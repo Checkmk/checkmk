@@ -52,8 +52,9 @@
 #include <stdarg.h>
 #include <time.h>
 #include <string.h>
+#include <locale.h>
 
-#define CHECK_MK_VERSION "1.1.2rc1"
+#define CHECK_MK_VERSION "1.1.2"
 #define CHECK_MK_AGENT_PORT 6556
 #define SERVICE_NAME "Check_MK_Agent"
 #define KiloByte 1024
@@ -1028,6 +1029,7 @@ void listen_tcp_loop()
 void usage()
 {
     fprintf(stderr, "Usage: \n"
+	    "check_mk_agent version -- show version " CHECK_MK_VERSION " and exit\n"
 	    "check_mk_agent install -- install as Windows NT service Check_Mk_Agent\n"
 	    "check_mk_agent remove  -- remove Windows NT service\n"
 	    "check_mk_agent adhoc   -- open TCP port %d and answer request until killed\n"
@@ -1247,9 +1249,16 @@ void cleanup()
     unregister_all_eventlogs(); // frees a few bytes
 }
 
+void show_version()
+{
+    printf("Check_MK_Agent version %s\n", CHECK_MK_VERSION);
+}
 
 int main(int argc, char **argv)
 {
+    // make sure, output of numbers is not localized
+    setlocale(LC_NUMERIC, "C");
+
     if (argc > 2)
 	usage();
     else if (argc <= 1)
@@ -1264,6 +1273,8 @@ int main(int argc, char **argv)
 	do_remove();
     else if (!strcmp(argv[1], "debug"))
 	do_debug();
+    else if (!strcmp(argv[1], "version"))
+	show_version();
     else
 	usage();
 

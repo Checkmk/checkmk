@@ -47,6 +47,8 @@
       * apc_symmetra: add remaining runtime to output
       * New check for UPS'es using the generic UPS-MIB (such as GE SitePro USP)
       * Fix bug in PNP-template for Linux NICs (bytes and megabytes had been mixed up).
+      * Windows agent: fix bug in output of performance counters (where sometimes with , instead of .)
+      * Windows agent: outputs version if called with 'version'
       
       Core, Setup, etc.:
       * New SNMP scan feature: -I snmp scans all SNMP checks (currently only very few checks support this, though)

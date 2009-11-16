@@ -1,0 +1,106 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |                     _           _           _                    |
+# |                  __| |_  ___ __| |__  _ __ | |__                 |
+# |                 / _| ' \/ -_) _| / / | '  \| / /                 |
+# |                 \__|_||_\___\__|_\_\_|_|_|_|_\_\                 |
+# |                                   |___|                          |
+# |              _   _   __  _         _        _ ____               |
+# |             / | / | /  \| |__  ___| |_ __ _/ |__  |              |
+# |             | |_| || () | '_ \/ -_)  _/ _` | | / /               |
+# |             |_(_)_(_)__/|_.__/\___|\__\__,_|_|/_/                |
+# |                                            check_mk 1.1.0beta17  |
+# |                                                                  |
+# | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of check_mk 1.1.0beta17.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Table columns:
+# 0: index
+# 1: sensor type (10 = temperature)
+# 2: sensor state (4 = ok)
+# 3: current value (temperature)
+# 4: critical level
+# 5: warn low level
+# 6: warn level
+# 7: description
+
+def inventory_cmctc_temp(checkname, info):
+   # return all temperature sensors
+   return [ (line[0], line[7], None) \
+               for line in info if int(line[1]) == 10 ]
+
+def check_cmctc_temp(item, no_params, info):
+   for line in info: # , value1, value2 in info:
+      if line[0] != item:
+         continue
+
+      status_text = {
+         "1" : "notAvail",
+         "2" : "lost",
+         "3" : "changed",
+         "4" : "ok",
+         "5" : "off",
+         "6" : "on",
+         "7" : "warning",
+         "8" : "tooLow",
+         "9" : "tooHigh",
+         }
+      status, current, crit, low, warn, descr = line[2:8]
+            
+      info_text = " - %s at %sC" % (descr, current)
+      levels_text = " (warn/crit at %sC/%sC)" % (warn, crit)
+      status_is = ", status is %s" % status_text.get(status, "UNKNOWN")
+      perfdata = [ ("temp", current, warn, crit, 0 ) ]
+      if status == "7":
+         return (1, "WARNING" + info_text + levels_text, perfdata)
+      elif status == "8":
+         return (1, "WARNING" + info_text + ": too low (below %sC)" % low, perfdata)
+      elif status == "4":
+         return (0, "OK" + info_text, perfdata)
+      else:
+         return (2, "CRIT" + info_text + levels_text + status_is, perfdata)
+         
+   return (3, "UNKNOWN - Sensor %s not found in SNMP data" % item)
+
+check_info['cmctc.temp'] = (check_cmctc_temp, "CMC Temperature %s", 1,  inventory_cmctc_temp)
+snmp_info['cmctc'] = ( 
+   # Base to all IO units
+   "enterprises.2606.4.2", 
+   # Each of the up to 4 units has its own subtree
+   ["3", "4", "5", "6"], 
+   [ 
+     # sensors index (1-4)
+     "5.2.1.1", 
+     # sensor type (10 = temperature)
+     "5.2.1.2",
+     # unit status: notAvail(1), lost(2), changed(3), ok(4), off(5), on(6), warning(7), tooLow(8), tooHigh(9)
+     "5.2.1.4",
+     # current value
+     "5.2.1.5",
+     # high value (used for critical state)
+     "5.2.1.6",
+     # low value (used for warning, if temp falls below this value)
+     "5.2.1.7",
+     # warn value (used for warning state)
+     "5.2.1.8",
+     # description (configured by user via admin interface)
+     "7.2.1.2"
+   ]
+   )
+     
+                                                                                                             

@@ -1,0 +1,21 @@
+title: Rittal CMC TC Temperature sensors
+agents: snmp
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check polls the state of temperature sensors
+ attached to a ComputerMultiControl-TopConcept unit.
+ Warning and critical levels are read via SNMP and
+ need to be configured in Nagios. Configure them
+ in your CMC unit.
+
+item:
+ Combination of IO unit number (3-6) and sensors index (1-4).
+ Example: {"3.2"} for first IO unit and second sensor.
+
+perfdata: 
+ One variable: the current temperatur in degrees celsius.
+
+inventory:
+ All available temperature sensors are automatically inventorized.

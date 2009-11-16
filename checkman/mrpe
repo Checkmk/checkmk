@@ -1,0 +1,28 @@
+title: MK's Remote Plugin Executor
+agents: linux, aix, solaris
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ The MRPE is a simple and efficient way to use standard Nagios
+ Plugins with the {check_mk_agent} and thus emulate NRPE to
+ a certain degree. Its main usage is to allow a soft migration
+ from NRPE to check_mk and to use third party Nagios plugins
+ that are running locally on your target hosts.
+
+ This check type processes the MRPE section in the output of the
+ agent. Since
+ all levels and parameters are configured on the target host,
+ no parameters are needed here. Please refer to the online
+ documentation on how to configure the agent.
+
+item:
+ The service description of the check as configured in {mrpe.cfg}
+ on the target host.
+
+perfdata:
+ All performance data is transparently
+ transported via check_mk to Nagios.
+
+inventory:
+ All plugins configured in {mrpe.cfg} are automatically inventorized.

@@ -1,0 +1,112 @@
+body, p, h1, h2 {
+  font-family: sans-serif;
+  background-color: #ccc;
+}
+
+h1 {
+  color: #404040;
+}
+h2 {
+  color: #000040;
+}
+
+div.chunk {
+  border-width: 1px;
+  border-style: solid;
+  margin-bottom: 1em;
+  padding: 0.5ex;
+  border-color: #bbb #555 #222 #bbb;
+  background-color: white;
+}
+
+a { 
+  font-family: sans-serif;
+  font-weight: bold;
+  width: 4em;
+  color: #008; 
+}
+
+a b {
+  color: #08f;
+}     
+
+a.ack {
+  background-color: #33c;
+  color: #fff;
+  text-decoration: none;
+  border-width: 2px;
+  border-style: solid;
+  border-color: #ccc #888 #333 #777;
+  padding: 0.3ex 1ex;
+  -moz-border-radius: 6px;
+}
+          
+pre { 
+  background-color: #ddd;
+  padding: 0.2ex 0.8ex;  
+  border: none;
+  margin: 0px;
+}
+
+pre.WARN { 
+  background-color: #ff8;
+}
+
+pre.CRIT {
+  background-color: #f88;
+}
+
+p.syserror {
+  background-color: #f88;
+  padding: 1ex;
+  margin: 2ex;
+}
+
+table.section {
+  margin: 0ex 0ex 0.8ex 0ex;
+  width: 100%
+}
+
+.date {
+  font-weight: normal;
+  padding-left: 1ex;
+  color: #666;
+}
+
+td.button { 
+  text-align: right;
+}
+
+td.button a {
+  background-color: #cca;
+  color: #000;
+  text-decoration: none;
+  font-weight: normal;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #ddd #888 #333 #ddd;
+  padding: 0.1ex 1ex;
+  -moz-border-radius: 4px;
+}
+
+td.button a:active {
+  background-color: #aa8;
+}
+
+td.WARN, td.CRIT {
+  width: 5em;
+  text-align: center;
+  padding: 0em 0.5ex;
+  margin: 0px;
+  border: 1px solid black;
+  font-weight: bold;
+}
+
+td.WARN {
+  background-color: #ff0;
+}
+
+td.CRIT {
+  background-color: #f00;
+  color: white;
+}

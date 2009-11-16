@@ -1,0 +1,56 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |                     _           _           _                    |
+# |                  __| |_  ___ __| |__  _ __ | |__                 |
+# |                 / _| ' \/ -_) _| / / | '  \| / /                 |
+# |                 \__|_||_\___\__|_\_\_|_|_|_|_\_\                 |
+# |                                   |___|                          |
+# |              _   _   __  _         _        _ ____               |
+# |             / | / | /  \| |__  ___| |_ __ _/ |__  |              |
+# |             | |_| || () | '_ \/ -_)  _/ _` | | / /               |
+# |             |_(_)_(_)__/|_.__/\___|\__\__,_|_|/_/                |
+# |                                            check_mk 1.1.0beta17  |
+# |                                                                  |
+# | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of check_mk 1.1.0beta17.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def inventory_nfsmounts(checkname, info):
+    return [ (line[0], None, None) for line in info ]
+
+def check_nfsmounts(item, params, info):
+    for line in info:
+        mountpoint = line[0]
+        if mountpoint == item:
+            size_blocks = int(line[2])
+            free_blocks = int(line[4]) # for non-root user
+            blocksize = int(line[5])
+            
+            if size_blocks < 0 or free_blocks < 0 or blocksize > 1024*1024:
+                return (1, "WARNING - Stale NFS handle")
+            
+            gb = 1024 * 1024 * 1024.0
+            size_gb = (size_blocks * blocksize) / gb
+            used_gb = (free_blocks * blocksize) / gb
+            if line[1] == 'ok':
+                return (0, "OK - server responding (%.2f GB / %.2f GB used)" % (used_gb, size_gb))
+            else:
+                return (2, "CRITICAL - server not responding")
+    return (3, "UNKNOWN - not mounted")
+    
+check_info['nfsmounts'] = (check_nfsmounts, "NFS mount %s", 0, inventory_nfsmounts)

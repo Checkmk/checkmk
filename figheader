@@ -1,0 +1,10 @@
+#!/usr/bin/python
+
+import os, sys
+width = 76
+sep = "#   +" + '-' * (width - 6) + '+'
+print sep
+for line in os.popen("figlet -c -w %d %s" % (width - 7, " ".join(sys.argv[1:])), "r"):
+   line = line[:-1]
+   print ("#   |%-" + str(width - 6) + "s|") % line
+print sep

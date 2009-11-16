@@ -1,0 +1,80 @@
+Installation von Nagios auf einem Debian 5.0
+--------------------------------------------------------------
+Ausgangspunkt: Frisch installiertes Debian 5.0 (hier
+32 Bit) mit Standardpaketauswahl ohne Sonderpaketgruppen.
+Hier im Beispiel wurde mit der 'Netinstall'-CD installiert.
+
+1. Installation von Nagios
+
+# aptitude install nagios3
+
+(alle Fragen mit Enter beantworten).
+
+Nagios läuft jetzt. Für die Anmweldung per HTTP
+brauchen wir noch ein Passwort:
+
+# htpassswd3 /etc/nagios3/htpasswd.users nagiosadmin
+New password:
+Retype new password:
+Adding password for user nagiosadmin
+
+Das Standardnagios läuft und kann erreicht werden über:
+
+http://localhost/nagios3/
+
+Nagios noch für externe Steuerung freigeben:
+
+# zile /etc/nagios3/nagios.cfg:
+check_external_commands=1
+
+# /etc/init.d/nagios3 stop
+# dpkg-statoverride --update --add nagios www-data 2710 /var/lib/nagios3/rw
+# dpkg-statoverride --update --add nagios nagios 751 /var/lib/nagios3
+# /etc/init.d/nagios3 start
+
+------------------------------------------------------------
+Installation von check_mk
+
+# dpkg -i check-mk_1.0.26-2_all.deb
+
+Konfigdatei installieren:
+
+# cp /usr/share/doc/check_mk/nagios.cfg /etc/nagios3/conf.d/main.mk
+# /etc/init.d/nagios3 restart
+
+Lokalen Agent installieren
+
+# dpkg -i check-mk-agent_1.0.26-2_all.deb
+
+Fehlenden xinetd installieren
+
+# aptitude install xinetd
+
+Agenten testen: 
+# telnet localhost 6556
+--> Jetzt muss die Textausgabe des Agenten kommen
+
+Jetzt Host 'localhost' in Liste für check_mk eintragen:
+
+# cd /etc/check_mk
+# zile main.mk
+all_hosts = [ 'localhost' ]
+
+# Pfad zu Nagios-Pipe einstellen
+nagios_command_pipe_path = '/var/lib/nagios3/rw/nagios.cmg'
+
+Jetzt kann man localhost inventurisieren:
+
+# check_mk -I alltcp localhost
+
+Konfigurationsdateien für Nagios erzeugen
+
+# check_mk -HS > /etc/nagios3/conf.d/check_mk_data.cfg
+
+Defaultkonfiguration für localhost von Debian löschen:
+
+# rm /etc/nagios3/conf.d/localhost_nagios2.cfg
+
+Und Nagios neu starten:
+
+# /etc/init.d/nagios3 restart

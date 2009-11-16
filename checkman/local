@@ -1,0 +1,24 @@
+title: Integrate custom checks
+agents: linux, aix, solaris
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check type processes the output of the checks the
+ agent sends in the {<<<local>>>} section. Local checks are
+ implemented by scripts or programs running on the target
+ hosts. Please refer to the online documentation details about
+ how to write those check scripts.
+
+item:
+ The service description of the check. It must be unique
+ within all checks of the host. It is the second word in 
+ the line output by the agent.
+
+perfdata:
+ A local check may or may not send one custom performance
+ variable.
+
+inventory:
+ All local checks are automatically inventorized. There
+ are no specific configuration variables.

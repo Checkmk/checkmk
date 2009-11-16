@@ -1,0 +1,109 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |                     _           _           _                    |
+# |                  __| |_  ___ __| |__  _ __ | |__                 |
+# |                 / _| ' \/ -_) _| / / | '  \| / /                 |
+# |                 \__|_||_\___\__|_\_\_|_|_|_|_\_\                 |
+# |                                   |___|                          |
+# |              _   _   __  _         _        _ ____               |
+# |             / | / | /  \| |__  ___| |_ __ _/ |__  |              |
+# |             | |_| || () | '_ \/ -_)  _/ _` | | / /               |
+# |             |_(_)_(_)__/|_.__/\___|\__\__,_|_|/_/                |
+# |                                            check_mk 1.1.0beta17  |
+# |                                                                  |
+# | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of check_mk 1.1.0beta17.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<vmware_state>>>
+# [2009-11-12 10:40:30.086 'App' 3076453184 info] Current working directory: /usr/lib/check_mk_agent/plugins
+# Found VM:
+# moref:32
+# name:ras-uss
+# uuid:501e8429-18ed-3097-a521-93932203e5db
+# ipaddr:193.18.239.33
+# Found VM:
+# moref:48
+# name:zmucgw4
+# uuid:564d7c29-a5ed-8dd5-4bae-3e9177d8628d
+# ipaddr:172.19.15.52
+# [2009-11-12 10:40:30.215 'vcbVmName' 3076453184 warning] IP address not set.
+# Found VM:
+# moref:80
+# name:zmucfi01
+# uuid:501e70b5-6aa3-25fa-1550-c1cf5f8a2025
+# ipaddr:
+
+def inventory_vmware_state(checkname, info):
+   inventory = []
+   for line in info:
+    #  print "LINE IS %s" % line[0]
+      if line[0].startswith("name:"):
+	 vm_name = line[0][5:]
+      if line[0].startswith("ipaddr:"):
+	 vm_ipaddr = line[0][7:]
+	 # add machine to inventory (if IP address is not empty)
+	 if vm_ipaddr != '':
+	    inventory.append((vm_name, vm_ipaddr, None))
+   return inventory
+
+# 1. Variant: loop over all machines and
+# remember the ip addresses of all machines.
+# Then pick out the ip address of the machine
+# we are looking for.
+#
+#def check_vmware_state(item, params, info):
+#   vm_ipaddr = {}
+#   for line in info:
+#      if line[0].startswith("name:"):
+#	 vm_name = line[0][5:]
+#   
+#      if line[0].startswith("ipaddr:"):
+#	 vm_ipaddr[vm_name] = line[0][7:]
+#  
+#   ip_addr = vm_ipaddr.get(item)
+#   if ip_addr == "":
+#      return(2, "CRIT - The Machine is DOWN")
+#
+#   elif ip_addr == None:
+#      return (3, "UNKNOWN - no such machine")
+#
+#   else:
+#      return(0, "OK - The Machine is UP (%s)" % ip_addr)
+
+# 2. Variant: loop over all machines. If
+# we reach the machine we are looking for
+# we do the check and return immediately.
+# If we go through the loop without finding
+# the machine, we return an UNKNOWN state.
+def check_vmware_state(item, params, info):
+   # item is the name of the machine.
+   for line in info:
+      if line[0].startswith("name:"):
+	 vm_name = line[0][5:]
+      elif line[0].startswith("ipaddr:"):
+	 if vm_name == item:
+	    ip_addr = line[0][7:]
+	    if ip_addr == "":
+	       return (2, "CRIT - the machine is down")
+	    else:
+	       return (0, "OK - machine is up (%s)" % ip_addr)
+   return (3, "UNKNOWN - no such machine")
+
+check_info['vmware_state'] = (check_vmware_state, "VM %s", 0, inventory_vmware_state)   
+

@@ -1,0 +1,76 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |                     _           _           _                    |
+# |                  __| |_  ___ __| |__  _ __ | |__                 |
+# |                 / _| ' \/ -_) _| / / | '  \| / /                 |
+# |                 \__|_||_\___\__|_\_\_|_|_|_|_\_\                 |
+# |                                   |___|                          |
+# |              _   _   __  _         _        _ ____               |
+# |             / | / | /  \| |__  ___| |_ __ _/ |__  |              |
+# |             | |_| || () | '_ \/ -_)  _/ _` | | / /               |
+# |             |_(_)_(_)__/|_.__/\___|\__\__,_|_|/_/                |
+# |                                            check_mk 1.1.0beta17  |
+# |                                                                  |
+# | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of check_mk 1.1.0beta17.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def inventory_diskstat(checkname, info):
+   if len(info) > 1: # first line is timestamp
+      return [('read', "", "None"),
+              ('write', "", "None")]
+   else:
+      return []
+
+# Fields in /proc/diskstat
+# At the beginning: major minor devicename
+# 
+# Field 1 -- # of reads issued
+# Field 2 -- # of reads merged, field 6 -- # of writes merged
+# Field 3 -- # of sectors read
+# Field 4 -- # of milliseconds spent reading
+# Field 5 -- # of writes completed
+# Field 7 -- # of sectors written
+# Field 8 -- # of milliseconds spent writing
+# Field 9 -- # of I/Os currently in progress
+# Field 10 -- # of milliseconds spent doing I/Os
+# Field 11 -- weighted # of milliseconds spent doing I/Os
+#
+# -> Field 1 has index 3
+
+
+# major minor device ...
+def check_diskstat(item, params, info):
+    # sum up over all devices
+    if item == 'read':
+        index = 5 # sectors read
+    elif item == 'write':
+        index = 9 # sectors written
+    else:
+        return (3, "UNKNOWN - invalid item %s" % (item,))
+
+    this_time = int(info[0][0])
+    this_val  = sum([int(x[index]) for x in info[1:]])
+
+    timedif, per_sec = get_counter("diskstat." + item, this_time, this_val)
+    mb_per_s = per_sec / 2048.0    # Diskstat output is in sectors a 512 Byte
+    perfdata = [ (item, "%dc" % this_val ) ]
+    return (0, "OK - %.1fMB/s (in last %d secs)" % (mb_per_s, timedif), perfdata)
+    
+
+check_info['diskstat'] = (check_diskstat, "Disk IO %s", 1,  inventory_diskstat)

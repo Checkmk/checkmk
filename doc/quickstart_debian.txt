@@ -1,0 +1,94 @@
+Quickstart for Nagios + check_mk on Debian 5.0 (Lenny)
+-----------------------------------------------------------
+
+This guide tells you how to set up Nagios and check_mk
+on Debian 5.0.
+
+PART 1 : SETUP OF NAGIOS
+========================
+
+Install the Nagios3 package from the distribution:
+
+# aptitude install nagios3
+
+Nagios3 and Apache2 are running now. Now Setup a password for the
+Webinterface:
+
+# htpassswd3 /etc/nagios3/htpasswd.users nagiosadmin
+New password: SECRET
+Retype new password: SECRET
+Adding password for user nagiosadmin
+
+You can log into the Webinterface to http://localhost/nagios3/
+now with user 'nagiosadmin' and password 'SECRET'.
+
+Now configure Nagios to allow external commands and allow
+Apache to send those commands. First edit /etc/nagios3/nagios.cfg
+and set check_external_commands=1. After setup permissions:
+
+# chmod g+rx /var/lib/nagios3/rw
+# usermod -aG nagios www-data
+
+You need to restart Apache2 in order to get the new group:
+
+# /etc/init.d/apache2 restart
+
+Part 2: SETUP OF CHECK_MK
+=========================
+Nagios is now ready. Let's now install check_mk. First we
+need xinetd (for the local agent):
+
+# aptitude install xinetd
+
+Now install the two .deb-packages of check_mk (one for the
+Server, one for the local agent):
+
+# dpkg -i check-mk-agent_1.0.26-2_all.deb
+# dpkg -i check-mk_1.0.26-2_all.deb
+
+You can test the local agent by telnetting to port 6556.
+You should get the text output of the agent:
+
+# telnet localhost 6556
+
+After that we can setup localhost as the first host to be monitored
+with check_mk. Configuration is done in /etc/check_mk:
+
+# cd /etc/check_mk
+
+Edit the example main.mk and add localhost to the
+list of hosts:
+
+all_hosts = [ 'localhost' ]
+
+Also define the path to the Nagios command pipe:
+
+nagios_command_pipe_path = '/var/lib/nagios3/rw/nagios.cmd'
+
+Now you can inventurize localhost by calling check_mk with
+the option -I:
+
+# check_mk -I alltcp localhost
+
+check_mk should find a couple of items to be monitored.
+Now we need to complete the configuration of Nagios.
+First we need a configuration file defining templates
+for check_mk. A working sample is in /usr/share/doc/check_mk.
+You can copy it verbatim to the Nagios configuration directory:
+
+# cp /usr/share/doc/check_mk/check_mk_templates.cfg /etc/nagios3/conf.d/
+
+The configuration files for the newly inventurized localhost
+is generated automatically by combining the options -H and -S:
+
+# check_mk -HS > /etc/nagios3/conf.d/check_mk_data.cfg
+
+The last we have to do is to delete the sample configuration
+for localhost prepackaged in the Debian Nagios package:
+
+# rm /etc/nagios3/conf.d/localhost_nagios2.cfg
+
+Finished. Restart Nagios. As soon as the host is checked
+you'll enjoy the results in the Web interface.
+
+# /etc/init.d/nagios3 restart

@@ -1,0 +1,87 @@
+title: Check used space in filesystems
+agents: linux, windows, aix, solaris, vms
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check measures the usage of filesystems. The usage
+ is checked against a warning and a critical level, which
+ can be specified in numerous ways. Beware: on Linux and UNIX systems
+ the filesystem might reserve a certain amount for root (typical is 5%).
+ The reserved spaces is accounted for as used. This is consistant with 
+ the percentage-column in the output of df. So your filesystem might
+ be at 100% in a situation where root still has 5% free space available.
+
+item:
+ The mount point of the filesystem (UNIX) or the drive
+ letter in upper case followed by a colon (Windows).
+
+examples:
+ # Set default level for all filesystems to 90/95
+ filesystem_default_levels = (90, 95)
+
+ # Exclude temporary backup from inventory
+ inventory_df_exclude_mountpoints = [ "/mnt/backup" ]
+
+ # explicit checks (or created by inventory)
+ checks = [
+    # use default levels for mount point /var
+    ("zbghora12", "df", "/var", filesystem_default_levels),
+    # specific levels at 95% and 98% for /home
+    ("zbghora12", "df", "/home", (95, 98)) 
+ ],
+
+ # Override warning/critical levels for all checks where
+ # levels are "filesystem_default_levels"
+ filesystem_levels = [ 
+    # Hosts with tag "vms" get 85/95
+    ( (85, 95), ["vms"], ALL_HOST, [ "" ] ),
+    # all /sapdata partitions will never be critical
+    ( (101, 101), ALL_HOSTS, [ "/sapdata$" ] ),
+    # Partitions below "/var" get 80/90 with magic factor 0.5
+    ( (80, 90, 0.5), ALL_HOSTS, [ "/var" ] ),
+    # /usr and /opt on hosts zlnx01 and zlnx02
+    ( (98, 99), [ "zlnx01", "zlnx02" ], [ "/usr$", "/opt$" ] ),
+    # All filesystems on clusters get 80/95
+    ( (80, 95), ALL_CLUSTERS, [ "" ] )
+ ]
+
+ # Exclude certain filesystems from being inventorized at all
+ inventory_df_exclude_fs = [ "iso9660", "romfs" ]
+
+perfdata: 
+ One variable: the used space of the filesystem in MB. Also the minimum (0 MB),
+ maximum (size of the filesystem) and the warning and critical
+ levels in MB are provided.
+
+inventory:
+ df supports inventory. All filesystem the agent reports
+ will be inventorized except mount points listed in
+ {inventory_df_exclude_mountpoints} and filesystem types
+ listed in {inventory_df_exclude_fs}. The Windows agent
+ only reports fixed disks. The Linux agent reports filesystems
+ that have a size and are not of type smbfs, tmpfs, cifs or nfs.
+
+[parameters]
+warning (int): The percentage of used space that triggers
+ WARNING state
+critical (int): The percentage of used space that triggers
+ CRITICAL space
+magic_factor (float): Optional: Magic factor that adapts the levels
+ according to the size of the filesystem. Default
+ is a factor of 1.0, which does no adaptation. A factor
+ less than 1.0 raises the levels for large filesystems
+ and lowers them for small ones. Please look at online
+ documentation for more details about the magic factor.
+
+[configuration]
+inventory_df_exclude_fs (list of strings): Lists of filesystem types to exclude from inventory
+inventory_df_exclude_mountpoints (list of strings): List of mount points to exclude from inventory
+filesystem_default_levels (int, int): Defaults levels for filesystem detected by inventory
+df_magicnumber_normsize (float): Reference filesystem size in GB. Default is 20.0. 
+ Levels for File systems larger then that will be raised by a magic
+ factor < 1.0. Level for smaller filesystems will be lowered.
+filesystem_levels: Configuration list that allows you to specify
+ filesystem levels for groups of hosts and mount points. The configuration
+ is analogous to that of {service_contactgroups}. The list is processed from
+ top to bottom. The first match wins.

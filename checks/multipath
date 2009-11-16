@@ -1,0 +1,163 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |                     _           _           _                    |
+# |                  __| |_  ___ __| |__  _ __ | |__                 |
+# |                 / _| ' \/ -_) _| / / | '  \| / /                 |
+# |                 \__|_||_\___\__|_\_\_|_|_|_|_\_\                 |
+# |                                   |___|                          |
+# |              _   _   __  _         _        _ ____               |
+# |             / | / | /  \| |__  ___| |_ __ _/ |__  |              |
+# |             | |_| || () | '_ \/ -_)  _/ _` | | / /               |
+# |             |_(_)_(_)__/|_.__/\___|\__\__,_|_|/_/                |
+# |                                            check_mk 1.1.0beta17  |
+# |                                                                  |
+# | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of check_mk 1.1.0beta17.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# Output from multipath -l has the following format:
+
+# orabase.lun50 (360a9800043346937686f456f59386741) dm-15 NETAPP,LUN
+# [size=25G][features=1 queue_if_no_path][hwhandler=0]
+# \_ round-robin 0 [prio=0][active]
+#  \_ 1:0:3:50 sdy 65:128 [active][undef]
+#  \_ 3:0:3:50 sdz 65:144 [active][undef]
+
+# An alias might not be defined. The out is then:
+# 360a980004334644d654a364469555a76
+# [size=300 GB][features="0"][hwhandler="0"]
+# \_ round-robin 0 [active]
+#  \_ 1:0:2:13 sdc 8:32  [active][ready]
+#  \_ 3:0:2:13 sdl 8:176 [active][ready]
+
+# Other output from other host:
+# anzvol2 (36005076306ffc648000000000000510a) dm-15 IBM,2107900
+# [size=100G][features=0][hwhandler=0]
+# \_ round-robin 0 [prio=-6][active]
+#  \_ 4:0:5:1  sdbf 67:144 [active][undef]
+#  \_ 4:0:4:1  sdau 66:224 [active][undef]
+#  \_ 4:0:3:1  sdaj 66:48  [active][undef]
+#  \_ 3:0:5:1  sdy  65:128 [active][undef]
+#  \_ 3:0:4:1  sdn  8:208  [active][undef]
+#  \_ 3:0:3:1  sdc  8:32   [active][undef]
+# anzvol1 (36005076306ffc6480000000000005005) dm-16 IBM,2107900
+# [size=165G][features=0][hwhandler=0]
+# \_ round-robin 0 [prio=-6][active]
+#  \_ 4:0:5:0  sdbe 67:128 [active][undef]
+#  \_ 4:0:4:0  sdat 66:208 [active][undef]
+#  \_ 4:0:3:0  sdai 66:32  [active][undef]
+#  \_ 3:0:5:0  sdx  65:112 [active][undef]
+#  \_ 3:0:4:0  sdm  8:192  [active][undef]
+#  \_ 3:0:3:0  sdb  8:16   [active][undef]
+  
+
+def parse_multipath_output(info, only_uuid = None):
+    reg_uuid = get_regex("[0-9a-z]{33}")
+    reg_prio = get_regex("\[prio=")
+    reg_lun  = get_regex("[0-9]+:[0-9]+:[0-9]+:[0-9]+")
+    uuid = None
+    groups = {}
+    group = {}
+    numpaths = 0
+    for line in info:
+        if line[0] == "dm":
+            continue
+        l = " ".join(line)
+        matchobject = reg_uuid.search(l)
+        if matchobject:
+            uuid = matchobject.group(0)
+            if only_uuid and uuid != only_uuid:
+                uuid = None
+                continue
+            numpaths = 0
+            lun_info = []
+            paths_info = []
+            broken_paths = []
+            group = {}
+            group['paths'] = paths_info
+            group['broken_paths'] = broken_paths
+            group['luns'] = lun_info
+            group['uuid'] = uuid
+            group['state'] = None
+            group['numpaths'] = 0
+            groups[uuid] = group
+            if len(line) > 1 and line[1].startswith('('):
+                group['alias'] = line[0]
+                
+        elif uuid:
+            if reg_prio.search(l):
+                group['state'] = line[3]
+            elif len(line) >= 4 and reg_lun.match(line[1]):
+                luninfo = "%s(%s)" % (line[1], line[2])
+                lun_info.append(luninfo)
+                state = line[4]
+                if not state.startswith('[active]'):
+                    broken_paths.append(luninfo)
+                numpaths += 1
+                group['numpaths'] = numpaths
+                paths_info.append(line[2])
+    return groups
+        
+# Get list of UUIDs of all multipath devices
+# Length of UUID is 360a9800043346937686f456f59386741
+def inventory_multipath(checkname, info):
+    inventory = []
+    parsed = parse_multipath_output(info)
+    for uuid, info in parsed.items():
+        inventory.append((uuid, " ".join(info['luns']), info['numpaths']))
+    return inventory
+
+# item is UUID (e.g. '360a9800043346937686f456f59386741')
+def check_multipath(item, target_numpaths, info):
+    if target_numpaths == None: 
+        target_numpaths = 2 # default case: we need two paths
+
+    parsed = parse_multipath_output(info, item) # we look for one specific uuid
+
+    # Check if map is there - in the first place
+    mmap = parsed.get(item)
+    if not mmap:
+        return (3, "UNKNOWN - no map with uuid %s" % item)
+
+    alias = mmap.get('alias')
+    if alias:
+        aliasinfo = "(%s) " % alias
+    else:
+        aliasinfo = ""
+    numpaths = mmap['numpaths']
+    broken = mmap['broken_paths']
+    numbroken = len(broken)
+    if numbroken > 0:
+        return (2, "CRIT - %sbroken paths: %s" % (aliasinfo, ",".join(broken)))
+
+    info = "%spaths expected: %d, paths active: %d" % (aliasinfo, target_numpaths, numpaths)
+    
+    if numpaths < target_numpaths:
+        return (2, "CRIT - " + info)
+    elif numpaths > target_numpaths:
+        return (1, "WARN - " + info)
+    else:
+        return (0, "OK - " + info)
+
+
+check_info['multipath'] = (
+    check_multipath,
+    "Multipath %s",
+    0,
+    inventory_multipath)
+

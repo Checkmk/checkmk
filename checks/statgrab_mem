@@ -1,0 +1,76 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |                     _           _           _                    |
+# |                  __| |_  ___ __| |__  _ __ | |__                 |
+# |                 / _| ' \/ -_) _| / / | '  \| / /                 |
+# |                 \__|_||_\___\__|_\_\_|_|_|_|_\_\                 |
+# |                                   |___|                          |
+# |              _   _   __  _         _        _ ____               |
+# |             / | / | /  \| |__  ___| |_ __ _/ |__  |              |
+# |             | |_| || () | '_ \/ -_)  _/ _` | | / /               |
+# |             |_(_)_(_)__/|_.__/\___|\__\__,_|_|/_/                |
+# |                                            check_mk 1.1.0beta17  |
+# |                                                                  |
+# | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of check_mk 1.1.0beta17.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def check_statgrab_mem(item, params, info):
+    try:
+        for var, value in info:
+            if var == 'mem.used':     memused_kb   = int(value) / 1024
+            elif var == 'mem.total':  totalmem_kb  = int(value) / 1024
+            elif var == 'swap.used':  swapused_kb  = int(value) / 1024 / 4 # BUG in statgrab und Solaris?
+            elif var == 'swap.total': totalswap_kb = int(value) / 1024 / 4 
+            elif var == 'mem.cache':  caches_kb    = int(value) / 1024
+        totalused_kb = (swapused_kb + memused_kb - caches_kb) 
+        totalused_mb = totalused_kb / 1024
+        totalmem_mb = totalmem_kb / 1024
+        totalused_perc = 100 * (float(totalused_kb) / float(totalmem_kb))
+        totalvirt_mb = (totalswap_kb + totalmem_kb) / 1024
+        warn, crit = params
+
+        perfdata = [ 
+            ('ramused', str((memused_kb - caches_kb) / 1024) + 'MB', '', '', 0, totalmem_mb),
+            ('swapused', str(swapused_kb / 1024) + 'MB', '', '', 0, totalswap_kb / 1024) ]
+        
+    except:
+        return (3, "UNKNOWN - invalid ouput from plugin")
+
+    # levels may be given either in int -> MB or in float -> percentages
+    
+    if type(warn) == float:
+        perfdata.append(('memused', str(totalused_mb)+'MB', int(warn/100.0 * totalmem_mb), int(crit/100.0 * totalmem_mb), 0, totalvirt_mb))
+        if totalused_perc >= crit:
+            return (2, 'CRIT - %.1f%% of RAM (%d MB) used by processes (critical at %.1f%%)' % (totalused_perc, totalused_mb, crit), perfdata)
+        elif totalused_perc >= warn:
+            return (1, 'WARN - %.1f%% of RAM (%d MB) used by processes (warning at %.1f%%)' % (totalused_perc, totalused_mb, warn), perfdata)
+        else:
+            return (0, 'OK - %.1f%% of RAM (%d MB) used by processes' % (totalused_perc, totalused_mb), perfdata)
+
+    else:
+        perfdata.append(('memused', str(totalused_mb)+'MB', warn, crit, 0, totalvirt_mb))
+        if totalused_mb >= crit:
+            return (2, 'CRIT - %d MB of RAM (%.1f%%) used by processes (critical at %d MB)' % (totalused_mb, totalused_perc, crit), perfdata)
+        elif totalused_mb >= warn:
+            return (1, 'WARN - %d MB of RAM (%.1f%%) used by processes (warning at %d MB)' % (totalused_mb, totalused_perc, warn), perfdata)
+        else:
+            return (0, 'OK - %d MB of RAM (%.1f%%) used by processes' % (totalused_mb, totalused_perc), perfdata)
+
+
+check_info['statgrab_mem'] = (check_statgrab_mem, "Memory used", 1, no_inventory_possible)

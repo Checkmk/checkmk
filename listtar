@@ -1,0 +1,22 @@
+#!/bin/bash
+
+if [ ! -e "$1" ] ; then 
+    echo "Usage: $0 check_mk-...tar.gz" >&2
+    exit 1
+fi
+
+tar tzf $1 | \
+while read filename
+do
+  echo -n "$filename"
+  if [ "${filename:(-7)}" = ".tar.gz" ] ; then
+    echo :
+    tar xzf $1 --to-stdout "$filename" | tar tzvf - | \
+cat
+#	awk ' { printf " |%8d %s\n", $3, $6; } '
+    echo
+  else
+    echo
+  fi
+done
+

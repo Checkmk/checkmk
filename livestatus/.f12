@@ -1,0 +1,5 @@
+#!/bin/sh
+set -e
+make -j 8
+rsync -varx Makefile nagios *.cc *.h *.c .deps root@klon:/tmp/livestatus/
+ssh root@klon "make -C /tmp/livestatus && install -m 755 /tmp/livestatus/livestatus.o /usr/lib/check_mk/ && /etc/init.d/nagios restart"

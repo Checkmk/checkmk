@@ -1,0 +1,169 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |                     _           _           _                    |
+# |                  __| |_  ___ __| |__  _ __ | |__                 |
+# |                 / _| ' \/ -_) _| / / | '  \| / /                 |
+# |                 \__|_||_\___\__|_\_\_|_|_|_|_\_\                 |
+# |                                   |___|                          |
+# |              _   _   __  _         _        _ ____               |
+# |             / | / | /  \| |__  ___| |_ __ _/ |__  |              |
+# |             | |_| || () | '_ \/ -_)  _/ _` | | / /               |
+# |             |_(_)_(_)__/|_.__/\___|\__\__,_|_|/_/                |
+# |                                            check_mk 1.1.0beta17  |
+# |                                                                  |
+# | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of check_mk 1.1.0beta17.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+inventory_netctr_counters  = [ 'rx_bytes', 'tx_bytes', 'rx_packets', 'tx_packets', 'rx_errors', 'tx_errors', 'tx_collisions' ]
+
+statgrab_netif_counternames = {
+    "collisions" :  "tx_collisions",
+    "ierrors"    :  "rx_errors",
+    "ipackets"   :  "rx_packets",
+    "oerrors"    :  "tx_errors",
+    "opackets"   :  "tx_packets",
+    "rx"         :  "rx_bytes",
+    "tx"         :  "tx_bytes",
+}
+
+def inventory_statgrab_net_link(checkname, info):
+    items = []
+    for var, value in info:
+        if var.endswith(".up"):
+            nicname = var.split('.')[0]
+            if not nicname.startswith("lo"):
+                items.append( (nicname, value == 'true', value == 'true') )
+    return items
+
+
+def check_statgrab_net_link(item, targetstate, info):
+    for var,value in info:
+        if var == item + ".up":
+            link = value == 'true'
+            if link == targetstate:
+                if link:
+                    return (0, "OK - Link is up")
+                else:
+                    return (0, "OK - no link / NIC unused")
+            else:
+                if link:
+                     return (1, "WARN - Link is up, NIC should be unused")
+                else:
+                     return (2, "CRIT - no link")
+    return (2, "CRIT - unknown network device")
+                 
+
+def inventory_statgrab_net_params(checkname, info):
+    items = []
+    for var, value in info:
+        if var.endswith(".duplex"):
+            nicname = var.split('.')[0]
+            duplex = value
+        elif var.endswith(".speed"):
+            speed = value
+            if not nicname.startswith("lo"):
+                params = (speed + "Mb/s", duplex.capitalize())
+                items.append( (nicname, params, "%s" % (params,)) )
+    return items
+          
+
+def check_statgrab_net_params(item, params, info):
+    for var, value in info:
+        if var.startswith(item + "."):
+            if var.endswith(".duplex"):
+                duplex = value
+            elif var.endswith(".speed"):
+                speed = value
+                act_params = (speed + "Mb/s", duplex.capitalize())
+                if act_params == params:
+                    return (0, "OK - %s" % (",".join(act_params),) )
+                else:
+                    return (2, "CRIT - %s (should be %s)" %
+                           (",".join(act_params), ",".join(params)))
+    return (3, "UNKNOWN - network device not found")
+                           
+
+
+def inventory_statgrab_net_ctr(checkname, info):
+    items = []
+    for var, value in info:
+        if var.endswith(".up"):
+            nicname = var.split('.')[0]
+            if not nicname.startswith("lo"):
+                items.append( (nicname, '', '""') )
+    return items
+
+    
+# Example output from statgrab for eri0:
+#eri0.collisions 43154
+#eri0.duplex half
+#eri0.ierrors 0
+#eri0.interface_name eri0
+#eri0.ipackets 1280771
+#eri0.oerrors 2
+#eri0.opackets 1158789
+#eri0.rx 153419924
+#eri0.speed 100
+#eri0.systime 1226493355
+#eri0.tx 357985657
+#eri0.up true
+
+# ACHTUNG: Performancedaten muessen genau in der gleichen Reihenfolge
+# gesendet werden, wie bei dem alten net_ctr combined. Umsortieren,
+# mit dummywerten auffuellen.
+
+def check_statgrab_net_ctr(nic, _no_params, info):
+    this_time = int(time.time())
+    infotxt = ""
+    perfdata_dict = {}
+    for var, value in info:
+       nicname, ctr = var.split('.')
+       if nicname != nic:
+           continue
+       countername = statgrab_netif_counternames.get(ctr, None)
+       if countername == None:
+           continue
+       value = int(value)
+       timedif, items_per_sec = get_counter( "netctr." + nic + "." + countername, this_time, value)
+       perfdata_dict[countername] = ( countername, "%dc" % value )
+       if countername == 'rx_bytes':
+           infotxt += ' - Receive: %.2f MB/sec' % (float(items_per_sec) / float(1024*1024))
+       elif countername == 'tx_bytes':
+           infotxt += ' - Send: %.2f MB/sec' % (float(items_per_sec) / float(1024*1024))
+       if ctr == 'tx':
+           break # last counter
+    if infotxt == "":
+        return (3, "UNKNOWN - unknown network interface")       
+
+    
+    perfdata = []
+    for countername in inventory_netctr_counters:
+        perf = perfdata_dict.get(countername)
+        if perf:
+            perfdata.append(perf)
+        else:
+            perfdata.append((countername, "0c"))
+
+    return (0, "OK" + infotxt, perfdata)
+
+
+
+check_info['statgrab_net.link'] = (check_statgrab_net_link,   "NIC %s link",        0,  inventory_statgrab_net_link)
+check_info['statgrab_net.ctr'] = (check_statgrab_net_ctr,    "NIC %s counters",    1,  inventory_statgrab_net_ctr)
+check_info['statgrab_net.params'] =  (check_statgrab_net_params, "NIC %s parameter",   0,  inventory_statgrab_net_params)

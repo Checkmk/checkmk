@@ -1,0 +1,16 @@
+Mit dem Debian-Paket ab jetzt:
+
+1. Debian nackt installieren
+2. aptitude install nagios3 xinetd
+3. dpkg -i check-mk_1.0.34-1_all.deb
+4. dpkg -i /root/check-mk-agent_1.0.34-2_all.deb
+5. htpasswd -c /etc/nagios3/htpasswd.users nagiosadmin
+6. chown root.nagios /usr/lib/nagios/plugins/check_icmp
+7. chmod 4744 /usr/lib/nagios/plugins/check_icmp
+( ODER DIE BEFEHLE AUS DEM QUICKSTART )
+8. in /etc/nagios3/nagios.cfg:
+check_external_commands=1
+9. main.mk: all_hosts = ['Localhost']
+10. check_mk -I alltcp
+11. check_mk -U
+12. Nagios neu starten

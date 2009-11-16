@@ -1,0 +1,71 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |                     _           _           _                    |
+# |                  __| |_  ___ __| |__  _ __ | |__                 |
+# |                 / _| ' \/ -_) _| / / | '  \| / /                 |
+# |                 \__|_||_\___\__|_\_\_|_|_|_|_\_\                 |
+# |                                   |___|                          |
+# |              _   _   __  _         _        _ ____               |
+# |             / | / | /  \| |__  ___| |_ __ _/ |__  |              |
+# |             | |_| || () | '_ \/ -_)  _/ _` | | / /               |
+# |             |_(_)_(_)__/|_.__/\___|\__\__,_|_|/_/                |
+# |                                            check_mk 1.1.0beta17  |
+# |                                                                  |
+# | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of check_mk 1.1.0beta17.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# Example for output from agent (contents of /proc/mdstat):
+#    Personalities : [raid1]
+#    md1 : active raid1 dm-19[0] dm-9[1]
+#          20971456 blocks [2/2] [UU]
+#          20971456 blocks super 1.2 [2/2] [UU] 
+#          
+#          unused devices: <none>
+def check_md(item, params, info):
+    raid_state = ''
+    its_next = False
+    for line in info:
+        if line[0] == item and line[1] == ':':
+            raid_state = line[2]
+            if raid_state != 'active':
+                return (2, "CRIT - raid state is '%s' (should be 'active')" % (raid_state,))
+            num_disks = len(line) - 4
+            its_next = True
+        elif its_next:
+            disk_state_1 = line[-2]
+            disk_state_2 = line[-1]
+            if disk_state_1 != '[%d/%d]' % (num_disks, num_disks) or \
+               disk_state_2 != '[' + ("U"*num_disks) + ']':
+                return (2, 'CRIT - disk state is %s %s' % (disk_state_1, disk_state_2))
+            else:
+                return (0, 'OK - raid active, disk state is %s %s' % (disk_state_1, disk_state_2))
+    return (2, 'CRIT - no raid device %s' % item)
+
+def inventory_md(checkname, info):
+    inventory = []
+    for line in info:
+        if line[0].startswith("md") and line[1] == ':':
+            device = line[0]
+            raid_state = line[2]
+        elif line[1] == 'blocks':
+            disk_state = line[-1][1:-1]
+            inventory.append( (device, '%s / %s' % (raid_state, disk_state), None) )
+    return inventory
+
+check_info['md'] = (check_md, "MD Softraid %s", 0, inventory_md)

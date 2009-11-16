@@ -1,0 +1,118 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |                     _           _           _                    |
+# |                  __| |_  ___ __| |__  _ __ | |__                 |
+# |                 / _| ' \/ -_) _| / / | '  \| / /                 |
+# |                 \__|_||_\___\__|_\_\_|_|_|_|_\_\                 |
+# |                                   |___|                          |
+# |              _   _   __  _         _        _ ____               |
+# |             / | / | /  \| |__  ___| |_ __ _/ |__  |              |
+# |             | |_| || () | '_ \/ -_)  _/ _` | | / /               |
+# |             |_(_)_(_)__/|_.__/\___|\__\__,_|_|/_/                |
+# |                                            check_mk 1.1.0beta17  |
+# |                                                                  |
+# | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of check_mk 1.1.0beta17.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def inventory_win_cpuusage(checkname, info):
+   for line in info:
+      try:
+         if line[0] == '238:6':
+            return [(None, None, None)]
+      except:
+         pass
+   return []
+
+
+def check_win_cpuusage(item, params, info):
+   for line in info:
+      try:
+         if line[0] == '238:6':
+            this_time = int(float(line[1]))
+            # Windows sends one counter for each CPU plus one counter that
+            # I've forgotton what's it for (idle?)
+            num_cpus = len(line) - 4
+            overall_perc = 0
+            for cpu in range(0, num_cpus):
+                ticks = int(line[2 + cpu])
+                timedif, ticks_per_sec = get_counter("cpuusage.%d" % cpu, this_time, ticks)
+                secs_per_sec = ticks_per_sec / 10000000.0;
+                used_perc = 100 * (1 - secs_per_sec)
+                overall_perc += used_perc
+
+            used_perc = overall_perc / num_cpus
+            
+            if used_perc < 0:
+               used_perc = 0
+            elif used_perc > 100:
+               used_perc = 100
+            perfdata = [ ("cpuusage", "%.2f" % used_perc, '', '', 0, 100) ]
+            if num_cpus == 1:
+                num_txt = ""
+            else:
+                num_txt = " / %d CPUs" % num_cpus
+            return (0, "OK - %d%% used%s (in last %d secs)" %
+                    (int(used_perc), num_txt, timedif), perfdata)
+      except:
+         return (3, "UNKNOWN - invalid output from plugin")
+   return (3, "UNKNOWN - counter for cpu (238:6) not found")
+
+def inventory_win_diskstat(checkname, info):
+   for line in info:
+      try:
+         if line[0] == '2:16' or line[0] == '2:18':
+            return [(None, None, None)]
+      except:
+         pass
+   return []
+
+
+def check_win_diskstat(item, params, info):
+    read_bytes_ctr = 0
+    write_bytes_ctr = 0
+    try:
+        for line in info:
+            if line[0] == '2:16':
+                read_bytes_ctr = int(line[2])
+            elif line[0] == '2:18':
+                write_bytes_ctr = int(line[2])
+                break
+        this_time = int(float(line[1]))
+
+    except Exception ,e:
+        return (3, "UNKNOWN - invalid output from plugin")
+
+    read_timedif,  read_per_sec  = get_counter("diskstat.read",  this_time, read_bytes_ctr)
+    write_timedif, write_per_sec = get_counter("diskstat.write", this_time, write_bytes_ctr)
+    perfdata = [ ("read", "%dc" % read_bytes_ctr),
+                 ("write", "%dc" % write_bytes_ctr) ]
+    return (0, "OK - reading %.1f MB/s, writing %.1f MB/s (in last %d secs)" %
+            (read_per_sec / 1048576, write_per_sec / 1048576, read_timedif), perfdata)
+
+
+check_info['winperf.diskstat'] = (check_win_diskstat, "Disk IO", 1,  inventory_win_diskstat)
+check_info['winperf.cpuusage'] = (check_win_cpuusage, "CPU Usage", 1, inventory_win_cpuusage)
+
+# Speicher kann man rausziehen aus
+# 4:24: Available Bytes
+# 4:1380 Available KBytes
+# 4:1382 Available MBytes
+# Frage: Wo bekommt man die installierte Menge an Speicher raus
+
+

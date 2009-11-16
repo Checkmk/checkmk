@@ -1,0 +1,30 @@
+title: Measure Disk IO
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check measures the cumulative throughput of 
+ all block (disk) devices of a Linux host. In the current
+ version this check is always OK. There is now way
+ to define levels. This might come in a future release,
+ but is not trivial: A sensible level would have to
+ be matched against an average throughput over a
+ longer period of time, not just over one check cycle.
+
+item:
+ Either {"read"}- for input - or {"write"}- for output.
+
+examples:
+  checks = [
+    ("zbghora12", "diskstat", "read",  None),
+    ("zbghora12", "diskstat", "write", None),
+  ]
+
+perfdata:
+  One variable: the throughput since the last check
+  in in bytes(!) per second. 
+
+inventory:
+  The inventory will automatically find two services:
+  one for {read} and one for {write}.

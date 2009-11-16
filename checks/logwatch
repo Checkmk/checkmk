@@ -1,0 +1,242 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |                     _           _           _                    |
+# |                  __| |_  ___ __| |__  _ __ | |__                 |
+# |                 / _| ' \/ -_) _| / / | '  \| / /                 |
+# |                 \__|_||_\___\__|_\_\_|_|_|_|_\_\                 |
+# |                                   |___|                          |
+# |              _   _   __  _         _        _ ____               |
+# |             / | / | /  \| |__  ___| |_ __ _/ |__  |              |
+# |             | |_| || () | '_ \/ -_)  _/ _` | | / /               |
+# |             |_(_)_(_)__/|_.__/\___|\__\__,_|_|/_/                |
+# |                                            check_mk 1.1.0beta17  |
+# |                                                                  |
+# | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of check_mk 1.1.0beta17.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# Configuration variables in main.mk needed during the actual check
+logwatch_dir = var_dir + '/logwatch'
+logwatch_patterns = { }
+
+# Variables embedded in precompiled checks
+check_config_variables += [ "logwatch_dir" ]
+
+def inventory_logwatch(checkname, info):
+    inventory = []
+    for l in info:
+        line = " ".join(l)
+        if len(line) > 6 and line[0:3] == "[[[" and line[-3:] == "]]]" and ':' not in line:
+            inventory.append((line[3:-3], "", '""'))
+    return inventory
+
+#logwatch_patterns = {
+#    'System': [
+#    ( 'W', 'sshd' ),
+#    ( ['host1', 'host2'], 'C', 'ssh' ), # only applies to certain hosts
+#    ( ['lnx', 'dmz'], ALL_HOSTS, 'C', 'ssh' ), # only applies to host having certain tags
+
+#    ( 'I', '0' )
+#    ],
+#    'Application': [
+#    ( 'W', 'crash.exe' ),
+#    ( 'E', 'ssh' )
+#    ]
+#    }
+
+# Extracts only pattern relevant for current host and item.
+# Constructs simple list of pairs: [ ('W', 'crash.exe'), ('C', 'sshd.*test') ]
+def logwatch_precompile(hostname, item, params):
+    patterns = logwatch_patterns.get(item)
+    params = []
+    if patterns:
+        for entry in patterns:
+            hostlist = None
+            tags = []
+
+            pattern = entry[-1]
+            level = entry[-2]
+
+            if len(entry) >= 3:    # found optional host list
+                hostlist = entry[-3]
+            if len(entry) >= 4:    # found optional host tags
+                tags = entry[-4]
+
+            if hostlist and not \
+                   (hosttags_match_taglist(tags_of_host(hostname), tags) and \
+                    in_extraconf_hostlist(hostlist, hostname)):
+                continue
+
+            params.append((level, pattern))
+    return params
+
+
+def logwatch_reclassify(patterns, text):
+    for level, pattern in patterns:
+        reg = compiled_regexes.get(pattern)
+        if not reg:
+            reg = re.compile(pattern)
+            compiled_regexes[pattern] = reg
+        if reg.search(text):
+            return level
+    return None
+
+# In case of a precompiled check, params contains the precompiled
+# logwatch_patterns for the logfile we deal with. If using check_mk
+# without precompiled checks, the params must be None an will be
+# ignored.
+def check_logwatch(item, params, info):
+    found = False
+    loglines = []
+    for l in info:
+        line = " ".join(l)
+        if line == "[[[%s]]]" % item:
+            found = True
+        elif len(line) > 6 and line[0:3] == "[[[" and line[-3:] == "]]]":
+            if found:
+                break
+            found = False
+        elif found:
+            loglines.append(line)
+
+    # Create directories, if neccessary
+    try:
+        logdir = logwatch_dir + "/" + g_hostname
+        if not os.path.exists(logwatch_dir):
+            os.mkdir(logwatch_dir)
+        if not os.path.exists(logdir):
+            os.mkdir(logdir)
+            if www_group != None:
+                try:
+                    if i_am_root():
+                        import pwd
+                        to_user = pwd.getpwnam(nagios_user)[2]
+                    else:
+                        to_user = -1 # keep user unchanged
+                    os.chown(logdir, to_user, www_group)
+                    os.chmod(logdir, 0775)
+                except Exception, e:
+                    os.rmdir(logdir)
+                    raise MKGeneralException(("User %s cannot chown directory to group id %d: %s. Please make sure "+
+                                             "that %s is a member of that group.") %
+                                             (username(), www_group, e, username()))
+
+    except MKGeneralException:
+        raise
+    except Exception, e:
+        raise MKGeneralException("User %s cannot create logwatch directory: %s" % \
+                                 (username(), e) )
+            
+    logfile = logdir + "/" + item.replace("/", "\\")
+   
+    if len(loglines) > 0 and loglines[0] in [ 'OK', 'WARNING', 'CRITICAL' ]:
+        # --------------------------------------------------------------------
+        # ALTE VERSION DES AGENTEN:
+        # 23.10.2008 fiebig k-h  extend the function to handle nagios state yellow
+        if loglines[0] != "OK" :
+            logarch = file(logfile, "a+")
+            logarch.write(time.strftime("<<<%Y-%m-%d %H:%M:%S>>>\n"))
+            logarch.write("\n".join(loglines) + "\n")
+        
+        if not os.path.exists(logfile) and loglines[0] == "OK":
+            return (0, "OK - no old or new error messages")
+        elif  os.path.exists(logfile) and loglines[0] == "OK":
+            if str(file(logfile).readlines()).count("CRITICAL") > 0 :
+                return (2, "CRIT - error messages present!")
+            else:
+                return (1, "WARN - error messages present!")
+        elif  os.path.exists(logfile) and loglines[0] != "OK":
+            if str(file(logfile).readlines()).count("CRITICAL") > 0 :
+                return (2, "CRIT - error messages present!")
+            else:
+                return (1, "WARN - error messages present!")
+        elif loglines[0] == "WARNING" :
+            return (1, "WARN - error messages present!")
+        elif loglines[0] == "CRITICAL" :
+            return (2, "CRIT - error messages present!")
+        # ENDE ALTE VERSION DES AGENTEN
+        # --------------------------------------------------------------------
+    else:
+        had_old_messages = os.path.exists(logfile)
+        if params:
+            patterns = params # patterns already precompiled
+        else:
+            patterns = logwatch_precompile(g_hostname, item, None)
+        
+        if len(loglines) > 0:
+            worst = 0
+            newloglines = []
+            for line in loglines:
+                level, text = line.split(None, 1)
+                if patterns and level != '.': # do never reclassify informational context messages
+                    newlevel = logwatch_reclassify(patterns, text)
+                    if newlevel != None:
+                        level = newlevel
+                    
+                if   level == 'W': worst = max(worst, 1)
+                elif level == 'C': worst = max(worst, 2)
+                newloglines.append(level + ' ' + text)
+
+            if worst == 1:
+                state = "WARN"
+            elif worst != 0:
+                state = "CRIT"
+            else:
+                state = "OK"
+
+            # Append new logfile lines to archive file. If state is "OK, do not
+            # write anything
+            if worst > 0:
+                try:
+                    logarch = file(logfile, "a+")
+                    logarch.write(time.strftime("<<<%Y-%m-%d %H:%M:%S " + state + ">>>\n"))
+                    logarch.write("\n".join(newloglines) + "\n")
+                except Exception, e:
+                    raise MKGeneralException("User %s cannot create logfile: %s" % \
+                                             (username(), e))
+            else:
+                logfiles = [] # appearently all logfiles reclassified to "I"
+
+        # Determine current state by scanning logarch for status
+        if not had_old_messages and len(loglines) == 0:
+            return (0, "OK - no old or new error messages")
+        elif not had_old_messages and len(loglines) > 0:
+            return (worst, state + " - %d new messages!" % len(newloglines))
+        else:
+            # had old messages. Scan old archive log messages for state
+            logarch = file(logfile)
+            state = "WARN"
+            worst = 1
+            for line in logarch:
+                if line.endswith("CRIT>>>\n"):
+                    state = "CRIT"
+                    worst = 2
+                    break
+            if len(loglines) > 0:
+                return (worst, state + " - some old and %d new messages present!" % len(newloglines))
+            else:
+                return (worst, state + " - error messages present!")
+        
+    
+check_info['logwatch'] = (
+    check_logwatch,
+    "LOG %s",
+    0,
+    inventory_logwatch)
+
+precompile_params['logwatch'] = logwatch_precompile

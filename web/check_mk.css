@@ -1,0 +1,295 @@
+body {
+  background-color: #97a8ab;
+  background-image: url("background.jpg");
+  background-repeat: repeat;
+  background-position: center;
+  margin: 1ex;
+  padding: 0px;
+  font-family: arial, helvetica, sans-serif;
+  font-size: 85%;
+}
+
+table.footer { 
+  width: 100%;
+  border-top: 1px dotted #468;
+  margin-top: 1em;
+  color: #246;
+}
+
+.footer td.left   { text-align: left; }
+.footer td.middle { text-align: center; }
+.footer td.right  { text-align: right; }
+.footer a { color: #246; }
+
+/* tabs ---------------------------------------------------------------------- */
+
+table.tabs td { 
+  vertical-align: bottom;
+  padding: 0px;
+  border: 0px;
+  height: 3em;
+}
+
+table.tabs { 
+  border-bottom: 1px solid black;
+  width: 100%;
+}
+
+input.tab, input.tabactive {
+  -moz-border-radius: 12px 12px 0px 0px;
+  margin-bottom: 0px;
+  color: #000;
+  padding: 0.4ex 1em;
+  border-style: none;
+  vertical-align: top;
+  margin-right: 0.3ex;
+}
+
+input.tab:hover { 
+  padding-bottom: 10px;
+}
+
+input.tabactive { 
+  padding-bottom: 6px;
+  border-bottom-style: none;
+}
+
+table.tabs td.pad { 
+  text-align: right;
+  padding-bottom: 2px;
+}
+
+table.tabs td.pad img { 
+  margin: 0px;
+  padding: 0px;
+}
+
+table.tabs td.pad b { 
+  font-size: 120%;
+  font-weight: bold;
+  color: #246;
+  margin-bottom: 60px;
+}
+
+/* Time of rendering the page in header line */
+table.tabs td.pad b.headtime { 
+  color: black;
+  font-size: 120%;
+  margin-right: 1ex;
+}
+
+
+table#tabs { 
+  margin-bottom: 1ex;
+}
+
+/* table of services -------------------------------------------------------------- */
+
+table.services { 
+  border-spacing: 0px;
+  margin: 0px;
+  padding: 0px;
+  border-collapse: collapse;
+  empty-cells: show;
+  width: 100%;
+}
+
+table.services tr.odd0  { background-color: #eee; } 
+table.services tr.even0 { background-color: #ddd; }
+
+table.services tr.odd1  { background-color: #ffc; } 
+table.services tr.even1 { background-color: #ffa; }
+
+table.services tr.odd2  { background-color: #fcc; } 
+table.services tr.even2 { background-color: #faa; }
+
+table.services tr.odd3  { background-color: #fdc; } 
+table.services tr.even3 { background-color: #fea; }
+
+
+table.services td { 
+  border: 1px solid #bbb;
+  padding: 0.2ex 1ex;
+}
+
+table.services td.host { 
+  border-style: none;
+  font-weight: bold;
+  padding-top: 1ex;
+  padding-left: 0px;
+  font-size: 120%;
+}
+
+td.host b.down { 
+  background-color: red;
+  -moz-border-radius: 0.5ex;
+  border: 2px solid #800;
+  padding: 0px 1ex;
+}
+
+td.host a { 
+  color: black;
+  text-decoration: none;
+}
+
+td.host a:hover { 
+  color: #444;
+  text-decoration: underline;
+}
+
+table.services td.age { 
+  text-align: right;
+  color: #666;
+  white-space: nowrap;
+}
+
+table.services td.agerecent { 
+  text-align: right;
+  font-weight: bold;
+}
+
+td.state0, td.state1, td.state2, td.state3, td.state4 { 
+  text-align: center;
+  font-weight: bold;
+  width: 5ex;
+  font-family: sans-serif;
+}
+
+td.state0 { 
+  background-color: #4a2;
+  color: #0f0;
+}
+
+td.state1 { 
+  background-color: #ff0;
+  color: #000;
+}
+
+td.state2 { 
+  background-color: #f00;
+  color: #fff;
+}
+
+td.state3 { 
+  background-color: #f80;
+  color: #fff;
+}
+
+/* ??? */
+
+.inputerror input { 
+  background-color: #f84;
+}
+
+
+/* forms in general */
+
+h2.formcaption { 
+  font-size: 100%;
+  margin-bottom: 0px;
+}
+
+table.form {
+  padding: 1ex;
+  border-collapse: collapse;
+  empty-cells: show;
+  width: 100%;
+}
+
+table.form td { 
+  vertical-align: top;
+  padding: 0.8ex 1ex;
+}
+
+table.form td.legend { 
+  font-weight: bold;
+  width: 20%;
+  border: 1px solid black;
+}
+
+table.form td.content { 
+  padding-right: 2ex;
+  width: 75%;
+  border: 1px solid black;
+}
+
+/* colors of specific forms */
+
+
+table#filter td.content { 
+  background-image: url("background-gold.jpg");
+  background-repeat: repeat;
+  background-position: center;
+}
+table#filter td.legend, 
+input.tab#filter, 
+input.tabactive#filter    { background-color: #fc0; }
+
+table#displayoptions td.content { 
+  background-image: url("background-brown.jpg");
+  background-repeat: repeat;
+  background-position: center;
+}
+table#displayoptions td.legend, 
+input.tab#displayoptions, 
+input.tabactive#displayoptions    { background-color: #f84; }
+
+
+table#actions td.content { 
+  background-image: url("background-blue.jpg");
+  background-repeat: repeat;
+  background-position: center;
+}
+
+input.tab#results, input.tabactive#results { background-color: #fe6; }
+
+table#actions td.legend, 
+input.tabactive#actions,
+input.tab#actions          { background-color: #589; }
+
+/* input elements in forms */
+
+table.form input.text { 
+  width: 100%;
+}
+
+div.textinputlegend { 
+  font-size: 80%;
+}
+
+input.date, input.time { 
+  padding: 0ex 0.5ex;
+  font-family: monospace;
+}
+
+/* actions */
+div.really, div.success, div.error { 
+  margin: 2em 2em 2em 2em;
+  -moz-border-radius: 1ex;
+  padding: 1em 2em;
+  border-width: 2spx;
+  border-style: solid;
+}
+
+div.really { 
+  background-color: #f88;
+  border-color: #800;
+}
+
+div.really input { 
+  color: fff;
+  font-weight: bold;
+  margin-top: 1em;
+  padding: 0.5ex 2em;
+}
+
+div.success { 
+  background-color: #8f8;
+  border-color: #080;
+}
+
+div.error { 
+  background-color: #f84;
+  border-color: #e40;
+}
+

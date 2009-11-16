@@ -1,0 +1,36 @@
+title: Measure current number of processes / threads
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ Monitor the number of processes and threads. If too many processes
+ and threads are found then the check results in a warning or critical
+ state. The default levels are set to {2000} and {4000}.
+
+inventory:
+ A check of this type is created automatically on each Linux host.
+ The check parameter is set to {threads_default_levels}. If you
+ need individual levels for your hosts, please define this check
+ explicitely in {checks}.
+
+perfdata:
+ On variable: the current number of threads and processes found on 
+ the system.
+
+examples:
+ checks += [
+    # set levels to 500 / 1000 on all hosts with tag "sap"
+    ( ["sap"], ALL_HOSTS, "cpu.threads", None, (500, 1000) ),
+    # Exception for one specific host
+    ( "megahost", "cpu.threads", None, (5000, 8000) ),
+ ]
+
+[parameters]
+warn (int): Number of processes and threads at which a warning level
+ is triggered
+crit (int): Number for a critical state
+
+[configuration]
+threads_default_levels (int, int): Levels used for all checks found
+ by inventory. This variable is preset to {(2000, 4000)}.

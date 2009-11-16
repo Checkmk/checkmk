@@ -1,0 +1,30 @@
+title: Check operational status of network interfaces
+agents: snmp
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check polls the SNMP OID .1.3.6.1.2.1.2.2.1.2 (IF-MIB::ifOperStatus)
+ which is part of the standard SNMP interfaces MIB. It checks network interfaces
+ for their operational status (the link). The link can either be 'up' or 'down'. 
+ The check status is OK if the actual link status is equal to the target status.
+ If the target status is 'up' and the link status is 'down', the check gets
+ CRITICAL. If the link status is 'up' and the target status is 'down', the check
+ gets into WARNING status.
+
+item:
+ A string: the name of the interface as in .1.3.6.1.2.1.2.2.1.2 (IF-MIB::ifDescr). The
+ OID index is not relevant.
+
+inventory:
+ All active interfaces are found and configured. Negative monitoring of
+ unused interfaces is optional.
+
+[parameters]
+targetstatus (string): The target status of the interface, either {"up"} or {"down"}.
+
+[configuration]
+ifoperstatus_monitor_unused (boolean): Determines weather unused ports should
+ be monitored. This has an influence only on inventory. If set to True,
+ it will created checks with target status 'down' for unused ports. The default
+ value is False.

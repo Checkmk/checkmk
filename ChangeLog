@@ -1,0 +1,497 @@
+1.1.0beta16:
+      - Fixed bug in MK Livestatus: StatsGroupBy:
+        didn't work
+
+1.1.0beta15
+      - MK Livestatus supports keep alive
+
+1.1.0beta12:
+      - Fix bug in Multiadmin: Sorting according to
+        service states did not work
+      - Fix two bugs in df_netapp: use 64 bit counters
+        (32 counter wrap at 2TB filesystems) and exclude
+       	snapshot filesystems with size 0 from inventory.
+      - Rudimentary support for monitoring ESX: monitor
+        virtual filesystems with 'vdf' (using normal df
+	check of check_mk) and monitor state of machines 
+	with vcbVmName -s any (new check vmware_state).
+      - Fixed bug in MRPE: check failed on empty performance
+        data (e.g. from check_snmp: there is emptyness
+        after the pipe symbol sometimes)
+      - MK Livestatus is now multithreaded an can
+        handle up to 10 parallel connections (might
+        be configurable in a future version).
+      - mk_logwatch -d now processes the complete logfile
+        if logwatch.state is missing or not including the
+	file (this is easier for testing)
+
+1.1.0beta11:
+      - Added missing float columns to Livestatus.
+      - Livestatus: new header StatsGroupBy:
+
+1.1.0:
+      - First version with "Check_MK Livestatus Module"!
+        setup.sh will compile, install and activate
+	Livestatus per default now. If you do not want
+	this, please disable it by entering <tt>no</tt>,
+	when asked by setup.
+      - Web pages (Multiadmin) now uses MK Livestatus
+        instead of parsing status.dat. This is much faster.
+	And that way you get *live* data.
+      - New Option --paths shows all installation, config
+        and data paths of Check_mk and Nagios
+      - New configuration variable define_hostgroups and
+        define service_groups allow you to automatically
+        create host- and service groups - even with aliases.
+      - Multiadmin has new filter for 'active checks enabled'.
+      - Multiadmin filter for check_command is now a drop down list.
+      - Dummy commands output error message when passive services
+        are actively checked (by accident)
+      - New configuration option service_descriptions allows to
+        define customized service descriptions for each check type
+      - New configuration options extra_host_conf, extra_summary_host_conf
+        and extra_service_conf allow to define arbitrary Nagios options
+	in host and service defitions (notes, icon_image, custom variables,
+        etc)
+      - Fix bug: honor only_hosts also at option -C
+
+
+1.0.39:
+      - New configuration variable only_hosts allows
+	you to limit check_mk to a subset of your
+	hosts (for testing)
+      - New configuration parameter mem_extended_perfdata
+	sends more performance data on Linux (see 
+	check manual for details)
+      - many improvements of Multiadmin web pages: optionally 
+	filter out services which are (not) currently in downtime
+	(host or service itself), optionally (not) filter out summary
+	hosts, show host status (down hosts), new action
+	for removing all scheduled downtimes of a service.
+	Search results will be refreshed every 90 seconds.
+	Choose between two different sorting orders.
+	Multadmin now also supports user authentication
+      - New configuration option define_timeperiods, which
+	allows to create Nagios timeperiod definitions.
+	This also enables the Multiadmin tools to filter
+	out services which are currently not in their
+	notification interval.
+      - NIC check for Linux (netctr.combined) now supports
+	checking of error rates
+      - fc_brocade_port: New possibility of monitoring
+	CRC errors and C3 discards
+      - Fixed bug: snmp_info_single was missing
+        in precompiled host checks
+	
+1.0.38:
+      - New: check_mk's multiadmin tool (Python based
+	web page). It allows mass administration of
+	services (enable/disable checks/notifications, 
+	acknowledgements, downtimes). It does not need
+	Nagios service- or host groups but works with
+	a freeform search.
+      - Remove duplicate <?php from the four new 
+	PNP templates of 1.0.37.
+      - Linux Agent: Kill hanging NFS with signal 9
+	(signal 15 does not always help)
+      - Some improvements in autodetection. Also make
+	debug mode: ./autodetect.py: This helps to
+	find problems in autodetection.
+      - New configuration variables generate_hostconf and
+	generate_dummy_commands, which allows to suppress
+	generation of host definitions for Nagios, or 
+	dummy commands, resp.
+      - Now also SNMP based checks use cache files.
+      - New major options --backup and --restore for
+	intelligent backup and restore of configuration
+	and runtime data
+      - New variable simulation_mode allows you to dry
+	run your Nagios with data from another installation.
+      - Fixed inventory of Linux cpu.loads and cpu.threads
+      - Fixed several examples in checks manpages
+      - Fixed problems in install_nagios_on_lenny.sh
+      - ./setup.sh now understands option --yes: This
+        will not output anything except error messages
+	and assumes 'yes' to all questions
+      - Fix missing 'default.php' in templates for
+	local
+	
+1.0.37:
+      - IMPORTANT: Semantics of check "cpu.loads" has changed.
+	Levels are now regarded as *per CPU*. That means, that
+	if your warning level is at 4.0 on a 2 CPU machine, then 
+	a level of 8.0 is applied.
+      - On check_mk -v now also ouputs version of check_mk
+      - logfile_patterns can now contain host specific entries.
+	Please refer to updated online documentation for details.
+      - Handling wrapping of performance counters. 32 and 64 bit
+	counters should be autodetected and handled correctly.
+	Counters wrapping over twice within one check cycle
+	cannot be handled, though.
+      - Fixed bug in diskstat: Throughput was computed twice
+	too high, since /proc/diskstats counts in sectors (512 Bytes)
+	not in KB
+      - The new configuration variables bulkwalk_hosts and
+	non_bulkwalk_hosts, that allow 	to specify, which hosts 
+	support snmpbulkwalk (which is
+	faster than snmpwalk) and which not. In previos versions,
+	always bulk walk was used, but some devices do not support
+	that.
+      - New configuration variable non_aggregated_hosts allows
+	to exclude hosts generally from service aggregation.
+      - New SNMP based check for Rittal CMC TC 
+	(ComputerMultiControl-TopConcept) Temperature sensors 
+      - Fixed several problems in autodetection of setup
+      - Fixed inventory check: exit code was always 0
+	for newer Python versions.
+      - Fixed optical problem in check manual pages with
+	newer version of less.
+      - New template check_mk-local.php that tries to
+	find and include service name specific templates.
+	If none is found, default.php will be used.
+      - New PNP templates check_mk-kernel.php for major page
+	faults, context switches and process creation
+      - New PNP template for cpu.threads (Number of threads)
+      - Check nfsmounts now detects stale NFS handles and
+	triggers a warning state in that case
+
+1.0.36:
+      - New feature of Linux/UNIX Agent: "MRPE" allows
+	you to call Nagios plugins by the agent. Please
+	refer to online documentation for details.
+      - Fix bug in logwatch.php: Logfiles names containing spaces
+	now work.
+      - Setup.sh now automatically creates cfg_dir if
+	none found in nagios.cfg (which is the case for the
+	default configuration of a self compiled Nagios)
+      - Fix computation of CPU usage for VMS.
+      - snmp_hosts now allows config-list syntax. If you do
+	not define snmp_hosts at all, all hosts with tag
+	'snmp' are considered to be SNMP hosts. That is 
+	the new preferred way to do it. Please refer
+	to the new online documentation.
+      - snmp_communities now also allows config-list syntax
+	and is compatible to datasource_programs. This allows
+	to define different SNMP communities by making use
+	of host tags.
+      - Check ifoperstatus: Monitoring of unused ports is
+	now controlled via ifoperstatus_monitor_unused.
+      - Fix problem in Windows-Agent with cluster filesystems:
+	temporarily non-present cluster-filesystems are ignored by
+	the agent now.
+      - Linux agent now supports /dev/cciss/d0d0... in section
+	<<<diskstat>>>
+      - host configuration for Nagios creates now a variable
+	'name host_$HOSTNAME' for each host. This allows
+	you to add custom Nagios settings to specific hosts
+	in a quite general way.
+      - hosts' parents can now be specified with the
+	variable 'parents'. Please look at online documentation
+	for details.
+      - Summary hosts now automatically get their real host as a
+	parent. This also holds for summary cluster hosts.
+      - New option -X, --config-check that checks your configuration
+	for invalid variables. You still can use your own temporary
+	variables if you prefix them with an underscore.
+	IMPORTANT: Please check your configuration files with
+	this option. The check may become an implicit standard in
+	future versions.
+      - Fixed problem with inventory check on older Python 
+	versions.
+      - Updated install_nagios_on_lenny.sh to Nagios version
+	3.2.0 and fixed several bugs.
+
+1.0.35:
+      - New option -R/--restart that does -S, -H and -C and
+	also restarts Nagios, but before that does a Nagios
+	config check. If that fails, everything is rolled
+	back and Nagios keeps running with the old configuration.
+      - PNP template for PING which combines RTA and LOSS into
+	one graph.
+      - Host check interval set to 1 in default templates.
+      - New check for hanging NFS mounts (currently only
+	on Linux)
+      - Changed check_mk_templates.cfg for PING-only hosts:
+	No performance data is processed for the PING-Check
+	since the PING data is already processed via the
+	host check (avoid duplicate RRDs)
+      - Fix broken notes_url for logwatch: Value from setup.sh
+	was ignored and always default value taken.
+      - Renamed config variable mknagios_port to agent_port
+	(please updated main.mk if you use that variable)
+      - Renamed config variable mknagios_min_version to
+	agent_min_version (update main.mk if used)
+      - Renamed config variable mknagios_autochecksdir to 
+	autochecksdir (update main.mk if used)
+      - configuration directory for Linux/UNIX agents is
+	now configurable (default is /etc/check_mk)
+      - Add missing configuration variable to precompiled
+	checks (fix problem when using clusters)
+      - Improved multipath-check: Inventory now determines
+	current number of paths. And check output is more
+	verbose.
+      - Mark config files as config files in RPM. RPM used
+	to overwrite main.mk on update!
+	
+1.0.34:
+      - Ship agents for AIX and SunOS/Solaris (beta versions).
+      - setup script now autodetects paths and settings of your
+	running Nagios
+      - Debian package of check_mk itself is now natively build
+	with paths matching the prepackaged Nagios on Debian 5.0
+      - checks/df: Fix output of check: percentage shown in output
+	did include reserved space for root where check logic did
+	not. Also fix logic: account reserved space as used - not
+	as avail.
+      - checks/df: Exclude filesystems with size 0 from inventory.
+      - Fix bug with host tags in clusters -> precompile did not
+	work.
+      - New feature "Inventory Check": Check for new services. Setting
+	inventory_check_interval=120 in main.mk will check for new services
+	every 2 hours on each host. Refer to online documentation
+	for more details.
+      - Fixed bug: When agent sends invalid information or check
+	has bug, check_mk now handles this gracefully
+      - Fixed bug in checks/diskstat and in Linux agent. Also
+	IDE disks are found. The inventory does now work correctly
+	if now disks are found.
+      - Determine common group of Apache and Nagios at setup.
+	Auto set new variable www_group which replaces logwatch_groupid.
+	Fix bug: logwatch directories are now created with correct
+	ownership when check_mk is called manually as root.
+      - Default templates: notifications options for hosts and
+	services now include also recovery, flapping and warning
+	events.
+      - Windows agent: changed computation of RAM and SWAP usage
+	(now we assume that "totalPageFile" includes RAM *and*
+	SWAP).
+      - Fix problem with Nagios configuration files: remove
+	characters Nagios considers as illegal from service
+	descriptions.
+      - Processing of performance data (check_icmp) for host
+        checks and PING-only-services now set to 1 in default
+	templates check_mk_templates.cfg.
+      - New SNMP checks for querying FSC ServerView Agent: fsc_fans,
+	fsc_temp and fsc_subsystems. Successfully tested with agents
+	running	on Windows and Linux.
+      - RPM packaged agent tested to be working on VMWare ESX 4.0 
+	(simply install RPM package with rpm -i ... and open port 
+	in firewall with "esxcfg-firewall -o 6556,tcp,in,check_mk")
+      - Improve handling of cache files: inventory now uses cache
+	files only if they are current and if the hosts are not
+	explicitely specified.
+	
+1.0.33:
+      - Made check_mk run on Python 2.3.4 (as used in CentOS 4.7
+	und RedHat 4.7). 
+      - New option -M that prints out manual pages of checks.
+	Only a few check types are documented yet, but more will
+	be following.
+      - Package the empty directory /usr/lib/check_mk_agent/plugins
+	and ../local into the RPM and DEB package of the agent
+      - New feature: service_dependencies. check_mk lets you comfortably
+	create Nagios servicedependency definitions for you and also
+	supports them by executing the checks in an optimal order.
+      - logwatch.php: New button for hiding the context messages.
+	This is a global setting for all logfiles and its state is
+	stored in a cookie.
+	
+1.0.32:
+      - IMPORTANT: Configuration variable datasource_programs is now
+        analogous to that of host_groups. That means: the order of
+        program and hostlist must be swapped!
+      - New option --fake-dns, useful for tests with non-existing
+	hosts.
+      - Massive speed improvement for -S, -H and -C
+      - Fixed bug in inventory of clusters: Clustered services where
+	silently dropped (since introduction of host tags). Fixed now.
+      - Fixed minor bug in inventory: Suppress DNS lookup when using
+	--no-tcp
+      - Fixed bug in cluster handling: Missing function strip_tags()
+	in check_mk_base.py was eliminated.
+      - Changed semantics of host_groups, summary_host_groups,
+	host_contactgroups, and summary_host_groups for clusters: 
+	Now the cluster names will be relevant, not
+	the names of the nodes. This allows the cluster hosts to
+	have different host/contactgroups than the nodes. And it is more
+	consistent with other parts of the configuration.
+      - Fixed bug: datasource_programs on cluster nodes did not work
+	when precompiling
+
+1.0.31:
+      - New option -D, --dump that dumps all configuration information
+	about one, several or all hosts
+	New config variables 'ignored_checktypes' and 'ignored_services',
+        which allow to include certain checktypes in general or
+        some services from some hosts from inventory
+      - Config variable 'clustered_services' now has the same semantics
+	as ignored_checktypes and allows to make it host dependent.
+      - Allow magic tags PHYSICAL_HOSTS, CLUSTER_HOSTS and ALL_HOSTS at
+	all places, where lists of hosts are expected (except checks).
+	This fixes various problems that arise when using all_hosts at
+	those places:
+	  * all_hosts might by changed by another file in conf.d
+	  * all_hosts does not contain the cluster hosts
+      - Config file 'final.mk' is read after all other config files -
+	if it exists. You can put debug code there that prints the
+	contents of your variables.
+      - Use colored output only, if stdout is a tty. If you have
+	problems with colors, then you can pipe the output
+	through cat or less
+      - Fixed bug with host tags: didn't strip off tags when
+	processing configuration lists (occurs when using
+	custom host lists)
+      - mk_logwatch is now aware of inodes of logfiles. This
+	is important for fast rotating files: If the inode
+	of a logfile changes between two checks mk_logwatch
+	assumes that the complete content is new, even if
+	the new file is longer than the old one.
+      - check_mk makes sure that you do not have duplicate
+	hosts in all_hosts or clusters.
+
+1.0.30:
+      - Windows agent now automatically monitors all existing
+	event logs, not only "System" and "Application".
+
+1.0.29:
+      - Improved default Nagios configuration file:
+	added some missing templates, enter correct URLs
+	asked at setup time.
+      - IMPORANT: If you do not use the new default 
+	Nagios configuration file you need to rename
+	the template for aggregated services (summary
+	services) to check_mk_summarizes (old name
+	was 'check_mk_passive-summary'). Aggregated
+	services are *always* passive and do *never*
+	have performance data.
+      - Hopefully fixed CPU usage output on multi-CPU
+	machines
+      - Fixed Problem in Windows Agent: Eventlog monitoring
+	does now also work, if first record has not number 1
+	(relevant for larger/older eventlogs)
+      - Fixed bug in administration.html: Filename for Nagios
+	must be named check_mk.cfg and *not* main.mk. Nagios
+	does not read files without the suffix .cfg. 
+      - magic factor for df, that allows to automatgically 
+        adapt levels for very big or very small filesystems.
+      - new concept of host tags simplyfies configuration.
+      - IMPORTANT: at all places in the configuration where
+	lists of hosts are used those are not any longer
+	interpreted as regular expressions. Hostnames
+	must match exactly. Therefore the list [ "" ] does
+	not any longer represent the list of all hosts.
+	It is a bug now. Please write all_hosts instead
+	of [ "" ]. The semantics for service expressions
+	has not changed.
+      - Fixed problem with logwatch.php: Begin with
+	<?php, not with <?. This makes some older webservers
+	happy.
+      - Fixed problem in check ipmi: Handle corrupt output
+	from agent
+      - Cleaned up code, improved inline documentation
+      - Fixed problem with vms_df: default_filesystem_levels,
+	filesystem_levels and df magic number now are used
+	for df, vms_df and df_netapp together. Works now also
+	when precompiled.
+	
+1.0.28:
+      - IMPORTANT: the config file has been renamed from
+	check_mk.cfg to main.mk. This has been suggested
+	by several of my customers in order to avoid 
+	confusion with Nagios configuration files. In addition,
+	all check_mk's configuration file have to end in
+	'.mk'. This also holds for the autochecks. The 
+	setup.sh script will automatically rename all relevant
+	files. Users of RPM or DEB installations have to remove
+	the files themselves - sorry.
+      - Windows agent supports eventlogs. Current all Warning
+        and Error messages from 'System' and 'Application' are
+        being sent to check_mk. Events can be filtered on the
+	Nagios host.
+      - Fixed bug: direct RRD update didn't work. Should now.
+      - Fixed permission problems when run as root.
+      - Agent is expected to send its version in <<<check_mk>>>
+	now (not any longer in <<<mknagios>>>
+      - Fixed bug in Windows agent. Performance counters now output
+	correct values
+      - Change checks/winperf: Changed 'ops/sec' into MB/s.
+	That measures read and write disk throughput
+	(now warn/crit levels possible yet)
+      - new SNMP check 'ifoperstatus' for checking link
+        of network interfaces via SNMP standard MIB
+      - translated setup script into english
+      - fixed bug with missing directories in setup script
+      - made setup script's output nicer, show version information
+      - NEW: mk_logwatch - a new plugin for the linux/UNIX agent
+	for watching logfiles
+      - Better error handling with Nagios pipe
+      - Better handling of global error: make check_mk return
+	CRIT, when no data can retrieved at all.
+      - Added missing template 'check_mk_pingonly' in sample
+	Nagios config file (is needed for hosts without checks)
+	
+1.0.27:
+      - Ship source code of windows agent
+      - fix several typos
+      - fix bug: option --list-hosts did not work
+      - fix bug: precompile "-C" did not work because
+	of missing extension .py
+      - new option -U,--update: It combines -S, -H and
+	-U and writes the Nagios configuration into a
+	file (not to stdout).
+      - ship templates for PNP4Nagios matching most check_mk-checks.
+	Standard installation path is /usr/share/check_mk/pnp-templates
+	
+1.0.26:
+      -	Changed License to GNU GPL Version 2
+      - modules check_mk_admin and check_mk_base are both shipped
+	uncompiled.
+      - source code of windows agent togehter with Makefile shipped
+	with normal distribution
+      - checks/md now handles rare case where output of /proc/mdstat
+	shows three lines per array
+
+1.0.25:
+      - setup skript remembers paths
+
+1.0.24:
+      - fixed bug with precompile: Version of Agent was always 0
+
+1.0.23:
+      - fixed bug: check_config_variables was missing in precompiled
+	files
+      - new logwatch agent in Python plus new logwatch-check that
+	handles both the output from the old and the new agent
+
+1.0.22:
+      - Default timeout for TCP transfer increased from 3.0 to 60.0
+      - Windows agent supports '<<<mem>>>' that is compatible with Linux
+      - Windows agents performance counters output fixed
+      - Windows agent can now be cross-compiled with mingw on Linux
+      - New checktype winperf.cpuusage that retrieves the percentage
+	of CPU usage from windows (still has to be tested on Multi-CPU
+	machine)
+      - Fixed bug: logwatch_dir and logwatch_groupid got lost when
+	precompiling. 
+      - arithmetic for CPU usage on VMS multi-CPU machines changed
+
+1.0.21:
+      - fixed bug in checks/df: filesystem levels did not work
+	with precompiled checks
+
+1.0.20:
+      - new administration guide in doc/
+      - fixed bug: option -v now works independent of order
+      - fixed bug: in statgrab_net: variable was missing (affected -C)
+      - fixed bug: added missing variables, imported re (affected -C)
+      - check ipmi: new option ipmi_summarize: create only one check for all sensors
+      - new pnp-template for ipmi summarized ambient temperature
+ 
+1.0.19:
+      - Monitoring of Windows Services
+      - Fixed bug with check-specific default parameters
+      - Monitoring of VMS (agent not included yet)
+      - Retrieving of data via an external programm (e.g. SSH/RSH)
+      - setup.sh does not overwrite check_mk.cfg but installs
+	the new default file as check_mk.cfg-1.0.19
+      - Put hosts into default hostgroup if none is configured

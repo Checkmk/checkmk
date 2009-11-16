@@ -1,0 +1,36 @@
+title: Check CPU load
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check measures and checks the averaged CPU load. The values
+ for 1, 5 and 15 minute average are sent, although the PNP template
+ shipped with check_mk only displays the 1 and 15 min average load.
+
+examples:
+ # Set default levels to a load of 4 and 8 per CPU
+ cpuload_default_levels = (4.0, 8.0).
+   
+ checks = [
+    # Use levels 4 per CPU (warning) and 8 per CPU (critical)
+    # on all hosts with the tag "linux"
+    (["linux"], ALL_HOSTS, "cpu.loads", (4, 8)),
+ ]
+perfdata:
+  Three values: The load average for 1, 5 and 15 minutes.
+
+inventory:
+  Automatically.
+
+[parameters]
+warning (int): 15 minute average load {per processor} at which a
+  warning is triggered. If you set this value to 2 on a 16 CPU
+  machine, then a warning will be reached at a load of 32.
+critical (int): 15 minute average load per processor at which
+  a critical state is triggered.
+
+[configuration]
+cpuload_default_levels (int, int): A pair of floats or integers: The default
+ levels. These levels are used for inventorized checks. This variable
+ is preset to {(5, 10)}

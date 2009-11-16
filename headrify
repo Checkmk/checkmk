@@ -1,0 +1,107 @@
+#!/bin/bash
+VERSION=$(sed -rn 's/^VERSION[[:space:]]*= *([0-9]+\.[0-9]+\.[0-9a-z]+).*/\1/p' < Makefile)
+
+# figlet -f small macht einen kleine Font
+header ()
+{
+    echo '+------------------------------------------------------------------+'
+
+    figlet -w 66 -cf small "check_mk   $VERSION" | tr ' ' @  | sed '$d' | \
+	while read -r line
+      do
+      printf "|%-66s|\n" "${line//@/ }"
+    done
+    printf "|%44s%-22s|\n" "" "check_mk $VERSION"
+    echo '|                                                                  |'
+    echo '| Copyright Mathias Kettner 2009             mk@mathias-kettner.de |'
+    echo '+------------------------------------------------------------------+'
+
+    cat <<EOF
+
+This file is part of check_mk $VERSION.
+The official homepage is at http://mathias-kettner.de/check_mk.
+
+check_mk is free software;  you can redistribute it and/or modify it
+under the  terms of the  GNU General Public License  as published by
+the Free Software Foundation in version 2.  check_mk is  distributed
+in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+ails.  You should have  received  a copy of the  GNU  General Public
+License along with GNU Make; see the file  COPYING.  If  not,  write
+to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+Boston, MA 02110-1301 USA.
+EOF
+}
+
+headrify ()
+{
+  echo "$file..."
+  PERMISSIONS=$(stat -c %a "$file")
+  TMP=$(mktemp .headrify.new.XXXXXX)
+  suffix="${file##*.}"
+  suffix="${suffix##*/}"
+  headline="$(head -n1 $file)"
+  if [ "${headline:0:9}" = "#!/bin/sh" ] ; then
+      comment="# "
+      bangpath="#!/bin/sh"
+  elif [ "${headline:0:11}" = "#!/bin/bash" ] ; then
+      comment="# "
+      bangpath="#!/bin/bash"
+  else
+      bangpath=""
+      case "$suffix" in
+          php)    comment="# " ; bangpath="<?php"; ;;
+          h|c|cc) comment="// " ;;
+          conf|cfg)   comment="# " ;;
+          spec|Makefile) comment="# " ;;
+          py|*)     comment="# "  ; bangpath="#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-"; ;;
+      esac
+  fi
+
+  : > $TMP
+  if [ -n "$bangpath" ] ; then echo "$bangpath" > $TMP ; fi
+  header | sed "s@^@$comment@" >> $TMP
+  echo >> $TMP
+  firstline="$(head -n1 < $file)"
+  secondline="$(sed -n 2p < $file)"
+  thirdline="$(sed -n 3p < $file)"
+  shouldbe="$comment+---------------------------------------------------"
+  if [ "${firstline:0:20}" = "${shouldbe:0:20}"  \
+       -o "${secondline:0:20}" = "${shouldbe:0:20}" \
+       -o "${thirdline:0:20}" = "${shouldbe:0:20}" ] ; then
+      sed '0,/^.*Boston, MA 02110-1301 USA.$/d' $file | sed 1d >> $TMP
+  else
+      cat $file >> $TMP
+  fi
+  mv $TMP $file
+  chmod $PERMISSIONS "$file"
+}
+
+echo "Headrifying to version $VERSION"
+
+if [ "$#" -gt 0 ] ; then
+  for file in "$@"
+  do
+    headrify "$file"
+  done
+else
+  { find -not -type l -and \( \
+      -name "Makefile" -or \
+      -name "*.h" -or \
+      -name "*.cc" -or \
+      -name "*.c" -or \
+      -name "*.py" -or \
+      -name "*.php" -or \
+      -name "*.sh" -or \
+      -name "*.spec" \) ; \
+    rm -f checks/*~ ; ls checks/* ; echo agents/* | tr ' ' \\n | grep -vx agents/waitmax | fgrep -v windows | fgrep -v .exe ; ls agents/windows/*.cc ; echo agents/windows/Makefile ; } \
+	| grep -v /Privat/ | grep -v livestatus/nagios/ | grep -vx '' | \
+  while read file
+  do
+    echo headrify "$file" &
+  done
+fi
+sleep 0.1
+wait

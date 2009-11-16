@@ -1,0 +1,34 @@
+title: Check for running process
+agents: linux, windows, aix, solaris, vms
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check looks into the list of then current running processes for
+ those matching a certain name or regular expression. The number of
+ matching processes is matched against warning and critical levels.
+
+item:
+ A user definable service description for Nagios.
+ That description must be unique within each host.
+ Changing the description will make Nagios think that
+ it is another service.
+
+examples:
+ checks += [
+   # make sure exactly one ntpd is running
+   ( "somehost", "ps", "NTP", ( "/usr/sbin/ntpd", 1, 1, 1, 1 ) ),
+   # command lines containing "prefork" should be in range 20 ... 30
+   ( "somehost", "ps", "prefork" ( "~.*prefork", 15, 20, 30, 35 ) ),
+   # no process containing "sshd" should exist
+   ( "somehost", "ps", "SSHD" ( "~.*sshd", 0, 0, 0, 0 ) )
+ ]
+[parameters]
+procname (string): Process specification. This can either be the name of a process as ouput by the agent. It must exactly match the first column of the agents output. Or - if the string is beginning with a tilde - it is interpreted
+ as a regular expression that must match the beginning of the process line as output by the agent. For the Linux/UNIX agents this allows you to match specific
+ command line arguments of the process.
+warnmin (int): Minimum number of matched process for WARNING state
+okmin (int): Minimum number for OK state
+okmax (int): Maximum number for OK state
+warnmax (int): Maximum number for WARNING state. Counts less than warnmin or greater than
+ warnmax are CRITICAL

@@ -1,0 +1,202 @@
+#!/bin/bash
+# +------------------------------------------------------------------+
+# |                     _           _           _                    |
+# |                  __| |_  ___ __| |__  _ __ | |__                 |
+# |                 / _| ' \/ -_) _| / / | '  \| / /                 |
+# |                 \__|_||_\___\__|_\_\_|_|_|_|_\_\                 |
+# |                                   |___|                          |
+# |              _   _   __  _         _        _ ____               |
+# |             / | / | /  \| |__  ___| |_ __ _/ |__  |              |
+# |             | |_| || () | '_ \/ -_)  _/ _` | | / /               |
+# |             |_(_)_(_)__/|_.__/\___|\__\__,_|_|/_/                |
+# |                                            check_mk 1.1.0beta17  |
+# |                                                                  |
+# | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of check_mk 1.1.0beta17.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+export MK_LIBDIR="/to/be/changed"
+export MK_CONFDIR="/to/be/changed"
+
+# All executables in PLUGINSDIR will simply be executed and their
+# ouput appended to the output of the agent. Plugins define their own
+# sections and must output headers with '<<<' and '>>>'
+PLUGINSDIR=$MK_LIBDIR/plugins
+
+# All executables in LOCALDIR will by executabled and their
+# output inserted into the section <<<local>>>. They must
+# *not* output a section header. A local extension may output
+# zero, one or several lines. Each line must be in the form
+# EXITCODE CHECK_NAME PERFDATA CHECK_OUTPUT
+# EXITCODE is 0, 1, 2 or 3
+# CHECK_NAME will be used as Nagios's service_descriptions and
+# must be unique for this host
+# PERFDATA is optional performance data in the standard Nagios
+# format for variable=value;warn;crit;min;max. You can send
+# only one variable currently. If you do not want to send 
+# performance data output a single dash instead
+# CHECK_OUTPUT will be used by Nagios as the check's output
+# EXITCODE, CHECK_NAME and PERFDATA must not contain spaces
+# or tabs. CHECK_OUTPUT may contain spaces and tabs
+LOCALDIR=$MK_LIBDIR/local
+
+# close standard input (for security reasons) and stderr
+exec <&- 2>/dev/null
+
+echo '<<<check_mk>>>'
+echo Version: 1.1.0beta17
+
+echo '<<<mknagios>>>'
+echo Version: 1.1.0beta17
+
+# Partitionen (-P verhindert Zeilenumbruch bei langen Mountpunkten)
+# Achtung: NFS-Mounts werden grundsaetzlich ausgeblendet, um
+# Haenger zu vermeiden. Diese sollten ohnehin besser auf dem
+# Server, als auf dem Client ueberwacht werden.
+echo '<<<df>>>'
+df -PTlk -x smbfs -x tmpfs -x cifs -x iso9660 | sed 1d
+# VMWare shows its own filesystems with 'vdf'. Just one
+# problem: it outputs not 7 but only 6 columns
+if which vdf > /dev/null
+then
+   vdf -P | grep ^/vmfs/volumes | sed 's/ / vmfs /'
+fi
+
+# Check NFS mounts by accessing them with stat -f (System
+# call statfs()). If this lasts more then 2 seconds we
+# consider it as hanging. We need waitmax.
+
+if type waitmax >/dev/null
+then
+    echo '<<<nfsmounts>>>'
+    sed -n '/ nfs /s/[^ ]* \([^ ]*\) .*/\1/p' < /proc/mounts |
+        while read MP
+	do
+	    waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %S" "$MP" || \
+		echo "$MP hanging 0 0 0 0"
+	done
+fi
+
+
+# Prozesse ohne Kernelprozesse
+echo '<<<ps>>>'
+ps ax -o command | sed -e 1d -e '/^\[/d'
+
+# Speicherauslastung
+echo '<<<mem>>>'
+cat /proc/meminfo
+
+# Load und Anzahl Prozesse
+echo '<<<cpu>>>'
+echo "$(cat /proc/loadavg) $(grep bogomips < /proc/cpuinfo | wc -l)"
+
+# Network interfaces (Link, Autoneg, Speed)
+# This requires ethtool
+if which ethtool > /dev/null
+then
+  echo '<<<netif>>>'
+  for eth in $(cat /proc/net/dev | sed -rn -e 's/[[:space:]]*//g' -e  '/ *([^:]):.*/s//\1/p' | egrep -vx '(lo|sit.*)')
+  do
+    echo $eth $(ethtool $eth | egrep '(Speed|Duplex|Link detected|Auto-negotiation):' | cut -d: -f2 | sed 's/ *//g')
+  done
+fi
+
+# Platten- und RAID-Status von LSI-Controlleren, falls vorhanden
+if which cfggen > /dev/null ; then
+   echo '<<<lsi>>>'
+   cfggen 0 DISPLAY | egrep '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' | sed -e 's/ *//g' -e 's/:/ /'
+fi
+
+# Multipathgeraete
+if which multipath >/dev/null ; then
+    echo '<<<multipath>>>'
+    multipath -l
+fi
+
+# Soft-RAID
+echo '<<<md>>>'
+cat /proc/mdstat
+
+# Performancecounter Platten
+echo '<<<diskstat>>>'
+date +%s
+egrep ' ([sh]d[a-z]*|cciss/c[0-9]+d[0-9]+) ' < /proc/diskstats
+
+# Performancecounter Kernel
+echo '<<<kernel>>>'
+date +%s
+cat /proc/vmstat /proc/stat
+
+# Statistik der Netzwerkgeraete (Pakete, Kollisionen, etc)
+echo '<<<netctr>>>'
+# Genauen Zeitstempel einfuegen, da Counter von Zeit abhaengen
+date +%s
+sed -e 1,2d -e 's/:/ /g' < /proc/net/dev
+
+# IPMI-Daten (Luefter, CPU, Temperatur, etc)
+if which ipmitool >/dev/null ; then
+    echo '<<<ipmi>>>'
+    # Transform output from |-separated into ' '-separated,
+    # drop lines with no data (e.g. from non-present CPUs)
+    # Columns: name value status unrec_low crit_low noncrit_low noncrit_high crit_high unrec_high
+    # Status: ok, nc (NonCritical=Warning), ??
+    ipmitool sensor list \
+        | grep -v 'command failed' \
+        | sed -e 's/ *| */|/g' -e "s/ /_/g" -e 's/_*$//' -e 's/|/ /g' \
+        | egrep -v '^[^ ]+ na ' \
+        | grep -v ' discrete '
+fi
+
+if which vcbVmName ; then
+   echo '<<<vmware_state>>>'
+   vcbVmName -s any
+fi
+
+
+# Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
+if cd $PLUGINSDIR
+then
+  for skript in $(ls)
+  do
+    if [ -x "$skript" ] ; then
+        ./$skript
+    fi
+  done
+fi
+
+# Lokale Einzelchecks
+echo '<<<local>>>'
+if cd $LOCALDIR
+then
+  for skript in $(ls)
+  do
+    if [ -x "$skript" ] ; then
+        ./$skript
+    fi
+  done
+fi
+
+# MK's Remote Plugin Executor
+if [ -e "$MK_CONFDIR/mrpe.cfg" ]
+then
+    echo '<<<mrpe>>>'
+    grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
+    while read descr cmdline
+    do
+        OUTPUT=$($cmdline)
+        echo "$descr $? $OUTPUT"
+    done
+fi

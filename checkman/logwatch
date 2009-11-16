@@ -1,0 +1,79 @@
+title: Check logfiles for relevant new messages
+agents: linux, windows, aix, solaris
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check processes the output of those agents
+ having the logwatch extension. The windows agent
+ has this extension built in. The logwatch extension
+ of the Linux/UNIX agents needs a configuration file
+ that lists all relevant logfiles and lists possible
+ log lines that should result in warning or critical
+ state. The windows agents does not need any configuration
+ but sends all log files in the Windows event log.
+ It uses the warning/error classification of Windows.
+
+ Relevant log messages found by the agent are stored
+ locally into a text file. The check is critical, if
+ at least one new {or old} log message exists that
+ is classified as critical. If at least one warning
+ message exists but no critical, the check results
+ in a warning state.
+
+ The only way to bring the state back to OK is to
+ delete the text file with the stored log messages.
+ This is stored below {/var/lib/check_mk/logwatch}.
+ Usually the logwatch webpage is used to browse and
+ delete the messages. Please refer to the online
+ documentation of check_mk for more details about logwatch.
+
+item:
+ The name of the logfile. For Linux/UNIX this is
+ the complete absolute path name of the logfile.
+ For Windows this is the name as shown in the 
+ windows event log, for example {Application} (case
+ sensitive!).
+
+inventory:
+ All logfiles sent by the agent are automatically
+ inventorized. Please use standard inventory configuration
+ methods if you want to ignore certain log files.
+
+
+examples:
+  logwatch_patterns = {
+     "System":             [ ('W', "crash"), 
+                             ('I', "svchost") ],
+     "/var/log/messages":  [ ( ['test'], ALL_HOSTS, 'I', "sshd") ]
+  }
+
+[parameters]
+patterns (list): The parameter can be used to reclassify
+ log messages sent by the agent. You can assign one of
+ the three levels {'I'} (ignore), {'W'} (warning) or
+ {'C'} (critical) to each message. It is only possible
+ to reclassify messages with an original level of {W} or {C}.
+ Each entry of the list is a pair of the new level and an
+ extended regular expression searched in the log line.
+ Please note, that because logwatch checks are usually
+ inventorized, it is easier to use the global configuration variable
+ {logwatch_patterns} instead of explicit check parameters.
+ Example: {[ ('I', "sshd"), ('C', "foo.*bar") ]}
+
+[configuration]
+logwatch_patterns (dict): A dictionary for reclassifying
+ the level of certain messages. This is especially useful
+ for the Window agent, since that uses the pre-classification
+ of Windows and might not meet your needs. The key of each entry is the name
+ of a logfile (see {item}). The value of each entry is
+ a list of pairs as described in {parameters}. It is also
+ possible to restrict entries to single hosts or groups
+ of hosts by prepending list of host and host tags to the pairs,
+ as seen in the example.
+
+logwatch_dir (string): Directory where log messages are
+ stored. The default value is {/var/lib/check_mk/logwatch}.
+ For each host a subdirectory is created. The name of the 
+ files therein are the names of the logfiles with slashes
+ replaced by backslashes.

@@ -1,0 +1,79 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |                     _           _           _                    |
+# |                  __| |_  ___ __| |__  _ __ | |__                 |
+# |                 / _| ' \/ -_) _| / / | '  \| / /                 |
+# |                 \__|_||_\___\__|_\_\_|_|_|_|_\_\                 |
+# |                                   |___|                          |
+# |              _   _   __  _         _        _ ____               |
+# |             / | / | /  \| |__  ___| |_ __ _/ |__  |              |
+# |             | |_| || () | '_ \/ -_)  _/ _` | | / /               |
+# |             |_(_)_(_)__/|_.__/\___|\__\__,_|_|/_/                |
+# |                                            check_mk 1.1.0beta17  |
+# |                                                                  |
+# | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of check_mk 1.1.0beta17.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# DSA101  0.77 400.00 0.07 0.93 16271539.00 35556389
+# DSA102  0.00 400.00 0.00 0.00 86651840.00 106669167
+# DSA103  0.00 400.00 0.00 0.00 97962784.00 106669167
+# DSA104  0.30 400.00 0.00 0.00 75934488.00 106669167
+def inventory_vms_df(checkname, info):
+    return [ ( line[0], '""', 'filesystem_default_levels') for line in info ]
+    
+def check_vms_df(item, params, info):
+    try:
+      for line in info:
+        if line[0] == item:
+            io_ops_total_per_sec = float(line[1])
+            read_perc            = float(line[2])
+            disk_util            = float(line[3])
+            response_time_ms     = float(line[4])
+            blocks_free          = float(line[5])
+            blocks_total	 = float(line[6]) # one block is 512 bytes
+
+            free_mb = blocks_free / 2048
+            size_mb = blocks_total / 2048
+            size_gb = size_mb / 1024.0
+            used_mb = size_mb - free_mb
+            used_perc = 100 * (used_mb / size_mb)
+
+            warn_mb, crit_mb, levelstext = get_filesystem_levels(g_hostname, item, size_gb, params)
+
+
+            perfdata = [
+              (item, str(used_mb) + 'MB', warn_mb, crit_mb, 0, size_mb),
+              ('iops', "%.2f" % io_ops_total_per_sec )
+            ]             
+            
+            used_txt = "%d%% used (%.2f of %.2f GB)" % (used_perc, used_mb/1024, size_mb/1024)
+            if used_mb > crit_mb:
+                return (2, "CRIT - %s %s" % (used_txt, levelstext), perfdata)
+            elif used_mb >= warn_mb:
+                return (1, "WARN - %s %s" % (used_txt, levelstext), perfdata)
+            else:
+                return (0, "OK - %s %s" % (used_txt, levelstext), perfdata)
+            
+    except 1:
+        return (3, "Invalid output from plugin")
+        
+    return (3, "Disk %s not found" % (item,))
+
+check_info['vms_df']        = ( check_vms_df, "fs_%s", 1, inventory_vms_df )
+precompile_params['vms_df'] = precompile_filesystem_levels

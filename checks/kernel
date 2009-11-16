@@ -1,0 +1,125 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |                     _           _           _                    |
+# |                  __| |_  ___ __| |__  _ __ | |__                 |
+# |                 / _| ' \/ -_) _| / / | '  \| / /                 |
+# |                 \__|_||_\___\__|_\_\_|_|_|_|_\_\                 |
+# |                                   |___|                          |
+# |              _   _   __  _         _        _ ____               |
+# |             / | / | /  \| |__  ___| |_ __ _/ |__  |              |
+# |             | |_| || () | '_ \/ -_)  _/ _` | | / /               |
+# |             |_(_)_(_)__/|_.__/\___|\__\__,_|_|/_/                |
+# |                                            check_mk 1.1.0beta17  |
+# |                                                                  |
+# | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of check_mk 1.1.0beta17.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# item is one of the keys in /proc/stat or /proc/vmstat
+def check_kernel(item, params, info):
+    try:
+       this_time = int(info[0][0])
+    except:
+        return (3, "UNKNOWN - no output from mknagios agent")
+        
+    hits = [ line[1] for line in info[1:] if line[0] == item ]
+    if len(hits) != 1:
+        return (3, "UNKNOWN - invalid item '%s'" % (item,))
+    
+    this_val = int(hits[0])
+    timedif, per_sec = get_counter("kernel." + item, this_time, this_val)
+    perfdata = [ (item, "%dc" % this_val) ]
+    return (0, "OK - %.0f/s (in last %d secs)" % (per_sec, timedif), perfdata)
+
+
+def inventory_cpu_utilization(checktype, info):
+   try:
+      for x in info:
+         if x[0] == 'cpu':
+            return [(None, "", "None")]
+   except:
+      pass
+   return []
+
+# Columns of cpu usage /proc/stat:
+# - cpuX: number of CPU or only 'cpu' for aggregation
+# - user: normal processes executing in user mode
+# - nice: niced processes executing in user mode
+# - system: processes executing in kernel mode
+# - idle: twiddling thumbs
+# - iowait: waiting for I/O to complete
+# - irq: servicing interrupts
+# - softirq: servicing softirqs
+# - steal: involuntary wait
+def check_cpu_utilization(item, params, info):
+    global g_counters
+    # Look for entry beginning with "cpu"
+    f = [ l for l in info if l[0] == "cpu" ]
+    if len(f) != 1:
+        return (3, "UNKNOWN - invalid output from plugin")
+    line = f[0]
+    if len(line) < 8:
+        return (3, "UNKOWN - invalid 'cpu' line in plugin output")
+    
+    # line contains now the following columns:
+    # 'cpu' user nice system idle wait hw-int sw-int (steal ...)
+    # convert number to int
+    values = [ int(x) for x in line[1:8] ]
+    this_time = int(time.time())
+    diff_values = []
+    n = 0
+    for v in values:
+        n += 1
+        countername = "cpu.util.%d" % n
+        last_time, last_val = g_counters.get(countername, (0, 0))
+        diff_values.append(v - last_val)
+        g_counters[countername] = (this_time, v)
+        
+    sum_jiffies = sum(diff_values[0:7]) # do not account for steal!
+    if sum_jiffies == 0:
+        return (0, "OK - too short interval")
+    user        = diff_values[0] + diff_values[1] # add user + nice
+    system      = diff_values[2]
+    wait        = diff_values[4]
+    user_perc   = 100.0 * float(user)   / float(sum_jiffies)
+    system_perc = 100.0 * float(system) / float(sum_jiffies)
+    wait_perc   = 100.0 * float(wait)   / float(sum_jiffies)
+    perfdata = [ 
+          ( "user",   "%.3f" % user_perc ), 
+          ( "system", "%.3f" % system_perc ), 
+          ( "wait",   "%.3f" % wait_perc ) ]
+
+    # You may set a warning/critical level on the io wait
+    # percentage. This can be done by setting params to
+    # a pair of (warn, crit)
+    result = (0, "OK")
+    try:
+       warn, crit = params
+       if wait_perc >= crit:
+          result = (2, "CRIT (wait too large)")
+       elif wait_perc >= warn:
+          result = (1, "WARNING (wait too large)")
+    except:
+       pass
+    
+    return (result[0], result[1] + " - user: %2.0f%%, system: %2.0f%%, wait: %2.0f%%" %
+            (user_perc, system_perc, wait_perc), perfdata)
+
+check_info['kernel.util'] = (check_cpu_utilization, "CPU utilization", 1,  inventory_cpu_utilization)
+check_info['kernel'] = (check_kernel, "Kernel %s", 1,  no_inventory_possible)
+

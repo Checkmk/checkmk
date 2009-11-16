@@ -1,0 +1,134 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |                     _           _           _                    |
+# |                  __| |_  ___ __| |__  _ __ | |__                 |
+# |                 / _| ' \/ -_) _| / / | '  \| / /                 |
+# |                 \__|_||_\___\__|_\_\_|_|_|_|_\_\                 |
+# |                                   |___|                          |
+# |              _   _   __  _         _        _ ____               |
+# |             / | / | /  \| |__  ___| |_ __ _/ |__  |              |
+# |             | |_| || () | '_ \/ -_)  _/ _` | | / /               |
+# |             |_(_)_(_)__/|_.__/\___|\__\__,_|_|/_/                |
+# |                                            check_mk 1.1.0beta17  |
+# |                                                                  |
+# | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of check_mk 1.1.0beta17.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# Example of output from ipmi:
+# ambienttemp 25.800 degrees_C ok na na na 34.800 40.200 na
+# bulk.v12-0-s0 11.940 Volts ok na 10.200 na na 13.800 na
+# bulk.v3_3-s0 3.360 Volts ok na 3.000 na na 3.600 na
+# bulk.v3_3-s5 3.240 Volts ok na 3.000 na na 3.600 na
+# bulk.v5-s0 5.040 Volts ok na 4.500 na na 5.520 na
+# bulk.v5-s5 5.040 Volts ok na 4.500 na na 5.520 na
+# cpu0.dietemp 51.000 degrees_C ok na na na 70.200 73.200 na
+# ...
+# On another host
+# mb.t_amb 24.000 degrees_C ok na na na 70.000 75.000 80.000
+# mb.v_bat 2.839 Volts ok 2.340 2.527 2.621 3.307 3.510 3.697
+# mb.v_+3v3stby 3.218 Volts ok 2.595 2.785 2.993 3.598 3.789 3.996
+# mb.v_+3v3 3.339 Volts ok 2.595 2.785 2.993 3.598 3.789 3.996
+# mb.v_+5v 5.044 Volts ok 3.484 3.978 4.498 5.486 5.980 6.500
+# fp.t_amb 21.000 degrees_C ok na na na 30.000 35.000 45.000
+# pdb.t_amb 21.000 degrees_C ok na na na 70.000 75.000 80.000
+# io.t_amb 19.000 degrees_C ok na na na 70.000 75.000 80.000
+# p0.t_core 18.000 degrees_C ok na na na 62.000 67.000 75.000
+# p0.v_vdd 1.332 Volts ok 0.792 0.900 0.996 1.596 1.692 1.800
+
+# IPMI has two operation modes:
+# 1. detailed
+# 2. summarized
+# This controls how the inventory is done. In summary-mode, the
+# inventory returns one single check item 'Summary' - or nothing
+# if the host does not send any IPMI information
+# In Detailed mode for each sensor one item is returned.
+
+ipmi_summarize = True
+    
+def inventory_ipmi(checkname, info):
+    if ipmi_summarize and len(info) > 0:
+        return [ ( "Summary", None, None ) ]
+    else:
+        return [ ( line[0], line[1], None ) for line in info ]
+
+def check_ipmi(item, params, info):
+    if item == "Summary":
+        return check_ipmi_summarized(info)
+    else:
+        return check_ipmi_detailed(item, info)
+
+def check_ipmi_detailed(item, info):
+    try:
+        for name,val,unit,status,unrec_low,crit_low,warn_low,warn_high,crit_high,unrec_high in info:
+            if name == item:
+                perfdata = [ (name, val + unit) ] # TODO: add warn and crit levels
+                if status == 'ok':
+                    return (0, "OK - %s is %s %s" % (name, val, unit), perfdata)
+                elif status == 'nc':
+                    return (1, "WARN - %s is %s %s" % (name, val, unit), perfdata)
+                else:
+                    return (2, "CRIT - %s is %s %s" % (name, val, unit), perfdata)
+        return (3, 'UNKNOWN - item %s not found' % item)
+    except:
+        return (3, "UNKNOWN - invalid or incomplete  output from agent")
+
+def check_ipmi_summarized(info):
+    worst_status = 0
+    warn_texts = []
+    crit_texts = []
+    count = 0
+    ambient_count = 0
+    ambient_sum = 0.0
+    try:
+      for name,val,unit,status,unrec_low,crit_low,warn_low,warn_high,crit_high,unrec_high in info:
+        text = "%s is %s %s" % (name, val, unit)
+        count += 1
+        if status == 'nc':
+            worst_status = max(worst_status, 1)
+            warn_texts.append(text)
+        elif status != 'ok':
+            worst_status = 2
+            crit_texts.append(text)
+        if "amb" in name:
+            try:
+                ambient_count += 1
+                ambient_sum += float(val)
+            except:
+                pass
+    except:
+        return (3, "UNKNOWN - invalid or incomplete  output from agent")
+
+
+    if ambient_count > 0:
+        perfdata = [ ("ambient_temp", ambient_sum / ambient_count) ]
+    else:
+        perfdata = []
+
+    statname = { 0: "OK", 1:"WARN", 2:"CRIT" }[worst_status]
+    if worst_status == 0:
+        infotext = "%d sensors OK" % count
+    else:
+        infotext = ""
+        if len(crit_texts) > 0:
+            infotext += "critical are: %s" % ", ".join(crit_texts)
+        if len(warn_texts) > 0:
+            infotext += "warning are: %s" % ", ".join(warn_texts)
+    return (worst_status, "%s - %s" % (statname, infotext), perfdata)
+
+check_info['ipmi'] = (check_ipmi, "IPMI Sensor %s", 1,  inventory_ipmi)

@@ -1,0 +1,96 @@
+title: Check usage of physical and virtual RAM
+agents: linux, windows
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check measures the current usage of physical RAM and
+ virtual memory used by processes. You can define a warning
+ and critical level for the usage of virtual memory,
+ {not} for the usage of RAM.
+
+ This is not a bug, its a feature. In fact it is the
+ only way to do it right (at least for Linux): What
+ parts of a process currently reside in physical RAM
+ and what parts are swapped out is not related in a 
+ direct way with the current memory usage. 
+
+ Linux
+ (and probably Windows as well) tends to swap out
+ parts of processes even if RAM is available. It does
+ this in situations where disk buffers (are assumed to)
+ speed up the overall performance more than keeping
+ rarely used parts of processes in RAM.
+
+ For example after a complete backup of your system
+ you might experiance that your swap usage has increased
+ while you have more RAM free then before. That is 
+ because Linux has taken RAM from processes in order
+ to increase disk buffers. 
+
+ So when defining a level to check against, the only 
+ value that is not affected by such internals of
+ memory management is the total amount of {virtual}
+ memory used up by processes (not by disk buffers).
+
+ Check_mk lets you define levels in percentage of
+ the physically installed RAM or as absolute 
+ values in MB. The default levels
+ are at 150% and 200%. That means that this check
+ gets critical if the memory used by processes
+ is twice the size of your RAM.
+
+ Hint: If you want to monitor swapping, you probably
+ better measure major pagefaults. Please look
+ at the check {kernel}.
+
+item:
+ {None}
+
+inventory:
+ {mem} supports inventory. One service per host will be 
+ created if the agent outputs the section {<<<mem>>>}.
+
+examples:
+ # Change default levels from 150%/200% to 100%/150%:
+ memused_default_levels = (100.0, 150.0)
+ checks = [
+   # make explicit check for hosts with tag "oracle"
+   ( ["oracle"], ALL_HOSTS, "mem.used", None, (80.0, 100.0) ),
+   # use absolute levels at 8GB / 12GB for some other hosts
+   ( ["host12","host34"], "mem.used", None, (8192, 12288) )
+ ]
+
+perfdata:
+ Two variables are stored: the physical and RAM and
+ the used swap space (Windows: usage of swap file). Maximum
+ values for both variables are also transmitted, so that
+ they can be visualized. All values are in Megabytes (1024 * 1024 bytes).
+
+ The template for PNP4Nagios that is shipped with check_mk
+ stacks swap usage on top of RAM usage und thus shows
+ the amount of virtual RAM that is used by processes.
+
+ If {mem_extended_perfdata} is set to {True}, then 
+ additional performance data is output (see below).
+
+[parameters]
+warning (int or float): the precentage of virtual memory used 
+ by processes at which WARNING state is triggered. If the
+ level is defined as in integer value then it is interpreted
+ as an absolute value in megabytes.
+critical (int or float): the percentage or absolute value
+ at which CRITICAL state is triggered
+
+
+[configuration]
+memused_default_levels (float, float): Levels used by
+ all checks that are created by inventory. Please define
+ explicit checks for hosts that need more specific levels.
+
+mem_extended_perfdata (boolean): If this variable is set
+ to {True}, then the checks outputs additional performance
+ data, if the agent provides that information. On Linux
+ the amount of mapped and committed memory is output
+ (see {Mapped} and {Committed_AS} in {/proc/meminfo}).
+

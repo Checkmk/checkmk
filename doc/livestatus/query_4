@@ -1,0 +1,4 @@
+GET services
+Columns: host_name description state
+Filter: state = 2
+Filter: in_notification_period = 1

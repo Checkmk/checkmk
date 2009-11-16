@@ -1,0 +1,52 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |                     _           _           _                    |
+# |                  __| |_  ___ __| |__  _ __ | |__                 |
+# |                 / _| ' \/ -_) _| / / | '  \| / /                 |
+# |                 \__|_||_\___\__|_\_\_|_|_|_|_\_\                 |
+# |                                   |___|                          |
+# |              _   _   __  _         _        _ ____               |
+# |             / | / | /  \| |__  ___| |_ __ _/ |__  |              |
+# |             | |_| || () | '_ \/ -_)  _/ _` | | / /               |
+# |             |_(_)_(_)__/|_.__/\___|\__\__,_|_|/_/                |
+# |                                            check_mk 1.1.0beta17  |
+# |                                                                  |
+# | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of check_mk 1.1.0beta17.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# This inventory collects the current state of several SNMP
+# variables. The check monitors if they are unchanged
+
+check_info['snia_sml'] = (check_snmp_fixed, "SNMP %s", 0,  inventory_snmp_fixed)
+# e.g. IBM TAPELIB 3584
+
+snmp_info_single['snia_sml'] = ( "SNIA-SML-MIB", "enterprises.14851.3.1", 
+   [ "4.5",        # SNIA-SML-MIB::chassis-SecurityBreach
+     "4.6",        # SNIA-SML-MIB::chassis-IsLocked
+     "4.10.1.5",   # SNIA-SML-MIB::subChassis-LockPresent 
+     "4.10.1.6",   # SNIA-SML-MIB::subChassis-SecurityBreach 
+     "4.10.1.7",   # SNIA-SML-MIB::subChassis-IsLocked
+     "6.2.1.5",    # SNIA-SML-MIB::mediaAccessDevice-Availability     
+     "6.2.1.11",   # SNIA-SML-MIB::mediaAccessDevice-OperationalStatus
+     "11.2.1.8",   # SNIA-SML-MIB::changerDevice-Availability
+     "11.2.1.9",   # SNIA-SML-MIB::changerDevice-OperationalStatus
+     "12.2.1.6",   # SNIA-SML-MIB::scsiProtocolController-Availability
+     "12.2.1.4",   # SNIA-SML-MIB::scsiProtocolController-OperationalStatus
+     "15.2.1.6",   # SNIA-SML-MIB::fCPortController-OperationalStatus
+     ] )

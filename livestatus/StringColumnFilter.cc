@@ -1,0 +1,93 @@
+// +------------------------------------------------------------------+
+// |                     _           _           _                    |
+// |                  __| |_  ___ __| |__  _ __ | |__                 |
+// |                 / _| ' \/ -_) _| / / | '  \| / /                 |
+// |                 \__|_||_\___\__|_\_\_|_|_|_|_\_\                 |
+// |                                   |___|                          |
+// |              _   _   __  _         _        _ ____               |
+// |             / | / | /  \| |__  ___| |_ __ _/ |__  |              |
+// |             | |_| || () | '_ \/ -_)  _/ _` | | / /               |
+// |             |_(_)_(_)__/|_.__/\___|\__\__,_|_|/_/                |
+// |                                            check_mk 1.1.0beta17  |
+// |                                                                  |
+// | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
+// +------------------------------------------------------------------+
+// 
+// This file is part of check_mk 1.1.0beta17.
+// The official homepage is at http://mathias-kettner.de/check_mk.
+// 
+// check_mk is free software;  you can redistribute it and/or modify it
+// under the  terms of the  GNU General Public License  as published by
+// the Free Software Foundation in version 2.  check_mk is  distributed
+// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+// ails.  You should have  received  a copy of the  GNU  General Public
+// License along with GNU Make; see the file  COPYING.  If  not,  write
+// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+// Boston, MA 02110-1301 USA.
+
+#include <stdlib.h>
+#include <strings.h>
+#include <string.h>
+
+#include "StringColumnFilter.h"
+#include "StringColumn.h"
+#include "logger.h"
+#include "opids.h"
+
+StringColumnFilter::StringColumnFilter(StringColumn *column, int opid, char *value)
+   : _column(column)
+   , _ref_string(value)
+   , _opid(abs(opid))
+   , _negate(opid < 0)
+     , _regex(0)
+{
+   if (opid == OP_REGEX || opid == OP_REGEX_ICASE) {
+      _regex = new regex_t();
+      if (0 != regcomp(_regex, value, REG_EXTENDED | REG_NOSUB | (opid == OP_REGEX_ICASE ? REG_ICASE : 0)))
+      {
+	 logger(LG_INFO, "Invalid regular expression '%s'", value);
+	 delete _regex;
+      }
+   }
+}
+
+StringColumnFilter::~StringColumnFilter()
+{
+   if (_regex)
+      regfree(_regex);
+}
+
+
+bool StringColumnFilter::accepts(void *data)
+{
+   bool pass = true;
+   char *act_string = _column->getValue(data);
+   switch (_opid) {
+      case OP_EQUAL:
+	 pass = _ref_string == act_string; break;
+      case OP_EQUAL_ICASE:
+	 pass = !strcasecmp(_ref_string.c_str(), act_string); break;
+      case OP_REGEX:
+      case OP_REGEX_ICASE:
+	 pass = _regex != 0 && 0 == regexec(_regex, act_string, 0, 0, 0);
+	 break;
+      case OP_GREATER:
+	 pass = 0 > strcmp(_ref_string.c_str(), act_string); break;
+      case OP_LESS:
+	 pass = 0 < strcmp(_ref_string.c_str(), act_string); break;
+      default:
+	 logger(LG_INFO, "Sorry. Operator %d for strings not implemented.", _opid);
+	 break;
+   }
+   return pass != _negate;
+}
+
+void *StringColumnFilter::indexFilter(const char *column)
+{
+   if (_opid == OP_EQUAL && !strcmp(column, _column->name()))
+      return (void *)_ref_string.c_str();
+   else
+      return 0;
+}

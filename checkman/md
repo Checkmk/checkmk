@@ -1,0 +1,20 @@
+title: Check Linux softraid devices
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ Checks the current state of a Linux MD raid array. The information
+ is read by the agent from {/proc/mdstat}. The result is either
+ OK, if all disks are active or critical in any other case.
+
+item:
+ The Linux raid device without {/dev/}, for example {"md0"}.
+
+examples:
+ checks += [
+    ( "somehost", "md", "md0", None )
+ ]
+
+inventory:
+ All raid devices are automatically detected.

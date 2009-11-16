@@ -1,0 +1,110 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |                     _           _           _                    |
+# |                  __| |_  ___ __| |__  _ __ | |__                 |
+# |                 / _| ' \/ -_) _| / / | '  \| / /                 |
+# |                 \__|_||_\___\__|_\_\_|_|_|_|_\_\                 |
+# |                                   |___|                          |
+# |              _   _   __  _         _        _ ____               |
+# |             / | / | /  \| |__  ___| |_ __ _/ |__  |              |
+# |             | |_| || () | '_ \/ -_)  _/ _` | | / /               |
+# |             |_(_)_(_)__/|_.__/\___|\__\__,_|_|/_/                |
+# |                                            check_mk 1.1.0beta17  |
+# |                                                                  |
+# | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of check_mk 1.1.0beta17.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# levels for warning/critical on error rate - in percentage of total packets!
+netctr_default_params = (0.01, 0.1)
+
+netctr_counters  = [ 'rx_bytes', 'tx_bytes', 'rx_packets', 'tx_packets', 'rx_errors', 'tx_errors', 'tx_collisions' ]
+
+# Check counters from network interfaces
+# Item is devicename.countername, eg,
+# eth0.tx_collisions. Available are: 
+
+counter_indices = {
+  # Receive
+  'rx_bytes'      : 0,
+  'rx_packets'    : 1,
+  'rx_errors'     : 2,
+  'rx_drop'       : 3,
+  'rx_fifo'       : 4,
+  'rx_frame'      : 5,
+  'rx_compressed' : 6,
+  'rx_multicast'  : 7,
+  # Transmit
+  'tx_bytes'      : 8,
+  'tx_packets'    : 9,
+  'tx_errors'     : 10,
+  'tx_drop'       : 11,
+  'tx_fifo'       : 12,
+  'tx_collisions' : 13,
+  'tx_carrier'    : 14,
+  'tx_compressed' : 15 }
+
+def inventory_netctr_combined(checkname, info):
+    if len(info) == 0: return []
+    return [ (l[0], '', 'netctr_default_params') for l in info[1:] if l[0] != 'lo' and not l[0].startswith("sit") ]
+
+
+def check_netctr_combined(nic, params, info):
+    try:
+        warn, crit = params
+    except:
+        warn, crit = (0.01, 0.1)
+
+    global counter_indices
+    this_time = int(info[0][0])
+
+    # Look for line describing this nic
+    for nicline in info[1:]:
+        if nicline[0] != nic: continue
+        perfdata = []
+        infotxt = ""
+        problems_per_sec = 0.0
+        packets_per_sec = 0.0
+        for countername in netctr_counters:
+            index = counter_indices[countername]
+            value = int(nicline[index + 1])
+            timedif, items_per_sec = get_counter( "netctr." + nic + "." + countername, this_time, value)
+            perfdata.append( ( countername, "%dc" % value ) )
+            if countername in [ "rx_errors", "tx_errors", "tx_collisions" ]:
+                problems_per_sec += items_per_sec
+            elif countername in [ "rx_packets", "tx_packets" ]:
+                packets_per_sec += items_per_sec
+            if countername == 'rx_bytes':
+                infotxt += ' - Receive: %.2f MB/sec' % (float(items_per_sec) / float(1024*1024))
+            elif countername == 'tx_bytes':
+                infotxt += ' - Send: %.2f MB/sec' % (float(items_per_sec) / float(1024*1024))
+        error_percentage = 0.0
+        if problems_per_sec > 0:
+            error_percentage = (problems_per_sec / packets_per_sec) * 100.0
+            infotxt += ", error rate %.4f%%" % error_percentage
+        if error_percentage >= crit:
+            return (2, "CRIT" + infotxt)
+        elif error_percentage >= warn:
+            return (1, "WARNING" + infotxt)
+        else:
+            return (0, "OK" + infotxt, perfdata)
+                
+    return (3, "UNKNOWN - NIC is not present")
+
+
+check_info['netctr.combined'] = (check_netctr_combined, "NIC %s counters", 1,  inventory_netctr_combined )
+check_config_variables.append("netctr_counters")

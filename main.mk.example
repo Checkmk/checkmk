@@ -1,0 +1,62 @@
+# Put your hosts here. You can append so called
+# 'host tags' and refer to them later. In this
+# example we use the following tags:
+# lnx = Linux Hosts, win = Windows Hosts
+# test = Test machines, dmz = Servers in the DMZ
+
+all_hosts = [
+ "localhost|lnx",
+ "hostw01|win",
+ "hostw02|win|test",
+ "hostl01|lnx",
+ "hostl02|lnx|test",
+]
+
+# If your hosts are not resolvable via DNS, you
+# can define IP addresses here. For this example
+# we assign 127.0.0.1 to all hosts.
+
+ipaddresses = {
+ "hostw01" : "127.0.0.1",
+ "hostw02" : "127.0.0.1",
+ "hostl01" : "127.0.0.1",
+ "hostl02" : "127.0.0.1",
+}
+
+# All hosts but those with the tag 'win' support
+# SNMP bulk walk (Default is: all hosts support snmpbulkwalk)
+bulkwalk_hosts = [
+  ( ["!cis"], ALL_HOSTS )
+]
+
+# Disable service aggregation for all SNMP based hosts
+non_aggregated_hosts = [
+  ( ["snmp"], ALL_HOSTS )
+]
+
+# Suppress output of host configuration: check_mk -U and
+# check_mk -R will generation not host definitions for
+# Nagios:
+# generate_hostconf = False
+
+# Limit check_mk to certain hosts (for testing)
+# only_hosts = [ ( ["test"], ALL_HOSTS ) ]
+# or (do not omit the , in this one-tuple!):
+# only_hosts = [ ( ["hostw01"], ) ]
+
+# Define our own time periods. These definitions
+# will generate Nagios time periods and are available
+# for the check_mk web pages in order to determine,
+# wether a service is in it notification period or
+# not.
+define_timeperiods = {
+             # monday          tuesday       wednesday      thursday       friday         saturday        sunday          
+ "7x24" : ("00:00-24:00", "00:00-24:00", "00:00-24:00", "00:00-24:00", "00:00-24:00", "00:00-24:00", "00:00-24:00" ),
+ "10x5" : ("07:00-17:00", "07:00-17:00", "07:00-17:00", "07:00-17:00", "07:00-17:00", None,          None ),
+}
+
+# Limit access to check_mk's multiadmin web pages to certain
+# users. If unset - all users have access
+multiadmin_users = [ 'nagiosadmin', 'mk' ]
+multiadmin_action_users = [ 'nagiosadmin' ]
+

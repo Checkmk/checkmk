@@ -5,3 +5,4 @@ mk-livestatus-*.tar.gz
 rpm.buildroot/
 rpm.topdir/
 *.rpm
+*.deb

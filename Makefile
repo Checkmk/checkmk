@@ -108,7 +108,9 @@ version:
 	    ./headrify ; \
 	fi ; \
 	for agent in agents/* ; do \
-	  sed -i 's/echo Version: [0-9.a-z]*/'"echo Version: $$newversion/g" $$agent; \
+	  if [ "$$agent" != agents/windows ] ; then \
+	    sed -i 's/echo Version: [0-9.a-z]*/'"echo Version: $$newversion/g" $$agent; \
+	  fi ; \
 	done ; \
 	sed -i 's/#define CHECK_MK_VERSION .*/#define CHECK_MK_VERSION "'$$newversion'"/' agents/windows/check_mk_agent.cc ; \
 	sed -i 's/^VERSION=.*/VERSION='"$$newversion"'/' scripts/setup.sh ; \

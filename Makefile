@@ -1,19 +1,14 @@
 # +------------------------------------------------------------------+
-# |                     _           _           _                    |
-# |                  __| |_  ___ __| |__  _ __ | |__                 |
-# |                 / _| ' \/ -_) _| / / | '  \| / /                 |
-# |                 \__|_||_\___\__|_\_\_|_|_|_|_\_\                 |
-# |                                   |___|                          |
-# |              _   _   __  _         _        _ ____               |
-# |             / | / | /  \| |__  ___| |_ __ _/ |__  |              |
-# |             | |_| || () | '_ \/ -_)  _/ _` | | / /               |
-# |             |_(_)_(_)__/|_.__/\___|\__\__,_|_|/_/                |
-# |                                            check_mk 1.1.0beta17  |
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
 # | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 # 
-# This file is part of check_mk 1.1.0beta17.
+# This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
 # 
 # check_mk is free software;  you can redistribute it and/or modify it
@@ -28,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL           = /bin/bash
-VERSION        	= 1.1.0beta17
+VERSION        	= 1.1.0beta19
 NAME           	= check_mk
 RPM_TOPDIR     	= rpm.topdir
 RPM_BUILDROOT  	= rpm.buildroot
@@ -96,6 +91,7 @@ dist: mk-livestatus
 	./listtar $(DISTNAME).tar.gz 
 
 mk-livestatus:
+	cd livestatus && automake && autoconf
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)
 	cd livestatus ; tar cf - $(LIVESTATUS_SOURCES) | tar xf - -C ../mk-livestatus-$(VERSION)
@@ -109,7 +105,6 @@ version:
 	@newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)") ; \
 	if [ -n "$$newversion" ] ; then \
 	    sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$$newversion/" Makefile ; \
-	    ./headrify ; \
 	fi ; \
 	for agent in agents/* ; do \
 	  if [ "$$agent" != agents/windows ] ; then \
@@ -117,6 +112,7 @@ version:
 	  fi ; \
 	done ; \
 	sed -i 's/#define CHECK_MK_VERSION .*/#define CHECK_MK_VERSION "'$$newversion'"/' agents/windows/check_mk_agent.cc ; \
+	sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$$newversion"'], [mk@mathias-kettner.de])/' livestatus/configure.ac ; \
 	sed -i 's/^VERSION=.*/VERSION='"$$newversion"'/' scripts/setup.sh ; \
 	echo 'check-mk_$$newversion-1_all.deb net optional' > debian/files ; \
 	sed -i 's/^MKVERSION=.*/MKVERSION=\$${3:-'"$$newversion}"'/' scripts/install_nagios_on_lenny.sh

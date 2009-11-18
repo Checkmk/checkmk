@@ -1,20 +1,15 @@
 #!/bin/bash
 # +------------------------------------------------------------------+
-# |                     _           _           _                    |
-# |                  __| |_  ___ __| |__  _ __ | |__                 |
-# |                 / _| ' \/ -_) _| / / | '  \| / /                 |
-# |                 \__|_||_\___\__|_\_\_|_|_|_|_\_\                 |
-# |                                   |___|                          |
-# |              _   _   __  _         _        _ ____               |
-# |             / | / | /  \| |__  ___| |_ __ _/ |__  |              |
-# |             | |_| || () | '_ \/ -_)  _/ _` | | / /               |
-# |             |_(_)_(_)__/|_.__/\___|\__\__,_|_|/_/                |
-# |                                            check_mk 1.1.0beta17  |
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
 # | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 # 
-# This file is part of check_mk 1.1.0beta17.
+# This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
 # 
 # check_mk is free software;  you can redistribute it and/or modify it
@@ -29,7 +24,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-VERSION=1.1.0beta17
+VERSION=1.1.0beta19
 NAME=check_mk
 LANG=
 LC_ALL=
@@ -485,19 +480,31 @@ then
     echo
 fi
 
+propeller ()
+{
+   while read LINE
+   do
+      echo "$LINE"
+      if [ -z "$YES" ] ; then echo -n "." >&2 ; fi
+   done
+}
+
 compile_livestatus ()
 {
    local D=$SRCDIR/livestatus.src
    mkdir -p $D
-   tar xzf $SRCDIR/livestatus.tar.gz -C $D
-   cd $D
+   tar xvzf $SRCDIR/livestatus.tar.gz -C $D
+   pushd $D
    ./configure --libdir=$libdir --bindir=$bindir
-   make -C $D clean
-   cat <<EOF > $D/config.h
-#define LIVESTATUS_VERSION "$VERSION"
+   make clean
+   cat <<EOF > $D/livestatus.h
+#ifndef livestatus_h
+#define livestatus_h
 #define DEFAULT_SOCKET_PATH "$livesock"
+#endif // livestatus_h
 EOF
-   make deps ; make -j 4 -C $D
+   make -j 8  2>&1
+   popd
 }
 
 
@@ -515,9 +522,11 @@ do
 
 	   if [ "$enable_livestatus" = yes ]
 	   then
-	       if compile_livestatus > $SRCDIR/livestatus.log 2>&1
+	       if [ -z "$YES" ] ; then echo -n "(Compiling MK Livestatus..." ; fi
+	       if compile_livestatus 2>&1 | propeller > $SRCDIR/livestatus.log
 	       then
-		   make -C $SRCDIR/livestatus.src DESTDIR=$DESTDIR install-strip
+		   strip $SRCDIR/livestatus.src/src/livestatus.o
+		   install -m 755 $SRCDIR/livestatus.src/src/livestatus.o $DESTDIR$libdir/livestatus.o
 
 		   if [ "$livestatus_in_nagioscfg" = False -a -n "$nagios_config_file" ]
 		   then
@@ -529,6 +538,7 @@ do
 		   cat $SRCDIR/livestatus.log
 		   exit 1
 	       fi
+	       if [ -z "$YES" ] ; then echo ")" ; fi
 	   fi &&
 	   mkdir -p $DESTDIR$modulesdir &&
 	   create_defaults > $DESTDIR$modulesdir/defaults &&

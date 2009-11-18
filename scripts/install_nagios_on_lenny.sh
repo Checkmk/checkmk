@@ -1,20 +1,15 @@
 #!/bin/bash
 # +------------------------------------------------------------------+
-# |                     _           _           _                    |
-# |                  __| |_  ___ __| |__  _ __ | |__                 |
-# |                 / _| ' \/ -_) _| / / | '  \| / /                 |
-# |                 \__|_||_\___\__|_\_\_|_|_|_|_\_\                 |
-# |                                   |___|                          |
-# |              _   _   __  _         _        _ ____               |
-# |             / | / | /  \| |__  ___| |_ __ _/ |__  |              |
-# |             | |_| || () | '_ \/ -_)  _/ _` | | / /               |
-# |             |_(_)_(_)__/|_.__/\___|\__\__,_|_|/_/                |
-# |                                            check_mk 1.1.0beta17  |
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
 # | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 # 
-# This file is part of check_mk 1.1.0beta17.
+# This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
 # 
 # check_mk is free software;  you can redistribute it and/or modify it
@@ -32,7 +27,7 @@
 
 VERSION=${1:-3.2.0}
 PNPVERSION=${2:-0.4.14}
-MKVERSION=${3:-1.1.0beta17}
+MKVERSION=${3:-1.1.0beta19}
 NAGIOS_MIRROR=dfn
 NAGVIS_URL='http://nagvis.git.sourceforge.net/git/gitweb.cgi?p=nagvis/nagvis;a=snapshot;h=8f1c2e25a7a73deaf2b721d482086241be94ee66;sf=tgz'
 

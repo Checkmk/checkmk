@@ -52,7 +52,7 @@ def check_ifoperstatus(item, targetstate, info):
            else:
                return (2, "CRIT - status is %s" % operstatus)
                     
-   return (3, "UNKNOWN - inteface %s missing" % item)
+   return (3, "UNKNOWN - interface %s missing" % item)
 
-check_info['ifoperstatus'] = (check_ifoperstatus, "Interface %s", 1,  inventory_ifoperstatus)
+check_info['ifoperstatus'] = (check_ifoperstatus, "Interface %s", 0,  inventory_ifoperstatus)
 snmp_info['ifoperstatus'] = ( ".1.3.6.1.2.1.2.2.1", [ 2, 8 ] )

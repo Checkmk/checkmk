@@ -32,19 +32,30 @@
 
 # item is one of the keys in /proc/stat or /proc/vmstat
 def check_kernel(item, params, info):
-    try:
-       this_time = int(info[0][0])
-    except:
-        return (3, "UNKNOWN - no output from mknagios agent")
+    this_time = int(info[0][0])
         
     hits = [ line[1] for line in info[1:] if line[0] == item ]
-    if len(hits) != 1:
-        return (3, "UNKNOWN - invalid item '%s'" % (item,))
+    if len(hits) == 0:
+        return (3, "UNKNOWN - item '%s' not found in agent output" % item)
+    elif len(hits) > 1:
+        return (3, "UNKNOWN - item '%s' not unique (found %d times)" % (item, len(hits)))
     
     this_val = int(hits[0])
     timedif, per_sec = get_counter("kernel." + item, this_time, this_val)
-    perfdata = [ (item, "%dc" % this_val) ]
-    return (0, "OK - %.0f/s (in last %d secs)" % (per_sec, timedif), perfdata)
+    infotext = " - %.0f/s in last %d secs" % (per_sec, timedif)
+    if params == None:
+         perfdata = [ (item, "%dc" % this_val, None, None, 0 ) ]
+	 return (0, "OK" + infotext, perfdata)
+   
+    warn, crit = params
+    perfdata = [ (item, "%dc" % this_val, warn, crit, 0) ]
+    infotext += " (levels at %d/%d)" % (warn, crit)
+    if per_sec >= crit:
+	return (2, "CRIT" + infotext, perfdata)
+    elif per_sec >= warn:
+        return (1, "WARN" + infotext, perfdata)
+    else:
+        return (0, "OK" + infotext, perfdata)  
 
 
 def inventory_cpu_utilization(checktype, info):

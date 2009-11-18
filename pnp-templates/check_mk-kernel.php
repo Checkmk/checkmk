@@ -68,7 +68,12 @@ $def[1] = "DEF:var1=$rrdfile:$DS[1]:MAX ";
 $def[1] .= "AREA:var1#$color:\"$title\:\" ";
 $def[1] .= "LINE1:var1#$line:\"\" ";
 $def[1] .= "GPRINT:var1:LAST:\"Current\: $format\" ";
-$def[1] .= "GPRINT:var1:MAX:\"Maximum\: $format\" ";
+if ($WARN[1])
+	$lf = "\\n";
+else
+	$lf = "";
+	
+$def[1] .= "GPRINT:var1:MAX:\"Maximum\: $format$lf\" ";
 if ($WARN[1]) {
  $def[1] .= "HRULE:$WARN[1]#FFFF00:\"Warning\: $WARN[1]C\" ";
  $def[1] .= "HRULE:$CRIT[1]#FF0000:\"Critical\: $CRIT[1]C\" ";

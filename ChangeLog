@@ -2,6 +2,8 @@
       - Fixed bug in cluster checks: No cache files
         had been used. This can lead to missing logfile
 	messages.
+      - Check kernel: allow to set levels (e.g. on 
+	pgmajfaults)
 
 1.1.0beta16:
       - Fixed bug in MK Livestatus: StatsGroupBy:

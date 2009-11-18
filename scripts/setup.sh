@@ -490,6 +490,8 @@ compile_livestatus ()
    local D=$SRCDIR/livestatus.src
    mkdir -p $D
    tar xzf $SRCDIR/livestatus.tar.gz -C $D
+   cd $D
+   ./configure --libdir=$libdir --bindir=$bindir
    make -C $D clean
    cat <<EOF > $D/config.h
 #define LIVESTATUS_VERSION "$VERSION"
@@ -515,12 +517,7 @@ do
 	   then
 	       if compile_livestatus > $SRCDIR/livestatus.log 2>&1
 	       then
-	           mkdir -p $DESTDIR$libdir &&
-	           install -m 755 $SRCDIR/livestatus.src/livestatus.o $DESTDIR$libdir &&
-		   mkdir -p $DESTDIR$bindir &&
-		   install -m 755 $SRCDIR/livestatus.src/unixcat $DESTDIR$bindir &&
-		   # mkdir -p $DESTDIR$livebackendsdir/nagvis &&
-		   # install -m 644 $SRCDIR/livestatus.src/nagvis/* $DESTDIR$livebackendsdir/nagvis
+		   make -C $SRCDIR/livestatus.src DESTDIR=$DESTDIR install-strip
 
 		   if [ "$livestatus_in_nagioscfg" = False -a -n "$nagios_config_file" ]
 		   then

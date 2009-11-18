@@ -2326,7 +2326,7 @@ def do_restore(tarname):
 # option --list-hosts
 def list_all_hosts(hostgroups):
     hostlist = []
-    for hn in all_hosts_untagged:
+    for hn in all_active_hosts() + all_active_clusters():
         if len(hostgroups) == 0:
             hostlist.append(hn)
         else:
@@ -2339,7 +2339,7 @@ def list_all_hosts(hostgroups):
 # Same for host tags, needed for --list-tag
 def list_all_hosts_with_tags(tags):
     hosts = []
-    for h in all_hosts_untagged:
+    for h in all_active_hosts() + all_active_clusters(): 
         if hosttags_match_taglist(tags_of_host(h), tags):
             hosts.append(h)
     return hosts

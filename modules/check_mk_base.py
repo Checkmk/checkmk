@@ -199,6 +199,8 @@ def get_host_info(hostname, ipaddress, checkname):
         info = []
         at_least_one_without_exception = False
         exception_texts = []
+	global opt_use_cachefile
+	opt_use_cachefile = True
         for node in nodes:
             # If an error with the agent occurs, we still can (and must)
             # try the other node.

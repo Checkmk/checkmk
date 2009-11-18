@@ -187,7 +187,7 @@ do_rrd_update			   = False
 aggr_summary_hostname              = "%s-s"
 agent_min_version                  = 0 # warn, if plugin has not at least version
 check_max_cachefile_age            = 0 # per default do not use cache files when checking
-cluster_max_cachefile_age          = 59   # secs.
+cluster_max_cachefile_age          = 90   # secs.
 simulation_mode                    = False
 
 # SNMP communities

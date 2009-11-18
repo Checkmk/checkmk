@@ -31,9 +31,12 @@
 
 
 def check_procs(item, params, info):
-    try:
+    if len(params) == 5:
         procname, warnmin, okmin, okmax, warnmax = params
-    except ValueError,e:
+        user = None
+    elif len(params) == 6:
+        procname, user, warnmin, okmin, okmax, warnmax = params
+    else:
         return (3, "UNKNOWN - invalid check parameters: %s" % (params,))
         
     # procname is either:
@@ -47,7 +50,16 @@ def check_procs(item, params, info):
 
     count = 0
     for ps in info:                 # loop over all processes found on the host. ps is list of strings
-        if procname[0] != '~':
+        # agent might output username in brackets in the first columns
+        if ps[0].startswith("(") and ps[0].endswith(")"):
+	   if user and user != ps[0][1:-1]:
+	       continue # user does not match
+	   ps = ps[1:]
+
+        if not procname:
+	    count += 1
+
+        elif not procname[0].startswith("~"):
             if ps[0] == procname:
                 count += 1
         else:

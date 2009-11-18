@@ -91,9 +91,9 @@ then
 fi
 
 
-# Prozesse ohne Kernelprozesse
+# processes including username, without kernel processes
 echo '<<<ps>>>'
-ps ax -o command | sed -e 1d -e '/^\[/d'
+ps ax -o user,command | sed -e 1d -e 's/^/(/' -e 's/ /)/' -e '/([^ ]*) \+\[/d'
 
 # Speicherauslastung
 echo '<<<mem>>>'

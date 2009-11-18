@@ -4,6 +4,8 @@
 	messages.
       - Check kernel: allow to set levels (e.g. on 
 	pgmajfaults)
+      - Check ps now allows to check for processes owned
+        by a specific user (need update of Linux agent)
 
 1.1.0beta16:
       - Fixed bug in MK Livestatus: StatsGroupBy:

@@ -6,3 +6,4 @@ rpm.buildroot/
 rpm.topdir/
 *.rpm
 *.deb
+var/

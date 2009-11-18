@@ -52,14 +52,13 @@ def check_df_netapp(volume, params, info):
       return (3, "UNKNOWN - negative size or usage (32 bit SNMP counter wrap!)")
 
    warn_mb, crit_mb, levelstext = get_filesystem_levels(g_hostname, volume, size_gb, params)
-   warn, crit = params
 
    used_perc = int(round(float(used_kb) / float(size_kb) * 100))
    infotext = "%d%% used (%.1fG of %.1fG), %s" % (used_perc, used_gb, size_gb, levelstext)
    perfdata = [(volume, "%.2fMB" % used_mb, warn_mb, crit_mb, 0, size_mb)]
-   if used_perc >= crit:
+   if used_mb >= crit_mb:
       return (2, "CRIT - " + infotext, perfdata)
-   elif used_perc >= warn:
+   elif used_mb >= warn_mb:
       return (1, "WARNING - " + infotext, perfdata)
    else:
       return (0, "OK - " + infotext, perfdata)

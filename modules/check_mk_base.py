@@ -140,12 +140,13 @@ def store_aggregated_service_result(hostname, detaildesc, aggrdesc, newstatus, n
     g_aggregated_service_results[aggrdesc] = (count + 1, status, outputlist)
 
 
+
 # Submit the result of all aggregated services of a host
 # to Nagios. Those are stored in g_aggregated_service_results
 def submit_aggregated_results(hostname):
     if not host_is_aggregated(hostname):
         return
-        
+    
     if opt_verbose:
         print "\n%s%sAggregates Services:%s" % (tty_bold, tty_blue, tty_normal)
     global g_aggregated_service_results
@@ -168,6 +169,21 @@ def submit_aggregated_results(hostname):
             print "%-20s %s%s%-70s%s" % (servicedesc, tty_bold, color, text, tty_normal)
 
 
+def submit_check_mk_aggregation(hostname, status, output):
+    if not host_is_aggregated(hostname):
+        return
+   	
+    if not opt_dont_submit:
+       open_command_pipe()
+       if nagios_command_pipe:
+           nagios_command_pipe.write("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;Check_MK;%d;%s\n" % 
+                 (int(time.time()), summary_hostname(hostname), status, output))
+           nagios_command_pipe.flush()
+    if opt_verbose:
+        color = { 0: tty_green, 1: tty_yellow, 2: tty_red, 3: tty_magenta }[status]
+        print "%-20s %s%s%-70s%s" % ("Check_MK", tty_bold, color, output, tty_normal)
+        
+   
 #   +----------------------------------------------------------------------+
 #   |                 ____      _         _       _                        |
 #   |                / ___| ___| |_    __| | __ _| |_ __ _                 |
@@ -548,30 +564,40 @@ def do_check(hostname, ipaddress):
         load_counters(hostname)
         agent_version, num_success, num_errors = do_all_checks_on_host(hostname, ipaddress)
         save_counters(hostname)
+        if num_errors > 0 and num_success > 0:
+            output = "WARNING - Got only %d out of %d infos" % (num_success, num_success + num_errors)
+            status = 1
+        elif num_errors > 0:
+            output = "CRIT - Got no information from host"
+            status = 2
+        elif agent_min_version and agent_version < agent_min_version:
+            output = "WARNING - old plugin version %s (should be at least %s)" % (agent_version, agent_min_version)
+            status = 1
+        else:   
+            output = "OK - Agent Version %s, processed %d host infos" % (agent_version, num_success)
+            status = 0
+
     except MKGeneralException, e:
         if opt_debug:
             raise
-        print "UNKNOWN - %s" % e
-        sys.exit(3)
+        output = "UNKNOWN - %s" % e
+        status = 3
+
     except MKAgentError, e:
         if opt_debug:
             raise
-        print "CRIT - %s" % e
-        sys.exit(2)
+        output = "CRIT - %s" % e
+        status = 2
 
-    if num_errors > 0 and num_success > 0:
-        print "WARNING - Got only %d out of %d infos" % (num_success, num_success + num_errors)
-        sys.exit(1)
-    elif num_errors > 0:
-        print "CRIT - Got no information from host"
-        sys.exit(2)
-    else:
-        if agent_min_version and agent_version < agent_min_version:
-            print "WARNING - old plugin version %s (should be at least %s)" % (agent_version, agent_min_version)
-            sys.exit(1)
-           
-        print "OK - Agent Version %s, processed %d host infos" % (agent_version, num_success)
-        sys.exit(0)
+    if aggregate_check_mk:
+        try:
+            submit_check_mk_aggregation(hostname, status, output)
+        except:
+	    if opt_debug:
+	        raise
+
+    print(output)
+    sys.exit(status)
 
 
 # Loops over all checks for a host, gets the data, calls the check
@@ -632,6 +658,24 @@ def do_all_checks_on_host(hostname, ipaddress):
 def nagios_pipe_open_timeout(signum, stackframe):
     raise IOError("Timeout while opening pipe")
 
+def open_command_pipe():
+    global nagios_command_pipe
+    if nagios_command_pipe == None:
+        if not os.path.exists(nagios_command_pipe_path):
+            nagios_command_pipe = False # False means: tried but failed to open
+            raise MKGeneralException("Missing Nagios command pipe '%s'" % nagios_command_pipe_path)
+        else:
+            try:
+                signal.signal(signal.SIGALRM, nagios_pipe_open_timeout)
+                signal.alarm(3) # three seconds to open pipe
+                nagios_command_pipe =  file(nagios_command_pipe_path, 'w')
+                signal.alarm(0) # cancel alarm
+            except Exception, e:
+                nagios_command_pipe = False
+                raise MKGeneralException("Error writing to command pipe: %s" % e)
+
+
+
 def submit_check_result(host, servicedesc, result, sa):
     global nagios_command_pipe
     # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
@@ -651,20 +695,7 @@ def submit_check_result(host, servicedesc, result, sa):
             perftext = "|" + (" ".join(perftexts))
     
     if not opt_dont_submit:
-       if nagios_command_pipe == None:
-           if not os.path.exists(nagios_command_pipe_path):
-               nagios_command_pipe = False # False means: tried but failed to open
-               raise MKGeneralException("Missing Nagios command pipe '%s'" % nagios_command_pipe_path)
-           else:
-               try:
-                   signal.signal(signal.SIGALRM, nagios_pipe_open_timeout)
-                   signal.alarm(3) # three seconds to open pipe
-                   nagios_command_pipe =  file(nagios_command_pipe_path, 'w')
-                   signal.alarm(0) # cancel alarm
-               except Exception, e:
-                   nagios_command_pipe = False
-                   raise MKGeneralException("Error writing to command pipe: %s" % e)
-
+       open_command_pipe()
        if nagios_command_pipe:
           nagios_command_pipe.write("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" % 
                                  (int(time.time()), host, servicedesc, result[0], result[1] + perftext)  )

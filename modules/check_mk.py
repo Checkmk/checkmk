@@ -245,6 +245,7 @@ datasource_programs                  = []
 service_aggregations                 = []
 service_dependencies                 = []
 non_aggregated_hosts                 = []
+aggregate_check_mk                   = False
 summary_host_groups                  = []
 summary_service_groups               = [] # service groups for aggregated services
 summary_service_contactgroups        = [] # service contact groups for aggregated services
@@ -1310,7 +1311,11 @@ def output_serviceconf(outfile = sys.stdout):
         if do_aggregation and service_aggregations:
             outfile.write("\n# Aggregated services of host %s\n\n" % hostname)
 
-        for description in aggregated_services_conf:
+        aggr_descripts = aggregated_services_conf
+	if aggregate_check_mk and host_is_aggregated(hostname):
+	    aggr_descripts.add("Check_MK")
+
+        for description in aggr_descripts:
             sergr = service_extra_conf(hostname, description, summary_service_groups)
             if len(sergr) > 0:
                 sg = "    service_groups            +" + ",".join(sergr) + "\n"
@@ -1720,7 +1725,7 @@ filesystem_default_levels = None
                  'var_dir', 'counters_directory', 'tcp_cache_dir',
                  'check_mk_basedir', 'df_magicnumber_normsize', 'nagios_user',
                  'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
-                 'simulation_mode',
+                 'simulation_mode', 'aggregate_check_mk',
                  ]:
         output.write("%s = %r\n" % (var, globals()[var]))
 

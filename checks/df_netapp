@@ -1,21 +1,16 @@
 #!/usr/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
-# |                     _           _           _                    |
-# |                  __| |_  ___ __| |__  _ __ | |__                 |
-# |                 / _| ' \/ -_) _| / / | '  \| / /                 |
-# |                 \__|_||_\___\__|_\_\_|_|_|_|_\_\                 |
-# |                                   |___|                          |
-# |              _   _   __  _         _        _ ____               |
-# |             / | / | /  \| |__  ___| |_ __ _/ |__  |              |
-# |             | |_| || () | '_ \/ -_)  _/ _` | | / /               |
-# |             |_(_)_(_)__/|_.__/\___|\__\__,_|_|/_/                |
-# |                                            check_mk 1.1.0beta17  |
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
 # | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 # 
-# This file is part of check_mk 1.1.0beta17.
+# This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
 # 
 # check_mk is free software;  you can redistribute it and/or modify it
@@ -52,14 +47,13 @@ def check_df_netapp(volume, params, info):
       return (3, "UNKNOWN - negative size or usage (32 bit SNMP counter wrap!)")
 
    warn_mb, crit_mb, levelstext = get_filesystem_levels(g_hostname, volume, size_gb, params)
-   warn, crit = params
 
    used_perc = int(round(float(used_kb) / float(size_kb) * 100))
    infotext = "%d%% used (%.1fG of %.1fG), %s" % (used_perc, used_gb, size_gb, levelstext)
    perfdata = [(volume, "%.2fMB" % used_mb, warn_mb, crit_mb, 0, size_mb)]
-   if used_perc >= crit:
+   if used_mb >= crit_mb:
       return (2, "CRIT - " + infotext, perfdata)
-   elif used_perc >= warn:
+   elif used_mb >= warn_mb:
       return (1, "WARNING - " + infotext, perfdata)
    else:
       return (0, "OK - " + infotext, perfdata)

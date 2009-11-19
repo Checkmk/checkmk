@@ -1,21 +1,16 @@
 #!/usr/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
-# |                     _           _           _                    |
-# |                  __| |_  ___ __| |__  _ __ | |__                 |
-# |                 / _| ' \/ -_) _| / / | '  \| / /                 |
-# |                 \__|_||_\___\__|_\_\_|_|_|_|_\_\                 |
-# |                                   |___|                          |
-# |              _   _   __  _         _        _ ____               |
-# |             / | / | /  \| |__  ___| |_ __ _/ |__  |              |
-# |             | |_| || () | '_ \/ -_)  _/ _` | | / /               |
-# |             |_(_)_(_)__/|_.__/\___|\__\__,_|_|/_/                |
-# |                                            check_mk 1.1.0beta17  |
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
 # | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 # 
-# This file is part of check_mk 1.1.0beta17.
+# This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
 # 
 # check_mk is free software;  you can redistribute it and/or modify it
@@ -34,13 +29,21 @@ def inventory_win_cpuusage(checkname, info):
    for line in info:
       try:
          if line[0] == '238:6':
-            return [(None, None, None)]
+            return [(None, None, "winperf_cpu_default_levels")]
       except:
          pass
    return []
 
+winperf_cpu_default_levels = ( 101, 101 ) 
 
+# params: levels for warn / crit in percentage
 def check_win_cpuusage(item, params, info):
+   # get parameters. Be nice to older installations that still use 'None'
+   # as parameters
+   if params == None:
+	params = winperf_cpu_default_levels
+   warn, crit = params
+
    for line in info:
       try:
          if line[0] == '238:6':
@@ -67,8 +70,16 @@ def check_win_cpuusage(item, params, info):
                 num_txt = ""
             else:
                 num_txt = " / %d CPUs" % num_cpus
-            return (0, "OK - %d%% used%s (in last %d secs)" %
-                    (int(used_perc), num_txt, timedif), perfdata)
+
+	    infotext = " - %d%% used%s (in last %d secs)" % (int(used_perc), num_txt, timedif)
+
+	    if used_perc >= crit:
+		return (2, "CRIT" + infotext, perfdata) 
+            elif used_perc >= warn:
+		return (1, "WARN" + infotext, perfdata)
+	    else:
+                return (0, "OK" + infotext, perfdata)
+
       except:
          return (3, "UNKNOWN - invalid output from plugin")
    return (3, "UNKNOWN - counter for cpu (238:6) not found")
@@ -108,6 +119,7 @@ def check_win_diskstat(item, params, info):
 
 check_info['winperf.diskstat'] = (check_win_diskstat, "Disk IO", 1,  inventory_win_diskstat)
 check_info['winperf.cpuusage'] = (check_win_cpuusage, "CPU Usage", 1, inventory_win_cpuusage)
+check_config_variables.append("winperf_cpu_default_levels")
 
 # Speicher kann man rausziehen aus
 # 4:24: Available Bytes

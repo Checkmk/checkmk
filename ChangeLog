@@ -9,6 +9,16 @@
       - New configuration option aggregate_check_mk: If
         set to True, the summary hosts will show the
 	status auf check_mk (default: False)
+      - Check winperf.cpuusage now supports levels
+        for warning and critical. Default levels are
+	at 101 / 101
+      - New check df_netapp32 which must be used
+        for Netapps that do not support 64 bit 
+	counters. Does the same as df_netapp
+      - Symlink PNP templates: df_netapp32 and
+        df_netapp use same template as df
+      - Fix bug: ifoperstatus does not produce performance
+        data but said so.
 
 1.1.0beta16:
       - Fixed bug in MK Livestatus: StatsGroupBy:

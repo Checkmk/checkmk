@@ -35,7 +35,7 @@ examples:
  # levels are "filesystem_default_levels"
  filesystem_levels = [ 
     # Hosts with tag "vms" get 85/95
-    ( (85, 95), ["vms"], ALL_HOST, [ "" ] ),
+    ( (85, 95), ["vms"], ALL_HOSTS, [ "" ] ),
     # all /sapdata partitions will never be critical
     ( (101, 101), ALL_HOSTS, [ "/sapdata$" ] ),
     # Partitions below "/var" get 80/90 with magic factor 0.5

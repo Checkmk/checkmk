@@ -1,0 +1,5 @@
+*.a
+*.la
+.deps
+*.so
+Makefile.in

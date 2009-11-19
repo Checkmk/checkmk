@@ -1,24 +1,23 @@
 #!/bin/bash
 VERSION=$(sed -rn 's/^VERSION[[:space:]]*= *([0-9]+\.[0-9]+\.[0-9a-z]+).*/\1/p' < Makefile)
 
-# figlet -f small macht einen kleine Font
+# figlet -f small macht einen kleinen Font
 header ()
 {
     echo '+------------------------------------------------------------------+'
 
-    figlet -w 66 -cf small "check_mk   $VERSION" | tr ' ' @  | sed '$d' | \
+    figlet -w 66 -c "Check_MK" | tr ' ' @  | sed '$d' | \
 	while read -r line
       do
       printf "|%-66s|\n" "${line//@/ }"
     done
-    printf "|%44s%-22s|\n" "" "check_mk $VERSION"
     echo '|                                                                  |'
     echo '| Copyright Mathias Kettner 2009             mk@mathias-kettner.de |'
     echo '+------------------------------------------------------------------+'
 
     cat <<EOF
 
-This file is part of check_mk $VERSION.
+This file is part of Check_MK.
 The official homepage is at http://mathias-kettner.de/check_mk.
 
 check_mk is free software;  you can redistribute it and/or modify it
@@ -50,12 +49,12 @@ headrify ()
       bangpath="#!/bin/bash"
   else
       bangpath=""
-      case "$suffix" in
-          php)    comment="# " ; bangpath="<?php"; ;;
-          h|c|cc) comment="// " ;;
-          conf|cfg)   comment="# " ;;
-          spec|Makefile) comment="# " ;;
-          py|*)     comment="# "  ; bangpath="#!/usr/bin/python
+      case "${file##*/}" in
+          *.php)    comment="# " ; bangpath="<?php"; ;;
+          *.h|*.c|*.cc|*.h.in) comment="// " ;;
+          *.conf|*.cfg)   comment="# " ;;
+          *.spec|Makefile*) comment="# " ;;
+          *.py|*)     comment="# "  ; bangpath="#!/usr/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-"; ;;
       esac
   fi
@@ -89,6 +88,9 @@ if [ "$#" -gt 0 ] ; then
 else
   { find -not -type l -and \( \
       -name "Makefile" -or \
+      -name "Makefile.am" -or \
+      -name "configure.ac" -or \
+      -name "*.in" -or \
       -name "*.h" -or \
       -name "*.cc" -or \
       -name "*.c" -or \
@@ -100,7 +102,7 @@ else
 	| grep -v /Privat/ | grep -v livestatus/nagios/ | grep -vx '' | \
   while read file
   do
-    echo headrify "$file" &
+    headrify "$file" &
   done
 fi
 sleep 0.1

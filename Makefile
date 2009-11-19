@@ -88,7 +88,6 @@ dist: mk-livestatus
 	@echo "=============================================================================="
 	@figlet "                    finished."
 	@echo "=============================================================================="
-	./listtar $(DISTNAME).tar.gz 
 
 mk-livestatus:
 	cd livestatus && aclocal && automake && autoconf

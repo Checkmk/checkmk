@@ -674,7 +674,7 @@ Please install mod_python and restart Apache."
 EOF
            fi &&
 	   if [ -z "$YES" ] ; then
-	       echo -e "Installation completed successfully.\nPlease restart Apache in order to update/active check_mk's web pages."
+	       echo -e "Installation completed successfully.\nPlease restart Nagios and Apache in order to update/active check_mk's web pages."
            fi ||
 	   echo "ERROR!"
 	   exit

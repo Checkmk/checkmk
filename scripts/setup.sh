@@ -526,7 +526,10 @@ do
 	       if compile_livestatus 2>&1 | propeller > $SRCDIR/livestatus.log
 	       then
 		   strip $SRCDIR/livestatus.src/src/livestatus.o
+		   mkdir -p $DESTDIR$libdir
 		   install -m 755 $SRCDIR/livestatus.src/src/livestatus.o $DESTDIR$libdir/livestatus.o
+		   mkdir -p $DESTDIR$bindir
+		   install -m 755 $SRCDIR/livestatus.src/src/unixcat $DESTDIR$bindir
 
 		   if [ "$livestatus_in_nagioscfg" = False -a -n "$nagios_config_file" ]
 		   then

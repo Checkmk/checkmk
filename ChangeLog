@@ -1,3 +1,8 @@
+1.1.0.beta20:
+      - Fixed problem sind 1.0.39: recompile waitmax for
+        32 Bit (also running on 64)
+      - Autoconfiscated MK Livestatus
+
 1.1.0beta18:
       - Fixed bug in cluster checks: No cache files
         had been used. This can lead to missing logfile

@@ -52,10 +52,10 @@ LOCALDIR=$MK_LIBDIR/local
 exec <&- 2>/dev/null
 
 echo '<<<check_mk>>>'
-echo Version: 1.1.0beta19
+echo Version: 1.1.0beta20
 
 echo '<<<mknagios>>>'
-echo Version: 1.1.0beta19
+echo Version: 1.1.0beta20
 
 # Partitionen (-P verhindert Zeilenumbruch bei langen Mountpunkten)
 # Achtung: NFS-Mounts werden grundsaetzlich ausgeblendet, um

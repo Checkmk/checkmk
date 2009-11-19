@@ -52,7 +52,7 @@
 #include <stdarg.h>
 #include <time.h>
 
-#define CHECK_MK_VERSION "1.1.0beta19"
+#define CHECK_MK_VERSION "1.1.0beta20"
 #define CHECK_MK_AGENT_PORT 6556
 #define SERVICE_NAME "Check_MK_Agent"
 #define KiloByte 1024

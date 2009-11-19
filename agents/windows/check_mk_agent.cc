@@ -51,6 +51,7 @@
 #include <winsock2.h>
 #include <stdarg.h>
 #include <time.h>
+#include <string.h>
 
 #define CHECK_MK_VERSION "1.1.0beta20"
 #define CHECK_MK_AGENT_PORT 6556
@@ -60,6 +61,7 @@
 bool do_tcp = false;
 bool should_terminate = false;
 bool logwatch_send_initial_entries = false;
+
 bool logwatch_suppress_info = true;
 
 // dynamic buffer for event log entries. Grows with the
@@ -526,7 +528,7 @@ void grow_eventlog_buffer(int newsize)
 bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, char type_char, 
 			   const char *logname, const char *source_name, char **strings)
 {
-    char msgbuffer[512];
+    char msgbuffer[2048]; 
     char dll_realpath[128];
     HINSTANCE dll;
 
@@ -535,7 +537,7 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
     // is successfull.
 
     if (dllpath) {
-	// to make it even more difficult, dllpath may containt %SystemRoot%, which
+	// to make it even more difficult, dllpath may contain %SystemRoot%, which
 	// must be replaced with the environment variable %SystemRoot% (most probably - 
 	// but not entirely for sure - C:\WINDOWS
 	if (strncasecmp(dllpath, "%SystemRoot%", 12) == 0)
@@ -552,7 +554,6 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
     }
     else
 	dll = NULL;
-    
     DWORD len = FormatMessage(
 	FORMAT_MESSAGE_ARGUMENT_ARRAY | 
 	FORMAT_MESSAGE_FROM_HMODULE | 
@@ -563,18 +564,26 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
 	(LPTSTR)msgbuffer,         
 	sizeof(msgbuffer),         
 	strings);
+
     if (dll)
 	FreeLibrary(dll);
-    
-    if (len == 0) {
-	if (dllpath)
+   
+    if (len == 0) // message could not be converted
+    {
+        // if conversion was not successfull while trying to load a DLL, we return a 
+        // failure. Our parent function will then retry later without a DLL path.
+	if (dllpath) 
 	    return false;
-	// if message cannot be converted than at least output the text strings
-        msgbuffer[0] = 0;
+
+	// if message cannot be converted, then at least output the text strings.
+	// We render all messages one after the other into msgbuffer, separated
+	// by spaces.
+	memset(msgbuffer, 0, sizeof(msgbuffer)); // avoids problems with 0-termination
 	char *w = msgbuffer;
-	int sizeleft = sizeof(msgbuffer) - 1;
-	int n=0;
-	while (strings[n]) {
+	int sizeleft = sizeof(msgbuffer) - 1; // leave one byte for termination
+	int n = 0;
+	while (strings[n]) // string array is zero terminated
+	{
 	    char *s = strings[n];
 	    int l = strlen(s);
 	    if (l + 1 < sizeleft) {
@@ -585,12 +594,8 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
 	    }
 	    n++;
 	}
-	*w = 0;
     }
     
-    // I'm not sure if Windows zero-terminates this if msg is too long...
-    msgbuffer[sizeof(msgbuffer)-1] = 0; 
-
     // replace newlines with spaces. check_mk expects one message each line.
     char *w = msgbuffer;
     while (*w) {
@@ -599,17 +604,12 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
     }
     
     // convert UNIX timestamp to local time
-    time_t *time_pointer = (time_t *)&event->TimeGenerated;
-    char dummymsg[512];
-    snprintf(dummymsg, 512, "Value of time_pointer: %p", time_pointer);
-    debug(dummymsg);
-    time_t now = time(0);
-    struct tm *t = time_pointer ? localtime(time_pointer) : localtime(&now);
+    time_t time_generated = (time_t)event->TimeGenerated;
+    struct tm *t = localtime(&time_generated);
     char timestamp[64];
     strftime(timestamp, sizeof(timestamp), "%b %d %H:%M:%S", t);
     
-    output(out, "%c %s %lu %s %s\n", type_char, timestamp,
-	   event->EventID, source_name, msgbuffer);
+    output(out, "%c %s %lu %s %s\n", type_char, timestamp, event->EventID, source_name, msgbuffer);
     return true;
 }
 
@@ -647,12 +647,16 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
 	if (*worst_state < this_state)
 	    *worst_state = this_state;
 
+	// If we are not just scanning for the current end and the worst state,
+	// we output the event message
 	if (!just_find_end) 
 	{
+	    // The source name is the name of the application that produced the event
 	    LPCTSTR lpSourceName = (LPCTSTR) ((LPBYTE) event + sizeof(EVENTLOGRECORD));
 	    
 	    // prepare source name without spaces (for check_mk output)
-	    strncpy(source_name, lpSourceName, sizeof(source_name));
+	    strncpy(source_name, lpSourceName, sizeof(source_name)-1);
+	    source_name[sizeof(source_name)-1] = 0; // strncpy does not zero-terminate, if buffer is too small!
 	    char *w = source_name;
 	    while (*w) {
 		if (*w == ' ') *w = '_';
@@ -669,8 +673,7 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
 		strings[ns] = s;
 		s += strlen(s) + 1;
 	    }
-	    strings[ns] = 0;
-
+	    strings[ns] = 0; // end marker in array
 	    
 	    // Windows eventlog entries refer to texts stored in a DLL >:-P
 	    // We need to load this DLL. First we need to look up which
@@ -679,19 +682,20 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
 	    snprintf(regpath, sizeof(regpath), 
 		     "SYSTEM\\CurrentControlSet\\Services\\Eventlog\\%s\\%s",
 		     logname, lpSourceName);
-	    DWORD size = sizeof(dllpath);
+
 	    HKEY key;
-	    DWORD ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE, regpath, 0,
-				     KEY_READ, &key);
+	    DWORD ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE, regpath, 0, KEY_READ, &key);
 
 	    bool success = false;
-	    if (ret == ERROR_SUCCESS) 
+	    if (ret == ERROR_SUCCESS) // could open registry key
 	    {
+	        DWORD size = sizeof(dllpath) - 1; // leave space for 0 termination
+	        memset(dllpath, 0, sizeof(dllpath));
 		if (ERROR_SUCCESS == RegQueryValueEx(key, "EventMessageFile", NULL, NULL, dllpath, &size))
 		{
 		    // Answer may contain more than one DLL. They are separated
-		    // by semicola. Not knowing which one is the correct one, I try
-		    // all
+		    // by semicola. Not knowing which one is the correct one, I have to try
+		    // all...
 		    char *token = strtok((char *)dllpath, ";");
 		    while (token) {
 			if (output_eventlog_entry(out, token, event, type_char, logname, source_name, strings)) {
@@ -702,11 +706,10 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
 		    }
 		}
 		RegCloseKey(key);
-	      }
-	      // No text conversion succeeded. Output without text anyway
-	      if (!success) {
-	  	output_eventlog_entry(out, NULL, event, type_char, logname, source_name, strings);
-	  }
+	    }
+	    // No text conversion succeeded. Output without text anyway
+	    if (!success)
+	       output_eventlog_entry(out, NULL, event, type_char, logname, source_name, strings);
 
 	} // type_char != '.'
 	    
@@ -736,7 +739,7 @@ void output_eventlog(SOCKET &out, const char *logname,
 	// we scan all new entries twice. At the first run we check if
 	// at least one warning/error message is present. Only if this
 	// is the case we make a second run where we output *all* messages,
-	// even the informational once.
+	// even the informational ones.
 	for (int t=0; t<2; t++)
 	{
 	    *record_number = old_record_number;

@@ -1,4 +1,9 @@
-1.1.0.beta20:
+1.1.0beta21:
+      - Fixed problems in Windows agent (could lead
+        to crash of agent in case of unusal Eventlog
+	messages)
+
+1.1.0beta20:
       - Fixed problem sind 1.0.39: recompile waitmax for
         32 Bit (also running on 64)
       - Autoconfiscated MK Livestatus

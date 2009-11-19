@@ -1,3 +1,4 @@
+.*.swp
 *~
 check_mk-*.spec
 check_mk-*.tar.gz
@@ -6,3 +7,4 @@ rpm.buildroot/
 rpm.topdir/
 *.rpm
 *.deb
+var/

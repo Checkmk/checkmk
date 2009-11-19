@@ -5,7 +5,8 @@ license: GPL
 distribution: check_mk
 description:
  This check looks into the list of then current running processes for
- those matching a certain name or regular expression. The number of
+ those matching a certain name or regular expression and optionally 
+ being owned by a certain user. The number of
  matching processes is matched against warning and critical levels.
 
 item:
@@ -18,15 +19,29 @@ examples:
  checks += [
    # make sure exactly one ntpd is running
    ( "somehost", "ps", "NTP", ( "/usr/sbin/ntpd", 1, 1, 1, 1 ) ),
+
    # command lines containing "prefork" should be in range 20 ... 30
    ( "somehost", "ps", "prefork" ( "~.*prefork", 15, 20, 30, 35 ) ),
+
    # no process containing "sshd" should exist
-   ( "somehost", "ps", "SSHD" ( "~.*sshd", 0, 0, 0, 0 ) )
+   ( "somehost", "ps", "SSHD" ( "~.*sshd", 0, 0, 0, 0 ) ),
+
+   # check number of processes owned by user "www-data"
+   ( "somehost", "ps", "count www", ( None, "www-data", 10, 15, 25, 30 ) ),
+
+   # make sure no "sshd" processes owned by user "root" exists
+   ( "somehost", "ps", "SSHD[root]", ( "~.*sshd", "root", 0, 0, 0, 0) ),
+
  ]
 [parameters]
-procname (string): Process specification. This can either be the name of a process as ouput by the agent. It must exactly match the first column of the agents output. Or - if the string is beginning with a tilde - it is interpreted
- as a regular expression that must match the beginning of the process line as output by the agent. For the Linux/UNIX agents this allows you to match specific
- command line arguments of the process.
+procname (string): Process specification. This can either be the name of a process as ouput by the agent. 
+   It must exactly match the first column of the agents output. Or - if the string is 
+   beginning with a tilde - it is interpreted as a regular expression that must match 
+   the beginning of the process line as output by the agent. For the Linux/UNIX agents
+   this allows you to match specific command line arguments of the process. A third possibility is to
+   set the process name to {None}. In that case {all} processes will match. This is probably only useful
+   if you specify a user name.
+user (string): Name of user that owns the process(es). This parameter is optional and can be left out completely.
 warnmin (int): Minimum number of matched process for WARNING state
 okmin (int): Minimum number for OK state
 okmax (int): Maximum number for OK state

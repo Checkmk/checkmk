@@ -53,6 +53,7 @@ void OutputBuffer::reset()
    _response_header = RESPONSE_HEADER_OFF;
    _response_code = RESPONSE_CODE_OK;
    _do_keepalive = false;
+   _error_message = "";
 }
 
 void OutputBuffer::addChar(char c)

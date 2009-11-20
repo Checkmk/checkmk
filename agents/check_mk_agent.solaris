@@ -49,7 +49,7 @@ PLUGINSDIR=$MK_LIBDIR/plugins
 LOCALDIR=$MK_LIBDIR/local
 
 echo '<<<check_mk>>>'
-echo Version: 1.1.0beta21
+echo Version: 1.1.0beta22
 
 echo '<<<df>>>'
 df -lk | sed 1d | \

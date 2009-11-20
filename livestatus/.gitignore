@@ -2,3 +2,10 @@ Makefile.in
 autom4te.cache/
 configure
 aclocal.m4
+Makefile
+config.h
+config.log
+config.status
+src/Makefile
+src/unixcat
+stamp-h1

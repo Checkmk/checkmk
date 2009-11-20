@@ -71,6 +71,7 @@ dist: mk-livestatus
 			check_mk{,.trans}.200.png  quickstart_debian.txt windows \
 			df_magic_number.py livestatus
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) COPYING AUTHORS ChangeLog
+	tar rf $(DISTNAME)/doc.tar $(TAROPTS) livestatus/api --exclude "*~" --exclude "*.pyc"
 	gzip $(DISTNAME)/doc.tar
 	tar czf $(DISTNAME)/modules.tar.gz $(TAROPTS) -C modules $$(cd modules ; ls *.py)
 
@@ -86,7 +87,7 @@ dist: mk-livestatus
 	tar czf $(DISTNAME).tar.gz $(DISTNAME)
 	rm -rf $(DISTNAME)
 	@echo "=============================================================================="
-	@figlet "                    finished."
+	@echo "   FINISHED. "
 	@echo "=============================================================================="
 
 mk-livestatus:
@@ -170,5 +171,14 @@ check:
 	    echo "./check_mk -c $${checkfile%.HS} -HS > $$checkfile" ; \
             exit 1 ; } ; \
 	done 
+
+setup:
+	$(MAKE) dist
+	rm -rf $(DISTNAME)
+	tar xzf $(DISTNAME).tar.gz
+	cd $(DISTNAME) && ./setup.sh --yes
+	/etc/init.d/nagios restart
+	/etc/init.d/apache2 reload
+
 
 -include Makefile.private

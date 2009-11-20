@@ -1,0 +1,8 @@
+This directory contains a simple and yet complete API for accessing
+MK Livestatus from Python. Two positive aspects of this API:
+
+* It supports keep alive
+* It returns typed values
+
+You might want to look at example.py for examples of usage.
+

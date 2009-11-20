@@ -147,6 +147,12 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset, Ta
 	    "Wether the host state is flapping (0/1)", (char *)(&hst.is_flapping) - ref, indirect_offset));
    table->addColumn(new OffsetIntColumn(prefix + "scheduled_downtime_depth", 
 	    "The number of downtimes this host is currently in", (char *)(&hst.scheduled_downtime_depth) - ref, indirect_offset));
+   table->addColumn(new OffsetIntColumn(prefix + "is_executing",
+	    "is there a host check currently running... (0/1)", (char *)(&hst.is_executing) - ref, indirect_offset));
+   table->addColumn(new OffsetIntColumn(prefix + "active_checks_enabled",
+	    "Wether active checks are enabled for the host (0/1)", (char *)(&hst.checks_enabled) - ref, indirect_offset));
+   table->addColumn(new OffsetIntColumn(prefix + "check_options",
+	    "The current check option, forced, normal, freshness... (0/1)", (char *)(&hst.check_options) - ref, indirect_offset));
 
    // columns of type double
    table->addColumn(new OffsetDoubleColumn(prefix + "check_interval",

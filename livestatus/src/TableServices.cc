@@ -195,6 +195,12 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
 	    "Wether notifications are enabled for the service (0/1)", (char *)(&svc.notifications_enabled) - ref, indirect_offset));
    table->addColumn(new OffsetIntColumn(prefix + "process_performance_data", 
 	    "Wether processing of performance data is enabled for the service (0/1)", (char *)(&svc.process_performance_data) - ref, indirect_offset));
+   table->addColumn(new OffsetIntColumn(prefix + "is_executing",
+	    "is there a service check currently running... (0/1)", (char *)(&svc.is_executing) - ref, indirect_offset));
+   table->addColumn(new OffsetIntColumn(prefix + "active_checks_enabled",
+	    "Wether active checks are enabled for the service (0/1)", (char *)(&svc.checks_enabled) - ref, indirect_offset));
+   table->addColumn(new OffsetIntColumn(prefix + "check_options",
+	    "The current check option, forced, normal, freshness... (0/1)", (char *)(&svc.check_options) - ref, indirect_offset));
 
    // columns of type double
    table->addColumn(new OffsetDoubleColumn(prefix + "check_interval",

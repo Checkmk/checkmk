@@ -91,7 +91,7 @@ dist: mk-livestatus
 	@echo "=============================================================================="
 
 mk-livestatus:
-	cd livestatus && aclocal && automake && autoconf
+	cd livestatus && autoheader && aclocal && automake && autoconf
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)
 	cd livestatus ; tar cf - $(LIVESTATUS_SOURCES) | tar xf - -C ../mk-livestatus-$(VERSION)

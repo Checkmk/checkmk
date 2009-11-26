@@ -9,3 +9,4 @@ config.status
 src/Makefile
 src/unixcat
 stamp-h1
+config.h.in

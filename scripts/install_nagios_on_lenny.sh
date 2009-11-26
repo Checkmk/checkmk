@@ -113,7 +113,6 @@ id nagios >/dev/null 2>&1 || useradd -c 'Nagios Daemon' -s /bin/false -d /var/li
 
 make -j 16 all
 
-rm -rf /tmp/hirni
 make DESTDIR=$DESTDIR \
   install \
   install-cgis \

@@ -112,7 +112,6 @@ void Store::answerCommandRequest(const char *command)
 void Store::answerGetRequest(InputBuffer *input, OutputBuffer *output, const char *tablename)
 {
    output->reset();
-   logger(LG_INFO, "Tablename ist [%s] HIRN", tablename);
 
    if (!tablename[0]) {
       output->setError(RESPONSE_CODE_INVALID_REQUEST, "Invalid GET request, missing tablename");

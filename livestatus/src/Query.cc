@@ -97,7 +97,11 @@ Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
       else if (!strncmp(buffer, "KeepAlive:", 10))
 	 parseKeepAliveLine(lstrip(buffer + 10));
 
-      else if (!buffer[0]) {
+      else if (!buffer[0])
+	 break;
+
+      else {
+	 output->setError(RESPONSE_CODE_INVALID_HEADER, "Undefined request header '%s'", buffer);
 	 break;
       }
    }

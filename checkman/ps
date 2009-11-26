@@ -21,10 +21,10 @@ examples:
    ( "somehost", "ps", "NTP", ( "/usr/sbin/ntpd", 1, 1, 1, 1 ) ),
 
    # command lines containing "prefork" should be in range 20 ... 30
-   ( "somehost", "ps", "prefork" ( "~.*prefork", 15, 20, 30, 35 ) ),
+   ( "somehost", "ps", "prefork", ( "~.*prefork", 15, 20, 30, 35 ) ),
 
    # no process containing "sshd" should exist
-   ( "somehost", "ps", "SSHD" ( "~.*sshd", 0, 0, 0, 0 ) ),
+   ( "somehost", "ps", "SSHD", ( "~.*sshd", 0, 0, 0, 0 ) ),
 
    # check number of processes owned by user "www-data"
    ( "somehost", "ps", "count www", ( None, "www-data", 10, 15, 25, 30 ) ),

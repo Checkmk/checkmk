@@ -65,7 +65,6 @@ public:
 
 private:
   Table *findTable(string name);
-  string readCommand(FILE *);
   void answerGetRequest(InputBuffer *, OutputBuffer *, const char *);
   void answerCommandRequest(const char *);
 };

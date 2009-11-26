@@ -80,17 +80,6 @@ void Store::registerDowntime(nebstruct_downtime_data *d)
    _table_downtimes.add(d);
 }
 
-string Store::readCommand(FILE *c)
-{
-   char command[512];
-   if (0 == fgets(command, sizeof(command), c))
-      return "";
-   if (strncmp(command, "GET ", 4))
-      return "";
-   rstrip(command + 4);
-   return command + 4;
-}
-
 bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
 {
    output->reset();
@@ -104,6 +93,8 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
    const char *line = l.c_str();
    if (!strncmp(line, "GET ", 4))
       answerGetRequest(input, output, lstrip(line + 4));
+   else if (!strcmp(line, "GET"))
+      answerGetRequest(input, output, ""); // only to get error message
    else if (!strncmp(line, "COMMAND ", 8))
       answerCommandRequest(lstrip(line + 8));
    else 
@@ -121,6 +112,7 @@ void Store::answerCommandRequest(const char *command)
 void Store::answerGetRequest(InputBuffer *input, OutputBuffer *output, const char *tablename)
 {
    output->reset();
+   logger(LG_INFO, "Tablename ist [%s] HIRN", tablename);
 
    if (!tablename[0]) {
       output->setError(RESPONSE_CODE_INVALID_REQUEST, "Invalid GET request, missing tablename");

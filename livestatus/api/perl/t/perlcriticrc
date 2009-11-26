@@ -1,0 +1,286 @@
+##############################################################################
+# This Perl::Critic configuration file sets the Policy severity levels
+# according to Damian Conway's own personal recommendations.  Feel free to
+# use this as your own, or make modifications.
+##############################################################################
+
+[Perl::Critic::Policy::ValuesAndExpressions::ProhibitAccessOfPrivateData]
+severity   = 3
+
+[Perl::Critic::Policy::BuiltinFunctions::ProhibitLvalueSubstr]
+severity   = 3
+
+[Perl::Critic::Policy::BuiltinFunctions::ProhibitReverseSortBlock]
+severity   = 1
+
+[Perl::Critic::Policy::BuiltinFunctions::ProhibitSleepViaSelect]
+severity   = 5
+
+[Perl::Critic::Policy::BuiltinFunctions::ProhibitStringyEval]
+severity   = 5
+
+[Perl::Critic::Policy::BuiltinFunctions::ProhibitStringySplit]
+severity   = 2
+
+[Perl::Critic::Policy::BuiltinFunctions::ProhibitUniversalCan]
+severity   = 4
+
+[Perl::Critic::Policy::BuiltinFunctions::ProhibitUniversalIsa]
+severity   = 4
+
+[Perl::Critic::Policy::BuiltinFunctions::ProhibitVoidGrep]
+severity   = 3
+
+[Perl::Critic::Policy::BuiltinFunctions::ProhibitVoidMap]
+severity   = 3
+
+[Perl::Critic::Policy::BuiltinFunctions::RequireBlockGrep]
+severity   = 4
+
+[Perl::Critic::Policy::BuiltinFunctions::RequireBlockMap]
+severity   = 4
+
+[Perl::Critic::Policy::BuiltinFunctions::RequireGlobFunction]
+severity   = 5
+
+[Perl::Critic::Policy::BuiltinFunctions::RequireSimpleSortBlock]
+severity   = 3
+
+[Perl::Critic::Policy::ClassHierarchies::ProhibitAutoloading]
+severity   = 3
+
+[Perl::Critic::Policy::ClassHierarchies::ProhibitExplicitISA]
+severity   = 4
+
+[Perl::Critic::Policy::ClassHierarchies::ProhibitOneArgBless]
+severity   = 5
+
+[Perl::Critic::Policy::CodeLayout::ProhibitHardTabs]
+severity   = 3
+
+[Perl::Critic::Policy::CodeLayout::ProhibitParensWithBuiltins]
+severity   = 1
+
+[Perl::Critic::Policy::CodeLayout::ProhibitQuotedWordLists]
+severity   = 2
+
+[Perl::Critic::Policy::CodeLayout::RequireConsistentNewlines]
+severity   = 4
+
+[Perl::Critic::Policy::CodeLayout::RequireTidyCode]
+severity   = 1
+
+[Perl::Critic::Policy::CodeLayout::RequireTrailingCommas]
+severity   = 3
+
+[Perl::Critic::Policy::ControlStructures::ProhibitCStyleForLoops]
+severity   = 3
+
+[Perl::Critic::Policy::ControlStructures::ProhibitCascadingIfElse]
+severity   = 3
+
+[Perl::Critic::Policy::ControlStructures::ProhibitDeepNests]
+severity   = 3
+
+[Perl::Critic::Policy::ControlStructures::ProhibitMutatingListFunctions]
+severity   = 5
+
+[Perl::Critic::Policy::ControlStructures::ProhibitPostfixControls]
+severity   = 4
+
+[Perl::Critic::Policy::ControlStructures::ProhibitUnlessBlocks]
+severity   = 4
+
+[Perl::Critic::Policy::ControlStructures::ProhibitUnreachableCode]
+severity   = 4
+
+[Perl::Critic::Policy::ControlStructures::ProhibitUntilBlocks]
+severity   = 4
+
+[Perl::Critic::Policy::Documentation::RequirePodAtEnd]
+severity   = 2
+
+[Perl::Critic::Policy::Documentation::RequirePodSections]
+severity   = 2
+
+[Perl::Critic::Policy::ErrorHandling::RequireCarping]
+severity   = 4
+
+[Perl::Critic::Policy::InputOutput::ProhibitBacktickOperators]
+severity   = 3
+
+[Perl::Critic::Policy::InputOutput::ProhibitBarewordFileHandles]
+severity   = 5
+
+[Perl::Critic::Policy::InputOutput::ProhibitInteractiveTest]
+severity   = 4
+
+[Perl::Critic::Policy::InputOutput::ProhibitOneArgSelect]
+severity   = 4
+
+[Perl::Critic::Policy::InputOutput::ProhibitReadlineInForLoop]
+severity   = 5
+
+[Perl::Critic::Policy::InputOutput::ProhibitTwoArgOpen]
+severity   = 4
+
+[Perl::Critic::Policy::InputOutput::RequireBracedFileHandleWithPrint]
+severity   = 3
+
+[Perl::Critic::Policy::Miscellanea::ProhibitFormats]
+severity   = 3
+
+[Perl::Critic::Policy::Miscellanea::ProhibitTies]
+severity   = 4
+
+[-Perl::Critic::Policy::Miscellanea::RequireRcsKeywords]
+
+[Perl::Critic::Policy::Modules::ProhibitAutomaticExportation]
+severity   = 4
+
+[Perl::Critic::Policy::Modules::ProhibitEvilModules]
+severity   = 5
+
+[Perl::Critic::Policy::Modules::ProhibitMultiplePackages]
+severity   = 4
+
+[Perl::Critic::Policy::Modules::RequireBarewordIncludes]
+severity   = 5
+
+[Perl::Critic::Policy::Modules::RequireEndWithOne]
+severity   = 4
+
+[Perl::Critic::Policy::Modules::RequireExplicitPackage]
+severity   = 4
+
+[Perl::Critic::Policy::Modules::RequireFilenameMatchesPackage]
+severity   = 5
+
+[Perl::Critic::Policy::Modules::RequireVersionVar]
+severity   = 4
+
+[Perl::Critic::Policy::NamingConventions::ProhibitAmbiguousNames]
+severity   = 3
+
+[Perl::Critic::Policy::NamingConventions::ProhibitMixedCaseSubs]
+severity   = 1
+
+[Perl::Critic::Policy::NamingConventions::ProhibitMixedCaseVars]
+severity   = 1
+
+[Perl::Critic::Policy::References::ProhibitDoubleSigils]
+severity   = 4
+
+[Perl::Critic::Policy::RegularExpressions::ProhibitCaptureWithoutTest]
+severity   = 4
+
+[Perl::Critic::Policy::RegularExpressions::RequireExtendedFormatting]
+severity   = 5
+
+[Perl::Critic::Policy::RegularExpressions::RequireLineBoundaryMatching]
+severity   = 5
+
+[Perl::Critic::Policy::Subroutines::ProhibitAmpersandSigils]
+severity   = 2
+
+[Perl::Critic::Policy::Subroutines::ProhibitBuiltinHomonyms]
+severity   = 4
+
+[Perl::Critic::Policy::Subroutines::ProhibitExcessComplexity]
+severity   = 3
+
+[Perl::Critic::Policy::Subroutines::ProhibitExplicitReturnUndef]
+severity   = 5
+
+[Perl::Critic::Policy::Subroutines::ProhibitSubroutinePrototypes]
+severity   = 4
+
+[Perl::Critic::Policy::Subroutines::ProtectPrivateSubs]
+severity   = 3
+
+[Perl::Critic::Policy::Subroutines::RequireFinalReturn]
+severity   = 5
+
+[Perl::Critic::Policy::TestingAndDebugging::ProhibitNoStrict]
+severity   = 5
+
+[Perl::Critic::Policy::TestingAndDebugging::ProhibitNoWarnings]
+severity   = 4
+
+[Perl::Critic::Policy::TestingAndDebugging::ProhibitProlongedStrictureOverride]
+severity   = 4
+
+[Perl::Critic::Policy::TestingAndDebugging::RequireTestLabels]
+severity   = 3
+
+[Perl::Critic::Policy::TestingAndDebugging::RequireUseStrict]
+severity   = 5
+
+[Perl::Critic::Policy::TestingAndDebugging::RequireUseWarnings]
+severity   = 4
+
+[Perl::Critic::Policy::ValuesAndExpressions::ProhibitConstantPragma]
+severity   = 4
+
+[Perl::Critic::Policy::ValuesAndExpressions::ProhibitEmptyQuotes]
+severity   = 2
+
+[Perl::Critic::Policy::ValuesAndExpressions::ProhibitEscapedCharacters]
+severity   = 2
+
+[Perl::Critic::Policy::ValuesAndExpressions::ProhibitInterpolationOfLiterals]
+severity   = 1
+
+[Perl::Critic::Policy::ValuesAndExpressions::ProhibitLeadingZeros]
+severity   = 5
+
+[Perl::Critic::Policy::ValuesAndExpressions::ProhibitMismatchedOperators]
+severity   = 2
+
+[Perl::Critic::Policy::ValuesAndExpressions::ProhibitMixedBooleanOperators]
+severity   = 4
+
+[Perl::Critic::Policy::ValuesAndExpressions::ProhibitNoisyQuotes]
+severity   = 2
+
+[Perl::Critic::Policy::ValuesAndExpressions::ProhibitVersionStrings]
+severity   = 3
+
+[Perl::Critic::Policy::ValuesAndExpressions::RequireInterpolationOfMetachars]
+severity   = 1
+
+[Perl::Critic::Policy::ValuesAndExpressions::RequireNumberSeparators]
+severity   = 2
+
+[Perl::Critic::Policy::ValuesAndExpressions::RequireQuotedHeredocTerminator]
+severity   = 4
+
+[Perl::Critic::Policy::ValuesAndExpressions::RequireUpperCaseHeredocTerminator]
+severity   = 4
+
+[Perl::Critic::Policy::Variables::ProhibitConditionalDeclarations]
+severity   = 5
+
+[Perl::Critic::Policy::Variables::ProhibitLocalVars]
+severity   = 2
+
+[Perl::Critic::Policy::Variables::ProhibitMatchVars]
+severity   = 4
+
+[Perl::Critic::Policy::Variables::ProhibitPackageVars]
+severity   = 3
+
+[Perl::Critic::Policy::Variables::ProhibitPunctuationVars]
+severity   = 2
+
+[Perl::Critic::Policy::Variables::ProtectPrivateVars]
+severity   = 3
+
+[Perl::Critic::Policy::Variables::RequireInitializationForLocalVars]
+severity   = 5
+
+[Perl::Critic::Policy::Variables::RequireLexicalLoopIterators]
+severity   = 5
+
+[Perl::Critic::Policy::Variables::RequireNegativeIndices]
+severity   = 4

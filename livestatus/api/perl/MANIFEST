@@ -1,0 +1,19 @@
+Changes
+examples/dump.pl
+lib/Nagios/MKLivestatus.pm
+lib/Nagios/MKLivestatus/INET.pm
+lib/Nagios/MKLivestatus/UNIX.pm
+Makefile.PL
+MANIFEST
+README
+t/01-Nagios-MKLivestatus-basic_tests.t
+t/02-Nagios-MKLivestatus-internals.t
+t/20-Nagios-MKLivestatus-test_socket.t
+t/21-Nagios-MKLivestatus-INET.t
+t/22-Nagios-MKLivestatus-UNIX.t
+t/30-Nagios-MKLivestatus-real_test.t
+t/97-Pod.t
+t/98-Pod-Coverage.t
+t/99-Perl-Critic.t
+t/perlcriticrc
+META.yml                                 Module meta-data (added by MakeMaker)

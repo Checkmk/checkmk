@@ -1,0 +1,53 @@
+Revision history for Perl extension Nagios::MKLivestatus.
+
+0.22  Mon Nov 23 09:13:19 CET 2009
+	- fixed errors on socket problems
+
+0.20  Sun Nov 22 12:41:39 CET 2009
+	- added keepalive support
+	- added support for ResponseHeader: fixed16
+	- added error handling
+	- added pod test
+	- added tests with real socket / server
+	- added column aliases
+	- added timeout option
+	- implemented select_scalar_value()
+	- fixed perl::critic tests
+
+0.18  Sat Nov 14 2009 08:58:02 GMT
+	- fixed requirements
+	- fixed typos
+
+0.17  Fri Nov 13 17:15:44 CET 2009
+	- added support for tcp connections
+
+0.16  Sun Nov  8 23:17:35 CET 2009
+	- added support for stats querys
+
+0.15  Sat Nov  7 21:28:33 CET 2009
+	- fixed typos in doc
+	- minor bugfixes
+
+0.14  Fri Nov  6 09:39:56 CET 2009
+	- implemented selectcol_arrayref
+	- implemented selectrow_array
+	- implemented selectrow_hashref
+
+0.13  Fri Nov  6 00:03:38 CET 2009
+	- fixed tests on solaris
+	- implemented selectall_hashref()
+
+0.12  Thu Nov  5 09:34:59 CET 2009
+	- fixed tests with thread support
+	- added more tests
+
+0.11  Wed Nov  4 23:12:16 2009
+	- inital working version
+
+0.10  Tue Nov  3 17:13:16 2009
+	- renamed to Nagios::MKLivestatus
+
+0.01  Tue Nov  3 00:07:46 2009
+	- original version; created by h2xs 1.23 with options
+		-A -X -n Nagios::Livestatus
+

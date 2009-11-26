@@ -158,9 +158,10 @@ deb-agent: $(NAME)-agent-$(VERSION)-1.noarch.rpm $(NAME)-agent-logwatch-$(VERSIO
 
 clean:
 	rm -rf dist.tmp rpm.topdir *.rpm *.deb mk-livestatus-*.tar.gz $(NAME)-*.tar.gz *~ counters autochecks precompiled cache
-	$(MAKE) -C livestatus clean
 	find -name "*~" | xargs rm -f
 
+mrproper:
+	git clean -xfd
 
 check:
 	@set -e ; for checkfile in *.HS ; do \

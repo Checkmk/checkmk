@@ -77,7 +77,7 @@ int InputBuffer::readRequest()
 	    if (rd == IB_END_OF_FILE && r == _read_pointer /* currently at beginning of a line */) 
 	    {
 	       if (_requestlines.empty()) {
-		  return IB_UNEXPECTED_END_OF_FILE; // incomplete request
+		  return IB_END_OF_FILE; // empty request -> no request
 	       }
 	       else {
 		  // socket has been closed but request is complete
@@ -88,11 +88,14 @@ int InputBuffer::readRequest()
 		  // next request, it will get an IB_UNEXPECTED_END_OF_FILE
 	       }
 	    }
-	    // if we are *not* at an end of line or if we should
-	    // terminate, we pass through the error message. The
-	    // main program will close the client connection
-	    else if (rd == IB_SHOULD_TERMINATE || rd == IB_END_OF_FILE)
-	       return rd;
+	    // if we are *not* at an end of line while reading
+	    // a request, we got an invalid request.
+	    else if (rd == IB_END_OF_FILE)
+	       return IB_UNEXPECTED_END_OF_FILE;
+
+	    // Nagios restarted while reading
+	    else if (rd == IB_SHOULD_TERMINATE)
+	       return IB_SHOULD_TERMINATE;
 	 }
 	 // OK. So no space is left in the buffer. But maybe at the
 	 // *beginning* of the buffer is space left again. This is
@@ -127,7 +130,6 @@ int InputBuffer::readRequest()
 	       return IB_REQUEST_READ;
 	 }
 	 else { // non-empty line: belongs to current request
-	    string hirn(_read_pointer, r - _read_pointer);
 	    storeRequestLine(_read_pointer, r - _read_pointer);
 	    _read_pointer = r + 1;
 	    r = _read_pointer;

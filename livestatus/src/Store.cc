@@ -142,7 +142,7 @@ void Store::answerGetRequest(InputBuffer *input, OutputBuffer *output, const cha
       query.finish();
       gettimeofday(&after, 0);
       unsigned long ustime = (after.tv_sec - before.tv_sec) * 1000000 + (after.tv_usec - before.tv_usec);
-      logger(LG_INFO, "Time to process request: %lu us. Size of answer: %d bytes", ustime, output->size());
+      // logger(LG_INFO, "Time to process request: %lu us. Size of answer: %d bytes", ustime, output->size());
    }
 }
 

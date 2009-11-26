@@ -81,18 +81,6 @@ void livestatus_cleanup_after_fork()
       if (0 == fstat(i, &st) && S_ISSOCK(st.st_mode))
       {
 	 close(i);
-
-	 // the question here is: is it faster to check if the
-	 // CLOEXEC is really set or to simply close the fd 
-	 // now? I assume that closing is cheaper.
-
-	 /* int flags = fcntl(i, F_GETFD);
-	 if (flags & FD_CLOEXEC)
-	    logger(LG_INFO, "Muss %d nicht schliessen: CLOEXEC :-)", i);
-	 else {
-	    logger(LOG_INFO, "Schliesse %d", i);
-	    close(i);
-	 }*/
       }
    }
 }
@@ -282,15 +270,12 @@ int broker_check(int event_type, void *data)
    if (event_type == NEBCALLBACK_SERVICE_CHECK_DATA) {
       nebstruct_service_check_data *c = (nebstruct_service_check_data *)data;
       if (c->type == NEBTYPE_SERVICECHECK_PROCESSED) {
-	 // logger(LG_INFO, "service check %s|%s\n", c->host_name, c->service_description);
 	 g_counters[COUNTER_SERVICE_CHECKS]++;
       }
    }
    else if (event_type == NEBCALLBACK_HOST_CHECK_DATA) {
       nebstruct_host_check_data *c = (nebstruct_host_check_data *)data;
       if (c->type == NEBTYPE_HOSTCHECK_PROCESSED) {
-	 //logger(LG_INFO, "host check %s. Type=%d, flags=%d attr=%d\n",
-	 //    c->host_name, c->type, c->flags, c->attr);
 	 g_counters[COUNTER_HOST_CHECKS]++;
       }
    }

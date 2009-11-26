@@ -347,11 +347,16 @@ void Query::parseResponseHeaderLine(char *line)
 void Query::parseLimitLine(char *line)
 {
    char *value = next_field(&line);
-   int limit = atoi(value);
-   if (!isdigit(value[0]) || limit < 0)
-      _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value for Limit: must be non-negative integer");
-   else
-      _limit = limit;
+   if (!value) {
+      _output->setError(RESPONSE_CODE_INVALID_HEADER, "Header Limit: missing value");
+   }
+   else {
+      int limit = atoi(value);
+      if (!isdigit(value[0]) || limit < 0)
+	 _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value for Limit: must be non-negative integer");
+      else
+	 _limit = limit;
+   }
 }
 
 bool Query::doStats()

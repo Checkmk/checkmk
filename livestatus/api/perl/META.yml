@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Nagios-MKLivestatus
-version:            0.20
+version:            0.22
 abstract:           access nagios runtime data from check_mk livestatus Nagios addon
 author:
     - Sven Nierlein <nierlein@cpan.org>

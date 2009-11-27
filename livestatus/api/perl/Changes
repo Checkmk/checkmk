@@ -1,7 +1,8 @@
 Revision history for Perl extension Nagios::MKLivestatus.
 
-0.22  Mon Nov 23 09:13:19 CET 2009
+0.22  Fri Nov 27 01:04:16 CET 2009
 	- fixed errors on socket problems
+	- fixed sending commands
 
 0.20  Sun Nov 22 12:41:39 CET 2009
 	- added keepalive support

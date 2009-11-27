@@ -16,4 +16,3 @@ t/97-Pod.t
 t/98-Pod-Coverage.t
 t/99-Perl-Critic.t
 t/perlcriticrc
-META.yml                                 Module meta-data (added by MakeMaker)

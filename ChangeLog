@@ -4,7 +4,6 @@
 	messages)
       - Fixed problem sind 1.0.39: recompile waitmax for
         32 Bit (also running on 64)
-      - Autoconfiscated MK Livestatus
       - Fixed bug in cluster checks: No cache files
         had been used. This can lead to missing logfile
 	messages.
@@ -25,9 +24,6 @@
         df_netapp use same template as df
       - Fix bug: ifoperstatus does not produce performance
         data but said so.
-      - Fixed bug in MK Livestatus: StatsGroupBy:
-        didn't work
-      - MK Livestatus supports keep alive
       - Fix bug in Multiadmin: Sorting according to
         service states did not work
       - Fix two bugs in df_netapp: use 64 bit counters
@@ -53,9 +49,6 @@
 	Livestatus per default now. If you do not want
 	this, please disable it by entering <tt>no</tt>,
 	when asked by setup.
-      - Web pages (Multiadmin) now uses MK Livestatus
-        instead of parsing status.dat. This is much faster.
-	And that way you get *live* data.
       - New Option --paths shows all installation, config
         and data paths of Check_mk and Nagios
       - New configuration variable define_hostgroups and

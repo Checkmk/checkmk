@@ -1,14 +1,10 @@
-1.1.0beta21:
+1.1.0:
       - Fixed problems in Windows agent (could lead
         to crash of agent in case of unusal Eventlog
 	messages)
-
-1.1.0beta20:
       - Fixed problem sind 1.0.39: recompile waitmax for
         32 Bit (also running on 64)
       - Autoconfiscated MK Livestatus
-
-1.1.0beta18:
       - Fixed bug in cluster checks: No cache files
         had been used. This can lead to missing logfile
 	messages.
@@ -29,15 +25,9 @@
         df_netapp use same template as df
       - Fix bug: ifoperstatus does not produce performance
         data but said so.
-
-1.1.0beta16:
       - Fixed bug in MK Livestatus: StatsGroupBy:
         didn't work
-
-1.1.0beta15
       - MK Livestatus supports keep alive
-
-1.1.0beta12:
       - Fix bug in Multiadmin: Sorting according to
         service states did not work
       - Fix two bugs in df_netapp: use 64 bit counters
@@ -56,12 +46,8 @@
       - mk_logwatch -d now processes the complete logfile
         if logwatch.state is missing or not including the
 	file (this is easier for testing)
-
-1.1.0beta11:
       - Added missing float columns to Livestatus.
       - Livestatus: new header StatsGroupBy:
-
-1.1.0:
       - First version with "Check_MK Livestatus Module"!
         setup.sh will compile, install and activate
 	Livestatus per default now. If you do not want

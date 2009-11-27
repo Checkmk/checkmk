@@ -105,17 +105,17 @@ version:
 	@newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)") ; \
 	if [ -n "$$newversion" ] ; then \
 	    sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$$newversion/" Makefile ; \
+	    for agent in agents/* ; do \
+	        if [ "$$agent" != agents/windows ] ; then \
+	            sed -i 's/echo Version: [0-9.a-z]*/'"echo Version: $$newversion/g" $$agent; \
+	        fi ; \
+	    done ; \
+	    sed -i 's/#define CHECK_MK_VERSION .*/#define CHECK_MK_VERSION "'$$newversion'"/' agents/windows/check_mk_agent.cc ; \
+	    sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$$newversion"'], [mk@mathias-kettner.de])/' livestatus/configure.ac ; \
+	    sed -i 's/^VERSION=.*/VERSION='"$$newversion"'/' scripts/setup.sh ; \
+	    echo 'check-mk_$$newversion-1_all.deb net optional' > debian/files ; \
+	    sed -i 's/^MKVERSION=.*/MKVERSION=\$${3:-'"$$newversion}"'/' scripts/install_nagios_on_lenny.sh ; \
 	fi ; \
-	for agent in agents/* ; do \
-	  if [ "$$agent" != agents/windows ] ; then \
-	    sed -i 's/echo Version: [0-9.a-z]*/'"echo Version: $$newversion/g" $$agent; \
-	  fi ; \
-	done ; \
-	sed -i 's/#define CHECK_MK_VERSION .*/#define CHECK_MK_VERSION "'$$newversion'"/' agents/windows/check_mk_agent.cc ; \
-	sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$$newversion"'], [mk@mathias-kettner.de])/' livestatus/configure.ac ; \
-	sed -i 's/^VERSION=.*/VERSION='"$$newversion"'/' scripts/setup.sh ; \
-	echo 'check-mk_$$newversion-1_all.deb net optional' > debian/files ; \
-	sed -i 's/^MKVERSION=.*/MKVERSION=\$${3:-'"$$newversion}"'/' scripts/install_nagios_on_lenny.sh
 
 headers:
 	./headrify

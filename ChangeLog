@@ -1,3 +1,7 @@
+1.1.1:
+      - MK Livestatus: added some new columns about Nagios status
+        data to stable 'status'
+
 1.1.0:
       - Fixed problems in Windows agent (could lead
         to crash of agent in case of unusal Eventlog

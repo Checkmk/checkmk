@@ -26,6 +26,31 @@
 #include "global_counters.h"
 #include "GlobalCountersColumn.h"
 #include "Query.h"
+#include "IntPointerColumn.h"
+#include "StringPointerColumn.h"
+
+// Nagios status values
+
+extern time_t program_start;
+extern int nagios_pid;
+extern time_t last_command_check;
+extern time_t last_log_rotation;
+extern int enable_notifications;
+extern int execute_service_checks;
+extern int accept_passive_service_checks;
+extern int execute_host_checks;
+extern int accept_passive_host_checks;
+extern int enable_event_handlers;
+extern int obsess_over_services;
+extern int obsess_over_hosts;
+extern int check_service_freshness;
+extern int check_host_freshness;
+extern int enable_flap_detection;
+extern int process_performance_data;
+extern int check_external_commands;
+
+//extern char *last_program_version;
+//extern char *new_program_version;
 
 TableStatus::TableStatus()
 {
@@ -53,6 +78,49 @@ TableStatus::TableStatus()
 	    "The number of host checks since program start",              COUNTER_HOST_CHECKS,    false));
    addColumn(new GlobalCountersColumn("host_checks_rate", 
 	    "the averaged number of host checks per second",              COUNTER_HOST_CHECKS,    true));
+
+
+   // Nagios program status data
+   addColumn(new IntPointerColumn("nagios_pid", 
+	    "The process ID of the Nagios main process", &nagios_pid ));
+   addColumn(new IntPointerColumn("enable_notifications", 
+	    "Whether notifications are enabled in general (0/1)", &enable_notifications ));
+   addColumn(new IntPointerColumn("execute_service_checks", 
+	    "Whether active service checks are activated in general (0/1)", &execute_service_checks ));
+   addColumn(new IntPointerColumn("accept_passive_service_checks", 
+	    "Whether passive service checks are activated in general (0/1)", &accept_passive_service_checks ));
+   addColumn(new IntPointerColumn("execute_host_checks", 
+	    "Whether host checks are executed in general (0/1)", &execute_host_checks));
+   addColumn(new IntPointerColumn("accept_passive_host_checks", 
+	    "Whether passive host checks are accepted in general (0/1)", &accept_passive_host_checks));
+   addColumn(new IntPointerColumn("enable_event_handlers", 
+	    "Whether event handlers are activated in general (0/1)", &enable_event_handlers));
+   addColumn(new IntPointerColumn("obsess_over_services", 
+	    "Whether Nagios will obsess over service checks and run the ocsp_command (0/1)", &obsess_over_services));
+   addColumn(new IntPointerColumn("obsess_over_hosts", 
+	    "Whether Nagios will obsess over host checks (0/1)", &obsess_over_hosts));
+   addColumn(new IntPointerColumn("check_service_freshness", 
+	    "Whether service freshness checking is activated in general (0/1)", &check_service_freshness));
+   addColumn(new IntPointerColumn("check_host_freshness", 
+	    "Whether host freshness checking is activated in general (0/1)", &check_host_freshness));
+   addColumn(new IntPointerColumn("enable_flap_detection", 
+	    "Whether flap detection is activated in general (0/1)", &enable_flap_detection));
+   addColumn(new IntPointerColumn("process_performance_data", 
+	    "Whether processing of performance data is activated in general (0/1)", &process_performance_data));
+   addColumn(new IntPointerColumn("check_external_commands", 
+	    "Whether Nagios checks for external commands at its command pipe (0/1)", &check_external_commands));
+   addColumn(new IntPointerColumn("program_start", 
+	    "The time of the last program start as UNIX timestamp", (int*)&program_start));
+   addColumn(new IntPointerColumn("last_command_check", 
+	    "The time of the last check for a command as UNIX timestamp", (int*)&last_command_check));
+   addColumn(new IntPointerColumn("last_log_rotation", 
+	    "Time time of the last log file rotation", (int*)&last_log_rotation));
+
+/*   addColumn(new StringPointerColumn("last_program_version", 
+	    "The last version of Nagios", last_program_version ));
+   addColumn(new StringPointerColumn("new_program_version", 
+	    "The new version of Nagios", new_program_version ));
+	    */
 }
 
 void TableStatus::answerQuery(Query *query)

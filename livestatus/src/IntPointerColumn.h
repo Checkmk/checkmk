@@ -7,10 +7,10 @@
 // |                                                                  |
 // | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
-// 
+//
 // This file is part of Check_MK.
 // The official homepage is at http://mathias-kettner.de/check_mk.
-// 
+//
 // check_mk is free software;  you can redistribute it and/or modify it
 // under the  terms of the  GNU General Public License  as published by
 // the Free Software Foundation in version 2.  check_mk is  distributed
@@ -22,9 +22,19 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef livestatus_h
-#define livestatus_h
+#ifndef IntPointerColumn_h
+#define IntPointerColumn_h
 
-#define DEFAULT_SOCKET_PATH "/usr/local/nagios/var/rw/live"
+#include "IntColumn.h"
 
-#endif // livestatus_h
+class IntPointerColumn : public IntColumn
+{
+    int *_number;
+public:
+    IntPointerColumn(string name, string description, int* number)
+       : IntColumn(name, description, -1), _number(number) {};
+    int32_t getValue(void *) { return *_number; };
+};
+
+
+#endif // IntPointerColumn_h

@@ -7,10 +7,10 @@
 // |                                                                  |
 // | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
-// 
+//
 // This file is part of Check_MK.
 // The official homepage is at http://mathias-kettner.de/check_mk.
-// 
+//
 // check_mk is free software;  you can redistribute it and/or modify it
 // under the  terms of the  GNU General Public License  as published by
 // the Free Software Foundation in version 2.  check_mk is  distributed
@@ -22,9 +22,19 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef livestatus_h
-#define livestatus_h
+#ifndef StringPointerColumn_h
+#define StringPointerColumn_h
 
-#define DEFAULT_SOCKET_PATH "/usr/local/nagios/var/rw/live"
+#include "StringColumn.h"
 
-#endif // livestatus_h
+class StringPointerColumn : public StringColumn
+{
+    char *_string;
+public:
+    StringPointerColumn(string name, string description, char *string)
+       : StringColumn(name, description, -1), _string(string) {};
+    char* getValue(void* ) { return _string; };
+};
+
+
+#endif // StringPointerColumn_h

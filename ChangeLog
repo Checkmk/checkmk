@@ -1,6 +1,7 @@
 1.1.1:
       - MK Livestatus: added some new columns about Nagios status
         data to stable 'status'
+      - Check kernel: make CPU utilization work on Linux 2.4
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

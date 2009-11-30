@@ -80,7 +80,7 @@ def check_cpu_utilization(item, params, info):
         return (3, "UNKNOWN - invalid output from plugin")
     line = f[0]
     if len(line) < 8:
-        return (3, "UNKOWN - invalid 'cpu' line in plugin output")
+        line = line + ['0', '0', '0', '0'] # needed for Linux 2.4
     
     # line contains now the following columns:
     # 'cpu' user nice system idle wait hw-int sw-int (steal ...)
@@ -123,7 +123,7 @@ def check_cpu_utilization(item, params, info):
     except:
        pass
     
-    return (result[0], result[1] + " - user: %2.0f%%, system: %2.0f%%, wait: %2.0f%%" %
+    return (result[0], result[1] + " - user: %2.1f%%, system: %2.1f%%, wait: %2.1f%%" %
             (user_perc, system_perc, wait_perc), perfdata)
 
 check_info['kernel.util'] = (check_cpu_utilization, "CPU utilization", 1,  inventory_cpu_utilization)

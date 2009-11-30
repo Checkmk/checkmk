@@ -201,6 +201,10 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
 	    "Wether active checks are enabled for the service (0/1)", (char *)(&svc.checks_enabled) - ref, indirect_offset));
    table->addColumn(new OffsetIntColumn(prefix + "check_options",
 	    "The current check option, forced, normal, freshness... (0/1)", (char *)(&svc.check_options) - ref, indirect_offset));
+   table->addColumn(new OffsetIntColumn(prefix + "flap_detection_enabled",
+	    "Wether flap detection is enabled for the service (0/1)", (char *)(&svc.flap_detection_enabled) - ref, indirect_offset));
+   table->addColumn(new OffsetIntColumn(prefix + "obsess_over_service",
+	    "Wether 'obsess_over_service' is enabled for the service (0/1)", (char *)(&svc.obsess_over_service) - ref, indirect_offset));
 
    // columns of type double
    table->addColumn(new OffsetDoubleColumn(prefix + "check_interval",

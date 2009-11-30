@@ -2,6 +2,8 @@
       - MK Livestatus: added some new columns about Nagios status
         data to stable 'status'
       - Check kernel: make CPU utilization work on Linux 2.4
+      - MK Livestatus: added new columns flap_detection and
+        obsess_over_services in table services
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

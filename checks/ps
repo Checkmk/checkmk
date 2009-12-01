@@ -25,6 +25,85 @@
 # Boston, MA 02110-1301 USA.
 
 
+inventory_processes = []
+ANY_USER = None
+GRAB_USER = False
+
+
+
+def inventory_ps(check_name, info):
+    inventory = []
+    for servicedesc, pattern, userspec, warnmin, okmin, okmax, warnmax in inventory_processes:
+	num_perc_s = servicedesc.count("%s")
+	for ps in info:
+	    l_user = [userspec]
+	    matches = process_matches(ps, pattern, l_user)
+	    if matches != False:
+		if len(matches) != num_perc_s:
+		    raise MKGeneralException("Invalid entry in inventory_processes: service description '%s' contains "
+			    "%d times '%%s', but regular expression '%s' contains %d subexpression(s)." % \
+			    (servicedesc, num_perc_s, pattern, len(matches)))
+		i_servicedesc = servicedesc % matches
+		if userspec == GRAB_USER:
+		    i_userspec = l_user[0]
+		else:
+		    i_userspec = ANY_USER
+		# Problem here: We need to instantiate all subexpressions
+		# with their actual values of the found process.
+		i_pattern = instantiate_regex_pattern(pattern, matches)
+		inv = ( i_servicedesc, "matched by \"%s\"" % pattern, ( i_pattern, i_userspec, warnmin, okmin, okmax, warnmax ) )
+		if inv not in inventory:
+		    inventory.append(inv)
+
+    return inventory
+
+def instantiate_regex_pattern(pattern, matches):
+    for m in matches:
+	pattern = instantiate_regex_pattern_once(pattern, m)
+    return pattern
+
+def instantiate_regex_pattern_once(pattern, match):
+    # this correctly handles \( and \) but not [^)] - sorry
+    return re.compile(r"(?<!\\)\(.*?(?<!\\)\)").sub(escape_regex_chars(match), pattern, 1)
+
+def escape_regex_chars(match):
+    r = ""
+    for c in match:
+	if c in r"[]\().?{}|*^$":
+	    r += "\\"
+	r += c
+    return r
+
+
+def process_matches(ps, procname, l_user):
+    # agent might output username in brackets in the first columns
+    userspec = l_user[0]
+    if ps[0].startswith("(") and ps[0].endswith(")"):
+	user = ps[0][1:-1]
+	if userspec and userspec != user:
+	    return False
+	l_user[0] = user # return actual user that way
+	ps = ps[1:]
+    else:
+	l_user[0] = None
+
+    if not procname:
+	return ()
+
+    elif not procname[0].startswith("~"):
+	if ps[0] == procname:
+	    return ()
+    else:
+	pattern = procname[1:]
+	reg = compiled_regexes.get(pattern)
+	if not reg:
+	    reg = re.compile(pattern)
+	    compiled_regexes[pattern] = reg
+	matchobject = reg.match(" ".join(ps))
+	if matchobject:
+	    return matchobject.groups()
+    return False
+
 def check_procs(item, params, info):
     if len(params) == 5:
         procname, warnmin, okmin, okmax, warnmax = params
@@ -44,27 +123,9 @@ def check_procs(item, params, info):
     # applied. A simple string compare is done.
 
     count = 0
-    for ps in info:                 # loop over all processes found on the host. ps is list of strings
-        # agent might output username in brackets in the first columns
-        if ps[0].startswith("(") and ps[0].endswith(")"):
-	   if user and user != ps[0][1:-1]:
-	       continue # user does not match
-	   ps = ps[1:]
-
-        if not procname:
+    for ps in info:
+        if process_matches(ps, procname, [user]) != False:
 	    count += 1
-
-        elif not procname[0].startswith("~"):
-            if ps[0] == procname:
-                count += 1
-        else:
-            pattern = procname[1:]
-            reg = compiled_regexes.get(pattern)
-            if not reg:
-                reg = re.compile(pattern)
-                compiled_regexes[pattern] = reg
-            if reg.match(" ".join(ps)):
-                count += 1
 
     if count > warnmax or count < warnmin:
         return (2, "CRIT - %d processes (ok from %d to %d)" % (count, okmin, okmax))
@@ -74,4 +135,4 @@ def check_procs(item, params, info):
         return (0, "OK - %d processes" % count)
 
 
-check_info['ps'] = (check_procs, "proc_%s", 0,  no_inventory_possible)
+check_info['ps'] = (check_procs, "proc_%s", 0,  inventory_ps)

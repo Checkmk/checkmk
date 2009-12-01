@@ -8,6 +8,8 @@
         very flexible way. This simplifies monitoring a great
 	number of slightly different processes such as with
 	ORACLE or SAP.
+      - Check 'md': Consider status active(auto-read-only) as
+        OK
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

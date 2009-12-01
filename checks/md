@@ -38,8 +38,8 @@ def check_md(item, params, info):
     for line in info:
         if line[0] == item and line[1] == ':':
             raid_state = line[2]
-            if raid_state != 'active':
-                return (2, "CRIT - raid state is '%s' (should be 'active')" % (raid_state,))
+            if raid_state != 'active' and raid_state != 'active(auto-read-only)':
+	        return (2, "CRIT - raid state is '%s' (should be 'active')" % (raid_state,))
             num_disks = len(line) - 4
             its_next = True
         elif its_next:

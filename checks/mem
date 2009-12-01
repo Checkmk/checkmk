@@ -47,7 +47,7 @@ def check_mem_used(item, params, info):
         # Buffers and Cached are optional (not supported on Windows yet)
         caches   = meminfo.get('Buffers', 0) + meminfo.get('Cached', 0)
     except:
-        return (3, "UNKNOWN - invalid ouput from plugin")
+        return (3, "UNKNOWN - invalid output from plugin")
 
     # Add extended memory performance data, if this is
     # enabled and the agent provides that information.

@@ -36,7 +36,7 @@ def check_df(mountpoint, params, df_lines):
     used = used_list[0] # might be listed twice. We take the first occurance
 
     if len(used) != 7 or used[5][-1] != '%':
-	return (3, "UNKNOWN - Invalid ouput from agent (%s)" % (' '.join(used),))
+	return (3, "UNKNOWN - Invalid output from agent (%s)" % (' '.join(used),))
 
     # Beware: the 6th column of df ("used perc") may includes 5% which are reserved
     # for the superuser, whereas the 4th colum ("used MB") does *not* include that.

@@ -45,7 +45,7 @@ def check_statgrab_mem(item, params, info):
             ('swapused', str(swapused_kb / 1024) + 'MB', '', '', 0, totalswap_kb / 1024) ]
         
     except:
-        return (3, "UNKNOWN - invalid ouput from plugin")
+        return (3, "UNKNOWN - invalid output from plugin")
 
     # levels may be given either in int -> MB or in float -> percentages
     

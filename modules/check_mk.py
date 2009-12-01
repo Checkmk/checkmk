@@ -1977,12 +1977,13 @@ def show_check_manual(checkname):
             print
 
         def print_textbody(text):
-            print text
+            print markup(text)
         
         def print_splitwrap(attr1, left, attr2, text):
             if '(' in left:
                 name, typ = left.split('(', 1)
-                typ = typ[:-2]
+	        name = name.strip()
+                typ = typ.strip()[:-2]
             else:
                 name = left
                 typ = ""
@@ -2172,7 +2173,7 @@ def show_check_manual(checkname):
             for line in lines:
                 if line.lstrip().startswith('#'):
                     print_line(line)
-                elif not (line == "<br>" and not opt_nowiki):
+	        elif line != "<br>":
                     print_line(line, examples_color, True) # nomarkup
             if opt_nowiki:
                 print "F-:"

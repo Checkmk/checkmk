@@ -11,7 +11,7 @@ description:
 examples:
  # Set default levels to a load of 4 and 8 per CPU
  cpuload_default_levels = (4.0, 8.0).
-   
+
  checks = [
     # Use levels 4 per CPU (warning) and 8 per CPU (critical)
     # on all hosts with the tag "linux"

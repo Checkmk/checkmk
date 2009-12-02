@@ -60,6 +60,9 @@ examples:
    # make sure exactly one ntpd is running
    ( "somehost", "ps", "NTP", ( "/usr/sbin/ntpd", 1, 1, 1, 1 ) ),
 
+   # the same, but  for all hosts with the tag "lnx"
+   ( ["lnx"], ALL_HOSTS, "ps", "NTPD", ( "/usr/sbin/ntpd", 1, 1, 1, 1 ) ),
+
    # command lines containing "prefork" should be in range 20 ... 30
    ( "somehost", "ps", "prefork", ( "~.*prefork", 15, 20, 30, 35 ) ),
 
@@ -71,6 +74,8 @@ examples:
 
    # make sure no "sshd" processes owned by user "root" exists
    ( "somehost", "ps", "SSHD[root]", ( "~.*sshd", "root", 0, 0, 0, 0) ),
+
+
  ]
 
  # Examples for automatic inventorization of processes

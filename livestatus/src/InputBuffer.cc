@@ -25,6 +25,7 @@
 #include <sys/select.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
 
 #include "InputBuffer.h"
 #include "logger.h"
@@ -153,7 +154,7 @@ int InputBuffer::readData()
 
       int retval = select(_fd + 1, &fds, NULL, NULL, &tv);
       if (retval > 0 && FD_ISSET(_fd, &fds)) {
-	 size_t r = read(_fd, _write_pointer, _end_pointer - _write_pointer);
+	 ssize_t r = read(_fd, _write_pointer, _end_pointer - _write_pointer);
 	 if (r < 0) {
 	    return IB_END_OF_FILE;
 	 }

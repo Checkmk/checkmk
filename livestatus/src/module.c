@@ -46,6 +46,13 @@
 #include "config.h"
 #include "global_counters.h"
 
+#ifndef AF_LOCAL
+#define   AF_LOCAL AF_UNIX
+#endif
+#ifndef PF_LOCAL
+#define   PF_LOCAL PF_UNIX
+#endif
+
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
 
 #define ACCEPT_TIMEOUT_USEC 250000

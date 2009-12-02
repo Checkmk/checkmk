@@ -285,7 +285,7 @@
 #include <sys/poll.h>
 #endif
 
-#define HAVE_GETOPT_H 1
+/* #define HAVE_GETOPT_H 1 */
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
 #endif

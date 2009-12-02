@@ -33,6 +33,13 @@
 #include <unistd.h>
 #include <signal.h>
 
+#ifndef AF_LOCAL
+#define   AF_LOCAL AF_UNIX
+#endif
+#ifndef PF_LOCAL
+#define   PF_LOCAL PF_UNIX
+#endif
+
 
 /* Ist normalerweise in sys/un.h, aber dietc hat dieses Makro nicht */
 /* Evaluate to actual length of the `sockaddr_un' structure.  */

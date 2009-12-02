@@ -11,6 +11,7 @@
       - Check 'md': Consider status active(auto-read-only) as
         OK
       - MK Livestatus: fix several compile problems on AIX
+      - Linux Agent: fix bug in vmware_state
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

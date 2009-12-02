@@ -155,11 +155,11 @@ if which ipmitool >/dev/null ; then
         | grep -v ' discrete '
 fi
 
-if which vcbVmName ; then
+if which vcbVmName > /dev/null 2>&1 ; then
    echo '<<<vmware_state>>>'
    vcbVmName -s any
 fi
-
+      
 
 # Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
 if cd $PLUGINSDIR

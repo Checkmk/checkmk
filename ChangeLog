@@ -16,6 +16,8 @@
       - Linux Agent: made <<<meminfo>>> work on RedHat 3.
       - New check ps.perf: Does the same as ps, but without
         inventory, but with performance data
+      - Fix problem in Agent-RPM: mark xinetd-configfile
+        with %config -> avoid data loss on update
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

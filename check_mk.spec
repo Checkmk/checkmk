@@ -116,7 +116,7 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %files agent
-/etc/xinetd.d/check_mk
+%config /etc/xinetd.d/check_mk
 /usr/bin/check_mk_agent
 /usr/bin/waitmax
 /usr/share/doc/check_mk_agent

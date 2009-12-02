@@ -1,0 +1,30 @@
+#!/usr/bin/python
+
+apc_symmetra_ext_temp_default_levels = (30, 35)
+
+def inventory_temp(checkname, info):
+    return [ ( line[0], "", "apc_symmetra_ext_temp_default_levels" ) \
+	    for line in info if line[1] == "2" ]
+
+def check_temp(item, params, info):
+    warn, crit = params
+    for index, status, temp in info:
+	if item == index:
+           temp = int(temp)
+	   perfdata = [( "temp", temp, warn, crit )]
+	   infotxt = " - %sC (levels at %d/%d)" % (temp, warn, crit)
+           if temp >= crit:
+		return (2, "CRITICAL" + infotxt, perfdata)
+           elif temp >= warn:
+		return (1, "WARNING" + infotxt, perfdata)
+           else:
+		return (0, "OK" + infotxt, perfdata)
+    return (3, "UNKNOWN - Sensor not found in SNMP data")
+
+
+
+check_info['apc_symmetra_ext_temp'] = (check_temp, "APC External Temp %s", 1, inventory_temp)
+snmp_info['apc_symmetra_ext_temp'] = (
+  "enterprises.318.1.1.10.2.3.2.1",
+  [ 1, 3, 4 ] )
+

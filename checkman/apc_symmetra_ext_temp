@@ -1,0 +1,30 @@
+title: Check APC Symmetra external temperature sensors
+agents: snmp
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check polls the state of temperature sensors
+ attached to a APC Symmetra APC.
+
+item:
+ The index of the sensor, e.g. {"1"}.
+
+perfdata:
+ One variable: the current temperature in degrees celsius.
+
+inventory:
+ All available temperature sensors are automatically inventorized.
+
+examples:
+ # Set default levels for all checks to 30 and 35 degrees
+ apc_symmetra_ext_temp_default_levels = (30, 35)
+
+[parameters]
+warn (int): degrees at which a warning level is triggerd
+crit (int): degress for a critical level
+
+[configuration]
+apc_symmetra_ext_temp_default_levels (int, int):
+  Default levels used for inventorized checks.
+

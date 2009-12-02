@@ -12,6 +12,7 @@
         OK
       - MK Livestatus: fix several compile problems on AIX
       - Linux Agent: fix bug in vmware_state
+      - New Checks for APC Symmetra USV
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

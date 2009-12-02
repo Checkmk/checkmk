@@ -1,0 +1,36 @@
+title: Check status auf APC Symmetra USV
+agents: snmp
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ Monitor seven aspects of an APC Symmetra USV: {(1)} the battery status,
+ {(2)} the output status, {(3)} the battery capacity, {(4)} the battery
+ temperature, {(5)} the battery current, {(6)} the output voltage and
+ {(7)} the output current. The output current is not checked against 
+ a level but just being displayed.
+
+examples:
+ # Set the critical levels for all ACP checks to:
+ # - battery capacity at 90% or lower
+ # - battery temperature to 38C or higher
+ # - battery current to 10A or higher
+ # - output voltage to 225V or lower
+ apc_default_levels = (90, 38, 10, 225)
+
+perfdata: 
+ This check outputs five performance values: the battery capacity,
+ the battery temperature, the battery current, the output voltage and
+ the output current.
+
+inventory:
+ Supported. 
+
+[parameters]
+crit_capacity (int): The battery capacity in percent at and below which a critical state is be triggered
+crit_batt_temp (int): The critical temperature of the battery
+crit_batt_curr (int): The critical battery current in Ampere
+crit_voltage (int): The output voltage at and below which a critical state is triggered.
+[configuration]
+apc_default_levels (int, int, int, int): The default levels to be used
+   for inventorized checks. This variable is preset to {(95, 40, 1, 220)}

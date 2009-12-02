@@ -367,7 +367,7 @@ that will be installed contains a valid configuration for HTTP basic
 auth. The most conveniant way for you is to use the same user file as
 for Nagios. Please enter your htpasswd file to use here"
 
-ask_dir -d nagios_auth_name "Nagios Monitoring" "Nagios Monitoring" "HTTP AuthName" \
+ask_dir -d nagios_auth_name "Nagios Access" "Nagios Access" "HTTP AuthName" \
  "Check_mk's Apache configuration file will need an AuthName. That
 string will be displayed to the user when asking for the password.
 You should use the same AuthName as for Nagios. Otherwise the user will 

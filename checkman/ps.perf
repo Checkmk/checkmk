@@ -1,0 +1,28 @@
+title: Check for running process and count them
+agents: linux, windows, aix, solaris, vms
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check does exactly the same as {ps} with two differences:
+ {(1)} it does not support inventory. {(2)} it outputs performance
+ data: the number of matching running processes found on the target
+ system. Please refer to the manpage of {ps} for more details.
+
+perfdata:
+ One variable: the number of matching running processes
+
+[parameters]
+procname (string): Process specification. This can either be the name of a process as ouput by the agent. 
+   It must exactly match the first column of the agents output. Or - if the string is 
+   beginning with a tilde - it is interpreted as a regular expression that must match 
+   the beginning of the process line as output by the agent. For the Linux/UNIX agents
+   this allows you to match specific command line arguments of the process. A third possibility is to
+   set the process name to {None}. In that case {all} processes will match. This is probably only useful
+   if you specify a user name.
+user (string): Name of user that owns the process(es). This parameter is optional and can be left out completely.
+warnmin (int): Minimum number of matched process for WARNING state
+okmin (int): Minimum number for OK state
+okmax (int): Maximum number for OK state
+warnmax (int): Maximum number for WARNING state. Counts less than warnmin or greater than
+ warnmax are CRITICAL

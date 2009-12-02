@@ -14,6 +14,8 @@
       - Linux Agent: fix bug in vmware_state
       - New Checks for APC Symmetra USV
       - Linux Agent: made <<<meminfo>>> work on RedHat 3.
+      - New check ps.perf: Does the same as ps, but without
+        inventory, but with performance data
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

@@ -29,8 +29,6 @@ inventory_processes = []
 ANY_USER = None
 GRAB_USER = False
 
-
-
 def inventory_ps(check_name, info):
     inventory = []
     for servicedesc, pattern, userspec, warnmin, okmin, okmax, warnmax in inventory_processes:
@@ -76,6 +74,15 @@ def escape_regex_chars(match):
 
 
 def process_matches(ps, procname, l_user):
+    # procname is either:
+    # 1. a string beginning with ~. Then it is interpreted as regular expression
+    # that must match the *beginning* of the process line. Please check the output of
+    # check_mk -d HOSTNAME. Note: groups of whitespaces are reduced to one single
+    # whitespace!
+    # 2. a string *not* beginning with ~: It must be equal to the first column
+    # in the process table (i.e. the process name). No regular expressions are
+    # applied. A simple string compare is done.
+
     # agent might output username in brackets in the first columns
     userspec = l_user[0]
     if ps[0].startswith("(") and ps[0].endswith(")"):
@@ -104,7 +111,7 @@ def process_matches(ps, procname, l_user):
 	    return matchobject.groups()
     return False
 
-def check_procs(item, params, info):
+def check_procs(item, params, info, with_perfdata):
     if len(params) == 5:
         procname, warnmin, okmin, okmax, warnmax = params
         user = None
@@ -113,26 +120,24 @@ def check_procs(item, params, info):
     else:
         return (3, "UNKNOWN - invalid check parameters: %s" % (params,))
         
-    # procname is either:
-    # 1. a string beginning with ~. Then it is interpreted as regular expression
-    # that must match the *beginning* of the process line. Please check the output of
-    # check_mk -d HOSTNAME. Note: groups of whitespaces are reduced to one single
-    # whitespace!
-    # 2. a string *not* beginning with ~: It must be equal to the first column
-    # in the process table (i.e. the process name). No regular expressions are
-    # applied. A simple string compare is done.
-
     count = 0
     for ps in info:
         if process_matches(ps, procname, [user]) != False:
 	    count += 1
 
-    if count > warnmax or count < warnmin:
-        return (2, "CRIT - %d processes (ok from %d to %d)" % (count, okmin, okmax))
-    elif count > okmax or count < okmin:
-        return (1, "WARN - %d processes (ok from %d to %d)" % (count, okmin, okmax))
+    if with_perfdata:
+       perfdata = [ ("count", count, okmax+1, warnmax+1, 0) ]
     else:
-        return (0, "OK - %d processes" % count)
+       perfdata = []
+
+    if count > warnmax or count < warnmin:
+        return (2, "CRIT - %d processes (ok from %d to %d)" % (count, okmin, okmax), perfdata)
+    elif count > okmax or count < okmin:
+        return (1, "WARN - %d processes (ok from %d to %d)" % (count, okmin, okmax), perfdata)
+    else:
+        return (0, "OK - %d processes" % count, perfdata)
 
 
-check_info['ps'] = (check_procs, "proc_%s", 0,  inventory_ps)
+check_info['ps']      = (lambda i,p,n: check_procs(i,p,n,False), "proc_%s", 0, inventory_ps)
+check_info['ps.perf'] = (lambda i,p,n: check_procs(i,p,n,True),  "proc_%s", 1, no_inventory_possible)
+

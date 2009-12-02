@@ -92,7 +92,7 @@ ps ax -o user,command --columns 10000 | sed -e 1d -e 's/^/(/' -e 's/ /) /' -e '/
 
 # Speicherauslastung
 echo '<<<mem>>>'
-cat /proc/meminfo
+egrep -v '^Swap:|^Mem:|total:' < /proc/meminfo
 
 # Load und Anzahl Prozesse
 echo '<<<cpu>>>'

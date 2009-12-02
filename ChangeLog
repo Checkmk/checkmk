@@ -13,6 +13,7 @@
       - MK Livestatus: fix several compile problems on AIX
       - Linux Agent: fix bug in vmware_state
       - New Checks for APC Symmetra USV
+      - Linux Agent: made <<<meminfo>>> work on RedHat 3.
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

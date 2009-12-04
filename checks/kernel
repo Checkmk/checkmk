@@ -39,7 +39,7 @@ def check_kernel(item, params, info):
     timedif, per_sec = get_counter("kernel." + item, this_time, this_val)
     infotext = " - %.0f/s in last %d secs" % (per_sec, timedif)
     if params == None:
-         perfdata = [ (item, "%dc" % this_val, None, None, 0 ) ]
+         perfdata = [ (item, "%dc" % this_val, "", "", 0 ) ]
 	 return (0, "OK" + infotext, perfdata)
    
     warn, crit = params

@@ -18,6 +18,7 @@
         inventory, but with performance data
       - Fix problem in Agent-RPM: mark xinetd-configfile
         with %config -> avoid data loss on update
+      - Check kernel: fixed missing performance data
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

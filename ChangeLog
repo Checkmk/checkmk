@@ -22,6 +22,8 @@
       - Fix problem in Agent-RPM: mark xinetd-configfile
         with %config -> avoid data loss on update
       - Check kernel: fixed missing performance data
+      - Solaris agent: don't use egrep, removed some
+        bashisms, output filesystem type zfs or ufs
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

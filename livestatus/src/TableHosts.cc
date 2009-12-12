@@ -49,10 +49,6 @@ TableHosts::TableHosts()
 
 void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 {
-   /* Es fehlt: 
-      Spalte services!!!
-      double Spalten
-      etliche unwichtigere Spalten */
 
    host hst;
    char *ref = (char *)&hst;
@@ -190,9 +186,9 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
    table->addColumn(new HostContactsColumn(prefix + "contacts", 
 	    "A list of all contacts of this host", indirect_offset));
    table->addColumn(new DownCommColumn(prefix + "downtimes", 
-	    "A list of the ids of all scheduled downtimes of this host", indirect_offset, g_table_downtimes));
+	    "A list of the ids of all scheduled downtimes of this host", indirect_offset, true));
    table->addColumn(new DownCommColumn(prefix + "comments", 
-	    "A list of the ids of all comments of this host", indirect_offset, g_table_comments));
+	    "A list of the ids of all comments of this host", indirect_offset, false));
 
    table->addColumn(new CustomVarsColumn(prefix + "custom_variable_names", 
 	    "A list of the names of all custom variables", (char *)(&hst.custom_variables) - ref, indirect_offset, CVT_VARNAMES));

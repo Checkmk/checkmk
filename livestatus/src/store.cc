@@ -95,6 +95,11 @@ void store_register_contact(contact *c)
   g_store->registerContact(c);
 }
 
+void store_register_comment(nebstruct_comment_data *d)
+{
+   g_store->registerComment(d);
+}
+
 void store_register_downtime(nebstruct_downtime_data *d)
 {
    g_store->registerDowntime(d);

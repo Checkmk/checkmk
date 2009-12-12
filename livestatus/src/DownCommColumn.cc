@@ -27,17 +27,19 @@
 #include "TableDownComm.h"
 #include "logger.h"
 #include "Query.h"
+#include "tables.h"
 
 void DownCommColumn::output(void *data, Query *query)
 {
+   TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
    query->outputBeginList();
    data = shiftPointer(data); // points to host or service
    if (data) 
    {
       bool first = true;
 
-      for (map<unsigned long, DowntimeOrComment *>::iterator it = _table->entriesIteratorBegin();
-	    it != _table->entriesIteratorEnd();
+      for (map<unsigned long, DowntimeOrComment *>::iterator it = table->entriesIteratorBegin();
+	    it != table->entriesIteratorEnd();
 	    ++it)
       {
 	 unsigned long id = it->first;
@@ -64,10 +66,11 @@ void *DownCommColumn::getNagiosObject(char *name)
 
 bool DownCommColumn::isNagiosMember(void *data, void *member)
 {
+   TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
    // data points to a host or service
    // member is not a pointer, but an unsigned int (hack)
    int64_t id = (int64_t)member; // Hack. Convert it back.
-   DowntimeOrComment *dt = _table->findEntry(id);
+   DowntimeOrComment *dt = table->findEntry(id);
    return dt != 0 && 
 		( dt->_service == (service *)data
 		 || (dt->_service == 0 && dt->_host == (host *)data));

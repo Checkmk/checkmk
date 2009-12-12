@@ -235,9 +235,9 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
    table->addColumn(new ServiceContactsColumn(prefix + "contacts", 
 	    "A list of all contacts of the service", indirect_offset));
    table->addColumn(new DownCommColumn(prefix + "downtimes", 
-	    "A list of all downtime ids of the service", indirect_offset, g_table_downtimes));
+	    "A list of all downtime ids of the service", indirect_offset, true));
    table->addColumn(new DownCommColumn(prefix + "comments", 
-	    "A list of all comment ids of the service", indirect_offset, g_table_comments));
+	    "A list of all comment ids of the service", indirect_offset, false));
 
    if (add_hosts)
       g_table_hosts->addColumns(this, "host_", (char *)(&svc.host_ptr) - ref);

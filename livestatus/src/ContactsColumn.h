@@ -32,10 +32,9 @@ class TableContacts;
 
 class ContactsColumn : public ListColumn
 {
-   TableContacts *_table_contacts;
 public:
-   ContactsColumn(string name, string description, int indirect_offset, TableContacts *tc)
-      : ListColumn(name, description, indirect_offset), _table_contacts(tc)  {};
+   ContactsColumn(string name, string description, int indirect_offset)
+      : ListColumn(name, description, indirect_offset)  {};
    int type() { return COLTYPE_LIST; };
    void *getNagiosObject(char *name);
    void output(void *, Query *);

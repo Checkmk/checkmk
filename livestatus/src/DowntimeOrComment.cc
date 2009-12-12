@@ -22,28 +22,47 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef DowntimesColumn_h
-#define DowntimesColumn_h
+#include "DowntimeOrComment.h"
+#include "logger.h"
 
-#include "config.h"
-
-#include "ListColumn.h"
-#include "TableContacts.h"
-
-class TableDowntimes;
-
-class DowntimesColumn : public ListColumn
+DowntimeOrComment::DowntimeOrComment(nebstruct_downtime_struct *dt, 
+	unsigned long id)
+   : _type(dt->downtime_type)
+   , _entry_time(dt->entry_time)
+   , _author_name(strdup(dt->author_name))
+   , _comment(strdup(dt->comment_data))
+   , _id(id)
 {
-   TableDowntimes *_table_downtimes;
-public:
-   DowntimesColumn(string name, string description, int indirect_offset, TableDowntimes *tc)
-      : ListColumn(name, description, indirect_offset), _table_downtimes(tc) {};
-   int type() { return COLTYPE_LIST; };
-   void output(void *, Query *);
-   void *getNagiosObject(char *name);
-   bool isNagiosMember(void *data, void *member);
-};
+   _host = find_host(dt->host_name);
+   if (dt->service_description)
+      _service = find_service(dt->host_name, dt->service_description); 
+   else
+      _service = 0;
+}
 
 
-#endif // DowntimesColumn_h
+DowntimeOrComment::~DowntimeOrComment()
+{
+   free(_author_name);
+   free(_comment);
+}
 
+
+Downtime::Downtime(nebstruct_downtime_struct *dt)
+    : DowntimeOrComment(dt, dt->downtime_id)
+   , _start_time(dt->start_time)
+   , _end_time(dt->end_time)
+   , _fixed(dt->fixed)
+   , _duration(dt->duration)
+   , _triggered_by(dt->triggered_by)
+{
+}
+
+Comment::Comment(nebstruct_comment_struct *co)
+   : DowntimeOrComment((nebstruct_downtime_struct *)co, co->comment_id)
+     , _persistent(co->persistent)
+     , _source(co->source)
+     , _expires(co->expires)
+     , _expire_time(co->expire_time)
+{
+}

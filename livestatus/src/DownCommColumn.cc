@@ -22,13 +22,13 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "DowntimesColumn.h"
-#include "Downtime.h"
-#include "TableDowntimes.h"
+#include "DownCommColumn.h"
+#include "DowntimeOrComment.h"
+#include "TableDownComm.h"
 #include "logger.h"
 #include "Query.h"
 
-void DowntimesColumn::output(void *data, Query *query)
+void DownCommColumn::output(void *data, Query *query)
 {
    query->outputBeginList();
    data = shiftPointer(data); // points to host or service
@@ -36,12 +36,12 @@ void DowntimesColumn::output(void *data, Query *query)
    {
       bool first = true;
 
-      for (map<unsigned long, Downtime *>::iterator it = _table_downtimes->downtimesIteratorBegin();
-	    it != _table_downtimes->downtimesIteratorEnd();
+      for (map<unsigned long, DowntimeOrComment *>::iterator it = _table->entriesIteratorBegin();
+	    it != _table->entriesIteratorEnd();
 	    ++it)
       {
 	 unsigned long id = it->first;
-	 Downtime *dt = it->second;
+	 DowntimeOrComment *dt = it->second;
 	 if ((void *)dt->_service == data ||
 	       (dt->_service == 0 && dt->_host == data))
 	 {
@@ -56,19 +56,19 @@ void DowntimesColumn::output(void *data, Query *query)
    query->outputEndList();
 }
 
-void *DowntimesColumn::getNagiosObject(char *name)
+void *DownCommColumn::getNagiosObject(char *name)
 {
    unsigned int id = strtoul(name, 0, 10);
    return (void *)id; // Hack. Convert number into pointer.
 }
 
-bool DowntimesColumn::isNagiosMember(void *data, void *member)
+bool DownCommColumn::isNagiosMember(void *data, void *member)
 {
    // data points to a host or service
    // member is not a pointer, but an unsigned int (hack)
    int64_t id = (int64_t)member; // Hack. Convert it back.
-   Downtime *dt = _table_downtimes->findDowntime(id);
-   return dt != 0 && \
-		(	 dt->_service == (service *)data
-			 || (dt->_service == 0 && dt->_host == (host *)data));
+   DowntimeOrComment *dt = _table->findEntry(id);
+   return dt != 0 && 
+		( dt->_service == (service *)data
+		 || (dt->_service == 0 && dt->_host == (host *)data));
 }

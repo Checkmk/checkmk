@@ -27,6 +27,7 @@
 #include "TableContacts.h"
 #include "logger.h"
 #include "Query.h"
+#include "tables.h"
 
 void *ContactsColumn::getNagiosObject(char *name)
 {
@@ -40,8 +41,8 @@ void ContactsColumn::output(void *data, Query *query)
 
    if (data) {
       bool first = true;
-      for (set<contact *>::iterator it = _table_contacts->contactsIteratorBegin();
-	    it != _table_contacts->contactsIteratorEnd();
+      for (set<contact *>::iterator it = g_table_contacts->contactsIteratorBegin();
+	    it != g_table_contacts->contactsIteratorEnd();
 	    ++it)
       {
 	 contact *ctc = *it;

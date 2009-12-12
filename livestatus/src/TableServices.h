@@ -42,11 +42,11 @@ class TableServices : public Table
     _services_t _services;
 
 public:
-    TableServices(TableHosts *, TableContacts *, TableDowntimes *);
+    TableServices();
     const char *name() { return "services"; };
     void add(service *svc);
     void answerQuery(Query *);
-    void addColumns(Table *, string prefix, int indirect_offset, TableHosts *, TableContacts *ts, TableDowntimes *);
+    void addColumns(Table *, string prefix, int indirect_offset, bool add_hosts);
 };
 
 

@@ -22,32 +22,28 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "Downtime.h"
-#include "logger.h"
+#ifndef DownCommColumn_h
+#define DownCommColumn_h
 
-Downtime::Downtime(nebstruct_downtime_struct *dt)
-   : _type(dt->downtime_type)
-   , _entry_time(dt->entry_time)
-   , _author_name(strdup(dt->author_name))
-   , _comment(strdup(dt->comment_data))
-   , _start_time(dt->start_time)
-   , _end_time(dt->end_time)
-   , _fixed(dt->fixed)
-   , _duration(dt->duration)
-   , _triggered_by(dt->triggered_by)
-     , _downtime_id(dt->downtime_id)
+#include "config.h"
+
+#include "ListColumn.h"
+#include "TableContacts.h"
+
+class TableDownComm;
+
+class DownCommColumn : public ListColumn
 {
-   _host = find_host(dt->host_name);
-   if (dt->service_description)
-      _service = find_service(dt->host_name, dt->service_description); 
-   else
-      _service = 0;
-}
+   TableDownComm *_table;
+public:
+   DownCommColumn(string name, string description, int indirect_offset, TableDownComm *table)
+      : ListColumn(name, description, indirect_offset), _table(table) {};
+   int type() { return COLTYPE_LIST; };
+   void output(void *, Query *);
+   void *getNagiosObject(char *name);
+   bool isNagiosMember(void *data, void *member);
+};
 
 
-Downtime::~Downtime()
-{
-   free(_author_name);
-   free(_comment);
-}
+#endif // DownCommColumn_h
 

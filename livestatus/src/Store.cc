@@ -28,10 +28,16 @@
 #include "strutil.h"
 #include "OutputBuffer.h"
 
+#ifdef EXTERN
+#undef EXTERN
+#endif
+#define EXTERN
+#include "tables.h"
+#undef EXTERN
+
 Store::Store()
-   : _table_hosts(&_table_contacts, &_table_downtimes)
-   , _table_services(&_table_hosts, &_table_contacts, &_table_downtimes)
-     , _table_downtimes(&_table_hosts, &_table_services, &_table_contacts)
+     : _table_downtimes(true)
+     , _table_comments(false)
 {
    _tables.insert(make_pair("hosts", &_table_hosts));
    _tables.insert(make_pair("services", &_table_services));
@@ -40,8 +46,20 @@ Store::Store()
    _tables.insert(make_pair("contacts", &_table_contacts));
    _tables.insert(make_pair("commands", &_table_commands));
    _tables.insert(make_pair("downtimes", &_table_downtimes));
+   _tables.insert(make_pair("comments", &_table_comments));
    _tables.insert(make_pair("status", &_table_status));
    _tables.insert(make_pair("columns", &_table_columns));
+
+   g_table_hosts = &_table_hosts;
+   g_table_services = &_table_services;
+   g_table_hostgroups = &_table_hostgroups;
+   g_table_servicegroups = &_table_servicegroups;
+   g_table_contacts = &_table_contacts;
+   g_table_commands = &_table_commands;
+   g_table_downtimes = &_table_downtimes;
+   g_table_comments = &_table_comments;
+   g_table_status = &_table_status;
+   g_table_columns = &_table_columns;
 
    for (_tables_t::iterator it = _tables.begin();
 	 it != _tables.end();
@@ -75,9 +93,14 @@ void Store::registerContact(contact *s)
    _table_contacts.add(s);
 }
 
+void Store::registerComment(nebstruct_comment_data *d)
+{
+   _table_comments.addComment(d);
+}
+
 void Store::registerDowntime(nebstruct_downtime_data *d)
 {
-   _table_downtimes.add(d);
+   _table_downtimes.addDowntime(d);
 }
 
 bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)

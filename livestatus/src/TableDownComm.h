@@ -22,8 +22,8 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef TableDowntimes_h
-#define TableDowntimes_h
+#ifndef TableDownComm_h
+#define TableDownComm_h
 
 #include "config.h"
 
@@ -31,29 +31,34 @@
 #include "Table.h"
 #include "nagios.h"
 
-class Downtime;
+class DowntimeOrComment;
 class TableHosts;
 class TableContacts;
 class TableServices;
 
 using namespace std;
 
-class TableDowntimes : public Table
+class TableDownComm : public Table
 {
-   typedef map<unsigned long, Downtime *> _downtimes_t;
-   _downtimes_t _downtimes;
+   const char *_name;
+   typedef map<unsigned long, DowntimeOrComment *> _entries_t;
+   _entries_t _entries;
+
 public:
-   TableDowntimes(TableHosts *, TableServices *, TableContacts *);
-   const char *name() { return "downtimes"; };
-   ~TableDowntimes();
-   Downtime *findDowntime(unsigned long id);
-   void add(nebstruct_downtime_data *);
+   TableDownComm(bool is_downtime);
+   const char *name() { return _name; };
+   ~TableDownComm();
+   DowntimeOrComment *findEntry(unsigned long id);
+   void addDowntime(nebstruct_downtime_data *);
+   void addComment(nebstruct_comment_data *);
+   void add(DowntimeOrComment *data);
+   void remove(unsigned id);
    void answerQuery(Query *);
-   _downtimes_t::iterator downtimesIteratorBegin() { return _downtimes.begin(); }
-   _downtimes_t::iterator downtimesIteratorEnd() { return _downtimes.end(); }
+   _entries_t::iterator entriesIteratorBegin() { return _entries.begin(); }
+   _entries_t::iterator entriesIteratorEnd() { return _entries.end(); }
 };
 
 
 
-#endif // TableDowntimes_h
+#endif // TableDownComm_h
 

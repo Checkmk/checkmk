@@ -30,6 +30,8 @@
         if process is in brackets
       - Linux agent: 'ps' now no longer supresses
         kernel processes
+      - Linux agent: make CPU count work correctly
+        on PPC-Linux
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

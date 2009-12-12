@@ -22,7 +22,6 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#define NSCORE
 #include "nagios.h"
 #include "logger.h"
 #include "TableHosts.h"
@@ -32,27 +31,24 @@
 #include "OffsetDoubleColumn.h"
 #include "OffsetTimeperiodColumn.h"
 #include "HostContactsColumn.h"
-#include "DowntimesColumn.h"
+#include "DownCommColumn.h"
 #include "CustomVarsColumn.h"
 #include "HostlistColumn.h"
 #include "ServicelistColumn.h"
 #include "ServicelistStateColumn.h"
 #include "HostgroupsColumn.h"
 #include "HostSpecialIntColumn.h"
+#include "tables.h"
 
 
-TableHosts::TableHosts(TableContacts *tc, TableDowntimes *td)
+TableHosts::TableHosts()
 {
-   addColumns(this, "", -1, tc, td);
+   addColumns(this, "", -1);
 }
 
 
-void TableHosts::addColumns(Table *table, string prefix, int indirect_offset, TableContacts *tc, TableDowntimes *td)
+void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 {
-   /* Es fehlt: 
-      Spalte services!!!
-      double Spalten
-      etliche unwichtigere Spalten */
 
    host hst;
    char *ref = (char *)&hst;
@@ -188,9 +184,11 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset, Ta
 	    "Wether this host is currently in its check period (0/1)", (char *)(&hst.check_period_ptr) - ref, indirect_offset));
 
    table->addColumn(new HostContactsColumn(prefix + "contacts", 
-	    "A list of all contacts of this host", indirect_offset, tc));
-   table->addColumn(new DowntimesColumn(prefix + "downtimes", 
-	    "A list of the ids of all scheduled downtimes of this host", indirect_offset, td));
+	    "A list of all contacts of this host", indirect_offset));
+   table->addColumn(new DownCommColumn(prefix + "downtimes", 
+	    "A list of the ids of all scheduled downtimes of this host", indirect_offset, true));
+   table->addColumn(new DownCommColumn(prefix + "comments", 
+	    "A list of the ids of all comments of this host", indirect_offset, false));
 
    table->addColumn(new CustomVarsColumn(prefix + "custom_variable_names", 
 	    "A list of the names of all custom variables", (char *)(&hst.custom_variables) - ref, indirect_offset, CVT_VARNAMES));

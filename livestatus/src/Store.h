@@ -33,7 +33,7 @@
 #include "TableServicegroups.h"
 #include "TableContacts.h"
 #include "TableCommands.h"
-#include "TableDowntimes.h"
+#include "TableDownComm.h"
 #include "TableStatus.h"
 #include "TableColumns.h"
 #include "OutputBuffer.h"
@@ -47,7 +47,8 @@ class Store
   TableServices      _table_services;
   TableHostgroups    _table_hostgroups;
   TableServicegroups _table_servicegroups;
-  TableDowntimes     _table_downtimes;
+  TableDownComm      _table_downtimes;
+  TableDownComm      _table_comments;
   TableStatus        _table_status;
   TableColumns       _table_columns;
 
@@ -60,6 +61,7 @@ public:
   void registerService(service *);
   void registerHostgroup(hostgroup *);
   void registerContact(contact *);
+  void registerComment(nebstruct_comment_data *);
   void registerDowntime(nebstruct_downtime_data *);
   bool answerRequest(InputBuffer *, OutputBuffer *);
 

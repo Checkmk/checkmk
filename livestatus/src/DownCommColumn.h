@@ -22,38 +22,28 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef TableDowntimes_h
-#define TableDowntimes_h
+#ifndef DownCommColumn_h
+#define DownCommColumn_h
 
 #include "config.h"
 
-#include <map>
-#include "Table.h"
-#include "nagios.h"
+#include "ListColumn.h"
+#include "TableContacts.h"
 
-class Downtime;
-class TableHosts;
-class TableContacts;
-class TableServices;
+class TableDownComm;
 
-using namespace std;
-
-class TableDowntimes : public Table
+class DownCommColumn : public ListColumn
 {
-   typedef map<unsigned long, Downtime *> _downtimes_t;
-   _downtimes_t _downtimes;
+   bool _is_downtime;
 public:
-   TableDowntimes(TableHosts *, TableServices *, TableContacts *);
-   const char *name() { return "downtimes"; };
-   ~TableDowntimes();
-   Downtime *findDowntime(unsigned long id);
-   void add(nebstruct_downtime_data *);
-   void answerQuery(Query *);
-   _downtimes_t::iterator downtimesIteratorBegin() { return _downtimes.begin(); }
-   _downtimes_t::iterator downtimesIteratorEnd() { return _downtimes.end(); }
+   DownCommColumn(string name, string description, int indirect_offset, bool is_downtime)
+      : ListColumn(name, description, indirect_offset), _is_downtime(is_downtime) {};
+   int type() { return COLTYPE_LIST; };
+   void output(void *, Query *);
+   void *getNagiosObject(char *name);
+   bool isNagiosMember(void *data, void *member);
 };
 
 
-
-#endif // TableDowntimes_h
+#endif // DownCommColumn_h
 

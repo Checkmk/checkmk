@@ -30,7 +30,7 @@ pkglib_LIBRARIES = livestatus.so
 livestatus_so_SOURCES = \
 	AndingFilter.cc ClientQueue.cc Column.cc ColumnsColumn.cc \
 	ContactsColumn.cc CustomVarsColumn.cc CustomVarsFilter.cc DoubleColumn.cc \
-	DoubleColumnFilter.cc Downtime.cc DowntimesColumn.cc EmptyColumn.cc \
+	DoubleColumnFilter.cc DowntimeOrComment.cc DownCommColumn.cc EmptyColumn.cc \
 	Filter.cc GlobalCountersColumn.cc HostContactsColumn.cc HostgroupsColumn.cc \
 	HostlistColumn.cc HostlistColumnFilter.cc HostlistStateColumn.cc \
 	HostSpecialIntColumn.cc InputBuffer.cc IntColumn.cc IntColumnFilter.cc \
@@ -39,7 +39,7 @@ livestatus_so_SOURCES = \
 	Query.cc ServiceContactsColumn.cc ServicegroupsColumn.cc ServicelistColumn.cc \
 	ServicelistColumnFilter.cc ServicelistStateColumn.cc store.cc Store.cc \
 	StringColumn.cc StringColumnFilter.cc strutil.cc Table.cc TableColumns.cc \
-	TableCommands.cc TableContacts.cc TableDowntimes.cc TableHostgroups.cc \
+	TableCommands.cc TableContacts.cc TableDownComm.cc TableHostgroups.cc \
 	TableHosts.cc TableServicegroups.cc TableServices.cc TableStatus.cc  \
 	global_counters.c  module.c  logger.c 
 
@@ -51,6 +51,11 @@ livestatus.o: $(livestatus_so_OBJECTS) $(livestatus_so_DEPENDENCIES)
 	$(CXX) -s -fPIC -shared $(livestatus_so_OBJECTS) -o $@ -lpthread -lstdc++
 
 all-local: livestatus.o
+
+install-data-local:
+	$(mkinstalldirs) $(DESTDIR)$(pkglibdir)
+	$(INSTALL_PROGRAM) livestatus.o $(DESTDIR)$(pkglibdir)
+	rm -f $(DESTDIR)$(pkglibdir)/livestatus.so
 
 clean-local:
 	rm -f *~

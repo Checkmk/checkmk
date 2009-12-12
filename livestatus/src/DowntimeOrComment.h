@@ -22,14 +22,20 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef Downtime_h
-#define Downtime_h
+#ifndef DowntimeOrComment_h
+#define DowntimeOrComment_h
 
 #include "config.h"
 
 #include "nagios.h"
 #include <string>
 using namespace std;
+
+/* The structs for downtime and comment are so similar, that
+   we handle them with the same logic */
+
+
+
 
 /*
 typedef struct nebstruct_downtime_struct{
@@ -53,9 +59,31 @@ typedef struct nebstruct_downtime_struct{
 
         void            *object_ptr; // not implemented yet
         }nebstruct_downtime_data;
+
+typedef struct nebstruct_comment_struct{
+	int             type;
+	int             flags;
+	int             attr;
+	struct timeval  timestamp;
+
+	int             comment_type;
+	char            *host_name;
+	char            *service_description;
+	time_t          entry_time;
+	char            *author_name;
+	char            *comment_data;
+	int             persistent;
+	int             source;
+	int             entry_type;
+	int             expires;
+	time_t          expire_time;
+	unsigned long   comment_id;
+
+	void            *object_ptr; // not implemented yet
+        }nebstruct_comment_data;
 */
 
-struct Downtime
+struct DowntimeOrComment
 {
    int           _type;
    host         *_host;
@@ -63,15 +91,30 @@ struct Downtime
    time_t        _entry_time;
    char *        _author_name;
    char*         _comment;
+   unsigned long _id;
+
+   DowntimeOrComment(nebstruct_downtime_struct *data, unsigned long id);
+   virtual ~DowntimeOrComment();
+};
+
+struct Downtime : public DowntimeOrComment
+{
    time_t        _start_time;
    time_t        _end_time;
    int           _fixed;
    int           _duration;
    int           _triggered_by;
-   unsigned long _downtime_id;
+   Downtime(nebstruct_downtime_struct *data);
+};
 
-   Downtime(nebstruct_downtime_data *data);
-   ~Downtime();
+struct Comment : public DowntimeOrComment
+{
+   int           _persistent;
+   int           _source;
+   int           _entry_type;
+   int           _expires;
+   time_t        _expire_time;
+   Comment(nebstruct_comment_struct *data);
 };
 
 

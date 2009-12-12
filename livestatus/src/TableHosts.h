@@ -31,7 +31,7 @@
 #include "Table.h"
 #include "nagios/objects.h"
 class TableContacts;
-class TableDowntimes;
+class TableDownComm;
 
 class TableHosts : public Table
 {
@@ -39,9 +39,9 @@ class TableHosts : public Table
   _hosts_t _hosts;
 
 public:
-  TableHosts(TableContacts *tc, TableDowntimes *td);
+  TableHosts();
   const char *name() { return "hosts"; };
-  void addColumns(Table *, string prefix, int indirect_offset, TableContacts *tc, TableDowntimes *td);
+  void addColumns(Table *, string prefix, int indirect_offset);
   void add(host *hst);
   void answerQuery(Query *query);
 };

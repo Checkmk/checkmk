@@ -22,9 +22,7 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#define NSCORE
-#include "nagios/objects.h"
-
+#include "nagios.h"
 #include "TableServices.h"
 #include "Query.h"
 #include "logger.h"
@@ -34,9 +32,10 @@
 #include "OffsetTimeperiodColumn.h"
 #include "TableHosts.h"
 #include "ServiceContactsColumn.h"
-#include "DowntimesColumn.h"
+#include "DownCommColumn.h"
 #include "CustomVarsColumn.h"
 #include "ServicegroupsColumn.h"
+#include "tables.h"
 
 void TableServices::answerQuery(Query *query)
 {
@@ -101,13 +100,13 @@ void TableServices::add(service *svc)
 }
 
 
-TableServices::TableServices(TableHosts *ht, TableContacts *tc, TableDowntimes *td)
+TableServices::TableServices()
 {
-   addColumns(this, "", -1, ht, tc, td);
+   addColumns(this, "", -1, true);
 }
 
 
-void TableServices::addColumns(Table *table, string prefix, int indirect_offset, TableHosts *ht, TableContacts *tc, TableDowntimes *td)
+void TableServices::addColumns(Table *table, string prefix, int indirect_offset, bool add_hosts)
 {
    /* es fehlt noch: double-Spalten, unsigned long spalten, etliche weniger wichtige
       Spalte. Und: die Servicegruppen */
@@ -234,11 +233,14 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
 
 
    table->addColumn(new ServiceContactsColumn(prefix + "contacts", 
-	    "A list of all contacts of the service", indirect_offset, tc));
-   table->addColumn(new DowntimesColumn(prefix + "downtimes", 
-	    "A list of all downtime ids of the service", indirect_offset, td));
-   if (ht)
-      ht->addColumns(this, "host_", (char *)(&svc.host_ptr) - ref, tc, td);
+	    "A list of all contacts of the service", indirect_offset));
+   table->addColumn(new DownCommColumn(prefix + "downtimes", 
+	    "A list of all downtime ids of the service", indirect_offset, true));
+   table->addColumn(new DownCommColumn(prefix + "comments", 
+	    "A list of all comment ids of the service", indirect_offset, false));
+
+   if (add_hosts)
+      g_table_hosts->addColumns(this, "host_", (char *)(&svc.host_ptr) - ref);
 
    table->addColumn(new CustomVarsColumn(prefix + "custom_variable_names", 
 	    "A list of the names of all custom variables of the service", (char *)(&svc.custom_variables) - ref, indirect_offset, CVT_VARNAMES));

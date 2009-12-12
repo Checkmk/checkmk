@@ -22,32 +22,43 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "Downtime.h"
-#include "logger.h"
+#ifndef TableDownComm_h
+#define TableDownComm_h
 
-Downtime::Downtime(nebstruct_downtime_struct *dt)
-   : _type(dt->downtime_type)
-   , _entry_time(dt->entry_time)
-   , _author_name(strdup(dt->author_name))
-   , _comment(strdup(dt->comment_data))
-   , _start_time(dt->start_time)
-   , _end_time(dt->end_time)
-   , _fixed(dt->fixed)
-   , _duration(dt->duration)
-   , _triggered_by(dt->triggered_by)
-     , _downtime_id(dt->downtime_id)
+#include "config.h"
+
+#include <map>
+#include "Table.h"
+#include "nagios.h"
+
+class DowntimeOrComment;
+class TableHosts;
+class TableContacts;
+class TableServices;
+
+using namespace std;
+
+class TableDownComm : public Table
 {
-   _host = find_host(dt->host_name);
-   if (dt->service_description)
-      _service = find_service(dt->host_name, dt->service_description); 
-   else
-      _service = 0;
-}
+   const char *_name;
+   typedef map<unsigned long, DowntimeOrComment *> _entries_t;
+   _entries_t _entries;
+
+public:
+   TableDownComm(bool is_downtime);
+   const char *name() { return _name; };
+   ~TableDownComm();
+   DowntimeOrComment *findEntry(unsigned long id);
+   void addDowntime(nebstruct_downtime_data *);
+   void addComment(nebstruct_comment_data *);
+   void add(DowntimeOrComment *data);
+   void remove(unsigned id);
+   void answerQuery(Query *);
+   _entries_t::iterator entriesIteratorBegin() { return _entries.begin(); }
+   _entries_t::iterator entriesIteratorEnd() { return _entries.end(); }
+};
 
 
-Downtime::~Downtime()
-{
-   free(_author_name);
-   free(_comment);
-}
+
+#endif // TableDownComm_h
 

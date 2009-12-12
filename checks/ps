@@ -85,7 +85,7 @@ def process_matches(ps, procname, l_user):
 
     # agent might output username in brackets in the first columns
     userspec = l_user[0]
-    if ps[0].startswith("(") and ps[0].endswith(")"):
+    if ps[0].startswith("(") and ps[0].endswith(")") and len(ps) > 1:
 	user = ps[0][1:-1]
 	if userspec and userspec != user:
 	    return False

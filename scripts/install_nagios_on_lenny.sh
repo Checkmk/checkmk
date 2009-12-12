@@ -27,7 +27,7 @@
 
 VERSION=${1:-3.2.0}
 PNPVERSION=${2:-0.4.14}
-MKVERSION=${3:-1.1.0}
+MKVERSION=${3:-1.1.1rc}
 NAGIOS_MIRROR=dfn
 NAGVIS_URL='http://nagvis.git.sourceforge.net/git/gitweb.cgi?p=nagvis/nagvis;a=snapshot;h=8f1c2e25a7a73deaf2b721d482086241be94ee66;sf=tgz'
 

@@ -32,6 +32,7 @@
 #include "nagios.h"
 
 #define HLSC_NUM_SVC               SLSC_NUM
+#define HLSC_NUM_SVC_PENDING       SLSC_NUM_PENDING
 #define HLSC_NUM_SVC_OK            SLSC_NUM_OK
 #define HLSC_NUM_SVC_WARN          SLSC_NUM_WARN
 #define HLSC_NUM_SVC_CRIT          SLSC_NUM_CRIT
@@ -46,6 +47,7 @@
 #define HLSC_NUM_HST_UP       10
 #define HLSC_NUM_HST_DOWN     11
 #define HLSC_NUM_HST_UNREACH  12
+#define HLSC_NUM_HST_PENDING  13
 #define HLSC_NUM_HST          -11
 #define HLSC_WORST_HST_STATE  -12
 

@@ -60,6 +60,8 @@ void TableHostgroups::addColumns(Table *table, string prefix, int indirect_offse
 	    "The worst state of all of the groups' hosts (UP <= UNREACHABLE <= DOWN)",     HLSC_WORST_HST_STATE, (char *)(&hgr.members) - ref, indirect_offset));
    table->addColumn(new HostlistStateColumn(prefix + "num_hosts", 
 	    "The total number of hosts in the group",            HLSC_NUM_HST, (char *)(&hgr.members) - ref, indirect_offset));
+   table->addColumn(new HostlistStateColumn(prefix + "num_hosts_pending", 
+	    "The number of hosts in the group that are pending",    HLSC_NUM_HST_PENDING, (char *)(&hgr.members) - ref, indirect_offset));
    table->addColumn(new HostlistStateColumn(prefix + "num_hosts_up", 
 	    "The number of hosts in the group that are up",         HLSC_NUM_HST_UP, (char *)(&hgr.members) - ref, indirect_offset));
    table->addColumn(new HostlistStateColumn(prefix + "num_hosts_down", 
@@ -73,6 +75,8 @@ void TableHostgroups::addColumns(Table *table, string prefix, int indirect_offse
    // soft states 
    table->addColumn(new HostlistStateColumn(prefix + "worst_service_state", 
 	    "The worst state of all services that belong to a host of this group (OK <= WARN <= UNKNOWN <= CRIT)",  HLSC_WORST_SVC_STATE, (char *)(&hgr.members) - ref, indirect_offset));
+   table->addColumn(new HostlistStateColumn(prefix + "num_services_pending", 
+	    "The total number of services with the state Pending of hosts in this group", HLSC_NUM_SVC_PENDING, (char *)(&hgr.members) - ref, indirect_offset));
    table->addColumn(new HostlistStateColumn(prefix + "num_services_ok", 
 	    "The total number of services with the state OK of hosts in this group",      HLSC_NUM_SVC_OK, (char *)(&hgr.members) - ref, indirect_offset));
    table->addColumn(new HostlistStateColumn(prefix + "num_services_warn", 

@@ -68,6 +68,8 @@ void TableServicegroups::addColumns(Table *table, string prefix, int indirect_of
 	    "The number of services in the group that are CRIT",    SLSC_NUM_CRIT,    (char *)(&sgr.members) - ref, indirect_offset));
    table->addColumn(new ServicelistStateColumn(prefix + "num_services_unknown", 
 	    "The number of services in the group that are UNKNOWN", SLSC_NUM_UNKNOWN, (char *)(&sgr.members) - ref, indirect_offset));
+   table->addColumn(new ServicelistStateColumn(prefix + "num_services_pending", 
+	    "The number of services in the group that are PENDING", SLSC_NUM_PENDING, (char *)(&sgr.members) - ref, indirect_offset));
    table->addColumn(new ServicelistStateColumn(prefix + "num_services_hard_ok", 
 	    "The number of services in the group that are OK",      SLSC_NUM_HARD_OK,      (char *)(&sgr.members) - ref, indirect_offset));
    table->addColumn(new ServicelistStateColumn(prefix + "num_services_hard_warn", 

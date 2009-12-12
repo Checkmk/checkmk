@@ -45,39 +45,47 @@ servicesmember *ServicelistStateColumn::getMembers(void *data)
 
 int32_t ServicelistStateColumn::getValue(int logictype, servicesmember *mem)
 {
-   int32_t result = 0;
+    int32_t result = 0;
 
-   while (mem) {
-      service *svc = mem->service_ptr;
-      int state;
-      if (logictype >= 60) {
-	 state = svc->last_hard_state;
-         logictype -= 64;
-      }
-      else
-	 state = svc->current_state;
+    while (mem) {
+	service *svc = mem->service_ptr;
+	int state;
+	int has_been_checked;
+	if (logictype >= 60) {
+	    state = svc->last_hard_state;
+	    logictype -= 64;
+	}
+	else
+	    state = svc->current_state;
 
-      switch (logictype) {
-	 case SLSC_WORST_STATE: 
-	    if (svcStateIsWorse(result, state)) result = state; 
-	    break;
-	 case SLSC_NUM: 
-	    result++; 
-   	    break;
-	 default: 
-	    if (state == logictype) 
-	       result++; 
-	    break;
-      }
-      mem = mem->next;
-   }
-   return result;
+	has_been_checked = svc->has_been_checked;
+
+	switch (logictype) {
+	    case SLSC_WORST_STATE:
+		if (svcStateIsWorse(result, state))
+		    result = state;
+		break;
+	    case SLSC_NUM:
+		result++;
+		break;
+	    case SLSC_NUM_PENDING:
+		if (!has_been_checked)
+		    result++;
+		break;
+	    default:
+		if (has_been_checked && state == logictype)
+		    result++;
+		break;
+	}
+	mem = mem->next;
+    }
+    return result;
 }
 
 
 int32_t ServicelistStateColumn::getValue(void *data)
 {
-   servicesmember *mem = getMembers(data);
-   return getValue(_logictype, mem);
+    servicesmember *mem = getMembers(data);
+    return getValue(_logictype, mem);
 }
 

@@ -34,6 +34,7 @@
 #define SLSC_NUM_WARN          1
 #define SLSC_NUM_CRIT          2
 #define SLSC_NUM_UNKNOWN       3
+#define SLSC_NUM_PENDING       4
 #define SLSC_WORST_STATE       -2
 
 #define SLSC_NUM_HARD_OK       (0 + 64)

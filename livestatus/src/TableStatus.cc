@@ -52,10 +52,6 @@ extern int enable_flap_detection;
 extern int process_performance_data;
 extern int check_external_commands;
 
-extern char *last_program_version;
-extern char *new_program_version;
-
-
 TableStatus::TableStatus()
 {
    addColumn(new GlobalCountersColumn("neb_callbacks", 
@@ -122,10 +118,6 @@ TableStatus::TableStatus()
 
    addColumn(new StringPointerColumn("program_version", 
 	    "The version of the monitoring daemon", get_program_version()));
-   addColumn(new StringPointerColumn("last_program_version", 
-	    "The last version of Nagios", last_program_version));
-   addColumn(new StringPointerColumn("new_program_version", 
-	    "The new version of Nagios", new_program_version));
 }
 
 void TableStatus::answerQuery(Query *query)

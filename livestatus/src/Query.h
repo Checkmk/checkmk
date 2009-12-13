@@ -97,6 +97,7 @@ public:
    void outputListSeparator();
    void outputEndList();
    void *findIndexFilter(const char *columnname);
+   void *findTimerangeFilter(const char *columnname, time_t *, time_t *);
 
 private:
    bool doStats();

@@ -22,57 +22,31 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef Store_h
-#define Store_h
+#ifndef TableLog_h
+#define TableLog_h
 
+#include <map>
 #include "config.h"
+#include "Table.h"
 
-#include "TableServices.h"
-#include "TableHosts.h"
-#include "TableHostgroups.h"
-#include "TableServicegroups.h"
-#include "TableContacts.h"
-#include "TableCommands.h"
-#include "TableDownComm.h"
-#include "TableStatus.h"
-#include "TableLog.h"
-#include "TableColumns.h"
-#include "OutputBuffer.h"
-#include "InputBuffer.h"
+class Logfile;
 
-class Store
+class TableLog : public Table
 {
-  TableContacts      _table_contacts;
-  TableCommands      _table_commands;
-  TableHosts         _table_hosts;
-  TableServices      _table_services;
-  TableHostgroups    _table_hostgroups;
-  TableServicegroups _table_servicegroups;
-  TableDownComm      _table_downtimes;
-  TableDownComm      _table_comments;
-  TableStatus        _table_status;
-  TableLog           _table_log;
-  TableColumns       _table_columns;
-
-  typedef map<string, Table *> _tables_t;
-  _tables_t _tables;
+    typedef map<time_t, Logfile *> _logfiles_t;
+    _logfiles_t _logfiles;
 
 public:
-  Store();
-  void registerHost(host *);
-  void registerService(service *);
-  void registerHostgroup(hostgroup *);
-  void registerContact(contact *);
-  void registerComment(nebstruct_comment_data *);
-  void registerDowntime(nebstruct_downtime_data *);
-  bool answerRequest(InputBuffer *, OutputBuffer *);
+    TableLog();
+    ~TableLog();
+    const char *name() { return "log"; };
+    void answerQuery(Query *query);
 
 private:
-  Table *findTable(string name);
-  void answerGetRequest(InputBuffer *, OutputBuffer *, const char *);
-  void answerCommandRequest(const char *);
+    void updateLogfileIndex();
+    void scanLogfile(char *path, bool watch);
+    bool answerQuery(Query *, Logfile *, time_t, time_t);
+    _logfiles_t::iterator findLogfileStartingBefore(time_t);
 };
 
-#endif // Store_h
-
-
+#endif // TableLog_h

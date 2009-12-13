@@ -64,5 +64,6 @@ Comment::Comment(nebstruct_comment_struct *co)
      , _source(co->source)
      , _expires(co->expires)
      , _expire_time(co->expire_time)
+     , _entry_type(co->entry_type)
 {
 }

@@ -23,6 +23,8 @@ class TableDownComm;
 EXTERN TableDownComm      *g_table_comments;
 class TableStatus;
 EXTERN TableStatus        *g_table_status;
+class TableLog;
+EXTERN TableLog           *g_table_log;
 class TableColumns;
 EXTERN TableColumns       *g_table_columns;
 

@@ -39,7 +39,7 @@ DoubleColumnFilter::DoubleColumnFilter(DoubleColumn *column, int opid, char *val
 bool DoubleColumnFilter::accepts(void *data)
 {
    bool pass = true;
-   int32_t act_value = _column->getValue(data);
+   double act_value = _column->getValue(data);
    switch (_opid) {
       case OP_EQUAL:
 	 pass = act_value == _ref_value; break;

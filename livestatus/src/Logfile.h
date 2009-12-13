@@ -30,6 +30,7 @@ public:
     Logfile(const char *path, bool watch);
     ~Logfile();
 
+    char *path() { return _path; };
     void load(unsigned logtypes);
     bool isLoaded() { return _is_loaded; };
     time_t since() { return _since; };

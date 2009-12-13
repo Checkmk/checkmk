@@ -42,7 +42,7 @@ TableLog::TableLog()
 		"Time of the log event (UNIX timestamp)", (char *)&(ref->_time) - (char *)ref, -1));
 
     addColumn(new OffsetStringColumn("message", 
-		"The message (test)", (char *)&(ref->_msg) - (char *)ref, -1));
+		"The message (test)", (char *)&(ref->_text) - (char *)ref, -1));
     updateLogfileIndex();
 }
 
@@ -60,12 +60,13 @@ TableLog::~TableLog()
 
 void TableLog::answerQuery(Query *query)
 {
-    time_t since = time(0);
-    time_t until = 0;
-    query->findTimerangeFilter("time", &since, &until);
-
-    _logfiles_t::iterator it = findLogfileStartingBefore(since);
+    time_t since = 0;
+    time_t until = time(0);
+    // query->findTimerangeFilter("time", &since, &until);
+    logger(LG_INFO, "HIRN: Suche von %d bis %d\n", since, until);
+    _logfiles_t::iterator it = _logfiles.lower_bound(since);
     while (it != _logfiles.end()) {
+	logger(LG_INFO, "HIRN: Logdatei %s", it->second->path());
 	Logfile *log = it->second;
 	if (!log->answerQuery(query, since, until, LOGTYPE_ALL))
 	    break; // end of time range in this logfile
@@ -90,12 +91,14 @@ void TableLog::updateLogfileIndex()
 	int len = offsetof(struct dirent, d_name) 
 	    + pathconf(log_archive_path, _PC_NAME_MAX) + 1;
 	ent = (struct dirent *)malloc(len);
-	while (0 == readdir_r(dir, ent, &result))
+	while (0 == readdir_r(dir, ent, &result) && result != 0)
 	{
-	   if (ent->d_name[0] != '.') {
-	       snprintf(abspath, sizeof(abspath), "%s/%s", log_archive_path, ent->d_name);
-	       scanLogfile(abspath, false);
-	   }
+	    logger(LG_INFO, "HIRNI: dir: %s", ent->d_name);
+	    if (ent->d_name[0] != '.') {
+		snprintf(abspath, sizeof(abspath), "%s/%s", log_archive_path, ent->d_name);
+		scanLogfile(abspath, false);
+	    }
+	    // ent = result;
 	}
 	free(ent);
 	closedir(dir);

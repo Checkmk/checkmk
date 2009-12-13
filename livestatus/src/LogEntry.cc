@@ -9,7 +9,9 @@ LogEntry::LogEntry(char *line)
 
     // make a copy of the message
     _msg = strdup(line);
-    _msglen = strlen(line) + 1;
+    _msglen = strlen(line);
+    while (_msglen > 0 && _msg[_msglen-1] == '\n')
+	_msg[--_msglen] = '\0';
 
     // [1260722267] xxx - extract timestamp, validate message
     if (_msglen < 13 || _msg[0] != '[' || _msg[11] != ']')

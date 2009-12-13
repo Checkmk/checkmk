@@ -32,6 +32,12 @@
         kernel processes
       - Linux agent: make CPU count work correctly
         on PPC-Linux
+      - MK Livestatus: fixed bug for double columns: filter
+        truncated double to int
+      - MK Livestatus: added new column program_version,
+        showing the Nagios version
+      - MK Livestatus: added new column num_services_pending
+        in table hosts
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

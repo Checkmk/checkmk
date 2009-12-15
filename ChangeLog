@@ -28,6 +28,7 @@
         showing the Nagios version
       - MK Livestatus: added new column num_services_pending
         in table hosts
+      - five new checks for monitoring DECRU SANs
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

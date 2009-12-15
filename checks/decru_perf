@@ -1,0 +1,42 @@
+#!/usr/bin/python
+
+
+
+
+def inventory_decru_perf(checkname, info):
+    perf_names = {
+       1 : "read (bytes/s)", # readBytesPerSec
+       2 : "write (bytes/s)", # writeBytesPerSec
+       3 : "operations (/s)", # opsPerSec
+       4 : "CIFS read (bytes/s)", # cifs-readBytesPerSec
+       5 : "CIFS write (bytes/s)", # cifs-writeBytesPerSec
+       6 : "CIFS operations (/s)", # cifs-opsPerSec
+       7 : "NFS read (bytes/s)", # nfs-readBytesPerSec
+       8 : "NFS write (bytes/s)", # nfs-writeBytesPerSec
+       9 : "NFS operations (/s)", # nfs-opsPerSec
+    }
+
+    inventory = []
+    for index, rate in info:
+        def_name = "unknown %s" % index
+        name = perf_names.get(int(index), def_name)
+        item = "%s: %s" % (index, name)
+        inventory.append( ( item, rate, None ) )
+    return inventory
+
+def check_decru_perf(item, _no_params, info):
+    index, name = item.split(":", 1)
+    for perf in info:
+       if perf[0] == index:
+          rate = int(perf[1])
+	  return (0, "OK - current rate is %d/s" % rate, [("rate", rate)])
+
+    return (3, "UNKNOWN - item not found")
+
+check_info['decru_perf'] = (check_decru_perf, "COUNTER %s", 1, inventory_decru_perf)
+
+snmp_info['decru_perf'] = ( "enterprises.12962.1.1.2.1.1", [ 1, 2 ] )
+# snmp_scan_info['decru_perf'] = ( "enterprises.12962.1.1.1.1", "=", "san" )
+# oder (SNMPv2-MIB::sysObjectID.0 = OID: SNMPv2-SMI::enterprises.12962.2.1.4):
+# snmp_scan_info['decru_perf'] = ( ".1.3.6.1.2.1.1.2.0", "=", ".1.3.6.1.4.1.12962.2.1.4" )
+

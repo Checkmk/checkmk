@@ -22,6 +22,16 @@
       - Fix problem in Agent-RPM: mark xinetd-configfile
         with %config -> avoid data loss on update
       - Check kernel: fixed missing performance data
+      - Solaris agent: don't use egrep, removed some
+        bashisms, output filesystem type zfs or ufs
+      - Linux agent: fixed problem with nfsmount on
+        SuSE 9.3/10.0
+      - Check 'ps': fix incompability with old agent
+        if process is in brackets
+      - Linux agent: 'ps' now no longer supresses
+        kernel processes
+      - Linux agent: make CPU count work correctly
+        on PPC-Linux
       - MK Livestatus: fixed bug for double columns: filter
         truncated double to int
       - MK Livestatus: added new column program_version,
@@ -30,6 +40,9 @@
         in table hosts
       - Five new checks for monitoring DECRU SANs
       - Some new PNP templates
+      - AIX Agent: fix filesystem output
+      - Check logwatch: Fix problem occuring at empty
+        log lines
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

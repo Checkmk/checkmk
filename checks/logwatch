@@ -177,7 +177,12 @@ def check_logwatch(item, params, info):
             worst = 0
             newloglines = []
             for line in loglines:
-                level, text = line.split(None, 1)
+	        parts = line.split(None, 1)
+	        level = parts[0]
+		if len(parts) > 1:
+		   text = parts[1]
+	        else:
+		   text = ""
                 if patterns and level != '.': # do never reclassify informational context messages
                     newlevel = logwatch_reclassify(patterns, text)
                     if newlevel != None:

@@ -39,6 +39,8 @@
       - MK Livestatus: added new column num_services_pending
         in table hosts
       - AIX Agent: fix filesystem output
+      - Check logwatch: Fix problem occuring at empty
+        log lines
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

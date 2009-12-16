@@ -37,7 +37,6 @@ Logfile::Logfile(const char *path, bool watch)
     line[11] = 0;
     _since = atoi(line+1);
     close(fd);
-    logger(LG_INFO, "HIRN: %s beginnt bei %d", path, _since);
 }
 
 
@@ -56,11 +55,9 @@ Logfile::~Logfile()
 void Logfile::load(unsigned logtypes)
 {
     // TODO: implement watch
-    logger(LG_INFO, "HIRN: Lade logtypes %u", logtypes);
     unsigned missing_types = logtypes & ~_logtypes_read;
 
     if (logtypes && _logtypes_read == logtypes) {
-	logger(LG_INFO, "HIRN: Habe alle Typen schon gelesen");
 	return;
     }
 
@@ -87,6 +84,11 @@ void Logfile::load(unsigned logtypes)
 bool Logfile::processLogLine(uint32_t lineno, unsigned logtypes)
 {
     LogEntry *entry = new LogEntry(_linebuffer);
+    // ignored invalid lines
+    if (entry->_logtype == LOGTYPE_INVALID) {
+	delete entry;
+	return false;
+    }
     if ((1 << entry->_logtype) & logtypes) {
 	uint64_t key = makeKey(entry->_time, lineno);
 	_entries.insert(make_pair(key, entry));

@@ -15,19 +15,23 @@ LogEntry::LogEntry(char *line)
 	_msg[--_msglen] = '\0';
 
     // [1260722267] xxx - extract timestamp, validate message
-    if (_msglen < 13 || _msg[0] != '[' || _msg[11] != ']')
+    if (_msglen < 13 || _msg[0] != '[' || _msg[11] != ']') {
+	_logtype = LOGTYPE_INVALID;
 	return; // ignore invalid lines silently
+    }
     _msg[11] = 0; // zero-terminate time stamp
     _time = atoi(_msg+1);
+    if (_time == 0) {
+	logger(LG_INFO, "HIRN: Zeit ist 0, text ist %s", line);
+    }
     _text = _msg + 13; // also skip space after timestamp
 
-    // now classify the log message
+    // now classify the log message. Some messages
+    // refer to other table, some do not.
     if (handleStatusEntry() ||
 	handleNotificationEntry() ||
 	handlePassiveCheckEntry() ||
-	handleExternalCommandEntry() ||
-	handleProgrammEntry() ||
-	handleMiscEntry())
+	handleExternalCommandEntry())
     {
 	if (_host_name)
 	    _host = find_host(_host_name);
@@ -38,41 +42,14 @@ LogEntry::LogEntry(char *line)
 	if (_command_name)
 	    _command = find_command(_command_name);
     }
+    else
+	handleProgrammEntry();
+    // rest is LOGTYPE_INFO
 }
 
-int LogEntry::serviceStateToInt(char *s)
+LogEntry::~LogEntry()
 {
-    // WARN, CRIT, OK, UNKNOWN
-    switch (s[0]) {
-	case 'O': return 0;
-	case 'W': return 1;
-	case 'C': return 2;
-	case 'U': return 3;
-	default: return 4;
-    }
-}
-
-
-int LogEntry::hostStateToInt(char *s)
-{
-    // WARN, CRIT, OK, UNKNOWN
-    switch (s[1]) {
-	case 'P': return 0;
-	case 'O': return 1;
-	case 'N': return 2;
-	default: return 3;
-    }
-}
-
-int LogEntry::stateTypeToInt(char *s)
-{
-    return s[0] == 'H' ? 1 : 0;
-}
-
-
-int LogEntry::startedStoppedToInt(char *s)
-{
-    return !strcmp(s, "STARTED") ? 1 : 0;
+    free(_msg);
 }
 
 
@@ -95,7 +72,8 @@ bool LogEntry::handleStatusEntry()
 	_check_output = next_token(&scan);
 	return true;
     }
-    else if (!strncmp(_text, "HOST DOWNTIME ALERT: ", 21))
+    else if (!strncmp(_text, "HOST DOWNTIME ALERT: ", 21)
+	    || !strncmp(_text, "HOST FLAPPING ALERT: ", 21))
     {
 	_logtype = LOGTYPE_STATE;
 	char *scan = _text;
@@ -126,7 +104,8 @@ bool LogEntry::handleStatusEntry()
 	_check_output = next_token(&scan);
 	return true;
     }
-    else if (!strncmp(_text, "SERVICE DOWNTIME ALERT: ", 24))
+    else if (!strncmp(_text, "SERVICE DOWNTIME ALERT: ", 24)
+          || !strncmp(_text, "SERVICE FLAPPING ALERT: ", 24))
     {
 	_logtype = LOGTYPE_STATE;
 	char *scan = _text;
@@ -167,6 +146,23 @@ bool LogEntry::handleNotificationEntry()
 
 bool LogEntry::handlePassiveCheckEntry()
 {
+    if (!strncmp(_text, "PASSIVE SERVICE CHECK: ", 23)
+       || !strncmp(_text, "PASSIVE HOST CHECK: ", 20))
+    {
+	_logtype = LOGTYPE_PASSIVECHECK;
+	bool svc = _text[8] == 'S';
+	char *scan = _text;
+	_text = next_token(&scan, ':');
+	scan++;
+
+	_host_name    = next_token(&scan);
+	if (svc) 
+	    _svc_desc     = next_token(&scan);
+	_state        = atoi(next_token(&scan));
+	_check_output = next_token(&scan);
+	return true;
+    }
+
     return false;
 }
 
@@ -182,6 +178,7 @@ bool LogEntry::handleExternalCommandEntry()
 	   deren Parameteraufbau. Oder gibt es hier auch eine bessere
 	   Loesung? */
     }
+    return false;
 }
 
 bool LogEntry::handleProgrammEntry()
@@ -189,17 +186,40 @@ bool LogEntry::handleProgrammEntry()
     return false;
 }
 
-bool LogEntry::handleMiscEntry()
+
+int LogEntry::serviceStateToInt(char *s)
 {
-    return false;
+    // WARN, CRIT, OK, UNKNOWN
+    switch (s[0]) {
+	case 'O': return 0;
+	case 'W': return 1;
+	case 'C': return 2;
+	case 'U': return 3;
+	default: return 4;
+    }
 }
 
 
-
-
-LogEntry::~LogEntry()
+int LogEntry::hostStateToInt(char *s)
 {
-    free(_msg);
+    // WARN, CRIT, OK, UNKNOWN
+    switch (s[1]) {
+	case 'P': return 0;
+	case 'O': return 1;
+	case 'N': return 2;
+	default: return 3;
+    }
+}
+
+int LogEntry::stateTypeToInt(char *s)
+{
+    return s[0] == 'H' ? 1 : 0;
+}
+
+
+int LogEntry::startedStoppedToInt(char *s)
+{
+    return !strcmp(s, "STARTED") ? 1 : 0;
 }
 
 

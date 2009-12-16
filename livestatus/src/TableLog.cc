@@ -55,16 +55,16 @@
      gehe ich von einer Rotation aus und mach das, was oben
      beschrieben ist.
 
-   - Die fehlenden Informationen der Meldung. Die Klassifizierung.
-     Ich muss sinnvolle Klassen von Meldungen aufstellen. Wie kann
-     ich die Einzelstrings der Meldungen zur Verfügung stellen und
-     die Gesamtmeldung trotzdem, ohne datei Speicher doppelt zu
-     brauchen?
-
    - Eine Optimierung der Bereichsanfrage
 
    - Ein Lock auf TableLog, da hier ändernde Operationen
      stattfinden.
+
+   - Etliche Meldungstypen: Programm-Meldungen (Neustart),
+     Eventhandler-Meldungen, und was gibt es noch?
+     Die Verknuefpungen der External-Commands stellen wir
+     noch zurueck.
+
 
 */
 
@@ -82,7 +82,7 @@ TableLog::TableLog()
 		"The message (test)", (char *)&(ref->_text) - (char *)ref, -1));
     addColumn(new OffsetStringColumn("comment", 
 		"A comment field used in various message types", (char *)&(ref->_comment) - (char *)ref, -1));
-    addColumn(new OffsetStringColumn("check_output", 
+    addColumn(new OffsetStringColumn("plugin_output", 
 		"The output of the check, if any is associated with the message", (char *)&(ref->_check_output) - (char *)ref, -1));
     addColumn(new OffsetIntColumn("state", 
 		"The state of the host or service in question", (char *)&(ref->_state) - (char *)ref, -1));
@@ -157,7 +157,6 @@ void TableLog::updateLogfileIndex()
 	ent = (struct dirent *)malloc(len);
 	while (0 == readdir_r(dir, ent, &result) && result != 0)
 	{
-	    logger(LG_INFO, "HIRNI: dir: %s", ent->d_name);
 	    if (ent->d_name[0] != '.') {
 		snprintf(abspath, sizeof(abspath), "%s/%s", log_archive_path, ent->d_name);
 		scanLogfile(abspath, false);

@@ -7,6 +7,7 @@
 #define LOGTYPE_NOTIFICATION      3
 #define LOGTYPE_PASSIVECHECK      4
 #define LOGTYPE_COMMAND           5
+#define LOGTYPE_INVALID          -1 // never stored
 #define LOGTYPE_ALL          0xffff
 
 #include "nagios.h"
@@ -42,7 +43,7 @@ private:
     bool handlePassiveCheckEntry();
     bool handleExternalCommandEntry();
     bool handleProgrammEntry();
-    bool handleMiscEntry();
+    bool handleInfoEntry();
     int serviceStateToInt(char *s);
     int hostStateToInt(char *s);
     int stateTypeToInt(char *s);

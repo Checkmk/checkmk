@@ -32,13 +32,20 @@ extern command *command_list;
 
 TableCommands::TableCommands()
 {
+    addColumns(this, "", -1);
+}
+
+
+void TableCommands::addColumns(Table *table, string prefix, int indirect_offset)
+{
    command cmd;
    char *ref = (char *)&cmd;
-   addColumn(new OffsetStringColumn("name", 
-	    "The name of the command", (char *)(&cmd.name) - ref, -1));
-   addColumn(new OffsetStringColumn("line", 
-	    "The shell command line", (char *)(&cmd.command_line) - ref, -1));
+   table->addColumn(new OffsetStringColumn(prefix + "name", 
+	    "The name of the command", (char *)(&cmd.name) - ref, indirect_offset));
+   table->addColumn(new OffsetStringColumn(prefix + "line", 
+	    "The shell command line", (char *)(&cmd.command_line) - ref, indirect_offset));
 }
+
 
 void TableCommands::answerQuery(Query *query)
 {

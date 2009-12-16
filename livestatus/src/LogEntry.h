@@ -6,6 +6,7 @@
 #define LOGTYPE_PROGRAM           2
 #define LOGTYPE_NOTIFICATION      3
 #define LOGTYPE_PASSIVECHECK      4
+#define LOGTYPE_COMMAND           5
 #define LOGTYPE_ALL          0xffff
 
 #include "nagios.h"
@@ -19,15 +20,18 @@ struct LogEntry
     char      *_text;      // points into msg
     char      *_host_name; // points into msg or is 0
     char      *_svc_desc;  // points into msg or is 0
-    // char      *_contact_name;   // points into msg or is 0
-    host      *_host;
-    service   *_service;
-    contact   *_contact;
+    char      *_command_name;
+    char      *_contact_name;
     int       _state;
     int       _state_type;
     int       _attempt;
     char      *_check_output;
     char      *_comment;
+    
+    host      *_host;
+    service   *_service;
+    contact   *_contact;
+    command   *_command;
 
     LogEntry(char *line);
     ~LogEntry();

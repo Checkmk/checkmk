@@ -37,6 +37,8 @@
 #include "tables.h"
 #include "TableServices.h"
 #include "TableHosts.h"
+#include "TableCommands.h"
+#include "TableContacts.h"
 
 
 
@@ -74,7 +76,7 @@ TableLog::TableLog()
     addColumn(new OffsetIntColumn("time", 
 		"Time of the log event (UNIX timestamp)", (char *)&(ref->_time) - (char *)ref, -1));
     addColumn(new OffsetIntColumn("class", 
-		"The class of the message as integer (0:info, 1:state, 2:program, 3:notification, 4:passive)", (char *)&(ref->_logtype) - (char *)ref, -1));
+		"The class of the message as integer (0:info, 1:state, 2:program, 3:notification, 4:passive, 5:command)", (char *)&(ref->_logtype) - (char *)ref, -1));
 
     addColumn(new OffsetStringColumn("message", 
 		"The message (test)", (char *)&(ref->_text) - (char *)ref, -1));
@@ -94,11 +96,18 @@ TableLog::TableLog()
     addColumn(new OffsetStringColumn("host_name",
 		"The name of the host the log entry is about (might be empty)", 
 		(char *)&(ref->_host_name) - (char *)ref, -1));
+    addColumn(new OffsetStringColumn("contact_name",
+		"The name of the contact the log entry is about (might be empty)", 
+		(char *)&(ref->_contact_name) - (char *)ref, -1));
+    addColumn(new OffsetStringColumn("command_name",
+		"The name of the command of the log entry (e.g. for notifications)", 
+		(char *)&(ref->_command_name) - (char *)ref, -1));
 
     // join host and service tables
     g_table_hosts->addColumns(this, "current_host_",    (char *)&(ref->_host)    - (char *)ref);
     g_table_services->addColumns(this, "current_service_", (char *)&(ref->_service) - (char *)ref, false /* no hosts table */);
-
+    g_table_contacts->addColumns(this, "current_contact_", (char *)&(ref->_contact) - (char *)ref);
+    g_table_commands->addColumns(this, "current_command_", (char *)&(ref->_command) - (char *)ref);
 
     updateLogfileIndex();
 }

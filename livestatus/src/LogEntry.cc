@@ -1,7 +1,7 @@
 #include <string.h>
 #include "LogEntry.h"
 #include "strutil.h"
-
+#include "logger.h"
 
 LogEntry::LogEntry(char *line)
 {
@@ -33,6 +33,10 @@ LogEntry::LogEntry(char *line)
 	    _host = find_host(_host_name);
 	if (_svc_desc)
 	    _service = find_service(_host_name, _svc_desc);
+	if (_contact_name)
+	    _contact = find_contact(_contact_name);
+	if (_command_name)
+	    _command = find_command(_command_name);
     }
 }
 
@@ -105,7 +109,7 @@ bool LogEntry::handleStatusEntry()
     }
 
     // SERVICE states
-    if (!strncmp(_text, "INITIAL SERVICE STATE: ", 23)
+    else if (!strncmp(_text, "INITIAL SERVICE STATE: ", 23)
        || !strncmp(_text, "CURRENT SERVICE STATE: ", 23)
        || !strncmp(_text, "SERVICE ALERT: ", 15))
     {
@@ -141,6 +145,23 @@ bool LogEntry::handleStatusEntry()
 
 bool LogEntry::handleNotificationEntry()
 {
+    if (!strncmp(_text, "HOST NOTIFICATION: ", 19)
+        || !strncmp(_text, "SERVICE NOTIFICATION: ", 22))
+    {
+	_logtype = LOGTYPE_NOTIFICATION;
+	bool svc = _text[0] == 'S';
+	char *scan = _text;
+	_text = next_token(&scan, ':');
+	scan++;
+	
+	_contact_name  = next_token(&scan);
+	_host_name     = next_token(&scan);
+	if (svc) _svc_desc = next_token(&scan);
+	_state_type    = stateTypeToInt(next_token(&scan));
+	_command_name  = next_token(&scan);
+	_check_output  = next_token(&scan);
+	return true;
+    }
     return false;
 }
 
@@ -151,7 +172,16 @@ bool LogEntry::handlePassiveCheckEntry()
 
 bool LogEntry::handleExternalCommandEntry()
 {
-    return false;
+    if (!strncmp(_text, "EXTERNAL COMMAND:", 17)) 
+    {
+	_logtype = LOGTYPE_COMMAND;
+	_text = _text + 18;
+	return true; // TODO: join with host/service information?
+	/* Damit wir die restlichen Spalten ordentlich befuellen, braeuchten
+	   wir eine komplette Liste von allen external commands und
+	   deren Parameteraufbau. Oder gibt es hier auch eine bessere
+	   Loesung? */
+    }
 }
 
 bool LogEntry::handleProgrammEntry()

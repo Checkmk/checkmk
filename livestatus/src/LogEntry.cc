@@ -1,5 +1,6 @@
 #include <string.h>
 #include "LogEntry.h"
+#include "strutil.h"
 
 
 LogEntry::LogEntry(char *line)
@@ -19,7 +20,152 @@ LogEntry::LogEntry(char *line)
     _msg[11] = 0; // zero-terminate time stamp
     _time = atoi(_msg+1);
     _text = _msg + 13; // also skip space after timestamp
+
+    // now classify the log message
+    if (handleStatusEntry() ||
+	handleNotificationEntry() ||
+	handlePassiveCheckEntry() ||
+	handleExternalCommandEntry() ||
+	handleProgrammEntry() ||
+	handleMiscEntry())
+    {
+	if (_host_name)
+	    _host = find_host(_host_name);
+	if (_svc_desc)
+	    _service = find_service(_host_name, _svc_desc);
+    }
 }
+
+int LogEntry::serviceStateToInt(char *s)
+{
+    // WARN, CRIT, OK, UNKNOWN
+    switch (s[0]) {
+	case 'O': return 0;
+	case 'W': return 1;
+	case 'C': return 2;
+	case 'U': return 3;
+	default: return 4;
+    }
+}
+
+
+int LogEntry::hostStateToInt(char *s)
+{
+    // WARN, CRIT, OK, UNKNOWN
+    switch (s[1]) {
+	case 'P': return 0;
+	case 'O': return 1;
+	case 'N': return 2;
+	default: return 3;
+    }
+}
+
+int LogEntry::stateTypeToInt(char *s)
+{
+    return s[0] == 'H' ? 1 : 0;
+}
+
+
+int LogEntry::startedStoppedToInt(char *s)
+{
+    return !strcmp(s, "STARTED") ? 1 : 0;
+}
+
+
+bool LogEntry::handleStatusEntry()
+{
+    // HOST states
+    if (!strncmp(_text, "INITIAL HOST STATE: ", 20)
+       || !strncmp(_text, "CURRENT HOST STATE: ", 20)
+       || !strncmp(_text, "HOST ALERT: ", 12))
+    {
+	_logtype = LOGTYPE_STATE;
+	char *scan = _text;
+	_text = next_token(&scan, ':');
+	scan++;
+
+	_host_name    = next_token(&scan);
+	_state        = hostStateToInt(next_token(&scan));
+	_state_type   = stateTypeToInt(next_token(&scan));
+	_attempt      = atoi(next_token(&scan));
+	_check_output = next_token(&scan);
+	return true;
+    }
+    else if (!strncmp(_text, "HOST DOWNTIME ALERT: ", 21))
+    {
+	_logtype = LOGTYPE_STATE;
+	char *scan = _text;
+	_text = next_token(&scan, ':');
+	scan++;
+	
+	_host_name    = next_token(&scan);
+	_state_type   = startedStoppedToInt(next_token(&scan));
+	_comment      = next_token(&scan) + 1;
+	return true;
+    }
+
+    // SERVICE states
+    if (!strncmp(_text, "INITIAL SERVICE STATE: ", 23)
+       || !strncmp(_text, "CURRENT SERVICE STATE: ", 23)
+       || !strncmp(_text, "SERVICE ALERT: ", 15))
+    {
+	_logtype = LOGTYPE_STATE;
+	char *scan = _text;
+	_text = next_token(&scan, ':');
+	scan++;
+
+	_host_name    = next_token(&scan);
+	_svc_desc     = next_token(&scan);
+	_state        = serviceStateToInt(next_token(&scan));
+	_state_type   = stateTypeToInt(next_token(&scan));
+	_attempt      = atoi(next_token(&scan));
+	_check_output = next_token(&scan);
+	return true;
+    }
+    else if (!strncmp(_text, "SERVICE DOWNTIME ALERT: ", 24))
+    {
+	_logtype = LOGTYPE_STATE;
+	char *scan = _text;
+	_text = next_token(&scan, ':');
+	scan++;
+	
+	_host_name    = next_token(&scan);
+	_svc_desc     = next_token(&scan);
+	_state_type   = startedStoppedToInt(next_token(&scan));
+	_comment      = next_token(&scan) + 1;
+	return true;
+    }
+    return false;
+
+}
+
+bool LogEntry::handleNotificationEntry()
+{
+    return false;
+}
+
+bool LogEntry::handlePassiveCheckEntry()
+{
+    return false;
+}
+
+bool LogEntry::handleExternalCommandEntry()
+{
+    return false;
+}
+
+bool LogEntry::handleProgrammEntry()
+{
+    return false;
+}
+
+bool LogEntry::handleMiscEntry()
+{
+    return false;
+}
+
+
+
 
 LogEntry::~LogEntry()
 {

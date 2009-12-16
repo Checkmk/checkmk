@@ -34,15 +34,72 @@
 #include "OffsetStringColumn.h"
 #include "Query.h"
 #include "Logfile.h"
+#include "tables.h"
+#include "TableServices.h"
+#include "TableHosts.h"
+
+
+
+/* Es fehlt noch:
+
+   - Wenn Nagios eine neue Logdatei ins Archiv reinrotiert,
+     dann muss ich diese neu in den Index aufnehmen. Gleichzeitig
+     muss ich die bestehende nagios.log aus dem Archiv entfernen.
+
+   - Die aktuelle Logdatei (watch) muss bei jedem Zugriff auf
+     die Größe geprüft werden. Wenn sie größer geworden ist,
+     dann muss ich den Rest neu einlesen. Ich könnte außerdem
+     die Inode-Nummer beobachten. Wenn sich diese geändert hat,
+     gehe ich von einer Rotation aus und mach das, was oben
+     beschrieben ist.
+
+   - Die fehlenden Informationen der Meldung. Die Klassifizierung.
+     Ich muss sinnvolle Klassen von Meldungen aufstellen. Wie kann
+     ich die Einzelstrings der Meldungen zur Verfügung stellen und
+     die Gesamtmeldung trotzdem, ohne datei Speicher doppelt zu
+     brauchen?
+
+   - Eine Optimierung der Bereichsanfrage
+
+   - Ein Lock auf TableLog, da hier ändernde Operationen
+     stattfinden.
+
+*/
+
+int num_cached_log_messages = 0;
 
 TableLog::TableLog()
 {
     LogEntry *ref = 0;
     addColumn(new OffsetIntColumn("time", 
 		"Time of the log event (UNIX timestamp)", (char *)&(ref->_time) - (char *)ref, -1));
+    addColumn(new OffsetIntColumn("class", 
+		"The class of the message as integer (0:info, 1:state, 2:program, 3:notification, 4:passive)", (char *)&(ref->_logtype) - (char *)ref, -1));
 
     addColumn(new OffsetStringColumn("message", 
 		"The message (test)", (char *)&(ref->_text) - (char *)ref, -1));
+    addColumn(new OffsetStringColumn("comment", 
+		"A comment field used in various message types", (char *)&(ref->_comment) - (char *)ref, -1));
+    addColumn(new OffsetStringColumn("check_output", 
+		"The output of the check, if any is associated with the message", (char *)&(ref->_check_output) - (char *)ref, -1));
+    addColumn(new OffsetIntColumn("state", 
+		"The state of the host or service in question", (char *)&(ref->_state) - (char *)ref, -1));
+    addColumn(new OffsetIntColumn("state_type", 
+		"The type of the state (0: soft, 1: hard)", (char *)&(ref->_state_type) - (char *)ref, -1));
+    addColumn(new OffsetIntColumn("attempt", 
+		"The number of the check attempt", (char *)&(ref->_attempt) - (char *)ref, -1));
+    addColumn(new OffsetStringColumn("service_description",
+		"The description of the service log entry is about (might be empty)", 
+		(char *)&(ref->_svc_desc) - (char *)ref, -1));
+    addColumn(new OffsetStringColumn("host_name",
+		"The name of the host the log entry is about (might be empty)", 
+		(char *)&(ref->_host_name) - (char *)ref, -1));
+
+    // join host and service tables
+    g_table_hosts->addColumns(this, "current_host_",    (char *)&(ref->_host)    - (char *)ref);
+    g_table_services->addColumns(this, "current_service_", (char *)&(ref->_service) - (char *)ref, false /* no hosts table */);
+
+
     updateLogfileIndex();
 }
 
@@ -63,10 +120,8 @@ void TableLog::answerQuery(Query *query)
     time_t since = 0;
     time_t until = time(0);
     // query->findTimerangeFilter("time", &since, &until);
-    logger(LG_INFO, "HIRN: Suche von %d bis %d\n", since, until);
     _logfiles_t::iterator it = _logfiles.lower_bound(since);
     while (it != _logfiles.end()) {
-	logger(LG_INFO, "HIRN: Logdatei %s", it->second->path());
 	Logfile *log = it->second;
 	if (!log->answerQuery(query, since, until, LOGTYPE_ALL))
 	    break; // end of time range in this logfile

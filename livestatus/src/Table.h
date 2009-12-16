@@ -45,7 +45,7 @@ private:
 public:
     Table() {};
     virtual ~Table();
-    Column *column(char *name);
+    Column *column(const char *name);
     virtual void answerQuery(Query *) = 0;
     virtual const char *name() = 0;
     void addColumn(Column *);

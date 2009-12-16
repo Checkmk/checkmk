@@ -6,6 +6,8 @@
 #include "LogEntry.h"
 #include "Query.h"
 
+extern int num_cached_log_messages;
+
 Logfile::Logfile(const char *path, bool watch)
     : _path(strdup(path))
     , _since(0)
@@ -73,7 +75,8 @@ void Logfile::load(unsigned logtypes)
     while (fgets(_linebuffer, MAX_LOGLINE, file))
     {
 	lineno++;
-	processLogLine(lineno, missing_types);
+	if (processLogLine(lineno, missing_types))
+	    num_cached_log_messages ++;
     }	
     fgetpos(file, &_read_pos);
     _logtypes_read |= missing_types;
@@ -81,15 +84,18 @@ void Logfile::load(unsigned logtypes)
 }
 
 
-void Logfile::processLogLine(uint32_t lineno, unsigned logtypes)
+bool Logfile::processLogLine(uint32_t lineno, unsigned logtypes)
 {
     LogEntry *entry = new LogEntry(_linebuffer);
     if ((1 << entry->_logtype) & logtypes) {
 	uint64_t key = makeKey(entry->_time, lineno);
 	_entries.insert(make_pair(key, entry));
+	return true;
     }
-    else
+    else {
 	delete entry;
+	return false;
+    }
 }
 
 
@@ -112,6 +118,6 @@ bool Logfile::answerQuery(Query *query, time_t since, time_t until, unsigned log
 
 uint64_t Logfile::makeKey(time_t t, unsigned lineno)
 {
-    return (uint64_t)(t << 32) | (uint64_t)lineno;
+    return (uint64_t)((uint64_t)t << 32) | (uint64_t)lineno;
 }
 

@@ -55,6 +55,7 @@ extern int check_external_commands;
 extern char *last_program_version;
 extern char *new_program_version;
 
+extern int num_cached_log_messages;
 
 TableStatus::TableStatus()
 {
@@ -126,6 +127,10 @@ TableStatus::TableStatus()
 	    "The last version of Nagios", last_program_version));
    addColumn(new StringPointerColumn("new_program_version", 
 	    "The new version of Nagios", new_program_version));
+  
+   // Livestatus' own status
+   addColumn(new IntPointerColumn("cached_log_messages", 
+	    "The current number of log messages MK Livestatus keeps in memory", &num_cached_log_messages ));
 }
 
 void TableStatus::answerQuery(Query *query)

@@ -21,9 +21,6 @@ LogEntry::LogEntry(char *line)
     }
     _msg[11] = 0; // zero-terminate time stamp
     _time = atoi(_msg+1);
-    if (_time == 0) {
-	logger(LG_INFO, "HIRN: Zeit ist 0, text ist %s", line);
-    }
     _text = _msg + 13; // also skip space after timestamp
 
     // now classify the log message. Some messages

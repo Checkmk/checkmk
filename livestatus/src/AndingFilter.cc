@@ -70,6 +70,16 @@ void *AndingFilter::findIndexFilter(const char *columnname)
    return 0;
 }
 
+void AndingFilter::findIntLimits(const char *columnname, int *lower, int *upper)
+{
+   for (_subfilters_t::iterator it = _subfilters.begin();
+	 it != _subfilters.end();
+	 ++it)
+   {
+      Filter *filter = *it;
+      filter->findIntLimits(columnname, lower, upper);
+   }
+}
 
 void AndingFilter::combineFilters(int count, int andor)
 {

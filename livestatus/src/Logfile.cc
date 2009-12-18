@@ -36,6 +36,7 @@ Logfile::Logfile(const char *path, bool watch)
 
     line[11] = 0;
     _since = atoi(line+1);
+    logger(LG_INFO, "HIRN: Logfile %s beginnt bei %d", path, _since);
     close(fd);
 }
 
@@ -109,7 +110,7 @@ bool Logfile::answerQuery(Query *query, time_t since, time_t until, unsigned log
     while (it != _entries.end())
     {
 	LogEntry *entry = it->second;
-	if (entry->_time > until)
+	if (entry->_time >= until)
 	    return false; // end found
 	query->processDataset(entry);
 	++it;

@@ -47,6 +47,7 @@ private:
     void scanLogfile(char *path, bool watch);
     bool answerQuery(Query *, Logfile *, time_t, time_t);
     _logfiles_t::iterator findLogfileStartingBefore(time_t);
+    void dumpLogfiles();
 };
 
 #endif // TableLog_h

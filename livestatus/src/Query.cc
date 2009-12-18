@@ -492,6 +492,11 @@ void *Query::findIndexFilter(const char *columnname)
    return _filter.findIndexFilter(columnname);
 }
 
+void Query::findIntLimits(const char *columnname, int *lower, int *upper)
+{
+   return _filter.findIntLimits(columnname, lower, upper);
+}
+
 // output helpers, called from columns
 void Query::outputDatasetBegin()
 {

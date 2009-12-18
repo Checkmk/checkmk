@@ -55,8 +55,6 @@
      gehe ich von einer Rotation aus und mach das, was oben
      beschrieben ist.
 
-   - Eine Optimierung der Bereichsanfrage
-
    - Ein Lock auf TableLog, da hier ändernde Operationen
      stattfinden.
 
@@ -126,12 +124,31 @@ TableLog::~TableLog()
 
 void TableLog::answerQuery(Query *query)
 {
-    time_t since = 0;
-    time_t until = time(0);
-    // query->findTimerangeFilter("time", &since, &until);
-    _logfiles_t::iterator it = _logfiles.lower_bound(since);
+    int since = 0;
+    int until = time(0) + 1;
+    logger(LG_INFO, "HIRN: Versuche Gernzen zu finden");
+    query->findIntLimits("time", &since, &until);
+    if (since != 0)
+	logger(LG_INFO, "HIRN: Filter hat since auf %d begrenzt", since);
+    if (until != time(0) + 1)
+	logger(LG_INFO, "HIRN: Filter hat until auf %d begrenzt", until);
+
+    logger(LG_INFO, "HIRN: Anfrage von %d bis %d (%d sec)", since, until, until-since);
+
+    dumpLogfiles();
+
+    _logfiles_t::iterator it;
+    if (since == 0)
+	it = _logfiles.begin();
+    else { // find oldest relevant logfile
+	it = _logfiles.end();
+	while (it != _logfiles.begin() &&
+		(it == _logfiles.end() || it->first >= since))
+	    --it;
+    }
     while (it != _logfiles.end()) {
 	Logfile *log = it->second;
+	logger(LG_INFO, "HIRN: probiere Logfile %s (%d)", log->path(), log->since());
 	if (!log->answerQuery(query, since, until, LOGTYPE_ALL))
 	    break; // end of time range in this logfile
 	++it;
@@ -180,3 +197,13 @@ void TableLog::scanLogfile(char *path, bool watch)
 	delete logfile;
 }
 
+void TableLog::dumpLogfiles()
+{
+    for (_logfiles_t::iterator it = _logfiles.begin();
+	    it != _logfiles.end();
+	    ++it)
+    {
+        Logfile *log = it->second;
+	logger(LG_INFO, "LOG %s ab %d", log->path(), log->since());
+    }
+}

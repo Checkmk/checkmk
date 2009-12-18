@@ -98,6 +98,7 @@ public:
    void outputEndList();
    void *findIndexFilter(const char *columnname);
    void *findTimerangeFilter(const char *columnname, time_t *, time_t *);
+   void findIntLimits(const char *columnname, int *lower, int *upper);
 
 private:
    bool doStats();

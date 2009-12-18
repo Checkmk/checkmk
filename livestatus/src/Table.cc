@@ -35,7 +35,6 @@ void Table::addColumn(Column *col)
     // which both define host_name.
     if (column(col->name())) {
 	delete col;
-	logger(LG_INFO, "HIRN: Doppelte Spalte %s kommt weg", col->name());
     }
     else
 	_columns.insert(make_pair(col->name(), col));

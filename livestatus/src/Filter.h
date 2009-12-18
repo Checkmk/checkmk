@@ -37,6 +37,7 @@ public:
     virtual ~Filter() {};
     virtual bool accepts(void *data) = 0;
     virtual void *indexFilter(const char *columnname) { return 0; };
+    virtual void findIntLimits(const char *columnname, int *lower, int *upper) {};
 };
 
 #endif // Filter_h

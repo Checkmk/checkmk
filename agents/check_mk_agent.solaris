@@ -23,8 +23,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-export MK_LIBDIR="/to/be/changed"
-export MK_CONFDIR="/to/be/changed"
+MK_LIBDIR="/to/be/changed"
+MK_CONFDIR="/to/be/changed"
+export MK_LIBDIR MK_CONFDIR
 
 # All executables in PLUGINSDIR will simply be executed and their
 # ouput appended to the output of the agent. Plugins define their own
@@ -52,13 +53,16 @@ echo '<<<check_mk>>>'
 echo Version: 1.1.1rc
 
 echo '<<<df>>>'
-df -lk | sed 1d | \
-while read Filesystem kbytes used avail capacity Mountedon
+for fs in ufs zfs
 do
-  echo "${Filesystem} dummy ${kbytes} ${used} ${avail} ${capacity} ${Mountedon}"
+   df -lk -F $fs 2>/dev/null | sed 1d | \
+   while read Filesystem kbytes used avail capacity Mountedon
+   do
+      echo "${Filesystem} $fs ${kbytes} ${used} ${avail} ${capacity} ${Mountedon}"
+   done
 done
 
-# Prozesse
+# Prozesses
 echo '<<<ps>>>'
 ps -ef -o args | sed -e 1d -e '/^\[/d'
 
@@ -80,7 +84,7 @@ fi
 
 if cd $PLUGINSDIR 2>/dev/null
 then
-    for skript in $(ls)
+    for skript in `ls`
     do
         if [ -x "$skript" ] ; then
             ./$skript
@@ -91,7 +95,7 @@ fi
 echo '<<<local>>>'
 if cd $LOCALDIR 2>/dev/null
 then
-  for skript in $(ls)
+  for skript in `ls`
   do
     if [ -x "$skript" ] ; then
         ./$skript
@@ -103,10 +107,10 @@ fi
 if [ -e "$MK_CONFDIR/mrpe.cfg" ]
 then
     echo '<<<mrpe>>>'
-    grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
+    grep -v '^ *#' "$MK_CONFDIR/mrpe.cfg" | grep -v '^ *$' | \
     while read descr cmdline
     do
-        OUTPUT=$($cmdline)
+        OUTPUT=`$cmdline`
         echo "$? $descr $OUTPUT"
     done
 fi

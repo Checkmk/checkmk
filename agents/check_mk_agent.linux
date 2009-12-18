@@ -48,6 +48,10 @@ PLUGINSDIR=$MK_LIBDIR/plugins
 # or tabs. CHECK_OUTPUT may contain spaces and tabs
 LOCALDIR=$MK_LIBDIR/local
 
+# get 'stat' version
+STAT_VERSION=$(stat --version | head -1 | cut -d" " -f4)
+STAT_BROKE="5.3.0"
+
 # close standard input (for security reasons) and stderr
 exec <&- 2>/dev/null
 
@@ -80,15 +84,20 @@ then
     sed -n '/ nfs /s/[^ ]* \([^ ]*\) .*/\1/p' < /proc/mounts |
         while read MP
 	do
-	    waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %S" "$MP" || \
+	 if [ $STAT_VERSION != $STAT_BROKE ]; then
+	    waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" || \
 		echo "$MP hanging 0 0 0 0"
+	 else
+	    waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" && \
+	    printf '\n'|| echo "$MP hanging 0 0 0 0"
+	 fi
 	done
 fi
 
 
 # processes including username, without kernel processes
 echo '<<<ps>>>'
-ps ax -o user,command --columns 10000 | sed -e 1d -e 's/^/(/' -e 's/ /) /' -e '/([^ ]*) \+\[/d'
+ps ax -o user,command --columns 10000 | sed -e 1d -e 's/^/(/' -e 's/ /) /'
 
 # Speicherauslastung
 echo '<<<mem>>>'
@@ -96,7 +105,7 @@ egrep -v '^Swap:|^Mem:|total:' < /proc/meminfo
 
 # Load und Anzahl Prozesse
 echo '<<<cpu>>>'
-echo "$(cat /proc/loadavg) $(grep bogomips < /proc/cpuinfo | wc -l)"
+echo "$(cat /proc/loadavg) $(grep processor < /proc/cpuinfo | wc -l)"
 
 # Network interfaces (Link, Autoneg, Speed)
 # This requires ethtool
@@ -159,7 +168,7 @@ if which vcbVmName > /dev/null 2>&1 ; then
    echo '<<<vmware_state>>>'
    vcbVmName -s any
 fi
-      
+
 
 # Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
 if cd $PLUGINSDIR

@@ -44,6 +44,7 @@ public:
     IntColumnFilter(IntColumn *_column, int opid, char *value);
     bool accepts(void *data);
     void findIntLimits(const char *columnname, int *lower, int *upper);
+    bool optimizeBitmask(const char *columnname, uint32_t *mask);
 };
 
 

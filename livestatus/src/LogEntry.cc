@@ -16,7 +16,7 @@ LogEntry::LogEntry(char *line)
 
     // [1260722267] xxx - extract timestamp, validate message
     if (_msglen < 13 || _msg[0] != '[' || _msg[11] != ']') {
-	_logtype = LOGTYPE_INVALID;
+	_logclass = LOGCLASS_INVALID;
 	return; // ignore invalid lines silently
     }
     _msg[11] = 0; // zero-terminate time stamp
@@ -41,7 +41,7 @@ LogEntry::LogEntry(char *line)
     }
     else
 	handleProgrammEntry();
-    // rest is LOGTYPE_INFO
+    // rest is LOGCLASS_INFO
 }
 
 LogEntry::~LogEntry()
@@ -57,7 +57,7 @@ bool LogEntry::handleStatusEntry()
        || !strncmp(_text, "CURRENT HOST STATE: ", 20)
        || !strncmp(_text, "HOST ALERT: ", 12))
     {
-	_logtype = LOGTYPE_STATE;
+	_logclass = LOGCLASS_STATE;
 	char *scan = _text;
 	_text = next_token(&scan, ':');
 	scan++;
@@ -72,7 +72,7 @@ bool LogEntry::handleStatusEntry()
     else if (!strncmp(_text, "HOST DOWNTIME ALERT: ", 21)
 	    || !strncmp(_text, "HOST FLAPPING ALERT: ", 21))
     {
-	_logtype = LOGTYPE_STATE;
+	_logclass = LOGCLASS_STATE;
 	char *scan = _text;
 	_text = next_token(&scan, ':');
 	scan++;
@@ -88,7 +88,7 @@ bool LogEntry::handleStatusEntry()
        || !strncmp(_text, "CURRENT SERVICE STATE: ", 23)
        || !strncmp(_text, "SERVICE ALERT: ", 15))
     {
-	_logtype = LOGTYPE_STATE;
+	_logclass = LOGCLASS_STATE;
 	char *scan = _text;
 	_text = next_token(&scan, ':');
 	scan++;
@@ -104,7 +104,7 @@ bool LogEntry::handleStatusEntry()
     else if (!strncmp(_text, "SERVICE DOWNTIME ALERT: ", 24)
           || !strncmp(_text, "SERVICE FLAPPING ALERT: ", 24))
     {
-	_logtype = LOGTYPE_STATE;
+	_logclass = LOGCLASS_STATE;
 	char *scan = _text;
 	_text = next_token(&scan, ':');
 	scan++;
@@ -124,7 +124,7 @@ bool LogEntry::handleNotificationEntry()
     if (!strncmp(_text, "HOST NOTIFICATION: ", 19)
         || !strncmp(_text, "SERVICE NOTIFICATION: ", 22))
     {
-	_logtype = LOGTYPE_NOTIFICATION;
+	_logclass = LOGCLASS_NOTIFICATION;
 	bool svc = _text[0] == 'S';
 	char *scan = _text;
 	_text = next_token(&scan, ':');
@@ -146,7 +146,7 @@ bool LogEntry::handlePassiveCheckEntry()
     if (!strncmp(_text, "PASSIVE SERVICE CHECK: ", 23)
        || !strncmp(_text, "PASSIVE HOST CHECK: ", 20))
     {
-	_logtype = LOGTYPE_PASSIVECHECK;
+	_logclass = LOGCLASS_PASSIVECHECK;
 	bool svc = _text[8] == 'S';
 	char *scan = _text;
 	_text = next_token(&scan, ':');
@@ -167,7 +167,7 @@ bool LogEntry::handleExternalCommandEntry()
 {
     if (!strncmp(_text, "EXTERNAL COMMAND:", 17)) 
     {
-	_logtype = LOGTYPE_COMMAND;
+	_logclass = LOGCLASS_COMMAND;
 	_text = _text + 18;
 	return true; // TODO: join with host/service information?
 	/* Damit wir die restlichen Spalten ordentlich befuellen, braeuchten

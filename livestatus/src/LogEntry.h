@@ -1,21 +1,21 @@
 #ifndef LogEntry_h
 #define LogEntry_h
 
-#define LOGTYPE_INFO              0
-#define LOGTYPE_STATE             1
-#define LOGTYPE_PROGRAM           2
-#define LOGTYPE_NOTIFICATION      3
-#define LOGTYPE_PASSIVECHECK      4
-#define LOGTYPE_COMMAND           5
-#define LOGTYPE_INVALID          -1 // never stored
-#define LOGTYPE_ALL          0xffff
+#define LOGCLASS_INFO              0
+#define LOGCLASS_STATE             1
+#define LOGCLASS_PROGRAM           2
+#define LOGCLASS_NOTIFICATION      3
+#define LOGCLASS_PASSIVECHECK      4
+#define LOGCLASS_COMMAND           5
+#define LOGCLASS_INVALID          -1 // never stored
+#define LOGCLASS_ALL          0xffff
 
 #include "nagios.h"
 
 struct LogEntry
 {
     time_t     _time;
-    unsigned   _logtype;
+    unsigned   _logclass;
     char      *_msg;       // split up with binary zeroes
     unsigned   _msglen;    // size of _msg
     char      *_text;      // points into msg

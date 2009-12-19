@@ -21,7 +21,7 @@ class Logfile
     bool       _watch;         // true only for current logfile
     ino_t      _inode;         // needed to detect switching
     fpos_t     _read_pos;      // read until this position
-    unsigned   _logtypes_read; // only these types have been read
+    unsigned   _logclasses_read; // only these types have been read
     typedef map<uint64_t, LogEntry *> _entries_t; // key is time_t . lineno
     _entries_t _entries;
     char       _linebuffer[MAX_LOGLINE];

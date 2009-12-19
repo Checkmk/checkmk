@@ -99,6 +99,7 @@ public:
    void *findIndexFilter(const char *columnname);
    void *findTimerangeFilter(const char *columnname, time_t *, time_t *);
    void findIntLimits(const char *columnname, int *lower, int *upper);
+   void optimizeBitmask(const char *columnname, uint32_t *bitmask);
 
 private:
    bool doStats();

@@ -33,6 +33,7 @@ class OringFilter : public AndingFilter
 {
 public:
     bool accepts(void *data);
+    bool optimizeBitmask(const char *columnname, uint32_t *mask);
 };
 
 

@@ -113,3 +113,54 @@ void IntColumnFilter::findIntLimits(const char *columnname, int *lower, int *upp
 	    return;
     }
 }
+
+
+bool IntColumnFilter::optimizeBitmask(const char *columnname, uint32_t *mask)
+{
+    if (strcmp(columnname, _column->name())) {
+	logger(LG_INFO, "HIRN: Falsche spatel: %s != %s", columnname, _column->name());
+	return false; // wrong column
+    }
+
+    if (_ref_value < 0 || _ref_value > 31)
+	return true; // not optimizable by 32bit bit mask
+
+    // Our task is to remove those bits from mask that are deselected
+    // by the filter.
+    uint32_t bit = 1 << _ref_value;
+
+    int opref = _opid * (_negate != false ? -1 : 1); 
+    logger(LG_INFO, "HIRN: ich bin hier. mask=%u op=%d neg=%d opref=%d _ref=%d", *mask, _opid, _negate, opref, _ref_value);
+    switch (opref) { 
+	case OP_EQUAL:
+	    *mask &= bit; // bit must be set
+	    return true;
+	
+	case -OP_EQUAL:
+	    *mask &= ~bit; // bit must not be set
+	    return true; 
+
+	case -OP_LESS: // >=
+	    bit >>= 1;
+	case OP_GREATER:
+	    while (bit) {
+		*mask &= ~bit;
+		bit >>= 1;
+	    }
+	    return true;
+	
+	case -OP_GREATER: // <=
+	    if (_ref_value == 31)
+		return true;
+	    bit <<= 1;
+	case OP_LESS:
+	    while (true) {
+		*mask &= ~bit;
+		if (bit == 0x80000000)
+		    return true;
+		bit <<= 1;
+	    }
+	    return true;
+    }
+}
+

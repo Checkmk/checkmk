@@ -14,7 +14,7 @@ Logfile::Logfile(const char *path, bool watch)
     , _is_loaded(false)
     , _watch(watch)
     , _inode(0)
-    , _logtypes_read(0)
+    , _logclasses_read(0)
 {
     int fd = open(path, O_RDONLY);
     if (fd < 0) {
@@ -53,14 +53,16 @@ Logfile::~Logfile()
 }
 
 
-void Logfile::load(unsigned logtypes)
+void Logfile::load(unsigned logclasses)
 {
     // TODO: implement watch
-    unsigned missing_types = logtypes & ~_logtypes_read;
+    logger(LG_INFO, "HIRN: Klassen 0x%x sind da. Brauche 0x%x", _logclasses_read, logclasses);
+    unsigned missing_types = logclasses & ~_logclasses_read;
 
-    if (logtypes && _logtypes_read == logtypes) {
+    if (missing_types == 0)
 	return;
-    }
+
+    logger(LG_INFO, "HIRN: Datei %s: Muss Typen laden: 0x%x", _path, missing_types);
 
     FILE *file = fopen(_path, "r");
     if (!file) {
@@ -77,20 +79,20 @@ void Logfile::load(unsigned logtypes)
 	    num_cached_log_messages ++;
     }	
     fgetpos(file, &_read_pos);
-    _logtypes_read |= missing_types;
+    _logclasses_read |= missing_types;
     fclose(file);
 }
 
 
-bool Logfile::processLogLine(uint32_t lineno, unsigned logtypes)
+bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses)
 {
     LogEntry *entry = new LogEntry(_linebuffer);
     // ignored invalid lines
-    if (entry->_logtype == LOGTYPE_INVALID) {
+    if (entry->_logclass == LOGCLASS_INVALID) {
 	delete entry;
 	return false;
     }
-    if ((1 << entry->_logtype) & logtypes) {
+    if ((1 << entry->_logclass) & logclasses) {
 	uint64_t key = makeKey(entry->_time, lineno);
 	_entries.insert(make_pair(key, entry));
 	return true;
@@ -102,9 +104,9 @@ bool Logfile::processLogLine(uint32_t lineno, unsigned logtypes)
 }
 
 
-bool Logfile::answerQuery(Query *query, time_t since, time_t until, unsigned logtypes)
+bool Logfile::answerQuery(Query *query, time_t since, time_t until, unsigned logclasses)
 {
-    load(logtypes); // make sure all messages are present
+    load(logclasses); // make sure all messages are present
     uint64_t sincekey = makeKey(since, 0);
     _entries_t::iterator it = _entries.lower_bound(sincekey);
     while (it != _entries.end())

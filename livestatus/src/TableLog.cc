@@ -74,7 +74,7 @@ TableLog::TableLog()
     addColumn(new OffsetIntColumn("time", 
 		"Time of the log event (UNIX timestamp)", (char *)&(ref->_time) - (char *)ref, -1));
     addColumn(new OffsetIntColumn("class", 
-		"The class of the message as integer (0:info, 1:state, 2:program, 3:notification, 4:passive, 5:command)", (char *)&(ref->_logtype) - (char *)ref, -1));
+		"The class of the message as integer (0:info, 1:state, 2:program, 3:notification, 4:passive, 5:command)", (char *)&(ref->_logclass) - (char *)ref, -1));
 
     addColumn(new OffsetStringColumn("message", 
 		"The message (test)", (char *)&(ref->_text) - (char *)ref, -1));
@@ -127,11 +127,28 @@ void TableLog::answerQuery(Query *query)
     int since = 0;
     int until = time(0) + 1;
     logger(LG_INFO, "HIRN: Versuche Gernzen zu finden");
+    // Optimize time interval for the query. In log querys
+    // there should always be a time range in form of one
+    // or two filter expressions over time. We use that
+    // to limit the number of logfiles we need to scan and
+    // to find the optimal entry point into the logfile
     query->findIntLimits("time", &since, &until);
+
     if (since != 0)
 	logger(LG_INFO, "HIRN: Filter hat since auf %d begrenzt", since);
     if (until != time(0) + 1)
 	logger(LG_INFO, "HIRN: Filter hat until auf %d begrenzt", until);
+
+    // The second optimization is for log message types.
+    // We want to load only those log type that are queried.
+    uint32_t classmask = LOGCLASS_ALL;
+    query->optimizeBitmask("class", &classmask);
+    logger(LG_INFO, "HIRN: klassen auf %x begreenzt", classmask);
+    if (classmask == 0) {
+	logger(LG_INFO, "HIRN: Achtung: Klassen sind 0!");
+	return;
+    }
+
 
     logger(LG_INFO, "HIRN: Anfrage von %d bis %d (%d sec)", since, until, until-since);
 
@@ -149,7 +166,7 @@ void TableLog::answerQuery(Query *query)
     while (it != _logfiles.end()) {
 	Logfile *log = it->second;
 	logger(LG_INFO, "HIRN: probiere Logfile %s (%d)", log->path(), log->since());
-	if (!log->answerQuery(query, since, until, LOGTYPE_ALL))
+	if (!log->answerQuery(query, since, until, classmask))
 	    break; // end of time range in this logfile
 	++it;
     }

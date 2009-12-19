@@ -45,21 +45,13 @@ extern time_t last_log_rotation;
 
 /* Es fehlt noch:
 
-   - Wenn Nagios eine neue Logdatei ins Archiv reinrotiert,
-     dann muss ich diese neu in den Index aufnehmen. Gleichzeitig
-     muss ich die bestehende nagios.log aus dem Archiv entfernen.
-
-   - Die aktuelle Logdatei (watch) muss bei jedem Zugriff auf
-     die Größe geprüft werden. Wenn sie größer geworden ist,
-     dann muss ich den Rest neu einlesen. Ich könnte außerdem
-     die Inode-Nummer beobachten. Wenn sich diese geändert hat,
-     gehe ich von einer Rotation aus und mach das, was oben
-     beschrieben ist.
-
    - Etliche Meldungstypen: Programm-Meldungen (Neustart),
      Eventhandler-Meldungen, und was gibt es noch?
      Die Verknuefpungen der External-Commands stellen wir
      noch zurueck.
+
+   - Dokumentation dazu: Ueber die Klassen, die Verknuepfungen,
+     die Speicherverwaltung, die Rotation, usw.
 
 */
 

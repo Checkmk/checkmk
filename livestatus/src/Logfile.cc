@@ -14,7 +14,7 @@ Logfile::Logfile(const char *path, bool watch)
     , _is_loaded(false)
     , _watch(watch)
     , _inode(0)
-    , _logclasses_read(0)
+      , _logclasses_read(0)
 {
     int fd = open(path, O_RDONLY);
     if (fd < 0) {
@@ -43,31 +43,71 @@ Logfile::Logfile(const char *path, bool watch)
 Logfile::~Logfile()
 {
     free(_path);
+    deleteLogentries();
+}
+
+void Logfile::deleteLogentries()
+{
     for (_entries_t::iterator it = _entries.begin();
 	    it != _entries.end();
 	    ++it)
     {
 	delete it->second;
     }
+    _entries.clear();
+    _logclasses_read = 0;
 }
 
 
 void Logfile::load(unsigned logclasses)
 {
-    // TODO: implement watch
     unsigned missing_types = logclasses & ~_logclasses_read;
 
-    if (missing_types == 0)
-	return;
+    FILE *file = 0;
+    // The current logfile has the _watch flag set to true.
+    // In that case, if the logfile has grown, we need to 
+    // load the rest of the file, even if no logclasses
+    // are missing.
+    if (_watch) {
+	file = fopen(_path, "r");
+	if (!file) {
+	    logger(LG_INFO, "Cannot open logfile '%s'", _path);
+	    return;
+	}
 
-
-    FILE *file = fopen(_path, "r");
-    if (!file) {
-	logger(LG_INFO, "Cannot open logfile '%s'", _path);
-	return;
+	// file might have grown. Read all classes that we already
+	// have read to the end of the file
+	if (_logclasses_read) {
+	    fsetpos(file, &_read_pos); // continue at previous end
+	    load(file, _logclasses_read);
+	    fgetpos(file, &_read_pos);
+	}
+	if (missing_types) {
+	    fseek(file, 0, SEEK_SET);
+	    load(file, missing_types);
+	    _logclasses_read |= missing_types;
+	}
+	fclose(file);
     }
-    
-    // TODO: skip to _read_pos, if watch
+    else 
+    {
+	if (missing_types == 0)
+	    return;
+
+	file = fopen(_path, "r");
+	if (!file) {
+	    logger(LG_INFO, "Cannot open logfile '%s'", _path);
+	    return;
+	}
+
+	load(file, missing_types);
+	fclose(file);
+	_logclasses_read |= missing_types;
+    }
+}
+
+void Logfile::load(FILE *file, unsigned missing_types)
+{
     uint32_t lineno = 0;
     while (fgets(_linebuffer, MAX_LOGLINE, file))
     {
@@ -75,9 +115,6 @@ void Logfile::load(unsigned logclasses)
 	if (processLogLine(lineno, missing_types))
 	    num_cached_log_messages ++;
     }	
-    fgetpos(file, &_read_pos);
-    _logclasses_read |= missing_types;
-    fclose(file);
 }
 
 
@@ -91,7 +128,8 @@ bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses)
     }
     if ((1 << entry->_logclass) & logclasses) {
 	uint64_t key = makeKey(entry->_time, lineno);
-	_entries.insert(make_pair(key, entry));
+	if (_entries.find(key) == _entries.end())
+	    _entries.insert(make_pair(key, entry));
 	return true;
     }
     else {

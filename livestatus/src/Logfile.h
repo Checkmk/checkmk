@@ -37,6 +37,8 @@ public:
     bool answerQuery(Query *query, time_t since, time_t until, unsigned);
 
 private:
+    void deleteLogentries();
+    void load(FILE *file, unsigned missing_types);
     bool processLogLine(uint32_t, unsigned);
     uint64_t makeKey(time_t, unsigned);
 };

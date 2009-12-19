@@ -58,11 +58,9 @@ bool IntColumnFilter::accepts(void *data)
 void IntColumnFilter::findIntLimits(const char *columnname, int *lower, int *upper)
 {
     if (strcmp(columnname, _column->name())) {
-	logger(LG_INFO, "HIRN: Falsche spatel: %s != %s", columnname, _column->name());
 	return; // wrong column
     }
     if (*lower >= *upper) {
-	logger(LG_INFO, "HIRN: Mist %d >= %d", *lower, *upper);
 	return; // already empty interval
     }
 
@@ -71,7 +69,6 @@ void IntColumnFilter::findIntLimits(const char *columnname, int *lower, int *upp
        that interval to a smaller interval.
        */
     int opref = _opid * (_negate != false ? -1 : 1); 
-    logger(LG_INFO, "HIRN: ich bin hier. lower=%d upper=%d op=%d neg=%d opref=%d _ref=%d", *lower, *upper, _opid, _negate, opref, _ref_value);
     switch (opref) { 
 	case OP_EQUAL:
 	    if (_ref_value >= *lower && _ref_value < *upper) {
@@ -91,7 +88,6 @@ void IntColumnFilter::findIntLimits(const char *columnname, int *lower, int *upp
 
 	case OP_GREATER:
 	    if (_ref_value >= *lower) {
-		logger(LG_INFO, "HIRN: Treffer");
 		*lower = _ref_value + 1;
 	    }
 
@@ -118,7 +114,6 @@ void IntColumnFilter::findIntLimits(const char *columnname, int *lower, int *upp
 bool IntColumnFilter::optimizeBitmask(const char *columnname, uint32_t *mask)
 {
     if (strcmp(columnname, _column->name())) {
-	logger(LG_INFO, "HIRN: Falsche spatel: %s != %s", columnname, _column->name());
 	return false; // wrong column
     }
 
@@ -130,7 +125,6 @@ bool IntColumnFilter::optimizeBitmask(const char *columnname, uint32_t *mask)
     uint32_t bit = 1 << _ref_value;
 
     int opref = _opid * (_negate != false ? -1 : 1); 
-    logger(LG_INFO, "HIRN: ich bin hier. mask=%u op=%d neg=%d opref=%d _ref=%d", *mask, _opid, _negate, opref, _ref_value);
     switch (opref) { 
 	case OP_EQUAL:
 	    *mask &= bit; // bit must be set

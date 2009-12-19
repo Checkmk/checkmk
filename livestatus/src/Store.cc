@@ -36,131 +36,137 @@
 #undef EXTERN
 
 Store::Store()
-     : _table_downtimes(true)
-     , _table_comments(false)
+    : _table_downtimes(true)
+    , _table_comments(false)
 {
-   _tables.insert(make_pair("hosts", &_table_hosts));
-   _tables.insert(make_pair("services", &_table_services));
-   _tables.insert(make_pair("hostgroups", &_table_hostgroups));
-   _tables.insert(make_pair("servicegroups", &_table_servicegroups));
-   _tables.insert(make_pair("contacts", &_table_contacts));
-   _tables.insert(make_pair("commands", &_table_commands));
-   _tables.insert(make_pair("downtimes", &_table_downtimes));
-   _tables.insert(make_pair("comments", &_table_comments));
-   _tables.insert(make_pair("status", &_table_status));
-   _tables.insert(make_pair("log", &_table_log));
-   _tables.insert(make_pair("columns", &_table_columns));
+    _tables.insert(make_pair("hosts", &_table_hosts));
+    _tables.insert(make_pair("services", &_table_services));
+    _tables.insert(make_pair("hostgroups", &_table_hostgroups));
+    _tables.insert(make_pair("servicegroups", &_table_servicegroups));
+    _tables.insert(make_pair("contacts", &_table_contacts));
+    _tables.insert(make_pair("commands", &_table_commands));
+    _tables.insert(make_pair("downtimes", &_table_downtimes));
+    _tables.insert(make_pair("comments", &_table_comments));
+    _tables.insert(make_pair("status", &_table_status));
+    _tables.insert(make_pair("log", &_table_log));
+    _tables.insert(make_pair("columns", &_table_columns));
 
-   g_table_hosts = &_table_hosts;
-   g_table_services = &_table_services;
-   g_table_hostgroups = &_table_hostgroups;
-   g_table_servicegroups = &_table_servicegroups;
-   g_table_contacts = &_table_contacts;
-   g_table_commands = &_table_commands;
-   g_table_downtimes = &_table_downtimes;
-   g_table_comments = &_table_comments;
-   g_table_status = &_table_status;
-   g_table_log = &_table_log;
-   g_table_columns = &_table_columns;
+    g_table_hosts = &_table_hosts;
+    g_table_services = &_table_services;
+    g_table_hostgroups = &_table_hostgroups;
+    g_table_servicegroups = &_table_servicegroups;
+    g_table_contacts = &_table_contacts;
+    g_table_commands = &_table_commands;
+    g_table_downtimes = &_table_downtimes;
+    g_table_comments = &_table_comments;
+    g_table_status = &_table_status;
+    g_table_log = &_table_log;
+    g_table_columns = &_table_columns;
 
-   for (_tables_t::iterator it = _tables.begin();
-	 it != _tables.end();
-	 ++it)
-   {
-      _table_columns.addTable(it->second);
-   }
+    for (_tables_t::iterator it = _tables.begin();
+	    it != _tables.end();
+	    ++it)
+    {
+	_table_columns.addTable(it->second);
+    }
 }
 
 Table *Store::findTable(string name)
 {
-   _tables_t::iterator it = _tables.find(name);
-   if (it == _tables.end())
-      return 0;
-   else
-      return it->second;
+    _tables_t::iterator it = _tables.find(name);
+    if (it == _tables.end())
+	return 0;
+    else
+	return it->second;
 }
 
 void Store::registerHost(host *h)
 {
-   _table_hosts.add(h);
+    _table_hosts.add(h);
 }
 
 void Store::registerService(service *s)
 {
-   _table_services.add(s);
+    _table_services.add(s);
 }
 
 void Store::registerContact(contact *s)
 {
-   _table_contacts.add(s);
+    _table_contacts.add(s);
 }
 
 void Store::registerComment(nebstruct_comment_data *d)
 {
-   _table_comments.addComment(d);
+    _table_comments.addComment(d);
 }
 
 void Store::registerDowntime(nebstruct_downtime_data *d)
 {
-   _table_downtimes.addDowntime(d);
+    _table_downtimes.addDowntime(d);
 }
 
 bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
 {
-   output->reset();
-   int r = input->readRequest();
-   if (r != IB_REQUEST_READ) {
-      if (r != IB_END_OF_FILE)
-	 output->setError(RESPONSE_CODE_INCOMPLETE_REQUEST, "Client connection terminated while request still incomplete");
-      return false;
-   }
-   string l = input->nextLine();
-   const char *line = l.c_str();
-   if (!strncmp(line, "GET ", 4))
-      answerGetRequest(input, output, lstrip(line + 4));
-   else if (!strcmp(line, "GET"))
-      answerGetRequest(input, output, ""); // only to get error message
-   else if (!strncmp(line, "COMMAND ", 8))
-      answerCommandRequest(lstrip(line + 8));
-   else 
-      output->setError(RESPONSE_CODE_INVALID_REQUEST, "Invalid request method");
-   return output->doKeepalive();
+    output->reset();
+    int r = input->readRequest();
+    if (r != IB_REQUEST_READ) {
+	if (r != IB_END_OF_FILE)
+	    output->setError(RESPONSE_CODE_INCOMPLETE_REQUEST, "Client connection terminated while request still incomplete");
+	return false;
+    }
+    string l = input->nextLine();
+    const char *line = l.c_str();
+    if (!strncmp(line, "GET ", 4))
+	answerGetRequest(input, output, lstrip(line + 4));
+    else if (!strcmp(line, "GET"))
+	answerGetRequest(input, output, ""); // only to get error message
+    else if (!strncmp(line, "COMMAND ", 8))
+	answerCommandRequest(lstrip(line + 8));
+    else if (!strncmp(line, "LOGROTATE", 9)) {
+	logger(LG_INFO, "Forcing logfile rotation");
+	rotate_log_file(time(0));
+    }
+    else {
+	logger(LG_INFO, "Invalid request '%s'", line);
+	output->setError(RESPONSE_CODE_INVALID_REQUEST, "Invalid request method");
+    }
+    return output->doKeepalive();
 }
 
 void Store::answerCommandRequest(const char *command)
 {
-   int buffer_items = -1;
-   int ret = submit_external_command((char *)command, &buffer_items);
+    int buffer_items = -1;
+    int ret = submit_external_command((char *)command, &buffer_items);
 }
 
 
 void Store::answerGetRequest(InputBuffer *input, OutputBuffer *output, const char *tablename)
 {
-   output->reset();
+    output->reset();
 
-   if (!tablename[0]) {
-      output->setError(RESPONSE_CODE_INVALID_REQUEST, "Invalid GET request, missing tablename");
-   }
-   Table *table = findTable(tablename);
-   if (!table) {
-      output->setError(RESPONSE_CODE_NOT_FOUND, "Invalid GET request, no such table '%s'", tablename);
-   }
-   Query query(input, output, table);
+    if (!tablename[0]) {
+	output->setError(RESPONSE_CODE_INVALID_REQUEST, "Invalid GET request, missing tablename");
+    }
+    Table *table = findTable(tablename);
+    if (!table) {
+	output->setError(RESPONSE_CODE_NOT_FOUND, "Invalid GET request, no such table '%s'", tablename);
+    }
+    Query query(input, output, table);
 
-   if (table) {
-      if (query.hasNoColumns()) {
-	 table->addAllColumnsToQuery(&query);
-	 query.setShowColumnHeaders(true);
-      }
-      struct timeval before, after;
-      gettimeofday(&before, 0);
-      query.start();
-      table->answerQuery(&query);
-      query.finish();
-      gettimeofday(&after, 0);
-      unsigned long ustime = (after.tv_sec - before.tv_sec) * 1000000 + (after.tv_usec - before.tv_usec);
-      // logger(LG_INFO, "Time to process request: %lu us. Size of answer: %d bytes", ustime, output->size());
-   }
+    if (table) {
+	if (query.hasNoColumns()) {
+	    table->addAllColumnsToQuery(&query);
+	    query.setShowColumnHeaders(true);
+	}
+	struct timeval before, after;
+	gettimeofday(&before, 0);
+	query.start();
+	table->answerQuery(&query);
+	query.finish();
+	gettimeofday(&after, 0);
+	unsigned long ustime = (after.tv_sec - before.tv_sec) * 1000000 + (after.tv_usec - before.tv_usec);
+	// logger(LG_INFO, "Time to process request: %lu us. Size of answer: %d bytes", ustime, output->size());
+    }
 }
 
 

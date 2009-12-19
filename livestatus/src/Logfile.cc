@@ -36,7 +36,6 @@ Logfile::Logfile(const char *path, bool watch)
 
     line[11] = 0;
     _since = atoi(line+1);
-    logger(LG_INFO, "HIRN: Logfile %s beginnt bei %d", path, _since);
     close(fd);
 }
 
@@ -56,13 +55,11 @@ Logfile::~Logfile()
 void Logfile::load(unsigned logclasses)
 {
     // TODO: implement watch
-    logger(LG_INFO, "HIRN: Klassen 0x%x sind da. Brauche 0x%x", _logclasses_read, logclasses);
     unsigned missing_types = logclasses & ~_logclasses_read;
 
     if (missing_types == 0)
 	return;
 
-    logger(LG_INFO, "HIRN: Datei %s: Muss Typen laden: 0x%x", _path, missing_types);
 
     FILE *file = fopen(_path, "r");
     if (!file) {

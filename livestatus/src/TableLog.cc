@@ -40,7 +40,8 @@
 #include "TableCommands.h"
 #include "TableContacts.h"
 
-
+// watch nagios' logfile rotation
+extern time_t last_log_rotation;
 
 /* Es fehlt noch:
 
@@ -55,14 +56,10 @@
      gehe ich von einer Rotation aus und mach das, was oben
      beschrieben ist.
 
-   - Ein Lock auf TableLog, da hier ändernde Operationen
-     stattfinden.
-
    - Etliche Meldungstypen: Programm-Meldungen (Neustart),
      Eventhandler-Meldungen, und was gibt es noch?
      Die Verknuefpungen der External-Commands stellen wir
      noch zurueck.
-
 
 */
 
@@ -70,6 +67,8 @@ int num_cached_log_messages = 0;
 
 TableLog::TableLog()
 {
+    pthread_mutex_init(&_lock, 0);
+
     LogEntry *ref = 0;
     addColumn(new OffsetIntColumn("time", 
 		"Time of the log event (UNIX timestamp)", (char *)&(ref->_time) - (char *)ref, -1));
@@ -113,20 +112,40 @@ TableLog::TableLog()
 
 TableLog::~TableLog()
 {
+    forgetLogfiles();
+    pthread_mutex_destroy(&_lock);
+}
+
+
+void TableLog::forgetLogfiles()
+{
     for (_logfiles_t::iterator it = _logfiles.begin();
 	    it != _logfiles.end();
 	    ++it)
     {
 	delete it->second;
     }
+    _logfiles.clear();
 }
 
 
 void TableLog::answerQuery(Query *query)
 {
+    // since logfiles are loaded on demand, we need
+    // to lock out concurrent threads.
+    pthread_mutex_lock(&_lock);
+
+    // Has Nagios rotated logfiles? => Update 
+    // our file index. And delete all memorized
+    // log messages.
+    if (last_log_rotation > _last_index_update) {
+	logger(LG_INFO, "Nagios has rotated logfiles. Rebuilding logfile index");
+	forgetLogfiles();
+	updateLogfileIndex();
+    }
+
     int since = 0;
     int until = time(0) + 1;
-    logger(LG_INFO, "HIRN: Versuche Gernzen zu finden");
     // Optimize time interval for the query. In log querys
     // there should always be a time range in form of one
     // or two filter expressions over time. We use that
@@ -134,25 +153,12 @@ void TableLog::answerQuery(Query *query)
     // to find the optimal entry point into the logfile
     query->findIntLimits("time", &since, &until);
 
-    if (since != 0)
-	logger(LG_INFO, "HIRN: Filter hat since auf %d begrenzt", since);
-    if (until != time(0) + 1)
-	logger(LG_INFO, "HIRN: Filter hat until auf %d begrenzt", until);
-
     // The second optimization is for log message types.
     // We want to load only those log type that are queried.
     uint32_t classmask = LOGCLASS_ALL;
     query->optimizeBitmask("class", &classmask);
-    logger(LG_INFO, "HIRN: klassen auf %x begreenzt", classmask);
-    if (classmask == 0) {
-	logger(LG_INFO, "HIRN: Achtung: Klassen sind 0!");
+    if (classmask == 0)
 	return;
-    }
-
-
-    logger(LG_INFO, "HIRN: Anfrage von %d bis %d (%d sec)", since, until, until-since);
-
-    dumpLogfiles();
 
     _logfiles_t::iterator it;
     if (since == 0)
@@ -165,11 +171,11 @@ void TableLog::answerQuery(Query *query)
     }
     while (it != _logfiles.end()) {
 	Logfile *log = it->second;
-	logger(LG_INFO, "HIRN: probiere Logfile %s (%d)", log->path(), log->since());
 	if (!log->answerQuery(query, since, until, classmask))
 	    break; // end of time range in this logfile
 	++it;
     }
+    pthread_mutex_unlock(&_lock);
 }
 
 
@@ -178,6 +184,8 @@ extern char *log_archive_path;
 
 void TableLog::updateLogfileIndex()
 {
+    _last_index_update = time(0);
+
     // We need to find all relevant logfiles. This includes
     // the current nagios.log and all files in the archive
     // directory.

@@ -26,6 +26,7 @@
 #define TableLog_h
 
 #include <map>
+#include <time.h>
 #include "config.h"
 #include "Table.h"
 
@@ -35,6 +36,8 @@ class TableLog : public Table
 {
     typedef map<time_t, Logfile *> _logfiles_t;
     _logfiles_t _logfiles;
+    pthread_mutex_t _lock;
+    time_t _last_index_update;
 
 public:
     TableLog();
@@ -43,6 +46,7 @@ public:
     void answerQuery(Query *query);
 
 private:
+    void forgetLogfiles();
     void updateLogfileIndex();
     void scanLogfile(char *path, bool watch);
     bool answerQuery(Query *, Logfile *, time_t, time_t);

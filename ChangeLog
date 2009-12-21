@@ -2,6 +2,7 @@
       - MK Livestatus: added some new columns about Nagios status
         data to stable 'status'
       - MK Livestatus: added new table "comments"
+      - MK Livestatus: fix segfault on downtimes:contacts
       - MK Livestatus: added logic for count of pending service
         and hosts
       - MK Livestatus: added new table "log", which gives you

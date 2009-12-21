@@ -60,16 +60,16 @@ void TableContacts::addColumns(Table *table, string prefix, int indirect_offset)
 	       (string("The additional field ") + b), (char *)(&ctc.address[i]) - ref, indirect_offset));
    }
 
-   table->addColumn(new OffsetIntColumn("can_submit_commands", 
+   table->addColumn(new OffsetIntColumn(prefix + "can_submit_commands", 
 	    "Wether the contact is allowed to submit commands (0/1)", (char *)&ctc.can_submit_commands - ref, indirect_offset));
-   table->addColumn(new OffsetIntColumn("host_notifications_enabled", 
+   table->addColumn(new OffsetIntColumn(prefix + "host_notifications_enabled", 
 	    "Wether the contact will be notified about host problems in general (0/1)", (char *)&ctc.host_notifications_enabled - ref, indirect_offset));
-   table->addColumn(new OffsetIntColumn("service_notifications_enabled", 
+   table->addColumn(new OffsetIntColumn(prefix + "service_notifications_enabled", 
 	    "Wether the contact will be notified about service problems in general (0/1)", (char *)&ctc.service_notifications_enabled - ref, indirect_offset));
 
-   table->addColumn(new OffsetTimeperiodColumn("in_host_notification_period", 
+   table->addColumn(new OffsetTimeperiodColumn(prefix + "in_host_notification_period", 
 	    "Wether the contact is currently in his/her host notification period (0/1)", (char *)&ctc.host_notification_period_ptr - ref, indirect_offset));
-   table->addColumn(new OffsetTimeperiodColumn("in_service_notification_period", 
+   table->addColumn(new OffsetTimeperiodColumn(prefix + "in_service_notification_period", 
 	    "Wether the contact is currently in his/her service notification period (0/1)", (char *)&ctc.service_notification_period_ptr - ref, indirect_offset));
    
    table->addColumn(new CustomVarsColumn(prefix + "custom_variable_names", 

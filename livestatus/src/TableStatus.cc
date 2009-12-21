@@ -123,6 +123,8 @@ TableStatus::TableStatus()
    // Livestatus' own status
    addColumn(new IntPointerColumn("cached_log_messages", 
 	    "The current number of log messages MK Livestatus keeps in memory", &num_cached_log_messages ));
+   addColumn(new StringPointerColumn("livestatus_version",
+	    "The version of the MK Livestatus module", VERSION));
 }
 
 void TableStatus::answerQuery(Query *query)

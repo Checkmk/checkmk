@@ -35,14 +35,16 @@ class IntColumn;
 
 class IntColumnFilter : public Filter
 {
-   IntColumn *_column;
-   int32_t _ref_value;
-   int _opid;
-   bool _negate;
+    IntColumn *_column;
+    int32_t _ref_value;
+    int _opid;
+    bool _negate;
 
 public:
-   IntColumnFilter(IntColumn *_column, int opid, char *value);
-   bool accepts(void *data);
+    IntColumnFilter(IntColumn *_column, int opid, char *value);
+    bool accepts(void *data);
+    void findIntLimits(const char *columnname, int *lower, int *upper);
+    bool optimizeBitmask(const char *columnname, uint32_t *mask);
 };
 
 

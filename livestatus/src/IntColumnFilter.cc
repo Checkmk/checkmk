@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include <stdlib.h>
+#include <string.h>
 #include "IntColumnFilter.h"
 #include "IntColumn.h"
 #include "logger.h"
@@ -52,5 +53,108 @@ bool IntColumnFilter::accepts(void *data)
 	 break;
    }
    return pass != _negate;
+}
+
+void IntColumnFilter::findIntLimits(const char *columnname, int *lower, int *upper)
+{
+    if (strcmp(columnname, _column->name())) {
+	return; // wrong column
+    }
+    if (*lower >= *upper) {
+	return; // already empty interval
+    }
+
+
+    /* [lower, upper[ is some interval. This filter might restrict
+       that interval to a smaller interval.
+       */
+    int opref = _opid * (_negate != false ? -1 : 1); 
+    switch (opref) { 
+	case OP_EQUAL:
+	    if (_ref_value >= *lower && _ref_value < *upper) {
+		*lower = _ref_value;
+		*upper = _ref_value + 1;
+	    }
+	    else
+		*lower = *upper;
+	    return;
+	
+	case -OP_EQUAL:
+	    if (_ref_value == *lower)
+		*lower = *lower + 1;
+	    else if (_ref_value == *upper - 1)
+		*upper = *upper - 1;
+	    return;
+
+	case OP_GREATER:
+	    if (_ref_value >= *lower) {
+		*lower = _ref_value + 1;
+	    }
+
+	    return;
+	
+	case OP_LESS:
+	    if (_ref_value < *upper)
+		*upper = _ref_value;
+	    return;
+
+	case -OP_GREATER: // LESS OR EQUAL
+	    if (_ref_value < *upper - 1)
+		*upper = _ref_value + 1;
+	    return;
+
+	case -OP_LESS: // GREATER OR EQUAL
+	    if (_ref_value > *lower)
+		*lower = _ref_value;
+	    return;
+    }
+}
+
+
+bool IntColumnFilter::optimizeBitmask(const char *columnname, uint32_t *mask)
+{
+    if (strcmp(columnname, _column->name())) {
+	return false; // wrong column
+    }
+
+    if (_ref_value < 0 || _ref_value > 31)
+	return true; // not optimizable by 32bit bit mask
+
+    // Our task is to remove those bits from mask that are deselected
+    // by the filter.
+    uint32_t bit = 1 << _ref_value;
+
+    int opref = _opid * (_negate != false ? -1 : 1); 
+    switch (opref) { 
+	case OP_EQUAL:
+	    *mask &= bit; // bit must be set
+	    return true;
+	
+	case -OP_EQUAL:
+	    *mask &= ~bit; // bit must not be set
+	    return true; 
+
+	case -OP_LESS: // >=
+	    bit >>= 1;
+	case OP_GREATER:
+	    while (bit) {
+		*mask &= ~bit;
+		bit >>= 1;
+	    }
+	    return true;
+	
+	case -OP_GREATER: // <=
+	    if (_ref_value == 31)
+		return true;
+	    bit <<= 1;
+	case OP_LESS:
+	    while (true) {
+		*mask &= ~bit;
+		if (bit == 0x80000000)
+		    return true;
+		bit <<= 1;
+	    }
+	    return true;
+    }
 }
 

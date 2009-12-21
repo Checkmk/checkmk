@@ -70,6 +70,30 @@ void *AndingFilter::findIndexFilter(const char *columnname)
    return 0;
 }
 
+void AndingFilter::findIntLimits(const char *columnname, int *lower, int *upper)
+{
+   for (_subfilters_t::iterator it = _subfilters.begin();
+	 it != _subfilters.end();
+	 ++it)
+   {
+      Filter *filter = *it;
+      filter->findIntLimits(columnname, lower, upper);
+   }
+}
+
+bool AndingFilter::optimizeBitmask(const char *columnname, uint32_t *mask)
+{
+    bool optimized = false;
+   for (_subfilters_t::iterator it = _subfilters.begin();
+	 it != _subfilters.end();
+	 ++it)
+   {
+      Filter *filter = *it;
+      if (filter->optimizeBitmask(columnname, mask))
+	  optimized = true;
+   }
+   return optimized;
+}
 
 void AndingFilter::combineFilters(int count, int andor)
 {

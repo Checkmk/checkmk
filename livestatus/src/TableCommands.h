@@ -37,6 +37,7 @@ public:
   TableCommands();
   const char *name() { return "commands"; };
   void answerQuery(Query *query);
+  void addColumns(Table *table, string prefix, int indirect_offset);
 };
 
 #endif // TableCommands_h

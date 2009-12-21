@@ -33,17 +33,19 @@
 class AndingFilter : public Filter
 {
 protected:
-   typedef deque<Filter *> _subfilters_t;
-   _subfilters_t _subfilters;
+    typedef deque<Filter *> _subfilters_t;
+    _subfilters_t _subfilters;
 public:
-   ~AndingFilter();
-   void addSubfilter(Filter *);
-   bool accepts(void *data);
-   void combineFilters(int count, int andor);
-   unsigned numFilters() { return _subfilters.size(); };
-   _subfilters_t::iterator begin() { return _subfilters.begin(); };
-   _subfilters_t::iterator end() { return _subfilters.end(); };
-   void *findIndexFilter(const char *columnname);
+    ~AndingFilter();
+    void addSubfilter(Filter *);
+    bool accepts(void *data);
+    void combineFilters(int count, int andor);
+    unsigned numFilters() { return _subfilters.size(); };
+    _subfilters_t::iterator begin() { return _subfilters.begin(); };
+    _subfilters_t::iterator end() { return _subfilters.end(); };
+    void *findIndexFilter(const char *columnname);
+    void findIntLimits(const char *columnname, int *lower, int *upper);
+    bool optimizeBitmask(const char *columnname, uint32_t *mask);
 };
 
 

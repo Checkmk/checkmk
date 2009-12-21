@@ -38,6 +38,8 @@
         showing the Nagios version
       - MK Livestatus: added new column num_services_pending
         in table hosts
+      - Five new checks for monitoring DECRU SANs
+      - Some new PNP templates
       - AIX Agent: fix filesystem output
       - Check logwatch: Fix problem occuring at empty
         log lines

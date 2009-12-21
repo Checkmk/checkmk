@@ -25,10 +25,19 @@
 #include "Table.h"
 #include "Column.h"
 #include "Query.h"
+#include "logger.h"
 
 void Table::addColumn(Column *col)
 {
-   _columns.insert(make_pair(col->name(), col));
+    // do not insert column if one with that name
+    // already exists. Delete that column in that
+    // case. (For example needed for TableLog->TableHosts,
+    // which both define host_name.
+    if (column(col->name())) {
+	delete col;
+    }
+    else
+	_columns.insert(make_pair(col->name(), col));
 }
 
 bool Table::hasColumn(Column *col)
@@ -68,7 +77,7 @@ void Table::addAllColumnsToQuery(Query *q)
 }
 
 
-Column *Table::column(char *name)
+Column *Table::column(const char *name)
 {
    _columns_t::iterator it = _columns.find(string(name));
    if (it == _columns.end())

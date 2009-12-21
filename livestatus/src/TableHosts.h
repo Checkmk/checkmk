@@ -25,11 +25,11 @@
 #ifndef TableHosts_h
 #define TableHosts_h
 
-#include "config.h"
-
 #include <set>
+#include "config.h"
 #include "Table.h"
-#include "nagios/objects.h"
+#include "nagios.h"
+
 class TableContacts;
 class TableDownComm;
 

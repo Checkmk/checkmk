@@ -22,20 +22,36 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef OringFilter_h
-#define OringFilter_h
+#ifndef TableLog_h
+#define TableLog_h
 
+#include <map>
+#include <time.h>
 #include "config.h"
+#include "Table.h"
 
-#include "AndingFilter.h"
+class Logfile;
 
-class OringFilter : public AndingFilter
+class TableLog : public Table
 {
+    typedef map<time_t, Logfile *> _logfiles_t;
+    _logfiles_t _logfiles;
+    pthread_mutex_t _lock;
+    time_t _last_index_update;
+
 public:
-    bool accepts(void *data);
-    bool optimizeBitmask(const char *columnname, uint32_t *mask);
+    TableLog();
+    ~TableLog();
+    const char *name() { return "log"; };
+    void answerQuery(Query *query);
+
+private:
+    void forgetLogfiles();
+    void updateLogfileIndex();
+    void scanLogfile(char *path, bool watch);
+    bool answerQuery(Query *, Logfile *, time_t, time_t);
+    _logfiles_t::iterator findLogfileStartingBefore(time_t);
+    void dumpLogfiles();
 };
 
-
-#endif // OringFilter_h
-
+#endif // TableLog_h

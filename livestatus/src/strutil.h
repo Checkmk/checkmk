@@ -31,6 +31,7 @@ void rstrip(char *);
 char *lstrip(char *line);
 const char *lstrip(const char *line);
 char *next_field(char **line);
+char *next_token(char **c, char delim = ';');
 
 #endif // strutil_h
 

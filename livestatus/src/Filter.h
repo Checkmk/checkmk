@@ -28,6 +28,7 @@
 #include "config.h"
 
 #include <vector>
+#include <stdint.h>
 using namespace std;
 
 class Filter
@@ -37,6 +38,8 @@ public:
     virtual ~Filter() {};
     virtual bool accepts(void *data) = 0;
     virtual void *indexFilter(const char *columnname) { return 0; };
+    virtual void findIntLimits(const char *columnname, int *lower, int *upper) {};
+    virtual bool optimizeBitmask(const char *columnname, uint32_t *mask) {};
 };
 
 #endif // Filter_h

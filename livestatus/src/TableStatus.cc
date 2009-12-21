@@ -51,6 +51,7 @@ extern int check_host_freshness;
 extern int enable_flap_detection;
 extern int process_performance_data;
 extern int check_external_commands;
+extern int num_cached_log_messages;
 
 TableStatus::TableStatus()
 {
@@ -118,6 +119,10 @@ TableStatus::TableStatus()
 
    addColumn(new StringPointerColumn("program_version", 
 	    "The version of the monitoring daemon", get_program_version()));
+  
+   // Livestatus' own status
+   addColumn(new IntPointerColumn("cached_log_messages", 
+	    "The current number of log messages MK Livestatus keeps in memory", &num_cached_log_messages ));
 }
 
 void TableStatus::answerQuery(Query *query)

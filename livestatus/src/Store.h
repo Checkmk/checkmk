@@ -35,6 +35,7 @@
 #include "TableCommands.h"
 #include "TableDownComm.h"
 #include "TableStatus.h"
+#include "TableLog.h"
 #include "TableColumns.h"
 #include "OutputBuffer.h"
 #include "InputBuffer.h"
@@ -50,6 +51,7 @@ class Store
   TableDownComm      _table_downtimes;
   TableDownComm      _table_comments;
   TableStatus        _table_status;
+  TableLog           _table_log;
   TableColumns       _table_columns;
 
   typedef map<string, Table *> _tables_t;

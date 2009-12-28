@@ -5,6 +5,7 @@
 #include "logger.h"
 #include "LogEntry.h"
 #include "Query.h"
+#include "TableLog.h"
 
 extern int num_cached_log_messages;
 
@@ -59,7 +60,7 @@ void Logfile::deleteLogentries()
 }
 
 
-void Logfile::load(unsigned logclasses)
+void Logfile::load(TableLog *tablelog, time_t since, time_t until, unsigned logclasses)
 {
     unsigned missing_types = logclasses & ~_logclasses_read;
 
@@ -79,12 +80,12 @@ void Logfile::load(unsigned logclasses)
 	// have read to the end of the file
 	if (_logclasses_read) {
 	    fsetpos(file, &_read_pos); // continue at previous end
-	    load(file, _logclasses_read);
+	    load(file, _logclasses_read, tablelog, since, until, logclasses);
 	    fgetpos(file, &_read_pos);
 	}
 	if (missing_types) {
 	    fseek(file, 0, SEEK_SET);
-	    load(file, missing_types);
+	    load(file, missing_types, tablelog, since, until, logclasses);
 	    _logclasses_read |= missing_types;
 	}
 	fclose(file);
@@ -100,13 +101,14 @@ void Logfile::load(unsigned logclasses)
 	    return;
 	}
 
-	load(file, missing_types);
+	load(file, missing_types, tablelog, since, until, logclasses);
 	fclose(file);
 	_logclasses_read |= missing_types;
     }
 }
 
-void Logfile::load(FILE *file, unsigned missing_types)
+void Logfile::load(FILE *file, unsigned missing_types, 
+	TableLog *tablelog, time_t since, time_t until, unsigned logclasses)
 {
     uint32_t lineno = 0;
     while (fgets(_linebuffer, MAX_LOGLINE, file))
@@ -114,7 +116,27 @@ void Logfile::load(FILE *file, unsigned missing_types)
 	lineno++;
 	if (processLogLine(lineno, missing_types))
 	    num_cached_log_messages ++;
+	tablelog->handleNewMessage(this, since, until, logclasses); // memory management
     }	
+}
+
+
+long Logfile::freeMessages(unsigned logclasses)
+{
+    long freed = 0;
+    for (_entries_t::iterator it = _entries.begin();
+	    it != _entries.end();
+	    ++it)
+    {
+	LogEntry *entry = it->second;
+	if ((1 << entry->_logclass) & logclasses)
+	{
+	    delete it->second;
+	    freed ++;
+	}
+    }
+    _logclasses_read &= ~logclasses;
+    return freed;
 }
 
 
@@ -139,9 +161,9 @@ bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses)
 }
 
 
-bool Logfile::answerQuery(Query *query, time_t since, time_t until, unsigned logclasses)
+bool Logfile::answerQuery(Query *query, TableLog *tablelog, time_t since, time_t until, unsigned logclasses)
 {
-    load(logclasses); // make sure all messages are present
+    load(tablelog, since, until, logclasses); // make sure all messages are present
     uint64_t sincekey = makeKey(since, 0);
     _entries_t::iterator it = _entries.lower_bound(sincekey);
     while (it != _entries.end())

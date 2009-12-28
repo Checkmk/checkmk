@@ -57,7 +57,9 @@ extern time_t last_log_rotation;
 
 int num_cached_log_messages = 0;
 
-TableLog::TableLog()
+TableLog::TableLog(unsigned long max_cached_messages)
+    : _max_cached_messages(max_cached_messages)
+    , _num_cached_messages(0)
 {
     pthread_mutex_init(&_lock, 0);
 
@@ -118,6 +120,7 @@ void TableLog::forgetLogfiles()
 	delete it->second;
     }
     _logfiles.clear();
+    _num_cached_messages = 0;
 }
 
 
@@ -163,7 +166,7 @@ void TableLog::answerQuery(Query *query)
     }
     while (it != _logfiles.end()) {
 	Logfile *log = it->second;
-	if (!log->answerQuery(query, since, until, classmask))
+	if (!log->answerQuery(query, this, since, until, classmask))
 	    break; // end of time range in this logfile
 	++it;
     }
@@ -224,3 +227,58 @@ void TableLog::dumpLogfiles()
 	logger(LG_INFO, "LOG %s ab %d", log->path(), log->since());
     }
 }
+    
+void TableLog::handleNewMessage(Logfile *logfile, time_t since, time_t until, unsigned logclasses)
+{
+    if (++_num_cached_messages <= _max_cached_messages)
+	return; // everything ok
+    logger(LG_INFO, "HIRN: Maximum number of cached log messages reached. Freeing memory");
+
+    // [1] Begin by deleting old logfiles
+    _logfiles_t::iterator it;
+    for (it = _logfiles.begin(); it != _logfiles.end(); ++it)
+    {
+        Logfile *log = it->second;
+	if (log == logfile) {
+	    logger(LG_INFO, "HIRN: Loesche nicht %s", log->path());
+	    break;
+	}
+	logger(LG_INFO, "HIRN: Schmeisse %s weg", log->path());
+	_num_cached_messages -= log->numEntries();
+	delete log;
+	_logfiles.erase(it);
+	if (_num_cached_messages <= _max_cached_messages)
+	    return;
+    }
+
+    // [2] Delete message classes irrelevent to current query
+    for (; it != _logfiles.end(); ++it)
+    {
+        Logfile *log = it->second;
+	long freed = log->freeMessages(~logclasses);
+	_num_cached_messages -= freed;
+	logger(LG_INFO, "HIRN: %ld Meldungen aus %s weg", freed, log->path());
+	if (_num_cached_messages <= _max_cached_messages)
+	    return;
+    }
+
+    // [3] Delete newest logfiles
+    while (_logfiles.size() > 0)
+    {
+	it = _logfiles.end();
+	--it;
+
+	Logfile *log = it->second;
+	if (log == logfile)
+	    break;
+	_num_cached_messages -= log->numEntries();
+	logger(LG_INFO, "HIRN: Logfile %s von hinten weggeschmissen", log->path());
+	delete log;
+	_logfiles.erase(it);
+	if (_num_cached_messages <= _max_cached_messages)
+	    return;
+    }
+
+    logger(LG_INFO, "HIRN: Cannot free enough memory");
+}
+

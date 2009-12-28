@@ -38,11 +38,14 @@ class TableLog : public Table
     _logfiles_t _logfiles;
     pthread_mutex_t _lock;
     time_t _last_index_update;
+    unsigned long _num_cached_messages;
+    unsigned long _max_cached_messages;
 
 public:
-    TableLog();
+    TableLog(unsigned long max_cached_messages);
     ~TableLog();
     const char *name() { return "log"; };
+    void handleNewMessage(Logfile *logfile, time_t since, time_t until, unsigned logclasses);
     void answerQuery(Query *query);
 
 private:

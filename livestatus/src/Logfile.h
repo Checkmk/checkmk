@@ -12,6 +12,7 @@ using namespace std;
 
 class LogEntry;
 class Query;
+class TableLog;
 
 class Logfile
 {
@@ -31,14 +32,16 @@ public:
     ~Logfile();
 
     char *path() { return _path; };
-    void load(unsigned logtypes);
+    void load(TableLog *tablelog, time_t since, time_t until, unsigned logclasses);
     bool isLoaded() { return _is_loaded; };
     time_t since() { return _since; };
-    bool answerQuery(Query *query, time_t since, time_t until, unsigned);
+    long numEntries() { return _entries.size(); };
+    bool answerQuery(Query *query, TableLog *tl, time_t since, time_t until, unsigned);
+    long freeMessages(unsigned logclasses);
 
 private:
     void deleteLogentries();
-    void load(FILE *file, unsigned missing_types);
+    void load(FILE *file, unsigned missing_types, TableLog *, time_t since, time_t until, unsigned logclasses);
     bool processLogLine(uint32_t, unsigned);
     uint64_t makeKey(time_t, unsigned);
 };

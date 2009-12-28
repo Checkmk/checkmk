@@ -38,6 +38,7 @@
 Store::Store()
     : _table_downtimes(true)
     , _table_comments(false)
+    , _table_log(17)
 {
     _tables.insert(make_pair("hosts", &_table_hosts));
     _tables.insert(make_pair("services", &_table_services));

@@ -12,7 +12,6 @@ extern int num_cached_log_messages;
 Logfile::Logfile(const char *path, bool watch)
     : _path(strdup(path))
     , _since(0)
-    , _is_loaded(false)
     , _watch(watch)
     , _inode(0)
       , _logclasses_read(0)
@@ -44,10 +43,11 @@ Logfile::Logfile(const char *path, bool watch)
 Logfile::~Logfile()
 {
     free(_path);
-    deleteLogentries();
+    flush();
 }
 
-void Logfile::deleteLogentries()
+
+void Logfile::flush()
 {
     for (_entries_t::iterator it = _entries.begin();
 	    it != _entries.end();
@@ -114,9 +114,10 @@ void Logfile::load(FILE *file, unsigned missing_types,
     while (fgets(_linebuffer, MAX_LOGLINE, file))
     {
 	lineno++;
-	if (processLogLine(lineno, missing_types))
+	if (processLogLine(lineno, missing_types)) {
 	    num_cached_log_messages ++;
-	tablelog->handleNewMessage(this, since, until, logclasses); // memory management
+	    tablelog->handleNewMessage(this, since, until, logclasses); // memory management
+	}
     }	
 }
 
@@ -132,6 +133,7 @@ long Logfile::freeMessages(unsigned logclasses)
 	if ((1 << entry->_logclass) & logclasses)
 	{
 	    delete it->second;
+	    _entries.erase(it);
 	    freed ++;
 	}
     }

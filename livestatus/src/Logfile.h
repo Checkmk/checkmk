@@ -18,7 +18,6 @@ class Logfile
 {
     char      *_path;
     time_t     _since;
-    bool       _is_loaded;
     bool       _watch;         // true only for current logfile
     ino_t      _inode;         // needed to detect switching
     fpos_t     _read_pos;      // read until this position
@@ -33,14 +32,14 @@ public:
 
     char *path() { return _path; };
     void load(TableLog *tablelog, time_t since, time_t until, unsigned logclasses);
-    bool isLoaded() { return _is_loaded; };
+    void flush();
     time_t since() { return _since; };
+    unsigned classesRead() { return _logclasses_read; };
     long numEntries() { return _entries.size(); };
     bool answerQuery(Query *query, TableLog *tl, time_t since, time_t until, unsigned);
     long freeMessages(unsigned logclasses);
 
 private:
-    void deleteLogentries();
     void load(FILE *file, unsigned missing_types, TableLog *, time_t since, time_t until, unsigned logclasses);
     bool processLogLine(uint32_t, unsigned);
     uint64_t makeKey(time_t, unsigned);

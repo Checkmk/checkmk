@@ -40,6 +40,7 @@ class TableLog : public Table
     time_t _last_index_update;
     unsigned long _num_cached_messages;
     unsigned long _max_cached_messages;
+    unsigned long _num_at_last_check;
 
 public:
     TableLog(unsigned long max_cached_messages);

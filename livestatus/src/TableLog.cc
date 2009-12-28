@@ -40,6 +40,8 @@
 #include "TableCommands.h"
 #include "TableContacts.h"
 
+#define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
+
 // watch nagios' logfile rotation
 extern time_t last_log_rotation;
 
@@ -60,6 +62,7 @@ int num_cached_log_messages = 0;
 TableLog::TableLog(unsigned long max_cached_messages)
     : _max_cached_messages(max_cached_messages)
     , _num_cached_messages(0)
+    , _num_at_last_check(0)
 {
     pthread_mutex_init(&_lock, 0);
 
@@ -166,10 +169,12 @@ void TableLog::answerQuery(Query *query)
     }
     while (it != _logfiles.end()) {
 	Logfile *log = it->second;
+	logger(LG_INFO, "HIRN: Jetzt kommt Logfile %s", log->path());
 	if (!log->answerQuery(query, this, since, until, classmask))
 	    break; // end of time range in this logfile
 	++it;
     }
+    dumpLogfiles();
     pthread_mutex_unlock(&_lock);
 }
 
@@ -224,7 +229,7 @@ void TableLog::dumpLogfiles()
 	    ++it)
     {
         Logfile *log = it->second;
-	logger(LG_INFO, "LOG %s ab %d", log->path(), log->since());
+	logger(LG_INFO, "LOG %s ab %d, %u messages, Klassen: 0x%04x", log->path(), log->since(), log->numEntries(), log->classesRead());
     }
 }
     
@@ -232,6 +237,10 @@ void TableLog::handleNewMessage(Logfile *logfile, time_t since, time_t until, un
 {
     if (++_num_cached_messages <= _max_cached_messages)
 	return; // everything ok
+    if (_num_cached_messages < _num_at_last_check + CHECK_MEM_CYCLE)
+	return; // Do not check too often
+    logger(LG_INFO, "HIRN: %d von %d erreicht", _num_cached_messages + 1, _max_cached_messages);
+
     logger(LG_INFO, "HIRN: Maximum number of cached log messages reached. Freeing memory");
 
     // [1] Begin by deleting old logfiles
@@ -243,42 +252,54 @@ void TableLog::handleNewMessage(Logfile *logfile, time_t since, time_t until, un
 	    logger(LG_INFO, "HIRN: Loesche nicht %s", log->path());
 	    break;
 	}
-	logger(LG_INFO, "HIRN: Schmeisse %s weg", log->path());
-	_num_cached_messages -= log->numEntries();
-	delete log;
-	_logfiles.erase(it);
-	if (_num_cached_messages <= _max_cached_messages)
-	    return;
+	if (log->numEntries() > 0) {
+	    logger(LG_INFO, "HIRN: Spuele %s weg", log->path());
+	    _num_cached_messages -= log->numEntries();
+	    log->flush();
+	    if (_num_cached_messages <= _max_cached_messages)
+		logger(LG_INFO, "HIRN: OK. Jetzt passts wieder (%d von %d)", _num_cached_messages, _max_cached_messages);
+		_num_at_last_check = _num_cached_messages;
+		return;
+	}
     }
 
     // [2] Delete message classes irrelevent to current query
     for (; it != _logfiles.end(); ++it)
     {
         Logfile *log = it->second;
-	long freed = log->freeMessages(~logclasses);
-	_num_cached_messages -= freed;
-	logger(LG_INFO, "HIRN: %ld Meldungen aus %s weg", freed, log->path());
-	if (_num_cached_messages <= _max_cached_messages)
-	    return;
+	if (log->numEntries() > 0) {
+	    long freed = log->freeMessages(~logclasses);
+	    _num_cached_messages -= freed;
+	    logger(LG_INFO, "HIRN: %ld Meldungen aus %s weg", freed, log->path());
+	    if (_num_cached_messages <= _max_cached_messages)
+		logger(LG_INFO, "HIRN: OK. Jetzt passts wieder (%d von %d)", _num_cached_messages, _max_cached_messages);
+		_num_at_last_check = _num_cached_messages;
+		return;
+	}
     }
 
-    // [3] Delete newest logfiles
-    while (_logfiles.size() > 0)
+    // [3] Flush newest logfiles
+    it = _logfiles.end();
+    while (true)
     {
-	it = _logfiles.end();
 	--it;
-
 	Logfile *log = it->second;
 	if (log == logfile)
 	    break;
-	_num_cached_messages -= log->numEntries();
-	logger(LG_INFO, "HIRN: Logfile %s von hinten weggeschmissen", log->path());
-	delete log;
-	_logfiles.erase(it);
-	if (_num_cached_messages <= _max_cached_messages)
-	    return;
+
+	if (log->numEntries() > 0) {
+	    _num_cached_messages -= log->numEntries();
+	    logger(LG_INFO, "HIRN: Logfile %s von hinten weggeschmissen (bin gerade bei %s)", log->path(), logfile->path());
+	    log->flush();
+	    if (_num_cached_messages <= _max_cached_messages) {
+		_num_at_last_check = _num_cached_messages;
+		logger(LG_INFO, "HIRN: OK. Jetzt passts wieder (%d von %d)", _num_cached_messages, _max_cached_messages);
+		return;
+	    }
+	}
     }
 
+    _num_at_last_check = _num_cached_messages;
     logger(LG_INFO, "HIRN: Cannot free enough memory");
 }
 

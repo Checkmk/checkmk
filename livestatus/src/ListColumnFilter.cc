@@ -38,6 +38,9 @@ ListColumnFilter::ListColumnFilter(ListColumn *column, int opid, char *value)
 
 bool ListColumnFilter::accepts(void *data)
 {
+   data = _column->shiftPointer(data);
+   if (!data)
+      return false;
    bool is_member = _column->isNagiosMember(data, _ref_member);
    switch (_opid) {
       case -OP_LESS: /* !< means >= means 'contains' */

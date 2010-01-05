@@ -54,7 +54,6 @@ public:
     virtual int type() = 0;
     virtual void output(void *data, Query *) = 0;
     virtual Filter *createFilter(int opid, char *value) { return 0; };
-protected:
     void *shiftPointer(void *data);
 };
 

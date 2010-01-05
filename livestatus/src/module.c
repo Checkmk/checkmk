@@ -343,7 +343,6 @@ int nebmodule_init(int flags, char *args, void *handle)
    else
       strcpy(g_socket_path, DEFAULT_SOCKET_PATH);
    logger(LG_INFO, "Version %s initializing. Socket path: '%s'", VERSION, g_socket_path);
-   logger(LOG_INFO, "HIRN: Nagios Version is %s", get_program_version());
 
    if (!open_unix_socket())
       return 1;

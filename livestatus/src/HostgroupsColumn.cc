@@ -60,7 +60,13 @@ void *HostgroupsColumn::getNagiosObject(char *name)
 
 bool HostgroupsColumn::isNagiosMember(void *data, void *nagobject)
 {
-   objectlist *list = getData(data);
+   if (!nagobject || !data)
+      return false;
+   
+   // data is already shifted (_indirect_offset is taken into account)
+   // But _offset needs still to be accounted for
+   objectlist *list = *(objectlist **)((char *)data + _offset);
+
    while (list) {
       if (list->object_ptr == nagobject)
 	 return true;

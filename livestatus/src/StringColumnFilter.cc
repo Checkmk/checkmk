@@ -36,7 +36,7 @@ StringColumnFilter::StringColumnFilter(StringColumn *column, int opid, char *val
    , _ref_string(value)
    , _opid(abs(opid))
    , _negate(opid < 0)
-     , _regex(0)
+   , _regex(0)
 {
    if (opid == OP_REGEX || opid == OP_REGEX_ICASE) {
       _regex = new regex_t();
@@ -44,6 +44,7 @@ StringColumnFilter::StringColumnFilter(StringColumn *column, int opid, char *val
       {
 	 logger(LG_INFO, "Invalid regular expression '%s'", value);
 	 delete _regex;
+	 _regex = 0;
       }
    }
 }

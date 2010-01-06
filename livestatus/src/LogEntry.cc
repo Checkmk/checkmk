@@ -3,10 +3,11 @@
 #include "strutil.h"
 #include "logger.h"
 
-LogEntry::LogEntry(char *line)
+LogEntry::LogEntry(unsigned lineno, char *line)
 {
     // zero all elements as fast as possible -> default values
     bzero(this, sizeof(LogEntry));
+    _lineno = lineno;
 
     // make a copy of the message
     _msg = strdup(line);
@@ -64,7 +65,7 @@ bool LogEntry::handleStatusEntry()
 
 	_host_name    = next_token(&scan);
 	_state        = hostStateToInt(next_token(&scan));
-	_state_type   = stateTypeToInt(next_token(&scan));
+	_state_type   = next_token(&scan);
 	_attempt      = atoi(next_token(&scan));
 	_check_output = next_token(&scan);
 	return true;
@@ -78,7 +79,7 @@ bool LogEntry::handleStatusEntry()
 	scan++;
 	
 	_host_name    = next_token(&scan);
-	_state_type   = startedStoppedToInt(next_token(&scan));
+	_state_type   = next_token(&scan);
 	_comment      = next_token(&scan) + 1;
 	return true;
     }
@@ -96,7 +97,7 @@ bool LogEntry::handleStatusEntry()
 	_host_name    = next_token(&scan);
 	_svc_desc     = next_token(&scan);
 	_state        = serviceStateToInt(next_token(&scan));
-	_state_type   = stateTypeToInt(next_token(&scan));
+	_state_type   = next_token(&scan);
 	_attempt      = atoi(next_token(&scan));
 	_check_output = next_token(&scan);
 	return true;
@@ -111,7 +112,7 @@ bool LogEntry::handleStatusEntry()
 	
 	_host_name    = next_token(&scan);
 	_svc_desc     = next_token(&scan);
-	_state_type   = startedStoppedToInt(next_token(&scan));
+	_state_type   = next_token(&scan);
 	_comment      = next_token(&scan) + 1;
 	return true;
     }
@@ -132,8 +133,16 @@ bool LogEntry::handleNotificationEntry()
 	
 	_contact_name  = next_token(&scan);
 	_host_name     = next_token(&scan);
-	if (svc) _svc_desc = next_token(&scan);
-	_state_type    = stateTypeToInt(next_token(&scan));
+	if (svc) {
+	    _svc_desc = next_token(&scan);
+	    _state_type = next_token(&scan);
+	    _state = serviceStateToInt(_state_type);
+	} 
+	else {
+	    _state_type = next_token(&scan);
+	    _state = hostStateToInt(_state_type);
+	}
+
 	_command_name  = next_token(&scan);
 	_check_output  = next_token(&scan);
 	return true;
@@ -186,37 +195,33 @@ bool LogEntry::handleProgrammEntry()
 
 int LogEntry::serviceStateToInt(char *s)
 {
+    char *last = s + strlen(s) - 1;
+    if (*last == ')')
+	last--;
+
     // WARN, CRIT, OK, UNKNOWN
-    switch (s[0]) {
-	case 'O': return 0;
-	case 'W': return 1;
-	case 'C': return 2;
-	case 'U': return 3;
-	default: return 4;
+    switch (*last) {
+	case 'K': return 0;
+	case 'G': return 1;
+	case 'L': return 2;
+	case 'N': return 3;
+	default:  return 4;
     }
 }
 
 
 int LogEntry::hostStateToInt(char *s)
 {
-    // WARN, CRIT, OK, UNKNOWN
-    switch (s[1]) {
+    char *last = s + strlen(s) - 1;
+    if (*last == ')')
+	last--;
+
+    // UP, DOWN, UNREACHABLE
+    switch (*last) {
 	case 'P': return 0;
-	case 'O': return 1;
-	case 'N': return 2;
-	default: return 3;
+	case 'N': return 1;
+	case 'E': return 2;
+	default:  return 3;
     }
 }
-
-int LogEntry::stateTypeToInt(char *s)
-{
-    return s[0] == 'H' ? 1 : 0;
-}
-
-
-int LogEntry::startedStoppedToInt(char *s)
-{
-    return !strcmp(s, "STARTED") ? 1 : 0;
-}
-
 

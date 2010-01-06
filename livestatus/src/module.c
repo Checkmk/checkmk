@@ -129,7 +129,6 @@ void *client_thread(void *data)
 {
    void *input_buffer = create_inputbuffer(&g_should_terminate);
    void *output_buffer = create_outputbuffer();
-   logger(LG_INFO, "Starting client thread %p", output_buffer);
 
    while (!g_should_terminate) {
       int cc = queue_pop_connection();
@@ -146,7 +145,6 @@ void *client_thread(void *data)
    }
    delete_outputbuffer(output_buffer);
    delete_inputbuffer(input_buffer);
-   logger(LG_INFO, "Client thread %p has terminated", output_buffer);
 }
 
 void start_threads()
@@ -155,6 +153,7 @@ void start_threads()
       /* start thread that listens on socket */
       pthread_atfork(NULL, NULL, livestatus_cleanup_after_fork);
       pthread_create(&g_mainthread_id, 0, main_thread, (void *)0);
+      logger(LG_INFO, "Starting %d client threads", NUM_CLIENTTHREADS);
 
       unsigned t;
       for (t=0; t < NUM_CLIENTTHREADS; t++)

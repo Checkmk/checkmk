@@ -69,6 +69,8 @@ TableLog::TableLog(unsigned long max_cached_messages)
     LogEntry *ref = 0;
     addColumn(new OffsetIntColumn("time", 
 		"Time of the log event (UNIX timestamp)", (char *)&(ref->_time) - (char *)ref, -1));
+    addColumn(new OffsetIntColumn("lineno", 
+		"The number of the line in the log file", (char *)&(ref->_lineno) - (char *)ref, -1));
     addColumn(new OffsetIntColumn("class", 
 		"The class of the message as integer (0:info, 1:state, 2:program, 3:notification, 4:passive, 5:command)", (char *)&(ref->_logclass) - (char *)ref, -1));
 
@@ -80,8 +82,8 @@ TableLog::TableLog(unsigned long max_cached_messages)
 		"The output of the check, if any is associated with the message", (char *)&(ref->_check_output) - (char *)ref, -1));
     addColumn(new OffsetIntColumn("state", 
 		"The state of the host or service in question", (char *)&(ref->_state) - (char *)ref, -1));
-    addColumn(new OffsetIntColumn("state_type", 
-		"The type of the state (0: soft, 1: hard)", (char *)&(ref->_state_type) - (char *)ref, -1));
+    addColumn(new OffsetStringColumn("state_type", 
+		"The type of the state (varies on different log classes)", (char *)&(ref->_state_type) - (char *)ref, -1));
     addColumn(new OffsetIntColumn("attempt", 
 		"The number of the check attempt", (char *)&(ref->_attempt) - (char *)ref, -1));
     addColumn(new OffsetStringColumn("service_description",

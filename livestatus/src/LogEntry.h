@@ -14,6 +14,7 @@
 
 struct LogEntry
 {
+    unsigned   _lineno;      // line number in file
     time_t     _time;
     unsigned   _logclass;
     char      *_msg;       // split up with binary zeroes
@@ -24,7 +25,7 @@ struct LogEntry
     char      *_command_name;
     char      *_contact_name;
     int       _state;
-    int       _state_type;
+    char      *_state_type;
     int       _attempt;
     char      *_check_output;
     char      *_comment;
@@ -34,7 +35,7 @@ struct LogEntry
     contact   *_contact;
     command   *_command;
 
-    LogEntry(char *line);
+    LogEntry(unsigned lineno, char *line);
     ~LogEntry();
 
 private:
@@ -46,8 +47,6 @@ private:
     bool handleInfoEntry();
     int serviceStateToInt(char *s);
     int hostStateToInt(char *s);
-    int stateTypeToInt(char *s);
-    int startedStoppedToInt(char *s);
 };
 
 #endif // LogEntry_h

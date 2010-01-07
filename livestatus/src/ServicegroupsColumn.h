@@ -39,6 +39,7 @@ public:
    int type() { return COLTYPE_LIST; };
    void output(void *, Query *);
    void *getNagiosObject(char *name); // return pointer to service group
+   bool isEmpty(void *data);
    bool isNagiosMember(void *data, void *nagobject);
 private:
    objectlist *getData(void *);

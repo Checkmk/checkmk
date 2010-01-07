@@ -41,6 +41,7 @@ public:
    int type() { return COLTYPE_LIST; };
    void output(void *, Query *);
    void *getNagiosObject(char *name);
+   bool isEmpty(void *data);
    bool isNagiosMember(void *data, void *member);
 };
 

@@ -58,3 +58,16 @@ void ContactsColumn::output(void *data, Query *query)
    }
    query->outputEndList();
 }
+
+
+bool ContactsColumn::isEmpty(void *svc)
+{
+   contact *ct = contact_list;
+   while (ct) {
+       if (isNagiosMember(svc, ct))
+	   return false;
+      ct = ct->next;
+   }
+   return true;
+}
+

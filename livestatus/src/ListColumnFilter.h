@@ -35,6 +35,7 @@ class ListColumnFilter : public Filter
    ListColumn *_column;
    void *_ref_member;
    int _opid;
+   bool _empty_ref; // distinct from unknown ref
 
 public:
    ListColumnFilter(ListColumn *column, int opid, char *value);

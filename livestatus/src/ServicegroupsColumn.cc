@@ -68,3 +68,9 @@ bool ServicegroupsColumn::isNagiosMember(void *data, void *nagobject)
    }
    return false;
 } 
+
+bool ServicegroupsColumn::isEmpty(void *data)
+{
+   objectlist *list = *(objectlist **)((char *)data + _offset);
+   return list == 0;
+}

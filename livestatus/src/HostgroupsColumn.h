@@ -40,6 +40,7 @@ public:
    void output(void *, Query *);
    void *getNagiosObject(char *name); // return pointer to host group
    bool isNagiosMember(void *data, void *nagobject);
+   bool isEmpty(void *data);
 private:
    objectlist *getData(void *);
 };

@@ -31,47 +31,67 @@
 
 void DownCommColumn::output(void *data, Query *query)
 {
-   TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
-   query->outputBeginList();
-   data = shiftPointer(data); // points to host or service
-   if (data) 
-   {
-      bool first = true;
+    TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
+    query->outputBeginList();
+    data = shiftPointer(data); // points to host or service
+    if (data) 
+    {
+	bool first = true;
 
-      for (map<unsigned long, DowntimeOrComment *>::iterator it = table->entriesIteratorBegin();
-	    it != table->entriesIteratorEnd();
-	    ++it)
-      {
-	 unsigned long id = it->first;
-	 DowntimeOrComment *dt = it->second;
-	 if ((void *)dt->_service == data ||
-	       (dt->_service == 0 && dt->_host == data))
-	 {
-	    if (first)
-	       first = false;
-	    else
-	       query->outputListSeparator();
-	    query->outputUnsignedLong(id);
-	 }
-      }
-   }
-   query->outputEndList();
+	for (map<unsigned long, DowntimeOrComment *>::iterator it = table->entriesIteratorBegin();
+		it != table->entriesIteratorEnd();
+		++it)
+	{
+	    unsigned long id = it->first;
+	    DowntimeOrComment *dt = it->second;
+	    if ((void *)dt->_service == data ||
+		    (dt->_service == 0 && dt->_host == data))
+	    {
+		if (first)
+		    first = false;
+		else
+		    query->outputListSeparator();
+		query->outputUnsignedLong(id);
+	    }
+	}
+    }
+    query->outputEndList();
 }
 
 void *DownCommColumn::getNagiosObject(char *name)
 {
-   unsigned int id = strtoul(name, 0, 10);
-   return (void *)id; // Hack. Convert number into pointer.
+    unsigned int id = strtoul(name, 0, 10);
+    return (void *)id; // Hack. Convert number into pointer.
 }
 
 bool DownCommColumn::isNagiosMember(void *data, void *member)
 {
-   TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
-   // data points to a host or service
-   // member is not a pointer, but an unsigned int (hack)
-   int64_t id = (int64_t)member; // Hack. Convert it back.
-   DowntimeOrComment *dt = table->findEntry(id);
-   return dt != 0 && 
-		( dt->_service == (service *)data
-		 || (dt->_service == 0 && dt->_host == (host *)data));
+    TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
+    // data points to a host or service
+    // member is not a pointer, but an unsigned int (hack)
+    int64_t id = (int64_t)member; // Hack. Convert it back.
+    DowntimeOrComment *dt = table->findEntry(id);
+    return dt != 0 && 
+	( dt->_service == (service *)data
+	  || (dt->_service == 0 && dt->_host == (host *)data));
+}
+
+bool DownCommColumn::isEmpty(void *data)
+{
+    if (!data) return true;
+
+    TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
+    for (map<unsigned long, DowntimeOrComment *>::iterator it = table->entriesIteratorBegin();
+	    it != table->entriesIteratorEnd();
+	    ++it)
+    {
+	unsigned long id = it->first;
+	DowntimeOrComment *dt = it->second;
+	if ((void *)dt->_service == data ||
+		(dt->_service == 0 && dt->_host == data))
+	{
+	    return false;
+	}
+    }
+    return true; // empty
 }

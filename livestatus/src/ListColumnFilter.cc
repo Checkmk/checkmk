@@ -30,33 +30,41 @@
 #include "ListColumn.h"
 
 ListColumnFilter::ListColumnFilter(ListColumn *column, int opid, char *value)
-   : _column(column)
-     , _opid(opid)
+    : _column(column)
+    , _opid(opid)
+    , _empty_ref(!value[0])
 {
-   _ref_member = _column->getNagiosObject(value);
+    _ref_member = _column->getNagiosObject(value);
 }
 
 bool ListColumnFilter::accepts(void *data)
 {
-   data = _column->shiftPointer(data);
-   if (!data)
-      return false;
-   bool is_member = _column->isNagiosMember(data, _ref_member);
-   switch (_opid) {
-      case -OP_LESS: /* !< means >= means 'contains' */
-	 return is_member;
-      case OP_LESS:
-	 return !is_member;
-      default:
-	 logger(LG_INFO, "Sorry, Operator %d for lists not implemented.", _opid);
-	 return true;
-   }
+    data = _column->shiftPointer(data);
+    if (!data)
+	return false;
+    bool is_member = _column->isNagiosMember(data, _ref_member);
+    switch (_opid) {
+	case -OP_LESS: /* !< means >= means 'contains' */
+	    return is_member;
+	case OP_LESS:
+	    return !is_member;
+	case OP_EQUAL:
+	case -OP_EQUAL:
+	    if (_empty_ref)
+		return _column->isEmpty(data) == (_opid == OP_EQUAL);
+	    logger(LG_INFO, "Sorry, Equality for lists implemented only for emptyness");
+	    return false;
+
+	default:
+	    logger(LG_INFO, "Sorry, Operator %d for lists not implemented.", _opid);
+	    return true;
+    }
 }
 
 void *ListColumnFilter::indexFilter(const char *columnname)
 {
     if (_opid == -OP_LESS && !strcmp(columnname, _column->name()))
-      return _ref_member;
+	return _ref_member;
     else
-       return 0;
+	return 0;
 }

@@ -1,5 +1,23 @@
 Revision history for Perl extension Nagios::MKLivestatus.
 
+0.28  Sat Dec 19 19:19:13 CET 2009
+	- fixed bug in column alias
+	- added support for multiple peers
+	- changed to Module::Install
+
+0.26  Fri Dec  4 08:25:07 CET 2009
+	- added peer name
+	- added peer arg (can be socket or server)
+
+0.24  Wed Dec  2 23:41:34 CET 2009
+	- added support for StatsAnd: and StatsOr: queries
+	- table alias support for selectall_hashref and selectrow_hashref
+	- added support for Stats:   ... as alias
+	- added support for StatsAnd:... as alias
+	- added support for StatsOr: ... as alias
+	- added support for StatsGroupBy: (with alias)
+	- added support column aliases for Column: header
+
 0.22  Fri Nov 27 01:04:16 CET 2009
 	- fixed errors on socket problems
 	- fixed sending commands

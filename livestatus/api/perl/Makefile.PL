@@ -1,17 +1,25 @@
-use 5.000000;
-use ExtUtils::MakeMaker;
-# See lib/ExtUtils/MakeMaker.pm for details of how to influence
-# the contents of the Makefile that is written.
-WriteMakefile(
-    NAME           => 'Nagios::MKLivestatus',
-    VERSION_FROM   => 'lib/Nagios/MKLivestatus.pm',
-    PREREQ_PM      => {
-                          'threads'          => 1.07,
-                          'IO::Socket::UNIX' => 0,
-                          'IO::Socket::INET' => 0,
-                      },
-    ABSTRACT_FROM  => 'lib/Nagios/MKLivestatus.pm',
-    AUTHOR         => 'Sven Nierlein <nierlein@cpan.org>',
-    $ExtUtils::MakeMaker::VERSION >= 6.31
-    ? ( 'LICENSE' => 'perl' ) : (),
-);
+# IMPORTANT: if you delete this file your app will not work as
+# expected.  you have been warned
+use inc::Module::Install;
+
+name         'Nagios-MKLivestatus';
+all_from     'lib/Nagios/MKLivestatus.pm';
+perl_version '5.006';
+license      'perl';
+
+requires 'IO::Socket::UNIX';
+requires 'IO::Socket::INET';
+requires 'Digest::MD5';
+requires 'threads'           => '1.07';
+requires 'Thread::Queue'     => '2.11';
+
+test_requires 'File::Copy::Recursive';
+test_requires 'Test::Pod' => 1.14;
+test_requires 'Test::Perl::Critic';
+test_requires 'Test::Pod::Coverage';
+test_requires 'Perl::Critic::Policy::Dynamic::NoIndirect';
+test_requires 'Perl::Critic::Policy::NamingConventions::ProhibitMixedCaseSubs';
+test_requires 'Perl::Critic::Policy::ValuesAndExpressions::ProhibitAccessOfPrivateData';
+
+auto_install;
+WriteAll;

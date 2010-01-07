@@ -126,17 +126,20 @@ for my $key (keys %{$objects_to_test}) {
     my $nl = $objects_to_test->{$key};
     isa_ok($nl, 'Nagios::MKLivestatus');
 
+    # we dont need warnings for testing
+    $nl->warnings(0);
+
     ##################################################
     # test settings
     my $rt = $nl->verbose(1);
-    is($rt, '1', 'enable verbose');
+    is($rt, '0', 'enable verbose');
     $rt = $nl->verbose(0);
     is($rt, '1', 'disable verbose');
 
     $rt = $nl->errors_are_fatal(0);
     is($rt, '1', 'disable errors_are_fatal');
     $rt = $nl->errors_are_fatal(1);
-    is($rt, '1', 'enable errors_are_fatal');
+    is($rt, '0', 'enable errors_are_fatal');
 
     ##################################################
     # do some sample querys

@@ -23,21 +23,22 @@ Nagios::MKLivestatus::UNIX - connector with unix sockets
 
 Creates an C<Nagios::MKLivestatus::UNIX> object. C<new> takes at least the socketpath.
 Arguments are the same as in C<Nagios::MKLivestatus>.
-
 If the constructor is only passed a single argument, it is assumed to
 be a the C<socket> specification. Use either socker OR server.
 
 =cut
 
-
 sub new {
     my $class = shift;
-    unshift(@_, "socket") if scalar @_ == 1;
+    unshift(@_, "peer") if scalar @_ == 1;
     my(%options) = @_;
+    $options{'name'} = $options{'peer'} unless defined $options{'name'};
 
     $options{'backend'} = $class;
     my $self = Nagios::MKLivestatus->new(%options);
     bless $self, $class;
+    confess('not a scalar') if ref $self->{'peer'} ne '';
+
     return $self;
 }
 
@@ -50,15 +51,8 @@ sub new {
 
 sub _open {
     my $self      = shift;
-    if(!-S $self->{'socket'}) {
-        croak("failed to open socket $self->{'socket'}: $!");
-    }
-    my $sock = IO::Socket::UNIX->new(
-                                        Peer     => $self->{'socket'},
-                                        timeout  => $self->{'timeout'},
-                                     );
-    if(!defined $sock or !$sock->connected()) {
-        my $msg = "failed to connect to $self->{'socket'} :$!";
+    if(!-S $self->{'peer'}) {
+        my $msg = "failed to open socket $self->{'peer'}: $!";
         if($self->{'errors_are_fatal'}) {
             croak($msg);
         }
@@ -66,6 +60,19 @@ sub _open {
         $Nagios::MKLivestatus::ErrorMessage = $msg;
         return;
     }
+    my $sock = IO::Socket::UNIX->new(
+                                        Peer     => $self->{'peer'},
+                                     );
+    if(!defined $sock or !$sock->connected()) {
+        my $msg = "failed to connect to $self->{'peer'} :$!";
+        if($self->{'errors_are_fatal'}) {
+            croak($msg);
+        }
+        $Nagios::MKLivestatus::ErrorCode    = 500;
+        $Nagios::MKLivestatus::ErrorMessage = $msg;
+        return;
+    }
+
     return($sock);
 }
 

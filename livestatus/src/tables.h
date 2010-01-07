@@ -23,6 +23,8 @@ class TableDownComm;
 EXTERN TableDownComm      *g_table_comments;
 class TableTimeperiods;
 EXTERN TableTimeperiods   *g_table_timeperiods;
+class TableContactgroups;
+EXTERN TableContactgroups *g_table_contactgroups;
 class TableStatus;
 EXTERN TableStatus        *g_table_status;
 class TableLog;

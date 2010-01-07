@@ -1,12 +1,13 @@
 #ifndef LogEntry_h
 #define LogEntry_h
 
-#define LOGCLASS_INFO              0
-#define LOGCLASS_STATE             1
-#define LOGCLASS_PROGRAM           2
-#define LOGCLASS_NOTIFICATION      3
-#define LOGCLASS_PASSIVECHECK      4
-#define LOGCLASS_COMMAND           5
+#define LOGCLASS_INFO              0 // all messages not in any other class
+#define LOGCLASS_ALERT             1 // alerts: the change service/host state
+#define LOGCLASS_PROGRAM           2 // important programm events (restart, ...)
+#define LOGCLASS_NOTIFICATION      3 // host/service notifications
+#define LOGCLASS_PASSIVECHECK      4 // passive checks
+#define LOGCLASS_COMMAND           5 // external commands
+#define LOGCLASS_STATE             6 // initial or current states
 #define LOGCLASS_INVALID          -1 // never stored
 #define LOGCLASS_ALL          0xffff
 

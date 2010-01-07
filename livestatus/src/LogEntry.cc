@@ -74,7 +74,11 @@ bool LogEntry::handleStatusEntry()
        || !strncmp(_text, "CURRENT HOST STATE: ", 20)
        || !strncmp(_text, "HOST ALERT: ", 12))
     {
-	_logclass = LOGCLASS_STATE;
+	if (_text[0] == 'H')
+	    _logclass = LOGCLASS_ALERT;
+	else
+	    _logclass = LOGCLASS_STATE;
+
 	char *scan = _text;
 	_text = next_token(&scan, ':');
 	scan++;
@@ -89,7 +93,7 @@ bool LogEntry::handleStatusEntry()
     else if (!strncmp(_text, "HOST DOWNTIME ALERT: ", 21)
 	    || !strncmp(_text, "HOST FLAPPING ALERT: ", 21))
     {
-	_logclass = LOGCLASS_STATE;
+	_logclass = LOGCLASS_ALERT;
 	char *scan = _text;
 	_text = next_token(&scan, ':');
 	scan++;
@@ -105,7 +109,10 @@ bool LogEntry::handleStatusEntry()
        || !strncmp(_text, "CURRENT SERVICE STATE: ", 23)
        || !strncmp(_text, "SERVICE ALERT: ", 15))
     {
-	_logclass = LOGCLASS_STATE;
+	if (_text[0] == 'S')
+	    _logclass = LOGCLASS_ALERT;
+	else
+	    _logclass = LOGCLASS_STATE;
 	char *scan = _text;
 	_text = next_token(&scan, ':');
 	scan++;
@@ -121,7 +128,7 @@ bool LogEntry::handleStatusEntry()
     else if (!strncmp(_text, "SERVICE DOWNTIME ALERT: ", 24)
           || !strncmp(_text, "SERVICE FLAPPING ALERT: ", 24))
     {
-	_logclass = LOGCLASS_STATE;
+	_logclass = LOGCLASS_ALERT;
 	char *scan = _text;
 	_text = next_token(&scan, ':');
 	scan++;

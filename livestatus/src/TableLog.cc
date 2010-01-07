@@ -52,18 +52,6 @@ extern time_t last_log_rotation;
      Die Verknuefpungen der External-Commands stellen wir
      noch zurueck.
 
-   - Die Initial und current states sollte man in eine
-     eigene Klasse packen. Die braucht man nur bei den
-     Reports. Und sie machen die Loewenanteil aus. 
-
-   - Bei allen Logmeldungen die komplette Zeile irgendwie
-     verfuegbar machen.
-
-   - Das erste Feld (vor dem Doppelpunkt) irgendwie einheitlich
-     verfuegbar machen.
-
-   - Status "Recovery" (siehe Patch von Sven)
-
    - Dokumentation dazu: Ueber die Klassen, die Verknuepfungen,
      die Speicherverwaltung, die Rotation, usw.
 
@@ -88,6 +76,8 @@ TableLog::TableLog(unsigned long max_cached_messages)
 
     addColumn(new OffsetStringColumn("message", 
 		"The complete message line including the timestamp", (char *)&(ref->_complete) - (char *)ref, -1));
+    addColumn(new OffsetStringColumn("type", 
+		"The type of the message (text before the colon), the message itself for info messages", (char *)&(ref->_text) - (char *)ref, -1));
     addColumn(new OffsetStringColumn("options", 
 		"The part of the message after the ':'", (char *)&(ref->_options) - (char *)ref, -1));
     addColumn(new OffsetStringColumn("comment", 

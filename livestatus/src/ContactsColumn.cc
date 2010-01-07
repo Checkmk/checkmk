@@ -29,6 +29,8 @@
 #include "Query.h"
 #include "tables.h"
 
+extern contact *contact_list;
+
 void *ContactsColumn::getNagiosObject(char *name)
 {
    return (void *)find_contact(name);
@@ -41,11 +43,9 @@ void ContactsColumn::output(void *data, Query *query)
 
    if (data) {
       bool first = true;
-      for (set<contact *>::iterator it = g_table_contacts->contactsIteratorBegin();
-	    it != g_table_contacts->contactsIteratorEnd();
-	    ++it)
-      {
-	 contact *ctc = *it;
+
+      contact *ctc = contact_list;
+      while (ctc) {
 	 if (isNagiosMember(data, ctc)) {
 	    if (first)
 	       first = false;
@@ -53,6 +53,7 @@ void ContactsColumn::output(void *data, Query *query)
 	       query->outputListSeparator();
 	    query->outputString(ctc->name);
 	 }
+	 ctc = ctc->next;
       }
    }
    query->outputEndList();

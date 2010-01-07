@@ -184,7 +184,7 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 	    "Wether this host is currently in its check period (0/1)", (char *)(&hst.check_period_ptr) - ref, indirect_offset));
 
    table->addColumn(new HostContactsColumn(prefix + "contacts", 
-	    "A list of all contacts of this host", indirect_offset));
+	    "A list of all contacts of this host, either direct or via a contact group", indirect_offset));
    table->addColumn(new DownCommColumn(prefix + "downtimes", 
 	    "A list of the ids of all scheduled downtimes of this host", indirect_offset, true));
    table->addColumn(new DownCommColumn(prefix + "comments", 

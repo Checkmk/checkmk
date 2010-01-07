@@ -233,7 +233,7 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
 
 
    table->addColumn(new ServiceContactsColumn(prefix + "contacts", 
-	    "A list of all contacts of the service", indirect_offset));
+	    "A list of all contacts of the service, either direct or via a contact group", indirect_offset));
    table->addColumn(new DownCommColumn(prefix + "downtimes", 
 	    "A list of all downtime ids of the service", indirect_offset, true));
    table->addColumn(new DownCommColumn(prefix + "comments", 

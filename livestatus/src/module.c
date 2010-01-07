@@ -288,14 +288,6 @@ int broker_check(int event_type, void *data)
 }
 
 
-int broker_contact(int event_type, void *data)
-{
-   nebstruct_contact_status_data *ctc = (nebstruct_contact_status_data *) data;
-   contact *c = (contact *)ctc->object_ptr;
-   store_register_contact(c);
-   g_counters[COUNTER_NEB_CALLBACKS]++;
-}
-
 int broker_comment(int event_type, void *data)
 {
    nebstruct_comment_data *co = (nebstruct_comment_data *)data;
@@ -314,7 +306,6 @@ void register_callbacks()
 {
    neb_register_callback(NEBCALLBACK_HOST_STATUS_DATA,      g_nagios_handle, 0, broker_host);
    neb_register_callback(NEBCALLBACK_SERVICE_STATUS_DATA,   g_nagios_handle, 0, broker_service);
-   neb_register_callback(NEBCALLBACK_CONTACT_STATUS_DATA,   g_nagios_handle, 0, broker_contact);
    neb_register_callback(NEBCALLBACK_COMMENT_DATA,          g_nagios_handle, 0, broker_comment);
    neb_register_callback(NEBCALLBACK_DOWNTIME_DATA,         g_nagios_handle, 0, broker_downtime);
    neb_register_callback(NEBCALLBACK_SERVICE_CHECK_DATA,    g_nagios_handle, 0, broker_check);
@@ -325,7 +316,6 @@ void deregister_callbacks()
 {
    neb_deregister_callback(NEBCALLBACK_HOST_STATUS_DATA,      broker_host);
    neb_deregister_callback(NEBCALLBACK_SERVICE_STATUS_DATA,   broker_service);
-   neb_deregister_callback(NEBCALLBACK_CONTACT_STATUS_DATA,   broker_contact);
    neb_deregister_callback(NEBCALLBACK_COMMENT_DATA,          broker_downtime);
    neb_deregister_callback(NEBCALLBACK_DOWNTIME_DATA,         broker_downtime);
    neb_deregister_callback(NEBCALLBACK_SERVICE_CHECK_DATA,    broker_downtime);

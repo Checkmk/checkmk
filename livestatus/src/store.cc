@@ -90,11 +90,6 @@ void store_register_host(host *h)
   g_store->registerHost(h);
 }
 
-void store_register_contact(contact *c)
-{
-  g_store->registerContact(c);
-}
-
 void store_register_comment(nebstruct_comment_data *d)
 {
    g_store->registerComment(d);

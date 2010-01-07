@@ -22,8 +22,7 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#define NSCORE
-#include "nagios/objects.h"
+#include "nagios.h"
 #include "TableContacts.h"
 #include "Query.h"
 #include "OffsetStringColumn.h"
@@ -31,6 +30,7 @@
 #include "OffsetTimeperiodColumn.h"
 #include "CustomVarsColumn.h"
 
+extern contact *contact_list;
 
 TableContacts::TableContacts()
 {
@@ -78,18 +78,13 @@ void TableContacts::addColumns(Table *table, string prefix, int indirect_offset)
 	    "A list of the values of all custom variables of the contact", (char *)(&ctc.custom_variables) - ref, indirect_offset, CVT_VALUES));
 }
 
-void TableContacts::add(contact *ctc)
-{
-   _contacts.insert(ctc);
-}
 
 void TableContacts::answerQuery(Query *query)
 {
-   for (_contacts_t::const_iterator it = _contacts.begin();
-	 it != _contacts.end();
-	 ++it)
-   {
-      if (!query->processDataset(*it))
+   contact *ct = contact_list;
+   while (ct) {
+      if (!query->processDataset(ct))
 	 break;
+      ct = ct->next;
    }
 }

@@ -95,11 +95,6 @@ void Store::registerService(service *s)
     _table_services.add(s);
 }
 
-void Store::registerContact(contact *s)
-{
-    _table_contacts.add(s);
-}
-
 void Store::registerComment(nebstruct_comment_data *d)
 {
     _table_comments.addComment(d);

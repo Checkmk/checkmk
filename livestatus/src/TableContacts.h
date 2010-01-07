@@ -26,24 +26,16 @@
 #define TableContacts_h
 
 #include "config.h"
-
-#include <set>
 #include "Table.h"
-#include "nagios/objects.h"
+#include "objects.h"
 
 class TableContacts : public Table
 {
-  typedef set<contact *> _contacts_t;
-  _contacts_t _contacts;
-
 public:
   TableContacts();
   const char *name() { return "contacts"; };
   void addColumns(Table *, string prefix, int indirect_offset);
-  void add(contact *ctc);
   void answerQuery(Query *query);
-  _contacts_t::iterator contactsIteratorBegin() { return _contacts.begin(); }
-  _contacts_t::iterator contactsIteratorEnd() { return _contacts.end(); }
 };
 
 #endif // TableContacts_h

@@ -36,7 +36,6 @@ extern "C"
   void store_deinit();
   void store_register_service(service *);
   void store_register_host(host *);
-  void store_register_contact(contact *);
   void store_register_comment(nebstruct_comment_data *);
   void store_register_downtime(nebstruct_downtime_data *);
   int  store_answer_request(void *input_buffer, void *output_buffer);

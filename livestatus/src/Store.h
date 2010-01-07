@@ -66,7 +66,6 @@ public:
   void registerHost(host *);
   void registerService(service *);
   void registerHostgroup(hostgroup *);
-  void registerContact(contact *);
   void registerComment(nebstruct_comment_data *);
   void registerDowntime(nebstruct_downtime_data *);
   bool answerRequest(InputBuffer *, OutputBuffer *);

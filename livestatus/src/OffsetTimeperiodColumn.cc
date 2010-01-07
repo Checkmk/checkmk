@@ -29,36 +29,54 @@
 #include "logger.h"
 
 
+OffsetTimeperiodColumn::OffsetTimeperiodColumn(string name, string description, int offset, int indirect_offset) 
+    : OffsetIntColumn(name, description, offset, indirect_offset), _cache_time(0) 
+{
+    pthread_mutex_init(&_cache_lock, 0);
+}
+
+
+OffsetTimeperiodColumn::~OffsetTimeperiodColumn()
+{
+    pthread_mutex_destroy(&_cache_lock);
+}
+
 int32_t OffsetTimeperiodColumn::getValue(void *data)
 {
-   data = shiftPointer(data);
-   if (!data)
-      return 0;
+    data = shiftPointer(data);
+    if (!data)
+	return 0;
 
-   timeperiod *tp = *(timeperiod **)((char *)data + offset());
+    timeperiod *tp = *(timeperiod **)((char *)data + offset());
 
-   if (!tp)
-      return 1; // no timeperiod set -> Nagios assumes 7x24
-   else if (inTimeperiod(tp))
-      return 1;
-   else
-      return 0;
+    if (!tp)
+	return 1; // no timeperiod set -> Nagios assumes 7x24
+    else if (inTimeperiod(tp))
+	return 1;
+    else
+	return 0;
 }
 
 bool OffsetTimeperiodColumn::inTimeperiod(timeperiod *tp)
 {
-   time_t now = time(0);
-   if (now != _cache_time) {
-      _cache.clear();
-      _cache_time = now;
-   }
+    pthread_mutex_lock(&_cache_lock);
 
-   _cache_t::iterator it = _cache.find(tp);
-   if (it != _cache.end())
-      return it->second;
+    time_t now = time(0);
+    if (now != _cache_time) {
+	_cache.clear();
+	_cache_time = now;
+    }
 
-   bool in = 0 == check_time_against_period(now, tp);
-   _cache.insert(make_pair(tp, in));
-   return in;
+    bool is_in;
+
+    _cache_t::iterator it = _cache.find(tp);
+    if (it != _cache.end())
+	is_in = it->second;
+    else {
+	is_in = 0 == check_time_against_period(now, tp);
+	_cache.insert(make_pair(tp, is_in));
+    }
+    pthread_mutex_unlock(&_cache_lock);
+    return is_in;
 }
 

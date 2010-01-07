@@ -9,11 +9,26 @@ LogEntry::LogEntry(unsigned lineno, char *line)
     bzero(this, sizeof(LogEntry));
     _lineno = lineno;
 
-    // make a copy of the message
+    // make a copy of the message and strip trailing newline
     _msg = strdup(line);
     _msglen = strlen(line);
     while (_msglen > 0 && _msg[_msglen-1] == '\n')
 	_msg[--_msglen] = '\0';
+
+    // keep unsplitted copy of the message (needs lots of memory,
+    // maybe we could optimize that one day...)
+    _complete = strdup(_msg);
+
+    // pointer to options (everything after ':')
+    _options = _complete;
+    while (*_options && *_options != ':')
+	_options ++;
+    if (*_options) // line contains colon
+    {
+	_options ++; // skip ':'
+	while (*_options == ' ')
+	    _options ++; // skip space after ':' 
+    }
 
     // [1260722267] xxx - extract timestamp, validate message
     if (_msglen < 13 || _msg[0] != '[' || _msg[11] != ']') {
@@ -48,6 +63,7 @@ LogEntry::LogEntry(unsigned lineno, char *line)
 LogEntry::~LogEntry()
 {
     free(_msg);
+    free(_complete);
 }
 
 

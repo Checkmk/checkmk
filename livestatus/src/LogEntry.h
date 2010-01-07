@@ -17,6 +17,8 @@ struct LogEntry
     unsigned   _lineno;      // line number in file
     time_t     _time;
     unsigned   _logclass;
+    char      *_complete;  // copy of complete unsplit message
+    char      *_options;   // points into _complete after ':'
     char      *_msg;       // split up with binary zeroes
     unsigned   _msglen;    // size of _msg
     char      *_text;      // points into msg

@@ -215,9 +215,10 @@ int LogEntry::serviceStateToInt(char *s)
     if (*last == ')')
 	last--;
 
-    // WARN, CRIT, OK, UNKNOWN
+    // WARN, CRIT, OK, UNKNOWN, RECOVERY
     switch (*last) {
 	case 'K': return 0;
+	case 'Y': return 0;
 	case 'G': return 1;
 	case 'L': return 2;
 	case 'N': return 3;
@@ -232,9 +233,10 @@ int LogEntry::hostStateToInt(char *s)
     if (*last == ')')
 	last--;
 
-    // UP, DOWN, UNREACHABLE
+    // UP, DOWN, UNREACHABLE, RECOVERY
     switch (*last) {
 	case 'P': return 0;
+	case 'Y': return 0;
 	case 'N': return 1;
 	case 'E': return 2;
 	default:  return 3;

@@ -21,6 +21,8 @@ class TableDownComm;
 EXTERN TableDownComm      *g_table_downtimes;
 class TableDownComm;
 EXTERN TableDownComm      *g_table_comments;
+class TableTimeperiods;
+EXTERN TableTimeperiods   *g_table_timeperiods;
 class TableStatus;
 EXTERN TableStatus        *g_table_status;
 class TableLog;

@@ -33,6 +33,7 @@
 #include "TableServicegroups.h"
 #include "TableContacts.h"
 #include "TableCommands.h"
+#include "TableTimeperiods.h"
 #include "TableDownComm.h"
 #include "TableStatus.h"
 #include "TableLog.h"
@@ -48,6 +49,7 @@ class Store
   TableServices      _table_services;
   TableHostgroups    _table_hostgroups;
   TableServicegroups _table_servicegroups;
+  TableTimeperiods   _table_timeperiods;
   TableDownComm      _table_downtimes;
   TableDownComm      _table_comments;
   TableStatus        _table_status;

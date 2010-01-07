@@ -41,7 +41,7 @@ livestatus_so_SOURCES = \
 	StringColumn.cc StringColumnFilter.cc strutil.cc Table.cc TableColumns.cc \
 	TableCommands.cc TableContacts.cc TableDownComm.cc TableHostgroups.cc \
 	TableHosts.cc TableServicegroups.cc TableServices.cc TableStatus.cc  \
-	LogEntry.cc Logfile.cc TableLog.cc \
+	LogEntry.cc Logfile.cc TableLog.cc TableTimeperiods.cc \
 	global_counters.c  module.c  logger.c 
 
 livestatus_so_CXXFLAGS = -I$(top_srcdir)/nagios -fPIC

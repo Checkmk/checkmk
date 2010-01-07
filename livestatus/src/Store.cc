@@ -50,6 +50,7 @@ Store::Store()
     _tables.insert(make_pair("comments", &_table_comments));
     _tables.insert(make_pair("status", &_table_status));
     _tables.insert(make_pair("log", &_table_log));
+    _tables.insert(make_pair("timeperiods", &_table_timeperiods));
     _tables.insert(make_pair("columns", &_table_columns));
 
     g_table_hosts = &_table_hosts;
@@ -61,6 +62,7 @@ Store::Store()
     g_table_downtimes = &_table_downtimes;
     g_table_comments = &_table_comments;
     g_table_status = &_table_status;
+    g_table_timeperiods = &_table_timeperiods;
     g_table_log = &_table_log;
     g_table_columns = &_table_columns;
 

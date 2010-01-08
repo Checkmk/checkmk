@@ -21,6 +21,7 @@ public:
     virtual service *getService(void *) = 0;
 private:
     const char *expandMacro(const char *macroname, host *hst, service *svc);
+    const char *expandCustomVariables(const char *varname, customvariablesmember *custvars);
 };
 
 #endif // OffsetStringMacroColumn_h

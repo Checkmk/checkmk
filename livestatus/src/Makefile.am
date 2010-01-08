@@ -43,6 +43,7 @@ livestatus_so_SOURCES = \
 	TableHosts.cc TableServicegroups.cc TableServices.cc TableStatus.cc  \
 	LogEntry.cc Logfile.cc TableLog.cc TableTimeperiods.cc TableContactgroups.cc \
 	ContactgroupsMemberColumn.cc OffsetStringMacroColumn.cc OffsetStringServiceMacroColumn.cc \
+	OffsetStringHostMacroColumn.cc \
 	global_counters.c  module.c  logger.c 
 
 livestatus_so_CXXFLAGS = -I$(top_srcdir)/nagios -fPIC

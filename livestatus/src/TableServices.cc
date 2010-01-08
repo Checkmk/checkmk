@@ -134,6 +134,8 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
 	    "The name of the check period of the service. It this is empty, the service is always checked.", (char *)(&svc.check_period) - ref, indirect_offset));
    table->addColumn(new OffsetStringColumn(prefix + "notes", 
 	    "Optional notes about the service", (char *)(&svc.notes) - ref, indirect_offset));
+   table->addColumn(new OffsetStringServiceMacroColumn(prefix + "notes__expanded", 
+	    "The notes with (the most important) macros expanded", (char *)(&svc.notes) - ref, indirect_offset));
    table->addColumn(new OffsetStringColumn(prefix + "notes_url", 
 	    "An optional URL for additional notes about the service", (char *)(&svc.notes_url) - ref, indirect_offset));
    table->addColumn(new OffsetStringServiceMacroColumn(prefix + "notes_url_expanded", 

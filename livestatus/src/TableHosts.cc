@@ -30,6 +30,7 @@
 #include "OffsetIntColumn.h"
 #include "OffsetDoubleColumn.h"
 #include "OffsetTimeperiodColumn.h"
+#include "OffsetStringHostMacroColumn.h"
 #include "HostContactsColumn.h"
 #include "DownCommColumn.h"
 #include "CustomVarsColumn.h"
@@ -68,10 +69,16 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 	    "Time period in which this host will be checked. If empty then the host will always be checked.", (char *)(&hst.check_period) - ref, indirect_offset));
    table->addColumn(new OffsetStringColumn(prefix + "notes", 
 	    "Optional notes for this host", (char *)(&hst.notes) - ref, indirect_offset));
+   table->addColumn(new OffsetStringHostMacroColumn(prefix + "notes_expanded", 
+	    "The same as notes, but with the most important macros expanded", (char *)(&hst.notes) - ref, indirect_offset));
    table->addColumn(new OffsetStringColumn(prefix + 
 	    "notes_url", "An optional URL with further information about the host", (char *)(&hst.notes_url) - ref, indirect_offset));
+   table->addColumn(new OffsetStringHostMacroColumn(prefix + 
+	    "notes_url_expanded", "Same es notes_url, but with the most important macros expanded", (char *)(&hst.notes_url) - ref, indirect_offset));
    table->addColumn(new OffsetStringColumn(prefix + "action_url", 
 	    "An optional URL to custom actions or information about this host", (char *)(&hst.action_url) - ref, indirect_offset));
+   table->addColumn(new OffsetStringHostMacroColumn(prefix + "action_url_expanded", 
+	    "The same as action_url, but with the most important macros expanded", (char *)(&hst.action_url) - ref, indirect_offset));
    table->addColumn(new OffsetStringColumn(prefix + "plugin_output", 
 	    "Output of the last host check", (char *)(&hst.plugin_output) - ref, indirect_offset));
    table->addColumn(new OffsetStringColumn(prefix + "perf_data", 

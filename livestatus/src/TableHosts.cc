@@ -41,6 +41,7 @@
 #include "HostSpecialIntColumn.h"
 #include "tables.h"
 
+extern host *host_list;
 
 TableHosts::TableHosts()
 {
@@ -240,10 +241,6 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 }
 
 
-void TableHosts::add(host *hst)
-{
-   _hosts.insert(hst);
-}
 
 void TableHosts::answerQuery(Query *query)
 {
@@ -260,11 +257,10 @@ void TableHosts::answerQuery(Query *query)
    }
 
    // no index -> linear search over all hosts
-   for (_hosts_t::const_iterator it = _hosts.begin();
-	 it != _hosts.end();
-	 ++it)
-   {
-      if (!query->processDataset(*it))
+   host *hst = host_list;
+   while (hst) {
+      if (!query->processDataset(hst))
 	 break;
+      hst = hst->next;
    }
 }

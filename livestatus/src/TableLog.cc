@@ -52,9 +52,6 @@ extern time_t last_log_rotation;
      Die Verknuefpungen der External-Commands stellen wir
      noch zurueck.
 
-   - Dokumentation dazu: Ueber die Klassen, die Verknuepfungen,
-     die Speicherverwaltung, die Rotation, usw.
-
 */
 
 int num_cached_log_messages = 0;

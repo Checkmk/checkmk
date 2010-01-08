@@ -80,15 +80,6 @@ void queue_wakeup_all()
    return g_client_queue->wakeupAll();
 }
 
-void store_register_service(service *s)
-{
-  g_store->registerService(s);
-}
-
-void store_register_host(host *h)
-{
-  g_store->registerHost(h);
-}
 
 void store_register_comment(nebstruct_comment_data *d)
 {

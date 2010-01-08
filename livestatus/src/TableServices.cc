@@ -38,6 +38,8 @@
 #include "ServicegroupsColumn.h"
 #include "tables.h"
 
+extern service *service_list;
+
 void TableServices::answerQuery(Query *query)
 {
    // do we know the host?
@@ -85,19 +87,12 @@ void TableServices::answerQuery(Query *query)
    }
 
    // no index -> iterator over *all* services
-   for (_services_t::const_iterator it = _services.begin();
-	 it != _services.end();
-	 ++it)
-   {
-      if (!query->processDataset(*it))
+   service *svc = service_list;
+   while (svc) {
+      if (!query->processDataset(svc))
 	 break;
+      svc = svc->next;
    }
-}
-
-
-void TableServices::add(service *svc)
-{
-   _services.insert(svc);
 }
 
 

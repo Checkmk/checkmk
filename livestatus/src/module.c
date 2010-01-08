@@ -252,27 +252,12 @@ void close_unix_socket()
 
 int broker_host(int event_type, void *data)
 {
-    nebstruct_host_status_data *hst = (nebstruct_host_status_data *) data;
-    host *h = (host *)hst->object_ptr;
-    store_register_host(h);
-    customvariablesmember *cvm = h->custom_variables;
-    while (cvm) {
-	cvm = cvm->next;
-    }
+    // This is a hack that assures that our client threads
+    // are started not before Nagios is really up and running!
     start_threads();
     g_counters[COUNTER_NEB_CALLBACKS]++;
 }
 
-/* Dies wird aufgerufen, wenn sich an einem Service was aendert. 
-   Auch beim Start des Programmes. Eigentlich wuerde uns das reichen,
-   weil wir spaeter direkt auf die Services zugreifen. */
-int broker_service(int event_type, void *data)
-{
-    nebstruct_service_status_data *svc = (nebstruct_service_status_data *) data;
-    service *s = (service *)svc->object_ptr;
-    store_register_service(s);
-    g_counters[COUNTER_NEB_CALLBACKS]++;
-}
 
 int broker_check(int event_type, void *data)
 {
@@ -307,22 +292,20 @@ int broker_downtime(int event_type, void *data)
 
 void register_callbacks()
 {
-    neb_register_callback(NEBCALLBACK_HOST_STATUS_DATA,      g_nagios_handle, 0, broker_host);
-    neb_register_callback(NEBCALLBACK_SERVICE_STATUS_DATA,   g_nagios_handle, 0, broker_service);
-    neb_register_callback(NEBCALLBACK_COMMENT_DATA,          g_nagios_handle, 0, broker_comment);
-    neb_register_callback(NEBCALLBACK_DOWNTIME_DATA,         g_nagios_handle, 0, broker_downtime);
-    neb_register_callback(NEBCALLBACK_SERVICE_CHECK_DATA,    g_nagios_handle, 0, broker_check);
-    neb_register_callback(NEBCALLBACK_HOST_CHECK_DATA,       g_nagios_handle, 0, broker_check);
+    neb_register_callback(NEBCALLBACK_HOST_STATUS_DATA,      g_nagios_handle, 0, broker_host); // Needed to start threads
+    neb_register_callback(NEBCALLBACK_COMMENT_DATA,          g_nagios_handle, 0, broker_comment); // dynamic data
+    neb_register_callback(NEBCALLBACK_DOWNTIME_DATA,         g_nagios_handle, 0, broker_downtime); // dynamic data
+    neb_register_callback(NEBCALLBACK_SERVICE_CHECK_DATA,    g_nagios_handle, 0, broker_check); // only for statistics
+    neb_register_callback(NEBCALLBACK_HOST_CHECK_DATA,       g_nagios_handle, 0, broker_check); // only for statistics
 }
 
 void deregister_callbacks()
 {
     neb_deregister_callback(NEBCALLBACK_HOST_STATUS_DATA,      broker_host);
-    neb_deregister_callback(NEBCALLBACK_SERVICE_STATUS_DATA,   broker_service);
-    neb_deregister_callback(NEBCALLBACK_COMMENT_DATA,          broker_downtime);
+    neb_deregister_callback(NEBCALLBACK_COMMENT_DATA,          broker_comment);
     neb_deregister_callback(NEBCALLBACK_DOWNTIME_DATA,         broker_downtime);
-    neb_deregister_callback(NEBCALLBACK_SERVICE_CHECK_DATA,    broker_downtime);
-    neb_deregister_callback(NEBCALLBACK_HOST_CHECK_DATA,       broker_downtime);
+    neb_deregister_callback(NEBCALLBACK_SERVICE_CHECK_DATA,    broker_check);
+    neb_deregister_callback(NEBCALLBACK_HOST_CHECK_DATA,       broker_check);
 }
 
 

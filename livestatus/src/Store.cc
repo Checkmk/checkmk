@@ -88,15 +88,6 @@ Table *Store::findTable(string name)
 	return it->second;
 }
 
-void Store::registerHost(host *h)
-{
-    _table_hosts.add(h);
-}
-
-void Store::registerService(service *s)
-{
-    _table_services.add(s);
-}
 
 void Store::registerComment(nebstruct_comment_data *d)
 {

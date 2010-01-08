@@ -38,9 +38,6 @@ class TableDowntimes;
 
 class TableServices : public Table
 {
-    typedef set<service *> _services_t;
-    _services_t _services;
-
 public:
     TableServices();
     const char *name() { return "services"; };

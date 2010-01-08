@@ -63,8 +63,6 @@ class Store
 
 public:
   Store();
-  void registerHost(host *);
-  void registerService(service *);
   void registerHostgroup(hostgroup *);
   void registerComment(nebstruct_comment_data *);
   void registerDowntime(nebstruct_downtime_data *);

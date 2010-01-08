@@ -35,14 +35,10 @@ class TableDownComm;
 
 class TableHosts : public Table
 {
-  typedef set<host *> _hosts_t;
-  _hosts_t _hosts;
-
 public:
   TableHosts();
   const char *name() { return "hosts"; };
   void addColumns(Table *, string prefix, int indirect_offset);
-  void add(host *hst);
   void answerQuery(Query *query);
 };
 

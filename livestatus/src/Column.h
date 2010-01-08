@@ -43,6 +43,7 @@ class Column
 {
     string _name;
     string _description;
+public:
     int _indirect_offset;
 
 public:

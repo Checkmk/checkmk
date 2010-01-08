@@ -30,6 +30,7 @@
 #include "OffsetIntColumn.h"
 #include "OffsetDoubleColumn.h"
 #include "OffsetTimeperiodColumn.h"
+#include "OffsetStringServiceMacroColumn.h"
 #include "TableHosts.h"
 #include "ServiceContactsColumn.h"
 #include "DownCommColumn.h"
@@ -135,8 +136,12 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
 	    "Optional notes about the service", (char *)(&svc.notes) - ref, indirect_offset));
    table->addColumn(new OffsetStringColumn(prefix + "notes_url", 
 	    "An optional URL for additional notes about the service", (char *)(&svc.notes_url) - ref, indirect_offset));
+   table->addColumn(new OffsetStringServiceMacroColumn(prefix + "notes_url_expanded", 
+	    "The notes_url with (the most important) macros expanded", (char *)(&svc.notes_url) - ref, indirect_offset));
    table->addColumn(new OffsetStringColumn(prefix + "action_url", 
 	    "An optional URL for actions or custom information about the service", (char *)(&svc.action_url) - ref, indirect_offset));
+   table->addColumn(new OffsetStringServiceMacroColumn(prefix + "action_url_expanded", 
+	    "The action_url with (the most important) macros expanded", (char *)(&svc.action_url) - ref, indirect_offset));
    table->addColumn(new OffsetStringColumn(prefix + "icon_image", 
 	    "The name of an image to be used as icon in the web interface", (char *)(&svc.icon_image) - ref, indirect_offset));
    table->addColumn(new OffsetStringColumn(prefix + "icon_image_alt", 

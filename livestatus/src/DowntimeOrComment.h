@@ -109,11 +109,11 @@ struct Downtime : public DowntimeOrComment
 
 struct Comment : public DowntimeOrComment
 {
+   time_t        _expire_time;
    int           _persistent;
    int           _source;
    int           _entry_type;
    int           _expires;
-   time_t        _expire_time;
    Comment(nebstruct_comment_struct *data);
 };
 

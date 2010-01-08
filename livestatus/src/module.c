@@ -71,7 +71,8 @@ int g_debug_level = 0;
 int g_should_terminate = false;
 pthread_t g_mainthread_id;
 pthread_t g_clientthread_id[NUM_CLIENTTHREADS];
-
+unsigned long g_max_cached_messages = 500000;
+unsigned long g_max_response_size = 100 * 1024 * 1024; // limit answer to 10 MB
 int g_thread_running = 0;
 int g_thread_pid = 0;
 
@@ -345,6 +346,18 @@ void livestatus_parse_arguments(const char *args_orig)
 	    if (!strcmp(left, "debug")) {
 		g_debug_level = atoi(right);
 		logger(LG_INFO, "Setting debug level to %d", g_debug_level);
+	    }
+	    else if (!strcmp(left, "max_cached_messages")) {
+		g_max_cached_messages = strtoul(right, 0, 10);
+		logger(LG_INFO, "Setting max number of cached log messages to %lu", g_max_cached_messages);
+	    }
+	    else if (!strcmp(left, "max_response_size")) {
+		g_max_response_size = strtoul(right, 0, 10);
+		logger(LG_INFO, "Setting maximum response size to %lu bytes (%.1f MB)", 
+			g_max_response_size, g_max_response_size / (1024.0*1024.0));
+	    }
+	    else {
+		logger(LG_INFO, "Ignoring invalid option %s=%s", left, right);
 	    }
 	}
     } 

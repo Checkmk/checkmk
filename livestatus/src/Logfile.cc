@@ -173,7 +173,8 @@ bool Logfile::answerQuery(Query *query, TableLog *tablelog, time_t since, time_t
 	LogEntry *entry = it->second;
 	if (entry->_time >= until)
 	    return false; // end found
-	query->processDataset(entry);
+	if (!query->processDataset(entry))
+	    return false; // limit exceeded
 	++it;
     }
     return true;

@@ -85,7 +85,6 @@ bool DownCommColumn::isEmpty(void *data)
 	    it != table->entriesIteratorEnd();
 	    ++it)
     {
-	unsigned long id = it->first;
 	DowntimeOrComment *dt = it->second;
 	if ((void *)dt->_service == data ||
 		(dt->_service == 0 && dt->_host == data))

@@ -36,11 +36,12 @@
 #undef EXTERN
 
 extern int g_debug_level;
+extern unsigned long g_max_cached_messages;
 
 Store::Store()
     : _table_downtimes(true)
     , _table_comments(false)
-    , _table_log(100000)
+    , _table_log(g_max_cached_messages)
 {
     _tables.insert(make_pair("hosts", &_table_hosts));
     _tables.insert(make_pair("services", &_table_services));
@@ -140,7 +141,8 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
 void Store::answerCommandRequest(const char *command)
 {
     int buffer_items = -1;
-    int ret = submit_external_command((char *)command, &buffer_items);
+    /* int ret = */
+    submit_external_command((char *)command, &buffer_items);
 }
 
 

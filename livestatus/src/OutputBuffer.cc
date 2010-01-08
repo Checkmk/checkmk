@@ -34,7 +34,7 @@
 #define WRITE_TIMEOUT_USEC 100000
 
 
-   OutputBuffer::OutputBuffer()
+OutputBuffer::OutputBuffer()
    : _max_size(INITIAL_OUTPUT_BUFFER_SIZE)
 {
    _buffer = (char *)malloc(_max_size);

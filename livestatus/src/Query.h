@@ -60,9 +60,9 @@ class Query
    string        _dataset_separator;
    string        _list_separator;
    string        _host_service_separator;
-   int           _output_format;
    bool          _show_column_headers;
    bool          _need_ds_separator;
+   int           _output_format;
    int           _limit;
    unsigned      _current_line;
 

@@ -38,6 +38,7 @@
 #include "InputBuffer.h"
 
 extern int g_debug_level;
+extern unsigned long g_max_response_size;
 
 Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
    _output(output),
@@ -442,9 +443,18 @@ void Query::finish()
 
 bool Query::processDataset(void *data)
 {
+   if (_output->size() > g_max_response_size) {
+	logger(LG_INFO, "Maximum response size of %d bytes exceeded!", g_max_response_size);
+	// _output->setError(RESPONSE_CODE_LIMIT_EXCEEDED, "Maximum response size of %d reached", g_max_response_size);
+	// currently we only log an error into the log file and do
+	// not abort the query. We handle it like Limit:
+	return false;
+   }
+    
+
    if (_filter.accepts(data)) {
       _current_line++;
-      if (_limit >= 0 && _current_line > _limit)
+      if (_limit >= 0 && (int)_current_line > _limit)
 	 return false;
 
       if (doStats())

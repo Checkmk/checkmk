@@ -55,9 +55,6 @@ extern time_t last_log_rotation;
    - Dokumentation dazu: Ueber die Klassen, die Verknuepfungen,
      die Speicherverwaltung, die Rotation, usw.
 
-   - Konfiguration der Speicherverwaltung (/proc/meminfo,
-     aufrufparameter)
-
 */
 
 int num_cached_log_messages = 0;

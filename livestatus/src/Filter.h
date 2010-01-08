@@ -39,7 +39,7 @@ public:
     virtual bool accepts(void *data) = 0;
     virtual void *indexFilter(const char *columnname) { return 0; };
     virtual void findIntLimits(const char *columnname, int *lower, int *upper) {};
-    virtual bool optimizeBitmask(const char *columnname, uint32_t *mask) {};
+    virtual bool optimizeBitmask(const char *columnname, uint32_t *mask) { return false; };
 };
 
 #endif // Filter_h

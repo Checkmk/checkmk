@@ -156,5 +156,6 @@ bool IntColumnFilter::optimizeBitmask(const char *columnname, uint32_t *mask)
 	    }
 	    return true;
     }
+    return false; // should not be reached
 }
 

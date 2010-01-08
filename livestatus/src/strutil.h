@@ -27,11 +27,20 @@
 
 #include "config.h"
 
-void rstrip(char *);
-char *lstrip(char *line);
-const char *lstrip(const char *line);
-char *next_field(char **line);
-char *next_token(char **c, char delim = ';');
+#ifdef __cplusplus
+extern "C" {
+#endif
+    void rstrip(char *);
+    char *lstrip(char *line);
+#ifdef __cplusplus
+    char *next_token(char **c, char delim = ',');
+#else
+    char *next_token(char **c, char delim);
+#endif
+    char *next_field(char **line);
+#ifdef __cplusplus
+}
+#endif
 
 #endif // strutil_h
 

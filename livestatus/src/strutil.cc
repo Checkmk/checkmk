@@ -36,11 +36,6 @@ void rstrip(char *c)
 
 char *lstrip(char *c)
 {
-   return (char *)lstrip((const char *)c);
-}
-
-const char *lstrip(const char *c)
-{
    while (isspace(*c)) c++;
    return c;
 }

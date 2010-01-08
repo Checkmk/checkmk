@@ -35,6 +35,8 @@
 #include "tables.h"
 #undef EXTERN
 
+extern int g_debug_level;
+
 Store::Store()
     : _table_downtimes(true)
     , _table_comments(false)
@@ -116,12 +118,14 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
     }
     string l = input->nextLine();
     const char *line = l.c_str();
+    if (g_debug_level > 0)
+	logger(LG_INFO, "Query: %s", line);
     if (!strncmp(line, "GET ", 4))
-	answerGetRequest(input, output, lstrip(line + 4));
+	answerGetRequest(input, output, lstrip((char *)line + 4));
     else if (!strcmp(line, "GET"))
 	answerGetRequest(input, output, ""); // only to get error message
     else if (!strncmp(line, "COMMAND ", 8))
-	answerCommandRequest(lstrip(line + 8));
+	answerCommandRequest(lstrip((char *)line + 8));
     else if (!strncmp(line, "LOGROTATE", 9)) {
 	logger(LG_INFO, "Forcing logfile rotation");
 	rotate_log_file(time(0));
@@ -165,7 +169,8 @@ void Store::answerGetRequest(InputBuffer *input, OutputBuffer *output, const cha
 	query.finish();
 	gettimeofday(&after, 0);
 	unsigned long ustime = (after.tv_sec - before.tv_sec) * 1000000 + (after.tv_usec - before.tv_usec);
-	// logger(LG_INFO, "Time to process request: %lu us. Size of answer: %d bytes", ustime, output->size());
+	if (g_debug_level > 0)
+	    logger(LG_INFO, "Time to process request: %lu us. Size of answer: %d bytes", ustime, output->size());
     }
 }
 

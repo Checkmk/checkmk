@@ -37,6 +37,8 @@
 #include "OutputBuffer.h"
 #include "InputBuffer.h"
 
+extern int g_debug_level;
+
 Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
    _output(output),
    _table(table), 
@@ -56,6 +58,8 @@ Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
       string line = input->nextLine();
       char *buffer = (char *)line.c_str();
       rstrip(buffer);
+      if (g_debug_level > 0)
+	  logger(LG_INFO, "Query: %s", buffer);
       if (!strncmp(buffer, "Filter:", 7))
 	 parseFilterLine(lstrip(buffer + 7), false);
 

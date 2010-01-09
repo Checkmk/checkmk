@@ -60,7 +60,8 @@ void *ServicegroupsColumn::getNagiosObject(char *name)
 
 bool ServicegroupsColumn::isNagiosMember(void *data, void *nagobject)
 {
-   objectlist *list = getData(data);
+   // data is already shifted
+   objectlist *list = *(objectlist **)((char *)data + _offset);
    while (list) {
       if (list->object_ptr == nagobject)
 	 return true;

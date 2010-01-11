@@ -56,8 +56,8 @@
 
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
 
-#define ACCEPT_TIMEOUT_USEC 250000
-#define NUM_CLIENTTHREADS   10 /* maybe make configurable */
+int g_accept_timeout_msec = 2500; /* default is 2.5 sec */
+int g_num_clientthreads = 10;     /* allow 10 concurrent connections per default */
 
 #define false 0
 #define true 1
@@ -70,7 +70,7 @@ char g_socket_path[4096];
 int g_debug_level = 0;
 int g_should_terminate = false;
 pthread_t g_mainthread_id;
-pthread_t g_clientthread_id[NUM_CLIENTTHREADS];
+pthread_t *g_clientthread_id;
 unsigned long g_max_cached_messages = 500000;
 unsigned long g_max_response_size = 100 * 1024 * 1024; // limit answer to 10 MB
 int g_thread_running = 0;
@@ -107,8 +107,8 @@ void *main_thread(void *data)
 	    // return;
 	}
 	struct timeval tv;
-	tv.tv_sec  = ACCEPT_TIMEOUT_USEC / 1000000;
-	tv.tv_usec = ACCEPT_TIMEOUT_USEC % 1000000;
+	tv.tv_sec  = g_accept_timeout_msec / 1000;
+	tv.tv_usec = 1000 * (g_accept_timeout_msec % 1000);
 
 	fd_set fds;
 	FD_ZERO(&fds);
@@ -152,14 +152,15 @@ void *client_thread(void *data)
 
 void start_threads()
 {
+    g_clientthread_id = (pthread_t *)malloc(sizeof(pthread_t *) * g_num_clientthreads);
     if (!g_thread_running) {
 	/* start thread that listens on socket */
 	pthread_atfork(NULL, NULL, livestatus_cleanup_after_fork);
 	pthread_create(&g_mainthread_id, 0, main_thread, (void *)0);
-	logger(LG_INFO, "Starting %d client threads", NUM_CLIENTTHREADS);
+	logger(LG_INFO, "Starting %d client threads", g_num_clientthreads);
 
 	unsigned t;
-	for (t=0; t < NUM_CLIENTTHREADS; t++)
+	for (t=0; t < g_num_clientthreads; t++)
 	    pthread_create(&g_clientthread_id[t], 0, client_thread, (void *)0);
 
 	g_thread_running = 1;
@@ -175,13 +176,14 @@ void terminate_threads()
 	logger(LG_INFO, "Waiting for client threads to terminate...");
 	queue_wakeup_all();
 	unsigned t;
-	for (t=0; t < NUM_CLIENTTHREADS; t++) {
+	for (t=0; t < g_num_clientthreads; t++) {
 	    if (0 != pthread_join(g_clientthread_id[t], NULL))
 		logger(LG_INFO, "Warning: could not join thread %p", g_clientthread_id[t]);
 	}
-	logger(LG_INFO, "Main thread + %u client threads have finished", NUM_CLIENTTHREADS);
+	logger(LG_INFO, "Main thread + %u client threads have finished", g_num_clientthreads);
 	g_thread_running = 0;
     }
+    free(g_clientthread_id);
 }
 
 int open_unix_socket()
@@ -338,6 +340,24 @@ void livestatus_parse_arguments(const char *args_orig)
 		g_max_response_size = strtoul(right, 0, 10);
 		logger(LG_INFO, "Setting maximum response size to %lu bytes (%.1f MB)", 
 			g_max_response_size, g_max_response_size / (1024.0*1024.0));
+	    }
+	    else if (!strcmp(left, "num_client_threads")) {
+		int c = atoi(right);
+		if (c <= 0 || c > 1000) 
+		    logger(LG_INFO, "Error: Cannot set num_client_threads to %d. Must be > 0 and <= 1000", c);
+		else {
+		    logger(LG_INFO, "Setting number of client threads to %d", c);
+		    g_num_clientthreads = c;
+		}
+	    }
+	    else if (!strcmp(left, "accept_timeout")) {
+		int c = atoi(right);
+		if (c <= 0)
+		    logger(LG_INFO, "Error: accept_timeout must be > 0");
+		else {
+		    g_accept_timeout_msec = c;
+		    logger(LG_INFO, "Setting TCP connect timeout to %d ms", c);
+		}
 	    }
 	    else {
 		logger(LG_INFO, "Ignoring invalid option %s=%s", left, right);

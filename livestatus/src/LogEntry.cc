@@ -213,6 +213,16 @@ bool LogEntry::handleExternalCommandEntry()
 
 bool LogEntry::handleProgrammEntry()
 {
+    if (strstr(_text, "restarting...") ||
+	    strstr(_text, "starting...") ||
+	    strstr(_text, "shutting down...") ||
+	    strstr(_text, "Bailing out") ||
+	    strstr(_text, "active mode...") ||
+	    strstr(_text, "standby mode..."))
+    {
+	_logclass = LOGCLASS_PROGRAM;
+	return true;
+    }
     return false;
 }
 

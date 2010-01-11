@@ -152,7 +152,6 @@ void *client_thread(void *data)
 
 void start_threads()
 {
-    g_clientthread_id = (pthread_t *)malloc(sizeof(pthread_t *) * g_num_clientthreads);
     if (!g_thread_running) {
 	/* start thread that listens on socket */
 	pthread_atfork(NULL, NULL, livestatus_cleanup_after_fork);
@@ -160,6 +159,7 @@ void start_threads()
 	logger(LG_INFO, "Starting %d client threads", g_num_clientthreads);
 
 	unsigned t;
+	g_clientthread_id = (pthread_t *)malloc(sizeof(pthread_t) * g_num_clientthreads);
 	for (t=0; t < g_num_clientthreads; t++)
 	    pthread_create(&g_clientthread_id[t], 0, client_thread, (void *)0);
 

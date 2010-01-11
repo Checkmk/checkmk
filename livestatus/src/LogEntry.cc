@@ -200,7 +200,8 @@ bool LogEntry::handleExternalCommandEntry()
     if (!strncmp(_text, "EXTERNAL COMMAND:", 17)) 
     {
 	_logclass = LOGCLASS_COMMAND;
-	_text = _text + 18;
+	char *scan = _text;
+	_text = next_token(&scan, ':');
 	return true; // TODO: join with host/service information?
 	/* Damit wir die restlichen Spalten ordentlich befuellen, braeuchten
 	   wir eine komplette Liste von allen external commands und

@@ -141,6 +141,8 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
 	    "The action_url with (the most important) macros expanded", (char *)(&svc.action_url) - ref, indirect_offset));
    table->addColumn(new OffsetStringColumn(prefix + "icon_image", 
 	    "The name of an image to be used as icon in the web interface", (char *)(&svc.icon_image) - ref, indirect_offset));
+   table->addColumn(new OffsetStringServiceMacroColumn(prefix + "icon_image_expanded", 
+	    "The icon_image with (the most important) macros expanded", (char *)(&svc.icon_image) - ref, indirect_offset));
    table->addColumn(new OffsetStringColumn(prefix + "icon_image_alt", 
 	    "An alternative text for the icon_image for browsers not displaying icons", (char *)(&svc.icon_image_alt) - ref, indirect_offset));
 

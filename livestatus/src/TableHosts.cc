@@ -86,6 +86,8 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 	    "Optional performance data of the last host check", (char *)(&hst.perf_data) - ref, indirect_offset));
    table->addColumn(new OffsetStringColumn(prefix + "icon_image", 
 	    "The name of an image file to be used in the web pages", (char *)(&hst.icon_image) - ref, indirect_offset));
+   table->addColumn(new OffsetStringHostMacroColumn(prefix + "icon_image_expanded", 
+	    "The same as icon_image, but with the most important macros expanded", (char *)(&hst.icon_image) - ref, indirect_offset));
    table->addColumn(new OffsetStringColumn(prefix + "icon_image_alt",
 	    "Alternative text for the icon_image", (char *)(&hst.icon_image_alt) - ref, indirect_offset));
    table->addColumn(new OffsetStringColumn(prefix + "statusmap_image", 

@@ -55,6 +55,8 @@
       - New script install_nagios.sh that does the same
         as install_nagios_on_lenny.sh, but also works
 	on RedHat/CentOS 5.3.
+      - New check using the output of ipmi-sensors from
+        freeipmi (Linux)
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

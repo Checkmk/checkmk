@@ -41,6 +41,7 @@ This package is only needed on the Nagios server.
 Group:     System/Monitoring
 Requires:  xinetd
 Summary: Linux-Agent for check_mk
+AutoReqProv:   no
 %description agent
 This package contains the agent for check_mk. Install this on
 all Linux machines you want to monitor via check_mk. You'll need
@@ -50,6 +51,7 @@ xinetd to run this agent.
 Group:     System/Monitoring
 Requires:  check_mk-agent, python
 Summary: Logwatch-Plugin for check_mk agent
+AutoReq:   no
 %description agent-logwatch
 The logwatch plugin for the check_mk agent allows you to monitor
 logfiles on Linux and UNIX. In one or more configuration files you
@@ -61,6 +63,7 @@ This way only new messages are being sent.
 Group:     System/Monitoring
 Requires:  python
 Summary: Check_mk web pages
+AutoReq:   no
 %description web
 This package contains the Check_mk webpages. They allow you to
 search for services and apply Nagios commands to the search results.

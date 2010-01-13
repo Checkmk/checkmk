@@ -29,6 +29,11 @@
 inventory_services = []
 
 def check_windows_services(item, params, info):
+    # make sure, that thing also works for clusters:
+    # here a service can be listed more than once.
+    # It is sufficient of at least one "running" is
+    # found.
+    worststate = None
     for line in info:
         name = line[0]
         if name == item:
@@ -36,9 +41,11 @@ def check_windows_services(item, params, info):
             displayname = " ".join(line[2:])
             if state == 'running':
                 return (0, "OK - running: %s" % displayname)
-            else:
-                return (2, "CRITICAL - %s: %s" % (state, displayname))
-    return (3, "UNKNOWN - service not found")
+            worststate = state
+    if worststate:
+        return (2, "CRITICAL - %s: %s" % (worststate, displayname))
+    else:
+        return (3, "UNKNOWN - service not found")
 
 # AeLookupSvc        running  Application Experience Lookup Service
 # Alerter            stopped  Alerter

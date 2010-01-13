@@ -176,7 +176,8 @@ if which ipmi-sensors >/dev/null ; then
     done
 fi
 
-# State of LSI MegaRAID controller via MegaCli
+# State of LSI MegaRAID controller via MegaCli. You can download that tool from:
+# http://www.lsi.com/DistributionSystem/AssetDocument/support/downloads/megaraid/miscellaneous/linux/2.00.15_Linux_MegaCLI.zip
 if which MegaCli >/dev/null ; then
     echo '<<<megaraid_pdisks>>>'
     MegaCli -PDList -aALL -NoLog < /dev/null | egrep 'Raw Size|Slot Number|Device Id|Firmware state|Inquiry'

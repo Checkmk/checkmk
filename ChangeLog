@@ -57,6 +57,9 @@
 	on RedHat/CentOS 5.3.
       - New check using the output of ipmi-sensors from
         freeipmi (Linux)
+      - New check for LSI MegaRAID disks and arrays
+        using MegaCli (based on the driver megaraid_sas)
+        (Linux)
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

@@ -1,0 +1,65 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# Slot Number: 0
+# Device Id: 4
+# Raw Size: 140014MB [0x11177330 Sectors]
+# Firmware state: Unconfigured(good)
+# Inquiry Data: FUJITSU MBB2147RC       5204BS04P9104BV5        
+# Slot Number: 1
+# Device Id: 5
+# Raw Size: 140014MB [0x11177330 Sectors]
+# Firmware state: Unconfigured(good)
+# Inquiry Data: FUJITSU MBB2147RC       5204BS04P9104BSC        
+
+def inventory_megaraid_pdisks(checkname, info):
+    inventory = []
+    for line in info:
+	if line[0] == "Slot":
+	   slot = int(line[2])
+	elif line[0] == "Firmware" and line[1] == "state:":
+	   inventory.append(( slot, "", repr(line[2]) ))
+    return inventory
+
+def check_megaraid_pdisks(item, target_state, info):
+    # param is the target state
+    for line in info:
+	if line[0] == "Slot":
+	   slot = int(line[2])
+	   found = slot == item
+	elif found and line[0] == "Firmware" and line[1] == "state:":
+	   state = line[2]
+	elif found and line[0] == "Inquiry" and line[1] == "Data:":
+	   name = " ".join(line[2:])
+	   infotext = " - %s (%s)" % (state, name)
+	   if state == target_state:
+	       return (0, "OK" + infotext)
+	   else:
+	       return (2, "CRIT" + infotext)
+    return (3, "UNKNOWN - No disk in slot %d found" % item)
+	      
+check_info['megaraid_pdisks'] = (check_megaraid_pdisks, "Slot %s", 1, inventory_megaraid_pdisks) 

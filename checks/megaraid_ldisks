@@ -1,0 +1,61 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# Adapter 0 -- Virtual Drive Information:
+# Virtual Disk: 0 (Target Id: 0)
+# Size:139488MB
+# State: Optimal
+# Stripe Size: 64kB
+# Number Of Drives:2
+
+def inventory_megaraid_ldisks(checkname, info):
+    inventory = []
+    for line in info:
+	if line[0] == "Adapter":
+	   adapter = int(line[1])
+	elif line[0] == "Virtual" and line[1] == "Disk:":
+	   disk = int(line[2])
+	   inventory.append( ("%d/%d" % (adapter, disk), "", None) )
+    return inventory
+
+def check_megaraid_ldisks(item, _no_params, info):
+    for line in info:
+	if line[0] == "Adapter":
+	   adapter = int(line[1])
+	elif line[0] == "Virtual" and line[1] == "Disk:":
+	   disk = int(line[2])
+	   found = "%d/%d" % (adapter, disk) == item
+	elif found and line[0] == "State:":
+	   state = " ".join(line[1:])
+	   infotext = "state is %s" % state
+	   if state == "Optimal":
+	      return (0, "OK - " + infotext)
+	   else:
+	      return (2, "CRIT - " + infotext)
+    return (3, "UNKNOWN - no such adapter/logical disk found")
+
+check_info['megaraid_ldisks'] = (check_megaraid_ldisks, "Adapter/Disk %s", 1, inventory_megaraid_ldisks)

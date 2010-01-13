@@ -1,0 +1,27 @@
+title: Check state of physical disks of LSI MegaRAID
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of the physical disks of an LSI
+ MegaRAID Controller. The Linux agent sends the neccessary data,
+ if the command line utility {MegaCli} is found in the shells
+ search path. The usual way is to install it into {/usr/local/bin}.
+
+ The utility {MegaCli} can be downloaded from
+ {http://www.lsi.com/DistributionSystem/AssetDocument/support/downloads/megaraid/miscellaneous/linux/2.00.15_Linux_MegaCLI.zip}.
+ This is an alternative to the utility {cfggen}. {cfggen} only works
+ with the driver {mptsas}, whereas {MegaCli} uses a device created
+ by the driver {megaraid_sas}.
+
+item:
+ The number of the disk slot (integer). 
+
+parameter:
+ targetstate (string): The target state of the disk as output
+ by {MegaCli}.
+
+inventory:
+ All disks are automatically inventorized. The current state is
+ taken as the target state.

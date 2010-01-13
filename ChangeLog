@@ -52,6 +52,9 @@
 	On RedHat Check_MK's Apache conf file must be
 	loaded after mod_python and was thus renamed
 	to zzz_check_mk.conf.
+      - New script install_nagios.sh that does the same
+        as install_nagios_on_lenny.sh, but also works
+	on RedHat/CentOS 5.3.
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

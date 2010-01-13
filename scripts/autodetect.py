@@ -117,23 +117,30 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
         apache_binary = process_executable(apache_pid)
         apache_conffile = None
         apache_confdir = None
+	httpd_root = ""
         for line in os.popen("%s -V 2>&1" % apache_binary):
             parts = line.split()
             if parts[0] == "-D" and len(parts) > 1:
                 p = parts[1].split("=")
                 if len(p) == 2 and p[0] == "SERVER_CONFIG_FILE":
                     apache_conffile = p[1].replace('"', "")
-                    break
+		elif len(p) == 2 and p[0] == "HTTPD_ROOT":
+		    httpd_root = p[1].replace('"', "")
         if apache_conffile:
+	    if apache_conffile[0] != '/':
+		apache_conffile = httpd_root + "/" + apache_conffile
             confdirs = []
             for line in file(apache_conffile):
                 parts = line.strip().split()
-                if len(parts) == 2 and parts[0].lower() == "include" and parts[1].endswith("/"):
-                    confdir = parts[1][:-1]
-                    if confdir.endswith == "conf.d":
-                        confdirs = [confdir] + confdirs # put at front of list
-                    else:
-                        confdirs.append(confdir)
+                if len(parts) == 2 and parts[0].lower() == "include":
+		    if parts[1].endswith("/") or parts[1].endswith("/*.conf"):
+			confdir = "/".join(parts[1].split("/")[:-1])
+			if confdir[0] != "/":
+			    confdir = httpd_root + "/" + confdir
+                        if confdir.endswith == "conf.d":
+                           confdirs = [confdir] + confdirs # put at front of list
+                        else:
+                           confdirs.append(confdir)
             if len(confdirs) > 0:
                 apache_confdir = confdirs[0]
                 

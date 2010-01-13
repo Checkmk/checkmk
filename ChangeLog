@@ -47,6 +47,7 @@
       - AIX Agent: fix filesystem output
       - Check logwatch: Fix problem occuring at empty
         log lines
+      - Improve setup autodetection on RedHat/CentOS
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

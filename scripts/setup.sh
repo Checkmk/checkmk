@@ -618,13 +618,19 @@ do
 	   fi
 
 	   mkdir -p $DESTDIR$apache_config_dir &&
-	   if [ ! -e $DESTDIR$apache_config_dir/$NAME ]
+	   if [ ! -e $DESTDIR$apache_config_dir/$NAME -a ! -e $DESTDIR$apache_config_dir/zzz_$NAME.conf ]
 	   then
-	       cat <<EOF > $DESTDIR$apache_config_dir/$NAME
+	       cat <<EOF > $DESTDIR$apache_config_dir/zzz_$NAME.conf
 # Created by setup of check_mk version $VERSION
 # This file will *not* be overwritten at the next setup
 # of check_mk. You may edit it as needed. In order to get
 # a new version, please delete it and re-run setup.sh.
+
+# Note for RedHat 5.3 users (and probably other version:
+# this file must be loaded *after* python.conf, otherwise
+# <IfModule mod_python.c> does not trigger! For that
+# reason, it is installed as zzz_.... Sorry for the
+# inconveniance.
 
 <IfModule mod_python.c>
   Alias $checkmk_web_uri $web_dir

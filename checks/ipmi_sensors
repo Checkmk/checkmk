@@ -1,0 +1,89 @@
+#!/usr/bin/python
+
+# Example output of agent:
+# <<<ipmi_sensors>>>
+# 32 Temperature_Ambient 20.00_C_(1.00/42.00) [OK]
+# 96 Temperature_Systemboard 23.00_C_(1.00/65.00) [OK]
+# 160 Temperature_CPU_1 31.00_C_(1.00/90.00) [OK]
+# 224 Temperature_CPU_2 NA(1.00/78.00) [Unknown]
+# 288 Temperature_DIMM-1A 54.00_C_(NA/115.00) [OK]
+# 352 Temperature_DIMM-1B 56.00_C_(NA/115.00) [OK]
+# 416 Temperature_DIMM-2A NA(NA/115.00) [Unknown]
+# 480 Temperature_DIMM-2B NA(NA/115.00) [Unknown]
+# 544 Temperature_DIMM-3A NA(NA/115.00) [Unknown]
+# 608 Temperature_DIMM-3B NA(NA/115.00) [Unknown]
+# 672 Temperature_DIMM-4A NA(NA/NA) [Unknown]
+# 736 Temperature_DIMM-4B NA(NA/NA) [Unknown]
+# 800 Temperature_DIMM-1C NA(NA/115.00) [Unknown]
+# 864 Temperature_DIMM-1D NA(NA/115.00) [Unknown]
+# 928 Temperature_DIMM-2C NA(NA/115.00) [Unknown]
+# 992 Temperature_DIMM-2D NA(NA/115.00) [Unknown]
+# 1056 Temperature_DIMM-3C NA(NA/115.00) [Unknown]
+# 1120 Temperature_DIMM-3D NA(NA/115.00) [Unknown]
+# 1184 Temperature_DIMM-4C NA(NA/NA) [Unknown]
+# 1248 Temperature_DIMM-4D NA(NA/NA) [Unknown]
+# 4288 Power_Unit_PSU [Redundancy_Lost]
+# 4336 Power_Unit_PSU [Unknown]
+# 3104 Fan_FAN1_CPU 3600.00_RPM_(1800.00/NA) [OK]
+# 3168 Fan_FAN2_CPU 3600.00_RPM_(1800.00/NA) [OK]
+# 3232 Fan_FAN3_CPU 3540.00_RPM_(1800.00/NA) [OK]
+# 3296 Fan_FAN4_CPU NA(1800.00/NA) [Unknown]
+# 3360 Fan_FAN5_CPU NA(1800.00/NA) [Unknown]
+# 3424 Fan_FAN6_CPU NA(1800.00/NA) [Unknown]
+# 3488 Fan_FAN1_SYS 3360.00_RPM_(1800.00/NA) [OK]
+# 3552 Fan_FAN2_SYS NA(1800.00/NA) [Unknown]
+# 3616 Fan_FAN_PSU1 6840.00_RPM_(2760.00/NA) [OK]
+# 3680 Fan_FAN_PSU2 0.00_RPM_(2760.00/NA) [OK]
+
+def inventory_freeipmi(checkname, info):
+    return [ (line[1], "", None) for line in info if line[-1] != '[Unknown]' ]
+
+def check_freeipmi(item, _no_params, info):
+    for line in info:
+        if line[1] == item:
+	    status = line[-1][1:-1]
+	    perfdata = []
+	    infotext = "Sensor status is " + status
+	    if len(line) == 4:
+		current, levels = line[2].split('(')
+
+		# extract current sensor value
+		cparts = current.split("_")
+		if cparts[0] == "NA":
+		    current = None
+		else:
+		    current = float(cparts[0])
+		    if len(cparts) > 1:
+			unit = " " + cparts[1]
+		    else:
+			unit = ""
+
+		    # extract levels
+		    lower, upper = levels[:-1].split("/")
+		    if lower == "NA": lower = None
+		    if upper == "NA": upper = None
+		    if upper and lower:
+			levelstext = ", valid range is %.1f%s ... %.1f%s" % \
+				      (float(lower), unit, float(upper), unit)
+		    elif upper:
+			levelstext = ", critical at %.1f%s" % (float(upper), unit)
+		    elif lower:
+			levelstext = ", critical below %.1f%s" % (float(lower), unit)
+		    else:
+			levelstext = ""
+
+		    perfdata = [ ("value", current, lower, upper) ]
+		    infotext = "Current value %.1f%s%s" % (current, unit, levelstext)
+	    if status == "OK":
+		return (0, "OK - " + infotext, perfdata)
+	    else:
+		return (2, "CRIT - " + infotext, perfdata)
+
+    return (3, "UNKNOWN - item %s not found" % item)
+
+
+	
+check_info['ipmi_sensors'] = (check_freeipmi, "IPMI Sensor %s", 1, inventory_freeipmi)
+	
+	
+	    

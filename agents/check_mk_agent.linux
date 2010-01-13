@@ -23,8 +23,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-export MK_LIBDIR="/to/be/changed"
-export MK_CONFDIR="/to/be/changed"
+export MK_LIBDIR="/usr/lib/check_mk_agent"
+export MK_CONFDIR="/etc/check_mk"
+
+# Make sure, locally installed binaries are found
+PATH=$PATH:/usr/local/bin
 
 # All executables in PLUGINSDIR will simply be executed and their
 # ouput appended to the output of the agent. Plugins define their own
@@ -164,11 +167,23 @@ if which ipmitool >/dev/null ; then
         | grep -v ' discrete '
 fi
 
-# IPMI data via ipmi-sensors
+# IPMI data via ipmi-sensors (of freeipmi)
 if which ipmi-sensors >/dev/null ; then
-    echo '<<<ipmi-sensors>>>'
-    ipmi-sensors -v
+    echo '<<<ipmi_sensors>>>'
+    for class in Temperature 'Power Unit' Fan
+    do
+       ipmi-sensors -g "$class" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
+    done
 fi
+
+# State of LSI MegaRAID controller via MegaCli
+if which MegaCli >/dev/null ; then
+    echo '<<<megaraid_pdisks>>>'
+    MegaCli -PDList -aALL -NoLog < /dev/null | egrep 'Raw Size|Slot Number|Device Id|Firmware state|Inquiry'
+    echo '<<<megaraid_ldisks>>>'
+    MegaCli -LDInfo -Lall -aALL -NoLog < /dev/null | egrep 'Size|State|Number|Adapter|Virtual'
+fi
+
 
 if which vcbVmName > /dev/null 2>&1 ; then
    echo '<<<vmware_state>>>'

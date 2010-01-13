@@ -1,0 +1,25 @@
+title: Check IPMI sensors via freeipmi
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check uses the information of the utility {ipmi-sensors}
+ from the utility package {freeipmi}. You need your host kernel
+ to support IPMI and have ipmi-sensors in your executable path for
+ the agent to send that data. The current implementation of
+ the agents sends the status of all available fans, temperature
+ sensors and power supplies.
+
+item:
+ A combination of sensor group and sensor name, with spaces replaced
+ by underscores in the sensor name. For example
+ {Fan_FAN2_CPU} for a sensor of the group {Fan} with the name {FAN2 CPU}.
+
+perfdata: 
+ One variable: the current value of the sensor. Only temperature and
+ fan sensors send performance data. 
+
+inventory:
+ All sensors that are not in the state {[Unknown]} are automatically
+ inventorized.

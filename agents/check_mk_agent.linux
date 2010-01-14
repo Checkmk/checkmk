@@ -170,9 +170,17 @@ fi
 # IPMI data via ipmi-sensors (of freeipmi)
 if which ipmi-sensors >/dev/null ; then
     echo '<<<ipmi_sensors>>>'
+    # No cache file existing? => give more time to create it
+    if [ ! -e "/var/cache/.freeipmi/sdr-cache/sdr-cache-$(hostname).127.0.0.1" ]
+    then
+	TIMEOUT=50
+    else
+	TIMEOUT=2
+    fi
     for class in Temperature 'Power Unit' Fan
     do
-       ipmi-sensors -g "$class" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
+       waitmax $TIMEOUT ipmi-sensors --sdr-cache-directory /var/cache -g "$class" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
+       TIMEOUT=2
     done
 fi
 

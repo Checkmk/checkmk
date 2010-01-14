@@ -23,13 +23,15 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-$opt[1] = "--vertical-label 'MEMORY(MB)' --upper-limit " . ($MAX[1] * 120 / 100) . " -l0  --title \"Memory usage $hostname\" ";
+$opt[1] = "--vertical-label 'MEMORY(MB)' -X0 --upper-limit " . ($MAX[1] * 120 / 100) . " -l0  --title \"Memory usage $hostname\" ";
+
+$maxgb = sprintf("%.1f", $MAX[1] / 1024.0);
 
 $def[1] =  "DEF:ram=$rrdfile:$DS[1]:MAX " ;
 $def[1] .= "DEF:swap=$rrdfile:$DS[2]:MAX " ;
 $def[1] .= "DEF:virt=$rrdfile:$DS[3]:MAX " ;
 $def[1] .= "HRULE:$MAX[3]#000080:\"RAM+SWAP installed\" ";
-$def[1] .= "HRULE:$MAX[1]#2040d0:\"RAM installed\" ";
+$def[1] .= "HRULE:$MAX[1]#2040d0:\"$maxgb GB RAM installed\" ";
 $def[1] .= "HRULE:$WARN[3]#FFFF00:\"Warning\" ";
 $def[1] .= "HRULE:$CRIT[3]#FF0000:\"Critical\" ";
 

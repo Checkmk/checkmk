@@ -16,7 +16,8 @@ description:
  by the driver {megaraid_sas}.
 
 item:
- The number of the disk slot (integer). 
+ A combination of the enclosure and the slot number, separated by a slash, for
+ example {"0/4"} for enclosure {0} and slot {4}.
 
 parameter:
  targetstate (string): The target state of the disk as output

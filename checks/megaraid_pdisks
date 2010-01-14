@@ -39,18 +39,23 @@
 def inventory_megaraid_pdisks(checkname, info):
     inventory = []
     for line in info:
-	if line[0] == "Slot":
-	   slot = int(line[2])
+        if line[0] == "Enclosure":
+	   enclosure = int(line[-1])
+	elif line[0] == "Slot":
+	   slot = int(line[-1])
 	elif line[0] == "Firmware" and line[1] == "state:":
-	   inventory.append(( slot, "", repr(line[2]) ))
+	   inventory.append(( "%d/%d" % (enclosure, slot), "", repr(line[2]) ))
     return inventory
 
 def check_megaraid_pdisks(item, target_state, info):
+    # item is "$ENCLOSURE/$SLOT"
     # param is the target state
     for line in info:
-	if line[0] == "Slot":
-	   slot = int(line[2])
-	   found = slot == item
+        if line[0] == "Enclosure":
+           enclosure = int(line[-1])
+	elif line[0] == "Slot":
+	   slot = int(line[-1])
+	   found = "%d/%d" % (enclosure, slot) == item
 	elif found and line[0] == "Firmware" and line[1] == "state:":
 	   state = line[2]
 	elif found and line[0] == "Inquiry" and line[1] == "Data:":
@@ -60,6 +65,6 @@ def check_megaraid_pdisks(item, target_state, info):
 	       return (0, "OK" + infotext)
 	   else:
 	       return (2, "CRIT" + infotext)
-    return (3, "UNKNOWN - No disk in slot %d found" % item)
+    return (3, "UNKNOWN - No disk in encl/slot %s found" % item)
 	      
-check_info['megaraid_pdisks'] = (check_megaraid_pdisks, "Slot %s", 1, inventory_megaraid_pdisks) 
+check_info['megaraid_pdisks'] = (check_megaraid_pdisks, "RAID PDisk Enc/Sl %s", 1, inventory_megaraid_pdisks) 

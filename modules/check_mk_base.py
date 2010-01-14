@@ -671,6 +671,12 @@ def open_command_pipe():
 
 
 
+def none_to_empty(x):
+    if x == None:
+        return ""
+    else:
+        return x
+
 def submit_check_result(host, servicedesc, result, sa):
     global nagios_command_pipe
     # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
@@ -682,10 +688,13 @@ def submit_check_result(host, servicedesc, result, sa):
     # performance data - if any - is stored in the third part of the result
     perftexts = [];
     perftext = ""
+
     if len(result) > 2:
         perfdata = result[2]
         for p in perfdata:
-            perftexts.append("%s=%s;%s;%s;%s;%s" %  tuple((list(p) + (['']*4))[0:6])  ) # fill missing places with ''
+	    # replace None with "" and fill up to 6 values
+	    p = (map(none_to_empty, p) + ['','','',''])[0:6]
+            perftexts.append("%s=%s;%s;%s;%s;%s" %  tuple(p) )
         if perftexts != [] and not direct_rrd_update(host, servicedesc, perfdata):
             perftext = "|" + (" ".join(perftexts))
     

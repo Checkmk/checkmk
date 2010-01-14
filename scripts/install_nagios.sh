@@ -391,25 +391,6 @@ define command {
 EOF
 
 
-cat <<EOF > $HTTPD.conf
-ScriptAlias /nagios/cgi-bin/ /usr/local/lib/nagios/cgi-bin/
-<Directory /usr/local/lib/nagios/cgi-bin/>
-   allow from all
-   AuthName "Nagios Monitoring"
-   AuthType Basic
-   AuthUserFile "/etc/nagios/htpasswd"
-   require valid-user 
-</Directory>
-
-Alias /nagios/ /usr/local/share/nagios/htdocs/
-<Directory /usr/local/share/nagios/htdocs/>
-   allow from all
-   AuthName "Nagios Monitoring"
-   AuthType Basic
-   AuthUserFile "/etc/nagios/htpasswd"
-   require valid-user 
-</Directory>
-EOF
 
 echo 'nagiosadmin:vWQwFr7mwjvmI' > htpasswd
 
@@ -469,6 +450,36 @@ sed -i -e 's@^;socket="unix:.*@socket="unix:/var/run/nagios/rw/live"@' \
        -e 's@^;backend=.*@backend="live_1"@' \
    /usr/local/nagvis/etc/nagvis.ini.php
 
+cat <<EOF > /etc/$HTTPD/conf.d/nagios.conf
+Alias /nagvis/ /usr/local/nagvis/
+<Directory /usr/local/nagvis/>
+   allow from all
+   AuthName "Nagios Monitoring"
+   AuthType Basic
+   AuthUserFile "/etc/nagios/htpasswd"
+   require valid-user 
+</Directory>
+
+ScriptAlias /nagios/cgi-bin/ /usr/local/lib/nagios/cgi-bin/
+<Directory /usr/local/lib/nagios/cgi-bin/>
+   allow from all
+   AuthName "Nagios Monitoring"
+   AuthType Basic
+   AuthUserFile "/etc/nagios/htpasswd"
+   require valid-user 
+</Directory>
+
+Alias /nagios/ /usr/local/share/nagios/htdocs/
+<Directory /usr/local/share/nagios/htdocs/>
+   allow from all
+   AuthName "Nagios Monitoring"
+   AuthType Basic
+   AuthUserFile "/etc/nagios/htpasswd"
+   require valid-user 
+</Directory>
+EOF
+
+
 
 gpasswd -a $WWWUSER nagios
 /etc/init.d/$HTTPD stop
@@ -503,7 +514,7 @@ popd
 activate_initd httpd
 
 # side.html anpassen
-HTML='<div class="navsectiontitle">Check_MK</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="/check_mk/filter.py" target="<?php echo $link_target;?>">Filters and Actions</a></li></div></div><div class="navsection"><div class="navsectiontitle">Nagvis</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="/nagvis" target="<?php echo $link_target;?>">Overview page</a></li></div></div><div class="navsection">'
+HTML='<div class="navsectiontitle">Check_MK</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="/check_mk/filter.py" target="<?php echo $link_target;?>">Filters and Actions</a></li></div></div><div class="navsection"><div class="navsectiontitle">Nagvis</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="/nagios/nagvis/" target="<?php echo $link_target;?>">Overview page</a></li></div></div><div class="navsection">'
 QUOTE=${HTML//\//\\/}
 sed -i "/.*Reports<.*$/i$QUOTE" /usr/local/share/nagios/htdocs/side.php
 

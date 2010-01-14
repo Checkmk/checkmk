@@ -58,4 +58,4 @@ def check_megaraid_ldisks(item, _no_params, info):
 	      return (2, "CRIT - " + infotext)
     return (3, "UNKNOWN - no such adapter/logical disk found")
 
-check_info['megaraid_ldisks'] = (check_megaraid_ldisks, "Adapter/Disk %s", 1, inventory_megaraid_ldisks)
+check_info['megaraid_ldisks'] = (check_megaraid_ldisks, "RAID Adapter/LDisk %s", 1, inventory_megaraid_ldisks)

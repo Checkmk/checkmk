@@ -84,19 +84,23 @@ def check_freeipmi(item, _no_params, info):
 
 		    # extract levels
 		    lower, upper = levels[:-1].split("/")
-		    if lower == "NA": lower = None
-		    if upper == "NA": upper = None
-		    if upper and lower:
+		    if lower == "NA" and upper != "NA": 
+			crit = upper
+			levelstext = ", critical at %.1f%s" % (float(upper), unit)
+		    elif lower != "NA" and upper == "NA":
+			crit = lower
+			levelstext = ", critical below %.1f%s" % (float(lower), unit)
+                    elif lower != "NA" and upper != "NA":
+			# PNP 0.4.14 cannot handle ranges in thresholds :-(
+			# crit = "%s:%s" % (lower, upper)
+			crit = upper
 			levelstext = ", valid range is %.1f%s ... %.1f%s" % \
 				      (float(lower), unit, float(upper), unit)
-		    elif upper:
-			levelstext = ", critical at %.1f%s" % (float(upper), unit)
-		    elif lower:
-			levelstext = ", critical below %.1f%s" % (float(lower), unit)
-		    else:
+                    else:
+			crit = None
 			levelstext = ""
 
-		    perfdata = [ ("value", current, lower, upper) ]
+		    perfdata = [ ("value", current, None, crit) ]
 		    infotext = "Current value %.1f%s%s" % (current, unit, levelstext)
 	    if status == "OK":
 		return (0, "OK - " + infotext, perfdata)

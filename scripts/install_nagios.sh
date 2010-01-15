@@ -32,15 +32,25 @@ set -e
 NAGIOS_VERSION=3.2.0
 PLUGINS_VERSION=1.4.14
 CHECK_MK_VERSION=1.1.2rc1
-PNP_VERSION=0.6.2
+PNP_VERSION=0.4.2
+PNP_NAME=pnp
 NAGVIS_VERSION=1.4.5
 RRDTOOL_VERSION=1.4.2
 
 SOURCEFORGE_MIRROR=dfn
 NAGIOS_URL="http://downloads.sourceforge.net/project/nagios/nagios-3.x/nagios-$NAGIOS_VERSION/nagios-$NAGIOS_VERSION.tar.gz?use_mirror=$SOURCEFORGE_MIRROR"
 PLUGINS_URL="http://downloads.sourceforge.net/project/nagiosplug/nagiosplug/$PLUGINS_VERSION/nagios-plugins-$PLUGINS_VERSION.tar.gz?use_mirror=$SOURCEFORGE_MIRROR"
+CHECK_MK_URL="http://mathias-kettner.de/download/check_mk-$CHECK_MK_VERSION.tar.gz"
 NAGVIS_URL="http://downloads.sourceforge.net/project/nagvis/NagVis%201.4%20%28stable%29/NagVis-$NAGVIS_VERSION/nagvis-$NAGVIS_VERSION.tar.gz?use_mirror=$SOURCEFORGE_MIRROR"
-PNP_URL="http://downloads.sourceforge.net/project/pnp4nagios/PNP-${PNP_VERSION:0:3}/pnp4nagios-$PNP_VERSION.tar.gz?use_mirror=$SOURCEFORGE_MIRROR"
+if [ "${PNP_VERSION:2:1}" = 6 ]
+then
+   PNP_URL="http://downloads.sourceforge.net/project/pnp4nagios/PNP-${PNP_VERSION:0:3}/pnp4nagios-$PNP_VERSION.tar.gz?use_mirror=$SOURCEFORGE_MIRROR"
+   PNP_DATAOPTION=--datarootdir=/usr/local/share/nagios/htdocs/pnp
+else
+   PNP_URL="http://downloads.sourceforge.net/project/pnp4nagios/PNP/pnp-${PNP_VERSION}/pnp-${PNP_VERSION}.tar.gz?use_mirror=$SOURCEFORGE_MIRROR"
+   PNP_DATAOPTION=--datadir=/usr/local/share/nagios/htdocs/pnp
+fi
+
 RRDTOOL_URL="http://oss.oetiker.ch/rrdtool/pub/rrdtool-$RRDTOOL_VERSION.tar.gz"
 
 if [ "$(cat /etc/redhat-release 2>/dev/null)" = "Red Hat Enterprise Linux Server release 5.3 (Tikanga)" ]
@@ -107,7 +117,6 @@ EOF
 echo -n 'Then please enter "yes": '
 read yes
 [ "$yes" = yes ] || exit 0
-
 
 set -e
 
@@ -382,7 +391,75 @@ define command {
 EOF
 
 
-cat <<EOF > $HTTPD.conf
+
+echo 'nagiosadmin:vWQwFr7mwjvmI' > htpasswd
+
+
+mkdir -p $DESTDIR/etc/$HTTPD/conf.d
+ln -sfn /etc/nagios/$HTTPD.conf $DESTDIR/etc/$HTTPD/conf.d/nagios.conf
+
+rm -rf conf.d-example
+
+popd
+
+# Compile and install PNP4Nagios
+[ -e $PNP_NAME-$PNP_VERSION.tar.gz ] || wget "$PNP_URL"
+tar xzf $PNP_NAME-$PNP_VERSION.tar.gz
+pushd $PNP_NAME-$PNP_VERSION
+
+./configure \
+  --bindir=/usr/local/bin \
+  --sbindir=/usr/local/lib/nagios/cgi-bin \
+  --libexecdir=/usr/local/lib/nagios \
+  --sysconfdir=/etc/nagios \
+  --sharedstatedir=/var/lib/nagios \
+  --localstatedir=/var/lib/nagios \
+  --libdir=/usr/local/lib/nagios \
+  --includedir=/usr/local/include/nagios \
+  $PNP_DATAOPTION
+
+make all
+make DESTDIR=$DESTDIR install install-config
+rm -rf $DESTDIR/etc/nagios/check_commands
+popd
+pushd $DESTDIR/etc/nagios
+mv rra.cfg-sample rra.cfg
+mv process_perfdata.cfg-sample process_perfdata.cfg
+mv npcd.cfg-sample npcd.cfg
+sed -i 's@^RRDPATH =.*@RRDPATH = /var/lib/nagios/rrd@' process_perfdata.cfg
+sed -i 's@^\(.conf\[.rrdbase.\] =\).*@\1"/var/lib/nagios/rrd/";@' config.php
+popd
+
+# Und auch noch Nagvis
+[ -e nagvis-$NAGVIS_VERSION.tar.gz ] || wget "$NAGVIS_URL"
+rm -rf nagvis-$NAGVIS_VERSION
+tar xzf nagvis-$NAGVIS_VERSION.tar.gz
+pushd nagvis-$NAGVIS_VERSION
+./install.sh -q -F -c y \
+  -u $WWWUSER \
+  -g $WWWUSER \
+  -w /etc/$HTTPD/conf.d \
+  -W /nagvis \
+  -B /usr/local/bin/nagios \
+  -b /usr/bin \
+  -p /usr/local/nagvis \
+  -B /usr/local/bin
+popd
+
+sed -i -e 's@^;socket="unix:.*@socket="unix:/var/run/nagios/rw/live"@' \
+       -e 's@^;backend=.*@backend="live_1"@' \
+   /usr/local/nagvis/etc/nagvis.ini.php
+
+cat <<EOF > /etc/$HTTPD/conf.d/nagios.conf
+Alias /nagvis/ /usr/local/nagvis/
+<Directory /usr/local/nagvis/>
+   allow from all
+   AuthName "Nagios Monitoring"
+   AuthType Basic
+   AuthUserFile "/etc/nagios/htpasswd"
+   require valid-user 
+</Directory>
+
 ScriptAlias /nagios/cgi-bin/ /usr/local/lib/nagios/cgi-bin/
 <Directory /usr/local/lib/nagios/cgi-bin/>
    allow from all
@@ -402,62 +479,6 @@ Alias /nagios/ /usr/local/share/nagios/htdocs/
 </Directory>
 EOF
 
-echo 'nagiosadmin:vWQwFr7mwjvmI' > htpasswd
-
-
-mkdir -p $DESTDIR/etc/$HTTPD/conf.d
-ln -sfn /etc/nagios/$HTTPD.conf $DESTDIR/etc/$HTTPD/conf.d/nagios.conf
-
-rm -rf conf.d-example
-
-popd
-
-
-# Compile and install PNP4Nagios
-[ -e pnp4nagios-$PNP_VERSION.tar.gz ] || wget "$PNP_URL"
-tar xzf pnp4nagios-$PNP_VERSION.tar.gz
-pushd pnp4nagios-$PNP_VERSION
-./configure \
-  --bindir=/usr/local/bin \
-  --sbindir=/usr/local/lib/nagios/cgi-bin \
-  --libexecdir=/usr/local/lib/nagios \
-  --sysconfdir=/etc/nagios \
-  --sharedstatedir=/var/lib/nagios \
-  --localstatedir=/var/lib/nagios \
-  --libdir=/usr/local/lib/nagios \
-  --includedir=/usr/local/include/nagios \
-  --datarootdir=/usr/local/share/nagios/htdocs/pnp
-make all
-make DESTDIR=$DESTDIR install install-config
-rm -rf $DESTDIR/etc/nagios/check_commands
-popd
-pushd $DESTDIR/etc/nagios
-mv rra.cfg-sample rra.cfg
-mv process_perfdata.cfg-sample process_perfdata.cfg
-mv npcd.cfg-sample npcd.cfg
-sed -i 's@^RRDPATH =.*@RRDPATH = /var/lib/nagios/rrd@' process_perfdata.cfg
-sed -i 's@^\(.conf\[.rrdbase.\] =\).*@\1"/var/lib/nagios/rrd/";@' config.php
-popd
-
-# Und auch noch Nagvis
-[ -e nagvis$NAGVIS_VERSION.tar.gz ] || wget "$NAGVIS_URL"
-rm -rf nagvis-$NAGVIS_VERSION
-tar xzf nagvis-$NAGVIS_VERSION.tar.gz
-pushd nagvis-$NAGVIS_VERSION
-./install.sh -q -F -c y \
-  -u $WWWUSER \
-  -g $WWWUSER \
-  -w /etc/$HTTPD/conf.d \
-  -W /nagvis \
-  -B /usr/local/bin/nagios \
-  -b /usr/bin \
-  -p /usr/local/nagvis \
-  -B /usr/local/bin
-popd
-
-sed -i -e 's@^;socket="unix:.*@socket="unix:/var/run/nagios/rw/live"@' \
-       -e 's@^;backend=.*@backend="live_1"@' \
-   /usr/local/nagvis/etc/nagvis.ini.php
 
 
 gpasswd -a $WWWUSER nagios
@@ -468,8 +489,10 @@ killall nagios || true
 activate_initd nagios || true
 
 # check_mk
-rm -f check_mk-$CHECK_MK_VERSION.tar.gz
-wget "http://mathias-kettner.de/download/check_mk-$CHECK_MK_VERSION.tar.gz"
+if [ ! -e check_mk-$CHECK_MK_VERSION.tar.gz ]
+then
+    wget "$CHECK_MK_URL"
+fi
 rm -rf check_mk-$CHECK_MK_VERSION
 tar xzf check_mk-$CHECK_MK_VERSION.tar.gz
 pushd check_mk-$CHECK_MK_VERSION
@@ -488,9 +511,10 @@ popd
 
 # Apache neu starten
 /etc/init.d/$HTTPD restart
+activate_initd httpd
 
 # side.html anpassen
-HTML='<div class="navsectiontitle">Check_MK</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="/check_mk/filter.py" target="<?php echo $link_target;?>">Filters and Actions</a></li></div></div><div class="navsection"><div class="navsectiontitle">Nagvis</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="/nagvis" target="<?php echo $link_target;?>">Overview page</a></li></div></div><div class="navsection">'
+HTML='<div class="navsectiontitle">Check_MK</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="/check_mk/filter.py" target="<?php echo $link_target;?>">Filters and Actions</a></li></div></div><div class="navsection"><div class="navsectiontitle">Nagvis</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="/nagios/nagvis/" target="<?php echo $link_target;?>">Overview page</a></li></div></div><div class="navsection">'
 QUOTE=${HTML//\//\\/}
 sed -i "/.*Reports<.*$/i$QUOTE" /usr/local/share/nagios/htdocs/side.php
 
@@ -501,6 +525,7 @@ mkdir -p $DESTDIR/usr/bin
 install -m 755 $DESTDIR/usr/share/check_mk/agents/check_mk_agent.linux $DESTDIR/usr/bin/check_mk_agent
 /etc/init.d/xinetd stop || true
 /etc/init.d/xinetd start
+activate_initd xinetd
 
 cat <<EOF > $DESTDIR/etc/check_mk/main.mk
 all_hosts = [ 'localhost' ]

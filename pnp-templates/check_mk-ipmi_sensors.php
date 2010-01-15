@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,38 +23,33 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example output from agent:
-# Adapter 0 -- Virtual Drive Information:
-# Virtual Disk: 0 (Target Id: 0)
-# Size:139488MB
-# State: Optimal
-# Stripe Size: 64kB
-# Number Of Drives:2
+$parts = explode("_", $servicedesc);
+$sensorname = implode(" ", $parts);
 
-def inventory_megaraid_ldisks(checkname, info):
-    inventory = []
-    for line in info:
-	if line[0] == "Adapter":
-	   adapter = int(line[1])
-	elif line[0] == "Virtual" and line[1] == "Disk:":
-	   disk = int(line[2])
-	   inventory.append( ("%d/%d" % (adapter, disk), "", None) )
-    return inventory
+if ($parts[2] == "Fan")
+{
+	$opt[1] = "--vertical-label 'RPM' -X0 -l0 -u6000 --title \"$sensorname\" ";
 
-def check_megaraid_ldisks(item, _no_params, info):
-    for line in info:
-	if line[0] == "Adapter":
-	   adapter = int(line[1])
-	elif line[0] == "Virtual" and line[1] == "Disk:":
-	   disk = int(line[2])
-	   found = "%d/%d" % (adapter, disk) == item
-	elif found and line[0] == "State:":
-	   state = " ".join(line[1:])
-	   infotext = "state is %s" % state
-	   if state == "Optimal":
-	      return (0, "OK - " + infotext)
-	   else:
-	      return (2, "CRIT - " + infotext)
-    return (3, "UNKNOWN - no such adapter/logical disk found")
+	$def[1] = "DEF:rpm=$rrdfile:$DS[1]:AVERAGE ";
+	$def[1] .= "AREA:rpm#0080a0:\"Rotations per minute\" ";
+	$def[1] .= "LINE:rpm#004060 ";
+	$def[1] .= "HRULE:$CRIT[1]#ff0000:\"Critical below $CRIT[1] RPM\" ";
+}
 
-check_info['megaraid_ldisks'] = (check_megaraid_ldisks, "RAID Adapter/LDisk %s", 1, inventory_megaraid_ldisks)
+else if ($parts[2] == "Temperature")
+{
+	$upper = max(60, $CRIT[1] + 3);
+	$opt[1] = "--vertical-label '$CRIT[1] Celsius' -l0 -u$upper --title \"$sensorname\" ";
+
+	$def[1] = "DEF:temp=$rrdfile:$DS[1]:MAX ";
+	$def[1] .= "AREA:temp#ffd040:\"temperature (max)\" ";
+	$def[1] .= "LINE:temp#ff8000 ";
+	$def[1] .= "HRULE:$CRIT[1]#ff0000:\"Critical at $CRIT[1] C\" ";
+}
+
+else {
+   include("check_mk-local.php");
+}
+ 
+
+?>

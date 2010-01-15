@@ -70,6 +70,14 @@ vmstat | tail -n1
 echo '<<<mpstat_aix>>>'
 mpstat -a | tail -n1
 
+# CPU output of Linux agent simulated
+# (thanks to Cameron Pierce)
+echo '<<<cpu>>>'
+load=`uptime|sed -e 's;.*average: \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\), \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\), \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\);\1 \2 \3;'`
+ps=`ps -ef|wc -l|sed -e 's;[[:space:]]\{1,\};;'`
+procs=`vmstat|grep lcpu|sed -e 's;.* lcpu=\([[:digit:]]\{1,2\}\) .*;\1;'`
+echo $load 1/$ps $$ $procs
+
 
 if cd $PLUGINSDIR 2>/dev/null
 then

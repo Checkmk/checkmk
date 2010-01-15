@@ -60,6 +60,7 @@
       - New check for LSI MegaRAID disks and arrays
         using MegaCli (based on the driver megaraid_sas)
         (Linux)
+      - Added section <<<cpu>>> to AIX and Solaris agents
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

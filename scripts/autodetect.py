@@ -26,7 +26,7 @@
 
 import os, sys, stat
 
-opt_debug = "-d" in sys.argv
+opt_debug = "-d" in sys.argv or "--debug" in sys.argv
 
 # The following settings are tried to be autodetected
 target_values = {
@@ -110,6 +110,29 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
     if not wwwuser:
         raise Exception("Cannot find Apache process. Is it running?")
 
+    def scan_apacheconf(apache_conffile):
+	confdirs = []
+	if apache_conffile[0] != '/':
+	    apache_conffile = httpd_root + "/" + apache_conffile
+	confdirs = []
+	for line in file(apache_conffile):
+	    parts = line.strip().split()
+	    if len(parts) == 2 and parts[0].lower() == "include":
+		if parts[1].endswith("/") or parts[1].endswith("/*.conf"):
+		    confdir = "/".join(parts[1].split("/")[:-1])
+		    if confdir[0] != "/":
+			confdir = httpd_root + "/" + confdir
+		    if not os.path.exists(confdir):
+			continue
+		    confdirs.append(confdir) # put at front of list
+		else:
+		    try:
+		        confdirs += scan_apacheconf(parts[1]) # recursive scan
+		    except:
+			pass
+	return confdirs
+	
+
     # Find binary
     try:
         nagios_htpasswd_file = None
@@ -127,20 +150,7 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
 		elif len(p) == 2 and p[0] == "HTTPD_ROOT":
 		    httpd_root = p[1].replace('"', "")
         if apache_conffile:
-	    if apache_conffile[0] != '/':
-		apache_conffile = httpd_root + "/" + apache_conffile
-            confdirs = []
-            for line in file(apache_conffile):
-                parts = line.strip().split()
-                if len(parts) == 2 and parts[0].lower() == "include":
-		    if parts[1].endswith("/") or parts[1].endswith("/*.conf"):
-			confdir = "/".join(parts[1].split("/")[:-1])
-			if confdir[0] != "/":
-			    confdir = httpd_root + "/" + confdir
-                        if confdir.endswith == "conf.d":
-                           confdirs = [confdir] + confdirs # put at front of list
-                        else:
-                           confdirs.append(confdir)
+	    confdirs = scan_apacheconf(apache_conffile)
             if len(confdirs) > 0:
                 apache_confdir = confdirs[0]
                 

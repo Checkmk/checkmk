@@ -27,13 +27,15 @@
 # programs there...
 PATH=$PATH:/usr/local/bin
 
+LOGFILE=install_nagios.sh.log
+exec > >(tee $LOGFILE) 2>&1
+
 set -e
 
 NAGIOS_VERSION=3.2.0
 PLUGINS_VERSION=1.4.14
 CHECK_MK_VERSION=1.1.2rc1
-PNP_VERSION=0.4.2
-PNP_NAME=pnp
+PNP_VERSION=0.6.2
 NAGVIS_VERSION=1.4.5
 RRDTOOL_VERSION=1.4.2
 
@@ -45,13 +47,16 @@ NAGVIS_URL="http://downloads.sourceforge.net/project/nagvis/NagVis%201.4%20%28st
 if [ "${PNP_VERSION:2:1}" = 6 ]
 then
    PNP_URL="http://downloads.sourceforge.net/project/pnp4nagios/PNP-${PNP_VERSION:0:3}/pnp4nagios-$PNP_VERSION.tar.gz?use_mirror=$SOURCEFORGE_MIRROR"
-   PNP_DATAOPTION=--datarootdir=/usr/local/share/nagios/htdocs/pnp
+   PNP_DATAOPTION=--datarootdir=/usr/local/share/pnp4nagios
+   PNP_NAME=pnp4nagios
 else
    PNP_URL="http://downloads.sourceforge.net/project/pnp4nagios/PNP/pnp-${PNP_VERSION}/pnp-${PNP_VERSION}.tar.gz?use_mirror=$SOURCEFORGE_MIRROR"
    PNP_DATAOPTION=--datadir=/usr/local/share/nagios/htdocs/pnp
+   PNP_NAME=pnp
 fi
 
 RRDTOOL_URL="http://oss.oetiker.ch/rrdtool/pub/rrdtool-$RRDTOOL_VERSION.tar.gz"
+
 
 if [ "$(cat /etc/redhat-release 2>/dev/null)" = "Red Hat Enterprise Linux Server release 5.3 (Tikanga)" ]
 then
@@ -63,43 +68,58 @@ then
     DISTRO=REDHAT
     DISTRONAME="CentOS 5.3"
     DISTROVERS=5.3
-else
+elif grep -qi "USE Linux Enterprise Server 11" /etc/SuSE-release 2>/dev/null
+then
+    DISTRO=SUSE
+    DISTRONAME="SLES 11"
+    DISTROVERS=11
+elif grep -qi lenny /etc/issue
+then
     DISTRO=DEBIAN
     DISTRONAME="Debian 5.0 (Lenny)"
     DISTROVERS=5.0
-    WWWUSER=www-data
 fi
 
-if [ "$DISTRO" = REDHAT  -o "$DISTRO" = SUSE ]
-then
-    HTTPD=httpd
-    WWWUSER=apache
-    activate_initd () 
-    {
-        chkconfig $1 on
-    }
-else
-    HTTPD=apache2
-    activate_initd ()
-    {
-	update-rc.d $1 defaults
-    }
-fi
-
-
+case "$DISTRO" in 
+    REDHAT)
+    	HTTPD=httpd
+    	WWWUSER=apache
+	WWWGROUP=apache
+        activate_initd () { chkconfig $1 on ; }
+        add_user_to_group () { gpasswd -a $1 $2 ; }
+    ;;
+    SUSE)
+	HTTPD=apache2
+	WWWUSER=wwwrun
+	WWWGROUP=www
+        activate_initd () { chkconfig $1 on ; }
+        add_user_to_group () { groupmod -A $1 $2 ; }
+    ;;
+    DEBIAN)
+	HTTPD=apache2
+	WWWUSER=www-data
+	WWWGROUP=www-data
+        activate_initd () { update-rc.d $1 default; }
+        add_user_to_group () { gpasswd -a $1 $2 ; }
+    ;;
+    *)
+	echo "This script does not work on your Linux distribution. Sorry."
+	echo "Supported are: Debian 5.0, SLES 11 and RedHat/CentOS 5.3"
+        exit 1
+esac	
 
 cat <<EOF
 
-This script is intended for setting up Nagios, PNP4Nagios and
-check_mk on a freshly installed Linux system.
+This script is intended for setting up Nagios, PNP4Nagios, NagVis and
+Check_MK on a freshly installed Linux system. It will:
 
  - probably delete your existing Nagios configuration (if any)
- - install missing packages from Debian sources via aptitude
+ - install missing packages via apt/yum/zypper
  - download software from various internet sources
- - compile Nagios and PNP4Nagios
+ - compile Nagios, PNP4Nagios and MK Livestatus
  - install everything into FHS-compliant paths below /etc,
    /var and /usr/local
- - setup Nagios, Apache, PNP4Nagios and check_mk
+ - setup Nagios, Apache, PNP4Nagios, NagVis and Check_MK
  - install the check_mk_agent on localhost
  - setup Nagios to monitor localhost
 
@@ -111,6 +131,8 @@ check_mk on a freshly installed Linux system.
    PNP4Nagios version:   $PNP_VERSION
    Nagvis version:       $NAGVIS_VERSION
 
+The output of this script is logged into $LOGFILE.
+
 No user interaction is neccesary. Do you want to proceed?
 EOF
 
@@ -120,22 +142,41 @@ read yes
 
 set -e
 
+
+heading ()
+{
+    echo
+    echo '//===========================================================================\\'
+    printf "|| %-73s ||\n" "$1"
+    echo '\\===========================================================================//'
+    echo
+}
+
+
+heading "Installing missing software"
+
 if [ "$DISTRO" = DEBIAN ]
 then
   aptitude -y update
-  aptitude -y install psmisc build-essential nail nagios-plugins-basic \
+  aptitude -y install psmisc build-essential nail  \
     apache2 libapache2-mod-php5 python rrdtool php5-gd libgd-dev \
     python-rrdtool xinetd wget libgd2-xpm-dev psmisc less libapache2-mod-python \
     graphviz php5-sqlite sqlite php-gettext locales-all
     # Hint for Debian: Installing the packages locales-all is normally not neccessary
     # if you use 'dpkg-reconfigure locales' to setup and generate your locales.
     # Correct locales are needed for the localisation of Nagvis.
+elif [ "$DISTRO" = SUSE ]
+then
+   zypper update
+   zypper -n install apache2 mailx apache2-mod_python apache2-mod_php5 php5-gd gd-devel \
+	xinetd wget xorg-x11-libXpm-devel psmisc less graphviz-devel graphviz-gd \
+	php5-sqlite php5-gettext python-rrdtool php5-zlib
 else
    yum update
    yum -y install httpd gcc mailx php php-gd gd-devl xinetd wget psmisc less mod_python \
      sqlite cairo-devel libxml2-devel pango-devel pango libpng-devel freetype freetype-devel libart_lgpl-devel 
-   true
 fi
+
 
 set +e
 killall nagios
@@ -143,18 +184,21 @@ killall -9 nagios
 killall npcd
 set -e
 
+
 # Compile rrdtool
+heading "RRDTool"
 [ -e rrdtool-$RRDTOOL_VERSION ] || wget $RRDTOOL_URL
 rm -rf rrdtool-$RRDTOOL_VERSION
 tar xzf rrdtool-$RRDTOOL_VERSION.tar.gz
 pushd rrdtool-$RRDTOOL_VERSION
 ./configure --prefix=/usr/local
 make -j 16
-make DESTDIR=$DESTDIR install
+make install
 popd
 
 
 # Compile plugins
+heading "Nagios plugins"
 [ -e nagios-plugins-$PLUGINS_VERSION.tar.gz ] || wget $PLUGINS_URL
 rm -rf nagios-plugins-$PLUGINS_VERSION
 tar xzf nagios-plugins-$PLUGINS_VERSION.tar.gz
@@ -162,10 +206,18 @@ pushd nagios-plugins-$PLUGINS_VERSION
 ./configure \
   --libexecdir=/usr/local/lib/nagios/plugins
 make -j 16
-make DESTDIR=$DESTDIR install
+make install
 popd
 
 # Compile Nagios
+heading "Nagios"
+# Mounting tmpfs to /var/spool/nagios
+umount /var/spool/nagios 2>/dev/null || true
+mkdir -p /var/spool/nagios
+sed -i '\/var\/lib\/nagios\/spool tmpfs/d' /etc/fstab
+echo 'tmpfs /var/spool/nagios tmpfs defaults 0 0' >> /etc/fstab
+mount /var/spool/nagios
+
 [ -e nagios-$NAGIOS_VERSION.tar.gz ] || wget $NAGIOS_URL
 rm -rf nagios-$NAGIOS_VERSION
 tar xzf nagios-$NAGIOS_VERSION.tar.gz
@@ -201,7 +253,7 @@ id nagios >/dev/null 2>&1 || useradd -c 'Nagios Daemon' -s /bin/false -d /var/li
 
 make -j 16 all
 
-make DESTDIR=$DESTDIR \
+make \
   install \
   install-cgis \
   install-html \
@@ -210,40 +262,41 @@ make DESTDIR=$DESTDIR \
   install-config 
 
 chown -R root.root \
-  $DESTDIR/usr/local/bin/nagios* \
-  $DESTDIR/usr/local/*/nagios \
-  $DESTDIR/etc/nagios
+  /usr/local/bin/nagios* \
+  /usr/local/*/nagios \
+  /etc/nagios
 
-sed -i '/CONFIG ERROR/a\                        $NagiosBin -v $NagiosCfgFile'  $DESTDIR/etc/init.d/nagios
+sed -i '/CONFIG ERROR/a\                        $NagiosBin -v $NagiosCfgFile'  /etc/init.d/nagios
 
 
-mkdir -p $DESTDIR/var/lib/nagios/tmp
-chown -R nagios.nagios $DESTDIR/var/lib/nagios
-mkdir -p $DESTDIR/var/log/nagios
-chown nagios.nagios $DESTDIR/var/log/nagios
-mkdir -p $DESTDIR/var/cache/nagios
-chown nagios.nagios $DESTDIR/var/cache/nagios
-mkdir -p $DESTDIR/var/run/nagios/rw
-chown nagios.nagios $DESTDIR/var/run/nagios/rw
-chmod 2755 $DESTDIR/var/run/nagios/rw
-mkdir -p  $DESTDIR/var/lib/nagios/rrd
-chown nagios.nagios $DESTDIR/var/lib/nagios/rrd
-
+mkdir -p /var/spool/nagios/tmp
+chown -R nagios.nagios /var/lib/nagios
+mkdir -p /var/log/nagios/archives
+chown nagios.nagios /var/log/nagios/archives
+mkdir -p /var/cache/nagios
+chown nagios.nagios /var/cache/nagios
+mkdir -p /var/run/nagios/rw
+chown nagios.nagios /var/run/nagios/rw
+chmod 2755 /var/run/nagios/rw
+mkdir -p  /var/lib/nagios/rrd
+chown nagios.nagios /var/lib/nagios/rrd
+mkdir -p /var/spool/nagios/pnp/npcd
+chown -R nagios.nagios /var/spool/nagios
 chown root.nagios /usr/local/lib/nagios/plugins/check_icmp
 chmod 4750 /usr/local/lib/nagios/plugins/check_icmp
 
 # Prepare configuration
 popd
-pushd $DESTDIR/etc/nagios
+pushd /etc/nagios
 mv nagios.cfg nagios.cfg-example
 mv objects conf.d-example
 : > resource.cfg
 cat <<EOF > nagios.cfg
 # Paths
 lock_file=/var/run/nagios.lock
-temp_file=/var/lib/nagios/nagios.tmp
-temp_path=/var/lib/nagios/tmp
-log_archive_path=/var/lib/nagios/archives
+temp_file=/var/spool/nagios/nagios.tmp
+temp_path=/var/spool/nagios/tmp
+log_archive_path=/var/log/nagios/archives
 check_result_path=/var/spool/nagios/checkresults
 state_retention_file=/var/lib/nagios/retention.dat
 debug_file=/var/log/nagios/nagios.debug
@@ -253,7 +306,7 @@ cfg_dir=/etc/nagios/conf.d
 object_cache_file=/var/cache/nagios/objects.cache
 precached_object_file=/var/cache/nagios/objects.precache
 resource_file=/etc/nagios/resource.cfg
-status_file=/var/lib/nagios/status.dat
+status_file=/var/spool/nagios/status.dat
 
 # Logging
 log_rotation_method=w
@@ -300,8 +353,19 @@ debug_verbosity=0
 max_debug_file_size=1000000
 
 # PNP4Nagios
-service_perfdata_command=process-service-perfdata
-host_perfdata_command=process-host-perfdata
+service_perfdata_command=process-service-perfdata-file
+service_perfdata_file=/var/spool/nagios/pnp/service-perfdata
+service_perfdata_file_template=DATATYPE::SERVICEPERFDATA\tTIMET::\$TIMET\$\tHOSTNAME::\$HOSTNAME\$\tSERVICEDESC::\$SERVICEDESC\$\tSERVICEPERFDATA::\$SERVICEPERFDATA\$\tSERVICECHECKCOMMAND::\$SERVICECHECKCOMMAND\$\tHOSTSTATE::\$HOSTSTATE\$\tHOSTSTATETYPE::\$HOSTSTATETYPE\$\tSERVICESTATE::\$SERVICESTATE\$\tSERVICESTATETYPE::\$SERVICESTATETYPE\$
+service_perfdata_file_mode=a
+service_perfdata_file_processing_interval=10
+service_perfdata_file_processing_command=process-service-perfdata-file
+
+host_perfdata_command=process-host-perfdata-file
+host_perfdata_file=/var/spool/nagios/pnp/host-perfdata
+host_perfdata_file_template=DATATYPE::HOSTPERFDATA\tTIMET::\$TIMET\$\tHOSTNAME::\$HOSTNAME\$\tHOSTPERFDATA::\$HOSTPERFDATA\$\tHOSTCHECKCOMMAND::\$HOSTCHECKCOMMAND\$\tHOSTSTATE::\$HOSTSTATE\$\tHOSTSTATETYPE::\$HOSTSTATETYPE\$
+host_perfdata_file_mode=a
+host_perfdata_file_processing_interval=10
+host_perfdata_file_processing_command=process-host-perfdata-file
 
 # Illegal characters
 EOF
@@ -380,29 +444,33 @@ EOF
 
 cat <<EOF > conf.d/pnp4nagios.cfg
 define command {
-   command_name  process-service-perfdata
-   command_line  /usr/bin/perl /usr/local/lib/nagios/process_perfdata.pl
+       command_name    process-service-perfdata-file
+       command_line    /bin/mv /var/spool/nagios/pnp/service-perfdata /var/spool/nagios/pnp/npcd/service-perfdata.$TIMET$
 }
 
 define command {
-   command_name  process-host-perfdata
-   command_line  /usr/bin/perl /usr/local/lib/nagios/process_perfdata.pl -d HOSTPERFDATA
+       command_name    process-host-perfdata-file
+       command_line    /bin/mv /var/spool/nagios/pnp/host-perfdata /var/spool/nagios/pnp/npcd/host-perfdata.$TIMET$
 }
 EOF
-
 
 
 echo 'nagiosadmin:vWQwFr7mwjvmI' > htpasswd
 
 
-mkdir -p $DESTDIR/etc/$HTTPD/conf.d
-ln -sfn /etc/nagios/$HTTPD.conf $DESTDIR/etc/$HTTPD/conf.d/nagios.conf
+mkdir -p /etc/$HTTPD/conf.d
+ln -sfn /etc/nagios/$HTTPD.conf /etc/$HTTPD/conf.d/nagios.conf
 
 rm -rf conf.d-example
 
 popd
 
+# =============================================================================
+# PNP4Nagios
+# =============================================================================
+
 # Compile and install PNP4Nagios
+heading "PNP4Nagios"
 [ -e $PNP_NAME-$PNP_VERSION.tar.gz ] || wget "$PNP_URL"
 tar xzf $PNP_NAME-$PNP_VERSION.tar.gz
 pushd $PNP_NAME-$PNP_VERSION
@@ -419,25 +487,187 @@ pushd $PNP_NAME-$PNP_VERSION
   $PNP_DATAOPTION
 
 make all
-make DESTDIR=$DESTDIR install install-config
-rm -rf $DESTDIR/etc/nagios/check_commands
+make install install-config install-webconf
+rm -rf /etc/nagios/check_commands
 popd
-pushd $DESTDIR/etc/nagios
+pushd /etc/nagios
 mv rra.cfg-sample rra.cfg
-mv process_perfdata.cfg-sample process_perfdata.cfg
-mv npcd.cfg-sample npcd.cfg
-sed -i 's@^RRDPATH =.*@RRDPATH = /var/lib/nagios/rrd@' process_perfdata.cfg
-sed -i 's@^\(.conf\[.rrdbase.\] =\).*@\1"/var/lib/nagios/rrd/";@' config.php
+rm -f npcd.cfg*
+cat <<EOF > npcd.cfg
+user = nagios
+group = nagios
+log_type = file
+log_file = /var/log/nagios/npcd.log
+max_logfile_size = 10485760
+log_level = 0
+perfdata_spool_dir = /var/spool/nagios/pnp/npcd
+perfdata_file_run_cmd = /usr/local/lib/nagios/process_perfdata.pl
+perfdata_file_run_cmd_args = -b
+identify_npcd = 1
+npcd_max_threads = 5
+sleep_time = 15
+load_threshold = 0.0
+pid_file = /var/run/npcd.pid
+# This line must be here. Bug in ncpd. Sorry.
+EOF
+
+rm -f process_perfdata.cfg*
+cat <<EOF > process_perfdata.cfg
+TIMEOUT = 5
+USE_RRDs = 1 
+RRDPATH = /var/lib/nagios/rrd
+RRDTOOL = /usr/local/bin/rrdtool
+CFG_DIR = /etc/nagios
+RRD_STORAGE_TYPE = SINGLE
+RRD_HEARTBEAT = 8460 
+RRA_CFG = /etc/nagios/rra.cfg
+RRA_STEP = 60
+LOG_FILE = /var/log/nagios/perfdata.log
+LOG_LEVEL = 0
+XML_ENC = UTF-8
+XML_UPDATE_DELAY = 0
+RRD_DAEMON_OPTS = 
+EOF
+
+rm -f config.php*
+cat <<EOF > config.php
+<?php
+\$conf['use_url_rewriting'] = 1;
+\$conf['rrdtool'] = "/usr/local/bin/rrdtool";
+\$conf['graph_width'] = "500";
+\$conf['graph_height'] = "100";
+\$conf['pdf_width'] = "675";
+\$conf['pdf_height'] = "100";
+\$conf['graph_opt'] = ""; 
+\$conf['pdf_graph_opt'] = ""; 
+\$conf['rrdbase'] = "/var/lib/nagios/rrd/";
+\$conf['page_dir'] = "/etc/nagios/pages/";
+\$conf['refresh'] = "90";
+\$conf['max_age'] = 60*60*6;   
+\$conf['temp'] = "/var/tmp";
+\$conf['nagios_base'] = "/nagios/cgi-bin";
+\$conf['allowed_for_service_links'] = "EVERYONE";
+\$conf['allowed_for_host_search'] = "EVERYONE";
+\$conf['allowed_for_host_overview'] = "EVERYONE";
+\$conf['allowed_for_pages'] = "EVERYONE";
+\$conf['overview-range'] = 1 ;
+\$conf['popup-width'] = "300px";
+\$conf['ui-theme'] = 'smoothness';
+\$conf['lang'] = "en_US";
+\$conf['date_fmt'] = "d.m.y G:i";
+\$conf['enable_recursive_template_search'] = 0;
+\$conf['show_xml_icon'] = 1;
+\$conf['use_fpdf'] = 1;	
+\$conf['background_pdf'] = '/etc/nagios/background.pdf' ;
+\$conf['use_calendar'] = 1;
+\$views[0]["title"] = "4 Hours";
+\$views[0]["start"] = ( 60*60*4 );
+\$views[1]["title"] = "24 Hours";
+\$views[1]["start"] = ( 60*60*24 );
+\$views[2]["title"] = "One Week";
+\$views[2]["start"] = ( 60*60*24*7 );
+\$views[3]["title"] = "One Month";
+\$views[3]["start"] = ( 60*60*24*30 );
+\$views[4]["title"] = "One Year";
+\$views[4]["start"] = ( 60*60*24*365 );
+\$conf['RRD_DAEMON_OPTS'] = '';
+\$conf['template_dir'] = '/usr/local/share/pnp4nagios';
+?>
+EOF
+
+cat <<EOF > /etc/$HTTPD/conf.d/pnp4nagios.conf
+Alias /pnp4nagios "/usr/local/share/pnp4nagios"
+
+<Directory "/usr/local/share/pnp4nagios">
+   	AllowOverride None
+   	Order allow,deny
+   	Allow from all
+   	#
+   	# Use the same value as defined in nagios.conf
+   	#
+   	AuthName "Nagios Access"
+   	AuthType Basic
+   	AuthUserFile /etc/nagios/htpasswd
+   	Require valid-user
+	<IfModule mod_rewrite.c>
+		# Turn on URL rewriting
+		RewriteEngine On
+		Options FollowSymLinks
+		# Installation directory
+		RewriteBase /pnp4nagios/
+		# Protect application and system files from being viewed
+		RewriteRule ^(application|modules|system) - [F,L]
+		# Allow any files or directories that exist to be displayed directly
+		RewriteCond %{REQUEST_FILENAME} !-f
+		RewriteCond %{REQUEST_FILENAME} !-d
+		# Rewrite all other URLs to index.php/URL
+		RewriteRule .* index.php/\$0 [PT,L]
+	</IfModule>
+</Directory>
+EOF
+
+
+
+chown -R root.root pages *.pdf pnp4nagios_release *.cfg
 popd
 
+
+mkdir -p /etc/init.d
+cat <<EOF > /etc/init.d/npcd
+#!/bin/sh
+
+# chkconfig: 345 98 02
+# description: PNP4Nagios NCPD
+
+### BEGIN INIT INFO
+# Provides:       npcd
+# Required-Start: $networking
+# Required-Stop:  $networking
+# Default-Start:  2 3 5
+# Default-Stop:
+# Description:    Start NPCD of PNP4Nagios
+### END INIT INFO
+
+case "\$1" in
+    start)
+	# make sure, directories are there (ramdisk!)
+	mkdir -p /var/spool/nagios/pnp/npcd
+	chown -R nagios.nagios /var/spool/nagios
+ 	echo -n 'Starting NPCD...'
+	/usr/local/bin/npcd -d -f /etc/nagios/npcd.cfg && echo OK || echo Error
+        ;;
+    stop)
+	echo -n 'Stopping NPCD...'
+	killall npcd && echo OK || echo Error
+    ;;
+    restart)
+	\$0 start
+	\$0 stop
+    ;;
+    *)
+	echo "Usage: \0 {start|stop|restart}"
+    ;;
+esac
+EOF
+
+
+activate_initd npcd
+/etc/init.d/npcd start
+
+echo "Enabling mod_rewrite"
+a2enmod rewrite || true
+
+rm -f /usr/local/share/nagios/htdocs/pnp/install.php
+
 # Und auch noch Nagvis
+heading "NagVis"
 [ -e nagvis-$NAGVIS_VERSION.tar.gz ] || wget "$NAGVIS_URL"
 rm -rf nagvis-$NAGVIS_VERSION
 tar xzf nagvis-$NAGVIS_VERSION.tar.gz
 pushd nagvis-$NAGVIS_VERSION
 ./install.sh -q -F -c y \
   -u $WWWUSER \
-  -g $WWWUSER \
+  -g $WWWGROUP \
   -w /etc/$HTTPD/conf.d \
   -W /nagvis \
   -B /usr/local/bin/nagios \
@@ -451,10 +681,12 @@ sed -i -e 's@^;socket="unix:.*@socket="unix:/var/run/nagios/rw/live"@' \
    /usr/local/nagvis/etc/nagvis.ini.php
 
 cat <<EOF > /etc/$HTTPD/conf.d/nagios.conf
+RedirectMatch ^/$ /nagios/
+
 Alias /nagvis/ /usr/local/nagvis/
 <Directory /usr/local/nagvis/>
    allow from all
-   AuthName "Nagios Monitoring"
+   AuthName "Nagios Access"
    AuthType Basic
    AuthUserFile "/etc/nagios/htpasswd"
    require valid-user 
@@ -463,7 +695,7 @@ Alias /nagvis/ /usr/local/nagvis/
 ScriptAlias /nagios/cgi-bin/ /usr/local/lib/nagios/cgi-bin/
 <Directory /usr/local/lib/nagios/cgi-bin/>
    allow from all
-   AuthName "Nagios Monitoring"
+   AuthName "Nagios Access"
    AuthType Basic
    AuthUserFile "/etc/nagios/htpasswd"
    require valid-user 
@@ -472,7 +704,7 @@ ScriptAlias /nagios/cgi-bin/ /usr/local/lib/nagios/cgi-bin/
 Alias /nagios/ /usr/local/share/nagios/htdocs/
 <Directory /usr/local/share/nagios/htdocs/>
    allow from all
-   AuthName "Nagios Monitoring"
+   AuthName "Nagios Access"
    AuthType Basic
    AuthUserFile "/etc/nagios/htpasswd"
    require valid-user 
@@ -481,7 +713,7 @@ EOF
 
 
 
-gpasswd -a $WWWUSER nagios
+add_user_to_group $WWWUSER nagios
 /etc/init.d/$HTTPD stop
 /etc/init.d/$HTTPD start
 killall nagios || true
@@ -489,6 +721,7 @@ killall nagios || true
 activate_initd nagios || true
 
 # check_mk
+heading "Check_MK"
 if [ ! -e check_mk-$CHECK_MK_VERSION.tar.gz ]
 then
     wget "$CHECK_MK_URL"
@@ -503,15 +736,18 @@ rm -rf /var/lib/check_mk /etc/check_mk
 # autodetected
 cat <<EOF > ~/.check_mk_setup.conf 
 check_icmp_path='/usr/local/lib/nagios/plugins/check_icmp'
+rrddir='/var/lib/nagios/rrd'
+pnptemplates='/usr/local/share/pnp4nagios/templates'
 EOF
 
-DESTDIR=$DESTDIR ./setup.sh --yes
+./setup.sh --yes
 echo 'do_rrd_update = False' >> /etc/check_mk/main.mk
 popd
 
 # Apache neu starten
+echo "Restarting apache"
 /etc/init.d/$HTTPD restart
-activate_initd httpd
+activate_initd $HTTPD
 
 # side.html anpassen
 HTML='<div class="navsectiontitle">Check_MK</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="/check_mk/filter.py" target="<?php echo $link_target;?>">Filters and Actions</a></li></div></div><div class="navsection"><div class="navsectiontitle">Nagvis</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="/nagios/nagvis/" target="<?php echo $link_target;?>">Overview page</a></li></div></div><div class="navsection">'
@@ -519,23 +755,24 @@ QUOTE=${HTML//\//\\/}
 sed -i "/.*Reports<.*$/i$QUOTE" /usr/local/share/nagios/htdocs/side.php
 
 # Agent fuer localhost
-mkdir -p $DESTDIR/etc/xinetd.d
-cp $DESTDIR/usr/share/check_mk/agents/xinetd.conf $DESTDIR/etc/xinetd.d/check_mk
-mkdir -p $DESTDIR/usr/bin
-install -m 755 $DESTDIR/usr/share/check_mk/agents/check_mk_agent.linux $DESTDIR/usr/bin/check_mk_agent
+mkdir -p /etc/xinetd.d
+cp /usr/share/check_mk/agents/xinetd.conf /etc/xinetd.d/check_mk
+mkdir -p /usr/bin
+install -m 755 /usr/share/check_mk/agents/check_mk_agent.linux /usr/bin/check_mk_agent
 /etc/init.d/xinetd stop || true
 /etc/init.d/xinetd start
 activate_initd xinetd
 
-cat <<EOF > $DESTDIR/etc/check_mk/main.mk
+cat <<EOF > /etc/check_mk/main.mk
 all_hosts = [ 'localhost' ]
 do_rrd_update = False
 EOF
 check_mk -I alltcp
-rm $DESTDIR/etc/nagios/conf.d/localhost.cfg
+rm /etc/nagios/conf.d/localhost.cfg
 check_mk -R
 
-
+heading "Cleaning up"
+rm -f /etc/nagios/*.cfg-*
 
 cat <<EOF
 
@@ -546,8 +783,9 @@ Nagios and the addons have been installed into the following paths:
  /etc/init.d/nagios       start script for Nagios
 
  /var/lib/nagios          data directory of Nagios
+ /var/spool/nagios        spool files for Nagios (in Ramdisk)
  /var/log/nagios          log files of Nagios
- /var/lib/check_mk        data directory of check_mk
+ /var/lib/check_mk        data directory of Check_MK
 
  /usr/local               programs, scripts, fixed data
 

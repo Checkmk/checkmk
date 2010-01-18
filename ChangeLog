@@ -61,6 +61,11 @@
         using MegaCli (based on the driver megaraid_sas)
         (Linux)
       - Added section <<<cpu>>> to AIX and Solaris agents
+      - make non-bulkwalk a default. Please edit bulkwalk_hosts
+        or non_bulkwalk_hosts to change that
+      - New SNMP scan feature: -I snmp scans all SNMP
+	checks (currently only very few checks support this,
+	though)
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

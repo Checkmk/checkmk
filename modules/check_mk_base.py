@@ -83,6 +83,8 @@ g_hostname                   = "unknown" # Host currently being checked
 g_aggregated_service_results = {}   # store results for later submission
 compiled_regexes             = {}   # avoid recompiling regexes
 nagios_command_pipe          = None # Filedescriptor to open nagios command pipe.
+g_single_oid_hostname        = None
+g_single_oid_cache           = {}
 
 
 # variables set later by getopt

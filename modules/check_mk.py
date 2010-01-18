@@ -269,6 +269,7 @@ precompile_params                  = {} # optional functions for parameter preco
 check_config_variables             = [] # variables (names) in checks/* needed for check itself
 snmp_info                          = {} # whichs OIDs to fetch for which check (for tabular information)
 snmp_info_single                   = {} # similar, but for single SNMP variables (MIB-Name BASE-OID List-of-Suffixes)
+snmp_scan_functions                = {} # SNMP autodetection
 
 
 # Now include the other modules. They contain everything that is needed
@@ -610,7 +611,63 @@ def is_bulkwalk_host(hostname):
     elif non_bulkwalk_hosts:
         return not in_binary_hostlist(hostname, non_bulkwalk_hosts)
     else:
-        return True
+        return False
+
+def get_single_oid(hostname, ipaddress, oid):
+    global g_single_oid_hostname
+    global g_single_oid_cache
+
+    if g_single_oid_hostname != hostname:
+        g_single_oid_hostname = hostname
+        g_single_oid_cache = {}
+
+    if oid in g_single_oid_cache:
+        return g_single_oid_cache[oid]
+
+    community = get_snmp_community(hostname)
+    command = "snmpget -v1 -On -OQ -Oe -c %s %s %s" % (community, ipaddress, oid)
+    try:
+	if opt_verbose:
+	    sys.stdout.write("Running '%s'\n" % command)
+	    
+        snmp_process = os.popen(command, "r")
+	line = snmp_process.readline().strip()
+	item, value = line.split("=")
+	value = value.strip()
+	if opt_verbose:
+	   sys.stdout.write("SNMP answer: ==> [%s]\n" % value)
+	
+	
+        # try to remove text, only keep number
+        # value_num = value_text.split(" ")[0]
+        # value_num = value_num.lstrip("+")
+        # value_num = value_num.rstrip("%")
+	# value = value_num
+    except:
+        value = None
+
+    g_single_oid_cache[oid] = value
+    return value
+
+def snmp_scan(hostname, ipaddress):
+    sys.stdout.write("Scanning host %s(%s)..." % (hostname, ipaddress))
+    sys_descr = get_single_oid(hostname, ipaddress, ".1.3.6.1.2.1.1.1.0")
+    if sys_descr == None:
+	print "no SNMP answer"
+	return []
+
+    found = []
+    for checktype, detect_function in snmp_scan_functions.items():
+        if detect_function(lambda oid: get_single_oid(hostname, ipaddress, oid)):
+            found.append(checktype)
+	    sys.stdout.write("%s " % checktype)
+	    sys.stdout.flush()
+    if found == []:
+	sys.stdout.write("nothing detected.\n")
+    else:
+	sys.stdout.write("\n")
+    return found
+
 
 #   +----------------------------------------------------------------------+
 #   |                    ____ _           _                                |
@@ -1426,6 +1483,18 @@ def inventorable_checktypes(include_snmp = True):
     checknames.sort()
     return checknames
 
+
+def do_snmp_scan(hostnamelist):
+    for hostname in hostnamelist:
+	try:
+	     ipaddress = lookup_ipaddress(hostname)
+	except:
+	     print "Cannot resolve %s into IP address. Skipping." % hostname
+	     continue
+	checknames = snmp_scan(hostname, ipaddress)
+	for checkname in checknames:
+	    make_inventory(checkname, [hostname])
+	
 
 def make_inventory(checkname, hostnamelist, check_only=False):
     try:
@@ -2868,18 +2937,21 @@ if __name__ == "__main__":
         elif o == '-I':
             if a == 'list':
                 print "Checktypes available for inventory are: %s" % (",".join(inventorable_checktypes()))
-            else:
-                if a == 'alltcp':
-                    checknames = inventorable_checktypes(False)
-                    opt_no_snmp_hosts = True
-                else:
-                    checknames = a.split(',')
-                if len(checknames) == 0:
-                    print "Please specify check types."
-                    usage()
-                    sys.exit(1)
-                for checkname in checknames:
-                    make_inventory(checkname, args)
+            else:	
+		if a == "allsnmp" or a == "snmp":
+		    do_snmp_scan(args) 
+		else:
+		    if a == 'alltcp' or a == "tcp":
+			checknames = inventorable_checktypes(False)
+			opt_no_snmp_hosts = True
+		    else:
+			checknames = a.split(',')
+		    if len(checknames) == 0:
+			print "Please specify check types."
+			usage()
+			sys.exit(1)
+		    for checkname in checknames:
+			make_inventory(checkname, args)
             done = True
         elif o == '--check-inventory':
             check_inventory(a)

@@ -131,7 +131,9 @@ def get_snmp_table(hostname, ip, community, oid_info):
             # Ugly: snmpbulkwalk outputs 'No more variables left in this MIB
             # View (It is past the end of the MIB tree)' if part of tree is
             # not available -- on stdout >:-P
-            if len(rowinfo) == 1 and rowinfo[0].startswith('No more variables'):
+            if len(rowinfo) == 1 and ( \
+		rowinfo[0].startswith('No more variables') or \
+		rowinfo[0].startswith('End of MIB')):
                 rowinfo = []
             if len(rowinfo) > 0:
                # if we are working with suboids, we need to prefix them

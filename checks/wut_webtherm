@@ -3,28 +3,33 @@
 wut_webtherm_defaultlevels = (30, 35)
 
 def inventory_webtherm(checkname, info):
-    if len(info) > 0:
-	return [ (None, "", "wut_webtherm_defaultlevels") ]
+    return [ (line[0], "", "wut_webtherm_defaultlevels") for
+	line in info if len(line) == 2 ]
 
 def check_webtherm(item, params, info):
-   temp = float(info[0][0].replace(",", "."))
-   warn, crit = params
-   perfdata = [ ("temp", temp, warn, crit) ]
-   infotext = " - %.1f C (warn/crit at %.1f/%.1f C)" % (temp, warn, crit)
-   if temp >= crit:
-	return (2, "CRIT" + infotext, perfdata)
-   elif temp >= warn:
-	return (1, "WARN" + infotext, perfdata)
-   else:
-	return (0, "OK" + infotext, perfdata)
+   for line in info:
+       if line[0] == item:
+	   temp = float(line[1].replace(",", "."))
+	   warn, crit = params
+	   perfdata = [ ("temp", temp, warn, crit) ]
+	   infotext = " - %.1f C (warn/crit at %.1f/%.1f C)" % (temp, warn, crit)
+	   if temp >= crit:
+		return (2, "CRIT" + infotext, perfdata)
+	   elif temp >= warn:
+		return (1, "WARN" + infotext, perfdata)
+	   else:
+		return (0, "OK" + infotext, perfdata)
+   return (3, "UNKNOWN - No sensor found")
 
 def detect_webtherm(oid):
-   return oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.5040.1.2.3" 
+   return oid(".1.3.6.1.2.1.1.2.0") in \
+      [  ".1.3.6.1.4.1.5040.1.2.3",  ".1.3.6.1.4.1.5040.1.2.8" ] 
+    	
 
-check_info['wut_webtherm'] = ( check_webtherm, "WuT Web Thermograph", 1, inventory_webtherm)
+check_info['wut_webtherm'] = ( check_webtherm, "Thermograph Sensor %s", 1, inventory_webtherm)
 
 snmp_info['wut_webtherm'] = (
-   "enterprises.5040.1.2.3.1.3.1.1", [ 1 ])
+   "enterprises.5040.1.2", ["3", "8"],  [ "1.2.1.1.1", "1.3.1.1.1" ])
 
 snmp_scan_functions['wut_webtherm'] = detect_webtherm
 

@@ -170,7 +170,7 @@ then
    zypper update
    zypper -n install apache2 mailx apache2-mod_python apache2-mod_php5 php5-gd gd-devel \
 	xinetd wget xorg-x11-libXpm-devel psmisc less graphviz-devel graphviz-gd \
-	php5-sqlite php5-gettext python-rrdtool php5-zlib
+	php5-sqlite php5-gettext python-rrdtool php5-zlib php5-sockets
 else
    yum update
    yum -y install httpd gcc mailx php php-gd gd-devl xinetd wget psmisc less mod_python \
@@ -665,6 +665,7 @@ heading "NagVis"
 rm -rf nagvis-$NAGVIS_VERSION
 tar xzf nagvis-$NAGVIS_VERSION.tar.gz
 pushd nagvis-$NAGVIS_VERSION
+rm -rf /usr/local/share/nagvis
 ./install.sh -q -F -c y \
   -u $WWWUSER \
   -g $WWWGROUP \
@@ -672,19 +673,34 @@ pushd nagvis-$NAGVIS_VERSION
   -W /nagvis \
   -B /usr/local/bin/nagios \
   -b /usr/bin \
-  -p /usr/local/nagvis \
+  -p /usr/local/share/nagvis \
   -B /usr/local/bin
 popd
 
+cat <<EOF > /usr/local/share/nagvis/etc/nagvis.ini.php
+[paths]
+base="/usr/local/share/nagvis/"
+htmlbase="/nagvis/"
+htmlcgi="/nagios/cgi-bin"
+
+[defaults]
+backend="live_1"
+
+[backend_live_1]
+backendtype="mklivestatus"
+socket="unix:/var/run/nagios/rw/live"
+EOF
+
+
 sed -i -e 's@^;socket="unix:.*@socket="unix:/var/run/nagios/rw/live"@' \
        -e 's@^;backend=.*@backend="live_1"@' \
-   /usr/local/nagvis/etc/nagvis.ini.php
+   /usr/local/share/nagvis/etc/nagvis.ini.php
 
 cat <<EOF > /etc/$HTTPD/conf.d/nagios.conf
 RedirectMatch ^/$ /nagios/
 
-Alias /nagvis/ /usr/local/nagvis/
-<Directory /usr/local/nagvis/>
+Alias /nagvis/ /usr/local/share/nagvis/
+<Directory /usr/local/share/nagvis/>
    allow from all
    AuthName "Nagios Access"
    AuthType Basic
@@ -744,13 +760,16 @@ EOF
 echo 'do_rrd_update = False' >> /etc/check_mk/main.mk
 popd
 
+echo "Enabling mod_python"
+a2enmod python || true
+
 # Apache neu starten
 echo "Restarting apache"
 /etc/init.d/$HTTPD restart
 activate_initd $HTTPD
 
 # side.html anpassen
-HTML='<div class="navsectiontitle">Check_MK</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="/check_mk/filter.py" target="<?php echo $link_target;?>">Filters and Actions</a></li></div></div><div class="navsection"><div class="navsectiontitle">Nagvis</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="/nagios/nagvis/" target="<?php echo $link_target;?>">Overview page</a></li></div></div><div class="navsection">'
+HTML='<div class="navsectiontitle">Check_MK</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="/check_mk/filter.py" target="<?php echo $link_target;?>">Filters and Actions</a></li></div></div><div class="navsection"><div class="navsectiontitle">Nagvis</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="/nagvis/" target="<?php echo $link_target;?>">Overview page</a></li></div></div><div class="navsection">'
 QUOTE=${HTML//\//\\/}
 sed -i "/.*Reports<.*$/i$QUOTE" /usr/local/share/nagios/htdocs/side.php
 

@@ -1485,7 +1485,15 @@ def inventorable_checktypes(include_snmp = True):
 
 
 def do_snmp_scan(hostnamelist):
+    only_snmp_hosts = False
+    if hostnamelist == []:
+        hostnamelist = all_hosts_untagged
+        only_snmp_hosts = True
     for hostname in hostnamelist:
+        if only_snmp_hosts and not is_snmp_host(hostname):
+	    if opt_verbose:
+		sys.stdout.write("Skipping %s, not an snmp host\n" % hostname)
+            continue
 	try:
 	     ipaddress = lookup_ipaddress(hostname)
 	except:
@@ -1645,7 +1653,10 @@ def make_inventory(checkname, hostnamelist, check_only=False):
     if not check_only:
         sys.stdout.write('%-30s ' % (tty_blue + checkname + tty_normal))
         if newchecks != []:
-            filename = autochecksdir + "/" + checkname + "-" + time.strftime("%Y-%m-%d_%H.%M.%S") + ".mk"
+            filename = autochecksdir + "/" + checkname + "-" + time.strftime("%Y-%m-%d_%H.%M.%S")
+	    while os.path.exists(filename + ".mk"): # more that one file a second..
+		filename += ".x"
+            filename += ".mk"
             if not os.path.exists(autochecksdir):
                os.makedirs(autochecksdir)
             file(filename, "w").write('# %s\n[%s]\n' % (filename, ''.join(newchecks)))
@@ -1825,7 +1836,8 @@ filesystem_default_levels = None
                  "precompile_params = {}\n" +
                  "check_config_variables = []\n" +
                  "snmp_info = {}\n" +
-		 "snmp_info_single = {}\n")
+		 "snmp_info_single = {}\n" +
+		 "snmp_scan_functions = {}\n")
 
     
     for filename in filenames:

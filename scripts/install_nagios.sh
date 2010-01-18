@@ -657,7 +657,7 @@ activate_initd npcd
 echo "Enabling mod_rewrite"
 a2enmod rewrite || true
 
-rm -f /usr/local/share/nagios/htdocs/pnp/install.php
+rm -f /usr/local/share/pnp4nagios/install.php
 
 # Und auch noch Nagvis
 heading "NagVis"

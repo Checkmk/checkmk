@@ -24,7 +24,7 @@
 # Boston, MA 02110-1301 USA.
 
 $ds_name[1] = "Round Trip Averages";
-$opt[1] = "--vertical-label \"RTA (ms)\" --title \"Ping times for $hostname ($NAGIOS_HOSTADDRESS)\" ";
+$opt[1] = "--vertical-label \"RTA (ms)\" --title \"Ping times for $hostname\" ";
 $def[1] =  "DEF:var1=$rrdfile:$DS[1]:AVERAGE " ;
 $def[1] .= "DEF:var2=$rrdfile:$DS[2]:MAX " ;
 $def[1] .= "VDEF:maxrta=var1,MAXIMUM " ;

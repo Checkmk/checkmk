@@ -23,7 +23,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-$opt[1] = "--vertical-label \"Celsius\"  -l 0 -u 40 --title \"CMC Sensor $servicedesc\" ";
+$opt[1] = "--vertical-label \"Celsius\"  -l 0 -u 40 --title \"Temperature $servicedesc\" ";
 
 $def[1] = "DEF:var1=$rrdfile:$DS[1]:AVERAGE ";
 $def[1] .= "AREA:var1#2080ff:\"Temperature\:\" ";

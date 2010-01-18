@@ -1,0 +1,30 @@
+#!/usr/bin/python
+
+wut_webtherm_defaultlevels = (30, 35)
+
+def inventory_webtherm(checkname, info):
+    if len(info) > 0:
+	return [ (None, "", "wut_webtherm_defaultlevels") ]
+
+def check_webtherm(item, params, info):
+   temp = float(info[0][0].replace(",", "."))
+   warn, crit = params
+   perfdata = [ ("temp", temp, warn, crit) ]
+   infotext = " - %.1f C (warn/crit at %.1f/%.1f C)" % (temp, warn, crit)
+   if temp >= crit:
+	return (2, "CRIT" + infotext, perfdata)
+   elif temp >= warn:
+	return (1, "WARN" + infotext, perfdata)
+   else:
+	return (0, "OK" + infotext, perfdata)
+
+def detect_webtherm(oid):
+   return oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.5040.1.2.3" 
+
+check_info['wut_webtherm'] = ( check_webtherm, "WuT Web Thermograph", 1, inventory_webtherm)
+
+snmp_info['wut_webtherm'] = (
+   "enterprises.5040.1.2.3.1.3.1.1", [ 1 ])
+
+snmp_scan_functions['wut_webtherm'] = detect_webtherm
+

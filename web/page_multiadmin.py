@@ -491,7 +491,7 @@ def nagios_service_action_command(html, service):
 
     elif html.var("down_remove"):
         downtime_ids = []
-	for id in service["downtimes"].split(","):
+	for id in service["downtimes"]:
 	   if id != "":
 	       downtime_ids.append(int(id))
         commands = []

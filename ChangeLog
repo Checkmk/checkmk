@@ -67,6 +67,7 @@
 	checks (currently only very few checks support this,
 	though)
       - New Check for W&T web thermograph (webthermometer)
+      - New Check for output power of APC Symmetra USP
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

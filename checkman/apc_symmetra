@@ -1,4 +1,4 @@
-title: Check status auf APC Symmetra USV
+title: Check status of APC Symmetra USV
 agents: snmp
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL

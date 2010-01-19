@@ -41,7 +41,8 @@ apc_default_levels = ( 95, 40, 1, 220 )
 def check_apc(item, params, info):
    BasicBatteryStatus, BasicOutputStatus, AdvBatteryCapacity, \
    AdvBatteryTemperature, AdvBatteryCurrent, AdvOutputVoltage, \
-   AdvOutputCurrent = [int(x) for x in info[0]]
+   AdvOutputCurrent = [int(x) for x in info[0][:7]]
+   RunTimeRemaining = info[0][7]
 
    crit_capacity, crit_batt_temp, crit_batt_curr, crit_voltage = params
 
@@ -108,10 +109,20 @@ def check_apc(item, params, info):
 
    # 7. Simply add output current as perfdata
    single_states.append( (0, "output current %dA" % AdvOutputCurrent, ("current", AdvOutputCurrent)) )
+   
+   # 8. run time remaining
+   # RunTimeRemaining == "0:0:26:00.00"
+   parts = RunTimeRemaining.split(":")
+   secs = int(float(parts[-1]))
+   mins = int(parts[-2])
+   hrs = int(parts[-3])
+   single_states.append( (0, "run time remaining: %02d:%02d:%02d" % (hrs, mins, secs), None) )
 
+   # create summary state
    worst_state = max([x[0] for x in single_states])
    info_text = ", ".join([x[1] for x in single_states])
    state_text = { 0:"OK", 1:"WARN", 2:"CRIT" }.get(worst_state)
+
    return (worst_state, "%s - %s" % (state_text, info_text), [x[2] for x in single_states if x[2] != None])
 
 def inventory_apc(checkname, info):
@@ -124,6 +135,6 @@ check_info['apc_symmetra'] = ( check_apc, "APC Symmetra status", 1, inventory_ap
 snmp_info['apc_symmetra'] = (
   "enterprises.318.1.1.1",
   [ "2.1.1.0", "4.1.1.0", "2.2.1.0", "2.2.2.0", 
-    "2.2.9.0", "4.2.1.0", "4.2.4.0" ] )
+    "2.2.9.0", "4.2.1.0", "4.2.4.0", "2.2.3.0" ] )
 
 snmp_scan_functions['apc_symmetra'] = lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.318.1.3.13.3"

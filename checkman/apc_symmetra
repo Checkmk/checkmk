@@ -4,10 +4,11 @@ author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
- Monitor seven aspects of an APC Symmetra USV: {(1)} the battery status,
+ Monitor eight aspects of an APC Symmetra USV: {(1)} the battery status,
  {(2)} the output status, {(3)} the battery capacity, {(4)} the battery
  temperature, {(5)} the battery current, {(6)} the output voltage and
- {(7)} the output current. The output current is not checked against 
+ {(7)} the output current, {(8)} the remaing run time. The output current and
+ remaining run time are not checked against 
  a level but just being displayed.
 
 examples:
@@ -31,6 +32,7 @@ crit_capacity (int): The battery capacity in percent at and below which a critic
 crit_batt_temp (int): The critical temperature of the battery
 crit_batt_curr (int): The critical battery current in Ampere
 crit_voltage (int): The output voltage at and below which a critical state is triggered.
+
 [configuration]
 apc_default_levels (int, int, int, int): The default levels to be used
    for inventorized checks. This variable is preset to {(95, 40, 1, 220)}

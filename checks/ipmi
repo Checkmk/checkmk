@@ -100,7 +100,7 @@ def check_ipmi_summarized(info):
         elif status != 'ok':
             worst_status = 2
             crit_texts.append(text)
-        if "amb" in name:
+        if "amb" in name or "Ambient" in name:
             try:
                 ambient_count += 1
                 ambient_sum += float(val)

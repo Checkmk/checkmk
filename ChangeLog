@@ -71,7 +71,8 @@
       - New Check for temperature sensors of APC Symmetra
         WEB/SNMP Management Card.
       - apc_symmetra: add remaining runtime to output
-      - New check for GE SitePro USP
+      - New check for UPS'es using the generic UPS-MIB
+        (such as GE SitePro USP)
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

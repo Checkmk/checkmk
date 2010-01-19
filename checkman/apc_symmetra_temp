@@ -1,0 +1,34 @@
+title: Check temperature via Symmetra APC Web/SNMP Management Card
+agents: snmp
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This checks queries a APC Symmetra Web/SNMP management card for attached temperature
+ sensors.
+
+item:
+ The name of the sensor as configured in your management card.
+
+perfdata: 
+ One variable: the current temperature in degrees celsius.
+
+inventory:
+ All available temperature sensors are automatically inventorized.
+
+examples:
+ # set default levels for all temperature sensors
+ apc_temp_default_levels = (20, 24)
+
+ # Set specific levels for one sensor
+ checks += [
+   ("apcusv47", "apc_symmetra_temp", 'Temp Sensor MM:3', (22, 26) ),
+ ]
+
+[parameters]
+warning (int): temperature at which a warning level is triggered
+critical (int): critical level for temperature
+
+[configuration]
+apc_temp_default_levels (int, int): Default levels for warning
+ and critical. This is preset to {(25, 30)}.

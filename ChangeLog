@@ -68,6 +68,8 @@
 	though)
       - New Check for W&T web thermograph (webthermometer)
       - New Check for output power of APC Symmetra USP
+      - New Check for temperature sensors of APC Symmetra
+        WEB/SNMP Management Card.
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

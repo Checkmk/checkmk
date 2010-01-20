@@ -73,6 +73,8 @@
       - apc_symmetra: add remaining runtime to output
       - New check for UPS'es using the generic UPS-MIB
         (such as GE SitePro USP)
+      - Fix bug in PNP-template for Linux NICs (bytes
+	and megabytes had been mixed up).
 
 1.1.0:
       - Fixed problems in Windows agent (could lead

@@ -1,15 +1,15 @@
 <?php
 # +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |     _           _           _       _   __   _______        ___  |
+# |  __| |_  ___ __| |__  _ __ | |__   / | /  \ |__ / _ \_ _ __|_  ) |
+# | / _| ' \/ -_) _| / / | '  \| / /   | || () | |_ \_, / '_/ _|/ /  |
+# | \__|_||_\___\__|_\_\_|_|_|_|_\_\   |_(_)__(_)___//_/|_| \__/___| |
+# |                                            check_mk 1.0.39rc2    |
 # |                                                                  |
-# | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2009                mk@mathias-kettner |
 # +------------------------------------------------------------------+
 # 
-# This file is part of Check_MK.
+# This file is part of check_mk 1.0.39rc2.
 # The official homepage is at http://mathias-kettner.de/check_mk.
 # 
 # check_mk is free software;  you can redistribute it and/or modify it
@@ -37,16 +37,16 @@
 #
 $x = explode("_", $servicedesc);
 $nic = $x[1];
-$opt[1] = "--vertical-label 'Byte/s' -l0 -u1048576  --title \"$hostname / NIC $nic\" ";
+$opt[1] = "--vertical-label 'Bytes/s' -l0 -u1048576  --title \"$hostname / NIC $nic\" ";
 #
 #
 #
 $def[1] =  "DEF:rx_bytes=$rrdfile:$DS[1]:MAX " ;
 $def[1] .= "DEF:tx_bytes=$rrdfile:$DS[2]:MAX " ;
-#$def[1] .= "CDEF:rx_mb=rx_bytes,1048576.0,/ " ;
-#$def[1] .= "CDEF:tx_mb=tx_bytes,1048576.0,/ " ;
-$def[1] .= "CDEF:rx_mb=rx_bytes,1.0,/ " ;
-$def[1] .= "CDEF:tx_mb=tx_bytes,1.0,/ " ;
+$def[1] .= "CDEF:rx_mb=rx_bytes,1048576.0,/ " ;
+$def[1] .= "CDEF:tx_mb=tx_bytes,1048576.0,/ " ;
+#$def[1] .= "CDEF:rx_mb=rx_bytes,1.0,/ " ;
+#$def[1] .= "CDEF:tx_mb=tx_bytes,1.0,/ " ;
 $def[1] .= "DEF:rx_errors=$rrdfile:$DS[5]:MAX " ;
 $def[1] .= "DEF:tx_errors=$rrdfile:$DS[6]:MAX " ;
 $def[1] .= "DEF:tx_collisions=$rrdfile:$DS[7]:MAX " ;
@@ -56,9 +56,9 @@ $def[1] .= "CDEF:problems=problems_x,1000000,* "; # Skaliere Probleme hoch, dami
 
 $def[1] .= "AREA:problems#ff0000:\"Errors \" " ;
 $def[1] .= "GPRINT:problems:LAST:\"%.0lf/s\" " ;
-$def[1] .= "LINE:rx_mb#2060a0:\"Receive \" " ;
-$def[1] .= "GPRINT:rx_mb:LAST:\"%.1lfMB/s\" " ;
-$def[1] .= "LINE:tx_mb#60a020:\"Transmit \" " ;
-$def[1] .= "GPRINT:tx_mb:LAST:\"%.1lfMB/s\" " ;
+$def[1] .= "LINE:rx_bytes#2060a0:\"Receive \" " ;
+$def[1] .= "GPRINT:rx_mb:LAST:\"%.2lfMB/s\" " ;
+$def[1] .= "LINE:tx_bytes#60a020:\"Transmit \" " ;
+$def[1] .= "GPRINT:tx_mb:LAST:\"%.2lfMB/s\" " ;
 
 ?>

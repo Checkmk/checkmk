@@ -498,12 +498,13 @@ propeller ()
 compile_livestatus ()
 {
    local D=$SRCDIR/livestatus.src
+   rm -rf $D
    mkdir -p $D
    tar xvzf $SRCDIR/livestatus.tar.gz -C $D
    pushd $D
    ./configure --libdir=$libdir --bindir=$bindir
    make clean
-   cat <<EOF > $D/livestatus.h
+   cat <<EOF > src/livestatus.h
 #ifndef livestatus_h
 #define livestatus_h
 #define DEFAULT_SOCKET_PATH "$livesock"

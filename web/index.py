@@ -59,7 +59,7 @@ def read_get_vars(req):
     if req.args:
         req.rawvars = util.parse_qs(req.args, True)
         for (key,values) in req.rawvars.items():
-            if len(values) >= 1 and values[-1] != '':
+            if len(values) >= 1:
                 req.vars[key] = values[-1]
                 
 

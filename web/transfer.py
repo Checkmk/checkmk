@@ -24,8 +24,5 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-
 # Sorry, this is a hack. Please tell me, if you
 # know a better solution

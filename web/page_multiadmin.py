@@ -74,6 +74,13 @@ sort_options = [ ("0", "hostname -> service", cmp_svc_hostname_svc),
                  ("1", "severity -> status age -> hostname -> service",          cmp_svc_severity, )
                  ]
 
+def enabled_sites(html):
+    sites = []
+    for site_name in check_mk.sites():
+	if html.var("site_%s" % site_name) == "on":
+	    sites.append(site_name)
+    return sites
+		 
 def page(html):
     global tabs
     tabs = [ ("filter", "Filter"),
@@ -89,7 +96,7 @@ def page(html):
 
     if html.has_var("filled_in") and not html.has_var("filter"):
         search_filter = build_search_filter(html)
-        hits, hosts = nagios.find_entries(html.req.defaults["livestatus_unix_socket"], search_filter)
+        hits, hosts = nagios.find_entries(search_filter, enabled_sites(html))
 
     if html.has_var("results"):
         show_tabs(html, tabs, "results")
@@ -211,6 +218,14 @@ def show_filter_form(html):
             html.write("<input type=radio name=%s value=\"%s\"%s> %s &nbsp; \n" %
                       (nagios_flag, value, checked, text))
         html.write("</td></tr>\n")
+
+    if check_mk.is_multisite():
+	html.write("<tr><td class=legend>Sites</td><td class=content>\n")
+	for site_name in check_mk.sites():
+	    site = check_mk.site(site_name)
+	    html.checkbox("site_" + site_name, 1)
+	    html.write(" " + site["alias"] + " &nbsp;")
+	html.write("</td></tr>")
 
     for descr, field in search_textfields:
         html.write("<tr><td class=legend>%s</td>\n"
@@ -515,9 +530,7 @@ def nagios_service_action_command(html, service):
     return title, [nagios_command]
 
 def all_check_commands():
-   commands = nagios.query_livestatus_column(
-	 check_mk.livestatus_unix_socket,
-	 "GET commands\nColumns: name\n")
+   commands = nagios.query_livestatus_column_unique("GET commands\nColumns: name\n")
    commands.sort()
    return commands
 
@@ -541,7 +554,7 @@ search_vars = [ "filled_in",
 		"checks_enabled",
                 "in_notification_period",
                 "sortorder",
-                ]
+                ] + [ "site_%s" % n for n in check_mk.sites() ]
 
 search_textfields = [ ("Service",       "description"),
                       ("Hostname",      "host_name"),

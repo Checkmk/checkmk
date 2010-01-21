@@ -24,9 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-#
-
 class MKConfigError(Exception):
     def __init__(self, msg):
         Exception.__init__(self, msg)

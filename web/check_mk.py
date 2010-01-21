@@ -35,4 +35,20 @@ def is_allowed_to_view(user):
 def is_allowed_to_act(user):
    return multiadmin_action_users == None or user in multiadmin_action_users
 
+def sites():
+    return multiadmin_sites.keys()
 
+def site(name):
+    s = multiadmin_sites[name]
+    if "alias" not in s:
+	s["alias"] = name
+    if "socket" not in s:
+	s["socket"] = "unix:" + livestatus_unix_socket
+    if "nagios_url" not in s:
+	s["nagios_url"] = nagios_url
+    if "nagios_cgi_url" not in s:
+	s["nagios_cgi_url"] = nagios_cgi_url
+    return s 
+
+def is_multisite():
+    return len(multiadmin_sites) > 1

@@ -1,0 +1,2 @@
+cp *.py *.png *.css *.jpg /usr/share/check_mk/web/ && /etc/init.d/apache2 restart
+

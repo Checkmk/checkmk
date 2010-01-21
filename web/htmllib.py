@@ -24,9 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-#
-
 import time, cgi
 from lib import *
 
@@ -156,6 +153,14 @@ class html:
                 sel = ""
             self.write("<option value=\"%s\"%s>%s</option>\n" % (value, sel, text))
         self.write("</select>\n")
+
+    def checkbox(self, varname, deflt):
+	value = self.req.vars.get(varname, deflt)
+	if value != "":
+	    checked = " CHECKED"
+	else:
+	    checked = ""
+	self.write("<input type=checkbox name=%s%s>" % (varname, checked))
 
     def datetime_input(self, varname, default_value):
         try:

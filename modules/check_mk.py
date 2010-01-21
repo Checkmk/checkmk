@@ -215,6 +215,7 @@ nagios_illegal_chars               = '`~!$%^&*|\'"<>?,()='
 # Settings for web pages
 multiadmin_users                   = None # means: all
 multiadmin_action_users            = None # means: all
+multiadmin_sites                   = { "local" : {} }
 
 # Data to be defined in main.mk
 checks                               = []

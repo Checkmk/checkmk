@@ -445,12 +445,12 @@ EOF
 cat <<EOF > conf.d/pnp4nagios.cfg
 define command {
        command_name    process-service-perfdata-file
-       command_line    /bin/mv /var/spool/nagios/pnp/service-perfdata /var/spool/nagios/pnp/npcd/service-perfdata.$TIMET$
+       command_line    /bin/mv /var/spool/nagios/pnp/service-perfdata /var/spool/nagios/pnp/npcd/service-perfdata.\$TIMET\$
 }
 
 define command {
        command_name    process-host-perfdata-file
-       command_line    /bin/mv /var/spool/nagios/pnp/host-perfdata /var/spool/nagios/pnp/npcd/host-perfdata.$TIMET$
+       command_line    /bin/mv /var/spool/nagios/pnp/host-perfdata /var/spool/nagios/pnp/npcd/host-perfdata.\$TIMET\$
 }
 EOF
 

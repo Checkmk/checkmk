@@ -136,6 +136,8 @@ void *client_thread(void *data)
     while (!g_should_terminate) {
 	int cc = queue_pop_connection();
 	if (cc >= 0) {
+	    if (g_debug_level >= 2)
+		logger(LG_INFO, "Accepted client connection on fd %d", cc);
 	    set_inputbuffer_fd(input_buffer, cc);
 	    int keepalive = 1;
 	    while (keepalive) {

@@ -8,9 +8,7 @@ description:
  to a WuT (Wiesemann & Theis) Web-Thermograph. 
 
 item:
- The item of the first (and most time only) sensor is
- is either {"3.1"} or {"8.1"}, depending on the version
- of the MiB, the thermograph is using.
+ The item is the number of the sensor as string - usuall {"1"}.
 
 perfdata: 
  One variable: the current temperature in degrees celsius.
@@ -26,12 +24,12 @@ examples:
  # for the first sensor, by defining explicit checks:
  zuluft_levels = ( 19, 25 )
  checks += [
-  ( [ "zuluft" ], ALL_HOSTS, "wut_webtherm", "3.1", zuluft_levels )
+  ( [ "zuluft" ], ALL_HOSTS, "wut_webtherm", "1", zuluft_levels )
  ]
 
  # Set even mor specific levels for one thermometer
  checks += [
-   ("webtherm3", "wut_webtherm", '3.1', (15, 18) ),
+   ("webtherm3", "wut_webtherm", '1', (15, 18) ),
  ]
 
 [parameters]

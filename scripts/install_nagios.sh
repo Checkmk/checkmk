@@ -353,14 +353,12 @@ debug_verbosity=0
 max_debug_file_size=1000000
 
 # PNP4Nagios
-service_perfdata_command=process-service-perfdata-file
 service_perfdata_file=/var/spool/nagios/pnp/service-perfdata
 service_perfdata_file_template=DATATYPE::SERVICEPERFDATA\tTIMET::\$TIMET\$\tHOSTNAME::\$HOSTNAME\$\tSERVICEDESC::\$SERVICEDESC\$\tSERVICEPERFDATA::\$SERVICEPERFDATA\$\tSERVICECHECKCOMMAND::\$SERVICECHECKCOMMAND\$\tHOSTSTATE::\$HOSTSTATE\$\tHOSTSTATETYPE::\$HOSTSTATETYPE\$\tSERVICESTATE::\$SERVICESTATE\$\tSERVICESTATETYPE::\$SERVICESTATETYPE\$
 service_perfdata_file_mode=a
 service_perfdata_file_processing_interval=10
 service_perfdata_file_processing_command=process-service-perfdata-file
 
-host_perfdata_command=process-host-perfdata-file
 host_perfdata_file=/var/spool/nagios/pnp/host-perfdata
 host_perfdata_file_template=DATATYPE::HOSTPERFDATA\tTIMET::\$TIMET\$\tHOSTNAME::\$HOSTNAME\$\tHOSTPERFDATA::\$HOSTPERFDATA\$\tHOSTCHECKCOMMAND::\$HOSTCHECKCOMMAND\$\tHOSTSTATE::\$HOSTSTATE\$\tHOSTSTATETYPE::\$HOSTSTATETYPE\$
 host_perfdata_file_mode=a

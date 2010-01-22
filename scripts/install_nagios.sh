@@ -486,6 +486,7 @@ pushd $PNP_NAME-$PNP_VERSION
 
 make all
 make install install-config install-webconf
+install -m 644 contrib/ssi/status-header.ssi /usr/local/share/nagios/htdocs/ssi/
 rm -rf /etc/nagios/check_commands
 popd
 pushd /etc/nagios

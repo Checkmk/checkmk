@@ -3,12 +3,14 @@
 wut_webtherm_defaultlevels = (30, 35)
 
 def inventory_webtherm(checkname, info):
-    return [ (line[0], "", "wut_webtherm_defaultlevels") for
+    # line[0] is 3.1 or 8.1 depending on MIB variant. We chop
+    # of the first part in order to get independent of that.
+    return [ (line[0].split(".")[1], "", "wut_webtherm_defaultlevels") for
 	line in info if len(line) == 2 ]
 
 def check_webtherm(item, params, info):
    for line in info:
-       if line[0] == item:
+       if line[0].split(".")[1] == item:
 	   temp = float(line[1].replace(",", "."))
 	   warn, crit = params
 	   perfdata = [ ("temp", temp, warn, crit) ]

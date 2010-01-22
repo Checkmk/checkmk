@@ -641,8 +641,8 @@ case "\$1" in
 	killall npcd && echo OK || echo Error
     ;;
     restart)
-	\$0 start
 	\$0 stop
+	\$0 start
     ;;
     *)
 	echo "Usage: \0 {start|stop|restart}"

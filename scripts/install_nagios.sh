@@ -170,7 +170,7 @@ then
    zypper update
    zypper -n install apache2 mailx apache2-mod_python apache2-mod_php5 php5-gd gd-devel \
 	xinetd wget xorg-x11-libXpm-devel psmisc less graphviz-devel graphviz-gd \
-	php5-sqlite php5-gettext python-rrdtool php5-zlib php5-sockets
+	php5-sqlite php5-gettext python-rrdtool php5-zlib php5-sockets php5-mbstring
 else
    yum update
    yum -y install httpd gcc mailx php php-gd gd-devl xinetd wget psmisc less mod_python \
@@ -353,14 +353,12 @@ debug_verbosity=0
 max_debug_file_size=1000000
 
 # PNP4Nagios
-service_perfdata_command=process-service-perfdata-file
 service_perfdata_file=/var/spool/nagios/pnp/service-perfdata
 service_perfdata_file_template=DATATYPE::SERVICEPERFDATA\tTIMET::\$TIMET\$\tHOSTNAME::\$HOSTNAME\$\tSERVICEDESC::\$SERVICEDESC\$\tSERVICEPERFDATA::\$SERVICEPERFDATA\$\tSERVICECHECKCOMMAND::\$SERVICECHECKCOMMAND\$\tHOSTSTATE::\$HOSTSTATE\$\tHOSTSTATETYPE::\$HOSTSTATETYPE\$\tSERVICESTATE::\$SERVICESTATE\$\tSERVICESTATETYPE::\$SERVICESTATETYPE\$
 service_perfdata_file_mode=a
 service_perfdata_file_processing_interval=10
 service_perfdata_file_processing_command=process-service-perfdata-file
 
-host_perfdata_command=process-host-perfdata-file
 host_perfdata_file=/var/spool/nagios/pnp/host-perfdata
 host_perfdata_file_template=DATATYPE::HOSTPERFDATA\tTIMET::\$TIMET\$\tHOSTNAME::\$HOSTNAME\$\tHOSTPERFDATA::\$HOSTPERFDATA\$\tHOSTCHECKCOMMAND::\$HOSTCHECKCOMMAND\$\tHOSTSTATE::\$HOSTSTATE\$\tHOSTSTATETYPE::\$HOSTSTATETYPE\$
 host_perfdata_file_mode=a
@@ -641,8 +639,8 @@ case "\$1" in
 	killall npcd && echo OK || echo Error
     ;;
     restart)
-	\$0 start
 	\$0 stop
+	\$0 start
     ;;
     *)
 	echo "Usage: \0 {start|stop|restart}"

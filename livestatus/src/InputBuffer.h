@@ -56,7 +56,7 @@ class InputBuffer
    // some buffer
 public:
    InputBuffer(int *termination_flag);
-   void setFd(int fd) { _fd = fd; _read_pointer = _write_pointer = _readahead_buffer; };
+   void setFd(int fd);
    int readRequest();
    bool moreLines() { return !_requestlines.empty(); };
    string nextLine();

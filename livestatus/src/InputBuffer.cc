@@ -40,6 +40,13 @@ InputBuffer::InputBuffer(int *termination_flag)
    _end_pointer = _read_pointer + IB_BUFFER_SIZE; // points ot end of buffer
 }
 
+void InputBuffer::setFd(int fd)
+{ 
+   _fd = fd; 
+   _read_pointer = _write_pointer = _readahead_buffer; 
+   _requestlines.clear();
+}
+
 // read in data enough for one complete request
 // (and maybe more). If this method returns IB_REQUEST_READ
 // then you can subsequently retrieve the lines of the

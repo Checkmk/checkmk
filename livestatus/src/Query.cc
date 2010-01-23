@@ -36,6 +36,9 @@
 #include "EmptyColumn.h"
 #include "OutputBuffer.h"
 #include "InputBuffer.h"
+#include "StatsColumn.h"
+#include "Aggregator.h"
+#include "OringFilter.h"
 
 extern int g_debug_level;
 extern unsigned long g_max_response_size;
@@ -62,22 +65,22 @@ Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
       if (g_debug_level > 0)
 	  logger(LG_INFO, "Query: %s", buffer);
       if (!strncmp(buffer, "Filter:", 7))
-	 parseFilterLine(lstrip(buffer + 7), false);
+	 parseFilterLine(lstrip(buffer + 7));
 
       else if (!strncmp(buffer, "Or:", 3))
-	 parseAndOrLine(lstrip(buffer + 3), ANDOR_OR, false);
+	 parseAndOrLine(lstrip(buffer + 3), ANDOR_OR);
 
       else if (!strncmp(buffer, "And:", 4))
-	 parseAndOrLine(lstrip(buffer + 4), ANDOR_AND, false);
+	 parseAndOrLine(lstrip(buffer + 4), ANDOR_AND);
 
       else if (!strncmp(buffer, "StatsOr:", 8))
-	 parseAndOrLine(lstrip(buffer + 8), ANDOR_OR, true);
+	 parseStatsAndOrLine(lstrip(buffer + 8), ANDOR_OR);
 
       else if (!strncmp(buffer, "StatsAnd:", 9))
-	 parseAndOrLine(lstrip(buffer + 9), ANDOR_AND, true);
+	 parseStatsAndOrLine(lstrip(buffer + 9), ANDOR_AND);
 
       else if (!strncmp(buffer, "Stats:", 6))
-	 parseFilterLine(lstrip(buffer + 6), true);
+	 parseStatsLine(lstrip(buffer + 6));
 
       else if (!strncmp(buffer, "StatsGroupBy:", 13))
 	 parseStatsGroupLine(lstrip(buffer + 13));
@@ -123,12 +126,12 @@ Query::~Query()
       delete *it;
    }
 
-   // delete stats group information
-   for (_stats_groups_t::iterator it = _stats_groups.begin();
-	 it != _stats_groups.end();
+   // delete stats columns
+   for (_stats_columns_t::iterator it = _stats_columns.begin();
+	 it != _stats_columns.end();
 	 ++it)
    {
-      delete it->second;
+      delete *it;
    }
 }
 
@@ -148,7 +151,7 @@ void Query::addColumn(Column *column)
 
 bool Query::hasNoColumns()
 {
-   return _columns.size() == 0 and _stats.numFilters() == 0;
+   return _columns.size() == 0 && !doStats();
 }
 
 int Query::lookupOperator(const char *opname)
@@ -186,23 +189,125 @@ int Query::lookupOperator(const char *opname)
 }
 
 
-void Query::parseAndOrLine(char *line, int andor, bool stats)
+void Query::parseAndOrLine(char *line, int andor)
 {
    char *value = next_field(&line);
    int number = atoi(value);
    if (!isdigit(value[0]) || number <= 0) {
-      _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value for %s%s: need non-zero integer number", 
-	    stats ? "Stats" : "", andor == ANDOR_OR ? "Or" : "And");
+      _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value for %s: need non-zero integer number", 
+	    andor == ANDOR_OR ? "Or" : "And");
       return;
    }
-   if (stats)
-      _stats.combineFilters(number, andor);
-   else
-      _filter.combineFilters(number, andor);
+   _filter.combineFilters(number, andor);
+}
+
+void Query::parseStatsAndOrLine(char *line, int andor)
+{
+   char *value = next_field(&line);
+   int number = atoi(value);
+   if (!isdigit(value[0]) || number <= 0) {
+      _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value for Stats%s: need non-zero integer number", 
+	    andor == ANDOR_OR ? "Or" : "And");
+      return;
+   }
+
+   // The last 'number' StatsColumns must be of type STATS_OP_COUNT
+   AndingFilter *anding = (andor == ANDOR_OR) ? new OringFilter() : new AndingFilter();
+   while (number > 0) {
+       if (_stats_columns.size() == 0) {
+	   _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid count for Stats%s: too few Stats: headers available",
+		   andor == ANDOR_OR ? "Or" : "And");
+	   delete anding;
+	   return;
+       }
+
+       StatsColumn *col = _stats_columns.back();
+       if (col->operation() != STATS_OP_COUNT) {
+	   _output->setError(RESPONSE_CODE_INVALID_HEADER, "Can use Stats%s only on Stats: headers of filter type",
+		   andor == ANDOR_OR ? "Or" : "And");
+	   delete anding;
+	   return;
+       }
+       anding->addSubfilter(col->stealFilter());
+       _stats_columns.pop_back();
+       number --;
+   }
+   _stats_columns.push_back(new StatsColumn(0, anding, STATS_OP_COUNT));
+}
+
+void Query::parseStatsLine(char *line)
+{
+    if (!_table)
+	return;
+
+    // first token is either aggregation operator or column name
+    char *col_or_op = next_field(&line);
+    if (!col_or_op) {
+      _output->setError(RESPONSE_CODE_INVALID_HEADER, "empty stats line");
+      return;
+    }
+
+    int operation = STATS_OP_COUNT;
+    if (!strcmp(col_or_op, "sum"))
+	operation = STATS_OP_SUM;
+    else if (!strcmp(col_or_op, "min"))
+	operation = STATS_OP_MIN;
+    else if (!strcmp(col_or_op, "max"))
+	operation = STATS_OP_MAX;
+    else if (!strcmp(col_or_op, "avg"))
+	operation = STATS_OP_AVG;
+    else if (!strcmp(col_or_op, "std"))
+	operation = STATS_OP_STD;
+   
+    char *column_name;
+    if (operation == STATS_OP_COUNT) 
+	column_name = col_or_op;
+    else {
+	// aggregation operator is followed by column name
+	column_name = next_field(&line);
+	if (!column_name) {
+	    _output->setError(RESPONSE_CODE_INVALID_HEADER, "missing column name in stats header");
+	    return;
+	}
+    }
+
+    Column *column = _table->column(column_name);
+    if (!column) {
+	_output->setError(RESPONSE_CODE_INVALID_HEADER, "invalid stats header: table '%s' has no column '%s'", _table->name(), column_name);
+	return;
+    }
+
+    StatsColumn *stats_col;
+    if (operation == STATS_OP_COUNT)
+    {
+	char *operator_name = next_field(&line);
+	if (!operator_name) {
+	    _output->setError(RESPONSE_CODE_INVALID_HEADER, "invalid stats header: missing operator after table '%s'", column_name);
+	    return; 
+	}
+	int operator_id = lookupOperator(operator_name);
+	if (operator_id == OP_INVALID) {
+	    _output->setError(RESPONSE_CODE_INVALID_HEADER, "invalid stats operator '%s'", operator_name);
+	    return;
+	}
+	char *value = lstrip(line);
+	if (!value) {
+	    _output->setError(RESPONSE_CODE_INVALID_HEADER, "invalid stats: missing value after operator '%s'", operator_name);
+	    return;
+	}
+
+	Filter *filter = column->createFilter(operator_id, value);
+	if (!filter)
+	    _output->setError(RESPONSE_CODE_INVALID_HEADER, "cannot create filter on table %s", _table->name());
+	stats_col = new StatsColumn(column, filter, operation);
+    }
+    else 
+	stats_col = new StatsColumn(column, 0, operation);
+    _stats_columns.push_back(stats_col);
 }
 
 
-void Query::parseFilterLine(char *line, bool stats)
+void Query::parseFilterLine(char *line)
 {
    if (!_table)
       return;
@@ -220,8 +325,10 @@ void Query::parseFilterLine(char *line, bool stats)
    }
 
    char *operator_name = next_field(&line);
-   if (!operator_name)
-      return; 
+   if (!operator_name) {
+       _output->setError(RESPONSE_CODE_INVALID_HEADER, "invalid filter header: missing operator after table '%s'", column_name);
+       return; 
+   }
    int operator_id = lookupOperator(operator_name);
    if (operator_id == OP_INVALID) {
       _output->setError(RESPONSE_CODE_INVALID_HEADER, "invalid filter operator '%s'", operator_name);
@@ -236,11 +343,7 @@ void Query::parseFilterLine(char *line, bool stats)
    Filter *filter = column->createFilter(operator_id, value);
    if (!filter)
       _output->setError(RESPONSE_CODE_INVALID_HEADER, "cannot create filter on table %s", _table->name());
-   else if (stats) {
-      _stats.addSubfilter(filter);
-   }
-   else
-      _filter.addSubfilter(filter);
+   _filter.addSubfilter(filter);
 }
 
 void Query::parseStatsGroupLine(char *line)
@@ -371,7 +474,7 @@ void Query::parseLimitLine(char *line)
 
 bool Query::doStats()
 {
-   return _stats.numFilters() > 0;
+   return _stats_columns.size() > 0;
 }
 
 void Query::start()
@@ -383,10 +486,14 @@ void Query::start()
 
    if (doStats())
    {
+      // if we have no StatsGroupBy: column, we allocate one only row of Aggregators,
+      // directly in _stats_aggregators. When grouping the rows of aggregators
+      // will be created each time a new group is found.
       if (!_stats_group_column) 
       {
-	 _stats_counts = new uint32_t[_stats.numFilters()];
-	 bzero(_stats_counts, sizeof(uint32_t) * _stats.numFilters());
+	 _stats_aggregators = new Aggregator *[_stats_columns.size()];
+	 for (unsigned i=0; i<_stats_columns.size(); i++)
+	     _stats_aggregators[i] = _stats_columns[i]->createAggregator();
       }
    }
    else if (_show_column_headers)
@@ -407,39 +514,6 @@ void Query::start()
    }
 }
 
-void Query::finish()
-{
-   if (doStats() && _stats_group_column) 
-   {
-      for (_stats_groups_t::iterator it = _stats_groups.begin();
-	    it != _stats_groups.end();
-	    ++it)
-      {
-	 if (it != _stats_groups.begin() && _output_format == OUTPUT_FORMAT_JSON)
-	    _output->addBuffer(",\n", 2);
-	 outputDatasetBegin();
-	 outputString(it->first.c_str());
-	 uint32_t *s = it->second;
-	 for (unsigned i=0; i<_stats.numFilters(); i++) {
-	    outputFieldSeparator();
-	    outputInteger(s[i]);
-	 }
-	 outputDatasetEnd();
-      }
-   }
-   else if (doStats()) {
-      outputDatasetBegin();
-      for (unsigned i=0; i<_stats.numFilters(); i++) {
-	 if (i > 0)
-	    outputFieldSeparator();
-	 outputInteger((int32_t) _stats_counts[i]);
-      }
-      outputDatasetEnd();
-      delete _stats_counts;
-   }
-   if (_output_format == OUTPUT_FORMAT_JSON)
-      _output->addBuffer("]\n", 2);
-}
 
 bool Query::processDataset(void *data)
 {
@@ -459,27 +533,25 @@ bool Query::processDataset(void *data)
 
       if (doStats())
       {
-	 uint32_t *s;
+	 Aggregator **aggr;
+	 // When doing grouped stats, we need to fetch/create a row
+	 // of aggregators for the current group
 	 if (_stats_group_column) {
 	    string groupname = _stats_group_column->valueAsString(data);
-	    s = getStatsGroup(groupname);
+	    aggr = getStatsGroup(groupname);
 	 }
 	 else
-	    s = _stats_counts;
+	    aggr = _stats_aggregators;
 
-	 int i=0;
-	 for (deque<Filter *>::iterator it = _stats.begin();
-	       it != _stats.end();
-	       ++it)
-	 {
-	    Filter *filter = *it;
-	    if (filter->accepts(data))
-	       s[i] ++;
-	    i++;
-	 }
+	 for (unsigned i=0; i<_stats_columns.size(); i++) 
+	     aggr[i]->consume(data);
+
+	 // No output is done while processing the data, we only
+	 // collect stats.
       }
       else
       {
+	 // output data of current row
 	 if (_need_ds_separator && _output_format == OUTPUT_FORMAT_JSON)
 	    _output->addBuffer(",\n", 2);
 	 else
@@ -500,6 +572,51 @@ bool Query::processDataset(void *data)
    }
    return true;
 }
+
+void Query::finish()
+{
+    // grouped stats
+    if (doStats() && _stats_group_column) 
+    {
+	for (_stats_groups_t::iterator it = _stats_groups.begin();
+		it != _stats_groups.end();
+		++it)
+	{
+	    if (it != _stats_groups.begin() && _output_format == OUTPUT_FORMAT_JSON)
+		_output->addBuffer(",\n", 2);
+	    outputDatasetBegin();
+	    outputString(it->first.c_str());
+
+	    Aggregator **aggr = it->second;
+	    for (unsigned i=0; i<_stats_columns.size(); i++) {
+		outputFieldSeparator();
+		aggr[i]->output(this);
+		delete aggr[i]; // not needed any more
+	    }
+	    outputDatasetEnd();
+	    delete aggr; 
+	}
+    }
+
+    // stats without group column
+    else if (doStats()) {
+	outputDatasetBegin();
+	for (unsigned i=0; i<_stats_columns.size(); i++) 
+	{
+	    if (i > 0)
+		outputFieldSeparator();
+	    _stats_aggregators[i]->output(this);
+	    delete _stats_aggregators[i];
+	}
+	outputDatasetEnd();
+	delete _stats_aggregators;
+    }
+
+    // normal query
+    if (_output_format == OUTPUT_FORMAT_JSON)
+	_output->addBuffer("]\n", 2);
+}
+
 
 void *Query::findIndexFilter(const char *columnname)
 {
@@ -546,6 +663,13 @@ void Query::outputInteger(int32_t value)
    _output->addBuffer(buf, l);
 }
 
+void Query::outputInteger64(int64_t value)
+{
+   char buf[32];
+   int l = snprintf(buf, 32, "%lld", value);
+   _output->addBuffer(buf, l);
+}
+
 void Query::outputUnsignedLong(unsigned long value)
 {
    char buf[64];
@@ -563,7 +687,7 @@ void Query::outputCounter(counter_t value)
 void Query::outputDouble(double value)
 {
    char buf[64];
-   int l = snprintf(buf, sizeof(buf), "%.6g", value);
+   int l = snprintf(buf, sizeof(buf), "%.10g", value);
    _output->addBuffer(buf, l);
 }
 
@@ -628,14 +752,15 @@ void Query::outputEndList()
       _output->addChar(']');
 }
 
-uint32_t *Query::getStatsGroup(string name)
+Aggregator **Query::getStatsGroup(string name)
 {
    _stats_groups_t::iterator it = _stats_groups.find(name);
    if (it == _stats_groups.end()) {
-      uint32_t *n = new uint32_t[_stats.numFilters()];
-      bzero(n, sizeof(uint32_t) * _stats.numFilters());
-      _stats_groups.insert(make_pair(string(name), n));
-      return n;
+       Aggregator **aggr = new Aggregator *[_stats_columns.size()];
+       for (unsigned i=0; i<_stats_columns.size(); i++)
+	   aggr[i] = _stats_columns[i]->createAggregator();
+       _stats_groups.insert(make_pair(string(name), aggr));
+       return aggr;
    }
    else
       return it->second;

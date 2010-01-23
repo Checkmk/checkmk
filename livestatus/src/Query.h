@@ -39,6 +39,8 @@ class Table;
 class Column;
 class OutputBuffer;
 class InputBuffer;
+class StatsColumn;
+class Aggregator;
 
 #define OUTPUT_FORMAT_CSV  0
 #define OUTPUT_FORMAT_JSON 1
@@ -55,7 +57,6 @@ class Query
    OutputBuffer *_output;
    Table        *_table;
    AndingFilter  _filter;
-   AndingFilter  _stats;
    string        _field_separator;
    string        _dataset_separator;
    string        _list_separator;
@@ -66,12 +67,17 @@ class Query
    int           _limit;
    unsigned      _current_line;
 
+   // normal queries
    typedef vector<Column *> _columns_t;
    _columns_t _columns;
    _columns_t _dummy_columns; // dynamically allocated. Must delete them.
-   uint32_t *_stats_counts;
+
+   // stats queries
+   typedef vector<StatsColumn *> _stats_columns_t;
+   _stats_columns_t _stats_columns; // must also delete
+   Aggregator **_stats_aggregators;
    Column *_stats_group_column;
-   typedef map<string, uint32_t *> _stats_groups_t;
+   typedef map<string, Aggregator **> _stats_groups_t;
    _stats_groups_t _stats_groups; 
 
 public:
@@ -88,6 +94,7 @@ public:
    void outputDatasetEnd();
    void outputFieldSeparator();
    void outputInteger(int32_t);
+   void outputInteger64(int64_t);
    void outputUnsignedLong(unsigned long);
    void outputCounter(counter_t);
    void outputDouble(double);
@@ -103,10 +110,12 @@ public:
 
 private:
    bool doStats();
-   uint32_t *getStatsGroup(string name);
-   void parseFilterLine(char *line, bool stats);
+   Aggregator **getStatsGroup(string name);
+   void parseFilterLine(char *line);
+   void parseStatsLine(char *line);
    void parseStatsGroupLine(char *line);
-   void parseAndOrLine(char *line, int andor, bool stats);
+   void parseAndOrLine(char *line, int andor);
+   void parseStatsAndOrLine(char *line, int andor);
    void parseColumnsLine(char *line);
    void parseColumnHeadersLine(char *line);
    void parseLimitLine(char *line);

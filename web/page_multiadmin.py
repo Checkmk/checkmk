@@ -75,8 +75,13 @@ sort_options = [ ("0", "hostname -> service", cmp_svc_hostname_svc),
                  ]
 
 def enabled_sites(html):
+    # If there is only one site (non-multisite), than
+    # user cannot enable/disable. 
+    configured_sites = check_mk.sites()
+    if len(configured_sites) == 1:
+	return configured_sites[0]
     sites = []
-    for site_name in check_mk.sites():
+    for site_name in configured_sites:
 	if html.var("site_%s" % site_name) == "on":
 	    sites.append(site_name)
     return sites

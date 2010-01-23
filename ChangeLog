@@ -17,6 +17,7 @@
       * Fixed several compile problems on AIX
       * Fixed bug: queries could be garbled after interrupted connection
       * Fixed segfault on downtimes:contacts
+      * New feature: sum, min, max, avg and std of columns in new syntax of Stats:
 
       Checks & Agents:
       * Check ps: this check now supports inventory in a very flexible way. This simplifies monitoring a great number of slightly different processes such as with ORACLE or SAP.

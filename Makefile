@@ -43,7 +43,7 @@ LIVESTATUS_SOURCES = configure aclocal.m4 config.guess config.h.in config.sub \
 
 .PHONY: help install clean
 
-all: dist
+all: dist rpm deb
 
 help:
 	@echo "make                           --> dist, rpm and deb"
@@ -92,7 +92,7 @@ dist: mk-livestatus
 
 mk-livestatus:
 	if [ ! -e livestatus/configure ] ; then \
-		cd livestatus && autoheader && aclocal && automake && autoconf ; \
+		cd livestatus && aclocal && autoheader && automake && autoconf ; \
 	fi
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)

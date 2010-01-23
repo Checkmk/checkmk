@@ -74,7 +74,7 @@ search for services and apply Nagios commands to the search results.
 %install
 R=$RPM_BUILD_ROOT
 rm -rf $R
-DESTDIR=$R ./setup.sh
+DESTDIR=$R ./setup.sh --yes
 rm -vf $R/etc/check_mk/*.mk-*
 mkdir -p $R/etc/xinetd.d
 mkdir -p $R/usr/share/doc/check_mk_agent

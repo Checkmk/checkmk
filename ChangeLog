@@ -1,9 +1,8 @@
 1.1.2:
-     Summary:
-     * Lots of new checks
-     * MK Livestatus gives transparent access to log files (nagios.log, archive/*.log)
-     * Many bug fixes
-
+      Summary:
+      * Lots of new checks
+      * MK Livestatus gives transparent access to log files (nagios.log, archive/*.log)
+      * Many bug fixes
 
       MK Livestatus:
       * Added new table "log", which gives you transparent access to the Nagios log files!
@@ -53,6 +52,8 @@
       * make non-bulkwalk a default. Please edit bulkwalk_hosts or non_bulkwalk_hosts to change that
       * Improve setup autodetection on RedHat/CentOS.  Also fix problem with Apache config for Mutliadmin: On RedHat Check_MK's Apache conf file must be loaded after mod_python and was thus renamed to zzz_check_mk.conf.
       * Fix problem in Agent-RPM: mark xinetd-configfile with %config -> avoid data loss on update
+      * Support PNP4Nagios 0.6.2
+      * New setup script "install_nagios.sh" for installing Nagios and everything else on SLES11
 
 1.1.0:
       * Fixed problems in Windows agent (could lead

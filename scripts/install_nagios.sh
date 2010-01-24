@@ -83,7 +83,7 @@ then
     DISTRO=SUSE
     DISTRONAME="SLES 11"
     DISTROVERS=11
-elif grep -qi lenny /etc/issue
+elif [ "$(cat /etc/debian_version)" = 5.0 ]
 then
     DISTRO=DEBIAN
     DISTRONAME="Debian 5.0 (Lenny)"

@@ -39,7 +39,7 @@ CHECKMANDIR	= /home/mk/svn/mkde/htdocs/checkmk
 LIVESTATUS_SOURCES = configure aclocal.m4 config.guess config.h.in config.sub \
 		     configure.ac ltmain.sh Makefile.am Makefile.in missing \
 		     nagios/README nagios/*.h src/*.{h,c,cc} src/Makefile.{in,am} \
-		     depcomp install-sh
+		     depcomp install-sh api/python/{*.py,README} api/perl/*
 
 .PHONY: help install clean
 
@@ -63,7 +63,7 @@ dist: mk-livestatus
 	tar czf $(DISTNAME)/checkman.tar.gz $(TAROPTS) -C checkman $$(cd checkman ; ls)
 	tar czf $(DISTNAME)/htdocs.tar.gz $(TAROPTS) -C htdocs $$(cd htdocs ; ls *.php *.css *.png *.gif)
 	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web $$(cd web ; ls *.py *.css *.jpg *.png)
-	tar czf $(DISTNAME)/livestatus.tar.gz $(TAROPTS) -C livestatus $$(cd livestatus ; ls $(LIVESTATUS_SOURCES) )
+	tar czf $(DISTNAME)/livestatus.tar.gz $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) )
 	tar czf $(DISTNAME)/pnp-templates.tar.gz $(TAROPTS) -C pnp-templates $$(cd pnp-templates ; ls *.php)
 	tar cf $(DISTNAME)/doc.tar $(TAROPTS) -C doc --exclude .svn --exclude "*~" \
 			check_mk_templates.cfg check_mk.1 \

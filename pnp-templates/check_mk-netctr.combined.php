@@ -1,15 +1,15 @@
 <?php
 # +------------------------------------------------------------------+
-# |     _           _           _       _   __   _______        ___  |
-# |  __| |_  ___ __| |__  _ __ | |__   / | /  \ |__ / _ \_ _ __|_  ) |
-# | / _| ' \/ -_) _| / / | '  \| / /   | || () | |_ \_, / '_/ _|/ /  |
-# | \__|_||_\___\__|_\_\_|_|_|_|_\_\   |_(_)__(_)___//_/|_| \__/___| |
-# |                                            check_mk 1.0.39rc2    |
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2009                mk@mathias-kettner |
+# | Copyright Mathias Kettner 2009             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 # 
-# This file is part of check_mk 1.0.39rc2.
+# This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
 # 
 # check_mk is free software;  you can redistribute it and/or modify it

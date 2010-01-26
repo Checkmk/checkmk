@@ -24,9 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-#
-
 import htmllib, nagios, time, re, check_mk
 from lib import *
 
@@ -156,6 +153,8 @@ def show_tabs(html, tabs, active, suppress_form = False):
                "</a></td></tr></table>" % time.strftime("%H:%M"))
 
 def build_search_filter(html):
+    """Constructs Filter: headers for Livestatus according to the current GET
+    variables of the search form"""
     search_filter = ""
 
     # Search texts
@@ -224,6 +223,7 @@ def show_filter_form(html):
                       (nagios_flag, value, checked, text))
         html.write("</td></tr>\n")
 
+    # Allow site selection on multisite installations
     if check_mk.is_multisite():
 	html.write("<tr><td class=legend>Sites</td><td class=content>\n")
 	for site_name in check_mk.sites():

@@ -157,6 +157,21 @@ deb-agent: $(NAME)-agent-$(VERSION)-1.noarch.rpm $(NAME)-agent-logwatch-$(VERSIO
 	@for pac in $^ ; do \
 	  fakeroot alien --scripts -d $$pac ; \
 	done
+	@for p in agent agent-logwatch ; do \
+	   pac="check-mk-$${p}_$(VERSION)-2_all.deb" ; \
+	   echo "Repackaging $$pac" ; \
+	   rm -rf deb-unpack && \
+	   mkdir -p deb-unpack && \
+	   cd deb-unpack && \
+	   ar x ../$$pac && \
+	   mkdir ctrl && \
+	   tar xzf control.tar.gz -C ctrl && \
+	   sed -i -e '/^Depends:/d' -e 's/^Maintainer:.*/Maintainer: mk@mathias-kettner.de/' ctrl/control && \
+	   tar czf control.tar.gz -C ctrl . && \
+	   ar r ../$$pac debian-binary control.tar.gz data.tar.gz && \
+	   cd .. && \
+	   rm -rf deb-unpack || exit 1 ; \
+	done
 
 
 clean:

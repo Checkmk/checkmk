@@ -354,6 +354,8 @@ def show_search_results(html, services, hosts):
 
     last_hostname = None
     odd = False
+    num_hosts_down = 0
+    at_least_one_state = {}
     for hit in services:
         odd = not odd
         state = int(hit["state"])
@@ -373,13 +375,14 @@ def show_search_results(html, services, hosts):
             age_class = "agerecent"
         else:
             age_class = "age"
-        
+
         if hostname != last_hostname:
             # http://10.10.0.141/nagios/cgi-bin/status.cgi?host=Acht
             if host_state == 0:
                 hoststate = "up"
             else:
                 hoststate = "down"
+		num_hosts_down += 1
             host_url = html.req.defaults["nagios_cgi_url"] + "/status.cgi?host=" + htmllib.urlencode(hostname)
             html.write("<tr><td class=host colspan=4>"
                        "<b class=%s>"
@@ -389,6 +392,8 @@ def show_search_results(html, services, hosts):
 
         # Current state
         statename = nagios.short_state_names[state]
+	at_least_one_state[state] = True	
+
         svc_url = html.req.defaults["nagios_cgi_url"] + \
                   ( "/extinfo.cgi?type=2&host=%s&service=%s" % (hostname, htmllib.urlencode(hit["description"])))
         html.write("<td class=state%d>%s</td>\n" % (state, statename))
@@ -397,6 +402,28 @@ def show_search_results(html, services, hosts):
         html.write("<td>%(plugin_output)s</td></tr>\n" % hit)
 
     html.write("</table>\n")
+
+    sound = None
+    if num_hosts_down > 0:
+        sound = "host"
+    elif at_least_one_state.get(2):
+	sound = "critical"
+    elif at_least_one_state.get(1):
+	sound = "warning"
+    elif at_least_one_state.get(3):
+	sound = "unknown"
+    else:
+	sound = "ok"
+
+    if sound:
+	try:
+	    sound_uri = check_mk.multiadmin_sounds[sound]
+	    html.write('<p><b>BUMM: %s(%s)!!!</b></p>' % (sound, sound_uri))
+	    html.write('<object type="audio/x-wav" data="%s" height="0" width="0">'
+		    '<param name="filename" value="%s">'
+		    '<param name="autostart" value="true"><param name="playcount" value="1"></object>' % (sound_uri, sound_uri))
+        except:
+	    pass
 
 
 def do_actions(html, hits, hosts):

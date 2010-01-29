@@ -57,6 +57,7 @@
       * Fix problem in Agent-RPM: mark xinetd-configfile with %config -> avoid data loss on update
       * Support PNP4Nagios 0.6.2
       * New setup script "install_nagios.sh" for installing Nagios and everything else on SLES11
+      * New option define_contactgroups: will automatically create contactgroup definitions for Nagios
 
 1.1.0:
       * Fixed problems in Windows agent (could lead

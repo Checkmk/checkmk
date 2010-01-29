@@ -59,10 +59,10 @@ STAT_BROKE="5.3.0"
 exec <&- 2>/dev/null
 
 echo '<<<check_mk>>>'
-echo Version: 1.1.2rc2
+echo Version: 1.1.2
 
 echo '<<<mknagios>>>'
-echo Version: 1.1.2rc2
+echo Version: 1.1.2
 
 # Partitionen (-P verhindert Zeilenumbruch bei langen Mountpunkten)
 # Achtung: NFS-Mounts werden grundsaetzlich ausgeblendet, um

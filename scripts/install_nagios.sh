@@ -83,11 +83,15 @@ then
     DISTRO=SUSE
     DISTRONAME="SLES 11"
     DISTROVERS=11
-elif grep -qi lenny /etc/issue
-then
-    DISTRO=DEBIAN
-    DISTRONAME="Debian 5.0 (Lenny)"
-    DISTROVERS=5.0
+else
+    debvers=$(cat /etc/debian_version)
+    debvers=${debvers:0:3}
+    if [ "$debvers" = 5.0 ]
+    then
+        DISTRO=DEBIAN
+        DISTRONAME="Debian 5.0 (Lenny)"
+        DISTROVERS=5.0
+    fi
 fi
 
 case "$DISTRO" in 
@@ -109,7 +113,7 @@ case "$DISTRO" in
 	HTTPD=apache2
 	WWWUSER=www-data
 	WWWGROUP=www-data
-        activate_initd () { update-rc.d $1 default; }
+        activate_initd () { update-rc.d $1 defaults; }
         add_user_to_group () { gpasswd -a $1 $2 ; }
     ;;
     *)
@@ -171,7 +175,7 @@ then
   aptitude -y install psmisc build-essential nail  \
     apache2 libapache2-mod-php5 python rrdtool php5-gd libgd-dev \
     python-rrdtool xinetd wget libgd2-xpm-dev psmisc less libapache2-mod-python \
-    graphviz php5-sqlite sqlite php-gettext locales-all
+    graphviz php5-sqlite sqlite php-gettext locales-all libxml2-dev libpango1.0-dev
     # Hint for Debian: Installing the packages locales-all is normally not neccessary
     # if you use 'dpkg-reconfigure locales' to setup and generate your locales.
     # Correct locales are needed for the localisation of Nagvis.

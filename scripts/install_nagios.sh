@@ -24,14 +24,6 @@
 # Boston, MA 02110-1301 USA.
 
 
-# ACHTUNG: NAGIOS startet nach einem Reboot nicht, weil das temp-
-# Verzeichnis fehlt. Dazu braucht man noch folgende Befehle
-# im Startskript:
-# mkdir -p /var/spool/nagios/{tmp,checkresults}
-# chown nagios.nagios /var/spool/nagios/{tmp,checkresults}
-# --> Am besten hier ein eigenes besseres Startskript generieren!
-
-
 
 # Make sure, /usr/local/bin is in the PATH, since we install
 # programs there...

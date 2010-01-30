@@ -180,7 +180,8 @@ then
    zypper update
    zypper -n install apache2 mailx apache2-mod_python apache2-mod_php5 php5-gd gd-devel \
 	xinetd wget xorg-x11-libXpm-devel psmisc less graphviz-devel graphviz-gd \
-	php5-sqlite php5-gettext python-rrdtool php5-zlib php5-sockets php5-mbstring
+	php5-sqlite php5-gettext python-rrdtool php5-zlib php5-sockets php5-mbstring gcc \
+	cairo-devel libxml-devel libxml2-devel pango-devel
 else
    yum update
    yum -y install httpd gcc mailx php php-gd gd-devl xinetd wget psmisc less mod_python \

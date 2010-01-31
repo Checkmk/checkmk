@@ -46,6 +46,7 @@
 #include "config.h"
 #include "global_counters.h"
 #include "strutil.h"
+#include "waittriggers.h"
 
 #ifndef AF_LOCAL
 #define   AF_LOCAL AF_UNIX
@@ -287,6 +288,8 @@ int broker_check(int event_type, void *data)
 	    g_counters[COUNTER_HOST_CHECKS]++;
 	}
     }
+    pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
+    pthread_cond_broadcast(&g_wait_cond[WT_CHECK]);
 }
 
 
@@ -295,6 +298,8 @@ int broker_comment(int event_type, void *data)
     nebstruct_comment_data *co = (nebstruct_comment_data *)data;
     store_register_comment(co);
     g_counters[COUNTER_NEB_CALLBACKS]++;
+    pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
+    pthread_cond_broadcast(&g_wait_cond[WT_COMMENT]);
 }
 
 int broker_downtime(int event_type, void *data)
@@ -302,6 +307,8 @@ int broker_downtime(int event_type, void *data)
     nebstruct_downtime_data *dt = (nebstruct_downtime_data *)data;
     store_register_downtime(dt);
     g_counters[COUNTER_NEB_CALLBACKS]++;
+    pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
+    pthread_cond_broadcast(&g_wait_cond[WT_DOWNTIME]);
 }
 
 void register_callbacks()

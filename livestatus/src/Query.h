@@ -57,6 +57,10 @@ class Query
    OutputBuffer *_output;
    Table        *_table;
    AndingFilter  _filter;
+   AndingFilter  _wait_condition;
+   unsigned      _wait_timeout;
+   unsigned      _wait_trigger;
+   void         *_wait_object;
    string        _field_separator;
    string        _dataset_separator;
    string        _list_separator;
@@ -110,11 +114,12 @@ public:
 
 private:
    bool doStats();
+   void doWait();
    Aggregator **getStatsGroup(string name);
-   void parseFilterLine(char *line);
+   void parseFilterLine(char *line, bool filter /* and not cond */);
    void parseStatsLine(char *line);
    void parseStatsGroupLine(char *line);
-   void parseAndOrLine(char *line, int andor);
+   void parseAndOrLine(char *line, int andor, bool filter /* and not cond */);
    void parseStatsAndOrLine(char *line, int andor);
    void parseColumnsLine(char *line);
    void parseColumnHeadersLine(char *line);
@@ -123,6 +128,9 @@ private:
    void parseOutputFormatLine(char *line);
    void parseKeepAliveLine(char *line);
    void parseResponseHeaderLine(char *line);
+   void parseWaitTimeoutLine(char *line);
+   void parseWaitTriggerLine(char *line);
+   void parseWaitObjectLine(char *line);
    int lookupOperator(const char *opname);
    Column *createDummyColumn(const char *name);
 };

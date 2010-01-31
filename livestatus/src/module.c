@@ -87,6 +87,12 @@ void livestatus_cleanup_after_fork()
     // the connection will still be open since and the client will
     // hang while trying to read further data. And the CLOEXEC is
     // not atomic :-(
+
+    // Eventuell sollte man hier anstelle von store_deinit() nicht
+    // darauf verlassen, dass die ClientQueue alle Verbindungen zumacht.
+    // Es sind ja auch Dateideskriptoren offen, die von Threads gehalten
+    // werden und nicht mehr in der Queue sind. Und in store_deinit()
+    // wird mit mutexes rumgemacht....
     for (i=3; i < g_max_fd_ever; i++) {
 	if (0 == fstat(i, &st) && S_ISSOCK(st.st_mode))
 	{

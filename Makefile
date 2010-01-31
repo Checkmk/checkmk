@@ -67,8 +67,8 @@ dist: mk-livestatus
 	tar czf $(DISTNAME)/pnp-templates.tar.gz $(TAROPTS) -C pnp-templates $$(cd pnp-templates ; ls *.php)
 	tar cf $(DISTNAME)/doc.tar $(TAROPTS) -C doc --exclude .svn --exclude "*~" \
 			check_mk_templates.cfg check_mk.1 \
-			check_mk.css screenshot1.png Abstract README helpers \
-			check_mk{,.trans}.200.png  quickstart_debian.txt windows \
+			check_mk.css screenshot1.png README helpers \
+			check_mk{,.trans}.200.png windows \
 			df_magic_number.py livestatus
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) COPYING AUTHORS ChangeLog
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) livestatus/api --exclude "*~" --exclude "*.pyc"
@@ -82,7 +82,7 @@ dist: mk-livestatus
 	tar  rf $(DISTNAME)/agents.tar $(TAROPTS) -C agents windows/{check_mk_agent.exe,check_mk_agent.cc,Makefile}
 	gzip $(DISTNAME)/agents.tar
 	install -m 755 scripts/*.{sh,py} $(DISTNAME)
-	install -m 644 COPYING AUTHORS ChangeLog doc/INSTALL $(DISTNAME)
+	install -m 644 COPYING AUTHORS ChangeLog $(DISTNAME)
 	echo "$(VERSION)" > $(DISTNAME)/VERSION
 	tar czf $(DISTNAME).tar.gz $(DISTNAME)
 	rm -rf $(DISTNAME)

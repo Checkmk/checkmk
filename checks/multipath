@@ -62,6 +62,7 @@
   
 
 def parse_multipath_output(info, only_uuid = None):
+    # only_uuid --> look only for data of this uuid
     reg_uuid = get_regex("[0-9a-z]{33}")
     reg_prio = get_regex("\[prio=")
     reg_lun  = get_regex("[0-9]+:[0-9]+:[0-9]+:[0-9]+")
@@ -70,15 +71,24 @@ def parse_multipath_output(info, only_uuid = None):
     group = {}
     numpaths = 0
     for line in info:
+        # newer agent also output the device mapper table.
+        # ignore those lines for now.
         if line[0] == "dm":
             continue
+	
+	# restore original non-split line
         l = " ".join(line)
+
+	# try to find section header of multipath device
         matchobject = reg_uuid.search(l)
         if matchobject:
+	    # extract UUID of device (ignoring alias)
             uuid = matchobject.group(0)
             if only_uuid and uuid != only_uuid:
-                uuid = None
+                uuid = None # wrong uuid, ignore this one
                 continue
+
+	    # initialize information about next device	
             numpaths = 0
             lun_info = []
             paths_info = []
@@ -91,10 +101,12 @@ def parse_multipath_output(info, only_uuid = None):
             group['state'] = None
             group['numpaths'] = 0
             groups[uuid] = group
+
+	    # If the device has an alias, then extract it
             if len(line) > 1 and line[1].startswith('('):
                 group['alias'] = line[0]
                 
-        elif uuid:
+        elif uuid: # we are currently within a device section
             if reg_prio.search(l):
                 group['state'] = line[3]
             elif len(line) >= 4 and reg_lun.match(line[1]):
@@ -114,7 +126,8 @@ def inventory_multipath(checkname, info):
     inventory = []
     parsed = parse_multipath_output(info)
     for uuid, info in parsed.items():
-        inventory.append((uuid, " ".join(info['luns']), info['numpaths']))
+	# take current number of paths as target value
+        inventory.append( (uuid, " ".join(info['luns']), info['numpaths']) )
     return inventory
 
 # item is UUID (e.g. '360a9800043346937686f456f59386741')

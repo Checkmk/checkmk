@@ -110,7 +110,7 @@ def parse_multipath_output(info, only_uuid = None):
             new_dev = 1
             alias = None
             uuid = matchobject.group(0)
-            
+
         if not matchobject:
             # Then map lines with aliases
             matchobject = reg_uuid_alias.search(l)
@@ -118,7 +118,7 @@ def parse_multipath_output(info, only_uuid = None):
                 new_dev = 1
                 alias = matchobject.group(1)
                 uuid = matchobject.group(2)
-            
+
         if not matchobject:
             # Then map "local discs"
             matchobject = reg_local_disk.search(l)
@@ -126,7 +126,7 @@ def parse_multipath_output(info, only_uuid = None):
                 new_dev = 1
                 alias = None
                 uuid = matchobject.group(0)
-        
+
         if not matchobject:
            # Then map strange header: UUIDdm.+
            matchobject = reg_uuid_plus.search(l)
@@ -134,7 +134,7 @@ def parse_multipath_output(info, only_uuid = None):
                new_dev = 1
                alias = None
                uuid = matchobject.group(1)
-        
+
         # FIXME: New reported header lines need to be placed here
 
         if new_dev:
@@ -142,7 +142,7 @@ def parse_multipath_output(info, only_uuid = None):
             if only_uuid and uuid != only_uuid:
                 uuid = None # wrong uuid, ignore this one
                 continue
-            
+
             # initialize information about next device
             numpaths = 0
             lun_info = []
@@ -156,14 +156,14 @@ def parse_multipath_output(info, only_uuid = None):
             group['state'] = None
             group['numpaths'] = 0
             groups[uuid] = group
-            
+
             # If the device has an alias, then extract it
             if alias:
                 group['alias'] = alias
-            
+
             # Proceed with next line after init
             continue
-         
+
         elif uuid != None:
             if reg_prio.search(l):
                 group['state'] = line[3]
@@ -177,7 +177,7 @@ def parse_multipath_output(info, only_uuid = None):
                 group['numpaths'] = numpaths
                 paths_info.append(line[2])
     return groups
-        
+
 # Get list of UUIDs of all multipath devices
 # Length of UUID is 360a9800043346937686f456f59386741
 def inventory_multipath(checkname, info):
@@ -212,7 +212,7 @@ def check_multipath(item, target_numpaths, info):
         return (2, "CRIT - %sbroken paths: %s" % (aliasinfo, ",".join(broken)))
 
     info = "%spaths expected: %d, paths active: %d" % (aliasinfo, target_numpaths, numpaths)
-    
+
     if numpaths < target_numpaths:
         return (2, "CRIT - " + info)
     elif numpaths > target_numpaths:

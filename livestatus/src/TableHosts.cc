@@ -43,6 +43,14 @@
 
 extern host *host_list;
 
+bool TableHosts::isAuthorized(contact *ctc, void *data)
+{
+    host *hst = (host *)data;
+    return is_contact_for_host(hst, ctc)
+	|| is_escalated_contact_for_host(hst, ctc);
+}
+
+
 TableHosts::TableHosts()
 {
    addColumns(this, "", -1);

@@ -40,6 +40,20 @@
 #  \_ 1:0:2:13 sdc 8:32  [active][ready]
 #  \_ 3:0:2:13 sdl 8:176 [active][ready]
 
+# Might also be local disks:
+# SFUJITSU_MAW3073NC_DBL2P62003VT
+# [size=68 GB][features="0"][hwhandler="0"]
+# \_ round-robin 0 [active]
+#  \_ 0:0:3:0  sdb 8:16  [active][ready]
+
+# Some very special header line - strange...
+# 360a980004334644d654a316e65306e51dm-4 NETAPP,LUN
+# [size=30G][features=1 queue_if_no_path][hwhandler=0]
+# \_ round-robin 0 [prio=0][active]
+#  \_ 1:0:2:50 sdg 8:96  [active][undef]
+# \_ round-robin 0 [prio=0][enabled]
+#  \_ 4:0:1:50 sdl 8:176 [active][undef]
+
 # Other output from other host:
 # anzvol2 (36005076306ffc648000000000000510a) dm-15 IBM,2107900
 # [size=100G][features=0][hwhandler=0]
@@ -63,32 +77,73 @@
 
 def parse_multipath_output(info, only_uuid = None):
     # only_uuid --> look only for data of this uuid
-    reg_uuid = get_regex("[0-9a-z]{33}")
+    reg_uuid = get_regex("^[0-9a-z]{33}$")
+    reg_uuid_alias = get_regex("^([^\s]+)\s\(([0-9a-z]{33})\)")
+    reg_local_disk = get_regex("^[a-zA-Z0-9_]+$")
+    reg_uuid_plus = get_regex("^([0-9a-z]{33})dm.+$")
     reg_prio = get_regex("\[prio=")
     reg_lun  = get_regex("[0-9]+:[0-9]+:[0-9]+:[0-9]+")
     uuid = None
+    alias = None
     groups = {}
     group = {}
-    numpaths = 0
+    numpaths = None
     for line in info:
+        new_dev = 0
         # newer agent also output the device mapper table.
         # ignore those lines for now.
         if line[0] == "dm":
+            # Reset current device and skip line
+            uuid = None
             continue
-	
-	# restore original non-split line
+
+        # restore original non-split line
         l = " ".join(line)
 
-	# try to find section header of multipath device
+        #
+        # Maybe this is a new device header?
+        #
+
+        # First try to parse single UUIDs
         matchobject = reg_uuid.search(l)
         if matchobject:
-	    # extract UUID of device (ignoring alias)
+            new_dev = 1
+            alias = None
             uuid = matchobject.group(0)
+            
+        if not matchobject:
+            # Then map lines with aliases
+            matchobject = reg_uuid_alias.search(l)
+            if matchobject:
+                new_dev = 1
+                alias = matchobject.group(1)
+                uuid = matchobject.group(2)
+            
+        if not matchobject:
+            # Then map "local discs"
+            matchobject = reg_local_disk.search(l)
+            if matchobject:
+                new_dev = 1
+                alias = None
+                uuid = matchobject.group(0)
+        
+        if not matchobject:
+           # Then map strange header: UUIDdm.+
+           matchobject = reg_uuid_plus.search(l)
+           if matchobject:
+               new_dev = 1
+               alias = None
+               uuid = matchobject.group(1)
+        
+        # FIXME: New reported header lines need to be placed here
+
+        if new_dev:
+            # Skip unwanted devices in one device mode
             if only_uuid and uuid != only_uuid:
                 uuid = None # wrong uuid, ignore this one
                 continue
-
-	    # initialize information about next device	
+            
+            # initialize information about next device
             numpaths = 0
             lun_info = []
             paths_info = []
@@ -101,12 +156,15 @@ def parse_multipath_output(info, only_uuid = None):
             group['state'] = None
             group['numpaths'] = 0
             groups[uuid] = group
-
-	    # If the device has an alias, then extract it
-            if len(line) > 1 and line[1].startswith('('):
-                group['alias'] = line[0]
-                
-        elif uuid: # we are currently within a device section
+            
+            # If the device has an alias, then extract it
+            if alias:
+                group['alias'] = alias
+            
+            # Proceed with next line after init
+            continue
+         
+        elif uuid != None:
             if reg_prio.search(l):
                 group['state'] = line[3]
             elif len(line) >= 4 and reg_lun.match(line[1]):

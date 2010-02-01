@@ -279,7 +279,7 @@ sed -i '/CONFIG ERROR/a\                        $NagiosBin -v $NagiosCfgFile'  /
 mkdir -p /var/spool/nagios/tmp
 chown -R nagios.nagios /var/lib/nagios
 mkdir -p /var/log/nagios/archives
-chown nagios.nagios /var/log/nagios/archives
+chown -R nagios.nagios /var/log/nagios
 mkdir -p /var/cache/nagios
 chown nagios.nagios /var/cache/nagios
 mkdir -p /var/run/nagios/rw

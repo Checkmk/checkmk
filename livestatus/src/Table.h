@@ -26,6 +26,7 @@
 #define Table_h
 
 #include "config.h"
+#include "nagios.h"
 
 #include <map>
 #include <string>
@@ -48,6 +49,7 @@ public:
     Column *column(const char *name);
     virtual void answerQuery(Query *) = 0;
     virtual const char *name() = 0;
+    virtual bool isAuthorized(contact *, void *) { return true; };
     void addColumn(Column *);
     bool hasColumn(Column *);
     void addAllColumnsToQuery(Query *);

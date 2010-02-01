@@ -46,6 +46,7 @@
 #include "config.h"
 #include "global_counters.h"
 #include "strutil.h"
+#include "servauth.h"
 
 #ifndef AF_LOCAL
 #define   AF_LOCAL AF_UNIX
@@ -75,6 +76,7 @@ unsigned long g_max_cached_messages = 500000;
 unsigned long g_max_response_size = 100 * 1024 * 1024; // limit answer to 10 MB
 int g_thread_running = 0;
 int g_thread_pid = 0;
+int g_service_authorization = SERVAUTH_LOOSE;
 
 void livestatus_cleanup_after_fork()
 {
@@ -365,6 +367,16 @@ void livestatus_parse_arguments(const char *args_orig)
 		    logger(LG_INFO, "Setting TCP connect timeout to %d ms", c);
 		}
 	    }
+	    else if (!strcmp(left, "service_authorization")) {
+		if (!strcmp(right, "strict"))
+		    g_service_authorization = SERVAUTH_STRICT;
+		else if (!strcmp(right, "loose"))
+		    g_service_authorization = SERVAUTH_LOOSE;
+		else {
+		    logger(LG_INFO, "Invalid service authorization mode. Allowed are strict and loose.");
+		}
+	    }
+		 
 	    else {
 		logger(LG_INFO, "Ignoring invalid option %s=%s", left, right);
 	    }
@@ -380,6 +392,8 @@ int nebmodule_init(int flags, char *args, void *handle)
     livestatus_parse_arguments(args);
 
     logger(LG_INFO, "Version %s initializing. Socket path: '%s'", VERSION, g_socket_path);
+    logger(LG_INFO, "Livestatus has been brought to you by Mathias Kettner");
+    logger(LG_INFO, "Please visit us at http://mathias-kettner.de/");
 
     if (!open_unix_socket())
 	return 1;

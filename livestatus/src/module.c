@@ -311,6 +311,29 @@ int broker_downtime(int event_type, void *data)
     pthread_cond_broadcast(&g_wait_cond[WT_DOWNTIME]);
 }
 
+int broker_log(int event_type, void *data)
+{
+    g_counters[COUNTER_NEB_CALLBACKS]++;
+    pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
+    pthread_cond_broadcast(&g_wait_cond[WT_LOG]);
+}
+
+
+int broker_command(int event_type, void *data)
+{
+    g_counters[COUNTER_NEB_CALLBACKS]++;
+    pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
+    pthread_cond_broadcast(&g_wait_cond[WT_COMMAND]);
+}
+
+int broker_state(int event_type, void *data)
+{
+    g_counters[COUNTER_NEB_CALLBACKS]++;
+    pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
+    pthread_cond_broadcast(&g_wait_cond[WT_STATE]);
+}
+
+
 void register_callbacks()
 {
     neb_register_callback(NEBCALLBACK_HOST_STATUS_DATA,      g_nagios_handle, 0, broker_host); // Needed to start threads
@@ -318,6 +341,9 @@ void register_callbacks()
     neb_register_callback(NEBCALLBACK_DOWNTIME_DATA,         g_nagios_handle, 0, broker_downtime); // dynamic data
     neb_register_callback(NEBCALLBACK_SERVICE_CHECK_DATA,    g_nagios_handle, 0, broker_check); // only for statistics
     neb_register_callback(NEBCALLBACK_HOST_CHECK_DATA,       g_nagios_handle, 0, broker_check); // only for statistics
+    neb_register_callback(NEBCALLBACK_LOG_DATA,              g_nagios_handle, 0, broker_log); // only for trigger 'log'
+    neb_register_callback(NEBCALLBACK_EXTERNAL_COMMAND_DATA, g_nagios_handle, 0, broker_command); // only for trigger 'command'
+    neb_register_callback(NEBCALLBACK_STATE_CHANGE_DATA,     g_nagios_handle, 0, broker_state); // only for trigger 'state'
 }
 
 void deregister_callbacks()
@@ -327,6 +353,9 @@ void deregister_callbacks()
     neb_deregister_callback(NEBCALLBACK_DOWNTIME_DATA,         broker_downtime);
     neb_deregister_callback(NEBCALLBACK_SERVICE_CHECK_DATA,    broker_check);
     neb_deregister_callback(NEBCALLBACK_HOST_CHECK_DATA,       broker_check);
+    neb_deregister_callback(NEBCALLBACK_LOG_DATA,              broker_log);
+    neb_deregister_callback(NEBCALLBACK_EXTERNAL_COMMAND_DATA, broker_command);
+    neb_deregister_callback(NEBCALLBACK_STATE_CHANGE_DATA,     broker_state);
 }
 
 

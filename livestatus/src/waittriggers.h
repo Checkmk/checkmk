@@ -13,6 +13,8 @@
 #define WT_COMMAND       6
 #define WT_NUM_TRIGGERS  7
 
+#define WT_ALLNAMES "all, check, state, log, downtime, comment and command"
+
 extern const char *wt_names[];
 extern pthread_cond_t g_wait_cond[];
 extern pthread_mutex_t g_wait_mutex;

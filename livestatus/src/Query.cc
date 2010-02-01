@@ -534,7 +534,7 @@ void Query::parseWaitTriggerLine(char *line)
 	    return;
 	}
     }
-    _output->setError(RESPONSE_CODE_INVALID_HEADER, "WaitTrigger: invalid trigger");
+    _output->setError(RESPONSE_CODE_INVALID_HEADER, "WaitTrigger: invalid trigger '%s'. Allowed are %s.", value, WT_ALLNAMES);
 }
 
 void Query::parseWaitObjectLine(char *line)
@@ -545,7 +545,7 @@ void Query::parseWaitObjectLine(char *line)
     char *objectspec = lstrip(line);
     _wait_object = _table->findObject(objectspec);
     if (!_wait_object) {
-	_output->setError(RESPONSE_CODE_INVALID_HEADER, "WaitObject: object '%s' not found or not supported by this table", _wait_object);
+	_output->setError(RESPONSE_CODE_INVALID_HEADER, "WaitObject: object '%s' not found or not supported by this table", objectspec);
     }
 }
 
@@ -884,8 +884,11 @@ void Query::doWait()
 	    pthread_mutex_lock(&g_wait_mutex);
 	    int ret = pthread_cond_timedwait(&g_wait_cond[_wait_trigger], &g_wait_mutex, &timeout);
 	    pthread_mutex_unlock(&g_wait_mutex);
-	    if (ret == ETIMEDOUT)
+	    if (ret == ETIMEDOUT) {
+		if (g_debug_level >= 2) 
+		    logger(LG_INFO, "WaitTimeout after %d ms", _wait_timeout);
 		return; // timeout occurred. do not wait any longer
+	    }
 	}
     } while (!_wait_condition.accepts(_wait_object));
 }

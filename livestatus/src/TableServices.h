@@ -41,6 +41,7 @@ class TableServices : public Table
 public:
     TableServices();
     const char *name() { return "services"; };
+    void *findObject(char *objectspec);
     void add(service *svc);
     void answerQuery(Query *);
     void addColumns(Table *, string prefix, int indirect_offset, bool add_hosts);

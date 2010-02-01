@@ -37,6 +37,7 @@
 #include "CustomVarsColumn.h"
 #include "ServicegroupsColumn.h"
 #include "tables.h"
+#include "strutil.h"
 
 extern service *service_list;
 
@@ -256,3 +257,9 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
 }
 
 
+void *TableServices::findObject(char *objectspec)
+{
+    char *host_name = next_field(&objectspec);
+    char *description = objectspec;
+    return find_service(host_name, description);
+}

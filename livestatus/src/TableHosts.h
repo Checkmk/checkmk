@@ -38,6 +38,7 @@ class TableHosts : public Table
 public:
   TableHosts();
   const char *name() { return "hosts"; };
+  void *findObject(char *objectspec);
   void addColumns(Table *, string prefix, int indirect_offset);
   void answerQuery(Query *query);
 };

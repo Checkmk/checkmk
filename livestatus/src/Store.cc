@@ -150,7 +150,7 @@ void Store::answerGetRequest(InputBuffer *input, OutputBuffer *output, const cha
     }
     Query query(input, output, table);
 
-    if (table) {
+    if (table && !output->hasError()) {
 	if (query.hasNoColumns()) {
 	    table->addAllColumnsToQuery(&query);
 	    query.setShowColumnHeaders(true);

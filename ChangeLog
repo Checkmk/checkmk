@@ -4,6 +4,7 @@
 
       MK Livestatus:
       * New headers for waiting (please refer to online documentation)
+      * Abort on errors even if header is not fixed16
 
 1.1.2:
       Summary:

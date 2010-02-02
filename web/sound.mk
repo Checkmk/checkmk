@@ -17,7 +17,6 @@ multiadmin_sounds = {
 # If no problem exists, the "ok" sound is played.
 # If no object is listed, th "idle" sound is played.
 
-# If one sound type is not defined in multiadmin_sounds
-# or set to None, then no sound for that state is played
-# and the sound for the next lower state will be played
-# instead.
+# If one sound type is not defined in multiadmin_sounds,
+# then no sound for that state is played and the sound
+# for the next lower state will be played instead.

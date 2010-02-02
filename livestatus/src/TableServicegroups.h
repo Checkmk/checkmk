@@ -36,6 +36,8 @@ class TableServicegroups : public Table
 public:
   TableServicegroups();
   const char *name() { return "servicegroups"; };
+  void *findObject(char *objectspec);
+  bool isAuthorized(contact *, void *);
   void addColumns(Table *, string prefix, int indirect_offset);
   void add(servicegroup *);
   void answerQuery(Query *query);

@@ -76,7 +76,7 @@ then
     DISTRONAME="SLES 11"
     DISTROVERS=11
 else
-    debvers=$(cat /etc/debian_version)
+    debvers=$(cat /etc/debian_version 2>/dev/null)
     debvers=${debvers:0:3}
     if [ "$debvers" = 5.0 ]
     then
@@ -158,8 +158,9 @@ heading ()
     echo
 }
 
-
+# -----------------------------------------------------------------------------
 heading "Installing missing software"
+# -----------------------------------------------------------------------------
 
 if [ "$DISTRO" = DEBIAN ]
 then
@@ -192,8 +193,9 @@ killall npcd
 set -e
 
 
-# Compile rrdtool
+# -----------------------------------------------------------------------------
 heading "RRDTool"
+# -----------------------------------------------------------------------------
 [ -e rrdtool-$RRDTOOL_VERSION ] || wget $RRDTOOL_URL
 rm -rf rrdtool-$RRDTOOL_VERSION
 tar xzf rrdtool-$RRDTOOL_VERSION.tar.gz
@@ -204,8 +206,9 @@ make install
 popd
 
 
-# Compile plugins
+# -----------------------------------------------------------------------------
 heading "Nagios plugins"
+# -----------------------------------------------------------------------------
 [ -e nagios-plugins-$PLUGINS_VERSION.tar.gz ] || wget $PLUGINS_URL
 rm -rf nagios-plugins-$PLUGINS_VERSION
 tar xzf nagios-plugins-$PLUGINS_VERSION.tar.gz
@@ -216,7 +219,9 @@ make -j 16
 make install
 popd
 
+# -----------------------------------------------------------------------------
 # Compile Nagios
+# -----------------------------------------------------------------------------
 heading "Nagios"
 # Mounting tmpfs to /var/spool/nagios
 umount /var/spool/nagios 2>/dev/null || true
@@ -279,7 +284,7 @@ sed -i '/CONFIG ERROR/a\                        $NagiosBin -v $NagiosCfgFile'  /
 mkdir -p /var/spool/nagios/tmp
 chown -R nagios.nagios /var/lib/nagios
 mkdir -p /var/log/nagios/archives
-chown nagios.nagios /var/log/nagios/archives
+chown -R nagios.nagios /var/log/nagios
 mkdir -p /var/cache/nagios
 chown nagios.nagios /var/cache/nagios
 mkdir -p /var/run/nagios/rw
@@ -671,7 +676,9 @@ a2enmod rewrite || true
 
 rm -f /usr/local/share/pnp4nagios/install.php
 
+# -----------------------------------------------------------------------------
 # Und auch noch Nagvis
+# -----------------------------------------------------------------------------
 heading "NagVis"
 [ -e nagvis-$NAGVIS_VERSION.tar.gz ] || wget "$NAGVIS_URL"
 rm -rf nagvis-$NAGVIS_VERSION
@@ -748,8 +755,9 @@ killall nagios || true
 /etc/init.d/nagios start
 activate_initd nagios || true
 
-# check_mk
+# -----------------------------------------------------------------------------
 heading "Check_MK"
+# -----------------------------------------------------------------------------
 if [ ! -e check_mk-$CHECK_MK_VERSION.tar.gz ]
 then
     wget "$CHECK_MK_URL"
@@ -785,7 +793,9 @@ HTML='<div class="navsectiontitle">Check_MK</div><div class="navsectionlinks"><u
 QUOTE=${HTML//\//\\/}
 sed -i "/.*Reports<.*$/i$QUOTE" /usr/local/share/nagios/htdocs/side.php
 
+# -----------------------------------------------------------------------------
 # Agent fuer localhost
+# -----------------------------------------------------------------------------
 mkdir -p /etc/xinetd.d
 cp /usr/share/check_mk/agents/xinetd.conf /etc/xinetd.d/check_mk
 mkdir -p /usr/bin

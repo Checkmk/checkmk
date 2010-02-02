@@ -88,3 +88,9 @@ void TableContacts::answerQuery(Query *query)
       ct = ct->next;
    }
 }
+
+
+void *TableContacts::findObject(char *objectspec)
+{
+    return find_contact(objectspec);
+}

@@ -43,6 +43,14 @@
 
 extern host *host_list;
 
+bool TableHosts::isAuthorized(contact *ctc, void *data)
+{
+    host *hst = (host *)data;
+    return is_contact_for_host(hst, ctc)
+	|| is_escalated_contact_for_host(hst, ctc);
+}
+
+
 TableHosts::TableHosts()
 {
    addColumns(this, "", -1);
@@ -242,6 +250,10 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 	    "A list of all host groups this host is in", (char *)(&hst.hostgroups_ptr) - ref, indirect_offset));
 }
 
+void *TableHosts::findObject(char *objectspec)
+{
+    return find_host(objectspec);
+}
 
 
 void TableHosts::answerQuery(Query *query)

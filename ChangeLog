@@ -1,5 +1,9 @@
 1.1.3:
-      check_mk_template.cfg: fix typo in notes_url
+      Core, Setup, etc.:
+      * check_mk_template.cfg: fix typo in notes_url
+
+      MK Livestatus:
+      * New headers for waiting (please refer to online documentation)
 
 1.1.2:
       Summary:

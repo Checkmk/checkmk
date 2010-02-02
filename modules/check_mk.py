@@ -1603,7 +1603,7 @@ def make_inventory(checkname, hostnamelist, check_only=False):
           except Exception, e:
               if opt_debug:
                   raise
-              print "Invalid output from agent or invalid configuration: %s" % e
+              print "%s: Invalid output from agent or invalid configuration: %s" % (hostname,  e))
               continue
 
           if len(inventory) == 0: # found nothing

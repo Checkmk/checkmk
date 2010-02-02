@@ -25,6 +25,8 @@
 #include <string.h>
 #include <strings.h>
 #include <stdlib.h>
+#include <sys/time.h>
+#include <sys/errno.h>
 
 #include "logger.h"
 #include "opids.h"
@@ -39,6 +41,7 @@
 #include "StatsColumn.h"
 #include "Aggregator.h"
 #include "OringFilter.h"
+#include "waittriggers.h"
 
 extern int g_debug_level;
 extern unsigned long g_max_response_size;
@@ -46,6 +49,10 @@ extern unsigned long g_max_response_size;
 Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
    _output(output),
    _table(table), 
+   _auth_user(0),
+   _wait_timeout(0),
+   _wait_trigger(WT_NONE),
+   _wait_object(0),
    _field_separator(";"),
    _dataset_separator("\n"),
    _list_separator(","),
@@ -65,13 +72,13 @@ Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
       if (g_debug_level > 0)
 	  logger(LG_INFO, "Query: %s", buffer);
       if (!strncmp(buffer, "Filter:", 7))
-	 parseFilterLine(lstrip(buffer + 7));
+	 parseFilterLine(lstrip(buffer + 7), true);
 
       else if (!strncmp(buffer, "Or:", 3))
-	 parseAndOrLine(lstrip(buffer + 3), ANDOR_OR);
+	 parseAndOrLine(lstrip(buffer + 3), ANDOR_OR, true);
 
       else if (!strncmp(buffer, "And:", 4))
-	 parseAndOrLine(lstrip(buffer + 4), ANDOR_AND);
+	 parseAndOrLine(lstrip(buffer + 4), ANDOR_AND, true);
 
       else if (!strncmp(buffer, "StatsOr:", 8))
 	 parseStatsAndOrLine(lstrip(buffer + 8), ANDOR_OR);
@@ -94,6 +101,9 @@ Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
       else if (!strncmp(buffer, "Limit:", 6))
 	 parseLimitLine(lstrip(buffer + 6));
 
+      else if (!strncmp(buffer, "AuthUser:", 9))
+	 parseAuthUserHeader(lstrip(buffer + 9));
+
       else if (!strncmp(buffer, "Separators:", 11))
 	 parseSeparatorsLine(lstrip(buffer + 11));
 
@@ -105,6 +115,25 @@ Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
 
       else if (!strncmp(buffer, "KeepAlive:", 10))
 	 parseKeepAliveLine(lstrip(buffer + 10));
+
+      else if (!strncmp(buffer, "WaitCondition:", 14))
+	 parseFilterLine(lstrip(buffer + 14), false);
+
+      else if (!strncmp(buffer, "WaitConditionAnd:", 17))
+	 parseAndOrLine(lstrip(buffer + 17), ANDOR_AND, false);
+
+      else if (!strncmp(buffer, "WaitConditionOr:", 16))
+	 parseAndOrLine(lstrip(buffer + 16), ANDOR_OR, false);
+
+      else if (!strncmp(buffer, "WaitTrigger:", 12))
+	 parseWaitTriggerLine(lstrip(buffer + 12));
+
+      else if (!strncmp(buffer, "WaitObject:", 11))
+	 parseWaitObjectLine(lstrip(buffer + 11));
+
+      else if (!strncmp(buffer, "WaitTimeout:", 12))
+	 parseWaitTimeoutLine(lstrip(buffer + 12));
+
 
       else if (!buffer[0])
 	 break;
@@ -189,16 +218,20 @@ int Query::lookupOperator(const char *opname)
 }
 
 
-void Query::parseAndOrLine(char *line, int andor)
+void Query::parseAndOrLine(char *line, int andor, bool filter)
 {
    char *value = next_field(&line);
    int number = atoi(value);
    if (!isdigit(value[0]) || number <= 0) {
-      _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value for %s: need non-zero integer number", 
+      _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value for %s%s: need non-zero integer number", 
+	    filter ? "" : "WaitCondition",
 	    andor == ANDOR_OR ? "Or" : "And");
       return;
    }
-   _filter.combineFilters(number, andor);
+   if (filter)
+       _filter.combineFilters(number, andor);
+   else
+       _wait_condition.combineFilters(number, andor);
 }
 
 void Query::parseStatsAndOrLine(char *line, int andor)
@@ -307,7 +340,7 @@ void Query::parseStatsLine(char *line)
 }
 
 
-void Query::parseFilterLine(char *line)
+void Query::parseFilterLine(char *line, bool is_filter)
 {
    if (!_table)
       return;
@@ -343,7 +376,19 @@ void Query::parseFilterLine(char *line)
    Filter *filter = column->createFilter(operator_id, value);
    if (!filter)
       _output->setError(RESPONSE_CODE_INVALID_HEADER, "cannot create filter on table %s", _table->name());
-   _filter.addSubfilter(filter);
+   if (is_filter)
+       _filter.addSubfilter(filter);
+   else
+       _wait_condition.addSubfilter(filter);
+}
+
+void Query::parseAuthUserHeader(char *line)
+{
+    if (!_table)
+	return;
+    _auth_user = find_contact(line);
+    if (!_auth_user)
+	_output->setError(RESPONSE_CODE_INVALID_HEADER, "AuthUser: no such user '%s'", line);
 }
 
 void Query::parseStatsGroupLine(char *line)
@@ -472,6 +517,52 @@ void Query::parseLimitLine(char *line)
    }
 }
 
+void Query::parseWaitTimeoutLine(char *line)
+{
+   char *value = next_field(&line);
+   if (!value) {
+      _output->setError(RESPONSE_CODE_INVALID_HEADER, "WaitTimeout: missing value");
+   }
+   else {
+      int timeout = atoi(value);
+      if (!isdigit(value[0]) || timeout < 0)
+	 _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value for WaitTimeout: must be non-negative integer");
+      else
+	 _wait_timeout = timeout;
+   }
+}
+
+void Query::parseWaitTriggerLine(char *line)
+{
+    char *value = next_field(&line);
+    if (!value) {
+	_output->setError(RESPONSE_CODE_INVALID_HEADER, "WaitTrigger: missing keyword");
+	return;
+    }
+
+    for (unsigned i=0; i < WT_NUM_TRIGGERS; i++)
+    {
+	if (!strcmp(value, wt_names[i])) {
+	    _wait_trigger = i;
+	    return;
+	}
+    }
+    _output->setError(RESPONSE_CODE_INVALID_HEADER, "WaitTrigger: invalid trigger '%s'. Allowed are %s.", value, WT_ALLNAMES);
+}
+
+void Query::parseWaitObjectLine(char *line)
+{
+    if (!_table)
+	return;
+
+    char *objectspec = lstrip(line);
+    _wait_object = _table->findObject(objectspec);
+    if (!_wait_object) {
+	_output->setError(RESPONSE_CODE_INVALID_HEADER, "WaitObject: object '%s' not found or not supported by this table", objectspec);
+    }
+}
+
+
 bool Query::doStats()
 {
    return _stats_columns.size() > 0;
@@ -479,6 +570,8 @@ bool Query::doStats()
 
 void Query::start()
 {
+   doWait();
+
    _need_ds_separator = false;
 
    if (_output_format == OUTPUT_FORMAT_JSON)
@@ -526,7 +619,7 @@ bool Query::processDataset(void *data)
    }
     
 
-   if (_filter.accepts(data)) {
+   if (_filter.accepts(data) && (!_auth_user || _table->isAuthorized(_auth_user, data))) {
       _current_line++;
       if (_limit >= 0 && (int)_current_line > _limit)
 	 return false;
@@ -766,3 +859,49 @@ Aggregator **Query::getStatsGroup(string name)
       return it->second;
 }
 
+void Query::doWait()
+{
+    // If no wait condition and no trigger is set,
+    // we do not wait at all.
+    if (_wait_condition.numFilters() == 0 && _wait_trigger == WT_NONE)
+	return;
+    
+    // If a condition is set, we check the condition. If it
+    // is already true, we do not need to way
+    if (_wait_condition.numFilters() > 0 &&
+	_wait_condition.accepts(_wait_object))
+	return;
+
+    // No wait on specified trigger. If no trigger was specified
+    // we use WT_ALL as default trigger.
+    if (_wait_trigger == WT_NONE)
+	_wait_trigger = WT_ALL;
+
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    struct timespec timeout;
+    timeout.tv_sec = now.tv_sec + (_wait_timeout / 1000);
+    timeout.tv_nsec = now.tv_usec * 1000 + 1000 * 1000 * (_wait_timeout % 1000);	
+    if (timeout.tv_nsec > 1000000000) {
+	timeout.tv_sec ++;
+	timeout.tv_nsec -= 1000000000;
+    }
+
+    do {
+	if (_wait_timeout == 0) {
+	    pthread_mutex_lock(&g_wait_mutex);
+	    pthread_cond_wait(&g_wait_cond[_wait_trigger], &g_wait_mutex);
+	    pthread_mutex_unlock(&g_wait_mutex);
+	}
+	else {
+	    pthread_mutex_lock(&g_wait_mutex);
+	    int ret = pthread_cond_timedwait(&g_wait_cond[_wait_trigger], &g_wait_mutex, &timeout);
+	    pthread_mutex_unlock(&g_wait_mutex);
+	    if (ret == ETIMEDOUT) {
+		if (g_debug_level >= 2) 
+		    logger(LG_INFO, "WaitTimeout after %d ms", _wait_timeout);
+		return; // timeout occurred. do not wait any longer
+	    }
+	}
+    } while (!_wait_condition.accepts(_wait_object));
+}

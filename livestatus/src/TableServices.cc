@@ -37,6 +37,8 @@
 #include "CustomVarsColumn.h"
 #include "ServicegroupsColumn.h"
 #include "tables.h"
+#include "auth.h"
+#include "strutil.h"
 
 extern service *service_list;
 
@@ -95,6 +97,20 @@ void TableServices::answerQuery(Query *query)
    }
 }
 
+bool TableServices::isAuthorized(contact *ctc, void *data)
+{
+    service *svc = (service *)data;
+    if (g_service_authorization == AUTH_STRICT)
+       return is_contact_for_service(svc, ctc) 
+	   || is_escalated_contact_for_service(svc, ctc);
+    else { // AUTH_LOOSE
+	host *hst = svc->host_ptr;
+	return  is_contact_for_host(hst, ctc) 
+	    || is_escalated_contact_for_host(hst, ctc)
+	    || is_contact_for_service(svc, ctc)
+	    || is_escalated_contact_for_service(svc, ctc);
+    }
+}
 
 TableServices::TableServices()
 {
@@ -256,3 +272,9 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
 }
 
 
+void *TableServices::findObject(char *objectspec)
+{
+    char *host_name = next_field(&objectspec);
+    char *description = objectspec;
+    return find_service(host_name, description);
+}

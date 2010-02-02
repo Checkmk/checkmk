@@ -162,3 +162,4 @@ DowntimeOrComment *TableDownComm::findEntry(unsigned long id)
 	return 0;
 }
 
+

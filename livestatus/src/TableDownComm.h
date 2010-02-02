@@ -59,6 +59,5 @@ public:
 };
 
 
-
 #endif // TableDownComm_h
 

@@ -36,6 +36,7 @@ class TableHostgroups : public Table
 public:
   TableHostgroups();
   const char *name() { return "hostgroups"; };
+  void *findObject(char *objectspec);
   void addColumns(Table *, string prefix, int indirect_offset);
   void add(hostgroup *ctc);
   void answerQuery(Query *query);

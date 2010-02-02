@@ -39,6 +39,7 @@ public:
   TableHosts();
   const char *name() { return "hosts"; };
   bool isAuthorized(contact *ctc, void *data);
+  void *findObject(char *objectspec);
   void addColumns(Table *, string prefix, int indirect_offset);
   void answerQuery(Query *query);
 };

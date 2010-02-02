@@ -250,6 +250,10 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 	    "A list of all host groups this host is in", (char *)(&hst.hostgroups_ptr) - ref, indirect_offset));
 }
 
+void *TableHosts::findObject(char *objectspec)
+{
+    return find_host(objectspec);
+}
 
 
 void TableHosts::answerQuery(Query *query)

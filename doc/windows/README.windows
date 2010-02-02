@@ -11,16 +11,3 @@ You can compiled the Windows agent yourself using MinGW -
 the minimalist GNU compiler for Windows. It's homepage
 is http://www.mingw.org/.
 
-MinGW is great. It does need neiter Cygwin nor any proprietary
-product from Microsoft. It is available for Windows and even
-for Linux. For example Debian 5.0 provides a package 'mingw32'.
-It contains a cross-compiling version of MinGW that allows you
-to compile on Linux (even on another architecture).
-
-The Makefile shipped with this distribution can be used both
-with Linux and MinGW on Windows. It tries to detect where it
-is running in compiles check_mk_agent.cc. Please tell us, if
-you have any problems comiling the agent (or if you have solved
-some compiling problem yourself).
-
-

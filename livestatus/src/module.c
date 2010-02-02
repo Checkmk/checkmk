@@ -47,6 +47,7 @@
 #include "global_counters.h"
 #include "strutil.h"
 #include "servauth.h"
+#include "waittriggers.h"
 
 #ifndef AF_LOCAL
 #define   AF_LOCAL AF_UNIX
@@ -89,6 +90,12 @@ void livestatus_cleanup_after_fork()
     // the connection will still be open since and the client will
     // hang while trying to read further data. And the CLOEXEC is
     // not atomic :-(
+
+    // Eventuell sollte man hier anstelle von store_deinit() nicht
+    // darauf verlassen, dass die ClientQueue alle Verbindungen zumacht.
+    // Es sind ja auch Dateideskriptoren offen, die von Threads gehalten
+    // werden und nicht mehr in der Queue sind. Und in store_deinit()
+    // wird mit mutexes rumgemacht....
     for (i=3; i < g_max_fd_ever; i++) {
 	if (0 == fstat(i, &st) && S_ISSOCK(st.st_mode))
 	{
@@ -283,6 +290,8 @@ int broker_check(int event_type, void *data)
 	    g_counters[COUNTER_HOST_CHECKS]++;
 	}
     }
+    pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
+    pthread_cond_broadcast(&g_wait_cond[WT_CHECK]);
 }
 
 
@@ -291,6 +300,8 @@ int broker_comment(int event_type, void *data)
     nebstruct_comment_data *co = (nebstruct_comment_data *)data;
     store_register_comment(co);
     g_counters[COUNTER_NEB_CALLBACKS]++;
+    pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
+    pthread_cond_broadcast(&g_wait_cond[WT_COMMENT]);
 }
 
 int broker_downtime(int event_type, void *data)
@@ -298,7 +309,32 @@ int broker_downtime(int event_type, void *data)
     nebstruct_downtime_data *dt = (nebstruct_downtime_data *)data;
     store_register_downtime(dt);
     g_counters[COUNTER_NEB_CALLBACKS]++;
+    pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
+    pthread_cond_broadcast(&g_wait_cond[WT_DOWNTIME]);
 }
+
+int broker_log(int event_type, void *data)
+{
+    g_counters[COUNTER_NEB_CALLBACKS]++;
+    pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
+    pthread_cond_broadcast(&g_wait_cond[WT_LOG]);
+}
+
+
+int broker_command(int event_type, void *data)
+{
+    g_counters[COUNTER_NEB_CALLBACKS]++;
+    pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
+    pthread_cond_broadcast(&g_wait_cond[WT_COMMAND]);
+}
+
+int broker_state(int event_type, void *data)
+{
+    g_counters[COUNTER_NEB_CALLBACKS]++;
+    pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
+    pthread_cond_broadcast(&g_wait_cond[WT_STATE]);
+}
+
 
 void register_callbacks()
 {
@@ -307,6 +343,9 @@ void register_callbacks()
     neb_register_callback(NEBCALLBACK_DOWNTIME_DATA,         g_nagios_handle, 0, broker_downtime); // dynamic data
     neb_register_callback(NEBCALLBACK_SERVICE_CHECK_DATA,    g_nagios_handle, 0, broker_check); // only for statistics
     neb_register_callback(NEBCALLBACK_HOST_CHECK_DATA,       g_nagios_handle, 0, broker_check); // only for statistics
+    neb_register_callback(NEBCALLBACK_LOG_DATA,              g_nagios_handle, 0, broker_log); // only for trigger 'log'
+    neb_register_callback(NEBCALLBACK_EXTERNAL_COMMAND_DATA, g_nagios_handle, 0, broker_command); // only for trigger 'command'
+    neb_register_callback(NEBCALLBACK_STATE_CHANGE_DATA,     g_nagios_handle, 0, broker_state); // only for trigger 'state'
 }
 
 void deregister_callbacks()
@@ -316,6 +355,9 @@ void deregister_callbacks()
     neb_deregister_callback(NEBCALLBACK_DOWNTIME_DATA,         broker_downtime);
     neb_deregister_callback(NEBCALLBACK_SERVICE_CHECK_DATA,    broker_check);
     neb_deregister_callback(NEBCALLBACK_HOST_CHECK_DATA,       broker_check);
+    neb_deregister_callback(NEBCALLBACK_LOG_DATA,              broker_log);
+    neb_deregister_callback(NEBCALLBACK_EXTERNAL_COMMAND_DATA, broker_command);
+    neb_deregister_callback(NEBCALLBACK_STATE_CHANGE_DATA,     broker_state);
 }
 
 

@@ -108,3 +108,9 @@ void TableHostgroups::answerQuery(Query *query)
       hg = hg->next;
    }
 }
+
+  
+void *TableHostgroups::findObject(char *objectspec)
+{
+    return find_hostgroup(objectspec);
+}

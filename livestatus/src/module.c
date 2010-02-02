@@ -46,7 +46,7 @@
 #include "config.h"
 #include "global_counters.h"
 #include "strutil.h"
-#include "servauth.h"
+#include "auth.h"
 #include "waittriggers.h"
 
 #ifndef AF_LOCAL
@@ -77,7 +77,8 @@ unsigned long g_max_cached_messages = 500000;
 unsigned long g_max_response_size = 100 * 1024 * 1024; // limit answer to 10 MB
 int g_thread_running = 0;
 int g_thread_pid = 0;
-int g_service_authorization = SERVAUTH_LOOSE;
+int g_service_authorization = AUTH_LOOSE;
+int g_group_authorization = AUTH_STRICT;
 
 void livestatus_cleanup_after_fork()
 {
@@ -411,11 +412,20 @@ void livestatus_parse_arguments(const char *args_orig)
 	    }
 	    else if (!strcmp(left, "service_authorization")) {
 		if (!strcmp(right, "strict"))
-		    g_service_authorization = SERVAUTH_STRICT;
+		    g_service_authorization = AUTH_STRICT;
 		else if (!strcmp(right, "loose"))
-		    g_service_authorization = SERVAUTH_LOOSE;
+		    g_service_authorization = AUTH_LOOSE;
 		else {
 		    logger(LG_INFO, "Invalid service authorization mode. Allowed are strict and loose.");
+		}
+	    }
+	    else if (!strcmp(left, "group_authorization")) {
+		if (!strcmp(right, "strict"))
+		    g_group_authorization = AUTH_STRICT;
+		else if (!strcmp(right, "loose"))
+		    g_group_authorization = AUTH_LOOSE;
+		else {
+		    logger(LG_INFO, "Invalid group authorization mode. Allowed are strict and loose.");
 		}
 	    }
 		 

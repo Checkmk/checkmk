@@ -45,15 +45,6 @@
 // watch nagios' logfile rotation
 extern time_t last_log_rotation;
 
-/* Es fehlt noch:
-
-   - Etliche Meldungstypen: Programm-Meldungen (Neustart),
-     Eventhandler-Meldungen, und was gibt es noch?
-     Die Verknuefpungen der External-Commands stellen wir
-     noch zurueck.
-
-*/
-
 int num_cached_log_messages = 0;
 
 TableLog::TableLog(unsigned long max_cached_messages)
@@ -294,3 +285,16 @@ void TableLog::handleNewMessage(Logfile *logfile, time_t since, time_t until, un
     _num_at_last_check = _num_cached_messages;
 }
 
+bool TableLog::isAuthorized(contact *ctc, void *data)
+{
+    LogEntry *entry = (LogEntry *)data;
+    service *svc = entry->_service;
+    host *hst = entry->_host;
+
+    if (svc)
+	return g_table_services->isAuthorized(ctc, svc);
+    else if (hst)
+	return g_table_hosts->isAuthorized(ctc, hst);
+    else
+	return true;
+}

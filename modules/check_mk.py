@@ -213,9 +213,14 @@ dummy_check_commandline            = 'echo "ERROR - you did an active check on t
 nagios_illegal_chars               = '`~!$%^&*|\'"<>?,()='
 
 # Settings for web pages
-multiadmin_users                   = None # means: all
-multiadmin_action_users            = None # means: all
-multiadmin_sites                   = { "local" : {} }
+multiadmin_users                     = None # means: all
+multiadmin_action_users              = None # means: all
+multiadmin_sites                     = { "local" : {} }
+multiadmin_restrict                  = False
+multiadmin_restrict_actions          = False
+multiadmin_unrestricted_users        = []
+multiadmin_unrestricted_action_users = []
+multiadmin_sounds                    = {}
 
 # Data to be defined in main.mk
 checks                               = []
@@ -1603,7 +1608,7 @@ def make_inventory(checkname, hostnamelist, check_only=False):
           except Exception, e:
               if opt_debug:
                   raise
-              print "%s: Invalid output from agent or invalid configuration: %s" % (hostname,  e))
+              print "%s: Invalid output from agent or invalid configuration: %s" % (hostname, e)
               continue
 
           if len(inventory) == 0: # found nothing

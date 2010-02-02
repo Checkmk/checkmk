@@ -39,14 +39,18 @@ class MKGeneralException(Exception):
 
 
 
-def find_entries(filt, enabled_sites = None):
+def find_entries(filt, enabled_sites = None, auth_user = None):
    services = []
    hosts = set([])
 
    columns = ["host_name","description","state","host_state", 
 	      "plugin_output", "last_state_change", "downtimes" ] 
+   if auth_user:
+	auth_header = "AuthUser: %s\n" % auth_user
+   else:
+        auth_header = ""
    svcs = query_livestatus("GET services\n"
-	                   "Columns: %s\n%s" % (" ".join(columns), filt), enabled_sites)
+	                   "Columns: %s\n%s%s" % (" ".join(columns), auth_header, filt), enabled_sites)
    for line in svcs:
       services.append(dict(zip(columns, line)))
       hosts.add(line[0])

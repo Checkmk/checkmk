@@ -96,9 +96,25 @@ def page(html):
 
     html.header("Check_mk Multiadmin")
 
+    # Decide wether to show all items or only those the
+    # user is a contact for
+    auth_user = None
+
+    # User wants to see data (also needed for actions)
+    if check_mk.multiadmin_restrict:
+        if html.req.user not in check_mk.multiadmin_unrestricted_users:
+	    auth_user = html.req.user
+
+    # User wants to do action?
+    if check_mk.multiadmin_restrict_actions and \
+       	(html.has_var("actions") or html.has_var("do_actions")):
+	if html.req.user not in check_mk.multiadmin_unrestricted_action_users:
+	    auth_user = html.req.user
+
+
     if html.has_var("filled_in") and not html.has_var("filter"):
         search_filter = build_search_filter(html)
-        hits, hosts = nagios.find_entries(search_filter, enabled_sites(html))
+        hits, hosts = nagios.find_entries(search_filter, enabled_sites(html), auth_user)
 
     if html.has_var("results"):
         show_tabs(html, tabs, "results")

@@ -8,13 +8,15 @@ multiadmin_sounds = {
   "warning"  : _sound_uri + "crawler.wav",
   "unknown"  : _sound_uri + "door.wav",
   "ok"       : _sound_uri + "tiktak.wav",
+  "idle"     : _sound_uri + "tiktak.wav",
 }
 
 # Just as Nagios does it, only *one* sound is played on
 # each page access, which reflects the "worst" event.
-# The order is host -> critical -> warning -> unknown.
+# The order is host -> critical -> unknown -> warning.
 # If no problem exists, the "ok" sound is played.
+# If no object is listed, th "idle" sound is played.
 
 # If one sound type is not defined in multiadmin_sounds,
-# then no sound is played if that event is the worst
-# one.
+# then no sound for that state is played and the sound
+# for the next lower state will be played instead.

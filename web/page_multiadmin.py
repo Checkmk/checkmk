@@ -419,28 +419,24 @@ def show_search_results(html, services, hosts):
 
     html.write("</table>\n")
 
-    sound = None
-    if num_hosts_down > 0:
-        sound = "host"
-    elif at_least_one_state.get(2):
-	sound = "critical"
-    elif at_least_one_state.get(1):
-	sound = "warning"
-    elif at_least_one_state.get(3):
-	sound = "unknown"
+    sound_uri = None
+    if num_hosts_down > 0 and 'host' in check_mk.multiadmin_sounds:
+        sound_uri = check_mk.multiadmin_sounds['host']
+    elif at_least_one_state.get(2) and 'critical' in check_mk.multiadmin_sounds:
+        sound_uri = check_mk.multiadmin_sounds['critical']
+    elif at_least_one_state.get(3) and 'unknown' in check_mk.multiadmin_sounds:
+        sound_uri = check_mk.multiadmin_sounds['unknown']
+    elif at_least_one_state.get(1) and 'warning' in check_mk.multiadmin_sounds:
+        sound_uri = check_mk.multiadmin_sounds['warning']
+    elif 'ok' in check_mk.multiadmin_sounds:
+        sound_uri = check_mk.multiadmin_sounds['ok']
     else:
-	sound = "ok"
+        sound_uri = check_mk.multiadmin_sounds['idle']
 
-    if sound:
-	try:
-	    sound_uri = check_mk.multiadmin_sounds[sound]
-	    html.write('<p><b>BUMM: %s(%s)!!!</b></p>' % (sound, sound_uri))
-	    html.write('<object type="audio/x-wav" data="%s" height="0" width="0">'
-		    '<param name="filename" value="%s">'
-		    '<param name="autostart" value="true"><param name="playcount" value="1"></object>' % (sound_uri, sound_uri))
-        except:
-	    pass
-
+    if sound_uri:
+            html.write('<object type="audio/x-wav" data="%s" height="0" width="0">'
+                    '<param name="filename" value="%s">'
+                    '<param name="autostart" value="true"><param name="playcount" value="1"></object>' % (sound_uri, sound_uri))
 
 def do_actions(html, hits, hosts):
     if not check_mk.is_allowed_to_act(html.req.user):

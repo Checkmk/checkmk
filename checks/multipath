@@ -85,10 +85,11 @@ def parse_multipath_output(info, only_uuid = None):
     # 0: matching regex
     # 1: matched regex-group id of UUID
     # 2: matched regex-group id of alias (optional)
-    reg_headers = [ (get_regex("^[0-9a-z]{33}$"), 0),
+    reg_headers = [ (get_regex("^[0-9a-z]{33}$"), 0, None),
                     (get_regex("^([^\s]+)\s\(([0-9a-z]{33})\)"), 2, 1),
-                    (get_regex("^[a-zA-Z0-9_]+$"), 0),
-                    (get_regex("^([0-9a-z]{33})\s*dm.+$"), 1) ]
+                    (get_regex("^[a-zA-Z0-9_]+$"), 0, None),
+                    (get_regex("^([0-9a-z]{33})\s?dm.+$"), 1, None),
+                    (get_regex("^[a-zA-Z0-9_]+dm-.+$"), 0, None) ]
 
     reg_prio = get_regex("\[prio=")
     reg_lun  = get_regex("[0-9]+:[0-9]+:[0-9]+:[0-9]+")
@@ -108,53 +109,57 @@ def parse_multipath_output(info, only_uuid = None):
         # restore original non-split line
         l = " ".join(line)
 
+        # Skip output when multipath is not present
+        if l.endswith('DM multipath kernel driver not loaded'):
+            uuid = None
+            continue
+
         # First simply separate between data row and header row
         if line[0][0] != '[' and line[0][0] != '\\':
             # Try to match header lines
-            i = 0
             matchobject = None
-            while not matchobject and i < len(reg_headers)-1:
-                matchobject = reg_headers[i][0].search(l)
+            for regex, uuid_pos, alias_pos in reg_headers:
+                matchobject = regex.search(l)
 
                 if matchobject:
-                    uuid = matchobject.group(reg_headers[i][1])
+                    uuid = matchobject.group(uuid_pos)
 
-                    if len(reg_headers[i]) > 2:
-                        alias = matchobject.group(reg_headers[i][2])
+                    if alias_pos:
+                        alias = matchobject.group(alias_pos)
+                    else:
+                        alias = None
 
-                i += 1
-            else:
-                # No data row and no matching header row
-                if not matchobject:
-                    # FIXME: Error handling
-                    print "ERROR"
-                    continue
+                    break
 
-                # Skip unwanted devices in one device mode
-                if only_uuid and uuid != only_uuid:
-                    uuid = None # wrong uuid, ignore this one
-                    continue
+            # No data row and no matching header row
+            if not matchobject:
+                raise Exception("Invalid line in agent output: " + l)
 
-                # initialize information about next device
-                numpaths = 0
-                lun_info = []
-                paths_info = []
-                broken_paths = []
-                group = {}
-                group['paths'] = paths_info
-                group['broken_paths'] = broken_paths
-                group['luns'] = lun_info
-                group['uuid'] = uuid
-                group['state'] = None
-                group['numpaths'] = 0
-                groups[uuid] = group
-
-                # If the device has an alias, then extract it
-                if alias:
-                    group['alias'] = alias
-
-                # Proceed with next line after init
+            # Skip unwanted devices in one device mode
+            if only_uuid and uuid != only_uuid:
+                uuid = None # wrong uuid, ignore this one
                 continue
+
+            # initialize information about next device
+            numpaths = 0
+            lun_info = []
+            paths_info = []
+            broken_paths = []
+            group = {}
+            group['paths'] = paths_info
+            group['broken_paths'] = broken_paths
+            group['luns'] = lun_info
+            group['uuid'] = uuid
+            group['state'] = None
+            group['numpaths'] = 0
+            groups[uuid] = group
+
+            # If the device has an alias, then extract it
+            if alias:
+                group['alias'] = alias
+
+            # Proceed with next line after init
+            continue
         else:
             if uuid != None:
                 if reg_prio.search(l):

@@ -2,6 +2,9 @@
       Core, Setup, etc.:
       * check_mk_template.cfg: fix typo in notes_url
 
+      Checks & Agents:
+      * multipath: Fixed bug in output parser
+
       MK Livestatus:
       * New headers for waiting (please refer to online documentation)
 

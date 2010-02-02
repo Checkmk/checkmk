@@ -57,3 +57,9 @@ void TableContactgroups::answerQuery(Query *query)
 	cg = cg->next;
     }
 }
+
+void TableContactgroups::findObject(char *objectspec)
+{
+    return find_contactgroup(objectspec);
+}
+

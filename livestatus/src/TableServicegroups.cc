@@ -89,3 +89,8 @@ void TableServicegroups::answerQuery(Query *query)
       sg = sg->next;
    }
 }
+
+void *TableServicegroups::findObject(char *objectspec)
+{
+    return find_servicegroup(objectspec);
+}

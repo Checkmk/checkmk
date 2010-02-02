@@ -35,6 +35,7 @@ class TableContactgroups : public Table
 public:
     TableContactgroups();
     const char *name() { return "contactgroups"; };
+    void *findObject(char *objectspec);
     void answerQuery(Query *query);
     void addColumns(Table *table, string prefix, int indirect_offset);
 };

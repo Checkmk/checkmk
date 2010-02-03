@@ -8,17 +8,19 @@
 #  5: c3discards
 
 $ds_name[1] = 'Traffic';
-$opt[1]  = "--vertical-label \"MB/sec\" -b 1024 --title \"Traffic for $hostname / $servicedesc\" ";
-$def[1]  = "DEF:txbytes=$rrdfile:$DS[1]:AVERAGE " ;
-$def[1] .= "DEF:rxbytes=$rrdfile:$DS[2]:AVERAGE " ;
+$opt[1]  = "--vertical-label \"MB/sec\" -X0 -b 1024 --title \"Traffic for $hostname / $servicedesc\" ";
+$def[1]  = "DEF:txwords=$rrdfile:$DS[1]:AVERAGE " ;
+$def[1] .= "DEF:rxwords=$rrdfile:$DS[2]:AVERAGE " ;
+$def[1] .= "CDEF:txbytes=txwords,4,* " ;
+$def[1] .= "CDEF:rxbytes=rxwords,4,* " ;
 $def[1] .= "CDEF:rxMbytes=rxbytes,1048576.0,/ " ;
 $def[1] .= "CDEF:txMbytes=txbytes,1048576.0,/ " ;
-$def[1] .= "CDEF:rxbytesDraw=rxbytes,-1,* " ;
-$def[1] .= "AREA:txbytes#60a020:\"in\" " ;
+$def[1] .= "CDEF:rxMbytesDraw=rxMbytes,-1,* " ;
+$def[1] .= "AREA:txMbytes#60a020:\"in \" " ;
 $def[1] .= "GPRINT:txMbytes:LAST:\"%.2lf MB/s last\" " ;
 $def[1] .= "GPRINT:txMbytes:AVERAGE:\"%.2lf MB/s avg\" " ;
 $def[1] .= "GPRINT:txMbytes:MAX:\"%.2lf MB/s max\\n\" " ;
-$def[1] .= "AREA:rxbytesDraw#2060a0:\"out\" " ;
+$def[1] .= "AREA:rxMbytesDraw#2060a0:\"out\" " ;
 $def[1] .= "GPRINT:rxMbytes:LAST:\"%.2lf MB/s last\" " ;
 $def[1] .= "GPRINT:rxMbytes:AVERAGE:\"%.2lf MB/s avg\" " ;
 $def[1] .= "GPRINT:rxMbytes:MAX:\"%.2lf MB/s max\\n\" " ;

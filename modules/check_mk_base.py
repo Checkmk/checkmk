@@ -97,9 +97,16 @@ opt_no_cache                 = False
 opt_no_snmp_hosts            = False
 fake_dns                     = False
 
+
 class MKGeneralException(Exception):
     def __init__(self, reason):
         self.reason = reason
+    def __str__(self):
+        return self.reason
+
+class MKCounterWrapped(Exception):
+    def __init__(self, countername):
+        self.reason = countername
     def __str__(self):
         return self.reason
 
@@ -504,26 +511,31 @@ def load_counters(hostname):
 
 def get_counter(countername, this_time, this_val):
     global g_counters
-    last_time, last_val = g_counters.get(countername, (0, 0))
-    g_counters[countername] = (this_time, this_val)
+
+    # First time we see this counter? Do not return
+    # any data!
+    if not countername in g_counters:
+       g_counters[countername] = (this_time, this_val)
+       raise MKCounterWrapped(countername)  
+	 
+    last_time, last_val = g_counters.get(countername)
     timedif = this_time - last_time
-    count   = this_val  - last_val
-    if timedif > 0:
-        valuedif = this_val - last_val
-        if valuedif < 0:
-            if ((last_val < 2147483648 and this_val < 0) # assume 32 bit signed counter
-                or last_val < 4294967296): # assume 32 bit unsigned
-                    last_val -= 4294967296
-            else:
-                last_val -= 2**64 # assume 64 bit unsigned
-            valuedif = this_val - last_val
-            if valuedif < 0 or valuedif >= 2*30:
-                valuedif = 0 # safety first
-        per_sec = float(this_val - last_val) / timedif
-        
-    else:
-        per_sec = 0.0
-    return (timedif, per_sec)
+    if timedif <= 0: # do not update counter
+        raise MKCounterWrapped(countername)
+
+    # update counter for next time
+    g_counters[countername] = (this_time, this_val)
+
+    valuedif = this_val - last_val
+    if valuedif < 0:
+	 # Do not try to handle wrapper counters. We do not know
+	 # wether they are 32 or 64 bit. It also could happen counter
+	 # reset (reboot, etc.). Better is to leave this value undefined
+	 # and wait for the next check interval.
+	 raise MKCounterWrapped(countername)
+
+    per_sec = float(valuedif) / timedif
+    return timedif, per_sec
 
     
 def save_counters(hostname):
@@ -625,13 +637,22 @@ def do_all_checks_on_host(hostname, ipaddress):
                raise MKGeneralException("Unknown check type %s" % checkname)
 
            try:
+	       dont_submit = False
                result = check_funktion(item, params, info)
+           # handle check implementations that do not yet support the
+           # handling of wrapped counters via exception. Do not submit
+           # any check result in that case:
+	   except MKCounterWrapped:
+	       if opt_verbose:
+		  print "Counter wrapped, not handled by check, ignoring this check result"
+	       dont_submit = True
            except:
                result = (3, "UNKNOWN - invalid output from plugin section <<<%s>>> or error in check type %s" %
                          (checkname, checkname))
                if opt_debug:
                    raise
-           submit_check_result(hostname, description, result, aggrname)
+	   if not dont_submit:
+               submit_check_result(hostname, description, result, aggrname)
         else:
            num_errors += 1
 

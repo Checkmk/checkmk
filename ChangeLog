@@ -1,4 +1,6 @@
       * New check fc_brocade_port_detailed
+      * Negation in binary conf lists via NEGATE (clustered_services, ingored_services,
+	bulkwalk_hosts, etc).
 
 1.1.2:
       Summary:

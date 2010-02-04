@@ -430,7 +430,7 @@ def show_search_results(html, services, hosts):
         sound_uri = check_mk.multiadmin_sounds['warning']
     elif 'ok' in check_mk.multiadmin_sounds:
         sound_uri = check_mk.multiadmin_sounds['ok']
-    else:
+    elif 'idle' in check_mk.multiadmin_sounds:
         sound_uri = check_mk.multiadmin_sounds['idle']
 
     if sound_uri:

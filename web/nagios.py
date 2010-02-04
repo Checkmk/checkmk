@@ -37,7 +37,11 @@ class MKGeneralException(Exception):
     def __str__(self):
         return self.reason
 
-
+class MKAuthException(Exception):
+    def __init__(self, reason):
+        self.reason = reason
+    def __str__(self):
+        return self.reason
 
 def find_entries(filt, enabled_sites = None, auth_user = None):
    services = []
@@ -71,6 +75,10 @@ def query_livestatus(query, enabled_sites = None):
        try:
            result += query_livestatus_url(site["socket"], query)
        except Exception, e:
+           # Forward exception directly when using only one site
+           if len(sites) == 1:
+               raise
+
            exceptions.append("%s: %s" % (site["alias"], e))
     if len(exceptions) > 0 and len(exceptions) == len(sites): # no site worked...
         raise MKGeneralException("Cannot connect to any site: %s" % ", ".join([str(e) for e in exceptions]))
@@ -99,31 +107,47 @@ def query_livestatus_tcp(ipaddress, port, query):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect( (ipaddress, port) )
     return query_livestatus_socket(s, query)
-   
+
 def query_livestatus_socket(s, query):
-   query = query + "OutputFormat: json\n"
-   try:
-      s.send(query)
-      s.shutdown(socket.SHUT_WR)
-      answer = ""
-      while True:
-          r = s.recv(65536)
-          if r != "":
-              answer += r
-          else:
-              break
-      try: 
-          result = eval(answer)
-      except:
-	 raise MKGeneralException("Invalid JSON output from Livestatus. "
-	       "Query was: <pre>%s</pre>. Result was: %s" % (query, answer))
-      return result
+    query += "OutputFormat: json\nResponseHeader: fixed16\n"
+    try:
+        # FIXME: Make timeout configurable
+        s.settimeout(2)
+        s.send(query)
+        s.shutdown(socket.SHUT_WR)
 
-   except MKGeneralException:
-      raise
+        resp = receive_data(s, 16)
+        code = resp[0:3]
 
-   except Exception, e:
-      raise MKGeneralException("Cannot connect to %s: Please check if Livestatus module is correctly loaded and socket path is correct (Error: %s)" % (socket_path, e))
+        if code == '200':
+            length = int(resp[4:15].lstrip())
+
+            answer = receive_data(s, length)
+
+            try:
+                result = eval(answer)
+            except:
+                raise MKGeneralException("Invalid JSON output from Livestatus. "
+                  "Query was: <pre>%s</pre>. Result was: %s" % (query, answer))
+        elif code == '401':
+            raise MKAuthException("Unauthorized. Invalid username.")
+        else:
+            raise MKGeneralException("Unknown status code in Livestatus response. Query was: <pre>%s</pre>. Code was: %s" % (query, code))
+
+        return result
+    except socket.timeout, e:
+        raise MKGeneralException("Cannot connect to livestatus socket: Please check if Livestatus module is correctly loaded and socket path is correct (Error: %s)" % (e))
+    except socket.error, e:
+        raise MKGeneralException("Cannot connect to livestatus socket: Please check if Livestatus module is correctly loaded and socket path is correct (Error: %s)" % (e))
+
+
+def receive_data(sock, size):
+    result = ""
+    while size > 0:
+        packet = sock.recv(size)
+        size -= len(packet)
+        result += packet
+    return result
 
 # Queries just a single column -> returns a list
 def query_livestatus_column(query):

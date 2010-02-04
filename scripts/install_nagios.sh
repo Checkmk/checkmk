@@ -296,6 +296,7 @@ mkdir -p /var/spool/nagios/pnp/npcd
 chown -R nagios.nagios /var/spool/nagios
 chown root.nagios /usr/local/lib/nagios/plugins/check_icmp
 chmod 4750 /usr/local/lib/nagios/plugins/check_icmp
+chown nagios.nagios /var/log/nagios
 
 # Prepare configuration
 popd

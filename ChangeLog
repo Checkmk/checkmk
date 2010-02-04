@@ -11,6 +11,7 @@
       MK Livestatus:
       * New headers for waiting (please refer to online documentation)
       * Abort on errors even if header is not fixed16
+      * Changed response codes to better match HTTP
 
       Multiadmin:
       * Allow nagios contacts to be used for authorization (in order to

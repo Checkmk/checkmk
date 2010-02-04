@@ -388,7 +388,7 @@ void Query::parseAuthUserHeader(char *line)
 	return;
     _auth_user = find_contact(line);
     if (!_auth_user)
-	_output->setError(RESPONSE_CODE_INVALID_HEADER, "AuthUser: no such user '%s'", line);
+	_output->setError(RESPONSE_CODE_UNAUTHORIZED, "AuthUser: no such user '%s'", line);
 }
 
 void Query::parseStatsGroupLine(char *line)

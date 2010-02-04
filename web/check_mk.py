@@ -35,8 +35,11 @@ def is_allowed_to_view(user):
 def is_allowed_to_act(user):
    return multiadmin_action_users == None or user in multiadmin_action_users
 
-def sites():
+def sitenames():
     return multiadmin_sites.keys()
+
+def sites():
+    return dict( [(name, site(name)) for name in sitenames()])
 
 def site(name):
     s = multiadmin_sites[name]

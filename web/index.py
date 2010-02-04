@@ -116,7 +116,7 @@ def handler(req):
         html.footer()
         apache.log_error("Configuration error: %s" % (e,), apache.APLOG_ERR)
 
-    except 1: # Exception, e:
+    except Exception, e:
         html.header("Internal Error")
         html.write("<h1 class=error>Internal error</h1>")
         html.write("<div class=error>Internal error: %s</div>" % e)

@@ -29,6 +29,8 @@ from lib import *
 
 
 def connect_to_livestatus(html):
+    global site_status, live
+    site_status = {}
     # If there is only one site (non-multisite), than
     # user cannot enable/disable. 
     if check_mk.is_multisite():
@@ -39,8 +41,13 @@ def connect_to_livestatus(html):
 		enabled_sites[sitename] = site
 	global live
 	live = livestatus.MultiSiteConnection(enabled_sites)
+	live.set_prepend_site(True)
+        for site, v1, v2 in live.query("GET status\nColumns: livestatus_version program_version"):
+	    site_status[site] = { "livestatus_version": v1, "program_version" : v2 }
+	live.set_prepend_site(False)
     else:
 	live = livestatus.SingleSiteConnection(check_mk.livestatus_unix_socket)
+
 
 def find_entries(filt, auth_user = None):
    services = []
@@ -135,10 +142,16 @@ def show_site_header(html):
 	varname = "siteoff_" + sitename
 	if not html.var(varname) == "on": # site not switched off -> is on
 	    switch = "on" # show 'on', switch off
+	    if sitename in site_status:
+		style = "online"
+	    else:
+		style = "offline"
 	else:
 	    switch = "off" # show 'off', switch on
+	    style = "off"
+
 	uri = html.makeuri([("siteoff_" + sitename, switch)])
-	html.write("<td class=%s><a href=\"%s\">%s</a></td>" % (switch, uri, site["alias"]))
+	html.write("<td class=%s><a href=\"%s\">%s</a></td>" % (style, uri, site["alias"]))
     html.write("</tr></table><hr class=siteheader>\n")
 
 def show_tabs(html, tabs, active, suppress_form = False):

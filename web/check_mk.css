@@ -39,11 +39,18 @@ table.siteheader td a {
     text-decoration: none;
 }
 
-table.siteheader td.on a {
+table.siteheader td.online a {
     border-width: 2px;
     background-color: #8f8;
     border-color: #222 #ccc #fff #555;
     color: #080;
+}
+
+table.siteheader td.offline a {
+    border-width: 2px;
+    background-color: #f88;
+    border-color: #222 #ccc #fff #555;
+    color: #800;
 }
 
 table.siteheader td.off a {

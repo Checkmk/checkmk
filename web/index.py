@@ -77,7 +77,7 @@ def handler(req):
     # Verzweigen je nach Name der Seite, 'main' ist Default
 
     html = htmllib.html(req)
-    html.write(req.myfile)
+
     try:
         read_get_vars(req)
         read_checkmk_defaults(req)

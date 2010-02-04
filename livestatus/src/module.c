@@ -82,8 +82,12 @@ int g_group_authorization = AUTH_STRICT;
 
 void livestatus_cleanup_after_fork()
 {
-    store_deinit();
+    // 4.2.2010: Deactivate the cleanup function. It might cause
+    // more trouble than it tries to avoid. It might lead to a deadlock
+    // with Nagios' fork()-mechanism...
+    // store_deinit();
     struct stat st;
+
     int i;
     // We need to close our server and client sockets. Otherwise
     // our connections are inherited to host and service checks.

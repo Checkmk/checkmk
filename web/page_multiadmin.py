@@ -189,10 +189,10 @@ def build_search_filter(html):
 	    search_filter += "Filter: " + field + " ~~ " + value + "\n"
 
     # search dropdown selections
-    for descr, field, valuefunc in search_dropdown_fields:
+    for descr, field, operator, valuefunc in search_dropdown_fields:
         value = html.var(field, "").strip()
         if value != "":
-	    search_filter += "Filter: " + field + " = " + value + "\n"
+	    search_filter += "Filter: " + field + " " + operator + " " + value + "\n"
 
     # Search out by flags
     for nagios_flag in [ "acknowledged",
@@ -255,10 +255,10 @@ def show_filter_form(html):
         if field == "host_name":
             select_flag("is_summary_host", 0, "Summary Hosts")
 
-    for descr, field, valuefunc in search_dropdown_fields:
+    for descr, field, operator, valuefunc in search_dropdown_fields:
          html.write("<tr><td class=legend>%s</td><td class=content>\n" % descr)
 	 current = html.var(field, "")
-         options = [ ("", "(ignored)") ] + [ (v, v) for v in valuefunc() ]
+         options = [ ("", "(ignored)") ] + valuefunc() 
 	 html.select(field, options, current, "") 
 	 html.write("</td></tr>\n")
 
@@ -574,16 +574,36 @@ def nagios_service_action_command(html, service):
     return title, [nagios_command]
 
 def all_check_commands():
-   commands = live.query_column_unique("GET commands\nColumns: name\n")
-   commands.sort()
-   return commands
+    commands = live.query_column_unique("GET commands\nColumns: name\n")
+    commands.sort()
+    return [ (name, name) for name in commands ]
+
+def all_groups(what):
+    groups = dict(live.query("GET %sgroups\nColumns: name alias\n" % what))
+    names = groups.keys()
+    names.sort()
+    return [ (name, groups[name]) for name in names ]
+
+
+search_dropdown_fields = [ ("Check command", "check_command",  "=",  all_check_commands),
+		           ("Host group",    "host_groups",    ">=", lambda: all_groups("host")),
+		           ("Service group", "groups",         ">=", lambda: all_groups("service")),
+			 ]
+
+search_textfields = [ ("Service",       "description"),
+                      ("Hostname",      "host_name"),
+                      ("Check output",  "plugin_output"),
+                      ]
 
 # HTML variables set by search dialog. They need to be
 # conserved over all sub pages
+
 search_vars = [ "filled_in",
                 "description",
                 "host_name",
                 "check_command",
+		"host_groups",
+		"service_groups"
                 "plugin_output",
                 "state0",
                 "state1",
@@ -597,16 +617,14 @@ search_vars = [ "filled_in",
                 "is_summary_host",
 		"checks_enabled",
                 "in_notification_period",
-                "sortorder" ]
+                "sortorder"
+		] \
+		    + [ f[1] for f in search_textfields ] \
+		    + [ f[1] for f in search_dropdown_fields ]
 
 site_vars = [ "siteoff_" + s for s in check_mk.sitenames() ]
 
-search_textfields = [ ("Service",       "description"),
-                      ("Hostname",      "host_name"),
-                      ("Check output",  "plugin_output"),
-                      ]
 
-search_dropdown_fields = [ ("Check command", "check_command", all_check_commands) ]
 
 # Helper functions for sorting according to state
 def cmp_atoms(s1, s2):

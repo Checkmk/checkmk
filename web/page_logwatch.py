@@ -126,9 +126,9 @@ def show_host_log_list(html):
     logs_shown = False
     for file in host_logs(host):
         logs_shown = True
-        fileDisplay = file.replace('\\', '/')
+        fileDisplay = form_file_to_ext(file)
 
-        logs = parse_file(check_mk.logwatch_dir + '/' + host + '/' + file)
+        logs = parse_file(host, file)
         worst_log = get_worst_log(logs)
         last_log = get_last_log(logs)
 
@@ -149,7 +149,7 @@ def show_file(html):
     show_tabs(html, tabs, "file")
 
     host = html.var('host')
-    file = html.var('file')
+    file = form_file_to_int(html.var('file'))
 
     if html.var('hidecontext', 'no') == 'yes':
         hide_context_label = 'Show context'
@@ -160,7 +160,11 @@ def show_file(html):
 
     show_host_header(html, host)
 
-    logs = parse_file(check_mk.logwatch_dir + '/' + host + '/' + file, html.var('hidecontext', 'no'))
+    try:
+        logs = parse_file(host, file, html.var('hidecontext', 'no'))
+    except MKFileNotFoundException, e:
+        html.write('<table class="form" id="filter"><tr><td class="content">%s</td></tr></table>' % e)
+        return
 
     for log in logs:
         html.write('<div class="chunk">');
@@ -197,8 +201,8 @@ def do_log_ack(html):
     show_tabs(html, tabs, "log")
 
     host = html.var('host')
-    file = html.var('file')
-    fileDisplay = file.replace('\\', '/')
+    file = form_file_to_int(html.var('file'))
+    fileDisplay = form_file_to_ext(file)
     ack  = html.var('ack')
 
     # filter invalid values
@@ -227,7 +231,7 @@ def get_worst_file(host, files):
     worst_level = 0
 
     for file in files:
-        logs = parse_file(check_mk.logwatch_dir + '/' + host + '/' + file)
+        logs = parse_file(host, file)
         worst_file_log = get_worst_log(logs)
 
         if worst_file_log['level'] > worst_level:
@@ -261,12 +265,13 @@ def get_last_log(logs):
     return last_log
 
 
-def parse_file(file, hidecontext = "no"):
+def parse_file(host, file, hidecontext = "no"):
+    filePath = check_mk.logwatch_dir + '/' + host + '/' + file
     try:
-        f = open(file, 'r')
+        f = open(filePath, 'r')
     except:
-        raise MKGeneralException('The log file &quot;%s&quot; could not be opened.' % \
-                                   (htmllib.attrencode(file)))
+        raise MKFileNotFoundException('The log file &quot;%s&quot; on host &quot;%s&quot; is empty or does not exist.' % \
+                                       (htmllib.attrencode(form_file_to_ext(file)), htmllib.attrencode(host)))
     chunk_open = False
     logs = []
     log = None
@@ -340,6 +345,12 @@ def all_hosts(user = None):
 def form_level(level):
     levels = [ 'OK', 'WARN', 'CRIT' ]
     return levels[level]
+
+def form_file_to_int(file):
+    return file.replace('/', '\\')
+
+def form_file_to_ext(file):
+    return file.replace('\\', '/')
 
 def form_datetime(dt, format = '%Y-%m-%d %H:%M:%S'):
     # FIXME: Dateformat could be configurable

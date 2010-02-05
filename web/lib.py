@@ -33,6 +33,12 @@ class MKGeneralException(Exception):
     def __str__(self):
         return str(self.reason)
 
+class MKFileNotFoundException(Exception):
+    def __init__(self, reason):
+        self.reason = reason
+    def __str__(self):
+        return str(self.reason)
+
 class MKAuthException(Exception):
     def __init__(self, reason):
         self.reason = reason

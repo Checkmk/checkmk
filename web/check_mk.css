@@ -448,7 +448,7 @@ div#logwatch a.tab, div#logwatch a.tabactive {
 	border-bottom: 1px solid black;
 	text-decoration: none;
 	font-size: 100%;
-	width: 100px;
+	width: 140px;
 }
 
 div#logwatch a.tab:hover {

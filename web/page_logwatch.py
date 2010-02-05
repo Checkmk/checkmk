@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import htmllib, nagios, time, re, check_mk, os, datetime
+import htmllib, livestatus, time, re, check_mk, os, datetime
 from lib import *
 
 def show_tabs(html, tabs, active):
@@ -51,7 +51,7 @@ def show_tabs(html, tabs, active):
 def page(html):
     global tabs
     tabs = [ ("logwatch", "All Hosts", html.req.uri.split("/")[-1]),
-             ("host", "Host", 'logwatch.py?host=' + html.var('host', '')) ]
+             ("host", "All Logs of Host", 'logwatch.py?host=' + html.var('host', '')) ]
 
     html.header("Check_mk Logwatch")
 
@@ -117,13 +117,7 @@ def show_host_log_list(html):
         html.write("<div class=error>You are not allowed to view the logs of the host %s</div>" % htmllib.attrencode(host))
         return
 
-    # Show host header
-    html.write("<table class=form id=filter>\n")
-    html.write('<tr><td class="legend">Hostname:</td><td class="content">%s</td></tr>' % htmllib.attrencode(host))
-    html.write('<tr><td class="legend">Host in Nagios:</td>'
-               '<td class="content"><a href="%s/status.cgi?host=%s">Link</a></td></tr>' % \
-               (htmllib.urlencode(html.req.defaults["nagios_cgi_url"]), htmllib.attrencode(host)))
-    html.write('</table>')
+    show_host_header(html, host)
 
     html.write("<table class=form id=filter>\n")
     html.write("<tr><td style=\"width:100px\" class=\"legend\">Level</td><td class=\"legend\">Logfile</td>"
@@ -164,6 +158,8 @@ def show_file(html):
         hide_context_label = 'Hide context'
         hide_context_param = 'yes'
 
+    show_host_header(html, host)
+
     logs = parse_file(check_mk.logwatch_dir + '/' + host + '/' + file, html.var('hidecontext', 'no'))
 
     for log in logs:
@@ -188,6 +184,14 @@ def show_file(html):
         html.write('<p><br /><a class="ack" href="logwatch.py?host=%s&amp;'
                    'file=%s&amp;ack=1">Acknowledge and delete mesages</a>' % \
                    (htmllib.urlencode(host), htmllib.urlencode(file) ))
+
+def show_host_header(html, host):
+    html.write("<table class=form id=filter>\n")
+    html.write('<tr><td class="legend">Hostname:</td><td class="content">%s</td></tr>' % htmllib.attrencode(host))
+    html.write('<tr><td class="legend">Host in Nagios:</td>'
+               '<td class="content"><a href="%s/status.cgi?host=%s">Link</a></td></tr>' % \
+               (htmllib.urlencode(html.req.defaults["nagios_cgi_url"]), htmllib.attrencode(host)))
+    html.write('</table><br />')
 
 def do_log_ack(html):
     show_tabs(html, tabs, "log")
@@ -330,7 +334,7 @@ def all_hosts(user = None):
     else:
         auth = ''
 
-    hosts = nagios.query_livestatus_column_unique("GET hosts\n" + auth + "Columns: name\n")
+    hosts = livestatus.SingleSiteConnection(check_mk.livestatus_unix_socket).query_column_unique("GET hosts\n" + auth + "Columns: name\n")
     hosts.sort()
     return hosts
 

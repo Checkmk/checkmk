@@ -21,22 +21,35 @@ table.footer {
 .footer td.right  { text-align: right; }
 .footer a { color: #246; }
 
+h1 {
+    font-size: 13pt;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    display: block;
+    background-color: #ccc;
+    border-bottom: 2px solid #666;
+    border-right: 2px solid #888;
+    padding: 2px 0px 2px 10px;
+    -moz-border-radius: 12px;
+}
 
 /* site header --------------------------------------------------------------- */
 table.siteheader {
+    margin-bottom: 0px;
+    margin-top: 5px;
 }
 
-hr.siteheader {
-    border-bottom: 1px solid black;
-    width: 100%;
+table.siteheader td img {
+    vertical-align: middle;
 }
-
 
 table.siteheader td a {
-    height: 1em;
+    height: 18px;
+    display: block;
     padding: 2px 1ex;
     border-style: solid;
     text-decoration: none;
+    vertical-align: middle;
 }
 
 table.siteheader td.online a {
@@ -187,16 +200,16 @@ table.services td.agerecent {
   font-weight: bold;
 }
 
-td.state0, td.state1, td.state2, td.state3, td.state4 { 
+td.state0, td.state1, td.state2, td.state3, td.state4, td.hstate0, td.hstate1, td.hstate2 { 
   text-align: center;
   font-weight: bold;
   width: 5ex;
   font-family: sans-serif;
 }
 
-td.state0 { 
+td.state0, td.hstate0 { 
   background-color: #4a2;
-  color: #0f0;
+  color: #6f4;
 }
 
 td.state1 { 
@@ -204,17 +217,16 @@ td.state1 {
   color: #000;
 }
 
-td.state2 { 
+td.state2, td.hstate1 { 
   background-color: #f00;
   color: #fff;
 }
 
-td.state3 { 
+td.state3, td.hstate2 { 
   background-color: #f80;
   color: #fff;
 }
 
-/* ??? */
 
 .inputerror input { 
   background-color: #f84;
@@ -330,6 +342,58 @@ div.success {
 div.error { 
   background-color: #f84;
   border-color: #e40;
+}
+
+/* -------------------------------------------------------------- */
+
+img.siteicon {
+width: 24px;
+height: 24px;
+border: 1px solid #666;
+}
+
+/* ---- site overview ------------------------------------------- */
+table.siteoverview {
+}
+
+table.siteoverview td {
+    vertical-align: bottom;
+    padding-bottom: 13px;
+}
+
+table.siteoverview td.icon img {
+    margin-right: 10px;
+    border: 1px solid #666;
+    margin-left: 20px;
+}
+
+table.siteoverview table {
+    margin-top: 3px;
+    border-collapse: collapse;
+    empty-cells: show;
+    border: 3px solid white;
+    height: 64px;
+}
+
+table.siteoverview table td {
+    border: 1px solid #666;
+    text-align: center;
+    width: 3em;
+    padding-bottom: 0px;
+}
+
+table.siteoverview table th {
+    background-color: #ddd;
+    text-align: left;
+    border-right: 1px solid #666;
+    padding-left: 0.5ex;
+}
+table.siteoverview table td.legend {
+    background-color: #ddd;
+    text-align: left;
+}
+table.siteoverview table td.zero {
+    background-color: #cbc;
 }
 
 /* ---- logwatch ------------------------------------------------ */

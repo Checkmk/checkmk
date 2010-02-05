@@ -99,9 +99,10 @@ def handler(req):
             import page_multiadmin
             import page_logwatch
 
-            pagehandlers = { "index"    : page_index,
-                             "filter"   : page_multiadmin.page,
-                             "logwatch" : page_logwatch.page, }
+            pagehandlers = { "index"        : page_index,
+                             "filter"       : page_multiadmin.page,
+			     "siteoverview" : page_multiadmin.page_siteoverview,
+                             "logwatch"     : page_logwatch.page, }
 
             handler = pagehandlers.get(req.myfile, page_index)
             handler(html)
@@ -119,7 +120,7 @@ def handler(req):
         html.footer()
         apache.log_error("Configuration error: %s" % (e,), apache.APLOG_ERR)
 
-    except Exception, e:
+    except 1: #Exception, e:
         html.header("Internal Error")
         html.write("<h1 class=error>Internal error</h1>")
         html.write("<div class=error>Internal error: %s</div>" % e)

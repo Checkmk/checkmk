@@ -237,7 +237,8 @@ class html:
     <link rel="stylesheet" type="text/css" href="check_mk.css">
     </head>
     <body>
-    ''' % title)
+    <h1>%s</h1>
+    ''' % (title, title))
             self.req.header_sent = True
 
     def footer(self):

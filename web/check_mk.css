@@ -21,6 +21,58 @@ table.footer {
 .footer td.right  { text-align: right; }
 .footer a { color: #246; }
 
+h1 {
+    font-size: 13pt;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    display: block;
+    background-color: #ccc;
+    border-bottom: 2px solid #666;
+    border-right: 2px solid #888;
+    padding: 2px 0px 2px 10px;
+    -moz-border-radius: 12px;
+}
+
+/* site header --------------------------------------------------------------- */
+table.siteheader {
+    margin-bottom: 0px;
+    margin-top: 5px;
+}
+
+table.siteheader td img {
+    vertical-align: middle;
+}
+
+table.siteheader td a {
+    height: 18px;
+    display: block;
+    padding: 2px 1ex;
+    border-style: solid;
+    text-decoration: none;
+    vertical-align: middle;
+}
+
+table.siteheader td.online a {
+    border-width: 2px;
+    background-color: #8f8;
+    border-color: #222 #ccc #fff #555;
+    color: #080;
+}
+
+table.siteheader td.offline a {
+    border-width: 2px;
+    background-color: #f88;
+    border-color: #222 #ccc #fff #555;
+    color: #800;
+}
+
+table.siteheader td.off a {
+    border-width: 2px;
+    background-color: #ccc;
+    border-color: #ccc #777 #444 #aaa;
+    color: #444;
+}
+
 /* tabs ---------------------------------------------------------------------- */
 
 table.tabs td { 
@@ -148,16 +200,16 @@ table.services td.agerecent {
   font-weight: bold;
 }
 
-td.state0, td.state1, td.state2, td.state3, td.state4 { 
+td.state0, td.state1, td.state2, td.state3, td.state4, td.hstate0, td.hstate1, td.hstate2 { 
   text-align: center;
   font-weight: bold;
   width: 5ex;
   font-family: sans-serif;
 }
 
-td.state0 { 
+td.state0, td.hstate0 { 
   background-color: #4a2;
-  color: #0f0;
+  color: #6f4;
 }
 
 td.state1 { 
@@ -165,17 +217,16 @@ td.state1 {
   color: #000;
 }
 
-td.state2 { 
+td.state2, td.hstate1 { 
   background-color: #f00;
   color: #fff;
 }
 
-td.state3 { 
+td.state3, td.hstate2 { 
   background-color: #f80;
   color: #fff;
 }
 
-/* ??? */
 
 .inputerror input { 
   background-color: #f84;
@@ -293,3 +344,182 @@ div.error {
   border-color: #e40;
 }
 
+/* -------------------------------------------------------------- */
+
+img.siteicon {
+width: 24px;
+height: 24px;
+border: 1px solid #666;
+}
+
+/* ---- site overview ------------------------------------------- */
+table.siteoverview {
+}
+
+table.siteoverview td {
+    vertical-align: bottom;
+    padding-bottom: 13px;
+}
+
+table.siteoverview td.icon img {
+    margin-right: 10px;
+    border: 1px solid #666;
+    margin-left: 20px;
+}
+
+table.siteoverview table {
+    margin-top: 3px;
+    border-collapse: collapse;
+    empty-cells: show;
+    border: 3px solid white;
+    height: 64px;
+}
+
+table.siteoverview table td {
+    border: 1px solid #666;
+    text-align: center;
+    width: 3em;
+    padding-bottom: 0px;
+}
+
+table.siteoverview table th {
+    background-color: #ddd;
+    text-align: left;
+    border-right: 1px solid #666;
+    padding-left: 0.5ex;
+}
+table.siteoverview table td.legend {
+    background-color: #ddd;
+    text-align: left;
+}
+table.siteoverview table td.zero {
+    background-color: #cbc;
+}
+
+/* ---- logwatch ------------------------------------------------ */
+
+div#logwatch div.chunk {
+  border-width: 1px;
+  border-style: solid;
+  margin-bottom: 1em;
+  padding: 0.5ex;
+  border-color: #bbb #555 #222 #bbb;
+  background-color: white;
+}
+
+div#logwatch a {
+  font-family: sans-serif;
+  font-weight: bold;
+  width: 4em;
+  color: #008;
+}
+
+div#logwatch a b {
+  color: #08f;
+}
+
+div#logwatch a.ack {
+  background-color: #33c;
+  color: #fff;
+  text-decoration: none;
+  border-width: 2px;
+  border-style: solid;
+  border-color: #ccc #888 #333 #777;
+  padding: 0.3ex 1ex;
+  -moz-border-radius: 6px;
+}
+
+div#logwatch pre {
+  background-color: #ddd;
+  padding: 0.2ex 0.8ex;
+  border: none;
+  margin: 0px;
+}
+
+div#logwatch pre.context {
+	display:none;
+}
+
+div#logwatch pre.WARN {
+  background-color: #ff8;
+}
+
+div#logwatch pre.CRIT {
+  background-color: #f88;
+}
+
+div#logwatch td.WARN, td.CRIT {
+  width: 5em;
+  text-align: center;
+  padding: 0em 0.5ex;
+  margin: 0px;
+  border: 1px solid black;
+  font-weight: bold;
+}
+
+div#logwatch td.WARN {
+  background-color: #ff0;
+}
+
+div#logwatch td.CRIT {
+  background-color: #f00;
+  color: white;
+}
+
+div#logwatch table.section {
+  margin: 0ex 0ex 0.8ex 0ex;
+  width: 100%
+}
+
+div#logwatch .date {
+  font-weight: normal;
+  padding-left: 1ex;
+  color: #666;
+}
+
+div#logwatch td.button {
+  text-align: right;
+}
+
+div#logwatch td.button a {
+  background-color: #cca;
+  color: #000;
+  text-decoration: none;
+  font-weight: normal;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #ddd #888 #333 #ddd;
+  padding: 0.1ex 1ex;
+  -moz-border-radius: 4px;
+}
+
+div#logwatch td.button a:active {
+  background-color: #aa8;
+}
+
+/* --- navigation tabs in logwatch ------------------ */
+
+div#logwatch a.tab, div#logwatch a.tabactive {
+  -moz-border-radius: 12px 12px 0px 0px;
+	display: block;
+  margin-bottom: 0px;
+  color: #000;
+  padding: 0.4ex 1em;
+  border-style: none;
+  vertical-align: top;
+  margin-right: 0.3ex;
+	background-color: #fc0;
+	border-bottom: 1px solid black;
+	text-decoration: none;
+	font-size: 100%;
+	width: 140px;
+}
+
+div#logwatch a.tab:hover {
+  padding-bottom: 10px;
+}
+
+div#logwatch a.tabactive {
+  padding-bottom: 6px;
+  border-bottom-style: none;
+}

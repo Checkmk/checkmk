@@ -214,9 +214,15 @@ dummy_check_commandline            = 'echo "ERROR - you did an active check on t
 nagios_illegal_chars               = '`~!$%^&*|\'"<>?,()='
 
 # Settings for web pages
-multiadmin_users                   = None # means: all
-multiadmin_action_users            = None # means: all
-multiadmin_sites                   = { "local" : {} }
+multiadmin_users                     = None # means: all
+multiadmin_action_users              = None # means: all
+multiadmin_sites                     = { "local" : {} }
+multiadmin_restrict                  = False
+multiadmin_restrict_actions          = False
+multiadmin_unrestricted_users        = []
+multiadmin_unrestricted_action_users = []
+multiadmin_sounds                    = {}
+multiadmin_use_siteicons             = False
 
 # Data to be defined in main.mk
 checks                               = []
@@ -236,6 +242,7 @@ parents                              = []
 define_timeperiods                   = {}
 define_hostgroups                    = None
 define_servicegroups                 = None
+define_contactgroups                 = None
 clusters                             = {}
 clustered_services                   = []
 datasource_programs                  = []
@@ -1185,7 +1192,7 @@ def output_hostconf(outfile = sys.stdout):
 """ % (host_template, summary_hostname(hostname), summary_hostname(hostname), hostname, hostname,
        hostgroups, hostname, host_contactgroups_nag([hostname]), nottime, 
        extra_summary_host_conf_of(hostname), ip))
-
+	   
     #   _____ 
     #  |___ / 
     #    |_ \ 
@@ -1315,6 +1322,7 @@ def output_serviceconf(outfile = sys.stdout):
                 sg = ""
                 
             sercgr = service_extra_conf(hostname, description, service_contactgroups)
+	    contactgroups_to_output.update(sercgr)
             if len(sercgr) > 0:
                 scg = "    contact_groups           +" + ",".join(sercgr) + "\n"
             else:
@@ -1328,7 +1336,7 @@ def output_serviceconf(outfile = sys.stdout):
             
             # Hardcoded for logwatch check: Link to logwatch.php
             if checkname == "logwatch":
-                logwatch = "    notes_url                " + (logwatch_notes_url % (urllib.quote(hostname), urllib.quote(description))) + "\n"
+                logwatch = "    notes_url                " + (logwatch_notes_url % (urllib.quote(hostname), urllib.quote(item))) + "\n"
             else:
                 logwatch = "";
 
@@ -1366,7 +1374,6 @@ def output_serviceconf(outfile = sys.stdout):
             have_at_least_one_service = True
 
 
-
         # Now create definitions of the aggregated services for this host
         if do_aggregation and service_aggregations:
             outfile.write("\n# Aggregated services of host %s\n\n" % hostname)
@@ -1385,6 +1392,7 @@ def output_serviceconf(outfile = sys.stdout):
                 sg = ""
                 
             sercgr = service_extra_conf(hostname, description, summary_service_contactgroups)
+	    contactgroups_to_output.update(sercgr)
             if len(sercgr) > 0:
                 scg = "    contact_groups            +" + ",".join(sercgr) + "\n"
             else:
@@ -1472,6 +1480,23 @@ define service {
 }
 
 """ % (sg, alias))
+
+
+
+def output_contactgroups(cgs, outfile = sys.stdout):
+    cgs = list(cgs)
+    cgs.sort()
+    outfile.write("\n# Contact groups, (controlled by define_contactgroups)\n")
+    for name in cgs:
+	if type(define_contactgroups) == dict:
+	    alias = define_contactgroups.get(name, name)
+	else:
+	    alias = name
+        outfile.write("\ndefine contactgroup {\n"
+		"  contactgroup_name %s\n"
+		"  alias             %s\n"
+		"}\n" % (name, alias))
+
 
 #   +----------------------------------------------------------------------+
 #   |            ___                      _                                |
@@ -1591,7 +1616,7 @@ def make_inventory(checkname, hostnamelist, check_only=False):
           except Exception, e:
               if opt_debug:
                   raise
-              print "Invalid output from agent or invalid configuration: %s" % e
+              print "%s: Invalid output from agent or invalid configuration: %s" % (hostname, e)
               continue
 
           if len(inventory) == 0: # found nothing
@@ -2725,6 +2750,15 @@ def do_create_config():
     sys.stdout.flush()
     output_serviceconf(out)
     sys.stdout.write("OK\n")
+
+    if define_contactgroups:
+	sys.stdout.write("Generating Nagios configuration for contactsgroups...")
+        sys.stdout.flush()
+        contactgroups_to_output.update(host_contactgroups_of(all_active_hosts()))
+	contactgroups_to_output.update(host_contactgroups_of(all_active_clusters()))
+	output_contactgroups(contactgroups_to_output, out)
+	sys.stdout.write("OK\n")
+
     sys.stdout.flush()
     out.close()
 
@@ -2839,6 +2873,9 @@ for taggedhost in all_hosts + clusters.keys():
     parts = taggedhost.split("|")
     hosttags[parts[0]] = parts[1:]
 all_hosts_untagged = all_active_hosts()
+
+# global helper variable needed by config output
+contactgroups_to_output = set([])
 
 # Sanity check for duplicate hostnames
 seen_hostnames = set([])

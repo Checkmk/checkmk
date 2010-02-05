@@ -26,6 +26,7 @@
 #define Query_h
 
 #include "config.h"
+#include "nagios.h"
 
 #include <stdio.h>
 #include <string>
@@ -57,6 +58,7 @@ class Query
    OutputBuffer *_output;
    Table        *_table;
    AndingFilter  _filter;
+   contact      *_auth_user;
    AndingFilter  _wait_condition;
    unsigned      _wait_timeout;
    unsigned      _wait_trigger;
@@ -128,6 +130,7 @@ private:
    void parseOutputFormatLine(char *line);
    void parseKeepAliveLine(char *line);
    void parseResponseHeaderLine(char *line);
+   void parseAuthUserHeader(char *line);
    void parseWaitTimeoutLine(char *line);
    void parseWaitTriggerLine(char *line);
    void parseWaitObjectLine(char *line);

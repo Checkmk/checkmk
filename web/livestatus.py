@@ -86,6 +86,16 @@ class Helpers:
 	 of all lines in that column as a single list"""
       return [ l[0] for l in self.query(query, "ColumnHeaders: off") ]
 
+   def query_column_unique(self, query):
+      """Issues a query that returns exactly one column and returns the values 
+	 of all lines with duplicates removed"""
+      result = []
+      for line in self.query(query, "ColumnHeaders: off"):
+          if line[0] not in result:
+	    result.append(line[0])
+      return result
+    
+
    def query_table(self, query):
       """Issues a query that may return multiple lines and columns and returns 
 	 a list of lists"""
@@ -109,10 +119,14 @@ class BaseConnection:
 	self.socket_state = DOWN
 	self.socket_target = None
 	self.create_socket(socketurl)
+	self.add_headers = ""
 
+    def add_header(self, header):
+	self.add_headers += header + "\n"
+    
     def set_timeout(self, timeout):
 	self.socket.settimeout(timeout)
- 
+
     def create_socket(self, url):
 	parts = url.split(":")
 	if parts[0] == "unix":
@@ -152,6 +166,7 @@ class BaseConnection:
         if not query.endswith("\n"):
 	    query += "\n"
         query += add_headers
+	query += self.add_headers
         if not query.endswith("\n"):
 	    query += "\n"
         query += "OutputFormat: json\nKeepAlive: on\nResponseHeader: fixed16\n\n"
@@ -169,7 +184,7 @@ class BaseConnection:
 		    raise MKLivestatusQueryError("Invalid response from Livestatus")
 	    else:
 	       raise MKLivestatusQueryError(code, data.strip())
-        except 1: # Exception, e:
+        except Exception, e:
 	    self.socket_state = DOWN
 	    raise MKLivestatusSocketError(str(e))
 
@@ -188,6 +203,7 @@ class MultiSiteConnection(Helpers):
 	self.connections = []
 	self.deadsites = {}
 	self.prepend_site = False
+
 	for sitename, site in sites.items():
 	    try:
 		url = site["socket"]
@@ -202,6 +218,10 @@ class MultiSiteConnection(Helpers):
 		    "exception" : e,
 		    "site"      : site,
 		}
+
+    def add_header(self, header):
+	for sitename, site, connection in self.connections:
+	    connection.add_header(header)
 
     def set_prepend_site(self, p):
 	self.prepend_site = p
@@ -222,7 +242,7 @@ class MultiSiteConnection(Helpers):
 		    r = [ [sitename] + l for l in r ]
 		result += r
 		stillalive.append( (sitename, site, connection) )
-	    except Exception, e:
+            except Exception, e:
 		self.deadsites[sitename] = {
 		    "exception" : e,
 		    "site" : site,

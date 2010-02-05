@@ -24,7 +24,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-VERSION=1.1.2rc1
+VERSION=1.1.3rc
 NAME=check_mk
 LANG=
 LC_ALL=
@@ -459,7 +459,7 @@ nagios_conf_dir             = '$nagconfdir'
 nagios_user                 = '$nagiosuser'
 nagios_url                  = '$nagiosurl'
 nagios_cgi_url              = '$cgiurl'
-logwatch_notes_url          = '$nagiosurl/logwatch.php?host=%s&file=%s'
+logwatch_notes_url          = '$checkmk_web_uri/logwatch.py?host=%s&file=%s'
 www_group                   = '$wwwgroup'
 nagios_config_file          = '$nagios_config_file'
 nagios_startscript          = '$nagios_startscript'

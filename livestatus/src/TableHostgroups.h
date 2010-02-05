@@ -37,6 +37,7 @@ public:
   TableHostgroups();
   const char *name() { return "hostgroups"; };
   void *findObject(char *objectspec);
+  bool isAuthorized(contact *, void *);
   void addColumns(Table *, string prefix, int indirect_offset);
   void add(hostgroup *ctc);
   void answerQuery(Query *query);

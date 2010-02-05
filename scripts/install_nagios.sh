@@ -24,14 +24,6 @@
 # Boston, MA 02110-1301 USA.
 
 
-# ACHTUNG: NAGIOS startet nach einem Reboot nicht, weil das temp-
-# Verzeichnis fehlt. Dazu braucht man noch folgende Befehle
-# im Startskript:
-# mkdir -p /var/spool/nagios/{tmp,checkresults}
-# chown nagios.nagios /var/spool/nagios/{tmp,checkresults}
-# --> Am besten hier ein eigenes besseres Startskript generieren!
-
-
 
 # Make sure, /usr/local/bin is in the PATH, since we install
 # programs there...
@@ -44,7 +36,7 @@ set -e
 
 NAGIOS_VERSION=3.2.0
 PLUGINS_VERSION=1.4.14
-CHECK_MK_VERSION=1.1.2rc1
+CHECK_MK_VERSION=1.1.3rc
 PNP_VERSION=0.6.2
 NAGVIS_VERSION=1.4.5
 RRDTOOL_VERSION=1.4.2
@@ -83,11 +75,15 @@ then
     DISTRO=SUSE
     DISTRONAME="SLES 11"
     DISTROVERS=11
-elif [ "$(cat /etc/debian_version)" = 5.0 ]
-then
-    DISTRO=DEBIAN
-    DISTRONAME="Debian 5.0 (Lenny)"
-    DISTROVERS=5.0
+else
+    debvers=$(cat /etc/debian_version 2>/dev/null)
+    debvers=${debvers:0:3}
+    if [ "$debvers" = 5.0 ]
+    then
+        DISTRO=DEBIAN
+        DISTRONAME="Debian 5.0 (Lenny)"
+        DISTROVERS=5.0
+    fi
 fi
 
 case "$DISTRO" in 
@@ -109,7 +105,7 @@ case "$DISTRO" in
 	HTTPD=apache2
 	WWWUSER=www-data
 	WWWGROUP=www-data
-        activate_initd () { update-rc.d $1 default; }
+        activate_initd () { update-rc.d $1 defaults; }
         add_user_to_group () { gpasswd -a $1 $2 ; }
     ;;
     *)
@@ -172,7 +168,7 @@ then
   aptitude -y install psmisc build-essential nail  \
     apache2 libapache2-mod-php5 python rrdtool php5-gd libgd-dev \
     python-rrdtool xinetd wget libgd2-xpm-dev psmisc less libapache2-mod-python \
-    graphviz php5-sqlite sqlite php-gettext locales-all
+    graphviz php5-sqlite sqlite php-gettext locales-all libxml2-dev libpango1.0-dev
     # Hint for Debian: Installing the packages locales-all is normally not neccessary
     # if you use 'dpkg-reconfigure locales' to setup and generate your locales.
     # Correct locales are needed for the localisation of Nagvis.
@@ -181,7 +177,8 @@ then
    zypper update
    zypper -n install apache2 mailx apache2-mod_python apache2-mod_php5 php5-gd gd-devel \
 	xinetd wget xorg-x11-libXpm-devel psmisc less graphviz-devel graphviz-gd \
-	php5-sqlite php5-gettext python-rrdtool php5-zlib php5-sockets php5-mbstring
+	php5-sqlite php5-gettext python-rrdtool php5-zlib php5-sockets php5-mbstring gcc \
+	cairo-devel libxml-devel libxml2-devel pango-devel gcc-c++
 else
    yum update
    yum -y install httpd gcc mailx php php-gd gd-devl xinetd wget psmisc less mod_python \
@@ -287,7 +284,7 @@ sed -i '/CONFIG ERROR/a\                        $NagiosBin -v $NagiosCfgFile'  /
 mkdir -p /var/spool/nagios/tmp
 chown -R nagios.nagios /var/lib/nagios
 mkdir -p /var/log/nagios/archives
-chown nagios.nagios /var/log/nagios/archives
+chown -R nagios.nagios /var/log/nagios
 mkdir -p /var/cache/nagios
 chown nagios.nagios /var/cache/nagios
 mkdir -p /var/run/nagios/rw
@@ -299,6 +296,7 @@ mkdir -p /var/spool/nagios/pnp/npcd
 chown -R nagios.nagios /var/spool/nagios
 chown root.nagios /usr/local/lib/nagios/plugins/check_icmp
 chmod 4750 /usr/local/lib/nagios/plugins/check_icmp
+chown nagios.nagios /var/log/nagios
 
 # Prepare configuration
 popd
@@ -385,6 +383,12 @@ EOF
 
 grep 'illegal.*=' nagios.cfg-example >> nagios.cfg
 
+# Modify init-script: It must create the temp directory,
+# as it is in a tmpfs...
+sed -i -e '/^[[:space:]]start)/a                mkdir -p /var/spool/nagios/tmp /var/spool/nagios/checkresults' \
+       -e '/^[[:space:]]start)/a                chown nagios.nagios /var/spool/nagios/tmp /var/spool/nagios/checkresults' /etc/init.d/nagios
+
+# Make CGIs display addons in right frame, not in a new window
 sed -i 's/_blank/main/g' cgi.cfg
 
 mkdir -p conf.d
@@ -663,7 +667,7 @@ case "\$1" in
     ;;
 esac
 EOF
-
+chmod 755 /etc/init.d/npcd
 
 activate_initd npcd
 /etc/init.d/npcd start

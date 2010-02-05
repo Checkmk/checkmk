@@ -1,6 +1,25 @@
-      * New check fc_brocade_port_detailed
+1.1.3:
+      Core, Setup, etc.:
+      * check_mk_template.cfg: fix typo in notes_ur
       * Negation in binary conf lists via NEGATE (clustered_services, ingored_services,
 	bulkwalk_hosts, etc).
+
+      Multiadmin:
+      * Implemented worse state depending sounds on page load
+
+      Checks & Agents:
+      * multipath: Fixed bug in output parser
+      * cpu: fixed bug: apply level on 15min, not on 1min avg
+      * New check fc_brocade_port_detailed
+
+      MK Livestatus:
+      * New headers for waiting (please refer to online documentation)
+      * Abort on errors even if header is not fixed16
+      * Changed response codes to better match HTTP
+
+      Multiadmin:
+      * Allow nagios contacts to be used for authorization (in order to
+	control which services may be seen / acted upon)
 
 1.1.2:
       Summary:
@@ -21,6 +40,7 @@
       * Fixed several compile problems on AIX
       * Fixed bug: queries could be garbled after interrupted connection
       * Fixed segfault on downtimes:contacts
+      * New feature: sum, min, max, avg and std of columns in new syntax of Stats:
 
       Checks & Agents:
       * Check ps: this check now supports inventory in a very flexible way. This simplifies monitoring a great number of slightly different processes such as with ORACLE or SAP.
@@ -50,6 +70,8 @@
       * apc_symmetra: add remaining runtime to output
       * New check for UPS'es using the generic UPS-MIB (such as GE SitePro USP)
       * Fix bug in PNP-template for Linux NICs (bytes and megabytes had been mixed up).
+      * Windows agent: fix bug in output of performance counters (where sometimes with , instead of .)
+      * Windows agent: outputs version if called with 'version'
       
       Core, Setup, etc.:
       * New SNMP scan feature: -I snmp scans all SNMP checks (currently only very few checks support this, though)
@@ -58,6 +80,7 @@
       * Fix problem in Agent-RPM: mark xinetd-configfile with %config -> avoid data loss on update
       * Support PNP4Nagios 0.6.2
       * New setup script "install_nagios.sh" for installing Nagios and everything else on SLES11
+      * New option define_contactgroups: will automatically create contactgroup definitions for Nagios
 
 1.1.0:
       * Fixed problems in Windows agent (could lead

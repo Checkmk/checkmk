@@ -28,6 +28,9 @@
 #include "OffsetStringColumn.h"
 #include "ServicelistColumn.h"
 #include "ServicelistStateColumn.h"
+#include "auth.h"
+#include "tables.h"
+#include "TableServices.h"
 
 /* this might be a hack (accessing Nagios' internal structures.
    Ethan: please help me here: how should this be code to be
@@ -93,4 +96,19 @@ void TableServicegroups::answerQuery(Query *query)
 void *TableServicegroups::findObject(char *objectspec)
 {
     return find_servicegroup(objectspec);
+}
+
+bool TableServicegroups::isAuthorized(contact *ctc, void *data)
+{
+   servicegroup *sg = (servicegroup *)data;
+   servicesmember *mem = sg->members;
+   while (mem) {
+       service *svc = mem->service_ptr;
+       bool is = g_table_services->isAuthorized(ctc, svc);
+       if (is && g_group_authorization == AUTH_LOOSE)
+	   return true;
+       else if (!is && g_group_authorization == AUTH_STRICT)
+	   return false;
+   }
+   return true;
 }

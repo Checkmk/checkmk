@@ -33,11 +33,12 @@ using namespace std;
 #define INITIAL_OUTPUT_BUFFER_SIZE 1
 
 #define RESPONSE_CODE_OK                 200
-#define RESPONSE_CODE_INVALID_HEADER     401
-#define RESPONSE_CODE_INVALID_REQUEST    402
-#define RESPONSE_CODE_INCOMPLETE_REQUEST 403
+#define RESPONSE_CODE_INVALID_HEADER     400
+#define RESPONSE_CODE_UNAUTHORIZED       403
 #define RESPONSE_CODE_NOT_FOUND          404
-#define RESPONSE_CODE_UNKNOWN_COLUMN     405
+#define RESPONSE_CODE_INCOMPLETE_REQUEST 451
+#define RESPONSE_CODE_INVALID_REQUEST    452
+#define RESPONSE_CODE_UNKNOWN_COLUMN     450
 
 class OutputBuffer
 {
@@ -65,6 +66,7 @@ public:
    void setDoKeepalive(bool d) { _do_keepalive = d; };
    bool doKeepalive() { return _do_keepalive; };
    void setError(unsigned code, const char *format, ...);
+   bool hasError() { return _error_message != ""; };
 
 private:
    void needSpace(unsigned);

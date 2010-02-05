@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL           = /bin/bash
-VERSION        	= 1.1.2rc1
+VERSION        	= 1.1.3rc
 NAME           	= check_mk
 RPM_TOPDIR     	= rpm.topdir
 RPM_BUILDROOT  	= rpm.buildroot
@@ -116,7 +116,6 @@ version:
 	    sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$$newversion"'], [mk@mathias-kettner.de])/' livestatus/configure.ac ; \
 	    sed -i 's/^VERSION=.*/VERSION='"$$newversion"'/' scripts/setup.sh ; \
 	    echo 'check-mk_$$newversion-1_all.deb net optional' > debian/files ; \
-	    sed -i 's/^MKVERSION=.*/MKVERSION=\$${3:-'"$$newversion}"'/' scripts/install_nagios_on_lenny.sh ; \
 	    sed -i 's/^CHECK_MK_VERSION=.*/CHECK_MK_VERSION='$$newversion/ scripts/install_nagios.sh ; \
 	fi ; \
 

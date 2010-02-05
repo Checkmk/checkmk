@@ -49,6 +49,7 @@ extern unsigned long g_max_response_size;
 Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
    _output(output),
    _table(table), 
+   _auth_user(0),
    _wait_timeout(0),
    _wait_trigger(WT_NONE),
    _wait_object(0),
@@ -99,6 +100,9 @@ Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
 
       else if (!strncmp(buffer, "Limit:", 6))
 	 parseLimitLine(lstrip(buffer + 6));
+
+      else if (!strncmp(buffer, "AuthUser:", 9))
+	 parseAuthUserHeader(lstrip(buffer + 9));
 
       else if (!strncmp(buffer, "Separators:", 11))
 	 parseSeparatorsLine(lstrip(buffer + 11));
@@ -378,6 +382,15 @@ void Query::parseFilterLine(char *line, bool is_filter)
        _wait_condition.addSubfilter(filter);
 }
 
+void Query::parseAuthUserHeader(char *line)
+{
+    if (!_table)
+	return;
+    _auth_user = find_contact(line);
+    if (!_auth_user)
+	_output->setError(RESPONSE_CODE_UNAUTHORIZED, "AuthUser: no such user '%s'", line);
+}
+
 void Query::parseStatsGroupLine(char *line)
 {
    if (!_table)
@@ -606,7 +619,7 @@ bool Query::processDataset(void *data)
    }
     
 
-   if (_filter.accepts(data)) {
+   if (_filter.accepts(data) && (!_auth_user || _table->isAuthorized(_auth_user, data))) {
       _current_line++;
       if (_limit >= 0 && (int)_current_line > _limit)
 	 return false;

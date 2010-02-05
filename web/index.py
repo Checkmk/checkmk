@@ -33,7 +33,7 @@ from lib import *
 def read_checkmk_defaults(req):
     # read in check_mk's defaults file. That contains all
     # installation settings (paths, etc.)
-    
+
     req.defaults = {}
     try:
         # The "options" are set in the Apache configuration
@@ -61,14 +61,13 @@ def read_get_vars(req):
         for (key,values) in req.rawvars.items():
             if len(values) >= 1:
                 req.vars[key] = values[-1]
-                
+
 
 def handler(req):
     req.content_type = "text/html"
     req.header_sent = False
 
-    # req.uriinfo = html.uriinfo(req)
-    
+
     # Die Datei main.py wird mit beliebigen Namen aufgerufen, die
     # alle auf .py enden, und die es garnicht geben muss!
     req.myfile = req.uri.split("/")[-1][:-3]
@@ -76,45 +75,52 @@ def handler(req):
 
     # Verzweigen je nach Name der Seite, 'main' ist Default
 
-
     html = htmllib.html(req)
+    req.uriinfo = htmllib.uriinfo(req)
+
     try:
         read_get_vars(req)
         read_checkmk_defaults(req)
         if not check_mk.is_allowed_to_view(req.user):
-	   html.header("Not Authorized")
-	   if type(req.user) == str:
-	       login_text = "logged in as <b>%s</b>" % req.user
-	   else:
-	       login_text = "not logged in"
-	   html.write("<h1 class=error>You are not authorized</h1>\n")
-	   html.write("<div class=error>Sorry. You are %s and not "
-		 "authorized to use check_mk's web pages. If you think this is an error, "
-		 "please ask your administrator to add your login into the list "
-		" <tt>main.mk:multiadmin_users</tt>.</div>"% login_text)
-	   html.footer()
-        else:
-	   import page_multiadmin
-	   pagehandlers = { "index"  : page_index,
-	      "filter" : page_multiadmin.page}
+            html.header("Not Authorized")
 
-	   handler = pagehandlers.get(req.myfile, page_index)
-	   handler(html)
+            if type(req.user) == str:
+                login_text = "logged in as <b>%s</b>" % req.user
+            else:
+                login_text = "not logged in"
+
+            html.write("<h1 class=error>You are not authorized</h1>\n")
+            html.write("<div class=error>Sorry. You are %s and not "
+                       "authorized to use check_mk's web pages. If you think this is an error, "
+                       "please ask your administrator to add your login into the list "
+                       " <tt>main.mk:multiadmin_users</tt>.</div>"% login_text)
+            html.footer()
+        else:
+            import page_multiadmin
+            import page_logwatch
+
+            pagehandlers = { "index"        : page_index,
+                             "filter"       : page_multiadmin.page,
+			     "siteoverview" : page_multiadmin.page_siteoverview,
+                             "logwatch"     : page_logwatch.page, }
+
+            handler = pagehandlers.get(req.myfile, page_index)
+            handler(html)
 
     except MKUserError, e:
         html.header("Invalid User Input")
         html.write("<h1 class=error>Invalid User Input</h1>\n")
-        html.write("<div class=error>%s</s>" % e)
+        html.write("<div class=error>%s</div>" % e)
         html.footer()
 
     except MKConfigError, e:
         html.header("Configuration Error")
         html.write("<h1 class=error>Configuration Error</h1>\n")
-        html.write("<div class=error>%s</s>" % e)
+        html.write("<div class=error>%s</div>" % e)
         html.footer()
         apache.log_error("Configuration error: %s" % (e,), apache.APLOG_ERR)
 
-    except Exception, e:
+    except 1: #Exception, e:
         html.header("Internal Error")
         html.write("<h1 class=error>Internal error</h1>")
         html.write("<div class=error>Internal error: %s</div>" % e)
@@ -131,6 +137,7 @@ def page_index(html):
 <ul>
 <li><a href="http://mathias-kettner.de/check_mk.html">Homepage of Check_mk</a></li>
 <li><a href="filter.py">Filter and Actions</a></li>
+<li><a href="logwatch.py">Logwatch</a></li>
 </ul>
 ''')
     html.footer()

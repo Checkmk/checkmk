@@ -28,6 +28,9 @@
 #include "OffsetStringColumn.h"
 #include "HostlistColumn.h"
 #include "HostlistStateColumn.h"
+#include "auth.h"
+#include "tables.h"
+#include "TableHosts.h"
 
 /* this might be a hack (accessing Nagios' internal structures.
    Hi Ethan: please help me here: how should this be code to be
@@ -113,4 +116,19 @@ void TableHostgroups::answerQuery(Query *query)
 void *TableHostgroups::findObject(char *objectspec)
 {
     return find_hostgroup(objectspec);
+}
+
+bool TableHostgroups::isAuthorized(contact *ctc, void *data)
+{
+   hostgroup *hg = (hostgroup *)data;
+   hostsmember *mem = hg->members;
+   while (mem) {
+       host *hst = mem->host_ptr;
+       bool is = g_table_hosts->isAuthorized(ctc, hst);
+       if (is && g_group_authorization == AUTH_LOOSE)
+	   return true;
+       else if (!is && g_group_authorization == AUTH_STRICT)
+	   return false;
+   }
+   return true;
 }

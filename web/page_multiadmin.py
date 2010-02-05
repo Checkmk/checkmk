@@ -80,14 +80,71 @@ def find_entries(filt, auth_user = None):
         services.append(d)
     return services, hosts
 
+def page_siteoverview(html):
+    if check_mk.multiadmin_restrict and \
+	html.req.user not in check_mk.multiadmin_unrestricted_users:
+	    auth_user = html.req.user
+    else:
+	auth_user = None
+    connect_to_livestatus(html, auth_user)
+
+    live.set_prepend_site(True)
+    html.header("Site Overview")
+    hst = live.query("GET hosts\n"
+	    "Stats: state = 0\n"
+	    "Stats: state = 1\n"
+	    "Stats: state = 2\n"
+	    "Stats: state = 1\nStats: acknowledged = 0\nStatsAnd: 2\n"
+	    "Stats: state = 2\nStats: acknowledged = 0\nStatsAnd: 2\n")
+
+    svc = live.query("GET services\n"
+	    "Stats: state = 0\n"
+	    "Stats: state = 1\n"
+	    "Stats: state = 2\n"
+	    "Stats: state = 3\n"
+	    "Stats: state = 1\nStats: acknowledged = 0\nStatsAnd: 2\n"
+	    "Stats: state = 2\nStats: acknowledged = 0\nStatsAnd: 2\n"
+	    "Stats: state = 3\nStats: acknowledged = 0\nStatsAnd: 2\n"
+	    )
+
+    html.write("<table class=siteoverview><tr>")
+    num = 0
+    for h, s in zip(hst, svc):
+	num += 1
+	sitename = h[0]
+	if num % 2 == 1:
+	    html.write("</tr><tr>")
+	if check_mk.multiadmin_use_siteicons:
+	    html.write("<td class=icon><img src=\"icons/site-%s-64.png\"></td>" % sitename)
+	html.write("<td><b>%s</b><br>" % check_mk.site(sitename)["alias"])
+
+        html.write("<table>\n")
+	html.write("<tr><th></th><th colspan=3>Hosts</th><th colspan=4>Services</th></tr>\n")
+	html.write("<tr><td class=legend>total</td>")
+	def render_cell(prefix, state, count):
+	    if count > 0:
+	        html.write("<td class=%sstate%d>%d</td>" % (prefix, state, count))
+	    else:
+		html.write("<td class=zero></td>")
+
+	for state in [0,1,2]:
+	    render_cell("h", state, h[state + 1])
+	for state in [0,1,3,2]:
+	    render_cell("", state, s[state + 1])
+
+	html.write("</tr><tr><td class=legend>unhandled</td><td class=zero></td>")
+	for state in [1,2]:
+	    render_cell("h", state, h[state + 3])
+	html.write("<td class=zero></td>")
+	for state in [1,3,2]:
+	    render_cell("", state, s[state + 4])
+	html.write("</tr></table>")
+	
+    html.write("</table>")	
+    html.footer()
+
 
 def page(html):
-    global tabs
-    tabs = [ ("filter", "Filter"),
-             ("results", "Results") ]
-    if check_mk.is_allowed_to_act(html.req.user):
-       tabs.append(("actions", "Actions"))
- 
     # Decide wether to show all items or only those the
     # user is a contact for
     auth_user = None
@@ -114,10 +171,16 @@ def page(html):
         html.req.headers_out["Refresh"] = "90"
 
     html.header("Check_mk Multiadmin")
-
+    
     if check_mk.is_multisite():
 	show_site_header(html)
 
+    # Set tabs according to general permissions
+    global tabs
+    tabs = [ ("filter", "Filter"), ("results", "Results") ]
+    if check_mk.is_allowed_to_act(html.req.user):
+       tabs.append(("actions", "Actions"))
+ 
     if html.has_var("filled_in") and not html.has_var("filter"):
         search_filter = build_search_filter(html)
         hits, hosts = find_entries(search_filter, auth_user)
@@ -172,7 +235,7 @@ def show_site_header(html):
 	    html.write("</td>")
 	html.write("<td class=%s>" % style)
 	html.write("<a href=\"%s\">%s</a></td>" % (uri, site["alias"]))
-    html.write("</tr></table><hr class=siteheader>\n")
+    html.write("</tr></table>\n")
 
 def add_site_icon(html, sitename):
     if check_mk.multiadmin_use_siteicons:

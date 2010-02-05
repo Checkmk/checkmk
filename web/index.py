@@ -99,9 +99,10 @@ def handler(req):
             import page_multiadmin
             import page_logwatch
 
-            pagehandlers = { "index"    : page_index,
-                             "filter"   : page_multiadmin.page,
-                             "logwatch" : page_logwatch.page, }
+            pagehandlers = { "index"        : page_index,
+                             "filter"       : page_multiadmin.page,
+			     "siteoverview" : page_multiadmin.page_siteoverview,
+                             "logwatch"     : page_logwatch.page, }
 
             handler = pagehandlers.get(req.myfile, page_index)
             handler(html)

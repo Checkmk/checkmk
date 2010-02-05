@@ -7,6 +7,7 @@
 
       Checks & Agents:
       * multipath: Fixed bug in output parser
+      * cpu: fixed bug: apply level on 15min, not on 1min avg
 
       MK Livestatus:
       * New headers for waiting (please refer to online documentation)

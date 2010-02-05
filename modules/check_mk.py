@@ -1328,7 +1328,7 @@ def output_serviceconf(outfile = sys.stdout):
             
             # Hardcoded for logwatch check: Link to logwatch.php
             if checkname == "logwatch":
-                logwatch = "    notes_url                " + (logwatch_notes_url % (urllib.quote(hostname), urllib.quote(description))) + "\n"
+                logwatch = "    notes_url                " + (logwatch_notes_url % (urllib.quote(hostname), urllib.quote(item))) + "\n"
             else:
                 logwatch = "";
 

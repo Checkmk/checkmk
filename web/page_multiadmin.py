@@ -28,7 +28,7 @@ import htmllib, time, re, check_mk, livestatus
 from lib import *
 
 
-def connect_to_livestatus(html):
+def connect_to_livestatus(html, auth_user = None):
     global site_status, live
     site_status = {}
     # If there is only one site (non-multisite), than
@@ -48,23 +48,37 @@ def connect_to_livestatus(html):
     else:
 	live = livestatus.SingleSiteConnection(check_mk.livestatus_unix_socket)
 
+    if auth_user:
+	live.addHeader("AuthUser: %s" % auth_user)
+
 
 def find_entries(filt, auth_user = None):
-   services = []
-   hosts = set([])
-
-   columns = ["host_name","description","state","host_state", 
+    services = []
+    hosts = set([])
+    im = check_mk.is_multisite()
+   
+    columns = ["host_name","description","state","host_state", 
 	      "plugin_output", "last_state_change", "downtimes" ] 
-   if auth_user:
-	auth_header = "AuthUser: %s\n" % auth_user
-   else:
-        auth_header = ""
-   svcs = live.query("GET services\n"
-	    "Columns: %s\n%s%s" % (" ".join(columns), auth_header, filt))
-   for line in svcs:
-      services.append(dict(zip(columns, line)))
-      hosts.add(line[0])
-   return services, hosts
+
+	
+    if im: # let livestatus api prepend site to each line
+       live.set_prepend_site(True)
+
+    svcs = live.query("GET services\nColumns: %s\n%s" % (" ".join(columns), filt))
+
+    if check_mk.is_multisite():
+       columns = ["site"] + columns 
+       
+    for line in svcs:
+	d = dict(zip(columns, line))
+	if im:
+	    host = "%s:%s" % (line[0], line[1])
+	    hosts.add(host)
+	    d["host_name"] = host
+	else:
+            hosts.add(line[0])
+        services.append(d)
+    return services, hosts
 
 
 def page(html):
@@ -74,20 +88,6 @@ def page(html):
     if check_mk.is_allowed_to_act(html.req.user):
        tabs.append(("actions", "Actions"))
  
-    connect_to_livestatus(html)
-    # make sure current setting of site_vars are contained in all forms
-    # and buttons
-    html.add_global_vars(site_vars)
-
-    # Make search results refresh every 90 seconds
-    if html.has_var("results"):
-        html.req.headers_out["Refresh"] = "90"
-
-    html.header("Check_mk Multiadmin")
-
-    if check_mk.is_multisite():
-	show_site_header(html)
-
     # Decide wether to show all items or only those the
     # user is a contact for
     auth_user = None
@@ -102,6 +102,21 @@ def page(html):
        	(html.has_var("actions") or html.has_var("_do_actions")):
 	if html.req.user not in check_mk.multiadmin_unrestricted_action_users:
 	    auth_user = html.req.user
+
+    connect_to_livestatus(html, auth_user)
+
+    # make sure current setting of site_vars are contained in all forms
+    # and buttons
+    html.add_global_vars(site_vars)
+
+    # Make search results refresh every 90 seconds
+    if html.has_var("results"):
+        html.req.headers_out["Refresh"] = "90"
+
+    html.header("Check_mk Multiadmin")
+
+    if check_mk.is_multisite():
+	show_site_header(html)
 
     if html.has_var("filled_in") and not html.has_var("filter"):
         search_filter = build_search_filter(html)
@@ -151,8 +166,20 @@ def show_site_header(html):
 	    style = "off"
 
 	uri = html.makeuri([("siteoff_" + sitename, switch)])
-	html.write("<td class=%s><a href=\"%s\">%s</a></td>" % (style, uri, site["alias"]))
+	if check_mk.multiadmin_use_siteicons:
+	    html.write("<td>")
+	    add_site_icon(html, sitename)
+	    html.write("</td>")
+	html.write("<td class=%s>" % style)
+	html.write("<a href=\"%s\">%s</a></td>" % (uri, site["alias"]))
     html.write("</tr></table><hr class=siteheader>\n")
+
+def add_site_icon(html, sitename):
+    if check_mk.multiadmin_use_siteicons:
+	html.write("<img class=siteicon src=\"icons/site-%s-24.png\"> " % sitename)
+        return True
+    else:
+	return False
 
 def show_tabs(html, tabs, active, suppress_form = False):
     html.write("<table class=tabs cellpadding=0 cellspacing=0><tr>\n")
@@ -399,10 +426,21 @@ def show_search_results(html, services, hosts):
             else:
                 hoststate = "down"
 		num_hosts_down += 1
-            host_url = html.req.defaults["nagios_cgi_url"] + "/status.cgi?host=" + htmllib.urlencode(hostname)
             html.write("<tr><td class=host colspan=4>"
-                       "<b class=%s>"
-                       "<a href=\"%s\">%s</a></b></td></tr>\n" % (hoststate, host_url, hostname))
+                       "<b class=%s>" % hoststate)
+	    parts = hostname.split(":", 1)
+	    if len(parts) > 1:
+		sitename = parts[0]
+		host = parts[1]
+		if not add_site_icon(html, sitename):
+		    html.write("%s: " % sitename)
+		nagurl = check_mk.site(sitename)["nagios_cgi_url"]
+	    else:
+		host = hostname
+		nagurl = html.req.defaults["nagios_cgi_url"]
+
+            host_url = nagurl + "/status.cgi?host=" + htmllib.urlencode(hostname)
+	    html.write("<a href=\"%s\">%s</a></b></td></tr>\n" % (host_url, host))
         last_hostname = hostname
         html.write("<tr class=%s>" % trclass)
 
@@ -410,8 +448,8 @@ def show_search_results(html, services, hosts):
         statename = nagios_short_state_names[state]
 	at_least_one_state[state] = True	
 
-        svc_url = html.req.defaults["nagios_cgi_url"] + \
-                  ( "/extinfo.cgi?type=2&host=%s&service=%s" % (hostname, htmllib.urlencode(hit["description"])))
+        svc_url = nagurl + \
+                  ( "/extinfo.cgi?type=2&host=%s&service=%s" % (host, htmllib.urlencode(hit["description"])))
         html.write("<td class=state%d>%s</td>\n" % (state, statename))
         html.write("<td><a href=\"%s\">%s</a></td>\n" % (svc_url, hit["description"]))
         html.write("<td class=%s>%s</td>\n" % (age_class, html.age_text(age)))

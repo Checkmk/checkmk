@@ -221,6 +221,7 @@ multiadmin_restrict_actions          = False
 multiadmin_unrestricted_users        = []
 multiadmin_unrestricted_action_users = []
 multiadmin_sounds                    = {}
+multiadmin_use_siteicons             = False
 
 # Data to be defined in main.mk
 checks                               = []

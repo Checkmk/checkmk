@@ -31,12 +31,17 @@ hr.siteheader {
     width: 100%;
 }
 
+table.siteheader td img {
+    vertical-align: middle;
+}
 
 table.siteheader td a {
-    height: 1em;
+    height: 18px;
+    display: block;
     padding: 2px 1ex;
     border-style: solid;
     text-decoration: none;
+    vertical-align: middle;
 }
 
 table.siteheader td.online a {
@@ -332,3 +337,9 @@ div.error {
   border-color: #e40;
 }
 
+/* -------------------------------------------------------------------------- */
+img.siteicon {
+width: 24px;
+height: 24px;
+border: 1px solid #666;
+}

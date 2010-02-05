@@ -206,7 +206,7 @@ def do_log_ack(html):
         raise MKUserError('ack', 'Invalid value for ack parameter.')
 
     if not check_mk.is_allowed_to_act(html.req.user):
-        raise nagios.MKAuthException('Not authorized to perform actions.')
+        raise MKAuthException('Not authorized to perform actions.')
 
     try:
         os.remove(check_mk.logwatch_dir + '/' + host + '/' + file)
@@ -217,9 +217,9 @@ def do_log_ack(html):
                    '&quot;%s&quot; have been acknowledged.</p>' % \
                      (htmllib.attrencode(host), htmllib.attrencode(fileDisplay)))
     except:
-        raise nagios.MKGeneralException('The log file &quot;%s&quot; from host &quot;%s&quot;'
-                                        ' could not be deleted.' % \
-                                        (htmllib.attrencode(fileDisplay), htmllib.attrencode(host)))
+        raise MKGeneralException('The log file &quot;%s&quot; from host &quot;%s&quot;'
+                                 ' could not be deleted.' % \
+                                  (htmllib.attrencode(fileDisplay), htmllib.attrencode(host)))
 
 def get_worst_file(host, files):
     worst_file = None
@@ -265,9 +265,8 @@ def parse_file(file, hidecontext = "no"):
     try:
         f = open(file, 'r')
     except:
-        raise nagios.MKGeneralException('The log file &quot;%s&quot; from host &quot;%s&quot;'
-                                        ' could not be opened.' % \
-                                        (htmllib.attrencode(file.replace('\\', '/')), htmllib.attrencode(host)))
+        raise MKGeneralException('The log file &quot;%s&quot; could not be opened.' % \
+                                   (htmllib.attrencode(file)))
     chunk_open = False
     logs = []
     log = None

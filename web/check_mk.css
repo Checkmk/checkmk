@@ -293,3 +293,130 @@ div.error {
   border-color: #e40;
 }
 
+/* ---- logwatch ------------------------------------------------ */
+
+div#logwatch div.chunk {
+  border-width: 1px;
+  border-style: solid;
+  margin-bottom: 1em;
+  padding: 0.5ex;
+  border-color: #bbb #555 #222 #bbb;
+  background-color: white;
+}
+
+div#logwatch a {
+  font-family: sans-serif;
+  font-weight: bold;
+  width: 4em;
+  color: #008;
+}
+
+div#logwatch a b {
+  color: #08f;
+}
+
+div#logwatch a.ack {
+  background-color: #33c;
+  color: #fff;
+  text-decoration: none;
+  border-width: 2px;
+  border-style: solid;
+  border-color: #ccc #888 #333 #777;
+  padding: 0.3ex 1ex;
+  -moz-border-radius: 6px;
+}
+
+div#logwatch pre {
+  background-color: #ddd;
+  padding: 0.2ex 0.8ex;
+  border: none;
+  margin: 0px;
+}
+
+div#logwatch pre.context {
+	display:none;
+}
+
+div#logwatch pre.WARN {
+  background-color: #ff8;
+}
+
+div#logwatch pre.CRIT {
+  background-color: #f88;
+}
+
+div#logwatch td.WARN, td.CRIT {
+  width: 5em;
+  text-align: center;
+  padding: 0em 0.5ex;
+  margin: 0px;
+  border: 1px solid black;
+  font-weight: bold;
+}
+
+div#logwatch td.WARN {
+  background-color: #ff0;
+}
+
+div#logwatch td.CRIT {
+  background-color: #f00;
+  color: white;
+}
+
+div#logwatch table.section {
+  margin: 0ex 0ex 0.8ex 0ex;
+  width: 100%
+}
+
+div#logwatch .date {
+  font-weight: normal;
+  padding-left: 1ex;
+  color: #666;
+}
+
+div#logwatch td.button {
+  text-align: right;
+}
+
+div#logwatch td.button a {
+  background-color: #cca;
+  color: #000;
+  text-decoration: none;
+  font-weight: normal;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #ddd #888 #333 #ddd;
+  padding: 0.1ex 1ex;
+  -moz-border-radius: 4px;
+}
+
+div#logwatch td.button a:active {
+  background-color: #aa8;
+}
+
+/* --- navigation tabs in logwatch ------------------ */
+
+div#logwatch a.tab, div#logwatch a.tabactive {
+  -moz-border-radius: 12px 12px 0px 0px;
+	display: block;
+  margin-bottom: 0px;
+  color: #000;
+  padding: 0.4ex 1em;
+  border-style: none;
+  vertical-align: top;
+  margin-right: 0.3ex;
+	background-color: #fc0;
+	border-bottom: 1px solid black;
+	text-decoration: none;
+	font-size: 100%;
+	width: 100px;
+}
+
+div#logwatch a.tab:hover {
+  padding-bottom: 10px;
+}
+
+div#logwatch a.tabactive {
+  padding-bottom: 6px;
+  border-bottom-style: none;
+}

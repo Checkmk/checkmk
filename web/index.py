@@ -97,8 +97,11 @@ def handler(req):
             html.footer()
         else:
             import page_multiadmin
-            pagehandlers = { "index"  : page_index,
-                             "filter" : page_multiadmin.page,}
+            import page_logwatch
+
+            pagehandlers = { "index"    : page_index,
+                             "filter"   : page_multiadmin.page,
+                             "logwatch" : page_logwatch.page, }
 
             handler = pagehandlers.get(req.myfile, page_index)
             handler(html)
@@ -106,13 +109,13 @@ def handler(req):
     except MKUserError, e:
         html.header("Invalid User Input")
         html.write("<h1 class=error>Invalid User Input</h1>\n")
-        html.write("<div class=error>%s</s>" % e)
+        html.write("<div class=error>%s</div>" % e)
         html.footer()
 
     except MKConfigError, e:
         html.header("Configuration Error")
         html.write("<h1 class=error>Configuration Error</h1>\n")
-        html.write("<div class=error>%s</s>" % e)
+        html.write("<div class=error>%s</div>" % e)
         html.footer()
         apache.log_error("Configuration error: %s" % (e,), apache.APLOG_ERR)
 
@@ -133,6 +136,7 @@ def page_index(html):
 <ul>
 <li><a href="http://mathias-kettner.de/check_mk.html">Homepage of Check_mk</a></li>
 <li><a href="filter.py">Filter and Actions</a></li>
+<li><a href="logwatch.py">Logwatch</a></li>
 </ul>
 ''')
     html.footer()

@@ -42,7 +42,7 @@ def sites():
     return dict( [(name, site(name)) for name in sitenames()])
 
 def site(name):
-    s = multiadmin_sites[name]
+    s = multiadmin_sites.get(name, {})
     if "alias" not in s:
 	s["alias"] = name
     if "socket" not in s:

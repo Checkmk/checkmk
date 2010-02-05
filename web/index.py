@@ -98,10 +98,12 @@ def handler(req):
         else:
             import page_multiadmin
             import page_logwatch
+	    import experimental
 
             pagehandlers = { "index"        : page_index,
                              "filter"       : page_multiadmin.page,
 			     "siteoverview" : page_multiadmin.page_siteoverview,
+			     "experimental" : experimental.page,
                              "logwatch"     : page_logwatch.page, }
 
             handler = pagehandlers.get(req.myfile, page_index)

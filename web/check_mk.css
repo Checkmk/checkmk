@@ -172,6 +172,16 @@ table.services td.host {
   font-size: 120%;
 }
 
+tr.groupheader table {
+    border-style: none;
+    padding: 0px 1ex 0px 0px;
+}
+
+tr.groupheader td {
+   border-style: none;
+   padding: 0px;
+}
+
 td.host b.down { 
   background-color: red;
   -moz-border-radius: 0.5ex;

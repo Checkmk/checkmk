@@ -67,7 +67,6 @@ def handler(req):
     req.content_type = "text/html"
     req.header_sent = False
 
-    # req.uriinfo = html.uriinfo(req)
 
     # Die Datei main.py wird mit beliebigen Namen aufgerufen, die
     # alle auf .py enden, und die es garnicht geben muss!
@@ -77,6 +76,7 @@ def handler(req):
     # Verzweigen je nach Name der Seite, 'main' ist Default
 
     html = htmllib.html(req)
+    req.uriinfo = htmllib.uriinfo(req)
 
     try:
         read_get_vars(req)

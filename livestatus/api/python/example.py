@@ -27,20 +27,20 @@
 
 import livestatus
 
-socket_path = "/var/lib/nagios/rw/live"
+socket_path = "/var/run/nagios/rw/live"
 
 try:
    # Make a single connection for each query
    print "\nPerformance:"
-   for key, value in livestatus.connection(socket_path).query_line_assoc("GET status").items():
-      print "%-20s: %10.3f" % (key, value)
+   for key, value in livestatus.SingleSiteConnection(socket_path).query_line_assoc("GET status").items():
+      print "%-30s: %s" % (key, value)
    print "\nHosts:"
-   hosts = livestatus.connection(socket_path).query_table("GET hosts\nColumns: name alias address")
+   hosts = livestatus.SingleSiteConnection(socket_path).query_table("GET hosts\nColumns: name alias address")
    for name, alias, address in hosts:
       print "%-14s %-16s %s" % (name, address, alias)
 
    # Do several queries in one connection
-   conn = livestatus.connection(socket_path)
+   conn = livestatus.SingleSiteConnection(socket_path)
    num_up = conn.query_value("GET hosts\nStats: hard_state = 0")
    print "\nHosts up: %d" % num_up
 
@@ -59,6 +59,7 @@ try:
    conn.query_value("GET hosts\nColumns: hirni")
 
 
-except livestatus.MKLivestatusException, e:
+except Exception, e: # livestatus.MKLivestatusException, e:
    print "Livestatus error: %s" % str(e)
+
 

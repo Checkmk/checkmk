@@ -48,7 +48,8 @@ class uriinfo:
 
     # [('varname1', value1), ('varname2', value2) ]
     def makeuri(self, addvars):
-        return self.req.myfile + ".py?" + urlencode(self.req.vars.items() + addvars)
+        return self.req.myfile + ".py?" + urlencode_vars(self.req.vars.items() + addvars)
+
 
     # Liste von Hidden-Felder erzeugen aus aktueller URI
     def hiddenfields(self, omit=[]):
@@ -58,6 +59,16 @@ class uriinfo:
 
 def attrencode(value):
     return cgi.escape(value, True)
+
+def urlencode_vars(vars):
+    output = ""
+    for varname, value in vars:
+	if output != "":
+	    output += "&"
+	output += varname
+	output += "="
+	output += urlencode(value)
+    return output
 
 def urlencode(value):
     ret = ""
@@ -75,6 +86,7 @@ class html:
         self.req = req
         self.user_errors = {}
         self.focus_object = None
+	self.global_vars = []
         
     def write(self, text):
         self.req.write(text)
@@ -99,6 +111,7 @@ class html:
         self.current_form = name
         self.write("<form name=%s class=%s action=\"%s.py\" method=GET>\n" %
                    (name, name, self.req.myfile))
+	self.hidden_fields(self.global_vars)
 
     def end_form(self):
         self.write("</form>\n")
@@ -125,7 +138,15 @@ class html:
         else: # add *all* get variables
             for var, value in self.req.vars.items():
                 self.hidden_field(var, value)
+
+    def add_global_vars(self, varnames):
+	self.global_vars += varnames
             
+    # [('varname1', value1), ('varname2', value2) ]
+    def makeuri(self, addvars):
+	vars = [ (v, self.var(v)) for v in self.req.vars if not v.startswith("_") ]
+        return self.req.myfile + ".py?" + urlencode_vars(vars + addvars)
+
     def button(self, varname, title, cssclass):
         self.write("<input type=submit name=\"%s\" id=\"%s\" value=\"%s\" class=\"%s\">\n" % \
                    ( varname, varname, title, cssclass))

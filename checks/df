@@ -35,6 +35,10 @@ def check_df(mountpoint, params, df_lines):
 	return (3, "UNKNOWN - %s missing or not a partition" % mountpoint )
     used = used_list[0] # might be listed twice. We take the first occurance
 
+    # In some rare cases the mountpoint may contain a space (happened on ESX).
+    if len(used) > 7:
+        used = used[0:6] + [ " ".join(used[6:]) ]
+
     if len(used) != 7 or used[5][-1] != '%':
 	return (3, "UNKNOWN - Invalid output from agent (%s)" % (' '.join(used),))
 

@@ -21,6 +21,45 @@ table.footer {
 .footer td.right  { text-align: right; }
 .footer a { color: #246; }
 
+
+/* site header --------------------------------------------------------------- */
+table.siteheader {
+}
+
+hr.siteheader {
+    border-bottom: 1px solid black;
+    width: 100%;
+}
+
+
+table.siteheader td a {
+    height: 1em;
+    padding: 2px 1ex;
+    border-style: solid;
+    text-decoration: none;
+}
+
+table.siteheader td.online a {
+    border-width: 2px;
+    background-color: #8f8;
+    border-color: #222 #ccc #fff #555;
+    color: #080;
+}
+
+table.siteheader td.offline a {
+    border-width: 2px;
+    background-color: #f88;
+    border-color: #222 #ccc #fff #555;
+    color: #800;
+}
+
+table.siteheader td.off a {
+    border-width: 2px;
+    background-color: #ccc;
+    border-color: #ccc #777 #444 #aaa;
+    color: #444;
+}
+
 /* tabs ---------------------------------------------------------------------- */
 
 table.tabs td { 

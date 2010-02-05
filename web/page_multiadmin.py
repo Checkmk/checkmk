@@ -24,77 +24,69 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import htmllib, nagios, time, re, check_mk
+import htmllib, time, re, check_mk, livestatus
 from lib import *
 
 
-def cmp_atoms(s1, s2):
-    if s1 < s2:
-        return -1
-    elif s1 == s2:
-        return 0
-    else:
-        return 1
-
-def cmp_after(x, y):
-    if x: return x
-    else: return y
-
-def cmp_after3(x, y, z):
-    if x: return x
-    else: return cmp_after(y, z)
-
-state_indices = {2:0, 3:1, 1:2, 4:3, 0:4}
-   
-def cmp_svcstate(s1, s2):
-    return cmp_atoms(state_indices.get(s1,-1), state_indices.get(s2,-1))
-
-def cmp_svc_hostname_svc(s1, s2):
-    try:
-      return cmp_after(
-        cmp_atoms(s1["host_name"], s2["host_name"]),
-        cmp_atoms(s1["description"], s2["description"]))
-    except:
-       raise Exception("s1: %r, s2: %r" % (s1, s2))
-
-def cmp_svc_severity(s1, s2):
-    try:
-      return cmp_after3(
-        cmp_svcstate(s1["state"], s2["state"]),
-        cmp_atoms(s1["last_state_change"], s2["last_state_change"]),
-        cmp_svc_hostname_svc(s1, s2))
-    except Exception, e:
-      raise nagios.MKGeneralException("Cannot compare state of services s1(%r) and s2(%r): %s" % \
-		(s1, s2, e))
-
-sort_options = [ ("0", "hostname -> service", cmp_svc_hostname_svc), 
-                 ("1", "severity -> status age -> hostname -> service",          cmp_svc_severity, )
-                 ]
-
-def enabled_sites(html):
+def connect_to_livestatus(html):
+    global site_status, live
+    site_status = {}
     # If there is only one site (non-multisite), than
     # user cannot enable/disable. 
-    configured_sites = check_mk.sites()
-    if len(configured_sites) == 1:
-	return configured_sites[0]
-    sites = []
-    for site_name in configured_sites:
-	if html.var("site_%s" % site_name) == "on":
-	    sites.append(site_name)
-    return sites
-		 
+    if check_mk.is_multisite():
+	enabled_sites = {}
+	for sitename, site in check_mk.sites().items():
+	    varname = "siteoff_" + sitename
+	    if not html.var(varname) == "on":
+		enabled_sites[sitename] = site
+	global live
+	live = livestatus.MultiSiteConnection(enabled_sites)
+	live.set_prepend_site(True)
+        for site, v1, v2 in live.query("GET status\nColumns: livestatus_version program_version"):
+	    site_status[site] = { "livestatus_version": v1, "program_version" : v2 }
+	live.set_prepend_site(False)
+    else:
+	live = livestatus.SingleSiteConnection(check_mk.livestatus_unix_socket)
+
+
+def find_entries(filt, auth_user = None):
+   services = []
+   hosts = set([])
+
+   columns = ["host_name","description","state","host_state", 
+	      "plugin_output", "last_state_change", "downtimes" ] 
+   if auth_user:
+	auth_header = "AuthUser: %s\n" % auth_user
+   else:
+        auth_header = ""
+   svcs = live.query("GET services\n"
+	    "Columns: %s\n%s%s" % (" ".join(columns), auth_header, filt))
+   for line in svcs:
+      services.append(dict(zip(columns, line)))
+      hosts.add(line[0])
+   return services, hosts
+
+
 def page(html):
     global tabs
     tabs = [ ("filter", "Filter"),
              ("results", "Results") ]
     if check_mk.is_allowed_to_act(html.req.user):
        tabs.append(("actions", "Actions"))
-    
+ 
+    connect_to_livestatus(html)
+    # make sure current setting of site_vars are contained in all forms
+    # and buttons
+    html.add_global_vars(site_vars)
+
     # Make search results refresh every 90 seconds
     if html.has_var("results"):
         html.req.headers_out["Refresh"] = "90"
 
     html.header("Check_mk Multiadmin")
+
+    if check_mk.is_multisite():
+	show_site_header(html)
 
     # Decide wether to show all items or only those the
     # user is a contact for
@@ -107,14 +99,13 @@ def page(html):
 
     # User wants to do action?
     if check_mk.multiadmin_restrict_actions and \
-       	(html.has_var("actions") or html.has_var("do_actions")):
+       	(html.has_var("actions") or html.has_var("_do_actions")):
 	if html.req.user not in check_mk.multiadmin_unrestricted_action_users:
 	    auth_user = html.req.user
 
-
     if html.has_var("filled_in") and not html.has_var("filter"):
         search_filter = build_search_filter(html)
-        hits, hosts = nagios.find_entries(search_filter, enabled_sites(html), auth_user)
+        hits, hosts = find_entries(search_filter, auth_user)
 
     if html.has_var("results"):
         show_tabs(html, tabs, "results")
@@ -122,14 +113,14 @@ def page(html):
 
     elif html.has_var("actions"):
         show_tabs(html, tabs, "actions")
-        if html.has_var("do_actions"):
+        if html.has_var("_do_actions"):
             try:
                 do_actions(html, hits, hosts)
             except MKUserError, e:
                 html.write("<div class=error>%s</div>\n" % e.message)
                 html.add_user_error(e.varname, e.message)
                 
-        if not html.has_var("do_actions") or html.has_users_errors():
+        if not html.has_var("_do_actions") or html.has_users_errors():
             show_action_form(html)
             show_search_results(html, hits, hosts)
 
@@ -143,7 +134,25 @@ def page(html):
 
 
     html.footer()
-    
+
+def show_site_header(html):
+    html.write("<table class=siteheader><tr>")
+    for sitename in check_mk.sites():
+	site = check_mk.site(sitename)
+	varname = "siteoff_" + sitename
+	if not html.var(varname) == "on": # site not switched off -> is on
+	    switch = "on" # show 'on', switch off
+	    if sitename in site_status:
+		style = "online"
+	    else:
+		style = "offline"
+	else:
+	    switch = "off" # show 'off', switch on
+	    style = "off"
+
+	uri = html.makeuri([("siteoff_" + sitename, switch)])
+	html.write("<td class=%s><a href=\"%s\">%s</a></td>" % (style, uri, site["alias"]))
+    html.write("</tr></table><hr class=siteheader>\n")
 
 def show_tabs(html, tabs, active, suppress_form = False):
     html.write("<table class=tabs cellpadding=0 cellspacing=0><tr>\n")
@@ -180,10 +189,10 @@ def build_search_filter(html):
 	    search_filter += "Filter: " + field + " ~~ " + value + "\n"
 
     # search dropdown selections
-    for descr, field, valuefunc in search_dropdown_fields:
+    for descr, field, operator, valuefunc in search_dropdown_fields:
         value = html.var(field, "").strip()
         if value != "":
-	    search_filter += "Filter: " + field + " = " + value + "\n"
+	    search_filter += "Filter: " + field + " " + operator + " " + value + "\n"
 
     # Search out by flags
     for nagios_flag in [ "acknowledged",
@@ -215,7 +224,7 @@ def build_search_filter(html):
 
     # Search according to state
     allowed_states = []
-    for num, name in nagios.state_names.items():
+    for num, name in nagios_state_names.items():
         if html.var("state%d" % num) != "on":
 	    search_filter += "Filter: state != %d\n" % num
 
@@ -239,15 +248,6 @@ def show_filter_form(html):
                       (nagios_flag, value, checked, text))
         html.write("</td></tr>\n")
 
-    # Allow site selection on multisite installations
-    if check_mk.is_multisite():
-	html.write("<tr><td class=legend>Sites</td><td class=content>\n")
-	for site_name in check_mk.sites():
-	    site = check_mk.site(site_name)
-	    html.checkbox("site_" + site_name, 1)
-	    html.write(" " + site["alias"] + " &nbsp;")
-	html.write("</td></tr>")
-
     for descr, field in search_textfields:
         html.write("<tr><td class=legend>%s</td>\n"
                   "<td class=content><input name=%s value=\"%s\" type=text class=text></td></tr>"
@@ -255,17 +255,17 @@ def show_filter_form(html):
         if field == "host_name":
             select_flag("is_summary_host", 0, "Summary Hosts")
 
-    for descr, field, valuefunc in search_dropdown_fields:
+    for descr, field, operator, valuefunc in search_dropdown_fields:
          html.write("<tr><td class=legend>%s</td><td class=content>\n" % descr)
 	 current = html.var(field, "")
-         options = [ ("", "(ignored)") ] + [ (v, v) for v in valuefunc() ]
+         options = [ ("", "(ignored)") ] + valuefunc() 
 	 html.select(field, options, current, "") 
 	 html.write("</td></tr>\n")
 
     html.write("<tr><td class=legend>Current State</td>\n"
               "<td class=content>")
 
-    for num, name in nagios.state_names.items():
+    for num, name in nagios_state_names.items():
         varname = "state%d" % num
         val = html.var(varname)
         if val == "on" or html.var("filled_in") != "yes":
@@ -303,7 +303,7 @@ def show_action_form(html):
     html.begin_form("actions")
     html.write("<table class=form id=actions>\n")
  
-    html.hidden_field("do_actions", "yes")
+    html.hidden_field("_do_actions", "yes")
     html.hidden_field("actions", "yes")
 
     for var in search_vars:
@@ -407,7 +407,7 @@ def show_search_results(html, services, hosts):
         html.write("<tr class=%s>" % trclass)
 
         # Current state
-        statename = nagios.short_state_names[state]
+        statename = nagios_short_state_names[state]
 	at_least_one_state[state] = True	
 
         svc_url = html.req.defaults["nagios_cgi_url"] + \
@@ -430,7 +430,7 @@ def show_search_results(html, services, hosts):
         sound_uri = check_mk.multiadmin_sounds['warning']
     elif 'ok' in check_mk.multiadmin_sounds:
         sound_uri = check_mk.multiadmin_sounds['ok']
-    else:
+    elif 'idle' in check_mk.multiadmin_sounds:
         sound_uri = check_mk.multiadmin_sounds['idle']
 
     if sound_uri:
@@ -574,16 +574,36 @@ def nagios_service_action_command(html, service):
     return title, [nagios_command]
 
 def all_check_commands():
-   commands = nagios.query_livestatus_column_unique("GET commands\nColumns: name\n")
-   commands.sort()
-   return commands
+    commands = live.query_column_unique("GET commands\nColumns: name\n")
+    commands.sort()
+    return [ (name, name) for name in commands ]
+
+def all_groups(what):
+    groups = dict(live.query("GET %sgroups\nColumns: name alias\n" % what))
+    names = groups.keys()
+    names.sort()
+    return [ (name, groups[name]) for name in names ]
+
+
+search_dropdown_fields = [ ("Check command", "check_command",  "=",  all_check_commands),
+		           ("Host group",    "host_groups",    ">=", lambda: all_groups("host")),
+		           ("Service group", "groups",         ">=", lambda: all_groups("service")),
+			 ]
+
+search_textfields = [ ("Service",       "description"),
+                      ("Hostname",      "host_name"),
+                      ("Check output",  "plugin_output"),
+                      ]
 
 # HTML variables set by search dialog. They need to be
 # conserved over all sub pages
+
 search_vars = [ "filled_in",
                 "description",
                 "host_name",
                 "check_command",
+		"host_groups",
+		"service_groups"
                 "plugin_output",
                 "state0",
                 "state1",
@@ -597,12 +617,56 @@ search_vars = [ "filled_in",
                 "is_summary_host",
 		"checks_enabled",
                 "in_notification_period",
-                "sortorder",
-                ] + [ "site_%s" % n for n in check_mk.sites() ]
+                "sortorder"
+		] \
+		    + [ f[1] for f in search_textfields ] \
+		    + [ f[1] for f in search_dropdown_fields ]
 
-search_textfields = [ ("Service",       "description"),
-                      ("Hostname",      "host_name"),
-                      ("Check output",  "plugin_output"),
-                      ]
+site_vars = [ "siteoff_" + s for s in check_mk.sitenames() ]
 
-search_dropdown_fields = [ ("Check command", "check_command", all_check_commands) ]
+
+
+# Helper functions for sorting according to state
+def cmp_atoms(s1, s2):
+    if s1 < s2:
+        return -1
+    elif s1 == s2:
+        return 0
+    else:
+        return 1
+
+def cmp_after(x, y):
+    if x: return x
+    else: return y
+
+def cmp_after3(x, y, z):
+    if x: return x
+    else: return cmp_after(y, z)
+
+state_indices = {2:0, 3:1, 1:2, 4:3, 0:4}
+   
+def cmp_svcstate(s1, s2):
+    return cmp_atoms(state_indices.get(s1,-1), state_indices.get(s2,-1))
+
+def cmp_svc_hostname_svc(s1, s2):
+    try:
+      return cmp_after(
+        cmp_atoms(s1["host_name"], s2["host_name"]),
+        cmp_atoms(s1["description"], s2["description"]))
+    except:
+       raise Exception("s1: %r, s2: %r" % (s1, s2))
+
+def cmp_svc_severity(s1, s2):
+    try:
+      return cmp_after3(
+        cmp_svcstate(s1["state"], s2["state"]),
+        cmp_atoms(s1["last_state_change"], s2["last_state_change"]),
+        cmp_svc_hostname_svc(s1, s2))
+    except Exception, e:
+      raise nagios.MKGeneralException("Cannot compare state of services s1(%r) and s2(%r): %s" % \
+		(s1, s2, e))
+
+sort_options = [ ("0", "hostname -> service", cmp_svc_hostname_svc), 
+                 ("1", "severity -> status age -> hostname -> service",          cmp_svc_severity, )
+                 ]
+

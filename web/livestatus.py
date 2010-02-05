@@ -86,6 +86,16 @@ class Helpers:
 	 of all lines in that column as a single list"""
       return [ l[0] for l in self.query(query, "ColumnHeaders: off") ]
 
+   def query_column_unique(self, query):
+      """Issues a query that returns exactly one column and returns the values 
+	 of all lines with duplicates removed"""
+      result = []
+      for line in self.query(query, "ColumnHeaders: off"):
+          if line[0] not in result:
+	    result.append(line[0])
+      return result
+    
+
    def query_table(self, query):
       """Issues a query that may return multiple lines and columns and returns 
 	 a list of lists"""

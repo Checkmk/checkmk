@@ -2,6 +2,7 @@ import check_mk, livestatus, htmllib, time
 from lib import *
 
 multisite_datasources = {}
+multisite_filters     = {}
 multisite_layouts     = {}
 multisite_painters    = {}
 
@@ -19,33 +20,45 @@ def page(h):
     connect_to_livestatus(html, auth_user)
 
     # show_page("hosts", "ungrouped_list", [ "sitename_plain", "host_with_state" ])
-    if True: show_page("services",  # data source
+    show_page("services",  # data source
+	      [ "host", "service", "svcstate" ], # filters
 	      "grouped_list", # layout
 	      [ "site", "host_name" ], # grouping columns
 	      [ "site_icon", "host_black" ], # group painters
 	      [ "service_state", "service_description", "state_age", "plugin_output" ])
 
-    if False: show_page("services",
-	      "ungrouped_list",
-	      [],
-              [],
-	      [ "service_state", "service_description", "state_age", "plugin_output" ])
-
     html.footer()
 
-def show_page(datasourcename, layoutname, group_columns, group_painternames, painternames):
+def show_page(datasourcename, filternames, layoutname, group_columns, group_painternames, painternames):
     datasource = multisite_datasources[datasourcename]
-    data = query_data(datasource)
-    layout = multisite_layouts[layoutname]
+    filters = [ multisite_filters[fn] for fn in filternames ]
+    filterheaders = "".join(f.filter(datasource["table"]) for f in filters)
+    data = query_data(datasource, filterheaders)
     painters = [ multisite_painters[n] for n in painternames ]
+    layout = multisite_layouts[layoutname]
     group_painters = [ multisite_painters[n] for n in group_painternames ]
-    layout["render"](data, group_columns, group_painters, painters)
+    layout["render"](data, filters, group_columns, group_painters, painters)
 
-def query_data(datasource):
+def show_filter_form(filters):
+    html.begin_form("filter")
+    html.write("<table class=form id=filter>\n")
+    for f in filters:
+	html.write("<tr><td class=legend>%s</td>" % f.title)
+	html.write("<td class=content>")
+	f.display()
+	html.write("</td></tr>\n")
+    html.write("<tr><td class=legend></td><td class=content>")
+    html.button("search", "Search", "submit")
+    html.write("</td></tr>\n")
+    html.write("</table>\n")
+    html.end_form()
+
+def query_data(datasource, add_headers):
     tablename = datasource["table"]
     query = "GET %s\n" % tablename
     columns = datasource["columns"]
     query += "Columns: %s\n" % " ".join(datasource["columns"])
+    query += add_headers
     live.set_prepend_site(True)
     data = live.query(query)
     columns_with_site = ["site"] + columns
@@ -86,7 +99,9 @@ def connect_to_livestatus(html, auth_user = None):
     if auth_user:
 	live.addHeader("AuthUser: %s" % auth_user)
 
+##################################################################################
 # Data sources
+##################################################################################
 
 multisite_datasources["hosts"] = {
     "table"   : "hosts",
@@ -98,9 +113,96 @@ multisite_datasources["services"] = {
     "columns" : ["description", "plugin_output", "state", "host_name", "host_state", "last_state_change" ],
 }
 
-# Layouts
+##################################################################################
+# Filters
+##################################################################################
 
-def render_ungrouped_list(data, group_columns, group_painters, painters):
+def declare_filter(f):
+    multisite_filters[f.name] = f
+
+class Filter:
+    def __init__(self, name, title, table, columns, htmlvars):
+	self.name = name
+	self.table = table
+	self.title = title
+	self.columns = columns
+	self.htmlvars = htmlvars
+	
+    def display(self):
+	raise MKInternalError("Incomplete implementation of filter %s '%s': missing display()" % \
+		(self.name, self.title))
+	html.write("FILTER NOT IMPLEMENTED")
+
+    def filter(self):
+	raise MKInternalError("Incomplete implementation of filter %s '%s': missing filter()" % \
+	    (self.name, self.title))
+	html.write("FILTER NOT IMPLEMENTED")
+
+    def tableprefix(self, tablename):
+	if self.table == tablename:
+	    return ""
+	else:
+	    return self.table[:-1] + "_"
+
+class FilterText(Filter):
+    def __init__(self, name, title, table, column, htmlvar, op):
+	Filter.__init__(self, name, title, table, [column], [htmlvar])
+	self.op = op
+    
+    def display(self):
+	htmlvar = self.htmlvars[0]
+	current_value = html.var(htmlvar, "")
+	html.text_input(htmlvar, current_value)
+
+    def filter(self, tablename):
+	htmlvar = self.htmlvars[0]
+	current_value = html.var(htmlvar)
+	if current_value:
+	    return "Filter: %s%s %s %s\n" % (self.tableprefix(tablename), self.columns[0], self.op, current_value)
+	else:
+	    return ""
+
+class FilterServiceState(Filter):
+    def __init__(self):
+	Filter.__init__(self, "svcstate", "Service states", 
+		"services", [ "state", "has_been_checked" ], [ "st0", "st1", "st2", "st3", "stp" ])
+    
+    def display(self):
+	if html.var("filled_in"):
+	    defval = ""
+	else:
+	    defval = "on"
+	for var, text in [("st0", "OK"), ("st1", "WARN"), ("st2", "CRIT"), ("st3", "UNKNOWN"), ("st4", "PENDING")]:
+	    html.checkbox(var, defval)
+	    html.write(" %s " % text)
+
+    def filter(self, tablename):
+	headers = []
+	if html.var("filled_in"):
+	    defval = ""
+	else:
+	    defval = "on"
+
+	for i in [0,1,2,3]:
+	    if html.var("st%d" % i, defval) == "on":
+		headers.append("Filter: %sstate = %d\n" % (self.tableprefix(tablename), i))
+	if html.var("stp", defval) == "on":
+	    headers.append("Filter: has_been_checked = 1\n")
+	if len(headers) == 0:
+	    return "Limit: 0\n" # now allowed state
+	else:
+	    return "".join(headers) + ("Or: %d\n" % len(headers))
+
+declare_filter(FilterText("host", "Hostname", "hosts", "name", "host", "~~"))
+declare_filter(FilterText("service", "Service", "services", "description", "service", "~~"))
+declare_filter(FilterServiceState())
+
+##################################################################################
+# Layouts
+##################################################################################
+
+def render_ungrouped_list(data, filters, group_columns, group_painters, painters):
+    show_filter_form(filters)
     columns, rowfunction, rows = data
     html.write("<table class=services>\n")
     trclass = None
@@ -117,7 +219,8 @@ def render_ungrouped_list(data, group_columns, group_painters, painters):
 	html.write("</tr>\n")
     html.write("<table>\n")
 
-def render_grouped_list(data, group_columns, group_painters, painters):
+def render_grouped_list(data, filters, group_columns, group_painters, painters):
+    show_filter_form(filters)
     columns, rowfunction, rows = data
     html.write("<table class=services>\n")
     last_group = None
@@ -145,9 +248,6 @@ def render_grouped_list(data, group_columns, group_painters, painters):
 	html.write("</tr>\n")
     html.write("<table>\n")
 
-
-
-
 multisite_layouts["ungrouped_list"] = { 
     "render" : render_ungrouped_list,
 }
@@ -157,7 +257,9 @@ multisite_layouts["grouped_list"] = {
     "group" : True
 }
 
+##################################################################################
 # Painters
+##################################################################################
 def nagios_host_url(sitename, host):
     nagurl = check_mk.site(sitename)["nagios_cgi_url"]
     return nagurl + "/status.cgi?host=" + htmllib.urlencode(host)

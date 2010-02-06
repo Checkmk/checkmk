@@ -111,6 +111,7 @@ class html:
         self.current_form = name
         self.write("<form name=%s class=%s action=\"%s.py\" method=GET>\n" %
                    (name, name, self.req.myfile))
+	self.hidden_field("filled_in", "on")
 	self.hidden_fields(self.global_vars)
 
     def end_form(self):
@@ -131,7 +132,7 @@ class html:
             self.write("<input type=hidden name=%s value=\"%s\">\n" % (var, attrencode(value)))
 
     def hidden_fields(self, varlist = None):
-        if varlist:
+        if varlist != None:
             for var in varlist:
                 value = self.req.vars.get(var, "")
                 self.hidden_field(var, value)

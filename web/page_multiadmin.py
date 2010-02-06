@@ -347,9 +347,8 @@ def show_filter_form(html):
 
     for descr, field, operator, valuefunc in search_dropdown_fields:
          html.write("<tr><td class=legend>%s</td><td class=content>\n" % descr)
-	 current = html.var(field, "")
          options = [ ("", "(ignored)") ] + valuefunc() 
-	 html.select(field, options, current, "") 
+	 html.select(field, options, "") 
 	 html.write("</td></tr>\n")
 
     html.write("<tr><td class=legend>Current State</td>\n"
@@ -380,7 +379,7 @@ def show_filter_form(html):
     html.write("<table class=form id=displayoptions>\n")
     html.write("<tr><td class=legend>Sort order</td>\n"
                "<td class=content>")
-    html.select("sortorder", [ o[0:2] for o in sort_options ], html.var("sortorder"), "0")
+    html.select("sortorder", [ o[0:2] for o in sort_options ], "0")
     html.write("</td></tr>\n")
 
     html.write("</table>")
@@ -550,16 +549,10 @@ def do_actions(html, hits, hosts):
     command = None
     for hit in hits:
         title, nagios_commands = nagios_service_action_command(html, hit)
-        if not html.has_var("do_action_really"):
-            html.write("<div class=really>Do you really want to %s "
-                       "the following %d services?" % (title, len(hits)))
-            html.begin_form("confirm")
-            html.hidden_fields()
-            html.button("do_action_really", "Yes!", "really")
-            html.end_form()
-            html.write("</div>")
+        confirms = html.confirm("Do you really want to %s the following %d services?" % (title, len(hits)))
+        if not confirms:
             show_search_results(html, hits, hosts)
-            return
+	    return
         for command in nagios_commands:
             pipe.write(command)
             count += 1

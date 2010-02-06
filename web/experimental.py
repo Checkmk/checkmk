@@ -14,12 +14,13 @@ max_sort_columns      = 4
 
 
 def setup(h):
-    global html
+    global html, authuser
     html = h
+    authuser = html.req.user
 
     if check_mk.multiadmin_restrict and \
-	html.req.user not in check_mk.multiadmin_unrestricted_users:
-	    auth_user = html.req.user
+	authuser not in check_mk.multiadmin_unrestricted_users:
+	    auth_user = authuser
     else:
 	auth_user = None
 
@@ -61,11 +62,10 @@ def page_view(h):
     try:
         user, view_name = html.var("view_name").split("/")
 	view = multisite_views[(user, view_name)]
-    except 1:
+    except:
 	raise MKGeneralException("This view does not exist.")
 
     html.header(view["title"])
-    html.add_global_vars(["view_name"])
     show_view(view)
 
     html.footer()
@@ -73,16 +73,43 @@ def page_view(h):
 def page_edit_views(h):
     setup(h)
     html.header("Experimental: User defined views")
-    load_views(html.req.user)
+    load_views(authuser)
+
+    # Deletion of views
+    delname = html.var("delete")
+    if delname and html.confirm("Please confirm the deletion of the view <tt>%s</tt>" % delname):
+	del multisite_views[(authuser, delname)]
+	save_views(authuser)
+
+    # Cloning of views
+    clonename = html.var("clone")
+    if clonename:
+	newname = clonename + "_clone"
+	n = 1
+	while (authuser, newname) in multisite_views:
+	    n += 1
+	    newname = clonename + "_clone%d" % n
+	import copy
+	orig = multisite_views[(authuser, clonename)]
+	clone = copy.copy(orig)
+	clone["name"] = newname
+	clone["title"] = orig["title"] + " (Copy)" 
+	multisite_views[(authuser, newname)] = clone
+	save_views(authuser)
+		
     html.write("<table class=views>\n")
     html.write("<tr><th>Name</th><th>Title</th><th>Datasource</th><th></th></tr>\n")
-    for (user, viewname), view in multisite_views.items():
-	if user == html.req.user:
+    keys_sorted = multisite_views.keys()
+    keys_sorted.sort()
+    for (user, viewname) in keys_sorted:
+	view = multisite_views[(user, viewname)]
+	if user == authuser:
 	    html.write("<tr><td class=legend>%s</td>" % viewname)
 	    html.write("<td class=content><a href=\"view.py?view_name=%s/%s\">%s</a>" % (user, viewname, view["title"]))
 	    html.write("</td><td class=content>%s</td><td class=edit>\n" % view["datasource"])
 	    html.buttonlink("edit_view.py?load_view=%s" % viewname, "Edit")
-	    html.buttonlink("page_edit_views.py?delete_view=%s" % viewname, "Delete!")
+	    html.buttonlink("edit_views.py?clone=%s" % viewname, "Clone")
+	    html.buttonlink("edit_views.py?delete=%s" % viewname, "Delete!")
 	    html.write("</td></tr>")
     html.write("</table>\n")
     html.buttonlink("edit_view.py", "Create new view")
@@ -95,8 +122,8 @@ def page_edit_view(h):
     view = None
     viewname = html.var("load_view")
     if viewname:
-	load_views(html.req.user)
-	view = multisite_views.get((html.req.user, viewname), None)
+	load_views(authuser)
+	view = multisite_views.get((authuser, viewname), None)
 # html.write("view ist: <br><pre>%s</pre>" % (pprint.pformat(view),))
 	if view:
 	    load_view_into_html_vars(view)
@@ -105,9 +132,9 @@ def page_edit_view(h):
 	try:
 	    view = create_view()
 	    if html.var("save"):
-		load_views(html.req.user)
-		multisite_views[(html.req.user, view["name"])] = view
-		save_views(html.req.user)
+		load_views(authuser)
+		multisite_views[(authuser, view["name"])] = view
+		save_views(authuser)
 		html.write("Your view has been saved.")
 		html.footer()
 		return
@@ -183,7 +210,8 @@ def page_edit_view(h):
     
     if html.has_var("try") or html.has_var("filled_in"):
         html.set_var("filled_in", "on")
-	if view: show_view(view)
+	if view: 
+	    show_view(view)
 
     html.footer()
 
@@ -255,8 +283,7 @@ def create_view():
 	elif usage == "hard":
 	    hard_filternames.append(fname)
 	    for varname in filt.htmlvars:
-		if html.has_var(varname):
-		    hard_filtervars.append((varname, html.var(varname)))
+		hard_filtervars.append((varname, html.var(varname, "")))
 
     sorternames = []
     for n in range(1, max_sort_columns+1):
@@ -293,19 +320,36 @@ def create_view():
 
 
 def show_view(view):
+    # [1] Datasource
     datasource = multisite_datasources[view["datasource"]]
     tablename = datasource["table"]
-    filters = [ multisite_filters[fn] for fn in view["show_filters"] ]
-    filterheaders = "".join(f.filter(tablename) for f in filters)
+
+    # [2] Layout
+    layout = multisite_layouts[view["layout"]]
+    
+    # [3] Filters
+    show_filters = [ multisite_filters[fn] for fn in view["show_filters"] ]
+    hard_filter = [ multisite_filters[fn] for fn in view["hard_filters"] ]
+    for varname, value in view["hard_filtervars"]:
+	html.set_var(varname, value)
+    filterheaders = "".join(f.filter(tablename) for f in show_filters)
+    filterheaders += "".join(f.filter(tablename) for f in hard_filter)
     query = filterheaders + view.get("add_headers", "")
+    
+    # Fetch data
     data = query_data(datasource, query)
+
+    # [4] Sorting
     sorters = [ (multisite_sorters[sn], reverse) for sn, reverse in view["sorters"] ]
     sort_data(data[2], sorters, tablename)
-    painters = [ multisite_painters[n] for n in view["painters"] ]
-    layout = multisite_layouts[view["layout"]]
+
+    # [5] Grouping
     group_painters = [ multisite_painters[n] for n in view["group_painters"] ]
     group_columns = needed_group_columns(group_painters, tablename)
-    layout["render"](data, filters, group_columns, group_painters, painters)
+
+    # [6] Columns
+    painters = [ multisite_painters[n] for n in view["painters"] ]
+    layout["render"](data, show_filters, group_columns, group_painters, painters)
 
 def needed_group_columns(painters, tablename):
     columns = []
@@ -326,6 +370,7 @@ def needed_group_columns(painters, tablename):
 def show_filter_form(filters):
     if len(filters) > 0:
 	html.begin_form("filter")
+	html.hidden_fields()
 	html.write("<table class=form id=filter>\n")
 	for f in filters:
 	    html.write("<tr><td class=legend>%s</td>" % f.title)
@@ -494,6 +539,27 @@ class FilterText(Filter):
 	else:
 	    return ""
 
+# Helper that retrieves the list of host/service/contactgroups via Livestatus
+def all_groups(what):
+    groups = dict(live.query("GET %sgroups\nColumns: name alias\n" % what))
+    names = groups.keys()
+    names.sort()
+    return [ (name, groups[name]) for name in names ]
+
+class FilterHostgroupCombo(Filter):
+    def __init__(self):
+	Filter.__init__(self, "hostgroup", "Hostgroup-Combobox, obligatory",
+		"hosts", [ "host_groups" ], [ "hostgroup" ])
+
+    def display(self):
+	html.select("hostgroup", all_groups("host"))
+
+    def filter(self, tablename):
+	htmlvar = self.htmlvars[0]
+	current_value = html.var(htmlvar)
+	return "Filter: %sgroups >= %s\n" % (self.tableprefix(tablename), current_value)
+
+
 class FilterServiceState(Filter):
     def __init__(self):
 	Filter.__init__(self, "svcstate", "Service states", 
@@ -528,6 +594,7 @@ class FilterServiceState(Filter):
 declare_filter(FilterText("host", "Hostname", "hosts", "name", "host", "~~"))
 declare_filter(FilterText("service", "Service", "services", "description", "service", "~~"))
 declare_filter(FilterServiceState())
+declare_filter(FilterHostgroupCombo())
 
 ##################################################################################
 # Sorting
@@ -702,6 +769,14 @@ multisite_painters["host_with_state"] = {
     "paint" : lambda row: "<td class=hstate%d><a href=\"%s\">%s</a></td>" % \
 	(row("state"), nagios_host_url(row("site"), row("name")), row("name")),
 }
+
+multisite_painters["host"] = {
+    "title" : "Hostname with link to Nagios",
+    "table" : "hosts",
+    "columns" : ["name"],
+    "paint" : lambda row: "<td><a href=\"%s\">%s</a></td>" % (nagios_host_url(row("site"), row("host_name")), row("name"))
+}
+
 
 def paint_service_state_short(row):
     if row("has_been_checked") == 1:

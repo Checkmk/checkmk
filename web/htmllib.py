@@ -155,6 +155,9 @@ class html:
         self.write("<input type=submit name=\"%s\" id=\"%s\" value=\"%s\" class=\"%s\">\n" % \
                    ( varname, varname, title, cssclass))
 
+    def buttonlink(self, href, text):
+	self.write("<a href=\"%s\" class=button>%s</a>" % (href, text))
+
     def text_input(self, varname, default_value = ""):
         value = self.req.vars.get(varname, default_value)
         error = self.user_errors.get(varname)
@@ -164,7 +167,7 @@ class html:
         html += "<input type=text class=text value=\"%s\" name=\"%s\">" % (attrencode(value), varname)
         if error:
             html += "</x>"
-            self.set_focus(self. current_form, varname)
+            self.set_focus(self.current_form, varname)
         self.write(html)
 
     def select(self, varname, options, deflt=""):
@@ -244,6 +247,9 @@ class html:
     ''' % (title, title))
             self.req.header_sent = True
 
+    def show_error(self, msg):
+        self.write("<div class=error>%s</div>\n" % msg)
+
     def footer(self):
         if self.req.header_sent:
             if self.focus_object:
@@ -271,7 +277,6 @@ class html:
 
     def set_focus(self, formname, varname):
         self.focus_object = (formname, varname)
-
 
     def has_var(self, varname):
         return varname in self.req.vars

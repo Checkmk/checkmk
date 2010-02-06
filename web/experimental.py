@@ -1,11 +1,12 @@
-import check_mk, livestatus, htmllib, time
+import check_mk, livestatus, htmllib, time, os, re, pprint
 from lib import *
 
 multisite_datasources = {}
 multisite_filters     = {}
 multisite_layouts     = {}
 multisite_painters    = {}
-multisite_sorters = {}
+multisite_sorters     = {}
+multisite_views       = {}
 
 max_display_columns   = 10
 max_group_columns     = 3
@@ -24,24 +25,109 @@ def setup(h):
 
     connect_to_livestatus(html, auth_user)
 
-def page(h):
+multisite_config_dir = "/tmp"
+
+def load_views(user = None): # None => load all views
+    if user:
+	subdirs = [user]
+    else:
+	subdirs = os.listdir(multisite_config_dir)
+
+    for user in subdirs:
+	try:
+	    dirpath = multisite_config_dir + "/" + user
+	    if os.path.isdir(dirpath):
+	        f = file(dirpath + "/views.mk")
+		views = eval(f.read())
+		for name, view in views.items():
+		    multisite_views[(user, name)] = view
+	except:
+	     pass
+
+def save_views(us):
+    userviews = {}
+    for (user, name), view in multisite_views.items():
+	if us == user:
+	    userviews[name] = view
+    userdir = multisite_config_dir + "/" + user
+    if not os.path.exists(userdir):
+	os.mkdir(userdir)
+    file(userdir + "/views.mk", "w").write(pprint.pformat(userviews) + "\n")
+	    
+
+def page_view(h):
     setup(h)
-    html.header("Experimental")
-    # show_page("hosts", "ungrouped_list", [ "sitename_plain", "host_with_state" ])
-    show_page("services",  # data source
-	      [ "host", "service", "svcstate" ], # filters
-	      "grouped_list", # layout
-	      [ "site", "host_name" ], # grouping columns
-	      [ "site_icon", "host_black" ], # group painters
-	      [ "service_state", "service_description", "state_age", "plugin_output" ])
+    load_views()
+    try:
+        user, view_name = html.var("view_name").split("/")
+	view = multisite_views[(user, view_name)]
+    except 1:
+	raise MKGeneralException("This view does not exist.")
+
+    html.header(view["title"])
+    html.add_global_vars(["view_name"])
+    show_view(view)
 
     html.footer()
 
-def page_designer(h):
+def page_edit_views(h):
     setup(h)
+    html.header("Experimental: User defined views")
+    load_views(html.req.user)
+    html.write("<table class=views>\n")
+    html.write("<tr><th>Name</th><th>Title</th><th>Datasource</th><th></th></tr>\n")
+    for (user, viewname), view in multisite_views.items():
+	if user == html.req.user:
+	    html.write("<tr><td class=legend>%s</td>" % viewname)
+	    html.write("<td class=content><a href=\"view.py?view_name=%s/%s\">%s</a>" % (user, viewname, view["title"]))
+	    html.write("</td><td class=content>%s</td><td class=edit>\n" % view["datasource"])
+	    html.buttonlink("edit_view.py?load_view=%s" % viewname, "Edit")
+	    html.buttonlink("page_edit_views.py?delete_view=%s" % viewname, "Delete!")
+	    html.write("</td></tr>")
+    html.write("</table>\n")
+    html.buttonlink("edit_view.py", "Create new view")
+    html.footer()
+
+def page_edit_view(h):
+    setup(h)
+    html.buttonlink("edit_views.py", "Back to list of views")
+
+    view = None
+    viewname = html.var("load_view")
+    if viewname:
+	load_views(html.req.user)
+	view = multisite_views.get((html.req.user, viewname), None)
+# html.write("view ist: <br><pre>%s</pre>" % (pprint.pformat(view),))
+	if view:
+	    load_view_into_html_vars(view)
+
+    if html.var("save") or html.var("try") or html.var("filled_in"):
+	try:
+	    view = create_view()
+	    if html.var("save"):
+		load_views(html.req.user)
+		multisite_views[(html.req.user, view["name"])] = view
+		save_views(html.req.user)
+		html.write("Your view has been saved.")
+		html.footer()
+		return
+
+	except MKUserError, e:
+	    html.write("<div class=error>%s</div>\n" % e.message)
+	    html.add_user_error(e.varname, e.message)
+
     html.header("Experimental: View designer")
     html.begin_form("view")
     html.write("<table class=view>\n")
+
+    html.write("<tr><td class=legend>Shortname for linking</td><td class=content>")
+    html.text_input("view_name")
+    html.write("</td></tr>\n")
+
+    html.write("<tr><td class=legend>Title</td><td class=content>")
+    html.text_input("view_title")
+    html.write("</td></tr>\n")
+
     def show_list(name, title, data):
 	html.write("<tr><td class=legend>%s</td>" % title)
 	html.write("<td class=content>")
@@ -88,27 +174,89 @@ def page_designer(h):
     # [6] Columns (painters)	
     column_selection("6. Display columns", "col_", max_display_columns, multisite_painters)
 
-
     html.write("<tr><td colspan=2>")
-    html.button("show", "Try out")
+    html.button("try", "Try out")
+    html.write(" ")
+    html.button("save", "Save")
     html.write("</table>\n")
+    html.end_form()
+    
+    if html.has_var("try") or html.has_var("filled_in"):
+        html.set_var("filled_in", "on")
+	if view: show_view(view)
 
-    if html.has_var("show") or html.has_var("filled_in"):
-	preview_view()
+    html.footer()
 
-def preview_view():
+def load_view_into_html_vars(view):
+    # view is well formed, not checks neccessary
+    html.set_var("view_title", view["title"])
+    html.set_var("view_name",  view["name"])
+    html.set_var("datasource", view["datasource"])
+    html.set_var("layout",     view["layout"])
+
+    # [3] Filters
+    for name, filt in multisite_filters.items():
+	if name in view["show_filters"]:
+	    html.set_var("filter_%s" % name, "show")
+	elif name in view["hard_filters"]:
+	    html.set_var("filter_%s" % name, "hard")
+    for varname, value in view["hard_filtervars"]:
+	html.set_var(varname, value)
+
+    # [4] Sorting
+    n = 1
+    for name, desc in view["sorters"]:
+	html.set_var("sort_%d" % n, name)
+	if desc:
+	    value = "dsc"
+	else:
+	    value = "asc"
+	html.set_var("sort_order_%d" % n, value)
+	n +=1
+
+    # [5] Grouping
+    n = 1
+    for name in view["group_painters"]:
+	html.set_var("group_%d" % n, name)
+	n += 1
+
+    # [6] Columns
+    n = 1
+    for name in view["painters"]:
+	html.set_var("col_%d" % n, name)
+	n += 1
+
+    # Make sure, checkboxes with default "on" do no set "on". Otherwise they
+    # would always be on
+    html.set_var("filled_in", "on")
+
+def create_view():
+    name = html.var("view_name").strip()
+    if name == "":
+	raise MKUserError("view_name", "Please supply a unique name for the view, this will be used to specify that view in HTTP links.")
+    if not re.match("^[a-zA-Z0-9_]+$", name):
+	raise MKUserError("view_name", "The name of the view may only contain letters, digits and underscores.")
+    title = html.var("view_title").strip()
+    if title == "":
+	raise MKUserError("view_title", "Please specify a title for your view")
+
     datasourcename = html.var("datasource")
     datasource = multisite_datasources[datasourcename]
     tablename = datasource["table"]
     layoutname = html.var("layout")
-    filternames = []
-    add_headers = ""
+    show_filternames = []
+    hard_filternames = []
+    hard_filtervars = []
+
     for fname, filt in multisite_filters.items():
 	usage = html.var("filter_%s" % fname)
 	if usage == "show":
-	    filternames.append(fname)
+	    show_filternames.append(fname)
 	elif usage == "hard":
-	    add_headers += filt.filter(tablename)
+	    hard_filternames.append(fname)
+	    for varname in filt.htmlvars:
+		if html.has_var(varname):
+		    hard_filtervars.append((varname, html.var(varname)))
 
     sorternames = []
     for n in range(1, max_sort_columns+1):
@@ -128,23 +276,34 @@ def preview_view():
 	pname = html.var("col_%d" % n)
 	if pname:
 	    painternames.append(pname)
-   
-    html.set_var("filled_in", "on") 
-    show_page(datasourcename, add_headers, filternames, layoutname, group_painternames, painternames, sorternames)
+  
+    return { 
+	"name"            : name,
+	"title"           : title,
+	"datasource"      : datasourcename,
+	"layout"          : layoutname,
+	"show_filters"    : show_filternames,
+	"hard_filters"    : hard_filternames,
+	"hard_filtervars" : hard_filtervars,
+	"sorters"         : sorternames,
+	"group_painters"  : group_painternames,
+	"painters"        : painternames
+    }
 
 
-def show_page(datasourcename, add_headers, filternames, layoutname, group_painternames, painternames, sorternames):
-    datasource = multisite_datasources[datasourcename]
+
+def show_view(view):
+    datasource = multisite_datasources[view["datasource"]]
     tablename = datasource["table"]
-    filters = [ multisite_filters[fn] for fn in filternames ]
+    filters = [ multisite_filters[fn] for fn in view["show_filters"] ]
     filterheaders = "".join(f.filter(tablename) for f in filters)
-    query = filterheaders + add_headers
+    query = filterheaders + view.get("add_headers", "")
     data = query_data(datasource, query)
-    sorters = [ (multisite_sorters[sn], reverse) for sn, reverse in sorternames ]
+    sorters = [ (multisite_sorters[sn], reverse) for sn, reverse in view["sorters"] ]
     sort_data(data[2], sorters, tablename)
-    painters = [ multisite_painters[n] for n in painternames ]
-    layout = multisite_layouts[layoutname]
-    group_painters = [ multisite_painters[n] for n in group_painternames ]
+    painters = [ multisite_painters[n] for n in view["painters"] ]
+    layout = multisite_layouts[view["layout"]]
+    group_painters = [ multisite_painters[n] for n in view["group_painters"] ]
     group_columns = needed_group_columns(group_painters, tablename)
     layout["render"](data, filters, group_columns, group_painters, painters)
 

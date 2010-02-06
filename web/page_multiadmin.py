@@ -195,7 +195,7 @@ def page(html):
             try:
                 do_actions(html, hits, hosts)
             except MKUserError, e:
-                html.write("<div class=error>%s</div>\n" % e.message)
+		html.show_error(e.message)
                 html.add_user_error(e.varname, e.message)
                 
         if not html.has_var("_do_actions") or html.has_users_errors():
@@ -541,10 +541,9 @@ def show_search_results(html, services, hosts):
 
 def do_actions(html, hits, hosts):
     if not check_mk.is_allowed_to_act(html.req.user):
-       html.write("<div class=error>"
-	     "You are not allowed to perform actions. If you think this is an error, "
+       html.show_error("You are not allowed to perform actions. If you think this is an error, "
              "please ask your administrator to add your login to <tt>multiadmin_action_users</tt> "
-	     "in <tt>main.mk</tt></div>")
+	     "in <tt>main.mk</tt>")
        return
     count = 0
     pipe = file(html.req.defaults["nagios_command_pipe_path"], "w")

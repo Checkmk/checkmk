@@ -563,3 +563,45 @@ table.view table.filters {
 table.view table.filters td {
     background-color: #fff;
 }
+
+table.views {
+    border-collapse: collapse;
+    empty-cells: show;
+    margin-bottom: 1ex;
+}
+
+table.views td, table.views th{
+    border: 1px solid #444;
+    padding: 2px 1ex;
+}
+
+table.views th {
+    background-color: #5b8;
+    color: white;
+}
+
+table.views td.legend {
+    background-color: #7ca;
+}
+
+table.views td.content {
+    background-color: #8ec;
+}
+
+table.views td.edit {
+    background-color: #6ab;
+    text-align: center;
+}
+
+a.button {
+    background-color: #cca;
+    color: #000;
+    text-decoration: none;
+    font-weight: normal;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #ddd #888 #333 #ddd;
+    padding: 0.1ex 1ex;
+    height: 24px;
+    -moz-border-radius: 4px;
+}

@@ -90,10 +90,10 @@ def handler(req):
                 login_text = "not logged in"
 
             html.write("<h1 class=error>You are not authorized</h1>\n")
-            html.write("<div class=error>Sorry. You are %s and not "
+	    html.show_error("You are %s and not "
                        "authorized to use check_mk's web pages. If you think this is an error, "
                        "please ask your administrator to add your login into the list "
-                       " <tt>main.mk:multiadmin_users</tt>.</div>"% login_text)
+                       " <tt>main.mk:multiadmin_users</tt>"% login_text)
             html.footer()
         else:
             import page_multiadmin
@@ -103,8 +103,9 @@ def handler(req):
             pagehandlers = { "index"        : page_index,
                              "filter"       : page_multiadmin.page,
 			     "siteoverview" : page_multiadmin.page_siteoverview,
-			     "experimental" : experimental.page,
-			     "viewdesigner" : experimental.page_designer,
+			     "edit_views"   : experimental.page_edit_views,
+			     "edit_view"    : experimental.page_edit_view,
+			     "view"         : experimental.page_view,
                              "logwatch"     : page_logwatch.page, }
 
             handler = pagehandlers.get(req.myfile, page_index)
@@ -113,20 +114,20 @@ def handler(req):
     except MKUserError, e:
         html.header("Invalid User Input")
         html.write("<h1 class=error>Invalid User Input</h1>\n")
-        html.write("<div class=error>%s</div>" % e)
+        html.show_error(e)
         html.footer()
 
     except MKConfigError, e:
         html.header("Configuration Error")
         html.write("<h1 class=error>Configuration Error</h1>\n")
-        html.write("<div class=error>%s</div>" % e)
+        html.show_error(e)
         html.footer()
         apache.log_error("Configuration error: %s" % (e,), apache.APLOG_ERR)
 
     except 1: #Exception, e:
         html.header("Internal Error")
         html.write("<h1 class=error>Internal error</h1>")
-        html.write("<div class=error>Internal error: %s</div>" % e)
+        html.show_error("Internal error: %s" % e)
         html.footer()
         apache.log_error("Internal error: %s" % (e,), apache.APLOG_ERR)
 
@@ -141,7 +142,7 @@ def page_index(html):
 <li><a href="http://mathias-kettner.de/check_mk.html">Homepage of Check_mk</a></li>
 <li><a href="filter.py">Filter and Actions</a></li>
 <li><a href="experimental.py">Experimental pages</a></li>
-<li><a href="viewdesigner.py">Experimental view designer</a></li>
+<li><a href="edit_views.py">Experimental: Edit user views</a></li>
 <li><a href="logwatch.py">Logwatch</a></li>
 </ul>
 ''')

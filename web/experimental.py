@@ -69,15 +69,18 @@ def page_designer(h):
     html.write("</table></td></tr>\n")
    
     # [4] Sorting
-    def column_selection(title, var_prefix, maxnum, data):
+    def column_selection(title, var_prefix, maxnum, data, order=False):
 	html.write("<tr><td class=legend>%s</td><td class=content>" % title)
 	for n in range(1, maxnum+1):
 	    collist = [ ("", "") ] + [ (name, p["title"]) for name, p in data.items() ]
 	    html.write("%02d " % n)
 	    html.select("%s%d" % (var_prefix, n), collist)
+	    if order:
+		html.write(" ")
+		html.select("%sorder_%d" % (var_prefix, n), [("asc", "Ascending"), ("dsc", "Descending")])
 	    html.write("<br />")
 	html.write("</td></tr>\n")
-    column_selection("Sorting", "sort_", max_sort_columns, multisite_sorters)
+    column_selection("Sorting", "sort_", max_sort_columns, multisite_sorters, True)
 
     # [5] Grouping
     column_selection("Group columns", "group_", max_group_columns, multisite_painters)
@@ -111,7 +114,8 @@ def preview_view():
     for n in range(1, max_sort_columns+1):
 	sname = html.var("sort_%d" % n)
 	if sname:
-	    sorternames.append(sname)
+	    reverse = html.var("sort_order_%d" % n) == "dsc"
+	    sorternames.append((sname, reverse))
 
     group_painternames = [] 
     for n in range(1, max_group_columns+1):
@@ -136,7 +140,7 @@ def show_page(datasourcename, add_headers, filternames, layoutname, group_painte
     filterheaders = "".join(f.filter(tablename) for f in filters)
     query = filterheaders + add_headers
     data = query_data(datasource, query)
-    sorters = [ multisite_sorters[sn] for sn in sorternames ]
+    sorters = [ (multisite_sorters[sn], reverse) for sn, reverse in sorternames ]
     sort_data(data[2], sorters, tablename)
     painters = [ multisite_painters[n] for n in painternames ]
     layout = multisite_layouts[layoutname]
@@ -205,26 +209,41 @@ def sort_data(data, sorters, tablename):
     # comparing to elements of data. The sorter functions do
     # not expect a row array but a rowfunction for each of the
     # the elements
+    sort_cmps = []
 
-    def cmp_after(x, y): # combines two sort functions
-	if x: return x
-	else: return y
+    # convert compare function that gets to functions row() into
+    # compare function that gets to row-dictionaries. Also take
+    # reverse sorting into account
+    def make_compfunc(rowfunc, compfunc, reverse):
+        if reverse:	
+	    return lambda dict2, dict1: compfunc(lambda k: rowfunc(dict1, k), lambda k: rowfunc(dict2, k))
+	else:
+	    return lambda dict1, dict2: compfunc(lambda k: rowfunc(dict1, k), lambda k: rowfunc(dict2, k))
 
-    sort_cmp = None
-    for s in sorters:
+    for s, reverse in sorters:
         tn = s.get("table", tablename)
 	if tn == tablename:
 	    rowfunc = lambda a, b: a[b]
 	else:
 	    prefix = tn[:-1] + "_"
 	    rowfunc = lambda a, b: a[prefix + b]
-	cmp = lambda dict1, dict2: s["cmp"](lambda k: rowfunc(dict1, k), lambda k: rowfunc(dict2, k))
-	if sort_cmp == None:
-	    sort_cmp = cmp
-	else:
-	    sort_cmp = cmp_after(sort_cmp, cmp)
 
-    data.sort(sort_cmp)
+	compfunc = s["cmp"]
+	cmp = make_compfunc(rowfunc, compfunc, reverse)
+	sort_cmps.append(cmp)
+
+    compfunc = None
+
+    def multisort(e1, e2):
+	for cmp in sort_cmps:
+	    c = cmp(e1, e2)
+	    if c != 0: return c
+	return 0 # equal
+
+    if len(sort_cmps) > 1:
+	data.sort(multisort)
+    else:
+	data.sort(sort_cmps[0])
     
      
 def connect_to_livestatus(html, auth_user = None):
@@ -375,7 +394,12 @@ def cmp_state_equiv(r):
 
 def cmp_svc_states(r1, r2):
     return cmp_atoms(cmp_state_equiv(r1), cmp_state_equiv(r2))
+   
+def cmp_simple_string(column, r1, r2):
+    return cmp_atoms(r1(column).lower(), r2(column).lower())
     
+def cmp_simple_number(column, r1, r2):
+    return cmp_atoms(r1(column), r2(column))
     
 multisite_sorters["svcstate"] = {
     "title"   : "Service state",
@@ -384,8 +408,17 @@ multisite_sorters["svcstate"] = {
     "cmp"     : cmp_svc_states
 }
 
+def declare_simple_sorter(name, title, table, column, func):
+    multisite_sorters[name] = {
+	"title"   : title,
+	"table"   : table,
+	"columns" : [ column ],
+        "cmp"     : lambda r1, r2: func(column, r1, r2)
+    }
 
-
+declare_simple_sorter("host",      "Hostname",              "hosts",    "name",          cmp_simple_string)
+declare_simple_sorter("svcdescr",  "Service description",   "services", "description",   cmp_simple_string)
+declare_simple_sorter("svcoutput", "Service plugin output", "services", "plugin_output", cmp_simple_string)
 
 ##################################################################################
 # Layouts

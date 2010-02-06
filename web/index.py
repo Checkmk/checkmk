@@ -104,6 +104,7 @@ def handler(req):
                              "filter"       : page_multiadmin.page,
 			     "siteoverview" : page_multiadmin.page_siteoverview,
 			     "experimental" : experimental.page,
+			     "viewdesigner" : experimental.page_designer,
                              "logwatch"     : page_logwatch.page, }
 
             handler = pagehandlers.get(req.myfile, page_index)
@@ -139,6 +140,8 @@ def page_index(html):
 <ul>
 <li><a href="http://mathias-kettner.de/check_mk.html">Homepage of Check_mk</a></li>
 <li><a href="filter.py">Filter and Actions</a></li>
+<li><a href="experimental.py">Experimental pages</a></li>
+<li><a href="viewdesigner.py">Experimental view designer</a></li>
 <li><a href="logwatch.py">Logwatch</a></li>
 </ul>
 ''')

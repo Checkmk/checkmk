@@ -538,3 +538,26 @@ div#logwatch a.tabactive {
   padding-bottom: 6px;
   border-bottom-style: none;
 }
+
+/* view editor */
+table.view {
+    width: 100%;
+    border-collapse: collapse;
+    empty-cells: show;
+    background-color: #ffc;
+}
+table.view td {
+   border: 1px solid #884;
+   padding: 2px 0.5ex;
+}
+table.view td.legend {
+    vertical-align: top;
+}
+table.view table.filters {
+    border-collapse: collapse;
+    empty-cells: show;
+    margin-bottom: 3px;
+}
+table.view table.filters td {
+    background-color: #fff;
+}

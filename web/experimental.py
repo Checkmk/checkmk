@@ -5,12 +5,13 @@ multisite_datasources = {}
 multisite_filters     = {}
 multisite_layouts     = {}
 multisite_painters    = {}
+max_display_columns  = 10
 
-def page(h):
+
+def setup(h):
     global html
     html = h
 
-    html.header("Experimental")
     if check_mk.multiadmin_restrict and \
 	html.req.user not in check_mk.multiadmin_unrestricted_users:
 	    auth_user = html.req.user
@@ -19,6 +20,9 @@ def page(h):
 
     connect_to_livestatus(html, auth_user)
 
+def page(h):
+    setup(h)
+    html.header("Experimental")
     # show_page("hosts", "ungrouped_list", [ "sitename_plain", "host_with_state" ])
     show_page("services",  # data source
 	      [ "host", "service", "svcstate" ], # filters
@@ -29,30 +33,109 @@ def page(h):
 
     html.footer()
 
-def show_page(datasourcename, filternames, layoutname, group_columns, group_painternames, painternames):
+def page_designer(h):
+    setup(h)
+    html.header("Experimental: View designer")
+    html.begin_form("view")
+    html.write("<table class=view>\n")
+    def show_list(name, title, data):
+	html.write("<tr><td class=legend>%s</td>" % title)
+	html.write("<td class=content>")
+	html.select(name, [ (k, v["title"]) for k,v in data.items() ])
+	html.write("</td></tr>\n")
+
+    # [1] Datasource
+    show_list("datasource", "Datasource", multisite_datasources)
+    
+    # [2] Layout
+    show_list("layout", "Layout", multisite_layouts)
+  
+    # [3] Filters 
+    html.write("<tr><td class=legend>Filters</td><td>")
+    html.write("<table class=filters>")
+    html.write("<tr><th>Filter</th><th>usage</th><th>hardcoded settings</th></tr>\n")
+    for fname, filt in multisite_filters.items():
+	html.write("<tr>")
+	html.write("<td>%s</td>" % filt.title)
+	html.write("<td>")
+	html.select("filter_%s" % fname, [("off", "Don't use"), ("show", "Show to user"), ("hard", "Hardcode")])
+	html.write("</td><td>")
+	filt.display()
+	html.write("</td></tr>\n")
+    html.write("</table></td></tr>\n")
+   
+    # [4] Sorting
+
+    # [5] Grouping
+
+    # [6] Columns (painters)	
+    html.write("<tr><td class=legend>Columns</td><td class=content>")
+    for n in range(1, max_display_columns+1):
+	collist = [ ("", "") ] + [ (name, p["title"]) for name, p in multisite_painters.items() ]
+	html.write("%02d " % n)
+	html.select("col_%d" % n, collist)
+	html.write("<br />")
+    html.write("</td></tr>\n")
+    html.write("<tr><td colspan=2>")
+    html.button("show", "Try out")
+    html.write("</table>\n")
+    html.heading("Sorting &amp; Grouping")
+
+    html.heading("Display columns")
+
+    if html.var("show"):
+	html.write("Zeige")
+	preview_view()
+
+def preview_view():
+    datasourcename = html.var("datasource")
+    datasource = multisite_datasources[datasourcename]
+    tablename = datasource["table"]
+    layoutname = html.var("layout")
+    filternames = []
+    add_headers = ""
+    for fname, filt in multisite_filters.items():
+	usage = html.var("filter_%s" % fname)
+	if usage == "show":
+	    filternames.append(fname)
+	elif usage == "hard":
+	    add_headers += filt.filter(tablename)
+    
+    painternames = []
+    for n in range(1, max_display_columns+1):
+	pname = html.var("col_%d" % n)
+	if pname:
+	    painternames.append(pname)
+   
+    html.set_var("filled_in", "on") 
+    show_page(datasourcename, add_headers, filternames, layoutname, [], [], painternames) 
+
+
+def show_page(datasourcename, add_headers, filternames, layoutname, group_columns, group_painternames, painternames):
     datasource = multisite_datasources[datasourcename]
     filters = [ multisite_filters[fn] for fn in filternames ]
     filterheaders = "".join(f.filter(datasource["table"]) for f in filters)
-    html.write("<pre>%s</pre>" % filterheaders)
-    data = query_data(datasource, filterheaders)
+    query = filterheaders + add_headers
+    data = query_data(datasource, query)
     painters = [ multisite_painters[n] for n in painternames ]
     layout = multisite_layouts[layoutname]
     group_painters = [ multisite_painters[n] for n in group_painternames ]
     layout["render"](data, filters, group_columns, group_painters, painters)
 
 def show_filter_form(filters):
-    html.begin_form("filter")
-    html.write("<table class=form id=filter>\n")
-    for f in filters:
-	html.write("<tr><td class=legend>%s</td>" % f.title)
-	html.write("<td class=content>")
-	f.display()
+    if len(filters) > 0:
+	html.begin_form("filter")
+	html.write("<table class=form id=filter>\n")
+	for f in filters:
+	    html.write("<tr><td class=legend>%s</td>" % f.title)
+	    html.write("<td class=content>")
+	    f.display()
+	    html.write("</td></tr>\n")
+	html.write("<tr><td class=legend></td><td class=content>")
+	html.button("search", "Search", "submit")
 	html.write("</td></tr>\n")
-    html.write("<tr><td class=legend></td><td class=content>")
-    html.button("search", "Search", "submit")
-    html.write("</td></tr>\n")
-    html.write("</table>\n")
-    html.end_form()
+	html.write("</table>\n")
+	html.end_form()
 
 def query_data(datasource, add_headers):
     tablename = datasource["table"]
@@ -105,11 +188,13 @@ def connect_to_livestatus(html, auth_user = None):
 ##################################################################################
 
 multisite_datasources["hosts"] = {
+    "title"   : "All hosts",
     "table"   : "hosts",
     "columns" : ["name", "state"],
 }
 
 multisite_datasources["services"] = {
+    "title"   : "All services",
     "table"   : "services",
     "columns" : ["description", "plugin_output", "state", "has_been_checked", 
                  "host_name", "host_state", "last_state_change" ],
@@ -251,10 +336,12 @@ def render_grouped_list(data, filters, group_columns, group_painters, painters):
     html.write("<table>\n")
 
 multisite_layouts["ungrouped_list"] = { 
+    "title"  : "Ungrouped list",
     "render" : render_ungrouped_list,
 }
 
 multisite_layouts["grouped_list"] = { 
+    "title"  : "Grouped list",
     "render" : render_grouped_list,
     "group" : True
 }
@@ -292,6 +379,7 @@ def paint_site_icon(row):
 	
 
 multisite_painters["sitename_plain"] = {
+    "title" : "The id of the site",
     "paint" : lambda row: "<td>%s</td>" % row("site"),
 }
 
@@ -305,11 +393,13 @@ def paint_host_black(row):
 	(style, nagios_host_url(row("site"), row("name")), row("name"))
 
 multisite_painters["host_black"] = {
+    "title" : "Hostname, red background if down or unreachable",
     "table" : "hosts",
     "paint" : paint_host_black,
 }
 
 multisite_painters["host_with_state"] = {
+    "title" : "Hostname colored with state",
     "table" : "hosts",
     "paint" : lambda row: "<td class=hstate%d><a href=\"%s\">%s</a></td>" % \
 	(row("state"), nagios_host_url(row("site"), row("name")), row("name")),
@@ -325,18 +415,22 @@ def paint_service_state_short(row):
     return "<td class=state%s>%s</td>" % (state, name)
 
 multisite_painters["service_state"] = {
+    "title" : "The service state, colored and short (4 letters)",
     "paint" : paint_service_state_short
 }
 
 multisite_painters["site_icon"] = {
+    "title" : "Icon showing the site",
     "paint" : paint_site_icon
 }
 
 multisite_painters["plugin_output"] = {
+    "title" : "Output of check plugin",
     "paint" : lambda row: paint_plain(row("plugin_output"))
 }
     
 multisite_painters["service_description"] = {
+    "title" : "Service description",
     "paint" : lambda row: "<td><a href=\"%s\">%s</a></td>" % (nagios_service_url(row("site"), row("host_name"), row("description")), row("description"))
 }
 

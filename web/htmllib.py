@@ -91,6 +91,9 @@ class html:
     def write(self, text):
         self.req.write(text)
 
+    def heading(self, text):
+	self.write("<h2>%s</h2>\n" % text)
+
     def age_text(self, timedif):
         timedif = int(timedif)
         if timedif < 120:
@@ -148,7 +151,7 @@ class html:
 	vars = [ (v, self.var(v)) for v in self.req.vars if not v.startswith("_") ]
         return self.req.myfile + ".py?" + urlencode_vars(vars + addvars)
 
-    def button(self, varname, title, cssclass):
+    def button(self, varname, title, cssclass=""):
         self.write("<input type=submit name=\"%s\" id=\"%s\" value=\"%s\" class=\"%s\">\n" % \
                    ( varname, varname, title, cssclass))
 
@@ -164,9 +167,8 @@ class html:
             self.set_focus(self. current_form, varname)
         self.write(html)
 
-    def select(self, varname, options, current, deflt):
-        if not current or current == "":
-            current = deflt;
+    def select(self, varname, options, deflt=""):
+	current = self.var(varname, deflt)
         self.write("<select name=\"%s\" size=\"1\">\n" % varname)
         for value, text in options:
             if value == current:
@@ -276,3 +278,6 @@ class html:
     
     def var(self, varname, deflt = None):
         return self.req.vars.get(varname, deflt)
+
+    def set_var(self, varname, value):
+	self.req.vars[varname] = value

@@ -5,7 +5,11 @@ multisite_datasources = {}
 multisite_filters     = {}
 multisite_layouts     = {}
 multisite_painters    = {}
-max_display_columns  = 10
+multisite_sorters = {}
+
+max_display_columns   = 10
+max_group_columns     = 3
+max_sort_columns      = 4
 
 
 def setup(h):
@@ -65,26 +69,28 @@ def page_designer(h):
     html.write("</table></td></tr>\n")
    
     # [4] Sorting
+    def column_selection(title, var_prefix, maxnum, data):
+	html.write("<tr><td class=legend>%s</td><td class=content>" % title)
+	for n in range(1, maxnum+1):
+	    collist = [ ("", "") ] + [ (name, p["title"]) for name, p in data.items() ]
+	    html.write("%02d " % n)
+	    html.select("%s%d" % (var_prefix, n), collist)
+	    html.write("<br />")
+	html.write("</td></tr>\n")
+    column_selection("Sorting", "sort_", max_sort_columns, multisite_sorters)
 
     # [5] Grouping
+    column_selection("Group columns", "group_", max_group_columns, multisite_painters)
 
     # [6] Columns (painters)	
-    html.write("<tr><td class=legend>Columns</td><td class=content>")
-    for n in range(1, max_display_columns+1):
-	collist = [ ("", "") ] + [ (name, p["title"]) for name, p in multisite_painters.items() ]
-	html.write("%02d " % n)
-	html.select("col_%d" % n, collist)
-	html.write("<br />")
-    html.write("</td></tr>\n")
+    column_selection("Display columns", "col_", max_display_columns, multisite_painters)
+
+
     html.write("<tr><td colspan=2>")
     html.button("show", "Try out")
     html.write("</table>\n")
-    html.heading("Sorting &amp; Grouping")
-
-    html.heading("Display columns")
 
     if html.var("show"):
-	html.write("Zeige")
 	preview_view()
 
 def preview_view():
@@ -100,7 +106,19 @@ def preview_view():
 	    filternames.append(fname)
 	elif usage == "hard":
 	    add_headers += filt.filter(tablename)
-    
+
+    sorternames = []
+    for n in range(1, max_sort_columns+1):
+	sname = html.var("sort_%d" % n)
+	if sname:
+	    sorternames.append(sname)
+
+    group_painternames = [] 
+    for n in range(1, max_group_columns+1):
+	pname = html.var("group_%d" % n)
+	if pname:
+	    group_painternames.append(pname)
+
     painternames = []
     for n in range(1, max_display_columns+1):
 	pname = html.var("col_%d" % n)
@@ -108,19 +126,39 @@ def preview_view():
 	    painternames.append(pname)
    
     html.set_var("filled_in", "on") 
-    show_page(datasourcename, add_headers, filternames, layoutname, [], [], painternames) 
+    show_page(datasourcename, add_headers, filternames, layoutname, group_painternames, painternames, sorternames)
 
 
-def show_page(datasourcename, add_headers, filternames, layoutname, group_columns, group_painternames, painternames):
+def show_page(datasourcename, add_headers, filternames, layoutname, group_painternames, painternames, sorternames):
     datasource = multisite_datasources[datasourcename]
+    tablename = datasource["table"]
     filters = [ multisite_filters[fn] for fn in filternames ]
-    filterheaders = "".join(f.filter(datasource["table"]) for f in filters)
+    filterheaders = "".join(f.filter(tablename) for f in filters)
     query = filterheaders + add_headers
     data = query_data(datasource, query)
+    sorters = [ multisite_sorters[sn] for sn in sorternames ]
+    sort_data(data[2], sorters, tablename)
     painters = [ multisite_painters[n] for n in painternames ]
     layout = multisite_layouts[layoutname]
     group_painters = [ multisite_painters[n] for n in group_painternames ]
+    group_columns = needed_group_columns(group_painters, tablename)
     layout["render"](data, filters, group_columns, group_painters, painters)
+
+def needed_group_columns(painters, tablename):
+    columns = []
+    for p in painters:
+	t = p.get("table", tablename)
+	if tablename != t:
+	    prefix = p["table"][:-1] + "_"
+	else:
+	    prefix = ""
+	for c in p["columns"]:
+	    if c != "site":
+		c = prefix + c
+	    if c not in columns:
+		columns.append(c)
+    return columns
+
 
 def show_filter_form(filters):
     if len(filters) > 0:
@@ -158,6 +196,35 @@ def query_data(datasource, add_headers):
 	    return lambda x: row.get(paintertable[:-1] + "_" + x, row.get(x))
 
     return (["site"] + columns, rowfunction, assoc)
+
+def sort_data(data, sorters, tablename):
+    if len(sorters) == 0:
+	return
+    
+    # Construct sort function. It must return -1, 0 or +1 when
+    # comparing to elements of data. The sorter functions do
+    # not expect a row array but a rowfunction for each of the
+    # the elements
+
+    def cmp_after(x, y): # combines two sort functions
+	if x: return x
+	else: return y
+
+    sort_cmp = None
+    for s in sorters:
+        tn = s.get("table", tablename)
+	if tn == tablename:
+	    rowfunc = lambda a, b: a[b]
+	else:
+	    prefix = tn[:-1] + "_"
+	    rowfunc = lambda a, b: a[prefix + b]
+	cmp = lambda dict1, dict2: s["cmp"](lambda k: rowfunc(dict1, k), lambda k: rowfunc(dict2, k))
+	if sort_cmp == None:
+	    sort_cmp = cmp
+	else:
+	    sort_cmp = cmp_after(sort_cmp, cmp)
+
+    data.sort(sort_cmp)
     
      
 def connect_to_livestatus(html, auth_user = None):
@@ -285,6 +352,42 @@ declare_filter(FilterText("service", "Service", "services", "description", "serv
 declare_filter(FilterServiceState())
 
 ##################################################################################
+# Sorting
+##################################################################################
+
+# return -1, if r1 < r2, 0 if they are equal, 1 otherwise
+def cmp_atoms(s1, s2):
+    if s1 < s2:
+        return -1
+    elif s1 == s2:
+        return 0
+    else:
+        return 1
+
+def cmp_state_equiv(r):
+    if r("has_been_checked") == 0:
+	return -1
+    s = r("state")
+    if s <= 1:
+	return s
+    else:
+	return 5 - s # swap crit and unknown
+
+def cmp_svc_states(r1, r2):
+    return cmp_atoms(cmp_state_equiv(r1), cmp_state_equiv(r2))
+    
+    
+multisite_sorters["svcstate"] = {
+    "title"   : "Service state",
+    "table"   : "services",
+    "columns" : ["state", "has_been_checked"],
+    "cmp"     : cmp_svc_states
+}
+
+
+
+
+##################################################################################
 # Layouts
 ##################################################################################
 
@@ -380,6 +483,7 @@ def paint_site_icon(row):
 
 multisite_painters["sitename_plain"] = {
     "title" : "The id of the site",
+    "columns" : ["site"],
     "paint" : lambda row: "<td>%s</td>" % row("site"),
 }
 
@@ -394,12 +498,14 @@ def paint_host_black(row):
 
 multisite_painters["host_black"] = {
     "title" : "Hostname, red background if down or unreachable",
+    "columns" : ["site","name"],
     "table" : "hosts",
     "paint" : paint_host_black,
 }
 
 multisite_painters["host_with_state"] = {
     "title" : "Hostname colored with state",
+    "columns" : ["site","name"],
     "table" : "hosts",
     "paint" : lambda row: "<td class=hstate%d><a href=\"%s\">%s</a></td>" % \
 	(row("state"), nagios_host_url(row("site"), row("name")), row("name")),
@@ -416,25 +522,30 @@ def paint_service_state_short(row):
 
 multisite_painters["service_state"] = {
     "title" : "The service state, colored and short (4 letters)",
+    "columns" : ["has_been_checked","state"],
     "paint" : paint_service_state_short
 }
 
 multisite_painters["site_icon"] = {
     "title" : "Icon showing the site",
+    "columns" : ["site"],
     "paint" : paint_site_icon
 }
 
 multisite_painters["plugin_output"] = {
     "title" : "Output of check plugin",
+    "columns" : ["plugin_output"],
     "paint" : lambda row: paint_plain(row("plugin_output"))
 }
     
 multisite_painters["service_description"] = {
     "title" : "Service description",
+    "columns" : ["description"],
     "paint" : lambda row: "<td><a href=\"%s\">%s</a></td>" % (nagios_service_url(row("site"), row("host_name"), row("description")), row("description"))
 }
 
 multisite_painters["state_age"] = {
     "title" : "The age of the current state",
+    "columns" : [ "has_been_checked", "last_state_change" ],
     "paint" : lambda row: paint_age(row("last_state_change"), row("has_been_checked") == "1")
 }

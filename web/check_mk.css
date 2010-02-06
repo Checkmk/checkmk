@@ -551,6 +551,8 @@ table.view td {
    padding: 2px 0.5ex;
 }
 table.view td.legend {
+    padding-top: 3px;
+    color: #884;
     vertical-align: top;
 }
 table.view table.filters {

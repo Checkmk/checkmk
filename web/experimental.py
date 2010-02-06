@@ -49,13 +49,13 @@ def page_designer(h):
 	html.write("</td></tr>\n")
 
     # [1] Datasource
-    show_list("datasource", "Datasource", multisite_datasources)
+    show_list("datasource", "1. Datasource", multisite_datasources)
     
     # [2] Layout
-    show_list("layout", "Layout", multisite_layouts)
+    show_list("layout", "2. Layout", multisite_layouts)
   
     # [3] Filters 
-    html.write("<tr><td class=legend>Filters</td><td>")
+    html.write("<tr><td class=legend>3. Filters</td><td>")
     html.write("<table class=filters>")
     html.write("<tr><th>Filter</th><th>usage</th><th>hardcoded settings</th></tr>\n")
     for fname, filt in multisite_filters.items():
@@ -80,20 +80,20 @@ def page_designer(h):
 		html.select("%sorder_%d" % (var_prefix, n), [("asc", "Ascending"), ("dsc", "Descending")])
 	    html.write("<br />")
 	html.write("</td></tr>\n")
-    column_selection("Sorting", "sort_", max_sort_columns, multisite_sorters, True)
+    column_selection("4. Sorting", "sort_", max_sort_columns, multisite_sorters, True)
 
     # [5] Grouping
-    column_selection("Group columns", "group_", max_group_columns, multisite_painters)
+    column_selection("5. Group by", "group_", max_group_columns, multisite_painters)
 
     # [6] Columns (painters)	
-    column_selection("Display columns", "col_", max_display_columns, multisite_painters)
+    column_selection("6. Display columns", "col_", max_display_columns, multisite_painters)
 
 
     html.write("<tr><td colspan=2>")
     html.button("show", "Try out")
     html.write("</table>\n")
 
-    if html.var("show"):
+    if html.has_var("show") or html.has_var("filled_in"):
 	preview_view()
 
 def preview_view():
@@ -580,5 +580,5 @@ multisite_painters["service_description"] = {
 multisite_painters["state_age"] = {
     "title" : "The age of the current state",
     "columns" : [ "has_been_checked", "last_state_change" ],
-    "paint" : lambda row: paint_age(row("last_state_change"), row("has_been_checked") == "1")
+    "paint" : lambda row: paint_age(row("last_state_change"), row("has_been_checked") == 1)
 }

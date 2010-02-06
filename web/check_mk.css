@@ -210,7 +210,7 @@ table.services td.agerecent {
   font-weight: bold;
 }
 
-td.state0, td.state1, td.state2, td.state3, td.state4, td.hstate0, td.hstate1, td.hstate2 { 
+td.state0, td.state1, td.state2, td.state3, td.state4, td.statep, td.hstate0, td.hstate1, td.hstate2, td.hstatep { 
   text-align: center;
   font-weight: bold;
   width: 5ex;
@@ -234,6 +234,11 @@ td.state2, td.hstate1 {
 
 td.state3, td.hstate2 { 
   background-color: #f80;
+  color: #fff;
+}
+
+td.statep, td.hstatep { 
+  background-color: #888;
   color: #fff;
 }
 

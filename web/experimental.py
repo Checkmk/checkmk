@@ -33,6 +33,7 @@ def show_page(datasourcename, filternames, layoutname, group_columns, group_pain
     datasource = multisite_datasources[datasourcename]
     filters = [ multisite_filters[fn] for fn in filternames ]
     filterheaders = "".join(f.filter(datasource["table"]) for f in filters)
+    html.write("<pre>%s</pre>" % filterheaders)
     data = query_data(datasource, filterheaders)
     painters = [ multisite_painters[n] for n in painternames ]
     layout = multisite_layouts[layoutname]
@@ -110,7 +111,8 @@ multisite_datasources["hosts"] = {
 
 multisite_datasources["services"] = {
     "table"   : "services",
-    "columns" : ["description", "plugin_output", "state", "host_name", "host_state", "last_state_change" ],
+    "columns" : ["description", "plugin_output", "state", "has_been_checked", 
+                 "host_name", "host_state", "last_state_change" ],
 }
 
 ##################################################################################
@@ -172,7 +174,7 @@ class FilterServiceState(Filter):
 	    defval = ""
 	else:
 	    defval = "on"
-	for var, text in [("st0", "OK"), ("st1", "WARN"), ("st2", "CRIT"), ("st3", "UNKNOWN"), ("st4", "PENDING")]:
+	for var, text in [("st0", "OK"), ("st1", "WARN"), ("st2", "CRIT"), ("st3", "UNKNOWN"), ("stp", "PENDING")]:
 	    html.checkbox(var, defval)
 	    html.write(" %s " % text)
 
@@ -185,9 +187,9 @@ class FilterServiceState(Filter):
 
 	for i in [0,1,2,3]:
 	    if html.var("st%d" % i, defval) == "on":
-		headers.append("Filter: %sstate = %d\n" % (self.tableprefix(tablename), i))
+		headers.append("Filter: %sstate = %d\nFilter: has_been_checked = 1\nAnd: 2\n" % (self.tableprefix(tablename), i))
 	if html.var("stp", defval) == "on":
-	    headers.append("Filter: has_been_checked = 1\n")
+	    headers.append("Filter: has_been_checked = 0\n")
 	if len(headers) == 0:
 	    return "Limit: 0\n" # now allowed state
 	else:
@@ -271,7 +273,10 @@ def nagios_service_url(sitename, host, svc):
 def paint_plain(text):
     return "<td>%s</td>" % text
 
-def paint_age(timestamp):
+def paint_age(timestamp, has_been_checked):
+    if not has_been_checked:
+	return "<td class=age>-</td>"
+	   
     age = time.time() - timestamp
     if age < 60 * 10:
 	age_class = "agerecent"
@@ -310,8 +315,17 @@ multisite_painters["host_with_state"] = {
 	(row("state"), nagios_host_url(row("site"), row("name")), row("name")),
 }
 
+def paint_service_state_short(row):
+    if row("has_been_checked") == 1:
+	state = row("state")
+	name = nagios_short_state_names[row("state")]
+    else:
+	state = "p"
+	name = "PEND"
+    return "<td class=state%s>%s</td>" % (state, name)
+
 multisite_painters["service_state"] = {
-    "paint" : lambda row: "<td class=state%d>%s</td>" % (row("state"), nagios_short_state_names[row("state")])
+    "paint" : paint_service_state_short
 }
 
 multisite_painters["site_icon"] = {
@@ -328,5 +342,5 @@ multisite_painters["service_description"] = {
 
 multisite_painters["state_age"] = {
     "title" : "The age of the current state",
-    "paint" : lambda row: paint_age(row("last_state_change"))
+    "paint" : lambda row: paint_age(row("last_state_change"), row("has_been_checked") == "1")
 }

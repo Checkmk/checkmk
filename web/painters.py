@@ -33,6 +33,7 @@ def paint_site_icon(row):
 
 multisite_painters["sitename_plain"] = {
     "title" : "The id of the site",
+    "table" : None,
     "columns" : ["site"],
     "paint" : lambda row: "<td>%s</td>" % row("site"),
 }
@@ -80,30 +81,35 @@ def paint_service_state_short(row):
 
 multisite_painters["service_state"] = {
     "title" : "The service state, colored and short (4 letters)",
+    "table" : "services",
     "columns" : ["has_been_checked","state"],
     "paint" : paint_service_state_short
 }
 
 multisite_painters["site_icon"] = {
     "title" : "Icon showing the site",
+    "table" : None,
     "columns" : ["site"],
     "paint" : paint_site_icon
 }
 
-multisite_painters["plugin_output"] = {
+multisite_painters["svc_plugin_output"] = {
     "title" : "Output of check plugin",
+    "table" : "services",
     "columns" : ["plugin_output"],
     "paint" : lambda row: paint_plain(row("plugin_output"))
 }
     
 multisite_painters["service_description"] = {
     "title" : "Service description",
+    "table" : "services",
     "columns" : ["description"],
     "paint" : lambda row: "<td><a href=\"%s\">%s</a></td>" % (nagios_service_url(row("site"), row("host_name"), row("description")), row("description"))
 }
 
-multisite_painters["state_age"] = {
-    "title" : "The age of the current state",
+multisite_painters["svc_state_age"] = {
+    "title" : "The age of the current service state",
+    "table" : "services",
     "columns" : [ "has_been_checked", "last_state_change" ],
     "paint" : lambda row: paint_age(row("last_state_change"), row("has_been_checked") == 1)
 }

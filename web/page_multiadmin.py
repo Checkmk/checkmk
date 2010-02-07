@@ -557,10 +557,9 @@ def do_actions(html, hits, hosts):
             pipe.write(command)
             count += 1
     if command:
-        html.write("<div class=success>Successfully sent %d commands to Nagios. " % count)
-        html.write("The last one was: <pre>%s</pre></div>" % command)
+	html.message("Successfully sent %d commands to Nagios. The last one was: <pre>%s</pre>" % (count, command))
     else:
-        html.write("<div class=success>No matching service. No command sent.</div>")
+	html.message("No matching service. No command sent.")
 
 
 def nagios_service_action_command(html, service):

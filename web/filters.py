@@ -30,6 +30,9 @@ class Filter:
 	else:
 	    return self.table[:-1] + "_"
 
+    def allowed_for_table(self, tablename):
+	return True
+
 class FilterText(Filter):
     def __init__(self, name, title, table, column, htmlvar, op):
 	Filter.__init__(self, name, title, table, [column], [htmlvar])
@@ -47,6 +50,35 @@ class FilterText(Filter):
 	    return "Filter: %s%s %s %s\n" % (self.tableprefix(tablename), self.columns[0], self.op, current_value)
 	else:
 	    return ""
+
+    def allowed_for_table(self, tablename):
+	if tablename == self.table:
+	    return True
+	if self.table == "hosts" and tablename == "services":
+	    return True
+	return False
+
+class FilterLimit(Filter):
+    def __init__(self):
+	Filter.__init__(self, "limit", "Limit number of data sets", None, [], [ "limit" ])
+
+    def current_value(self):
+	try:
+	    return int(html.var("limit"))
+	except:
+	    return 0
+
+    def display(self):
+	html.number_input("limit", self.current_value())
+    
+    def filter(self, tablename):
+	v = self.current_value()
+	if v > 0:
+	    return "Limit: %d\n" % v
+	return ""
+
+declare_filter(FilterLimit())
+	
 
 # Helper that retrieves the list of host/service/contactgroups via Livestatus
 def all_groups(what):
@@ -67,6 +99,9 @@ class FilterHostgroupCombo(Filter):
 	htmlvar = self.htmlvars[0]
 	current_value = html.var(htmlvar)
 	return "Filter: %sgroups >= %s\n" % (self.tableprefix(tablename), current_value)
+    
+    def allowed_for_table(self, tablename):
+	return tablename in [ "hosts", "services", "hostgroups" ]
 
 
 class FilterServiceState(Filter):
@@ -99,6 +134,9 @@ class FilterServiceState(Filter):
 	    return "Limit: 0\n" # now allowed state
 	else:
 	    return "".join(headers) + ("Or: %d\n" % len(headers))
+	
+    def allowed_for_table(self, tablename):
+	return tablename in [ "services" ]
 
 declare_filter(FilterText("host", "Hostname", "hosts", "name", "host", "~~"))
 declare_filter(FilterText("service", "Service", "services", "description", "service", "~~"))

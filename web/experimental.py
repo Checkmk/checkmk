@@ -63,6 +63,7 @@ def save_views(us):
     file(userdir + "/views.mk", "w").write(pprint.pformat(userviews) + "\n")
 	    
 
+# Show one view filled with data
 def page_view(h):
     setup(h)
     load_views()
@@ -77,9 +78,14 @@ def page_view(h):
 
     html.footer()
 
-def page_edit_views(h):
+# Show list of all views with buttons for editing
+def page_edit_views(h, msg=None):
     setup(h)
     html.header("Experimental: User defined views")
+
+    if msg: # called from page_edit_view() after saving
+	html.message(msg)
+
     load_views(authuser)
 
     # Deletion of views
@@ -119,38 +125,49 @@ def page_edit_views(h):
 	    html.buttonlink("edit_views.py?delete=%s" % viewname, "Delete!")
 	    html.write("</td></tr>")
     html.write("</table>\n")
-    html.buttonlink("edit_view.py", "Create new view")
+
+    html.begin_form("create_view", "edit_view.py") 
+    html.button("create", "Create new view for datasource -> ")
+    html.sorted_select("datasource", [ (k, v["title"]) for k, v in multisite_datasources.items() ])
+    html.end_form()
     html.footer()
 
+
+# Edit one view
 def page_edit_view(h):
     setup(h)
-    html.buttonlink("edit_views.py", "Back to list of views")
 
     view = None
+
+    # Load existing view from disk
     viewname = html.var("load_view")
     if viewname:
 	load_views(authuser)
 	view = multisite_views.get((authuser, viewname), None)
-# html.write("view ist: <br><pre>%s</pre>" % (pprint.pformat(view),))
+	datasourcename = view["datasource"]
 	if view:
 	    load_view_into_html_vars(view)
 
-    if html.var("save") or html.var("try") or html.var("filled_in"):
+    # set datasource name if a new view is being created
+    elif html.var("datasource"):
+	datasourcename = html.var("datasource")
+
+    # handle case of save or try or press on search button
+    if html.var("save") or html.var("try") or html.var("search"):
 	try:
 	    view = create_view()
 	    if html.var("save"):
 		load_views(authuser)
 		multisite_views[(authuser, view["name"])] = view
 		save_views(authuser)
-		html.write("Your view has been saved.")
-		html.footer()
-		return
+		return page_edit_views(h, "Your view has been saved.")
 
 	except MKUserError, e:
 	    html.write("<div class=error>%s</div>\n" % e.message)
 	    html.add_user_error(e.varname, e.message)
 
     html.header("Experimental: View designer")
+    html.buttonlink("edit_views.py", "Back to list of views")
     html.begin_form("view")
     html.write("<table class=view>\n")
 
@@ -168,8 +185,9 @@ def page_edit_view(h):
 	html.sorted_select(name, [ (k, v["title"]) for k,v in data.items() ])
 	html.write("</td></tr>\n")
 
-    # [1] Datasource
-    show_list("datasource", "1. Datasource", multisite_datasources)
+    # [1] Datasource (not changeable here!)
+    html.write("<tr><td class=legend>1. Datasource</td><td>%s</td></tr>" % datasourcename)
+    html.hidden_field("datasource", datasourcename)
     
     # [2] Layout
     show_list("layout", "2. Layout", multisite_layouts)
@@ -178,7 +196,8 @@ def page_edit_view(h):
     html.write("<tr><td class=legend>3. Filters</td><td>")
     html.write("<table class=filters>")
     html.write("<tr><th>Filter</th><th>usage</th><th>hardcoded settings</th></tr>\n")
-    for fname, filt in multisite_filters.items():
+    allowed_filters = filters_allowed_for_datasource(datasourcename)
+    for fname, filt in allowed_filters.items():
 	html.write("<tr>")
 	html.write("<td>%s</td>" % filt.title)
 	html.write("<td>")
@@ -190,9 +209,10 @@ def page_edit_view(h):
    
     # [4] Sorting
     def column_selection(title, var_prefix, maxnum, data, order=False):
+	allowed = allowed_for_datasource(data, datasourcename)
 	html.write("<tr><td class=legend>%s</td><td class=content>" % title)
 	for n in range(1, maxnum+1):
-	    collist = [ ("", "") ] + [ (name, p["title"]) for name, p in data.items() ]
+	    collist = [ ("", "") ] + [ (name, p["title"]) for name, p in allowed.items() ]
 	    html.write("%02d " % n)
 	    html.select("%s%d" % (var_prefix, n), collist)
 	    if order:
@@ -448,7 +468,34 @@ def sort_data(data, sorters, tablename):
 	data.sort(multisort)
     else:
 	data.sort(sort_cmps[0])
-    
+
+
+def filters_allowed_for_datasource(datasourcename):
+    datasource = multisite_datasources[datasourcename]
+    tablename = datasource["table"]
+    allowed = {}
+    for fname, filt in multisite_filters.items():
+	if filt.allowed_for_table(tablename):
+	    allowed[fname] = filt
+    return allowed
+
+def painters_allowed_for_datasource(datasourcename):
+    return allowed_for_datasource(multisite_painters, datasourcename)
+
+def sorters_allowed_for_datasource(datasourcename):
+    return allowed_for_datasource(multisite_sorters, datasourcename)
+
+def allowed_for_datasource(collection, datasourcename):
+    datasource = multisite_datasources[datasourcename]
+    tablename = datasource["table"]
+    allowed = {}
+    for name, item in collection.items():
+	if item["table"] == tablename or \
+	    item["table"] == None or \
+	    (item["table"] == "hosts" and tablename == "services"):
+	    allowed[name] = item
+    return allowed
+
      
 def connect_to_livestatus(html, auth_user = None):
     global site_status, live

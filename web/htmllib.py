@@ -110,10 +110,12 @@ class html:
         days = hours / 24
         return "%d days" % days
 
-    def begin_form(self, name):
+    def begin_form(self, name, action = None):
+	if action == None:
+	    action = self.req.myfile + ".py"
         self.current_form = name
-        self.write("<form name=%s class=%s action=\"%s.py\" method=GET>\n" %
-                   (name, name, self.req.myfile))
+        self.write("<form name=%s class=%s action=\"%s\" method=GET>\n" %
+                   (name, name, action))
 	self.hidden_field("filled_in", "on")
 	self.hidden_fields(self.global_vars)
 
@@ -158,13 +160,16 @@ class html:
     def buttonlink(self, href, text):
 	self.write("<a href=\"%s\" class=button>%s</a>" % (href, text))
 
-    def text_input(self, varname, default_value = ""):
+    def number_input(self, varname, deflt = ""):
+	self.text_input(varname, str(deflt), "number")
+
+    def text_input(self, varname, default_value = "", cssclass = "text"):
         value = self.req.vars.get(varname, default_value)
         error = self.user_errors.get(varname)
         html = ""
         if error:
             html = "<x class=inputerror>"
-        html += "<input type=text class=text value=\"%s\" name=\"%s\">" % (attrencode(value), varname)
+        html += "<input type=text class=%s value=\"%s\" name=\"%s\">" % (cssclass, attrencode(value), varname)
         if error:
             html += "</x>"
             self.set_focus(self.current_form, varname)
@@ -256,6 +261,9 @@ class html:
 
     def show_error(self, msg):
         self.write("<div class=error>%s</div>\n" % msg)
+
+    def message(self, msg):
+	self.write("<div class=success>%s</div>\n" % msg)
 
     def confirm(self, msg):
         if not self.has_var("_do_confirm"):

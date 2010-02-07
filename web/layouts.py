@@ -20,6 +20,83 @@ def show_filter_form(filters):
 	html.end_form()
 
 
+def render_grouped_boxes(data, filters, group_columns, group_painters, painters, num_columns):
+    show_filter_form(filters)
+    columns, rowfunction, rows = data
+    # N columns. Each should contain approx the same number of entries
+    groups = []
+    last_group = None
+    for row in rows:
+	this_group = [ row[c] for c in group_columns ]
+	if this_group != last_group:
+	    last_group = this_group
+	    current_group = []
+	    groups.append((this_group, current_group))
+	current_group.append(row)
+
+    def height_of(groups):
+	# compute total space needed. I count the group header like two rows.
+	return sum([ len(rows) for header, rows in groups ]) + 2 * len(groups)
+
+    # Create empty columns
+    columns = [ ]
+    for x in range(0, num_columns):
+	columns.append([])
+    
+    # First put everything into the first column
+    for group in groups:
+	columns[0].append(group)
+
+    # shift from src to dst, if usefull
+    def balance(src, dst):
+	if len(src) == 0: 
+	    return False
+	hsrc = height_of(src)
+	hdst = height_of(dst)
+	shift = len(src[-1][1]) + 2
+	if max(hsrc, hdst) > max(hsrc - shift, hdst + shift):
+	    dst[0:0] = [ src[-1] ]
+	    del src[-1]
+	    return True
+	return False
+
+    # Shift from left to right as long as usefull
+    did_something = True
+    while did_something:
+        did_something = False
+	for i in range(0, num_columns - 1):
+	    if balance(columns[i], columns[i+1]):
+		did_something = True
+
+    # render one group
+    def render_group(header, rows):
+	html.write("<table class=services><tr class=groupheader>")
+	for p in group_painters:
+	    html.write(p["paint"](rowfunction(p, rows[0])))
+	html.write("</tr>\n")
+	trclass = None
+	for row in rows:
+	    if trclass == "odd":
+		trclass = "even"
+	    else:
+		trclass = "odd"
+	    state = row.get("state", 0)
+	    html.write("<tr class=%s%d>" % (trclass, state))
+	    for p in painters:
+		html.write(p["paint"](rowfunction(p, row)))
+	    html.write("</tr>\n")
+	html.write("</table>\n")
+
+    # render table
+    html.write("<table class=boxlayout><tr>")
+    for column in columns:
+	html.write("<td class=boxcolumn>")
+	for header, rows in column:
+	    render_group(header, rows)
+        html.write("</td>")
+    html.write("</tr></table>\n")
+
+
 def render_grouped_list(data, filters, group_columns, group_painters, painters, num_columns):
     show_filter_form(filters)
     columns, rowfunction, rows = data
@@ -80,23 +157,42 @@ def render_grouped_list(data, filters, group_columns, group_painters, painters, 
     html.write("<table>\n")
 
 multisite_layouts["table"] = { 
-    "title"  : "table, supports grouping",
+    "title"  : "table",
     "render" : lambda a,b,c,d,e: render_grouped_list(a,b,c,d,e,1),
     "group"  : True
 }
 multisite_layouts["table_2c"] = { 
-    "title"  : "2-column table, supports grouping",
+    "title"  : "table with 2 columns",
     "render" : lambda a,b,c,d,e: render_grouped_list(a,b,c,d,e,2),
     "group"  : True
 }
 multisite_layouts["table_3c"] = { 
-    "title"  : "3-column table, supports grouping",
+    "title"  : "table with 3 columns",
     "render" : lambda a,b,c,d,e: render_grouped_list(a,b,c,d,e,3),
     "group"  : True
 }
 multisite_layouts["table_4c"] = { 
-    "title"  : "4-column table, supports grouping",
+    "title"  : "table with 4 columns",
     "render" : lambda a,b,c,d,e: render_grouped_list(a,b,c,d,e,4),
     "group"  : True
 }
-
+multisite_layouts["boxed_2"] = { 
+    "title"  : "Balanced boxes in 2 columns",
+    "render" : lambda a,b,c,d,e: render_grouped_boxes(a,b,c,d,e,2),
+    "group"  : True
+}
+multisite_layouts["boxed_3"] = { 
+    "title"  : "Balanced boxes in 3 columns",
+    "render" : lambda a,b,c,d,e: render_grouped_boxes(a,b,c,d,e,3),
+    "group"  : True
+}
+multisite_layouts["boxed_4"] = { 
+    "title"  : "Balanced boxes in 4 columns",
+    "render" : lambda a,b,c,d,e: render_grouped_boxes(a,b,c,d,e,4),
+    "group"  : True
+}
+multisite_layouts["boxed_5"] = { 
+    "title"  : "Balanced boxes in 5 columns",
+    "render" : lambda a,b,c,d,e: render_grouped_boxes(a,b,c,d,e,5),
+    "group"  : True
+}

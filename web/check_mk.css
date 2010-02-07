@@ -242,6 +242,14 @@ td.statep, td.hstatep {
   color: #fff;
 }
 
+/* boxed layout */
+table.boxlayout {
+}
+table.boxlayout td.boxcolumn {
+    vertical-align: top;
+    padding-right: 20px;
+}
+
 
 .inputerror input { 
   background-color: #f84;
@@ -558,10 +566,36 @@ table.view td.legend {
 table.view table.filters {
     border-collapse: collapse;
     empty-cells: show;
-    margin-bottom: 3px;
+    margin-bottom: 6px;
+    margin-left: 3px;
 }
-table.view table.filters td {
+
+
+table.view table.filters td
+{
+   border: 1px solid #cc8;
+}
+
+
+table.view table.filters th
+{
+    text-align: left;
+    padding-bottom: 3px;
+}
+
+table.view table.filters td.usage
+{
+    background-color: #ee8;
+}
+
+table.view table.filters td.widget 
+{
     background-color: #fff;
+}
+
+table.view table.filters td.title {
+    border-style: none;
+    padding-right: 1em;
 }
 
 table.views {

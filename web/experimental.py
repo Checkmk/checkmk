@@ -199,10 +199,10 @@ def page_edit_view(h):
     allowed_filters = filters_allowed_for_datasource(datasourcename)
     for fname, filt in allowed_filters.items():
 	html.write("<tr>")
-	html.write("<td>%s</td>" % filt.title)
-	html.write("<td>")
+	html.write("<td class=title>%s</td>" % filt.title)
+	html.write("<td class=usage>")
 	html.sorted_select("filter_%s" % fname, [("off", "Don't use"), ("show", "Show to user"), ("hard", "Hardcode")])
-	html.write("</td><td>")
+	html.write("</td><td class=widget>")
 	filt.display()
 	html.write("</td></tr>\n")
     html.write("</table></td></tr>\n")

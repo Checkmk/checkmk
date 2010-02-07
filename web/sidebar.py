@@ -9,13 +9,13 @@ def page_views(html):
     html.write("<body class=side>\n")
     html.heading("Views")
     views.load_views()
-# html.write("<ul class=views>")
     for (user, name), view in views.multisite_views.items():
 	if user == authuser or view["public"]:
 	    html.write("<li class=view><a target=\"main\" class=view href=\"view.py?view_name=%s/%s\">%s</a></li>\n" % (user, name, htmllib.attrencode(view["title"])))
 
     def link(title, target):
 	html.write("<li><a target=\"main\" class=link href=\"%s\">%s</a></li>" % (target, title))
+
     html.heading("Administration")
     link("Edit views", "/check_mk/edit_views.py")
     link("Multiadmin", "/check_mk/filter.py")

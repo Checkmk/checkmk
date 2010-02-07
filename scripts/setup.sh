@@ -580,10 +580,14 @@ do
 	   for php in $DESTDIR$htdocsdir/*.php ; do
 	       sed -ri 's@\$vardir *= *"(.*)"@$vardir="'"$vardir"'"@' $php
            done &&
-	   mkdir -p $DESTDIR$vardir/{autochecks,counters,precompiled,cache,logwatch} &&
+	   mkdir -p $DESTDIR$vardir/{autochecks,counters,precompiled,cache,logwatch,web} &&
 	   if [ -z "$DESTDIR" ] && id "$nagiosuser" > /dev/null 2>&1 ; then
-	     chown -R $nagiosuser $DESTDIR$vardir/{counters,cache,logwatch}
+	     chown -R $nagiosuser $DESTDIR$vardir/{counters,cache,logwatch,web}
            fi &&
+	   if [ -z "$DESTDIR" ] ; then
+	     chgrp -R $wwwgroup $DESTDIR$vardir/web &&
+	     chmod -R g+w $DESTDIR$vardir/web
+	   fi &&
 	   mkdir -p $DESTDIR$confdir/conf.d && 
 	   tar xzf $SRCDIR/conf.tar.gz -C $DESTDIR$confdir &&
 	   if [ -e $DESTDIR$confdir/check_mk.cfg -a ! -e $DESTDIR$confdir/main.mk ] ; then

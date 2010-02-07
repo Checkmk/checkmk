@@ -8,6 +8,7 @@ multisite_painters    = {}
 multisite_sorters     = {}
 multisite_views       = {}
 
+# TODO: Move include files out of htdocs directory
 include_path = "/usr/share/check_mk/web"
 execfile(include_path + "/datasources.py")
 execfile(include_path + "/layouts.py")
@@ -19,6 +20,7 @@ max_display_columns   = 10
 max_group_columns     = 3
 max_sort_columns      = 4
 
+multisite_config_dir = check_mk.var_dir + "/web"
 
 def setup(h):
     global html, authuser
@@ -32,8 +34,6 @@ def setup(h):
 	auth_user = None
 
     connect_to_livestatus(html, auth_user)
-
-multisite_config_dir = "/tmp"
 
 def load_views():
     global multisite_views
@@ -92,7 +92,10 @@ def page_view(h):
 # Show list of all views with buttons for editing
 def page_edit_views(h, msg=None):
     setup(h)
-    html.header("Experimental: User defined views")
+    html.header("Edit views")
+    html.write("<p>Here you can create and edit customizable <b>views</b>. A view "
+	    "displays monitoring status or log data by combining filters, sortings, "
+	    "groupings and other aspects.</p>")
 
     if msg: # called from page_edit_view() after saving
 	html.message(msg)
@@ -129,21 +132,21 @@ def page_edit_views(h, msg=None):
 	load_views()
 		
     html.write("<table class=views>\n")
-    html.write("<tr><th>Name</th><th>Owner</th><th>Public</th><th>Title</th><th>Datasource</th><th></th></tr>\n")
+    html.write("<tr><th>Name</th><th>Title</th><th>Owner</th><th>Public</th><th>Datasource</th><th></th></tr>\n")
     keys_sorted = multisite_views.keys()
     keys_sorted.sort()
     for (owner, viewname) in keys_sorted:
 	view = multisite_views[(owner, viewname)]
 	if owner == authuser or view["public"]:
 	    html.write("<tr><td class=legend>%s</td>" % viewname)
+	    html.write("<td class=content><a href=\"view.py?view_name=%s/%s\">%s</a>" % (owner, viewname, view["title"]))
 	    html.write("<td class=content>%s</td>" % owner)
 	    html.write("<td class=content>%s</td>" % (view["public"] and "yes" or "no"))
-	    html.write("<td class=content><a href=\"view.py?view_name=%s/%s\">%s</a>" % (owner, viewname, view["title"]))
-	    html.write("</td><td class=content>%s</td><td class=content>\n" % view["datasource"])
+	    html.write("</td><td class=content>%s</td><td class=buttons>\n" % view["datasource"])
+	    html.buttonlink("edit_views.py?clone=%s/%s" % (owner, viewname), "Clone")
 	    if owner == authuser:
 		html.buttonlink("edit_view.py?load_view=%s" % viewname, "Edit")
 		html.buttonlink("edit_views.py?delete=%s" % viewname, "Delete!")
-	    html.buttonlink("edit_views.py?clone=%s/%s" % (owner, viewname), "Clone")
 	    html.write("</td></tr>")
     html.write("</table>\n")
 

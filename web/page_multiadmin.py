@@ -260,12 +260,7 @@ def show_tabs(html, tabs, active, suppress_form = False):
     if not suppress_form:
         html.end_form()
     
-    html.write("<td width=\"100%%\" class=pad>"
-               "<b class=headtime>%s</b> "
-               "<b>Check_mk Multiadmin</b> "
-               "<a href=\"http://mathias-kettner.de/check_mk\">"
-               "<img align=absbottom border=0 src=\"check_mk.trans.60.png\">"
-               "</a></td></tr></table>" % time.strftime("%H:%M"))
+    html.write("<td width=\"100%%\" class=pad></td></tr></table>\n")
 
 def build_search_filter(html):
     """Constructs Filter: headers for Livestatus according to the current GET

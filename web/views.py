@@ -1,4 +1,4 @@
-import check_mk, livestatus, htmllib, time, os, re, pprint
+import check_mk, livestatus, htmllib, time, os, re, pprint, time
 from lib import *
 
 multisite_datasources = {}
@@ -35,32 +35,43 @@ def setup(h):
 
 multisite_config_dir = "/tmp"
 
-def load_views(user = None): # None => load all views
-    if user:
-	subdirs = [user]
-    else:
-	subdirs = os.listdir(multisite_config_dir)
+def load_views():
+    global multisite_views
+    multisite_views = {}
+    subdirs = os.listdir(multisite_config_dir)
 
     for user in subdirs:
 	try:
 	    dirpath = multisite_config_dir + "/" + user
 	    if os.path.isdir(dirpath):
-	        f = file(dirpath + "/views.mk")
-		views = eval(f.read())
+	        f = file(dirpath + "/views.mk", "r", 0)
+		sourcecode = f.read()
+		t = 0
+		while sourcecode == "": # This should never happen. But it happened. Don't know why.
+		    # It's just a plain file. No fsync or stuff helped. Hack around a bit.
+		    time.sleep(0.2)
+		    sourcecode = f.read()
+		    t += 1
+		    if t > 10:
+			raise MKGeneralException("Cannot load views from %s/view.mk: file empty or not flushed" % dirpath)
+		views = eval(sourcecode)
 		for name, view in views.items():
 		    multisite_views[(user, name)] = view
-	except:
+	except IOError:
 	     pass
+	except SyntaxError, e:
+	     raise MKGeneralException("Cannot load views from %s/views.mk: %s" % (dirpath, e))
 
 def save_views(us):
     userviews = {}
     for (user, name), view in multisite_views.items():
 	if us == user:
 	    userviews[name] = view
-    userdir = multisite_config_dir + "/" + user
+    userdir = multisite_config_dir + "/" + us
     if not os.path.exists(userdir):
 	os.mkdir(userdir)
-    file(userdir + "/views.mk", "w").write(pprint.pformat(userviews) + "\n")
+    f = file(userdir + "/views.mk", "w", 0)
+    f.write(pprint.pformat(userviews) + "\n")
 	    
 
 # Show one view filled with data
@@ -71,7 +82,7 @@ def page_view(h):
         user, view_name = html.var("view_name").split("/")
 	view = multisite_views[(user, view_name)]
     except:
-	raise MKGeneralException("This view does not exist.")
+	raise MKGeneralException("This view does not exist (user: %s, name: %s)." % (user, view_name))
 
     html.header(view["title"])
     show_view(view)
@@ -86,7 +97,7 @@ def page_edit_views(h, msg=None):
     if msg: # called from page_edit_view() after saving
 	html.message(msg)
 
-    load_views(authuser)
+    load_views()
 
     # Deletion of views
     delname = html.var("delete")
@@ -95,7 +106,11 @@ def page_edit_views(h, msg=None):
 	save_views(authuser)
 
     # Cloning of views
-    clonename = html.var("clone")
+    try:
+	cloneuser, clonename = html.var("clone").split("/")
+    except:
+	clonename = ""
+
     if clonename:
 	newname = clonename + "_clone"
 	n = 1
@@ -103,26 +118,32 @@ def page_edit_views(h, msg=None):
 	    n += 1
 	    newname = clonename + "_clone%d" % n
 	import copy
-	orig = multisite_views[(authuser, clonename)]
+	orig = multisite_views[(cloneuser, clonename)]
 	clone = copy.copy(orig)
 	clone["name"] = newname
 	clone["title"] = orig["title"] + " (Copy)" 
+	if cloneuser != authuser: 
+	    clone["public"] = False
 	multisite_views[(authuser, newname)] = clone
 	save_views(authuser)
+	load_views()
 		
     html.write("<table class=views>\n")
-    html.write("<tr><th>Name</th><th>Title</th><th>Datasource</th><th></th></tr>\n")
+    html.write("<tr><th>Name</th><th>Owner</th><th>Public</th><th>Title</th><th>Datasource</th><th></th></tr>\n")
     keys_sorted = multisite_views.keys()
     keys_sorted.sort()
-    for (user, viewname) in keys_sorted:
-	view = multisite_views[(user, viewname)]
-	if user == authuser:
+    for (owner, viewname) in keys_sorted:
+	view = multisite_views[(owner, viewname)]
+	if owner == authuser or view["public"]:
 	    html.write("<tr><td class=legend>%s</td>" % viewname)
-	    html.write("<td class=content><a href=\"view.py?view_name=%s/%s\">%s</a>" % (user, viewname, view["title"]))
-	    html.write("</td><td class=content>%s</td><td class=edit>\n" % view["datasource"])
-	    html.buttonlink("edit_view.py?load_view=%s" % viewname, "Edit")
-	    html.buttonlink("edit_views.py?clone=%s" % viewname, "Clone")
-	    html.buttonlink("edit_views.py?delete=%s" % viewname, "Delete!")
+	    html.write("<td class=content>%s</td>" % owner)
+	    html.write("<td class=content>%s</td>" % (view["public"] and "yes" or "no"))
+	    html.write("<td class=content><a href=\"view.py?view_name=%s/%s\">%s</a>" % (owner, viewname, view["title"]))
+	    html.write("</td><td class=content>%s</td><td class=content>\n" % view["datasource"])
+	    if owner == authuser:
+		html.buttonlink("edit_view.py?load_view=%s" % viewname, "Edit")
+		html.buttonlink("edit_views.py?delete=%s" % viewname, "Delete!")
+	    html.buttonlink("edit_views.py?clone=%s/%s" % (owner, viewname), "Clone")
 	    html.write("</td></tr>")
     html.write("</table>\n")
 
@@ -142,7 +163,7 @@ def page_edit_view(h):
     # Load existing view from disk
     viewname = html.var("load_view")
     if viewname:
-	load_views(authuser)
+	load_views()
 	view = multisite_views.get((authuser, viewname), None)
 	datasourcename = view["datasource"]
 	if view:
@@ -157,7 +178,7 @@ def page_edit_view(h):
 	try:
 	    view = create_view()
 	    if html.var("save"):
-		load_views(authuser)
+		load_views()
 		multisite_views[(authuser, view["name"])] = view
 		save_views(authuser)
 		return page_edit_views(h, "Your view has been saved.")
@@ -166,7 +187,7 @@ def page_edit_view(h):
 	    html.write("<div class=error>%s</div>\n" % e.message)
 	    html.add_user_error(e.varname, e.message)
 
-    html.header("Experimental: View designer")
+    html.header("Edit view")
     html.buttonlink("edit_views.py", "Back to list of views")
     html.begin_form("view")
     html.write("<table class=view>\n")
@@ -177,6 +198,11 @@ def page_edit_view(h):
 
     html.write("<tr><td class=legend>Title</td><td class=content>")
     html.text_input("view_title")
+    html.write("</td></tr>\n")
+
+    html.write("<tr><td class=legend>Configuration</td><td class=content>")
+    html.checkbox("public")
+    html.write(" make this view available for all users")
     html.write("</td></tr>\n")
 
     def show_list(name, title, data):
@@ -301,6 +327,7 @@ def create_view():
     datasource = multisite_datasources[datasourcename]
     tablename = datasource["table"]
     layoutname = html.var("layout")
+    public = html.var("public", "") != ""
     show_filternames = []
     hard_filternames = []
     hard_filtervars = []
@@ -337,6 +364,7 @@ def create_view():
 	"name"            : name,
 	"title"           : title,
 	"datasource"      : datasourcename,
+	"public"          : public,
 	"layout"          : layoutname,
 	"show_filters"    : show_filternames,
 	"hard_filters"    : hard_filternames,

@@ -94,6 +94,9 @@ class html:
     def heading(self, text):
 	self.write("<h2>%s</h2>\n" % text)
 
+    def rule(self):
+	self.write("<hr/>")
+
     def age_text(self, timedif):
         timedif = int(timedif)
         if timedif < 120:
@@ -193,7 +196,7 @@ class html:
             self.write("<option value=\"%s\"%s>%s</option>\n" % (value, sel, text))
         self.write("</select>\n")
 
-    def checkbox(self, varname, deflt):
+    def checkbox(self, varname, deflt=""):
 	value = self.req.vars.get(varname, deflt)
 	if value != "":
 	    checked = " CHECKED"

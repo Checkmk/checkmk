@@ -641,7 +641,32 @@ a.button {
 
 /* --- plugins for sidebar ----------------------------------- */
 body.side {
-    background-color: #444;
-	color: white;
+    background-color: #000;
+    font-size: 80%;
+    color: #DEE7C6;
+    font-family: verdana,arial, sans-serif;
+}
+body.side h2 {
+    margin-top: 0.5em;
+    margin-bottom: 0.3em;
+    font-size: 10pt;
+    color: #e63;
+}
+body.side a {
+    text-decoration: none;
+    color: #DEE7C6;
+    font-size: 9pt;
+    font-weight: normal;
+}
+body.side a:hover {
+    text-decoration: underline;
+    color: #fff;
+}
+ul.views {
+    margin-left: 0px;
+    padding-left: 1ex;
 }
 
+.side hr {
+width: 103px;
+}

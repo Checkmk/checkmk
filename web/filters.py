@@ -98,6 +98,8 @@ class FilterHostgroupCombo(Filter):
     def filter(self, tablename):
 	htmlvar = self.htmlvars[0]
 	current_value = html.var(htmlvar)
+	if not current_value: # Take first hostgroup
+	    current_value = live.query_value("GET hostgroups\nColumns: name\nLimit: 1\n")
 	return "Filter: %sgroups >= %s\n" % (self.tableprefix(tablename), current_value)
     
     def allowed_for_table(self, tablename):

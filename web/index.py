@@ -135,13 +135,11 @@ def handler(req):
     
 
 def page_index(html):
-    html.header("Main page")
-    html.write("<h1>Check_mk</h1>")
+    html.header("Check_MK Overview")
     html.write('''
 <ul>
 <li><a href="http://mathias-kettner.de/check_mk.html">Homepage of Check_mk</a></li>
 <li><a href="filter.py">Filter and Actions</a></li>
-<li><a href="experimental.py">Experimental pages</a></li>
 <li><a href="edit_views.py">Experimental: Edit user views</a></li>
 <li><a href="logwatch.py">Logwatch</a></li>
 </ul>

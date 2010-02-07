@@ -235,8 +235,8 @@ def page_edit_view(h):
     html.write("</table>\n")
     html.end_form()
     
-    if html.has_var("try") or html.has_var("filled_in"):
-        html.set_var("filled_in", "on")
+    if html.has_var("try") or html.has_var("search"):
+        html.set_var("search", "on")
 	if view: 
 	    show_view(view)
 

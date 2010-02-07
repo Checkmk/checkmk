@@ -22,7 +22,7 @@ def show_filter_form(filters):
 
 def render_grouped_boxes(data, filters, group_columns, group_painters, painters, num_columns):
     show_filter_form(filters)
-    columns, rowfunction, rows = data
+    columns, rows = data
     # N columns. Each should contain approx the same number of entries
     groups = []
     last_group = None
@@ -73,7 +73,7 @@ def render_grouped_boxes(data, filters, group_columns, group_painters, painters,
 	html.write("<table class=services><tr class=groupheader>")
 	html.write("<td colspan=%d><table><tr>" % len(painters))
 	for p in group_painters:
-	    html.write(p["paint"](rowfunction(p, rows[0])))
+	    html.write(p["paint"](rows[0]))
 	html.write("</tr></table></td></tr>\n")
 	trclass = None
 	for row in rows:
@@ -84,7 +84,7 @@ def render_grouped_boxes(data, filters, group_columns, group_painters, painters,
 	    state = row.get("state", 0)
 	    html.write("<tr class=%s%d>" % (trclass, state))
 	    for p in painters:
-		html.write(p["paint"](rowfunction(p, row)))
+		html.write(p["paint"](row))
 	    html.write("</tr>\n")
 	html.write("</table>\n")
 
@@ -100,7 +100,7 @@ def render_grouped_boxes(data, filters, group_columns, group_painters, painters,
 
 def render_grouped_list(data, filters, group_columns, group_painters, painters, num_columns):
     show_filter_form(filters)
-    columns, rowfunction, rows = data
+    columns, rows = data
     html.write("<table class=services>\n")
     last_group = None
     trclass = None
@@ -121,7 +121,7 @@ def render_grouped_list(data, filters, group_columns, group_painters, painters, 
 		html.write("<tr class=groupheader>")
 		html.write("<td colspan=%d><table><tr>" % len(painters))
 		for p in group_painters:
-		    html.write(p["paint"](rowfunction(p, row)))
+		    html.write(p["paint"](row))
 		html.write("</tr></table></td></tr>\n")
 		trclass = "even"
 		last_group = this_group
@@ -147,7 +147,7 @@ def render_grouped_list(data, filters, group_columns, group_painters, painters, 
 	    html.write("<tr class=%s%d>" % (trclass, state))
 
         for p in painters:
-	    html.write(p["paint"](rowfunction(p, row)))
+	    html.write(p["paint"](row))
 	    html.write("\n")
 	column += 1
     

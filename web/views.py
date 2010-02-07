@@ -132,12 +132,16 @@ def page_edit_views(h, msg=None):
 	load_views()
 		
     html.write("<table class=views>\n")
-    html.write("<tr><th>Name</th><th>Title</th><th>Owner</th><th>Public</th><th>Datasource</th><th></th></tr>\n")
+
     keys_sorted = multisite_views.keys()
     keys_sorted.sort()
+    first = True
     for (owner, viewname) in keys_sorted:
 	view = multisite_views[(owner, viewname)]
 	if owner == authuser or view["public"]:
+	    if first:
+		html.write("<tr><th>Name</th><th>Title</th><th>Owner</th><th>Public</th><th>Datasource</th><th></th></tr>\n")
+		first = False
 	    html.write("<tr><td class=legend>%s</td>" % viewname)
 	    html.write("<td class=content><a href=\"view.py?view_name=%s/%s\">%s</a>" % (owner, viewname, view["title"]))
 	    html.write("<td class=content>%s</td>" % owner)
@@ -148,11 +152,13 @@ def page_edit_views(h, msg=None):
 		html.buttonlink("edit_view.py?load_view=%s" % viewname, "Edit")
 		html.buttonlink("edit_views.py?delete=%s" % viewname, "Delete!")
 	    html.write("</td></tr>")
-    html.write("</table>\n")
 
+    html.write("<tr><td class=legend colspan=6>")
     html.begin_form("create_view", "edit_view.py") 
-    html.button("create", "Create new view for datasource -> ")
+    html.button("create", "Create new view")
+    html.write(" for datasource: ")
     html.sorted_select("datasource", [ (k, v["title"]) for k, v in multisite_datasources.items() ])
+    html.write("</table>\n")
     html.end_form()
     html.footer()
 
@@ -191,7 +197,7 @@ def page_edit_view(h):
 	    html.add_user_error(e.varname, e.message)
 
     html.header("Edit view")
-    html.buttonlink("edit_views.py", "Back to list of views")
+    html.write("<p>Edit the properties of the view or go <a href=\"edit_views.py\">back to this list of all views</a>.</p>")
     html.begin_form("view")
     html.write("<table class=view>\n")
 
@@ -398,33 +404,24 @@ def show_view(view):
     query = filterheaders + view.get("add_headers", "")
     
     # Fetch data
-    data = query_data(datasource, query)
+    columns, rows = query_data(datasource, query)
 
     # [4] Sorting
     sorters = [ (multisite_sorters[sn], reverse) for sn, reverse in view["sorters"] ]
-    sort_data(data[2], sorters, tablename)
+    sort_data(rows, sorters)
 
     # [5] Grouping
     group_painters = [ multisite_painters[n] for n in view["group_painters"] ]
-    group_columns = needed_group_columns(group_painters, tablename)
+    group_columns = needed_group_columns(group_painters)
 
     # [6] Columns
     painters = [ multisite_painters[n] for n in view["painters"] ]
-    layout["render"](data, show_filters, group_columns, group_painters, painters)
+    layout["render"]((columns, rows), show_filters, group_columns, group_painters, painters)
 
-def needed_group_columns(painters, tablename):
+def needed_group_columns(painters):
     columns = []
     for p in painters:
-	t = p.get("table", tablename)
-	if tablename != t:
-	    prefix = p["table"][:-1] + "_"
-	else:
-	    prefix = ""
-	for c in p["columns"]:
-	    if c != "site":
-		c = prefix + c
-	    if c not in columns:
-		columns.append(c)
+	columns += p["columns"] 
     return columns
 
 
@@ -438,67 +435,45 @@ def query_data(datasource, add_headers):
     query += add_headers
     live.set_prepend_site(True)
     data = live.query(query)
-    columns_with_site = ["site"] + columns
-    assoc = [ dict(zip(columns_with_site, row)) for row in data ]
+    # convert lists-rows into dictionaries. Thas costs a bit of
+    # performance, but makes live much easier later. What also
+    # makes live easier is, that we prefix all columns with
+    # the table name, if that prefix is not already present
+    # for example "name" -> "host_name" in table "hosts"
+    prefixed_columns = ["site"]
+    for col in columns:
+	parts = col.split("_", 1)
+	if len(parts) < 2 or parts[0] not in [ "host", "service", "contact", "contactgroup" ]:
+		col = tablename[:-1] + "_" + col
+	elif tablename == "log" and col.startswith("current_"):
+	    col = col[8:]
+	prefixed_columns.append(col)
+
+    assoc = [ dict(zip(prefixed_columns, row)) for row in data ]
     live.set_prepend_site(False)
 
-    # If you understand this code than you are really smart >;-/
-    def rowfunction(painter, row):
-	paintertable = painter.get("table")
-	if paintertable in [None, tablename]:
-	    return lambda x: row[x]
-	else:
-	    return lambda x: row.get(paintertable[:-1] + "_" + x, row.get(x))
-
-    return (["site"] + columns, rowfunction, assoc)
+    return (prefixed_columns, assoc)
 
 # Sort data according to list of sorters. The tablename
 # is needed in order to handle different column names
 # for same objects (e.g. host_name in table services and
 # simply name in table hosts)
-def sort_data(data, sorters, tablename):
+def sort_data(data, sorters):
     if len(sorters) == 0:
 	return
+    elif len(sorters) == 1:
+        data.sort(sorters[0][0]["cmp"], None, sorters[0][1])
+	return
     
-    # Construct sort function. It must return -1, 0 or +1 when
-    # comparing to elements of data. The sorter functions do
-    # not expect a row array but a rowfunction for each of the
-    # the elements
-    sort_cmps = []
-
-    # convert compare function that gets to functions row() into
-    # compare function that gets to row-dictionaries. Also take
-    # reverse sorting into account
-    def make_compfunc(rowfunc, compfunc, reverse):
-        if reverse:	
-	    return lambda dict2, dict1: compfunc(lambda k: rowfunc(dict1, k), lambda k: rowfunc(dict2, k))
-	else:
-	    return lambda dict1, dict2: compfunc(lambda k: rowfunc(dict1, k), lambda k: rowfunc(dict2, k))
-
-    for s, reverse in sorters:
-        tn = s.get("table", tablename)
-	if tn == tablename:
-	    rowfunc = lambda a, b: a[b]
-	else:
-	    prefix = tn[:-1] + "_"
-	    rowfunc = lambda a, b: a[prefix + b]
-
-	compfunc = s["cmp"]
-	cmp = make_compfunc(rowfunc, compfunc, reverse)
-	sort_cmps.append(cmp)
-
-    compfunc = None
+    sort_cmps = [(s["cmp"], (reverse and -1 or 1)) for s, reverse in sorters]
 
     def multisort(e1, e2):
-	for cmp in sort_cmps:
-	    c = cmp(e1, e2)
+	for func, neg in sort_cmps:
+	    c = neg * func(e1, e2)
 	    if c != 0: return c
 	return 0 # equal
 
-    if len(sort_cmps) > 1:
-	data.sort(multisort)
-    else:
-	data.sort(sort_cmps[0])
+    data.sort(multisort)
 
 
 def filters_allowed_for_datasource(datasourcename):

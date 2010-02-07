@@ -269,7 +269,7 @@ class html:
 		    "<table class=heading><tr><td width=\"100%%\" class=left><h1>%s</h1></td><td class=right>" % title)
 	    self.write("<b class=headtime>%s</b>" % time.strftime("%H:%M"))
 	    self.write("<a href=\"http://mathias-kettner.de/check_mk.html\">"
-		    "<img border=0 align=bottom src=\"check_mk.trans.60.png\"></a></td></tr></table>\n")
+		    "<img border=0 align=bottom src=\"check_mk.trans.54.png\"></a></td></tr></table>\n")
 
     def show_error(self, msg):
         self.write("<div class=error>%s</div>\n" % msg)

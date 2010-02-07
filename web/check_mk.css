@@ -38,15 +38,22 @@ table.heading {
     margin-bottom: 2px;
     border-bottom: 1px solid black;
     margin-top: 0px;
-    padding-top: 0px;
+    padding-top: 3px;
 }
 
 table.heading td {
     vertical-align: bottom;
     padding: 0px;
-    border: 1px solid blue;
 }
 
+table.heading td.right img {
+    margin-left: 15px;
+    margin-right: 8px;
+}
+table.heading b.headtime { 
+  color: black;
+  font-size: 120%;
+}
 table.heading td.right {
     text-align: right;
     white-space: nowrap;
@@ -142,12 +149,6 @@ table.tabs td.pad b {
   margin-bottom: 60px;
 }
 
-/* Time of rendering the page in header line */
-table.tabs td.pad b.headtime { 
-  color: black;
-  font-size: 120%;
-  margin-right: 1ex;
-}
 
 
 table#tabs { 

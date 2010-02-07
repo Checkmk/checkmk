@@ -8,6 +8,13 @@ multisite_painters    = {}
 multisite_sorters     = {}
 multisite_views       = {}
 
+include_path = "/usr/share/check_mk/web"
+execfile(include_path + "/datasources.py")
+execfile(include_path + "/layouts.py")
+execfile(include_path + "/filters.py")
+execfile(include_path + "/sortings.py")
+execfile(include_path + "/painters.py")
+
 max_display_columns   = 10
 max_group_columns     = 3
 max_sort_columns      = 4
@@ -158,7 +165,7 @@ def page_edit_view(h):
     def show_list(name, title, data):
 	html.write("<tr><td class=legend>%s</td>" % title)
 	html.write("<td class=content>")
-	html.select(name, [ (k, v["title"]) for k,v in data.items() ])
+	html.sorted_select(name, [ (k, v["title"]) for k,v in data.items() ])
 	html.write("</td></tr>\n")
 
     # [1] Datasource
@@ -175,7 +182,7 @@ def page_edit_view(h):
 	html.write("<tr>")
 	html.write("<td>%s</td>" % filt.title)
 	html.write("<td>")
-	html.select("filter_%s" % fname, [("off", "Don't use"), ("show", "Show to user"), ("hard", "Hardcode")])
+	html.sorted_select("filter_%s" % fname, [("off", "Don't use"), ("show", "Show to user"), ("hard", "Hardcode")])
 	html.write("</td><td>")
 	filt.display()
 	html.write("</td></tr>\n")
@@ -258,6 +265,8 @@ def load_view_into_html_vars(view):
     # would always be on
     html.set_var("filled_in", "on")
 
+# Extract properties of view from HTML variables and construct
+# view object, to be used for saving or displaying
 def create_view():
     name = html.var("view_name").strip()
     if name == "":
@@ -318,7 +327,8 @@ def create_view():
     }
 
 
-
+# Display view with real data. This is *the* function everying
+# is about.
 def show_view(view):
     # [1] Datasource
     datasource = multisite_datasources[view["datasource"]]
@@ -367,22 +377,8 @@ def needed_group_columns(painters, tablename):
     return columns
 
 
-def show_filter_form(filters):
-    if len(filters) > 0:
-	html.begin_form("filter")
-	html.hidden_fields()
-	html.write("<table class=form id=filter>\n")
-	for f in filters:
-	    html.write("<tr><td class=legend>%s</td>" % f.title)
-	    html.write("<td class=content>")
-	    f.display()
-	    html.write("</td></tr>\n")
-	html.write("<tr><td class=legend></td><td class=content>")
-	html.button("search", "Search", "submit")
-	html.write("</td></tr>\n")
-	html.write("</table>\n")
-	html.end_form()
-
+# Retrieve data via livestatus, convert into list of dicts,
+# prepare row-function needed for painters
 def query_data(datasource, add_headers):
     tablename = datasource["table"]
     query = "GET %s\n" % tablename
@@ -405,6 +401,10 @@ def query_data(datasource, add_headers):
 
     return (["site"] + columns, rowfunction, assoc)
 
+# Sort data according to list of sorters. The tablename
+# is needed in order to handle different column names
+# for same objects (e.g. host_name in table services and
+# simply name in table hosts)
 def sort_data(data, sorters, tablename):
     if len(sorters) == 0:
 	return
@@ -473,346 +473,4 @@ def connect_to_livestatus(html, auth_user = None):
     if auth_user:
 	live.addHeader("AuthUser: %s" % auth_user)
 
-##################################################################################
-# Data sources
-##################################################################################
 
-multisite_datasources["hosts"] = {
-    "title"   : "All hosts",
-    "table"   : "hosts",
-    "columns" : ["name", "state"],
-}
-
-multisite_datasources["services"] = {
-    "title"   : "All services",
-    "table"   : "services",
-    "columns" : ["description", "plugin_output", "state", "has_been_checked", 
-                 "host_name", "host_state", "last_state_change" ],
-}
-
-##################################################################################
-# Filters
-##################################################################################
-
-def declare_filter(f):
-    multisite_filters[f.name] = f
-
-class Filter:
-    def __init__(self, name, title, table, columns, htmlvars):
-	self.name = name
-	self.table = table
-	self.title = title
-	self.columns = columns
-	self.htmlvars = htmlvars
-	
-    def display(self):
-	raise MKInternalError("Incomplete implementation of filter %s '%s': missing display()" % \
-		(self.name, self.title))
-	html.write("FILTER NOT IMPLEMENTED")
-
-    def filter(self):
-	raise MKInternalError("Incomplete implementation of filter %s '%s': missing filter()" % \
-	    (self.name, self.title))
-	html.write("FILTER NOT IMPLEMENTED")
-
-    def tableprefix(self, tablename):
-	if self.table == tablename:
-	    return ""
-	else:
-	    return self.table[:-1] + "_"
-
-class FilterText(Filter):
-    def __init__(self, name, title, table, column, htmlvar, op):
-	Filter.__init__(self, name, title, table, [column], [htmlvar])
-	self.op = op
-    
-    def display(self):
-	htmlvar = self.htmlvars[0]
-	current_value = html.var(htmlvar, "")
-	html.text_input(htmlvar, current_value)
-
-    def filter(self, tablename):
-	htmlvar = self.htmlvars[0]
-	current_value = html.var(htmlvar)
-	if current_value:
-	    return "Filter: %s%s %s %s\n" % (self.tableprefix(tablename), self.columns[0], self.op, current_value)
-	else:
-	    return ""
-
-# Helper that retrieves the list of host/service/contactgroups via Livestatus
-def all_groups(what):
-    groups = dict(live.query("GET %sgroups\nColumns: name alias\n" % what))
-    names = groups.keys()
-    names.sort()
-    return [ (name, groups[name]) for name in names ]
-
-class FilterHostgroupCombo(Filter):
-    def __init__(self):
-	Filter.__init__(self, "hostgroup", "Hostgroup-Combobox, obligatory",
-		"hosts", [ "host_groups" ], [ "hostgroup" ])
-
-    def display(self):
-	html.select("hostgroup", all_groups("host"))
-
-    def filter(self, tablename):
-	htmlvar = self.htmlvars[0]
-	current_value = html.var(htmlvar)
-	return "Filter: %sgroups >= %s\n" % (self.tableprefix(tablename), current_value)
-
-
-class FilterServiceState(Filter):
-    def __init__(self):
-	Filter.__init__(self, "svcstate", "Service states", 
-		"services", [ "state", "has_been_checked" ], [ "st0", "st1", "st2", "st3", "stp" ])
-    
-    def display(self):
-	if html.var("filled_in"):
-	    defval = ""
-	else:
-	    defval = "on"
-	for var, text in [("st0", "OK"), ("st1", "WARN"), ("st2", "CRIT"), ("st3", "UNKNOWN"), ("stp", "PENDING")]:
-	    html.checkbox(var, defval)
-	    html.write(" %s " % text)
-
-    def filter(self, tablename):
-	headers = []
-	if html.var("filled_in"):
-	    defval = ""
-	else:
-	    defval = "on"
-
-	for i in [0,1,2,3]:
-	    if html.var("st%d" % i, defval) == "on":
-		headers.append("Filter: %sstate = %d\nFilter: has_been_checked = 1\nAnd: 2\n" % (self.tableprefix(tablename), i))
-	if html.var("stp", defval) == "on":
-	    headers.append("Filter: has_been_checked = 0\n")
-	if len(headers) == 0:
-	    return "Limit: 0\n" # now allowed state
-	else:
-	    return "".join(headers) + ("Or: %d\n" % len(headers))
-
-declare_filter(FilterText("host", "Hostname", "hosts", "name", "host", "~~"))
-declare_filter(FilterText("service", "Service", "services", "description", "service", "~~"))
-declare_filter(FilterServiceState())
-declare_filter(FilterHostgroupCombo())
-
-##################################################################################
-# Sorting
-##################################################################################
-
-# return -1, if r1 < r2, 0 if they are equal, 1 otherwise
-def cmp_atoms(s1, s2):
-    if s1 < s2:
-        return -1
-    elif s1 == s2:
-        return 0
-    else:
-        return 1
-
-def cmp_state_equiv(r):
-    if r("has_been_checked") == 0:
-	return -1
-    s = r("state")
-    if s <= 1:
-	return s
-    else:
-	return 5 - s # swap crit and unknown
-
-def cmp_svc_states(r1, r2):
-    return cmp_atoms(cmp_state_equiv(r1), cmp_state_equiv(r2))
-   
-def cmp_simple_string(column, r1, r2):
-    return cmp_atoms(r1(column).lower(), r2(column).lower())
-    
-def cmp_simple_number(column, r1, r2):
-    return cmp_atoms(r1(column), r2(column))
-    
-multisite_sorters["svcstate"] = {
-    "title"   : "Service state",
-    "table"   : "services",
-    "columns" : ["state", "has_been_checked"],
-    "cmp"     : cmp_svc_states
-}
-
-def declare_simple_sorter(name, title, table, column, func):
-    multisite_sorters[name] = {
-	"title"   : title,
-	"table"   : table,
-	"columns" : [ column ],
-        "cmp"     : lambda r1, r2: func(column, r1, r2)
-    }
-
-declare_simple_sorter("host",      "Hostname",              "hosts",    "name",          cmp_simple_string)
-declare_simple_sorter("svcdescr",  "Service description",   "services", "description",   cmp_simple_string)
-declare_simple_sorter("svcoutput", "Service plugin output", "services", "plugin_output", cmp_simple_string)
-
-##################################################################################
-# Layouts
-##################################################################################
-
-def render_ungrouped_list(data, filters, group_columns, group_painters, painters):
-    show_filter_form(filters)
-    columns, rowfunction, rows = data
-    html.write("<table class=services>\n")
-    trclass = None
-    for row in rows:
-        if trclass == "odd":
-	    trclass = "even"
-	else:
-	    trclass = "odd"
-        # render state, if available through whole tr
-	state = row.get("state", 0)
-	html.write("<tr class=%s%d>" % (trclass, state))
-        for p in painters:
-	    html.write(p["paint"](rowfunction(p, row)))
-	html.write("</tr>\n")
-    html.write("<table>\n")
-
-def render_grouped_list(data, filters, group_columns, group_painters, painters):
-    show_filter_form(filters)
-    columns, rowfunction, rows = data
-    html.write("<table class=services>\n")
-    last_group = None
-    trclass = None
-    for row in rows:
-        if trclass == "odd":
-	    trclass = "even"
-	else:
-	    trclass = "odd"
-
-        this_group = [ row[c] for c in group_columns ]
-	if this_group != last_group:
-	    html.write("<tr class=groupheader>")
-	    html.write("<td colspan=%d><table><tr>" % len(painters))
-            for p in group_painters:
-	        html.write(p["paint"](rowfunction(p, row)))
-	    html.write("</tr></table></td></tr>\n")
-	    last_group = this_group
-	    trclass = "even"
-        # render state, if available through whole tr
-	state = row.get("state", 0)
-	html.write("<tr class=%s%d>" % (trclass, state))
-        for p in painters:
-	    html.write(p["paint"](rowfunction(p, row)))
-	html.write("</tr>\n")
-    html.write("<table>\n")
-
-multisite_layouts["ungrouped_list"] = { 
-    "title"  : "Ungrouped list",
-    "render" : render_ungrouped_list,
-}
-
-multisite_layouts["grouped_list"] = { 
-    "title"  : "Grouped list",
-    "render" : render_grouped_list,
-    "group" : True
-}
-
-##################################################################################
-# Painters
-##################################################################################
-def nagios_host_url(sitename, host):
-    nagurl = check_mk.site(sitename)["nagios_cgi_url"]
-    return nagurl + "/status.cgi?host=" + htmllib.urlencode(host)
-
-def nagios_service_url(sitename, host, svc):
-    nagurl = check_mk.site(sitename)["nagios_cgi_url"]
-    return nagurl + ( "/extinfo.cgi?type=2&host=%s&service=%s" % (htmllib.urlencode(host), htmllib.urlencode(svc)))
-
-def paint_plain(text):
-    return "<td>%s</td>" % text
-
-def paint_age(timestamp, has_been_checked):
-    if not has_been_checked:
-	return "<td class=age>-</td>"
-	   
-    age = time.time() - timestamp
-    if age < 60 * 10:
-	age_class = "agerecent"
-    else:
-	age_class = "age"
-    return "<td class=%s>%s</td>\n" % (age_class, html.age_text(age))
-
-def paint_site_icon(row):
-    if row("site") and check_mk.multiadmin_use_siteicons:
-	return "<td><img class=siteicon src=\"icons/site-%s-24.png\"> " % row("site")
-    else:
-	return "<td></td>"
-	
-
-multisite_painters["sitename_plain"] = {
-    "title" : "The id of the site",
-    "columns" : ["site"],
-    "paint" : lambda row: "<td>%s</td>" % row("site"),
-}
-
-def paint_host_black(row):
-    state = row("state")
-    if state == 0:
-	style = "up"
-    else:
-	style = "down"
-    return "<td class=host><b class=%s><a href=\"%s\">%s</a></b></td>" % \
-	(style, nagios_host_url(row("site"), row("name")), row("name"))
-
-multisite_painters["host_black"] = {
-    "title" : "Hostname, red background if down or unreachable",
-    "columns" : ["site","name"],
-    "table" : "hosts",
-    "paint" : paint_host_black,
-}
-
-multisite_painters["host_with_state"] = {
-    "title" : "Hostname colored with state",
-    "columns" : ["site","name"],
-    "table" : "hosts",
-    "paint" : lambda row: "<td class=hstate%d><a href=\"%s\">%s</a></td>" % \
-	(row("state"), nagios_host_url(row("site"), row("name")), row("name")),
-}
-
-multisite_painters["host"] = {
-    "title" : "Hostname with link to Nagios",
-    "table" : "hosts",
-    "columns" : ["name"],
-    "paint" : lambda row: "<td><a href=\"%s\">%s</a></td>" % (nagios_host_url(row("site"), row("host_name")), row("name"))
-}
-
-
-def paint_service_state_short(row):
-    if row("has_been_checked") == 1:
-	state = row("state")
-	name = nagios_short_state_names[row("state")]
-    else:
-	state = "p"
-	name = "PEND"
-    return "<td class=state%s>%s</td>" % (state, name)
-
-multisite_painters["service_state"] = {
-    "title" : "The service state, colored and short (4 letters)",
-    "columns" : ["has_been_checked","state"],
-    "paint" : paint_service_state_short
-}
-
-multisite_painters["site_icon"] = {
-    "title" : "Icon showing the site",
-    "columns" : ["site"],
-    "paint" : paint_site_icon
-}
-
-multisite_painters["plugin_output"] = {
-    "title" : "Output of check plugin",
-    "columns" : ["plugin_output"],
-    "paint" : lambda row: paint_plain(row("plugin_output"))
-}
-    
-multisite_painters["service_description"] = {
-    "title" : "Service description",
-    "columns" : ["description"],
-    "paint" : lambda row: "<td><a href=\"%s\">%s</a></td>" % (nagios_service_url(row("site"), row("host_name"), row("description")), row("description"))
-}
-
-multisite_painters["state_age"] = {
-    "title" : "The age of the current state",
-    "columns" : [ "has_been_checked", "last_state_change" ],
-    "paint" : lambda row: paint_age(row("last_state_change"), row("has_been_checked") == 1)
-}

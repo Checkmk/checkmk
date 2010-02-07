@@ -170,6 +170,13 @@ class html:
             self.set_focus(self.current_form, varname)
         self.write(html)
 
+    def sorted_select(self, varname, options, deflt=""):
+        # Sort according to display texts, not keys
+	swapped = [ (disp, key) for key, disp in options ]
+	swapped.sort()
+	swapped = [ (key, disp) for disp, key in swapped ]
+	html.select(self, varname, swapped, deflt)
+
     def select(self, varname, options, deflt=""):
 	current = self.var(varname, deflt)
         self.write("<select name=\"%s\" size=\"1\">\n" % varname)

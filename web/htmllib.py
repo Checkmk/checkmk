@@ -244,20 +244,25 @@ class html:
                               "Please enter the date/time in the format YYYY-MM-DD HH:MM")
         return int(time.mktime(br))
 
+    def html_head(self, title):
+        if not self.req.header_sent:
+            self.req.write(
+		'''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+		<html><head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>%s</title>
+		<link rel="stylesheet" type="text/css" href="check_mk.css">
+		</head>
+		''' % title)
+            self.req.header_sent = True
+
+    def html_foot(self):
+	self.write("</html>\n")
 
     def header(self, title=''):
         if not self.req.header_sent:
-            self.req.write(
-    '''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-    <html><head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>%s</title>
-    <link rel="stylesheet" type="text/css" href="check_mk.css">
-    </head>
-    <body>
-    <h1>%s</h1>
-    ''' % (title, title))
-            self.req.header_sent = True
+	    self.html_head(title)
+	    self.write("<body class=page><h1>%s</h1>\n" % title)
 
     def show_error(self, msg):
         self.write("<div class=error>%s</div>\n" % msg)

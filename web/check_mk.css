@@ -1,4 +1,4 @@
-body {
+body.page {
   background-color: #97a8ab;
   background-image: url("background.jpg");
   background-repeat: repeat;
@@ -213,7 +213,6 @@ table.services td.agerecent {
 td.state0, td.state1, td.state2, td.state3, td.state4, td.statep, td.hstate0, td.hstate1, td.hstate2, td.hstatep { 
   text-align: center;
   font-weight: bold;
-  width: 5ex;
   font-family: sans-serif;
 }
 
@@ -639,3 +638,10 @@ a.button {
     height: 24px;
     -moz-border-radius: 4px;
 }
+
+/* --- plugins for sidebar ----------------------------------- */
+body.side {
+    background-color: #444;
+	color: white;
+}
+

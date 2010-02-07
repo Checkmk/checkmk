@@ -71,9 +71,10 @@ def render_grouped_boxes(data, filters, group_columns, group_painters, painters,
     # render one group
     def render_group(header, rows):
 	html.write("<table class=services><tr class=groupheader>")
+	html.write("<td colspan=%d><table><tr>" % len(painters))
 	for p in group_painters:
 	    html.write(p["paint"](rowfunction(p, rows[0])))
-	html.write("</tr>\n")
+	html.write("</tr></table></td></tr>\n")
 	trclass = None
 	for row in rows:
 	    if trclass == "odd":

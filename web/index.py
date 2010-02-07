@@ -99,6 +99,7 @@ def handler(req):
             import page_multiadmin
             import page_logwatch
 	    import experimental
+	    import sidebar
 
             pagehandlers = { "index"        : page_index,
                              "filter"       : page_multiadmin.page,
@@ -106,7 +107,8 @@ def handler(req):
 			     "edit_views"   : experimental.page_edit_views,
 			     "edit_view"    : experimental.page_edit_view,
 			     "view"         : experimental.page_view,
-                             "logwatch"     : page_logwatch.page, }
+                             "logwatch"     : page_logwatch.page,
+			     "side_views"   : sidebar.page_views, }
 
             handler = pagehandlers.get(req.myfile, page_index)
             handler(html)

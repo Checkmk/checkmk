@@ -77,7 +77,7 @@ def paint_service_state_short(row):
     else:
 	state = "p"
 	name = "PEND"
-    return "<td class=state%s>%s</td>" % (state, name)
+    return "<td style=\"width: 4ex;\" class=state%s>%s</td>" % (state, name)
 
 multisite_painters["service_state"] = {
     "title" : "The service state, colored and short (4 letters)",

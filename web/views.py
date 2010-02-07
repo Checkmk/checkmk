@@ -35,6 +35,9 @@ def setup(h):
 
     connect_to_livestatus(html, auth_user)
 
+def cleanup():
+    disconnect_from_livestatus()
+
 def load_views():
     global multisite_views
     multisite_views = {}
@@ -283,6 +286,7 @@ def load_view_into_html_vars(view):
     html.set_var("view_name",  view["name"])
     html.set_var("datasource", view["datasource"])
     html.set_var("layout",     view["layout"])
+    html.set_var("public",     view["public"] and "on" or "")
 
     # [3] Filters
     for name, filt in multisite_filters.items():
@@ -526,4 +530,7 @@ def connect_to_livestatus(html, auth_user = None):
     if auth_user:
 	live.addHeader("AuthUser: %s" % auth_user)
 
+def disconnect_from_livestatus():
+    global live
+    live = None
 

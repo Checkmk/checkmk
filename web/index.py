@@ -29,7 +29,6 @@ from urllib import urlencode
 import htmllib, transfer
 from lib import *
 
-
 def read_checkmk_defaults(req):
     # read in check_mk's defaults file. That contains all
     # installation settings (paths, etc.)
@@ -81,6 +80,12 @@ def handler(req):
     try:
         read_get_vars(req)
         read_checkmk_defaults(req)
+
+	import page_multiadmin
+	import page_logwatch
+	import views
+	import sidebar
+
         if not check_mk.is_allowed_to_view(req.user):
             html.header("Not Authorized")
 
@@ -96,10 +101,6 @@ def handler(req):
                        " <tt>main.mk:multiadmin_users</tt>"% login_text)
             html.footer()
         else:
-            import page_multiadmin
-            import page_logwatch
-	    import views
-	    import sidebar
 
             pagehandlers = { "index"        : page_index,
                              "filter"       : page_multiadmin.page,
@@ -115,24 +116,24 @@ def handler(req):
 
     except MKUserError, e:
         html.header("Invalid User Input")
-        html.write("<h1 class=error>Invalid User Input</h1>\n")
         html.show_error(e)
         html.footer()
 
     except MKConfigError, e:
         html.header("Configuration Error")
-        html.write("<h1 class=error>Configuration Error</h1>\n")
         html.show_error(e)
         html.footer()
         apache.log_error("Configuration error: %s" % (e,), apache.APLOG_ERR)
 
-    except 1: #Exception, e:
+    except Exception, e:
+	if check_mk.multiadmin_debug:
+	    raise
         html.header("Internal Error")
-        html.write("<h1 class=error>Internal error</h1>")
         html.show_error("Internal error: %s" % e)
         html.footer()
         apache.log_error("Internal error: %s" % (e,), apache.APLOG_ERR)
 
+    views.disconnect_from_livestatus() # HACK.
     return apache.OK
     
 

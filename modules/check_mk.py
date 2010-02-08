@@ -174,6 +174,7 @@ else:
 PHYSICAL_HOSTS = [ '@physical' ] # all hosts but not clusters
 CLUSTER_HOSTS  = [ '@cluster' ]  # all cluster hosts
 ALL_HOSTS      = [ '@all' ]      # physical and cluster hosts
+NEGATE         = '@negate'       # negation in boolean lists
 
 # Basic Settings
 agent_port                         = 6556
@@ -973,7 +974,13 @@ def in_binary_hostlist(hostname, conf):
     
     for entry in conf:
         try:
-            # entry should be one-tuple of two-tuple. Tuple's elements are
+	    # Negation via 'NEGATE'
+	    if entry[0] == NEGATE:
+	        entry = entry[1:]
+		negate = True
+	    else:
+		negate = False
+            # entry should be one-tuple or two-tuple. Tuple's elements are
             # lists of strings. User might forget comma in one tuple. Then the
             # entry is the list itself.
             if type(entry) == list:
@@ -988,7 +995,7 @@ def in_binary_hostlist(hostname, conf):
 
             if hosttags_match_taglist(tags_of_host(hostname), tags) and \
                    in_extraconf_hostlist(hostlist, hostname):
-                return True
+                return not negate
             
         except:
             MKGeneralException("Invalid entry '%r' in host configuration list: must be tupel with 1 or 2 entries" % (entry,))
@@ -1729,6 +1736,12 @@ def service_ignored(hostname, service_description):
 
 def in_boolean_serviceconf_list(hostname, service_description, conflist):
     for entry in conflist:
+	if entry[0] == NEGATE: # this entry is logically negated
+	    negate = True
+	    entry = entry[1:]
+	else:
+	    negate = False
+	    
         if len(entry) == 2:
             hostlist, servlist = entry
             tags = []
@@ -1742,7 +1755,7 @@ def in_boolean_serviceconf_list(hostname, service_description, conflist):
            in_extraconf_servicelist(servlist, service_description):
             if opt_verbose:
                 print "Ignoring service '%s' on host %s." % (service_description, hostname)
-            return True
+            return not negate
     return False # no match. Do not ignore
 
 #   +----------------------------------------------------------------------+

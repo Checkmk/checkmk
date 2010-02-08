@@ -94,7 +94,6 @@ class Helpers:
           if line[0] not in result:
 	    result.append(line[0])
       return result
-    
 
    def query_table(self, query):
       """Issues a query that may return multiple lines and columns and returns 
@@ -160,7 +159,7 @@ class BaseConnection:
 	    result += packet
 	return result
 
-    def query(self, query, add_headers = ""):
+    def do_query(self, query, add_headers = ""):
         if self.socket_state != UP:
 	    self.connect()
         if not query.endswith("\n"):
@@ -191,6 +190,17 @@ class BaseConnection:
 class SingleSiteConnection(BaseConnection, Helpers):
     def __init__(self, unixsocketpath):
 	BaseConnection.__init__(self, "unix:" + unixsocketpath)
+	self.prepend_site = False
+    
+    def set_prepend_site(self, p):
+	self.prepend_site = p
+
+    def query(self, query, add_headers = ""):
+	data = self.do_query(query, add_headers)
+	if self.prepend_site:
+	    return [ [None] + line for line in data ]
+	else:
+	    return data
 
 # sites is a dictionary from site name to a dict.
 # Keys in the dictionary:
@@ -237,7 +247,7 @@ class MultiSiteConnection(Helpers):
 	stillalive = []
 	for sitename, site, connection in self.connections:
 	    try:
-		r = connection.query(query, add_headers)
+		r = connection.do_query(query, add_headers)
 		if self.prepend_site:
 		    r = [ [sitename] + l for l in r ]
 		result += r

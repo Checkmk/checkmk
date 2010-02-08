@@ -580,10 +580,14 @@ do
 	   for php in $DESTDIR$htdocsdir/*.php ; do
 	       sed -ri 's@\$vardir *= *"(.*)"@$vardir="'"$vardir"'"@' $php
            done &&
-	   mkdir -p $DESTDIR$vardir/{autochecks,counters,precompiled,cache,logwatch} &&
+	   mkdir -p $DESTDIR$vardir/{autochecks,counters,precompiled,cache,logwatch,web} &&
 	   if [ -z "$DESTDIR" ] && id "$nagiosuser" > /dev/null 2>&1 ; then
-	     chown -R $nagiosuser $DESTDIR$vardir/{counters,cache,logwatch}
+	     chown -R $nagiosuser $DESTDIR$vardir/{counters,cache,logwatch,web}
            fi &&
+	   if [ -z "$DESTDIR" ] ; then
+	     chgrp -R $wwwgroup $DESTDIR$vardir/web &&
+	     chmod -R g+w $DESTDIR$vardir/web
+	   fi &&
 	   mkdir -p $DESTDIR$confdir/conf.d && 
 	   tar xzf $SRCDIR/conf.tar.gz -C $DESTDIR$confdir &&
 	   if [ -e $DESTDIR$confdir/check_mk.cfg -a ! -e $DESTDIR$confdir/main.mk ] ; then
@@ -677,8 +681,8 @@ and change the path there. Restart Apache afterwards."
 </IfModule>
 
 <IfModule !mod_python.c>
-  Alias /check_mk /usr/share/check_mk/web
-  <Directory /usr/share/check_mk/web>
+  Alias $checkmk_web_uri $web_dir
+  <Directory $web_dir>
         Deny from all
         ErrorDocument 403 "<h1>Check_mk: Incomplete Apache2 Installation</h1>\
 You need mod_python in order to run the web interface of check_mk.<br> \

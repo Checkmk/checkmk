@@ -91,6 +91,12 @@ class html:
     def write(self, text):
         self.req.write(text)
 
+    def heading(self, text):
+	self.write("<h2>%s</h2>\n" % text)
+
+    def rule(self):
+	self.write("<hr/>")
+
     def age_text(self, timedif):
         timedif = int(timedif)
         if timedif < 120:
@@ -107,10 +113,13 @@ class html:
         days = hours / 24
         return "%d days" % days
 
-    def begin_form(self, name):
+    def begin_form(self, name, action = None):
+	if action == None:
+	    action = self.req.myfile + ".py"
         self.current_form = name
-        self.write("<form name=%s class=%s action=\"%s.py\" method=GET>\n" %
-                   (name, name, self.req.myfile))
+        self.write("<form name=%s class=%s action=\"%s\" method=GET>\n" %
+                   (name, name, action))
+	self.hidden_field("filled_in", "on")
 	self.hidden_fields(self.global_vars)
 
     def end_form(self):
@@ -131,7 +140,7 @@ class html:
             self.write("<input type=hidden name=%s value=\"%s\">\n" % (var, attrencode(value)))
 
     def hidden_fields(self, varlist = None):
-        if varlist:
+        if varlist != None:
             for var in varlist:
                 value = self.req.vars.get(var, "")
                 self.hidden_field(var, value)
@@ -147,25 +156,37 @@ class html:
 	vars = [ (v, self.var(v)) for v in self.req.vars if not v.startswith("_") ]
         return self.req.myfile + ".py?" + urlencode_vars(vars + addvars)
 
-    def button(self, varname, title, cssclass):
+    def button(self, varname, title, cssclass=""):
         self.write("<input type=submit name=\"%s\" id=\"%s\" value=\"%s\" class=\"%s\">\n" % \
                    ( varname, varname, title, cssclass))
 
-    def text_input(self, varname, default_value = ""):
+    def buttonlink(self, href, text):
+	self.write("<a href=\"%s\" class=button>%s</a>" % (href, text))
+
+    def number_input(self, varname, deflt = ""):
+	self.text_input(varname, str(deflt), "number")
+
+    def text_input(self, varname, default_value = "", cssclass = "text"):
         value = self.req.vars.get(varname, default_value)
         error = self.user_errors.get(varname)
         html = ""
         if error:
             html = "<x class=inputerror>"
-        html += "<input type=text class=text value=\"%s\" name=\"%s\">" % (attrencode(value), varname)
+        html += "<input type=text class=%s value=\"%s\" name=\"%s\">" % (cssclass, attrencode(value), varname)
         if error:
             html += "</x>"
-            self.set_focus(self. current_form, varname)
+            self.set_focus(self.current_form, varname)
         self.write(html)
 
-    def select(self, varname, options, current, deflt):
-        if not current or current == "":
-            current = deflt;
+    def sorted_select(self, varname, options, deflt=""):
+        # Sort according to display texts, not keys
+	swapped = [ (disp, key) for key, disp in options ]
+	swapped.sort()
+	swapped = [ (key, disp) for disp, key in swapped ]
+	html.select(self, varname, swapped, deflt)
+
+    def select(self, varname, options, deflt=""):
+	current = self.var(varname, deflt)
         self.write("<select name=\"%s\" size=\"1\">\n" % varname)
         for value, text in options:
             if value == current:
@@ -175,7 +196,7 @@ class html:
             self.write("<option value=\"%s\"%s>%s</option>\n" % (value, sel, text))
         self.write("</select>\n")
 
-    def checkbox(self, varname, deflt):
+    def checkbox(self, varname, deflt=""):
 	value = self.req.vars.get(varname, deflt)
 	if value != "":
 	    checked = " CHECKED"
@@ -226,20 +247,47 @@ class html:
                               "Please enter the date/time in the format YYYY-MM-DD HH:MM")
         return int(time.mktime(br))
 
+    def html_head(self, title):
+        if not self.req.header_sent:
+            self.req.write(
+		'''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+		<html><head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>%s</title>
+		<link rel="stylesheet" type="text/css" href="check_mk.css">
+		</head>
+		''' % title)
+            self.req.header_sent = True
+
+    def html_foot(self):
+	self.write("</html>\n")
 
     def header(self, title=''):
         if not self.req.header_sent:
-            self.req.write(
-    '''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-    <html><head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>%s</title>
-    <link rel="stylesheet" type="text/css" href="check_mk.css">
-    </head>
-    <body>
-    <h1>%s</h1>
-    ''' % (title, title))
-            self.req.header_sent = True
+	    self.html_head(title)
+	    self.write("<body class=page>"
+		    "<table class=heading><tr><td width=\"100%%\" class=left><h1>%s</h1></td><td class=right>" % title)
+	    self.write("<b class=headtime>%s</b>" % time.strftime("%H:%M"))
+	    self.write("<a href=\"http://mathias-kettner.de/check_mk.html\">"
+		    "<img border=0 align=bottom src=\"check_mk.trans.54.png\"></a></td></tr></table>\n")
+
+    def show_error(self, msg):
+        self.write("<div class=error>%s</div>\n" % msg)
+
+    def message(self, msg):
+	self.write("<div class=success>%s</div>\n" % msg)
+
+    def confirm(self, msg):
+        if not self.has_var("_do_confirm"):
+            self.write("<div class=really>%s" % msg)
+            self.begin_form("confirm")
+            self.hidden_fields()
+            self.button("_do_confirm", "Yes!", "really")
+            self.end_form()
+            self.write("</div>")
+            return False
+	else:
+	    return True
 
     def footer(self):
         if self.req.header_sent:
@@ -269,9 +317,11 @@ class html:
     def set_focus(self, formname, varname):
         self.focus_object = (formname, varname)
 
-
     def has_var(self, varname):
         return varname in self.req.vars
     
     def var(self, varname, deflt = None):
         return self.req.vars.get(varname, deflt)
+
+    def set_var(self, varname, value):
+	self.req.vars[varname] = value

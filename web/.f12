@@ -1,2 +1,3 @@
-sudo cp *.py *.png *.css *.jpg /usr/share/check_mk/web/ && sudo /etc/init.d/apache2 restart
+sudo cp *.py *.png *.gif *.css *.jpg /usr/share/check_mk/web/ 
+sudo /etc/init.d/apache2 restart
 

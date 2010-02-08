@@ -1,0 +1,43 @@
+title: Check port usage and error counters on Brocade FC switches
+agents: snmp
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This checks monitors the used ports of a Brocade FibreChannel switch.
+ The logical and physical state of each port is checked as well
+ as various error counters (currently those are CRC errors, ENC out
+ and C3 discards).
+
+item:
+ The port number as two-digit string as printed on the switch
+ and as used in the management softare of the switch. The first
+ port has the item {"01"}.
+
+examples:
+ fc_brocade_port_detailed_default_levels = (
+    ( 1, 500    ),     # warn at 1, crit at 500 CRC errors per check intervall
+    ( 0.1, 10.0 ),     # warn/crit if encout is more then 0.1 or 10% of packets
+    ( 101.0, 101.0 ) ) # do never alert C3 discards
+
+perfdata: 
+ Five variables: the number of bytes received and trasmitted, and the number
+ of CRC error, ENC out and C3 discards.
+
+inventory:
+ All ports are monitored, except unsed and missing ones (those without
+ a transmission module installed).
+
+[parameters]
+crcerrors (number, number): A pair of levels for the CRC errors. If the level is
+ an integer number, it is considered to be an absolute number
+ to be applied to the number of
+ events in once check cycle. If it is a floating point
+ number it is interpreted as the percentage of errors in relation
+ to the total number of packets received in the last check cycle.
+encout (number, number):    A pair of levels for the ENC out counter. 
+c3discards (number, number): A pair of levels for the C3 discards.
+
+[configuration]
+fc_brocade_port_detailed_default_levels ( pair, pair, pair ):
+    Default levels used by inventorized checks. This is preset to {( (1, 0.1), (1, 0.1), (1, 0.1) )}.

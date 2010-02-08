@@ -151,9 +151,14 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
 		    httpd_root = p[1].replace('"', "")
         if apache_conffile:
 	    confdirs = scan_apacheconf(apache_conffile)
+
             if len(confdirs) > 0:
                 apache_confdir = confdirs[0]
-                
+
+	    for dir in confdirs:
+                if dir.endswith("/conf.d"):
+                   apache_confdir = dir
+
             # Search for Nagios configuration. We are interested
             # in the authentication configuration. Most Nagios
             # installations use HTTP basic auth with a htpasswd

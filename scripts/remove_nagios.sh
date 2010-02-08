@@ -49,6 +49,7 @@ rm -vrf \
   etc/apache2/conf.d/nagios.* \
   etc/apache2/conf.d/pnp4nagios.* \
   etc/apache2/conf.d/multisite.* \
+  etc/apache2/conf.d/zzz_check_mk.* \
   usr/local/share/pnp4nagios \
   usr/local/bin/npcd* \
   usr/local/share/nagvis \

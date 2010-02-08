@@ -45,7 +45,6 @@ def check_win_cpuusage(item, params, info):
    warn, crit = params
 
    for line in info:
-      try:
          if line[0] == '238:6':
             this_time = int(float(line[1]))
             # Windows sends one counter for each CPU plus one counter that
@@ -80,8 +79,6 @@ def check_win_cpuusage(item, params, info):
 	    else:
                 return (0, "OK" + infotext, perfdata)
 
-      except:
-         return (3, "UNKNOWN - invalid output from plugin")
    return (3, "UNKNOWN - counter for cpu (238:6) not found")
 
 def inventory_win_diskstat(checkname, info):
@@ -97,17 +94,14 @@ def inventory_win_diskstat(checkname, info):
 def check_win_diskstat(item, params, info):
     read_bytes_ctr = 0
     write_bytes_ctr = 0
-    try:
-        for line in info:
-            if line[0] == '2:16':
-                read_bytes_ctr = int(line[2])
-            elif line[0] == '2:18':
-                write_bytes_ctr = int(line[2])
-                break
-        this_time = int(float(line[1]))
+    for line in info:
+	if line[0] == '2:16':
+	    read_bytes_ctr = int(line[2])
+	elif line[0] == '2:18':
+	    write_bytes_ctr = int(line[2])
+	    break
+    this_time = int(float(line[1]))
 
-    except Exception ,e:
-        return (3, "UNKNOWN - invalid output from plugin")
 
     read_timedif,  read_per_sec  = get_counter("diskstat.read",  this_time, read_bytes_ctr)
     write_timedif, write_per_sec = get_counter("diskstat.write", this_time, write_bytes_ctr)

@@ -3,9 +3,7 @@
       * check_mk_template.cfg: fix typo in notes_ur
       * Negation in binary conf lists via NEGATE (clustered_services, ingored_services,
 	bulkwalk_hosts, etc).
-
-      Multiadmin:
-      * Implemented worse state depending sounds on page load
+      * Better handling of wrapping performance counters
 
       Checks & Agents:
       * multipath: Fixed bug in output parser
@@ -20,6 +18,7 @@
       Multiadmin:
       * Allow nagios contacts to be used for authorization (in order to
 	control which services may be seen / acted upon)
+      * Implemented worse state depending sounds on page load
 
 1.1.2:
       Summary:

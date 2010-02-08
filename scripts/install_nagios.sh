@@ -115,6 +115,23 @@ case "$DISTRO" in
 esac	
 
 
+# Process command line options
+if [ $# -gt 0 ]; then
+  while getopts "s:y" options $OPTS; do
+    case $options in
+      y)
+        YES=1
+      s)
+        SITE=$OPTARG
+      ;;
+      *)
+        echo "Error: Unknown option."
+        exit 1
+      ;;
+    esac
+  done
+fi
+
 cat <<EOF
 
 This script is intended for setting up Nagios, PNP4Nagios, NagVis and
@@ -140,12 +157,15 @@ Check_MK on a freshly installed Linux system. It will:
 
 The output of this script is logged into $LOGFILE.
 
-No user interaction is neccesary. Do you want to proceed?
+No user interaction is neccesary.
 EOF
 
-echo -n 'Then please enter "yes": '
-read yes
-[ "$yes" = yes ] || exit 0
+if [ -z "$YES" ]; then
+  echo 'Do you want to proceed?'
+	echo -n 'Then please enter "yes": '
+	read yes
+	[ "$yes" = yes ] || exit 0
+fi
 
 cat <<EOF
 
@@ -159,14 +179,18 @@ for a classical single-site setup:
 
 EOF
 
-echo -n "Site id (leave empty for single site installation): "
-read SITE
-if [ -n "$SITE" ] ; then
-    SITEURL=/$SITE
-    echo -e "\nCool. Doing a multisite installation for site '$SITE'\n"
-else
-    SITEURL=
+if [ -z "$SITE" ]; then
+	echo -n "Site id (leave empty for single site installation): "
+	read SITE
 fi
+
+if [ -n "$SITE" ] ; then
+	SITEURL=/$SITE
+	echo -e "\nCool. Doing a multisite installation for site '$SITE'\n"
+else
+	SITEURL=
+fi
+
 set -e
 
 

@@ -819,14 +819,24 @@ EOF
 
 if [ "$SITE" ] ; then
 cat <<EOF > /etc/$HTTPD/conf.d/multisite.conf
-# Add other sites to your configuration 
+# Add other sites to your configuration
+# RewriteLog /tmp/rewrite.log
+# RewriteLogLevel 9
 #
-#<Location $SITEURL/nagios>
-#  Options +FollowSymlinks
-#  RewriteEngine On
-#  RewriteRule ^/usr/local/share/nagios/htdocs/muc/(.*) http://muc-server/muc/nagios/$1 [P]
-#  RewriteRule ^/usr/local/share/nagios/htdocs/bgh/(.*) http://bgh-server/bgh/nagios/$1 [P]
-#</Location>
+# This example works on the assumption that the id of the 
+# site is identical with the hostname of the site's nagios
+# server.
+
+# Example for two remote sites 'zwei' and 'vier':
+# Alias /zwei/ /remote/zwei/
+# Alias /vier/ /remote/vier/
+
+# <Directory /remote>
+#   Options +FollowSymlinks
+#   RewriteEngine On
+#   RewriteBase /remote/
+#   RewriteRule ^([^/]*)/(.*) http://\$1/\$1/\$2 [P]
+# </Directory>
 EOF
     a2enmod proxy
     a2enmod proxy_http

@@ -839,7 +839,7 @@ EOF
 
 if [ "$SITE" ]; then
     echo "checkmk_web_uri='$SITEURL/check_mk'" >> ~/.check_mk_setup.conf
-f
+fi
 
 ./setup.sh --yes
 

@@ -1,9 +1,9 @@
-body {
+body.page {
   background-color: #97a8ab;
   background-image: url("background.jpg");
   background-repeat: repeat;
   background-position: center;
-  margin: 1ex;
+  margin: 0px 0px 0px 8px;
   padding: 0px;
   font-family: arial, helvetica, sans-serif;
   font-size: 85%;
@@ -26,11 +26,37 @@ h1 {
     margin-top: 0px;
     margin-bottom: 0px;
     display: block;
-    background-color: #ccc;
-    border-bottom: 2px solid #666;
-    border-right: 2px solid #888;
-    padding: 2px 0px 2px 10px;
+    /* background-color: #ccc; */
+    /* border-bottom: 2px solid #666; */
+    /* border-right: 2px solid #888; */
+    /* padding: 2px 0px 2px 10px; */
     -moz-border-radius: 12px;
+}
+
+table.heading {
+    width: 100%;
+    margin-bottom: 2px;
+    border-bottom: 1px solid black;
+    margin-top: 0px;
+    padding-top: 3px;
+}
+
+table.heading td {
+    vertical-align: bottom;
+    padding: 0px;
+}
+
+table.heading td.right img {
+    margin-left: 15px;
+    margin-right: 8px;
+}
+table.heading b.headtime { 
+  color: black;
+  font-size: 120%;
+}
+table.heading td.right {
+    text-align: right;
+    white-space: nowrap;
 }
 
 /* site header --------------------------------------------------------------- */
@@ -123,12 +149,6 @@ table.tabs td.pad b {
   margin-bottom: 60px;
 }
 
-/* Time of rendering the page in header line */
-table.tabs td.pad b.headtime { 
-  color: black;
-  font-size: 120%;
-  margin-right: 1ex;
-}
 
 
 table#tabs { 
@@ -172,6 +192,16 @@ table.services td.host {
   font-size: 120%;
 }
 
+tr.groupheader table {
+    border-style: none;
+    padding: 0px 1ex 0px 0px;
+}
+
+tr.groupheader td {
+   border-style: none;
+   padding: 0px;
+}
+
 td.host b.down { 
   background-color: red;
   -moz-border-radius: 0.5ex;
@@ -200,10 +230,9 @@ table.services td.agerecent {
   font-weight: bold;
 }
 
-td.state0, td.state1, td.state2, td.state3, td.state4, td.hstate0, td.hstate1, td.hstate2 { 
+td.state0, td.state1, td.state2, td.state3, td.state4, td.statep, td.hstate0, td.hstate1, td.hstate2, td.hstatep { 
   text-align: center;
   font-weight: bold;
-  width: 5ex;
   font-family: sans-serif;
 }
 
@@ -225,6 +254,19 @@ td.state2, td.hstate1 {
 td.state3, td.hstate2 { 
   background-color: #f80;
   color: #fff;
+}
+
+td.statep, td.hstatep { 
+  background-color: #888;
+  color: #fff;
+}
+
+/* boxed layout */
+table.boxlayout {
+}
+table.boxlayout td.boxcolumn {
+    vertical-align: top;
+    padding-right: 20px;
 }
 
 
@@ -522,4 +564,137 @@ div#logwatch a.tab:hover {
 div#logwatch a.tabactive {
   padding-bottom: 6px;
   border-bottom-style: none;
+}
+
+/* view editor */
+table.view {
+    width: 100%;
+    border-collapse: collapse;
+    empty-cells: show;
+    background-color: #ffc;
+}
+table.view td {
+   border: 1px solid #884;
+   padding: 2px 0.5ex;
+}
+table.view td.legend {
+    padding-top: 3px;
+    color: #884;
+    vertical-align: top;
+}
+table.view table.filters {
+    border-collapse: collapse;
+    empty-cells: show;
+    margin-bottom: 6px;
+    margin-left: 3px;
+}
+
+
+table.view table.filters td
+{
+   border: 1px solid #cc8;
+}
+
+
+table.view table.filters th
+{
+    text-align: left;
+    padding-bottom: 3px;
+}
+
+table.view table.filters td.usage
+{
+    background-color: #ee8;
+}
+
+table.view table.filters td.widget 
+{
+    background-color: #fff;
+}
+
+table.view table.filters td.title {
+    border-style: none;
+    padding-right: 1em;
+}
+
+table.views {
+    border-collapse: collapse;
+    empty-cells: show;
+    margin-bottom: 1ex;
+}
+
+table.views td, table.views th{
+    border: 1px solid #444;
+    padding: 2px 1ex;
+}
+
+table.views th {
+    background-color: #5b8;
+    color: white;
+}
+
+table.views td.legend {
+    background-color: #7ca;
+}
+
+table.views td.content {
+    background-color: #8ec;
+}
+
+table.views td.edit {
+    background-color: #6ab;
+    text-align: center;
+}
+
+table.views td.buttons {
+    padding: 3px;
+    background-color: #888;
+    vertical-align: middle;
+}
+
+a.button {
+    background-color: #cca;
+    color: #000;
+    text-decoration: none;
+    font-weight: normal;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #ddd #888 #333 #ddd;
+    padding: 0.1ex 1ex;
+    height: 24px;
+    -moz-border-radius: 4px;
+    margin: 2px;
+    font-size: 9pt;
+}
+
+/* --- plugins for sidebar ----------------------------------- */
+body.side {
+    background-color: #000;
+    font-size: 80%;
+    color: #DEE7C6;
+    font-family: verdana,arial, sans-serif;
+}
+body.side h2 {
+    margin-top: 0.5em;
+    margin-bottom: 0.3em;
+    font-size: 10pt;
+    color: #e63;
+}
+body.side a {
+    text-decoration: none;
+    color: #DEE7C6;
+    font-size: 9pt;
+    font-weight: normal;
+}
+body.side a:hover {
+    text-decoration: underline;
+    color: #fff;
+}
+ul.views {
+    margin-left: 0px;
+    padding-left: 1ex;
+}
+
+.side hr {
+width: 103px;
 }

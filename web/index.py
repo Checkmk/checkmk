@@ -29,7 +29,6 @@ from urllib import urlencode
 import htmllib, transfer
 from lib import *
 
-
 def read_checkmk_defaults(req):
     # read in check_mk's defaults file. That contains all
     # installation settings (paths, etc.)
@@ -81,6 +80,12 @@ def handler(req):
     try:
         read_get_vars(req)
         read_checkmk_defaults(req)
+
+	import page_multiadmin
+	import page_logwatch
+	import views
+	import sidebar
+
         if not check_mk.is_allowed_to_view(req.user):
             html.header("Not Authorized")
 
@@ -90,53 +95,55 @@ def handler(req):
                 login_text = "not logged in"
 
             html.write("<h1 class=error>You are not authorized</h1>\n")
-            html.write("<div class=error>Sorry. You are %s and not "
+	    html.show_error("You are %s and not "
                        "authorized to use check_mk's web pages. If you think this is an error, "
                        "please ask your administrator to add your login into the list "
-                       " <tt>main.mk:multiadmin_users</tt>.</div>"% login_text)
+                       " <tt>main.mk:multiadmin_users</tt>"% login_text)
             html.footer()
         else:
-            import page_multiadmin
-            import page_logwatch
 
             pagehandlers = { "index"        : page_index,
                              "filter"       : page_multiadmin.page,
 			     "siteoverview" : page_multiadmin.page_siteoverview,
-                             "logwatch"     : page_logwatch.page, }
+			     "edit_views"   : views.page_edit_views,
+			     "edit_view"    : views.page_edit_view,
+			     "view"         : views.page_view,
+                             "logwatch"     : page_logwatch.page,
+			     "side_views"   : sidebar.page_views, }
 
             handler = pagehandlers.get(req.myfile, page_index)
             handler(html)
 
     except MKUserError, e:
         html.header("Invalid User Input")
-        html.write("<h1 class=error>Invalid User Input</h1>\n")
-        html.write("<div class=error>%s</div>" % e)
+        html.show_error(e)
         html.footer()
 
     except MKConfigError, e:
         html.header("Configuration Error")
-        html.write("<h1 class=error>Configuration Error</h1>\n")
-        html.write("<div class=error>%s</div>" % e)
+        html.show_error(e)
         html.footer()
         apache.log_error("Configuration error: %s" % (e,), apache.APLOG_ERR)
 
-    except 1: #Exception, e:
+    except Exception, e:
+	if check_mk.multiadmin_debug:
+	    raise
         html.header("Internal Error")
-        html.write("<h1 class=error>Internal error</h1>")
-        html.write("<div class=error>Internal error: %s</div>" % e)
+        html.show_error("Internal error: %s" % e)
         html.footer()
         apache.log_error("Internal error: %s" % (e,), apache.APLOG_ERR)
 
+    views.disconnect_from_livestatus() # HACK.
     return apache.OK
     
 
 def page_index(html):
-    html.header("Main page")
-    html.write("<h1>Check_mk</h1>")
+    html.header("Check_MK Overview")
     html.write('''
 <ul>
 <li><a href="http://mathias-kettner.de/check_mk.html">Homepage of Check_mk</a></li>
 <li><a href="filter.py">Filter and Actions</a></li>
+<li><a href="edit_views.py">Experimental: Edit user views</a></li>
 <li><a href="logwatch.py">Logwatch</a></li>
 </ul>
 ''')

@@ -195,7 +195,7 @@ def page(html):
             try:
                 do_actions(html, hits, hosts)
             except MKUserError, e:
-                html.write("<div class=error>%s</div>\n" % e.message)
+		html.show_error(e.message)
                 html.add_user_error(e.varname, e.message)
                 
         if not html.has_var("_do_actions") or html.has_users_errors():
@@ -260,12 +260,7 @@ def show_tabs(html, tabs, active, suppress_form = False):
     if not suppress_form:
         html.end_form()
     
-    html.write("<td width=\"100%%\" class=pad>"
-               "<b class=headtime>%s</b> "
-               "<b>Check_mk Multiadmin</b> "
-               "<a href=\"http://mathias-kettner.de/check_mk\">"
-               "<img align=absbottom border=0 src=\"check_mk.trans.60.png\">"
-               "</a></td></tr></table>" % time.strftime("%H:%M"))
+    html.write("<td width=\"100%%\" class=pad></td></tr></table>\n")
 
 def build_search_filter(html):
     """Constructs Filter: headers for Livestatus according to the current GET
@@ -347,9 +342,8 @@ def show_filter_form(html):
 
     for descr, field, operator, valuefunc in search_dropdown_fields:
          html.write("<tr><td class=legend>%s</td><td class=content>\n" % descr)
-	 current = html.var(field, "")
          options = [ ("", "(ignored)") ] + valuefunc() 
-	 html.select(field, options, current, "") 
+	 html.select(field, options, "") 
 	 html.write("</td></tr>\n")
 
     html.write("<tr><td class=legend>Current State</td>\n"
@@ -380,7 +374,7 @@ def show_filter_form(html):
     html.write("<table class=form id=displayoptions>\n")
     html.write("<tr><td class=legend>Sort order</td>\n"
                "<td class=content>")
-    html.select("sortorder", [ o[0:2] for o in sort_options ], html.var("sortorder"), "0")
+    html.select("sortorder", [ o[0:2] for o in sort_options ], "0")
     html.write("</td></tr>\n")
 
     html.write("</table>")
@@ -541,34 +535,26 @@ def show_search_results(html, services, hosts):
 
 def do_actions(html, hits, hosts):
     if not check_mk.is_allowed_to_act(html.req.user):
-       html.write("<div class=error>"
-	     "You are not allowed to perform actions. If you think this is an error, "
+       html.show_error("You are not allowed to perform actions. If you think this is an error, "
              "please ask your administrator to add your login to <tt>multiadmin_action_users</tt> "
-	     "in <tt>main.mk</tt></div>")
+	     "in <tt>main.mk</tt>")
        return
     count = 0
     pipe = file(html.req.defaults["nagios_command_pipe_path"], "w")
     command = None
     for hit in hits:
         title, nagios_commands = nagios_service_action_command(html, hit)
-        if not html.has_var("do_action_really"):
-            html.write("<div class=really>Do you really want to %s "
-                       "the following %d services?" % (title, len(hits)))
-            html.begin_form("confirm")
-            html.hidden_fields()
-            html.button("do_action_really", "Yes!", "really")
-            html.end_form()
-            html.write("</div>")
+        confirms = html.confirm("Do you really want to %s the following %d services?" % (title, len(hits)))
+        if not confirms:
             show_search_results(html, hits, hosts)
-            return
+	    return
         for command in nagios_commands:
             pipe.write(command)
             count += 1
     if command:
-        html.write("<div class=success>Successfully sent %d commands to Nagios. " % count)
-        html.write("The last one was: <pre>%s</pre></div>" % command)
+	html.message("Successfully sent %d commands to Nagios. The last one was: <pre>%s</pre>" % (count, command))
     else:
-        html.write("<div class=success>No matching service. No command sent.</div>")
+	html.message("No matching service. No command sent.")
 
 
 def nagios_service_action_command(html, service):

@@ -23,15 +23,23 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#!/bin/bash
 set -e
+
 killall nagios
-if [ -n "$DESTDIR" ] ; then cd $DESTDIR ; else cd / ; fi
+
+if [ -n "$DESTDIR" ]; then
+    cd $DESTDIR
+else
+    cd /
+fi
+
 rm -vrf \
   etc/nagios \
+  usr/local/nagios \
   usr/local/bin/nagios* \
   usr/local/share/nagios \
   usr/local/lib/nagios \
+  usr/local/share/nagios \
   var/lib/nagios \
   var/log/nagios \
   var/cache/nagios \
@@ -39,7 +47,11 @@ rm -vrf \
   var/run/nagios* \
   etc/init.d/nagios \
   etc/apache2/conf.d/nagios.* \
+  etc/apache2/conf.d/pnp4nagios.* \
+  etc/apache2/conf.d/multisite.* \
+  usr/local/share/pnp4nagios \
   usr/local/bin/npcd* \
+  usr/local/share/nagvis \
   etc/check_mk \
   usr/share/check_mk \
   var/lib/check_mk \

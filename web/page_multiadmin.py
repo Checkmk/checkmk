@@ -118,7 +118,9 @@ def page_siteoverview(html):
     html.footer()
 
 
-def page(html):
+def page(h):
+    global html
+    html = h
     # make sure current setting of site_vars are contained in all forms
     # and buttons
     html.add_global_vars(site_vars)
@@ -146,7 +148,7 @@ def page(html):
  
     if html.has_var("filled_in") and not html.has_var("filter"):
         search_filter = build_search_filter(html)
-        hits, hosts = find_entries(search_filter, auth_user)
+        hits, hosts = find_entries(search_filter)
 
     if html.has_var("results"):
         show_tabs(html, tabs, "results")
@@ -183,7 +185,7 @@ def show_site_header(html):
 	varname = "siteoff_" + sitename
 	if not html.var(varname) == "on": # site not switched off -> is on
 	    switch = "on" # show 'on', switch off
-	    if sitename in site_status:
+	    if sitename in html.site_status:
 		style = "online"
 	    else:
 		style = "offline"

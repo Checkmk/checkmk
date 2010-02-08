@@ -68,29 +68,29 @@ class Helpers:
    def query_value(self, query):
       """Issues a query that returns exactly one line and one columns and returns 
 	 the response as a single value"""
-      return self.query(query, "ColumnHeaders: off")[0][0]
+      return self.query(query, "ColumnHeaders: off\n")[0][0]
    
    def query_line(self, query):
       """Issues a query that returns one line of data and returns the elements
 	 of that line as list"""
-      return self.query(query, "ColumnHeaders: off")[0]
+      return self.query(query, "ColumnHeaders: off\n")[0]
 
    def query_line_assoc(self, query):
       """Issues a query that returns one line of data and returns the elements
 	 of that line as a dictionary from column names to values"""
-      r = self.query(query, "ColumnHeaders: on")[0:2]
+      r = self.query(query, "ColumnHeaders: on\n")[0:2]
       return dict(zip(r[0], r[1]))
 
    def query_column(self, query):
       """Issues a query that returns exactly one column and returns the values 
 	 of all lines in that column as a single list"""
-      return [ l[0] for l in self.query(query, "ColumnHeaders: off") ]
+      return [ l[0] for l in self.query(query, "ColumnHeaders: off\n") ]
 
    def query_column_unique(self, query):
       """Issues a query that returns exactly one column and returns the values 
 	 of all lines with duplicates removed"""
       result = []
-      for line in self.query(query, "ColumnHeaders: off"):
+      for line in self.query(query, "ColumnHeaders: off\n"):
           if line[0] not in result:
 	    result.append(line[0])
       return result
@@ -98,13 +98,13 @@ class Helpers:
    def query_table(self, query):
       """Issues a query that may return multiple lines and columns and returns 
 	 a list of lists"""
-      return self.query(query, "ColumnHeaders: off")
+      return self.query(query, "ColumnHeaders: off\n")
 
    def query_table_assoc(self, query):
       """Issues a query that may return multiple lines and columns and returns
 	 a dictionary from column names to values for each line. This can be
 	 very ineffective for large response sets."""
-      response = self.query(query, "ColumnHeaders: on")
+      response = self.query(query, "ColumnHeaders: on\n")
       headers = response[0]
       result = []
       for line in response[1:]:
@@ -188,8 +188,8 @@ class BaseConnection:
 	    raise MKLivestatusSocketError(str(e))
 
 class SingleSiteConnection(BaseConnection, Helpers):
-    def __init__(self, unixsocketpath):
-	BaseConnection.__init__(self, "unix:" + unixsocketpath)
+    def __init__(self, socketurl):
+	BaseConnection.__init__(self, socketurl)
 	self.prepend_site = False
 	self.auth_users = {}
 	self.auth_header = ""
@@ -198,21 +198,21 @@ class SingleSiteConnection(BaseConnection, Helpers):
 	self.prepend_site = p
 
     def query(self, query, add_headers = ""):
-	data = self.do_query(query, add_headers + self.auth_header)
+	data = self.do_query(query, self.auth_header + add_headers)
 	if self.prepend_site:
 	    return [ [None] + line for line in data ]
 	else:
 	    return data
 
     # Set user to be used in certain authorization domain
-    def set_auth_user(domain, user):
+    def set_auth_user(self, domain, user):
 	if user:
 	    self.auth_users[domain] = user
 	else:
 	    del self.auth_users[domain]
 
     # Switch future request to new authorization domain
-    def set_auth_domain(domain):
+    def set_auth_domain(self, domain):
 	auth_user = self.auth_users.get(domain)
 	if auth_user:
 	    self.auth_header = "AuthUser: %s\n" % auth_user
@@ -260,11 +260,11 @@ class MultiSiteConnection(Helpers):
     def alive_sites(self):
 	return self.connections.keys()
     
-    def set_auth_user(domain, user):
+    def set_auth_user(self, domain, user):
 	for sitename, site, connection in self.connections:
 	    connection.set_auth_user(domain, user)
 
-    def set_auth_domain(domain):
+    def set_auth_domain(self, domain):
 	for sitename, site, connection in self.connections:
 	    connection.set_auth_domain(domain)
 

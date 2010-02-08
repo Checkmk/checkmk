@@ -26,7 +26,7 @@
 
 from mod_python import apache,util
 from urllib import urlencode
-import htmllib, transfer
+import htmllib, transfer, livestatus
 from lib import *
 
 def read_checkmk_defaults(req):
@@ -73,11 +73,11 @@ def connect_to_livestatus(html):
 		enabled_sites[sitename] = site
 	html.live = livestatus.MultiSiteConnection(enabled_sites)
 	html.live.set_prepend_site(True)
-        for site, v1, v2 in live.query("GET status\nColumns: livestatus_version program_version"):
+        for site, v1, v2 in html.live.query("GET status\nColumns: livestatus_version program_version"):
 	    html.site_status[site] = { "livestatus_version": v1, "program_version" : v2 }
 	html.live.set_prepend_site(False)
     else:
-	html.live = livestatus.SingleSiteConnection(check_mk.livestatus_unix_socket)
+	html.live = livestatus.SingleSiteConnection("unix:" + check_mk.livestatus_unix_socket)
 
 
 def handler(req):
@@ -111,10 +111,10 @@ def handler(req):
 
 	# in main.mk you can configure "multiadmin_users": a whitelist of users.
         if not check_mk.is_allowed_to_view(req.user):
-	    reason = "Not Authorized.  You are logged in as <b>%s</b>" % req.user
-            reason += "If you think this is an error, "
-                       "please ask your administrator to add your login into the list "
-                       " <tt>main.mk:multiadmin_users</tt>" % login_text
+	    reason = "Not Authorized.  You are logged in as <b>%s</b>. " % req.user
+            reason += "If you think this is an error, " \
+                       "please ask your administrator to add your login into the list " \
+                       " <tt>main.mk:multiadmin_users</tt>"
             raise MKConfigError(reason)
 
         # General access allowed. Now connect to livestatus

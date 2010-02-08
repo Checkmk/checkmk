@@ -121,6 +121,7 @@ if [ $# -gt 0 ]; then
     case $options in
       y)
         YES=1
+      ;;
       s)
         SITE=$OPTARG
       ;;
@@ -906,6 +907,33 @@ EOF
 check_mk -I alltcp
 rm /etc/nagios/conf.d/localhost.cfg
 check_mk -R
+
+# -----------------------------------------------------------------------------
+# Livestatus xinetd
+# -----------------------------------------------------------------------------
+
+cat <<EOF > /etc/xinetd.d/livestatus
+service livestatus
+{
+	type		= UNLISTED
+	port		= 6557
+	socket_type	= stream
+	protocol	= tcp
+	wait		= no
+# limit to 100 connections per second. Disable 3 secs if above.
+	cps             = 100 3
+# Disable TCP delay, makes connection more responsive
+	flags           = NODELAY
+	user		= nagios
+	server		= /usr/bin/unixcat
+	server_args     = /var/run/nagios/rw/live
+# configure the IP address(es) of your Nagios server here:
+#	only_from       = 127.0.0.1 193.18.227.73 172.19.209.{1,2,3}
+	disable		= no
+}
+EOF
+/etc/init.d/xinetd restart
+
 
 heading "Cleaning up"
 rm -f /etc/nagios/*.cfg-*

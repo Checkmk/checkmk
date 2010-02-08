@@ -681,8 +681,8 @@ and change the path there. Restart Apache afterwards."
 </IfModule>
 
 <IfModule !mod_python.c>
-  Alias /check_mk /usr/share/check_mk/web
-  <Directory /usr/share/check_mk/web>
+  Alias $checkmk_web_uri $web_dir
+  <Directory $web_dir>
         Deny from all
         ErrorDocument 403 "<h1>Check_mk: Incomplete Apache2 Installation</h1>\
 You need mod_python in order to run the web interface of check_mk.<br> \

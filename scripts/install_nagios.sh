@@ -38,7 +38,7 @@ NAGIOS_VERSION=3.2.0
 PLUGINS_VERSION=1.4.14
 CHECK_MK_VERSION=1.1.3rc
 PNP_VERSION=0.6.2
-NAGVIS_VERSION=1.4.5
+NAGVIS_VERSION=1.4.6
 RRDTOOL_VERSION=1.4.2
 
 SOURCEFORGE_MIRROR=dfn
@@ -114,6 +114,7 @@ case "$DISTRO" in
         exit 1
 esac	
 
+
 cat <<EOF
 
 This script is intended for setting up Nagios, PNP4Nagios, NagVis and
@@ -146,6 +147,26 @@ echo -n 'Then please enter "yes": '
 read yes
 [ "$yes" = yes ] || exit 0
 
+cat <<EOF
+
+This version of the script supports Multisite-Installations. That
+allows you to combine several Nagios instances in one web GUI
+using Livestatus and Apache reverse proxy for live data access.
+In order to use the feature, you need a unique prefix in the URLs
+for each site, e.g. /muc/nagios/ instead of /nagios/, where 'muc'
+is the id of the site. Please enter a site id or leave empty
+for a classical single-site setup:
+
+EOF
+
+echo -n "Site id (leave empty for single site installation): "
+read SITE
+if [ -n "$SITE" ] ; then
+    SITEURL=/$SITE
+    echo -e "\nCool. Doing a multisite installation for site '$SITE'\n"
+else
+    SITEURL=
+fi
 set -e
 
 
@@ -185,7 +206,6 @@ else
      sqlite cairo-devel libxml2-devel pango-devel pango libpng-devel freetype freetype-devel libart_lgpl-devel 
 fi
 
-
 set +e
 killall nagios
 killall -9 nagios
@@ -219,10 +239,10 @@ make -j 16
 make install
 popd
 
-# -----------------------------------------------------------------------------
-# Compile Nagios
+
 # -----------------------------------------------------------------------------
 heading "Nagios"
+# -----------------------------------------------------------------------------
 # Mounting tmpfs to /var/spool/nagios
 umount /var/spool/nagios 2>/dev/null || true
 mkdir -p /var/spool/nagios
@@ -247,8 +267,8 @@ id nagios >/dev/null 2>&1 || useradd -c 'Nagios Daemon' -s /bin/false -d /var/li
   --with-temp-dir=/var/lib/nagios/tmp \
   --with-init-dir=/etc/init.d \
   --with-lockfile=/var/run/nagios.lock \
-  --with-cgiurl=/nagios/cgi-bin \
-  --with-htmurl=/nagios \
+  --with-cgiurl=$SITEURL/nagios/cgi-bin \
+  --with-htmurl=$SITEURL/nagios \
   --bindir=/usr/local/bin \
   --sbindir=/usr/local/lib/nagios/cgi-bin \
   --libexecdir=/usr/local/lib/nagios \
@@ -298,6 +318,9 @@ chown root.nagios /usr/local/lib/nagios/plugins/check_icmp
 chmod 4750 /usr/local/lib/nagios/plugins/check_icmp
 chown nagios.nagios /var/log/nagios
 
+# Fix F5 problem in Nagios webinterface
+sed -i '1s/.*$/<?php header("Cache-Control: max-age=7200, public"); ?>\n&/g' /usr/local/share/nagios/htdocs/index.php
+
 # Prepare configuration
 popd
 pushd /etc/nagios
@@ -332,7 +355,7 @@ log_initial_states=0
 log_external_commands=0
 log_passive_checks=0
 
-status_update_interval=10
+status_update_interval=30
 nagios_user=nagios
 nagios_group=nagios
 check_external_commands=1
@@ -359,7 +382,7 @@ date_format=iso8601
 enable_embedded_perl=0
 use_regexp_matching=0
 use_true_regexp_matching=0
-use_large_installation_tweaks=1
+use_large_installation_tweaks=0
 enable_environment_macros=1
 debug_level=0
 debug_verbosity=0
@@ -472,6 +495,7 @@ define command {
 EOF
 
 
+# Password is 'test'
 echo 'nagiosadmin:vWQwFr7mwjvmI' > htpasswd
 
 
@@ -506,6 +530,10 @@ pushd $PNP_NAME-$PNP_VERSION
 make all
 make install install-config install-webconf
 install -m 644 contrib/ssi/status-header.ssi /usr/local/share/nagios/htdocs/ssi/
+if [ "$SITE" ] ; then
+    sed -i "s@/pnp4nagios@$SITEURL/pnp4nagios@" /usr/local/share/nagios/htdocs/ssi/status-header.ssi 
+fi
+
 rm -rf /etc/nagios/check_commands
 popd
 pushd /etc/nagios
@@ -563,7 +591,8 @@ cat <<EOF > config.php
 \$conf['refresh'] = "90";
 \$conf['max_age'] = 60*60*6;   
 \$conf['temp'] = "/var/tmp";
-\$conf['nagios_base'] = "/nagios/cgi-bin";
+\$conf['pnp_base'] = "$SITEURL/pnp4nagios";
+\$conf['nagios_base'] = "$SITEURL/nagios/cgi-bin";
 \$conf['allowed_for_service_links'] = "EVERYONE";
 \$conf['allowed_for_host_search'] = "EVERYONE";
 \$conf['allowed_for_host_overview'] = "EVERYONE";
@@ -594,7 +623,7 @@ cat <<EOF > config.php
 EOF
 
 cat <<EOF > /etc/$HTTPD/conf.d/pnp4nagios.conf
-Alias /pnp4nagios "/usr/local/share/pnp4nagios"
+Alias $SITEURL/pnp4nagios "/usr/local/share/pnp4nagios"
 
 <Directory "/usr/local/share/pnp4nagios">
    	AllowOverride None
@@ -612,7 +641,7 @@ Alias /pnp4nagios "/usr/local/share/pnp4nagios"
 		RewriteEngine On
 		Options FollowSymLinks
 		# Installation directory
-		RewriteBase /pnp4nagios/
+		RewriteBase $SITEURL/pnp4nagios/
 		# Protect application and system files from being viewed
 		RewriteRule ^(application|modules|system) - [F,L]
 		# Allow any files or directories that exist to be displayed directly
@@ -623,8 +652,6 @@ Alias /pnp4nagios "/usr/local/share/pnp4nagios"
 	</IfModule>
 </Directory>
 EOF
-
-
 
 chown -R root.root pages *.pdf pnp4nagios_release *.cfg
 popd
@@ -677,6 +704,27 @@ a2enmod rewrite || true
 
 rm -f /usr/local/share/pnp4nagios/install.php
 
+# Fixes for Multisite
+if [ "$SITE" ]
+then
+    sed -i 's#^.config..site_domain...*#\$config["site_domain"] = "'"$SITEURL"'/pnp4nagios";#' /usr/local/share/pnp4nagios/application/config/config.php
+    sed -i "s#/pnp4nagios#$SITEURL/pnp4nagios#" /usr/local/share/pnp4nagios/media/js/basket.js
+cat  <<EOF > /usr/local/share/pnp4nagios/application/views/popup.php
+<table><tr><td>
+<?php
+foreach ( \$this->data->STRUCT as \$KEY=>\$VAL){
+	\$source = \$VAL['SOURCE'];
+	echo "<tr><td>\n";
+	echo "<img width=\"".\$imgwidth."\" src=\"$SITEURL/pnp4nagios/image?host=\$host&srv=\$srv&view=\$view&source=\$source\">\n";
+	echo "</td></tr>\n";
+}
+?>
+</table>
+EOF
+fi
+
+
+
 # -----------------------------------------------------------------------------
 # Und auch noch Nagvis
 # -----------------------------------------------------------------------------
@@ -690,7 +738,7 @@ rm -rf /usr/local/share/nagvis
   -u $WWWUSER \
   -g $WWWGROUP \
   -w /etc/$HTTPD/conf.d \
-  -W /nagvis \
+  -W $SITEURL/nagvis \
   -B /usr/local/bin/nagios \
   -b /usr/bin \
   -p /usr/local/share/nagvis \
@@ -700,8 +748,8 @@ popd
 cat <<EOF > /usr/local/share/nagvis/etc/nagvis.ini.php
 [paths]
 base="/usr/local/share/nagvis/"
-htmlbase="/nagvis/"
-htmlcgi="/nagios/cgi-bin"
+htmlbase="$SITEURL/nagvis/"
+htmlcgi="$SITEURL/nagios/cgi-bin"
 
 [defaults]
 backend="live_1"
@@ -709,17 +757,14 @@ backend="live_1"
 [backend_live_1]
 backendtype="mklivestatus"
 socket="unix:/var/run/nagios/rw/live"
+htmlcgi="$SITEURL/nagios/cgi-bin"
 EOF
 
 
-sed -i -e 's@^;socket="unix:.*@socket="unix:/var/run/nagios/rw/live"@' \
-       -e 's@^;backend=.*@backend="live_1"@' \
-   /usr/local/share/nagvis/etc/nagvis.ini.php
-
 cat <<EOF > /etc/$HTTPD/conf.d/nagios.conf
-RedirectMatch ^/$ /nagios/
+RedirectMatch ^/$ $SITEURL/nagios/
 
-Alias /nagvis/ /usr/local/share/nagvis/
+Alias $SITEURL/nagvis/ /usr/local/share/nagvis/
 <Directory /usr/local/share/nagvis/>
    allow from all
    AuthName "Nagios Access"
@@ -728,7 +773,7 @@ Alias /nagvis/ /usr/local/share/nagvis/
    require valid-user 
 </Directory>
 
-ScriptAlias /nagios/cgi-bin/ /usr/local/lib/nagios/cgi-bin/
+ScriptAlias $SITEURL/nagios/cgi-bin/ /usr/local/lib/nagios/cgi-bin/
 <Directory /usr/local/lib/nagios/cgi-bin/>
    allow from all
    AuthName "Nagios Access"
@@ -737,7 +782,7 @@ ScriptAlias /nagios/cgi-bin/ /usr/local/lib/nagios/cgi-bin/
    require valid-user 
 </Directory>
 
-Alias /nagios/ /usr/local/share/nagios/htdocs/
+Alias $SITEURL/nagios/ /usr/local/share/nagios/htdocs/
 <Directory /usr/local/share/nagios/htdocs/>
    allow from all
    AuthName "Nagios Access"
@@ -747,6 +792,20 @@ Alias /nagios/ /usr/local/share/nagios/htdocs/
 </Directory>
 EOF
 
+if [ "$SITE" ] ; then
+cat <<EOF > /etc/$HTTPD/conf.d/multisite.conf
+# Add other sites to your configuration 
+#
+#<Location $SITEURL/nagios>
+#  Options +FollowSymlinks
+#  RewriteEngine On
+#  RewriteRule ^/usr/local/share/nagios/htdocs/muc/(.*) http://muc-server/muc/nagios/$1 [P]
+#  RewriteRule ^/usr/local/share/nagios/htdocs/bgh/(.*) http://bgh-server/bgh/nagios/$1 [P]
+#</Location>
+EOF
+    a2enmod proxy
+    a2enmod proxy_http
+fi
 
 
 add_user_to_group $WWWUSER nagios
@@ -775,9 +834,16 @@ cat <<EOF > ~/.check_mk_setup.conf
 check_icmp_path='/usr/local/lib/nagios/plugins/check_icmp'
 rrddir='/var/lib/nagios/rrd'
 pnptemplates='/usr/local/share/pnp4nagios/templates'
+pnp_prefix='$SITEURL/pnp4nagios/graph'
 EOF
 
 ./setup.sh --yes
+
+# HACK: Change popup link for PNP, not yet done by setup
+if [ "$SITE" ] ; then
+    sed -i "s@'/pnp4nagios@'$SITEURL/pnp4nagios@" /usr/share/doc/check_mk/check_mk_templates.cfg
+fi
+
 echo 'do_rrd_update = False' >> /etc/check_mk/main.mk
 popd
 
@@ -790,7 +856,7 @@ echo "Restarting apache"
 activate_initd $HTTPD
 
 # side.html anpassen
-HTML='<div class="navsectiontitle">Check_MK</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="/check_mk/filter.py" target="<?php echo $link_target;?>">Filters and Actions</a></li></div></div><div class="navsection"><div class="navsectiontitle">Nagvis</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="/nagvis/" target="<?php echo $link_target;?>">Overview page</a></li></div></div><div class="navsection">'
+HTML='<div class="navsectiontitle">Check_MK</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="'"$SITEURL"'/check_mk/filter.py" target="<?php echo $link_target;?>">Filters and Actions</a></li><li><a href="'"$SITEURL"'/check_mk/siteoverview.py" target="<?php echo $link_target;?>">Site Overview</a></li></ul></div></div><div class="navsection"><div class="navsectiontitle">NagVis</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="'"$SITEURL"'/nagvis/" target="<?php echo $link_target;?>">Overview page</a></li></div></div><div class="navsection">'
 QUOTE=${HTML//\//\\/}
 sed -i "/.*Reports<.*$/i$QUOTE" /usr/local/share/nagios/htdocs/side.php
 
@@ -831,8 +897,23 @@ Nagios and the addons have been installed into the following paths:
 
  /usr/local               programs, scripts, fixed data
 
-Now you can point your browser to to http://localhost/nagios/
+Now you can point your browser to to http://localhost/$SITEURL/nagios/
 and login with 'nagiosadmin' and 'test'.
+
 You can change that password with
 # htpasswd /etc/nagios/htpasswd nagiosadmin
+
 EOF
+
+if [ "$SITE" ] ; then
+cat <<EOF
+Multisite TODO: You need to alter the apache configuration to make 
+the Multisite setup work.
+
+A sample configuration is placed here: /etc/$HTTPD/conf.d/multisite.conf
+
+You need to add the single sites to the master server or all sites
+to their partners.
+
+EOF
+fi

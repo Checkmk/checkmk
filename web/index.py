@@ -61,6 +61,24 @@ def read_get_vars(req):
             if len(values) >= 1:
                 req.vars[key] = values[-1]
 
+def connect_to_livestatus(html):
+    html.site_status = {}
+    # If there is only one site (non-multisite), than
+    # user cannot enable/disable. 
+    if check_mk.is_multisite():
+	enabled_sites = {}
+	for sitename, site in check_mk.sites().items():
+	    varname = "siteoff_" + sitename
+	    if not html.var(varname) == "on":
+		enabled_sites[sitename] = site
+	html.live = livestatus.MultiSiteConnection(enabled_sites)
+	html.live.set_prepend_site(True)
+        for site, v1, v2 in live.query("GET status\nColumns: livestatus_version program_version"):
+	    html.site_status[site] = { "livestatus_version": v1, "program_version" : v2 }
+	html.live.set_prepend_site(False)
+    else:
+	html.live = livestatus.SingleSiteConnection(check_mk.livestatus_unix_socket)
+
 
 def handler(req):
     req.content_type = "text/html"
@@ -85,34 +103,48 @@ def handler(req):
 	import page_logwatch
 	import views
 	import sidebar
+    
+        # These pages may only be used with HTTP authentication turned on. 
+	if not req.user or type(req.user) != str:
+	    raise MKConfigError("You are not logged in. This should never happen. Please "
+		    "review your Apache configuration.")
 
+	# in main.mk you can configure "multiadmin_users": a whitelist of users.
         if not check_mk.is_allowed_to_view(req.user):
-            html.header("Not Authorized")
-
-            if type(req.user) == str:
-                login_text = "logged in as <b>%s</b>" % req.user
-            else:
-                login_text = "not logged in"
-
-            html.write("<h1 class=error>You are not authorized</h1>\n")
-	    html.show_error("You are %s and not "
-                       "authorized to use check_mk's web pages. If you think this is an error, "
+	    reason = "Not Authorized.  You are logged in as <b>%s</b>" % req.user
+            reason += "If you think this is an error, "
                        "please ask your administrator to add your login into the list "
-                       " <tt>main.mk:multiadmin_users</tt>"% login_text)
-            html.footer()
-        else:
+                       " <tt>main.mk:multiadmin_users</tt>" % login_text
+            raise MKConfigError(reason)
 
-            pagehandlers = { "index"        : page_index,
-                             "filter"       : page_multiadmin.page,
-			     "siteoverview" : page_multiadmin.page_siteoverview,
-			     "edit_views"   : views.page_edit_views,
-			     "edit_view"    : views.page_edit_view,
-			     "view"         : views.page_view,
-                             "logwatch"     : page_logwatch.page,
-			     "side_views"   : sidebar.page_views, }
+        # General access allowed. Now connect to livestatus
+	connect_to_livestatus(html)
 
-            handler = pagehandlers.get(req.myfile, page_index)
-            handler(html)
+	# If multiadmin is retricted to data user is a nagios contact for,
+	# we need to set an AuthUser: header for livestatus
+	if check_mk.multiadmin_restrict and \
+	    req.user not in check_mk.multiadmin_unrestricted_users:
+		html.live.set_auth_user('read', req.user)
+
+	# User wants to do action?
+	if check_mk.multiadmin_restrict_actions or check_mk.multiadmin_restrict:
+	    if req.user not in check_mk.multiadmin_unrestricted_action_users:
+		html.live.set_auth_user('action', req.user)
+
+        # Default auth domain is read. Please set to None to switch off authorization
+	html.live.set_auth_domain('read')
+
+	pagehandlers = { "index"        : page_index,
+			 "filter"       : page_multiadmin.page,
+			 "siteoverview" : page_multiadmin.page_siteoverview,
+			 "edit_views"   : views.page_edit_views,
+			 "edit_view"    : views.page_edit_view,
+			 "view"         : views.page_view,
+			 "logwatch"     : page_logwatch.page,
+			 "side_views"   : sidebar.page_views, }
+
+	handler = pagehandlers.get(req.myfile, page_index)
+	handler(html)
 
     except MKUserError, e:
         html.header("Invalid User Input")
@@ -127,13 +159,15 @@ def handler(req):
 
     except Exception, e:
 	if check_mk.multiadmin_debug:
+            html.live = None
 	    raise
         html.header("Internal Error")
         html.show_error("Internal error: %s" % e)
         html.footer()
         apache.log_error("Internal error: %s" % (e,), apache.APLOG_ERR)
 
-    views.disconnect_from_livestatus() # HACK.
+    # Disconnect from livestatus!
+    html.live = None
     return apache.OK
     
 
@@ -148,4 +182,6 @@ def page_index(html):
 </ul>
 ''')
     html.footer()
+
+
 

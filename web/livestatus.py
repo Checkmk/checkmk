@@ -191,16 +191,34 @@ class SingleSiteConnection(BaseConnection, Helpers):
     def __init__(self, unixsocketpath):
 	BaseConnection.__init__(self, "unix:" + unixsocketpath)
 	self.prepend_site = False
+	self.auth_users = {}
+	self.auth_header = ""
     
     def set_prepend_site(self, p):
 	self.prepend_site = p
 
     def query(self, query, add_headers = ""):
-	data = self.do_query(query, add_headers)
+	data = self.do_query(query, add_headers + self.auth_header)
 	if self.prepend_site:
 	    return [ [None] + line for line in data ]
 	else:
 	    return data
+
+    # Set user to be used in certain authorization domain
+    def set_auth_user(domain, user):
+	if user:
+	    self.auth_users[domain] = user
+	else:
+	    del self.auth_users[domain]
+
+    # Switch future request to new authorization domain
+    def set_auth_domain(domain):
+	auth_user = self.auth_users.get(domain)
+	if auth_user:
+	    self.auth_header = "AuthUser: %s\n" % auth_user
+	else:
+	    self.auth_header = ""
+
 
 # sites is a dictionary from site name to a dict.
 # Keys in the dictionary:
@@ -217,7 +235,7 @@ class MultiSiteConnection(Helpers):
 	for sitename, site in sites.items():
 	    try:
 		url = site["socket"]
-	        connection = BaseConnection(url)
+	        connection = SingleSiteConnection(url)
 		if "timeout" in site:
 		   connection.set_timeout(int(site["timeout"]))
 		connection.connect()
@@ -241,6 +259,14 @@ class MultiSiteConnection(Helpers):
 
     def alive_sites(self):
 	return self.connections.keys()
+    
+    def set_auth_user(domain, user):
+	for sitename, site, connection in self.connections:
+	    connection.set_auth_user(domain, user)
+
+    def set_auth_domain(domain):
+	for sitename, site, connection in self.connections:
+	    connection.set_auth_domain(domain)
 
     def query(self, query, add_headers = ""):
 	result = []
@@ -257,6 +283,15 @@ class MultiSiteConnection(Helpers):
 		    "exception" : e,
 		    "site" : site,
 		}
-	self.alive_sites = stillalive
+	self.connections = stillalive
 	return result
 
+    # Return connection to localhost (UNIX), if available
+    def local_connection(self):
+	for sitename, site, connection in self.connections:
+	    if site["socket"].startswith("unix:"):
+		return connection
+	raise MKLivestatusConfigError("No livestatus connection to local host") 
+
+# Examle for forcing local connection:
+# live.local_connection().query_single_value(...)

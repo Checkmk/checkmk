@@ -24,33 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import htmllib, time, re, check_mk, livestatus
+import htmllib, time, re, check_mk
 from lib import *
-
-
-def connect_to_livestatus(html, auth_user = None):
-    global site_status, live
-    site_status = {}
-    # If there is only one site (non-multisite), than
-    # user cannot enable/disable. 
-    if check_mk.is_multisite():
-	enabled_sites = {}
-	for sitename, site in check_mk.sites().items():
-	    varname = "siteoff_" + sitename
-	    if not html.var(varname) == "on":
-		enabled_sites[sitename] = site
-	global live
-	live = livestatus.MultiSiteConnection(enabled_sites)
-	live.set_prepend_site(True)
-        for site, v1, v2 in live.query("GET status\nColumns: livestatus_version program_version"):
-	    site_status[site] = { "livestatus_version": v1, "program_version" : v2 }
-	live.set_prepend_site(False)
-    else:
-	live = livestatus.SingleSiteConnection(check_mk.livestatus_unix_socket)
-
-    if auth_user:
-	live.addHeader("AuthUser: %s" % auth_user)
-
 
 def find_entries(filt, auth_user = None):
     services = []
@@ -59,12 +34,11 @@ def find_entries(filt, auth_user = None):
    
     columns = ["host_name","description","state","host_state", 
 	      "plugin_output", "last_state_change", "downtimes" ] 
-
 	
     if im: # let livestatus api prepend site to each line
-       live.set_prepend_site(True)
+       html.live.set_prepend_site(True)
 
-    svcs = live.query("GET services\nColumns: %s\n%s" % (" ".join(columns), filt))
+    svcs = html.live.query("GET services\nColumns: %s\n%s" % (" ".join(columns), filt))
 
     if check_mk.is_multisite():
        columns = ["site"] + columns 
@@ -88,16 +62,16 @@ def page_siteoverview(html):
 	auth_user = None
     connect_to_livestatus(html, auth_user)
 
-    live.set_prepend_site(True)
+    html.live.set_prepend_site(True)
     html.header("Site Overview")
-    hst = live.query("GET hosts\n"
+    hst = html.live.query("GET hosts\n"
 	    "Stats: state = 0\n"
 	    "Stats: state = 1\n"
 	    "Stats: state = 2\n"
 	    "Stats: state = 1\nStats: acknowledged = 0\nStatsAnd: 2\n"
 	    "Stats: state = 2\nStats: acknowledged = 0\nStatsAnd: 2\n")
 
-    svc = live.query("GET services\n"
+    svc = html.live.query("GET services\n"
 	    "Stats: state = 0\n"
 	    "Stats: state = 1\n"
 	    "Stats: state = 2\n"
@@ -145,23 +119,6 @@ def page_siteoverview(html):
 
 
 def page(html):
-    # Decide wether to show all items or only those the
-    # user is a contact for
-    auth_user = None
-
-    # User wants to see data (also needed for actions)
-    if check_mk.multiadmin_restrict:
-        if html.req.user not in check_mk.multiadmin_unrestricted_users:
-	    auth_user = html.req.user
-
-    # User wants to do action?
-    if check_mk.multiadmin_restrict_actions and \
-       	(html.has_var("actions") or html.has_var("_do_actions")):
-	if html.req.user not in check_mk.multiadmin_unrestricted_action_users:
-	    auth_user = html.req.user
-
-    connect_to_livestatus(html, auth_user)
-
     # make sure current setting of site_vars are contained in all forms
     # and buttons
     html.add_global_vars(site_vars)
@@ -174,6 +131,12 @@ def page(html):
     
     if check_mk.is_multisite():
 	show_site_header(html)
+
+    # make sure, authorization on actions is done correctly
+    if html.has_var("actions") or html.has_var("_do_actions"):
+	html.live.set_auth_domain('action')
+    else:
+	html.live.set_auth_domain('read')
 
     # Set tabs according to general permissions
     global tabs
@@ -661,12 +624,12 @@ def nagios_service_action_command(html, service):
     return title, [nagios_command]
 
 def all_check_commands():
-    commands = live.query_column_unique("GET commands\nColumns: name\n")
+    commands = html.live.query_column_unique("GET commands\nColumns: name\n")
     commands.sort()
     return [ (name, name) for name in commands ]
 
 def all_groups(what):
-    groups = dict(live.query("GET %sgroups\nColumns: name alias\n" % what))
+    groups = dict(html.live.query("GET %sgroups\nColumns: name alias\n" % what))
     names = groups.keys()
     names.sort()
     return [ (name, groups[name]) for name in names ]

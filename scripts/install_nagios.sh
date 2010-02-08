@@ -837,6 +837,10 @@ pnptemplates='/usr/local/share/pnp4nagios/templates'
 pnp_prefix='$SITEURL/pnp4nagios/graph'
 EOF
 
+if [ "$SITE" ]; then
+    echo "checkmk_web_uri='$SITEURL/check_mk'" >> ~/.check_mk_setup.conf
+f
+
 ./setup.sh --yes
 
 # HACK: Change popup link for PNP, not yet done by setup

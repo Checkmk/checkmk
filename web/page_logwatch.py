@@ -27,6 +27,14 @@
 import htmllib, livestatus, time, re, check_mk, os, datetime
 from lib import *
 
+
+def new_is_allowed_to_act(user):
+    if check_mk.multiadmin_restrict_actions or check_mk.multiadmin_restrict:
+        if user not in check_mk.multiadmin_unrestricted_action_users:
+            return False
+
+    return True
+
 def show_tabs(html, tabs, active):
     html.write("<table class=tabs cellpadding=0 cellspacing=0><tr>\n")
     for tab, title, uri in tabs:
@@ -40,15 +48,13 @@ def show_tabs(html, tabs, active):
                    (htmllib.attrencode(cssclass), uri, title))
         html.write("</td>")
 
-    html.write("<td width=\"100%%\" class=pad>"
-               "<b class=headtime>%s</b> "
-               "<b>Check_mk Logwatch</b> "
-               "<a href=\"http://mathias-kettner.de/check_mk\">"
-               "<img align=absbottom border=0 src=\"check_mk.trans.60.png\">"
-               "</a></td></tr></table>" % time.strftime("%H:%M"))
+    html.write("<td width=\"100%%\" class=pad></td></tr></table>")
 
 
-def page(html):
+def page(h):
+    global html
+    html = h
+
     global tabs
     tabs = [ ("logwatch", "All Hosts", html.req.uri.split("/")[-1]),
              ("host", "All Logs of Host", 'logwatch.py?host=' + html.var('host', '')) ]
@@ -59,14 +65,16 @@ def page(html):
 
     if html.has_var('host'):
         host = html.var('host')
-        # Check user permissions
-        if(not host in all_hosts(html.req.user)):
+
+        # Check user permissions on the host
+        if(not host in all_hosts()):
             html.write("<h1 class=error>Permission denied</h1>\n")
-            html.write("<div class=error>You are not allowed to view the logs of the host %s</div>" % htmllib.attrencode(host))
+            html.write("<div class=error>You are not allowed to access the logs of the host %s</div>" % htmllib.attrencode(host))
             return
 
         if html.has_var('file'):
             if html.has_var('ack'):
+                html.live.set_auth_domain('action')
                 do_log_ack(html)
             else:
                 show_file(html)
@@ -87,7 +95,7 @@ def show_host_list(html):
     html.write("<table class=form id=filter>\n")
     html.write("<tr><td style=\"width:100px\" class=\"legend\">State</td><td class=\"legend\">Hostname</td><td class=\"legend\">Logs</td></tr>\n")
 
-    hosts = all_hosts(html.req.user)
+    hosts = all_hosts()
     host_shown = False
     for host in hosts:
         files = host_logs(host)
@@ -112,7 +120,7 @@ def show_host_log_list(html):
 
     host = html.var('host')
 
-    if(not host in all_hosts(html.req.user)):
+    if(not host in all_hosts()):
         html.write("<h1 class=error>Permission denied</h1>\n")
         html.write("<div class=error>You are not allowed to view the logs of the host %s</div>" % htmllib.attrencode(host))
         return
@@ -184,7 +192,7 @@ def show_file(html):
 
         html.write('</div>')
 
-    if check_mk.is_allowed_to_act(html.req.user):
+    if new_is_allowed_to_act(html.req.user) and host in all_hosts():
         html.write('<p><br /><a class="ack" href="logwatch.py?host=%s&amp;'
                    'file=%s&amp;ack=1">Acknowledge and delete mesages</a>' % \
                    (htmllib.urlencode(host), htmllib.urlencode(file) ))
@@ -205,12 +213,14 @@ def do_log_ack(html):
     fileDisplay = form_file_to_ext(file)
     ack  = html.var('ack')
 
+    if not new_is_allowed_to_act(html.req.user):
+        html.write("<h1 class=error>Permission denied</h1>\n")
+        html.write("<div class=error>You are not allowed to acknowledge the logs of the host %s</div>" % htmllib.attrencode(host))
+        return
+
     # filter invalid values
     if ack != '1':
         raise MKUserError('ack', 'Invalid value for ack parameter.')
-
-    if not check_mk.is_allowed_to_act(html.req.user):
-        raise MKAuthException('Not authorized to perform actions.')
 
     try:
         os.remove(check_mk.logwatch_dir + '/' + host + '/' + file)
@@ -332,13 +342,15 @@ def host_logs(host):
     except:
         return []
 
-def all_hosts(user = None):
-    if user:
-        auth = "AuthUser: %s\n" % user
+def all_hosts():
+    # FIXME: Or maybe make completely transparent and add pseudo local_connection() to Single livestatus clas?
+    if check_mk.is_multisite():
+        conn = html.live.local_connection()
     else:
-        auth = ''
+        conn = html.live
 
-    hosts = livestatus.SingleSiteConnection(check_mk.livestatus_unix_socket).query_column_unique("GET hosts\n" + auth + "Columns: name\n")
+    hosts = conn.query_column_unique("GET hosts\nColumns: name\n")
+
     hosts.sort()
     return hosts
 

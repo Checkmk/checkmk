@@ -69,6 +69,10 @@ DIRINFO="# Written by setup of check_mk $VERSION at $(date)"
 
 dir_already_configured ()
 {
+    # if DESTDIR is used, setup config is never used.
+    if [ -n "$DESTDIR" ] ; then return 1 ; fi
+
+    # Check if this path has already been configured in a previous setup
     grep -q "^$1=" $SETUPCONF >/dev/null 2>&1
 }
 

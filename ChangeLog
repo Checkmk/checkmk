@@ -5,6 +5,8 @@
 	bulkwalk_hosts, etc).
       * Better handling of wrapping performance counters
       * datasource_programs: allow <HOST> (formerly only <IP>)
+      * new config variable: extra_nagios_conf: string simply added to Nagios
+        object configuration (for example for define command, etc.)
 
       Checks & Agents:
       * multipath: Fixed bug in output parser

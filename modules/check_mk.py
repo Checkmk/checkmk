@@ -261,6 +261,7 @@ only_hosts                           = None
 extra_host_conf                      = {}
 extra_summary_host_conf              = {}
 extra_service_conf                   = {}
+extra_nagios_conf                    = ""
 service_descriptions                 = {}
 
 # Settings for filesystem checks (df, df_vms, df_netapp and maybe others)
@@ -2759,6 +2760,10 @@ def do_create_config():
 	contactgroups_to_output.update(host_contactgroups_of(all_active_clusters()))
 	output_contactgroups(contactgroups_to_output, out)
 	sys.stdout.write("OK\n")
+
+    if extra_nagios_conf:
+	out.write("\n# extra_nagios_conf\n\n")
+	out.write(extra_nagios_conf)
 
     sys.stdout.flush()
     out.close()

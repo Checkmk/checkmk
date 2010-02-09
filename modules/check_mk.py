@@ -816,7 +816,7 @@ def get_datasource_program(hostname, ipaddress):
     if len(programs) == 0:
         return None
     else:
-        return programs[0].replace("<IP>", ipaddress)
+        return programs[0].replace("<IP>", ipaddress).replace("<HOST>", hostname)
     
 
 def service_description(checkname, item):

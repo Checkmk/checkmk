@@ -4,6 +4,7 @@
       * Negation in binary conf lists via NEGATE (clustered_services, ingored_services,
 	bulkwalk_hosts, etc).
       * Better handling of wrapping performance counters
+      * datasource_programs: allow <HOST> (formerly only <IP>)
 
       Checks & Agents:
       * multipath: Fixed bug in output parser

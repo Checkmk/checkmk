@@ -35,6 +35,24 @@ def is_allowed_to_view(user):
 def is_allowed_to_act(user):
    return multiadmin_action_users == None or user in multiadmin_action_users
 
+# Returns true when restriction is disabled or restriction is enabled and the
+# user is in the unrestricted list
+def is_unrestricted_action_user(user):
+    if multiadmin_restrict_actions or multiadmin_restrict:
+        if user not in multiadmin_unrestricted_action_users:
+            return False
+
+    return True
+
+# Returns true when restriction is disabled or restriction is enabled and the
+# user is in the unrestricted list
+def is_unrestricted_user(user):
+    if multiadmin_restrict:
+        if user not in multiadmin_unrestricted_users:
+            return False
+
+    return True
+
 def sitenames():
     return multiadmin_sites.keys()
 

@@ -10,6 +10,7 @@
       * multipath: Fixed bug in output parser
       * cpu: fixed bug: apply level on 15min, not on 1min avg
       * New check fc_brocade_port_detailed
+      * winperf: Better handling of wrapping counters
 
       MK Livestatus:
       * New headers for waiting (please refer to online documentation)

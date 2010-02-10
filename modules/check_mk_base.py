@@ -515,12 +515,18 @@ def get_counter(countername, this_time, this_val):
     # First time we see this counter? Do not return
     # any data!
     if not countername in g_counters:
-       g_counters[countername] = (this_time, this_val)
-       raise MKCounterWrapped(countername)  
+        g_counters[countername] = (this_time, this_val)
+        # Do not suppress this check on check_mk -nv
+	if opt_dont_submit:
+	    return 1.0, 0.0 
+        raise MKCounterWrapped(countername)  
 	 
     last_time, last_val = g_counters.get(countername)
     timedif = this_time - last_time
     if timedif <= 0: # do not update counter
+        # Do not suppress this check on check_mk -nv
+	if opt_dont_submit:
+	    return 1.0, 0.0 
         raise MKCounterWrapped(countername)
 
     # update counter for next time
@@ -532,6 +538,9 @@ def get_counter(countername, this_time, this_val):
 	 # wether they are 32 or 64 bit. It also could happen counter
 	 # reset (reboot, etc.). Better is to leave this value undefined
 	 # and wait for the next check interval.
+	 # Do not suppress this check on check_mk -nv
+	 if opt_dont_submit:
+	     return 1.0, 0.0 
 	 raise MKCounterWrapped(countername)
 
     per_sec = float(valuedif) / timedif

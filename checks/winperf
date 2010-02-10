@@ -51,12 +51,20 @@ def check_win_cpuusage(item, params, info):
             # I've forgotton what's it for (idle?)
             num_cpus = len(line) - 4
             overall_perc = 0
+	    counter_wrapped = False
             for cpu in range(0, num_cpus):
                 ticks = int(line[2 + cpu])
-                timedif, ticks_per_sec = get_counter("cpuusage.%d" % cpu, this_time, ticks)
+		try:
+                    timedif, ticks_per_sec = get_counter("cpuusage.%d" % cpu, this_time, ticks)
+		except MKCounterWrapped, e:
+		    counter_wrapped = e.reason
+		    timedif, ticks_per_sec = 60, 0
                 secs_per_sec = ticks_per_sec / 10000000.0;
                 used_perc = 100 * (1 - secs_per_sec)
                 overall_perc += used_perc
+	    # At least one counter wrapped or started. This check is useless
+	    if counter_wrapped:
+		raise MKCounterWrapped(counter_wrapped)
 
             used_perc = overall_perc / num_cpus
             
@@ -102,9 +110,15 @@ def check_win_diskstat(item, params, info):
 	    break
     this_time = int(float(line[1]))
 
+    try:
+	read_timedif,  read_per_sec  = get_counter("diskstat.read",  this_time, read_bytes_ctr)
+	write_timedif, write_per_sec = get_counter("diskstat.write", this_time, write_bytes_ctr)
+    except MKCounterWrapped, e:
+        # make sure that inital check does not need three cycles for all counters
+        # to be initialized
+	get_counter("diskstat.write", this_time, write_bytes_ctr)
+	raise MKCounterWrapped(e.reason)
 
-    read_timedif,  read_per_sec  = get_counter("diskstat.read",  this_time, read_bytes_ctr)
-    write_timedif, write_per_sec = get_counter("diskstat.write", this_time, write_bytes_ctr)
     perfdata = [ ("read", "%dc" % read_bytes_ctr),
                  ("write", "%dc" % write_bytes_ctr) ]
     return (0, "OK - reading %.1f MB/s, writing %.1f MB/s (in last %d secs)" %

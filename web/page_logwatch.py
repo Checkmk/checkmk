@@ -24,16 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import htmllib, livestatus, time, re, check_mk, os, datetime
+import htmllib, livestatus, time, re, check_mk, os, datetime, check_mk
 from lib import *
-
-
-def new_is_allowed_to_act(user):
-    if check_mk.multiadmin_restrict_actions or check_mk.multiadmin_restrict:
-        if user not in check_mk.multiadmin_unrestricted_action_users:
-            return False
-
-    return True
 
 def show_tabs(html, tabs, active):
     html.write("<table class=tabs cellpadding=0 cellspacing=0><tr>\n")
@@ -148,7 +140,7 @@ def show_host_log_list(html):
                     htmllib.attrencode(fileDisplay), form_datetime(last_log['datetime']), len(logs)))
 
     if not logs_shown:
-        html.write('<tr><td class="content" colspan="2">No logs found for this host.</td></tr>')
+        html.write('<tr><td class="content" colspan="4">No logs found for this host.</td></tr>')
 
     html.write("</table>")
 
@@ -192,7 +184,10 @@ def show_file(html):
 
         html.write('</div>')
 
-    if new_is_allowed_to_act(html.req.user) and host in all_hosts():
+    # check_mk.is_allowed_to_act: Does the user have the permission to act in multiadmin?
+    # check_mk.is_unrestricted_action_user: Is the user allowed to override the Nagios permissions?
+    # If not unrestricted check if the user is allowed for that object
+    if check_mk.is_allowed_to_act(html.req.user) and (check_mk.is_unrestricted_action_user(html.req.user) or host in all_hosts()):
         html.write('<p><br /><a class="ack" href="logwatch.py?host=%s&amp;'
                    'file=%s&amp;ack=1">Acknowledge and delete mesages</a>' % \
                    (htmllib.urlencode(host), htmllib.urlencode(file) ))
@@ -213,7 +208,10 @@ def do_log_ack(html):
     fileDisplay = form_file_to_ext(file)
     ack  = html.var('ack')
 
-    if not new_is_allowed_to_act(html.req.user):
+    # check_mk.is_allowed_to_act: Does the user have the permission to act in multiadmin?
+    # check_mk.is_unrestricted_action_user: Is the user allowed to override the Nagios permissions?
+    # If not unrestricted check if the user is allowed for that object
+    if check_mk.is_allowed_to_act(html.req.user) and (check_mk.is_unrestricted_action_user(html.req.user) or host in all_hosts()):
         html.write("<h1 class=error>Permission denied</h1>\n")
         html.write("<div class=error>You are not allowed to acknowledge the logs of the host %s</div>" % htmllib.attrencode(host))
         return

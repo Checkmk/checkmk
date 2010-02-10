@@ -104,6 +104,7 @@ public:
    void outputUnsignedLong(unsigned long);
    void outputCounter(counter_t);
    void outputDouble(double);
+   void outputUnicodeEscape(unsigned value);
    void outputString(const char *);
    void outputHostService(const char *, const char *);
    void outputBeginList();

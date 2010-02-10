@@ -142,6 +142,8 @@ class BaseConnection:
 		raise MKLivestatusConfigError("Invalid livestatus tcp url '%s'. Correct example is 'tcp:somehost:6557'" % url)
 	    self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	    self.socket_target = ( host, port )
+        else:
+	    raise MKLivestatusConfigError("Invalid livestatus url '%s'. Must begin with 'tcp:' or 'unix:'" % url)
 
     def connect(self):
 	if self.socket_state == DOWN:

@@ -20,32 +20,14 @@ max_display_columns   = 10
 max_group_columns     = 3
 max_sort_columns      = 4
 
-multisite_config_dir = check_mk.var_dir + "/web"
-
-def setup(h):
-    global html, authuser
-    html = h
-    authuser = html.req.user
-
-    if check_mk.multiadmin_restrict and \
-	authuser not in check_mk.multiadmin_unrestricted_users:
-	    auth_user = authuser
-    else:
-	auth_user = None
-
-    connect_to_livestatus(html, auth_user)
-
-def cleanup():
-    disconnect_from_livestatus()
-
 def load_views():
     global multisite_views
     multisite_views = {}
-    subdirs = os.listdir(multisite_config_dir)
+    subdirs = os.listdir(check_mk.multisite_config_dir)
 
     for user in subdirs:
 	try:
-	    dirpath = multisite_config_dir + "/" + user
+	    dirpath = check_mk.multisite_config_dir + "/" + user
 	    if os.path.isdir(dirpath):
 	        f = file(dirpath + "/views.mk", "r", 0)
 		sourcecode = f.read()
@@ -70,7 +52,7 @@ def save_views(us):
     for (user, name), view in multisite_views.items():
 	if us == user:
 	    userviews[name] = view
-    userdir = multisite_config_dir + "/" + us
+    userdir = check_mk.multisite_config_dir + "/" + us
     if not os.path.exists(userdir):
 	os.mkdir(userdir)
     f = file(userdir + "/views.mk", "w", 0)
@@ -79,7 +61,8 @@ def save_views(us):
 
 # Show one view filled with data
 def page_view(h):
-    setup(h)
+    global html
+    html = h
     load_views()
     try:
         user, view_name = html.var("view_name").split("/")
@@ -94,7 +77,8 @@ def page_view(h):
 
 # Show list of all views with buttons for editing
 def page_edit_views(h, msg=None):
-    setup(h)
+    global html
+    html = h
     html.header("Edit views")
     html.write("<p>Here you can create and edit customizable <b>views</b>. A view "
 	    "displays monitoring status or log data by combining filters, sortings, "
@@ -108,8 +92,8 @@ def page_edit_views(h, msg=None):
     # Deletion of views
     delname = html.var("delete")
     if delname and html.confirm("Please confirm the deletion of the view <tt>%s</tt>" % delname):
-	del multisite_views[(authuser, delname)]
-	save_views(authuser)
+	del multisite_views[(html.req.auth, delname)]
+	save_views(html.req.user)
 
     # Cloning of views
     try:
@@ -120,7 +104,7 @@ def page_edit_views(h, msg=None):
     if clonename:
 	newname = clonename + "_clone"
 	n = 1
-	while (authuser, newname) in multisite_views:
+	while (html.req.user, newname) in multisite_views:
 	    n += 1
 	    newname = clonename + "_clone%d" % n
 	import copy
@@ -128,10 +112,10 @@ def page_edit_views(h, msg=None):
 	clone = copy.copy(orig)
 	clone["name"] = newname
 	clone["title"] = orig["title"] + " (Copy)" 
-	if cloneuser != authuser: 
+	if cloneuser != html.req.user: 
 	    clone["public"] = False
-	multisite_views[(authuser, newname)] = clone
-	save_views(authuser)
+	multisite_views[(html.req.user, newname)] = clone
+	save_views(html.req.user)
 	load_views()
 		
     html.write("<table class=views>\n")
@@ -141,7 +125,7 @@ def page_edit_views(h, msg=None):
     first = True
     for (owner, viewname) in keys_sorted:
 	view = multisite_views[(owner, viewname)]
-	if owner == authuser or view["public"]:
+	if owner == html.req.user or view["public"]:
 	    if first:
 		html.write("<tr><th>Name</th><th>Title</th><th>Owner</th><th>Public</th><th>Datasource</th><th></th></tr>\n")
 		first = False
@@ -151,7 +135,7 @@ def page_edit_views(h, msg=None):
 	    html.write("<td class=content>%s</td>" % (view["public"] and "yes" or "no"))
 	    html.write("</td><td class=content>%s</td><td class=buttons>\n" % view["datasource"])
 	    html.buttonlink("edit_views.py?clone=%s/%s" % (owner, viewname), "Clone")
-	    if owner == authuser:
+	    if owner == html.req.user:
 		html.buttonlink("edit_view.py?load_view=%s" % viewname, "Edit")
 		html.buttonlink("edit_views.py?delete=%s" % viewname, "Delete!")
 	    html.write("</td></tr>")
@@ -168,7 +152,8 @@ def page_edit_views(h, msg=None):
 
 # Edit one view
 def page_edit_view(h):
-    setup(h)
+    global html
+    html = h
 
     view = None
 
@@ -176,7 +161,7 @@ def page_edit_view(h):
     viewname = html.var("load_view")
     if viewname:
 	load_views()
-	view = multisite_views.get((authuser, viewname), None)
+	view = multisite_views.get((html.req.user, viewname), None)
 	datasourcename = view["datasource"]
 	if view:
 	    load_view_into_html_vars(view)
@@ -191,8 +176,8 @@ def page_edit_view(h):
 	    view = create_view()
 	    if html.var("save"):
 		load_views()
-		multisite_views[(authuser, view["name"])] = view
-		save_views(authuser)
+		multisite_views[(html.req.user, view["name"])] = view
+		save_views(html.req.user)
 		return page_edit_views(h, "Your view has been saved.")
 
 	except MKUserError, e:
@@ -437,8 +422,8 @@ def query_data(datasource, add_headers):
     columns = datasource["columns"]
     query += "Columns: %s\n" % " ".join(datasource["columns"])
     query += add_headers
-    live.set_prepend_site(True)
-    data = live.query(query)
+    html.live.set_prepend_site(True)
+    data = html.live.query(query)
     # convert lists-rows into dictionaries. Thas costs a bit of
     # performance, but makes live much easier later. What also
     # makes live easier is, that we prefix all columns with
@@ -454,7 +439,7 @@ def query_data(datasource, add_headers):
 	prefixed_columns.append(col)
 
     assoc = [ dict(zip(prefixed_columns, row)) for row in data ]
-    live.set_prepend_site(False)
+    html.live.set_prepend_site(False)
 
     return (prefixed_columns, assoc)
 
@@ -505,32 +490,3 @@ def allowed_for_datasource(collection, datasourcename):
 	    (item["table"] == "hosts" and tablename == "services"):
 	    allowed[name] = item
     return allowed
-
-     
-def connect_to_livestatus(html, auth_user = None):
-    global site_status, live
-    site_status = {}
-    # If there is only one site (non-multisite), than
-    # user cannot enable/disable. 
-    if check_mk.is_multisite():
-	enabled_sites = {}
-	for sitename, site in check_mk.sites().items():
-	    varname = "siteoff_" + sitename
-	    if not html.var(varname) == "on":
-		enabled_sites[sitename] = site
-	global live
-	live = livestatus.MultiSiteConnection(enabled_sites)
-	live.set_prepend_site(True)
-        for site, v1, v2 in live.query("GET status\nColumns: livestatus_version program_version"):
-	    site_status[site] = { "livestatus_version": v1, "program_version" : v2 }
-	live.set_prepend_site(False)
-    else:
-	live = livestatus.SingleSiteConnection(check_mk.livestatus_unix_socket)
-
-    if auth_user:
-	live.addHeader("AuthUser: %s" % auth_user)
-
-def disconnect_from_livestatus():
-    global live
-    live = None
-

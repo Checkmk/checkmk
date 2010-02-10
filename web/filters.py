@@ -82,7 +82,7 @@ declare_filter(FilterLimit())
 
 # Helper that retrieves the list of host/service/contactgroups via Livestatus
 def all_groups(what):
-    groups = dict(live.query("GET %sgroups\nColumns: name alias\n" % what))
+    groups = dict(html.live.query("GET %sgroups\nColumns: name alias\n" % what))
     names = groups.keys()
     names.sort()
     return [ (name, groups[name]) for name in names ]
@@ -99,7 +99,7 @@ class FilterHostgroupCombo(Filter):
 	htmlvar = self.htmlvars[0]
 	current_value = html.var(htmlvar)
 	if not current_value: # Take first hostgroup
-	    current_value = live.query_value("GET hostgroups\nColumns: name\nLimit: 1\n")
+	    current_value = html.live.query_value("GET hostgroups\nColumns: name\nLimit: 1\n")
 	return "Filter: %sgroups >= %s\n" % (self.tableprefix(tablename), current_value)
     
     def allowed_for_table(self, tablename):

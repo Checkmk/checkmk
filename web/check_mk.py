@@ -73,3 +73,5 @@ def site(name):
 
 def is_multisite():
     return len(multiadmin_sites) > 1
+
+multisite_config_dir = var_dir + "/web"

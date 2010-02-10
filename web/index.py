@@ -26,7 +26,7 @@
 
 from mod_python import apache,util
 from urllib import urlencode
-import htmllib, transfer, livestatus
+import htmllib, transfer, livestatus, os
 from lib import *
 
 def read_checkmk_defaults(req):
@@ -61,21 +61,38 @@ def read_get_vars(req):
             if len(values) >= 1:
                 req.vars[key] = values[-1]
 
+def read_site_config(html):
+    user = html.req.user
+    path = check_mk.multisite_config_dir + "/" + user + "/siteconfig.mk"
+    html.user_siteconf = {}
+    if os.path.exists(path):
+	html.user_siteconf = eval(file(path).read())
+
 def connect_to_livestatus(html):
     html.site_status = {}
     # If there is only one site (non-multisite), than
     # user cannot enable/disable. 
     if check_mk.is_multisite():
+	# do not contact those sites the user has disabled
 	enabled_sites = {}
 	for sitename, site in check_mk.sites().items():
-	    varname = "siteoff_" + sitename
-	    if not html.var(varname) == "on":
+	    siteconf = html.user_siteconf.get(sitename, {})
+	    if not siteconf.get("disabled", False):
 		enabled_sites[sitename] = site
+	# Now connect to enabled sites with keepalive-connection
 	html.live = livestatus.MultiSiteConnection(enabled_sites)
+
+	# Fetch status of sites by querying the version of Nagios and livestatus
 	html.live.set_prepend_site(True)
-        for site, v1, v2 in html.live.query("GET status\nColumns: livestatus_version program_version"):
-	    html.site_status[site] = { "livestatus_version": v1, "program_version" : v2 }
+        for sitename, v1, v2 in html.live.query("GET status\nColumns: livestatus_version program_version"):
+	    html.site_status[sitename] = { "livestatus_version": v1, "program_version" : v2 }
 	html.live.set_prepend_site(False)
+
+	# Get exceptions in case of dead sites
+	for sitename, deadinfo in html.live.dead_sites().items():
+	    status = html.site_status.get(sitename, {})
+	    status["exception"] = deadinfo["exception"]
+	    html.site_status[sitename] = status
     else:
 	html.live = livestatus.SingleSiteConnection("unix:" + check_mk.livestatus_unix_socket)
 
@@ -84,26 +101,19 @@ def handler(req):
     req.content_type = "text/html"
     req.header_sent = False
 
-
-    # Die Datei main.py wird mit beliebigen Namen aufgerufen, die
-    # alle auf .py enden, und die es garnicht geben muss!
+    # All URIs end in .py. We strip away the .py and get the
+    # name of the page.
     req.myfile = req.uri.split("/")[-1][:-3]
 
-
-    # Verzweigen je nach Name der Seite, 'main' ist Default
-
+    # Create object that contains all data about the request and
+    # helper functions for creating valid HTML. Parse URI and
+    # store results in the request object for later usage.
     html = htmllib.html(req)
     req.uriinfo = htmllib.uriinfo(req)
 
     try:
         read_get_vars(req)
         read_checkmk_defaults(req)
-
-	import page_multiadmin
-	import page_logwatch
-	import views
-	import sidebar
-	import srv_search
 
         # These pages may only be used with HTTP authentication turned on.
 	if not req.user or type(req.user) != str:
@@ -117,6 +127,11 @@ def handler(req):
                        "please ask your administrator to add your login into the list " \
                        " <tt>main.mk:multiadmin_users</tt>"
             raise MKConfigError(reason)
+
+	# Read in users's configuration of sites. This is needed only
+	# for multisite installations. The user may switch off certain
+	# sites he is not interested in.
+	read_site_config(html)
 
         # General access allowed. Now connect to livestatus
 	connect_to_livestatus(html)
@@ -135,6 +150,12 @@ def handler(req):
         # Default auth domain is read. Please set to None to switch off authorization
 	html.live.set_auth_domain('read')
 
+	# Now branch to a function creating HTML code
+	import page_multiadmin
+	import page_logwatch
+	import views
+	import sidebar
+
 	pagehandlers = { "index"        : page_index,
 			 "filter"       : page_multiadmin.page,
 			 "siteoverview" : page_multiadmin.page_siteoverview,
@@ -142,7 +163,6 @@ def handler(req):
 			 "edit_view"    : views.page_edit_view,
 			 "view"         : views.page_view,
 			 "logwatch"     : page_logwatch.page,
-			 "search"       : srv_search.page,
 			 "side_views"   : sidebar.page_views, }
 
 	handler = pagehandlers.get(req.myfile, page_index)

@@ -7,17 +7,20 @@
       * datasource_programs: allow <HOST> (formerly only <IP>)
       * new config variable: extra_nagios_conf: string simply added to Nagios
         object configuration (for example for define command, etc.)
+      * New option --flush: delete runtime data of some or all hosts
 
       Checks & Agents:
       * multipath: Fixed bug in output parser
       * cpu: fixed bug: apply level on 15min, not on 1min avg
       * New check fc_brocade_port_detailed
       * netctrl: improved handling of wrapped counters
+      * winperf: Better handling of wrapping counters
 
       MK Livestatus:
       * New headers for waiting (please refer to online documentation)
       * Abort on errors even if header is not fixed16
       * Changed response codes to better match HTTP
+      * json output: handle tab and other control characters correctly
 
       Multiadmin:
       * Allow nagios contacts to be used for authorization (in order to

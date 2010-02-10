@@ -2435,6 +2435,60 @@ def do_restore(tarname):
         sys.stderr.write("Successfully restored backup.\n")
 
 
+def do_flush(hosts):
+    if len(hosts) == 0:
+	hosts = all_active_hosts() + all_active_clusters()
+    for host in hosts:
+	sys.stdout.write("%-20s: " % host)
+	sys.stdout.flush()
+        flushed = False
+
+        # counters
+	try:
+	    os.remove(counters_directory + "/" + host)
+	    sys.stdout.write(tty_blue + " counters")
+	    sys.stdout.flush()
+            flushed = True
+	except:
+	    pass
+
+	# cache files
+	d = 0
+	dir = tcp_cache_dir
+	for f in os.listdir(dir):
+	    if f == host or f.startswith(host + "."):
+		try:
+		    os.remove(dir + "/" + f)
+		    d += 1
+                    flushed = True
+		except:
+		    pass
+	if d == 1:
+	    sys.stdout.write(tty_green + " cache")
+	elif d > 1:
+	    sys.stdout.write(tty_green + " cache(%d)" % d)
+	sys.stdout.flush()
+
+	# logfiles
+	dir = logwatch_dir + "/" + host
+	if os.path.exists(dir):
+	    d = 0
+	    for f in os.listdir(dir):
+		if f not in [".", ".."]:
+		    try:
+			os.remove(dir + "/" + f)
+			d += 1
+                        flushed = True
+		    except:
+			pass
+	    if d > 0:
+		sys.stdout.write(tty_magenta + " logfiles(%d)" % d)
+	if not flushed:
+	    sys.stdout.write("(nothing)")
+	
+	sys.stdout.write(tty_normal + "\n") 
+	    
+
 #   +----------------------------------------------------------------------+
 #   |   __  __       _        __                  _   _                    |
 #   |  |  \/  | __ _(_)_ __  / _|_   _ _ __   ___| |_(_) ___  _ __  ___    |
@@ -2668,6 +2722,7 @@ def usage():
  check_mk -X, --check-config               check configuration for invalid vars
  check_mk --backup BACKUPFILE.tar.gz       make backup of configuration and data
  check_mk --restore BACKUPFILE.tar.gz      restore configuration and data
+ check_mk --flush [HOST1 HOST2...]         flush all data of some or all hosts
  check_mk -V, --version                    print version
  check_mk -h, --help                       print this help
 
@@ -2721,6 +2776,11 @@ NOTES:
   --backup saves all configuration and runtime data to a gzip
   compressed tar file. --restore *erases* the current configuration
   and data and replaces it with that from the backup file.
+
+  --flush deletes all runtime data belonging to a host (not
+  inventory data). This includes the state of performance counters,
+  cached agent output,  and logfiles. Precompiled host checks
+  are not deleted.
   
   Nagios can call check_mk without options and the hostname and its IP
   address as arguments. Much faster is using precompiled host checks,
@@ -2898,6 +2958,7 @@ if __name__ == "__main__":
     short_options = 'SHVLCURDMd:I:c:nhvpX'
     long_options = ["help", "version", "verbose", "compile", "debug",
                     "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
+		    "flush",
                     "no-cache", "update", "restart", "dump", "fake-dns=",
                     "man", "nowiki", "config-check", "backup=", "restore=",
                     "check-inventory=", "timeperiods", "paths" ]
@@ -2976,6 +3037,9 @@ if __name__ == "__main__":
         elif o ==  '--restore':
             do_restore(a)
             done = True
+	elif o == '--flush':
+	    do_flush(args)
+	    done = True
         elif o == '--paths':
 	    show_paths()
 	    done = True

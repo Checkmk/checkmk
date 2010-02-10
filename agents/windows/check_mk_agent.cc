@@ -54,7 +54,7 @@
 #include <string.h>
 #include <locale.h>
 
-#define CHECK_MK_VERSION "1.1.3rc"
+#define CHECK_MK_VERSION "1.1.3"
 #define CHECK_MK_AGENT_PORT 6556
 #define SERVICE_NAME "Check_MK_Agent"
 #define KiloByte 1024
@@ -948,6 +948,9 @@ void section_eventlog(SOCKET &out)
 
 void output_data(SOCKET &out)
 {
+    // make sure, output of numbers is not localized
+    setlocale(LC_ALL, "C");
+
     output(out, "<<<check_mk>>>\n");
     output(out, "Version: %s\n", CHECK_MK_VERSION);
     section_df(out);
@@ -1021,7 +1024,6 @@ void listen_tcp_loop()
 	    Sleep(1); // should never happen
 	}
     }
-    debug("Schleife beendet.");
     closesocket(s);
     WSACleanup();
 }
@@ -1117,7 +1119,6 @@ void WINAPI ServiceMain(DWORD, TCHAR* [] )
 
 void RunService()
 {
-    debug("Dienst aufgerufen!");
     SERVICE_TABLE_ENTRY serviceTable[] =
 	{
 	    { gszServiceName, ServiceMain },
@@ -1256,9 +1257,6 @@ void show_version()
 
 int main(int argc, char **argv)
 {
-    // make sure, output of numbers is not localized
-    setlocale(LC_NUMERIC, "C");
-
     if (argc > 2)
 	usage();
     else if (argc <= 1)

@@ -784,6 +784,13 @@ void Query::outputDouble(double value)
    _output->addBuffer(buf, l);
 }
 
+void Query::outputUnicodeEscape(unsigned value)
+{
+    char buf[8];
+    snprintf(buf, sizeof(buf), "\\u%04x", value);
+    _output->addBuffer(buf, 6); 
+}
+
 void Query::outputHostService(const char *host_name, const char *service_description)
 {
    if (_output_format == OUTPUT_FORMAT_CSV) {
@@ -816,9 +823,15 @@ void Query::outputString(const char *value)
       _output->addChar('"');
       const char *r = value;
       while (*r) {
-	 if (*r == '"' || *r == '\\')
-	    _output->addChar('\\');
-	 _output->addChar(*r);
+	 if (*r < 32 && *r >= 0) 
+	     outputUnicodeEscape((unsigned)*r);
+	 else if (*r < 0)
+	     outputUnsignedLong((unsigned)((int)*r + 256)); // assume latin1 encoding
+	 else { 
+	     if (*r == '"' || *r == '\\')
+		_output->addChar('\\');
+	     _output->addChar(*r);
+	 }
 	 r++;
       }
       _output->addChar('"');

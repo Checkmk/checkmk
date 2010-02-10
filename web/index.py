@@ -103,8 +103,9 @@ def handler(req):
 	import page_logwatch
 	import views
 	import sidebar
-    
-        # These pages may only be used with HTTP authentication turned on. 
+	import srv_search
+
+        # These pages may only be used with HTTP authentication turned on.
 	if not req.user or type(req.user) != str:
 	    raise MKConfigError("You are not logged in. This should never happen. Please "
 		    "review your Apache configuration.")
@@ -141,6 +142,7 @@ def handler(req):
 			 "edit_view"    : views.page_edit_view,
 			 "view"         : views.page_view,
 			 "logwatch"     : page_logwatch.page,
+			 "search"       : srv_search.page,
 			 "side_views"   : sidebar.page_views, }
 
 	handler = pagehandlers.get(req.myfile, page_index)

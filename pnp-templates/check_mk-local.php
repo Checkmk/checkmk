@@ -31,8 +31,8 @@ $descr = str_replace("/", "_", $servicedesc);
 $found = 0;
 for ($i = strlen($descr); $i > 0; $i--)
 {
-   $tryname = substr($descr, 0, $i) . ".php";
-   if (include($tryname)) {
+   $tryname = 'templates/'.substr($descr, 0, $i) . ".php";
+   if (file_exists($tryname) && include($tryname)) {
       $found = 1;
       break;
    }      

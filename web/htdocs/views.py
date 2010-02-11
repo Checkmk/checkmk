@@ -8,8 +8,7 @@ multisite_painters    = {}
 multisite_sorters     = {}
 multisite_views       = {}
 
-# TODO: Move include files out of htdocs directory
-plugins_path = check_mk.web_dir + ".plugins"
+plugins_path = check_mk.web_dir + "/plugins/views"
 for fn in os.listdir(plugins_path):
     if fn.endswith(".py"):
 	execfile(plugins_path + "/" + fn)

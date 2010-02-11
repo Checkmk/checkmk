@@ -506,16 +506,21 @@ compile_livestatus ()
    mkdir -p $D
    tar xvzf $SRCDIR/livestatus.tar.gz -C $D
    pushd $D
-   ./configure --libdir=$libdir --bindir=$bindir
-   make clean
-   cat <<EOF > src/livestatus.h
+   ./configure --libdir=$libdir --bindir=$bindir &&
+   make clean &&
+   cat <<EOF > src/livestatus.h &&
 #ifndef livestatus_h
 #define livestatus_h
 #define DEFAULT_SOCKET_PATH "$livesock"
 #endif // livestatus_h
 EOF
-   make -j 8  2>&1
-   popd
+   make -j 8  2>&1 &&
+   strip src/livestatus.o &&
+   mkdir -p $DESTDIR$libdir &&
+   install -m 755 src/livestatus.o $DESTDIR$libdir/livestatus.o &&
+   mkdir -p $DESTDIR$bindir &&
+   install -m 755 src/unixcat $DESTDIR$bindir &&
+   popd 
 }
 
 
@@ -534,13 +539,9 @@ do
 	   if [ "$enable_livestatus" = yes ]
 	   then
 	       if [ -z "$YES" ] ; then echo -n "(Compiling MK Livestatus..." ; fi
-	       if compile_livestatus 2>&1 | propeller > $SRCDIR/livestatus.log
+	       compile_livestatus 2>&1 | propeller > $SRCDIR/livestatus.log
+	       if [ "${PIPESTATUS[0]}" = 0 ]
 	       then
-		   strip $SRCDIR/livestatus.src/src/livestatus.o
-		   mkdir -p $DESTDIR$libdir
-		   install -m 755 $SRCDIR/livestatus.src/src/livestatus.o $DESTDIR$libdir/livestatus.o
-		   mkdir -p $DESTDIR$bindir
-		   install -m 755 $SRCDIR/livestatus.src/src/unixcat $DESTDIR$bindir
 
 		   if [ "$livestatus_in_nagioscfg" = False -a -n "$nagios_config_file" ]
 		   then
@@ -548,8 +549,7 @@ do
 			   >> $nagios_config_file
 		   fi
 	       else
-		   echo -e "\E[1;31;40m ERROR compiling livestatus \E[0m"
-		   cat $SRCDIR/livestatus.log
+		   echo -e "\E[1;31;40m ERROR compiling livestatus! \E[0m.\nLogfile is in $SRCDIR/livestatus.log"
 		   exit 1
 	       fi
 	       if [ -z "$YES" ] ; then echo ")" ; fi

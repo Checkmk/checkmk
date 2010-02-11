@@ -75,6 +75,11 @@ then
     DISTRO=SUSE
     DISTRONAME="SLES 11"
     DISTROVERS=11
+elif grep -qi "DISTRIB_DESCRIPTION=\"Ubuntu 9.10\"" /etc/lsb-release 2>&1 >/dev/null
+then
+    DISTRO=UBUNTU
+    DISTRONAME="Ubuntu 9.10"
+    DISTROVERS=9.10
 else
     debvers=$(cat /etc/debian_version 2>/dev/null)
     debvers=${debvers:0:3}
@@ -88,29 +93,36 @@ fi
 
 case "$DISTRO" in 
     REDHAT)
-    	HTTPD=httpd
-    	WWWUSER=apache
-	WWWGROUP=apache
+        HTTPD=httpd
+        WWWUSER=apache
+        WWWGROUP=apache
         activate_initd () { chkconfig $1 on ; }
         add_user_to_group () { gpasswd -a $1 $2 ; }
     ;;
     SUSE)
-	HTTPD=apache2
-	WWWUSER=wwwrun
-	WWWGROUP=www
+        HTTPD=apache2
+        WWWUSER=wwwrun
+        WWWGROUP=www
         activate_initd () { chkconfig $1 on ; }
         add_user_to_group () { groupmod -A $1 $2 ; }
     ;;
+    UBUNTU)
+        HTTPD=apache2
+        WWWUSER=www-data
+        WWWGROUP=www-data
+        activate_initd () { update-rc.d $1 defaults; }
+        add_user_to_group () { gpasswd -a $1 $2 ; }
+    ;;
     DEBIAN)
-	HTTPD=apache2
-	WWWUSER=www-data
-	WWWGROUP=www-data
+        HTTPD=apache2
+        WWWUSER=www-data
+        WWWGROUP=www-data
         activate_initd () { update-rc.d $1 defaults; }
         add_user_to_group () { gpasswd -a $1 $2 ; }
     ;;
     *)
 	echo "This script does not work on your Linux distribution. Sorry."
-	echo "Supported are: Debian 5.0, SLES 11 and RedHat/CentOS 5.3"
+	echo "Supported are: Debian 5.0, Ubuntu 9.10, SLES 11 and RedHat/CentOS 5.3"
         exit 1
 esac	
 
@@ -208,7 +220,7 @@ heading ()
 heading "Installing missing software"
 # -----------------------------------------------------------------------------
 
-if [ "$DISTRO" = DEBIAN ]
+if [ "$DISTRO" = DEBIAN -o "$DISTRO" = UBUNTU ]
 then
   aptitude -y update
   aptitude -y install psmisc build-essential nail  \

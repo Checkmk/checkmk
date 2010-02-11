@@ -8,6 +8,7 @@
       * new config variable: extra_nagios_conf: string simply added to Nagios
         object configuration (for example for define command, etc.)
       * New option --flush: delete runtime data of some or all hosts
+      * PNP4Nagios Templates: Fixed bug in template file detection for local checks
 
       Checks & Agents:
       * multipath: Fixed bug in output parser

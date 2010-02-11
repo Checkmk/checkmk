@@ -27,6 +27,9 @@
       * Allow nagios contacts to be used for authorization (in order to
 	control which services may be seen / acted upon)
       * Implemented worse state depending sounds on page load
+      * Appended /htdocs to document root (setup.sh tries to change 
+	your Apache-configuration accordingly, but this might fail on
+	rare occasions). Default root is now /usr/share/check_mk/web/htdocs
 
 1.1.2:
       Summary:

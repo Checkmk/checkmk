@@ -92,7 +92,7 @@ table.siteheader td.offline a {
     color: #800;
 }
 
-table.siteheader td.off a {
+table.siteheader td.disabled a {
     border-width: 2px;
     background-color: #ccc;
     border-color: #ccc #777 #444 #aaa;

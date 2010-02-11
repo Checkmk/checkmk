@@ -26,7 +26,7 @@
 
 from mod_python import apache,util
 from urllib import urlencode
-import htmllib, transfer, livestatus, os
+import htmllib, transfer, livestatus, os, pprint
 from lib import *
 
 def read_checkmk_defaults(req):
@@ -68,31 +68,70 @@ def read_site_config(html):
     if os.path.exists(path):
 	html.user_siteconf = eval(file(path).read())
 
+def save_site_config(html):
+    user = html.req.user
+    dir = check_mk.multisite_config_dir + "/" + user
+    try:
+	os.mkdir(dir)
+    except:
+	pass
+    path = dir + "/siteconfig.mk"
+    try:
+        file(path, "w").write(pprint.pformat(html.user_siteconf) + "\n")
+    except Exception, e:
+	raise MKConfigError("Cannot save site configuration for user <b>%s</b> into <b>%s</b>: %s" % \
+		(user, path, e))
+
 def connect_to_livestatus(html):
     html.site_status = {}
+    # site_status keeps a dictionary for each site with the following
+    # keys:
+    # "state"              --> "online", "offline", "disabled"
+    # "exception"          --> An error exception in case of "offline"
+    # "livestatus_version" --> Version of sites livestatus if "online"
+    # "program_version"    --> Version of Nagios if "online"
+
     # If there is only one site (non-multisite), than
     # user cannot enable/disable. 
     if check_mk.is_multisite():
 	# do not contact those sites the user has disabled
+	# also honor HTML-variables for switching off sites
+	# right now. This is generally done by the variable
+	# _site_switch=sitename1:on,sitename2:off,...
 	enabled_sites = {}
+	switch_var = html.var("_site_switch")
+	if switch_var:
+	    for info in switch_var.split(","):
+		sitename, onoff = info.split(":")	
+		d = html.user_siteconf.get(sitename, {})
+		if onoff == "on":
+		    d["disabled"] = False
+		else:
+		    d["disabled"] = True
+		html.user_siteconf[sitename] = d
+	    save_site_config(html)
+
+	# Make a list of all non-disables sites
 	for sitename, site in check_mk.sites().items():
 	    siteconf = html.user_siteconf.get(sitename, {})
-	    if not siteconf.get("disabled", False):
+	    if siteconf.get("disabled", False):
+		html.site_status[sitename] = { "state" : "disabled" } 
+	    else:
+		html.site_status[sitename] = { "state" : "offline" }
 		enabled_sites[sitename] = site
+		
 	# Now connect to enabled sites with keepalive-connection
 	html.live = livestatus.MultiSiteConnection(enabled_sites)
 
 	# Fetch status of sites by querying the version of Nagios and livestatus
 	html.live.set_prepend_site(True)
         for sitename, v1, v2 in html.live.query("GET status\nColumns: livestatus_version program_version"):
-	    html.site_status[sitename] = { "livestatus_version": v1, "program_version" : v2 }
+	    html.site_status[sitename].update({ "state" : "online", "livestatus_version": v1, "program_version" : v2 })
 	html.live.set_prepend_site(False)
 
 	# Get exceptions in case of dead sites
 	for sitename, deadinfo in html.live.dead_sites().items():
-	    status = html.site_status.get(sitename, {})
-	    status["exception"] = deadinfo["exception"]
-	    html.site_status[sitename] = status
+	    html.site_status[sitename]["exception"] = deadinfo["exception"]
     else:
 	html.live = livestatus.SingleSiteConnection("unix:" + check_mk.livestatus_unix_socket)
 

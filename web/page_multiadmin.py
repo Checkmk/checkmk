@@ -121,9 +121,6 @@ def page_siteoverview(html):
 def page(h):
     global html
     html = h
-    # make sure current setting of site_vars are contained in all forms
-    # and buttons
-    html.add_global_vars(site_vars)
 
     # Make search results refresh every 90 seconds
     if html.has_var("results"):
@@ -182,23 +179,17 @@ def show_site_header(html):
     html.write("<table class=siteheader><tr>")
     for sitename in check_mk.sites():
 	site = check_mk.site(sitename)
-	varname = "siteoff_" + sitename
-	if not html.var(varname) == "on": # site not switched off -> is on
-	    switch = "on" # show 'on', switch off
-	    if sitename in html.site_status:
-		style = "online"
-	    else:
-		style = "offline"
+	state = html.site_status[sitename]["state"]
+	if state == "disabled":
+	    switch = "on"
 	else:
-	    switch = "off" # show 'off', switch on
-	    style = "off"
-
-	uri = html.makeuri([("siteoff_" + sitename, switch)])
+	    switch = "off"
+	uri = html.makeuri([("_site_switch", sitename + ":" + switch)])
 	if check_mk.multiadmin_use_siteicons:
 	    html.write("<td>")
 	    add_site_icon(html, sitename)
 	    html.write("</td>")
-	html.write("<td class=%s>" % style)
+	html.write("<td class=%s>" % state)
 	html.write("<a href=\"%s\">%s</a></td>" % (uri, site["alias"]))
     html.write("</tr></table>\n")
 
@@ -673,9 +664,6 @@ search_vars = [ "filled_in",
 		] \
 		    + [ f[1] for f in search_textfields ] \
 		    + [ f[1] for f in search_dropdown_fields ]
-
-site_vars = [ "siteoff_" + s for s in check_mk.sitenames() ]
-
 
 
 # Helper functions for sorting according to state

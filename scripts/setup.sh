@@ -649,8 +649,8 @@ do
 # inconveniance.
 
 <IfModule mod_python.c>
-  Alias $checkmk_web_uri $web_dir
-  <Directory $web_dir>
+  Alias $checkmk_web_uri $web_dir/htdocs
+  <Directory $web_dir/htdocs>
         AddHandler mod_python .py
         PythonHandler index
         PythonDebug On 
@@ -685,8 +685,8 @@ and change the path there. Restart Apache afterwards."
 </IfModule>
 
 <IfModule !mod_python.c>
-  Alias $checkmk_web_uri $web_dir
-  <Directory $web_dir>
+  Alias $checkmk_web_uri $web_dir/htdocs
+  <Directory $web_dir/htdocs>
         Deny from all
         ErrorDocument 403 "<h1>Check_mk: Incomplete Apache2 Installation</h1>\
 You need mod_python in order to run the web interface of check_mk.<br> \
@@ -695,6 +695,12 @@ Please install mod_python and restart Apache."
 </IfModule>
 EOF
            fi &&
+	   for d in $DESTDIR$apache_config_dir/../*/*$NAME.conf ; do
+	       if [ -e "$d" ] && ! grep -q "$web_dir/htdocs" $d ; then
+		   echo "Changing $web_dir to $web_dir/htdocs in $d"
+		   sed -i "s@$web_dir@$web_dir/htdocs@g" $d
+	       fi
+	   done &&
 	   if [ -z "$YES" ] ; then
 	       echo -e "Installation completed successfully.\nPlease restart Nagios and Apache in order to update/active check_mk's web pages."
            fi ||

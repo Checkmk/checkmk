@@ -9,12 +9,10 @@ multisite_sorters     = {}
 multisite_views       = {}
 
 # TODO: Move include files out of htdocs directory
-include_path = "/usr/share/check_mk/web"
-execfile(include_path + "/datasources.py")
-execfile(include_path + "/layouts.py")
-execfile(include_path + "/filters.py")
-execfile(include_path + "/sortings.py")
-execfile(include_path + "/painters.py")
+plugins_path = check_mk.web_dir + ".plugins"
+for fn in os.listdir(plugins_path):
+    if fn.endswith(".py"):
+	execfile(plugins_path + "/" + fn)
 
 max_display_columns   = 10
 max_group_columns     = 3

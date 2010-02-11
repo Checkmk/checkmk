@@ -33,6 +33,7 @@ class Filter:
     def allowed_for_table(self, tablename):
 	return True
 
+# Filters for substring search, displaying a text input field
 class FilterText(Filter):
     def __init__(self, name, title, table, column, htmlvar, op):
 	Filter.__init__(self, name, title, table, [column], [htmlvar])
@@ -57,6 +58,11 @@ class FilterText(Filter):
 	if self.table == "hosts" and tablename == "services":
 	    return True
 	return False
+
+declare_filter(FilterText("host",    "Hostname",             "hosts",    "name",          "host",    "~~"))
+declare_filter(FilterText("service", "Service",              "services", "description",   "service", "~~"))
+declare_filter(FilterText("output",  "Service check output", "services", "plugin_output", "service", "~~"))
+
 
 class FilterLimit(Filter):
     def __init__(self):
@@ -105,6 +111,30 @@ class FilterHostgroupCombo(Filter):
     def allowed_for_table(self, tablename):
 	return tablename in [ "hosts", "services", "hostgroups" ]
 
+declare_filter(FilterHostgroupCombo())
+
+class FilterQueryDropdown(Filter):
+    def __init__(self, name, title, table, query, filterline):
+	Filter.__init__(self, name, title, table, [], [ name ])
+	self.query = query
+	self.filterline = filterline
+
+    def display(self):
+	selection = html.live.query_column_unique(self.query)
+	html.sorted_select(self.name, [("", "")] + [(x,x) for x in selection])
+
+    def filter(self, tablename):
+	current = html.var(self.name)
+	if current:
+	    return self.filterline % current
+	else:
+	    return ""
+
+    def allowed_for_table(self, tablename):
+	return self.table == tablename
+
+declare_filter(FilterQueryDropdown("check_command", "Check command", "services", \
+	"GET commands\nColumns: name\n", "Filter: check_command = %s\n"))
 
 class FilterServiceState(Filter):
     def __init__(self):
@@ -138,9 +168,71 @@ class FilterServiceState(Filter):
 	    return "".join(headers) + ("Or: %d\n" % len(headers))
 	
     def allowed_for_table(self, tablename):
-	return tablename in [ "services" ]
+	return tablename == "services"
 
-declare_filter(FilterText("host", "Hostname", "hosts", "name", "host", "~~"))
-declare_filter(FilterText("service", "Service", "services", "description", "service", "~~"))
+class FilterTristate(Filter):
+    def __init__(self, name, title, table, column, deflt = -1):
+	self.column = column
+	self.varname = "is_" + name
+	Filter.__init__(self, name, title, table, [ column ], [ self.varname ])
+	self.deflt = deflt
+   
+    def display(self):
+        current = html.var(self.varname)
+        for value, text in [("1", "yes"), ("0", "no"), ("-1", "(ignore)")]:
+            checked = current == value or (current in [ None, ""] and int(value) == self.deflt)
+            html.radiobutton(self.varname, value, checked, text)
+
+    def tristate_value(self):
+        current = html.var(self.varname)
+	if current in [ None, "" ]:
+	    return self.deflt
+	return int(current)
+	
+    def allowed_for_table(self, tablename):
+	if self.table == "hosts":
+	    return tablename in [ "hosts", "services" ]
+	else:
+	    return tablename == self.table
+    
+    def filter(self, tablename):
+	current = self.tristate_value()
+	if current == -1: # ignore
+	    return ""
+	elif current == 1:
+	    return self.filter_code(tablename, True)
+	else:
+	    return self.filter_code(tablename, False)
+
+class FilterNagiosFlag(FilterTristate):
+    def __init__(self, table, column, title, deflt = -1):
+	FilterTristate.__init__(self, table[:-1] + "_" + column, title, table, column, deflt)
+
+    def filter_code(self, tablename, positive):
+	if tablename == "services" and self.table == "hosts":
+	    column = "host_" + self.column
+	else:
+	    column = self.column
+	return "Filter: %s = %d\n" % (column, positive and 1 or 0)
+
+class FilterNagiosExpression(FilterTristate):
+    def __init__(self, table, name, title, pos, neg, deflt = -1):
+	FilterTristate.__init__(self, name, title, table, [], deflt)
+	self.pos = pos
+	self.neg = neg
+
+    def allowed_for_table(self, tablename):
+	return self.table == tablename
+
+    def filter_code(self, tablename, positive):
+	return positive and self.pos or self.neg
+
+declare_filter(FilterNagiosExpression("services", "show_summary_hosts", "Show summary hosts", 
+	    "host_custom_variable_names >= _REALNAME\n",
+	    "host_custom_variable_names < _REALNAME\n"))
+
+
+declare_filter(FilterNagiosFlag("hosts",    "in_notification_period", "Host is in notification period"))
+declare_filter(FilterNagiosFlag("services", "in_notification_period", "Service is in notification period"))
+	
 declare_filter(FilterServiceState())
-declare_filter(FilterHostgroupCombo())

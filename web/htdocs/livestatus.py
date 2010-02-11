@@ -157,6 +157,8 @@ class BaseConnection:
 	result = ""
 	while size > 0:
 	    packet = self.socket.recv(size)
+	    if len(packet) == 0:
+		raise MKLivestatusSocketError("Read zero data from socket")
 	    size -= len(packet)
 	    result += packet
 	return result

@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 import time, cgi
-from lib import *
 
 # Information about uri
 class InvalidUserInput(Exception):
@@ -178,23 +177,26 @@ class html:
             self.set_focus(self.current_form, varname)
         self.write(html)
 
-    def sorted_select(self, varname, options, deflt=""):
+    def sorted_select(self, varname, options, deflt="", onchange=None):
         # Sort according to display texts, not keys
 	swapped = [ (disp, key) for key, disp in options ]
 	swapped.sort()
 	swapped = [ (key, disp) for disp, key in swapped ]
-	html.select(self, varname, swapped, deflt)
+	html.select(self, varname, swapped, deflt, onchange)
 
-    def select(self, varname, options, deflt=""):
+    def select(self, varname, options, deflt="", onchange=None):
 	current = self.var(varname, deflt)
-        self.write("<select name=\"%s\" size=\"1\">\n" % varname)
+	onchange_code = onchange and " id=\"%s\" onchange=\"%s(this.id)\"" % (varname, onchange) or ""
+        self.write("<select%s name=\"%s\" size=\"1\">\n" % (onchange_code, varname))
         for value, text in options:
-            if value == current:
-                sel = " selected"
-            else:
-                sel = ""
+            sel = value == current and " selected" or ""
             self.write("<option value=\"%s\"%s>%s</option>\n" % (value, sel, text))
         self.write("</select>\n")
+
+    def radiobutton(self, name, value, checked, text):
+	checked_text = checked and " checked" or ""
+	self.write("<input type=radio name=%s value=\"%s\"%s> %s &nbsp; \n" %
+                      (name, value, checked_text, text))
 
     def checkbox(self, varname, deflt=""):
 	value = self.req.vars.get(varname, deflt)
@@ -255,6 +257,7 @@ class html:
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 		<title>%s</title>
 		<link rel="stylesheet" type="text/css" href="check_mk.css">
+		<script type='text/javascript' src='check_mk.js'></script> 
 		</head>
 		''' % title)
             self.req.header_sent = True

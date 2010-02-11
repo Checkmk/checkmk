@@ -137,7 +137,7 @@ def render_grouped_list(data, filters, group_columns, group_painters, painters, 
 	    # or host - if available - to color the complete line
 	    if num_columns == 1:
 		# render state, if available through whole tr
-		state = row.get("state", 0)
+		state = row.get("service_state", 0)
 	    else:
 		state = 0
 	    if trclass == "odd":

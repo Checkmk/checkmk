@@ -1,5 +1,6 @@
 import check_mk, livestatus, htmllib, time, os, re, pprint, time
 from lib import *
+from pagefunctions import *
 
 multisite_datasources = {}
 multisite_filters     = {}
@@ -68,6 +69,7 @@ def page_view(h):
 	raise MKGeneralException("This view does not exist (user: %s, name: %s)." % (user, view_name))
 
     html.header(view["title"])
+    show_site_header(html)
     show_view(view)
 
     html.footer()
@@ -89,7 +91,7 @@ def page_edit_views(h, msg=None):
     # Deletion of views
     delname = html.var("delete")
     if delname and html.confirm("Please confirm the deletion of the view <tt>%s</tt>" % delname):
-	del multisite_views[(html.req.auth, delname)]
+	del multisite_views[(html.req.user, delname)]
 	save_views(html.req.user)
 
     # Cloning of views
@@ -221,11 +223,15 @@ def page_edit_view(h):
 	html.write("<tr>")
 	html.write("<td class=title>%s</td>" % filt.title)
 	html.write("<td class=usage>")
-	html.sorted_select("filter_%s" % fname, [("off", "Don't use"), ("show", "Show to user"), ("hard", "Hardcode")])
+	html.sorted_select("filter_%s" % fname, [("off", "Don't use"), ("show", "Show to user"), ("hard", "Hardcode")], "", "filter_activation")
 	html.write("</td><td class=widget>")
 	filt.display()
 	html.write("</td></tr>\n")
     html.write("</table></td></tr>\n")
+    html.write("<script language=\"javascript\">\n")
+    for fname, filt in allowed_filters.items():
+	html.write("filter_activation(\"filter_%s\");\n" % fname)
+    html.write("</script>\n")	
    
     # [4] Sorting
     def column_selection(title, var_prefix, maxnum, data, order=False):
@@ -420,6 +426,7 @@ def query_data(datasource, add_headers):
     query += "Columns: %s\n" % " ".join(datasource["columns"])
     query += add_headers
     html.live.set_prepend_site(True)
+    html.write("<div class=message><pre>%s</pre></div>\n" % query)
     data = html.live.query(query)
     # convert lists-rows into dictionaries. Thas costs a bit of
     # performance, but makes live much easier later. What also

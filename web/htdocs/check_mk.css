@@ -79,21 +79,21 @@ table.siteheader td a {
 }
 
 table.siteheader td.online a {
-    border-width: 2px;
-    background-color: #8f8;
+    border-width: 1px;
+    background-color: #cfa;
     border-color: #222 #ccc #fff #555;
     color: #080;
 }
 
 table.siteheader td.offline a {
-    border-width: 2px;
-    background-color: #f88;
+    border-width: 1px;
+    background-color: #fca;
     border-color: #222 #ccc #fff #555;
     color: #800;
 }
 
 table.siteheader td.disabled a {
-    border-width: 2px;
+    border-width: 1px;
     background-color: #ccc;
     border-color: #ccc #777 #444 #aaa;
     color: #444;
@@ -356,7 +356,7 @@ input.date, input.time {
 }
 
 /* actions */
-div.really, div.success, div.error { 
+div.really, div.success, div.error, div.message { 
   margin: 2em 2em 2em 2em;
   -moz-border-radius: 1ex;
   padding: 1em 2em;
@@ -379,6 +379,10 @@ div.really input {
 div.success { 
   background-color: #8f8;
   border-color: #080;
+}
+div.message {
+  background-color: #8cf;
+  border-color: #048;
 }
 
 div.error { 
@@ -604,12 +608,22 @@ table.view table.filters th
 
 table.view table.filters td.usage
 {
-    background-color: #ee8;
+    background-color: #fd9;
 }
 
-table.view table.filters td.widget 
+table.view table.filters td.widget
 {
-    background-color: #fff;
+    background-image: url("background-gold.jpg");
+    background-repeat: repeat;
+    background-position: center;
+    background-color: none;
+    color: #000;
+}
+table.view table.filters td.widgetoff
+{
+    background-image: none;
+    background-color: #bbb;
+    color: #ff0;
 }
 
 table.view table.filters td.title {

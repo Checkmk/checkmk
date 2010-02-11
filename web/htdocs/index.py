@@ -153,6 +153,7 @@ def handler(req):
     try:
         read_get_vars(req)
         read_checkmk_defaults(req)
+        from lib import *
 
         # These pages may only be used with HTTP authentication turned on.
 	if not req.user or type(req.user) != str:

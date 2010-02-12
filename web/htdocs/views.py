@@ -39,6 +39,8 @@ def load_views():
 			raise MKGeneralException("Cannot load views from %s/view.mk: file empty or not flushed" % dirpath)
 		views = eval(sourcecode)
 		for name, view in views.items():
+		    view["owner"] = user
+		    view["name"] = name
 		    multisite_views[(user, name)] = view
 	except IOError:
 	     pass
@@ -71,6 +73,8 @@ def page_view(h):
     html.header(view["title"])
     show_site_header(html)
     show_view(view)
+    if view["owner"] == html.req.user:
+	html.write("<a href=\"edit_view.py?load_view=%s\">Edit this view</a>" % view["name"])
 
     html.footer()
 
@@ -184,7 +188,8 @@ def page_edit_view(h):
 	    html.add_user_error(e.varname, e.message)
 
     html.header("Edit view")
-    html.write("<p>Edit the properties of the view or go <a href=\"edit_views.py\">back to this list of all views</a>.</p>")
+    html.write("<p>Edit the properties of the view or go <a href=\"edit_views.py\">back to this list of all views</a>.<br />")
+    html.write("<a href=\"view.py?view_name=%s/%s\">Visit view (does not save)</a></p>" % (html.req.user, viewname))
     html.begin_form("view")
     html.write("<table class=view>\n")
 
@@ -363,6 +368,7 @@ def create_view():
   
     return { 
 	"name"            : name,
+	"owner"           : html.req.user,
 	"title"           : title,
 	"datasource"      : datasourcename,
 	"public"          : public,
@@ -408,7 +414,27 @@ def show_view(view):
 
     # [6] Columns
     painters = [ multisite_painters[n] for n in view["painters"] ]
-    layout["render"]((columns, rows), show_filters, group_columns, group_painters, painters)
+
+    # Actions
+    has_done_actions = False
+    if len(rows) > 0:
+	if html.do_actions(): # submit button pressed
+	    try:
+		has_done_actions = do_actions(tablename, rows)
+	    except MKUserError, e:
+		html.show_error(e.message)
+		html.add_user_error(e.varname, e.message)
+		show_action_form(tablename)
+
+        else:
+	    show_action_form(tablename)
+
+    if has_done_actions:
+	html.write("<a href=\"%s\">Back to search results</a>" % html.makeuri([]))
+    else:
+        layout["render"]((columns, rows), show_filters, group_columns, group_painters, painters)
+
+
 
 def needed_group_columns(painters):
     columns = []
@@ -426,7 +452,8 @@ def query_data(datasource, add_headers):
     query += "Columns: %s\n" % " ".join(datasource["columns"])
     query += add_headers
     html.live.set_prepend_site(True)
-    html.write("<div class=message><pre>%s</pre></div>\n" % query)
+    if check_mk.multiadmin_debug:
+	html.write("<div class=message><pre>%s</pre></div>\n" % query)
     data = html.live.query(query)
     # convert lists-rows into dictionaries. Thas costs a bit of
     # performance, but makes live much easier later. What also
@@ -494,3 +521,202 @@ def allowed_for_datasource(collection, datasourcename):
 	    (item["table"] == "hosts" and tablename == "services"):
 	    allowed[name] = item
     return allowed
+
+# -----------------------------------------------------------------------------
+#         _        _   _
+#        / \   ___| |_(_) ___  _ __  ___
+#       / _ \ / __| __| |/ _ \| '_ \/ __|
+#      / ___ \ (__| |_| | (_) | | | \__ \
+#     /_/   \_\___|\__|_|\___/|_| |_|___/
+#
+# -----------------------------------------------------------------------------
+
+def show_action_form(tablename):
+    if not check_mk.is_allowed_to_act(html.req.user):
+	return
+
+    html.begin_form("actions")
+    display = html.do_actions()
+    toggle_texts = { False: 'Show command form', True: 'Hide command form' }
+    html.write("<a id=toggle_actionform href=\"#\" onclick=\"toggle_actionform(this, '%s', '%s')\">%s</a>" % \
+	    (toggle_texts[False], toggle_texts[True], toggle_texts[display]))
+    html.hidden_field("_do_actions", "yes")
+    html.hidden_field("actions", "yes")
+    html.hidden_fields() # set all current variables, exception action vars
+
+    html.write("<table %s id=actionform class=form id=actions>\n" % (display and " " or 'style="display: none"'))
+
+    html.write("<tr><td class=legend>Notifications</td>\n"
+               "<td class=content>\n"
+               "<input type=submit name=_enable_notifications value=\"Enable\"> &nbsp; "
+               "<input type=submit name=_disable_notifications value=\"Disable\"> &nbsp; "
+               "</td></tr>\n")
+
+    html.write("<tr><td class=legend>Active checks</td>\n"
+               "<td class=content>\n"
+               "<input type=submit name=_enable_checks value=\"Enable\"> &nbsp; "
+               "<input type=submit name=_disable_checks value=\"Disable\"> &nbsp; "
+               "<input type=submit name=_resched_checks value=\"Reschedule next check now\"></td></tr>\n"
+               "</td></tr>\n")
+
+    html.write("<tr><td rowspan=2 class=legend>Acknowledge</td>\n")
+    html.write("<td class=content><input type=submit name=_acknowledge value=\"Acknowledge\"> &nbsp; "
+               "<input type=submit name=_remove_ack value=\"Remove Acknowledgement\"></td></tr><tr>"
+               "<td class=content><div class=textinputlegend>Comment:</div>")
+    html.text_input("_comment")
+    html.write("</td></tr>\n")
+
+    html.write("<tr><td class=legend rowspan=3>Schedule Downtimes</td>\n"
+               "<td class=content>\n"
+               "<input type=submit name=_down_2h value=\"2 hours\"> "
+               "<input type=submit name=_down_today value=\"Today\"> "
+               "<input type=submit name=_down_week value=\"This week\"> "
+               "<input type=submit name=_down_month value=\"This month\"> "
+               "<input type=submit name=_down_year value=\"This year\"> "
+               " &nbsp; - &nbsp;"
+               "<input type=submit name=_down_remove value=\"Remove all\"> "
+               "</tr><tr>"
+               "<td class=content>"
+               "<input type=submit name=_down_custom value=\"Custom time range\"> &nbsp; ")
+    html.datetime_input("_down_from", time.time())
+    html.write("&nbsp; to &nbsp;")
+    html.datetime_input("_down_to", time.time() + 7200)
+    html.write("</td></tr>")
+    html.write("<tr><td class=content><div class=textinputlegend>Comment:</div>\n")
+    html.text_input("_down_comment")
+    html.write("</td></tr>")
+    html.write("</table></form>\n")
+
+def nagios_action_command(tablename, service):
+    host = service["host_name"]
+    descr = service.get("service_description") # not available on hosts
+    down_from = time.time()
+    down_to = None
+    if tablename == "hosts":
+	spec = host
+	cmdtag = "HOST"
+    elif tablename == "services":
+	spec = "%s;%s" % (host, descr)
+	cmdtag = "SVC"
+    else:
+	raise MKInternalError("Sorry, no actions possible on table %s" % tablename)
+
+    if html.var("_enable_notifications"):
+        command = "ENABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec
+        title = "<b>enable notifications</b> for"
+
+    elif html.var("_disable_notifications"):
+        command = "DISABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec
+        title = "<b>disable notifications</b> for"
+
+    elif html.var("_enable_checks"):
+        command = "ENABLE_" + cmdtag + "_CHECK;%s" % spec 
+        title = "<b>enable active checks</b> of"
+
+    elif html.var("_disable_checks"):
+        command = "DISABLE_" + cmdtag + "_CHECK;%s" % spec
+        title = "<b>disable active checks</b> of"
+
+    elif html.var("_resched_checks"):
+        command = "SCHEDULE_FORCED_" + cmdtag + "_CHECK;%s;%d" % (spec, int(time.time()))
+        title = "<b>reschedule an immediate check</b> of"
+
+    elif html.var("_acknowledge"):
+        comment = html.var("_comment")
+        if not comment:
+            raise MKUserError("_comment", "You need to supply a comment.")
+        command = "ACKNOWLEDGE_" + cmdtag + "_PROBLEM;%s;2;1;0;%s" % \
+                  (spec, html.req.user) + ";" + html.var("_comment")
+        title = "<b>acknowledge the problems</b> of"
+
+    elif html.var("_remove_ack"):
+        command = "REMOVE_" + cmdtag + "_ACKNOWLEDGEMENT;%s" % spec
+        title = "<b>remove acknowledgements</b> from"
+
+    elif html.var("_down_2h"):
+        down_to = down_from + 7200
+        title = "<b>schedule an immediate 2-hour downtime</b> on"
+
+    elif html.var("_down_today"):
+        br = time.localtime(down_from)
+        down_to = time.mktime((br.tm_year, br.tm_mon, br.tm_mday, 23, 59, 59, 0, 0, br.tm_isdst)) + 1
+        title = "<b>schedule an immediate downtime until 24:00:00</b> on"
+
+    elif html.var("_down_week"):
+        br = time.localtime(down_from)
+        wday = br.tm_wday
+        days_plus = 6 - wday
+        down_to = time.mktime((br.tm_year, br.tm_mon, br.tm_mday, 23, 59, 59, 0, 0, br.tm_isdst)) + 1
+        down_to += days_plus * 24 * 3600
+        title = "<b>schedule an immediate downtime until sunday night</b> on"
+
+    elif html.var("_down_month"):
+        br = time.localtime(down_from)
+        new_month = br.tm_mon + 1
+        if new_month == 13:
+            new_year = br.tm_year + 1
+            new_month = 1
+        else:
+            new_year = br.tm_year
+        down_to = time.mktime((new_year, new_month, 1, 0, 0, 0, 0, 0, br.tm_isdst)) 
+        title = "<b>schedule an immediate downtime until end of month</b> on"
+
+    elif html.var("_down_year"):
+        br = time.localtime(down_from)
+        down_to = time.mktime((br.tm_year, 12, 31, 23, 59, 59, 0, 0, br.tm_isdst)) + 1
+        title = "<b>schedule an immediate downtime until end of %d</b> on" % br.tm_year
+
+    elif html.var("_down_custom"):
+        down_from = html.get_datetime_input("down_from")
+        down_to   = html.get_datetime_input("down_to")
+        title = "<b>schedule a downtime from %s to %s</b> on " % (
+            time.asctime(time.localtime(down_from)),
+            time.asctime(time.localtime(down_to)))
+
+    elif html.var("_down_remove"):
+        downtime_ids = []
+	for id in service["service_downtimes"]:
+	   if id != "":
+	       downtime_ids.append(int(id))
+        commands = []
+        for dtid in downtime_ids:
+            commands.append("[%d] DEL_" + cmdtag + "_DOWNTIME;%d\n" % (int(time.time()), dtid))
+        title = "<b>remove all scheduled downtimes</b> of "
+        return title, commands
+
+    else:
+        raise MKUserError(None, "Sorry. This command is not implemented.")
+
+    if down_to:
+        comment = html.var("_down_comment")
+        if not comment:
+            raise MKUserError("_down_comment", "You need to supply a comment for your downtime.")
+        command = (("SCHEDULE_" + cmdtag + "_DOWNTIME;%s;" % spec) \
+                   + ("%d;%d;1;0;0;%s;" % (int(down_from), int(down_to), html.req.user)) \
+                   + comment)
+                  
+    nagios_command = ("[%d] " % int(time.time())) + command + "\n"
+    return title, [nagios_command]
+
+def do_actions(tablename, rows):
+    if not check_mk.is_allowed_to_act(html.req.user):
+       html.show_error("You are not allowed to perform actions. If you think this is an error, "
+             "please ask your administrator to add your login to <tt>multiadmin_action_users</tt> "
+	     "in <tt>main.mk</tt>")
+       return
+    count = 0
+    pipe = file(html.req.defaults["nagios_command_pipe_path"], "w")
+    command = None
+    for row in rows:
+        title, nagios_commands = nagios_action_command(tablename, row)
+        confirms = html.confirm("Do you really want to %s the following %d %s?" % (title, len(rows), tablename))
+        if not confirms:
+	    return False
+        for command in nagios_commands:
+            pipe.write(command)
+            count += 1
+    if command:
+	html.message("Successfully sent %d commands to Nagios. The last one was: <pre>%s</pre>" % (count, command))
+    else:
+	html.message("No matching service. No command sent.")
+    return True

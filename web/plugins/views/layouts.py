@@ -4,7 +4,7 @@
 ##################################################################################
 
 def show_filter_form(filters):
-    if len(filters) > 0:
+    if len(filters) > 0 and not html.do_actions():
 	html.begin_form("filter")
 	html.hidden_fields()
 	html.write("<table class=form id=filter>\n")

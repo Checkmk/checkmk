@@ -23,9 +23,9 @@ function filter_activation(oid)
     selectobject = null;
 }
 
-function toggle_actionform(linkobject, showtext, hidetext)
+function toggle_actions(linkobject, showtext, hidetext)
 {
-    var table = document.getElementById("actionform");
+    var table = document.getElementById("actions");
     var displayed = table.style.display;
     if (displayed == "none") {
 	table.style.display = "";

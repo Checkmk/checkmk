@@ -538,13 +538,13 @@ def show_action_form(tablename):
     html.begin_form("actions")
     display = html.do_actions()
     toggle_texts = { False: 'Show command form', True: 'Hide command form' }
-    html.write("<a id=toggle_actionform href=\"#\" onclick=\"toggle_actionform(this, '%s', '%s')\">%s</a>" % \
+    html.write("<a id=toggle_actions href=\"#\" onclick=\"toggle_actions(this, '%s', '%s')\">%s</a>" % \
 	    (toggle_texts[False], toggle_texts[True], toggle_texts[display]))
     html.hidden_field("_do_actions", "yes")
     html.hidden_field("actions", "yes")
     html.hidden_fields() # set all current variables, exception action vars
 
-    html.write("<table %s id=actionform class=form id=actions>\n" % (display and " " or 'style="display: none"'))
+    html.write("<table %s id=actions class=form id=actions>\n" % (display and " " or 'style="display: none"'))
 
     html.write("<tr><td class=legend>Notifications</td>\n"
                "<td class=content>\n"

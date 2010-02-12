@@ -107,18 +107,23 @@ class FilterGroupCombo(Filter):
 	current_value = html.var(htmlvar)
 	if not current_value: # Take first hostgroup
 	    current_value = html.live.query_value("GET %sgroups\nColumns: name\nLimit: 1\n" % self.what)
-	if self.what + "s" == self.table:
+	if self.what + "s" == tablename:
 	    col = "groups"
 	else:
-	    col = what + "_groups"
+	    col = self.what + "_groups"
 	return "Filter: %s >= %s\n" % (col, current_value)
     
     def allowed_for_table(self, tablename):
-	return tablename in [ "hosts", "services", "hostgroups" ]
+	if tablename == "services": return True # Service table allows all groups
+	elif tablename == "hosts" : return self.what in [ "host", "contact" ]
+	elif tablename == "contacts" : return self.what == "contact"
+	else:
+	    return False
 
 declare_filter(FilterGroupCombo("host"))
 declare_filter(FilterGroupCombo("service"))
-declare_filter(FilterGroupCombo("contact"))
+# Livestatus still misses "contact_groups" column. 
+# declare_filter(FilterGroupCombo("contact"))
 
 class FilterQueryDropdown(Filter):
     def __init__(self, name, title, table, query, filterline):

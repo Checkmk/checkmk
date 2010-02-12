@@ -203,7 +203,7 @@ def handler(req):
 			 "edit_view"    : views.page_edit_view,
 			 "view"         : views.page_view,
 			 "logwatch"     : page_logwatch.page,
-			 "side_views"   : sidebar.page_views, }
+			 "sidebar"      : sidebar.sidebar, }
 
 	handler = pagehandlers.get(req.myfile, page_index)
 	handler(html)

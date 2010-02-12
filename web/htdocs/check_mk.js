@@ -22,3 +22,17 @@ function filter_activation(oid)
     oTd = null;
     selectobject = null;
 }
+
+function toggle_actionform(linkobject, showtext, hidetext)
+{
+    var table = document.getElementById("actionform");
+    var displayed = table.style.display;
+    if (displayed == "none") {
+	table.style.display = "";
+	linkobject.innerHTML = hidetext;
+    }
+    else {
+	table.style.display = "none";
+	linkobject.innerHTML = showtext;
+    }
+}

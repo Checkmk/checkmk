@@ -138,14 +138,16 @@ class html:
         if value != None:
             self.write("<input type=hidden name=%s value=\"%s\">\n" % (var, attrencode(value)))
 
-    def hidden_fields(self, varlist = None):
+    def hidden_fields(self, varlist = None, **args):
+	add_action_vars = args.get("add_action_vars", False)
         if varlist != None:
             for var in varlist:
                 value = self.req.vars.get(var, "")
                 self.hidden_field(var, value)
         else: # add *all* get variables
             for var, value in self.req.vars.items():
-                self.hidden_field(var, value)
+		if var[0] != "_" or add_action_vars:
+		    self.hidden_field(var, value)
 
     def add_global_vars(self, varnames):
 	self.global_vars += varnames
@@ -284,13 +286,17 @@ class html:
         if not self.has_var("_do_confirm"):
             self.write("<div class=really>%s" % msg)
             self.begin_form("confirm")
-            self.hidden_fields()
+            self.hidden_fields(add_action_vars = True) 
             self.button("_do_confirm", "Yes!", "really")
+            self.button("_do_actions", "No", "")
             self.end_form()
             self.write("</div>")
             return False
 	else:
 	    return True
+
+    def do_actions(self):
+	return self.var("_do_actions") not in [ "", None, "No" ]
 
     def footer(self):
         if self.req.header_sent:

@@ -606,24 +606,47 @@ table.view table.filters th
     padding-bottom: 3px;
 }
 
-table.view table.filters td.usage
+table.view table.filters td.usageshow
 {
-    background-color: #fd9;
+ background-color: #ff0;
+}
+table.view table.filters td.usagehard
+{
+    background-color: #89f;
+}
+table.view table.filters td.usageoff
+{
+    background-color: #ffc;
 }
 
-table.view table.filters td.widget
+table.view table.filters td.usageshow select
+{
+   background-color: #cc0;
+}
+table.view table.filters td.usagehard select
+{
+    background-color: #67c;
+}
+
+table.view table.filters td.widgetshow
 {
     background-image: url("background-gold.jpg");
     background-repeat: repeat;
     background-position: center;
     background-color: none;
-    color: #000;
+    color: #aa6;
 }
 table.view table.filters td.widgetoff
 {
     background-image: none;
-    background-color: #bbb;
-    color: #ff0;
+    background-color: #ffc;
+    color: #aa6;
+}
+table.view table.filters td.widgethard
+{
+    background-image: none;
+    background-color: #abf;
+    color: #000;
 }
 
 table.view table.filters td.title {

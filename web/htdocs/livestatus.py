@@ -184,10 +184,10 @@ class BaseConnection:
 		try:
 		    return eval(data)
 		except:
-		    raise MKLivestatusQueryError("Invalid response from Livestatus")
+		    raise MKLivestatusSocketError("Malformed output")
 	    else:
 	       raise MKLivestatusQueryError(code, data.strip())
-        except Exception, e:
+        except IOError, e:
 	    self.socket_state = DOWN
 	    raise MKLivestatusSocketError(str(e))
 

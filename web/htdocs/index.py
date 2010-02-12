@@ -219,6 +219,11 @@ def handler(req):
         html.footer()
         apache.log_error("Configuration error: %s" % (e,), apache.APLOG_ERR)
 
+    except livestatus.MKLivestatusException, e:
+	html.header("Livestatus problem")
+	html.show_error("Livestatus problem: %s" % e)
+	html.footer()
+	
     except Exception, e:
 	if check_mk.multiadmin_debug:
             html.live = None

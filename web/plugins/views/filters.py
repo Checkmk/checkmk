@@ -11,7 +11,7 @@ class Filter:
 	self.name = name
 	self.table = table
 	self.title = title
-	self.columns = columns
+# self.columns = columns # TEST
 	self.htmlvars = htmlvars
 	
     def display(self):
@@ -93,25 +93,32 @@ def all_groups(what):
     names.sort()
     return [ (name, groups[name]) for name in names ]
 
-class FilterHostgroupCombo(Filter):
-    def __init__(self):
-	Filter.__init__(self, "hostgroup", "Hostgroup-Combobox, obligatory",
-		"hosts", [ "host_groups" ], [ "hostgroup" ])
+class FilterGroupCombo(Filter):
+    def __init__(self, what):
+	Filter.__init__(self, what + "group", what[0].upper() + what[1:] + "group-Combobox",
+		what + "s", [ ], [ what + "group" ])
+        self.what = what
 
     def display(self):
-	html.select("hostgroup", all_groups("host"))
+	html.select(self.what + "group", all_groups(self.what))
 
     def filter(self, tablename):
 	htmlvar = self.htmlvars[0]
 	current_value = html.var(htmlvar)
 	if not current_value: # Take first hostgroup
-	    current_value = html.live.query_value("GET hostgroups\nColumns: name\nLimit: 1\n")
-	return "Filter: %sgroups >= %s\n" % (self.tableprefix(tablename), current_value)
+	    current_value = html.live.query_value("GET %sgroups\nColumns: name\nLimit: 1\n" % self.what)
+	if self.what + "s" == self.table:
+	    col = "groups"
+	else:
+	    col = what + "_groups"
+	return "Filter: %s >= %s\n" % (col, current_value)
     
     def allowed_for_table(self, tablename):
 	return tablename in [ "hosts", "services", "hostgroups" ]
 
-declare_filter(FilterHostgroupCombo())
+declare_filter(FilterGroupCombo("host"))
+declare_filter(FilterGroupCombo("service"))
+declare_filter(FilterGroupCombo("contact"))
 
 class FilterQueryDropdown(Filter):
     def __init__(self, name, title, table, query, filterline):
@@ -213,7 +220,10 @@ class FilterNagiosFlag(FilterTristate):
 	    column = "host_" + self.column
 	else:
 	    column = self.column
-	return "Filter: %s = %d\n" % (column, positive and 1 or 0)
+	if positive:
+	    return "Filter: %s != 0\n" % column
+	else:
+	    return "Filter: %s = 0\n" % column
 
 class FilterNagiosExpression(FilterTristate):
     def __init__(self, table, name, title, pos, neg, deflt = -1):
@@ -228,11 +238,22 @@ class FilterNagiosExpression(FilterTristate):
 	return positive and self.pos or self.neg
 
 declare_filter(FilterNagiosExpression("services", "show_summary_hosts", "Show summary hosts", 
-	    "host_custom_variable_names >= _REALNAME\n",
-	    "host_custom_variable_names < _REALNAME\n"))
+	    "Filter: host_custom_variable_names >= _REALNAME\n",
+	    "Filter: host_custom_variable_names < _REALNAME\n"))
 
 
-declare_filter(FilterNagiosFlag("hosts",    "in_notification_period", "Host is in notification period"))
-declare_filter(FilterNagiosFlag("services", "in_notification_period", "Service is in notification period"))
+declare_filter(FilterNagiosFlag("hosts",    "in_notification_period",   "Host is in notification period"))
+declare_filter(FilterNagiosFlag("services", "acknowledged",             "Problem has been acknowledged"))
+declare_filter(FilterNagiosFlag("services", "in_notification_period",   "Service is in notification period"))
+declare_filter(FilterNagiosFlag("services", "active_checks_enabled",    "Active checks enabled"))
+declare_filter(FilterNagiosFlag("services", "notifications_enabled",    "Notifications enabled"))
+declare_filter(FilterNagiosFlag("services", "is_flapping",              "Flapping"))
+declare_filter(FilterNagiosFlag("services", "in_notification_period",   "Service is in notification period"))
+declare_filter(FilterNagiosFlag("hosts",    "in_notification_period",   "Host is in notification period"))
+declare_filter(FilterNagiosFlag("services", "scheduled_downtime_depth", "Service in downtime"))
+declare_filter(FilterNagiosFlag("hosts",    "scheduled_downtime_depth", "Host in downtime"))
+declare_filter(FilterNagiosExpression("services", "in_downtime", "Host or Service in downtime",
+	    "Filter: scheduled_downtime_depth > 0\nFilter: host_scheduled_downtime_depth > 0\nOr: 2\n",
+	    "Filter: scheduled_downtime_depth = 0\nFilter: host_scheduled_downtime_depth = 0\nAnd: 2\n"))
 	
 declare_filter(FilterServiceState())

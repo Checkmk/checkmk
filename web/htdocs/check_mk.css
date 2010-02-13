@@ -791,3 +791,23 @@ div#check_mk_sidebar div.footnote {
 div#check_mk_sidebar div.footnote a {
     font-size: 6pt;
 }
+
+table.sidebarconfig {
+  margin-top: 1em;
+  border-collapse: collapse;
+  empty-cells: show;
+}
+
+table.sidebarconfig th {
+    background-color: #830;
+    text-align: left;
+    color: white;
+    border: 1px solid #c60;
+    padding: 2px 5px;
+}
+
+table.sidebarconfig td {
+    background-color: #d72;
+border: 1px solid #f84;
+    padding: 0px 5px;
+}

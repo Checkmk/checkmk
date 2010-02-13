@@ -127,8 +127,10 @@ def page_configure(h):
 
     html.begin_form("sidebarconfig")
     html.hidden_field("_saved", "yes")
+    html.write("<p>Here you can configure, which snapins you want to see in your personal "
+	    "sidebar and wether they are closed or opened at startup.</p>")
     html.write("<table class=sidebarconfig>\n"
-	    "<tr><th>Snapin</th><th>Usage</th></tr>\n")
+	    "<tr><th>Snapin</th><th>Usage</th><th colspan=2>Move</th></tr>\n")
 
     n = 0
     for name, usage in config:
@@ -147,6 +149,11 @@ def page_configure(h):
 	html.write("</td></tr>\n")
 	n += 1
     html.write("</table>\n")
+
+    html.write("<p> In order "
+	    "to integrate the Check_MK sidebar snapins into your sidebar, please "
+	    "add the following to your Nagios' <tt>side.html</tt> or <tt>side.php</tt></p>\n")
+    html.write("<pre>\n%s</pre>\n" % htmllib.attrencode('<div id="check_mk_sidebar"><script src="%s/sidebar.js"></script></div>' % check_mk.checkmk_web_uri))
     html.end_form()
 
     html.footer()

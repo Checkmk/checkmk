@@ -7,6 +7,7 @@ multisite_filters     = {}
 multisite_layouts     = {}
 multisite_painters    = {}
 multisite_sorters     = {}
+multisite_builtin_views = {}
 multisite_views       = {}
 
 plugins_path = check_mk.web_dir + "/plugins/views"
@@ -20,7 +21,7 @@ max_sort_columns      = 4
 
 def load_views():
     global multisite_views
-    multisite_views = {}
+    multisite_views = multisite_builtin_views
     subdirs = os.listdir(check_mk.multisite_config_dir)
 
     for user in subdirs:
@@ -137,12 +138,13 @@ def page_edit_views(h, msg=None):
 	view = multisite_views[(owner, viewname)]
 	if owner == html.req.user or view["public"]:
 	    if first:
-		html.write("<tr><th>Name</th><th>Title</th><th>Owner</th><th>Public</th><th>Datasource</th><th></th></tr>\n")
+		html.write("<tr><th>Name</th><th>Title</th><th>Owner</th><th>Public</th><th>hidden</th><th>Datasource</th><th></th></tr>\n")
 		first = False
 	    html.write("<tr><td class=legend>%s</td>" % viewname)
 	    html.write("<td class=content><a href=\"view.py?view_name=%s/%s\">%s</a>" % (owner, viewname, view["title"]))
 	    html.write("<td class=content>%s</td>" % owner)
 	    html.write("<td class=content>%s</td>" % (view["public"] and "yes" or "no"))
+	    html.write("<td class=content>%s</td>" % (view["hidden"] and "yes" or "no"))
 	    html.write("</td><td class=content>%s</td><td class=buttons>\n" % view["datasource"])
 	    html.buttonlink("edit_views.py?clone=%s/%s" % (owner, viewname), "Clone")
 	    if owner == html.req.user:
@@ -150,7 +152,7 @@ def page_edit_views(h, msg=None):
 		html.buttonlink("edit_views.py?delete=%s" % viewname, "Delete!")
 	    html.write("</td></tr>")
 
-    html.write("<tr><td class=legend colspan=6>")
+    html.write("<tr><td class=legend colspan=7>")
     html.begin_form("create_view", "edit_view.py") 
     html.button("create", "Create new view")
     html.write(" for datasource: ")
@@ -211,6 +213,9 @@ def page_edit_view(h):
     html.write("<tr><td class=legend>Configuration</td><td class=content>")
     html.checkbox("public")
     html.write(" make this view available for all users")
+    html.write("<br />\n")
+    html.checkbox("hidden")
+    html.write(" hide this view from the sidebar")
     html.write("</td></tr>\n")
 
     def show_list(name, title, data):
@@ -235,7 +240,7 @@ def page_edit_view(h):
 	html.write("<tr>")
 	html.write("<td class=title>%s</td>" % filt.title)
 	html.write("<td class=usage>")
-	html.sorted_select("filter_%s" % fname, [("off", "Don't use"), ("show", "Show to user"), ("hard", "Hardcode")], "", "filter_activation")
+	html.sorted_select("filter_%s" % fname, [("off", "Don't use"), ("show", "Show to user"), ("hide", "Hide but use"), ("hard", "Hardcode")], "", "filter_activation")
 	html.write("</td><td class=widget>")
 	filt.display()
 	html.write("</td></tr>\n")
@@ -287,6 +292,7 @@ def load_view_into_html_vars(view):
     html.set_var("datasource", view["datasource"])
     html.set_var("layout",     view["layout"])
     html.set_var("public",     view["public"] and "on" or "")
+    html.set_var("hidden",     view["hidden"] and "on" or "")
 
     # [3] Filters
     for name, filt in multisite_filters.items():
@@ -294,6 +300,9 @@ def load_view_into_html_vars(view):
 	    html.set_var("filter_%s" % name, "show")
 	elif name in view["hard_filters"]:
 	    html.set_var("filter_%s" % name, "hard")
+	elif name in view["hide_filters"]:
+	    html.set_var("filter_%s" % name, "hide")
+
     for varname, value in view["hard_filtervars"]:
 	html.set_var(varname, value)
 
@@ -341,7 +350,9 @@ def create_view():
     tablename = datasource["table"]
     layoutname = html.var("layout")
     public = html.var("public", "") != ""
+    hidden = html.var("hidden", "") != ""
     show_filternames = []
+    hide_filternames = []
     hard_filternames = []
     hard_filtervars = []
 
@@ -349,6 +360,8 @@ def create_view():
 	usage = html.var("filter_%s" % fname)
 	if usage == "show":
 	    show_filternames.append(fname)
+	elif usage == "hide":
+	    hide_filternames.append(fname)
 	elif usage == "hard":
 	    hard_filternames.append(fname)
 	    for varname in filt.htmlvars:
@@ -379,8 +392,10 @@ def create_view():
 	"title"           : title,
 	"datasource"      : datasourcename,
 	"public"          : public,
+	"hidden"          : hidden,
 	"layout"          : layoutname,
 	"show_filters"    : show_filternames,
+	"hide_filters"    : hide_filternames,
 	"hard_filters"    : hard_filternames,
 	"hard_filtervars" : hard_filtervars,
 	"sorters"         : sorternames,
@@ -401,11 +416,11 @@ def show_view(view):
     
     # [3] Filters
     show_filters = [ multisite_filters[fn] for fn in view["show_filters"] ]
-    hard_filter = [ multisite_filters[fn] for fn in view["hard_filters"] ]
+    hide_filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
+    hard_filters = [ multisite_filters[fn] for fn in view["hard_filters"] ]
     for varname, value in view["hard_filtervars"]:
 	html.set_var(varname, value)
-    filterheaders = "".join(f.filter(tablename) for f in show_filters)
-    filterheaders += "".join(f.filter(tablename) for f in hard_filter)
+    filterheaders = "".join(f.filter(tablename) for f in show_filters + hide_filters + hard_filters)
     query = filterheaders + view.get("add_headers", "")
     
     # Fetch data
@@ -727,3 +742,12 @@ def do_actions(tablename, rows):
     else:
 	html.message("No matching service. No command sent.")
     return True
+
+def get_context_link(user, viewname):
+    if multisite_views == {}:
+	load_views()
+    # Try to get view of user. If not available, get builtin view
+    # with that name
+    if (user, viewname) not in multisite_views and ("", viewname) in multisite_views:
+	user = ""
+    return "view.py?view_name=%s/%s" % (user, viewname)

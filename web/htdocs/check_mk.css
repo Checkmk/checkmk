@@ -610,6 +610,10 @@ table.view table.filters td.usageshow
 {
  background-color: #ff0;
 }
+table.view table.filters td.usagehide
+{
+ background-color: #f0f;
+}
 table.view table.filters td.usagehard
 {
     background-color: #89f;
@@ -622,6 +626,10 @@ table.view table.filters td.usageoff
 table.view table.filters td.usageshow select
 {
    background-color: #cc0;
+}
+table.view table.filters td.usagehide select
+{
+   background-color: #f6f;
 }
 table.view table.filters td.usagehard select
 {
@@ -646,6 +654,12 @@ table.view table.filters td.widgethard
 {
     background-image: none;
     background-color: #abf;
+    color: #000;
+}
+table.view table.filters td.widgethide
+{
+    background-image: none;
+    background-color: #e8e;
     color: #000;
 }
 

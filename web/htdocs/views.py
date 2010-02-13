@@ -82,6 +82,7 @@ def page_view(h):
 def page_edit_views(h, msg=None):
     global html
     html = h
+    changed = False
     html.header("Edit views")
     html.write("<p>Here you can create and edit customizable <b>views</b>. A view "
 	    "displays monitoring status or log data by combining filters, sortings, "
@@ -89,6 +90,7 @@ def page_edit_views(h, msg=None):
 
     if msg: # called from page_edit_view() after saving
 	html.message(msg)
+	changed = True
 
     load_views()
 
@@ -97,6 +99,7 @@ def page_edit_views(h, msg=None):
     if delname and html.confirm("Please confirm the deletion of the view <tt>%s</tt>" % delname):
 	del multisite_views[(html.req.user, delname)]
 	save_views(html.req.user)
+	changed = True
 
     # Cloning of views
     try:
@@ -120,7 +123,11 @@ def page_edit_views(h, msg=None):
 	multisite_views[(html.req.user, newname)] = clone
 	save_views(html.req.user)
 	load_views()
-		
+	changed = True
+	
+    if changed:
+	html.javascript("parent.frames[0].location.reload();");
+
     html.write("<table class=views>\n")
 
     keys_sorted = multisite_views.keys()

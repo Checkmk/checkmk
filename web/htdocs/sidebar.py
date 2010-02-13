@@ -89,6 +89,7 @@ def page_configure(h):
     html.header("Configure Sidebar")
 
     config = load_user_config()
+    changed = False
 
     # change states
     if html.var("_saved"):
@@ -102,6 +103,7 @@ def page_configure(h):
 	    n += 1
 	config = new_config
 	save_user_config(config)
+	changed = True
 
     # handle up and down
     n = 0
@@ -109,14 +111,18 @@ def page_configure(h):
 	if html.var("snapin_up_%d" % n) == "UP": # Cannot be 0
 	    config = config[0:n-1] + [(name,usage)] + [config[n-1]] + config[n+1:]
 	    save_user_config(config)
+	    changed = True
 	    break
 	elif html.var("snapin_down_%d" % n) == "DOWN": # Cannot be last one
 	    config = config[0:n] + [config[n+1]] + [(name,usage)] + config[n+2:]
 	    save_user_config(config)
+	    changed = True
 	    break
 	n += 1
     
-
+    # reload sidebar, if user changed something
+    if changed:
+	html.javascript("parent.frames[0].location.reload();");
 
 
     html.begin_form("sidebarconfig")
@@ -128,9 +134,10 @@ def page_configure(h):
     for name, usage in config:
 	snapin = sidebar_snapins[name]
 	html.set_var("snapin_%d" % n, usage)
+	html.write("<tr>\n")
 	html.write("<td class=title>%s</td>\n" % snapin["title"])
 	html.write("<td class=widget>")
-	html.select("snapin_%d" % n, [("off", "off"), ("open", "open"), ("closed","closed")])
+	html.select("snapin_%d" % n, [("off", "off"), ("open", "open"), ("closed","closed")], None, "this.form.submit()")
 	html.write("</td><td>")
 	if n > 0:
 	    html.button("snapin_up_%d" % n, "UP")

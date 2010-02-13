@@ -19,7 +19,8 @@ max_display_columns   = 10
 max_group_columns     = 3
 max_sort_columns      = 4
 
-def load_views():
+def load_views(**args):
+    override_builtins = args.get("override_builtins", None)
     global multisite_views
     multisite_views = multisite_builtin_views
     subdirs = os.listdir(check_mk.multisite_config_dir)
@@ -47,6 +48,13 @@ def load_views():
 	     pass
 	except SyntaxError, e:
 	     raise MKGeneralException("Cannot load views from %s/views.mk: %s" % (dirpath, e))
+
+    # Remove builtins, if user has same view and override_builtins is True
+    if override_builtins:
+	for (user, name), view in multisite_views.items():
+	    if user == override_builtins and ("", name) in multisite_views:
+		del multisite_views[("", name)]
+
 
 def save_views(us):
     userviews = {}

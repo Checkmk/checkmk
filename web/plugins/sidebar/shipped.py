@@ -14,7 +14,7 @@ sidebar_snapins["admin"] = {
 }
 
 def render_views():
-    views.load_views()
+    views.load_views(override_builtins = html.req.user)
     authuser = html.req.user
     for (user, name), view in views.multisite_views.items():
 	if not view["hidden"] and (user == authuser or view["public"]):

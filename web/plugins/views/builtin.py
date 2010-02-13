@@ -1,5 +1,9 @@
 #!/usr/bin/python
 
+# Be sure to set
+# - owner to ''
+# - public to True
+
 multisite_builtin_views = {
     ("", 'servicegroup'): 
 	{'datasource': 'services',
@@ -8,7 +12,7 @@ multisite_builtin_views = {
                      'hard_filtervars': [],
                      'layout': 'table',
                      'name': 'servicegroup',
-                     'owner': '_builtin_',
+                     'owner': '',
                      'painters': ['host',
                                   'service_state',
                                   'svc_state_age',
@@ -20,4 +24,18 @@ multisite_builtin_views = {
                      'hide_filters': ['servicegroup'],
                      'sorters': [('site_host', False), ('svcdescr', False)],
                      'title': 'Servicegroup'},
+("", 'services'): {'datasource': 'services',
+              'group_painters': ['service_description'],
+              'hard_filters': [],
+              'hard_filtervars': [],
+              'hidden': False,
+              'hide_filters': [],
+              'layout': 'boxed_4',
+              'name': 'services',
+              'owner': '',
+              'painters': ['host', 'svc_state_age', 'service_state'],
+              'public': True,
+              'show_filters': ['hostgroup'],
+              'sorters': [('svcdescr', False)],
+              'title': 'Services'},
 }

@@ -196,14 +196,18 @@ def handler(req):
 	import views
 	import sidebar
 
-	pagehandlers = { "index"        : page_index,
-			 "filter"       : page_multiadmin.page,
-			 "siteoverview" : page_multiadmin.page_siteoverview,
-			 "edit_views"   : views.page_edit_views,
-			 "edit_view"    : views.page_edit_view,
-			 "view"         : views.page_view,
-			 "logwatch"     : page_logwatch.page,
-			 "sidebar"      : sidebar.sidebar, }
+	pagehandlers = { "index"          : page_index,
+			 "filter"         : page_multiadmin.page,
+			 "siteoverview"   : page_multiadmin.page_siteoverview,
+			 "edit_views"     : views.page_edit_views,
+			 "edit_view"      : views.page_edit_view,
+			 "view"           : views.page_view,
+			 "logwatch"       : page_logwatch.page,
+			 "sidebar"        : sidebar.page_sidebar, 
+			 "sidebar_config" : sidebar.page_configure, 
+	
+	
+	}
 
 	handler = pagehandlers.get(req.myfile, page_index)
 	handler(html)

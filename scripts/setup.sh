@@ -695,7 +695,7 @@ Please install mod_python and restart Apache."
 </IfModule>
 EOF
            fi &&
-	   for d in $DESTDIR$apache_config_dir/../*/*$NAME.conf ; do
+	   for d in $DESTDIR$apache_config_dir/../*/*$NAME{,.conf} ; do
 	       if [ -e "$d" ] && ! grep -q "$web_dir/htdocs" $d ; then
 		   echo "Changing $web_dir to $web_dir/htdocs in $d"
 		   sed -i "s@$web_dir@$web_dir/htdocs@g" $d

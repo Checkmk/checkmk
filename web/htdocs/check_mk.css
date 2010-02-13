@@ -360,7 +360,7 @@ div.really, div.success, div.error, div.message {
   margin: 2em 2em 2em 2em;
   -moz-border-radius: 1ex;
   padding: 1em 2em;
-  border-width: 2spx;
+  border-width: 2px;
   border-style: solid;
 }
 
@@ -370,7 +370,7 @@ div.really {
 }
 
 div.really input { 
-  color: fff;
+  color: #fff;
   font-weight: bold;
   margin-top: 1em;
   padding: 0.5ex 2em;
@@ -633,7 +633,7 @@ table.view table.filters td.widgetshow
     background-image: url("background-gold.jpg");
     background-repeat: repeat;
     background-position: center;
-    background-color: none;
+    background-color: transparent;
     color: #aa6;
 }
 table.view table.filters td.widgetoff
@@ -730,21 +730,26 @@ div#check_mk_sidebar div.section {
     background-image: url("background-gray.jpg");
     background-repeat: repeat;
     background-position: center;
-    background-color: none;
+    background-color: transparent;
     border-width: 1px;
     margin-bottom: 3px;
     border-style: solid;
     border-color: #222 #ccc #fff #444;
     background-color: #444;
     -moz-border-radius: 4px;
-    padding: 8px;
+    padding: 0px;
     padding-top: 0px;
+    padding-left: 4px;
 }
 
-div#check_mk_sidebar h2 {
+div#check_mk_sidebar div.content {
     margin-top: 3px;
-    margin-bottom: 0.3em;
-    color: #028;
+    margin-bottom: 5px;
+}
+div#check_mk_sidebar h2 {
+    margin-top: 0px;
+    margin-bottom: 0px;
+    color: #fc4;
     font-size: 8pt;
 }
 div#check_mk_sidebar a {
@@ -763,4 +768,12 @@ li.sidebar {
 
 div#check_mk_sidebar hr {
    width: 103px;
+}
+
+div#check_mk_sidebar div.footnote {
+    width: 100%;
+    text-align: right;
+}
+div#check_mk_sidebar div.footnote a {
+    font-size: 6pt;
 }

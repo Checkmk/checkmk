@@ -224,6 +224,7 @@ multiadmin_unrestricted_action_users = []
 multiadmin_sounds                    = {}
 multiadmin_use_siteicons             = False
 multiadmin_debug                     = False
+multiadmin_sidebar                   = [ ("admin", "open"), ("views", "closed") ]
 
 # Data to be defined in main.mk
 checks                               = []

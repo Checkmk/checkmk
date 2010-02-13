@@ -27,3 +27,14 @@ function getFile(url) {
 }
 
 document.write(getFile(url + 'sidebar.py'));
+
+function toggle_sidebar_snapin(oH2)
+{
+    var oContent = oH2.parentNode.childNodes[3];
+    var closed = oContent.style.display == "none";
+    if (closed)
+	oContent.style.display = "";
+    else
+	oContent.style.display = "none";
+    oContent = null;
+}

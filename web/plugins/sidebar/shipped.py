@@ -30,8 +30,8 @@ def render_groups(what):
     name_to_alias = dict(data)
     groups = [(name_to_alias[name], name) for name in name_to_alias.keys()]
     groups.sort() # sort by Alias!
+    target = views.get_context_link(html.req.user, "%sgroup" % what)
     for alias, name in groups:
-	target = views.get_context_link(html.req.user, "%sgroup" % what)
 	bulletlink(alias, target + "&%sgroup=%s" % (what, htmllib.urlencode(name)))
 
 sidebar_snapins["hostgroups"] = {
@@ -43,6 +43,18 @@ sidebar_snapins["servicegroups"] = {
     "render" : lambda: render_groups("service")
 }
 
+def render_hosts():
+    hosts = html.live.query_column_unique("GET hosts\nColumns: name\n")
+    hosts.sort()
+    target = views.get_context_link(html.req.user, "host")
+    for host in hosts:
+	bulletlink(host, target + "&host=" + htmllib.urlencode(host))
+
+sidebar_snapins["hosts"] = {
+    "title" : "All hosts",
+    "render" : render_hosts
+}
+    
 
 def render_sitestatus():
     if check_mk.is_multisite():
@@ -65,5 +77,6 @@ def render_sitestatus():
 if check_mk.is_multisite():
     sidebar_snapins["sitestatus"] = {
 	"title" : "Site status",
+	"hidetitle" : True,
 	"render" : render_sitestatus
     }

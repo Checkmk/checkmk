@@ -42,6 +42,7 @@ class FilterText(Filter):
     def __init__(self, name, title, table, column, htmlvar, op):
 	Filter.__init__(self, name, title, table, [column], [htmlvar])
 	self.op = op
+	self.column = column
     
     def display(self):
 	htmlvar = self.htmlvars[0]
@@ -52,7 +53,7 @@ class FilterText(Filter):
 	htmlvar = self.htmlvars[0]
 	current_value = html.var(htmlvar)
 	if current_value:
-	    return "Filter: %s%s %s %s\n" % (self.tableprefix(tablename), self.columns[0], self.op, current_value)
+	    return "Filter: %s%s %s %s\n" % (self.tableprefix(tablename), self.column, self.op, current_value)
 	else:
 	    return ""
 
@@ -62,6 +63,10 @@ class FilterText(Filter):
 	if self.table == "hosts" and tablename == "services":
 	    return True
 	return False
+
+    def heading_info(self, tablename):
+	htmlvar = self.htmlvars[0]
+	return html.var(self.htmlvars[0])
 
 declare_filter(FilterText("host",    "Hostname",             "hosts",    "name",          "host",    "~~"))
 declare_filter(FilterText("service", "Service",              "services", "description",   "service", "~~"))
@@ -131,12 +136,11 @@ class FilterGroupCombo(Filter):
 	    return False
 
     def heading_info(self, tablename):
-	return "Hirni"
 	current_value = self.current_value(tablename)
 	if current_value:
 	    alias = html.live.query_value("GET %sgroups\nColumns: alias\nFilter: name = %s\n" % 
 		(self.what, current_value))
-	    return self.what[0].upper() + self.what[1:] + " " + alias
+	    return self.what[0].upper() + self.what[1:] + "group " + alias
 
 
 declare_filter(FilterGroupCombo("host"))

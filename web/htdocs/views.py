@@ -445,13 +445,12 @@ def show_view(view, show_heading = False):
 
     # Show heading
     if show_heading:
-	titles = [ view["title"] ]
+	extra_titles = [ ]
 	for filt in hide_filters:
 	    heading = filt.heading_info(tablename)
 	    if heading:
-		titles.append(heading)
-	title = ", ".join(titles)
-	html.header(title)
+		extra_titles.append(heading)
+	html.header(view["title"] + " " + ", ".join(extra_titles))
         show_site_header(html)
 
     # Actions

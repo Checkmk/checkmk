@@ -3,15 +3,15 @@
 # Filters
 ##################################################################################
 
-def declare_filter(f):
+def declare_filter(f, comment = None):
     multisite_filters[f.name] = f
+    f.comment = comment
 
 class Filter:
-    def __init__(self, name, title, table, columns, htmlvars):
+    def __init__(self, name, title, table, htmlvars):
 	self.name = name
 	self.table = table
 	self.title = title
-# self.columns = columns # TEST
 	self.htmlvars = htmlvars
 	
     def display(self):
@@ -40,7 +40,7 @@ class Filter:
 # Filters for substring search, displaying a text input field
 class FilterText(Filter):
     def __init__(self, name, title, table, column, htmlvar, op):
-	Filter.__init__(self, name, title, table, [column], [htmlvar])
+	Filter.__init__(self, name, title, table, [htmlvar])
 	self.op = op
 	self.column = column
     
@@ -75,7 +75,7 @@ declare_filter(FilterText("output",  "Service check output", "services", "plugin
 
 class FilterLimit(Filter):
     def __init__(self):
-	Filter.__init__(self, "limit", "Limit number of data sets", None, [], [ "limit" ])
+	Filter.__init__(self, "limit", "Limit number of data sets", None, [ "limit" ])
 
     def current_value(self):
 	try:
@@ -92,7 +92,8 @@ class FilterLimit(Filter):
 	    return "Limit: %d\n" % v
 	return ""
 
-declare_filter(FilterLimit())
+declare_filter(FilterLimit(), "Limits the number of items queried via livestatus. The limitation is "
+	"done <b>before</b> any sorting is done.")
 	
 
 # Helper that retrieves the list of host/service/contactgroups via Livestatus
@@ -104,8 +105,8 @@ def all_groups(what):
 
 class FilterGroupCombo(Filter):
     def __init__(self, what):
-	Filter.__init__(self, what + "group", what[0].upper() + what[1:] + "group-Combobox",
-		what + "s", [ ], [ what + "group" ])
+	Filter.__init__(self, what + "group", what[0].upper() + what[1:] + "group",
+		what + "s", [ what + "group" ])
         self.what = what
 
     def display(self):
@@ -143,14 +144,14 @@ class FilterGroupCombo(Filter):
 	    return self.what[0].upper() + self.what[1:] + "group " + alias
 
 
-declare_filter(FilterGroupCombo("host"))
-declare_filter(FilterGroupCombo("service"))
+declare_filter(FilterGroupCombo("host"), "Dropdown list, selection of host group is enforced")
+declare_filter(FilterGroupCombo("service"), "Dropdown list, selection of service group is enforced")
 # Livestatus still misses "contact_groups" column. 
 # declare_filter(FilterGroupCombo("contact"))
 
 class FilterQueryDropdown(Filter):
     def __init__(self, name, title, table, query, filterline):
-	Filter.__init__(self, name, title, table, [], [ name ])
+	Filter.__init__(self, name, title, table, [ name ])
 	self.query = query
 	self.filterline = filterline
 
@@ -174,7 +175,7 @@ declare_filter(FilterQueryDropdown("check_command", "Check command", "services",
 class FilterServiceState(Filter):
     def __init__(self):
 	Filter.__init__(self, "svcstate", "Service states", 
-		"services", [ "state", "has_been_checked" ], [ "st0", "st1", "st2", "st3", "stp" ])
+		"services", [ "st0", "st1", "st2", "st3", "stp" ])
     
     def display(self):
 	if html.var("filled_in"):
@@ -209,7 +210,7 @@ class FilterTristate(Filter):
     def __init__(self, name, title, table, column, deflt = -1):
 	self.column = column
 	self.varname = "is_" + name
-	Filter.__init__(self, name, title, table, [ column ], [ self.varname ])
+	Filter.__init__(self, name, title, table, [ self.varname ])
 	self.deflt = deflt
    
     def display(self):
@@ -255,7 +256,7 @@ class FilterNagiosFlag(FilterTristate):
 
 class FilterNagiosExpression(FilterTristate):
     def __init__(self, table, name, title, pos, neg, deflt = -1):
-	FilterTristate.__init__(self, name, title, table, [], deflt)
+	FilterTristate.__init__(self, name, title, table, None, deflt)
 	self.pos = pos
 	self.neg = neg
 

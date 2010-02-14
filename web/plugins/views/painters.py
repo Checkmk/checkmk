@@ -59,7 +59,7 @@ multisite_painters["host_with_state"] = {
     "columns" : ["site","host_name"],
     "table" : "hosts",
     "paint" : lambda row: "<td class=hstate%d><a href=\"%s\">%s</a></td>" % \
-	(row["state"], nagios_host_url(row["site"], row["host_name"]), row["host_name"]),
+	(row["host_state"], nagios_host_url(row["site"], row["host_name"]), row["host_name"]),
 }
 
 multisite_painters["host"] = {

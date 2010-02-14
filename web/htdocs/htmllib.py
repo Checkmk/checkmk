@@ -157,6 +157,9 @@ class html:
 	vars = [ (v, self.var(v)) for v in self.req.vars if not v.startswith("_") ]
         return self.req.myfile + ".py?" + urlencode_vars(vars + addvars)
 
+    def makeuri_contextless(self, vars):
+        return self.req.myfile + ".py?" + urlencode_vars(vars)
+
     def button(self, varname, title, cssclass=""):
         self.write("<input type=submit name=\"%s\" id=\"%s\" value=\"%s\" class=\"%s\">\n" % \
                    ( varname, varname, title, cssclass))

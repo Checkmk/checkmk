@@ -240,16 +240,23 @@ def page_edit_view(h):
     # [3] Filters 
     html.write("<tr><td class=legend>3. Filters</td><td>")
     html.write("<table class=filters>")
-    html.write("<tr><th>Filter</th><th>usage</th><th>hardcoded settings</th></tr>\n")
+    html.write("<tr><th>Filter</th><th>usage</th><th>hardcoded settings</th><th>HTML variables</th></tr>\n")
     allowed_filters = filters_allowed_for_datasource(datasourcename)
     for fname, filt in allowed_filters.items():
 	html.write("<tr>")
-	html.write("<td class=title>%s</td>" % filt.title)
+	html.write("<td class=title>%s" % filt.title)
+	if filt.comment:
+	    html.write("<br><div class=filtercomment>%s</div>" % filt.comment)
+	html.write("</td>")
 	html.write("<td class=usage>")
 	html.sorted_select("filter_%s" % fname, [("off", "Don't use"), ("show", "Show to user"), ("hide", "Hide but use"), ("hard", "Hardcode")], "", "filter_activation")
 	html.write("</td><td class=widget>")
 	filt.display()
-	html.write("</td></tr>\n")
+	html.write("</td>")
+	html.write("<td><tt>")
+	html.write(" ".join(filt.htmlvars))
+	html.write("</tt></td>")
+	html.write("</tr>\n")
     html.write("</table></td></tr>\n")
     html.write("<script language=\"javascript\">\n")
     for fname, filt in allowed_filters.items():
@@ -428,7 +435,7 @@ def show_view(view, show_heading = False):
 	html.set_var(varname, value)
     filterheaders = "".join(f.filter(tablename) for f in show_filters + hide_filters + hard_filters)
     query = filterheaders + view.get("add_headers", "")
-    
+   
     # Fetch data
     columns, rows = query_data(datasource, query)
 
@@ -445,13 +452,11 @@ def show_view(view, show_heading = False):
 
     # Show heading
     if show_heading:
-	extra_titles = [ ]
-	for filt in hide_filters:
-	    heading = filt.heading_info(tablename)
-	    if heading:
-		extra_titles.append(heading)
-	html.header(view["title"] + " " + ", ".join(extra_titles))
+	html.header(view_title(view))
         show_site_header(html)
+
+    # Kontext links
+    show_context_links(view, show_filters + hide_filters)
 
     # Actions
     has_done_actions = False
@@ -472,6 +477,66 @@ def show_view(view, show_heading = False):
     else:
         layout["render"]((columns, rows), show_filters, group_columns, group_painters, painters)
 
+def view_title(view):
+    extra_titles = [ ]
+    datasource = multisite_datasources[view["datasource"]]
+    tablename = datasource["table"]
+    hide_filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
+    for filt in hide_filters:
+	heading = filt.heading_info(tablename)
+	if heading:
+	    extra_titles.append(heading)
+	return view["title"] + " " + ", ".join(extra_titles)
+
+def show_context_links(thisview, active_filters):
+    load_views(override_builtins = True)
+    # compute list of html variable used actively by hidden or show
+    # filters.
+    active_filter_vars = set([])
+    for filt in active_filters:
+	for var in filt.htmlvars:
+	   if html.has_var(var) and var not in active_filter_vars:
+	       active_filter_vars.add(var)
+	       
+    first = True
+    for (user, name), view in multisite_views.items():
+	if view == thisview:
+	    continue
+	if user != html.req.user and not view["public"]: 
+	    continue
+	hidden_filternames = view["hide_filters"]
+	used_contextvars = []
+	skip = False
+	for fn in hidden_filternames:
+	    filt = multisite_filters[fn]
+	    contextvars = filt.htmlvars
+	    # now extract those variables which are honored by this
+	    # view, regardless if used by hardcoded, shown or hidden filters.
+	    for var in contextvars:
+		if var not in active_filter_vars:
+		    skip = var
+		    break
+	    used_contextvars += contextvars
+	    if skip:
+# html.write("%s geht nicht, weil %s fehlt. " % (fn, var))
+		break
+	if skip:
+# html.write("View %s/%s geht also nicht<br>" % (user, name))
+	    continue
+	
+	# add context link to this view    
+	if len(used_contextvars) > 0:
+	    if first:
+		html.write("<div class=contextlinks><h2>Contextlinks</h2>\n")
+		first = False
+	    vars_values = [ (var, html.var(var)) for var in set(used_contextvars) ]
+	    view_var = ("view_name", "%s/%s" % (user, name))
+	    html.write("<a href=\"%s\">%s</a><br>" % \
+		    (html.makeuri_contextless(vars_values + [view_var]), view_title(view)))
+
+    if not first:
+	html.write("</div>\n")
+	
 
 
 def needed_group_columns(painters):

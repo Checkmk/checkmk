@@ -572,7 +572,7 @@ div#logwatch a.tabactive {
 
 /* view editor */
 table.view {
-    width: 100%;
+    /* width: 100%; */
     border-collapse: collapse;
     empty-cells: show;
     background-color: #ffc;
@@ -580,23 +580,33 @@ table.view {
 table.view td {
    border: 1px solid #884;
    padding: 2px 0.5ex;
+    vertical-align: top;
 }
 table.view td.legend {
     padding-top: 3px;
     color: #884;
-    vertical-align: top;
 }
 table.view table.filters {
     border-collapse: collapse;
     empty-cells: show;
     margin-bottom: 6px;
     margin-left: 3px;
+width: 100%;
+}
+table.view div.filtercomment {
+    margin-left: 0px;
+    font-size: 8pt;
+    width: 300px;
+    font-style: italic;
+    color: #c80;
+    padding-bottom: 6px;
 }
 
 
 table.view table.filters td
 {
-   border: 1px solid #cc8;
+   border-style: none;
+   border-bottom: 1px dotted #cc8;
 }
 
 
@@ -604,6 +614,7 @@ table.view table.filters th
 {
     text-align: left;
     padding-bottom: 3px;
+   border-bottom: 1px solid #cc8;
 }
 
 table.view table.filters td.usageshow
@@ -664,7 +675,7 @@ table.view table.filters td.widgethide
 }
 
 table.view table.filters td.title {
-    border-style: none;
+    /* border-style: none; */
     padding-right: 1em;
 }
 
@@ -717,6 +728,26 @@ a.button {
     margin: 2px;
     font-size: 9pt;
 }
+
+/* Box with context links */
+div.contextlinks a {
+    font-size: 7pt;
+    color: white;
+}
+div.contextlinks h2 {
+    margin-top: 0px;
+    margin-bottom: 0px;
+    font-size: 7pt;
+    font-weight: bold;
+}
+div.contextlinks {
+    border: 1px solid white;
+    background-color: #048;
+    color: #ccf;
+    padding: 2px 6px;
+width: 200px;
+}
+
 
 /* --- plugins for sidebar ----------------------------------- */
 div#check_mk_sidebar {
@@ -811,39 +842,44 @@ table.sidebarconfig th {
 
 table.sidebarconfig td {
     background-color: #d72;
-border: 1px solid #f84;
+    border: 1px solid #f84;
     padding: 0px 5px;
 }
 
 div#check_mk_sidebar table.sitestate {
-    width: 140px;
+    width: 155px;
 }
 
 div#check_mk_sidebar table.sitestate td a {
-border: 1px solid #ccc;
-padding: 1px 3px;
+    border: 1px solid #000;
+    padding: 1px 3px;
 }
+
 div#check_mk_sidebar table.sitestate td {
     text-align: center;
-    display: block;
-    width: 30px;
+    width: 20px;
+    font-size: 6pt;
+    padding: 0px 0px;
 }
 
 div#check_mk_sidebar table.sitestate td.left {
     text-align: left;
-    width: 120px;
+    font-size: 7pt;
+width: 150px;
 }
 
 div#check_mk_sidebar table.sitestate td.offline a {
-    background-color: red;
-display: block;
+    background-color: #c00;
+    display: block;
+    color: #fff;
 }
 div#check_mk_sidebar table.sitestate td.online a {
-    background-color: green;
-display: block;
+    background-color: #4f6;
+    display: block;
+color: #000;
 }
 div#check_mk_sidebar table.sitestate td.disabled a {
     background-color: #666;
-display: block;
+    display: block;
 }
 

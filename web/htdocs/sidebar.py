@@ -79,7 +79,8 @@ def render_snapin(name, state):
     else:
 	style = ""
     if snapin.get("hidetitle") != True:
-	html.write("<h2 onclick=\"toggle_sidebar_snapin(this)\">%s</h2>\n" % snapin["title"])
+	html.write("<h2 onclick=\"toggle_sidebar_snapin(this)\" onmouseover=\"this.style.cursor='pointer'\" "
+		   "onmouseout=\"this.style.cursor='auto'\">%s</h2>\n" % snapin["title"])
     html.write("<div class=content%s>\n" % style)
     snapin["render"]()
     html.write("</div></div>\n")

@@ -38,3 +38,10 @@ function toggle_sidebar_snapin(oH2)
 	oContent.style.display = "none";
     oContent = null;
 }
+
+function switch_site(baseuri, switchvar)
+{
+    getFile(baseuri + "/switch_site.py?" + switchvar);
+    parent.frames[1].location.reload(); /* reload main frame */
+}
+

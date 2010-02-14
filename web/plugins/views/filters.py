@@ -108,12 +108,15 @@ class FilterGroupCombo(Filter):
 
     def current_value(self, tablename):
 	htmlvar = self.htmlvars[0]
-	return = html.var(htmlvar)
+	return html.var(htmlvar)
 
     def filter(self, tablename):
 	current_value = self.current_value(tablename)
-	if not current_value: # Take first hostgroup
-	    current_value = html.live.query_value("GET %sgroups\nColumns: name\nLimit: 1\n" % self.what)
+	if not current_value: # Take first group with the name we search
+	    current_value = html.live.query_value("GET %sgroups\nColumns: name\nLimit: 1\n" % self.what, None)
+	if current_value == None:
+	    return "" # no {what}group exists!
+
 	if self.what + "s" == tablename:
 	    col = "groups"
 	else:
@@ -128,10 +131,11 @@ class FilterGroupCombo(Filter):
 	    return False
 
     def heading_info(self, tablename):
+	return "Hirni"
 	current_value = self.current_value(tablename)
 	if current_value:
 	    alias = html.live.query_value("GET %sgroups\nColumns: alias\nFilter: name = %s\n" % 
-		(self.what, current_value)
+		(self.what, current_value))
 	    return self.what[0].upper() + self.what[1:] + " " + alias
 
 

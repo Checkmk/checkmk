@@ -1,7 +1,10 @@
 import check_mk
 
-
+# TODO: Remove this. It is replace by side bar plugin?
+# Or only show this, if sidebar snapin is not used?
 def show_site_header(html):
+    return False
+
     if check_mk.is_multisite():
 	html.write("<table class=siteheader><tr>")
 	for sitename in check_mk.sites():

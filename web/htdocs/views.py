@@ -79,9 +79,7 @@ def page_view(h):
     except:
 	raise MKGeneralException("This view does not exist (user: %s, name: %s)." % (user, view_name))
 
-    html.header(view["title"])
-    show_site_header(html)
-    show_view(view)
+    show_view(view, True)
     if view["owner"] == html.req.user:
 	html.write("<a href=\"edit_view.py?load_view=%s\">Edit this view</a>" % view["name"])
 
@@ -414,7 +412,7 @@ def create_view():
 
 # Display view with real data. This is *the* function everying
 # is about.
-def show_view(view):
+def show_view(view, show_heading = False):
     # [1] Datasource
     datasource = multisite_datasources[view["datasource"]]
     tablename = datasource["table"]
@@ -444,6 +442,17 @@ def show_view(view):
 
     # [6] Columns
     painters = [ multisite_painters[n] for n in view["painters"] ]
+
+    # Show heading
+    if show_heading:
+	titles = [ view["title"] ]
+	for filt in hide_filters:
+	    heading = filt.heading_info(tablename)
+	    if heading:
+		titles.append(heading)
+	title = ", ".join(titles)
+	html.header(title)
+        show_site_header(html)
 
     # Actions
     has_done_actions = False

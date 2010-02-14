@@ -44,3 +44,26 @@ sidebar_snapins["servicegroups"] = {
 }
 
 
+def render_sitestatus():
+    if check_mk.is_multisite():
+	html.write("<table cellspacing=0 class=sitestate>")
+	for sitename in check_mk.sites():
+	    site = check_mk.site(sitename)
+	    html.write("<tr><td class=left>%s</td>" % site["alias"])
+	    state = html.site_status[sitename]["state"]
+	    if state == "disabled":
+		switch = "on"
+	    else:
+		switch = "off"
+	    onclick = "switch_site('%s', '_site_switch=%s:%s')" % (check_mk.checkmk_web_uri, sitename, switch)
+	    html.write("<td class=%s>" % state)
+	    html.write("<a href=\"\" onclick=\"%s\">%s</a></td>" % (onclick, state[:3]))
+	    html.write("</tr>\n")
+	html.write("</table>\n")
+    
+
+if check_mk.is_multisite():
+    sidebar_snapins["sitestatus"] = {
+	"title" : "Site status",
+	"render" : render_sitestatus
+    }

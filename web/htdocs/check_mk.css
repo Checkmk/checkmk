@@ -725,6 +725,9 @@ div#check_mk_sidebar {
     font-size: 8pt;
     color: #fff;
 }
+div#check_mk_sidebar td {
+    font-size: 8pt;
+}
 
 div#check_mk_sidebar div.header table
 {
@@ -811,3 +814,36 @@ table.sidebarconfig td {
 border: 1px solid #f84;
     padding: 0px 5px;
 }
+
+div#check_mk_sidebar table.sitestate {
+    width: 140px;
+}
+
+div#check_mk_sidebar table.sitestate td a {
+border: 1px solid #ccc;
+padding: 1px 3px;
+}
+div#check_mk_sidebar table.sitestate td {
+    text-align: center;
+    display: block;
+    width: 30px;
+}
+
+div#check_mk_sidebar table.sitestate td.left {
+    text-align: left;
+    width: 120px;
+}
+
+div#check_mk_sidebar table.sitestate td.offline a {
+    background-color: red;
+display: block;
+}
+div#check_mk_sidebar table.sitestate td.online a {
+    background-color: green;
+display: block;
+}
+div#check_mk_sidebar table.sitestate td.disabled a {
+    background-color: #666;
+display: block;
+}
+

@@ -135,6 +135,11 @@ def connect_to_livestatus(html):
     else:
 	html.live = livestatus.SingleSiteConnection("unix:" + check_mk.livestatus_unix_socket)
 
+# This function does nothing. The sites have already
+# been reconfigured according to the variable _site_switch,
+# because that variable is processed by connect_to_livestatus()
+def ajax_switch_site(html):
+    pass 
 
 def handler(req):
     req.content_type = "text/html"
@@ -205,8 +210,7 @@ def handler(req):
 			 "logwatch"       : page_logwatch.page,
 			 "sidebar"        : sidebar.page_sidebar, 
 			 "sidebar_config" : sidebar.page_configure, 
-	
-	
+			 "switch_site"    : ajax_switch_site,
 	}
 
 	handler = pagehandlers.get(req.myfile, page_index)
@@ -222,6 +226,12 @@ def handler(req):
         html.show_error(e)
         html.footer()
         apache.log_error("Configuration error: %s" % (e,), apache.APLOG_ERR)
+
+    except livestatus.MKLivestatusNotFoundError, e:
+	html.header("Data not found")
+	html.show_error("The following query produced no output:\n<pre>\n%s</pre>\n" % \
+		e.query)
+	html.footer()
 
     except livestatus.MKLivestatusException, e:
 	html.header("Livestatus problem")

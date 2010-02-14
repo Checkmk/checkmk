@@ -64,11 +64,25 @@ class MKLivestatusQueryError(MKLivestatusException):
       MKLivestatusException.__init__(self, "%s: %s" % (code, reason))
       self.code = code
 
+class MKLivestatusNotFoundError(MKLivestatusException):
+    def __init__(self, query):
+	MKLivestatusException.__init__(self, query)
+	self.query = query
+
+# We need some unique value here
+NO_DEFAULT = lambda: None
 class Helpers:
-   def query_value(self, query):
+   def query_value(self, query, deflt = NO_DEFAULT):
       """Issues a query that returns exactly one line and one columns and returns 
 	 the response as a single value"""
-      return self.query(query, "ColumnHeaders: off\n")[0][0]
+      result = self.query(query, "ColumnHeaders: off\n")
+      try:
+	  return result[0][0]
+      except:
+	  if deflt == NO_DEFAULT:
+	      raise MKLivestatusNotFoundError(query)
+	  else:
+	      return deflt
    
    def query_line(self, query):
       """Issues a query that returns one line of data and returns the elements

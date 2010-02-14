@@ -132,6 +132,7 @@ def connect_to_livestatus(html):
 	# Get exceptions in case of dead sites
 	for sitename, deadinfo in html.live.dead_sites().items():
 	    html.site_status[sitename]["exception"] = deadinfo["exception"]
+
     else:
 	html.live = livestatus.SingleSiteConnection("unix:" + check_mk.livestatus_unix_socket)
 

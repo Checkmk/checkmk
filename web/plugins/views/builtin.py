@@ -1,8 +1,11 @@
 #!/usr/bin/python
 
-# Be sure to set
+# When copying stuff from /var/lib/check_mk/web/$USER/views.mk, 
+# be sure to set
+# - key to ("", '$VIEWNAME')
 # - owner to ''
 # - public to True
+# - set users in linked views to ''
 
 multisite_builtin_views = {
     ("", 'servicegroup'): 
@@ -25,6 +28,7 @@ multisite_builtin_views = {
                      'hide_filters': ['servicegroup'],
                      'sorters': [('site_host', False), ('svcdescr', False)],
                      'title': 'Servicegroup'},
+
 ("", 'services'): {'datasource': 'services',
               'group_painters': [('service_description', None)],
               'hard_filters': [],
@@ -39,4 +43,68 @@ multisite_builtin_views = {
               'show_filters': ['hostgroup'],
               'sorters': [('svcdescr', False)],
               'title': 'Services'},
+("", 'host'): {'datasource': 'services',
+          'group_painters': [],
+          'hard_filters': [],
+          'hard_filtervars': [],
+          'hidden': True,
+          'hide_filters': ['host'],
+          'layout': 'boxed_2',
+          'name': 'host',
+          'owner': '',
+          'painters': [('service_state', None),
+                       ('svc_state_age', None),
+                       ('service_description', None),
+                       ('svc_plugin_output', None)],
+          'public': True,
+          'show_filters': [],
+          'sorters': [('svcdescr', False)],
+          'title': 'Services of Host'},
+
+("", 'hostgroup'): {'datasource': 'hosts',
+               'group_painters': [('site_icon', None),
+                                  ('sitealias',
+                                   ('', 'sitehosts'))],
+               'hard_filters': [],
+               'hard_filtervars': [],
+               'hidden': True,
+               'hide_filters': ['hostgroup'],
+               'layout': 'boxed_2',
+               'name': 'hostgroup',
+               'owner': '',
+               'painters': [('host_state', None),
+                            ('host', ('', 'host')),
+                            ('alias', None),
+                            ('num_services_ok', None),
+                            ('num_services_warn', None),
+                            ('num_services_unknown', None),
+                            ('num_services_crit', None),
+                            ('num_services_pending', None)],
+               'public': True,
+               'show_filters': [],
+               'sorters': [('site', False), ('site_host', False)],
+               'title': 'Hostgroup'},
+
+("", 'sitehosts'): {'datasource': 'hosts',
+               'group_painters': [('site_icon', None), ('sitealias', None)],
+               'hard_filters': [],
+               'hard_filtervars': [],
+               'hidden': True,
+               'hide_filters': ['site'],
+               'layout': 'boxed_2',
+               'name': 'sitehosts',
+               'owner': '',
+               'painters': [('host_state', None),
+                            ('host', ('', 'host')),
+                            ('alias', None),
+                            ('num_services_ok', None),
+                            ('num_services_warn', None),
+                            ('num_services_unknown', None),
+                            ('num_services_crit', None),
+                            ('num_services_pending', None)],
+               'public': True,
+               'show_filters': [],
+               'sorters': [('site', False), ('site_host', False)],
+               'title': 'Hosts of Site'}
+
 }

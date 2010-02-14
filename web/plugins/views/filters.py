@@ -6,7 +6,8 @@
 def declare_filter(f, comment = None):
     multisite_filters[f.name] = f
     f.comment = comment
-
+    
+    
 class Filter:
     def __init__(self, name, title, table, htmlvars):
 	self.name = name
@@ -147,7 +148,7 @@ class FilterGroupCombo(Filter):
 	if current_value:
 	    alias = html.live.query_value("GET %sgroups\nColumns: alias\nFilter: name = %s\n" % 
 		(self.what, current_value))
-	    return self.what[0].upper() + self.what[1:] + "group " + alias
+	    return alias
 
 
 declare_filter(FilterGroupCombo("host"), "Dropdown list, selection of host group is enforced")
@@ -292,3 +293,28 @@ declare_filter(FilterNagiosExpression("services", "in_downtime", "Host or Servic
 	    "Filter: scheduled_downtime_depth = 0\nFilter: host_scheduled_downtime_depth = 0\nAnd: 2\n"))
 	
 declare_filter(FilterServiceState())
+
+class FilterSite(Filter):
+    def __init__(self):
+	Filter.__init__(self, "site", "Site", None, ["site"])
+
+    def display(self):
+	site_selector(html, "site")
+
+    def filter(self, tablename):
+	if check_mk.is_multisite():
+	    return "Sites: %s\n" % html.var("site", "")
+	else:
+	    return ""
+
+    def heading_info(self, tablename):
+	current_value = html.var("site")
+	if current_value:
+	    alias = check_mk.site(current_value)["alias"]
+	    return alias
+    
+    def variable_settings(self, row):
+	return [("site", row["site"])]
+	
+
+declare_filter(FilterSite())

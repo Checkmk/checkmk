@@ -75,7 +75,10 @@ def page_view(h):
     load_views()
     try:
         user, view_name = html.var("view_name").split("/")
+	if user == "" and (html.req.user, view_name) in multisite_views:
+	    user = html.req.user
 	view = multisite_views[(user, view_name)]
+	
     except:
 	raise MKGeneralException("This view does not exist (user: %s, name: %s)." % (user, view_name))
 
@@ -147,7 +150,12 @@ def page_edit_views(h, msg=None):
 		html.write("<tr><th>Name</th><th>Title</th><th>Owner</th><th>Public</th><th>hidden</th><th>Datasource</th><th></th></tr>\n")
 		first = False
 	    html.write("<tr><td class=legend>%s</td>" % viewname)
-	    html.write("<td class=content><a href=\"view.py?view_name=%s/%s\">%s</a>" % (owner, viewname, view["title"]))
+	    html.write("<td class=content>")
+	    if not view["hidden"]:
+		html.write("<a href=\"view.py?view_name=%s/%s\">%s</a>" % (owner, viewname, view["title"]))
+	    else:
+		html.write(view["title"])
+	    html.write("</td>")
 	    html.write("<td class=content>%s</td>" % owner)
 	    html.write("<td class=content>%s</td>" % (view["public"] and "yes" or "no"))
 	    html.write("<td class=content>%s</td>" % (view["hidden"] and "yes" or "no"))
@@ -462,11 +470,20 @@ def show_view(view, show_heading = False):
     hard_filters = [ multisite_filters[fn] for fn in view["hard_filters"] ]
     for varname, value in view["hard_filtervars"]:
 	html.set_var(varname, value)
-    filterheaders = "".join(f.filter(tablename) for f in show_filters + hide_filters + hard_filters)
+
+    filterheaders = ""
+    only_sites = None
+    for filt in show_filters + hide_filters + hard_filters:
+	header = filt.filter(tablename)
+	if header.startswith("Sites:"):
+	    only_sites = header.strip().split(" ")[1:]
+	else:
+	    filterheaders += header
+
     query = filterheaders + view.get("add_headers", "")
    
     # Fetch data
-    columns, rows = query_data(datasource, query)
+    columns, rows = query_data(datasource, query, only_sites)
 
     # [4] Sorting
     sorters = [ (multisite_sorters[sn], reverse) for sn, reverse in view["sorters"] ]
@@ -577,7 +594,7 @@ def needed_group_columns(painters):
 
 # Retrieve data via livestatus, convert into list of dicts,
 # prepare row-function needed for painters
-def query_data(datasource, add_headers):
+def query_data(datasource, add_headers, only_sites = None):
     tablename = datasource["table"]
     query = "GET %s\n" % tablename
     columns = datasource["columns"]
@@ -586,7 +603,11 @@ def query_data(datasource, add_headers):
     html.live.set_prepend_site(True)
     if check_mk.multiadmin_debug:
 	html.write("<div class=message><pre>%s</pre></div>\n" % query)
+    
+    if only_sites:
+	html.live.set_only_sites(only_sites)
     data = html.live.query(query)
+    html.live.set_only_sites(None)
     # convert lists-rows into dictionaries. Thas costs a bit of
     # performance, but makes live much easier later. What also
     # makes live easier is, that we prefix all columns with

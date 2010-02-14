@@ -77,6 +77,6 @@ def render_sitestatus():
 if check_mk.is_multisite():
     sidebar_snapins["sitestatus"] = {
 	"title" : "Site status",
-	"hidetitle" : True,
+#	"hidetitle" : True,
 	"render" : render_sitestatus
     }

@@ -215,6 +215,9 @@ class SingleSiteConnection(BaseConnection, Helpers):
     def set_prepend_site(self, p):
 	self.prepend_site = p
 
+    def set_only_sites(self, os = None):
+	pass
+
     def query(self, query, add_headers = ""):
 	data = self.do_query(query, self.auth_header + add_headers)
 	if self.prepend_site:
@@ -249,6 +252,7 @@ class MultiSiteConnection(Helpers):
 	self.connections = []
 	self.deadsites = {}
 	self.prepend_site = False
+	self.only_sites = None
 
 	for sitename, site in sites.items():
 	    try:
@@ -272,6 +276,9 @@ class MultiSiteConnection(Helpers):
     def set_prepend_site(self, p):
 	self.prepend_site = p
 
+    def set_only_sites(self, os = None):
+	self.only_sites = os
+
     def dead_sites(self):
 	return self.deadsites
 
@@ -290,6 +297,8 @@ class MultiSiteConnection(Helpers):
 	result = []
 	stillalive = []
 	for sitename, site, connection in self.connections:
+	    if self.only_sites != None and sitename not in self.only_sites:
+		continue
 	    try:
 		r = connection.do_query(query, add_headers)
 		if self.prepend_site:

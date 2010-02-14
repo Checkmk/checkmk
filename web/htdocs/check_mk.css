@@ -230,10 +230,14 @@ table.services td.agerecent {
   font-weight: bold;
 }
 
-td.state0, td.state1, td.state2, td.state3, td.state4, td.statep, td.hstate0, td.hstate1, td.hstate2, td.hstatep { 
+td.state0, td.state1, td.state2, td.state3, td.state4, td.statep, td.hstate0, td.hstate1, td.hstate2, td.hstatep, td.statex { 
   text-align: center;
   font-weight: bold;
   font-family: sans-serif;
+}
+
+td.statex { 
+  color: #ccc;
 }
 
 td.state0, td.hstate0 { 
@@ -757,11 +761,12 @@ width: 200px;
 div#check_mk_sidebar {
     margin-top: 1ex;
     margin-bottom: 1ex;
-    font-size: 8pt;
+    font-size: 9pt;
     color: #fff;
+    font-family: arial, helvetica, sans-serif;
 }
 div#check_mk_sidebar td {
-    font-size: 8pt;
+    font-size: 9pt;
 }
 
 div#check_mk_sidebar div.header table
@@ -802,7 +807,7 @@ div#check_mk_sidebar h2 {
     margin-top: 0px;
     margin-bottom: 0px;
     color: #fc4;
-    font-size: 8pt;
+    font-size: 9pt;
 }
 div#check_mk_sidebar a {
     text-decoration: none;
@@ -849,42 +854,44 @@ table.sidebarconfig td {
     border: 1px solid #f84;
     padding: 0px 5px;
 }
-
+/* sitestate snapin for sidebar */
 div#check_mk_sidebar table.sitestate {
-    width: 155px;
-}
-
-div#check_mk_sidebar table.sitestate td a {
-    border: 1px solid #000;
-    padding: 1px 3px;
+    width: 100%;
 }
 
 div#check_mk_sidebar table.sitestate td {
-    text-align: center;
-    width: 20px;
-    font-size: 6pt;
     padding: 0px 0px;
+    text-align: right;
+}
+
+div#check_mk_sidebar table.sitestate td a {
+    font-weight: bold;
+    -moz-border-radius: 4px;
+    margin: 0px;
+    padding: 0px 3px;
+    text-align: center;
+    font-size: 7pt;
+    margin-right: 3px;
+    display: block;
 }
 
 div#check_mk_sidebar table.sitestate td.left {
     text-align: left;
-    font-size: 7pt;
-width: 150px;
 }
 
 div#check_mk_sidebar table.sitestate td.offline a {
-    background-color: #c00;
-    display: block;
-    color: #fff;
+    background-color: #f00;
+    color: #000;
+    border-color: #800;
 }
 div#check_mk_sidebar table.sitestate td.online a {
     background-color: #4f6;
-    display: block;
-color: #000;
+    color: #000;
+    border-color: #0f0;
 }
 div#check_mk_sidebar table.sitestate td.disabled a {
     background-color: #666;
-    display: block;
+    border-color: #888;
 }
 
 div#mk_side_search {

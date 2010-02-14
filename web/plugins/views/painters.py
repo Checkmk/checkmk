@@ -29,10 +29,17 @@ def paint_site_icon(row):
 	
 
 multisite_painters["sitename_plain"] = {
-    "title" : "The id of the site",
+    "title" : "Site id",
     "table" : None,
     "columns" : ["site"],
     "paint" : lambda row: (None, row["site"])
+}
+
+multisite_painters["sitealias"] = {
+    "title" : "Site alias",
+    "table" : None,
+    "columns" : ["site"],
+    "paint" : lambda row: (None, check_mk.site(row["site"])["alias"])
 }
 
 def paint_host_black(row):
@@ -59,12 +66,18 @@ multisite_painters["host_with_state"] = {
 }
 
 multisite_painters["host"] = {
-    "title" : "Hostname with link to Nagios",
+    "title" : "Hostname",
     "table" : "hosts",
     "columns" : ["host_name"],
     "paint" : lambda row: (None, row["host_name"])
 }
 
+multisite_painters["alias"] = {
+    "title" : "Host alias",
+    "table" : "hosts",
+    "columns" : ["host_alias"],
+    "paint" : lambda row: (None, row["host_alias"])
+}
 
 def paint_service_state_short(row):
     if row["service_has_been_checked"] == 1:
@@ -75,11 +88,28 @@ def paint_service_state_short(row):
 	name = "PEND"
     return "state%s" % state, name
 
+def paint_host_state_short(row):
+# return None, str(row)
+    if row["host_has_been_checked"] == 1:
+	state = row["host_state"]
+	name = nagios_short_host_state_names[row["host_state"]]
+    else:
+	state = "p"
+	name = "PEND"
+    return "state%s" % state, name
+
 multisite_painters["service_state"] = {
-    "title" : "The service state, colored and short (4 letters)",
+    "title" : "Service state",
     "table" : "services",
     "columns" : ["service_has_been_checked","service_state"],
-    "paint" : paint_service_state_short
+    "paint" : paint_host_state_short
+}
+
+multisite_painters["host_state"] = {
+    "title" : "Host state",
+    "table" : "hosts",
+    "columns" : ["host_has_been_checked","host_state"],
+    "paint" : paint_host_state_short
 }
 
 multisite_painters["site_icon"] = {
@@ -109,3 +139,45 @@ multisite_painters["svc_state_age"] = {
     "columns" : [ "service_has_been_checked", "service_last_state_change" ],
     "paint" : lambda row: paint_age(row["service_last_state_change"], row["service_has_been_checked"] == 1)
 }
+
+def paint_svc_count(id, count):
+    if count > 0:
+	return "state%s" % id, str(count)
+    else:
+	return "statex", "0"
+
+multisite_painters["num_services_ok"] = {
+    "title"   : "Number of services in state OK",
+    "table"   : "hosts",
+    "columns" : [ "host_num_services_ok" ],
+    "paint"   : lambda row: paint_svc_count(0, row["host_num_services_ok"])
+}
+
+multisite_painters["num_services_warn"] = {
+    "title"   : "Number of services in state WARN",
+    "table"   : "hosts",
+    "columns" : [ "host_num_services_warn" ],
+    "paint"   : lambda row: paint_svc_count(1, row["host_num_services_warn"])
+}
+
+multisite_painters["num_services_crit"] = {
+    "title"   : "Number of services in state CRIT",
+    "table"   : "hosts",
+    "columns" : [ "host_num_services_crit" ],
+    "paint"   : lambda row: paint_svc_count(2, row["host_num_services_crit"])
+}
+
+multisite_painters["num_services_unknown"] = {
+    "title"   : "Number of services in state UNKNOWN",
+    "table"   : "hosts",
+    "columns" : [ "host_num_services_unknown" ],
+    "paint"   : lambda row: paint_svc_count(3, row["host_num_services_unknown"])
+}
+
+multisite_painters["num_services_pending"] = {
+    "title"   : "Number of pending services",
+    "table"   : "hosts",
+    "columns" : [ "host_num_services_pending" ],
+    "paint"   : lambda row: paint_svc_count("p", row["host_num_services_pending"])
+}
+

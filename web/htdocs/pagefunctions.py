@@ -30,3 +30,9 @@ def add_site_icon(html, sitename):
     else:
 	return False
 
+def site_selector(html, htmlvar):
+    choices = []
+    for sitename, state in html.site_status.items():
+	if state["state"] == "online":
+	    choices.append((sitename, check_mk.site(sitename)["alias"]))
+    html.sorted_select(htmlvar, choices)

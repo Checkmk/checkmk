@@ -13,16 +13,7 @@ def render_searchform():
     data = html.live.query("GET hosts\nColumns: name alias\n")
     html.write('var aSearchHosts = %s;' % data)
 
-    html.write('addField("mk_side_search_field");</script>')
-
-
-    #data = html.live.query("GET %sgroups\nColumns: name alias\n" % what)
-    #name_to_alias = dict(data)
-    #groups = [(name_to_alias[name], name) for name in name_to_alias.keys()]
-    #groups.sort() # sort by Alias!
-    #for alias, name in groups:
-        #target = views.get_context_link(html.req.user, "%sgroup" % what)
-        #bulletlink(alias, target + "&%sgroup=%s" % (what, htmllib.urlencode(name)))
+    html.write('mkSearchAddField("mk_side_search_field");</script>')
 
 sidebar_snapins["search"] = {
     "title" : "Quicksearch",

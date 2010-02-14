@@ -877,6 +877,6 @@ padding-left:5px;
 width:135px;
 }
 
-div#mk_side_search #mk_search_results a:hover {
+div#mk_side_search #mk_search_results a:hover, div#mk_side_search #mk_search_results a.active {
 background-color: #BFBFBF;
 }

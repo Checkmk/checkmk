@@ -17,5 +17,5 @@ def render_searchform():
 
 sidebar_snapins["search"] = {
     "title" : "Quicksearch",
-    "render" : lambda: render_searchform()
+    "render" : render_searchform
 }

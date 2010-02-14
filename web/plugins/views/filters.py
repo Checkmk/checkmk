@@ -33,6 +33,10 @@ class Filter:
     def allowed_for_table(self, tablename):
 	return True
 
+    # Hidden filters may contribute to the pages headers of the views
+    def heading_info(self, tablename):
+	return None
+
 # Filters for substring search, displaying a text input field
 class FilterText(Filter):
     def __init__(self, name, title, table, column, htmlvar, op):
@@ -102,9 +106,12 @@ class FilterGroupCombo(Filter):
     def display(self):
 	html.select(self.what + "group", all_groups(self.what))
 
-    def filter(self, tablename):
+    def current_value(self, tablename):
 	htmlvar = self.htmlvars[0]
-	current_value = html.var(htmlvar)
+	return = html.var(htmlvar)
+
+    def filter(self, tablename):
+	current_value = self.current_value(tablename)
 	if not current_value: # Take first hostgroup
 	    current_value = html.live.query_value("GET %sgroups\nColumns: name\nLimit: 1\n" % self.what)
 	if self.what + "s" == tablename:
@@ -119,6 +126,14 @@ class FilterGroupCombo(Filter):
 	elif tablename == "contacts" : return self.what == "contact"
 	else:
 	    return False
+
+    def heading_info(self, tablename):
+	current_value = self.current_value(tablename)
+	if current_value:
+	    alias = html.live.query_value("GET %sgroups\nColumns: alias\nFilter: name = %s\n" % 
+		(self.what, current_value)
+	    return self.what[0].upper() + self.what[1:] + " " + alias
+
 
 declare_filter(FilterGroupCombo("host"))
 declare_filter(FilterGroupCombo("service"))

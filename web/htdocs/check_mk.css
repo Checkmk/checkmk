@@ -586,6 +586,10 @@ table.view td.legend {
     padding-top: 3px;
     color: #884;
 }
+table.view td.content i {
+    font-size: 8pt;
+color: #995;
+}
 table.view table.filters {
     border-collapse: collapse;
     empty-cells: show;

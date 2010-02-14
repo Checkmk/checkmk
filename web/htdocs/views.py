@@ -168,17 +168,25 @@ def page_edit_views(h, msg=None):
     html.footer()
 
 
+def select_view(varname, only_with_hidden = False):
+    choices = [("", "")]
+    for (user, name), view in multisite_views.items():
+	if not user or view["public"] and \
+	    (not only_with_hidden or len(view["hide_filters"]) > 0):
+		choices.append(("%s/%s" % (user, name), view["title"]))
+    html.sorted_select(varname, choices, "")
+
 # Edit one view
 def page_edit_view(h):
     global html
     html = h
+    load_views()
 
     view = None
 
     # Load existing view from disk
     viewname = html.var("load_view")
     if viewname:
-	load_views()
 	view = multisite_views.get((html.req.user, viewname), None)
 	datasourcename = view["datasource"]
 	if view:
@@ -274,6 +282,9 @@ def page_edit_view(h):
 	    if order:
 		html.write(" ")
 		html.select("%sorder_%d" % (var_prefix, n), [("asc", "Ascending"), ("dsc", "Descending")])
+	    else:
+		html.write("<i> with link to </i>")
+		select_view("%slink_%d" % (var_prefix, n))
 	    html.write("<br />")
 	html.write("</td></tr>\n")
     column_selection("4. Sorting", "sort_", max_sort_columns, multisite_sorters, True)
@@ -332,14 +343,18 @@ def load_view_into_html_vars(view):
 
     # [5] Grouping
     n = 1
-    for name in view["group_painters"]:
+    for name, viewname in view["group_painters"]:
 	html.set_var("group_%d" % n, name)
+	if viewname:
+	    html.set_var("group_link_%d" % n, "%s/%s" % viewname)
 	n += 1
 
     # [6] Columns
     n = 1
-    for name in view["painters"]:
+    for name, viewname in view["painters"]:
 	html.set_var("col_%d" % n, name)
+	if viewname:
+	    html.set_var("col_link_%d" % n, "%s/%s" % viewname)
 	n += 1
 
     # Make sure, checkboxes with default "on" do no set "on". Otherwise they
@@ -390,14 +405,28 @@ def create_view():
     group_painternames = [] 
     for n in range(1, max_group_columns+1):
 	pname = html.var("group_%d" % n)
+	viewinfo = html.var("group_link_%d" % n)
 	if pname:
-	    group_painternames.append(pname)
+	    try:
+	        user, viewname = viewinfo.split("/")
+		view = multisite_views[(user, viewname)]
+		viewinfo = user, viewname
+	    except:
+		viewinfo = None
+	    group_painternames.append((pname, viewinfo))
 
     painternames = []
     for n in range(1, max_display_columns+1):
 	pname = html.var("col_%d" % n)
+	viewinfo = html.var("col_link_%d" % n)
 	if pname:
-	    painternames.append(pname)
+	    try:
+	        user, viewname = viewinfo.split("/")
+		view = multisite_views[(user, viewname)]
+		viewinfo = user, viewname
+	    except:
+		viewinfo = None
+	    painternames.append((pname, viewinfo))
   
     return { 
 	"name"            : name,
@@ -444,11 +473,11 @@ def show_view(view, show_heading = False):
     sort_data(rows, sorters)
 
     # [5] Grouping
-    group_painters = [ multisite_painters[n] for n in view["group_painters"] ]
+    group_painters = [ (multisite_painters[n], v) for n, v in view["group_painters"] ]
     group_columns = needed_group_columns(group_painters)
 
     # [6] Columns
-    painters = [ multisite_painters[n] for n in view["painters"] ]
+    painters = [ (multisite_painters[n], v) for n, v in view["painters"] ]
 
     # Show heading
     if show_heading:
@@ -541,7 +570,7 @@ def show_context_links(thisview, active_filters):
 
 def needed_group_columns(painters):
     columns = []
-    for p in painters:
+    for p, linkview in painters:
 	columns += p["columns"] 
     return columns
 

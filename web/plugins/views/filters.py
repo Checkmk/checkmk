@@ -23,6 +23,9 @@ class Filter:
 	raise MKInternalError("Incomplete implementation of filter %s '%s': missing filter()" % \
 	    (self.name, self.title))
 	html.write("FILTER NOT IMPLEMENTED")
+    
+    def variable_settings(self, row):
+       return [] # return pairs of htmlvar and name according to dataset in row	
 
     def tableprefix(self, tablename):
 	if self.table == tablename:
@@ -57,6 +60,9 @@ class FilterText(Filter):
 	else:
 	    return ""
 
+    def variable_settings(self, row):
+       return [ (self.htmlvars[0], row[self.table[:-1] + "_" + self.column]) ]
+    
     def allowed_for_table(self, tablename):
 	if tablename == self.table:
 	    return True

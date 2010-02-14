@@ -10,32 +10,29 @@ def nagios_service_url(sitename, host, svc):
     nagurl = check_mk.site(sitename)["nagios_cgi_url"]
     return nagurl + ( "/extinfo.cgi?type=2&host=%s&service=%s" % (htmllib.urlencode(host), htmllib.urlencode(svc)))
 
-def paint_plain(text):
-    return "<td>%s</td>" % text
-
 def paint_age(timestamp, has_been_checked):
     if not has_been_checked:
-	return "<td class=age>-</td>"
+	return "age", "-"
 	   
     age = time.time() - timestamp
     if age < 60 * 10:
 	age_class = "agerecent"
     else:
 	age_class = "age"
-    return "<td class=%s>%s</td>\n" % (age_class, html.age_text(age))
+    return age_class, html.age_text(age)
 
 def paint_site_icon(row):
     if row["site"] and check_mk.multiadmin_use_siteicons:
-	return "<td><img class=siteicon src=\"icons/site-%s-24.png\"> " % row["site"]
+	return None, "<img class=siteicon src=\"icons/site-%s-24.png\">" % row["site"]
     else:
-	return "<td></td>"
+	return None, ""
 	
 
 multisite_painters["sitename_plain"] = {
     "title" : "The id of the site",
     "table" : None,
     "columns" : ["site"],
-    "paint" : lambda row: "<td>%s</td>" % row["site"],
+    "paint" : lambda row: (None, row["site"])
 }
 
 def paint_host_black(row):
@@ -44,7 +41,7 @@ def paint_host_black(row):
 	style = "up"
     else:
 	style = "down"
-    return "<td class=host><b class=%s><a href=\"%s\">%s</a></b></td>" % \
+    return "host", "<b class=%s><a href=\"%s\">%s</a></b>" % \
 	(style, nagios_host_url(row["site"], row["host_name"]), row["host_name"])
 
 multisite_painters["host_black"] = {
@@ -58,15 +55,14 @@ multisite_painters["host_with_state"] = {
     "title" : "Hostname colored with state",
     "columns" : ["site","host_name"],
     "table" : "hosts",
-    "paint" : lambda row: "<td class=hstate%d><a href=\"%s\">%s</a></td>" % \
-	(row["host_state"], nagios_host_url(row["site"], row["host_name"]), row["host_name"]),
+    "paint" : lambda row: ("hstate%d" % row["host_state"], row["host_name"])
 }
 
 multisite_painters["host"] = {
     "title" : "Hostname with link to Nagios",
     "table" : "hosts",
     "columns" : ["host_name"],
-    "paint" : lambda row: "<td><a href=\"%s\">%s</a></td>" % (nagios_host_url(row["site"], row["host_name"]), row["host_name"])
+    "paint" : lambda row: (None, row["host_name"])
 }
 
 
@@ -77,7 +73,7 @@ def paint_service_state_short(row):
     else:
 	state = "p"
 	name = "PEND"
-    return "<td style=\"width: 4ex;\" class=state%s>%s</td>" % (state, name)
+    return "state%s" % state, name
 
 multisite_painters["service_state"] = {
     "title" : "The service state, colored and short (4 letters)",
@@ -97,15 +93,14 @@ multisite_painters["svc_plugin_output"] = {
     "title" : "Output of check plugin",
     "table" : "services",
     "columns" : ["service_plugin_output"],
-    "paint" : lambda row: paint_plain(row["service_plugin_output"])
+    "paint" : lambda row: (None, row["service_plugin_output"])
 }
     
 multisite_painters["service_description"] = {
     "title" : "Service description",
     "table" : "services",
     "columns" : ["service_description"],
-    "paint" : lambda row: "<td><a href=\"%s\">%s</a></td>" % \
-	(nagios_service_url(row["site"], row["host_name"], row["service_description"]), row["service_description"])
+    "paint" : lambda row: (None, row["service_description"])
 }
 
 multisite_painters["svc_state_age"] = {

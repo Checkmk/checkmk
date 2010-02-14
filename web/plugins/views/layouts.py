@@ -1,7 +1,31 @@
-
+ 
 ##################################################################################
 # Layouts
 ##################################################################################
+
+def paint(p, row):
+    painter, linkview = p
+    tdclass, content = painter["paint"](row)
+    # Create contextlink to other view
+    if linkview:
+	user, viewname = linkview
+	view = multisite_views[linkview]
+	if "_hide" not in view: # Cache in view object
+	    filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
+	    view["_hide"] = filters
+	else:
+	    filters = view["_hide"]
+	filtervars = []
+	for filt in filters:
+	    filtervars += filt.variable_settings(row)
+
+	uri = html.makeuri_contextless([("view_name", "%s/%s" % (user, viewname))] + filtervars)
+	content = "<a href=\"%s\">%s</a>" % (uri, content)
+
+    if tdclass:
+	html.write("<td class=%s>%s</td>\n" % (tdclass, content))
+    else:
+	html.write("<td>%s</td>" % content)
 
 def show_filter_form(filters):
     if len(filters) > 0 and not html.do_actions():
@@ -73,7 +97,7 @@ def render_grouped_boxes(data, filters, group_columns, group_painters, painters,
 	html.write("<table class=services><tr class=groupheader>")
 	html.write("<td colspan=%d><table><tr>" % len(painters))
 	for p in group_painters:
-	    html.write(p["paint"](rows[0]))
+	    paint(p, rows[0])
 	html.write("</tr></table></td></tr>\n")
 	trclass = None
 	for row in rows:
@@ -84,7 +108,7 @@ def render_grouped_boxes(data, filters, group_columns, group_painters, painters,
 	    state = row.get("state", 0)
 	    html.write("<tr class=%s%d>" % (trclass, state))
 	    for p in painters:
-		html.write(p["paint"](row))
+		paint(p, row)
 	    html.write("</tr>\n")
 	html.write("</table>\n")
 
@@ -121,7 +145,7 @@ def render_grouped_list(data, filters, group_columns, group_painters, painters, 
 		html.write("<tr class=groupheader>")
 		html.write("<td colspan=%d><table><tr>" % len(painters))
 		for p in group_painters:
-		    html.write(p["paint"](row))
+		    paint(p, row)
 		html.write("</tr></table></td></tr>\n")
 		trclass = "even"
 		last_group = this_group
@@ -147,8 +171,7 @@ def render_grouped_list(data, filters, group_columns, group_painters, painters, 
 	    html.write("<tr class=%s%d>" % (trclass, state))
 
         for p in painters:
-	    html.write(p["paint"](row))
-	    html.write("\n")
+	    paint(p, row)
 	column += 1
     
     # complete half line, if any

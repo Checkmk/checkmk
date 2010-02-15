@@ -18,6 +18,11 @@
       * New check fc_brocade_port_detailed
       * netctrl: improved handling of wrapped counters
       * winperf: Better handling of wrapping counters
+      * aironet_client: New check for number of clients and signal
+        quality of CISCO Aironet access points
+      * aironet_errors: New check for monitoring CRC errors on
+        CISCO Aironet access points
+
 
       MK Livestatus:
       * New headers for waiting (please refer to online documentation)

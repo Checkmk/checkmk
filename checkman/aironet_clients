@@ -1,0 +1,43 @@
+title: Monitor client status on CISCO Aironet access points
+agents: snmp
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors three aspects of the client status
+ of an CISCO Aironet access point: the number of clients
+ logged in, their average signal strength and their average
+ signal quality. You may provide levels for strength and quality.
+ If zero clients are logged in, this check is always OK.
+
+item:
+ One of the three strings {"clients"}, {"strength"} or {"quality"}.
+
+examples:
+ # Warn if strength is worse than -85dB, crit if worse than -65dB
+ aironet_default_strength_levels = (-85, -65)
+
+ # Set levels for quality to 20 and 10 percent
+ aironet_default_quality_levels = (20, 10) 
+    
+perfdata:
+ The number of clients, the average signal strength (this is a 
+ negative value) or the average quality - depending on the check
+ item used.
+
+inventory:
+ If at least one client is logged in, all three checks will
+ be generated.
+
+[parameters]
+warning (int): Warning level for signal strength or quality. Note that
+ the signal strength levels are always negative. Levels are ignored
+ for the check item {"clients"} and should be set to {None} in that case.
+critical (int): Critical levels, {None} in case of {"clients"}. 
+
+[configuration]
+aironet_default_strength_levels (int, int): Default levels for signal
+ strength. They are preset to {(-80, -70)}.
+aironet_default_quality_levels (int, int): Default levels for signal
+ quality. They are preset to {(40, 20)}.
+

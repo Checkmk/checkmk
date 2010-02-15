@@ -13,7 +13,7 @@ def render_searchform():
     data = html.live.query("GET hosts\nColumns: name alias\n")
     html.write('var aSearchHosts = %s;' % data)
 
-    html.write('mkSearchAddField("mk_side_search_field");</script>')
+    html.write('mkSearchAddField("mk_side_search_field", "main", "%s");</script>' % check_mk.checkmk_web_uri)
 
 sidebar_snapins["search"] = {
     "title" : "Quicksearch",

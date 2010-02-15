@@ -1,14 +1,19 @@
 var aSearchResults = [];
 var iCurrent = null;
 var mkSearchTargetFrame = 'main';
+var mkSearchCheckMkUrl = '/check_mk';
 
 // Register an input field to be a search field and add eventhandlers
-function mkSearchAddField(field, targetFrame) {
+function mkSearchAddField(field, targetFrame, checkMkUrl) {
     var oField = document.getElementById(field);
 
     if(oField) {
 				if(typeof targetFrame != 'undefined') {
 					mkSearchTargetFrame = targetFrame;
+				}
+		
+				if(typeof checkMkUrl != 'undefined') {
+					mkSearchcheckMkUrl = checkMkUrl;
 				}
 		
         oField.onkeydown   = function(e) { if (!e) e = window.event; return mkSearchKeyDown(e, oField); }
@@ -65,8 +70,7 @@ function mkSearchKeyDown(e, oField) {
 					mkSearchClose();
 				} else {
 					// When nothing selected, navigate with the current contents of the field
-					// FIXME: Hardcoded path
-					top.frames[mkSearchTargetFrame].location.href = '/nagios/cgi-bin/status.cgi?host='+oField.value;
+					top.frames[mkSearchTargetFrame].location.href = mkSearchCheckMkUrl+'/view.py?view_name=/host&host='+oField.value;
 					mkSearchClose();
 				}
 				
@@ -201,8 +205,7 @@ function mkSearch(e, oField) {
 						var oResult = {
 							'id': 'result_'+hostName,
 							'name': hostName,
-							// FIXME: Hardcoded path
-							'url': '/nagios/cgi-bin/status.cgi?host='+hostName,
+							'url': mkSearchCheckMkUrl+'/view.py?view_name=/host&host='+hostName,
 						};
 						
 						// Add id to search result array

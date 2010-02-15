@@ -67,6 +67,7 @@ function mkSearchKeyDown(e, oField) {
 					// When nothing selected, navigate with the current contents of the field
 					// FIXME: Hardcoded path
 					top.frames[mkSearchTargetFrame].location.href = '/nagios/cgi-bin/status.cgi?host='+oField.value;
+					mkSearchClose();
 				}
 				
 				e.returnValue = false;

@@ -114,13 +114,19 @@ def all_groups(what):
     return [ (name, groups[name]) for name in names ]
 
 class FilterGroupCombo(Filter):
-    def __init__(self, what):
-	Filter.__init__(self, what + "group", what[0].upper() + what[1:] + "group",
-		what + "s", [ what + "group" ])
+    def __init__(self, what, enforce):
+	self.enforce = enforce
+	self.prefix = not self.enforce and "opt" or ""
+	Filter.__init__(self, self.prefix + what + "group", what[0].upper() + what[1:] + "group",
+		what + "s", [ self.prefix + what + "group" ])
         self.what = what
+	
 
     def display(self):
-	html.select(self.what + "group", all_groups(self.what))
+	choices = all_groups(self.what)
+	if not self.enforce:
+	    choices = [("", "")] + choices
+	html.select(self.htmlvars[0], choices)
 
     def current_value(self, tablename):
 	htmlvar = self.htmlvars[0]
@@ -128,8 +134,12 @@ class FilterGroupCombo(Filter):
 
     def filter(self, tablename):
 	current_value = self.current_value(tablename)
-	if not current_value: # Take first group with the name we search
+    	if not current_value: 
+	    if not self.enforce:
+		return ""
+            # Take first group with the name we search
 	    current_value = html.live.query_value("GET %sgroups\nColumns: name\nLimit: 1\n" % self.what, None)
+
 	if current_value == None:
 	    return "" # no {what}group exists!
 
@@ -154,8 +164,10 @@ class FilterGroupCombo(Filter):
 	    return alias
 
 
-declare_filter(FilterGroupCombo("host"), "Dropdown list, selection of host group is enforced")
-declare_filter(FilterGroupCombo("service"), "Dropdown list, selection of service group is enforced")
+declare_filter(FilterGroupCombo("host", True),     "Dropdown list, selection of host group is <b>enforced</b>")
+declare_filter(FilterGroupCombo("service", True),  "Dropdown list, selection of service group is <b>enforced</b>")
+declare_filter(FilterGroupCombo("host", False),    "Optional selection of host group")
+declare_filter(FilterGroupCombo("service", False), "Optional selection of service group")
 # Livestatus still misses "contact_groups" column. 
 # declare_filter(FilterGroupCombo("contact"))
 

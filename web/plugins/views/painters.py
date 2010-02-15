@@ -96,7 +96,7 @@ def paint_host_state_short(row):
     else:
 	state = "p"
 	name = "PEND"
-    return "state%s" % state, name
+    return "hstate%s" % state, name
 
 multisite_painters["service_state"] = {
     "title" : "Service state",

@@ -258,9 +258,12 @@ def page_edit_view(h):
     html.write("<table class=filters>")
     html.write("<tr><th>Filter</th><th>usage</th><th>hardcoded settings</th><th>HTML variables</th></tr>\n")
     allowed_filters = filters_allowed_for_datasource(datasourcename)
-    for fname, filt in allowed_filters.items():
+    # sort filters according to title
+    s = [(filt.title, fname, filt) for fname, filt in allowed_filters.items()]
+    s.sort()
+    for title, fname, filt in s:
 	html.write("<tr>")
-	html.write("<td class=title>%s" % filt.title)
+	html.write("<td class=title>%s" % title)
 	if filt.comment:
 	    html.write("<br><div class=filtercomment>%s</div>" % filt.comment)
 	html.write("</td>")

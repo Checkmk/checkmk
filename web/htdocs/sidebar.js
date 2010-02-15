@@ -13,6 +13,7 @@ for(var i in oSidebar.childNodes)
 if(url == '')
 	alert('ERROR: Unable to determine the script location. Problem finding sidebar.js inside the check_mk_sidebar container.');
 
+
 var oLink = document.createElement('link')
 oLink.href = url + "check_mk.css";
 oLink.rel = 'stylesheet';
@@ -40,13 +41,15 @@ function getFile(url) {
       }                                             
 }
 
-function toggle_sidebar_snapin(oH2) {
+function toggle_sidebar_snapin(oH2, url) {
     var oContent = oH2.parentNode.childNodes[3];
     var closed = oContent.style.display == "none";
     if (closed)
 	oContent.style.display = "";
     else
 	oContent.style.display = "none";
+    /* make this persistent -> save */
+    getFile(url + (closed ? "open" : "closed")); 
     oContent = null;
 }
 

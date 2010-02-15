@@ -79,11 +79,25 @@ def render_snapin(name, state):
     else:
 	style = ""
     if snapin.get("hidetitle") != True:
-	html.write("<h2 onclick=\"toggle_sidebar_snapin(this)\" onmouseover=\"this.style.cursor='pointer'\" "
-		   "onmouseout=\"this.style.cursor='auto'\">%s</h2>\n" % snapin["title"])
+	url = check_mk.checkmk_web_uri + "/sidebar_openclose.py?name=%s&state=" % name
+	html.write("<h2 onclick=\"toggle_sidebar_snapin(this,'%s')\" onmouseover=\"this.style.cursor='pointer'\" "
+		   "onmouseout=\"this.style.cursor='auto'\">%s</h2>\n" % (url, snapin["title"]))
     html.write("<div class=content%s>\n" % style)
     snapin["render"]()
     html.write("</div></div>\n")
+
+def ajax_openclose(h):
+    global html
+    html = h
+
+    config = load_user_config()
+    new_config = []
+    for name, usage in config:
+	if html.var("name") == name:
+	    usage = html.var("state")	
+	new_config.append((name, usage))
+    save_user_config(new_config)
+
 
 def page_configure(h):
     global html
@@ -101,7 +115,7 @@ def page_configure(h):
 	    new_usage = html.var("snapin_%d" % n)
 	    if new_usage in ["off", "open", "closed"]:
 		usage = new_usage
-	    new_config.append((name, new_usage))
+	    new_config.append((name, usage))
 	    n += 1
 	config = new_config
 	save_user_config(config)

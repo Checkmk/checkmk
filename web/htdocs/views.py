@@ -238,6 +238,9 @@ def page_edit_view(h):
     html.write("<br />\n")
     html.checkbox("hidden")
     html.write(" hide this view from the sidebar")
+    html.write("<br />\n")
+    html.checkbox("mustsearch")
+    html.write(" show data only on search")
     html.write("</td></tr>\n")
 
     def show_list(name, title, data):
@@ -328,6 +331,7 @@ def load_view_into_html_vars(view):
     html.set_var("layout",     view["layout"])
     html.set_var("public",     view["public"] and "on" or "")
     html.set_var("hidden",     view["hidden"] and "on" or "")
+    html.set_var("mustsearch", view["mustsearch"] and "on" or "")
 
     # [3] Filters
     for name, filt in multisite_filters.items():
@@ -388,8 +392,9 @@ def create_view():
     datasource = multisite_datasources[datasourcename]
     tablename = datasource["table"]
     layoutname = html.var("layout")
-    public = html.var("public", "") != ""
-    hidden = html.var("hidden", "") != ""
+    public     = html.var("public", "") != ""
+    hidden     = html.var("hidden", "") != ""
+    mustsearch = html.var("mustsearch", "") != ""
     show_filternames = []
     hide_filternames = []
     hard_filternames = []
@@ -446,6 +451,7 @@ def create_view():
 	"datasource"      : datasourcename,
 	"public"          : public,
 	"hidden"          : hidden,
+	"mustsearch"      : mustsearch,
 	"layout"          : layoutname,
 	"show_filters"    : show_filternames,
 	"hide_filters"    : hide_filternames,
@@ -485,8 +491,11 @@ def show_view(view, show_heading = False):
 
     query = filterheaders + view.get("add_headers", "")
    
-    # Fetch data
-    columns, rows = query_data(datasource, query, only_sites)
+    # Fetch data. Some views show data only after pressing [Search]
+    if (not view["mustsearch"]) or html.var("search"):
+	columns, rows = query_data(datasource, query, only_sites)
+    else:
+	columns, rows = [], []
 
     # [4] Sorting
     sorters = [ (multisite_sorters[sn], reverse) for sn, reverse in view["sorters"] ]
@@ -535,7 +544,7 @@ def view_title(view):
 	heading = filt.heading_info(tablename)
 	if heading:
 	    extra_titles.append(heading)
-	return view["title"] + " " + ", ".join(extra_titles)
+    return view["title"] + " " + ", ".join(extra_titles)
 
 def show_context_links(thisview, active_filters):
     load_views(override_builtins = True)

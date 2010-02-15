@@ -102,7 +102,7 @@ multisite_painters["service_state"] = {
     "title" : "Service state",
     "table" : "services",
     "columns" : ["service_has_been_checked","service_state"],
-    "paint" : paint_host_state_short
+    "paint" : paint_service_state_short
 }
 
 multisite_painters["host_state"] = {
@@ -145,6 +145,13 @@ def paint_svc_count(id, count):
 	return "state%s" % id, str(count)
     else:
 	return "statex", "0"
+
+multisite_painters["num_services"] = {
+    "title"   : "Number of services",
+    "table"   : "hosts",
+    "columns" : [ "host_num_services" ],
+    "paint"   : lambda row: (None, str(row["host_num_services"])),
+}
 
 multisite_painters["num_services_ok"] = {
     "title"   : "Number of services in state OK",

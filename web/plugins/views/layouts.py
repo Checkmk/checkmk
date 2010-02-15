@@ -9,18 +9,19 @@ def paint(p, row):
     # Create contextlink to other view
     if linkview:
 	user, viewname = linkview
-	view = multisite_views[linkview]
-	if "_hide" not in view: # Cache in view object
-	    filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
-	    view["_hide"] = filters
-	else:
-	    filters = view["_hide"]
-	filtervars = []
-	for filt in filters:
-	    filtervars += filt.variable_settings(row)
+	view = multisite_views.get(linkview)
+	if view:
+	    if "_hide" not in view: # Cache in view object
+		filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
+		view["_hide"] = filters
+	    else:
+		filters = view["_hide"]
+	    filtervars = []
+	    for filt in filters:
+		filtervars += filt.variable_settings(row)
 
-	uri = html.makeuri_contextless([("view_name", "%s/%s" % (user, viewname))] + filtervars)
-	content = "<a href=\"%s\">%s</a>" % (uri, content)
+	    uri = html.makeuri_contextless([("view_name", "%s/%s" % (user, viewname))] + filtervars)
+	    content = "<a href=\"%s\">%s</a>" % (uri, content)
 
     if tdclass:
 	html.write("<td class=%s>%s</td>\n" % (tdclass, content))
@@ -43,6 +44,18 @@ def show_filter_form(filters):
 	html.write("</table>\n")
 	html.end_form()
 
+
+def render_single_dataset(data, filters, group_columns, group_painters, painters, num_columns):
+    columns, rows = data
+    # I'm expecting only one row
+    for row in rows:
+	html.write("<table class=dataset>\n")
+	for p in painters:
+	    painter, link = p
+	    html.write("<tr><td class=left>%s</td>" % painter["title"])
+	    paint(p, row)
+	    html.write("</tr>\n")
+	html.write("<table>\n")
 
 def render_grouped_boxes(data, filters, group_columns, group_painters, painters, num_columns):
     show_filter_form(filters)
@@ -180,6 +193,11 @@ def render_grouped_list(data, filters, group_columns, group_painters, painters, 
     html.write("</tr>\n")
     html.write("<table>\n")
 
+multisite_layouts["dataset"] = { 
+    "title"  : "single dataset",
+    "render" : lambda a,b,c,d,e: render_single_dataset(a,b,c,d,e,1),
+    "group"  : False
+}
 multisite_layouts["table"] = { 
     "title"  : "table",
     "render" : lambda a,b,c,d,e: render_grouped_list(a,b,c,d,e,1),

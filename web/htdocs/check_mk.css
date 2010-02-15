@@ -927,3 +927,25 @@ width:135px;
 div#mk_side_search #mk_search_results a:hover, div#mk_side_search #mk_search_results a.active {
 background-color: #BFBFBF;
 }
+
+/* layout dataset */
+table.dataset {
+  border-spacing: 0px;
+  margin: 0px;
+  padding: 0px;
+  border-collapse: collapse;
+  empty-cells: show;
+  background-color: #fec;
+  margin-bottom: 15px;
+                border: 6px solid #fec;
+}
+
+table.dataset td {
+    border-bottom: 1px dotted #444;
+    padding-bottom: 4px;
+    padding: 2px 10px 6px 0px;
+}
+table.dataset td.left {
+    padding-right: 10px;
+    color: #840;
+}

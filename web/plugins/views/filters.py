@@ -75,7 +75,10 @@ class FilterText(Filter):
 	htmlvar = self.htmlvars[0]
 	return html.var(self.htmlvars[0])
 
-declare_filter(FilterText("host",    "Hostname",             "hosts",    "name",          "host",    "~~"))
+declare_filter(FilterText("hostregex",    "Hostname",             "hosts",    "name",          "hostregex",    "~~"),
+			  "Search field with regular expressions, also allows partial matches")
+declare_filter(FilterText("host",    "Hostname",             "hosts",    "name",          "host",    "="),
+			  "Exact match. Use this for linking from other views.")
 declare_filter(FilterText("service", "Service",              "services", "description",   "service", "~~"))
 declare_filter(FilterText("output",  "Service check output", "services", "plugin_output", "service", "~~"))
 

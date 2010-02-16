@@ -182,6 +182,10 @@ class html:
             self.set_focus(self.current_form, varname)
         self.write(html)
 
+    def text_area(self, varname, rows):
+        value = self.req.vars.get(varname, "")
+        self.write("<textarea name=\"%s\">%s</textarea>\n" % (varname, value))
+
     def sorted_select(self, varname, options, deflt="", onchange=None):
         # Sort according to display texts, not keys
 	swapped = [ (disp, key) for key, disp in options ]

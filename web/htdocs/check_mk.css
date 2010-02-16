@@ -1,3 +1,9 @@
+/* Generel styles */
+td {
+    vertical-align: top;
+}
+
+
 body.page {
   background-color: #97a8ab;
   background-image: url("background.jpg");
@@ -157,6 +163,22 @@ table#tabs {
 
 /* table of services -------------------------------------------------------------- */
 
+table.services th {
+    font-weight: normal;
+    border-left: 1px dotted #366;
+    border-right: 1px dotted #366;
+    background-color: #abb;
+    padding: 0px 8px;
+    text-align: left;
+    font-size: 9pt;
+
+}
+table.services th.tablegap {
+  background-image: url("background.jpg");
+  background-repeat: repeat;
+  background-position: center;
+}
+
 table.services { 
   border-spacing: 0px;
   margin: 0px;
@@ -200,6 +222,7 @@ tr.groupheader table {
 tr.groupheader td {
    border-style: none;
    padding: 0px;
+   padding-top: 6px;
 }
 
 td.host b.down { 
@@ -358,6 +381,7 @@ table.form td.legend {
   font-weight: bold;
   width: 20%;
   border: 1px solid black;
+  vertical-align: top;
 }
 
 table.form td.content { 
@@ -644,6 +668,11 @@ table.view td {
 table.view td.legend {
     padding-top: 3px;
     color: #884;
+    text-align: top;
+}
+div.viewdescription {
+    color: #084;
+    font-size: 7pt;
 }
 table.view td.content i {
     font-size: 8pt;
@@ -1009,3 +1038,4 @@ table.dataset td.left {
     padding-right: 10px;
     color: #840;
 }
+

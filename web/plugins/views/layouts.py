@@ -24,6 +24,11 @@ def paint(p, row):
     else:
 	html.write("<td>%s</td>" % content)
 
+def paint_header(p):
+    painter, linkview = p
+    t = painter.get("short", painter["title"])
+    html.write("<th>%s</th>" % t)
+	
 def show_filter_form(filters):
     if len(filters) > 0 and not html.do_actions():
 	html.begin_form("filter")
@@ -43,8 +48,15 @@ def show_filter_form(filters):
 	html.write("</table>\n")
 	html.end_form()
 
-
-def render_single_dataset(data, filters, group_columns, group_painters, painters, num_columns):
+# -------------------------------------------------------------------------
+#    ____  _             _      
+#   / ___|(_)_ __   __ _| | ___ 
+#   \___ \| | '_ \ / _` | |/ _ \
+#    ___) | | | | | (_| | |  __/
+#   |____/|_|_| |_|\__, |_|\___|
+#                  |___/        
+# -------------------------------------------------------------------------
+def render_single_dataset(data, view, filters, group_columns, group_painters, painters, num_columns):
     columns, rows = data
     # I'm expecting only one row
     for row in rows:
@@ -56,7 +68,15 @@ def render_single_dataset(data, filters, group_columns, group_painters, painters
 	    html.write("</tr>\n")
 	html.write("<table>\n")
 
-def render_grouped_boxes(data, filters, group_columns, group_painters, painters, num_columns):
+# -------------------------------------------------------------------------
+#    ____                    _ 
+#   | __ )  _____  _____  __| |
+#   |  _ \ / _ \ \/ / _ \/ _` |
+#   | |_) | (_) >  <  __/ (_| |
+#   |____/ \___/_/\_\___|\__,_|
+#                              
+# -------------------------------------------------------------------------
+def render_grouped_boxes(data, view, filters, group_columns, group_painters, painters, num_columns):
     show_filter_form(filters)
     columns, rows = data
     # N columns. Each should contain approx the same number of entries
@@ -103,9 +123,10 @@ def render_grouped_boxes(data, filters, group_columns, group_painters, painters,
 	for i in range(0, num_columns - 1):
 	    if balance(columns[i], columns[i+1]):
 		did_something = True
+    
 
     # render one group
-    def render_group(header, rows):
+    def render_group(header, rows, paintheader):
 	html.write("<table class=services><tr class=groupheader>")
 	html.write("<td colspan=%d><table><tr>" % len(painters))
 	first = True
@@ -118,6 +139,14 @@ def render_grouped_boxes(data, filters, group_columns, group_painters, painters,
 		
 	html.write("</tr></table></td></tr>\n")
 	trclass = None
+
+	# paint table headers, if configured
+	if paintheader:
+	    html.write("<tr>")
+	    for p in painters:
+		paint_header(p)
+	    html.write("</tr>")
+
 	for row in rows:
 	    if trclass == "odd":
 		trclass = "even"
@@ -128,25 +157,58 @@ def render_grouped_boxes(data, filters, group_columns, group_painters, painters,
 	    for p in painters:
 		paint(p, row)
 	    html.write("</tr>\n")
+
 	html.write("</table>\n")
 
     # render table
+    if view.get("column_headers") == "perpage":
+	headerswitch = 1
+    elif view.get("column_headers") == "pergroup":
+	headerswitch = -1
+    else:
+	headerswitch = 0
+
     html.write("<table class=boxlayout><tr>")
     for column in columns:
 	html.write("<td class=boxcolumn>")
 	for header, rows in column:
-	    render_group(header, rows)
+	    if headerswitch:
+		paintheader = True
+		headerswitch -= 1
+	    else:
+		paintheader = False
+	    render_group(header, rows, paintheader)
         html.write("</td>")
     html.write("</tr></table>\n")
 
 
-def render_grouped_list(data, filters, group_columns, group_painters, painters, num_columns):
+# -------------------------------------------------------------------------
+#    _____     _     _      
+#   |_   _|_ _| |__ | | ___ 
+#     | |/ _` | '_ \| |/ _ \
+#     | | (_| | |_) | |  __/
+#     |_|\__,_|_.__/|_|\___|
+#                           
+# ------------------------------------------------------------------------
+def render_grouped_list(data, view, filters, group_columns, group_painters, painters, num_columns):
     show_filter_form(filters)
     columns, rows = data
     html.write("<table class=services>\n")
     last_group = None
     trclass = None
     column = 1
+
+    def show_header_line():
+        html.write("<tr>")
+	for n in range(1, num_columns + 1):
+	    if n > 1:
+		html.write("<th class=tablegap></th>\n")
+	    for p in painters:
+		paint_header(p)
+	html.write("</tr>\n")
+
+    if view.get("column_headers") == "perpage":
+	show_header_line()
 
     for row in rows:
 	# Show group header, if a new group begins. But only if grouping
@@ -169,6 +231,8 @@ def render_grouped_list(data, filters, group_columns, group_painters, painters, 
 			html.write("<td>,</td>")
 		    paint(p, row)
 		html.write("</tr></table></td></tr>\n")
+		if view.get("column_headers") == "pergroup":
+		    show_header_line()
 		trclass = "even"
 		last_group = this_group
 
@@ -204,46 +268,46 @@ def render_grouped_list(data, filters, group_columns, group_painters, painters, 
 
 multisite_layouts["dataset"] = { 
     "title"  : "single dataset",
-    "render" : lambda a,b,c,d,e: render_single_dataset(a,b,c,d,e,1),
+    "render" : lambda a,v,b,c,d,e: render_single_dataset(a,v,b,c,d,e,1),
     "group"  : False
 }
 multisite_layouts["table"] = { 
     "title"  : "table",
-    "render" : lambda a,b,c,d,e: render_grouped_list(a,b,c,d,e,1),
+    "render" : lambda a,v,b,c,d,e: render_grouped_list(a,v,b,c,d,e,1),
     "group"  : True
 }
 multisite_layouts["table_2c"] = { 
     "title"  : "table with 2 columns",
-    "render" : lambda a,b,c,d,e: render_grouped_list(a,b,c,d,e,2),
+    "render" : lambda a,v,b,c,d,e: render_grouped_list(a,v,b,c,d,e,2),
     "group"  : True
 }
 multisite_layouts["table_3c"] = { 
     "title"  : "table with 3 columns",
-    "render" : lambda a,b,c,d,e: render_grouped_list(a,b,c,d,e,3),
+    "render" : lambda a,v,b,c,d,e: render_grouped_list(a,v,b,c,d,e,3),
     "group"  : True
 }
 multisite_layouts["table_4c"] = { 
     "title"  : "table with 4 columns",
-    "render" : lambda a,b,c,d,e: render_grouped_list(a,b,c,d,e,4),
+    "render" : lambda a,v,b,c,d,e: render_grouped_list(a,v,b,c,d,e,4),
     "group"  : True
 }
 multisite_layouts["boxed_2"] = { 
     "title"  : "Balanced boxes in 2 columns",
-    "render" : lambda a,b,c,d,e: render_grouped_boxes(a,b,c,d,e,2),
+    "render" : lambda a,v,b,c,d,e: render_grouped_boxes(a,v,b,c,d,e,2),
     "group"  : True
 }
 multisite_layouts["boxed_3"] = { 
     "title"  : "Balanced boxes in 3 columns",
-    "render" : lambda a,b,c,d,e: render_grouped_boxes(a,b,c,d,e,3),
+    "render" : lambda a,v,b,c,d,e: render_grouped_boxes(a,v,b,c,d,e,3),
     "group"  : True
 }
 multisite_layouts["boxed_4"] = { 
     "title"  : "Balanced boxes in 4 columns",
-    "render" : lambda a,b,c,d,e: render_grouped_boxes(a,b,c,d,e,4),
+    "render" : lambda a,v,b,c,d,e: render_grouped_boxes(a,v,b,c,d,e,4),
     "group"  : True
 }
 multisite_layouts["boxed_5"] = { 
     "title"  : "Balanced boxes in 5 columns",
-    "render" : lambda a,b,c,d,e: render_grouped_boxes(a,b,c,d,e,5),
+    "render" : lambda a,v,b,c,d,e: render_grouped_boxes(a,v,b,c,d,e,5),
     "group"  : True
 }

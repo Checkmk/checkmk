@@ -2,13 +2,13 @@ import check_mk, livestatus, htmllib, time, os, re, pprint, time
 from lib import *
 from pagefunctions import *
 
-multisite_datasources = {}
-multisite_filters     = {}
-multisite_layouts     = {}
-multisite_painters    = {}
-multisite_sorters     = {}
+multisite_datasources   = {}
+multisite_filters       = {}
+multisite_layouts       = {}
+multisite_painters      = {}
+multisite_sorters       = {}
 multisite_builtin_views = {}
-multisite_views       = {}
+multisite_views         = {}
 
 plugins_path = check_mk.web_dir + "/plugins/views"
 for fn in os.listdir(plugins_path):
@@ -68,24 +68,14 @@ def save_views(us):
     f.write(pprint.pformat(userviews) + "\n")
 	    
 
-# Show one view filled with data
-def page_view(h):
-    global html
-    html = h
-    load_views()
-    try:
-        user, view_name = html.var("view_name").split("/")
-	if user == "" and (html.req.user, view_name) in multisite_views:
-	    user = html.req.user
-	view = multisite_views[(user, view_name)]
-	
-    except:
-	raise MKGeneralException("This view does not exist (user: %s, name: %s)." % (user, view_name))
-
-    show_view(view, True)
-
-    html.footer()
-
+# ----------------------------------------------------------------------
+#   _____     _     _               __         _                   
+#  |_   _|_ _| |__ | | ___    ___  / _| __   _(_) _____      _____ 
+#    | |/ _` | '_ \| |/ _ \  / _ \| |_  \ \ / / |/ _ \ \ /\ / / __|
+#    | | (_| | |_) | |  __/ | (_) |  _|  \ V /| |  __/\ V  V /\__ \
+#    |_|\__,_|_.__/|_|\___|  \___/|_|     \_/ |_|\___| \_/\_/ |___/
+#                                                                  
+# ----------------------------------------------------------------------
 # Show list of all views with buttons for editing
 def page_edit_views(h, msg=None):
     global html
@@ -145,7 +135,7 @@ def page_edit_views(h, msg=None):
 	view = multisite_views[(owner, viewname)]
 	if owner == html.req.user or view["public"]:
 	    if first:
-		html.write("<tr><th>Name</th><th>Title</th><th>Owner</th><th>Public</th><th>hidden</th><th>Datasource</th><th></th></tr>\n")
+		html.write("<tr><th>Name</th><th>Title / Description</th><th>Owner</th><th>Public</th><th>linked</th><th>Datasource</th><th></th></tr>\n")
 		first = False
 	    html.write("<tr><td class=legend>%s</td>" % viewname)
 	    html.write("<td class=content>")
@@ -153,6 +143,9 @@ def page_edit_views(h, msg=None):
 		html.write("<a href=\"view.py?view_name=%s/%s\">%s</a>" % (owner, viewname, view["title"]))
 	    else:
 		html.write(view["title"])
+	    description = view.get("description")
+	    if description:
+		html.write("<br><div class=viewdescription>%s</div>" % description)
 	    html.write("</td>")
 	    if owner == "":
 		ownertxt = "<i>builtin</i>"
@@ -245,6 +238,9 @@ def page_edit_view(h):
     html.write("<tr><td class=legend>Title</td><td class=content>")
     html.text_input("view_title")
     html.write("</td></tr>\n")
+    html.write("<tr><td class=legend>Description</td><td class=content>")
+    html.text_area("view_description", 4)
+    html.write("</td></tr>\n")
 
     html.write("<tr><td class=legend>Configuration</td><td class=content>")
     html.checkbox("public")
@@ -257,18 +253,16 @@ def page_edit_view(h):
     html.write(" show data only on search")
     html.write("</td></tr>\n")
 
-    def show_list(name, title, data):
-	html.write("<tr><td class=legend>%s</td>" % title)
-	html.write("<td class=content>")
-	html.sorted_select(name, [ (k, v["title"]) for k,v in data.items() ])
-	html.write("</td></tr>\n")
-
     # [1] Datasource (not changeable here!)
     html.write("<tr><td class=legend>1. Datasource</td><td>%s</td></tr>" % datasourcename)
     html.hidden_field("datasource", datasourcename)
     
     # [2] Layout
-    show_list("layout", "2. Layout", multisite_layouts)
+    html.write("<tr><td class=legend>2. Layout</td><td class=content>")
+    html.sorted_select("layout", [ (k, v["title"]) for k,v in multisite_layouts.items() ])
+    html.write("with column headers: \n")
+    html.select("column_headers", [ ("off", "off"), ("perpage", "once per page"), ("pergroup", "once per group") ])
+    html.write("</td></tr>\n")
   
     # [3] Filters 
     html.write("<tr><td class=legend>3. Filters</td><td>")
@@ -339,13 +333,15 @@ def page_edit_view(h):
 
 def load_view_into_html_vars(view):
     # view is well formed, not checks neccessary
-    html.set_var("view_title", view["title"])
-    html.set_var("view_name",  view["name"])
-    html.set_var("datasource", view["datasource"])
-    html.set_var("layout",     view["layout"])
-    html.set_var("public",     view["public"] and "on" or "")
-    html.set_var("hidden",     view["hidden"] and "on" or "")
-    html.set_var("mustsearch", view["mustsearch"] and "on" or "")
+    html.set_var("view_title",       view["title"])
+    html.set_var("view_description", view.get("description", ""))
+    html.set_var("view_name",        view["name"])
+    html.set_var("datasource",       view["datasource"])
+    html.set_var("column_headers",   view.get("column_headers", "off"))
+    html.set_var("layout",           view["layout"])
+    html.set_var("public",           view["public"] and "on" or "")
+    html.set_var("hidden",           view["hidden"] and "on" or "")
+    html.set_var("mustsearch",       view["mustsearch"] and "on" or "")
 
     # [3] Filters
     for name, filt in multisite_filters.items():
@@ -409,6 +405,7 @@ def create_view():
     public     = html.var("public", "") != ""
     hidden     = html.var("hidden", "") != ""
     mustsearch = html.var("mustsearch", "") != ""
+    column_headers = html.var("column_headers")
     show_filternames = []
     hide_filternames = []
     hard_filternames = []
@@ -462,11 +459,13 @@ def create_view():
 	"name"            : name,
 	"owner"           : html.req.user,
 	"title"           : title,
+	"description"     : html.var("view_description", ""),
 	"datasource"      : datasourcename,
 	"public"          : public,
 	"hidden"          : hidden,
 	"mustsearch"      : mustsearch,
 	"layout"          : layoutname,
+	"column_headers"  : column_headers,
 	"show_filters"    : show_filternames,
 	"hide_filters"    : hide_filternames,
 	"hard_filters"    : hard_filternames,
@@ -476,6 +475,32 @@ def create_view():
 	"painters"        : painternames
     }
 
+
+# ---------------------------------------------------------------------
+#  __     ___                       _               
+#  \ \   / (_) _____      __ __   _(_) _____      __
+#   \ \ / /| |/ _ \ \ /\ / / \ \ / / |/ _ \ \ /\ / /
+#    \ V / | |  __/\ V  V /   \ V /| |  __/\ V  V / 
+#     \_/  |_|\___| \_/\_/     \_/ |_|\___| \_/\_/  
+#                                                   
+# ---------------------------------------------------------------------
+# Show one view filled with data
+def page_view(h):
+    global html
+    html = h
+    load_views()
+    try:
+        user, view_name = html.var("view_name").split("/")
+	if user == "" and (html.req.user, view_name) in multisite_views:
+	    user = html.req.user
+	view = multisite_views[(user, view_name)]
+	
+    except:
+	raise MKGeneralException("This view does not exist (user: %s, name: %s)." % (user, view_name))
+
+    show_view(view, True)
+
+    html.footer()
 
 # Display view with real data. This is *the* function everying
 # is about.
@@ -550,7 +575,7 @@ def show_view(view, show_heading = False):
     if has_done_actions:
 	html.write("<a href=\"%s\">Back to search results</a>" % html.makeuri([]))
     else:
-        layout["render"]((columns, rows), show_filters, group_columns, group_painters, painters)
+        layout["render"]((columns, rows), view, show_filters, group_columns, group_painters, painters)
 
 def view_title(view):
     extra_titles = [ ]

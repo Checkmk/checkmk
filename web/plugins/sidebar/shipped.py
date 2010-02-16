@@ -130,3 +130,43 @@ if check_mk.is_multisite():
 #	"hidetitle" : True,
 	"render" : render_sitestatus
     }
+
+
+# --------------------------------------------------------------
+#    _____          _   _           _                             _               
+#   |_   _|_ _  ___| |_(_) ___ __ _| |   _____   _____ _ ____   _(_) _____      __
+#     | |/ _` |/ __| __| |/ __/ _` | |  / _ \ \ / / _ \ '__\ \ / / |/ _ \ \ /\ / /
+#     | | (_| | (__| |_| | (_| (_| | | | (_) \ V /  __/ |   \ V /| |  __/\ V  V / 
+#     |_|\__,_|\___|\__|_|\___\__,_|_|  \___/ \_/ \___|_|    \_/ |_|\___| \_/\_/  
+#                                                                                 
+# --------------------------------------------------------------
+import time
+def render_tactical_overview():
+    html.write("HIRNIBALDi: %s" % time.time())
+		    
+sidebar_snapins["tactical_overview"] = {
+    "title" : "Tactical Overview",
+    "refresh" : 10,
+    "render" : render_tactical_overview
+}
+
+def render_performance():
+    data = html.live.query("GET status\nColumns: service_checks_rate host_checks_rate\n")
+    for what, col in [("service", 0), ("host", 1)]:
+	html.write("%schecks/sec: %.2f<br>" % (what, sum([row[col] for row in data])))
+		    
+sidebar_snapins["performance"] = {
+    "title" : "Server performance",
+    "refresh" : 5,
+    "render" : render_performance
+}
+
+import time
+def render_current_time():
+    html.write("<div class=currenttime>%s</div>" % time.strftime("%H:%M:%S"))
+
+sidebar_snapins["time"] = {
+    "title" : "Current time",
+    "refresh" : 1,
+    "render" : render_current_time
+}

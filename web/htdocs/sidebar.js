@@ -58,3 +58,18 @@ function switch_site(baseuri, switchvar) {
     parent.frames[1].location.reload(); /* reload main frame */
 }
 
+function sidebar_scheduler() {
+    var timestamp = Date.parse(new Date()) / 1000;
+    var newcontent = "";
+    for (var i in refresh_snapins) { 
+	name    = refresh_snapins[i][0];
+	refresh = refresh_snapins[i][1];
+	if (timestamp % refresh == 0) {
+	    newcontent = getFile(url + "/sidebar_snapin.py?name=" + name);
+	    var oSnapin = document.getElementById("snapin_" + name);
+	    oSnapin.innerHTML = newcontent;
+	    oSnapin = null;
+	}
+    }
+    setTimeout(function(){sidebar_scheduler();}, 1000);
+}

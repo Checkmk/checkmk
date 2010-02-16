@@ -212,6 +212,7 @@ def handler(req):
 			 "sidebar"           : sidebar.page_sidebar, 
 			 "sidebar_config"    : sidebar.page_configure, 
 			 "switch_site"       : ajax_switch_site,
+			 "sidebar_snapin"    : sidebar.ajax_snapin,
 			 "sidebar_openclose" : sidebar.ajax_openclose,
 	}
 

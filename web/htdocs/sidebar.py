@@ -60,11 +60,19 @@ def page_sidebar(h):
 		"</tr></table></div>\n" % \
 	    check_mk.checkmk_web_uri)
     config = load_user_config()
+    refresh_snapins = []
     for name, state in config:
 	if state in [ "open", "closed" ]:
 	   render_snapin(name, state)
+	   refresh_time = sidebar_snapins.get(name).get("refresh", 0)
+	   if refresh_time > 0:
+	       refresh_snapins.append([name, refresh_time])
     html.write("<div class=footnote><a target=\"main\" href=\"%s/sidebar_config.py\">Configure sidebar</a></div>\n" % \
 	    check_mk.checkmk_web_uri)
+    html.write("<script language=\"javascript\">\n")
+    html.write("var refresh_snapins = %r;\n" % refresh_snapins) 
+    html.write("sidebar_scheduler();\n")
+    html.write("</script>\n")
 
 def render_snapin(name, state):
     snapin = sidebar_snapins.get(name)
@@ -82,7 +90,7 @@ def render_snapin(name, state):
 	url = check_mk.checkmk_web_uri + "/sidebar_openclose.py?name=%s&state=" % name
 	html.write("<h2 onclick=\"toggle_sidebar_snapin(this,'%s')\" onmouseover=\"this.style.cursor='pointer'\" "
 		   "onmouseout=\"this.style.cursor='auto'\">%s</h2>\n" % (url, snapin["title"]))
-    html.write("<div class=content%s>\n" % style)
+    html.write("<div id=\"snapin_%s\" class=content%s>\n" % (name, style))
     snapin["render"]()
     html.write("</div></div>\n")
 
@@ -97,6 +105,13 @@ def ajax_openclose(h):
 	    usage = html.var("state")	
 	new_config.append((name, usage))
     save_user_config(new_config)
+
+def ajax_snapin(h):
+    global html
+    html = h
+    snapin = sidebar_snapins.get(html.var("name"))
+    if snapin:
+        snapin["render"]()
 
 
 def page_configure(h):

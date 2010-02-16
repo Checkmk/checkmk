@@ -136,9 +136,13 @@ def check_logwatch(item, params, info):
     except Exception, e:
         raise MKGeneralException("User %s cannot create logwatch directory: %s" % \
                                  (username(), e) )
-            
+
     logfile = logdir + "/" + item.replace("/", "\\")
-   
+
+    # Logfile (=item) section not found and no local file found
+    if found == False and not os.path.exists(logfile):
+        return(3, "UNKNOWN - log not present anymore")
+
     if len(loglines) > 0 and loglines[0] in [ 'OK', 'WARNING', 'CRITICAL' ]:
         # --------------------------------------------------------------------
         # ALTE VERSION DES AGENTEN:
@@ -147,7 +151,7 @@ def check_logwatch(item, params, info):
             logarch = file(logfile, "a+")
             logarch.write(time.strftime("<<<%Y-%m-%d %H:%M:%S>>>\n"))
             logarch.write("\n".join(loglines) + "\n")
-        
+
         if not os.path.exists(logfile) and loglines[0] == "OK":
             return (0, "OK - no old or new error messages")
         elif  os.path.exists(logfile) and loglines[0] == "OK":
@@ -172,7 +176,7 @@ def check_logwatch(item, params, info):
             patterns = params # patterns already precompiled
         else:
             patterns = logwatch_precompile(g_hostname, item, None)
-        
+
         if len(loglines) > 0:
             worst = 0
             newloglines = []
@@ -187,7 +191,7 @@ def check_logwatch(item, params, info):
                     newlevel = logwatch_reclassify(patterns, text)
                     if newlevel != None:
                         level = newlevel
-                    
+
                 if   level == 'W': worst = max(worst, 1)
                 elif level == 'C': worst = max(worst, 2)
                 newloglines.append(level + ' ' + text)
@@ -231,8 +235,8 @@ def check_logwatch(item, params, info):
                 return (worst, state + " - some old and %d new messages present!" % len(newloglines))
             else:
                 return (worst, state + " - error messages present!")
-        
-    
+
+
 check_info['logwatch'] = (
     check_logwatch,
     "LOG %s",

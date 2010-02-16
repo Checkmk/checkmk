@@ -22,6 +22,8 @@
         quality of CISCO Aironet access points
       * aironet_errors: New check for monitoring CRC errors on
         CISCO Aironet access points
+      * logwatch: When Agent does not send a log anymore and no local logwatch
+                  file present the state will be UNKNOWN now (Was OK before).
 
 
       MK Livestatus:

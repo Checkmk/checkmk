@@ -80,7 +80,7 @@ declare_filter(FilterText("hostregex",    "Hostname",             "hosts",    "n
 declare_filter(FilterText("host",    "Hostname",             "hosts",    "name",          "host",    "="),
 			  "Exact match. Use this for linking from other views.")
 declare_filter(FilterText("service", "Service",              "services", "description",   "service", "~~"))
-declare_filter(FilterText("output",  "Service check output", "services", "plugin_output", "service", "~~"))
+declare_filter(FilterText("output",  "Service check output", "services", "plugin_output", "service_output", "~~"))
 
 
 class FilterLimit(Filter):

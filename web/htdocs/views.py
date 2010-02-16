@@ -184,7 +184,14 @@ def select_view(varname, only_with_hidden = False):
 		choices.append(("%s/%s" % (user, name), view["title"]))
     html.sorted_select(varname, choices, "")
 
-# Edit one view
+# -------------------------------------------------------------------------	
+#   _____    _ _ _    __     ___               
+#  | ____|__| (_) |_  \ \   / (_) _____      __
+#  |  _| / _` | | __|  \ \ / /| |/ _ \ \ /\ / /
+#  | |__| (_| | | |_    \ V / | |  __/\ V  V / 
+#  |_____\__,_|_|\__|    \_/  |_|\___| \_/\_/  
+#  Edit one view
+# -------------------------------------------------------------------------	
 def page_edit_view(h):
     global html
     html = h
@@ -211,6 +218,11 @@ def page_edit_view(h):
 	    if html.var("save"):
 		load_views()
 		multisite_views[(html.req.user, view["name"])] = view
+		oldname = html.var("old_name")
+                # Handle renaming of views -> delete old entry
+		if oldname and oldname != view["name"] and (html.req.user, oldname) in multisite_views:
+		    del multisite_views[(html.req.user, oldname)]
+		html.write("Name: %s Old Name; %s\n" % (view["name"], html.var("old_name")))
 		save_views(html.req.user)
 		return page_edit_views(h, "Your view has been saved.")
 
@@ -222,6 +234,7 @@ def page_edit_view(h):
     html.write("<p>Edit the properties of the view or go <a href=\"edit_views.py\">back to this list of all views</a>.<br />")
     html.write("<a href=\"view.py?view_name=%s/%s\">Visit view (does not save)</a></p>" % (html.req.user, viewname))
     html.begin_form("view")
+    html.hidden_field("old_name", viewname) # safe old name in case user changes it
     html.write("<table class=view>\n")
 
     html.write("<tr><td class=legend>Shortname for linking</td><td class=content>")

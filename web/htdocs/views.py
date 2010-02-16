@@ -279,7 +279,12 @@ def page_edit_view(h):
 	    html.write("<br><div class=filtercomment>%s</div>" % filt.comment)
 	html.write("</td>")
 	html.write("<td class=usage>")
-	html.sorted_select("filter_%s" % fname, [("off", "Don't use"), ("show", "Show to user"), ("hide", "Use for linking"), ("hard", "Hardcode")], "", "filter_activation")
+	html.sorted_select("filter_%s" % fname, 
+		[("off", "Don't use"), 
+		("show", "Show to user"), 
+		("hide", "Use for linking"), 
+		("hard", "Hardcode")], 
+		"", "filter_activation")
 	html.write("</td><td class=widget>")
 	filt.display()
 	html.write("</td>")
@@ -331,6 +336,7 @@ def page_edit_view(h):
 
     html.footer()
 
+# Called by edit function in order to prefill HTML form
 def load_view_into_html_vars(view):
     # view is well formed, not checks neccessary
     html.set_var("view_title",       view["title"])
@@ -353,7 +359,8 @@ def load_view_into_html_vars(view):
 	    html.set_var("filter_%s" % name, "hide")
 
     for varname, value in view["hard_filtervars"]:
-	html.set_var(varname, value)
+	if not html.has_var(varname):
+	    html.set_var(varname, value)
 
     # [4] Sorting
     n = 1
@@ -419,6 +426,7 @@ def create_view():
 	    hide_filternames.append(fname)
 	elif usage == "hard":
 	    hard_filternames.append(fname)
+	if usage in [ "show", "hard" ]:
 	    for varname in filt.htmlvars:
 		hard_filtervars.append((varname, html.var(varname, "")))
 
@@ -517,7 +525,8 @@ def show_view(view, show_heading = False):
     hide_filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
     hard_filters = [ multisite_filters[fn] for fn in view["hard_filters"] ]
     for varname, value in view["hard_filtervars"]:
-	html.set_var(varname, value)
+	if not html.var("filled_in"): # shown filters are set, if form is fresh
+	    html.set_var(varname, value)
 
     filterheaders = ""
     only_sites = None

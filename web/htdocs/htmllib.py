@@ -113,6 +113,7 @@ class html:
         return "%d days" % days
 
     def begin_form(self, name, action = None):
+	self.form_vars = []
 	if action == None:
 	    action = self.req.myfile + ".py"
         self.current_form = name
@@ -144,9 +145,10 @@ class html:
             for var in varlist:
                 value = self.req.vars.get(var, "")
                 self.hidden_field(var, value)
-        else: # add *all* get variables
+        else: # add *all* get variables, that are not set by any input!
             for var, value in self.req.vars.items():
-		if var[0] != "_" or add_action_vars:
+		if var not in self.form_vars and \
+		    (var[0] != "_" or add_action_vars):
 		    self.hidden_field(var, value)
 
     def add_global_vars(self, varnames):
@@ -185,6 +187,7 @@ class html:
     def text_area(self, varname, rows):
         value = self.req.vars.get(varname, "")
         self.write("<textarea name=\"%s\">%s</textarea>\n" % (varname, value))
+	self.form_vars.append(varname)
 
     def sorted_select(self, varname, options, deflt="", onchange=None):
         # Sort according to display texts, not keys
@@ -201,11 +204,13 @@ class html:
             sel = value == current and " selected" or ""
             self.write("<option value=\"%s\"%s>%s</option>\n" % (value, sel, text))
         self.write("</select>\n")
+	self.form_vars.append(varname)
 
-    def radiobutton(self, name, value, checked, text):
+    def radiobutton(self, varname, value, checked, text):
 	checked_text = checked and " checked" or ""
 	self.write("<input type=radio name=%s value=\"%s\"%s> %s &nbsp; \n" %
-                      (name, value, checked_text, text))
+                      (varname, value, checked_text, text))
+	self.form_vars.append(varname)
 
     def checkbox(self, varname, deflt=""):
 	value = self.req.vars.get(varname, deflt)
@@ -214,6 +219,7 @@ class html:
 	else:
 	    checked = ""
 	self.write("<input type=checkbox name=%s%s>" % (varname, checked))
+	self.form_vars.append(varname)
 
     def datetime_input(self, varname, default_value):
         try:
@@ -225,6 +231,8 @@ class html:
         self.date_input(varname + "_date", br.tm_year, br.tm_mon, br.tm_mday)
         self.write(" ")
         self.time_input(varname + "_time", br.tm_hour, br.tm_min)
+	self.form_vars.append(varname + "_date")
+	self.form_vars.append(varname + "_time")
 
     def time_input(self, varname, hours, mins):
         error = self.user_errors.get(varname)
@@ -234,6 +242,7 @@ class html:
                    (varname, hours, mins))
         if error:
             self.write("</x>")
+	self.form_vars.append(varname)
 
     def date_input(self, varname, year, month, day):
         error = self.user_errors.get(varname)
@@ -243,6 +252,7 @@ class html:
                    (varname, year, month, day))
         if error:
             self.write("</x>")
+	self.form_vars.append(varname)
 
     def get_datetime_input(self, varname):
         t = self.var(varname + "_time")

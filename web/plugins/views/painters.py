@@ -145,7 +145,7 @@ multisite_painters["service_description"] = {
 
 multisite_painters["svc_state_age"] = {
     "title" : "The age of the current service state",
-    "short" : "state age",
+    "short" : "age",
     "table" : "services",
     "columns" : [ "service_has_been_checked", "service_last_state_change" ],
     "paint" : lambda row: paint_age(row["service_last_state_change"], row["service_has_been_checked"] == 1)

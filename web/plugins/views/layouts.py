@@ -32,7 +32,6 @@ def paint_header(p):
 def show_filter_form(filters):
     if len(filters) > 0 and not html.do_actions():
 	html.begin_form("filter")
-	html.hidden_fields()
 	html.write("<table class=form id=filter>\n")
         # sort filters according to title
 	s = [(f.title, f) for f in filters]
@@ -46,6 +45,7 @@ def show_filter_form(filters):
 	html.button("search", "Search", "submit")
 	html.write("</td></tr>\n")
 	html.write("</table>\n")
+	html.hidden_fields()
 	html.end_form()
 
 # -------------------------------------------------------------------------

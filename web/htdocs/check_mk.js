@@ -5,11 +5,11 @@ function filter_activation(oid)
     var oTd = selectobject.parentNode.parentNode.childNodes[2];
     var pTd = selectobject.parentNode;
     pTd.setAttribute("className", "usage" + usage);
-    pTd.setAttribute("class", "usage" + usage); 
-    oTd.setAttribute("class", "widget" + usage);
+    pTd.setAttribute("class",     "usage" + usage); 
+    oTd.setAttribute("class",     "widget" + usage);
     oTd.setAttribute("className", "widget" + usage);
 
-    var disabled = usage != "hard";
+    var disabled = usage != "hard" && usage != "show";
     for (var i in oTd.childNodes) {
 	oNode = oTd.childNodes[i];
 	if (oNode.nodeName == "INPUT" || oNode.nodeName == "SELECT") {

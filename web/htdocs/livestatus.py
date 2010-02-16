@@ -205,6 +205,18 @@ class BaseConnection:
 	    self.socket_state = DOWN
 	    raise MKLivestatusSocketError(str(e))
 
+    def do_command(self, command):
+	if self.socket_state != UP:
+	    self.connect()
+	if not command.endswith("\n"):
+	    command += "\n"
+	try:
+	    self.socket.send("COMMAND " + command)
+	except IOError, e:
+	    self.socket_state = DOWN
+	    raise MKLivestatusSocketError(str(e))
+
+
 class SingleSiteConnection(BaseConnection, Helpers):
     def __init__(self, socketurl):
 	BaseConnection.__init__(self, socketurl)
@@ -224,6 +236,9 @@ class SingleSiteConnection(BaseConnection, Helpers):
 	    return [ [None] + line for line in data ]
 	else:
 	    return data
+
+    def command(self, command, site = None):
+	self.do_command(command)
 
     # Set user to be used in certain authorization domain
     def set_auth_user(self, domain, user):
@@ -312,6 +327,15 @@ class MultiSiteConnection(Helpers):
 		}
 	self.connections = stillalive
 	return result
+
+    def command(self, command, sitename = "local"):
+	if sitename in self.deadsites:
+	    raise MKLivestatusSocketError("Connection to site %s is dead: %s" % \
+		    (sitename, self.deadsites[sitename]["exception"]))
+        conn = [t[2] for t in self.connections if t[0] == sitename]
+	if len(conn) == 0:
+	    raise MKLivestatusConfigError("Cannot send command to unconfigured site '%s'" % sitename)
+	conn[0].do_command(command)
 
     # Return connection to localhost (UNIX), if available
     def local_connection(self):

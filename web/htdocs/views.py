@@ -803,17 +803,19 @@ def show_action_form(tablename):
     html.write("</td></tr>")
     html.write("</table></form>\n")
 
-def nagios_action_command(tablename, service):
-    host = service["host_name"]
-    descr = service.get("service_description") # not available on hosts
+def nagios_action_command(tablename, dataset):
+    host = dataset["host_name"]
+    descr = dataset.get("service_description") # not available on hosts
     down_from = time.time()
     down_to = None
     if tablename == "hosts":
 	spec = host
 	cmdtag = "HOST"
+	prefix = "host_"
     elif tablename == "services":
 	spec = "%s;%s" % (host, descr)
 	cmdtag = "SVC"
+	prefix = "service_"
     else:
 	raise MKInternalError("Sorry, no actions possible on table %s" % tablename)
 
@@ -891,12 +893,12 @@ def nagios_action_command(tablename, service):
 
     elif html.var("_down_remove"):
         downtime_ids = []
-	for id in service["service_downtimes"]:
+	for id in dataset[prefix + "downtimes"]:
 	   if id != "":
 	       downtime_ids.append(int(id))
         commands = []
         for dtid in downtime_ids:
-            commands.append("[%d] DEL_" + cmdtag + "_DOWNTIME;%d\n" % (int(time.time()), dtid))
+            commands.append("[%d] DEL_%s_DOWNTIME;%d\n" % (int(time.time()), cmdtag, dtid))
         title = "<b>remove all scheduled downtimes</b> of "
         return title, commands
 
@@ -921,7 +923,6 @@ def do_actions(tablename, rows):
 	     "in <tt>main.mk</tt>")
        return
     count = 0
-    pipe = file(html.req.defaults["nagios_command_pipe_path"], "w")
     command = None
     for row in rows:
         title, nagios_commands = nagios_action_command(tablename, row)
@@ -929,7 +930,7 @@ def do_actions(tablename, rows):
         if not confirms:
 	    return False
         for command in nagios_commands:
-            pipe.write(command)
+            html.live.command(command, row["site"])
             count += 1
     if command:
 	html.message("Successfully sent %d commands to Nagios. The last one was: <pre>%s</pre>" % (count, command))

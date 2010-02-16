@@ -116,8 +116,10 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
 	answerGetRequest(input, output, lstrip((char *)line + 4));
     else if (!strcmp(line, "GET"))
 	answerGetRequest(input, output, ""); // only to get error message
-    else if (!strncmp(line, "COMMAND ", 8))
+    else if (!strncmp(line, "COMMAND ", 8)) {
 	answerCommandRequest(lstrip((char *)line + 8));
+	output->setDoKeepalive(true);
+    }
     else if (!strncmp(line, "LOGROTATE", 9)) {
 	logger(LG_INFO, "Forcing logfile rotation");
 	rotate_log_file(time(0));

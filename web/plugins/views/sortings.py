@@ -67,8 +67,9 @@ def declare_simple_sorter(name, title, table, column, func):
     }
 
 
-#                      name         title                   table       column                   sortfunction
-declare_simple_sorter("svcdescr",  "Service description",   "services", "service_description",   cmp_simple_string)
-declare_simple_sorter("svcoutput", "Service plugin output", "services", "service_plugin_output", cmp_simple_string)
-declare_simple_sorter("site",      "Site",                   None,      "site",                  cmp_simple_string)
+#                      name         title                   table       column                       sortfunction
+declare_simple_sorter("svcdescr",  "Service description",   "services", "service_description",       cmp_simple_string)
+declare_simple_sorter("svcoutput", "Service plugin output", "services", "service_plugin_output",     cmp_simple_string)
+declare_simple_sorter("site",      "Site",                   None,      "site",                      cmp_simple_string)
+declare_simple_sorter("stateage",  "Service state age",     "services", "service_last_state_change", cmp_simple_number)
 

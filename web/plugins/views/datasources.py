@@ -14,7 +14,8 @@ multisite_datasources["services"] = {
     "title"   : "All services",
     "table"   : "services",
     "columns" : ["description", "plugin_output", "state", "has_been_checked", 
-                 "host_name", "host_state", "host_has_been_checked", "last_state_change", "downtimes" ],
+                 "host_name", "host_state", "host_has_been_checked", 
+		 "last_state_change", "downtimes", "perf_data" ],
 }
 
 

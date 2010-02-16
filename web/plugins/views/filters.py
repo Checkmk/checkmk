@@ -75,11 +75,19 @@ class FilterText(Filter):
 	htmlvar = self.htmlvars[0]
 	return html.var(self.htmlvars[0])
 
-declare_filter(FilterText("hostregex",    "Hostname",             "hosts",    "name",          "hostregex",    "~~"),
-			  "Search field with regular expressions, also allows partial matches")
+#                          filter          title              table       column           htmlvar
+declare_filter(FilterText("hostregex",    "Hostname",        "hosts",    "name",          "host",    "~~"),
+			  "Search field allowing regular expressions and partial matches")
+
 declare_filter(FilterText("host",    "Hostname",             "hosts",    "name",          "host",    "="),
-			  "Exact match. Use this for linking from other views.")
-declare_filter(FilterText("service", "Service",              "services", "description",   "service", "~~"))
+			  "Exact match, used for linking")
+
+declare_filter(FilterText("serviceregex", "Service",         "services", "description",   "service", "~~"),
+			  "Search field allowing regular expressions and partial matches")
+
+declare_filter(FilterText("service", "Service",              "services", "description",   "service", "="),
+		          "Exact match, used for linking")
+
 declare_filter(FilterText("output",  "Service check output", "services", "plugin_output", "service_output", "~~"))
 
 
@@ -310,15 +318,22 @@ declare_filter(FilterNagiosExpression("services", "in_downtime", "Host or Servic
 declare_filter(FilterServiceState())
 
 class FilterSite(Filter):
-    def __init__(self):
-	Filter.__init__(self, "site", "Site", None, ["site"])
+    def __init__(self, name, enforce):
+	Filter.__init__(self, name, "Site", None, ["site"])
+	self.enforce = enforce
 
     def display(self):
-	site_selector(html, "site")
+	site_selector(html, "site", self.enforce)
 
     def filter(self, tablename):
 	if check_mk.is_multisite():
-	    return "Sites: %s\n" % html.var("site", "")
+	    site = html.var("site")
+	    if site:
+		return "Sites: %s\n" % html.var("site", "")
+	    elif not self.enforce:
+		return ""
+	    else:
+		return "Sites:\n" # no site at all
 	else:
 	    return ""
 
@@ -331,5 +346,5 @@ class FilterSite(Filter):
     def variable_settings(self, row):
 	return [("site", row["site"])]
 	
-
-declare_filter(FilterSite())
+declare_filter(FilterSite("site",    True), "Selection of site is enforced, use this filter for joining")
+declare_filter(FilterSite("siteopt", False), "Optional selection of a site")

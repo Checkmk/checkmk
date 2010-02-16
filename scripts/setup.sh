@@ -475,6 +475,7 @@ web_dir                     = '$web_dir'
 checkmk_web_uri             = '$checkmk_web_uri'
 livestatus_unix_socket      = '$livesock'
 livebackendsdir             = '$livebackendsdir'
+pnp_prefix                  = '$pnp_prefix'
 EOF
 }
 

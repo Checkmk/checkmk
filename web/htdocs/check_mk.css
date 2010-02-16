@@ -3,7 +3,7 @@ body.page {
   background-image: url("background.jpg");
   background-repeat: repeat;
   background-position: center;
-  margin: 0px 0px 0px 8px;
+  margin: 0px 8px 0px 8px;
   padding: 0px;
   font-family: arial, helvetica, sans-serif;
   font-size: 85%;
@@ -219,6 +219,15 @@ td.host a:hover {
   text-decoration: underline;
 }
 
+/*
+  ____       _       _                
+ |  _ \ __ _(_)_ __ | |_ ___ _ __ ___ 
+ | |_) / _` | | '_ \| __/ _ \ '__/ __|
+ |  __/ (_| | | | | | ||  __/ |  \__ \
+ |_|   \__,_|_|_| |_|\__\___|_|  |___/
+
+*/                                    
+
 table.services td.age { 
   text-align: right;
   color: #666;
@@ -229,6 +238,23 @@ table.services td.agerecent {
   text-align: right;
   font-weight: bold;
 }
+
+/* state in group header */
+.groupheader td.state0, 
+.groupheader td.state1, 
+.groupheader td.state2, 
+.groupheader td.state3, 
+.groupheader td.state4, 
+.groupheader td.statep, 
+.groupheader td.hstate0, 
+.groupheader td.hstate1, 
+.groupheader td.hstate2, 
+.groupheader td.hstatep, 
+.groupheader td.statex {
+  width: 50px;
+  padding: 2px 5px;
+  border: 1px solid white;
+} 
 
 td.state0, td.state1, td.state2, td.state3, td.state4, td.statep, td.hstate0, td.hstate1, td.hstate2, td.hstatep, td.statex { 
   text-align: center;
@@ -265,6 +291,28 @@ td.statep, td.hstatep {
   color: #fff;
 }
 
+/*
+ _                            _       
+| |    __ _ _   _  ___  _   _| |_ ___ 
+| |   / _` | | | |/ _ \| | | | __/ __|
+| |__| (_| | |_| | (_) | |_| | |_\__ \
+|_____\__,_|\__, |\___/ \__,_|\__|___/
+            |___/                     
+*/
+
+td.groupheader {
+    margin: 0px;
+    padding: 0px;
+}
+td.groupheader table {
+    padding: 0px;
+    margin: 0px;
+    margin-bottom: 5px;
+    border: 0px;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
 /* boxed layout */
 table.boxlayout {
 }
@@ -278,6 +326,14 @@ table.boxlayout td.boxcolumn {
   background-color: #f84;
 }
 
+/* table layout */
+table.services td.tablegap {
+  border: none;
+  background-color: #97a8ab;
+  background-image: url("background.jpg");
+  background-repeat: repeat;
+  background-position: center;
+}
 
 /* forms in general */
 
@@ -872,6 +928,11 @@ div#check_mk_sidebar table.sitestate td a {
     font-size: 7pt;
     margin-right: 3px;
     display: block;
+}
+div#check_mk_sidebar table.sitestate td.left a {
+    text-align: left;
+    font-size: 8pt;
+    font-weight: normal;
 }
 
 div#check_mk_sidebar table.sitestate td.left {

@@ -115,9 +115,9 @@ def connect_to_livestatus(html):
 	for sitename, site in check_mk.sites().items():
 	    siteconf = html.user_siteconf.get(sitename, {})
 	    if siteconf.get("disabled", False):
-		html.site_status[sitename] = { "state" : "disabled" } 
+		html.site_status[sitename] = { "state" : "disabled", "site" : site } 
 	    else:
-		html.site_status[sitename] = { "state" : "offline" }
+		html.site_status[sitename] = { "state" : "offline", "site" : site }
 		enabled_sites[sitename] = site
 		
 	# Now connect to enabled sites with keepalive-connection

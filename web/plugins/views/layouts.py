@@ -9,7 +9,7 @@ def paint(p, row):
     # Create contextlink to other view
     if linkview:
 	user, viewname = linkview
-	view = multisite_views.get(linkview)
+	view = multisite_views.get(linkview) # ACHTUNG: BUG: HIER OVERRIDE BERUECKSICHTIGEN
 	if view:
 	    filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
 	    filtervars = []
@@ -155,19 +155,19 @@ def render_grouped_list(data, filters, group_columns, group_painters, painters, 
 	    this_group = [ row[c] for c in group_columns ]
 	    if this_group != last_group:
 		if column != 1: # not a the beginning of a new line
-                    html.write("<td></td>" * (len(painters) * (num_columns + 1 - column)))
 		    html.write("</tr>\n")
 		    column = 1
 
 		# paint group header
 		html.write("<tr class=groupheader>")
-		html.write("<td colspan=%d><table><tr>" % len(painters))
+		html.write("<td class=groupheader colspan=%d><table><tr>" % (len(painters) * num_columns + (num_columns - 1)))
+		first = True
 		for p in group_painters:
 		    if first:
 			first = False
 		    else:
 			html.write("<td>,</td>")
-		    paint(p, rows[0])
+		    paint(p, row)
 		html.write("</tr></table></td></tr>\n")
 		trclass = "even"
 		last_group = this_group
@@ -192,13 +192,13 @@ def render_grouped_list(data, filters, group_columns, group_painters, painters, 
 		trclass = "odd"
 	    html.write("<tr class=%s%d>" % (trclass, state))
 
+	else: # Insert spacing
+	    html.write("<td class=tablegap></td>")
+
         for p in painters:
 	    paint(p, row)
 	column += 1
     
-    # complete half line, if any
-    html.write("<td></td>" * (len(painters) * (num_columns + 1 - column)))
-
     html.write("</tr>\n")
     html.write("<table>\n")
 

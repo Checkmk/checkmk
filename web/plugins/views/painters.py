@@ -188,3 +188,39 @@ multisite_painters["num_services_pending"] = {
     "paint"   : lambda row: paint_svc_count("p", row["host_num_services_pending"])
 }
 
+# Intelligent Links to PNP4Nagios 0.6.X
+
+def paint_pnp_service_link(row):
+    # On our local site, we look for an existing XML file or PNP.
+    sitename = row["site"]
+    site = html.site_status[sitename]["site"]
+    host = row["host_name"]
+    svc = row["service_description"]
+    url = site["pnp_prefix"] + ("?host=%s&srv=%s" % (htmllib.urlencode(host), htmllib.urlencode(svc)))
+    a = "<a href=\"%s\">PNP</a>" % url
+
+    if check_mk.site_is_local(sitename):
+	# Where is our RRD?
+	basedir = check_mk.rrd_path + "/" + host
+	xmlpath = basedir + "/" + svc.replace("/", "_").replace(" ", "_") + ".xml"
+	if os.path.exists(xmlpath):
+	    return "", a
+	else:
+	    return "", ""
+    
+    # Darn. Remote site. We cannot check for a file but rather use
+    # (Lars' idea) the perfdata field
+    elif row["service_perf_data"]:
+	return "", a
+    else:
+	return "", ""
+        
+
+multisite_painters["link_to_pnp_service"] = {
+    "title"   : "Link to PNP4Nagios",
+    "table"   : "services",
+    "columns" : [ "site", "host_name", "service_description", "service_perf_data"],
+    "paint"   : paint_pnp_service_link,
+}
+
+

@@ -69,7 +69,14 @@ def site(name):
 	s["nagios_url"] = nagios_url
     if "nagios_cgi_url" not in s:
 	s["nagios_cgi_url"] = nagios_cgi_url
+    if "pnp_prefix" not in s:
+	s["pnp_prefix"] = pnp_prefix
     return s 
+
+def site_is_local(name):
+    s = multiadmin_sites.get(name, {})
+    sock = s.get("socket")
+    return not sock or sock.startswith("unix:")
 
 def is_multisite():
     return len(multiadmin_sites) > 1

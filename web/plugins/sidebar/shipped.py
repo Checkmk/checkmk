@@ -2,6 +2,14 @@
 
 import views
 
+# --------------------------------------------------------------
+#       _       _           _       _ _       _        
+#      / \   __| |_ __ ___ (_)_ __ | (_)_ __ | | _____ 
+#     / _ \ / _` | '_ ` _ \| | '_ \| | | '_ \| |/ / __|
+#    / ___ \ (_| | | | | | | | | | | | | | | |   <\__ \
+#   /_/   \_\__,_|_| |_| |_|_|_| |_|_|_|_| |_|_|\_\___/
+#                                                      
+# --------------------------------------------------------------
 def render_adminlinks():
     bulletlink("Edit views",    "edit_views.py")
     bulletlink("Multiadmin",    "filter.py")
@@ -13,18 +21,42 @@ sidebar_snapins["admin"] = {
     "render" : render_adminlinks
 }
 
+# --------------------------------------------------------------
+#   __     ___                   
+#   \ \   / (_) _____      _____ 
+#    \ \ / /| |/ _ \ \ /\ / / __|
+#     \ V / | |  __/\ V  V /\__ \
+#      \_/  |_|\___| \_/\_/ |___/
+#                                
+# --------------------------------------------------------------
 def render_views():
     views.load_views(override_builtins = html.req.user)
     authuser = html.req.user
-    for (user, name), view in views.multisite_views.items():
+    s = [ (view["title"], user, name, view) for (user, name), view in views.multisite_views.items() ]
+    s.sort()
+    for title, user, name, view in s:
 	if not view["hidden"] and (user == authuser or view["public"]):
-	    bulletlink(view["title"], "view.py?view_name=%s/%s" % (user, name))
+	    bulletlink(title, "view.py?view_name=%s/%s" % (user, name))
 
 sidebar_snapins["views"] = {
     "title" : "Views",
     "render" : render_views
 }
 
+# --------------------------------------------------------------
+#    ____                  _                     __
+#   / ___|  ___ _ ____   _(_) ___ ___           / /
+#   \___ \ / _ \ '__\ \ / / |/ __/ _ \_____    / / 
+#    ___) |  __/ |   \ V /| | (_|  __/_____|  / /  
+#   |____/ \___|_|    \_/ |_|\___\___|       /_/   
+#                                                  
+#   _   _           _                                  
+#  | | | | ___  ___| |_ __ _ _ __ ___  _   _ _ __  ___ 
+#  | |_| |/ _ \/ __| __/ _` | '__/ _ \| | | | '_ \/ __|
+#  |  _  | (_) \__ \ || (_| | | | (_) | |_| | |_) \__ \
+#  |_| |_|\___/|___/\__\__, |_|  \___/ \__,_| .__/|___/
+#                      |___/                |_|        
+# --------------------------------------------------------------
 def render_groups(what):
     data = html.live.query("GET %sgroups\nColumns: name alias\n" % what)
     name_to_alias = dict(data)
@@ -43,12 +75,22 @@ sidebar_snapins["servicegroups"] = {
     "render" : lambda: render_groups("service")
 }
 
+# --------------------------------------------------------------
+#    _   _           _       
+#   | | | | ___  ___| |_ ___ 
+#   | |_| |/ _ \/ __| __/ __|
+#   |  _  | (_) \__ \ |_\__ \
+#   |_| |_|\___/|___/\__|___/
+#                            
+# --------------------------------------------------------------
 def render_hosts():
-    hosts = html.live.query_column_unique("GET hosts\nColumns: name\n")
+    html.live.set_prepend_site(True)
+    hosts = html.live.query("GET hosts\nColumns: name\n")
+    html.live.set_prepend_site(False)
     hosts.sort()
     target = views.get_context_link(html.req.user, "host")
-    for host in hosts:
-	bulletlink(host, target + "&host=" + htmllib.urlencode(host))
+    for site, host in hosts:
+	bulletlink(host, target + ("&host=%s&site=%s" % (htmllib.urlencode(host), htmllib.urlencode(site))))
 
 sidebar_snapins["hosts"] = {
     "title" : "All hosts",
@@ -56,12 +98,20 @@ sidebar_snapins["hosts"] = {
 }
     
 
+# --------------------------------------------------------------
+#    ____  _ _            _        _             
+#   / ___|(_) |_ ___  ___| |_ __ _| |_ _   _ ___ 
+#   \___ \| | __/ _ \/ __| __/ _` | __| | | / __|
+#    ___) | | ||  __/\__ \ || (_| | |_| |_| \__ \
+#   |____/|_|\__\___||___/\__\__,_|\__|\__,_|___/
+#                                                
+# --------------------------------------------------------------
 def render_sitestatus():
     if check_mk.is_multisite():
 	html.write("<table cellspacing=0 class=sitestate>")
 	for sitename in check_mk.sites():
 	    site = check_mk.site(sitename)
-	    html.write("<tr><td class=left>%s</td>" % site["alias"])
+	    html.write("<tr><td class=left>%s</td>" % link(site["alias"], "view.py?view_name=/sitehosts&site=%s" % sitename))
 	    state = html.site_status[sitename]["state"]
 	    if state == "disabled":
 		switch = "on"

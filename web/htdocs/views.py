@@ -83,8 +83,6 @@ def page_view(h):
 	raise MKGeneralException("This view does not exist (user: %s, name: %s)." % (user, view_name))
 
     show_view(view, True)
-    if view["owner"] == html.req.user:
-	html.write("<a href=\"edit_view.py?load_view=%s\">Edit this view</a>" % view["name"])
 
     html.footer()
 
@@ -156,7 +154,11 @@ def page_edit_views(h, msg=None):
 	    else:
 		html.write(view["title"])
 	    html.write("</td>")
-	    html.write("<td class=content>%s</td>" % owner)
+	    if owner == "":
+		ownertxt = "<i>builtin</i>"
+	    else:
+		ownertxt = owner
+	    html.write("<td class=content>%s</td>" % ownertxt)
 	    html.write("<td class=content>%s</td>" % (view["public"] and "yes" or "no"))
 	    html.write("<td class=content>%s</td>" % (view["hidden"] and "yes" or "no"))
 	    html.write("</td><td class=content>%s</td><td class=buttons>\n" % view["datasource"])
@@ -222,7 +224,6 @@ def page_edit_view(h):
                 # Handle renaming of views -> delete old entry
 		if oldname and oldname != view["name"] and (html.req.user, oldname) in multisite_views:
 		    del multisite_views[(html.req.user, oldname)]
-		html.write("Name: %s Old Name; %s\n" % (view["name"], html.var("old_name")))
 		save_views(html.req.user)
 		return page_edit_views(h, "Your view has been saved.")
 
@@ -284,7 +285,7 @@ def page_edit_view(h):
 	    html.write("<br><div class=filtercomment>%s</div>" % filt.comment)
 	html.write("</td>")
 	html.write("<td class=usage>")
-	html.sorted_select("filter_%s" % fname, [("off", "Don't use"), ("show", "Show to user"), ("hide", "Hide but use"), ("hard", "Hardcode")], "", "filter_activation")
+	html.sorted_select("filter_%s" % fname, [("off", "Don't use"), ("show", "Show to user"), ("hide", "Use for linking"), ("hard", "Hardcode")], "", "filter_activation")
 	html.write("</td><td class=widget>")
 	filt.display()
 	html.write("</td>")
@@ -525,6 +526,9 @@ def show_view(view, show_heading = False):
     if show_heading:
 	html.header(view_title(view))
         show_site_header(html)
+
+    if view["owner"] == html.req.user:
+	html.write("<a href=\"edit_view.py?load_view=%s\">Edit this view</a> " % view["name"])
 
     # Kontext links
     show_context_links(view, show_filters + hide_filters)

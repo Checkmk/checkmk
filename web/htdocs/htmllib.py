@@ -26,6 +26,10 @@
 
 import time, cgi
 
+# TESTE TEST TSET 
+import os
+#  TSET TEST TEST
+
 # Information about uri
 class InvalidUserInput(Exception):
     def __init__(self, varname, text):
@@ -120,6 +124,7 @@ class html:
         self.write("<form name=%s class=%s action=\"%s\" method=GET>\n" %
                    (name, name, action))
 	self.hidden_field("filled_in", "on")
+	self.hidden_field("_transid", str(self.current_transid(self.req.user)))
 	self.hidden_fields(self.global_vars)
 
     def end_form(self):
@@ -166,7 +171,9 @@ class html:
         self.write("<input type=submit name=\"%s\" id=\"%s\" value=\"%s\" class=\"%s\">\n" % \
                    ( varname, varname, title, cssclass))
 
-    def buttonlink(self, href, text):
+    def buttonlink(self, href, text, add_transid=False):
+	if add_transid:
+	    href += "&_transid=%d" % self.current_transid(self.req.user)
 	self.write("<a href=\"%s\" class=button>%s</a>" % (href, text))
 
     def number_input(self, varname, deflt = ""):
@@ -310,7 +317,7 @@ class html:
             self.write("</div>")
             return False
 	else:
-	    return True
+	    return self.check_transaction()
 
     def do_actions(self):
 	return self.var("_do_actions") not in [ "", None, "No" ]
@@ -335,8 +342,8 @@ class html:
             self.req.write("<table class=footer><tr>"
                            "<td class=left>&copy; <a href=\"http://mathias-kettner.de\">Mathias Kettner</a></td>"
                            "<td class=middle>This is part of <a href=\"http://mathias-kettner.de/check_mk\">Check_MK</a> version %s</td>"
-                           "<td class=right>%s</td></tr></table>"
-                           % (self.req.defaults["check_mk_version"], login_text))
+                           "<td class=right>%s (PID %d)</td></tr></table>"
+                           % (self.req.defaults["check_mk_version"], login_text, os.getpid()))
             self.req.write("</body></html>\n")
 
 
@@ -354,3 +361,41 @@ class html:
 
     def javascript(self, code):
 	self.write("<script language=\"javascript\">\n%s\n</script>\n" % code)
+
+    # Get next transaction id for that user
+    def current_transid(self, username):
+	dir = self.req.defaults["var_dir"] + "/web/" + username
+	try:
+	    os.makedirs(dir)
+        except:
+	    pass
+
+	path = dir + "/transid.mk"
+	try:
+	    return int(file(path).read())
+	except:
+	    return 0
+
+    def increase_transid(self, username):
+	current = self.current_transid(username)
+	path = self.req.defaults["var_dir"] + "/web/" + username + "/transid.mk"
+	file(path, "w").write("%d\n" % (current + 1))
+
+    # Checks wether the current page is a reload or an original real submit
+    def transaction_valid(self):
+	if not self.var("_transid"): 
+	    return False
+	transid = int(self.var("_transid"))
+	current = self.current_transid(self.req.user)
+	return transid == current
+
+    # called by page functions in order to check, if this was
+    # a reload or the original form submission. Increases the
+    # transid of the user, if the latter was the case
+    def check_transaction(self):
+	if self.transaction_valid():
+	    self.increase_transid(self.req.user)
+	    return True
+	else:
+	    return False
+

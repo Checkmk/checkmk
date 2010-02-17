@@ -19,6 +19,13 @@ def link(text, target):
 def bulletlink(text, target):
     html.write("<li class=sidebar>" + link(text, target) + "</li>\n")
 
+def nagioscgilink(text, target):
+    html.write("<li class=sidebar><a target=\"main\" class=link href=\"%s/%s\">%s</a></li>" % \
+	    (check_mk.nagios_cgi_url, target, htmllib.attrencode(text)))
+
+def heading(text):
+    html.write("<h3>%s</h3>\n" % htmllib.attrencode(text))
+
 def load_user_config():
     user = html.req.user
     path = check_mk.multisite_config_dir + "/" + user + "/sidebar.mk"
@@ -54,17 +61,27 @@ def save_user_config(config):
 def page_sidebar(h):
     global html
     html = h
+    views.html = h
+    views.load_views()
     html.write("<div class=header><table><tr>"
 		"<td class=title><a target=\"main\" href=\"http://mathias-kettner.de/check_mk.html\">Check_MK</a></td>"
 		"<td class=logo><a target=\"_blank\" href=\"http://mathias-kettner.de\"><img border=0 src=\"%s/MK-mini-black.gif\"></a></td>"
 		"</tr></table></div>\n" % \
 	    check_mk.checkmk_web_uri)
     config = load_user_config()
+    refresh_snapins = []
     for name, state in config:
 	if state in [ "open", "closed" ]:
 	   render_snapin(name, state)
+	   refresh_time = sidebar_snapins.get(name).get("refresh", 0)
+	   if refresh_time > 0:
+	       refresh_snapins.append([name, refresh_time])
     html.write("<div class=footnote><a target=\"main\" href=\"%s/sidebar_config.py\">Configure sidebar</a></div>\n" % \
 	    check_mk.checkmk_web_uri)
+    html.write("<script language=\"javascript\">\n")
+    html.write("var refresh_snapins = %r;\n" % refresh_snapins) 
+    html.write("sidebar_scheduler();\n")
+    html.write("</script>\n")
 
 def render_snapin(name, state):
     snapin = sidebar_snapins.get(name)
@@ -72,6 +89,10 @@ def render_snapin(name, state):
 	if check_mk.multiadmin_debug:
 	    raise MKConfigError("Missing sidebar snapin <tt>%s</tt>. Available are: %s" % (name, ", ".join(sidebar_snapins.keys())))
 	return
+
+    styles = snapin.get("styles")
+    if styles: 
+	html.write("<style>\n%s\n</style>\n" % styles)
 
     html.write("<div class=section>\n")
     if state == "closed":
@@ -82,7 +103,7 @@ def render_snapin(name, state):
 	url = check_mk.checkmk_web_uri + "/sidebar_openclose.py?name=%s&state=" % name
 	html.write("<h2 onclick=\"toggle_sidebar_snapin(this,'%s')\" onmouseover=\"this.style.cursor='pointer'\" "
 		   "onmouseout=\"this.style.cursor='auto'\">%s</h2>\n" % (url, snapin["title"]))
-    html.write("<div class=content%s>\n" % style)
+    html.write("<div id=\"snapin_%s\" class=content%s>\n" % (name, style))
     snapin["render"]()
     html.write("</div></div>\n")
 
@@ -98,6 +119,13 @@ def ajax_openclose(h):
 	new_config.append((name, usage))
     save_user_config(new_config)
 
+def ajax_snapin(h):
+    global html
+    html = h
+    snapin = sidebar_snapins.get(html.var("name"))
+    if snapin:
+        snapin["render"]()
+
 
 def page_configure(h):
     global html
@@ -107,38 +135,39 @@ def page_configure(h):
     config = load_user_config()
     changed = False
 
-    # change states
-    if html.var("_saved"):
-	new_config = []
+    if html.transaction_valid():
+	# change states
+	if html.var("_saved"):
+	    new_config = []
+	    n = 0
+	    for name, usage in config:
+		new_usage = html.var("snapin_%d" % n)
+		if new_usage in ["off", "open", "closed"]:
+		    usage = new_usage
+		new_config.append((name, usage))
+		n += 1
+	    config = new_config
+	    save_user_config(config)
+	    changed = True
+
+	# handle up and down
 	n = 0
 	for name, usage in config:
-	    new_usage = html.var("snapin_%d" % n)
-	    if new_usage in ["off", "open", "closed"]:
-		usage = new_usage
-	    new_config.append((name, usage))
+	    if html.var("snapin_up_%d" % n) == "UP": # Cannot be 0
+		config = config[0:n-1] + [(name,usage)] + [config[n-1]] + config[n+1:]
+		save_user_config(config)
+		changed = True
+		break
+	    elif html.var("snapin_down_%d" % n) == "DOWN": # Cannot be last one
+		config = config[0:n] + [config[n+1]] + [(name,usage)] + config[n+2:]
+		save_user_config(config)
+		changed = True
+		break
 	    n += 1
-	config = new_config
-	save_user_config(config)
-	changed = True
-
-    # handle up and down
-    n = 0
-    for name, usage in config:
-	if html.var("snapin_up_%d" % n) == "UP": # Cannot be 0
-	    config = config[0:n-1] + [(name,usage)] + [config[n-1]] + config[n+1:]
-	    save_user_config(config)
-	    changed = True
-	    break
-	elif html.var("snapin_down_%d" % n) == "DOWN": # Cannot be last one
-	    config = config[0:n] + [config[n+1]] + [(name,usage)] + config[n+2:]
-	    save_user_config(config)
-	    changed = True
-	    break
-	n += 1
-    
-    # reload sidebar, if user changed something
-    if changed:
-	html.javascript("parent.frames[0].location.reload();");
+	
+	# reload sidebar, if user changed something
+	if changed:
+	    html.javascript("parent.frames[0].location.reload();");
 
 
     html.begin_form("sidebarconfig")

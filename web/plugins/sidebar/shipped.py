@@ -30,13 +30,11 @@ sidebar_snapins["admin"] = {
 #                                
 # --------------------------------------------------------------
 def render_views():
-    views.load_views(override_builtins = html.req.user)
     authuser = html.req.user
-    s = [ (view["title"], user, name, view) for (user, name), view in views.multisite_views.items() ]
+    s = [ (view["title"], name) for name, view in html.available_views.items() if not view["hidden"] ]
     s.sort()
-    for title, user, name, view in s:
-	if not view["hidden"] and (user == authuser or view["public"]):
-	    bulletlink(title, "view.py?view_name=%s/%s" % (user, name))
+    for title, name in s:
+        bulletlink(title, "view.py?view_name=%s" % name)
 
 sidebar_snapins["views"] = {
     "title" : "Views",
@@ -130,3 +128,169 @@ if check_mk.is_multisite():
 #	"hidetitle" : True,
 	"render" : render_sitestatus
     }
+
+
+# --------------------------------------------------------------
+#    _____          _   _           _                             _               
+#   |_   _|_ _  ___| |_(_) ___ __ _| |   _____   _____ _ ____   _(_) _____      __
+#     | |/ _` |/ __| __| |/ __/ _` | |  / _ \ \ / / _ \ '__\ \ / / |/ _ \ \ /\ / /
+#     | | (_| | (__| |_| | (_| (_| | | | (_) \ V /  __/ |   \ V /| |  __/\ V  V / 
+#     |_|\__,_|\___|\__|_|\___\__,_|_|  \___/ \_/ \___|_|    \_/ |_|\___| \_/\_/  
+#                                                                                 
+# --------------------------------------------------------------
+import time
+def render_tactical_overview():
+    headers = \
+        "Stats: state >= 0\n" \
+	"Stats: state > 0\n" \
+	"Stats: state > 0\n" \
+	"Stats: acknowledged = 0\n" \
+	"StatsAnd: 2\n"
+
+    svcdata = html.live.query_summed_stats("GET services\n" + headers)
+    hstdata = html.live.query_summed_stats("GET hosts\n" + headers)
+    html.write("<table class=tacticaloverview>\n")
+    for what, data in [("Services", svcdata), ("Hosts", hstdata)]:
+	html.write("<tr><th>%s</th><th>Problems</th><th>Unhandled</th></tr>\n" % what)
+	html.write("<tr>")
+
+	html.write("<td class=total>%d</td>" % data[0])
+	for value in data[1:]:
+            html.write("<td class=%sprob>%d</td>" % (value == 0 and "no" or "", value))
+	html.write("</tr>\n")
+    html.write("</table>\n")
+		    
+sidebar_snapins["tactical_overview"] = {
+    "title" : "Tactical Overview",
+    "refresh" : 10,
+    "render" : render_tactical_overview,
+    "styles" : """
+table.tacticaloverview { width: 153px; margin-top: 0px;}
+table.tacticaloverview th { font-size: 7pt; text-align: left; font-weight: normal; padding: 0px; }
+table.tacticaloverview td { text-align: right; border: 1px solid #444; padding: 0px; padding-right: 2px; }
+/*table.tacticaloverview td.noprob { background-color: #9ca; }*/
+table.tacticaloverview td.prob { background-color: #ca9; color: #f00; font-weight: bold; }
+"""
+}
+
+# --------------------------------------------------------------
+#    ____            __                                           
+#   |  _ \ ___ _ __ / _| ___  _ __ _ __ ___   __ _ _ __   ___ ___ 
+#   | |_) / _ \ '__| |_ / _ \| '__| '_ ` _ \ / _` | '_ \ / __/ _ \
+#   |  __/  __/ |  |  _| (_) | |  | | | | | | (_| | | | | (_|  __/
+#   |_|   \___|_|  |_|  \___/|_|  |_| |_| |_|\__,_|_| |_|\___\___|
+#                                                                 
+# --------------------------------------------------------------
+def render_performance():
+    data = html.live.query("GET status\nColumns: service_checks_rate host_checks_rate requests_rate\n")
+    html.write("<table class=performance>\n")
+    for what, col in \
+	[("Serv. checks", 0), 
+	("Host checks", 1),
+	("Livestatus-req.", 2)]:
+	html.write("<tr><td class=left>%s:</td><td class=right>%.2f/s</td></tr>\n" % (what, sum([row[col] for row in data])))
+    html.write("</table>\n")
+		    
+sidebar_snapins["performance"] = {
+    "title" : "Server performance",
+    "refresh" : 5,
+    "render" : render_performance,
+    "styles" : """
+table.performance { font-size: 8pt; width: 154px; background-color: #888; border-style: solid; border-color: #444 #bbb #eee #666; border-width: 1px; }
+table.Performance td.right { text-align: right; font-weight: bold; }
+
+"""
+}
+
+# --------------------------------------------------------------
+#    ____                           _   _                
+#   / ___|  ___ _ ____   _____ _ __| |_(_)_ __ ___   ___ 
+#   \___ \ / _ \ '__\ \ / / _ \ '__| __| | '_ ` _ \ / _ \
+#    ___) |  __/ |   \ V /  __/ |  | |_| | | | | | |  __/
+#   |____/ \___|_|    \_/ \___|_|   \__|_|_| |_| |_|\___|
+#                                                        
+# --------------------------------------------------------------
+def render_current_time():
+    import time
+    html.write("<div class=time>%s</div>" % time.strftime("%H:%M"))
+
+sidebar_snapins["time"] = {
+    "title" : "Server time",
+    "refresh" : 30,
+    "render" : render_current_time,
+    "styles" : """
+div.time {
+   width: 150px;
+   text-align: center;
+   font-size: 18pt;
+   font-weight: bold;
+   border: 2px dotted #8cc;
+   -moz-border-radius: 10px;
+   background-color: #588;
+   color: #aff;
+}
+"""
+}
+
+
+# --------------------------------------------------------------
+#    _   _             _           
+#   | \ | | __ _  __ _(_) ___  ___ 
+#   |  \| |/ _` |/ _` | |/ _ \/ __|
+#   | |\  | (_| | (_| | | (_) \__ \
+#   |_| \_|\__,_|\__, |_|\___/|___/
+#                |___/             
+# --------------------------------------------------------------
+def render_nagios():
+    bulletlink("Home", "http://www.nagios.org")
+    bulletlink("Documentation", "%s/doc" % check_mk.nagios_url)
+    for entry in [
+	"General",
+        ("tac.cgi", "Tactical Overview"),
+        ("statusmap.cgi?host=all", "Map"),
+	"Current Status",
+        ("status.cgi?hostgroup=all&amp;style=hostdetail", "Hosts"),
+        ("status.cgi?host=all", "Services"),
+        ("status.cgi?hostgroup=all&amp;style=overview", "Host Groups"),
+        ("status.cgi?hostgroup=all&amp;style=summary", "*Summary"),
+        ("status.cgi?hostgroup=all&amp;style=grid", "*Grid"),
+        ("status.cgi?servicegroup=all&amp;style=overview", "Service Groups"),
+        ("status.cgi?servicegroup=all&amp;style=summary", "*Summary"),
+        ("status.cgi?servicegroup=all&amp;style=grid", "*Grid"),
+        ("status.cgi?host=all&amp;servicestatustypes=28", "Problems"),
+        ("status.cgi?host=all&amp;type=detail&amp;hoststatustypes=3&amp;serviceprops=42&amp;servicestatustypes=28", "*Service (Unhandled)"),
+        ("status.cgi?hostgroup=all&amp;style=hostdetail&amp;hoststatustypes=12&amp;hostprops=42", "*Hosts (Unhandled)"),
+        ("outages.cgi", "Network Outages"),
+	"Reports",
+        ("avail.cgi", "Availability"),
+        ("trends.cgi", "Trends"),
+        ("history.cgi?host=all", "Alerts"),
+        ("history.cgi?host=all", "*History"),
+        ("summary.cgi", "*Summary"),
+        ("histogram.cgi", "*Histogram"),
+        ("notifications.cgi?contact=all", "Notifications"),
+        ("showlog.cgi", "Event Log"),
+	"System",
+        ("extinfo.cgi?type=3", "Comments"),
+        ("extinfo.cgi?type=6", "Downtime"),
+        ("extinfo.cgi?type=0", "Process Info"),
+        ("extinfo.cgi?type=4", "Performance Info"),
+        ("extinfo.cgi?type=7", "Scheduling Queue"),
+        ("config.cgi", "Configuration"),
+	]:
+	if type(entry) == str:
+	    heading(entry)
+	else:
+	    ref, text = entry
+	    if text[0] == "*":
+		html.write("<ul class=link>")
+		nagioscgilink(text[1:], ref)
+		html.write("</ul>")
+	    else:
+		nagioscgilink(text, ref)
+
+sidebar_snapins["nagios_legacy"] = {
+    "title" : "Nagios",
+    "render" : render_nagios
+}
+

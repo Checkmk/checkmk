@@ -24,7 +24,19 @@
         CISCO Aironet access points
       * logwatch: When Agent does not send a log anymore and no local logwatch
                   file present the state will be UNKNOWN now (Was OK before).
-
+      * fjdarye60_sum: New check for summary status of Fidary-E60 devices
+      * fjdarye60_disks: New check for status of physical disks
+      * fjdarye60_devencs: New check for status of device enclosures
+      * fjdarye60_cadaps: New check for status of channel adapters
+      * fjdarye60_cmods: New check for status of channel modules
+      * fjdarye60_cmods_flash: New check for status of channel modules flash
+      * fjdarye60_cmods_mem: New check for status of channel modules memory
+      * fjdarye60_conencs: New check for status of controller enclosures
+      * fjdarye60_expanders: New check for status of expanders
+      * fjdarye60_inletthmls: New check for status of inlet thermal sensors
+      * fjdarye60_thmls: New check for status of thermal sensors
+      * fjdarye60_psus: New check for status of PSUs
+      * fjdarye60_syscaps: New check for status of System Capacitor Units
 
       MK Livestatus:
       * New headers for waiting (please refer to online documentation)

@@ -26,6 +26,8 @@
                   file present the state will be UNKNOWN now (Was OK before).
       * fjdarye60_disks: New check for status of physical disks
       * fjdarye60_devencs: New check for status of device enclosures
+      * fjdarye60_cadaps: New check for status of channel adapters
+      * fjdarye60_cmods: New check for status of channel modules
 
 
       MK Livestatus:

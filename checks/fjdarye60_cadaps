@@ -28,7 +28,7 @@ fjdarye60_cadaps_status = { 1: 'normal',  2: 'alarm',       3: 'warning',
                             4: 'invalid', 5: 'maintenance', 6: 'undefined' }
 
 def inventory_fjdarye60_cadaps(checkname, info):
-    return [ (int(index), '', int(status)) for index, status in info if int(status) != 4 ]
+    return [ (int(index), '', 1) for index, status in info if int(status) != 4 ]
 
 
 def check_fjdarye60_cadaps(index, expected_status, info):
@@ -38,6 +38,9 @@ def check_fjdarye60_cadaps(index, expected_status, info):
 
             if status == expected_status:
                 return (0, "OK - Status is %s" % fjdarye60_cadaps_status[status])
+            elif status == 3:
+                return (1, "WARN - Status is %s (Expected status is %s)" % (fjdarye60_cadaps_status[status],
+                                                                          fjdarye60_cadaps_status[expected_status]))
             else:
                 return (2, "CRIT - Status is %s (Expected status is %s)" % (fjdarye60_cadaps_status[status],
                                                                           fjdarye60_cadaps_status[expected_status]))

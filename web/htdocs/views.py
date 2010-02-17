@@ -105,7 +105,7 @@ def page_edit_views(h, msg=None):
     except:
 	clonename = ""
 
-    if clonename:
+    if clonename and html.check_transaction():
 	newname = clonename + "_clone"
 	n = 1
 	while (html.req.user, newname) in multisite_views:
@@ -155,10 +155,10 @@ def page_edit_views(h, msg=None):
 	    html.write("<td class=content>%s</td>" % (view["public"] and "yes" or "no"))
 	    html.write("<td class=content>%s</td>" % (view["hidden"] and "yes" or "no"))
 	    html.write("</td><td class=content>%s</td><td class=buttons>\n" % view["datasource"])
-	    html.buttonlink("edit_views.py?clone=%s/%s" % (owner, viewname), "Clone")
+	    html.buttonlink("edit_views.py?clone=%s/%s" % (owner, viewname), "Clone", True)
 	    if owner == html.req.user:
 		html.buttonlink("edit_view.py?load_view=%s" % viewname, "Edit")
-		html.buttonlink("edit_views.py?delete=%s" % viewname, "Delete!")
+		html.buttonlink("edit_views.py?delete=%s" % viewname, "Delete!", True)
 	    html.write("</td></tr>")
 
     html.write("<tr><td class=legend colspan=7>")
@@ -211,13 +211,14 @@ def page_edit_view(h):
 	try:
 	    view = create_view()
 	    if html.var("save"):
-		load_views()
-		multisite_views[(html.req.user, view["name"])] = view
-		oldname = html.var("old_name")
-                # Handle renaming of views -> delete old entry
-		if oldname and oldname != view["name"] and (html.req.user, oldname) in multisite_views:
-		    del multisite_views[(html.req.user, oldname)]
-		save_views(html.req.user)
+	        if html.check_transaction():
+		    load_views()
+		    multisite_views[(html.req.user, view["name"])] = view
+		    oldname = html.var("old_name")
+		    # Handle renaming of views -> delete old entry
+		    if oldname and oldname != view["name"] and (html.req.user, oldname) in multisite_views:
+			del multisite_views[(html.req.user, oldname)]
+		    save_views(html.req.user)
 		return page_edit_views(h, "Your view has been saved.")
 
 	except MKUserError, e:
@@ -570,7 +571,7 @@ def show_view(view, show_heading = False):
     # Actions
     has_done_actions = False
     if len(rows) > 0:
-	if html.do_actions(): # submit button pressed
+	if html.do_actions() and html.transaction_valid(): # submit button pressed, no reload
 	    try:
 		has_done_actions = do_actions(tablename, rows)
 	    except MKUserError, e:
@@ -921,20 +922,23 @@ def do_actions(tablename, rows):
        html.show_error("You are not allowed to perform actions. If you think this is an error, "
              "please ask your administrator to add your login to <tt>multiadmin_action_users</tt> "
 	     "in <tt>main.mk</tt>")
-       return
-    count = 0
+       return False # no actions done
+
     command = None
+    title = nagios_action_command(tablename, rows[0])[0] # just get the title
+    if not html.confirm("Do you really want to %s the following %d %s?" % (title, len(rows), tablename)):
+	return False # no actions done
+
+    count = 0
     for row in rows:
         title, nagios_commands = nagios_action_command(tablename, row)
-        confirms = html.confirm("Do you really want to %s the following %d %s?" % (title, len(rows), tablename))
-        if not confirms:
-	    return False
-        for command in nagios_commands:
-            html.live.command(command, row["site"])
-            count += 1
+	for command in nagios_commands:
+	    html.live.command(command, row["site"])
+	    count += 1
+
     if command:
 	html.message("Successfully sent %d commands to Nagios. The last one was: <pre>%s</pre>" % (count, command))
-    else:
+    elif count == 0:
 	html.message("No matching service. No command sent.")
     return True
 

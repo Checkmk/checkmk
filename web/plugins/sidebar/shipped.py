@@ -142,33 +142,96 @@ if check_mk.is_multisite():
 # --------------------------------------------------------------
 import time
 def render_tactical_overview():
-    html.write("HIRNIBALDi: %s" % time.time())
+    headers = \
+        "Stats: state >= 0\n" \
+	"Stats: state > 0\n" \
+	"Stats: state > 0\n" \
+	"Stats: acknowledged = 0\n" \
+	"StatsAnd: 2\n"
+
+    svcdata = html.live.query_summed_stats("GET services\n" + headers)
+    hstdata = html.live.query_summed_stats("GET hosts\n" + headers)
+    html.write("<table class=tacticaloverview>\n")
+    for what, data in [("Services", svcdata), ("Hosts", hstdata)]:
+	html.write("<tr><th>%s</th><th>Problems</th><th>Unhandled</th></tr>\n" % what)
+	html.write("<tr>")
+
+	html.write("<td class=total>%d</td>" % data[0])
+	for value in data[1:]:
+            html.write("<td class=%sprob>%d</td>" % (value == 0 and "no" or "", value))
+	html.write("</tr>\n")
+    html.write("</table>\n")
 		    
 sidebar_snapins["tactical_overview"] = {
     "title" : "Tactical Overview",
     "refresh" : 10,
-    "render" : render_tactical_overview
+    "render" : render_tactical_overview,
+    "styles" : """
+table.tacticaloverview { width: 153px; margin-top: 0px;}
+table.tacticaloverview th { font-size: 7pt; text-align: left; font-weight: normal; padding: 0px; }
+table.tacticaloverview td { text-align: right; border: 1px solid #444; padding: 0px; padding-right: 2px; }
+/*table.tacticaloverview td.noprob { background-color: #9ca; }*/
+table.tacticaloverview td.prob { background-color: #ca9; color: #f00; font-weight: bold; }
+"""
 }
 
+# --------------------------------------------------------------
+#    ____            __                                           
+#   |  _ \ ___ _ __ / _| ___  _ __ _ __ ___   __ _ _ __   ___ ___ 
+#   | |_) / _ \ '__| |_ / _ \| '__| '_ ` _ \ / _` | '_ \ / __/ _ \
+#   |  __/  __/ |  |  _| (_) | |  | | | | | | (_| | | | | (_|  __/
+#   |_|   \___|_|  |_|  \___/|_|  |_| |_| |_|\__,_|_| |_|\___\___|
+#                                                                 
+# --------------------------------------------------------------
 def render_performance():
-    data = html.live.query("GET status\nColumns: service_checks_rate host_checks_rate\n")
-    for what, col in [("service", 0), ("host", 1)]:
-	html.write("%schecks/sec: %.2f<br>" % (what, sum([row[col] for row in data])))
+    data = html.live.query("GET status\nColumns: service_checks_rate host_checks_rate requests_rate\n")
+    html.write("<table class=performance>\n")
+    for what, col in \
+	[("Serv. checks", 0), 
+	("Host checks", 1),
+	("Livestatus-req.", 2)]:
+	html.write("<tr><td class=left>%s:</td><td class=right>%.2f/s</td></tr>\n" % (what, sum([row[col] for row in data])))
+    html.write("</table>\n")
 		    
 sidebar_snapins["performance"] = {
     "title" : "Server performance",
     "refresh" : 5,
-    "render" : render_performance
+    "render" : render_performance,
+    "styles" : """
+table.performance { font-size: 8pt; width: 154px; background-color: #888; border-style: solid; border-color: #444 #bbb #eee #666; border-width: 1px; }
+table.Performance td.right { text-align: right; font-weight: bold; }
+
+"""
 }
 
-import time
+# --------------------------------------------------------------
+#    ____                           _   _                
+#   / ___|  ___ _ ____   _____ _ __| |_(_)_ __ ___   ___ 
+#   \___ \ / _ \ '__\ \ / / _ \ '__| __| | '_ ` _ \ / _ \
+#    ___) |  __/ |   \ V /  __/ |  | |_| | | | | | |  __/
+#   |____/ \___|_|    \_/ \___|_|   \__|_|_| |_| |_|\___|
+#                                                        
+# --------------------------------------------------------------
 def render_current_time():
-    html.write("<div class=currenttime>%s</div>" % time.strftime("%H:%M:%S"))
+    import time
+    html.write("<div class=time>%s</div>" % time.strftime("%H:%M"))
 
 sidebar_snapins["time"] = {
-    "title" : "Current time",
-    "refresh" : 1,
-    "render" : render_current_time
+    "title" : "Server time",
+    "refresh" : 60,
+    "render" : render_current_time,
+    "styles" : """
+div.time {
+   width: 150px;
+   text-align: center;
+   font-size: 18pt;
+   font-weight: bold;
+   border: 2px dotted #8cc;
+   -moz-border-radius: 10px;
+   background-color: #588;
+   color: #aff;
+}
+"""
 }
 
 

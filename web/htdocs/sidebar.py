@@ -88,6 +88,10 @@ def render_snapin(name, state):
 	    raise MKConfigError("Missing sidebar snapin <tt>%s</tt>. Available are: %s" % (name, ", ".join(sidebar_snapins.keys())))
 	return
 
+    styles = snapin.get("styles")
+    if styles: 
+	html.write("<style>\n%s\n</style>\n" % styles)
+
     html.write("<div class=section>\n")
     if state == "closed":
 	style = ' style="display:none"'
@@ -129,38 +133,39 @@ def page_configure(h):
     config = load_user_config()
     changed = False
 
-    # change states
-    if html.var("_saved"):
-	new_config = []
+    if html.transaction_valid():
+	# change states
+	if html.var("_saved"):
+	    new_config = []
+	    n = 0
+	    for name, usage in config:
+		new_usage = html.var("snapin_%d" % n)
+		if new_usage in ["off", "open", "closed"]:
+		    usage = new_usage
+		new_config.append((name, usage))
+		n += 1
+	    config = new_config
+	    save_user_config(config)
+	    changed = True
+
+	# handle up and down
 	n = 0
 	for name, usage in config:
-	    new_usage = html.var("snapin_%d" % n)
-	    if new_usage in ["off", "open", "closed"]:
-		usage = new_usage
-	    new_config.append((name, usage))
+	    if html.var("snapin_up_%d" % n) == "UP": # Cannot be 0
+		config = config[0:n-1] + [(name,usage)] + [config[n-1]] + config[n+1:]
+		save_user_config(config)
+		changed = True
+		break
+	    elif html.var("snapin_down_%d" % n) == "DOWN": # Cannot be last one
+		config = config[0:n] + [config[n+1]] + [(name,usage)] + config[n+2:]
+		save_user_config(config)
+		changed = True
+		break
 	    n += 1
-	config = new_config
-	save_user_config(config)
-	changed = True
-
-    # handle up and down
-    n = 0
-    for name, usage in config:
-	if html.var("snapin_up_%d" % n) == "UP": # Cannot be 0
-	    config = config[0:n-1] + [(name,usage)] + [config[n-1]] + config[n+1:]
-	    save_user_config(config)
-	    changed = True
-	    break
-	elif html.var("snapin_down_%d" % n) == "DOWN": # Cannot be last one
-	    config = config[0:n] + [config[n+1]] + [(name,usage)] + config[n+2:]
-	    save_user_config(config)
-	    changed = True
-	    break
-	n += 1
-    
-    # reload sidebar, if user changed something
-    if changed:
-	html.javascript("parent.frames[0].location.reload();");
+	
+	# reload sidebar, if user changed something
+	if changed:
+	    html.javascript("parent.frames[0].location.reload();");
 
 
     html.begin_form("sidebarconfig")

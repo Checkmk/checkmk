@@ -890,7 +890,7 @@ div#check_mk_sidebar div.content {
 div#check_mk_sidebar h2 {
     margin-top: 0px;
     margin-bottom: 0px;
-    color: #fc4;
+    color: #036;
     font-size: 9pt;
 }
 div#check_mk_sidebar h3 {
@@ -953,7 +953,7 @@ table.sidebarconfig td {
     border: 1px solid #f84;
     padding: 0px 5px;
 }
-/* sitestate snapin for sidebar */
+/* sitestate snapin */
 div#check_mk_sidebar table.sitestate {
     width: 100%;
 }

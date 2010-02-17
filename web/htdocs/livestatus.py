@@ -248,7 +248,7 @@ class SingleSiteConnection(BaseConnection, Helpers):
     def query(self, query, add_headers = ""):
 	data = self.do_query(query, self.auth_header + add_headers)
 	if self.prepend_site:
-	    return [ [None] + line for line in data ]
+	    return [ [""] + line for line in data ]
 	else:
 	    return data
 

@@ -70,7 +70,7 @@ function mkSearchKeyDown(e, oField) {
 					mkSearchClose();
 				} else {
 					// When nothing selected, navigate with the current contents of the field
-					top.frames[mkSearchTargetFrame].location.href = mkSearchCheckMkUrl+'/view.py?view_name=/host&host='+oField.value;
+					top.frames[mkSearchTargetFrame].location.href = mkSearchCheckMkUrl+'/view.py?view_name=host&host='+oField.value;
 					mkSearchClose();
 				}
 				

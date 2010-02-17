@@ -61,6 +61,8 @@ def save_user_config(config):
 def page_sidebar(h):
     global html
     html = h
+    views.html = h
+    views.load_views()
     html.write("<div class=header><table><tr>"
 		"<td class=title><a target=\"main\" href=\"http://mathias-kettner.de/check_mk.html\">Check_MK</a></td>"
 		"<td class=logo><a target=\"_blank\" href=\"http://mathias-kettner.de\"><img border=0 src=\"%s/MK-mini-black.gif\"></a></td>"

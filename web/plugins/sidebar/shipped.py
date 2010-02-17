@@ -30,13 +30,11 @@ sidebar_snapins["admin"] = {
 #                                
 # --------------------------------------------------------------
 def render_views():
-    views.load_views(override_builtins = html.req.user)
     authuser = html.req.user
-    s = [ (view["title"], user, name, view) for (user, name), view in views.multisite_views.items() ]
+    s = [ (view["title"], name) for name, view in html.available_views.items() if not view["hidden"] ]
     s.sort()
-    for title, user, name, view in s:
-	if not view["hidden"] and (user == authuser or view["public"]):
-	    bulletlink(title, "view.py?view_name=%s/%s" % (user, name))
+    for title, name in s:
+        bulletlink(title, "view.py?view_name=%s" % name)
 
 sidebar_snapins["views"] = {
     "title" : "Views",
@@ -218,7 +216,7 @@ def render_current_time():
 
 sidebar_snapins["time"] = {
     "title" : "Server time",
-    "refresh" : 60,
+    "refresh" : 30,
     "render" : render_current_time,
     "styles" : """
 div.time {

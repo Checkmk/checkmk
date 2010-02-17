@@ -135,6 +135,13 @@ multisite_painters["svc_plugin_output"] = {
     "paint" : lambda row: (None, row["service_plugin_output"])
 }
     
+multisite_painters["host_plugin_output"] = {
+    "title" : "Output of host check plugin",
+    "short" : "Plugin output",
+    "table" : "hosts",
+    "columns" : ["host_plugin_output"],
+    "paint" : lambda row: (None, row["host_plugin_output"])
+}
 multisite_painters["service_description"] = {
     "title" : "Service description",
     "short" : "Service",

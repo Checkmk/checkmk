@@ -26,6 +26,10 @@
 
 import time, cgi
 
+# TESTE TEST TSET 
+import os
+#  TSET TEST TEST
+
 # Information about uri
 class InvalidUserInput(Exception):
     def __init__(self, varname, text):
@@ -338,8 +342,8 @@ class html:
             self.req.write("<table class=footer><tr>"
                            "<td class=left>&copy; <a href=\"http://mathias-kettner.de\">Mathias Kettner</a></td>"
                            "<td class=middle>This is part of <a href=\"http://mathias-kettner.de/check_mk\">Check_MK</a> version %s</td>"
-                           "<td class=right>%s</td></tr></table>"
-                           % (self.req.defaults["check_mk_version"], login_text))
+                           "<td class=right>%s (PID %d)</td></tr></table>"
+                           % (self.req.defaults["check_mk_version"], login_text, os.getpid()))
             self.req.write("</body></html>\n")
 
 

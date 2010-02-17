@@ -6,7 +6,7 @@
 multisite_datasources["hosts"] = {
     "title"   : "All hosts",
     "table"   : "hosts",
-    "columns" : ["name", "alias", "state", "has_been_checked", "downtimes", 
+    "columns" : ["name", "alias", "state", "has_been_checked", "downtimes", "plugin_output",
    "num_services", "num_services_pending", "num_services_ok", "num_services_warn", "num_services_unknown", "num_services_crit" ],
 }
 

@@ -24,6 +24,7 @@
         CISCO Aironet access points
       * logwatch: When Agent does not send a log anymore and no local logwatch
                   file present the state will be UNKNOWN now (Was OK before).
+      * fjdarye60_disks: New check for status of physical disks
 
 
       MK Livestatus:

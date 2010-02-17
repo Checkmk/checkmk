@@ -170,3 +170,66 @@ sidebar_snapins["time"] = {
     "refresh" : 1,
     "render" : render_current_time
 }
+
+
+# --------------------------------------------------------------
+#    _   _             _           
+#   | \ | | __ _  __ _(_) ___  ___ 
+#   |  \| |/ _` |/ _` | |/ _ \/ __|
+#   | |\  | (_| | (_| | | (_) \__ \
+#   |_| \_|\__,_|\__, |_|\___/|___/
+#                |___/             
+# --------------------------------------------------------------
+def render_nagios():
+    bulletlink("Home", "http://www.nagios.org")
+    bulletlink("Documentation", "%s/doc" % check_mk.nagios_url)
+    for entry in [
+	"General",
+        ("tac.cgi", "Tactical Overview"),
+        ("statusmap.cgi?host=all", "Map"),
+	"Current Status",
+        ("status.cgi?hostgroup=all&amp;style=hostdetail", "Hosts"),
+        ("status.cgi?host=all", "Services"),
+        ("status.cgi?hostgroup=all&amp;style=overview", "Host Groups"),
+        ("status.cgi?hostgroup=all&amp;style=summary", "*Summary"),
+        ("status.cgi?hostgroup=all&amp;style=grid", "*Grid"),
+        ("status.cgi?servicegroup=all&amp;style=overview", "Service Groups"),
+        ("status.cgi?servicegroup=all&amp;style=summary", "*Summary"),
+        ("status.cgi?servicegroup=all&amp;style=grid", "*Grid"),
+        ("status.cgi?host=all&amp;servicestatustypes=28", "Problems"),
+        ("status.cgi?host=all&amp;type=detail&amp;hoststatustypes=3&amp;serviceprops=42&amp;servicestatustypes=28", "*Service (Unhandled)"),
+        ("status.cgi?hostgroup=all&amp;style=hostdetail&amp;hoststatustypes=12&amp;hostprops=42", "*Hosts (Unhandled)"),
+        ("outages.cgi", "Network Outages"),
+	"Reports",
+        ("avail.cgi", "Availability"),
+        ("trends.cgi", "Trends"),
+        ("history.cgi?host=all", "Alerts"),
+        ("history.cgi?host=all", "*History"),
+        ("summary.cgi", "*Summary"),
+        ("histogram.cgi", "*Histogram"),
+        ("notifications.cgi?contact=all", "Notifications"),
+        ("showlog.cgi", "Event Log"),
+	"System",
+        ("extinfo.cgi?type=3", "Comments"),
+        ("extinfo.cgi?type=6", "Downtime"),
+        ("extinfo.cgi?type=0", "Process Info"),
+        ("extinfo.cgi?type=4", "Performance Info"),
+        ("extinfo.cgi?type=7", "Scheduling Queue"),
+        ("config.cgi", "Configuration"),
+	]:
+	if type(entry) == str:
+	    heading(entry)
+	else:
+	    ref, text = entry
+	    if text[0] == "*":
+		html.write("<ul class=link>")
+		nagioscgilink(text[1:], ref)
+		html.write("</ul>")
+	    else:
+		nagioscgilink(text, ref)
+
+sidebar_snapins["nagios_legacy"] = {
+    "title" : "Nagios",
+    "render" : render_nagios
+}
+

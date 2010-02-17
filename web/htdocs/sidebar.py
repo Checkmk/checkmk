@@ -19,6 +19,13 @@ def link(text, target):
 def bulletlink(text, target):
     html.write("<li class=sidebar>" + link(text, target) + "</li>\n")
 
+def nagioscgilink(text, target):
+    html.write("<li class=sidebar><a target=\"main\" class=link href=\"%s/%s\">%s</a></li>" % \
+	    (check_mk.nagios_cgi_url, target, htmllib.attrencode(text)))
+
+def heading(text):
+    html.write("<h3>%s</h3>\n" % htmllib.attrencode(text))
+
 def load_user_config():
     user = html.req.user
     path = check_mk.multisite_config_dir + "/" + user + "/sidebar.mk"

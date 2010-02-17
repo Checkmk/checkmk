@@ -893,6 +893,12 @@ div#check_mk_sidebar h2 {
     color: #fc4;
     font-size: 9pt;
 }
+div#check_mk_sidebar h3 {
+    margin: 0px;
+    color: #333;
+    font-size: 8pt;
+}
+
 div#check_mk_sidebar a {
     text-decoration: none;
     font-weight: normal;
@@ -905,6 +911,15 @@ div#check_mk_sidebar a:hover {
 li.sidebar {
     margin-left: 0px;
     padding-left: 1ex;
+}
+div#check_mk_sidebar ul.link {
+    margin: 0px;
+    font-size: 8pt;
+    padding-left: 32px;
+}
+div#check_mk_sidebar ul.link li {
+    margin: 0px;
+    padding: 0px;
 }
 
 div#check_mk_sidebar hr {

@@ -28,22 +28,21 @@ fjdarye60_sum_status = { 1: 'unknown', 2: 'unused', 3: 'ok',
                          4: 'warning', 5: 'failed' }
 
 def inventory_fjdarye60_sum(checkname, info):
-    return [ (0, '', 3) for index, status in info ]
+    return [ (0, '', None) for index, status in info ]
 
 
-def check_fjdarye60_sum(index, expected_status, info):
+def check_fjdarye60_sum(index, _no_param, info):
     for line in info:
         if int(line[0]) == index:
             status = int(line[1])
+            text = "Status is %s" % fjdarye60_sum_status[status]
 
-            if status == expected_status:
-                return (0, "OK - Status is %s" % fjdarye60_sum_status[status])
+            if status == 3:
+                return (0, "OK - %s" % text)
             elif status == 4:
-                return (1, "WARN - Status is %s (Expected status is %s)" % (fjdarye60_sum_status[status],
-                                                                          fjdarye60_sum_status[expected_status]))
+                return (1, "WARN - %s" % text)
             else:
-                return (2, "CRIT - Status is %s (Expected status is %s)" % (fjdarye60_sum_status[status],
-                                                                          fjdarye60_sum_status[expected_status]))
+                return (2, "CRIT - %s" % text)
 
     return (3, "UNKNOWN - No status summary %d present" % index)
 

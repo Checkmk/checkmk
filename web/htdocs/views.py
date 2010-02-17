@@ -8,7 +8,6 @@ multisite_layouts       = {}
 multisite_painters      = {}
 multisite_sorters       = {}
 multisite_builtin_views = {}
-multisite_views         = {}
 
 plugins_path = check_mk.web_dir + "/plugins/views"
 for fn in os.listdir(plugins_path):
@@ -19,17 +18,27 @@ max_display_columns   = 10
 max_group_columns     = 3
 max_sort_columns      = 4
 
-def load_views(**args):
-    override_builtins = args.get("override_builtins", None)
-    global multisite_views
-    multisite_views = multisite_builtin_views
-    subdirs = os.listdir(check_mk.multisite_config_dir)
+# Load all views - users or builtins
+def load_views():
+    html.multisite_views = {}
 
+    # first load builtins. Set username to ''
+    for name, view in multisite_builtin_views.items():
+	view["owner"] = '' # might have been forgotten on copy action
+	view["public"] = True
+	view["name"] = name
+	html.multisite_views[('', name)] = view
+
+    # Now scan users subdirs for files "views.mk"
+    subdirs = os.listdir(check_mk.multisite_config_dir)
     for user in subdirs:
 	try:
 	    dirpath = check_mk.multisite_config_dir + "/" + user
 	    if os.path.isdir(dirpath):
-	        f = file(dirpath + "/views.mk", "r", 0)
+		path = dirpath + "/views.mk"
+		if not os.path.exists(path):
+		    continue
+	        f = file(path, "r", 65536)
 		sourcecode = f.read()
 		t = 0
 		while sourcecode == "": # This should never happen. But it happened. Don't know why.
@@ -43,22 +52,44 @@ def load_views(**args):
 		for name, view in views.items():
 		    view["owner"] = user
 		    view["name"] = name
-		    multisite_views[(user, name)] = view
-	except IOError:
-	     pass
+		    html.multisite_views[(user, name)] = view
 	except SyntaxError, e:
 	     raise MKGeneralException("Cannot load views from %s/views.mk: %s" % (dirpath, e))
 
-    # Remove builtins, if user has same view and override_builtins is True
-    if override_builtins:
-	for (user, name), view in multisite_views.items():
-	    if user == override_builtins and ("", name) in multisite_views:
-		del multisite_views[("", name)]
+    html.available_views = available_views()
+
+# Get the list of views which are available to the user
+# (which could be retrieved with get_view)
+def available_views():
+    user = html.req.user
+    views = {}
+    # 1. user's own views
+    for (u, n), view in html.multisite_views.items():
+	views[n] = view
+
+    # 2. views of admin users, if public
+    for (u, n), view in html.multisite_views.items():
+	if n not in views \
+	    and u in check_mk.multiadmin_unrestricted_action_users \
+	    and view["public"]:
+	    views[n] = view
+    
+    # 3. Builtin views
+    for (u, n), view in html.multisite_views.items():
+	if u == '' and n not in views:
+	    views[n] = view
+
+    # 4. other users views, if public
+    for (u, n), view in html.multisite_views.items():
+	if n not in views and view["public"]:
+	    views[n] = view
+
+    return views
 
 
 def save_views(us):
     userviews = {}
-    for (user, name), view in multisite_views.items():
+    for (user, name), view in html.multisite_views.items():
 	if us == user:
 	    userviews[name] = view
     userdir = check_mk.multisite_config_dir + "/" + us
@@ -80,6 +111,7 @@ def save_views(us):
 def page_edit_views(h, msg=None):
     global html
     html = h
+
     changed = False
     html.header("Edit views")
     html.write("<p>Here you can create and edit customizable <b>views</b>. A view "
@@ -95,7 +127,7 @@ def page_edit_views(h, msg=None):
     # Deletion of views
     delname = html.var("delete")
     if delname and html.confirm("Please confirm the deletion of the view <tt>%s</tt>" % delname):
-	del multisite_views[(html.req.user, delname)]
+	del html.multisite_views[(html.req.user, delname)]
 	save_views(html.req.user)
 	changed = True
 
@@ -105,20 +137,20 @@ def page_edit_views(h, msg=None):
     except:
 	clonename = ""
 
-    if clonename:
+    if clonename and html.check_transaction():
 	newname = clonename + "_clone"
 	n = 1
-	while (html.req.user, newname) in multisite_views:
+	while (html.req.user, newname) in html.multisite_views:
 	    n += 1
 	    newname = clonename + "_clone%d" % n
 	import copy
-	orig = multisite_views[(cloneuser, clonename)]
+	orig = html.multisite_views[(cloneuser, clonename)]
 	clone = copy.copy(orig)
 	clone["name"] = newname
 	clone["title"] = orig["title"] + " (Copy)" 
 	if cloneuser != html.req.user: 
 	    clone["public"] = False
-	multisite_views[(html.req.user, newname)] = clone
+	html.multisite_views[(html.req.user, newname)] = clone
 	save_views(html.req.user)
 	load_views()
 	changed = True
@@ -128,11 +160,11 @@ def page_edit_views(h, msg=None):
 
     html.write("<table class=views>\n")
 
-    keys_sorted = multisite_views.keys()
+    keys_sorted = html.multisite_views.keys()
     keys_sorted.sort()
     first = True
     for (owner, viewname) in keys_sorted:
-	view = multisite_views[(owner, viewname)]
+	view = html.multisite_views[(owner, viewname)]
 	if owner == html.req.user or view["public"]:
 	    if first:
 		html.write("<tr><th>Name</th><th>Title / Description</th><th>Owner</th><th>Public</th><th>linked</th><th>Datasource</th><th></th></tr>\n")
@@ -140,7 +172,7 @@ def page_edit_views(h, msg=None):
 	    html.write("<tr><td class=legend>%s</td>" % viewname)
 	    html.write("<td class=content>")
 	    if not view["hidden"]:
-		html.write("<a href=\"view.py?view_name=%s/%s\">%s</a>" % (owner, viewname, view["title"]))
+		html.write("<a href=\"view.py?view_name=%s\">%s</a>" % (viewname, view["title"]))
 	    else:
 		html.write(view["title"])
 	    description = view.get("description")
@@ -155,10 +187,10 @@ def page_edit_views(h, msg=None):
 	    html.write("<td class=content>%s</td>" % (view["public"] and "yes" or "no"))
 	    html.write("<td class=content>%s</td>" % (view["hidden"] and "yes" or "no"))
 	    html.write("</td><td class=content>%s</td><td class=buttons>\n" % view["datasource"])
-	    html.buttonlink("edit_views.py?clone=%s/%s" % (owner, viewname), "Clone")
+	    html.buttonlink("edit_views.py?clone=%s/%s" % (owner, viewname), "Clone", True)
 	    if owner == html.req.user:
 		html.buttonlink("edit_view.py?load_view=%s" % viewname, "Edit")
-		html.buttonlink("edit_views.py?delete=%s" % viewname, "Delete!")
+		html.buttonlink("edit_views.py?delete=%s" % viewname, "Delete!", True)
 	    html.write("</td></tr>")
 
     html.write("<tr><td class=legend colspan=7>")
@@ -173,10 +205,9 @@ def page_edit_views(h, msg=None):
 
 def select_view(varname, only_with_hidden = False):
     choices = [("", "")]
-    for (user, name), view in multisite_views.items():
-	if not user or view["public"] and \
-	    (not only_with_hidden or len(view["hide_filters"]) > 0):
-		choices.append(("%s/%s" % (user, name), view["title"]))
+    for name, view in html.available_views.items():
+	if not only_with_hidden or len(view["hide_filters"]) > 0:
+	    choices.append(("%s" % name, view["title"]))
     html.sorted_select(varname, choices, "")
 
 # -------------------------------------------------------------------------	
@@ -197,7 +228,7 @@ def page_edit_view(h):
     # Load existing view from disk
     viewname = html.var("load_view")
     if viewname:
-	view = multisite_views.get((html.req.user, viewname), None)
+	view = html.multisite_views.get((html.req.user, viewname), None)
 	datasourcename = view["datasource"]
 	if view:
 	    load_view_into_html_vars(view)
@@ -211,13 +242,14 @@ def page_edit_view(h):
 	try:
 	    view = create_view()
 	    if html.var("save"):
-		load_views()
-		multisite_views[(html.req.user, view["name"])] = view
-		oldname = html.var("old_name")
-                # Handle renaming of views -> delete old entry
-		if oldname and oldname != view["name"] and (html.req.user, oldname) in multisite_views:
-		    del multisite_views[(html.req.user, oldname)]
-		save_views(html.req.user)
+	        if html.check_transaction():
+		    load_views()
+		    html.multisite_views[(html.req.user, view["name"])] = view
+		    oldname = html.var("old_name")
+		    # Handle renaming of views -> delete old entry
+		    if oldname and oldname != view["name"] and (html.req.user, oldname) in html.multisite_views:
+			del html.multisite_views[(html.req.user, oldname)]
+		    save_views(html.req.user)
 		return page_edit_views(h, "Your view has been saved.")
 
 	except MKUserError, e:
@@ -378,7 +410,7 @@ def load_view_into_html_vars(view):
     for name, viewname in view["group_painters"]:
 	html.set_var("group_%d" % n, name)
 	if viewname:
-	    html.set_var("group_link_%d" % n, "%s/%s" % viewname)
+	    html.set_var("group_link_%d" % n, viewname)
 	n += 1
 
     # [6] Columns
@@ -386,7 +418,7 @@ def load_view_into_html_vars(view):
     for name, viewname in view["painters"]:
 	html.set_var("col_%d" % n, name)
 	if viewname:
-	    html.set_var("col_link_%d" % n, "%s/%s" % viewname)
+	    html.set_var("col_link_%d" % n, viewname)
 	n += 1
 
     # Make sure, checkboxes with default "on" do no set "on". Otherwise they
@@ -440,28 +472,20 @@ def create_view():
     group_painternames = [] 
     for n in range(1, max_group_columns+1):
 	pname = html.var("group_%d" % n)
-	viewinfo = html.var("group_link_%d" % n)
+	viewname = html.var("group_link_%d" % n)
 	if pname:
-	    try:
-	        user, viewname = viewinfo.split("/")
-		view = multisite_views[(user, viewname)]
-		viewinfo = user, viewname
-	    except:
-		viewinfo = None
-	    group_painternames.append((pname, viewinfo))
+	    if viewname not in  html.available_views:
+		viewname = None
+	    group_painternames.append((pname, viewname))
 
     painternames = []
     for n in range(1, max_display_columns+1):
 	pname = html.var("col_%d" % n)
-	viewinfo = html.var("col_link_%d" % n)
+	viewname = html.var("col_link_%d" % n)
 	if pname:
-	    try:
-	        user, viewname = viewinfo.split("/")
-		view = multisite_views[(user, viewname)]
-		viewinfo = user, viewname
-	    except:
-		viewinfo = None
-	    painternames.append((pname, viewinfo))
+	    if viewname not in  html.available_views:
+		viewname = None
+	    painternames.append((pname, viewname))
   
     return { 
 	"name"            : name,
@@ -497,17 +521,12 @@ def page_view(h):
     global html
     html = h
     load_views()
-    try:
-        user, view_name = html.var("view_name").split("/")
-	if user == "" and (html.req.user, view_name) in multisite_views:
-	    user = html.req.user
-	view = multisite_views[(user, view_name)]
-	
-    except:
-	raise MKGeneralException("This view does not exist (user: %s, name: %s)." % (user, view_name))
+    view_name = html.var("view_name")
+    view = html.available_views.get(view_name)
+    if not view:
+	raise MKGeneralException("No view defined with the name '%s'." % view_name)
 
     show_view(view, True)
-
     html.footer()
 
 # Display view with real data. This is *the* function everying
@@ -570,7 +589,7 @@ def show_view(view, show_heading = False):
     # Actions
     has_done_actions = False
     if len(rows) > 0:
-	if html.do_actions(): # submit button pressed
+	if html.do_actions() and html.transaction_valid(): # submit button pressed, no reload
 	    try:
 		has_done_actions = do_actions(tablename, rows)
 	    except MKUserError, e:
@@ -598,7 +617,6 @@ def view_title(view):
     return view["title"] + " " + ", ".join(extra_titles)
 
 def show_context_links(thisview, active_filters):
-    load_views(override_builtins = True)
     # compute list of html variable used actively by hidden or show
     # filters.
     active_filter_vars = set([])
@@ -608,10 +626,8 @@ def show_context_links(thisview, active_filters):
 	       active_filter_vars.add(var)
 	       
     first = True
-    for (user, name), view in multisite_views.items():
+    for name, view in html.available_views.items():
 	if view == thisview:
-	    continue
-	if user != html.req.user and not view["public"]: 
 	    continue
 	hidden_filternames = view["hide_filters"]
 	used_contextvars = []
@@ -639,9 +655,8 @@ def show_context_links(thisview, active_filters):
 		html.write("<div class=contextlinks><h2>Contextlinks</h2>\n")
 		first = False
 	    vars_values = [ (var, html.var(var)) for var in set(used_contextvars) ]
-	    view_var = ("view_name", "%s/%s" % (user, name))
 	    html.write("<a href=\"%s\">%s</a><br>" % \
-		    (html.makeuri_contextless(vars_values + [view_var]), view_title(view)))
+		    (html.makeuri_contextless(vars_values + [("view_name", name)]), view_title(view)))
 
     if not first:
 	html.write("</div>\n")
@@ -803,17 +818,19 @@ def show_action_form(tablename):
     html.write("</td></tr>")
     html.write("</table></form>\n")
 
-def nagios_action_command(tablename, service):
-    host = service["host_name"]
-    descr = service.get("service_description") # not available on hosts
+def nagios_action_command(tablename, dataset):
+    host = dataset["host_name"]
+    descr = dataset.get("service_description") # not available on hosts
     down_from = time.time()
     down_to = None
     if tablename == "hosts":
 	spec = host
 	cmdtag = "HOST"
+	prefix = "host_"
     elif tablename == "services":
 	spec = "%s;%s" % (host, descr)
 	cmdtag = "SVC"
+	prefix = "service_"
     else:
 	raise MKInternalError("Sorry, no actions possible on table %s" % tablename)
 
@@ -891,12 +908,12 @@ def nagios_action_command(tablename, service):
 
     elif html.var("_down_remove"):
         downtime_ids = []
-	for id in service["service_downtimes"]:
+	for id in dataset[prefix + "downtimes"]:
 	   if id != "":
 	       downtime_ids.append(int(id))
         commands = []
         for dtid in downtime_ids:
-            commands.append("[%d] DEL_" + cmdtag + "_DOWNTIME;%d\n" % (int(time.time()), dtid))
+            commands.append("[%d] DEL_%s_DOWNTIME;%d\n" % (int(time.time()), cmdtag, dtid))
         title = "<b>remove all scheduled downtimes</b> of "
         return title, commands
 
@@ -919,29 +936,28 @@ def do_actions(tablename, rows):
        html.show_error("You are not allowed to perform actions. If you think this is an error, "
              "please ask your administrator to add your login to <tt>multiadmin_action_users</tt> "
 	     "in <tt>main.mk</tt>")
-       return
-    count = 0
-    pipe = file(html.req.defaults["nagios_command_pipe_path"], "w")
+       return False # no actions done
+
     command = None
+    title = nagios_action_command(tablename, rows[0])[0] # just get the title
+    if not html.confirm("Do you really want to %s the following %d %s?" % (title, len(rows), tablename)):
+	return False # no actions done
+
+    count = 0
     for row in rows:
         title, nagios_commands = nagios_action_command(tablename, row)
-        confirms = html.confirm("Do you really want to %s the following %d %s?" % (title, len(rows), tablename))
-        if not confirms:
-	    return False
-        for command in nagios_commands:
-            pipe.write(command)
-            count += 1
+	for command in nagios_commands:
+	    html.live.command(command, row["site"])
+	    count += 1
+
     if command:
 	html.message("Successfully sent %d commands to Nagios. The last one was: <pre>%s</pre>" % (count, command))
-    else:
+    elif count == 0:
 	html.message("No matching service. No command sent.")
     return True
 
 def get_context_link(user, viewname):
-    if multisite_views == {}:
-	load_views()
-    # Try to get view of user. If not available, get builtin view
-    # with that name
-    if (user, viewname) not in multisite_views and ("", viewname) in multisite_views:
-	user = ""
-    return "view.py?view_name=%s/%s" % (user, viewname)
+    if viewname in html.available_views:
+        return "view.py?view_name=%s" % viewname
+    else:
+	return None

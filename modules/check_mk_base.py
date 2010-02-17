@@ -850,3 +850,6 @@ def get_regex(pattern):
         reg = re.compile(pattern)
         compiled_regexes[pattern] = reg
     return reg
+
+# Names of texts usually output by checks
+nagios_state_names = ["OK", "WARN", "CRIT", "UNKNOWN"]

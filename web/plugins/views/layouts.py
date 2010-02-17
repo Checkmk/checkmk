@@ -8,15 +8,14 @@ def paint(p, row):
     tdclass, content = painter["paint"](row)
     # Create contextlink to other view
     if linkview:
-	user, viewname = linkview
-	view = multisite_views.get(linkview) # ACHTUNG: BUG: HIER OVERRIDE BERUECKSICHTIGEN
+	view = html.available_views.get(linkview)
 	if view:
 	    filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
 	    filtervars = []
 	    for filt in filters:
 		filtervars += filt.variable_settings(row)
 
-	    uri = html.makeuri_contextless([("view_name", "%s/%s" % (user, viewname))] + filtervars)
+	    uri = html.makeuri_contextless([("view_name", linkview)] + filtervars)
 	    content = "<a href=\"%s\">%s</a>" % (uri, content)
 
     if tdclass:

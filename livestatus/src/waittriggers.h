@@ -11,9 +11,10 @@
 #define WT_DOWNTIME      4
 #define WT_COMMENT       5
 #define WT_COMMAND       6
-#define WT_NUM_TRIGGERS  7
+#define WT_PROGRAM       7
+#define WT_NUM_TRIGGERS  8
 
-#define WT_ALLNAMES "all, check, state, log, downtime, comment and command"
+#define WT_ALLNAMES "all, check, state, log, downtime, comment, command and program"
 
 extern const char *wt_names[];
 extern pthread_cond_t g_wait_cond[];

@@ -8,10 +8,12 @@ const char *wt_names[WT_NUM_TRIGGERS] =
     "log", 
     "downtime", 
     "comment",
-    "command" 
+    "command",
+    "program",
 };
 
 pthread_cond_t g_wait_cond[] = {
+    PTHREAD_COND_INITIALIZER,
     PTHREAD_COND_INITIALIZER,
     PTHREAD_COND_INITIALIZER,
     PTHREAD_COND_INITIALIZER,

@@ -340,6 +340,12 @@ int broker_state(int event_type, void *data)
     pthread_cond_broadcast(&g_wait_cond[WT_STATE]);
 }
 
+int broker_program(int event_type, void *data)
+{
+    g_counters[COUNTER_NEB_CALLBACKS]++;
+    pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
+    pthread_cond_broadcast(&g_wait_cond[WT_PROGRAM]);
+}
 
 void register_callbacks()
 {
@@ -351,6 +357,7 @@ void register_callbacks()
     neb_register_callback(NEBCALLBACK_LOG_DATA,              g_nagios_handle, 0, broker_log); // only for trigger 'log'
     neb_register_callback(NEBCALLBACK_EXTERNAL_COMMAND_DATA, g_nagios_handle, 0, broker_command); // only for trigger 'command'
     neb_register_callback(NEBCALLBACK_STATE_CHANGE_DATA,     g_nagios_handle, 0, broker_state); // only for trigger 'state'
+    neb_register_callback(NEBCALLBACK_ADAPTIVE_PROGRAM_DATA, g_nagios_handle, 0, broker_program); // only for trigger 'program'
 }
 
 void deregister_callbacks()
@@ -363,6 +370,7 @@ void deregister_callbacks()
     neb_deregister_callback(NEBCALLBACK_LOG_DATA,              broker_log);
     neb_deregister_callback(NEBCALLBACK_EXTERNAL_COMMAND_DATA, broker_command);
     neb_deregister_callback(NEBCALLBACK_STATE_CHANGE_DATA,     broker_state);
+    neb_deregister_callback(NEBCALLBACK_ADAPTIVE_PROGRAM_DATA, broker_program);
 }
 
 

@@ -882,8 +882,12 @@ void Query::doWait()
     // If a condition is set, we check the condition. If it
     // is already true, we do not need to way
     if (_wait_condition.numFilters() > 0 &&
-	_wait_condition.accepts(_wait_object))
+	_wait_condition.accepts(_wait_object)) 
+    {
+	if (g_debug_level >= 2)
+	    logger(LG_INFO, "Wait condition true, no waiting neccessary");
 	return;
+    }
 
     // No wait on specified trigger. If no trigger was specified
     // we use WT_ALL as default trigger.
@@ -902,11 +906,15 @@ void Query::doWait()
 
     do {
 	if (_wait_timeout == 0) {
+	    if (g_debug_level >= 2)
+		logger(LG_INFO, "Waiting unlimited until condition becomes true");
 	    pthread_mutex_lock(&g_wait_mutex);
 	    pthread_cond_wait(&g_wait_cond[_wait_trigger], &g_wait_mutex);
 	    pthread_mutex_unlock(&g_wait_mutex);
 	}
 	else {
+	    if (g_debug_level >= 2)
+		logger(LG_INFO, "Waiting %d ms or until condition becomes true", _wait_timeout);
 	    pthread_mutex_lock(&g_wait_mutex);
 	    int ret = pthread_cond_timedwait(&g_wait_cond[_wait_trigger], &g_wait_mutex, &timeout);
 	    pthread_mutex_unlock(&g_wait_mutex);

@@ -71,6 +71,8 @@ def page_sidebar(h):
     config = load_user_config()
     refresh_snapins = []
     for name, state in config:
+	if not name in sidebar_snapins:
+	   continue
 	if state in [ "open", "closed" ]:
 	   render_snapin(name, state)
 	   refresh_time = sidebar_snapins.get(name).get("refresh", 0)
@@ -85,11 +87,6 @@ def page_sidebar(h):
 
 def render_snapin(name, state):
     snapin = sidebar_snapins.get(name)
-    if not snapin:
-	if check_mk.multiadmin_debug:
-	    raise MKConfigError("Missing sidebar snapin <tt>%s</tt>. Available are: %s" % (name, ", ".join(sidebar_snapins.keys())))
-	return
-
     styles = snapin.get("styles")
     if styles: 
 	html.write("<style>\n%s\n</style>\n" % styles)
@@ -179,6 +176,9 @@ def page_configure(h):
 
     n = 0
     for name, usage in config:
+	if name not in sidebar_snapins: 
+	    n += 1
+	    continue
 	snapin = sidebar_snapins[name]
 	html.set_var("snapin_%d" % n, usage)
 	html.write("<tr>\n")

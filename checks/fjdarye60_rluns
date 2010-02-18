@@ -24,33 +24,29 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-fjdarye60_hwstatus = { 1: 'normal',  2: 'alarm',       3: 'warning',
-                       4: 'invalid', 5: 'maintenance', 6: 'undefined' }
-
-def inventory_fjdarye60(checkname, info):
-    return [ (int(index), '', None) for index, status in info if int(status) != 4 ]
-
-
-def check_fjdarye60(index, _no_param, info):
+def inventoryfunc(checkname, info):
+    inventory = []
     for line in info:
-        if int(line[0]) == index:
-            status = int(line[1])
+	hexparts = line[1].split(None, 3)
+	if hexparts[2] == "A0": # RLUN is present
+	    inventory.append( (line[0], "", None) )
+    return inventory
 
-            if status == 1:
-                code = 0
-            elif status == 3:
-                code = 1
-            else:
-                code = 2
+def checkfunc(item, _no_params, info):
+    for line in info:
+	if item == line[0]:
+	    hexparts = line[1].split(None, 4)
+	    if hexparts[2] != "A0":
+		return (2, "CRIT - RLUN is not present")
+	    elif hexparts[3] == "08":
+		return (1, "WARN - RLUN is rebuilding") # we assume that ;-)
+	    else:
+		return (2, "CRIT - RLUN in unknown state %s" % hexparts[3])
+	    
+    return (3, "UNKNOWN - No RLUN %s in SNMP output" % item)
 
-            return (code, '%s - Status is %s' % (nagios_state_names[code], fjdarye60_hwstatus[status]))
+check_info['fjdarye60_rluns'] = (checkfunc, "RLUN %s", 0,  inventoryfunc)
+snmp_info['fjdarye60_rluns'] = (".1.3.6.1.4.1.211.1.21.1.60.3.4.2.1", [ 0, "2" ])
 
-    return (3, "UNKNOWN - No status for item %d present" % index)
-
-check_info['fjdarye60_cadaps'] = (check_fjdarye60, "Channel Adapter %s", 0,  inventory_fjdarye60)
-# 1: fjdaryCaIndex, 3: fjdaryCaStatus
-snmp_info['fjdarye60_cadaps'] = (".1.3.6.1.4.1.211.1.21.1.60.2.2.2.1", [ 1, 3 ])
-
-snmp_scan_functions['fjdarye60_cadaps'] \
+snmp_scan_functions['fjdarye60_rluns'] \
         = lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.60"
-

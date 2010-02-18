@@ -52,6 +52,6 @@ check_info['fjdarye60_inletthmls'] = (check_fjdarye60, "Inlet Thermal %s", 0,  i
 # 1: fjdaryInletthmlIndex, 3: fjdaryInletthmlStatus
 snmp_info['fjdarye60_inletthmls'] = (".1.3.6.1.4.1.211.1.21.1.60.2.10.2.1", [ 1, 3 ])
 
-# FIXME: Von System auslesen
-#snmp_scan_functions['fjdarye60_inletthmls'] \
-#	= lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.9.1.685"
+snmp_scan_functions['fjdarye60_inletthmls'] \
+        = lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.60"
+

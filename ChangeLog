@@ -11,6 +11,7 @@
       * Abort installation if livestatus does not compile.
       * PNP4Nagios Templates: Fixed bug in template file detection for local checks
       * nagios_install.sh: Added support for Ubuntu 9.10
+      * SNMP checks: handle multiline output of snmpwalk (e.g. Hexdumps)
 
       Checks & Agents:
       * multipath: Fixed bug in output parser
@@ -37,6 +38,7 @@
       * fjdarye60_thmls: New check for status of thermal sensors
       * fjdarye60_psus: New check for status of PSUs
       * fjdarye60_syscaps: New check for status of System Capacitor Units
+      * fjdarye60_rluns: New check for RLUNs
 
       MK Livestatus:
       * New headers for waiting (please refer to online documentation)

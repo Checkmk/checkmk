@@ -120,15 +120,36 @@ def get_snmp_table(hostname, ip, community, oid_info):
             
             command = cmd + " -OQ -Ov -c %s %s %s.%s 2>/dev/null" % \
                 (community, ip, fetchoid, str(column))
-            snmp_process = os.popen(command, "r")
-            rowinfo = map(strip_snmp_value, snmp_process.readlines())
+            snmp_process = os.popen(command, "r").xreadlines()
+	    
+	    # Ugly(1): in some cases snmpwalk inserts line feed within one
+	    # dataset. This happens for example on hexdump outputs longer
+	    # than a few bytes. Those dumps are enclose in double quotes.
+	    # So if the value begins with a double quote, but the line
+	    # does not end with a double quote, we take the next line(s) as
+	    # a continuation line.
+	    rowinfo = []
+	    try:
+	        while True: # walk through all lines
+		    line = snmp_process.next().strip()
+		    if len(line) > 0 and line[0] == '"' and line[-1] != '"': # to be continued
+			while True: # scan for end of this dataset
+			    nextline = snmp_process.next().strip()
+			    line += " " + nextline
+			    if line[-1] == '"':
+				break
+		    rowinfo.append(strip_snmp_value(line))
+		    
+	    except StopIteration:
+		pass
+
             exitstatus = snmp_process.close()
             if exitstatus:
                 if opt_verbose:
                     sys.stderr.write(tty_red + tty_bold + "ERROR: " + tty_normal + "SNMP error\n")
                 return None
 
-            # Ugly: snmpbulkwalk outputs 'No more variables left in this MIB
+            # Ugly(2): snmpbulkwalk outputs 'No more variables left in this MIB
             # View (It is past the end of the MIB tree)' if part of tree is
             # not available -- on stdout >:-P
             if len(rowinfo) == 1 and ( \

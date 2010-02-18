@@ -1,11 +1,11 @@
-title: Monitor summary status of Fujitsu Siemens ETERNUS DX storage systems
+title: Monitor summary status of Fujitsu ETERNUS DX storage systems
 agents: SNMP
 author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
  This check monitors the reported summary status of storage systems from
- Fujitsu Siemens which support the FJDARY-E60.MIB like the ETERNUS DX60 and DX80.
+ Fujitsu which support the FJDARY-E60.MIB like the ETERNUS DX60 and DX80.
 
 item:
  The item is {0} (integer) in all cases because on system can only have one summary status.

@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This check monitors the reported summary status of all installed 
  physical disks
- in storage systems from Fujitsu Siemens which support the
+ in storage systems from Fujitsu which support the
  FJDARY-E60.MIB like the ETERNUS DX60 and DX80.
 
 item:
@@ -16,6 +16,12 @@ inventory:
  If at least one disk is found, exactly one check will be created for
  the host.
 
+examples:
+ # Expect 5 available(=online) and one spare disk
+ checks += [
+   ( 'arc', 'fjdarye60_disks.summary', None, { "available": 5, "spare": 1 } )
+ ]
+
 [parameters]
 expected_state (dictionary): A dictionary from the statenames to the number
  of disks expected in that state. Possible state names are: 
@@ -24,3 +30,4 @@ expected_state (dictionary): A dictionary from the statenames to the number
  {"unformated"}, {"notexist"}, {"copying"}. The check will report {CRITICAL}
  if there are not enough disks in at least one state or otherwise {WARNING} if at
  least one state has an exceeding number of disks.
+

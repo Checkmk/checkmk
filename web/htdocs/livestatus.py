@@ -226,7 +226,7 @@ class BaseConnection:
 	if not command.endswith("\n"):
 	    command += "\n"
 	try:
-	    self.socket.send("COMMAND " + command)
+	    self.socket.send("COMMAND " + command + "\n")
 	except IOError, e:
 	    self.socket_state = DOWN
 	    raise MKLivestatusSocketError(str(e))

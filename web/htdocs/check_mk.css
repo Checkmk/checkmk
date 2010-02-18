@@ -953,50 +953,7 @@ table.sidebarconfig td {
     border: 1px solid #f84;
     padding: 0px 5px;
 }
-/* sitestate snapin */
-div#check_mk_sidebar table.sitestate {
-    width: 100%;
-}
 
-div#check_mk_sidebar table.sitestate td {
-    padding: 0px 0px;
-    text-align: right;
-}
-
-div#check_mk_sidebar table.sitestate td a {
-    font-weight: bold;
-    -moz-border-radius: 4px;
-    margin: 0px;
-    padding: 0px 3px;
-    text-align: center;
-    font-size: 7pt;
-    margin-right: 3px;
-    display: block;
-}
-div#check_mk_sidebar table.sitestate td.left a {
-    text-align: left;
-    font-size: 8pt;
-    font-weight: normal;
-}
-
-div#check_mk_sidebar table.sitestate td.left {
-    text-align: left;
-}
-
-div#check_mk_sidebar table.sitestate td.offline a {
-    background-color: #f00;
-    color: #000;
-    border-color: #800;
-}
-div#check_mk_sidebar table.sitestate td.online a {
-    background-color: #4f6;
-    color: #000;
-    border-color: #0f0;
-}
-div#check_mk_sidebar table.sitestate td.disabled a {
-    background-color: #666;
-    border-color: #888;
-}
 
 div#mk_side_search {
 	text-align: center;

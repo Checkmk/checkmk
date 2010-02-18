@@ -20,13 +20,13 @@ oLink.rel = 'stylesheet';
 oLink.type = 'text/css';
 document.body.appendChild(oLink);
 
-document.write(getFile(url + 'sidebar.py'));
+document.write(get_url(url + 'sidebar.py'));
 
 // Cleaning up DOM links
 oLink = null;
 oSidebar = null;
 
-function getFile(url) {
+function get_url(url) {
       if (window.XMLHttpRequest) {              
           AJAX=new XMLHttpRequest();              
       } else {                                  
@@ -49,14 +49,15 @@ function toggle_sidebar_snapin(oH2, url) {
     else
 	oContent.style.display = "none";
     /* make this persistent -> save */
-    getFile(url + (closed ? "open" : "closed")); 
+    get_url(url + (closed ? "open" : "closed")); 
     oContent = null;
 }
 
 function switch_site(baseuri, switchvar) {
-    getFile(baseuri + "/switch_site.py?" + switchvar);
+    get_url(baseuri + "/switch_site.py?" + switchvar);
     parent.frames[1].location.reload(); /* reload main frame */
 }
+
 
 function sidebar_scheduler() {
     var timestamp = Date.parse(new Date()) / 1000;
@@ -65,7 +66,7 @@ function sidebar_scheduler() {
 	name    = refresh_snapins[i][0];
 	refresh = refresh_snapins[i][1];
 	if (timestamp % refresh == 0) {
-	    newcontent = getFile(url + "/sidebar_snapin.py?name=" + name);
+	    newcontent = get_url(url + "/sidebar_snapin.py?name=" + name);
 	    var oSnapin = document.getElementById("snapin_" + name);
 	    oSnapin.innerHTML = newcontent;
 	    oSnapin = null;

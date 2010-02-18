@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import views
+import views, time
 
 # --------------------------------------------------------------
 #       _       _           _       _ _       _        
@@ -125,8 +125,52 @@ def render_sitestatus():
 if check_mk.is_multisite():
     sidebar_snapins["sitestatus"] = {
 	"title" : "Site status",
-#	"hidetitle" : True,
-	"render" : render_sitestatus
+	"render" : render_sitestatus,
+	"styles" : """
+div#check_mk_sidebar table.sitestate {
+    width: 100%;
+}
+
+div#check_mk_sidebar table.sitestate td {
+    padding: 0px 0px;
+    text-align: right;
+}
+
+div#check_mk_sidebar table.sitestate td a {
+    font-weight: bold;
+    -moz-border-radius: 4px;
+    margin: 0px;
+    padding: 0px 3px;
+    text-align: center;
+    font-size: 7pt;
+    margin-right: 3px;
+    display: block;
+}
+div#check_mk_sidebar table.sitestate td.left a {
+    text-align: left;
+    font-size: 8pt;
+    font-weight: normal;
+}
+
+div#check_mk_sidebar table.sitestate td.left {
+    text-align: left;
+}
+
+div#check_mk_sidebar table.sitestate td.offline a {
+    background-color: #f00;
+    color: #000;
+    border-color: #800;
+}
+div#check_mk_sidebar table.sitestate td.online a {
+    background-color: #4f6;
+    color: #000;
+    border-color: #0f0;
+}
+div#check_mk_sidebar table.sitestate td.disabled a {
+    background-color: #666;
+    border-color: #888;
+}
+"""
     }
 
 
@@ -138,7 +182,6 @@ if check_mk.is_multisite():
 #     |_|\__,_|\___|\__|_|\___\__,_|_|  \___/ \_/ \___|_|    \_/ |_|\___| \_/\_/  
 #                                                                                 
 # --------------------------------------------------------------
-import time
 def render_tactical_overview():
     headers = \
         "Stats: state >= 0\n" \
@@ -294,3 +337,110 @@ sidebar_snapins["nagios_legacy"] = {
     "render" : render_nagios
 }
 
+# ----------------------------------------------------------------
+#   __  __           _                           _             _ 
+#  |  \/  | __ _ ___| |_ ___ _ __ ___ ___  _ __ | |_ _ __ ___ | |
+#  | |\/| |/ _` / __| __/ _ \ '__/ __/ _ \| '_ \| __| '__/ _ \| |
+#  | |  | | (_| \__ \ ||  __/ | | (_| (_) | | | | |_| | | (_) | |
+#  |_|  |_|\__,_|___/\__\___|_|  \___\___/|_| |_|\__|_|  \___/|_|
+#                                                                
+# ----------------------------------------------------------------
+def render_master_control():
+    items = [ 
+	( "enable_notifications",     "Notifications", ),
+	( "execute_service_checks",   "Service checks" ),
+	( "execute_host_checks",      "Host checks" ),
+	( "enable_event_handlers",    "Event handlers" ),
+	( "process_performance_data", "Perf. data"),
+	]
+
+    html.live.set_prepend_site(True)
+    data = html.live.query("GET status\nColumns: %s" % " ".join([ i[0] for i in items ]))
+    html.live.set_prepend_site(False)
+    html.write("<table class=master_control>\n")
+    for siteline in data:
+	siteid = siteline[0]
+	if siteid:
+	    sitealias = html.site_status[siteid]["site"]["alias"]
+	    html.write("<tr><td colspan=2>")
+	    heading(sitealias)
+	    html.write("</tr>\n")
+	for i, (colname, title) in enumerate(items):
+	    colvalue = siteline[i + 1]
+	    url = check_mk.checkmk_web_uri + ("/switch_master_state.py?site=%s&switch=%s&state=%d" % (siteid, colname, 1 - colvalue))
+	    onclick = "get_url('%s')" % url
+	    enabled = colvalue and "enabled" or "disabled"
+	    html.write("<tr><td class=left>%s</td><td class=%s><a onclick=\"%s\" href=\"\">%s</a></td></tr>\n" % (title, enabled, onclick, enabled))
+    html.write("</table>")
+	    
+sidebar_snapins["master_control"] = {
+    "title" : "Master control",
+    "render" : render_master_control,
+    "styles" : """
+div#check_mk_sidebar table.master_control {
+    width: 100%;
+}
+
+div#check_mk_sidebar table.master_control td {
+    padding: 0px 0px;
+    text-align: right;
+}
+
+div#check_mk_sidebar table.master_control td a {
+    font-weight: bold;
+    -moz-border-radius: 4px;
+    margin: 0px;
+    padding: 0px 3px;
+    text-align: center;
+    font-size: 7pt;
+    margin-right: 3px;
+    display: block;
+}
+div#check_mk_sidebar table.master_control td.left a {
+    text-align: left;
+    font-size: 8pt;
+    font-weight: normal;
+}
+
+div#check_mk_sidebar table.master_control td.left {
+    text-align: left;
+}
+
+div#check_mk_sidebar table.master_control td.enabled a {
+    background-color: #4f6;
+    color: #000;
+    border-color: #0f0;
+}
+div#check_mk_sidebar table.master_control td.disabled a {
+    background-color: #666;
+    border-color: #888;
+}
+"""
+}
+
+def ajax_switch_masterstate(html):
+    site = html.var("site")
+    column = html.var("switch")
+    state = int(html.var("state"))
+    commands = {
+	( "enable_notifications",     1) : "ENABLE_NOTIFICATIONS",
+	( "enable_notifications",     0) : "DISABLE_NOTIFICATIONS",
+	( "execute_service_checks",   1) : "START_EXECUTING_SVC_CHECKS",
+	( "execute_service_checks",   0) : "STOP_EXECUTING_SVC_CHECKS",
+	( "execute_host_checks",      1) : "START_EXECUTING_HOST_CHECKS",
+	( "execute_host_checks",      0) : "STOP_EXECUTING_HOST_CHECKS",
+	( "process_performance_data", 1) : "ENABLE_PERFORMANCE_DATA",
+	( "process_performance_data", 0) : "DISABLE_PERFORMANCE_DATA",
+	( "enable_event_handlers",    1) : "ENABLE_EVENT_HANDLERS",
+	( "enable_event_handlers",    0) : "DISABLE_EVENT_HANDLERS",
+    }
+
+    command = commands.get((column, state))
+    if command:
+	html.live.command("[%d] %s" % (int(time.time()), command), site)
+	html.live.set_only_sites([site])
+        html.live.query("GET status\nWaitTrigger: program\nWaitTimeout: 4000\nWaitCondition: %s = %d\nColumns: %s\n" % \
+               (column, state, column))
+	html.live.set_only_sites(None)
+    else:
+	html.write("Command %s/%d not found" % (column, state))

@@ -216,7 +216,7 @@ nagios_illegal_chars               = '`~!$%^&*|\'"<>?,()='
 # Settings for web pages
 multiadmin_users                     = None # means: all
 multiadmin_action_users              = None # means: all
-multiadmin_sites                     = { "local" : {} }
+multiadmin_sites                     = { "" : {} }
 multiadmin_restrict                  = False
 multiadmin_restrict_actions          = False
 multiadmin_unrestricted_users        = []

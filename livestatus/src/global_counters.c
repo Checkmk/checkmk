@@ -27,8 +27,8 @@
 #include "time.h"
 
 time_t last_statistics_update = 0;
-#define STATISTICS_INTERVAL   10
-#define RATING_WEIGHT       0.05
+#define STATISTICS_INTERVAL    4 
+#define RATING_WEIGHT          0.30
 
 void do_statistics()
 {

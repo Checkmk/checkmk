@@ -45,6 +45,7 @@
       * Abort on errors even if header is not fixed16
       * Changed response codes to better match HTTP
       * json output: handle tab and other control characters correctly
+      * Livestatus: Fix columns host:worst_service_state and host:worst_service_hard_state
 
       Multiadmin:
       * Allow nagios contacts to be used for authorization (in order to

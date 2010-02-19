@@ -62,7 +62,7 @@ int32_t ServicelistStateColumn::getValue(int logictype, servicesmember *mem)
 
 	switch (logictype) {
 	    case SLSC_WORST_STATE:
-		if (svcStateIsWorse(result, state))
+		if (svcStateIsWorse(state, result))
 		    result = state;
 		break;
 	    case SLSC_NUM:

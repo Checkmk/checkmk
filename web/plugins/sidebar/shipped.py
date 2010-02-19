@@ -36,6 +36,11 @@ def render_views():
     for title, name in s:
         bulletlink(title, "view.py?view_name=%s" % name)
 
+    links = [("EDIT", "edit_views.py")]
+    if check_mk.multiadmin_debug:
+	links = [("EXPORT", "export_views.py")] + links
+    footnotelinks(links)
+
 sidebar_snapins["views"] = {
     "title" : "Views",
     "render" : render_views
@@ -61,8 +66,9 @@ def render_groups(what):
     groups = [(name_to_alias[name], name) for name in name_to_alias.keys()]
     groups.sort() # sort by Alias!
     target = views.get_context_link(html.req.user, "%sgroup" % what)
-    for alias, name in groups:
-	bulletlink(alias, target + "&%sgroup=%s" % (what, htmllib.urlencode(name)))
+    if target:
+	for alias, name in groups:
+	    bulletlink(alias, target + "&%sgroup=%s" % (what, htmllib.urlencode(name)))
 
 sidebar_snapins["hostgroups"] = {
     "title" : "Hostgroups",
@@ -109,12 +115,15 @@ def render_sitestatus():
 	html.write("<table cellspacing=0 class=sitestate>")
 	for sitename in check_mk.sites():
 	    site = check_mk.site(sitename)
-	    html.write("<tr><td class=left>%s</td>" % link(site["alias"], "view.py?view_name=/sitehosts&site=%s" % sitename))
 	    state = html.site_status[sitename]["state"]
 	    if state == "disabled":
 		switch = "on"
+		text = site["alias"]
 	    else:
 		switch = "off"
+		text = link(site["alias"], "view.py?view_name=sitehosts&site=%s" % sitename)
+
+	    html.write("<tr><td class=left>%s</td>" % text)
 	    onclick = "switch_site('%s', '_site_switch=%s:%s')" % (check_mk.checkmk_web_uri, sitename, switch)
 	    html.write("<td class=%s>" % state)
 	    html.write("<a href=\"\" onclick=\"%s\">%s</a></td>" % (onclick, state[:3]))

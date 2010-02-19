@@ -21,8 +21,20 @@ def cmp_state_equiv(r):
     else:
 	return 5 - s # swap crit and unknown
 
+def cmp_host_state_equiv(r):
+    if r["host_has_been_checked"] == 0:
+	return -1
+    s = r["host_state"]
+    if s == 0:
+	return 0
+    else:
+	return 2 - s # swap down und unreachable
+
 def cmp_svc_states(r1, r2):
     return cmp_atoms(cmp_state_equiv(r1), cmp_state_equiv(r2))
+   
+def cmp_hst_states(r1, r2):
+    return cmp_atoms(cmp_host_state_equiv(r1), cmp_host_state_equiv(r2))
    
 def cmp_simple_string(column, r1, r2):
     v1, v2 = r1[column], r2[column]
@@ -42,6 +54,13 @@ multisite_sorters["svcstate"] = {
     "table"   : "services",
     "columns" : ["service_state", "service_has_been_checked"],
     "cmp"     : cmp_svc_states
+}
+
+multisite_sorters["hoststate"] = {
+    "title"   : "Host state",
+    "table"   : "hosts",
+    "columns" : ["host_state", "host_has_been_checked"],
+    "cmp"     : cmp_hst_states
 }
 
 def cmp_site_host(r1, r2):

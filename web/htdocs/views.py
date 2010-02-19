@@ -57,6 +57,8 @@ def load_views():
 	     raise MKGeneralException("Cannot load views from %s/views.mk: %s" % (dirpath, e))
 
     html.available_views = available_views()
+# html.write("avail: <pre>%s</pre>\n" % pprint.pformat(html.available_views))
+#  html.write("builtin: <pre>%s</pre>\n" % multisite_builtin_views)
 
 # Get the list of views which are available to the user
 # (which could be retrieved with get_view)
@@ -961,3 +963,14 @@ def get_context_link(user, viewname):
         return "view.py?view_name=%s" % viewname
     else:
 	return None
+
+
+
+def ajax_export(h):
+    global html
+    html = h
+    load_views()
+    for name, view in html.available_views.items():
+	view["owner"] = ''
+	view["public"] = True
+    html.write(pprint.pformat(html.available_views))

@@ -135,6 +135,9 @@ def connect_to_livestatus(html):
 
     else:
 	html.live = livestatus.SingleSiteConnection("unix:" + check_mk.livestatus_unix_socket)
+	html.site_status = { '': { "state" : "offline", "site" : check_mk.site('') } }
+        v1, v2 = html.live.query_row("GET status\nColumns: livestatus_version program_version")
+	html.site_status[''].update({ "state" : "online", "livestatus_version": v1, "program_version" : v2 })
 
 # This function does nothing. The sites have already
 # been reconfigured according to the variable _site_switch,

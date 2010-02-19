@@ -31,17 +31,11 @@ h1 {
     font-size: 13pt;
     margin-top: 0px;
     margin-bottom: 0px;
-    display: block;
-    /* background-color: #ccc; */
-    /* border-bottom: 2px solid #666; */
-    /* border-right: 2px solid #888; */
-    /* padding: 2px 0px 2px 10px; */
-    -moz-border-radius: 12px;
 }
 
 table.heading {
     width: 100%;
-    margin-bottom: 2px;
+    margin-bottom: 6px;
     border-bottom: 1px solid black;
     margin-top: 0px;
     padding-top: 3px;
@@ -103,6 +97,32 @@ table.siteheader td.disabled a {
     background-color: #ccc;
     border-color: #ccc #777 #444 #aaa;
     color: #444;
+}
+
+/* navigation ---------------------------------------------------------------- */
+a.navi {
+    border-style: solid;
+    border-color: #eee #666 #444 #eee;
+    border-width: 1px;
+    -moz-border-radius: 4px;
+    background-color: #268;
+    padding: 2px 6px;
+    text-decoration: none;
+    color: white;
+    margin-right: 2px;
+}
+
+a.navi:hover {
+    border-color: #fff #888 #666 #fff;
+    background-color: #48a;
+}
+
+
+a.navi.context {
+    background-color: #628;
+}
+a.navi.context:hover {
+    background-color: #84a;
 }
 
 /* tabs ---------------------------------------------------------------------- */
@@ -389,7 +409,9 @@ table.form td.content {
 
 /* colors of specific forms */
 
-
+table#filter {
+    margin-top: 8px;
+}
 table#filter td.content { 
   background-image: url("background-gold.jpg");
   background-repeat: repeat;
@@ -408,7 +430,9 @@ table#displayoptions td.legend,
 input.tab#displayoptions, 
 input.tabactive#displayoptions    { background-color: #f84; }
 
-
+table#actions {
+    margin-top: 8px;
+}
 table#actions td.content { 
   background-image: url("background-blue.jpg");
   background-repeat: repeat;
@@ -1043,20 +1067,21 @@ background-color: #BFBFBF;
 
 /* layout dataset */
 table.dataset {
-  border-spacing: 0px;
-  margin: 0px;
-  padding: 0px;
-  border-collapse: collapse;
-  empty-cells: show;
-  background-color: #fec;
-  margin-bottom: 15px;
-                border: 6px solid #fec;
+    border-spacing: 0px;
+    margin: 0px;
+    padding: 0px;
+    border-collapse: collapse;
+    empty-cells: show;
+    background-color: #fec;
+    margin-bottom: 15px;
+    border: 6px solid #fec;
+    margin-top: 11px;
 }
 
 table.dataset td {
     border-bottom: 1px dotted #444;
     padding-bottom: 4px;
-    padding: 2px 10px 6px 0px;
+    padding: 1px 10px 5px 0px;
 }
 table.dataset td.left {
     padding-right: 10px;

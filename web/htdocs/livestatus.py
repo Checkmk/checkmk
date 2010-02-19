@@ -39,7 +39,7 @@ For persistent connections create and keep an object:
 
 conn = connection("/var/lib/nagios/rw/live")
 r1 = conn.query_table_assoc("GET hosts")
-r2 = conn.query_line("GET status")
+r2 = conn.query_row("GET status")
 """
 
 DOWN = 0
@@ -84,12 +84,12 @@ class Helpers:
 	  else:
 	      return deflt
    
-   def query_line(self, query):
+   def query_row(self, query):
       """Issues a query that returns one line of data and returns the elements
 	 of that line as list"""
       return self.query(query, "ColumnHeaders: off\n")[0]
 
-   def query_line_assoc(self, query):
+   def query_row_assoc(self, query):
       """Issues a query that returns one line of data and returns the elements
 	 of that line as a dictionary from column names to values"""
       r = self.query(query, "ColumnHeaders: on\n")[0:2]

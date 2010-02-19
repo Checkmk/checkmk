@@ -271,8 +271,9 @@ def page_edit_view(h):
 	    html.add_user_error(e.varname, e.message)
 
     html.header("Edit view")
-    html.write("<p>Edit the properties of the view or go <a href=\"edit_views.py\">back to this list of all views</a>.<br />")
-    html.write("<a href=\"view.py?view_name=%s/%s\">Visit view (does not save)</a></p>" % (html.req.user, viewname))
+    html.write("<a class=navi href=\"edit_views.py\">Edit views</a>\n")
+    html.write("<a class=navi href=\"view.py?view_name=%s\">Visit this view (does not save)</a>\n" % viewname)
+    html.write("<p>Edit the properties of the view.</p>\n")
     html.begin_form("view")
     html.hidden_field("old_name", viewname) # safe old name in case user changes it
     html.write("<table class=view>\n")
@@ -595,7 +596,7 @@ def show_view(view, show_heading = False):
         show_site_header(html)
 
     if view["owner"] == html.req.user:
-	html.write("<a href=\"edit_view.py?load_view=%s\">Edit this view</a> " % view["name"])
+	html.write("<a class=navi href=\"edit_view.py?load_view=%s\">Edit this view</a> " % view["name"])
 
     # Kontext links
     show_context_links(view, show_filters + hide_filters)
@@ -666,10 +667,10 @@ def show_context_links(thisview, active_filters):
 	# add context link to this view    
 	if len(used_contextvars) > 0:
 	    if first:
-		html.write("<div class=contextlinks><h2>Contextlinks</h2>\n")
+                # html.write("<div class=contextlinks><h2>Contextlinks</h2>\n")
 		first = False
 	    vars_values = [ (var, html.var(var)) for var in set(used_contextvars) ]
-	    html.write("<a href=\"%s\">%s</a><br>" % \
+	    html.write("<a class=\"navi context\" href=\"%s\">%s</a>" % \
 		    (html.makeuri_contextless(vars_values + [("view_name", name)]), view_title(view)))
 
     if not first:
@@ -780,11 +781,12 @@ def show_action_form(tablename):
     if not check_mk.is_allowed_to_act(html.req.user):
 	return
 
-    html.begin_form("actions")
     display = html.do_actions()
     toggle_texts = { False: 'Show command form', True: 'Hide command form' }
-    html.write("<a id=toggle_actions href=\"#\" onclick=\"toggle_actions(this, '%s', '%s')\">%s</a>" % \
+    html.write("<a class=navi id=toggle_actions href=\"#\" onclick=\"toggle_actions(this, '%s', '%s')\">%s</a>" % \
 	    (toggle_texts[False], toggle_texts[True], toggle_texts[display]))
+    
+    html.begin_form("actions")
     html.hidden_field("_do_actions", "yes")
     html.hidden_field("actions", "yes")
     html.hidden_fields() # set all current variables, exception action vars

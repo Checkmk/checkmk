@@ -233,7 +233,8 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
    table->addColumn(new ServicelistStateColumn(prefix + "num_services_pending", 
 	    "The number of the host's services which have not been checked yet (pending)", SLSC_NUM_PENDING, (char *)(&hst.services) - ref, indirect_offset));
    table->addColumn(new ServicelistStateColumn(prefix + "worst_service_hard_state", 
-	    "The worst hard state of all of the host's services (OK <= WARN <= UNKNOWN <= CRIT)",  SLSC_WORST_STATE,  (char *)(&hst.services) - ref, indirect_offset));
+	    "The worst hard state of all of the host's services (OK <= WARN <= UNKNOWN <= CRIT)",  \
+	    SLSC_WORST_HARD_STATE,  (char *)(&hst.services) - ref, indirect_offset));
    table->addColumn(new ServicelistStateColumn(prefix + "num_services_hard_ok", 
 	    "The number of the host's services with the hard state OK",      SLSC_NUM_HARD_OK,      (char *)(&hst.services) - ref, indirect_offset));
    table->addColumn(new ServicelistStateColumn(prefix + "num_services_hard_warn", 

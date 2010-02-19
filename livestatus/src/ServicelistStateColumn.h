@@ -30,18 +30,18 @@
 #include "IntColumn.h"
 #include "nagios.h"
 
-#define SLSC_NUM_OK            0
-#define SLSC_NUM_WARN          1
-#define SLSC_NUM_CRIT          2
-#define SLSC_NUM_UNKNOWN       3
-#define SLSC_NUM_PENDING       4
+#define SLSC_NUM_OK             0
+#define SLSC_NUM_WARN           1
+#define SLSC_NUM_CRIT           2
+#define SLSC_NUM_UNKNOWN        3
+#define SLSC_NUM_PENDING        4
 #define SLSC_WORST_STATE       -2
 
-#define SLSC_NUM_HARD_OK       (0 + 64)
-#define SLSC_NUM_HARD_WARN     (1 + 64)
-#define SLSC_NUM_HARD_CRIT     (2 + 64)
-#define SLSC_NUM_HARD_UNKNOWN  (3 + 64)
-#define SLSC_WORST_HARD_STATE   (-2 + 64)
+#define SLSC_NUM_HARD_OK       ( 0 + 64)
+#define SLSC_NUM_HARD_WARN     ( 1 + 64)
+#define SLSC_NUM_HARD_CRIT     ( 2 + 64)
+#define SLSC_NUM_HARD_UNKNOWN  ( 3 + 64)
+#define SLSC_WORST_HARD_STATE  (-2 + 64)
 
 #define SLSC_NUM               -1
 

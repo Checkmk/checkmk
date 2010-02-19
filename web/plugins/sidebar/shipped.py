@@ -3,21 +3,22 @@
 import views, time
 
 # --------------------------------------------------------------
-#       _       _           _       _ _       _        
-#      / \   __| |_ __ ___ (_)_ __ | (_)_ __ | | _____ 
-#     / _ \ / _` | '_ ` _ \| | '_ \| | | '_ \| |/ / __|
-#    / ___ \ (_| | | | | | | | | | | | | | | |   <\__ \
-#   /_/   \_\__,_|_| |_| |_|_|_| |_|_|_|_| |_|_|\_\___/
-#                                                      
+#       _    _                 _   
+#      / \  | |__   ___  _   _| |_ 
+#     / _ \ | '_ \ / _ \| | | | __|
+#    / ___ \| |_) | (_) | |_| | |_ 
+#   /_/   \_\_.__/ \___/ \__,_|\__|
+#                                  
 # --------------------------------------------------------------
 def render_adminlinks():
-    bulletlink("Edit views",    "edit_views.py")
-    bulletlink("Multiadmin",    "filter.py")
-    bulletlink("Logwatch",      "logwatch.py")
-    bulletlink("Documentation", "http://mathias-kettner.de/checkmk.html")
+    html.write("Version: " + check_mk.check_mk_version)
+    bulletlink("Homepage",        "http://mathias-kettner.de/check_mk.html")
+    bulletlink("Documentation",   "http://mathias-kettner.de/checkmk.html")
+    bulletlink("Download",        "http://mathias-kettner.de/check_mk_download.html")
+    bulletlink("Mathias Kettner", "http://mathias-kettner.de")
 
-sidebar_snapins["admin"] = {
-    "title" : "Administration",
+sidebar_snapins["about"] = {
+    "title" : "About Check_MK",
     "render" : render_adminlinks
 }
 

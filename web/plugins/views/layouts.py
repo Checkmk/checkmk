@@ -151,7 +151,7 @@ def render_grouped_boxes(data, view, filters, group_columns, group_painters, pai
 		trclass = "even"
 	    else:
 		trclass = "odd"
-	    state = row.get("state", 0)
+	    state = row.get("service_state", row.get("host_state", 0))
 	    html.write("<tr class=%s%d>" % (trclass, state))
 	    for p in painters:
 		paint(p, row)

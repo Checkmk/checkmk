@@ -224,7 +224,10 @@ multiadmin_unrestricted_action_users = []
 multiadmin_sounds                    = {}
 multiadmin_use_siteicons             = False
 multiadmin_debug                     = False
-multiadmin_sidebar                   = [ ("admin", "open"), ("views", "closed") ]
+multiadmin_sidebar                   = [('admin', 'open'), ('tactical_overview', 'open'), ('sitestatus', 'open'), \
+					('search', 'open'), ('views', 'open'), ('hostgroups', 'closed'), \
+					('servicegroups', 'closed'), ('hosts', 'closed'), ('time', 'open'), \
+					('nagios_legacy', 'closed'), ('performance', 'closed'), ('master_control', 'closed'), ('about', 'closed')]
 
 # Data to be defined in main.mk
 checks                               = []

@@ -13,7 +13,7 @@ function mkSearchAddField(field, targetFrame, checkMkUrl) {
 				}
 		
 				if(typeof checkMkUrl != 'undefined') {
-					mkSearchcheckMkUrl = checkMkUrl;
+					mkSearchCheckMkUrl = checkMkUrl;
 				}
 		
         oField.onkeydown   = function(e) { if (!e) e = window.event; return mkSearchKeyDown(e, oField); }
@@ -193,7 +193,9 @@ function mkSearch(e, oField) {
 		aSearchResults = [];
 
     // Build matching regex
-    var oMatch = new RegExp('^'+val, 'gi');
+    // var oMatch = new RegExp('^'+val, 'gi');
+    // switch to infix search
+    var oMatch = new RegExp(val, 'gi');
 
     var content = '';
     var hostName, hostAlias;
@@ -205,7 +207,7 @@ function mkSearch(e, oField) {
 						var oResult = {
 							'id': 'result_'+hostName,
 							'name': hostName,
-							'url': mkSearchCheckMkUrl+'/view.py?view_name=/host&host='+hostName,
+							'url': mkSearchCheckMkUrl+'/view.py?view_name=host&host='+hostName,
 						};
 						
 						// Add id to search result array

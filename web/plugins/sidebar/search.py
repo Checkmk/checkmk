@@ -3,7 +3,7 @@
 import views
 
 def render_searchform():
-    html.write('<script type="text/javascript" src="/check_mk/search.js"></script>')
+    html.write('<script type="text/javascript" src="%s/search.js"></script>' % check_mk.checkmk_web_uri)
     html.write('<div id="mk_side_search">')
     html.write('<input id="mk_side_search_field" type="text" name="search" />')
     html.write('</div>')

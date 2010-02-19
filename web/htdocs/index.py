@@ -207,6 +207,7 @@ def handler(req):
 			 "siteoverview"      : page_multiadmin.page_siteoverview,
 			 "edit_views"        : views.page_edit_views,
 			 "edit_view"         : views.page_edit_view,
+			 "export_views"      : views.ajax_export,
 			 "view"              : views.page_view,
 			 "logwatch"          : page_logwatch.page,
 			 "sidebar"           : sidebar.page_sidebar, 

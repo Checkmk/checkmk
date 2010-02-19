@@ -19,6 +19,12 @@ def link(text, target):
 def bulletlink(text, target):
     html.write("<li class=sidebar>" + link(text, target) + "</li>\n")
 
+def footnotelinks(links):
+    html.write("<div class=footnotelink>")
+    for text, target in links:
+	html.write(link(text, target))
+    html.write("</div>\n")
+
 def nagioscgilink(text, target):
     html.write("<li class=sidebar><a target=\"main\" class=link href=\"%s/%s\">%s</a></li>" % \
 	    (check_mk.nagios_cgi_url, target, htmllib.attrencode(text)))
@@ -57,7 +63,7 @@ def save_user_config(config):
 	file(path, "w").write(pprint.pformat(config) + "\n")
     except Exception, e:
 	raise MKConfigError("Cannot save user configuration to <tt>%s</tt>: %s" % (path, e))
-    
+   
 def page_sidebar(h):
     global html
     html = h

@@ -850,7 +850,7 @@ div#check_mk_sidebar {
     font-family: arial, helvetica, sans-serif;
 }
 div#check_mk_sidebar td {
-    font-size: 9pt;
+    font-size: 8pt;
 }
 
 div#check_mk_sidebar div.header table
@@ -858,10 +858,11 @@ div#check_mk_sidebar div.header table
     width: 100%;
 }
 
-div#check_mk_sidebar div.header table td.title
+div#check_mk_sidebar div.header table td.title a
 {
     font-weight: bold;
-    color: #fc0;
+    color: #888;
+    font-size: 12pt;
 }
 div#check_mk_sidebar div.header table td.logo
 {
@@ -884,8 +885,8 @@ div#check_mk_sidebar div.section {
 }
 
 div#check_mk_sidebar div.content {
-    margin-top: 3px;
-    margin-bottom: 5px;
+    margin-top: 2px;
+    margin-bottom: 3px;
 }
 div#check_mk_sidebar h2 {
     margin-top: 0px;
@@ -903,6 +904,19 @@ div#check_mk_sidebar a {
     text-decoration: none;
     font-weight: normal;
     color: #eee;
+}
+div#check_mk_sidebar div.footnotelink {
+    width: 155px;
+    text-align: right;
+}
+div#check_mk_sidebar div.footnotelink a {
+    font-size: 6pt;
+    color: #022;
+    border: 1px solid #333;
+    -moz-border-radius: 3px;
+    background-color: #666;
+    padding: 0px 4px;
+    margin-left: 3px;
 }
 div#check_mk_sidebar a:hover {
     text-decoration: underline;
@@ -931,7 +945,7 @@ div#check_mk_sidebar div.footnote {
     text-align: right;
 }
 div#check_mk_sidebar div.footnote a {
-    font-size: 6pt;
+    font-size: 7pt;
 }
 
 table.sidebarconfig {
@@ -967,7 +981,7 @@ div#check_mk_sidebar table.sitestate td a {
     font-weight: bold;
     -moz-border-radius: 4px;
     margin: 0px;
-    padding: 0px 3px;
+    padding: 0px 0px;
     text-align: center;
     font-size: 7pt;
     margin-right: 3px;

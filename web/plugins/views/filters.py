@@ -229,12 +229,50 @@ class FilterServiceState(Filter):
 	if html.var("stp", defval) == "on":
 	    headers.append("Filter: has_been_checked = 0\n")
 	if len(headers) == 0:
-	    return "Limit: 0\n" # now allowed state
+	    return "Limit: 0\n" # not allowed state
 	else:
 	    return "".join(headers) + ("Or: %d\n" % len(headers))
 	
     def allowed_for_table(self, tablename):
 	return tablename == "services"
+
+declare_filter(FilterServiceState())
+
+class FilterHostState(Filter):
+    def __init__(self):
+	Filter.__init__(self, "hoststate", "Host states", 
+		"hosts", [ "st0", "st1", "st2", "stp" ])
+    
+    def display(self):
+	if html.var("filled_in"):
+	    defval = ""
+	else:
+	    defval = "on"
+	for var, text in [("st0", "UP"), ("st1", "DOWN"), ("st2", "UNREACH"), ("stp", "PENDING")]:
+	    html.checkbox(var, defval)
+	    html.write(" %s " % text)
+
+    def filter(self, tablename):
+	headers = []
+	if html.var("filled_in"):
+	    defval = ""
+	else:
+	    defval = "on"
+
+	for i in [0,1,2]:
+	    if html.var("st%d" % i, defval) == "on":
+		headers.append("Filter: %sstate = %d\nFilter: has_been_checked = 1\nAnd: 2\n" % (self.tableprefix(tablename), i))
+	if html.var("stp", defval) == "on":
+	    headers.append("Filter: has_been_checked = 0\n")
+	if len(headers) == 0:
+	    return "Limit: 0\n" # not allowed state
+	else:
+	    return "".join(headers) + ("Or: %d\n" % len(headers))
+	
+    def allowed_for_table(self, tablename):
+	return tablename == "hosts"
+
+declare_filter(FilterHostState())
 
 class FilterTristate(Filter):
     def __init__(self, name, title, table, column, deflt = -1):
@@ -315,7 +353,6 @@ declare_filter(FilterNagiosExpression("services", "in_downtime", "Host or Servic
 	    "Filter: scheduled_downtime_depth > 0\nFilter: host_scheduled_downtime_depth > 0\nOr: 2\n",
 	    "Filter: scheduled_downtime_depth = 0\nFilter: host_scheduled_downtime_depth = 0\nAnd: 2\n"))
 	
-declare_filter(FilterServiceState())
 
 class FilterSite(Filter):
     def __init__(self, name, enforce):

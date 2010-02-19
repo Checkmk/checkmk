@@ -371,7 +371,7 @@ def render_master_control():
 	siteid = siteline[0]
 	if siteid:
 	    sitealias = html.site_status[siteid]["site"]["alias"]
-	    html.write("<tr><td colspan=2>")
+	    html.write("<tr><td class=left colspan=2>")
 	    heading(sitealias)
 	    html.write("</tr>\n")
 	for i, (colname, title) in enumerate(items):
@@ -404,6 +404,7 @@ div#check_mk_sidebar table.master_control td a {
     font-size: 7pt;
     margin-right: 3px;
     display: block;
+    border: 1px solid black;
 }
 div#check_mk_sidebar table.master_control td.left a {
     text-align: left;
@@ -418,11 +419,12 @@ div#check_mk_sidebar table.master_control td.left {
 div#check_mk_sidebar table.master_control td.enabled a {
     background-color: #4f6;
     color: #000;
-    border-color: #0f0;
+    border-color: #080;
 }
 div#check_mk_sidebar table.master_control td.disabled a {
-    background-color: #666;
-    border-color: #888;
+    background-color: #f33;
+    border-color: #c00;
+    color: #fff;
 }
 """
 }

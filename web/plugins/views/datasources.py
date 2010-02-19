@@ -18,4 +18,20 @@ multisite_datasources["services"] = {
 		 "last_state_change", "downtimes", "perf_data" ],
 }
 
+multisite_datasources["servicegroups"] = {
+    "title" : "Servicegroups",
+    "table" : "servicegroups",
+    "columns" : [ "name", "alias", "num_services", "num_services_ok", \
+    "num_services_warn", "num_services_crit", "num_services_unknown", "num_services_pending",
+    "worst_service_state" ],
+}
+
+multisite_datasources["hostgroups"] = {
+    "title" : "Hostgroups",
+    "table" : "hostgroups",
+    "columns" : [ "name", "alias", "num_hosts", "num_hosts_up", "num_hosts_down", "num_hosts_pending", "num_hosts_unreach",
+    "num_services", "num_services_ok", 
+    "num_services_warn", "num_services_crit", "num_services_unknown", "num_services_pending",
+    "worst_service_state" ],
+}
 

@@ -65,7 +65,7 @@ multisite_painters["host_with_state"] = {
     "short" : "Host",
     "columns" : ["site","host_name"],
     "table" : "hosts",
-    "paint" : lambda row: ("hstate%d" % row["host_state"], row["host_name"])
+    "paint" : lambda row: ("state hstate hstate%d" % row["host_state"], row["host_name"])
 }
 
 multisite_painters["host"] = {
@@ -91,7 +91,7 @@ def paint_service_state_short(row):
     else:
 	state = "p"
 	name = "PEND"
-    return "state%s" % state, name
+    return "state svcstate state%s" % state, name
 
 def paint_host_state_short(row):
 # return None, str(row)
@@ -101,7 +101,7 @@ def paint_host_state_short(row):
     else:
 	state = "p"
 	name = "PEND"
-    return "hstate%s" % state, name
+    return "state hstate hstate%s" % state, name
 
 multisite_painters["service_state"] = {
     "title" : "Service state",
@@ -160,9 +160,15 @@ multisite_painters["svc_state_age"] = {
 
 def paint_svc_count(id, count):
     if count > 0:
-	return "state%s" % id, str(count)
+	return "count svcstate state%s" % id, str(count)
     else:
-	return "statex", "0"
+	return "count svcstate statex", "0"
+
+def paint_host_count(id, count):
+    if count > 0:
+	return "count hstate hstate%s" % id, str(count)
+    else:
+	return "count hstate hstatex", "0"
 
 multisite_painters["num_services"] = {
     "title"   : "Number of services",
@@ -205,11 +211,177 @@ multisite_painters["num_services_unknown"] = {
 }
 
 multisite_painters["num_services_pending"] = {
-    "title"   : "Number of pending services",
+    "title"   : "Number of services in state PENDING",
     "short"   : "P",
     "table"   : "hosts",
     "columns" : [ "host_num_services_pending" ],
     "paint"   : lambda row: paint_svc_count("p", row["host_num_services_pending"])
+}
+
+#    _   _           _                                  
+#   | | | | ___  ___| |_ __ _ _ __ ___  _   _ _ __  ___ 
+#   | |_| |/ _ \/ __| __/ _` | '__/ _ \| | | | '_ \/ __|
+#   |  _  | (_) \__ \ || (_| | | | (_) | |_| | |_) \__ \
+#   |_| |_|\___/|___/\__\__, |_|  \___/ \__,_| .__/|___/
+#                       |___/                |_|        
+#
+multisite_painters["hg_num_services"] = {
+    "title"   : "Number of services",
+    "short"   : "",
+    "table"   : "hostgroups",
+    "columns" : [ "hostgroup_num_services" ],
+    "paint"   : lambda row: (None, str(row["hostgroup_num_services"])),
+}
+
+multisite_painters["hg_num_services_ok"] = {
+    "title"   : "Number of services in state OK",
+    "short"   : "O",
+    "table"   : "hostgroups",
+    "columns" : [ "hostgroup_num_services_ok" ],
+    "paint"   : lambda row: paint_svc_count(0, row["hostgroup_num_services_ok"])
+}
+
+multisite_painters["hg_num_services_warn"] = {
+    "title"   : "Number of services in state WARN",
+    "short"   : "W",
+    "table"   : "hostgroups",
+    "columns" : [ "hostgroup_num_services_warn" ],
+    "paint"   : lambda row: paint_svc_count(1, row["hostgroup_num_services_warn"])
+}
+
+multisite_painters["hg_num_services_crit"] = {
+    "title"   : "Number of services in state CRIT",
+    "short"   : "C",
+    "table"   : "hostgroups",
+    "columns" : [ "hostgroup_num_services_crit" ],
+    "paint"   : lambda row: paint_svc_count(2, row["hostgroup_num_services_crit"])
+}
+
+multisite_painters["hg_num_services_unknown"] = {
+    "title"   : "Number of services in state UNKNOWN",
+    "short"   : "U",
+    "table"   : "hostgroups",
+    "columns" : [ "hostgroup_num_services_unknown" ],
+    "paint"   : lambda row: paint_svc_count(3, row["hostgroup_num_services_unknown"])
+}
+
+multisite_painters["hg_num_services_pending"] = {
+    "title"   : "Number of services in state PENDING",
+    "short"   : "P",
+    "table"   : "hostgroups",
+    "columns" : [ "hostgroup_num_services_pending" ],
+    "paint"   : lambda row: paint_svc_count("p", row["hostgroup_num_services_pending"])
+}
+multisite_painters["hg_num_hosts_up"] = {
+    "title"   : "Number of hosts in state UP",
+    "short"   : "Up",
+    "table"   : "hostgroups",
+    "columns" : [ "hostgroup_num_hosts_up" ],
+    "paint"   : lambda row: paint_host_count(0, row["hostgroup_num_hosts_up"])
+}
+multisite_painters["hg_num_hosts_down"] = {
+    "title"   : "Number of hosts in state DOWN",
+    "short"   : "Dw",
+    "table"   : "hostgroups",
+    "columns" : [ "hostgroup_num_hosts_down" ],
+    "paint"   : lambda row: paint_host_count(0, row["hostgroup_num_hosts_down"])
+}
+multisite_painters["hg_num_hosts_unreach"] = {
+    "title"   : "Number of hosts in state UNREACH",
+    "short"   : "Un",
+    "table"   : "hostgroups",
+    "columns" : [ "hostgroup_num_hosts_unreach" ],
+    "paint"   : lambda row: paint_host_count(0, row["hostgroup_num_hosts_unreach"])
+}
+multisite_painters["hg_num_hosts_pending"] = {
+    "title"   : "Number of hosts in state PENDING",
+    "short"   : "Un",
+    "table"   : "hostgroups",
+    "columns" : [ "hostgroup_num_hosts_pending" ],
+    "paint"   : lambda row: paint_host_count(0, row["hostgroup_num_hosts_pending"])
+}
+multisite_painters["hg_name"] = {
+    "title" : "Hostgroup name",
+    "short" : "Name",
+    "table" : "hostgroups",
+    "columns" : ["hostgroup_name"],
+    "paint" : lambda row: (None, row["hostgroup_name"])
+}
+multisite_painters["hg_alias"] = {
+    "title" : "Hostgroup alias",
+    "short" : "Alias",
+    "table" : "hostgroups",
+    "columns" : ["hostgroup_alias"],
+    "paint" : lambda row: (None, row["hostgroup_alias"])
+}
+
+#    ____                  _                                          
+#   / ___|  ___ _ ____   _(_) ___ ___  __ _ _ __ ___  _   _ _ __  ___ 
+#   \___ \ / _ \ '__\ \ / / |/ __/ _ \/ _` | '__/ _ \| | | | '_ \/ __|
+#    ___) |  __/ |   \ V /| | (_|  __/ (_| | | | (_) | |_| | |_) \__ \
+#   |____/ \___|_|    \_/ |_|\___\___|\__, |_|  \___/ \__,_| .__/|___/
+#                                     |___/                |_|        
+
+multisite_painters["sg_num_services"] = {
+    "title"   : "Number of services",
+    "short"   : "",
+    "table"   : "servicegroups",
+    "columns" : [ "servicegroup_num_services" ],
+    "paint"   : lambda row: (None, str(row["servicegroup_num_services"])),
+}
+
+multisite_painters["sg_num_services_ok"] = {
+    "title"   : "Number of services in state OK",
+    "short"   : "O",
+    "table"   : "servicegroups",
+    "columns" : [ "servicegroup_num_services_ok" ],
+    "paint"   : lambda row: paint_svc_count(0, row["servicegroup_num_services_ok"])
+}
+
+multisite_painters["sg_num_services_warn"] = {
+    "title"   : "Number of services in state WARN",
+    "short"   : "W",
+    "table"   : "servicegroups",
+    "columns" : [ "servicegroup_num_services_warn" ],
+    "paint"   : lambda row: paint_svc_count(1, row["servicegroup_num_services_warn"])
+}
+
+multisite_painters["sg_num_services_crit"] = {
+    "title"   : "Number of services in state CRIT",
+    "short"   : "C",
+    "table"   : "servicegroups",
+    "columns" : [ "servicegroup_num_services_crit" ],
+    "paint"   : lambda row: paint_svc_count(2, row["servicegroup_num_services_crit"])
+}
+
+multisite_painters["sg_num_services_unknown"] = {
+    "title"   : "Number of services in state UNKNOWN",
+    "short"   : "U",
+    "table"   : "servicegroups",
+    "columns" : [ "servicegroup_num_services_unknown" ],
+    "paint"   : lambda row: paint_svc_count(3, row["servicegroup_num_services_unknown"])
+}
+
+multisite_painters["sg_num_services_pending"] = {
+    "title"   : "Number of services in state PENDING",
+    "short"   : "P",
+    "table"   : "servicegroups",
+    "columns" : [ "servicegroup_num_services_pending" ],
+    "paint"   : lambda row: paint_svc_count("p", row["servicegroup_num_services_pending"])
+}
+multisite_painters["sg_name"] = {
+    "title" : "Servicegroup name",
+    "short" : "Name",
+    "table" : "servicegroups",
+    "columns" : ["servicegroup_name"],
+    "paint" : lambda row: (None, row["servicegroup_name"])
+}
+multisite_painters["sg_alias"] = {
+    "title" : "Servicegroup alias",
+    "short" : "Alias",
+    "table" : "servicegroups",
+    "columns" : ["servicegroup_alias"],
+    "paint" : lambda row: (None, row["servicegroup_alias"])
 }
 
 # Intelligent Links to PNP4Nagios 0.6.X

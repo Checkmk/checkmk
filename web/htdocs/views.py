@@ -14,9 +14,9 @@ for fn in os.listdir(plugins_path):
     if fn.endswith(".py"):
 	execfile(plugins_path + "/" + fn)
 
-max_display_columns   = 10
-max_group_columns     = 3
-max_sort_columns      = 4
+max_display_columns   = 12
+max_group_columns     = 4
+max_sort_columns      = 5
 
 # Load all views - users or builtins
 def load_views():
@@ -57,8 +57,8 @@ def load_views():
 	     raise MKGeneralException("Cannot load views from %s/views.mk: %s" % (dirpath, e))
 
     html.available_views = available_views()
-# html.write("avail: <pre>%s</pre>\n" % pprint.pformat(html.available_views))
-#  html.write("builtin: <pre>%s</pre>\n" % multisite_builtin_views)
+     # html.write("avail: <pre>%s</pre>\n" % pprint.pformat(html.available_views))
+     # html.write("builtin: <pre>%s</pre>\n" % multisite_builtin_views)
 
 # Get the list of views which are available to the user
 # (which could be retrieved with get_view)
@@ -67,7 +67,8 @@ def available_views():
     views = {}
     # 1. user's own views
     for (u, n), view in html.multisite_views.items():
-	views[n] = view
+	if u == user:
+	    views[n] = view
 
     # 2. views of admin users, if public
     for (u, n), view in html.multisite_views.items():
@@ -78,8 +79,8 @@ def available_views():
     
     # 3. Builtin views
     for (u, n), view in html.multisite_views.items():
-	if u == '' and n not in views:
-	    views[n] = view
+        if u == '' and n not in views:
+            views[n] = view
 
     # 4. other users views, if public
     for (u, n), view in html.multisite_views.items():
@@ -140,7 +141,12 @@ def page_edit_views(h, msg=None):
 	clonename = ""
 
     if clonename and html.check_transaction():
-	newname = clonename + "_clone"
+	if cloneuser == html.req.user: # Same user, must rename
+	    newname = clonename + "_clone"
+        else:
+	    newname = clonename
+
+	# Name conflict -> try new names
 	n = 1
 	while (html.req.user, newname) in html.multisite_views:
 	    n += 1
@@ -149,7 +155,9 @@ def page_edit_views(h, msg=None):
 	orig = html.multisite_views[(cloneuser, clonename)]
 	clone = copy.copy(orig)
 	clone["name"] = newname
-	clone["title"] = orig["title"] + " (Copy)" 
+	clone["title"] = orig["title"]
+	if cloneuser == html.req.user:
+	    clone["title"] += " (Copy)" # only if same user
 	if cloneuser != html.req.user: 
 	    clone["public"] = False
 	html.multisite_views[(html.req.user, newname)] = clone
@@ -189,7 +197,11 @@ def page_edit_views(h, msg=None):
 	    html.write("<td class=content>%s</td>" % (view["public"] and "yes" or "no"))
 	    html.write("<td class=content>%s</td>" % (view["hidden"] and "yes" or "no"))
 	    html.write("</td><td class=content>%s</td><td class=buttons>\n" % view["datasource"])
-	    html.buttonlink("edit_views.py?clone=%s/%s" % (owner, viewname), "Clone", True)
+	    if owner == "":
+		buttontext = "Override"
+	    else:
+		buttontext = "Clone"
+	    html.buttonlink("edit_views.py?clone=%s/%s" % (owner, viewname), buttontext, True)
 	    if owner == html.req.user:
 		html.buttonlink("edit_view.py?load_view=%s" % viewname, "Edit")
 		html.buttonlink("edit_views.py?delete=%s" % viewname, "Delete!", True)
@@ -339,7 +351,7 @@ def page_edit_view(h):
 	for n in range(1, maxnum+1):
 	    collist = [ ("", "") ] + [ (name, p["title"]) for name, p in allowed.items() ]
 	    html.write("%02d " % n)
-	    html.select("%s%d" % (var_prefix, n), collist)
+	    html.sorted_select("%s%d" % (var_prefix, n), collist)
 	    if order:
 		html.write(" ")
 		html.select("%sorder_%d" % (var_prefix, n), [("asc", "Ascending"), ("dsc", "Descending")])

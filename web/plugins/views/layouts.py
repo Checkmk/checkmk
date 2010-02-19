@@ -19,7 +19,7 @@ def paint(p, row):
 	    content = "<a href=\"%s\">%s</a>" % (uri, content)
 
     if tdclass:
-	html.write("<td class=%s>%s</td>\n" % (tdclass, content))
+	html.write("<td class=\"%s\">%s</td>\n" % (tdclass, content))
     else:
 	html.write("<td>%s</td>" % content)
 

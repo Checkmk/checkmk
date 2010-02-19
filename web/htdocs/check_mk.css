@@ -169,8 +169,9 @@ table.services th {
     border-right: 1px dotted #366;
     background-color: #abb;
     padding: 0px 8px;
-    text-align: left;
+    text-align: center;
     font-size: 9pt;
+    color: white;
 
 }
 table.services th.tablegap {
@@ -263,29 +264,25 @@ table.services td.agerecent {
 }
 
 /* state in group header */
-.groupheader td.state0, 
-.groupheader td.state1, 
-.groupheader td.state2, 
-.groupheader td.state3, 
-.groupheader td.state4, 
-.groupheader td.statep, 
-.groupheader td.hstate0, 
-.groupheader td.hstate1, 
-.groupheader td.hstate2, 
-.groupheader td.hstatep, 
-.groupheader td.statex {
+.groupheader td.state {
   width: 50px;
   padding: 2px 5px;
   border: 1px solid white;
 } 
 
-td.state0, td.state1, td.state2, td.state3, td.state4, td.statep, td.hstate0, td.hstate1, td.hstate2, td.hstatep, td.statex { 
+td.state {  
   text-align: center;
   font-weight: bold;
   font-family: sans-serif;
 }
 
-td.statex { 
+td.count {
+  text-align: right;
+  font-weight: bold;
+  font-family: sans-serif;
+}
+
+td.statex {  /* zero count */
   color: #ccc;
 }
 

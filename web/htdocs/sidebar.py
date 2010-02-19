@@ -63,7 +63,23 @@ def save_user_config(config):
 	file(path, "w").write(pprint.pformat(config) + "\n")
     except Exception, e:
 	raise MKConfigError("Cannot save user configuration to <tt>%s</tt>: %s" % (path, e))
-   
+  
+# Standalone sidebar
+def page_side(h):
+    global html
+    html = h
+    html.write("""<html>
+<head>
+<title>Check_MK Sidebar</title>
+<link href="%s/check_mk.css" type="text/css" rel="stylesheet">
+</head>
+<body style="background-color: black">
+<div id=check_mk_sidebar><script src="%s/sidebar.js"></script></div>
+</body>
+</html>
+""" % ((check_mk.checkmk_web_uri, ) * 2))
+
+# Embedded sidebar	
 def page_sidebar(h):
     global html
     html = h

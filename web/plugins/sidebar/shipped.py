@@ -126,7 +126,7 @@ def render_sitestatus():
 
 	    html.write("<tr><td class=left>%s</td>" % text)
 	    onclick = "switch_site('%s', '_site_switch=%s:%s')" % (check_mk.checkmk_web_uri, sitename, switch)
-	    html.write("<td class=%s>" % state)
+	    html.write("<td class=\"state %s\">" % state)
 	    html.write("<a href=\"\" onclick=\"%s\">%s</a></td>" % (onclick, state[:3]))
 	    html.write("</tr>\n")
 	html.write("</table>\n")
@@ -162,6 +162,9 @@ div#check_mk_sidebar table.sitestate td.left a {
     font-weight: normal;
 }
 
+div#check_mk_sidebar table.sitestate td.state {
+    width: 30px;
+}
 div#check_mk_sidebar table.sitestate td.left {
     text-align: left;
 }
@@ -172,8 +175,8 @@ div#check_mk_sidebar table.sitestate td.offline a {
     border-color: #800;
 }
 div#check_mk_sidebar table.sitestate td.online a {
-    background-color: #4f6;
-    color: #000;
+    background-color: #3f6;
+    color: #fff;
     border-color: #0f0;
 }
 div#check_mk_sidebar table.sitestate td.disabled a {
@@ -221,8 +224,7 @@ sidebar_snapins["tactical_overview"] = {
 table.tacticaloverview { width: 153px; margin-top: 0px;}
 table.tacticaloverview th { font-size: 7pt; text-align: left; font-weight: normal; padding: 0px; }
 table.tacticaloverview td { text-align: right; border: 1px solid #444; padding: 0px; padding-right: 2px; }
-/*table.tacticaloverview td.noprob { background-color: #9ca; }*/
-table.tacticaloverview td.prob { background-color: #ca9; color: #f00; font-weight: bold; }
+table.tacticaloverview td.prob { background-color: #d30; color: #f00; font-weight: bold; }
 """
 }
 

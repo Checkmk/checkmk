@@ -39,12 +39,15 @@ extern int g_debug_level;
 extern unsigned long g_max_cached_messages;
 
 Store::Store()
-    : _table_downtimes(true)
+    : _table_services(false)
+    , _table_servicesbygroup(true)
+    , _table_downtimes(true)
     , _table_comments(false)
     , _table_log(g_max_cached_messages)
 {
     _tables.insert(make_pair("hosts", &_table_hosts));
     _tables.insert(make_pair("services", &_table_services));
+    _tables.insert(make_pair("servicesbygroup", &_table_servicesbygroup));
     _tables.insert(make_pair("hostgroups", &_table_hostgroups));
     _tables.insert(make_pair("servicegroups", &_table_servicegroups));
     _tables.insert(make_pair("contacts", &_table_contacts));
@@ -59,6 +62,7 @@ Store::Store()
 
     g_table_hosts = &_table_hosts;
     g_table_services = &_table_services;
+    g_table_servicesbygroup = &_table_servicesbygroup;
     g_table_hostgroups = &_table_hostgroups;
     g_table_servicegroups = &_table_servicegroups;
     g_table_contacts = &_table_contacts;

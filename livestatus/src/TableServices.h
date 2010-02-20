@@ -38,9 +38,11 @@ class TableDowntimes;
 
 class TableServices : public Table
 {
+    bool _by_group;
+
 public:
-    TableServices();
-    const char *name() { return "services"; };
+    TableServices(bool by_group);
+    const char *name() { return _by_group ? "servicesbygroup" : "services"; };
     bool isAuthorized(contact *, void *);
     void *findObject(char *objectspec);
     void add(service *svc);

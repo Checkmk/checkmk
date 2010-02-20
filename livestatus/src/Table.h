@@ -49,6 +49,7 @@ public:
     Column *column(const char *name);
     virtual void answerQuery(Query *) = 0;
     virtual const char *name() = 0;
+    virtual const char *prefixname() { return name(); };
     virtual bool isAuthorized(contact *, void *) { return true; };
     virtual void *findObject(char *objectspec) { return 0; }; // objectspec may be modified while parsing
     void addColumn(Column *);

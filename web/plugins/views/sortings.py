@@ -77,18 +77,18 @@ multisite_sorters["site_host"] = {
     "cmp"     : cmp_site_host
 }
 
-def declare_simple_sorter(name, title, table, column, func):
+def declare_simple_sorter(name, title, column, func):
     multisite_sorters[name] = {
 	"title"   : title,
-	"table"   : table,
 	"columns" : [ column ],
         "cmp"     : lambda r1, r2: func(column, r1, r2)
     }
 
 
-#                      name         title                   table       column                       sortfunction
-declare_simple_sorter("svcdescr",  "Service description",   "services", "service_description",       cmp_simple_string)
-declare_simple_sorter("svcoutput", "Service plugin output", "services", "service_plugin_output",     cmp_simple_string)
-declare_simple_sorter("site",      "Site",                   None,      "site",                      cmp_simple_string)
-declare_simple_sorter("stateage",  "Service state age",     "services", "service_last_state_change", cmp_simple_number)
+#                      name           title                    column                       sortfunction
+declare_simple_sorter("svcdescr",     "Service description",   "service_description",       cmp_simple_string)
+declare_simple_sorter("svcoutput",    "Service plugin output", "service_plugin_output",     cmp_simple_string)
+declare_simple_sorter("site",         "Site",                  "site",                      cmp_simple_string)
+declare_simple_sorter("stateage",     "Service state age",     "service_last_state_change", cmp_simple_number)
+declare_simple_sorter("servicegroup", "Servicegroup",          "servicegroup_alias",        cmp_simple_string)
 

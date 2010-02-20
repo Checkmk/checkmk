@@ -73,8 +73,8 @@ Column *Table::column(const char *colname)
 
     // Second allow column names to bear prefix like
     // the tablename (e.g. service_ for table services)
-    int prefix_len = strlen(name()); // replaced 's' with '_'
-    if (!strncmp(colname, name(), prefix_len - 1) && \
+    int prefix_len = strlen(prefixname()); // replaced 's' with '_'
+    if (!strncmp(colname, prefixname(), prefix_len - 1) && \
 	    colname[prefix_len - 1] == '_')
     {
 	return column(colname + prefix_len);

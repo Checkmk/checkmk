@@ -31,14 +31,12 @@ def paint_site_icon(row):
 multisite_painters["sitename_plain"] = {
     "title" : "Site id",
     "short" : "Site",
-    "table" : None,
     "columns" : ["site"],
     "paint" : lambda row: (None, row["site"])
 }
 
 multisite_painters["sitealias"] = {
     "title" : "Site alias",
-    "table" : None,
     "columns" : ["site"],
     "paint" : lambda row: (None, check_mk.site(row["site"])["alias"])
 }
@@ -56,7 +54,6 @@ multisite_painters["host_black"] = {
     "title" : "Hostname, red background if down or unreachable",
     "short" : "Host",
     "columns" : ["site","host_name"],
-    "table" : "hosts",
     "paint" : paint_host_black,
 }
 
@@ -64,14 +61,12 @@ multisite_painters["host_with_state"] = {
     "title" : "Hostname colored with state",
     "short" : "Host",
     "columns" : ["site","host_name"],
-    "table" : "hosts",
     "paint" : lambda row: ("state hstate hstate%d" % row["host_state"], row["host_name"])
 }
 
 multisite_painters["host"] = {
     "title" : "Hostname",
     "short" : "Host",
-    "table" : "hosts",
     "columns" : ["host_name"],
     "paint" : lambda row: (None, row["host_name"])
 }
@@ -79,7 +74,6 @@ multisite_painters["host"] = {
 multisite_painters["alias"] = {
     "title" : "Host alias",
     "short" : "Alias",
-    "table" : "hosts",
     "columns" : ["host_alias"],
     "paint" : lambda row: (None, row["host_alias"])
 }
@@ -106,7 +100,6 @@ def paint_host_state_short(row):
 multisite_painters["service_state"] = {
     "title" : "Service state",
     "short" : "state",
-    "table" : "services",
     "columns" : ["service_has_been_checked","service_state"],
     "paint" : paint_service_state_short
 }
@@ -114,7 +107,6 @@ multisite_painters["service_state"] = {
 multisite_painters["host_state"] = {
     "title" : "Host state",
     "short" : "state",
-    "table" : "hosts",
     "columns" : ["host_has_been_checked","host_state"],
     "paint" : paint_host_state_short
 }
@@ -122,7 +114,6 @@ multisite_painters["host_state"] = {
 multisite_painters["site_icon"] = {
     "title" : "Icon showing the site",
     "short" : "",
-    "table" : None,
     "columns" : ["site"],
     "paint" : paint_site_icon
 }
@@ -130,7 +121,6 @@ multisite_painters["site_icon"] = {
 multisite_painters["svc_plugin_output"] = {
     "title" : "Output of check plugin",
     "short" : "Plugin output",
-    "table" : "services",
     "columns" : ["service_plugin_output"],
     "paint" : lambda row: (None, row["service_plugin_output"])
 }
@@ -138,14 +128,12 @@ multisite_painters["svc_plugin_output"] = {
 multisite_painters["host_plugin_output"] = {
     "title" : "Output of host check plugin",
     "short" : "Plugin output",
-    "table" : "hosts",
     "columns" : ["host_plugin_output"],
     "paint" : lambda row: (None, row["host_plugin_output"])
 }
 multisite_painters["service_description"] = {
     "title" : "Service description",
     "short" : "Service",
-    "table" : "services",
     "columns" : ["service_description"],
     "paint" : lambda row: (None, row["service_description"])
 }
@@ -153,7 +141,6 @@ multisite_painters["service_description"] = {
 multisite_painters["svc_state_age"] = {
     "title" : "The age of the current service state",
     "short" : "age",
-    "table" : "services",
     "columns" : [ "service_has_been_checked", "service_last_state_change" ],
     "paint" : lambda row: paint_age(row["service_last_state_change"], row["service_has_been_checked"] == 1)
 }
@@ -173,7 +160,6 @@ def paint_host_count(id, count):
 multisite_painters["num_services"] = {
     "title"   : "Number of services",
     "short"   : "",
-    "table"   : "hosts",
     "columns" : [ "host_num_services" ],
     "paint"   : lambda row: (None, str(row["host_num_services"])),
 }
@@ -181,7 +167,6 @@ multisite_painters["num_services"] = {
 multisite_painters["num_services_ok"] = {
     "title"   : "Number of services in state OK",
     "short"   : "O",
-    "table"   : "hosts",
     "columns" : [ "host_num_services_ok" ],
     "paint"   : lambda row: paint_svc_count(0, row["host_num_services_ok"])
 }
@@ -189,7 +174,6 @@ multisite_painters["num_services_ok"] = {
 multisite_painters["num_services_warn"] = {
     "title"   : "Number of services in state WARN",
     "short"   : "W",
-    "table"   : "hosts",
     "columns" : [ "host_num_services_warn" ],
     "paint"   : lambda row: paint_svc_count(1, row["host_num_services_warn"])
 }
@@ -197,7 +181,6 @@ multisite_painters["num_services_warn"] = {
 multisite_painters["num_services_crit"] = {
     "title"   : "Number of services in state CRIT",
     "short"   : "C",
-    "table"   : "hosts",
     "columns" : [ "host_num_services_crit" ],
     "paint"   : lambda row: paint_svc_count(2, row["host_num_services_crit"])
 }
@@ -205,7 +188,6 @@ multisite_painters["num_services_crit"] = {
 multisite_painters["num_services_unknown"] = {
     "title"   : "Number of services in state UNKNOWN",
     "short"   : "U",
-    "table"   : "hosts",
     "columns" : [ "host_num_services_unknown" ],
     "paint"   : lambda row: paint_svc_count(3, row["host_num_services_unknown"])
 }
@@ -213,7 +195,6 @@ multisite_painters["num_services_unknown"] = {
 multisite_painters["num_services_pending"] = {
     "title"   : "Number of services in state PENDING",
     "short"   : "P",
-    "table"   : "hosts",
     "columns" : [ "host_num_services_pending" ],
     "paint"   : lambda row: paint_svc_count("p", row["host_num_services_pending"])
 }
@@ -228,7 +209,6 @@ multisite_painters["num_services_pending"] = {
 multisite_painters["hg_num_services"] = {
     "title"   : "Number of services",
     "short"   : "",
-    "table"   : "hostgroups",
     "columns" : [ "hostgroup_num_services" ],
     "paint"   : lambda row: (None, str(row["hostgroup_num_services"])),
 }
@@ -236,7 +216,6 @@ multisite_painters["hg_num_services"] = {
 multisite_painters["hg_num_services_ok"] = {
     "title"   : "Number of services in state OK",
     "short"   : "O",
-    "table"   : "hostgroups",
     "columns" : [ "hostgroup_num_services_ok" ],
     "paint"   : lambda row: paint_svc_count(0, row["hostgroup_num_services_ok"])
 }
@@ -244,7 +223,6 @@ multisite_painters["hg_num_services_ok"] = {
 multisite_painters["hg_num_services_warn"] = {
     "title"   : "Number of services in state WARN",
     "short"   : "W",
-    "table"   : "hostgroups",
     "columns" : [ "hostgroup_num_services_warn" ],
     "paint"   : lambda row: paint_svc_count(1, row["hostgroup_num_services_warn"])
 }
@@ -252,7 +230,6 @@ multisite_painters["hg_num_services_warn"] = {
 multisite_painters["hg_num_services_crit"] = {
     "title"   : "Number of services in state CRIT",
     "short"   : "C",
-    "table"   : "hostgroups",
     "columns" : [ "hostgroup_num_services_crit" ],
     "paint"   : lambda row: paint_svc_count(2, row["hostgroup_num_services_crit"])
 }
@@ -260,7 +237,6 @@ multisite_painters["hg_num_services_crit"] = {
 multisite_painters["hg_num_services_unknown"] = {
     "title"   : "Number of services in state UNKNOWN",
     "short"   : "U",
-    "table"   : "hostgroups",
     "columns" : [ "hostgroup_num_services_unknown" ],
     "paint"   : lambda row: paint_svc_count(3, row["hostgroup_num_services_unknown"])
 }
@@ -268,49 +244,42 @@ multisite_painters["hg_num_services_unknown"] = {
 multisite_painters["hg_num_services_pending"] = {
     "title"   : "Number of services in state PENDING",
     "short"   : "P",
-    "table"   : "hostgroups",
     "columns" : [ "hostgroup_num_services_pending" ],
     "paint"   : lambda row: paint_svc_count("p", row["hostgroup_num_services_pending"])
 }
 multisite_painters["hg_num_hosts_up"] = {
     "title"   : "Number of hosts in state UP",
     "short"   : "Up",
-    "table"   : "hostgroups",
     "columns" : [ "hostgroup_num_hosts_up" ],
     "paint"   : lambda row: paint_host_count(0, row["hostgroup_num_hosts_up"])
 }
 multisite_painters["hg_num_hosts_down"] = {
     "title"   : "Number of hosts in state DOWN",
     "short"   : "Dw",
-    "table"   : "hostgroups",
     "columns" : [ "hostgroup_num_hosts_down" ],
     "paint"   : lambda row: paint_host_count(0, row["hostgroup_num_hosts_down"])
 }
 multisite_painters["hg_num_hosts_unreach"] = {
     "title"   : "Number of hosts in state UNREACH",
     "short"   : "Un",
-    "table"   : "hostgroups",
     "columns" : [ "hostgroup_num_hosts_unreach" ],
     "paint"   : lambda row: paint_host_count(0, row["hostgroup_num_hosts_unreach"])
 }
 multisite_painters["hg_num_hosts_pending"] = {
     "title"   : "Number of hosts in state PENDING",
     "short"   : "Un",
-    "table"   : "hostgroups",
     "columns" : [ "hostgroup_num_hosts_pending" ],
     "paint"   : lambda row: paint_host_count(0, row["hostgroup_num_hosts_pending"])
 }
 multisite_painters["hg_name"] = {
     "title" : "Hostgroup name",
     "short" : "Name",
-    "table" : "hostgroups",
     "columns" : ["hostgroup_name"],
     "paint" : lambda row: (None, row["hostgroup_name"])
 }
 multisite_painters["hg_alias"] = {
     "title" : "Hostgroup alias",
     "short" : "Alias",
-    "table" : "hostgroups",
     "columns" : ["hostgroup_alias"],
     "paint" : lambda row: (None, row["hostgroup_alias"])
 }
@@ -325,7 +294,6 @@ multisite_painters["hg_alias"] = {
 multisite_painters["sg_num_services"] = {
     "title"   : "Number of services",
     "short"   : "",
-    "table"   : "servicegroups",
     "columns" : [ "servicegroup_num_services" ],
     "paint"   : lambda row: (None, str(row["servicegroup_num_services"])),
 }
@@ -333,7 +301,6 @@ multisite_painters["sg_num_services"] = {
 multisite_painters["sg_num_services_ok"] = {
     "title"   : "Number of services in state OK",
     "short"   : "O",
-    "table"   : "servicegroups",
     "columns" : [ "servicegroup_num_services_ok" ],
     "paint"   : lambda row: paint_svc_count(0, row["servicegroup_num_services_ok"])
 }
@@ -341,7 +308,6 @@ multisite_painters["sg_num_services_ok"] = {
 multisite_painters["sg_num_services_warn"] = {
     "title"   : "Number of services in state WARN",
     "short"   : "W",
-    "table"   : "servicegroups",
     "columns" : [ "servicegroup_num_services_warn" ],
     "paint"   : lambda row: paint_svc_count(1, row["servicegroup_num_services_warn"])
 }
@@ -349,7 +315,6 @@ multisite_painters["sg_num_services_warn"] = {
 multisite_painters["sg_num_services_crit"] = {
     "title"   : "Number of services in state CRIT",
     "short"   : "C",
-    "table"   : "servicegroups",
     "columns" : [ "servicegroup_num_services_crit" ],
     "paint"   : lambda row: paint_svc_count(2, row["servicegroup_num_services_crit"])
 }
@@ -357,7 +322,6 @@ multisite_painters["sg_num_services_crit"] = {
 multisite_painters["sg_num_services_unknown"] = {
     "title"   : "Number of services in state UNKNOWN",
     "short"   : "U",
-    "table"   : "servicegroups",
     "columns" : [ "servicegroup_num_services_unknown" ],
     "paint"   : lambda row: paint_svc_count(3, row["servicegroup_num_services_unknown"])
 }
@@ -365,21 +329,18 @@ multisite_painters["sg_num_services_unknown"] = {
 multisite_painters["sg_num_services_pending"] = {
     "title"   : "Number of services in state PENDING",
     "short"   : "P",
-    "table"   : "servicegroups",
     "columns" : [ "servicegroup_num_services_pending" ],
     "paint"   : lambda row: paint_svc_count("p", row["servicegroup_num_services_pending"])
 }
 multisite_painters["sg_name"] = {
     "title" : "Servicegroup name",
     "short" : "Name",
-    "table" : "servicegroups",
     "columns" : ["servicegroup_name"],
     "paint" : lambda row: (None, row["servicegroup_name"])
 }
 multisite_painters["sg_alias"] = {
     "title" : "Servicegroup alias",
     "short" : "Alias",
-    "table" : "servicegroups",
     "columns" : ["servicegroup_alias"],
     "paint" : lambda row: (None, row["servicegroup_alias"])
 }
@@ -415,7 +376,6 @@ def paint_pnp_service_link(row):
 multisite_painters["link_to_pnp_service"] = {
     "title"   : "Link to PNP4Nagios",
     "short"   : "PNP",
-    "table"   : "services",
     "columns" : [ "site", "host_name", "service_description", "service_perf_data"],
     "paint"   : paint_pnp_service_link,
 }

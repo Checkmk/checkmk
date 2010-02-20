@@ -6,6 +6,7 @@
 multisite_datasources["hosts"] = {
     "title"   : "All hosts",
     "table"   : "hosts",
+    "infos"   : [ "host" ],
     "columns" : ["host_name", "host_alias", "host_state", "host_has_been_checked", "host_downtimes", 
 		 "host_plugin_output", "host_num_services", "host_num_services_pending", "host_num_services_ok", 
 		 "host_num_services_warn", 
@@ -15,23 +16,26 @@ multisite_datasources["hosts"] = {
 multisite_datasources["services"] = {
     "title"   : "All services",
     "table"   : "services",
-    "columns" : ["service_description", "service_plugin_output", "service_state", "service_has_been_checked", 
-                 "host_name", "host_state", "host_has_been_checked", 
-		 "service_last_state_change", "service_downtimes", "service_perf_data" ],
+    "infos"   : [ "host", "service" ],
+    "columns" : [ "service_description", "service_plugin_output", "service_state", "service_has_been_checked", 
+                  "host_name", "host_state", "host_has_been_checked", 
+		  "service_last_state_change", "service_downtimes", "service_perf_data" ],
 }
 
 multisite_datasources["servicesbygroup"] = {
     "title"   : "Service grouped by service groups",
     "table"   : "servicesbygroup",
-    "columns" : ["servicegroup_alias", "servicegroup_name", 
-		 "service_description", "service_plugin_output", "service_state", "service_has_been_checked", 
-                 "host_name", "host_state", "host_has_been_checked", 
-		 "service_last_state_change", "service_downtimes", "service_perf_data" ],
+    "infos"   : [ "host", "service", "servicegroup" ],
+    "columns" : [ "servicegroup_alias", "servicegroup_name", 
+		  "service_description", "service_plugin_output", "service_state", "service_has_been_checked", 
+                  "host_name", "host_state", "host_has_been_checked", 
+		  "service_last_state_change", "service_downtimes", "service_perf_data" ],
 }
 
 multisite_datasources["servicegroups"] = {
     "title" : "Servicegroups",
     "table" : "servicegroups",
+    "infos" : [ "servicegroup" ],
     "columns" : \
 	[ "servicegroup_name", "servicegroup_alias", "servicegroup_num_services", 
 	  "servicegroup_num_services_ok", "servicegroup_num_services_warn", 
@@ -42,6 +46,7 @@ multisite_datasources["servicegroups"] = {
 multisite_datasources["hostgroups"] = {
     "title" : "Hostgroups",
     "table" : "hostgroups",
+    "infos" : [ "hostgroup" ],
     "columns" :
        	[ "hostgroup_name", "hostgroup_alias", "hostgroup_num_hosts", "hostgroup_num_hosts_up", 
 	  "hostgroup_num_hosts_down", "hostgroup_num_hosts_pending", "hostgroup_num_hosts_unreach",

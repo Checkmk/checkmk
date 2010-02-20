@@ -1,50 +1,9 @@
 
-##################################################################################
-# Filters
-##################################################################################
-
-def declare_filter(f, comment = None):
-    multisite_filters[f.name] = f
-    f.comment = comment
-    
-    
-class Filter:
-    def __init__(self, name, title, table, htmlvars):
-	self.name = name
-	self.table = table
-	self.title = title
-	self.htmlvars = htmlvars
-	
-    def display(self):
-	raise MKInternalError("Incomplete implementation of filter %s '%s': missing display()" % \
-		(self.name, self.title))
-	html.write("FILTER NOT IMPLEMENTED")
-
-    def filter(self):
-	raise MKInternalError("Incomplete implementation of filter %s '%s': missing filter()" % \
-	    (self.name, self.title))
-	html.write("FILTER NOT IMPLEMENTED")
-    
-    def variable_settings(self, row):
-       return [] # return pairs of htmlvar and name according to dataset in row	
-
-    def tableprefix(self, tablename):
-	if self.table == tablename:
-	    return ""
-	else:
-	    return self.table[:-1] + "_"
-
-    def allowed_for_table(self, tablename):
-	return True
-
-    # Hidden filters may contribute to the pages headers of the views
-    def heading_info(self, tablename):
-	return None
 
 # Filters for substring search, displaying a text input field
 class FilterText(Filter):
-    def __init__(self, name, title, table, column, htmlvar, op):
-	Filter.__init__(self, name, title, table, [htmlvar])
+    def __init__(self, name, title, info, column, htmlvar, op):
+	Filter.__init__(self, name, title, info, [htmlvar])
 	self.op = op
 	self.column = column
     
@@ -53,42 +12,35 @@ class FilterText(Filter):
 	current_value = html.var(htmlvar, "")
 	html.text_input(htmlvar, current_value)
 
-    def filter(self, tablename):
+    def filter(self, infoname):
 	htmlvar = self.htmlvars[0]
 	current_value = html.var(htmlvar)
 	if current_value:
-	    return "Filter: %s%s %s %s\n" % (self.tableprefix(tablename), self.column, self.op, current_value)
+	    return "Filter: %s %s %s\n" % (self.column, self.op, current_value)
 	else:
 	    return ""
 
     def variable_settings(self, row):
-       return [ (self.htmlvars[0], row[self.table[:-1] + "_" + self.column]) ]
-    
-    def allowed_for_table(self, tablename):
-	if tablename == self.table:
-	    return True
-	if self.table == "hosts" and tablename == "services":
-	    return True
-	return False
+       return [ (self.htmlvars[0], row[self.column]) ]
 
-    def heading_info(self, tablename):
+    def heading_info(self, infoname):
 	htmlvar = self.htmlvars[0]
 	return html.var(self.htmlvars[0])
 
-#                          filter          title              table       column           htmlvar
-declare_filter(FilterText("hostregex",    "Hostname",        "hosts",    "name",          "host",    "~~"),
+#                          filter          title              info       column           htmlvar
+declare_filter(FilterText("hostregex",    "Hostname",        "host",    "host_name",      "host",    "~~"),
 			  "Search field allowing regular expressions and partial matches")
 
-declare_filter(FilterText("host",    "Hostname",             "hosts",    "name",          "host",    "="),
+declare_filter(FilterText("host",    "Hostname",             "host",    "host_name",          "host",    "="),
 			  "Exact match, used for linking")
 
-declare_filter(FilterText("serviceregex", "Service",         "services", "description",   "service", "~~"),
+declare_filter(FilterText("serviceregex", "Service",         "service", "service_description",   "service", "~~"),
 			  "Search field allowing regular expressions and partial matches")
 
-declare_filter(FilterText("service", "Service",              "services", "description",   "service", "="),
+declare_filter(FilterText("service", "Service",              "service", "service_description",   "service", "="),
 		          "Exact match, used for linking")
 
-declare_filter(FilterText("output",  "Service check output", "services", "plugin_output", "service_output", "~~"))
+declare_filter(FilterText("output",  "Service check output", "service", "service_plugin_output", "service_output", "~~"))
 
 
 class FilterLimit(Filter):
@@ -104,7 +56,7 @@ class FilterLimit(Filter):
     def display(self):
 	html.number_input("limit", self.current_value())
     
-    def filter(self, tablename):
+    def filter(self, infoname):
 	v = self.current_value()
 	if v > 0:
 	    return "Limit: %d\n" % v
@@ -125,10 +77,11 @@ class FilterGroupCombo(Filter):
     def __init__(self, what, enforce):
 	self.enforce = enforce
 	self.prefix = not self.enforce and "opt" or ""
-	Filter.__init__(self, self.prefix + what + "group", what[0].upper() + what[1:] + "group",
-		what + "s", [ self.prefix + what + "group" ])
+	Filter.__init__(self, self.prefix + what + "group", # name,     e.g. "hostgroup"
+		what[0].upper() + what[1:] + "group",       # title,    e.g. "Hostgroup"
+		what,                                       # info,     e.g. "host"
+		[ self.prefix + what + "group" ])           # htmlvars, e.g. "hostgroup" 
         self.what = what
-	
 
     def display(self):
 	choices = all_groups(self.what)
@@ -136,12 +89,12 @@ class FilterGroupCombo(Filter):
 	    choices = [("", "")] + choices
 	html.select(self.htmlvars[0], choices)
 
-    def current_value(self, tablename):
+    def current_value(self, infoname):
 	htmlvar = self.htmlvars[0]
 	return html.var(htmlvar)
 
-    def filter(self, tablename):
-	current_value = self.current_value(tablename)
+    def filter(self, infoname):
+	current_value = self.current_value(infoname)
     	if not current_value: 
 	    if not self.enforce:
 		return ""
@@ -151,37 +104,30 @@ class FilterGroupCombo(Filter):
 	if current_value == None:
 	    return "" # no {what}group exists!
 
-	if self.what + "s" == tablename:
+	if self.what + "s" == infoname:
 	    col = "groups"
 	else:
 	    col = self.what + "_groups"
 	return "Filter: %s >= %s\n" % (col, current_value)
     
-    def allowed_for_table(self, tablename):
-	if tablename == "services": return True # Service table allows all groups
-	elif tablename == "hosts" : return self.what in [ "host", "contact" ]
-	elif tablename == "contacts" : return self.what == "contact"
-	else:
-	    return False
-
-    def heading_info(self, tablename):
-	current_value = self.current_value(tablename)
+    def heading_info(self, infoname):
+	current_value = self.current_value(infoname)
 	if current_value:
 	    alias = html.live.query_value("GET %sgroups\nColumns: alias\nFilter: name = %s\n" % 
 		(self.what, current_value))
 	    return alias
 
 
-declare_filter(FilterGroupCombo("host", True),     "Dropdown list, selection of host group is <b>enforced</b>")
+declare_filter(FilterGroupCombo("host",    True),  "Dropdown list, selection of host group is <b>enforced</b>")
 declare_filter(FilterGroupCombo("service", True),  "Dropdown list, selection of service group is <b>enforced</b>")
-declare_filter(FilterGroupCombo("host", False),    "Optional selection of host group")
+declare_filter(FilterGroupCombo("host",    False), "Optional selection of host group")
 declare_filter(FilterGroupCombo("service", False), "Optional selection of service group")
 # Livestatus still misses "contact_groups" column. 
 # declare_filter(FilterGroupCombo("contact"))
 
 class FilterQueryDropdown(Filter):
-    def __init__(self, name, title, table, query, filterline):
-	Filter.__init__(self, name, title, table, [ name ])
+    def __init__(self, name, title, info, query, filterline):
+	Filter.__init__(self, name, title, info, [ name ])
 	self.query = query
 	self.filterline = filterline
 
@@ -189,23 +135,22 @@ class FilterQueryDropdown(Filter):
 	selection = html.live.query_column_unique(self.query)
 	html.sorted_select(self.name, [("", "")] + [(x,x) for x in selection])
 
-    def filter(self, tablename):
+    def filter(self, infoname):
 	current = html.var(self.name)
 	if current:
 	    return self.filterline % current
 	else:
 	    return ""
 
-    def allowed_for_table(self, tablename):
-	return self.table == tablename
-
-declare_filter(FilterQueryDropdown("check_command", "Check command", "services", \
-	"GET commands\nColumns: name\n", "Filter: check_command = %s\n"))
+declare_filter(FilterQueryDropdown("check_command", "Service check command", "service", \
+	"GET commands\nColumns: name\n", "Filter: service_check_command = %s\n"))
+declare_filter(FilterQueryDropdown("host_check_command", "Host check command", "host", \
+	"GET commands\nColumns: name\n", "Filter: host_check_command = %s\n"))
 
 class FilterServiceState(Filter):
     def __init__(self):
 	Filter.__init__(self, "svcstate", "Service states", 
-		"services", [ "st0", "st1", "st2", "st3", "stp" ])
+		"service", [ "st0", "st1", "st2", "st3", "stp" ])
     
     def display(self):
 	if html.var("filled_in"):
@@ -216,7 +161,7 @@ class FilterServiceState(Filter):
 	    html.checkbox(var, defval)
 	    html.write(" %s " % text)
 
-    def filter(self, tablename):
+    def filter(self, infoname):
 	headers = []
 	if html.var("filled_in"):
 	    defval = ""
@@ -225,23 +170,20 @@ class FilterServiceState(Filter):
 
 	for i in [0,1,2,3]:
 	    if html.var("st%d" % i, defval) == "on":
-		headers.append("Filter: %sstate = %d\nFilter: has_been_checked = 1\nAnd: 2\n" % (self.tableprefix(tablename), i))
+		headers.append("Filter: service_state = %d\nFilter: service_has_been_checked = 1\nAnd: 2\n" % i)
 	if html.var("stp", defval) == "on":
-	    headers.append("Filter: has_been_checked = 0\n")
+	    headers.append("Filter: service_has_been_checked = 0\n")
 	if len(headers) == 0:
 	    return "Limit: 0\n" # not allowed state
 	else:
 	    return "".join(headers) + ("Or: %d\n" % len(headers))
 	
-    def allowed_for_table(self, tablename):
-	return tablename == "services"
-
 declare_filter(FilterServiceState())
 
 class FilterHostState(Filter):
     def __init__(self):
 	Filter.__init__(self, "hoststate", "Host states", 
-		"hosts", [ "st0", "st1", "st2", "stp" ])
+		"host", [ "st0", "st1", "st2", "stp" ])
     
     def display(self):
 	if html.var("filled_in"):
@@ -252,7 +194,7 @@ class FilterHostState(Filter):
 	    html.checkbox(var, defval)
 	    html.write(" %s " % text)
 
-    def filter(self, tablename):
+    def filter(self, infoname):
 	headers = []
 	if html.var("filled_in"):
 	    defval = ""
@@ -261,24 +203,21 @@ class FilterHostState(Filter):
 
 	for i in [0,1,2]:
 	    if html.var("st%d" % i, defval) == "on":
-		headers.append("Filter: %sstate = %d\nFilter: has_been_checked = 1\nAnd: 2\n" % (self.tableprefix(tablename), i))
+		headers.append("Filter: host_state = %d\nFilter: host_has_been_checked = 1\nAnd: 2\n" % i)
 	if html.var("stp", defval) == "on":
-	    headers.append("Filter: has_been_checked = 0\n")
+	    headers.append("Filter: host_has_been_checked = 0\n")
 	if len(headers) == 0:
 	    return "Limit: 0\n" # not allowed state
 	else:
 	    return "".join(headers) + ("Or: %d\n" % len(headers))
-	
-    def allowed_for_table(self, tablename):
-	return tablename == "hosts"
 
 declare_filter(FilterHostState())
 
 class FilterTristate(Filter):
-    def __init__(self, name, title, table, column, deflt = -1):
+    def __init__(self, name, title, info, column, deflt = -1):
 	self.column = column
 	self.varname = "is_" + name
-	Filter.__init__(self, name, title, table, [ self.varname ])
+	Filter.__init__(self, name, title, info, [ self.varname ])
 	self.deflt = deflt
    
     def display(self):
@@ -293,65 +232,52 @@ class FilterTristate(Filter):
 	    return self.deflt
 	return int(current)
 	
-    def allowed_for_table(self, tablename):
-	if self.table == "hosts":
-	    return tablename in [ "hosts", "services" ]
-	else:
-	    return tablename == self.table
-    
-    def filter(self, tablename):
+    def filter(self, infoname):
 	current = self.tristate_value()
 	if current == -1: # ignore
 	    return ""
 	elif current == 1:
-	    return self.filter_code(tablename, True)
+	    return self.filter_code(infoname, True)
 	else:
-	    return self.filter_code(tablename, False)
+	    return self.filter_code(infoname, False)
 
 class FilterNagiosFlag(FilterTristate):
-    def __init__(self, table, column, title, deflt = -1):
-	FilterTristate.__init__(self, table[:-1] + "_" + column, title, table, column, deflt)
+    def __init__(self, info, column, title, deflt = -1):
+	FilterTristate.__init__(self, column, title, info, column, deflt)
 
-    def filter_code(self, tablename, positive):
-	if tablename == "services" and self.table == "hosts":
-	    column = "host_" + self.column
-	else:
-	    column = self.column
+    def filter_code(self, infoname, positive):
 	if positive:
-	    return "Filter: %s != 0\n" % column
+	    return "Filter: %s != 0\n" % self.column
 	else:
-	    return "Filter: %s = 0\n" % column
+	    return "Filter: %s = 0\n" % self.column
 
 class FilterNagiosExpression(FilterTristate):
-    def __init__(self, table, name, title, pos, neg, deflt = -1):
-	FilterTristate.__init__(self, name, title, table, None, deflt)
+    def __init__(self, info, name, title, pos, neg, deflt = -1):
+	FilterTristate.__init__(self, name, title, info, None, deflt)
 	self.pos = pos
 	self.neg = neg
 
-    def allowed_for_table(self, tablename):
-	return self.table == tablename
-
-    def filter_code(self, tablename, positive):
+    def filter_code(self, infoname, positive):
 	return positive and self.pos or self.neg
 
-declare_filter(FilterNagiosExpression("services", "show_summary_hosts", "Show summary hosts", 
+declare_filter(FilterNagiosExpression("host", "show_summary_hosts", "Show summary hosts", 
 	    "Filter: host_custom_variable_names >= _REALNAME\n",
 	    "Filter: host_custom_variable_names < _REALNAME\n"))
 
 
-declare_filter(FilterNagiosFlag("hosts",    "in_notification_period",   "Host is in notification period"))
-declare_filter(FilterNagiosFlag("services", "acknowledged",             "Problem has been acknowledged"))
-declare_filter(FilterNagiosFlag("services", "in_notification_period",   "Service is in notification period"))
-declare_filter(FilterNagiosFlag("services", "active_checks_enabled",    "Active checks enabled"))
-declare_filter(FilterNagiosFlag("services", "notifications_enabled",    "Notifications enabled"))
-declare_filter(FilterNagiosFlag("services", "is_flapping",              "Flapping"))
-declare_filter(FilterNagiosFlag("services", "in_notification_period",   "Service is in notification period"))
-declare_filter(FilterNagiosFlag("hosts",    "in_notification_period",   "Host is in notification period"))
-declare_filter(FilterNagiosFlag("services", "scheduled_downtime_depth", "Service in downtime"))
-declare_filter(FilterNagiosFlag("hosts",    "scheduled_downtime_depth", "Host in downtime"))
-declare_filter(FilterNagiosExpression("services", "in_downtime", "Host or Service in downtime",
-	    "Filter: scheduled_downtime_depth > 0\nFilter: host_scheduled_downtime_depth > 0\nOr: 2\n",
-	    "Filter: scheduled_downtime_depth = 0\nFilter: host_scheduled_downtime_depth = 0\nAnd: 2\n"))
+declare_filter(FilterNagiosFlag("host",    "host_in_notification_period",   "Host is in notification period"))
+declare_filter(FilterNagiosFlag("service", "service_acknowledged",             "Problem has been acknowledged"))
+declare_filter(FilterNagiosFlag("service", "service_in_notification_period",   "Service is in notification period"))
+declare_filter(FilterNagiosFlag("service", "service_active_checks_enabled",    "Active checks enabled"))
+declare_filter(FilterNagiosFlag("service", "service_notifications_enabled",    "Notifications enabled"))
+declare_filter(FilterNagiosFlag("service", "service_is_flapping",              "Flapping"))
+declare_filter(FilterNagiosFlag("service", "service_in_notification_period",   "Service is in notification period"))
+declare_filter(FilterNagiosFlag("host",    "host_in_notification_period",   "Host is in notification period"))
+declare_filter(FilterNagiosFlag("service", "service_scheduled_downtime_depth", "Service in downtime"))
+declare_filter(FilterNagiosFlag("host",    "host_scheduled_downtime_depth", "Host in downtime"))
+declare_filter(FilterNagiosExpression("service", "in_downtime", "Host or Service in downtime",
+	    "Filter: service_scheduled_downtime_depth > 0\nFilter: host_scheduled_downtime_depth > 0\nOr: 2\n",
+	    "Filter: service_scheduled_downtime_depth = 0\nFilter: host_scheduled_downtime_depth = 0\nAnd: 2\n"))
 	
 
 class FilterSite(Filter):
@@ -362,7 +288,7 @@ class FilterSite(Filter):
     def display(self):
 	site_selector(html, "site", self.enforce)
 
-    def filter(self, tablename):
+    def filter(self, infoname):
 	if check_mk.is_multisite():
 	    site = html.var("site")
 	    if site:
@@ -374,7 +300,7 @@ class FilterSite(Filter):
 	else:
 	    return ""
 
-    def heading_info(self, tablename):
+    def heading_info(self, infoname):
 	current_value = html.var("site")
 	if current_value:
 	    alias = check_mk.site(current_value)["alias"]

@@ -2,6 +2,9 @@ import check_mk, livestatus, htmllib, time, os, re, pprint, time
 from lib import *
 from pagefunctions import *
 
+
+# Datastructures and functions needed before plugins can be loaded
+
 multisite_datasources   = {}
 multisite_filters       = {}
 multisite_layouts       = {}
@@ -9,6 +12,45 @@ multisite_painters      = {}
 multisite_sorters       = {}
 multisite_builtin_views = {}
 
+
+##################################################################################
+# Filters
+##################################################################################
+
+def declare_filter(f, comment = None):
+    multisite_filters[f.name] = f
+    f.comment = comment
+    
+# Base class for all filters    
+class Filter:
+    def __init__(self, name, title, info, htmlvars):
+	self.name = name
+	self.info = info
+	self.title = title
+	self.htmlvars = htmlvars
+	
+    def display(self):
+	raise MKInternalError("Incomplete implementation of filter %s '%s': missing display()" % \
+		(self.name, self.title))
+	html.write("FILTER NOT IMPLEMENTED")
+
+    def filter(self):
+	raise MKInternalError("Incomplete implementation of filter %s '%s': missing filter()" % \
+	    (self.name, self.title))
+	html.write("FILTER NOT IMPLEMENTED")
+    
+    def variable_settings(self, row):
+       return [] # return pairs of htmlvar and name according to dataset in row	
+
+    def infoprefix(self, infoname):
+	if self.info == infoname:
+	    return ""
+	else:
+	    return self.info[:-1] + "_"
+
+    # Hidden filters may contribute to the pages headers of the views
+    def heading_info(self, infoname):
+	return None
 plugins_path = check_mk.web_dir + "/plugins/views"
 for fn in os.listdir(plugins_path):
     if fn.endswith(".py"):
@@ -57,8 +99,8 @@ def load_views():
 	     raise MKGeneralException("Cannot load views from %s/views.mk: %s" % (dirpath, e))
 
     html.available_views = available_views()
-     # html.write("avail: <pre>%s</pre>\n" % pprint.pformat(html.available_views))
-     # html.write("builtin: <pre>%s</pre>\n" % multisite_builtin_views)
+# html.write("avail: <pre>%s</pre>\n" % pprint.pformat(html.available_views))
+#    html.write("all: <pre>%s</pre>\n" % pprint.pformat(html.multisite_views))
 
 # Get the list of views which are available to the user
 # (which could be retrieved with get_view)
@@ -250,6 +292,9 @@ def page_edit_view(h):
     # set datasource name if a new view is being created
     elif html.var("datasource"):
 	datasourcename = html.var("datasource")
+    else:
+	raise MKInternalError("No view name and not datasource defined.")
+
 
     # handle case of save or try or press on search button
     if html.var("save") or html.var("try") or html.var("search"):
@@ -732,12 +777,17 @@ def sort_data(data, sorters):
     data.sort(multisort)
 
 
+# Create a list of filters allowed for a certain data source.
+# Each filter is valid for a special info, e.g. "host" or
+# "service". or always (info is None in that case).
+# Each datasource provides a list of info. The datasource "services"
+# provides "service" and "host", for example.
 def filters_allowed_for_datasource(datasourcename):
     datasource = multisite_datasources[datasourcename]
-    tablename = datasource["table"]
+    infos = datasource["infos"]
     allowed = {}
     for fname, filt in multisite_filters.items():
-	if filt.allowed_for_table(tablename):
+	if filt.info == None or filt.info in infos:
 	    allowed[fname] = filt
     return allowed
 
@@ -747,14 +797,19 @@ def painters_allowed_for_datasource(datasourcename):
 def sorters_allowed_for_datasource(datasourcename):
     return allowed_for_datasource(multisite_sorters, datasourcename)
 
+def list_in_list(a, b):
+    for ele in a:
+	if ele not in b:
+	    return False
+    return True
+
 def allowed_for_datasource(collection, datasourcename):
     datasource = multisite_datasources[datasourcename]
-    tablename = datasource["table"]
     allowed = {}
+    ds_columns = datasource["columns"] + ["site"]
     for name, item in collection.items():
-	if item["table"] == tablename or \
-	    item["table"] == None or \
-	    (item["table"] == "hosts" and tablename == "services"):
+	columns = item["columns"]
+	if list_in_list(columns, ds_columns):
 	    allowed[name] = item
     return allowed
 
@@ -967,8 +1022,6 @@ def get_context_link(user, viewname):
         return "view.py?view_name=%s" % viewname
     else:
 	return None
-
-
 
 def ajax_export(h):
     global html

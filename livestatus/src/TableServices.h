@@ -43,6 +43,7 @@ class TableServices : public Table
 public:
     TableServices(bool by_group);
     const char *name() { return _by_group ? "servicesbygroup" : "services"; };
+    const char *prefixname() { return "services"; };
     bool isAuthorized(contact *, void *);
     void *findObject(char *objectspec);
     void add(service *svc);

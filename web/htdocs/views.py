@@ -74,7 +74,7 @@ def show_filter_form(is_open, filters):
 	    html.write("</tr>\n")
 	col = (col + 1) % 2
     if col == 1:
-	html.write("</tr>\n")
+	html.write("<td class=legend></td><td class=content></td></tr>\n")
     html.write("<tr><td class=legend colspan=4>")
     html.button("search", "Search", "submit")
     html.write("</td></tr>\n")

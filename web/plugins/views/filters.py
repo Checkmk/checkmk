@@ -268,7 +268,7 @@ class FilterNagiosExpression(FilterTristate):
     def filter_code(self, infoname, positive):
 	return positive and self.pos or self.neg
 
-declare_filter(120, FilterNagiosExpression("host", "show_summary_hosts", "Show summary hosts", 
+declare_filter(120, FilterNagiosExpression("host", "summary_host", "Show summary hosts", 
 	    "Filter: host_custom_variable_names >= _REALNAME\n",
 	    "Filter: host_custom_variable_names < _REALNAME\n"))
 

@@ -701,24 +701,14 @@ def query_data(datasource, add_headers, only_sites = None):
 	html.live.set_only_sites(only_sites)
     data = html.live.query(query)
     html.live.set_only_sites(None)
-    # convert lists-rows into dictionaries. Thas costs a bit of
-    # performance, but makes live much easier later. What also
-    # makes live easier is, that we prefix all columns with
-    # the table name, if that prefix is not already present
-    # for example "name" -> "host_name" in table "hosts"
-    prefixed_columns = ["site"]
-    for col in columns:
-	parts = col.split("_", 1)
-	if len(parts) < 2 or parts[0] not in [ "host", "service", "contact", "contactgroup" ]:
-		col = tablename[:-1] + "_" + col
-	elif tablename == "log" and col.startswith("current_"):
-	    col = col[8:]
-	prefixed_columns.append(col)
-
-    assoc = [ dict(zip(prefixed_columns, row)) for row in data ]
     html.live.set_prepend_site(False)
 
-    return (prefixed_columns, assoc)
+    # convert lists-rows into dictionaries. 
+    # performance, but makes live much easier later.
+    columns = ["site"] + columns
+    assoc = [ dict(zip(columns, row)) for row in data ]
+
+    return (columns, assoc)
 
 # Sort data according to list of sorters. The tablename
 # is needed in order to handle different column names

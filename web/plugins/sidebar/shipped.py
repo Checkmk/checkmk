@@ -237,12 +237,12 @@ table.tacticaloverview td.prob { background-color: #d30; color: #f00; font-weigh
 #                                                                 
 # --------------------------------------------------------------
 def render_performance():
-    data = html.live.query("GET status\nColumns: service_checks_rate host_checks_rate requests_rate\n")
+    data = html.live.query("GET status\nColumns: service_checks_rate host_checks_rate connections_rate\n")
     html.write("<table class=performance>\n")
     for what, col in \
 	[("Serv. checks", 0), 
 	("Host checks", 1),
-	("Livestatus-req.", 2)]:
+	("Livestatus-conn.", 2)]:
 	html.write("<tr><td class=left>%s:</td><td class=right>%.2f/s</td></tr>\n" % (what, sum([row[col] for row in data])))
     html.write("</table>\n")
 		    

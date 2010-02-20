@@ -144,7 +144,7 @@ TableServices::TableServices(bool by_group)
     struct servicebygroup ref;
     addColumns(this, "", -1, true);
     if (by_group) {
-	g_table_servicegroups->addColumns(this, "group_", (char *)&(ref._servicegroup) - (char *)&ref);
+	g_table_servicegroups->addColumns(this, "servicegroup_", (char *)&(ref._servicegroup) - (char *)&ref);
     }
 }
 

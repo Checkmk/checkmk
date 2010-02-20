@@ -40,49 +40,61 @@ void Table::addColumn(Column *col)
 	_columns.insert(make_pair(col->name(), col));
 }
 
-bool Table::hasColumn(Column *col)
-{
-  // this is not very efficient but seldomly used 
-   for (_columns_t::iterator it = _columns.begin();
-	 it != _columns.end();
-	 ++it)
-   {
-      if (col == it->second)
-	 return true;
-   }
-   return false;
-}
-
 
 
 Table::~Table()
 {
-   for (_columns_t::iterator it = _columns.begin();
-	 it != _columns.end();
-	 ++it)
-   {
-      delete it->second;
-   }
+    for (_columns_t::iterator it = _columns.begin();
+	    it != _columns.end();
+	    ++it)
+    {
+	delete it->second;
+    }
 }
 
 
 void Table::addAllColumnsToQuery(Query *q)
 {
-   for (_columns_t::iterator it = _columns.begin();
-	 it != _columns.end();
-	 ++it)
-   {
-      q->addColumn(it->second);
-   }
+    for (_columns_t::iterator it = _columns.begin();
+	    it != _columns.end();
+	    ++it)
+    {
+	q->addColumn(it->second);
+    }
 }
 
 
-Column *Table::column(const char *name)
+Column *Table::column(const char *colname)
 {
-   _columns_t::iterator it = _columns.find(string(name));
-   if (it == _columns.end())
-      return 0;
-   else
-      return it->second;
+    // First try exact match
+    _columns_t::iterator it = _columns.find(string(colname));
+    if (it != _columns.end())
+	return it->second;
+
+    // Second allow column names to bear prefix like
+    // the tablename (e.g. service_ for table services)
+    int prefix_len = strlen(name()); // replaced 's' with '_'
+    if (!strncmp(colname, name(), prefix_len - 1) && \
+	    colname[prefix_len - 1] == '_')
+    {
+	return column(colname + prefix_len);
+    }
+    else
+	return 0;
 }
+
+
+bool Table::hasColumn(Column *col)
+{
+    // this is not very efficient but seldomly used 
+    for (_columns_t::iterator it = _columns.begin();
+	    it != _columns.end();
+	    ++it)
+    {
+	if (col == it->second)
+	    return true;
+    }
+    return false;
+}
+
 

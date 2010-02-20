@@ -45,7 +45,11 @@
       * Abort on errors even if header is not fixed16
       * Changed response codes to better match HTTP
       * json output: handle tab and other control characters correctly
-      * Livestatus: Fix columns host:worst_service_state and host:worst_service_hard_state
+      * Fix columns host:worst_service_state and host:worst_service_hard_state
+      * New table servicesbygroup
+      * Allow to select columns with table prefix, e.g. host_name instead of name
+        in table hosts. This does not affect the columns headers output by
+	ColumnHeaders, though.
 
       Multiadmin:
       * Allow nagios contacts to be used for authorization (in order to

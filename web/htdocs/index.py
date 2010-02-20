@@ -162,6 +162,9 @@ def handler(req):
     try:
         read_get_vars(req)
         read_checkmk_defaults(req)
+	if html.var("debug"):
+	    check_mk.multiadmin_debug = True
+	    
         from lib import *
 
         # These pages may only be used with HTTP authentication turned on.
@@ -252,7 +255,8 @@ def handler(req):
             html.live = None
 	    raise
         html.header("Internal Error")
-        html.show_error("Internal error: %s" % e)
+	url = html.makeuri([("debug", "1")])
+        html.show_error("Internal error: %s (<a href=\"%s\">Retry with debug mode</a>)" % (e, url))
         html.footer()
         apache.log_error("Internal error: %s" % (e,), apache.APLOG_ERR)
 

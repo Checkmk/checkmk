@@ -27,20 +27,20 @@ class FilterText(Filter):
 	htmlvar = self.htmlvars[0]
 	return html.var(self.htmlvars[0])
 
-#                          filter          title              info       column           htmlvar
-declare_filter(FilterText("hostregex",    "Hostname",        "host",    "host_name",      "host",    "~~"),
+#                               filter          title              info       column           htmlvar
+declare_filter(100, FilterText("hostregex",    "Hostname",        "host",    "host_name",      "host",    "~~"),
 			  "Search field allowing regular expressions and partial matches")
 
-declare_filter(FilterText("host",    "Hostname",             "host",    "host_name",          "host",    "="),
+declare_filter(101, FilterText("host",    "Hostname",             "host",    "host_name",          "host",    "="),
 			  "Exact match, used for linking")
 
-declare_filter(FilterText("serviceregex", "Service",         "service", "service_description",   "service", "~~"),
+declare_filter(200, FilterText("serviceregex", "Service",         "service", "service_description",   "service", "~~"),
 			  "Search field allowing regular expressions and partial matches")
 
-declare_filter(FilterText("service", "Service",              "service", "service_description",   "service", "="),
+declare_filter(201, FilterText("service", "Service",              "service", "service_description",   "service", "="),
 		          "Exact match, used for linking")
 
-declare_filter(FilterText("output",  "Service check output", "service", "service_plugin_output", "service_output", "~~"))
+declare_filter(202, FilterText("output",  "Service check output", "service", "service_plugin_output", "service_output", "~~"))
 
 
 class FilterLimit(Filter):
@@ -62,7 +62,7 @@ class FilterLimit(Filter):
 	    return "Limit: %d\n" % v
 	return ""
 
-declare_filter(FilterLimit(), "Limits the number of items queried via livestatus. The limitation is "
+declare_filter(300, FilterLimit(), "Limits the number of items queried via livestatus. The limitation is "
 	"done <b>before</b> any sorting is done.")
 	
 
@@ -126,10 +126,10 @@ class FilterGroupCombo(Filter):
 	    return alias
 
 
-declare_filter(FilterGroupCombo("host",    True),  "Dropdown list, selection of host group is <b>enforced</b>")
-declare_filter(FilterGroupCombo("service", True),  "Dropdown list, selection of service group is <b>enforced</b>")
-declare_filter(FilterGroupCombo("host",    False), "Optional selection of host group")
-declare_filter(FilterGroupCombo("service", False), "Optional selection of service group")
+declare_filter(104, FilterGroupCombo("host",    True),  "Dropdown list, selection of host group is <b>enforced</b>")
+declare_filter(204, FilterGroupCombo("service", True),  "Dropdown list, selection of service group is <b>enforced</b>")
+declare_filter(105, FilterGroupCombo("host",    False), "Optional selection of host group")
+declare_filter(205, FilterGroupCombo("service", False), "Optional selection of service group")
 # Livestatus still misses "contact_groups" column. 
 # declare_filter(FilterGroupCombo("contact"))
 
@@ -150,10 +150,10 @@ class FilterQueryDropdown(Filter):
 	else:
 	    return ""
 
-declare_filter(FilterQueryDropdown("check_command", "Service check command", "service", \
-	"GET commands\nColumns: name\n", "Filter: service_check_command = %s\n"))
-declare_filter(FilterQueryDropdown("host_check_command", "Host check command", "host", \
+declare_filter(110, FilterQueryDropdown("host_check_command", "Host check command", "host", \
 	"GET commands\nColumns: name\n", "Filter: host_check_command = %s\n"))
+declare_filter(210, FilterQueryDropdown("check_command", "Service check command", "service", \
+	"GET commands\nColumns: name\n", "Filter: service_check_command = %s\n"))
 
 class FilterServiceState(Filter):
     def __init__(self):
@@ -186,7 +186,7 @@ class FilterServiceState(Filter):
 	else:
 	    return "".join(headers) + ("Or: %d\n" % len(headers))
 	
-declare_filter(FilterServiceState())
+declare_filter(215, FilterServiceState())
 
 class FilterHostState(Filter):
     def __init__(self):
@@ -219,7 +219,7 @@ class FilterHostState(Filter):
 	else:
 	    return "".join(headers) + ("Or: %d\n" % len(headers))
 
-declare_filter(FilterHostState())
+declare_filter(115, FilterHostState())
 
 class FilterTristate(Filter):
     def __init__(self, name, title, info, column, deflt = -1):
@@ -268,22 +268,21 @@ class FilterNagiosExpression(FilterTristate):
     def filter_code(self, infoname, positive):
 	return positive and self.pos or self.neg
 
-declare_filter(FilterNagiosExpression("host", "show_summary_hosts", "Show summary hosts", 
+declare_filter(120, FilterNagiosExpression("host", "show_summary_hosts", "Show summary hosts", 
 	    "Filter: host_custom_variable_names >= _REALNAME\n",
 	    "Filter: host_custom_variable_names < _REALNAME\n"))
 
 
-declare_filter(FilterNagiosFlag("host",    "host_in_notification_period",   "Host is in notification period"))
-declare_filter(FilterNagiosFlag("service", "service_acknowledged",             "Problem has been acknowledged"))
-declare_filter(FilterNagiosFlag("service", "service_in_notification_period",   "Service is in notification period"))
-declare_filter(FilterNagiosFlag("service", "service_active_checks_enabled",    "Active checks enabled"))
-declare_filter(FilterNagiosFlag("service", "service_notifications_enabled",    "Notifications enabled"))
-declare_filter(FilterNagiosFlag("service", "service_is_flapping",              "Flapping"))
-declare_filter(FilterNagiosFlag("service", "service_in_notification_period",   "Service is in notification period"))
-declare_filter(FilterNagiosFlag("host",    "host_in_notification_period",   "Host is in notification period"))
-declare_filter(FilterNagiosFlag("service", "service_scheduled_downtime_depth", "Service in downtime"))
-declare_filter(FilterNagiosFlag("host",    "host_scheduled_downtime_depth", "Host in downtime"))
-declare_filter(FilterNagiosExpression("service", "in_downtime", "Host or Service in downtime",
+declare_filter(130, FilterNagiosFlag("host",    "host_in_notification_period",   "Host is in notification period"))
+declare_filter(230, FilterNagiosFlag("service", "service_acknowledged",             "Problem has been acknowledged"))
+declare_filter(231, FilterNagiosFlag("service", "service_in_notification_period",   "Service is in notification period"))
+declare_filter(232, FilterNagiosFlag("service", "service_active_checks_enabled",    "Active checks enabled"))
+declare_filter(233, FilterNagiosFlag("service", "service_notifications_enabled",    "Notifications enabled"))
+declare_filter(236, FilterNagiosFlag("service", "service_is_flapping",              "Flapping"))
+declare_filter(131, FilterNagiosFlag("host",    "host_in_notification_period",   "Host is in notification period"))
+declare_filter(231, FilterNagiosFlag("service", "service_scheduled_downtime_depth", "Service in downtime"))
+declare_filter(132, FilterNagiosFlag("host",    "host_scheduled_downtime_depth", "Host in downtime"))
+declare_filter(232, FilterNagiosExpression("service", "in_downtime", "Host or Service in downtime",
 	    "Filter: service_scheduled_downtime_depth > 0\nFilter: host_scheduled_downtime_depth > 0\nOr: 2\n",
 	    "Filter: service_scheduled_downtime_depth = 0\nFilter: host_scheduled_downtime_depth = 0\nAnd: 2\n"))
 	
@@ -317,5 +316,5 @@ class FilterSite(Filter):
     def variable_settings(self, row):
 	return [("site", row["site"])]
 	
-declare_filter(FilterSite("site",    True), "Selection of site is enforced, use this filter for joining")
-declare_filter(FilterSite("siteopt", False), "Optional selection of a site")
+declare_filter(500, FilterSite("site",    True), "Selection of site is enforced, use this filter for joining")
+declare_filter(501, FilterSite("siteopt", False), "Optional selection of a site")

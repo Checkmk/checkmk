@@ -190,6 +190,7 @@ class html:
             html += "</x>"
             self.set_focus(self.current_form, varname)
         self.write(html)
+	self.form_vars.append(varname)
 
     def text_area(self, varname, rows):
         value = self.req.vars.get(varname, "")

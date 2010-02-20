@@ -60,14 +60,22 @@ def show_filter_form(is_open, filters):
     html.write("<table class=form id=filter %s>\n" % (not is_open and 'style="display: none"' or ''))
 
     # sort filters according to title
-    s = [(f.title, f) for f in filters]
+    s = [(f.sort_index, f.title, f) for f in filters]
     s.sort()
-    for title, f in s:
-	html.write("<tr><td class=legend>%s</td>" % title)
+    col = 0
+    for sort_index, title, f in s:
+	if col == 0:
+	    html.write("<tr>")
+	html.write("<td class=legend>%s</td>" % title)
 	html.write("<td class=content>")
 	f.display()
-	html.write("</td></tr>\n")
-    html.write("<tr><td class=legend></td><td class=content>")
+	html.write("</td>")
+	if col == 1:
+	    html.write("</tr>\n")
+	col = (col + 1) % 2
+    if col == 1:
+	html.write("</tr>\n")
+    html.write("<tr><td class=legend colspan=4>")
     html.button("search", "Search", "submit")
     html.write("</td></tr>\n")
     html.write("</table>\n")
@@ -78,9 +86,10 @@ def show_filter_form(is_open, filters):
 # Filters
 ##################################################################################
 
-def declare_filter(f, comment = None):
+def declare_filter(sort_index, f, comment = None):
     multisite_filters[f.name] = f
     f.comment = comment
+    f.sort_index = sort_index
     
 # Base class for all filters    
 class Filter:
@@ -424,9 +433,9 @@ def page_edit_view(h):
     html.write("<tr><th>Filter</th><th>usage</th><th>hardcoded settings</th><th>HTML variables</th></tr>\n")
     allowed_filters = filters_allowed_for_datasource(datasourcename)
     # sort filters according to title
-    s = [(filt.title, fname, filt) for fname, filt in allowed_filters.items()]
+    s = [(filt.sort_index, filt.title, fname, filt) for fname, filt in allowed_filters.items()]
     s.sort()
-    for title, fname, filt in s:
+    for sortindex, title, fname, filt in s:
 	html.write("<tr>")
 	html.write("<td class=title>%s" % title)
 	if filt.comment:

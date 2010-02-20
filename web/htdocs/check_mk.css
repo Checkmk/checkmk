@@ -412,24 +412,28 @@ table.form {
   padding: 1ex;
   border-collapse: collapse;
   empty-cells: show;
-  width: 100%;
+  /* width: 100%; */
 }
 
+table.form input { 
+    font-size: 9pt;
+}
 table.form td { 
   vertical-align: top;
   padding: 0.8ex 1ex;
+    font-size: 9pt;
 }
 
 table.form td.legend { 
-  font-weight: bold;
-  width: 20%;
+  /* width: 20%; */
   border: 1px solid black;
   vertical-align: top;
+color: white;
 }
 
 table.form td.content { 
   padding-right: 2ex;
-  width: 75%;
+  /* width: 75%; */
   border: 1px solid black;
 }
 
@@ -445,7 +449,7 @@ table#filter td.content {
 }
 table#filter td.legend, 
 input.tab#filter, 
-input.tabactive#filter    { background-color: #fc0; }
+input.tabactive#filter    { background-color: #ca0; }
 
 table#displayoptions td.content { 
   background-image: url("background-brown.jpg");

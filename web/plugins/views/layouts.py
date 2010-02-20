@@ -1,52 +1,4 @@
  
-##################################################################################
-# Layouts
-##################################################################################
-
-def paint(p, row):
-    painter, linkview = p
-    tdclass, content = painter["paint"](row)
-    # Create contextlink to other view
-    if linkview:
-	view = html.available_views.get(linkview)
-	if view:
-	    filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
-	    filtervars = []
-	    for filt in filters:
-		filtervars += filt.variable_settings(row)
-
-	    uri = html.makeuri_contextless([("view_name", linkview)] + filtervars)
-	    content = "<a href=\"%s\">%s</a>" % (uri, content)
-
-    if tdclass:
-	html.write("<td class=\"%s\">%s</td>\n" % (tdclass, content))
-    else:
-	html.write("<td>%s</td>" % content)
-
-def paint_header(p):
-    painter, linkview = p
-    t = painter.get("short", painter["title"])
-    html.write("<th>%s</th>" % t)
-	
-def show_filter_form(filters):
-    if len(filters) > 0 and not html.do_actions():
-	html.begin_form("filter")
-	html.write("<table class=form id=filter>\n")
-        # sort filters according to title
-	s = [(f.title, f) for f in filters]
-	s.sort()
-	for title, f in s:
-	    html.write("<tr><td class=legend>%s</td>" % title)
-	    html.write("<td class=content>")
-	    f.display()
-	    html.write("</td></tr>\n")
-	html.write("<tr><td class=legend></td><td class=content>")
-	html.button("search", "Search", "submit")
-	html.write("</td></tr>\n")
-	html.write("</table>\n")
-	html.hidden_fields()
-	html.end_form()
-
 # -------------------------------------------------------------------------
 #    ____  _             _      
 #   / ___|(_)_ __   __ _| | ___ 
@@ -76,7 +28,6 @@ def render_single_dataset(data, view, filters, group_columns, group_painters, pa
 #                              
 # -------------------------------------------------------------------------
 def render_grouped_boxes(data, view, filters, group_columns, group_painters, painters, num_columns):
-    show_filter_form(filters)
     columns, rows = data
     # N columns. Each should contain approx the same number of entries
     groups = []
@@ -128,13 +79,11 @@ def render_grouped_boxes(data, view, filters, group_columns, group_painters, pai
     def render_group(header, rows, paintheader):
 	html.write("<table class=services><tr class=groupheader>")
 	html.write("<td colspan=%d><table><tr>" % len(painters))
-	first = True
+	painted = False
 	for p in group_painters:
-	    if first:
-		first = False
-	    else:
+	    if painted:
 		html.write("<td>,</td>")
-	    paint(p, rows[0])
+	    painted = paint(p, rows[0])
 		
 	html.write("</tr></table></td></tr>\n")
 	trclass = None
@@ -190,7 +139,6 @@ def render_grouped_boxes(data, view, filters, group_columns, group_painters, pai
 #                           
 # ------------------------------------------------------------------------
 def render_grouped_list(data, view, filters, group_columns, group_painters, painters, num_columns):
-    show_filter_form(filters)
     columns, rows = data
     html.write("<table class=services>\n")
     last_group = None
@@ -222,13 +170,12 @@ def render_grouped_list(data, view, filters, group_columns, group_painters, pain
 		# paint group header
 		html.write("<tr class=groupheader>")
 		html.write("<td class=groupheader colspan=%d><table><tr>" % (len(painters) * num_columns + (num_columns - 1)))
-		first = True
+		painted = False
 		for p in group_painters:
-		    if first:
-			first = False
-		    else:
+		    if painted:
 			html.write("<td>,</td>")
-		    paint(p, row)
+		    painted = paint(p, row)
+
 		html.write("</tr></table></td></tr>\n")
 		if view.get("column_headers") == "pergroup":
 		    show_header_line()

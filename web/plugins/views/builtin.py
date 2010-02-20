@@ -127,7 +127,7 @@ multisite_builtin_views = {
                 'hard_filters': [],
                 'hard_filtervars': [],
                 'hidden': True,
-                'hide_filters': ['host'],
+                'hide_filters': ['site', 'host'],
                 'layout': 'dataset',
                 'mustsearch': False,
                 'name': 'hoststatus',

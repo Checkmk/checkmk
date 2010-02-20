@@ -14,6 +14,67 @@ multisite_builtin_views = {}
 
 
 ##################################################################################
+# Layouts
+##################################################################################
+
+def paint(p, row):
+    painter, linkview = p
+    tdclass, content = painter["paint"](row)
+
+    # Create contextlink to other view
+    if content and linkview:
+	view = html.available_views.get(linkview)
+	if view:
+	    filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
+	    filtervars = []
+	    for filt in filters:
+		filtervars += filt.variable_settings(row)
+
+	    uri = html.makeuri_contextless([("view_name", linkview)] + filtervars)
+	    content = "<a href=\"%s\">%s</a>" % (uri, content)
+
+    if tdclass:
+	html.write("<td class=\"%s\">%s</td>\n" % (tdclass, content))
+    else:
+	html.write("<td>%s</td>" % content)
+    return content != ""
+
+def paint_header(p):
+    painter, linkview = p
+    t = painter.get("short", painter["title"])
+    html.write("<th>%s</th>" % t)
+
+def toggle_button(id, isopen, opentxt, closetxt, addclasses=[]):
+    if isopen:
+	displaytxt = ""
+    else:
+	displaytxt = "none"
+    classes = " ".join(["navi"] + addclasses)
+    toggle_texts = { False: opentxt, True: closetxt }
+    html.write("<a class=\"%s\" href=\"#\" onclick=\"toggle_object(this, '%s', '%s', '%s')\">%s</a>" % \
+	    (classes, id, opentxt, closetxt, toggle_texts[isopen]))
+
+
+def show_filter_form(is_open, filters):
+    html.begin_form("filter")
+    html.write("<table class=form id=filter %s>\n" % (not is_open and 'style="display: none"' or ''))
+
+    # sort filters according to title
+    s = [(f.title, f) for f in filters]
+    s.sort()
+    for title, f in s:
+	html.write("<tr><td class=legend>%s</td>" % title)
+	html.write("<td class=content>")
+	f.display()
+	html.write("</td></tr>\n")
+    html.write("<tr><td class=legend></td><td class=content>")
+    html.button("search", "Search", "submit")
+    html.write("</td></tr>\n")
+    html.write("</table>\n")
+    html.hidden_fields()
+    html.end_form()
+
+##################################################################################
 # Filters
 ##################################################################################
 
@@ -317,7 +378,8 @@ def page_edit_view(h):
 
     html.header("Edit view")
     html.write("<a class=navi href=\"edit_views.py\">Edit views</a>\n")
-    html.write("<a class=navi href=\"view.py?view_name=%s\">Visit this view (does not save)</a>\n" % viewname)
+    if not view["hidden"]:
+	html.write("<a class=navi href=\"view.py?view_name=%s\">Visit this view (does not save)</a>\n" % viewname)
     html.write("<p>Edit the properties of the view.</p>\n")
     html.begin_form("view")
     html.hidden_field("old_name", viewname) # safe old name in case user changes it
@@ -640,11 +702,23 @@ def show_view(view, show_heading = False):
 	html.header(view_title(view))
         show_site_header(html)
 
+    show_context_links(view, hide_filters)
     if view["owner"] == html.req.user:
 	html.write("<a class=navi href=\"edit_view.py?load_view=%s\">Edit this view</a> " % view["name"])
 
-    # Kontext links
-    show_context_links(view, show_filters + hide_filters)
+    # Filter-button
+    if len(show_filters) > 0 and not html.do_actions():
+        filter_isopen = html.var("search", "") != "" or view["mustsearch"]
+	toggle_button("filter", filter_isopen, "Show filter", "Hide filter", ["filter"])
+   
+    # Action-button
+    if len(rows) > 0 and check_mk.is_allowed_to_act(html.req.user):
+	actions_are_open = html.do_actions()
+	toggle_button("actions", actions_are_open, "Show commands", "hide commands")
+
+    # Filter form
+    if len(show_filters) > 0 and not html.do_actions():
+	show_filter_form(filter_isopen, show_filters)
 
     # Actions
     has_done_actions = False
@@ -655,13 +729,14 @@ def show_view(view, show_heading = False):
 	    except MKUserError, e:
 		html.show_error(e.message)
 		html.add_user_error(e.varname, e.message)
-		show_action_form(tablename)
+		show_action_form(True, tablename)
 
         else:
-	    show_action_form(tablename)
+	    show_action_form(actions_are_open, tablename)
 
     if has_done_actions:
 	html.write("<a href=\"%s\">Back to search results</a>" % html.makeuri([]))
+
     else:
         layout["render"]((columns, rows), view, show_filters, group_columns, group_painters, painters)
 
@@ -677,7 +752,7 @@ def view_title(view):
     return view["title"] + " " + ", ".join(extra_titles)
 
 def show_context_links(thisview, active_filters):
-    # compute list of html variable used actively by hidden or show
+    # compute list of html variables used actively by hidden or shown
     # filters.
     active_filter_vars = set([])
     for filt in active_filters:
@@ -822,21 +897,16 @@ def allowed_for_datasource(collection, datasourcename):
 #
 # -----------------------------------------------------------------------------
 
-def show_action_form(tablename):
+def show_action_form(is_open, tablename):
     if not check_mk.is_allowed_to_act(html.req.user):
 	return
 
-    display = html.do_actions()
-    toggle_texts = { False: 'Show command form', True: 'Hide command form' }
-    html.write("<a class=navi id=toggle_actions href=\"#\" onclick=\"toggle_actions(this, '%s', '%s')\">%s</a>" % \
-	    (toggle_texts[False], toggle_texts[True], toggle_texts[display]))
-    
     html.begin_form("actions")
     html.hidden_field("_do_actions", "yes")
     html.hidden_field("actions", "yes")
     html.hidden_fields() # set all current variables, exception action vars
 
-    html.write("<table %s id=actions class=form id=actions>\n" % (display and " " or 'style="display: none"'))
+    html.write("<table %s id=actions class=form id=actions>\n" % (is_open and " " or 'style="display: none"'))
 
     html.write("<tr><td class=legend>Notifications</td>\n"
                "<td class=content>\n"

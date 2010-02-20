@@ -106,10 +106,12 @@ a.navi {
     border-width: 1px;
     -moz-border-radius: 4px;
     background-color: #268;
-    padding: 2px 6px;
+    padding: 0px 5px;
     text-decoration: none;
     color: white;
     margin-right: 2px;
+    line-height: 1.5em;
+    font-size: 9pt;
 }
 
 a.navi:hover {
@@ -117,6 +119,12 @@ a.navi:hover {
     background-color: #48a;
 }
 
+a.navi.filter {
+    background-color: #da0;
+}
+a.navi.filter:hover {
+    background-color: #fc0;
+}
 
 a.navi.context {
     background-color: #628;
@@ -204,6 +212,7 @@ table.services {
   border-spacing: 0px;
   margin: 0px;
   padding: 0px;
+    margin-top: 8px;
   border-collapse: collapse;
   empty-cells: show;
   width: 100%;
@@ -235,15 +244,32 @@ table.services td.host {
   font-size: 120%;
 }
 
-tr.groupheader table {
-    border-style: none;
-    padding: 0px 1ex 0px 0px;
+tr.groupheader td {
+    border-style: none; 
+    padding: 0px;
+    margin: 0px;
 }
 
-tr.groupheader td {
+tr.groupheader td table {
+    border-style: none; 
+    padding: 0px;
+    margin: 0px;
+}
+
+tr.groupheader table td {
    border-style: none;
    padding: 0px;
-   padding-top: 6px;
+   margin: 0px;
+   padding-top: 2px;
+   font-weight: bold;
+}
+tr.groupheader a {
+    color: black;
+   text-decoration: none;
+}
+
+tr.groupheader a:hover {
+    text-decoration: underline;
 }
 
 td.host b.down { 

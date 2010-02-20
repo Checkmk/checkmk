@@ -109,6 +109,14 @@ class FilterGroupCombo(Filter):
 	else:
 	    col = self.what + "_groups"
 	return "Filter: %s >= %s\n" % (col, current_value)
+
+    def variable_settings(self, row):
+	varname = self.htmlvars[0]
+	value = row.get(self.what + "group_name")
+	if value:
+	    return [(varname, value)]
+	else:
+	    return []
     
     def heading_info(self, infoname):
 	current_value = self.current_value(infoname)

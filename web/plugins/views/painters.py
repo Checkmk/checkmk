@@ -10,12 +10,12 @@ def nagios_service_url(sitename, host, svc):
     nagurl = check_mk.site(sitename)["nagios_cgi_url"]
     return nagurl + ( "/extinfo.cgi?type=2&host=%s&service=%s" % (htmllib.urlencode(host), htmllib.urlencode(svc)))
 
-def paint_age(timestamp, has_been_checked):
+def paint_age(timestamp, has_been_checked, bold_if_younger_than):
     if not has_been_checked:
 	return "age", "-"
 	   
     age = time.time() - timestamp
-    if age < 60 * 10:
+    if age < bold_if_younger_than: 
 	age_class = "agerecent"
     else:
 	age_class = "age"
@@ -99,7 +99,7 @@ def paint_host_state_short(row):
 
 multisite_painters["service_state"] = {
     "title" : "Service state",
-    "short" : "state",
+    "short" : "State",
     "columns" : ["service_has_been_checked","service_state"],
     "paint" : paint_service_state_short
 }
@@ -120,14 +120,14 @@ multisite_painters["site_icon"] = {
 
 multisite_painters["svc_plugin_output"] = {
     "title" : "Output of check plugin",
-    "short" : "Plugin output",
+    "short" : "Status detail",
     "columns" : ["service_plugin_output"],
     "paint" : lambda row: (None, row["service_plugin_output"])
 }
     
 multisite_painters["host_plugin_output"] = {
     "title" : "Output of host check plugin",
-    "short" : "Plugin output",
+    "short" : "Status detail",
     "columns" : ["host_plugin_output"],
     "paint" : lambda row: (None, row["host_plugin_output"])
 }
@@ -140,9 +140,15 @@ multisite_painters["service_description"] = {
 
 multisite_painters["svc_state_age"] = {
     "title" : "The age of the current service state",
-    "short" : "age",
+    "short" : "Age",
     "columns" : [ "service_has_been_checked", "service_last_state_change" ],
-    "paint" : lambda row: paint_age(row["service_last_state_change"], row["service_has_been_checked"] == 1)
+    "paint" : lambda row: paint_age(row["service_last_state_change"], row["service_has_been_checked"] == 1, 60 * 10)
+}
+multisite_painters["svc_check_age"] = {
+    "title" : "The time since the last check of the service",
+    "short" : "Checked",
+    "columns" : [ "service_has_been_checked", "service_last_check" ],
+    "paint" : lambda row: paint_age(row["service_last_check"], row["service_has_been_checked"] == 1, 0)
 }
 
 def paint_svc_count(id, count):

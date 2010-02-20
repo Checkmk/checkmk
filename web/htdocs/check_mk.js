@@ -23,9 +23,9 @@ function filter_activation(oid)
     selectobject = null;
 }
 
-function toggle_actions(linkobject, showtext, hidetext)
+function toggle_object(linkobject, oid, showtext, hidetext)
 {
-    var table = document.getElementById("actions");
+    var table = document.getElementById(oid);
     var displayed = table.style.display;
     if (displayed == "none") {
 	table.style.display = "";

@@ -25,6 +25,17 @@ def footnotelinks(links):
 	html.write(link(text, target))
     html.write("</div>\n")
 
+def iconbutton(what, url, target="side"):
+    if target == "side":
+	onclick = "onclick=\"get_url('%s')\"" % (check_mk.checkmk_web_uri + "/" + url)
+	href = ""
+	tg = ""
+    else:
+	onclick = ""
+	href = "%s/%s" % (check_mk.checkmk_web_uri, url)
+	tg = "target=%s" % target
+    html.write("<a href=\"%s\" %s %s><img onmouseover=\"hilite_icon(this, 1)\" onmouseout=\"hilite_icon(this, 0)\" align=absmiddle src=\"%s/images/icon_%s14lo.png\"></a> " % (href, onclick, tg, check_mk.checkmk_web_uri, what))
+
 def nagioscgilink(text, target):
     html.write("<li class=sidebar><a target=\"main\" class=link href=\"%s/%s\">%s</a></li>" % \
 	    (check_mk.nagios_cgi_url, target, htmllib.attrencode(text)))
@@ -186,7 +197,7 @@ def page_configure(h):
 	
 	# reload sidebar, if user changed something
 	if changed:
-	    html.javascript("parent.frames[0].location.reload();");
+	    html.reload_sidebar()
 
 
     html.begin_form("sidebarconfig")

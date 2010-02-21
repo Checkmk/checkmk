@@ -476,3 +476,97 @@ def ajax_switch_masterstate(html):
 	html.live.set_only_sites(None)
     else:
 	html.write("Command %s/%d not found" % (column, state))
+	
+# ---------------------------------------------------------
+#   ____              _                         _        
+#  | __ )  ___   ___ | | ___ __ ___   __ _ _ __| | _____ 
+#  |  _ \ / _ \ / _ \| |/ / '_ ` _ \ / _` | '__| |/ / __|
+#  | |_) | (_) | (_) |   <| | | | | | (_| | |  |   <\__ \
+#  |____/ \___/ \___/|_|\_\_| |_| |_|\__,_|_|  |_|\_\___/
+#                                                        
+# ---------------------------------------------------------
+def load_bookmarks():
+    user = html.req.user
+    path = check_mk.multisite_config_dir + "/" + user + "/bookmarks.mk"
+    try:
+	return eval(file(path).read())
+    except:
+	return []
+
+
+def save_bookmarks(bookmarks):
+    user = html.req.user
+    dir = check_mk.multisite_config_dir + "/" + user
+    try:
+	os.makedirs(dir)
+    except:
+	pass
+    path = dir + "/bookmarks.mk"
+    file(path, "w").write(repr(bookmarks) + "\n")
+
+def render_bookmarks():
+    bookmarks = load_bookmarks()
+    n = 0
+    for title, href in bookmarks:
+	iconbutton("del", "del_bookmark.py?num=%d" % n, "side")
+	iconbutton("edit", "edit_bookmark.py?num=%d" % n, "main")
+	html.write(link(title, href))
+	html.write("<br>")
+	n += 1
+
+    onclick = "add_bookmark('%s')" % check_mk.checkmk_web_uri
+    html.write("<div class=footnotelink><a href=\"\" onclick=\"%s\">Add Bookmark</a></div>\n" % onclick)
+
+def page_edit_bookmark(h):
+    global html
+    html = h
+    html.header("Edit Bookmark")
+    html.begin_form("edit_bookmark")
+    n = int(html.var("num"))
+    bookmarks = load_bookmarks()
+    if html.var("save"):
+	title = html.var("title")
+	url = html.var("url")
+	bookmarks[n] = (title, url)
+	save_bookmarks(bookmarks)
+	html.reload_sidebar()
+    else:
+	title, url = bookmarks[n]
+	html.set_var("title", title)
+	html.set_var("url", url)
+
+    html.write("<table class=edit_bookmarks>")
+    html.write("<tr><td>Title:</td><td>")
+    html.text_input("title", size = 50)
+    html.write("</td></tr><tr><td>URL:</td><td>")
+    html.text_input("url", size = 50)
+    html.write("</td></tr><tr><td></td><td>")
+    html.button("save", "Save")
+    html.write("</td></tr></table>\n")
+    html.hidden_field("num", str(n))
+    html.end_form()
+    html.footer()
+
+def ajax_del_bookmark(h):
+    global html
+    html = h
+    num = int(html.var("num"))
+    bookmarks = load_bookmarks()
+    del bookmarks[num]
+    save_bookmarks(bookmarks)
+
+def ajax_add_bookmark(h):
+    global html
+    html = h
+    title = html.var("title")
+    href = html.var("href")
+    if title and href:
+	bookmarks = load_bookmarks()
+	bookmarks.append((title, href))
+	save_bookmarks(bookmarks)
+	
+
+sidebar_snapins["bookmarks"] = {
+    "title" : "Bookmarks",
+    "render" : render_bookmarks,
+}

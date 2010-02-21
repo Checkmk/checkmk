@@ -179,13 +179,17 @@ class html:
     def number_input(self, varname, deflt = ""):
 	self.text_input(varname, str(deflt), "number")
 
-    def text_input(self, varname, default_value = "", cssclass = "text"):
+    def text_input(self, varname, default_value = "", cssclass = "text", **args):
+	addprops = ""
+	if "size" in args:
+	    addprops += " size=%d" % args["size"]
+
         value = self.req.vars.get(varname, default_value)
         error = self.user_errors.get(varname)
         html = ""
         if error:
             html = "<x class=inputerror>"
-        html += "<input type=text class=%s value=\"%s\" name=\"%s\">" % (cssclass, attrencode(value), varname)
+        html += "<input type=text class=%s value=\"%s\" name=\"%s\"%s>" % (cssclass, attrencode(value), varname, addprops)
         if error:
             html += "</x>"
             self.set_focus(self.current_form, varname)
@@ -363,6 +367,9 @@ class html:
     def javascript(self, code):
 	self.write("<script language=\"javascript\">\n%s\n</script>\n" % code)
 
+    def reload_sidebar(self):
+	self.javascript("parent.frames[0].location.reload();");
+	
     # Get next transaction id for that user
     def current_transid(self, username):
 	dir = self.req.defaults["var_dir"] + "/web/" + username

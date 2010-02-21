@@ -971,7 +971,7 @@ div#check_mk_sidebar div.footnotelink {
 }
 div#check_mk_sidebar div.footnotelink a {
     font-size: 6pt;
-    color: #022;
+    color: #fff;
     border: 1px solid #333;
     -moz-border-radius: 3px;
     background-color: #666;

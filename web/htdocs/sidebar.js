@@ -74,3 +74,18 @@ function sidebar_scheduler() {
     }
     setTimeout(function(){sidebar_scheduler();}, 1000);
 }
+
+function add_bookmark(baseurl) {
+    href = parent.frames[1].location;
+    title = parent.frames[1].document.title;
+    get_url(baseurl + "/add_bookmark.py?title=" + escape(title) + "&href=" + escape(href));
+}
+
+function hilite_icon(oImg, onoff) {
+    src = oImg.src;
+    if (onoff == 0)
+	oImg.src = oImg.src.replace("hi.png", "lo.png");
+    else
+	oImg.src = oImg.src.replace("lo.png", "hi.png");
+}
+	

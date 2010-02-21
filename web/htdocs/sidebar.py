@@ -129,11 +129,11 @@ def render_snapin(name, state):
 	style = ' style="display:none"'
     else:
 	style = ""
-    if snapin.get("hidetitle") != True:
-	url = check_mk.checkmk_web_uri + "/sidebar_openclose.py?name=%s&state=" % name
-	html.write("<h2 onclick=\"toggle_sidebar_snapin(this,'%s')\" onmouseover=\"this.style.cursor='pointer'\" "
-		   "onmouseout=\"this.style.cursor='auto'\">%s</h2>\n" % (url, snapin["title"]))
-    html.write("<div id=\"snapin_%s\" class=content%s>\n" % (name, style))
+    url = check_mk.checkmk_web_uri + "/sidebar_openclose.py?name=%s&state=" % name
+    iconbutton("close", "sidebar_openclose.py?name=%s&state=off" % name, "side")
+    html.write("<b class=heading onclick=\"toggle_sidebar_snapin(this,'%s')\" onmouseover=\"this.style.cursor='pointer'\" "
+	       "onmouseout=\"this.style.cursor='auto'\">%s" % (url, snapin["title"]))
+    html.write("</b><div id=\"snapin_%s\" class=content%s>\n" % (name, style))
     snapin["render"]()
     html.write("</div></div>\n")
 

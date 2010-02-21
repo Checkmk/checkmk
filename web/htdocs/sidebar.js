@@ -42,7 +42,14 @@ function get_url(url) {
 }
 
 function toggle_sidebar_snapin(oH2, url) {
-    var oContent = oH2.parentNode.childNodes[3];
+    var childs = oH2.parentNode.childNodes;
+    for (var i in childs) {
+	child = childs[i];
+	if (child.tagName == "DIV") {
+	    var oContent = child;
+	    break;
+	}
+    }
     var closed = oContent.style.display == "none";
     if (closed)
 	oContent.style.display = "";
@@ -51,6 +58,7 @@ function toggle_sidebar_snapin(oH2, url) {
     /* make this persistent -> save */
     get_url(url + (closed ? "open" : "closed")); 
     oContent = null;
+    childs = null;
 }
 
 function switch_site(baseuri, switchvar) {

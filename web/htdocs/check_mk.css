@@ -948,9 +948,10 @@ div#check_mk_sidebar div.content {
     margin-top: 2px;
     margin-bottom: 3px;
 }
-div#check_mk_sidebar h2 {
-    margin-top: 0px;
-    margin-bottom: 0px;
+div#check_mk_sidebar b.heading {
+    position: relative;
+    left: 0px;
+    top: 2px;
     color: #036;
     font-size: 9pt;
 }

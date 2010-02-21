@@ -1111,17 +1111,19 @@ table.dataset {
     empty-cells: show;
     background-color: #fec;
     margin-bottom: 15px;
-    border: 6px solid #fec;
+    border: 1px solid #840;
     margin-top: 11px;
 }
 
 table.dataset td {
-    border-bottom: 1px dotted #444;
+    border-bottom: 1px dotted #840;
     padding-bottom: 4px;
-    padding: 1px 10px 5px 0px;
+    padding: 1px 10px 5px 10px;
 }
 table.dataset td.left {
     padding-right: 10px;
-    color: #840;
+    color: #fec;
+    background-color: #840;
+    border-color: #fec;
 }
 

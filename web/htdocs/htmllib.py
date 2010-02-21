@@ -343,8 +343,8 @@ class html:
             self.req.write("<table class=footer><tr>"
                            "<td class=left>&copy; <a href=\"http://mathias-kettner.de\">Mathias Kettner</a></td>"
                            "<td class=middle>This is part of <a href=\"http://mathias-kettner.de/check_mk\">Check_MK</a> version %s</td>"
-                           "<td class=right>%s (PID %d)</td></tr></table>"
-                           % (self.req.defaults["check_mk_version"], login_text, os.getpid()))
+                           "<td class=right>%s</td></tr></table>"
+                           % (self.req.defaults["check_mk_version"], login_text))
             self.req.write("</body></html>\n")
 
 

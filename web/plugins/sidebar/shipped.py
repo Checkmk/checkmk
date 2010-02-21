@@ -90,16 +90,34 @@ sidebar_snapins["servicegroups"] = {
 # --------------------------------------------------------------
 def render_hosts():
     html.live.set_prepend_site(True)
-    hosts = html.live.query("GET hosts\nColumns: name\n")
+    hosts = html.live.query("GET hosts\nColumns: name state worst_service_state\n")
     html.live.set_prepend_site(False)
     hosts.sort()
     target = views.get_context_link(html.req.user, "host")
-    for site, host in hosts:
-	bulletlink(host, target + ("&host=%s&site=%s" % (htmllib.urlencode(host), htmllib.urlencode(site))))
+    for site, host, state, worstsvc in hosts:
+	if state > 0 or worstsvc == 2:
+	   statecolor = 2
+	elif worstsvc == 1:
+	   statecolor = 1
+	elif worstsvc == 3:
+	   statecolor = 3
+	else:
+	   statecolor = 0
+	html.write('<div class="statebullet state%d">&nbsp;</div> ' % statecolor)
+        html.write(link(host, target + ("&host=%s&site=%s" % (htmllib.urlencode(host), htmllib.urlencode(site)))))
+	html.write("<br>\n")
 
 sidebar_snapins["hosts"] = {
     "title" : "All hosts",
-    "render" : render_hosts
+    "render" : render_hosts,
+    "refresh" : 60,
+    "styles" : """
+div.statebullet { margin-left: 2px; margin-right: 4px; width: 10px; height: 10px; border: 1px solid black; float: left; }
+div.state0 { background-color: #4c4; border-color: #0f0;  }
+div.state1 { background-color: #ff0; }
+div.state2 { background-color: #f00; }
+div.state3 { background-color: #f80; }
+"""
 }
     
 

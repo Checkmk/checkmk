@@ -6,7 +6,7 @@ td {
 
 body.page {
   background-color: #97a8ab;
-  background-image: url("background.jpg");
+  background-image: url("images/background.jpg");
   background-repeat: repeat;
   background-position: center;
   margin: 0px 8px 0px 8px;
@@ -203,7 +203,7 @@ table.services th {
 
 }
 table.services th.tablegap {
-  background-image: url("background.jpg");
+  background-image: url("images/background.jpg");
   background-repeat: repeat;
   background-position: center;
 }
@@ -404,7 +404,7 @@ table.boxlayout td.boxcolumn {
 table.services td.tablegap {
   border: none;
   background-color: #97a8ab;
-  background-image: url("background.jpg");
+  background-image: url("images/background.jpg");
   background-repeat: repeat;
   background-position: center;
 }
@@ -451,7 +451,7 @@ table#filter {
     margin-top: 8px;
 }
 table#filter td.content { 
-  background-image: url("background-gold.jpg");
+  background-image: url("images/background-gold.jpg");
   background-repeat: repeat;
   background-position: center;
 }
@@ -460,7 +460,7 @@ input.tab#filter,
 input.tabactive#filter    { background-color: #ca0; }
 
 table#displayoptions td.content { 
-  background-image: url("background-brown.jpg");
+  background-image: url("images/background-brown.jpg");
   background-repeat: repeat;
   background-position: center;
 }
@@ -472,7 +472,7 @@ table#actions {
     margin-top: 8px;
 }
 table#actions td.content { 
-  background-image: url("background-blue.jpg");
+  background-image: url("images/background-blue.jpg");
   background-repeat: repeat;
   background-position: center;
 }
@@ -800,7 +800,7 @@ table.view table.filters td.usagehard select
 
 table.view table.filters td.widgetshow
 {
-    background-image: url("background-gold.jpg");
+    background-image: url("images/background-gold.jpg");
     background-repeat: repeat;
     background-position: center;
     background-color: transparent;
@@ -929,7 +929,7 @@ div#check_mk_sidebar div.header table td.logo
     text-align: right;
 }
 div#check_mk_sidebar div.section {
-    background-image: url("background-gray.jpg");
+    background-image: url("images/background-gray.jpg");
     background-repeat: repeat;
     background-position: center;
     background-color: transparent;

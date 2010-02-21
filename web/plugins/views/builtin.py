@@ -1,6 +1,5 @@
 multisite_builtin_views = {
-
-'allhosts': {'column_headers': 'pergroup',
+    'allhosts': {'column_headers': 'pergroup',
               'datasource': 'hosts',
               'description': 'Overall state of allhosts, with counts of services in the various states.',
               'group_painters': [('sitealias', None)],
@@ -34,7 +33,7 @@ multisite_builtin_views = {
                               ('st3', 'on'),
                               ('stp', 'on')],
           'hidden': True,
-          'hide_filters': ['site', 'host'],
+          'hide_filters': ['siteopt', 'host'],
           'layout': 'boxed_2',
           'mustsearch': False,
           'name': 'host',
@@ -200,7 +199,7 @@ multisite_builtin_views = {
                                     ('stp', 'on'),
                                     ('site', ''),
                                     ('host', ''),
-                                    ('summary_host', '-1'),
+                                    ('is_summary_host', '-1'),
                                     ('opthostgroup', ''),
                                     ('host_check_command', ''),
                                     ('limit', '0')],
@@ -427,7 +426,7 @@ multisite_builtin_views = {
                   'mustsearch': False,
                   'name': 'svcbyhgroups',
                   'owner': '',
-                  'painters': [('host', None),
+                  'painters': [('host', 'host'),
                                ('service_state', None),
                                ('svc_state_age', None),
                                ('service_description', None),
@@ -489,5 +488,4 @@ multisite_builtin_views = {
                  'sorters': [('svcstate', True),
                              ('stateage', False),
                              ('svcdescr', False)],
-                 'title': 'Service problems'}
-}
+                 'title': 'Service problems'}}

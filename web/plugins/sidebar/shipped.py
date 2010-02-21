@@ -93,6 +93,8 @@ def render_hosts():
     hosts = html.live.query("GET hosts\nColumns: name state worst_service_state\n")
     html.live.set_prepend_site(False)
     hosts.sort()
+    views.html = html
+    views.load_views()
     target = views.get_context_link(html.req.user, "host")
     for site, host, state, worstsvc in hosts:
 	if state > 0 or worstsvc == 2:

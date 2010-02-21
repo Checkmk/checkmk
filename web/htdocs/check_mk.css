@@ -951,7 +951,7 @@ div#check_mk_sidebar div.content {
 div#check_mk_sidebar b.heading {
     position: relative;
     left: 0px;
-    top: 2px;
+    top: 1px;
     color: #036;
     font-size: 9pt;
 }

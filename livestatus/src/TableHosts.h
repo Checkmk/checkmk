@@ -35,13 +35,15 @@ class TableDownComm;
 
 class TableHosts : public Table
 {
+    bool _by_group;
 public:
-  TableHosts();
-  const char *name() { return "hosts"; };
-  bool isAuthorized(contact *ctc, void *data);
-  void *findObject(char *objectspec);
-  void addColumns(Table *, string prefix, int indirect_offset);
-  void answerQuery(Query *query);
+    TableHosts(bool by_group);
+    const char *name() { return _by_group ? "hostsbygroup" : "hosts"; };
+    const char *prefixname() { return "hosts"; };
+    bool isAuthorized(contact *ctc, void *data);
+    void *findObject(char *objectspec);
+    void addColumns(Table *, string prefix, int indirect_offset);
+    void answerQuery(Query *query);
 };
 
 #endif // TableHosts_h

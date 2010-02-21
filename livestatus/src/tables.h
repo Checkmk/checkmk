@@ -35,6 +35,7 @@ class TableCommands;
 EXTERN TableCommands      *g_table_commands;
 class TableHosts;
 EXTERN TableHosts         *g_table_hosts;
+EXTERN TableHosts         *g_table_hostsbygroup;
 class TableServices;
 EXTERN TableServices      *g_table_services;
 EXTERN TableServices      *g_table_servicesbygroup;

@@ -41,11 +41,14 @@ extern unsigned long g_max_cached_messages;
 Store::Store()
     : _table_services(false)
     , _table_servicesbygroup(true)
+    , _table_hosts(false)
+    , _table_hostsbygroup(true)
     , _table_downtimes(true)
     , _table_comments(false)
     , _table_log(g_max_cached_messages)
 {
     _tables.insert(make_pair("hosts", &_table_hosts));
+    _tables.insert(make_pair("hostsbygroup", &_table_hostsbygroup));
     _tables.insert(make_pair("services", &_table_services));
     _tables.insert(make_pair("servicesbygroup", &_table_servicesbygroup));
     _tables.insert(make_pair("hostgroups", &_table_hostgroups));

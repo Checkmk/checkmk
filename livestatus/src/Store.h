@@ -46,11 +46,12 @@ class Store
 {
   TableContacts      _table_contacts;
   TableCommands      _table_commands;
+  TableHostgroups    _table_hostgroups;
   TableHosts         _table_hosts;
+  TableHosts         _table_hostsbygroup;
   TableServicegroups _table_servicegroups;
   TableServices      _table_services;
   TableServices      _table_servicesbygroup;
-  TableHostgroups    _table_hostgroups;
   TableTimeperiods   _table_timeperiods;
   TableContactgroups _table_contactgroups;
   TableDownComm      _table_downtimes;

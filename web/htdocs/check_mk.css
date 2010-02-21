@@ -309,6 +309,14 @@ table.services td.agerecent {
   font-weight: bold;
 }
 
+td.badflag {
+    font-weight: bold;
+    background-color: #f64;
+}
+td.goodflag {
+    color: #080;
+}
+
 /* state in group header */
 .groupheader td.state {
   width: 50px;

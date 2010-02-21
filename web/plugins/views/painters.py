@@ -124,6 +124,12 @@ multisite_painters["svc_plugin_output"] = {
     "columns" : ["service_plugin_output"],
     "paint" : lambda row: (None, row["service_plugin_output"])
 }
+multisite_painters["svc_perf_data"] = {
+    "title" : "Service performance data",
+    "short" : "Perfdata",
+    "columns" : ["service_perf_data"],
+    "paint" : lambda row: (None, row["service_perf_data"])
+}
     
 multisite_painters["host_plugin_output"] = {
     "title" : "Output of host check plugin",
@@ -150,6 +156,41 @@ multisite_painters["svc_check_age"] = {
     "columns" : [ "service_has_been_checked", "service_last_check" ],
     "paint" : lambda row: paint_age(row["service_last_check"], row["service_has_been_checked"] == 1, 0)
 }
+
+multisite_painters["svc_attempt"] = {
+    "title" : "Current check attempt",
+    "short" : "Att.",
+    "columns" : [ "service_current_attempt", "service_max_check_attempts" ],
+    "paint" : lambda row: (None, "%d/%d" % (row["service_current_attempt"], row["service_max_check_attempts"]))
+}
+
+def paint_nagiosflag(row, field, bold_if_nonzero):
+    value = row[field]
+    yesno = {True:"yes", False:"no"}[value != 0]
+    if (value != 0) == bold_if_nonzero:
+	return "badflag", yesno
+    else:
+	return "goodflag", yesno
+
+multisite_painters["svc_in_downtime"] = {
+    "title" : "Currently in downtime",
+    "short" : "Dt.",
+    "columns" : [ "service_scheduled_downtime_depth" ],
+    "paint" : lambda row: paint_nagiosflag(row, "service_scheduled_downtime_depth", True)
+}
+multisite_painters["svc_in_notifper"] = {
+    "title" : "In notification period",
+    "short" : "in notif. p.",
+    "columns" : [ "service_in_notification_period" ],
+    "paint" : lambda row: paint_nagiosflag(row, "service_in_notification_period", False)
+}
+multisite_painters["svc_flapping"] = {
+    "title" : "Is flapping",
+    "short" : "flap",
+    "columns" : [ "service_is_flapping" ],
+    "paint" : lambda row: paint_nagiosflag(row, "service_is_flapping", True)
+}
+
 
 def paint_svc_count(id, count):
     if count > 0:

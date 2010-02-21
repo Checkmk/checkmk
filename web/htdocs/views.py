@@ -310,7 +310,7 @@ def page_edit_views(h, msg=None):
 	    html.write("<td class=content>%s</td>" % (view["hidden"] and "yes" or "no"))
 	    html.write("</td><td class=content>%s</td><td class=buttons>\n" % view["datasource"])
 	    if owner == "":
-		buttontext = "Override"
+		buttontext = "Customize"
 	    else:
 		buttontext = "Clone"
 	    html.buttonlink("edit_views.py?clone=%s/%s" % (owner, viewname), buttontext, True)
@@ -354,7 +354,8 @@ def page_edit_view(h):
     # Load existing view from disk
     viewname = html.var("load_view")
     if viewname:
-	view = html.multisite_views.get((html.req.user, viewname), None)
+	loaduser = html.var("clonefrom", html.req.user)
+	view = html.multisite_views.get((loaduser, viewname), None)
 	datasourcename = view["datasource"]
 	if view:
 	    load_view_into_html_vars(view)
@@ -715,6 +716,8 @@ def show_view(view, show_heading = False):
     show_context_links(view, hide_filters)
     if view["owner"] == html.req.user:
 	html.write("<a class=navi href=\"edit_view.py?load_view=%s\">Edit this view</a> " % view["name"])
+    else:
+	html.write("<a class=navi href=\"edit_view.py?clonefrom=%s&load_view=%s\">Customize this view</a> " % (view["owner"], view["name"]))
 
     # Filter-button
     if len(show_filters) > 0 and not html.do_actions():

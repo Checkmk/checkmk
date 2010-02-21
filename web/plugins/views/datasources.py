@@ -29,7 +29,10 @@ multisite_datasources["services"] = {
     "infos"   : [ "host", "service" ],
     "columns" : [ "service_description", "service_plugin_output", "service_state", "service_has_been_checked", 
                   "host_name", "host_state", "host_has_been_checked", "service_last_check",
-		  "service_last_state_change", "service_downtimes", "service_perf_data" ],
+		  "service_last_state_change", "service_downtimes", "service_perf_data", 
+		      "service_max_check_attempts", "service_current_attempt", "service_in_notification_period",
+		  "service_scheduled_downtime_depth", "service_is_flapping",
+			  ],
 }
 
 multisite_datasources["servicesbygroup"] = {
@@ -39,7 +42,10 @@ multisite_datasources["servicesbygroup"] = {
     "columns" : [ "servicegroup_alias", "servicegroup_name", 
 		  "service_description", "service_plugin_output", "service_state", "service_has_been_checked", 
                   "host_name", "host_state", "host_has_been_checked", 
-		  "service_last_state_change", "service_downtimes", "service_perf_data" ],
+		  "service_last_state_change", "service_downtimes", "service_perf_data" 
+		      "service_max_check_attempts", "service_current_attempt", "service_in_notification_period",
+		  "service_scheduled_downtime_depth", "service_is_flapping",
+		      ],
 }
 multisite_datasources["servicesbyhostgroup"] = {
     "title"   : "Services grouped by host groups",
@@ -48,7 +54,10 @@ multisite_datasources["servicesbyhostgroup"] = {
     "columns" : [ "hostgroup_alias", "hostgroup_name", 
 		  "service_description", "service_plugin_output", "service_state", "service_has_been_checked", 
                   "host_name", "host_state", "host_has_been_checked", 
-		  "service_last_state_change", "service_downtimes", "service_perf_data" ],
+		  "service_last_state_change", "service_downtimes", "service_perf_data" ,
+		      "service_max_check_attempts", "service_current_attempt", "service_in_notification_period",
+		  "service_scheduled_downtime_depth","service_is_flapping",
+		      ]
 }
 
 multisite_datasources["servicegroups"] = {

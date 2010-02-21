@@ -91,4 +91,5 @@ declare_simple_sorter("svcoutput",    "Service plugin output", "service_plugin_o
 declare_simple_sorter("site",         "Site",                  "site",                      cmp_simple_string)
 declare_simple_sorter("stateage",     "Service state age",     "service_last_state_change", cmp_simple_number)
 declare_simple_sorter("servicegroup", "Servicegroup",          "servicegroup_alias",        cmp_simple_string)
+declare_simple_sorter("hostgroup",    "Hostgroup",             "hostgroup_alias",           cmp_simple_string)
 

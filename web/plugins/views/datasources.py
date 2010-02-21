@@ -10,9 +10,19 @@ multisite_datasources["hosts"] = {
     "columns" : ["host_name", "host_alias", "host_state", "host_has_been_checked", "host_downtimes", 
 		 "host_plugin_output", "host_num_services", "host_num_services_pending", "host_num_services_ok", 
 		 "host_num_services_warn", 
-   "host_num_services_unknown", "host_num_services_crit" ],
+                 "host_num_services_unknown", "host_num_services_crit" ],
 }
 
+multisite_datasources["hostsbygroup"] = {
+    "title"   : "Hosts grouped by host groups",
+    "table"   : "hostsbygroup",
+    "infos"   : [ "host", "hostgroup" ],
+    "columns" : ["hostgroup_name", "hostgroup_alias",
+                 "host_name", "host_alias", "host_state", "host_has_been_checked", "host_downtimes", 
+		 "host_plugin_output", "host_num_services", "host_num_services_pending", "host_num_services_ok", 
+		 "host_num_services_warn", 
+                 "host_num_services_unknown", "host_num_services_crit" ],
+}
 multisite_datasources["services"] = {
     "title"   : "All services",
     "table"   : "services",
@@ -23,10 +33,19 @@ multisite_datasources["services"] = {
 }
 
 multisite_datasources["servicesbygroup"] = {
-    "title"   : "Service grouped by service groups",
+    "title"   : "Services grouped by service groups",
     "table"   : "servicesbygroup",
     "infos"   : [ "host", "service", "servicegroup" ],
     "columns" : [ "servicegroup_alias", "servicegroup_name", 
+		  "service_description", "service_plugin_output", "service_state", "service_has_been_checked", 
+                  "host_name", "host_state", "host_has_been_checked", 
+		  "service_last_state_change", "service_downtimes", "service_perf_data" ],
+}
+multisite_datasources["servicesbyhostgroup"] = {
+    "title"   : "Services grouped by host groups",
+    "table"   : "servicesbyhostgroup",
+    "infos"   : [ "host", "service", "hostgroup" ],
+    "columns" : [ "hostgroup_alias", "hostgroup_name", 
 		  "service_description", "service_plugin_output", "service_state", "service_has_been_checked", 
                   "host_name", "host_state", "host_has_been_checked", 
 		  "service_last_state_change", "service_downtimes", "service_perf_data" ],

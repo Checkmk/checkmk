@@ -387,7 +387,7 @@ def page_edit_view(h):
 
     html.header("Edit view")
     html.write("<a class=navi href=\"edit_views.py\">Edit views</a>\n")
-    if not view["hidden"]:
+    if view and not view["hidden"]:
 	html.write("<a class=navi href=\"view.py?view_name=%s\">Visit this view (does not save)</a>\n" % viewname)
     html.write("<p>Edit the properties of the view.</p>\n")
     html.begin_form("view")
@@ -417,7 +417,8 @@ def page_edit_view(h):
     html.write("</td></tr>\n")
 
     # [1] Datasource (not changeable here!)
-    html.write("<tr><td class=legend>1. Datasource</td><td>%s</td></tr>" % datasourcename)
+    datasource_title = multisite_datasources[datasourcename]["title"]
+    html.write("<tr><td class=legend>1. Datasource</td><td>%s</td></tr>" % datasource_title)
     html.hidden_field("datasource", datasourcename)
     
     # [2] Layout

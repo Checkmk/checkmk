@@ -39,6 +39,7 @@ EXTERN TableHosts         *g_table_hostsbygroup;
 class TableServices;
 EXTERN TableServices      *g_table_services;
 EXTERN TableServices      *g_table_servicesbygroup;
+EXTERN TableServices      *g_table_servicesbyhostgroup;
 class TableHostgroups;
 EXTERN TableHostgroups    *g_table_hostgroups;
 class TableServicegroups;

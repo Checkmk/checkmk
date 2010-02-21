@@ -33,6 +33,7 @@
 #include "OffsetStringServiceMacroColumn.h"
 #include "TableHosts.h"
 #include "TableServicegroups.h"
+#include "TableHostgroups.h"
 #include "ServiceContactsColumn.h"
 #include "DownCommColumn.h"
 #include "CustomVarsColumn.h"
@@ -43,10 +44,15 @@
 
 extern service *service_list;
 extern servicegroup *servicegroup_list;
+extern hostgroup *hostgroup_list;
 
 struct servicebygroup {
     service _service;
     servicegroup *_servicegroup;
+};
+struct servicebyhostgroup {
+    service _service;
+    hostgroup *_hostgroup;
 };
 
 void TableServices::answerQuery(Query *query)
@@ -65,6 +71,31 @@ void TableServices::answerQuery(Query *query)
 		mem = mem->next;
 	    }
 	    sgroup = sgroup->next;
+	}
+	return;
+    }
+
+    // Table servicesbyhostgroup iterates of hostgroups and hosts
+    else if (_by_hostgroup)
+    {
+	hostgroup *hgroup = hostgroup_list;
+	servicebyhostgroup shg;
+	while (hgroup) {
+	    shg._hostgroup = hgroup;
+	    hostsmember *mem = hgroup->members;
+	    while (mem) {
+		host *hst = mem->host_ptr;
+		servicesmember *smem = hst->services;
+		while (smem) {
+		    service *svc = smem->service_ptr;
+		    memcpy(&shg._service, svc, sizeof(service));
+		    if (!query->processDataset(&shg))
+			break;
+		    smem = smem->next;
+		}
+		mem = mem->next;
+	    }
+	    hgroup = hgroup->next;
 	}
 	return;
     }
@@ -138,13 +169,18 @@ bool TableServices::isAuthorized(contact *ctc, void *data)
     }
 }
 
-TableServices::TableServices(bool by_group)
+TableServices::TableServices(bool by_group, bool by_hostgroup)
     : _by_group(by_group)
+    , _by_hostgroup(by_hostgroup)
 {
-    struct servicebygroup ref;
+    struct servicebygroup     sgref;
+    struct servicebyhostgroup hgref;
     addColumns(this, "", -1, true);
     if (by_group) {
-	g_table_servicegroups->addColumns(this, "servicegroup_", (char *)&(ref._servicegroup) - (char *)&ref);
+	g_table_servicegroups->addColumns(this, "servicegroup_", (char *)&(sgref._servicegroup) - (char *)&sgref);
+    }
+    else if (by_hostgroup) {
+	g_table_hostgroups->addColumns(this, "hostgroup_", (char *)&(hgref._hostgroup) - (char *)&hgref);
     }
 }
 

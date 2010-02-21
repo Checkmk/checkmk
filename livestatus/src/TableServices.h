@@ -39,10 +39,12 @@ class TableDowntimes;
 class TableServices : public Table
 {
     bool _by_group;
+    bool _by_hostgroup; // alternative to _by_group
 
 public:
-    TableServices(bool by_group);
-    const char *name() { return _by_group ? "servicesbygroup" : "services"; };
+    TableServices(bool by_group, bool by_hostgroup);
+    const char *name() { return _by_group ? "servicesbygroup" : \
+	(_by_hostgroup ? "servicesbyhostgroup" : "services"); };
     const char *prefixname() { return "services"; };
     bool isAuthorized(contact *, void *);
     void *findObject(char *objectspec);

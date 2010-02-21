@@ -52,6 +52,7 @@ class Store
   TableServicegroups _table_servicegroups;
   TableServices      _table_services;
   TableServices      _table_servicesbygroup;
+  TableServices      _table_servicesbyhostgroup;
   TableTimeperiods   _table_timeperiods;
   TableContactgroups _table_contactgroups;
   TableDownComm      _table_downtimes;

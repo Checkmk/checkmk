@@ -12,7 +12,7 @@ header ()
       printf "|%-66s|\n" "${line//@/ }"
     done
     echo '|                                                                  |'
-    echo '| Copyright Mathias Kettner 2009             mk@mathias-kettner.de |'
+    echo '| Copyright Mathias Kettner 2010             mk@mathias-kettner.de |'
     echo '+------------------------------------------------------------------+'
 
     cat <<EOF
@@ -51,7 +51,7 @@ headrify ()
       bangpath=""
       case "${file##*/}" in
           *.php)    comment="# " ; bangpath="<?php"; ;;
-          *.h|*.c|*.cc|*.h.in) comment="// " ;;
+          *.h|*.c|*.cc|*.h.in|*.js) comment="// " ;;
           *.conf|*.cfg)   comment="# " ;;
           *.spec|Makefile*) comment="# " ;;
           *.py|*)     comment="# "  ; bangpath="#!/usr/bin/python
@@ -94,6 +94,7 @@ else
       -name "*.h" -or \
       -name "*.cc" -or \
       -name "*.c" -or \
+      -name "*.js" -or \
       -name "*.py" -or \
       -name "*.php" -or \
       -name "*.sh" -or \

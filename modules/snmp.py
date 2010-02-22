@@ -54,6 +54,8 @@ def get_snmp_explicit(hostname, ipaddress, community, mib, baseoid, suffixes):
         num_found = 0
         snmp_process = os.popen(command, "r")
         for line in snmp_process.readlines():
+	   if not '=' in line: # TODO: join onto previous line
+	      continue
            item, value = line.split("=")
            value_text = strip_snmp_value(value)
            # try to remove text, only keep number

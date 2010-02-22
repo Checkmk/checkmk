@@ -52,7 +52,7 @@
       * Allow to select columns with table prefix, e.g. host_name instead of name
         in table hosts. This does not affect the columns headers output by
 	ColumnHeaders, though.
-      * fix invalid json output of group list column
+      * fix invalid json output of group list column in tables hosts and services
 
       Multiadmin:
       * Allow nagios contacts to be used for authorization (in order to

@@ -1,0 +1,72 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# +------------------------------------------------------------------+
+# | This file has been contributed and is copyrighted by:            |
+# |                                                                  |
+# | Joerg Linge 2009 <joerg.linge@pnp4nagios.org>     Copyright 2010 |
+# +------------------------------------------------------------------+
+
+#	%user  %sys  %wait  %idle physc %entc  lbusy   app  vcsw phint
+#	-----  ----  -----  ----- ----- ----- ------   ---  ---- -----
+#	  2.5   6.0    0.1   91.5  0.03  11.4    1.8  3.27 1976647217 490545630 
+
+
+lparstat_default_levels = (5, 10)
+
+def inventory_lparstat(checkname, info):
+   if len(info) == 1 and len(info[0]) >= 5:
+      return [(None, "", "lparstat_default_levels")]
+   else:
+      return []
+
+def check_lparstat(item, params, info):
+	try:
+		user  = info[0][0]
+		sys   = info[0][1]
+		wait  = info[0][2]
+		idle  = info[0][3]
+		physc = info[0][4]
+		entc  = info[0][5]
+		lbusy = info[0][6]
+		app   = info[0][7]
+	except:
+		return (3, "Unknown - invalid or incomplete output from plugin")
+
+	perfdata = [
+			('user', str(user) + '%'),
+			('sys', str(sys) + '%'),
+			('wait', str(wait) + '%'),
+			('idle', str(idle) + '%'),
+			('physc', str(physc) + ''),
+			('entc', str(entc) + '%'),
+			('lbusy', str(lbusy) + ''),
+			('app', str(app) + ''),
+			]
+
+	return (0, "OK: AIX lparstat, user=%s%% sys=%s%% wait=%s%% idle=%s%% physc=%s app=%s" % (user,sys,wait,idle,physc,app),perfdata )
+
+check_info['lparstat_aix'] = (check_lparstat, "lparstat", 1,  inventory_lparstat )

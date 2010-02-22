@@ -39,6 +39,7 @@
       * fjdarye60_psus: New check for status of PSUs
       * fjdarye60_syscaps: New check for status of System Capacitor Units
       * fjdarye60_rluns: New check for RLUNs
+      * lparstat_aix: New check by Joerg Linge
 
       MK Livestatus:
       * New headers for waiting (please refer to online documentation)

@@ -6,15 +6,13 @@ distribution: check_mk
 description:
  This check monitors the CPU usage on a Windows system using the
  windows performance counters (agent section {<<<winperf>>>}). 
- In its current implementation this check is always OK. Setting
- a level for warning or a critical state is currently not possible.
- The reason is, that it in most cases a CPU utilization of 100%
- over one check cycle (typically one minute) is not an event
- specific enough to trigger a critical state. One would have
- to monitor the CPU usage over a longer period of time than
- one check cycle. This is currently not possible but might
- be implemented in future versions.
-
+ In its current implementation this check is always OK. 
+ 
+ Setting a level for warning or a critical state is possible, but might
+ not be very usefull, since the computed value is an average over
+ just one check cycle. A combination with a larger value of {max_check_attempts}
+ or {notification_delay} might be useful here.
+ 
 perfdata:
  The averaged percentage of CPU utilization during the last check cycle.
 

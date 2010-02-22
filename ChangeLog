@@ -12,6 +12,7 @@
       * PNP4Nagios Templates: Fixed bug in template file detection for local checks
       * nagios_install.sh: Added support for Ubuntu 9.10
       * SNMP checks: handle multiline output of snmpwalk (e.g. Hexdumps)
+      * SNMP checks: handle ugly error output of snmpwalk
 
       Checks & Agents:
       * multipath: Fixed bug in output parser

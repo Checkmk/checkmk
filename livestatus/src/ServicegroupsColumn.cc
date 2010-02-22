@@ -38,6 +38,7 @@ objectlist *ServicegroupsColumn::getData(void *data)
 
 void ServicegroupsColumn::output(void *data, Query *query)
 {
+   query->outputBeginList();
    objectlist *list = getData(data);
    if (list) {
       bool first = true;
@@ -51,6 +52,7 @@ void ServicegroupsColumn::output(void *data, Query *query)
 	 list = list->next;
       }
    }
+   query->outputEndList();
 }
 
 void *ServicegroupsColumn::getNagiosObject(char *name)

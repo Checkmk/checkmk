@@ -703,7 +703,8 @@ def show_view(view, show_heading = False):
     hide_filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
     hard_filters = [ multisite_filters[fn] for fn in view["hard_filters"] ]
     for varname, value in view["hard_filtervars"]:
-	if not html.var("filled_in"): # shown filters are set, if form is fresh
+	# shown filters are set, if form is fresh and variable not supplied in URL
+	if not html.var("filled_in") and not html.has_var(varname): 
 	    html.set_var(varname, value)
 
     filterheaders = ""
@@ -768,10 +769,10 @@ def show_view(view, show_heading = False):
 	    except MKUserError, e:
 		html.show_error(e.message)
 		html.add_user_error(e.varname, e.message)
-		show_action_form(True, tablename)
+		show_action_form(True, datasource)
 
         else:
-	    show_action_form(actions_are_open, tablename)
+	    show_action_form(actions_are_open, datasource)
 
     if has_done_actions:
 	html.write("<a href=\"%s\">Back to search results</a>" % html.makeuri([]))
@@ -936,7 +937,7 @@ def allowed_for_datasource(collection, datasourcename):
 #
 # -----------------------------------------------------------------------------
 
-def show_action_form(is_open, tablename):
+def show_action_form(is_open, datasource):
     if not check_mk.is_allowed_to_act(html.req.user):
 	return
 
@@ -959,6 +960,19 @@ def show_action_form(is_open, tablename):
                "<input type=submit name=_disable_checks value=\"Disable\"> &nbsp; "
                "<input type=submit name=_resched_checks value=\"Reschedule next check now\"></td></tr>\n"
                "</td></tr>\n")
+
+    if "service" in datasource["infos"]:
+	states = ["Ok", "Warning", "Critical", "Unknown"]
+    elif "host" in datasource["infos"]:
+	states = ["Up", "Down", "Unreachable"]
+    else:
+	states = None
+    if states:
+	html.write("<tr><td class=legend>Fake check results</td><td class=content>\n")
+	for state in states:
+	    html.button("_fake", state)
+	    html.write(" ")
+	html.write("</td></tr>\n") 
 
     html.write("<tr><td rowspan=2 class=legend>Acknowledge</td>\n")
     html.write("<td class=content><input type=submit name=_acknowledge value=\"Acknowledge\"> &nbsp; "
@@ -1023,6 +1037,18 @@ def nagios_action_command(tablename, dataset):
     elif html.var("_resched_checks"):
         command = "SCHEDULE_FORCED_" + cmdtag + "_CHECK;%s;%d" % (spec, int(time.time()))
         title = "<b>reschedule an immediate check</b> of"
+
+    elif html.var("_fake"):
+	statename = html.var("_fake")
+	pluginoutput =  "Manually set to %s by %s" % (statename, html.req.user)
+	svcstate = {"Ok":0, "Warning":1, "Critical":2, "Unknown":3}.get(statename)
+	if svcstate != None:
+	    command = "PROCESS_SERVICE_CHECK_RESULT;%s;%s;%s" % (spec, svcstate, pluginoutput)
+	else:
+	    hoststate = {"Up":0, "Down":1, "Unreachable":2}.get(statename)
+	    if hoststate != None:
+		command = "PROCESS_HOST_CHECK_RESULT;%s;%s;%s" % (spec, hoststate, pluginoutput)
+	title = "<b>manually set check results to %s</b> for" % statename
 
     elif html.var("_acknowledge"):
         comment = html.var("_comment")

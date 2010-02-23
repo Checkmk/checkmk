@@ -250,13 +250,26 @@ def render_tactical_overview():
     svcdata = html.live.query_summed_stats("GET services\n" + headers)
     hstdata = html.live.query_summed_stats("GET hosts\n" + headers)
     html.write("<table class=tacticaloverview>\n")
-    for what, data in [("Services", svcdata), ("Hosts", hstdata)]:
-	html.write("<tr><th>%s</th><th>Problems</th><th>Unhandled</th></tr>\n" % what)
+    for title, data, view, what in [
+	    ("Hosts", hstdata, 'hostproblems', 'host'),
+	    ("Services", svcdata, 'svcproblems', 'service'), 
+	    ]:
+	html.write("<tr><th>%s</th><th>Problems</th><th>Unhandled</th></tr>\n" % title)
 	html.write("<tr>")
 
 	html.write("<td class=total>%d</td>" % data[0])
+	unhandled = False
 	for value in data[1:]:
-            html.write("<td class=%sprob>%d</td>" % (value == 0 and "no" or "", value))
+	    if value > 0:
+		href = "view.py?view_name=" + view
+		if unhandled:
+		             
+		    href += "&is_%s_acknowledged=0" % what
+		text = link(str(value), href)
+	    else:
+		text = str(value)
+            html.write("<td class=%sprob>%s</td>" % (value == 0 and "no" or "", text))
+	    unhandled = True
 	html.write("</tr>\n")
     html.write("</table>\n")
 		    

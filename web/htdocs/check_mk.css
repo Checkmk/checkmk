@@ -967,8 +967,8 @@ div#check_mk_sidebar a {
     color: #eee;
 }
 div#check_mk_sidebar div.footnotelink {
-    width: 155px;
     text-align: right;
+    padding-right: 3px;
 }
 div#check_mk_sidebar div.footnotelink a {
     font-size: 6pt;

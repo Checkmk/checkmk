@@ -1,31 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-# 
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-# 
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
-
-multisite_builtin_views = {
-    'allhosts': {'column_headers': 'pergroup',
+multisite_builtin_views = {'allhosts': {'column_headers': 'pergroup',
               'datasource': 'hosts',
               'description': 'Overall state of allhosts, with counts of services in the various states.',
               'group_painters': [('sitealias', None)],
@@ -123,7 +96,7 @@ multisite_builtin_views = {
                 'show_filters': [],
                 'sorters': [],
                 'title': 'Hostgroups'},
- 'hostproblems': {'column_headers': 'off',
+ 'hostproblems': {'column_headers': 'pergroup',
                   'datasource': 'hosts',
                   'description': 'A complete list of all host problems with a search form for selecting handled and unhandled',
                   'group_painters': [('host_state', None)],
@@ -136,6 +109,7 @@ multisite_builtin_views = {
                                       ('st1', 'on'),
                                       ('st2', 'on'),
                                       ('stp', ''),
+                                      ('host', ''),
                                       ('opthostgroup', '')],
                   'hidden': False,
                   'hide_filters': [],
@@ -144,11 +118,17 @@ multisite_builtin_views = {
                   'name': 'hostproblems',
                   'owner': '',
                   'painters': [('host', 'host'),
+                               ('host_state', None),
                                ('host_plugin_output', None),
-                               ('num_services', None)],
+                               ('num_services_ok', None),
+                               ('num_services_warn', None),
+                               ('num_services_crit', None),
+                               ('num_services_unknown', None),
+                               ('num_services_pending', None)],
                   'public': True,
                   'show_filters': ['host_in_notification_period',
                                    'hoststate',
+                                   'hostregex',
                                    'opthostgroup'],
                   'sorters': [],
                   'title': 'Host problems'},
@@ -189,7 +169,9 @@ multisite_builtin_views = {
                               ('hostgroup', False),
                               ('site_host', False)],
                   'title': 'Hosts by group'},
- 'hoststatus': {'datasource': 'hosts',
+ 'hoststatus': {'column_headers': 'off',
+                'datasource': 'hosts',
+                'description': '',
                 'group_painters': [],
                 'hard_filters': [],
                 'hard_filtervars': [],
@@ -199,18 +181,45 @@ multisite_builtin_views = {
                 'mustsearch': False,
                 'name': 'hoststatus',
                 'owner': '',
-                'painters': [('host_black', None),
-                             ('num_services', 'host'),
-                             ('host_state', None),
-                             ('site_icon', 'sitehosts'),
+                'painters': [('host', 'host'),
                              ('alias', None),
-                             ('host', None),
-                             ('sitename_plain', None),
-                             ('sitealias', None)],
+                             ('host_state', None),
+                             ('num_services', None),
+                             ('num_services_ok', None),
+                             ('num_services_warn', None),
+                             ('num_services_crit', None),
+                             ('num_services_unknown', None),
+                             ('num_services_pending', None),
+                             ('host_plugin_output', None)],
                 'public': True,
                 'show_filters': [],
                 'sorters': [],
                 'title': 'Status of Host'},
+ 'meinehosts': {'column_headers': 'perpage',
+                'datasource': 'hosts',
+                'description': 'oisjfoiewf',
+                'group_painters': [('sitealias', None)],
+                'hard_filters': ['host_scheduled_downtime_depth'],
+                'hard_filtervars': [('is_host_scheduled_downtime_depth',
+                                     '0'),
+                                    ('st0', 'on'),
+                                    ('st1', 'on'),
+                                    ('st2', 'on'),
+                                    ('stp', 'on')],
+                'hidden': False,
+                'hide_filters': [],
+                'layout': 'table_2c',
+                'mustsearch': False,
+                'name': 'meinehosts',
+                'owner': '',
+                'painters': [('host_state', None),
+                             ('host', 'host'),
+                             ('alias', None),
+                             ('host_plugin_output', None)],
+                'public': True,
+                'show_filters': ['hoststate'],
+                'sorters': [('site', False), ('site_host', False)],
+                'title': 'Nicht-Down-Hosts'},
  'searchhost': {'column_headers': 'pergroup',
                 'datasource': 'hosts',
                 'description': 'A form for search hosts after a couple of criteria.',
@@ -386,12 +395,11 @@ multisite_builtin_views = {
                   'painters': [('service_state', None),
                                ('svc_state_age', None),
                                ('service_description', None),
-                               ('svc_plugin_output', None)],
+                               ('svc_plugin_output', None),
+                               ('link_to_pnp_service', None)],
                   'public': True,
                   'show_filters': [],
-                  'sorters': [('site', False),
-                              ('site_host', False),
-                              ('svcdescr', False)],
+                  'sorters': [],
                   'title': 'Servicegroup'},
  'sitehosts': {'column_headers': 'off',
                'datasource': 'hosts',
@@ -500,15 +508,13 @@ multisite_builtin_views = {
                                      ('stp', '')],
                  'hidden': False,
                  'hide_filters': [],
-                 'layout': 'table',
+                 'layout': 'boxed_3',
                  'mustsearch': False,
                  'name': 'svcproblems',
                  'owner': '',
                  'painters': [('host', 'host'),
                               ('service_description', None),
-                              ('svc_state_age', None),
-                              ('svc_plugin_output', None),
-                              ('link_to_pnp_service', None)],
+                              ('svc_state_age', None)],
                  'public': True,
                  'show_filters': ['service_acknowledged', 'svcstate'],
                  'sorters': [('svcstate', True),

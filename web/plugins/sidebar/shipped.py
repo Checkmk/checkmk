@@ -246,8 +246,12 @@ def render_tactical_overview():
 	"Stats: acknowledged = 0\n" \
 	"StatsAnd: 2\n"
 
-    svcdata = html.live.query_summed_stats("GET services\n" + headers)
-    hstdata = html.live.query_summed_stats("GET hosts\n" + headers)
+    try:
+        svcdata = html.live.query_summed_stats("GET services\n" + headers)
+        hstdata = html.live.query_summed_stats("GET hosts\n" + headers)
+    except livestatus.MKLivestatusNotFoundError:
+	html.write("<center>No data from any site</center>")
+	return
     html.write("<table class=tacticaloverview>\n")
     for what, data in [("Services", svcdata), ("Hosts", hstdata)]:
 	html.write("<tr><th>%s</th><th>Problems</th><th>Unhandled</th></tr>\n" % what)

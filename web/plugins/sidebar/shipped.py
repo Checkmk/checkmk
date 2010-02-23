@@ -194,10 +194,9 @@ div#check_mk_sidebar table.sitestate td a {
     font-weight: bold;
     -moz-border-radius: 4px;
     margin: 0px;
-    padding: 0px 3px;
+    padding: 0px 0px;
     text-align: center;
     font-size: 7pt;
-    margin-right: 3px;
     display: block;
 }
 div#check_mk_sidebar table.sitestate td.left a {

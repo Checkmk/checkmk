@@ -158,8 +158,16 @@ def render_snapin(name, state):
     html.write("<b class=heading onclick=\"toggle_sidebar_snapin(this,'%s')\" onmouseover=\"this.style.cursor='pointer'\" "
 	       "onmouseout=\"this.style.cursor='auto'\">%s" % (url, snapin["title"]))
     html.write("</b><div id=\"snapin_%s\" class=content%s>\n" % (name, style))
-    snapin["render"]()
+    try:
+	snapin["render"]()
+    except Exception, e:
+	snapin_exception(e)
     html.write("</div></div>\n")
+
+def snapin_exception(e):
+    html.write("<div class=snapinexception>\n"
+	    "<h2>Error</h2>\n"
+	    "<p>%s</p></div>" % e)
 
 def ajax_openclose(h):
     global html
@@ -177,8 +185,10 @@ def ajax_snapin(h):
     global html
     html = h
     snapin = sidebar_snapins.get(html.var("name"))
-    if snapin:
-        snapin["render"]()
+    try:
+	snapin["render"]()
+    except Exception, e:
+	snapin_exception(e)
 
 
 def page_configure(h):

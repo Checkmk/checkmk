@@ -32,6 +32,9 @@ def strip_snmp_value(value):
    if v.endswith('"'): v = v[:-1]
    return v.strip()
 
+# Fetch single values via SNMP. This function is only used by snmp_info_single,
+# which is only rarely used. Most checks use snmp_info, which is handled by
+# get_snmp_table. 
 def get_snmp_explicit(hostname, ipaddress, community, mib, baseoid, suffixes):
     if opt_verbose:
         sys.stderr.write('Fetching misc values from OID %s%s%s%s from IP %s\n' % \

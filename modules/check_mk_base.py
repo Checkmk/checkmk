@@ -208,9 +208,11 @@ def submit_check_mk_aggregation(hostname, status, output):
 # If the host is a cluster, the information is fetched from all its
 # nodes an then merged per-check-wise.
 
-# TODO: For cluster checks we do not have an ip address from Nagios
+# For cluster checks we do not have an ip address from Nagios
 # We need to do DNS-lookups in that case :-(. We could avoid that at
-# least in case of precompiled checks.
+# least in case of precompiled checks. On the other hand, cluster checks
+# usually use existing cache files, if check_mk is not misconfigured,
+# and thus do no network activity at all...
 
 def get_host_info(hostname, ipaddress, checkname):
     nodes = nodes_of(hostname)
@@ -262,7 +264,14 @@ def get_realhost_info(hostname, ipaddress, checkname, max_cache_age):
        if content:
            return eval(content)
        community = get_snmp_community(hostname)
-       table = get_snmp_table(hostname, ipaddress, community, oid_info)
+       # New in 1.1.3: oid_info can now be a list: Each element
+       # of that list is interpreted as one real oid_info, fetches
+       # a separate snmp table. The overall result is then the list
+       # of these results.
+       if type(oid_info) == list:
+	   table = [ get_snmp_table(hostname, ipaddress, community, entry) for entry in oid_info ]
+       else:
+	   table = get_snmp_table(hostname, ipaddress, community, oid_info)
        store_cached_checkinfo(hostname, checkname, table)
        write_cache_file(cache_relpath, repr(table) + "\n")
        return table

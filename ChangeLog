@@ -13,6 +13,7 @@
       * nagios_install.sh: Added support for Ubuntu 9.10
       * SNMP checks: handle multiline output of snmpwalk (e.g. Hexdumps)
       * SNMP checks: handle ugly error output of snmpwalk
+      * SNMP checks: allow snmp_info to fetch multiple tables
 
       Checks & Agents:
       * multipath: Fixed bug in output parser
@@ -44,6 +45,8 @@
       * mrpe: Handles multiline output correctly (only works on Linux,
 	      Agents for AIX, Solaris still need fix).
       * df: limit warning and critical levels to 50/60% when using a magic number
+      * fc_brocade_port_detailed: allow setting levels on in/out traffic, detect
+         baudrate of inter switch links (ISL)
 
       MK Livestatus:
       * New headers for waiting (please refer to online documentation)

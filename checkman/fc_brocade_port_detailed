@@ -15,10 +15,16 @@ item:
  port has the item {"01"}.
 
 examples:
+ # set levels for errors, not for in/out
  fc_brocade_port_detailed_default_levels = (
     ( 1, 500    ),     # warn at 1, crit at 500 CRC errors per check intervall
     ( 0.1, 10.0 ),     # warn/crit if encout is more then 0.1 or 10% of packets
     ( 101.0, 101.0 ) ) # do never alert C3 discards
+
+ # Same, but warning if traffic more than 160MB/s on in or out,
+ # no level for critical and assumed link baudrate of 2GBit/s
+ fc_brocade_port_detailed_default_levels = (
+    (1, 500), (0.1, 10.0), (101.0, 101.0), (2, 160, None))
 
 perfdata: 
  Five variables: the number of bytes received and trasmitted, and the number
@@ -37,7 +43,16 @@ crcerrors (number, number): A pair of levels for the CRC errors. If the level is
  to the total number of packets received in the last check cycle.
 encout (number, number):    A pair of levels for the ENC out counter. 
 c3discards (number, number): A pair of levels for the C3 discards.
+inoutlevels (number, number, number): An optional triple used for 
+ checking in- and outgoing traffic. The first argument is the assumed link speed
+ in GBit/sec. For inter switch links (ISL) the brocade MIB contains an
+ entry for the current speed - which is being used. If that is different
+ from the assumed link speed, then the levels are adapted accordingly.
+ If you set the assumed link speed to 2, the level to 160 and the detected
+ link speed is 4GBit/s, then the level is being raised to 320. The other
+ two arguments are the levels for warning and critical in MB/s. Each of those may
+ be set to {None} in order to disable that level.
 
 [configuration]
-fc_brocade_port_detailed_default_levels ( pair, pair, pair ):
-    Default levels used by inventorized checks. This is preset to {( (1, 0.1), (1, 0.1), (1, 0.1) )}.
+fc_brocade_port_detailed_default_levels ( pair, pair, pair, triple ):
+    Default levels used by inventorized checks. This is preset to {( (1, 0.1), (1, 0.1), (1, 0.1), (2, 160, None) )}.

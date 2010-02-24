@@ -807,6 +807,11 @@ def get_filesystem_levels(host, mountpoint, size_gb, params):
     # If no magic factor is given, we use the neutral factor 1.0
     if len(params) < 3:
         params = (params[0], params[1], 1.0)
+        lowest_warning_level = 0
+	lowest_critical_level = 0
+    else:
+	lowest_warning_level = df_lowest_warning_level
+	lowest_critical_level = df_lowest_critical_level
       
     (warn, crit, magicfactor) = params    # warn and crit are in percent
     
@@ -815,6 +820,13 @@ def get_filesystem_levels(host, mountpoint, size_gb, params):
     scale = felt_size / hgb_size
     warn_scaled = 100 - (( 100 - warn ) * scale)
     crit_scaled = 100 - (( 100 - crit ) * scale)
+   
+    # Make sure, levels do never get too low due to magic factor
+    if warn_scaled < lowest_warning_level:
+        warn_scaled = lowest_warning_level
+    if crit_scaled < lowest_critical_level:
+        crit_scaled = lowest_critical_level
+
     size_mb     = size_gb * 1024
     warn_mb     = int(size_mb * warn_scaled / 100)
     crit_mb     = int(size_mb * crit_scaled / 100)

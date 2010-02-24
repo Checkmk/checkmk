@@ -85,3 +85,8 @@ filesystem_levels: Configuration list that allows you to specify
  filesystem levels for groups of hosts and mount points. The configuration
  is analogous to that of {service_contactgroups}. The list is processed from
  top to bottom. The first match wins.
+df_lowest_warning_level (int): When using a magic number, the warning level will never drop
+ below this value. The default is {50} (percent).
+df_lowest_critical_level (int): When using a magic number, the critical level will never drop
+ below this value. The default is {60} (percent).
+

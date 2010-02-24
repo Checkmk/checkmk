@@ -272,6 +272,8 @@ service_descriptions                 = {}
 filesystem_default_levels          = (80, 90)
 filesystem_levels                  = []
 df_magicnumber_normsize            = 20 # Standard size if 20 GB
+df_lowest_warning_level            = 50 # Never move warn level below 50% due to magic factor
+df_lowest_critical_level           = 60 # Never move crit level below 60% due to magic factor
 inventory_df_exclude_fs            = [ 'nfs', 'smbfs', 'cifs', 'iso9660' ]
 inventory_df_exclude_mountpoints   = [ '/dev' ]
 inventory_df_check_params          = 'filesystem_default_levels'
@@ -1842,7 +1844,8 @@ filesystem_default_levels = None
     for var in [ 'check_mk_version', 'agent_port', 'tcp_connect_timeout', 'agent_min_version',
                  'aggr_summary_hostname', 'nagios_command_pipe_path',
                  'var_dir', 'counters_directory', 'tcp_cache_dir',
-                 'check_mk_basedir', 'df_magicnumber_normsize', 'nagios_user',
+                 'check_mk_basedir', 'df_magicnumber_normsize', 
+		 'df_lowest_warning_level', 'df_lowest_critical_level', 'nagios_user',
                  'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
                  'simulation_mode', 'aggregate_check_mk',
                  ]:

@@ -43,6 +43,7 @@
       * lparstat_aix: New check by Joerg Linge
       * mrpe: Handles multiline output correctly (only works on Linux,
 	      Agents for AIX, Solaris still need fix).
+      * df: limit warning and critical levels to 50/60% when using a magic number
 
       MK Livestatus:
       * New headers for waiting (please refer to online documentation)

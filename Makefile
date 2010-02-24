@@ -62,7 +62,7 @@ dist: mk-livestatus
 	tar czf $(DISTNAME)/checks.tar.gz $(TAROPTS) -C checks $$(cd checks ; ls)
 	tar czf $(DISTNAME)/checkman.tar.gz $(TAROPTS) -C checkman $$(cd checkman ; ls)
 	tar czf $(DISTNAME)/htdocs.tar.gz $(TAROPTS) -C htdocs $$(cd htdocs ; ls *.php *.css *.png *.gif)
-	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web $$(cd web ; ls htdocs/*.{py,css,jpg,png,gif,js} plugins/*/*.py)
+	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web $$(cd web ; ls htdocs/*/*.{jpg,png,gif} htdocs/*.{py,css,js} plugins/*/*.py)
 	tar czf $(DISTNAME)/livestatus.tar.gz $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) )
 	tar czf $(DISTNAME)/pnp-templates.tar.gz $(TAROPTS) -C pnp-templates $$(cd pnp-templates ; ls *.php)
 	tar cf $(DISTNAME)/doc.tar $(TAROPTS) -C doc --exclude .svn --exclude "*~" \

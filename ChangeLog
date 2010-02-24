@@ -11,9 +11,9 @@
       * Abort installation if livestatus does not compile.
       * PNP4Nagios Templates: Fixed bug in template file detection for local checks
       * nagios_install.sh: Added support for Ubuntu 9.10
-      * SNMP checks: handle multiline output of snmpwalk (e.g. Hexdumps)
-      * SNMP checks: handle ugly error output of snmpwalk
-      * SNMP checks: allow snmp_info to fetch multiple tables
+      * SNMP: handle multiline output of snmpwalk (e.g. Hexdumps)
+      * SNMP: handle ugly error output of snmpwalk
+      * SNMP: allow snmp_info to fetch multiple tables
 
       Checks & Agents:
       * multipath: Fixed bug in output parser

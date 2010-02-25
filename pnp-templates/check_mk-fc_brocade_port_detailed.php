@@ -47,6 +47,19 @@ $def[1] .= "AREA:rxMbytesDraw#2060a0:\"out\" " ;
 $def[1] .= "GPRINT:rxMbytes:LAST:\"%.2lf MB/s last\" " ;
 $def[1] .= "GPRINT:rxMbytes:AVERAGE:\"%.2lf MB/s avg\" " ;
 $def[1] .= "GPRINT:rxMbytes:MAX:\"%.2lf MB/s max\\n\" " ;
+if ($WARN[1] != "") {
+   $def[1] .= "HRULE:$WARN[1]#ffff00:\"Warning (in)\" ";
+   $def[1] .= "HRULE:-$WARN[1]#ffff00:\"Warning (out)\" ";
+}
+if ($CRIT[1] != "") {
+   $def[1] .= "HRULE:$CRIT[1]#ff0000:\"Critical (in)\" ";
+   $def[1] .= "HRULE:-$CRIT[1]#ff0000:\"Critical (out)\" ";
+}
+if ($MAX[1] != "")  {
+   $def[1] .= "HRULE:$MAX[1]#0000ff:\"Portspeed (in)\" ";
+   $def[1] .= "HRULE:-$MAX[1]#0000ff:\"Portspeed (out)\" ";
+# $opt[1] .= " -u $MAX[1] -l -$MAX[1]";
+}
 
 $ds_name[2] = 'Error counter';
 $opt[2]  = "--vertical-label \"Error counter\" --title \"Problems on $hostname / $servicedesc\" ";

@@ -65,17 +65,36 @@ def check_brocade_port(portno, params, info):
    phystate, opstate, txwords, rxwords, txframes, rxframes, crcerrors, encout, c3discards = map(int, portinfo[0])
    baudrate = None
    baudinfo = ""
-   if len(params) > 3: 
-      baudinfo = ", assumed baudrate: %gGBit/s" % (params[3][0])
+   io_warn = None
+   io_crit = None
+   
+   # Lookup baud rate in inter switch table
    for portnr, brmult in isltable:
       if int(portno) + 1 == int(portnr):
 	 # brmult: 16 = 1GBit/s, 32 = 2GBit/s, 64 = 4GBit/s, ...
 	 baudrate = 1.0 * (float(brmult) / 16)
 	 baudinfo = ", ISL with baudrate: %gGBit/s" % (baudrate, )
 
+   if len(params) >= 4: 
+      assumed_baudrate, io_warn, io_crit = params[3]
+      if not baudinfo:
+	 baudinfo = ", assumed baudrate: %gGBit/s" % assumed_baudrate
+
+      # if we known the baudrate, scale level accordingly
+      if baudrate and int(baudrate) != int(assumed_baudrate):
+	  if io_warn: io_warn *= baudrate / float(assumed_baudrate)
+	  if io_crit: io_crit *= baudrate / float(assumed_baudrate)
+      elif not baudrate:
+	  baudrate = assumed_baudrate
+
+   if baudrate:
+       speedmax = baudrate * 1024.0 / 8.0
+   else:
+       speedmax = None
+
    perfdata = [
-       ( "txbytes",    "%dc" % (txwords * 4)),
-       ( "rxbytes",    "%dc" % (rxwords * 4)),
+       ( "txwords",    "%dc" % txwords, io_warn, io_crit, 0, speedmax),
+       ( "rxwords",    "%dc" % rxwords, io_warn, io_crit, 0, speedmax),
        ( "crcerrors",  "%dc" % crcerrors ),  # while receiving
        ( "encout",     "%dc" % encout ),     # while transmitting
        ( "c3discards", "%dc" % c3discards ), # 
@@ -101,11 +120,6 @@ def check_brocade_port(portno, params, info):
 
        # handle levels for in/out
        if len(params) >= 4: # New in 1.1.3: Levels on in/out
-           assumed_baudrate, io_warn, io_crit = params[3]
-	   # if we known the baudrate, scale level accordingly
-	   if baudrate and int(baudrate) != int(assumed_baudrate):
-	       if io_warn: io_warn *= baudrate / float(assumed_baudrate)
-	       if io_crit: io_crit *= baudrate / float(assumed_baudrate)
 	   for text, value in [("In", in_mb), ("Out", out_mb)]:
 	       if io_crit and value >= io_crit:
 		   worst = 2
@@ -153,6 +167,7 @@ def check_brocade_port(portno, params, info):
 	       get_counter("fc_brocade_port_detailed.%s.%s" % (counter, portno), this_time, value)
 	    except:
 	       pass
+       perfdata = [] # perfdata might not be valid
 
    if texts == []:
       texts = [ "link status is online/inSync" ]

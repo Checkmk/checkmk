@@ -2605,6 +2605,7 @@ def show_paths():
 def dump_all_hosts(hostlist):
     if hostlist == []:
         hostlist = all_hosts_untagged + all_active_clusters()
+    hostlist.sort()
     for hostname in hostlist:
         dump_host(hostname)
 

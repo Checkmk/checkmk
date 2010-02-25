@@ -14,6 +14,7 @@
       * SNMP: handle multiline output of snmpwalk (e.g. Hexdumps)
       * SNMP: handle ugly error output of snmpwalk
       * SNMP: allow snmp_info to fetch multiple tables
+      * check_mk -D: sort hostlist before output
 
       Checks & Agents:
       * multipath: Fixed bug in output parser

@@ -211,7 +211,7 @@ def do_log_ack(html):
     # check_mk.is_allowed_to_act: Does the user have the permission to act in multiadmin?
     # check_mk.is_unrestricted_action_user: Is the user allowed to override the Nagios permissions?
     # If not unrestricted check if the user is allowed for that object
-    if check_mk.is_allowed_to_act(html.req.user) and (check_mk.is_unrestricted_action_user(html.req.user) or host in all_hosts()):
+    if not check_mk.is_allowed_to_act(html.req.user) and not (check_mk.is_unrestricted_action_user(html.req.user) or host in all_hosts()):
         html.write("<h1 class=error>Permission denied</h1>\n")
         html.write("<div class=error>You are not allowed to acknowledge the logs of the host %s</div>" % htmllib.attrencode(host))
         return

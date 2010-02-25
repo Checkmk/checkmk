@@ -161,7 +161,7 @@ def get_snmp_table(hostname, ip, community, oid_info):
 		rowinfo[0].startswith('No more variables') or \
 		rowinfo[0].startswith('End of MIB') or \
 		rowinfo[0].startswith('No Such Object available') or \
-		rowinfo[0].startswith('No Such Instance currently exists'):
+		rowinfo[0].startswith('No Such Instance currently exists')):
                 rowinfo = []
             if len(rowinfo) > 0:
                # if we are working with suboids, we need to prefix them

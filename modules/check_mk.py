@@ -2640,7 +2640,8 @@ def dump_host(hostname):
             bulk = "no"
         agenttype = "SNMP (community: '%s', bulk walk: %s)" % (community, bulk)
     print tty_yellow + "Type of agent:          " + tty_normal + agenttype
-    if host_is_aggregated(hostname):
+    is_aggregated = host_is_aggregated(hostname)
+    if is_aggregated:
         print tty_yellow + "Is aggregated:          " + tty_normal + "yes"
         shn = summary_hostname(hostname)
         print tty_yellow + "Summary host:           " + tty_normal + shn
@@ -2661,14 +2662,21 @@ def dump_host(hostname):
     if service_dependencies != []:
         headers.append("depends on")
         colors.append(tty_magenta)
+
+    def if_aggr(a): 
+	if is_aggregated:
+	    return a
+        else:
+            return ""
+    
     print_table(headers, colors, [ [
         checktype,
         item,
         params,
         description,
         ",".join(service_extra_conf(hostname, description, service_groups)),
-        aggregated_service_name(hostname, description),
-        ",".join(service_extra_conf(hostname, aggregated_service_name(hostname, description), summary_service_groups)),
+        if_aggr(aggregated_service_name(hostname, description)),
+        if_aggr(",".join(service_extra_conf(hostname, aggregated_service_name(hostname, description), summary_service_groups))),
         ",".join(deps)
         ]
                   for checktype, item, params, description, deps in check_items ], "  ")

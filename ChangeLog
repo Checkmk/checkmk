@@ -15,6 +15,7 @@
       * SNMP: handle ugly error output of snmpwalk
       * SNMP: allow snmp_info to fetch multiple tables
       * check_mk -D: sort hostlist before output
+      * check_mk -D: fix output: don't show aggregated services for non-aggregated hosts
 
       Checks & Agents:
       * multipath: Fixed bug in output parser

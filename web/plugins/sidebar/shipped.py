@@ -194,10 +194,9 @@ div#check_mk_sidebar table.sitestate td a {
     font-weight: bold;
     -moz-border-radius: 4px;
     margin: 0px;
-    padding: 0px 3px;
+    padding: 0px 0px;
     text-align: center;
     font-size: 7pt;
-    margin-right: 3px;
     display: block;
 }
 div#check_mk_sidebar table.sitestate td.left a {
@@ -247,8 +246,12 @@ def render_tactical_overview():
 	"Stats: acknowledged = 0\n" \
 	"StatsAnd: 2\n"
 
-    svcdata = html.live.query_summed_stats("GET services\n" + headers)
-    hstdata = html.live.query_summed_stats("GET hosts\n" + headers)
+    try:
+        svcdata = html.live.query_summed_stats("GET services\n" + headers)
+        hstdata = html.live.query_summed_stats("GET hosts\n" + headers)
+    except livestatus.MKLivestatusNotFoundError:
+	html.write("<center>No data from any site</center>")
+	return
     html.write("<table class=tacticaloverview>\n")
     for title, data, view, what in [
 	    ("Hosts", hstdata, 'hostproblems', 'host'),

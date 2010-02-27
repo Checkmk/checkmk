@@ -942,6 +942,7 @@ div#check_mk_sidebar div.section {
     padding: 0px;
     padding-top: 0px;
     padding-left: 4px;
+    padding-right: 3px;
 }
 
 div#check_mk_sidebar div.content {
@@ -997,16 +998,27 @@ div#check_mk_sidebar ul.link li {
     padding: 0px;
 }
 
-div#check_mk_sidebar hr {
-   width: 103px;
-}
-
 div#check_mk_sidebar div.footnote {
     width: 100%;
     text-align: right;
 }
 div#check_mk_sidebar div.footnote a {
     font-size: 7pt;
+}
+
+div#check_mk_sidebar div.snapinexception {
+    background-color: #f88;
+    -moz-border-radius: 4px;
+    padding: 3px;
+    border: 1px solid #f00;
+}
+div#check_mk_sidebar div.snapinexception h2 {
+    font-size: 9pt;
+    color: #f00;
+    margin-top: 0px;
+}
+div#check_mk_sidebar div.snapinexception p {
+    color: #800;
 }
 
 table.sidebarconfig {
@@ -1029,45 +1041,6 @@ table.sidebarconfig td {
     padding: 0px 5px;
 }
 
-div#check_mk_sidebar table.sitestate td {
-    padding: 0px 0px;
-    text-align: right;
-}
-
-div#check_mk_sidebar table.sitestate td a {
-    font-weight: bold;
-    -moz-border-radius: 4px;
-    margin: 0px;
-    padding: 0px 0px;
-    text-align: center;
-    font-size: 7pt;
-    margin-right: 3px;
-    display: block;
-}
-div#check_mk_sidebar table.sitestate td.left a {
-    text-align: left;
-    font-size: 8pt;
-    font-weight: normal;
-}
-
-div#check_mk_sidebar table.sitestate td.left {
-    text-align: left;
-}
-
-div#check_mk_sidebar table.sitestate td.offline a {
-    background-color: #f00;
-    color: #000;
-    border-color: #800;
-}
-div#check_mk_sidebar table.sitestate td.online a {
-    background-color: #4f6;
-    color: #000;
-    border-color: #0f0;
-}
-div#check_mk_sidebar table.sitestate td.disabled a {
-    background-color: #666;
-    border-color: #888;
-}
 
 div#mk_side_search {
 	text-align: center;

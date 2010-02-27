@@ -136,7 +136,7 @@ def show_host_log_list(html):
                    "<td class=\"content\">%s</td>"
                    "<td class=\"content\">%s</td></tr>\n" % \
                    (form_level(worst_log['level']), form_level(worst_log['level']),
-                    htmllib.urlencode(host), htmllib.urlencode(file),
+                    htmllib.urlencode(host), htmllib.urlencode(fileDisplay),
                     htmllib.attrencode(fileDisplay), form_datetime(last_log['datetime']), len(logs)))
 
     if not logs_shown:
@@ -174,7 +174,7 @@ def show_file(html):
         html.write('<td class="button"><a href="logwatch.py?host=%s&amp;'
                    'file=%s&amp;hidecontext=%s">%s</td>' % \
                    (htmllib.urlencode(host), \
-                    htmllib.urlencode(file), \
+                    htmllib.urlencode(html.var('file')), \
                     htmllib.urlencode(hide_context_param), \
                     htmllib.attrencode(hide_context_label) ));
         html.write('</tr></table>');
@@ -190,7 +190,7 @@ def show_file(html):
     if check_mk.is_allowed_to_act(html.req.user) and (check_mk.is_unrestricted_action_user(html.req.user) or host in all_hosts()):
         html.write('<p><br /><a class="ack" href="logwatch.py?host=%s&amp;'
                    'file=%s&amp;ack=1">Acknowledge and delete mesages</a>' % \
-                   (htmllib.urlencode(host), htmllib.urlencode(file) ))
+                   (htmllib.urlencode(host), htmllib.urlencode(html.var('file')) ))
 
 def show_host_header(html, host):
     html.write("<table class=form id=filter>\n")
@@ -211,7 +211,7 @@ def do_log_ack(html):
     # check_mk.is_allowed_to_act: Does the user have the permission to act in multiadmin?
     # check_mk.is_unrestricted_action_user: Is the user allowed to override the Nagios permissions?
     # If not unrestricted check if the user is allowed for that object
-    if check_mk.is_allowed_to_act(html.req.user) and (check_mk.is_unrestricted_action_user(html.req.user) or host in all_hosts()):
+    if not check_mk.is_allowed_to_act(html.req.user) and not (check_mk.is_unrestricted_action_user(html.req.user) or host in all_hosts()):
         html.write("<h1 class=error>Permission denied</h1>\n")
         html.write("<div class=error>You are not allowed to acknowledge the logs of the host %s</div>" % htmllib.attrencode(host))
         return

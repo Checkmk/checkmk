@@ -32,6 +32,9 @@
 #include "OffsetIntColumn.h"
 #include "tables.h"
 
+// Todo: the dynamic data in this table must be
+// locked with a mutex
+
 TableDownComm::TableDownComm(bool is_downtime)
 {
     if (is_downtime)

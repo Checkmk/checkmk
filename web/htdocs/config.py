@@ -24,10 +24,24 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# defaults_path and check_mk_path must be set by importer!
-import transfer
-defaults_path = transfer.defaults_path
-execfile(transfer.check_mk_path + "/check_mk.py")
+def set_default(d):
+    global defaults
+    defaults = d
+    config_dir = defaults["var_dir"] + "/web" 
+
+def load_config():
+    # define default values for all settings
+    filename = defaults["
+    global debug
+    debug = False
+    global admin_users
+    admin_users = []
+    global guest_users
+    guest_users = []
+    global users
+    users = []
+    execfile(filename)
+    global config_dir
 
 def is_allowed_to_view(user):
    return multiadmin_users == None or user in multiadmin_users
@@ -54,13 +68,13 @@ def is_unrestricted_user(user):
     return True
 
 def sitenames():
-    return multiadmin_sites.keys()
+    return sites.keys()
 
 def sites():
     return dict( [(name, site(name)) for name in sitenames()])
 
 def site(name):
-    s = multiadmin_sites.get(name, {})
+    s = sites.get(name, {})
     if "alias" not in s:
 	s["alias"] = name
     if "socket" not in s:
@@ -74,11 +88,10 @@ def site(name):
     return s 
 
 def site_is_local(name):
-    s = multiadmin_sites.get(name, {})
+    s = sites.get(name, {})
     sock = s.get("socket")
     return not sock or sock.startswith("unix:")
 
 def is_multisite():
     return len(multiadmin_sites) > 1
 
-multisite_config_dir = var_dir + "/web"

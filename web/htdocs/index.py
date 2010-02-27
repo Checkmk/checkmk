@@ -26,14 +26,14 @@
 
 from mod_python import apache,util
 from urllib import urlencode
-import htmllib, transfer, livestatus, os, pprint
+import htmllib, livestatus, os, pprint, config
 from lib import *
 
-def read_checkmk_defaults(req):
+def load_config(req):
     # read in check_mk's defaults file. That contains all
     # installation settings (paths, etc.)
 
-    req.defaults = {}
+    defaults = {}
     try:
         # The "options" are set in the Apache configuration
         # with the directive "PythonOption"
@@ -42,16 +42,20 @@ def read_checkmk_defaults(req):
         for line in file(defaults_path):
             try:
                 var, value = line.split('=', 1)
-                req.defaults[var.strip()] = eval(value)
+                defaults[var.strip()] = eval(value)
             except:
                 pass
-        transfer.check_mk_path = req.defaults.get("modules_dir", "/usr/share/check_mk/modules")
-        transfer.defaults_path = defaults_path
-        global check_mk
-        import check_mk
 
     except Exception, e:
-        raise MKConfigError("Cannot import check_mk.py (defaults path <tt>%s</tt>): %s" % (defaults_path, e))
+        raise MKConfigError("Cannot read %s: %s" % (defaults_path, e))
+
+    config.set_defaults(defaults)
+
+    try:
+	path = defaults["default_config_dir"] + "/multisite.mk"
+	config.load_config(path)
+    except Exception, e:
+	raise MKConfigError("Cannot read %s: %s:" % (path, e))
 
 def read_get_vars(req):
     req.vars = {}
@@ -161,9 +165,9 @@ def handler(req):
 
     try:
         read_get_vars(req)
-        read_checkmk_defaults(req)
-	if html.var("debug"):
-	    check_mk.multiadmin_debug = True
+        load_config(req)
+	if html.var("debug"): # Debug flag may be set via URL
+	    conifg.debug = True
 	    
         from lib import *
 

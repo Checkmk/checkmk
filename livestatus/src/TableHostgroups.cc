@@ -129,6 +129,7 @@ bool TableHostgroups::isAuthorized(contact *ctc, void *data)
 	   return true;
        else if (!is && g_group_authorization == AUTH_STRICT)
 	   return false;
+       mem = mem->next;
    }
    return true;
 }

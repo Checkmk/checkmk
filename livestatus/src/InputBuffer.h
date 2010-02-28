@@ -35,6 +35,7 @@
 #define IB_LINE_TOO_LONG              5
 #define IB_END_OF_FILE                6
 #define IB_EMPTY_REQUEST              7
+#define IB_TIMEOUT                    8
 
 #define IB_BUFFER_SIZE            65536
 

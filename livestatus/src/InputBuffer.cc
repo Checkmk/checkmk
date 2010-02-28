@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include <sys/select.h>
+#include <sys/time.h>
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
@@ -31,6 +32,7 @@
 #include "logger.h"
 
 #define READ_TIMEOUT_USEC 200000
+#define QUERY_TIMEOUT    5000000  /* complete query must be read within 2 seconds */
 
 InputBuffer::InputBuffer(int *termination_flag)
 : _termination_flag(termination_flag)
@@ -101,9 +103,9 @@ int InputBuffer::readRequest()
 	    else if (rd == IB_END_OF_FILE)
 	       return IB_UNEXPECTED_END_OF_FILE;
 
-	    // Nagios restarted while reading
-	    else if (rd == IB_SHOULD_TERMINATE)
-	       return IB_SHOULD_TERMINATE;
+	    // Other status codes
+	    else if (rd == IB_SHOULD_TERMINATE || rd == IB_TIMEOUT)
+	       return rd;
 	 }
 	 // OK. So no space is left in the buffer. But maybe at the
 	 // *beginning* of the buffer is space left again. This is
@@ -149,9 +151,21 @@ int InputBuffer::readRequest()
 
 int InputBuffer::readData()
 {
+   struct timeval start;
+   gettimeofday(&start, NULL);
+   
    struct timeval tv;
    while (!*_termination_flag) 
    {
+      struct timeval now;
+      gettimeofday(&now, NULL);
+      int64_t elapsed = (now.tv_sec - start.tv_sec) * 1000000;
+      elapsed += now.tv_usec - start.tv_usec;
+      if (elapsed >= QUERY_TIMEOUT) {
+	  logger(LG_INFO, "Timeout while reading query");
+	  return IB_TIMEOUT;
+      }
+
       tv.tv_sec  = READ_TIMEOUT_USEC / 1000000;
       tv.tv_usec = READ_TIMEOUT_USEC % 1000000;
 

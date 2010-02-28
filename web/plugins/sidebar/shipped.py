@@ -34,7 +34,7 @@ import views, time
 #   /_/   \_\_.__/ \___/ \__,_|\__|
 #                                  
 # --------------------------------------------------------------
-def render_adminlinks():
+def render_about():
     html.write("Version: " + config.defaults["check_mk_version"])
     bulletlink("Homepage",        "http://mathias-kettner.de/check_mk.html")
     bulletlink("Documentation",   "http://mathias-kettner.de/checkmk.html")
@@ -43,8 +43,27 @@ def render_adminlinks():
 
 sidebar_snapins["about"] = {
     "title" : "About Check_MK",
-    "render" : render_adminlinks
+    "render" : render_about
 }
+
+# -----------------------------------------------------------------------
+#      _       _           _       _     _             _   _             
+#     / \   __| |_ __ ___ (_)_ __ (_)___| |_ _ __ __ _| |_(_) ___  _ __  
+#    / _ \ / _` | '_ ` _ \| | '_ \| / __| __| '__/ _` | __| |/ _ \| '_ \ 
+#   / ___ \ (_| | | | | | | | | | | \__ \ |_| | | (_| | |_| | (_) | | | |
+#  /_/   \_\__,_|_| |_| |_|_|_| |_|_|___/\__|_|  \__,_|\__|_|\___/|_| |_|
+#
+# -----------------------------------------------------------------------
+def render_admin():
+    bulletlink("View permissions", "view_permissions.py")
+    if config.may("edit_permissions"):
+	bulletlink("Edit permissions", "edit_permissions.py")
+
+sidebar_snapins["admin"] = {
+    "title" : "Administration",
+    "render" : render_admin
+}
+
 
 # --------------------------------------------------------------
 #   __     ___                   
@@ -61,10 +80,12 @@ def render_views():
     for title, name in s:
         bulletlink(title, "view.py?view_name=%s" % name)
 
-    links = [("EDIT", "edit_views.py")]
-    if config.debug:
-	links = [("EXPORT", "export_views.py")] + links
-    footnotelinks(links)
+    links = []
+    if config.may("edit_views"):
+	if config.debug:
+	    links.append(("EXPORT", "export_views.py"))
+	links.append(("EDIT", "edit_views.py"))
+	footnotelinks(links)
 
 sidebar_snapins["views"] = {
     "title" : "Views",

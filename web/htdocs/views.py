@@ -248,6 +248,8 @@ def save_views(us):
 def page_edit_views(h, msg=None):
     global html
     html = h
+    if not config.may("edit_views"):
+	raise MKAuthException("You are not allowed to edit views.")
 
     changed = False
     html.header("Edit views")
@@ -369,8 +371,10 @@ def select_view(varname, only_with_hidden = False):
 def page_edit_view(h):
     global html
     html = h
-    load_views()
+    if not config.may("edit_views"):
+	raise MKAuthException("You are not allowed to edit views.")
 
+    load_views()
     view = None
 
     # Load existing view from disk
@@ -736,10 +740,11 @@ def show_view(view, show_heading = False):
 	html.header(view_title(view))
 
     show_context_links(view, hide_filters)
-    if view["owner"] == html.req.user:
-	html.write("<a class=navi href=\"edit_view.py?load_view=%s\">Edit this view</a> " % view["name"])
-    else:
-	html.write("<a class=navi href=\"edit_view.py?clonefrom=%s&load_view=%s\">Customize this view</a> " % (view["owner"], view["name"]))
+    if config.may("edit_views"):
+	if view["owner"] == html.req.user:
+	    html.write("<a class=navi href=\"edit_view.py?load_view=%s\">Edit this view</a> " % view["name"])
+	else:
+	    html.write("<a class=navi href=\"edit_view.py?clonefrom=%s&load_view=%s\">Customize this view</a> " % (view["owner"], view["name"]))
 
     # Filter-button
     if len(show_filters) > 0 and not html.do_actions():
@@ -750,6 +755,8 @@ def show_view(view, show_heading = False):
     if len(rows) > 0 and config.may("act"):
 	actions_are_open = html.do_actions()
 	toggle_button("actions", actions_are_open, "Show commands", "hide commands")
+    else:
+	actions_are_open = False
 
     # Filter form
     if len(show_filters) > 0 and not html.do_actions():
@@ -1125,8 +1132,7 @@ def nagios_action_command(tablename, dataset):
 def do_actions(tablename, rows):
     if not config.may("act"):
        html.show_error("You are not allowed to perform actions. If you think this is an error, "
-             "please ask your administrator to add your login to <tt>multiadmin_action_users</tt> "
-	     "in <tt>main.mk</tt>")
+             "please ask your administrator grant you the permission to do so.")
        return False # no actions done
 
     command = None

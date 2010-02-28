@@ -166,10 +166,10 @@ def handler(req):
 
 	# User allowed to login at all?
         if not config.may("use"):
-	    reason = "Not Authorized.  You are logged in as <b>%s</b>. Your role is <b>%s</b>:" % (config.user, config.role_name)
+	    reason = "Not Authorized.  You are logged in as <b>%s</b>. Your role is <b>%s</b>:" % (config.user, config.role)
             reason += "If you think this is an error, " \
                        "please ask your administrator to add your login into multisite.mk"
-            raise MKConfigError(reason)
+            raise MKAuthException(reason)
 
         # General access allowed. Now connect to livestatus
 	connect_to_livestatus(html)
@@ -178,6 +178,7 @@ def handler(req):
 	import page_logwatch
 	import views
 	import sidebar
+	import permissions
 
 	pagehandlers = { "index"               : page_index,
 			 "edit_views"          : views.page_edit_views,
@@ -195,6 +196,8 @@ def handler(req):
 			 "add_bookmark"        : sidebar.ajax_add_bookmark,
 			 "del_bookmark"        : sidebar.ajax_del_bookmark,
 			 "edit_bookmark"       : sidebar.page_edit_bookmark,
+			 "view_permissions"    : permissions.page_view_permissions,
+			 "edit_permissions"    : permissions.page_edit_permissions,
 	}
 
 	handler = pagehandlers.get(req.myfile, page_index)
@@ -202,6 +205,11 @@ def handler(req):
 
     except MKUserError, e:
         html.header("Invalid User Input")
+        html.show_error(e)
+        html.footer()
+
+    except MKAuthException, e:
+        html.header("Permission denied")
         html.show_error(e)
         html.footer()
 

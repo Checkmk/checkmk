@@ -712,6 +712,53 @@ div#logwatch a.tabactive {
   border-bottom-style: none;
 }
 
+/* edit permissions */
+table.permissions {
+  border-collapse: collapse;
+  empty-cells: show;
+  border-spacing: 0px;
+}
+
+table.permissions td, table.permissions th {
+border: 1px solid white;
+padding: 3px 0.5ex;
+	 vertical-align: top;
+}
+table.permissions th {
+    text-align: left;
+    background-color: #98a;
+color: white;
+}
+
+table.permissions td i {
+    font-size: 9pt;
+}
+
+table.permissions td.legend {
+    background-color: #769;
+    color: white;
+}
+table.permissions td.content {
+    text-align: center;
+width: 6ex;
+       vertical-align: middle;
+}
+table.permissions td.content input {
+    width: 50px;
+    height: 50px;
+	    font-size: 12pt;
+}
+
+table.permissions td.content.user {
+    background-color: #b84;
+}
+table.permissions td.content.admin {
+    background-color: #c85;
+}
+table.permissions td.content.guest {
+    background-color: #d86;
+}
+
 /* view editor */
 table.view {
     /* width: 100%; */

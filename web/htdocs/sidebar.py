@@ -68,7 +68,6 @@ def heading(text):
     html.write("<h3>%s</h3>\n" % htmllib.attrencode(text))
 
 def load_user_config():
-    user = html.req.user
     path = config.user_confdir + "/sidebar.mk"
     try:
 	user_config = eval(file(path).read())
@@ -85,17 +84,10 @@ def load_user_config():
 	    user_config.append((name, "off"))
     return user_config
 
-def save_user_config(config):
-    user = html.req.user
-    dir = check_mk.multisite_config_dir + "/" + user
+def save_user_config(user_config):
+    path = config.user_confdir + "/sidebar.mk"
     try:
-	os.makedirs(dir)
-    except:
-	pass
-
-    try:
-	path = dir + "/sidebar.mk"
-	file(path, "w").write(pprint.pformat(config) + "\n")
+	file(path, "w").write(pprint.pformat(user_config) + "\n")
     except Exception, e:
 	raise MKConfigError("Cannot save user configuration to <tt>%s</tt>: %s" % (path, e))
   
@@ -118,6 +110,9 @@ def page_side(h):
 def page_sidebar(h):
     global html
     html = h
+    if not config.may("see_sidebar"):
+	return
+
     views.html = h
     views.load_views()
     html.write("<div class=header><table><tr>"
@@ -199,7 +194,7 @@ def page_configure(h):
     html = h
     html.header("Configure Sidebar")
 
-    config = load_user_config()
+    userconf = load_user_config()
     changed = False
 
     if html.transaction_valid():
@@ -207,27 +202,27 @@ def page_configure(h):
 	if html.var("_saved"):
 	    new_config = []
 	    n = 0
-	    for name, usage in config:
+	    for name, usage in userconf:
 		new_usage = html.var("snapin_%d" % n)
 		if new_usage in ["off", "open", "closed"]:
 		    usage = new_usage
 		new_config.append((name, usage))
 		n += 1
-	    config = new_config
-	    save_user_config(config)
+	    userconf = new_config
+	    save_user_config(userconf)
 	    changed = True
 
 	# handle up and down
 	n = 0
-	for name, usage in config:
+	for name, usage in userconf:
 	    if html.var("snapin_up_%d" % n) == "UP": # Cannot be 0
-		config = config[0:n-1] + [(name,usage)] + [config[n-1]] + config[n+1:]
-		save_user_config(config)
+		userconf = userconf[0:n-1] + [(name,usage)] + [userconf[n-1]] + userconf[n+1:]
+		save_user_config(userconf)
 		changed = True
 		break
 	    elif html.var("snapin_down_%d" % n) == "DOWN": # Cannot be last one
-		config = config[0:n] + [config[n+1]] + [(name,usage)] + config[n+2:]
-		save_user_config(config)
+		userconf = userconf[0:n] + [userconf[n+1]] + [(name,usage)] + userconf[n+2:]
+		save_user_config(userconf)
 		changed = True
 		break
 	    n += 1
@@ -245,7 +240,7 @@ def page_configure(h):
 	    "<tr><th>Snapin</th><th>Usage</th><th colspan=2>Move</th></tr>\n")
 
     n = 0
-    for name, usage in config:
+    for name, usage in userconf:
 	if name not in sidebar_snapins: 
 	    n += 1
 	    continue
@@ -259,7 +254,7 @@ def page_configure(h):
 	if n > 0:
 	    html.button("snapin_up_%d" % n, "UP")
 	html.write("</td><td>")
-	if n < len(config) - 1:
+	if n < len(userconf) - 1:
 	    html.button("snapin_down_%d" % n, "DOWN")
 	html.write("</td></tr>\n")
 	n += 1

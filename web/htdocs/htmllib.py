@@ -222,7 +222,7 @@ class html:
 
     def checkbox(self, varname, deflt=""):
 	value = self.req.vars.get(varname, deflt)
-	if value != "":
+	if value != "" and value != False:
 	    checked = " CHECKED"
 	else:
 	    checked = ""
@@ -337,7 +337,7 @@ class html:
 
 
 	    if type(self.req.user) == str:
-	       login_text = "Logged in as <b>%s</b> (%s)" % (config.user, config.role_name)
+	       login_text = "Logged in as <b>%s</b> (%s)" % (config.user, config.role)
 	       if config.debug:
 		  login_text += ", perms: %s" % (", ".join(config.user_permissions))
 	    else:

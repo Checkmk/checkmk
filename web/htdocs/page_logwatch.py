@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import htmllib, livestatus, time, re, check_mk, os, datetime, check_mk
+import htmllib, livestatus, time, re, os, datetime, config
 from lib import *
 
 def show_tabs(html, tabs, active):
@@ -184,12 +184,9 @@ def show_file(html):
 
         html.write('</div>')
 
-    # check_mk.is_allowed_to_act: Does the user have the permission to act in multiadmin?
-    # check_mk.is_unrestricted_action_user: Is the user allowed to override the Nagios permissions?
-    # If not unrestricted check if the user is allowed for that object
-    if check_mk.is_allowed_to_act(html.req.user) and (check_mk.is_unrestricted_action_user(html.req.user) or host in all_hosts()):
+    if config.may("act_all") or host in all_hosts():
         html.write('<p><br /><a class="ack" href="logwatch.py?host=%s&amp;'
-                   'file=%s&amp;ack=1">Acknowledge and delete mesages</a>' % \
+                   'file=%s&amp;ack=1">Acknowledge and delete messages</a>' % \
                    (htmllib.urlencode(host), htmllib.urlencode(html.var('file')) ))
 
 def show_host_header(html, host):
@@ -208,10 +205,7 @@ def do_log_ack(html):
     fileDisplay = form_file_to_ext(file)
     ack  = html.var('ack')
 
-    # check_mk.is_allowed_to_act: Does the user have the permission to act in multiadmin?
-    # check_mk.is_unrestricted_action_user: Is the user allowed to override the Nagios permissions?
-    # If not unrestricted check if the user is allowed for that object
-    if not check_mk.is_allowed_to_act(html.req.user) and not (check_mk.is_unrestricted_action_user(html.req.user) or host in all_hosts()):
+    if not (config.may("act_all") or host in all_hosts()):
         html.write("<h1 class=error>Permission denied</h1>\n")
         html.write("<div class=error>You are not allowed to acknowledge the logs of the host %s</div>" % htmllib.attrencode(host))
         return
@@ -221,7 +215,7 @@ def do_log_ack(html):
         raise MKUserError('ack', 'Invalid value for ack parameter.')
 
     try:
-        os.remove(check_mk.logwatch_dir + '/' + host + '/' + file)
+        os.remove(config.defaults["logwatch_dir"] + '/' + host + '/' + file)
 
         html.write('<h1>%s: %s Acknowledged</h1>' % \
           (htmllib.attrencode(host), htmllib.attrencode(fileDisplay)))
@@ -274,7 +268,7 @@ def get_last_log(logs):
 
 
 def parse_file(host, file, hidecontext = "no"):
-    filePath = check_mk.logwatch_dir + '/' + host + '/' + file
+    filePath = config.defaults["logwatch_dir"] + '/' + host + '/' + file
     try:
         f = open(filePath, 'r')
     except:
@@ -336,13 +330,13 @@ def parse_file(host, file, hidecontext = "no"):
 
 def host_logs(host):
     try:
-        return filter(lambda x: x != '..' and x != '.', os.listdir(check_mk.logwatch_dir + '/' + host))
+        return filter(lambda x: x != '..' and x != '.', os.listdir(config.defaults["logwatch_dir"] + '/' + host))
     except:
         return []
 
 def all_hosts():
     # FIXME: Or maybe make completely transparent and add pseudo local_connection() to Single livestatus clas?
-    if check_mk.is_multisite():
+    if config.is_multisite():
         conn = html.live.local_connection()
     else:
         conn = html.live

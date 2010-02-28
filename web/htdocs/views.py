@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import check_mk, livestatus, htmllib, time, os, re, pprint, time
+import config, livestatus, htmllib, time, os, re, pprint, time
 from lib import *
 from pagefunctions import *
 
@@ -147,7 +147,8 @@ class Filter:
     # Hidden filters may contribute to the pages headers of the views
     def heading_info(self, infoname):
 	return None
-plugins_path = check_mk.web_dir + "/plugins/views"
+
+plugins_path = config.defaults["web_dir"] + "/plugins/views"
 for fn in os.listdir(plugins_path):
     if fn.endswith(".py"):
 	execfile(plugins_path + "/" + fn)
@@ -168,10 +169,10 @@ def load_views():
 	html.multisite_views[('', name)] = view
 
     # Now scan users subdirs for files "views.mk"
-    subdirs = os.listdir(check_mk.multisite_config_dir)
+    subdirs = os.listdir(config.config_dir)
     for user in subdirs:
 	try:
-	    dirpath = check_mk.multisite_config_dir + "/" + user
+	    dirpath = config.config_dir + "/" + user
 	    if os.path.isdir(dirpath):
 		path = dirpath + "/views.mk"
 		if not os.path.exists(path):
@@ -210,9 +211,7 @@ def available_views():
 
     # 2. views of admin users, if public
     for (u, n), view in html.multisite_views.items():
-	if n not in views \
-	    and u in check_mk.multiadmin_unrestricted_action_users \
-	    and view["public"]:
+	if n not in views and view["public"] and config.user_may(u, "force_views"):
 	    views[n] = view
     
     # 3. Builtin views
@@ -220,9 +219,9 @@ def available_views():
         if u == '' and n not in views:
             views[n] = view
 
-    # 4. other users views, if public
+    # 4. other users views, if publi
     for (u, n), view in html.multisite_views.items():
-	if n not in views and view["public"]:
+	if n not in views and view["public"] and config.user_may(u, "publish_views"):
 	    views[n] = view
 
     return views
@@ -233,10 +232,7 @@ def save_views(us):
     for (user, name), view in html.multisite_views.items():
 	if us == user:
 	    userviews[name] = view
-    userdir = check_mk.multisite_config_dir + "/" + us
-    if not os.path.exists(userdir):
-	os.mkdir(userdir)
-    f = file(userdir + "/views.mk", "w", 0)
+    f = file(config.user_confdir + "/views.mk", "w", 0)
     f.write(pprint.pformat(userviews) + "\n")
 	    
 
@@ -738,7 +734,6 @@ def show_view(view, show_heading = False):
     # Show heading
     if show_heading:
 	html.header(view_title(view))
-        show_site_header(html)
 
     show_context_links(view, hide_filters)
     if view["owner"] == html.req.user:
@@ -752,7 +747,7 @@ def show_view(view, show_heading = False):
 	toggle_button("filter", filter_isopen, "Show filter", "Hide filter", ["filter"])
    
     # Action-button
-    if len(rows) > 0 and check_mk.is_allowed_to_act(html.req.user):
+    if len(rows) > 0 and config.may("act"):
 	actions_are_open = html.do_actions()
 	toggle_button("actions", actions_are_open, "Show commands", "hide commands")
 
@@ -854,7 +849,7 @@ def query_data(datasource, add_headers, only_sites = None):
     query += "Columns: %s\n" % " ".join(datasource["columns"])
     query += add_headers
     html.live.set_prepend_site(True)
-    if check_mk.multiadmin_debug:
+    if config.debug:
 	html.write("<div class=message><pre>%s</pre></div>\n" % query)
     
     if only_sites:
@@ -938,7 +933,7 @@ def allowed_for_datasource(collection, datasourcename):
 # -----------------------------------------------------------------------------
 
 def show_action_form(is_open, datasource):
-    if not check_mk.is_allowed_to_act(html.req.user):
+    if not config.may("act"):
 	return
 
     html.begin_form("actions")
@@ -1128,7 +1123,7 @@ def nagios_action_command(tablename, dataset):
     return title, [nagios_command]
 
 def do_actions(tablename, rows):
-    if not check_mk.is_allowed_to_act(html.req.user):
+    if not config.may("act"):
        html.show_error("You are not allowed to perform actions. If you think this is an error, "
              "please ask your administrator to add your login to <tt>multiadmin_action_users</tt> "
 	     "in <tt>main.mk</tt>")

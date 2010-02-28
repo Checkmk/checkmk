@@ -24,53 +24,184 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def set_default(d):
+import os, pprint
+from lib import *
+
+def set_defaults(d):
     global defaults
     defaults = d
+    global config_dir
     config_dir = defaults["var_dir"] + "/web" 
 
 def load_config():
-    # define default values for all settings
-    filename = defaults["
-    global debug
-    debug = False
-    global admin_users
-    admin_users = []
-    global guest_users
-    guest_users = []
-    global users
-    users = []
-    execfile(filename)
-    global config_dir
+    filename = defaults["default_config_dir"] + "/multisite.mk"
 
-def is_allowed_to_view(user):
-   return multiadmin_users == None or user in multiadmin_users
+    # Config file is obligatory. An empty example is installed
+    # during setup.sh. Better signal an error then simply ignore 
+    # Absence.
+    try:
+        execfile(filename, globals(), globals())
+    except Exception, e:
+        global user
+        global role_name
+        global user_permissions
+        user = "nobody"
+        role_name = "nobody"
+        user_permissions = []
+	raise MKConfigError("Cannot read configuration file %s: %s:" % (filename, e))
 
-def is_allowed_to_act(user):
-   return multiadmin_action_users == None or user in multiadmin_action_users
+# -------------------------------------------------------------------
+#    ____                     _         _                 
+#   |  _ \ ___ _ __ _ __ ___ (_)___ ___(_) ___  _ __  ___ 
+#   | |_) / _ \ '__| '_ ` _ \| / __/ __| |/ _ \| '_ \/ __|
+#   |  __/  __/ |  | | | | | | \__ \__ \ | (_) | | | \__ \
+#   |_|   \___|_|  |_| |_| |_|_|___/___/_|\___/|_| |_|___/
+#                                                         
+# -------------------------------------------------------------------
+# roles
+NOBODY = 0
+USER   = 1
+ADMIN  = 2
+GUEST  = 3
 
-# Returns true when restriction is disabled or restriction is enabled and the
-# user is in the unrestricted list
-def is_unrestricted_action_user(user):
-    if multiadmin_restrict_actions or multiadmin_restrict:
-        if user not in multiadmin_unrestricted_action_users:
-            return False
+role_names = [ "nobody", "user", "administrator", "guest" ]
 
-    return True
+# define default values for all settings
+debug       = False
+users       = None  # None means: all
+admin_users = []
+guest_users = []
 
-# Returns true when restriction is disabled or restriction is enabled and the
-# user is in the unrestricted list
-def is_unrestricted_user(user):
-    if multiadmin_restrict:
-        if user not in multiadmin_unrestricted_users:
-            return False
+# Global table of available permissions. Plugins may add their own
+# permissions
+permissions_by_name = {}
+permissions_by_order = []
 
-    return True
+def declare_permission(name, title, description, defaults):
+    perm = { "name" : name, "title" : title, "description" : description, "defaults" : defaults }
+    permissions_by_name[name] = perm
+    permissions_by_order.append(perm)
+
+declare_permission("use",
+     "Use Multisite at all",
+     "Users without this permission are not let in at all",
+     [ ADMIN, USER, GUEST ])
+
+declare_permission("act",
+     "Perform commands",
+     "Allows users to perform Nagios commands. If now futher permissions are granted, actions can only be done one objects one is a contact for",
+     [ ADMIN, USER ])
+
+declare_permission("see_all",
+     "See all Nagios objects",
+     "See all objects regardless of contacts and contact groups",
+     [ ADMIN, GUEST ])
+
+declare_permission("act_all",
+     "Commands on all objects",
+     "Do all commands on all objects, regardless of contacts",
+     [ ADMIN ])
+
+declare_permission("edit_views",
+     "Edit views",
+     "Create own views and customize builtin views",
+     [ ADMIN, USER ])
+
+declare_permission("publish_views",
+     "Plublish views",
+     "Make views visible and usable for other users",
+     [ ADMIN, USER ])
+
+declare_permission("force_views",
+     "Override builtin views",
+     "Make own published views override builtin views for all users",
+     [ ADMIN ])
+
+declare_permission("see_sidebar",
+     "Use Check_MK sidebar",
+     "Without this permission the Check_MK sidebar will be invisible",
+     [ ADMIN, USER, GUEST ])
+
+
+
+# Compute permissions for HTTP user and set in 
+# global variables. Also store user.
+def login(u):
+    global user
+    user = u
+    global role
+    role = NOBODY
+
+    # Prepare users' own configuration directory
+    global user_confdir
+    user_confdir = config_dir + "/" + user
+    try:
+	os.mkdir(user_confdir)
+    except:
+	pass
+
+    # determine role of user. Each user may be listed only once
+    # in admin_users, guest_users and users.
+    all = admin_users + guest_users
+    if users != None: 
+	all += users 
+    if all.count(user) > 1:
+	raise MKConfigError("Your username (<b>%s</b>) is listed more than once in multisite.mk. This is not allowed. "
+		"Please check your config." % user)
+
+    role = role_of_user(user)
+
+    global role_name
+    role_name = role_names[role]
+
+    # Now set permissions according to role
+    global user_permissions
+    user_permissions = set([p["name"] for p in permissions_by_order if role in p["defaults"]])
+
+    read_site_config()
+
+def save_site_config():
+    path = user_confdir + "/siteconfig.mk"
+    try:
+        file(path, "w").write(pprint.pformat(user_siteconf) + "\n")
+    except Exception, e:
+	raise MKConfigError("Cannot save site configuration for user <b>%s</b> into <b>%s</b>: %s" % \
+		(user, path, e))
+
+def role_of_user(u):
+    if u in admin_users:
+        return ADMIN
+    elif u in guest_users:
+        return GUEST
+    elif users != None and u not in users:
+        return NOBODY
+    else:
+        return USER
+
+def may(permname):
+    return permname in user_permissions
+
+def user_may(u, permname):
+    role = role_of_user(u)
+    return role in permissions_by_name[permname]["defaults"]
+
+
+# -------------------------------------------------------------------
+#    ____  _ _            
+#   / ___|(_) |_ ___  ___ 
+#   \___ \| | __/ _ \/ __|
+#    ___) | | ||  __/\__ \
+#   |____/|_|\__\___||___/
+#                         
+# -------------------------------------------------------------------
+
+sites = { "": {} }
+use_siteicons = False
 
 def sitenames():
     return sites.keys()
 
-def sites():
+def allsites():
     return dict( [(name, site(name)) for name in sitenames()])
 
 def site(name):
@@ -78,13 +209,13 @@ def site(name):
     if "alias" not in s:
 	s["alias"] = name
     if "socket" not in s:
-	s["socket"] = "unix:" + livestatus_unix_socket
+	s["socket"] = "unix:" + defaults["livestatus_unix_socket"]
     if "nagios_url" not in s:
-	s["nagios_url"] = nagios_url
+	s["nagios_url"] = defaults["nagios_url"]
     if "nagios_cgi_url" not in s:
-	s["nagios_cgi_url"] = nagios_cgi_url
+	s["nagios_cgi_url"] = defaults["nagios_cgi_url"]
     if "pnp_prefix" not in s:
-	s["pnp_prefix"] = pnp_prefix
+	s["pnp_prefix"] = defaults["pnp_prefix"]
     return s 
 
 def site_is_local(name):
@@ -93,5 +224,20 @@ def site_is_local(name):
     return not sock or sock.startswith("unix:")
 
 def is_multisite():
-    return len(multiadmin_sites) > 1
+    return len(sites) > 1
+
+def read_site_config():
+    path = user_confdir + "/siteconf.mk"
+    global user_siteconf
+    if os.path.exists(path):
+	user_siteconf = eval(file(path).read())
+    else:
+        user_siteconf = {}
+
+
+
+sidebar  = [('admin', 'open'), ('tactical_overview', 'open'), ('sitestatus', 'open'), \
+        ('search', 'open'), ('views', 'open'), ('hostgroups', 'closed'), \
+        ('servicegroups', 'closed'), ('hosts', 'closed'), ('time', 'open'), \
+        ('nagios_legacy', 'closed'), ('performance', 'closed'), ('master_control', 'closed'), ('about', 'closed')]
 

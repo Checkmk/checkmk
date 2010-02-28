@@ -35,7 +35,7 @@ import views, time
 #                                  
 # --------------------------------------------------------------
 def render_adminlinks():
-    html.write("Version: " + check_mk.check_mk_version)
+    html.write("Version: " + config.defaults["check_mk_version"])
     bulletlink("Homepage",        "http://mathias-kettner.de/check_mk.html")
     bulletlink("Documentation",   "http://mathias-kettner.de/checkmk.html")
     bulletlink("Download",        "http://mathias-kettner.de/check_mk_download.html")
@@ -62,7 +62,7 @@ def render_views():
         bulletlink(title, "view.py?view_name=%s" % name)
 
     links = [("EDIT", "edit_views.py")]
-    if check_mk.multiadmin_debug:
+    if config.debug:
 	links = [("EXPORT", "export_views.py")] + links
     footnotelinks(links)
 
@@ -156,10 +156,10 @@ div.state3 { background-color: #f80; }
 #                                                
 # --------------------------------------------------------------
 def render_sitestatus():
-    if check_mk.is_multisite():
+    if config.is_multisite():
 	html.write("<table cellspacing=0 class=sitestate>")
-	for sitename in check_mk.sites():
-	    site = check_mk.site(sitename)
+	for sitename in config.allsites():
+	    site = config.site(sitename)
 	    state = html.site_status[sitename]["state"]
 	    if state == "disabled":
 		switch = "on"
@@ -169,14 +169,14 @@ def render_sitestatus():
 		text = link(site["alias"], "view.py?view_name=sitehosts&site=%s" % sitename)
 
 	    html.write("<tr><td class=left>%s</td>" % text)
-	    onclick = "switch_site('%s', '_site_switch=%s:%s')" % (check_mk.checkmk_web_uri, sitename, switch)
+	    onclick = "switch_site('%s', '_site_switch=%s:%s')" % (config.defaults["checkmk_web_uri"], sitename, switch)
 	    html.write("<td class=\"state %s\">" % state)
 	    html.write("<a href=\"\" onclick=\"%s\">%s</a></td>" % (onclick, state[:3]))
 	    html.write("</tr>\n")
 	html.write("</table>\n")
     
 
-if check_mk.is_multisite():
+if config.is_multisite():
     sidebar_snapins["sitestatus"] = {
 	"title" : "Site status",
 	"render" : render_sitestatus,
@@ -358,7 +358,7 @@ div.time {
 # --------------------------------------------------------------
 def render_nagios():
     bulletlink("Home", "http://www.nagios.org")
-    bulletlink("Documentation", "%s/doc" % check_mk.nagios_url)
+    bulletlink("Documentation", "%s/doc" % config.defaults["nagios_url"])
     for entry in [
 	"General",
         ("tac.cgi", "Tactical Overview"),
@@ -439,7 +439,7 @@ def render_master_control():
 	    html.write("</tr>\n")
 	for i, (colname, title) in enumerate(items):
 	    colvalue = siteline[i + 1]
-	    url = check_mk.checkmk_web_uri + ("/switch_master_state.py?site=%s&switch=%s&state=%d" % (siteid, colname, 1 - colvalue))
+	    url = config.defaults["checkmk_web_uri"] + ("/switch_master_state.py?site=%s&switch=%s&state=%d" % (siteid, colname, 1 - colvalue))
 	    onclick = "get_url('%s')" % url
 	    enabled = colvalue and "enabled" or "disabled"
 	    html.write("<tr><td class=left>%s</td><td class=%s><a onclick=\"%s\" href=\"\">%s</a></td></tr>\n" % (title, enabled, onclick, enabled))
@@ -528,8 +528,7 @@ def ajax_switch_masterstate(html):
 #                                                        
 # ---------------------------------------------------------
 def load_bookmarks():
-    user = html.req.user
-    path = check_mk.multisite_config_dir + "/" + user + "/bookmarks.mk"
+    path = config.user_confdir + "/bookmarks.mk"
     try:
 	return eval(file(path).read())
     except:
@@ -537,13 +536,7 @@ def load_bookmarks():
 
 
 def save_bookmarks(bookmarks):
-    user = html.req.user
-    dir = check_mk.multisite_config_dir + "/" + user
-    try:
-	os.makedirs(dir)
-    except:
-	pass
-    path = dir + "/bookmarks.mk"
+    path = config.user_confdir + "/bookmarks.mk"
     file(path, "w").write(repr(bookmarks) + "\n")
 
 def render_bookmarks():
@@ -556,7 +549,7 @@ def render_bookmarks():
 	html.write("<br>")
 	n += 1
 
-    onclick = "add_bookmark('%s')" % check_mk.checkmk_web_uri
+    onclick = "add_bookmark('%s')" % config.defaults["checkmk_web_uri"]
     html.write("<div class=footnotelink><a href=\"\" onclick=\"%s\">Add Bookmark</a></div>\n" % onclick)
 
 def page_edit_bookmark(h):

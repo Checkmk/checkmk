@@ -330,7 +330,7 @@ class MultiSiteConnection(Helpers):
 	    if self.only_sites != None and sitename not in self.only_sites:
 		continue
 	    try:
-		r = connection.do_query(query, add_headers)
+		r = connection.query(query, add_headers)
 		if self.prepend_site:
 		    r = [ [sitename] + l for l in r ]
 		result += r

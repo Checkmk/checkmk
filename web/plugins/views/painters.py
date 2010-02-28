@@ -29,11 +29,11 @@
 # Painters
 ##################################################################################
 def nagios_host_url(sitename, host):
-    nagurl = check_mk.site(sitename)["nagios_cgi_url"]
+    nagurl = config.site(sitename)["nagios_cgi_url"]
     return nagurl + "/status.cgi?host=" + htmllib.urlencode(host)
 
 def nagios_service_url(sitename, host, svc):
-    nagurl = check_mk.site(sitename)["nagios_cgi_url"]
+    nagurl = config.site(sitename)["nagios_cgi_url"]
     return nagurl + ( "/extinfo.cgi?type=2&host=%s&service=%s" % (htmllib.urlencode(host), htmllib.urlencode(svc)))
 
 def paint_age(timestamp, has_been_checked, bold_if_younger_than):
@@ -48,7 +48,7 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than):
     return age_class, html.age_text(age)
 
 def paint_site_icon(row):
-    if row["site"] and check_mk.multiadmin_use_siteicons:
+    if row["site"] and config.use_siteicons:
 	return None, "<img class=siteicon src=\"icons/site-%s-24.png\">" % row["site"]
     else:
 	return None, ""
@@ -64,7 +64,7 @@ multisite_painters["sitename_plain"] = {
 multisite_painters["sitealias"] = {
     "title" : "Site alias",
     "columns" : ["site"],
-    "paint" : lambda row: (None, check_mk.site(row["site"])["alias"])
+    "paint" : lambda row: (None, config.site(row["site"])["alias"])
 }
 
 def paint_host_black(row):
@@ -157,6 +157,13 @@ multisite_painters["svc_perf_data"] = {
     "paint" : lambda row: (None, row["service_perf_data"])
 }
     
+multisite_painters["svc_contacts"] = {
+    "title" : "Service contacts",
+    "short" : "Contacts",
+    "columns" : ["contacts"],
+    "paint" : lambda row: (None, ", ".join(row["service_contacts"]))
+}
+
 multisite_painters["host_plugin_output"] = {
     "title" : "Output of host check plugin",
     "short" : "Status detail",
@@ -429,9 +436,9 @@ def paint_pnp_service_link(row):
     url = site["pnp_prefix"] + ("?host=%s&srv=%s" % (htmllib.urlencode(host), htmllib.urlencode(svc)))
     a = "<a href=\"%s\">PNP</a>" % url
 
-    if check_mk.site_is_local(sitename):
+    if config.site_is_local(sitename):
 	# Where is our RRD?
-	basedir = check_mk.rrd_path + "/" + host
+	basedir = config.defaults["rrd_path"] + "/" + host
 	xmlpath = basedir + "/" + svc.replace("/", "_").replace(" ", "_") + ".xml"
 	if os.path.exists(xmlpath):
 	    return "", a

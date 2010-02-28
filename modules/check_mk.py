@@ -213,7 +213,7 @@ generate_dummy_commands            = True
 dummy_check_commandline            = 'echo "ERROR - you did an active check on this serivce - please disable active checks" && exit 1'
 nagios_illegal_chars               = '`~!$%^&*|\'"<>?,()='
 
-# Settings for web pages
+# Settings for web pages (THIS IS DEPRECATED AND WILL SEEN BE REMOVED)
 multiadmin_users                     = None # means: all
 multiadmin_action_users              = None # means: all
 multiadmin_sites                     = { "" : {} }

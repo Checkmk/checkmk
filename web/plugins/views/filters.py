@@ -322,7 +322,7 @@ class FilterSite(Filter):
 	site_selector(html, "site", self.enforce)
 
     def filter(self, infoname):
-	if check_mk.is_multisite():
+	if config.is_multisite():
 	    site = html.var("site")
 	    if site:
 		return "Sites: %s\n" % html.var("site", "")
@@ -336,7 +336,7 @@ class FilterSite(Filter):
     def heading_info(self, infoname):
 	current_value = html.var("site")
 	if current_value:
-	    alias = check_mk.site(current_value)["alias"]
+	    alias = config.site(current_value)["alias"]
 	    return alias
     
     def variable_settings(self, row):

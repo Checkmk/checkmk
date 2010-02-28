@@ -24,12 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import check_mk, livestatus, htmllib, views, pprint, os
+import config, livestatus, htmllib, views, pprint, os
 from lib import *
 
 sidebar_snapins = {}
 
-snapins_dir = check_mk.web_dir + "/plugins/sidebar"
+snapins_dir = config.defaults["web_dir"] + "/plugins/sidebar"
 for fn in os.listdir(snapins_dir):
     if fn.endswith(".py"):
 	execfile(snapins_dir + "/" + fn)
@@ -37,7 +37,7 @@ for fn in os.listdir(snapins_dir):
 # Helper functions to be used by snapins
 def link(text, target):
     if not target.startswith("http:"):
-	target = check_mk.checkmk_web_uri + "/" + target 
+	target = config.defaults["checkmk_web_uri"] + "/" + target 
     return "<a target=\"main\" class=link href=\"%s\">%s</a>" % (target, htmllib.attrencode(text))
 
 def bulletlink(text, target):
@@ -51,39 +51,39 @@ def footnotelinks(links):
 
 def iconbutton(what, url, target="side"):
     if target == "side":
-	onclick = "onclick=\"get_url('%s')\"" % (check_mk.checkmk_web_uri + "/" + url)
+	onclick = "onclick=\"get_url('%s')\"" % (config.defaults["checkmk_web_uri"] + "/" + url)
 	href = ""
 	tg = ""
     else:
 	onclick = ""
-	href = "%s/%s" % (check_mk.checkmk_web_uri, url)
+	href = "%s/%s" % (config.defaults["checkmk_web_uri"], url)
 	tg = "target=%s" % target
-    html.write("<a href=\"%s\" %s %s><img border=0 onmouseover=\"hilite_icon(this, 1)\" onmouseout=\"hilite_icon(this, 0)\" align=absmiddle src=\"%s/images/icon_%s14lo.png\"></a> " % (href, onclick, tg, check_mk.checkmk_web_uri, what))
+    html.write("<a href=\"%s\" %s %s><img border=0 onmouseover=\"hilite_icon(this, 1)\" onmouseout=\"hilite_icon(this, 0)\" align=absmiddle src=\"%s/images/icon_%s14lo.png\"></a> " % (href, onclick, tg, config.defaults["checkmk_web_uri"], what))
 
 def nagioscgilink(text, target):
     html.write("<li class=sidebar><a target=\"main\" class=link href=\"%s/%s\">%s</a></li>" % \
-	    (check_mk.nagios_cgi_url, target, htmllib.attrencode(text)))
+	    (config.defaults["nagios_cgi_url"], target, htmllib.attrencode(text)))
 
 def heading(text):
     html.write("<h3>%s</h3>\n" % htmllib.attrencode(text))
 
 def load_user_config():
     user = html.req.user
-    path = check_mk.multisite_config_dir + "/" + user + "/sidebar.mk"
+    path = config.user_confdir + "/sidebar.mk"
     try:
-	config = eval(file(path).read())
+	user_config = eval(file(path).read())
     except:
-	config = check_mk.multiadmin_sidebar
+	user_config = config.sidebar
 
     # Now make sure that all snapins are listed in the config
     # even if turned off.
     for name in sidebar_snapins.keys():
 	found = False
-	for n, u in config:
+	for n, u in user_config:
 	    if n == name: found = True
 	if not found:
-	    config.append((name, "off"))
-    return config
+	    user_config.append((name, "off"))
+    return user_config
 
 def save_user_config(config):
     user = html.req.user
@@ -112,7 +112,7 @@ def page_side(h):
 <div id=check_mk_sidebar><script src="%s/sidebar.js"></script></div>
 </body>
 </html>
-""" % ((check_mk.checkmk_web_uri, ) * 2))
+""" % ((config.defaults["checkmk_web_uri"], ) * 2))
 
 # Embedded sidebar	
 def page_sidebar(h):
@@ -124,10 +124,10 @@ def page_sidebar(h):
 		"<td class=title><a target=\"main\" href=\"http://mathias-kettner.de/check_mk.html\">Check_MK</a></td>"
 		"<td class=logo><a target=\"_blank\" href=\"http://mathias-kettner.de\"><img border=0 src=\"%s/images/MK-mini-black.gif\"></a></td>"
 		"</tr></table></div>\n" % \
-	    check_mk.checkmk_web_uri)
-    config = load_user_config()
+	    config.defaults["checkmk_web_uri"])
+    user_config = load_user_config()
     refresh_snapins = []
-    for name, state in config:
+    for name, state in user_config:
 	if not name in sidebar_snapins:
 	   continue
 	if state in [ "open", "closed" ]:
@@ -136,7 +136,7 @@ def page_sidebar(h):
 	   if refresh_time > 0:
 	       refresh_snapins.append([name, refresh_time])
     html.write("<div class=footnote><a target=\"main\" href=\"%s/sidebar_config.py\">Configure sidebar</a></div>\n" % \
-	    check_mk.checkmk_web_uri)
+	    config.defaults["checkmk_web_uri"])
     html.write("<script language=\"javascript\">\n")
     html.write("var refresh_snapins = %r;\n" % refresh_snapins) 
     html.write("sidebar_scheduler();\n")
@@ -153,7 +153,7 @@ def render_snapin(name, state):
 	style = ' style="display:none"'
     else:
 	style = ""
-    url = check_mk.checkmk_web_uri + "/sidebar_openclose.py?name=%s&state=" % name
+    url = config.defaults["checkmk_web_uri"] + "/sidebar_openclose.py?name=%s&state=" % name
     iconbutton("close", "sidebar_openclose.py?name=%s&state=off" % name, "side")
     html.write("<b class=heading onclick=\"toggle_sidebar_snapin(this,'%s')\" onmouseover=\"this.style.cursor='pointer'\" "
 	       "onmouseout=\"this.style.cursor='auto'\">%s" % (url, snapin["title"]))
@@ -165,9 +165,12 @@ def render_snapin(name, state):
     html.write("</div></div>\n")
 
 def snapin_exception(e):
-    html.write("<div class=snapinexception>\n"
-	    "<h2>Error</h2>\n"
-	    "<p>%s</p></div>" % e)
+    if config.debug:
+        raise
+    else:
+        html.write("<div class=snapinexception>\n"
+                "<h2>Error</h2>\n"
+                "<p>%s</p></div>" % e)
 
 def ajax_openclose(h):
     global html
@@ -265,7 +268,7 @@ def page_configure(h):
     html.write("<p> In order "
 	    "to integrate the Check_MK sidebar snapins into your sidebar, please "
 	    "add the following to your Nagios' <tt>side.html</tt> or <tt>side.php</tt></p>\n")
-    html.write("<pre>\n%s</pre>\n" % htmllib.attrencode('<div id="check_mk_sidebar"><script src="%s/sidebar.js"></script></div>' % check_mk.checkmk_web_uri))
+    html.write("<pre>\n%s</pre>\n" % htmllib.attrencode('<div id="check_mk_sidebar"><script src="%s/sidebar.js"></script></div>' % config.defaults["checkmk_web_uri"]))
     html.end_form()
 
     html.footer()

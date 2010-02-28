@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 from mod_python import apache,util
-from urllib import urlencode
 import htmllib, livestatus, os, pprint, config
 from lib import *
 
@@ -33,6 +32,7 @@ def load_config(req):
     # read in check_mk's defaults file. That contains all
     # installation settings (paths, etc.)
 
+    # First read installation settings (written during setup.sh)
     defaults = {}
     try:
         # The "options" are set in the Apache configuration
@@ -49,13 +49,9 @@ def load_config(req):
     except Exception, e:
         raise MKConfigError("Cannot read %s: %s" % (defaults_path, e))
 
+    # Store installation settings in config module
     config.set_defaults(defaults)
-
-    try:
-	path = defaults["default_config_dir"] + "/multisite.mk"
-	config.load_config(path)
-    except Exception, e:
-	raise MKConfigError("Cannot read %s: %s:" % (path, e))
+    config.load_config()
 
 def read_get_vars(req):
     req.vars = {}
@@ -64,27 +60,6 @@ def read_get_vars(req):
         for (key,values) in req.rawvars.items():
             if len(values) >= 1:
                 req.vars[key] = values[-1]
-
-def read_site_config(html):
-    user = html.req.user
-    path = check_mk.multisite_config_dir + "/" + user + "/siteconfig.mk"
-    html.user_siteconf = {}
-    if os.path.exists(path):
-	html.user_siteconf = eval(file(path).read())
-
-def save_site_config(html):
-    user = html.req.user
-    dir = check_mk.multisite_config_dir + "/" + user
-    try:
-	os.mkdir(dir)
-    except:
-	pass
-    path = dir + "/siteconfig.mk"
-    try:
-        file(path, "w").write(pprint.pformat(html.user_siteconf) + "\n")
-    except Exception, e:
-	raise MKConfigError("Cannot save site configuration for user <b>%s</b> into <b>%s</b>: %s" % \
-		(user, path, e))
 
 def connect_to_livestatus(html):
     html.site_status = {}
@@ -97,7 +72,7 @@ def connect_to_livestatus(html):
 
     # If there is only one site (non-multisite), than
     # user cannot enable/disable. 
-    if check_mk.is_multisite():
+    if config.is_multisite():
 	# do not contact those sites the user has disabled
 	# also honor HTML-variables for switching off sites
 	# right now. This is generally done by the variable
@@ -107,17 +82,17 @@ def connect_to_livestatus(html):
 	if switch_var:
 	    for info in switch_var.split(","):
 		sitename, onoff = info.split(":")	
-		d = html.user_siteconf.get(sitename, {})
+		d = config.user_siteconf.get(sitename, {})
 		if onoff == "on":
 		    d["disabled"] = False
 		else:
 		    d["disabled"] = True
-		html.user_siteconf[sitename] = d
-	    save_site_config(html)
+		config.user_siteconf[sitename] = d
+	    config.save_site_config()
 
 	# Make a list of all non-disables sites
-	for sitename, site in check_mk.sites().items():
-	    siteconf = html.user_siteconf.get(sitename, {})
+	for sitename, site in config.allsites().items():
+	    siteconf = config.user_siteconf.get(sitename, {})
 	    if siteconf.get("disabled", False):
 		html.site_status[sitename] = { "state" : "disabled", "site" : site } 
 	    else:
@@ -138,10 +113,22 @@ def connect_to_livestatus(html):
 	    html.site_status[sitename]["exception"] = deadinfo["exception"]
 
     else:
-	html.live = livestatus.SingleSiteConnection("unix:" + check_mk.livestatus_unix_socket)
-	html.site_status = { '': { "state" : "offline", "site" : check_mk.site('') } }
+	html.live = livestatus.SingleSiteConnection("unix:" + config.defaults["livestatus_unix_socket"])
+	html.site_status = { '': { "state" : "offline", "site" : config.site('') } }
         v1, v2 = html.live.query_row("GET status\nColumns: livestatus_version program_version")
 	html.site_status[''].update({ "state" : "online", "livestatus_version": v1, "program_version" : v2 })
+
+    # If multiadmin is retricted to data user is a nagios contact for,
+    # we need to set an AuthUser: header for livestatus
+    if not config.may("see_all"):
+	html.live.set_auth_user('read', config.user)
+
+    # User wants to do action?
+    if not config.may("act_all"):
+	html.live.set_auth_user('action', config.user)
+
+    # Default auth domain is read. Please set to None to switch off authorization
+    html.live.set_auth_domain('read')
 
 # This function does nothing. The sites have already
 # been reconfigured according to the variable _site_switch,
@@ -167,54 +154,32 @@ def handler(req):
         read_get_vars(req)
         load_config(req)
 	if html.var("debug"): # Debug flag may be set via URL
-	    conifg.debug = True
-	    
-        from lib import *
+	    config.debug = True
+        from lib import * # declarations of exceptions
 
-        # These pages may only be used with HTTP authentication turned on.
 	if not req.user or type(req.user) != str:
 	    raise MKConfigError("You are not logged in. This should never happen. Please "
-		    "review your Apache configuration.")
+		    "review your Apache configuration. Check_MK Multisite requires HTTP login.")
+	    
+        # Set all permissions, read site config, and similar stuff
+	config.login(html.req.user)
 
-	# in main.mk you can configure "multiadmin_users": a whitelist of users.
-        if not check_mk.is_allowed_to_view(req.user):
-	    reason = "Not Authorized.  You are logged in as <b>%s</b>. " % req.user
+	# User allowed to login at all?
+        if not config.may("use"):
+	    reason = "Not Authorized.  You are logged in as <b>%s</b>. Your role is <b>%s</b>:" % (config.user, config.role_name)
             reason += "If you think this is an error, " \
-                       "please ask your administrator to add your login into the list " \
-                       " <tt>main.mk:multiadmin_users</tt>"
+                       "please ask your administrator to add your login into multisite.mk"
             raise MKConfigError(reason)
-
-	# Read in users's configuration of sites. This is needed only
-	# for multisite installations. The user may switch off certain
-	# sites he is not interested in.
-	read_site_config(html)
 
         # General access allowed. Now connect to livestatus
 	connect_to_livestatus(html)
 
-	# If multiadmin is retricted to data user is a nagios contact for,
-	# we need to set an AuthUser: header for livestatus
-	if check_mk.multiadmin_restrict and \
-	    req.user not in check_mk.multiadmin_unrestricted_users:
-		html.live.set_auth_user('read', req.user)
-
-	# User wants to do action?
-	if check_mk.multiadmin_restrict_actions or check_mk.multiadmin_restrict:
-	    if req.user not in check_mk.multiadmin_unrestricted_action_users:
-		html.live.set_auth_user('action', req.user)
-
-        # Default auth domain is read. Please set to None to switch off authorization
-	html.live.set_auth_domain('read')
-
-	# Now branch to a function creating HTML code
-	import page_multiadmin
+        # Module containing the actual pages
 	import page_logwatch
 	import views
 	import sidebar
 
 	pagehandlers = { "index"               : page_index,
-			 "filter"              : page_multiadmin.page,
-			 "siteoverview"        : page_multiadmin.page_siteoverview,
 			 "edit_views"          : views.page_edit_views,
 			 "edit_view"           : views.page_edit_view,
 			 "export_views"        : views.ajax_export,
@@ -258,7 +223,7 @@ def handler(req):
 	html.footer()
 	
     except Exception, e:
-	if check_mk.multiadmin_debug:
+	if config.debug:
             html.live = None
 	    raise
         html.header("Internal Error")

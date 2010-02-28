@@ -24,11 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import time, cgi
-
-# TESTE TEST TSET 
-import os
-#  TSET TEST TEST
+import time, cgi, config, os
 
 # Information about uri
 class InvalidUserInput(Exception):
@@ -341,14 +337,16 @@ class html:
 
 
 	    if type(self.req.user) == str:
-	       login_text = "Logged in as <b>%s</b>" % self.req.user
+	       login_text = "Logged in as <b>%s</b> (%s)" % (config.user, config.role_name)
+	       if config.debug:
+		  login_text += ", perms: %s" % (", ".join(config.user_permissions))
 	    else:
 	       login_text = "not logged in"
             self.req.write("<table class=footer><tr>"
                            "<td class=left>&copy; <a href=\"http://mathias-kettner.de\">Mathias Kettner</a></td>"
                            "<td class=middle>This is part of <a href=\"http://mathias-kettner.de/check_mk\">Check_MK</a> version %s</td>"
                            "<td class=right>%s</td></tr></table>"
-                           % (self.req.defaults["check_mk_version"], login_text))
+                           % (config.defaults["check_mk_version"], login_text))
             self.req.write("</body></html>\n")
 
 
@@ -372,7 +370,7 @@ class html:
 	
     # Get next transaction id for that user
     def current_transid(self, username):
-	dir = self.req.defaults["var_dir"] + "/web/" + username
+	dir = config.defaults["var_dir"] + "/web/" + username
 	try:
 	    os.makedirs(dir)
         except:
@@ -386,7 +384,7 @@ class html:
 
     def increase_transid(self, username):
 	current = self.current_transid(username)
-	path = self.req.defaults["var_dir"] + "/web/" + username + "/transid.mk"
+	path = config.defaults["var_dir"] + "/web/" + username + "/transid.mk"
 	file(path, "w").write("%d\n" % (current + 1))
 
     # Checks wether the current page is a reload or an original real submit

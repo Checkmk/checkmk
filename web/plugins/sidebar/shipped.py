@@ -43,7 +43,8 @@ def render_about():
 
 sidebar_snapins["about"] = {
     "title" : "About Check_MK",
-    "render" : render_about
+    "render" : render_about,
+    "allowed" : [ "admin", "user", "guest" ],
 }
 
 # -----------------------------------------------------------------------
@@ -61,7 +62,8 @@ def render_admin():
 
 sidebar_snapins["admin"] = {
     "title" : "Administration",
-    "render" : render_admin
+    "render" : render_admin,
+    "allowed" : [ "admin" ],
 }
 
 
@@ -89,7 +91,8 @@ def render_views():
 
 sidebar_snapins["views"] = {
     "title" : "Views",
-    "render" : render_views
+    "render" : render_views,
+    "allowed" : [ "user", "admin", "guest" ],
 }
 
 # --------------------------------------------------------------
@@ -118,11 +121,13 @@ def render_groups(what):
 
 sidebar_snapins["hostgroups"] = {
     "title" : "Hostgroups",
-    "render" : lambda: render_groups("host")
+    "render" : lambda: render_groups("host"),
+    "allowed" : [ "user", "admin", "guest" ]
 }
 sidebar_snapins["servicegroups"] = {
     "title" : "Servicegroups",
-    "render" : lambda: render_groups("service")
+    "render" : lambda: render_groups("service"),
+    "allowed" : [ "user", "admin", "guest" ]
 }
 
 # --------------------------------------------------------------
@@ -157,6 +162,7 @@ def render_hosts():
 sidebar_snapins["hosts"] = {
     "title" : "All hosts",
     "render" : render_hosts,
+    "allowed" : [ "user", "admin", "guest" ],
     "refresh" : 60,
     "styles" : """
 div.statebullet { margin-left: 2px; margin-right: 4px; width: 10px; height: 10px; border: 1px solid black; float: left; }
@@ -201,6 +207,7 @@ if config.is_multisite():
     sidebar_snapins["sitestatus"] = {
 	"title" : "Site status",
 	"render" : render_sitestatus,
+	"allowed" : [ "user", "admin" ],
 	"styles" : """
 div#check_mk_sidebar table.sitestate {
     width: 100%;
@@ -301,6 +308,7 @@ sidebar_snapins["tactical_overview"] = {
     "title" : "Tactical Overview",
     "refresh" : 10,
     "render" : render_tactical_overview,
+    "allowed" : [ "user", "admin", "guest" ],
     "styles" : """
 table.tacticaloverview { width: 153px; margin-top: 0px;}
 table.tacticaloverview th { font-size: 7pt; text-align: left; font-weight: normal; padding: 0px; }
@@ -331,6 +339,7 @@ sidebar_snapins["performance"] = {
     "title" : "Server performance",
     "refresh" : 5,
     "render" : render_performance,
+    "allowed" : [ "admin", ],
     "styles" : """
 table.performance { font-size: 8pt; width: 154px; background-color: #888; border-style: solid; border-color: #444 #bbb #eee #666; border-width: 1px; }
 table.Performance td.right { text-align: right; font-weight: bold; }
@@ -354,6 +363,7 @@ sidebar_snapins["time"] = {
     "title" : "Server time",
     "refresh" : 30,
     "render" : render_current_time,
+    "allowed" : [ "user", "admin", "guest", ],
     "styles" : """
 div.time {
    width: 150px;
@@ -427,7 +437,8 @@ def render_nagios():
 
 sidebar_snapins["nagios_legacy"] = {
     "title" : "Nagios",
-    "render" : render_nagios
+    "render" : render_nagios,
+    "allowed" : [ "user", "admin", "guest", ],
 }
 
 # ----------------------------------------------------------------
@@ -469,6 +480,7 @@ def render_master_control():
 sidebar_snapins["master_control"] = {
     "title" : "Master control",
     "render" : render_master_control,
+    "allowed" : [ "admin", ],
     "styles" : """
 div#check_mk_sidebar table.master_control {
     width: 100%;
@@ -625,4 +637,5 @@ def ajax_add_bookmark(h):
 sidebar_snapins["bookmarks"] = {
     "title" : "Bookmarks",
     "render" : render_bookmarks,
+    "allowed": [ "user", "admin", "guest" ],
 }

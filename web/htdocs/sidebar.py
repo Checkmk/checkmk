@@ -34,6 +34,14 @@ for fn in os.listdir(snapins_dir):
     if fn.endswith(".py"):
 	execfile(snapins_dir + "/" + fn)
 
+def declare_permissions():
+    for name, snapin in sidebar_snapins.items():
+	config.declare_permission("sidesnap.%s" % name,
+	    snapin["title"],
+	    "",
+	    snapin["allowed"])
+    
+
 # Helper functions to be used by snapins
 def link(text, target):
     if not target.startswith("http:"):

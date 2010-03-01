@@ -24,12 +24,18 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, htmllib, pprint
+import config, htmllib, pprint, sidebar
 from lib import *
+
+def declare_external_permissions():
+    sidebar.declare_permissions()
+# views.declare_permissions()
+# actions.declare_permissions()
 
 def page_view_permissions(h):
     global html
     html = h
+    declare_external_permissions()
     html.header("My permissions")
     html.write("<p>You have the following permissions:</p>")
     html.write("<table class=permissions>\n")
@@ -44,6 +50,7 @@ def page_edit_permissions(h):
     html = h
     if not config.may("edit_permissions"):
 	raise MKAuthException("You are not allowed to edit permissions.")
+    declare_external_permissions()
 
     html.header("Edit permissions")
 

@@ -338,8 +338,6 @@ class html:
 
 	    if type(self.req.user) == str:
 	       login_text = "Logged in as <b>%s</b> (%s)" % (config.user, config.role)
-	       if config.debug:
-		  login_text += ", perms: %s" % (", ".join(config.user_permissions))
 	    else:
 	       login_text = "not logged in"
             self.req.write("<table class=footer><tr>"

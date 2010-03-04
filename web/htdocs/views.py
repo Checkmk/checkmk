@@ -214,24 +214,30 @@ def load_views():
 def available_views():
     user = html.req.user
     views = {}
-    # 1. user's own views
-    for (u, n), view in html.multisite_views.items():
-	if u == user:
-	    views[n] = view
 
-    # 2. views of admin users, if public
+    # 1. user's own views, if allowed to edit views
+    if config.may("edit_views"):
+	for (u, n), view in html.multisite_views.items():
+	    if u == user:
+		views[n] = view
+
+    # 2. views of special users allowed to globally override builtin views
     for (u, n), view in html.multisite_views.items():
 	if n not in views and view["public"] and config.user_may(u, "force_views"):
 	    views[n] = view
     
-    # 3. Builtin views, if allowed
+    # 3. Builtin views, if allowed.
     for (u, n), view in html.multisite_views.items():
         if u == '' and n not in views and config.may("view.%s" % n):
-            views[n] = view
+	    views[n] = view
 
-    # 4. other users views, if public
+    # 4. other users views, if public. Sill make sure we honor permission
+    #    for builtin views
     for (u, n), view in html.multisite_views.items():
 	if n not in views and view["public"] and config.user_may(u, "publish_views"):
+	    # Is there a builtin view with the same name? If yes, honor permissions.
+	    if (u, n) in html.multisite_views and not config.may("view.%s" % n):
+		continue
 	    views[n] = view
 
     return views

@@ -96,13 +96,8 @@ declare_permission("act",
 
 declare_permission("see_all",
      "See all Nagios objects",
-     "See all objects regardless of contacts and contact groups",
+     "See all objects regardless of contacts and contact groups. If combined with 'perform commands' then commands may be done on all objects.",
      [ "admin", "guest" ])
-
-declare_permission("act_all",
-     "Commands on all objects",
-     "Do all commands on all objects, regardless of contacts",
-     [ "admin" ])
 
 declare_permission("edit_views",
      "Edit views",
@@ -115,7 +110,7 @@ declare_permission("publish_views",
      [ "admin", "user" ])
 
 declare_permission("force_views",
-     "Override builtin views",
+     "Modify builtin views",
      "Make own published views override builtin views for all users",
      [ "admin" ])
 

@@ -720,14 +720,14 @@ table.permissions {
 }
 
 table.permissions td, table.permissions th {
-border: 1px solid white;
-padding: 3px 0.5ex;
-	 vertical-align: top;
+    border: 1px solid white;
+    padding: 3px 0.5ex;
+    vertical-align: top;
 }
 table.permissions th {
     text-align: left;
     background-color: #98a;
-color: white;
+    color: white;
 }
 
 table.permissions td i {
@@ -749,13 +749,8 @@ table.permissions td.legend.sub {
 }
 table.permissions td.content {
     text-align: center;
-width: 6ex;
-       vertical-align: middle;
-}
-table.permissions td.content input {
-    width: 50px;
-    height: 50px;
-	    font-size: 12pt;
+    width: 6ex;
+    vertical-align: middle;
 }
 
 table.permissions td.content.user {

@@ -27,11 +27,10 @@
 import config, htmllib, pprint, sidebar
 from lib import *
 
-def declare_external_permissions():
-#sidebar.declare_permissions()
-# views.declare_permissions()
-#r actions.declare_permissions()
-    pass
+
+# Still missing:
+# * Permissions for actions
+
 
 def page_view_permissions(h):
     global html
@@ -51,7 +50,6 @@ def page_edit_permissions(h):
     html = h
     if not config.may("edit_permissions"):
 	raise MKAuthException("You are not allowed to edit permissions.")
-    declare_external_permissions()
 
     html.header("Edit permissions")
 

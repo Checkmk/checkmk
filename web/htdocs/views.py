@@ -148,10 +148,20 @@ class Filter:
     def heading_info(self, infoname):
 	return None
 
+# Load all view plugins
 plugins_path = defaults.web_dir + "/plugins/views"
 for fn in os.listdir(plugins_path):
     if fn.endswith(".py"):
 	execfile(plugins_path + "/" + fn)
+
+# Declare permissions for builtin views
+config.declare_permission_section("view", "Builtin views")
+for name, view in multisite_builtin_views.items():
+    config.declare_permission("view.%s" % name,
+	    view["title"],
+	    "",
+	    config.roles)
+
 
 max_display_columns   = 12
 max_group_columns     = 4
@@ -214,12 +224,12 @@ def available_views():
 	if n not in views and view["public"] and config.user_may(u, "force_views"):
 	    views[n] = view
     
-    # 3. Builtin views
+    # 3. Builtin views, if allowed
     for (u, n), view in html.multisite_views.items():
-        if u == '' and n not in views:
+        if u == '' and n not in views and config.may("view.%s" % n):
             views[n] = view
 
-    # 4. other users views, if publi
+    # 4. other users views, if public
     for (u, n), view in html.multisite_views.items():
 	if n not in views and view["public"] and config.user_may(u, "publish_views"):
 	    views[n] = view
@@ -294,7 +304,7 @@ def page_edit_views(h, msg=None):
 	clone["title"] = orig["title"]
 	if cloneuser == html.req.user:
 	    clone["title"] += " (Copy)" # only if same user
-	if cloneuser != html.req.user: 
+	if cloneuser != html.req.user or not config.may("publish_views"): 
 	    clone["public"] = False
 	html.multisite_views[(html.req.user, newname)] = clone
 	save_views(html.req.user)
@@ -310,8 +320,10 @@ def page_edit_views(h, msg=None):
     keys_sorted.sort()
     first = True
     for (owner, viewname) in keys_sorted:
+	if owner == "" and not config.may("view.%s" % viewname):
+	    continue
 	view = html.multisite_views[(owner, viewname)]
-	if owner == html.req.user or view["public"]:
+	if owner == html.req.user or (view["public"] and (owner == "" or config.user_may(owner, "publish_views"))):
 	    if first:
 		html.write("<tr><th>Name</th><th>Title / Description</th><th>Owner</th><th>Public</th><th>linked</th><th>Datasource</th><th></th></tr>\n")
 		first = False
@@ -433,9 +445,10 @@ def page_edit_view(h):
     html.write("</td></tr>\n")
 
     html.write("<tr><td class=legend>Configuration</td><td class=content>")
-    html.checkbox("public")
-    html.write(" make this view available for all users")
-    html.write("<br />\n")
+    if config.may("publish_views"):
+	html.checkbox("public")
+	html.write(" make this view available for all users")
+	html.write("<br />\n")
     html.checkbox("hidden")
     html.write(" hide this view from the sidebar")
     html.write("<br />\n")
@@ -600,7 +613,7 @@ def create_view():
     datasource = multisite_datasources[datasourcename]
     tablename = datasource["table"]
     layoutname = html.var("layout")
-    public     = html.var("public", "") != ""
+    public     = html.var("public", "") != "" and config.may("publish_views")
     hidden     = html.var("hidden", "") != ""
     mustsearch = html.var("mustsearch", "") != ""
     column_headers = html.var("column_headers")

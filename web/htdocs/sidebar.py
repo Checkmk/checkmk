@@ -94,11 +94,7 @@ def load_user_config():
 	    user_config.append((name, "off"))
 
     # Remove entries the user is not allowed for
-    allowed = [ entry for entry in user_config if config.may("sidesnap." + entry[0])]
-    if allowed == [] and config.debug:
-	html.message("Komisch: keine Snapins erlaubt, user_config ist <pre>%s</pre>, saved_user_config ist <pre>%s</pre>, permissions ist <pre>%s</pre>" %
-		(pprint.pformat(user_config), pprint.pformat(saved_user_config), pprint.pformat(config.user_permissions)))
-    return allowed
+    return [ entry for entry in user_config if config.may("sidesnap." + entry[0])]
 
 def save_user_config(user_config):
     path = config.user_confdir + "/sidebar.mk"

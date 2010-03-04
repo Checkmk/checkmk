@@ -192,7 +192,9 @@ def may(permname):
     # handle case where declare_permission is done after login
     # and permname also not contained in save configuration
     if permname not in permissions:
-	perm = permissions_by_name[permname]
+	perm = permissions_by_name.get(permname)
+	if not perm: # Object does not exists, e.g. sidesnap.multisite if not is_multisite()
+	    return False
 	if role in perm["defaults"]:
 	    user_permissions.add(permname)
 
@@ -200,7 +202,12 @@ def may(permname):
 
 def user_may(u, permname):
     role = role_of_user(u)
-    roles = permissions.get(permname, permissions_by_name[permname]["defaults"])
+    roles = permissions.get(permname)
+    if roles == None:
+	perm = permissions_by_name.get(permname)
+	if not perm:
+	    return False # permission target does not exist
+        roles = perm["defaults"]
     return role in roles 
 
 def load_permissions():

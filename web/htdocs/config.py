@@ -89,11 +89,6 @@ declare_permission("edit_permissions",
      "Configure, which user role has which permissions",
      [ "admin" ])
 
-declare_permission("act",
-     "Perform commands",
-     "Allows users to perform Nagios commands. If now futher permissions are granted, actions can only be done one objects one is a contact for",
-     [ "admin", "user" ])
-
 declare_permission("see_all",
      "See all Nagios objects",
      "See all objects regardless of contacts and contact groups. If combined with 'perform commands' then commands may be done on all objects.",
@@ -118,6 +113,12 @@ declare_permission("see_sidebar",
      "Use Check_MK sidebar",
      "Without this permission the Check_MK sidebar will be invisible",
      [ "admin", "user", "guest" ])
+
+declare_permission("act",
+     "Perform commands",
+     "Allows users to perform Nagios commands. If now futher permissions are granted, actions can only be done one objects one is a contact for",
+     [ "admin", "user" ])
+
 
 
 

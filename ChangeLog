@@ -71,6 +71,9 @@
 	your Apache-configuration accordingly, but this might fail on
 	rare occasions). Default root is now /usr/share/check_mk/web/htdocs
 
+      Multisite:
+      * Replaced Multiadmin by Multisite.
+
 
 1.1.2:
       Summary:

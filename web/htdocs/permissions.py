@@ -35,7 +35,6 @@ from lib import *
 def page_view_permissions(h):
     global html
     html = h
-    declare_external_permissions()
     html.header("My permissions")
     html.write("<p>You have the following permissions:</p>")
     html.write("<table class=permissions>\n")

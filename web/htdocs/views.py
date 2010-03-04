@@ -28,6 +28,31 @@ import config, defaults, livestatus, htmllib, time, os, re, pprint, time
 from lib import *
 from pagefunctions import *
 
+config.declare_permission_section("action", "Commands on Objects")
+config.declare_permission("action.notifications", 
+	"Enable/disable notifications",
+	"Enable and disable notifications on hosts and services",
+	[ "admin" ])
+config.declare_permission("action.enablechecks", 
+	"Enable/disable checks",
+	"Enable and disable active or passive checks on hosts and services",
+	[ "admin" ])
+config.declare_permission("action.reschedule", 
+	"Reschedule checks",
+	"Reschedule host and service checks",
+	[ "user", "admin" ])
+config.declare_permission("action.fakechecks", 
+	"Fake check results",
+	"Manually submit check results for host and service checks",
+	[ "admin" ])
+config.declare_permission("action.acknowledge", 
+	"Acknowledge",
+	"Acknowledge host and service problems and remove acknowledgements",
+	[ "user", "admin" ])
+config.declare_permission("action.downtimes", 
+	"Set/Remove Downtimes",
+	"Schedule and remove downtimes on hosts and services",
+	[ "user", "admin" ])
 
 # Datastructures and functions needed before plugins can be loaded
 
@@ -969,59 +994,67 @@ def show_action_form(is_open, datasource):
 
     html.write("<table %s id=actions class=form id=actions>\n" % (is_open and " " or 'style="display: none"'))
 
-    html.write("<tr><td class=legend>Notifications</td>\n"
-               "<td class=content>\n"
-               "<input type=submit name=_enable_notifications value=\"Enable\"> &nbsp; "
-               "<input type=submit name=_disable_notifications value=\"Disable\"> &nbsp; "
-               "</td></tr>\n")
+    if config.may("action.notifications"):
+	html.write("<tr><td class=legend>Notifications</td>\n"
+		   "<td class=content>\n"
+		   "<input type=submit name=_enable_notifications value=\"Enable\"> &nbsp; "
+		   "<input type=submit name=_disable_notifications value=\"Disable\"> &nbsp; "
+		   "</td></tr>\n")
 
-    html.write("<tr><td class=legend>Active checks</td>\n"
-               "<td class=content>\n"
-               "<input type=submit name=_enable_checks value=\"Enable\"> &nbsp; "
-               "<input type=submit name=_disable_checks value=\"Disable\"> &nbsp; "
-               "<input type=submit name=_resched_checks value=\"Reschedule next check now\"></td></tr>\n"
-               "</td></tr>\n")
+    if config.may("action.enablechecks") or config.may("action.reschedule"):
+	html.write("<tr><td class=legend>Active checks</td>\n"
+		   "<td class=content>\n")
+	if config.may("action.enablechecks"):
+	    html.write("<input type=submit name=_enable_checks value=\"Enable\"> &nbsp; "
+		   "<input type=submit name=_disable_checks value=\"Disable\"> &nbsp; ")
+	if config.may("action.reschedule"):
+	    html.write("<input type=submit name=_resched_checks value=\"Reschedule next check now\"></td></tr>\n"
+		   "</td></tr>\n")
 
-    if "service" in datasource["infos"]:
-	states = ["Ok", "Warning", "Critical", "Unknown"]
-    elif "host" in datasource["infos"]:
-	states = ["Up", "Down", "Unreachable"]
-    else:
-	states = None
-    if states:
-	html.write("<tr><td class=legend>Fake check results</td><td class=content>\n")
-	for state in states:
-	    html.button("_fake", state)
-	    html.write(" ")
-	html.write("</td></tr>\n") 
+    if config.may("action.fakechecks"):
+	if "service" in datasource["infos"]:
+	    states = ["Ok", "Warning", "Critical", "Unknown"]
+	elif "host" in datasource["infos"]:
+	    states = ["Up", "Down", "Unreachable"]
+	else:
+	    states = None
+	if states:
+	    html.write("<tr><td class=legend>Fake check results</td><td class=content>\n")
+	    for state in states:
+		html.button("_fake", state)
+		html.write(" ")
+	    html.write("</td></tr>\n") 
 
-    html.write("<tr><td rowspan=2 class=legend>Acknowledge</td>\n")
-    html.write("<td class=content><input type=submit name=_acknowledge value=\"Acknowledge\"> &nbsp; "
-               "<input type=submit name=_remove_ack value=\"Remove Acknowledgement\"></td></tr><tr>"
-               "<td class=content><div class=textinputlegend>Comment:</div>")
-    html.text_input("_comment")
-    html.write("</td></tr>\n")
+    if config.may("action.acknowledge"):
+	html.write("<tr><td rowspan=2 class=legend>Acknowledge</td>\n")
+	html.write("<td class=content><input type=submit name=_acknowledge value=\"Acknowledge\"> &nbsp; "
+		   "<input type=submit name=_remove_ack value=\"Remove Acknowledgement\"></td></tr><tr>"
+		   "<td class=content><div class=textinputlegend>Comment:</div>")
+	html.text_input("_comment")
+	html.write("</td></tr>\n")
 
-    html.write("<tr><td class=legend rowspan=3>Schedule Downtimes</td>\n"
-               "<td class=content>\n"
-               "<input type=submit name=_down_2h value=\"2 hours\"> "
-               "<input type=submit name=_down_today value=\"Today\"> "
-               "<input type=submit name=_down_week value=\"This week\"> "
-               "<input type=submit name=_down_month value=\"This month\"> "
-               "<input type=submit name=_down_year value=\"This year\"> "
-               " &nbsp; - &nbsp;"
-               "<input type=submit name=_down_remove value=\"Remove all\"> "
-               "</tr><tr>"
-               "<td class=content>"
-               "<input type=submit name=_down_custom value=\"Custom time range\"> &nbsp; ")
-    html.datetime_input("_down_from", time.time())
-    html.write("&nbsp; to &nbsp;")
-    html.datetime_input("_down_to", time.time() + 7200)
-    html.write("</td></tr>")
-    html.write("<tr><td class=content><div class=textinputlegend>Comment:</div>\n")
-    html.text_input("_down_comment")
-    html.write("</td></tr>")
+    if config.may("action.downtimes"):
+	html.write("<tr><td class=legend rowspan=3>Schedule Downtimes</td>\n"
+		   "<td class=content>\n"
+		   "<input type=submit name=_down_2h value=\"2 hours\"> "
+		   "<input type=submit name=_down_today value=\"Today\"> "
+		   "<input type=submit name=_down_week value=\"This week\"> "
+		   "<input type=submit name=_down_month value=\"This month\"> "
+		   "<input type=submit name=_down_year value=\"This year\"> "
+		   " &nbsp; - &nbsp;"
+		   "<input type=submit name=_down_remove value=\"Remove all\"> "
+		   "</tr><tr>"
+		   "<td class=content>"
+		   "<input type=submit name=_down_custom value=\"Custom time range\"> &nbsp; ")
+	html.datetime_input("_down_from", time.time())
+	html.write("&nbsp; to &nbsp;")
+	html.datetime_input("_down_to", time.time() + 7200)
+	html.write("</td></tr>")
+	html.write("<tr><td class=content><div class=textinputlegend>Comment:</div>\n")
+	html.text_input("_down_comment")
+	html.write("</td></tr>")
     html.write("</table></form>\n")
+
 
 def nagios_action_command(tablename, dataset):
     host = dataset["host_name"]
@@ -1039,27 +1072,27 @@ def nagios_action_command(tablename, dataset):
     else:
 	raise MKInternalError("Sorry, no actions possible on table %s" % tablename)
 
-    if html.var("_enable_notifications"):
+    if html.var("_enable_notifications") and config.may("action.notifications"):
         command = "ENABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec
         title = "<b>enable notifications</b> for"
 
-    elif html.var("_disable_notifications"):
+    elif html.var("_disable_notifications") and config.may("action.notifications"):
         command = "DISABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec
         title = "<b>disable notifications</b> for"
 
-    elif html.var("_enable_checks"):
+    elif html.var("_enable_checks") and config.may("action.enablechecks"):
         command = "ENABLE_" + cmdtag + "_CHECK;%s" % spec 
         title = "<b>enable active checks</b> of"
 
-    elif html.var("_disable_checks"):
+    elif html.var("_disable_checks") and config.may("action.enablechecks"):
         command = "DISABLE_" + cmdtag + "_CHECK;%s" % spec
         title = "<b>disable active checks</b> of"
 
-    elif html.var("_resched_checks"):
+    elif html.var("_resched_checks") and config.may("action.reschedule"):
         command = "SCHEDULE_FORCED_" + cmdtag + "_CHECK;%s;%d" % (spec, int(time.time()))
         title = "<b>reschedule an immediate check</b> of"
 
-    elif html.var("_fake"):
+    elif html.var("_fake") and config.may("action.fakechecks"):
 	statename = html.var("_fake")
 	pluginoutput =  "Manually set to %s by %s" % (statename, html.req.user)
 	svcstate = {"Ok":0, "Warning":1, "Critical":2, "Unknown":3}.get(statename)
@@ -1071,7 +1104,7 @@ def nagios_action_command(tablename, dataset):
 		command = "PROCESS_HOST_CHECK_RESULT;%s;%s;%s" % (spec, hoststate, pluginoutput)
 	title = "<b>manually set check results to %s</b> for" % statename
 
-    elif html.var("_acknowledge"):
+    elif html.var("_acknowledge") and config.may("action.acknowledge"):
         comment = html.var("_comment")
         if not comment:
             raise MKUserError("_comment", "You need to supply a comment.")
@@ -1079,20 +1112,20 @@ def nagios_action_command(tablename, dataset):
                   (spec, html.req.user) + ";" + html.var("_comment")
         title = "<b>acknowledge the problems</b> of"
 
-    elif html.var("_remove_ack"):
+    elif html.var("_remove_ack") and config.may("action.acknowledge"):
         command = "REMOVE_" + cmdtag + "_ACKNOWLEDGEMENT;%s" % spec
         title = "<b>remove acknowledgements</b> from"
 
-    elif html.var("_down_2h"):
+    elif html.var("_down_2h") and config.may("action.downtimes"):
         down_to = down_from + 7200
         title = "<b>schedule an immediate 2-hour downtime</b> on"
 
-    elif html.var("_down_today"):
+    elif html.var("_down_today") and config.may("action.downtimes"):
         br = time.localtime(down_from)
         down_to = time.mktime((br.tm_year, br.tm_mon, br.tm_mday, 23, 59, 59, 0, 0, br.tm_isdst)) + 1
         title = "<b>schedule an immediate downtime until 24:00:00</b> on"
 
-    elif html.var("_down_week"):
+    elif html.var("_down_week") and config.may("action.downtimes"):
         br = time.localtime(down_from)
         wday = br.tm_wday
         days_plus = 6 - wday
@@ -1100,7 +1133,7 @@ def nagios_action_command(tablename, dataset):
         down_to += days_plus * 24 * 3600
         title = "<b>schedule an immediate downtime until sunday night</b> on"
 
-    elif html.var("_down_month"):
+    elif html.var("_down_month") and config.may("action.downtimes"):
         br = time.localtime(down_from)
         new_month = br.tm_mon + 1
         if new_month == 13:
@@ -1111,19 +1144,19 @@ def nagios_action_command(tablename, dataset):
         down_to = time.mktime((new_year, new_month, 1, 0, 0, 0, 0, 0, br.tm_isdst)) 
         title = "<b>schedule an immediate downtime until end of month</b> on"
 
-    elif html.var("_down_year"):
+    elif html.var("_down_year") and config.may("action.downtimes"):
         br = time.localtime(down_from)
         down_to = time.mktime((br.tm_year, 12, 31, 23, 59, 59, 0, 0, br.tm_isdst)) + 1
         title = "<b>schedule an immediate downtime until end of %d</b> on" % br.tm_year
 
-    elif html.var("_down_custom"):
+    elif html.var("_down_custom") and config.may("action.downtimes"):
         down_from = html.get_datetime_input("down_from")
         down_to   = html.get_datetime_input("down_to")
         title = "<b>schedule a downtime from %s to %s</b> on " % (
             time.asctime(time.localtime(down_from)),
             time.asctime(time.localtime(down_to)))
 
-    elif html.var("_down_remove"):
+    elif html.var("_down_remove") and config.may("action.downtimes"):
         downtime_ids = []
 	for id in dataset[prefix + "downtimes"]:
 	   if id != "":

@@ -25,33 +25,16 @@
 # Boston, MA 02110-1301 USA.
 
 from mod_python import apache,util
-import htmllib, livestatus, os, pprint, config
+import os, pprint, livestatus
 from lib import *
+import config, htmllib
 
-def load_config(req):
-    # read in check_mk's defaults file. That contains all
-    # installation settings (paths, etc.)
+# Module containing the actual pages. They must be imported after config.
+import page_logwatch
+import views
+import sidebar
+import permissions
 
-    # First read installation settings (written during setup.sh)
-    defaults = {}
-    try:
-        # The "options" are set in the Apache configuration
-        # with the directive "PythonOption"
-        defaults_path = req.get_options().get(
-            "defaults_path", "/usr/share/check_mk/modules/defaults")
-        for line in file(defaults_path):
-            try:
-                var, value = line.split('=', 1)
-                defaults[var.strip()] = eval(value)
-            except:
-                pass
-
-    except Exception, e:
-        raise MKConfigError("Cannot read %s: %s" % (defaults_path, e))
-
-    # Store installation settings in config module
-    config.set_defaults(defaults)
-    config.load_config()
 
 def read_get_vars(req):
     req.vars = {}
@@ -144,7 +127,7 @@ def handler(req):
     # name of the page.
     req.myfile = req.uri.split("/")[-1][:-3]
 
-    # Create object that contains all data about the request and
+    # Create an object that contains all data about the request and
     # helper functions for creating valid HTML. Parse URI and
     # store results in the request object for later usage.
     html = htmllib.html(req)
@@ -152,10 +135,9 @@ def handler(req):
 
     try:
         read_get_vars(req)
-        load_config(req)
+        config.load_config() # load multisite.mk
 	if html.var("debug"): # Debug flag may be set via URL
 	    config.debug = True
-        from lib import * # declarations of exceptions
 
 	if not req.user or type(req.user) != str:
 	    raise MKConfigError("You are not logged in. This should never happen. Please "
@@ -173,12 +155,6 @@ def handler(req):
 
         # General access allowed. Now connect to livestatus
 	connect_to_livestatus(html)
-
-        # Module containing the actual pages
-	import page_logwatch
-	import views
-	import sidebar
-	import permissions
 
 	pagehandlers = { "index"               : page_index,
 			 "edit_views"          : views.page_edit_views,

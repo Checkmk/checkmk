@@ -28,9 +28,10 @@ import config, htmllib, pprint, sidebar
 from lib import *
 
 def declare_external_permissions():
-    sidebar.declare_permissions()
+#sidebar.declare_permissions()
 # views.declare_permissions()
-# actions.declare_permissions()
+#r actions.declare_permissions()
+    pass
 
 def page_view_permissions(h):
     global html
@@ -72,12 +73,28 @@ def page_edit_permissions(h):
 	html.write("<th>%s</th>" % role)
     html.write("</tr>\n")
 
+    current_section = None
     for perm in config.permissions_by_order:
-	html.write("<tr><td class=legend><b>%s</b><br><i>%s</i></td>" % (perm["title"], perm["description"]))
+        pname = perm["name"]
+	if "." in pname:
+	    section = pname.split(".")[0]
+	    section_title = config.permission_sections[section]
+	    if section != current_section:
+		current_section = section
+		html.write("<tr><td class=legend colspan=%d><b>%s</b></td></tr>\n" % (len(config.roles) + 1, section_title))
+	
+	if current_section == None:
+	    title = "<b>%s</b><br><i>%s</i>" % (perm["title"], perm["description"])
+	    classes="legend"
+	else:
+	    title = perm["title"]
+	    classes="legend sub"
+
+	html.write("<tr><td class=\"%s\">%s</td>" % (classes, title))
 	for role in config.roles:
-	    current = role in config.permissions[perm["name"]]
+	    current = role in config.permissions.get(pname, perm["defaults"])
 	    html.write("<td class=\"content %s\">" % role)
-	    html.checkbox("p_%s_%s" % (role, perm["name"]), current)
+	    html.checkbox("p_%s_%s" % (role, pname), current)
 	    html.write("</td>")
 	html.write("</tr>\n")
 

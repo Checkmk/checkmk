@@ -30,10 +30,10 @@
 # | Lars Michelsen <lm@mathias-kettner.de>            Copyright 2010 |
 # +------------------------------------------------------------------+
 
-import views
+import views, defaults
 
 def render_searchform():
-    html.write('<script type="text/javascript" src="%s/search.js"></script>' % config.defaults["checkmk_web_uri"])
+    html.write('<script type="text/javascript" src="%s/search.js"></script>' % defaults.checkmk_web_uri)
     html.write('<div id="mk_side_search">')
     html.write('<input id="mk_side_search_field" type="text" name="search" />')
     html.write('</div>')
@@ -43,7 +43,7 @@ def render_searchform():
     data = html.live.query("GET hosts\nColumns: name alias\n")
     html.write('var aSearchHosts = %s;' % data)
 
-    html.write('mkSearchAddField("mk_side_search_field", "main", "%s");</script>' % config.defaults["checkmk_web_uri"])
+    html.write('mkSearchAddField("mk_side_search_field", "main", "%s");</script>' % defaults.checkmk_web_uri)
 
 sidebar_snapins["search"] = {
     "title" : "Quicksearch",

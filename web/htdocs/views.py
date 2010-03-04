@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, livestatus, htmllib, time, os, re, pprint, time
+import config, defaults, livestatus, htmllib, time, os, re, pprint, time
 from lib import *
 from pagefunctions import *
 
@@ -148,7 +148,7 @@ class Filter:
     def heading_info(self, infoname):
 	return None
 
-plugins_path = config.defaults["web_dir"] + "/plugins/views"
+plugins_path = defaults.web_dir + "/plugins/views"
 for fn in os.listdir(plugins_path):
     if fn.endswith(".py"):
 	execfile(plugins_path + "/" + fn)

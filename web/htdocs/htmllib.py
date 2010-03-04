@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import time, cgi, config, os
+import time, cgi, config, os, defaults
 
 # Information about uri
 class InvalidUserInput(Exception):
@@ -346,7 +346,7 @@ class html:
                            "<td class=left>&copy; <a href=\"http://mathias-kettner.de\">Mathias Kettner</a></td>"
                            "<td class=middle>This is part of <a href=\"http://mathias-kettner.de/check_mk\">Check_MK</a> version %s</td>"
                            "<td class=right>%s</td></tr></table>"
-                           % (config.defaults["check_mk_version"], login_text))
+                           % (defaults.check_mk_version, login_text))
             self.req.write("</body></html>\n")
 
 
@@ -370,7 +370,7 @@ class html:
 	
     # Get next transaction id for that user
     def current_transid(self, username):
-	dir = config.defaults["var_dir"] + "/web/" + username
+	dir = defaults.var_dir + "/web/" + username
 	try:
 	    os.makedirs(dir)
         except:
@@ -384,7 +384,7 @@ class html:
 
     def increase_transid(self, username):
 	current = self.current_transid(username)
-	path = config.defaults["var_dir"] + "/web/" + username + "/transid.mk"
+	path = defaults.var_dir + "/web/" + username + "/transid.mk"
 	file(path, "w").write("%d\n" % (current + 1))
 
     # Checks wether the current page is a reload or an original real submit

@@ -738,6 +738,15 @@ table.permissions td.legend {
     background-color: #769;
     color: white;
 }
+table.permissions td.legend.sub {
+    border-top-style: none;
+    border-bottom-style: none;
+    background-color: #87a;
+    padding-left: 1em;
+    font-size: 9pt;
+    padding-top: 2px;
+    padding-bottom: 0px;
+}
 table.permissions td.content {
     text-align: center;
 width: 6ex;

@@ -26,15 +26,13 @@
 
 import os, pprint
 from lib import *
+import defaults
 
-def set_defaults(d):
-    global defaults
-    defaults = d
-    global config_dir
-    config_dir = defaults["var_dir"] + "/web"
+# Base directory of dynamic configuration
+config_dir = defaults.var_dir + "/web"
 
 def load_config():
-    filename = defaults["default_config_dir"] + "/multisite.mk"
+    filename = defaults.default_config_dir + "/multisite.mk"
 
     # Config file is obligatory. An empty example is installed
     # during setup.sh. Better signal an error then simply ignore
@@ -71,11 +69,15 @@ guest_users = []
 # permissions
 permissions_by_name = {}
 permissions_by_order = []
+permission_sections = {}
 
 def declare_permission(name, title, description, defaults):
     perm = { "name" : name, "title" : title, "description" : description, "defaults" : defaults }
     permissions_by_name[name] = perm
     permissions_by_order.append(perm)
+
+def declare_permission_section(name, title):
+    permission_sections[name] = title
 
 declare_permission("use",
      "Use Multisite at all",
@@ -187,6 +189,13 @@ def role_of_user(u):
         return "user"
 
 def may(permname):
+    # handle case where declare_permission is done after login
+    # and permname also not contained in save configuration
+    if permname not in permissions:
+	perm = permissions_by_name[permname]
+	if role in perm["defaults"]:
+	    user_permissions.add(permname)
+
     return permname in user_permissions
 
 def user_may(u, permname):
@@ -228,13 +237,13 @@ def site(name):
     if "alias" not in s:
         s["alias"] = name
     if "socket" not in s:
-        s["socket"] = "unix:" + defaults["livestatus_unix_socket"]
+        s["socket"] = "unix:" + defaults.livestatus_unix_socket
     if "nagios_url" not in s:
-        s["nagios_url"] = defaults["nagios_url"]
+        s["nagios_url"] = defaults.nagios_url
     if "nagios_cgi_url" not in s:
-        s["nagios_cgi_url"] = defaults["nagios_cgi_url"]
+        s["nagios_cgi_url"] = defaults.nagios_cgi_url
     if "pnp_prefix" not in s:
-        s["pnp_prefix"] = defaults["pnp_prefix"]
+        s["pnp_prefix"] = defaults.pnp_prefix
     return s
 
 def site_is_local(name):

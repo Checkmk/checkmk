@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import views, time
+import views, time, defaults
 
 # --------------------------------------------------------------
 #       _    _                 _   
@@ -35,7 +35,7 @@ import views, time
 #                                  
 # --------------------------------------------------------------
 def render_about():
-    html.write("Version: " + config.defaults["check_mk_version"])
+    html.write("Version: " + defaults.check_mk_version)
     bulletlink("Homepage",        "http://mathias-kettner.de/check_mk.html")
     bulletlink("Documentation",   "http://mathias-kettner.de/checkmk.html")
     bulletlink("Download",        "http://mathias-kettner.de/check_mk_download.html")
@@ -196,7 +196,7 @@ def render_sitestatus():
 		text = link(site["alias"], "view.py?view_name=sitehosts&site=%s" % sitename)
 
 	    html.write("<tr><td class=left>%s</td>" % text)
-	    onclick = "switch_site('%s', '_site_switch=%s:%s')" % (config.defaults["checkmk_web_uri"], sitename, switch)
+	    onclick = "switch_site('%s', '_site_switch=%s:%s')" % (defaults.checkmk_web_uri, sitename, switch)
 	    html.write("<td class=\"state %s\">" % state)
 	    html.write("<a href=\"\" onclick=\"%s\">%s</a></td>" % (onclick, state[:3]))
 	    html.write("</tr>\n")
@@ -389,7 +389,7 @@ div.time {
 # --------------------------------------------------------------
 def render_nagios():
     bulletlink("Home", "http://www.nagios.org")
-    bulletlink("Documentation", "%s/doc" % config.defaults["nagios_url"])
+    bulletlink("Documentation", "%s/doc" % defaults.nagios_url)
     for entry in [
 	"General",
         ("tac.cgi", "Tactical Overview"),
@@ -471,7 +471,7 @@ def render_master_control():
 	    html.write("</tr>\n")
 	for i, (colname, title) in enumerate(items):
 	    colvalue = siteline[i + 1]
-	    url = config.defaults["checkmk_web_uri"] + ("/switch_master_state.py?site=%s&switch=%s&state=%d" % (siteid, colname, 1 - colvalue))
+	    url = defaults.checkmk_web_uri + ("/switch_master_state.py?site=%s&switch=%s&state=%d" % (siteid, colname, 1 - colvalue))
 	    onclick = "get_url('%s')" % url
 	    enabled = colvalue and "enabled" or "disabled"
 	    html.write("<tr><td class=left>%s</td><td class=%s><a onclick=\"%s\" href=\"\">%s</a></td></tr>\n" % (title, enabled, onclick, enabled))
@@ -582,7 +582,7 @@ def render_bookmarks():
 	html.write("<br>")
 	n += 1
 
-    onclick = "add_bookmark('%s')" % config.defaults["checkmk_web_uri"]
+    onclick = "add_bookmark('%s')" % defaults.checkmk_web_uri
     html.write("<div class=footnotelink><a href=\"\" onclick=\"%s\">Add Bookmark</a></div>\n" % onclick)
 
 def page_edit_bookmark(h):

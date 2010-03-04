@@ -37,11 +37,20 @@ def page_view_permissions(h):
     html = h
     html.header("My permissions")
     html.write("<p>You have the following permissions:</p>")
-    html.write("<table class=permissions>\n")
+    html.write("<h2>General permissions</h2>\n<ul>")
+    current_section = None
     for perm in config.permissions_by_order:
-	if config.may(perm["name"]):
-	    html.write("<tr><td>%s</td></tr>\n" % perm["title"])
-    html.write("</table>\n")
+        pname = perm["name"]
+	if config.may(pname):
+	    if "." in pname:
+		section = pname.split(".")[0]
+		section_title = config.permission_sections[section]
+		if section != current_section:
+		    current_section = section
+		    html.write("</ul>\n<h2>%s</h2><ul>\n" % section_title)
+	    
+	    html.write("<li>%s</li>\n" % perm["title"])
+    html.write("</ul>\n")
     html.footer()
 
 def page_edit_permissions(h):

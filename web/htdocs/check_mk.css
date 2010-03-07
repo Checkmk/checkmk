@@ -297,7 +297,9 @@ td.host a:hover {
  |_|   \__,_|_|_| |_|\__\___|_|  |___/
 
 */                                    
-
+table.services img {
+    border-style: none;
+}
 table.services td.age { 
   text-align: right;
   color: #666;
@@ -363,6 +365,14 @@ td.state3, td.hstate2 {
 td.statep, td.hstatep { 
   background-color: #888;
   color: #fff;
+}
+
+td.icons {
+    white-space: nowrap;
+}
+td.icons img {
+ height: 20px;
+ margin-right: 3px;
 }
 
 /*

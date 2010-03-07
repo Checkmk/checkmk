@@ -25,6 +25,96 @@
 # Boston, MA 02110-1301 USA.
 
 
+#    ___                    
+#   |_ _|___ ___  _ __  ___ 
+#    | |/ __/ _ \| '_ \/ __|
+#    | | (_| (_) | | | \__ \
+#   |___\___\___/|_| |_|___/
+#                           
+
+icon_painters = []
+
+def iconpaint_actionurl(values):
+    if values[0]:
+	return "<a href=\"%s\"><img class=icon src=\"images/icon_action.gif\"></a>" % values[0]
+
+def iconpaint_notesurl(values):
+    if values[0]:
+	return "<a href=\"%s\"><img class=icon src=\"images/icon_notes.gif\"></a>" % values[0]
+
+def iconpaint_flag(values, icon):
+    if values[0] > 0:
+	return "<img class=icon src=\"images/icon_%s.gif\">" % icon
+
+def iconpaint_disabled(values, icon):
+    if values[0] == 0 and values[1] == 0:
+	return "<img class=icon src=\"images/icon_disabled.gif\">"
+
+def iconpaint_comments(values):
+    if values[0] != []:
+	return "<img class=icon src=\"images/icon_comment.gif\">"
+
+def iconpaint_check_mk(values):
+    if values[0].startswith("check_mk"):
+	return "<img class=icon src=\"images/icon_checkmkg.gif\">"
+
+def iconpaint_pnp(values):
+    return pnp_link(values)
+
+
+icon_painters.append(("service", ["service_check_command"], iconpaint_check_mk))
+icon_painters.append(("", ["comments"], iconpaint_comments))
+icon_painters.append(("", ["acknowledged"], lambda values: iconpaint_flag(values, "ack")))
+icon_painters.append(("", ["notifications_enabled"], lambda values: iconpaint_flag([1 - values[0]], "ndisabled")))
+icon_painters.append(("", ["active_checks_enabled", "accepts_passive_checks"], iconpaint_disabled))
+icon_painters.append(("", ["scheduled_downtime_depth"], lambda values: iconpaint_flag(values, "downtime")))
+icon_painters.append(("", ["action_url_expanded"], iconpaint_actionurl))
+icon_painters.append(("", ["notes_url_expanded"], iconpaint_notesurl))
+icon_painters.append(("", ["is_flapping"], lambda values: iconpaint_flag(values, "flapping")))
+icon_painters.append(("", ["is_executing"], lambda values: iconpaint_flag(values, "executing")))
+# Experimental: automatic link to PNP. Problem: autodetection not 100%, non-PNP-users will get icons
+# for remote sites with performance data.
+# icon_painters.append(("service", ["site", "host_name", "service_description", "service_perf_data"], iconpaint_pnp))
+
+def paint_icons(what, row): # what is "host" or "service"
+    output = ""
+    for w, columns, paint in icon_painters:
+	if w == what: # icon painter especially for "what"
+	    prefix = ""
+	elif w == "":
+	    prefix = what + "_" # universal icon painter
+	else:
+	    continue
+	values = []
+	for col in columns:
+	    pcol = prefix + col
+	    if pcol not in row:
+		values = None # missing information
+		break
+	    values.append(row[pcol])
+	if values:
+	    h = paint(values)
+	    if h:
+		output += paint(values)
+    return "icons", output
+		
+
+multisite_painters["service_icons"] = {
+    "title" : "Service icons",
+    "short" : "Icons",
+    "columns" : [ "service_description" ], # icons are painted as information is available
+    "paint" : lambda row: paint_icons("service", row)
+}
+
+multisite_painters["host_icons"] = {
+    "title" : "Host icons",
+    "short" : "Icons",
+    "columns" : [ "host_name" ], # icons are painted as information is available
+    "paint" : lambda row: paint_icons("host", row)
+}
+
+# -----------------------------------------------------------------------
+
 def nagios_host_url(sitename, host):
     nagurl = config.site(sitename)["nagios_cgi_url"]
     return nagurl + "/status.cgi?host=" + htmllib.urlencode(host)
@@ -427,27 +517,33 @@ multisite_painters["sg_alias"] = {
 def paint_pnp_service_link(row):
     # On our local site, we look for an existing XML file or PNP.
     sitename = row["site"]
-    site = html.site_status[sitename]["site"]
     host = row["host_name"]
     svc = row["service_description"]
+    perf = row["service_perf_data"]
+    h = pnp_link([sitename, host, svc, perf])
+    return "", h
+
+def pnp_link(values):
+    sitename, host, svc, perf = values
+    site = html.site_status[sitename]["site"]
     url = site["pnp_prefix"] + ("?host=%s&srv=%s" % (htmllib.urlencode(host), htmllib.urlencode(svc)))
-    a = "<a href=\"%s\">PNP</a>" % url
+    a = "<a href=\"%s\"><img class=icon src=\"images/icon_pnp.gif\"></a>" % url
 
     if config.site_is_local(sitename):
 	# Where is our RRD?
-	basedir = config.defaults["rrd_path"] + "/" + host
+	basedir = defaults.rrd_path + "/" + host
 	xmlpath = basedir + "/" + svc.replace("/", "_").replace(" ", "_") + ".xml"
 	if os.path.exists(xmlpath):
-	    return "", a
+	    return a
 	else:
-	    return "", ""
+	    return ""
     
     # Darn. Remote site. We cannot check for a file but rather use
     # (Lars' idea) the perfdata field
-    elif row["service_perf_data"]:
-	return "", a
+    elif perf:
+	return  a
     else:
-	return "", ""
+	return ""
         
 
 multisite_painters["link_to_pnp_service"] = {
@@ -457,56 +553,4 @@ multisite_painters["link_to_pnp_service"] = {
     "paint"   : paint_pnp_service_link,
 }
 
-
-# ICONS
-
-icon_painters = []
-
-def iconpaint_actionurl(values):
-    if values[0]:
-	return "<a href=\"%s\"><img class=icon src=\"images/icon_action.gif\"></a>" % values[0]
-
-def iconpaint_notesurl(values):
-    if values[0]:
-	return "<a href=\"%s\"><img class=icon src=\"images/icon_notes.gif\"></a>" % values[0]
-
-icon_painters.append(("", ["notes_url_expanded"], iconpaint_notesurl))
-icon_painters.append(("", ["action_url_expanded"], iconpaint_actionurl))
-
-def paint_icons(what, row): # what is "host" or "service"
-    output = []
-    for w, columns, paint in icon_painters:
-	if w == what: # icon painter especially for "what"
-	    prefix = ""
-	elif w == "":
-	    prefix = what + "_" # universal icon painter
-	else:
-	    continue
-	values = []
-	for col in columns:
-	    pcol = prefix + col
-	    if pcol not in row:
-		values = None # missing information
-		break
-	    values.append(row[pcol])
-	if values:
-	    h = paint(values)
-	    if h:
-		output.append(paint(values))
-    return "icons", (" ".join(output))
-		
-
-multisite_painters["service_icons"] = {
-    "title" : "Service icons",
-    "short" : "Icons",
-    "columns" : [ "service_description" ], # icons are painted as information is available
-    "paint" : lambda row: paint_icons("service", row)
-}
-
-multisite_painters["host_icons"] = {
-    "title" : "Host icons",
-    "short" : "Icons",
-    "columns" : [ "host_name" ], # icons are painted as information is available
-    "paint" : lambda row: paint_icons("host", row)
-}
 

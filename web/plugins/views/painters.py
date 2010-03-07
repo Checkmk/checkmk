@@ -25,9 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 
-##################################################################################
-# Painters
-##################################################################################
 def nagios_host_url(sitename, host):
     nagurl = config.site(sitename)["nagios_cgi_url"]
     return nagurl + "/status.cgi?host=" + htmllib.urlencode(host)
@@ -460,4 +457,56 @@ multisite_painters["link_to_pnp_service"] = {
     "paint"   : paint_pnp_service_link,
 }
 
+
+# ICONS
+
+icon_painters = []
+
+def iconpaint_actionurl(values):
+    if values[0]:
+	return "<a href=\"%s\"><img class=icon src=\"images/icon_action.gif\"></a>" % values[0]
+
+def iconpaint_notesurl(values):
+    if values[0]:
+	return "<a href=\"%s\"><img class=icon src=\"images/icon_notes.gif\"></a>" % values[0]
+
+icon_painters.append(("", ["notes_url_expanded"], iconpaint_notesurl))
+icon_painters.append(("", ["action_url_expanded"], iconpaint_actionurl))
+
+def paint_icons(what, row): # what is "host" or "service"
+    output = []
+    for w, columns, paint in icon_painters:
+	if w == what: # icon painter especially for "what"
+	    prefix = ""
+	elif w == "":
+	    prefix = what + "_" # universal icon painter
+	else:
+	    continue
+	values = []
+	for col in columns:
+	    pcol = prefix + col
+	    if pcol not in row:
+		values = None # missing information
+		break
+	    values.append(row[pcol])
+	if values:
+	    h = paint(values)
+	    if h:
+		output.append(paint(values))
+    return "icons", (" ".join(output))
+		
+
+multisite_painters["service_icons"] = {
+    "title" : "Service icons",
+    "short" : "Icons",
+    "columns" : [ "service_description" ], # icons are painted as information is available
+    "paint" : lambda row: paint_icons("service", row)
+}
+
+multisite_painters["host_icons"] = {
+    "title" : "Host icons",
+    "short" : "Icons",
+    "columns" : [ "host_name" ], # icons are painted as information is available
+    "paint" : lambda row: paint_icons("host", row)
+}
 

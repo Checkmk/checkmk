@@ -3,6 +3,7 @@
 
 upload:
 	scp $(DISTNAME).tar.gz mathias-kettner.de:/var/www/80/mathias-kettner.de/download/
+	scp scripts/install_nagios.sh mathias-kettner.de:/var/www/80/mathias-kettner.de/download/install_nagios-$(VERSION).sh
 	diff <(curl -s $(DOWNLOADURL)) $(DISTNAME).tar.gz
 	@echo "Alles OK. URL ist: $(DOWNLOADURL)"
 

@@ -36,10 +36,10 @@ set -e
 
 NAGIOS_VERSION=3.2.0
 PLUGINS_VERSION=1.4.14
-CHECK_MK_VERSION=1.1.3rc2
-PNP_VERSION=0.6.2
-NAGVIS_VERSION=1.4.6
 RRDTOOL_VERSION=1.4.2
+PNP_VERSION=0.6.2
+CHECK_MK_VERSION=1.1.3rc2
+NAGVIS_VERSION=1.4.6
 
 SOURCEFORGE_MIRROR=dfn
 NAGIOS_URL="http://downloads.sourceforge.net/project/nagios/nagios-3.x/nagios-$NAGIOS_VERSION/nagios-$NAGIOS_VERSION.tar.gz?use_mirror=$SOURCEFORGE_MIRROR"
@@ -765,24 +765,26 @@ fi
 # -----------------------------------------------------------------------------
 # Und auch noch Nagvis
 # -----------------------------------------------------------------------------
-heading "NagVis"
-[ -e nagvis-$NAGVIS_VERSION.tar.gz ] || wget "$NAGVIS_URL"
-rm -rf nagvis-$NAGVIS_VERSION
-tar xzf nagvis-$NAGVIS_VERSION.tar.gz
-pushd nagvis-$NAGVIS_VERSION
-rm -rf /usr/local/share/nagvis
-./install.sh -q -F -c y \
-  -u $WWWUSER \
-  -g $WWWGROUP \
-  -w /etc/$HTTPD/conf.d \
-  -W $SITEURL/nagvis \
-  -B /usr/local/bin/nagios \
-  -b /usr/bin \
-  -p /usr/local/share/nagvis \
-  -B /usr/local/bin
-popd
+if [ "$NAGVIS_VERSION" ]
+then
+	heading "NagVis"
+	[ -e nagvis-$NAGVIS_VERSION.tar.gz ] || wget "$NAGVIS_URL"
+	rm -rf nagvis-$NAGVIS_VERSION
+	tar xzf nagvis-$NAGVIS_VERSION.tar.gz
+	pushd nagvis-$NAGVIS_VERSION
+	rm -rf /usr/local/share/nagvis
+	./install.sh -q -F -c y \
+	  -u $WWWUSER \
+	  -g $WWWGROUP \
+	  -w /etc/$HTTPD/conf.d \
+	  -W $SITEURL/nagvis \
+	  -B /usr/local/bin/nagios \
+	  -b /usr/bin \
+	  -p /usr/local/share/nagvis \
+	  -B /usr/local/bin
+	popd
 
-cat <<EOF > /usr/local/share/nagvis/etc/nagvis.ini.php
+	cat <<EOF > /usr/local/share/nagvis/etc/nagvis.ini.php
 [paths]
 base="/usr/local/share/nagvis/"
 htmlbase="$SITEURL/nagvis/"
@@ -796,11 +798,7 @@ backendtype="mklivestatus"
 socket="unix:/var/run/nagios/rw/live"
 htmlcgi="$SITEURL/nagios/cgi-bin"
 EOF
-
-
-cat <<EOF > /etc/$HTTPD/conf.d/nagios.conf
-RedirectMatch ^/$ $SITEURL/nagios/
-
+    cat <<EOF > /etc/$HTTPD/conf.d/nagvis.conf
 Alias $SITEURL/nagvis/ /usr/local/share/nagvis/
 <Directory /usr/local/share/nagvis/>
    allow from all
@@ -809,6 +807,15 @@ Alias $SITEURL/nagvis/ /usr/local/share/nagvis/
    AuthUserFile "/etc/nagios/htpasswd"
    require valid-user 
 </Directory>
+EOF
+fi
+
+
+# -----------------------------------------------------------------------------
+# Apache
+# -----------------------------------------------------------------------------
+cat <<EOF > /etc/$HTTPD/conf.d/nagios.conf
+RedirectMatch ^/$ $SITEURL/nagios/
 
 ScriptAlias $SITEURL/nagios/cgi-bin/ /usr/local/lib/nagios/cgi-bin/
 <Directory /usr/local/lib/nagios/cgi-bin/>
@@ -862,79 +869,81 @@ killall nagios || true
 /etc/init.d/nagios start
 activate_initd nagios || true
 
-# -----------------------------------------------------------------------------
-heading "Check_MK"
-# -----------------------------------------------------------------------------
-if [ ! -e check_mk-$CHECK_MK_VERSION.tar.gz ]
+if [ "$CHECK_MK_VERSION" ]
 then
-    wget "$CHECK_MK_URL"
-fi
-rm -rf check_mk-$CHECK_MK_VERSION
-tar xzf check_mk-$CHECK_MK_VERSION.tar.gz
-pushd check_mk-$CHECK_MK_VERSION
-rm -f ~/.check_mk_setup.conf
-rm -rf /var/lib/check_mk /etc/check_mk
+    # -----------------------------------------------------------------------------
+    heading "Check_MK"
+    # -----------------------------------------------------------------------------
+    if [ ! -e check_mk-$CHECK_MK_VERSION.tar.gz ]
+    then
+	wget "$CHECK_MK_URL"
+    fi
+    rm -rf check_mk-$CHECK_MK_VERSION
+    tar xzf check_mk-$CHECK_MK_VERSION.tar.gz
+    pushd check_mk-$CHECK_MK_VERSION
+    rm -f ~/.check_mk_setup.conf
+    rm -rf /var/lib/check_mk /etc/check_mk
 
-# Set some non-default paths which cannot be 
-# autodetected
-cat <<EOF > ~/.check_mk_setup.conf 
+    # Set some non-default paths which cannot be 
+    # autodetected
+    cat <<EOF > ~/.check_mk_setup.conf 
 check_icmp_path='/usr/local/lib/nagios/plugins/check_icmp'
 rrddir='/var/lib/nagios/rrd'
 pnptemplates='/usr/local/share/pnp4nagios/templates'
 pnp_prefix='$SITEURL/pnp4nagios/graph'
 EOF
 
-if [ "$SITE" ]; then
-    echo "checkmk_web_uri='$SITEURL/check_mk'" >> ~/.check_mk_setup.conf
-fi
+    if [ "$SITE" ]; then
+	echo "checkmk_web_uri='$SITEURL/check_mk'" >> ~/.check_mk_setup.conf
+    fi
 
-./setup.sh --yes
+    ./setup.sh --yes
 
-# HACK: Change popup link for PNP, not yet done by setup
-if [ "$SITE" ] ; then
-    sed -i "s@'/pnp4nagios@'$SITEURL/pnp4nagios@" /usr/share/doc/check_mk/check_mk_templates.cfg
-fi
+    # HACK: Change popup link for PNP, not yet done by setup
+    if [ "$SITE" ] ; then
+	sed -i "s@'/pnp4nagios@'$SITEURL/pnp4nagios@" /usr/share/doc/check_mk/check_mk_templates.cfg
+    fi
 
-echo 'do_rrd_update = False' >> /etc/check_mk/main.mk
-popd
+    echo 'do_rrd_update = False' >> /etc/check_mk/main.mk
+    popd
 
-echo "Enabling mod_python"
-a2enmod python || true
+    echo "Enabling mod_python"
+    a2enmod python || true
 
-# Apache neu starten
-echo "Restarting apache"
-/etc/init.d/$HTTPD restart
-activate_initd $HTTPD
+    # Apache neu starten
+    echo "Restarting apache"
+    /etc/init.d/$HTTPD restart
+    activate_initd $HTTPD
 
-# side.html anpassen
-HTML='<div class="navsectiontitle">Check_MK</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="'"$SITEURL"'/check_mk/filter.py" target="<?php echo $link_target;?>">Filters and Actions</a></li><li><a href="'"$SITEURL"'/check_mk/siteoverview.py" target="<?php echo $link_target;?>">Site Overview</a></li></ul></div></div><div class="navsection"><div class="navsectiontitle">NagVis</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="'"$SITEURL"'/nagvis/" target="<?php echo $link_target;?>">Overview page</a></li></div></div><div class="navsection">'
-QUOTE=${HTML//\//\\/}
-sed -i "/.*Reports<.*$/i$QUOTE" /usr/local/share/nagios/htdocs/side.php
+    # side.html anpassen
+    HTML='<div class="navsectiontitle">Check_MK</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="'"$SITEURL"'/check_mk/filter.py" target="<?php echo $link_target;?>">Filters and Actions</a></li><li><a href="'"$SITEURL"'/check_mk/siteoverview.py" target="<?php echo $link_target;?>">Site Overview</a></li></ul></div></div><div class="navsection"><div class="navsectiontitle">NagVis</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="'"$SITEURL"'/nagvis/" target="<?php echo $link_target;?>">Overview page</a></li></div></div><div class="navsection">'
+    QUOTE=${HTML//\//\\/}
+    sed -i "/.*Reports<.*$/i$QUOTE" /usr/local/share/nagios/htdocs/side.php
 
-# -----------------------------------------------------------------------------
-# Agent fuer localhost
-# -----------------------------------------------------------------------------
-mkdir -p /etc/xinetd.d
-cp /usr/share/check_mk/agents/xinetd.conf /etc/xinetd.d/check_mk
-mkdir -p /usr/bin
-install -m 755 /usr/share/check_mk/agents/check_mk_agent.linux /usr/bin/check_mk_agent
-/etc/init.d/xinetd stop || true
-/etc/init.d/xinetd start
-activate_initd xinetd
+    # -----------------------------------------------------------------------------
+    # Agent fuer localhost
+    # -----------------------------------------------------------------------------
+    mkdir -p /etc/xinetd.d
+    cp /usr/share/check_mk/agents/xinetd.conf /etc/xinetd.d/check_mk
+    mkdir -p /usr/bin
+    install -m 755 /usr/share/check_mk/agents/check_mk_agent.linux /usr/bin/check_mk_agent
+    /etc/init.d/xinetd stop || true
+    /etc/init.d/xinetd start
+    activate_initd xinetd
 
-cat <<EOF > /etc/check_mk/main.mk
+    cat <<EOF > /etc/check_mk/main.mk
 all_hosts = [ 'localhost' ]
 do_rrd_update = False
 EOF
-check_mk -I alltcp
-rm /etc/nagios/conf.d/localhost.cfg
-check_mk -R
+    check_mk -I alltcp
+    rm /etc/nagios/conf.d/localhost.cfg
+    check_mk -R
 
-# -----------------------------------------------------------------------------
-# Livestatus xinetd
-# -----------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
+    # Livestatus xinetd
+    # -----------------------------------------------------------------------------
 
-cat <<EOF > /etc/xinetd.d/livestatus
+    cat <<EOF > /etc/xinetd.d/livestatus
 service livestatus
 {
 	type		= UNLISTED
@@ -954,7 +963,8 @@ service livestatus
 	disable		= no
 }
 EOF
-/etc/init.d/xinetd restart
+    /etc/init.d/xinetd restart
+fi
 
 
 heading "Cleaning up"

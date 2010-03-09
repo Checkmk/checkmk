@@ -103,7 +103,7 @@ def check_brocade_port(portno, params, info):
    # First check if port has physical and logical link
    state = phystate,opstate
    if state != (6,1):
-      return (2, "CRIT - physical state %s, opstate %s" % (brocade_pystate_names[phystate], perfdata))
+      return (2, "CRIT - physical state %s, opstate %s" % (brocade_pystate_names[phystate], brocade_opstate_names[opstate]), perfdata)
 
    # Now check rates of various error counters
    this_time = time.time()

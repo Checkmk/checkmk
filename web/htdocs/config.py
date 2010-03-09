@@ -258,7 +258,7 @@ def is_multisite():
     return len(sites) > 1
 
 def read_site_config():
-    path = user_confdir + "/siteconf.mk"
+    path = user_confdir + "/siteconfig.mk"
     global user_siteconf
     if os.path.exists(path):
         user_siteconf = eval(file(path).read())

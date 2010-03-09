@@ -182,16 +182,18 @@ declare_filter(210, FilterQueryDropdown("check_command", "Service check command"
 	"GET commands\nColumns: name\n", "Filter: service_check_command = %s\n"))
 
 class FilterServiceState(Filter):
-    def __init__(self):
-	Filter.__init__(self, "svcstate", "Service states", 
-		"service", [ "st0", "st1", "st2", "st3", "stp" ])
+    def __init__(self, name, title, prefix):
+	Filter.__init__(self, name, title, 
+		"service", [ prefix + "st0", prefix + "st1", prefix + "st2", prefix + "st3", prefix + "stp" ])
+        self.prefix = prefix
     
     def display(self):
 	if html.var("filled_in"):
 	    defval = ""
 	else:
 	    defval = "on"
-	for var, text in [("st0", "OK"), ("st1", "WARN"), ("st2", "CRIT"), ("st3", "UNKNOWN"), ("stp", "PENDING")]:
+	for var, text in [(self.prefix + "st0", "OK"), (self.prefix + "st1", "WARN"), \
+	                  (self.prefix + "st2", "CRIT"), (self.prefix + "st3", "UNKNOWN"), (self.prefix + "stp", "PENDING")]:
 	    html.checkbox(var, defval)
 	    html.write(" %s " % text)
 
@@ -203,16 +205,21 @@ class FilterServiceState(Filter):
 	    defval = "on"
 
 	for i in [0,1,2,3]:
-	    if html.var("st%d" % i, defval) == "on":
-		headers.append("Filter: service_state = %d\nFilter: service_has_been_checked = 1\nAnd: 2\n" % i)
-	if html.var("stp", defval) == "on":
+	    if html.var(self.prefix + "st%d" % i, defval) == "on":
+	        if self.prefix == "h": 
+		    column = "service_last_hard_state"
+	        else:
+		    column = "service_state"
+		headers.append("Filter: %s = %d\nFilter: service_has_been_checked = 1\nAnd: 2\n" % (column, i))
+	if html.var(self.prefix + "stp", defval) == "on":
 	    headers.append("Filter: service_has_been_checked = 0\n")
 	if len(headers) == 0:
 	    return "Limit: 0\n" # not allowed state
 	else:
 	    return "".join(headers) + ("Or: %d\n" % len(headers))
 	
-declare_filter(215, FilterServiceState())
+declare_filter(215, FilterServiceState("svcstate",     "Service states",      ""))
+declare_filter(216, FilterServiceState("svchardstate", "Service hard states", "h"))
 
 class FilterHostState(Filter):
     def __init__(self):

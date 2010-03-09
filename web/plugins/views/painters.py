@@ -532,6 +532,7 @@ def paint_pnp_service_link(row):
 
 def pnp_link(values):
     sitename, host, svc, perf = values
+    svc = svc.replace(":", "_").replace("\\", "_")
     site = html.site_status[sitename]["site"]
     url = site["pnp_prefix"] + ("?host=%s&srv=%s" % (htmllib.urlencode(host), htmllib.urlencode(svc)))
     a = "<a href=\"%s\"><img class=icon src=\"images/icon_pnp.gif\"></a>" % url

@@ -71,7 +71,9 @@ icon_painters.append(("", ["scheduled_downtime_depth"], lambda values: iconpaint
 icon_painters.append(("", ["action_url_expanded"], iconpaint_actionurl))
 icon_painters.append(("", ["notes_url_expanded"], iconpaint_notesurl))
 icon_painters.append(("", ["is_flapping"], lambda values: iconpaint_flag(values, "flapping")))
-icon_painters.append(("", ["is_executing"], lambda values: iconpaint_flag(values, "executing")))
+# Experimental: is_executing. Might confuse certain users. Value of this feature not clear.
+# icon_painters.append(("", ["is_executing"], lambda values: iconpaint_flag(values, "executing")))
+
 # Experimental: automatic link to PNP. Problem: autodetection not 100%, non-PNP-users will get icons
 # for remote sites with performance data.
 # icon_painters.append(("service", ["site", "host_name", "service_description", "service_perf_data"], iconpaint_pnp))

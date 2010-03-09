@@ -38,26 +38,27 @@ $def[1] .= "CDEF:txbytes=txwords,4,* " ;
 $def[1] .= "CDEF:rxbytes=rxwords,4,* " ;
 $def[1] .= "CDEF:rxMbytes=rxbytes,1048576.0,/ " ;
 $def[1] .= "CDEF:txMbytes=txbytes,1048576.0,/ " ;
-$def[1] .= "CDEF:rxMbytesDraw=rxMbytes,-1,* " ;
-$def[1] .= "AREA:txMbytes#60a020:\"in \" " ;
-$def[1] .= "GPRINT:txMbytes:LAST:\"%.2lf MB/s last\" " ;
-$def[1] .= "GPRINT:txMbytes:AVERAGE:\"%.2lf MB/s avg\" " ;
-$def[1] .= "GPRINT:txMbytes:MAX:\"%.2lf MB/s max\\n\" " ;
-$def[1] .= "AREA:rxMbytesDraw#2060a0:\"out\" " ;
+$def[1] .= "CDEF:rxMbytesDraw=rxMbytes,1,* " ;
+$def[1] .= "AREA:rxMbytesDraw#60a020:\"in \" " ;
 $def[1] .= "GPRINT:rxMbytes:LAST:\"%.2lf MB/s last\" " ;
 $def[1] .= "GPRINT:rxMbytes:AVERAGE:\"%.2lf MB/s avg\" " ;
 $def[1] .= "GPRINT:rxMbytes:MAX:\"%.2lf MB/s max\\n\" " ;
+$def[1] .= "CDEF:txMbytesDraw=txMbytes,-1,* " ;
+$def[1] .= "AREA:txMbytesDraw#2060a0:\"out\" " ;
+$def[1] .= "GPRINT:txMbytes:LAST:\"%.2lf MB/s last\" " ;
+$def[1] .= "GPRINT:txMbytes:AVERAGE:\"%.2lf MB/s avg\" " ;
+$def[1] .= "GPRINT:txMbytes:MAX:\"%.2lf MB/s max\\n\" " ;
 if ($WARN[1] != "") {
-   $def[1] .= "HRULE:$WARN[1]#ffff00:\"Warning (in)\" ";
+   $def[1] .= "HRULE:$WARN[2]#ffff00:\"Warning (in)\" ";
    $def[1] .= "HRULE:-$WARN[1]#ffff00:\"Warning (out)\" ";
 }
 if ($CRIT[1] != "") {
-   $def[1] .= "HRULE:$CRIT[1]#ff0000:\"Critical (in)\" ";
+   $def[1] .= "HRULE:$CRIT[2]#ff0000:\"Critical (in)\" ";
    $def[1] .= "HRULE:-$CRIT[1]#ff0000:\"Critical (out)\" ";
 }
 if ($MAX[1] != "")  {
-   $def[1] .= "HRULE:$MAX[1]#0000ff:\"Portspeed (in)\" ";
-   $def[1] .= "HRULE:-$MAX[1]#0000ff:\"Portspeed (out)\" ";
+   $def[1] .= "HRULE:$MAX[2]#60a020:\"Portspeed (in)\" ";
+   $def[1] .= "HRULE:-$MAX[1]#2060a0:\"Portspeed (out)\" ";
 # $opt[1] .= " -u $MAX[1] -l -$MAX[1]";
 }
 

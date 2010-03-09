@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import htmllib, livestatus, time, re, os, datetime, config
+import htmllib, livestatus, time, re, os, datetime, config, defaults
 from lib import *
 
 def show_tabs(html, tabs, active):
@@ -194,7 +194,7 @@ def show_host_header(html, host):
     html.write('<tr><td class="legend">Hostname:</td><td class="content">%s</td></tr>' % htmllib.attrencode(host))
     html.write('<tr><td class="legend">Host in Nagios:</td>'
                '<td class="content"><a href="%s/status.cgi?host=%s">Link</a></td></tr>' % \
-               (htmllib.urlencode(html.req.defaults["nagios_cgi_url"]), htmllib.attrencode(host)))
+               (htmllib.urlencode(defaults.nagios_cgi_url), htmllib.attrencode(host)))
     html.write('</table><br />')
 
 def do_log_ack(html):
@@ -215,7 +215,7 @@ def do_log_ack(html):
         raise MKUserError('ack', 'Invalid value for ack parameter.')
 
     try:
-        os.remove(config.defaults["logwatch_dir"] + '/' + host + '/' + file)
+        os.remove(config.defaults.logwatch_dir + '/' + host + '/' + file)
 
         html.write('<h1>%s: %s Acknowledged</h1>' % \
           (htmllib.attrencode(host), htmllib.attrencode(fileDisplay)))
@@ -268,7 +268,7 @@ def get_last_log(logs):
 
 
 def parse_file(host, file, hidecontext = "no"):
-    filePath = config.defaults["logwatch_dir"] + '/' + host + '/' + file
+    filePath = defaults.logwatch_dir + '/' + host + '/' + file
     try:
         f = open(filePath, 'r')
     except:
@@ -330,7 +330,7 @@ def parse_file(host, file, hidecontext = "no"):
 
 def host_logs(host):
     try:
-        return filter(lambda x: x != '..' and x != '.', os.listdir(config.defaults["logwatch_dir"] + '/' + host))
+        return filter(lambda x: x != '..' and x != '.', os.listdir(defaults.logwatch_dir + '/' + host))
     except:
         return []
 

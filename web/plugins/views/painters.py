@@ -304,6 +304,13 @@ multisite_painters["svc_in_notifper"] = {
     "columns" : [ "service_in_notification_period" ],
     "paint" : lambda row: paint_nagiosflag(row, "service_in_notification_period", False)
 }
+multisite_painters["svc_notifper"] = {
+   "title" : "Service notification period",
+   "short" : "notif.",
+   "columns" : [ "service_notification_period" ],
+   "paint" : lambda row: (None, row["service_notification_period"])
+}
+      
 multisite_painters["svc_flapping"] = {
     "title" : "Is flapping",
     "short" : "flap",

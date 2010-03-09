@@ -65,7 +65,7 @@ multisite_datasources["services"] = {
 		  "service_comments", "service_is_flapping", "service_is_executing", "service_check_command",
                   "host_name", "host_state", "host_has_been_checked", "service_last_check",
 		  "service_last_state_change", "service_downtimes", "service_perf_data", 
-		  "service_max_check_attempts", "service_current_attempt", "service_in_notification_period",
+		  "service_max_check_attempts", "service_current_attempt", "service_in_notification_period", "service_notification_period",
 		  "service_scheduled_downtime_depth", "service_is_flapping", "service_contacts",
 			  ],
 }
@@ -81,7 +81,7 @@ multisite_datasources["servicesbygroup"] = {
 		  "service_comments", "service_is_flapping", "service_is_executing",
                   "host_name", "host_state", "host_has_been_checked", 
 		  "service_last_state_change", "service_downtimes", "service_perf_data",
-		      "service_max_check_attempts", "service_current_attempt", "service_in_notification_period",
+		      "service_max_check_attempts", "service_current_attempt", "service_in_notification_period","service_notification_period",
 		  "service_scheduled_downtime_depth", "service_is_flapping", "service_contacts",
 		      ],
 }
@@ -96,7 +96,7 @@ multisite_datasources["servicesbyhostgroup"] = {
 		  "service_comments", "service_is_flapping", "service_is_executing",
                   "host_name", "host_state", "host_has_been_checked", 
 		  "service_last_state_change", "service_downtimes", "service_perf_data",
-		      "service_max_check_attempts", "service_current_attempt", "service_in_notification_period",
+		      "service_max_check_attempts", "service_current_attempt", "service_in_notification_period","service_notification_period",
 		  "service_scheduled_downtime_depth","service_is_flapping", "service_contacts",
 		      ]
 }

@@ -203,12 +203,11 @@ def render_sitestatus():
 	html.write("</table>\n")
     
 
-if config.is_multisite():
-    sidebar_snapins["sitestatus"] = {
-	"title" : "Site status",
-	"render" : render_sitestatus,
-	"allowed" : [ "user", "admin" ],
-	"styles" : """
+sidebar_snapins["sitestatus"] = {
+  "title" : "Site status",
+  "render" : render_sitestatus,
+  "allowed" : [ "user", "admin" ],
+  "styles" : """
 div#check_mk_sidebar table.sitestate {
     width: 100%;
 }
@@ -255,7 +254,7 @@ div#check_mk_sidebar table.sitestate td.disabled a {
     border-color: #888;
 }
 """
-    }
+}
 
 
 # --------------------------------------------------------------
@@ -310,7 +309,7 @@ sidebar_snapins["tactical_overview"] = {
     "render" : render_tactical_overview,
     "allowed" : [ "user", "admin", "guest" ],
     "styles" : """
-table.tacticaloverview { width: 100%; margin-top: 0px;}
+table.tacticaloverview { border-collapse: separate; border-spacing: 3px; width: 100%; margin-top: 0px;}
 table.tacticaloverview th { font-size: 7pt; text-align: left; font-weight: normal; padding: 0px; }
 table.tacticaloverview td { text-align: right; border: 1px solid #444; padding: 0px; padding-right: 2px; }
 table.tacticaloverview td.prob { background-color: #d30; color: #f00; font-weight: bold; }

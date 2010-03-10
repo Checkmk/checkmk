@@ -375,6 +375,10 @@ td.icons img {
  margin-right: 3px;
 }
 
+img.icon {
+   border-style: none;
+}
+
 /*
  _                            _       
 | |    __ _ _   _  ___  _   _| |_ ___ 

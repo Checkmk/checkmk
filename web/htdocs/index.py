@@ -27,7 +27,7 @@
 from mod_python import apache,util
 import os, pprint, livestatus
 from lib import *
-import config, htmllib
+import config, htmllib, defaults
 
 # Module containing the actual pages. They must be imported after config.
 import page_logwatch
@@ -96,7 +96,7 @@ def connect_to_livestatus(html):
 	    html.site_status[sitename]["exception"] = deadinfo["exception"]
 
     else:
-	html.live = livestatus.SingleSiteConnection("unix:" + config.defaults["livestatus_unix_socket"])
+	html.live = livestatus.SingleSiteConnection("unix:" + defaults.livestatus_unix_socket)
 	html.site_status = { '': { "state" : "offline", "site" : config.site('') } }
         v1, v2 = html.live.query_row("GET status\nColumns: livestatus_version program_version")
 	html.site_status[''].update({ "state" : "online", "livestatus_version": v1, "program_version" : v2 })

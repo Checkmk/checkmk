@@ -24,7 +24,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-VERSION=1.1.3rc2
+VERSION=1.1.3rc4
 NAME=check_mk
 LANG=
 LC_ALL=
@@ -458,6 +458,7 @@ autochecksdir               = '$vardir/autochecks'
 precompiled_hostchecks_dir  = '$vardir/precompiled'
 counters_directory          = '$vardir/counters'
 tcp_cache_dir		    = '$vardir/cache'
+logwatch_dir                = '$vardir/logwatch'
 nagios_objects_file         = '$nagconfdir/check_mk_objects.cfg'
 rrd_path                    = '$rrddir'
 nagios_command_pipe_path    = '$nagpipe'

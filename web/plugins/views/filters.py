@@ -66,6 +66,12 @@ declare_filter(200, FilterText("serviceregex", "Service",         "service", "se
 declare_filter(201, FilterText("service", "Service",              "service", "service_description",   "service", "="),
 		          "Exact match, used for linking")
 
+declare_filter(100, FilterText("servicegroupname", "Servicegroup",   "servicegroup", "servicegroup_name",   "servicegroup_name", "="),
+		          "Exact match, used for linking")
+
+declare_filter(101, FilterText("servicegroupnameregex", "Servicegroup",   "servicegroup", "servicegroup_name",   "servicegroup_name", "~~"),
+		          "Search field allowing regular expression and partial matches")
+
 declare_filter(202, FilterText("output",  "Service check output", "service", "service_plugin_output", "service_output", "~~"))
 
 

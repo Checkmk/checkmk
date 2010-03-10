@@ -128,7 +128,7 @@ def page_sidebar(h):
     views.html = h
     views.load_views()
     html.write("<div class=header><table><tr>"
-		"<td class=title><a target=\"main\" href=\"http://mathias-kettner.de/check_mk.html\">Check_MK</a></td>"
+		"<td class=title><a target=\"main\" href=\"main.py\">Check_MK</a></td>"
 		"<td class=logo><a target=\"_blank\" href=\"http://mathias-kettner.de\"><img border=0 src=\"%s/images/MK-mini-black.gif\"></a></td>"
 		"</tr></table></div>\n" % \
 	    defaults.checkmk_web_uri)

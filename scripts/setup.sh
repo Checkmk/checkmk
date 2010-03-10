@@ -610,7 +610,10 @@ do
                fi
            done &&
 	   if [ ! -e $DESTDIR$confdir/main.mk ] ; then
-	      tar xzf $SRCDIR/conf.tar.gz --to-stdout > $DESTDIR$confdir/main.mk
+	      cp $DESTDIR$confdir/main.mk-$VERSION $DESTDIR$confdir/main.mk
+           fi &&
+	   if [ ! -e $DESTDIR$confdir/multisite.mk ] ; then
+	      cp $DESTDIR$confdir/multisite.mk-$VERSION $DESTDIR$confdir/multisite.mk
            fi &&
 	   mkdir -p $DESTDIR$confdir/conf.d &&
 	   echo 'All files in this directory that end with .mk will be read in after main.mk' > $DESTDIR$confdir/conf.d/README &&

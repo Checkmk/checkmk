@@ -711,6 +711,8 @@ EOF
 	   done &&
 	   if [ -z "$YES" ] ; then
 	       echo -e "Installation completed successfully.\nPlease restart Nagios and Apache in order to update/active check_mk's web pages."
+	       echo
+	       echo -e "You can access the new Multisite GUI at http://localhost$checkmk_web_uri/"
            fi ||
 	   echo "ERROR!"
 	   exit

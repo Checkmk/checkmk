@@ -308,7 +308,7 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
     table->addColumn(new OffsetDoubleColumn(prefix + "latency",
 		"Time difference between scheduled check time and actual check time", (char *)(&svc.latency) - ref, indirect_offset));
     table->addColumn(new OffsetDoubleColumn(prefix + "execution_time",
-		"Time the host check needed for execution", (char *)(&svc.execution_time) - ref, indirect_offset));
+		"Time the service check needed for execution", (char *)(&svc.execution_time) - ref, indirect_offset));
     table->addColumn(new OffsetDoubleColumn(prefix + "percent_state_change",
 		"Percent state change", (char *)(&svc.percent_state_change) - ref, indirect_offset));
 

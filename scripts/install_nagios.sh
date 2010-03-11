@@ -492,7 +492,6 @@ retained_process_service_attribute_mask=0
 retained_contact_host_attribute_mask=0
 retained_contact_service_attribute_mask=0
 check_for_updates=0
-process_performance_data=1
 date_format=iso8601
 enable_embedded_perl=0
 use_regexp_matching=0
@@ -504,6 +503,7 @@ debug_verbosity=0
 max_debug_file_size=1000000
 
 # PNP4Nagios
+process_performance_data=1
 service_perfdata_file=/var/spool/nagios/pnp/service-perfdata
 service_perfdata_file_template=DATATYPE::SERVICEPERFDATA\tTIMET::\$TIMET\$\tHOSTNAME::\$HOSTNAME\$\tSERVICEDESC::\$SERVICEDESC\$\tSERVICEPERFDATA::\$SERVICEPERFDATA\$\tSERVICECHECKCOMMAND::\$SERVICECHECKCOMMAND\$\tHOSTSTATE::\$HOSTSTATE\$\tHOSTSTATETYPE::\$HOSTSTATETYPE\$\tSERVICESTATE::\$SERVICESTATE\$\tSERVICESTATETYPE::\$SERVICESTATETYPE\$
 service_perfdata_file_mode=a

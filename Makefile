@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL           = /bin/bash
-VERSION        	= 1.1.3rc2
+VERSION        	= 1.1.3rc4
 NAME           	= check_mk
 RPM_TOPDIR     	= rpm.topdir
 RPM_BUILDROOT  	= rpm.buildroot
@@ -76,8 +76,9 @@ dist: mk-livestatus
 	tar czf $(DISTNAME)/modules.tar.gz $(TAROPTS) -C modules $$(cd modules ; ls *.py)
 
 	cp main.mk main.mk-$(VERSION)
-	tar  czf $(DISTNAME)/conf.tar.gz $(TAROPTS) main.mk-$(VERSION)
-	rm -f main.mk-$(VERSION)
+	cp multisite.mk multisite.mk-$(VERSION)
+	tar  czf $(DISTNAME)/conf.tar.gz $(TAROPTS) main.mk-$(VERSION) multisite.mk-$(VERSION)
+	rm -f main.mk-$(VERSION) multisite.mk-$(VERSION)
 	tar  cf $(DISTNAME)/agents.tar $(TAROPTS) -C agents --exclude "*~" $$(cd agents ; ls | grep -v windows )
 	tar  rf $(DISTNAME)/agents.tar $(TAROPTS) -C agents windows/{check_mk_agent.exe,check_mk_agent.cc,Makefile}
 	gzip $(DISTNAME)/agents.tar

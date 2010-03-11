@@ -203,12 +203,11 @@ def render_sitestatus():
 	html.write("</table>\n")
     
 
-if config.is_multisite():
-    sidebar_snapins["sitestatus"] = {
-	"title" : "Site status",
-	"render" : render_sitestatus,
-	"allowed" : [ "user", "admin" ],
-	"styles" : """
+sidebar_snapins["sitestatus"] = {
+  "title" : "Site status",
+  "render" : render_sitestatus,
+  "allowed" : [ "user", "admin" ],
+  "styles" : """
 div#check_mk_sidebar table.sitestate {
     width: 100%;
 }
@@ -255,7 +254,7 @@ div#check_mk_sidebar table.sitestate td.disabled a {
     border-color: #888;
 }
 """
-    }
+}
 
 
 # --------------------------------------------------------------
@@ -280,7 +279,7 @@ def render_tactical_overview():
     except livestatus.MKLivestatusNotFoundError:
 	html.write("<center>No data from any site</center>")
 	return
-    html.write("<table class=tacticaloverview>\n")
+    html.write("<table class=tacticaloverview cellspacing=3>\n")
     for title, data, view, what in [
 	    ("Hosts", hstdata, 'hostproblems', 'host'),
 	    ("Services", svcdata, 'svcproblems', 'service'), 
@@ -310,7 +309,7 @@ sidebar_snapins["tactical_overview"] = {
     "render" : render_tactical_overview,
     "allowed" : [ "user", "admin", "guest" ],
     "styles" : """
-table.tacticaloverview { width: 153px; margin-top: 0px;}
+table.tacticaloverview { border-collapse: separate; border-spacing: 3px; width: 100%; margin-top: 0px;}
 table.tacticaloverview th { font-size: 7pt; text-align: left; font-weight: normal; padding: 0px; }
 table.tacticaloverview td { text-align: right; border: 1px solid #444; padding: 0px; padding-right: 2px; }
 table.tacticaloverview td.prob { background-color: #d30; color: #f00; font-weight: bold; }
@@ -341,7 +340,7 @@ sidebar_snapins["performance"] = {
     "render" : render_performance,
     "allowed" : [ "admin", ],
     "styles" : """
-table.performance { font-size: 8pt; width: 154px; background-color: #888; border-style: solid; border-color: #444 #bbb #eee #666; border-width: 1px; }
+table.performance { font-size: 8pt; width: 100%; background-color: #888; border-style: solid; border-color: #444 #bbb #eee #666; border-width: 1px; }
 table.Performance td.right { text-align: right; font-weight: bold; }
 
 """
@@ -366,7 +365,6 @@ sidebar_snapins["time"] = {
     "allowed" : [ "user", "admin", "guest", ],
     "styles" : """
 div.time {
-   width: 150px;
    text-align: center;
    font-size: 18pt;
    font-weight: bold;

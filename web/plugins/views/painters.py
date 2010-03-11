@@ -71,7 +71,9 @@ icon_painters.append(("", ["scheduled_downtime_depth"], lambda values: iconpaint
 icon_painters.append(("", ["action_url_expanded"], iconpaint_actionurl))
 icon_painters.append(("", ["notes_url_expanded"], iconpaint_notesurl))
 icon_painters.append(("", ["is_flapping"], lambda values: iconpaint_flag(values, "flapping")))
-icon_painters.append(("", ["is_executing"], lambda values: iconpaint_flag(values, "executing")))
+# Experimental: is_executing. Might confuse certain users. Value of this feature not clear.
+# icon_painters.append(("", ["is_executing"], lambda values: iconpaint_flag(values, "executing")))
+
 # Experimental: automatic link to PNP. Problem: autodetection not 100%, non-PNP-users will get icons
 # for remote sites with performance data.
 # icon_painters.append(("service", ["site", "host_name", "service_description", "service_perf_data"], iconpaint_pnp))
@@ -304,6 +306,13 @@ multisite_painters["svc_in_notifper"] = {
     "columns" : [ "service_in_notification_period" ],
     "paint" : lambda row: paint_nagiosflag(row, "service_in_notification_period", False)
 }
+multisite_painters["svc_notifper"] = {
+   "title" : "Service notification period",
+   "short" : "notif.",
+   "columns" : [ "service_notification_period" ],
+   "paint" : lambda row: (None, row["service_notification_period"])
+}
+      
 multisite_painters["svc_flapping"] = {
     "title" : "Is flapping",
     "short" : "flap",
@@ -525,6 +534,7 @@ def paint_pnp_service_link(row):
 
 def pnp_link(values):
     sitename, host, svc, perf = values
+    svc = svc.replace(":", "_").replace("\\", "_")
     site = html.site_status[sitename]["site"]
     url = site["pnp_prefix"] + ("?host=%s&srv=%s" % (htmllib.urlencode(host), htmllib.urlencode(svc)))
     a = "<a href=\"%s\"><img class=icon src=\"images/icon_pnp.gif\"></a>" % url

@@ -24,7 +24,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-VERSION=1.1.3rc2
+VERSION=1.1.3rc4
 NAME=check_mk
 LANG=
 LC_ALL=
@@ -458,6 +458,7 @@ autochecksdir               = '$vardir/autochecks'
 precompiled_hostchecks_dir  = '$vardir/precompiled'
 counters_directory          = '$vardir/counters'
 tcp_cache_dir		    = '$vardir/cache'
+logwatch_dir                = '$vardir/logwatch'
 nagios_objects_file         = '$nagconfdir/check_mk_objects.cfg'
 rrd_path                    = '$rrddir'
 nagios_command_pipe_path    = '$nagpipe'
@@ -609,7 +610,10 @@ do
                fi
            done &&
 	   if [ ! -e $DESTDIR$confdir/main.mk ] ; then
-	      tar xzf $SRCDIR/conf.tar.gz --to-stdout > $DESTDIR$confdir/main.mk
+	      cp $DESTDIR$confdir/main.mk-$VERSION $DESTDIR$confdir/main.mk
+           fi &&
+	   if [ ! -e $DESTDIR$confdir/multisite.mk ] ; then
+	      cp $DESTDIR$confdir/multisite.mk-$VERSION $DESTDIR$confdir/multisite.mk
            fi &&
 	   mkdir -p $DESTDIR$confdir/conf.d &&
 	   echo 'All files in this directory that end with .mk will be read in after main.mk' > $DESTDIR$confdir/conf.d/README &&
@@ -707,6 +711,8 @@ EOF
 	   done &&
 	   if [ -z "$YES" ] ; then
 	       echo -e "Installation completed successfully.\nPlease restart Nagios and Apache in order to update/active check_mk's web pages."
+	       echo
+	       echo -e "You can access the new Multisite GUI at http://localhost$checkmk_web_uri/"
            fi ||
 	   echo "ERROR!"
 	   exit

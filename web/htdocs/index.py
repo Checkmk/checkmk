@@ -27,7 +27,7 @@
 from mod_python import apache,util
 import os, pprint, livestatus
 from lib import *
-import config, htmllib
+import config, htmllib, defaults
 
 # Module containing the actual pages. They must be imported after config.
 import page_logwatch
@@ -96,7 +96,7 @@ def connect_to_livestatus(html):
 	    html.site_status[sitename]["exception"] = deadinfo["exception"]
 
     else:
-	html.live = livestatus.SingleSiteConnection("unix:" + config.defaults["livestatus_unix_socket"])
+	html.live = livestatus.SingleSiteConnection("unix:" + defaults.livestatus_unix_socket)
 	html.site_status = { '': { "state" : "offline", "site" : config.site('') } }
         v1, v2 = html.live.query_row("GET status\nColumns: livestatus_version program_version")
 	html.site_status[''].update({ "state" : "online", "livestatus_version": v1, "program_version" : v2 })
@@ -157,6 +157,8 @@ def handler(req):
 	connect_to_livestatus(html)
 
 	pagehandlers = { "index"               : page_index,
+			 "main"                : page_main,
+			 "filter"              : page_main, # for users of multiadmin
 			 "edit_views"          : views.page_edit_views,
 			 "edit_view"           : views.page_edit_view,
 			 "export_views"        : views.ajax_export,
@@ -176,7 +178,7 @@ def handler(req):
 			 "edit_permissions"    : permissions.page_edit_permissions,
 	}
 
-	handler = pagehandlers.get(req.myfile, page_index)
+	handler = pagehandlers.get(req.myfile, page_not_found)
 	handler(html)
 
     except MKUserError, e:
@@ -219,19 +221,56 @@ def handler(req):
     # Disconnect from livestatus!
     html.live = None
     return apache.OK
-    
+   
 
 def page_index(html):
-    html.header("Check_MK Overview")
-    html.write('''
+    html.write("""
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd">
+<html>
+<head>
+ <title>Check_MK Multisite</title>
+ <link rel="shortcut icon" href="images/favicon.ico" type="image/ico">
+</head>
+<frameset cols="200,*">
+ <frame src="side.py" name="side" frameborder="0">
+ <frame src="main.py" name="main" frameborder="0">
+</frameset>
+</html>
+""") 
+
+def page_main(html):
+    html.header("Check_MK Multisite")
+    html.write("""
+<p>Welcome to Check_MK Multisite - a new GUI for viewing status information
+and controlling your monitoring system. Multisite is not just another GUI
+for Nagios - it uses a completely new architecture and design scheme. It's
+key benefits are:</p>
 <ul>
-<li><a href="http://mathias-kettner.de/check_mk.html">Homepage of Check_mk</a></li>
-<li><a href="filter.py">Filter and Actions</a></li>
-<li><a href="edit_views.py">Experimental: Edit user views</a></li>
-<li><a href="logwatch.py">Logwatch</a></li>
+<li>It is fast.</li>
+<li>it is flexible.</li>
+<li>It supports distributed monitoring.</li>
 </ul>
-''')
+
+<p>Multisite is completely based on
+<a href="http://mathias-kettner.de/checkmk_livestatus.html">MK
+Livestatus</a>, which is what makes it fast in the first place - especially
+in huge installations with a large number of hosts and services. </p>
+
+<p>User customizable <b>views</b> is what makes Multisite flexible. Customize
+the builtin views or create completely own views in order to need your
+demands.</p>
+
+<p>Multisite supports distributed monitoring by allowing you to combine an
+arbitrary number of Monitoring servers under a common visualisation layer,
+without the need of a centralized data storage. No SQL database is needed.
+No network traffic is generated due to the monitoring.</p>
+
+<p>Please learn more about Multisite at its <a href="http://mathias-kettner.de/checkmk_multisite.html">Documentation home page</a>.</p>
+
+""")
     html.footer()
 
-
-
+def page_not_found(html):
+    html.header("Page not found")
+    html.show_error("This page was not found. Sorry.")
+    html.footer()

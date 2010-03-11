@@ -1,3 +1,29 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
 multisite_builtin_views = {'allhosts': {'column_headers': 'pergroup',
               'datasource': 'hosts',
               'description': 'Overall state of allhosts, with counts of services in the various states.',
@@ -12,6 +38,7 @@ multisite_builtin_views = {'allhosts': {'column_headers': 'pergroup',
               'owner': '',
               'painters': [('host_state', None),
                            ('host', 'host'),
+                           ('host_icons', None),
                            ('num_services_ok', None),
                            ('num_services_warn', None),
                            ('num_services_unknown', None),
@@ -59,6 +86,7 @@ multisite_builtin_views = {'allhosts': {'column_headers': 'pergroup',
                'owner': '',
                'painters': [('host_state', None),
                             ('host', 'host'),
+                           ('host_icons', None),
                             ('alias', None),
                             ('num_services_ok', None),
                             ('num_services_warn', None),
@@ -118,6 +146,7 @@ multisite_builtin_views = {'allhosts': {'column_headers': 'pergroup',
                   'name': 'hostproblems',
                   'owner': '',
                   'painters': [('host', 'host'),
+                           ('host_icons', None),
                                ('host_state', None),
                                ('host_plugin_output', None),
                                ('num_services_ok', None),
@@ -153,6 +182,7 @@ multisite_builtin_views = {'allhosts': {'column_headers': 'pergroup',
                   'owner': '',
                   'painters': [('host_state', None),
                                ('host', 'host'),
+                           ('host_icons', None),
                                ('alias', 'hoststatus'),
                                ('num_services_ok', None),
                                ('num_services_warn', None),
@@ -182,6 +212,7 @@ multisite_builtin_views = {'allhosts': {'column_headers': 'pergroup',
                 'name': 'hoststatus',
                 'owner': '',
                 'painters': [('host', 'host'),
+                           ('host_icons', None),
                              ('alias', None),
                              ('host_state', None),
                              ('num_services', None),
@@ -221,6 +252,7 @@ multisite_builtin_views = {'allhosts': {'column_headers': 'pergroup',
                 'owner': '',
                 'painters': [('host_state', None),
                              ('host', 'host'),
+                           ('host_icons', None),
                              ('num_services_ok', None),
                              ('num_services_warn', None),
                              ('num_services_crit', None),
@@ -275,6 +307,7 @@ multisite_builtin_views = {'allhosts': {'column_headers': 'pergroup',
                'name': 'searchsvc',
                'owner': '',
                'painters': [('service_state', None),
+                           ('service_icons', None),
                             ('service_description', None),
                             ('svc_state_age', None),
                             ('svc_plugin_output', None)],
@@ -314,6 +347,7 @@ multisite_builtin_views = {'allhosts': {'column_headers': 'pergroup',
              'painters': [('sitealias', None),
                           ('host', 'hoststatus'),
                           ('service_description', None),
+                           ('service_icons', None),
                           ('service_state', None),
                           ('svc_plugin_output', None),
                           ('svc_state_age', None),
@@ -370,6 +404,7 @@ multisite_builtin_views = {'allhosts': {'column_headers': 'pergroup',
                   'painters': [('service_state', None),
                                ('svc_state_age', None),
                                ('service_description', None),
+                           ('service_icons', None),
                                ('svc_plugin_output', None),
                                ('link_to_pnp_service', None)],
                   'public': True,
@@ -390,6 +425,7 @@ multisite_builtin_views = {'allhosts': {'column_headers': 'pergroup',
                'owner': '',
                'painters': [('host_state', None),
                             ('host', 'host'),
+                           ('host_icons', None),
                             ('alias', 'hoststatus'),
                             ('num_services_ok', None),
                             ('num_services_warn', None),
@@ -439,6 +475,7 @@ multisite_builtin_views = {'allhosts': {'column_headers': 'pergroup',
                                ('service_state', None),
                                ('svc_state_age', None),
                                ('service_description', None),
+			       ('service_icons', None),
                                ('svc_plugin_output', None)],
                   'public': True,
                   'show_filters': [],
@@ -489,6 +526,7 @@ multisite_builtin_views = {'allhosts': {'column_headers': 'pergroup',
                  'owner': '',
                  'painters': [('host', 'host'),
                               ('service_description', None),
+			       ('service_icons', None),
                               ('svc_state_age', None)],
                  'public': True,
                  'show_filters': ['service_acknowledged', 'svcstate'],

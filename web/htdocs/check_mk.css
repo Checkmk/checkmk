@@ -12,7 +12,10 @@ body.page {
   margin: 0px 8px 0px 8px;
   padding: 0px;
   font-family: arial, helvetica, sans-serif;
-  font-size: 85%;
+  font-size: 9pt;
+}
+input, td, select {
+    font-size: 9pt;
 }
 
 table.footer { 
@@ -373,6 +376,10 @@ td.icons {
 td.icons img {
  height: 20px;
  margin-right: 3px;
+}
+
+img.icon {
+   border-style: none;
 }
 
 /*

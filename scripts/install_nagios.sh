@@ -224,7 +224,7 @@ if [ "$DISTRO" = DEBIAN -o "$DISTRO" = UBUNTU ]
 then
   aptitude -y update
   aptitude -y install psmisc build-essential nail  \
-    apache2 libapache2-mod-php5 python rrdtool php5-gd libgd-dev \
+    apache2 libapache2-mod-php5 python php5-gd libgd-dev \
     python-rrdtool xinetd wget libgd2-xpm-dev psmisc less libapache2-mod-python \
     graphviz php5-sqlite sqlite php-gettext locales-all libxml2-dev libpango1.0-dev
     # Hint for Debian: Installing the packages locales-all is normally not neccessary
@@ -250,18 +250,96 @@ killall npcd
 set -e
 
 
+if [ -n "$RRDTOOL_VERSION" ] 
+then
 # -----------------------------------------------------------------------------
-heading "RRDTool"
+    heading "RRDTool"
 # -----------------------------------------------------------------------------
-[ -e rrdtool-$RRDTOOL_VERSION ] || wget $RRDTOOL_URL
-rm -rf rrdtool-$RRDTOOL_VERSION
-tar xzf rrdtool-$RRDTOOL_VERSION.tar.gz
-pushd rrdtool-$RRDTOOL_VERSION
-./configure --prefix=/usr/local
-make -j 16
-make install
-popd
+    [ -e rrdtool-$RRDTOOL_VERSION ] || wget $RRDTOOL_URL
+    rm -rf rrdtool-$RRDTOOL_VERSION
+    tar xzf rrdtool-$RRDTOOL_VERSION.tar.gz
+    pushd rrdtool-$RRDTOOL_VERSION
+    ./configure --prefix=/usr/local --localstatedir=/var --enable-perl-site-install
+    make -j 16
+    make install
+    if ! id rrdcached >/dev/null 2>&1 ; then
+       echo 'Creating user rrdcached'
+       useradd rrdcached 
+    fi
 
+    # Create start script
+    cat <<EOF > /etc/init.d/rrdcached
+#!/bin/sh
+
+# chkconfig: 345 98 02
+# description: RRD Tool cache daemon
+
+### BEGIN INIT INFO
+# Provides:       rrdcached
+# Required-Start: 
+# Required-Stop:  
+# Default-Start:  2 3 5
+# Default-Stop:
+# Description:    Start RRD cache daemon
+### END INIT INFO
+
+TIMING="-w 3600 -z 1800 -f 7200"
+RRD_DIR="/var/lib/nagios/rrd"
+CACHE_DIR="/var/lib/rrdcached"
+JOURNAL_DIR="\$CACHE_DIR/journal"
+SOCKET="\$CACHE_DIR/rrdcached.sock"
+PIDFILE="\$CACHE_DIR/rrdcached.pid"
+USER="rrdcached"
+OPTS="\$TIMING -l unix:\$SOCKET -p \$PIDFILE -j \$JOURNAL_DIR -b \$RRD_DIR -B"
+DAEMON="/usr/local/bin/rrdcached"
+
+case "\$1" in
+    start)
+        echo -n 'Starting rrdcached...'
+        if [ -e "\$PIDFILE" ] ; then
+            PID=\$(cat PIDFILE)
+            if [ -n "\$PID" ] && ps \$PID > /dev/null 2>&1 ; then
+                echo "still running with pid \$PID! Aborting!"
+                exit 1
+            fi
+            echo "removing stale pid file..."
+            rm -f \$PIDFILE
+        fi
+
+        # make sure, directories are there (ramdisk!)
+        mkdir -p \$CACHE_DIR \$RRD_DIR && 
+        chown -R \$USER \$CACHE_DIR \$RRD_DIR &&
+        su \$USER -c "\$DAEMON \$OPTS" &&
+        echo OK || echo Error
+    ;;
+    stop)
+        echo -n 'Stopping rrdcached...'
+        killall rrdcached && echo OK || echo "not running"
+    ;;
+    restart)
+        \$0 stop
+        \$0 start
+    ;;
+    status)
+        echo -n 'Checking status of rrdcached...'
+        if [ -e "\$PIDFILE" ] ; then
+            PID=\$(cat \$PIDFILE)
+            if [ -n "\$PID" ] && ps \$PID > /dev/null 2>&1 ; then
+                echo "running"
+                exit 0
+            fi
+        fi
+        echo "stopped"
+        exit 1
+    ;;
+    *)
+        echo "Usage: \$0 {start|stop|restart|status}"
+    ;;
+esac
+EOF
+    activate_initd rrdcached
+    popd
+fi
 
 # -----------------------------------------------------------------------------
 heading "Nagios plugins"

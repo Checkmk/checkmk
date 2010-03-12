@@ -95,6 +95,7 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %config /etc/check_mk/main.mk
+%config /etc/check_mk/multisite.mk
 /etc/check_mk/conf.d/README
 %config /etc/nagios/objects/*
 /usr/bin/check_mk
@@ -151,8 +152,11 @@ if [ ! -x /etc/init.d/xinetd ] ; then
     echo
     echo "This package needs xinetd to be installed. "
     echo "Currently you do not have installed xinetd. "
-    echo "Please install and start xinetd or manually "
-    echo "configure an other inetd."
+    echo "Please install and start xinetd or install "
+    echo "and setup another inetd manually."
+    echo ""
+    echo "It's also possible to monitor via SSH without "
+    echo "an inetd."
     echo "---------------------------------------------"
     echo
 fi

@@ -1692,7 +1692,6 @@ def make_inventory(checkname, hostnamelist, check_only=False):
         sys.stderr.write('<Interrupted>\n')
 
     if not check_only:
-        sys.stdout.write('%-30s ' % (tty_blue + checkname + tty_normal))
         if newchecks != []:
             filename = autochecksdir + "/" + checkname + "-" + time.strftime("%Y-%m-%d_%H.%M.%S")
 	    while os.path.exists(filename + ".mk"): # more that one file a second..
@@ -1701,9 +1700,10 @@ def make_inventory(checkname, hostnamelist, check_only=False):
             if not os.path.exists(autochecksdir):
                os.makedirs(autochecksdir)
             file(filename, "w").write('# %s\n[%s]\n' % (filename, ''.join(newchecks)))
+	    sys.stdout.write('%-30s ' % (tty_blue + checkname + tty_normal))
             sys.stdout.write('%s%d new checks%s\n' % (tty_bold + tty_green, count_new, tty_normal))
-        else: 
-            sys.stdout.write('nothing new\n')
+#         else: 
+#             sys.stdout.write('nothing new\n')
     else:
         return count_new
 

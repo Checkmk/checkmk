@@ -31,6 +31,8 @@ Group:     System/Monitoring
 URL:       http://mathias-kettner.de/check_mk
 Source:    check_mk-%{version}.tar.gz
 BuildRoot: /tmp/rpm.buildroot.check_mk-%{version}
+AutoReq:   off
+AutoProv:  off
 
 %description
 check_mk is a xinetd-based remote agent for monitoring Linux and Unix-Servers
@@ -95,6 +97,7 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %config /etc/check_mk/main.mk
+%config /etc/check_mk/multisite.mk
 /etc/check_mk/conf.d/README
 %config /etc/nagios/objects/*
 /usr/bin/check_mk

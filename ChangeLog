@@ -1,6 +1,9 @@
-1.1.3:
+1.1.3b2:
+      * Make check_mk_agent.linux executable
+
+1.1.3b1:
       Core, Setup, etc.:
-      * check_mk_template.cfg: fix typo in notes_ur
+      * check_mk_template.cfg: fix typo in notes_url
       * Negation in binary conf lists via NEGATE (clustered_services, ingored_services,
 	bulkwalk_hosts, etc).
       * Better handling of wrapping performance counters
@@ -58,21 +61,13 @@
       * Changed response codes to better match HTTP
       * json output: handle tab and other control characters correctly
       * Fix columns host:worst_service_state and host:worst_service_hard_state
-      * New table servicesbygroup
+      * New tables servicesbygroup, servicesbyhostgroup and hostsbygroup
       * Allow to select columns with table prefix, e.g. host_name instead of name
         in table hosts. This does not affect the columns headers output by
 	ColumnHeaders, though.
       * Fix invalid json output of group list column in tables hosts and services
       * Fix minor compile problem.
       * Fix hangup on AuthUser: at certain columns
-
-      Multiadmin:
-      * Allow nagios contacts to be used for authorization (in order to
-	control which services may be seen / acted upon)
-      * Implemented worse state depending sounds on page load
-      * Appended /htdocs to document root (setup.sh tries to change 
-	your Apache-configuration accordingly, but this might fail on
-	rare occasions). Default root is now /usr/share/check_mk/web/htdocs
 
       Multisite:
       * Replaced Multiadmin with Multisite.

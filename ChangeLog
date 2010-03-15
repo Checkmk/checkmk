@@ -1,6 +1,9 @@
 1.1.3b2:
       * Make check_mk_agent.linux executable
 
+      Checks & Agents:
+      * mutlipath: Added unhandled multipath output format (UUID with 49 signs)
+
 1.1.3b1:
       Core, Setup, etc.:
       * check_mk_template.cfg: fix typo in notes_url

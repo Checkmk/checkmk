@@ -55,6 +55,14 @@
 # \_ round-robin 0 [prio=0][enabled]
 #  \_ 4:0:1:50 sdl 8:176 [active][undef]
 
+# And another one:
+# 1494554000000000052303250303700000000000000000000 dm-0 IET,VIRTUAL-DISK
+# [size=70G][features=0][hwhandler=0][rw]
+# \_ round-robin 0 [prio=-1][active]
+#  \_ 3:0:0:0 sdb 8:16  [active][undef]
+# \_ round-robin 0 [prio=-1][enabled]
+#  \_ 4:0:0:0 sdc 8:32  [active][undef]
+
 # Other output from other host:
 # anzvol2 (36005076306ffc648000000000000510a) dm-15 IBM,2107900
 # [size=100G][features=0][hwhandler=0]
@@ -88,7 +96,7 @@ def parse_multipath_output(info, only_uuid = None):
     reg_headers = [ (get_regex("^[0-9a-z]{33}$"), 0, None),
                     (get_regex("^([^\s]+)\s\(([0-9a-z]{33})\)"), 2, 1),
                     (get_regex("^[a-zA-Z0-9_]+$"), 0, None),
-                    (get_regex("^([0-9a-z]{33})\s?dm.+$"), 1, None),
+                    (get_regex("^([0-9a-z]{33}|[0-9a-z]{49})\s?dm.+$"), 1, None),
                     (get_regex("^[a-zA-Z0-9_]+dm-.+$"), 0, None) ]
 
     reg_prio = get_regex("\[prio=")

@@ -3,6 +3,7 @@
       * check_mk-df.php: Fix locale setting (error of locale DE on PNP 0.6.2)
       * mutlipath: Added unhandled multipath output format (UUID with 49 signs)
       * Livestatus: fix operators !~ and !~~, they didn't work (ever)
+      * Makefile: make sure all files are world readable
 
 1.1.3b1:
       Core, Setup, etc.:

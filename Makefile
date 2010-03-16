@@ -56,6 +56,7 @@ help:
 
 dist: mk-livestatus
 	@echo "--------------------------------------------------------------------------"
+	@echo -n "Checking permissions... with find -not -perm 444..." && [ -z "$$(find -not -perm -444)" ] && echo OK
 	@echo "Making $(DISTNAME)"
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)

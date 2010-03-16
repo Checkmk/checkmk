@@ -387,7 +387,7 @@ div.time {
 # --------------------------------------------------------------
 def render_nagios():
     bulletlink("Home", "http://www.nagios.org")
-    bulletlink("Documentation", "%s/doc" % defaults.nagios_url)
+    bulletlink("Documentation", "%s/docs/toc.html" % defaults.nagios_url)
     for entry in [
 	"General",
         ("tac.cgi", "Tactical Overview"),

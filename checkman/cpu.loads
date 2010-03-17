@@ -15,7 +15,7 @@ examples:
  checks = [
     # Use levels 4 per CPU (warning) and 8 per CPU (critical)
     # on all hosts with the tag "linux"
-    (["linux"], ALL_HOSTS, "cpu.loads", (4, 8)),
+    (["linux"], ALL_HOSTS, "cpu.loads", None, (4, 8)),
  ]
 perfdata:
   Three values: The load average for 1, 5 and 15 minutes.

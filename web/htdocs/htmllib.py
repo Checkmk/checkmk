@@ -391,7 +391,7 @@ class html:
 	    return False
 	transid = int(self.var("_transid"))
 	current = self.current_transid(self.req.user)
-	return transid == current
+	return transid == current or transid == -1
 
     # called by page functions in order to check, if this was
     # a reload or the original form submission. Increases the

@@ -3,6 +3,8 @@
       * check_mk-df.php: Fix locale setting (error of locale DE on PNP 0.6.2)
       * mutlipath: Added unhandled multipath output format (UUID with 49 signs)
       * Livestatus: fix operators !~ and !~~, they didn't work (ever)
+      * check_mk_templates: remove action_url from cluster and summary hosts (they have no performance data)
+      * Clusters: make real host checks for clusters (using check_icmp with multiple IP addresses)
 
 1.1.3b1:
       Core, Setup, etc.:

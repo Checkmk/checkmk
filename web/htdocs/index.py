@@ -104,10 +104,7 @@ def connect_to_livestatus(html):
     # If multiadmin is retricted to data user is a nagios contact for,
     # we need to set an AuthUser: header for livestatus
     if not config.may("see_all"):
-	html.live.set_auth_user('read', config.user)
-
-    # User wants to do action?
-    if not config.may("act_all"):
+	html.live.set_auth_user('read',   config.user)
 	html.live.set_auth_user('action', config.user)
 
     # Default auth domain is read. Please set to None to switch off authorization

@@ -230,7 +230,7 @@ then
     grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
     while read descr cmdline
     do
-        OUTPUT=$($cmdline | tr \\n \\1)
+        OUTPUT=$(eval "$cmdline" | tr \\n \\1)
         echo "$descr $? $OUTPUT"
     done
 fi

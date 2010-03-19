@@ -8,6 +8,7 @@
       * Clusters: make real host checks for clusters (using check_icmp with multiple IP addresses)
       * logwatch: fix authorization problem on web pages when acknowledging
       * Livestatus: fix some compile problems
+      * MRPE: Fix problems with quotes in commands
 
 1.1.3b1:
       Core, Setup, etc.:

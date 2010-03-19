@@ -38,15 +38,18 @@ if(url == '')
 	alert('ERROR: Unable to determine the script location. Problem finding sidebar.js inside the check_mk_sidebar container.');
 
 
-var oLink = document.createElement('link')
+var oLink = document.createElement('link');
 oLink.href = url + "check_mk.css";
 oLink.rel = 'stylesheet';
 oLink.type = 'text/css';
 document.body.appendChild(oLink);
 
-document.write(get_url(url + 'sidebar.py'));
+var oDiv = document.createElement('div');
+oDiv.innerHTML = get_url(url + 'sidebar.py');
+oSidebar.appendChild(oDiv);
 
 // Cleaning up DOM links
+oDiv = null;
 oLink = null;
 oSidebar = null;
 

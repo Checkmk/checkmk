@@ -29,13 +29,13 @@ var oSidebar = document.getElementById("check_mk_sidebar");
 
 var url = '';
 for(var i in oSidebar.childNodes)
-	if(oSidebar.childNodes[i].nodeName == 'SCRIPT') {
-		url = oSidebar.childNodes[i].src.replace("sidebar.js", "");
-		break;
-	}
+    if(oSidebar.childNodes[i].nodeName == 'SCRIPT') {
+        url = oSidebar.childNodes[i].src.replace("sidebar.js", "");
+        break;
+    }
 
 if(url == '')
-	alert('ERROR: Unable to determine the script location. Problem finding sidebar.js inside the check_mk_sidebar container.');
+    alert('ERROR: Unable to determine the script location. Problem finding sidebar.js inside the check_mk_sidebar container.');
 
 
 var oLink = document.createElement('link');
@@ -54,34 +54,35 @@ oLink = null;
 oSidebar = null;
 
 function get_url(url) {
-      if (window.XMLHttpRequest) {              
-          AJAX=new XMLHttpRequest();              
-      } else {                                  
-          AJAX=new ActiveXObject("Microsoft.XMLHTTP");
-      }
-      if (AJAX) {
-         AJAX.open("GET", url, false);                             
-         AJAX.send(null);
-         return AJAX.responseText;                                         
-      } else {
-         return false;
-      }                                             
+    if (window.XMLHttpRequest) {
+        var AJAX = new XMLHttpRequest();
+    } else {
+        var AJAX = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    
+    if (AJAX) {
+        AJAX.open("GET", url, false);
+        AJAX.send(null);
+        return AJAX.responseText;
+    } else {
+        return false;
+    }
 }
 
 function toggle_sidebar_snapin(oH2, url) {
     var childs = oH2.parentNode.childNodes;
     for (var i in childs) {
-	child = childs[i];
-	if (child.tagName == "DIV") {
-	    var oContent = child;
-	    break;
-	}
+        child = childs[i];
+        if (child.tagName == "DIV") {
+            var oContent = child;
+            break;
+        }
     }
     var closed = oContent.style.display == "none";
     if (closed)
-	oContent.style.display = "";
+        oContent.style.display = "";
     else
-	oContent.style.display = "none";
+        oContent.style.display = "none";
     /* make this persistent -> save */
     get_url(url + (closed ? "open" : "closed")); 
     oContent = null;
@@ -93,19 +94,18 @@ function switch_site(baseuri, switchvar) {
     parent.frames[1].location.reload(); /* reload main frame */
 }
 
-
 function sidebar_scheduler() {
     var timestamp = Date.parse(new Date()) / 1000;
     var newcontent = "";
     for (var i in refresh_snapins) { 
-	name    = refresh_snapins[i][0];
-	refresh = refresh_snapins[i][1];
-	if (timestamp % refresh == 0) {
-	    newcontent = get_url(url + "/sidebar_snapin.py?name=" + name);
-	    var oSnapin = document.getElementById("snapin_" + name);
-	    oSnapin.innerHTML = newcontent;
-	    oSnapin = null;
-	}
+        name    = refresh_snapins[i][0];
+        refresh = refresh_snapins[i][1];
+        if (timestamp % refresh == 0) {
+            newcontent = get_url(url + "/sidebar_snapin.py?name=" + name);
+            var oSnapin = document.getElementById("snapin_" + name);
+            oSnapin.innerHTML = newcontent;
+            oSnapin = null;
+        }
     }
     setTimeout(function(){sidebar_scheduler();}, 1000);
 }
@@ -119,8 +119,7 @@ function add_bookmark(baseurl) {
 function hilite_icon(oImg, onoff) {
     src = oImg.src;
     if (onoff == 0)
-	oImg.src = oImg.src.replace("hi.png", "lo.png");
+        oImg.src = oImg.src.replace("hi.png", "lo.png");
     else
-	oImg.src = oImg.src.replace("lo.png", "hi.png");
+        oImg.src = oImg.src.replace("lo.png", "hi.png");
 }
-	

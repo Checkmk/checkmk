@@ -205,7 +205,7 @@ def do_log_ack(html):
     fileDisplay = form_file_to_ext(file)
     ack  = html.var('ack')
 
-    if not (config.may("act_all") or host in all_hosts()):
+    if not (config.may("act") and (config.may("see_all") or host in all_hosts())):
         html.write("<h1 class=error>Permission denied</h1>\n")
         html.write("<div class=error>You are not allowed to acknowledge the logs of the host %s</div>" % htmllib.attrencode(host))
         return
@@ -215,17 +215,17 @@ def do_log_ack(html):
         raise MKUserError('ack', 'Invalid value for ack parameter.')
 
     try:
-        os.remove(config.defaults.logwatch_dir + '/' + host + '/' + file)
+        os.remove(defaults.logwatch_dir + '/' + host + '/' + file)
 
         html.write('<h1>%s: %s Acknowledged</h1>' % \
           (htmllib.attrencode(host), htmllib.attrencode(fileDisplay)))
         html.write('<p>The log messages from host &quot;%s&quot; in file'
                    '&quot;%s&quot; have been acknowledged.</p>' % \
                      (htmllib.attrencode(host), htmllib.attrencode(fileDisplay)))
-    except:
+    except Exception, e:
         raise MKGeneralException('The log file &quot;%s&quot; from host &quot;%s&quot;'
-                                 ' could not be deleted.' % \
-                                  (htmllib.attrencode(fileDisplay), htmllib.attrencode(host)))
+                                 ' could not be deleted: %s.' % \
+                                  (htmllib.attrencode(fileDisplay), htmllib.attrencode(host), e))
 
 def get_worst_file(host, files):
     worst_file = None

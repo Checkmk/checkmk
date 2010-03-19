@@ -1126,9 +1126,7 @@ def output_hostconf(outfile = sys.stdout):
           if opt_verbose:
               sys.stderr.write("%s\n" % ip)
        except:
-          sys.stderr.write("ERROR: Cannot determine ip address of %s. Please enter into /etc/hosts\n" \
-                           % hostname)
-          continue
+	  raise MKGeneralException("Cannot determine ip address of %s. Please add to ipaddresses." % hostname)
 
        hgs = hostgroups_of(hostname)
        hostgroups = ",".join(hgs)
@@ -1209,6 +1207,10 @@ def output_hostconf(outfile = sys.stdout):
 
     for clustername in all_active_clusters():
         nodes = nodes_of(clustername)
+	for node in nodes:
+	    if node not in all_hosts_untagged:
+                raise MKGeneralException("Node %s of cluster %s not in all_hosts." % (node, clustername))
+		
 	hgs = hostgroups_of(clustername)
         hostgroups = ",".join(hgs)
         if hostgroups == "":
@@ -1216,6 +1218,10 @@ def output_hostconf(outfile = sys.stdout):
             need_default_host_group = True
 	elif define_hostgroups:
 	    hostgroups_to_define.update(hgs)
+	try:
+	    node_ips = [ lookup_ipaddress(h) for h in nodes ]
+	except:
+	    node_ips = []
 
         outfile.write("""define host {
     use            %s
@@ -1225,11 +1231,12 @@ def output_hostconf(outfile = sys.stdout):
     host_groups    +%s
 %s    address        0.0.0.0
 %s    parents        %s
+    _NODEIPS       %s
 }
 
 """ % (cluster_template, clustername, clustername, ", ".join(nodes), hostgroups, 
        host_contactgroups_nag([clustername]), extra_host_conf_of(clustername),
-       ",".join(nodes)))
+       ",".join(nodes), " ".join(node_ips)))
 
         #   _  _   
         #  | || |  
@@ -1257,12 +1264,13 @@ def output_hostconf(outfile = sys.stdout):
     host_groups    +%s
 %s%s    address        0.0.0.0
     parents        %s
+    _NODEIPS       %s
 }
 """ % (cluster_template, summary_hostname(clustername), summary_hostname(clustername),
        clustername, ", ".join(nodes), hostgroups, 
            host_contactgroups_nag([clustername]), 
 	   extra_summary_host_conf_of(clustername),
-	   clustername))
+	   clustername, " ".join(node_ips)))
 
     # output default hostgroup in order to be consistant
     if need_default_host_group:

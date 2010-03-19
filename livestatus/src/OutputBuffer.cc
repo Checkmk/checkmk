@@ -27,7 +27,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdarg.h>
-#include <sys/errno.h>
+#include <errno.h>
+
 #include "logger.h"
 #include "Query.h"
 

@@ -158,7 +158,82 @@ def render_grouped_boxes(data, view, filters, group_columns, group_painters, pai
         html.write("</td>")
     html.write("</tr></table>\n")
 
+# -------------------------------------------------------------------------
+#    _____ _ _          _ 
+#   |_   _(_) | ___  __| |
+#     | | | | |/ _ \/ _` |
+#     | | | | |  __/ (_| |
+#     |_| |_|_|\___|\__,_|
+#                         
+# -------------------------------------------------------------------------
+def render_tiled(data, view, filters, group_columns, group_painters, painters):
+    columns, rows = data
+    html.write("<table class=\"services tiled\">\n")
 
+    last_group = None
+    group_open = False
+    for row in rows:
+	# Show group header
+        if len(group_painters) > 0:
+	    this_group = [ row[c] for c in group_columns ]
+	    if this_group != last_group:
+
+		# paint group header
+		if group_open:
+		    html.write("</td></tr>\n")
+		html.write("<tr class=groupheader>")
+		painted = False
+		for p in group_painters:
+		    if painted:
+			html.write("<td>,</td>")
+		    painted = paint(p, row)
+
+		html.write("</tr><tr><td class=tiles>\n")
+		group_open = True
+		last_group = this_group
+
+
+	# background color of tile according to item state
+	state = row.get("service_state", 0)
+	if state == 0:
+	    state = row.get("host_state", 0)
+	    sclass = "hstate%d" % state
+	else:
+	    sclass = "state%d" % state
+
+	if not group_open:
+	    html.write("<tr><td class=tiles>")
+	    group_open = True
+	html.write('<div class="tile %s"><table>' % sclass)
+
+	# We need at least five painters.
+	empty_painter = { "paint" : (lambda row: ("", "")) }
+
+	if len(painters) < 5:
+	    painters = painters + ([ (empty_painter, None) ] * (5 - len(painters)))
+	
+	rendered = [ prepare_paint(p, row) for p in painters ]
+
+	html.write("<tr><td class=\"tl %s\">%s</td><td class=\"tr %s\">%s</td></tr>\n" % \
+		    (rendered[1][0], rendered[1][1], rendered[2][0], rendered[2][1]))
+	html.write("<tr><td colspan=2 class=\"center %s\">%s</td></tr>\n" % \
+		    (rendered[0][0], rendered[0][1]))
+	for css, cont in rendered[5:]:
+	    html.write("<tr><td colspan=2 class=\"cont %s\">%s</td></tr>\n" % \
+			(css, cont))
+	html.write("<tr><td class=\"bl %s\">%s</td><td class=\"br %s\">%s</td></tr>\n" % \
+		    (rendered[3][0], rendered[3][1], rendered[4][0], rendered[4][1]))
+	html.write("</table></div>\n")
+    if group_open:
+	html.write("</td></tr>\n")
+    html.write("</table>\n")
+    
+
+multisite_layouts["tiled"] = { 
+    "title"  : "Tiles",
+    "render" : render_tiled,
+    "group"  : True
+}
 # -------------------------------------------------------------------------
 #    _____     _     _      
 #   |_   _|_ _| |__ | | ___ 

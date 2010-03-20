@@ -426,6 +426,71 @@ table.services td.tablegap {
   background-position: center;
 }
 
+/* tiled layout */
+table.tiled td {
+    border-style: none;
+}
+table.tiled tr.groupheader td {
+    font-size: 10pt;
+    font-weight: bold;
+    padding-left: 6px;
+    padding-top: 4px;
+}
+
+.tile {
+   width: 180px;
+   border: 1px solid black;
+   float: left;
+   -moz-border-radius: 4px;
+   margin-right: 3px;
+   margin-bottom: 3px;
+   border-right: 2px solid black;
+   border-bottom: 2px solid black;
+}
+
+.tile table {
+height: 80px;
+}
+.tile td {
+    border-style: none;
+   font-size: 7pt;
+}
+.tile.state0, .tile.hstate0 {
+    background-color: #afa;
+}
+.tile.state1 {
+    background-color: #ff0;
+}
+.tile.state2, .tile.hstate1 {
+    background-color: #f42;
+}
+.tile.state3, .tile.hstate2 {
+    background-color: #f80;
+}
+
+.tile table {
+width: 100%;
+}
+.tile td.tl, .tile td.bl {
+    text-align: left;
+}
+.tile td.tr, .tile td.br {
+    text-align: right;
+}
+.tile td.center {
+    vertical-align: middle;
+}
+.tile td.center, .tile td.cont {
+    text-align: center;
+}
+.tile td.bl, .tile td.br {
+    vertical-align: bottom;
+}
+
+.tile td.bl, .tile td.br, .tile td.tl, .tile td.tr {
+height: 20px;
+}
+
 /* forms in general */
 
 h2.formcaption { 

@@ -68,7 +68,7 @@ multisite_builtin_views = {}
 # Layouts
 ##################################################################################
 
-def paint(p, row):
+def prepare_paint(p, row):
     painter, linkview = p
     tdclass, content = painter["paint"](row)
 
@@ -83,7 +83,10 @@ def paint(p, row):
 
 	    uri = html.makeuri_contextless([("view_name", linkview)] + filtervars)
 	    content = "<a href=\"%s\">%s</a>" % (uri, content)
+    return tdclass, content
 
+def paint(p, row):
+    tdclass, content = prepare_paint(p, row)
     if tdclass:
 	html.write("<td class=\"%s\">%s</td>\n" % (tdclass, content))
     else:

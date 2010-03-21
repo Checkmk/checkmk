@@ -418,26 +418,25 @@ multisite_painters["num_services_pending"] = {
     "paint"   : lambda row: paint_svc_count("p", row["host_num_services_pending"])
 }
 
-def paint_service_list(row):
-    h = "<div class=servicelist>"
-    for svc, state, checked in row["host_services_with_state"]:
-        link = "view.py?view_name=service&site=%s&host=%s&service=%s" % (
+def paint_host_list(row):
+    h = "<div class=objectlist>"
+    for host, state, checked in row["hostgroup_members_with_state"]:
+        link = "view.py?view_name=host&site=%s&host=%s" % (
 		htmllib.urlencode(row["site"]),
-		htmllib.urlencode(row["host_name"]),
-		htmllib.urlencode(svc))
+		htmllib.urlencode(host))
 	if checked:
-	    css = "state%d" % state
+	    css = "hstate%d" % state
 	else:
-	    css = "statep"
-	h += "<div class=\"%s\"><a href=\"%s\">%s</a></div>" % (css, link, svc) 
+	    css = "hstatep"
+	h += "<div class=\"%s\"><a href=\"%s\">%s</a></div>" % (css, link, host) 
     h += "</div>"
     return "", h
 
-multisite_painters["host_services"] = {
-    "title"   : "Services colored according to state",
-    "short"   : "Services",
-    "columns" : [ "host_name", "host_services_with_state" ],
-    "paint"   : paint_service_list,
+multisite_painters["hostgroup_hosts"] = {
+    "title"   : "Hosts colored according to state",
+    "short"   : "Hosts",
+    "columns" : [ "hostgroup_members_with_state" ],
+    "paint"   : paint_host_list,
 }
 
 #    _   _           _                                  
@@ -525,6 +524,27 @@ multisite_painters["hg_alias"] = {
     "paint" : lambda row: (None, row["hostgroup_alias"])
 }
 
+def paint_service_list(row):
+    h = "<div class=objectlist>"
+    for svc, state, checked in row["host_services_with_state"]:
+        link = "view.py?view_name=service&site=%s&host=%s&service=%s" % (
+		htmllib.urlencode(row["site"]),
+		htmllib.urlencode(row["host_name"]),
+		htmllib.urlencode(svc))
+	if checked:
+	    css = "state%d" % state
+	else:
+	    css = "statep"
+	h += "<div class=\"%s\"><a href=\"%s\">%s</a></div>" % (css, link, svc) 
+    h += "</div>"
+    return "", h
+
+multisite_painters["host_services"] = {
+    "title"   : "Services colored according to state",
+    "short"   : "Services",
+    "columns" : [ "host_name", "host_services_with_state" ],
+    "paint"   : paint_service_list,
+}
 #    ____                  _                                          
 #   / ___|  ___ _ ____   _(_) ___ ___  __ _ _ __ ___  _   _ _ __  ___ 
 #   \___ \ / _ \ '__\ \ / / |/ __/ _ \/ _` | '__/ _ \| | | | '_ \/ __|

@@ -384,7 +384,7 @@ img.icon {
 }
 
 /* Styles used by specific painters. These should be modularized later ... */
-div.servicelist div {
+div.objectlist div {
   float: left;
   padding: 1px 3px;
   border-style: solid;

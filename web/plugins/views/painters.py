@@ -24,6 +24,43 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# =================================================================== #
+#        _    ____ ___      ____                                      #
+#       / \  |  _ \_ _|    |  _ \  ___   ___ _   _                    #
+#      / _ \ | |_) | |_____| | | |/ _ \ / __| | | |                   #
+#     / ___ \|  __/| |_____| |_| | (_) | (__| |_| |                   #
+#    /_/   \_\_|  |___|    |____/ \___/ \___|\__,_|                   #
+#                                                                     #
+# =================================================================== #
+# 
+# A painter computes from information from a data row HTML output and
+# a CSS class for one display column. Please note, that there is no
+# 1:1 relation between data columns and display columns. A painter can
+# make use of more than one data columns. One example is the current
+# service state. It uses the columns "service_state" and "has_been_checked".
+#
+# A painter is a python dictionary with the following keys:
+#
+# "title":   Title of the column to be displayed in the view editor
+#            *and* in views as column header
+# "short":   If the key is defined, it is used as column header in views
+#            instead of the the title
+# "columns": Livestatus columns this painter need. Multisite retrieves
+#            only data columns declared in the painters, so make sure
+#            you do not leave out something here.
+# "paint":   The actual paint function 
+#
+# The paint function gets one argument: A data row, which is a python
+# dictionary representing one data object (host, service, ...). Its
+# keys are the column names, its values the actual values from livestatus
+# (typed: numbers are float or int, not string)
+#
+# The paint function must return a pair of two strings: The HTML code
+# for painting the column and a CSS class for the TD of the column.
+# That class is optional and set to "" in most cases. Currently CSS
+# styles are not modular and all defined in check_mk.css. This will
+# change in future.
+# =================================================================== #
 
 #    ___                    
 #   |_ _|___ ___  _ __  ___ 

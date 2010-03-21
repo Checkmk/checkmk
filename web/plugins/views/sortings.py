@@ -27,7 +27,7 @@
 
 # =================================================================== #
 #        _    ____ ___      ____                                      #
-#       / \  |  _ \_ _|    |  _ \  ___   ___ _   _                    # 
+#       / \  |  _ \_ _|    |  _ \  ___   ___ _   _                    #
 #      / _ \ | |_) | |_____| | | |/ _ \ / __| | | |                   #
 #     / ___ \|  __/| |_____| |_| | (_) | (__| |_| |                   #
 #    /_/   \_\_|  |___|    |____/ \___/ \___|\__,_|                   #
@@ -40,9 +40,9 @@
 #
 # Each sorter is a dictionary with the following keys:
 #  
-# title:    Name of the sorter to be displayed in view editor
-# columns:  Livestatus-columns needed be the sort algorithm
-# cmp:      Comparison function
+# "title":    Name of the sorter to be displayed in view editor
+# "columns":  Livestatus-columns needed be the sort algorithm
+# "cmp":      Comparison function
 #
 # The function cmp does the actual sorting. During sorting it
 # will be called with two data rows as arguments and must

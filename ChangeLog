@@ -3,9 +3,13 @@
       * Table hosts: New column 'services' listing all services of that host
       * Column servicegroups:members: AuthUser is now honored
       * New columns: hosts:services_with_state and servicegroups:members_with_state
+      * New column: hostgroup:members_with_state
+      * Columns hostgroup:members and hostgroup:members_with_state honor AuthUser
 
       Multisite:
       * Number of columns now configurable for each layout (1..50)
+      * New layout "tiled"
+      * New painters for lists of hosts and services in one column
     
 1.1.3b2:
       * Make check_mk_agent.linux executable

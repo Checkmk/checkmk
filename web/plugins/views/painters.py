@@ -357,6 +357,12 @@ multisite_painters["svc_flapping"] = {
     "paint" : lambda row: paint_nagiosflag(row, "service_is_flapping", True)
 }
 
+#   _   _           _       
+#  | | | | ___  ___| |_ ___ 
+#  | |_| |/ _ \/ __| __/ __|
+#  |  _  | (_) \__ \ |_\__ \
+#  |_| |_|\___/|___/\__|___/
+#                           
 
 def paint_svc_count(id, count):
     if count > 0:
@@ -410,6 +416,28 @@ multisite_painters["num_services_pending"] = {
     "short"   : "P",
     "columns" : [ "host_num_services_pending" ],
     "paint"   : lambda row: paint_svc_count("p", row["host_num_services_pending"])
+}
+
+def paint_service_list(row):
+    h = "<div class=servicelist>"
+    for svc, state, checked in row["host_services_with_state"]:
+        link = "view.py?view_name=service&site=%s&host=%s&service=%s" % (
+		htmllib.urlencode(row["site"]),
+		htmllib.urlencode(row["host_name"]),
+		htmllib.urlencode(svc))
+	if checked:
+	    css = "state%d" % state
+	else:
+	    css = "statep"
+	h += "<div class=\"%s\"><a href=\"%s\">%s</a></div>" % (css, link, svc) 
+    h += "</div>"
+    return "", h
+
+multisite_painters["host_services"] = {
+    "title"   : "Services colored according to state",
+    "short"   : "Services",
+    "columns" : [ "host_name", "host_services_with_state" ],
+    "paint"   : paint_service_list,
 }
 
 #    _   _           _                                  

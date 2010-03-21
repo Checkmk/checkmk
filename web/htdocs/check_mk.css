@@ -345,27 +345,28 @@ td.statex {  /* zero count */
   color: #ccc;
 }
 
-td.state0, td.hstate0 { 
+/* Colors of the five possible host and service states */
+.state0, .hstate0, .state0 a, .hstate0 a { 
   background-color: #4a2;
   color: #6f4;
 }
 
-td.state1 { 
+.state1, .state1 a { 
   background-color: #ff0;
   color: #000;
 }
 
-td.state2, td.hstate1 { 
+.state2, .hstate1, .state2 a, .hstate2 a { 
   background-color: #f00;
   color: #fff;
 }
 
-td.state3, td.hstate2 { 
+.state3, .hstate2, .state3 a, .hstate2 a { 
   background-color: #f80;
   color: #fff;
 }
 
-td.statep, td.hstatep { 
+.statep, .hstatep, .statep a, .hstatep a { 
   background-color: #888;
   color: #fff;
 }
@@ -381,6 +382,16 @@ td.icons img {
 img.icon {
    border-style: none;
 }
+
+/* Styles used by specific painters. These should be modularized later ... */
+div.servicelist div {
+  float: left;
+  padding: 1px 3px;
+  border-style: solid;
+  border-width: 1px;
+  margin: 1px;
+}
+
 
 /*
  _                            _       

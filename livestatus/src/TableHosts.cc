@@ -227,9 +227,9 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 		"A list of the values of the custom variables", (char *)(&hst.custom_variables) - ref, indirect_offset, CVT_VALUES));
 
     table->addColumn(new HostlistColumn(prefix + "parents", 
-		"A list of all direct parents of the host", (char *)(&hst.parent_hosts) - ref, indirect_offset));
+		"A list of all direct parents of the host", (char *)(&hst.parent_hosts) - ref, indirect_offset, false));
     table->addColumn(new HostlistColumn(prefix + "childs", 
-		"A list of all direct childs of the host", (char *)(&hst.child_hosts) - ref, indirect_offset));
+		"A list of all direct childs of the host", (char *)(&hst.child_hosts) - ref, indirect_offset, false));
 
     table->addColumn(new ServicelistStateColumn(prefix + "num_services", 
 		"The total number of services of the host",         SLSC_NUM,         (char *)(&hst.services) - ref, indirect_offset));

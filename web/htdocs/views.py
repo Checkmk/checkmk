@@ -765,15 +765,8 @@ def show_view(view, show_heading = False):
 
     query = filterheaders + view.get("add_headers", "")
    
-    # Fetch data. Some views show data only after pressing [Search]
-    if (not view["mustsearch"]) or html.var("search"):
-	columns, rows = query_data(datasource, query, only_sites)
-    else:
-	columns, rows = [], []
-
     # [4] Sorting
     sorters = [ (multisite_sorters[sn], reverse) for sn, reverse in view["sorters"] ]
-    sort_data(rows, sorters)
 
     # [5] Grouping
     group_painters = [ (multisite_painters[n], v) for n, v in view["group_painters"] ]
@@ -781,6 +774,22 @@ def show_view(view, show_heading = False):
 
     # [6] Columns
     painters = [ (multisite_painters[n], v) for n, v in view["painters"] ]
+
+    # The columns we need depend on the sortings and columns in use
+    columns = []
+    for obj in [ s for s, r in sorters ] + [ p for p, v in (group_painters + painters) ]:
+	columns += obj["columns"]
+    colset = set(columns)
+    if "site" in colset:
+	colset.remove("site")
+    columns = list(colset)
+
+    # Fetch data. Some views show data only after pressing [Search]
+    if (not view["mustsearch"]) or html.var("search"):
+	columns, rows = query_data(datasource, columns, query, only_sites)
+        sort_data(rows, sorters)
+    else:
+	columns, rows = [], []
 
     # Show heading
     if show_heading:
@@ -896,11 +905,10 @@ def needed_group_columns(painters):
 
 # Retrieve data via livestatus, convert into list of dicts,
 # prepare row-function needed for painters
-def query_data(datasource, add_headers, only_sites = None):
+def query_data(datasource, columns, add_headers, only_sites = None):
     tablename = datasource["table"]
     query = "GET %s\n" % tablename
-    columns = datasource["columns"]
-    query += "Columns: %s\n" % " ".join(datasource["columns"])
+    query += "Columns: %s\n" % " ".join(columns)
     query += add_headers
     html.live.set_prepend_site(True)
     if config.debug:
@@ -967,13 +975,16 @@ def list_in_list(a, b):
 	    return False
     return True
 
+# Filters a list of sorters or painters and decides which of
+# those are available for a certain data source
 def allowed_for_datasource(collection, datasourcename):
     datasource = multisite_datasources[datasourcename]
+    infos_available = set(datasource["infos"])
     allowed = {}
-    ds_columns = datasource["columns"] + ["site"]
     for name, item in collection.items():
 	columns = item["columns"]
-	if list_in_list(columns, ds_columns):
+	infos_needed = set([ c.split("_", 1)[0] for c in columns if c != "site" ])
+	if len(infos_needed.difference(infos_available)) == 0:
 	    allowed[name] = item
     return allowed
 

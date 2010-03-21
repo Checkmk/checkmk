@@ -25,10 +25,39 @@
 # Boston, MA 02110-1301 USA.
 
 
-##################################################################################
-# Sorting
-##################################################################################
+# =================================================================== #
+#        _    ____ ___      ____                                      #
+#       / \  |  _ \_ _|    |  _ \  ___   ___ _   _                    # 
+#      / _ \ | |_) | |_____| | | |/ _ \ / __| | | |                   #
+#     / ___ \|  __/| |_____| |_| | (_) | (__| |_| |                   #
+#    /_/   \_\_|  |___|    |____/ \___/ \___|\__,_|                   #
+#                                                                     #
+# =================================================================== #
+# 
+# A sorter is used for allowing the user to sort the queried data 
+# according to a certain logic. All sorters declare in plugins/views/*.py
+# are available for the user.
+#
+# Each sorter is a dictionary with the following keys:
+#  
+# title:    Name of the sorter to be displayed in view editor
+# columns:  Livestatus-columns needed be the sort algorithm
+# cmp:      Comparison function
+#
+# The function cmp does the actual sorting. During sorting it
+# will be called with two data rows as arguments and must
+# return -1, 0 or 1:
+#
+# -1: The first row is smaller than the second (should be output first)
+#  0: Both rows are equivalent
+#  1: The first row is greater than the second. 
+#
+# The rows are dictionaries from column names to values. Each row
+# represents one item in the Livestatus table, for example one host,
+# one service, etc.
+# =================================================================== #
 
+# Helper functions
 # return -1, if r1 < r2, 0 if they are equal, 1 otherwise
 def cmp_atoms(s1, s2):
     if s1 < s2:
@@ -77,14 +106,12 @@ def cmp_simple_number(column, r1, r2):
     
 multisite_sorters["svcstate"] = {
     "title"   : "Service state",
-    "table"   : "services",
     "columns" : ["service_state", "service_has_been_checked"],
     "cmp"     : cmp_svc_states
 }
 
 multisite_sorters["hoststate"] = {
     "title"   : "Host state",
-    "table"   : "hosts",
     "columns" : ["host_state", "host_has_been_checked"],
     "cmp"     : cmp_hst_states
 }
@@ -98,7 +125,6 @@ def cmp_site_host(r1, r2):
 
 multisite_sorters["site_host"] = {
     "title"   : "Host",
-    "table"   : "hosts",
     "columns" : ["site", "host_name" ],
     "cmp"     : cmp_site_host
 }

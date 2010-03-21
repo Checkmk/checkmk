@@ -524,12 +524,17 @@ multisite_painters["hg_alias"] = {
     "paint" : lambda row: (None, row["hostgroup_alias"])
 }
 
-def paint_service_list(row):
+def paint_service_list(row, columnname):
     h = "<div class=objectlist>"
-    for svc, state, checked in row["host_services_with_state"]:
+    for entry in row[columnname]:
+        if columnname.startswith("servicegroup"):
+	    host, svc, state, checked = entry
+	else:
+	    svc, state, checked = entry
+	    host = row["host_name"]
         link = "view.py?view_name=service&site=%s&host=%s&service=%s" % (
 		htmllib.urlencode(row["site"]),
-		htmllib.urlencode(row["host_name"]),
+		htmllib.urlencode(host),
 		htmllib.urlencode(svc))
 	if checked:
 	    css = "state%d" % state
@@ -543,7 +548,7 @@ multisite_painters["host_services"] = {
     "title"   : "Services colored according to state",
     "short"   : "Services",
     "columns" : [ "host_name", "host_services_with_state" ],
-    "paint"   : paint_service_list,
+    "paint"   : lambda row: paint_service_list(row, "host_services_with_state")
 }
 #    ____                  _                                          
 #   / ___|  ___ _ ____   _(_) ___ ___  __ _ _ __ ___  _   _ _ __  ___ 
@@ -551,6 +556,13 @@ multisite_painters["host_services"] = {
 #    ___) |  __/ |   \ V /| | (_|  __/ (_| | | | (_) | |_| | |_) \__ \
 #   |____/ \___|_|    \_/ |_|\___\___|\__, |_|  \___/ \__,_| .__/|___/
 #                                     |___/                |_|        
+
+multisite_painters["sg_services"] = {
+    "title"   : "Services colored according to state",
+    "short"   : "Services",
+    "columns" : [ "servicegroup_members_with_state" ],
+    "paint"   : lambda row: paint_service_list(row, "servicegroup_members_with_state")
+}
 
 multisite_painters["sg_num_services"] = {
     "title"   : "Number of services",

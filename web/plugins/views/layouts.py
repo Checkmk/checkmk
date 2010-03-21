@@ -33,7 +33,7 @@
 #   |____/|_|_| |_|\__, |_|\___|
 #                  |___/        
 # -------------------------------------------------------------------------
-def render_single_dataset(data, view, filters, group_columns, group_painters, painters, num_columns):
+def render_single_dataset(data, view, group_columns, group_painters, painters, num_columns):
     columns, rows = data
     # I'm expecting only one row
     for row in rows:
@@ -43,7 +43,7 @@ def render_single_dataset(data, view, filters, group_columns, group_painters, pa
 	    html.write("<tr><td class=left>%s</td>" % painter["title"])
 	    paint(p, row)
 	    html.write("</tr>\n")
-	html.write("<table>\n")
+	html.write("</table>\n")
 
 multisite_layouts["dataset"] = { 
     "title"  : "Single dataset",
@@ -59,7 +59,7 @@ multisite_layouts["dataset"] = {
 #   |____/ \___/_/\_\___|\__,_|
 #                              
 # -------------------------------------------------------------------------
-def render_grouped_boxes(data, view, filters, group_columns, group_painters, painters, num_columns):
+def render_grouped_boxes(data, view,  group_columns, group_painters, painters, num_columns):
     columns, rows = data
     # N columns. Each should contain approx the same number of entries
     groups = []
@@ -178,7 +178,7 @@ multisite_layouts["boxed"] = {
 #     |_| |_|_|\___|\__,_|
 #                         
 # -------------------------------------------------------------------------
-def render_tiled(data, view, filters, group_columns, group_painters, painters, _ignore_num_columns):
+def render_tiled(data, view, group_columns, group_painters, painters, _ignore_num_columns):
     columns, rows = data
     html.write("<table class=\"services tiled\">\n")
 
@@ -254,12 +254,13 @@ multisite_layouts["tiled"] = {
 #     |_|\__,_|_.__/|_|\___|
 #                           
 # ------------------------------------------------------------------------
-def render_grouped_list(data, view, filters, group_columns, group_painters, painters, num_columns):
+def render_grouped_list(data, view, group_columns, group_painters, painters, num_columns):
     columns, rows = data
     html.write("<table class=services>\n")
     last_group = None
     trclass = None
     column = 1
+    group_open = False
 
     def show_header_line():
         html.write("<tr>")
@@ -284,6 +285,7 @@ def render_grouped_list(data, view, filters, group_columns, group_painters, pain
 		    column = 1
 
 		# paint group header
+		group_open = True
 		html.write("<tr class=groupheader>")
 		html.write("<td class=groupheader colspan=%d><table><tr>" % (len(painters) * num_columns + (num_columns - 1)))
 		painted = False
@@ -325,8 +327,9 @@ def render_grouped_list(data, view, filters, group_columns, group_painters, pain
 	    paint(p, row)
 	column += 1
     
-    html.write("</tr>\n")
-    html.write("<table>\n")
+    if group_open: 
+	html.write("</tr>\n")
+    html.write("</table>\n")
 
 multisite_layouts["table"] = { 
     "title"  : "Table",

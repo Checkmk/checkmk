@@ -147,11 +147,12 @@ def declare_filter(sort_index, f, comment = None):
     
 # Base class for all filters    
 class Filter:
-    def __init__(self, name, title, info, htmlvars):
+    def __init__(self, name, title, info, htmlvars, link_columns):
 	self.name = name
 	self.info = info
 	self.title = title
 	self.htmlvars = htmlvars
+	self.link_columns = link_columns
 	
     def display(self):
 	raise MKInternalError("Incomplete implementation of filter %s '%s': missing display()" % \
@@ -234,8 +235,6 @@ def load_views():
 	     raise MKGeneralException("Cannot load views from %s/views.mk: %s" % (dirpath, e))
 
     html.available_views = available_views()
-# html.write("avail: <pre>%s</pre>\n" % pprint.pformat(html.available_views))
-#    html.write("all: <pre>%s</pre>\n" % pprint.pformat(html.multisite_views))
 
 # Get the list of views which are available to the user
 # (which could be retrieved with get_view)
@@ -378,7 +377,7 @@ def page_edit_views(h, msg=None):
 	    html.write("<td class=content>%s</td>" % ownertxt)
 	    html.write("<td class=content>%s</td>" % (view["public"] and "yes" or "no"))
 	    html.write("<td class=content>%s</td>" % (view["hidden"] and "yes" or "no"))
-	    html.write("</td><td class=content>%s</td><td class=buttons>\n" % view["datasource"])
+	    html.write("<td class=content>%s</td><td class=buttons>\n" % view["datasource"])
 	    if owner == "":
 		buttontext = "Customize"
 	    else:
@@ -387,7 +386,7 @@ def page_edit_views(h, msg=None):
 	    if owner == html.req.user:
 		html.buttonlink("edit_view.py?load_view=%s" % viewname, "Edit")
 		html.buttonlink("edit_views.py?delete=%s" % viewname, "Delete!", True)
-	    html.write("</td></tr>")
+	    html.write("</td></tr>\n")
 
     html.write("<tr><td class=legend colspan=7>")
     html.begin_form("create_view", "edit_view.py") 
@@ -825,10 +824,25 @@ def show_view(view, show_heading = False):
     # [6] Columns
     painters = [ (multisite_painters[n], v) for n, v in view["painters"] ]
 
-    # The columns we need depend on the sortings and columns in use
+    # Now compute this list of all columns we need to query via Livestatus.
+    # Those are: (1) columns used by the sorters in use, (2) columns use by
+    # column- and group-painters in use and - note - (3) columns used to
+    # satisfy external references (filters) of views we link to. The last bit
+    # is the trickiest.
     columns = []
-    for obj in [ s for s, r in sorters ] + [ p for p, v in (group_painters + painters) ]:
-	columns += obj["columns"]
+    for s, r in sorters:
+	columns += s["columns"]
+
+    for p, v in (group_painters + painters):
+	columns += p["columns"]
+	if v:
+	    linkview = html.available_views.get(v)
+	    if linkview:
+		for ef in linkview["hide_filters"]:
+		    f = multisite_filters[ef]
+		    columns += f.link_columns
+
+    # Make column list unique and remove (implicit) site column
     colset = set(columns)
     if "site" in colset:
 	colset.remove("site")
@@ -886,7 +900,7 @@ def show_view(view, show_heading = False):
 	html.write("<a href=\"%s\">Back to search results</a>" % html.makeuri([]))
 
     else:
-        layout["render"]((columns, rows), view, show_filters, group_columns, group_painters, painters, num_columns)
+        layout["render"]((columns, rows), view, group_columns, group_painters, painters, num_columns)
 
 def view_title(view):
     extra_titles = [ ]
@@ -926,23 +940,17 @@ def show_context_links(thisview, active_filters):
 		    break
 	    used_contextvars += contextvars
 	    if skip:
-# html.write("%s geht nicht, weil %s fehlt. " % (fn, var))
 		break
 	if skip:
-# html.write("View %s/%s geht also nicht<br>" % (user, name))
 	    continue
 	
 	# add context link to this view    
 	if len(used_contextvars) > 0:
 	    if first:
-                # html.write("<div class=contextlinks><h2>Contextlinks</h2>\n")
 		first = False
 	    vars_values = [ (var, html.var(var)) for var in set(used_contextvars) ]
 	    html.write("<a class=\"navi context\" href=\"%s\">%s</a>" % \
 		    (html.makeuri_contextless(vars_values + [("view_name", name)]), view_title(view)))
-
-    if not first:
-	html.write("</div>\n")
 	
 
 
@@ -962,7 +970,7 @@ def query_data(datasource, columns, add_headers, only_sites = None):
     query += add_headers
     html.live.set_prepend_site(True)
     if config.debug:
-	html.write("<div class=message><pre>%s</pre></div>\n" % query)
+	html.write("<div class=message><tt>%s</tt></div>\n" % (query.replace('\n', '<br>\n')))
     
     if only_sites:
 	html.live.set_only_sites(only_sites)
@@ -1072,7 +1080,7 @@ def show_action_form(is_open, datasource):
 	    html.write("<input type=submit name=_enable_checks value=\"Enable\"> &nbsp; "
 		   "<input type=submit name=_disable_checks value=\"Disable\"> &nbsp; ")
 	if config.may("action.reschedule"):
-	    html.write("<input type=submit name=_resched_checks value=\"Reschedule next check now\"></td></tr>\n"
+	    html.write("<input type=submit name=_resched_checks value=\"Reschedule next check now\">"
 		   "</td></tr>\n")
 
     if config.may("action.fakechecks"):

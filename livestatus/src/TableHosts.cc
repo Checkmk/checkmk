@@ -262,6 +262,11 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 
     table->addColumn(new HostgroupsColumn(prefix + "groups",
 		"A list of all host groups this host is in", (char *)(&hst.hostgroups_ptr) - ref, indirect_offset));
+
+    table->addColumn(new ServicelistColumn(prefix + "services", 
+	    "A list of all services of the host",    (char *)(&hst.services) - ref, indirect_offset, false, false));
+    table->addColumn(new ServicelistColumn(prefix + "services_with_state", 
+	    "A list of all services of the host together with state and has_been_checked",    (char *)(&hst.services) - ref, indirect_offset, false, true));
 }
 
 void *TableHosts::findObject(char *objectspec)

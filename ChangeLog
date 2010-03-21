@@ -1,3 +1,12 @@
+1.1.4:
+      Livestatus:
+      * Table hosts: New column 'services' listing all services of that host
+      * Column servicegroups:members: AuthUser is now honored
+      * New columns: hosts:services_with_state and servicegroups:members_with_state
+
+      Multisite:
+      * Number of columns now configurable for each layout (1..50)
+    
 1.1.3b2:
       * Make check_mk_agent.linux executable
       * check_mk-df.php: Fix locale setting (error of locale DE on PNP 0.6.2)

@@ -858,6 +858,26 @@ void Query::outputEndList()
       _output->addChar(']');
 }
 
+void Query::outputBeginSublist()
+{
+   if (_output_format == OUTPUT_FORMAT_JSON)
+      _output->addChar('[');
+}
+
+void Query::outputSublistSeparator()
+{
+   if (_output_format == OUTPUT_FORMAT_CSV)
+      _output->addBuffer(_host_service_separator.c_str(), _host_service_separator.size());
+   else
+      _output->addChar(',');
+}
+
+void Query::outputEndSublist()
+{
+   if (_output_format == OUTPUT_FORMAT_JSON)
+      _output->addChar(']');
+}
+
 Aggregator **Query::getStatsGroup(string name)
 {
    _stats_groups_t::iterator it = _stats_groups.find(name);

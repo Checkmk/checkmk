@@ -96,6 +96,7 @@ public:
    void addColumn(Column *column);
    void setShowColumnHeaders(bool x) { _show_column_headers = x; };
    bool hasNoColumns();
+   contact *authUser() { return _auth_user; };
    void outputDatasetBegin();
    void outputDatasetEnd();
    void outputFieldSeparator();
@@ -110,6 +111,9 @@ public:
    void outputBeginList();
    void outputListSeparator();
    void outputEndList();
+   void outputBeginSublist();
+   void outputSublistSeparator();
+   void outputEndSublist();
    void *findIndexFilter(const char *columnname);
    void *findTimerangeFilter(const char *columnname, time_t *, time_t *);
    void findIntLimits(const char *columnname, int *lower, int *upper);

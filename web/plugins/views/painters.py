@@ -529,9 +529,11 @@ def paint_service_list(row, columnname):
     for entry in row[columnname]:
         if columnname.startswith("servicegroup"):
 	    host, svc, state, checked = entry
+	    text = host + " ~ " + svc
 	else:
 	    svc, state, checked = entry
 	    host = row["host_name"]
+	    text = svc
         link = "view.py?view_name=service&site=%s&host=%s&service=%s" % (
 		htmllib.urlencode(row["site"]),
 		htmllib.urlencode(host),
@@ -540,7 +542,7 @@ def paint_service_list(row, columnname):
 	    css = "state%d" % state
 	else:
 	    css = "statep"
-	h += "<div class=\"%s\"><a href=\"%s\">%s</a></div>" % (css, link, svc) 
+	h += "<div class=\"%s\"><a href=\"%s\">%s</a></div>" % (css, link, text) 
     h += "</div>"
     return "", h
 

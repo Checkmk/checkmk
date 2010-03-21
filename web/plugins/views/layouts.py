@@ -45,6 +45,12 @@ def render_single_dataset(data, view, filters, group_columns, group_painters, pa
 	    html.write("</tr>\n")
 	html.write("<table>\n")
 
+multisite_layouts["dataset"] = { 
+    "title"  : "Single dataset",
+    "render" : render_single_dataset,
+    "group"  : False
+}
+
 # -------------------------------------------------------------------------
 #    ____                    _ 
 #   | __ )  _____  _____  __| |
@@ -158,6 +164,12 @@ def render_grouped_boxes(data, view, filters, group_columns, group_painters, pai
         html.write("</td>")
     html.write("</tr></table>\n")
 
+multisite_layouts["boxed"] = { 
+    "title"  : "Balanced boxes",
+    "render" : render_grouped_boxes,
+    "group"  : True
+}
+
 # -------------------------------------------------------------------------
 #    _____ _ _          _ 
 #   |_   _(_) | ___  __| |
@@ -166,7 +178,7 @@ def render_grouped_boxes(data, view, filters, group_columns, group_painters, pai
 #     |_| |_|_|\___|\__,_|
 #                         
 # -------------------------------------------------------------------------
-def render_tiled(data, view, filters, group_columns, group_painters, painters):
+def render_tiled(data, view, filters, group_columns, group_painters, painters, _ignore_num_columns):
     columns, rows = data
     html.write("<table class=\"services tiled\">\n")
 
@@ -316,48 +328,10 @@ def render_grouped_list(data, view, filters, group_columns, group_painters, pain
     html.write("</tr>\n")
     html.write("<table>\n")
 
-multisite_layouts["dataset"] = { 
-    "title"  : "single dataset",
-    "render" : lambda a,v,b,c,d,e: render_single_dataset(a,v,b,c,d,e,1),
-    "group"  : False
-}
 multisite_layouts["table"] = { 
-    "title"  : "table",
-    "render" : lambda a,v,b,c,d,e: render_grouped_list(a,v,b,c,d,e,1),
+    "title"  : "Table",
+    "render" : render_grouped_list,
     "group"  : True
 }
-multisite_layouts["table_2c"] = { 
-    "title"  : "table with 2 columns",
-    "render" : lambda a,v,b,c,d,e: render_grouped_list(a,v,b,c,d,e,2),
-    "group"  : True
-}
-multisite_layouts["table_3c"] = { 
-    "title"  : "table with 3 columns",
-    "render" : lambda a,v,b,c,d,e: render_grouped_list(a,v,b,c,d,e,3),
-    "group"  : True
-}
-multisite_layouts["table_4c"] = { 
-    "title"  : "table with 4 columns",
-    "render" : lambda a,v,b,c,d,e: render_grouped_list(a,v,b,c,d,e,4),
-    "group"  : True
-}
-multisite_layouts["boxed_2"] = { 
-    "title"  : "Balanced boxes in 2 columns",
-    "render" : lambda a,v,b,c,d,e: render_grouped_boxes(a,v,b,c,d,e,2),
-    "group"  : True
-}
-multisite_layouts["boxed_3"] = { 
-    "title"  : "Balanced boxes in 3 columns",
-    "render" : lambda a,v,b,c,d,e: render_grouped_boxes(a,v,b,c,d,e,3),
-    "group"  : True
-}
-multisite_layouts["boxed_4"] = { 
-    "title"  : "Balanced boxes in 4 columns",
-    "render" : lambda a,v,b,c,d,e: render_grouped_boxes(a,v,b,c,d,e,4),
-    "group"  : True
-}
-multisite_layouts["boxed_5"] = { 
-    "title"  : "Balanced boxes in 5 columns",
-    "render" : lambda a,v,b,c,d,e: render_grouped_boxes(a,v,b,c,d,e,5),
-    "group"  : True
-}
+
+

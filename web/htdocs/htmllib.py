@@ -57,7 +57,7 @@ class uriinfo:
                          if i[0] not in omit ])
 
 def attrencode(value):
-    return cgi.escape(value, True)
+    return cgi.escape(str(value), True)
 
 def urlencode_vars(vars):
     output = ""
@@ -66,7 +66,7 @@ def urlencode_vars(vars):
 	    output += "&"
 	output += varname
 	output += "="
-	output += urlencode(value)
+	output += urlencode(str(value))
     return output
 
 def urlencode(value):

@@ -518,7 +518,7 @@ table.form td.legend {
   /* width: 20%; */
   border: 1px solid black;
   vertical-align: top;
-color: white;
+  color: white;
 }
 
 table.form td.content { 
@@ -847,12 +847,12 @@ table.permissions td.content.guest {
 
 /* view editor */
 table.view {
-    /* width: 100%; */
+    width: 100%;
     border-collapse: collapse;
     empty-cells: show;
     background-color: #ffc;
 }
-table.view td {
+table.view td.legend, table.view td.content {
    border: 1px solid #884;
    padding: 2px 0.5ex;
     vertical-align: top;
@@ -861,6 +861,8 @@ table.view td.legend {
     padding-top: 3px;
     color: #884;
     vertical-align: top;
+    white-space: nowrap;
+    width: 150px;
 }
 div.viewdescription {
     color: #084;

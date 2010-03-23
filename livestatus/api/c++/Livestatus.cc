@@ -21,6 +21,12 @@ void Livestatus::connectUNIX(const char *socket_path)
 	_file = fdopen(_connection, "r");
 }
 
+
+Livestatus::~Livestatus()
+{
+    disconnect();
+}
+
 void Livestatus::disconnect()
 {
     if (isConnected()) {
@@ -41,7 +47,7 @@ void Livestatus::sendQuery(const char *query)
 }
 
 
-std::vector<std::string> *Livestatus::readLine()
+std::vector<std::string> *Livestatus::nextRow()
 {
     char line[65536];
     if (0 != fgets(line, sizeof(line), _file)) {

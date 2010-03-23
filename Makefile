@@ -64,7 +64,7 @@ dist: mk-livestatus
 	tar czf $(DISTNAME)/checkman.tar.gz $(TAROPTS) -C checkman $$(cd checkman ; ls)
 	tar czf $(DISTNAME)/htdocs.tar.gz $(TAROPTS) -C htdocs $$(cd htdocs ; ls *.php *.css *.png *.gif)
 	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web $$(cd web ; ls htdocs/*/*.{jpg,png,gif} htdocs/*.{py,css,js} plugins/*/*.py)
-	tar czf $(DISTNAME)/livestatus.tar.gz $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) )
+	tar czf $(DISTNAME)/livestatus.tar.gz $(TAROPTS) -C livestatus  $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) )
 	tar czf $(DISTNAME)/pnp-templates.tar.gz $(TAROPTS) -C pnp-templates $$(cd pnp-templates ; ls *.php)
 	tar cf $(DISTNAME)/doc.tar $(TAROPTS) -C doc --exclude .svn --exclude "*~" \
 			check_mk_templates.cfg check_mk.1 \
@@ -72,7 +72,7 @@ dist: mk-livestatus
 			check_mk{,.trans}.200.png windows \
 			df_magic_number.py livestatus
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) COPYING AUTHORS ChangeLog
-	tar rf $(DISTNAME)/doc.tar $(TAROPTS) livestatus/api --exclude "*~" --exclude "*.pyc"
+	tar rf $(DISTNAME)/doc.tar $(TAROPTS) livestatus/api --exclude "*~" --exclude "*.pyc" --exclude ".gitignore" --exclude .f12 
 	gzip $(DISTNAME)/doc.tar
 	tar czf $(DISTNAME)/modules.tar.gz $(TAROPTS) -C modules $$(cd modules ; ls *.py)
 

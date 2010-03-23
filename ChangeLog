@@ -5,6 +5,7 @@
       * New columns: hosts:services_with_state and servicegroups:members_with_state
       * New column: hostgroup:members_with_state
       * Columns hostgroup:members and hostgroup:members_with_state honor AuthUser
+      * New rudimentary API for C++
 
       Multisite:
       * Number of columns now configurable for each layout (1..50)

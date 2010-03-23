@@ -16,11 +16,12 @@ class Livestatus
 
 public:
     Livestatus() : _connection(-1), _file(0) {};
+    ~Livestatus();
     void connectUNIX(const char *socketpath);
     bool isConnected() const { return _connection >= 0; };
     void disconnect();
     void sendQuery(const char *query);
-    std::vector<std::string> *readLine();
+    std::vector<std::string> *nextRow();
 };
 
 

@@ -17,7 +17,7 @@ int main(int argc, char **argv)
     if (live.isConnected()) {
 	live.sendQuery(query);
 	std::vector<std::string> *row;
-	while (0 != (row = live.readLine()))
+	while (0 != (row = live.nextRow()))
 	{
 	    printf("Line:\n");
 	    for (int i=0; i<row->size(); i++) 

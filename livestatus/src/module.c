@@ -60,6 +60,7 @@ NEB_API_VERSION(CURRENT_NEB_API_VERSION)
 
 int g_accept_timeout_msec = 2500; /* default is 2.5 sec */
 int g_num_clientthreads = 10;     /* allow 10 concurrent connections per default */
+size_t g_thread_stack_size = 65536; /* stack size of threads */
 
 #define false 0
 #define true 1
@@ -180,10 +181,22 @@ void start_threads()
 
 	unsigned t;
 	g_clientthread_id = (pthread_t *)malloc(sizeof(pthread_t) * g_num_clientthreads);
-	for (t=0; t < g_num_clientthreads; t++)
-	    pthread_create(&g_clientthread_id[t], 0, client_thread, (void *)0);
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	size_t defsize;
+	if (g_debug_level >= 2 && 0 == pthread_attr_getstacksize(&attr, &defsize))
+	    logger(LG_INFO, "Default stack size is %lu", defsize);
+	if (0 != pthread_attr_setstacksize(&attr, g_thread_stack_size)) 
+	    logger(LG_INFO, "Error: Cannot set thread stack size to %lu", g_thread_stack_size);
+	else {
+	    if (g_debug_level >= 2)
+		logger(LG_INFO, "Setting thread stack size to %lu", g_thread_stack_size);
+	}
+	for (t=0; t < g_num_clientthreads; t++) 
+	    pthread_create(&g_clientthread_id[t], &attr, client_thread, (void *)0);
 
 	g_thread_running = 1;
+	pthread_attr_destroy(&attr);
     }
 }
 
@@ -398,6 +411,10 @@ void livestatus_parse_arguments(const char *args_orig)
 	    else if (!strcmp(left, "max_cached_messages")) {
 		g_max_cached_messages = strtoul(right, 0, 10);
 		logger(LG_INFO, "Setting max number of cached log messages to %lu", g_max_cached_messages);
+	    }
+	    else if (!strcmp(left, "thread_stack_size")) {
+		g_thread_stack_size = strtoul(right, 0, 10);
+		logger(LG_INFO, "Setting size of thread stacks to %lu", g_thread_stack_size);
 	    }
 	    else if (!strcmp(left, "max_response_size")) {
 		g_max_response_size = strtoul(right, 0, 10);

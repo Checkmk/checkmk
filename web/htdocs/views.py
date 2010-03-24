@@ -968,6 +968,19 @@ def query_data(datasource, columns, add_headers, only_sites = None):
     merge_column = datasource.get("merge_by")
     if merge_column:
 	columns = [merge_column] + columns
+
+    # Most layouts need current state of objekt in order to
+    # choose background color - even if no painter for state
+    # is selected. Make sure those columns are fetched.
+    state_columns = []
+    if "service" in datasource["infos"]:
+	state_columns += [ "service_has_been_checked", "service_state" ]	
+    elif "host" in datasource["infos"]:
+	state_columns += [ "host_has_been_checked", "host_state" ]	
+    for c in state_columns:
+	if c not in columns:
+	    columns.append(c)
+
     query = "GET %s\n" % tablename
     query += "Columns: %s\n" % " ".join(columns)
     query += add_headers

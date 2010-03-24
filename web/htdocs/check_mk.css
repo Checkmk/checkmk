@@ -346,6 +346,8 @@ td.statex {  /* zero count */
 }
 
 /* Colors of the five possible host and service states */
+/* HIRN: .hstate0 a muss raus. Dass muss ich spezifischer
+   machen */
 .state0, .hstate0, .state0 a, .hstate0 a { 
   background-color: #4a2;
   color: #6f4;

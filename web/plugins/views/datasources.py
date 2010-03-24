@@ -59,15 +59,29 @@ multisite_datasources["servicesbyhostgroup"] = {
     "infos"   : [ "host", "service", "hostgroup" ],
 }
 
-multisite_datasources["servicegroups"] = {
-    "title" : "Servicegroups",
-    "table" : "servicegroups",
-    "infos" : [ "servicegroup" ],
-}
-
 multisite_datasources["hostgroups"] = {
     "title" : "Hostgroups",
     "table" : "hostgroups",
     "infos" : [ "hostgroup" ],
+}
+
+multisite_datasources["merged_hostgroups"] = {
+    "title"    : "Hostgroups, merged",
+    "table"    : "hostgroups",
+    "merge_by" : "hostgroup_name",
+    "infos"    : [ "hostgroup" ],
+}
+
+multisite_datasources["servicegroups"] = {
+    "title"    : "Servicegroups",
+    "table"    : "servicegroups",
+    "infos"    : [ "servicegroup" ],
+}
+
+multisite_datasources["merged_servicegroups"] = {
+    "title"    : "Servicegroups, merged",
+    "table"    : "servicegroups",
+    "merge_by" : "servicegroup_name",
+    "infos"    : [ "servicegroup" ],
 }
 

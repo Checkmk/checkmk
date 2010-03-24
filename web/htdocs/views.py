@@ -965,6 +965,9 @@ def needed_group_columns(painters):
 # prepare row-function needed for painters
 def query_data(datasource, columns, add_headers, only_sites = None):
     tablename = datasource["table"]
+    merge_column = datasource.get("merge_by")
+    if merge_column:
+	columns = [merge_column] + columns
     query = "GET %s\n" % tablename
     query += "Columns: %s\n" % " ".join(columns)
     query += add_headers
@@ -977,6 +980,9 @@ def query_data(datasource, columns, add_headers, only_sites = None):
     data = html.live.query(query)
     html.live.set_only_sites(None)
     html.live.set_prepend_site(False)
+    
+    if merge_column:
+	data = merge_data(data, columns)
 
     # convert lists-rows into dictionaries. 
     # performance, but makes live much easier later.
@@ -984,6 +990,53 @@ def query_data(datasource, columns, add_headers, only_sites = None):
     assoc = [ dict(zip(columns, row)) for row in data ]
 
     return (columns, assoc)
+
+
+# Merge all data rows with different sites but the same value
+# in merge_column. We require that all column names are prefixed
+# with the tablename. The column with the merge key is required
+# to be the *second* column (right after the site column)
+def merge_data(data, columns):
+    merged = {}
+    mergefuncs = [lambda a,b: ""] # site column is not merged
+
+    def worst_service_state(a, b):
+	if a == 2 or b == 2: 
+	    return 2
+	else:
+	    return max(a, b)
+
+    def worst_host_state(a, b):
+	if a == 1 or b == 1:
+	    return 1
+	else:
+	    return max(a, b)
+
+    for c in columns:
+	tablename, col = c.split("_", 1)
+	if col.startswith("num_") or col.startswith("members"):
+	    mergefunc = lambda a,b: a+b
+	elif col.startswith("worst_service"):
+	    return worst_service_state
+	elif col.startswith("worst_host"):
+	    return worst_host_state
+	else:
+	    mergefunc = lambda a,b: a
+	mergefuncs.append(mergefunc)
+
+    for row in data:
+	mergekey = row[1]
+	if mergekey in merged:
+	    oldrow = merged[mergekey]
+	    merged[mergekey] = [ f(a,b) for f,a,b in zip(mergefuncs, oldrow, row) ]
+	else:
+	    merged[mergekey] = row
+
+    # return all rows sorted according to merge key
+    mergekeys = merged.keys()
+    mergekeys.sort()
+    return [ merged[k] for k in mergekeys ]
+
 
 # Sort data according to list of sorters. The tablename
 # is needed in order to handle different column names

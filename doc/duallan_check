@@ -1,0 +1,30 @@
+#!/bin/bash
+
+HOSTNAME=$1
+LANA=${HOSTNAME}1
+LANB=${HOSTNAME}2
+
+exec 2>/dev/null
+
+if cat < /dev/tcp/$LANA/6556
+then
+    echo "0 LAN-A - OK - Rechner über LAN-A erreichbar"
+    if /usr/lib/nagios/plugins/check_icmp $LANB >/dev/null 2>&1
+    then
+	echo "0 LAN-B - OK - Rechner über LAN-B erreichbar"
+    else
+	echo "2 LAN-B - CRIT - Rechner über LAN-B nicht erreichbar"
+    fi
+else 
+    if cat < /dev/tcp/$LANB/6556
+    then
+	echo "2 LAN-A - CRIT - Rechner über LAN-A nicht erreichbar"
+	echo "0 LAN-B - OK - Rechner über LAN-B erreichbar"
+    else
+	echo '<<<local>>>'
+	echo "2 LAN-A - CRIT - Rechner über LAN-A nicht erreichbar"
+	echo "2 LAN-B - CRIT - Rechner über LAN-B nicht erreichbar"
+	exit 1 # Beide LANs erfolglos
+    fi
+fi
+

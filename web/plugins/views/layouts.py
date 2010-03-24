@@ -206,12 +206,20 @@ def render_tiled(data, view, group_columns, group_painters, painters, _ignore_nu
 
 
 	# background color of tile according to item state
-	state = row.get("service_state", 0)
-	if state == 0:
-	    state = row.get("host_state", 0)
-	    sclass = "hstate%d" % state
+	state = row.get("service_state", -1)
+	if state == -1:
+	    hbc = row.get("host_has_been_checked", 1)
+	    if hbc:
+		state = row.get("host_state", 0)
+		sclass = "hstate%d" % state
+	    else:
+		state = "hstatep"
 	else:
-	    sclass = "state%d" % state
+	    hbc = row.get("service_has_been_checked", 1)
+	    if hbc:
+		sclass = "state%d" % state
+	    else:
+		sclass = "statep"
 
 	if not group_open:
 	    html.write("<tr><td class=tiles>")
@@ -244,7 +252,7 @@ def render_tiled(data, view, group_columns, group_painters, painters, _ignore_nu
 multisite_layouts["tiled"] = { 
     "title"  : "Tiles",
     "render" : render_tiled,
-    "group"  : True
+    "group"  : True,
 }
 # -------------------------------------------------------------------------
 #    _____     _     _      
@@ -334,7 +342,7 @@ def render_grouped_list(data, view, group_columns, group_painters, painters, num
 multisite_layouts["table"] = { 
     "title"  : "Table",
     "render" : render_grouped_list,
-    "group"  : True
+    "group"  : True,
 }
 
 

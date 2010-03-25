@@ -1,14 +1,19 @@
+1.1.3:
+      * Multisite: Fix sidebar problem (being black) with Internet Explorer
+
+1.1.3b3:
+      * check_mk_templates: remove action_url from cluster and summary hosts (they have no performance data)
+      * Clusters: make real host checks for clusters (using check_icmp with multiple IP addresses)
+      * MRPE: Fix problems with quotes in commands
+
 1.1.3b2:
       * Make check_mk_agent.linux executable
       * check_mk-df.php: Fix locale setting (error of locale DE on PNP 0.6.2)
-      * mutlipath: Added unhandled multipath output format (UUID with 49 signs)
+      * multipath: Added unhandled multipath output format (UUID with 49 signs)
       * Livestatus: fix operators !~ and !~~, they didn't work (ever)
       * Makefile: make sure all files are world readable
-      * check_mk_templates: remove action_url from cluster and summary hosts (they have no performance data)
-      * Clusters: make real host checks for clusters (using check_icmp with multiple IP addresses)
       * logwatch: fix authorization problem on web pages when acknowledging
       * Livestatus: fix some compile problems
-      * MRPE: Fix problems with quotes in commands
 
 1.1.3b1:
       Core, Setup, etc.:

@@ -29,6 +29,7 @@
 #include "Query.h"
 #include "OffsetStringColumn.h"
 #include "OffsetIntColumn.h"
+#include "OffsetTimeColumn.h"
 #include "OffsetDoubleColumn.h"
 #include "OffsetTimeperiodColumn.h"
 #include "OffsetStringHostMacroColumn.h"
@@ -140,13 +141,13 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 		"Last hard state", (char *)(&hst.last_hard_state) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "current_attempt", 
 		"Number of the current check attempts", (char *)(&hst.current_attempt) - ref, indirect_offset));
-    table->addColumn(new OffsetIntColumn(prefix + "last_notification", 
+    table->addColumn(new OffsetTimeColumn(prefix + "last_notification", 
 		"Time of the last notification (Unix timestamp)", (char *)(&hst.last_host_notification) - ref, indirect_offset));
-    table->addColumn(new OffsetIntColumn(prefix + "next_notification", 
+    table->addColumn(new OffsetTimeColumn(prefix + "next_notification", 
 		"Time of the next notification (Unix timestamp)", (char *)(&hst.next_host_notification) - ref, indirect_offset));
-    table->addColumn(new OffsetIntColumn(prefix + "next_check", 
+    table->addColumn(new OffsetTimeColumn(prefix + "next_check", 
 		"Scheduled time for the next check (Unix timestamp)", (char *)(&hst.next_check) - ref, indirect_offset));
-    table->addColumn(new OffsetIntColumn(prefix + "last_hard_state_change", 
+    table->addColumn(new OffsetTimeColumn(prefix + "last_hard_state_change", 
 		"Time of the last hard state change (Unix timestamp)", (char *)(&hst.last_hard_state_change) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "has_been_checked", 
 		"Wether the host has already been checked (0/1)", (char *)(&hst.has_been_checked) - ref, indirect_offset));
@@ -168,7 +169,7 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 		"Type of the current state (0: soft, 1: hard)", (char *)(&hst.state_type) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "last_check", 
 		"Time of the last check (Unix timestamp)", (char *)(&hst.last_check) - ref, indirect_offset));
-    table->addColumn(new OffsetIntColumn(prefix + "last_state_change", 
+    table->addColumn(new OffsetTimeColumn(prefix + "last_state_change", 
 		"Time of the last state change - soft or hard (Unix timestamp)", (char *)(&hst.last_state_change) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "is_flapping", 
 		"Wether the host state is flapping (0/1)", (char *)(&hst.is_flapping) - ref, indirect_offset));

@@ -28,6 +28,7 @@
 #include "logger.h"
 #include "OffsetStringColumn.h"
 #include "OffsetIntColumn.h"
+#include "OffsetTimeColumn.h"
 #include "OffsetDoubleColumn.h"
 #include "OffsetTimeperiodColumn.h"
 #include "OffsetStringServiceMacroColumn.h"
@@ -251,21 +252,21 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
 		"Wether the current service problem has been acknowledged (0/1)", (char *)&svc.problem_has_been_acknowledged - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "acknowledgement_type", 
 		"The type of the acknownledgement (0: none, 1: normal, 2: sticky)", (char *)&svc.acknowledgement_type - ref, indirect_offset));
-    table->addColumn(new OffsetIntColumn(prefix + "last_state_change", 
+    table->addColumn(new OffsetTimeColumn(prefix + "last_state_change", 
 		"The time of the last state change (Unix timestamp)", (char *)&svc.last_state_change - ref, indirect_offset));
-    table->addColumn(new OffsetIntColumn(prefix + "last_check", 
+    table->addColumn(new OffsetTimeColumn(prefix + "last_check", 
 		"The time of the last check (Unix timestamp)", (char *)&svc.last_check - ref, indirect_offset));
-    table->addColumn(new OffsetIntColumn(prefix + "next_check", 
+    table->addColumn(new OffsetTimeColumn(prefix + "next_check", 
 		"The scheduled time of the next check (Unix timestamp)", (char *)&svc.next_check - ref, indirect_offset));
-    table->addColumn(new OffsetIntColumn(prefix + "last_notification", 
+    table->addColumn(new OffsetTimeColumn(prefix + "last_notification", 
 		"The time of the last notification (Unix timestamp)", (char *)&svc.last_notification - ref, indirect_offset));
-    table->addColumn(new OffsetIntColumn(prefix + "next_notification", 
+    table->addColumn(new OffsetTimeColumn(prefix + "next_notification", 
 		"The time of the next notification (Unix timestamp)", (char *)&svc.next_notification - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "current_notification_number", 
 		"The number of the current notification", (char *)&svc.current_notification_number - ref, indirect_offset));
-    table->addColumn(new OffsetIntColumn(prefix + "last_state_change", 
+    table->addColumn(new OffsetTimeColumn(prefix + "last_state_change", 
 		"The time of the last state change - soft or hard (Unix timestamp)", (char *)&svc.last_state_change - ref, indirect_offset));
-    table->addColumn(new OffsetIntColumn(prefix + "last_hard_state_change", 
+    table->addColumn(new OffsetTimeColumn(prefix + "last_hard_state_change", 
 		"The time of the last hard state change (Unix timestamp)", (char *)&svc.last_hard_state_change - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "scheduled_downtime_depth", 
 		"The number of scheduled downtimes the service is currently in", (char *)(&svc.scheduled_downtime_depth) - ref, indirect_offset));

@@ -1,13 +1,13 @@
-#include "OffsetTimeColumn.h"
+#include "TimePointerColumn.h"
 #include "TimeColumnFilter.h"
 #include "Query.h"
 
-void OffsetTimeColumn::output(void *data, Query *query)
+void TimePointerColumn::output(void *data, Query *query)
 {
     query->outputTime(getValue(data));
 }
     
-Filter *OffsetTimeColumn::createFilter(int operator_id, char *value)
+Filter *TimePointerColumn::createFilter(int operator_id, char *value)
 {
     // The TimeColumnFilter applies the timezone offset
     // from the Localtime: header

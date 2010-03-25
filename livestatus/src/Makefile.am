@@ -36,6 +36,7 @@ livestatus_so_SOURCES = \
 	HostSpecialIntColumn.cc InputBuffer.cc IntColumn.cc IntColumnFilter.cc \
 	ListColumn.cc ListColumnFilter.cc OffsetDoubleColumn.cc OffsetIntColumn.cc \
 	OffsetStringColumn.cc OffsetTimeperiodColumn.cc OringFilter.cc OutputBuffer.cc \
+	OffsetTimeColumn.cc TimePointerColumn.cc TimeColumnFilter.cc \
 	Query.cc ServiceContactsColumn.cc ServicegroupsColumn.cc ServicelistColumn.cc \
 	ServicelistColumnFilter.cc ServicelistStateColumn.cc store.cc Store.cc \
 	StringColumn.cc StringColumnFilter.cc strutil.cc Table.cc TableColumns.cc \

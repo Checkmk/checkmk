@@ -31,6 +31,7 @@
 #include "TableLog.h"
 #include "LogEntry.h"
 #include "OffsetIntColumn.h"
+#include "OffsetTimeColumn.h"
 #include "OffsetStringColumn.h"
 #include "Query.h"
 #include "Logfile.h"
@@ -55,7 +56,7 @@ TableLog::TableLog(unsigned long max_cached_messages)
     pthread_mutex_init(&_lock, 0);
 
     LogEntry *ref = 0;
-    addColumn(new OffsetIntColumn("time", 
+    addColumn(new OffsetTimeColumn("time", 
 		"Time of the log event (UNIX timestamp)", (char *)&(ref->_time) - (char *)ref, -1));
     addColumn(new OffsetIntColumn("lineno", 
 		"The number of the line in the log file", (char *)&(ref->_lineno) - (char *)ref, -1));

@@ -22,32 +22,19 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef IntColumnFilter_h
-#define IntColumnFilter_h
+#ifndef TimePointerColumn_h
+#define TimePointerColumn_h
 
-#include "config.h"
+#include "IntPointerColumn.h"
 
-#include <string>
-using namespace std;
-
-#include "Filter.h"
-class IntColumn;
-
-class IntColumnFilter : public Filter
+class TimePointerColumn : public IntPointerColumn
 {
-    IntColumn *_column;
-    int _opid;
-    bool _negate;
-    string _ref_string;
-
 public:
-    IntColumnFilter(IntColumn *column, int opid, char *value);
-    virtual int32_t convertRefValue(); // see TimeColumnFilter
-    bool accepts(void *data);
-    void findIntLimits(const char *columnname, int *lower, int *upper);
-    bool optimizeBitmask(const char *columnname, uint32_t *mask);
+    TimePointerColumn(string name, string description, int* number)
+       : IntPointerColumn(name, description, number) {};
+    void output(void *data, Query *query);
+    Filter *createFilter(int operator_id, char *value);
 };
 
 
-#endif // IntColumnFilter_h
-
+#endif // TimePointerColumn_h

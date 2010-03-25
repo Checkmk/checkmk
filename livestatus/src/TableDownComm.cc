@@ -30,6 +30,7 @@
 #include "Query.h"
 #include "OffsetStringColumn.h"
 #include "OffsetIntColumn.h"
+#include "OffsetTimeColumn.h"
 #include "tables.h"
 
 // Todo: the dynamic data in this table must be
@@ -50,7 +51,7 @@ TableDownComm::TableDownComm(bool is_downtime)
 		"A comment text", (char *)&(ref->_comment) - (char *)ref));
     addColumn(new OffsetIntColumn("id", 
 		is_downtime ? "The id of the downtime" : "The id of the comment", (char *)&(ref->_id) - (char *)ref));
-    addColumn(new OffsetIntColumn("entry_time",
+    addColumn(new OffsetTimeColumn("entry_time",
 		"The time the entry was made as UNIX timestamp", (char *)&(ref->_entry_time) - (char *)ref));
     addColumn(new OffsetIntColumn("type",
 		is_downtime ?  "The type of the downtime: 0 if it is active, 1 if it is pending" :
@@ -59,9 +60,9 @@ TableDownComm::TableDownComm(bool is_downtime)
     if (is_downtime)
     {
 	Downtime *ref = 0;
-	addColumn(new OffsetIntColumn("start_time",
+	addColumn(new OffsetTimeColumn("start_time",
 		    "The start time of the downtime as UNIX timestamp", (char *)&(ref->_start_time) - (char *)ref));
-	addColumn(new OffsetIntColumn("end_time",
+	addColumn(new OffsetTimeColumn("end_time",
 		    "The end time of the downtime as UNIX timestamp", (char *)&(ref->_end_time) - (char *)ref));
 	addColumn(new OffsetIntColumn("fixed",
 		    "A 1 if the downtime is fixed, a 0 if it is flexible", (char *)&(ref->_fixed) - (char *)ref));
@@ -81,7 +82,7 @@ TableDownComm::TableDownComm(bool is_downtime)
 		    "The type of the comment: 1 is user, 2 is downtime, 3 is flap and 4 is acknowledgement", (char *)&(ref->_entry_type) - (char *)ref));
 	addColumn(new OffsetIntColumn("expires",
 		    "Whether this comment expires", (char *)&(ref->_expires) - (char *)ref));
-	addColumn(new OffsetIntColumn("expire_time",
+	addColumn(new OffsetTimeColumn("expire_time",
 		    "The time of expiry of this comment as a UNIX timestamp", (char *)&(ref->_expire_time) - (char *)ref));
     }
 

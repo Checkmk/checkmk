@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import socket
+import socket, time
 
 """MK Livestatus Python API
 
@@ -201,7 +201,7 @@ class BaseConnection:
 	query += self.add_headers
         if not query.endswith("\n"):
 	    query += "\n"
-        query += "OutputFormat: json\nKeepAlive: on\nResponseHeader: fixed16\n\n"
+        query += "Localtime: %d\nOutputFormat: json\nKeepAlive: on\nResponseHeader: fixed16\n\n" % int(time.time())
 
         try:
 	    self.socket.send(query)

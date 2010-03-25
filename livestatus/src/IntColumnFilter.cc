@@ -31,23 +31,31 @@
 
 IntColumnFilter::IntColumnFilter(IntColumn *column, int opid, char *value)
    : _column(column)
-   , _ref_value(atoi(value))
+   , _ref_string(value)
    , _opid(abs(opid))
    , _negate(opid < 0)
 {
+}
+
+// overridden by TimeColumnFilter in order to apply timezone
+// offset from Localtime: header
+int32_t IntColumnFilter::convertRefValue()
+{
+    return atoi(_ref_string.c_str());
 }
 
 bool IntColumnFilter::accepts(void *data)
 {
    bool pass = true;
    int32_t act_value = _column->getValue(data);
+   int32_t ref_value = convertRefValue();
    switch (_opid) {
       case OP_EQUAL:
-	 pass = act_value == _ref_value; break;
+	 pass = act_value == ref_value; break;
       case OP_GREATER:
-	 pass = act_value > _ref_value; break;
+	 pass = act_value > ref_value; break;
       case OP_LESS:
-	 pass = act_value < _ref_value; break;
+	 pass = act_value < ref_value; break;
       default:
 	 logger(LG_INFO, "Sorry. Operator %d for integers not implemented.", _opid);
 	 break;
@@ -64,6 +72,7 @@ void IntColumnFilter::findIntLimits(const char *columnname, int *lower, int *upp
 	return; // already empty interval
     }
 
+    int32_t ref_value = convertRefValue(); // TimeColumnFilter applies timezone offset here
 
     /* [lower, upper[ is some interval. This filter might restrict
        that interval to a smaller interval.
@@ -71,41 +80,41 @@ void IntColumnFilter::findIntLimits(const char *columnname, int *lower, int *upp
     int opref = _opid * (_negate != false ? -1 : 1); 
     switch (opref) { 
 	case OP_EQUAL:
-	    if (_ref_value >= *lower && _ref_value < *upper) {
-		*lower = _ref_value;
-		*upper = _ref_value + 1;
+	    if (ref_value >= *lower && ref_value < *upper) {
+		*lower = ref_value;
+		*upper = ref_value + 1;
 	    }
 	    else
 		*lower = *upper;
 	    return;
 	
 	case -OP_EQUAL:
-	    if (_ref_value == *lower)
+	    if (ref_value == *lower)
 		*lower = *lower + 1;
-	    else if (_ref_value == *upper - 1)
+	    else if (ref_value == *upper - 1)
 		*upper = *upper - 1;
 	    return;
 
 	case OP_GREATER:
-	    if (_ref_value >= *lower) {
-		*lower = _ref_value + 1;
+	    if (ref_value >= *lower) {
+		*lower = ref_value + 1;
 	    }
 
 	    return;
 	
 	case OP_LESS:
-	    if (_ref_value < *upper)
-		*upper = _ref_value;
+	    if (ref_value < *upper)
+		*upper = ref_value;
 	    return;
 
 	case -OP_GREATER: // LESS OR EQUAL
-	    if (_ref_value < *upper - 1)
-		*upper = _ref_value + 1;
+	    if (ref_value < *upper - 1)
+		*upper = ref_value + 1;
 	    return;
 
 	case -OP_LESS: // GREATER OR EQUAL
-	    if (_ref_value > *lower)
-		*lower = _ref_value;
+	    if (ref_value > *lower)
+		*lower = ref_value;
 	    return;
     }
 }
@@ -113,16 +122,18 @@ void IntColumnFilter::findIntLimits(const char *columnname, int *lower, int *upp
 
 bool IntColumnFilter::optimizeBitmask(const char *columnname, uint32_t *mask)
 {
+    int32_t ref_value = convertRefValue();
+
     if (strcmp(columnname, _column->name())) {
 	return false; // wrong column
     }
 
-    if (_ref_value < 0 || _ref_value > 31)
+    if (ref_value < 0 || ref_value > 31)
 	return true; // not optimizable by 32bit bit mask
 
     // Our task is to remove those bits from mask that are deselected
     // by the filter.
-    uint32_t bit = 1 << _ref_value;
+    uint32_t bit = 1 << ref_value;
 
     int opref = _opid * (_negate != false ? -1 : 1); 
     switch (opref) { 
@@ -144,7 +155,7 @@ bool IntColumnFilter::optimizeBitmask(const char *columnname, uint32_t *mask)
 	    return true;
 	
 	case -OP_GREATER: // <=
-	    if (_ref_value == 31)
+	    if (ref_value == 31)
 		return true;
 	    bit <<= 1;
 	case OP_LESS:

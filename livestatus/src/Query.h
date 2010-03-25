@@ -72,6 +72,7 @@ class Query
    int           _output_format;
    int           _limit;
    unsigned      _current_line;
+   int           _timezone_offset;
 
    // normal queries
    typedef vector<Column *> _columns_t;
@@ -101,6 +102,7 @@ public:
    void outputFieldSeparator();
    void outputInteger(int32_t);
    void outputInteger64(int64_t);
+   void outputTime(int32_t);
    void outputUnsignedLong(unsigned long);
    void outputCounter(counter_t);
    void outputDouble(double);
@@ -114,6 +116,7 @@ public:
    void *findTimerangeFilter(const char *columnname, time_t *, time_t *);
    void findIntLimits(const char *columnname, int *lower, int *upper);
    void optimizeBitmask(const char *columnname, uint32_t *bitmask);
+   int timezoneOffset() { return _timezone_offset; };
 
 private:
    bool doStats();
@@ -135,6 +138,7 @@ private:
    void parseWaitTimeoutLine(char *line);
    void parseWaitTriggerLine(char *line);
    void parseWaitObjectLine(char *line);
+   void parseLocaltimeLine(char *line);
    int lookupOperator(const char *opname);
    Column *createDummyColumn(const char *name);
 };

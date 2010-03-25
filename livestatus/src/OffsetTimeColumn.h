@@ -22,29 +22,30 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef Filter_h
-#define Filter_h
+#ifndef OffsetTimeColumn_h
+#define OffsetTimeColumn_h
 
 #include "config.h"
 
-#include <vector>
-#include <stdint.h>
-using namespace std;
-class Query;
+#include <stdlib.h>
+#include "OffsetIntColumn.h"
 
-class Filter
+
+/* We are using IntColumn in order to implement a column
+   of type time. This does almost the same as the time column,
+   but applies a timezone offset stored in the Query. */
+
+class OffsetTimeColumn : public OffsetIntColumn
 {
-protected:
-    Query *_query; // needed by TimeOffsetFilter (currently)
 public:
-    Filter() : _query(0) {};
-    virtual ~Filter() {};
-    void setQuery(Query *q) { _query = q; };
-    virtual bool accepts(void *data) = 0;
-    virtual void *indexFilter(const char *columnname) { return 0; };
-    virtual void findIntLimits(const char *columnname, int *lower, int *upper) {};
-    virtual bool optimizeBitmask(const char *columnname, uint32_t *mask) { return false; };
+    OffsetTimeColumn(string name, string description, int offset, int indirect_offset = -1) 
+	: OffsetIntColumn(name, description, offset, indirect_offset) {}; 
+    int type() { return COLTYPE_TIME; };
+    void output(void *data, Query *query);
+    Filter *createFilter(int operator_id, char *value);
+    string valueAsString(void *data) { return "invalid"; };
 };
 
-#endif // Filter_h
+
+#endif // OffsetTimeColumn_h
 

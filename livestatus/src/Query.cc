@@ -62,6 +62,7 @@ Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
    _output_format(OUTPUT_FORMAT_CSV),
    _limit(-1),
    _current_line(0),
+   _timezone_offset(0),
    _stats_group_column(0)
 {
    while (input->moreLines())
@@ -133,6 +134,9 @@ Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
 
       else if (!strncmp(buffer, "WaitTimeout:", 12))
 	 parseWaitTimeoutLine(lstrip(buffer + 12));
+
+      else if (!strncmp(buffer, "Localtime:", 10))
+	 parseLocaltimeLine(lstrip(buffer + 10));
 
 
       else if (!buffer[0])
@@ -332,6 +336,8 @@ void Query::parseStatsLine(char *line)
 	Filter *filter = column->createFilter(operator_id, value);
 	if (!filter)
 	    _output->setError(RESPONSE_CODE_INVALID_HEADER, "cannot create filter on table %s", _table->name());
+	else
+	    filter->setQuery(this);
 	stats_col = new StatsColumn(column, filter, operation);
     }
     else 
@@ -376,6 +382,9 @@ void Query::parseFilterLine(char *line, bool is_filter)
    Filter *filter = column->createFilter(operator_id, value);
    if (!filter)
       _output->setError(RESPONSE_CODE_INVALID_HEADER, "cannot create filter on table %s", _table->name());
+   else 
+       filter->setQuery(this);
+
    if (is_filter)
        _filter.addSubfilter(filter);
    else
@@ -559,6 +568,39 @@ void Query::parseWaitObjectLine(char *line)
     _wait_object = _table->findObject(objectspec);
     if (!_wait_object) {
 	_output->setError(RESPONSE_CODE_INVALID_HEADER, "WaitObject: object '%s' not found or not supported by this table", objectspec);
+    }
+}
+
+void Query::parseLocaltimeLine(char *line)
+{
+    char *value = next_field(&line);
+    if (!value) {
+	_output->setError(RESPONSE_CODE_INVALID_HEADER, "Header Localtime: missing value");
+	return;
+    }
+    time_t their_time = atoi(value);
+    time_t our_time = time(0);
+
+    // compute offset to be *added* each time we output our time and
+    // *substracted* from reference value by filter headers
+    int dif = their_time - our_time;
+
+    // Round difference to half hour. We assume, that both clocks are more
+    // or less synchronized and that the time offset is only due to being
+    // in different time zones. 
+    int full = dif / 1800;
+    int rem  = dif % 1800;
+    if (rem <= -900)
+	full --;
+    else if (rem >= 900)
+	full ++;
+    if (full >= 48 || full <= -48) {
+	_output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid Localtime header: timezone difference greater then 24 hours");
+	return;
+    }
+    _timezone_offset = full * 1800;
+    if (g_debug_level >= 2) {
+	logger(LG_INFO, "Timezone difference is %.1f hours", _timezone_offset / 3600.0);
     }
 }
 
@@ -763,6 +805,13 @@ void Query::outputInteger64(int64_t value)
    _output->addBuffer(buf, l);
 }
 
+void Query::outputTime(int32_t value)
+{
+    value += _timezone_offset;
+    outputInteger(value);
+}
+
+
 void Query::outputUnsignedLong(unsigned long value)
 {
    char buf[64];
@@ -853,6 +902,26 @@ void Query::outputListSeparator()
 }
 
 void Query::outputEndList()
+{
+   if (_output_format == OUTPUT_FORMAT_JSON)
+      _output->addChar(']');
+}
+
+void Query::outputBeginSublist()
+{
+   if (_output_format == OUTPUT_FORMAT_JSON)
+      _output->addChar('[');
+}
+
+void Query::outputSublistSeparator()
+{
+   if (_output_format == OUTPUT_FORMAT_CSV)
+      _output->addBuffer(_host_service_separator.c_str(), _host_service_separator.size());
+   else
+      _output->addChar(',');
+}
+
+void Query::outputEndSublist()
 {
    if (_output_format == OUTPUT_FORMAT_JSON)
       _output->addChar(']');

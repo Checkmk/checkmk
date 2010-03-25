@@ -36,12 +36,13 @@ class IntColumn;
 class IntColumnFilter : public Filter
 {
     IntColumn *_column;
-    int32_t _ref_value;
     int _opid;
     bool _negate;
+    string _ref_string;
 
 public:
     IntColumnFilter(IntColumn *_column, int opid, char *value);
+    virtual int32_t convertRefValue(); // see TimeColumnFilter
     bool accepts(void *data);
     void findIntLimits(const char *columnname, int *lower, int *upper);
     bool optimizeBitmask(const char *columnname, uint32_t *mask);

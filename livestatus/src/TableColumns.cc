@@ -62,7 +62,7 @@ void TableColumns::answerQuery(Query *query)
 
 const char *TableColumns::getValue(Column *column, int colcol)
 {
-   static const char *typenames[4] = { "int", "float", "string", "list" };
+   static const char *typenames[5] = { "int", "float", "string", "list", "time" };
 
    switch (colcol)
    {

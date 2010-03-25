@@ -35,6 +35,7 @@ using namespace std;
 #define COLTYPE_DOUBLE  1
 #define COLTYPE_STRING  2
 #define COLTYPE_LIST    3
+#define COLTYPE_TIME    4
 
 class Filter;
 class Query;

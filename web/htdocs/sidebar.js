@@ -46,12 +46,36 @@ document.getElementsByTagName("HEAD")[0].appendChild(oLink);
 
 var oDiv = document.createElement('div');
 oDiv.innerHTML = get_url(url + 'sidebar.py');
+
+// There may be some javascript code in the html code rendered by
+// sidebar.py. Execute it here. This is needed in some browsers.
+if(!isFirefox()) {
+  var aScripts = oDiv.getElementsByTagName('script');
+  for(var i in aScripts) {
+    if(aScripts[i].src && aScripts[i].src !== '') {
+      var oScr=document.createElement('script');
+      oScr.src = aScripts[i].src;
+      document.getElementsByTagName("HEAD")[0].appendChild(oScr);
+      oScr = null;
+    } else {
+      try {
+        eval(aScripts[i].text);
+      } catch(e) {}
+    }
+  }
+  aScripts = null;
+}
+
 oSidebar.appendChild(oDiv);
 
 // Cleaning up DOM links
 oDiv = null;
 oLink = null;
 oSidebar = null;
+
+function isFirefox() {
+  return navigator.userAgent.indexOf("Firefox") > -1;
+}
 
 function get_url(url) {
     if (window.XMLHttpRequest) {

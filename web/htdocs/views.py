@@ -520,7 +520,7 @@ def page_edit_view(h):
 		("show", "Show to user"), 
 		("hide", "Use for linking"), 
 		("hard", "Hardcode")], 
-		"", "filter_activation")
+		"", "filter_activation(this.id)")
 	html.write("</td><td class=widget>")
 	filt.display()
 	html.write("</td>")

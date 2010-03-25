@@ -6,6 +6,7 @@
       * New column: hostgroup:members_with_state
       * Columns hostgroup:members and hostgroup:members_with_state honor AuthUser
       * New rudimentary API for C++
+      * Updates API for Python
 
       Multisite:
       * Number of columns now configurable for each layout (1..50)

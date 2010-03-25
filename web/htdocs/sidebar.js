@@ -42,7 +42,7 @@ var oLink = document.createElement('link');
 oLink.href = url + "check_mk.css";
 oLink.rel = 'stylesheet';
 oLink.type = 'text/css';
-document.body.appendChild(oLink);
+document.getElementsByTagName("HEAD")[0].appendChild(oLink);
 
 var oDiv = document.createElement('div');
 oDiv.innerHTML = get_url(url + 'sidebar.py');

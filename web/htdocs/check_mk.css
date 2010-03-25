@@ -345,27 +345,30 @@ td.statex {  /* zero count */
   color: #ccc;
 }
 
-td.state0, td.hstate0 { 
+/* Colors of the five possible host and service states */
+/* HIRN: .hstate0 a muss raus. Dass muss ich spezifischer
+   machen */
+.state0, .hstate0, .state0 a, .hstate0 a { 
   background-color: #4a2;
   color: #6f4;
 }
 
-td.state1 { 
+.state1, .state1 a { 
   background-color: #ff0;
   color: #000;
 }
 
-td.state2, td.hstate1 { 
+.state2, .hstate1, .state2 a, .hstate2 a { 
   background-color: #f00;
   color: #fff;
 }
 
-td.state3, td.hstate2 { 
+.state3, .hstate2, .state3 a, .hstate2 a { 
   background-color: #f80;
   color: #fff;
 }
 
-td.statep, td.hstatep { 
+.statep, .hstatep, .statep a, .hstatep a { 
   background-color: #888;
   color: #fff;
 }
@@ -381,6 +384,16 @@ td.icons img {
 img.icon {
    border-style: none;
 }
+
+/* Styles used by specific painters. These should be modularized later ... */
+div.objectlist div {
+  float: left;
+  padding: 1px 3px;
+  border-style: solid;
+  border-width: 1px;
+  margin: 1px;
+}
+
 
 /*
  _                            _       
@@ -426,6 +439,71 @@ table.services td.tablegap {
   background-position: center;
 }
 
+/* tiled layout */
+table.tiled td {
+    border-style: none;
+}
+table.tiled tr.groupheader td {
+    font-size: 10pt;
+    font-weight: bold;
+    padding-left: 6px;
+    padding-top: 4px;
+}
+
+.tile {
+   width: 180px;
+   border: 1px solid black;
+   float: left;
+   -moz-border-radius: 4px;
+   margin-right: 3px;
+   margin-bottom: 3px;
+   border-right: 2px solid black;
+   border-bottom: 2px solid black;
+}
+
+.tile table {
+height: 80px;
+}
+.tile td {
+    border-style: none;
+   font-size: 7pt;
+}
+.tile.state0, .tile.hstate0 {
+    background-color: #afa;
+}
+.tile.state1 {
+    background-color: #ff0;
+}
+.tile.state2, .tile.hstate1 {
+    background-color: #f42;
+}
+.tile.state3, .tile.hstate2 {
+    background-color: #f80;
+}
+
+.tile table {
+width: 100%;
+}
+.tile td.tl, .tile td.bl {
+    text-align: left;
+}
+.tile td.tr, .tile td.br {
+    text-align: right;
+}
+.tile td.center {
+    vertical-align: middle;
+}
+.tile td.center, .tile td.cont {
+    text-align: center;
+}
+.tile td.bl, .tile td.br {
+    vertical-align: bottom;
+}
+
+.tile td.bl, .tile td.br, .tile td.tl, .tile td.tr {
+height: 20px;
+}
+
 /* forms in general */
 
 h2.formcaption { 
@@ -453,7 +531,7 @@ table.form td.legend {
   /* width: 20%; */
   border: 1px solid black;
   vertical-align: top;
-color: white;
+  color: white;
 }
 
 table.form td.content { 
@@ -782,12 +860,12 @@ table.permissions td.content.guest {
 
 /* view editor */
 table.view {
-    /* width: 100%; */
+    width: 100%;
     border-collapse: collapse;
     empty-cells: show;
     background-color: #ffc;
 }
-table.view td {
+table.view td.legend, table.view td.content {
    border: 1px solid #884;
    padding: 2px 0.5ex;
     vertical-align: top;
@@ -796,6 +874,8 @@ table.view td.legend {
     padding-top: 3px;
     color: #884;
     vertical-align: top;
+    white-space: nowrap;
+    width: 150px;
 }
 div.viewdescription {
     color: #084;

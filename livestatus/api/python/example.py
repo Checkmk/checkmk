@@ -27,12 +27,12 @@
 
 import livestatus
 
-socket_path = "/var/run/nagios/rw/live"
+socket_path = "unix:/var/run/nagios/rw/live"
 
 try:
    # Make a single connection for each query
    print "\nPerformance:"
-   for key, value in livestatus.SingleSiteConnection(socket_path).query_line_assoc("GET status").items():
+   for key, value in livestatus.SingleSiteConnection(socket_path).query_row_assoc("GET status").items():
       print "%-30s: %s" % (key, value)
    print "\nHosts:"
    hosts = livestatus.SingleSiteConnection(socket_path).query_table("GET hosts\nColumns: name alias address")
@@ -44,7 +44,7 @@ try:
    num_up = conn.query_value("GET hosts\nStats: hard_state = 0")
    print "\nHosts up: %d" % num_up
 
-   stats = conn.query_line(
+   stats = conn.query_row(
 	 "GET services\n"
 	 "Stats: state = 0\n"
 	 "Stats: state = 1\n"

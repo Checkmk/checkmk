@@ -27,39 +27,51 @@
 #include "nagios.h"
 #include "logger.h"
 #include "Query.h"
+#include "TableHosts.h"
 
-#define LIST_SEPARATOR ","
+extern TableHosts *g_table_hosts;
 
 hostsmember *HostlistColumn::getMembers(void *data)
 {
-   data = shiftPointer(data);
-   if (!data) return 0;
+    data = shiftPointer(data);
+    if (!data) return 0;
 
-   return *(hostsmember **)((char *)data + _offset);
+    return *(hostsmember **)((char *)data + _offset);
 }
 
 void HostlistColumn::output(void *data, Query *query)
 {
-   query->outputBeginList();
-   hostsmember *mem = getMembers(data);
+    query->outputBeginList();
+    contact *auth_user = query->authUser();
+    hostsmember *mem = getMembers(data);
 
-   bool first = true;
-   while (mem) {
-      if (!first)
-	 query->outputListSeparator();
-      else
-	 first = false;
-      char *host_name = mem->host_name;
-      if (!host_name)
-	 host_name = mem->host_ptr->name;
-      query->outputString(host_name);
-      mem = mem->next;
-   }
-   query->outputEndList();
+    bool first = true;
+    while (mem) {
+	host *hst = mem->host_ptr;
+	if (!auth_user || g_table_hosts->isAuthorized(auth_user, hst)) {
+	    if (!first)
+		query->outputListSeparator();
+	    else
+		first = false;
+	    if (!_show_state) 
+		query->outputString(hst->name);
+	    else {
+		query->outputBeginSublist();
+		query->outputString(hst->name);
+		query->outputSublistSeparator();
+		query->outputInteger(hst->current_state);
+		query->outputSublistSeparator();
+		query->outputInteger(hst->has_been_checked);
+		query->outputEndSublist();
+	    }
+	}
+	mem = mem->next;
+    }
+    query->outputEndList();
 }
 
 Filter *HostlistColumn::createFilter(int opid, char *value)
 {
-  return new HostlistColumnFilter(this, opid, value);
+    return new HostlistColumnFilter(this, opid, value);
 }
 

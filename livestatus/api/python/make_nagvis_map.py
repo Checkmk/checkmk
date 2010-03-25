@@ -89,8 +89,8 @@ define service {
 
 
 
-socket_path = "/var/run/nagios/rw/live"
-live = livestatus.connection(socket_path)
+socket_path = "unix:/var/run/nagios/rw/live"
+live = livestatus.SingleSiteConnection(socket_path)
 
 print """
 define global {

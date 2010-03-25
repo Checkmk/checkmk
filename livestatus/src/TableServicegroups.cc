@@ -57,7 +57,9 @@ void TableServicegroups::addColumns(Table *table, string prefix, int indirect_of
    table->addColumn(new OffsetStringColumn(prefix + "action_url", 
 	    "An optional URL to custom notes or actions on the service group", (char *)(&sgr.action_url) - ref, indirect_offset));
    table->addColumn(new ServicelistColumn(prefix + "members", 
-	    "A list of all members of the service group as host/service pairs ",    (char *)(&sgr.members) - ref, indirect_offset));
+	    "A list of all members of the service group as host/service pairs",    (char *)(&sgr.members) - ref, indirect_offset, true, false));
+   table->addColumn(new ServicelistColumn(prefix + "members_with_state", 
+	    "A list of all members of the service group with state and has_been_checked",    (char *)(&sgr.members) - ref, indirect_offset, true, true));
 
    table->addColumn(new ServicelistStateColumn(prefix + "worst_service_state", 
 	    "The worst soft state of all of the groups services (OK <= WARN <= UNKNOWN <= CRIT)",  SLSC_WORST_STATE,  (char *)(&sgr.members) - ref, indirect_offset));

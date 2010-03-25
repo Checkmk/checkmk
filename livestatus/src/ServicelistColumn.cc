@@ -26,6 +26,9 @@
 #include "ServicelistColumnFilter.h"
 #include "nagios.h"
 #include "Query.h"
+#include "TableServices.h"
+
+extern TableServices *g_table_services;
 
 servicesmember *ServicelistColumn::getMembers(void *data)
 {
@@ -37,19 +40,41 @@ servicesmember *ServicelistColumn::getMembers(void *data)
 
 void ServicelistColumn::output(void *data, Query *query)
 {
-   query->outputBeginList();
-   servicesmember *mem = getMembers(data);
+    query->outputBeginList();
+    contact *auth_user = query->authUser();
+    servicesmember *mem = getMembers(data);
 
-   bool first = true;
-   while (mem) {
-      if (!first)
-	 query->outputListSeparator();
-      else
-	 first = false;
-      query->outputHostService(mem->host_name, mem->service_description);
-      mem = mem->next;
-   }
-   query->outputEndList();
+    bool first = true;
+    while (mem) {
+	service *svc = mem->service_ptr;
+	if (!auth_user || g_table_services->isAuthorized(auth_user, svc)) {
+	    if (!first)
+		query->outputListSeparator();
+	    else
+		first = false;
+	    // show only service name => no sublist
+	    if (!_show_host && !_show_state)
+		query->outputString(svc->description);
+	    else
+	    {
+		query->outputBeginSublist();
+		if (_show_host) {
+		    query->outputString(svc->host_name);
+		    query->outputSublistSeparator();
+		}
+		query->outputString(svc->description);
+		if (_show_state) {
+		    query->outputSublistSeparator();
+		    query->outputInteger(svc->current_state);
+		    query->outputSublistSeparator();
+		    query->outputInteger(svc->has_been_checked);
+		}
+		query->outputEndSublist();
+	    }
+	}
+	mem = mem->next;
+    }
+    query->outputEndList();
 }
 
 Filter *ServicelistColumn::createFilter(int opid, char *value)

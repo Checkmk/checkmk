@@ -68,7 +68,7 @@ multisite_builtin_views = {}
 # Layouts
 ##################################################################################
 
-def paint(p, row):
+def prepare_paint(p, row):
     painter, linkview = p
     tdclass, content = painter["paint"](row)
 
@@ -83,7 +83,10 @@ def paint(p, row):
 
 	    uri = html.makeuri_contextless([("view_name", linkview)] + filtervars)
 	    content = "<a href=\"%s\">%s</a>" % (uri, content)
+    return tdclass, content
 
+def paint(p, row):
+    tdclass, content = prepare_paint(p, row)
     if tdclass:
 	html.write("<td class=\"%s\">%s</td>\n" % (tdclass, content))
     else:
@@ -145,11 +148,12 @@ def declare_filter(sort_index, f, comment = None):
     
 # Base class for all filters    
 class Filter:
-    def __init__(self, name, title, info, htmlvars):
+    def __init__(self, name, title, info, htmlvars, link_columns):
 	self.name = name
 	self.info = info
 	self.title = title
 	self.htmlvars = htmlvars
+	self.link_columns = link_columns
 	
     def display(self):
 	raise MKInternalError("Incomplete implementation of filter %s '%s': missing display()" % \
@@ -232,8 +236,6 @@ def load_views():
 	     raise MKGeneralException("Cannot load views from %s/views.mk: %s" % (dirpath, e))
 
     html.available_views = available_views()
-# html.write("avail: <pre>%s</pre>\n" % pprint.pformat(html.available_views))
-#    html.write("all: <pre>%s</pre>\n" % pprint.pformat(html.multisite_views))
 
 # Get the list of views which are available to the user
 # (which could be retrieved with get_view)
@@ -376,7 +378,7 @@ def page_edit_views(h, msg=None):
 	    html.write("<td class=content>%s</td>" % ownertxt)
 	    html.write("<td class=content>%s</td>" % (view["public"] and "yes" or "no"))
 	    html.write("<td class=content>%s</td>" % (view["hidden"] and "yes" or "no"))
-	    html.write("</td><td class=content>%s</td><td class=buttons>\n" % view["datasource"])
+	    html.write("<td class=content>%s</td><td class=buttons>\n" % view["datasource"])
 	    if owner == "":
 		buttontext = "Customize"
 	    else:
@@ -385,7 +387,7 @@ def page_edit_views(h, msg=None):
 	    if owner == html.req.user:
 		html.buttonlink("edit_view.py?load_view=%s" % viewname, "Edit")
 		html.buttonlink("edit_views.py?delete=%s" % viewname, "Delete!", True)
-	    html.write("</td></tr>")
+	    html.write("</td></tr>\n")
 
     html.write("<tr><td class=legend colspan=7>")
     html.begin_form("create_view", "edit_view.py") 
@@ -476,7 +478,41 @@ def page_edit_view(h):
     html.text_area("view_description", 4)
     html.write("</td></tr>\n")
 
-    html.write("<tr><td class=legend>Configuration</td><td class=content>")
+    # Larger sections are foldable and closed by default
+    html.javascript("""
+function toggle_section(nr, oImg) {
+  var oContent =  document.getElementById("ed_"   + nr);
+  var closed = oContent.style.display == "none";
+  if (closed) {
+    oContent.style.display = "";
+    oImg.src = "images/open.gif";
+  }
+  else {
+    oContent.style.display = "none";
+    oImg.src = "images/closed.gif";
+  }
+  oContent = null;
+  oImg = null;
+}
+""")
+
+    def section_header(id, title):
+	html.write("<tr><td class=legend>")
+	html.write("<img src=\"images/closed.gif\" onclick=\"toggle_section('%d', this) \""
+		   "onmouseover=\"this.style.cursor='pointer'\" "
+		   "onmouseout=\"this.style.cursor='auto'\"> " % id)
+	html.write("<b class=heading>%s</b>" % title)
+	html.write("</td><td class=content>")
+        html.write("<div id=\"ed_%d\" style=\"display: none;\">" % id)
+
+    def section_footer():
+	html.write("</div></td></tr>\n")
+
+    # Properties
+    section_header(2, "2. Properties")
+    datasource_title = multisite_datasources[datasourcename]["title"]
+    html.write("Datasource: <b>%s</b><br>\n" % datasource_title)
+    html.hidden_field("datasource", datasourcename)
     if config.may("publish_views"):
 	html.checkbox("public")
 	html.write(" make this view available for all users")
@@ -486,22 +522,10 @@ def page_edit_view(h):
     html.write("<br />\n")
     html.checkbox("mustsearch")
     html.write(" show data only on search")
-    html.write("</td></tr>\n")
+    section_footer()
 
-    # [1] Datasource (not changeable here!)
-    datasource_title = multisite_datasources[datasourcename]["title"]
-    html.write("<tr><td class=legend>1. Datasource</td><td>%s</td></tr>" % datasource_title)
-    html.hidden_field("datasource", datasourcename)
-    
-    # [2] Layout
-    html.write("<tr><td class=legend>2. Layout</td><td class=content>")
-    html.sorted_select("layout", [ (k, v["title"]) for k,v in multisite_layouts.items() ])
-    html.write("with column headers: \n")
-    html.select("column_headers", [ ("off", "off"), ("perpage", "once per page"), ("pergroup", "once per group") ])
-    html.write("</td></tr>\n")
-  
     # [3] Filters 
-    html.write("<tr><td class=legend>3. Filters</td><td>")
+    section_header(3, "3. Filters")
     html.write("<table class=filters>")
     html.write("<tr><th>Filter</th><th>usage</th><th>hardcoded settings</th><th>HTML variables</th></tr>\n")
     allowed_filters = filters_allowed_for_datasource(datasourcename)
@@ -528,16 +552,16 @@ def page_edit_view(h):
 	html.write(" ".join(filt.htmlvars))
 	html.write("</tt></td>")
 	html.write("</tr>\n")
-    html.write("</table></td></tr>\n")
+    html.write("</table>\n")
     html.write("<script language=\"javascript\">\n")
     for fname, filt in allowed_filters.items():
 	html.write("filter_activation(\"filter_%s\");\n" % fname)
     html.write("</script>\n")	
+    section_footer()
    
-    # [4] Sorting
-    def column_selection(title, var_prefix, maxnum, data, order=False):
+    def column_selection(id, title, var_prefix, maxnum, data, order=False):
 	allowed = allowed_for_datasource(data, datasourcename)
-	html.write("<tr><td class=legend>%s</td><td class=content>" % title)
+	section_header(id, title)
 	for n in range(1, maxnum+1):
 	    collist = [ ("", "") ] + [ (name, p["title"]) for name, p in allowed.items() ]
 	    html.write("%02d " % n)
@@ -549,14 +573,32 @@ def page_edit_view(h):
 		html.write("<i> with link to </i>")
 		select_view("%slink_%d" % (var_prefix, n))
 	    html.write("<br />")
-	html.write("</td></tr>\n")
-    column_selection("4. Sorting", "sort_", max_sort_columns, multisite_sorters, True)
+	section_footer()
+
+    # [4] Sorting
+    column_selection(4, "4. Sorting", "sort_", max_sort_columns, multisite_sorters, True)
 
     # [5] Grouping
-    column_selection("5. Group by", "group_", max_group_columns, multisite_painters)
+    column_selection(5, "5. Group by", "group_", max_group_columns, multisite_painters)
 
     # [6] Columns (painters)	
-    column_selection("6. Display columns", "col_", max_display_columns, multisite_painters)
+    column_selection(6, "6. Display columns", "col_", max_display_columns, multisite_painters)
+
+    # [2] Layout
+    section_header(7, "7. Layout")
+    html.write("<table border=0>")
+    html.write("<tr><td>Basic Layout:</td><td>")
+    html.sorted_select("layout", [ (k, v["title"]) for k,v in multisite_layouts.items() ])
+    html.write("</td></tr>\n")
+    html.write("<tr><td>Number of columns:</td><td>")
+    html.number_input("num_columns", 1)
+    html.write("</td></tr>\n")
+    html.write("<tr><td>Column headers:</td><td>")
+    html.select("column_headers", [ ("off", "off"), ("perpage", "once per page"), ("pergroup", "once per group") ])
+    html.write("</td><tr>\n")
+    html.write("</table>\n")
+    section_footer()
+
 
     html.write("<tr><td colspan=2>")
     html.button("try", "Try out")
@@ -581,6 +623,7 @@ def load_view_into_html_vars(view):
     html.set_var("datasource",       view["datasource"])
     html.set_var("column_headers",   view.get("column_headers", "off"))
     html.set_var("layout",           view["layout"])
+    html.set_var("num_columns",      view.get("num_columns", 1))
     html.set_var("public",           view["public"] and "on" or "")
     html.set_var("hidden",           view["hidden"] and "on" or "")
     html.set_var("mustsearch",       view["mustsearch"] and "on" or "")
@@ -645,6 +688,13 @@ def create_view():
     datasource = multisite_datasources[datasourcename]
     tablename = datasource["table"]
     layoutname = html.var("layout")
+    try:
+	num_columns = int(html.var("num_columns", 1))
+	if num_columns < 1: num_columns = 1
+	if num_columns > 50: num_columns = 50
+    except:
+	num_columns = 1
+
     public     = html.var("public", "") != "" and config.may("publish_views")
     hidden     = html.var("hidden", "") != ""
     mustsearch = html.var("mustsearch", "") != ""
@@ -701,6 +751,7 @@ def create_view():
 	"hidden"          : hidden,
 	"mustsearch"      : mustsearch,
 	"layout"          : layoutname,
+        "num_columns"     : num_columns,
 	"column_headers"  : column_headers,
 	"show_filters"    : show_filternames,
 	"hide_filters"    : hide_filternames,
@@ -742,6 +793,7 @@ def show_view(view, show_heading = False):
 
     # [2] Layout
     layout = multisite_layouts[view["layout"]]
+    num_columns = view.get("num_columns", 1)
     
     # [3] Filters
     show_filters = [ multisite_filters[fn] for fn in view["show_filters"] ]
@@ -763,15 +815,8 @@ def show_view(view, show_heading = False):
 
     query = filterheaders + view.get("add_headers", "")
    
-    # Fetch data. Some views show data only after pressing [Search]
-    if (not view["mustsearch"]) or html.var("search"):
-	columns, rows = query_data(datasource, query, only_sites)
-    else:
-	columns, rows = [], []
-
     # [4] Sorting
     sorters = [ (multisite_sorters[sn], reverse) for sn, reverse in view["sorters"] ]
-    sort_data(rows, sorters)
 
     # [5] Grouping
     group_painters = [ (multisite_painters[n], v) for n, v in view["group_painters"] ]
@@ -779,6 +824,37 @@ def show_view(view, show_heading = False):
 
     # [6] Columns
     painters = [ (multisite_painters[n], v) for n, v in view["painters"] ]
+
+    # Now compute this list of all columns we need to query via Livestatus.
+    # Those are: (1) columns used by the sorters in use, (2) columns use by
+    # column- and group-painters in use and - note - (3) columns used to
+    # satisfy external references (filters) of views we link to. The last bit
+    # is the trickiest.
+    columns = []
+    for s, r in sorters:
+	columns += s["columns"]
+
+    for p, v in (group_painters + painters):
+	columns += p["columns"]
+	if v:
+	    linkview = html.available_views.get(v)
+	    if linkview:
+		for ef in linkview["hide_filters"]:
+		    f = multisite_filters[ef]
+		    columns += f.link_columns
+
+    # Make column list unique and remove (implicit) site column
+    colset = set(columns)
+    if "site" in colset:
+	colset.remove("site")
+    columns = list(colset)
+
+    # Fetch data. Some views show data only after pressing [Search]
+    if (not view["mustsearch"]) or html.var("search"):
+	columns, rows = query_data(datasource, columns, query, only_sites)
+        sort_data(rows, sorters)
+    else:
+	columns, rows = [], []
 
     # Show heading
     if show_heading:
@@ -822,7 +898,7 @@ def show_view(view, show_heading = False):
 	html.write("<a href=\"%s\">Back to search results</a>" % html.makeuri([]))
 
     else:
-        layout["render"]((columns, rows), view, show_filters, group_columns, group_painters, painters)
+        layout["render"]((columns, rows), view, group_columns, group_painters, painters, num_columns)
 
 def view_title(view):
     extra_titles = [ ]
@@ -862,23 +938,17 @@ def show_context_links(thisview, active_filters):
 		    break
 	    used_contextvars += contextvars
 	    if skip:
-# html.write("%s geht nicht, weil %s fehlt. " % (fn, var))
 		break
 	if skip:
-# html.write("View %s/%s geht also nicht<br>" % (user, name))
 	    continue
 	
 	# add context link to this view    
 	if len(used_contextvars) > 0:
 	    if first:
-                # html.write("<div class=contextlinks><h2>Contextlinks</h2>\n")
 		first = False
 	    vars_values = [ (var, html.var(var)) for var in set(used_contextvars) ]
 	    html.write("<a class=\"navi context\" href=\"%s\">%s</a>" % \
 		    (html.makeuri_contextless(vars_values + [("view_name", name)]), view_title(view)))
-
-    if not first:
-	html.write("</div>\n")
 	
 
 
@@ -891,21 +961,39 @@ def needed_group_columns(painters):
 
 # Retrieve data via livestatus, convert into list of dicts,
 # prepare row-function needed for painters
-def query_data(datasource, add_headers, only_sites = None):
+def query_data(datasource, columns, add_headers, only_sites = None):
     tablename = datasource["table"]
+    merge_column = datasource.get("merge_by")
+    if merge_column:
+	columns = [merge_column] + columns
+
+    # Most layouts need current state of objekt in order to
+    # choose background color - even if no painter for state
+    # is selected. Make sure those columns are fetched.
+    state_columns = []
+    if "service" in datasource["infos"]:
+	state_columns += [ "service_has_been_checked", "service_state" ]	
+    elif "host" in datasource["infos"]:
+	state_columns += [ "host_has_been_checked", "host_state" ]	
+    for c in state_columns:
+	if c not in columns:
+	    columns.append(c)
+
     query = "GET %s\n" % tablename
-    columns = datasource["columns"]
-    query += "Columns: %s\n" % " ".join(datasource["columns"])
+    query += "Columns: %s\n" % " ".join(columns)
     query += add_headers
     html.live.set_prepend_site(True)
     if config.debug:
-	html.write("<div class=message><pre>%s</pre></div>\n" % query)
+	html.write("<div class=message><tt>%s</tt></div>\n" % (query.replace('\n', '<br>\n')))
     
     if only_sites:
 	html.live.set_only_sites(only_sites)
     data = html.live.query(query)
     html.live.set_only_sites(None)
     html.live.set_prepend_site(False)
+    
+    if merge_column:
+	data = merge_data(data, columns)
 
     # convert lists-rows into dictionaries. 
     # performance, but makes live much easier later.
@@ -913,6 +1001,53 @@ def query_data(datasource, add_headers, only_sites = None):
     assoc = [ dict(zip(columns, row)) for row in data ]
 
     return (columns, assoc)
+
+
+# Merge all data rows with different sites but the same value
+# in merge_column. We require that all column names are prefixed
+# with the tablename. The column with the merge key is required
+# to be the *second* column (right after the site column)
+def merge_data(data, columns):
+    merged = {}
+    mergefuncs = [lambda a,b: ""] # site column is not merged
+
+    def worst_service_state(a, b):
+	if a == 2 or b == 2: 
+	    return 2
+	else:
+	    return max(a, b)
+
+    def worst_host_state(a, b):
+	if a == 1 or b == 1:
+	    return 1
+	else:
+	    return max(a, b)
+
+    for c in columns:
+	tablename, col = c.split("_", 1)
+	if col.startswith("num_") or col.startswith("members"):
+	    mergefunc = lambda a,b: a+b
+	elif col.startswith("worst_service"):
+	    return worst_service_state
+	elif col.startswith("worst_host"):
+	    return worst_host_state
+	else:
+	    mergefunc = lambda a,b: a
+	mergefuncs.append(mergefunc)
+
+    for row in data:
+	mergekey = row[1]
+	if mergekey in merged:
+	    oldrow = merged[mergekey]
+	    merged[mergekey] = [ f(a,b) for f,a,b in zip(mergefuncs, oldrow, row) ]
+	else:
+	    merged[mergekey] = row
+
+    # return all rows sorted according to merge key
+    mergekeys = merged.keys()
+    mergekeys.sort()
+    return [ merged[k] for k in mergekeys ]
+
 
 # Sort data according to list of sorters. The tablename
 # is needed in order to handle different column names
@@ -962,13 +1097,16 @@ def list_in_list(a, b):
 	    return False
     return True
 
+# Filters a list of sorters or painters and decides which of
+# those are available for a certain data source
 def allowed_for_datasource(collection, datasourcename):
     datasource = multisite_datasources[datasourcename]
+    infos_available = set(datasource["infos"])
     allowed = {}
-    ds_columns = datasource["columns"] + ["site"]
     for name, item in collection.items():
 	columns = item["columns"]
-	if list_in_list(columns, ds_columns):
+	infos_needed = set([ c.split("_", 1)[0] for c in columns if c != "site" ])
+	if len(infos_needed.difference(infos_available)) == 0:
 	    allowed[name] = item
     return allowed
 

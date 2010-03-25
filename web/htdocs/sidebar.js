@@ -59,9 +59,17 @@ function get_url(url) {
     } else {
         var AJAX = new ActiveXObject("Microsoft.XMLHTTP");
     }
+
+    // Dynamic part to prevent caching
+    var dyn = "_t="+Date.parse(new Date());
+    if(url.indexOf('\?') !== -1) {
+        dyn = "&"+dyn;
+    } else {
+        dyn = "?"+dyn;
+    }
     
     if (AJAX) {
-        AJAX.open("GET", url, false);
+        AJAX.open("GET", url + dyn, false);
         AJAX.send(null);
         return AJAX.responseText;
     } else {
@@ -78,6 +86,7 @@ function toggle_sidebar_snapin(oH2, url) {
             break;
         }
     }
+    // FIXME: Does oContent really exist?
     var closed = oContent.style.display == "none";
     if (closed)
         oContent.style.display = "";

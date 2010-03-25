@@ -1,5 +1,6 @@
 1.1.3:
       * Multisite: Fix sidebar problem (being black) with Internet Explorer
+      * Multisite: Fix several other IE problems
 
 1.1.3b3:
       * check_mk_templates: remove action_url from cluster and summary hosts (they have no performance data)

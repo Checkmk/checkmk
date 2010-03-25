@@ -797,11 +797,8 @@ def show_view(view, show_heading = False):
 	toggle_button("table_filter", filter_isopen, "Show filter", "Hide filter", ["filter"])
    
     # Action-button
-    if len(rows) > 0 and config.may("act"):
-	actions_are_open = html.do_actions()
-	toggle_button("table_actions", actions_are_open, "Show commands", "Hide commands")
-    else:
-	actions_are_open = False
+    if len(rows) > 0 and config.may("act") and not html.do_actions():
+        toggle_button("table_actions", False, "Show commands", "Hide commands")
 
     # Filter form
     if len(show_filters) > 0 and not html.do_actions():
@@ -819,7 +816,7 @@ def show_view(view, show_heading = False):
 		show_action_form(True, datasource)
 
         else:
-	    show_action_form(actions_are_open, datasource)
+	    show_action_form(False, datasource)
 
     if has_done_actions:
 	html.write("<a href=\"%s\">Back to search results</a>" % html.makeuri([]))

@@ -36,26 +36,27 @@ var mkSearchCheckMkUrl = '/check_mk';
 // Register an input field to be a search field and add eventhandlers
 function mkSearchAddField(field, targetFrame, checkMkUrl) {
     var oField = document.getElementById(field);
-
     if(oField) {
-				if(typeof targetFrame != 'undefined') {
-					mkSearchTargetFrame = targetFrame;
-				}
-		
-				if(typeof checkMkUrl != 'undefined') {
-					mkSearchCheckMkUrl = checkMkUrl;
-				}
+        if(typeof targetFrame != 'undefined') {
+            mkSearchTargetFrame = targetFrame;
+        }
+
+        if(typeof checkMkUrl != 'undefined') {
+            mkSearchCheckMkUrl = checkMkUrl;
+        }
 		
         oField.onkeydown   = function(e) { if (!e) e = window.event; return mkSearchKeyDown(e, oField); }
         oField.onkeyup     = function(e) { if (!e) e = window.event; return mkSearchKeyUp(e, oField);}
         oField.onclick     = function(e) { if (!e) e = window.event; e.cancelBubble = true; e.returnValue = false; }
-				// The keypress event is being ignored. Key presses are handled by onkeydown and onkeyup events
+        // The keypress event is being ignored. Key presses are handled by onkeydown and onkeyup events
         oField.onkeypress  = function(e) { if (!e) e = window.event; if (e.keyCode == 13) return false; }
 
         // On doubleclick toggle the list
         oField.ondblclick  = function(e) { if (!e) e = window.event; mkSearchToggle(e, oField); }
     }
 }
+
+mkSearchAddField("mk_side_search_field", "main", url);
 
 // On key release event handler
 function mkSearchKeyUp(e, oField) {
@@ -213,6 +214,11 @@ function mkSearchClose() {
 
 // Build a new result list and show it up
 function mkSearch(e, oField) {
+    if(oField == null) {
+        alert("Field is null");
+        return;
+    }
+    
     var val = oField.value;
 
     if(!aSearchHosts) {
@@ -220,7 +226,7 @@ function mkSearch(e, oField) {
 				return;
 		}
 
-		aSearchResults = [];
+    aSearchResults = [];
 
     // Build matching regex
     // var oMatch = new RegExp('^'+val, 'gi');
@@ -237,7 +243,7 @@ function mkSearch(e, oField) {
 						var oResult = {
 							'id': 'result_'+hostName,
 							'name': hostName,
-							'url': mkSearchCheckMkUrl+'/view.py?view_name=host&host='+hostName,
+							'url': mkSearchCheckMkUrl+'/view.py?view_name=host&host='+hostName
 						};
 						
 						// Add id to search result array
@@ -246,7 +252,7 @@ function mkSearch(e, oField) {
             content += '<a id="'+oResult.id+'" href="'+oResult.url+'" onclick="mkSearchClose()" target="'+mkSearchTargetFrame+'">'+hostAlias+" ("+hostName+")</a>\n";
         }
     }
-		
+
     if(content != '') {
         var oContainer = document.getElementById('mk_search_results');
         if(!oContainer) {
@@ -260,8 +266,8 @@ function mkSearch(e, oField) {
 
         oContainer = null;
     } else {
-			mkSearchClose();
-		}
+        mkSearchClose();
+    }
     
     oField = null;
 }

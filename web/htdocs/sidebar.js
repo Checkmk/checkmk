@@ -22,6 +22,8 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+refresh_snapins = null;
+
 // Load stylesheet for sidebar
 
 // Get object of script (myself)
@@ -45,33 +47,38 @@ oLink.type = 'text/css';
 document.getElementsByTagName("HEAD")[0].appendChild(oLink);
 
 var oDiv = document.createElement('div');
+oDiv.setAttribute('id', 'sidebar_container');
 oDiv.innerHTML = get_url(url + 'sidebar.py');
-
-// There may be some javascript code in the html code rendered by
-// sidebar.py. Execute it here. This is needed in some browsers.
-if(!isFirefox()) {
-  var aScripts = oDiv.getElementsByTagName('script');
-  for(var i in aScripts) {
-    if(aScripts[i].src && aScripts[i].src !== '') {
-      var oScr=document.createElement('script');
-      oScr.src = aScripts[i].src;
-      document.getElementsByTagName("HEAD")[0].appendChild(oScr);
-      oScr = null;
-    } else {
-      try {
-        eval(aScripts[i].text);
-      } catch(e) {}
-    }
-  }
-  aScripts = null;
-}
-
 oSidebar.appendChild(oDiv);
+executeJS('sidebar_container');
 
 // Cleaning up DOM links
 oDiv = null;
 oLink = null;
 oSidebar = null;
+
+// There may be some javascript code in the html code rendered by
+// sidebar.py. Execute it here. This is needed in some browsers.
+function executeJS(objId) {
+  if(!isFirefox()) {
+    var obj = document.getElementById(objId);
+    var aScripts = obj.getElementsByTagName('script');
+    for(var i in aScripts) {
+      if(aScripts[i].src && aScripts[i].src !== '') {
+        var oScr = document.createElement('script');
+        oScr.src = aScripts[i].src;
+        document.getElementsByTagName("HEAD")[0].appendChild(oScr);
+        oScr = null;
+      } else {
+        try {
+          eval(aScripts[i].text);
+        } catch(e) {alert(aScripts[i].text + "\nError:" + e.message);}
+      }
+    }
+    aScripts = null;
+    obj = null;
+  }
+}
 
 function isFirefox() {
   return navigator.userAgent.indexOf("Firefox") > -1;
@@ -137,6 +144,7 @@ function sidebar_scheduler() {
             newcontent = get_url(url + "/sidebar_snapin.py?name=" + name);
             var oSnapin = document.getElementById("snapin_" + name);
             oSnapin.innerHTML = newcontent;
+            executeJS("snapin_" + name);
             oSnapin = null;
         }
     }

@@ -145,7 +145,7 @@ def page_sidebar(h):
     html.write("<div class=footnote><a target=\"main\" href=\"%s/sidebar_config.py\">Configure sidebar</a></div>\n" % \
 	    defaults.checkmk_web_uri)
     html.write("<script language=\"javascript\">\n")
-    html.write("var refresh_snapins = %r;\n" % refresh_snapins) 
+    html.write("refresh_snapins = %r;\n" % refresh_snapins) 
     html.write("sidebar_scheduler();\n")
     html.write("</script>\n")
 

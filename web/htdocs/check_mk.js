@@ -50,8 +50,7 @@ function filter_activation(oid)
 function toggle_object(linkobject, oid, showtext, hidetext)
 {
     var table = document.getElementById(oid);
-    var displayed = table.style.display;
-    if (displayed == "none") {
+    if (table.style.display == "none") {
 	table.style.display = "";
 	linkobject.innerHTML = hidetext;
     }
@@ -59,4 +58,5 @@ function toggle_object(linkobject, oid, showtext, hidetext)
 	table.style.display = "none";
 	linkobject.innerHTML = showtext;
     }
+    table = null;
 }

@@ -107,8 +107,9 @@ def toggle_button(id, isopen, opentxt, closetxt, addclasses=[]):
 
 
 def show_filter_form(is_open, filters):
+    # Table muss einen anderen Namen, als das Formular
     html.begin_form("filter")
-    html.write("<table class=form id=filter %s>\n" % (not is_open and 'style="display: none"' or ''))
+    html.write("<table class=form id=table_filter %s>\n" % (not is_open and 'style="display: none"' or ''))
 
     # sort filters according to title
     s = [(f.sort_index, f.title, f) for f in filters]
@@ -793,12 +794,12 @@ def show_view(view, show_heading = False):
     # Filter-button
     if len(show_filters) > 0 and not html.do_actions():
         filter_isopen = html.var("search", "") != "" or view["mustsearch"]
-	toggle_button("filter", filter_isopen, "Show filter", "Hide filter", ["filter"])
+	toggle_button("table_filter", filter_isopen, "Show filter", "Hide filter", ["filter"])
    
     # Action-button
     if len(rows) > 0 and config.may("act"):
 	actions_are_open = html.do_actions()
-	toggle_button("actions", actions_are_open, "Show commands", "hide commands")
+	toggle_button("table_actions", actions_are_open, "Show commands", "Hide commands")
     else:
 	actions_are_open = False
 
@@ -987,12 +988,13 @@ def show_action_form(is_open, datasource):
     if not config.may("act"):
 	return
 
+    # Table muss einen anderen Namen, als das Formular
     html.begin_form("actions")
     html.hidden_field("_do_actions", "yes")
     html.hidden_field("actions", "yes")
     html.hidden_fields() # set all current variables, exception action vars
 
-    html.write("<table %s id=actions class=form id=actions>\n" % (is_open and " " or 'style="display: none"'))
+    html.write("<table %s id=table_actions class=form>\n" % (is_open and " " or 'style="display:none"'))
 
     if config.may("action.notifications"):
 	html.write("<tr><td class=legend>Notifications</td>\n"
@@ -1008,7 +1010,7 @@ def show_action_form(is_open, datasource):
 	    html.write("<input type=submit name=_enable_checks value=\"Enable\"> &nbsp; "
 		   "<input type=submit name=_disable_checks value=\"Disable\"> &nbsp; ")
 	if config.may("action.reschedule"):
-	    html.write("<input type=submit name=_resched_checks value=\"Reschedule next check now\"></td></tr>\n"
+	    html.write("<input type=submit name=_resched_checks value=\"Reschedule next check now\">\n"
 		   "</td></tr>\n")
 
     if config.may("action.fakechecks"):

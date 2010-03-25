@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL           = /bin/bash
-VERSION        	= 1.1.3b2
+VERSION        	= 1.1.3
 NAME           	= check_mk
 RPM_TOPDIR     	= rpm.topdir
 RPM_BUILDROOT  	= rpm.buildroot
@@ -56,7 +56,7 @@ help:
 
 dist: mk-livestatus
 	@echo "--------------------------------------------------------------------------"
-	@echo -n "Checking permissions... with find -not -perm 444..." && [ -z "$$(find -not -perm -444)" ] && echo OK
+	@echo -n "Checking permissions... with find -not -perm -444..." && [ -z "$$(find -not -perm -444)" ] && echo OK
 	@echo "Making $(DISTNAME)"
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)

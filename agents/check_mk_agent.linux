@@ -59,10 +59,10 @@ STAT_BROKE="5.3.0"
 exec <&- 2>/dev/null
 
 echo '<<<check_mk>>>'
-echo Version: 1.1.3b2
+echo Version: 1.1.3
 
 echo '<<<mknagios>>>'
-echo Version: 1.1.3b2
+echo Version: 1.1.3
 
 # Partitionen (-P verhindert Zeilenumbruch bei langen Mountpunkten)
 # Achtung: NFS-Mounts werden grundsaetzlich ausgeblendet, um
@@ -230,7 +230,7 @@ then
     grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
     while read descr cmdline
     do
-        OUTPUT=$($cmdline | tr \\n \\1)
+        OUTPUT=$(eval "$cmdline" | tr \\n \\1)
         echo "$descr $? $OUTPUT"
     done
 fi

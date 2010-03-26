@@ -32,10 +32,11 @@
 
 class HostlistColumn : public Column
 {
-   int _offset;
+   int  _offset;
+   bool _show_state;
 public:
-   HostlistColumn(string name, string description, int offset, int indirect_offset)
-      : Column(name, description, indirect_offset), _offset(offset) {};
+   HostlistColumn(string name, string description, int offset, int indirect_offset, bool show_state)
+      : Column(name, description, indirect_offset), _offset(offset), _show_state(show_state) {};
    int type() { return COLTYPE_LIST; };
    void output(void *, Query *);
    Filter *createFilter(int opid, char *value);

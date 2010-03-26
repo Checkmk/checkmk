@@ -57,7 +57,10 @@ void TableHostgroups::addColumns(Table *table, string prefix, int indirect_offse
    table->addColumn(new OffsetStringColumn(prefix + "action_url", 
 	    "An optional URL to custom actions or information about the hostgroup", (char *)(&hgr.action_url) - ref, indirect_offset));
    table->addColumn(new HostlistColumn(    prefix + "members", 
-	    "A list of all host names that are members of the hostgroup",    (char *)(&hgr.members) - ref, indirect_offset));
+	    "A list of all host names that are members of the hostgroup",    (char *)(&hgr.members) - ref, indirect_offset, false));
+   table->addColumn(new HostlistColumn(    prefix + "members_with_state", 
+	    "A list of all host names that are members of the hostgroup together with state and has_been_checked", 
+	    (char *)(&hgr.members) - ref, indirect_offset, true));
 
    table->addColumn(new HostlistStateColumn(prefix + "worst_host_state", 
 	    "The worst state of all of the groups' hosts (UP <= UNREACHABLE <= DOWN)",     HLSC_WORST_HST_STATE, (char *)(&hgr.members) - ref, indirect_offset));

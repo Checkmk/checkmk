@@ -1,0 +1,2 @@
+* AuthUser: is not honored in some list columns (do this
+  like in ServiceslistColumn)

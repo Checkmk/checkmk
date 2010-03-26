@@ -227,9 +227,9 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 		"A list of the values of the custom variables", (char *)(&hst.custom_variables) - ref, indirect_offset, CVT_VALUES));
 
     table->addColumn(new HostlistColumn(prefix + "parents", 
-		"A list of all direct parents of the host", (char *)(&hst.parent_hosts) - ref, indirect_offset));
+		"A list of all direct parents of the host", (char *)(&hst.parent_hosts) - ref, indirect_offset, false));
     table->addColumn(new HostlistColumn(prefix + "childs", 
-		"A list of all direct childs of the host", (char *)(&hst.child_hosts) - ref, indirect_offset));
+		"A list of all direct childs of the host", (char *)(&hst.child_hosts) - ref, indirect_offset, false));
 
     table->addColumn(new ServicelistStateColumn(prefix + "num_services", 
 		"The total number of services of the host",         SLSC_NUM,         (char *)(&hst.services) - ref, indirect_offset));
@@ -262,6 +262,11 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 
     table->addColumn(new HostgroupsColumn(prefix + "groups",
 		"A list of all host groups this host is in", (char *)(&hst.hostgroups_ptr) - ref, indirect_offset));
+
+    table->addColumn(new ServicelistColumn(prefix + "services", 
+	    "A list of all services of the host",    (char *)(&hst.services) - ref, indirect_offset, false, false));
+    table->addColumn(new ServicelistColumn(prefix + "services_with_state", 
+	    "A list of all services of the host together with state and has_been_checked",    (char *)(&hst.services) - ref, indirect_offset, false, true));
 }
 
 void *TableHosts::findObject(char *objectspec)

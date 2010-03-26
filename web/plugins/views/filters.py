@@ -29,7 +29,7 @@
 # Filters for substring search, displaying a text input field
 class FilterText(Filter):
     def __init__(self, name, title, info, column, htmlvar, op):
-	Filter.__init__(self, name, title, info, [htmlvar])
+	Filter.__init__(self, name, title, info, [htmlvar], [column])
 	self.op = op
 	self.column = column
     
@@ -77,7 +77,7 @@ declare_filter(202, FilterText("output",  "Service check output", "service", "se
 
 class FilterLimit(Filter):
     def __init__(self):
-	Filter.__init__(self, "limit", "Limit number of data sets", None, [ "limit" ])
+	Filter.__init__(self, "limit", "Limit number of data sets", None, [ "limit" ], [])
 
     def current_value(self):
 	try:
@@ -112,7 +112,8 @@ class FilterGroupCombo(Filter):
 	Filter.__init__(self, self.prefix + what + "group", # name,     e.g. "hostgroup"
 		what[0].upper() + what[1:] + "group",       # title,    e.g. "Hostgroup"
 		what,                                       # info,     e.g. "host"
-		[ self.prefix + what + "group" ])           # htmlvars, e.g. "hostgroup" 
+		[ self.prefix + what + "group" ],           # htmlvars, e.g. "hostgroup" 
+		[ what + "group_name" ])                    # rows needed to fetch for link information
         self.what = what
 
     def display(self):
@@ -167,7 +168,7 @@ declare_filter(205, FilterGroupCombo("service", False), "Optional selection of s
 
 class FilterQueryDropdown(Filter):
     def __init__(self, name, title, info, query, filterline):
-	Filter.__init__(self, name, title, info, [ name ])
+	Filter.__init__(self, name, title, info, [ name ], [])
 	self.query = query
 	self.filterline = filterline
 
@@ -190,7 +191,7 @@ declare_filter(210, FilterQueryDropdown("check_command", "Service check command"
 class FilterServiceState(Filter):
     def __init__(self, name, title, prefix):
 	Filter.__init__(self, name, title, 
-		"service", [ prefix + "st0", prefix + "st1", prefix + "st2", prefix + "st3", prefix + "stp" ])
+		"service", [ prefix + "st0", prefix + "st1", prefix + "st2", prefix + "st3", prefix + "stp" ], [])
         self.prefix = prefix
     
     def display(self):
@@ -230,7 +231,7 @@ declare_filter(216, FilterServiceState("svchardstate", "Service hard states", "h
 class FilterHostState(Filter):
     def __init__(self):
 	Filter.__init__(self, "hoststate", "Host states", 
-		"host", [ "st0", "st1", "st2", "stp" ])
+		"host", [ "st0", "st1", "st2", "stp" ], [])
     
     def display(self):
 	if html.var("filled_in"):
@@ -264,7 +265,7 @@ class FilterTristate(Filter):
     def __init__(self, name, title, info, column, deflt = -1):
 	self.column = column
 	self.varname = "is_" + name
-	Filter.__init__(self, name, title, info, [ self.varname ])
+	Filter.__init__(self, name, title, info, [ self.varname ], [])
 	self.deflt = deflt
    
     def display(self):
@@ -328,7 +329,7 @@ declare_filter(232, FilterNagiosExpression("service", "in_downtime", "Host or Se
 
 class FilterSite(Filter):
     def __init__(self, name, enforce):
-	Filter.__init__(self, name, "Site", None, ["site"])
+	Filter.__init__(self, name, "Site", None, ["site"], [])
 	self.enforce = enforce
 
     def display(self):

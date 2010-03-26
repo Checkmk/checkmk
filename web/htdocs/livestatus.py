@@ -138,7 +138,7 @@ class Helpers:
 	for x in range(0, len(data[0])):
 	    result.append(sum([row[x] for row in data]))
 	return result
-
+    
 
 class BaseConnection:
     def __init__(self, socketurl):

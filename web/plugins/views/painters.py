@@ -24,6 +24,43 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# =================================================================== #
+#        _    ____ ___      ____                                      #
+#       / \  |  _ \_ _|    |  _ \  ___   ___ _   _                    #
+#      / _ \ | |_) | |_____| | | |/ _ \ / __| | | |                   #
+#     / ___ \|  __/| |_____| |_| | (_) | (__| |_| |                   #
+#    /_/   \_\_|  |___|    |____/ \___/ \___|\__,_|                   #
+#                                                                     #
+# =================================================================== #
+# 
+# A painter computes from information from a data row HTML output and
+# a CSS class for one display column. Please note, that there is no
+# 1:1 relation between data columns and display columns. A painter can
+# make use of more than one data columns. One example is the current
+# service state. It uses the columns "service_state" and "has_been_checked".
+#
+# A painter is a python dictionary with the following keys:
+#
+# "title":   Title of the column to be displayed in the view editor
+#            *and* in views as column header
+# "short":   If the key is defined, it is used as column header in views
+#            instead of the the title
+# "columns": Livestatus columns this painter need. Multisite retrieves
+#            only data columns declared in the painters, so make sure
+#            you do not leave out something here.
+# "paint":   The actual paint function 
+#
+# The paint function gets one argument: A data row, which is a python
+# dictionary representing one data object (host, service, ...). Its
+# keys are the column names, its values the actual values from livestatus
+# (typed: numbers are float or int, not string)
+#
+# The paint function must return a pair of two strings: The HTML code
+# for painting the column and a CSS class for the TD of the column.
+# That class is optional and set to "" in most cases. Currently CSS
+# styles are not modular and all defined in check_mk.css. This will
+# change in future.
+# =================================================================== #
 
 #    ___                    
 #   |_ _|___ ___  _ __  ___ 
@@ -320,6 +357,12 @@ multisite_painters["svc_flapping"] = {
     "paint" : lambda row: paint_nagiosflag(row, "service_is_flapping", True)
 }
 
+#   _   _           _       
+#  | | | | ___  ___| |_ ___ 
+#  | |_| |/ _ \/ __| __/ __|
+#  |  _  | (_) \__ \ |_\__ \
+#  |_| |_|\___/|___/\__|___/
+#                           
 
 def paint_svc_count(id, count):
     if count > 0:
@@ -373,6 +416,27 @@ multisite_painters["num_services_pending"] = {
     "short"   : "P",
     "columns" : [ "host_num_services_pending" ],
     "paint"   : lambda row: paint_svc_count("p", row["host_num_services_pending"])
+}
+
+def paint_host_list(row):
+    h = "<div class=objectlist>"
+    for host, state, checked in row["hostgroup_members_with_state"]:
+        link = "view.py?view_name=host&site=%s&host=%s" % (
+		htmllib.urlencode(row["site"]),
+		htmllib.urlencode(host))
+	if checked:
+	    css = "hstate%d" % state
+	else:
+	    css = "hstatep"
+	h += "<div class=\"%s\"><a href=\"%s\">%s</a></div>" % (css, link, host) 
+    h += "</div>"
+    return "", h
+
+multisite_painters["hostgroup_hosts"] = {
+    "title"   : "Hosts colored according to state",
+    "short"   : "Hosts",
+    "columns" : [ "hostgroup_members_with_state" ],
+    "paint"   : paint_host_list,
 }
 
 #    _   _           _                                  
@@ -460,12 +524,47 @@ multisite_painters["hg_alias"] = {
     "paint" : lambda row: (None, row["hostgroup_alias"])
 }
 
+def paint_service_list(row, columnname):
+    h = "<div class=objectlist>"
+    for entry in row[columnname]:
+        if columnname.startswith("servicegroup"):
+	    host, svc, state, checked = entry
+	    text = host + " ~ " + svc
+	else:
+	    svc, state, checked = entry
+	    host = row["host_name"]
+	    text = svc
+        link = "view.py?view_name=service&site=%s&host=%s&service=%s" % (
+		htmllib.urlencode(row["site"]),
+		htmllib.urlencode(host),
+		htmllib.urlencode(svc))
+	if checked:
+	    css = "state%d" % state
+	else:
+	    css = "statep"
+	h += "<div class=\"%s\"><a href=\"%s\">%s</a></div>" % (css, link, text) 
+    h += "</div>"
+    return "", h
+
+multisite_painters["host_services"] = {
+    "title"   : "Services colored according to state",
+    "short"   : "Services",
+    "columns" : [ "host_name", "host_services_with_state" ],
+    "paint"   : lambda row: paint_service_list(row, "host_services_with_state")
+}
 #    ____                  _                                          
 #   / ___|  ___ _ ____   _(_) ___ ___  __ _ _ __ ___  _   _ _ __  ___ 
 #   \___ \ / _ \ '__\ \ / / |/ __/ _ \/ _` | '__/ _ \| | | | '_ \/ __|
 #    ___) |  __/ |   \ V /| | (_|  __/ (_| | | | (_) | |_| | |_) \__ \
 #   |____/ \___|_|    \_/ |_|\___\___|\__, |_|  \___/ \__,_| .__/|___/
 #                                     |___/                |_|        
+
+multisite_painters["sg_services"] = {
+    "title"   : "Services colored according to state",
+    "short"   : "Services",
+    "columns" : [ "servicegroup_members_with_state" ],
+    "paint"   : lambda row: paint_service_list(row, "servicegroup_members_with_state")
+}
 
 multisite_painters["sg_num_services"] = {
     "title"   : "Number of services",

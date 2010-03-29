@@ -83,7 +83,7 @@ def iconpaint_flag(values, icon):
     if values[0] > 0:
 	return "<img class=icon src=\"images/icon_%s.gif\">" % icon
 
-def iconpaint_disabled(values, icon):
+def iconpaint_disabled(values):
     if values[0] == 0 and values[1] == 0:
 	return "<img class=icon src=\"images/icon_disabled.gif\">"
 
@@ -99,11 +99,11 @@ def iconpaint_pnp(values):
     return pnp_link(values)
 
 
-icon_painters.append(("service", ["service_check_command"], iconpaint_check_mk))
+icon_painters.append(("service", ["check_command"], iconpaint_check_mk))
 icon_painters.append(("", ["comments"], iconpaint_comments))
 icon_painters.append(("", ["acknowledged"], lambda values: iconpaint_flag(values, "ack")))
 icon_painters.append(("", ["notifications_enabled"], lambda values: iconpaint_flag([1 - values[0]], "ndisabled")))
-icon_painters.append(("", ["active_checks_enabled", "accepts_passive_checks"], iconpaint_disabled))
+icon_painters.append(("", ["active_checks_enabled", "accept_passive_checks"], iconpaint_disabled))
 icon_painters.append(("", ["scheduled_downtime_depth"], lambda values: iconpaint_flag(values, "downtime")))
 icon_painters.append(("", ["action_url_expanded"], iconpaint_actionurl))
 icon_painters.append(("", ["notes_url_expanded"], iconpaint_notesurl))
@@ -118,12 +118,11 @@ icon_painters.append(("", ["is_flapping"], lambda values: iconpaint_flag(values,
 def paint_icons(what, row): # what is "host" or "service"
     output = ""
     for w, columns, paint in icon_painters:
-	if w == what: # icon painter especially for "what"
-	    prefix = ""
-	elif w == "":
-	    prefix = what + "_" # universal icon painter
-	else:
-	    continue
+	if w and w != what:
+	    continue # painter not suitable for what
+	prefix = what + "_"
+
+	# Fetch values icon painter needs from row
 	values = []
 	for col in columns:
 	    pcol = prefix + col
@@ -136,19 +135,25 @@ def paint_icons(what, row): # what is "host" or "service"
 	    if h:
 		output += paint(values)
     return "icons", output
-		
+
+def painter_columns(what):
+    cols = []
+    for w, columns, paint in icon_painters:
+	if what == w or not w:
+	    cols += [ what + "_" + c for c in columns ] 
+    return cols
 
 multisite_painters["service_icons"] = {
     "title" : "Service icons",
     "short" : "Icons",
-    "columns" : [ "service_description" ], # icons are painted as information is available
+    "columns" : painter_columns("service"),
     "paint" : lambda row: paint_icons("service", row)
 }
 
 multisite_painters["host_icons"] = {
     "title" : "Host icons",
     "short" : "Icons",
-    "columns" : [ "host_name" ], # icons are painted as information is available
+    "columns" : painter_columns("host"),
     "paint" : lambda row: paint_icons("host", row)
 }
 

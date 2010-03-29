@@ -167,7 +167,7 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 		"The current state of the host (0: up, 1: down, 2: unreachable)", (char *)(&hst.current_state) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "state_type", 
 		"Type of the current state (0: soft, 1: hard)", (char *)(&hst.state_type) - ref, indirect_offset));
-    table->addColumn(new OffsetIntColumn(prefix + "last_check", 
+    table->addColumn(new OffsetTimeColumn(prefix + "last_check", 
 		"Time of the last check (Unix timestamp)", (char *)(&hst.last_check) - ref, indirect_offset));
     table->addColumn(new OffsetTimeColumn(prefix + "last_state_change", 
 		"Time of the last state change - soft or hard (Unix timestamp)", (char *)(&hst.last_state_change) - ref, indirect_offset));

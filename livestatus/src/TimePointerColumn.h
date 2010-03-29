@@ -33,6 +33,7 @@ public:
     TimePointerColumn(string name, string description, int* number)
        : IntPointerColumn(name, description, number) {};
     void output(void *data, Query *query);
+    int type() { return COLTYPE_TIME; };
     Filter *createFilter(int operator_id, char *value);
 };
 

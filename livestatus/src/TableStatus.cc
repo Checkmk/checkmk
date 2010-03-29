@@ -27,6 +27,7 @@
 #include "GlobalCountersColumn.h"
 #include "Query.h"
 #include "IntPointerColumn.h"
+#include "TimePointerColumn.h"
 #include "StringPointerColumn.h"
 #include "nagios.h"
 #include "logger.h"
@@ -111,11 +112,11 @@ TableStatus::TableStatus()
 	    "Whether processing of performance data is activated in general (0/1)", &process_performance_data));
    addColumn(new IntPointerColumn("check_external_commands", 
 	    "Whether Nagios checks for external commands at its command pipe (0/1)", &check_external_commands));
-   addColumn(new IntPointerColumn("program_start", 
+   addColumn(new TimePointerColumn("program_start", 
 	    "The time of the last program start as UNIX timestamp", (int*)&program_start));
-   addColumn(new IntPointerColumn("last_command_check", 
+   addColumn(new TimePointerColumn("last_command_check", 
 	    "The time of the last check for a command as UNIX timestamp", (int*)&last_command_check));
-   addColumn(new IntPointerColumn("last_log_rotation", 
+   addColumn(new TimePointerColumn("last_log_rotation", 
 	    "Time time of the last log file rotation", (int*)&last_log_rotation));
    addColumn(new IntPointerColumn("interval_length", 
 	    "The default interval length from nagios.cfg", (int*)&interval_length));

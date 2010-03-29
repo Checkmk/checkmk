@@ -325,12 +325,13 @@ table.tacticaloverview td.prob { background-color: #d30; color: #f00; font-weigh
 #                                                                 
 # --------------------------------------------------------------
 def render_performance():
-    data = html.live.query("GET status\nColumns: service_checks_rate host_checks_rate connections_rate\n")
+    data = html.live.query("GET status\nColumns: service_checks_rate host_checks_rate connections_rate forks_rate\n")
     html.write("<table class=performance>\n")
     for what, col in \
 	[("Serv. checks", 0), 
 	("Host checks", 1),
-	("Livestatus-conn.", 2)]:
+	("Livestatus-conn.", 2),
+	("Process creations", 3)]:
 	html.write("<tr><td class=left>%s:</td><td class=right>%.2f/s</td></tr>\n" % (what, sum([row[col] for row in data])))
     html.write("</table>\n")
 		    
@@ -341,7 +342,7 @@ sidebar_snapins["performance"] = {
     "allowed" : [ "admin", ],
     "styles" : """
 table.performance { font-size: 8pt; width: 100%; background-color: #888; border-style: solid; border-color: #444 #bbb #eee #666; border-width: 1px; }
-table.Performance td.right { text-align: right; font-weight: bold; }
+table.Performance td.right { text-align: right; font-weight: bold; padding: 0px; }
 
 """
 }
@@ -544,7 +545,7 @@ def ajax_switch_masterstate(html):
     if command:
 	html.live.command("[%d] %s" % (int(time.time()), command), site)
 	html.live.set_only_sites([site])
-        html.live.query("GET status\nWaitTrigger: program\nWaitTimeout: 4000\nWaitCondition: %s = %d\nColumns: %s\n" % \
+        html.live.query("GET status\nWaitTrigger: program\nWaitTimeout: 10000\nWaitCondition: %s = %d\nColumns: %s\n" % \
                (column, state, column))
 	html.live.set_only_sites(None)
     else:

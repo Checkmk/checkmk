@@ -899,6 +899,11 @@ def show_view(view, show_heading = False):
 
     else:
         layout["render"]((columns, rows), view, group_columns, group_painters, painters, num_columns)
+    
+    # In multi site setups error messages of single sites do not block the
+    # output and raise now exception. We simply print error messages here:
+    for sitename, info in html.live.deadsites.items():
+	html.show_error("<b>%s - Livestatus error</b><br>%s" % (info["site"]["alias"], info["exception"]))
 
 def view_title(view):
     extra_titles = [ ]

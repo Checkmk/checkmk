@@ -9,11 +9,13 @@
       * Updates API for Python
       * Make stack size of threads configurable
       * Set stack size of threads per default o 64 KB instead of 8 MB
+      * New header Localtime: for compensating time offsets of remote sites
 
       Multisite:
       * Number of columns now configurable for each layout (1..50)
       * New layout "tiled"
       * New painters for lists of hosts and services in one column
+      * Automatically compensate timezone offsets of remote sites
 
       Checks & Agents:
       * mrpe in Linux agent: Fix bug introduced in 1.1.3: Exit status of plugins was

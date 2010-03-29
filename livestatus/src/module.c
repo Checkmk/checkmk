@@ -81,6 +81,12 @@ int g_thread_pid = 0;
 int g_service_authorization = AUTH_LOOSE;
 int g_group_authorization = AUTH_STRICT;
 
+void livestatus_count_fork()
+{
+    g_counters[COUNTER_FORKS]++;
+}
+
+
 void livestatus_cleanup_after_fork()
 {
     // 4.2.2010: Deactivate the cleanup function. It might cause
@@ -175,7 +181,7 @@ void start_threads()
 {
     if (!g_thread_running) {
 	/* start thread that listens on socket */
-	pthread_atfork(NULL, NULL, livestatus_cleanup_after_fork);
+	pthread_atfork(livestatus_count_fork, NULL, livestatus_cleanup_after_fork);
 	pthread_create(&g_mainthread_id, 0, main_thread, (void *)0);
 	logger(LG_INFO, "Starting %d client threads", g_num_clientthreads);
 

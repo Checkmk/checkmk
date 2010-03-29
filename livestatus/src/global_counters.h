@@ -40,7 +40,8 @@ typedef uint64_t counter_t;
 #define COUNTER_CONNECTIONS    2
 #define COUNTER_SERVICE_CHECKS 3
 #define COUNTER_HOST_CHECKS    4
-#define NUM_COUNTERS           5
+#define COUNTER_FORKS          5
+#define NUM_COUNTERS           6
 
 EXTERN counter_t g_counters[NUM_COUNTERS];
 EXTERN counter_t g_last_counter[NUM_COUNTERS];

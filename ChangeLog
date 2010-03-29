@@ -10,6 +10,7 @@
       * Make stack size of threads configurable
       * Set stack size of threads per default o 64 KB instead of 8 MB
       * New header Localtime: for compensating time offsets of remote sites
+      * New performance counter for fork rate
 
       Multisite:
       * Number of columns now configurable for each layout (1..50)

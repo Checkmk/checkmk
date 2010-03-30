@@ -50,6 +50,7 @@ public:
     bool isAuthorized(contact *ctc, void *data);
     void handleNewMessage(Logfile *logfile, time_t since, time_t until, unsigned logclasses);
     void answerQuery(Query *query);
+    Column *column(const char *colname); // override in order to handle current_
 
 private:
     void forgetLogfiles();

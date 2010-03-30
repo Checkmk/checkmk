@@ -299,3 +299,18 @@ bool TableLog::isAuthorized(contact *ctc, void *data)
     else
 	return true;
 }
+
+Column *TableLog::column(const char *colname)
+{
+    // First try to find column in the usual way
+    Column *col = Table::column(colname);
+    if (col) return col;
+
+    // Now try with prefix "current_", since our joined
+    // tables have this prefix in order to make clear that
+    // we access current and not historic data and in order
+    // to prevent mixing up historic and current fields with 
+    // the same name.
+    string with_current = string("current_") + colname;
+    return Table::column(with_current.c_str());
+}

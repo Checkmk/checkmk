@@ -290,7 +290,7 @@ def parse_file(host, file, hidecontext = "no"):
             log = {'lines': []}
 
             # New header line
-            date, time, level = line[3:-3].split(' ')
+            date, logtime, level = line[3:-3].split(' ')
 
             # Save level as integer to make it better comparable
             if level == 'CRIT':
@@ -303,8 +303,8 @@ def parse_file(host, file, hidecontext = "no"):
             # Gather datetime object
             # Python versions below 2.5 don't provide datetime.datetime.strptime.
             # Use the following instead:
-            #log['datetime'] = datetime.datetime.strptime(date + ' ' + time, "%Y-%m-%d %H:%M:%S") 
-            log['datetime'] = datetime.datetime(*time.strptime(date + ' ' + time, "%Y-%m-%d %H:%M:%S")[0:5])
+            #log['datetime'] = datetime.datetime.strptime(date + ' ' + logtime, "%Y-%m-%d %H:%M:%S") 
+            log['datetime'] = datetime.datetime(*time.strptime(date + ' ' + logtime, "%Y-%m-%d %H:%M:%S")[0:5])
         else:
             # Data line
             lineDisplay = line[2:]

@@ -55,7 +55,7 @@ TableDownComm::TableDownComm(bool is_downtime)
 		"The time the entry was made as UNIX timestamp", (char *)&(ref->_entry_time) - (char *)ref));
     addColumn(new OffsetIntColumn("type",
 		is_downtime ?  "The type of the downtime: 0 if it is active, 1 if it is pending" :
-		"The type of the comment: 1 is service, 2 is host", (char *)&(ref->_type) - (char *)ref));
+		"The type of the comment: 1 is host, 2 is service", (char *)&(ref->_type) - (char *)ref));
 
     if (is_downtime)
     {
@@ -100,8 +100,7 @@ TableDownComm::~TableDownComm()
     }
 }
 
-void TableDownComm::addComment(nebstruct_comment_data *data)
-{
+void TableDownComm::addComment(nebstruct_comment_data *data) {
     unsigned long id = data->comment_id;
     if (data->type == NEBTYPE_COMMENT_ADD || data->type == NEBTYPE_COMMENT_LOAD) {
 	add(new Comment(data));

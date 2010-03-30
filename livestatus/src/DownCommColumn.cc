@@ -51,7 +51,18 @@ void DownCommColumn::output(void *data, Query *query)
 		    first = false;
 		else
 		    query->outputListSeparator();
-		query->outputUnsignedLong(id);
+		if (_with_info)
+		{
+		    query->outputBeginSublist();
+		    query->outputUnsignedLong(id);
+		    query->outputSublistSeparator();
+		    query->outputString(dt->_author_name);
+		    query->outputSublistSeparator();
+		    query->outputString(dt->_comment);
+		    query->outputEndSublist();
+		}
+		else
+		   query->outputUnsignedLong(id);
 	    }
 	}
     }

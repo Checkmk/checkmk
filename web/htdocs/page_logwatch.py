@@ -301,7 +301,10 @@ def parse_file(host, file, hidecontext = "no"):
                 log['level'] = 0
 
             # Gather datetime object
-            log['datetime'] = datetime.datetime.strptime(date + ' ' + time, "%Y-%m-%d %H:%M:%S") 
+            # Python versions below 2.5 don't provide datetime.datetime.strptime.
+            # Use the following instead:
+            #log['datetime'] = datetime.datetime.strptime(date + ' ' + time, "%Y-%m-%d %H:%M:%S") 
+            log['datetime'] = datetime.datetime(*time.strptime(date + ' ' + time, "%Y-%m-%d %H:%M:%S")[0:5])
         else:
             # Data line
             lineDisplay = line[2:]

@@ -145,3 +145,6 @@ declare_simple_sorter("stateage",     "Service state age",     "service_last_sta
 declare_simple_sorter("servicegroup", "Servicegroup",          "servicegroup_alias",        cmp_simple_string)
 declare_simple_sorter("hostgroup",    "Hostgroup",             "hostgroup_alias",           cmp_simple_string)
 
+# Comments
+declare_simple_sorter("comment_author", "Comment author",      "comment_author",            cmp_simple_string)
+declare_simple_sorter("comment_type",   "Comment type",        "comment_type",              cmp_simple_number)

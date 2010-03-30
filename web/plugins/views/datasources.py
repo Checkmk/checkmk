@@ -85,3 +85,17 @@ multisite_datasources["merged_servicegroups"] = {
     "infos"    : [ "servicegroup" ],
 }
 
+
+multisite_datasources["comments"] = {
+    "title"    : "Host- und Servicecomments",
+    "table"    : "comments",
+    "infos"    : [ "comment", "host", "service" ],
+}
+
+
+multisite_datasources["downtimes"] = {
+    "title"    : "Schedules Downtimes",
+    "table"    : "downtimes",
+    "infos"    : [ "downtime", "host", "service" ],
+}
+

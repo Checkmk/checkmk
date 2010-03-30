@@ -49,6 +49,10 @@ config.declare_permission("action.acknowledge",
 	"Acknowledge",
 	"Acknowledge host and service problems and remove acknowledgements",
 	[ "user", "admin" ])
+config.declare_permission("action.addcomment", 
+	"Add comments",
+	"Add comments to hosts or services, and remove comments",
+	[ "user", "admin" ])
 config.declare_permission("action.downtimes", 
 	"Set/Remove Downtimes",
 	"Schedule and remove downtimes on hosts and services",
@@ -74,16 +78,21 @@ def prepare_paint(p, row):
 
     # Create contextlink to other view
     if content and linkview:
-	view = html.available_views.get(linkview)
-	if view:
-	    filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
-	    filtervars = []
-	    for filt in filters:
-		filtervars += filt.variable_settings(row)
-
-	    uri = html.makeuri_contextless([("view_name", linkview)] + filtervars)
-	    content = "<a href=\"%s\">%s</a>" % (uri, content)
+	content = link_to_view(content, row, linkview)
     return tdclass, content
+
+def link_to_view(content, row, linkview):
+    view = html.available_views.get(linkview)
+    if view:
+	filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
+	filtervars = []
+	for filt in filters:
+	    filtervars += filt.variable_settings(row)
+
+	uri = html.makeuri_contextless([("view_name", linkview)] + filtervars)
+	content = "<a href=\"%s\">%s</a>" % (uri, content)
+    return content
+
 
 def paint(p, row):
     tdclass, content = prepare_paint(p, row)
@@ -1172,6 +1181,13 @@ def show_action_form(is_open, datasource):
 	html.write("<td class=content><input type=submit name=_acknowledge value=\"Acknowledge\"> &nbsp; "
 		   "<input type=submit name=_remove_ack value=\"Remove Acknowledgement\"></td></tr><tr>"
 		   "<td class=content><div class=textinputlegend>Comment:</div>")
+	html.text_input("_ack_comment")
+	html.write("</td></tr>\n")
+
+    if config.may("action.addcomment"):
+	html.write("<tr><td rowspan=2 class=legend>Add comment</td>\n")
+	html.write("<td class=content><input type=submit name=_add_comment value=\"Add comment\"></td></tr>\n"
+		"<tr><td class=content><div class=textinputlegend>Comment:</div>")
 	html.text_input("_comment")
 	html.write("</td></tr>\n")
 
@@ -1247,12 +1263,20 @@ def nagios_action_command(tablename, dataset):
 	title = "<b>manually set check results to %s</b> for" % statename
 
     elif html.var("_acknowledge") and config.may("action.acknowledge"):
+        comment = html.var("_ack_comment")
+        if not comment:
+            raise MKUserError("_ack_comment", "You need to supply a comment.")
+        command = "ACKNOWLEDGE_" + cmdtag + "_PROBLEM;%s;2;1;0;%s" % \
+                  (spec, html.req.user) + ";" + html.var("_ack_comment")
+        title = "<b>acknowledge the problems</b> of"
+
+    elif html.var("_add_comment") and config.may("action.addcomment"):
         comment = html.var("_comment")
         if not comment:
             raise MKUserError("_comment", "You need to supply a comment.")
-        command = "ACKNOWLEDGE_" + cmdtag + "_PROBLEM;%s;2;1;0;%s" % \
+        command = "ADD_" + cmdtag + "_COMMENT;%s;1;%s" % \
                   (spec, html.req.user) + ";" + html.var("_comment")
-        title = "<b>acknowledge the problems</b> of"
+        title = "<b>add a comment to</b>"
 
     elif html.var("_remove_ack") and config.may("action.acknowledge"):
         command = "REMOVE_" + cmdtag + "_ACKNOWLEDGEMENT;%s" % spec
@@ -1292,8 +1316,8 @@ def nagios_action_command(tablename, dataset):
         title = "<b>schedule an immediate downtime until end of %d</b> on" % br.tm_year
 
     elif html.var("_down_custom") and config.may("action.downtimes"):
-        down_from = html.get_datetime_input("down_from")
-        down_to   = html.get_datetime_input("down_to")
+        down_from = html.get_datetime_input("_down_from")
+        down_to   = html.get_datetime_input("_down_to")
         title = "<b>schedule a downtime from %s to %s</b> on " % (
             time.asctime(time.localtime(down_from)),
             time.asctime(time.localtime(down_to)))

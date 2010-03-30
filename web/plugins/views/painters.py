@@ -99,7 +99,7 @@ def iconpaint_pnp(values):
     return pnp_link(values)
 
 
-icon_painters.append(("service", ["check_command"], iconpaint_check_mk))
+#icon_painters.append(("service", ["check_command"], iconpaint_check_mk))
 icon_painters.append(("", ["comments"], iconpaint_comments))
 icon_painters.append(("", ["acknowledged"], lambda values: iconpaint_flag(values, "ack")))
 icon_painters.append(("", ["notifications_enabled"], lambda values: iconpaint_flag([1 - values[0]], "ndisabled")))
@@ -115,45 +115,58 @@ icon_painters.append(("", ["is_flapping"], lambda values: iconpaint_flag(values,
 # for remote sites with performance data.
 # icon_painters.append(("service", ["site", "host_name", "service_description", "service_perf_data"], iconpaint_pnp))
 
+icon_columns = [ "acknowledged", "scheduled_downtime_depth", "downtimes_with_info", "comments_with_info" ]
+
 def paint_icons(what, row): # what is "host" or "service"
     output = ""
-    for w, columns, paint in icon_painters:
-	if w and w != what:
-	    continue # painter not suitable for what
-	prefix = what + "_"
+    if what == "host":
+	prefix = "host_"
+    else:
+	 prefix = "service_"
 
-	# Fetch values icon painter needs from row
-	values = []
-	for col in columns:
-	    pcol = prefix + col
-	    if pcol not in row:
-		values = None # missing information
-		break
-	    values.append(row[pcol])
-	if values:
-	    h = paint(values)
-	    if h:
-		output += paint(values)
+    # Problem has been acknowledged
+    if row[prefix + "acknowledged"]:
+	output += '<img class=icon src="images/icon_ack.gif">'
+
+    # Currently we are in a downtime + link to list of downtimes for this host / service
+    if row[prefix + "scheduled_downtime_depth"] > 0:
+       output += link_to_view('<img class=icon src="images/icon_downtime.gif">', row, 'downtimes_of_' + what)
+
+    # Comments
+    comments = row[prefix + "comments_with_info"]
+    if len(comments) > 0:
+        text = ""
+	for id, author, comment in comments:
+	    text += "%s: \"%s\" \n" % (author, comment)
+	output += link_to_view('<img class=icon title=\'%s\' src="images/icon_comment.gif">' % text, row, 'comments_of_' + what)
+	
+    # Es fehlen noch:
+    # notifications disabled
+    # Active checks disabled, accept passive checks
+    # action_url and notes_url
+    # is_flapping
+    # eventuell doch PNP
+
     return "icons", output
 
-def painter_columns(what):
-    cols = []
-    for w, columns, paint in icon_painters:
-	if what == w or not w:
-	    cols += [ what + "_" + c for c in columns ] 
+def iconpainter_columns(what):
+    cols = [ what + "_" + c for c in icon_columns ]
+    cols += [ "host_name" ]
+    if what == "service":
+        cols += [ "service_description" ]
     return cols
 
 multisite_painters["service_icons"] = {
     "title" : "Service icons",
     "short" : "Icons",
-    "columns" : painter_columns("service"),
+    "columns" : iconpainter_columns("service"),
     "paint" : lambda row: paint_icons("service", row)
 }
 
 multisite_painters["host_icons"] = {
     "title" : "Host icons",
     "short" : "Icons",
-    "columns" : painter_columns("host"),
+    "columns" : iconpainter_columns("host"),
     "paint" : lambda row: paint_icons("host", row)
 }
 
@@ -172,11 +185,20 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than):
 	return "age", "-"
 	   
     age = time.time() - timestamp
+    if age >= 48 * 3600 or age < -48 * 3600:
+	return "age", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
+
+    # Time delta less than two days => make relative time
+    if age < 0:
+	age = -age
+	prefix = "in "
+    else:
+	prefix = ""
     if age < bold_if_younger_than: 
 	age_class = "agerecent"
     else:
 	age_class = "age"
-    return age_class, html.age_text(age)
+    return age_class, prefix + html.age_text(age)
 
 def paint_site_icon(row):
     if row["site"] and config.use_siteicons:
@@ -184,7 +206,6 @@ def paint_site_icon(row):
     else:
 	return None, ""
 	
-
 multisite_painters["sitename_plain"] = {
     "title" : "Site id",
     "short" : "Site",
@@ -667,4 +688,132 @@ multisite_painters["link_to_pnp_service"] = {
     "paint"   : paint_pnp_service_link,
 }
 
+#     ____                                     _       
+#    / ___|___  _ __ ___  _ __ ___   ___ _ __ | |_ ___ 
+#   | |   / _ \| '_ ` _ \| '_ ` _ \ / _ \ '_ \| __/ __|
+#   | |__| (_) | | | | | | | | | | |  __/ | | | |_\__ \
+#    \____\___/|_| |_| |_|_| |_| |_|\___|_| |_|\__|___/
+#                                                      
 
+multisite_painters["comment_id"] = {
+    "title" : "Comment id",
+    "short" : "ID",
+    "columns" : ["comment_id"],
+    "paint" : lambda row: (None, row["comment_id"])
+}
+multisite_painters["comment_author"] = {
+    "title" : "Comment author",
+    "short" : "Author",
+    "columns" : ["comment_author"],
+    "paint" : lambda row: (None, row["comment_author"])
+}
+
+multisite_painters["comment_comment"] = {
+    "title" : "Comment text",
+    "columns" : ["comment_comment"],
+    "paint" : lambda row: (None, row["comment_comment"])
+}
+
+multisite_painters["comment_what"] = {
+    "title" : "Comment type (host/service)",
+    "short" : "Type",
+    "columns" : ["comment_type"],
+    "paint" : lambda row: (None, row["comment_type"] == 1 and "Host" or "Service")
+}
+multisite_painters["comment_time"] = {
+    "title" : "Comment entry time",
+    "short" : "Time",
+    "columns" : ["comment_entry_time"],
+    "paint" : lambda row: paint_age(row["comment_entry_time"], True, 3600)
+}
+multisite_painters["comment_expires"] = {
+    "title" : "Comment expiry time",
+    "short" : "Expires",
+    "columns" : ["comment_expire_time"],
+    "paint" : lambda row: paint_age(row["comment_expire_time"], row["comment_expire_time"] != 0, 3600)
+}
+
+def paint_comment_entry_type(row):
+    t = row["comment_entry_type"]
+    linkview = None
+    if t == 1:   icon = "comment"
+    elif t == 2:
+	icon = "downtime"
+	if row["service_description"]:
+	    linkview = "downtimes_of_service"
+	else:
+	    linkview = "downtimes_of_host"
+	
+    elif t == 3: icon = "flapping"
+    elif t == 4: icon = "ack"
+    else:
+	return "", ""
+    code = '<img class=icon src="images/icon_%s.gif">' % icon
+    if linkview:
+	code = link_to_view(code, row, linkview)
+    return "icons", code
+
+multisite_painters["comment_entry_type"] = {
+    "title" : "Comment entry type (user/downtime/flapping/ack)",
+    "short" : "E.Type",
+    "columns" : ["comment_entry_type", "host_name", "service_description" ],
+    "paint" : paint_comment_entry_type
+}
+
+#    ____                      _   _                     
+#   |  _ \  _____      ___ __ | |_(_)_ __ ___   ___  ___ 
+#   | | | |/ _ \ \ /\ / / '_ \| __| | '_ ` _ \ / _ \/ __|
+#   | |_| | (_) \ V  V /| | | | |_| | | | | | |  __/\__ \
+#   |____/ \___/ \_/\_/ |_| |_|\__|_|_| |_| |_|\___||___/
+#                                                        
+
+
+multisite_painters["downtime_id"] = {
+    "title" : "Downtime id",
+    "short" : "ID",
+    "columns" : ["downtime_id"],
+    "paint" : lambda row: (None, row["downtime_id"])
+}
+multisite_painters["downtime_author"] = {
+    "title" : "Downtime author",
+    "short" : "Author",
+    "columns" : ["downtime_author"],
+    "paint" : lambda row: (None, row["downtime_author"])
+}
+multisite_painters["downtime_comment"] = {
+    "title" : "Downtime comment",
+    "columns" : ["downtime_comment"],
+    "paint" : lambda row: (None, row["downtime_comment"])
+}
+
+multisite_painters["downtime_fixed"] = {
+    "title" : "Downtime is fixed",
+    "short" : "Fixed",
+    "columns" : ["downtime_fixed"],
+    "paint" : lambda row: (None, row["downtime_fixed"] == "0" and "flexible" or "fixed")
+}
+multisite_painters["downtime_what"] = {
+    "title" : "Downtime type (active/pending)",
+    "short" : "Type",
+    "columns" : ["downtime_type"],
+    "paint" : lambda row: (None, row["downtime_type"] == 0 and "active" or "pending")
+}
+multisite_painters["downtime_entry_time"] = {
+    "title" : "Downtime entry time",
+    "short" : "Entry",
+    "columns" : ["downtime_entry_time"],
+    "paint" : lambda row: paint_age(row["downtime_entry_time"], True, 3600)
+}
+
+multisite_painters["downtime_start_time"] = {
+    "title" : "Downtime start time",
+    "short" : "Start",
+    "columns" : ["downtime_start_time"],
+    "paint" : lambda row: paint_age(row["downtime_start_time"], True, 3600)
+}
+multisite_painters["downtime_end_time"] = {
+    "title" : "Downtime end time",
+    "short" : "End",
+    "columns" : ["downtime_end_time"],
+    "paint" : lambda row: paint_age(row["downtime_end_time"], True, 3600)
+}

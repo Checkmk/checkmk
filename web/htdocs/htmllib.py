@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import time, cgi, config, os, defaults
+from lib import *
 
 # Information about uri
 class InvalidUserInput(Exception):

@@ -223,7 +223,7 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 		"A list of the all scheduled downtimes of the host with id, author and comment", indirect_offset, true, true));
     table->addColumn(new DownCommColumn(prefix + "comments", 
 		"A list of the ids of all comments of this host", indirect_offset, false, false));
-    table->addColumn(new DownCommColumn(prefix + "comment_with_info", 
+    table->addColumn(new DownCommColumn(prefix + "comments_with_info", 
 		"A list of all comments of the host with id, author and comment", indirect_offset, false, true));
 
     table->addColumn(new CustomVarsColumn(prefix + "custom_variable_names", 

@@ -358,3 +358,11 @@ class FilterSite(Filter):
 	
 declare_filter(500, FilterSite("site",    True), "Selection of site is enforced, use this filter for joining")
 declare_filter(501, FilterSite("siteopt", False), "Optional selection of a site")
+
+#    _                
+#   | |    ___   __ _ 
+#   | |   / _ \ / _` |
+#   | |__| (_) | (_| |
+#   |_____\___/ \__, |
+#               |___/ 
+

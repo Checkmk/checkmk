@@ -803,3 +803,49 @@ multisite_painters["downtime_end_time"] = {
     "columns" : ["downtime_end_time"],
     "paint" : lambda row: paint_age(row["downtime_end_time"], True, 3600)
 }
+
+#    _                
+#   | |    ___   __ _ 
+#   | |   / _ \ / _` |
+#   | |__| (_) | (_| |
+#   |_____\___/ \__, |
+#               |___/ 
+
+multisite_painters["log_message"] = {
+    "title" : "Log: complete message",
+    "short" : "Message",
+    "columns" : ["log_message"],
+    "paint" : lambda row: ("", row["log_message"])
+}
+multisite_painters["log_type"] = {
+    "title" : "Log: type",
+    "short" : "Type",
+    "columns" : ["log_type"],
+    "paint" : lambda row: ("", row["log_type"])
+}
+multisite_painters["log_options"] = {
+    "title" : "Log: informational part of message",
+    "short" : "Info",
+    "columns" : ["log_options"],
+    "paint" : lambda row: ("", row["log_options"])
+}
+
+multisite_painters["log_time"] = {
+    "title" : "Log: entry time",
+    "short" : "Time",
+    "columns" : ["log_time"],
+    "paint" : lambda row: paint_age(row["log_time"], True, 3600 * 24)
+}
+def paint_log_state(row):
+    state = row["log_state"]
+    if row["log_service_description"]:
+	return paint_service_state_short({"service_has_been_checked":1, "service_state" : state})
+    else:
+	return paint_host_state_short({"host_has_been_checked":1, "host_state" : state})
+
+multisite_painters["log_state"] = {
+    "title" : "Log: state of host/service at log time",
+    "short" : "State",
+    "columns" : ["log_state", "log_service_description"],
+    "paint" : paint_log_state
+}

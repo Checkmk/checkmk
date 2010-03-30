@@ -1162,6 +1162,13 @@ def show_action_form(is_open, datasource):
 	    html.write("<input type=submit name=_resched_checks value=\"Reschedule next check now\">\n"
 		   "</td></tr>\n")
 
+    if config.may("action.enablechecks"):
+	html.write("<tr><td class=legend>Passive checks</td>\n"
+		   "<td class=content>\n")
+	html.write("<input type=submit name=_enable_passive_checks value=\"Enable\"> &nbsp; "
+	       "<input type=submit name=_disable_passive_checks value=\"Disable\"> &nbsp; "
+	       "</td></tr>\n")
+
     if config.may("action.fakechecks"):
 	if "service" in datasource["infos"]:
 	    states = ["Ok", "Warning", "Critical", "Unknown"]
@@ -1245,6 +1252,14 @@ def nagios_action_command(tablename, dataset):
     elif html.var("_disable_checks") and config.may("action.enablechecks"):
         command = "DISABLE_" + cmdtag + "_CHECK;%s" % spec
         title = "<b>disable active checks</b> of"
+
+    elif html.var("_enable_passive_checks") and config.may("action.enablechecks"):
+        command = "ENABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec 
+        title = "<b>enable passive checks</b> of"
+
+    elif html.var("_disable_passive_checks") and config.may("action.enablechecks"):
+        command = "DISABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec
+        title = "<b>disable passive checks</b> of"
 
     elif html.var("_resched_checks") and config.may("action.reschedule"):
         command = "SCHEDULE_FORCED_" + cmdtag + "_CHECK;%s;%d" % (spec, int(time.time()))

@@ -69,53 +69,10 @@
 #   |___\___\___/|_| |_|___/
 #                           
 
-icon_painters = []
 
-def iconpaint_actionurl(values):
-    if values[0]:
-	return "<a href=\"%s\"><img class=icon src=\"images/icon_action.gif\"></a>" % values[0]
-
-def iconpaint_notesurl(values):
-    if values[0]:
-	return "<a href=\"%s\"><img class=icon src=\"images/icon_notes.gif\"></a>" % values[0]
-
-def iconpaint_flag(values, icon):
-    if values[0] > 0:
-	return "<img class=icon src=\"images/icon_%s.gif\">" % icon
-
-def iconpaint_disabled(values):
-    if values[0] == 0 and values[1] == 0:
-	return "<img class=icon src=\"images/icon_disabled.gif\">"
-
-def iconpaint_comments(values):
-    if values[0] != []:
-	return "<img class=icon src=\"images/icon_comment.gif\">"
-
-def iconpaint_check_mk(values):
-    if values[0].startswith("check_mk"):
-	return "<img class=icon src=\"images/icon_checkmkg.gif\">"
-
-def iconpaint_pnp(values):
-    return pnp_link(values)
-
-
-#icon_painters.append(("service", ["check_command"], iconpaint_check_mk))
-icon_painters.append(("", ["comments"], iconpaint_comments))
-icon_painters.append(("", ["acknowledged"], lambda values: iconpaint_flag(values, "ack")))
-icon_painters.append(("", ["notifications_enabled"], lambda values: iconpaint_flag([1 - values[0]], "ndisabled")))
-icon_painters.append(("", ["active_checks_enabled", "accept_passive_checks"], iconpaint_disabled))
-icon_painters.append(("", ["scheduled_downtime_depth"], lambda values: iconpaint_flag(values, "downtime")))
-icon_painters.append(("", ["action_url_expanded"], iconpaint_actionurl))
-icon_painters.append(("", ["notes_url_expanded"], iconpaint_notesurl))
-icon_painters.append(("", ["is_flapping"], lambda values: iconpaint_flag(values, "flapping")))
-# Experimental: is_executing. Might confuse certain users. Value of this feature not clear.
-# icon_painters.append(("", ["is_executing"], lambda values: iconpaint_flag(values, "executing")))
-
-# Experimental: automatic link to PNP. Problem: autodetection not 100%, non-PNP-users will get icons
-# for remote sites with performance data.
-# icon_painters.append(("service", ["site", "host_name", "service_description", "service_perf_data"], iconpaint_pnp))
-
-icon_columns = [ "acknowledged", "scheduled_downtime_depth", "downtimes_with_info", "comments_with_info" ]
+icon_columns = [ "acknowledged", "scheduled_downtime_depth", "downtimes_with_info", "comments_with_info",
+	         "notifications_enabled", "is_flapping", "modified_attributes_list", "active_checks_enabled",
+		 "accept_passive_checks", "action_url_expanded", "notes_url_expanded" ]
 
 def paint_icons(what, row): # what is "host" or "service"
     output = ""
@@ -124,9 +81,17 @@ def paint_icons(what, row): # what is "host" or "service"
     else:
 	 prefix = "service_"
 
+    # action_url
+    if row[prefix + "action_url_expanded"]:
+	output += "<a href=\"%s\"><img class=icon src=\"images/icon_action.gif\"></a>" % row[prefix + "action_url_expanded"]
+
+    # notes_url
+    if row[prefix + "notes_url_expanded"]:
+	output += "<a href=\"%s\"><img class=icon src=\"images/icon_notes.gif\"></a>" % row[prefix + "notes_url_expanded"]
+
     # Problem has been acknowledged
     if row[prefix + "acknowledged"]:
-	output += '<img class=icon src="images/icon_ack.gif">'
+	output += '<img class=icon title="this problem has been acknowledged" src="images/icon_ack.gif">'
 
     # Currently we are in a downtime + link to list of downtimes for this host / service
     if row[prefix + "scheduled_downtime_depth"] > 0:
@@ -140,12 +105,31 @@ def paint_icons(what, row): # what is "host" or "service"
 	    text += "%s: \"%s\" \n" % (author, comment)
 	output += link_to_view('<img class=icon title=\'%s\' src="images/icon_comment.gif">' % text, row, 'comments_of_' + what)
 	
-    # Es fehlen noch:
-    # notifications disabled
-    # Active checks disabled, accept passive checks
-    # action_url and notes_url
-    # is_flapping
-    # eventuell doch PNP
+    # Notifications disabled
+    if not row[prefix + "notifications_enabled"]:
+	output += '<img class=icon title="notifications are disabled for this %s" src="images/icon_ndisabled.gif">' % \
+		  what
+
+    # Flapping
+    if row[prefix + "is_flapping"]:
+	output += '<img class=icon title="This %s is flapping" src="images/icon_flapping.gif">' % what
+    
+    # Setting of active checks modified by user
+    if "active_checks_enabled" in row[prefix + "modified_attributes_list"]:
+	if row[prefix + "active_checks_enabled"] == 0:
+	    output += '<img class=icon title="Active checks have been manually disabled for this %s!" '\
+		      'src="images/icon_disabled.gif">' % what
+	else:
+	    output += '<img class=icon title="Active checks have been manually enabled for this %s!" '\
+		      'src="images/icon_enabled.gif">' % what
+    
+    # Passive checks disabled manually?
+    if "passive_checks_enabled" in row[prefix + "modified_attributes_list"]:
+	if row[prefix + "accept_passive_checks"] == 0:
+	    output += '<img class=icon title="Passive checks have been manually disabled for this %s!" '\
+		      'src="images/icon_npassive.gif">' % what
+
+
 
     return "icons", output
 
@@ -458,11 +442,11 @@ def paint_host_list(row):
     h += "</div>"
     return "", h
 
-multisite_painters["hostgroup_hosts"] = {
-    "title"   : "Hosts colored according to state",
-    "short"   : "Hosts",
-    "columns" : [ "hostgroup_members_with_state" ],
-    "paint"   : paint_host_list,
+multisite_painters["host_modattr"] = {
+    "title"   : "Modified attributes",
+    "short"   : "mod",
+    "columns" : [ "host_modified_attributes" ],
+    "paint"   : lambda row: ("", row["host_modified_attributes"])
 }
 
 #    _   _           _                                  
@@ -472,6 +456,13 @@ multisite_painters["hostgroup_hosts"] = {
 #   |_| |_|\___/|___/\__\__, |_|  \___/ \__,_| .__/|___/
 #                       |___/                |_|        
 #
+multisite_painters["hostgroup_hosts"] = {
+    "title"   : "Hosts colored according to state",
+    "short"   : "Hosts",
+    "columns" : [ "hostgroup_members_with_state" ],
+    "paint"   : paint_host_list,
+}
+
 multisite_painters["hg_num_services"] = {
     "title"   : "Number of services",
     "short"   : "",

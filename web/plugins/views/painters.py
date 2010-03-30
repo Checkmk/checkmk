@@ -395,35 +395,35 @@ multisite_painters["num_services"] = {
 
 multisite_painters["num_services_ok"] = {
     "title"   : "Number of services in state OK",
-    "short"   : "O",
+    "short"   : "OK",
     "columns" : [ "host_num_services_ok" ],
     "paint"   : lambda row: paint_svc_count(0, row["host_num_services_ok"])
 }
 
 multisite_painters["num_services_warn"] = {
     "title"   : "Number of services in state WARN",
-    "short"   : "W",
+    "short"   : "Wa",
     "columns" : [ "host_num_services_warn" ],
     "paint"   : lambda row: paint_svc_count(1, row["host_num_services_warn"])
 }
 
 multisite_painters["num_services_crit"] = {
     "title"   : "Number of services in state CRIT",
-    "short"   : "C",
+    "short"   : "Cr",
     "columns" : [ "host_num_services_crit" ],
     "paint"   : lambda row: paint_svc_count(2, row["host_num_services_crit"])
 }
 
 multisite_painters["num_services_unknown"] = {
     "title"   : "Number of services in state UNKNOWN",
-    "short"   : "U",
+    "short"   : "Un",
     "columns" : [ "host_num_services_unknown" ],
     "paint"   : lambda row: paint_svc_count(3, row["host_num_services_unknown"])
 }
 
 multisite_painters["num_services_pending"] = {
     "title"   : "Number of services in state PENDING",
-    "short"   : "P",
+    "short"   : "Pd",
     "columns" : [ "host_num_services_pending" ],
     "paint"   : lambda row: paint_svc_count("p", row["host_num_services_pending"])
 }
@@ -442,12 +442,6 @@ def paint_host_list(row):
     h += "</div>"
     return "", h
 
-multisite_painters["host_modattr"] = {
-    "title"   : "Modified attributes",
-    "short"   : "mod",
-    "columns" : [ "host_modified_attributes" ],
-    "paint"   : lambda row: ("", row["host_modified_attributes"])
-}
 
 #    _   _           _                                  
 #   | | | | ___  ___| |_ __ _ _ __ ___  _   _ _ __  ___ 
@@ -773,6 +767,7 @@ multisite_painters["downtime_author"] = {
 }
 multisite_painters["downtime_comment"] = {
     "title" : "Downtime comment",
+    "short" : "Comment",
     "columns" : ["downtime_comment"],
     "paint" : lambda row: (None, row["downtime_comment"])
 }
@@ -783,9 +778,9 @@ multisite_painters["downtime_fixed"] = {
     "columns" : ["downtime_fixed"],
     "paint" : lambda row: (None, row["downtime_fixed"] == "0" and "flexible" or "fixed")
 }
-multisite_painters["downtime_what"] = {
-    "title" : "Downtime type (active/pending)",
-    "short" : "Type",
+multisite_painters["downtime_type"] = {
+    "title" : "Downtime active or pending",
+    "short" : "act/pend",
     "columns" : ["downtime_type"],
     "paint" : lambda row: (None, row["downtime_type"] == 0 and "active" or "pending")
 }

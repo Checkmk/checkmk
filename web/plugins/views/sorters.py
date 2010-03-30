@@ -148,3 +148,8 @@ declare_simple_sorter("hostgroup",    "Hostgroup",             "hostgroup_alias"
 # Comments
 declare_simple_sorter("comment_author", "Comment author",      "comment_author",            cmp_simple_string)
 declare_simple_sorter("comment_type",   "Comment type",        "comment_type",              cmp_simple_number)
+
+# Downtimes
+declare_simple_sorter("downtime_start_time",   "Downtime start",    "downtime_start_time",            cmp_simple_number)
+declare_simple_sorter("downtime_end_time",     "Downtime end",       "downtime_end_time",             cmp_simple_number)
+declare_simple_sorter("downtime_entry_time", "Downtime entry time",  "downtime_entry_time", cmp_simple_number)

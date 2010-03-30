@@ -22,22 +22,27 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef opids_h
-#define opids_h
+#ifndef AttributelistFilter_h
+#define AttributelistFilter_h
 
 #include "config.h"
+#include "Filter.h"
+#include <stdlib.h>
 
-#define OP_INVALID       0
-#define OP_EQUAL         1 // =
-#define OP_REGEX         2 // ~
-#define OP_EQUAL_ICASE   3 // =~
-#define OP_REGEX_ICASE   4 // ~~
-#define OP_GREATER       5 // >
-#define OP_LESS          6 // <
+class AttributelistColumn;
 
-// Note: The operators !=, <= and >= are parsed into ! =, ! > and ! <.
-// The negation is represented by negating the value of the operator.
-// Example >= is represented as -6 (- OP_LESS)
+class AttributelistFilter : public Filter
+{
+    AttributelistColumn *_column;
+    int _opid;
+    bool _negate;
+    unsigned long _ref;
 
-#endif // opids_h
+public:
+    AttributelistFilter(AttributelistColumn *column, int opid, unsigned long ref) :
+	_column(column), _negate(opid < 0), _opid(abs(opid)), _ref(ref) {};
+    bool accepts(void *data);
+};
 
+
+#endif // AttributelistFilter_h

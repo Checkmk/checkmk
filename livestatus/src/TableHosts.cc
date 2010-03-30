@@ -33,6 +33,7 @@
 #include "OffsetDoubleColumn.h"
 #include "OffsetTimeperiodColumn.h"
 #include "OffsetStringHostMacroColumn.h"
+#include "AttributelistColumn.h"
 #include "HostContactsColumn.h"
 #include "DownCommColumn.h"
 #include "CustomVarsColumn.h"
@@ -183,6 +184,10 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 		"The current check option, forced, normal, freshness... (0-2)", (char *)(&hst.check_options) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "obsess_over_host",
 		"The current obsess_over_host setting... (0/1)", (char *)(&hst.obsess_over_host) - ref, indirect_offset));
+    table->addColumn(new AttributelistColumn(prefix + "modified_attributes",
+		"A bitmask specifying which attributes have been modified", (char *)(&hst.modified_attributes) - ref, indirect_offset, false));
+    table->addColumn(new AttributelistColumn(prefix + "modified_attributes_list",
+		"A list of all modified attributes", (char *)(&hst.modified_attributes) - ref, indirect_offset, true));
 
     // columns of type double
     table->addColumn(new OffsetDoubleColumn(prefix + "check_interval",

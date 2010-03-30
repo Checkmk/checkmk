@@ -32,6 +32,7 @@
 #include "OffsetDoubleColumn.h"
 #include "OffsetTimeperiodColumn.h"
 #include "OffsetStringServiceMacroColumn.h"
+#include "AttributelistColumn.h"
 #include "TableHosts.h"
 #include "TableServicegroups.h"
 #include "TableHostgroups.h"
@@ -292,6 +293,10 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
 		"Wether flap detection is enabled for the service (0/1)", (char *)(&svc.flap_detection_enabled) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "obsess_over_service",
 		"Wether 'obsess_over_service' is enabled for the service (0/1)", (char *)(&svc.obsess_over_service) - ref, indirect_offset));
+    table->addColumn(new AttributelistColumn(prefix + "modified_attributes",
+		"A bitmask specifying which attributes have been modified", (char *)(&svc.modified_attributes) - ref, indirect_offset, false));
+    table->addColumn(new AttributelistColumn(prefix + "modified_attributes_list",
+		"A list of all modified attributes", (char *)(&svc.modified_attributes) - ref, indirect_offset, true));
 
     // columns of type double
     table->addColumn(new OffsetDoubleColumn(prefix + "check_interval",

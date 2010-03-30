@@ -22,22 +22,31 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef opids_h
-#define opids_h
+#ifndef AttributelistColumn_h
+#define AttributelistColumn_h
 
 #include "config.h"
 
-#define OP_INVALID       0
-#define OP_EQUAL         1 // =
-#define OP_REGEX         2 // ~
-#define OP_EQUAL_ICASE   3 // =~
-#define OP_REGEX_ICASE   4 // ~~
-#define OP_GREATER       5 // >
-#define OP_LESS          6 // <
+#include "Column.h"
+#include "nagios.h"
 
-// Note: The operators !=, <= and >= are parsed into ! =, ! > and ! <.
-// The negation is represented by negating the value of the operator.
-// Example >= is represented as -6 (- OP_LESS)
+class AttributelistColumn : public Column
+{
+    int _offset;
+    bool _show_list;
+public:
+    AttributelistColumn(string name, string description, int offset, int indirect_offset, bool show_list)
+	: Column(name, description, indirect_offset), _offset(offset), _show_list(show_list) {};
 
-#endif // opids_h
+    /* API of Column */
+    int type() { return _show_list ? COLTYPE_LIST : COLTYPE_INT; };
+    virtual string valueAsString(void *data);
+    void output(void *, Query *);
+    Filter *createFilter(int opid, char *value);
+    unsigned long getValue(void *data);
+};
+
+
+
+#endif // AttributelistColumn_h
 

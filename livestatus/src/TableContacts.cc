@@ -28,6 +28,7 @@
 #include "OffsetStringColumn.h"
 #include "OffsetIntColumn.h"
 #include "OffsetTimeperiodColumn.h"
+#include "AttributelistColumn.h"
 #include "CustomVarsColumn.h"
 
 extern contact *contact_list;
@@ -76,6 +77,10 @@ void TableContacts::addColumns(Table *table, string prefix, int indirect_offset)
 	    "A list of all custom variables of the contact", (char *)(&ctc.custom_variables) - ref, indirect_offset, CVT_VARNAMES));
    table->addColumn(new CustomVarsColumn(prefix + "custom_variable_values", 
 	    "A list of the values of all custom variables of the contact", (char *)(&ctc.custom_variables) - ref, indirect_offset, CVT_VALUES));
+   table->addColumn(new AttributelistColumn(prefix + "modified_attributes",
+       	"A bitmask specifying which attributes have been modified", (char *)(&ctc.modified_attributes) - ref, indirect_offset, false));
+   table->addColumn(new AttributelistColumn(prefix + "modified_attributes_list",
+	"A list of all modified attributes", (char *)(&ctc.modified_attributes) - ref, indirect_offset, true));
 }
 
 

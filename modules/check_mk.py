@@ -105,9 +105,7 @@ except Exception, e:
 # is searched for at several places:
 #
 # 1. if present - the option '-c' specifies the path to main.mk
-# 2. the current directory
-# 3. the directory ~/check_mk
-# 4. in the default_config_dir (that path should be present in modules/defaults)
+# 2. in the default_config_dir (that path should be present in modules/defaults)
 
 
 if __name__ == "__main__":
@@ -133,21 +131,11 @@ if __name__ == "__main__":
           sys.exit(1)
           
     except ValueError:
-       if os.path.exists("./main.mk"):
-          check_mk_basedir = "."
-       else:
-          homedir = os.path.expanduser("~")
-          if os.path.exists(homedir + "/check_mk/main.mk"):
-             check_mk_basedir = homedir + "/check_mk"
-          elif not os.path.exists(default_config_dir + "/main.mk"):
-             sys.stderr.write("Missing configuration file. I've look at:\n" +
-                              "  ./main.mk\n" +
-                              "  %s/check_mk/main.mk\n" % homedir +
-                              "  %s/main.mk\n" % default_config_dir)
-             sys.exit(4)
-          else:
-             check_mk_basedir = default_config_dir
-       check_mk_configfile = check_mk_basedir + "/main.mk"
+      if not os.path.exists(default_config_dir + "/main.mk"):
+	 sys.stderr.write("Missing main configuration file %s/main.mk\n" % default_config_dir)
+	 sys.exit(4)
+      check_mk_basedir = default_config_dir
+      check_mk_configfile = check_mk_basedir + "/main.mk"
 
     except SystemExit, exitcode:
           sys.exit(exitcode)

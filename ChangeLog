@@ -1,4 +1,8 @@
 1.1.4:
+      Core, Setup, etc.:
+      * Check_MK is looking for main.mk not longer in the current and home
+        directory
+
       Livestatus:
       * Table hosts: New column 'services' listing all services of that host
       * Column servicegroups:members: AuthUser is now honored

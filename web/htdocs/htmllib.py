@@ -305,6 +305,9 @@ class html:
     def show_error(self, msg):
         self.write("<div class=error>%s</div>\n" % msg)
 
+    def show_warning(self, msg):
+        self.write("<div class=warning>%s</div>\n" % msg)
+
     def message(self, msg):
 	self.write("<div class=success>%s</div>\n" % msg)
 

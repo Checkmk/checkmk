@@ -594,7 +594,7 @@ input.date, input.time {
 }
 
 /* actions */
-div.really, div.success, div.error, div.message { 
+div.really, div.success, div.error, div.message, div.warning { 
   margin: 2em 2em 2em 2em;
   -moz-border-radius: 1ex;
   padding: 1em 2em;
@@ -627,6 +627,10 @@ div.error {
   border-color: #e40;
 }
 
+div.warning { 
+  background-color: #ff4;
+  border-color: #fc0;
+}
 /* -------------------------------------------------------------- */
 
 img.siteicon {

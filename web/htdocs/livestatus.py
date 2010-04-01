@@ -238,6 +238,7 @@ class SingleSiteConnection(BaseConnection, Helpers):
 	self.prepend_site = False
 	self.auth_users = {}
 	self.auth_header = ""
+	self.limit = None
     
     def set_prepend_site(self, p):
 	self.prepend_site = p
@@ -245,7 +246,12 @@ class SingleSiteConnection(BaseConnection, Helpers):
     def set_only_sites(self, os = None):
 	pass
 
+    def set_limit(self, limit = None):
+	self.limit = limit
+
     def query(self, query, add_headers = ""):
+	if self.limit != None:
+	    query += "Limit: %d\n" % self.limit
 	data = self.do_query(query, self.auth_header + add_headers)
 	if self.prepend_site:
 	    return [ [''] + line for line in data ]
@@ -283,6 +289,7 @@ class MultiSiteConnection(Helpers):
 	self.deadsites = {}
 	self.prepend_site = False
 	self.only_sites = None
+	self.limit = None
 
 	for sitename, site in sites.items():
 	    try:
@@ -309,6 +316,10 @@ class MultiSiteConnection(Helpers):
     def set_only_sites(self, os = None):
 	self.only_sites = os
 
+    # Impose Limit on number of returned datasets (distributed amoung sites)
+    def set_limit(self, limit = None):
+	self.limit = limit
+
     def dead_sites(self):
 	return self.deadsites
 
@@ -326,13 +337,20 @@ class MultiSiteConnection(Helpers):
     def query(self, query, add_headers = ""):
 	result = []
 	stillalive = []
+	limit = self.limit
 	for sitename, site, connection in self.connections:
 	    if self.only_sites != None and sitename not in self.only_sites:
 		continue
 	    try:
-		r = connection.query(query, add_headers)
+		if limit != None:
+		    limit_header = "Limit: %d\n" % limit	
+		else:
+		    limit_header = ""
+		r = connection.query(query, add_headers + limit_header)
 		if self.prepend_site:
 		    r = [ [sitename] + l for l in r ]
+		if limit != None:
+		    limit -= len(r) # Account for portion of limit used by this site
 		result += r
 		stillalive.append( (sitename, site, connection) )
             except Exception, e:

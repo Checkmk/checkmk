@@ -863,7 +863,7 @@ def show_view(view, show_heading = False):
 
     # Fetch data. Some views show data only after pressing [Search]
     if (not view["mustsearch"]) or html.var("search"):
-	columns, rows = query_data(datasource, columns, query, only_sites)
+	columns, rows = query_data(datasource, columns, query, only_sites, get_limit())
         sort_data(rows, sorters)
     else:
 	columns, rows = [], []
@@ -910,13 +910,36 @@ def show_view(view, show_heading = False):
 	html.write("<a href=\"%s\">Back to search results</a>" % html.makeuri([]))
 
     else:
+        # Limit exceeded? Show warning
+	count = len(rows)
+	limit = get_limit()
+	if limit != None and count == limit + 1:
+	    text = "Your query produced more then %d results. " % limit
+	    if html.var("limit", "soft") == "soft" and config.may("ignore_soft_limit"):
+		text += '<a href="%s">Repeat query and allow more results.</a>' % html.makeuri([("limit", "hard")])
+	    elif html.var("limit") == "hard" and config.may("ignore_hard_limit"):
+		text += '<a href="%s">Repeat query without limit.</a>' % html.makeuri([("limit", "none")])
+	    html.show_warning(text)
+	    del rows[-1]
         layout["render"]((columns, rows), view, group_columns, group_painters, painters, num_columns)
     
+
+
     # In multi site setups error messages of single sites do not block the
     # output and raise now exception. We simply print error messages here:
     for sitename, info in html.live.deadsites.items():
 	html.show_error("<b>%s - Livestatus error</b><br>%s" % (info["site"]["alias"], info["exception"]))
 
+# How many data rows may the user query?
+def get_limit():
+    limitvar = html.var("limit", "soft")
+    if limitvar == "hard" and config.may("ignore_soft_limit"):
+	return config.hard_query_limit
+    elif limitvar == "none" and config.may("ignore_hard_limit"):
+	return None
+    else:
+	return config.soft_query_limit
+	
 def view_title(view):
     extra_titles = [ ]
     datasource = multisite_datasources[view["datasource"]]
@@ -978,7 +1001,7 @@ def needed_group_columns(painters):
 
 # Retrieve data via livestatus, convert into list of dicts,
 # prepare row-function needed for painters
-def query_data(datasource, columns, add_headers, only_sites = None):
+def query_data(datasource, columns, add_headers, only_sites = [], limit = None):
     tablename = datasource["table"]
     merge_column = datasource.get("merge_by")
     if merge_column:
@@ -1000,6 +1023,8 @@ def query_data(datasource, columns, add_headers, only_sites = None):
     query += "Columns: %s\n" % " ".join(columns)
     query += add_headers
     html.live.set_prepend_site(True)
+    if limit != None:
+	html.live.set_limit(limit + 1) # + 1: We need to know, if limit is exceeded
     if config.debug:
 	html.write("<div class=message><tt>%s</tt></div>\n" % (query.replace('\n', '<br>\n')))
     
@@ -1008,6 +1033,7 @@ def query_data(datasource, columns, add_headers, only_sites = None):
     data = html.live.query(query)
     html.live.set_only_sites(None)
     html.live.set_prepend_site(False)
+    html.live.set_limit() # removes limit
     
     if merge_column:
 	data = merge_data(data, columns)

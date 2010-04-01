@@ -265,9 +265,35 @@ def read_site_config():
     else:
         user_siteconf = {}
 
+#    ____  _     _      _                
+#   / ___|(_) __| | ___| |__   __ _ _ __ 
+#   \___ \| |/ _` |/ _ \ '_ \ / _` | '__|
+#    ___) | | (_| |  __/ |_) | (_| | |   
+#   |____/|_|\__,_|\___|_.__/ \__,_|_|   
+#                                        
 
 
 sidebar  = [('admin', 'open'), ('tactical_overview', 'open'), ('sitestatus', 'open'), \
         ('search', 'open'), ('views', 'open'), ('hostgroups', 'closed'), \
         ('servicegroups', 'closed'), ('hosts', 'closed'), ('time', 'open'), \
         ('nagios_legacy', 'closed'), ('performance', 'closed'), ('master_control', 'closed'), ('about', 'closed')]
+
+#    _     _           _ _       
+#   | |   (_)_ __ ___ (_) |_ ___ 
+#   | |   | | '_ ` _ \| | __/ __|
+#   | |___| | | | | | | | |_\__ \
+#   |_____|_|_| |_| |_|_|\__|___/
+#                                
+
+soft_query_limit = 1000
+hard_query_limit = 5000
+
+declare_permission("ignore_soft_limit",
+     "Ignore soft query limit",
+     "Allows to ignore the soft query limit imposed upon the number of datasets returned by a query",
+     [ "admin", "user" ])
+
+declare_permission("ignore_hard_limit",
+     "Ignore hard query limit",
+     "Allows to ignore the hard query limit imposed upon the number of datasets returned by a query",
+     [ "admin" ])

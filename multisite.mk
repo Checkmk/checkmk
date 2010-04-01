@@ -30,3 +30,8 @@ admin_users = [ "nagiosadmin" ]
 #     },
 # }
 
+# Restrict number of datasets queries via Livestatus.
+# This prevents you from consuming too much ressources
+# in case of insensible queries.
+# soft_query_limit = 1000
+# hard_query_limit = 5000

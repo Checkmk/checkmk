@@ -186,11 +186,9 @@ void TableLog::answerQuery(Query *query)
     } */
 
     /* NEW CODE - NEWEST FIRST */
-    logger(LG_INFO, "HIRN: Suche neuestes Logfile...");
     _logfiles_t::iterator it;
     it = _logfiles.end(); // it now points beyond last log file
     --it; // switch to last logfile (we have at least one)
-    logger(LG_INFO, "HIRN: Bin beim letzen: %s", it->second->path());
 
     // Now find newest log where 'until' is contained. The problem
     // here: For each logfile we only know the time of the *first* entry,
@@ -198,11 +196,9 @@ void TableLog::answerQuery(Query *query)
     while (it != _logfiles.begin() && it->first > until) // while logfiles are too new...
 	--it; // go back in history
     if (it->first > until)  { // all logfiles are too new 
-	logger(LOG_INFO, "HIRN: Alle Logs sind zu neu");
 	pthread_mutex_unlock(&_lock);
 	return;
     }
-    logger(LG_INFO, "HIRN: Gefunden: %s", it->second->path());
 
     while (true) {
 	Logfile *log = it->second;

@@ -29,40 +29,51 @@
 # Data sources
 ##################################################################################
 
+# keys: columns which must be fetched in order to execute commands on 
+# the items (= in order to identify the items and gather all information
+# needed for constructing Nagios commands)
+
+
 multisite_datasources["hosts"] = {
     "title"   : "All hosts",
     "table"   : "hosts",
     "infos"   : [ "host" ],
+    "keys"    : [ "host_name" ],
 }
 
 multisite_datasources["hostsbygroup"] = {
     "title"   : "Hosts grouped by host groups",
     "table"   : "hostsbygroup",
     "infos"   : [ "host", "hostgroup" ],
+    "keys"    : [ "host_name" ],
 }
 
 multisite_datasources["services"] = {
     "title"   : "All services",
     "table"   : "services",
     "infos"   : [ "host", "service" ],
+    "keys"    : [ "host_name", "service_description" ],
 }
 
 multisite_datasources["servicesbygroup"] = {
     "title"   : "Services grouped by service groups",
     "table"   : "servicesbygroup",
     "infos"   : [ "host", "service", "servicegroup" ],
+    "keys"    : [ "host_name", "service_description" ],
 }
 
 multisite_datasources["servicesbyhostgroup"] = {
     "title"   : "Services grouped by host groups",
     "table"   : "servicesbyhostgroup",
     "infos"   : [ "host", "service", "hostgroup" ],
+    "keys"    : [ "host_name", "service_description" ],
 }
 
 multisite_datasources["hostgroups"] = {
     "title" : "Hostgroups",
     "table" : "hostgroups",
     "infos" : [ "hostgroup" ],
+    "keys"    : [ "hostgroup_name" ],
 }
 
 multisite_datasources["merged_hostgroups"] = {
@@ -70,12 +81,14 @@ multisite_datasources["merged_hostgroups"] = {
     "table"    : "hostgroups",
     "merge_by" : "hostgroup_name",
     "infos"    : [ "hostgroup" ],
+    "keys"    : [ "hostgroup_name" ],
 }
 
 multisite_datasources["servicegroups"] = {
     "title"    : "Servicegroups",
     "table"    : "servicegroups",
     "infos"    : [ "servicegroup" ],
+    "keys"    : [ "servicegroup_name" ],
 }
 
 multisite_datasources["merged_servicegroups"] = {
@@ -83,23 +96,27 @@ multisite_datasources["merged_servicegroups"] = {
     "table"    : "servicegroups",
     "merge_by" : "servicegroup_name",
     "infos"    : [ "servicegroup" ],
+    "keys"    : [ "servicegroup_name" ],
 }
 
 multisite_datasources["comments"] = {
     "title"    : "Host- und Servicecomments",
     "table"    : "comments",
     "infos"    : [ "comment", "host", "service" ],
+    "keys"    : [ "comment_id", "comment_type" ],
 }
 
 multisite_datasources["downtimes"] = {
     "title"    : "Schedules Downtimes",
     "table"    : "downtimes",
     "infos"    : [ "downtime", "host", "service" ],
+    "keys"    : [ "downtime_id", "service_description" ],
 }
 
 multisite_datasources["log"] = {
     "title"    : "The Logfile",
     "table"    : "log",
     "infos"    : [ "log", "host", "service", "contact", "command" ],
+    "keys"     : [],
 }
 

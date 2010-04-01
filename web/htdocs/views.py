@@ -851,6 +851,9 @@ def show_view(view, show_heading = False):
 		for ef in linkview["hide_filters"]:
 		    f = multisite_filters[ef]
 		    columns += f.link_columns
+    
+    # Add key columns, needed for executing commands
+    columns += datasource["keys"]
 
     # Make column list unique and remove (implicit) site column
     colset = set(columns)
@@ -894,7 +897,7 @@ def show_view(view, show_heading = False):
     if len(rows) > 0:
 	if html.do_actions() and html.transaction_valid(): # submit button pressed, no reload
 	    try:
-		has_done_actions = do_actions(tablename, rows)
+		has_done_actions = do_actions(datasource["infos"][0], rows)
 	    except MKUserError, e:
 		html.show_error(e.message)
 		html.add_user_error(e.varname, e.message)
@@ -1137,14 +1140,45 @@ def show_action_form(is_open, datasource):
     if not config.may("act"):
 	return
 
+    # We take the first info to be the native data type of this table
+    # and show actions useful for that
+    what = datasource["infos"][0]
+    if what not in [ "host", "service", "comment", "downtime" ]:
+	return # no actions on others	
+
     # Table muss einen anderen Namen, als das Formular
     html.begin_form("actions")
     html.hidden_field("_do_actions", "yes")
-    html.hidden_field("actions", "yes")
+    html.hidden_field("actions", "yes") 
     html.hidden_fields() # set all current variables, exception action vars
 
     html.write("<table %s id=table_actions class=form>\n" % (is_open and " " or 'style="display:none"'))
+    if what in [ "host", "service" ]:
+	show_host_service_actions(what)
+    elif what == "downtime":
+	show_downtime_actions()
+    elif what == "comment":
+	show_comment_actions()
 
+	html.write("</td></tr>")
+    html.write("</table></form>\n")
+
+def show_downtime_actions():
+    if config.may("action.downtimes"):
+	html.write("<tr><td class=legend>Downtimes</td>\n"
+		"<td class=content>\n"
+		   "<input type=submit name=_remove_downtimes value=\"Remove\"> &nbsp; "
+		   "</td></tr>\n")
+
+def show_comment_actions():
+    if config.may("action.addcomment"):
+	html.write("<tr><td class=legend>Comments</td>\n"
+		"<td class=content>\n"
+		   "<input type=submit name=_remove_comments value=\"Remove\"> &nbsp; "
+		   "</td></tr>\n")
+
+
+def show_host_service_actions(what):
     if config.may("action.notifications"):
 	html.write("<tr><td class=legend>Notifications</td>\n"
 		   "<td class=content>\n"
@@ -1170,18 +1204,15 @@ def show_action_form(is_open, datasource):
 	       "</td></tr>\n")
 
     if config.may("action.fakechecks"):
-	if "service" in datasource["infos"]:
+	if what == "service":
 	    states = ["Ok", "Warning", "Critical", "Unknown"]
-	elif "host" in datasource["infos"]:
-	    states = ["Up", "Down", "Unreachable"]
 	else:
-	    states = None
-	if states:
-	    html.write("<tr><td class=legend>Fake check results</td><td class=content>\n")
-	    for state in states:
-		html.button("_fake", state)
-		html.write(" ")
-	    html.write("</td></tr>\n") 
+	    states = ["Up", "Down", "Unreachable"]
+	html.write("<tr><td class=legend>Fake check results</td><td class=content>\n")
+	for state in states:
+	    html.button("_fake", state)
+	    html.write(" ")
+	html.write("</td></tr>\n") 
 
     if config.may("action.acknowledge"):
 	html.write("<tr><td rowspan=2 class=legend>Acknowledge</td>\n")
@@ -1217,20 +1248,46 @@ def show_action_form(is_open, datasource):
 	html.write("</td></tr>")
 	html.write("<tr><td class=content><div class=textinputlegend>Comment:</div>\n")
 	html.text_input("_down_comment")
-	html.write("</td></tr>")
-    html.write("</table></form>\n")
 
+def nagios_action_command(what, row):
+    if what in [ "host", "service" ]:
+	return nagios_host_service_action_command(what, row)
+    elif what == "downtime":
+	return nagios_downtime_command(row)
+    elif what == "comment":
+	return nagios_comment_command(row)
 
-def nagios_action_command(tablename, dataset):
-    host = dataset["host_name"]
-    descr = dataset.get("service_description") # not available on hosts
+def nagios_downtime_command(row):
+    id = row.get("downtime_id")
+    prefix = "[%d] " % time.time()
+    if html.var("_remove_downtimes"):
+	if row.get("service_description"):
+	    command = prefix + "DEL_SVC_DOWNTIME;%d" % id
+	else:
+	    command = prefix + "DEL_HOST_DOWNTIME;%d" % id
+	return "remove the following", [command]
+
+def nagios_comment_command(row):
+    id = row.get("comment_id")
+    prefix = "[%d] " % time.time()
+    if html.var("_remove_comments"):
+	if row.get("comment_type") == 1:
+	    command = prefix + "DEL_HOST_COMMENT;%d" % id
+	else:
+	    command = prefix + "DEL_SVC_COMMENT;%d" % id
+	return "remove the following", [command]
+
+def nagios_host_service_action_command(what, dataset):
+    host = dataset.get("host_name")
+    descr = dataset.get("service_description")
+
     down_from = time.time()
     down_to = None
-    if tablename == "hosts":
+    if what == "host":
 	spec = host
 	cmdtag = "HOST"
 	prefix = "host_"
-    elif tablename == "services":
+    elif what == "service":
 	spec = "%s;%s" % (host, descr)
 	cmdtag = "SVC"
 	prefix = "service_"
@@ -1362,20 +1419,20 @@ def nagios_action_command(tablename, dataset):
     nagios_command = ("[%d] " % int(time.time())) + command + "\n"
     return title, [nagios_command]
 
-def do_actions(tablename, rows):
+def do_actions(what, rows):
     if not config.may("act"):
        html.show_error("You are not allowed to perform actions. If you think this is an error, "
              "please ask your administrator grant you the permission to do so.")
        return False # no actions done
 
     command = None
-    title = nagios_action_command(tablename, rows[0])[0] # just get the title
-    if not html.confirm("Do you really want to %s the following %d %s?" % (title, len(rows), tablename)):
+    title = nagios_action_command(what, rows[0])[0] # just get the title
+    if not html.confirm("Do you really want to %s the following %d %ss?" % (title, len(rows), what)):
 	return False # no actions done
 
     count = 0
     for row in rows:
-        title, nagios_commands = nagios_action_command(tablename, row)
+        title, nagios_commands = nagios_action_command(what, row)
 	for command in nagios_commands:
 	    html.live.command(command, row["site"])
 	    count += 1

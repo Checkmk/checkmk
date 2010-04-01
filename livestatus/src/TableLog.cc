@@ -128,6 +128,14 @@ void TableLog::answerQuery(Query *query)
     // to lock out concurrent threads.
     pthread_mutex_lock(&_lock);
 
+    // Do we have any logfiles (should always be the case,
+    // but we don't want to crash...
+    if (_logfiles.size() == 0) {
+	pthread_mutex_unlock(&_lock);
+	logger(LOG_INFO, "Warning: no logfile found, not even nagios.log");
+	return;
+    }
+
     // Has Nagios rotated logfiles? => Update 
     // our file index. And delete all memorized
     // log messages.
@@ -150,9 +158,17 @@ void TableLog::answerQuery(Query *query)
     // We want to load only those log type that are queried.
     uint32_t classmask = LOGCLASS_ALL;
     query->optimizeBitmask("class", &classmask);
-    if (classmask == 0)
+    if (classmask == 0) {
+	pthread_mutex_unlock(&_lock);
 	return;
+    }
 
+
+    /* This code start with the oldest log entries. I'm going
+       to change this and start with the newest. That way,
+       the Limit: header produces more reasonable results. */
+
+    /* OLD CODE - OLDEST FIRST 
     _logfiles_t::iterator it;
     if (since == 0)
 	it = _logfiles.begin();
@@ -167,7 +183,36 @@ void TableLog::answerQuery(Query *query)
 	if (!log->answerQuery(query, this, since, until, classmask))
 	    break; // end of time range in this logfile
 	++it;
+    } */
+
+    /* NEW CODE - NEWEST FIRST */
+    logger(LG_INFO, "HIRN: Suche neuestes Logfile...");
+    _logfiles_t::iterator it;
+    it = _logfiles.end(); // it now points beyond last log file
+    --it; // switch to last logfile (we have at least one)
+    logger(LG_INFO, "HIRN: Bin beim letzen: %s", it->second->path());
+
+    // Now find newest log where 'until' is contained. The problem
+    // here: For each logfile we only know the time of the *first* entry,
+    // not that of the last. 
+    while (it != _logfiles.begin() && it->first > until) // while logfiles are too new...
+	--it; // go back in history
+    if (it->first > until)  { // all logfiles are too new 
+	logger(LOG_INFO, "HIRN: Alle Logs sind zu neu");
+	pthread_mutex_unlock(&_lock);
+	return;
     }
+    logger(LG_INFO, "HIRN: Gefunden: %s", it->second->path());
+
+    while (true) {
+	Logfile *log = it->second;
+	if (!log->answerQueryReverse(query, this, since, until, classmask))
+	    break; // end of time range found
+	if (it == _logfiles.begin())
+	    break; // this was the oldest one
+	--it;
+    }
+
     // dumpLogfiles();
     pthread_mutex_unlock(&_lock);
 }

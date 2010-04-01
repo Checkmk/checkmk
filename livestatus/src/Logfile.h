@@ -41,7 +41,7 @@ class TableLog;
 class Logfile
 {
     char      *_path;
-    time_t     _since;
+    time_t     _since;         // time of first entry
     bool       _watch;         // true only for current logfile
     ino_t      _inode;         // needed to detect switching
     fpos_t     _read_pos;      // read until this position
@@ -61,6 +61,7 @@ public:
     unsigned classesRead() { return _logclasses_read; };
     long numEntries() { return _entries.size(); };
     bool answerQuery(Query *query, TableLog *tl, time_t since, time_t until, unsigned);
+    bool answerQueryReverse(Query *query, TableLog *tl, time_t since, time_t until, unsigned);
     long freeMessages(unsigned logclasses);
 
 private:

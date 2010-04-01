@@ -204,6 +204,22 @@ bool Logfile::answerQuery(Query *query, TableLog *tablelog, time_t since, time_t
     return true;
 }
 
+bool Logfile::answerQueryReverse(Query *query, TableLog *tablelog, time_t since, time_t until, unsigned logclasses)
+{
+    load(tablelog, since, until, logclasses); // make sure all messages are present
+    uint64_t untilkey = makeKey(until, 999999999);
+    _entries_t::iterator it = _entries.upper_bound(untilkey);
+    while (it != _entries.begin())
+    {
+	--it;
+	LogEntry *entry = it->second;
+	if (entry->_time < since)
+	    return false; // end found
+	if (!query->processDataset(entry))
+	    return false; // limit exceeded
+    }
+    return true;
+}
 
 uint64_t Logfile::makeKey(time_t t, unsigned lineno)
 {

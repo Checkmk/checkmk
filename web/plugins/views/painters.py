@@ -296,7 +296,7 @@ multisite_painters["svc_perf_data"] = {
 multisite_painters["svc_contacts"] = {
     "title" : "Service contacts",
     "short" : "Contacts",
-    "columns" : ["contacts"],
+    "columns" : ["service_contacts"],
     "paint" : lambda row: (None, ", ".join(row["service_contacts"]))
 }
 

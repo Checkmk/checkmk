@@ -33,7 +33,7 @@ class IntPointerColumn : public IntColumn
 public:
     IntPointerColumn(string name, string description, int* number)
        : IntColumn(name, description, -1), _number(number) {};
-    int32_t getValue(void *) { return *_number; };
+    int32_t getValue(void *, Query *) { return *_number; };
 };
 
 

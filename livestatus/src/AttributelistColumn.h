@@ -40,7 +40,7 @@ public:
 
     /* API of Column */
     int type() { return _show_list ? COLTYPE_LIST : COLTYPE_INT; };
-    virtual string valueAsString(void *data);
+    virtual string valueAsString(void *data, Query *);
     void output(void *, Query *);
     Filter *createFilter(int opid, char *value);
     unsigned long getValue(void *data);

@@ -25,7 +25,7 @@
 #include "HostSpecialIntColumn.h"
 #include "nagios.h"
 
-int32_t HostSpecialIntColumn::getValue(void *data)
+int32_t HostSpecialIntColumn::getValue(void *data, Query *)
 {
    data = shiftPointer(data);
    if (!data) return 0;

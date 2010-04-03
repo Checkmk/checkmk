@@ -52,7 +52,7 @@ public:
     virtual ~Column() {};
     const char *name() const { return _name.c_str(); };
     const char *description() const { return _description.c_str(); };
-    virtual string valueAsString(void *data) { return "invalid"; };
+    virtual string valueAsString(void *data, Query *) { return "invalid"; };
     virtual int type() = 0;
     virtual void output(void *data, Query *) = 0;
     virtual Filter *createFilter(int opid, char *value) { return 0; };

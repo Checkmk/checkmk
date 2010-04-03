@@ -28,7 +28,7 @@
 
 void IntColumn::output(void *data, Query *query)
 {
-   query->outputInteger(getValue(data));
+   query->outputInteger(getValue(data, query));
 }
 
 Filter *IntColumn::createFilter(int operator_id, char *value)
@@ -37,9 +37,9 @@ Filter *IntColumn::createFilter(int operator_id, char *value)
 }
 
 
-string IntColumn::valueAsString(void *data) 
+string IntColumn::valueAsString(void *data, Query *query) 
 { 
    char i[16];
-   snprintf(i, sizeof(i), "%d", getValue(data));
+   snprintf(i, sizeof(i), "%d", getValue(data, query));
    return i;
 }

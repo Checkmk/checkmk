@@ -672,14 +672,14 @@ bool Query::processDataset(void *data)
 	 // When doing grouped stats, we need to fetch/create a row
 	 // of aggregators for the current group
 	 if (_stats_group_column) {
-	    string groupname = _stats_group_column->valueAsString(data);
+	    string groupname = _stats_group_column->valueAsString(data, this);
 	    aggr = getStatsGroup(groupname);
 	 }
 	 else
 	    aggr = _stats_aggregators;
 
 	 for (unsigned i=0; i<_stats_columns.size(); i++) 
-	     aggr[i]->consume(data);
+	     aggr[i]->consume(data, this);
 
 	 // No output is done while processing the data, we only
 	 // collect stats.

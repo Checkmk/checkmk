@@ -38,7 +38,7 @@ class HostSpecialIntColumn : public IntColumn
 public:
    HostSpecialIntColumn(string name, string description, int hsic_type, int indirect)
       : IntColumn(name, description, indirect) , _type(hsic_type) {};
-   int32_t getValue(void *data);
+   int32_t getValue(void *data, Query *);
 };
 
 #endif // HostSpecialIntColumn_h

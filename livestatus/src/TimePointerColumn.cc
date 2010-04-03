@@ -4,7 +4,7 @@
 
 void TimePointerColumn::output(void *data, Query *query)
 {
-    query->outputTime(getValue(data));
+    query->outputTime(getValue(data, query));
 }
     
 Filter *TimePointerColumn::createFilter(int operator_id, char *value)

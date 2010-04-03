@@ -43,7 +43,7 @@ public:
     int type() { return COLTYPE_TIME; };
     void output(void *data, Query *query);
     Filter *createFilter(int operator_id, char *value);
-    string valueAsString(void *data) { return "invalid"; };
+    string valueAsString(void *data, Query *) { return "invalid"; };
 };
 
 

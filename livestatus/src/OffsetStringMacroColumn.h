@@ -36,7 +36,7 @@ public:
 	OffsetStringColumn(name, description, offset, indirect_offset) {};
     // reimplement several functions from StringColumn
 
-    string valueAsString(void *data);
+    string valueAsString(void *data, Query *);
     void output(void *data, Query *);
     Filter *createFilter(int opid, char *value);
 

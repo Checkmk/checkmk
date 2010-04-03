@@ -25,72 +25,79 @@
 #include "HostlistStateColumn.h"
 #include "ServicelistStateColumn.h"
 #include "nagios.h"
+#include "TableServices.h"
+#include "Query.h"
+
+extern TableServices *g_table_hosts;
+
 
 inline bool hst_state_is_worse(int32_t state1, int32_t state2)
 {
-   if (state1 == 0) return false;        // UP is worse than nothing
-   else if (state2 == 0) return true;    // everything else is worse then UP
-   else if (state2 == 1) return false;   // nothing is worse than DOWN
-   else if (state1 == 1) return true;    // state1 is DOWN, state2 not
-   else return false;                    // both are UNREACHABLE
+    if (state1 == 0) return false;        // UP is worse than nothing
+    else if (state2 == 0) return true;    // everything else is worse then UP
+    else if (state2 == 1) return false;   // nothing is worse than DOWN
+    else if (state1 == 1) return true;    // state1 is DOWN, state2 not
+    else return false;                    // both are UNREACHABLE
 }
 
 hostsmember *HostlistStateColumn::getMembers(void *data)
 {
-   data = shiftPointer(data);
-   if (!data) return 0;
+    data = shiftPointer(data);
+    if (!data) return 0;
 
-   return *(hostsmember **)((char *)data + _offset);
+    return *(hostsmember **)((char *)data + _offset);
 }
 
-int32_t HostlistStateColumn::getValue(void *data)
+int32_t HostlistStateColumn::getValue(void *data, Query *query)
 {
-   hostsmember *mem = getMembers(data);
-   int32_t result = 0;
-   int state;
+    contact *auth_user = query->authUser();
+    hostsmember *mem = getMembers(data);
+    int32_t result = 0;
+    int state;
 
-   while (mem) {
-      host *hst = mem->host_ptr;
-      switch (_logictype) {
-	 case HLSC_NUM_SVC_PENDING:
-	 case HLSC_NUM_SVC_OK:
-	 case HLSC_NUM_SVC_WARN:
-	 case HLSC_NUM_SVC_CRIT:
-	 case HLSC_NUM_SVC_UNKNOWN:
-	 case HLSC_NUM_SVC:
-	    result += ServicelistStateColumn::getValue(_logictype, hst->services);
-	    break;
+    while (mem) {
+	host *hst = mem->host_ptr;
+	if (!auth_user || g_table_hosts->isAuthorized(auth_user, hst)) {
+	    switch (_logictype) {
+		case HLSC_NUM_SVC_PENDING:
+		case HLSC_NUM_SVC_OK:
+		case HLSC_NUM_SVC_WARN:
+		case HLSC_NUM_SVC_CRIT:
+		case HLSC_NUM_SVC_UNKNOWN:
+		case HLSC_NUM_SVC:
+		    result += ServicelistStateColumn::getValue(_logictype, hst->services, query);
+		    break;
 
-	 case HLSC_WORST_SVC_STATE:
-	    state = ServicelistStateColumn::getValue(_logictype, hst->services);
-	    if (ServicelistStateColumn::svcStateIsWorse(state, result))
-	       result = state;
-	    break;
+		case HLSC_WORST_SVC_STATE:
+		    state = ServicelistStateColumn::getValue(_logictype, hst->services, query);
+		    if (ServicelistStateColumn::svcStateIsWorse(state, result))
+			result = state;
+		    break;
 
-	 case HLSC_NUM_HST_UP:
-	 case HLSC_NUM_HST_DOWN:
-	 case HLSC_NUM_HST_UNREACH:
-	    if (hst->has_been_checked && hst->current_state == _logictype - HLSC_NUM_HST_UP)
-	       result ++;
-	    break;
+		case HLSC_NUM_HST_UP:
+		case HLSC_NUM_HST_DOWN:
+		case HLSC_NUM_HST_UNREACH:
+		    if (hst->has_been_checked && hst->current_state == _logictype - HLSC_NUM_HST_UP)
+			result ++;
+		    break;
 
-	 case HLSC_NUM_HST_PENDING:
-	    if (!hst->has_been_checked)
-	       result ++;
-	    break;
+		case HLSC_NUM_HST_PENDING:
+		    if (!hst->has_been_checked)
+			result ++;
+		    break;
 
-	 case HLSC_NUM_HST:
-	    result ++;
-	    break;
+		case HLSC_NUM_HST:
+		    result ++;
+		    break;
 
-	 case HLSC_WORST_HST_STATE:
-	    if (hst_state_is_worse(hst->current_state, result))
-	       result = hst->current_state;
-	    break;
-      }
-
-      mem = mem->next;
-   }
-   return result;
+		case HLSC_WORST_HST_STATE:
+		    if (hst_state_is_worse(hst->current_state, result))
+			result = hst->current_state;
+		    break;
+	    }
+	}
+	mem = mem->next;
+    }
+    return result;
 }
 

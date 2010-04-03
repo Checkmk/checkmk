@@ -28,10 +28,10 @@
 #include "IntColumn.h"
 #include "Query.h"
 
-void IntAggregator::consume(void *data)
+void IntAggregator::consume(void *data, Query *query)
 {
     _count++;
-    int32_t value = _column->getValue(data);
+    int32_t value = _column->getValue(data, query);
     switch (_operation) {
 	case STATS_OP_SUM:
 	case STATS_OP_AVG:

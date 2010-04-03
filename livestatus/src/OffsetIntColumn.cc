@@ -26,7 +26,7 @@
 #include <stdint.h>
 #include "OffsetIntColumn.h"
 
-int32_t OffsetIntColumn::getValue(void *data)
+int32_t OffsetIntColumn::getValue(void *data, Query *)
 {
    if (!data)
       return 0;

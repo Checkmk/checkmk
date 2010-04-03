@@ -159,9 +159,10 @@ void TableServices::answerQuery(Query *query)
 bool TableServices::isAuthorized(contact *ctc, void *data)
 {
     service *svc = (service *)data;
-    if (g_service_authorization == AUTH_STRICT)
-	return is_contact_for_service(svc, ctc) 
-	    || is_escalated_contact_for_service(svc, ctc);
+    if (g_service_authorization == AUTH_STRICT) {
+	return is_contact_for_service(svc, ctc);
+	    is_escalated_contact_for_service(svc, ctc);
+    }
     else { // AUTH_LOOSE
 	host *hst = svc->host_ptr;
 	return  is_contact_for_host(hst, ctc) 

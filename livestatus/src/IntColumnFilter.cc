@@ -47,7 +47,7 @@ int32_t IntColumnFilter::convertRefValue()
 bool IntColumnFilter::accepts(void *data)
 {
    bool pass = true;
-   int32_t act_value = _column->getValue(data);
+   int32_t act_value = _column->getValue(data, _query);
    int32_t ref_value = convertRefValue();
    switch (_opid) {
       case OP_EQUAL:

@@ -33,7 +33,7 @@
    stuff by using C++ templates and the like.
    */
 
-void DoubleAggregator::consume(void *data)
+void DoubleAggregator::consume(void *data, Query *)
 {
     _count++;
     double value = _column->getValue(data);

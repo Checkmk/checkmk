@@ -30,7 +30,7 @@
 #include "nagios/macros.h"
 extern char     *macro_user[MAX_USER_MACROS];
 
-string OffsetStringMacroColumn::valueAsString(void *data)
+string OffsetStringMacroColumn::valueAsString(void *data, Query *)
 {
     char *raw = getValue(data);
     host *hst = getHost(data);
@@ -66,7 +66,7 @@ string OffsetStringMacroColumn::valueAsString(void *data)
 
 void OffsetStringMacroColumn::output(void *data, Query *query)
 {
-    string s = valueAsString(data);
+    string s = valueAsString(data, query);
     query->outputString(s.c_str());
 }
 

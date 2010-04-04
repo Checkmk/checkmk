@@ -2,6 +2,9 @@
       Core, Setup, etc.:
       * Check_MK is looking for main.mk not longer in the current and home
         directory
+      * install_nagios.sh: fix link to Check_MK in sidebar
+      * install_nagios.sh: switch PNP to version 0.6.3
+      * do not search main.mk in ~ and . anymore (brought only trouble) 
 
       Livestatus:
       * Table hosts: New column 'services' listing all services of that host
@@ -17,12 +20,24 @@
       * New performance counter for fork rate
       * New columns for hosts: last_time_{up,down,unreachable}
       * New columns for services: last_time_{ok,warning,critical,unknown}
+      * Columns with counts honor now AuthUser
+      * New columns for hosts/services: modified_attributes{,_list}
+      * new columns comments_with_info and downtimes_with_info
+      * Table log: switch output to reverse chronological order!
 
       Multisite:
+      * Improved many builtin views
+      * new builtin views for host- and service groups
       * Number of columns now configurable for each layout (1..50)
       * New layout "tiled"
       * New painters for lists of hosts and services in one column
       * Automatically compensate timezone offsets of remote sites
+      * New datasources for downtimes and comments
+      * New experimental datasource for log
+      * Introduce limitation, this safes you from too large output
+      * reimplement host- and service icons more intelligent
+      * Output error messages from dead site in Multisite mode
+      * Increase wait time for master control buttons from 4s to 10s
 
       Checks & Agents:
       * mrpe in Linux agent: Fix bug introduced in 1.1.3: Exit status of plugins was

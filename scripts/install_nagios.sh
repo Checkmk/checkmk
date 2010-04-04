@@ -994,7 +994,7 @@ EOF
     activate_initd $HTTPD
 
     # side.html anpassen
-    HTML='<div class="navsectiontitle">Check_MK</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="'"$SITEURL"'/check_mk/filter.py" target="<?php echo $link_target;?>">Filters and Actions</a></li><li><a href="'"$SITEURL"'/check_mk/siteoverview.py" target="<?php echo $link_target;?>">Site Overview</a></li></ul></div></div><div class="navsection"><div class="navsectiontitle">NagVis</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="'"$SITEURL"'/nagvis/" target="<?php echo $link_target;?>">Overview page</a></li></div></div><div class="navsection">'
+    HTML='<div class="navsectiontitle">Check_MK</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="'"$SITEURL"'/check_mk/" target="<?php echo $link_target;?>">Multisite</a></li></ul></div></div><div class="navsection"><div class="navsectiontitle">NagVis</div><div class="navsectionlinks"><ul class="navsectionlinks"><li><a href="'"$SITEURL"'/nagvis/" target="<?php echo $link_target;?>">Overview page</a></li></div></div><div class="navsection">'
     QUOTE=${HTML//\//\\/}
     sed -i "/.*Reports<.*$/i$QUOTE" /usr/local/share/nagios/htdocs/side.php
 
@@ -1063,8 +1063,11 @@ Nagios and the addons have been installed into the following paths:
 
  /usr/local               programs, scripts, fixed data
 
-Now you can point your browser to to http://localhost/$SITEURL/nagios/
+Now you can point your browser to to http://${HOSTNAME:-localhost}/$SITEURL/nagios/
 and login with 'nagiosadmin' and 'test'.
+
+The new Check_MK Multisite GUI is awaiting you here:
+http://${HOSTNAME:-localhost}/$SITEURL/check_mk/
 
 You can change that password with
 # htpasswd /etc/nagios/htpasswd nagiosadmin

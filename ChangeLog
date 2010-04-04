@@ -15,6 +15,8 @@
       * Set stack size of threads per default o 64 KB instead of 8 MB
       * New header Localtime: for compensating time offsets of remote sites
       * New performance counter for fork rate
+      * New columns for hosts: last_time_{up,down,unreachable}
+      * New columns for services: last_time_{ok,warning,critical,unknown}
 
       Multisite:
       * Number of columns now configurable for each layout (1..50)

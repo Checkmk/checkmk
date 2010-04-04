@@ -256,6 +256,15 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
 		"The type of the acknownledgement (0: none, 1: normal, 2: sticky)", (char *)&svc.acknowledgement_type - ref, indirect_offset));
     table->addColumn(new OffsetTimeColumn(prefix + "last_state_change", 
 		"The time of the last state change (Unix timestamp)", (char *)&svc.last_state_change - ref, indirect_offset));
+    table->addColumn(new OffsetTimeColumn(prefix + "last_time_ok", 
+		"The last time the service was OK (Unix timestamp)", (char *)&svc.last_time_ok - ref, indirect_offset));
+    table->addColumn(new OffsetTimeColumn(prefix + "last_time_warning", 
+		"The last time the service was in WARNING state (Unix timestamp)", (char *)&svc.last_time_warning - ref, indirect_offset));
+    table->addColumn(new OffsetTimeColumn(prefix + "last_time_critical", 
+		"The last time the service was CRITICAL (Unix timestamp)", (char *)&svc.last_time_critical - ref, indirect_offset));
+    table->addColumn(new OffsetTimeColumn(prefix + "last_time_unknown", 
+		"The last time the service was UNKNOWN (Unix timestamp)", (char *)&svc.last_time_unknown - ref, indirect_offset));
+
     table->addColumn(new OffsetTimeColumn(prefix + "last_check", 
 		"The time of the last check (Unix timestamp)", (char *)&svc.last_check - ref, indirect_offset));
     table->addColumn(new OffsetTimeColumn(prefix + "next_check", 

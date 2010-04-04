@@ -172,6 +172,14 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 		"Time of the last check (Unix timestamp)", (char *)(&hst.last_check) - ref, indirect_offset));
     table->addColumn(new OffsetTimeColumn(prefix + "last_state_change", 
 		"Time of the last state change - soft or hard (Unix timestamp)", (char *)(&hst.last_state_change) - ref, indirect_offset));
+
+    table->addColumn(new OffsetTimeColumn(prefix + "last_time_up", 
+		"The last time the host was UP (Unix timestamp)", (char *)&hst.last_time_up - ref, indirect_offset));
+    table->addColumn(new OffsetTimeColumn(prefix + "last_time_down", 
+		"The last time the host was DOWN (Unix timestamp)", (char *)&hst.last_time_down - ref, indirect_offset));
+    table->addColumn(new OffsetTimeColumn(prefix + "last_time_unreachable", 
+		"The last time the host was UNREACHABLE (Unix timestamp)", (char *)&hst.last_time_unreachable - ref, indirect_offset));
+    
     table->addColumn(new OffsetIntColumn(prefix + "is_flapping", 
 		"Wether the host state is flapping (0/1)", (char *)(&hst.is_flapping) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "scheduled_downtime_depth", 

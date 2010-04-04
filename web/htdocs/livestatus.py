@@ -237,6 +237,7 @@ class SingleSiteConnection(BaseConnection, Helpers):
 	BaseConnection.__init__(self, socketurl)
 	self.prepend_site = False
 	self.auth_users = {}
+	self.deadsites = {} # never filled, just for compatibility
 	self.auth_header = ""
 	self.limit = None
     

@@ -83,6 +83,11 @@
 #  \_ 3:0:4:0  sdm  8:192  [active][undef]
 #  \_ 3:0:3:0  sdb  8:16   [active][undef]
 
+# And one other output (ID has not 33 times A-Z0-9):
+# mpath1 (SIBM_____SwapA__________DA02BF71)
+# [size=41 GB][features="0"][hwhandler="0"]
+# \_ round-robin 0 [active]
+#  \_ 1:0:1:0 sdd 8:48  [active]
 
 def parse_multipath_output(info, only_uuid = None):
     # only_uuid --> look only for data of this uuid
@@ -94,7 +99,7 @@ def parse_multipath_output(info, only_uuid = None):
     # 1: matched regex-group id of UUID
     # 2: matched regex-group id of alias (optional)
     reg_headers = [ (get_regex("^[0-9a-z]{33}$"), 0, None),
-                    (get_regex("^([^\s]+)\s\(([0-9a-z]{33})\)"), 2, 1),
+                    (get_regex("^([^\s]+)\s\(([0-9A-Za-z_-]+)\)"), 2, 1),
                     (get_regex("^[a-zA-Z0-9_]+$"), 0, None),
                     (get_regex("^([0-9a-z]{33}|[0-9a-z]{49})\s?dm.+$"), 1, None),
                     (get_regex("^[a-zA-Z0-9_]+dm-.+$"), 0, None) ]

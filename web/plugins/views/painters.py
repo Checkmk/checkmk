@@ -83,11 +83,11 @@ def paint_icons(what, row): # what is "host" or "service"
 
     # action_url
     if row[prefix + "action_url_expanded"]:
-	output += "<a href=\"%s\"><img class=icon src=\"images/icon_action.gif\"></a>" % row[prefix + "action_url_expanded"]
+	output += "<a href='%s'><img class=icon src=\"images/icon_action.gif\"></a>" % row[prefix + "action_url_expanded"]
 
     # notes_url
     if row[prefix + "notes_url_expanded"]:
-	output += "<a href=\"%s\"><img class=icon src=\"images/icon_notes.gif\"></a>" % row[prefix + "notes_url_expanded"]
+	output += "<a href='%s'><img class=icon src=\"images/icon_notes.gif\"></a>" % row[prefix + "notes_url_expanded"]
 
     # Problem has been acknowledged
     if row[prefix + "acknowledged"]:

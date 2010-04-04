@@ -916,24 +916,21 @@ EOF
 
 if [ "$SITE" ] ; then
 cat <<EOF > /etc/$HTTPD/conf.d/multisite.conf
-# Add other sites to your configuration
+# Transparent access to web based addons and the classical Nagios GUI
+# via mod_rewrite, mod_proxy and mod_proxy_http (make sure, those are enabled)!
+
+# For each remote site, define a Location like the following.
+# In this example, /nag02 is the site prefix and 192.168.56.7
+# the IP address of the remote web server
+
+<Location /nag02>
+    RewriteEngine On
+    RewriteRule ^/.+/nag02/(.*) http://192.168.56.7/nag02/$1 [P]
+</Location>
+
+# Need some debugging => turn on a logfile here:
 # RewriteLog /tmp/rewrite.log
-# RewriteLogLevel 9
-#
-# This example works on the assumption that the id of the 
-# site is identical with the hostname of the site's nagios
-# server.
-
-# Example for two remote sites 'zwei' and 'vier':
-# Alias /zwei/ /remote/zwei/
-# Alias /vier/ /remote/vier/
-
-# <Directory /remote>
-#   Options +FollowSymlinks
-#   RewriteEngine On
-#   RewriteBase /remote/
-#   RewriteRule ^([^/]*)/(.*) http://\$1/\$1/\$2 [P]
-# </Directory>
+# RewriteLogLevel 3
 EOF
     a2enmod proxy
     a2enmod proxy_http

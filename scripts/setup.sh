@@ -548,10 +548,10 @@ do
 	       if [ "${PIPESTATUS[0]}" = 0 ]
 	       then
 
-		   if [ "$livestatus_in_nagioscfg" = False -a -n "$nagios_config_file" ]
+		   if [ "$livestatus_in_nagioscfg" = False -a -n "$DESTDIR$nagios_config_file" ]
 		   then
 			echo -e "# Load Livestatus Module\nbroker_module=$libdir/livestatus.o $livesock\nevent_broker_options=-1" \
-			   >> $nagios_config_file
+			   >> $DESTDIR$nagios_config_file
 		   fi
 	       else
 		   echo -e "\E[1;31;40m ERROR compiling livestatus! \E[0m.\nLogfile is in $SRCDIR/livestatus.log"
@@ -637,9 +637,9 @@ do
 	   if [ ! -e $DESTDIR$nagconfdir/check_mk_templates.cfg ] ; then
  	       ln -s $docdir/check_mk_templates.cfg $DESTDIR$nagconfdir 2>/dev/null
 	   fi
-	   if [ -n "$nagiosaddconf" -a -n "$nagios_config_file" ] ; then
-	      echo "# added by setup.sh of check_mk " >> $nagios_config_file
-	      echo "$nagiosaddconf" >> $nagios_config_file
+	   if [ -n "$nagiosaddconf" -a -n "$DESTDIR$nagios_config_file" ] ; then
+	      echo "# added by setup.sh of check_mk " >> $DESTDIR$nagios_config_file
+	      echo "$nagiosaddconf" >> $DESTDIR$nagios_config_file
 	   fi
 
 	   mkdir -p $DESTDIR$apache_config_dir &&

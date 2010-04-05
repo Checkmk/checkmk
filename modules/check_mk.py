@@ -239,6 +239,7 @@ define_servicegroups                 = None
 define_contactgroups                 = None
 clusters                             = {}
 clustered_services                   = []
+clustered_services_of                = {} # new in 1.1.4
 datasource_programs                  = []
 service_aggregations                 = []
 service_dependencies                 = []
@@ -693,15 +694,28 @@ def is_cluster(hostname):
     return False
 
 # If host is node of a cluster, return name of that cluster
-# (untagged). If not, return None.
+# (untagged). If not, return None. If a host belongt to
+# more than one cluster, then a random cluster is choosen.
 def cluster_of(hostname):
     for clustername, nodes in clusters.items():
         if hostname in nodes:
             return strip_tags(clustername)
     return None
 
-def is_clustered_service(hostname, servicedesc):
-    return in_boolean_serviceconf_list(hostname, servicedesc, clustered_services)
+# Determine wether a service (found on a physical host) is a clustered
+# service and - if yes - return the cluster host of the service. If
+# no, returns the hostname of the physical host.
+def host_of_clustered_service(hostname, servicedesc):
+    # 1. Old style: clustered_services assumes that each host belong to
+    #    exactly on cluster
+    if in_boolean_serviceconf_list(hostname, servicedesc, clustered_services):
+        return cluster_of(hostname)
+    
+    for cluster, conf in clustered_services_of.items():
+        if in_boolean_serviceconf_list(hostname, servicedesc, conf):
+            return cluster
+
+    return hostname
 
 
 #   +----------------------------------------------------------------------+
@@ -716,7 +730,12 @@ def is_clustered_service(hostname, servicedesc):
 
 # Returns check table for a specific host
 # Format: ( checkname, item ) -> (params, description )
+g_check_table_cache = {}
 def get_check_table(hostname):
+    # speed up multiple lookup of same host
+    if hostname in g_check_table_cache:
+        return g_check_table_cache[hostname]
+
     check_table = {}
     for entry in checks:
         if len(entry) == 4:
@@ -762,6 +781,7 @@ def get_check_table(hostname):
             if d in all_descr:
                 deps.append(d)
 
+    g_check_table_cache[hostname] = check_table
     return check_table
 
 
@@ -1624,66 +1644,35 @@ def make_inventory(checkname, hostnamelist, check_only=False):
               print "%s: Invalid output from agent or invalid configuration: %s" % (hostname, e)
               continue
 
-          if len(inventory) == 0: # found nothing
-              continue
-          
-          # If our host is part of a cluster and the service is one of 
-          # clustered_services, then we must add that service to the cluster
-          # and not to the physical host
-          clustername = cluster_of(hostname)
-          if opt_verbose:
-              if clustername:
-                  print "%s is part of cluster %s" % (hostname, clustername)
-          hostlist = [ hostname ]
-          if clustername:
-              hostlist.append(clustername)
+          for entry in inventory:
+              if len(entry) == 2: # comment is now obsolete
+                  item, paramstring = entry
+              else:
+                  item, comment, paramstring = entry
 
-          for hn in hostlist:
-            # for clusters: filter inventory and sort into clustered and
-            # non-clustered services
-            if len(hostlist) >= 2:
-                if opt_verbose:
-                    print "Looking for checks on cluster %s:" % hn
-                inv_filtered = []
-                am_cluster = hn != hostname
-                for item, comment, params in inventory:
-                    if item != None:
-                        description = check_info[checkname][1] % (item,)
-                    else:
-                        description = check_info[checkname][1]
+              description = service_description(checkname, item)
 
-                    # Check if this item should be assigned to cluster or
-                    # the physical node. Note: in clustered_services always
-                    # the physical hostname is referred to. So do not use
-                    # hn here but hostname! (Was a bug <= 1.0.31rc3)
-                    clus_serv = is_clustered_service(hostname, description)
-                    if am_cluster == clus_serv:
-                        inv_filtered.append((item, comment, params))
-            else:
-              inv_filtered = inventory
+              # Find logical host this check belongs to. The service might belong to a cluster. 
+              hn = host_of_clustered_service(hostname, description)
+              
+              # Now compare with already known checks for this host (from
+              # previous inventory or explicit checks). Also drop services
+              # the user wants to ignore via 'ignored_services'.
+              checktable = get_check_table(hn)
+              checked_items = [ i for ( (cn, i), (par, descr, deps) ) \
+                                in checktable.items() if cn == checkname ]
+              if item in checked_items:
+                  continue # we have that already
 
-            # Now compare with already known checks for this host (from
-            # previous inventory or explicit checks). Also drop services
-            # the user wants to ignore via 'ignored_services'.
-            checktable = get_check_table(hn)
-            checked_items = [ item for ( (cn, item), (par, descr, deps) ) \
-                              in checktable.items() if cn == checkname ]
-          
-            missing = [ i for i in inv_filtered
-                        if i[0] not in checked_items
-                        and not service_ignored(hn, service_description(checkname, i[0])) ]
-            
-            if missing != []:
-               newchecks.append('\n  # === %s === \n' % hn)
-               for (item, curval, paramstring) in missing:
-                  if type(item) == str:
-                     item_txt = '%s' % repr(item)
-                  else:
-                     item_txt = item
-                  newcheck = '  ("%s", "%s", %s, %s), # %s\n' % (hn, checkname, item_txt, paramstring, curval)
-                  if newcheck not in newchecks:
-                      newchecks.append(newcheck)
-                      count_new += 1
+              if service_ignored(hn, description):
+                  continue # user does not want this item to be checked
+              
+              newcheck = '  ("%s", "%s", %r, %s),' % (hn, checkname, item, paramstring)
+              newcheck += "\n"
+              if newcheck not in newchecks: # avoid duplicates if inventory outputs item twice
+                  newchecks.append(newcheck)
+                  count_new += 1
+
 
     except KeyboardInterrupt:
         sys.stderr.write('<Interrupted>\n')
@@ -1696,11 +1685,9 @@ def make_inventory(checkname, hostnamelist, check_only=False):
             filename += ".mk"
             if not os.path.exists(autochecksdir):
                os.makedirs(autochecksdir)
-            file(filename, "w").write('# %s\n[%s]\n' % (filename, ''.join(newchecks)))
+            file(filename, "w").write('# %s\n[\n%s]\n' % (filename, ''.join(newchecks)))
 	    sys.stdout.write('%-30s ' % (tty_blue + checkname + tty_normal))
             sys.stdout.write('%s%d new checks%s\n' % (tty_bold + tty_green, count_new, tty_normal))
-#         else: 
-#             sys.stdout.write('nothing new\n')
     else:
         return count_new
 

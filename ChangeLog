@@ -5,6 +5,8 @@
       * install_nagios.sh: fix link to Check_MK in sidebar
       * install_nagios.sh: switch PNP to version 0.6.3
       * do not search main.mk in ~ and . anymore (brought only trouble) 
+      * clusters: new variable clustered_services_of, allowing for overlapping
+         clusters (as proposed by Jörg Linge)
 
       Livestatus:
       * Table hosts: New column 'services' listing all services of that host

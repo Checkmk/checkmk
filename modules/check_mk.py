@@ -706,15 +706,16 @@ def cluster_of(hostname):
 # service and - if yes - return the cluster host of the service. If
 # no, returns the hostname of the physical host.
 def host_of_clustered_service(hostname, servicedesc):
+    # 1. New style: explicitlely assigned services
+    for cluster, conf in clustered_services_of.items():
+        if in_boolean_serviceconf_list(hostname, servicedesc, conf):
+            return cluster
+
     # 1. Old style: clustered_services assumes that each host belong to
     #    exactly on cluster
     if in_boolean_serviceconf_list(hostname, servicedesc, clustered_services):
         return cluster_of(hostname)
     
-    for cluster, conf in clustered_services_of.items():
-        if in_boolean_serviceconf_list(hostname, servicedesc, conf):
-            return cluster
-
     return hostname
 
 

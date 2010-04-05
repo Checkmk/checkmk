@@ -221,6 +221,21 @@ int Query::lookupOperator(const char *opname)
    return negate * opid;
 }
 
+Filter *Query::createFilter(Column *column, int operator_id, char *value)
+{
+   Filter *filter = column->createFilter(operator_id, value);
+   if (!filter)
+      _output->setError(RESPONSE_CODE_INVALID_HEADER, "cannot create filter on table %s", _table->name());
+   else if (filter->hasError()) {
+       _output->setError(filter->errorCode(), "error in Filter header: %s", filter->errorMessage().c_str());
+       delete filter;
+       filter = 0;
+   }
+   else 
+       filter->setQuery(this);
+   return filter;
+}
+
 
 void Query::parseAndOrLine(char *line, int andor, bool filter)
 {
@@ -333,12 +348,10 @@ void Query::parseStatsLine(char *line)
 	    return;
 	}
 
-	Filter *filter = column->createFilter(operator_id, value);
-	if (!filter)
-	    _output->setError(RESPONSE_CODE_INVALID_HEADER, "cannot create filter on table %s", _table->name());
-	else
-	    filter->setQuery(this);
-	stats_col = new StatsColumn(column, filter, operation);
+	Filter *filter = createFilter(column, operator_id, value);
+        if (!filter)
+            return;
+        stats_col = new StatsColumn(column, filter, operation);
     }
     else 
 	stats_col = new StatsColumn(column, 0, operation);
@@ -379,16 +392,13 @@ void Query::parseFilterLine(char *line, bool is_filter)
       return;
    }
 
-   Filter *filter = column->createFilter(operator_id, value);
-   if (!filter)
-      _output->setError(RESPONSE_CODE_INVALID_HEADER, "cannot create filter on table %s", _table->name());
-   else 
-       filter->setQuery(this);
-
-   if (is_filter)
-       _filter.addSubfilter(filter);
-   else
-       _wait_condition.addSubfilter(filter);
+   Filter *filter = createFilter(column, operator_id, value);
+   if (filter) {
+       if (is_filter)
+           _filter.addSubfilter(filter);
+       else
+           _wait_condition.addSubfilter(filter);
+   }
 }
 
 void Query::parseAuthUserHeader(char *line)

@@ -126,6 +126,7 @@ private:
    bool doStats();
    void doWait();
    Aggregator **getStatsGroup(string name);
+   Filter *createFilter(Column *column, int operator_id, char *value);
    void parseFilterLine(char *line, bool filter /* and not cond */);
    void parseStatsLine(char *line);
    void parseStatsGroupLine(char *line);

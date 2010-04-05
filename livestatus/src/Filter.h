@@ -28,17 +28,27 @@
 #include "config.h"
 
 #include <vector>
+#include <string>
 #include <stdint.h>
+
 using namespace std;
 class Query;
 
 class Filter
 {
+    string _error_message; // Error in constructor
+    unsigned _error_code;
+
 protected:
     Query *_query; // needed by TimeOffsetFilter (currently)
+    void setError(unsigned code, const char *format, ...);
+
 public:
     Filter() : _query(0) {};
     virtual ~Filter() {};
+    string errorMessage() { return _error_message; };
+    unsigned errorCode() { return _error_code; };
+    bool hasError() { return _error_message != ""; };
     void setQuery(Query *q) { _query = q; };
     virtual bool accepts(void *data) = 0;
     virtual void *indexFilter(const char *columnname) { return 0; };

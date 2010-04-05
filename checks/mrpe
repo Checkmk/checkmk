@@ -33,7 +33,7 @@ def inventory_mrpe(checkname, info):
             item = line[1]
         else:
             item = line[0]
-        items.append((item, '', '""'))
+        items.append((item, None))
     return items
 
 

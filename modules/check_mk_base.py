@@ -732,11 +732,23 @@ def submit_check_result(host, servicedesc, result, sa):
 
     if len(result) > 2:
         perfdata = result[2]
+        # Check may append the name of the check command to the
+        # list of perfdata. It is of type string. And it might be
+        # needed by the graphing tool in order to choose the correct
+        # template. Currently this is used only by mrpe.
+        if len(perfdata) > 0 and type(perfdata[-1]) == str:
+            check_command = perfdata[-1]
+            del perfdata[-1]
+        else:
+            check_command = None
+            
         for p in perfdata:
 	    # replace None with "" and fill up to 6 values
 	    p = (map(none_to_empty, p) + ['','','',''])[0:6]
             perftexts.append("%s=%s;%s;%s;%s;%s" %  tuple(p) )
         if perftexts != [] and not direct_rrd_update(host, servicedesc, perfdata):
+            if check_command and perfdata_format == "pnp":
+                perftexts.append("[%s]" % check_command)
             perftext = "|" + (" ".join(perftexts))
     
     if not opt_dont_submit:

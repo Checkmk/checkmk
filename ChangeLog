@@ -47,6 +47,7 @@
       * Logwatch GUI: fix problem on Python 2.4 (thanks to Lars)
       * multipath: Check is now less restrictive when parsing header lines with
         the following format: "<alias> (<id>)"
+      * mrpe: fix output in Solaris agent (did never work)
 
 1.1.3:
 

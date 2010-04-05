@@ -539,7 +539,7 @@ do
     case "$JA" in
         j|J|ja|Ja|JA|y|yes|Y|Yes|YES)
 	   # Save paths for later installation
-	   echo "$DIRINFO" > $SETUPCONF
+	   if [ -z "$DESTDIR" ] ; then echo "$DIRINFO" > $SETUPCONF ; fi
 
 	   if [ "$enable_livestatus" = yes ]
 	   then

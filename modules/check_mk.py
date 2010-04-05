@@ -173,6 +173,7 @@ agent_min_version                  = 0 # warn, if plugin has not at least versio
 check_max_cachefile_age            = 0 # per default do not use cache files when checking
 cluster_max_cachefile_age          = 90   # secs.
 simulation_mode                    = False
+perfdata_format                    = "standard" # also possible: "pnp"
 
 # SNMP communities
 snmp_default_community             = 'public'
@@ -201,7 +202,7 @@ generate_dummy_commands            = True
 dummy_check_commandline            = 'echo "ERROR - you did an active check on this serivce - please disable active checks" && exit 1'
 nagios_illegal_chars               = '`~!$%^&*|\'"<>?,()='
 
-# Settings for web pages (THIS IS DEPRECATED AND WILL SEEN BE REMOVED)
+# Settings for web pages (THIS IS DEPRECATED AND POINTLESS AND WILL BE REMOVED ANY DECADE NOW)
 multiadmin_users                     = None # means: all
 multiadmin_action_users              = None # means: all
 multiadmin_sites                     = { "" : {} }
@@ -1838,6 +1839,7 @@ filesystem_default_levels = None
     # Compile in all neccessary global variables
     output.write("\n# Global variables\n")
     for var in [ 'check_mk_version', 'agent_port', 'tcp_connect_timeout', 'agent_min_version',
+                 'perfdata_format',
                  'aggr_summary_hostname', 'nagios_command_pipe_path',
                  'var_dir', 'counters_directory', 'tcp_cache_dir',
                  'check_mk_basedir', 'df_magicnumber_normsize', 

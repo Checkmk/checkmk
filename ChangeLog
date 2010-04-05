@@ -43,6 +43,7 @@
       Checks & Agents:
       * mrpe in Linux agent: Fix bug introduced in 1.1.3: Exit status of plugins was
         not honored anymore (due to newline handling)
+      * mrpe: allow for sending check_command to PNP4Nagios (see MRPE docu)
       * Logwatch GUI: fix problem on Python 2.4 (thanks to Lars)
       * multipath: Check is now less restrictive when parsing header lines with
         the following format: "<alias> (<id>)"

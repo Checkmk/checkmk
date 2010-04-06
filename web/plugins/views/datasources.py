@@ -51,21 +51,21 @@ multisite_datasources["hostsbygroup"] = {
 multisite_datasources["services"] = {
     "title"   : "All services",
     "table"   : "services",
-    "infos"   : [ "host", "service" ],
+    "infos"   : [ "service", "host" ],
     "keys"    : [ "host_name", "service_description" ],
 }
 
 multisite_datasources["servicesbygroup"] = {
     "title"   : "Services grouped by service groups",
     "table"   : "servicesbygroup",
-    "infos"   : [ "host", "service", "servicegroup" ],
+    "infos"   : [ "service", "host", "servicegroup" ],
     "keys"    : [ "host_name", "service_description" ],
 }
 
 multisite_datasources["servicesbyhostgroup"] = {
     "title"   : "Services grouped by host groups",
     "table"   : "servicesbyhostgroup",
-    "infos"   : [ "host", "service", "hostgroup" ],
+    "infos"   : [ "service", "host", "hostgroup" ],
     "keys"    : [ "host_name", "service_description" ],
 }
 

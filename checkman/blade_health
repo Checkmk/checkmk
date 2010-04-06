@@ -1,0 +1,12 @@
+title: Simple check of summary health state of an IBM blade center
+agents: snmp
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the summary health state of an IBM blade center.
+ It's just one simple check saying OK, WARN or CRIT and does not
+ show any details.
+
+inventory:
+ One check per blade center is created automatically.

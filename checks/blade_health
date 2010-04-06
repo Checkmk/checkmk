@@ -1,0 +1,21 @@
+def inventory_blade_health(checkname, info):
+    if len(info) == 1:
+	return [(None, None, None)]
+
+def check_blade_health(_no_item, _no_params, info):
+    state = info[0][0]
+    if state == "255":
+        return (0, "OK - State is good")
+    elif state == "2":
+	return (2, "CRIT - State is degraded (non critical)")
+    elif state == "4":
+        return (1, "WARN - State is degraded (system level)")
+    elif state == "0":
+        return (0, "CRIT - State is critical!")
+    else:
+        return (3, "UNKNOWN - Undefined state code %s" % state)
+
+
+check_info['blade_health'] = ( check_blade_health, "Summary health state", 0, inventory_blade_health)
+
+snmp_info['blade_health'] = ( "enterprises.2.3.51.2.2.7", [1])

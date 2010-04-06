@@ -1,0 +1,20 @@
+def inventory_blade_mediatray(checkname, info):
+    if len(info) == 1 and info[0][0] == "1":
+	return [(None, None, None)]
+
+def check_blade_mediatray(_no_item, _no_params, info):
+    if len(info) < 1:
+	return (3, "UNKNOWN - no information about media tray in SNMP output")
+    present = info[0][0]
+    communicating = info[0][1]
+    if present != "1":
+        return (2, "CRIT - media tray not present")
+    elif communicating != "1":
+        return (2, "CRIT - media tray not communicating")
+    else:
+	return (0, "OK - media tray present and communicating")
+
+
+check_info['blade_mediatray'] = ( check_blade_mediatray, "Media tray", 0, inventory_blade_mediatray)
+
+snmp_info['blade_mediatray'] = ( "enterprises.2.3.51.2.2.5.2", [74, 75])

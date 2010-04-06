@@ -1,52 +1,21 @@
-Was noch komplett offen ist: Wenn man eine standortübergreifende
-Darstellung von Host- und Servicegruppen machen will, dann muss
-man diese Tabellen alternativ in einer Datenquelle bereithalten,
-welche nicht eine Zeile pro Site enthält, sondern alle Einträge
-aller Standorte in einer Zeile vereint (und dann in der Spalte
-site einfach "" hat).
+logwatch.php und die anderen htdocs/* -Dateien rausschmeissen,
+nicht mehr installieren. Im setup auch das Eintragen von var_dir
+entfernen.
 
-Dies betrifft:
-hostgroups, servicegroups
+snmp_communities: dictionary nicht mehr verwenden, aus Doku
+raus, Defaultwert leere Liste, aus Code raus, Hinweis im
+ChangeLog.
 
-Die Tabellen der Hosts und Services sind hier nicht betroffen,
-da ja ein Host oder Service immer genau an einem Standort ist.
+PING: service_notification_period und andere Eigenschaften
+wie Gruppen, etc werden nicht berücksichtigt. Gleiches
+gilt für Servicegruppen. Man sollte daher die Funktion
+extra_service_conf_of() so erweitern, dass *alles*
+Nagios-Attribute agbefrühstückt werden.
 
-Das Zusammenfassen dieser Tabellen könnte entweder im Livestatus-
-Modul geschehen oder außerhalb.
+Multisite: konfigurierbares regelmäßiges Reload für
+Views.
 
-Vorteile für innerhalb des Moduls:
-- Feature auch für andere Anwendungen nutzbar
-- Code von Multisite wird einfacher
+Multisite: Tonausgabe von altem Multiadmin portieren.
 
-Nachteile für innerhalb des Moduls:
-- Man bräuchte hartkodiert eine Logik zu bestimmten Tabellen.
-  Je nach Spaltenart müsste man anders zusammenfassen:
-  * num_... werden addiert
-  * worst_... werden nach spezieller Logik berechnet
-  * members... werden zusammengehängt
-  * Von anderen Spalten nimmt man nur den ersten Treffer (z.B. Alias, notes, ...)
-=> Das ist alles schon sehr spezifisch und fraglich, ob es wirklich
-in die API rein soll. Anderseits hätte man nur so standortübergreifende
-transparente Host- und Servicegruppen.
-
-Präsentation: Eventuell als virtuelle Tabellen "merged_servicegroups" und
-"merged_hostgroups". Die API müsste das aus dem GET rausfischen und dann
-die Logik anwerfen. Schwierigkeit noch dazu: Um die Identität der Datensätze
-zu erkennen, muss ich erzwingen, dass die Spalte "name" mit abgefragt wird.
-Da wir nicht mit assoc-Arrays arbeiten, muss ich die Spalte evtl. wieder
-aus der Antwort rausschneiden. Oder ich hänge sie einfach immer vornedran.
-Sie kann ja zweimal auftauchen. Bei der Antwort schneide ich vorne ab.
-Fertig.
-
-Vorgehen: 
-Query erkennt virtuelle Tabelle am Prefix merged_. Nun hängt sie die Spalte
-tabellenname(ohne s)_name vorne dran und macht die Anfrage. Danach gehe
-ich Zeile für Zeile durch und bauen ein Dict auf, das von Name nach
-Row geht.
-
-Oder: Die API kennt ein setMerge("host_name"). Das führt dazu, dass eine
-Spalte zum Mergen ausgewählt wird. Frage ist halt, wie man sauber hinbekommt,
-dass die einzelnen Spaltentypen richtig aggregiert werden. Dazu
-gehört ja z.B. auch die Tabelle status, wenn man es richtig machen will
-
-
+Eine Datei local.mk, die von backup/restore *nicht*
+beruecksichtigt wird.

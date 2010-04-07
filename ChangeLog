@@ -46,6 +46,8 @@
       * Logwatch GUI: fix problem on Python 2.4 (thanks to Lars)
       * multipath: Check is now less restrictive when parsing header lines with
         the following format: "<alias> (<id>)"
+      * fsc_ipmi_mem_status: New check for monitoring memory status (e.g. ECC)
+			  on FSC TX-120 (and maybe other) systems.
 
 1.1.3:
 

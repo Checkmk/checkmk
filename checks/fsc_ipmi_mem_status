@@ -1,0 +1,66 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# Author: Lars Michelsen <lm@mathias-kettner.de>
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output of agent:
+#<<<fsc-ipmi-mem-status>>>
+#0 DIMM-1A 01
+#1 DIMM-1B 03
+#2 DIMM-2A 00
+#3 DIMM-2B 00
+#
+# Available state levels:
+# 00 = Empty slot
+# 01 = OK, running
+# 02 = reserved
+# 03 = Error (module has encountered errors, but is still in use)
+# 04 = Fail (module has encountered errors and is therefore disabled)
+# 05 = Prefail (module exceeded the correctable errors threshold)
+fsc_ipmi_mem_status_levels = [
+  # Status Code, Label
+  (0, 'Empty slot'),
+  (0, 'Running'),
+  (0, 'Reserved'),
+  (2, 'Error (module has encountered errors, but is still in use)'),
+  (2, 'Fail (module has encountered errors and is therefore disabled)'),
+  (2, 'Prefail (module exceeded the correctable errors threshold)'),
+]
+
+statname = [ "OK", "WARN", "CRIT" ]
+
+def inventory_fsc_ipmi_mem_status(checkname, info):
+    return [ (line[1], "", None) for line in info if line[0] != 'E' ]
+
+def check_fsc_ipmi_mem_status(name, _no_params, info):
+    for line in info:
+        if line[1] == name:
+            level = int(line[2])
+            return (fsc_ipmi_mem_status_levels[level][0], "%s: %s" % (
+                          statname[fsc_ipmi_mem_status_levels[level][0]],
+                          fsc_ipmi_mem_status_levels[level][1]))
+
+check_info['fsc_ipmi_mem_status'] = (check_fsc_ipmi_mem_status, "IPMI %s", 1, inventory_fsc_ipmi_mem_status)

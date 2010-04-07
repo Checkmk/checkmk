@@ -583,7 +583,7 @@ do
 	   fi &&
 	   mkdir -p $DESTDIR$agentsdir &&
 	   tar xzf $SRCDIR/agents.tar.gz -C $DESTDIR$agentsdir &&
-	   for agent in $DESTDIR/$agentsdir/check_mk_agent.* $DESTDIR/$agentsdir/mk_logwatch ; do 
+	   for agent in $DESTDIR/$agentsdir/check_mk_*agent.* $DESTDIR/$agentsdir/mk_logwatch ; do 
 	       sed -ri 's@^export MK_LIBDIR="(.*)"@export MK_LIBDIR="'"$agentslibdir"'"@' $agent 
 	       sed -ri 's@^export MK_CONFDIR="(.*)"@export MK_CONFDIR="'"$agentsconfdir"'"@' $agent 
 	   done &&

@@ -48,8 +48,7 @@
 #   ip address, which is absolutely needed here.                     #
 # ------------------------------------------------------------------ #
 
-CACHEDIR=/var/lib/check_mk/agent/cache
-mkdir -p $CACHEDIR
+export MK_CONFDIR="/this/is/changed/by/setup"
 
 # Determine the IP address of the remote Nagios server.
 # xinetd sends us the IP address of the remote host via 
@@ -67,9 +66,14 @@ then
     fi
 fi
 
-CACHEFILE=$CACHEDIR/agent_output
-LOCKFILE=$CACHEDIR/lock
-SEENFILE=$CACHEDIR/seenby.$REMOTE_HOST
+# We keep the cache and state files in the configuration directory.
+# This is not fully FHS-compliant - I guess - but (1) consistent
+# with the logwatch extension and (2) configurable for the admin
+# during setup.
+
+CACHEFILE=$MK_CONFDIR/agentcache
+LOCKFILE=$CACHEFILE.lock
+SEENFILE=$CACHEFILE.seenby.$REMOTE_HOST
 
 # Check if we need to refresh the cache file. This needs
 # to be done in mutual exclusion in order to avoid a clash
@@ -81,7 +85,7 @@ SEENFILE=$CACHEDIR/seenby.$REMOTE_HOST
   if [ ! -e "$CACHEFILE" -o -e "$SEENFILE" ]
   then
       check_mk_agent > $CACHEFILE
-      rm -f $CACHEDIR/seenby.*
+      rm -f $CACHEFILE.seenby.*
   fi
   # Send cache file and mark it as seen by our remote host
   cat $CACHEFILE

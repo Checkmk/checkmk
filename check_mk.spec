@@ -43,17 +43,34 @@ This package is only needed on the Nagios server.
 Group:     System/Monitoring
 Requires:  xinetd
 Summary: Linux-Agent for check_mk
-AutoReqProv:   no
+AutoReq:   off
+AutoProv:  off
+Conflicts: check_mk-caching-agent
 %description agent
 This package contains the agent for check_mk. Install this on
 all Linux machines you want to monitor via check_mk. You'll need
 xinetd to run this agent.
 
+%package caching-agent
+Group:     System/Monitoring
+Requires:  xinetd
+Summary: Caching Linux-Agent for check_mk
+AutoReq:   off
+AutoProv:  off
+Conflicts: check_mk-agent
+%description caching-agent
+This package contains the agent for check_mk with an xinetd
+configuration that wrap the agent with the check_mk_caching_agent
+wrapper. Use it when doing fully redundant monitoring, where
+an agent is regularily polled by more than one monitoring
+server.
+
 %package agent-logwatch
 Group:     System/Monitoring
 Requires:  check_mk-agent, python
 Summary: Logwatch-Plugin for check_mk agent
-AutoReq:   no
+AutoReq:   off
+AutoProv:  off
 %description agent-logwatch
 The logwatch plugin for the check_mk agent allows you to monitor
 logfiles on Linux and UNIX. In one or more configuration files you
@@ -65,7 +82,8 @@ This way only new messages are being sent.
 Group:     System/Monitoring
 Requires:  python
 Summary: Check_mk web pages
-AutoReq:   no
+AutoReq:   off
+AutoProv:  off
 %description web
 This package contains the Check_mk webpages. They allow you to
 search for services and apply Nagios commands to the search results.
@@ -78,16 +96,21 @@ R=$RPM_BUILD_ROOT
 rm -rf $R
 DESTDIR=$R ./setup.sh --yes
 rm -vf $R/etc/check_mk/*.mk-*
+
+# install agent
 mkdir -p $R/etc/xinetd.d
 mkdir -p $R/usr/share/doc/check_mk_agent
 install -m 644 COPYING ChangeLog AUTHORS $R/usr/share/doc/check_mk_agent
 install -m 644 $R/usr/share/check_mk/agents/xinetd.conf $R/etc/xinetd.d/check_mk
+install -m 644 $R/usr/share/check_mk/agents/xinetd_caching.conf $R/etc/xinetd.d/check_mk_caching
 mkdir -p $R/usr/bin
 install -m 755 $R/usr/share/check_mk/agents/check_mk_agent.linux $R/usr/bin/check_mk_agent
+install -m 755 $R/usr/share/check_mk/agents/check_mk_caching_agent.linux $R/usr/bin/check_mk_caching_agent
+install -m 755 $R/usr/share/check_mk/agents/waitmax $R/usr/bin
 mkdir -p $R/usr/lib/check_mk_agent/plugins
 mkdir -p $R/usr/lib/check_mk_agent/local
-install -m 755 $R/usr/share/check_mk/agents/check_mk_agent.linux $R/usr/bin/check_mk_agent
-install -m 755 $R/usr/share/check_mk/agents/waitmax $R/usr/bin
+
+# logwatch extension
 install -m 755 $R/usr/share/check_mk/agents/mk_logwatch $R/usr/lib/check_mk_agent/plugins
 install -m 755 $R/usr/share/check_mk/agents/logwatch.cfg $R/etc/check_mk
 
@@ -129,6 +152,15 @@ rm -rf $RPM_BUILD_ROOT
 %dir /usr/lib/check_mk_agent/local
 %dir /usr/lib/check_mk_agent/plugins
 
+%files caching-agent
+%config /etc/xinetd.d/check_mk_caching
+/usr/bin/check_mk_agent
+/usr/bin/check_mk_caching_agent
+/usr/bin/waitmax
+/usr/share/doc/check_mk_agent
+%dir /usr/lib/check_mk_agent/local
+%dir /usr/lib/check_mk_agent/plugins
+
 %files agent-logwatch
 /usr/lib/check_mk_agent/plugins/mk_logwatch
 %config /etc/check_mk/logwatch.cfg
@@ -145,6 +177,10 @@ then
     useradd -r -c 'Nagios' -d /var/lib/nagios nagios
     echo "Created user nagios"
 fi
+
+%define reload_xinetd if [ -x /etc/init.d/xinetd ] ; then if pgrep -x xinetd >/dev/null ; then echo "Reloading xinetd..." ; /etc/init.d/xinetd reload ; else echo "Starting xinetd..." ; /etc/init.d/xinetd start ; fi ; fi
+
+%define activate_xinetd if which chkconfig >/dev/null 2>&1 ; then echo "Activating startscript of xinetd" ; chkconfig xinetd on ; fi
 
 %pre agent
 if [ ! -x /etc/init.d/xinetd ] ; then
@@ -164,35 +200,36 @@ if [ ! -x /etc/init.d/xinetd ] ; then
 fi
 
 %post agent
-# Activate or reload xinetd
-if which chkconfig >/dev/null 2>&1
-then
-    echo "Activating startscript of xinetd"
-    chkconfig xinetd on
-fi
-
-if [ -x /etc/init.d/xinetd ]
-then
-    if pgrep -x xinetd >/dev/null
-    then
-        echo "Reloading xinetd..."
-        /etc/init.d/xinetd reload
-    else
-        echo "Starting xinetd..."
-        /etc/init.d/xinetd start
-    fi
-fi
+%activate_xinetd
+%reload_xinetd
 
 %postun agent
-if [ -x /etc/init.d/xinetd ]
-then
-    if pgrep -x xinetd >/dev/null
-    then
-	echo "Reloading xinetd..."
-        /etc/init.d/xinetd reload
-    else
-        echo "Starting xinetd..."
-        /etc/init.d/xinetd start
-    fi
+%reload_xinetd
+
+# Sorry. I need to copy&paste all scripts from the normal agent to 
+# the caching agent. This might better be done with RPM macros. But
+# that are very ugly if you want to do multi line shell scripts...
+%pre caching-agent
+if [ ! -x /etc/init.d/xinetd ] ; then
+    echo
+    echo "---------------------------------------------"
+    echo "WARNING"
+    echo
+    echo "This package needs xinetd to be installed. "
+    echo "Currently you do not have installed xinetd. "
+    echo "Please install and start xinetd or install "
+    echo "and setup another inetd manually."
+    echo ""
+    echo "It's also possible to monitor via SSH without "
+    echo "an inetd."
+    echo "---------------------------------------------"
+    echo
 fi
+
+%post caching-agent
+%activate_xinetd
+%reload_xinetd
+
+%postun caching-agent
+%reload_xinetd
 

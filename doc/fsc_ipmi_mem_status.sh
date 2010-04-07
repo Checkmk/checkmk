@@ -41,8 +41,12 @@
 # is located here: /usr/lib/check_mk_agent/plugins
 
 # Check needed binarys
-[ which ipmi-sensors >/dev/null 2>&1 ] && OUT="\nE ipmi-sensors is missing" && ERR=1
-[ which ipmi-raw >/dev/null 2>&1 ] && OUT="\nE ipmi-raw is missing" && ERR=1
+if ! which ipmi-sensors >/dev/null 2>&1; then
+  OUT="\nE ipmi-sensors is missing" && ERR=1
+fi
+if ! which ipmi-raw >/dev/null 2>&1; then
+  OUT="\nE ipmi-raw is missing" && ERR=1
+fi
 
 if [ -z $ERR ]; then
   CMD="ipmi-sensors -g OEM_Reserved $FORMAT"

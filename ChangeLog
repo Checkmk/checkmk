@@ -51,6 +51,8 @@
         the following format: "<alias> (<id>)"
       * mrpe: fix output in Solaris agent (did never work)
       * IBM blade center: new checks for chassis blowers, mediatray and overall health
+      * New caching agent (wrapper) for linux, supporting efficient fully redundant
+        monitoring (please read notes in agents/check_mk_caching_agent)
 
 1.1.3:
 

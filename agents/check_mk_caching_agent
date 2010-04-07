@@ -1,0 +1,90 @@
+#!/bin/bash
+
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# ------------------------------------------------------------------ #
+#   Check_MK Caching Agent                                           #
+#                                                                    #
+#   This is a wrapper for the normal check_mk_agent. It optimizes    #
+#   situations where - due to fully redundant monitoring - the       #
+#   target host is queried by two or even more monitoring servers    #
+#   in parallel. It will cache with output of the agent and send     #
+#   the contents of the cache file to servers that have not seen     #
+#   that output yet. No time criteria is needed, so this is working  #
+#   without configuration, regardless of your check interval. It     #
+#   is not even neccessary that all servers are polling with the     #
+#   same interval.                                                   #
+#                                                                    #
+#   We apoplogize for the fact that this wrapper is running only     #
+#   on Linux, currently and uses features of the BASH (for sake      #
+#   of execution speed). An adaption for other Unices should not     #
+#   be very difficult.                                               #
+#                                                                    #
+#   In order to use this wrapper, simply call it instead of          #
+#   check_mk_agent. This works via SSH and via xinetd. I'm not       #
+#   sure if the normal inetd gives you access to the REMOTE_HOST     #
+#   ip address, which is absolutely needed here.                     #
+# ------------------------------------------------------------------ #
+
+CACHEDIR=/var/lib/check_mk/agent/cache
+mkdir -p $CACHEDIR
+
+# Determine the IP address of the remote Nagios server.
+# xinetd sends us the IP address of the remote host via 
+# the environment variable REMOTE_HOST. SSH sets a variable
+# SSH_CONNECTION where the remote IP address is the first
+# part of a space-separated list. Of both fails, we set
+# the address to 'unknown'
+
+if [ -z "$REMOTE_HOST" ]
+then
+    REMOTE_HOST=${SSH_CONNECTION%% *}
+    if [ -z "$REMOTE_HOST" ]
+    then
+	REMOTE_HOST=unknown
+    fi
+fi
+
+CACHEFILE=$CACHEDIR/agent_output
+LOCKFILE=$CACHEDIR/lock
+SEENFILE=$CACHEDIR/seenby.$REMOTE_HOST
+
+# Check if we need to refresh the cache file. This needs
+# to be done in mutual exclusion in order to avoid a clash
+# with other monitoring servers calling us in parallel. This
+# is not very unlikely since the agent might run a couple
+# of seconds
+(
+  flock --exclusive 200
+  if [ ! -e "$CACHEFILE" -o -e "$SEENFILE" ]
+  then
+      check_mk_agent > $CACHEFILE
+      rm -f $CACHEDIR/seenby.*
+  fi
+  # Send cache file and mark it as seen by our remote host
+  cat $CACHEFILE
+  touch $SEENFILE
+) 200>$LOCKFILE
+

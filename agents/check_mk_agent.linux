@@ -173,13 +173,19 @@ if which ipmi-sensors >/dev/null ; then
     # No cache file existing? => give more time to create it
     if [ ! -e "/var/cache/.freeipmi/sdr-cache/sdr-cache-$(hostname).127.0.0.1" ]
     then
-	TIMEOUT=50
+        TIMEOUT=50
     else
-	TIMEOUT=2
+        TIMEOUT=2
+    fi
+    # Newer ipmi-sensors version have new output format; Legacy format can be used
+    if ipmi-sensors --help | grep -q legacy-output; then 
+        IPMI_FORMAT="--legacy-output"
+    else
+        IPMI_FORMAT=""
     fi
     for class in Temperature 'Power Unit' Fan
     do
-       waitmax $TIMEOUT ipmi-sensors --sdr-cache-directory /var/cache -g "$class" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
+       waitmax $TIMEOUT ipmi-sensors $IPMI_FORMAT --sdr-cache-directory /var/cache -g "$class" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
        TIMEOUT=2
     done
 fi

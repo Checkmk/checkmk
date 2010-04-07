@@ -28,8 +28,9 @@
 
 #include "StringColumnFilter.h"
 #include "StringColumn.h"
-#include "logger.h"
 #include "opids.h"
+#include "logger.h"
+#include "OutputBuffer.h"
 
 StringColumnFilter::StringColumnFilter(StringColumn *column, int opid, char *value)
    : _column(column)
@@ -42,7 +43,7 @@ StringColumnFilter::StringColumnFilter(StringColumn *column, int opid, char *val
       _regex = new regex_t();
       if (0 != regcomp(_regex, value, REG_EXTENDED | REG_NOSUB | (_opid == OP_REGEX_ICASE ? REG_ICASE : 0)))
       {
-	 logger(LG_INFO, "Invalid regular expression '%s'", value);
+	 setError(RESPONSE_CODE_INVALID_HEADER, "invalid regular expression '%s'", value);
 	 delete _regex;
 	 _regex = 0;
       }
@@ -74,6 +75,7 @@ bool StringColumnFilter::accepts(void *data)
       case OP_LESS:
 	 pass = 0 < strcmp(_ref_string.c_str(), act_string); break;
       default:
+         // this should never be reached, all operators are handled
 	 logger(LG_INFO, "Sorry. Operator %d for strings not implemented.", _opid);
 	 break;
    }

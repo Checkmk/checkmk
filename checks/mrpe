@@ -25,11 +25,25 @@
 # Boston, MA 02110-1301 USA.
 
 def inventory_mrpe(checkname, info):
-    return [ (line[0], '', '""') for line in info ]
+    items = []
+    for line in info:
+        # New Linux agent sends (check_name) in first column. Stay
+        # compatible with MRPE versions not providing this info
+        if line[0].startswith("("):
+            item = line[1]
+        else:
+            item = line[0]
+        items.append((item, None))
+    return items
 
 
 def check_mrpe(item, params, info):
     for line in info:
+        if line[0].startswith("("):
+            check_name = line[0][1:-1]
+            line = line[1:]
+        else:
+            check_name = None 
         if line[0] == item:
             state = int(line[1])
             rest = " ".join(line[2:])
@@ -47,6 +61,9 @@ def check_mrpe(item, params, info):
 	            except:
 		       pass
 
+            # name of check command needed for PNP to choose the correct template
+            if check_name:
+                perfdata.append(check_name)
             return (state, output, perfdata)
     return (3, "Check output not found in local checks")
         

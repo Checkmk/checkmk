@@ -6,6 +6,8 @@
       * install_nagios.sh: switch PNP to version 0.6.3
       * install_nagios.sh: better Apache-Config for Multisite setup
       * do not search main.mk in ~ and . anymore (brought only trouble) 
+      * clusters: new variable clustered_services_of, allowing for overlapping
+         clusters (as proposed by Jörg Linge)
 
       Livestatus:
       * Table hosts: New column 'services' listing all services of that host
@@ -43,6 +45,7 @@
       Checks & Agents:
       * mrpe in Linux agent: Fix bug introduced in 1.1.3: Exit status of plugins was
         not honored anymore (due to newline handling)
+      * mrpe: allow for sending check_command to PNP4Nagios (see MRPE docu)
       * Logwatch GUI: fix problem on Python 2.4 (thanks to Lars)
       * multipath: Check is now less restrictive when parsing header lines with
         the following format: "<alias> (<id>)"
@@ -50,6 +53,7 @@
          on FSC TX-120 (and maybe other) systems.
       * ipmi_sensors in Linux agent: Fixed compatibility problem with new ipmi
         output. Using "--legacy-output" parameter with newer freeipmi versions now.
+      * mrpe: fix output in Solaris agent (did never work)
 
 1.1.3:
 

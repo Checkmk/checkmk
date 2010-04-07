@@ -22,7 +22,13 @@ item:
 
 perfdata:
  All performance data is transparently
- transported via check_mk to Nagios.
+ transported via check_mk to Nagios. If you are using PNP4Nagios, you
+ can set {perfdata_format = "pnp"} in your {main.mk}. This will let
+ PNP4Nagios choose a template matching the original check command.
 
 inventory:
  All plugins configured in {mrpe.cfg} are automatically inventorized.
+
+[configuration]
+perfdata_format (string): Set to {"pnp"} for adding the check command
+ for PNP4Nagios

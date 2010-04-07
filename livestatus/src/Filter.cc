@@ -23,5 +23,17 @@
 // Boston, MA 02110-1301 USA.
 
 #include "Filter.h"
+#include <stdarg.h>
+#include <string.h>
 
 
+void Filter::setError(unsigned code, const char *format, ...)
+{
+    char buffer[8192];
+    va_list ap;
+    va_start(ap, format);
+    vsnprintf(buffer, sizeof(buffer) - 1, format, ap);
+    va_end(ap);
+    _error_message = buffer;
+    _error_code = code;
+}

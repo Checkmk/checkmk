@@ -65,4 +65,6 @@ def check_fsc_ipmi_mem_status(name, _no_params, info):
                           statname[fsc_ipmi_mem_status_levels[level][0]],
                           fsc_ipmi_mem_status_levels[level][1]))
 
+    return (3, "UNKNOWN - item %s not found" % item)
+
 check_info['fsc_ipmi_mem_status'] = (check_fsc_ipmi_mem_status, "IPMI %s", 1, inventory_fsc_ipmi_mem_status)

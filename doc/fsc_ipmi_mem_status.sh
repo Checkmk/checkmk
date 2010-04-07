@@ -48,11 +48,10 @@ which ipmi-raw >/dev/null 2>&1
 [ $? -ne 0 ] && OUT="\nE ipmi-raw is missing" && ERR=1
 
 if [ -z $ERR ]; then
-  FORMAT=
-  if [[ "$(ipmi-sensors -V | head -1)" =~ "ipmi-sensors - 0.8.*" ]]; then
-    FORMAT="--legacy-output"
-  fi
-  SLOTS="$(ipmi-sensors -g OEM_Reserved $FORMAT | grep DIMM | cut -d' ' -f 2 | uniq)"
+  CMD="ipmi-sensors -g OEM_Reserved $FORMAT"
+  FORMAT="--legacy-output"
+  SENSORS=$($CMD $FORMAT || $CMD)
+  SLOTS="$(echo "$SENSORS" | grep DIMM | cut -d' ' -f 2 | uniq)"
 
   # Use ipmi-sensors to get all memory slots of TX-120
   OUT=

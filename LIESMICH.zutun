@@ -48,3 +48,8 @@ wurde. Evntl. hängt es an hosts und services. Bei Hosts
 geht es nicht, bei Services schon. ==> URSACHE: der
 Limit-Filter verwendet die gleiche Variable. Den Limit-Filter
 kann man sich dann sowieso schenken
+Multisite:
+ Ansicht "service": Das Kommando wird auf dem Host statt auf
+ dem Service ausgeführt. Das gilt scheinbar für alle Ansichten!
+
+

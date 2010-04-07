@@ -42,28 +42,30 @@
 
 # Check needed binarys
 which ipmi-sensors >/dev/null 2>&1
-[ $? -ne 0 ] && echo "E ipmi-sensors is missing" && exit 1
+[ $? -ne 0 ] && OUT="\nE ipmi-sensors is missing" && ERR=1
 
 which ipmi-raw >/dev/null 2>&1
-[ $? -ne 0 ] && echo "E ipmi-raw is missing" && exit 1
+[ $? -ne 0 ] && OUT="\nE ipmi-raw is missing" && ERR=1
 
-FORMAT=
-if [[ "$(ipmi-sensors -V | head -1)" =~ "ipmi-sensors - 0.8.*" ]]; then
-  FORMAT="--legacy-output"
+if [ -z $ERR ]; then
+  FORMAT=
+  if [[ "$(ipmi-sensors -V | head -1)" =~ "ipmi-sensors - 0.8.*" ]]; then
+    FORMAT="--legacy-output"
+  fi
+  SLOTS="$(ipmi-sensors -g OEM_Reserved $FORMAT | grep DIMM | cut -d' ' -f 2 | uniq)"
+
+  # Use ipmi-sensors to get all memory slots of TX-120
+  OUT=
+  I=0
+  for NAME in $SLOTS; do
+    STATUS=$(ipmi-raw 0 0x2e 0xf5 0x80 0x28 0x00 0x48 $I | cut -d' ' -f 7)
+    OUT="$OUT\n$I $NAME $STATUS"
+    I=$(($I+1))
+  done
 fi
-SLOTS="$(ipmi-sensors -g OEM_Reserved $FORMAT | grep DIMM | cut -d' ' -f 2 | uniq)"
-
-# Use ipmi-sensors to get all memory slots of TX-120
-OUT=
-I=0
-for NAME in $SLOTS; do
-  STATUS=$(ipmi-raw 0 0x2e 0xf5 0x80 0x28 0x00 0x48 $I | cut -d' ' -f 7)
-  OUT="$OUT\n$I $NAME $STATUS"
-  I=$(($I+1))
-done
 
 # Only print output when at least one memory slot was found
-if [ $I -ne 0 ]; then
+if [[ ! -z $ERR || $I -ne 0 ]]; then
   echo -n "<<<fsc_ipmi_mem_status>>>"
   echo -e "$OUT"
 fi

@@ -49,7 +49,7 @@ if ! which ipmi-raw >/dev/null 2>&1; then
 fi
 
 if [ -z $ERR ]; then
-  CMD="ipmi-sensors -g OEM_Reserved $FORMAT"
+  CMD="ipmi-sensors --sdr-cache-directory /var/cache -g OEM_Reserved $FORMAT"
   FORMAT="--legacy-output"
   SENSORS=$($CMD $FORMAT || $CMD)
   SLOTS="$(echo "$SENSORS" | grep DIMM | cut -d' ' -f 2 | uniq)"

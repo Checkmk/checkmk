@@ -160,6 +160,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/share/doc/check_mk_agent
 %dir /usr/lib/check_mk_agent/local
 %dir /usr/lib/check_mk_agent/plugins
+%dir /etc/check_mk
 
 %files agent-logwatch
 /usr/lib/check_mk_agent/plugins/mk_logwatch

@@ -420,6 +420,7 @@ multisite_builtin_views = {
                 'name': 'hoststatus',
                 'owner': '',
                 'painters': [('host', 'host'),
+                             ('host_group_memberlist', None),
                              ('host_icons', None),
                              ('alias', None),
                              ('host_state', None),

@@ -428,6 +428,27 @@ multisite_painters["num_services_pending"] = {
     "paint"   : lambda row: paint_svc_count("p", row["host_num_services_pending"])
 }
 
+def paint_host_group_memberlist(row):
+    links = []
+    for group in row["host_groups"]:
+        link = "view.py?view_name=hostgroup&hostgroup=" + group
+        links.append('<a href="%s">%s</a>' % (link, group))
+    return "", ", ".join(links)
+
+multisite_painters["host_group_memberlist"] = {
+    "title"   : "Hostgroups the host is member of",
+    "short"   : "Groups",
+    "columns" : [ "host_groups" ],
+    "paint"   : paint_host_group_memberlist
+}
+
+#    _   _           _                                  
+#   | | | | ___  ___| |_ __ _ _ __ ___  _   _ _ __  ___ 
+#   | |_| |/ _ \/ __| __/ _` | '__/ _ \| | | | '_ \/ __|
+#   |  _  | (_) \__ \ || (_| | | | (_) | |_| | |_) \__ \
+#   |_| |_|\___/|___/\__\__, |_|  \___/ \__,_| .__/|___/
+#                       |___/                |_|        
+#
 def paint_host_list(row):
     h = "<div class=objectlist>"
     for host, state, checked in row["hostgroup_members_with_state"]:
@@ -442,14 +463,6 @@ def paint_host_list(row):
     h += "</div>"
     return "", h
 
-
-#    _   _           _                                  
-#   | | | | ___  ___| |_ __ _ _ __ ___  _   _ _ __  ___ 
-#   | |_| |/ _ \/ __| __/ _` | '__/ _ \| | | | '_ \/ __|
-#   |  _  | (_) \__ \ || (_| | | | (_) | |_| | |_) \__ \
-#   |_| |_|\___/|___/\__\__, |_|  \___/ \__,_| .__/|___/
-#                       |___/                |_|        
-#
 multisite_painters["hostgroup_hosts"] = {
     "title"   : "Hosts colored according to state",
     "short"   : "Hosts",

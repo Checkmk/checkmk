@@ -28,6 +28,13 @@ import os, pprint
 from lib import *
 import defaults
 
+# Python 2.3 does not have 'set' in normal namespace.
+# But it can be imported from 'sets'
+try:
+    set()
+except NameError:
+    from sets import Set as set
+
 # Base directory of dynamic configuration
 config_dir = defaults.var_dir + "/web"
 

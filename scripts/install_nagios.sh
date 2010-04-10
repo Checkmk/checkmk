@@ -226,7 +226,8 @@ then
   aptitude -y install psmisc build-essential nail  \
     apache2 libapache2-mod-php5 python php5-gd libgd-dev \
     python-rrdtool xinetd wget libgd2-xpm-dev psmisc less libapache2-mod-python \
-    graphviz php5-sqlite sqlite php-gettext locales-all libxml2-dev libpango1.0-dev
+    graphviz php5-sqlite sqlite php-gettext locales-all libxml2-dev libpango1.0-dev \
+    snmp
     # Hint for Debian: Installing the packages locales-all is normally not neccessary
     # if you use 'dpkg-reconfigure locales' to setup and generate your locales.
     # Correct locales are needed for the localisation of Nagvis.
@@ -236,11 +237,12 @@ then
    zypper -n install apache2 mailx apache2-mod_python apache2-mod_php5 php5-gd gd-devel \
 	xinetd wget xorg-x11-libXpm-devel psmisc less graphviz-devel graphviz-gd \
 	php5-sqlite php5-gettext python-rrdtool php5-zlib php5-sockets php5-mbstring gcc \
-	cairo-devel libxml-devel libxml2-devel pango-devel gcc-c++
+	cairo-devel libxml-devel libxml2-devel pango-devel gcc-c++ net-snmp
 else
    yum update
    yum -y install httpd gcc mailx php php-gd gd-devl xinetd wget psmisc less mod_python \
-     sqlite cairo-devel libxml2-devel pango-devel pango libpng-devel freetype freetype-devel libart_lgpl-devel 
+     sqlite cairo-devel libxml2-devel pango-devel pango libpng-devel freetype freetype-devel libart_lgpl-devel \
+     net-snmp
 fi
 
 set +e

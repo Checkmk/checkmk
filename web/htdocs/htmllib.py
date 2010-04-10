@@ -87,6 +87,7 @@ class html:
         self.user_errors = {}
         self.focus_object = None
 	self.global_vars = []
+        self.browser_reload = 0
         
     def write(self, text):
         self.req.write(text)
@@ -293,6 +294,10 @@ class html:
     def html_foot(self):
 	self.write("</html>\n")
 
+    def set_browser_reload(self, secs):
+        self.req.headers_out.add("refresh", str(secs))
+        self.browser_reload = secs
+
     def header(self, title=''):
         if not self.req.header_sent:
 	    self.html_head(title)
@@ -344,6 +349,8 @@ class html:
 	       login_text = "Logged in as <b>%s</b> (%s)" % (config.user, config.role)
 	    else:
 	       login_text = "not logged in"
+            if self.browser_reload:
+                login_text += ", refresh: %d secs" % self.browser_reload
             self.req.write("<table class=footer><tr>"
                            "<td class=left>&copy; <a href=\"http://mathias-kettner.de\">Mathias Kettner</a></td>"
                            "<td class=middle>This is part of <a href=\"http://mathias-kettner.de/check_mk\">Check_MK</a> version %s</td>"

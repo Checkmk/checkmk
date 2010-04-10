@@ -602,6 +602,9 @@ function toggle_section(nr, oImg) {
     html.write("<tr><td>Number of columns:</td><td>")
     html.number_input("num_columns", 1)
     html.write("</td></tr>\n")
+    html.write("<tr><td>Automatic reload (0 or empty for none):</td><td>")
+    html.number_input("browser_reload", 0)
+    html.write("</td></tr>\n")
     html.write("<tr><td>Column headers:</td><td>")
     html.select("column_headers", [ ("off", "off"), ("perpage", "once per page"), ("pergroup", "once per group") ])
     html.write("</td><tr>\n")
@@ -633,6 +636,7 @@ def load_view_into_html_vars(view):
     html.set_var("column_headers",   view.get("column_headers", "off"))
     html.set_var("layout",           view["layout"])
     html.set_var("num_columns",      view.get("num_columns", 1))
+    html.set_var("browser_reload",   view.get("browser_reload", 0))
     html.set_var("public",           view["public"] and "on" or "")
     html.set_var("hidden",           view["hidden"] and "on" or "")
     html.set_var("mustsearch",       view["mustsearch"] and "on" or "")
@@ -704,6 +708,12 @@ def create_view():
     except:
 	num_columns = 1
 
+    try:
+        browser_reload = int(html.var("browser_reload", 0))
+        if browser_reload < 0: browser_reload = 0
+    except:
+        browser_reload = 0
+
     public     = html.var("public", "") != "" and config.may("publish_views")
     hidden     = html.var("hidden", "") != ""
     mustsearch = html.var("mustsearch", "") != ""
@@ -761,6 +771,7 @@ def create_view():
 	"mustsearch"      : mustsearch,
 	"layout"          : layoutname,
         "num_columns"     : num_columns,
+        "browser_reload"  : browser_reload,
 	"column_headers"  : column_headers,
 	"show_filters"    : show_filternames,
 	"hide_filters"    : hide_filternames,
@@ -803,6 +814,9 @@ def show_view(view, show_heading = False):
     # [2] Layout
     layout = multisite_layouts[view["layout"]]
     num_columns = view.get("num_columns", 1)
+    browser_reload = view.get("browser_reload", 0)
+    if browser_reload:
+        html.set_browser_reload(browser_reload)
     
     # [3] Filters
     show_filters = [ multisite_filters[fn] for fn in view["show_filters"] ]

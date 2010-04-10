@@ -41,6 +41,7 @@
       * reimplement host- and service icons more intelligent
       * Output error messages from dead site in Multisite mode
       * Increase wait time for master control buttons from 4s to 10s
+      * Views get (per-view) configurable browser automatic reload interval
 
       Checks & Agents:
       * mrpe in Linux agent: Fix bug introduced in 1.1.3: Exit status of plugins was

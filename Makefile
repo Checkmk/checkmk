@@ -86,7 +86,7 @@ dist: mk-livestatus
 	install -m 755 scripts/*.{sh,py} $(DISTNAME)
 	install -m 644 COPYING AUTHORS ChangeLog $(DISTNAME)
 	echo "$(VERSION)" > $(DISTNAME)/VERSION
-	tar czf $(DISTNAME).tar.gz $(DISTNAME)
+	tar czf $(DISTNAME).tar.gz $(TAROPTS) $(DISTNAME)
 	rm -rf $(DISTNAME)
 	@echo "=============================================================================="
 	@echo "   FINISHED. "
@@ -101,7 +101,7 @@ mk-livestatus:
 	cd livestatus ; tar cf - $(LIVESTATUS_SOURCES) | tar xf - -C ../mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)/nagios
 	cp livestatus/nagios/*.h mk-livestatus-$(VERSION)/nagios/
-	tar czf mk-livestatus-$(VERSION).tar.gz mk-livestatus-$(VERSION)
+	tar czf mk-livestatus-$(VERSION).tar.gz $(TAROPTS) mk-livestatus-$(VERSION)
 	rm -rf mk-livestatus-$(VERSION)
 
 
@@ -168,7 +168,7 @@ deb-agent: $(NAME)-agent-$(VERSION)-1.noarch.rpm $(NAME)-agent-logwatch-$(VERSIO
 	   mkdir ctrl && \
 	   tar xzf control.tar.gz -C ctrl && \
 	   sed -i -e '/^Depends:/d' -e 's/^Maintainer:.*/Maintainer: mk@mathias-kettner.de/' ctrl/control && \
-	   tar czf control.tar.gz -C ctrl . && \
+	   tar czf $(TAROPTS) control.tar.gz -C ctrl . && \
 	   ar r ../$$pac debian-binary control.tar.gz data.tar.gz && \
 	   cd .. && \
 	   rm -rf deb-unpack || exit 1 ; \

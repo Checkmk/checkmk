@@ -9,6 +9,7 @@
       * clusters: new variable clustered_services_of, allowing for overlapping
          clusters (as proposed by Jörg Linge)
       * install_nagios.sh: install snmp package (needed for snmp based checks)
+      * Fix ower/group of tarballs: set them to root/root
 
       Livestatus:
       * Table hosts: New column 'services' listing all services of that host

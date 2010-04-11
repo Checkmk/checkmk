@@ -93,6 +93,8 @@ def link_to_view(content, row, linkview):
 	content = "<a href=\"%s\">%s</a>" % (uri, content)
     return content
 
+def docu_link(topic, text):
+    return '<a href="%s" target="_blank">%s</a>' % (config.doculink_urlformat % topic, text)
 
 def paint(p, row):
     tdclass, content = prepare_paint(p, row)
@@ -615,7 +617,7 @@ function toggle_section(nr, oImg) {
     html.write("<tr><td>Automatic reload (0 or empty for none):</td><td>")
     html.number_input("browser_reload", 0)
     html.write("</td></tr>\n")
-    html.write("<tr><td>Play alarm sounds:</td><td>")
+    html.write("<tr><td>Play %s:</td><td>" % docu_link("multisite_sounds", "alarm sounds"))
     html.checkbox("play_sounds", False)
     html.write("</td></tr>\n")
     html.write("<tr><td>Column headers:</td><td>")
@@ -965,8 +967,6 @@ def show_view(view, show_heading = False):
 
 def play_alarm_sounds():
     url = config.sound_url
-    if not url: # override this in multisite.mk, if you want
-        url = "sounds" # relative url works here
     if not url.endswith("/"):
         url += "/"
     for event, wav in config.sounds:

@@ -312,5 +312,8 @@ declare_permission("ignore_hard_limit",
 #   |____/ \___/ \__,_|_| |_|\__,_|___/
 #                                      
 
-sound_url = None # use default url
+sound_url = "sounds/"
 sounds = []
+
+# MISC
+doculink_urlformat = "http://mathias-kettner.de/checkmk_%s.html";

@@ -264,7 +264,7 @@ then
 # -----------------------------------------------------------------------------
     [ -e rrdtool-$RRDTOOL_VERSION ] || wget $RRDTOOL_URL
     rm -rf rrdtool-$RRDTOOL_VERSION
-    tar xzf rrdtool-$RRDTOOL_VERSION.tar.gz $(TARXOPTS)
+    tar xzf rrdtool-$RRDTOOL_VERSION.tar.gz $TARXOPTS
     pushd rrdtool-$RRDTOOL_VERSION
     ./configure --prefix=/usr/local --localstatedir=/var --enable-perl-site-install
     make -j 16
@@ -353,7 +353,7 @@ heading "Nagios plugins"
 # -----------------------------------------------------------------------------
 [ -e nagios-plugins-$PLUGINS_VERSION.tar.gz ] || wget $PLUGINS_URL
 rm -rf nagios-plugins-$PLUGINS_VERSION
-tar xzf nagios-plugins-$PLUGINS_VERSION.tar.gz $(TARXOPTS)
+tar xzf nagios-plugins-$PLUGINS_VERSION.tar.gz $TARXOPTS
 pushd nagios-plugins-$PLUGINS_VERSION
 ./configure \
   --libexecdir=/usr/local/lib/nagios/plugins
@@ -374,7 +374,7 @@ mount /var/spool/nagios
 
 [ -e nagios-$NAGIOS_VERSION.tar.gz ] || wget $NAGIOS_URL
 rm -rf nagios-$NAGIOS_VERSION
-tar xzf nagios-$NAGIOS_VERSION.tar.gz $(TARXOPTS)
+tar xzf nagios-$NAGIOS_VERSION.tar.gz $TARXOPTS
 pushd nagios-$NAGIOS_VERSION
 groupadd -r nagios >/dev/null 2>&1 || true
 id nagios >/dev/null 2>&1 || useradd -c 'Nagios Daemon' -s /bin/false -d /var/lib/nagios -r -g nagios nagios
@@ -635,7 +635,7 @@ popd
 # Compile and install PNP4Nagios
 heading "PNP4Nagios"
 [ -e $PNP_NAME-$PNP_VERSION.tar.gz ] || wget "$PNP_URL"
-tar xzf $PNP_NAME-$PNP_VERSION.tar.gz $(TARXOPTS)
+tar xzf $PNP_NAME-$PNP_VERSION.tar.gz $TARXOPTS
 pushd $PNP_NAME-$PNP_VERSION
 
 ./configure \
@@ -855,7 +855,7 @@ then
 	heading "NagVis"
 	[ -e nagvis-$NAGVIS_VERSION.tar.gz ] || wget "$NAGVIS_URL"
 	rm -rf nagvis-$NAGVIS_VERSION
-	tar xzf nagvis-$NAGVIS_VERSION.tar.gz $(TARXOPTS)
+	tar xzf nagvis-$NAGVIS_VERSION.tar.gz $TARXOPTS
 	pushd nagvis-$NAGVIS_VERSION
 	rm -rf /usr/local/share/nagvis
 	./install.sh -q -F -c y \
@@ -961,7 +961,7 @@ then
 	wget "$CHECK_MK_URL"
     fi
     rm -rf check_mk-$CHECK_MK_VERSION
-    tar xzf check_mk-$CHECK_MK_VERSION.tar.gz $(TARXOPTS)
+    tar xzf check_mk-$CHECK_MK_VERSION.tar.gz $TARXOPTS
     pushd check_mk-$CHECK_MK_VERSION
     rm -f ~/.check_mk_setup.conf
     rm -rf /var/lib/check_mk /etc/check_mk

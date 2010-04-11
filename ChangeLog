@@ -28,6 +28,7 @@
       * New columns for hosts/services: modified_attributes{,_list}
       * new columns comments_with_info and downtimes_with_info
       * Table log: switch output to reverse chronological order!
+      * Fix segfault on filter on comments:host_services
 
       Multisite:
       * Improved many builtin views

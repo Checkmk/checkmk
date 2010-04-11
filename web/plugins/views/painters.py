@@ -215,14 +215,14 @@ def paint_host_black(row):
 multisite_painters["host_black"] = {
     "title" : "Hostname, red background if down or unreachable",
     "short" : "Host",
-    "columns" : ["site","host_name"],
+    "columns" : ["site", "host_name", "host_state"],
     "paint" : paint_host_black,
 }
 
 multisite_painters["host_with_state"] = {
     "title" : "Hostname colored with state",
     "short" : "Host",
-    "columns" : ["site","host_name"],
+    "columns" : ["site", "host_name", "host_state" ],
     "paint" : lambda row: ("state hstate hstate%d" % row["host_state"], row["host_name"])
 }
 

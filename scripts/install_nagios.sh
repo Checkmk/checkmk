@@ -37,7 +37,7 @@ set -e
 NAGIOS_VERSION=3.2.1
 PLUGINS_VERSION=1.4.14
 RRDTOOL_VERSION=1.4.2
-CHECK_MK_VERSION=1.1.4a7
+CHECK_MK_VERSION=1.1.4b1
 PNP_VERSION=0.6.3
 NAGVIS_VERSION=1.4.6
 
@@ -216,6 +216,11 @@ heading ()
     echo
 }
 
+# Many broken tarballs are out there, which install files as funny users or
+# groups and even create directories with permissions 777 (nagios-plugins,
+# rrdtool) which unpacking as root
+TARXOPTS="--no-same-owner --no-same-permissions"
+
 # -----------------------------------------------------------------------------
 heading "Installing missing software"
 # -----------------------------------------------------------------------------
@@ -226,7 +231,8 @@ then
   aptitude -y install psmisc build-essential nail  \
     apache2 libapache2-mod-php5 python php5-gd libgd-dev \
     python-rrdtool xinetd wget libgd2-xpm-dev psmisc less libapache2-mod-python \
-    graphviz php5-sqlite sqlite php-gettext locales-all libxml2-dev libpango1.0-dev
+    graphviz php5-sqlite sqlite php-gettext locales-all libxml2-dev libpango1.0-dev \
+    snmp
     # Hint for Debian: Installing the packages locales-all is normally not neccessary
     # if you use 'dpkg-reconfigure locales' to setup and generate your locales.
     # Correct locales are needed for the localisation of Nagvis.
@@ -236,11 +242,12 @@ then
    zypper -n install apache2 mailx apache2-mod_python apache2-mod_php5 php5-gd gd-devel \
 	xinetd wget xorg-x11-libXpm-devel psmisc less graphviz-devel graphviz-gd \
 	php5-sqlite php5-gettext python-rrdtool php5-zlib php5-sockets php5-mbstring gcc \
-	cairo-devel libxml-devel libxml2-devel pango-devel gcc-c++
+	cairo-devel libxml-devel libxml2-devel pango-devel gcc-c++ net-snmp
 else
    yum update
    yum -y install httpd gcc mailx php php-gd gd-devl xinetd wget psmisc less mod_python \
-     sqlite cairo-devel libxml2-devel pango-devel pango libpng-devel freetype freetype-devel libart_lgpl-devel 
+     sqlite cairo-devel libxml2-devel pango-devel pango libpng-devel freetype freetype-devel libart_lgpl-devel \
+     net-snmp
 fi
 
 set +e
@@ -257,7 +264,7 @@ then
 # -----------------------------------------------------------------------------
     [ -e rrdtool-$RRDTOOL_VERSION ] || wget $RRDTOOL_URL
     rm -rf rrdtool-$RRDTOOL_VERSION
-    tar xzf rrdtool-$RRDTOOL_VERSION.tar.gz
+    tar xzf rrdtool-$RRDTOOL_VERSION.tar.gz $TARXOPTS
     pushd rrdtool-$RRDTOOL_VERSION
     ./configure --prefix=/usr/local --localstatedir=/var --enable-perl-site-install
     make -j 16
@@ -346,7 +353,7 @@ heading "Nagios plugins"
 # -----------------------------------------------------------------------------
 [ -e nagios-plugins-$PLUGINS_VERSION.tar.gz ] || wget $PLUGINS_URL
 rm -rf nagios-plugins-$PLUGINS_VERSION
-tar xzf nagios-plugins-$PLUGINS_VERSION.tar.gz
+tar xzf nagios-plugins-$PLUGINS_VERSION.tar.gz $TARXOPTS
 pushd nagios-plugins-$PLUGINS_VERSION
 ./configure \
   --libexecdir=/usr/local/lib/nagios/plugins
@@ -367,7 +374,7 @@ mount /var/spool/nagios
 
 [ -e nagios-$NAGIOS_VERSION.tar.gz ] || wget $NAGIOS_URL
 rm -rf nagios-$NAGIOS_VERSION
-tar xzf nagios-$NAGIOS_VERSION.tar.gz
+tar xzf nagios-$NAGIOS_VERSION.tar.gz $TARXOPTS
 pushd nagios-$NAGIOS_VERSION
 groupadd -r nagios >/dev/null 2>&1 || true
 id nagios >/dev/null 2>&1 || useradd -c 'Nagios Daemon' -s /bin/false -d /var/lib/nagios -r -g nagios nagios
@@ -628,7 +635,7 @@ popd
 # Compile and install PNP4Nagios
 heading "PNP4Nagios"
 [ -e $PNP_NAME-$PNP_VERSION.tar.gz ] || wget "$PNP_URL"
-tar xzf $PNP_NAME-$PNP_VERSION.tar.gz
+tar xzf $PNP_NAME-$PNP_VERSION.tar.gz $TARXOPTS
 pushd $PNP_NAME-$PNP_VERSION
 
 ./configure \
@@ -848,7 +855,7 @@ then
 	heading "NagVis"
 	[ -e nagvis-$NAGVIS_VERSION.tar.gz ] || wget "$NAGVIS_URL"
 	rm -rf nagvis-$NAGVIS_VERSION
-	tar xzf nagvis-$NAGVIS_VERSION.tar.gz
+	tar xzf nagvis-$NAGVIS_VERSION.tar.gz $TARXOPTS
 	pushd nagvis-$NAGVIS_VERSION
 	rm -rf /usr/local/share/nagvis
 	./install.sh -q -F -c y \
@@ -954,7 +961,7 @@ then
 	wget "$CHECK_MK_URL"
     fi
     rm -rf check_mk-$CHECK_MK_VERSION
-    tar xzf check_mk-$CHECK_MK_VERSION.tar.gz
+    tar xzf check_mk-$CHECK_MK_VERSION.tar.gz $TARXOPTS
     pushd check_mk-$CHECK_MK_VERSION
     rm -f ~/.check_mk_setup.conf
     rm -rf /var/lib/check_mk /etc/check_mk

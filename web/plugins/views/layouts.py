@@ -37,6 +37,7 @@ def render_single_dataset(data, view, group_columns, group_painters, painters, n
     columns, rows = data
     # I'm expecting only one row
     for row in rows:
+        register_events(row) # needed for playing sounds
 	html.write("<table class=dataset>\n")
 	for p in painters:
 	    painter, link = p
@@ -65,6 +66,7 @@ def render_grouped_boxes(data, view,  group_columns, group_painters, painters, n
     groups = []
     last_group = None
     for row in rows:
+        register_events(row) # needed for playing sounds
 	this_group = [ row[c] for c in group_columns ]
 	if this_group != last_group:
 	    last_group = this_group
@@ -128,6 +130,7 @@ def render_grouped_boxes(data, view,  group_columns, group_painters, painters, n
 	    html.write("</tr>")
 
 	for row in rows:
+            register_events(row) # needed for playing sounds
 	    if trclass == "odd":
 		trclass = "even"
 	    else:
@@ -283,6 +286,7 @@ def render_grouped_list(data, view, group_columns, group_painters, painters, num
 	show_header_line()
 
     for row in rows:
+        register_events(row) # needed for playing sounds
 	# Show group header, if a new group begins. But only if grouping
         # is activated
         if len(group_painters) > 0:

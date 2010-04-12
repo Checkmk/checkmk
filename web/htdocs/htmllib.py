@@ -26,6 +26,12 @@
 
 import time, cgi, config, os, defaults
 from lib import *
+# Python 2.3 does not have 'set' in normal namespace.
+# But it can be imported from 'sets'
+try:
+    set()
+except NameError:
+    from sets import Set as set
 
 # Information about uri
 class InvalidUserInput(Exception):
@@ -87,6 +93,8 @@ class html:
         self.user_errors = {}
         self.focus_object = None
 	self.global_vars = []
+        self.browser_reload = 0
+        self.events = set([]) # currently used only for sounds
         
     def write(self, text):
         self.req.write(text)
@@ -293,6 +301,10 @@ class html:
     def html_foot(self):
 	self.write("</html>\n")
 
+    def set_browser_reload(self, secs):
+        self.req.headers_out.add("refresh", str(secs))
+        self.browser_reload = secs
+
     def header(self, title=''):
         if not self.req.header_sent:
 	    self.html_head(title)
@@ -344,6 +356,8 @@ class html:
 	       login_text = "Logged in as <b>%s</b> (%s)" % (config.user, config.role)
 	    else:
 	       login_text = "not logged in"
+            if self.browser_reload:
+                login_text += ", refresh: %d secs" % self.browser_reload
             self.req.write("<table class=footer><tr>"
                            "<td class=left>&copy; <a href=\"http://mathias-kettner.de\">Mathias Kettner</a></td>"
                            "<td class=middle>This is part of <a href=\"http://mathias-kettner.de/check_mk\">Check_MK</a> version %s</td>"
@@ -407,3 +421,17 @@ class html:
 	else:
 	    return False
 
+    def register_event(self, name):
+        self.events.add(name)
+
+    def has_event(self, name):
+        return name in self.events
+
+    def play_sound(self, url):
+        self.write('<object type="audio/x-wav" data="%s" height="0" width="0">'
+                  '<param name="filename" value="%s">'
+                  '<param name="autostart" value="true"><param name="playcount" value="1"></object>' % (url, url))
+        if config.debug:
+            self.write("Booom (%s)" % url)
+
+    

@@ -13,6 +13,8 @@
       * do not search main.mk in ~ and . anymore (brought only trouble) 
       * clusters: new variable clustered_services_of, allowing for overlapping
          clusters (as proposed by Jörg Linge)
+      * install_nagios.sh: install snmp package (needed for snmp based checks)
+      * Fix ower/group of tarballs: set them to root/root
 
       Livestatus:
       * Table hosts: New column 'services' listing all services of that host
@@ -32,6 +34,7 @@
       * New columns for hosts/services: modified_attributes{,_list}
       * new columns comments_with_info and downtimes_with_info
       * Table log: switch output to reverse chronological order!
+      * Fix segfault on filter on comments:host_services
 
       Multisite:
       * Improved many builtin views
@@ -46,6 +49,8 @@
       * reimplement host- and service icons more intelligent
       * Output error messages from dead site in Multisite mode
       * Increase wait time for master control buttons from 4s to 10s
+      * Views get (per-view) configurable browser automatic reload interval
+      * Playing of alarm sounds (configurable per view)
 
       Checks & Agents:
       * mrpe in Linux agent: Fix bug introduced in 1.1.3: Exit status of plugins was

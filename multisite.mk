@@ -35,3 +35,23 @@ admin_users = [ "nagiosadmin" ]
 # in case of insensible queries.
 # soft_query_limit = 1000
 # hard_query_limit = 5000
+
+# Views allow to play alarm sounds according to the
+# "worst" state of the show items. Configure here
+# which sounds to play. Possible events: critical,
+# warning, unknown, ok, up, down, unreachable,
+# pending. Sounds are expected in the sounds subdirectory
+# of htdocs (Default is /usr/share/check_mk/web/htdocs/sounds)
+# sounds = [
+#  ( "down", "down.wav" ),
+#  ( "critical", "critical.wav" ),
+#  ( "unknown", "unknown.wav" ),
+#  ( "warning", "warning.wav" ),
+#  ( None,      "ok", ), 
+# ]
+# Note: this example has not sound for unreachable hosts. 
+# set sound_url to another url, if you place your sound
+# files elsewhere:
+# sound_url = "http://otherhost/path/to/sound/"
+# or
+# sound_url = "/nagios/alarms/"

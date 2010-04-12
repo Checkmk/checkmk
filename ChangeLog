@@ -1,4 +1,9 @@
 1.1.4:
+      SUMMARY:
+      * Many improvements in new Multisite GUI
+      * Stability and performance improvements in Livestatus
+      * Lots of smaller bug fixes (including MRPE exit code bug)
+
       Core, Setup, etc.:
       * Check_MK is looking for main.mk not longer in the current and home
         directory

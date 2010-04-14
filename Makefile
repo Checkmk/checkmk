@@ -168,7 +168,7 @@ deb-agent: $(NAME)-agent-$(VERSION)-1.noarch.rpm $(NAME)-agent-logwatch-$(VERSIO
 	   mkdir ctrl && \
 	   tar xzf control.tar.gz -C ctrl && \
 	   sed -i -e '/^Depends:/d' -e 's/^Maintainer:.*/Maintainer: mk@mathias-kettner.de/' ctrl/control && \
-	   tar czf $(TAROPTS) control.tar.gz -C ctrl . && \
+	   tar czf control.tar.gz $(TAROPTS) -C ctrl . && \
 	   ar r ../$$pac debian-binary control.tar.gz data.tar.gz && \
 	   cd .. && \
 	   rm -rf deb-unpack || exit 1 ; \

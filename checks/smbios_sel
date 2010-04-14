@@ -124,6 +124,13 @@ def check_smbios_sel(_no_item, _no_params, info):
            num_errors += 1;
            smbios_sel_msg_types["E%d"%num_errors] = [1, 2, 1, datetime.now(), msg]
            continue
+	
+        # Informational messages are explicit created by our binary when the 
+        # sel is empty. This is needed to create the smbios_sel service in Nagios.
+        if type == "I":
+           sum_status = 0
+           smbios_sel_msg_types["I%d"%num_errors] = [1, 0, 1, datetime.now(), msg]
+           continue
 
 	type = int(type)
         if type in smbios_sel_msg_types:

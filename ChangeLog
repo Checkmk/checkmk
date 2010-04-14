@@ -1,4 +1,9 @@
 1.1.4:
+      Summary:
+      * Many improvements in new Multisite GUI
+      * Stability and performance improvements in Livestatus
+      * Lots of smaller bug fixes (including MRPE exit code bug)
+
       Core, Setup, etc.:
       * Check_MK is looking for main.mk not longer in the current and home
         directory
@@ -6,13 +11,14 @@
       * install_nagios.sh: switch PNP to version 0.6.3
       * install_nagios.sh: better Apache-Config for Multisite setup
       * do not search main.mk in ~ and . anymore (brought only trouble) 
-      * clusters: new variable clustered_services_of, allowing for overlapping
+      * clusters: new variable 'clustered_services_of', allowing for overlapping
          clusters (as proposed by Jörg Linge)
       * install_nagios.sh: install snmp package (needed for snmp based checks)
+      * Fix ower/group of tarballs: set them to root/root
 
       Livestatus:
       * Table hosts: New column 'services' listing all services of that host
-      * Column servicegroups:members: AuthUser is now honored
+      * Column servicegroups:members: 'AuthUser' is now honored
       * New columns: hosts:services_with_state and servicegroups:members_with_state
       * New column: hostgroup:members_with_state
       * Columns hostgroup:members and hostgroup:members_with_state honor AuthUser
@@ -28,6 +34,7 @@
       * New columns for hosts/services: modified_attributes{,_list}
       * new columns comments_with_info and downtimes_with_info
       * Table log: switch output to reverse chronological order!
+      * Fix segfault on filter on comments:host_services
 
       Multisite:
       * Improved many builtin views
@@ -43,6 +50,7 @@
       * Output error messages from dead site in Multisite mode
       * Increase wait time for master control buttons from 4s to 10s
       * Views get (per-view) configurable browser automatic reload interval
+      * Playing of alarm sounds (configurable per view)
 
       Checks & Agents:
       * mrpe in Linux agent: Fix bug introduced in 1.1.3: Exit status of plugins was
@@ -59,6 +67,9 @@
       * IBM blade center: new checks for chassis blowers, mediatray and overall health
       * New caching agent (wrapper) for linux, supporting efficient fully redundant
         monitoring (please read notes in agents/check_mk_caching_agent)
+
+      Checks & Agents:
+      * Added new smbios_sel check for monitoring the System Event Log of SMBIOS.
 
 1.1.3:
 
@@ -527,7 +538,7 @@
       * Fixed bug in cluster handling: Missing function strip_tags()
 	in check_mk_base.py was eliminated.
       * Changed semantics of host_groups, summary_host_groups,
-	host_contactgroups, and summary_host_groups for clusters: 
+	host_contactgroups, and summary_host_groups for clusters. 
 	Now the cluster names will be relevant, not
 	the names of the nodes. This allows the cluster hosts to
 	have different host/contactgroups than the nodes. And it is more

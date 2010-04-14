@@ -93,6 +93,8 @@ def link_to_view(content, row, linkview):
 	content = "<a href=\"%s\">%s</a>" % (uri, content)
     return content
 
+def docu_link(topic, text):
+    return '<a href="%s" target="_blank">%s</a>' % (config.doculink_urlformat % topic, text)
 
 def paint(p, row):
     tdclass, content = prepare_paint(p, row)
@@ -106,6 +108,16 @@ def paint_header(p):
     painter, linkview = p
     t = painter.get("short", painter["title"])
     html.write("<th>%s</th>" % t)
+
+def register_events(row):
+    if config.sounds != []:
+        host_state = row.get("host_hard_state", row.get("host_state"))
+        if host_state != None:
+            html.register_event({0:"up", 1:"down", 2:"unreachable"}[host_state])
+        svc_state = row.get("service_last_hard_state", row.get("service_state"))
+        if svc_state != None:
+            html.register_event({0:"up", 1:"warning", 2:"critical", 3:"unknown"}[svc_state])
+
 
 def toggle_button(id, isopen, opentxt, closetxt, addclasses=[]):
     if isopen:
@@ -605,6 +617,9 @@ function toggle_section(nr, oImg) {
     html.write("<tr><td>Automatic reload (0 or empty for none):</td><td>")
     html.number_input("browser_reload", 0)
     html.write("</td></tr>\n")
+    html.write("<tr><td>Play %s:</td><td>" % docu_link("multisite_sounds", "alarm sounds"))
+    html.checkbox("play_sounds", False)
+    html.write("</td></tr>\n")
     html.write("<tr><td>Column headers:</td><td>")
     html.select("column_headers", [ ("off", "off"), ("perpage", "once per page"), ("pergroup", "once per group") ])
     html.write("</td><tr>\n")
@@ -637,6 +652,7 @@ def load_view_into_html_vars(view):
     html.set_var("layout",           view["layout"])
     html.set_var("num_columns",      view.get("num_columns", 1))
     html.set_var("browser_reload",   view.get("browser_reload", 0))
+    html.set_var("play_sounds",      view.get("play_sounds", False))
     html.set_var("public",           view["public"] and "on" or "")
     html.set_var("hidden",           view["hidden"] and "on" or "")
     html.set_var("mustsearch",       view["mustsearch"] and "on" or "")
@@ -714,6 +730,7 @@ def create_view():
     except:
         browser_reload = 0
 
+    play_sounds = html.var("play_sounds", "") != ""
     public     = html.var("public", "") != "" and config.may("publish_views")
     hidden     = html.var("hidden", "") != ""
     mustsearch = html.var("mustsearch", "") != ""
@@ -772,6 +789,7 @@ def create_view():
 	"layout"          : layoutname,
         "num_columns"     : num_columns,
         "browser_reload"  : browser_reload,
+        "play_sounds"     : play_sounds,
 	"column_headers"  : column_headers,
 	"show_filters"    : show_filternames,
 	"hide_filters"    : hide_filternames,
@@ -936,13 +954,25 @@ def show_view(view, show_heading = False):
 	    html.show_warning(text)
 	    del rows[-1]
         layout["render"]((columns, rows), view, group_columns, group_painters, painters, num_columns)
-    
 
+        # Play alarm sounds, if critical events have been displayed
+        if view.get("play_sounds"):
+            play_alarm_sounds()
 
     # In multi site setups error messages of single sites do not block the
     # output and raise now exception. We simply print error messages here:
     for sitename, info in html.live.deadsites.items():
 	html.show_error("<b>%s - Livestatus error</b><br>%s" % (info["site"]["alias"], info["exception"]))
+
+
+def play_alarm_sounds():
+    url = config.sound_url
+    if not url.endswith("/"):
+        url += "/"
+    for event, wav in config.sounds:
+        if not event or html.has_event(event):
+            html.play_sound(url + wav)
+            break # only one sound at one time
 
 # How many data rows may the user query?
 def get_limit():

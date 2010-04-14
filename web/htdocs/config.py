@@ -304,3 +304,16 @@ declare_permission("ignore_hard_limit",
      "Ignore hard query limit",
      "Allows to ignore the hard query limit imposed upon the number of datasets returned by a query",
      [ "admin" ])
+
+#    ____                        _     
+#   / ___|  ___  _   _ _ __   __| |___ 
+#   \___ \ / _ \| | | | '_ \ / _` / __|
+#    ___) | (_) | |_| | | | | (_| \__ \
+#   |____/ \___/ \__,_|_| |_|\__,_|___/
+#                                      
+
+sound_url = "sounds/"
+sounds = []
+
+# MISC
+doculink_urlformat = "http://mathias-kettner.de/checkmk_%s.html";

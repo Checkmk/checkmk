@@ -26,6 +26,12 @@
 
 import time, cgi, config, os, defaults
 from lib import *
+# Python 2.3 does not have 'set' in normal namespace.
+# But it can be imported from 'sets'
+try:
+    set()
+except NameError:
+    from sets import Set as set
 
 # Information about uri
 class InvalidUserInput(Exception):
@@ -88,6 +94,7 @@ class html:
         self.focus_object = None
 	self.global_vars = []
         self.browser_reload = 0
+        self.events = set([]) # currently used only for sounds
         
     def write(self, text):
         self.req.write(text)
@@ -414,3 +421,17 @@ class html:
 	else:
 	    return False
 
+    def register_event(self, name):
+        self.events.add(name)
+
+    def has_event(self, name):
+        return name in self.events
+
+    def play_sound(self, url):
+        self.write('<object type="audio/x-wav" data="%s" height="0" width="0">'
+                  '<param name="filename" value="%s">'
+                  '<param name="autostart" value="true"><param name="playcount" value="1"></object>' % (url, url))
+        if config.debug:
+            self.write("Booom (%s)" % url)
+
+    

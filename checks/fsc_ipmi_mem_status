@@ -53,7 +53,11 @@ fsc_ipmi_mem_status_levels = [
 statname = [ "OK", "WARN", "CRIT" ]
 
 def inventory_fsc_ipmi_mem_status(checkname, info):
-    return [ (line[1], "", None) for line in info if line[0] != 'E' and line[2] != '00' ]
+    # Skip all lines which have
+    # a) An error (Begin with "E")
+    # b) Don't have a status (line[2])
+    # c) Don't have a module
+    return [ (line[1], "", None) for line in info if line[0] != 'E' and len(line) > 2 and line[2] != '00' ]
 
 def check_fsc_ipmi_mem_status(name, _no_params, info):
     for line in info:

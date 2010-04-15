@@ -71,6 +71,9 @@
       * New caching agent (wrapper) for linux, supporting efficient fully redundant
         monitoring (please read notes in agents/check_mk_caching_agent)
 
+      Checks & Agents:
+      * Added new smbios_sel check for monitoring the System Event Log of SMBIOS.
+
 1.1.3:
 
       Core, Setup, etc.:

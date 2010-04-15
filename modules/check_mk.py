@@ -60,6 +60,7 @@ else:
 default_config_dir                 = '/etc/check_mk'
 check_mk_configdir                 = default_config_dir + "/conf.d"
 checks_dir                         = '/usr/share/check_mk/checks'
+agents_dir                         = '/usr/share/check_mk/agents'
 check_manpages_dir                 = '/usr/share/doc/check_mk/checks'
 modules_dir                        = '/usr/share/check_mk/modules'
 var_dir                            = '/var/lib/check_mk' 
@@ -2543,6 +2544,7 @@ def show_paths():
     paths = [
 	( modules_dir,                 dir, inst, "Main components of check_mk"),
 	( checks_dir,                  dir, inst, "Checks"),
+        ( agents_dir,                  dir, inst, "Agents for operating systems"),
 	( web_dir,                     dir, inst, "Check_MK's web pages"),
 	( check_manpages_dir,          dir, inst, "Check manpages (for check_mk -M)"),
 	( lib_dir,                     dir, inst, "Binary plugins (architecture specific)"),

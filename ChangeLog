@@ -67,9 +67,10 @@
       * IBM blade center: new checks for chassis blowers, mediatray and overall health
       * New caching agent (wrapper) for linux, supporting efficient fully redundant
         monitoring (please read notes in agents/check_mk_caching_agent)
-
-      Checks & Agents:
       * Added new smbios_sel check for monitoring the System Event Log of SMBIOS.
+      * Linx agent: The xinetd does not log each request anymore. Only
+        failures are logged by xinetd now. This can be changed in the xinetd
+				configuration files.
 
 1.1.3:
 

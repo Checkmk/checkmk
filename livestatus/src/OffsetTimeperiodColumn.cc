@@ -41,7 +41,7 @@ OffsetTimeperiodColumn::~OffsetTimeperiodColumn()
     pthread_mutex_destroy(&_cache_lock);
 }
 
-int32_t OffsetTimeperiodColumn::getValue(void *data)
+int32_t OffsetTimeperiodColumn::getValue(void *data, Query *)
 {
     data = shiftPointer(data);
     if (!data)

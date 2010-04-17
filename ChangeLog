@@ -1,5 +1,6 @@
 1.1.4b2:
       * Remove dependency from debian agent package    
+      * Multisite: New column with icon with link to Nagios GUI
 
 1.1.4b1:
       Summary:

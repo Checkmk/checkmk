@@ -247,6 +247,15 @@ table.services td.host {
   font-size: 120%;
 }
 
+table.services td.singleicon img {
+    margin: 0px;
+    padding: 0px;
+    border-style: none;
+}
+table.services td.singleicon {
+    width: 16px;
+    text-align: center;
+}
 tr.groupheader td {
     border-style: none; 
     padding: 0px;

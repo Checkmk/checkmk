@@ -72,7 +72,7 @@
 
 icon_columns = [ "acknowledged", "scheduled_downtime_depth", "downtimes_with_info", "comments_with_info",
 	         "notifications_enabled", "is_flapping", "modified_attributes_list", "active_checks_enabled",
-		 "accept_passive_checks", "action_url_expanded", "notes_url_expanded" ]
+		 "accept_passive_checks", "action_url_expanded", "notes_url_expanded", "in_notification_period" ]
 
 def paint_icons(what, row): # what is "host" or "service"
     output = ""
@@ -130,6 +130,8 @@ def paint_icons(what, row): # what is "host" or "service"
 		      'src="images/icon_npassive.gif">' % what
 
 
+    if not row[prefix + "in_notification_period"]:
+        output += '<img class=icon title="Out of notification period" src="images/icon_moon.gif">'
 
     return "icons", output
 

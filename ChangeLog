@@ -4,6 +4,8 @@
       * Livestatus: fix bug: in_*_period didn't work anymore
         (this bug was introduced by Localtime: and is not present
          in 1.1.3)
+      * Multisite: new icon showing items out of their notification
+        period.
 
 1.1.4b1:
       Summary:

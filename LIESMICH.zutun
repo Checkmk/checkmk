@@ -15,8 +15,6 @@ Nagios-Attribute agbefrühstückt werden.
 Multisite: konfigurierbares regelmäßiges Reload für
 Views.
 
-Multisite: Tonausgabe von altem Multiadmin portieren.
-
 Eine Datei local.mk, die von backup/restore *nicht*
 beruecksichtigt wird.
 

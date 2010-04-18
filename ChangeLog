@@ -11,6 +11,7 @@
       * Check md on Linux: handle spare disks correctly
       * Check ipmi: new config variable ipmi_ignore_nr
       * Wrote man-page for ipmi check
+      * Check mrpe: correctly display multiline output in Nagios GUI
 
 1.1.4b1:
       Summary:

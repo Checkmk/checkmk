@@ -265,6 +265,8 @@ filesystem_levels                  = []
 df_magicnumber_normsize            = 20 # Standard size if 20 GB
 df_lowest_warning_level            = 50 # Never move warn level below 50% due to magic factor
 df_lowest_critical_level           = 60 # Never move crit level below 60% due to magic factor
+
+# This is obsolete stuff and should be moved to the check plugins some day
 inventory_df_exclude_fs            = [ 'nfs', 'smbfs', 'cifs', 'iso9660' ]
 inventory_df_exclude_mountpoints   = [ '/dev' ]
 inventory_df_check_params          = 'filesystem_default_levels'
@@ -715,7 +717,9 @@ def host_of_clustered_service(hostname, servicedesc):
     # 1. Old style: clustered_services assumes that each host belong to
     #    exactly on cluster
     if in_boolean_serviceconf_list(hostname, servicedesc, clustered_services):
-        return cluster_of(hostname)
+        cluster = cluster_of(hostname)
+        if cluster:
+            return cluster
     
     return hostname
 
@@ -1643,7 +1647,7 @@ def make_inventory(checkname, hostnamelist, check_only=False):
           except Exception, e:
               if opt_debug:
                   raise
-              print "%s: Invalid output from agent or invalid configuration: %s" % (hostname, e)
+              sys.stderr.write("%s: Invalid output from agent or invalid configuration: %s\n" % (hostname, e))
               continue
 
           for entry in inventory:

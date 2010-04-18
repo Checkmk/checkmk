@@ -13,6 +13,7 @@
       * Check ipmi: new config variable ipmi_ignore_nr
       * Linux agent: df now also excludes NFSv4
       * Wrote man-page for ipmi check
+      * Check mrpe: correctly display multiline output in Nagios GUI
 
 1.1.4b1:
       Summary:

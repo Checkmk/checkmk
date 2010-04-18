@@ -48,7 +48,8 @@ def check_mrpe(item, params, info):
             state = int(line[1])
             rest = " ".join(line[2:])
             parts = rest.split("|", 1)
-            output = parts[0].replace("\1", "<br>") # MRPE uses binary byte 1 to mask newlines
+            # replace first line break with "\\n" -> Nagios expects it like this 
+            output = parts[0].replace("\1", "\\n", 1).replace("\1", "<br>")
                            
             perfdata = []
             if len(parts) > 1: # found pipe symbol

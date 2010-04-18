@@ -167,7 +167,7 @@ NEGATE         = '@negate'       # negation in boolean lists
 
 # Basic Settings
 agent_port                         = 6556
-tcp_connect_timeout                = 60.0
+tcp_connect_timeout                = 5.0
 do_rrd_update			   = False
 aggr_summary_hostname              = "%s-s"
 agent_min_version                  = 0 # warn, if plugin has not at least version

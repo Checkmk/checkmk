@@ -10,10 +10,12 @@
       * Check df: handle mountpoints containing spaces correctly 
         (need new inventorization if you have mountpoints with spaces)
       * Check md on Linux: handle spare disks correctly
+      * Check mk on Linux: fix case where (auto-read-only) separated by space
       * Check ipmi: new config variable ipmi_ignore_nr
       * Linux agent: df now also excludes NFSv4
       * Wrote man-page for ipmi check
       * Check mrpe: correctly display multiline output in Nagios GUI
+    
 
 1.1.4b1:
       Summary:

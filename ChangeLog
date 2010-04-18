@@ -9,6 +9,7 @@
       * Core: Fixed problem with inventory when using clustered_services
       * Check df: handle mountpoints containing spaces correctly 
         (need new inventorization if you have mountpoints with spaces)
+      * Check md on Linux: handle spare disks correctly
 
 1.1.4b1:
       Summary:

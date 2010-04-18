@@ -11,6 +11,7 @@
         (need new inventorization if you have mountpoints with spaces)
       * Check md on Linux: handle spare disks correctly
       * Check ipmi: new config variable ipmi_ignore_nr
+      * Linux agent: df now also excludes NFSv4
 
 1.1.4b1:
       Summary:

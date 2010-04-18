@@ -31,11 +31,15 @@
 #    md1 : active raid1 dm-19[0] dm-9[1]
 #          20971456 blocks [2/2] [UU]
 #          20971456 blocks super 1.2 [2/2] [UU] 
+#
+#    md2 : active (auto-read-only) raid1 sda6[0] sdb6[1]
+#          4200952 blocks super 1.0 [2/2] [UU]
+#          bitmap: 0/9 pages [0KB], 256KB chunk
 #          
 #          unused devices: <none>
 # ---------------------------------------------------------
 
-# Other example (with RAID 5 and spare disk)
+# Another example (with RAID 5 and spare disk)
 # ---------------------------------------------------------
 # Personalities : [raid1] [raid6] [raid5] [raid4] 
 # md2 : active raid5 sde1[3](S) sdd1[0] sdg1[2] sdf1[1]
@@ -58,6 +62,10 @@ def check_md(item, params, info):
             raid_state = line[2]
             if raid_state != 'active' and raid_state != 'active(auto-read-only)':
 	        return (2, "CRIT - raid state is '%s' (should be 'active')" % (raid_state,))
+            # Usually (auto-read-only) sticks to active without a space.
+            # But on some kernels it appears separated by a space
+            if line[3] == '(auto-read-only)':
+                del line[3]
             num_disks = len([x for x in line[4:] if not x.endswith("(S)") ]) # omit spare disks
             its_next = True
         elif its_next:

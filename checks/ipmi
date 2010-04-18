@@ -55,12 +55,13 @@
 # In Detailed mode for each sensor one item is returned.
 
 ipmi_summarize = True
-    
+ipmi_ignore_nr = False # set to True in order to ignore entries with state 'nr'
+
 def inventory_ipmi(checkname, info):
     if ipmi_summarize and len(info) > 0:
         return [ ( "Summary", None, None ) ]
     else:
-        return [ ( line[0], line[1], None ) for line in info ]
+        return [ ( line[0], line[1], None ) for line in info if not ipmi_ignore_nr or line[3] != 'nr' ]
 
 def check_ipmi(item, params, info):
     if item == "Summary":
@@ -97,6 +98,8 @@ def check_ipmi_summarized(info):
         if status == 'nc':
             worst_status = max(worst_status, 1)
             warn_texts.append(text)
+        elif status == 'nr' and ipmi_ignore_nr:
+            pass
         elif status != 'ok':
             worst_status = 2
             crit_texts.append(text)
@@ -127,3 +130,4 @@ def check_ipmi_summarized(info):
     return (worst_status, "%s - %s" % (statname, infotext), perfdata)
 
 check_info['ipmi'] = (check_ipmi, "IPMI Sensor %s", 1,  inventory_ipmi)
+check_config_variables.append("ipmi_ignore_nr")

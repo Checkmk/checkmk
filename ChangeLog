@@ -7,6 +7,8 @@
       * Multisite: new icon showing items out of their notification
         period.
       * Core: Fixed problem with inventory when using clustered_services
+      * Check df: handle mountpoints containing spaces correctly 
+        (need new inventorization if you have mountpoints with spaces)
 
 1.1.4b1:
       Summary:

@@ -403,6 +403,10 @@ def get_agent_info_tcp(hostname, ipaddress):
         except:
             pass # some old Python versions lack settimeout(). Better ignore than fail
         s.connect((ipaddress, agent_port))
+        try:
+            s.setblocking(1)
+        except:
+            pass
         output = ""
         while True:
             out = s.recv(4096, socket.MSG_WAITALL)

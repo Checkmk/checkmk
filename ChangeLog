@@ -13,6 +13,8 @@
       * Check ipmi: new config variable ipmi_ignore_nr
       * Wrote man-page for ipmi check
       * Check mrpe: correctly display multiline output in Nagios GUI
+      * tcp_connect_timeout: Applies now only for connect(), not for
+        time of data transmission once a connection is established
     
 
 1.1.4b1:

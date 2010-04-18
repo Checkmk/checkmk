@@ -12,6 +12,7 @@
       * Check md on Linux: handle spare disks correctly
       * Check ipmi: new config variable ipmi_ignore_nr
       * Linux agent: df now also excludes NFSv4
+      * Wrote man-page for ipmi check
 
 1.1.4b1:
       Summary:

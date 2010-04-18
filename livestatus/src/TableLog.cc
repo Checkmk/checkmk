@@ -45,8 +45,25 @@
 
 // watch nagios' logfile rotation
 extern time_t last_log_rotation;
+extern int g_debug_level;
 
 int num_cached_log_messages = 0;
+
+// Debugging logging is hard if debug messages are logged themselves...
+void debug(const char *loginfo, ...)
+{
+    if (g_debug_level < 2)
+        return;
+
+    FILE *x = fopen("/tmp/livestatus.log", "a+");
+    va_list ap;
+    va_start(ap, loginfo);
+    vfprintf(x, loginfo, ap);
+    fputc('\n', x);
+    va_end(ap);
+    fclose(x);
+}
+
 
 TableLog::TableLog(unsigned long max_cached_messages)
     : _max_cached_messages(max_cached_messages)
@@ -202,6 +219,7 @@ void TableLog::answerQuery(Query *query)
 
     while (true) {
 	Logfile *log = it->second;
+        debug("Query is now at logfile %s, needing classes 0x%x", log->path(), classmask);
 	if (!log->answerQueryReverse(query, this, since, until, classmask))
 	    break; // end of time range found
 	if (it == _logfiles.begin())
@@ -264,55 +282,87 @@ void TableLog::dumpLogfiles()
 	    ++it)
     {
         Logfile *log = it->second;
-	logger(LG_INFO, "LOG %s from %d, %u messages, classes: 0x%04x", log->path(), log->since(), log->numEntries(), log->classesRead());
+	debug("LOG %s from %d, %u messages, classes: 0x%04x", log->path(), log->since(), log->numEntries(), log->classesRead());
     }
 }
-    
+
+/* This method is called each time a log message is loaded
+   into memory. If the number of messages loaded in memory
+   is to large, memory will be freed by flushing logfiles
+   and message not needed by the current query. 
+
+   The parameters to this method reflect the current query,
+   not the messages that just has been loaded.
+*/
 void TableLog::handleNewMessage(Logfile *logfile, time_t since, time_t until, unsigned logclasses)
 {
     if (++_num_cached_messages <= _max_cached_messages)
-	return; // everything ok
+	return; // current message count still allowed, everything ok
+
+    /* Memory checking an freeing consumes CPU ressources. We save 
+       ressources, by avoiding to make the memory check each time
+       a new message is loaded when being in a sitation where no
+       memory can be freed. We do this by suppressing the check when
+       the number of messages loaded into memory has not grown
+       by at least CHECK_MEM_CYCLE messages */
     if (_num_cached_messages < _num_at_last_check + CHECK_MEM_CYCLE)
-	return; // Do not check too often
+	return; // Do not check this time
 
     // [1] Begin by deleting old logfiles
+    // Begin deleting with the oldest logfile available
     _logfiles_t::iterator it;
     for (it = _logfiles.begin(); it != _logfiles.end(); ++it)
     {
         Logfile *log = it->second;
+        ///if (g_debug_level > 2)
+        //    debug("Logfile %s (%s, %d entries)", log->path(), log == logfile ? "current" : "other", log->numEntries());
 	if (log == logfile) {
+            // Do not touch the logfile the Query is currently accessing
+            // and 
 	    break;
 	}
 	if (log->numEntries() > 0) {
 	    _num_cached_messages -= log->numEntries();
-	    log->flush();
-	    if (_num_cached_messages <= _max_cached_messages)
+	    log->flush(); // drop all messages of that file
+	    if (_num_cached_messages <= _max_cached_messages) {
+                // remember the number of log messages in cache when
+                // the last memory-release was done. No further
+                // release-check shall be done until that number changes.
 		_num_at_last_check = _num_cached_messages;
-		return;
+                return;
+            }
 	}
     }
+    // The end of this loop must be reached by 'break'. At least one logfile
+    // must be the current logfile. So now 'it' points to the current logfile.
+    // We save that pointer for later.
+    _logfiles_t::iterator queryit = it;
 
     // [2] Delete message classes irrelevent to current query
+    // Starting from the current logfile (wo broke out of the
+    // previous loop just when 'it' pointed to that)
     for (; it != _logfiles.end(); ++it)
     {
         Logfile *log = it->second;
-	if (log->numEntries() > 0) {
-	    long freed = log->freeMessages(~logclasses);
+	if (log->numEntries() > 0 && (log->classesRead() & ~logclasses) != 0) {
+            if (g_debug_level > 2)
+                debug("Freeing classes 0x%02x of file %s", ~logclasses, log->path());
+	    long freed = log->freeMessages(~logclasses); // flush only messages not needed for current query
 	    _num_cached_messages -= freed;
-	    if (_num_cached_messages <= _max_cached_messages)
+	    if (_num_cached_messages <= _max_cached_messages) {
 		_num_at_last_check = _num_cached_messages;
 		return;
+            }
 	}
     }
 
     // [3] Flush newest logfiles
-    it = _logfiles.end();
-    while (true)
+    // If there are still too many messages loaded, continue
+    // flushing logfiles from the oldest to the newest starting
+    // at the file just after (i.e. newer than) the current logfile
+    for (it = ++queryit; it != _logfiles.end(); ++it)
     {
-	--it;
 	Logfile *log = it->second;
-	if (log == logfile)
-	    break;
 
 	if (log->numEntries() > 0) {
 	    _num_cached_messages -= log->numEntries();
@@ -323,8 +373,13 @@ void TableLog::handleNewMessage(Logfile *logfile, time_t since, time_t until, un
 	    }
 	}
     }
-
     _num_at_last_check = _num_cached_messages;
+    // If we reach this point, no more logfiles can be unloaded,
+    // despite the fact that there are still too many messages
+    // loaded.
+    if (g_debug_level > 2)
+        debug("Cannot unload more messages. Still %d loaded (max is %d)", 
+                _num_cached_messages, _max_cached_messages);
 }
 
 bool TableLog::isAuthorized(contact *ctc, void *data)

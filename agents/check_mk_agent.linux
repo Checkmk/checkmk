@@ -108,7 +108,7 @@ egrep -v '^Swap:|^Mem:|total:' < /proc/meminfo
 
 # Load und Anzahl Prozesse
 echo '<<<cpu>>>'
-echo "$(cat /proc/loadavg) $(grep processor < /proc/cpuinfo | wc -l)"
+echo "$(cat /proc/loadavg) $(grep ^processor < /proc/cpuinfo | wc -l)"
 
 # Network interfaces (Link, Autoneg, Speed)
 # This requires ethtool

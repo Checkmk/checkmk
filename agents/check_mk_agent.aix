@@ -109,6 +109,6 @@ then
     while read descr cmdline
     do
         OUTPUT=$($cmdline)
-        echo "$? $descr $OUTPUT"
+        echo "$descr $? $OUTPUT"
     done
 fi

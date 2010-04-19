@@ -17,6 +17,7 @@
         time of data transmission once a connection is established
       * Multisite: updated some views
       * Multisite: fix bug in removing all downtimes
+      * AIX agent: fix output of MRPE (state and description was swapped)
     
 
 1.1.4b1:

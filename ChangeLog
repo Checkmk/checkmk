@@ -18,6 +18,7 @@
       * tcp_connect_timeout: Applies now only for connect(), not for
         time of data transmission once a connection is established
       * setup.sh now also works for Icinga
+      * Multisite: updated some views
     
 
 1.1.4b1:

@@ -16,6 +16,7 @@
       * tcp_connect_timeout: Applies now only for connect(), not for
         time of data transmission once a connection is established
       * Multisite: updated some views
+      * Multisite: fix bug in removing all downtimes
     
 
 1.1.4b1:

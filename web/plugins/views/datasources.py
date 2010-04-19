@@ -38,35 +38,35 @@ multisite_datasources["hosts"] = {
     "title"   : "All hosts",
     "table"   : "hosts",
     "infos"   : [ "host" ],
-    "keys"    : [ "host_name" ],
+    "keys"    : [ "host_name", "host_downtimes" ],
 }
 
 multisite_datasources["hostsbygroup"] = {
     "title"   : "Hosts grouped by host groups",
     "table"   : "hostsbygroup",
     "infos"   : [ "host", "hostgroup" ],
-    "keys"    : [ "host_name" ],
+    "keys"    : [ "host_name", "host_downtimes" ],
 }
 
 multisite_datasources["services"] = {
     "title"   : "All services",
     "table"   : "services",
     "infos"   : [ "service", "host" ],
-    "keys"    : [ "host_name", "service_description" ],
+    "keys"    : [ "host_name", "service_description", "service_downtimes" ],
 }
 
 multisite_datasources["servicesbygroup"] = {
     "title"   : "Services grouped by service groups",
     "table"   : "servicesbygroup",
     "infos"   : [ "service", "host", "servicegroup" ],
-    "keys"    : [ "host_name", "service_description" ],
+    "keys"    : [ "host_name", "service_description", "service_downtimes" ],
 }
 
 multisite_datasources["servicesbyhostgroup"] = {
     "title"   : "Services grouped by host groups",
     "table"   : "servicesbyhostgroup",
     "infos"   : [ "service", "host", "hostgroup" ],
-    "keys"    : [ "host_name", "service_description" ],
+    "keys"    : [ "host_name", "service_description", "service_downtimes" ],
 }
 
 multisite_datasources["hostgroups"] = {

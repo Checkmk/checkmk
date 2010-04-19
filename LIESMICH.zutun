@@ -1,3 +1,7 @@
+Die impliziten Services Check_MK und PING und evtl. legacy_checks
+auch durch die Konfigmaschine laufen lassen, damit Servicegruppen
+etc auch funktoinieren (auch Inventory-Checks).
+
 logwatch.php und die anderen htdocs/* -Dateien rausschmeissen,
 nicht mehr installieren. Im setup auch das Eintragen von var_dir
 entfernen.
@@ -11,9 +15,6 @@ wie Gruppen, etc werden nicht berücksichtigt. Gleiches
 gilt für Servicegruppen. Man sollte daher die Funktion
 extra_service_conf_of() so erweitern, dass *alles*
 Nagios-Attribute agbefrühstückt werden.
-
-Multisite: konfigurierbares regelmäßiges Reload für
-Views.
 
 Eine Datei local.mk, die von backup/restore *nicht*
 beruecksichtigt wird.

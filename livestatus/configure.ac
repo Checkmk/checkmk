@@ -40,6 +40,9 @@ AC_PROG_RANLIB
 # AC_PROG_LIBTOOL
 
 # Checks for libraries.
+AC_CHECK_LIB(socket, socket)
+AC_CHECK_LIB(socket, connect)
+AC_CHECK_LIB(socket, shutdown)
 
 # Checks for header files.
 AC_HEADER_DIRENT

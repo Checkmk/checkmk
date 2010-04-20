@@ -635,7 +635,7 @@ def get_single_oid(hostname, ipaddress, oid):
         return g_single_oid_cache[oid]
 
     community = get_snmp_community(hostname)
-    command = "snmpget -v1 -On -OQ -Oe -c %s %s %s" % (community, ipaddress, oid)
+    command = "snmpget -v1 -On -OQ -Oe -c %s %s %s 2>/dev/null" % (community, ipaddress, oid)
     try:
 	if opt_verbose:
 	    sys.stdout.write("Running '%s'\n" % command)
@@ -668,10 +668,13 @@ def snmp_scan(hostname, ipaddress):
 
     found = []
     for checktype, detect_function in snmp_scan_functions.items():
-        if detect_function(lambda oid: get_single_oid(hostname, ipaddress, oid)):
-            found.append(checktype)
-	    sys.stdout.write("%s " % checktype)
-	    sys.stdout.flush()
+        try:
+            if detect_function(lambda oid: get_single_oid(hostname, ipaddress, oid)):
+                found.append(checktype)
+	        sys.stdout.write("%s " % checktype)
+	        sys.stdout.flush()
+        except:
+	    pass
     if found == []:
 	sys.stdout.write("nothing detected.\n")
     else:

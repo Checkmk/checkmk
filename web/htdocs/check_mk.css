@@ -693,6 +693,9 @@ table.siteoverview table td.zero {
 }
 
 /* ---- logwatch ------------------------------------------------ */
+div#logwatch {
+    margin-top: 1ex;
+}
 
 div#logwatch div.chunk {
   border-width: 1px;
@@ -730,10 +733,6 @@ div#logwatch pre {
   padding: 0.2ex 0.8ex;
   border: none;
   margin: 0px;
-}
-
-div#logwatch pre.context {
-	display:none;
 }
 
 div#logwatch pre.WARN {

@@ -24,7 +24,8 @@
       * Linux agent: fixed computation of number of processors on S390
       * Livestatus: Fix missing -lsocket on Solaris
       * Livestatus: add missing SUN_LEN (fixed compile problem on Solaris)
-    
+      * Logwatch GUI: move acknowledge button to top, use Multisite layout,
+         fix several layout problem, remove list of hosts
 
 1.1.4b1:
       Summary:

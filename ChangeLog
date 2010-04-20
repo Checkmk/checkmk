@@ -19,6 +19,7 @@
         time of data transmission once a connection is established
       * setup.sh now also works for Icinga
       * Multisite: updated some views
+      * New check: rsa_health for monitoring IBM Remote Supervisor Adapter (RSA)
     
 
 1.1.4b1:

@@ -72,6 +72,12 @@ logwatch_patterns (dict): A dictionary for reclassifying
  of hosts by prepending list of host and host tags to the pairs,
  as seen in the example.
 
+logwatch_max_filesize (int): This is preset to 500000
+ and limits the maximum size of a logfile stored on the monitoring
+ servers (i.e. the amount of unacknowledged problem messages).
+ As soon as the maximum size is reached, the check gets critical.
+ (It probably anyways is with so many problem messages lying around).
+
 logwatch_dir (string): Directory where log messages are
  stored. The default value is {/var/lib/check_mk/logwatch}.
  For each host a subdirectory is created. The name of the 

@@ -29,6 +29,8 @@
       * New check: cpsecure_sessions for number of sessions on Content Security Gateway
       * Logwatch GUI: move acknowledge button to top, use Multisite layout,
          fix several layout problem, remove list of hosts
+      * Check logwatch: limit maximum size of stored log messages (configurable
+        be logwatch_max_filesize)
 
 1.1.4b1:
       Summary:

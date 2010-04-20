@@ -26,6 +26,7 @@
       * Livestatus: add missing SUN_LEN (fixed compile problem on Solaris)
       * New check: rsa_health for monitoring IBM Remote Supervisor Adapter (RSA)
       * snmp scan: suppress error messages of snmpget
+      * New check: cpsecure_sessions for number of sessions on Content Security Gateway
     
 
 1.1.4b1:

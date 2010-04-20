@@ -139,7 +139,8 @@ def check_logwatch(item, params, info):
 
     logfile = logdir + "/" + item.replace("/", "\\")
 
-    # Logfile (=item) section not found and no local file found
+    # Logfile (=item) section not found and no local file found. This usually
+    # means, that the corresponding logfile also vanished on the target host.
     if found == False and not os.path.exists(logfile):
         return(3, "UNKNOWN - log not present anymore")
 

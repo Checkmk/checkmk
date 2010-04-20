@@ -27,7 +27,8 @@
       * New check: rsa_health for monitoring IBM Remote Supervisor Adapter (RSA)
       * snmp scan: suppress error messages of snmpget
       * New check: cpsecure_sessions for number of sessions on Content Security Gateway
-    
+      * Logwatch GUI: move acknowledge button to top, use Multisite layout,
+         fix several layout problem, remove list of hosts
 
 1.1.4b1:
       Summary:

@@ -1,7 +1,3 @@
-def inventory_rsa_health(checkname, info):
-    if len(info) > 0:
-        return [(None, None)]
-
 # Example for info:
 # [['0'], ['1'], ['2'], ['3'], ['4'], ['5'], ['Critical'], ['Critical'], ['Warning'], ['Warning'], ['Warning'], ['Multiple fan failures'], ['Power Supply 1 AC Power Removed'], ['System Running Nonredundant Power'], ['Fan 7 Failure'], ['Fan 8 Failure']]
 # state definitions from RSA-MIB:
@@ -9,6 +5,10 @@ def inventory_rsa_health(checkname, info):
 #   nonCritical(2),
 #   systemLevel(4),
 #   normal(255)
+
+def inventory_rsa_health(checkname, info):
+    if len(info) > 0:
+        return [(None, None)]
 
 def check_rsa_health(_no_item, _no_params, info):
      num_alerts = (len(info) - 1) / 3

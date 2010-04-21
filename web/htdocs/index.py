@@ -117,7 +117,7 @@ def ajax_switch_site(html):
     pass 
 
 def handler(req):
-    req.content_type = "text/html"
+    req.content_type = "text/html; charset=UTF-8"
     req.header_sent = False
 
     # All URIs end in .py. We strip away the .py and get the

@@ -37,6 +37,8 @@
       * Livestatus: fix segault if module loaded without arguments
       * Check md: exclude RAID 0 devices from inventory (were reported as critical)
       * Livestatus: new output format "python": declares strings as UTF-8 correctly
+      * Multisite: display Umlauts from Nagios comments correctly (assuming Latin-1),
+         inhibit entering of Umlauts in new comments (fixes exception)
 
 1.1.4b1:
       Summary:

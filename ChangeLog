@@ -36,6 +36,7 @@
       * check netctr: add missing perfdata (was only sent on OK case)
       * Livestatus: fix segault if module loaded without arguments
       * Check md: exclude RAID 0 devices from inventory (were reported as critical)
+      * Livestatus: new output format "python": declares strings as UTF-8 correctly
 
 1.1.4b1:
       Summary:

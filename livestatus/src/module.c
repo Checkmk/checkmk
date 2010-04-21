@@ -401,8 +401,11 @@ void deregister_callbacks()
 void livestatus_parse_arguments(const char *args_orig)
 {
     /* set default socket path */
-
     strcpy(g_socket_path, DEFAULT_SOCKET_PATH);
+
+    if (!args_orig) 
+        return; // no arguments, use default options
+    
     char *args = strdup(args_orig);
     char *token;
     while (0 != (token = next_field(&args)))

@@ -75,28 +75,6 @@ declare_filter(101, FilterText("servicegroupnameregex", "Servicegroup",   "servi
 declare_filter(202, FilterText("output",  "Service check output", "service", "service_plugin_output", "service_output", "~~"))
 
 
-class FilterLimit(Filter):
-    def __init__(self):
-	Filter.__init__(self, "limit", "Limit number of data sets", None, [ "limit" ], [])
-
-    def current_value(self):
-	try:
-	    return int(html.var("limit"))
-	except:
-	    return 0
-
-    def display(self):
-	html.number_input("limit", self.current_value())
-    
-    def filter(self, infoname):
-	v = self.current_value()
-	if v > 0:
-	    return "Limit: %d\n" % v
-	return ""
-
-declare_filter(300, FilterLimit(), "Limits the number of items queried via livestatus. The limitation is "
-	"done <b>before</b> any sorting is done.")
-	
 
 # Helper that retrieves the list of host/service/contactgroups via Livestatus
 def all_groups(what):

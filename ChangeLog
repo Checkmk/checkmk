@@ -31,6 +31,8 @@
          fix several layout problem, remove list of hosts
       * Check logwatch: limit maximum size of stored log messages (configurable
         be logwatch_max_filesize)
+      * Multisite: removed filter 'limit'. Not longer needed and made problems
+        with new auto-limitation.
 
 1.1.4b1:
       Summary:

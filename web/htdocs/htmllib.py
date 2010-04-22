@@ -86,6 +86,19 @@ def urlencode(value):
         ret += c
     return ret
 
+def u8(c):
+    if ord(c) > 127:
+        return "&#%d;" % ord(c)
+    else:
+        return c
+
+def utf8_to_entities(text):
+    if type(text) != unicode:
+        return text
+    n = ""
+    for c in text:
+        n += u8(c)
+    return n
 
 class html:
     def __init__(self, req):

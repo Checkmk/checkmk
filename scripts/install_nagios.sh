@@ -36,7 +36,7 @@ set -e
 
 NAGIOS_VERSION=3.2.1
 PLUGINS_VERSION=1.4.14
-RRDTOOL_VERSION=1.4.2
+RRDTOOL_VERSION=1.4.3
 CHECK_MK_VERSION=1.1.4b2
 PNP_VERSION=0.6.3
 NAGVIS_VERSION=1.4.6
@@ -160,7 +160,7 @@ Check_MK on a freshly installed Linux system. It will:
  - install the check_mk_agent on localhost
  - setup Nagios to monitor localhost
 
-   You Linux distro:     $DISTRONAME
+   Your Linux distro:    $DISTRONAME
    Nagios version:       $NAGIOS_VERSION
    Plugins version:      $PLUGINS_VERSION
    Check_MK version:     $CHECK_MK_VERSION
@@ -932,7 +932,7 @@ cat <<EOF > /etc/$HTTPD/conf.d/multisite.conf
 
 <Location /nag02>
     RewriteEngine On
-    RewriteRule ^/.+/nag02/(.*) http://192.168.56.7/nag02/$1 [P]
+    RewriteRule ^/.+/nag02/(.*) http://192.168.56.7/nag02/\$1 [P]
 </Location>
 
 # Need some debugging => turn on a logfile here:

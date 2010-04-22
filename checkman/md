@@ -17,4 +17,6 @@ examples:
  ]
 
 inventory:
- All raid devices are automatically detected.
+ All RAID devices except those with raid level 0 are automatically detected.
+ The RAID 0 devices's output is completely different from the others.
+ And if a disk crashes you will soon notice anyway...

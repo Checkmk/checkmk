@@ -39,7 +39,8 @@
 #          unused devices: <none>
 # ---------------------------------------------------------
 
-# Another example (with RAID 5 and spare disk)
+# Another example (with RAID 5 and spare disk (md2) and a RAID-0
+# device (md3)
 # ---------------------------------------------------------
 # Personalities : [raid1] [raid6] [raid5] [raid4] 
 # md2 : active raid5 sde1[3](S) sdd1[0] sdg1[2] sdf1[1]
@@ -50,9 +51,24 @@
 #       
 # md1 : active raid1 sdb3[1] sda3[0]
 #       486239232 blocks [2/2] [UU]
+#
+# md3 : active raid0 sdb3[0] sda3[1]
+#       16386048 blocks 64k chunks
 #       
 # unused devices: <none>
 # ---------------------------------------------------------
+
+def inventory_md(checkname, info):
+    inventory = []
+    for line in info:
+        if line[0].startswith("md") and line[1] == ':':
+            device = line[0]
+            raid_state = line[2]
+        elif line[1] == 'blocks':
+            if line[-1] != "chunks": # ignore RAID 0 devices
+                disk_state = line[-1][1:-1]
+                inventory.append( (device, '%s / %s' % (raid_state, disk_state), None) )
+    return inventory
 
 def check_md(item, params, info):
     raid_state = ''
@@ -78,15 +94,5 @@ def check_md(item, params, info):
                 return (0, 'OK - raid active, disk state is %s %s' % (disk_state_1, disk_state_2))
     return (2, 'CRIT - no raid device %s' % item)
 
-def inventory_md(checkname, info):
-    inventory = []
-    for line in info:
-        if line[0].startswith("md") and line[1] == ':':
-            device = line[0]
-            raid_state = line[2]
-        elif line[1] == 'blocks':
-            disk_state = line[-1][1:-1]
-            inventory.append( (device, '%s / %s' % (raid_state, disk_state), None) )
-    return inventory
 
 check_info['md'] = (check_md, "MD Softraid %s", 0, inventory_md)

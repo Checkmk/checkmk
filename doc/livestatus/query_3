@@ -1,3 +1,0 @@
-GET services
-Columns: host_name description state
-Filter: state = 2

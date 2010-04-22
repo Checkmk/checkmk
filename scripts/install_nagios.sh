@@ -1043,7 +1043,7 @@ service livestatus
 	server		= /usr/bin/unixcat
 	server_args     = /var/run/nagios/rw/live
 # configure the IP address(es) of your Nagios server here:
-#	only_from       = 127.0.0.1 193.18.227.73 172.19.209.{1,2,3}
+#	only_from       = 127.0.0.1 10.0.20.1 10.0.20.2
 	disable		= no
 }
 EOF

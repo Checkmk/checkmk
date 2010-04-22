@@ -39,6 +39,8 @@
       * Livestatus: new output format "python": declares strings as UTF-8 correctly
       * Multisite: display Umlauts from Nagios comments correctly (assuming Latin-1),
          inhibit entering of Umlauts in new comments (fixes exception)
+      * Check sylo: New check for monitoring the sylo state
+      * Multisite: Switched sidebar sajax requests to ajax calls
 
 1.1.4b1:
       Summary:

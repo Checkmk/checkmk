@@ -529,9 +529,11 @@ EOF
 grep 'illegal.*=' nagios.cfg-example >> nagios.cfg
 
 # Modify init-script: It must create the temp directory,
-# as it is in a tmpfs...
-sed -i -e '/^[[:space:]]start)/a                mkdir -p /var/spool/nagios/tmp /var/spool/nagios/checkresults' \
-       -e '/^[[:space:]]start)/a                chown nagios.nagios /var/spool/nagios/tmp /var/spool/nagios/checkresults' /etc/init.d/nagios
+# as it is in a tmpfs. And on Ubuntu /var/run is also a ramdisk,
+# so create /var/run/nagios/rw also in startskript.
+sed -i -e '/^[[:space:]]start)/a                mkdir -p /var/spool/nagios/tmp /var/spool/nagios/checkresults /var/run/nagios/rw' \
+       -e '/^[[:space:]]start)/a                chown nagios.nagios /var/spool/nagios/tmp /var/spool/nagios/checkresults /var/run/nagios/rw' \
+       -e '/^[[:space:]]start)/a                chmod 2755 /var/run/nagios/rw' /etc/init.d/nagios
 
 # Make CGIs display addons in right frame, not in a new window
 sed -i 's/_blank/main/g' cgi.cfg

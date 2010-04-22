@@ -1,0 +1,10 @@
+Idee: Manuelle Services wie check_http doch über Check_MK einrichten lassen.
+Man macht es nicht über MRPE, sondern so:
+
+legacy_checks = [
+ ( "HTTP Port 80", "check-http!80", [ "linux" ], ALL_HOSTS, )
+]
+
+Die so genrierten Checks sollen alle Konfigurations-Dinge
+vom normalen Check_MK durchlaufen -> service_groups, extra_conf,
+etc. Nur die Aggregation geht dann nicht.

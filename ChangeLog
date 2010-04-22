@@ -33,6 +33,7 @@
         be logwatch_max_filesize)
       * Multisite: removed filter 'limit'. Not longer needed and made problems
         with new auto-limitation.
+      * Check sylo: New check for monitoring the sylo state
 
 1.1.4b1:
       Summary:

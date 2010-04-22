@@ -34,6 +34,7 @@
       * Multisite: removed filter 'limit'. Not longer needed and made problems
         with new auto-limitation.
       * check netctr: add missing perfdata (was only sent on OK case)
+      * Livestatus: fix segault if module loaded without arguments
 
 1.1.4b1:
       Summary:

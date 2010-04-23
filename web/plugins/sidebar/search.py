@@ -30,7 +30,7 @@
 # | Lars Michelsen <lm@mathias-kettner.de>            Copyright 2010 |
 # +------------------------------------------------------------------+
 
-import views, defaults
+import views, defaults, json
 
 def render_searchform():
     html.write('<div id="mk_side_search">')
@@ -41,7 +41,7 @@ def render_searchform():
 
     # Store (user) hosts in JS array
     data = html.live.query("GET hosts\nColumns: name alias\n")
-    html.write("aSearchHosts = %s;\n" % data)
+    html.write("aSearchHosts = %s;\n" % json.dumps(data))
     html.write('</script>')
 
 sidebar_snapins["search"] = {

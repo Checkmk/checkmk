@@ -8,8 +8,7 @@ admin_users = [ "nagiosadmin" ]
 
 # A lists of all normal operational users allowed to use
 # Multisite. If this variable is no set, then everybody with a correct
-# HTTP login may use Multisite, but sees only data he/she is
-# a contact for in Nagios
+# HTTP login may use Multisite.
 # users       = [ "meier", "huber", "mueller" ]
 
 # Sites to connect to. If this variable is unset, a single

@@ -395,8 +395,8 @@ class html:
 	self.write("<script language=\"javascript\">\n%s\n</script>\n" % code)
 
     def reload_sidebar(self):
-	self.javascript("parent.frames[0].location.reload();");
-	
+        self.javascript("parent.frames[0].location.reload();");
+
     # Get next transaction id for that user
     def current_transid(self, username):
 	dir = defaults.var_dir + "/web/" + username

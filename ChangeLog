@@ -41,6 +41,7 @@
          inhibit entering of Umlauts in new comments (fixes exception)
       * Check sylo: New check for monitoring the sylo state
       * Multisite: Switched sidebar sajax requests to ajax calls
+      * Multisite: Reduced complete reloads of the sidebar caused by user actions
 
 1.1.4b1:
       Summary:

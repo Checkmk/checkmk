@@ -367,9 +367,9 @@ def page_edit_views(h, msg=None):
 	save_views(html.req.user)
 	load_views()
 	changed = True
-	
+
     if changed:
-	html.javascript("parent.frames[0].location.reload();");
+        html.javascript("parent.frames[0].location.reload();");
 
     html.write("<table class=views>\n")
 

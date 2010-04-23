@@ -163,7 +163,7 @@ def handler(req):
 			 "logwatch"            : page_logwatch.page,
 			 "sidebar"             : sidebar.page_sidebar, # embedded
 			 "side"                : sidebar.page_side,    # replacement for side.php
-			 "sidebar_config"      : sidebar.page_configure, 
+			 "sidebar_config"      : sidebar.page_configure,
 			 "switch_site"         : ajax_switch_site,
 			 "sidebar_snapin"      : sidebar.ajax_snapin,
 			 "sidebar_openclose"   : sidebar.ajax_openclose,

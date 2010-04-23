@@ -46,7 +46,7 @@ for name, snapin in sidebar_snapins.items():
 # Helper functions to be used by snapins
 def link(text, target):
     if not target.startswith("http:") and target[0] != '/':
-	target = defaults.checkmk_web_uri + "/" + target 
+	target = defaults.checkmk_web_uri + "/" + target
     return "<a target=\"main\" class=link href=\"%s\">%s</a>" % (target, htmllib.attrencode(text))
 
 def bulletlink(text, target):
@@ -58,10 +58,11 @@ def footnotelinks(links):
 	html.write(link(text, target))
     html.write("</div>\n")
 
-def iconbutton(what, url, target="side"):
+def iconbutton(what, url, target="side", handler="", name=""):
     if target == "side":
-	onclick = "onclick=\"get_url('%s')\"" % (defaults.checkmk_web_uri + "/" + url)
-	href = ""
+	onclick = "onclick=\"get_url('%s', %s, '%s')\"" % \
+                   (defaults.checkmk_web_uri + "/" + url, handler, name)
+	href = "#"
 	tg = ""
     else:
 	onclick = ""
@@ -118,7 +119,7 @@ def page_side(h):
 </html>
 """ % ((defaults.checkmk_web_uri, ) * 2))
 
-# Embedded sidebar	
+# Embedded sidebar
 def page_sidebar(h):
     global html
     html = h
@@ -145,14 +146,14 @@ def page_sidebar(h):
     html.write("<div class=footnote><a target=\"main\" href=\"%s/sidebar_config.py\">Configure sidebar</a></div>\n" % \
 	    defaults.checkmk_web_uri)
     html.write("<script language=\"javascript\">\n")
-    html.write("refresh_snapins = %r;\n" % refresh_snapins) 
+    html.write("refresh_snapins = %r;\n" % refresh_snapins)
     html.write("sidebar_scheduler();\n")
     html.write("</script>\n")
 
 def render_snapin(name, state):
     snapin = sidebar_snapins.get(name)
     styles = snapin.get("styles")
-    if styles: 
+    if styles:
 	html.write("<style>\n%s\n</style>\n" % styles)
 
     html.write("<div class=section>\n")
@@ -161,7 +162,7 @@ def render_snapin(name, state):
     else:
 	style = ""
     url = defaults.checkmk_web_uri + "/sidebar_openclose.py?name=%s&state=" % name
-    iconbutton("close", "sidebar_openclose.py?name=%s&state=off" % name, "side")
+    iconbutton("close", "sidebar_openclose.py?name=%s&state=off" % name, "side", "removeSnapin", 'snapin_'+name)
     html.write("<b class=heading onclick=\"toggle_sidebar_snapin(this,'%s')\" onmouseover=\"this.style.cursor='pointer'\" "
 	       "onmouseout=\"this.style.cursor='auto'\">%s" % (url, snapin["title"]))
     html.write("</b><div id=\"snapin_%s\" class=content%s>\n" % (name, style))

@@ -56,6 +56,25 @@ oDiv = null;
 oLink = null;
 oSidebar = null;
 
+// Removes a bookmark from the bookmarks list after deletion
+function delBookmark(num, code) {
+  var container = document.getElementById('bookmark_'+num);
+  var parent = container.parentNode;
+  parent.removeChild(container);
+  container = null;
+  parent = null;
+}
+
+// Removes a snapin from the sidebar without reloading anything
+function removeSnapin(id, code) {
+  var container = document.getElementById(id).parentNode;
+  var parent = container.parentNode;
+  parent.removeChild(container);
+  container = null;
+  parent = null;
+}
+
+// Updates the contents of a snapin container after get_url
 function updateContents(id, code) {
   var obj = document.getElementById(id);
   if(obj) {
@@ -156,17 +175,17 @@ function sidebar_scheduler() {
     for (var i in refresh_snapins) { 
         name    = refresh_snapins[i][0];
         refresh = refresh_snapins[i][1];
-        if (timestamp % refresh == 0) {
+        if(timestamp % refresh == 0) {
             get_url(url + "/sidebar_snapin.py?name=" + name, updateContents, "snapin_" + name);
         }
     }
     setTimeout(function(){sidebar_scheduler();}, 1000);
 }
 
-function add_bookmark(baseurl) {
+function addBookmark() {
     href = parent.frames[1].location;
     title = parent.frames[1].document.title;
-    get_url(baseurl + "/add_bookmark.py?title=" + escape(title) + "&href=" + escape(href));
+    get_url(url + "/add_bookmark.py?title=" + escape(title) + "&href=" + escape(href), updateContents, "snapin_bookmarks");
 }
 
 function hilite_icon(oImg, onoff) {

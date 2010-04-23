@@ -1486,10 +1486,10 @@ define servicedependency {
             outfile.write("""
 define service {
     use                      %s
-    host_name                %s
+%s    host_name                %s
 }
 
-""" % (pingonly_template, hostname))
+""" % (pingonly_template, extra_service_conf_of(hostname, "PING"), hostname))
 
     if generate_dummy_commands:
         outfile.write("# Dummy check commands for passive services\n\n")

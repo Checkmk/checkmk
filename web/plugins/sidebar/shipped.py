@@ -449,7 +449,7 @@ sidebar_snapins["nagios_legacy"] = {
 #                                                                
 # ----------------------------------------------------------------
 def render_master_control():
-    items = [ 
+    items = [
 	( "enable_notifications",     "Notifications", ),
 	( "execute_service_checks",   "Service checks" ),
 	( "execute_host_checks",      "Host checks" ),
@@ -471,9 +471,9 @@ def render_master_control():
 	for i, (colname, title) in enumerate(items):
 	    colvalue = siteline[i + 1]
 	    url = defaults.checkmk_web_uri + ("/switch_master_state.py?site=%s&switch=%s&state=%d" % (siteid, colname, 1 - colvalue))
-	    onclick = "get_url('%s')" % url
+	    onclick = "get_url('%s', updateContents, 'snapin_master_control')" % url
 	    enabled = colvalue and "enabled" or "disabled"
-	    html.write("<tr><td class=left>%s</td><td class=%s><a onclick=\"%s\" href=\"\">%s</a></td></tr>\n" % (title, enabled, onclick, enabled))
+	    html.write("<tr><td class=left>%s</td><td class=%s><a onclick=\"%s\" href=\"#\">%s</a></td></tr>\n" % (title, enabled, onclick, enabled))
     html.write("</table>")
 	    
 sidebar_snapins["master_control"] = {
@@ -524,7 +524,9 @@ div#check_mk_sidebar table.master_control td.disabled a {
 """
 }
 
-def ajax_switch_masterstate(html):
+def ajax_switch_masterstate(h):
+    global html
+    html = h
     site = html.var("site")
     column = html.var("switch")
     state = int(html.var("state"))
@@ -548,9 +550,10 @@ def ajax_switch_masterstate(html):
         html.live.query("GET status\nWaitTrigger: program\nWaitTimeout: 10000\nWaitCondition: %s = %d\nColumns: %s\n" % \
                (column, state, column))
 	html.live.set_only_sites(None)
+        render_master_control()
     else:
 	html.write("Command %s/%d not found" % (column, state))
-	
+
 # ---------------------------------------------------------
 #   ____              _                         _        
 #  | __ )  ___   ___ | | ___ __ ___   __ _ _ __| | _____ 
@@ -575,14 +578,14 @@ def render_bookmarks():
     bookmarks = load_bookmarks()
     n = 0
     for title, href in bookmarks:
-	iconbutton("del", "del_bookmark.py?num=%d" % n, "side")
+        html.write("<div id=\"bookmark_%s\">" % n)
+	iconbutton("del", "del_bookmark.py?num=%d" % n, "side", "delBookmark", n)
 	iconbutton("edit", "edit_bookmark.py?num=%d" % n, "main")
 	html.write(link(title, href))
-	html.write("<br>")
+        html.write("</div>")
 	n += 1
 
-    onclick = "add_bookmark('%s')" % defaults.checkmk_web_uri
-    html.write("<div class=footnotelink><a href=\"\" onclick=\"%s\">Add Bookmark</a></div>\n" % onclick)
+    html.write("<div class=footnotelink><a href=\"#\" onclick=\"addBookmark()\">Add Bookmark</a></div>\n")
 
 def page_edit_bookmark(h):
     global html
@@ -631,7 +634,7 @@ def ajax_add_bookmark(h):
 	bookmarks = load_bookmarks()
 	bookmarks.append((title, href))
 	save_bookmarks(bookmarks)
-	
+    render_bookmarks()
 
 sidebar_snapins["bookmarks"] = {
     "title" : "Bookmarks",

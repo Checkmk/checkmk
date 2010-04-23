@@ -43,6 +43,8 @@
         (groups, contactgroups still missing)
       * Check sylo: New check for monitoring the sylo state
       * Multisite: Switched sidebar sajax requests to ajax calls
+      * ping-only-hosts: When ping only hosts are summarized, remove Check_MK and
+        add single PING to summary host.
 
 1.1.4b1:
       Summary:

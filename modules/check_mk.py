@@ -1413,8 +1413,21 @@ def output_serviceconf(outfile = sys.stdout):
             outfile.write("\n# Aggregated services of host %s\n\n" % hostname)
 
         aggr_descripts = aggregated_services_conf
-	if aggregate_check_mk and host_is_aggregated(hostname):
+	if aggregate_check_mk and host_is_aggregated(hostname) and have_at_least_one_service:
 	    aggr_descripts.add("Check_MK")
+
+        # If a ping-only-host is aggregated, the summary host gets it's own
+        # copy of the ping - as active check. We cannot aggregate the result
+        # from the ping of the real host since no Check_MK is running during 
+        # the check.
+        elif host_is_aggregated(hostname) and not have_at_least_one_service:
+            outfile.write("""
+define service {
+    use                      %s
+%s    host_name                %s
+}
+
+""" % (pingonly_template, extra_service_conf_of(hostname, "PING"), summary_hostname(hostname)))
 
         for description in aggr_descripts:
             sergr = service_extra_conf(hostname, description, summary_service_groups)

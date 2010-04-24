@@ -48,6 +48,7 @@
         add single PING to summary host.
       * New config parameter debug_log: set this to a filename in main.mk and you
         will get a debug log in case if 'invalid output from plugin...'
+      * Livestatus: Separators: remote sanitiy check, allow separators to be equal
 
 1.1.4b1:
       Summary:

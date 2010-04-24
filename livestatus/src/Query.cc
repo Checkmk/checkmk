@@ -461,16 +461,16 @@ void Query::parseSeparatorsLine(char *line)
    token = next_field(&line);
    if (token) hssep = atoi(token);
 
-   if (dssep == fieldsep 
-	 || dssep == listsep 
-	 || fieldsep == listsep
-	 || dssep == hssep
-	 || fieldsep == hssep
-	 || listsep == hssep)
-   {
-      _output->setError(RESPONSE_CODE_INVALID_HEADER, "invalid Separators: need four different integers");
-      return;
-   }
+   // if (dssep == fieldsep 
+   //       || dssep == listsep 
+   //       || fieldsep == listsep
+   //       || dssep == hssep
+   //       || fieldsep == hssep
+   //       || listsep == hssep)
+   // {
+   //    _output->setError(RESPONSE_CODE_INVALID_HEADER, "invalid Separators: need four different integers");
+   //    return;
+   // }
    _dataset_separator      = string(&dssep, 1);
    _field_separator        = string(&fieldsep, 1);
    _list_separator         = string(&listsep, 1);

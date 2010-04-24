@@ -175,6 +175,7 @@ check_max_cachefile_age            = 0 # per default do not use cache files when
 cluster_max_cachefile_age          = 90   # secs.
 simulation_mode                    = False
 perfdata_format                    = "standard" # also possible: "pnp"
+debug_log                          = None
 
 # SNMP communities
 snmp_default_community             = 'public'
@@ -1854,7 +1855,7 @@ filesystem_default_levels = None
                  'check_mk_basedir', 'df_magicnumber_normsize', 
 		 'df_lowest_warning_level', 'df_lowest_critical_level', 'nagios_user',
                  'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
-                 'simulation_mode', 'aggregate_check_mk',
+                 'simulation_mode', 'aggregate_check_mk', 'debug_log',
                  ]:
         output.write("%s = %r\n" % (var, globals()[var]))
 

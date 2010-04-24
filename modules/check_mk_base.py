@@ -668,9 +668,27 @@ def do_all_checks_on_host(hostname, ipaddress):
 	       if opt_verbose:
 		  print "Counter wrapped, not handled by check, ignoring this check result"
 	       dont_submit = True
-           except:
+           except Exception, e:
                result = (3, "UNKNOWN - invalid output from plugin section <<<%s>>> or error in check type %s" %
-                         (checkname, checkname))
+                         (infotype, checkname))
+               if debug_log:
+                   try:
+                       import traceback, pprint
+                       l = file(debug_log, "a")
+                       l.write(("Invalid output from plugin or error in check:\n"
+                               "  Date:         %s\n"
+                               "  Host:         %s\n"
+                               "  Service:      %s\n"
+                               "  Check type:   %s\n"
+                               "  %s\n"
+                               "  Agent info:   %s\n\n") % (
+                               time.strftime("%Y-%d-%m %H:%M:%S"),
+                               hostname, description, checkname,
+                               traceback.format_exc().replace('\n', '\n      '),
+                               pprint.pformat(info)))
+                   except:
+                       pass
+
                if opt_debug:
                    raise
 	   if not dont_submit:

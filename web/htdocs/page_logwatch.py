@@ -254,7 +254,7 @@ def parse_file(host, file, hidecontext = False):
                     line_level = 2
                     line_class = 'CRIT'
 
-                elif hidecontext:
+                elif not hidecontext:
                     line_level = 0
                     line_class = 'context'
 

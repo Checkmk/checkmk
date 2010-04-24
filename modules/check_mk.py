@@ -175,6 +175,7 @@ check_max_cachefile_age            = 0 # per default do not use cache files when
 cluster_max_cachefile_age          = 90   # secs.
 simulation_mode                    = False
 perfdata_format                    = "standard" # also possible: "pnp"
+debug_log                          = None
 
 # SNMP communities
 snmp_default_community             = 'public'
@@ -1413,8 +1414,21 @@ def output_serviceconf(outfile = sys.stdout):
             outfile.write("\n# Aggregated services of host %s\n\n" % hostname)
 
         aggr_descripts = aggregated_services_conf
-	if aggregate_check_mk and host_is_aggregated(hostname):
+	if aggregate_check_mk and host_is_aggregated(hostname) and have_at_least_one_service:
 	    aggr_descripts.add("Check_MK")
+
+        # If a ping-only-host is aggregated, the summary host gets it's own
+        # copy of the ping - as active check. We cannot aggregate the result
+        # from the ping of the real host since no Check_MK is running during 
+        # the check.
+        elif host_is_aggregated(hostname) and not have_at_least_one_service:
+            outfile.write("""
+define service {
+    use                      %s
+%s    host_name                %s
+}
+
+""" % (pingonly_template, extra_service_conf_of(hostname, "PING"), summary_hostname(hostname)))
 
         for description in aggr_descripts:
             sergr = service_extra_conf(hostname, description, summary_service_groups)
@@ -1486,10 +1500,10 @@ define servicedependency {
             outfile.write("""
 define service {
     use                      %s
-    host_name                %s
+%s    host_name                %s
 }
 
-""" % (pingonly_template, hostname))
+""" % (pingonly_template, extra_service_conf_of(hostname, "PING"), hostname))
 
     if generate_dummy_commands:
         outfile.write("# Dummy check commands for passive services\n\n")
@@ -1841,7 +1855,7 @@ filesystem_default_levels = None
                  'check_mk_basedir', 'df_magicnumber_normsize', 
 		 'df_lowest_warning_level', 'df_lowest_critical_level', 'nagios_user',
                  'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
-                 'simulation_mode', 'aggregate_check_mk',
+                 'simulation_mode', 'aggregate_check_mk', 'debug_log',
                  ]:
         output.write("%s = %r\n" % (var, globals()[var]))
 

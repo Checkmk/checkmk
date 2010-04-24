@@ -1,3 +1,8 @@
+Multisite: man kann bei Comments keine Umlaute eingeben. Diese
+sind aktuell verboten, weil Python sonst Exceptions wirft.
+Komischerweise kann man in den Filtern problemlos Umlaute
+eingeben. Keine Ahnung, wo hier der Unterschied liegt.
+
 Icinga 1.0.1 mit Livestatus hing nach dem Beenden in futex:
 
 # strace -p 25739
@@ -23,9 +28,6 @@ futex(0x7fb7f4d399f4, FUTEX_WAIT_PRIVATE, 2, NULL
 --> Haenger ist wahrscheinlich abhaengig von dem Setzen
 der Umgebungsvariablen.
 
-
-Doku zu Livestatus: xinetd-Beispiel mit geschewiften Klammern
-geht nicht. Beispiel ohne Klammern einbauen
 
 Hostgroups (Summary): Das Feld wie die Pending hosts stehen,
     ist grün statt grau und die Überschrift ist "Un" statt "Pe"
@@ -121,3 +123,5 @@ Anstelle der Pipe direkt checkresults-Dateien schreiben
 
 check_mk -R koennte statt restart ein reload machen.
 Oder eine eigene option, check_mk -O?
+
+check_mk -C soll Liste von Hosts bekommen können.

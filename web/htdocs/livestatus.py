@@ -197,11 +197,12 @@ class BaseConnection:
 	    self.connect()
         if not query.endswith("\n"):
 	    query += "\n"
-        query += add_headers
 	query += self.add_headers
+        query += "Localtime: %d\nOutputFormat: python\nKeepAlive: on\nResponseHeader: fixed16\n" % int(time.time())
+        query += add_headers
         if not query.endswith("\n"):
 	    query += "\n"
-        query += "Localtime: %d\nOutputFormat: python\nKeepAlive: on\nResponseHeader: fixed16\n\n" % int(time.time())
+        query += "\n"
 
         try:
 	    self.socket.send(query)

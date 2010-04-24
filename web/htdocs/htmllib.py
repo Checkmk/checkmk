@@ -372,7 +372,7 @@ class html:
             if self.browser_reload:
                 login_text += ", refresh: %d secs" % self.browser_reload
             self.req.write("<table class=footer><tr>"
-                           "<td class=left>&copy; <a href=\"http://mathias-kettner.de\">Mathias Kettner</a></td>"
+                           "<td class=left>&copy; <a href=\"http://mathias-kettner.de\">MK</a></td>"
                            "<td class=middle>This is part of <a href=\"http://mathias-kettner.de/check_mk\">Check_MK</a> version %s</td>"
                            "<td class=right>%s</td></tr></table>"
                            % (defaults.check_mk_version, login_text))

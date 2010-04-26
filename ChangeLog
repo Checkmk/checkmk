@@ -51,6 +51,7 @@
       * Livestatus: Separators: remote sanitiy check, allow separators to be equal
       * Multisite: fix reload problem in frameset: Browser reload now only reloads
         content frames, not frameset.
+      * Multisite: view "Hostgroups": fix color and table heading
 
 1.1.4b1:
       Summary:

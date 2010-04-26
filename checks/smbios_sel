@@ -168,4 +168,4 @@ def check_smbios_sel(_no_item, _no_params, info):
 
     return (sum_status, "%s: %s" % (statname[sum_status], sum_output))
 
-check_info['smbios_sel'] = (check_smbios_sel, "SMBIOS Event Log", 1, inventory_smbios_sel)
+check_info['smbios_sel'] = (check_smbios_sel, "SMBIOS Event Log", 0, inventory_smbios_sel)

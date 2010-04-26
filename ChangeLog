@@ -52,6 +52,7 @@
       * Multisite: fix reload problem in frameset: Browser reload now only reloads
         content frames, not frameset.
       * Multisite: view "Hostgroups": fix color and table heading
+      * Multisite: new sidebar snapin "Problem hosts"
 
 1.1.4b1:
       Summary:

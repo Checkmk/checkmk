@@ -138,9 +138,12 @@ sidebar_snapins["servicegroups"] = {
 #   |_| |_|\___/|___/\__|___/
 #                            
 # --------------------------------------------------------------
-def render_hosts():
+def render_hosts(only_problems = False):
     html.live.set_prepend_site(True)
-    hosts = html.live.query("GET hosts\nColumns: name state worst_service_state\n")
+    query = "GET hosts\nColumns: name state worst_service_state\n"
+    if only_problems:
+	query += "Filter: state > 0\nFilter: worst_service_state > 0\nOr: 2\n"
+    hosts = html.live.query(query)
     html.live.set_prepend_site(False)
     hosts.sort()
     views.html = html
@@ -159,18 +162,28 @@ def render_hosts():
         html.write(link(host, target + ("&host=%s&site=%s" % (htmllib.urlencode(host), htmllib.urlencode(site)))))
 	html.write("<br>\n")
 
-sidebar_snapins["hosts"] = {
-    "title" : "All hosts",
-    "render" : render_hosts,
-    "allowed" : [ "user", "admin", "guest" ],
-    "refresh" : 60,
-    "styles" : """
+sidebar_all_hosts_styles = """
 div.statebullet { margin-left: 2px; margin-right: 4px; width: 10px; height: 10px; border: 1px solid black; float: left; }
 div.state0 { background-color: #4c4; border-color: #0f0;  }
 div.state1 { background-color: #ff0; }
 div.state2 { background-color: #f00; }
 div.state3 { background-color: #f80; }
 """
+
+sidebar_snapins["hosts"] = {
+    "title" : "All hosts",
+    "render" : lambda: render_hosts(False),
+    "allowed" : [ "user", "admin", "guest" ],
+    "refresh" : 60,
+    "styles" : sidebar_all_hosts_styles
+}
+
+sidebar_snapins["problem_hosts"] = {
+    "title" : "Problem hosts",
+    "render" : lambda: render_hosts(True),
+    "allowed" : [ "user", "admin", "guest" ],
+    "refresh" : 60,
+    "styles" : sidebar_all_hosts_styles
 }
     
 

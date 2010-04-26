@@ -410,7 +410,11 @@ def paint_svc_count(id, count):
 
 def paint_host_count(id, count):
     if count > 0:
-	return "count hstate hstate%s" % id, str(count)
+        if id != None:
+            return "count hstate hstate%s" % id, str(count)
+        else: # pending
+            return "count hstate hstatep", str(count)
+
     else:
 	return "count hstate hstatex", "0"
 
@@ -549,19 +553,19 @@ multisite_painters["hg_num_hosts_down"] = {
     "title"   : "Number of hosts in state DOWN",
     "short"   : "Dw",
     "columns" : [ "hostgroup_num_hosts_down" ],
-    "paint"   : lambda row: paint_host_count(0, row["hostgroup_num_hosts_down"])
+    "paint"   : lambda row: paint_host_count(1, row["hostgroup_num_hosts_down"])
 }
 multisite_painters["hg_num_hosts_unreach"] = {
     "title"   : "Number of hosts in state UNREACH",
     "short"   : "Un",
     "columns" : [ "hostgroup_num_hosts_unreach" ],
-    "paint"   : lambda row: paint_host_count(0, row["hostgroup_num_hosts_unreach"])
+    "paint"   : lambda row: paint_host_count(2, row["hostgroup_num_hosts_unreach"])
 }
 multisite_painters["hg_num_hosts_pending"] = {
     "title"   : "Number of hosts in state PENDING",
-    "short"   : "Un",
+    "short"   : "Pd",
     "columns" : [ "hostgroup_num_hosts_pending" ],
-    "paint"   : lambda row: paint_host_count(0, row["hostgroup_num_hosts_pending"])
+    "paint"   : lambda row: paint_host_count(None, row["hostgroup_num_hosts_pending"])
 }
 multisite_painters["hg_name"] = {
     "title" : "Hostgroup name",

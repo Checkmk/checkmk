@@ -278,24 +278,65 @@ div#check_mk_sidebar table.sitestate td.disabled a {
 #     |_|\__,_|\___|\__|_|\___\__,_|_|  \___/ \_/ \___|_|    \_/ |_|\___| \_/\_/  
 #                                                                                 
 # --------------------------------------------------------------
+# Filter for host problems:
+#
+tactical_overview_hostfilter = \
+"""
+"""
+
+tactical_overview_servicefilter = \
+"""Filter: service_state = 1
+Filter: service_has_been_checked = 1
+And: 2
+Filter: service_state = 2
+Filter: service_has_been_checked = 1
+And: 2
+Filter: service_state = 3
+Filter: service_has_been_checked = 1
+And: 2
+Or: 3
+Filter: service_scheduled_downtime_depth = 0
+Filter: host_scheduled_downtime_depth = 0
+And: 2
+"""
+
 def render_tactical_overview():
-    headers = \
+    host_query = \
+        "GET hosts\n" \
         "Stats: state >= 0\n" \
 	"Stats: state > 0\n" \
+        "Stats: scheduled_downtime_depth = 0\n" \
+        "StatsAnd: 2\n" \
 	"Stats: state > 0\n" \
+        "Stats: scheduled_downtime_depth = 0\n" \
 	"Stats: acknowledged = 0\n" \
-	"StatsAnd: 2\n"
+	"StatsAnd: 3\n"
+
+    service_query = \
+        "GET services\n" \
+        "Stats: state >= 0\n" \
+	"Stats: state > 0\n" \
+        "Stats: scheduled_downtime_depth = 0\n" \
+        "Stats: host_scheduled_downtime_depth = 0\n" \
+        "StatsAnd: 3\n" \
+	"Stats: state > 0\n" \
+        "Stats: scheduled_downtime_depth = 0\n" \
+        "Stats: host_scheduled_downtime_depth = 0\n" \
+	"Stats: acknowledged = 0\n" \
+	"StatsAnd: 4\n"
+
+    # ACHTUNG: Stats-Filter so anpassen, dass jeder Host gezaehlt wird.
 
     try:
-        svcdata = html.live.query_summed_stats("GET services\n" + headers)
-        hstdata = html.live.query_summed_stats("GET hosts\n" + headers)
+        hstdata = html.live.query_summed_stats(host_query)
+        svcdata = html.live.query_summed_stats(service_query)
     except livestatus.MKLivestatusNotFoundError:
 	html.write("<center>No data from any site</center>")
 	return
     html.write("<table class=tacticaloverview cellspacing=3>\n")
     for title, data, view, what in [
-	    ("Hosts", hstdata, 'hostproblems', 'host'),
-	    ("Services", svcdata, 'svcproblems', 'service'), 
+	    ("Hosts",    hstdata, 'hostproblems', 'host'),
+	    ("Services", svcdata, 'svcproblems',  'service'), 
 	    ]:
 	html.write("<tr><th>%s</th><th>Problems</th><th>Unhandled</th></tr>\n" % title)
 	html.write("<tr>")

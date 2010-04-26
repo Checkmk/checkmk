@@ -53,6 +53,7 @@
         content frames, not frameset.
       * Multisite: view "Hostgroups": fix color and table heading
       * Multisite: new sidebar snapin "Problem hosts"
+      * Multisite: tactical overview: honor downtimes
 
 1.1.4b1:
       Summary:

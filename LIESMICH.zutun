@@ -2,11 +2,6 @@
 NOCH INS RELEASE
 --------------------------------------------------------------------------------
 
-Hostgroups (Summary): Das Feld wie die Pending hosts stehen,
-    ist grün statt grau und die Überschrift ist "Un" statt "Pe"
-
-In Frameset: header("Cache-Control: max-age=7200, public"); 
-
 Die Tactical overview blendet nicht die Services aus, die gerade in Downtime
 sind. Wenn man aber auf die Zahl klickt, kommt man zu einer View, die diese
 (korrekt) ausblendet.

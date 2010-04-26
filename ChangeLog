@@ -54,6 +54,7 @@
       * Multisite: view "Hostgroups": fix color and table heading
       * Multisite: new sidebar snapin "Problem hosts"
       * Multisite: tactical overview: honor downtimes
+      * Service aggregation: fix state relationship: CRIT now worse than UNKNOWN 
 
 1.1.4b1:
       Summary:

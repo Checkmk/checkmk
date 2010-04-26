@@ -72,8 +72,7 @@ def check_sylo(item, params, info):
         age = now - mtime
         if age > alive_report:
             status = 2
-            mtime_date = datetime.fromtimestamp(mtime)
-            return (2, "CRIT - Sylo not running (Hintfile too old: last update %s)" % mtime_date)
+            return (2, "CRIT - Sylo not running (Hintfile too old: last update %d secs ago)" % age)
 
         # Current fill state
         if inOffset == outOffset:

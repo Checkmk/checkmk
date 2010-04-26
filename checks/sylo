@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-#
+# 
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-#
+# 
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -23,7 +23,7 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-#
+
 # Author: Lars Michelsen <lm@mathias-kettner.de
 
 # Example output of agent:

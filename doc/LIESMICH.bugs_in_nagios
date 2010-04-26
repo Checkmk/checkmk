@@ -1,0 +1,34 @@
+
+Icinga 1.0.1 mit Livestatus hing nach dem Beenden in futex:
+
+# strace -p 25739
+Process 25739 attached - interrupt to quit
+futex(0x7fb7f4d399f4, FUTEX_WAIT_PRIVATE, 2, NULL
+        
+(gdb) bt
+#0  0x00007fb7f4abc76e in ?? () from /lib/libc.so.6
+#1  0x00007fb7f4a63f3d in ?? () from /lib/libc.so.6
+#2  0x00007fb7f4a63cf7 in ?? () from /lib/libc.so.6
+#3  0x00000000004408df in get_datetime_string ()
+#4  0x0000000000431acc in grab_datetime_macro ()
+#5  0x0000000000434085 in grab_macrox_value ()
+#6  0x00000000004348b3 in set_macrox_environment_vars ()
+#7  0x00000000004348ed in set_all_macro_environment_vars ()
+#8  0x0000000000419313 in run_async_host_check_3x ()
+#9  0x000000000041b50f in run_scheduled_host_check_3x ()
+#10 0x000000000041b6ba in perform_scheduled_host_check ()
+#11 0x000000000042b44b in handle_timed_event ()
+#12 0x000000000042b8a1 in event_execution_loop ()
+#13 0x0000000000413ef2 in main ()
+
+--> Haenger ist wahrscheinlich abhaengig von dem Setzen
+der Umgebungsvariablen.
+
+Im Quellcode von get_datetime_string() sieht man, dass
+die Funktion localtime() oder gmtime() verwendet wird.
+Beide sind *nicht* threadsafe. Gut möglich, dass die
+libc sich hier mit einem futex-schützt. Andere Aufrufe
+in die libc gibt es nicht, außer snprintf, der sicherlich
+kein Problem machen dürfte. ==> Sieht aus wie ein Bug
+in Nagios. Besser, man stellt die Umgebungsvariablen ab.
+

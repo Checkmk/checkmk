@@ -55,7 +55,6 @@ def inventory_sylo(checkname, info):
 
 def check_sylo(item, params, info):
     if len(info[0]) == 4:
-        status = 0
         msg = ""
 
         alive_report, warn, crit = params
@@ -74,7 +73,7 @@ def check_sylo(item, params, info):
         if age > alive_report:
             status = 2
             mtime_date = datetime.fromtimestamp(mtime)
-            msg += "Sylo not running (Hintfile too old: last update %s) - " % mtime_date
+            return (2, "CRIT - Sylo not running (Hintfile too old: last update %s)" % mtime_date)
 
         # Current fill state
         if inOffset == outOffset:
@@ -94,6 +93,7 @@ def check_sylo(item, params, info):
              (bytesUsed / (1024*1024.0), percUsed, in_rate, out_rate)
 
         # CRIT/WARN: Filled up
+        status = 0
         if percUsed >= crit and status < 2:
             status = 2
         elif percUsed >= warn and status < 1:

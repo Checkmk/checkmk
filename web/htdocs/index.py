@@ -221,6 +221,7 @@ def handler(req):
    
 
 def page_index(html):
+    html.req.headers_out.add("Cache-Control", "max-age=7200, public");
     html.write("""
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd">
 <html>

@@ -47,6 +47,8 @@
         add single PING to summary host.
       * New config parameter debug_log: set this to a filename in main.mk and you
         will get a debug log in case if 'invalid output from plugin...'
+      * Multisite: fix reload problem in frameset: Browser reload now only reloads
+        content frames, not frameset.
 
 1.1.4b1:
       Summary:

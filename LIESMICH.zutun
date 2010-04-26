@@ -1,14 +1,13 @@
 --------------------------------------------------------------------------------
-NOCH INS RELEASE
+NOCH INS RELEASE 1.1.4
 --------------------------------------------------------------------------------
-
-Die Tactical overview blendet nicht die Services aus, die gerade in Downtime
-sind. Wenn man aber auf die Zahl klickt, kommt man zu einer View, die diese
-(korrekt) ausblendet.
 
 --------------------------------------------------------------------------------
 UNSCHOENHEITEN
 --------------------------------------------------------------------------------
+Logwatch.py: Wenn die state-Datei korrupt ist, diese neu anlegen und eine
+Fakemeldung nach oben schicken, die critical ist.
+
 Tabledarstellung mit Gruppen: Hier klebt der Gruppenkopf zu dicht
 an der vorherigen Gruppe.
 
@@ -38,13 +37,8 @@ dass diese *nicht* bei einem Restart gespeichert werden?
 Sonst werden sie nie zurückgesetzt. Oder kann man das evtl.
 mit einem Kommando machen? 
 
-Ja => CHANGE_SVC_MODATTR;<host_name>;<service_description>;<value>
-Eine Datei local.mk, die von backup/restore *nicht* beruecksichtigt wird.
-
-Tactical overview: Könnte man evtl. einfach die Datenquellen und Filter
-von bestehenden Views verwendenden? Dann wäre darüber auch die Sache
-konfigurierbar?? Auch gut wäre eine Möglichkeit, wie sich sidebar-snapins
-eine Konfiguration merken und Konfigdialog aufmachen können.
+    Ja => CHANGE_SVC_MODATTR;<host_name>;<service_description>;<value>
+    Eine Datei local.mk, die von backup/restore *nicht* beruecksichtigt wird.
 
 Multisite: Bei einer bestehenden View muss man die Datenquelle umstellen
 können, zumindest wenn die neue Datenquelle alle Spalten unterstützt,
@@ -62,10 +56,9 @@ Edit view: die Spaltenzahl ist zu niedrig.
 Inventur von Linux-NICs: Nur verwendete Karten monitoren.
 
 Doku Windows:
-
-C:\> lodctr /s:c:\counter.txt
-==> Holt aus der Registry die Namen und Beschreibungen der
-ganzen Performancecounter :-)
+ C:\> lodctr /s:c:\counter.txt
+ ==> Holt aus der Registry die Namen und Beschreibungen der
+ ganzen Performancecounter :-)
 
 Die Option -d verwendet --cache nicht.
 
@@ -78,19 +71,17 @@ Oder eine eigene option, check_mk -O?
 
 check_mk -C soll Liste von Hosts bekommen können.
 
-Generieren der Host- und Serviceconf umbauen und
-in einer gemeinsamen Schleifen machen. Dabei stets
-zuerst die Services und dann die Hosts generieren.
-Denn dann kann ich bei den Hosts schon wissen, ob
-es services gibt und für die PING-only hosts eine
-andere Schablone nehmen, wo die check_interval für
-Hostchecks auf 0 ist, also nur on-demand-pings
-ausgeführt werden (damit man nicht doppelt pingt).
+Generieren der Host- und Serviceconf umbauen und in einer gemeinsamen Schleifen
+machen. Dabei stets zuerst die Services und dann die Hosts generieren.
+Denn dann kann ich bei den Hosts schon wissen, ob es services gibt und für
+die PING-only hosts eine andere Schablone nehmen, wo die check_interval
+für Hostchecks auf 0 ist, also nur on-demand-pings ausgeführt werden
+(damit man nicht doppelt pingt).
 
-Multisite: man kann bei Comments keine Umlaute eingeben. Diese
-sind aktuell verboten, weil Python sonst Exceptions wirft.
-Komischerweise kann man in den Filtern problemlos Umlaute
-eingeben. Keine Ahnung, wo hier der Unterschied liegt.
+Multisite: man kann bei Comments keine Umlaute eingeben. Diese sind aktuell
+verboten, weil Python sonst Exceptions wirft.  Komischerweise kann man
+in den Filtern problemlos Umlaute eingeben. Keine Ahnung, wo hier der
+Unterschied liegt.
 
 Windows-Agent: Speicherberechung von Swap anpassen und Check mem entsprechend
 anpassen, dass er TotalPage und UsedPage verwendet. Im Quellcode ist das schon
@@ -105,7 +96,4 @@ für Servicegruppen. Man sollte daher die Funktion extra_service_conf_of()
 so erweitern, dass *alles* Nagios-Attribute agbefrühstückt werden.
 
 Check ps (Linux) mit Uberwachung von MEM (Resident) und CPU.
-
-Logwatch.py: Wenn die state-Datei korrupt ist, diese neu anlegen
-und eine Fakemeldung nach oben schicken, die critical ist.
 

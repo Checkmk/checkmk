@@ -132,18 +132,24 @@ def summary_hostname(hostname):
 # Updates the state of an aggretated service check from the output of
 # one of the underlying service checks. The status of the aggregated
 # service will be updated such that the new status is the maximum
-# (crit > warn > ok) of all underlying status. Appends the output to
+# (crit > unknown > warn > ok) of all underlying status. Appends the output to
 # the output list and increases the count by 1.
 def store_aggregated_service_result(hostname, detaildesc, aggrdesc, newstatus, newoutput):
     global g_aggregated_service_results
     count, status, outputlist = g_aggregated_service_results.get(aggrdesc, (0, 0, []))
-    if newstatus > status:
+    if status_worse(newstatus, status):
         status = newstatus
     if newstatus > 0:
         outputlist.append( (detaildesc, newoutput) )
     g_aggregated_service_results[aggrdesc] = (count + 1, status, outputlist)
 
-
+def status_worse(newstatus, status):
+    if status == 2:
+        return False # nothing worse then critical
+    elif newstatus == 2:
+        return True  # nothing worse then critical
+    else:
+        return newstatus > status # 0 < 1 < 3 are in correct order
 
 # Submit the result of all aggregated services of a host
 # to Nagios. Those are stored in g_aggregated_service_results

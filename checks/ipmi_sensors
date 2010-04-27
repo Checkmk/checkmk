@@ -104,7 +104,7 @@ def check_freeipmi(item, _no_params, info):
 
                     # Do not save performance data for FANs. This produces
                     # much data and is - in my opinion - useless.
-                    if items.startswith("Fan_"):
+                    if item.startswith("Fan_"):
                         perfdata = []
                     else:
                         perfdata = [ ("value", current, None, crit) ]

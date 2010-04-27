@@ -47,6 +47,7 @@ target_values = {
     'nagiosuser'        : "System user running the Nagios process",
     'nagpipe'           : "Absolute path to Nagios command pipe (nagios.cmd)",
     'pnpconffile'       : "PNP4Nagios configuration file for its PHP pages",
+    'pnphtdocsdir'      : "PNP4Nagios www document root directory",
     'pnptemplates'      : "directory of PHP templates for PNP4Nagios",
     'rrddir'            : "Base directory where RRDs are stored",
     'wwwgroup'          : "Common group of Nagios and Apache",
@@ -197,6 +198,16 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
                                 if len(parts) > 1 and parts[0].lower() == "authname":
                                     parts = line.split(None, 1)
                                     new_auth_names.append(remove_quotes(parts[1].strip()))
+			        try:
+                                    if len(parts) > 1 and parts[0].lower().startswith("<directory") and "pnp4nagios" in line:
+				        cleanedup = line.replace("<", "").replace(">", "").replace('"', "")
+				        cleanedup = cleanedup[9:]
+				        dir = cleanedup.strip()
+				        if os.path.exists(dir) and os.path.exists(dir + "/application/config/config.php"):
+				            result['pnphtdocsdir'] = dir
+					    result['pnptemplates'] = dir + "/templates"
+                                except Exception,e :
+				    pass
                             if file_good:
                                 auth_names += new_auth_names
                                 auth_files += new_auth_files
@@ -292,6 +303,72 @@ def parse_nagios_config(configfile):
             pass # ignore invalid line (as Nagios seems to do)
     return conf
 
+
+def detect_pnp():
+    global result
+    # Jetzt will ich noch das Verzeichnis fuer die Schablonen
+    # von PNP finden. Ich erkenne es daran, dass es ein Verzeichnis
+    # ist, in dem 'templates' und 'templates.dist' liegen. Dieses
+    # Verzeichnis liegt hoffentlich innerhalb der Webseite von
+    # Nagios selbst. Dieser Pfad ist in cgi.cfg festgelegt. Das ganze
+    # klappt nur bei PNP 0.4
+    if 'pnptemplates' not in result:
+        try:
+            found = []
+            def func(arg, dirname, names):
+                if 'templates' in names and 'templates.dist' in names:
+                    found.append(dirname + "/templates")
+            os.path.walk(cgiconf['physical_html_path'], func, None)
+            result['pnptemplates'] = found[0]
+	    if 'pnphtdocsdir' not in result:
+		result['pnphtdocsdir'] = result['pnptemplates'].rsplit('/', 1)[0]
+        except:
+            pass
+
+    # Suche die Konfigurationsdatei von PNP4Nagios. Denn ich will
+    # den Eintrag finden, der auf die RRDs zeigt. Den braucht
+    # check_mk für das direkte Eintragen in die RRD-Datenbanken
+    try:
+        pnppath = os.path.dirname(result['pnptemplates'])
+        index_php = pnppath + "/index.php"
+        for line in file(index_php):
+            line = line.strip()
+            #  $config = "/usr/local/nagios/etc/pnp/config";
+            if line.startswith('$config =') and line.endswith('";'):
+                pnpconffile = line.split('"')[1] + ".php"
+                result['pnpconffile'] = pnpconffile
+                result['pnpconfdir'] = pnpconffile.rsplit("/", 1)[0]
+                break
+    except:
+	pass
+
+    try:
+	# For PNP 0.6
+        if 'pnpconffile' not in result:
+	    kohanaconf = result['pnphtdocsdir'] + "/application/config/config.php"
+	    if os.path.exists(kohanaconf):
+		for line in file(kohanaconf):
+                    line = line.strip()
+                    if not line.startswith("#") and "pnp_etc_path" in line:
+			last = line.split('=')[-1].strip()
+			dir = last.replace("'", "").replace(";", "").replace('"', "")
+			if os.path.exists(dir):
+			    result['pnpconfdir'] = dir
+			    result['pnpconffile'] = dir + "/config.php"
+
+    except:
+	pass
+
+    try:
+        for line in file(result['pnpconffile']):
+            line = line.strip()
+            if line.startswith("$conf['rrdbase']") and line.endswith('";'):
+                rrddir = line.split('"')[1]
+                if rrddir.endswith('/'):
+                    rrddir = rrddir[:-1]
+                result['rrddir'] = rrddir
+    except:
+	pass
 
 try:
     result = {}
@@ -447,46 +524,6 @@ try:
             pass
                
 
-    # Jetzt will ich noch das Verzeichnis fuer die Schablonen
-    # von PNP finden. Ich erkenne es daran, dass es ein Verzeichnis
-    # ist, in dem 'templates' und 'templates.dist' liegen. Dieses
-    # Verzeichnis liegt hoffentlich innerhalb der Webseite von
-    # Nagios selbst. Dieser Pfad ist in cgi.cfg festgelegt
-    try:
-        found = []
-        def func(arg, dirname, names):
-            if 'templates' in names and 'templates.dist' in names:
-                found.append(dirname + "/templates")
-        os.path.walk(cgiconf['physical_html_path'], func, None)
-        result['pnptemplates'] = found[0]
-    except:
-        pass
-
-    # Suche die Konfigurationsdatei von PNP4Nagios. Denn ich will
-    # den Eintrag finden, der auf die RRDs zeigt. Den braucht
-    # check_mk für das direkte Eintragen in die RRD-Datenbanken
-    try:
-        pnppath = os.path.dirname(result['pnptemplates'])
-        index_php = pnppath + "/index.php"
-        for line in file(index_php):
-            line = line.strip()
-            #  $config = "/usr/local/nagios/etc/pnp/config";
-            if line.startswith('$config =') and line.endswith('";'):
-                pnpconffile = line.split('"')[1] + ".php"
-                result['pnpconffile'] = pnpconffile
-                break
-        for line in file(pnpconffile):
-            line = line.strip()
-            # $conf['rrdbase'] = "/usr/share/nagios3/htdocs/perfdata/";
-            if line.startswith("$conf['rrdbase']") and line.endswith('";'):
-                rrddir = line.split('"')[1]
-                if rrddir.endswith('/'):
-                    rrddir = rrddir[:-1]
-                result['rrddir'] = rrddir
-    except:
-        pass
-
-
     # Die Basis-Url fuer Nagios ist leider auch nicht immer
     # gleich
     try:
@@ -513,6 +550,9 @@ try:
     except Exception, e:
         sys.stderr.write("\033[1;41;35m Cannot determine Apache properties. \033[0m\n"
                          "Reason: %s\n" % e)
+
+
+    detect_pnp()
 
     print "# Result of autodetection"
     for var, value in result.items():

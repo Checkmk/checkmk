@@ -1,3 +1,9 @@
+1.1.5:
+      Core & Setup
+      * Improve autodetection of PNP4Nagios 0.6
+      * RRA configuration for PNP specific for checks (saves I/O)
+
+
 1.1.4b2:
       * Remove dependency from debian agent package    
       * Multisite: New column with icon with link to Nagios GUI

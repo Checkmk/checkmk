@@ -645,30 +645,35 @@ def page_edit_bookmark(h):
     global html
     html = h
     html.header("Edit Bookmark")
-    html.begin_form("edit_bookmark")
     n = int(html.var("num"))
     bookmarks = load_bookmarks()
-    if html.var("save"):
-	title = html.var("title")
-	url = html.var("url")
-	bookmarks[n] = (title, url)
-	save_bookmarks(bookmarks)
-	html.reload_sidebar()
+    
+    if n >= len(bookmarks):
+        html.show_error("Unknown bookmark id: %d" % n)
     else:
-	title, url = bookmarks[n]
-	html.set_var("title", title)
-	html.set_var("url", url)
-
-    html.write("<table class=edit_bookmarks>")
-    html.write("<tr><td>Title:</td><td>")
-    html.text_input("title", size = 50)
-    html.write("</td></tr><tr><td>URL:</td><td>")
-    html.text_input("url", size = 50)
-    html.write("</td></tr><tr><td></td><td>")
-    html.button("save", "Save")
-    html.write("</td></tr></table>\n")
-    html.hidden_field("num", str(n))
-    html.end_form()
+        html.begin_form("edit_bookmark")
+        if html.var("save"):
+            title = html.var("title")
+            url = html.var("url")
+            bookmarks[n] = (title, url)
+            save_bookmarks(bookmarks)
+            html.reload_sidebar()
+        else:
+            title, url = bookmarks[n]
+            html.set_var("title", title)
+            html.set_var("url", url)
+        
+        html.write("<table class=edit_bookmarks>")
+        html.write("<tr><td>Title:</td><td>")
+        html.text_input("title", size = 50)
+        html.write("</td></tr><tr><td>URL:</td><td>")
+        html.text_input("url", size = 50)
+        html.write("</td></tr><tr><td></td><td>")
+        html.button("save", "Save")
+        html.write("</td></tr></table>\n")
+        html.hidden_field("num", str(n))
+        html.end_form()
+    
     html.footer()
 
 def ajax_del_bookmark(h):

@@ -1,5 +1,7 @@
 1.1.4b3:
-      * fsc_ipmi_mem_status: Fixed missing sensor detection 
+      * fsc_ipmi_mem_status: Fixed missing sensor detection
+      * Multiside Bookmark Snapin: Added nice error message when trying to
+			edit a non existing bookmark
 
 1.1.4b2:
       * Remove dependency from debian agent package    

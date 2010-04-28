@@ -205,6 +205,10 @@ if which vcbVmName > /dev/null 2>&1 ; then
    vcbVmName -s any
 fi
 
+if which ntpq > /dev/null 2>&1 ; then
+   echo '<<<ntp>>>'
+   ntpq -np | sed 1,2d
+fi
 
 # Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
 if cd $PLUGINSDIR

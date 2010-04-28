@@ -1,9 +1,11 @@
 1.1.5:
-      Core & Setup
+      Core & Setup:
       * Improve autodetection of PNP4Nagios 0.6
       * RRA configuration for PNP specific for checks (saves I/O)
       * check kernel: support inventory and partial levels
 
+      Checks & Agents:
+      * Add NTP section to Linux agent (output of ntpq)
 
 1.1.4b2:
       * Remove dependency from debian agent package    

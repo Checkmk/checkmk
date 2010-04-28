@@ -6,6 +6,7 @@
 
       Checks & Agents:
       * Add NTP section to Linux agent (output of ntpq)
+      * ifoperstatus: inventory skips non-ethernet interfaces (configurable)
 
 1.1.4:
       * fsc_ipmi_mem_status: Fixed missing sensor detection 

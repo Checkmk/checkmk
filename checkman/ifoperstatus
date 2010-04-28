@@ -17,8 +17,8 @@ item:
  OID index is not relevant.
 
 inventory:
- All active interfaces are found and configured. Negative monitoring of
- unused interfaces is optional.
+ checks for all interfaces found up and of the correct types (default is {ethernetCsmacd})
+ are created.
 
 [parameters]
 targetstatus (string): The target status of the interface, either {"up"} or {"down"}.
@@ -28,3 +28,5 @@ ifoperstatus_monitor_unused (boolean): Determines weather unused ports should
  be monitored. This has an influence only on inventory. If set to True,
  it will created checks with target status 'down' for unused ports. The default
  value is False.
+ifoperstatus_inventory_porttypes (list of strings): list of port types to be found
+ be inventory. Default is {[ "ethernetCsmacd" ]}.

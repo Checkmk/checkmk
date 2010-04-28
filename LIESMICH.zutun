@@ -9,6 +9,12 @@ Beim Loeschen von Bookmarks (Sidebar) verschieben sich die Nummern scheinbar
 nicht. wenn man auf ein bookmark klickt, das nach einem geloeschten kommt
 (Editierfunktion), laeuft die Editierseite auf eine Exception.
 
+Reload-Problem: Wenn man im Browser auf eine Exception stoesst und
+dann per Klick auf (repeat same query with debug mode) debug einschaltet,
+dann wird das scheinbar persistent in dem Thread in Apache gespeichert.
+Irgendwo muss ich die globale Debug-Variable am Anfang zurücksetzen...
+
+
 --------------------------------------------------------------------------------
 UNSCHOENHEITEN
 --------------------------------------------------------------------------------

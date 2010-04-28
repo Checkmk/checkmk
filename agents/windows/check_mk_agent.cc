@@ -54,7 +54,7 @@
 #include <string.h>
 #include <locale.h>
 
-#define CHECK_MK_VERSION "1.1.4b1"
+#define CHECK_MK_VERSION "1.1.4b2"
 #define CHECK_MK_AGENT_PORT 6556
 #define SERVICE_NAME "Check_MK_Agent"
 #define KiloByte 1024
@@ -826,10 +826,12 @@ void section_mem(SOCKET &out)
     statex.dwLength = sizeof (statex);
     GlobalMemoryStatusEx (&statex);
 
-    output(out, "MemTotal:  %11d kB\n", statex.ullTotalPhys / 1024);
-    output(out, "MemFree:   %11d kB\n", statex.ullAvailPhys / 1024);
+    output(out, "MemTotal:  %11d kB\n", statex.ullTotalPhys     / 1024);
+    output(out, "MemFree:   %11d kB\n", statex.ullAvailPhys     / 1024);
     output(out, "SwapTotal: %11d kB\n", (statex.ullTotalPageFile - statex.ullTotalPhys) / 1024);
     output(out, "SwapFree:  %11d kB\n", (statex.ullAvailPageFile - statex.ullAvailPhys) / 1024);
+    output(out, "PageTotal: %11d kB\n", statex.ullTotalPageFile / 1024);
+    output(out, "PageFree:  %11d kB\n", statex.ullAvailPageFile / 1024);
 }
 
 
@@ -842,6 +844,8 @@ void section_winperf(SOCKET &out)
 	if (i != 230 && i != 232 && i != 786 && i != 740)
 	    dump_performance_counters(out, i);
     }
+    // Terminalservices
+    dump_performance_counters(out, 2102);
 }
 
 

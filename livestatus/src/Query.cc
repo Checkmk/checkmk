@@ -461,16 +461,16 @@ void Query::parseSeparatorsLine(char *line)
    token = next_field(&line);
    if (token) hssep = atoi(token);
 
-   if (dssep == fieldsep 
-	 || dssep == listsep 
-	 || fieldsep == listsep
-	 || dssep == hssep
-	 || fieldsep == hssep
-	 || listsep == hssep)
-   {
-      _output->setError(RESPONSE_CODE_INVALID_HEADER, "invalid Separators: need four different integers");
-      return;
-   }
+   // if (dssep == fieldsep 
+   //       || dssep == listsep 
+   //       || fieldsep == listsep
+   //       || dssep == hssep
+   //       || fieldsep == hssep
+   //       || listsep == hssep)
+   // {
+   //    _output->setError(RESPONSE_CODE_INVALID_HEADER, "invalid Separators: need four different integers");
+   //    return;
+   // }
    _dataset_separator      = string(&dssep, 1);
    _field_separator        = string(&fieldsep, 1);
    _list_separator         = string(&listsep, 1);
@@ -484,6 +484,8 @@ void Query::parseOutputFormatLine(char *line)
       _output_format = OUTPUT_FORMAT_CSV;
    else if (!strcmp(format, "json"))
       _output_format = OUTPUT_FORMAT_JSON;
+   else if (!strcmp(format, "python"))
+      _output_format = OUTPUT_FORMAT_PYTHON;
    else
       _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid output format. Only 'csv' and 'json' are available.");
 }
@@ -626,7 +628,7 @@ void Query::start()
 
    _need_ds_separator = false;
 
-   if (_output_format == OUTPUT_FORMAT_JSON)
+   if (_output_format != OUTPUT_FORMAT_CSV)
       _output->addChar('[');
 
    if (doStats())
@@ -654,7 +656,7 @@ void Query::start()
 	 outputString(column->name());
       }
       outputDatasetEnd();
-      if (_output_format == OUTPUT_FORMAT_JSON)
+      if (_output_format != OUTPUT_FORMAT_CSV)
 	 _output->addBuffer(",\n", 2);
    }
 }
@@ -697,7 +699,7 @@ bool Query::processDataset(void *data)
       else
       {
 	 // output data of current row
-	 if (_need_ds_separator && _output_format == OUTPUT_FORMAT_JSON)
+	 if (_need_ds_separator && _output_format != OUTPUT_FORMAT_CSV)
 	    _output->addBuffer(",\n", 2);
 	 else
 	    _need_ds_separator = true;
@@ -727,7 +729,7 @@ void Query::finish()
 		it != _stats_groups.end();
 		++it)
 	{
-	    if (it != _stats_groups.begin() && _output_format == OUTPUT_FORMAT_JSON)
+	    if (it != _stats_groups.begin() && _output_format != OUTPUT_FORMAT_CSV)
 		_output->addBuffer(",\n", 2);
 	    outputDatasetBegin();
 	    outputString(it->first.c_str());
@@ -758,7 +760,7 @@ void Query::finish()
     }
 
     // normal query
-    if (_output_format == OUTPUT_FORMAT_JSON)
+    if (_output_format != OUTPUT_FORMAT_CSV)
 	_output->addBuffer("]\n", 2);
 }
 
@@ -781,7 +783,7 @@ void Query::optimizeBitmask(const char *columnname, uint32_t *bitmask)
 // output helpers, called from columns
 void Query::outputDatasetBegin()
 {
-   if (_output_format == OUTPUT_FORMAT_JSON)
+   if (_output_format != OUTPUT_FORMAT_CSV)
       _output->addChar('[');
 }
 
@@ -869,7 +871,7 @@ void Query::outputHostService(const char *host_name, const char *service_descrip
 void Query::outputString(const char *value)
 {
    if (!value) {
-      if (_output_format == OUTPUT_FORMAT_JSON)
+      if (_output_format != OUTPUT_FORMAT_CSV)
 	 _output->addBuffer("\"\"", 2);
       return;
    }
@@ -879,13 +881,15 @@ void Query::outputString(const char *value)
 
    else // JSON
    {
+      if (_output_format == OUTPUT_FORMAT_PYTHON)
+          _output->addChar('u'); // mark strings as unicode
       _output->addChar('"');
       const char *r = value;
       while (*r) {
 	 if (*r < 32 && *r >= 0) 
 	     outputUnicodeEscape((unsigned)*r);
 	 else if (*r < 0)
-	     outputUnsignedLong((unsigned)((int)*r + 256)); // assume latin1 encoding
+	     outputUnicodeEscape((unsigned)((int)*r + 256)); // assume latin1 encoding
 	 else { 
 	     if (*r == '"' || *r == '\\')
 		_output->addChar('\\');
@@ -899,7 +903,7 @@ void Query::outputString(const char *value)
 
 void Query::outputBeginList()
 {
-   if (_output_format == OUTPUT_FORMAT_JSON)
+   if (_output_format != OUTPUT_FORMAT_CSV)
       _output->addChar('[');
 }
 
@@ -913,13 +917,13 @@ void Query::outputListSeparator()
 
 void Query::outputEndList()
 {
-   if (_output_format == OUTPUT_FORMAT_JSON)
+   if (_output_format != OUTPUT_FORMAT_CSV)
       _output->addChar(']');
 }
 
 void Query::outputBeginSublist()
 {
-   if (_output_format == OUTPUT_FORMAT_JSON)
+   if (_output_format != OUTPUT_FORMAT_CSV)
       _output->addChar('[');
 }
 
@@ -933,7 +937,7 @@ void Query::outputSublistSeparator()
 
 void Query::outputEndSublist()
 {
-   if (_output_format == OUTPUT_FORMAT_JSON)
+   if (_output_format != OUTPUT_FORMAT_CSV)
       _output->addChar(']');
 }
 

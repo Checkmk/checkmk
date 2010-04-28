@@ -37,11 +37,14 @@ def inventory_ps(check_name, info):
 	    l_user = [userspec]
 	    matches = process_matches(ps, pattern, l_user)
 	    if matches != False:
-		if len(matches) != num_perc_s:
+		if len(matches) < num_perc_s:
 		    raise MKGeneralException("Invalid entry in inventory_processes: service description '%s' contains "
-			    "%d times '%%s', but regular expression '%s' contains %d subexpression(s)." % \
+			    "%d times '%%s', but regular expression '%s' contains only %d subexpression(s)." % \
 			    (servicedesc, num_perc_s, pattern, len(matches)))
-		i_servicedesc = servicedesc % matches
+                # It is allowed (1.1.4) that the pattern contains more subexpressions then the
+                # service description. In that case only the first subexpressions are used as
+                # item.
+		i_servicedesc = servicedesc % (matches[:num_perc_s])
 		if userspec == GRAB_USER:
 		    i_userspec = l_user[0]
 		else:

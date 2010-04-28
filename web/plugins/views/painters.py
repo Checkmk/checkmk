@@ -72,7 +72,7 @@
 
 icon_columns = [ "acknowledged", "scheduled_downtime_depth", "downtimes_with_info", "comments_with_info",
 	         "notifications_enabled", "is_flapping", "modified_attributes_list", "active_checks_enabled",
-		 "accept_passive_checks", "action_url_expanded", "notes_url_expanded" ]
+		 "accept_passive_checks", "action_url_expanded", "notes_url_expanded", "in_notification_period" ]
 
 def paint_icons(what, row): # what is "host" or "service"
     output = ""
@@ -130,6 +130,8 @@ def paint_icons(what, row): # what is "host" or "service"
 		      'src="images/icon_npassive.gif">' % what
 
 
+    if not row[prefix + "in_notification_period"]:
+        output += '<img class=icon title="Out of notification period" src="images/icon_moon.gif">'
 
     return "icons", output
 
@@ -156,13 +158,19 @@ multisite_painters["host_icons"] = {
 
 # -----------------------------------------------------------------------
 
-def nagios_host_url(sitename, host):
-    nagurl = config.site(sitename)["nagios_cgi_url"]
-    return nagurl + "/status.cgi?host=" + htmllib.urlencode(host)
-
-def nagios_service_url(sitename, host, svc):
-    nagurl = config.site(sitename)["nagios_cgi_url"]
-    return nagurl + ( "/extinfo.cgi?type=2&host=%s&service=%s" % (htmllib.urlencode(host), htmllib.urlencode(svc)))
+def paint_nagios_link(row):
+    # We need to use the Nagios-URL as configured
+    # in sites.
+    baseurl = config.site(row["site"])["nagios_cgi_url"]
+    url = baseurl + "/extinfo.cgi?host=" + htmllib.urlencode(row["host_name"])
+    svc = row.get("service_description")
+    if svc:
+        url += "&type=2&service=" + htmllib.urlencode(svc)
+        what = "service"
+    else:
+        url += "&type=1"
+        what = "host"
+    return "singleicon", "<a href=\"%s\"><img title=\"Show this %s in Nagios\" src=\"images/icon_nagios.gif\"></a>" % (url, what)
 
 def paint_age(timestamp, has_been_checked, bold_if_younger_than):
     if not has_been_checked:
@@ -203,42 +211,12 @@ multisite_painters["sitealias"] = {
     "paint" : lambda row: (None, config.site(row["site"])["alias"])
 }
 
-def paint_host_black(row):
-    state = row["host_state"]
-    if state == 0:
-	style = "up"
-    else:
-	style = "down"
-    return "host", "<b class=%s><a href=\"%s\">%s</a></b>" % \
-	(style, nagios_host_url(row["site"], row["host_name"]), row["host_name"])
-
-multisite_painters["host_black"] = {
-    "title" : "Hostname, red background if down or unreachable",
-    "short" : "Host",
-    "columns" : ["site", "host_name", "host_state"],
-    "paint" : paint_host_black,
-}
-
-multisite_painters["host_with_state"] = {
-    "title" : "Hostname colored with state",
-    "short" : "Host",
-    "columns" : ["site", "host_name", "host_state" ],
-    "paint" : lambda row: ("state hstate hstate%d" % row["host_state"], row["host_name"])
-}
-
-multisite_painters["host"] = {
-    "title" : "Hostname",
-    "short" : "Host",
-    "columns" : ["host_name"],
-    "paint" : lambda row: (None, row["host_name"])
-}
-
-multisite_painters["alias"] = {
-    "title" : "Host alias",
-    "short" : "Alias",
-    "columns" : ["host_alias"],
-    "paint" : lambda row: (None, row["host_alias"])
-}
+#    ____                  _               
+#   / ___|  ___ _ ____   _(_) ___ ___  ___ 
+#   \___ \ / _ \ '__\ \ / / |/ __/ _ \/ __|
+#    ___) |  __/ |   \ V /| | (_|  __/\__ \
+#   |____/ \___|_|    \_/ |_|\___\___||___/
+#                                          
 
 def paint_service_state_short(row):
     if row["service_has_been_checked"] == 1:
@@ -258,6 +236,13 @@ def paint_host_state_short(row):
 	state = "p"
 	name = "PEND"
     return "state hstate hstate%s" % state, name
+
+multisite_painters["service_nagios_link"] = {
+    "title" : "Icon with link to service in Nagios GUI",
+    "short" : "",
+    "columns" : [ "site", "host_name", "service_description" ],
+    "paint" : paint_nagios_link
+}
 
 multisite_painters["service_state"] = {
     "title" : "Service state",
@@ -374,6 +359,49 @@ multisite_painters["svc_flapping"] = {
 #  |_| |_|\___/|___/\__|___/
 #                           
 
+def paint_host_black(row):
+    state = row["host_state"]
+    if state == 0:
+	style = "up"
+    else:
+	style = "down"
+    return "host", row["host_name"]
+
+multisite_painters["host_black"] = {
+    "title" : "Hostname, red background if down or unreachable",
+    "short" : "Host",
+    "columns" : ["site", "host_name", "host_state"],
+    "paint" : paint_host_black,
+}
+
+
+multisite_painters["host_nagios_link"] = {
+    "title" : "Icon with link to host to Nagios GUI",
+    "short" : "",
+    "columns" : [ "site", "host_name" ],
+    "paint" : paint_nagios_link
+}
+
+multisite_painters["host_with_state"] = {
+    "title" : "Hostname colored with state",
+    "short" : "Host",
+    "columns" : ["site", "host_name", "host_state" ],
+    "paint" : lambda row: ("state hstate hstate%d" % row["host_state"], row["host_name"])
+}
+
+multisite_painters["host"] = {
+    "title" : "Hostname",
+    "short" : "Host",
+    "columns" : ["host_name"],
+    "paint" : lambda row: (None, row["host_name"])
+}
+
+multisite_painters["alias"] = {
+    "title" : "Host alias",
+    "short" : "Alias",
+    "columns" : ["host_alias"],
+    "paint" : lambda row: (None, row["host_alias"])
+}
 def paint_svc_count(id, count):
     if count > 0:
 	return "count svcstate state%s" % id, str(count)
@@ -382,7 +410,11 @@ def paint_svc_count(id, count):
 
 def paint_host_count(id, count):
     if count > 0:
-	return "count hstate hstate%s" % id, str(count)
+        if id != None:
+            return "count hstate hstate%s" % id, str(count)
+        else: # pending
+            return "count hstate hstatep", str(count)
+
     else:
 	return "count hstate hstatex", "0"
 
@@ -521,19 +553,19 @@ multisite_painters["hg_num_hosts_down"] = {
     "title"   : "Number of hosts in state DOWN",
     "short"   : "Dw",
     "columns" : [ "hostgroup_num_hosts_down" ],
-    "paint"   : lambda row: paint_host_count(0, row["hostgroup_num_hosts_down"])
+    "paint"   : lambda row: paint_host_count(1, row["hostgroup_num_hosts_down"])
 }
 multisite_painters["hg_num_hosts_unreach"] = {
     "title"   : "Number of hosts in state UNREACH",
     "short"   : "Un",
     "columns" : [ "hostgroup_num_hosts_unreach" ],
-    "paint"   : lambda row: paint_host_count(0, row["hostgroup_num_hosts_unreach"])
+    "paint"   : lambda row: paint_host_count(2, row["hostgroup_num_hosts_unreach"])
 }
 multisite_painters["hg_num_hosts_pending"] = {
     "title"   : "Number of hosts in state PENDING",
-    "short"   : "Un",
+    "short"   : "Pd",
     "columns" : [ "hostgroup_num_hosts_pending" ],
-    "paint"   : lambda row: paint_host_count(0, row["hostgroup_num_hosts_pending"])
+    "paint"   : lambda row: paint_host_count(None, row["hostgroup_num_hosts_pending"])
 }
 multisite_painters["hg_name"] = {
     "title" : "Hostgroup name",

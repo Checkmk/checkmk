@@ -32,6 +32,7 @@
 #include "TableLog.h"
 
 extern int num_cached_log_messages;
+extern int g_debug_level;
 
 Logfile::Logfile(const char *path, bool watch)
     : _path(strdup(path))

@@ -117,7 +117,7 @@ def ajax_switch_site(html):
     pass 
 
 def handler(req):
-    req.content_type = "text/html"
+    req.content_type = "text/html; charset=UTF-8"
     req.header_sent = False
 
     # All URIs end in .py. We strip away the .py and get the
@@ -163,7 +163,7 @@ def handler(req):
 			 "logwatch"            : page_logwatch.page,
 			 "sidebar"             : sidebar.page_sidebar, # embedded
 			 "side"                : sidebar.page_side,    # replacement for side.php
-			 "sidebar_config"      : sidebar.page_configure, 
+			 "sidebar_config"      : sidebar.page_configure,
 			 "switch_site"         : ajax_switch_site,
 			 "sidebar_snapin"      : sidebar.ajax_snapin,
 			 "sidebar_openclose"   : sidebar.ajax_openclose,
@@ -221,6 +221,7 @@ def handler(req):
    
 
 def page_index(html):
+    html.req.headers_out.add("Cache-Control", "max-age=7200, public");
     html.write("""
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd">
 <html>

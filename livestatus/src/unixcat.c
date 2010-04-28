@@ -43,8 +43,9 @@
 
 /* Ist normalerweise in sys/un.h, aber dietc hat dieses Makro nicht */
 /* Evaluate to actual length of the `sockaddr_un' structure.  */
-# define SUN_LEN(ptr) ((size_t) (((struct sockaddr_un *) 0)->sun_path)        \
-      + strlen ((ptr)->sun_path))
+#ifndef SUN_LEN
+# define SUN_LEN(ptr) ((size_t) (((struct sockaddr_un *) 0)->sun_path) + strlen ((ptr)->sun_path))
+#endif 
 
 int copy_data(int from, int to);
 

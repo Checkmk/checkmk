@@ -28,8 +28,9 @@
 def check_df(mountpoint, params, df_lines):
     # df outputs seven columns:
     # DEVICE FS-TYPE SIZE(KB) USED(KB) AVAIL(KB) USED(%) MOUNTPOINT
+    # The mount point may contain spaces (seen on VMWare volumes)
 
-    used_list = [ l for l in df_lines if l[6].replace('\\','/') == mountpoint ]
+    used_list = [ l for l in df_lines if " ".join(l[6:]).replace('\\','/') == mountpoint ]
 
     if len(used_list) == 0:
 	return (3, "UNKNOWN - %s missing or not a partition" % mountpoint )
@@ -88,7 +89,7 @@ def inventory_df(checkname, info):
             size_kb = int(line[2])
             if size_kb == 0 or line[5] == '-':
                 continue # exclude filesystems without size
-            mountpoint = line[6].replace('\\', '/') # Windows \ is replaced with /
+            mountpoint = " ".join(line[6:]).replace('\\', '/') # Windows \ is replaced with /
 
             # exclude some filesystem types and some mountpoints
             if fs_type not in inventory_df_exclude_fs and mountpoint not in inventory_df_exclude_mountpoints:

@@ -27,187 +27,139 @@
 import htmllib, livestatus, time, re, os, datetime, config, defaults
 from lib import *
 
-def show_tabs(html, tabs, active):
-    html.write("<table class=tabs cellpadding=0 cellspacing=0><tr>\n")
-    for tab, title, uri in tabs:
-        if tab == active:
-            cssclass = "tabactive"
-        else:
-            cssclass = "tab"
-
-        html.write("<td>")
-        html.write('<a class="%s" href="%s">%s</a>' % \
-                   (htmllib.attrencode(cssclass), uri, title))
-        html.write("</td>")
-
-    html.write("<td width=\"100%%\" class=pad></td></tr></table>")
-
 
 def page(h):
     global html
     html = h
 
-    global tabs
-    tabs = [ ("logwatch", "All Hosts", html.req.uri.split("/")[-1]),
-             ("host", "All Logs of Host", 'logwatch.py?host=' + html.var('host', '')) ]
+    host = html.var('host')
+    filename = html.var('file')
+    if not host:
+        raise MKGeneralException("You called this page via an invalid URL: missing host")
 
-    html.header("Check_mk Logwatch")
+    # Check user permissions on the host
+    if not may_see(host):
+        raise MKAuthException("You are not allowed to access the logs of the host %s" % htmllib.attrencode(host))
 
-    html.write('<div id="logwatch">')
-
-    if html.has_var('host'):
-        host = html.var('host')
-
-        # Check user permissions on the host
-        if(not host in all_hosts()):
-            html.write("<h1 class=error>Permission denied</h1>\n")
-            html.write("<div class=error>You are not allowed to access the logs of the host %s</div>" % htmllib.attrencode(host))
-            return
-
-        if html.has_var('file'):
-            if html.has_var('ack'):
-                html.live.set_auth_domain('action')
-                do_log_ack(html)
-            else:
-                show_file(html)
+    if filename:
+        if html.has_var('ack') and not html.var("_do_actions") == "No":
+            html.live.set_auth_domain('action')
+            do_log_ack(host, filename)
         else:
-            show_host_log_list(html)
+            show_file(host, filename)
     else:
-        show_host_list(html)
+        show_host_log_list(host)
 
-    html.write('</div>')
+def show_host_log_list(host):
+    html.header("Logfiles of host " + host)
+    html.write(" <a class=navi href=\"view.py?view_name=host&host=%s\">Back to this host in Multisite</a>\n" % htmllib.urlencode(host))
+
+    logs_shown = False
+    rowno = 0
+    for file in host_logs(host):
+        rowno += 1
+        if rowno == 1:
+            html.write("<table class=services>\n")
+            html.write("<tr class=groupheader>\n")
+            html.write("<th>Level</th><th>Logfile</th><th>Last Entry</th><th>Entries</th></tr>\n")
+
+        file_display = form_file_to_ext(file)
+
+        logs = parse_file(host, file)
+        if logs == [] or type(logs) != list: # corrupted logfile
+            if logs == []: logs = "empty"
+            html.write("<tr class=%s0>\n" % (rowno % 2 == 0 and "odd" or "even"))
+            html.write("<td>-</td><td>%s</td><td>%s</td><td>0</td></tr>\n" % (htmllib.attrencode(logs), htmllib.attrencode(file_display)))
+        else:
+            worst_log = get_worst_log(logs)
+            last_log = get_last_log(logs)
+            state = worst_log['level']
+            state_name = form_level(state)
+            html.write("<tr class=%s%d>\n" % (rowno % 2 == 0 and "odd" or "even", state))
+        
+            html.write("<td class=\"state%d\">%s</td>\n" % (state, state_name))
+            html.write("<td><a href=\"logwatch.py?host=%s&amp;file=%s\">%s</a></td>\n" % 
+                        (htmllib.urlencode(host), htmllib.urlencode(file_display),htmllib.attrencode(file_display)))
+            html.write("<td>%s</td><td>%s</td></tr>\n" % \
+                        (form_datetime(last_log['datetime']), len(logs)))
+
+    if rowno > 0:
+        html.write("</table>")
+    else:
+        html.write('<p>No logs found for this host.</p>\n')
 
     html.footer()
 
-def show_host_list(html):
-    main_tabs = tabs
-    main_tabs.pop(1)
 
-    show_tabs(html, main_tabs, "logwatch")
-    html.write("<table class=form id=filter>\n")
-    html.write("<tr><td style=\"width:100px\" class=\"legend\">State</td><td class=\"legend\">Hostname</td><td class=\"legend\">Logs</td></tr>\n")
+def show_file(host, filename):
 
-    hosts = all_hosts()
-    host_shown = False
-    for host in hosts:
-        files = host_logs(host)
-
-        if len(files) > 0:
-            host_shown = True
-
-            worst_file, worst_log = get_worst_file(host, files)
-
-            html.write("<tr><td class=\"%s\">%s</td><td class=\"content\"><a href=\"logwatch.py?host=%s\">%s</a></td>"
-                       "<td class=\"content\">%s</td></tr>\n" % \
-                       (form_level(worst_log['level']), form_level(worst_log['level']), host, host, len(host_logs(host)) ))
-
-    if not host_shown:
-        html.write('<tr><td class="content" colspan="2">No hosts to list here.</td></tr>')
-
-    html.write('<tr><td colspan="2">This list only shows hosts with non acknowledged logfiles.</td>')
-    html.write("</table>")
-
-def show_host_log_list(html):
-    show_tabs(html, tabs, "host")
-
-    host = html.var('host')
-
-    if(not host in all_hosts()):
-        html.write("<h1 class=error>Permission denied</h1>\n")
-        html.write("<div class=error>You are not allowed to view the logs of the host %s</div>" % htmllib.attrencode(host))
-        return
-
-    show_host_header(html, host)
-
-    html.write("<table class=form id=filter>\n")
-    html.write("<tr><td style=\"width:100px\" class=\"legend\">Level</td><td class=\"legend\">Logfile</td>"
-               "<td class=\"legend\">Last Entry</td><td class=\"legend\">Entries</td></tr>\n")
-
-    logs_shown = False
-    for file in host_logs(host):
-        logs_shown = True
-        fileDisplay = form_file_to_ext(file)
-
-        logs = parse_file(host, file)
-        worst_log = get_worst_log(logs)
-        last_log = get_last_log(logs)
-
-        html.write("<tr><td class=\"%s\">%s</td><td class=\"content\"><a href=\"logwatch.py?host=%s&amp;file=%s\">%s</a></td>"
-                   "<td class=\"content\">%s</td>"
-                   "<td class=\"content\">%s</td></tr>\n" % \
-                   (form_level(worst_log['level']), form_level(worst_log['level']),
-                    htmllib.urlencode(host), htmllib.urlencode(fileDisplay),
-                    htmllib.attrencode(fileDisplay), form_datetime(last_log['datetime']), len(logs)))
-
-    if not logs_shown:
-        html.write('<tr><td class="content" colspan="4">No logs found for this host.</td></tr>')
-
-    html.write("</table>")
-
-
-def show_file(html):
-    show_tabs(html, tabs, "file")
-
-    host = html.var('host')
-    file = form_file_to_int(html.var('file'))
+    file = form_file_to_int(filename)
+    html.header("Logfiles of host %s: %s" % (host, filename))
+    html.write("<a class=navi href=\"view.py?view_name=host&host=%s\">Back to this host in Multisite</a>\n" % htmllib.urlencode(host))
+    html.write("<a class=navi href=\"logwatch.py?host=%s\">All logfiles of %s</a>\n" % tuple([htmllib.urlencode(host)] * 2))
 
     if html.var('hidecontext', 'no') == 'yes':
         hide_context_label = 'Show context'
         hide_context_param = 'no'
+        hide = True
     else:
         hide_context_label = 'Hide context'
         hide_context_param = 'yes'
+        hide = False
 
-    show_host_header(html, host)
-
-    try:
-        logs = parse_file(host, file, html.var('hidecontext', 'no'))
-    except MKFileNotFoundException, e:
-        html.write('<table class="form" id="filter"><tr><td class="content">%s</td></tr></table>' % e)
+    logs = parse_file(host, file, hide)
+    if type(logs) != list:
+        html.show_error("Unable to show logfile: <b>%s</b>" % logs)
+        html.footer()
+        return
+    elif logs == []:
+        html.message("This logfile contains no unacknowledged messages.")
+        html.footer()
         return
 
-    for log in logs:
-        html.write('<div class="chunk">');
-        html.write('<table class="section"><tr>');
-        html.write('<td class="%s">%s</td>' % (form_level(log['level']), form_level(log['level'])));
-        html.write('<td class="date">%s</td>' % (form_datetime(log['datetime'])));
-        html.write('<td class="button"><a href="logwatch.py?host=%s&amp;'
-                   'file=%s&amp;hidecontext=%s">%s</td>' % \
+    if config.may("act") and may_see(host):
+        html.write('<a class=navi href="logwatch.py?host=%s&amp;'
+                   'file=%s&amp;ack=1">Acknowledge and delete messages</a>' % \
+                   (htmllib.urlencode(host), htmllib.urlencode(html.var('file')) ))
+
+    html.write('<a class=navi href="logwatch.py?host=%s&file=%s&hidecontext=%s">%s</a>' % \
                    (htmllib.urlencode(host), \
                     htmllib.urlencode(html.var('file')), \
                     htmllib.urlencode(hide_context_param), \
                     htmllib.attrencode(hide_context_label) ));
-        html.write('</tr></table>');
+
+
+    html.write("<div id=logwatch>\n")
+    for log in logs:
+        html.write('<div class="chunk">\n');
+        html.write('<table class="section">\n<tr>\n');
+        html.write('<td class="%s">%s</td>\n' % (form_level(log['level']), form_level(log['level'])));
+        html.write('<td class="date">%s</td>\n' % (form_datetime(log['datetime'])));
+        html.write('</tr>\n</table>\n');
 
         for line in log['lines']:
-            html.write('<pre class="%s">%s</pre>' % (line['class'], htmllib.attrencode(line['line']) ))
+            html.write('<pre class="%s">%s</pre>\n' % (line['class'], htmllib.attrencode(line['line']) ))
 
-        html.write('</div>')
+        html.write('</div>\n')
 
-    if config.may("act_all") or host in all_hosts():
-        html.write('<p><br /><a class="ack" href="logwatch.py?host=%s&amp;'
-                   'file=%s&amp;ack=1">Acknowledge and delete messages</a>' % \
-                   (htmllib.urlencode(host), htmllib.urlencode(html.var('file')) ))
+    html.write("</div>\n")
+    html.footer()
 
-def show_host_header(html, host):
-    html.write("<table class=form id=filter>\n")
-    html.write('<tr><td class="legend">Hostname:</td><td class="content">%s</td></tr>' % htmllib.attrencode(host))
-    html.write('<tr><td class="legend">Host in Nagios:</td>'
-               '<td class="content"><a href="%s/status.cgi?host=%s">Link</a></td></tr>' % \
-               (htmllib.urlencode(defaults.nagios_cgi_url), htmllib.attrencode(host)))
-    html.write('</table><br />')
 
-def do_log_ack(html):
-    show_tabs(html, tabs, "log")
-
-    host = html.var('host')
-    file = form_file_to_int(html.var('file'))
-    fileDisplay = form_file_to_ext(file)
+def do_log_ack(host, filename):
+    file = form_file_to_int(filename)
+    file_display = form_file_to_ext(file)
+    html.header("Acknowledge logfile %s" % file_display)
+    html.write("<a class=navi href=\"logwatch.py?host=%s\">All logfiles of %s</a>\n" % tuple([htmllib.urlencode(host)] * 2))
     ack  = html.var('ack')
+    if not html.confirm("Please confirm the deletion of the message from <tt>%s</tt>" % filename):
+        html.footer()
+        return
 
-    if not (config.may("act") and (config.may("see_all") or host in all_hosts())):
+    if not (config.may("act") and may_see(host)):
         html.write("<h1 class=error>Permission denied</h1>\n")
         html.write("<div class=error>You are not allowed to acknowledge the logs of the host %s</div>" % htmllib.attrencode(host))
+        html.footer()
         return
 
     # filter invalid values
@@ -217,31 +169,18 @@ def do_log_ack(html):
     try:
         os.remove(defaults.logwatch_dir + '/' + host + '/' + file)
 
-        html.write('<h1>%s: %s Acknowledged</h1>' % \
-          (htmllib.attrencode(host), htmllib.attrencode(fileDisplay)))
-        html.write('<p>The log messages from host &quot;%s&quot; in file'
+        message = '<b>%s: %s Acknowledged</b><br>' % \
+          (htmllib.attrencode(host), htmllib.attrencode(file_display))
+        message += '<p>The log messages from host &quot;%s&quot; in file' \
                    '&quot;%s&quot; have been acknowledged.</p>' % \
-                     (htmllib.attrencode(host), htmllib.attrencode(fileDisplay)))
+                     (htmllib.attrencode(host), htmllib.attrencode(file_display))
+        html.message(message)
     except Exception, e:
-        raise MKGeneralException('The log file &quot;%s&quot; from host &quot;%s&quot;'
+        html.show_error('The log file &quot;%s&quot; from host &quot;%s&quot;'
                                  ' could not be deleted: %s.' % \
-                                  (htmllib.attrencode(fileDisplay), htmllib.attrencode(host), e))
+                                  (htmllib.attrencode(file_display), htmllib.attrencode(host), e))
+    html.footer()
 
-def get_worst_file(host, files):
-    worst_file = None
-    worst_log = None
-    worst_level = 0
-
-    for file in files:
-        logs = parse_file(host, file)
-        worst_file_log = get_worst_log(logs)
-
-        if worst_file_log['level'] > worst_level:
-            worst_level = worst_file_log['level']
-            worst_file = logs
-            worst_log = worst_file_log
-
-    return worst_file, worst_log
 
 def get_worst_log(logs):
     worst_level = 0
@@ -267,67 +206,65 @@ def get_last_log(logs):
     return last_log
 
 
-def parse_file(host, file, hidecontext = "no"):
-    filePath = defaults.logwatch_dir + '/' + host + '/' + file
+def parse_file(host, file, hidecontext = False):
+    logs = [] 
     try:
-        f = open(filePath, 'r')
-    except:
-        raise MKFileNotFoundException('The log file &quot;%s&quot; on host &quot;%s&quot; is empty or does not exist.' % \
-                                       (htmllib.attrencode(form_file_to_ext(file)), htmllib.attrencode(host)))
-    chunk_open = False
-    logs = []
-    log = None
-    for line in f.readlines():
-        line = line.strip()
-        if line == '':
-            continue
+        file_path = defaults.logwatch_dir + '/' + host + '/' + file 
+        if not os.path.exists(file_path):
+            return []
+        f = open(file_path, 'r') 
+        chunk_open = False 
+        log = None 
+        for line in f.readlines():
+            line = line.strip() 
+            if line == '':
+                continue
 
-        if line[:3] == '<<<':
-            # Add maybe old log to lisst
-            if log:
+            if line[:3] == '<<<': # new chunk begins
+                log_lines = []
+                log = {'lines': log_lines}
                 logs.append(log)
 
-            log = {'lines': []}
+                # New header line
+                date, logtime, level = line[3:-3].split(' ')
 
-            # New header line
-            date, logtime, level = line[3:-3].split(' ')
+                # Save level as integer to make it better comparable
+                if level == 'CRIT':
+                    log['level'] = 2
+                elif level == 'WARN':
+                    log['level'] = 1
+                else:
+                    log['level'] = 0
 
-            # Save level as integer to make it better comparable
-            if level == 'CRIT':
-                log['level'] = 2
-            elif level == 'WARN':
-                log['level'] = 1
-            else:
-                log['level'] = 0
+                # Gather datetime object
+                # Python versions below 2.5 don't provide datetime.datetime.strptime.
+                # Use the following instead:
+                #log['datetime'] = datetime.datetime.strptime(date + ' ' + logtime, "%Y-%m-%d %H:%M:%S") 
+                log['datetime'] = datetime.datetime(*time.strptime(date + ' ' + logtime, "%Y-%m-%d %H:%M:%S")[0:5])
+            elif log: # else: not in a chunk?!
+                # Data line
+                line_display = line[2:]
 
-            # Gather datetime object
-            # Python versions below 2.5 don't provide datetime.datetime.strptime.
-            # Use the following instead:
-            #log['datetime'] = datetime.datetime.strptime(date + ' ' + logtime, "%Y-%m-%d %H:%M:%S") 
-            log['datetime'] = datetime.datetime(*time.strptime(date + ' ' + logtime, "%Y-%m-%d %H:%M:%S")[0:5])
-        else:
-            # Data line
-            lineDisplay = line[2:]
+                # Classify the line for styling
+                if line[0] == 'W':
+                    line_level = 1
+                    line_class = 'WARN'
 
-            # Classify the line for styling
-            if line[0] == 'W':
-                line_level = 1
-                line_class = 'WARN'
-            elif line[0] == 'C':
-                line_level = 2
-                line_class = 'CRIT'
-            elif hidecontext == 'yes':
-                line_level = 0
-                line_class = 'context'
-            else:
-                line_level = 0
-                line_class = ''
+                elif line[0] == 'C':
+                    line_level = 2
+                    line_class = 'CRIT'
 
-            log['lines'].append({ 'level': line_level, 'class': line_class, 'line': lineDisplay })
+                elif not hidecontext:
+                    line_level = 0
+                    line_class = 'context'
 
-    # Append last log
-    if log:
-        logs.append(log)
+                else:
+                    continue # ignore this line
+
+                log_lines.append({ 'level': line_level, 'class': line_class, 'line': line_display })
+    except Exception, e:
+        # cannot parse logfile: corrupted
+        return str(e)
 
     return logs
 
@@ -337,20 +274,21 @@ def host_logs(host):
     except:
         return []
 
-def all_hosts():
+def may_see(host):
+    if config.may("see_all"):
+        return True
+
     # FIXME: Or maybe make completely transparent and add pseudo local_connection() to Single livestatus clas?
     if config.is_multisite():
         conn = html.live.local_connection()
     else:
         conn = html.live
 
-    hosts = conn.query_column_unique("GET hosts\nColumns: name\n")
-
-    hosts.sort()
-    return hosts
+    # livestatus connection is setup with AuthUser
+    return conn.query_value("GET hosts\nStats: state >= 0\nFilter: name = %s\n" % host) > 0
 
 def form_level(level):
-    levels = [ 'OK', 'WARN', 'CRIT' ]
+    levels = [ 'OK', 'WARN', 'CRIT', 'UNKNOWN' ]
     return levels[level]
 
 def form_file_to_int(file):
@@ -361,4 +299,4 @@ def form_file_to_ext(file):
 
 def form_datetime(dt, format = '%Y-%m-%d %H:%M:%S'):
     # FIXME: Dateformat could be configurable
-   return dt.strftime(format)
+    return dt.strftime(format)

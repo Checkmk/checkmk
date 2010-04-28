@@ -12,8 +12,6 @@
 # 
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# Author: Lars Michelsen <lm@mathias-kettner.de>
 # 
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
@@ -71,4 +69,4 @@ def check_fsc_ipmi_mem_status(name, _no_params, info):
 
     return (3, "UNKNOWN - item %s not found" % item)
 
-check_info['fsc_ipmi_mem_status'] = (check_fsc_ipmi_mem_status, "IPMI %s", 1, inventory_fsc_ipmi_mem_status)
+check_info['fsc_ipmi_mem_status'] = (check_fsc_ipmi_mem_status, "IPMI Memory status %s", 1, inventory_fsc_ipmi_mem_status)

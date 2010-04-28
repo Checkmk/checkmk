@@ -40,8 +40,14 @@ def render_searchform():
     html.write('<script type="text/javascript">')
 
     # Store (user) hosts in JS array
-    data = html.live.query("GET hosts\nColumns: name alias\n")
-    html.write("aSearchHosts = %s;\n" % data)
+    try:
+        import json
+        data = html.live.query("GET hosts\nColumns: name alias\n")
+        html.write("aSearchHosts = %s;\n" % json.dumps(data))
+    except:
+        data = html.live.query("GET hosts\nColumns: name alias\n", "OutputFormat: json\n")
+        html.write("aSearchHosts = %s;\n" % data)
+    
     html.write('</script>')
 
 sidebar_snapins["search"] = {

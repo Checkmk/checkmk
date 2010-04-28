@@ -1,0 +1,40 @@
+title: Check number of sessions on Content Security Gateway of CPSECURE (NetGear)
+agents: snmp
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+  This check monitors the number of current sessions of the various
+  network protocols on a Content Security Gateway of CPSECURE (in the
+  meantime bought by NetGear some time ago). 
+
+item:
+  Name of the protocol, in upper case letters, for example {"SMTP"}.
+
+perfdata:
+  One variable per check: the number of current sessions of the
+  checked protocol.
+
+inventory:
+  For each {enabled} protocol one check is created.
+
+examples:
+ # set global default levels for number of sessions for
+ # all protocols:
+ cpsecure_sessions_default_levels = ( 100, 1000 )
+
+ # Define manual checks with individual levels for some protocols
+ # for all hosts with the tag "csg"
+ checks += [
+   (["csg"], ALL_HOSTS, "cpsecure_sessions", 'SMTP',  (600, 1000)),
+   (["csg"], ALL_HOSTS, "cpsecure_sessions", 'FTP',   (60, 100)),
+   (["csg"], ALL_HOSTS, "cpsecure_sessions", 'IMAP',  (60, 100)),
+ ]
+
+[parameters]
+warning (int): Number of concurrent sessions at which a warning level is triggered
+critical (int): Critical level for number of sessions
+
+[configuration]
+cpsecure_sessions_default_levels (int, int): Default levels for warning and critical. This is preset to {(2500, 5000)}.
+

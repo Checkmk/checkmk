@@ -56,6 +56,11 @@
 #define   PF_LOCAL PF_UNIX
 #endif
 
+// usually - but not always - in sys/un.h
+#ifndef SUN_LEN
+# define SUN_LEN(ptr) ((size_t) (((struct sockaddr_un *) 0)->sun_path) + strlen ((ptr)->sun_path))
+#endif 
+
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
 
 int g_accept_timeout_msec = 2500; /* default is 2.5 sec */
@@ -396,8 +401,11 @@ void deregister_callbacks()
 void livestatus_parse_arguments(const char *args_orig)
 {
     /* set default socket path */
-
     strcpy(g_socket_path, DEFAULT_SOCKET_PATH);
+
+    if (!args_orig) 
+        return; // no arguments, use default options
+    
     char *args = strdup(args_orig);
     char *token;
     while (0 != (token = next_field(&args)))

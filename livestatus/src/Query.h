@@ -43,8 +43,9 @@ class InputBuffer;
 class StatsColumn;
 class Aggregator;
 
-#define OUTPUT_FORMAT_CSV  0
-#define OUTPUT_FORMAT_JSON 1
+#define OUTPUT_FORMAT_CSV    0
+#define OUTPUT_FORMAT_JSON   1
+#define OUTPUT_FORMAT_PYTHON 2
 
 #define RESPONSE_HEADER_OFF     0
 #define RESPONSE_HEADER_FIXED16 1

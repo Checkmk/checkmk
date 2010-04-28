@@ -107,7 +107,7 @@ declare_permission("edit_views",
      [ "admin", "user" ])
 
 declare_permission("publish_views",
-     "Plublish views",
+     "Publish views",
      "Make views visible and usable for other users",
      [ "admin", "user" ])
 

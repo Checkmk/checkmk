@@ -86,6 +86,19 @@ def urlencode(value):
         ret += c
     return ret
 
+def u8(c):
+    if ord(c) > 127:
+        return "&#%d;" % ord(c)
+    else:
+        return c
+
+def utf8_to_entities(text):
+    if type(text) != unicode:
+        return text
+    n = ""
+    for c in text:
+        n += u8(c)
+    return n
 
 class html:
     def __init__(self, req):
@@ -359,7 +372,7 @@ class html:
             if self.browser_reload:
                 login_text += ", refresh: %d secs" % self.browser_reload
             self.req.write("<table class=footer><tr>"
-                           "<td class=left>&copy; <a href=\"http://mathias-kettner.de\">Mathias Kettner</a></td>"
+                           "<td class=left>&copy; <a href=\"http://mathias-kettner.de\">MK</a></td>"
                            "<td class=middle>This is part of <a href=\"http://mathias-kettner.de/check_mk\">Check_MK</a> version %s</td>"
                            "<td class=right>%s</td></tr></table>"
                            % (defaults.check_mk_version, login_text))
@@ -382,8 +395,8 @@ class html:
 	self.write("<script language=\"javascript\">\n%s\n</script>\n" % code)
 
     def reload_sidebar(self):
-	self.javascript("parent.frames[0].location.reload();");
-	
+        self.javascript("parent.frames[0].location.reload();");
+
     # Get next transaction id for that user
     def current_transid(self, username):
 	dir = defaults.var_dir + "/web/" + username

@@ -76,6 +76,8 @@ def prepare_paint(p, row):
     painter, linkview = p
     tdclass, content = painter["paint"](row)
 
+    content = htmllib.utf8_to_entities(content)
+
     # Create contextlink to other view
     if content and linkview:
 	content = link_to_view(content, row, linkview)
@@ -365,9 +367,9 @@ def page_edit_views(h, msg=None):
 	save_views(html.req.user)
 	load_views()
 	changed = True
-	
+
     if changed:
-	html.javascript("parent.frames[0].location.reload();");
+        html.javascript("parent.frames[0].location.reload();");
 
     html.write("<table class=views>\n")
 
@@ -1408,16 +1410,22 @@ def nagios_host_service_action_command(what, dataset):
         comment = html.var("_ack_comment")
         if not comment:
             raise MKUserError("_ack_comment", "You need to supply a comment.")
-        command = "ACKNOWLEDGE_" + cmdtag + "_PROBLEM;%s;2;1;0;%s" % \
-                  (spec, html.req.user) + ";" + html.var("_ack_comment")
+        try:
+            command = "ACKNOWLEDGE_" + cmdtag + "_PROBLEM;%s;2;1;0;%s" % \
+                      (spec, html.req.user) + (";%s" % comment)
+        except:
+            raise MKUserError("_ack_comment", "Please only use ASCII characters in your comment.")
         title = "<b>acknowledge the problems</b> of"
 
     elif html.var("_add_comment") and config.may("action.addcomment"):
         comment = html.var("_comment")
         if not comment:
             raise MKUserError("_comment", "You need to supply a comment.")
-        command = "ADD_" + cmdtag + "_COMMENT;%s;1;%s" % \
-                  (spec, html.req.user) + ";" + html.var("_comment")
+        try:
+            command = "ADD_" + cmdtag + "_COMMENT;%s;1;%s" % \
+                  (spec, html.req.user) + (";%s" % comment)
+        except:
+            raise MKUserError("_ack_comment", "Please only use ASCII characters in your comment.")
         title = "<b>add a comment to</b>"
 
     elif html.var("_remove_ack") and config.may("action.acknowledge"):

@@ -28,9 +28,10 @@
 # Configuration variables in main.mk needed during the actual check
 logwatch_dir = var_dir + '/logwatch'
 logwatch_patterns = { }
+logwatch_max_filesize = 500000 # do not save more than 500k of message (configurable)
 
 # Variables embedded in precompiled checks
-check_config_variables += [ "logwatch_dir" ]
+check_config_variables += [ "logwatch_dir", "logwatch_max_filesize" ]
 
 def inventory_logwatch(checkname, info):
     inventory = []
@@ -139,9 +140,14 @@ def check_logwatch(item, params, info):
 
     logfile = logdir + "/" + item.replace("/", "\\")
 
-    # Logfile (=item) section not found and no local file found
+    # Logfile (=item) section not found and no local file found. This usually
+    # means, that the corresponding logfile also vanished on the target host.
     if found == False and not os.path.exists(logfile):
-        return(3, "UNKNOWN - log not present anymore")
+        return (3, "UNKNOWN - log not present anymore")
+
+    # if logfile has reached maximum size, abort with critical state
+    if os.path.exists(logfile) and os.path.getsize(logfile) > logwatch_max_filesize:
+        return (2, "CRIT - ununknowledged messages have exceed max size (%d Bytes)" % logwatch_max_filesize)
 
     if len(loglines) > 0 and loglines[0] in [ 'OK', 'WARNING', 'CRITICAL' ]:
         # --------------------------------------------------------------------

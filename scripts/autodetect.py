@@ -68,11 +68,11 @@ def find_pid_and_configfile():
     procs = os.popen("ps ax -o pid,ppid,user,command").readlines()
     pids = []
     for line in procs:
-        if line.find('nagios.cfg') >= 0:
+        if line.find('nagios.cfg') >= 0 or line.find('icinga.cfg') >= 0:
             pids.append(line.split()[0])
 
     for line in procs:
-        if line.find('nagios.cfg') >= 0:
+        if line.find('nagios.cfg') >= 0 or line.find('icinga.cfg') >= 0:
             try:
                 words = line.split()
                 if '-d' in words or '--daemon' in words:
@@ -89,7 +89,7 @@ def find_pid_and_configfile():
                 if opt_debug:
                     raise
 
-    raise Sorry("Cannot find Nagios process. Is it running?")
+    raise Sorry("Cannot find Nagios/Icinga process. Is it running?")
 
 def find_apache_properties(nagiosuser, nagios_htdocs_dir):
     wwwuser = None
@@ -225,6 +225,8 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
     if len(common_groups) > 1:
         if 'nagios' in common_groups:
             common_group = 'nagios'
+        elif 'icinga' in common_groups:
+            common_group = 'icinga'
         else:
             common_group = common_groups[0]
     elif len(common_groups) == 1:
@@ -306,7 +308,7 @@ try:
     result['nagios_binary'] = process_executable(pid)
 
     # Path to startscript
-    for path in [ '/etc/init.d/nagios', '/etc/init.d/nagios3' ]:
+    for path in [ '/etc/init.d/nagios', '/etc/init.d/nagios3', '/etc/init.d/icinga' ]:
         if os.path.exists(path):
             result['nagios_startscript'] = path
             break

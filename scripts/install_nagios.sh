@@ -36,8 +36,8 @@ set -e
 
 NAGIOS_VERSION=3.2.1
 PLUGINS_VERSION=1.4.14
-RRDTOOL_VERSION=1.4.2
-CHECK_MK_VERSION=1.1.4b1
+RRDTOOL_VERSION=1.4.3
+CHECK_MK_VERSION=1.1.4b2
 PNP_VERSION=0.6.3
 NAGVIS_VERSION=1.4.6
 
@@ -160,7 +160,7 @@ Check_MK on a freshly installed Linux system. It will:
  - install the check_mk_agent on localhost
  - setup Nagios to monitor localhost
 
-   You Linux distro:     $DISTRONAME
+   Your Linux distro:    $DISTRONAME
    Nagios version:       $NAGIOS_VERSION
    Plugins version:      $PLUGINS_VERSION
    Check_MK version:     $CHECK_MK_VERSION
@@ -529,9 +529,11 @@ EOF
 grep 'illegal.*=' nagios.cfg-example >> nagios.cfg
 
 # Modify init-script: It must create the temp directory,
-# as it is in a tmpfs...
-sed -i -e '/^[[:space:]]start)/a                mkdir -p /var/spool/nagios/tmp /var/spool/nagios/checkresults' \
-       -e '/^[[:space:]]start)/a                chown nagios.nagios /var/spool/nagios/tmp /var/spool/nagios/checkresults' /etc/init.d/nagios
+# as it is in a tmpfs. And on Ubuntu /var/run is also a ramdisk,
+# so create /var/run/nagios/rw also in startskript.
+sed -i -e '/^[[:space:]]start)/a                mkdir -p /var/spool/nagios/tmp /var/spool/nagios/checkresults /var/run/nagios/rw' \
+       -e '/^[[:space:]]start)/a                chown nagios.nagios /var/spool/nagios/tmp /var/spool/nagios/checkresults /var/run/nagios/rw' \
+       -e '/^[[:space:]]start)/a                chmod 2755 /var/run/nagios/rw' /etc/init.d/nagios
 
 # Make CGIs display addons in right frame, not in a new window
 sed -i 's/_blank/main/g' cgi.cfg
@@ -932,7 +934,7 @@ cat <<EOF > /etc/$HTTPD/conf.d/multisite.conf
 
 <Location /nag02>
     RewriteEngine On
-    RewriteRule ^/.+/nag02/(.*) http://192.168.56.7/nag02/$1 [P]
+    RewriteRule ^/.+/nag02/(.*) http://192.168.56.7/nag02/\$1 [P]
 </Location>
 
 # Need some debugging => turn on a logfile here:
@@ -1041,7 +1043,7 @@ service livestatus
 	server		= /usr/bin/unixcat
 	server_args     = /var/run/nagios/rw/live
 # configure the IP address(es) of your Nagios server here:
-#	only_from       = 127.0.0.1 193.18.227.73 172.19.209.{1,2,3}
+#	only_from       = 127.0.0.1 10.0.20.1 10.0.20.2
 	disable		= no
 }
 EOF

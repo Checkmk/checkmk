@@ -167,7 +167,7 @@ NEGATE         = '@negate'       # negation in boolean lists
 
 # Basic Settings
 agent_port                         = 6556
-tcp_connect_timeout                = 60.0
+tcp_connect_timeout                = 5.0
 do_rrd_update			   = False
 aggr_summary_hostname              = "%s-s"
 agent_min_version                  = 0 # warn, if plugin has not at least version
@@ -175,6 +175,7 @@ check_max_cachefile_age            = 0 # per default do not use cache files when
 cluster_max_cachefile_age          = 90   # secs.
 simulation_mode                    = False
 perfdata_format                    = "standard" # also possible: "pnp"
+debug_log                          = None
 
 # SNMP communities
 snmp_default_community             = 'public'
@@ -265,6 +266,8 @@ filesystem_levels                  = []
 df_magicnumber_normsize            = 20 # Standard size if 20 GB
 df_lowest_warning_level            = 50 # Never move warn level below 50% due to magic factor
 df_lowest_critical_level           = 60 # Never move crit level below 60% due to magic factor
+
+# This is obsolete stuff and should be moved to the check plugins some day
 inventory_df_exclude_fs            = [ 'nfs', 'smbfs', 'cifs', 'iso9660' ]
 inventory_df_exclude_mountpoints   = [ '/dev' ]
 inventory_df_check_params          = 'filesystem_default_levels'
@@ -633,7 +636,7 @@ def get_single_oid(hostname, ipaddress, oid):
         return g_single_oid_cache[oid]
 
     community = get_snmp_community(hostname)
-    command = "snmpget -v1 -On -OQ -Oe -c %s %s %s" % (community, ipaddress, oid)
+    command = "snmpget -v1 -On -OQ -Oe -c %s %s %s 2>/dev/null" % (community, ipaddress, oid)
     try:
 	if opt_verbose:
 	    sys.stdout.write("Running '%s'\n" % command)
@@ -666,10 +669,13 @@ def snmp_scan(hostname, ipaddress):
 
     found = []
     for checktype, detect_function in snmp_scan_functions.items():
-        if detect_function(lambda oid: get_single_oid(hostname, ipaddress, oid)):
-            found.append(checktype)
-	    sys.stdout.write("%s " % checktype)
-	    sys.stdout.flush()
+        try:
+            if detect_function(lambda oid: get_single_oid(hostname, ipaddress, oid)):
+                found.append(checktype)
+	        sys.stdout.write("%s " % checktype)
+	        sys.stdout.flush()
+        except:
+	    pass
     if found == []:
 	sys.stdout.write("nothing detected.\n")
     else:
@@ -715,7 +721,9 @@ def host_of_clustered_service(hostname, servicedesc):
     # 1. Old style: clustered_services assumes that each host belong to
     #    exactly on cluster
     if in_boolean_serviceconf_list(hostname, servicedesc, clustered_services):
-        return cluster_of(hostname)
+        cluster = cluster_of(hostname)
+        if cluster:
+            return cluster
     
     return hostname
 
@@ -1406,8 +1414,21 @@ def output_serviceconf(outfile = sys.stdout):
             outfile.write("\n# Aggregated services of host %s\n\n" % hostname)
 
         aggr_descripts = aggregated_services_conf
-	if aggregate_check_mk and host_is_aggregated(hostname):
+	if aggregate_check_mk and host_is_aggregated(hostname) and have_at_least_one_service:
 	    aggr_descripts.add("Check_MK")
+
+        # If a ping-only-host is aggregated, the summary host gets it's own
+        # copy of the ping - as active check. We cannot aggregate the result
+        # from the ping of the real host since no Check_MK is running during 
+        # the check.
+        elif host_is_aggregated(hostname) and not have_at_least_one_service:
+            outfile.write("""
+define service {
+    use                      %s
+%s    host_name                %s
+}
+
+""" % (pingonly_template, extra_service_conf_of(hostname, "PING"), summary_hostname(hostname)))
 
         for description in aggr_descripts:
             sergr = service_extra_conf(hostname, description, summary_service_groups)
@@ -1479,10 +1500,10 @@ define servicedependency {
             outfile.write("""
 define service {
     use                      %s
-    host_name                %s
+%s    host_name                %s
 }
 
-""" % (pingonly_template, hostname))
+""" % (pingonly_template, extra_service_conf_of(hostname, "PING"), hostname))
 
     if generate_dummy_commands:
         outfile.write("# Dummy check commands for passive services\n\n")
@@ -1643,7 +1664,7 @@ def make_inventory(checkname, hostnamelist, check_only=False):
           except Exception, e:
               if opt_debug:
                   raise
-              print "%s: Invalid output from agent or invalid configuration: %s" % (hostname, e)
+              sys.stderr.write("%s: Invalid output from agent or invalid configuration: %s\n" % (hostname, e))
               continue
 
           for entry in inventory:
@@ -1834,7 +1855,7 @@ filesystem_default_levels = None
                  'check_mk_basedir', 'df_magicnumber_normsize', 
 		 'df_lowest_warning_level', 'df_lowest_critical_level', 'nagios_user',
                  'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
-                 'simulation_mode', 'aggregate_check_mk',
+                 'simulation_mode', 'aggregate_check_mk', 'debug_log',
                  ]:
         output.write("%s = %r\n" % (var, globals()[var]))
 

@@ -48,49 +48,78 @@ document.getElementsByTagName("HEAD")[0].appendChild(oLink);
 
 var oDiv = document.createElement('div');
 oDiv.setAttribute('id', 'sidebar_container');
-oDiv.innerHTML = get_url(url + 'sidebar.py');
 oSidebar.appendChild(oDiv);
-executeJS('sidebar_container');
+get_url(url + 'sidebar.py', updateContents, 'sidebar_container');
 
 // Cleaning up DOM links
 oDiv = null;
 oLink = null;
 oSidebar = null;
 
+// Removes a bookmark from the bookmarks list after deletion
+function delBookmark(num, code) {
+  var container = document.getElementById('bookmark_'+num);
+  var parent = container.parentNode;
+  parent.removeChild(container);
+  container = null;
+  parent = null;
+}
+
+// Removes a snapin from the sidebar without reloading anything
+function removeSnapin(id, code) {
+  var container = document.getElementById(id).parentNode;
+  var parent = container.parentNode;
+  parent.removeChild(container);
+  container = null;
+  parent = null;
+}
+
+// Updates the contents of a snapin container after get_url
+function updateContents(id, code) {
+  var obj = document.getElementById(id);
+  if(obj) {
+    obj.innerHTML = code;
+    executeJS(id);
+    obj = null;
+  }
+}
+
 // There may be some javascript code in the html code rendered by
 // sidebar.py. Execute it here. This is needed in some browsers.
 function executeJS(objId) {
-  if(!isFirefox()) {
-    var obj = document.getElementById(objId);
-    var aScripts = obj.getElementsByTagName('script');
-    for(var i in aScripts) {
-      if(aScripts[i].src && aScripts[i].src !== '') {
-        var oScr = document.createElement('script');
-        oScr.src = aScripts[i].src;
-        document.getElementsByTagName("HEAD")[0].appendChild(oScr);
-        oScr = null;
-      } else {
-        try {
-          eval(aScripts[i].text);
-        } catch(e) {alert(aScripts[i].text + "\nError:" + e.message);}
-      }
+  // Before switching to asynchronous requests this worked in firefox
+  // out of the box. Now it seems not to work with ff too. So now
+  // executing the javascript manually.
+  // if(!isFirefox()) {
+  var obj = document.getElementById(objId);
+  var aScripts = obj.getElementsByTagName('script');
+  for(var i in aScripts) {
+    if(aScripts[i].src && aScripts[i].src !== '') {
+      var oScr = document.createElement('script');
+      oScr.src = aScripts[i].src;
+      document.getElementsByTagName("HEAD")[0].appendChild(oScr);
+      oScr = null;
+    } else {
+      try {
+    	  eval(aScripts[i].text);
+      } catch(e) {alert(aScripts[i].text + "\nError:" + e.message);}
     }
-    aScripts = null;
-    obj = null;
   }
+  aScripts = null;
+  obj = null;
 }
 
 function isFirefox() {
   return navigator.userAgent.indexOf("Firefox") > -1;
 }
 
-function get_url(url) {
+function get_url(url, handler, id) {
     if (window.XMLHttpRequest) {
         var AJAX = new XMLHttpRequest();
     } else {
         var AJAX = new ActiveXObject("Microsoft.XMLHTTP");
     }
-
+    
     // Dynamic part to prevent caching
     var dyn = "_t="+Date.parse(new Date());
     if(url.indexOf('\?') !== -1) {
@@ -100,9 +129,15 @@ function get_url(url) {
     }
     
     if (AJAX) {
-        AJAX.open("GET", url + dyn, false);
+        AJAX.open("GET", url + dyn, true);
+        if(typeof handler === 'function')
+            AJAX.onreadystatechange = function() {
+                if (AJAX.readyState == 4) {
+                    handler(id, AJAX.responseText);
+                }
+            }
         AJAX.send(null);
-        return AJAX.responseText;
+        return true;
     } else {
         return false;
     }
@@ -140,21 +175,17 @@ function sidebar_scheduler() {
     for (var i in refresh_snapins) { 
         name    = refresh_snapins[i][0];
         refresh = refresh_snapins[i][1];
-        if (timestamp % refresh == 0) {
-            newcontent = get_url(url + "/sidebar_snapin.py?name=" + name);
-            var oSnapin = document.getElementById("snapin_" + name);
-            oSnapin.innerHTML = newcontent;
-            executeJS("snapin_" + name);
-            oSnapin = null;
+        if(timestamp % refresh == 0) {
+            get_url(url + "/sidebar_snapin.py?name=" + name, updateContents, "snapin_" + name);
         }
     }
     setTimeout(function(){sidebar_scheduler();}, 1000);
 }
 
-function add_bookmark(baseurl) {
+function addBookmark() {
     href = parent.frames[1].location;
     title = parent.frames[1].document.title;
-    get_url(baseurl + "/add_bookmark.py?title=" + escape(title) + "&href=" + escape(href));
+    get_url(url + "/add_bookmark.py?title=" + escape(title) + "&href=" + escape(href), updateContents, "snapin_bookmarks");
 }
 
 function hilite_icon(oImg, onoff) {

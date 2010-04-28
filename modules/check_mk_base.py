@@ -132,18 +132,24 @@ def summary_hostname(hostname):
 # Updates the state of an aggretated service check from the output of
 # one of the underlying service checks. The status of the aggregated
 # service will be updated such that the new status is the maximum
-# (crit > warn > ok) of all underlying status. Appends the output to
+# (crit > unknown > warn > ok) of all underlying status. Appends the output to
 # the output list and increases the count by 1.
 def store_aggregated_service_result(hostname, detaildesc, aggrdesc, newstatus, newoutput):
     global g_aggregated_service_results
     count, status, outputlist = g_aggregated_service_results.get(aggrdesc, (0, 0, []))
-    if newstatus > status:
+    if status_worse(newstatus, status):
         status = newstatus
     if newstatus > 0:
         outputlist.append( (detaildesc, newoutput) )
     g_aggregated_service_results[aggrdesc] = (count + 1, status, outputlist)
 
-
+def status_worse(newstatus, status):
+    if status == 2:
+        return False # nothing worse then critical
+    elif newstatus == 2:
+        return True  # nothing worse then critical
+    else:
+        return newstatus > status # 0 < 1 < 3 are in correct order
 
 # Submit the result of all aggregated services of a host
 # to Nagios. Those are stored in g_aggregated_service_results
@@ -403,6 +409,10 @@ def get_agent_info_tcp(hostname, ipaddress):
         except:
             pass # some old Python versions lack settimeout(). Better ignore than fail
         s.connect((ipaddress, agent_port))
+        try:
+            s.setblocking(1)
+        except:
+            pass
         output = ""
         while True:
             out = s.recv(4096, socket.MSG_WAITALL)
@@ -664,9 +674,27 @@ def do_all_checks_on_host(hostname, ipaddress):
 	       if opt_verbose:
 		  print "Counter wrapped, not handled by check, ignoring this check result"
 	       dont_submit = True
-           except:
+           except Exception, e:
                result = (3, "UNKNOWN - invalid output from plugin section <<<%s>>> or error in check type %s" %
-                         (checkname, checkname))
+                         (infotype, checkname))
+               if debug_log:
+                   try:
+                       import traceback, pprint
+                       l = file(debug_log, "a")
+                       l.write(("Invalid output from plugin or error in check:\n"
+                               "  Date:         %s\n"
+                               "  Host:         %s\n"
+                               "  Service:      %s\n"
+                               "  Check type:   %s\n"
+                               "  %s\n"
+                               "  Agent info:   %s\n\n") % (
+                               time.strftime("%Y-%d-%m %H:%M:%S"),
+                               hostname, description, checkname,
+                               traceback.format_exc().replace('\n', '\n      '),
+                               pprint.pformat(info)))
+                   except:
+                       pass
+
                if opt_debug:
                    raise
 	   if not dont_submit:

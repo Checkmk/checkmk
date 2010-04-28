@@ -1,0 +1,3 @@
+cp * /usr/share/check_mk/checks
+rm -f /usr/share/check_mk/checks/*~
+

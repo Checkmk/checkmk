@@ -1,55 +1,99 @@
-logwatch.php und die anderen htdocs/* -Dateien rausschmeissen,
-nicht mehr installieren. Im setup auch das Eintragen von var_dir
-entfernen.
+--------------------------------------------------------------------------------
+NOCH INS RELEASE 1.1.4
+--------------------------------------------------------------------------------
 
-snmp_communities: dictionary nicht mehr verwenden, aus Doku
-raus, Defaultwert leere Liste, aus Code raus, Hinweis im
-ChangeLog.
+--------------------------------------------------------------------------------
+UNSCHOENHEITEN
+--------------------------------------------------------------------------------
+Logwatch.py: Wenn die state-Datei korrupt ist, diese neu anlegen und eine
+Fakemeldung nach oben schicken, die critical ist.
 
-PING: service_notification_period und andere Eigenschaften
-wie Gruppen, etc werden nicht berücksichtigt. Gleiches
-gilt für Servicegruppen. Man sollte daher die Funktion
-extra_service_conf_of() so erweitern, dass *alles*
-Nagios-Attribute agbefrühstückt werden.
+Tabledarstellung mit Gruppen: Hier klebt der Gruppenkopf zu dicht
+an der vorherigen Gruppe.
 
-Multisite: konfigurierbares regelmäßiges Reload für
-Views.
+Multisite: Zeitanzeige der Downtimes (ende) zu ungenau.  "in 6 hrs" ist
+blöd. Auch bei Start "19 sec" ist dumm, hier wäre besser (vor 19 sec). Oder
+bei Downtimes immer absolute Zeiten angeben? Evtl. Zusatzspalte der Duration.
 
-Multisite: Tonausgabe von altem Multiadmin portieren.
+logwatch.php und die anderen htdocs/* -Dateien rausschmeissen, nicht mehr
+installieren. Im setup auch das Eintragen von var_dir entfernen. Eventuell
+vorher oben einen Text einbauen mit Link auf das neue Logwatch.
 
-Eine Datei local.mk, die von backup/restore *nicht*
-beruecksichtigt wird.
+snmp_communities: dictionary nicht mehr verwenden, aus Doku raus, Defaultwert
+leere Liste, aus Code raus, Hinweis im ChangeLog. Evtl einen Test mit
+Abbruch, wenn immer noch type ist dict.
 
+Multisite: Bei Änderungen an der Konfigdatei (debug) muss man komischerweise
+Apache neu starten....
+
+--------------------------------------------------------------------------------
+IDEEN & VERBESSERUNGEN
+--------------------------------------------------------------------------------
 Multisite: icons: das Erkennen der modified_attributes
 funktioniert nur halb: Wenn man den Ausgangswert wiederherstellt,
 bleibt das Attribut trotzdem modified...
+Kann man die modified attributes beim Nagios so einstellen,
+dass diese *nicht* bei einem Restart gespeichert werden?
+Sonst werden sie nie zurückgesetzt. Oder kann man das evtl.
+mit einem Kommando machen? 
 
-Multisite: Zeitanzeige der Downtimes (ende) zu ungenau.
-"in 6 hrs" ist blöd. Auch bei Start "19 sec" ist dumm,
-hier wäre besser (vor 19 sec). Oder bei Downtimes
-immer absolute Zeiten angeben? Evtl. Zusatzspalte
-der Duration.
+    Ja => CHANGE_SVC_MODATTR;<host_name>;<service_description>;<value>
+    Eine Datei local.mk, die von backup/restore *nicht* beruecksichtigt wird.
 
-Multisite: die reloads in der Sidebar müssen unbedingt *asynchron*
-laufen. Ansonsnten hängt der Browser immer wieder, wenn die Verbindung 
-zu einem Site langsam ist.
+Multisite: Bei einer bestehenden View muss man die Datenquelle umstellen
+können, zumindest wenn die neue Datenquelle alle Spalten unterstützt,
+die aktuell verwendet werden (und Filter).  Man muss z.B. von hostgroups
+auf hostgroups_merged umstellen können. Alles andere ist viel zu umständlich.
 
-Multisite: Bei einer bestehenden View muss man die Datenquelle
-umstellen können, zumindest wenn die neue Datenquelle alle
-Spalten unterstützt, die aktuell verwendet werden (und Filter).
-Man muss z.B. von hostgroups auf hostgroups_merged umstellen
-können. Alles andere ist viel zu umständlich.
+Cluster: Wenn der Clustername einer IP-Adresse zugeordnet ist (
+einfach mit Check_MK-Mitteln Adresse ermitteln aus gethostbyname/ipaddresses),
+dann:
+ * IP in address eintragen anstelle von 0.0.0.0
+ * check-mk-ping als Hostcheck verwenden
 
-Multisite: Bug: Die Limitierung zeigt normalerweise einen
-Link an, bei der man sie aufheben kann. Manchmal geht 
-das komischerweise nicht, obwohl ich admin bin. Außerdem
-sollte man in den Text schreiben, dass nicht alles angzeigt
-wurde. Evntl. hängt es an hosts und services. Bei Hosts
-geht es nicht, bei Services schon. ==> URSACHE: der
-Limit-Filter verwendet die gleiche Variable. Den Limit-Filter
-kann man sich dann sowieso schenken
-Multisite:
- Ansicht "service": Das Kommando wird auf dem Host statt auf
- dem Service ausgeführt. Das gilt scheinbar für alle Ansichten!
+Edit view: die Spaltenzahl ist zu niedrig.
 
+Inventur von Linux-NICs: Nur verwendete Karten monitoren.
+
+Doku Windows:
+ C:\> lodctr /s:c:\counter.txt
+ ==> Holt aus der Registry die Namen und Beschreibungen der
+ ganzen Performancecounter :-)
+
+Die Option -d verwendet --cache nicht.
+
+Searcher für last_checked
+
+Anstelle der Pipe direkt checkresults-Dateien schreiben
+
+check_mk -R koennte statt restart ein reload machen.
+Oder eine eigene option, check_mk -O?
+
+check_mk -C soll Liste von Hosts bekommen können.
+
+Generieren der Host- und Serviceconf umbauen und in einer gemeinsamen Schleifen
+machen. Dabei stets zuerst die Services und dann die Hosts generieren.
+Denn dann kann ich bei den Hosts schon wissen, ob es services gibt und für
+die PING-only hosts eine andere Schablone nehmen, wo die check_interval
+für Hostchecks auf 0 ist, also nur on-demand-pings ausgeführt werden
+(damit man nicht doppelt pingt).
+
+Multisite: man kann bei Comments keine Umlaute eingeben. Diese sind aktuell
+verboten, weil Python sonst Exceptions wirft.  Komischerweise kann man
+in den Filtern problemlos Umlaute eingeben. Keine Ahnung, wo hier der
+Unterschied liegt.
+
+Windows-Agent: Speicherberechung von Swap anpassen und Check mem entsprechend
+anpassen, dass er TotalPage und UsedPage verwendet. Im Quellcode ist das schon
+drin, der Check muss angepasst werden und auch die Schablone. Evtl. macht
+man einen eigenen Check. Oder man löst es über das Check-Item.
+
+Die impliziten Services Check_MK und PING und evtl. legacy_checks auch durch
+die Konfigmaschine laufen lassen, damit Servicegruppen etc auch funktoinieren
+(auch Inventory-Checks).  PING: service_notification_period und andere
+Eigenschaften wie Gruppen, etc werden eicht berücksichtigt. Gleiches gilt
+für Servicegruppen. Man sollte daher die Funktion extra_service_conf_of()
+so erweitern, dass *alles* Nagios-Attribute agbefrühstückt werden.
+
+Check ps (Linux) mit Uberwachung von MEM (Resident) und CPU.
 

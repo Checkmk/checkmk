@@ -1,0 +1,52 @@
+title: Check hardware sensors with ipmitool
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check makes use of the output of a working {ipmitool} on
+ a Linux system. If the kernel properly supports IPMI and {ipmitool}
+ is installed, then the agent will output the current state of
+ power supplies, cooling devices and temperatures. This check makes
+ sure that all those devices are working properly.
+
+ Fortunately, IPMI provides not only the current sensor values
+ but also their state, so no levels need to be configured for
+ this checks.
+
+ This check provides a summarized mode, where all sensors
+ appear as one summary check per host and a detailed mode
+ with one check per sensor.
+
+item:
+ {"Summary"} for summary mode, the name of the IPMI item
+ in detailed mode.
+
+inventory:
+ In summary mode, one check is created if at least one
+ sensor is found by the agent. In detailed mode one
+ item is created for each sensor found. 
+ 
+ Note: Some obscure hardware lists sensors in the state
+ {nr} which do not produce usable output. If you set
+ {impi_ignore_nr} to {True} then these sensors will
+ be ignored.
+
+perfdata:
+ In summary mode only the current ambient temperature
+ will be output - if available. In detailed mode each
+ sensors outputs its current value.
+
+examples:
+ # Ignore sensors in state 'nr'
+ ipmi_ignore_nr = True
+
+ # Make inventory produce detailed IPMI checks
+ ipmi_summarize = False
+
+[configuration]
+ipmi_ignore_nr (boolean): If set to {True}, sensors
+ with the state {nr} will be ignored. Default is {False}.
+ipmi_summarize (boolean): If set to {False}, the inventory
+ will create a separate service for each IPMI device. Default
+ is {True}.

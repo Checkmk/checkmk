@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL           = /bin/bash
-VERSION        	= 1.1.4b1
+VERSION        	= 1.1.4b2
 NAME           	= check_mk
 RPM_TOPDIR     	= rpm.topdir
 RPM_BUILDROOT  	= rpm.buildroot
@@ -70,7 +70,7 @@ dist: mk-livestatus
 			check_mk_templates.cfg check_mk.1 \
 			check_mk.css screenshot1.png README helpers \
 			check_mk{,.trans}.200.png windows \
-			df_magic_number.py livestatus
+			df_magic_number.py 
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) COPYING AUTHORS ChangeLog
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) livestatus/api --exclude "*~" --exclude "*.pyc" --exclude ".gitignore" --exclude .f12 
 	gzip $(DISTNAME)/doc.tar

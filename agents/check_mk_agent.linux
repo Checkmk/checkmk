@@ -59,17 +59,17 @@ STAT_BROKE="5.3.0"
 exec <&- 2>/dev/null
 
 echo '<<<check_mk>>>'
-echo Version: 1.1.4b1
+echo Version: 1.1.4b2
 
 echo '<<<mknagios>>>'
-echo Version: 1.1.4b1
+echo Version: 1.1.4b2
 
 # Partitionen (-P verhindert Zeilenumbruch bei langen Mountpunkten)
 # Achtung: NFS-Mounts werden grundsaetzlich ausgeblendet, um
 # Haenger zu vermeiden. Diese sollten ohnehin besser auf dem
 # Server, als auf dem Client ueberwacht werden.
 echo '<<<df>>>'
-df -PTlk -x smbfs -x tmpfs -x cifs -x iso9660 | sed 1d
+df -PTlk -x smbfs -x tmpfs -x cifs -x iso9660 -x nfsv4 | sed 1d
 # VMWare shows its own filesystems with 'vdf'. Just one
 # problem: it outputs not 7 but only 6 columns
 if which vdf > /dev/null
@@ -108,7 +108,7 @@ egrep -v '^Swap:|^Mem:|total:' < /proc/meminfo
 
 # Load und Anzahl Prozesse
 echo '<<<cpu>>>'
-echo "$(cat /proc/loadavg) $(grep processor < /proc/cpuinfo | wc -l)"
+echo "$(cat /proc/loadavg) $(grep ^processor < /proc/cpuinfo | wc -l)"
 
 # Network interfaces (Link, Autoneg, Speed)
 # This requires ethtool

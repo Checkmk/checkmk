@@ -1,3 +1,6 @@
+1.1.4b3:
+      * fsc_ipmi_mem_status: Fixed missing sensor detection 
+
 1.1.4b2:
       * Remove dependency from debian agent package    
       * Linx agent: The xinetd does not log each request anymore. Only

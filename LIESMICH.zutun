@@ -3,6 +3,13 @@ NOCH INS RELEASE 1.1.4
 --------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
+BUGS
+--------------------------------------------------------------------------------
+Beim Loeschen von Bookmarks (Sidebar) verschieben sich die Nummern scheinbar
+nicht. wenn man auf ein bookmark klickt, das nach einem geloeschten kommt
+(Editierfunktion), laeuft die Editierseite auf eine Exception.
+
+--------------------------------------------------------------------------------
 UNSCHOENHEITEN
 --------------------------------------------------------------------------------
 Logwatch.py: Wenn die state-Datei korrupt ist, diese neu anlegen und eine

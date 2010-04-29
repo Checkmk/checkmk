@@ -14,10 +14,18 @@ dann per Klick auf (repeat same query with debug mode) debug einschaltet,
 dann wird das scheinbar persistent in dem Thread in Apache gespeichert.
 Irgendwo muss ich die globale Debug-Variable am Anfang zurücksetzen...
 
+Multisite view pending: Host output statt service output. View
+übersichtlicher bauen.
 
 --------------------------------------------------------------------------------
 UNSCHOENHEITEN
 --------------------------------------------------------------------------------
+Multisite tactical overview: Hier muss man Summary hosts ausschliessen.
+Soll man die Filter doch irgendwie konfigurierbar machen? Oder doch
+einfach an hostproblems und serviceproblems haengen??
+
+Kachellayout von Multisite: Farben sind so, dass man nix erkennt.
+
 Logwatch.py: Wenn die state-Datei korrupt ist, diese neu anlegen und eine
 Fakemeldung nach oben schicken, die critical ist.
 

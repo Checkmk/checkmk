@@ -97,6 +97,10 @@ then
 	done
 fi
 
+# Check mount options. Filesystems may switch to 'ro' in case
+# of a read error.
+echo '<<<mounts>>>'
+grep ^/dev < /proc/mounts
 
 # processes including username, without kernel processes
 echo '<<<ps>>>'

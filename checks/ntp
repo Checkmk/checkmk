@@ -50,7 +50,14 @@ def check_ntp(item, params, info):
 		return (2, "CRIT - peer has never been reached")
 	    offset  = float(offset)
 	    jitter  = float(jitter)
-	    when    = int(when)
+	    if when[-1] == "m":
+		when = int(when[:-1]) * 60
+	    elif when[-1] == "h":
+		when = int(when[:-1]) * 60 * 60
+	    elif when[-1] == "d":
+		when = int(when[:-1]) * 60 * 60 * 24
+	    else:
+	        when    = int(when)
 	    poll    = int(poll)
  	    stratum = int(stratum)
 	    perfdata = [ ( "offset",  offset, warn, crit, 0, None ),

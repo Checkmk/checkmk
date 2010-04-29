@@ -58,7 +58,7 @@ def check_ntp(item, params, info):
 	    infotext = " - %s - stratum %d, offset %.2f ms, jitter %.2f ms" % (state, stratum, offset, jitter)
 	    if offset >= crit:
 		return (2, "CRIT - critical offset" + infotext, perfdata)
-            elif state in [ "falsetick", "reject" ]:
+            elif state in [ "falsetick" ]:
 		return (2, "CRIT" + infotext, perfdata)
 	    elif when > poll:
 		return (2, "CRIT - no response since %d secs%s" % (when - poll, infotext), perfdata)

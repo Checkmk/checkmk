@@ -45,7 +45,12 @@ for name, snapin in sidebar_snapins.items():
 
 # Helper functions to be used by snapins
 def link(text, target):
-    if not target.startswith("http:") and target[0] != '/':
+    # Convert relative links into absolute links. We have three kinds
+    # of possible links and we change only [3]
+    # [1] protocol://hostname/url/link.py
+    # [2] /absolute/link.py
+    # [3] relative.py
+    if not (":" in target[:10]) and target[0] != '/':
 	target = defaults.checkmk_web_uri + "/" + target
     return "<a target=\"main\" class=link href=\"%s\">%s</a>" % (target, htmllib.attrencode(text))
 

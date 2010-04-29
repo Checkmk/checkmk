@@ -8,6 +8,7 @@ exec 2>/dev/null
 
 if cat < /dev/tcp/$LANA/6556
 then
+    echo '<<<local>>>'
     echo "0 LAN-A - OK - Rechner über LAN-A erreichbar"
     if /usr/lib/nagios/plugins/check_icmp $LANB >/dev/null 2>&1
     then
@@ -18,6 +19,7 @@ then
 else 
     if cat < /dev/tcp/$LANB/6556
     then
+	echo '<<<local>>>'
 	echo "2 LAN-A - CRIT - Rechner über LAN-A nicht erreichbar"
 	echo "0 LAN-B - OK - Rechner über LAN-B erreichbar"
     else

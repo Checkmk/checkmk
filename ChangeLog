@@ -6,7 +6,7 @@
       * Agent output parser: allow section to appear more than once
 
       Checks & Agents:
-      * Add NTP section to Linux agent (output of ntpq)
+      * Add NTP section to Linux agent (output of ntpq), new ntp check
       * ifoperstatus: inventory skips non-ethernet interfaces (configurable)
       * mounts: new Linux check for mount options of filesystems
 

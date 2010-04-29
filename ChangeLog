@@ -3,6 +3,7 @@
       * Improve autodetection of PNP4Nagios 0.6
       * RRA configuration for PNP specific for checks (saves I/O)
       * check kernel: support inventory and partial levels
+      * Agent output parser: allow section to appear more than once
 
       Checks & Agents:
       * Add NTP section to Linux agent (output of ntpq)

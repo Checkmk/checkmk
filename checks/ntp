@@ -63,7 +63,7 @@ def check_ntp(item, params, info):
 	    perfdata = [ ( "offset",  offset, warn, crit, 0, None ),
 			 ( "jitter",  jitter, warn, crit, 0, None ) ]
 	    infotext = " - %s - stratum %d, offset %.2f ms, jitter %.2f ms" % (state, stratum, offset, jitter)
-	    if offset >= crit:
+	    if abs(offset) >= crit:
 		return (2, "CRIT - critical offset" + infotext, perfdata)
             elif state in [ "falsetick" ]:
 		return (2, "CRIT" + infotext, perfdata)
@@ -72,7 +72,7 @@ def check_ntp(item, params, info):
             elif stratum >= maxstratum:
 		return (2, "CRIT - stratum %d is too high (max allowed is %d)" % (stratum, maxstratum - 1))
 		
-	    elif offset >= warn:
+	    elif abs(offset) >= warn:
 		return (1, "WARN - offset too high" + infotext, perfdata)
 	    elif state == "outlyer":
 		return (1, "WARN" + infotext, perfdata)

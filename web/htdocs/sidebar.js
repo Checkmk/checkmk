@@ -57,13 +57,13 @@ oLink = null;
 oSidebar = null;
 
 // Removes a bookmark from the bookmarks list after deletion
-function delBookmark(num, code) {
-  var container = document.getElementById('bookmark_'+num);
-  var parent = container.parentNode;
-  parent.removeChild(container);
-  container = null;
-  parent = null;
-}
+// function delBookmark(num, code) {
+//   var container = document.getElementById('bookmark_'+num);
+//   var parent = container.parentNode;
+//   parent.removeChild(container);
+//   container = null;
+//   parent = null;
+// }
 
 // Removes a snapin from the sidebar without reloading anything
 function removeSnapin(id, code) {

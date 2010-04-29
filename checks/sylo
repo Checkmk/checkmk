@@ -54,6 +54,9 @@ def inventory_sylo(checkname, info):
         return []
 
 def check_sylo(item, params, info):
+    if len(info) != 1:
+	return (2, "CRIT - No hint file (sylo probably never ran on this system)")
+
     if len(info[0]) == 4:
         msg = ""
 

@@ -648,7 +648,7 @@ def page_edit_bookmark(h):
     html.begin_form("edit_bookmark")
     n = int(html.var("num"))
     bookmarks = load_bookmarks()
-    if html.var("save"):
+    if html.var("save") and html.check_transaction():
 	title = html.var("title")
 	url = html.var("url")
 	bookmarks[n] = (title, url)

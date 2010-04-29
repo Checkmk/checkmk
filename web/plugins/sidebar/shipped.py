@@ -632,8 +632,8 @@ def render_bookmarks():
     bookmarks = load_bookmarks()
     n = 0
     for title, href in bookmarks:
-        html.write("<div id=\"bookmark_%s\">" % n)
-	iconbutton("del", "del_bookmark.py?num=%d" % n, "side", "delBookmark", n)
+        html.write("<div id=\"bookmark_%d\">" % n)
+	iconbutton("del", "del_bookmark.py?num=%d" % n, "side", "updateContents", 'snapin_bookmarks')
 	iconbutton("edit", "edit_bookmark.py?num=%d" % n, "main")
 	html.write(link(title, href))
         html.write("</div>")
@@ -678,6 +678,7 @@ def ajax_del_bookmark(h):
     bookmarks = load_bookmarks()
     del bookmarks[num]
     save_bookmarks(bookmarks)
+    render_bookmarks()
 
 def ajax_add_bookmark(h):
     global html

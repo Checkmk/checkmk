@@ -18,6 +18,8 @@ Irgendwo muss ich die globale Debug-Variable am Anfang zurücksetzen...
 --------------------------------------------------------------------------------
 UNSCHOENHEITEN
 --------------------------------------------------------------------------------
+Kachellayout von Multisite: Farben sind so, dass man nix erkennt.
+
 Logwatch.py: Wenn die state-Datei korrupt ist, diese neu anlegen und eine
 Fakemeldung nach oben schicken, die critical ist.
 

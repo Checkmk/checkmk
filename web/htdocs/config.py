@@ -39,6 +39,14 @@ except NameError:
 config_dir = defaults.var_dir + "/web"
 
 def load_config():
+    # reset settings which can be changed at runtime to
+    # default values. Otherwise they stick to their changed
+    # value - within the Apache process that has answered
+    # the query, if that variable is not explicitely defined
+    # in multisite.mk
+    global debug
+    debug = False
+
     filename = defaults.default_config_dir + "/multisite.mk"
 
     # Config file is obligatory. An empty example is installed

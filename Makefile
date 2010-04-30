@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL           = /bin/bash
-VERSION        	= 1.1.4atlas6
+VERSION        	= 1.1.4atlas7
 NAME           	= check_mk
 RPM_TOPDIR     	= rpm.topdir
 RPM_BUILDROOT  	= rpm.buildroot

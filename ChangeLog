@@ -14,6 +14,7 @@
       * fsc_ipmi_mem_status: Fixed missing sensor detection 
       * Multisite sidebar: fix bookmark deletion problem in bookmark snapin
       * fjdarye60_rluns: added missing case for OK state
+      * Multisite: fixed problem with sticky debug
 
 1.1.4b2:
       * Remove dependency from debian agent package    

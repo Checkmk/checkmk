@@ -15,6 +15,7 @@
       * Multisite sidebar: fix bookmark deletion problem in bookmark snapin
       * fjdarye60_rluns: added missing case for OK state
       * Multisite: fixed problem with sticky debug
+      * Multisite: improve pending services view
 
 1.1.4b2:
       * Remove dependency from debian agent package    

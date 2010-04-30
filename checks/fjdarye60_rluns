@@ -40,6 +40,8 @@ def checkfunc(item, _no_params, info):
 		return (2, "CRIT - RLUN is not present")
 	    elif hexparts[3] == "08":
 		return (1, "WARN - RLUN is rebuilding") # we assume that ;-)
+            elif hexparts[3] == "00":
+		return (0, "OK - RLUN is in normal state") # assumption
 	    else:
 		return (2, "CRIT - RLUN in unknown state %s" % hexparts[3])
 	    

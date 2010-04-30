@@ -60,15 +60,13 @@ def check_ntp(item, params, info):
 		return (2, "CRIT - critical offset" + infotext, perfdata)
             elif state in [ "falsetick" ]:
 		return (2, "CRIT" + infotext, perfdata)
-	    elif when > poll:
+	    elif when > 2*poll and when > 128: # when can exceed poll for small polling values
 		return (2, "CRIT - no response since %d secs%s" % (when - poll, infotext), perfdata)
             elif stratum >= maxstratum:
 		return (2, "CRIT - stratum %d is too high (max allowed is %d)" % (stratum, maxstratum - 1))
 		
 	    elif abs(offset) >= warn:
 		return (1, "WARN - offset too high" + infotext, perfdata)
-	    elif state == "outlyer":
-		return (1, "WARN" + infotext, perfdata)
 	    else: 
 		return (0, "OK" + infotext, perfdata)
 	    

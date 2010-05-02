@@ -196,14 +196,15 @@ def render_tiled(data, view, group_columns, group_painters, painters, _ignore_nu
 		# paint group header
 		if group_open:
 		    html.write("</td></tr>\n")
-		html.write("<tr class=groupheader>")
+		html.write("<tr><td><table><tr class=groupheader>")
 		painted = False
 		for p in group_painters:
 		    if painted:
 			html.write("<td>,</td>")
 		    painted = paint(p, row)
 
-		html.write("</tr><tr><td class=tiles>\n")
+		html.write('</tr></table></td></tr>'
+                           '<tr><td class=tiles>\n')
 		group_open = True
 		last_group = this_group
 
@@ -214,15 +215,15 @@ def render_tiled(data, view, group_columns, group_painters, painters, _ignore_nu
 	    hbc = row.get("host_has_been_checked", 1)
 	    if hbc:
 		state = row.get("host_state", 0)
-		sclass = "hstate%d" % state
+		sclass = "hhstate%d" % state
 	    else:
-		state = "hstatep"
+		state = "hhstatep"
 	else:
 	    hbc = row.get("service_has_been_checked", 1)
 	    if hbc:
-		sclass = "state%d" % state
+		sclass = "sstate%d" % state
 	    else:
-		sclass = "statep"
+		sclass = "sstatep"
 
 	if not group_open:
 	    html.write("<tr><td class=tiles>")
@@ -235,7 +236,7 @@ def render_tiled(data, view, group_columns, group_painters, painters, _ignore_nu
 	if len(painters) < 5:
 	    painters = painters + ([ (empty_painter, None) ] * (5 - len(painters)))
 	
-	rendered = [ prepare_paint(p, row) for p in painters ]
+	rendered = [ ("", prepare_paint(p, row)[1]) for p in painters ]
 
 	html.write("<tr><td class=\"tl %s\">%s</td><td class=\"tr %s\">%s</td></tr>\n" % \
 		    (rendered[1][0], rendered[1][1], rendered[2][0], rendered[2][1]))

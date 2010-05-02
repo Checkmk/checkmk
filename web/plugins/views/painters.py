@@ -442,7 +442,7 @@ multisite_painters["num_services_ok"] = {
 
 multisite_painters["num_problems"] = {
     "title"   : "Number of problems",
-    "short"   : "",
+    "short"   : "Pro.",
     "columns" : [ "host_num_services", "host_num_services_ok", "host_num_services_pending" ],
     "paint"   : lambda row: paint_svc_count('s', row["host_num_services"] - row["host_num_services_ok"] - row["host_num_services_pending"]),
 }

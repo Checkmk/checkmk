@@ -288,10 +288,17 @@ def read_site_config():
 #                                        
 
 
-sidebar  = [('admin', 'open'), ('tactical_overview', 'open'), ('sitestatus', 'open'), \
-        ('search', 'open'), ('views', 'open'), ('hostgroups', 'closed'), \
-        ('servicegroups', 'closed'), ('hosts', 'closed'), ('time', 'open'), \
-        ('nagios_legacy', 'closed'), ('performance', 'closed'), ('master_control', 'closed'), ('about', 'closed')]
+sidebar = \
+[('tactical_overview', 'open'),
+ ('sitestatus', 'open'),
+ ('search', 'open'),
+ ('views', 'open'),
+ ('hostgroups', 'closed'),
+ ('servicegroups', 'open'),
+ ('performance', 'open'),
+ ('master_control', 'open'),
+ ('bookmarks', 'closed'),
+ ('admin', 'closed') ]
 
 #    _     _           _ _       
 #   | |   (_)_ __ ___ (_) |_ ___ 

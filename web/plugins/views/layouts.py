@@ -236,7 +236,7 @@ def render_tiled(data, view, group_columns, group_painters, painters, _ignore_nu
 	if len(painters) < 5:
 	    painters = painters + ([ (empty_painter, None) ] * (5 - len(painters)))
 	
-	rendered = [ prepare_paint(p, row) for p in painters ]
+	rendered = [ ("", prepare_paint(p, row)[1]) for p in painters ]
 
 	html.write("<tr><td class=\"tl %s\">%s</td><td class=\"tr %s\">%s</td></tr>\n" % \
 		    (rendered[1][0], rendered[1][1], rendered[2][0], rendered[2][1]))

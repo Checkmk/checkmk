@@ -199,7 +199,7 @@ table.services th {
     border-left: 1px dotted #366;
     border-right: 1px dotted #366;
     background-color: #abb;
-    padding: 0px 8px;
+    padding: 0px 4px;
     text-align: center;
     font-size: 9pt;
     color: white;
@@ -466,7 +466,7 @@ table.tiled tr.groupheader td {
     padding-top: 4px;
 }
 .tile {
-   width: 180px;
+   width: 160px;
    border: 1px solid black;
    float: left;
    -moz-border-radius: 4px;
@@ -477,7 +477,7 @@ table.tiled tr.groupheader td {
 }
 
 .tile table {
-height: 80px;
+height: 70px;
 }
 .tile td {
     border-style: none;

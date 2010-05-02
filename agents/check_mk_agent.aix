@@ -50,7 +50,7 @@ LOCALDIR=$MK_LIBDIR/local
 
 
 echo '<<<check_mk>>>'
-echo Version: 1.1.4b2
+echo Version: 1.1.4
 
 echo '<<<df>>>'
 df -kP | sed 's/ / - /' | grep -v ^/proc | grep -v ^Filesystem

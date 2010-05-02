@@ -1,5 +1,0 @@
-prolem RRDFILE[] gibt es bei PNP 0.4 nicht.
-und meine Schablonen klappen beim neuen nicht, wenn
-der Mode MULTIPLE ist. Loesung: gemeinsames Includefile
-fuer meine Schablonen, die RRDFILE[] fuellt, falls
-PNP 0.4 vorhanden ist.

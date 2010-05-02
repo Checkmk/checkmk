@@ -393,15 +393,23 @@ multisite_painters["host"] = {
     "title" : "Hostname",
     "short" : "Host",
     "columns" : ["host_name"],
-    "paint" : lambda row: (None, row["host_name"])
+    "paint" : lambda row: ("", row["host_name"])
 }
 
 multisite_painters["alias"] = {
     "title" : "Host alias",
     "short" : "Alias",
     "columns" : ["host_alias"],
-    "paint" : lambda row: (None, row["host_alias"])
+    "paint" : lambda row: ("", row["host_alias"])
 }
+
+multisite_painters["hostaddress"] = {
+    "title" : "Host IP address",
+    "short" : "IP address",
+    "columns" : ["host_address"],
+    "paint" : lambda row: ("", row["host_address"])
+}
+
 def paint_svc_count(id, count):
     if count > 0:
 	return "count svcstate state%s" % id, str(count)
@@ -430,6 +438,13 @@ multisite_painters["num_services_ok"] = {
     "short"   : "OK",
     "columns" : [ "host_num_services_ok" ],
     "paint"   : lambda row: paint_svc_count(0, row["host_num_services_ok"])
+}
+
+multisite_painters["num_problems"] = {
+    "title"   : "Number of problems",
+    "short"   : "",
+    "columns" : [ "host_num_services", "host_num_services_ok", "host_num_services_pending" ],
+    "paint"   : lambda row: paint_svc_count('s', row["host_num_services"] - row["host_num_services_ok"] - row["host_num_services_pending"]),
 }
 
 multisite_painters["num_services_warn"] = {

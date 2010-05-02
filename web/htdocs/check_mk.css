@@ -377,6 +377,13 @@ td.statex {  /* zero count */
   color: #fff;
 }
 
+
+/* *some* problem */
+.states, .hstates, .states a, .hstates a { 
+  background-color: #f08;
+  color: #fff;
+}
+
 .statep, .hstatep, .statep a, .hstatep a { 
   background-color: #888;
   color: #fff;
@@ -458,7 +465,6 @@ table.tiled tr.groupheader td {
     padding-left: 6px;
     padding-top: 4px;
 }
-
 .tile {
    width: 180px;
    border: 1px solid black;
@@ -477,16 +483,16 @@ height: 80px;
     border-style: none;
    font-size: 7pt;
 }
-.tile.state0, .tile.hstate0 {
+.tile.sstate0, .tile.hhstate0 {
     background-color: #afa;
 }
-.tile.state1 {
+.tile.sstate1 {
     background-color: #ff0;
 }
-.tile.state2, .tile.hstate1 {
+.tile.sstate2, .tile.hhstate1 {
     background-color: #f42;
 }
-.tile.state3, .tile.hstate2 {
+.tile.sstate3, .tile.hhstate2 {
     background-color: #f80;
 }
 

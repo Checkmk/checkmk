@@ -39,13 +39,14 @@ PLUGINS_VERSION=1.4.14
 RRDTOOL_VERSION=1.4.3
 CHECK_MK_VERSION=1.1.4
 PNP_VERSION=0.6.3
-NAGVIS_VERSION=1.4.6
+NAGVIS_VERSION=1.4.7
 
 SOURCEFORGE_MIRROR=dfn
 NAGIOS_URL="http://downloads.sourceforge.net/project/nagios/nagios-3.x/nagios-$NAGIOS_VERSION/nagios-$NAGIOS_VERSION.tar.gz?use_mirror=$SOURCEFORGE_MIRROR"
 PLUGINS_URL="http://downloads.sourceforge.net/project/nagiosplug/nagiosplug/$PLUGINS_VERSION/nagios-plugins-$PLUGINS_VERSION.tar.gz?use_mirror=$SOURCEFORGE_MIRROR"
 CHECK_MK_URL="http://mathias-kettner.de/download/check_mk-$CHECK_MK_VERSION.tar.gz"
-NAGVIS_URL="http://downloads.sourceforge.net/project/nagvis/NagVis%201.4%20%28stable%29/NagVis-$NAGVIS_VERSION/nagvis-$NAGVIS_VERSION.tar.gz?use_mirror=$SOURCEFORGE_MIRROR"
+NAGVIS_URL="http://downloads.sourceforge.net/project/nagvis/NagVis%201.4%20%28stable%29/nagvis-$NAGVIS_VERSION.tar.gz?use_mirror=$SOURCEFORGE_MIRROR"
+
 if [ "${PNP_VERSION:2:1}" = 6 ]
 then
    PNP_URL="http://downloads.sourceforge.net/project/pnp4nagios/PNP-${PNP_VERSION:0:3}/pnp4nagios-$PNP_VERSION.tar.gz?use_mirror=$SOURCEFORGE_MIRROR"

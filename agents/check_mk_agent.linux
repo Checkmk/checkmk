@@ -61,9 +61,6 @@ exec <&- 2>/dev/null
 echo '<<<check_mk>>>'
 echo Version: 1.1.4
 
-echo '<<<mknagios>>>'
-echo Version: 1.1.4
-
 # Partitionen (-P verhindert Zeilenumbruch bei langen Mountpunkten)
 # Achtung: NFS-Mounts werden grundsaetzlich ausgeblendet, um
 # Haenger zu vermeiden. Diese sollten ohnehin besser auf dem
@@ -100,7 +97,8 @@ fi
 
 # processes including username, without kernel processes
 echo '<<<ps>>>'
-ps ax -o user,command --columns 10000 | sed -e 1d -e 's/^/(/' -e 's/ /) /'
+ps ax -o user,vsz,rss,pcpu,command --columns 10000 | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
+
 
 # Speicherauslastung
 echo '<<<mem>>>'

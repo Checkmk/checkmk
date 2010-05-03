@@ -373,6 +373,24 @@ multisite_painters["host_black"] = {
     "paint" : paint_host_black,
 }
 
+def paint_host_black_with_link_to_old_nagios_services(row):
+    host = row["host_name"]
+    baseurl = config.site(row["site"])["nagios_cgi_url"]
+    url = baseurl + "/status.cgi?host=" + htmllib.urlencode(host)
+    state = row["host_state"]
+    if state != 0:
+        return None, '<div class=hostdown><a href="%s">%s</a></div>' % (url, host) 
+    else:
+        return None, '<a href="%s">%s</a>' % (url, host)
+
+
+multisite_painters["host_black_nagios"] = {
+    "title" : "Hostname, red background if down, link to Nagios services",
+    "short" : "Host",
+    "columns" : ["site", "host_name", "host_state"],
+    "paint" : paint_host_black_with_link_to_old_nagios_services,
+}
+
 
 multisite_painters["host_nagios_link"] = {
     "title" : "Icon with link to host to Nagios GUI",

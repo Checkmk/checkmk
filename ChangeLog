@@ -1,3 +1,6 @@
+1.1.5:
+     * Multisite: new column host painter with link to old Nagios services
+
 1.1.4:
       Summary:
       * A plentitude of problem fixes (including MRPE exit code bug)

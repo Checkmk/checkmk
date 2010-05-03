@@ -1,5 +1,9 @@
 1.1.5:
-     * Multisite: new column host painter with link to old Nagios services
+      Checks & Agents:
+      * local: allow more than once performance value, separated by pipe (|)
+
+      Multisite:
+      * New column host painter with link to old Nagios services
 
 1.1.4:
       Summary:

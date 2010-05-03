@@ -93,7 +93,7 @@ dist: mk-livestatus
 
 mk-livestatus:
 	if [ ! -e livestatus/configure ] ; then \
-		cd livestatus && aclocal && autoheader && automake && autoconf ; \
+		cd livestatus && aclocal && autoheader && automake -a && autoconf ; \
 	fi
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)

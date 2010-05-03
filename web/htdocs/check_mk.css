@@ -259,6 +259,7 @@ table.services td.singleicon {
 tr.groupheader td {
     border-style: none; 
     padding: 0px;
+    padding-top: 4px;
     margin: 0px;
 }
 
@@ -284,9 +285,10 @@ tr.groupheader a:hover {
     text-decoration: underline;
 }
 
-.services td.down { 
-  background-color: red;
+.services td.hostdown { 
+  background-color: #f22;
   -moz-border-radius: 0.5ex;
+  border: 1px solid #f88;
 }
 
 /*td.host a { 

@@ -362,9 +362,9 @@ multisite_painters["svc_flapping"] = {
 def paint_host_black(row):
     state = row["host_state"]
     if state == 0:
-	style = "host up"
+	style = None
     else:
-	style = "host down"
+	style = "hostdown"
     return style, row["host_name"]
 
 multisite_painters["host_black"] = {

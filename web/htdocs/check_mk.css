@@ -285,21 +285,14 @@ tr.groupheader a:hover {
     text-decoration: underline;
 }
 
-.services td.hostdown { 
-  background-color: #f22;
-  -moz-border-radius: 0.5ex;
-  border: 1px solid #f88;
+.services div.hostdown { 
+    background-color: #f22;
+    -moz-border-radius: 4px;
+    border: 2px solid #000;
+    padding-left: 3px;
+    padding-right: 3px;
 }
 
-/*td.host a { 
-  color: black;
-  text-decoration: none;
-}
-
-td.host a:hover { 
-  color: #444;
-  text-decoration: underline;
-}*/
 
 /*
   ____       _       _                

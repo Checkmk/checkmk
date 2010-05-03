@@ -276,7 +276,7 @@ tr.groupheader table td {
    font-weight: bold;
 }
 tr.groupheader a {
-    color: black;
+   color: black;
    text-decoration: none;
 }
 
@@ -284,14 +284,12 @@ tr.groupheader a:hover {
     text-decoration: underline;
 }
 
-td.host b.down { 
+.services td.down { 
   background-color: red;
   -moz-border-radius: 0.5ex;
-  border: 2px solid #800;
-  padding: 0px 1ex;
 }
 
-td.host a { 
+/*td.host a { 
   color: black;
   text-decoration: none;
 }
@@ -299,7 +297,7 @@ td.host a {
 td.host a:hover { 
   color: #444;
   text-decoration: underline;
-}
+}*/
 
 /*
   ____       _       _                

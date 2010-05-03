@@ -362,10 +362,10 @@ multisite_painters["svc_flapping"] = {
 def paint_host_black(row):
     state = row["host_state"]
     if state == 0:
-	style = "up"
+	style = "host up"
     else:
-	style = "down"
-    return "host", row["host_name"]
+	style = "host down"
+    return style, row["host_name"]
 
 multisite_painters["host_black"] = {
     "title" : "Hostname, red background if down or unreachable",

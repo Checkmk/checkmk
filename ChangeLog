@@ -1,6 +1,7 @@
 1.1.5:
       Checks & Agents:
       * local: allow more than once performance value, separated by pipe (|)
+      * ps.perf: also send memory and CPU usage (currently on Linux and Solaris)
 
       Multisite:
       * New column host painter with link to old Nagios services

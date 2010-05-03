@@ -31,12 +31,39 @@ $line = "202060";
 
 $opt[1] = " --vertical-label \"count\" -X0 -L5 -l 0 -u $upto --title \"Number of Processes\" ";
 
-$def[1] = "DEF:count=$rrdfile:$DS[1]:MAX ";
+$def[1] = "DEF:count=$RRDFILE[1]:$DS[1]:MAX ";
 $def[1] .= "AREA:count#$color:\"Processes\"     ";
 $def[1] .= "LINE1:count#$line:\"\" ";
 $def[1] .= "GPRINT:count:LAST:\"Current\: $format\" ";
 $def[1] .= "GPRINT:count:MAX:\"Maximum\: $format \" ";
 $def[1] .= "HRULE:$WARN[1]#FFFF00:\"Warning at $WARN[1]\" ";
 $def[1] .= "HRULE:$CRIT[1]#FF0000:\"Critical at $CRIT[1]\" ";
+
+if ($DS[2]) {
+ $opt[2]  = " --vertical-label \"MB\" -l 0 --title \"Memory Usage\" ";
+ $def[2]  = "DEF:vsz=$RRDFILE[2]:$DS[2]:MAX ";
+ $def[2] .= "DEF:rss=$RRDFILE[3]:$DS[3]:MAX ";
+ $def[2] .= "CDEF:vszmb=vsz,1024,/ ";
+ $def[2] .= "CDEF:rssmb=rss,1024,/ ";
+ $def[2] .= "AREA:vszmb#90a0f0:\"Virtual size \" ";
+ $def[2] .= "GPRINT:vszmb:LAST:\"Current\: %5.1lf MB\" ";
+ $def[2] .= "GPRINT:vszmb:MIN:\"Min\: %5.1lf MB\" ";
+ $def[2] .= "GPRINT:vszmb:MAX:\"Max\: %5.1lf MB\" ";
+ $def[2] .= "AREA:rssmb#2070ff:\"Resident size\" ";
+ $def[2] .= "GPRINT:rssmb:LAST:\"Current\: %5.1lf MB\" ";
+ $def[2] .= "GPRINT:rssmb:MIN:\"Min\: %5.1lf MB\" ";
+ $def[2] .= "GPRINT:rssmb:MAX:\"Max\: %5.1lf MB\" ";
+}
+
+if ($DS[3]) {
+ $opt[3]  = " --vertical-label \"CPU(%)\" -l 0 -u 100 --title \"CPU Usage\" ";
+ $def[3]  = "DEF:pcpu=$RRDFILE[4]:$DS[4]:MAX ";
+ $def[3] .= "AREA:pcpu#30ff80:\"CPU usage (%) \" ";
+ $def[3] .= "LINE:pcpu#20a060:\"\" ";
+ $def[3] .= "GPRINT:pcpu:LAST:\"Current\: %4.1lf %%\" ";
+ $def[3] .= "GPRINT:pcpu:MIN:\"Min\: %4.1lf %%\" ";
+ $def[3] .= "GPRINT:pcpu:MAX:\"Max\: %4.1lf %%\" ";
+}
+
 
 ?>

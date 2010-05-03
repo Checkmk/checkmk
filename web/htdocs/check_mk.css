@@ -351,8 +351,8 @@ td.statex {  /* zero count */
 /* HIRN: .hstate0 a muss raus. Dass muss ich spezifischer
    machen */
 .state0, .hstate0, .state0 a, .hstate0 a { 
-  background-color: #4a2;
-  color: #6f4;
+  background-color: #0a2;
+  color: #fff;
 }
 
 .state1, .state1 a { 

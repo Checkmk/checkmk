@@ -1,13 +1,13 @@
 --------------------------------------------------------------------------------
-NOCH INS RELEASE 1.1.4
+NOCH INS RELEASE 1.1.5
 --------------------------------------------------------------------------------
+Bei Check_MK -U nach "Precompiling Hostcheck..." ein
+flush auf stdout machen. Evtl. einen Punkt pro Hostcheck
+ausgeben.
 
 --------------------------------------------------------------------------------
 BUGS
 --------------------------------------------------------------------------------
-Multisite view pending: Host output statt service output. View
-übersichtlicher bauen.
-
 
 --------------------------------------------------------------------------------
 UNSCHOENHEITEN

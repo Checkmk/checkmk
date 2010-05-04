@@ -70,7 +70,7 @@ else
 	
 $def[1] .= "GPRINT:var1:MAX:\"Maximum\: $format$lf\" ";
 if ($WARN[1]) {
- $def[1] .= "HRULE:$WARN[1]#FFFF00:\"Warning\: $WARN[1]C\" ";
- $def[1] .= "HRULE:$CRIT[1]#FF0000:\"Critical\: $CRIT[1]C\" ";
+ $def[1] .= "HRULE:$WARN[1]#FFFF00:\"Warning\: $WARN[1]/s\" ";
+ $def[1] .= "HRULE:$CRIT[1]#FF0000:\"Critical\: $CRIT[1]/s\" ";
 }
 ?>

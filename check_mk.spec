@@ -130,6 +130,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/share/check_mk/htdocs
 /usr/share/check_mk/modules
 %config /usr/share/check_mk/pnp-templates/*
+%config /etc/pnp4nagios/*
 /usr/share/doc/check_mk
 %dir /var/lib/check_mk
 %dir %attr(-,nagios,root) /var/lib/check_mk/counters

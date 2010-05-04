@@ -64,9 +64,9 @@ if ($MAX[1] != "")  {
 
 $ds_name[2] = 'Error counter';
 $opt[2]  = "--vertical-label \"Error counter\" --title \"Problems on $hostname / $servicedesc\" ";
-$def[2]  = "DEF:crcerrors=$rrdfile:$DS[3]:AVERAGE " ;
-$def[2] .= "DEF:encout=$rrdfile:$DS[4]:AVERAGE " ;
-$def[2] .= "DEF:c3discards=$rrdfile:$DS[5]:AVERAGE " ;
+$def[2]  = "DEF:crcerrors=$rrdfile:$DS[3]:MAX " ;
+$def[2] .= "DEF:encout=$rrdfile:$DS[4]:MAX " ;
+$def[2] .= "DEF:c3discards=$rrdfile:$DS[5]:MAX " ;
 $def[2] .= "LINE1:crcerrors#ff0000:\"CRC Errors      \" " ;
 $def[2] .= "GPRINT:crcerrors:LAST:\"%.0lf\\n\" " ;
 $def[2] .= "LINE1:encout#60a020:\"ENC-Out         \" " ;

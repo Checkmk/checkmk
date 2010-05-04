@@ -1,0 +1,31 @@
+title: Check options of mounted filesystems
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the options with which a filesystem is mounted by
+ using the output of {/proc/mounts}. In normal operation mount options
+ should never change. If they do a severe problem can be the case: In
+ case of an I/O error while writing to disk, most filesystems (e.g.
+ {ext3}) will switch to read-only per default in order to avoid further
+ filesystem corruption. This check makes sure that you get to know
+ if this happens.
+
+ Any change in the mount options results in a {CRITICAL} state.
+ If the filesystem is not being found mounted, the check returns
+ an {UNKNOWN} state.
+
+item:
+ The mount point of the filesystem.
+
+inventory:
+ All filesystems which are not of the type {tmpfs} will be monitored.
+ The inventory uses the current mount options as check parameter.
+ Note: the agent sends only filesystems which have a device below
+ {/dev}, so network filesystems and virtual filesystems are excluded
+ by the agent.
+
+[parameters]
+target_options (list of strings): The list of expected mount options. Any change
+ in that list will result in a critical state. Example: {['data=ordered', 'rw']}

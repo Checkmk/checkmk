@@ -77,7 +77,7 @@ magic_factor (float): Optional: Magic factor that adapts the levels
 [configuration]
 inventory_df_exclude_fs (list of strings): Lists of filesystem types to exclude from inventory
 inventory_df_exclude_mountpoints (list of strings): List of mount points to exclude from inventory
-filesystem_default_levels (int, int): Defaults levels for filesystem detected by inventory
+filesystem_default_levels (int, int): Default levels for filesystem detected by inventory
 df_magicnumber_normsize (float): Reference filesystem size in GB. Default is 20.0. 
  Levels for File systems larger then that will be raised by a magic
  factor < 1.0. Level for smaller filesystems will be lowered.

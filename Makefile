@@ -66,6 +66,7 @@ dist: mk-livestatus
 	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web $$(cd web ; ls htdocs/*/*.{jpg,png,gif} htdocs/*.{py,css,js} plugins/*/*.py)
 	tar czf $(DISTNAME)/livestatus.tar.gz $(TAROPTS) -C livestatus  $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) )
 	tar czf $(DISTNAME)/pnp-templates.tar.gz $(TAROPTS) -C pnp-templates $$(cd pnp-templates ; ls *.php)
+	tar czf $(DISTNAME)/pnp-rraconf.tar.gz $(TAROPTS) -C pnp-rraconf $$(cd pnp-rraconf ; ls *.rra.cfg README.rra)
 	tar cf $(DISTNAME)/doc.tar $(TAROPTS) -C doc --exclude .svn --exclude "*~" \
 			check_mk_templates.cfg check_mk.1 \
 			check_mk.css screenshot1.png README helpers \

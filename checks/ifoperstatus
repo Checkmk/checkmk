@@ -28,17 +28,18 @@
 # targetstate is 1 (up)
 
 ifoperstatus_monitor_unused = False
+ifoperstatus_inventory_porttypes = [ "ethernetCsmacd" ]
 
 def inventory_ifoperstatus(checkname, info):
     inventory = []
-    for name, operstatus in info:
-        if ifoperstatus_monitor_unused or operstatus == 'up':
+    for name, hwtype, operstatus in info:
+        if hwtype in ifoperstatus_inventory_porttypes and (ifoperstatus_monitor_unused or operstatus == 'up'):
             inventory.append( (name, operstatus, repr(operstatus)) )
     return inventory
 
 
 def check_ifoperstatus(item, targetstate, info):
-   for name, operstatus in info:
+   for name, hwtype, operstatus in info:
        if item == name:
            if operstatus == targetstate:
                return (0, "OK - status is %s" % operstatus)
@@ -50,7 +51,7 @@ def check_ifoperstatus(item, targetstate, info):
    return (3, "UNKNOWN - interface %s missing" % item)
 
 check_info['ifoperstatus'] = (check_ifoperstatus, "Interface %s", 0,  inventory_ifoperstatus)
-snmp_info['ifoperstatus'] = ( ".1.3.6.1.2.1.2.2.1", [ 2, 8 ] )
+snmp_info['ifoperstatus'] = ( ".1.3.6.1.2.1.2.2.1", [ 2, 3, 8 ] )
 
 # check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2
 snmp_scan_functions['ifoperstatus'] = \

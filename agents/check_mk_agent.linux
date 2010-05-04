@@ -94,6 +94,10 @@ then
 	done
 fi
 
+# Check mount options. Filesystems may switch to 'ro' in case
+# of a read error.
+echo '<<<mounts>>>'
+grep ^/dev < /proc/mounts
 
 # processes including username, without kernel processes
 echo '<<<ps>>>'
@@ -203,6 +207,11 @@ if which vcbVmName > /dev/null 2>&1 ; then
    vcbVmName -s any
 fi
 
+if which ntpq > /dev/null 2>&1 ; then
+   echo '<<<ntp>>>'
+   # remote heading, make first column space separated
+   ntpq -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+fi
 
 # Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
 if cd $PLUGINSDIR

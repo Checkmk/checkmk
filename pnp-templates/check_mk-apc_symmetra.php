@@ -36,7 +36,7 @@ $def[1] .= "GPRINT:var1:AVERAGE:\"Avg\: %2.0lfC)\" ";
 $def[1] .= "HRULE:$CRIT[2]#FF0000:\"Critical\: $CRIT[2]C\" ";
 
 $opt[2] = "--vertical-label \"Percent\" -l 0 -u 100 --title \"Battery Capacity\" ";
-$def[2] = "DEF:var2=$rrdfile:$DS[1]:AVERAGE ";
+$def[2] = "DEF:var2=$rrdfile:$DS[1]:MIN ";
 $def[2] .= "AREA:var2#80e0c0:\"Capacity\:\" ";
 $def[2] .= "GPRINT:var2:LAST:\"%2.0lf%%\" ";
 $def[2] .= "LINE1:var2#008040:\"\" ";
@@ -44,7 +44,7 @@ $def[2] .= "GPRINT:var2:MAX:\"(Max\: %2.0lf%%,\" ";
 $def[2] .= "GPRINT:var2:AVERAGE:\"Avg\: %2.0lf%%)\" ";
 $def[2] .= "HRULE:$CRIT[1]#FF0000:\"Critical\: $CRIT[1]%\" ";
 
-$opt[3] = "--vertical-label \"Ampere\" -l 0 --title \"Currencies\" ";
+$opt[3] = "--vertical-label \"Ampere\" -l -0.5 --title \"Currencies\" ";
 $def[3] = "DEF:batcur=$rrdfile:$DS[3]:MAX ";
 $def[3] .= "DEF:outcur=$rrdfile:$DS[5]:MAX ";
 $def[3] .= "LINE:batcur#c0c000:\"Battery Currency\:\" ";
@@ -53,11 +53,11 @@ $def[3] .= "LINE:outcur#00c0c0:\"Output Currency\:\" ";
 $def[3] .= "GPRINT:outcur:LAST:\"%2.0lfA\" ";
 
 $opt[4] = "--vertical-label \"Volt\" -l 0 -u 250 --title \"Output Voltage\" ";
-$def[4] = "DEF:volt=$rrdfile:$DS[4]:MAX ";
+$def[4] = "DEF:volt=$rrdfile:$DS[4]:MIN ";
 $def[4] .= "GPRINT:volt:LAST:\"%2.0lfV\" ";
 $def[4] .= "LINE1:volt#408040:\"\" ";
-$def[4] .= "GPRINT:volt:MAX:\"(Max\: %2.0lfV,\" ";
-$def[4] .= "GPRINT:volt:AVERAGE:\"Avg\: %2.0lfV)\" ";
+$def[4] .= "GPRINT:volt:MIN:\"(min\: %2.0lfV,\" ";
+$def[4] .= "GPRINT:volt:AVERAGE:\"avg\: %2.0lfV)\" ";
 $def[4] .= "HRULE:$CRIT[4]#FF0000:\"Critical\: $CRIT[4]V\" ";
 
 

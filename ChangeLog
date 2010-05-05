@@ -20,6 +20,7 @@
       * fc_brocade_port_detailed: PNP template now uses MAX instead of AVERAGE
       * kernel: fix text in PNP template
       * ipmi_sensors: fix timeout in agent (lead to missing items)
+      * multipath: allow alias as item instead of uuid
 
       Multisite:
       * New column host painter with link to old Nagios services

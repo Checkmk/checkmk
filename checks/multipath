@@ -90,7 +90,7 @@
 #  \_ 1:0:1:0 sdd 8:48  [active]
 
 def parse_multipath_output(info, only_uuid = None):
-    # only_uuid --> look only for data of this uuid
+    # only_uuid --> look only for data of this uuid or alias
 
     # New reported header lines need to be placed here
     # the matches need to be put in a list of tupples
@@ -149,7 +149,7 @@ def parse_multipath_output(info, only_uuid = None):
                 raise Exception("Invalid line in agent output: " + l)
 
             # Skip unwanted devices in one device mode
-            if only_uuid and uuid != only_uuid:
+            if only_uuid and only_uuid not in [ uuid, alias ]:
                 uuid = None # wrong uuid, ignore this one
                 continue
 
@@ -198,23 +198,22 @@ def inventory_multipath(checkname, info):
         inventory.append( (uuid, " ".join(info['luns']), info['numpaths']) )
     return inventory
 
-# item is UUID (e.g. '360a9800043346937686f456f59386741')
+# item is UUID (e.g. '360a9800043346937686f456f59386741') or alias (e.g. 'mpath0')
 def check_multipath(item, target_numpaths, info):
     if target_numpaths == None:
         target_numpaths = 2 # default case: we need two paths
 
-    parsed = parse_multipath_output(info, item) # we look for one specific uuid
-
-    # Check if map is there - in the first place
-    mmap = parsed.get(item)
-    if not mmap:
-        return (3, "UNKNOWN - no map with uuid %s" % item)
+    parsed = parse_multipath_output(info, item) # we look for one specific uuid/alias
+    if len(parsed) == 0:
+        return (3, "UNKNOWN - no map with uuid/alias %s" % item)
+    mmap = parsed.values()[0]
 
     alias = mmap.get('alias')
     if alias:
         aliasinfo = "(%s) " % alias
     else:
         aliasinfo = ""
+
     numpaths = mmap['numpaths']
     broken = mmap['broken_paths']
     numbroken = len(broken)

@@ -21,6 +21,7 @@
       * kernel: fix text in PNP template
       * ipmi_sensors: fix timeout in agent (lead to missing items)
       * multipath: allow alias as item instead of uuid
+      * caching agent: use /var/cache/check_mk as cache directory (instead of /etc/check_mk)
 
       Multisite:
       * New column host painter with link to old Nagios services

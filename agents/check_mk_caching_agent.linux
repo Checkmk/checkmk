@@ -47,7 +47,7 @@
 #   ip address, which is absolutely needed here.                     #
 # ------------------------------------------------------------------ #
 
-export MK_CONFDIR="/this/is/changed/by/setup"
+export MK_CACHEDIR="/var/cache/check_mk"
 
 # Determine the IP address of the remote Nagios server.
 # xinetd sends us the IP address of the remote host via 
@@ -70,7 +70,8 @@ fi
 # with the logwatch extension and (2) configurable for the admin
 # during setup.
 
-CACHEFILE=$MK_CONFDIR/agentcache
+mkdir -p $MK_CACHEDIR
+CACHEFILE=$MK_CACHEDIR/agentcache
 LOCKFILE=$CACHEFILE.lock
 SEENFILE=$CACHEFILE.seenby.$REMOTE_HOST
 

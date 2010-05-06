@@ -5,9 +5,20 @@ Bei Check_MK -U nach "Precompiling Hostcheck..." ein
 flush auf stdout machen. Evtl. einen Punkt pro Hostcheck
 ausgeben.
 
+Bei Inventur check_mk -I ntp werden auch die SNMP-Geraete abgefragt?
+Werden die nur bei -I tcp ausgeklammert? Sollte nicht sein, sonst
+bekommen wir viele Timeouts.
+
+Quicksearch: Das Dropdown bleibt recht oft auf, obwohl man schon einen
+Host ausgewählt hat.
+
 --------------------------------------------------------------------------------
 BUGS
 --------------------------------------------------------------------------------
+Wenn man gerade die Kommandobox auf hat (oder den Filter?) dann sollte
+kein Refresh stattfinden. Sonst wird man mitten im Tippen abgewürgt.
+Kann man das mit Javascript hinbekommen?
+
 
 --------------------------------------------------------------------------------
 UNSCHOENHEITEN

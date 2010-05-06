@@ -2855,9 +2855,9 @@ def do_create_config():
 
 def do_precompile_hostchecks():
     sys.stdout.write("Precompiling host checks...")
+    sys.stdout.flush()
     precompile_hostchecks()
     sys.stdout.write("OK\n")
-    sys.stdout.flush()
     
 
 def do_update():

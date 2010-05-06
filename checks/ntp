@@ -60,13 +60,18 @@ def inventory_ntp(checktype, info):
 
 def check_ntp(item, params, info):
     maxstratum, warn, crit = params
-    for statecode, peer, refid, stratum, t, when, poll, reach, delay, offset, jitter in info:
+    for line in info:
+        statecode, peer, refid, stratum, t, when, poll, reach, delay, offset, jitter = line
         if peer == item:
-	    if when == "-" or reach == "0":
+	    if reach == "0":
 		return (2, "CRIT - peer has never been reached")
+            
 	    offset  = float(offset)
 	    jitter  = float(jitter)
-	    if when[-1] == "m":
+
+            if when == '-':
+		when = 0
+	    elif when[-1] == "m":
 		when = int(when[:-1]) * 60
 	    elif when[-1] == "h":
 		when = int(when[:-1]) * 60 * 60
@@ -74,18 +79,22 @@ def check_ntp(item, params, info):
 		when = int(when[:-1]) * 60 * 60 * 24
 	    else:
 	        when    = int(when)
+
 	    poll    = int(poll)
  	    stratum = int(stratum)
 	    perfdata = [ ( "offset",  offset, warn, crit, 0, None ),
 			 ( "jitter",  jitter, warn, crit, 0, None ) ]
 	    state = ntp_state_codes.get(statecode, "unknown")
 	    infotext = " - %s - stratum %d, offset %.2f ms, jitter %.2f ms" % (state, stratum, offset, jitter)
+            if when > 0:
+		infotext += ", last reached %d secs ago" % when
+
 	    if abs(offset) >= crit:
 		return (2, "CRIT - critical offset" + infotext, perfdata)
             elif state in [ "falsetick" ]:
 		return (2, "CRIT" + infotext, perfdata)
 	    elif when > 2*poll and when > 128: # when can exceed poll for small polling values
-		return (2, "CRIT - no response since %d secs%s" % (when - poll, infotext), perfdata)
+		return (2, "CRIT - response due since %d secs%s" % (when - poll, infotext), perfdata)
             elif stratum >= maxstratum:
 		return (2, "CRIT - stratum %d is too high (max allowed is %d)" % (stratum, maxstratum - 1))
 		
@@ -95,6 +104,7 @@ def check_ntp(item, params, info):
 		return (0, "OK" + infotext, perfdata)
 	    
     return (3, "UNKNOWN - peer not found")
+
 
 
 check_info['ntp']  = (check_ntp, "NTP Peer %s", 1, inventory_ntp)

@@ -8,8 +8,13 @@ admin_users = [ "nagiosadmin" ]
 
 # A lists of all normal operational users allowed to use
 # Multisite. If this variable is no set, then everybody with a correct
-# HTTP login may use Multisite.
+# HTTP login may use Multisite and gets the role "user"
 # users       = [ "meier", "huber", "mueller" ]
+
+# Users not explicitely being listed in admin_users or guest_users
+# get the role "user" if they have a valid login. You can change this
+# to "guest", "admin" or None by setting the following variable:
+# default_user_role = "guest"
 
 # Sites to connect to. If this variable is unset, a single
 # connection to the local host is done.

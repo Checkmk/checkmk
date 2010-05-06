@@ -75,16 +75,17 @@ def load_config():
 roles = [ "user", "admin", "guest" ]
 
 # define default values for all settings
-debug       = False
-users       = None  # None means: all
-admin_users = []
-guest_users = []
+debug             = False
+users             = []
+admin_users       = []
+guest_users       = []
+default_user_role = "user"
 
 # Global table of available permissions. Plugins may add their own
 # permissions
-permissions_by_name = {}
+permissions_by_name  = {}
 permissions_by_order = []
-permission_sections = {}
+permission_sections  = {}
 
 def declare_permission(name, title, description, defaults):
     perm = { "name" : name, "title" : title, "description" : description, "defaults" : defaults }
@@ -194,10 +195,10 @@ def role_of_user(u):
         return "admin"
     elif u in guest_users:
         return "guest"
-    elif users != None and u not in users:
-        return None
-    else:
+    elif u in users:
         return "user"
+    else:
+        return default_user_role
 
 def may(permname):
     # handle case where declare_permission is done after login

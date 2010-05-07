@@ -197,7 +197,7 @@ then
     then
         eval "$OUTPUT"
 	if [ -z "$YES" ] ; then 
-	    printf "[1;37;42m %-71s [0m\n" "* Found running Nagios process, autodetected $(echo "$OUTPUT" | grep -v '#' | wc -l) settings."
+	    printf "[1;37;42m %-71s [0m\n" "* Found running Nagios process, autodetected $(echo "$OUTPUT" | grep -v '^\(#\|$\)' | wc -l) settings."
 	fi
     fi
 fi

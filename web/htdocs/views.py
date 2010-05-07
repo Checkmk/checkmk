@@ -915,7 +915,7 @@ def show_view(view, show_heading = False):
 
     # Filter-button
     if len(show_filters) > 0 and not html.do_actions():
-        filter_isopen = html.var("search", "") != "" or view["mustsearch"]
+        filter_isopen = html.var("search", "") == "" and view["mustsearch"]
 	toggle_button("table_filter", filter_isopen, "Show filter", "Hide filter", ["filter"])
    
     # Action-button

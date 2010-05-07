@@ -198,7 +198,7 @@ setup:
 	rm -rf $(DISTNAME)
 	tar xzf $(DISTNAME).tar.gz
 	cd $(DISTNAME) && ./setup.sh --yes
-	/etc/init.d/nagios restart
+	check_mk -R
 	/etc/init.d/apache2 reload
 
 

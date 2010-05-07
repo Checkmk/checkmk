@@ -123,7 +123,7 @@ def get_snmp_table(hostname, ip, community, oid_info):
             if suboid:
                fetchoid += "." + str(suboid)
             
-            command = cmd + " -OQ -Ov -c %s %s %s.%s 2>/dev/null" % \
+            command = cmd + " -Oa -OQ -Ov -c %s %s %s.%s 2>/dev/null" % \
                 (community, ip, fetchoid, str(column))
             snmp_process = os.popen(command, "r").xreadlines()
 	    

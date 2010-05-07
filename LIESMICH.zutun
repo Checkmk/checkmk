@@ -19,6 +19,7 @@ Wenn man gerade die Kommandobox auf hat (oder den Filter?) dann sollte
 kein Refresh stattfinden. Sonst wird man mitten im Tippen abgewürgt.
 Kann man das mit Javascript hinbekommen?
 
+Eingabe von Downtimes: Auch hier Umlaute abfangen wie bei Comments
 
 --------------------------------------------------------------------------------
 UNSCHOENHEITEN

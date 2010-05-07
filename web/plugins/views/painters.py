@@ -352,12 +352,37 @@ multisite_painters["svc_flapping"] = {
     "paint" : lambda row: paint_nagiosflag(row, "service_is_flapping", True)
 }
 
+# PNP Graphs
+def paint_pnpgraph(sitename, host, service = "_HOST_"):
+    site = html.site_status[sitename]["site"]
+    pnpurl = site["pnp_prefix"].replace("/graph", "")
+    htmlcode = ""
+    for source in [ 1, 2, 3, 4, 5, 6, 7 ]:
+        urlvars = 'host=%s&srv=%s&source=%d' % (htmllib.urlencode(host), htmllib.urlencode(service), source)
+        htmlcode += '<a href="%s/graph?%s"><img src="%s/image?%s&view=0"></a><br>' % \
+            (pnpurl, urlvars, pnpurl, urlvars)
+    return "", htmlcode
+        
+multisite_painters["svc_pnpgraph" ] = {
+    "title"   : "PNP service graph",
+    "short"   : "PNP graph",
+    "columns" : [ "host_name", "service_description" ],
+    "paint"   : lambda row: paint_pnpgraph(row["site"], row["host_name"], row["service_description"])
+}
+
 #   _   _           _       
 #  | | | | ___  ___| |_ ___ 
 #  | |_| |/ _ \/ __| __/ __|
 #  |  _  | (_) \__ \ |_\__ \
 #  |_| |_|\___/|___/\__|___/
 #                           
+
+multisite_painters["host_pnpgraph" ] = {
+    "title"   : "PNP host graph",
+    "short"   : "PNP graph",
+    "columns" : [ "host_name" ],
+    "paint"   : lambda row: paint_pnpgraph(row["site"], row["host_name"])
+}
 
 def paint_host_black(row):
     state = row["host_state"]

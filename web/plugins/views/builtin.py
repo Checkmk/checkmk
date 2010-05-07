@@ -579,7 +579,7 @@ multisite_builtin_views = {
                 'name': 'pendingsvc',
                 'num_columns': 5,
                 'owner': 'admin',
-                'painters': [('host', None), ('service_description', None)],
+                'painters': [('service_description', None)],
                 'play_sounds': False,
                 'public': True,
                 'show_filters': [],

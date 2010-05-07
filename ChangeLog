@@ -29,6 +29,9 @@
       Multisite:
       * New column host painter with link to old Nagios services
       * Multisite: new configuration parameter default_user_role
+      
+      Livestatus:
+      * Add missing LDFLAGS for compiling (useful for -g)
 
 1.1.4:
       Summary:

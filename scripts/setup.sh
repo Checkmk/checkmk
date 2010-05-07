@@ -24,7 +24,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-VERSION=1.1.4
+VERSION=1.1.5i0
 NAME=check_mk
 LANG=
 LC_ALL=
@@ -376,7 +376,9 @@ string will be displayed to the user when asking for the password.
 You should use the same AuthName as for Nagios. Otherwise the user will 
 have to log in twice"
 
+# -------------------------------------------------------------------
 ask_title "Integration with PNP4Nagios"
+# -------------------------------------------------------------------
 
 ask_dir -d pnp_prefix /pnp4nagios/graph /pnp4nagios/graph "URL prefix for PNP4Nagios" \
   "Check_MK automatically creates links to PNP4Nagios for hosts and
@@ -391,12 +393,24 @@ graphing tool check_mk can directly write into the exsting databases.
 This saves CPU and disk IO"
 
 ask_dir pnptemplates /usr/share/$NAME/pnp-templates $HOMEBASEDIR/pnp-templates "PNP4Nagios templates" \
-  "check_mk ships templates for PNP4Nagios for most of its checks.
+  "Check_MK ships templates for PNP4Nagios for most of its checks.
 Those templates make the history graphs look nice. PNP4Nagios
 expects such templates in the directory pnp/templates in your
 document root for static web pages"
 
+ask_dir pnpconfdir /etc/pnp4nagios $HOMEBASEDIR/pnp4nagios/etc "PNP4Nagios config directory" \
+  "Check_MK ships RRA configuration files for its checks that 
+can be used by PNP when creating the RRDs. Per default, PNP 
+creates RRD such that for each variable the minimum, maximum
+and average value is stored. Most checks need only one or two
+of these aggregations. If you install the Check_MK's RRA config
+files into the configuration directory of PNP, PNP will create
+RRDs with the minimum of required aggregation and thus save
+substantial amount of disk I/O (and space) for RRDs"
+
+# -------------------------------------------------------------------
 ask_title "Check_MK Livestatus Module"
+# -------------------------------------------------------------------
 
 ask_dir -d enable_livestatus yes yes "compile livestatus module" \
   "This version of Check_mk ships a completely new and experimental
@@ -571,6 +585,8 @@ do
 	   cp $DESTDIR$modulesdir/defaults $DESTDIR$web_dir/htdocs/defaults.py &&
 	   mkdir -p $DESTDIR$pnptemplates &&
 	   tar xzf $SRCDIR/pnp-templates.tar.gz -C $DESTDIR$pnptemplates &&
+	   mkdir -p $DESTDIR$pnpconfdir &&
+	   tar xzf $SRCDIR/pnp-rraconf.tar.gz -C $DESTDIR$pnpconfdir &&
 	   mkdir -p $DESTDIR$modulesdir &&
 	   rm -f $DESTDIR$modulesdir/check_mk{,_admin} &&
 	   tar xzf $SRCDIR/modules.tar.gz -C $DESTDIR$modulesdir &&

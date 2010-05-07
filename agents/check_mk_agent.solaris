@@ -50,7 +50,7 @@ PLUGINSDIR=$MK_LIBDIR/plugins
 LOCALDIR=$MK_LIBDIR/local
 
 echo '<<<check_mk>>>'
-echo Version: 1.1.4
+echo Version: 1.1.5i0
 
 echo '<<<df>>>'
 for fs in ufs zfs
@@ -62,9 +62,9 @@ do
    done
 done
 
-# Prozesses
+# Processes
 echo '<<<ps>>>'
-ps -ef -o args | sed -e 1d -e '/^\[/d'
+ps -A -o user,vsz,rss,pcpu,args | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
 
 # You need statgrab to be installed. You'll find it 
 # here: http://www.i-scream.org/libstatgrab/ 

@@ -473,9 +473,11 @@ def parse_info(lines):
                 else:
                     opt_args = None
                 chunkoptions[opt_name] = opt_args
-                print chunkoptions
-	    chunk = []
-	    info[chunkname] = chunk
+
+            chunk = info.get(chunkname, None)
+	    if chunk == None: # chunk appears in output for the first time
+		chunk = []
+	        info[chunkname] = chunk
             try:
                 separator = chr(int(chunkoptions["sep"]))
             except:

@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import glob, sys, os
+import glob, sys, os, shutil
 
 mknagios_autochecksdir = "autochecks"	
 outputdir              = "autochecks.new"
@@ -55,3 +55,9 @@ for host, lines in hosts.items():
   for line in lines:
     f.write(line)
   f.write("]\n")
+
+if "-f" in sys.argv:
+  print "making new autochecks active"
+  os.rename("autochecks", "autochecks.old")
+  os.rename("autochecks.new", "autochecks")
+  shutil.rmtree("autochecks.old", True)

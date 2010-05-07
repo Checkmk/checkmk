@@ -102,7 +102,12 @@ def check_freeipmi(item, _no_params, info):
 			crit = None
 			levelstext = ""
 
-		    perfdata = [ ("value", current, None, crit) ]
+                    # Do not save performance data for FANs. This produces
+                    # much data and is - in my opinion - useless.
+                    if item.startswith("Fan_"):
+                        perfdata = []
+                    else:
+                        perfdata = [ ("value", current, None, crit) ]
 		    infotext = "Current value %.1f%s%s" % (current, unit, levelstext)
 	    if status == "OK" or status.startswith("Fully_Redundant"):
 		return (0, "OK - " + infotext, perfdata)

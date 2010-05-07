@@ -34,12 +34,13 @@ def check_local(item, params, info):
            state = int(line[0])
            perftxt = line[2]
            output = " ".join(line[3:])
-           if perftxt == "-": # no performance data
-               perfdata = []
-           else:
-               varname,valuetxt = perftxt.split('=')
-               values=valuetxt.split(';')
-               perfdata = [ tuple( [varname] + values ) ]
+           perfdata = []
+           if perftxt != "-":
+               # new: allow multiple perfdata by using | as separator
+               for entry in perftxt.split('|'):
+                   varname, valuetxt = entry.split('=')
+                   values = valuetxt.split(';')
+                   perfdata.append(tuple( [varname] + values ))
            return (state, output, perfdata)
     return (3, "Check output not found in local checks")
                

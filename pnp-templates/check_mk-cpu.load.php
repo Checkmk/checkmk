@@ -26,10 +26,8 @@
 $opt[1] = "--vertical-label Load -l0  --title \"CPU Load for $hostname / $servicedesc\" ";
 #
 $def[1] =  "DEF:var1=$rrdfile:$DS[1]:MAX " ;
-#$def[1] =  "DEF:var2=$rrdfile:$DS[1]:AVERAGE " ;
 $def[1] .= "HRULE:$WARN[1]#FFFF00 ";
 $def[1] .= "HRULE:$CRIT[1]#FF0000 ";
-#$def[1] .= "AREA:var2#4080A0:\"load max\" " ;
 $def[1] .= "AREA:var1#2060a0:\"load\" " ;
 $def[1] .= "GPRINT:var1:LAST:\"%6.2lf last\" " ;
 $def[1] .= "GPRINT:var1:AVERAGE:\"%6.2lf avg\" " ;

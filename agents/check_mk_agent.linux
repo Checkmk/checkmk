@@ -59,10 +59,7 @@ STAT_BROKE="5.3.0"
 exec <&- 2>/dev/null
 
 echo '<<<check_mk>>>'
-echo Version: 1.1.4
-
-echo '<<<mknagios>>>'
-echo Version: 1.1.4
+echo Version: 1.1.5i0
 
 # Partitionen (-P verhindert Zeilenumbruch bei langen Mountpunkten)
 # Achtung: NFS-Mounts werden grundsaetzlich ausgeblendet, um
@@ -97,10 +94,15 @@ then
 	done
 fi
 
+# Check mount options. Filesystems may switch to 'ro' in case
+# of a read error.
+echo '<<<mounts>>>'
+grep ^/dev < /proc/mounts
 
 # processes including username, without kernel processes
 echo '<<<ps>>>'
-ps ax -o user,command --columns 10000 | sed -e 1d -e 's/^/(/' -e 's/ /) /'
+ps ax -o user,vsz,rss,pcpu,command --columns 10000 | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
+
 
 # Speicherauslastung
 echo '<<<mem>>>'
@@ -170,12 +172,12 @@ fi
 # IPMI data via ipmi-sensors (of freeipmi)
 if which ipmi-sensors >/dev/null ; then
     echo '<<<ipmi_sensors>>>'
-    # No cache file existing? => give more time to create it
+    # No cache file existing? => Impose no time limit, this can take a minute and more
     if [ ! -e "/var/cache/.freeipmi/sdr-cache/sdr-cache-$(hostname).127.0.0.1" ]
     then
-        TIMEOUT=50
+        WAITMAX=
     else
-        TIMEOUT=2
+        WAITMAX="waitmax 3"
     fi
     # Newer ipmi-sensors version have new output format; Legacy format can be used
     if ipmi-sensors --help | grep -q legacy-output; then 
@@ -185,8 +187,8 @@ if which ipmi-sensors >/dev/null ; then
     fi
     for class in Temperature 'Power Unit' Fan
     do
-       waitmax $TIMEOUT ipmi-sensors $IPMI_FORMAT --sdr-cache-directory /var/cache -g "$class" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
-       TIMEOUT=2
+       $WAITMAX ipmi-sensors $IPMI_FORMAT --sdr-cache-directory /var/cache -g "$class" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
+       WAITMAX="waitmax 3"
     done
 fi
 
@@ -205,6 +207,11 @@ if which vcbVmName > /dev/null 2>&1 ; then
    vcbVmName -s any
 fi
 
+if which ntpq > /dev/null 2>&1 ; then
+   echo '<<<ntp>>>'
+   # remote heading, make first column space separated
+   ntpq -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+fi
 
 # Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
 if cd $PLUGINSDIR

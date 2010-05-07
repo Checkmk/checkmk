@@ -1,29 +1,46 @@
 --------------------------------------------------------------------------------
-NOCH INS RELEASE 1.1.4
+NOCH INS RELEASE 1.1.5
 --------------------------------------------------------------------------------
+Bei Check_MK -U nach "Precompiling Hostcheck..." ein
+flush auf stdout machen. Evtl. einen Punkt pro Hostcheck
+ausgeben.
+
+Bei Inventur check_mk -I ntp werden auch die SNMP-Geraete abgefragt?
+Werden die nur bei -I tcp ausgeklammert? Sollte nicht sein, sonst
+bekommen wir viele Timeouts.
+
+Quicksearch: Das Dropdown bleibt recht oft auf, obwohl man schon einen
+Host ausgewählt hat.
 
 --------------------------------------------------------------------------------
 BUGS
 --------------------------------------------------------------------------------
-Multisite view pending: Host output statt service output. View
-übersichtlicher bauen.
+Wenn man gerade die Kommandobox auf hat (oder den Filter?) dann sollte
+kein Refresh stattfinden. Sonst wird man mitten im Tippen abgewürgt.
+Kann man das mit Javascript hinbekommen?
 
 Eingabe von Downtimes: Auch hier Umlaute abfangen wie bei Comments
 
 --------------------------------------------------------------------------------
 UNSCHOENHEITEN
 --------------------------------------------------------------------------------
+Wenn man eine View editiert ueber [Edit this view] und auf speichern
+geht, dann wäre es sehr toll, wenn man direkt zu dieser View zurückkehrt.
+Dazu müsste der Knopf die origurl in einer Variable mitgeben, die dann
+beim Save berücksichtigt wird. Frage ist, ob man das mit einer Weiterleitung
+machen muss oder ob das so geht, dass das [Save] in view_view() abgehandelt
+wird.
+
+Möglicherweise sollte man das automatische Refresh zum Default machen
+oder zumindest in die Builtin-Views einbauen. Meistens erwartet man
+einfach, dass sich die Anzeige aktualisiert.
+
 Multisite tactical overview: Hier muss man Summary hosts ausschliessen.
 Soll man die Filter doch irgendwie konfigurierbar machen? Oder doch
 einfach an hostproblems und serviceproblems haengen??
 
-Kachellayout von Multisite: Farben sind so, dass man nix erkennt.
-
 Logwatch.py: Wenn die state-Datei korrupt ist, diese neu anlegen und eine
 Fakemeldung nach oben schicken, die critical ist.
-
-Tabledarstellung mit Gruppen: Hier klebt der Gruppenkopf zu dicht
-an der vorherigen Gruppe.
 
 Multisite: Zeitanzeige der Downtimes (ende) zu ungenau.  "in 6 hrs" ist
 blöd. Auch bei Start "19 sec" ist dumm, hier wäre besser (vor 19 sec). Oder

@@ -24,14 +24,31 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# First generation of agents output only the process command line:
+# /usr/sbin/xinetd -pidfile /var/run/xinetd.pid -stayalive -inetd_compat -inetd_ipv6
+
+# Second generation of agents output the user in brackets in the first columns:
+# (root) /usr/sbin/xinetd -pidfile /var/run/xinetd.pid -stayalive -inetd_compat -inetd_ipv6
+
+# Third generation (from 1.1.5) output also virtual memory, resident memory and %CPU:
+# (class,122376,88128,0.0) /usr/jre1.6.0_13/bin/java -Dn=Cart_16TH13 -Dmcs.node=zbgh1ca -Dmcs.mdt.redundan
+
+
 
 inventory_processes = []
+inventory_processes_perf = []
 ANY_USER = None
 GRAB_USER = False
 
+
 def inventory_ps(check_name, info):
     inventory = []
-    for servicedesc, pattern, userspec, warnmin, okmin, okmax, warnmax in inventory_processes:
+    if check_name == "ps":
+        invdata = inventory_processes
+    else:
+        invdata = inventory_processes_perf
+
+    for servicedesc, pattern, userspec, warnmin, okmin, okmax, warnmax in invdata:
 	num_perc_s = servicedesc.count("%s")
 	for ps in info:
 	    l_user = [userspec]
@@ -89,7 +106,8 @@ def process_matches(ps, procname, l_user):
     # agent might output username in brackets in the first columns
     userspec = l_user[0]
     if ps[0].startswith("(") and ps[0].endswith(")") and len(ps) > 1:
-	user = ps[0][1:-1]
+        addinfo = ps[0][1:-1].split(",")
+        user = addinfo[0]
 	if userspec and userspec != user:
 	    return False
 	l_user[0] = user # return actual user that way
@@ -124,12 +142,28 @@ def check_procs(item, params, info, with_perfdata):
         return (3, "UNKNOWN - invalid check parameters: %s" % (params,))
         
     count = 0
+    virtual_size   = 0
+    resident_size  = 0
+    percent_cpu    = 0.0
+    extended_perfdata = False
+
     for ps in info:
         if process_matches(ps, procname, [user]) != False:
 	    count += 1
+            if ps[0][0] == '(':
+                addinfo = ps[0][1:-1].split(",")
+                if len(addinfo) >= 4: # extended performance data
+                    virtual_size += int(addinfo[1])  # kB
+                    resident_size += int(addinfo[2]) # kB
+                    percent_cpu += float(addinfo[3])
+                    extended_perfdata = True
 
     if with_perfdata:
        perfdata = [ ("count", count, okmax+1, warnmax+1, 0) ]
+       if extended_perfdata:
+           perfdata += [ ("vsz", virtual_size), 
+                         ("rss", resident_size),
+                         ("pcpu", percent_cpu) ]
     else:
        perfdata = []
 
@@ -140,7 +174,5 @@ def check_procs(item, params, info, with_perfdata):
     else:
         return (0, "OK - %d processes" % count, perfdata)
 
-
 check_info['ps']      = (lambda i,p,n: check_procs(i,p,n,False), "proc_%s", 0, inventory_ps)
-check_info['ps.perf'] = (lambda i,p,n: check_procs(i,p,n,True),  "proc_%s", 1, no_inventory_possible)
-
+check_info['ps.perf'] = (lambda i,p,n: check_procs(i,p,n,True),  "proc_%s", 1, inventory_ps)

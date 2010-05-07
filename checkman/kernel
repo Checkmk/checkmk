@@ -1,4 +1,4 @@
-title: Check various Linux Kernel counters
+title: Check various Linux kernel counters
 agents: linux
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
@@ -12,7 +12,8 @@ description:
 
  You can set a critical and warning level on each of those
  counters or just monitor them without levels in order to
- collect performance data.
+ collect performance data. Levels you set to {None} will not
+ be checked.
 
 item:
  The name of the kernel counter as found in {/proc/stat} or
@@ -25,7 +26,29 @@ examples:
    ( ["lnx"], ALL_HOSTS, "kernel", "pgmajfault", (200, 400) )
  ]
 
-[parameters]
-warning (int): The rate per second which triggers a warning
+perfdata:
+ One variable: the current value of the counter. 
 
-critical (int): The rate per second which triggers a critical state
+inventory:
+ Per default one check for {pgmajfault}, {ctxt} and {processes}
+ will be created on each host providing that data. You can
+ override this list globally by setting {inventory_kernel_counters}
+ to a list of strings with those counters that should be inventorized.
+ Use {ignored_services} if you need a host-specific configuration
+ of the inventory.
+
+examples:
+  # Make inventory create only checks for pgmajfault
+  inventory_kernel_counters = [ "pgmajfault" ]
+
+[parameters]
+warning (int): The rate per second which triggers a warning. A value of {None} disables the level.
+
+critical (int): The rate per second which triggers a critical state. A value of {None} disables the level.
+
+[configuration]
+inventory_kernel_counters (list of strings): List of performance counters the inventory should create checks for. Default is {[ "pgmajfault", "ctxt", "processes" ]}.
+
+kernel_default_levels (int, int): Default levels for newly inventorized checks. Default is {(None, None)}, which disables the levels and makes the check always OK.
+
+

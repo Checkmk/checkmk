@@ -41,8 +41,8 @@ $opt[1] = "--vertical-label 'Bytes/s' -l0 -u1048576  --title \"$hostname / NIC $
 #
 #
 #
-$def[1] =  "DEF:rx_bytes=$rrdfile:$DS[1]:MAX " ;
-$def[1] .= "DEF:tx_bytes=$rrdfile:$DS[2]:MAX " ;
+$def[1] =  "DEF:rx_bytes=$rrdfile:$DS[1]:AVERAGE " ;
+$def[1] .= "DEF:tx_bytes=$rrdfile:$DS[2]:AVERAGE " ;
 $def[1] .= "CDEF:rx_mb=rx_bytes,1048576.0,/ " ;
 $def[1] .= "CDEF:tx_mb=tx_bytes,1048576.0,/ " ;
 #$def[1] .= "CDEF:rx_mb=rx_bytes,1.0,/ " ;

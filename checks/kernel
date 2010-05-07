@@ -24,33 +24,51 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Inventory creates three checks per default:
+inventory_kernel_counters = [ "pgmajfault", "ctxt", "processes" ]
+kernel_default_levels = (None, None)
 
-# item is one of the keys in /proc/stat or /proc/vmstat
+def inventory_kernel(checktype, info):
+    inventory = []
+    for counter in inventory_kernel_counters:
+        hits = [ line[0] for line in info[1:] if line[0] == counter ]
+	if len(hits) == 1:
+	    inventory.append( (counter, "kernel_default_levels") )
+    return inventory
+	
+
+# item is one of the keys in /proc/stat or /proc/vmstat 
 def check_kernel(item, params, info):
     this_time = int(info[0][0])
-        
-    hits = [ line[1] for line in info[1:] if line[0] == item ]
+
+    hits = [ line[1] for line in info[1:] if line[0] == item ] 
     if len(hits) == 0:
         return (3, "UNKNOWN - item '%s' not found in agent output" % item)
     elif len(hits) > 1:
         return (3, "UNKNOWN - item '%s' not unique (found %d times)" % (item, len(hits)))
-    
-    this_val = int(hits[0])
-    timedif, per_sec = get_counter("kernel." + item, this_time, this_val)
-    infotext = " - %.0f/s in last %d secs" % (per_sec, timedif)
+
+    this_val = int(hits[0]) 
+    timedif, per_sec = get_counter("kernel." + item, this_time, this_val) 
+    infotext = " - %.0f/s in last %d secs" % (per_sec, timedif) 
     if params == None:
-         perfdata = [ (item, "%dc" % this_val, "", "", 0 ) ]
-	 return (0, "OK" + infotext, perfdata)
-   
-    warn, crit = params
-    perfdata = [ (item, "%dc" % this_val, warn, crit, 0) ]
-    infotext += " (levels at %d/%d)" % (warn, crit)
-    if per_sec >= crit:
+	 perfdata = [ (item, "%dc" % this_val, "", "", 0 ) ] 
+         return (0, "OK" + infotext, perfdata)
+
+    warn, crit = params 
+    perfdata = [ (item, "%dc" % this_val, warn, crit, 2) ] 
+    if warn == None and crit != None:
+        infotext += " (critical at %.0f/s)" % crit
+    elif warn != None and crit == None:
+        infotext += " (warning at %.0f/s)" % warn
+    elif warn != None:
+        infotext += " (warn/crit at %.0f/%.0f per sec)" % (warn, crit)
+        
+    if crit != None and per_sec >= crit:
 	return (2, "CRIT" + infotext, perfdata)
-    elif per_sec >= warn:
-        return (1, "WARN" + infotext, perfdata)
+    elif warn != None and per_sec >= warn:
+	return (1, "WARN" + infotext, perfdata)
     else:
-        return (0, "OK" + infotext, perfdata)  
+	return (0, "OK" + infotext, perfdata)
 
 
 def inventory_cpu_utilization(checktype, info):
@@ -127,5 +145,5 @@ def check_cpu_utilization(item, params, info):
             (user_perc, system_perc, wait_perc), perfdata)
 
 check_info['kernel.util'] = (check_cpu_utilization, "CPU utilization", 1,  inventory_cpu_utilization)
-check_info['kernel'] = (check_kernel, "Kernel %s", 1,  no_inventory_possible)
+check_info['kernel'] = (check_kernel, "Kernel %s", 1,  inventory_kernel)
 

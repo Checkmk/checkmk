@@ -35,7 +35,6 @@ LIBDIR	       	= $(PREFIX)/lib/$(NAME)
 DISTNAME       	= $(NAME)-$(VERSION)
 TAROPTS        	= --owner=root --group=root --exclude=.svn --exclude=*~ 
 DOWNLOADURL     = http://mathias-kettner.de/download/$(DISTNAME).tar.gz
-CHECKMANDIR	= /home/mk/svn/mkde/htdocs/checkmk
 LIVESTATUS_SOURCES = configure aclocal.m4 config.guess config.h.in config.sub \
 		     configure.ac ltmain.sh Makefile.am Makefile.in missing \
 		     nagios/README nagios/*.h src/*.{h,c,cc} src/Makefile.{in,am} \

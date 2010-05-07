@@ -30,7 +30,7 @@ admin_users = [ "nagiosadmin" ]
 #         "socket":         "tcp:10.0.0.2:6557",
 #         "nagios_url":     "/paris/nagios",
 #         "nagios_cgi_url": "/paris/nagios/cgi-bin",
-#         "pnp_prefix":     "/paris/pnp4nagios/graph",
+#         "pnp_url":        "/paris/pnp4nagios/",
 #     },
 # }
 

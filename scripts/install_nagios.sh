@@ -974,8 +974,6 @@ then
     cat <<EOF > ~/.check_mk_setup.conf 
 check_icmp_path='/usr/local/lib/nagios/plugins/check_icmp'
 rrddir='/var/lib/nagios/rrd'
-pnptemplates='/usr/local/share/pnp4nagios/templates'
-pnp_prefix='$SITEURL/pnp4nagios/graph'
 EOF
 
     if [ "$SITE" ]; then

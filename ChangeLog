@@ -4,6 +4,8 @@
       * Allow sections in agent output to apear multiple times
       * cleanup_autochecks.py: new option -f for directly activating new config
       * setup.sh: better detection for PNP4Nagios 0.6
+      * snmpwalk: use option -Oa, inhibit strings to be output as hex if an umlaut
+        is contained.
 
       Checks & Agents:
       * local: allow more than once performance value, separated by pipe (|)
@@ -27,6 +29,9 @@
       Multisite:
       * New column host painter with link to old Nagios services
       * Multisite: new configuration parameter default_user_role
+      
+      Livestatus:
+      * Add missing LDFLAGS for compiling (useful for -g)
 
 1.1.4:
       Summary:

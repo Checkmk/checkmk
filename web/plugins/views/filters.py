@@ -290,6 +290,10 @@ declare_filter(120, FilterNagiosExpression("host", "summary_host", "Is summary h
 	    "Filter: host_custom_variable_names >= _REALNAME\n",
 	    "Filter: host_custom_variable_names < _REALNAME\n"))
 
+declare_filter(250, FilterNagiosFlag("service", "service_process_performance_data", "Processes performance data"))
+declare_filter(251, FilterNagiosExpression("service", "has_performance_data", "Has performance data",
+            "Filter: service_perf_data != \n",
+            "Filter: service_perf_data = \n"))
 
 declare_filter(130, FilterNagiosFlag("host",    "host_in_notification_period",   "Host is in notification period"))
 declare_filter(230, FilterNagiosFlag("service", "service_acknowledged",             "Problem has been acknowledged"))

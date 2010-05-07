@@ -22,6 +22,9 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+// TODO: The sidebar cannot longer be embedded. We can use relative
+// links again and do not need to know the base url any longer :-)
+
 refresh_snapins = null;
 
 // Removes a snapin from the sidebar without reloading anything
@@ -144,7 +147,7 @@ function sidebar_scheduler() {
 function addBookmark() {
     href = parent.frames[1].location;
     title = parent.frames[1].document.title;
-    get_url(url + "/add_bookmark.py?title=" + escape(title) + "&href=" + escape(href), updateContents, "snapin_bookmarks");
+    get_url("add_bookmark.py?title=" + escape(title) + "&href=" + escape(href), updateContents, "snapin_bookmarks");
 }
 
 function hilite_icon(oImg, onoff) {

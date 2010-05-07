@@ -405,6 +405,10 @@ div.objectlist div {
 }
 
 
+table.services td.pnpgraph {
+   padding: 0px;
+}
+
 /*
  _                            _       
 | |    __ _ _   _  ___  _   _| |_ ___ 

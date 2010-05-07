@@ -359,9 +359,9 @@ def paint_pnpgraph(sitename, host, service = "_HOST_"):
     htmlcode = ""
     for source in [ 1, 2, 3, 4, 5, 6, 7 ]:
         urlvars = 'host=%s&srv=%s&source=%d' % (htmllib.urlencode(host), htmllib.urlencode(service), source)
-        htmlcode += '<a href="%s/graph?%s"><img src="%s/image?%s&view=0"></a><br>' % \
+        htmlcode += '<div class=pnpgraph><a href="%s/graph?%s"><img src="%s/image?%s&view=0"></a></div>' % \
             (pnpurl, urlvars, pnpurl, urlvars)
-    return "", htmlcode
+    return "pnpgraph", htmlcode
         
 multisite_painters["svc_pnpgraph" ] = {
     "title"   : "PNP service graph",

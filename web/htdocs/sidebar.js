@@ -24,47 +24,6 @@
 
 refresh_snapins = null;
 
-// Load stylesheet for sidebar
-
-// Get object of script (myself)
-var oSidebar = document.getElementById("check_mk_sidebar");
-
-var url = '';
-for(var i in oSidebar.childNodes)
-    if(oSidebar.childNodes[i].nodeName == 'SCRIPT') {
-        url = oSidebar.childNodes[i].src.replace("sidebar.js", "");
-        break;
-    }
-
-if(url == '')
-    alert('ERROR: Unable to determine the script location. Problem finding sidebar.js inside the check_mk_sidebar container.');
-
-
-var oLink = document.createElement('link');
-oLink.href = url + "check_mk.css";
-oLink.rel = 'stylesheet';
-oLink.type = 'text/css';
-document.getElementsByTagName("HEAD")[0].appendChild(oLink);
-
-var oDiv = document.createElement('div');
-oDiv.setAttribute('id', 'sidebar_container');
-oSidebar.appendChild(oDiv);
-get_url(url + 'sidebar.py', updateContents, 'sidebar_container');
-
-// Cleaning up DOM links
-oDiv = null;
-oLink = null;
-oSidebar = null;
-
-// Removes a bookmark from the bookmarks list after deletion
-// function delBookmark(num, code) {
-//   var container = document.getElementById('bookmark_'+num);
-//   var parent = container.parentNode;
-//   parent.removeChild(container);
-//   container = null;
-//   parent = null;
-// }
-
 // Removes a snapin from the sidebar without reloading anything
 function removeSnapin(id, code) {
   var container = document.getElementById(id).parentNode;

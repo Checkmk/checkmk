@@ -161,7 +161,6 @@ def handler(req):
 			 "export_views"        : views.ajax_export,
 			 "view"                : views.page_view,
 			 "logwatch"            : page_logwatch.page,
-			 "sidebar"             : sidebar.page_sidebar, # embedded
 			 "side"                : sidebar.page_side,    # replacement for side.php
 			 "sidebar_config"      : sidebar.page_configure,
 			 "switch_site"         : ajax_switch_site,

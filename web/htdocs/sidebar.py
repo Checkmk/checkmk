@@ -111,25 +111,20 @@ def save_user_config(user_config):
   
 # Standalone sidebar
 def page_side(h):
+    if not config.may("see_sidebar"):
+	return
+
     global html
     html = h
     html.write("""<html>
 <head>
 <title>Check_MK Sidebar</title>
-<link href="%s/check_mk.css" type="text/css" rel="stylesheet">
+<link href="check_mk.css" type="text/css" rel="stylesheet">
+<script type='text/javascript' src='check_mk.js'></script> 
+<script type='text/javascript' src='sidebar.js'></script> 
 </head>
-<body style="background-color: black">
-<div id=check_mk_sidebar><script src="%s/sidebar.js"></script></div>
-</body>
-</html>
-""" % ((defaults.checkmk_web_uri, ) * 2))
-
-# Embedded sidebar
-def page_sidebar(h):
-    global html
-    html = h
-    if not config.may("see_sidebar"):
-	return
+<body class="side">
+<div id=check_mk_sidebar>""")
 
     views.html = h
     views.load_views()
@@ -154,6 +149,8 @@ def page_sidebar(h):
     html.write("refresh_snapins = %r;\n" % refresh_snapins)
     html.write("sidebar_scheduler();\n")
     html.write("</script>\n")
+
+    html.write("</div>\n</body>\n</html>")
 
 def render_snapin(name, state):
     snapin = sidebar_snapins.get(name)

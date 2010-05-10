@@ -356,9 +356,11 @@ multisite_painters["svc_flapping"] = {
 def paint_pnpgraph(sitename, host, service = "_HOST_"):
     site = html.site_status[sitename]["site"]
     pnpurl = site["pnp_url"]
+    end = int(time.time())
+    start = end - (24 * 60 * 60)
     htmlcode = ""
     for source in [ 1, 2, 3, 4, 5, 6, 7 ]:
-        urlvars = 'host=%s&srv=%s&source=%d' % (htmllib.urlencode(host), htmllib.urlencode(service), source)
+        urlvars = 'start=%d&end=%d&host=%s&srv=%s&source=%d' % (start, end, htmllib.urlencode(host), htmllib.urlencode(service), source)
         htmlcode += '<div class=pnpgraph><a href="%s/graph?%s"><img src="%s/image?%s&view=0"></a></div>' % \
             (pnpurl, urlvars, pnpurl, urlvars)
     return "pnpgraph", htmlcode

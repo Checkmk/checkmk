@@ -1,4 +1,12 @@
-1.1.5:
+1.1.5i1:
+     Checks & Agents:
+     * uptime: new check for system uptime (Linux)
+
+     Multisite:
+     * direct integration of PNP graphs into Multisite views
+
+
+1.1.5i0:
       Core, Setup, etc.:
       * Ship check-specific rra.cfg's for PNP4Nagios (save much IO and disk space)
       * Allow sections in agent output to apear multiple times

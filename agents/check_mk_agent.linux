@@ -112,6 +112,10 @@ egrep -v '^Swap:|^Mem:|total:' < /proc/meminfo
 echo '<<<cpu>>>'
 echo "$(cat /proc/loadavg) $(grep ^processor < /proc/cpuinfo | wc -l)"
 
+# Uptime
+echo '<<<uptime>>>'
+cat /proc/uptime
+
 # Network interfaces (Link, Autoneg, Speed)
 # This requires ethtool
 if which ethtool > /dev/null

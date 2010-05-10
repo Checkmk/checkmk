@@ -12,6 +12,11 @@ bekommen wir viele Timeouts.
 Quicksearch: Das Dropdown bleibt recht oft auf, obwohl man schon einen
 Host ausgewählt hat.
 
+Quicksearch: geht gerade nicht.
+
+Views: Überall wo nicht sinnvoll die Summary hosts entfernen (z.B.
+bei Problems, All hosts, etc.)
+
 --------------------------------------------------------------------------------
 BUGS
 --------------------------------------------------------------------------------

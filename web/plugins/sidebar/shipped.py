@@ -212,7 +212,7 @@ def render_sitestatus():
 		text = link(site["alias"], "view.py?view_name=sitehosts&site=%s" % sitename)
 
 	    html.write("<tr><td class=left>%s</td>" % text)
-	    onclick = "switch_site('%s', '_site_switch=%s:%s')" % (defaults.checkmk_web_uri, sitename, switch)
+	    onclick = "switch_site('_site_switch=%s:%s')" % (sitename, switch)
 	    html.write("<td class=\"state %s\">" % state)
 	    html.write("<a href=\"\" onclick=\"%s\">%s</a></td>" % (onclick, state[:3]))
 	    html.write("</tr>\n")

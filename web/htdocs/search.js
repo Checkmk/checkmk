@@ -31,23 +31,19 @@
 var aSearchResults = [];
 var iCurrent = null;
 var mkSearchTargetFrame = 'main';
-var mkSearchCheckMkUrl = '/check_mk';
 
 // Register an input field to be a search field and add eventhandlers
-function mkSearchAddField(field, targetFrame, checkMkUrl) {
+function mkSearchAddField(field, targetFrame) {
     var oField = document.getElementById(field);
     if(oField) {
         if(typeof targetFrame != 'undefined') {
             mkSearchTargetFrame = targetFrame;
         }
 
-        if(typeof checkMkUrl != 'undefined') {
-            mkSearchCheckMkUrl = checkMkUrl;
-        }
-		
         oField.onkeydown   = function(e) { if (!e) e = window.event; return mkSearchKeyDown(e, oField); }
         oField.onkeyup     = function(e) { if (!e) e = window.event; return mkSearchKeyUp(e, oField);}
         oField.onclick     = function(e) { if (!e) e = window.event; e.cancelBubble = true; e.returnValue = false; }
+
         // The keypress event is being ignored. Key presses are handled by onkeydown and onkeyup events
         oField.onkeypress  = function(e) { if (!e) e = window.event; if (e.keyCode == 13) return false; }
 
@@ -56,7 +52,7 @@ function mkSearchAddField(field, targetFrame, checkMkUrl) {
     }
 }
 
-mkSearchAddField("mk_side_search_field", "main", url);
+mkSearchAddField("mk_side_search_field", "main");
 
 // On key release event handler
 function mkSearchKeyUp(e, oField) {
@@ -101,7 +97,8 @@ function mkSearchKeyDown(e, oField) {
 					mkSearchClose();
 				} else {
 					// When nothing selected, navigate with the current contents of the field
-					top.frames[mkSearchTargetFrame].location.href = mkSearchCheckMkUrl+'/view.py?view_name=host&host='+oField.value;
+                                        // TOOD: Here is missing site=...
+					top.frames[mkSearchTargetFrame].location.href = 'view.py?view_name=host&host='+oField.value;
 					mkSearchClose();
 				}
 				
@@ -243,7 +240,7 @@ function mkSearch(e, oField) {
 						var oResult = {
 							'id': 'result_'+hostName,
 							'name': hostName,
-							'url': mkSearchCheckMkUrl+'/view.py?view_name=host&host='+hostName
+							'url': 'view.py?view_name=host&host='+hostName
 						};
 						
 						// Add id to search result array

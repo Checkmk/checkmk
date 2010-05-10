@@ -126,8 +126,8 @@ function toggle_sidebar_snapin(oH2, url) {
     childs = null;
 }
 
-function switch_site(baseuri, switchvar) {
-    get_url(baseuri + "/switch_site.py?" + switchvar);
+function switch_site(switchvar) {
+    get_url("switch_site.py?" + switchvar);
     parent.frames[1].location.reload(); /* reload main frame */
 }
 
@@ -138,7 +138,7 @@ function sidebar_scheduler() {
         name    = refresh_snapins[i][0];
         refresh = refresh_snapins[i][1];
         if(timestamp % refresh == 0) {
-            get_url(url + "/sidebar_snapin.py?name=" + name, updateContents, "snapin_" + name);
+            get_url("sidebar_snapin.py?name=" + name, updateContents, "snapin_" + name);
         }
     }
     setTimeout(function(){sidebar_scheduler();}, 1000);

@@ -12,6 +12,7 @@
        summary hosts
      * View host problems/service problems: exclude summary hosts, exclude services
        of down hosts
+     * Simplified implementation of sidebar: sidebar is not any longer embeddeable.
 
 
 1.1.5i0:

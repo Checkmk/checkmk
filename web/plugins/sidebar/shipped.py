@@ -281,28 +281,6 @@ div#check_mk_sidebar table.sitestate td.disabled a {
 #     |_|\__,_|\___|\__|_|\___\__,_|_|  \___/ \_/ \___|_|    \_/ |_|\___| \_/\_/  
 #                                                                                 
 # --------------------------------------------------------------
-# Filter for host problems:
-#
-tactical_overview_hostfilter = \
-"""
-"""
-
-tactical_overview_servicefilter = \
-"""Filter: service_state = 1
-Filter: service_has_been_checked = 1
-And: 2
-Filter: service_state = 2
-Filter: service_has_been_checked = 1
-And: 2
-Filter: service_state = 3
-Filter: service_has_been_checked = 1
-And: 2
-Or: 3
-Filter: service_scheduled_downtime_depth = 0
-Filter: host_scheduled_downtime_depth = 0
-And: 2
-"""
-
 def render_tactical_overview():
     host_query = \
         "GET hosts\n" \
@@ -313,7 +291,8 @@ def render_tactical_overview():
 	"Stats: state > 0\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
 	"Stats: acknowledged = 0\n" \
-	"StatsAnd: 3\n"
+	"StatsAnd: 3\n" \
+        "Filter: custom_variable_names < _REALNAME\n"
 
     service_query = \
         "GET services\n" \
@@ -321,12 +300,15 @@ def render_tactical_overview():
 	"Stats: state > 0\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
-        "StatsAnd: 3\n" \
+        "Stats: host_state = 0\n" \
+        "StatsAnd: 4\n" \
 	"Stats: state > 0\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
 	"Stats: acknowledged = 0\n" \
-	"StatsAnd: 4\n"
+        "Stats: host_state = 0\n" \
+	"StatsAnd: 5\n" \
+        "Filter: host_custom_variable_names < _REALNAME\n"
 
     # ACHTUNG: Stats-Filter so anpassen, dass jeder Host gezaehlt wird.
 

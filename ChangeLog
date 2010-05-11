@@ -8,6 +8,8 @@
        might need to update custom views using a filter on host states.
      * Tactical overview: exclude services of down hosts from problems, also exclude
        summary hosts
+     * View host problems/service problems: exclude summary hosts, exclude services
+       of down hosts
 
 
 1.1.5i0:

@@ -176,12 +176,18 @@ fi
 # IPMI data via ipmi-sensors (of freeipmi)
 if which ipmi-sensors >/dev/null ; then
     echo '<<<ipmi_sensors>>>'
+    sdrcache=/var/cache/.freeipmi/sdr-cache/sdr-cache-$(hostname).127.0.0.1
     # No cache file existing? => Impose no time limit, this can take a minute and more
-    if [ ! -e "/var/cache/.freeipmi/sdr-cache/sdr-cache-$(hostname).127.0.0.1" ]
+    if [ ! -e "$sdrcache" ]
     then
         WAITMAX=
-    else
+    elif tail --bytes 2 < "$sdrcache" | od -t x2 | grep -q a0a0
+    then
         WAITMAX="waitmax 3"
+    else
+        # Cache file corrupt. Must end with two linefeeds.
+        rm -f $sdrcache
+	WAITMAX=
     fi
     # Newer ipmi-sensors version have new output format; Legacy format can be used
     if ipmi-sensors --help | grep -q legacy-output; then 

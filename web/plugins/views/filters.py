@@ -209,14 +209,14 @@ declare_filter(216, FilterServiceState("svchardstate", "Service hard states", "h
 class FilterHostState(Filter):
     def __init__(self):
 	Filter.__init__(self, "hoststate", "Host states", 
-		"host", [ "st0", "st1", "st2", "stp" ], [])
+		"host", [ "hst0", "hst1", "hst2", "hstp" ], [])
     
     def display(self):
 	if html.var("filled_in"):
 	    defval = ""
 	else:
 	    defval = "on"
-	for var, text in [("st0", "UP"), ("st1", "DOWN"), ("st2", "UNREACH"), ("stp", "PENDING")]:
+	for var, text in [("hst0", "UP"), ("hst1", "DOWN"), ("hst2", "UNREACH"), ("hstp", "PENDING")]:
 	    html.checkbox(var, defval)
 	    html.write(" %s " % text)
 
@@ -228,7 +228,7 @@ class FilterHostState(Filter):
 	    defval = "on"
 
 	for i in [0,1,2]:
-	    if html.var("st%d" % i, defval) == "on":
+	    if html.var("hst%d" % i, defval) == "on":
 		headers.append("Filter: host_state = %d\nFilter: host_has_been_checked = 1\nAnd: 2\n" % i)
 	if html.var("stp", defval) == "on":
 	    headers.append("Filter: host_has_been_checked = 0\n")

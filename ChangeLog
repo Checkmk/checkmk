@@ -4,6 +4,8 @@
 
      Multisite:
      * direct integration of PNP graphs into Multisite views
+     * Host state filter: renamed HTML variables (collision with service state). You
+       might need to update custom views using a filter on host states.
 
 
 1.1.5i0:

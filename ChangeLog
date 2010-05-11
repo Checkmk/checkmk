@@ -1,6 +1,8 @@
 1.1.5i1:
      Checks & Agents:
      * uptime: new check for system uptime (Linux)
+     * if: new SNMP check for network interfaces with very detailed traffic,
+       packet and error statistics - PNP graphs included
 
      Multisite:
      * direct integration of PNP graphs into Multisite views

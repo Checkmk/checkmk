@@ -51,12 +51,14 @@ PLUGINSDIR=$MK_LIBDIR/plugins
 # or tabs. CHECK_OUTPUT may contain spaces and tabs
 LOCALDIR=$MK_LIBDIR/local
 
-# get 'stat' version
-STAT_VERSION=$(stat --version | head -1 | cut -d" " -f4)
-STAT_BROKE="5.3.0"
 
 # close standard input (for security reasons) and stderr
-exec <&- 2>/dev/null
+if [ "$1" = -d ]
+then
+    set -xv
+else
+    exec <&- 2>/dev/null
+fi
 
 echo '<<<check_mk>>>'
 echo Version: 1.1.5i2
@@ -77,9 +79,11 @@ fi
 # Check NFS mounts by accessing them with stat -f (System
 # call statfs()). If this lasts more then 2 seconds we
 # consider it as hanging. We need waitmax.
-
 if type waitmax >/dev/null
 then
+    STAT_VERSION=$(stat --version | head -1 | cut -d" " -f4)
+    STAT_BROKE="5.3.0"
+
     echo '<<<nfsmounts>>>'
     sed -n '/ nfs /s/[^ ]* \([^ ]*\) .*/\1/p' < /proc/mounts |
         while read MP
@@ -181,7 +185,7 @@ if which ipmi-sensors >/dev/null ; then
     if [ ! -e "$sdrcache" ]
     then
         WAITMAX=
-    elif tail --bytes 2 < "$sdrcache" | od -t x2 | grep -q a0a0
+    elif tail --bytes 2 < "$sdrcache" | od -t x2 | grep -q 0a0a
     then
         WAITMAX="waitmax 3"
     else

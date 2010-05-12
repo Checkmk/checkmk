@@ -24,14 +24,17 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Share settings with if, so user needs to configure this
+# only once. Important: The default settings must be the same
+# as in 'if' since they overwrite each other.
 if_inventory_porttypes = [ "ethernetCsmacd" ]
 if_inventory_uses_description = False
 if_default_levels = (0.01, 0.1) # Error percentages
 
-def inventory_if(checkname, info):
+def inventory_if64(checkname, info):
     inventory = []
-    for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, ifInUcastPkts, ifInNUcastPkts, ifInDiscards, \
-        ifInErrors, ifOutOctets, ifOutUcastPkts, ifOutNUcastPkts, ifOutDiscards, ifOutErrors, ifOutQLen in info:
+    for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \
+        ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen in info:
         if ifType in if_inventory_porttypes and ifOperStatus in ['1','up']:
             if if_inventory_uses_description and ifDescr:
                 item = ifDescr
@@ -44,11 +47,11 @@ def ifoperstatus_statename(st):
     names = { '1': "up", '2': "down" }
     return names.get(st, st)
 
-def check_if(item, params, info):
+def check_if64(item, params, info):
     warn, crit, targetspeed = params
 
-    for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, ifInUcastPkts, ifInNUcastPkts, ifInDiscards, \
-        ifInErrors, ifOutOctets, ifOutUcastPkts, ifOutNUcastPkts, ifOutDiscards, ifOutErrors, ifOutQLen in info:
+    for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \
+        ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen in info:
         if item == ifIndex or item == ifDescr:
 
             # Display port number or alias in infotext if that is not part
@@ -65,7 +68,7 @@ def check_if(item, params, info):
                 return (2, "CRIT - %sno link" % infotext)
 
             state = 0
-                
+
             # Check speed
             speed = int(ifSpeed)
             bandwidth = speed / 8.0 # in Bytes / sec
@@ -86,14 +89,14 @@ def check_if(item, params, info):
             perfdata = []
             for name, counter, warnn, critt, minn, maxx in [ 
                 ( "in",        ifInOctets, None, None, 0, bandwidth), 
-                ( "inucast",   ifInUcastPkts, None, None, None, None),   
-                ( "innucast",  ifInNUcastPkts, None, None, None, None),
+                ( "inucast",   inucast, None, None, None, None),   
+                ( "innucast",  int(inmcast) + int(inbcast), None, None, None, None),
                 ( "indisc",    ifInDiscards, None, None, None, None),
                 ( "inerr",     ifInErrors, warn, crit, None, None),
 
                 ( "out",       ifOutOctets, None, None, 0, bandwidth), 
-                ( "outucast",  ifOutUcastPkts, None, None, None, None),   
-                ( "outnucast", ifOutNUcastPkts, None, None, None, None),
+                ( "outucast",  outucast, None, None, None, None),   
+                ( "outnucast", int(outmcast) + int(outbcast), None, None, None, None),
                 ( "outdisc",   ifOutDiscards, None, None, None, None),
                 ( "outerr",    ifOutErrors, warn, crit, None, None) ]:
             
@@ -134,27 +137,29 @@ def check_if(item, params, info):
                     
     return (3, "UNKNOWN - no such interface")
 
-check_info['if'] = (check_if, "Interface %s", 1,  inventory_if)
-snmp_info['if'] = \
-  ( ".1.3.6.1.2.1.2.2.1", [ 
-  1, # ifIndex
-  2, # ifDescr
-  3, # ifType
-  5, # ifSpeed
-  8, # ifOperStatus
-  10, # ifInOctets
-  11, # ifInUcastPkts
-  12, # ifInNUcastPkts
-  13, # ifInDiscards
-  14, # ifInErrors
-  16, # ifOutOctets
-  17, # ifOutUcastPkts
-  18, # ifOutNUcastPkts
-  19, # ifOutDiscards
-  20, # ifOutErrors
-  21, # ifOutQLen
+check_info['if64'] = (check_if64, "Interface %s", 1,  inventory_if64)
+snmp_info['if64'] = \
+  ( ".1.3.6.1.2.1", [
+    "2.2.1.1",     # ifIndex
+    "31.1.1.1.18", # ifAlias
+    "2.2.1.3",     # ifType
+    "2.2.1.5",     # ifSpeed
+    "2.2.1.8",     # ifOperStatus
+    "31.1.1.1.6",  # ifHCInOctets
+    "31.1.1.1.7",  # ifHCInUcastPkts
+    "31.1.1.1.8",  # ifHCInMulticastPkts
+    "31.1.1.1.9",  # ifHCInBroadcastPkts
+    "2.2.1.13",    # ifInDiscards
+    "2.2.1.14",    # ifInErrors
+    "31.1.1.1.10", # ifHCOutOctets
+    "31.1.1.1.11", # ifHCOutUcastPkts
+    "31.1.1.1.12", # ifHCOutMulticastPkts
+    "31.1.1.1.13", # ifHCOutBroadcastPkts
+    "2.2.1.19",    # ifOutDiscards
+    "2.2.1.20",    # ifOutErrors
+    "2.2.1.21",    # ifOutQLen
   ] )
 
 # check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2
-snmp_scan_functions['if'] = \
-	lambda oid: int(oid(".1.3.6.1.2.1.2.1.0")) >= 2 and not oid('.1.3.6.1.2.1.31.1.1.1.6.1') # use if64 if possible
+snmp_scan_functions['if64'] = \
+	lambda oid: not not oid(".1.3.6.1.2.1.31.1.1.1.6.1")

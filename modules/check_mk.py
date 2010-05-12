@@ -636,7 +636,11 @@ def get_single_oid(hostname, ipaddress, oid):
         return g_single_oid_cache[oid]
 
     community = get_snmp_community(hostname)
-    command = "snmpget -v1 -On -OQ -Oe -c %s %s %s 2>/dev/null" % (community, ipaddress, oid)
+    if is_bulkwalk_host(hostname):
+        command = "snmpget -v2c"
+    else:
+        command = "snmpget -v1" 
+    command += " -On -OQ -Oe -c %s %s %s 2>/dev/null" % (community, ipaddress, oid)
     try:
 	if opt_verbose:
 	    sys.stdout.write("Running '%s'\n" % command)

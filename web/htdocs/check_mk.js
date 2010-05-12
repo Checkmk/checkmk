@@ -40,7 +40,6 @@ function filter_activation(oid)
 	    oNode.disabled = disabled;
 	}
     }
-    
 
     p = null;
     oTd = null;

@@ -37,7 +37,7 @@ set -e
 NAGIOS_VERSION=3.2.1
 PLUGINS_VERSION=1.4.14
 RRDTOOL_VERSION=1.4.3
-CHECK_MK_VERSION=1.1.5i0
+CHECK_MK_VERSION=1.1.5i1
 PNP_VERSION=0.6.3
 NAGVIS_VERSION=1.4.7
 
@@ -974,8 +974,6 @@ then
     cat <<EOF > ~/.check_mk_setup.conf 
 check_icmp_path='/usr/local/lib/nagios/plugins/check_icmp'
 rrddir='/var/lib/nagios/rrd'
-pnptemplates='/usr/local/share/pnp4nagios/templates'
-pnp_prefix='$SITEURL/pnp4nagios/graph'
 EOF
 
     if [ "$SITE" ]; then

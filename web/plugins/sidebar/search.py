@@ -36,7 +36,7 @@ def render_searchform():
     html.write('<div id="mk_side_search">')
     html.write('<input id="mk_side_search_field" type="text" name="search" />')
     html.write('</div>')
-    html.write('<script type="text/javascript" src="%s/search.js"></script>' % defaults.checkmk_web_uri)
+    html.write('<script type="text/javascript" src="search.js"></script>')
     html.write('<script type="text/javascript">')
 
     # Store (user) hosts in JS array

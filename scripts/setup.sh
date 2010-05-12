@@ -24,7 +24,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-VERSION=1.1.5i0
+VERSION=1.1.5i1
 NAME=check_mk
 LANG=
 LC_ALL=
@@ -197,7 +197,7 @@ then
     then
         eval "$OUTPUT"
 	if [ -z "$YES" ] ; then 
-	    printf "[1;37;42m %-71s [0m\n" "* Found running Nagios process, autodetected $(echo "$OUTPUT" | grep -v '#' | wc -l) settings."
+	    printf "[1;37;42m %-71s [0m\n" "* Found running Nagios process, autodetected $(echo "$OUTPUT" | grep -v '^\(#\|$\)' | wc -l) settings."
 	fi
     fi
 fi
@@ -377,15 +377,16 @@ You should use the same AuthName as for Nagios. Otherwise the user will
 have to log in twice"
 
 # -------------------------------------------------------------------
-ask_title "Integration with PNP4Nagios"
+ask_title "Integration with PNP4Nagios 0.6"
 # -------------------------------------------------------------------
 
-ask_dir -d pnp_prefix /pnp4nagios/graph /pnp4nagios/graph "URL prefix for PNP4Nagios" \
+ask_dir -d pnp_url /pnp4nagios/ /pnp4nagios/ "URL prefix for PNP4Nagios" \
   "Check_MK automatically creates links to PNP4Nagios for hosts and
-services which have performance data. Please specify the beginning of the
-URL for those links. Check_MK will append ?host=\$HOSTNAME\$&?srv=$\$SERVICEDESC\$.
-Usually pnp/index.php is correct for PNP 0.4.x and /pnp4nagios/graph
-for PNP 0.6.x."
+services which have performance data. And multisite supports PNP by
+creating links in inline performance graphs. Please specify the URL
+to your installation of PNP4Nagios including the trailing slash if
+you want to use PNP integration (Note: PNP 0.4 is not supported any
+longer)"
 
 ask_dir rrddir $vardir/rrd $vardir/rrd "round robin databases" \
   "Base directory for round robin databases. If you use PNP4Nagios as
@@ -494,7 +495,7 @@ web_dir                     = '$web_dir'
 checkmk_web_uri             = '$checkmk_web_uri'
 livestatus_unix_socket      = '$livesock'
 livebackendsdir             = '$livebackendsdir'
-pnp_prefix                  = '$pnp_prefix'
+pnp_url                     = '$pnp_url'
 EOF
 }
 
@@ -649,7 +650,7 @@ do
 	   sed -i "s#@CGIURL@#$cgiurl#g"              $DESTDIR$docdir/check_mk_templates.cfg &&
 	   sed -i "s#@CHECK_ICMP@#$check_icmp_path#g" $DESTDIR$docdir/check_mk_templates.cfg &&
 	   sed -i "s#@NAGIOSURL@#$nagiosurl#g"        $DESTDIR$docdir/check_mk_templates.cfg &&
-	   sed -i "s#@PNPPREFIX@#$pnp_prefix#g"       $DESTDIR$docdir/check_mk_templates.cfg &&
+	   sed -i "s#@PNPURL@#$pnp_url#g"             $DESTDIR$docdir/check_mk_templates.cfg &&
            mkdir -p "$DESTDIR$nagconfdir"
 	   if [ ! -e $DESTDIR$nagconfdir/check_mk_templates.cfg ] ; then
  	       ln -s $docdir/check_mk_templates.cfg $DESTDIR$nagconfdir 2>/dev/null

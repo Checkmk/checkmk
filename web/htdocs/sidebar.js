@@ -22,48 +22,10 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+// TODO: The sidebar cannot longer be embedded. We can use relative
+// links again and do not need to know the base url any longer :-)
+
 refresh_snapins = null;
-
-// Load stylesheet for sidebar
-
-// Get object of script (myself)
-var oSidebar = document.getElementById("check_mk_sidebar");
-
-var url = '';
-for(var i in oSidebar.childNodes)
-    if(oSidebar.childNodes[i].nodeName == 'SCRIPT') {
-        url = oSidebar.childNodes[i].src.replace("sidebar.js", "");
-        break;
-    }
-
-if(url == '')
-    alert('ERROR: Unable to determine the script location. Problem finding sidebar.js inside the check_mk_sidebar container.');
-
-
-var oLink = document.createElement('link');
-oLink.href = url + "check_mk.css";
-oLink.rel = 'stylesheet';
-oLink.type = 'text/css';
-document.getElementsByTagName("HEAD")[0].appendChild(oLink);
-
-var oDiv = document.createElement('div');
-oDiv.setAttribute('id', 'sidebar_container');
-oSidebar.appendChild(oDiv);
-get_url(url + 'sidebar.py', updateContents, 'sidebar_container');
-
-// Cleaning up DOM links
-oDiv = null;
-oLink = null;
-oSidebar = null;
-
-// Removes a bookmark from the bookmarks list after deletion
-// function delBookmark(num, code) {
-//   var container = document.getElementById('bookmark_'+num);
-//   var parent = container.parentNode;
-//   parent.removeChild(container);
-//   container = null;
-//   parent = null;
-// }
 
 // Removes a snapin from the sidebar without reloading anything
 function removeSnapin(id, code) {
@@ -164,8 +126,8 @@ function toggle_sidebar_snapin(oH2, url) {
     childs = null;
 }
 
-function switch_site(baseuri, switchvar) {
-    get_url(baseuri + "/switch_site.py?" + switchvar);
+function switch_site(switchvar) {
+    get_url("switch_site.py?" + switchvar);
     parent.frames[1].location.reload(); /* reload main frame */
 }
 
@@ -176,7 +138,7 @@ function sidebar_scheduler() {
         name    = refresh_snapins[i][0];
         refresh = refresh_snapins[i][1];
         if(timestamp % refresh == 0) {
-            get_url(url + "/sidebar_snapin.py?name=" + name, updateContents, "snapin_" + name);
+            get_url("sidebar_snapin.py?name=" + name, updateContents, "snapin_" + name);
         }
     }
     setTimeout(function(){sidebar_scheduler();}, 1000);
@@ -185,7 +147,7 @@ function sidebar_scheduler() {
 function addBookmark() {
     href = parent.frames[1].location;
     title = parent.frames[1].document.title;
-    get_url(url + "/add_bookmark.py?title=" + escape(title) + "&href=" + escape(href), updateContents, "snapin_bookmarks");
+    get_url("add_bookmark.py?title=" + escape(title) + "&href=" + escape(href), updateContents, "snapin_bookmarks");
 }
 
 function hilite_icon(oImg, onoff) {

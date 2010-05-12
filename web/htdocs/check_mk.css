@@ -14,6 +14,7 @@ body.page {
   font-family: arial, helvetica, sans-serif;
   font-size: 9pt;
 }
+
 input, td, select {
     font-size: 9pt;
 }
@@ -403,6 +404,12 @@ div.objectlist div {
   margin: 1px;
 }
 
+
+table.services td.pnpgraph {
+   padding: 0px;
+   border-bottom: 1px solid #666;
+   border-right: 1px solid #666;
+}
 
 /*
  _                            _       
@@ -1060,6 +1067,9 @@ width: 200px;
 
 
 /* --- plugins for sidebar ----------------------------------- */
+body.side {
+    background-color: black;
+}
 div#check_mk_sidebar {
     margin-top: 1ex;
     margin-bottom: 1ex;

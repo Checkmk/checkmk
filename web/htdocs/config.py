@@ -261,8 +261,8 @@ def site(name):
         s["nagios_url"] = defaults.nagios_url
     if "nagios_cgi_url" not in s:
         s["nagios_cgi_url"] = defaults.nagios_cgi_url
-    if "pnp_prefix" not in s:
-        s["pnp_prefix"] = defaults.pnp_prefix
+    if "pnp_url" not in s:
+        s["pnp_url"] = defaults.pnp_url
     return s
 
 def site_is_local(name):

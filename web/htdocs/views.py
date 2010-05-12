@@ -497,6 +497,11 @@ def page_edit_view(h):
     html.write("<tr><td class=legend>Title</td><td class=content>")
     html.text_input("view_title")
     html.write("</td></tr>\n")
+
+    html.write("<tr><td class=legend>Title of Contextlink</td><td class=content>")
+    html.text_input("view_linktitle")
+    html.write("</td></tr>\n")
+
     html.write("<tr><td class=legend>Description</td><td class=content>")
     html.text_area("view_description", 4)
     html.write("</td></tr>\n")
@@ -647,6 +652,7 @@ function toggle_section(nr, oImg) {
 def load_view_into_html_vars(view):
     # view is well formed, not checks neccessary
     html.set_var("view_title",       view["title"])
+    html.set_var("view_linktitle",   view.get("linktitle", view["title"]))
     html.set_var("view_description", view.get("description", ""))
     html.set_var("view_name",        view["name"])
     html.set_var("datasource",       view["datasource"])
@@ -714,6 +720,9 @@ def create_view():
     title = html.var("view_title").strip()
     if title == "":
 	raise MKUserError("view_title", "Please specify a title for your view")
+    linktitle = html.var("view_linktitle").strip()
+    if not linktitle:
+        linktitle = title
 
     datasourcename = html.var("datasource")
     datasource = multisite_datasources[datasourcename]
@@ -783,6 +792,7 @@ def create_view():
 	"name"            : name,
 	"owner"           : html.req.user,
 	"title"           : title,
+	"linktitle"       : linktitle,
 	"description"     : html.var("view_description", ""),
 	"datasource"      : datasourcename,
 	"public"          : public,
@@ -915,7 +925,7 @@ def show_view(view, show_heading = False):
 
     # Filter-button
     if len(show_filters) > 0 and not html.do_actions():
-        filter_isopen = html.var("search", "") != "" or view["mustsearch"]
+        filter_isopen = html.var("search", "") == "" and view["mustsearch"]
 	toggle_button("table_filter", filter_isopen, "Show filter", "Hide filter", ["filter"])
    
     # Action-button
@@ -997,6 +1007,15 @@ def view_title(view):
 	    extra_titles.append(heading)
     return view["title"] + " " + ", ".join(extra_titles)
 
+# Return title for context link buttons
+def view_linktitle(view):
+    t = view.get("linktitle")
+    if not t:
+        return view_title(view)
+    else:
+        return t
+
+
 def show_context_links(thisview, active_filters):
     # compute list of html variables used actively by hidden or shown
     # filters.
@@ -1034,7 +1053,7 @@ def show_context_links(thisview, active_filters):
 		first = False
 	    vars_values = [ (var, html.var(var)) for var in set(used_contextvars) ]
 	    html.write("<a class=\"navi context\" href=\"%s\">%s</a>" % \
-		    (html.makeuri_contextless(vars_values + [("view_name", name)]), view_title(view)))
+		    (html.makeuri_contextless(vars_values + [("view_name", name)]), view_linktitle(view)))
 	
 
 

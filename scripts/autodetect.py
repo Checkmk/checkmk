@@ -46,6 +46,7 @@ target_values = {
     'nagiosurl'         : "Base-URL of Nagios web pages",
     'nagiosuser'        : "System user running the Nagios process",
     'nagpipe'           : "Absolute path to Nagios command pipe (nagios.cmd)",
+    'pnp_url'           : "Url of PNP4Nagios",
     'pnpconffile'       : "PNP4Nagios configuration file for its PHP pages",
     'pnphtdocsdir'      : "PNP4Nagios www document root directory",
     'pnptemplates'      : "directory of PHP templates for PNP4Nagios",
@@ -367,6 +368,11 @@ def detect_pnp():
                 if rrddir.endswith('/'):
                     rrddir = rrddir[:-1]
                 result['rrddir'] = rrddir
+            elif line.startswith("$conf['base_url']") and line.endswith(";"):
+                pnp_url = line.split('"')[1]
+                if not pnp_url.endswith("/"):
+                    pnp_url += "/"
+                result["pnp_url"] = pnp_url
     except:
 	pass
 

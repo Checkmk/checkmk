@@ -12,6 +12,20 @@ bekommen wir viele Timeouts.
 Quicksearch: Das Dropdown bleibt recht oft auf, obwohl man schon einen
 Host ausgewählt hat.
 
+Quicksearch: geht gerade nicht.
+
+Views: Überall wo nicht sinnvoll die Summary hosts entfernen (z.B.
+bei Problems, All hosts, etc.)
+
+Alerts/Notifications/Downtimealerts für Service und für Host und
+für Services of Host (letzteres wahrscheinlich dann gemeinsam).
+==> Zwei Datenquellen: servicealerts und hostalerts
+=> Dazu Tabelle log und in datasource builtin-Headers einbauen,
+nämlich mit Logclasses. Dann views bauen und einen Filter auf
+einen Zeitraum (Heute, diese Woche, letzte 30 Tage, usw.).
+Evtl. noch einen Filter mit Datumseingabe.
+
+
 --------------------------------------------------------------------------------
 BUGS
 --------------------------------------------------------------------------------

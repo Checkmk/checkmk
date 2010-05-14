@@ -170,6 +170,7 @@ def handler(req):
 			 "add_bookmark"        : sidebar.ajax_add_bookmark,
 			 "del_bookmark"        : sidebar.ajax_del_bookmark,
 			 "edit_bookmark"       : sidebar.page_edit_bookmark,
+			 "reposition_snapin"   : sidebar.reposition_snapin,
 			 "view_permissions"    : permissions.page_view_permissions,
 			 "edit_permissions"    : permissions.page_edit_permissions,
 	}

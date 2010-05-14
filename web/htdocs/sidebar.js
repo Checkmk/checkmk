@@ -22,6 +22,367 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+//
+// Sidebar styling and scrolling stuff
+//
+
+/************************************************
+ * snapin drag/drop code
+ *************************************************/
+
+var snapinDragging = false;
+var snapinOffset   = [ 0, 0 ];
+
+if(window.addEventListener) {
+  window.addEventListener("mousemove", snapinDrag,      false);
+} else {
+  document.documentElement.onmousemove = snapinDrag;
+}
+
+function snapinStartDrag(event) {
+  // IE fix
+  if (!event)
+    event = window.event;
+  
+  // Skip calls when already dragging or other button than left mouse
+  if(snapinDragging !== false || event.button != 0 || event.target.tagName != 'DIV')
+    return true;
+
+  var container = event.target.parentNode;
+  
+  if(event.preventDefault)
+    event.preventDefault();
+  event.returnValue = false;
+  
+  if(event.stopPropagation)
+    event.stopPropagation();
+  event.cancelBubble = true;
+  
+  snapinDragging = container;
+
+  // Save relative offset of the mouse to the snapin title to prevent flipping on drag start
+  snapinOffset = [ event.clientY - container.offsetTop, event.clientX - container.offsetLeft ];
+}
+
+function snapinDrag(event) {
+  // IE fix
+  if (!event)
+    event = window.event;
+  
+  if(snapinDragging === false)
+    return true;
+
+  // Drag the snapin
+  snapinDragging.style.position = 'absolute';
+  snapinDragging.style.top      = event.clientY - snapinOffset[0];
+  snapinDragging.style.left     = event.clientX - snapinOffset[1];
+  snapinDragging.style.width    = '175px';
+  snapinDragging.style.zIndex   = 200;
+
+  // Refresh the drop marker
+  removeSnapinDragIndicator();
+  
+  var line = document.createElement('div');
+  line.setAttribute('id', 'snapinDragIndicator');
+  line.style.height          = '4px';
+  line.style.backgroundColor = '#ff0000';
+  var o = getSnapinTargetPos();
+  if(o != null) {
+    snapinAddBefore(o.parentNode, o, line);
+    o = null;
+  } else {
+    snapinAddBefore(snapinDragging.parentNode, null, line);
+  }
+  line = null;
+}
+
+function snapinAddBefore(par, o, add) {
+  if(o != null) {
+    par.insertBefore(add, o);
+    o = null;
+  } else {
+    par.appendChild(add);
+  }
+  add = null;
+}
+
+function removeSnapinDragIndicator() {
+  var o = document.getElementById('snapinDragIndicator');
+  if(o) {
+    o.parentNode.removeChild(o);
+    o = null;
+  }
+}
+
+function snapinDrop(o) {
+  // Reset properties
+  snapinDragging.style.top      = '';
+  snapinDragging.style.left     = '';
+  snapinDragging.style.position = '';
+
+  // FIXME: Catch quick clicks without movement on the title bar
+  //        Don't reposition the object in this case.
+  
+  var par = snapinDragging.parentNode;
+  par.removeChild(snapinDragging);
+  snapinAddBefore(par, o, snapinDragging);
+
+  // Now send the new information to the backend
+  var thisId = snapinDragging.id.replace('snapin_container_', '');
+
+  var after = '';
+  if(o != null)
+    after = '&after='+o.id.replace('snapin_container_', '');
+  get_url('reposition_snapin.py?name='+thisId+after);
+  thisId = null;
+  o = null;
+}
+
+function snapinStopDrag() {
+  removeSnapinDragIndicator();
+  snapinDrop(getSnapinTargetPos());
+  snapinDragging = false;
+}
+
+function getSnapinTargetPos() {
+  var snapinTop = snapinDragging.offsetTop;
+  var childs = snapinDragging.parentNode.children;
+  var obj = false;
+  
+  // Find the nearest snapin to current left/top corner of
+  // the currently dragged snapin
+  for(var i in childs) {
+    child = childs[i];
+
+    // Skip currently dragged object
+    if(child == snapinDragging)
+      continue;
+    
+    // Initialize with the first snapin in the list
+    if(obj === false) {
+      obj = child;
+      continue;
+    }
+
+    // First check which corner is closer. Upper left or
+    // the bottom left.
+    var curBottomOffset = obj.offsetTop + obj.clientHeight - snapinTop;
+    if(curBottomOffset < 0)
+      curBottomOffset *= -1;
+
+    var curTopOffset = obj.offsetTop - snapinTop;
+    if(curTopOffset < 0)
+      curTopOffset *= -1;
+
+    var curOffset = curTopOffset;
+    if(curBottomOffset < curTopOffset)
+      curOffset = curBottomOffset;
+    
+    var newBottomOffset = child.offsetTop + obj.clientHeight - snapinTop
+    if(newBottomOffset < 0)
+      newBottomOffset *= -1;
+    
+    var newTopOffset = child.offsetTop - snapinTop
+    if(newTopOffset < 0)
+      newTopOffset *= -1;
+
+    var newOffset = newTopOffset;
+    if(newBottomOffset < newTopOffset)
+      newOffset = newBottomOffset;
+
+    // Is the upper left corner closer?
+    if(curOffset > newOffset) {
+      obj = child;
+      continue;
+    }
+  }
+
+  // Is the dragged snapin dragged below the last one?
+  if((obj.id == childs[childs.length-1].id && snapinTop > obj.offsetTop + obj.clientHeight)
+     || (snapinDragging == childs[childs.length-1] && snapinTop > childs[childs.length-2].offsetTop + childs[childs.length-2].clientHeight)) {
+    return null;
+  }
+
+  return obj;
+}
+
+/************************************************
+ * misc sidebar styling
+ *************************************************/
+
+function pageHeight() {
+  var h;
+
+  if(window.innerHeight !== null && typeof window.innerHeight !== 'undefined')
+    h = window.innerHeight;
+  else if(document.documentElement && document.documentElement.clientHeight)
+    h = document.documentElement.clientHeight;
+  else if(document.body !== null)
+    h = document.body.clientHeight;
+  else
+    h = null;
+
+  return h;
+}
+
+// Set the size of the sidebar_content div to fit the whole screen
+// but without scrolling. The height of the header and footer divs need
+// to be treated here.
+function setSidebarHeight() {
+  var oHeader  = document.getElementById('side_header');
+  var oContent = document.getElementById('side_content');
+  var oFooter  = document.getElementById('side_footer');
+  var height   = pageHeight();
+
+  oContent.style.height = height - oHeader.clientHeight - oFooter.clientHeight;
+}
+
+var scrolling = true;
+
+function scrollwindow(speed){
+  var c = document.getElementById('side_content');
+
+  if(scrolling) {
+    c.scrollTop += speed;
+    setTimeout("scrollwindow("+speed+")", 10);
+  }
+
+  c = null;
+}
+
+/************************************************
+ * drag/drop scrollen
+ *************************************************/
+ 
+var dragging = false;
+var startY = 0;
+var startScroll = 0;
+
+if(window.addEventListener) {
+  window.addEventListener("mousedown", startDragScroll, false);
+  window.addEventListener("mouseup",   stopDragScroll,  false);
+  window.addEventListener("mousemove", dragScroll,      false);
+} else {
+  document.documentElement.onmousedown = startDragScroll;
+  document.documentElement.onmouseup   = stopDragScroll;
+  document.documentElement.onmousemove = dragScroll;
+}
+
+function startDragScroll(event) {
+  // IE fix
+  if (!event)
+    event = window.event;
+  
+  // Evtl. auch nur mit Shift Taste: (e.button == 0 && (e["shiftKey"])
+  if(dragging === false && event.button == 0
+     && event.target.tagName != 'A'
+     && event.target.tagName != 'INPUT'
+     && !(event.target.tagName == 'DIV' && event.target.className == 'heading')) {
+    event.preventDefault();
+    event.stopPropagation();
+    event.returnValue = false;
+    
+    dragging = event;
+    startY = event.clientY;
+    startScroll = document.getElementById('side_content').scrollTop;
+  }
+}
+
+function stopDragScroll(event){ 
+  dragging = false;
+}
+
+function dragScroll(event) {
+  // IE fix
+  if (!event)
+    event = window.event;
+  
+  if(dragging === false)
+    return true;
+  
+  if(event.preventDefault)
+    event.preventDefault();
+  event.returnValue = false;
+  
+  if(event.stopPropagation)
+    event.stopPropagation();
+  event.cancelBubble = true;
+  
+  var inhalt = document.getElementById('side_content');
+  var diff = startY - event.clientY;
+  
+  //parent.main.document.close(); 
+  //parent.main.document.open(); 
+  //parent.main.document.write(diff+"<br>");
+  
+  inhalt.scrollTop += diff;
+  
+  startY = event.clientY;
+  
+  dragging = event;
+  inhalt = null;
+}
+
+/************************************************
+ * Mausrad scrollen
+ *************************************************/
+
+function handle(delta) {
+  if (delta < 0) {
+    scrolling = true;
+    scrollwindow(-delta*20);
+    scrolling = false;
+  } else {
+    scrolling = true;
+    scrollwindow(-delta*20);
+    scrolling = false;
+  }
+}
+
+/** Event handler for mouse wheel event.
+ */
+function scrollWheel(event){
+  var delta = 0;
+  if (!event)
+    event = window.event;
+    /* IE/Opera. */
+  if(event.wheelDelta) {
+    delta = event.wheelDelta / 120;
+    /** In Opera 9, delta differs in sign as compared to IE. */
+    if (window.opera)
+      delta = -delta;
+  } else if (event.detail) { /** Mozilla case. */
+    /** In Mozilla, sign of delta is different than in IE.
+     * Also, delta is multiple of 3. */
+    delta = -event.detail / 3;
+  }
+  /** If delta is nonzero, handle it.
+   * Basically, delta is now positive if wheel was scrolled up,
+   * and negative, if wheel was scrolled down.
+   */
+  if (delta)
+    handle(delta);
+  /** Prevent default actions caused by mouse wheel.
+   * That might be ugly, but we handle scrolls somehow
+   * anyway, so don't bother here..
+   */
+  if (event.preventDefault)
+    event.preventDefault();
+  
+  event.returnValue = false;
+}
+
+// add event listener cross browser compatible
+if(window.addEventListener)
+  window.addEventListener('DOMMouseScroll', scrollWheel, false);
+else
+  window.onmousewheel = document.onmousewheel = scrollWheel;
+
+
+//
+// Sidebar ajax stuff
+//
+
 // TODO: The sidebar cannot longer be embedded. We can use relative
 // links again and do not need to know the base url any longer :-)
 
@@ -106,10 +467,10 @@ function get_url(url, handler, id) {
 }
 
 function toggle_sidebar_snapin(oH2, url) {
-    var childs = oH2.parentNode.childNodes;
+    var childs = oH2.parentNode.parentNode.childNodes;
     for (var i in childs) {
         child = childs[i];
-        if (child.tagName == "DIV") {
+        if (child.tagName == 'DIV' && child.className == 'content') {
             var oContent = child;
             break;
         }

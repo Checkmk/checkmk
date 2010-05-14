@@ -108,7 +108,26 @@ def save_user_config(user_config):
 	file(path, "w").write(pprint.pformat(user_config) + "\n")
     except Exception, e:
 	raise MKConfigError("Cannot save user configuration to <tt>%s</tt>: %s" % (path, e))
-  
+
+def sidebar_head():
+    html.write('<div id="side_header">'
+		"<div class=\"logo\"><a target=\"_blank\" href=\"http://mathias-kettner.de\">"
+                "<img border=0 src=\"%s/images/MK-mini.gif\"></a></div>"
+		"<div class=\"title\"><a target=\"main\" href=\"main.py\">Check_MK</a></div>"
+                "<div class=\"nav\">"
+                "<img src=\"%s/images/side_up.png\" onmouseover=\"scrolling=true;scrollwindow(-2)\""
+                " onmouseout=\"scrolling=false\">"
+                "</div><div id=\"slit_top\"></div>"
+                "</div>\n" % (defaults.checkmk_web_uri, defaults.checkmk_web_uri))
+
+def sidebar_foot():
+    html.write('<div id="side_footer">'
+               '<div id="slit_bottom"></div>'
+               '<div class="nav"><img src="%s/images/side_down.png" onmouseover="scrolling=true;scrollwindow(2)"'
+               ' onmouseout="scrolling=false"></div>'
+               '<div class="footnote"><a target="main" href="%s/sidebar_config.py">Configure sidebar</a></div>'
+               '</div>' % (defaults.checkmk_web_uri, defaults.checkmk_web_uri))
+
 # Standalone sidebar
 def page_side(h):
     if not config.may("see_sidebar"):
@@ -120,21 +139,19 @@ def page_side(h):
 <head>
 <title>Check_MK Sidebar</title>
 <link href="check_mk.css" type="text/css" rel="stylesheet">
-<script type='text/javascript' src='check_mk.js'></script> 
-<script type='text/javascript' src='sidebar.js'></script> 
+<script type="text/javascript" src="check_mk.js"></script>
+<script type="text/javascript" src="sidebar.js"></script>
 </head>
 <body class="side">
-<div id=check_mk_sidebar>""")
+<div id="check_mk_sidebar">""")
 
     views.html = h
     views.load_views()
-    html.write("<div class=header><table><tr>"
-		"<td class=title><a target=\"main\" href=\"main.py\">Check_MK</a></td>"
-		"<td class=logo><a target=\"_blank\" href=\"http://mathias-kettner.de\"><img border=0 src=\"%s/images/MK-mini-black.gif\"></a></td>"
-		"</tr></table></div>\n" % \
-	    defaults.checkmk_web_uri)
+    sidebar_head()
     user_config = load_user_config()
     refresh_snapins = []
+
+    html.write('<div id="side_content">')
     for name, state in user_config:
 	if not name in sidebar_snapins or not config.may("sidesnap." + name):
 	   continue
@@ -143,9 +160,11 @@ def page_side(h):
 	   refresh_time = sidebar_snapins.get(name).get("refresh", 0)
 	   if refresh_time > 0:
 	       refresh_snapins.append([name, refresh_time])
-    html.write("<div class=footnote><a target=\"main\" href=\"%s/sidebar_config.py\">Configure sidebar</a></div>\n" % \
-	    defaults.checkmk_web_uri)
+    html.write('</div>')
+    sidebar_foot()
+
     html.write("<script language=\"javascript\">\n")
+    html.write("setSidebarHeight();\n")
     html.write("refresh_snapins = %r;\n" % refresh_snapins)
     html.write("sidebar_scheduler();\n")
     html.write("</script>\n")
@@ -158,16 +177,19 @@ def render_snapin(name, state):
     if styles:
 	html.write("<style>\n%s\n</style>\n" % styles)
 
-    html.write("<div class=section>\n")
+    html.write("<div id=\"snapin_container_%s\" class=section>\n" % name)
     if state == "closed":
 	style = ' style="display:none"'
     else:
 	style = ""
     url = defaults.checkmk_web_uri + "/sidebar_openclose.py?name=%s&state=" % name
+    html.write("<div class=\"heading\" onmousedown=\"snapinStartDrag(event)\" onmouseup=\"snapinStopDrag(event)\">")
     iconbutton("close", "sidebar_openclose.py?name=%s&state=off" % name, "side", "removeSnapin", 'snapin_'+name)
     html.write("<b class=heading onclick=\"toggle_sidebar_snapin(this,'%s')\" onmouseover=\"this.style.cursor='pointer'\" "
-	       "onmouseout=\"this.style.cursor='auto'\">%s" % (url, snapin["title"]))
-    html.write("</b><div id=\"snapin_%s\" class=content%s>\n" % (name, style))
+	       "onmouseout=\"this.style.cursor='auto'\">%s</b>" % (url, snapin["title"]))
+    html.write("</div>")
+
+    html.write("<div id=\"snapin_%s\" class=content%s>\n" % (name, style))
     try:
 	snapin["render"]()
     except Exception, e:
@@ -190,7 +212,7 @@ def ajax_openclose(h):
     new_config = []
     for name, usage in config:
 	if html.var("name") == name:
-	    usage = html.var("state")	
+	    usage = html.var("state")
 	new_config.append((name, usage))
     save_user_config(new_config)
 
@@ -206,6 +228,26 @@ def ajax_snapin(h):
     except Exception, e:
 	snapin_exception(e)
 
+def reposition_snapin(h):
+    global html
+    html      = h
+    snapname  = html.var("name")
+    aftername = html.var("after")
+
+    new_config = []
+    after_pos  = -1
+    cur_snapin = None
+    for id, snapin in enumerate(load_user_config()):
+        if aftername == snapin[0]:
+            after_pos = id
+
+        if snapname == snapin[0]:
+            cur_snapin = snapin
+        else:
+            new_config.append(snapin)
+
+    new_config.insert(after_pos, cur_snapin)
+    save_user_config(new_config)
 
 def page_configure(h):
     global html

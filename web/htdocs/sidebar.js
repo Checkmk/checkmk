@@ -32,6 +32,7 @@
 
 var snapinDragging = false;
 var snapinOffset   = [ 0, 0 ];
+var snapinStartpos = [ 0, 0 ];
 
 if(window.addEventListener) {
   window.addEventListener("mousemove", snapinDrag,      false);
@@ -61,7 +62,8 @@ function snapinStartDrag(event) {
   snapinDragging = container;
 
   // Save relative offset of the mouse to the snapin title to prevent flipping on drag start
-  snapinOffset = [ event.clientY - container.offsetTop, event.clientX - container.offsetLeft ];
+  snapinOffset   = [ event.clientY - container.offsetTop, event.clientX - container.offsetLeft ];
+  snapinStartPos = [ event.clientY, event.clientX ];
 }
 
 function snapinDrag(event) {
@@ -115,6 +117,9 @@ function removeSnapinDragIndicator() {
 }
 
 function snapinDrop(o) {
+  if(snapinDragging == false)
+    return true;
+
   // Reset properties
   snapinDragging.style.top      = '';
   snapinDragging.style.left     = '';
@@ -138,9 +143,22 @@ function snapinDrop(o) {
   o = null;
 }
 
-function snapinStopDrag() {
+function snapinStopDrag(event) {
+  // IE fix
+  if (!event)
+    event = window.event;
+  
+  if(snapinStartPos[0] == event.clientY && snapinStartPos[1] == event.clientX) {
+    if(event.preventDefault)
+      event.preventDefault();
+    if(event.stopPropagation)
+      event.stopPropagation();
+    event.returnValue = false;
+  } else {
+    snapinDrop(getSnapinTargetPos());
+  }
+  
   removeSnapinDragIndicator();
-  snapinDrop(getSnapinTargetPos());
   snapinDragging = false;
 }
 

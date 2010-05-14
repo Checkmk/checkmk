@@ -246,7 +246,10 @@ def reposition_snapin(h):
         else:
             new_config.append(snapin)
 
-    new_config.insert(after_pos, cur_snapin)
+    if after_pos == -1:
+        new_config.append(cur_snapin)
+    else:
+        new_config.insert(after_pos, cur_snapin)
     save_user_config(new_config)
 
 def page_configure(h):

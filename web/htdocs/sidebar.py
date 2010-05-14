@@ -167,6 +167,7 @@ def page_side(h):
     html.write("setSidebarHeight();\n")
     html.write("refresh_snapins = %r;\n" % refresh_snapins)
     html.write("sidebar_scheduler();\n")
+    html.write("window.onresize = function() { setSidebarHeight(); }\n")
     html.write("</script>\n")
 
     html.write("</div>\n</body>\n</html>")

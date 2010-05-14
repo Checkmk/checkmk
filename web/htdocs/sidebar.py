@@ -184,7 +184,8 @@ def render_snapin(name, state):
     else:
 	style = ""
     url = defaults.checkmk_web_uri + "/sidebar_openclose.py?name=%s&state=" % name
-    html.write("<div class=\"heading\" onmousedown=\"snapinStartDrag(event)\" onmouseup=\"snapinStopDrag(event)\">")
+    html.write("<div class=\"heading\" onmouseover=\"document.body.style.cursor='move';\" onmouseout=\"document.body.style.cursor='';\""
+               " onmousedown=\"snapinStartDrag(event)\" onmouseup=\"snapinStopDrag(event)\">")
     iconbutton("close", "sidebar_openclose.py?name=%s&state=off" % name, "side", "removeSnapin", 'snapin_'+name)
     html.write("<b class=heading onclick=\"toggle_sidebar_snapin(this,'%s')\" onmouseover=\"this.style.cursor='pointer'\" "
 	       "onmouseout=\"this.style.cursor='auto'\">%s</b>" % (url, snapin["title"]))
@@ -250,7 +251,7 @@ def reposition_snapin(h):
     if after_pos == -1:
         new_config.append(cur_snapin)
     else:
-        new_config.insert(after_pos, cur_snapin)
+        new_config.insert(after_pos-1, cur_snapin)
     save_user_config(new_config)
 
 def page_configure(h):

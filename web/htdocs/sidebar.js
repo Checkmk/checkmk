@@ -32,7 +32,7 @@
 
 var snapinDragging = false;
 var snapinOffset   = [ 0, 0 ];
-var snapinStartpos = [ 0, 0 ];
+var snapinStartPos = [ 0, 0 ];
 
 if(window.addEventListener) {
   window.addEventListener("mousemove", snapinDrag,      false);
@@ -116,7 +116,7 @@ function removeSnapinDragIndicator() {
   }
 }
 
-function snapinDrop(o) {
+function snapinDrop(event, o) {
   if(snapinDragging == false)
     return true;
 
@@ -125,8 +125,16 @@ function snapinDrop(o) {
   snapinDragging.style.left     = '';
   snapinDragging.style.position = '';
 
-  // FIXME: Catch quick clicks without movement on the title bar
-  //        Don't reposition the object in this case.
+  // Catch quick clicks without movement on the title bar
+  // Don't reposition the object in this case.
+  if(snapinStartPos[0] == event.clientY && snapinStartPos[1] == event.clientX) {
+    if(event.preventDefault)
+      event.preventDefault();
+    if(event.stopPropagation)
+      event.stopPropagation();
+    event.returnValue = false;
+    return false;
+  }
   
   var par = snapinDragging.parentNode;
   par.removeChild(snapinDragging);
@@ -148,17 +156,8 @@ function snapinStopDrag(event) {
   if (!event)
     event = window.event;
   
-  if(snapinStartPos[0] == event.clientY && snapinStartPos[1] == event.clientX) {
-    if(event.preventDefault)
-      event.preventDefault();
-    if(event.stopPropagation)
-      event.stopPropagation();
-    event.returnValue = false;
-  } else {
-    snapinDrop(getSnapinTargetPos());
-  }
-  
   removeSnapinDragIndicator();
+  snapinDrop(event, getSnapinTargetPos());
   snapinDragging = false;
 }
 

@@ -59,14 +59,14 @@ function mkSearchKeyUp(e, oField) {
 	var keyCode = e.which || e.keyCode;
 
 	switch (keyCode) {
-		// Return/Enter
+		// 18: Return/Enter
+		// 27: Escape
 		case 13:
+		case 27:
+			mkSearchClose();
 			e.returnValue = false;
 			e.cancelBubble = true;
 		break;
-
-		// Escape
-		case 27:
 			mkSearchClose();
 			e.returnValue = false;
 			e.cancelBubble = true;
@@ -231,22 +231,24 @@ function mkSearch(e, oField) {
     var oMatch = new RegExp(val, 'gi');
 
     var content = '';
-    var hostName, hostAlias;
+    var hostName, hostAlias, hostSite;
     for(var i in aSearchHosts){
-        hostName = aSearchHosts[i][0];
-        hostAlias = aSearchHosts[i][1];
+        hostSite  = aSearchHosts[i][0];
+        hostName  = aSearchHosts[i][1];
+        hostAlias = aSearchHosts[i][2];
 
         if(hostName.match(oMatch) || hostAlias.match(oMatch)) {
 						var oResult = {
 							'id': 'result_'+hostName,
 							'name': hostName,
-							'url': 'view.py?view_name=host&host='+hostName
+							'site': hostSite,
+							'url': 'view.py?view_name=host&host='+hostName+'&site='+hostSite
 						};
 						
 						// Add id to search result array
 						aSearchResults.push(oResult);
 						
-            content += '<a id="'+oResult.id+'" href="'+oResult.url+'" onclick="mkSearchClose()" target="'+mkSearchTargetFrame+'">'+hostAlias+" ("+hostName+")</a>\n";
+            content += '<a id="'+oResult.id+'" href="'+oResult.url+'" onclick="mkSearchClose()" target="'+mkSearchTargetFrame+'">'+hostAlias+"</a>\n";
         }
     }
 

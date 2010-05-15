@@ -20,6 +20,9 @@
      * View host problems/service problems: exclude summary hosts, exclude services
        of down hosts
      * Simplified implementation of sidebar: sidebar is not any longer embeddeable.
+     * Sidebar search: Added host site to be able to see the context links on
+       the result page
+     * Sidebar search: Hitting enter now closes the hint dropdown in all cases
 
 
 1.1.5i0:

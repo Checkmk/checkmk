@@ -103,11 +103,12 @@ def load_user_config():
     return [ entry for entry in user_config if config.may("sidesnap." + entry[0])]
 
 def save_user_config(user_config):
-    path = config.user_confdir + "/sidebar.mk"
-    try:
-	file(path, "w").write(pprint.pformat(user_config) + "\n")
-    except Exception, e:
-	raise MKConfigError("Cannot save user configuration to <tt>%s</tt>: %s" % (path, e))
+    if config.may("configure_sidebar"):
+        path = config.user_confdir + "/sidebar.mk"
+        try:
+            file(path, "w").write(pprint.pformat(user_config) + "\n")
+        except Exception, e:
+            raise MKConfigError("Cannot save user configuration to <tt>%s</tt>: %s" % (path, e))
 
 def sidebar_head():
     html.write('<div id="side_header">'
@@ -123,10 +124,11 @@ def sidebar_head():
 def sidebar_foot():
     html.write('<div id="side_footer">'
                '<div id="slit_bottom"></div>'
-               '<div class="nav"><img src="%s/images/side_down.png" onmouseover="scrolling=true;scrollwindow(2)"'
-               ' onmouseout="scrolling=false"></div>'
-               '<div class="footnote"><a target="main" href="%s/sidebar_config.py">Configure sidebar</a></div>'
-               '</div>' % (defaults.checkmk_web_uri, defaults.checkmk_web_uri))
+               '<div class="nav"><img src="images/side_down.png" onmouseover="scrolling=true;scrollwindow(2)"'
+               ' onmouseout="scrolling=false"></div>')
+    if config.may("configure_sidebar"):
+        html.write('<div class="footnote"><a target="main" href="sidebar_add_snapin.py">Add snapin</a></div>')
+    html.write('</div>')
 
 # Standalone sidebar
 def page_side(h):
@@ -183,10 +185,16 @@ def render_snapin(name, state):
 	style = ' style="display:none"'
     else:
 	style = ""
-    url = defaults.checkmk_web_uri + "/sidebar_openclose.py?name=%s&state=" % name
-    html.write("<div class=\"heading\" onmouseover=\"document.body.style.cursor='move';\" onmouseout=\"document.body.style.cursor='';\""
+    url = "sidebar_openclose.py?name=%s&state=" % name
+
+    html.write("<div class=\"heading\"")
+    if config.may("configure_sidebar"):
+        html.write("onmouseover=\"document.body.style.cursor='move';\" onmouseout=\"document.body.style.cursor='';\""
                " onmousedown=\"snapinStartDrag(event)\" onmouseup=\"snapinStopDrag(event)\">")
-    iconbutton("close", "sidebar_openclose.py?name=%s&state=off" % name, "side", "removeSnapin", 'snapin_'+name)
+    else:
+        html.write(">")
+    if config.may("configure_sidebar"):
+        iconbutton("close", "sidebar_openclose.py?name=%s&state=off" % name, "side", "removeSnapin", 'snapin_'+name)
     html.write("<b class=heading onclick=\"toggle_sidebar_snapin(this,'%s')\" onmouseover=\"this.style.cursor='pointer'\" "
 	       "onmouseout=\"this.style.cursor='auto'\">%s</b>" % (url, snapin["title"]))
     html.write("</div>")
@@ -231,6 +239,9 @@ def ajax_snapin(h):
 	snapin_exception(e)
 
 def reposition_snapin(h):
+    if not config.may("configure_sidebar"):
+        return
+
     global html
     html      = h
     snapname  = html.var("name")
@@ -254,10 +265,13 @@ def reposition_snapin(h):
         new_config.insert(after_pos-1, cur_snapin)
     save_user_config(new_config)
 
-def page_configure(h):
+def page_add_snapin(h):
+    if not config.may("configure_sidebar"):
+        raise MKGeneralException("You are not allowed to change the sidebar.")
+
     global html
     html = h
-    html.header("Configure Sidebar")
+    html.header("Add Snaping")
 
     userconf = load_user_config() # contains only allowed snapins
     changed = False

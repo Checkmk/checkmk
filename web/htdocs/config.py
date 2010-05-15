@@ -125,16 +125,21 @@ declare_permission("force_views",
      "Make own published views override builtin views for all users",
      [ "admin" ])
 
-declare_permission("see_sidebar",
-     "Use Check_MK sidebar",
-     "Without this permission the Check_MK sidebar will be invisible",
-     [ "admin", "user", "guest" ])
-
 declare_permission("act",
      "Perform commands",
      "Allows users to perform Nagios commands. If now futher permissions are granted, actions can only be done one objects one is a contact for",
      [ "admin", "user" ])
 
+
+declare_permission("see_sidebar",
+     "Use Check_MK sidebar",
+     "Without this permission the Check_MK sidebar will be invisible",
+     [ "admin", "user", "guest" ])
+
+declare_permission("configure_sidebar",
+     "Configure sidebar",
+     "This allows the user to add, move and remove sidebar snapins.",
+     [ "admin", "user" ])
 
 
 

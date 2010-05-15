@@ -162,8 +162,8 @@ def handler(req):
 			 "view"                : views.page_view,
 			 "logwatch"            : page_logwatch.page,
 			 "side"                : sidebar.page_side,    # replacement for side.php
-			 "sidebar_config"      : sidebar.page_configure,
 			 "switch_site"         : ajax_switch_site,
+			 "sidebar_add_snapin"  : sidebar.page_add_snapin,
 			 "sidebar_snapin"      : sidebar.ajax_snapin,
 			 "sidebar_openclose"   : sidebar.ajax_openclose,
 			 "switch_master_state" : sidebar.ajax_switch_masterstate,

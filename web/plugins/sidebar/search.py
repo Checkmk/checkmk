@@ -54,6 +54,7 @@ def render_searchform():
 
 sidebar_snapins["search"] = {
     "title" : "Quicksearch",
+    "description" : "Interactive search field for direct access to hosts",
     "author" : "Lars Michelsen",
     "render" : render_searchform,
     "allowed" : [ "user", "admin", "guest" ],

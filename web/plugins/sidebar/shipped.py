@@ -95,7 +95,7 @@ def render_views():
 
 sidebar_snapins["views"] = {
     "title" : "Views",
-    "description" : "",
+    "description" : "Links to all views",
     "author" : "Mathias Kettner",
     "render" : render_views,
     "allowed" : [ "user", "admin", "guest" ],
@@ -127,14 +127,14 @@ def render_groups(what):
 
 sidebar_snapins["hostgroups"] = {
     "title" : "Hostgroups",
-    "description" : "",
+    "description" : "Directs links to all host groups",
     "author" : "Mathias Kettner",
     "render" : lambda: render_groups("host"),
     "allowed" : [ "user", "admin", "guest" ]
 }
 sidebar_snapins["servicegroups"] = {
     "title" : "Servicegroups",
-    "description" : "",
+    "description" : "Direct links to all service groups",
     "author" : "Mathias Kettner",
     "render" : lambda: render_groups("service"),
     "allowed" : [ "user", "admin", "guest" ]
@@ -185,7 +185,7 @@ div.state3 { background-color: #f80; }
 
 sidebar_snapins["hosts"] = {
     "title" : "All hosts",
-    "description" : "",
+    "description" : "A summary state of each host with a link to the view showing its services",
     "author" : "Mathias Kettner",
     "render" : lambda: render_hosts(False),
     "allowed" : [ "user", "admin", "guest" ],
@@ -195,7 +195,7 @@ sidebar_snapins["hosts"] = {
 
 sidebar_snapins["problem_hosts"] = {
     "title" : "Problem hosts",
-    "description" : "",
+    "description" : "A summary state of all hosts that have problem, with links to problems of those hosts",
     "author" : "Mathias Kettner",
     "render" : lambda: render_hosts(True),
     "allowed" : [ "user", "admin", "guest" ],
@@ -235,7 +235,7 @@ def render_sitestatus():
 
 sidebar_snapins["sitestatus"] = {
   "title" : "Site status",
-    "description" : "",
+    "description" : "Connection state of each site and button for enabling and disabling the site connection",
     "author" : "Mathias Kettner",
   "render" : render_sitestatus,
   "allowed" : [ "user", "admin" ],
@@ -360,7 +360,7 @@ def render_tactical_overview():
 		    
 sidebar_snapins["tactical_overview"] = {
     "title" : "Tactical Overview",
-    "description" : "",
+    "description" : "The total number of hosts and service with and without problems",
     "author" : "Mathias Kettner",
     "refresh" : 10,
     "render" : render_tactical_overview,
@@ -394,9 +394,9 @@ def render_performance():
 		    
 sidebar_snapins["performance"] = {
     "title" : "Server performance",
-    "description" : "",
+    "description" : "Live monitor of the overall performance of all monitoring servers",
     "author" : "Mathias Kettner",
-    "refresh" : 5,
+    "refresh" : 10,
     "render" : render_performance,
     "allowed" : [ "admin", ],
     "styles" : """
@@ -420,7 +420,7 @@ def render_current_time():
 
 sidebar_snapins["time"] = {
     "title" : "Server time",
-    "description" : "",
+    "description" : "A large clock showing the current time of the web server",
     "author" : "Mathias Kettner",
     "refresh" : 30,
     "render" : render_current_time,
@@ -497,7 +497,7 @@ def render_nagios():
 
 sidebar_snapins["nagios_legacy"] = {
     "title" : "Nagios",
-    "description" : "",
+    "description" : "The classical sidebar of Nagios 3.2.0 with links to your local Nagios instance (no multi site support)",
     "author" : "Mathias Kettner",
     "render" : render_nagios,
     "allowed" : [ "user", "admin", "guest", ],
@@ -541,7 +541,7 @@ def render_master_control():
 	    
 sidebar_snapins["master_control"] = {
     "title" : "Master control",
-    "description" : "",
+    "description" : "Buttons for switching globally states such as enabling checks and notifications",
     "author" : "Mathias Kettner",
     "render" : render_master_control,
     "allowed" : [ "admin", ],
@@ -715,7 +715,7 @@ def ajax_add_bookmark(h):
 
 sidebar_snapins["bookmarks"] = {
     "title" : "Bookmarks",
-    "description" : "",
+    "description" : "A simple and yet practical snapin allowing to create bookmarks to views and other content in the main frame",
     "author" : "Mathias Kettner",
     "render" : render_bookmarks,
     "allowed": [ "user", "admin", "guest" ],

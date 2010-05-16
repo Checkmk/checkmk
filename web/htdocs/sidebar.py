@@ -85,22 +85,12 @@ def heading(text):
 def load_user_config():
     path = config.user_confdir + "/sidebar.mk"
     try:
-	saved_user_config = eval(file(path).read())
+	user_config = eval(file(path).read())
     except:
-	saved_user_config = config.sidebar
+	user_config = config.sidebar
 
-    # Now make sure that all snapins are listed in the config
-    # even if turned off.
-    user_config = copy.copy(saved_user_config)
-    for name in sidebar_snapins.keys():
-	found = False
-	for n, u in user_config:
-	    if n == name: found = True
-	if not found:
-	    user_config.append((name, "off"))
-
-    # Remove entries the user is not allowed for
-    return [ entry for entry in user_config if config.may("sidesnap." + entry[0])]
+    # Remove entries the user is not allowed for or which have state "off" (from legacy version)
+    return [ entry for entry in user_config if entry[1] != "off" and config.may("sidesnap." + entry[0])]
 
 def save_user_config(user_config):
     if config.may("configure_sidebar"):
@@ -221,7 +211,8 @@ def ajax_openclose(h):
     for name, usage in config:
 	if html.var("name") == name:
 	    usage = html.var("state")
-	new_config.append((name, usage))
+        if usage != "off":
+            new_config.append((name, usage))
     save_user_config(new_config)
 
 def ajax_snapin(h):
@@ -270,13 +261,13 @@ def page_add_snapin(h):
     global html
     html = h
     html.header("Add Snapin")
-    used_snapins = [name for (name, state) in load_user_config() if state != "off"]
+    used_snapins = [name for (name, state) in load_user_config()]
 
     addname = html.var("name")
     if addname in sidebar_snapins and addname not in used_snapins and html.transaction_valid():
         user_config = load_user_config() + [(addname, "open")]
         save_user_config(user_config)
-        used_snapins = [name for (name, state) in load_user_config() if state != "off"]
+        used_snapins = [name for (name, state) in load_user_config()]
 	html.reload_sidebar()
 
     names = sidebar_snapins.keys()
@@ -311,85 +302,3 @@ def page_add_snapin(h):
     html.footer()
 
 
-def page_configure_sidbar(h):
-    if not config.may("configure_sidebar"):
-        raise MKGeneralException("You are not allowed to change the sidebar.")
-
-    global html
-    html = h
-    html.header("Add Snapin")
-
-    userconf = load_user_config() # contains only allowed snapins
-    changed = False
-
-    if html.check_transaction():
-	# change states
-	if html.var("_saved"):
-	    new_config = []
-	    n = 0
-	    for name, usage in userconf:
-		new_usage = html.var("snapin_%d" % n)
-		if new_usage in ["off", "open", "closed"]:
-		    usage = new_usage
-		new_config.append((name, usage))
-		n += 1
-	    userconf = new_config
-	    save_user_config(userconf)
-	    changed = True
-
-	# handle up and down
-	n = 0
-	for name, usage in userconf:
-	    if html.var("snapin_up_%d" % n) == "UP": # Cannot be 0
-		userconf = userconf[0:n-1] + [(name,usage)] + [userconf[n-1]] + userconf[n+1:]
-		save_user_config(userconf)
-		changed = True
-		break
-	    elif html.var("snapin_down_%d" % n) == "DOWN": # Cannot be last one
-		userconf = userconf[0:n] + [userconf[n+1]] + [(name,usage)] + userconf[n+2:]
-		save_user_config(userconf)
-		changed = True
-		break
-	    n += 1
-	
-	# reload sidebar, if user changed something
-	if changed:
-	    html.reload_sidebar()
-
-
-    html.begin_form("sidebarconfig")
-    html.hidden_field("_saved", "yes")
-    html.write("<p>Here you can configure, which snapins you want to see in your personal "
-	    "sidebar and wether they are closed or opened at startup.</p>")
-    html.write("<table class=sidebarconfig>\n"
-	    "<tr><th>Snapin</th><th>Usage</th><th colspan=2>Move</th></tr>\n")
-
-    n = 0
-    for name, usage in userconf:
-	if name not in sidebar_snapins:
-	    n += 1
-	    continue
-
-	snapin = sidebar_snapins[name]
-	html.set_var("snapin_%d" % n, usage)
-	html.write("<tr>\n")
-	html.write("<td class=title>%s</td>\n" % snapin["title"])
-	html.write("<td class=widget>")
-	html.select("snapin_%d" % n, [("off", "off"), ("open", "open"), ("closed","closed")], None, "this.form.submit()")
-	html.write("</td><td>")
-	if n > 0:
-	    html.button("snapin_up_%d" % n, "UP")
-	html.write("</td><td>")
-	if n < len(userconf) - 1:
-	    html.button("snapin_down_%d" % n, "DOWN")
-	html.write("</td></tr>\n")
-	n += 1
-    html.write("</table>\n")
-
-    html.write("<p> In order "
-	    "to integrate the Check_MK sidebar snapins into your sidebar, please "
-	    "add the following to your Nagios' <tt>side.html</tt> or <tt>side.php</tt></p>\n")
-    html.write("<pre>\n%s</pre>\n" % htmllib.attrencode('<div id="check_mk_sidebar"><script src="%s/sidebar.js"></script></div>' % defaults.checkmk_web_uri))
-    html.end_form()
-
-    html.footer()

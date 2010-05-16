@@ -113,19 +113,17 @@ def save_user_config(user_config):
 def sidebar_head():
     html.write('<div id="side_header">'
 		"<div class=\"logo\"><a target=\"_blank\" href=\"http://mathias-kettner.de\">"
-                "<img border=0 src=\"%s/images/MK-mini.gif\"></a></div>"
+                "<img border=0 src=\"images/MK-mini.gif\"></a></div>"
 		"<div class=\"title\"><a target=\"main\" href=\"main.py\">Check_MK</a></div>"
                 "<div class=\"nav\">"
-                "<img src=\"%s/images/side_up.png\" onmouseover=\"scrolling=true;scrollwindow(-2)\""
-                " onmouseout=\"scrolling=false\">"
                 "</div><div id=\"slit_top\"></div>"
-                "</div>\n" % (defaults.checkmk_web_uri, defaults.checkmk_web_uri))
+                "</div>\n")
+# "<img src=\"images/side_up.png\" onmouseover=\"scrolling=true;scrollwindow(-2)\" onmouseout=\"scrolling=false\">"
 
 def sidebar_foot():
     html.write('<div id="side_footer">'
-               '<div id="slit_bottom"></div>'
-               '<div class="nav"><img src="images/side_down.png" onmouseover="scrolling=true;scrollwindow(2)"'
-               ' onmouseout="scrolling=false"></div>')
+               '<div id="slit_bottom"></div>')
+#           '<div class="nav"><img src="images/side_down.png" onmouseover="scrolling=true;scrollwindow(2)" onmouseout="scrolling=false"></div>')
     if config.may("configure_sidebar"):
         html.write('<div class="footnote"><a target="main" href="sidebar_add_snapin.py">Add snapin</a></div>')
     html.write('</div>')
@@ -276,10 +274,7 @@ def page_add_snapin(h):
 
     addname = html.var("name")
     if addname in sidebar_snapins and addname not in used_snapins and html.transaction_valid():
-        if html.var("pos") == "top":
-            user_config = [(addname, "open")] + load_user_config()
-        else:
-            user_config = load_user_config() + [(addname, "open")]
+        user_config = load_user_config() + [(addname, "open")]
         save_user_config(user_config)
         used_snapins = [name for (name, state) in load_user_config() if state != "off"]
 	html.reload_sidebar()
@@ -299,14 +294,16 @@ def page_add_snapin(h):
         title = snapin["title"]
         description = snapin.get("description", "")
         author = snapin.get("author")
-        html.write("<td><b>%s</b><br>\n"
+	transid = html.current_transid(html.req.user)
+        url = 'sidebar_add_snapin.py?name=%s&_transid=%d&pos=top' % (name, transid)
+        html.write('<td onmouseover="this.style.background=\'#cde\'; this.style.cursor=\'pointer\';" '
+                'onmouseout="this.style.background=\'#abc\' "'
+                'onclick="window.location.href=\'%s\';">' % url)
+        
+        html.write("<b>%s</b><br>\n"
                 "%s" % (title, description))
         if author:
             html.write("<br><i>Author: %s</i>" % author)
-	transid = html.current_transid(html.req.user)
-        html.write('<br><a class="navi add" href="sidebar_add_snapin.py?name=%s&_transid=%d&pos=top">Add top</a>\n' % (name, transid))
-        html.write('<a class="navi add" href="sidebar_add_snapin.py?name=%s&_transid=%d&pos=bottom">Add bottom</a></td>\n' % (name, transid))
-
       
     html.write("<td></td>" * (3-n))
 

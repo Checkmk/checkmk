@@ -1082,7 +1082,7 @@ div#check_mk_sidebar {
 div#check_mk_sidebar td {font-size:8pt;color:#fff;}
 
 div#check_mk_sidebar div#side_header,
-div#check_mk_sidebar div#side_footer {height:50px;width:100%;}
+div#check_mk_sidebar div#side_footer {height:30px;width:100%;}
 div#check_mk_sidebar div#side_content {height:500px;margin:auto;overflow:hidden;color:#000000;}
 
 div#check_mk_sidebar div#side_header div.title {width:100%;}
@@ -1270,21 +1270,29 @@ table.dataset td.left {
     border-color: #fec;
 }
 
+/* page for adding snapins */
+
 table.add_snapin {
-    border-spacing: 0px;
     margin: 0px;
     padding: 0px;
-    border-collapse: collapse;
-    empty-cells: show;
+    border-spacing: 5px;
+    empty-cells: hide;
 }
 
 table.add_snapin td {
-    border:  1px solid #eee; 
     padding: 8px;
-    background-color: #68f;
+    background-color: #abc;
     width: 33%;
+    -moz-border-radius: 8px;
+    border-bottom: 1px solid #9ab;
+    border-right: 1px solid #89a;
+    min-height: 100px;
+    color: #369;
 }
-
+table.add_snapin b {
+    color: black;
+}
 table.add_snapin i {
     color: white;
 }
+

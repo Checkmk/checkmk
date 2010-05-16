@@ -198,6 +198,7 @@ setup:
 	rm -rf $(DISTNAME)
 	tar xzf $(DISTNAME).tar.gz
 	cd $(DISTNAME) && ./setup.sh --yes
+	rm -rf $(DISTNAME)
 	check_mk -R
 	/etc/init.d/apache2 reload
 

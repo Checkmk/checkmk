@@ -26,6 +26,13 @@
 
 import views, time, defaults
 
+# Python 2.3 does not have 'set' in normal namespace.
+# But it can be imported from 'sets'
+try:
+    set()
+except NameError:
+    from sets import Set as set
+
 # --------------------------------------------------------------
 #       _    _                 _   
 #      / \  | |__   ___  _   _| |_ 
@@ -80,11 +87,25 @@ sidebar_snapins["admin"] = {
 #                                
 # --------------------------------------------------------------
 def render_views():
-    authuser = html.req.user
-    s = [ (view["title"], name) for name, view in html.available_views.items() if not view["hidden"] ]
+    def render_topic(topic, s):
+        html.write("<h3>%s</h3>\n" % topic)
+        for t, title, name in s:
+            if t == topic:
+                bulletlink(title, "view.py?view_name=%s" % name)
+
+    s = [ (view.get("topic", "Other"), view["title"], name) for name, view in html.available_views.items() if not view["hidden"] ]
     s.sort()
-    for title, name in s:
-        bulletlink(title, "view.py?view_name=%s" % name)
+    
+    # Enforce a certain order on the topics
+    known_topics = [ "Hosts", "Hostgroups", "Services", "Servicegroups", "Problems", "Addons" ] 
+    for topic in known_topics: 
+        render_topic(topic, s)
+
+    rest = list(set([ t for (t, _t, _v) in s if t not in known_topics ]))
+    rest.sort()
+    for topic in rest:
+        render_topic(topic, s)
+
 
     links = []
     if config.may("edit_views"):

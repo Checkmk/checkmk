@@ -498,6 +498,10 @@ def page_edit_view(h):
     html.text_input("view_title")
     html.write("</td></tr>\n")
 
+    html.write("<tr><td class=legend>Topic</td><td class=content>")
+    html.text_input("view_topic", "Other")
+    html.write("</td></tr>\n")
+
     html.write("<tr><td class=legend>Title of Contextlink</td><td class=content>")
     html.text_input("view_linktitle")
     html.write("</td></tr>\n")
@@ -652,6 +656,7 @@ function toggle_section(nr, oImg) {
 def load_view_into_html_vars(view):
     # view is well formed, not checks neccessary
     html.set_var("view_title",       view["title"])
+    html.set_var("view_topic",       view.get("topic", "Other"))
     html.set_var("view_linktitle",   view.get("linktitle", view["title"]))
     html.set_var("view_description", view.get("description", ""))
     html.set_var("view_name",        view["name"])
@@ -724,6 +729,9 @@ def create_view():
     if not linktitle:
         linktitle = title
 
+    topic = html.var("topic")
+    if not topic:
+        topic = "Other"
     datasourcename = html.var("datasource")
     datasource = multisite_datasources[datasourcename]
     tablename = datasource["table"]
@@ -792,6 +800,7 @@ def create_view():
 	"name"            : name,
 	"owner"           : html.req.user,
 	"title"           : title,
+	"topic"           : topic,
 	"linktitle"       : linktitle,
 	"description"     : html.var("view_description", ""),
 	"datasource"      : datasourcename,

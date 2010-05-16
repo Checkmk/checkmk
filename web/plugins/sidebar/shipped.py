@@ -43,6 +43,8 @@ def render_about():
 
 sidebar_snapins["about"] = {
     "title" : "About Check_MK",
+    "description" : "Version information and Links to Documentation, Homepage and Download of Check_MK",
+    "author" : "Mathias Kettner",
     "render" : render_about,
     "allowed" : [ "admin", "user", "guest" ],
 }
@@ -62,6 +64,8 @@ def render_admin():
 
 sidebar_snapins["admin"] = {
     "title" : "Administration",
+    "description" : "Links to administrations functions, e.g. configuration of permissions",
+    "author" : "Mathias Kettner",
     "render" : render_admin,
     "allowed" : [ "admin" ],
 }
@@ -91,6 +95,8 @@ def render_views():
 
 sidebar_snapins["views"] = {
     "title" : "Views",
+    "description" : "",
+    "author" : "Mathias Kettner",
     "render" : render_views,
     "allowed" : [ "user", "admin", "guest" ],
 }
@@ -121,11 +127,15 @@ def render_groups(what):
 
 sidebar_snapins["hostgroups"] = {
     "title" : "Hostgroups",
+    "description" : "",
+    "author" : "Mathias Kettner",
     "render" : lambda: render_groups("host"),
     "allowed" : [ "user", "admin", "guest" ]
 }
 sidebar_snapins["servicegroups"] = {
     "title" : "Servicegroups",
+    "description" : "",
+    "author" : "Mathias Kettner",
     "render" : lambda: render_groups("service"),
     "allowed" : [ "user", "admin", "guest" ]
 }
@@ -175,6 +185,8 @@ div.state3 { background-color: #f80; }
 
 sidebar_snapins["hosts"] = {
     "title" : "All hosts",
+    "description" : "",
+    "author" : "Mathias Kettner",
     "render" : lambda: render_hosts(False),
     "allowed" : [ "user", "admin", "guest" ],
     "refresh" : 60,
@@ -183,6 +195,8 @@ sidebar_snapins["hosts"] = {
 
 sidebar_snapins["problem_hosts"] = {
     "title" : "Problem hosts",
+    "description" : "",
+    "author" : "Mathias Kettner",
     "render" : lambda: render_hosts(True),
     "allowed" : [ "user", "admin", "guest" ],
     "refresh" : 60,
@@ -221,6 +235,8 @@ def render_sitestatus():
 
 sidebar_snapins["sitestatus"] = {
   "title" : "Site status",
+    "description" : "",
+    "author" : "Mathias Kettner",
   "render" : render_sitestatus,
   "allowed" : [ "user", "admin" ],
   "styles" : """
@@ -344,6 +360,8 @@ def render_tactical_overview():
 		    
 sidebar_snapins["tactical_overview"] = {
     "title" : "Tactical Overview",
+    "description" : "",
+    "author" : "Mathias Kettner",
     "refresh" : 10,
     "render" : render_tactical_overview,
     "allowed" : [ "user", "admin", "guest" ],
@@ -376,6 +394,8 @@ def render_performance():
 		    
 sidebar_snapins["performance"] = {
     "title" : "Server performance",
+    "description" : "",
+    "author" : "Mathias Kettner",
     "refresh" : 5,
     "render" : render_performance,
     "allowed" : [ "admin", ],
@@ -400,6 +420,8 @@ def render_current_time():
 
 sidebar_snapins["time"] = {
     "title" : "Server time",
+    "description" : "",
+    "author" : "Mathias Kettner",
     "refresh" : 30,
     "render" : render_current_time,
     "allowed" : [ "user", "admin", "guest", ],
@@ -475,6 +497,8 @@ def render_nagios():
 
 sidebar_snapins["nagios_legacy"] = {
     "title" : "Nagios",
+    "description" : "",
+    "author" : "Mathias Kettner",
     "render" : render_nagios,
     "allowed" : [ "user", "admin", "guest", ],
 }
@@ -517,6 +541,8 @@ def render_master_control():
 	    
 sidebar_snapins["master_control"] = {
     "title" : "Master control",
+    "description" : "",
+    "author" : "Mathias Kettner",
     "render" : render_master_control,
     "allowed" : [ "admin", ],
     "styles" : """
@@ -689,6 +715,8 @@ def ajax_add_bookmark(h):
 
 sidebar_snapins["bookmarks"] = {
     "title" : "Bookmarks",
+    "description" : "",
+    "author" : "Mathias Kettner",
     "render" : render_bookmarks,
     "allowed": [ "user", "admin", "guest" ],
 }

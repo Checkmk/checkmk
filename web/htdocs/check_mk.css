@@ -1270,3 +1270,21 @@ table.dataset td.left {
     border-color: #fec;
 }
 
+table.add_snapin {
+    border-spacing: 0px;
+    margin: 0px;
+    padding: 0px;
+    border-collapse: collapse;
+    empty-cells: show;
+}
+
+table.add_snapin td {
+    border:  1px solid #eee; 
+    padding: 8px;
+    background-color: #68f;
+    width: 33%;
+}
+
+table.add_snapin i {
+    color: white;
+}

@@ -921,6 +921,24 @@ multisite_painters["log_message"] = {
     "columns" : ["log_message"],
     "paint" : lambda row: ("", row["log_message"])
 }
+multisite_painters["log_plugin_output"] = {
+    "title" : "Log: output of check plugin",
+    "short" : "Check output",
+    "columns" : ["log_plugin_output"],
+    "paint" : lambda row: ("", row["log_plugin_output"])
+}
+multisite_painters["log_attempt"] = {
+    "title" : "Log: number of check attempt",
+    "short" : "Att.",
+    "columns" : ["log_attempt"],
+    "paint" : lambda row: ("", row["log_attempt"])
+}
+multisite_painters["log_state_type"] = {
+    "title" : "Log: type of state (hard/soft)",
+    "short" : "Type",
+    "columns" : ["log_state_type"],
+    "paint" : lambda row: ("", row["log_state_type"])
+}
 multisite_painters["log_type"] = {
     "title" : "Log: type",
     "short" : "Type",

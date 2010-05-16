@@ -403,6 +403,7 @@ class FilterTime(Filter):
 
 declare_filter(250, FilterTime("service", "svc_last_state_change", "Last service state change", "service_last_state_change"))
 declare_filter(251, FilterTime("service", "svc_last_check", "Last service check", "service_last_check"))
+declare_filter(252, FilterTime("log", "logtime", "Time of log entry", "log_time"))
 
 #    _                
 #   | |    ___   __ _ 

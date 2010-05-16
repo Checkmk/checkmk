@@ -1077,6 +1077,7 @@ def needed_group_columns(painters):
 # prepare row-function needed for painters
 def query_data(datasource, columns, add_headers, only_sites = [], limit = None):
     tablename = datasource["table"]
+    add_headers += datasource.get("add_headers", "")
     merge_column = datasource.get("merge_by")
     if merge_column:
 	columns = [merge_column] + columns

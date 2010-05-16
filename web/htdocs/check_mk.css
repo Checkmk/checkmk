@@ -599,6 +599,10 @@ table.form input.text {
   width: 100%;
 }
 
+table.form input.number { 
+    text-align: right;
+}
+
 div.textinputlegend { 
   font-size: 80%;
 }

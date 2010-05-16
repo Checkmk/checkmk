@@ -194,8 +194,8 @@ class html:
 	    href += "&_transid=%d" % self.current_transid(self.req.user)
 	self.write("<a href=\"%s\" class=button>%s</a>" % (href, text))
 
-    def number_input(self, varname, deflt = ""):
-	self.text_input(varname, str(deflt), "number")
+    def number_input(self, varname, deflt = "", size=8):
+	self.text_input(varname, str(deflt), "number", size=size)
 
     def text_input(self, varname, default_value = "", cssclass = "text", **args):
 	addprops = ""

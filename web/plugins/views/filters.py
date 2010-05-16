@@ -341,6 +341,55 @@ class FilterSite(Filter):
 declare_filter(500, FilterSite("site",    True), "Selection of site is enforced, use this filter for joining")
 declare_filter(501, FilterSite("siteopt", False), "Optional selection of a site")
 
+# Filter for setting time ranges, e.g. on last_state_change and last_check
+# Variante eins:
+# age [  ] seconds  [  ] minutes  [  ] hours  [  ] days
+# Variante zwei: (not implemented)
+# since [2010-01-02] [00:00:00]
+# Variante drei: (not implemented)
+# from [2010-01-02] [00:00:00] until [2010-01-02] [00:00:00]
+class FilterTime(Filter):
+    def __init__(self, info, name, title, column):
+        self.column = column
+        self.name = name
+        self.ranges = [ (1, "sec"), (60, "min"), (3600, "hours"), (86400, "days") ]
+        Filter.__init__(self, name, title, info, [ name + "_" + n for (s, n) in self.ranges], [column])
+
+    def display(self):
+        for s, n in self.ranges:
+            htmlvar = self.name + "_" + n
+            html.number_input(htmlvar, 0, 2)
+            html.write(" %s &nbsp; " % n)
+
+    def filter(self, infoname):
+        secs = 0
+        for s, n in self.ranges:
+            htmlvar = self.name + "_" + n
+            v = html.var(htmlvar)
+            if v:
+                secs += int(v) * s
+
+        if secs > 0:
+            timestamp = int(time.time()) - secs
+            return "Filter: %s >= %d\n" % (self.column, timestamp)
+        else:
+            return ""
+
+    def variable_settings(self, row):
+        vars = []
+        secs = int(time.time()) - row[self.column]
+        for s, n in self.ranges[::-1]:
+            v = secs / s
+            secs -= v * s
+            vars.append((self.name + "_" + n, secs))
+        return vars
+
+    def heading_info(self, infoname):
+        return "since the last couple of seconds"
+
+declare_filter(250, FilterTime("service", "svc_last_state_change", "Last service state change", "service_last_state_change"))
+declare_filter(251, FilterTime("service", "svc_last_check", "Last service check", "service_last_check"))
+
 #    _                
 #   | |    ___   __ _ 
 #   | |   / _ \ / _` |

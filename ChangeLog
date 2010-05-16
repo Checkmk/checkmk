@@ -5,6 +5,9 @@
      * Linux agent: option -d enabled debug output
      * Linux agent: fix ipmi-sensors cache corruption detection
 
+     Multisite:
+     * Filters for groups are negateble.
+
 1.1.5i1:
      Checks & Agents:
      * uptime: new check for system uptime (Linux)

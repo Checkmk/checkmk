@@ -1,3 +1,11 @@
+tobi:
+    Multisite:
+    * New filters for last service check and last service state change
+    * New views "Recently changed services" and "Unchecked services"
+    * New page for adding sidebar snapins
+    * Drag & Drop for sidebar snapins (thanks to Lars)
+    * Grab & Move for sidebar scrolling (thanks to Lars)
+
 1.1.5i2:
      Checks & Agents:
      * if64: new SNMP check for network interfaces. Like if, but uses 64 bit

@@ -353,13 +353,17 @@ class FilterTime(Filter):
         self.column = column
         self.name = name
         self.ranges = [ (1, "sec"), (60, "min"), (3600, "hours"), (86400, "days") ]
-        Filter.__init__(self, name, title, info, [ name + "_" + n for (s, n) in self.ranges], [column])
+        Filter.__init__(self, name, title, info, [ name ] + [ name + "_" + n for (s, n) in self.ranges], [column])
 
     def display(self):
+        current = html.var(self.name, "since")
+        for t in [ "before", "since" ]:
+            html.radiobutton(self.name, t, current == t, t) 
+            html.write(" ")
         for s, n in self.ranges:
             htmlvar = self.name + "_" + n
             html.number_input(htmlvar, 0, 2)
-            html.write(" %s &nbsp; " % n)
+            html.write(" %s " % n)
 
     def filter(self, infoname):
         secs = 0
@@ -367,14 +371,24 @@ class FilterTime(Filter):
             htmlvar = self.name + "_" + n
             v = html.var(htmlvar)
             if v:
-                secs += int(v) * s
+                try:
+                    secs += int(v) * s
+                except:
+                    pass    
 
         if secs > 0:
             timestamp = int(time.time()) - secs
-            return "Filter: %s >= %d\n" % (self.column, timestamp)
+            if html.var(self.name, "since") != "since":
+                neg = "!"
+            else:
+                neg = ""
+            return "Filter: %s %s>= %d\n" % (self.column, neg, timestamp)
         else:
             return ""
 
+    # I'm not sure if this function is useful or ever been called.
+    # Problem is, that it is not clear wether to use "since" or "before"
+    # here.
     def variable_settings(self, row):
         vars = []
         secs = int(time.time()) - row[self.column]

@@ -408,7 +408,7 @@ def render_performance():
     for what, col in \
 	[("Serv. checks", 0), 
 	("Host checks", 1),
-	("Livestatus-conn.", 2),
+	("Livestatus-connections", 2),
 	("Process creations", 3)]:
 	html.write("<tr><td class=left>%s:</td><td class=right>%.2f/s</td></tr>\n" % (what, sum([row[col] for row in data])))
     html.write("</table>\n")
@@ -421,7 +421,16 @@ sidebar_snapins["performance"] = {
     "render" : render_performance,
     "allowed" : [ "admin", ],
     "styles" : """
-table.performance { font-size: 8pt; width: 100%; background-color: #888; border-style: solid; border-color: #444 #bbb #eee #666; border-width: 1px; }
+table.performance { 
+    -moz-border-radius: 4px; 
+    font-size: 8pt; 
+    width: 100%; 
+    background-color: #888; 
+    border-style: solid; 
+    border-color: #444 #bbb #eee #666; 
+    border-width: 1px; 
+}
+table.performance td { padding: 0px; }
 table.Performance td.right { text-align: right; font-weight: bold; padding: 0px; }
 
 """
@@ -538,7 +547,7 @@ def render_master_control():
 	( "execute_service_checks",   "Service checks" ),
 	( "execute_host_checks",      "Host checks" ),
 	( "enable_event_handlers",    "Event handlers" ),
-	( "process_performance_data", "Perf. data"),
+	( "process_performance_data", "Performance data"),
 	]
 
     html.live.set_prepend_site(True)

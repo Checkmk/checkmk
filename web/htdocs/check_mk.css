@@ -4,16 +4,84 @@ td {
 }
 
 
-body.top, body.page, body.bottom {
+body {
+    background-attachment:fixed;
+}
+
+body.main, body.bottom {
   background-color: #97a8ab;
   background-image: url("images/background.jpg");
   background-repeat: repeat;
-  background-position: center;
-  margin: 0px 8px 0px 8px;
+  background-position: -420px 0px;
+  margin: 0px;
   padding: 0px;
   font-family: arial, helvetica, sans-serif;
   font-size: 9pt;
 }
+
+/* side frame */
+body.side {
+  background-image: url("images/background-side.jpg");
+  background-repeat: repeat;
+  background-position: -200px;
+  overflow:hidden;
+  border-right: 1px solid #ddd;
+  padding: 0px;
+  margin: 0px;
+}
+
+body.top {
+    /* border-bottom: 1px solid white; */
+    background-image: url("images/background-top.jpg");
+    background-repeat: repeat;
+    background-position: top right;
+    margin: 0px;
+    padding: 0px;
+    text-align: right;
+    vertical-align: bottom;
+    font-family: arial, helvetica, sans-serif;
+    font-size: 8pt;
+}
+
+body.top div.loggedin {
+    color: white;
+    margin-right: 280px;
+    margin-top: 34px;
+}
+
+
+body.bottom {
+    border-top: 2px solid #ddd;
+    padding-left: 40px;
+}
+
+a.bottomnavi {
+    border: 1px solid #fff;
+    border-top-style: none;
+    -moz-border-radius: 2px;
+    display: block;
+    width: 100px;
+    height: 19px;
+    margin-right: 4px;
+    margin-top: 0px;
+    color: #fff;
+    text-align: center;
+    text-decoration: none;
+    vertical-align middle;
+    font-size: 8pt;
+}
+
+a.bottomnavi:hover {
+    color: white;
+    border-color: white
+    background-color: #abc;
+    font-weight: bold;
+}
+
+body.main {
+    padding-left: 18px;
+}
+
 
 input, td, select {
     font-size: 9pt;
@@ -32,9 +100,11 @@ table.footer {
 .footer a { color: #246; }
 
 h1 {
-    font-size: 13pt;
+    color: white;
+    font-size: 17pt;
     margin-top: 0px;
-    margin-bottom: 0px;
+    margin-bottom: 5px;
+    margin-left: 5px;
 }
 
 table.heading {
@@ -110,19 +180,20 @@ table.navi {
 }
 a.navi {
     border-style: solid;
-    border-color: #ddd;
+    border-color: #fff;
     border-width: 1px;
-    /* -moz-border-radius: 4px; */
-    background-color: #89a;
-    padding: 2px 2px 1px 2px;
+    -moz-border-radius: 3px;
+    background-color: #69a;
+    padding: 3px 2px 0px 2px;
     text-decoration: none;
     color: white;
     margin-right: 2px;
     margin-bottom: 2px;
     /* line-height: 1.5em; */
-    font-size: 9pt;
+    font-size: 8pt;
+    font-weight: bold;
     width: 140px;
-    height: 16px;
+    height: 18px;
     display: block;
     float: left;
     overflow: hidden;
@@ -152,12 +223,14 @@ a.navi.filter:hover {
 }
 
 a.navi.context {
-    background-color: #9ab;
+    background-color: #5f8b98;
 }
 a.navi.context:hover {
-    background-color: #bcd;
+    background-color: #8bc;
     border-color: #fff;
 }
+
+
 
 /* tabs ---------------------------------------------------------------------- */
 
@@ -1093,12 +1166,6 @@ width: 200px;
 
 
 /* --- plugins for sidebar ----------------------------------- */
-body.side {
-  background-image: url("images/background.jpg");
-  background-repeat: repeat;
-  background-position: center;
-  overflow:hidden;
-}
 div#check_mk_sidebar {
     margin-top: 1ex;
     margin-bottom: 1ex;
@@ -1134,10 +1201,10 @@ div#check_mk_sidebar div.section {
     border-color: #222 #ccc #fff #444;
     background-color: #444;
     -moz-border-radius: 4px;
-    padding: 0px;
     padding-top: 0px;
-    padding-left: 4px;
-    padding-right: 3px;
+    padding-left: 6px;
+    padding-right: 5px;
+    padding-bottom: 2px;
 }
 
 div#check_mk_sidebar div.content {

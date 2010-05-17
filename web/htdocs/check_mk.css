@@ -104,23 +104,44 @@ table.siteheader td.disabled a {
 }
 
 /* navigation ---------------------------------------------------------------- */
+table.navi {
+    /* border: 1px solid white; */
+    /* padding: 10px; */
+}
 a.navi {
     border-style: solid;
-    border-color: #eee #666 #444 #eee;
+    border-color: #ddd;
     border-width: 1px;
-    -moz-border-radius: 4px;
-    background-color: #268;
-    padding: 0px 5px;
+    /* -moz-border-radius: 4px; */
+    background-color: #89a;
+    padding: 2px 2px 1px 2px;
     text-decoration: none;
     color: white;
     margin-right: 2px;
-    line-height: 1.5em;
+    margin-bottom: 2px;
+    /* line-height: 1.5em; */
     font-size: 9pt;
+    width: 140px;
+    height: 16px;
+    display: block;
+    float: left;
+    overflow: hidden;
+    white-space: nowrap;
+    text-align: center;
+    vertical-align: middle;
+}
+
+div.naviend {
+    width: 0px;
+    height: 0px;
+    display: block;
+    float: none;
+    background-color: green;
+    overflow: hidden;
 }
 
 a.navi:hover {
-    border-color: #fff #888 #666 #fff;
-    background-color: #48a;
+    background-color: #bcd;
 }
 
 a.navi.filter {
@@ -131,10 +152,11 @@ a.navi.filter:hover {
 }
 
 a.navi.context {
-    background-color: #628;
+    background-color: #9ab;
 }
 a.navi.context:hover {
-    background-color: #84a;
+    background-color: #bcd;
+    border-color: #fff;
 }
 
 /* tabs ---------------------------------------------------------------------- */

@@ -925,6 +925,8 @@ def show_view(view, show_heading = False):
     if show_heading:
 	html.header(view_title(view))
 
+    html.write("<table class=navi><tr><td>\n")
+
     show_context_links(view, hide_filters)
     if config.may("edit_views"):
 	if view["owner"] == html.req.user:
@@ -941,9 +943,12 @@ def show_view(view, show_heading = False):
     if len(rows) > 0 and config.may("act") and not html.do_actions():
         toggle_button("table_actions", False, "Show commands", "Hide commands")
 
+    html.write("</td></tr></table>\n")
+
     # Filter form
     if len(show_filters) > 0 and not html.do_actions():
 	show_filter_form(filter_isopen, show_filters)
+
 
     # Actions
     has_done_actions = False

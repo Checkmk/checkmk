@@ -155,6 +155,8 @@ def handler(req):
 
 	pagehandlers = { "index"               : page_index,
 			 "main"                : page_main,
+                         "top"                 : page_top_frame,
+                         "bottom"              : page_bottom_frame,
 			 "filter"              : page_main, # for users of multiadmin
 			 "edit_views"          : views.page_edit_views,
 			 "edit_view"           : views.page_edit_view,
@@ -229,12 +231,25 @@ def page_index(html):
  <title>Check_MK Multisite</title>
  <link rel="shortcut icon" href="images/favicon.ico" type="image/ico">
 </head>
-<frameset cols="200,*">
- <frame src="side.py" name="side" frameborder="0">
- <frame src="main.py" name="main" frameborder="0">
-</frameset>
+<frameset cols="200,*" frameborder="0" framespacing="0" border="0">
+    <frame src="side.py" name="side" noresize scrolling=no>
+    <frameset rows="20,*,20" frameborder="0" framespacing="0" border="0">
+        <frame src="top.py" name="top" noresize scrolling=no>
+        <frame src="main.py" name="main" noresize>
+        <frame src="bottom.py" name="top" noresize scrolling=no>
+    </frameset>
 </html>
 """) 
+
+def page_top_frame(html):
+    html.html_head('Multisite top frame')
+    html.write("<body class=top>TOP</body>\n")
+    html.html_foot()
+
+def page_bottom_frame(html):
+    html.html_head('Multisite top frame')
+    html.write("<body class=bottom>BOTTOM</body>\n")
+    html.html_foot()
 
 def page_main(html):
     html.header("Check_MK Multisite")

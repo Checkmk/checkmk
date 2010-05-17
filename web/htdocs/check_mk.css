@@ -4,7 +4,7 @@ td {
 }
 
 
-body.page {
+body.top, body.page, body.bottom {
   background-color: #97a8ab;
   background-image: url("images/background.jpg");
   background-repeat: repeat;

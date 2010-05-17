@@ -23,6 +23,17 @@ nämlich mit Logclasses. Dann views bauen und einen Filter auf
 einen Zeitraum (Heute, diese Woche, letzte 30 Tage, usw.).
 Evtl. noch einen Filter mit Datumseingabe.
 
+Ueberall wo sinnvoll refresh einbauen.
+
+Host-Status: IP-Adresse fehlt (und evtl. weitere Daten, siehe
+Nagios GUI)
+
+View editieren: Im Try-Out-Modus sollte nur der Filter-Button
+kommen, nicht "Edit this view" und auch nicht "Commands"
+Auch darf kein Refresh verwendet werden.
+
+View editor: Wenn man keine Display columns ausgewaehlt
+hat, dann sollte eine Fehlermeldung kommen.
 
 --------------------------------------------------------------------------------
 BUGS

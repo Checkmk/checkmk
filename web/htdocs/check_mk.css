@@ -178,7 +178,7 @@ table.navi {
     /* border: 1px solid white; */
     /* padding: 10px; */
 }
-a.navi {
+a.navi, a.viewoption {
     border-style: solid;
     border-color: #fff;
     border-width: 1px;
@@ -200,6 +200,19 @@ a.navi {
     white-space: nowrap;
     text-align: center;
     vertical-align: middle;
+}
+
+a.viewoption {
+    background-color: transparent;
+}
+a.viewoption.columns {
+    width: 20px;
+}
+a.viewoption.refresh {
+    width: 30px;
+}
+a.viewoption.selected, a.viewoption:hover {
+    background-color: #ace;
 }
 
 div.naviend {

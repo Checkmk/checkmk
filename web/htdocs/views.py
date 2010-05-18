@@ -855,8 +855,13 @@ def show_view(view, show_heading = False):
 
     # [2] Layout
     layout = multisite_layouts[view["layout"]]
-    num_columns = view.get("num_columns", 1)
-    browser_reload = view.get("browser_reload", 0)
+
+    # User can override the layout settings via HTML variables (buttons)
+    # which are safed persistently. This is known as "view options"
+    vo = view_options(view["name"])
+    num_columns = vo.get("num_columns", view.get("num_columns", 1))
+    browser_reload = vo.get("refresh", view.get("browser_reload", None))
+
     if browser_reload:
         html.set_browser_reload(browser_reload)
     
@@ -946,12 +951,34 @@ def show_view(view, show_heading = False):
     if len(rows) > 0 and config.may("act") and not html.do_actions():
         toggle_button("table_actions", False, "Show commands", "Hide commands")
 
+    # Buttons for view options
+    if config.user_may(config.user, "view_option_columns"):
+        for col in config.view_option_columns:
+            uri = html.makeuri([("num_columns", col)])
+            if col == num_columns:
+                addclass = " selected"
+            else:
+                addclass = ""
+            html.write("<a class=\"viewoption columns %s\" href=\"%s\">%s</a>" % (addclass, uri, col))
+
+    if config.user_may(config.user, "view_option_refresh"):
+        for ref in config.view_option_refreshes:
+            uri = html.makeuri([("refresh", ref)])
+            if ref == browser_reload or (not ref and not browser_reload):
+                addclass = " selected"
+            else:
+                addclass = ""
+            if ref:
+                reftext = "%d s" % ref
+            else:
+                reftext = "&#8734;"
+            html.write("<a class=\"viewoption refresh %s\" href=\"%s\">%s</a>" % (addclass, uri, reftext))
+
     html.write("</td></tr></table>\n")
 
     # Filter form
     if len(show_filters) > 0 and not html.do_actions():
 	show_filter_form(filter_isopen, show_filters)
-
 
     # Actions
     has_done_actions = False
@@ -993,6 +1020,35 @@ def show_view(view, show_heading = False):
     for sitename, info in html.live.deadsites.items():
 	html.show_error("<b>%s - Livestatus error</b><br>%s" % (info["site"]["alias"], info["exception"]))
 
+def view_options(viewname):
+    vo = config.load_user_file("viewoptions", {})
+    v = vo.get(viewname, {})
+    must_save = False
+    if config.user_may(config.user, "view_option_refresh"):
+        if html.has_var("refresh"):
+            try:
+                v["refresh"] = int(html.var("refresh"))
+            except:
+                v["refresh"] = None
+            must_save = True
+    elif "refresh" in v:
+        del v["refresh"]
+
+    if config.user_may(config.user, "view_option_columns"):
+        if html.has_var("num_columns"):
+            try:
+                v["num_columns"] = max(1, int(html.var("num_columns")))
+            except:
+                v["num_columns"] = 1
+            must_save = True
+    elif "num_columns" in v:
+        del v["num_columns"]
+
+    if must_save:
+        vo[viewname] = v
+        config.save_user_file("viewoptions", vo)
+    return v
+        
 
 def play_alarm_sounds():
     url = config.sound_url

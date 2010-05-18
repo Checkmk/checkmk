@@ -151,15 +151,3 @@ Eigenschaften wie Gruppen, etc werden eicht berücksichtigt. Gleiches gilt
 für Servicegruppen. Man sollte daher die Funktion extra_service_conf_of()
 so erweitern, dass *alles* Nagios-Attribute agbefrühstückt werden.
 
-Multisite: Bei den Views direkt per Knopf Viewoptionen zulassen:
-* Anzahl der Spalten => über eine Reihe von Knöpfen
-* Refresh => über eine Reihe von Knöpfen: [10] [30] [60] [90] [5min] [aus]
-* Layout => über ein Dropdownmenü
-Die Einstellungen sollen pro Benutzer und view unter viewoptions.mk 
-gespeichert werden. Sie haben immer Vorrang vor den Einstellungen
-in der View selbst. Das ganze soll über Berechtigungen steuerbar
-sein, und zwar getrennt für Spalten, Refresh und Layout. Die Berechtigungen
-nicht nur auf das Anzeigen der Knöpfe und das Auswerten der HTML-Variablen
-anwenden, sondern auch darauf, ob die aus Viewoptions.mk geladenen
-Optionen verwendet werden sollen. Tobi sagen, dass ich dafür im 
-Layout Platz brauche.

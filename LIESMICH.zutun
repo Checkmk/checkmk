@@ -1,6 +1,9 @@
 --------------------------------------------------------------------------------
 NOCH INS RELEASE 1.1.5
 --------------------------------------------------------------------------------
+Aenderung an default_user_role in multisite.mk erfordert
+Apache-Neustart.
+
 Bei Check_MK -U nach "Precompiling Hostcheck..." ein
 flush auf stdout machen. Evtl. einen Punkt pro Hostcheck
 ausgeben.
@@ -34,6 +37,12 @@ Auch darf kein Refresh verwendet werden.
 
 View editor: Wenn man keine Display columns ausgewaehlt
 hat, dann sollte eine Fehlermeldung kommen.
+
+--------------------------------------------------------------------------------
+INS RELEASE 1.2
+--------------------------------------------------------------------------------
+check_mk -X erzwingen. Das -R soll nur noch klappen, wenn kein Configfehler
+auftritt.
 
 --------------------------------------------------------------------------------
 BUGS

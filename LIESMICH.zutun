@@ -4,10 +4,6 @@ NOCH INS RELEASE 1.1.5
 Aenderung an default_user_role in multisite.mk erfordert
 Apache-Neustart.
 
-Bei Inventur check_mk -I ntp werden auch die SNMP-Geraete abgefragt?
-Werden die nur bei -I tcp ausgeklammert? Sollte nicht sein, sonst
-bekommen wir viele Timeouts.
-
 Quicksearch: Das Dropdown bleibt recht oft auf, obwohl man schon einen
 Host ausgewählt hat.
 
@@ -19,9 +15,6 @@ nämlich mit Logclasses. Dann views bauen und einen Filter auf
 einen Zeitraum (Heute, diese Woche, letzte 30 Tage, usw.).
 Evtl. noch einen Filter mit Datumseingabe.
 
-Host-Status: IP-Adresse fehlt (und evtl. weitere Daten, siehe
-Nagios GUI)
-
 View editieren: Im Try-Out-Modus sollte nur der Filter-Button
 kommen, nicht "Edit this view" und auch nicht "Commands"
 Auch darf kein Refresh verwendet werden.
@@ -29,9 +22,17 @@ Auch darf kein Refresh verwendet werden.
 View editor: Wenn man keine Display columns ausgewaehlt
 hat, dann sollte eine Fehlermeldung kommen.
 
+Nuvola Icons einbauen.
+
+Layout von Tobi umsetzen
+
 --------------------------------------------------------------------------------
 INS RELEASE 1.2
 --------------------------------------------------------------------------------
+Bei Inventur check_mk -I ntp werden auch die SNMP-Geraete abgefragt?
+Werden die nur bei -I tcp ausgeklammert? Sollte nicht sein, sonst
+bekommen wir viele Timeouts.
+
 check_mk -X erzwingen. Das -R soll nur noch klappen, wenn kein Configfehler
 auftritt.
 

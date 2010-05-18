@@ -192,6 +192,12 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than):
 	age_class = "age"
     return age_class, prefix + html.age_text(age)
 
+def paint_future_time(timestamp):
+    if timestamp <= 0:
+        return "", "-"
+    else:
+        return paint_age(timestamp, True, 0)
+
 def paint_site_icon(row):
     if row["site"] and config.use_siteicons:
 	return None, "<img class=siteicon src=\"icons/site-%s-24.png\">" % row["site"]
@@ -251,13 +257,6 @@ multisite_painters["service_state"] = {
     "paint" : paint_service_state_short
 }
 
-multisite_painters["host_state"] = {
-    "title" : "Host state",
-    "short" : "state",
-    "columns" : ["host_has_been_checked","host_state"],
-    "paint" : paint_host_state_short
-}
-
 multisite_painters["site_icon"] = {
     "title" : "Icon showing the site",
     "short" : "",
@@ -285,12 +284,6 @@ multisite_painters["svc_contacts"] = {
     "paint" : lambda row: (None, ", ".join(row["service_contacts"]))
 }
 
-multisite_painters["host_plugin_output"] = {
-    "title" : "Output of host check plugin",
-    "short" : "Status detail",
-    "columns" : ["host_plugin_output"],
-    "paint" : lambda row: (None, row["host_plugin_output"])
-}
 multisite_painters["service_description"] = {
     "title" : "Service description",
     "short" : "Service",
@@ -379,6 +372,90 @@ multisite_painters["svc_pnpgraph" ] = {
 #  |_| |_|\___/|___/\__|___/
 #                           
 
+multisite_painters["host_state"] = {
+    "title" : "Host state",
+    "short" : "state",
+    "columns" : ["host_has_been_checked","host_state"],
+    "paint" : paint_host_state_short
+}
+
+multisite_painters["host_plugin_output"] = {
+    "title" : "Output of host check plugin",
+    "short" : "Status detail",
+    "columns" : ["host_plugin_output"],
+    "paint" : lambda row: (None, row["host_plugin_output"])
+}
+
+multisite_painters["host_perfdata"] = {
+    "title" : "Host performance data",
+    "short" : "Performance data",
+    "columns" : ["host_perf_data"],
+    "paint" : lambda row: (None, row["host_perf_data"])
+}
+
+multisite_painters["host_state_age"] = {
+    "title" : "The age of the current host state",
+    "short" : "Age",
+    "columns" : [ "host_has_been_checked", "host_last_state_change" ],
+    "paint" : lambda row: paint_age(row["host_last_state_change"], row["host_has_been_checked"] == 1, 60 * 10)
+}
+
+multisite_painters["host_check_age"] = {
+    "title" : "The time since the last check of the host",
+    "short" : "Checked",
+    "columns" : [ "host_has_been_checked", "host_last_check" ],
+    "paint" : lambda row: paint_age(row["host_last_check"], row["host_has_been_checked"] == 1, 0)
+}
+
+multisite_painters["host_next_check"] = {
+    "title" : "The time of the next scheduled host check",
+    "short" : "Next check",
+    "columns" : [ "host_next_check" ],
+    "paint" : lambda row: paint_future_time(row["host_next_check"])
+}
+
+multisite_painters["host_next_notification"] = {
+    "title" : "The time of the next host notification",
+    "short" : "Next notification",
+    "columns" : [ "host_next_notification" ],
+    "paint" : lambda row: paint_future_time(row["host_next_notification"])
+}
+
+multisite_painters["host_last_notification"] = {
+    "title" : "The time of the last host notification",
+    "short" : "last notification",
+    "columns" : [ "host_last_notification" ],
+    "paint" : lambda row: paint_age(row["host_last_notification"], row["host_last_notification"], 0)
+}
+
+multisite_painters["host_check_latency"] = {
+    "title" : "Host check latency",
+    "short" : "Latency",
+    "columns" : [ "host_latency" ],
+    "paint" : lambda row: ("", "%.3f sec" % row["host_latency"])
+}
+
+multisite_painters["host_check_duration"] = {
+    "title" : "Host check duration",
+    "short" : "Duration",
+    "columns" : [ "host_execution_time" ],
+    "paint" : lambda row: ("", "%.3f sec" % row["host_execution_time"])
+}
+
+multisite_painters["host_attempt"] = {
+    "title" : "Current host check attempt",
+    "short" : "Att.",
+    "columns" : [ "host_current_attempt", "host_max_check_attempts" ],
+    "paint" : lambda row: (None, "%d/%d" % (row["host_current_attempt"], row["host_max_check_attempts"]))
+}
+
+multisite_painters["host_check_type"] = {
+    "title" : "Host check type",
+    "short" : "Type",
+    "columns" : [ "host_check_type" ],
+    "paint" : lambda row: (None, row["host_check_type"] == 0 and "ACTIVE" or "PASSIVE")
+}
+
 multisite_painters["host_pnpgraph" ] = {
     "title"   : "PNP host graph",
     "short"   : "PNP graph",
@@ -447,7 +524,7 @@ multisite_painters["alias"] = {
     "paint" : lambda row: ("", row["host_alias"])
 }
 
-multisite_painters["hostaddress"] = {
+multisite_painters["host_address"] = {
     "title" : "Host IP address",
     "short" : "IP address",
     "columns" : ["host_address"],
@@ -519,6 +596,61 @@ multisite_painters["num_services_pending"] = {
     "paint"   : lambda row: paint_svc_count("p", row["host_num_services_pending"])
 }
 
+def paint_service_list(row, columnname):
+    h = "<div class=objectlist>"
+    for entry in row[columnname]:
+        if columnname.startswith("servicegroup"):
+	    host, svc, state, checked = entry
+	    text = host + " ~ " + svc
+	else:
+	    svc, state, checked = entry
+	    host = row["host_name"]
+	    text = svc
+        link = "view.py?view_name=service&site=%s&host=%s&service=%s" % (
+		htmllib.urlencode(row["site"]),
+		htmllib.urlencode(host),
+		htmllib.urlencode(svc))
+	if checked:
+	    css = "state%d" % state
+	else:
+	    css = "statep"
+	h += "<div class=\"%s\"><a href=\"%s\">%s</a></div>" % (css, link, text) 
+    h += "</div>"
+    return "", h
+
+multisite_painters["host_services"] = {
+    "title"   : "Services colored according to state",
+    "short"   : "Services",
+    "columns" : [ "host_name", "host_services_with_state" ],
+    "paint"   : lambda row: paint_service_list(row, "host_services_with_state")
+}
+
+def paint_host_list(site, hosts):
+    h = ""
+    first = True
+    for host in hosts:
+        if first:
+            first = False
+        else:
+            h += ", "
+        link = "view.py?view_name=hoststatus&site=%s&host=%s" % (htmllib.urlencode(site), htmllib.urlencode(host))
+	h += "<a href=\"%s\">%s</a></div>" % (link, host) 
+    return "", h
+
+multisite_painters["host_parents"] = {
+    "title"   : "Host's parents",
+    "short"   : "Parents",
+    "columns" : [ "host_parents" ],
+    "paint"   : lambda row: paint_host_list(row["site"], row["host_parents"])
+}
+
+multisite_painters["host_childs"] = {
+    "title"   : "Host's childs",
+    "short"   : "childs",
+    "columns" : [ "host_childs" ],
+    "paint"   : lambda row: paint_host_list(row["site"], row["host_childs"])
+}
+
 def paint_host_group_memberlist(row):
     links = []
     for group in row["host_groups"]:
@@ -540,7 +672,7 @@ multisite_painters["host_group_memberlist"] = {
 #   |_| |_|\___/|___/\__\__, |_|  \___/ \__,_| .__/|___/
 #                       |___/                |_|        
 #
-def paint_host_list(row):
+def paint_hg_host_list(row):
     h = "<div class=objectlist>"
     for host, state, checked in row["hostgroup_members_with_state"]:
         link = "view.py?view_name=host&site=%s&host=%s" % (
@@ -558,7 +690,7 @@ multisite_painters["hostgroup_hosts"] = {
     "title"   : "Hosts colored according to state",
     "short"   : "Hosts",
     "columns" : [ "hostgroup_members_with_state" ],
-    "paint"   : paint_host_list,
+    "paint"   : paint_hg_host_list,
 }
 
 multisite_painters["hg_num_services"] = {
@@ -639,34 +771,6 @@ multisite_painters["hg_alias"] = {
     "paint" : lambda row: (None, row["hostgroup_alias"])
 }
 
-def paint_service_list(row, columnname):
-    h = "<div class=objectlist>"
-    for entry in row[columnname]:
-        if columnname.startswith("servicegroup"):
-	    host, svc, state, checked = entry
-	    text = host + " ~ " + svc
-	else:
-	    svc, state, checked = entry
-	    host = row["host_name"]
-	    text = svc
-        link = "view.py?view_name=service&site=%s&host=%s&service=%s" % (
-		htmllib.urlencode(row["site"]),
-		htmllib.urlencode(host),
-		htmllib.urlencode(svc))
-	if checked:
-	    css = "state%d" % state
-	else:
-	    css = "statep"
-	h += "<div class=\"%s\"><a href=\"%s\">%s</a></div>" % (css, link, text) 
-    h += "</div>"
-    return "", h
-
-multisite_painters["host_services"] = {
-    "title"   : "Services colored according to state",
-    "short"   : "Services",
-    "columns" : [ "host_name", "host_services_with_state" ],
-    "paint"   : lambda row: paint_service_list(row, "host_services_with_state")
-}
 #    ____                  _                                          
 #   / ___|  ___ _ ____   _(_) ___ ___  __ _ _ __ ___  _   _ _ __  ___ 
 #   \___ \ / _ \ '__\ \ / / |/ __/ _ \/ _` | '__/ _ \| | | | '_ \/ __|

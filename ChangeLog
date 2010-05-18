@@ -7,6 +7,7 @@ tobi:
     * Grab & Move for sidebar scrolling (thanks to Lars)
     * Filter out summary hosts in most views.
     * Set browser refresh to 30 secs for most views
+    * View host status: added a lot of missing information
 
 1.1.5i2:
      Core, Setup, etc.:

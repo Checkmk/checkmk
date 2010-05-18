@@ -5,6 +5,7 @@ tobi:
     * New page for adding sidebar snapins
     * Drag & Drop for sidebar snapins (thanks to Lars)
     * Grab & Move for sidebar scrolling (thanks to Lars)
+    * Filter out summary hosts in most views.
 
 1.1.5i2:
      Core, Setup, etc.:

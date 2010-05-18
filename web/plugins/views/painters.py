@@ -131,7 +131,7 @@ def paint_icons(what, row): # what is "host" or "service"
 
 
     if not row[prefix + "in_notification_period"]:
-        output += '<img class=icon title="Out of notification period" src="images/icon_moon.gif">'
+        output += '<img class=icon title="Out of notification period" src="images/icon_outofnot.gif">'
 
     return "icons", output
 

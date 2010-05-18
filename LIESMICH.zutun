@@ -19,8 +19,6 @@ nämlich mit Logclasses. Dann views bauen und einen Filter auf
 einen Zeitraum (Heute, diese Woche, letzte 30 Tage, usw.).
 Evtl. noch einen Filter mit Datumseingabe.
 
-Ueberall wo sinnvoll refresh einbauen.
-
 Host-Status: IP-Adresse fehlt (und evtl. weitere Daten, siehe
 Nagios GUI)
 

@@ -6,6 +6,7 @@ tobi:
     * Drag & Drop for sidebar snapins (thanks to Lars)
     * Grab & Move for sidebar scrolling (thanks to Lars)
     * Filter out summary hosts in most views.
+    * Set browser refresh to 30 secs for most views
 
 1.1.5i2:
      Core, Setup, etc.:

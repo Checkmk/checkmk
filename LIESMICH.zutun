@@ -66,6 +66,11 @@ snmp_communities: dictionary nicht mehr verwenden, aus Doku raus, Defaultwert
 leere Liste, aus Code raus, Hinweis im ChangeLog. Evtl einen Test mit
 Abbruch, wenn immer noch type ist dict.
 
+bulkwalk_hosts: Hier ist der Default None und nicht []. Problem dabei
+ist, dass dann ein += nicht funktioniert. Kann man nicht non_bulkwalk_hosts
+ganz rausschmeissen und bulkwalk_hosts auf [] setzen? Ausserdem gibt
+es ja fuer binaere Hostlisten das NEGATE (=> Doku). In 1.2 einbauen.
+
 --------------------------------------------------------------------------------
 IDEEN & VERBESSERUNGEN
 --------------------------------------------------------------------------------

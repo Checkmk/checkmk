@@ -594,7 +594,10 @@ function toggle_section(nr, oImg) {
     def column_selection(id, title, var_prefix, maxnum, data, order=False):
 	allowed = allowed_for_datasource(data, datasourcename)
 	section_header(id, title)
-	for n in range(1, maxnum+1):
+        # make sure, at least 3 selection boxes are free for new columns
+        while html.has_var("%s%d" % (var_prefix, maxnum - 2)):
+            maxnum += 1
+	for n in range(1, maxnum + 1):
 	    collist = [ ("", "") ] + [ (name, p["title"]) for name, p in allowed.items() ]
 	    html.write("%02d " % n)
 	    html.sorted_select("%s%d" % (var_prefix, n), collist)

@@ -8,6 +8,7 @@ tobi:
     * Filter out summary hosts in most views.
     * Set browser refresh to 30 secs for most views
     * View host status: added a lot of missing information
+    * Make sure, enough columns can be selected in view editor
 
 1.1.5i2:
      Core, Setup, etc.:

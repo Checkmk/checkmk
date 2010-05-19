@@ -1,9 +1,14 @@
 1.1.5i2:
+     Core, Setup, etc.:
+     * install_nagios.sh: add missing package php5-iconv for SLES11
+
      Checks & Agents:
      * if64: new SNMP check for network interfaces. Like if, but uses 64 bit
        counters of modern switches. You might need to configure bulkwalk_hosts.
      * Linux agent: option -d enabled debug output
      * Linux agent: fix ipmi-sensors cache corruption detection
+     * New check for temperature on Cisco devices (cisco_3640_temp)
+
 
      Multisite:
      * Filters for groups are negateble.

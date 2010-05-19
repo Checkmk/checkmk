@@ -8,7 +8,8 @@
      * Linux agent: option -d enabled debug output
      * Linux agent: fix ipmi-sensors cache corruption detection
      * New check for temperature on Cisco devices (cisco_3640_temp)
-
+     * recompiled waitmax with dietlibc (fixed incompatibility issues
+       on older systems)
 
      Multisite:
      * Filters for groups are negateble.

@@ -304,6 +304,41 @@ multisite_painters["svc_check_age"] = {
     "paint" : lambda row: paint_age(row["service_last_check"], row["service_has_been_checked"] == 1, 0)
 }
 
+multisite_painters["svc_next_check"] = {
+    "title" : "The time of the next scheduled service check",
+    "short" : "Next check",
+    "columns" : [ "service_next_check" ],
+    "paint" : lambda row: paint_future_time(row["service_next_check"])
+}
+
+multisite_painters["svc_next_notification"] = {
+    "title" : "The time of the next service notification",
+    "short" : "Next notification",
+    "columns" : [ "service_next_notification" ],
+    "paint" : lambda row: paint_future_time(row["service_next_notification"])
+}
+
+multisite_painters["svc_last_notification"] = {
+    "title" : "The time of the last service notification",
+    "short" : "last notification",
+    "columns" : [ "service_last_notification" ],
+    "paint" : lambda row: paint_age(row["service_last_notification"], row["service_last_notification"], 0)
+}
+
+
+multisite_painters["svc_check_latency"] = {
+    "title" : "Service check latency",
+    "short" : "Latency",
+    "columns" : [ "service_latency" ],
+    "paint" : lambda row: ("", "%.3f sec" % row["service_latency"])
+}
+
+multisite_painters["svc_check_duration"] = {
+    "title" : "Service check duration",
+    "short" : "Duration",
+    "columns" : [ "service_execution_time" ],
+    "paint" : lambda row: ("", "%.3f sec" % row["service_execution_time"])
+}
 multisite_painters["svc_attempt"] = {
     "title" : "Current check attempt",
     "short" : "Att.",
@@ -311,6 +346,12 @@ multisite_painters["svc_attempt"] = {
     "paint" : lambda row: (None, "%d/%d" % (row["service_current_attempt"], row["service_max_check_attempts"]))
 }
 
+multisite_painters["svc_check_type"] = {
+    "title" : "Service check type",
+    "short" : "Type",
+    "columns" : [ "service_check_type" ],
+    "paint" : lambda row: (None, row["service_check_type"] == 0 and "ACTIVE" or "PASSIVE")
+}
 def paint_nagiosflag(row, field, bold_if_nonzero):
     value = row[field]
     yesno = {True:"yes", False:"no"}[value != 0]
@@ -343,6 +384,20 @@ multisite_painters["svc_flapping"] = {
     "short" : "flap",
     "columns" : [ "service_is_flapping" ],
     "paint" : lambda row: paint_nagiosflag(row, "service_is_flapping", True)
+}
+
+def paint_service_group_memberlist(row):
+    links = []
+    for group in row["service_groups"]:
+        link = "view.py?view_name=servicegroup&servicegroup=" + group
+        links.append('<a href="%s">%s</a>' % (link, group))
+    return "", ", ".join(links)
+
+multisite_painters["svc_group_memberlist"] = {
+    "title"   : "Servicegroups the service is member of",
+    "short"   : "Groups",
+    "columns" : [ "service_groups" ],
+    "paint"   : paint_service_group_memberlist
 }
 
 # PNP Graphs
@@ -386,7 +441,7 @@ multisite_painters["host_plugin_output"] = {
     "paint" : lambda row: (None, row["host_plugin_output"])
 }
 
-multisite_painters["host_perfdata"] = {
+multisite_painters["host_perf_data"] = {
     "title" : "Host performance data",
     "short" : "Performance data",
     "columns" : ["host_perf_data"],
@@ -456,6 +511,25 @@ multisite_painters["host_check_type"] = {
     "paint" : lambda row: (None, row["host_check_type"] == 0 and "ACTIVE" or "PASSIVE")
 }
 
+multisite_painters["host_in_downtime"] = {
+    "title" : "Host currently in downtime",
+    "short" : "Dt.",
+    "columns" : [ "host_scheduled_downtime_depth" ],
+    "paint" : lambda row: paint_nagiosflag(row, "host_scheduled_downtime_depth", True)
+}
+multisite_painters["host_in_notifper"] = {
+    "title" : "Host in notification period",
+    "short" : "in notif. p.",
+    "columns" : [ "host_in_notification_period" ],
+    "paint" : lambda row: paint_nagiosflag(row, "host_in_notification_period", False)
+}
+multisite_painters["host_notifper"] = {
+   "title" : "Host notification period",
+   "short" : "notif.",
+   "columns" : [ "host_notification_period" ],
+   "paint" : lambda row: (None, row["host_notification_period"])
+}
+      
 multisite_painters["host_pnpgraph" ] = {
     "title"   : "PNP host graph",
     "short"   : "PNP graph",

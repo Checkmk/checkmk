@@ -8,6 +8,7 @@ tobi:
     * Filter out summary hosts in most views.
     * Set browser refresh to 30 secs for most views
     * View host status: added a lot of missing information
+    * View service status: also added information here
     * Make sure, enough columns can be selected in view editor
     * Allow user to change num columns and refresh directly in view
 

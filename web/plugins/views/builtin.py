@@ -1030,7 +1030,7 @@ multisite_builtin_views = {
                'num_columns': 1,
                'owner': '',
                'painters': [('host', 'hoststatus'),
-                            ('hostaddress', None),
+                            ('host_address', None),
                             ('host_icons', None),
                             ('num_services', 'host'),
                             ('num_problems', 'problemsofhost'),

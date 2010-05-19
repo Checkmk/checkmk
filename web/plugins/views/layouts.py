@@ -35,16 +35,25 @@
 # -------------------------------------------------------------------------
 def render_single_dataset(data, view, group_columns, group_painters, painters, num_columns):
     columns, rows = data
-    # I'm expecting only one row
     for row in rows:
         register_events(row) # needed for playing sounds
-	html.write("<table class=dataset>\n")
+
+    html.write("<table class=dataset>\n")
+    rownum = 0
+    while rownum < len(rows):
+        if rownum > 0:
+            html.write("<tr class=gap><td class=gap colspan=%d></td></tr>\n" % (1 + num_columns))
+        thispart = rows[rownum:rownum + num_columns]
 	for p in painters:
 	    painter, link = p
-	    html.write("<tr><td class=left>%s</td>" % painter["title"])
-	    paint(p, row)
+            html.write("<tr class=data><td class=left>%s</td>" % painter["title"])
+            for row in thispart:
+	        paint(p, row)
+            if len(thispart) < num_columns:
+                html.write("<td class=gap style=\"border-style: none;\" colspan=%d></td>" % (1 + num_columns - len(thispart)))
 	    html.write("</tr>\n")
-	html.write("</table>\n")
+        rownum += num_columns
+    html.write("</table>\n")
 
 multisite_layouts["dataset"] = { 
     "title"  : "Single dataset",

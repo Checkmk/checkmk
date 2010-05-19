@@ -1361,9 +1361,14 @@ table.dataset {
     empty-cells: show;
     margin-bottom: 15px;
     margin-top: 11px;
+    width: 100%;
+}
+
+table.dataset tr.data {
     background-color: #eee;
-    /* width: 100%; */
-    /* border: 1px solid #356; */
+}
+table.dataset tr.gap {
+    background-color: transparent;
 }
 
 table.dataset td {
@@ -1377,6 +1382,13 @@ table.dataset td.left {
     padding-right: 10px;
     color: white;
     background-color: #888;
+    width: 10%;
+    white-space: nowrap;
+}
+table.dataset td.gap {
+    background-color: transparent;
+    border-left-style: none;
+    border-right-style: none;
 }
 
 /* page for adding snapins */

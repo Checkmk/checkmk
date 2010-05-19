@@ -12,8 +12,6 @@ bekommen wir viele Timeouts.
 Quicksearch: Das Dropdown bleibt recht oft auf, obwohl man schon einen
 Host ausgewählt hat.
 
-Quicksearch: geht gerade nicht.
-
 Views: Überall wo nicht sinnvoll die Summary hosts entfernen (z.B.
 bei Problems, All hosts, etc.)
 
@@ -68,12 +66,18 @@ snmp_communities: dictionary nicht mehr verwenden, aus Doku raus, Defaultwert
 leere Liste, aus Code raus, Hinweis im ChangeLog. Evtl einen Test mit
 Abbruch, wenn immer noch type ist dict.
 
-Multisite: Bei Änderungen an der Konfigdatei (debug) muss man komischerweise
-Apache neu starten....
+bulkwalk_hosts: Hier ist der Default None und nicht []. Problem dabei
+ist, dass dann ein += nicht funktioniert. Kann man nicht non_bulkwalk_hosts
+ganz rausschmeissen und bulkwalk_hosts auf [] setzen? Ausserdem gibt
+es ja fuer binaere Hostlisten das NEGATE (=> Doku). In 1.2 einbauen.
 
 --------------------------------------------------------------------------------
 IDEEN & VERBESSERUNGEN
 --------------------------------------------------------------------------------
+Multisite: view "recent Service changes", die Services zeigt, die kuerzlich
+den Status geändert haben. Dazu Filter über Zeit bauen. Diesen Filter 
+nicht Hartkodieren sondern mit "Show to user" aber sinnvoll vorbefüllt.
+
 Multisite: icons: das Erkennen der modified_attributes
 funktioniert nur halb: Wenn man den Ausgangswert wiederherstellt,
 bleibt das Attribut trotzdem modified...
@@ -107,7 +111,7 @@ Doku Windows:
 
 Die Option -d verwendet --cache nicht.
 
-Searcher für last_checked
+Filter für last_checked und last_state_change
 
 Anstelle der Pipe direkt checkresults-Dateien schreiben
 
@@ -140,5 +144,15 @@ Eigenschaften wie Gruppen, etc werden eicht berücksichtigt. Gleiches gilt
 für Servicegruppen. Man sollte daher die Funktion extra_service_conf_of()
 so erweitern, dass *alles* Nagios-Attribute agbefrühstückt werden.
 
-Check ps (Linux) mit Uberwachung von MEM (Resident) und CPU.
-
+Multisite: Bei den Views direkt per Knopf Viewoptionen zulassen:
+* Anzahl der Spalten => über eine Reihe von Knöpfen
+* Refresh => über eine Reihe von Knöpfen: [10] [30] [60] [90] [5min] [aus]
+* Layout => über ein Dropdownmenü
+Die Einstellungen sollen pro Benutzer und view unter viewoptions.mk 
+gespeichert werden. Sie haben immer Vorrang vor den Einstellungen
+in der View selbst. Das ganze soll über Berechtigungen steuerbar
+sein, und zwar getrennt für Spalten, Refresh und Layout. Die Berechtigungen
+nicht nur auf das Anzeigen der Knöpfe und das Auswerten der HTML-Variablen
+anwenden, sondern auch darauf, ob die aus Viewoptions.mk geladenen
+Optionen verwendet werden sollen. Tobi sagen, dass ich dafür im 
+Layout Platz brauche.

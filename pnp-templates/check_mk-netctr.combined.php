@@ -37,14 +37,16 @@
 #
 $x = explode("_", $servicedesc);
 $nic = $x[1];
-$opt[1] = "--vertical-label 'Bytes/s' -l0 -u1048576  --title \"$hostname / NIC $nic\" ";
-#
+$opt[1] = "--vertical-label 'Bytes/s' -l -1024 -u 1024 --title \"$hostname / NIC $nic\" ";
+# -l0 -u1048576  
 #
 #
 $def[1] =  "DEF:rx_bytes=$rrdfile:$DS[1]:AVERAGE " ;
+# $def[1] =  "DEF:rx_bytes=/var/lib/nagios/pnp/localhost/NIC_eth0.rrd:rxbytes:AVERAGE " ;
 $def[1] .= "DEF:tx_bytes=$rrdfile:$DS[2]:AVERAGE " ;
 $def[1] .= "CDEF:rx_mb=rx_bytes,1048576.0,/ " ;
 $def[1] .= "CDEF:tx_mb=tx_bytes,1048576.0,/ " ;
+$def[1] .= "CDEF:tx_bytes_neg=0,tx_bytes,- ";
 #$def[1] .= "CDEF:rx_mb=rx_bytes,1.0,/ " ;
 #$def[1] .= "CDEF:tx_mb=tx_bytes,1.0,/ " ;
 $def[1] .= "DEF:rx_errors=$rrdfile:$DS[5]:MAX " ;
@@ -56,9 +58,10 @@ $def[1] .= "CDEF:problems=problems_x,1000000,* "; # Skaliere Probleme hoch, dami
 
 $def[1] .= "AREA:problems#ff0000:\"Errors \" " ;
 $def[1] .= "GPRINT:problems:LAST:\"%.0lf/s\" " ;
-$def[1] .= "LINE:rx_bytes#2060a0:\"Receive \" " ;
+$def[1] .= "AREA:rx_bytes#20a020:\"Receive \" " ;
 $def[1] .= "GPRINT:rx_mb:LAST:\"%.2lfMB/s\" " ;
-$def[1] .= "LINE:tx_bytes#60a020:\"Transmit \" " ;
+$def[1] .= "AREA:tx_bytes_neg#0060a0:\"Transmit \" " ;
+$def[1] .= "HRULE:0#c0c0c0 ";
 $def[1] .= "GPRINT:tx_mb:LAST:\"%.2lfMB/s\" " ;
 
 ?>

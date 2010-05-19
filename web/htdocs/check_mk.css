@@ -15,6 +15,7 @@ body.main, body.bottom {
   background-position: -420px 0px;
   margin: 0px;
   padding: 0px;
+  padding-right: 12px;
   font-family: arial, helvetica, sans-serif;
   font-size: 9pt;
 }
@@ -1353,27 +1354,29 @@ background-color: #BFBFBF;
 
 /* layout dataset */
 table.dataset {
-    border-spacing: 0px;
+    border-spacing: 1px;
     margin: 0px;
     padding: 0px;
     border-collapse: collapse;
     empty-cells: show;
-    background-color: #fec;
     margin-bottom: 15px;
-    border: 1px solid #840;
     margin-top: 11px;
+    background-color: #eee;
+    /* width: 100%; */
+    /* border: 1px solid #356; */
 }
 
 table.dataset td {
-    border-bottom: 1px dotted #840;
     padding-bottom: 4px;
     padding: 1px 10px 5px 10px;
+    text-align: left;
+    vertical-align: middle;
+    border: 1px solid #bbb;
 }
 table.dataset td.left {
     padding-right: 10px;
-    color: #fec;
-    background-color: #840;
-    border-color: #fec;
+    color: white;
+    background-color: #888;
 }
 
 /* page for adding snapins */

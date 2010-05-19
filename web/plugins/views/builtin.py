@@ -173,7 +173,7 @@ multisite_builtin_views = {
                              ('site_host', False),
                              ('svcdescr', False)],
                  'title': 'All services',
-              'topic': "Services"},
+              'topic': 'Services'},
  'comments': {'column_headers': 'perpage',
               'datasource': 'comments',
               'description': 'All host- and service comments',

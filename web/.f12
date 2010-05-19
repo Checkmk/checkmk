@@ -1,3 +1,4 @@
 sudo rsync -varx --delete --exclude=defaults.py htdocs plugins /usr/share/check_mk/web/ 
 sudo /etc/init.d/apache2 restart
+#sudo /etc/init.d/apache2 reload
 

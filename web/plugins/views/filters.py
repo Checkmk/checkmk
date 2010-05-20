@@ -87,10 +87,13 @@ class FilterGroupCombo(Filter):
     def __init__(self, what, enforce):
 	self.enforce = enforce
 	self.prefix = not self.enforce and "opt" or ""
+        htmlvars = [ self.prefix + what + "group" ]
+        if not enforce:
+            htmlvars.append("neg_" + htmlvars[0])
 	Filter.__init__(self, self.prefix + what + "group", # name,     e.g. "hostgroup"
 		what[0].upper() + what[1:] + "group",       # title,    e.g. "Hostgroup"
 		what,                                       # info,     e.g. "host"
-		[ self.prefix + what + "group" ],           # htmlvars, e.g. "hostgroup" 
+		htmlvars,                                   # htmlvars, e.g. "hostgroup" 
 		[ what + "group_name" ])                    # rows needed to fetch for link information
         self.what = what
 
@@ -99,6 +102,10 @@ class FilterGroupCombo(Filter):
 	if not self.enforce:
 	    choices = [("", "")] + choices
 	html.select(self.htmlvars[0], choices)
+        if not self.enforce:
+            html.write(" ")
+            html.checkbox(self.htmlvars[1])
+            html.write("negate")
 
     def current_value(self, infoname):
 	htmlvar = self.htmlvars[0]
@@ -119,13 +126,22 @@ class FilterGroupCombo(Filter):
 	    col = "groups"
 	else:
 	    col = self.what + "_groups"
-	return "Filter: %s >= %s\n" % (col, current_value)
+        if not self.enforce and html.var(self.htmlvars[1]):
+            negate = "!"
+        else:
+            negate = ""
+	return "Filter: %s %s>= %s\n" % (col, negate, current_value)
 
     def variable_settings(self, row):
 	varname = self.htmlvars[0]
 	value = row.get(self.what + "group_name")
 	if value:
-	    return [(varname, value)]
+            s = [(varname, value)]
+            if not self.enforce:
+                negvar = self.htmlvars[1]
+                if html.var(negvar):
+                    s.append((negvar, html.var(negvar)))
+            return s
 	else:
 	    return []
     

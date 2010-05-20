@@ -233,7 +233,7 @@ def page_index(html):
 </head>
 <frameset cols="280,*" frameborder="0" framespacing="0" border="0">
     <frame src="side.py" name="side" noresize scrolling=no>
-    <frame src="main.py" name="main" noresize>
+    <frame src="main.py" name="main" noresize scrolling=auto>
 </html>
 """) 
 

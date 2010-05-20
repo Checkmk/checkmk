@@ -86,8 +86,10 @@ function snapinDrag(event) {
   
   var line = document.createElement('div');
   line.setAttribute('id', 'snapinDragIndicator');
-  line.style.height          = '4px';
-  line.style.backgroundColor = '#ff0000';
+  line.style.height          = '3px';
+  line.style.width           = '250px';
+  line.style.backgroundColor = '#eee';
+  line.style.margin         = '1px 0px 0px 5px';
   var o = getSnapinTargetPos();
   if(o != null) {
     snapinAddBefore(o.parentNode, o, line);

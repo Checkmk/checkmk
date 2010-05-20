@@ -487,20 +487,30 @@ function toggle_sidebar_snapin(oH2, url) {
     var childs = oH2.parentNode.parentNode.childNodes;
     for (var i in childs) {
         child = childs[i];
-        if (child.tagName == 'DIV' && child.className == 'content') {
+        if (child.tagName == 'DIV' && child.className == 'content')
             var oContent = child;
-            break;
-        }
+        else if (child.tagName == 'DIV' && (child.className == 'head open' || child.className == "head closed"))
+            var oHead = child;
+        else if (child.tagName == 'DIV' && child.className == 'foot')
+            var oFoot = child;
     }
     // FIXME: Does oContent really exist?
     var closed = oContent.style.display == "none";
-    if (closed)
+    if (closed) {
         oContent.style.display = "";
-    else
+        oFoot.style.display = "";
+        oHead.className = "head open";
+    }
+    else {
         oContent.style.display = "none";
+        oFoot.style.display = "none";
+        oHead.className = "head closed";
+    }
     /* make this persistent -> save */
     get_url(url + (closed ? "open" : "closed")); 
     oContent = null;
+    oHead = null;
+    oFoot = null;
     childs = null;
 }
 

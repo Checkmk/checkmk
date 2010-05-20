@@ -2,98 +2,263 @@
 td {
     vertical-align: top;
 }
-
-
-body {
-    background-attachment:fixed;
-}
-
-body.main, body.bottom {
-  background-color: #97a8ab;
-  background-image: url("images/background.jpg");
-  background-repeat: repeat;
-  background-position: -420px 0px;
-  margin: 0px;
-  padding: 0px;
-  padding-right: 12px;
-  font-family: arial, helvetica, sans-serif;
-  font-size: 9pt;
-}
-
-/* side frame */
-body.side {
-  background-image: url("images/background-side.jpg");
-  background-repeat: repeat;
-  background-position: -200px;
-  overflow:hidden;
-  border-right: 1px solid #ddd;
-  padding: 0px;
-  margin: 0px;
-}
-
-body.top {
-    /* border-bottom: 1px solid white; */
-    background-image: url("images/background-top.jpg");
-    background-repeat: repeat;
-    background-position: top right;
-    margin: 0px;
-    padding: 0px;
-    text-align: right;
-    vertical-align: bottom;
-    font-family: arial, helvetica, sans-serif;
-    font-size: 8pt;
-}
-
-body.top div.loggedin {
-    color: white;
-    margin-right: 280px;
-    margin-top: 34px;
-}
-
-
-body.bottom {
-    border-top: 2px solid #ddd;
-    padding-left: 40px;
-}
-
-a.bottomnavi {
-    border: 1px solid #fff;
-    border-top-style: none;
-    -moz-border-radius: 2px;
-    display: block;
-    width: 100px;
-    height: 19px;
-    margin-right: 4px;
-    margin-top: 0px;
-    color: #fff;
-    text-align: center;
-    text-decoration: none;
-    vertical-align middle;
-    font-size: 8pt;
-}
-
-a.bottomnavi:hover {
-    color: white;
-    border-color: white
-    background-color: #abc;
-    font-weight: bold;
-}
-
-body.main {
-    padding-left: 18px;
-}
-
-
 input, td, select {
     font-size: 9pt;
 }
+/*
+   __  __       _         _                            _   
+  |  \/  | __ _(_)_ __   | |    __ _ _   _  ___  _   _| |_ 
+  | |\/| |/ _` | | '_ \  | |   / _` | | | |/ _ \| | | | __|
+  | |  | | (_| | | | | | | |__| (_| | |_| | (_) | |_| | |_ 
+  |_|  |_|\__,_|_|_| |_| |_____\__,_|\__, |\___/ \__,_|\__|
+
+*/
+
+body {
+}
+
+body.main {
+    background-attachment: fixed;
+    background-repeat: repeat;
+    font-family: arial, helvetica, sans-serif;
+    font-size: 9pt;
+    padding: 0px;
+    margin: 0px;
+    overflow:hidden;
+    background-image: url("images/contentframe_background.jpg");
+    padding-right: 12px;
+}
+
+hirn.depp {
+    overflow:hidden;
+    background-position: -200px;
+}
+
 
 table.footer { 
-  width: 100%;
-  border-top: 1px dotted #468;
-  margin-top: 1em;
-  color: #246;
+    width: 100%;
+    border-top: 1px dotted #468;
+    margin-top: 1em;
+    color: #246;
 }
+
+/*
+    ____  _     _      _                
+   / ___|(_) __| | ___| |__   __ _ _ __ 
+   \___ \| |/ _` |/ _ \ '_ \ / _` | '__|
+    ___) | | (_| |  __/ |_) | (_| | |   
+   |____/|_|\__,_|\___|_.__/ \__,_|_|   
+                                        
+*/
+
+body.side {
+    background-attachment: fixed;
+    background-repeat: repeat;
+    font-family: arial, helvetica, sans-serif;
+    font-size: 9pt;
+    padding: 0px;
+    margin: 0px;
+    overflow:hidden;
+    background-image: url("images/snapinframe_background.jpg");
+}
+
+/* Top logo part */
+div#check_mk_sidebar div#side_header {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    height: 55px;
+    z-index: 10;
+}
+
+/* Scrolling part with snapins */
+div#check_mk_sidebar div#side_content {
+    z-index: 5;
+    position: relative;
+    top: -4px;
+    left: 0px;
+    width: 290px;
+    height: 500px;
+    overflow: hidden;
+    color: #000000;
+    padding-left: 5px;
+    padding-top: 60px;
+}
+
+/* General layout of snapins */
+div.snapin {
+    width: 280px;
+    margin-left: 0px;
+}
+
+
+/* snapin header */
+div.snapin div.head {
+    width: 260px;
+    text-align: center;
+    vertical-align: middle;
+    color: white;
+    font-size: 9pt;
+}
+
+div.snapin div.head.open {
+    background-image: url("images/snapin_header.png");
+    height: 26px;
+}
+
+div.snapin div.head.closed {
+    background-image: url("images/snapin_closed.png");
+    height: 33px;
+}
+
+/* close button on header */
+div.snapin div.closesnapin {
+    position: relative;
+    top: 11px;
+    left: 11px;
+    width: 0px;
+    overflow: visible;
+}
+
+
+div.snapin div.content {
+    background-image: url("images/snapin_background.png");
+    background-repeat: repeat;
+    background-position: left;
+    padding-top: 5px;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-bottom: 5px;
+    width: 240px;
+}
+
+div.snapin div.foot {
+    background-image: url("images/snapin_footer.png");
+    width: 260px;
+    height: 10px;
+}
+/*div#check_mk_sidebar div#side_header,
+div#check_mk_sidebar div#side_footer {
+    height: 30px;
+    width: 100%;
+}
+*/
+/*
+div#check_mk_sidebar div#side_header div.title {width:100%;}
+div#check_mk_sidebar div#side_header div.title a {font-weight:bold;color:#fff;font-size:12pt;}
+div#check_mk_sidebar div#side_header div.logo {float:right;}
+
+div#check_mk_sidebar div#side_header div.nav,
+div#check_mk_sidebar div#side_footer div.nav {width:100%;margin:auto;text-align:center;}
+div#check_mk_sidebar div#side_header div.nav img
+div#check_mk_sidebar div#side_footer div.nav img {margin:auto;width: 20px;}
+*/
+/* div#check_mk_sidebar div#side_header div#slit_top {background-image:url(side_slit_top.png);background-color:transparent;}
+div#check_mk_sidebar div#side_header div#slit_bottom {background-image:url(side_slit_bottom.png);background-color:transparent;}
+*/
+div#check_mk_sidebar div.section {
+}
+/*
+div#check_mk_sidebar div.content {
+    margin-top: 2px;
+    margin-bottom: 3px;
+}*/
+
+
+/* General styles for snapin contents */
+div#check_mk_sidebar {
+    font-size: 8pt;
+    font-family: arial, helvetica, sans-serif;
+}
+
+div#check_mk_sidebar td {
+    font-size: 8pt; color: #fff;
+}
+div#check_mk_sidebar h3 {
+    margin: 0px;
+    color: #fff;
+    font-size: 8pt;
+}
+
+div#check_mk_sidebar a {
+    text-decoration: none;
+    font-weight: normal;
+    color: #eee;
+}
+div#check_mk_sidebar div.footnotelink {
+    text-align: right;
+    padding-right: 3px;
+}
+div#check_mk_sidebar div.footnotelink a {
+    font-size: 6pt;
+    color: #fff;
+    border: 1px solid #333;
+    -moz-border-radius: 3px;
+    background-color: #666;
+    padding: 0px 4px;
+    margin-left: 3px;
+}
+div#check_mk_sidebar a:hover {
+    text-decoration: underline;
+    color: #fff;
+}
+li.sidebar {
+    margin-left: 0px;
+    padding-left: 1ex;
+}
+div#check_mk_sidebar ul.link {
+    margin: 0px;
+    font-size: 8pt;
+    padding-left: 32px;
+}
+div#check_mk_sidebar ul.link li {
+    margin: 0px;
+    padding: 0px;
+}
+
+div#check_mk_sidebar div.footnote {
+    width: 100%;
+    text-align: right;
+}
+div#check_mk_sidebar div.footnote a {
+    font-size: 7pt;
+}
+
+div#check_mk_sidebar div.snapinexception {
+    background-color: #f88;
+    -moz-border-radius: 4px;
+    padding: 3px;
+    border: 1px solid #f00;
+}
+div#check_mk_sidebar div.snapinexception h2 {
+    font-size: 9pt;
+    color: #f00;
+    margin-top: 0px;
+}
+div#check_mk_sidebar div.snapinexception p {
+    color: #800;
+}
+
+table.sidebarconfig {
+  margin-top: 1em;
+  border-collapse: collapse;
+  empty-cells: show;
+}
+
+table.sidebarconfig th {
+    background-color: #830;
+    text-align: left;
+    color: white;
+    border: 1px solid #c60;
+    padding: 2px 5px;
+}
+
+table.sidebarconfig td {
+    background-color: #d72;
+    border: 1px solid #f84;
+    padding: 0px 5px;
+}
+
 
 .footer td.left   { text-align: left; }
 .footer td.middle { text-align: center; }
@@ -1177,146 +1342,6 @@ div.contextlinks {
     padding: 2px 6px;
 width: 200px;
 }
-
-
-/* --- plugins for sidebar ----------------------------------- */
-div#check_mk_sidebar {
-    margin-top: 1ex;
-    margin-bottom: 1ex;
-    font-size: 8pt;
-    font-family: arial, helvetica, sans-serif;
-}
-div#check_mk_sidebar td {font-size:8pt;color:#fff;}
-
-div#check_mk_sidebar div#side_header,
-div#check_mk_sidebar div#side_footer {height:30px;width:100%;}
-div#check_mk_sidebar div#side_content {height:500px;margin:auto;overflow:hidden;color:#000000;}
-
-div#check_mk_sidebar div#side_header div.title {width:100%;}
-div#check_mk_sidebar div#side_header div.title a {font-weight:bold;color:#fff;font-size:12pt;}
-div#check_mk_sidebar div#side_header div.logo {float:right;}
-
-div#check_mk_sidebar div#side_header div.nav,
-div#check_mk_sidebar div#side_footer div.nav {width:100%;margin:auto;text-align:center;}
-div#check_mk_sidebar div#side_header div.nav img
-div#check_mk_sidebar div#side_footer div.nav img {margin:auto;width: 20px;}
-
-div#check_mk_sidebar div#side_header div#slit_top {background-image:url(side_slit_top.png);background-color:transparent;}
-div#check_mk_sidebar div#side_header div#slit_bottom {background-image:url(side_slit_bottom.png);background-color:transparent;}
-
-div#check_mk_sidebar div.section {
-    background-image: url("images/background-gray.jpg");
-    background-repeat: repeat;
-    background-position: center;
-    background-color: transparent;
-    border-width: 1px;
-    margin-bottom: 3px;
-    border-style: solid;
-    border-color: #222 #ccc #fff #444;
-    background-color: #444;
-    -moz-border-radius: 4px;
-    padding-top: 0px;
-    padding-left: 6px;
-    padding-right: 5px;
-    padding-bottom: 2px;
-}
-
-div#check_mk_sidebar div.content {
-    margin-top: 2px;
-    margin-bottom: 3px;
-}
-div#check_mk_sidebar b.heading {
-    position: relative;
-    left: 0px;
-    top: 1px;
-    color: #036;
-    font-size: 9pt;
-}
-div#check_mk_sidebar h3 {
-    margin: 0px;
-    color: #fff;
-    font-size: 8pt;
-}
-
-div#check_mk_sidebar a {
-    text-decoration: none;
-    font-weight: normal;
-    color: #eee;
-}
-div#check_mk_sidebar div.footnotelink {
-    text-align: right;
-    padding-right: 3px;
-}
-div#check_mk_sidebar div.footnotelink a {
-    font-size: 6pt;
-    color: #fff;
-    border: 1px solid #333;
-    -moz-border-radius: 3px;
-    background-color: #666;
-    padding: 0px 4px;
-    margin-left: 3px;
-}
-div#check_mk_sidebar a:hover {
-    text-decoration: underline;
-    color: #fff;
-}
-li.sidebar {
-    margin-left: 0px;
-    padding-left: 1ex;
-}
-div#check_mk_sidebar ul.link {
-    margin: 0px;
-    font-size: 8pt;
-    padding-left: 32px;
-}
-div#check_mk_sidebar ul.link li {
-    margin: 0px;
-    padding: 0px;
-}
-
-div#check_mk_sidebar div.footnote {
-    width: 100%;
-    text-align: right;
-}
-div#check_mk_sidebar div.footnote a {
-    font-size: 7pt;
-}
-
-div#check_mk_sidebar div.snapinexception {
-    background-color: #f88;
-    -moz-border-radius: 4px;
-    padding: 3px;
-    border: 1px solid #f00;
-}
-div#check_mk_sidebar div.snapinexception h2 {
-    font-size: 9pt;
-    color: #f00;
-    margin-top: 0px;
-}
-div#check_mk_sidebar div.snapinexception p {
-    color: #800;
-}
-
-table.sidebarconfig {
-  margin-top: 1em;
-  border-collapse: collapse;
-  empty-cells: show;
-}
-
-table.sidebarconfig th {
-    background-color: #830;
-    text-align: left;
-    color: white;
-    border: 1px solid #c60;
-    padding: 2px 5px;
-}
-
-table.sidebarconfig td {
-    background-color: #d72;
-    border: 1px solid #f84;
-    padding: 0px 5px;
-}
-
 
 div#mk_side_search {
 	text-align: center;

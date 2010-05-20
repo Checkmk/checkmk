@@ -73,7 +73,7 @@ def iconbutton(what, url, target="side", handler="", name=""):
 	onclick = ""
 	href = "%s/%s" % (defaults.checkmk_web_uri, url)
 	tg = "target=%s" % target
-    html.write("<a href=\"%s\" %s %s><img border=0 onmouseover=\"hilite_icon(this, 1)\" onmouseout=\"hilite_icon(this, 0)\" align=absmiddle src=\"%s/images/button_%s14lo.png\"></a>\n " % (href, onclick, tg, defaults.checkmk_web_uri, what))
+    html.write("<a href=\"%s\" %s %s><img border=0 onmouseover=\"hilite_icon(this, 1)\" onmouseout=\"hilite_icon(this, 0)\" align=absmiddle src=\"%s/images/button_%s_lo.png\"></a>\n " % (href, onclick, tg, defaults.checkmk_web_uri, what))
 
 def nagioscgilink(text, target):
     html.write("<li class=sidebar><a target=\"main\" class=link href=\"%s/%s\">%s</a></li>" % \
@@ -101,22 +101,20 @@ def save_user_config(user_config):
             raise MKConfigError("Cannot save user configuration to <tt>%s</tt>: %s" % (path, e))
 
 def sidebar_head():
-    html.write('<div id="side_header">'
-		"<div class=\"logo\"><a target=\"_blank\" href=\"http://mathias-kettner.de\">"
-                "<img border=0 src=\"images/MK-mini.gif\"></a></div>"
-		"<div class=\"title\"><a target=\"main\" href=\"main.py\">Check_MK</a></div>"
-                "<div class=\"nav\">"
-                "</div><div id=\"slit_top\"></div>"
-                "</div>\n")
+    html.write('<div id="side_header" style="margin-top: 0px;">'
+	       '<div class="logo"><a target="_blank" href="http://mathias-kettner.de">'
+               '<img border=0 src="images/sidebar_oben.png"></a></div>'
+               '<div id="slit_top"></div>'
+               '</div>\n')
 # "<img src=\"images/side_up.png\" onmouseover=\"scrolling=true;scrollwindow(-2)\" onmouseout=\"scrolling=false\">"
 
 def sidebar_foot():
     html.write('<div id="side_footer">'
-               '<div id="slit_bottom"></div>')
+               '<div id="slit_bottom"><img src=\"images/sidebar_unten.png\"></div>')
 #           '<div class="nav"><img src="images/side_down.png" onmouseover="scrolling=true;scrollwindow(2)" onmouseout="scrolling=false"></div>')
     if config.may("configure_sidebar"):
         html.write('<div class="footnote"><a target="main" href="sidebar_add_snapin.py">Add snapin</a></div>')
-    html.write('</div>')
+    html.write('</div>HIRN')
 
 # Standalone sidebar
 def page_side(h):
@@ -168,21 +166,26 @@ def render_snapin(name, state):
     if styles:
 	html.write("<style>\n%s\n</style>\n" % styles)
 
-    html.write("<div id=\"snapin_container_%s\" class=section>\n" % name)
+    html.write("<div id=\"snapin_container_%s\" class=snapin>\n" % name)
     if state == "closed":
 	style = ' style="display:none"'
+        headclass = "closed"
     else:
 	style = ""
+        headclass = "open"
     url = "sidebar_openclose.py?name=%s&state=" % name
 
-    html.write("<div class=\"heading\"")
+    html.write('<div class="head %s" ' % headclass)
     if config.may("configure_sidebar"):
         html.write("onmouseover=\"document.body.style.cursor='move';\" onmouseout=\"document.body.style.cursor='';\""
                " onmousedown=\"snapinStartDrag(event)\" onmouseup=\"snapinStopDrag(event)\">")
     else:
         html.write(">")
     if config.may("configure_sidebar"):
-        iconbutton("close", "sidebar_openclose.py?name=%s&state=off" % name, "side", "removeSnapin", 'snapin_'+name)
+        html.write('<div class="closesnapin">')
+        iconbutton("closesnapin", "sidebar_close.py?name=%s&state=off" % name, "side", "removeSnapin", 'snapin_'+name)
+        html.write('</div>')
+        pass
     html.write("<b class=heading onclick=\"toggle_sidebar_snapin(this,'%s')\" onmouseover=\"this.style.cursor='pointer'\" "
 	       "onmouseout=\"this.style.cursor='auto'\">%s</b>" % (url, snapin["title"]))
     html.write("</div>")
@@ -192,7 +195,7 @@ def render_snapin(name, state):
 	snapin["render"]()
     except Exception, e:
 	snapin_exception(e)
-    html.write("</div></div>\n")
+    html.write('</div><div class="foot"%s></div>\n' % style)
 
 def snapin_exception(e):
     if config.debug:

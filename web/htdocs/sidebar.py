@@ -114,7 +114,7 @@ def sidebar_foot():
 #           '<div class="nav"><img src="images/side_down.png" onmouseover="scrolling=true;scrollwindow(2)" onmouseout="scrolling=false"></div>')
     if config.may("configure_sidebar"):
         html.write('<div class=button><a target="main" href="sidebar_add_snapin.py">Add snapin</a></div>')
-    html.write("<div class=copyright>&copy; <a href=\"http://mathias-kettner.de\">Mathias Kettner</a></div>\n")
+    html.write("<div class=copyright>&copy; <a target=\"main\" href=\"http://mathias-kettner.de\">Mathias Kettner</a></div>\n")
     html.write('</div>')
     html.write('</div>')
 

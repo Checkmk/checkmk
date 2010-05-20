@@ -110,10 +110,12 @@ def sidebar_head():
 
 def sidebar_foot():
     html.write('<div id="side_footer">'
-               '<div id="slit_bottom"><img src=\"images/sidebar_unten.png\"></div>')
+               '<div id="slit_bottom"><img src=\"images/sidebar_unten.png\">')
 #           '<div class="nav"><img src="images/side_down.png" onmouseover="scrolling=true;scrollwindow(2)" onmouseout="scrolling=false"></div>')
-    # if config.may("configure_sidebar"):
-    #     html.write('<div class="footnote"><a target="main" href="sidebar_add_snapin.py">Add snapin</a></div>')
+    if config.may("configure_sidebar"):
+        html.write('<div class=button><a target="main" href="sidebar_add_snapin.py">Add snapin</a></div>')
+    html.write("<div class=copyright>&copy; <a href=\"http://mathias-kettner.de\">Mathias Kettner</a></div>\n")
+    html.write('</div>')
     html.write('</div>')
 
 # Standalone sidebar

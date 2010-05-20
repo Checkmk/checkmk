@@ -6,34 +6,26 @@ input, td, select {
     font-size: 9pt;
 }
 /*
-   __  __       _         _                            _   
-  |  \/  | __ _(_)_ __   | |    __ _ _   _  ___  _   _| |_ 
-  | |\/| |/ _` | | '_ \  | |   / _` | | | |/ _ \| | | | __|
-  | |  | | (_| | | | | | | |__| (_| | |_| | (_) | |_| | |_ 
-  |_|  |_|\__,_|_|_| |_| |_____\__,_|\__, |\___/ \__,_|\__|
+   __  __       _        
+  |  \/  | __ _(_)_ __   
+  | |\/| |/ _` | | '_ \  
+  | |  | | (_| | | | | | 
+  |_|  |_|\__,_|_|_| |_| 
 
 */
 
-body {
-}
-
 body.main {
     background-attachment: fixed;
+    background-image: url("images/contentframe_background.jpg");
+    background-color: black;
     background-repeat: repeat;
     font-family: arial, helvetica, sans-serif;
-    font-size: 9pt;
+    font-size: 10pt;
     padding: 0px;
     margin: 0px;
     overflow:hidden;
-    background-image: url("images/contentframe_background.jpg");
     padding-right: 12px;
 }
-
-hirn.depp {
-    overflow:hidden;
-    background-position: -200px;
-}
-
 
 table.footer { 
     width: 100%;
@@ -54,12 +46,12 @@ table.footer {
 body.side {
     background-attachment: fixed;
     background-repeat: repeat;
+    background-image: url("images/snapinframe_background.jpg");
     font-family: arial, helvetica, sans-serif;
-    font-size: 9pt;
+    font-size: 10pt;
     padding: 0px;
     margin: 0px;
     overflow:hidden;
-    background-image: url("images/snapinframe_background.jpg");
 }
 
 /* Top logo part */
@@ -88,12 +80,46 @@ div#check_mk_sidebar div#side_content {
 
 div#check_mk_sidebar div#side_footer {
     position: relative;
-    top: -5px;
+    top: -8px;
     height: 33px;
     width: 100%;
     overflow: visible;
     z-index: 10;
+    background-attachment: fixed;
+    background-repeat: repeat;
+    background-image: url("images/sidebar_unten.jpg");
 }
+div#check_mk_sidebar div#side_footer div.button {
+    width: 75px;
+    height: 20px;
+    z-index: 20;
+    position: absolute;
+    background-attachment: fixed;
+    background-repeat: repeat;
+    background-image: url("images/sidebar_button_lo.png");
+    top: 10px;
+    left: 15px;
+    background-position: 15px 20px;
+    float: left;
+}
+div#check_mk_sidebar div#side_footer div.button a {
+    width: 75px;
+    height: 20px;
+    display: block;
+    color: #fff;
+    text-align: center;
+    vertical-align: middle;
+    padding-top: 3px;
+}
+div#check_mk_sidebar div#side_footer div.copyright {
+    color: white;
+    position: relative;
+    left: 130px;
+    top: -18px;
+    width: 120px;
+    text-align: right;
+}
+
 
 /* General layout of snapins */
 div.snapin {
@@ -108,7 +134,7 @@ div.snapin div.head {
     text-align: center;
     vertical-align: middle;
     color: white;
-    font-size: 9pt;
+    /* font-size: 9pt; */
 }
 
 div.snapin div.head.open {
@@ -171,17 +197,18 @@ div#check_mk_sidebar div.content {
 
 /* General styles for snapin contents */
 div#check_mk_sidebar {
-    font-size: 8pt;
+    /* font-size: 8pt; */
     font-family: arial, helvetica, sans-serif;
 }
 
 div#check_mk_sidebar td {
-    font-size: 8pt; color: #fff;
+    /* font-size: 8pt; */
+    color: #fff;
 }
 div#check_mk_sidebar h3 {
     margin: 0px;
     color: #fff;
-    font-size: 8pt;
+    font-size: 100%;
 }
 
 div#check_mk_sidebar a {
@@ -194,11 +221,11 @@ div#check_mk_sidebar div.footnotelink {
     padding-right: 3px;
 }
 div#check_mk_sidebar div.footnotelink a {
-    font-size: 6pt;
+    font-size: 7pt;
     color: #fff;
-    border: 1px solid #333;
+    border: 1px solid #ddd;
     -moz-border-radius: 3px;
-    background-color: #666;
+    background-color: #8eaeb8;
     padding: 0px 4px;
     margin-left: 3px;
 }

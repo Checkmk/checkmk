@@ -104,7 +104,7 @@ def sidebar_head():
     html.write('<div id="side_header" style="margin-top: 0px;">'
 	       '<div class="logo"><a target="_blank" href="http://mathias-kettner.de">'
                '<img border=0 src="images/sidebar_oben.png"></a></div>'
-               '<div id="slit_top"></div>'
+#               '<div id="slit_top"></div>'
                '</div>\n')
 # "<img src=\"images/side_up.png\" onmouseover=\"scrolling=true;scrollwindow(-2)\" onmouseout=\"scrolling=false\">"
 
@@ -112,9 +112,9 @@ def sidebar_foot():
     html.write('<div id="side_footer">'
                '<div id="slit_bottom"><img src=\"images/sidebar_unten.png\"></div>')
 #           '<div class="nav"><img src="images/side_down.png" onmouseover="scrolling=true;scrollwindow(2)" onmouseout="scrolling=false"></div>')
-    if config.may("configure_sidebar"):
-        html.write('<div class="footnote"><a target="main" href="sidebar_add_snapin.py">Add snapin</a></div>')
-    html.write('</div>HIRN')
+    # if config.may("configure_sidebar"):
+    #     html.write('<div class="footnote"><a target="main" href="sidebar_add_snapin.py">Add snapin</a></div>')
+    html.write('</div>')
 
 # Standalone sidebar
 def page_side(h):
@@ -150,6 +150,7 @@ def page_side(h):
 	       refresh_snapins.append([name, refresh_time])
     html.write('</div>')
     sidebar_foot()
+    html.write('</div>')
 
     html.write("<script language=\"javascript\">\n")
     html.write("setSidebarHeight();\n")
@@ -158,7 +159,8 @@ def page_side(h):
     html.write("window.onresize = function() { setSidebarHeight(); }\n")
     html.write("</script>\n")
 
-    html.write("</div>\n</body>\n</html>")
+    # html.write("</div>\n")
+    html.write("</body>\n</html>")
 
 def render_snapin(name, state):
     snapin = sidebar_snapins.get(name)
@@ -196,6 +198,7 @@ def render_snapin(name, state):
     except Exception, e:
 	snapin_exception(e)
     html.write('</div><div class="foot"%s></div>\n' % style)
+    html.write('</div>')
 
 def snapin_exception(e):
     if config.debug:

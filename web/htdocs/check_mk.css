@@ -83,6 +83,16 @@ div#check_mk_sidebar div#side_content {
     color: #000000;
     padding-left: 5px;
     padding-top: 60px;
+    padding-bottom: 5px;
+}
+
+div#check_mk_sidebar div#side_footer {
+    position: relative;
+    top: -5px;
+    height: 33px;
+    width: 100%;
+    overflow: visible;
+    z-index: 10;
 }
 
 /* General layout of snapins */
@@ -114,7 +124,7 @@ div.snapin div.head.closed {
 /* close button on header */
 div.snapin div.closesnapin {
     position: relative;
-    top: 11px;
+    top: 12px;
     left: 11px;
     width: 0px;
     overflow: visible;
@@ -137,12 +147,6 @@ div.snapin div.foot {
     width: 260px;
     height: 10px;
 }
-/*div#check_mk_sidebar div#side_header,
-div#check_mk_sidebar div#side_footer {
-    height: 30px;
-    width: 100%;
-}
-*/
 /*
 div#check_mk_sidebar div#side_header div.title {width:100%;}
 div#check_mk_sidebar div#side_header div.title a {font-weight:bold;color:#fff;font-size:12pt;}

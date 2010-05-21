@@ -38,7 +38,7 @@ def render_single_dataset(data, view, group_columns, group_painters, painters, n
     for row in rows:
         register_events(row) # needed for playing sounds
 
-    html.write("<div class=tableshadow><table class=dataset>\n")
+    html.write('<div class="tableshadow left"><table class=dataset>\n')
     rownum = 0
     while rownum < len(rows):
         if rownum > 0:
@@ -149,7 +149,7 @@ def render_grouped_boxes(data, view,  group_columns, group_painters, painters, n
 	    if state == None:
 	       state = row.get("host_state", 0)
 	       if state > 0: state +=1 # 1 is critical for hosts
-	    html.write("<tr class=%s%d>" % (trclass, state))
+	    html.write('<tr class="data %s%d">' % (trclass, state))
 	    for p in painters:
 		paint(p, row)
 	    html.write("</tr>\n")
@@ -377,7 +377,7 @@ def render_grouped_list(data, view, group_columns, group_painters, painters, num
 		trclass = "even"
 	    else:
 		trclass = "odd"
-	    html.write("<tr class=%s%d>" % (trclass, state))
+	    html.write('<tr class="data %s%d">' % (trclass, state))
 
         for p in painters:
 	    paint(p, row)

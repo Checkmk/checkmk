@@ -1334,8 +1334,8 @@ def show_action_form(is_open, datasource, colspan):
     # We take the first info to be the native data type of this table
     # and show actions useful for that
     what = datasource["infos"][0]
-    if what not in [ "host", "service", "comment", "downtime" ]:
-	return # no actions on others	
+    # if what not in [ "host", "service", "comment", "downtime" ]:
+    #	return # no actions on others	
 
     # Table muss einen anderen Namen, als das Formular
 
@@ -1353,9 +1353,12 @@ def show_action_form(is_open, datasource, colspan):
 	show_downtime_actions()
     elif what == "comment":
 	show_comment_actions()
+    else:
+        html.write("<tr><td>No commands possible for %ss</td></tr>" % what)
 
-	html.write("</td></tr>")
-    html.write("</table></form>\n")
+    html.write("</table></div>\n")
+    html.end_form()
+    html.write("</td></tr>\n")
 
 def show_downtime_actions():
     if config.may("action.downtimes"):

@@ -153,28 +153,26 @@ def handler(req):
         # General access allowed. Now connect to livestatus
 	connect_to_livestatus(html)
 
-	pagehandlers = { "index"               : page_index,
-			 "main"                : page_main,
-#                         "top"                 : page_top_frame,
-#                         "bottom"              : page_bottom_frame,
-			 "filter"              : page_main, # for users of multiadmin
-			 "edit_views"          : views.page_edit_views,
-			 "edit_view"           : views.page_edit_view,
-			 "export_views"        : views.ajax_export,
-			 "view"                : views.page_view,
-			 "logwatch"            : page_logwatch.page,
-			 "side"                : sidebar.page_side,    # replacement for side.php
-			 "switch_site"         : ajax_switch_site,
-			 "sidebar_add_snapin"  : sidebar.page_add_snapin,
-			 "sidebar_snapin"      : sidebar.ajax_snapin,
-			 "sidebar_openclose"   : sidebar.ajax_openclose,
-			 "switch_master_state" : sidebar.ajax_switch_masterstate,
-			 "add_bookmark"        : sidebar.ajax_add_bookmark,
-			 "del_bookmark"        : sidebar.ajax_del_bookmark,
-			 "edit_bookmark"       : sidebar.page_edit_bookmark,
-			 "reposition_snapin"   : sidebar.reposition_snapin,
-			 "view_permissions"    : permissions.page_view_permissions,
-			 "edit_permissions"    : permissions.page_edit_permissions,
+	pagehandlers = { "index"                 : page_index,
+			 "main"                  : page_main,
+			 "filter"                : page_main, # for users of multiadmin
+			 "edit_views"            : views.page_edit_views,
+			 "edit_view"             : views.page_edit_view,
+			 "export_views"          : views.ajax_export,
+			 "view"                  : views.page_view,
+			 "logwatch"              : page_logwatch.page,
+			 "side"                  : sidebar.page_side,    # replacement for side.php
+			 "switch_site"           : ajax_switch_site,
+			 "sidebar_add_snapin"    : sidebar.page_add_snapin,
+			 "sidebar_snapin"        : sidebar.ajax_snapin,
+			 "sidebar_openclose"     : sidebar.ajax_openclose,
+			 "switch_master_state"   : sidebar.ajax_switch_masterstate,
+			 "add_bookmark"          : sidebar.ajax_add_bookmark,
+			 "del_bookmark"          : sidebar.ajax_del_bookmark,
+			 "edit_bookmark"         : sidebar.page_edit_bookmark,
+			 "reposition_snapin"     : sidebar.reposition_snapin,
+			 "view_permissions"      : permissions.page_view_permissions,
+			 "edit_permissions"      : permissions.page_edit_permissions,
 	}
 
 	handler = pagehandlers.get(req.myfile, page_not_found)
@@ -237,22 +235,6 @@ def page_index(html):
 </html>
 """) 
 
-# def page_top_frame(html):
-#     html.html_head('Multisite top frame')
-#     html.write("<body class=top>")
-#     if type(html.req.user) == str:
-#        login_text = "Logged in as <b>%s</b> (%s)" % (config.user, config.role)
-#     else:
-#        login_text = "not logged in"
-#     html.write("<div class=loggedin>%s</div>" % login_text)
-#     html.write("</body>\n")
-#     html.html_foot()
-# 
-# def page_bottom_frame(html):
-#     html.html_head('Multisite top frame')
-#     html.write("<body class=bottom>")
-#     html.write("<a class=bottomnavi href=\"sidebar_add_snapin.py\" target=\"main\">Add snapin</a></body>\n")
-#     html.html_foot()
 
 def page_main(html):
     html.header("Check_MK Multisite")

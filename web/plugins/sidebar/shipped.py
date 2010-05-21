@@ -197,7 +197,7 @@ def render_hosts(only_problems = False):
 	html.write("<br>\n")
 
 sidebar_all_hosts_styles = """
-div.statebullet { margin-left: 2px; margin-right: 4px; width: 10px; height: 10px; border: 1px solid black; float: left; }
+div.statebullet { margin-left: 2px; margin-right: 5px; width: 10px; height: 10px; border: 1px solid #eee; float: left; }
 div.state0 { background-color: #4c4; border-color: #0f0;  }
 div.state1 { background-color: #ff0; }
 div.state2 { background-color: #f00; }

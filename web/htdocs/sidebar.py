@@ -66,7 +66,7 @@ def footnotelinks(links):
 def iconbutton(what, url, target="side", handler="", name=""):
     if target == "side":
 	onclick = "onclick=\"get_url('%s', %s, '%s')\"" % \
-                   (defaults.checkmk_web_uri + "/" + url, handler, name)
+                   (url, handler, name)
 	href = "#"
 	tg = ""
     else:
@@ -182,7 +182,7 @@ def render_snapin(name, state):
         html.write(">")
     if config.may("configure_sidebar"):
         html.write('<div class="closesnapin">')
-        iconbutton("closesnapin", "sidebar_close.py?name=%s&state=off" % name, "side", "removeSnapin", 'snapin_'+name)
+        iconbutton("closesnapin", "sidebar_openclose.py?name=%s&state=off" % name, "side", "removeSnapin", 'snapin_'+name)
         html.write('</div>')
         pass
     html.write("<b class=heading onclick=\"toggle_sidebar_snapin(this,'%s')\" onmouseover=\"this.style.cursor='pointer'\" "

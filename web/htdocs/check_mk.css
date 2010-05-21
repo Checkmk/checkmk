@@ -244,11 +244,13 @@ div#check_mk_sidebar h3 {
     font-size: 100%;
 }
 
+/* Normal link in sidebar */
 div#check_mk_sidebar a {
     text-decoration: none;
     font-weight: normal;
-    color: #eee;
+    color: #fff;
 }
+
 div#check_mk_sidebar div.footnotelink {
     text-align: right;
     padding-right: 3px;
@@ -583,9 +585,9 @@ table.services tr.even3 { background-color: #fea; }
 
 
 /* HACK */
-table.services tr.odd0 td, table.services tr.even0 td { 
+table.services tr.data td { 
   border: 1px solid #bbb;
-  padding: 0.2ex 1ex;
+  padding: 3px 6px;
 }
 
 table.services td.host { 
@@ -776,6 +778,10 @@ div.tableshadow {
     border-style: none;
 }
 
+div.tableshadow.left {
+    margin-left: 5px;
+}
+    
 td.shadowtop, td.shadowbottom {
     background-image: url("images/tableshadow.png");
     background-repeat: repeat;
@@ -1463,7 +1469,6 @@ background-color: #BFBFBF;
 /* layout dataset */
 table.dataset {
     border-spacing: 1px;
-    margin: 0px;
     padding: 0px;
     border-collapse: collapse;
     empty-cells: show;

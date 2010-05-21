@@ -214,11 +214,11 @@ div.snapin div.closesnapin {
 
 
 div.snapin div.content {
-     background-image: url("images/snapin_background.png");
+    background-image: url("images/snapin_background.png");
     background-repeat: repeat-y;
     background-position: left;
-    padding-top: 5px;
-    padding-left: 12px;
+    padding-top: 10px;
+    padding-left: 15px;
     padding-right: 12px;
     padding-bottom: 5px;
     width: 240px;
@@ -251,19 +251,6 @@ div#check_mk_sidebar a {
     color: #fff;
 }
 
-div#check_mk_sidebar div.footnotelink {
-    text-align: right;
-    padding-right: 3px;
-}
-div#check_mk_sidebar div.footnotelink a {
-    font-size: 7pt;
-    color: #fff;
-    border: 1px solid #ddd;
-    -moz-border-radius: 3px;
-    background-color: #8eaeb8;
-    padding: 0px 4px;
-    margin-left: 3px;
-}
 div#check_mk_sidebar a:hover {
     text-decoration: underline;
     color: #fff;
@@ -274,7 +261,6 @@ li.sidebar {
 }
 div#check_mk_sidebar ul.link {
     margin: 0px;
-    font-size: 8pt;
     padding-left: 32px;
 }
 div#check_mk_sidebar ul.link li {
@@ -285,9 +271,6 @@ div#check_mk_sidebar ul.link li {
 div#check_mk_sidebar div.footnote {
     width: 100%;
     text-align: right;
-}
-div#check_mk_sidebar div.footnote a {
-    font-size: 7pt;
 }
 
 div#check_mk_sidebar div.snapinexception {
@@ -1439,7 +1422,6 @@ div#mk_side_search {
 div#mk_side_search input{
 	margin: auto;
 	width: 90%;
-	
 	font-size: 8pt;
 }
 

@@ -29,6 +29,9 @@ from lib import *
 
 sidebar_snapins = {}
 
+# Constants to be used in snapins
+snapin_width = 230 
+
 # Load all snapins
 snapins_dir = defaults.web_dir + "/plugins/sidebar"
 for fn in os.listdir(snapins_dir):

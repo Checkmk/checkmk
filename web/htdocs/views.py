@@ -379,7 +379,21 @@ def page_edit_views(h, msg=None):
     html.write("<table class=views>\n")
 
     keys_sorted = html.multisite_views.keys()
-    keys_sorted.sort()
+    def cmp_viewkey(a, b):
+        if a[0] == b[0]:
+            if a[1] < b[1]:
+                return -1
+            else:
+                return 1
+        elif a[0] == "":
+            return 1
+        elif b[0] == "":
+            return -1
+        elif a[0] < b[0]:
+            return -1
+        else:
+            return 1
+    keys_sorted.sort(cmp_viewkey)
     first = True
     for (owner, viewname) in keys_sorted:
 	if owner == "" and not config.may("view.%s" % viewname):
@@ -487,27 +501,31 @@ def page_edit_view(h):
 	    html.add_user_error(e.varname, e.message)
 
     html.header("Edit view")
-    html.write("<a class=navi href=\"edit_views.py\">Edit views</a>\n")
-    if view and not view["hidden"]:
-	html.write("<a class=navi href=\"view.py?view_name=%s\">Visit this view (does not save)</a>\n" % viewname)
-    html.write("<p>Edit the properties of the view.</p>\n")
+    html.write("<table class=navi><tr>\n")
+    html.write('<td class="left open">Edit</td>\n')
+    html.write("<td class=gap></td>\n")
+    html.write('<td class="right" onmouseover="hover_tab(this);" onmouseout="unhover_tab(this);">')
+    html.write('<a href="edit_views.py">All views</a>\n')
+    html.write('</td>\n')
+    html.write("</tr><tr class=form><td class=form colspan=3><div class=whiteborder>\n")
+
     html.begin_form("view")
     html.hidden_field("old_name", viewname) # safe old name in case user changes it
-    html.write("<table class=view>\n")
-
-    html.write("<tr><td class=legend>Shortname for linking</td><td class=content>")
-    html.text_input("view_name")
-    html.write("</td></tr>\n")
+    html.write("<table class=form>\n")
 
     html.write("<tr><td class=legend>Title</td><td class=content>")
     html.text_input("view_title")
+    html.write("</td></tr>\n")
+
+    html.write("<tr><td class=legend>Linkname</td><td class=content>")
+    html.text_input("view_name")
     html.write("</td></tr>\n")
 
     html.write("<tr><td class=legend>Topic</td><td class=content>")
     html.text_input("view_topic", "Other")
     html.write("</td></tr>\n")
 
-    html.write("<tr><td class=legend>Title of Contextlink</td><td class=content>")
+    html.write("<tr><td class=legend>Buttontext</td><td class=content>")
     html.text_input("view_linktitle")
     html.write("</td></tr>\n")
 
@@ -546,7 +564,7 @@ function toggle_section(nr, oImg) {
 	html.write("</div></td></tr>\n")
 
     # Properties
-    section_header(2, "2. Properties")
+    section_header(2, "Properties")
     datasource_title = multisite_datasources[datasourcename]["title"]
     html.write("Datasource: <b>%s</b><br>\n" % datasource_title)
     html.hidden_field("datasource", datasourcename)
@@ -562,7 +580,7 @@ function toggle_section(nr, oImg) {
     section_footer()
 
     # [3] Filters 
-    section_header(3, "3. Filters")
+    section_header(3, "Filters")
     html.write("<table class=filters>")
     html.write("<tr><th>Filter</th><th>usage</th><th>hardcoded settings</th><th>HTML variables</th></tr>\n")
     allowed_filters = filters_allowed_for_datasource(datasourcename)
@@ -616,16 +634,16 @@ function toggle_section(nr, oImg) {
 	section_footer()
 
     # [4] Sorting
-    column_selection(4, "4. Sorting", "sort_", max_sort_columns, multisite_sorters, True)
+    column_selection(4, "Sorting", "sort_", max_sort_columns, multisite_sorters, True)
 
     # [5] Grouping
-    column_selection(5, "5. Group by", "group_", max_group_columns, multisite_painters)
+    column_selection(5, "Group by", "group_", max_group_columns, multisite_painters)
 
     # [6] Columns (painters)	
-    column_selection(6, "6. Display columns", "col_", max_display_columns, multisite_painters)
+    column_selection(6, "Columns", "col_", max_display_columns, multisite_painters)
 
     # [2] Layout
-    section_header(7, "7. Layout")
+    section_header(7, "Layout")
     html.write("<table border=0>")
     html.write("<tr><td>Basic Layout:</td><td>")
     html.sorted_select("layout", [ (k, v["title"]) for k,v in multisite_layouts.items() ])
@@ -646,17 +664,19 @@ function toggle_section(nr, oImg) {
     section_footer()
 
 
-    html.write("<tr><td colspan=2>")
+    html.write('<tr><td class="legend button" colspan=2>')
     html.button("try", "Try out")
     html.write(" ")
     html.button("save", "Save")
     html.write("</table>\n")
     html.end_form()
+
+    html.write("</div></td></tr></table>\n")
     
     if html.has_var("try") or html.has_var("search"):
         html.set_var("search", "on")
 	if view: 
-	    show_view(view)
+	    show_view(view, False, False)
 
     html.footer()
 
@@ -853,7 +873,7 @@ def page_view(h):
 
 # Display view with real data. This is *the* function everying
 # is about.
-def show_view(view, show_heading = False):
+def show_view(view, show_heading = False, show_buttons = True):
     # [1] Datasource
     datasource = multisite_datasources[view["datasource"]]
     tablename = datasource["table"]
@@ -938,84 +958,85 @@ def show_view(view, show_heading = False):
     if show_heading:
 	html.header(view_title(view))
 
-    show_context_links(view, hide_filters)
-
-    html.write("<table class=navi><tr>\n")
-    colspan = 0
-
-    # Filter-button
-    if len(show_filters) > 0 and not html.do_actions():
-        filter_isopen = html.var("search", "") == "" and view["mustsearch"]
-	toggle_button("table_filter", filter_isopen, "Filter", ["filter"])
-        html.write("<td class=minigap></td>\n")
-        colspan += 2
-   
-    # Command-button
-    if len(rows) > 0 and config.may("act") and not html.do_actions():
-        toggle_button("table_actions", False, "Commands")
-        html.write("<td class=minigap></td>\n")
-        colspan += 2
-
-
-    # Buttons for view options
-    if config.user_may(config.user, "view_option_columns"):
-        for col in config.view_option_columns:
-            uri = html.makeuri([("num_columns", col)])
-            if col == num_columns:
-                addclass = " selected"
-            else:
-                addclass = ""
-            html.write('<td class="left columns%s"><a href="%s">%s</a></td>\n' % (addclass, uri, col))
-            html.write("<td class=minigap></td>\n")
-            colspan += 2
-
-    if config.user_may(config.user, "view_option_refresh"):
-        for ref in config.view_option_refreshes:
-            uri = html.makeuri([("refresh", ref)])
-            if ref == browser_reload or (not ref and not browser_reload):
-                addclass = " selected"
-            else:
-                addclass = ""
-            if ref:
-                reftext = "%d s" % ref
-            else:
-                reftext = "&#8734;"
-            html.write('<td class="left refresh%s"><a href="%s">%s</a></td>\n' % (addclass, uri, reftext))
-            html.write("<td class=minigap></td>\n")
-            colspan += 2
-
-    html.write("<td class=gap></td>\n")
-    colspan += 1
-    # Customize/Edit view button
-    if config.may("edit_views"):
-        html.write('<td class="right" onmouseover="hover_tab(this);" onmouseout="unhover_tab(this);">')
-	if view["owner"] == html.req.user:
-	    html.write('<a href="edit_view.py?load_view=%s">Edit</a>\n' % view["name"])
-	else:
-            html.write('<a href="edit_view.py?clonefrom=%s&load_view=%s">Edit</a>\n' % (view["owner"], view["name"]))
-        html.write('</td>')
-        colspan += 1
-    html.write("</tr>")
-    
-    # Filter form
-    if len(show_filters) > 0 and not html.do_actions():
-	show_filter_form(filter_isopen, show_filters, colspan)
-
-    # Actions
     has_done_actions = False
-    if len(rows) > 0:
-	if html.do_actions() and html.transaction_valid(): # submit button pressed, no reload
-	    try:
-		has_done_actions = do_actions(datasource["infos"][0], rows)
-	    except MKUserError, e:
-		html.show_error(e.message)
-		html.add_user_error(e.varname, e.message)
-		show_action_form(True, datasource, colspan)
+    if show_buttons:
+        show_context_links(view, hide_filters)
 
-        else:
-	    show_action_form(False, datasource, colspan)
+        html.write("<table class=navi><tr>\n")
+        colspan = 0
 
-    html.write("</table>\n")
+        # Filter-button
+        if len(show_filters) > 0 and not html.do_actions():
+            filter_isopen = html.var("search", "") == "" and view["mustsearch"]
+            toggle_button("table_filter", filter_isopen, "Filter", ["filter"])
+            html.write("<td class=minigap></td>\n")
+            colspan += 2
+       
+        # Command-button
+        if len(rows) > 0 and config.may("act") and not html.do_actions():
+            toggle_button("table_actions", False, "Commands")
+            html.write("<td class=minigap></td>\n")
+            colspan += 2
+
+
+        # Buttons for view options
+        if config.user_may(config.user, "view_option_columns"):
+            for col in config.view_option_columns:
+                uri = html.makeuri([("num_columns", col)])
+                if col == num_columns:
+                    addclass = " selected"
+                else:
+                    addclass = ""
+                html.write('<td class="left columns%s"><a href="%s">%s</a></td>\n' % (addclass, uri, col))
+                html.write("<td class=minigap></td>\n")
+                colspan += 2
+
+        if config.user_may(config.user, "view_option_refresh"):
+            for ref in config.view_option_refreshes:
+                uri = html.makeuri([("refresh", ref)])
+                if ref == browser_reload or (not ref and not browser_reload):
+                    addclass = " selected"
+                else:
+                    addclass = ""
+                if ref:
+                    reftext = "%d s" % ref
+                else:
+                    reftext = "&#8734;"
+                html.write('<td class="left refresh%s"><a href="%s">%s</a></td>\n' % (addclass, uri, reftext))
+                html.write("<td class=minigap></td>\n")
+                colspan += 2
+
+        html.write("<td class=gap></td>\n")
+        colspan += 1
+        # Customize/Edit view button
+        if config.may("edit_views"):
+            html.write('<td class="right" onmouseover="hover_tab(this);" onmouseout="unhover_tab(this);">')
+            if view["owner"] == html.req.user:
+                html.write('<a href="edit_view.py?load_view=%s">Edit</a>\n' % view["name"])
+            else:
+                html.write('<a href="edit_view.py?clonefrom=%s&load_view=%s">Edit</a>\n' % (view["owner"], view["name"]))
+            html.write('</td>')
+            colspan += 1
+        html.write("</tr>")
+        
+        # Filter form
+        if len(show_filters) > 0 and not html.do_actions():
+            show_filter_form(filter_isopen, show_filters, colspan)
+
+        # Actions
+        if len(rows) > 0:
+            if html.do_actions() and html.transaction_valid(): # submit button pressed, no reload
+                try:
+                    has_done_actions = do_actions(datasource["infos"][0], rows)
+                except MKUserError, e:
+                    html.show_error(e.message)
+                    html.add_user_error(e.varname, e.message)
+                    show_action_form(True, datasource, colspan)
+
+            else:
+                show_action_form(False, datasource, colspan)
+
+        html.write("</table>\n")
 
     if has_done_actions:
 	html.write("<a href=\"%s\">Back to search results</a>" % html.makeuri([]))

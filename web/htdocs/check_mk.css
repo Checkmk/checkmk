@@ -166,6 +166,7 @@ div#check_mk_sidebar div#side_footer div.button a {
     text-align: center;
     vertical-align: middle;
     padding-top: 3px;
+       text-decoration: none;
 }
 div#check_mk_sidebar div#side_footer div.copyright {
     color: white;
@@ -174,6 +175,13 @@ div#check_mk_sidebar div#side_footer div.copyright {
     top: 12px;
     width: 122px;
     text-align: right;
+}
+
+div#side_footer a {
+color: #eee;
+}
+div#side_footer a:hover {
+color: white;
 }
 
 /* General layout of snapins */
@@ -231,27 +239,27 @@ div.snapin div.foot {
 }
 
 /* General styles for snapin contents */
-div#check_mk_sidebar {
+div.snapin {
     font-family: arial, helvetica, sans-serif;
 }
 
-div#check_mk_sidebar td {
+div.snapin td {
     color: #fff;
 }
-div#check_mk_sidebar h3 {
+div.snapin h3 {
     margin: 0px;
     color: #fff;
     font-size: 100%;
 }
 
 /* Normal link in sidebar */
-div#check_mk_sidebar a {
+div.snapin a {
     text-decoration: none;
     font-weight: normal;
     color: #fff;
 }
 
-div#check_mk_sidebar a:hover {
+div.snapin a:hover {
     text-decoration: underline;
     color: #fff;
 }
@@ -259,33 +267,48 @@ li.sidebar {
     margin-left: 0px;
     padding-left: 1ex;
 }
-div#check_mk_sidebar ul.link {
+div.snapin ul.link {
     margin: 0px;
     padding-left: 32px;
 }
-div#check_mk_sidebar ul.link li {
+div.snapin ul.link li {
     margin: 0px;
     padding: 0px;
 }
 
-div#check_mk_sidebar div.footnote {
+div.snapin div.footnote {
     width: 100%;
     text-align: right;
 }
 
-div#check_mk_sidebar div.snapinexception {
+div.snapin div.snapinexception {
     background-color: #f88;
     -moz-border-radius: 4px;
     padding: 3px;
     border: 1px solid #f00;
 }
-div#check_mk_sidebar div.snapinexception h2 {
+div.snapin div.snapinexception h2 {
     font-size: 9pt;
     color: #f00;
     margin-top: 0px;
 }
-div#check_mk_sidebar div.snapinexception p {
+div.snapin div.snapinexception p {
     color: #800;
+}
+div.snapin div.footnotelink {
+    text-align: right;
+    padding-right: 8px;
+}
+div.snapin div.footnotelink a {
+    border: 1px solid white;
+    font-size: 7pt;
+    -moz-border-radius: 4px;
+    padding: 2px 4px;
+}
+div.snapin div.footnotelink a:hover {
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+    text-decoration: none;
 }
 
 table.sidebarconfig {
@@ -431,6 +454,8 @@ table.navi {
     width: 100%;
     border-collapse: collapse;
     border-spacing: 0px;
+position: relative;
+left: -5px;
 }
 
 table.navi td {
@@ -487,17 +512,13 @@ table.navi td.minigap {
      width: 3px;
 }
 
-table.navi a {
+table.navi td.left a, table.navi td.right a {
     vertical-align: middle;
     text-align: center;
     font-weight: normal;
     text-decoration: none;
     color: white;
     display: block;
-}
-                    
-table.navi a:hover {
-    
 }
 
 a.viewoption {
@@ -513,12 +534,18 @@ a.viewoption.selected, a.viewoption:hover {
     background-color: #ace;
 }
 
-table.navi tr.form div.whiteborder {
+table.navi tr.form td.form {
+    margin: 0px;
+    padding: 0px;
+}
+
+table.navi tr.form div.whiteborder, table.navi tr.form table.whiteborder {
     border-left: 1px solid white;
     border-right: 1px solid white;
     margin: 0px;
     padding: 0px;
     border-bottom: 1px solid white;
+width: 100%;
 }
 
 /* FILTER and ACTIONS */
@@ -899,12 +926,16 @@ table.form {
     margin: 10px;
 }
 
+table.form textarea {
+width: 100%;
+}
+
 table.form input { 
     font-size: 9pt;
 }
 table.form td { 
     vertical-align: top;
-    padding: 0px 1ex;
+    padding: 4px 10px;
 }
 
 table.form td.legend { 
@@ -1249,14 +1280,13 @@ table.view {
     width: 100%;
     border-collapse: collapse;
     empty-cells: show;
-    background-color: #ffc;
 }
-table.view td.legend, table.view td.content {
+td.legend, td.content {
    border: 1px solid #884;
    padding: 2px 0.5ex;
     vertical-align: top;
 }
-table.view td.legend {
+td.legend {
     padding-top: 3px;
     color: #884;
     vertical-align: top;
@@ -1264,75 +1294,84 @@ table.view td.legend {
     width: 150px;
 }
 div.viewdescription {
-    color: #084;
+    color: #274750;
     font-size: 7pt;
 }
-table.view td.content i {
+td.content i {
     font-size: 8pt;
-color: #995;
+    color: #fff;
 }
-table.view table.filters {
+
+/* Table of filters in edit view page */
+table.filters {
     border-collapse: collapse;
     empty-cells: show;
     margin-bottom: 6px;
     margin-left: 3px;
-width: 100%;
+    width: 100%;
 }
-table.view div.filtercomment {
+div.filtercomment {
     margin-left: 0px;
     font-size: 8pt;
     width: 300px;
     font-style: italic;
-    color: #c80;
+    color: #478;
     padding-bottom: 6px;
 }
 
 
-table.view table.filters td
+table.filters td
 {
    border-style: none;
-   border-bottom: 1px dotted #cc8;
+   border-bottom: 1px dotted #fff;
+   vertical-align: middle;
+   height: 36px;
+padding: 4px 8px;
 }
 
 
-table.view table.filters th
+table.filters th
 {
     text-align: left;
     padding-bottom: 3px;
-   border-bottom: 1px solid #cc8;
+    padding-left: 8px;
+    font-weight: normal;
+    color: white;
+    border-bottom: 1px solid #fff;
 }
 
-table.view table.filters td.usageshow
+table.filters td.usageshow
 {
- background-color: #ff0;
+    background-color: #ff0;
 }
-table.view table.filters td.usagehide
+table.filters td.usagehide
 {
- background-color: #f0f;
+    background-color: #f0f;
 }
-table.view table.filters td.usagehard
+table.filters td.usagehard
 {
     background-color: #89f;
 }
-table.view table.filters td.usageoff
+table.filters td.usageoff
 {
-    background-color: #ffc;
+    background-image: url("images/tableshadow.png");
+    background-repeat: repeat;
 }
 
-table.view table.filters td.usageshow select
+table.filters td.usageshow select
 {
-   background-color: #cc0;
+    background-color: #cc0;
 }
-table.view table.filters td.usagehide select
+table.filters td.usagehide select
 {
-   background-color: #f6f;
+    background-color: #f6f;
 }
-table.view table.filters td.usagehard select
+table.filters td.usagehard select
 {
     background-color: #67c;
 }
 
-table.view table.filters td.widgetshow
+table.filters td.widgetshow
 {
     background-image: url("images/background-gold.jpg");
     background-repeat: repeat;
@@ -1340,30 +1379,30 @@ table.view table.filters td.widgetshow
     background-color: transparent;
     color: #000;
 }
-table.view table.filters td.widgetoff
+table.filters td.widgetoff
 {
     background-image: none;
-    background-color: #ffc;
     color: #aa6;
 }
-table.view table.filters td.widgethard
+table.filters td.widgethard
 {
     background-image: none;
     background-color: #abf;
     color: #000;
 }
-table.view table.filters td.widgethide
+table.filters td.widgethide
 {
     background-image: none;
     background-color: #e8e;
     color: #000;
 }
 
-table.view table.filters td.title {
+table.filters td.title {
     /* border-style: none; */
     padding-right: 1em;
 }
 
+/* TABLE OF ALL VIEWS */
 table.views {
     border-collapse: collapse;
     empty-cells: show;
@@ -1375,17 +1414,26 @@ table.views td, table.views th{
     padding: 2px 1ex;
 }
 
+table.views td {
+height: 25px;
+        padding-top: 3px;
+color: white;
+}
+
 table.views th {
-    background-color: #5b8;
+    background-color: #709aa5;
     color: white;
 }
 
 table.views td.legend {
-    background-color: #7ca;
+    background-color: #8eaeb8;
+    color: white;
+
 }
 
 table.views td.content {
-    background-color: #8ec;
+    background-color: #9ebec8;
+    color: white;
 }
 
 table.views td.edit {
@@ -1395,8 +1443,8 @@ table.views td.edit {
 
 table.views td.buttons {
     padding: 3px;
-    background-color: #888;
     vertical-align: middle;
+    background-color: #8EAEB8;
 }
 
 a.button {

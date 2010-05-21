@@ -20,18 +20,54 @@ body.main {
     background-color: black;
     background-repeat: repeat;
     font-family: arial, helvetica, sans-serif;
-    font-size: 10pt;
-    padding: 0px;
+    font-size: 11pt;
+    padding-left: 0px;
+    padding-right: 10px;
+    padding-top: 0px;
+    padding-bottom: 0px;
     margin: 0px;
     overflow:hidden;
-    padding-right: 12px;
 }
 
-table.footer { 
+body.main table.header {
     width: 100%;
-    border-top: 1px dotted #468;
-    margin-top: 1em;
-    color: #246;
+    border-bottom: 1px solid white;
+    margin-bottom: 10px;
+    padding-bottom: 3px;
+    padding-left: 10px;
+    padding-right: 0px;
+    margin-left: 0px;
+} 
+
+body.main table.header td.left {
+    font-size: 15pt;
+    font-weight: bold;
+    color: #fff;
+    vertical-align: bottom;
+    padding-left: 4px;
+}
+
+body.main table.header td.right {
+    text-align: right;
+    vertical-align: bottom;
+    color: #fff;
+    font-size: 10pt;
+}
+
+body.main table.header td.right img {
+    position: relative;
+    top: 5px;
+}
+
+
+body.main table.footer { 
+    margin-top: 10px;
+    width: 100%;
+    color: white;
+}
+
+div.main {
+    padding-left: 10px;
 }
 
 /*

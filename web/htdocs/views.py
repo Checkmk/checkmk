@@ -1,5 +1,3 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -123,23 +121,23 @@ def register_events(row):
 
 def toggle_button(id, isopen, text, addclasses=[]):
     if isopen:
-	displaytxt = ""
-        linestyle = "border-bottom-style: none;"
+	cssclass = "open"
     else:
-	displaytxt = "none"
-        linestyle = "border-bottom-style: solid;"
+	cssclass = "closed"
     classes = " ".join(["navi"] + addclasses)
-    html.write('<td class=left style="%s"><a class="%s" href="#" onclick="toggle_tab(this.parentNode, \'%s\')">%s</a></td>\n' % \
-	    (linestyle, classes, id, text))
+    html.write('<td class="left %s" onclick="toggle_tab(this, \'%s\');" '
+               'onmouseover="this.style.cursor=\'pointer\'; hover_tab(this);" '
+	       'onmouseout="this.style.cursor=\'auto\'; unhover_tab(this);">%s</td>\n' % (cssclass, id, text))
 
 
 def show_filter_form(is_open, filters, colspan):
     # Table muss einen anderen Namen, als das Formular
-    html.write("<tr class=form id=table_filter %s><td colspan=%d>" % ((not is_open and 'style="display: none"' or ''), colspan) )
+    html.write("<tr class=form id=table_filter %s>\n" % (not is_open and 'style="display: none"' or '') )
+    html.write("<td colspan=%d>" % colspan) 
     html.begin_form("filter")
     html.write("<div class=whiteborder>\n")
+    
     html.write("<table class=form>\n")
-
     # sort filters according to title
     s = [(f.sort_index, f.title, f) for f in filters]
     s.sort()
@@ -155,14 +153,17 @@ def show_filter_form(is_open, filters, colspan):
 	    html.write("</tr>\n")
 	col = (col + 1) % 2
     if col == 1:
-	html.write("<td class=legend></td><td class=content></td></tr>\n")
+	html.write("<td class=legend></td>\n<td class=content></td></tr>\n")
     html.write('<tr><td class="legend button" colspan=4>')
     html.button("search", "Search", "submit")
     html.write("</td></tr>\n")
-    html.write("</table></div>\n")
-    html.write("</td></tr>\n")
+    html.write("</table>\n")
+
     html.hidden_fields()
     html.end_form()
+
+    html.write("</div>")
+    html.write("</td></tr>\n")
 
 ##################################################################################
 # Filters
@@ -964,7 +965,7 @@ def show_view(view, show_heading = False):
                 addclass = " selected"
             else:
                 addclass = ""
-            html.write('<td class="left columns"><a class="%s" href="%s">%s</a></td>\n' % (addclass, uri, col))
+            html.write('<td class="left columns%s"><a href="%s">%s</a></td>\n' % (addclass, uri, col))
             html.write("<td class=minigap></td>\n")
             colspan += 2
 
@@ -979,7 +980,7 @@ def show_view(view, show_heading = False):
                 reftext = "%d s" % ref
             else:
                 reftext = "&#8734;"
-            html.write('<td class="left refresh"><a class="%s" href="%s">%s</a></td>\n' % (addclass, uri, reftext))
+            html.write('<td class="left refresh%s"><a href="%s">%s</a></td>\n' % (addclass, uri, reftext))
             html.write("<td class=minigap></td>\n")
             colspan += 2
 
@@ -987,12 +988,14 @@ def show_view(view, show_heading = False):
     colspan += 1
     # Customize/Edit view button
     if config.may("edit_views"):
+        html.write('<td class="right" onmouseover="hover_tab(this);" onmouseout="unhover_tab(this);">')
 	if view["owner"] == html.req.user:
-	    html.write('<td class="right"><a href="edit_view.py?load_view=%s">Edit</a></td>\n' % view["name"])
+	    html.write('<a href="edit_view.py?load_view=%s">Edit</a>\n' % view["name"])
 	else:
-            html.write('<td class="right"><a href="edit_view.py?clonefrom=%s&load_view=%s">Edit</a></td>\n' % (view["owner"], view["name"]))
+            html.write('<a href="edit_view.py?clonefrom=%s&load_view=%s">Edit</a>\n' % (view["owner"], view["name"]))
+        html.write('</td>')
         colspan += 1
-    html.write("</td></tr>")
+    html.write("</tr>")
     
     # Filter form
     if len(show_filters) > 0 and not html.do_actions():

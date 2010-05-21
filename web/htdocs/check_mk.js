@@ -51,11 +51,24 @@ function toggle_tab(linkobject, oid)
     var table = document.getElementById(oid);
     if (table.style.display == "none") {
 	table.style.display = "";
-        linkobject.style.borderBottomStyle = "none";
+        linkobject.setAttribute("className", "left open");
+        linkobject.setAttribute("class", "left open");
     }
     else {
 	table.style.display = "none";
-        linkobject.style.borderBottomStyle = "solid";
+        linkobject.setAttribute("className", "left closed");
+        linkobject.setAttribute("class", "left closed");
     }
     table = null;
 }
+
+function hover_tab(linkobject)
+{
+    linkobject.style.backgroundImage = "url(images/metanav_button_hi.png)";
+}
+
+function unhover_tab(linkobject)
+{
+    linkobject.style.backgroundImage = "url(images/metanav_button.png)";
+}
+

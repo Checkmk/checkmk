@@ -89,7 +89,7 @@ function snapinDrag(event) {
   line.style.height          = '3px';
   line.style.width           = '250px';
   line.style.backgroundColor = '#eee';
-  line.style.margin         = '1px 0px 0px 5px';
+  line.style.margin          = '1px 0px 0px 5px';
   var o = getSnapinTargetPos();
   if(o != null) {
     snapinAddBefore(o.parentNode, o, line);
@@ -163,70 +163,81 @@ function snapinStopDrag(event) {
   snapinDragging = false;
 }
 
+function getSnapinList() {
+  var l = [];
+  var childs = snapinDragging.parentNode.children;
+  for(var i in childs) {
+    var child = childs[i];
+    // Skip
+    // - non snapin objects
+    // - currently dragged object
+    if(child.id && child.id.substr(0, 7) == 'snapin_' && child.id != snapinDragging.id)
+      l.push(child);
+  }
+
+  return l;
+}
+
+function getSnapinCoords(obj) {
+  var snapinTop = snapinDragging.offsetTop;
+  
+  var bottomOffset = obj.offsetTop + obj.clientHeight - snapinTop;
+  if(bottomOffset < 0)
+    bottomOffset = -bottomOffset;
+      
+  var topOffset = obj.offsetTop - snapinTop;
+  if(topOffset < 0)
+    topOffset = -topOffset;
+      
+  var offset = topOffset;
+  var corner = 0;
+  if(bottomOffset < topOffset) {
+    offset = bottomOffset
+    corner = 1;
+  }
+
+  return [ bottomOffset, topOffset, offset, corner ];
+}
+
 function getSnapinTargetPos() {
   var snapinTop = snapinDragging.offsetTop;
-  var childs = snapinDragging.parentNode.children;
-  var obj = false;
+  var childs = getSnapinList();
+  var objId = -1;
+  var objCorner = -1;
 
   // Find the nearest snapin to current left/top corner of
   // the currently dragged snapin
   for(var i in childs) {
     var child = childs[i];
 
-    // Skip currently dragged object
-    if(child == snapinDragging)
+    if(!child.id || child.id.substr(0, 7) != 'snapin_' || child.id == snapinDragging.id)
       continue;
 
     // Initialize with the first snapin in the list
-    if(obj === false) {
-      obj = child;
+    if(objId === -1) {
+      objId = i;
+      var coords = getSnapinCoords(child)
+      objCorner = coords[3]; 
       continue;
     }
 
     // First check which corner is closer. Upper left or
     // the bottom left.
-    var curBottomOffset = obj.offsetTop + obj.clientHeight - snapinTop;
-    if(curBottomOffset < 0)
-      curBottomOffset = -curBottomOffset;
-
-    var curTopOffset = obj.offsetTop - snapinTop;
-    if(curTopOffset < 0)
-      curTopOffset = -curTopOffset;
-
-    var curOffset = curTopOffset;
-    if(curBottomOffset < curTopOffset)
-      curOffset = curBottomOffset;
-
-    var newBottomOffset = child.offsetTop + child.clientHeight - snapinTop;
-    if(newBottomOffset < 0)
-      newBottomOffset = -newBottomOffset;
-
-    var newTopOffset = child.offsetTop - snapinTop;
-    if(newTopOffset < 0)
-      newTopOffset = -newTopOffset;
-
-    var newOffset = newTopOffset;
-    if(newBottomOffset < newTopOffset)
-      newOffset = newBottomOffset;
-
-    /*parent.main.document.close(); 
-    parent.main.document.open(); 
-    parent.main.document.write("Offset: "+newOffset+" Top: "+newTopOffset+" Bottom: "+newBottomOffset+"<br>");*/
+    var curCoords = getSnapinCoords(childs[objId]);
+    var newCoords = getSnapinCoords(child);
 
     // Is the upper left corner closer?
-    if(curOffset > newOffset) {
-      obj = child;
-      continue;
+    if(newCoords[2] < curCoords[2]) {
+      objCorner = newCoords[3];
+		  objId = i;
     }
   }
 
-  // Is the dragged snapin dragged below the last one?
-  if((obj.id == childs[childs.length-1].id && snapinTop > obj.offsetTop + obj.clientHeight)
-     || (snapinDragging == childs[childs.length-1] && snapinTop > childs[childs.length-2].offsetTop + childs[childs.length-2].clientHeight)) {
-    return null;
-  }
-
-  return obj;
+	// Is the dragged snapin dragged above the first one?
+	if(objId == 0 && objCorner == 0)
+		return childs[0];
+	else
+    return childs[(parseInt(objId)+1)];
 }
 
 /************************************************

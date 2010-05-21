@@ -76,7 +76,7 @@ function snapinDrag(event) {
 
   // Drag the snapin
   snapinDragging.style.position = 'absolute';
-  snapinDragging.style.top      = event.clientY - snapinOffset[0];
+  snapinDragging.style.top      = event.clientY - snapinOffset[0] - document.getElementById('side_content').scrollTop;
   snapinDragging.style.left     = event.clientX - snapinOffset[1];
   snapinDragging.style.width    = '175px';
   snapinDragging.style.zIndex   = 200;
@@ -179,7 +179,7 @@ function getSnapinList() {
 }
 
 function getSnapinCoords(obj) {
-  var snapinTop = snapinDragging.offsetTop;
+  var snapinTop = snapinDragging.offsetTop + document.getElementById('side_content').scrollTop;
   
   var bottomOffset = obj.offsetTop + obj.clientHeight - snapinTop;
   if(bottomOffset < 0)

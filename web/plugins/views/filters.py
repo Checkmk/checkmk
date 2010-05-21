@@ -311,16 +311,15 @@ declare_filter(251, FilterNagiosExpression("service", "has_performance_data", "H
             "Filter: service_perf_data != \n",
             "Filter: service_perf_data = \n"))
 
-declare_filter(130, FilterNagiosFlag("host",    "host_in_notification_period",   "Host is in notification period"))
-declare_filter(230, FilterNagiosFlag("service", "service_acknowledged",             "Problem has been acknowledged"))
-declare_filter(231, FilterNagiosFlag("service", "service_in_notification_period",   "Service is in notification period"))
+declare_filter(130, FilterNagiosFlag("host",    "host_in_notification_period",   "Host in notif. period"))
+declare_filter(230, FilterNagiosFlag("service", "service_acknowledged",             "Problem acknowledged"))
+declare_filter(231, FilterNagiosFlag("service", "service_in_notification_period",   "Service in notif. per."))
 declare_filter(232, FilterNagiosFlag("service", "service_active_checks_enabled",    "Active checks enabled"))
 declare_filter(233, FilterNagiosFlag("service", "service_notifications_enabled",    "Notifications enabled"))
 declare_filter(236, FilterNagiosFlag("service", "service_is_flapping",              "Flapping"))
-declare_filter(131, FilterNagiosFlag("host",    "host_in_notification_period",   "Host is in notification period"))
 declare_filter(231, FilterNagiosFlag("service", "service_scheduled_downtime_depth", "Service in downtime"))
 declare_filter(132, FilterNagiosFlag("host",    "host_scheduled_downtime_depth", "Host in downtime"))
-declare_filter(232, FilterNagiosExpression("service", "in_downtime", "Host or Service in downtime",
+declare_filter(232, FilterNagiosExpression("service", "in_downtime", "Host/service in downtime",
 	    "Filter: service_scheduled_downtime_depth > 0\nFilter: host_scheduled_downtime_depth > 0\nOr: 2\n",
 	    "Filter: service_scheduled_downtime_depth = 0\nFilter: host_scheduled_downtime_depth = 0\nAnd: 2\n"))
 	

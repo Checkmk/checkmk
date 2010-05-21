@@ -85,9 +85,16 @@ body.side {
     background-image: url("images/snapinframe_background.jpg");
     font-family: arial, helvetica, sans-serif;
     font-size: 10pt;
-    padding: 0px;
-    margin: 0px;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    height: 100%;
     overflow:hidden;
+}
+
+div#check_mk_sidebar {
+    padding: 0;
+    margin: 0;
 }
 
 /* Top logo part */
@@ -95,17 +102,26 @@ div#check_mk_sidebar div#side_header {
     position: absolute;
     top: 0px;
     left: 0px;
+    width: 100%;
     height: 55px;
     z-index: 10;
+    background-repeat: no-repeat;
+    background-image: url("images/sidebar_oben.png");
+}
+
+div#check_mk_sidebar div#side_header a.logo {
+    display: block;
+    height: 55px;
+    width: 270px;
 }
 
 /* Scrolling part with snapins */
 div#check_mk_sidebar div#side_content {
     z-index: 5;
-    position: relative;
+    /*position: relative;
     top: -4px;
-    left: 0px;
-    width: 290px;
+    left: 0px;*/
+    width: 100%;
     height: 500px;
     overflow: hidden;
     color: #000000;
@@ -115,15 +131,16 @@ div#check_mk_sidebar div#side_content {
 }
 
 div#check_mk_sidebar div#side_footer {
-    position: relative;
-    top: -8px;
-    height: 33px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    margin: 0;
+    padding: 0;
+    height: 35px;
     width: 100%;
-    overflow: visible;
     z-index: 10;
-    background-attachment: fixed;
-    background-repeat: repeat;
-    background-image: url("images/sidebar_unten.jpg");
+    background-repeat: no-repeat;
+    background-image: url("images/sidebar_unten.png");
 }
 div#check_mk_sidebar div#side_footer div.button {
     width: 75px;
@@ -151,16 +168,17 @@ div#check_mk_sidebar div#side_footer div.copyright {
     color: white;
     position: relative;
     left: 130px;
-    top: -18px;
-    width: 120px;
+    top: 12px;
+    width: 122px;
     text-align: right;
 }
 
-
 /* General layout of snapins */
 div.snapin {
-    width: 280px;
-    margin-left: 0px;
+    /*width: 280px;*/
+    width: 100%;
+    margin: 0;
+    padding: 0;
 }
 
 
@@ -170,7 +188,6 @@ div.snapin div.head {
     text-align: center;
     vertical-align: middle;
     color: white;
-    /* font-size: 9pt; */
 }
 
 div.snapin div.head.open {
@@ -209,36 +226,13 @@ div.snapin div.foot {
     width: 260px;
     height: 10px;
 }
-/*
-div#check_mk_sidebar div#side_header div.title {width:100%;}
-div#check_mk_sidebar div#side_header div.title a {font-weight:bold;color:#fff;font-size:12pt;}
-div#check_mk_sidebar div#side_header div.logo {float:right;}
-
-div#check_mk_sidebar div#side_header div.nav,
-div#check_mk_sidebar div#side_footer div.nav {width:100%;margin:auto;text-align:center;}
-div#check_mk_sidebar div#side_header div.nav img
-div#check_mk_sidebar div#side_footer div.nav img {margin:auto;width: 20px;}
-*/
-/* div#check_mk_sidebar div#side_header div#slit_top {background-image:url(side_slit_top.png);background-color:transparent;}
-div#check_mk_sidebar div#side_header div#slit_bottom {background-image:url(side_slit_bottom.png);background-color:transparent;}
-*/
-div#check_mk_sidebar div.section {
-}
-/*
-div#check_mk_sidebar div.content {
-    margin-top: 2px;
-    margin-bottom: 3px;
-}*/
-
 
 /* General styles for snapin contents */
 div#check_mk_sidebar {
-    /* font-size: 8pt; */
     font-family: arial, helvetica, sans-serif;
 }
 
 div#check_mk_sidebar td {
-    /* font-size: 8pt; */
     color: #fff;
 }
 div#check_mk_sidebar h3 {

@@ -41,7 +41,6 @@ if(window.addEventListener) {
 }
 
 function snapinStartDrag(event) {
-  // IE fix
   if (!event)
     event = window.event;
   
@@ -67,7 +66,6 @@ function snapinStartDrag(event) {
 }
 
 function snapinDrag(event) {
-  // IE fix
   if (!event)
     event = window.event;
   
@@ -164,6 +162,9 @@ function snapinStopDrag(event) {
 }
 
 function getSnapinList() {
+  if(snapinDragging === false)
+    return true;
+  
   var l = [];
   var childs = snapinDragging.parentNode.children;
   for(var i in childs) {

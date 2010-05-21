@@ -16,11 +16,10 @@ input, td, select {
 
 body.main {
     background-attachment: fixed;
-    background-image: url("images/contentframe_background.jpg");
-    background-color: black;
+    background-image: url("images/contentframe_background.jpg"); 
     background-repeat: repeat;
     font-family: arial, helvetica, sans-serif;
-    font-size: 11pt;
+    font-size: 9pt;
     padding-left: 0px;
     padding-right: 10px;
     padding-top: 0px;
@@ -43,8 +42,8 @@ body.main table.header td.left {
     font-weight: bold;
     color: #fff;
     vertical-align: bottom;
-    F
     padding-left: 4px;
+    height: 31px;
 }
 
 body.main table.header td.right {
@@ -84,12 +83,16 @@ body.side {
     background-repeat: repeat;
     background-image: url("images/snapinframe_background.jpg");
     font-family: arial, helvetica, sans-serif;
-    font-size: 10pt;
+    font-size: 9pt;
     padding: 0;
     margin: 0;
     width: 100%;
     height: 100%;
     overflow:hidden;
+}
+
+body.side li {
+color: #274750;
 }
 
 div#check_mk_sidebar {
@@ -211,7 +214,7 @@ div.snapin div.closesnapin {
 
 
 div.snapin div.content {
-    background-image: url("images/snapin_background.png");
+     background-image: url("images/snapin_background.png");
     background-repeat: repeat-y;
     background-position: left;
     padding-top: 5px;
@@ -405,28 +408,92 @@ table.navi {
     /* border: 1px solid white; */
     /* padding: 10px; */
 }
-a.navi, a.viewoption {
-    border-style: solid;
-    border-color: #fff;
-    border-width: 1px;
-    -moz-border-radius: 3px;
-    background-color: #69a;
-    padding: 3px 2px 0px 2px;
-    text-decoration: none;
-    color: white;
-    margin-right: 2px;
-    margin-bottom: 2px;
-    /* line-height: 1.5em; */
-    font-size: 8pt;
-    font-weight: bold;
-    width: 140px;
-    height: 18px;
-    display: block;
+
+div.contextlink {
     float: left;
     overflow: hidden;
     white-space: nowrap;
     text-align: center;
     vertical-align: middle;
+    width: 158px;
+    height: 25px;
+    background-image: url("images/contextlink.png");
+    background-repeat: no-repeat;
+    background-position: center center;
+    margin: 0px;
+}
+
+div.contextlink a {
+    padding-top: 5px;
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    display: block;
+    width: 158px;
+    height: 25px;
+}
+
+div.naviend {
+    width: 0px;
+    height: 0px;
+    display: block;
+    float: none;
+    background-color: green;
+    overflow: hidden;
+}
+
+table.navi {
+    margin-top: 10px;
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0px;
+    margin: 0px 0px 0px 4px;
+}
+
+table.navi td {
+    border-bottom: 1px solid white;
+    padding: 0px;
+    margin: 0px;
+/* border: 1px solid green; */
+}
+
+table.navi td.left, table.navi td.right {
+    vertical-align: middle;
+    text-align: center;
+    width: 155px;
+    height: 21px;
+    background-image: url("images/metanav_button.png");
+    background-repeat: no-repeat;
+    background-position: center center;
+    border: 1px solid transparent;
+    border-bottom: 1px solid white;
+}
+
+table.navi td.left.columns {
+    width: 21px;
+    background-image: url("images/metanav_button_20.png");
+}
+
+table.navi td.left.refresh {
+    width: 30px;
+    background-image: url("images/metanav_button_30.png");
+}
+
+table.navi td.minigap {
+     width: 3px;
+}
+
+table.navi a {
+    vertical-align: middle;
+    text-align: center;
+    font-weight: normal;
+    text-decoration: none;
+    color: white;
+    display: block;
+}
+                    
+table.navi a:hover {
+    
 }
 
 a.viewoption {
@@ -442,35 +509,12 @@ a.viewoption.selected, a.viewoption:hover {
     background-color: #ace;
 }
 
-div.naviend {
-    width: 0px;
-    height: 0px;
-    display: block;
-    float: none;
-    background-color: green;
-    overflow: hidden;
+table.navi tr.form div.whiteborder {
+    border-left: 1px solid white;
+    border-right: 1px solid white;
 }
 
-a.navi:hover {
-    background-color: #bcd;
-}
-
-a.navi.filter {
-    background-color: #da0;
-}
-a.navi.filter:hover {
-    background-color: #fc0;
-}
-
-a.navi.context {
-    background-color: #5f8b98;
-}
-a.navi.context:hover {
-    background-color: #8bc;
-    border-color: #fff;
-}
-
-
+/* FILTER and ACTIONS */
 
 /* tabs ---------------------------------------------------------------------- */
 
@@ -767,7 +811,7 @@ td.shadowtop, td.shadowbottom {
     background-repeat: repeat;
     height: 1px;
     border-style: none;
-    border-width: none;
+    border-width: 0px;
     padding: 0px;
 }
 td.shadowleft, td.shadowright {
@@ -775,7 +819,7 @@ td.shadowleft, td.shadowright {
     background-repeat: repeat;
     width: 1px;
     border-style: none;
-    border-width: none;
+    border-width: 0px;
     padding: 0px;
 }
 td.shadowright {
@@ -888,32 +932,38 @@ h2.formcaption {
 }
 
 table.form {
-  padding: 1ex;
-  border-collapse: collapse;
-  empty-cells: show;
-  /* width: 100%; */
+    border-collapse: collapse;
+    empty-cells: show;
+    background-image: url("images/form_background.png"); 
+    background-repeat: repeat;
+    border-spacing: 0px;
+    margin: 10px;
 }
 
 table.form input { 
     font-size: 9pt;
 }
 table.form td { 
-  vertical-align: top;
-  padding: 0.8ex 1ex;
-    font-size: 9pt;
+    vertical-align: top;
+    padding: 0.8ex 1ex;
 }
 
 table.form td.legend { 
-  /* width: 20%; */
-  border: 1px solid black;
-  vertical-align: top;
-  color: white;
+    vertical-align: top;
+    color: #274750;
+    border: 1px solid white;
+    border-right-style: none;
+}
+
+table.form td.legend.button { 
+    text-align: right;
+    border-right: 1px solid white;
 }
 
 table.form td.content { 
-  padding-right: 2ex;
-  /* width: 75%; */
-  border: 1px solid black;
+    padding-right: 2ex;
+    border: 1px solid white;
+    border-left-style: none;
 }
 
 /* colors of specific forms */

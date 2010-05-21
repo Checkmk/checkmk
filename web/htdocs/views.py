@@ -121,21 +121,24 @@ def register_events(row):
             html.register_event({0:"up", 1:"warning", 2:"critical", 3:"unknown"}[svc_state])
 
 
-def toggle_button(id, isopen, opentxt, closetxt, addclasses=[]):
+def toggle_button(id, isopen, text, addclasses=[]):
     if isopen:
 	displaytxt = ""
+        linestyle = "border-bottom-style: none;"
     else:
 	displaytxt = "none"
+        linestyle = "border-bottom-style: solid;"
     classes = " ".join(["navi"] + addclasses)
-    toggle_texts = { False: opentxt, True: closetxt }
-    html.write("<a class=\"%s\" href=\"#\" onclick=\"toggle_object(this, '%s', '%s', '%s')\">%s</a>" % \
-	    (classes, id, opentxt, closetxt, toggle_texts[isopen]))
+    html.write('<td class=left style="%s"><a class="%s" href="#" onclick="toggle_tab(this.parentNode, \'%s\')">%s</a></td>\n' % \
+	    (linestyle, classes, id, text))
 
 
-def show_filter_form(is_open, filters):
+def show_filter_form(is_open, filters, colspan):
     # Table muss einen anderen Namen, als das Formular
+    html.write("<tr class=form id=table_filter %s><td colspan=%d>" % ((not is_open and 'style="display: none"' or ''), colspan) )
     html.begin_form("filter")
-    html.write("<table class=form id=table_filter %s>\n" % (not is_open and 'style="display: none"' or ''))
+    html.write("<div class=whiteborder>\n")
+    html.write("<table class=form>\n")
 
     # sort filters according to title
     s = [(f.sort_index, f.title, f) for f in filters]
@@ -153,10 +156,11 @@ def show_filter_form(is_open, filters):
 	col = (col + 1) % 2
     if col == 1:
 	html.write("<td class=legend></td><td class=content></td></tr>\n")
-    html.write("<tr><td class=legend colspan=4>")
+    html.write('<tr><td class="legend button" colspan=4>')
     html.button("search", "Search", "submit")
     html.write("</td></tr>\n")
-    html.write("</table>\n")
+    html.write("</table></div>\n")
+    html.write("</td></tr>\n")
     html.hidden_fields()
     html.end_form()
 
@@ -933,23 +937,24 @@ def show_view(view, show_heading = False):
     if show_heading:
 	html.header(view_title(view))
 
-    html.write("<table class=navi><tr><td>\n")
-
     show_context_links(view, hide_filters)
-    if config.may("edit_views"):
-	if view["owner"] == html.req.user:
-	    html.write("<a class=navi href=\"edit_view.py?load_view=%s\">Edit this view</a> " % view["name"])
-	else:
-	    html.write("<a class=navi href=\"edit_view.py?clonefrom=%s&load_view=%s\">Customize this view</a> " % (view["owner"], view["name"]))
+
+    html.write("<table class=navi><tr>\n")
+    colspan = 0
 
     # Filter-button
     if len(show_filters) > 0 and not html.do_actions():
         filter_isopen = html.var("search", "") == "" and view["mustsearch"]
-	toggle_button("table_filter", filter_isopen, "Show filter", "Hide filter", ["filter"])
+	toggle_button("table_filter", filter_isopen, "Filter", ["filter"])
+        html.write("<td class=minigap></td>\n")
+        colspan += 2
    
-    # Action-button
+    # Command-button
     if len(rows) > 0 and config.may("act") and not html.do_actions():
-        toggle_button("table_actions", False, "Show commands", "Hide commands")
+        toggle_button("table_actions", False, "Commands")
+        html.write("<td class=minigap></td>\n")
+        colspan += 2
+
 
     # Buttons for view options
     if config.user_may(config.user, "view_option_columns"):
@@ -959,7 +964,9 @@ def show_view(view, show_heading = False):
                 addclass = " selected"
             else:
                 addclass = ""
-            html.write("<a class=\"viewoption columns %s\" href=\"%s\">%s</a>" % (addclass, uri, col))
+            html.write('<td class="left columns"><a class="%s" href="%s">%s</a></td>\n' % (addclass, uri, col))
+            html.write("<td class=minigap></td>\n")
+            colspan += 2
 
     if config.user_may(config.user, "view_option_refresh"):
         for ref in config.view_option_refreshes:
@@ -972,13 +979,24 @@ def show_view(view, show_heading = False):
                 reftext = "%d s" % ref
             else:
                 reftext = "&#8734;"
-            html.write("<a class=\"viewoption refresh %s\" href=\"%s\">%s</a>" % (addclass, uri, reftext))
+            html.write('<td class="left refresh"><a class="%s" href="%s">%s</a></td>\n' % (addclass, uri, reftext))
+            html.write("<td class=minigap></td>\n")
+            colspan += 2
 
-    html.write("</td></tr></table>\n")
-
+    html.write("<td class=gap></td>\n")
+    colspan += 1
+    # Customize/Edit view button
+    if config.may("edit_views"):
+	if view["owner"] == html.req.user:
+	    html.write('<td class="right"><a href="edit_view.py?load_view=%s">Edit</a></td>\n' % view["name"])
+	else:
+            html.write('<td class="right"><a href="edit_view.py?clonefrom=%s&load_view=%s">Edit</a></td>\n' % (view["owner"], view["name"]))
+        colspan += 1
+    html.write("</td></tr>")
+    
     # Filter form
     if len(show_filters) > 0 and not html.do_actions():
-	show_filter_form(filter_isopen, show_filters)
+	show_filter_form(filter_isopen, show_filters, colspan)
 
     # Actions
     has_done_actions = False
@@ -989,10 +1007,12 @@ def show_view(view, show_heading = False):
 	    except MKUserError, e:
 		html.show_error(e.message)
 		html.add_user_error(e.varname, e.message)
-		show_action_form(True, datasource)
+		show_action_form(True, datasource, colspan)
 
         else:
-	    show_action_form(False, datasource)
+	    show_action_form(False, datasource, colspan)
+
+    html.write("</table>\n")
 
     if has_done_actions:
 	html.write("<a href=\"%s\">Back to search results</a>" % html.makeuri([]))
@@ -1092,6 +1112,7 @@ def view_linktitle(view):
 def show_context_links(thisview, active_filters):
     # compute list of html variables used actively by hidden or shown
     # filters.
+    html.write("<table class=contextlinks><tr><td>")
     active_filter_vars = set([])
     for filt in active_filters:
 	for var in filt.htmlvars:
@@ -1125,8 +1146,10 @@ def show_context_links(thisview, active_filters):
 	    if first:
 		first = False
 	    vars_values = [ (var, html.var(var)) for var in set(used_contextvars) ]
-	    html.write("<a class=\"navi context\" href=\"%s\">%s</a>" % \
+	    html.write('<div class="contextlink"><a href="%s">%s</a></div>' % \
 		    (html.makeuri_contextless(vars_values + [("view_name", name)]), view_linktitle(view)))
+
+    html.write('</td></tr></table>\n')
 	
 
 
@@ -1301,7 +1324,7 @@ def allowed_for_datasource(collection, datasourcename):
 #
 # -----------------------------------------------------------------------------
 
-def show_action_form(is_open, datasource):
+def show_action_form(is_open, datasource, colspan):
     if not config.may("act"):
 	return
 
@@ -1312,12 +1335,15 @@ def show_action_form(is_open, datasource):
 	return # no actions on others	
 
     # Table muss einen anderen Namen, als das Formular
+
+    html.write("<tr class=form id=table_actions %s><td colspan=%d>" % ((not is_open and 'style="display: none"' or ''), colspan) )
     html.begin_form("actions")
     html.hidden_field("_do_actions", "yes")
     html.hidden_field("actions", "yes") 
     html.hidden_fields() # set all current variables, exception action vars
+    html.write("<div class=whiteborder>\n")
+    html.write("<table class=form>\n")
 
-    html.write("<table %s id=table_actions class=form>\n" % (is_open and " " or 'style="display:none"'))
     if what in [ "host", "service" ]:
 	show_host_service_actions(what)
     elif what == "downtime":

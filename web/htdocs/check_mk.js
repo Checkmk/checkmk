@@ -46,16 +46,16 @@ function filter_activation(oid)
     selectobject = null;
 }
 
-function toggle_object(linkobject, oid, showtext, hidetext)
+function toggle_tab(linkobject, oid)
 {
     var table = document.getElementById(oid);
     if (table.style.display == "none") {
 	table.style.display = "";
-	linkobject.innerHTML = hidetext;
+        linkobject.style.borderBottomStyle = "none";
     }
     else {
 	table.style.display = "none";
-	linkobject.innerHTML = showtext;
+        linkobject.style.borderBottomStyle = "solid";
     }
     table = null;
 }

@@ -353,8 +353,8 @@ sounds = []
 #      \_/  |_|\___| \_/\_/    \___/| .__/ \__|_|\___/|_| |_|___/
 #                                   |_|                          
 
-view_option_refreshes = [ 10, 30, 60, 90, 0 ]
-view_option_columns   = [ 1, 2, 3, 4, 5, 6, 8, 10, 12 ]
+view_option_refreshes = [ 30, 60, 90, 0 ]
+view_option_columns   = [ 1, 2, 3, 4, 5, 6, 8 ]
 
 
 # MISC

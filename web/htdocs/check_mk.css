@@ -26,7 +26,6 @@ body.main {
     padding-top: 0px;
     padding-bottom: 0px;
     margin: 0px;
-    overflow:hidden;
 }
 
 body.main table.header {
@@ -195,7 +194,7 @@ div.snapin div.closesnapin {
 
 div.snapin div.content {
     background-image: url("images/snapin_background.png");
-    background-repeat: repeat;
+    background-repeat: repeat-y;
     background-position: left;
     padding-top: 5px;
     padding-left: 12px;
@@ -536,10 +535,19 @@ table#tabs {
 
 /* table of services -------------------------------------------------------------- */
 
+table.services { 
+  border-spacing: 0px;
+  margin: 0px;
+  padding: 0px;
+  border-collapse: collapse;
+  empty-cells: show;
+  width: 100%;
+}
+
 table.services th {
     font-weight: normal;
-    border-left: 1px dotted #366;
-    border-right: 1px dotted #366;
+    border-left: 1px solid #ccc;
+    border-right: 1px solid #ccc;
     background-color: #abb;
     padding: 0px 4px;
     text-align: center;
@@ -552,17 +560,6 @@ table.services th.tablegap {
   background-repeat: repeat;
   background-position: center;
 }
-
-table.services { 
-  border-spacing: 0px;
-  margin: 0px;
-  padding: 0px;
-    margin-top: 8px;
-  border-collapse: collapse;
-  empty-cells: show;
-  width: 100%;
-}
-
 table.services tr.odd0  { background-color: #eee; } 
 table.services tr.even0 { background-color: #ddd; }
 
@@ -603,6 +600,7 @@ tr.groupheader td {
     padding: 0px;
     padding-top: 4px;
     margin: 0px;
+    font-weight: bold;
 }
 
 tr.groupheader td table {
@@ -760,6 +758,13 @@ table.services td.pnpgraph {
 |_____\__,_|\__, |\___/ \__,_|\__|___/
             |___/                     
 */
+
+div.tableshadow {
+    background-image: url("images/tableshadow.png");
+    background-repeat: repeat;
+    padding: 1px 1px 1px 1px;
+}
+
 
 td.groupheader {
     margin: 0px;
@@ -1451,8 +1456,6 @@ table.dataset {
     padding: 0px;
     border-collapse: collapse;
     empty-cells: show;
-    margin-bottom: 15px;
-    margin-top: 11px;
     width: 100%;
 }
 

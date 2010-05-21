@@ -318,6 +318,8 @@ def render_grouped_list(data, view, group_columns, group_painters, painters, num
 	    this_group = [ row[c] for c in group_columns ]
 	    if this_group != last_group:
 		if column != 1: # not a the beginning of a new line
+                    for i in range(column-1, num_columns):
+                        html.write("<td class=fillup colspan=%d></td>" % num_painters)
 		    html.write("</tr>\n")
                     html.write("<tr>\n")
                     for x in range(0, num_columns):
@@ -359,8 +361,6 @@ def render_grouped_list(data, view, group_columns, group_painters, painters, num
 
 	# Should we wrap over to a new line?
 	if column >= num_columns + 1:
-            for i in range(column, num_columns):
-                html.write("<td colspan=%d>LEER</td>" % num_painters)
             html.write("</tr>\n")
 	    column = 1
 
@@ -385,8 +385,8 @@ def render_grouped_list(data, view, group_columns, group_painters, painters, num
         index += 1
     
     if group_open: 
-        for i in range(column, num_columns):
-            html.write("<td colspan=%d>LEER</td>" % num_painters)
+        for i in range(column-1, num_columns):
+            html.write("<td class=fillup colspan=%d></td>" % num_painters)
 	html.write("</tr>\n")
         html.write("<tr>\n")
         for x in range(0, num_columns):

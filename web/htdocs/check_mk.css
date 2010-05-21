@@ -568,7 +568,8 @@ table.services tr.odd3  { background-color: #fdc; }
 table.services tr.even3 { background-color: #fea; }
 
 
-table.services td { 
+/* HACK */
+table.services tr.odd0 td, table.services tr.even0 td { 
   border: 1px solid #bbb;
   padding: 0.2ex 1ex;
 }
@@ -758,24 +759,34 @@ div.tableshadow {
     background-image: url("images/tableshadow.png");
     background-repeat: repeat;
     padding: 1px 1px 1px 1px;
+    border-style: none;
 }
 
-td.shadowtop {
-    background-color: green;
-    height: 2px;
+td.shadowtop, td.shadowbottom {
+    background-image: url("images/tableshadow.png");
+    background-repeat: repeat;
+    height: 1px;
+    border-style: none;
+    border-width: none;
+    padding: 0px;
 }
-td.shadowleft {
-    background-color: red;
+td.shadowleft, td.shadowright {
+    background-image: url("images/tableshadow.png");
+    background-repeat: repeat;
+    width: 1px;
+    border-style: none;
+    border-width: none;
+    padding: 0px;
 }
 td.shadowright {
-    background-color: blue;
+  width: 1px;
 }
-td.shadowbottom {
-    background-color: #f80;
-    height: 2px;
-}
+
 td.tablegap {
-    background-color: yellow;
+    /* background-color: yellow; */
+}
+td.fillup {
+    background-color: #eee;
 }
 td.groupheader {
     margin: 0px;

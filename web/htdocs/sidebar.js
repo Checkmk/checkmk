@@ -167,16 +167,16 @@ function getSnapinTargetPos() {
   var snapinTop = snapinDragging.offsetTop;
   var childs = snapinDragging.parentNode.children;
   var obj = false;
-  
+
   // Find the nearest snapin to current left/top corner of
   // the currently dragged snapin
   for(var i in childs) {
-    child = childs[i];
+    var child = childs[i];
 
     // Skip currently dragged object
     if(child == snapinDragging)
       continue;
-    
+
     // Initialize with the first snapin in the list
     if(obj === false) {
       obj = child;
@@ -187,27 +187,31 @@ function getSnapinTargetPos() {
     // the bottom left.
     var curBottomOffset = obj.offsetTop + obj.clientHeight - snapinTop;
     if(curBottomOffset < 0)
-      curBottomOffset *= -1;
+      curBottomOffset = -curBottomOffset;
 
     var curTopOffset = obj.offsetTop - snapinTop;
     if(curTopOffset < 0)
-      curTopOffset *= -1;
+      curTopOffset = -curTopOffset;
 
     var curOffset = curTopOffset;
     if(curBottomOffset < curTopOffset)
       curOffset = curBottomOffset;
-    
-    var newBottomOffset = child.offsetTop + obj.clientHeight - snapinTop
+
+    var newBottomOffset = child.offsetTop + child.clientHeight - snapinTop;
     if(newBottomOffset < 0)
-      newBottomOffset *= -1;
-    
-    var newTopOffset = child.offsetTop - snapinTop
+      newBottomOffset = -newBottomOffset;
+
+    var newTopOffset = child.offsetTop - snapinTop;
     if(newTopOffset < 0)
-      newTopOffset *= -1;
+      newTopOffset = -newTopOffset;
 
     var newOffset = newTopOffset;
     if(newBottomOffset < newTopOffset)
       newOffset = newBottomOffset;
+
+    /*parent.main.document.close(); 
+    parent.main.document.open(); 
+    parent.main.document.write("Offset: "+newOffset+" Top: "+newTopOffset+" Bottom: "+newBottomOffset+"<br>");*/
 
     // Is the upper left corner closer?
     if(curOffset > newOffset) {
@@ -231,7 +235,7 @@ function getSnapinTargetPos() {
 
 function pageHeight() {
   var h;
-
+  
   if(window.innerHeight !== null && typeof window.innerHeight !== 'undefined')
     h = window.innerHeight;
   else if(document.documentElement && document.documentElement.clientHeight)
@@ -240,8 +244,8 @@ function pageHeight() {
     h = document.body.clientHeight;
   else
     h = null;
-
-  return h;
+  
+return h;
 }
 
 // Set the size of the sidebar_content div to fit the whole screen
@@ -252,7 +256,7 @@ function setSidebarHeight() {
   var oContent = document.getElementById('side_content');
   var oFooter  = document.getElementById('side_footer');
   var height   = pageHeight();
-
+  
   oContent.style.height = height - oHeader.clientHeight - oFooter.clientHeight - 5;
 }
 
@@ -260,19 +264,19 @@ var scrolling = true;
 
 function scrollwindow(speed){
   var c = document.getElementById('side_content');
-
+  
   if(scrolling) {
     c.scrollTop += speed;
     setTimeout("scrollwindow("+speed+")", 10);
   }
-
+  
   c = null;
 }
 
 /************************************************
  * drag/drop scrollen
  *************************************************/
- 
+
 var dragging = false;
 var startY = 0;
 var startScroll = 0;
@@ -288,15 +292,14 @@ if(window.addEventListener) {
 }
 
 function startDragScroll(event) {
-  // IE fix
   if (!event)
     event = window.event;
   
   // Evtl. auch nur mit Shift Taste: (e.button == 0 && (e["shiftKey"])
   if(dragging === false && event.button == 0
-     && event.target.tagName != 'A'
-     && event.target.tagName != 'INPUT'
-     && !(event.target.tagName == 'DIV' && event.target.className == 'heading')) {
+      && event.target.tagName != 'A'
+      && event.target.tagName != 'INPUT'
+      && !(event.target.tagName == 'DIV' && event.target.className == 'heading')) {
     event.preventDefault();
     event.stopPropagation();
     event.returnValue = false;
@@ -312,7 +315,6 @@ function stopDragScroll(event){
 }
 
 function dragScroll(event) {
-  // IE fix
   if (!event)
     event = window.event;
   
@@ -329,10 +331,6 @@ function dragScroll(event) {
   
   var inhalt = document.getElementById('side_content');
   var diff = startY - event.clientY;
-  
-  //parent.main.document.close(); 
-  //parent.main.document.open(); 
-  //parent.main.document.write(diff+"<br>");
   
   inhalt.scrollTop += diff;
   
@@ -364,30 +362,21 @@ function scrollWheel(event){
   var delta = 0;
   if (!event)
     event = window.event;
-    /* IE/Opera. */
+
   if(event.wheelDelta) {
     delta = event.wheelDelta / 120;
-    /** In Opera 9, delta differs in sign as compared to IE. */
     if (window.opera)
       delta = -delta;
-  } else if (event.detail) { /** Mozilla case. */
-    /** In Mozilla, sign of delta is different than in IE.
-     * Also, delta is multiple of 3. */
+  } else if (event.detail) {
     delta = -event.detail / 3;
   }
-  /** If delta is nonzero, handle it.
-   * Basically, delta is now positive if wheel was scrolled up,
-   * and negative, if wheel was scrolled down.
-   */
+
   if (delta)
     handle(delta);
-  /** Prevent default actions caused by mouse wheel.
-   * That might be ugly, but we handle scrolls somehow
-   * anyway, so don't bother here..
-   */
+
   if (event.preventDefault)
     event.preventDefault();
-  
+
   event.returnValue = false;
 }
 

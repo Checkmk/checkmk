@@ -214,11 +214,11 @@ div.snapin div.closesnapin {
 
 
 div.snapin div.content {
-     background-image: url("images/snapin_background.png");
+    background-image: url("images/snapin_background.png");
     background-repeat: repeat-y;
     background-position: left;
-    padding-top: 5px;
-    padding-left: 12px;
+    padding-top: 10px;
+    padding-left: 15px;
     padding-right: 12px;
     padding-bottom: 5px;
     width: 240px;
@@ -244,24 +244,13 @@ div#check_mk_sidebar h3 {
     font-size: 100%;
 }
 
+/* Normal link in sidebar */
 div#check_mk_sidebar a {
     text-decoration: none;
     font-weight: normal;
-    color: #eee;
-}
-div#check_mk_sidebar div.footnotelink {
-    text-align: right;
-    padding-right: 3px;
-}
-div#check_mk_sidebar div.footnotelink a {
-    font-size: 7pt;
     color: #fff;
-    border: 1px solid #ddd;
-    -moz-border-radius: 3px;
-    background-color: #8eaeb8;
-    padding: 0px 4px;
-    margin-left: 3px;
 }
+
 div#check_mk_sidebar a:hover {
     text-decoration: underline;
     color: #fff;
@@ -272,7 +261,6 @@ li.sidebar {
 }
 div#check_mk_sidebar ul.link {
     margin: 0px;
-    font-size: 8pt;
     padding-left: 32px;
 }
 div#check_mk_sidebar ul.link li {
@@ -283,9 +271,6 @@ div#check_mk_sidebar ul.link li {
 div#check_mk_sidebar div.footnote {
     width: 100%;
     text-align: right;
-}
-div#check_mk_sidebar div.footnote a {
-    font-size: 7pt;
 }
 
 div#check_mk_sidebar div.snapinexception {
@@ -404,9 +389,8 @@ table.siteheader td.disabled a {
 }
 
 /* navigation ---------------------------------------------------------------- */
-table.navi {
-    /* border: 1px solid white; */
-    /* padding: 10px; */
+table.contextlinks {
+    margin-bottom: 10px;
 }
 
 div.contextlink {
@@ -443,11 +427,10 @@ div.naviend {
 }
 
 table.navi {
-    margin-top: 10px;
+    margin: 0px 0px 10px 5px;
     width: 100%;
     border-collapse: collapse;
     border-spacing: 0px;
-    margin: 0px 0px 0px 4px;
 }
 
 table.navi td {
@@ -585,9 +568,9 @@ table.services tr.even3 { background-color: #fea; }
 
 
 /* HACK */
-table.services tr.odd0 td, table.services tr.even0 td { 
+table.services tr.data td { 
   border: 1px solid #bbb;
-  padding: 0.2ex 1ex;
+  padding: 3px 6px;
 }
 
 table.services td.host { 
@@ -778,6 +761,10 @@ div.tableshadow {
     border-style: none;
 }
 
+div.tableshadow.left {
+    margin-left: 5px;
+}
+    
 td.shadowtop, td.shadowbottom {
     background-image: url("images/tableshadow.png");
     background-repeat: repeat;
@@ -917,7 +904,7 @@ table.form input {
 }
 table.form td { 
     vertical-align: top;
-    padding: 0.8ex 1ex;
+    padding: 0px 1ex;
 }
 
 table.form td.legend { 
@@ -925,6 +912,10 @@ table.form td.legend {
     color: #274750;
     border: 1px solid white;
     border-right-style: none;
+    white-space: nowrap;
+    height: 32px;
+    vertical-align: top;
+    padding-top: 10px;
 }
 
 table.form td.legend.button { 
@@ -936,6 +927,7 @@ table.form td.content {
     padding-right: 2ex;
     border: 1px solid white;
     border-left-style: none;
+    vertical-align: middle;
 }
 
 /* colors of specific forms */
@@ -1422,24 +1414,6 @@ a.button {
     font-size: 9pt;
 }
 
-/* Box with context links */
-div.contextlinks a {
-    font-size: 7pt;
-    color: white;
-}
-div.contextlinks h2 {
-    margin-top: 0px;
-    margin-bottom: 0px;
-    font-size: 7pt;
-    font-weight: bold;
-}
-div.contextlinks {
-    border: 1px solid white;
-    background-color: #048;
-    color: #ccf;
-    padding: 2px 6px;
-width: 200px;
-}
 
 div#mk_side_search {
 	text-align: center;
@@ -1448,7 +1422,6 @@ div#mk_side_search {
 div#mk_side_search input{
 	margin: auto;
 	width: 90%;
-	
 	font-size: 8pt;
 }
 
@@ -1478,7 +1451,6 @@ background-color: #BFBFBF;
 /* layout dataset */
 table.dataset {
     border-spacing: 1px;
-    margin: 0px;
     padding: 0px;
     border-collapse: collapse;
     empty-cells: show;

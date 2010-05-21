@@ -197,7 +197,7 @@ def render_hosts(only_problems = False):
 	html.write("<br>\n")
 
 sidebar_all_hosts_styles = """
-div.statebullet { margin-left: 2px; margin-right: 4px; width: 10px; height: 10px; border: 1px solid black; float: left; }
+div.statebullet { margin-left: 2px; margin-right: 5px; width: 10px; height: 10px; border: 1px solid #eee; float: left; }
 div.state0 { background-color: #4c4; border-color: #0f0;  }
 div.state1 { background-color: #ff0; }
 div.state2 { background-color: #f00; }
@@ -262,7 +262,7 @@ sidebar_snapins["sitestatus"] = {
   "allowed" : [ "user", "admin" ],
   "styles" : """
 div#check_mk_sidebar table.sitestate {
-    width: 100%;
+    width: %d;
 }
 
 div#check_mk_sidebar table.sitestate td {
@@ -276,12 +276,10 @@ div#check_mk_sidebar table.sitestate td a {
     margin: 0px;
     padding: 0px 0px;
     text-align: center;
-    font-size: 7pt;
     display: block;
 }
 div#check_mk_sidebar table.sitestate td.left a {
     text-align: left;
-    font-size: 8pt;
     font-weight: normal;
 }
 
@@ -296,17 +294,20 @@ div#check_mk_sidebar table.sitestate td.offline a {
     background-color: #f00;
     color: #000;
     border-color: #800;
+    font-size: 7pt;
 }
 div#check_mk_sidebar table.sitestate td.online a {
     background-color: #3f6;
     color: #fff;
     border-color: #0f0;
+    font-size: 7pt;
 }
 div#check_mk_sidebar table.sitestate td.disabled a {
     background-color: #666;
     border-color: #888;
+    font-size: 7pt;
 }
-"""
+""" % snapin_width
 }
 
 
@@ -387,11 +388,11 @@ sidebar_snapins["tactical_overview"] = {
     "render" : render_tactical_overview,
     "allowed" : [ "user", "admin", "guest" ],
     "styles" : """
-table.tacticaloverview { border-collapse: separate; border-spacing: 5px 0px; width: 100%;}
+table.tacticaloverview { border-collapse: separate; border-spacing: 5px 0px; width: %d;}
 table.tacticaloverview th { font-size: 7pt; text-align: left; font-weight: normal; padding: 0px; padding-top: 2px; }
 table.tacticaloverview td { text-align: right; border: 1px solid #444; padding: 0px; padding-right: 2px; }
 table.tacticaloverview td.prob { background-color: #f08; color: #f00; font-weight: bold; }
-"""
+""" % snapin_width
 }
 
 # --------------------------------------------------------------
@@ -422,18 +423,19 @@ sidebar_snapins["performance"] = {
     "allowed" : [ "admin", ],
     "styles" : """
 table.performance { 
-    -moz-border-radius: 4px; 
+    -moz-border-radius: 5px; 
     font-size: 8pt; 
-    width: 100%; 
-    background-color: #888; 
+    width: %d; 
     border-style: solid; 
+    background-color: #589; 
     border-color: #444 #bbb #eee #666; 
     border-width: 1px; 
+    padding: 2px;
 }
 table.performance td { padding: 0px; }
 table.Performance td.right { text-align: right; font-weight: bold; padding: 0px; }
 
-"""
+""" % snapin_width
 }
 
 # --------------------------------------------------------------

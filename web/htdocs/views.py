@@ -1115,7 +1115,6 @@ def view_linktitle(view):
 def show_context_links(thisview, active_filters):
     # compute list of html variables used actively by hidden or shown
     # filters.
-    html.write("<table class=contextlinks><tr><td>")
     active_filter_vars = set([])
     for filt in active_filters:
 	for var in filt.htmlvars:
@@ -1148,11 +1147,12 @@ def show_context_links(thisview, active_filters):
 	if len(used_contextvars) > 0:
 	    if first:
 		first = False
+                html.write("<table class=contextlinks><tr><td>")
 	    vars_values = [ (var, html.var(var)) for var in set(used_contextvars) ]
 	    html.write('<div class="contextlink"><a href="%s">%s</a></div>' % \
 		    (html.makeuri_contextless(vars_values + [("view_name", name)]), view_linktitle(view)))
-
-    html.write('</td></tr></table>\n')
+    if not first:
+        html.write('</td></tr></table>\n')
 	
 
 
@@ -1334,8 +1334,8 @@ def show_action_form(is_open, datasource, colspan):
     # We take the first info to be the native data type of this table
     # and show actions useful for that
     what = datasource["infos"][0]
-    if what not in [ "host", "service", "comment", "downtime" ]:
-	return # no actions on others	
+    # if what not in [ "host", "service", "comment", "downtime" ]:
+    #	return # no actions on others	
 
     # Table muss einen anderen Namen, als das Formular
 
@@ -1353,9 +1353,12 @@ def show_action_form(is_open, datasource, colspan):
 	show_downtime_actions()
     elif what == "comment":
 	show_comment_actions()
+    else:
+        html.write("<tr><td>No commands possible for %ss</td></tr>" % what)
 
-	html.write("</td></tr>")
-    html.write("</table></form>\n")
+    html.write("</table></div>\n")
+    html.end_form()
+    html.write("</td></tr>\n")
 
 def show_downtime_actions():
     if config.may("action.downtimes"):

@@ -43,6 +43,7 @@ body.main table.header td.left {
     font-weight: bold;
     color: #fff;
     vertical-align: bottom;
+    F
     padding-left: 4px;
 }
 
@@ -765,7 +766,23 @@ div.tableshadow {
     padding: 1px 1px 1px 1px;
 }
 
-
+td.shadowtop {
+    background-color: green;
+    height: 2px;
+}
+td.shadowleft {
+    background-color: red;
+}
+td.shadowright {
+    background-color: blue;
+}
+td.shadowbottom {
+    background-color: #f80;
+    height: 2px;
+}
+td.tablegap {
+    background-color: yellow;
+}
 td.groupheader {
     margin: 0px;
     padding: 0px;
@@ -793,13 +810,6 @@ table.boxlayout td.boxcolumn {
 }
 
 /* table layout */
-table.services td.tablegap {
-  border: none;
-  background-color: #97a8ab;
-  background-image: url("images/background.jpg");
-  background-repeat: repeat;
-  background-position: center;
-}
 
 /* tiled layout */
 table.tiled td {

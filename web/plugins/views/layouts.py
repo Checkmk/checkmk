@@ -288,8 +288,6 @@ def render_grouped_list(data, view, group_columns, group_painters, painters, num
     def show_header_line():
         html.write("<tr>")
 	for n in range(1, num_columns + 1):
-	    if n > 1:
-		html.write("<th class=tablegap></th>\n")
 	    for p in painters:
 		paint_header(p)
 	html.write("</tr>\n")
@@ -299,10 +297,19 @@ def render_grouped_list(data, view, group_columns, group_painters, painters, num
 
     # Helper function that counts the number of entries in 
     # the current group
-    def count_group_members():
-        pass
+    def count_group_members(row, rows):
+	this_group = [ row[c] for c in group_columns ]
+        members = 1
+        for row in rows[1:]:
+            that_group = [ row[c] for c in group_columns ]
+            if that_group == this_group:
+                members += 1
+            else:
+                break
+        return members
 
 
+    index = 0
     for row in rows:
         register_events(row) # needed for playing sounds
 	# Show group header, if a new group begins. But only if grouping
@@ -312,12 +319,16 @@ def render_grouped_list(data, view, group_columns, group_painters, painters, num
 	    if this_group != last_group:
 		if column != 1: # not a the beginning of a new line
 		    html.write("</tr>\n")
+                    html.write("<tr>\n")
+                    for x in range(0, num_columns):
+                        html.write("<td colspan=%d class=shadowbottom></td>\n" % num_painters)
+                    html.write("</tr>\n")
 		    column = 1
 
 		# paint group header
 		group_open = True
 		html.write("<tr class=groupheader>")
-		html.write("<td class=groupheader colspan=%d><table><tr>" % (num_painters * num_columns + (num_columns - 1)))
+		html.write("<td class=groupheader colspan=%d><table><tr>" % (num_painters * (num_columns + 2) + (num_columns - 1)))
 		painted = False
 		for p in group_painters:
 		    if painted:
@@ -325,6 +336,22 @@ def render_grouped_list(data, view, group_columns, group_painters, painters, num
 		    painted = paint(p, row)
 
 		html.write("</tr></table></td></tr>\n")
+    
+                # paint top, left and right shadows
+                group_rows = count_group_members(row, rows[index:])
+                rowspan = 3 + group_rows / num_columns
+                if group_rows % num_columns:
+                    rowspan += 1
+                html.write("<tr>\n")
+                for x in range(0, num_columns):
+                    if x > 0:
+                        html.write("<td rowspan=%d class=tablegap></td>\n" % rowspan)
+                    html.write("<td rowspan=%d class=shadowleft></td>\n" % rowspan)
+                    html.write("<td colspan=%d class=shadowtop></td>\n" % num_painters)
+                    html.write("<td rowspan=%d class=shadowright></td>\n" % rowspan)
+                html.write("</tr>\n")
+
+                # Table headers
 		if view.get("column_headers") == "pergroup":
 		    show_header_line()
 		trclass = "even"
@@ -332,6 +359,8 @@ def render_grouped_list(data, view, group_columns, group_painters, painters, num
 
 	# Should we wrap over to a new line?
 	if column >= num_columns + 1:
+            for i in range(column, num_columns):
+                html.write("<td colspan=%d>LEER</td>" % num_painters)
             html.write("</tr>\n")
 	    column = 1
 
@@ -350,15 +379,19 @@ def render_grouped_list(data, view, group_columns, group_painters, painters, num
 		trclass = "odd"
 	    html.write("<tr class=%s%d>" % (trclass, state))
 
-	else: # Insert spacing
-	    html.write("<td class=tablegap></td>")
-
         for p in painters:
 	    paint(p, row)
 	column += 1
+        index += 1
     
     if group_open: 
+        for i in range(column, num_columns):
+            html.write("<td colspan=%d>LEER</td>" % num_painters)
 	html.write("</tr>\n")
+        html.write("<tr>\n")
+        for x in range(0, num_columns):
+            html.write("<td colspan=%d class=shadowbottom></td>\n" % num_painters)
+        html.write("</tr>\n")
     html.write("</table>\n")
 
 multisite_layouts["table"] = { 

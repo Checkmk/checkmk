@@ -101,21 +101,16 @@ def save_user_config(user_config):
             raise MKConfigError("Cannot save user configuration to <tt>%s</tt>: %s" % (path, e))
 
 def sidebar_head():
-    html.write('<div id="side_header" style="margin-top: 0px;">'
-	       '<div class="logo"><a target="_blank" href="http://mathias-kettner.de">'
-               '<img border=0 src="images/sidebar_oben.png"></a></div>'
-#               '<div id="slit_top"></div>'
+    html.write('<div id="side_header">'
+	       '<a class="logo" target="_blank" href="http://mathias-kettner.de"></a>'
                '</div>\n')
 # "<img src=\"images/side_up.png\" onmouseover=\"scrolling=true;scrollwindow(-2)\" onmouseout=\"scrolling=false\">"
 
 def sidebar_foot():
-    html.write('<div id="side_footer">'
-               '<div id="slit_bottom"><img src=\"images/sidebar_unten.png\">')
-#           '<div class="nav"><img src="images/side_down.png" onmouseover="scrolling=true;scrollwindow(2)" onmouseout="scrolling=false"></div>')
+    html.write('<div id="side_footer">')
     if config.may("configure_sidebar"):
         html.write('<div class=button><a target="main" href="sidebar_add_snapin.py">Add snapin</a></div>')
     html.write("<div class=copyright>&copy; <a target=\"main\" href=\"http://mathias-kettner.de\">Mathias Kettner</a></div>\n")
-    html.write('</div>')
     html.write('</div>')
 
 # Standalone sidebar

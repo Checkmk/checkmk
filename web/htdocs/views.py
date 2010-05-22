@@ -494,7 +494,7 @@ def page_edit_view(h):
 		    if oldname and oldname != view["name"] and (html.req.user, oldname) in html.multisite_views:
 			del html.multisite_views[(html.req.user, oldname)]
 		    save_views(html.req.user)
-		return page_edit_views(h, "Your view has been saved.")
+                return page_message_and_forward(h, "Your view has been saved.", "edit_views.py")
 
 	except MKUserError, e:
 	    html.write("<div class=error>%s</div>\n" % e.message)
@@ -510,6 +510,7 @@ def page_edit_view(h):
     html.write("</tr><tr class=form><td class=form colspan=3><div class=whiteborder>\n")
 
     html.begin_form("view")
+    html.hidden_field("back", html.var("back", ""))
     html.hidden_field("old_name", viewname) # safe old name in case user changes it
     html.write("<table class=form>\n")
 
@@ -757,7 +758,7 @@ def create_view():
     if not linktitle:
         linktitle = title
 
-    topic = html.var("topic")
+    topic = html.var("view_topic")
     if not topic:
         topic = "Other"
     datasourcename = html.var("datasource")
@@ -1682,3 +1683,17 @@ def ajax_export(h):
 	view["owner"] = ''
 	view["public"] = True
     html.write(pprint.pformat(html.available_views))
+
+def page_message_and_forward(h, message, default_url):
+    global html
+    html = h
+    url = html.var("back")
+    if not url: 
+        url = default_url
+
+    html.set_browser_redirect(1, url)
+    html.header("Multisite")
+    html.message(message)
+    html.footer()
+
+

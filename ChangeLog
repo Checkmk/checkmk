@@ -1,5 +1,6 @@
 tobi:
     Multisite:
+    * Complete new design (by Tobias Roeckl, Kopf & Herz)
     * New filters for last service check and last service state change
     * New views "Recently changed services" and "Unchecked services"
     * New page for adding sidebar snapins
@@ -11,6 +12,7 @@ tobi:
     * View service status: also added information here
     * Make sure, enough columns can be selected in view editor
     * Allow user to change num columns and refresh directly in view
+    * Get back to where you came after editing views
 
 1.1.5i2:
      Core, Setup, etc.:

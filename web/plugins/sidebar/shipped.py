@@ -198,10 +198,6 @@ def render_hosts(only_problems = False):
 
 sidebar_all_hosts_styles = """
 div.statebullet { margin-left: 2px; margin-right: 5px; width: 10px; height: 10px; border: 1px solid #eee; float: left; }
-div.state0 { background-color: #4c4; border-color: #0f0;  }
-div.state1 { background-color: #ff0; }
-div.state2 { background-color: #f00; }
-div.state3 { background-color: #f80; }
 """
 
 sidebar_snapins["hosts"] = {
@@ -364,7 +360,7 @@ def render_tactical_overview():
 	html.write("<tr><th>%s</th><th>Problems</th><th>Unhandled</th></tr>\n" % title)
 	html.write("<tr>")
 
-	html.write("<td class=total>%d</td>" % data[0])
+	html.write('<td class=total><a target="main" href="view.py?view_name=all%ss">%d</a></td>' % (what, data[0]))
 	unhandled = False
 	for value in data[1:]:
 	    if value > 0:
@@ -375,7 +371,7 @@ def render_tactical_overview():
 		text = link(str(value), href)
 	    else:
 		text = str(value)
-            html.write("<td class=%sprob>%s</td>" % (value == 0 and "no" or "", text))
+            html.write('<td class="%s">%s</td>' % (value == 0 and " " or "states prob", text))
 	    unhandled = True
 	html.write("</tr>\n")
     html.write("</table>\n")
@@ -384,16 +380,17 @@ sidebar_snapins["tactical_overview"] = {
     "title" : "Tactical Overview",
     "description" : "The total number of hosts and service with and without problems",
     "author" : "Mathias Kettner",
-    "refresh" : 10,
+    "refresh" : 1010,
     "render" : render_tactical_overview,
     "allowed" : [ "user", "admin", "guest" ],
     "styles" : """
 table.tacticaloverview { border-collapse: separate; border-spacing: 5px 0px; width: %d;}
 table.tacticaloverview th { font-size: 7pt; text-align: left; font-weight: normal; padding: 0px; padding-top: 2px; }
 table.tacticaloverview td { text-align: right; border: 1px solid #444; padding: 0px; padding-right: 2px; }
-table.tacticaloverview td.prob { background-color: #f08; color: #f00; font-weight: bold; }
+table.tacticaloverview td a { display: block; }
 """ % snapin_width
 }
+# table.tacticaloverview td.prob { font-weight: bold; }
 
 # --------------------------------------------------------------
 #    ____            __                                           

@@ -727,39 +727,47 @@ td.statex {  /* zero count */
   color: #ccc;
 }
 
-/* Colors of the five possible host and service states */
-/* HIRN: .hstate0 a muss raus. Dass muss ich spezifischer
-   machen */
+/* Colors of the five possible host and service states 
+  CRIT:    #e2001a
+  UNKNOWN: #f79802
+  WARN:    #e6c908
+  OK:      #41a62a
+*/
+
+/* OK/UP */
 .state0, .hstate0, .state0 a, .hstate0 a { 
-  background-color: #0a2;
-  color: #fff;
+  background-color: #0b2; color: #fff;
 }
 
+/* WARN */
 .state1, .state1 a { 
-  background-color: #ff0;
-  color: #000;
+  background-color: #ff0; color: #000;
 }
 
+/* CRIT/DOWN */
 .state2, .hstate1, .state2 a, .hstate2 a { 
-  background-color: #f00;
-  color: #fff;
+  background-color: #f00; color: #fff;
 }
 
+/* UNKNOWN / UNREACH */
 .state3, .hstate2, .state3 a, .hstate2 a { 
-  background-color: #f80;
-  color: #fff;
+  background-color: #fa0; color: #fff;
 }
 
+/* PENDING */
+.statep, .hstatep, .statep a, .hstatep a { 
+  background-color: #888; color: #fff;
+}
 
 /* *some* problem */
-.states, .hstates, .states a, .hstates a { 
-  background-color: #f08;
-  color: #fff;
+.states, .hstates { 
+    background-image: url("images/someproblem.png");
+    background-position: center center;
+    background-repeat: repeat;
+    color: #000;
 }
-
-.statep, .hstatep, .statep a, .hstatep a { 
-  background-color: #888;
-  color: #fff;
+.states a, .hstates a {
+    color: #000;
 }
 
 td.icons {

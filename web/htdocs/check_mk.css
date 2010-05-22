@@ -112,6 +112,24 @@ div#check_mk_sidebar div#side_header {
     background-image: url("images/sidebar_oben.png");
 }
 
+div#side_version {
+    position: absolute;
+    top: 24px;
+    left: 54px;
+    z-index: 54;
+    color: white;
+    text-align: right;
+    width: 200px;
+}
+div#side_version a {
+    text-decoration: none;
+    color: #e8e8e8;
+}
+div#side_version a:hover {
+    text-decoration: underline;
+    color: #fff;
+}
+
 div#check_mk_sidebar div#side_header a.logo {
     display: block;
     height: 55px;

@@ -107,6 +107,7 @@ def sidebar_head():
     html.write('<div id="side_header">'
 	       '<a class="logo" target="_blank" href="http://mathias-kettner.de"></a>'
                '</div>\n')
+    html.write('<div id="side_version"><a href="http://mathias-kettner.de/checkmk_download.html" target="main">v%s</a></div>\n' % defaults.check_mk_version)
 # "<img src=\"images/side_up.png\" onmouseover=\"scrolling=true;scrollwindow(-2)\" onmouseout=\"scrolling=false\">"
 
 def sidebar_foot():

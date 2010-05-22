@@ -1010,11 +1010,12 @@ def show_view(view, show_heading = False, show_buttons = True):
         colspan += 1
         # Customize/Edit view button
         if config.may("edit_views"):
+            backurl = htmllib.urlencode(html.makeuri([]))
             html.write('<td class="right" onmouseover="hover_tab(this);" onmouseout="unhover_tab(this);">')
             if view["owner"] == html.req.user:
-                html.write('<a href="edit_view.py?load_view=%s">Edit</a>\n' % view["name"])
+                html.write('<a href="edit_view.py?load_view=%s&back=%s">Edit</a>\n' % (view["name"], backurl))
             else:
-                html.write('<a href="edit_view.py?clonefrom=%s&load_view=%s">Edit</a>\n' % (view["owner"], view["name"]))
+                html.write('<a href="edit_view.py?clonefrom=%s&load_view=%s&back=%s">Edit</a>\n' % (view["owner"], view["name"], backurl))
             html.write('</td>')
             colspan += 1
         html.write("</tr>")

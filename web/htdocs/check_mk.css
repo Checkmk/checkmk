@@ -505,25 +505,25 @@ table.navi td.left.open {
     border-bottom: none;
 }
 
-table.navi td.left.closed, table.navi td.right, table.navi td.columns, table.navi td.refresh {
+table.navi td.left.closed, table.navi td.right, table.navi td.w30, table.navi td.w40 {
     border-bottom: 1px solid white;
 }
 
-table.navi td.left.columns {
-    width: 21px;
-    background-image: url("images/metanav_button_20.png");
-}
-table.navi td.left.columns.selected {
-    background-image: url("images/metanav_button_20_hi.png");
-}
-
-table.navi td.left.refresh {
+table.navi td.left.w30 {
     width: 30px;
-    background-image: url("images/metanav_button_30.png");
+    background-image: url("images/metanav_30.png");
+}
+table.navi td.left.w30.selected {
+    background-image: url("images/metanav_30_hi.png");
 }
 
-table.navi td.left.refresh.selected {
-    background-image: url("images/metanav_button_30_hi.png"); 
+table.navi td.left.w40 {
+    width: 40px;
+    background-image: url("images/metanav_40.png");
+}
+
+table.navi td.left.w40.selected {
+    background-image: url("images/metanav_40_hi.png"); 
 }
 
 table.navi td.minigap {

@@ -180,10 +180,25 @@ def render_hosts(only_problems = False):
     hosts = html.live.query(query)
     html.live.set_prepend_site(False)
     hosts.sort()
+
+    longestname = 0
+    for site, host, state, worstsvc in hosts:
+        longestname = max(longestname, host)
+    if len(longestname) > 15:
+        num_columns = 1
+    else:
+        num_columns = 2
+
     views.html = html
     views.load_views()
     target = views.get_context_link(html.req.user, view)
+    html.write("<table class=allhosts>\n")
+    col = 1
     for site, host, state, worstsvc in hosts:
+        if col == 1:
+            html.write("<tr>")
+        html.write("<td>")
+        
 	if state > 0 or worstsvc == 2:
 	   statecolor = 2
 	elif worstsvc == 1:
@@ -194,10 +209,20 @@ def render_hosts(only_problems = False):
 	   statecolor = 0
 	html.write('<div class="statebullet state%d">&nbsp;</div> ' % statecolor)
         html.write(link(host, target + ("&host=%s&site=%s" % (htmllib.urlencode(host), htmllib.urlencode(site)))))
-	html.write("<br>\n")
+        html.write("</td>")
+        if col == num_columns:
+            html.write("</tr>\n")
+            col = 1
+        else:
+            col += 1
+        
+    if col < num_columns:
+        html.write("</tr>\n")
+    html.write("</table>\n")
 
-sidebar_all_hosts_styles = """
-div.statebullet { margin-left: 2px; margin-right: 5px; width: 10px; height: 10px; border: 1px solid #eee; float: left; }
+snapin_allhosts_styles = """
+  .snapin table.allhosts { width: 100%; }
+  .snapin table.allhosts td { width: 50%; padding: 0px 0px; }
 """
 
 sidebar_snapins["hosts"] = {
@@ -207,7 +232,7 @@ sidebar_snapins["hosts"] = {
     "render" : lambda: render_hosts(False),
     "allowed" : [ "user", "admin", "guest" ],
     "refresh" : 60,
-    "styles" : sidebar_all_hosts_styles
+    "styles" : snapin_allhosts_styles,
 }
 
 sidebar_snapins["problem_hosts"] = {
@@ -217,7 +242,7 @@ sidebar_snapins["problem_hosts"] = {
     "render" : lambda: render_hosts(True),
     "allowed" : [ "user", "admin", "guest" ],
     "refresh" : 60,
-    "styles" : sidebar_all_hosts_styles
+    "styles" : snapin_allhosts_styles,
 }
     
 
@@ -401,14 +426,16 @@ table.tacticaloverview td a { display: block; }
 #                                                                 
 # --------------------------------------------------------------
 def render_performance():
-    data = html.live.query("GET status\nColumns: service_checks_rate host_checks_rate connections_rate forks_rate\n")
+    data = html.live.query("GET status\nColumns: service_checks_rate host_checks_rate connections_rate forks_rate log_messages_rate cached_log_messages\n")
     html.write("<table class=performance>\n")
-    for what, col in \
-	[("Serv. checks", 0), 
-	("Host checks", 1),
-	("Livestatus-connections", 2),
-	("Process creations", 3)]:
-	html.write("<tr><td class=left>%s:</td><td class=right>%.2f/s</td></tr>\n" % (what, sum([row[col] for row in data])))
+    for what, col, format in \
+	[("Service checks", 0, "%.2f/s"), 
+	("Host checks", 1, "%.2f/s"),
+	("Livestatus-connections", 2, "%.2f/s"),
+	("Process creations", 3, "%.2f/s"),
+        ("New log messages", 4, "%.2f/s"),
+        ("Cached log messages", 5, "%d")]:
+	html.write(("<tr><td class=left>%s:</td><td class=right>" + format + "</td></tr>\n") % (what, sum([row[col] for row in data])))
     html.write("</table>\n")
 		    
 sidebar_snapins["performance"] = {
@@ -673,7 +700,7 @@ def render_bookmarks():
     n = 0
     for title, href in bookmarks:
         html.write("<div id=\"bookmark_%d\">" % n)
-	iconbutton("del", "del_bookmark.py?num=%d" % n, "side", "updateContents", 'snapin_bookmarks')
+	iconbutton("delete", "del_bookmark.py?num=%d" % n, "side", "updateContents", 'snapin_bookmarks')
 	iconbutton("edit", "edit_bookmark.py?num=%d" % n, "main")
 	html.write(link(title, href))
         html.write("</div>")

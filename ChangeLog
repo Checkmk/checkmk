@@ -14,6 +14,10 @@ tobi:
     * Allow user to change num columns and refresh directly in view
     * Get back to where you came after editing views
 
+    Livestatus:
+    * new statistics columns: log_messages and log_messages_rate
+    * make statistics average algorithm more sluggish
+
 1.1.5i2:
      Core, Setup, etc.:
      * install_nagios.sh: add missing package php5-iconv for SLES11

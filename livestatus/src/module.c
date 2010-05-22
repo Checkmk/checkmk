@@ -345,6 +345,7 @@ int broker_downtime(int event_type, void *data)
 int broker_log(int event_type, void *data)
 {
     g_counters[COUNTER_NEB_CALLBACKS]++;
+    g_counters[COUNTER_LOG_MESSAGES]++;
     pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
     pthread_cond_broadcast(&g_wait_cond[WT_LOG]);
 }

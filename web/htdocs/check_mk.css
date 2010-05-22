@@ -304,6 +304,7 @@ div.snapin div.snapinexception {
     -moz-border-radius: 4px;
     padding: 3px;
     border: 1px solid #f00;
+    width: 220px;
 }
 div.snapin div.snapinexception h2 {
     font-size: 9pt;
@@ -314,6 +315,7 @@ div.snapin div.snapinexception p {
     color: #800;
 }
 div.snapin div.footnotelink {
+    margin-top: 4px;
     text-align: right;
     padding-right: 8px;
 }
@@ -327,6 +329,22 @@ div.snapin div.footnotelink a:hover {
     background-image: url("images/form_background.png");
     background-repeat: repeat;
     text-decoration: none;
+}
+
+/* Small iconbutton (e.g. at bookmarks) */
+div.snapin img.iconbutton {
+    margin: 0px 2px 0px 0px;
+    border: none;
+}
+
+/* state bullets at problem host or all hosts snapin */
+div.statebullet { 
+    margin-left: 0px; 
+    margin-right: 6px; 
+    width: 10px; 
+    height: 10px; 
+    border: 1px solid #eee; 
+    float: left; 
 }
 
 table.sidebarconfig {
@@ -751,7 +769,7 @@ td.statex {  /* zero count */
 
 /* UNKNOWN / UNREACH */
 .state3, .hstate2, .state3 a, .hstate2 a { 
-  background-color: #fa0; color: #fff;
+  background-color: #f80; color: #fff;
 }
 
 /* PENDING */

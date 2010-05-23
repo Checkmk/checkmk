@@ -300,7 +300,7 @@ def page_add_snapin(h):
 	transid = html.current_transid(html.req.user)
         url = 'sidebar_add_snapin.py?name=%s&_transid=%d&pos=top' % (name, transid)
         html.write('<td onmouseover="this.style.background=\'#cde\'; this.style.cursor=\'pointer\';" '
-                'onmouseout="this.style.background=\'#abc\' "'
+                'onmouseout="this.style.background=\'#9bc\' "'
                 'onclick="window.location.href=\'%s\';">' % url)
         
         html.write("<b>%s</b><br>\n"

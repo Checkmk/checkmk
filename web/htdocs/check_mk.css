@@ -1593,12 +1593,12 @@ table.add_snapin {
 
 table.add_snapin td {
     padding: 8px;
-    background-color: #abc;
+    background-color: #9bc;
     width: 33%;
     -moz-border-radius: 8px;
     border-bottom: 1px solid #9ab;
     border-right: 1px solid #89a;
-    min-height: 100px;
+    height: 90px;
     color: #369;
 }
 table.add_snapin b {

@@ -113,7 +113,9 @@ def sidebar_head():
 def sidebar_foot():
     html.write('<div id="side_footer">')
     if config.may("configure_sidebar"):
-        html.write('<div class=button><a target="main" href="sidebar_add_snapin.py">Add snapin</a></div>')
+        html.write('<div class=button>\n')
+        html.write('<a target="main" href="sidebar_add_snapin.py"')
+        html.write('>Add snapin</a></div>')
     html.write("<div class=copyright>&copy; <a target=\"main\" href=\"http://mathias-kettner.de\">Mathias Kettner</a></div>\n")
     html.write('</div>')
 

@@ -168,23 +168,28 @@ div#check_mk_sidebar div#side_footer div.button {
     height: 20px;
     z-index: 20;
     position: absolute;
-    background-attachment: fixed;
-    background-repeat: repeat;
-    background-image: url("images/sidebar_button_lo.png");
+    /* background-attachment: fixed; */
+    /* background-position: 15px 20px; */
     top: 10px;
     left: 15px;
-    background-position: 15px 20px;
     float: left;
+padding: 0px;
 }
 div#check_mk_sidebar div#side_footer div.button a {
     width: 75px;
-    height: 20px;
+    height: 17px;
     display: block;
     color: #fff;
     text-align: center;
     vertical-align: middle;
     padding-top: 3px;
-       text-decoration: none;
+    text-decoration: none;
+    background-repeat: repeat;
+    background-image: url("images/sidebar_button_lo.png");
+margin: 0px;
+}
+div#check_mk_sidebar div#side_footer div.button a:hover {
+    background-image: url("images/sidebar_button_hi.png");
 }
 div#check_mk_sidebar div#side_footer div.copyright {
     color: white;
@@ -1589,6 +1594,7 @@ table.add_snapin {
     padding: 0px;
     border-spacing: 5px;
     empty-cells: hide;
+    width: 100%;
 }
 
 table.add_snapin td {

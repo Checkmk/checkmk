@@ -494,7 +494,7 @@ def page_edit_view(h):
 		    if oldname and oldname != view["name"] and (html.req.user, oldname) in html.multisite_views:
 			del html.multisite_views[(html.req.user, oldname)]
 		    save_views(html.req.user)
-		return page_edit_views(h, "Your view has been saved.")
+                return page_message_and_forward(h, "Your view has been saved.", "edit_views.py")
 
 	except MKUserError, e:
 	    html.write("<div class=error>%s</div>\n" % e.message)
@@ -510,6 +510,7 @@ def page_edit_view(h):
     html.write("</tr><tr class=form><td class=form colspan=3><div class=whiteborder>\n")
 
     html.begin_form("view")
+    html.hidden_field("back", html.var("back", ""))
     html.hidden_field("old_name", viewname) # safe old name in case user changes it
     html.write("<table class=form>\n")
 
@@ -757,7 +758,7 @@ def create_view():
     if not linktitle:
         linktitle = title
 
-    topic = html.var("topic")
+    topic = html.var("view_topic")
     if not topic:
         topic = "Other"
     datasourcename = html.var("datasource")
@@ -987,7 +988,7 @@ def show_view(view, show_heading = False, show_buttons = True):
                     addclass = " selected"
                 else:
                     addclass = ""
-                html.write('<td class="left columns%s"><a href="%s">%s</a></td>\n' % (addclass, uri, col))
+                html.write('<td class="left w30%s"><a href="%s">%s</a></td>\n' % (addclass, uri, col))
                 html.write("<td class=minigap></td>\n")
                 colspan += 2
 
@@ -1002,7 +1003,7 @@ def show_view(view, show_heading = False, show_buttons = True):
                     reftext = "%d s" % ref
                 else:
                     reftext = "&#8734;"
-                html.write('<td class="left refresh%s"><a href="%s">%s</a></td>\n' % (addclass, uri, reftext))
+                html.write('<td class="left w40%s"><a href="%s">%s</a></td>\n' % (addclass, uri, reftext))
                 html.write("<td class=minigap></td>\n")
                 colspan += 2
 
@@ -1010,11 +1011,12 @@ def show_view(view, show_heading = False, show_buttons = True):
         colspan += 1
         # Customize/Edit view button
         if config.may("edit_views"):
+            backurl = htmllib.urlencode(html.makeuri([]))
             html.write('<td class="right" onmouseover="hover_tab(this);" onmouseout="unhover_tab(this);">')
             if view["owner"] == html.req.user:
-                html.write('<a href="edit_view.py?load_view=%s">Edit</a>\n' % view["name"])
+                html.write('<a href="edit_view.py?load_view=%s&back=%s">Edit</a>\n' % (view["name"], backurl))
             else:
-                html.write('<a href="edit_view.py?clonefrom=%s&load_view=%s">Edit</a>\n' % (view["owner"], view["name"]))
+                html.write('<a href="edit_view.py?clonefrom=%s&load_view=%s&back=%s">Edit</a>\n' % (view["owner"], view["name"], backurl))
             html.write('</td>')
             colspan += 1
         html.write("</tr>")
@@ -1170,7 +1172,12 @@ def show_context_links(thisview, active_filters):
 		first = False
                 html.write("<table class=contextlinks><tr><td>")
 	    vars_values = [ (var, html.var(var)) for var in set(used_contextvars) ]
-	    html.write('<div class="contextlink"><a href="%s">%s</a></div>' % \
+	    html.write('<div class="contextlink" ')
+            html.write(r'''onmouseover='this.style.backgroundImage="url(\"images/contextlink_hi.png\")";' ''')
+            html.write(r'''onmouseout='this.style.backgroundImage="url(\"images/contextlink.png\")";' ''')
+            html.write('>')
+
+            html.write('<a href="%s">%s</a></div>' % \
 		    (html.makeuri_contextless(vars_values + [("view_name", name)]), view_linktitle(view)))
     if not first:
         html.write('</td></tr></table>\n')
@@ -1681,3 +1688,17 @@ def ajax_export(h):
 	view["owner"] = ''
 	view["public"] = True
     html.write(pprint.pformat(html.available_views))
+
+def page_message_and_forward(h, message, default_url):
+    global html
+    html = h
+    url = html.var("back")
+    if not url: 
+        url = default_url
+
+    html.set_browser_redirect(1, url)
+    html.header("Multisite")
+    html.message(message)
+    html.footer()
+
+

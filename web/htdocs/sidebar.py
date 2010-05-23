@@ -76,7 +76,7 @@ def iconbutton(what, url, target="side", handler="", name=""):
 	onclick = ""
 	href = "%s/%s" % (defaults.checkmk_web_uri, url)
 	tg = "target=%s" % target
-    html.write("<a href=\"%s\" %s %s><img border=0 onmouseover=\"hilite_icon(this, 1)\" onmouseout=\"hilite_icon(this, 0)\" align=absmiddle src=\"%s/images/button_%s_lo.png\"></a>\n " % (href, onclick, tg, defaults.checkmk_web_uri, what))
+    html.write("<a href=\"%s\" %s %s><img class=iconbutton onmouseover=\"hilite_icon(this, 1)\" onmouseout=\"hilite_icon(this, 0)\" align=absmiddle src=\"%s/images/button_%s_lo.png\"></a>\n " % (href, onclick, tg, defaults.checkmk_web_uri, what))
 
 def nagioscgilink(text, target):
     html.write("<li class=sidebar><a target=\"main\" class=link href=\"%s/%s\">%s</a></li>" % \
@@ -107,6 +107,7 @@ def sidebar_head():
     html.write('<div id="side_header">'
 	       '<a class="logo" target="_blank" href="http://mathias-kettner.de"></a>'
                '</div>\n')
+    html.write('<div id="side_version"><a href="http://mathias-kettner.de/checkmk_download.html" target="main">v%s</a></div>\n' % defaults.check_mk_version)
 # "<img src=\"images/side_up.png\" onmouseover=\"scrolling=true;scrollwindow(-2)\" onmouseout=\"scrolling=false\">"
 
 def sidebar_foot():
@@ -233,31 +234,36 @@ def ajax_snapin(h):
     except Exception, e:
 	snapin_exception(e)
 
-def reposition_snapin(h):
+def move_snapin(h):
     if not config.may("configure_sidebar"):
         return
 
     global html
     html      = h
-    snapname  = html.var("name")
-    aftername = html.var("after")
+    snapname_to_move = html.var("name")
+    beforename = html.var("before")
+    
+    snapin_config = load_user_config()
 
+    # Get current state of snaping being moved (open, closed)
+    snap_to_move = None
+    for name, state in snapin_config:
+        if name == snapname_to_move:
+            snap_to_move = name, state
+    if not snap_to_move:
+        return # snaping being moved not visible. Cannot be.
+        
+    # Build new config by removing snaping at current position
+    # and add before "beforename" or as last if beforename is not set
     new_config = []
-    after_pos  = -1
-    cur_snapin = None
-    for id, snapin in enumerate(load_user_config()):
-        if aftername == snapin[0]:
-            after_pos = id
-
-        if snapname == snapin[0]:
-            cur_snapin = snapin
-        else:
-            new_config.append(snapin)
-
-    if after_pos == -1:
-        new_config.append(cur_snapin)
-    else:
-        new_config.insert(after_pos-1, cur_snapin)
+    for name, state in snapin_config:
+        if name == snapname_to_move:
+            continue # remove at this position
+        elif name == beforename:
+            new_config.append(snap_to_move)
+        new_config.append( (name, state) )
+    if not beforename: # insert as last
+        new_config.append(snap_to_move)
     save_user_config(new_config)
 
 def page_add_snapin(h):

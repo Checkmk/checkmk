@@ -318,6 +318,9 @@ class html:
         self.req.headers_out.add("refresh", str(secs))
         self.browser_reload = secs
 
+    def set_browser_redirect(self, secs, url):
+        self.req.headers_out.add("refresh", "%d; URL=%s" % (secs, url))
+
     def header(self, title=''):
         if not self.req.header_sent:
 	    self.html_head(title)

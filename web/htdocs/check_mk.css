@@ -112,6 +112,24 @@ div#check_mk_sidebar div#side_header {
     background-image: url("images/sidebar_oben.png");
 }
 
+div#side_version {
+    position: absolute;
+    top: 24px;
+    left: 54px;
+    z-index: 54;
+    color: white;
+    text-align: right;
+    width: 200px;
+}
+div#side_version a {
+    text-decoration: none;
+    color: #e8e8e8;
+}
+div#side_version a:hover {
+    text-decoration: underline;
+    color: #fff;
+}
+
 div#check_mk_sidebar div#side_header a.logo {
     display: block;
     height: 55px;
@@ -286,6 +304,7 @@ div.snapin div.snapinexception {
     -moz-border-radius: 4px;
     padding: 3px;
     border: 1px solid #f00;
+    width: 220px;
 }
 div.snapin div.snapinexception h2 {
     font-size: 9pt;
@@ -296,6 +315,7 @@ div.snapin div.snapinexception p {
     color: #800;
 }
 div.snapin div.footnotelink {
+    margin-top: 4px;
     text-align: right;
     padding-right: 8px;
 }
@@ -309,6 +329,22 @@ div.snapin div.footnotelink a:hover {
     background-image: url("images/form_background.png");
     background-repeat: repeat;
     text-decoration: none;
+}
+
+/* Small iconbutton (e.g. at bookmarks) */
+div.snapin img.iconbutton {
+    margin: 0px 2px 0px 0px;
+    border: none;
+}
+
+/* state bullets at problem host or all hosts snapin */
+div.statebullet { 
+    margin-left: 0px; 
+    margin-right: 6px; 
+    width: 10px; 
+    height: 10px; 
+    border: 1px solid #eee; 
+    float: left; 
 }
 
 table.sidebarconfig {
@@ -487,25 +523,25 @@ table.navi td.left.open {
     border-bottom: none;
 }
 
-table.navi td.left.closed, table.navi td.right, table.navi td.columns, table.navi td.refresh {
+table.navi td.left.closed, table.navi td.right, table.navi td.w30, table.navi td.w40 {
     border-bottom: 1px solid white;
 }
 
-table.navi td.left.columns {
-    width: 21px;
-    background-image: url("images/metanav_button_20.png");
-}
-table.navi td.left.columns.selected {
-    background-image: url("images/metanav_button_20_hi.png");
-}
-
-table.navi td.left.refresh {
+table.navi td.left.w30 {
     width: 30px;
-    background-image: url("images/metanav_button_30.png");
+    background-image: url("images/metanav_30.png");
+}
+table.navi td.left.w30.selected {
+    background-image: url("images/metanav_30_hi.png");
 }
 
-table.navi td.left.refresh.selected {
-    background-image: url("images/metanav_button_30_hi.png"); 
+table.navi td.left.w40 {
+    width: 40px;
+    background-image: url("images/metanav_40.png");
+}
+
+table.navi td.left.w40.selected {
+    background-image: url("images/metanav_40_hi.png"); 
 }
 
 table.navi td.minigap {
@@ -709,39 +745,47 @@ td.statex {  /* zero count */
   color: #ccc;
 }
 
-/* Colors of the five possible host and service states */
-/* HIRN: .hstate0 a muss raus. Dass muss ich spezifischer
-   machen */
+/* Colors of the five possible host and service states 
+  CRIT:    #e2001a
+  UNKNOWN: #f79802
+  WARN:    #e6c908
+  OK:      #41a62a
+*/
+
+/* OK/UP */
 .state0, .hstate0, .state0 a, .hstate0 a { 
-  background-color: #0a2;
-  color: #fff;
+  background-color: #0b2; color: #fff;
 }
 
+/* WARN */
 .state1, .state1 a { 
-  background-color: #ff0;
-  color: #000;
+  background-color: #ff0; color: #000;
 }
 
+/* CRIT/DOWN */
 .state2, .hstate1, .state2 a, .hstate2 a { 
-  background-color: #f00;
-  color: #fff;
+  background-color: #f00; color: #fff;
 }
 
+/* UNKNOWN / UNREACH */
 .state3, .hstate2, .state3 a, .hstate2 a { 
-  background-color: #f80;
-  color: #fff;
+  background-color: #f80; color: #fff;
 }
 
+/* PENDING */
+.statep, .hstatep, .statep a, .hstatep a { 
+  background-color: #888; color: #fff;
+}
 
 /* *some* problem */
-.states, .hstates, .states a, .hstates a { 
-  background-color: #f08;
-  color: #fff;
+.states, .hstates { 
+    background-image: url("images/someproblem.png");
+    background-position: center center;
+    background-repeat: repeat;
+    color: #000;
 }
-
-.statep, .hstatep, .statep a, .hstatep a { 
-  background-color: #888;
-  color: #fff;
+.states a, .hstates a {
+    color: #000;
 }
 
 td.icons {

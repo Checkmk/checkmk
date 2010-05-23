@@ -166,11 +166,11 @@ def handler(req):
 			 "sidebar_add_snapin"    : sidebar.page_add_snapin,
 			 "sidebar_snapin"        : sidebar.ajax_snapin,
 			 "sidebar_openclose"     : sidebar.ajax_openclose,
+			 "sidebar_move_snapin"   : sidebar.move_snapin,
 			 "switch_master_state"   : sidebar.ajax_switch_masterstate,
 			 "add_bookmark"          : sidebar.ajax_add_bookmark,
 			 "del_bookmark"          : sidebar.ajax_del_bookmark,
 			 "edit_bookmark"         : sidebar.page_edit_bookmark,
-			 "reposition_snapin"     : sidebar.reposition_snapin,
 			 "view_permissions"      : permissions.page_view_permissions,
 			 "edit_permissions"      : permissions.page_edit_permissions,
 	}

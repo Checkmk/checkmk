@@ -34,7 +34,7 @@ var snapinDragging = false;
 var snapinOffset   = [ 0, 0 ];
 var snapinStartPos = [ 0, 0 ];
 
-if(window.addEventListener) {
+if (window.addEventListener) {
   window.addEventListener("mousemove", snapinDrag,      false);
 } else {
   document.documentElement.onmousemove = snapinDrag;
@@ -45,16 +45,16 @@ function snapinStartDrag(event) {
     event = window.event;
   
   // Skip calls when already dragging or other button than left mouse
-  if(snapinDragging !== false || event.button != 0 || event.target.tagName != 'DIV')
+  if (snapinDragging !== false || event.button != 0 || event.target.tagName != 'DIV')
     return true;
 
   var container = event.target.parentNode;
   
-  if(event.preventDefault)
+  if (event.preventDefault)
     event.preventDefault();
   event.returnValue = false;
   
-  if(event.stopPropagation)
+  if (event.stopPropagation)
     event.stopPropagation();
   event.cancelBubble = true;
   
@@ -69,7 +69,7 @@ function snapinDrag(event) {
   if (!event)
     event = window.event;
   
-  if(snapinDragging === false)
+  if (snapinDragging === false)
     return true;
 
   // Drag the snapin
@@ -89,7 +89,7 @@ function snapinDrag(event) {
   line.style.backgroundColor = '#fff';
   line.style.margin          = '1px 0px 0px 5px';
   var o = getSnapinTargetPos();
-  if(o != null) {
+  if (o != null) {
     snapinAddBefore(o.parentNode, o, line);
     o = null;
   } else {
@@ -99,7 +99,7 @@ function snapinDrag(event) {
 }
 
 function snapinAddBefore(par, o, add) {
-  if(o != null) {
+  if (o != null) {
     par.insertBefore(add, o);
     o = null;
   } else {
@@ -110,14 +110,14 @@ function snapinAddBefore(par, o, add) {
 
 function removeSnapinDragIndicator() {
   var o = document.getElementById('snapinDragIndicator');
-  if(o) {
+  if (o) {
     o.parentNode.removeChild(o);
     o = null;
   }
 }
 
-function snapinDrop(event, o) {
-  if(snapinDragging == false)
+function snapinDrop(event, targetpos) {
+  if (snapinDragging == false)
     return true;
 
   // Reset properties
@@ -127,10 +127,10 @@ function snapinDrop(event, o) {
 
   // Catch quick clicks without movement on the title bar
   // Don't reposition the object in this case.
-  if(snapinStartPos[0] == event.clientY && snapinStartPos[1] == event.clientX) {
-    if(event.preventDefault)
+  if (snapinStartPos[0] == event.clientY && snapinStartPos[1] == event.clientX) {
+    if (event.preventDefault)
       event.preventDefault();
-    if(event.stopPropagation)
+    if (event.stopPropagation)
       event.stopPropagation();
     event.returnValue = false;
     return false;
@@ -138,17 +138,17 @@ function snapinDrop(event, o) {
   
   var par = snapinDragging.parentNode;
   par.removeChild(snapinDragging);
-  snapinAddBefore(par, o, snapinDragging);
+  snapinAddBefore(par, targetpos, snapinDragging);
 
   // Now send the new information to the backend
   var thisId = snapinDragging.id.replace('snapin_container_', '');
 
-  var after = '';
-  if(o != null)
-    after = '&after='+o.id.replace('snapin_container_', '');
-  get_url('reposition_snapin.py?name='+thisId+after);
+  var before = '';
+  if (targetpos != null)
+    before = '&before=' + targetpos.id.replace('snapin_container_', '');
+  get_url('sidebar_move_snapin.py?name=' + thisId + before);
   thisId = null;
-  o = null;
+  targetpos = null;
 }
 
 function snapinStopDrag(event) {
@@ -162,7 +162,7 @@ function snapinStopDrag(event) {
 }
 
 function getSnapinList() {
-  if(snapinDragging === false)
+  if (snapinDragging === false)
     return true;
   
   var l = [];
@@ -172,7 +172,7 @@ function getSnapinList() {
     // Skip
     // - non snapin objects
     // - currently dragged object
-    if(child.id && child.id.substr(0, 7) == 'snapin_' && child.id != snapinDragging.id)
+    if (child.id && child.id.substr(0, 7) == 'snapin_' && child.id != snapinDragging.id)
       l.push(child);
   }
 
@@ -183,16 +183,16 @@ function getSnapinCoords(obj) {
   var snapinTop = snapinDragging.offsetTop + document.getElementById('side_content').scrollTop;
   
   var bottomOffset = obj.offsetTop + obj.clientHeight - snapinTop;
-  if(bottomOffset < 0)
+  if (bottomOffset < 0)
     bottomOffset = -bottomOffset;
       
   var topOffset = obj.offsetTop - snapinTop;
-  if(topOffset < 0)
+  if (topOffset < 0)
     topOffset = -topOffset;
       
   var offset = topOffset;
   var corner = 0;
-  if(bottomOffset < topOffset) {
+  if (bottomOffset < topOffset) {
     offset = bottomOffset
     corner = 1;
   }
@@ -211,11 +211,11 @@ function getSnapinTargetPos() {
   for(var i in childs) {
     var child = childs[i];
 
-    if(!child.id || child.id.substr(0, 7) != 'snapin_' || child.id == snapinDragging.id)
+    if (!child.id || child.id.substr(0, 7) != 'snapin_' || child.id == snapinDragging.id)
       continue;
 
     // Initialize with the first snapin in the list
-    if(objId === -1) {
+    if (objId === -1) {
       objId = i;
       var coords = getSnapinCoords(child)
       objCorner = coords[3]; 
@@ -228,17 +228,17 @@ function getSnapinTargetPos() {
     var newCoords = getSnapinCoords(child);
 
     // Is the upper left corner closer?
-    if(newCoords[2] < curCoords[2]) {
+    if (newCoords[2] < curCoords[2]) {
       objCorner = newCoords[3];
-		  objId = i;
+      objId = i;
     }
   }
 
-	// Is the dragged snapin dragged above the first one?
-	if(objId == 0 && objCorner == 0)
-		return childs[0];
-	else
-    return childs[(parseInt(objId)+1)];
+  // Is the dragged snapin dragged above the first one?
+  if (objId == 0 && objCorner == 0)
+      return childs[0];
+  else
+      return childs[(parseInt(objId)+1)];
 }
 
 /************************************************
@@ -248,11 +248,11 @@ function getSnapinTargetPos() {
 function pageHeight() {
   var h;
   
-  if(window.innerHeight !== null && typeof window.innerHeight !== 'undefined')
+  if (window.innerHeight !== null && typeof window.innerHeight !== 'undefined')
     h = window.innerHeight;
-  else if(document.documentElement && document.documentElement.clientHeight)
+  else if (document.documentElement && document.documentElement.clientHeight)
     h = document.documentElement.clientHeight;
-  else if(document.body !== null)
+  else if (document.body !== null)
     h = document.body.clientHeight;
   else
     h = null;
@@ -277,7 +277,7 @@ var scrolling = true;
 function scrollwindow(speed){
   var c = document.getElementById('side_content');
   
-  if(scrolling) {
+  if (scrolling) {
     c.scrollTop += speed;
     setTimeout("scrollwindow("+speed+")", 10);
   }
@@ -293,7 +293,7 @@ var dragging = false;
 var startY = 0;
 var startScroll = 0;
 
-if(window.addEventListener) {
+if (window.addEventListener) {
   window.addEventListener("mousedown", startDragScroll, false);
   window.addEventListener("mouseup",   stopDragScroll,  false);
   window.addEventListener("mousemove", dragScroll,      false);
@@ -308,7 +308,7 @@ function startDragScroll(event) {
     event = window.event;
   
   // Evtl. auch nur mit Shift Taste: (e.button == 0 && (e["shiftKey"])
-  if(dragging === false && event.button == 0
+  if (dragging === false && event.button == 0
       && event.target.tagName != 'A'
       && event.target.tagName != 'INPUT'
       && !(event.target.tagName == 'DIV' && event.target.className == 'heading')) {
@@ -330,14 +330,14 @@ function dragScroll(event) {
   if (!event)
     event = window.event;
   
-  if(dragging === false)
+  if (dragging === false)
     return true;
   
-  if(event.preventDefault)
+  if (event.preventDefault)
     event.preventDefault();
   event.returnValue = false;
   
-  if(event.stopPropagation)
+  if (event.stopPropagation)
     event.stopPropagation();
   event.cancelBubble = true;
   
@@ -375,7 +375,7 @@ function scrollWheel(event){
   if (!event)
     event = window.event;
 
-  if(event.wheelDelta) {
+  if (event.wheelDelta) {
     delta = event.wheelDelta / 120;
     if (window.opera)
       delta = -delta;
@@ -393,7 +393,7 @@ function scrollWheel(event){
 }
 
 // add event listener cross browser compatible
-if(window.addEventListener)
+if (window.addEventListener)
   window.addEventListener('DOMMouseScroll', scrollWheel, false);
 else
   window.onmousewheel = document.onmousewheel = scrollWheel;
@@ -420,7 +420,7 @@ function removeSnapin(id, code) {
 // Updates the contents of a snapin container after get_url
 function updateContents(id, code) {
   var obj = document.getElementById(id);
-  if(obj) {
+  if (obj) {
     obj.innerHTML = code;
     executeJS(id);
     obj = null;
@@ -433,11 +433,11 @@ function executeJS(objId) {
   // Before switching to asynchronous requests this worked in firefox
   // out of the box. Now it seems not to work with ff too. So now
   // executing the javascript manually.
-  // if(!isFirefox()) {
+  // if (!isFirefox()) {
   var obj = document.getElementById(objId);
   var aScripts = obj.getElementsByTagName('script');
   for(var i in aScripts) {
-    if(aScripts[i].src && aScripts[i].src !== '') {
+    if (aScripts[i].src && aScripts[i].src !== '') {
       var oScr = document.createElement('script');
       oScr.src = aScripts[i].src;
       document.getElementsByTagName("HEAD")[0].appendChild(oScr);
@@ -465,7 +465,7 @@ function get_url(url, handler, id) {
     
     // Dynamic part to prevent caching
     var dyn = "_t="+Date.parse(new Date());
-    if(url.indexOf('\?') !== -1) {
+    if (url.indexOf('\?') !== -1) {
         dyn = "&"+dyn;
     } else {
         dyn = "?"+dyn;
@@ -473,7 +473,7 @@ function get_url(url, handler, id) {
     
     if (AJAX) {
         AJAX.open("GET", url + dyn, true);
-        if(typeof handler === 'function')
+        if (typeof handler === 'function')
             AJAX.onreadystatechange = function() {
                 if (AJAX.readyState == 4) {
                     handler(id, AJAX.responseText);
@@ -528,7 +528,7 @@ function sidebar_scheduler() {
     for (var i in refresh_snapins) { 
         name    = refresh_snapins[i][0];
         refresh = refresh_snapins[i][1];
-        if(timestamp % refresh == 0) {
+        if (timestamp % refresh == 0) {
             get_url("sidebar_snapin.py?name=" + name, updateContents, "snapin_" + name);
         }
     }

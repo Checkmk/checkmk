@@ -575,6 +575,12 @@ table.navi tr.form td.form {
     padding: 0px;
 }
 
+table.navi tr.form td.whiteborder {
+    border-left: 1px solid white;
+    border-right: 1px solid white;
+    border-bottom: 1px solid white;
+}
+
 table.navi tr.form div.whiteborder, table.navi tr.form table.whiteborder {
     border-left: 1px solid white;
     border-right: 1px solid white;

@@ -272,11 +272,11 @@ def page_add_snapin(h):
 
     global html
     html = h
-    html.header("Add Snapin")
+    html.header("Available snapins")
     used_snapins = [name for (name, state) in load_user_config()]
 
     addname = html.var("name")
-    if addname in sidebar_snapins and addname not in used_snapins and html.transaction_valid():
+    if addname in sidebar_snapins and addname not in used_snapins and html.check_transaction():
         user_config = load_user_config() + [(addname, "open")]
         save_user_config(user_config)
         used_snapins = [name for (name, state) in load_user_config()]

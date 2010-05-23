@@ -411,10 +411,17 @@ refresh_snapins = null;
 // Removes a snapin from the sidebar without reloading anything
 function removeSnapin(id, code) {
   var container = document.getElementById(id).parentNode;
-  var parent = container.parentNode;
-  parent.removeChild(container);
+  var myparent = container.parentNode;
+  myparent.removeChild(container);
+
+  // reload main frame if it is just displaying the "add snapin" page
+  var href = escape(parent.frames[1].location);
+  if (href.indexOf("sidebar_add_snapin.py") > -1)
+      parent.frames[1].location.reload();
+
+  href = null;
   container = null;
-  parent = null;
+  myparent = null;
 }
 
 // Updates the contents of a snapin container after get_url

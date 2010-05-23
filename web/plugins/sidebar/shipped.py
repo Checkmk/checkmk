@@ -169,14 +169,20 @@ sidebar_snapins["servicegroups"] = {
 #   |_| |_|\___/|___/\__|___/
 #                            
 # --------------------------------------------------------------
-def render_hosts(only_problems = False):
+def render_hosts(mode):
     html.live.set_prepend_site(True)
     query = "GET hosts\nColumns: name state worst_service_state\n"
-    if only_problems:
+    view = "host"
+
+    if mode == "summary":
+	query += "Filter: custom_variable_names >= _REALNAME\n"
+    else:
+	query += "Filter: custom_variable_names < _REALNAME\n"
+
+    if mode == "problems":
 	query += "Filter: state > 0\nFilter: worst_service_state > 0\nOr: 2\n"
         view = "problemsofhost"
-    else:
-        view = "host"
+
     hosts = html.live.query(query)
     html.live.set_prepend_site(False)
     hosts.sort()
@@ -229,7 +235,17 @@ sidebar_snapins["hosts"] = {
     "title" : "All hosts",
     "description" : "A summary state of each host with a link to the view showing its services",
     "author" : "Mathias Kettner",
-    "render" : lambda: render_hosts(False),
+    "render" : lambda: render_hosts("hosts"),
+    "allowed" : [ "user", "admin", "guest" ],
+    "refresh" : 60,
+    "styles" : snapin_allhosts_styles,
+}
+
+sidebar_snapins["summary_hosts"] = {
+    "title" : "Summary hosts",
+    "description" : "A summary state of all summary hosts (summary hosts hold aggregated service states and are a feature of Check_MK)",
+    "author" : "Mathias Kettner",
+    "render" : lambda: render_hosts("summary"),
     "allowed" : [ "user", "admin", "guest" ],
     "refresh" : 60,
     "styles" : snapin_allhosts_styles,
@@ -239,7 +255,7 @@ sidebar_snapins["problem_hosts"] = {
     "title" : "Problem hosts",
     "description" : "A summary state of all hosts that have problem, with links to problems of those hosts",
     "author" : "Mathias Kettner",
-    "render" : lambda: render_hosts(True),
+    "render" : lambda: render_hosts("problems"),
     "allowed" : [ "user", "admin", "guest" ],
     "refresh" : 60,
     "styles" : snapin_allhosts_styles,

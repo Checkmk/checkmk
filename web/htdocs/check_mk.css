@@ -821,7 +821,7 @@ div.objectlist div {
 }
 
 
-table.services td.pnpgraph {
+table.services tr.data td.pnpgraph {
    padding: 0px;
    border-bottom: 1px solid #666;
    border-right: 1px solid #666;

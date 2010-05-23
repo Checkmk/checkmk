@@ -157,9 +157,7 @@ def render_grouped_boxes(data, view,  group_columns, group_painters, painters, n
 	html.write("</table></div>\n")
 
     # render table
-    if view.get("column_headers") == "perpage":
-	headerswitch = 1
-    elif view.get("column_headers") == "pergroup":
+    if view.get("column_headers") != "off":
 	headerswitch = -1
     else:
 	headerswitch = 0
@@ -290,10 +288,7 @@ def render_grouped_list(data, view, group_columns, group_painters, painters, num
 	for n in range(1, num_columns + 1):
 	    for p in painters:
 		paint_header(p)
-	html.write("</tr>\n")
-
-    if view.get("column_headers") == "perpage":
-	show_header_line()
+        html.write("</tr>\n")
 
     # Helper function that counts the number of entries in 
     # the current group
@@ -354,7 +349,7 @@ def render_grouped_list(data, view, group_columns, group_painters, painters, num
                 html.write("</tr>\n")
 
                 # Table headers
-		if view.get("column_headers") == "pergroup":
+		if view.get("column_headers") != "off":
 		    show_header_line()
 		trclass = "even"
 		last_group = this_group

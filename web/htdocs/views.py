@@ -659,7 +659,7 @@ function toggle_section(nr, oImg) {
     html.checkbox("play_sounds", False)
     html.write("</td></tr>\n")
     html.write("<tr><td>Column headers:</td><td>")
-    html.select("column_headers", [ ("off", "off"), ("perpage", "once per page"), ("pergroup", "once per group") ])
+    html.select("column_headers", [ ("off", "off"), ("pergroup", "once per group") ])
     html.write("</td><tr>\n")
     html.write("</table>\n")
     section_footer()

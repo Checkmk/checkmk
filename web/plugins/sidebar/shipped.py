@@ -261,6 +261,80 @@ sidebar_snapins["problem_hosts"] = {
     "styles" : snapin_allhosts_styles,
 }
     
+# --------------------------------------------------------------
+#  _   _           _     __  __       _        _      
+# | | | | ___  ___| |_  |  \/  | __ _| |_ _ __(_)_  __
+# | |_| |/ _ \/ __| __| | |\/| |/ _` | __| '__| \ \/ /
+# |  _  | (_) \__ \ |_  | |  | | (_| | |_| |  | |>  < 
+# |_| |_|\___/|___/\__| |_|  |_|\__,_|\__|_|  |_/_/\_\
+#                                                     
+# --------------------------------------------------------------
+def render_hostmatrix():
+    html.live.set_prepend_site(True)
+    query = "GET hosts\nColumns: name state has_been_checked worst_service_state scheduled_downtime_depth\nFilter: custom_variable_names < _REALNAME\n"
+    hosts = html.live.query(query)
+    html.live.set_prepend_site(False)
+    hosts.sort()
+
+    # Choose smallest square number large enough
+    # to show all hosts
+    num_hosts = len(hosts)
+    n = 1
+    while n*n < num_hosts:
+        n += 1
+
+    rows = num_hosts / n
+    lastcols = num_hosts % n
+    if lastcols > 0:
+        rows += 1
+
+    style = 'height: %d; ' % (snapin_width)
+    if rows > 10:
+        style += "border-collapse: collapse;"
+    html.write('<table class=hostmatrix style="%s"\n' % style)
+    col = 1
+    row = 1
+    for site, host, state, has_been_checked, worstsvc, downtimedepth in hosts:
+        if col == 1:
+            html.write("<tr>")
+        if downtimedepth > 0:
+            s = "d"
+        elif not has_been_checked:
+            s = "p"
+        elif worstsvc == 2 or state == 1:
+            s = 2
+        elif worstsvc == 3 or state == 2:
+            s = 3
+        elif worstsvc == 1:
+            s = 1
+        else:
+            s = 0
+        url = "view.py?view_name=host&site=%s&host=%s" % (htmllib.urlencode(site), htmllib.urlencode(host))
+        html.write('<td class="state state%s"><a href="%s" title="%s" target="main"></a></td>' % (s, url, host))
+        if col == n or (row == rows and n == lastcols):
+            html.write("<tr>\n")
+            col = 1
+            row += 1
+        else:
+            col += 1
+    html.write("</table>")
+
+
+sidebar_snapins["hostmatrix"] = {
+    "title"       : "Host Matrix",
+    "description" : "A matrix showing s colored square for each host",
+    "author"      : "Mathias Kettner",
+    "render"      : render_hostmatrix,
+    "allowed"     : [ "user", "admin", "guest" ],
+    "refresh"     : 10,
+    "styles"      : """
+table.hostmatrix { width: %d; cell-spacing: 1px; }
+table.hostmatrix a { display: block; width: 100%%; height: 100%%; }
+table.hostmatrix td { border: 1px solid white; }
+""" % snapin_width
+
+}
+
 
 # --------------------------------------------------------------
 #    ____  _ _            _        _             

@@ -78,6 +78,11 @@ nagios_binary                      = '/usr/sbin/nagios'
 nagios_config_file                 = '/etc/nagios/nagios.cfg'
 logwatch_notes_url                 = "/nagios/logwatch.php?host=%s&file=%s"
 
+def verbose(t):
+    if opt_verbose:
+        sys.stderr.write(t)
+        sys.stderr.flush()
+
 
 # During setup a file called defaults is created in the modules
 # directory.  In this file all directories are configured.  We need to
@@ -289,6 +294,7 @@ try:
     for module in [ 'check_mk_base', 'snmp' ]:
         filename = modules_dir + "/" + module + ".py"
         execfile(filename)
+
 except Exception, e:
     sys.stderr.write("Cannot read file %s: %s\n" % (filename, e))
     sys.exit(5)
@@ -2984,10 +2990,10 @@ for hostname in strip_tags(all_hosts + clusters.keys()):
 # Do option parsing and execute main function -
 # if check_mk is not called as module
 if __name__ == "__main__":
-    short_options = 'SHVLCURDMd:I:c:nhvpX'
+    short_options = 'SHVLCURDMd:I:c:nhvpXP:'
     long_options = ["help", "version", "verbose", "compile", "debug",
                     "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
-		    "flush",
+		    "flush", "package=",
                     "no-cache", "update", "restart", "dump", "fake-dns=",
                     "man", "nowiki", "config-check", "backup=", "restore=",
                     "check-inventory=", "timeperiods", "paths" ]
@@ -3072,6 +3078,10 @@ if __name__ == "__main__":
         elif o == '--paths':
 	    show_paths()
 	    done = True
+        elif o in ['-P', '--package']:
+            execfile(modules_dir + "/packaging.py")
+            do_packaging(a, args)
+            done = True
         elif o in [ '-M', '--man' ]:
             if len(args) > 0:
                 show_check_manual(args[0])

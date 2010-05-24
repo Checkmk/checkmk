@@ -2350,22 +2350,26 @@ backup_paths = [
     ('logwatch_dir',        logwatch_dir,        "",              "Logwatch",                          True,  True,  True  ),
     ]
 
+class fake_file:
+    def __init__(self, content):
+        self.content = content
+        self.pointer = 0
+
+    def size(self):
+        return len(self.content)
+
+    def read(self, size):
+        new_end = self.pointer + size
+        data = self.content[self.pointer:new_end]
+        self.pointer = new_end
+        return data
+
 def do_backup(tarname):
     import tarfile
     if opt_verbose:
         sys.stderr.write("Creating backup file '%s'...\n" % tarname)
     tar = tarfile.open(tarname, "w:gz")
 
-    class fake_file:
-        def __init__(self, content):
-            self.content = content
-            self.pointer = 0
-
-        def read(self, size):
-            new_end = self.pointer + size
-            data = self.content[self.pointer:new_end]
-            self.pointer = new_end
-            return data
 
     for name, path, canonical_name, descr, is_dir, owned_by_nagios, group_www in backup_paths:
         absdir = os.path.abspath(path)

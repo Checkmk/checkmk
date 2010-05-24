@@ -1,5 +1,7 @@
 #!/usr/bin/python
-import pprint
+import pprint, tarfile
+
+pac_ext = ".mkp"
 
 class PackageException(Exception):
     def __init__(self, reason):
@@ -24,6 +26,7 @@ def do_packaging(command, args):
     commands = {
         "create" : package_create,
         "list"   : package_list,
+        "pack"   : package_pack,
     }
     f = commands.get(command)
     if f:
@@ -74,6 +77,49 @@ def package_create(args):
     write_package(pacname, package)
     verbose("New package %s created with %d files.\n" % (pacname, num_files))
 
+def package_pack(args):
+    if len(args) != 1:
+        raise PackageException("Usage: check_mk -P pack NAME")
+
+    pacname = args[0]
+    package = read_package(pacname)
+    if not package:
+        raise PackageException("Package %s not existing or corrupt." % pacname)
+    tarfilename = pacname + pac_ext
+    verbose("Packing %s => %s...\n" % (pacname, tarfilename))
+
+    def create_info(filename, size):
+        info = tarfile.TarInfo("info")
+        info.mtime = time.time()
+        info.uid = 0
+        info.gid = 0
+        info.size = size
+        info.mode = 0644
+        info.type = tarfile.REGTYPE
+        info.name = filename
+        return info
+    
+    tar = tarfile.open(tarfilename, "w:gz")
+    info_file = fake_file(pprint.pformat(package)) 
+    info = create_info("info", info_file.size())
+    tar.addfile(info, info_file)
+
+    # Now pack the actual files into sub tars
+    for part, title, dir in package_parts:
+        filenames = package["files"].get(part, [])
+        if len(filenames) > 0:
+            subtarname = part + ".tar"
+            subdata = os.popen("tar cf - --dereference --force-local -C '%s' %s" % (dir, " ".join(filenames))).read()
+            info = create_info(subtarname, len(subdata))
+            tar.addfile(info, fake_file(subdata))
+
+    tar.close()
+
+    verbose("Successfully created %s\n" % tarfilename)
+
+
+# Und jetzt wie bei --backup arbeiten mit dem in Python eingebauten tar...
+
 def files_in_dir(dir, prefix = ""):
     result = []
     files = os.listdir(dir)
@@ -110,10 +156,11 @@ def read_package(pacname):
         return None
 
 def write_package(pacname, package):
-    file(pac_dir + pacname, "w").write(pprint.pformat(package))
+    file(pac_dir + pacname, "w").write(pprint.pformat(package) + "\n")
 
 def all_packages():
     all = [ p for p in os.listdir(pac_dir) if p not in [ '.', '..' ] ]
     all.sort()
     return all
+
 

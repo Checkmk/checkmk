@@ -964,7 +964,8 @@ table.form {
 }
 
 table.form textarea {
-width: 100%;
+    width: 30em;
+    height: 4em;
 }
 
 table.form input { 
@@ -973,6 +974,16 @@ table.form input {
 table.form td { 
     vertical-align: top;
     padding: 4px 10px;
+}
+
+table.form b.toggleheader {
+    cursor: auto;
+    background-image: none;
+}
+table.form b.toggleheader.hover {
+    cursor: pointer;
+    color: white;
+    /* background-image: url("images/form_background.png"); */
 }
 
 table.form td.legend { 

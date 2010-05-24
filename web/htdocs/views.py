@@ -554,10 +554,10 @@ function toggle_section(nr, oImg) {
 
     def section_header(id, title):
 	html.write("<tr><td class=legend>")
-	html.write("<img src=\"images/closed.gif\" onclick=\"toggle_section('%d', this) \""
-		   "onmouseover=\"this.style.cursor='pointer'\" "
-		   "onmouseout=\"this.style.cursor='auto'\"> " % id)
-	html.write("<b class=heading>%s</b>" % title)
+	html.write("<b class=toggleheader onclick=\"toggle_section('%d', this) \""
+                   "title=\"Click to open this section\" "
+		   "onmouseover=\"this.className='toggleheader hover';\" "
+		   "onmouseout=\"this.className='toggleheader';\">%s</b> " % (id, title))
 	html.write("</td><td class=content>")
         html.write("<div id=\"ed_%d\" style=\"display: none;\">" % id)
 

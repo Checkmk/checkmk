@@ -515,7 +515,7 @@ table.navi td.left, table.navi td.right {
     height: 21px;
     background-image: url("images/metanav_button.png");
     background-repeat: no-repeat;
-    background-position: center center;
+    background-position: left;
     /* border: 1px solid transparent; */
     /* border-bottom: 1px solid white; */
     color: white;
@@ -997,7 +997,7 @@ table.form td.legend {
     color: #274750;
     border: 1px solid white;
     border-right-style: none;
-    white-space: nowrap;
+    /* white-space: nowrap; */
     height: 32px;
     vertical-align: top;
     padding-top: 10px;
@@ -1008,6 +1008,7 @@ table.form td.legend.border {
 table.form td.hilite {
     background-image: url("images/form_background.png"); 
     background-repeat: repeat;
+    margin: 10px;
 }
 
 table.form td.legend.button { 
@@ -1351,7 +1352,7 @@ td.legend {
     padding-top: 3px;
     color: #884;
     vertical-align: top;
-    white-space: nowrap;
+    white-space: nowrap; 
     width: 150px;
 }
 div.viewdescription {

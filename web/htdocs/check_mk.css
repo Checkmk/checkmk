@@ -664,26 +664,19 @@ table.services td.singleicon {
     width: 16px;
     text-align: center;
 }
+
+/* Group header used in table, box and tiled layout */
+table.groupheader {
+    margin: 0px;
+    border: 0px;
+    padding: 4px 0px 0px 0px;
+}
+
 tr.groupheader td {
     border-style: none; 
-    padding: 0px;
-    padding-top: 4px;
     margin: 0px;
+    padding-top: 2px;
     font-weight: bold;
-}
-
-tr.groupheader td table {
-    border-style: none; 
-    padding: 0px;
-    margin: 0px;
-}
-
-tr.groupheader table td {
-   border-style: none;
-   padding: 0px;
-   margin: 0px;
-   padding-top: 2px;
-   font-weight: bold;
 }
 tr.groupheader a {
    color: black;
@@ -693,6 +686,13 @@ tr.groupheader a {
 tr.groupheader a:hover {
     text-decoration: underline;
 }
+
+/* state in group header must have fixed width */
+.groupheader td.state {
+  width: 50px;
+  padding: 2px 5px;
+  border: 1px solid white;
+} 
 
 .services div.hostdown { 
     background-color: #f22;
@@ -733,17 +733,12 @@ td.goodflag {
     color: #080;
 }
 
-/* state in group header */
-.groupheader td.state {
-  width: 50px;
-  padding: 2px 5px;
-  border: 1px solid white;
-} 
 
 td.state {  
   text-align: center;
   font-weight: bold;
   font-family: sans-serif;
+  width: 32px;
 }
 
 td.count {
@@ -877,14 +872,6 @@ td.groupheader {
     margin: 0px;
     padding: 0px;
 }
-td.groupheader table {
-    padding: 0px;
-    margin: 0px;
-    margin-bottom: 5px;
-    border: 0px;
-    border-collapse: collapse;
-    border-spacing: 0;
-}
 
 /* boxed layout */
 table.boxlayout {
@@ -905,12 +892,7 @@ table.boxlayout td.boxcolumn {
 table.tiled td {
     border-style: none;
 }
-table.tiled tr.groupheader td {
-    font-size: 10pt;
-    font-weight: bold;
-    padding-left: 6px;
-    padding-top: 4px;
-}
+
 .tile {
    width: 160px;
    border: 1px solid black;

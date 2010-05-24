@@ -554,10 +554,10 @@ function toggle_section(nr, oImg) {
 
     def section_header(id, title):
 	html.write("<tr><td class=legend>")
-	html.write("<img src=\"images/closed.gif\" onclick=\"toggle_section('%d', this) \""
-		   "onmouseover=\"this.style.cursor='pointer'\" "
-		   "onmouseout=\"this.style.cursor='auto'\"> " % id)
-	html.write("<b class=heading>%s</b>" % title)
+	html.write("<b class=toggleheader onclick=\"toggle_section('%d', this) \""
+                   "title=\"Click to open this section\" "
+		   "onmouseover=\"this.className='toggleheader hover';\" "
+		   "onmouseout=\"this.className='toggleheader';\">%s</b> " % (id, title))
 	html.write("</td><td class=content>")
         html.write("<div id=\"ed_%d\" style=\"display: none;\">" % id)
 
@@ -659,7 +659,7 @@ function toggle_section(nr, oImg) {
     html.checkbox("play_sounds", False)
     html.write("</td></tr>\n")
     html.write("<tr><td>Column headers:</td><td>")
-    html.select("column_headers", [ ("off", "off"), ("perpage", "once per page"), ("pergroup", "once per group") ])
+    html.select("column_headers", [ ("off", "off"), ("pergroup", "once per group") ])
     html.write("</td><tr>\n")
     html.write("</table>\n")
     section_footer()
@@ -1009,6 +1009,7 @@ def show_view(view, show_heading = False, show_buttons = True):
 
         html.write("<td class=gap></td>\n")
         colspan += 1
+
         # Customize/Edit view button
         if config.may("edit_views"):
             backurl = htmllib.urlencode(html.makeuri([]))
@@ -1029,21 +1030,21 @@ def show_view(view, show_heading = False, show_buttons = True):
         if len(rows) > 0:
             if html.do_actions() and html.transaction_valid(): # submit button pressed, no reload
                 try:
-                    has_done_actions = do_actions(datasource["infos"][0], rows)
+                    html.write("<tr class=form><td class=whiteborder colspan=%d>" % colspan)
+                    has_done_actions = do_actions(datasource["infos"][0], rows, html.makeuri([]))
+                    html.write("</td></tr>")
                 except MKUserError, e:
                     html.show_error(e.message)
+                    html.write("</td></tr>")
                     html.add_user_error(e.varname, e.message)
                     show_action_form(True, datasource, colspan)
 
             else:
                 show_action_form(False, datasource, colspan)
 
-        html.write("</table>\n")
+        html.write("</table>\n") # class=navi
 
-    if has_done_actions:
-	html.write("<a href=\"%s\">Back to search results</a>" % html.makeuri([]))
-
-    else:
+    if not has_done_actions:
         # Limit exceeded? Show warning
 	count = len(rows)
 	limit = get_limit()
@@ -1650,7 +1651,7 @@ def nagios_host_service_action_command(what, dataset):
     nagios_command = ("[%d] " % int(time.time())) + command + "\n"
     return title, [nagios_command]
 
-def do_actions(what, rows):
+def do_actions(what, rows, backurl):
     if not config.may("act"):
        html.show_error("You are not allowed to perform actions. If you think this is an error, "
              "please ask your administrator grant you the permission to do so.")
@@ -1669,7 +1670,11 @@ def do_actions(what, rows):
 	    count += 1
 
     if command:
-	html.message("Successfully sent %d commands to Nagios. The last one was: <pre>%s</pre>" % (count, command))
+        message = "Successfully sent %d commands to Nagios." % count 
+        if config.debug:
+            message += "The last one was: <pre>%s</pre>" % command
+        message += '<br><a href="%s">Back to view</a>' % backurl
+        html.message(message)
     elif count == 0:
 	html.message("No matching service. No command sent.")
     return True

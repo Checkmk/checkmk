@@ -113,7 +113,9 @@ def sidebar_head():
 def sidebar_foot():
     html.write('<div id="side_footer">')
     if config.may("configure_sidebar"):
-        html.write('<div class=button><a target="main" href="sidebar_add_snapin.py">Add snapin</a></div>')
+        html.write('<div class=button>\n')
+        html.write('<a target="main" href="sidebar_add_snapin.py"')
+        html.write('>Add snapin</a></div>')
     html.write("<div class=copyright>&copy; <a target=\"main\" href=\"http://mathias-kettner.de\">Mathias Kettner</a></div>\n")
     html.write('</div>')
 
@@ -272,11 +274,11 @@ def page_add_snapin(h):
 
     global html
     html = h
-    html.header("Add Snapin")
+    html.header("Available snapins")
     used_snapins = [name for (name, state) in load_user_config()]
 
     addname = html.var("name")
-    if addname in sidebar_snapins and addname not in used_snapins and html.transaction_valid():
+    if addname in sidebar_snapins and addname not in used_snapins and html.check_transaction():
         user_config = load_user_config() + [(addname, "open")]
         save_user_config(user_config)
         used_snapins = [name for (name, state) in load_user_config()]
@@ -300,7 +302,7 @@ def page_add_snapin(h):
 	transid = html.current_transid(html.req.user)
         url = 'sidebar_add_snapin.py?name=%s&_transid=%d&pos=top' % (name, transid)
         html.write('<td onmouseover="this.style.background=\'#cde\'; this.style.cursor=\'pointer\';" '
-                'onmouseout="this.style.background=\'#abc\' "'
+                'onmouseout="this.style.background=\'#9bc\' "'
                 'onclick="window.location.href=\'%s\';">' % url)
         
         html.write("<b>%s</b><br>\n"

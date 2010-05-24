@@ -120,7 +120,7 @@ def render_grouped_boxes(data, view,  group_columns, group_painters, painters, n
 
     # render one group
     def render_group(header, rows, paintheader):
-        html.write("<table><tr class=groupheader>")
+        html.write("<table class=groupheader><tr class=groupheader>")
 	painted = False
 	for p in group_painters:
 	    if painted:
@@ -157,9 +157,7 @@ def render_grouped_boxes(data, view,  group_columns, group_painters, painters, n
 	html.write("</table></div>\n")
 
     # render table
-    if view.get("column_headers") == "perpage":
-	headerswitch = 1
-    elif view.get("column_headers") == "pergroup":
+    if view.get("column_headers") != "off":
 	headerswitch = -1
     else:
 	headerswitch = 0
@@ -206,7 +204,7 @@ def render_tiled(data, view, group_columns, group_painters, painters, _ignore_nu
 		# paint group header
 		if group_open:
 		    html.write("</td></tr>\n")
-		html.write("<tr><td><table><tr class=groupheader>")
+		html.write("<tr><td><table class=groupheader><tr class=groupheader>")
 		painted = False
 		for p in group_painters:
 		    if painted:
@@ -290,10 +288,7 @@ def render_grouped_list(data, view, group_columns, group_painters, painters, num
 	for n in range(1, num_columns + 1):
 	    for p in painters:
 		paint_header(p)
-	html.write("</tr>\n")
-
-    if view.get("column_headers") == "perpage":
-	show_header_line()
+        html.write("</tr>\n")
 
     # Helper function that counts the number of entries in 
     # the current group
@@ -330,7 +325,7 @@ def render_grouped_list(data, view, group_columns, group_painters, painters, num
 		# paint group header
 		group_open = True
 		html.write("<tr class=groupheader>")
-		html.write("<td class=groupheader colspan=%d><table><tr>" % (num_painters * (num_columns + 2) + (num_columns - 1)))
+		html.write("<td class=groupheader colspan=%d><table class=groupheader><tr>" % (num_painters * (num_columns + 2) + (num_columns - 1)))
 		painted = False
 		for p in group_painters:
 		    if painted:
@@ -354,7 +349,7 @@ def render_grouped_list(data, view, group_columns, group_painters, painters, num
                 html.write("</tr>\n")
 
                 # Table headers
-		if view.get("column_headers") == "pergroup":
+		if view.get("column_headers") != "off":
 		    show_header_line()
 		trclass = "even"
 		last_group = this_group

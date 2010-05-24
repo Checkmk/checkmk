@@ -107,7 +107,7 @@ declare_permission("edit_permissions",
 
 declare_permission("see_all",
      "See all Nagios objects",
-     "See all objects regardless of contacts and contact groups. If combined with 'perform commands' then commands may be done on all objects.",
+     "See all objects regardless of contacts and contact groups. If combined<br>with 'perform commands' then commands may be done on all objects.",
      [ "admin", "guest" ])
 
 declare_permission("edit_views",
@@ -127,17 +127,17 @@ declare_permission("force_views",
 
 declare_permission("view_option_columns",
      "Change view display columns",
-     "Interactively change the number of columns being displayed by a view (does not edit or customize the view)",
+     "Interactively change the number of columns being displayed by a view<br>(does not edit or customize the view)",
      [ "admin", "user", "guest" ])
 
 declare_permission("view_option_refresh",
      "Change view display refresh",
-     "Interactively change the automatic browser reload of a view being displayed (does not edit or customize the view)",
+     "Interactively change the automatic browser reload of a view being displayed<br>(does not edit or customize the view)",
      [ "admin", "user" ])
 
 declare_permission("act",
      "Perform commands",
-     "Allows users to perform Nagios commands. If now futher permissions are granted, actions can only be done one objects one is a contact for",
+     "Allows users to perform Nagios commands. If now futher permissions are granted,<br>actions can only be done one objects one is a contact for",
      [ "admin", "user" ])
 
 

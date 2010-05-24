@@ -168,23 +168,28 @@ div#check_mk_sidebar div#side_footer div.button {
     height: 20px;
     z-index: 20;
     position: absolute;
-    background-attachment: fixed;
-    background-repeat: repeat;
-    background-image: url("images/sidebar_button_lo.png");
+    /* background-attachment: fixed; */
+    /* background-position: 15px 20px; */
     top: 10px;
     left: 15px;
-    background-position: 15px 20px;
     float: left;
+padding: 0px;
 }
 div#check_mk_sidebar div#side_footer div.button a {
     width: 75px;
-    height: 20px;
+    height: 17px;
     display: block;
     color: #fff;
     text-align: center;
     vertical-align: middle;
     padding-top: 3px;
-       text-decoration: none;
+    text-decoration: none;
+    background-repeat: repeat;
+    background-image: url("images/sidebar_button_lo.png");
+margin: 0px;
+}
+div#check_mk_sidebar div#side_footer div.button a:hover {
+    background-image: url("images/sidebar_button_hi.png");
 }
 div#check_mk_sidebar div#side_footer div.copyright {
     color: white;
@@ -510,7 +515,7 @@ table.navi td.left, table.navi td.right {
     height: 21px;
     background-image: url("images/metanav_button.png");
     background-repeat: no-repeat;
-    background-position: center center;
+    background-position: left;
     /* border: 1px solid transparent; */
     /* border-bottom: 1px solid white; */
     color: white;
@@ -573,6 +578,12 @@ a.viewoption.selected, a.viewoption:hover {
 table.navi tr.form td.form {
     margin: 0px;
     padding: 0px;
+}
+
+table.navi tr.form td.whiteborder {
+    border-left: 1px solid white;
+    border-right: 1px solid white;
+    border-bottom: 1px solid white;
 }
 
 table.navi tr.form div.whiteborder, table.navi tr.form table.whiteborder {
@@ -653,26 +664,19 @@ table.services td.singleicon {
     width: 16px;
     text-align: center;
 }
+
+/* Group header used in table, box and tiled layout */
+table.groupheader {
+    margin: 0px;
+    border: 0px;
+    padding: 4px 0px 0px 0px;
+}
+
 tr.groupheader td {
     border-style: none; 
-    padding: 0px;
-    padding-top: 4px;
     margin: 0px;
+    padding-top: 2px;
     font-weight: bold;
-}
-
-tr.groupheader td table {
-    border-style: none; 
-    padding: 0px;
-    margin: 0px;
-}
-
-tr.groupheader table td {
-   border-style: none;
-   padding: 0px;
-   margin: 0px;
-   padding-top: 2px;
-   font-weight: bold;
 }
 tr.groupheader a {
    color: black;
@@ -682,6 +686,13 @@ tr.groupheader a {
 tr.groupheader a:hover {
     text-decoration: underline;
 }
+
+/* state in group header must have fixed width */
+.groupheader td.state {
+  width: 50px;
+  padding: 2px 5px;
+  border: 1px solid white;
+} 
 
 .services div.hostdown { 
     background-color: #f22;
@@ -722,17 +733,12 @@ td.goodflag {
     color: #080;
 }
 
-/* state in group header */
-.groupheader td.state {
-  width: 50px;
-  padding: 2px 5px;
-  border: 1px solid white;
-} 
 
 td.state {  
   text-align: center;
   font-weight: bold;
   font-family: sans-serif;
+  width: 32px;
 }
 
 td.count {
@@ -810,7 +816,7 @@ div.objectlist div {
 }
 
 
-table.services td.pnpgraph {
+table.services tr.data td.pnpgraph {
    padding: 0px;
    border-bottom: 1px solid #666;
    border-right: 1px solid #666;
@@ -866,14 +872,6 @@ td.groupheader {
     margin: 0px;
     padding: 0px;
 }
-td.groupheader table {
-    padding: 0px;
-    margin: 0px;
-    margin-bottom: 5px;
-    border: 0px;
-    border-collapse: collapse;
-    border-spacing: 0;
-}
 
 /* boxed layout */
 table.boxlayout {
@@ -894,12 +892,7 @@ table.boxlayout td.boxcolumn {
 table.tiled td {
     border-style: none;
 }
-table.tiled tr.groupheader td {
-    font-size: 10pt;
-    font-weight: bold;
-    padding-left: 6px;
-    padding-top: 4px;
-}
+
 .tile {
    width: 160px;
    border: 1px solid black;
@@ -971,7 +964,8 @@ table.form {
 }
 
 table.form textarea {
-width: 100%;
+    width: 30em;
+    height: 4em;
 }
 
 table.form input { 
@@ -981,16 +975,40 @@ table.form td {
     vertical-align: top;
     padding: 4px 10px;
 }
+table.form th {
+    border-width: 1px;
+    border-color: #fff;
+    border-style: solid solid none solid;
+    padding: 4px 4px;
+}
+
+table.form b.toggleheader {
+    cursor: auto;
+    background-image: none;
+}
+table.form b.toggleheader.hover {
+    cursor: pointer;
+    color: white;
+    /* background-image: url("images/form_background.png"); */
+}
 
 table.form td.legend { 
     vertical-align: top;
     color: #274750;
     border: 1px solid white;
     border-right-style: none;
-    white-space: nowrap;
+    /* white-space: nowrap; */
     height: 32px;
     vertical-align: top;
     padding-top: 10px;
+}
+table.form td.legend.border { 
+    border-right-style: solid;
+}
+table.form td.hilite {
+    background-image: url("images/form_background.png"); 
+    background-repeat: repeat;
+    margin: 10px;
 }
 
 table.form td.legend.button { 
@@ -1334,7 +1352,7 @@ td.legend {
     padding-top: 3px;
     color: #884;
     vertical-align: top;
-    white-space: nowrap;
+    white-space: nowrap; 
     width: 150px;
 }
 div.viewdescription {
@@ -1583,16 +1601,17 @@ table.add_snapin {
     padding: 0px;
     border-spacing: 5px;
     empty-cells: hide;
+    width: 100%;
 }
 
 table.add_snapin td {
     padding: 8px;
-    background-color: #abc;
+    background-color: #9bc;
     width: 33%;
     -moz-border-radius: 8px;
     border-bottom: 1px solid #9ab;
     border-right: 1px solid #89a;
-    min-height: 100px;
+    height: 90px;
     color: #369;
 }
 table.add_snapin b {

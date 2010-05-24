@@ -1,3 +1,10 @@
+1.1.5i3:
+    Multisite:
+    * New feature "status_host" for remote sites: Determine connection
+      state to remote side by considering a certain host state. This
+      avoids livestatus time outs to dead sites.
+    * Sidebar snapin site status: fix reload problem
+
 tobi:
     Multisite:
     * Complete new design (by Tobias Roeckl, Kopf & Herz)

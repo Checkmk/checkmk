@@ -268,6 +268,8 @@ def allsites():
 
 def site(name):
     s = sites.get(name, {})
+    # Now make sure that all important keys are available.
+    # Add missing entries by supplying default values.
     if "alias" not in s:
         s["alias"] = name
     if "socket" not in s:

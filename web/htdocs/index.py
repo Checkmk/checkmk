@@ -48,16 +48,17 @@ def connect_to_livestatus(html):
     html.site_status = {}
     # site_status keeps a dictionary for each site with the following
     # keys:
-    # "state"              --> "online", "offline", "disabled"
-    # "exception"          --> An error exception in case of "offline"
+    # "state"              --> "online", "disabled", "down", "unreach" or "dead"
+    # "exception"          --> An error exception in case of down, unreach or dead
+    # "status_host_state"  --> host state of status host (0, 1, 2 or None)
     # "livestatus_version" --> Version of sites livestatus if "online"
     # "program_version"    --> Version of Nagios if "online"
 
     # If there is only one site (non-multisite), than
     # user cannot enable/disable. 
     if config.is_multisite():
-	# do not contact those sites the user has disabled
-	# also honor HTML-variables for switching off sites
+	# do not contact those sites the user has disabled.
+	# Also honor HTML-variables for switching off sites
 	# right now. This is generally done by the variable
 	# _site_switch=sitename1:on,sitename2:off,...
 	enabled_sites = {}
@@ -73,15 +74,15 @@ def connect_to_livestatus(html):
 		config.user_siteconf[sitename] = d
 	    config.save_site_config()
 
-	# Make a list of all non-disables sites
-	for sitename, site in config.allsites().items():
+	# Make a list of all non-disabled sites. 	
+        for sitename, site in config.allsites().items():
 	    siteconf = config.user_siteconf.get(sitename, {})
 	    if siteconf.get("disabled", False):
 		html.site_status[sitename] = { "state" : "disabled", "site" : site } 
 	    else:
-		html.site_status[sitename] = { "state" : "offline", "site" : site }
+		html.site_status[sitename] = { "state" : "dead", "site" : site }
 		enabled_sites[sitename] = site
-		
+
 	# Now connect to enabled sites with keepalive-connection
 	html.live = livestatus.MultiSiteConnection(enabled_sites)
 
@@ -94,10 +95,16 @@ def connect_to_livestatus(html):
 	# Get exceptions in case of dead sites
 	for sitename, deadinfo in html.live.dead_sites().items():
 	    html.site_status[sitename]["exception"] = deadinfo["exception"]
+            shs = deadinfo.get("status_host_state")
+            html.site_status[sitename]["status_host_state"] = shs
+            if shs == 1:
+                html.site_status[sitename]["state"] = "down"
+            elif shs == 2:
+                html.site_status[sitename]["state"] = "unreach"
 
     else:
 	html.live = livestatus.SingleSiteConnection("unix:" + defaults.livestatus_unix_socket)
-	html.site_status = { '': { "state" : "offline", "site" : config.site('') } }
+	html.site_status = { '': { "state" : "dead", "site" : config.site('') } }
         v1, v2 = html.live.query_row("GET status\nColumns: livestatus_version program_version")
 	html.site_status[''].update({ "state" : "online", "livestatus_version": v1, "program_version" : v2 })
 
@@ -271,4 +278,5 @@ No network traffic is generated due to the monitoring.</p>
 def page_not_found(html):
     html.header("Page not found")
     html.show_error("This page was not found. Sorry.")
+    H
     html.footer()

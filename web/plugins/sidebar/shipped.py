@@ -189,8 +189,8 @@ def render_hosts(mode):
 
     longestname = 0
     for site, host, state, worstsvc in hosts:
-        longestname = max(longestname, host)
-    if len(longestname) > 15:
+        longestname = max(longestname, len(host))
+    if longestname > 15:
         num_columns = 1
     else:
         num_columns = 2
@@ -347,20 +347,30 @@ table.hostmatrix td { border: 1px solid white; }
 def render_sitestatus():
     if config.is_multisite():
 	html.write("<table cellspacing=0 class=sitestate>")
-	for sitename in config.allsites():
+        sitenames = config.allsites().keys()
+        sitenames.sort()
+	for sitename in sitenames:
 	    site = config.site(sitename)
 	    state = html.site_status[sitename]["state"]
 	    if state == "disabled":
 		switch = "on"
 		text = site["alias"]
+                title = "Site %s is switched off" % site["alias"]
 	    else:
 		switch = "off"
 		text = link(site["alias"], "view.py?view_name=sitehosts&site=%s" % sitename)
+                ex = html.site_status[sitename].get("exception")
+                shs = html.site_status[sitename].get("status_host_state")
+                    
+                if ex:
+                    title = ex
+                else:
+                    title = "Site %s is online" % site["alias"]
 
 	    html.write("<tr><td class=left>%s</td>" % text)
 	    onclick = "switch_site('_site_switch=%s:%s')" % (sitename, switch)
 	    html.write("<td class=\"state %s\">" % state)
-	    html.write("<a href=\"\" onclick=\"%s\">%s</a></td>" % (onclick, state[:3]))
+	    html.write('<a title="%s" href="#" onclick="%s">%s</a></td>' % (title, onclick, state))
 	    html.write("</tr>\n")
 	html.write("</table>\n")
     
@@ -372,16 +382,16 @@ sidebar_snapins["sitestatus"] = {
   "render" : render_sitestatus,
   "allowed" : [ "user", "admin" ],
   "styles" : """
-div#check_mk_sidebar table.sitestate {
+.snapin table.sitestate {
     width: %d;
 }
 
-div#check_mk_sidebar table.sitestate td {
+.snapin table.sitestate td {
     padding: 0px 0px;
     text-align: right;
 }
 
-div#check_mk_sidebar table.sitestate td a {
+.snapin table.sitestate td a {
     font-weight: bold;
     -moz-border-radius: 4px;
     margin: 0px;
@@ -389,35 +399,28 @@ div#check_mk_sidebar table.sitestate td a {
     text-align: center;
     display: block;
 }
-div#check_mk_sidebar table.sitestate td.left a {
+.snapin table.sitestate td.left a {
     text-align: left;
     font-weight: normal;
 }
 
-div#check_mk_sidebar table.sitestate td.state {
-    width: 30px;
+.snapin table.sitestate td.state {
+    width: 60px;
+    font-size: 7pt;
 }
-div#check_mk_sidebar table.sitestate td.left {
+.snapin table.sitestate td.left {
     text-align: left;
 }
 
-div#check_mk_sidebar table.sitestate td.offline a {
-    background-color: #f00;
-    color: #000;
-    border-color: #800;
-    font-size: 7pt;
+.snapin table.sitestate td.state a {
+    border-width: 1px;
+    border-style: solid;
 }
-div#check_mk_sidebar table.sitestate td.online a {
-    background-color: #3f6;
-    color: #fff;
-    border-color: #0f0;
-    font-size: 7pt;
-}
-div#check_mk_sidebar table.sitestate td.disabled a {
-    background-color: #666;
-    border-color: #888;
-    font-size: 7pt;
-}
+.snapin table.sitestate td.online a   { background-color: #3c0; color: #fff; border-color: #0f0; }
+.snapin table.sitestate td.disabled a { background-color: #666; color: #ccc; border-color: #888; }
+.snapin table.sitestate td.dead a     { background-color: #c00; color: #f88; border-color: #f44; }
+.snapin table.sitestate td.down a     { background-color: #f00; color: #fff; border-color: #800; }
+.snapin table.sitestate td.unreach a  { background-color: #f80; color: #fff; border-color: #840; }
 """ % snapin_width
 }
 

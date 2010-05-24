@@ -524,9 +524,15 @@ function toggle_sidebar_snapin(oH2, url) {
     childs = null;
 }
 
-function switch_site(switchvar) {
-    get_url("switch_site.py?" + switchvar);
+function reload_main_plus_sidebar(id, code) {
     parent.frames[1].location.reload(); /* reload main frame */
+    parent.frames[0].location.reload(); /* reload side bar */
+}
+
+function switch_site(switchvar) {
+    get_url("switch_site.py?" + switchvar, reload_main_plus_sidebar, null);
+    /* After the site switch has been done, everything must be reloaded since
+       everything is affected by the switch */
 }
 
 function sidebar_scheduler() {

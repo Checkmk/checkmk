@@ -783,6 +783,11 @@ td.statex {  /* zero count */
   background-color: #888; color: #fff;
 }
 
+/* in DOWNTIME */
+.stated, .hstated, .stated a, .hstated a { 
+  background-color: #0af; color: #fff;
+}
+
 /* *some* problem */
 .states, .hstates { 
     background-image: url("images/someproblem.png");

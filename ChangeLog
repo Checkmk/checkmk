@@ -13,6 +13,7 @@ tobi:
     * Make sure, enough columns can be selected in view editor
     * Allow user to change num columns and refresh directly in view
     * Get back to where you came after editing views
+    * New sidebar snapin "Host Matrix"
 
     Livestatus:
     * new statistics columns: log_messages and log_messages_rate

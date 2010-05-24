@@ -30,7 +30,7 @@ from lib import *
 sidebar_snapins = {}
 
 # Constants to be used in snapins
-snapin_width = 230 
+snapin_width = 229 
 
 # Load all snapins
 snapins_dir = defaults.web_dir + "/plugins/sidebar"

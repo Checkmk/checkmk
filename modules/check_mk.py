@@ -2762,6 +2762,7 @@ def usage():
  check_mk --backup BACKUPFILE.tar.gz       make backup of configuration and data
  check_mk --restore BACKUPFILE.tar.gz      restore configuration and data
  check_mk --flush [HOST1 HOST2...]         flush all data of some or all hosts
+ check_mk -P, --package COMMAND            do package operations
  check_mk -V, --version                    print version
  check_mk -h, --help                       print this help
 
@@ -2820,6 +2821,10 @@ NOTES:
   inventory data). This includes the state of performance counters,
   cached agent output,  and logfiles. Precompiled host checks
   are not deleted.
+
+  -P, --package brings you into packager mode. Packages are
+  used to ship inofficial extensions of Check_MK. Call without
+  arguments for a help on packaging.
   
   Nagios can call check_mk without options and the hostname and its IP
   address as arguments. Much faster is using precompiled host checks,

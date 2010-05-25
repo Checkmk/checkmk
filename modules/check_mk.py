@@ -2994,10 +2994,10 @@ for hostname in strip_tags(all_hosts + clusters.keys()):
 # Do option parsing and execute main function -
 # if check_mk is not called as module
 if __name__ == "__main__":
-    short_options = 'SHVLCURDMd:I:c:nhvpXP:'
+    short_options = 'SHVLCURDMd:I:c:nhvpXP'
     long_options = ["help", "version", "verbose", "compile", "debug",
                     "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
-		    "flush", "package=",
+		    "flush", "package",
                     "no-cache", "update", "restart", "dump", "fake-dns=",
                     "man", "nowiki", "config-check", "backup=", "restore=",
                     "check-inventory=", "timeperiods", "paths" ]
@@ -3084,7 +3084,7 @@ if __name__ == "__main__":
 	    done = True
         elif o in ['-P', '--package']:
             execfile(modules_dir + "/packaging.py")
-            do_packaging(a, args)
+            do_packaging(args)
             done = True
         elif o in [ '-M', '--man' ]:
             if len(args) > 0:

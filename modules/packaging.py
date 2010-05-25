@@ -22,13 +22,40 @@ package_parts = [
   ( "web",      "Multisite extensions", web_dir ),
 ]
 
-def do_packaging(command, args):
+def packaging_usage():
+    sys.stdout.write("""Usage: check_mk [-v] -P|--package COMMAND [ARGS]
+
+Available commands are:
+   create NAME      ...  Collect unpackaged files into new package NAME
+   pack NAME        ...  Create package file NAME.mkp from installed package
+   release NAME     ...  Drop installed package NAME, release packaged files
+   list             ...  List all installed packages
+   list NAME        ...  List files of installed package
+   list PACK.mkp    ...  List files of uninstalled package file
+   show NAME        ...  Show information about installed package
+   show PACK.mkp    ...  Show information about uninstalled package file
+   install PACK.mkp ...  Install package file PACK.mkp
+   remove NAME      ...  Uninstall package NAME
+
+   -v  enables verbose output
+
+Package files are located in %s.
+""" % pac_dir)
+
+def do_packaging(args):
+    if len(args) == 0:
+        packaging_usage()
+        sys.exit(1)
+    command = args[0]
+    args = args[1:]
+        
     commands = {
         "create"  : package_create,
         "release" : package_release,
         "list"    : package_list,
         "show"    : package_info,
         "pack"    : package_pack,
+        "remove"  : package_remove,
     }
     f = commands.get(command)
     if f:
@@ -187,11 +214,31 @@ def package_pack(args):
             tar.addfile(info, fake_file(subdata))
 
     tar.close()
-
     verbose("Successfully created %s\n" % tarfilename)
 
+def package_remove(args):
+    if len(args) != 1:
+        raise PackageException("Usage: check_mk -P remove NAME")
+    pacname = args[0]
+    package = read_package(pacname)
+    if not package:
+        raise PackageException("No such package %s." % pacname)
 
-# Und jetzt wie bei --backup arbeiten mit dem in Python eingebauten tar...
+    verbose("Removing package %s...\n" % pacname)
+    for part, title, dir in package_parts:
+        filenames = package["files"].get(part, [])
+        verbose("  %s\n" % title)
+        for fn in filenames:
+            verbose("    %s" % fn)
+            try:
+                path = dir + "/" + fn
+                os.remove(path)
+                verbose("\n")
+            except Exception, e:
+                sys.stderr.write("cannot remove %s: %s\n" % (path, e))
+    os.remove(pac_dir + pacname)
+    verbose("Successfully removed package %s.\n" % pacname)
+
 
 def files_in_dir(dir, prefix = ""):
     result = []

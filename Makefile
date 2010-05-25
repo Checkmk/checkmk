@@ -84,6 +84,7 @@ dist: mk-livestatus
 	tar  cf $(DISTNAME)/agents.tar $(TAROPTS) -C agents --exclude "*~" $$(cd agents ; ls | grep -v windows )
 	tar  rf $(DISTNAME)/agents.tar $(TAROPTS) -C agents windows/{check_mk_agent.exe,check_mk_agent.cc,Makefile}
 	gzip $(DISTNAME)/agents.tar
+	cd $(DISTNAME) ; ../make_package_info $(VERSION) > package_info
 	install -m 755 scripts/*.{sh,py} $(DISTNAME)
 	install -m 644 COPYING AUTHORS ChangeLog $(DISTNAME)
 	echo "$(VERSION)" > $(DISTNAME)/VERSION

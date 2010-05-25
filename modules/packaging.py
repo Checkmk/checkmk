@@ -24,10 +24,11 @@ package_parts = [
 
 def do_packaging(command, args):
     commands = {
-        "create" : package_create,
-        "list"   : package_list,
-        "show"   : package_info,
-        "pack"   : package_pack,
+        "create"  : package_create,
+        "release" : package_release,
+        "list"    : package_list,
+        "show"    : package_info,
+        "pack"    : package_pack,
     }
     f = commands.get(command)
     if f:
@@ -49,11 +50,15 @@ def package_list(args):
         for name in args:
             show_package_contents(name)
     else:
-        table = []
-        for pacname in all_packages():
-            package = read_package(pacname)
-            table.append((pacname, package["title"], package["num_files"]))
-        print_table(["Name", "Title", "Files"], [ tty_bold, "", "" ], table)
+        if opt_verbose:
+            table = []
+            for pacname in all_packages():
+                package = read_package(pacname)
+                table.append((pacname, package["title"], package["num_files"]))
+            print_table(["Name", "Title", "Files"], [ tty_bold, "", "" ], table)
+        else:
+            for pacname in all_packages():
+                sys.stdout.write("%s\n" % pacname)
 
 def package_info(args):
     if len(args) == 0:
@@ -132,6 +137,19 @@ def package_create(args):
     write_package(pacname, package)
     verbose("New package %s created with %d files.\n" % (pacname, num_files))
 
+def package_release(args):
+    if len(args) != 1:
+        raise PackageException("Usage: check_mk -P release NAME")
+
+    pacname = args[0]
+    pacpath = pac_dir + pacname
+    if not os.path.exists(pacpath):
+        raise PackageException("No such package %s." % pacname)
+    package = read_package(pacname)
+    os.unlink(pacpath)
+    if package:
+        verbose("Released %d files into freedom.\n" % package["num_files"])
+
 def package_pack(args):
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P pack NAME")
@@ -141,7 +159,6 @@ def package_pack(args):
     if not package:
         raise PackageException("Package %s not existing or corrupt." % pacname)
     tarfilename = pacname + pac_ext
-    verbose("Packing %s => %s...\n" % (pacname, tarfilename))
 
     def create_info(filename, size):
         info = tarfile.TarInfo("info")
@@ -162,6 +179,7 @@ def package_pack(args):
     # Now pack the actual files into sub tars
     for part, title, dir in package_parts:
         filenames = package["files"].get(part, [])
+        verbose("  %-24s %3d files\n" % (title + ":", len(filenames)))
         if len(filenames) > 0:
             subtarname = part + ".tar"
             subdata = os.popen("tar cf - --dereference --force-local -C '%s' %s" % (dir, " ".join(filenames))).read()

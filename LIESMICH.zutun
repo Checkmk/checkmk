@@ -14,14 +14,14 @@ klickt, könnte man einfach den ersten Host auswählen, der matcht. Momentan
 kommt man zu einer leeren Ansicht, weil es den Host ja nicht gibt, den
 man eingetippt hat.
 
+Quicksearch: Das Dropdown bleibt recht oft auf, obwohl man schon einen
+Host ausgewählt hat.
+
 --------------------------------------------------------------------------------
 NOCH INS RELEASE 1.1.5
 --------------------------------------------------------------------------------
 Aenderung an default_user_role in multisite.mk erfordert
 Apache-Neustart.
-
-Quicksearch: Das Dropdown bleibt recht oft auf, obwohl man schon einen
-Host ausgewählt hat.
 
 Alerts/Notifications/Downtimealerts für Service und für Host und
 für Services of Host (letzteres wahrscheinlich dann gemeinsam).
@@ -31,21 +31,8 @@ nämlich mit Logclasses. Dann views bauen und einen Filter auf
 einen Zeitraum (Heute, diese Woche, letzte 30 Tage, usw.).
 Evtl. noch einen Filter mit Datumseingabe.
 
-View editieren: Im Try-Out-Modus sollte nur der Filter-Button
-kommen, nicht "Edit this view" und auch nicht "Commands"
-Auch darf kein Refresh verwendet werden.
-
 View editor: Wenn man keine Display columns ausgewaehlt
 hat, dann sollte eine Fehlermeldung kommen.
-
-View service status detail: Fehlende Spalten ergaenzen (alles
-was Nagios/Livestatus so hergibt, bis auf die Daten vom Host)
-
-Nuvola Icons einbauen.
-
-Layout von Tobi umsetzen
-
-Beim Customized von views ändert sich das Topic immer auf "Other".
 
 --------------------------------------------------------------------------------
 INS RELEASE 1.2
@@ -78,18 +65,6 @@ View-Tabellen von Multisite: bei Zeilen mit kritischem Status, sollten
 zwei leicht unterschiedliche Rotoene verwendet werden. Aktuell ist einer
 davon orange...
 
-
-Wenn man eine View editiert ueber [Edit this view] und auf speichern
-geht, dann wäre es sehr toll, wenn man direkt zu dieser View zurückkehrt.
-Dazu müsste der Knopf die origurl in einer Variable mitgeben, die dann
-beim Save berücksichtigt wird. Frage ist, ob man das mit einer Weiterleitung
-machen muss oder ob das so geht, dass das [Save] in view_view() abgehandelt
-wird.
-
-Multisite tactical overview: Hier muss man Summary hosts ausschliessen.
-Soll man die Filter doch irgendwie konfigurierbar machen? Oder doch
-einfach an hostproblems und serviceproblems haengen??
-
 Logwatch.py: Wenn die state-Datei korrupt ist, diese neu anlegen und eine
 Fakemeldung nach oben schicken, die critical ist.
 
@@ -116,11 +91,6 @@ IDEEN & VERBESSERUNGEN
 Multisite: Kann man - wenn man Aggregation verwendet - beim normalen
 Host einen Links auf den Summary host machen und umgekehrt? Evtl.
 hartkodiert in show_view(), falls die Variable host gesetzt ist?
-
-
-Multisite: view "recent Service changes", die Services zeigt, die kuerzlich
-den Status geändert haben. Dazu Filter über Zeit bauen. Diesen Filter 
-nicht Hartkodieren sondern mit "Show to user" aber sinnvoll vorbefüllt.
 
 Multisite: icons: das Erkennen der modified_attributes
 funktioniert nur halb: Wenn man den Ausgangswert wiederherstellt,
@@ -188,7 +158,12 @@ Eigenschaften wie Gruppen, etc werden eicht berücksichtigt. Gleiches gilt
 für Servicegruppen. Man sollte daher die Funktion extra_service_conf_of()
 so erweitern, dass *alles* Nagios-Attribute agbefrühstückt werden.
 
-
 check_mk --restore: Löscht er cache und counters? Er sollte nur die
 Inhalte löschen. Es könnte nämlich sein, dass es sich nicht um Verzeichnisse,
 sondern um Symlinks handelt.
+
+check_mk --uninstall backup.tar.gz: Deinstalliert alle Dateien, die
+setup installiert hat. Dazu verwendet man einfach die Pfade, die setup.sh
+gespeichert hat (reicht das?). Man wird dabei gezwungen, vorher ein
+Backup durchzuführen.
+

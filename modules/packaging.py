@@ -31,6 +31,7 @@ Available commands are:
    create NAME      ...  Collect unpackaged files into new package NAME
    pack NAME        ...  Create package file from installed package
    release NAME     ...  Drop installed package NAME, release packaged files
+   find             ...  Find and display unpackaged files
    list             ...  List all installed packages
    list NAME        ...  List files of installed package
    list PACK.mkp    ...  List files of uninstalled package file
@@ -55,6 +56,7 @@ def do_packaging(args):
         "create"  : package_create,
         "release" : package_release,
         "list"    : package_list,
+        "find"    : package_find,
         "show"    : package_info,
         "pack"    : package_pack,
         "remove"  : package_remove,
@@ -178,6 +180,23 @@ def package_create(args):
     write_package(pacname, package)
     verbose("New package %s created with %d files.\n" % (pacname, num_files))
     verbose("Please edit package details in %s%s%s\n" % (tty_bold, pac_dir + pacname, tty_normal))
+
+def package_find(_no_args):
+    first = True
+    for part, title, dir in package_parts:
+        files = unpackaged_files_in_dir(part, dir)
+        if len(files) > 0:
+            if first:
+                verbose("Unpackaged files:\n")
+                first = False
+            verbose("  %s%s%s:\n" % (tty_bold, title, tty_normal))
+            for f in files:
+                if opt_verbose:
+                    sys.stdout.write("    %s\n" % f)
+                else:
+                    sys.stdout.write("%s/%s\n" % (dir, f))
+    if first:
+        verbose("No unpackaged files found.\n")
 
 def package_release(args):
     if len(args) != 1:

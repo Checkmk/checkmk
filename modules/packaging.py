@@ -27,14 +27,14 @@ def packaging_usage():
 
 Available commands are:
    create NAME      ...  Collect unpackaged files into new package NAME
-   pack NAME        ...  Create package file NAME.mkp from installed package
+   pack NAME        ...  Create package file from installed package
    release NAME     ...  Drop installed package NAME, release packaged files
    list             ...  List all installed packages
    list NAME        ...  List files of installed package
    list PACK.mkp    ...  List files of uninstalled package file
    show NAME        ...  Show information about installed package
    show PACK.mkp    ...  Show information about uninstalled package file
-   install PACK.mkp ...  Install package file PACK.mkp
+   install PACK.mkp ...  Install or update package from file PACK.mkp
    remove NAME      ...  Uninstall package NAME
 
    -v  enables verbose output
@@ -125,13 +125,18 @@ def show_package(name, show_info = False):
                 " ".join([ "%s(%d)" % (part, len(fs)) for part, fs in package["files"].items() ]))
         sys.stdout.write("Description:\n  %s\n" % package["description"])
     else:
-        for part, title, dir in package_parts:
-            files = package["files"].get(part, [])
-            if len(files) > 0:
-                sys.stdout.write("%s%s%s:\n" % (tty_bold, title, tty_normal))
-                for f in files:
-                    sys.stdout.write("  %s\n" % f)
-                sys.stdout.write("\n")
+        if opt_verbose:
+            sys.stdout.write("Files in package %s:\n" % name)
+            for part, title, dir in package_parts:
+                files = package["files"].get(part, [])
+                if len(files) > 0:
+                    sys.stdout.write("  %s%s%s:\n" % (tty_bold, title, tty_normal))
+                    for f in files:
+                        sys.stdout.write("    %s\n" % f)
+        else:
+            for part, title, dir in package_parts:
+                for fn in package["files"].get(part, []):
+                    sys.stdout.write(dir + "/" + fn + "\n")
 
 
 def package_create(args):
@@ -142,7 +147,7 @@ def package_create(args):
     if read_package(pacname):
         raise PackageException("Package %s already existing." % pacname)
 
-    verbose("Creating new package %s\n" % pacname)
+    verbose("Creating new package %s...\n" % pacname)
     filelists = {}
     package = {
         "title"           : "Title of %s" % pacname,
@@ -155,15 +160,18 @@ def package_create(args):
     }
     num_files = 0
     for part, title, dir in package_parts:
-        verbose("  Unpackaged files in %s:\n" % dir) 
         files = unpackaged_files_in_dir(part, dir)
-        for f in files:
-            verbose("    %s\n" % f)
         filelists[part] = files
         num_files += len(files)
+        if len(files) > 0:
+            verbose("  %s%s%s:\n" % (tty_bold, title, tty_normal))
+            for f in files:
+                verbose("    %s\n" % f)
+
 
     write_package(pacname, package)
     verbose("New package %s created with %d files.\n" % (pacname, num_files))
+    verbose("Please edit package details in %s%s%s\n" % (tty_bold, pac_dir + pacname, tty_normal))
 
 def package_release(args):
     if len(args) != 1:
@@ -175,8 +183,14 @@ def package_release(args):
         raise PackageException("No such package %s." % pacname)
     package = read_package(pacname)
     os.unlink(pacpath)
-    if package:
-        verbose("Released %d files into freedom.\n" % package["num_files"])
+    verbose("Releasing files of package %s into freedom...\n" % pacname)
+    if opt_verbose:
+        for part, title, dir in package_parts:
+            filenames = package["files"].get(part, [])
+            if len(filenames) > 0:
+                verbose("  %s%s%s:\n" % (tty_bold, title, tty_normal))
+                for f in filenames:
+                    verbose("    %s\n" % f)
 
 def package_pack(args):
     if len(args) != 1:
@@ -186,7 +200,8 @@ def package_pack(args):
     package = read_package(pacname)
     if not package:
         raise PackageException("Package %s not existing or corrupt." % pacname)
-    tarfilename = pacname + pac_ext
+    tarfilename = "%s-%s%s" % (pacname, package["version"], pac_ext)
+    verbose("Packing %s into %s...\n" % (pacname, tarfilename))
 
     def create_info(filename, size):
         info = tarfile.TarInfo("info")
@@ -207,8 +222,10 @@ def package_pack(args):
     # Now pack the actual files into sub tars
     for part, title, dir in package_parts:
         filenames = package["files"].get(part, [])
-        verbose("  %-24s %3d files\n" % (title + ":", len(filenames)))
         if len(filenames) > 0:
+            verbose("  %s%s%s:\n" % (tty_bold, title, tty_normal))
+            for f in filenames:
+                verbose("    %s\n" % f)
             subtarname = part + ".tar"
             subdata = os.popen("tar cf - --dereference --force-local -C '%s' %s" % (dir, " ".join(filenames))).read()
             info = create_info(subtarname, len(subdata))
@@ -228,15 +245,16 @@ def package_remove(args):
     verbose("Removing package %s...\n" % pacname)
     for part, title, dir in package_parts:
         filenames = package["files"].get(part, [])
-        verbose("  %s\n" % title)
-        for fn in filenames:
-            verbose("    %s" % fn)
-            try:
-                path = dir + "/" + fn
-                os.remove(path)
-                verbose("\n")
-            except Exception, e:
-                sys.stderr.write("cannot remove %s: %s\n" % (path, e))
+        if len(filenames) > 0:
+            verbose("  %s%s%s\n" % (tty_bold, title, tty_normal))
+            for fn in filenames:
+                verbose("    %s" % fn)
+                try:
+                    path = dir + "/" + fn
+                    os.remove(path)
+                    verbose("\n")
+                except Exception, e:
+                    sys.stderr.write("cannot remove %s: %s\n" % (path, e))
     os.remove(pac_dir + pacname)
     verbose("Successfully removed package %s.\n" % pacname)
 
@@ -247,16 +265,15 @@ def package_install(args):
     if not os.path.exists(path):
         raise PackageException("No such file %s." % path)
 
-
-    verbose("Installing %s.\n" % path)
     tar = tarfile.open(path, "r:gz")
     package = eval(tar.extractfile("info").read())
     pacname = package["name"]
     old_package = read_package(pacname)
     if old_package:
-        verbose("Package %s is already installed in version %s. Updating to %s\n" % (pacname, old_package["version"], package["version"]))
+        verbose("Updating %s from version %s to %s.\n" % (pacname, old_package["version"], package["version"]))
         update = True
     else:
+        verbose("Installing %s version %s.\n" % (pacname, package["version"]))
         update = False
 
     # Before installing check for conflicts
@@ -269,7 +286,7 @@ def package_install(args):
             old_files = old_package["files"].get(part, [])
         for fn in package["files"].get(part, []):
             path = dir + "/" + fn
-            if fn in old_files:
+            if update and fn in old_files:
                keep.append(fn) 
             elif fn in packaged:
                 raise PackageException("File conflict: %s is part of another package." % path)
@@ -295,7 +312,7 @@ def package_install(args):
     # In case of an update remove files from old_package not present in new one
     if update:
         for part, title, dir in package_parts:
-            filenames = package["files"].get(part, [])
+            filenames = old_package["files"].get(part, [])
             keep = keep_files.get(part, [])
             for fn in filenames:
                 if fn not in keep:

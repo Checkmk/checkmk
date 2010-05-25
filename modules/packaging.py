@@ -56,6 +56,7 @@ def do_packaging(args):
         "show"    : package_info,
         "pack"    : package_pack,
         "remove"  : package_remove,
+        "install" : package_install,
     }
     f = commands.get(command)
     if f:
@@ -238,6 +239,75 @@ def package_remove(args):
                 sys.stderr.write("cannot remove %s: %s\n" % (path, e))
     os.remove(pac_dir + pacname)
     verbose("Successfully removed package %s.\n" % pacname)
+
+def package_install(args):
+    if len(args) != 1:
+        raise PackageException("Usage: check_mk -P remove NAME")
+    path = args[0]
+    if not os.path.exists(path):
+        raise PackageException("No such file %s." % path)
+
+
+    verbose("Installing %s.\n" % path)
+    tar = tarfile.open(path, "r:gz")
+    package = eval(tar.extractfile("info").read())
+    pacname = package["name"]
+    old_package = read_package(pacname)
+    if old_package:
+        verbose("Package %s is already installed in version %s. Updating to %s\n" % (pacname, old_package["version"], package["version"]))
+        update = True
+    else:
+        update = False
+
+    # Before installing check for conflicts
+    keep_files = {}    
+    for part, title, dir in package_parts:
+        packaged = packaged_files_in_dir(part)
+        keep = []
+        keep_files[part] = keep
+        if update:
+            old_files = old_package["files"].get(part, [])
+        for fn in package["files"].get(part, []):
+            path = dir + "/" + fn
+            if fn in old_files:
+               keep.append(fn) 
+            elif fn in packaged:
+                raise PackageException("File conflict: %s is part of another package." % path)
+            elif os.path.exists(path):
+                raise PackageException("File conflict: %s already existing." % path)
+
+    # Now install files, but only unpack files explicitely listed
+    for part, title, dir in package_parts:
+        filenames = package["files"].get(part, [])
+        if len(filenames) > 0:
+            verbose("  %s%s%s:\n" % (tty_bold, title, tty_normal))
+            for fn in filenames:
+                verbose("    %s\n" % fn)
+            tarsource = tar.extractfile(part + ".tar")
+            subtar = "tar xf - -C %s %s" % (dir, " ".join(filenames))
+            tardest = os.popen(subtar, "w")
+            while True:
+                data = tarsource.read(4096)
+                if not data:
+                    break
+                tardest.write(data)
+
+    # In case of an update remove files from old_package not present in new one
+    if update:
+        for part, title, dir in package_parts:
+            filenames = package["files"].get(part, [])
+            keep = keep_files.get(part, [])
+            for fn in filenames:
+                if fn not in keep:
+                    path = dir + "/" + fn
+                    verbose("Removing outdated file %s.\n" % path)
+                    try:
+                        os.remove(path)
+                    except Exception, e:
+                        sys.stderr.write("Error removing %s: %s\n" % (path, e))
+
+    # Last but not least install package file
+    file(pac_dir + pacname, "w").write(pprint.pformat(package))
 
 
 def files_in_dir(dir, prefix = ""):

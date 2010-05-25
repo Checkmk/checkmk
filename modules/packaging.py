@@ -26,6 +26,7 @@ def do_packaging(command, args):
     commands = {
         "create" : package_create,
         "list"   : package_list,
+        "show"   : package_info,
         "pack"   : package_pack,
     }
     f = commands.get(command)
@@ -36,16 +37,69 @@ def do_packaging(command, args):
             sys.stderr.write("%s\n" % e)
             sys.exit(1)
     else:
-        sys.stderr.write("Invalid packaging command. Allowed are: %s.\n" % 
-                ", ".join(commands.keys()))
+        allc = commands.keys()
+        allc.sort()
+        allc = [ tty_bold + c + tty_normal for c in allc ]
+        sys.stderr.write("Invalid packaging command. Allowed are: %s and %s.\n" % 
+                (", ".join(allc[:-1]), allc[-1]))
         sys.exit(1)
     
 def package_list(args):
-    table = []
-    for pacname in all_packages():
-        package = read_package(pacname)
-        table.append((pacname, package["title"], package["num_files"]))
-    print_table(["Name", "Title", "Files"], [ tty_green, tty_yellow, tty_cyan ], table)
+    if len(args) > 0:
+        for name in args:
+            show_package_contents(name)
+    else:
+        table = []
+        for pacname in all_packages():
+            package = read_package(pacname)
+            table.append((pacname, package["title"], package["num_files"]))
+        print_table(["Name", "Title", "Files"], [ tty_bold, "", "" ], table)
+
+def package_info(args):
+    if len(args) == 0:
+        raise PackageException("Usage: check_mk -P show NAME|PACKAGE.mkp")
+    for name in args:
+        show_package_info(name)
+
+def show_package_contents(name):
+    show_package(name, False)
+
+def show_package_info(name):
+    show_package(name, True)
+
+def show_package(name, show_info = False):
+    try:
+        if name.endswith(pac_ext):
+            tar = tarfile.open(name, "r:gz")
+            info = tar.extractfile("info")
+            package = eval(info.read())
+        else:
+            package = read_package(name)
+            if not package:
+                raise PackageException("No such package %s." % name)
+    except PackageException:
+        raise
+    except Exception, e:
+        raise PackageException("Cannot open package %s: %s" % (name, e))
+
+    if show_info:
+        sys.stdout.write("Name:               %s\n" % package["name"])
+        sys.stdout.write("Version:            %s\n" % package["version"])
+        sys.stdout.write("Title:              %s\n" % package["title"])
+        sys.stdout.write("Author:             %s\n" % package["author"])
+        sys.stdout.write("Download-URL:       %s\n" % package["download_url"])
+        sys.stdout.write("Files:              %s\n" % \
+                " ".join([ "%s(%d)" % (part, len(fs)) for part, fs in package["files"].items() ]))
+        sys.stdout.write("Description:\n  %s\n" % package["description"])
+    else:
+        for part, title, dir in package_parts:
+            files = package["files"].get(part, [])
+            if len(files) > 0:
+                sys.stdout.write("%s%s%s:\n" % (tty_bold, title, tty_normal))
+                for f in files:
+                    sys.stdout.write("  %s\n" % f)
+                sys.stdout.write("\n")
+
 
 def package_create(args):
     if len(args) != 1:
@@ -59,6 +113,7 @@ def package_create(args):
     filelists = {}
     package = {
         "title"           : "Title of %s" % pacname,
+        "name"            : pacname,
         "description"     : "Please add a description here",
         "version"         : "1.0",
         "author"          : "Add your name here",

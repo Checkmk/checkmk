@@ -2,10 +2,10 @@ Paketierung:
 
 * check_mk -P create foo       --> Sammelt unpaketierte Dateien in installiertes neues Paket foo
   check_mk -P install foo.mkp  --> Installiert Paket
-  check_mk -P files foo        --> Listet Dateien von installiertem Pakete auf
-  check_mk -P files foo.mkp    --> Listet Dateien von nicht installiertem Paket
-  check_mk -P info foo         --> Allgemeine Infos zu installiertem Paket
-  check_mk -P info foo.mkp     --> Infos zu nicht installiertem Paket
+* check_mk -P list foo        --> Listet Dateien von installiertem Pakete auf
+* check_mk -P list foo.mkp    --> Listet Dateien von nicht installiertem Paket
+* check_mk -P show foo         --> Allgemeine Infos zu installiertem Paket
+* check_mk -P show foo.mkp     --> Infos zu nicht installiertem Paket
   check_mk -P remove foo       --> Entfernt Paket foo
 * check_mk -P pack foo         --> Sammelt Dateien von foo ein und baut Paket foo.mkp
 * check_mk -P list             --> listet alle Pakete auf

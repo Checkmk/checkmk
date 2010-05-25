@@ -1,8 +1,28 @@
-paketierung:
+Paketierung:
 
 check_mk -P create foo       --> Sammelt unpaketierte Dateien in installiertes neues Paket foo
 check_mk -P install foo.mkp  --> Installiert Paket
-check_mk -P list             --> Listed installiertes Pakete auf
-check_mk -P list foo.mkp
+check_mk -P files foo        --> Listet Dateien von installiertem Pakete auf
+check_mk -P files foo.mkp    --> Listet Dateien von nicht installiertem Paket
+check_mk -P info foo         --> Allgemeine Infos zu installiertem Paket
+check_mk -P info foo.mkp     --> Infos zu nicht installiertem Paket
 check_mk -P remove foo       --> Entfernt Paket foo
 check_mk -P pack foo         --> Sammelt Dateien von foo ein und baut Paket
+
+Paketformat eines .mkp:
+Es ist ein komprimiertes .tar.gz mit folgendem Inhalt
+info          --> Datei mit allgemeiner Information
+web.tar       --> Erweiterungen für Multisite (sidebar, view-Plugins, Bilder, etc)
+checks.tar    --> Selbst programmierte Checks
+checkman.tar  --> Manpages zu checks
+agents.tar    --> Dateien im Agents-Verzeichnis
+(evtl. weitere Verzeichnisse)
+
+Speicherung der installierten Pakete:
+
+/var/lib/check_mk/packages
+
+Darunter gibt es pro installiertem Paket in Verzeichnis
+mit folgenden Dateien:
+info -> Direkt die Info-Datei aus dem Paket
+

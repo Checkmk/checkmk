@@ -2580,9 +2580,11 @@ def show_paths():
 	( modules_dir,                 dir, inst, "Main components of check_mk"),
 	( checks_dir,                  dir, inst, "Checks"),
         ( agents_dir,                  dir, inst, "Agents for operating systems"),
+        ( doc_dir,                     dir, inst, "Documentatoin files"),
 	( web_dir,                     dir, inst, "Check_MK's web pages"),
 	( check_manpages_dir,          dir, inst, "Check manpages (for check_mk -M)"),
 	( lib_dir,                     dir, inst, "Binary plugins (architecture specific)"),
+        ( pnp_templates_dir,           dir, inst, "Templates for PNP4Nagios"),
 	( nagios_startscript,          fil, inst, "Startscript for Nagios daemon"),
 	( nagios_binary,               fil, inst, "Path to Nagios executable"),
 

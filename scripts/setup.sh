@@ -496,6 +496,8 @@ checkmk_web_uri             = '$checkmk_web_uri'
 livestatus_unix_socket      = '$livesock'
 livebackendsdir             = '$livebackendsdir'
 pnp_url                     = '$pnp_url'
+pnp_templates_dir           = '$pnptemplates'
+doc_dir                     = '$docdir'
 EOF
 }
 

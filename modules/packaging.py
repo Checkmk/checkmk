@@ -16,10 +16,12 @@ except:
     pass
 
 package_parts = [
-  ( "checks",   "Checks",               checks_dir ),
-  ( "checkman", "Checks' man pages",    check_manpages_dir ),
-  ( "agents",   "Agents",               agents_dir ),
-  ( "web",      "Multisite extensions", web_dir ),
+  ( "checks",        "Checks",               checks_dir ),
+  ( "checkman",      "Checks' man pages",    check_manpages_dir ),
+  ( "agents",        "Agents",               agents_dir ),
+  ( "web",           "Multisite extensions", web_dir ),
+  ( "pnp-templates", "PNP4Nagios templates", pnp_templates_dir ),
+  ( "doc",           "Documentation files",  doc_dir ),
 ]
 
 def packaging_usage():
@@ -332,7 +334,12 @@ def package_install(args):
     file(pac_dir + pacname, "w").write(pprint.pformat(package))
 
 
-def files_in_dir(dir, prefix = ""):
+def files_in_dir(part, dir, prefix = ""):
+    # Handle case where one part-dir lies below another
+    taboo_dirs = [ d for p, t, d in package_parts if p != part ]
+    if dir in taboo_dirs:
+        return []
+        
     result = []
     files = os.listdir(dir)
     for f in files:
@@ -340,14 +347,14 @@ def files_in_dir(dir, prefix = ""):
             continue
         path = dir + "/" + f
         if os.path.isdir(path):
-            result += files_in_dir(path, prefix + f + "/")
+            result += files_in_dir(part, path, prefix + f + "/")
         else:
             result.append(prefix + f)
     result.sort()
     return result
 
 def unpackaged_files_in_dir(part, dir):
-    all    = files_in_dir(dir)
+    all    = files_in_dir(part, dir)
     packed = packaged_files_in_dir(part)
     return [ f for f in all if f not in packed ]
 

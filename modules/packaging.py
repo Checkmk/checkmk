@@ -116,12 +116,14 @@ def show_package(name, show_info = False):
         raise PackageException("Cannot open package %s: %s" % (name, e))
 
     if show_info:
-        sys.stdout.write("Name:               %s\n" % package["name"])
-        sys.stdout.write("Version:            %s\n" % package["version"])
-        sys.stdout.write("Title:              %s\n" % package["title"])
-        sys.stdout.write("Author:             %s\n" % package["author"])
-        sys.stdout.write("Download-URL:       %s\n" % package["download_url"])
-        sys.stdout.write("Files:              %s\n" % \
+        sys.stdout.write("Name:                          %s\n" % package["name"])
+        sys.stdout.write("Version:                       %s\n" % package["version"])
+        sys.stdout.write("Packaged on Check_MK Version:  %s\n" % package["version.packaged"])
+        sys.stdout.write("Required Check_MK Version:     %s\n" % package["version.min_required"])
+        sys.stdout.write("Title:                         %s\n" % package["title"])
+        sys.stdout.write("Author:                        %s\n" % package["author"])
+        sys.stdout.write("Download-URL:                  %s\n" % package["download_url"])
+        sys.stdout.write("Files:                         %s\n" % \
                 " ".join([ "%s(%d)" % (part, len(fs)) for part, fs in package["files"].items() ]))
         sys.stdout.write("Description:\n  %s\n" % package["description"])
     else:
@@ -150,13 +152,15 @@ def package_create(args):
     verbose("Creating new package %s...\n" % pacname)
     filelists = {}
     package = {
-        "title"           : "Title of %s" % pacname,
-        "name"            : pacname,
-        "description"     : "Please add a description here",
-        "version"         : "1.0",
-        "author"          : "Add your name here",
-        "download_url"    : "http://example.com/%s/" % pacname,
-        "files"           : filelists
+        "title"                : "Title of %s" % pacname,
+        "name"                 : pacname,
+        "description"          : "Please add a description here",
+        "version"              : "1.0",
+        "version.packaged"     : check_mk_version,
+        "version.min_required" : check_mk_version,
+        "author"               : "Add your name here",
+        "download_url"         : "http://example.com/%s/" % pacname,
+        "files"                : filelists
     }
     num_files = 0
     for part, title, dir in package_parts:
@@ -200,6 +204,7 @@ def package_pack(args):
     package = read_package(pacname)
     if not package:
         raise PackageException("Package %s not existing or corrupt." % pacname)
+    package["version.packaged"] = check_mk_version
     tarfilename = "%s-%s%s" % (pacname, package["version"], pac_ext)
     verbose("Packing %s into %s...\n" % (pacname, tarfilename))
 

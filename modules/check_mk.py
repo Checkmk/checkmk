@@ -78,6 +78,11 @@ nagios_binary                      = '/usr/sbin/nagios'
 nagios_config_file                 = '/etc/nagios/nagios.cfg'
 logwatch_notes_url                 = "/nagios/logwatch.php?host=%s&file=%s"
 
+def verbose(t):
+    if opt_verbose:
+        sys.stderr.write(t)
+        sys.stderr.flush()
+
 
 # During setup a file called defaults is created in the modules
 # directory.  In this file all directories are configured.  We need to
@@ -289,6 +294,7 @@ try:
     for module in [ 'check_mk_base', 'snmp' ]:
         filename = modules_dir + "/" + module + ".py"
         execfile(filename)
+
 except Exception, e:
     sys.stderr.write("Cannot read file %s: %s\n" % (filename, e))
     sys.exit(5)
@@ -2344,22 +2350,26 @@ backup_paths = [
     ('logwatch_dir',        logwatch_dir,        "",              "Logwatch",                          True,  True,  True  ),
     ]
 
+class fake_file:
+    def __init__(self, content):
+        self.content = content
+        self.pointer = 0
+
+    def size(self):
+        return len(self.content)
+
+    def read(self, size):
+        new_end = self.pointer + size
+        data = self.content[self.pointer:new_end]
+        self.pointer = new_end
+        return data
+
 def do_backup(tarname):
     import tarfile
     if opt_verbose:
         sys.stderr.write("Creating backup file '%s'...\n" % tarname)
     tar = tarfile.open(tarname, "w:gz")
 
-    class fake_file:
-        def __init__(self, content):
-            self.content = content
-            self.pointer = 0
-
-        def read(self, size):
-            new_end = self.pointer + size
-            data = self.content[self.pointer:new_end]
-            self.pointer = new_end
-            return data
 
     for name, path, canonical_name, descr, is_dir, owned_by_nagios, group_www in backup_paths:
         absdir = os.path.abspath(path)
@@ -2752,6 +2762,7 @@ def usage():
  check_mk --backup BACKUPFILE.tar.gz       make backup of configuration and data
  check_mk --restore BACKUPFILE.tar.gz      restore configuration and data
  check_mk --flush [HOST1 HOST2...]         flush all data of some or all hosts
+ check_mk -P, --package COMMAND            do package operations
  check_mk -V, --version                    print version
  check_mk -h, --help                       print this help
 
@@ -2810,6 +2821,10 @@ NOTES:
   inventory data). This includes the state of performance counters,
   cached agent output,  and logfiles. Precompiled host checks
   are not deleted.
+
+  -P, --package brings you into packager mode. Packages are
+  used to ship inofficial extensions of Check_MK. Call without
+  arguments for a help on packaging.
   
   Nagios can call check_mk without options and the hostname and its IP
   address as arguments. Much faster is using precompiled host checks,
@@ -2984,10 +2999,10 @@ for hostname in strip_tags(all_hosts + clusters.keys()):
 # Do option parsing and execute main function -
 # if check_mk is not called as module
 if __name__ == "__main__":
-    short_options = 'SHVLCURDMd:I:c:nhvpX'
+    short_options = 'SHVLCURDMd:I:c:nhvpXP'
     long_options = ["help", "version", "verbose", "compile", "debug",
                     "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
-		    "flush",
+		    "flush", "package",
                     "no-cache", "update", "restart", "dump", "fake-dns=",
                     "man", "nowiki", "config-check", "backup=", "restore=",
                     "check-inventory=", "timeperiods", "paths" ]
@@ -3072,6 +3087,10 @@ if __name__ == "__main__":
         elif o == '--paths':
 	    show_paths()
 	    done = True
+        elif o in ['-P', '--package']:
+            execfile(modules_dir + "/packaging.py")
+            do_packaging(args)
+            done = True
         elif o in [ '-M', '--man' ]:
             if len(args) > 0:
                 show_check_manual(args[0])

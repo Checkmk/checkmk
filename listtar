@@ -11,9 +11,11 @@ do
   echo -n "$filename"
   if [ "${filename:(-7)}" = ".tar.gz" ] ; then
     echo :
-    tar xzf $1 --to-stdout "$filename" | tar tzvf - | \
-cat
-#	awk ' { printf " |%8d %s\n", $3, $6; } '
+    tar xzf $1 --to-stdout "$filename" | tar tzvf - 
+    echo
+  elif [ "${filename:(-4)}" = ".tar" ] ; then
+    echo :
+    tar xzf $1 --to-stdout "$filename" | tar tvf - 
     echo
   else
     echo

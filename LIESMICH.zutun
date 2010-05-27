@@ -33,9 +33,19 @@ Kann man das mit Javascript hinbekommen?
 
 Eingabe von Downtimes: Auch hier Umlaute abfangen wie bei Comments
 
+rrdcached-Startskript aus Skript: restart kill das Skript selbst.
+Besser mit PID-Datei arbeiten. Ausserdem Optionen -s und -m verwenden.
+Außerdem sollte der Cachedaemon auch verwendet werden.
+
+
 --------------------------------------------------------------------------------
 UNSCHOENHEITEN
 --------------------------------------------------------------------------------
+View-Tabellen von Multisite: bei Zeilen mit kritischem Status, sollten
+zwei leicht unterschiedliche Rotoene verwendet werden. Aktuell ist einer
+davon orange...
+
+
 Wenn man eine View editiert ueber [Edit this view] und auf speichern
 geht, dann wäre es sehr toll, wenn man direkt zu dieser View zurückkehrt.
 Dazu müsste der Knopf die origurl in einer Variable mitgeben, die dann
@@ -74,6 +84,11 @@ es ja fuer binaere Hostlisten das NEGATE (=> Doku). In 1.2 einbauen.
 --------------------------------------------------------------------------------
 IDEEN & VERBESSERUNGEN
 --------------------------------------------------------------------------------
+Multisite: Kann man - wenn man Aggregation verwendet - beim normalen
+Host einen Links auf den Summary host machen und umgekehrt? Evtl.
+hartkodiert in show_view(), falls die Variable host gesetzt ist?
+
+
 Multisite: view "recent Service changes", die Services zeigt, die kuerzlich
 den Status geändert haben. Dazu Filter über Zeit bauen. Diesen Filter 
 nicht Hartkodieren sondern mit "Show to user" aber sinnvoll vorbefüllt.
@@ -156,3 +171,7 @@ nicht nur auf das Anzeigen der Knöpfe und das Auswerten der HTML-Variablen
 anwenden, sondern auch darauf, ob die aus Viewoptions.mk geladenen
 Optionen verwendet werden sollen. Tobi sagen, dass ich dafür im 
 Layout Platz brauche.
+
+check_mk --restore: Löscht er cache und counters? Er sollte nur die
+Inhalte löschen. Es könnte nämlich sein, dass es sich nicht um Verzeichnisse,
+sondern um Symlinks handelt.

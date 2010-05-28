@@ -23,14 +23,6 @@ NOCH INS RELEASE 1.1.5
 Aenderung an default_user_role in multisite.mk erfordert
 Apache-Neustart.
 
-Alerts/Notifications/Downtimealerts für Service und für Host und
-für Services of Host (letzteres wahrscheinlich dann gemeinsam).
-==> Zwei Datenquellen: servicealerts und hostalerts
-=> Dazu Tabelle log und in datasource builtin-Headers einbauen,
-nämlich mit Logclasses. Dann views bauen und einen Filter auf
-einen Zeitraum (Heute, diese Woche, letzte 30 Tage, usw.).
-Evtl. noch einen Filter mit Datumseingabe.
-
 View editor: Wenn man keine Display columns ausgewaehlt
 hat, dann sollte eine Fehlermeldung kommen.
 

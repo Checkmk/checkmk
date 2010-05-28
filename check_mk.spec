@@ -127,7 +127,6 @@ rm -rf $RPM_BUILD_ROOT
 %dir /usr/share/check_mk
 /usr/share/check_mk/agents
 /usr/share/check_mk/checks
-/usr/share/check_mk/htdocs
 /usr/share/check_mk/modules
 %config /usr/share/check_mk/pnp-templates/*
 %config /etc/pnp4nagios/*

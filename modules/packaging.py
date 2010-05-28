@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import pprint, tarfile
 
-pac_ext = ".mkp"
+pac_ext = ".mkpac"
 
 class PackageException(Exception):
     def __init__(self, reason):
@@ -28,18 +28,19 @@ def packaging_usage():
     sys.stdout.write("""Usage: check_mk [-v] -P|--package COMMAND [ARGS]
 
 Available commands are:
-   create NAME      ...  Collect unpackaged files into new package NAME
-   pack NAME        ...  Create package file from installed package
-   release NAME     ...  Drop installed package NAME, release packaged files
-   list             ...  List all installed packages
-   list NAME        ...  List files of installed package
-   list PACK.mkp    ...  List files of uninstalled package file
-   show NAME        ...  Show information about installed package
-   show PACK.mkp    ...  Show information about uninstalled package file
-   install PACK.mkp ...  Install or update package from file PACK.mkp
-   remove NAME      ...  Uninstall package NAME
+  create NAME          Collect unpackaged files into new package NAME
+  pack NAME            Create package file from installed package
+  release NAME         Drop installed package NAME, release packaged files
+  find                 Find and display unpackaged files
+  list                 List all installed packages
+  list NAME            List files of installed package
+  list PACK.mkpac      List files of uninstalled package file
+  show NAME            Show information about installed package
+  show PACK.mkpac      Show information about uninstalled package file
+  install PACK.mkpac   Install or update package from file PACK.mkpac
+  remove NAME          Uninstall package NAME
 
-   -v  enables verbose output
+  -v  enables verbose output
 
 Package files are located in %s.
 """ % pac_dir)
@@ -55,6 +56,7 @@ def do_packaging(args):
         "create"  : package_create,
         "release" : package_release,
         "list"    : package_list,
+        "find"    : package_find,
         "show"    : package_info,
         "pack"    : package_pack,
         "remove"  : package_remove,
@@ -84,15 +86,15 @@ def package_list(args):
             table = []
             for pacname in all_packages():
                 package = read_package(pacname)
-                table.append((pacname, package["title"], package["num_files"]))
-            print_table(["Name", "Title", "Files"], [ tty_bold, "", "" ], table)
+                table.append((pacname, package["title"], package["version"], package["num_files"]))
+            print_table(["Name", "Title", "Version", "Files"], [ tty_bold, "", "", "" ], table)
         else:
             for pacname in all_packages():
                 sys.stdout.write("%s\n" % pacname)
 
 def package_info(args):
     if len(args) == 0:
-        raise PackageException("Usage: check_mk -P show NAME|PACKAGE.mkp")
+        raise PackageException("Usage: check_mk -P show NAME|PACKAGE.mkpac")
     for name in args:
         show_package_info(name)
 
@@ -126,7 +128,7 @@ def show_package(name, show_info = False):
         sys.stdout.write("Author:                        %s\n" % package["author"])
         sys.stdout.write("Download-URL:                  %s\n" % package["download_url"])
         sys.stdout.write("Files:                         %s\n" % \
-                " ".join([ "%s(%d)" % (part, len(fs)) for part, fs in package["files"].items() ]))
+                " ".join([ "%s(%d)" % (part, len(fs)) for part, fs in package["files"].items() if len(fs) > 0 ]))
         sys.stdout.write("Description:\n  %s\n" % package["description"])
     else:
         if opt_verbose:
@@ -178,6 +180,23 @@ def package_create(args):
     write_package(pacname, package)
     verbose("New package %s created with %d files.\n" % (pacname, num_files))
     verbose("Please edit package details in %s%s%s\n" % (tty_bold, pac_dir + pacname, tty_normal))
+
+def package_find(_no_args):
+    first = True
+    for part, title, dir in package_parts:
+        files = unpackaged_files_in_dir(part, dir)
+        if len(files) > 0:
+            if first:
+                verbose("Unpackaged files:\n")
+                first = False
+            verbose("  %s%s%s:\n" % (tty_bold, title, tty_normal))
+            for f in files:
+                if opt_verbose:
+                    sys.stdout.write("    %s\n" % f)
+                else:
+                    sys.stdout.write("%s/%s\n" % (dir, f))
+    if first:
+        verbose("No unpackaged files found.\n")
 
 def package_release(args):
     if len(args) != 1:

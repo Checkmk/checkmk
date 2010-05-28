@@ -26,6 +26,7 @@
 
 import htmllib, livestatus, time, re, os, datetime, config, defaults
 from lib import *
+import views
 
 
 def page(h):
@@ -52,7 +53,9 @@ def page(h):
 
 def show_host_log_list(host):
     html.header("Logfiles of host " + host)
-    html.write(" <a class=navi href=\"view.py?view_name=host&host=%s\">Back to this host in Multisite</a>\n" % htmllib.urlencode(host))
+    html.begin_context_buttons()
+    html.context_button("Services", "view.py?view_name=host&site=&host=%s" % htmllib.urlencode(host))
+    html.end_context_buttons()
 
     logs_shown = False
     rowno = 0
@@ -92,11 +95,11 @@ def show_host_log_list(host):
 
 
 def show_file(host, filename):
-
     file = form_file_to_int(filename)
     html.header("Logfiles of host %s: %s" % (host, filename))
-    html.write("<a class=navi href=\"view.py?view_name=host&host=%s\">Back to this host in Multisite</a>\n" % htmllib.urlencode(host))
-    html.write("<a class=navi href=\"logwatch.py?host=%s\">All logfiles of %s</a>\n" % tuple([htmllib.urlencode(host)] * 2))
+    html.begin_context_buttons()
+    html.context_button("Services", "view.py?view_name=host&site=&host=%s" % htmllib.urlencode(host))
+    html.context_button("All logfiles", "logwatch.py?host=%s" % htmllib.urlencode(host))
 
     if html.var('hidecontext', 'no') == 'yes':
         hide_context_label = 'Show context'
@@ -109,25 +112,27 @@ def show_file(host, filename):
 
     logs = parse_file(host, file, hide)
     if type(logs) != list:
+        html.end_context_buttons()
         html.show_error("Unable to show logfile: <b>%s</b>" % logs)
         html.footer()
         return
     elif logs == []:
+        html.end_context_buttons()
         html.message("This logfile contains no unacknowledged messages.")
         html.footer()
         return
 
     if config.may("act") and may_see(host):
-        html.write('<a class=navi href="logwatch.py?host=%s&amp;'
-                   'file=%s&amp;ack=1">Acknowledge and delete messages</a>' % \
+        html.context_button("Acknowledge", "logwatch.py?host=%s&amp;file=%s&amp;ack=1" % \
                    (htmllib.urlencode(host), htmllib.urlencode(html.var('file')) ))
 
-    html.write('<a class=navi href="logwatch.py?host=%s&file=%s&hidecontext=%s">%s</a>' % \
+    html.context_button("Context", 'logwatch.py?host=%s&file=%s&hidecontext=%s">%s</a>' % \
                    (htmllib.urlencode(host), \
                     htmllib.urlencode(html.var('file')), \
                     htmllib.urlencode(hide_context_param), \
-                    htmllib.attrencode(hide_context_label) ));
+                    htmllib.attrencode(hide_context_label) ))
 
+    html.end_context_buttons()
 
     html.write("<div id=logwatch>\n")
     for log in logs:

@@ -1121,19 +1121,13 @@ def show_context_links(thisview, active_filters):
 	if len(used_contextvars) > 0:
 	    if first:
 		first = False
-                html.write("<table class=contextlinks><tr><td>")
+                html.begin_context_buttons()
 	    vars_values = [ (var, html.var(var)) for var in set(used_contextvars) ]
-	    html.write('<div class="contextlink" ')
-            html.write(r'''onmouseover='this.style.backgroundImage="url(\"images/contextlink_hi.png\")";' ''')
-            html.write(r'''onmouseout='this.style.backgroundImage="url(\"images/contextlink.png\")";' ''')
-            html.write('>')
+            html.context_button(view_linktitle(view), html.makeuri_contextless(vars_values + [("view_name", name)]))
 
-            html.write('<a href="%s">%s</a></div>' % \
-		    (html.makeuri_contextless(vars_values + [("view_name", name)]), view_linktitle(view)))
     if not first:
-        html.write('</td></tr></table>\n')
+        html.end_context_buttons()
 	
-
 
 # Retrieve data via livestatus, convert into list of dicts,
 # prepare row-function needed for painters

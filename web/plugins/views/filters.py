@@ -103,9 +103,10 @@ class FilterGroupCombo(Filter):
 	    choices = [("", "")] + choices
 	html.select(self.htmlvars[0], choices)
         if not self.enforce:
-            html.write(" ")
+            html.write(" <nobr>")
             html.checkbox(self.htmlvars[1])
             html.write("negate")
+            html.write("</nobr>")
 
     def current_value(self, infoname):
 	htmlvar = self.htmlvars[0]
@@ -371,14 +372,16 @@ class FilterTime(Filter):
         Filter.__init__(self, name, title, info, [ name ] + [ name + "_" + n for (s, n) in self.ranges], [column])
 
     def display(self):
+        for s, n in self.ranges:
+            htmlvar = self.name + "_" + n
+            html.write("<nobr>")
+            html.number_input(htmlvar, 0, 2)
+            html.write(" %s</nobr> " % n)
+        html.write("<br>\n")
         current = html.var(self.name, "since")
         for t in [ "before", "since" ]:
             html.radiobutton(self.name, t, current == t, t) 
             html.write(" ")
-        for s, n in self.ranges:
-            htmlvar = self.name + "_" + n
-            html.number_input(htmlvar, 0, 2)
-            html.write(" %s " % n)
 
     def filter(self, infoname):
         secs = 0
@@ -418,7 +421,6 @@ class FilterTime(Filter):
 
 declare_filter(250, FilterTime("service", "svc_last_state_change", "Last service state change", "service_last_state_change"))
 declare_filter(251, FilterTime("service", "svc_last_check", "Last service check", "service_last_check"))
-declare_filter(252, FilterTime("log", "logtime", "Time of log entry", "log_time"))
 
 #    _                
 #   | |    ___   __ _ 
@@ -427,3 +429,61 @@ declare_filter(252, FilterTime("log", "logtime", "Time of log entry", "log_time"
 #   |_____\___/ \__, |
 #               |___/ 
 
+declare_filter(252, FilterTime("log", "logtime", "Time of log entry", "log_time"))
+# INFO          0 // all messages not in any other class
+# ALERT         1 // alerts: the change service/host state
+# PROGRAM       2 // important programm events (restart, ...)
+# NOTIFICATION  3 // host/service notifications
+# PASSIVECHECK  4 // passive checks
+# COMMAND       5 // external commands
+# STATE         6 // initial or current states
+
+class FilterLogClass(Filter):
+    def __init__(self):
+        self.log_classes = [
+            (0, "Informational"), (1, "Alerts"), (2, "Program"), 
+            (3, "Notifications"), (4, "Passive checks"), 
+            (5, "Commands"), (6, "States") ]
+
+	Filter.__init__(self, "log_class", "Logentry class", 
+		"log", [ "logclass%d" % l for l, c in self.log_classes ], [])
+    
+    def display(self):
+	if html.var("filled_in"):
+	    defval = ""
+	else:
+	    defval = "on"
+        html.write("<table cellspacing=0 cellpadding=0>")
+        col = 1
+	for l, c in self.log_classes:
+            if col == 1:
+                html.write("<tr>")
+            html.write("<td>")
+	    html.checkbox("logclass%d" % l, defval)
+	    html.write(c)
+            html.write("</td>")
+            if col == 2:
+                html.write("</tr>\n")
+                col = 1
+            else:
+                col += 1
+        if col == 1:
+            html.write("<td></td></tr>")
+        html.write("</table>\n") 
+
+    def filter(self, infoname):
+	headers = []
+	if html.var("filled_in"):
+	    defval = ""
+	else:
+	    defval = "on"
+
+	for l, c in self.log_classes:
+	    if html.var("logclass%d" % l, defval) == "on":
+		headers.append("Filter: class = %d\n" % l)
+	if len(headers) == 0:
+	    return "Limit: 0\n" # no class allowed
+	else:
+	    return "".join(headers) + ("Or: %d\n" % len(headers))
+
+declare_filter(255, FilterLogClass())

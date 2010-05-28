@@ -1062,23 +1062,9 @@ table.form td.content {
     padding-right: 2ex;
     border: 1px solid white;
     border-left-style: none;
-    vertical-align: middle;
+    vertical-align: top;
 }
 
-/* colors of specific forms */
-/*
-table#table_filter {
-    margin-top: 8px;
-}
-table#table_filter td.content { 
-  background-image: url("images/background-gold.jpg");
-  background-repeat: repeat;
-  background-position: center;
-}
-table#table_filter td.legend, 
-input.tab#table_filter, 
-input.tabactive#table_filter    { background-color: #ca0; }
-*/
 table#displayoptions td.content { 
   background-image: url("images/background-brown.jpg");
   background-repeat: repeat;

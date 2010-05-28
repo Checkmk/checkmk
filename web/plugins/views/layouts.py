@@ -33,7 +33,7 @@
 #   |____/|_|_| |_|\__, |_|\___|
 #                  |___/        
 # -------------------------------------------------------------------------
-def render_single_dataset(data, view, group_columns, group_painters, painters, num_columns):
+def render_single_dataset(data, view, group_painters, painters, num_columns):
     columns, rows = data
     for row in rows:
         register_events(row) # needed for playing sounds
@@ -69,14 +69,14 @@ multisite_layouts["dataset"] = {
 #   |____/ \___/_/\_\___|\__,_|
 #                              
 # -------------------------------------------------------------------------
-def render_grouped_boxes(data, view,  group_columns, group_painters, painters, num_columns):
+def render_grouped_boxes(data, view,  group_painters, painters, num_columns):
     columns, rows = data
     # N columns. Each should contain approx the same number of entries
     groups = []
     last_group = None
     for row in rows:
         register_events(row) # needed for playing sounds
-	this_group = [ row[c] for c in group_columns ]
+	this_group = group_value(row, group_painters)
 	if this_group != last_group:
 	    last_group = this_group
 	    current_group = []
@@ -189,7 +189,7 @@ multisite_layouts["boxed"] = {
 #     |_| |_|_|\___|\__,_|
 #                         
 # -------------------------------------------------------------------------
-def render_tiled(data, view, group_columns, group_painters, painters, _ignore_num_columns):
+def render_tiled(data, view, group_painters, painters, _ignore_num_columns):
     columns, rows = data
     html.write("<table class=\"services tiled\">\n")
 
@@ -198,7 +198,7 @@ def render_tiled(data, view, group_columns, group_painters, painters, _ignore_nu
     for row in rows:
 	# Show group header
         if len(group_painters) > 0:
-	    this_group = [ row[c] for c in group_columns ]
+	    this_group = group_value(row, group_painters)
 	    if this_group != last_group:
 
 		# paint group header
@@ -274,7 +274,7 @@ multisite_layouts["tiled"] = {
 #     |_|\__,_|_.__/|_|\___|
 #                           
 # ------------------------------------------------------------------------
-def render_grouped_list(data, view, group_columns, group_painters, painters, num_columns):
+def render_grouped_list(data, view, group_painters, painters, num_columns):
     columns, rows = data
     html.write("<table class=services>\n")
     last_group = None
@@ -293,10 +293,10 @@ def render_grouped_list(data, view, group_columns, group_painters, painters, num
     # Helper function that counts the number of entries in 
     # the current group
     def count_group_members(row, rows):
-	this_group = [ row[c] for c in group_columns ]
+	this_group = group_value(row, group_painters)
         members = 1
         for row in rows[1:]:
-            that_group = [ row[c] for c in group_columns ]
+            that_group = group_value(row, group_painters)
             if that_group == this_group:
                 members += 1
             else:
@@ -310,7 +310,7 @@ def render_grouped_list(data, view, group_columns, group_painters, painters, num
 	# Show group header, if a new group begins. But only if grouping
         # is activated
         if len(group_painters) > 0:
-	    this_group = [ row[c] for c in group_columns ]
+	    this_group = group_value(row, group_painters)
 	    if this_group != last_group:
 		if column != 1: # not a the beginning of a new line
                     for i in range(column-1, num_columns):

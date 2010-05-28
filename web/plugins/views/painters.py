@@ -198,6 +198,9 @@ def paint_future_time(timestamp):
     else:
         return paint_age(timestamp, True, 0)
 
+def paint_day(timestamp):
+    return "", time.strftime("%A, %Y-%m-%d", time.localtime(timestamp))
+
 def paint_site_icon(row):
     if row["site"] and config.use_siteicons:
 	return None, "<img class=siteicon src=\"icons/site-%s-24.png\">" % row["site"]
@@ -1136,6 +1139,15 @@ multisite_painters["log_time"] = {
     "columns" : ["log_time"],
     "paint" : lambda row: paint_age(row["log_time"], True, 3600 * 24)
 }
+
+multisite_painters["log_date"] = {
+    "title"   : "Log: day of entry",
+    "short"   : "Date",
+    "columns" : ["log_time"],
+    "groupby" : lambda row: paint_day(row["log_time"])[1],
+    "paint"   : lambda row: paint_day(row["log_time"])
+}
+
 def paint_log_state(row):
     state = row["log_state"]
     if row["log_service_description"]:

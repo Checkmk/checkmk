@@ -20,29 +20,46 @@ body.main {
     background-repeat: repeat;
     font-family: arial, helvetica, sans-serif;
     font-size: 9pt;
-    padding-left: 0px;
-    padding-right: 10px;
-    padding-top: 0px;
-    padding-bottom: 0px;
+    padding: 0px 10px 0px 10px;
     margin: 0px;
 }
 
 body.main table.header {
     width: 100%;
-    border-bottom: 1px solid white;
     margin-bottom: 10px;
-    padding-bottom: 3px;
-    padding-left: 10px;
-    padding-right: 0px;
     margin-left: 0px;
+    padding: 8px 0px 10px 0px;
+    border-spacing: 0px;
 } 
+
+body.main hr.header {
+    color: white;
+    background-color: white;
+    border-style: none;
+    height: 1px;
+    position: absolute;
+    width: 100%;
+    left: 0px;
+    top: 35px;
+
+}
+
+body.main hr.hxeader {
+    position: absolute;
+    left: 50px;
+    top: 70px;
+    height: 1px;
+    color: white;
+    background-color: white;
+border: none;
+}
 
 body.main table.header td.left {
     font-size: 15pt;
     font-weight: bold;
     color: #fff;
     vertical-align: bottom;
-    padding-left: 4px;
+    padding-left: 0px;
     height: 31px;
 }
 
@@ -67,6 +84,7 @@ body.main table.footer {
 
 div.main {
     padding-left: 10px;
+border-left: 1px solid red;
 }
 
 /*
@@ -469,6 +487,8 @@ div.contextlink {
     background-repeat: no-repeat;
     background-position: center center;
     margin: 0px;
+    position: relative;
+    left: -4px;
 }
 
 div.contextlink a {
@@ -604,12 +624,12 @@ width: 100%;
 /* table of services -------------------------------------------------------------- */
 
 table.services { 
-  border-spacing: 0px;
-  margin: 0px;
-  padding: 0px;
-  border-collapse: collapse;
-  empty-cells: show;
-  width: 100%;
+    border-spacing: 0px;
+    margin: 0px;
+    padding: 0px;
+    border-collapse: collapse;
+    empty-cells: show;
+    width: 100%;
 }
 
 table.services th {
@@ -844,7 +864,7 @@ div.tableshadow {
 }
 
 div.tableshadow.left {
-    margin-left: 5px;
+    /* margin-left: 5px; */
 }
     
 td.shadowtop, td.shadowbottom {
@@ -880,6 +900,7 @@ td.groupheader {
 
 /* boxed layout */
 table.boxlayout {
+    border-spacing: 0px;
 }
 table.boxlayout td.boxcolumn {
     vertical-align: top;

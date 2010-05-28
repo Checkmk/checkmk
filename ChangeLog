@@ -1,11 +1,4 @@
-1.1.5i3:
-    Multisite:
-    * New feature "status_host" for remote sites: Determine connection
-      state to remote side by considering a certain host state. This
-      avoids livestatus time outs to dead sites.
-    * Sidebar snapin site status: fix reload problem
-
-tobi:
+1.1.6:
     Multisite:
     * Complete new design (by Tobias Roeckl, Kopf & Herz)
     * New filters for last service check and last service state change
@@ -21,10 +14,19 @@ tobi:
     * Allow user to change num columns and refresh directly in view
     * Get back to where you came after editing views
     * New sidebar snapin "Host Matrix"
+    * New feature "status_host" for remote sites: Determine connection
+      state to remote side by considering a certain host state. This
+      avoids livestatus time outs to dead sites.
+    * Sidebar snapin site status: fix reload problem
+
 
     Livestatus:
     * new statistics columns: log_messages and log_messages_rate
     * make statistics average algorithm more sluggish
+
+1.1.5i3:
+     Core, Setup, etc.:
+     * New Check_MK packager (check_mk -P)
 
 1.1.5i2:
      Core, Setup, etc.:
@@ -40,7 +42,7 @@ tobi:
        on older systems)
 
      Multisite:
-     * Filters for groups are negateble.
+     * Filters for groups are negateable.
 
 1.1.5i1:
      Checks & Agents:
@@ -60,7 +62,6 @@ tobi:
      * Sidebar search: Added host site to be able to see the context links on
        the result page
      * Sidebar search: Hitting enter now closes the hint dropdown in all cases
-
 
 1.1.5i0:
       Core, Setup, etc.:

@@ -70,55 +70,6 @@ multisite_builtin_views = {}
 # Layouts
 ##################################################################################
 
-def prepare_paint(p, row):
-    painter, linkview = p
-    tdclass, content = painter["paint"](row)
-
-    content = htmllib.utf8_to_entities(content)
-
-    # Create contextlink to other view
-    if content and linkview:
-	content = link_to_view(content, row, linkview)
-    return tdclass, content
-
-def link_to_view(content, row, linkview):
-    view = html.available_views.get(linkview)
-    if view:
-	filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
-	filtervars = []
-	for filt in filters:
-	    filtervars += filt.variable_settings(row)
-
-	uri = html.makeuri_contextless([("view_name", linkview)] + filtervars)
-	content = "<a href=\"%s\">%s</a>" % (uri, content)
-    return content
-
-def docu_link(topic, text):
-    return '<a href="%s" target="_blank">%s</a>' % (config.doculink_urlformat % topic, text)
-
-def paint(p, row):
-    tdclass, content = prepare_paint(p, row)
-    if tdclass:
-	html.write("<td class=\"%s\">%s</td>\n" % (tdclass, content))
-    else:
-	html.write("<td>%s</td>" % content)
-    return content != ""
-
-def paint_header(p):
-    painter, linkview = p
-    t = painter.get("short", painter["title"])
-    html.write("<th>%s</th>" % t)
-
-def register_events(row):
-    if config.sounds != []:
-        host_state = row.get("host_hard_state", row.get("host_state"))
-        if host_state != None:
-            html.register_event({0:"up", 1:"down", 2:"unreachable"}[host_state])
-        svc_state = row.get("service_last_hard_state", row.get("service_state"))
-        if svc_state != None:
-            html.register_event({0:"up", 1:"warning", 2:"critical", 3:"unknown"}[svc_state])
-
-
 def toggle_button(id, isopen, text, addclasses=[]):
     if isopen:
 	cssclass = "open"
@@ -916,7 +867,6 @@ def show_view(view, show_heading = False, show_buttons = True):
 
     # [5] Grouping
     group_painters = [ (multisite_painters[n], v) for n, v in view["group_painters"] ]
-    group_columns = needed_group_columns(group_painters)
 
     # [6] Columns
     painters = [ (multisite_painters[n], v) for n, v in view["painters"] ]
@@ -1056,7 +1006,7 @@ def show_view(view, show_heading = False, show_buttons = True):
 		text += '<a href="%s">Repeat query without limit.</a>' % html.makeuri([("limit", "none")])
 	    html.show_warning(text)
 	    del rows[-1]
-        layout["render"]((columns, rows), view, group_columns, group_painters, painters, num_columns)
+        layout["render"]((columns, rows), view, group_painters, painters, num_columns)
 
         # Play alarm sounds, if critical events have been displayed
         if view.get("play_sounds"):
@@ -1185,13 +1135,6 @@ def show_context_links(thisview, active_filters):
 	
 
 
-def needed_group_columns(painters):
-    columns = []
-    for p, linkview in painters:
-	columns += p["columns"] 
-    return columns
-
-
 # Retrieve data via livestatus, convert into list of dicts,
 # prepare row-function needed for painters
 def query_data(datasource, columns, add_headers, only_sites = [], limit = None):
@@ -1203,15 +1146,18 @@ def query_data(datasource, columns, add_headers, only_sites = [], limit = None):
 
     # Most layouts need current state of objekt in order to
     # choose background color - even if no painter for state
-    # is selected. Make sure those columns are fetched.
-    state_columns = []
-    if "service" in datasource["infos"]:
-	state_columns += [ "service_has_been_checked", "service_state" ]	
-    elif "host" in datasource["infos"]:
-	state_columns += [ "host_has_been_checked", "host_state" ]	
-    for c in state_columns:
-	if c not in columns:
-	    columns.append(c)
+    # is selected. Make sure those columns are fetched. This
+    # must not be done for the table 'log' as it cannot correctly
+    # distinguish between service_state and host_state
+    if "log" not in datasource["infos"]:
+        state_columns = []
+        if "service" in datasource["infos"]:
+            state_columns += [ "service_has_been_checked", "service_state" ]	
+        elif "host" in datasource["infos"]:
+            state_columns += [ "host_has_been_checked", "host_state" ]	
+        for c in state_columns:
+            if c not in columns:
+                columns.append(c)
 
     query = "GET %s\n" % tablename
     query += "Columns: %s\n" % " ".join(columns)
@@ -1706,4 +1652,70 @@ def page_message_and_forward(h, message, default_url):
     html.message(message)
     html.footer()
 
+#   ____  _             _             _   _      _
+#  |  _ \| |_   _  __ _(_)_ __       | | | | ___| |_ __   ___ _ __ ___
+#  | |_) | | | | |/ _` | | '_ \ _____| |_| |/ _ \ | '_ \ / _ \ '__/ __|
+#  |  __/| | |_| | (_| | | | | |_____|  _  |  __/ | |_) |  __/ |  \__ \
+#  |_|   |_|\__,_|\__, |_|_| |_|     |_| |_|\___|_| .__/ \___|_|  |___/
+#                 |___/                           |_|
 
+def prepare_paint(p, row):
+    painter, linkview = p
+    tdclass, content = painter["paint"](row)
+
+    content = htmllib.utf8_to_entities(content)
+
+    # Create contextlink to other view
+    if content and linkview:
+	content = link_to_view(content, row, linkview)
+    return tdclass, content
+
+def link_to_view(content, row, linkview):
+    view = html.available_views.get(linkview)
+    if view:
+	filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
+	filtervars = []
+	for filt in filters:
+	    filtervars += filt.variable_settings(row)
+
+	uri = html.makeuri_contextless([("view_name", linkview)] + filtervars)
+	content = "<a href=\"%s\">%s</a>" % (uri, content)
+    return content
+
+def docu_link(topic, text):
+    return '<a href="%s" target="_blank">%s</a>' % (config.doculink_urlformat % topic, text)
+
+def paint(p, row):
+    tdclass, content = prepare_paint(p, row)
+    if tdclass:
+	html.write("<td class=\"%s\">%s</td>\n" % (tdclass, content))
+    else:
+	html.write("<td>%s</td>" % content)
+    return content != ""
+
+def paint_header(p):
+    painter, linkview = p
+    t = painter.get("short", painter["title"])
+    html.write("<th>%s</th>" % t)
+
+def register_events(row):
+    if config.sounds != []:
+        host_state = row.get("host_hard_state", row.get("host_state"))
+        if host_state != None:
+            html.register_event({0:"up", 1:"down", 2:"unreachable"}[host_state])
+        svc_state = row.get("service_last_hard_state", row.get("service_state"))
+        if svc_state != None:
+            html.register_event({0:"up", 1:"warning", 2:"critical", 3:"unknown"}[svc_state])
+
+# The Group-value of a row is used for deciding wether
+# two rows are in the same group or not
+def group_value(row, group_painters):
+    group = []
+    for p, l in group_painters:
+        groupvalfunc = p.get("groupby")
+        if groupvalfunc:
+            group.append(groupvalfunc(row))
+        else:
+            for c in p["columns"]:
+                group.append(row[c])
+    return group

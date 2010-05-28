@@ -187,7 +187,7 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than):
     else:
 	prefix = ""
     if age < bold_if_younger_than: 
-	age_class = "agerecent"
+	age_class = "age recent"
     else:
 	age_class = "age"
     return age_class, prefix + html.age_text(age)
@@ -197,6 +197,9 @@ def paint_future_time(timestamp):
         return "", "-"
     else:
         return paint_age(timestamp, True, 0)
+
+def paint_day(timestamp):
+    return "", time.strftime("%A, %Y-%m-%d", time.localtime(timestamp))
 
 def paint_site_icon(row):
     if row["site"] and config.use_siteicons:
@@ -1112,16 +1115,50 @@ multisite_painters["log_attempt"] = {
     "paint" : lambda row: ("", row["log_attempt"])
 }
 multisite_painters["log_state_type"] = {
-    "title" : "Log: type of state (hard/soft)",
+    "title" : "Log: type of state (hard/soft/stopped/started)",
     "short" : "Type",
     "columns" : ["log_state_type"],
     "paint" : lambda row: ("", row["log_state_type"])
 }
 multisite_painters["log_type"] = {
-    "title" : "Log: type",
-    "short" : "Type",
+    "title" : "Log: event",
+    "short" : "Event",
     "columns" : ["log_type"],
-    "paint" : lambda row: ("", row["log_type"])
+    "paint" : lambda row: ("nowrap", row["log_type"])
+}
+def paint_log_icon(row):
+    img = None
+    log_type = row["log_type"]
+    if log_type == "SERVICE ALERT":
+        img = { 0: "ok", 1: "warn", 2:"crit", 3:"unknown" }.get(row["log_state"])
+    elif log_type == "HOST ALERT":
+        img = { 0: "up", 1: "down", 2:"unreach" }.get(row["log_state"])
+    elif "DOWNTIME" in log_type:
+        if row["log_state_type"] == "STOPPED":
+            img = "downtimestop"
+        else:
+            img = "downtime"
+    elif log_type.endswith("NOTIFICATION"):
+        img = "notify"
+    elif log_type == "EXTERNAL COMMAND":
+        img = "command"
+    elif "restarting..." in log_type:
+        img = "restart"
+    elif "starting..." in log_type:
+        img = "start"
+    elif "shutdown..." in log_type:
+        img = "stop"
+
+    if img:
+        return "icon", '<img src="images/alert_%s.png">' % img
+    else:
+        return "icon", ""
+
+multisite_painters["log_icon"] = {
+    "title" : "Log: event icon",
+    "short" : "",
+    "columns" : ["log_type", "log_state", "log_state_type"],
+    "paint" : paint_log_icon,
 }
 multisite_painters["log_options"] = {
     "title" : "Log: informational part of message",
@@ -1136,6 +1173,15 @@ multisite_painters["log_time"] = {
     "columns" : ["log_time"],
     "paint" : lambda row: paint_age(row["log_time"], True, 3600 * 24)
 }
+
+multisite_painters["log_date"] = {
+    "title"   : "Log: day of entry",
+    "short"   : "Date",
+    "columns" : ["log_time"],
+    "groupby" : lambda row: paint_day(row["log_time"])[1],
+    "paint"   : lambda row: paint_day(row["log_time"])
+}
+
 def paint_log_state(row):
     state = row["log_state"]
     if row["log_service_description"]:

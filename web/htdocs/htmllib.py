@@ -332,7 +332,7 @@ class html:
                     "<table class=header><tr><td class=left>%s</td><td class=right>"
                     "%s &nbsp; &nbsp; %s <img src=\"images/mk_logo_klein.png\"></td></tr></table>" %
                     (title, login_text, time.strftime("%H:%M")))
-            self.write("<div class=main>\n")
+            self.write("<hr class=header>\n")
 
     def footer(self):
         if self.req.header_sent:

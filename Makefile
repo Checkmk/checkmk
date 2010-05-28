@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL           = /bin/bash
-VERSION        	= 1.1.5tobi
+VERSION        	= 1.1.6b1
 NAME           	= check_mk
 RPM_TOPDIR     	= rpm.topdir
 RPM_BUILDROOT  	= rpm.buildroot
@@ -34,7 +34,6 @@ LIBDIR	       	= $(PREFIX)/lib/$(NAME)
 DISTNAME       	= $(NAME)-$(VERSION)
 TAROPTS        	= --owner=root --group=root --exclude=.svn --exclude=*~ 
 DOWNLOADURL     = http://mathias-kettner.de/download/$(DISTNAME).tar.gz
-CHECKMANDIR	= /home/mk/svn/mkde/htdocs/checkmk
 LIVESTATUS_SOURCES = configure aclocal.m4 config.guess config.h.in config.sub \
 		     configure.ac ltmain.sh Makefile.am Makefile.in missing \
 		     nagios/README nagios/*.h src/*.{h,c,cc} src/Makefile.{in,am} \
@@ -82,6 +81,7 @@ dist: mk-livestatus
 	tar  cf $(DISTNAME)/agents.tar $(TAROPTS) -C agents --exclude "*~" $$(cd agents ; ls | grep -v windows )
 	tar  rf $(DISTNAME)/agents.tar $(TAROPTS) -C agents windows/{check_mk_agent.exe,check_mk_agent.cc,Makefile}
 	gzip $(DISTNAME)/agents.tar
+	cd $(DISTNAME) ; ../make_package_info $(VERSION) > package_info
 	install -m 755 scripts/*.{sh,py} $(DISTNAME)
 	install -m 644 COPYING AUTHORS ChangeLog $(DISTNAME)
 	echo "$(VERSION)" > $(DISTNAME)/VERSION

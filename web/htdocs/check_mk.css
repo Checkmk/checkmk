@@ -738,12 +738,17 @@ table.services td.age {
   text-align: right;
   color: #666;
   white-space: nowrap;
+  width: 40px;
+}
+table.services td.age.recent { 
+  font-weight: bold;
+  color: #000;
 }
 
-table.services td.agerecent { 
-  text-align: right;
-  font-weight: bold;
-}
+
+table.services td.nowrap {
+  white-space: nowrap;
+}  
 
 td.badflag {
     font-weight: bold;
@@ -818,6 +823,9 @@ td.statex {  /* zero count */
 .states a, .hstates a {
     color: #000;
 }
+td.narrow {
+    width: 10px;
+}
 
 td.icons {
     white-space: nowrap;
@@ -825,6 +833,14 @@ td.icons {
 td.icons img {
  height: 20px;
  margin-right: 3px;
+}
+
+td.icon {
+    width: 20px;
+    background-image: url("images/whiteglass.png");
+}
+td.icon img {
+  border-style: none;
 }
 
 img.icon {

@@ -69,7 +69,7 @@ multisite_layouts["dataset"] = {
 #   |____/ \___/_/\_\___|\__,_|
 #                              
 # -------------------------------------------------------------------------
-def render_grouped_boxes(data, view,  group_painters, painters, num_columns):
+def render_grouped_boxes(data, view, group_painters, painters, num_columns):
     columns, rows = data
     # N columns. Each should contain approx the same number of entries
     groups = []
@@ -289,6 +289,9 @@ def render_grouped_list(data, view, group_painters, painters, num_columns):
 	    for p in painters:
 		paint_header(p)
         html.write("</tr>\n")
+
+    if len(group_painters) == 0 and view.get("column_headers") != "off":
+        show_header_line()
 
     # Helper function that counts the number of entries in 
     # the current group

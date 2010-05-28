@@ -982,11 +982,6 @@ EOF
 
     ./setup.sh --yes
 
-    # HACK: Change popup link for PNP, not yet done by setup
-    if [ "$SITE" ] ; then
-	sed -i "s@'/pnp4nagios@'$SITEURL/pnp4nagios@" /usr/share/doc/check_mk/check_mk_templates.cfg
-    fi
-
     echo 'do_rrd_update = False' >> /etc/check_mk/main.mk
     popd
 

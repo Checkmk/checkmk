@@ -502,11 +502,17 @@ sidebar_snapins["tactical_overview"] = {
     "render" : render_tactical_overview,
     "allowed" : [ "user", "admin", "guest" ],
     "styles" : """
-table.tacticaloverview { border-collapse: separate; border-spacing: 5px 0px; width: %d;}
+table.tacticaloverview { 
+   border-collapse: separate; 
+   border-spacing: 5px 0px; 
+   width: %d;
+   position: relative;
+   left: -4px;
+}
 table.tacticaloverview th { font-size: 7pt; text-align: left; font-weight: normal; padding: 0px; padding-top: 2px; }
 table.tacticaloverview td { text-align: right; border: 1px solid #444; padding: 0px; padding-right: 2px; }
 table.tacticaloverview td a { display: block; }
-""" % snapin_width
+""" % (snapin_width + 9)
 }
 # table.tacticaloverview td.prob { font-weight: bold; }
 
@@ -579,12 +585,13 @@ div.time {
    text-align: center;
    font-size: 18pt;
    font-weight: bold;
-   border: 2px dotted #8cc;
+   border: 1px solid #8cc;
    -moz-border-radius: 10px;
    background-color: #588;
    color: #aff;
+   width: %d
 }
-"""
+"""  % (snapin_width - 2)
 }
 
 
@@ -696,7 +703,9 @@ sidebar_snapins["master_control"] = {
     "allowed" : [ "admin", ],
     "styles" : """
 div#check_mk_sidebar table.master_control {
-    width: 100%;
+    width: %d;
+    margin: 0px;
+    border-spacing: 0px;
 }
 
 div#check_mk_sidebar table.master_control td {
@@ -711,7 +720,7 @@ div#check_mk_sidebar table.master_control td a {
     padding: 0px 3px;
     text-align: center;
     font-size: 7pt;
-    margin-right: 3px;
+    margin-right: 0px;
     display: block;
     border: 1px solid black;
 }
@@ -735,7 +744,7 @@ div#check_mk_sidebar table.master_control td.disabled a {
     border-color: #c00;
     color: #fff;
 }
-"""
+""" % snapin_width
 }
 
 def ajax_switch_masterstate(h):

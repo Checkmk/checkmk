@@ -194,6 +194,19 @@ class html:
 	    href += "&_transid=%d" % self.current_transid(self.req.user)
 	self.write("<a href=\"%s\" class=button>%s</a>" % (href, text))
 
+    def begin_context_buttons(self):
+        self.write("<table class=contextlinks><tr><td>\n")
+    
+    def end_context_buttons(self):
+        self.write("</td></tr></table>\n")
+    
+    def context_button(self, title, url):
+        self.write('<div class="contextlink" ')
+        self.write(r'''onmouseover='this.style.backgroundImage="url(\"images/contextlink_hi.png\")";' ''')
+        self.write(r'''onmouseout='this.style.backgroundImage="url(\"images/contextlink.png\")";' ''')
+        self.write('>')
+        self.write('<a href="%s">%s</a></div>' % (url, title))
+        
     def number_input(self, varname, deflt = "", size=8):
 	self.text_input(varname, str(deflt), "number", size=size)
 

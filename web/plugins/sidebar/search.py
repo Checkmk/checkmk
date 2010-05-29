@@ -58,4 +58,40 @@ sidebar_snapins["search"] = {
     "author" : "Lars Michelsen",
     "render" : render_searchform,
     "allowed" : [ "user", "admin", "guest" ],
+    "styles" : """
+div#mk_side_search {
+    padding-left: 1px;
+    width: %dpx;
+}
+
+div#mk_side_search input{
+    margin: 0px 1px 0px 0px;
+    width: 100%%;
+    font-size: 8pt;
+}
+
+div#mk_side_search #mk_search_results {
+    position: relative;
+    border: 1px solid white;
+    top: 1px;
+    background-color: #DFDFDF;
+    color: #000;
+    font-size: 80%%;
+    width:140px;
+}
+
+div#mk_side_search #mk_search_results a {
+    display: block;
+    color: #000;
+    text-decoration: none;
+    text-align: left;
+    padding-left: 5px;
+    width: 135px;
+}
+
+div#mk_side_search #mk_search_results a:hover, div#mk_side_search #mk_search_results a.active {
+background-color: #BFBFBF;
+}
+
+""" % (snapin_width - 1)
 }

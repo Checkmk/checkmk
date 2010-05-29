@@ -19,6 +19,8 @@
       avoids livestatus time outs to dead sites.
     * Sidebar snapin site status: fix reload problem
     * New Perf-O-Meters displaying service performance data
+    * New snapin "Custom Links" where you easily configure your own
+      links via multisite.mk (see example in new default config file)
 
     Livestatus:
     * new statistics columns: log_messages and log_messages_rate

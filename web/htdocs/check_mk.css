@@ -802,6 +802,12 @@ td.perfometer table {
   border: none;
 }
 
+table.services tr.data td.perfometer table td {
+    padding: 0px;
+    margin: 0px;
+    border: none;
+}
+
 
 td.statex {  /* zero count */
   color: #ccc;

@@ -378,3 +378,13 @@ def save_user_file(name, content):
         raise MKConfigError("Cannot save %s options for user <b>%s</b> into <b>%s</b>: %s" % \
                 (name, user, path, e))
 
+
+#   ____          _                    _     _       _        
+#  / ___|   _ ___| |_ ___  _ __ ___   | |   (_)_ __ | | _____ 
+# | |  | | | / __| __/ _ \| '_ ` _ \  | |   | | '_ \| |/ / __|
+# | |__| |_| \__ \ || (_) | | | | | | | |___| | | | |   <\__ \
+#  \____\__,_|___/\__\___/|_| |_| |_| |_____|_|_| |_|_|\_\___/
+#                                                             
+
+custom_links = {}
+

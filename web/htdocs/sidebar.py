@@ -57,6 +57,9 @@ def link(text, target):
 	target = defaults.checkmk_web_uri + "/" + target
     return "<a target=\"main\" class=link href=\"%s\">%s</a>" % (target, htmllib.attrencode(text))
 
+def simplelink(text, target):
+    html.write(link(text, target) + "<br>\n")
+
 def bulletlink(text, target):
     html.write("<li class=sidebar>" + link(text, target) + "</li>\n")
 

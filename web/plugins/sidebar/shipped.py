@@ -878,3 +878,78 @@ sidebar_snapins["bookmarks"] = {
     "render" : render_bookmarks,
     "allowed": [ "user", "admin", "guest" ],
 }
+
+
+
+# ------------------------------------------------------------
+#   ____          _                    _     _       _        
+#  / ___|   _ ___| |_ ___  _ __ ___   | |   (_)_ __ | | _____ 
+# | |  | | | / __| __/ _ \| '_ ` _ \  | |   | | '_ \| |/ / __|
+# | |__| |_| \__ \ || (_) | | | | | | | |___| | | | |   <\__ \
+#  \____\__,_|___/\__\___/|_| |_| |_| |_____|_|_| |_|_|\_\___/
+#                                                             
+# ------------------------------------------------------------
+
+def render_custom_links():
+    links = config.custom_links.get(config.role)
+    if not links:
+        html.write("Please edit <tt>%s</tt> in order to configure which links are shown in this snapin.\n" %
+                  (defaults.default_config_dir + "/multisite.mk"))
+
+    def render_list(ids, links):
+        n = 0
+        for entry in links:
+            n += 1
+            try:
+                if type(entry[1]) == type(True):
+                    if entry[1]: # open
+                        display = ""
+                        img = "link_folder_open.gif"
+                    else:
+                        display = "none"
+                        img = "link_folder.gif"
+                    idss = ids + [str(n)]
+                    html.write('<h3 onclick="toggle_folder(this);" ')
+                    html.write('onmouseover="this.style.cursor=\'pointer\';" ')
+	            html.write('onmouseout="this.style.cursor=\'auto\';">') 
+                    html.write('<img src="images/%s">' % img)
+                    html.write("%s</h3>\n" % entry[0])
+                    html.write('<div style="display: %s;" class=sublist>' % display)
+                    render_list(idss, entry[2])
+                    html.write('</div>\n')
+                elif type(entry[1]) == str:
+                    if len(entry) > 2:
+                        html.write('<img src="images/%s">' % entry[2])
+                    else:
+                        html.write('<img src="images/link_link.gif">')
+                    simplelink(entry[0], entry[1])
+                else:
+                    html.write("Second part of tuple must be list or string, not %s\n" % str(entry[1]))
+            except Exception, e:
+                html.write("invalid entry %s: %s<br>\n" % (entry, e))
+ 
+    render_list([], links)
+
+sidebar_snapins["custom_links"] = {
+    "title" : "Custom Links",
+    "description" : "This snapin contains custom links which can be configured via the configuration variable <tt>custom_links</tt> in <tt>multisite.mk</tt>",
+    "author" : "Mathias Kettner",
+    "render" : render_custom_links,
+    "allowed" : [ "user", "admin", "guest" ],
+    "styles" : """
+div#snapin_custom_links {
+}
+div#snapin_custom_links div.sublist {
+    padding-left: 10px;
+}
+div#snapin_custom_links h3 {
+}
+div#snapin_custom_links img {
+    position: relative;
+    top: 3px;
+    margin-right: 5px;
+}
+"""
+}
+
+

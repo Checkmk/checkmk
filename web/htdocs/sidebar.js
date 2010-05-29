@@ -561,3 +561,47 @@ function hilite_icon(oImg, onoff) {
     else
         oImg.src = oImg.src.replace("lo.png", "hi.png");
 }
+
+
+function toggle_folder(o) {
+    var par = o.parentNode;
+    var next = null;
+    var one_more = false;
+    var img = null;
+
+    for (var i in par.childNodes) {
+	var child = par.childNodes[i];
+        if (one_more && child.nodeName == "DIV") {
+            next = child;
+            break;
+        }
+        if (child == o) 
+            one_more = true;
+    }
+
+    for (var i in o.childNodes) {
+        var child = o.childNodes[i];
+        if (child.nodeName == "IMG") {
+            img = child;
+            break;
+        }
+    }
+
+    if (next) {
+        if (next.style.display == "none") {
+	    next.style.display = "";
+            if (img) 
+                img.src = "images/link_folder_open.gif";
+        }
+        else {
+	    next.style.display = "none";
+            if (img) 
+                img.src = "images/link_folder.gif";
+        }
+    }
+
+    child = null;
+    par = null;
+    next = null;
+    img = null;
+}

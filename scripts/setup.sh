@@ -491,6 +491,8 @@ checkmk_web_uri             = '$checkmk_web_uri'
 livestatus_unix_socket      = '$livesock'
 livebackendsdir             = '$livebackendsdir'
 pnp_url                     = '$pnp_url'
+pnp_templates_dir           = '$pnptemplates'
+doc_dir                     = '$docdir'
 EOF
 }
 
@@ -648,7 +650,10 @@ do
 	   if [ -n "$nagiosaddconf" -a -n "$DESTDIR$nagios_config_file" ] ; then
 	      echo "# added by setup.sh of check_mk " >> $DESTDIR$nagios_config_file
 	      echo "$nagiosaddconf" >> $DESTDIR$nagios_config_file
-	   fi
+	   fi &&
+
+           mkdir -p $DESTDIR$vardir/packages &&
+           install -m 644 package_info $DESTDIR$vardir/packages/check_mk &&
 
 	   mkdir -p $DESTDIR$apache_config_dir &&
 	   if [ ! -e $DESTDIR$apache_config_dir/$NAME -a ! -e $DESTDIR$apache_config_dir/zzz_$NAME.conf ]

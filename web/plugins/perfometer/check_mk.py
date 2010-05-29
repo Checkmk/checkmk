@@ -39,3 +39,26 @@ def perfometer_check_mk_kernel_util(row, check_command, perf_data):
     return "%d%%" % total, h
 
 perfometers["check_mk-kernel.util"] = perfometer_check_mk_kernel_util
+
+def perfometer_check_mk_mem_used(row, check_command, perf_data):
+    h = '<table><tr>'
+    ram_total = float(perf_data[0][6])
+    swap_total = float(perf_data[1][6])
+    virt_total = ram_total + swap_total
+    ram_used = float(perf_data[0][1])
+    swap_used = float(perf_data[1][1])
+    virt_used = ram_used + swap_used
+    state = row["service_state"]
+    ram_color, swap_color = { 0: ("#80ff40", "#008030"), 1: ("#ff2", "#dd0"), 2:("#f44", "#d00"), 3:("#fa2", "#d80") }[state]
+    h += perfometer_td(100 * ram_used / virt_total, ram_color)
+    h += perfometer_td(100 * swap_used / virt_total, swap_color)
+    if virt_used < ram_total:
+        h += perfometer_td(100 * (ram_total - virt_used) / virt_total, "#ccf")
+        h += perfometer_td(100 * (virt_total - ram_total) / virt_total, "#fff")
+    else:
+        h += perfometer_td(100 * (virt_total - virt_used), "#fff")
+    h += "</tr></table>"
+    return "%d%%" % (100 * (virt_used / ram_total)), h
+
+perfometers["check_mk-mem.used"] = perfometer_check_mk_mem_used
+

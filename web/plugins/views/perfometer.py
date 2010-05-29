@@ -38,7 +38,7 @@ def paint_perfometer(row):
             value, warn, crit, min, max = value_parts[0:5]
             # separate value from unit
             i = 0
-            while i < len(value) and (str.isdigit(value[i]) or value[i] == '.'):
+            while i < len(value) and (str.isdigit(value[i]) or value[i] in ['.', ',', '-']):
                 i += 1
             unit = value[i:]
             value = value[:i]

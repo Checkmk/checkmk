@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import pprint, tarfile
 
-pac_ext = ".mkpac"
+pac_ext = ".mkp"
 
 class PackageException(Exception):
     def __init__(self, reason):
@@ -28,19 +28,19 @@ def packaging_usage():
     sys.stdout.write("""Usage: check_mk [-v] -P|--package COMMAND [ARGS]
 
 Available commands are:
-  create NAME          Collect unpackaged files into new package NAME
-  pack NAME            Create package file from installed package
-  release NAME         Drop installed package NAME, release packaged files
-  find                 Find and display unpackaged files
-  list                 List all installed packages
-  list NAME            List files of installed package
-  list PACK.mkpac      List files of uninstalled package file
-  show NAME            Show information about installed package
-  show PACK.mkpac      Show information about uninstalled package file
-  install PACK.mkpac   Install or update package from file PACK.mkpac
-  remove NAME          Uninstall package NAME
+   create NAME      ...  Collect unpackaged files into new package NAME
+   pack NAME        ...  Create package file from installed package
+   release NAME     ...  Drop installed package NAME, release packaged files
+   find             ...  Find and display unpackaged files
+   list             ...  List all installed packages
+   list NAME        ...  List files of installed package
+   list PACK.mkp    ...  List files of uninstalled package file
+   show NAME        ...  Show information about installed package
+   show PACK.mkp    ...  Show information about uninstalled package file
+   install PACK.mkp ...  Install or update package from file PACK.mkp
+   remove NAME      ...  Uninstall package NAME
 
-  -v  enables verbose output
+   -v  enables verbose output
 
 Package files are located in %s.
 """ % pac_dir)
@@ -86,15 +86,15 @@ def package_list(args):
             table = []
             for pacname in all_packages():
                 package = read_package(pacname)
-                table.append((pacname, package["title"], package["version"], package["num_files"]))
-            print_table(["Name", "Title", "Version", "Files"], [ tty_bold, "", "", "" ], table)
+                table.append((pacname, package["title"], package["num_files"]))
+            print_table(["Name", "Title", "Files"], [ tty_bold, "", "" ], table)
         else:
             for pacname in all_packages():
                 sys.stdout.write("%s\n" % pacname)
 
 def package_info(args):
     if len(args) == 0:
-        raise PackageException("Usage: check_mk -P show NAME|PACKAGE.mkpac")
+        raise PackageException("Usage: check_mk -P show NAME|PACKAGE.mkp")
     for name in args:
         show_package_info(name)
 
@@ -128,7 +128,7 @@ def show_package(name, show_info = False):
         sys.stdout.write("Author:                        %s\n" % package["author"])
         sys.stdout.write("Download-URL:                  %s\n" % package["download_url"])
         sys.stdout.write("Files:                         %s\n" % \
-                " ".join([ "%s(%d)" % (part, len(fs)) for part, fs in package["files"].items() if len(fs) > 0 ]))
+                " ".join([ "%s(%d)" % (part, len(fs)) for part, fs in package["files"].items() ]))
         sys.stdout.write("Description:\n  %s\n" % package["description"])
     else:
         if opt_verbose:

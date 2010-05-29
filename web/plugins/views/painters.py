@@ -279,6 +279,12 @@ multisite_painters["svc_perf_data"] = {
     "columns" : ["service_perf_data"],
     "paint" : lambda row: (None, row["service_perf_data"])
 }
+multisite_painters["svc_check_command"] = {
+    "title" : "Service check command",
+    "short" : "Check command",
+    "columns" : ["service_check_command"],
+    "paint" : lambda row: (None, row["service_check_command"])
+}
     
 multisite_painters["svc_contacts"] = {
     "title" : "Service contacts",
@@ -449,6 +455,13 @@ multisite_painters["host_perf_data"] = {
     "short" : "Performance data",
     "columns" : ["host_perf_data"],
     "paint" : lambda row: (None, row["host_perf_data"])
+}
+
+multisite_painters["host_check_command"] = {
+    "title" : "Host check command",
+    "short" : "Check command",
+    "columns" : ["host_check_command"],
+    "paint" : lambda row: (None, row["host_check_command"])
 }
 
 multisite_painters["host_state_age"] = {

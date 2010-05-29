@@ -324,7 +324,7 @@ multisite_builtin_views = {
                        ('svc_state_age', None),
                        ('svc_check_age', None),
                        ('service_icons', None),
-                       ('service_nagios_link', None)],
+                       ('perfometer', None)],
           'play_sounds': False,
           'public': True,
           'show_filters': ['svcstate'],

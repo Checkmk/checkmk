@@ -48,7 +48,8 @@ def paint_perfometer(row):
 
     try:
         title, h = perf_painter(row, check_command, perf_data)
-        return "perfometer", "<div class=title>%s</div>" % title + h
+# return "perfometer", '<div class=title>%s</div>' % (title + h)
+        return "perfometer", '<a href="%s"><div class=title>%s</div>%s</a>' % (pnp_url(row), title, h)
     except Exception, e:
         if config.debug:
             raise

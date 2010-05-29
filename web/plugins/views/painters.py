@@ -918,26 +918,23 @@ multisite_painters["sg_alias"] = {
 
 # Intelligent Links to PNP4Nagios 0.6.X
 
-def paint_pnp_service_link(row):
-    # On our local site, we look for an existing XML file or PNP.
+def pnp_url(row):
     sitename = row["site"]
     host = row["host_name"]
     svc = row["service_description"]
-    perf = row["service_perf_data"]
-    h = pnp_link([sitename, host, svc, perf])
-    return "", h
-
-def pnp_link(values):
-    sitename, host, svc, perf = values
     svc = svc.replace(":", "_").replace("\\", "_")
     site = html.site_status[sitename]["site"]
     url = site["pnp_url"] + ("graph?host=%s&srv=%s" % (htmllib.urlencode(host), htmllib.urlencode(svc)))
-    a = "<a href=\"%s\"><img class=icon src=\"images/icon_pnp.gif\"></a>" % url
+    return url
 
-    if config.site_is_local(sitename):
+
+def pnp_icon_link(row):
+    a = "<a href=\"%s\"><img class=icon src=\"images/icon_pnp.gif\"></a>" % pnp_url(row)
+
+    if config.site_is_local(row["site"]):
 	# Where is our RRD?
-	basedir = defaults.rrd_path + "/" + host
-	xmlpath = basedir + "/" + svc.replace("/", "_").replace(" ", "_") + ".xml"
+	basedir = defaults.rrd_path + "/" + row["host_name"]
+	xmlpath = basedir + "/" + row["service_description"].replace("/", "_").replace(" ", "_") + ".xml"
 	if os.path.exists(xmlpath):
 	    return a
 	else:
@@ -945,7 +942,7 @@ def pnp_link(values):
     
     # Darn. Remote site. We cannot check for a file but rather use
     # (Lars' idea) the perfdata field
-    elif perf:
+    elif row["service_perf_data"]:
 	return  a
     else:
 	return ""
@@ -955,7 +952,7 @@ multisite_painters["link_to_pnp_service"] = {
     "title"   : "Link to PNP4Nagios",
     "short"   : "PNP",
     "columns" : [ "site", "host_name", "service_description", "service_perf_data"],
-    "paint"   : paint_pnp_service_link,
+    "paint"   : lambda row: ("", pnp_icon_link(row))
 }
 
 #     ____                                     _       

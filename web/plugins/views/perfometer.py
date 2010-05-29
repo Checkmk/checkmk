@@ -1,6 +1,32 @@
 # Painters for Perf-O-Meter
+import math
 
 perfometers = {}
+
+# Helper functions for perfometers
+def perfometer_td(perc, color):
+    return '<td style="background-color: %s; width: %d%%;"></td>' % (color, int(float(perc)))
+
+# Paint logarithm with base 10, half_value is being
+# displayed at 50% of the width
+def perfometer_logarithmic(value, half_value, base, color):
+    value = float(value)
+    if value == 0.0:
+        pos = 0
+    else:
+        half_value = float(half_value)
+        h = math.log(half_value, base) # value to be displayed at 50%
+        pos = 50 + 10.0 * (math.log(value, base) - h)
+        if pos < 2:
+            pos = 2
+        if pos > 98:
+            pos = 98
+
+    return "<table><tr>" + \
+      perfometer_td(pos, color) + \
+      perfometer_td(100 - pos, "white") + \
+      "</tr></table>"
+    
 
 perfometer_plugins_dir = defaults.web_dir + "/plugins/perfometer"
 for fn in os.listdir(perfometer_plugins_dir):
@@ -61,3 +87,4 @@ multisite_painters["perfometer"] = {
     "columns" : [ "service_perf_data", "service_state", "service_check_command" ],
     "paint" : paint_perfometer
 }
+

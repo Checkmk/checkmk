@@ -8,9 +8,6 @@
 # 3. The parsed performance data as a list of 7-tuples of
 #    (varname, value, unit, warn, crit, min, max)
 
-def perfometer_td(perc, color):
-    return '<td style="background-color: %s; width: %d%%;"></td>' % (color, int(float(perc)))
-
 def perfometer_check_mk_df(row, check_command, perf_data):
     h = '<table><tr>'
     varname, value, unit, warn, crit, minn, maxx = perf_data[0]
@@ -61,4 +58,14 @@ def perfometer_check_mk_mem_used(row, check_command, perf_data):
     return "%d%%" % (100 * (virt_used / ram_total)), h
 
 perfometers["check_mk-mem.used"] = perfometer_check_mk_mem_used
+
+# def perfometer_check_mk_kernel(row, check_command, perf_data):
+#     return "%d/s" % int(perf_data[0][1]), perfometer_logarithmic(perf_data[0][1], 1000, 10, "#f2a")
+# 
+# perfometers["check_mk-kernel"] = perfometer_check_mk_kernel
+
+def perfometer_check_mk_cpu_threads(row, check_command, perf_data):
+    color = { 0: "#a4f", 1: "#ff2", 2: "#f22", 3: "#fa2" }[row["service_state"]]
+    return "%d" % int(perf_data[0][1]), perfometer_logarithmic(perf_data[0][1], 400, 2, color)
+perfometers["check_mk-cpu.threads"] = perfometer_check_mk_cpu_threads
 

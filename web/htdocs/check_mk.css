@@ -810,6 +810,7 @@ table.services tr.data td.perfometer table td {
 
 table.services tr.data td.perfometer a {
     color: black;
+    text-decoration: none;
 }
 
 td.statex {  /* zero count */

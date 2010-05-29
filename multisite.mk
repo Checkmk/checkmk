@@ -62,7 +62,8 @@ admin_users = [ "nagiosadmin" ]
 
 
 # Custom links for "Custom Links" Snapin. Feel free to add your
-# own links here...
+# own links here. The boolean values True and False determine
+# wether the sections are open or closed by default.
 
 # Links for everyone
 custom_links['guest'] = [

@@ -305,18 +305,12 @@ def read_site_config():
 #   |____/|_|\__,_|\___|_.__/ \__,_|_|   
 #                                        
 
-
 sidebar = \
 [('tactical_overview', 'open'),
- ('sitestatus', 'open'),
  ('search', 'open'),
  ('views', 'open'),
- ('hostgroups', 'closed'),
- ('servicegroups', 'open'),
- ('performance', 'open'),
- ('master_control', 'open'),
- ('bookmarks', 'closed'),
- ('admin', 'closed') ]
+ ('bookmarks', 'open'),
+ ('master_control', 'closed')]
 
 #    _     _           _ _       
 #   | |   (_)_ __ ___ (_) |_ ___ 

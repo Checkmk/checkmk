@@ -21,6 +21,7 @@
     * New Perf-O-Meters displaying service performance data
     * New snapin "Custom Links" where you easily configure your own
       links via multisite.mk (see example in new default config file)
+    * Fixed problem when using only one site and that is not local
 
     Livestatus:
     * new statistics columns: log_messages and log_messages_rate

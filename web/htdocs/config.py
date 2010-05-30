@@ -288,7 +288,11 @@ def site_is_local(name):
     return not sock or sock.startswith("unix:")
 
 def is_multisite():
-    return len(sites) > 1
+    if len(sites) > 1:
+        return True
+    # Also use Multisite mode if the one and only site is not local
+    sitename = sites.keys()[0]
+    return not site_is_local(sitename) 
 
 def read_site_config():
     path = user_confdir + "/siteconfig.mk"

@@ -1,3 +1,7 @@
+1.1.6b1:
+    Multisite:
+    * Fix problem when using only one site and that is not local
+
 1.1.5i3:
      Core, Setup, etc.:
      * New Check_MK packager (check_mk -P)

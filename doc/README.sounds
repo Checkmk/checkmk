@@ -1,0 +1,45 @@
+The sound files shipped with Check_MK are gratefully taken from the game "The
+Battle of Wesnoth".  You find this software under http://www.wesnoth.org/
+
+With exception of fonts and some libraries taken from other projects,
+Wesnoth is licenced under GPL Version 2 or later:
+
+  >>
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License version 2
+    or at your option any later version.
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY.
+  <<
+
+We'd like to thank the developers of Wesnoth for their great game and software
+engineering and hope that they won't mind that we have taken a handful sound
+files as demonstration files for Multisite.
+
+Copyright and authors of Wesnoth (Note that there are far more contributors in Wesnoth that the ones listed here):
+
+Copyright (C) 2003 - 2009 by David White <dave@whitevine.net>
+Copyright (C) 2004 - 2009 by Guillaume Melquiond <guillaume.melquiond@gmail.com>
+Copyright (C) 2004 - 2009 by Philippe Plantier <ayin@anathas.org>
+Copyright (C) 2005 - 2009 by Yann Dirson <ydirson@altern.org>
+Copyright (C) 2005 - 2007 by Isaac Clerencia <isaac@sindominio.net>
+Copyright (C) 2005 - 2009 by Joerg Hinrichs <joerg.hinrichs@alice-dsl.de>
+Copyright (C) 2005 - 2009 by Joeri Melis <joeri_melis@hotmail.com>
+Copyright (C) 2005 - 2009 by Rusty Russell <rusty@rustcorp.com.au>
+Copyright (C) 2006 - 2009 by Dominic Bolin <dominic.bolin@exong.net>
+Copyright (C) 2006 - 2009 by Jeremy Rosen <jeremy.rosen@enst-bretagne.fr>
+Copyright (C) 2006 - 2009 by Karol Nowak <grzywacz@sul.uni.lodz.pl>
+Copyright (C) 2006 - 2009 by Mark de Wever <koraq@xs4all.nl>
+Copyright (C) 2006 - 2009 by Patrick Parker <patrick_x99@hotmail.com>
+Copyright (C) 2007 - 2009 by Benoit Timbert <benoit.timbert@free.fr>
+Copyright (C) 2008 - 2009 by Ignacio R. Morelle <shadowm2006@gmail.com>
+Copyright (C) 2008 - 2009 by Pauli Nieminen <paniemin@cc.hut.fi>
+Copyright (C) 2008 - 2009 by Thomas Baumhauer <thomas.baumhauer@NOSPAMgmail.com>
+Copyright (C) 2008 - 2009 by Tomasz Sniatowski <kailoran@gmail.com>
+Copyright (C) 2009 by Bartosz Waresiak <dragonking@o2.pl>
+Copyright (C) 2009 by Chris Hopman <cjhopman@gmail.com>
+Copyright (C) 2009 by Daniel Franke.
+Copyright (C) 2009 by Eugen Jiresch
+Copyright (C) 2009 by Greg Shikhman <cornmander@cornmander.com>
+Copyright (C) 2009 by Yurii Chernyi <terraninfo@terraninfo.net>
+

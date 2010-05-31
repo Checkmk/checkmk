@@ -1,7 +1,7 @@
 1.1.6b2:
+    Core, Setup, etc.:
     * Packager: fix unpackaged files (sounds, etc)
 
-1.1.6b1:
     Multisite:
     * Complete new design (by Tobias Roeckl, Kopf & Herz)
     * New filters for last service check and last service state change

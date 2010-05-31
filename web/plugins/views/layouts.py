@@ -33,18 +33,27 @@
 #   |____/|_|_| |_|\__, |_|\___|
 #                  |___/        
 # -------------------------------------------------------------------------
-def render_single_dataset(data, view, group_columns, group_painters, painters, num_columns):
+def render_single_dataset(data, view, group_painters, painters, num_columns):
     columns, rows = data
-    # I'm expecting only one row
     for row in rows:
         register_events(row) # needed for playing sounds
-	html.write("<table class=dataset>\n")
+
+    html.write('<div class="tableshadow left"><table class=dataset>\n')
+    rownum = 0
+    while rownum < len(rows):
+        if rownum > 0:
+            html.write("<tr class=gap><td class=gap colspan=%d></td></tr>\n" % (1 + num_columns))
+        thispart = rows[rownum:rownum + num_columns]
 	for p in painters:
 	    painter, link = p
-	    html.write("<tr><td class=left>%s</td>" % painter["title"])
-	    paint(p, row)
+            html.write("<tr class=data><td class=left>%s</td>" % painter["title"])
+            for row in thispart:
+	        paint(p, row)
+            if len(thispart) < num_columns:
+                html.write("<td class=gap style=\"border-style: none;\" colspan=%d></td>" % (1 + num_columns - len(thispart)))
 	    html.write("</tr>\n")
-	html.write("</table>\n")
+        rownum += num_columns
+    html.write("</table></div>\n")
 
 multisite_layouts["dataset"] = { 
     "title"  : "Single dataset",
@@ -60,14 +69,14 @@ multisite_layouts["dataset"] = {
 #   |____/ \___/_/\_\___|\__,_|
 #                              
 # -------------------------------------------------------------------------
-def render_grouped_boxes(data, view,  group_columns, group_painters, painters, num_columns):
+def render_grouped_boxes(data, view, group_painters, painters, num_columns):
     columns, rows = data
     # N columns. Each should contain approx the same number of entries
     groups = []
     last_group = None
     for row in rows:
         register_events(row) # needed for playing sounds
-	this_group = [ row[c] for c in group_columns ]
+	this_group = group_value(row, group_painters)
 	if this_group != last_group:
 	    last_group = this_group
 	    current_group = []
@@ -111,15 +120,15 @@ def render_grouped_boxes(data, view,  group_columns, group_painters, painters, n
 
     # render one group
     def render_group(header, rows, paintheader):
-	html.write("<table class=services><tr class=groupheader>")
-	html.write("<td colspan=%d><table><tr>" % len(painters))
+        html.write("<table class=groupheader><tr class=groupheader>")
 	painted = False
 	for p in group_painters:
 	    if painted:
 		html.write("<td>,</td>")
 	    painted = paint(p, rows[0])
-		
-	html.write("</tr></table></td></tr>\n")
+	html.write("</tr></table>\n")
+
+	html.write("<div class=tableshadow><table class=services>")
 	trclass = None
 
 	# paint table headers, if configured
@@ -127,7 +136,8 @@ def render_grouped_boxes(data, view,  group_columns, group_painters, painters, n
 	    html.write("<tr>")
 	    for p in painters:
 		paint_header(p)
-	    html.write("</tr>")
+                html.write("\n")
+	    html.write("</tr>\n")
 
 	for row in rows:
             register_events(row) # needed for playing sounds
@@ -139,17 +149,15 @@ def render_grouped_boxes(data, view,  group_columns, group_painters, painters, n
 	    if state == None:
 	       state = row.get("host_state", 0)
 	       if state > 0: state +=1 # 1 is critical for hosts
-	    html.write("<tr class=%s%d>" % (trclass, state))
+	    html.write('<tr class="data %s%d">' % (trclass, state))
 	    for p in painters:
 		paint(p, row)
 	    html.write("</tr>\n")
 
-	html.write("</table>\n")
+	html.write("</table></div>\n")
 
     # render table
-    if view.get("column_headers") == "perpage":
-	headerswitch = 1
-    elif view.get("column_headers") == "pergroup":
+    if view.get("column_headers") != "off":
 	headerswitch = -1
     else:
 	headerswitch = 0
@@ -181,7 +189,7 @@ multisite_layouts["boxed"] = {
 #     |_| |_|_|\___|\__,_|
 #                         
 # -------------------------------------------------------------------------
-def render_tiled(data, view, group_columns, group_painters, painters, _ignore_num_columns):
+def render_tiled(data, view, group_painters, painters, _ignore_num_columns):
     columns, rows = data
     html.write("<table class=\"services tiled\">\n")
 
@@ -190,13 +198,13 @@ def render_tiled(data, view, group_columns, group_painters, painters, _ignore_nu
     for row in rows:
 	# Show group header
         if len(group_painters) > 0:
-	    this_group = [ row[c] for c in group_columns ]
+	    this_group = group_value(row, group_painters)
 	    if this_group != last_group:
 
 		# paint group header
 		if group_open:
 		    html.write("</td></tr>\n")
-		html.write("<tr><td><table><tr class=groupheader>")
+		html.write("<tr><td><table class=groupheader><tr class=groupheader>")
 		painted = False
 		for p in group_painters:
 		    if painted:
@@ -266,41 +274,61 @@ multisite_layouts["tiled"] = {
 #     |_|\__,_|_.__/|_|\___|
 #                           
 # ------------------------------------------------------------------------
-def render_grouped_list(data, view, group_columns, group_painters, painters, num_columns):
+def render_grouped_list(data, view, group_painters, painters, num_columns):
     columns, rows = data
     html.write("<table class=services>\n")
     last_group = None
     trclass = None
     column = 1
     group_open = False
+    num_painters = len(painters)
 
     def show_header_line():
         html.write("<tr>")
 	for n in range(1, num_columns + 1):
-	    if n > 1:
-		html.write("<th class=tablegap></th>\n")
 	    for p in painters:
 		paint_header(p)
-	html.write("</tr>\n")
+        html.write("</tr>\n")
 
-    if view.get("column_headers") == "perpage":
-	show_header_line()
+    if len(group_painters) == 0 and view.get("column_headers") != "off":
+        show_header_line()
 
+    # Helper function that counts the number of entries in 
+    # the current group
+    def count_group_members(row, rows):
+	this_group = group_value(row, group_painters)
+        members = 1
+        for row in rows[1:]:
+            that_group = group_value(row, group_painters)
+            if that_group == this_group:
+                members += 1
+            else:
+                break
+        return members
+
+
+    index = 0
     for row in rows:
         register_events(row) # needed for playing sounds
 	# Show group header, if a new group begins. But only if grouping
         # is activated
         if len(group_painters) > 0:
-	    this_group = [ row[c] for c in group_columns ]
+	    this_group = group_value(row, group_painters)
 	    if this_group != last_group:
 		if column != 1: # not a the beginning of a new line
+                    for i in range(column-1, num_columns):
+                        html.write("<td class=fillup colspan=%d></td>" % num_painters)
 		    html.write("</tr>\n")
+                    html.write("<tr>\n")
+                    for x in range(0, num_columns):
+                        html.write("<td colspan=%d class=shadowbottom></td>\n" % num_painters)
+                    html.write("</tr>\n")
 		    column = 1
 
 		# paint group header
 		group_open = True
 		html.write("<tr class=groupheader>")
-		html.write("<td class=groupheader colspan=%d><table><tr>" % (len(painters) * num_columns + (num_columns - 1)))
+		html.write("<td class=groupheader colspan=%d><table class=groupheader><tr>" % (num_painters * (num_columns + 2) + (num_columns - 1)))
 		painted = False
 		for p in group_painters:
 		    if painted:
@@ -308,7 +336,23 @@ def render_grouped_list(data, view, group_columns, group_painters, painters, num
 		    painted = paint(p, row)
 
 		html.write("</tr></table></td></tr>\n")
-		if view.get("column_headers") == "pergroup":
+    
+                # paint top, left and right shadows
+                group_rows = count_group_members(row, rows[index:])
+                rowspan = 3 + group_rows / num_columns
+                if group_rows % num_columns:
+                    rowspan += 1
+                html.write("<tr>\n")
+                for x in range(0, num_columns):
+                    if x > 0:
+                        html.write("<td rowspan=%d class=tablegap></td>\n" % rowspan)
+                    html.write("<td rowspan=%d class=shadowleft></td>\n" % rowspan)
+                    html.write("<td colspan=%d class=shadowtop></td>\n" % num_painters)
+                    html.write("<td rowspan=%d class=shadowright></td>\n" % rowspan)
+                html.write("</tr>\n")
+
+                # Table headers
+		if view.get("column_headers") != "off":
 		    show_header_line()
 		trclass = "even"
 		last_group = this_group
@@ -331,17 +375,21 @@ def render_grouped_list(data, view, group_columns, group_painters, painters, num
 		trclass = "even"
 	    else:
 		trclass = "odd"
-	    html.write("<tr class=%s%d>" % (trclass, state))
-
-	else: # Insert spacing
-	    html.write("<td class=tablegap></td>")
+	    html.write('<tr class="data %s%d">' % (trclass, state))
 
         for p in painters:
 	    paint(p, row)
 	column += 1
+        index += 1
     
     if group_open: 
+        for i in range(column-1, num_columns):
+            html.write("<td class=fillup colspan=%d></td>" % num_painters)
 	html.write("</tr>\n")
+        html.write("<tr>\n")
+        for x in range(0, num_columns):
+            html.write("<td colspan=%d class=shadowbottom></td>\n" % num_painters)
+        html.write("</tr>\n")
     html.write("</table>\n")
 
 multisite_layouts["table"] = { 

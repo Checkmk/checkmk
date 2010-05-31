@@ -2,29 +2,398 @@
 td {
     vertical-align: top;
 }
-
-
-body.page {
-  background-color: #97a8ab;
-  background-image: url("images/background.jpg");
-  background-repeat: repeat;
-  background-position: center;
-  margin: 0px 8px 0px 8px;
-  padding: 0px;
-  font-family: arial, helvetica, sans-serif;
-  font-size: 9pt;
-}
-
 input, td, select {
     font-size: 9pt;
 }
+/*
+   __  __       _        
+  |  \/  | __ _(_)_ __   
+  | |\/| |/ _` | | '_ \  
+  | |  | | (_| | | | | | 
+  |_|  |_|\__,_|_|_| |_| 
 
-table.footer { 
-  width: 100%;
-  border-top: 1px dotted #468;
-  margin-top: 1em;
-  color: #246;
+*/
+
+body.main {
+    background-attachment: fixed;
+    background-image: url("images/contentframe_background.jpg"); 
+    background-repeat: repeat;
+    font-family: arial, helvetica, sans-serif;
+    font-size: 9pt;
+    padding: 0px 10px 0px 10px;
+    margin: 0px;
 }
+
+body.main table.header {
+    width: 100%;
+    margin-bottom: 10px;
+    margin-left: 0px;
+    padding: 8px 0px 10px 0px;
+    border-spacing: 0px;
+} 
+
+body.main hr.header {
+    color: white;
+    background-color: white;
+    border-style: none;
+    height: 1px;
+    position: absolute;
+    width: 100%;
+    left: 0px;
+    top: 35px;
+
+}
+
+body.main hr.hxeader {
+    position: absolute;
+    left: 50px;
+    top: 70px;
+    height: 1px;
+    color: white;
+    background-color: white;
+border: none;
+}
+
+body.main table.header td.left {
+    font-size: 15pt;
+    font-weight: bold;
+    color: #fff;
+    vertical-align: bottom;
+    padding-left: 0px;
+    height: 31px;
+}
+
+body.main table.header td.right {
+    text-align: right;
+    vertical-align: bottom;
+    color: #fff;
+    font-size: 10pt;
+}
+
+body.main table.header td.right img {
+    position: relative;
+    top: 5px;
+}
+
+
+body.main table.footer { 
+    margin-top: 10px;
+    width: 100%;
+    color: white;
+}
+
+div.main {
+    padding-left: 10px;
+border-left: 1px solid red;
+}
+
+/*
+    ____  _     _      _                
+   / ___|(_) __| | ___| |__   __ _ _ __ 
+   \___ \| |/ _` |/ _ \ '_ \ / _` | '__|
+    ___) | | (_| |  __/ |_) | (_| | |   
+   |____/|_|\__,_|\___|_.__/ \__,_|_|   
+                                        
+*/
+
+body.side {
+    background-attachment: fixed;
+    background-repeat: repeat;
+    background-image: url("images/snapinframe_background.jpg");
+    font-family: arial, helvetica, sans-serif;
+    font-size: 9pt;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow:hidden;
+}
+
+div#check_mk_sidebar {
+    padding: 0;
+    margin: 0;
+}
+
+/* Top logo part */
+div#check_mk_sidebar div#side_header {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 55px;
+    z-index: 10;
+    background-repeat: no-repeat;
+    background-image: url("images/sidebar_oben.png");
+}
+
+div#side_version {
+    position: absolute;
+    top: 24px;
+    left: 54px;
+    z-index: 54;
+    color: white;
+    text-align: right;
+    width: 200px;
+}
+div#side_version a {
+    text-decoration: none;
+    color: #e8e8e8;
+}
+div#side_version a:hover {
+    text-decoration: underline;
+    color: #fff;
+}
+
+div#check_mk_sidebar div#side_header a.logo {
+    display: block;
+    height: 55px;
+    width: 270px;
+}
+
+/* Scrolling part with snapins */
+div#check_mk_sidebar div#side_content {
+    z-index: 5;
+    /*position: relative;
+    top: -4px;
+    left: 0px;*/
+    width: 100%;
+    height: 500px;
+    overflow: hidden;
+    color: #000000;
+    padding-left: 5px;
+    padding-top: 60px;
+    padding-bottom: 5px;
+}
+
+div#check_mk_sidebar div#side_footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    margin: 0;
+    padding: 0;
+    height: 35px;
+    width: 100%;
+    z-index: 10;
+    background-repeat: no-repeat;
+    background-image: url("images/sidebar_unten.png");
+}
+div#check_mk_sidebar div#side_footer div.button {
+    width: 75px;
+    height: 20px;
+    z-index: 20;
+    position: absolute;
+    /* background-attachment: fixed; */
+    /* background-position: 15px 20px; */
+    top: 10px;
+    left: 15px;
+    float: left;
+padding: 0px;
+}
+div#check_mk_sidebar div#side_footer div.button a {
+    width: 75px;
+    height: 17px;
+    display: block;
+    color: #fff;
+    text-align: center;
+    vertical-align: middle;
+    padding-top: 3px;
+    text-decoration: none;
+    background-repeat: repeat;
+    background-image: url("images/sidebar_button_lo.png");
+margin: 0px;
+}
+div#check_mk_sidebar div#side_footer div.button a:hover {
+    background-image: url("images/sidebar_button_hi.png");
+}
+div#check_mk_sidebar div#side_footer div.copyright {
+    color: white;
+    position: relative;
+    left: 130px;
+    top: 12px;
+    width: 122px;
+    text-align: right;
+}
+
+div#side_footer a {
+color: #eee;
+}
+div#side_footer a:hover {
+color: white;
+}
+
+/* General layout of snapins */
+div.snapin {
+    /*width: 280px;*/
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+
+/* snapin header */
+div.snapin div.head {
+    width: 260px;
+    text-align: center;
+    vertical-align: middle;
+    color: white;
+}
+
+div.snapin div.head.open {
+    background-image: url("images/snapin_header.png");
+    height: 26px;
+}
+
+div.snapin div.head.closed {
+    background-image: url("images/snapin_closed.png");
+    height: 33px;
+}
+
+/* close button on header */
+div.snapin div.closesnapin {
+    position: relative;
+    top: 12px;
+    left: 11px;
+    width: 0px;
+    overflow: visible;
+}
+
+
+div.snapin div.content {
+    background-image: url("images/snapin_background.png");
+    background-repeat: repeat-y;
+    background-position: left;
+    padding-top: 10px;
+    padding-left: 15px;
+    padding-right: 12px;
+    padding-bottom: 5px;
+    width: 240px;
+}
+
+div.snapin div.foot {
+    background-image: url("images/snapin_footer.png");
+    width: 260px;
+    height: 10px;
+}
+
+/* General styles for snapin contents */
+div.snapin {
+    font-family: arial, helvetica, sans-serif;
+}
+
+div.snapin td {
+    color: #fff;
+}
+div.snapin h3 {
+    margin: 2px 0px;
+    color: #fff;
+    font-size: 100%;
+}
+
+body.side li {
+    padding-left: 1px;
+    color: #274750;
+    color: #478;
+}
+
+
+/* Normal link in sidebar */
+div.snapin a {
+    text-decoration: none;
+    font-weight: normal;
+    color: #fff;
+}
+
+div.snapin a:hover {
+    text-decoration: underline;
+    color: #fff;
+}
+li.sidebar {
+    margin-left: 0px;
+    padding-left: 1ex;
+}
+div.snapin ul.link {
+    margin: 0px;
+    padding-left: 32px;
+}
+div.snapin ul.link li {
+    margin: 0px;
+    padding: 0px;
+}
+
+div.snapin div.footnote {
+    width: 100%;
+    text-align: right;
+}
+
+div.snapin div.snapinexception {
+    background-color: #f88;
+    -moz-border-radius: 4px;
+    padding: 3px;
+    border: 1px solid #f00;
+    width: 220px;
+}
+div.snapin div.snapinexception h2 {
+    font-size: 9pt;
+    color: #f00;
+    margin-top: 0px;
+}
+div.snapin div.snapinexception p {
+    color: #800;
+}
+div.snapin div.footnotelink {
+    margin-top: 5px;
+    text-align: right;
+    padding-right: 11px;
+}
+div.snapin div.footnotelink a {
+    border: 1px solid #ddd;
+    font-size: 7pt;
+    -moz-border-radius: 4px;
+    padding: 1px 4px;
+}
+div.snapin div.footnotelink a:hover {
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+    text-decoration: none;
+    border: 1px solid white;
+}
+
+/* Small iconbutton (e.g. at bookmarks) */
+div.snapin img.iconbutton {
+    margin: 0px 2px 0px 0px;
+    border: none;
+}
+
+/* state bullets at problem host or all hosts snapin */
+div.statebullet { 
+    margin-left: 0px; 
+    margin-right: 6px; 
+    width: 10px; 
+    height: 10px; 
+    border: 1px solid #eee; 
+    float: left; 
+}
+
+table.sidebarconfig {
+  margin-top: 1em;
+  border-collapse: collapse;
+  empty-cells: show;
+}
+
+table.sidebarconfig th {
+    background-color: #830;
+    text-align: left;
+    color: white;
+    border: 1px solid #c60;
+    padding: 2px 5px;
+}
+
+table.sidebarconfig td {
+    background-color: #d72;
+    border: 1px solid #f84;
+    padding: 0px 5px;
+}
+
 
 .footer td.left   { text-align: left; }
 .footer td.middle { text-align: center; }
@@ -32,9 +401,11 @@ table.footer {
 .footer a { color: #246; }
 
 h1 {
-    font-size: 13pt;
+    color: white;
+    font-size: 17pt;
     margin-top: 0px;
-    margin-bottom: 0px;
+    margin-bottom: 5px;
+    margin-left: 5px;
 }
 
 table.heading {
@@ -104,101 +475,171 @@ table.siteheader td.disabled a {
 }
 
 /* navigation ---------------------------------------------------------------- */
-a.navi {
-    border-style: solid;
-    border-color: #eee #666 #444 #eee;
-    border-width: 1px;
-    -moz-border-radius: 4px;
-    background-color: #268;
-    padding: 0px 5px;
+table.contextlinks {
+    margin-bottom: 10px;
+}
+
+div.contextlink {
+    float: left;
+    overflow: hidden;
+    white-space: nowrap;
+    text-align: center;
+    vertical-align: middle;
+    width: 158px;
+    height: 25px;
+    background-image: url("images/contextlink.png");
+    background-repeat: no-repeat;
+    background-position: center center;
+    margin: 0px;
+    position: relative;
+    left: -4px;
+}
+
+div.contextlink a {
+    padding-top: 5px;
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    display: block;
+    width: 158px;
+    height: 25px;
+}
+
+div.naviend {
+    width: 0px;
+    height: 0px;
+    display: block;
+    float: none;
+    background-color: green;
+    overflow: hidden;
+}
+
+table.navi {
+    margin: 0px 0px 10px 5px;
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0px;
+position: relative;
+left: -5px;
+}
+
+table.navi td {
+    padding: 0px;
+    margin: 0px;
+/* border: 1px solid green; */
+}
+table.navi td.gap, table.navi td.minigap {
+    border-bottom: 1px solid white;
+}
+
+table.navi td.left, table.navi td.right {
+    vertical-align: middle;
+    text-align: center;
+    width: 155px;
+    height: 21px;
+    background-image: url("images/metanav_button.png");
+    background-repeat: no-repeat;
+    background-position: left;
+    /* border: 1px solid transparent; */
+    /* border-bottom: 1px solid white; */
+    color: white;
+    padding: 0px;
+    margin: 0px;
+    border: 1px dotted transparent;
+}
+
+table.navi td.left.open {
+    border-bottom: none;
+}
+
+table.navi td.left.closed, table.navi td.right, table.navi td.w30, table.navi td.w40 {
+    border-bottom: 1px solid white;
+}
+
+table.navi td.left.w30 {
+    width: 30px;
+    background-image: url("images/metanav_30.png");
+}
+table.navi td.left.w30.selected {
+    background-image: url("images/metanav_30_hi.png");
+}
+
+table.navi td.left.w40 {
+    width: 40px;
+    background-image: url("images/metanav_40.png");
+}
+
+table.navi td.left.w40.selected {
+    background-image: url("images/metanav_40_hi.png"); 
+}
+
+table.navi td.minigap {
+     width: 3px;
+}
+
+table.navi td.left a, table.navi td.right a {
+    vertical-align: middle;
+    text-align: center;
+    font-weight: normal;
     text-decoration: none;
     color: white;
-    margin-right: 2px;
-    line-height: 1.5em;
-    font-size: 9pt;
+    display: block;
 }
 
-a.navi:hover {
-    border-color: #fff #888 #666 #fff;
-    background-color: #48a;
+a.viewoption {
+    background-color: transparent;
+}
+a.viewoption.columns {
+    width: 20px;
+}
+a.viewoption.refresh {
+    width: 30px;
+}
+a.viewoption.selected, a.viewoption:hover {
+    background-color: #ace;
 }
 
-a.navi.filter {
-    background-color: #da0;
-}
-a.navi.filter:hover {
-    background-color: #fc0;
+table.navi tr.form td.form {
+    margin: 0px;
+    padding: 0px;
 }
 
-a.navi.context {
-    background-color: #628;
+table.navi tr.form td.whiteborder {
+    border-left: 1px solid white;
+    border-right: 1px solid white;
+    border-bottom: 1px solid white;
 }
-a.navi.context:hover {
-    background-color: #84a;
+
+table.navi tr.form div.whiteborder, table.navi tr.form table.whiteborder {
+    border-left: 1px solid white;
+    border-right: 1px solid white;
+    margin: 0px;
+    padding: 0px;
+    border-bottom: 1px solid white;
+width: 100%;
 }
+
+/* FILTER and ACTIONS */
 
 /* tabs ---------------------------------------------------------------------- */
 
-table.tabs td { 
-  vertical-align: bottom;
-  padding: 0px;
-  border: 0px;
-  height: 3em;
-}
 
-table.tabs { 
-  border-bottom: 1px solid black;
-  width: 100%;
-}
-
-input.tab, input.tabactive {
-  -moz-border-radius: 12px 12px 0px 0px;
-  margin-bottom: 0px;
-  color: #000;
-  padding: 0.4ex 1em;
-  border-style: none;
-  vertical-align: top;
-  margin-right: 0.3ex;
-}
-
-input.tab:hover { 
-  padding-bottom: 10px;
-}
-
-input.tabactive { 
-  padding-bottom: 6px;
-  border-bottom-style: none;
-}
-
-table.tabs td.pad { 
-  text-align: right;
-  padding-bottom: 2px;
-}
-
-table.tabs td.pad img { 
-  margin: 0px;
-  padding: 0px;
-}
-
-table.tabs td.pad b { 
-  font-size: 120%;
-  font-weight: bold;
-  color: #246;
-  margin-bottom: 60px;
-}
-
-
-
-table#tabs { 
-  margin-bottom: 1ex;
-}
 
 /* table of services -------------------------------------------------------------- */
 
+table.services { 
+    border-spacing: 0px;
+    margin: 0px;
+    padding: 0px;
+    border-collapse: collapse;
+    empty-cells: show;
+    width: 100%;
+}
+
 table.services th {
     font-weight: normal;
-    border-left: 1px dotted #366;
-    border-right: 1px dotted #366;
+    border-left: 1px solid #ccc;
+    border-right: 1px solid #ccc;
     background-color: #abb;
     padding: 0px 4px;
     text-align: center;
@@ -211,17 +652,6 @@ table.services th.tablegap {
   background-repeat: repeat;
   background-position: center;
 }
-
-table.services { 
-  border-spacing: 0px;
-  margin: 0px;
-  padding: 0px;
-    margin-top: 8px;
-  border-collapse: collapse;
-  empty-cells: show;
-  width: 100%;
-}
-
 table.services tr.odd0  { background-color: #eee; } 
 table.services tr.even0 { background-color: #ddd; }
 
@@ -235,9 +665,10 @@ table.services tr.odd3  { background-color: #fdc; }
 table.services tr.even3 { background-color: #fea; }
 
 
-table.services td { 
+/* HACK */
+table.services tr.data td { 
   border: 1px solid #bbb;
-  padding: 0.2ex 1ex;
+  padding: 3px 6px;
 }
 
 table.services td.host { 
@@ -257,25 +688,19 @@ table.services td.singleicon {
     width: 16px;
     text-align: center;
 }
+
+/* Group header used in table, box and tiled layout */
+table.groupheader {
+    margin: 0px;
+    border: 0px;
+    padding: 4px 0px 0px 0px;
+}
+
 tr.groupheader td {
     border-style: none; 
-    padding: 0px;
-    padding-top: 4px;
     margin: 0px;
-}
-
-tr.groupheader td table {
-    border-style: none; 
-    padding: 0px;
-    margin: 0px;
-}
-
-tr.groupheader table td {
-   border-style: none;
-   padding: 0px;
-   margin: 0px;
-   padding-top: 2px;
-   font-weight: bold;
+    padding-top: 2px;
+    font-weight: bold;
 }
 tr.groupheader a {
    color: black;
@@ -285,6 +710,13 @@ tr.groupheader a {
 tr.groupheader a:hover {
     text-decoration: underline;
 }
+
+/* state in group header must have fixed width */
+.groupheader td.state {
+  width: 50px;
+  padding: 2px 5px;
+  border: 1px solid white;
+} 
 
 .services div.hostdown { 
     background-color: #f22;
@@ -310,12 +742,17 @@ table.services td.age {
   text-align: right;
   color: #666;
   white-space: nowrap;
+  width: 40px;
+}
+table.services td.age.recent { 
+  font-weight: bold;
+  color: #000;
 }
 
-table.services td.agerecent { 
-  text-align: right;
-  font-weight: bold;
-}
+
+table.services td.nowrap {
+  white-space: nowrap;
+}  
 
 td.badflag {
     font-weight: bold;
@@ -325,17 +762,12 @@ td.goodflag {
     color: #080;
 }
 
-/* state in group header */
-.groupheader td.state {
-  width: 50px;
-  padding: 2px 5px;
-  border: 1px solid white;
-} 
 
 td.state {  
   text-align: center;
   font-weight: bold;
   font-family: sans-serif;
+  width: 32px;
 }
 
 td.count {
@@ -344,43 +776,96 @@ td.count {
   font-family: sans-serif;
 }
 
+table.services tr.data td.perfometer {
+  padding: 2px 2px;
+  width: 120px;
+  height: 22px;
+  vertical-align: middle;
+  background-color: #888;
+}
+td.perfometer div.title {
+   height: 0px; 
+   position: relative; 
+   top: 3px; 
+   left: 0px;
+   width: 120px;
+   text-align: center;
+   white-space: nowrap;
+}
+
+td.perfometer table {
+  width: 120px;
+  height: 100%;
+  border-spacing: 0px;
+  padding: 0px;
+  margin: 0px;
+  border: none;
+}
+
+table.services tr.data td.perfometer table td {
+    padding: 0px;
+    margin: 0px;
+    border: none;
+}
+
+table.services tr.data td.perfometer a {
+    color: black;
+    text-decoration: none;
+}
+
 td.statex {  /* zero count */
   color: #ccc;
 }
 
-/* Colors of the five possible host and service states */
-/* HIRN: .hstate0 a muss raus. Dass muss ich spezifischer
-   machen */
+/* Colors of the five possible host and service states 
+  CRIT:    #e2001a
+  UNKNOWN: #f79802
+  WARN:    #e6c908
+  OK:      #41a62a
+*/
+
+/* OK/UP */
 .state0, .hstate0, .state0 a, .hstate0 a { 
-  background-color: #0a2;
-  color: #fff;
+  background-color: #0b3; color: #fff;
 }
 
+/* WARN */
 .state1, .state1 a { 
-  background-color: #ff0;
-  color: #000;
+  background-color: #ff0; color: #000;
 }
 
+/* CRIT/DOWN */
 .state2, .hstate1, .state2 a, .hstate2 a { 
-  background-color: #f00;
-  color: #fff;
+  background-color: #f00; color: #fff;
 }
 
+/* UNKNOWN / UNREACH */
 .state3, .hstate2, .state3 a, .hstate2 a { 
-  background-color: #f80;
-  color: #fff;
+  background-color: #f80; color: #fff;
 }
 
+/* PENDING */
+.statep, .hstatep, .statep a, .hstatep a { 
+  background-color: #888; color: #fff;
+}
+
+/* in DOWNTIME */
+.stated, .hstated, .stated a, .hstated a { 
+  background-color: #0af; color: #fff;
+}
 
 /* *some* problem */
-.states, .hstates, .states a, .hstates a { 
-  background-color: #f08;
-  color: #fff;
+.states, .hstates { 
+    background-image: url("images/someproblem.png");
+    background-position: center center;
+    background-repeat: repeat;
+    color: #000;
 }
-
-.statep, .hstatep, .statep a, .hstatep a { 
-  background-color: #888;
-  color: #fff;
+.states a, .hstates a {
+    color: #000;
+}
+td.narrow {
+    width: 10px;
 }
 
 td.icons {
@@ -389,6 +874,14 @@ td.icons {
 td.icons img {
  height: 20px;
  margin-right: 3px;
+}
+
+td.icon {
+    width: 20px;
+    background-image: url("images/whiteglass.png");
+}
+td.icon img {
+  border-style: none;
 }
 
 img.icon {
@@ -405,7 +898,7 @@ div.objectlist div {
 }
 
 
-table.services td.pnpgraph {
+table.services tr.data td.pnpgraph {
    padding: 0px;
    border-bottom: 1px solid #666;
    border-right: 1px solid #666;
@@ -420,21 +913,51 @@ table.services td.pnpgraph {
             |___/                     
 */
 
+div.tableshadow {
+    background-image: url("images/tableshadow.png");
+    background-repeat: repeat;
+    padding: 1px 1px 1px 1px;
+    border-style: none;
+}
+
+div.tableshadow.left {
+    /* margin-left: 5px; */
+}
+    
+td.shadowtop, td.shadowbottom {
+    background-image: url("images/tableshadow.png");
+    background-repeat: repeat;
+    height: 1px;
+    border-style: none;
+    border-width: 0px;
+    padding: 0px;
+}
+td.shadowleft, td.shadowright {
+    background-image: url("images/tableshadow.png");
+    background-repeat: repeat;
+    width: 1px;
+    border-style: none;
+    border-width: 0px;
+    padding: 0px;
+}
+td.shadowright {
+  width: 1px;
+}
+
+td.tablegap {
+    /* background-color: yellow; */
+}
+td.fillup {
+    background-color: #eee;
+}
 td.groupheader {
     margin: 0px;
     padding: 0px;
 }
-td.groupheader table {
-    padding: 0px;
-    margin: 0px;
-    margin-bottom: 5px;
-    border: 0px;
-    border-collapse: collapse;
-    border-spacing: 0;
-}
 
 /* boxed layout */
 table.boxlayout {
+    border-spacing: 0px;
 }
 table.boxlayout td.boxcolumn {
     vertical-align: top;
@@ -447,24 +970,12 @@ table.boxlayout td.boxcolumn {
 }
 
 /* table layout */
-table.services td.tablegap {
-  border: none;
-  background-color: #97a8ab;
-  background-image: url("images/background.jpg");
-  background-repeat: repeat;
-  background-position: center;
-}
 
 /* tiled layout */
 table.tiled td {
     border-style: none;
 }
-table.tiled tr.groupheader td {
-    font-size: 10pt;
-    font-weight: bold;
-    padding-left: 6px;
-    padding-top: 4px;
-}
+
 .tile {
    width: 160px;
    border: 1px solid black;
@@ -527,47 +1038,73 @@ h2.formcaption {
 }
 
 table.form {
-  padding: 1ex;
-  border-collapse: collapse;
-  empty-cells: show;
-  /* width: 100%; */
+    border-collapse: collapse;
+    empty-cells: show;
+    background-image: url("images/form_background.png"); 
+    background-repeat: repeat;
+    border-spacing: 0px;
+    margin: 10px;
+}
+
+table.form textarea {
+    width: 30em;
+    height: 4em;
 }
 
 table.form input { 
     font-size: 9pt;
 }
 table.form td { 
-  vertical-align: top;
-  padding: 0.8ex 1ex;
-    font-size: 9pt;
+    vertical-align: top;
+    padding: 4px 10px;
+}
+table.form th {
+    border-width: 1px;
+    border-color: #fff;
+    border-style: solid solid none solid;
+    padding: 4px 4px;
+}
+
+table.form b.toggleheader {
+    cursor: auto;
+    background-image: none;
+}
+table.form b.toggleheader.hover {
+    cursor: pointer;
+    color: white;
+    /* background-image: url("images/form_background.png"); */
 }
 
 table.form td.legend { 
-  /* width: 20%; */
-  border: 1px solid black;
-  vertical-align: top;
-  color: white;
+    vertical-align: top;
+    color: #274750;
+    border: 1px solid white;
+    border-right-style: none;
+    /* white-space: nowrap; */
+    height: 32px;
+    vertical-align: top;
+    padding-top: 10px;
+}
+table.form td.legend.border { 
+    border-right-style: solid;
+}
+table.form td.hilite {
+    background-image: url("images/form_background.png"); 
+    background-repeat: repeat;
+    margin: 10px;
+}
+
+table.form td.legend.button { 
+    text-align: right;
+    border-right: 1px solid white;
 }
 
 table.form td.content { 
-  padding-right: 2ex;
-  /* width: 75%; */
-  border: 1px solid black;
+    padding-right: 2ex;
+    border: 1px solid white;
+    border-left-style: none;
+    vertical-align: top;
 }
-
-/* colors of specific forms */
-
-table#table_filter {
-    margin-top: 8px;
-}
-table#table_filter td.content { 
-  background-image: url("images/background-gold.jpg");
-  background-repeat: repeat;
-  background-position: center;
-}
-table#table_filter td.legend, 
-input.tab#table_filter, 
-input.tabactive#table_filter    { background-color: #ca0; }
 
 table#displayoptions td.content { 
   background-image: url("images/background-brown.jpg");
@@ -578,25 +1115,18 @@ table#displayoptions td.legend,
 input.tab#displayoptions, 
 input.tabactive#displayoptions    { background-color: #f84; }
 
-table#table_actions {
-    margin-top: 8px;
-}
-table#table_actions td.content { 
-  background-image: url("images/background-blue.jpg");
-  background-repeat: repeat;
-  background-position: center;
-}
 
 input.tab#results, input.tabactive#results { background-color: #fe6; }
 
-table#table_actions td.legend, 
-input.tabactive#table_actions,
-input.tab#table_actions          { background-color: #589; }
 
 /* input elements in forms */
 
 table.form input.text { 
   width: 100%;
+}
+
+table.form input.number { 
+    text-align: right;
 }
 
 div.textinputlegend { 
@@ -881,90 +1411,98 @@ table.view {
     width: 100%;
     border-collapse: collapse;
     empty-cells: show;
-    background-color: #ffc;
 }
-table.view td.legend, table.view td.content {
+td.legend, td.content {
    border: 1px solid #884;
    padding: 2px 0.5ex;
     vertical-align: top;
 }
-table.view td.legend {
+td.legend {
     padding-top: 3px;
     color: #884;
     vertical-align: top;
-    white-space: nowrap;
+    white-space: nowrap; 
     width: 150px;
 }
 div.viewdescription {
-    color: #084;
+    color: #274750;
     font-size: 7pt;
 }
-table.view td.content i {
+td.content i {
     font-size: 8pt;
-color: #995;
+    color: #fff;
 }
-table.view table.filters {
+
+/* Table of filters in edit view page */
+table.filters {
     border-collapse: collapse;
     empty-cells: show;
     margin-bottom: 6px;
     margin-left: 3px;
-width: 100%;
+    width: 100%;
 }
-table.view div.filtercomment {
+div.filtercomment {
     margin-left: 0px;
     font-size: 8pt;
     width: 300px;
     font-style: italic;
-    color: #c80;
+    color: #478;
     padding-bottom: 6px;
 }
 
 
-table.view table.filters td
+table.filters td
 {
    border-style: none;
-   border-bottom: 1px dotted #cc8;
+   border-bottom: 1px dotted #fff;
+   vertical-align: middle;
+   height: 36px;
+padding: 4px 8px;
 }
 
 
-table.view table.filters th
+table.filters th
 {
     text-align: left;
     padding-bottom: 3px;
-   border-bottom: 1px solid #cc8;
+    padding-left: 8px;
+    font-weight: normal;
+    color: white;
+    border-bottom: 1px solid #fff;
 }
 
-table.view table.filters td.usageshow
+table.filters td.usageshow
 {
- background-color: #ff0;
+    background-color: #ff0;
 }
-table.view table.filters td.usagehide
+table.filters td.usagehide
 {
- background-color: #f0f;
+    background-color: #f0f;
 }
-table.view table.filters td.usagehard
+table.filters td.usagehard
 {
     background-color: #89f;
 }
-table.view table.filters td.usageoff
+table.filters td.usageoff
 {
-    background-color: #ffc;
+    background-image: url("images/tableshadow.png");
+    background-repeat: repeat;
 }
 
-table.view table.filters td.usageshow select
+table.filters td.usageshow select
 {
-   background-color: #cc0;
+    background-color: #cc0;
 }
-table.view table.filters td.usagehide select
+table.filters td.usagehide select
 {
-   background-color: #f6f;
+    background-color: #f6f;
 }
-table.view table.filters td.usagehard select
+table.filters td.usagehard select
 {
     background-color: #67c;
 }
 
-table.view table.filters td.widgetshow
+table.filters td.widgetshow
 {
     background-image: url("images/background-gold.jpg");
     background-repeat: repeat;
@@ -972,30 +1510,30 @@ table.view table.filters td.widgetshow
     background-color: transparent;
     color: #000;
 }
-table.view table.filters td.widgetoff
+table.filters td.widgetoff
 {
     background-image: none;
-    background-color: #ffc;
     color: #aa6;
 }
-table.view table.filters td.widgethard
+table.filters td.widgethard
 {
     background-image: none;
     background-color: #abf;
     color: #000;
 }
-table.view table.filters td.widgethide
+table.filters td.widgethide
 {
     background-image: none;
     background-color: #e8e;
     color: #000;
 }
 
-table.view table.filters td.title {
+table.filters td.title {
     /* border-style: none; */
     padding-right: 1em;
 }
 
+/* TABLE OF ALL VIEWS */
 table.views {
     border-collapse: collapse;
     empty-cells: show;
@@ -1007,17 +1545,26 @@ table.views td, table.views th{
     padding: 2px 1ex;
 }
 
+table.views td {
+height: 25px;
+        padding-top: 3px;
+color: white;
+}
+
 table.views th {
-    background-color: #5b8;
+    background-color: #709aa5;
     color: white;
 }
 
 table.views td.legend {
-    background-color: #7ca;
+    background-color: #8eaeb8;
+    color: white;
+
 }
 
 table.views td.content {
-    background-color: #8ec;
+    background-color: #9ebec8;
+    color: white;
 }
 
 table.views td.edit {
@@ -1027,8 +1574,8 @@ table.views td.edit {
 
 table.views td.buttons {
     padding: 3px;
-    background-color: #888;
     vertical-align: middle;
+    background-color: #8EAEB8;
 }
 
 a.button {
@@ -1046,227 +1593,67 @@ a.button {
     font-size: 9pt;
 }
 
-/* Box with context links */
-div.contextlinks a {
-    font-size: 7pt;
-    color: white;
-}
-div.contextlinks h2 {
-    margin-top: 0px;
-    margin-bottom: 0px;
-    font-size: 7pt;
-    font-weight: bold;
-}
-div.contextlinks {
-    border: 1px solid white;
-    background-color: #048;
-    color: #ccf;
-    padding: 2px 6px;
-width: 200px;
-}
-
-
-/* --- plugins for sidebar ----------------------------------- */
-body.side {
-    background-color: black;
-}
-div#check_mk_sidebar {
-    margin-top: 1ex;
-    margin-bottom: 1ex;
-    font-size: 8pt;
-    color: #fff;
-    font-family: arial, helvetica, sans-serif;
-}
-div#check_mk_sidebar td {
-    font-size: 8pt;
-color: #fff;
-}
-
-div#check_mk_sidebar div.header table
-{
-    width: 100%;
-}
-
-div#check_mk_sidebar div.header table td.title a
-{
-    font-weight: bold;
-    color: #888;
-    font-size: 12pt;
-}
-div#check_mk_sidebar div.header table td.logo
-{
-    text-align: right;
-}
-div#check_mk_sidebar div.section {
-    background-image: url("images/background-gray.jpg");
-    background-repeat: repeat;
-    background-position: center;
-    background-color: transparent;
-    border-width: 1px;
-    margin-bottom: 3px;
-    border-style: solid;
-    border-color: #222 #ccc #fff #444;
-    background-color: #444;
-    -moz-border-radius: 4px;
-    padding: 0px;
-    padding-top: 0px;
-    padding-left: 4px;
-    padding-right: 3px;
-}
-
-div#check_mk_sidebar div.content {
-    margin-top: 2px;
-    margin-bottom: 3px;
-}
-div#check_mk_sidebar b.heading {
-    position: relative;
-    left: 0px;
-    top: 1px;
-    color: #036;
-    font-size: 9pt;
-}
-div#check_mk_sidebar h3 {
-    margin: 0px;
-    color: #333;
-    font-size: 8pt;
-}
-
-div#check_mk_sidebar a {
-    text-decoration: none;
-    font-weight: normal;
-    color: #eee;
-}
-div#check_mk_sidebar div.footnotelink {
-    text-align: right;
-    padding-right: 3px;
-}
-div#check_mk_sidebar div.footnotelink a {
-    font-size: 6pt;
-    color: #fff;
-    border: 1px solid #333;
-    -moz-border-radius: 3px;
-    background-color: #666;
-    padding: 0px 4px;
-    margin-left: 3px;
-}
-div#check_mk_sidebar a:hover {
-    text-decoration: underline;
-    color: #fff;
-}
-li.sidebar {
-    margin-left: 0px;
-    padding-left: 1ex;
-}
-div#check_mk_sidebar ul.link {
-    margin: 0px;
-    font-size: 8pt;
-    padding-left: 32px;
-}
-div#check_mk_sidebar ul.link li {
-    margin: 0px;
-    padding: 0px;
-}
-
-div#check_mk_sidebar div.footnote {
-    width: 100%;
-    text-align: right;
-}
-div#check_mk_sidebar div.footnote a {
-    font-size: 7pt;
-}
-
-div#check_mk_sidebar div.snapinexception {
-    background-color: #f88;
-    -moz-border-radius: 4px;
-    padding: 3px;
-    border: 1px solid #f00;
-}
-div#check_mk_sidebar div.snapinexception h2 {
-    font-size: 9pt;
-    color: #f00;
-    margin-top: 0px;
-}
-div#check_mk_sidebar div.snapinexception p {
-    color: #800;
-}
-
-table.sidebarconfig {
-  margin-top: 1em;
-  border-collapse: collapse;
-  empty-cells: show;
-}
-
-table.sidebarconfig th {
-    background-color: #830;
-    text-align: left;
-    color: white;
-    border: 1px solid #c60;
-    padding: 2px 5px;
-}
-
-table.sidebarconfig td {
-    background-color: #d72;
-    border: 1px solid #f84;
-    padding: 0px 5px;
-}
-
-
-div#mk_side_search {
-	text-align: center;
-}
-
-div#mk_side_search input{
-	margin: auto;
-	width: 90%;
-	
-	font-size: 8pt;
-}
-
-div#mk_side_search #mk_search_results {
-position: relative;
-border: 1px solid white;
-top: 1px;
-background-color: #DFDFDF;
-color: #000;
-font-size: 80%;
-width:140px;
-}
-
-div#mk_side_search #mk_search_results a {
-display: block;
-color: #000;
-text-decoration: none;
-text-align:left;
-padding-left:5px;
-width:135px;
-}
-
-div#mk_side_search #mk_search_results a:hover, div#mk_side_search #mk_search_results a.active {
-background-color: #BFBFBF;
-}
 
 /* layout dataset */
 table.dataset {
-    border-spacing: 0px;
-    margin: 0px;
+    border-spacing: 1px;
     padding: 0px;
     border-collapse: collapse;
     empty-cells: show;
-    background-color: #fec;
-    margin-bottom: 15px;
-    border: 1px solid #840;
-    margin-top: 11px;
+    width: 100%;
+}
+
+table.dataset tr.data {
+    background-color: #eee;
+}
+table.dataset tr.gap {
+    background-color: transparent;
 }
 
 table.dataset td {
-    border-bottom: 1px dotted #840;
     padding-bottom: 4px;
     padding: 1px 10px 5px 10px;
+    text-align: left;
+    vertical-align: middle;
+    border: 1px solid #bbb;
 }
 table.dataset td.left {
     padding-right: 10px;
-    color: #fec;
-    background-color: #840;
-    border-color: #fec;
+    color: white;
+    background-color: #888;
+    width: 10%;
+    white-space: nowrap;
+}
+table.dataset td.gap {
+    background-color: transparent;
+    border-left-style: none;
+    border-right-style: none;
+}
+
+/* page for adding snapins */
+
+table.add_snapin {
+    margin: 0px;
+    padding: 0px;
+    border-spacing: 5px;
+    empty-cells: hide;
+    width: 100%;
+}
+
+table.add_snapin td {
+    padding: 8px;
+    background-color: #9bc;
+    width: 33%;
+    -moz-border-radius: 8px;
+    border-bottom: 1px solid #9ab;
+    border-right: 1px solid #89a;
+    height: 90px;
+    color: #369;
+}
+table.add_snapin b {
+    color: black;
+}
+table.add_snapin i {
+    color: white;
 }
 

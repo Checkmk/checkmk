@@ -83,9 +83,14 @@ TableStatus::TableStatus()
 	    "the averaged number of host checks per second",              COUNTER_HOST_CHECKS,    true));
 
    addColumn(new GlobalCountersColumn("forks", 
-	    "The number of process creatins since program start",         COUNTER_FORKS,    false));
+	    "The number of process creations since program start",         COUNTER_FORKS,    false));
    addColumn(new GlobalCountersColumn("forks_rate", 
 	    "the averaged number of forks checks per second",             COUNTER_FORKS,    true));
+
+   addColumn(new GlobalCountersColumn("log_messages", 
+	    "The number of new log messages since program start",         COUNTER_LOG_MESSAGES,    false));
+   addColumn(new GlobalCountersColumn("log_messages_rate", 
+	    "the averaged number of new log messages per second",         COUNTER_LOG_MESSAGES,    true));
 
    // Nagios program status data
    addColumn(new IntPointerColumn("nagios_pid", 

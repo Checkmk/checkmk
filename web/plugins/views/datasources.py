@@ -120,3 +120,19 @@ multisite_datasources["log"] = {
     "keys"     : [],
 }
 
+multisite_datasources["log_events"] = {
+    "title"       : "Host and Service Events",
+    "table"       : "log",
+    "add_headers" : "Filter: class = 1\n", 
+    "infos"       : [ "log", "host", "service" ],
+    "keys"        : [],
+}
+
+multisite_datasources["log_host_events"] = {
+    "title"       : "Host Events",
+    "table"       : "log",
+    "add_headers" : "Filter: class = 1\nFilter: service_description = \n", 
+    "infos"       : [ "log", "host" ],
+    "keys"        : [],
+}
+

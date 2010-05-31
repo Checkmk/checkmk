@@ -194,8 +194,21 @@ class html:
 	    href += "&_transid=%d" % self.current_transid(self.req.user)
 	self.write("<a href=\"%s\" class=button>%s</a>" % (href, text))
 
-    def number_input(self, varname, deflt = ""):
-	self.text_input(varname, str(deflt), "number")
+    def begin_context_buttons(self):
+        self.write("<table class=contextlinks><tr><td>\n")
+    
+    def end_context_buttons(self):
+        self.write("</td></tr></table>\n")
+    
+    def context_button(self, title, url):
+        self.write('<div class="contextlink" ')
+        self.write(r'''onmouseover='this.style.backgroundImage="url(\"images/contextlink_hi.png\")";' ''')
+        self.write(r'''onmouseout='this.style.backgroundImage="url(\"images/contextlink.png\")";' ''')
+        self.write('>')
+        self.write('<a href="%s">%s</a></div>' % (url, title))
+        
+    def number_input(self, varname, deflt = "", size=8):
+	self.text_input(varname, str(deflt), "number", size=size)
 
     def text_input(self, varname, default_value = "", cssclass = "text", **args):
 	addprops = ""
@@ -318,14 +331,45 @@ class html:
         self.req.headers_out.add("refresh", str(secs))
         self.browser_reload = secs
 
+    def set_browser_redirect(self, secs, url):
+        self.req.headers_out.add("refresh", "%d; URL=%s" % (secs, url))
+
     def header(self, title=''):
         if not self.req.header_sent:
 	    self.html_head(title)
-	    self.write("<body class=page>"
-		    "<table class=heading><tr><td width=\"100%%\" class=left><h1>%s</h1></td><td class=right>" % title)
-	    self.write("<b class=headtime>%s</b>" % time.strftime("%H:%M"))
-	    self.write("<a href=\"http://mathias-kettner.de/check_mk.html\">"
-		    "<img border=0 align=bottom src=\"images/check_mk.trans.54.png\"></a></td></tr></table>\n")
+	    if type(self.req.user) == str:
+	       login_text = "<b>%s</b> (%s)" % (config.user, config.role)
+	    else:
+	       login_text = "not logged in"
+	    self.write("<body class=main>"
+                    "<table class=header><tr><td class=left>%s</td><td class=right>"
+                    "%s &nbsp; &nbsp; %s <img src=\"images/mk_logo_klein.png\"></td></tr></table>" %
+                    (title, login_text, time.strftime("%H:%M")))
+            self.write("<hr class=header>\n")
+
+    def footer(self):
+        if self.req.header_sent:
+            if self.focus_object:
+                formname, varname = self.focus_object
+                obj = formname + "." + varname
+                self.req.write("<script language=\"javascript\" type=\"text/javascript\">\n"
+                               "<!--\n"
+                               "document.%s.focus();\n"
+                               "document.%s.select();\n"
+                               "// -->\n"
+                               "</script>\n" % (obj, obj))
+
+
+            corner_text = ""
+            if self.browser_reload:
+                corner_text += "refresh: %d secs" % self.browser_reload
+            self.req.write("<table class=footer><tr>"
+                           "<td class=left></td>"
+                           "<td class=middle></td>"
+                           "<td class=right>%s</td></tr></table>"
+                           % (corner_text))
+            self.req.write("</body></html>\n")
+
 
     def show_error(self, msg):
         self.write("<div class=error>%s</div>\n" % msg)
@@ -351,33 +395,6 @@ class html:
 
     def do_actions(self):
 	return self.var("_do_actions") not in [ "", None, "No" ]
-
-    def footer(self):
-        if self.req.header_sent:
-            if self.focus_object:
-                formname, varname = self.focus_object
-                obj = formname + "." + varname
-                self.req.write("<script language=\"javascript\" type=\"text/javascript\">\n"
-                               "<!--\n"
-                               "document.%s.focus();\n"
-                               "document.%s.select();\n"
-                               "// -->\n"
-                               "</script>\n" % (obj, obj))
-
-
-	    if type(self.req.user) == str:
-	       login_text = "Logged in as <b>%s</b> (%s)" % (config.user, config.role)
-	    else:
-	       login_text = "not logged in"
-            if self.browser_reload:
-                login_text += ", refresh: %d secs" % self.browser_reload
-            self.req.write("<table class=footer><tr>"
-                           "<td class=left>&copy; <a href=\"http://mathias-kettner.de\">MK</a></td>"
-                           "<td class=middle>This is part of <a href=\"http://mathias-kettner.de/check_mk\">Check_MK</a> version %s</td>"
-                           "<td class=right>%s</td></tr></table>"
-                           % (defaults.check_mk_version, login_text))
-            self.req.write("</body></html>\n")
-
 
     def set_focus(self, formname, varname):
         self.focus_object = (formname, varname)

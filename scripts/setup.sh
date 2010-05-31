@@ -278,11 +278,6 @@ files here (currently only the logwatch extension needs a configuration file)"
 
 ask_title "Integration with Nagios"
 
-ask_dir htdocsdir /usr/share/check_mk/htdocs $HOMEBASEDIR/htdocs "Webpages" \
-  "Directory for web pages and .php files. Currently check_mk ships only 
-one PHP file called logwatch.php. Make sure it's in the same directory
-as the Nagios HTML files (the place where side.html and main.html reside)"
-
 ask_dir -d nagiosuser nagios $(id -un) "Name of Nagios user" \
   "The working directory for check_mk contains several subdirectories
 that need to be writable by the Nagios user (which is running check_mk 
@@ -581,8 +576,6 @@ do
 	   create_defaults > $DESTDIR$modulesdir/defaults &&
 	   mkdir -p $DESTDIR$checksdir &&
 	   tar xzf $SRCDIR/checks.tar.gz -C $DESTDIR$checksdir &&
-	   mkdir -p $DESTDIR$htdocsdir &&
-	   tar xzf $SRCDIR/htdocs.tar.gz -C $DESTDIR$htdocsdir &&
 	   mkdir -p $DESTDIR$web_dir &&
 	   tar xzf $SRCDIR/web.tar.gz -C $DESTDIR$web_dir &&
 	   cp $DESTDIR$modulesdir/defaults $DESTDIR$web_dir/htdocs/defaults.py &&
@@ -607,9 +600,6 @@ do
 	       sed -ri 's@^export MK_LIBDIR="(.*)"@export MK_LIBDIR="'"$agentslibdir"'"@' $agent 
 	       sed -ri 's@^export MK_CONFDIR="(.*)"@export MK_CONFDIR="'"$agentsconfdir"'"@' $agent 
 	   done &&
-	   for php in $DESTDIR$htdocsdir/*.php ; do
-	       sed -ri 's@\$vardir *= *"(.*)"@$vardir="'"$vardir"'"@' $php
-           done &&
 	   mkdir -p $DESTDIR$vardir/{autochecks,counters,precompiled,cache,logwatch,web} &&
 	   if [ -z "$DESTDIR" ] && id "$nagiosuser" > /dev/null 2>&1 ; then
 	     chown -R $nagiosuser $DESTDIR$vardir/{counters,cache,logwatch,web}

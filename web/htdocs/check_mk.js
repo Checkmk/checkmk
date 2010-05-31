@@ -46,16 +46,29 @@ function filter_activation(oid)
     selectobject = null;
 }
 
-function toggle_object(linkobject, oid, showtext, hidetext)
+function toggle_tab(linkobject, oid)
 {
     var table = document.getElementById(oid);
     if (table.style.display == "none") {
 	table.style.display = "";
-	linkobject.innerHTML = hidetext;
+        linkobject.setAttribute("className", "left open");
+        linkobject.setAttribute("class", "left open");
     }
     else {
 	table.style.display = "none";
-	linkobject.innerHTML = showtext;
+        linkobject.setAttribute("className", "left closed");
+        linkobject.setAttribute("class", "left closed");
     }
     table = null;
 }
+
+function hover_tab(linkobject)
+{
+    linkobject.style.backgroundImage = "url(images/metanav_button_hi.png)";
+}
+
+function unhover_tab(linkobject)
+{
+    linkobject.style.backgroundImage = "url(images/metanav_button.png)";
+}
+

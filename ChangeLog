@@ -1,6 +1,31 @@
-1.1.6b1:
+1.1.6:
     Multisite:
-    * Fix problem when using only one site and that is not local
+    * Complete new design (by Tobias Roeckl, Kopf & Herz)
+    * New filters for last service check and last service state change
+    * New views "Recently changed services" and "Unchecked services"
+    * New page for adding sidebar snapins
+    * Drag & Drop for sidebar snapins (thanks to Lars)
+    * Grab & Move for sidebar scrolling (thanks to Lars)
+    * Filter out summary hosts in most views.
+    * Set browser refresh to 30 secs for most views
+    * View host status: added a lot of missing information
+    * View service status: also added information here
+    * Make sure, enough columns can be selected in view editor
+    * Allow user to change num columns and refresh directly in view
+    * Get back to where you came after editing views
+    * New sidebar snapin "Host Matrix"
+    * New feature "status_host" for remote sites: Determine connection
+      state to remote side by considering a certain host state. This
+      avoids livestatus time outs to dead sites.
+    * Sidebar snapin site status: fix reload problem
+    * New Perf-O-Meters displaying service performance data
+    * New snapin "Custom Links" where you easily configure your own
+      links via multisite.mk (see example in new default config file)
+    * Fixed problem when using only one site and that is not local
+
+    Livestatus:
+    * new statistics columns: log_messages and log_messages_rate
+    * make statistics average algorithm more sluggish
 
 1.1.5i3:
      Core, Setup, etc.:

@@ -22,6 +22,387 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+//
+// Sidebar styling and scrolling stuff
+//
+
+/************************************************
+ * snapin drag/drop code
+ *************************************************/
+
+var snapinDragging = false;
+var snapinOffset   = [ 0, 0 ];
+var snapinStartPos = [ 0, 0 ];
+
+if (window.addEventListener) {
+  window.addEventListener("mousemove", snapinDrag,      false);
+} else {
+  document.documentElement.onmousemove = snapinDrag;
+}
+
+function snapinStartDrag(event) {
+  if (!event)
+    event = window.event;
+  
+  // Skip calls when already dragging or other button than left mouse
+  if (snapinDragging !== false || event.button != 0 || event.target.tagName != 'DIV')
+    return true;
+
+  var container = event.target.parentNode;
+  
+  if (event.preventDefault)
+    event.preventDefault();
+  event.returnValue = false;
+  
+  if (event.stopPropagation)
+    event.stopPropagation();
+  event.cancelBubble = true;
+  
+  snapinDragging = container;
+
+  // Save relative offset of the mouse to the snapin title to prevent flipping on drag start
+  snapinOffset   = [ event.clientY - container.offsetTop, event.clientX - container.offsetLeft ];
+  snapinStartPos = [ event.clientY, event.clientX ];
+}
+
+function snapinDrag(event) {
+  if (!event)
+    event = window.event;
+  
+  if (snapinDragging === false)
+    return true;
+
+  // Drag the snapin
+  snapinDragging.style.position = 'absolute';
+  snapinDragging.style.top      = event.clientY - snapinOffset[0] - document.getElementById('side_content').scrollTop;
+  snapinDragging.style.left     = event.clientX - snapinOffset[1];
+  snapinDragging.style.width    = '175px';
+  snapinDragging.style.zIndex   = 200;
+
+  // Refresh the drop marker
+  removeSnapinDragIndicator();
+  
+  var line = document.createElement('div');
+  line.setAttribute('id', 'snapinDragIndicator');
+  line.style.height          = '3px';
+  line.style.width           = '250px';
+  line.style.backgroundColor = '#fff';
+  line.style.margin          = '1px 0px 0px 5px';
+  var o = getSnapinTargetPos();
+  if (o != null) {
+    snapinAddBefore(o.parentNode, o, line);
+    o = null;
+  } else {
+    snapinAddBefore(snapinDragging.parentNode, null, line);
+  }
+  line = null;
+}
+
+function snapinAddBefore(par, o, add) {
+  if (o != null) {
+    par.insertBefore(add, o);
+    o = null;
+  } else {
+    par.appendChild(add);
+  }
+  add = null;
+}
+
+function removeSnapinDragIndicator() {
+  var o = document.getElementById('snapinDragIndicator');
+  if (o) {
+    o.parentNode.removeChild(o);
+    o = null;
+  }
+}
+
+function snapinDrop(event, targetpos) {
+  if (snapinDragging == false)
+    return true;
+
+  // Reset properties
+  snapinDragging.style.top      = '';
+  snapinDragging.style.left     = '';
+  snapinDragging.style.position = '';
+
+  // Catch quick clicks without movement on the title bar
+  // Don't reposition the object in this case.
+  if (snapinStartPos[0] == event.clientY && snapinStartPos[1] == event.clientX) {
+    if (event.preventDefault)
+      event.preventDefault();
+    if (event.stopPropagation)
+      event.stopPropagation();
+    event.returnValue = false;
+    return false;
+  }
+  
+  var par = snapinDragging.parentNode;
+  par.removeChild(snapinDragging);
+  snapinAddBefore(par, targetpos, snapinDragging);
+
+  // Now send the new information to the backend
+  var thisId = snapinDragging.id.replace('snapin_container_', '');
+
+  var before = '';
+  if (targetpos != null)
+    before = '&before=' + targetpos.id.replace('snapin_container_', '');
+  get_url('sidebar_move_snapin.py?name=' + thisId + before);
+  thisId = null;
+  targetpos = null;
+}
+
+function snapinStopDrag(event) {
+  // IE fix
+  if (!event)
+    event = window.event;
+  
+  removeSnapinDragIndicator();
+  snapinDrop(event, getSnapinTargetPos());
+  snapinDragging = false;
+}
+
+function getSnapinList() {
+  if (snapinDragging === false)
+    return true;
+  
+  var l = [];
+  var childs = snapinDragging.parentNode.children;
+  for(var i in childs) {
+    var child = childs[i];
+    // Skip
+    // - non snapin objects
+    // - currently dragged object
+    if (child.id && child.id.substr(0, 7) == 'snapin_' && child.id != snapinDragging.id)
+      l.push(child);
+  }
+
+  return l;
+}
+
+function getSnapinCoords(obj) {
+  var snapinTop = snapinDragging.offsetTop + document.getElementById('side_content').scrollTop;
+  
+  var bottomOffset = obj.offsetTop + obj.clientHeight - snapinTop;
+  if (bottomOffset < 0)
+    bottomOffset = -bottomOffset;
+      
+  var topOffset = obj.offsetTop - snapinTop;
+  if (topOffset < 0)
+    topOffset = -topOffset;
+      
+  var offset = topOffset;
+  var corner = 0;
+  if (bottomOffset < topOffset) {
+    offset = bottomOffset
+    corner = 1;
+  }
+
+  return [ bottomOffset, topOffset, offset, corner ];
+}
+
+function getSnapinTargetPos() {
+  var snapinTop = snapinDragging.offsetTop;
+  var childs = getSnapinList();
+  var objId = -1;
+  var objCorner = -1;
+
+  // Find the nearest snapin to current left/top corner of
+  // the currently dragged snapin
+  for(var i in childs) {
+    var child = childs[i];
+
+    if (!child.id || child.id.substr(0, 7) != 'snapin_' || child.id == snapinDragging.id)
+      continue;
+
+    // Initialize with the first snapin in the list
+    if (objId === -1) {
+      objId = i;
+      var coords = getSnapinCoords(child)
+      objCorner = coords[3]; 
+      continue;
+    }
+
+    // First check which corner is closer. Upper left or
+    // the bottom left.
+    var curCoords = getSnapinCoords(childs[objId]);
+    var newCoords = getSnapinCoords(child);
+
+    // Is the upper left corner closer?
+    if (newCoords[2] < curCoords[2]) {
+      objCorner = newCoords[3];
+      objId = i;
+    }
+  }
+
+  // Is the dragged snapin dragged above the first one?
+  if (objId == 0 && objCorner == 0)
+      return childs[0];
+  else
+      return childs[(parseInt(objId)+1)];
+}
+
+/************************************************
+ * misc sidebar styling
+ *************************************************/
+
+function pageHeight() {
+  var h;
+  
+  if (window.innerHeight !== null && typeof window.innerHeight !== 'undefined')
+    h = window.innerHeight;
+  else if (document.documentElement && document.documentElement.clientHeight)
+    h = document.documentElement.clientHeight;
+  else if (document.body !== null)
+    h = document.body.clientHeight;
+  else
+    h = null;
+  
+return h;
+}
+
+// Set the size of the sidebar_content div to fit the whole screen
+// but without scrolling. The height of the header and footer divs need
+// to be treated here.
+function setSidebarHeight() {
+  var oHeader  = document.getElementById('side_header');
+  var oContent = document.getElementById('side_content');
+  var oFooter  = document.getElementById('side_footer');
+  var height   = pageHeight();
+  
+  oContent.style.height = height - oHeader.clientHeight - oFooter.clientHeight - 5;
+}
+
+var scrolling = true;
+
+function scrollwindow(speed){
+  var c = document.getElementById('side_content');
+  
+  if (scrolling) {
+    c.scrollTop += speed;
+    setTimeout("scrollwindow("+speed+")", 10);
+  }
+  
+  c = null;
+}
+
+/************************************************
+ * drag/drop scrollen
+ *************************************************/
+
+var dragging = false;
+var startY = 0;
+var startScroll = 0;
+
+if (window.addEventListener) {
+  window.addEventListener("mousedown", startDragScroll, false);
+  window.addEventListener("mouseup",   stopDragScroll,  false);
+  window.addEventListener("mousemove", dragScroll,      false);
+} else {
+  document.documentElement.onmousedown = startDragScroll;
+  document.documentElement.onmouseup   = stopDragScroll;
+  document.documentElement.onmousemove = dragScroll;
+}
+
+function startDragScroll(event) {
+  if (!event)
+    event = window.event;
+  
+  // Evtl. auch nur mit Shift Taste: (e.button == 0 && (e["shiftKey"])
+  if (dragging === false && event.button == 0
+      && event.target.tagName != 'A'
+      && event.target.tagName != 'INPUT'
+      && !(event.target.tagName == 'DIV' && event.target.className == 'heading')) {
+    event.preventDefault();
+    event.stopPropagation();
+    event.returnValue = false;
+    
+    dragging = event;
+    startY = event.clientY;
+    startScroll = document.getElementById('side_content').scrollTop;
+  }
+}
+
+function stopDragScroll(event){ 
+  dragging = false;
+}
+
+function dragScroll(event) {
+  if (!event)
+    event = window.event;
+  
+  if (dragging === false)
+    return true;
+  
+  if (event.preventDefault)
+    event.preventDefault();
+  event.returnValue = false;
+  
+  if (event.stopPropagation)
+    event.stopPropagation();
+  event.cancelBubble = true;
+  
+  var inhalt = document.getElementById('side_content');
+  var diff = startY - event.clientY;
+  
+  inhalt.scrollTop += diff;
+  
+  startY = event.clientY;
+  
+  dragging = event;
+  inhalt = null;
+}
+
+/************************************************
+ * Mausrad scrollen
+ *************************************************/
+
+function handle(delta) {
+  if (delta < 0) {
+    scrolling = true;
+    scrollwindow(-delta*20);
+    scrolling = false;
+  } else {
+    scrolling = true;
+    scrollwindow(-delta*20);
+    scrolling = false;
+  }
+}
+
+/** Event handler for mouse wheel event.
+ */
+function scrollWheel(event){
+  var delta = 0;
+  if (!event)
+    event = window.event;
+
+  if (event.wheelDelta) {
+    delta = event.wheelDelta / 120;
+    if (window.opera)
+      delta = -delta;
+  } else if (event.detail) {
+    delta = -event.detail / 3;
+  }
+
+  if (delta)
+    handle(delta);
+
+  if (event.preventDefault)
+    event.preventDefault();
+
+  event.returnValue = false;
+}
+
+// add event listener cross browser compatible
+if (window.addEventListener)
+  window.addEventListener('DOMMouseScroll', scrollWheel, false);
+else
+  window.onmousewheel = document.onmousewheel = scrollWheel;
+
+
+//
+// Sidebar ajax stuff
+//
+
 // TODO: The sidebar cannot longer be embedded. We can use relative
 // links again and do not need to know the base url any longer :-)
 
@@ -30,16 +411,23 @@ refresh_snapins = null;
 // Removes a snapin from the sidebar without reloading anything
 function removeSnapin(id, code) {
   var container = document.getElementById(id).parentNode;
-  var parent = container.parentNode;
-  parent.removeChild(container);
+  var myparent = container.parentNode;
+  myparent.removeChild(container);
+
+  // reload main frame if it is just displaying the "add snapin" page
+  var href = escape(parent.frames[1].location);
+  if (href.indexOf("sidebar_add_snapin.py") > -1)
+      parent.frames[1].location.reload();
+
+  href = null;
   container = null;
-  parent = null;
+  myparent = null;
 }
 
 // Updates the contents of a snapin container after get_url
 function updateContents(id, code) {
   var obj = document.getElementById(id);
-  if(obj) {
+  if (obj) {
     obj.innerHTML = code;
     executeJS(id);
     obj = null;
@@ -52,11 +440,11 @@ function executeJS(objId) {
   // Before switching to asynchronous requests this worked in firefox
   // out of the box. Now it seems not to work with ff too. So now
   // executing the javascript manually.
-  // if(!isFirefox()) {
+  // if (!isFirefox()) {
   var obj = document.getElementById(objId);
   var aScripts = obj.getElementsByTagName('script');
   for(var i in aScripts) {
-    if(aScripts[i].src && aScripts[i].src !== '') {
+    if (aScripts[i].src && aScripts[i].src !== '') {
       var oScr = document.createElement('script');
       oScr.src = aScripts[i].src;
       document.getElementsByTagName("HEAD")[0].appendChild(oScr);
@@ -84,7 +472,7 @@ function get_url(url, handler, id) {
     
     // Dynamic part to prevent caching
     var dyn = "_t="+Date.parse(new Date());
-    if(url.indexOf('\?') !== -1) {
+    if (url.indexOf('\?') !== -1) {
         dyn = "&"+dyn;
     } else {
         dyn = "?"+dyn;
@@ -92,7 +480,7 @@ function get_url(url, handler, id) {
     
     if (AJAX) {
         AJAX.open("GET", url + dyn, true);
-        if(typeof handler === 'function')
+        if (typeof handler === 'function')
             AJAX.onreadystatechange = function() {
                 if (AJAX.readyState == 4) {
                     handler(id, AJAX.responseText);
@@ -106,29 +494,45 @@ function get_url(url, handler, id) {
 }
 
 function toggle_sidebar_snapin(oH2, url) {
-    var childs = oH2.parentNode.childNodes;
+    var childs = oH2.parentNode.parentNode.childNodes;
     for (var i in childs) {
         child = childs[i];
-        if (child.tagName == "DIV") {
+        if (child.tagName == 'DIV' && child.className == 'content')
             var oContent = child;
-            break;
-        }
+        else if (child.tagName == 'DIV' && (child.className == 'head open' || child.className == "head closed"))
+            var oHead = child;
+        else if (child.tagName == 'DIV' && child.className == 'foot')
+            var oFoot = child;
     }
     // FIXME: Does oContent really exist?
     var closed = oContent.style.display == "none";
-    if (closed)
+    if (closed) {
         oContent.style.display = "";
-    else
+        oFoot.style.display = "";
+        oHead.className = "head open";
+    }
+    else {
         oContent.style.display = "none";
+        oFoot.style.display = "none";
+        oHead.className = "head closed";
+    }
     /* make this persistent -> save */
     get_url(url + (closed ? "open" : "closed")); 
     oContent = null;
+    oHead = null;
+    oFoot = null;
     childs = null;
 }
 
-function switch_site(switchvar) {
-    get_url("switch_site.py?" + switchvar);
+function reload_main_plus_sidebar(id, code) {
     parent.frames[1].location.reload(); /* reload main frame */
+    parent.frames[0].location.reload(); /* reload side bar */
+}
+
+function switch_site(switchvar) {
+    get_url("switch_site.py?" + switchvar, reload_main_plus_sidebar, null);
+    /* After the site switch has been done, everything must be reloaded since
+       everything is affected by the switch */
 }
 
 function sidebar_scheduler() {
@@ -137,7 +541,7 @@ function sidebar_scheduler() {
     for (var i in refresh_snapins) { 
         name    = refresh_snapins[i][0];
         refresh = refresh_snapins[i][1];
-        if(timestamp % refresh == 0) {
+        if (timestamp % refresh == 0) {
             get_url("sidebar_snapin.py?name=" + name, updateContents, "snapin_" + name);
         }
     }
@@ -156,4 +560,48 @@ function hilite_icon(oImg, onoff) {
         oImg.src = oImg.src.replace("hi.png", "lo.png");
     else
         oImg.src = oImg.src.replace("lo.png", "hi.png");
+}
+
+
+function toggle_folder(o) {
+    var par = o.parentNode;
+    var next = null;
+    var one_more = false;
+    var img = null;
+
+    for (var i in par.childNodes) {
+	var child = par.childNodes[i];
+        if (one_more && child.nodeName == "DIV") {
+            next = child;
+            break;
+        }
+        if (child == o) 
+            one_more = true;
+    }
+
+    for (var i in o.childNodes) {
+        var child = o.childNodes[i];
+        if (child.nodeName == "IMG") {
+            img = child;
+            break;
+        }
+    }
+
+    if (next) {
+        if (next.style.display == "none") {
+	    next.style.display = "";
+            if (img) 
+                img.src = "images/link_folder_open.gif";
+        }
+        else {
+	    next.style.display = "none";
+            if (img) 
+                img.src = "images/link_folder.gif";
+        }
+    }
+
+    child = null;
+    par = null;
+    next = null;
+    img = null;
 }

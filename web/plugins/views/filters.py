@@ -103,9 +103,10 @@ class FilterGroupCombo(Filter):
 	    choices = [("", "")] + choices
 	html.select(self.htmlvars[0], choices)
         if not self.enforce:
-            html.write(" ")
+            html.write(" <nobr>")
             html.checkbox(self.htmlvars[1])
             html.write("negate")
+            html.write("</nobr>")
 
     def current_value(self, infoname):
 	htmlvar = self.htmlvars[0]
@@ -311,16 +312,15 @@ declare_filter(251, FilterNagiosExpression("service", "has_performance_data", "H
             "Filter: service_perf_data != \n",
             "Filter: service_perf_data = \n"))
 
-declare_filter(130, FilterNagiosFlag("host",    "host_in_notification_period",   "Host is in notification period"))
-declare_filter(230, FilterNagiosFlag("service", "service_acknowledged",             "Problem has been acknowledged"))
-declare_filter(231, FilterNagiosFlag("service", "service_in_notification_period",   "Service is in notification period"))
+declare_filter(130, FilterNagiosFlag("host",    "host_in_notification_period",   "Host in notif. period"))
+declare_filter(230, FilterNagiosFlag("service", "service_acknowledged",             "Problem acknowledged"))
+declare_filter(231, FilterNagiosFlag("service", "service_in_notification_period",   "Service in notif. per."))
 declare_filter(232, FilterNagiosFlag("service", "service_active_checks_enabled",    "Active checks enabled"))
 declare_filter(233, FilterNagiosFlag("service", "service_notifications_enabled",    "Notifications enabled"))
 declare_filter(236, FilterNagiosFlag("service", "service_is_flapping",              "Flapping"))
-declare_filter(131, FilterNagiosFlag("host",    "host_in_notification_period",   "Host is in notification period"))
 declare_filter(231, FilterNagiosFlag("service", "service_scheduled_downtime_depth", "Service in downtime"))
 declare_filter(132, FilterNagiosFlag("host",    "host_scheduled_downtime_depth", "Host in downtime"))
-declare_filter(232, FilterNagiosExpression("service", "in_downtime", "Host or Service in downtime",
+declare_filter(232, FilterNagiosExpression("service", "in_downtime", "Host/service in downtime",
 	    "Filter: service_scheduled_downtime_depth > 0\nFilter: host_scheduled_downtime_depth > 0\nOr: 2\n",
 	    "Filter: service_scheduled_downtime_depth = 0\nFilter: host_scheduled_downtime_depth = 0\nAnd: 2\n"))
 	
@@ -357,6 +357,71 @@ class FilterSite(Filter):
 declare_filter(500, FilterSite("site",    True), "Selection of site is enforced, use this filter for joining")
 declare_filter(501, FilterSite("siteopt", False), "Optional selection of a site")
 
+# Filter for setting time ranges, e.g. on last_state_change and last_check
+# Variante eins:
+# age [  ] seconds  [  ] minutes  [  ] hours  [  ] days
+# Variante zwei: (not implemented)
+# since [2010-01-02] [00:00:00]
+# Variante drei: (not implemented)
+# from [2010-01-02] [00:00:00] until [2010-01-02] [00:00:00]
+class FilterTime(Filter):
+    def __init__(self, info, name, title, column):
+        self.column = column
+        self.name = name
+        self.ranges = [ (1, "sec"), (60, "min"), (3600, "hours"), (86400, "days") ]
+        Filter.__init__(self, name, title, info, [ name ] + [ name + "_" + n for (s, n) in self.ranges], [column])
+
+    def display(self):
+        for s, n in self.ranges:
+            htmlvar = self.name + "_" + n
+            html.write("<nobr>")
+            html.number_input(htmlvar, 0, 2)
+            html.write(" %s</nobr> " % n)
+        html.write("<br>\n")
+        current = html.var(self.name, "since")
+        for t in [ "before", "since" ]:
+            html.radiobutton(self.name, t, current == t, t) 
+            html.write(" ")
+
+    def filter(self, infoname):
+        secs = 0
+        for s, n in self.ranges:
+            htmlvar = self.name + "_" + n
+            v = html.var(htmlvar)
+            if v:
+                try:
+                    secs += int(v) * s
+                except:
+                    pass    
+
+        if secs > 0:
+            timestamp = int(time.time()) - secs
+            if html.var(self.name, "since") != "since":
+                neg = "!"
+            else:
+                neg = ""
+            return "Filter: %s %s>= %d\n" % (self.column, neg, timestamp)
+        else:
+            return ""
+
+    # I'm not sure if this function is useful or ever been called.
+    # Problem is, that it is not clear wether to use "since" or "before"
+    # here.
+    def variable_settings(self, row):
+        vars = []
+        secs = int(time.time()) - row[self.column]
+        for s, n in self.ranges[::-1]:
+            v = secs / s
+            secs -= v * s
+            vars.append((self.name + "_" + n, secs))
+        return vars
+
+    def heading_info(self, infoname):
+        return "since the last couple of seconds"
+
+declare_filter(250, FilterTime("service", "svc_last_state_change", "Last service state change", "service_last_state_change"))
+declare_filter(251, FilterTime("service", "svc_last_check", "Last service check", "service_last_check"))
+
 #    _                
 #   | |    ___   __ _ 
 #   | |   / _ \ / _` |
@@ -364,3 +429,61 @@ declare_filter(501, FilterSite("siteopt", False), "Optional selection of a site"
 #   |_____\___/ \__, |
 #               |___/ 
 
+declare_filter(252, FilterTime("log", "logtime", "Time of log entry", "log_time"))
+# INFO          0 // all messages not in any other class
+# ALERT         1 // alerts: the change service/host state
+# PROGRAM       2 // important programm events (restart, ...)
+# NOTIFICATION  3 // host/service notifications
+# PASSIVECHECK  4 // passive checks
+# COMMAND       5 // external commands
+# STATE         6 // initial or current states
+
+class FilterLogClass(Filter):
+    def __init__(self):
+        self.log_classes = [
+            (0, "Informational"), (1, "Alerts"), (2, "Program"), 
+            (3, "Notifications"), (4, "Passive checks"), 
+            (5, "Commands"), (6, "States") ]
+
+	Filter.__init__(self, "log_class", "Logentry class", 
+		"log", [ "logclass%d" % l for l, c in self.log_classes ], [])
+    
+    def display(self):
+	if html.var("filled_in"):
+	    defval = ""
+	else:
+	    defval = "on"
+        html.write("<table cellspacing=0 cellpadding=0>")
+        col = 1
+	for l, c in self.log_classes:
+            if col == 1:
+                html.write("<tr>")
+            html.write("<td>")
+	    html.checkbox("logclass%d" % l, defval)
+	    html.write(c)
+            html.write("</td>")
+            if col == 2:
+                html.write("</tr>\n")
+                col = 1
+            else:
+                col += 1
+        if col == 1:
+            html.write("<td></td></tr>")
+        html.write("</table>\n") 
+
+    def filter(self, infoname):
+	headers = []
+	if html.var("filled_in"):
+	    defval = ""
+	else:
+	    defval = "on"
+
+	for l, c in self.log_classes:
+	    if html.var("logclass%d" % l, defval) == "on":
+		headers.append("Filter: class = %d\n" % l)
+	if len(headers) == 0:
+	    return "Limit: 0\n" # no class allowed
+	else:
+	    return "".join(headers) + ("Or: %d\n" % len(headers))
+
+declare_filter(255, FilterLogClass())

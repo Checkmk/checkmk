@@ -1,5 +1,3 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -72,71 +70,25 @@ multisite_builtin_views = {}
 # Layouts
 ##################################################################################
 
-def prepare_paint(p, row):
-    painter, linkview = p
-    tdclass, content = painter["paint"](row)
-
-    content = htmllib.utf8_to_entities(content)
-
-    # Create contextlink to other view
-    if content and linkview:
-	content = link_to_view(content, row, linkview)
-    return tdclass, content
-
-def link_to_view(content, row, linkview):
-    view = html.available_views.get(linkview)
-    if view:
-	filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
-	filtervars = []
-	for filt in filters:
-	    filtervars += filt.variable_settings(row)
-
-	uri = html.makeuri_contextless([("view_name", linkview)] + filtervars)
-	content = "<a href=\"%s\">%s</a>" % (uri, content)
-    return content
-
-def docu_link(topic, text):
-    return '<a href="%s" target="_blank">%s</a>' % (config.doculink_urlformat % topic, text)
-
-def paint(p, row):
-    tdclass, content = prepare_paint(p, row)
-    if tdclass:
-	html.write("<td class=\"%s\">%s</td>\n" % (tdclass, content))
-    else:
-	html.write("<td>%s</td>" % content)
-    return content != ""
-
-def paint_header(p):
-    painter, linkview = p
-    t = painter.get("short", painter["title"])
-    html.write("<th>%s</th>" % t)
-
-def register_events(row):
-    if config.sounds != []:
-        host_state = row.get("host_hard_state", row.get("host_state"))
-        if host_state != None:
-            html.register_event({0:"up", 1:"down", 2:"unreachable"}[host_state])
-        svc_state = row.get("service_last_hard_state", row.get("service_state"))
-        if svc_state != None:
-            html.register_event({0:"up", 1:"warning", 2:"critical", 3:"unknown"}[svc_state])
-
-
-def toggle_button(id, isopen, opentxt, closetxt, addclasses=[]):
+def toggle_button(id, isopen, text, addclasses=[]):
     if isopen:
-	displaytxt = ""
+	cssclass = "open"
     else:
-	displaytxt = "none"
+	cssclass = "closed"
     classes = " ".join(["navi"] + addclasses)
-    toggle_texts = { False: opentxt, True: closetxt }
-    html.write("<a class=\"%s\" href=\"#\" onclick=\"toggle_object(this, '%s', '%s', '%s')\">%s</a>" % \
-	    (classes, id, opentxt, closetxt, toggle_texts[isopen]))
+    html.write('<td class="left %s" onclick="toggle_tab(this, \'%s\');" '
+               'onmouseover="this.style.cursor=\'pointer\'; hover_tab(this);" '
+	       'onmouseout="this.style.cursor=\'auto\'; unhover_tab(this);">%s</td>\n' % (cssclass, id, text))
 
 
-def show_filter_form(is_open, filters):
+def show_filter_form(is_open, filters, colspan):
     # Table muss einen anderen Namen, als das Formular
+    html.write("<tr class=form id=table_filter %s>\n" % (not is_open and 'style="display: none"' or '') )
+    html.write("<td colspan=%d>" % colspan) 
     html.begin_form("filter")
-    html.write("<table class=form id=table_filter %s>\n" % (not is_open and 'style="display: none"' or ''))
-
+    html.write("<div class=whiteborder>\n")
+    
+    html.write("<table class=form>\n")
     # sort filters according to title
     s = [(f.sort_index, f.title, f) for f in filters]
     s.sort()
@@ -152,13 +104,17 @@ def show_filter_form(is_open, filters):
 	    html.write("</tr>\n")
 	col = (col + 1) % 2
     if col == 1:
-	html.write("<td class=legend></td><td class=content></td></tr>\n")
-    html.write("<tr><td class=legend colspan=4>")
+	html.write("<td class=legend></td>\n<td class=content></td></tr>\n")
+    html.write('<tr><td class="legend button" colspan=4>')
     html.button("search", "Search", "submit")
     html.write("</td></tr>\n")
     html.write("</table>\n")
+
     html.hidden_fields()
     html.end_form()
+
+    html.write("</div>")
+    html.write("</td></tr>\n")
 
 ##################################################################################
 # Filters
@@ -374,7 +330,21 @@ def page_edit_views(h, msg=None):
     html.write("<table class=views>\n")
 
     keys_sorted = html.multisite_views.keys()
-    keys_sorted.sort()
+    def cmp_viewkey(a, b):
+        if a[0] == b[0]:
+            if a[1] < b[1]:
+                return -1
+            else:
+                return 1
+        elif a[0] == "":
+            return 1
+        elif b[0] == "":
+            return -1
+        elif a[0] < b[0]:
+            return -1
+        else:
+            return 1
+    keys_sorted.sort(cmp_viewkey)
     first = True
     for (owner, viewname) in keys_sorted:
 	if owner == "" and not config.may("view.%s" % viewname):
@@ -475,30 +445,39 @@ def page_edit_view(h):
 		    if oldname and oldname != view["name"] and (html.req.user, oldname) in html.multisite_views:
 			del html.multisite_views[(html.req.user, oldname)]
 		    save_views(html.req.user)
-		return page_edit_views(h, "Your view has been saved.")
+                return page_message_and_forward(h, "Your view has been saved.", "edit_views.py")
 
 	except MKUserError, e:
 	    html.write("<div class=error>%s</div>\n" % e.message)
 	    html.add_user_error(e.varname, e.message)
 
     html.header("Edit view")
-    html.write("<a class=navi href=\"edit_views.py\">Edit views</a>\n")
-    if view and not view["hidden"]:
-	html.write("<a class=navi href=\"view.py?view_name=%s\">Visit this view (does not save)</a>\n" % viewname)
-    html.write("<p>Edit the properties of the view.</p>\n")
-    html.begin_form("view")
-    html.hidden_field("old_name", viewname) # safe old name in case user changes it
-    html.write("<table class=view>\n")
+    html.write("<table class=navi><tr>\n")
+    html.write('<td class="left open">Edit</td>\n')
+    html.write("<td class=gap></td>\n")
+    html.write('<td class="right" onmouseover="hover_tab(this);" onmouseout="unhover_tab(this);">')
+    html.write('<a href="edit_views.py">All views</a>\n')
+    html.write('</td>\n')
+    html.write("</tr><tr class=form><td class=form colspan=3><div class=whiteborder>\n")
 
-    html.write("<tr><td class=legend>Shortname for linking</td><td class=content>")
-    html.text_input("view_name")
-    html.write("</td></tr>\n")
+    html.begin_form("view")
+    html.hidden_field("back", html.var("back", ""))
+    html.hidden_field("old_name", viewname) # safe old name in case user changes it
+    html.write("<table class=form>\n")
 
     html.write("<tr><td class=legend>Title</td><td class=content>")
     html.text_input("view_title")
     html.write("</td></tr>\n")
 
-    html.write("<tr><td class=legend>Title of Contextlink</td><td class=content>")
+    html.write("<tr><td class=legend>Linkname</td><td class=content>")
+    html.text_input("view_name")
+    html.write("</td></tr>\n")
+
+    html.write("<tr><td class=legend>Topic</td><td class=content>")
+    html.text_input("view_topic", "Other")
+    html.write("</td></tr>\n")
+
+    html.write("<tr><td class=legend>Buttontext</td><td class=content>")
     html.text_input("view_linktitle")
     html.write("</td></tr>\n")
 
@@ -526,10 +505,10 @@ function toggle_section(nr, oImg) {
 
     def section_header(id, title):
 	html.write("<tr><td class=legend>")
-	html.write("<img src=\"images/closed.gif\" onclick=\"toggle_section('%d', this) \""
-		   "onmouseover=\"this.style.cursor='pointer'\" "
-		   "onmouseout=\"this.style.cursor='auto'\"> " % id)
-	html.write("<b class=heading>%s</b>" % title)
+	html.write("<b class=toggleheader onclick=\"toggle_section('%d', this) \""
+                   "title=\"Click to open this section\" "
+		   "onmouseover=\"this.className='toggleheader hover';\" "
+		   "onmouseout=\"this.className='toggleheader';\">%s</b> " % (id, title))
 	html.write("</td><td class=content>")
         html.write("<div id=\"ed_%d\" style=\"display: none;\">" % id)
 
@@ -537,7 +516,7 @@ function toggle_section(nr, oImg) {
 	html.write("</div></td></tr>\n")
 
     # Properties
-    section_header(2, "2. Properties")
+    section_header(2, "Properties")
     datasource_title = multisite_datasources[datasourcename]["title"]
     html.write("Datasource: <b>%s</b><br>\n" % datasource_title)
     html.hidden_field("datasource", datasourcename)
@@ -553,7 +532,7 @@ function toggle_section(nr, oImg) {
     section_footer()
 
     # [3] Filters 
-    section_header(3, "3. Filters")
+    section_header(3, "Filters")
     html.write("<table class=filters>")
     html.write("<tr><th>Filter</th><th>usage</th><th>hardcoded settings</th><th>HTML variables</th></tr>\n")
     allowed_filters = filters_allowed_for_datasource(datasourcename)
@@ -590,7 +569,10 @@ function toggle_section(nr, oImg) {
     def column_selection(id, title, var_prefix, maxnum, data, order=False):
 	allowed = allowed_for_datasource(data, datasourcename)
 	section_header(id, title)
-	for n in range(1, maxnum+1):
+        # make sure, at least 3 selection boxes are free for new columns
+        while html.has_var("%s%d" % (var_prefix, maxnum - 2)):
+            maxnum += 1
+	for n in range(1, maxnum + 1):
 	    collist = [ ("", "") ] + [ (name, p["title"]) for name, p in allowed.items() ]
 	    html.write("%02d " % n)
 	    html.sorted_select("%s%d" % (var_prefix, n), collist)
@@ -604,16 +586,16 @@ function toggle_section(nr, oImg) {
 	section_footer()
 
     # [4] Sorting
-    column_selection(4, "4. Sorting", "sort_", max_sort_columns, multisite_sorters, True)
+    column_selection(4, "Sorting", "sort_", max_sort_columns, multisite_sorters, True)
 
     # [5] Grouping
-    column_selection(5, "5. Group by", "group_", max_group_columns, multisite_painters)
+    column_selection(5, "Group by", "group_", max_group_columns, multisite_painters)
 
     # [6] Columns (painters)	
-    column_selection(6, "6. Display columns", "col_", max_display_columns, multisite_painters)
+    column_selection(6, "Columns", "col_", max_display_columns, multisite_painters)
 
     # [2] Layout
-    section_header(7, "7. Layout")
+    section_header(7, "Layout")
     html.write("<table border=0>")
     html.write("<tr><td>Basic Layout:</td><td>")
     html.sorted_select("layout", [ (k, v["title"]) for k,v in multisite_layouts.items() ])
@@ -628,23 +610,25 @@ function toggle_section(nr, oImg) {
     html.checkbox("play_sounds", False)
     html.write("</td></tr>\n")
     html.write("<tr><td>Column headers:</td><td>")
-    html.select("column_headers", [ ("off", "off"), ("perpage", "once per page"), ("pergroup", "once per group") ])
+    html.select("column_headers", [ ("off", "off"), ("pergroup", "once per group") ])
     html.write("</td><tr>\n")
     html.write("</table>\n")
     section_footer()
 
 
-    html.write("<tr><td colspan=2>")
+    html.write('<tr><td class="legend button" colspan=2>')
     html.button("try", "Try out")
     html.write(" ")
     html.button("save", "Save")
     html.write("</table>\n")
     html.end_form()
+
+    html.write("</div></td></tr></table>\n")
     
     if html.has_var("try") or html.has_var("search"):
         html.set_var("search", "on")
 	if view: 
-	    show_view(view)
+	    show_view(view, False, False)
 
     html.footer()
 
@@ -652,6 +636,7 @@ function toggle_section(nr, oImg) {
 def load_view_into_html_vars(view):
     # view is well formed, not checks neccessary
     html.set_var("view_title",       view["title"])
+    html.set_var("view_topic",       view.get("topic", "Other"))
     html.set_var("view_linktitle",   view.get("linktitle", view["title"]))
     html.set_var("view_description", view.get("description", ""))
     html.set_var("view_name",        view["name"])
@@ -724,6 +709,9 @@ def create_view():
     if not linktitle:
         linktitle = title
 
+    topic = html.var("view_topic")
+    if not topic:
+        topic = "Other"
     datasourcename = html.var("datasource")
     datasource = multisite_datasources[datasourcename]
     tablename = datasource["table"]
@@ -792,6 +780,7 @@ def create_view():
 	"name"            : name,
 	"owner"           : html.req.user,
 	"title"           : title,
+	"topic"           : topic,
 	"linktitle"       : linktitle,
 	"description"     : html.var("view_description", ""),
 	"datasource"      : datasourcename,
@@ -836,15 +825,20 @@ def page_view(h):
 
 # Display view with real data. This is *the* function everying
 # is about.
-def show_view(view, show_heading = False):
+def show_view(view, show_heading = False, show_buttons = True):
     # [1] Datasource
     datasource = multisite_datasources[view["datasource"]]
     tablename = datasource["table"]
 
     # [2] Layout
     layout = multisite_layouts[view["layout"]]
-    num_columns = view.get("num_columns", 1)
-    browser_reload = view.get("browser_reload", 0)
+
+    # User can override the layout settings via HTML variables (buttons)
+    # which are safed persistently. This is known as "view options"
+    vo = view_options(view["name"])
+    num_columns = vo.get("num_columns", view.get("num_columns", 1))
+    browser_reload = vo.get("refresh", view.get("browser_reload", None))
+
     if browser_reload:
         html.set_browser_reload(browser_reload)
     
@@ -873,7 +867,6 @@ def show_view(view, show_heading = False):
 
     # [5] Grouping
     group_painters = [ (multisite_painters[n], v) for n, v in view["group_painters"] ]
-    group_columns = needed_group_columns(group_painters)
 
     # [6] Columns
     painters = [ (multisite_painters[n], v) for n, v in view["painters"] ]
@@ -916,44 +909,92 @@ def show_view(view, show_heading = False):
     if show_heading:
 	html.header(view_title(view))
 
-    show_context_links(view, hide_filters)
-    if config.may("edit_views"):
-	if view["owner"] == html.req.user:
-	    html.write("<a class=navi href=\"edit_view.py?load_view=%s\">Edit this view</a> " % view["name"])
-	else:
-	    html.write("<a class=navi href=\"edit_view.py?clonefrom=%s&load_view=%s\">Customize this view</a> " % (view["owner"], view["name"]))
-
-    # Filter-button
-    if len(show_filters) > 0 and not html.do_actions():
-        filter_isopen = html.var("search", "") == "" and view["mustsearch"]
-	toggle_button("table_filter", filter_isopen, "Show filter", "Hide filter", ["filter"])
-   
-    # Action-button
-    if len(rows) > 0 and config.may("act") and not html.do_actions():
-        toggle_button("table_actions", False, "Show commands", "Hide commands")
-
-    # Filter form
-    if len(show_filters) > 0 and not html.do_actions():
-	show_filter_form(filter_isopen, show_filters)
-
-    # Actions
     has_done_actions = False
-    if len(rows) > 0:
-	if html.do_actions() and html.transaction_valid(): # submit button pressed, no reload
-	    try:
-		has_done_actions = do_actions(datasource["infos"][0], rows)
-	    except MKUserError, e:
-		html.show_error(e.message)
-		html.add_user_error(e.varname, e.message)
-		show_action_form(True, datasource)
+    if show_buttons:
+        show_context_links(view, hide_filters)
 
-        else:
-	    show_action_form(False, datasource)
+        html.write("<table class=navi><tr>\n")
+        colspan = 0
 
-    if has_done_actions:
-	html.write("<a href=\"%s\">Back to search results</a>" % html.makeuri([]))
+        # Filter-button
+        if len(show_filters) > 0 and not html.do_actions():
+            filter_isopen = html.var("search", "") == "" and view["mustsearch"]
+            toggle_button("table_filter", filter_isopen, "Filter", ["filter"])
+            html.write("<td class=minigap></td>\n")
+            colspan += 2
+       
+        # Command-button
+        if len(rows) > 0 and config.may("act") and not html.do_actions():
+            toggle_button("table_actions", False, "Commands")
+            html.write("<td class=minigap></td>\n")
+            colspan += 2
 
-    else:
+
+        # Buttons for view options
+        if config.user_may(config.user, "view_option_columns"):
+            for col in config.view_option_columns:
+                uri = html.makeuri([("num_columns", col)])
+                if col == num_columns:
+                    addclass = " selected"
+                else:
+                    addclass = ""
+                html.write('<td class="left w30%s"><a href="%s">%s</a></td>\n' % (addclass, uri, col))
+                html.write("<td class=minigap></td>\n")
+                colspan += 2
+
+        if config.user_may(config.user, "view_option_refresh"):
+            for ref in config.view_option_refreshes:
+                uri = html.makeuri([("refresh", ref)])
+                if ref == browser_reload or (not ref and not browser_reload):
+                    addclass = " selected"
+                else:
+                    addclass = ""
+                if ref:
+                    reftext = "%d s" % ref
+                else:
+                    reftext = "&#8734;"
+                html.write('<td class="left w40%s"><a href="%s">%s</a></td>\n' % (addclass, uri, reftext))
+                html.write("<td class=minigap></td>\n")
+                colspan += 2
+
+        html.write("<td class=gap></td>\n")
+        colspan += 1
+
+        # Customize/Edit view button
+        if config.may("edit_views"):
+            backurl = htmllib.urlencode(html.makeuri([]))
+            html.write('<td class="right" onmouseover="hover_tab(this);" onmouseout="unhover_tab(this);">')
+            if view["owner"] == html.req.user:
+                html.write('<a href="edit_view.py?load_view=%s&back=%s">Edit</a>\n' % (view["name"], backurl))
+            else:
+                html.write('<a href="edit_view.py?clonefrom=%s&load_view=%s&back=%s">Edit</a>\n' % (view["owner"], view["name"], backurl))
+            html.write('</td>')
+            colspan += 1
+        html.write("</tr>")
+        
+        # Filter form
+        if len(show_filters) > 0 and not html.do_actions():
+            show_filter_form(filter_isopen, show_filters, colspan)
+
+        # Actions
+        if len(rows) > 0:
+            if html.do_actions() and html.transaction_valid(): # submit button pressed, no reload
+                try:
+                    html.write("<tr class=form><td class=whiteborder colspan=%d>" % colspan)
+                    has_done_actions = do_actions(datasource["infos"][0], rows, html.makeuri([]))
+                    html.write("</td></tr>")
+                except MKUserError, e:
+                    html.show_error(e.message)
+                    html.write("</td></tr>")
+                    html.add_user_error(e.varname, e.message)
+                    show_action_form(True, datasource, colspan)
+
+            else:
+                show_action_form(False, datasource, colspan)
+
+        html.write("</table>\n") # class=navi
+
+    if not has_done_actions:
         # Limit exceeded? Show warning
 	count = len(rows)
 	limit = get_limit()
@@ -965,7 +1006,7 @@ def show_view(view, show_heading = False):
 		text += '<a href="%s">Repeat query without limit.</a>' % html.makeuri([("limit", "none")])
 	    html.show_warning(text)
 	    del rows[-1]
-        layout["render"]((columns, rows), view, group_columns, group_painters, painters, num_columns)
+        layout["render"]((columns, rows), view, group_painters, painters, num_columns)
 
         # Play alarm sounds, if critical events have been displayed
         if view.get("play_sounds"):
@@ -976,6 +1017,35 @@ def show_view(view, show_heading = False):
     for sitename, info in html.live.deadsites.items():
 	html.show_error("<b>%s - Livestatus error</b><br>%s" % (info["site"]["alias"], info["exception"]))
 
+def view_options(viewname):
+    vo = config.load_user_file("viewoptions", {})
+    v = vo.get(viewname, {})
+    must_save = False
+    if config.user_may(config.user, "view_option_refresh"):
+        if html.has_var("refresh"):
+            try:
+                v["refresh"] = int(html.var("refresh"))
+            except:
+                v["refresh"] = None
+            must_save = True
+    elif "refresh" in v:
+        del v["refresh"]
+
+    if config.user_may(config.user, "view_option_columns"):
+        if html.has_var("num_columns"):
+            try:
+                v["num_columns"] = max(1, int(html.var("num_columns")))
+            except:
+                v["num_columns"] = 1
+            must_save = True
+    elif "num_columns" in v:
+        del v["num_columns"]
+
+    if must_save:
+        vo[viewname] = v
+        config.save_user_file("viewoptions", vo)
+    return v
+        
 
 def play_alarm_sounds():
     url = config.sound_url
@@ -1051,38 +1121,37 @@ def show_context_links(thisview, active_filters):
 	if len(used_contextvars) > 0:
 	    if first:
 		first = False
+                html.begin_context_buttons()
 	    vars_values = [ (var, html.var(var)) for var in set(used_contextvars) ]
-	    html.write("<a class=\"navi context\" href=\"%s\">%s</a>" % \
-		    (html.makeuri_contextless(vars_values + [("view_name", name)]), view_linktitle(view)))
+            html.context_button(view_linktitle(view), html.makeuri_contextless(vars_values + [("view_name", name)]))
+
+    if not first:
+        html.end_context_buttons()
 	
-
-
-def needed_group_columns(painters):
-    columns = []
-    for p, linkview in painters:
-	columns += p["columns"] 
-    return columns
-
 
 # Retrieve data via livestatus, convert into list of dicts,
 # prepare row-function needed for painters
 def query_data(datasource, columns, add_headers, only_sites = [], limit = None):
     tablename = datasource["table"]
+    add_headers += datasource.get("add_headers", "")
     merge_column = datasource.get("merge_by")
     if merge_column:
 	columns = [merge_column] + columns
 
     # Most layouts need current state of objekt in order to
     # choose background color - even if no painter for state
-    # is selected. Make sure those columns are fetched.
-    state_columns = []
-    if "service" in datasource["infos"]:
-	state_columns += [ "service_has_been_checked", "service_state" ]	
-    elif "host" in datasource["infos"]:
-	state_columns += [ "host_has_been_checked", "host_state" ]	
-    for c in state_columns:
-	if c not in columns:
-	    columns.append(c)
+    # is selected. Make sure those columns are fetched. This
+    # must not be done for the table 'log' as it cannot correctly
+    # distinguish between service_state and host_state
+    if "log" not in datasource["infos"]:
+        state_columns = []
+        if "service" in datasource["infos"]:
+            state_columns += [ "service_has_been_checked", "service_state" ]	
+        elif "host" in datasource["infos"]:
+            state_columns += [ "host_has_been_checked", "host_state" ]	
+        for c in state_columns:
+            if c not in columns:
+                columns.append(c)
 
     query = "GET %s\n" % tablename
     query += "Columns: %s\n" % " ".join(columns)
@@ -1227,32 +1296,38 @@ def allowed_for_datasource(collection, datasourcename):
 #
 # -----------------------------------------------------------------------------
 
-def show_action_form(is_open, datasource):
+def show_action_form(is_open, datasource, colspan):
     if not config.may("act"):
 	return
 
     # We take the first info to be the native data type of this table
     # and show actions useful for that
     what = datasource["infos"][0]
-    if what not in [ "host", "service", "comment", "downtime" ]:
-	return # no actions on others	
+    # if what not in [ "host", "service", "comment", "downtime" ]:
+    #	return # no actions on others	
 
     # Table muss einen anderen Namen, als das Formular
+
+    html.write("<tr class=form id=table_actions %s><td colspan=%d>" % ((not is_open and 'style="display: none"' or ''), colspan) )
     html.begin_form("actions")
     html.hidden_field("_do_actions", "yes")
     html.hidden_field("actions", "yes") 
     html.hidden_fields() # set all current variables, exception action vars
+    html.write("<div class=whiteborder>\n")
+    html.write("<table class=form>\n")
 
-    html.write("<table %s id=table_actions class=form>\n" % (is_open and " " or 'style="display:none"'))
     if what in [ "host", "service" ]:
 	show_host_service_actions(what)
     elif what == "downtime":
 	show_downtime_actions()
     elif what == "comment":
 	show_comment_actions()
+    else:
+        html.write("<tr><td>No commands possible for %ss</td></tr>" % what)
 
-	html.write("</td></tr>")
-    html.write("</table></form>\n")
+    html.write("</table></div>\n")
+    html.end_form()
+    html.write("</td></tr>\n")
 
 def show_downtime_actions():
     if config.may("action.downtimes"):
@@ -1516,7 +1591,7 @@ def nagios_host_service_action_command(what, dataset):
     nagios_command = ("[%d] " % int(time.time())) + command + "\n"
     return title, [nagios_command]
 
-def do_actions(what, rows):
+def do_actions(what, rows, backurl):
     if not config.may("act"):
        html.show_error("You are not allowed to perform actions. If you think this is an error, "
              "please ask your administrator grant you the permission to do so.")
@@ -1535,7 +1610,11 @@ def do_actions(what, rows):
 	    count += 1
 
     if command:
-	html.message("Successfully sent %d commands to Nagios. The last one was: <pre>%s</pre>" % (count, command))
+        message = "Successfully sent %d commands to Nagios." % count 
+        if config.debug:
+            message += "The last one was: <pre>%s</pre>" % command
+        message += '<br><a href="%s">Back to view</a>' % backurl
+        html.message(message)
     elif count == 0:
 	html.message("No matching service. No command sent.")
     return True
@@ -1554,3 +1633,83 @@ def ajax_export(h):
 	view["owner"] = ''
 	view["public"] = True
     html.write(pprint.pformat(html.available_views))
+
+def page_message_and_forward(h, message, default_url):
+    global html
+    html = h
+    url = html.var("back")
+    if not url: 
+        url = default_url
+
+    html.set_browser_redirect(1, url)
+    html.header("Multisite")
+    html.message(message)
+    html.footer()
+
+#   ____  _             _             _   _      _
+#  |  _ \| |_   _  __ _(_)_ __       | | | | ___| |_ __   ___ _ __ ___
+#  | |_) | | | | |/ _` | | '_ \ _____| |_| |/ _ \ | '_ \ / _ \ '__/ __|
+#  |  __/| | |_| | (_| | | | | |_____|  _  |  __/ | |_) |  __/ |  \__ \
+#  |_|   |_|\__,_|\__, |_|_| |_|     |_| |_|\___|_| .__/ \___|_|  |___/
+#                 |___/                           |_|
+
+def prepare_paint(p, row):
+    painter, linkview = p
+    tdclass, content = painter["paint"](row)
+
+    content = htmllib.utf8_to_entities(content)
+
+    # Create contextlink to other view
+    if content and linkview:
+	content = link_to_view(content, row, linkview)
+    return tdclass, content
+
+def link_to_view(content, row, linkview):
+    view = html.available_views.get(linkview)
+    if view:
+	filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
+	filtervars = []
+	for filt in filters:
+	    filtervars += filt.variable_settings(row)
+
+	uri = html.makeuri_contextless([("view_name", linkview)] + filtervars)
+	content = "<a href=\"%s\">%s</a>" % (uri, content)
+    return content
+
+def docu_link(topic, text):
+    return '<a href="%s" target="_blank">%s</a>' % (config.doculink_urlformat % topic, text)
+
+def paint(p, row):
+    tdclass, content = prepare_paint(p, row)
+    if tdclass:
+	html.write("<td class=\"%s\">%s</td>\n" % (tdclass, content))
+    else:
+	html.write("<td>%s</td>" % content)
+    return content != ""
+
+def paint_header(p):
+    painter, linkview = p
+    t = painter.get("short", painter["title"])
+    html.write("<th>%s</th>" % t)
+
+def register_events(row):
+    if config.sounds != []:
+        host_state = row.get("host_hard_state", row.get("host_state"))
+        if host_state != None:
+            html.register_event({0:"up", 1:"down", 2:"unreachable"}[host_state])
+        svc_state = row.get("service_last_hard_state", row.get("service_state"))
+        if svc_state != None:
+            html.register_event({0:"up", 1:"warning", 2:"critical", 3:"unknown"}[svc_state])
+
+# The Group-value of a row is used for deciding wether
+# two rows are in the same group or not
+def group_value(row, group_painters):
+    group = []
+    for p, l in group_painters:
+        groupvalfunc = p.get("groupby")
+        if groupvalfunc:
+            group.append(groupvalfunc(row))
+        else:
+            for c in p["columns"]:
+                group.append(row[c])
+    return group

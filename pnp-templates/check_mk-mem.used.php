@@ -57,7 +57,7 @@ $retval = -1;
 system("rrdtool info $rrdfile | fgrep -q 'ds[5]'", $retval);
 if ($retval == 0)
 {
- if ($NAME[4] == "mapped") {
+ if (count($NAME) >= 4 and $NAME[4] == "mapped") {
    $def[1] .= "DEF:mapped=$rrdfile:$DS[4]:MAX " ;
    $def[1] .= "LINE2:mapped#8822ff:\"Memory mapped\" " ;
    $def[1] .= "GPRINT:mapped:LAST:\"%6.0lf MB last\" " ;
@@ -65,7 +65,7 @@ if ($retval == 0)
    $def[1] .= "GPRINT:mapped:MAX:\"%6.0lf MB max\\n\" " ;
   }
 
- if ($NAME[5] == "committed_as") {
+ if (count($NAME) >= 5 and $NAME[5] == "committed_as") {
    $def[1] .= "DEF:committed=$rrdfile:$DS[5]:MAX " ;
    $def[1] .= "LINE2:committed#cc00dd:\"Committed    \" " ;
    $def[1] .= "GPRINT:committed:LAST:\"%6.0lf MB last\" " ;

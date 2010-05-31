@@ -40,9 +40,9 @@ function mkSearchAddField(field, targetFrame) {
             mkSearchTargetFrame = targetFrame;
         }
 
-        oField.onkeydown   = function(e) { if (!e) e = window.event; return mkSearchKeyDown(e, oField); }
-        oField.onkeyup     = function(e) { if (!e) e = window.event; return mkSearchKeyUp(e, oField);}
-        oField.onclick     = function(e) { if (!e) e = window.event; e.cancelBubble = true; e.returnValue = false; }
+        oField.onkeydown = function(e) { if (!e) e = window.event; return mkSearchKeyDown(e, oField); }
+        oField.onkeyup   = function(e) { if (!e) e = window.event; return mkSearchKeyUp(e, oField);}
+        oField.onclick   = function(e) { if (!e) e = window.event; e.cancelBubble = true; e.returnValue = false; }
 
         // The keypress event is being ignored. Key presses are handled by onkeydown and onkeyup events
         oField.onkeypress  = function(e) { if (!e) e = window.event; if (e.keyCode == 13) return false; }
@@ -56,33 +56,55 @@ mkSearchAddField("mk_side_search_field", "main");
 
 // On key release event handler
 function mkSearchKeyUp(e, oField) {
-	var keyCode = e.which || e.keyCode;
+    var keyCode = e.which || e.keyCode;
 
-	switch (keyCode) {
-		// 18: Return/Enter
-		// 27: Escape
-		case 13:
-		case 27:
-			mkSearchClose();
-			e.returnValue = false;
-			e.cancelBubble = true;
-		break;
-			mkSearchClose();
-			e.returnValue = false;
-			e.cancelBubble = true;
-		break;
-		
-		// Up/Down
-		case 38:
-		case 40:
-			return false;
-		break;
+    switch (keyCode) {
+        // 18: Return/Enter
+        // 27: Escape
+        case 13:
+        case 27:
+            mkSearchClose();
+            e.returnValue = false;
+            e.cancelBubble = true;
+        break;
+            mkSearchClose();
+            e.returnValue = false;
+            e.cancelBubble = true;
+        break;
+        
+        // Up/Down
+        case 38:
+        case 40:
+            return false;
+        break;
 
-		// Other keys
-		default:
-			mkSearch(e, oField);
-		break;
-	}
+        // Other keys
+        default:
+            mkSearch(e, oField);
+        break;
+    }
+}
+
+function find_host_url(namepart)
+{   
+    // first try to find if hostpart is a complete hostname
+    // found in our list and is unique (found in only one site)
+    var url = null;
+    for (var i in aSearchHosts) {
+        var hostSite  = aSearchHosts[i][0];
+        var hostName  = aSearchHosts[i][1];
+        if (namepart == hostName) {
+            if (url != null) { // found second match -> not unique
+                url = null;
+                break; // abort
+            }
+            url = 'view.py?view_name=host&host=' + namepart + '&site=' + hostSite;
+        }
+    }
+    if (url != null) return url;
+
+    // not found, not unique or only prefix -> display a view that shows more hosts
+    return 'view.py?view_name=hosts&host=' + namepart;
 }
 
 // On key press down event handler
@@ -90,111 +112,112 @@ function mkSearchKeyDown(e, oField) {
     var keyCode = e.which || e.keyCode;
 
     switch (keyCode) {
-			// Return/Enter
-			case 13:
-				if (iCurrent != null) {
-					mkSearchNavigate();
-					mkSearchClose();
-				} else {
-					// When nothing selected, navigate with the current contents of the field
-                                        // TOOD: Here is missing site=...
-					top.frames[mkSearchTargetFrame].location.href = 'view.py?view_name=host&host='+oField.value;
-					mkSearchClose();
-				}
-				
-				e.returnValue = false;
-				e.cancelBubble = true;
-			break;
-			
-			// Escape
-			case 27:
-				mkSearchClose();
-				e.returnValue = false;
-				e.cancelBubble = true;
-			break;
-			
-			// Up arrow
-			case 38:
-				if(!mkSearchResultShown()) {
-					mkSearch(e, oField);
-				}
-				
-				mkSearchMoveElement(-1);
-				return false;
-			break;
-			
-			// Tab
-			case 9:
-				if(mkSearchResultShown()) {
-					mkSearchClose();
-				}
-				return;
-			break;
-			
-			// Down arrow
-			case 40:
-				if(!mkSearchResultShown()) {
-					mkSearch(e, oField);
-				}
-				
-				mkSearchMoveElement(1);
-				return false;
-			break;
-		}
+            // Return/Enter
+            case 13:
+                if (iCurrent != null) {
+                    mkSearchNavigate();
+                    mkSearchClose();
+                } else {
+                    // When nothing selected, navigate with the current contents of the field
+                    // TODO: Here is missing site=.... But we can add a site= only, if the entered
+                    // hostname is unique and in our list.
+                    top.frames[mkSearchTargetFrame].location.href = find_host_url(oField.value);
+                    mkSearchClose();
+                }
+                
+                e.returnValue = false;
+                e.cancelBubble = true;
+            break;
+            
+            // Escape
+            case 27:
+                mkSearchClose();
+                e.returnValue = false;
+                e.cancelBubble = true;
+            break;
+            
+            // Up arrow
+            case 38:
+                if(!mkSearchResultShown()) {
+                    mkSearch(e, oField);
+                }
+                
+                mkSearchMoveElement(-1);
+                return false;
+            break;
+            
+            // Tab
+            case 9:
+                if(mkSearchResultShown()) {
+                    mkSearchClose();
+                }
+                return;
+            break;
+            
+            // Down arrow
+            case 40:
+                if(!mkSearchResultShown()) {
+                    mkSearch(e, oField);
+                }
+                
+                mkSearchMoveElement(1);
+                return false;
+            break;
+        }
 }
 
 // Navigate to the target of the selected event
 function mkSearchNavigate() {
-	top.frames[mkSearchTargetFrame].location.href = aSearchResults[iCurrent].url;
+    top.frames[mkSearchTargetFrame].location.href = aSearchResults[iCurrent].url;
 }
 
 // Move one step of given size in the result list
 function mkSearchMoveElement(step) {
-	if(iCurrent == null) {
-		iCurrent = -1;
-	}
+    if(iCurrent == null) {
+        iCurrent = -1;
+    }
 
-	iCurrent += step;
+    iCurrent += step;
 
-	if(iCurrent < 0)
-		iCurrent = aSearchResults.length-1;
-	
-	if(iCurrent > aSearchResults.length-1)
-		iCurrent = 0;
+    if(iCurrent < 0)
+        iCurrent = aSearchResults.length-1;
+    
+    if(iCurrent > aSearchResults.length-1)
+        iCurrent = 0;
 
-	var oResults = document.getElementById('mk_search_results').childNodes;
-	var a = 0;
-	for(var i in oResults) {
-		if(oResults[i].nodeName == 'A') {
-			if(a == iCurrent) {
-				oResults[i].setAttribute('class', 'active');
-				oResults[i].setAttribute('className', 'active');
-			} else {
-				oResults[i].setAttribute('class', 'inactive');
-				oResults[i].setAttribute('className', 'inactive');
-			}
-			a++;
-		}
-	}
+    var oResults = document.getElementById('mk_search_results').childNodes;
+    var a = 0;
+    for(var i in oResults) {
+        if(oResults[i].nodeName == 'A') {
+            if(a == iCurrent) {
+                oResults[i].setAttribute('class', 'active');
+                oResults[i].setAttribute('className', 'active');
+            } else {
+                oResults[i].setAttribute('class', 'inactive');
+                oResults[i].setAttribute('className', 'inactive');
+            }
+            a++;
+        }
+    }
 }
 
 // Is the result list shown at the moment?
 function mkSearchResultShown() {
-	var oContainer = document.getElementById('mk_search_results');
-	if(oContainer) {
-		oContainer = null;
-		return true;
-	} else
-		return false;
+    var oContainer = document.getElementById('mk_search_results');
+    if(oContainer) {
+        oContainer = null;
+        return true;
+    } else
+        return false;
 }
 
 // Toggle the result list
 function mkSearchToggle(e, oField) {
-	if(mkSearchResultShown()) {
-		mkSearchClose();
-	} else {
-		mkSearch(e, oField);
-	}
+    if(mkSearchResultShown()) {
+        mkSearchClose();
+    } else {
+        mkSearch(e, oField);
+    }
 }
 
 // Close the result list
@@ -204,9 +227,9 @@ function mkSearchClose() {
     oContainer.parentNode.removeChild(oContainer);
     oContainer = null;
   }
-	
-	aSearchResults = [];
-	iCurrent = null;
+    
+    aSearchResults = [];
+    iCurrent = null;
 }
 
 // Build a new result list and show it up
@@ -220,8 +243,8 @@ function mkSearch(e, oField) {
 
     if(!aSearchHosts) {
         alert("No hosts to search for");
-				return;
-		}
+                return;
+        }
 
     aSearchResults = [];
 
@@ -238,16 +261,15 @@ function mkSearch(e, oField) {
         hostAlias = aSearchHosts[i][2];
 
         if(hostName.match(oMatch) || hostAlias.match(oMatch)) {
-						var oResult = {
-							'id': 'result_'+hostName,
-							'name': hostName,
-							'site': hostSite,
-							'url': 'view.py?view_name=host&host='+hostName+'&site='+hostSite
-						};
-						
-						// Add id to search result array
-						aSearchResults.push(oResult);
-						
+            var oResult = {
+                'id': 'result_'+hostName,
+                'name': hostName,
+                'site': hostSite,
+                'url': 'view.py?view_name=host&host='+hostName+'&site='+hostSite
+            };
+            
+            // Add id to search result array
+            aSearchResults.push(oResult);
             content += '<a id="'+oResult.id+'" href="'+oResult.url+'" onclick="mkSearchClose()" target="'+mkSearchTargetFrame+'">'+hostAlias+"</a>\n";
         }
     }

@@ -1,3 +1,6 @@
+1.1.6b2:
+    * Packager: fix unpackaged files (sounds, etc)
+
 1.1.6b1:
     Multisite:
     * Complete new design (by Tobias Roeckl, Kopf & Herz)

@@ -138,6 +138,8 @@ rm -rf $RPM_BUILD_ROOT
 %dir %attr(-,nagios,root) /var/lib/check_mk/rrd
 %dir /var/lib/check_mk/autochecks
 %dir /var/lib/check_mk/precompiled
+%dir /var/lib/check_mk/packages
+/var/lib/check_mk/packages/check_mk
 
 # Spaeter Subpaket draus machen
 /usr/bin/unixcat

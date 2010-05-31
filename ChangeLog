@@ -1,4 +1,4 @@
-1.1.6:
+1.1.6b1:
     Multisite:
     * Complete new design (by Tobias Roeckl, Kopf & Herz)
     * New filters for last service check and last service state change

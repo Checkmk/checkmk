@@ -159,3 +159,5 @@ setup installiert hat. Dazu verwendet man einfach die Pfade, die setup.sh
 gespeichert hat (reicht das?). Man wird dabei gezwungen, vorher ein
 Backup durchzuführen.
 
+Livestatus-Limit-Header könnte auch einen Bereich erlauben, z.B.:
+Limit: 1000 2000 (holt die zweiten Tausend Eintraege...)

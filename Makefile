@@ -23,11 +23,10 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL           = /bin/bash
-VERSION        	= 1.1.5i1
+VERSION        	= 1.1.6b2
 NAME           	= check_mk
 RPM_TOPDIR     	= rpm.topdir
 RPM_BUILDROOT  	= rpm.buildroot
-WWWROOT        	= /srv/www/htdocs
 PREFIX         	= /usr
 BINDIR         	= $(PREFIX)/bin
 CONFDIR	       	= /etc/$(NAME)
@@ -35,7 +34,6 @@ LIBDIR	       	= $(PREFIX)/lib/$(NAME)
 DISTNAME       	= $(NAME)-$(VERSION)
 TAROPTS        	= --owner=root --group=root --exclude=.svn --exclude=*~ 
 DOWNLOADURL     = http://mathias-kettner.de/download/$(DISTNAME).tar.gz
-CHECKMANDIR	= /home/mk/svn/mkde/htdocs/checkmk
 LIVESTATUS_SOURCES = configure aclocal.m4 config.guess config.h.in config.sub \
 		     configure.ac ltmain.sh Makefile.am Makefile.in missing \
 		     nagios/README nagios/*.h src/*.{h,c,cc} src/Makefile.{in,am} \
@@ -62,8 +60,7 @@ dist: mk-livestatus
 	mkdir -p $(DISTNAME)
 	tar czf $(DISTNAME)/checks.tar.gz $(TAROPTS) -C checks $$(cd checks ; ls)
 	tar czf $(DISTNAME)/checkman.tar.gz $(TAROPTS) -C checkman $$(cd checkman ; ls)
-	tar czf $(DISTNAME)/htdocs.tar.gz $(TAROPTS) -C htdocs $$(cd htdocs ; ls *.php *.css *.png *.gif)
-	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web $$(cd web ; ls htdocs/*/*.{jpg,png,gif} htdocs/*.{py,css,js} plugins/*/*.py)
+	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web $$(cd web ; ls htdocs/*/*.{wav,jpg,png,gif,ico} htdocs/*.{py,css,js} plugins/*/*.py)
 	tar czf $(DISTNAME)/livestatus.tar.gz $(TAROPTS) -C livestatus  $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) )
 	tar czf $(DISTNAME)/pnp-templates.tar.gz $(TAROPTS) -C pnp-templates $$(cd pnp-templates ; ls *.php)
 	tar czf $(DISTNAME)/pnp-rraconf.tar.gz $(TAROPTS) -C pnp-rraconf $$(cd pnp-rraconf ; ls *.rra.cfg README.rra)
@@ -71,7 +68,7 @@ dist: mk-livestatus
 			check_mk_templates.cfg check_mk.1 \
 			check_mk.css screenshot1.png README helpers \
 			check_mk{,.trans}.200.png windows \
-			df_magic_number.py 
+			df_magic_number.py README.sounds
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) COPYING AUTHORS ChangeLog
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) livestatus/api --exclude "*~" --exclude "*.pyc" --exclude ".gitignore" --exclude .f12 
 	gzip $(DISTNAME)/doc.tar
@@ -84,6 +81,7 @@ dist: mk-livestatus
 	tar  cf $(DISTNAME)/agents.tar $(TAROPTS) -C agents --exclude "*~" $$(cd agents ; ls | grep -v windows )
 	tar  rf $(DISTNAME)/agents.tar $(TAROPTS) -C agents windows/{check_mk_agent.exe,check_mk_agent.cc,Makefile}
 	gzip $(DISTNAME)/agents.tar
+	cd $(DISTNAME) ; ../make_package_info $(VERSION) > package_info
 	install -m 755 scripts/*.{sh,py} $(DISTNAME)
 	install -m 644 COPYING AUTHORS ChangeLog $(DISTNAME)
 	echo "$(VERSION)" > $(DISTNAME)/VERSION
@@ -198,6 +196,7 @@ setup:
 	rm -rf $(DISTNAME)
 	tar xzf $(DISTNAME).tar.gz
 	cd $(DISTNAME) && ./setup.sh --yes
+	rm -rf $(DISTNAME)
 	check_mk -R
 	/etc/init.d/apache2 reload
 

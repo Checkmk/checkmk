@@ -1,0 +1,165 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Share settings with if, so user needs to configure this
+# only once. Important: The default settings must be the same
+# as in 'if' since they overwrite each other.
+if_inventory_porttypes = [ "ethernetCsmacd" ]
+if_inventory_uses_description = False
+if_default_levels = (0.01, 0.1) # Error percentages
+
+def inventory_if64(checkname, info):
+    inventory = []
+    for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \
+        ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen in info:
+        if ifType in if_inventory_porttypes and ifOperStatus in ['1','up']:
+            if if_inventory_uses_description and ifDescr:
+                item = ifDescr
+            else:
+                item = ifIndex
+            inventory.append( (item, "(if_default_levels[0], if_default_levels[1], %d)" % int(ifSpeed)) )
+    return inventory
+
+def ifoperstatus_statename(st):
+    names = { '1': "up", '2': "down" }
+    return names.get(st, st)
+
+def check_if64(item, params, info):
+    warn, crit, targetspeed = params
+
+    for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \
+        ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen in info:
+        if item == ifIndex or item == ifDescr:
+
+            # Display port number or alias in infotext if that is not part
+            # of the service description anyway
+            if item == ifIndex and (item == ifDescr or ifDescr == ''): # description trvial
+                infotext = ""
+            elif item != ifDescr and ifDescr != '': # description useful
+                infotext = "[%s] " % ifDescr
+            else:
+                infotext = "[%s] " % ifIndex
+                
+	    operstatus = ifoperstatus_statename(ifOperStatus)
+            if operstatus != "up":
+                return (2, "CRIT - %sno link" % infotext)
+
+            state = 0
+
+            # Check speed
+            speed = int(ifSpeed)
+            bandwidth = speed / 8.0 # in Bytes / sec
+            speedtxt = { 
+                10000000    : "10MBit/s", 
+                100000000   : "100MBit/s", 
+                1000000000  : "1GBit/s", 
+                10000000000 : "10GBit/s" }.get(speed, str(speed))
+            infotext += speedtxt
+            if speed != targetspeed:
+                infotext += "(wrong speed!)"
+                state = 1
+
+            # Performance counters
+            this_time = time.time()
+            rates = []
+            wrapped = False
+            perfdata = []
+            for name, counter, warnn, critt, minn, maxx in [ 
+                ( "in",        ifInOctets, None, None, 0, bandwidth), 
+                ( "inucast",   inucast, None, None, None, None),   
+                ( "innucast",  int(inmcast) + int(inbcast), None, None, None, None),
+                ( "indisc",    ifInDiscards, None, None, None, None),
+                ( "inerr",     ifInErrors, warn, crit, None, None),
+
+                ( "out",       ifOutOctets, None, None, 0, bandwidth), 
+                ( "outucast",  outucast, None, None, None, None),   
+                ( "outnucast", int(outmcast) + int(outbcast), None, None, None, None),
+                ( "outdisc",   ifOutDiscards, None, None, None, None),
+                ( "outerr",    ifOutErrors, warn, crit, None, None) ]:
+            
+                try:
+                    timedif, rate = get_counter("if.%s.%s" % (name, item), this_time, int(counter))
+                    rates.append(rate)
+                    perfdata.append( (name, rate, warn, crit, minn, maxx) )
+                except MKCounterWrapped:
+                    wrapped = True
+                    # continue, other counters might wrap as well
+
+            # if at least one counter wrapped, we do not handle the counters at all
+            if wrapped:
+                perfdata = []
+            else:
+                MB = 1024 * 1024.0
+                perfdata.append(("outqlen", int(ifOutQLen)))
+                for what, errorrate, okrate, traffic in \
+                   [ ("in",  rates[4], rates[1] + rates[2], rates[0]),
+                     ("out", rates[9], rates[6] + rates[7], rates[1]) ]:
+                    infotext += ", %s: %.1fMB/s" % (what, traffic / MB)
+                    pacrate = okrate + errorrate
+                    if pacrate > 0.0: # any packets transmitted?
+                        errperc = 100.0 * errorrate / (okrate + errorrate)
+
+                        if errperc > 0:
+                            infotext += ", %s-errors: %.2f%%" % (what, errperc)
+                        if errperc >= crit:
+                            state = 2
+                            infotext += "(!)" + str(crit)
+                        elif errperc >= warn:
+                            state = 1
+                            infotext += "(!)" + str(warn)
+                              
+
+            return (state, "%s - %s" % (nagios_state_names[state], infotext), perfdata)
+
+                    
+    return (3, "UNKNOWN - no such interface")
+
+check_info['if64'] = (check_if64, "Interface %s", 1,  inventory_if64)
+snmp_info['if64'] = \
+  ( ".1.3.6.1.2.1", [
+    "2.2.1.1",     # ifIndex
+    "31.1.1.1.18", # ifAlias
+    "2.2.1.3",     # ifType
+    "2.2.1.5",     # ifSpeed
+    "2.2.1.8",     # ifOperStatus
+    "31.1.1.1.6",  # ifHCInOctets
+    "31.1.1.1.7",  # ifHCInUcastPkts
+    "31.1.1.1.8",  # ifHCInMulticastPkts
+    "31.1.1.1.9",  # ifHCInBroadcastPkts
+    "2.2.1.13",    # ifInDiscards
+    "2.2.1.14",    # ifInErrors
+    "31.1.1.1.10", # ifHCOutOctets
+    "31.1.1.1.11", # ifHCOutUcastPkts
+    "31.1.1.1.12", # ifHCOutMulticastPkts
+    "31.1.1.1.13", # ifHCOutBroadcastPkts
+    "2.2.1.19",    # ifOutDiscards
+    "2.2.1.20",    # ifOutErrors
+    "2.2.1.21",    # ifOutQLen
+  ] )
+
+# check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2
+snmp_scan_functions['if64'] = \
+	lambda oid: not not oid(".1.3.6.1.2.1.31.1.1.1.6.1")

@@ -293,7 +293,8 @@ class MultiSiteConnection(Helpers):
 	self.only_sites = None
 	self.limit = None
 
-	for sitename, site in sites.items():
+        # Helper function for connecting to a site
+        def connect_to_site(sitename, site):
 	    try:
 		url = site["socket"]
 	        connection = SingleSiteConnection(url)
@@ -307,6 +308,73 @@ class MultiSiteConnection(Helpers):
 		    "exception" : e,
 		    "site"      : site,
 		}
+
+        # Status host: A status host helps to prevent trying to connect
+        # to a remote site which is unreachable. This is done by looking
+        # at the current state of a certain host on a local site that is
+        # representing the connection to the remote site. The status host
+        # is specified as an optional pair of (site, host) in the entry 
+        # "status_host". We first connect to all sites without a status_host
+        # entry, then retrieve the host states of the status hosts and then
+        # connect to the remote site which are reachable
+        
+        # First connect to sites without status host. Collect status
+        # hosts at the same time.
+        status_hosts = {} # dict from site to list of status_hosts
+	for sitename, site in sites.items():
+            status_host = site.get("status_host")
+            if status_host:
+                if type(status_host) != tuple or len(status_host) != 2:
+                    raise MKLivestatusConfigError("Status host of site %s is %r, but must be pair of site and host" %
+                            (sitename, status_host))
+                s, h = status_host
+                status_hosts[s] = status_hosts.get(s, []) + [h]
+            else:
+                connect_to_site(sitename, site)
+
+        # Now learn current states of status hosts and store it in a dictionary
+        # from (local_site, host) => state
+        status_host_states = {}
+        for sitename, hosts in status_hosts.items():
+            # Fetch all the states of status hosts of this local site in one query
+            query = "GET hosts\nColumns: name state last_time_up\n"
+            for host in hosts:
+                query += "Filter: name = %s\n" % host
+                query += "Or: %d\n" % len(hosts)
+                self.set_only_sites([sitename]) # only connect one site
+            try:
+                result = self.query_table(query)
+                # raise MKLivestatusConfigError("TRESulT: %s" % (result,))
+                for host, state, lastup in result:
+                    status_host_states[(sitename, host)] = (state, lastup)
+            except Exception, e:
+                raise MKLivestatusConfigError(e)
+                status_host_states[(sitename, host)] = (str(e), None)
+        self.set_only_sites() # clear site filter
+
+        # Now loop over all sites having a status_host and take that state
+        # of that into consideration
+
+	for sitename, site in sites.items():
+            status_host = site.get("status_host")
+            if status_host:
+                now = time.time()
+                shs, lastup = status_host_states.get(status_host, (None, now)) # None => UNKNOWN
+                deltatime = now - lastup
+                if shs == 0 or shs == None:
+                    connect_to_site(sitename, site)
+                else:
+                    if shs == 1:
+                        ex = "The remote monitoring host is down"
+                    elif shs == 2:
+                        ex = "The remote monitoring host is unreachable"
+                    else:
+                        ex = "Error determining state of remote monitoring host: %s" % shs
+                    self.deadsites[sitename] = {
+                        "site" : site,
+                        "status_host_state" : shs,
+                        "exception" : ex,
+                    }
 
     def add_header(self, header):
 	for sitename, site, connection in self.connections:

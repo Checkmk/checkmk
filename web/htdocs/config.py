@@ -107,7 +107,7 @@ declare_permission("edit_permissions",
 
 declare_permission("see_all",
      "See all Nagios objects",
-     "See all objects regardless of contacts and contact groups. If combined with 'perform commands' then commands may be done on all objects.",
+     "See all objects regardless of contacts and contact groups. If combined<br>with 'perform commands' then commands may be done on all objects.",
      [ "admin", "guest" ])
 
 declare_permission("edit_views",
@@ -125,16 +125,31 @@ declare_permission("force_views",
      "Make own published views override builtin views for all users",
      [ "admin" ])
 
+declare_permission("view_option_columns",
+     "Change view display columns",
+     "Interactively change the number of columns being displayed by a view<br>(does not edit or customize the view)",
+     [ "admin", "user", "guest" ])
+
+declare_permission("view_option_refresh",
+     "Change view display refresh",
+     "Interactively change the automatic browser reload of a view being displayed<br>(does not edit or customize the view)",
+     [ "admin", "user" ])
+
+declare_permission("act",
+     "Perform commands",
+     "Allows users to perform Nagios commands. If now futher permissions are granted,<br>actions can only be done one objects one is a contact for",
+     [ "admin", "user" ])
+
+
 declare_permission("see_sidebar",
      "Use Check_MK sidebar",
      "Without this permission the Check_MK sidebar will be invisible",
      [ "admin", "user", "guest" ])
 
-declare_permission("act",
-     "Perform commands",
-     "Allows users to perform Nagios commands. If now futher permissions are granted, actions can only be done one objects one is a contact for",
+declare_permission("configure_sidebar",
+     "Configure sidebar",
+     "This allows the user to add, move and remove sidebar snapins.",
      [ "admin", "user" ])
-
 
 
 
@@ -253,6 +268,8 @@ def allsites():
 
 def site(name):
     s = sites.get(name, {})
+    # Now make sure that all important keys are available.
+    # Add missing entries by supplying default values.
     if "alias" not in s:
         s["alias"] = name
     if "socket" not in s:
@@ -271,7 +288,11 @@ def site_is_local(name):
     return not sock or sock.startswith("unix:")
 
 def is_multisite():
-    return len(sites) > 1
+    if len(sites) > 1:
+        return True
+    # Also use Multisite mode if the one and only site is not local
+    sitename = sites.keys()[0]
+    return not site_is_local(sitename) 
 
 def read_site_config():
     path = user_confdir + "/siteconfig.mk"
@@ -288,18 +309,12 @@ def read_site_config():
 #   |____/|_|\__,_|\___|_.__/ \__,_|_|   
 #                                        
 
-
 sidebar = \
 [('tactical_overview', 'open'),
- ('sitestatus', 'open'),
  ('search', 'open'),
  ('views', 'open'),
- ('hostgroups', 'closed'),
- ('servicegroups', 'open'),
- ('performance', 'open'),
- ('master_control', 'open'),
- ('bookmarks', 'closed'),
- ('admin', 'closed') ]
+ ('bookmarks', 'open'),
+ ('master_control', 'closed')]
 
 #    _     _           _ _       
 #   | |   (_)_ __ ___ (_) |_ ___ 
@@ -331,5 +346,43 @@ declare_permission("ignore_hard_limit",
 sound_url = "sounds/"
 sounds = []
 
+#   __     ___                             _   _                 
+#   \ \   / (_) _____      __   ___  _ __ | |_(_) ___  _ __  ___ 
+#    \ \ / /| |/ _ \ \ /\ / /  / _ \| '_ \| __| |/ _ \| '_ \/ __|
+#     \ V / | |  __/\ V  V /  | (_) | |_) | |_| | (_) | | | \__ \
+#      \_/  |_|\___| \_/\_/    \___/| .__/ \__|_|\___/|_| |_|___/
+#                                   |_|                          
+
+view_option_refreshes = [ 30, 60, 90, 0 ]
+view_option_columns   = [ 1, 2, 3, 4, 5, 6, 8 ]
+
+
 # MISC
 doculink_urlformat = "http://mathias-kettner.de/checkmk_%s.html";
+
+# Helper functions
+def load_user_file(name, deflt):
+    path = user_confdir + "/" + name + ".mk"
+    try:
+        return eval(file(path).read())
+    except:
+        return deflt
+
+def save_user_file(name, content):
+    path = user_confdir + "/" + name + ".mk"
+    try:
+        file(path, "w").write(pprint.pformat(content) + "\n")
+    except Exception, e:
+        raise MKConfigError("Cannot save %s options for user <b>%s</b> into <b>%s</b>: %s" % \
+                (name, user, path, e))
+
+
+#   ____          _                    _     _       _        
+#  / ___|   _ ___| |_ ___  _ __ ___   | |   (_)_ __ | | _____ 
+# | |  | | | / __| __/ _ \| '_ ` _ \  | |   | | '_ \| |/ / __|
+# | |__| |_| \__ \ || (_) | | | | | | | |___| | | | |   <\__ \
+#  \____\__,_|___/\__\___/|_| |_| |_| |_____|_|_| |_|_|\_\___/
+#                                                             
+
+custom_links = {}
+

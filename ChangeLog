@@ -1,3 +1,55 @@
+1.1.6b2:
+    Core, Setup, etc.:
+    * Packager: fix unpackaged files (sounds, etc)
+
+    Multisite:
+    * Complete new design (by Tobias Roeckl, Kopf & Herz)
+    * New filters for last service check and last service state change
+    * New views "Recently changed services" and "Unchecked services"
+    * New page for adding sidebar snapins
+    * Drag & Drop for sidebar snapins (thanks to Lars)
+    * Grab & Move for sidebar scrolling (thanks to Lars)
+    * Filter out summary hosts in most views.
+    * Set browser refresh to 30 secs for most views
+    * View host status: added a lot of missing information
+    * View service status: also added information here
+    * Make sure, enough columns can be selected in view editor
+    * Allow user to change num columns and refresh directly in view
+    * Get back to where you came after editing views
+    * New sidebar snapin "Host Matrix"
+    * New feature "status_host" for remote sites: Determine connection
+      state to remote side by considering a certain host state. This
+      avoids livestatus time outs to dead sites.
+    * Sidebar snapin site status: fix reload problem
+    * New Perf-O-Meters displaying service performance data
+    * New snapin "Custom Links" where you easily configure your own
+      links via multisite.mk (see example in new default config file)
+    * Fixed problem when using only one site and that is not local
+
+    Livestatus:
+    * new statistics columns: log_messages and log_messages_rate
+    * make statistics average algorithm more sluggish
+
+1.1.5i3:
+     Core, Setup, etc.:
+     * New Check_MK packager (check_mk -P)
+
+1.1.5i2:
+     Core, Setup, etc.:
+     * install_nagios.sh: add missing package php5-iconv for SLES11
+
+     Checks & Agents:
+     * if64: new SNMP check for network interfaces. Like if, but uses 64 bit
+       counters of modern switches. You might need to configure bulkwalk_hosts.
+     * Linux agent: option -d enabled debug output
+     * Linux agent: fix ipmi-sensors cache corruption detection
+     * New check for temperature on Cisco devices (cisco_3640_temp)
+     * recompiled waitmax with dietlibc (fixed incompatibility issues
+       on older systems)
+
+     Multisite:
+     * Filters for groups are negateable.
+
 1.1.5i1:
      Checks & Agents:
      * uptime: new check for system uptime (Linux)
@@ -16,7 +68,6 @@
      * Sidebar search: Added host site to be able to see the context links on
        the result page
      * Sidebar search: Hitting enter now closes the hint dropdown in all cases
-
 
 1.1.5i0:
       Core, Setup, etc.:

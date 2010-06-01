@@ -127,7 +127,6 @@ rm -rf $RPM_BUILD_ROOT
 %dir /usr/share/check_mk
 /usr/share/check_mk/agents
 /usr/share/check_mk/checks
-/usr/share/check_mk/htdocs
 /usr/share/check_mk/modules
 %config /usr/share/check_mk/pnp-templates/*
 %config /etc/pnp4nagios/*
@@ -139,6 +138,8 @@ rm -rf $RPM_BUILD_ROOT
 %dir %attr(-,nagios,root) /var/lib/check_mk/rrd
 %dir /var/lib/check_mk/autochecks
 %dir /var/lib/check_mk/precompiled
+%dir /var/lib/check_mk/packages
+/var/lib/check_mk/packages/check_mk
 
 # Spaeter Subpaket draus machen
 /usr/bin/unixcat

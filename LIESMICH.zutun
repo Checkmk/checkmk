@@ -1,30 +1,40 @@
 --------------------------------------------------------------------------------
-NOCH INS RELEASE 1.1.5
+Noch fuer den Workshop
 --------------------------------------------------------------------------------
-Bei Check_MK -U nach "Precompiling Hostcheck..." ein
-flush auf stdout machen. Evtl. einen Punkt pro Hostcheck
-ausgeben.
+Lars: Sidebar scrollen: Wenn man ein Snapin packt, mit der Maus scrollt und
+dabei die Maus über den Rand des HTML-Bereiches des Browsers rauszieht und
+dort loslässt, dann bekommt die Sidebar das nicht mit. Wenn man mit der Maus
+wieder reinfährt, ist man - trotz losgelassener Maus - noch im Scrollmodus.
+Kann man den aktuellen Status der Maus irgendwie abfragen - so dass man das
+verlorengegangene Event kompensieren kann? Oder kommt das Event irgendwo
+anders an, wo man es noch abgreifen kann?
 
-Bei Inventur check_mk -I ntp werden auch die SNMP-Geraete abgefragt?
-Werden die nur bei -I tcp ausgeklammert? Sollte nicht sein, sonst
-bekommen wir viele Timeouts.
+Lars: Quicksearch: Wenn man nur ein paar Buchstaben tippt und dann enter
+klickt, könnte man einfach den ersten Host auswählen, der matcht. Momentan
+kommt man zu einer leeren Ansicht, weil es den Host ja nicht gibt, den
+man eingetippt hat.
 
 Quicksearch: Das Dropdown bleibt recht oft auf, obwohl man schon einen
 Host ausgewählt hat.
 
-Quicksearch: geht gerade nicht.
+--------------------------------------------------------------------------------
+NOCH INS RELEASE 1.1.5
+--------------------------------------------------------------------------------
+Aenderung an default_user_role in multisite.mk erfordert
+Apache-Neustart.
 
-Views: Überall wo nicht sinnvoll die Summary hosts entfernen (z.B.
-bei Problems, All hosts, etc.)
+View editor: Wenn man keine Display columns ausgewaehlt
+hat, dann sollte eine Fehlermeldung kommen.
 
-Alerts/Notifications/Downtimealerts für Service und für Host und
-für Services of Host (letzteres wahrscheinlich dann gemeinsam).
-==> Zwei Datenquellen: servicealerts und hostalerts
-=> Dazu Tabelle log und in datasource builtin-Headers einbauen,
-nämlich mit Logclasses. Dann views bauen und einen Filter auf
-einen Zeitraum (Heute, diese Woche, letzte 30 Tage, usw.).
-Evtl. noch einen Filter mit Datumseingabe.
+--------------------------------------------------------------------------------
+INS RELEASE 1.2
+--------------------------------------------------------------------------------
+Bei Inventur check_mk -I ntp werden auch die SNMP-Geraete abgefragt?
+Werden die nur bei -I tcp ausgeklammert? Sollte nicht sein, sonst
+bekommen wir viele Timeouts.
 
+check_mk -X erzwingen. Das -R soll nur noch klappen, wenn kein Configfehler
+auftritt.
 
 --------------------------------------------------------------------------------
 BUGS
@@ -35,23 +45,17 @@ Kann man das mit Javascript hinbekommen?
 
 Eingabe von Downtimes: Auch hier Umlaute abfangen wie bei Comments
 
+rrdcached-Startskript aus Skript: restart kill das Skript selbst.
+Besser mit PID-Datei arbeiten. Ausserdem Optionen -s und -m verwenden.
+Außerdem sollte der Cachedaemon auch verwendet werden.
+
+
 --------------------------------------------------------------------------------
 UNSCHOENHEITEN
 --------------------------------------------------------------------------------
-Wenn man eine View editiert ueber [Edit this view] und auf speichern
-geht, dann wäre es sehr toll, wenn man direkt zu dieser View zurückkehrt.
-Dazu müsste der Knopf die origurl in einer Variable mitgeben, die dann
-beim Save berücksichtigt wird. Frage ist, ob man das mit einer Weiterleitung
-machen muss oder ob das so geht, dass das [Save] in view_view() abgehandelt
-wird.
-
-Möglicherweise sollte man das automatische Refresh zum Default machen
-oder zumindest in die Builtin-Views einbauen. Meistens erwartet man
-einfach, dass sich die Anzeige aktualisiert.
-
-Multisite tactical overview: Hier muss man Summary hosts ausschliessen.
-Soll man die Filter doch irgendwie konfigurierbar machen? Oder doch
-einfach an hostproblems und serviceproblems haengen??
+View-Tabellen von Multisite: bei Zeilen mit kritischem Status, sollten
+zwei leicht unterschiedliche Rotoene verwendet werden. Aktuell ist einer
+davon orange...
 
 Logwatch.py: Wenn die state-Datei korrupt ist, diese neu anlegen und eine
 Fakemeldung nach oben schicken, die critical ist.
@@ -68,12 +72,18 @@ snmp_communities: dictionary nicht mehr verwenden, aus Doku raus, Defaultwert
 leere Liste, aus Code raus, Hinweis im ChangeLog. Evtl einen Test mit
 Abbruch, wenn immer noch type ist dict.
 
-Multisite: Bei Änderungen an der Konfigdatei (debug) muss man komischerweise
-Apache neu starten....
+bulkwalk_hosts: Hier ist der Default None und nicht []. Problem dabei
+ist, dass dann ein += nicht funktioniert. Kann man nicht non_bulkwalk_hosts
+ganz rausschmeissen und bulkwalk_hosts auf [] setzen? Ausserdem gibt
+es ja fuer binaere Hostlisten das NEGATE (=> Doku). In 1.2 einbauen.
 
 --------------------------------------------------------------------------------
 IDEEN & VERBESSERUNGEN
 --------------------------------------------------------------------------------
+Multisite: Kann man - wenn man Aggregation verwendet - beim normalen
+Host einen Links auf den Summary host machen und umgekehrt? Evtl.
+hartkodiert in show_view(), falls die Variable host gesetzt ist?
+
 Multisite: icons: das Erkennen der modified_attributes
 funktioniert nur halb: Wenn man den Ausgangswert wiederherstellt,
 bleibt das Attribut trotzdem modified...
@@ -107,7 +117,7 @@ Doku Windows:
 
 Die Option -d verwendet --cache nicht.
 
-Searcher für last_checked
+Filter für last_checked und last_state_change
 
 Anstelle der Pipe direkt checkresults-Dateien schreiben
 
@@ -140,5 +150,14 @@ Eigenschaften wie Gruppen, etc werden eicht berücksichtigt. Gleiches gilt
 für Servicegruppen. Man sollte daher die Funktion extra_service_conf_of()
 so erweitern, dass *alles* Nagios-Attribute agbefrühstückt werden.
 
-Check ps (Linux) mit Uberwachung von MEM (Resident) und CPU.
+check_mk --restore: Löscht er cache und counters? Er sollte nur die
+Inhalte löschen. Es könnte nämlich sein, dass es sich nicht um Verzeichnisse,
+sondern um Symlinks handelt.
 
+check_mk --uninstall backup.tar.gz: Deinstalliert alle Dateien, die
+setup installiert hat. Dazu verwendet man einfach die Pfade, die setup.sh
+gespeichert hat (reicht das?). Man wird dabei gezwungen, vorher ein
+Backup durchzuführen.
+
+Livestatus-Limit-Header könnte auch einen Bereich erlauben, z.B.:
+Limit: 1000 2000 (holt die zweiten Tausend Eintraege...)

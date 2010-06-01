@@ -1,0 +1,61 @@
+# Possible values for state:
+#  Valid values are:
+#
+#  normal(1):         the environment is good, such as low
+#                     temperature.
+#
+#  warning(2):        the environment is bad, such as temperature
+#                     above normal operation range but not too
+#                     high.
+#
+#  critical(3):       the environment is very bad, such as
+#                     temperature much higher than normal
+#                     operation limit.
+#
+#  shutdown(4):       the environment is the worst, the system
+#                     should be shutdown immediately.
+#
+#  notPresent(5):     the environmental monitor is not present,
+#                     such as temperature sensors do not exist.
+#
+#  notFunctioning(6): the environmental monitor does not 
+#                     function properly, such as a temperature
+#                     sensor generates a abnormal data like
+#                     1000 C.
+ 
+
+def inventory_3640_temp(checktyp, info):
+    # inventory = []
+    # for name, state in info:
+    #     inventory.append( (name, None) )
+    # return inventory
+
+    return [ (name, None)  for (name, state) in info ]
+
+def check_3640_temp(item, params, info):
+    for name, state in info:
+        if name == item:
+	    if state == '1':
+		return (0, "OK - status is OK")
+            elif state == '2':
+		return (1, "WARN - status is WARNING")
+            elif state == '3':
+		return (2, "CRIT - status is CRITICAL")
+	    elif state == '4':
+		return (2, "CRIT - status is SHUTDOWN")
+	    elif state == '5':
+		return (3, "UNKNOWN - sensor not present")
+	    elif state == '6':
+		return (3, "UNKNOWN - sensor value out of range")
+	    else:
+		return (3, "UNKNOWN - invalid state '%s'" % state)
+
+    return (3, "UNKNOWN - sensor not found in SNMP output")
+
+check_info["cisco_3640_temp"] = ( check_3640_temp, "Temperature %s", 0, inventory_3640_temp )
+
+snmp_info["cisco_3640_temp"] = \
+   ( ".1.3.6.1.4.1.9.9.13.1.3.1", [ "2", "6" ] )
+
+snmp_scan_functions["cisco_3640_temp"] = \
+    lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.9.1.110"

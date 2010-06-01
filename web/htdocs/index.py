@@ -48,16 +48,17 @@ def connect_to_livestatus(html):
     html.site_status = {}
     # site_status keeps a dictionary for each site with the following
     # keys:
-    # "state"              --> "online", "offline", "disabled"
-    # "exception"          --> An error exception in case of "offline"
+    # "state"              --> "online", "disabled", "down", "unreach" or "dead"
+    # "exception"          --> An error exception in case of down, unreach or dead
+    # "status_host_state"  --> host state of status host (0, 1, 2 or None)
     # "livestatus_version" --> Version of sites livestatus if "online"
     # "program_version"    --> Version of Nagios if "online"
 
     # If there is only one site (non-multisite), than
     # user cannot enable/disable. 
     if config.is_multisite():
-	# do not contact those sites the user has disabled
-	# also honor HTML-variables for switching off sites
+	# do not contact those sites the user has disabled.
+	# Also honor HTML-variables for switching off sites
 	# right now. This is generally done by the variable
 	# _site_switch=sitename1:on,sitename2:off,...
 	enabled_sites = {}
@@ -73,15 +74,15 @@ def connect_to_livestatus(html):
 		config.user_siteconf[sitename] = d
 	    config.save_site_config()
 
-	# Make a list of all non-disables sites
-	for sitename, site in config.allsites().items():
+	# Make a list of all non-disabled sites. 	
+        for sitename, site in config.allsites().items():
 	    siteconf = config.user_siteconf.get(sitename, {})
 	    if siteconf.get("disabled", False):
 		html.site_status[sitename] = { "state" : "disabled", "site" : site } 
 	    else:
-		html.site_status[sitename] = { "state" : "offline", "site" : site }
+		html.site_status[sitename] = { "state" : "dead", "site" : site }
 		enabled_sites[sitename] = site
-		
+
 	# Now connect to enabled sites with keepalive-connection
 	html.live = livestatus.MultiSiteConnection(enabled_sites)
 
@@ -94,10 +95,16 @@ def connect_to_livestatus(html):
 	# Get exceptions in case of dead sites
 	for sitename, deadinfo in html.live.dead_sites().items():
 	    html.site_status[sitename]["exception"] = deadinfo["exception"]
+            shs = deadinfo.get("status_host_state")
+            html.site_status[sitename]["status_host_state"] = shs
+            if shs == 1:
+                html.site_status[sitename]["state"] = "down"
+            elif shs == 2:
+                html.site_status[sitename]["state"] = "unreach"
 
     else:
 	html.live = livestatus.SingleSiteConnection("unix:" + defaults.livestatus_unix_socket)
-	html.site_status = { '': { "state" : "offline", "site" : config.site('') } }
+	html.site_status = { '': { "state" : "dead", "site" : config.site('') } }
         v1, v2 = html.live.query_row("GET status\nColumns: livestatus_version program_version")
 	html.site_status[''].update({ "state" : "online", "livestatus_version": v1, "program_version" : v2 })
 
@@ -153,25 +160,26 @@ def handler(req):
         # General access allowed. Now connect to livestatus
 	connect_to_livestatus(html)
 
-	pagehandlers = { "index"               : page_index,
-			 "main"                : page_main,
-			 "filter"              : page_main, # for users of multiadmin
-			 "edit_views"          : views.page_edit_views,
-			 "edit_view"           : views.page_edit_view,
-			 "export_views"        : views.ajax_export,
-			 "view"                : views.page_view,
-			 "logwatch"            : page_logwatch.page,
-			 "side"                : sidebar.page_side,    # replacement for side.php
-			 "sidebar_config"      : sidebar.page_configure,
-			 "switch_site"         : ajax_switch_site,
-			 "sidebar_snapin"      : sidebar.ajax_snapin,
-			 "sidebar_openclose"   : sidebar.ajax_openclose,
-			 "switch_master_state" : sidebar.ajax_switch_masterstate,
-			 "add_bookmark"        : sidebar.ajax_add_bookmark,
-			 "del_bookmark"        : sidebar.ajax_del_bookmark,
-			 "edit_bookmark"       : sidebar.page_edit_bookmark,
-			 "view_permissions"    : permissions.page_view_permissions,
-			 "edit_permissions"    : permissions.page_edit_permissions,
+	pagehandlers = { "index"                 : page_index,
+			 "main"                  : page_main,
+			 "filter"                : page_main, # for users of multiadmin
+			 "edit_views"            : views.page_edit_views,
+			 "edit_view"             : views.page_edit_view,
+			 "export_views"          : views.ajax_export,
+			 "view"                  : views.page_view,
+			 "logwatch"              : page_logwatch.page,
+			 "side"                  : sidebar.page_side,    # replacement for side.php
+			 "switch_site"           : ajax_switch_site,
+			 "sidebar_add_snapin"    : sidebar.page_add_snapin,
+			 "sidebar_snapin"        : sidebar.ajax_snapin,
+			 "sidebar_openclose"     : sidebar.ajax_openclose,
+			 "sidebar_move_snapin"   : sidebar.move_snapin,
+			 "switch_master_state"   : sidebar.ajax_switch_masterstate,
+			 "add_bookmark"          : sidebar.ajax_add_bookmark,
+			 "del_bookmark"          : sidebar.ajax_del_bookmark,
+			 "edit_bookmark"         : sidebar.page_edit_bookmark,
+			 "view_permissions"      : permissions.page_view_permissions,
+			 "edit_permissions"      : permissions.page_edit_permissions,
 	}
 
 	handler = pagehandlers.get(req.myfile, page_not_found)
@@ -228,12 +236,12 @@ def page_index(html):
  <title>Check_MK Multisite</title>
  <link rel="shortcut icon" href="images/favicon.ico" type="image/ico">
 </head>
-<frameset cols="200,*">
- <frame src="side.py" name="side" frameborder="0">
- <frame src="main.py" name="main" frameborder="0">
-</frameset>
+<frameset cols="280,*" frameborder="0" framespacing="0" border="0">
+    <frame src="side.py" name="side" noresize>
+    <frame src="main.py" name="main" noresize>
 </html>
 """) 
+
 
 def page_main(html):
     html.header("Check_MK Multisite")
@@ -270,4 +278,5 @@ No network traffic is generated due to the monitoring.</p>
 def page_not_found(html):
     html.header("Page not found")
     html.show_error("This page was not found. Sorry.")
+    H
     html.footer()

@@ -88,11 +88,13 @@ function mkSearchKeyUp(e, oField) {
     }
 }
 
-function find_host_url(namepart)
+function find_host_url(oField)
 {   
+    namepart = oField.value;
     // first try to find if hostpart is a complete hostname
     // found in our list and is unique (found in only one site)
     var url = null;
+    var selected_host = null;
     for (var i in aSearchHosts) {
         var hostSite  = aSearchHosts[i][0];
         var hostName  = aSearchHosts[i][1];
@@ -102,9 +104,13 @@ function find_host_url(namepart)
                 break; // abort
             }
             url = 'view.py?view_name=host&host=' + hostName + '&site=' + hostSite;
+            selected_host = hostName;
         }
     }
-    if (url != null) return url;
+    if (url != null) {
+        oField.value = selected_host;
+        return url;
+    }
 
     // not found, not unique or only prefix -> display a view that shows more hosts
     return 'view.py?view_name=hosts&host=' + namepart;
@@ -125,7 +131,7 @@ function mkSearchKeyDown(e, oField) {
                     // When nothing selected, navigate with the current contents of the field
                     // TODO: Here is missing site=.... But we can add a site= only, if the entered
                     // hostname is unique and in our list.
-                    top.frames[mkSearchTargetFrame].location.href = find_host_url(oField.value);
+                    top.frames[mkSearchTargetFrame].location.href = find_host_url(oField);
                     mkSearchClose();
                 }
                 

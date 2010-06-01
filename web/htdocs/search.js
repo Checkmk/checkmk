@@ -74,20 +74,8 @@ function mkSearchKeyUp(e, oField) {
             return false;
         break;
 
-        // Backspace, then cancelBubble and mkSearchClose, increases useability
-        case 8:
-           if (oField.value == "") {
-               e.returnValue = false;
-               e.cancelBubble = true;
-               mkSearchClose();
-           }
-           else {
-               mkSearch(e, oField);
-           }
-        break;
-
-        // Del, then cancelBubble and mkSearchClose, increases useability
-        case 46:
+        // Other keys
+        default:
             if (oField.value == "") {
                 e.returnValue = false;
                 e.cancelBubble = true;
@@ -96,11 +84,6 @@ function mkSearchKeyUp(e, oField) {
             else {
                 mkSearch(e, oField);
             }
-        break;
-
-        // Other keys
-        default:
-            mkSearch(e, oField);
         break;
     }
 }
@@ -113,12 +96,12 @@ function find_host_url(namepart)
     for (var i in aSearchHosts) {
         var hostSite  = aSearchHosts[i][0];
         var hostName  = aSearchHosts[i][1];
-        if (namepart == hostName) {
+        if (hostName.indexOf(namepart) > -1) {
             if (url != null) { // found second match -> not unique
                 url = null;
                 break; // abort
             }
-            url = 'view.py?view_name=host&host=' + namepart + '&site=' + hostSite;
+            url = 'view.py?view_name=host&host=' + hostName + '&site=' + hostSite;
         }
     }
     if (url != null) return url;
@@ -136,6 +119,7 @@ function mkSearchKeyDown(e, oField) {
             case 13:
                 if (iCurrent != null) {
                     mkSearchNavigate();
+                    oField.value = aSearchResults[iCurrent].name;
                     mkSearchClose();
                 } else {
                     // When nothing selected, navigate with the current contents of the field
@@ -274,13 +258,12 @@ function mkSearch(e, oField) {
     var oMatch = new RegExp(val, 'gi');
 
     var content = '';
-    var hostName, hostAlias, hostSite;
+    var hostName, hostSite;
     for(var i in aSearchHosts){
         hostSite  = aSearchHosts[i][0];
         hostName  = aSearchHosts[i][1];
-        hostAlias = aSearchHosts[i][2];
 
-        if(hostName.match(oMatch) || hostAlias.match(oMatch)) {
+        if(hostName.match(oMatch)) {
             var oResult = {
                 'id': 'result_'+hostName,
                 'name': hostName,
@@ -290,7 +273,7 @@ function mkSearch(e, oField) {
             
             // Add id to search result array
             aSearchResults.push(oResult);
-            content += '<a id="'+oResult.id+'" href="'+oResult.url+'" onclick="mkSearchClose()" target="'+mkSearchTargetFrame+'">'+hostAlias+"</a>\n";
+            content += '<a id="'+oResult.id+'" href="'+oResult.url+'" onclick="mkSearchClose()" target="'+mkSearchTargetFrame+'">'+ hostName +"</a>\n";
         }
     }
 

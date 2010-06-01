@@ -43,10 +43,10 @@ def render_searchform():
     html.live.set_prepend_site(True)
     try:
         import json
-        data = html.live.query("GET hosts\nColumns: name alias\n")
+        data = html.live.query("GET hosts\nColumns: name\n")
         html.write("aSearchHosts = %s;\n" % json.dumps(data))
     except:
-        data = html.live.query("GET hosts\nColumns: name alias\n", "OutputFormat: json\n")
+        data = html.live.query("GET hosts\nColumns: name\n", "OutputFormat: json\n")
         html.write("aSearchHosts = %s;\n" % data)
     html.live.set_prepend_site(False)
 

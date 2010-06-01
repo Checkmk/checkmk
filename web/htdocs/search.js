@@ -67,15 +67,35 @@ function mkSearchKeyUp(e, oField) {
             e.returnValue = false;
             e.cancelBubble = true;
         break;
-            mkSearchClose();
-            e.returnValue = false;
-            e.cancelBubble = true;
-        break;
         
         // Up/Down
         case 38:
         case 40:
             return false;
+        break;
+
+        // Backspace, then cancelBubble and mkSearchClose, increases useability
+        case 8:
+           if (oField.value == "") {
+               e.returnValue = false;
+               e.cancelBubble = true;
+               mkSearchClose();
+           }
+           else {
+               mkSearch(e, oField);
+           }
+        break;
+
+        // Del, then cancelBubble and mkSearchClose, increases useability
+        case 46:
+            if (oField.value == "") {
+                e.returnValue = false;
+                e.cancelBubble = true;
+                mkSearchClose();
+            } 
+            else {
+                mkSearch(e, oField);
+            }
         break;
 
         // Other keys

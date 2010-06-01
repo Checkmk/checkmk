@@ -201,7 +201,7 @@ service_dependency_template        = 'check_mk'
 default_host_group                 = 'check_mk'
 generate_hostconf                  = True
 generate_dummy_commands            = True
-dummy_check_commandline            = 'echo "ERROR - you did an active check on this serivce - please disable active checks" && exit 1'
+dummy_check_commandline            = 'echo "ERROR - you did an active check on this service - please disable active checks" && exit 1'
 nagios_illegal_chars               = '`~!$%^&*|\'"<>?,()='
 
 # Settings for web pages (THIS IS DEPRECATED AND POINTLESS AND WILL BE REMOVED ANY DECADE NOW)

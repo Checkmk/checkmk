@@ -92,7 +92,11 @@ def verbose(t):
 # '/'. This allows us to find our directory by taking everying up to
 # the first '/'
 
-if __name__ == "__main__":
+# Allow to specify defaults file on command line (needed for OMD)
+if sys.argv[1] == '--defaults':
+    defaults_path = sys.argv[2]
+    del sys.argv[1:3]
+elif __name__ == "__main__":
     defaults_path = os.path.dirname(sys.argv[0]) + "/defaults"
     
 if opt_verbose:

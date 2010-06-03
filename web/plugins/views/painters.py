@@ -413,12 +413,10 @@ multisite_painters["svc_group_memberlist"] = {
 def paint_pnpgraph(sitename, host, service = "_HOST_"):
     site = html.site_status[sitename]["site"]
     pnpurl = site["pnp_url"]
-    end = int(time.time())
-    start = end - (24 * 60 * 60)
     htmlcode = ""
     for source in [ 1, 2, 3, 4, 5, 6, 7 ]:
-        urlvars = 'start=%d&end=%d&host=%s&srv=%s&source=%d' % (start, end, htmllib.urlencode(host), htmllib.urlencode(service), source)
-        htmlcode += '<div class=pnpgraph><a href="%s/graph?%s"><img src="%s/image?%s&view=0"></a></div>' % \
+        urlvars = '&host=%s&srv=%s&source=%d' % ( htmllib.urlencode(host), htmllib.urlencode(service), source)
+        htmlcode += '<div class=pnpgraph><a href="%s/index.php/graph?%s"><img src="%s/image?%s&view=0"></a></div>' % \
             (pnpurl, urlvars, pnpurl, urlvars)
     return "pnpgraph", htmlcode
         
@@ -937,7 +935,7 @@ def pnp_url(row):
     svc = row["service_description"]
     svc = svc.replace(":", "_").replace("\\", "_")
     site = html.site_status[sitename]["site"]
-    url = site["pnp_url"] + ("graph?host=%s&srv=%s" % (htmllib.urlencode(host), htmllib.urlencode(svc)))
+    url = site["pnp_url"] + ("index.php/graph?host=%s&srv=%s" % (htmllib.urlencode(host), htmllib.urlencode(svc)))
     return url
 
 

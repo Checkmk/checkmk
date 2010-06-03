@@ -885,6 +885,7 @@ td.icon img {
 }
 
 img.icon {
+   width: 20px;
    border-style: none;
 }
 

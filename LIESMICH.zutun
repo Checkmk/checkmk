@@ -39,6 +39,12 @@ auftritt.
 --------------------------------------------------------------------------------
 BUGS
 --------------------------------------------------------------------------------
+Livestatus: das Nagios-Debuglog ist nicht reentrant. Livestatus muss ein eigenes
+Logfile schreiben. Wir machen das ohne Rotation. Man muss einfach selbst
+aufpassen, dass es nicht zu groß wird. Default ist eh aus. Ins Nagios
+geloggt wird nur das Starten und Beenden (was ja im Hauptthread läuft).
+
+
 Wenn man gerade die Kommandobox auf hat (oder den Filter?) dann sollte
 kein Refresh stattfinden. Sonst wird man mitten im Tippen abgewürgt.
 Kann man das mit Javascript hinbekommen?

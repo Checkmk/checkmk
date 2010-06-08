@@ -171,7 +171,6 @@ function snapinDrop(event, targetpos) {
 }
 
 function snapinStopDrag(event) {
-  // IE fix
   if (!event)
     event = window.event;
   
@@ -317,25 +316,27 @@ if (window.addEventListener) {
   window.addEventListener("mouseup",   stopDragScroll,  false);
   window.addEventListener("mousemove", dragScroll,      false);
 } else {
-  document.onmousedown = startDragScroll;
-  document.onmouseup   = stopDragScroll;
-  document.onmousemove = dragScroll;
-  //document.documentElement.onmousedown = startDragScroll;
-  //document.documentElement.onmouseup   = stopDragScroll;
-  //document.documentElement.onmousemove = dragScroll;
+  document.documentElement.onmousedown = startDragScroll;
+  document.documentElement.onmouseup   = stopDragScroll;
+  document.documentElement.onmousemove = dragScroll;
 }
 
 function startDragScroll(event) {
   if (!event)
     event = window.event;
+
+  var target = getTarget(event);
+  var button = getButton(event);
   
   // Evtl. auch nur mit Shift Taste: (e.button == 0 && (e["shiftKey"])
-  if (dragging === false && event.button == 0
-      && event.target.tagName != 'A'
-      && event.target.tagName != 'INPUT'
-      && !(event.target.tagName == 'DIV' && event.target.className == 'heading')) {
-    event.preventDefault();
-    event.stopPropagation();
+  if (dragging === false && button == 'LEFT'
+      && target.tagName != 'A'
+      && target.tagName != 'INPUT'
+      && !(target.tagName == 'DIV' && target.className == 'heading')) {
+    if (event.preventDefault)
+      event.preventDefault();
+    if (event.stopPropagation)
+      event.stopPropagation();
     event.returnValue = false;
     
     dragging = event;
@@ -410,15 +411,16 @@ function scrollWheel(event){
 
   if (event.preventDefault)
     event.preventDefault();
-
-  event.returnValue = false;
+  else
+    event.returnValue = false;
+  return false;
 }
 
 // add event listener cross browser compatible
 if (window.addEventListener)
   window.addEventListener('DOMMouseScroll', scrollWheel, false);
 else
-  window.onmousewheel = document.onmousewheel = scrollWheel;
+  document.documentElement.onmousewheel = document.onmousewheel = scrollWheel;
 
 
 //

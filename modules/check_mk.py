@@ -729,7 +729,8 @@ def cluster_of(hostname):
 def host_of_clustered_service(hostname, servicedesc):
     # 1. New style: explicitlely assigned services
     for cluster, conf in clustered_services_of.items():
-        if in_boolean_serviceconf_list(hostname, servicedesc, conf):
+        if hostname in nodes_of(cluster) and \
+            in_boolean_serviceconf_list(hostname, servicedesc, conf):
             return cluster
 
     # 1. Old style: clustered_services assumes that each host belong to

@@ -32,7 +32,8 @@ BINDIR         	= $(PREFIX)/bin
 CONFDIR	       	= /etc/$(NAME)
 LIBDIR	       	= $(PREFIX)/lib/$(NAME)
 DISTNAME       	= $(NAME)-$(VERSION)
-TAROPTS        	= --owner=root --group=root --exclude=.svn --exclude=*~ 
+TAROPTS        	= --owner=root --group=root --exclude=.svn --exclude=*~ \
+		  --exclude=.gitignore
 DOWNLOADURL     = http://mathias-kettner.de/download/$(DISTNAME).tar.gz
 LIVESTATUS_SOURCES = configure aclocal.m4 config.guess config.h.in config.sub \
 		     configure.ac ltmain.sh Makefile.am Makefile.in missing \
@@ -93,7 +94,7 @@ dist: mk-livestatus
 
 mk-livestatus:
 	if [ ! -e livestatus/configure ] ; then \
-		cd livestatus && aclocal && autoheader && automake && autoconf ; \
+		cd livestatus && aclocal && autoheader && automake -a && autoconf ; \
 	fi
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)

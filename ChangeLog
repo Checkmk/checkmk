@@ -1,3 +1,7 @@
+1.1.6b4:
+    Multisite:
+    * Repair Perf-O-Meters on webkit based browsers (e.g. Chrome, Safari)
+
 1.1.6b3:
     Multisite:
     * Quicksearch: hide complete host list if field is emptied via Backspace or Del.

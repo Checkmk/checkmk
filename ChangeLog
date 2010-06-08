@@ -5,6 +5,7 @@
     Core, Setup, etc.:
     * Included three patched from Jeff Dairiki dealing with compile flags
       and .gitignore removed from tarballs
+    * Packager: handle broken files in package dir
       
     Checks & Agents:
     * Solaris agent: fixed rare df problems on Solaris 10, fix problem with test -f

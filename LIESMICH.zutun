@@ -197,3 +197,7 @@ Backup durchzuführen.
 
 Livestatus-Limit-Header könnte auch einen Bereich erlauben, z.B.:
 Limit: 1000 2000 (holt die zweiten Tausend Eintraege...)
+
+Windows: Der Agent sollte die Logmeldungen nach UTF-8 konvertieren. 
+Nur wie?
+

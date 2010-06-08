@@ -381,7 +381,8 @@ def packaged_files_in_dir(part):
     result = []
     for pacname in all_packages():
         package = read_package(pacname)
-        result += package["files"].get(part, [])
+        if package:
+            result += package["files"].get(part, [])
     return result
    
 def read_package(pacname):
@@ -391,6 +392,9 @@ def read_package(pacname):
         package["num_files"] = num_files
         return package
     except IOError:
+        return None
+    except Exception:
+        sys.stderr.write("Ignoring invalid package file '%s%s'. Please remove it from %s!\n" % (pac_dir, pacname, pac_dir))
         return None
 
 def write_package(pacname, package):

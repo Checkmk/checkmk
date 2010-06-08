@@ -2,6 +2,10 @@
     Multisite:
     * Repair Perf-O-Meters on webkit based browsers (e.g. Chrome, Safari)
 
+    Core, Setup, etc.:
+    * Included three patched from Jeff Dairiki dealing with compile flags
+      and .gitignore removed from tarballs
+
 1.1.6b3:
     Multisite:
     * Quicksearch: hide complete host list if field is emptied via Backspace or Del.

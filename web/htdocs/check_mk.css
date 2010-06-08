@@ -234,7 +234,6 @@ div.snapin {
 div.snapin div.head {
     width: 260px;
     text-align: center;
-    vertical-align: middle;
     color: white;
 }
 
@@ -250,13 +249,15 @@ div.snapin div.head.closed {
 
 /* close button on header */
 div.snapin div.closesnapin {
-    position: relative;
-    top: 12px;
-    left: 11px;
-    width: 0px;
-    overflow: visible;
+    float: right;
+    margin-right: 10px;
+    margin-top:   10px;
 }
 
+div.snapin div.head b.heading {
+    position: relative;
+    top:9px;
+}
 
 div.snapin div.content {
     background-image: url("images/snapin_background.png");
@@ -266,13 +267,15 @@ div.snapin div.content {
     padding-left: 15px;
     padding-right: 12px;
     padding-bottom: 5px;
-    width: 240px;
+    width: 260px;
 }
 
 div.snapin div.foot {
     background-image: url("images/snapin_footer.png");
+    background-repeat: no-repeat;
     width: 260px;
     height: 10px;
+    line-height: 10px;
 }
 
 /* General styles for snapin contents */

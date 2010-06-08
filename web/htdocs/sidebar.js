@@ -34,41 +34,58 @@ var snapinDragging = false;
 var snapinOffset   = [ 0, 0 ];
 var snapinStartPos = [ 0, 0 ];
 
-if (window.addEventListener) {
+// First firefox and the IE
+if (window.addEventListener)
   window.addEventListener("mousemove", snapinDrag,      false);
-} else {
+else
   document.documentElement.onmousemove = snapinDrag;
+
+function getButton(event) {
+  if (event.which == null)
+    /* IE case */
+    return (event.button < 2) ? "LEFT" : ((event.button == 4) ? "MIDDLE" : "RIGHT");
+  else
+    /* All others */
+    return (event.which < 2) ? "LEFT" : ((event.which == 2) ? "MIDDLE" : "RIGHT");
+}
+
+function getTarget(event) {
+  return event.target ? event.target : event.srcElement;
 }
 
 function snapinStartDrag(event) {
   if (!event)
     event = window.event;
-  
+
+  var target = getTarget(event);
+  var button = getButton(event);
+
   // Skip calls when already dragging or other button than left mouse
-  if (snapinDragging !== false || event.button != 0 || event.target.tagName != 'DIV')
+  if (snapinDragging !== false || button != 'LEFT' || target.tagName != 'DIV')
     return true;
 
-  var container = event.target.parentNode;
-  
-  if (event.preventDefault)
-    event.preventDefault();
-  event.returnValue = false;
-  
   if (event.stopPropagation)
     event.stopPropagation();
   event.cancelBubble = true;
   
-  snapinDragging = container;
+  snapinDragging = target.parentNode;
 
   // Save relative offset of the mouse to the snapin title to prevent flipping on drag start
-  snapinOffset   = [ event.clientY - container.offsetTop, event.clientX - container.offsetLeft ];
+  snapinOffset   = [ event.clientY - target.parentNode.offsetTop, event.clientX - target.parentNode.offsetLeft ];
   snapinStartPos = [ event.clientY, event.clientX ];
+  
+  // Disable the default events for all the different browsers
+  if (event.preventDefault)
+    event.preventDefault();
+  else
+    event.returnValue = false;
+  return false;
 }
 
 function snapinDrag(event) {
   if (!event)
     event = window.event;
-  
+
   if (snapinDragging === false)
     return true;
 
@@ -85,6 +102,8 @@ function snapinDrag(event) {
   var line = document.createElement('div');
   line.setAttribute('id', 'snapinDragIndicator');
   line.style.height          = '3px';
+  line.style.lineHeight      = '1px';
+  line.style.fontSize        = '1px';
   line.style.width           = '250px';
   line.style.backgroundColor = '#fff';
   line.style.margin          = '1px 0px 0px 5px';
@@ -298,9 +317,12 @@ if (window.addEventListener) {
   window.addEventListener("mouseup",   stopDragScroll,  false);
   window.addEventListener("mousemove", dragScroll,      false);
 } else {
-  document.documentElement.onmousedown = startDragScroll;
-  document.documentElement.onmouseup   = stopDragScroll;
-  document.documentElement.onmousemove = dragScroll;
+  document.onmousedown = startDragScroll;
+  document.onmouseup   = stopDragScroll;
+  document.onmousemove = dragScroll;
+  //document.documentElement.onmousedown = startDragScroll;
+  //document.documentElement.onmouseup   = stopDragScroll;
+  //document.documentElement.onmousemove = dragScroll;
 }
 
 function startDragScroll(event) {

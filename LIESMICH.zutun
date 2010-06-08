@@ -39,6 +39,34 @@ auftritt.
 --------------------------------------------------------------------------------
 BUGS
 --------------------------------------------------------------------------------
+Counter wraps: Wenn ein Counter wrapped, liefert dann Check_MK eine Warnung
+"got only 5 out of 9 infos?"
+
+UTF-8 Patch im Livestatus:
+--- ./mk-livestatus-1.1.4/src/Query.cc  2010-04-28 09:08:17.000000000
++0300
++++ ./mk-livestatus-1.1.4-utf-8/src/Query.cc    2010-06-02 13:46:36.077076220
++0300
+@@ -888,6 +888,10 @@
+        while (*r) {
+        if (*r < 32 && *r >= 0) 
+                outputUnicodeEscape((unsigned)*r);
++       /* updated by Alexander Yegorov*/
++       else if ((*r & 0xE0) == 0xC0)
++               outputUnicodeEscape(((*r & 31) << 6) | (*++r & 0x3F)); // 2
+byte encoding
++       /* updated by Alexander Yegorov*/
+        else if (*r < 0)
+                outputUnicodeEscape((unsigned)((int)*r + 256)); // assume latin1
+encoding
+        else {
+
+Stammt von hier:
+http://www.nagios-portal.org/wbb/index.php?page=Thread&threadID=18763
+
+
+
+
 Livestatus: das Nagios-Debuglog ist nicht reentrant. Livestatus muss ein eigenes
 Logfile schreiben. Wir machen das ohne Rotation. Man muss einfach selbst
 aufpassen, dass es nicht zu groß wird. Default ist eh aus. Ins Nagios
@@ -86,6 +114,8 @@ es ja fuer binaere Hostlisten das NEGATE (=> Doku). In 1.2 einbauen.
 --------------------------------------------------------------------------------
 IDEEN & VERBESSERUNGEN
 --------------------------------------------------------------------------------
+Neue Spalten: * long_service_output, host_notes
+
 Multisite: Kann man - wenn man Aggregation verwendet - beim normalen
 Host einen Links auf den Summary host machen und umgekehrt? Evtl.
 hartkodiert in show_view(), falls die Variable host gesetzt ist?

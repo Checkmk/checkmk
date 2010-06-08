@@ -5,6 +5,8 @@
     Core, Setup, etc.:
     * Included three patched from Jeff Dairiki dealing with compile flags
       and .gitignore removed from tarballs
+    * Fix problem with clustered_services_of[]: services of one cluster
+      appeared also on others
       
     Checks & Agents:
     * Solaris agent: fixed rare df problems on Solaris 10, fix problem with test -f

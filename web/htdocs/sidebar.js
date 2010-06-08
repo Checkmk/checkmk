@@ -27,18 +27,41 @@
 //
 
 /************************************************
+ * Register events
+ *************************************************/
+
+// First firefox and the IE
+if (window.addEventListener) {
+  window.addEventListener("mousemove",     function(e) {
+                                             snapinDrag(e);
+                                             dragScroll(e);
+                                             return false;
+                                           }, false);
+  window.addEventListener("mousedown",      startDragScroll, false);
+  window.addEventListener("mouseup",        stopDragScroll,  false);
+  window.addEventListener('DOMMouseScroll', scrollWheel,     false);
+} else {
+  document.documentElement.onmousemove  = function(e) {
+    // snapin drag 'n drop
+    snapinDrag(e);
+    // drag/drop scrolling
+    dragScroll(e);
+    return false;
+  };
+  // drag/drop scrolling
+  document.documentElement.onmousedown  = startDragScroll;
+  document.documentElement.onmouseup    = stopDragScroll;
+  // mousewheel scrolling
+  document.documentElement.onmousewheel = scrollWheel;
+}
+
+/************************************************
  * snapin drag/drop code
  *************************************************/
 
 var snapinDragging = false;
 var snapinOffset   = [ 0, 0 ];
 var snapinStartPos = [ 0, 0 ];
-
-// First firefox and the IE
-if (window.addEventListener)
-  window.addEventListener("mousemove", snapinDrag,      false);
-else
-  document.documentElement.onmousemove = snapinDrag;
 
 function getButton(event) {
   if (event.which == null)
@@ -311,16 +334,6 @@ var dragging = false;
 var startY = 0;
 var startScroll = 0;
 
-if (window.addEventListener) {
-  window.addEventListener("mousedown", startDragScroll, false);
-  window.addEventListener("mouseup",   stopDragScroll,  false);
-  window.addEventListener("mousemove", dragScroll,      false);
-} else {
-  document.documentElement.onmousedown = startDragScroll;
-  document.documentElement.onmouseup   = stopDragScroll;
-  document.documentElement.onmousemove = dragScroll;
-}
-
 function startDragScroll(event) {
   if (!event)
     event = window.event;
@@ -342,7 +355,10 @@ function startDragScroll(event) {
     dragging = event;
     startY = event.clientY;
     startScroll = document.getElementById('side_content').scrollTop;
+
+    return false;
   }
+  return true;
 }
 
 function stopDragScroll(event){ 
@@ -373,6 +389,8 @@ function dragScroll(event) {
   
   dragging = event;
   inhalt = null;
+
+  return false;
 }
 
 /************************************************
@@ -415,12 +433,6 @@ function scrollWheel(event){
     event.returnValue = false;
   return false;
 }
-
-// add event listener cross browser compatible
-if (window.addEventListener)
-  window.addEventListener('DOMMouseScroll', scrollWheel, false);
-else
-  document.documentElement.onmousewheel = document.onmousewheel = scrollWheel;
 
 
 //

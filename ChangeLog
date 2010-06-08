@@ -5,6 +5,10 @@
     Core, Setup, etc.:
     * Included three patched from Jeff Dairiki dealing with compile flags
       and .gitignore removed from tarballs
+      
+    Checks & Agents:
+    * Solaris agent: fixed rare df problems on Solaris 10, fix problem with test -f
+      (thanks to Ulf Hoffmann)
 
 1.1.6b3:
     Multisite:

@@ -17,6 +17,11 @@
     * Converted all PNP templates to format of 0.6.X. Dropped compatibility
       with 0.4.X.
 
+    Livestatus:
+    * Delay starting of threads (and handling of socket) until Nagios has
+      started its event loop. This prevents showing services as PENDING 
+      a short time during program start.
+
 1.1.6b3:
     Multisite:
     * Quicksearch: hide complete host list if field is emptied via Backspace or Del.

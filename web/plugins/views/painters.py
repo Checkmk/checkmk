@@ -591,11 +591,18 @@ multisite_painters["host_nagios_link"] = {
     "paint" : paint_nagios_link
 }
 
+def paint_host_with_state(row):
+    if row["host_has_been_checked"]:
+        state = row["host_state"]
+    else:
+        state = "p"
+    return "state hstate hstate%s" % state, row["host_name"]
+
 multisite_painters["host_with_state"] = {
     "title" : "Hostname colored with state",
     "short" : "Host",
-    "columns" : ["site", "host_name", "host_state" ],
-    "paint" : lambda row: ("state hstate hstate%d" % row["host_state"], row["host_name"])
+    "columns" : ["site", "host_name", "host_state", "host_has_been_checked" ],
+    "paint" : paint_host_with_state, 
 }
 
 multisite_painters["host"] = {

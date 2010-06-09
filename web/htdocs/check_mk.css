@@ -251,7 +251,7 @@ div.snapin div.head.closed {
 div.snapin div.closesnapin {
     float: right;
     margin-right: 10px;
-    margin-top:   10px;
+    margin-top:   11px;
 }
 
 div.snapin div.head b.heading {
@@ -346,7 +346,7 @@ div.snapin div.snapinexception p {
 div.snapin div.footnotelink {
     margin-top: 5px;
     text-align: right;
-    padding-right: 11px;
+    padding-right: 31px;
 }
 div.snapin div.footnotelink a {
     border: 1px solid #ddd;

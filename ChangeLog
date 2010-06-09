@@ -21,6 +21,11 @@
       to fiddle around with /dev/mem in that case and miserably fails
       in some cases (infinite loop)
 
+    Livestatus:
+    * Delay starting of threads (and handling of socket) until Nagios has
+      started its event loop. This prevents showing services as PENDING 
+      a short time during program start.
+
 1.1.6b3:
     Multisite:
     * Quicksearch: hide complete host list if field is emptied via Backspace or Del.

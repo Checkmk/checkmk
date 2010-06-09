@@ -25,8 +25,8 @@
 
 $ds_name[1] = "Round Trip Averages";
 $opt[1] = "--vertical-label \"RTA (ms)\" --title \"Ping times for $hostname\" ";
-$def[1] =  "DEF:var1=$rrdfile:$DS[1]:AVERAGE " ;
-$def[1] .= "DEF:var2=$rrdfile:$DS[2]:MAX " ;
+$def[1] =  "DEF:var1=$RRDFILE[1]:$DS[1]:AVERAGE " ;
+$def[1] .= "DEF:var2=$RRDFILE[1]:$DS[2]:MAX " ;
 $def[1] .= "VDEF:maxrta=var1,MAXIMUM " ;
 $def[1] .= "CDEF:loss1=var2,100,/,maxrta,* " ;
 $def[1] .= "CDEF:sp1=var1,100,/,12,* " ;

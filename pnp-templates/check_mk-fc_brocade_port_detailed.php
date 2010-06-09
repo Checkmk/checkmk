@@ -32,8 +32,8 @@
 
 $ds_name[1] = 'Traffic';
 $opt[1]  = "--vertical-label \"MB/sec\" -X0 -b 1024 --title \"Traffic for $hostname / $servicedesc\" ";
-$def[1]  = "DEF:txwords=$rrdfile:$DS[1]:AVERAGE " ;
-$def[1] .= "DEF:rxwords=$rrdfile:$DS[2]:AVERAGE " ;
+$def[1]  = "DEF:txwords=$RRDFILE[1]:$DS[1]:AVERAGE " ;
+$def[1] .= "DEF:rxwords=$RRDFILE[1]:$DS[2]:AVERAGE " ;
 $def[1] .= "CDEF:txbytes=txwords,4,* " ;
 $def[1] .= "CDEF:rxbytes=rxwords,4,* " ;
 $def[1] .= "CDEF:rxMbytes=rxbytes,1048576.0,/ " ;
@@ -64,9 +64,9 @@ if ($MAX[1] != "")  {
 
 $ds_name[2] = 'Error counter';
 $opt[2]  = "--vertical-label \"Error counter\" --title \"Problems on $hostname / $servicedesc\" ";
-$def[2]  = "DEF:crcerrors=$rrdfile:$DS[3]:MAX " ;
-$def[2] .= "DEF:encout=$rrdfile:$DS[4]:MAX " ;
-$def[2] .= "DEF:c3discards=$rrdfile:$DS[5]:MAX " ;
+$def[2]  = "DEF:crcerrors=$RRDFILE[1]:$DS[3]:MAX " ;
+$def[2] .= "DEF:encout=$RRDFILE[1]:$DS[4]:MAX " ;
+$def[2] .= "DEF:c3discards=$RRDFILE[1]:$DS[5]:MAX " ;
 $def[2] .= "LINE1:crcerrors#ff0000:\"CRC Errors      \" " ;
 $def[2] .= "GPRINT:crcerrors:LAST:\"%.0lf\\n\" " ;
 $def[2] .= "LINE1:encout#60a020:\"ENC-Out         \" " ;

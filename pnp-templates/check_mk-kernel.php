@@ -59,7 +59,7 @@ else {
 
 $opt[1] = " --vertical-label \"$vertical\" -X0 -l 0 -u $upto --title \"$title\" ";
 
-$def[1] = "DEF:var1=$rrdfile:$DS[1]:MAX ";
+$def[1] = "DEF:var1=$RRDFILE[1]:$DS[1]:MAX ";
 $def[1] .= "AREA:var1#$color:\"$title\:\" ";
 $def[1] .= "LINE1:var1#$line:\"\" ";
 $def[1] .= "GPRINT:var1:LAST:\"Current\: $format\" ";

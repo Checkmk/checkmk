@@ -64,7 +64,7 @@ $opt[1] = "--vertical-label '$unit' -l0 $upperlimit --title \"$title $hostname /
 #
 #
 #
-$def[1]  = "DEF:val=$rrdfile:$DS[1]:MAX " ;
+$def[1]  = "DEF:val=$RRDFILE[1]:$DS[1]:MAX " ;
 $def[1] .= "CDEF:mb=val,$div,/ " ;
 $def[1] .= "AREA:mb#$color " ;
 $def[1] .= "LINE:mb#a40 " ;

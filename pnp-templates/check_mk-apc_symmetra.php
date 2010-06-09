@@ -27,7 +27,7 @@ $opt[1] = "--vertical-label \"Celsius\"  -l 0 -u 60 --title \"Battery temperatur
 
 $color = sprintf("ff%02x80", $ACT[2] * 3, $ACT[2] * 2);
 
-$def[1] = "DEF:var1=$rrdfile:$DS[2]:MAX ";
+$def[1] = "DEF:var1=$RRDFILE[1]:$DS[2]:MAX ";
 $def[1] .= "AREA:var1#$color:\"Temperature\:\" ";
 $def[1] .= "GPRINT:var1:LAST:\"%2.0lfC\" ";
 $def[1] .= "LINE1:var1#800040:\"\" ";
@@ -36,7 +36,7 @@ $def[1] .= "GPRINT:var1:AVERAGE:\"Avg\: %2.0lfC)\" ";
 $def[1] .= "HRULE:$CRIT[2]#FF0000:\"Critical\: $CRIT[2]C\" ";
 
 $opt[2] = "--vertical-label \"Percent\" -l 0 -u 100 --title \"Battery Capacity\" ";
-$def[2] = "DEF:var2=$rrdfile:$DS[1]:MIN ";
+$def[2] = "DEF:var2=$RRDFILE[1]:$DS[1]:MIN ";
 $def[2] .= "AREA:var2#80e0c0:\"Capacity\:\" ";
 $def[2] .= "GPRINT:var2:LAST:\"%2.0lf%%\" ";
 $def[2] .= "LINE1:var2#008040:\"\" ";
@@ -45,15 +45,15 @@ $def[2] .= "GPRINT:var2:AVERAGE:\"Avg\: %2.0lf%%)\" ";
 $def[2] .= "HRULE:$CRIT[1]#FF0000:\"Critical\: $CRIT[1]%\" ";
 
 $opt[3] = "--vertical-label \"Ampere\" -l -0.5 --title \"Currencies\" ";
-$def[3] = "DEF:batcur=$rrdfile:$DS[3]:MAX ";
-$def[3] .= "DEF:outcur=$rrdfile:$DS[5]:MAX ";
+$def[3] = "DEF:batcur=$RRDFILE[1]:$DS[3]:MAX ";
+$def[3] .= "DEF:outcur=$RRDFILE[1]:$DS[5]:MAX ";
 $def[3] .= "LINE:batcur#c0c000:\"Battery Currency\:\" ";
 $def[3] .= "GPRINT:batcur:LAST:\"%2.0lfA\" ";
 $def[3] .= "LINE:outcur#00c0c0:\"Output Currency\:\" ";
 $def[3] .= "GPRINT:outcur:LAST:\"%2.0lfA\" ";
 
 $opt[4] = "--vertical-label \"Volt\" -l 0 -u 250 --title \"Output Voltage\" ";
-$def[4] = "DEF:volt=$rrdfile:$DS[4]:MIN ";
+$def[4] = "DEF:volt=$RRDFILE[1]:$DS[4]:MIN ";
 $def[4] .= "GPRINT:volt:LAST:\"%2.0lfV\" ";
 $def[4] .= "LINE1:volt#408040:\"\" ";
 $def[4] .= "GPRINT:volt:MIN:\"(min\: %2.0lfV,\" ";

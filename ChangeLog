@@ -1,6 +1,8 @@
 1.1.6b4:
     Multisite:
     * Repair Perf-O-Meters on webkit based browsers (e.g. Chrome, Safari)
+    * Repair layout on IE7/IE8. Even on IE6 something is working (definitely
+      not transparent PNGs though). Thanks to Lars.
 
     Core, Setup, etc.:
     * Included three patched from Jeff Dairiki dealing with compile flags

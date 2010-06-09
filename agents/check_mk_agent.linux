@@ -178,7 +178,7 @@ if which ipmitool >/dev/null ; then
 fi
 
 # IPMI data via ipmi-sensors (of freeipmi)
-if which ipmi-sensors >/dev/null ; then
+if which ipmi-sensors -a -c /dev/ipmi0 >/dev/null ; then
     echo '<<<ipmi_sensors>>>'
     sdrcache=/var/cache/.freeipmi/sdr-cache/sdr-cache-$(hostname).127.0.0.1
     # No cache file existing? => Impose no time limit, this can take a minute and more

@@ -16,6 +16,9 @@
       (thanks to Ulf Hoffmann)
     * Converted all PNP templates to format of 0.6.X. Dropped compatibility
       with 0.4.X.
+    * Do not use ipmi-sensors if /dev/ipmi0 is missing. ipmi-sensors tries
+      to fiddle around with /dev/mem in that case and miserably fails
+      in some cases (infinite loop)
 
 1.1.6b3:
     Multisite:

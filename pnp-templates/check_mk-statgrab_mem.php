@@ -25,9 +25,9 @@
 
 $opt[1] = "--vertical-label 'MEMORY(MB)' --upper-limit " . ($MAX[1] * 120 / 100) . " -l0  --title \"Memory usage $hostname\" ";
 
-$def[1] =  "DEF:ram=$rrdfile:$DS[1]:AVERAGE " ;
-$def[1] .= "DEF:swap=$rrdfile:$DS[2]:AVERAGE " ;
-$def[1] .= "DEF:virt=$rrdfile:$DS[3]:AVERAGE " ;
+$def[1] =  "DEF:ram=$RRDFILE[1]:$DS[1]:AVERAGE " ;
+$def[1] .= "DEF:swap=$RRDFILE[1]:$DS[2]:AVERAGE " ;
+$def[1] .= "DEF:virt=$RRDFILE[1]:$DS[3]:AVERAGE " ;
 $def[1] .= "HRULE:$MAX[3]#000080:\"RAM+SWAP installed\" ";
 $def[1] .= "HRULE:$MAX[1]#2040d0:\"RAM installed\" ";
 $def[1] .= "HRULE:$WARN[3]#FFFF00:\"Warning\" ";

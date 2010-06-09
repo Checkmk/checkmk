@@ -39,7 +39,7 @@ for ($i = strlen($descr); $i > 0; $i--)
 }
 
 if (!$found) {
-  $def[1] = "DEF:cnt=$rrdfile:$DS[1]:MAX "; 
+  $def[1] = "DEF:cnt=$RRDFILE[1]:$DS[1]:MAX "; 
   $def[1] .= "AREA:cnt#00ffc6:\"$servicedesc\" "; 
   $def[1] .= "LINE1:cnt#226600: "; 
 

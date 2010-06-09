@@ -12,6 +12,8 @@
     Checks & Agents:
     * Solaris agent: fixed rare df problems on Solaris 10, fix problem with test -f
       (thanks to Ulf Hoffmann)
+    * Converted all PNP templates to format of 0.6.X. Dropped compatibility
+      with 0.4.X.
 
 1.1.6b3:
     Multisite:

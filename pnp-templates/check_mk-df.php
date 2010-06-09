@@ -48,7 +48,7 @@ $opt[1] = "--vertical-label GB -l 0 -u $maxgb --title '$hostname: Filesystem $fs
 #
 #
 # Graphen Definitions
-$def[1] = "DEF:mb=$rrdfile:$DS[1]:MAX "; 
+$def[1] = "DEF:mb=$RRDFILE[1]:$DS[1]:MAX "; 
 $def[1] .= "CDEF:var1=mb,1024,/ ";
 $def[1] .= "AREA:var1#00ffc6:\"used space on $fsname\\n\" "; 
 $def[1] .= "LINE1:var1#226600: "; 

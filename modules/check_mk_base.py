@@ -276,6 +276,9 @@ def get_realhost_info(hostname, ipaddress, checkname, max_cache_age):
        # of these results.
        if type(oid_info) == list:
 	   table = [ get_snmp_table(hostname, ipaddress, community, entry) for entry in oid_info ]
+           # if at least one query fails, we discard the hole table
+           if None in table:
+               table = None
        else:
 	   table = get_snmp_table(hostname, ipaddress, community, oid_info)
        store_cached_checkinfo(hostname, checkname, table)

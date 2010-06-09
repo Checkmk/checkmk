@@ -11,6 +11,8 @@
     * Fix problem with clustered_services_of[]: services of one cluster
       appeared also on others
     * Packager: handle broken files in package dir
+    * snmp handling: better error handling in cases where multiple tables
+      are merged (e.g. fc_brocade_port_detailed)
       
     Checks & Agents:
     * Solaris agent: fixed rare df problems on Solaris 10, fix problem with test -f

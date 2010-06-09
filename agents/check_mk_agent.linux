@@ -68,7 +68,7 @@ echo Version: 1.1.6b4
 # Haenger zu vermeiden. Diese sollten ohnehin besser auf dem
 # Server, als auf dem Client ueberwacht werden.
 echo '<<<df>>>'
-df -PTlk -x smbfs -x tmpfs -x cifs -x iso9660 -x nfsv4 | sed 1d
+df -PTlk -x smbfs -x tmpfs -x cifs -x iso9660 -x udf -x nfsv4 | sed 1d
 # VMWare shows its own filesystems with 'vdf'. Just one
 # problem: it outputs not 7 but only 6 columns
 if which vdf > /dev/null

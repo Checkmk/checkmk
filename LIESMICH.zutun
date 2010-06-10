@@ -205,3 +205,6 @@ Limit: 1000 2000 (holt die zweiten Tausend Eintraege...)
 Windows: Der Agent sollte die Logmeldungen nach UTF-8 konvertieren. 
 Nur wie?
 
+Logwatch: Hier sollte man wirklich einen Teil der Meldung ausgeben.
+Kann man evtl. den long_service_output verwenden?
+

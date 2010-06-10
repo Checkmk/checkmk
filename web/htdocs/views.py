@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, defaults, livestatus, htmllib, time, os, re, pprint, time
+import config, defaults, livestatus, htmllib, time, os, re, pprint, time, copy
 from lib import *
 from pagefunctions import *
 
@@ -276,7 +276,6 @@ def page_edit_views(h, msg=None):
     if not config.may("edit_views"):
 	raise MKAuthException("You are not allowed to edit views.")
 
-    changed = False
     html.header("Edit views")
     html.write("<p>Here you can create and edit customizable <b>views</b>. A view "
 	    "displays monitoring status or log data by combining filters, sortings, "
@@ -284,50 +283,16 @@ def page_edit_views(h, msg=None):
 
     if msg: # called from page_edit_view() after saving
 	html.message(msg)
-	changed = True
 
     load_views()
 
     # Deletion of views
-    delname = html.var("delete")
+    delname = html.var("_delete")
     if delname and html.confirm("Please confirm the deletion of the view <tt>%s</tt>" % delname):
 	del html.multisite_views[(html.req.user, delname)]
 	save_views(html.req.user)
-	changed = True
-
-    # Cloning of views
-    try:
-	cloneuser, clonename = html.var("clone").split("/")
-    except:
-	clonename = ""
-
-    if clonename and html.check_transaction():
-	if cloneuser == html.req.user: # Same user, must rename
-	    newname = clonename + "_clone"
-        else:
-	    newname = clonename
-
-	# Name conflict -> try new names
-	n = 1
-	while (html.req.user, newname) in html.multisite_views:
-	    n += 1
-	    newname = clonename + "_clone%d" % n
-	import copy
-	orig = html.multisite_views[(cloneuser, clonename)]
-	clone = copy.copy(orig)
-	clone["name"] = newname
-	clone["title"] = orig["title"]
-	if cloneuser == html.req.user:
-	    clone["title"] += " (Copy)" # only if same user
-	if cloneuser != html.req.user or not config.may("publish_views"): 
-	    clone["public"] = False
-	html.multisite_views[(html.req.user, newname)] = clone
-	save_views(html.req.user)
-	load_views()
-	changed = True
-
-    if changed:
-        html.javascript("parent.frames[0].location.reload();");
+        # Reload sidebar (snapin views needs a refresh)
+        html.javascript("top.frames[0].location.reload();");
 
     html.write("<table class=views>\n")
 
@@ -378,10 +343,12 @@ def page_edit_views(h, msg=None):
 		buttontext = "Customize"
 	    else:
 		buttontext = "Clone"
-	    html.buttonlink("edit_views.py?clone=%s/%s" % (owner, viewname), buttontext, True)
+            backurl = htmllib.urlencode(html.makeuri([]))
+            url = "edit_view.py?clonefrom=%s&load_view=%s&back=%s" % (owner, viewname, backurl)
+	    html.buttonlink(url, buttontext, True)
 	    if owner == html.req.user:
 		html.buttonlink("edit_view.py?load_view=%s" % viewname, "Edit")
-		html.buttonlink("edit_views.py?delete=%s" % viewname, "Delete!", True)
+		html.buttonlink("edit_views.py?_delete=%s" % viewname, "Delete!", True)
 	    html.write("</td></tr>\n")
 
     html.write("<tr><td class=legend colspan=7>")
@@ -418,11 +385,31 @@ def page_edit_view(h):
     load_views()
     view = None
 
-    # Load existing view from disk
+    # Load existing view from disk - and create a copy if 'clonefrom' is set
     viewname = html.var("load_view")
+    oldname = viewname
     if viewname:
-	loaduser = html.var("clonefrom", html.req.user)
-	view = html.multisite_views.get((loaduser, viewname), None)
+	cloneuser = html.var("clonefrom")
+        if cloneuser != None:
+	    view = copy.copy(html.multisite_views.get((cloneuser, viewname), None))
+            # Make sure, name is unique
+            if cloneuser == html.req.user: # Clone own view
+                newname = viewname + "_clone"
+            else:
+                newname = viewname
+	    # Name conflict -> try new names
+	    n = 1
+	    while (html.req.user, newname) in html.multisite_views:
+	        n += 1
+	        newname = viewname + "_clone%d" % n
+            view["name"] = newname
+            viewname = newname
+            oldname = None # Prevent renaming
+            if cloneuser == html.req.user:
+                view["title"] += " (Copy)"
+        else:
+            view = html.multisite_views.get((html.req.user, viewname))
+        
 	datasourcename = view["datasource"]
 	if view:
 	    load_view_into_html_vars(view)
@@ -447,7 +434,8 @@ def page_edit_view(h):
 		    if oldname and oldname != view["name"] and (html.req.user, oldname) in html.multisite_views:
 			del html.multisite_views[(html.req.user, oldname)]
 		    save_views(html.req.user)
-                return page_message_and_forward(h, "Your view has been saved.", "edit_views.py")
+                return page_message_and_forward(h, "Your view has been saved.", "edit_views.py", 
+                        "<script type='text/javascript'>top.frames[0].location.reload();</script>\n")
 
 	except MKUserError, e:
 	    html.write("<div class=error>%s</div>\n" % e.message)
@@ -1636,7 +1624,7 @@ def ajax_export(h):
 	view["public"] = True
     html.write(pprint.pformat(html.available_views))
 
-def page_message_and_forward(h, message, default_url):
+def page_message_and_forward(h, message, default_url, addhtml=""):
     global html
     html = h
     url = html.var("back")
@@ -1646,6 +1634,7 @@ def page_message_and_forward(h, message, default_url):
     html.set_browser_redirect(1, url)
     html.header("Multisite")
     html.message(message)
+    html.write(addhtml)
     html.footer()
 
 #   ____  _             _             _   _      _

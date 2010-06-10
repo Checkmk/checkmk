@@ -64,7 +64,11 @@ encoding
 Stammt von hier:
 http://www.nagios-portal.org/wbb/index.php?page=Thread&threadID=18763
 
-
+Livestatus: Bei bestimmten regulären Ausdrücken in ~~ schmiert Nagios
+ab. Ist wohl ein Bug in glibc/regcomp. Weiss nicht, was ich da machen
+kann. Beispiel:
+GET hosts 
+Filter: name ~~ (.*){1,346}[bc] 
 
 
 Livestatus: das Nagios-Debuglog ist nicht reentrant. Livestatus muss ein eigenes

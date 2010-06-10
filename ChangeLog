@@ -26,6 +26,7 @@
       to fiddle around with /dev/mem in that case and miserably fails
       in some cases (infinite loop)
     * fjdary60_run: use new binary encoding of hex strings
+    * if64: better error handling for cases where clients do not send all information
 
     Livestatus:
     * Delay starting of threads (and handling of socket) until Nagios has

@@ -6,7 +6,8 @@
     * Display host state correct if host is pending (painter "host with state")
     * Logfile: new filter for plugin output
     * Improve dialog flow when cloning views (button [EDIT] in views snapin)
-    * Quicksearch: do not open search list if text did not change (e.g. Shift up)
+    * Quicksearch: do not open search list if text did not change (e.g. Shift up),
+      close at click into field or snapin.
 
     Core, Setup, etc.:
     * Included three patched from Jeff Dairiki dealing with compile flags

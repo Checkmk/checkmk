@@ -381,6 +381,8 @@ class html:
 	self.write("<div class=success>%s</div>\n" % msg)
 
     def confirm(self, msg):
+        if self.var("_do_actions") == "No": 
+            return # user has pressed "No"
         if not self.has_var("_do_confirm"):
             self.write("<div class=really>%s" % msg)
             self.begin_form("confirm")

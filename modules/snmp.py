@@ -60,8 +60,8 @@ def get_snmp_explicit(hostname, ipaddress, community, mib, baseoid, suffixes):
             mibinfo = ""
         command = cmd + "%s -OQ -Oe -c %s %s %s.%s 2>/dev/null" % \
                   (mibinfo, community, ipaddress, baseoid, suffix)
-        if opt_verbose:
-            sys.stderr.write('   Running %s...' % (command,))
+        if opt_debug:
+            sys.stderr.write('   Running %s\n' % (command,))
         num_found = 0
         snmp_process = os.popen(command, "r")
         for line in snmp_process.readlines():
@@ -133,6 +133,8 @@ def get_snmp_table(hostname, ip, community, oid_info):
             
             command = cmd + " -OQ -Ov -c %s %s %s.%s 2>/dev/null" % \
                 (community, ip, fetchoid, str(column))
+            if opt_debug:
+                sys.stderr.write('   Running %s\n' % (command,))
             snmp_process = os.popen(command, "r").xreadlines()
 	    
 	    # Ugly(1): in some cases snmpwalk inserts line feed within one

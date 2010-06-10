@@ -22,14 +22,6 @@ Kann man den aktuellen Status der Maus irgendwie abfragen - so dass man das
 verlorengegangene Event kompensieren kann? Oder kommt das Event irgendwo
 anders an, wo man es noch abgreifen kann?
 
-Quicksearch: Wenn man die Suchliste aufklappt und dann das Widget mit
-der Maus verlässt, dann klappt es nicht wieder zu. Gut wäre hier,
-wenn wenigstens ein Mausklick auf das Snapin (außerhalb der Liste)
-diese wieder zuklappt.
-
-Quicksearch: Kann man die Liste nicht nach X Sekunden Inaktivität
-von selbst zuklappen lassen?
-
 Counter wraps: Wenn ein Counter wrapped, liefert dann Check_MK eine Warnung
 "got only 5 out of 9 infos?"
 
@@ -92,10 +84,6 @@ Fakemeldung nach oben schicken, die critical ist.
 Multisite: Zeitanzeige der Downtimes (ende) zu ungenau.  "in 6 hrs" ist
 blöd. Auch bei Start "19 sec" ist dumm, hier wäre besser (vor 19 sec). Oder
 bei Downtimes immer absolute Zeiten angeben? Evtl. Zusatzspalte der Duration.
-
-logwatch.php und die anderen htdocs/* -Dateien rausschmeissen, nicht mehr
-installieren. Im setup auch das Eintragen von var_dir entfernen. Eventuell
-vorher oben einen Text einbauen mit Link auf das neue Logwatch.
 
 snmp_communities: dictionary nicht mehr verwenden, aus Doku raus, Defaultwert
 leere Liste, aus Code raus, Hinweis im ChangeLog. Evtl einen Test mit

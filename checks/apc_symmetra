@@ -64,7 +64,7 @@ def check_apc(item, params, info):
                   10:"hardware failure bypass", 11:"sleeping until power return", 
                   12:"on smart trim" }
    infotxt = "output status %s" % (status_text.get(BasicOutputStatus))
-   if BasicOutputStatus != 2:
+   if BasicOutputStatus not in [2, 4]:
       state = 2
       infotxt += "(!)"
    else:

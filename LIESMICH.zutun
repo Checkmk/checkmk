@@ -223,3 +223,7 @@ verhindert, dass in den RRDs nach einem Reboot utopische Werte
 stehen (z.B. für die Kernel counter). (3) Da in den Performancedaten
 bereits eine Rate steht, können auch Tools wie NagVis dafür eine
 Visualisierung machen.
+
+Multisite: Perf-O-Meter für weitere Checks einbauen.
+
+Logfile ansicht: Filter zum suchen nach Texten.

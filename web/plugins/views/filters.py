@@ -487,3 +487,4 @@ class FilterLogClass(Filter):
 	    return "".join(headers) + ("Or: %d\n" % len(headers))
 
 declare_filter(255, FilterLogClass())
+declare_filter(202, FilterText("output",  "Log: plugin output", "log", "log_plugin_output", "log_plugin_output", "~~"))

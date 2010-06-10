@@ -31,6 +31,7 @@
 var aSearchResults = [];
 var iCurrent = null;
 var mkSearchTargetFrame = 'main';
+var oldValue = "";
 
 // Register an input field to be a search field and add eventhandlers
 function mkSearchAddField(field, targetFrame) {
@@ -250,11 +251,14 @@ function mkSearch(e, oField) {
     }
     
     var val = oField.value;
+    if (val == oldValue)
+        return; // nothing changed. No new search neccessary
+    oldValue = val;
 
-    if(!aSearchHosts) {
+    if (!aSearchHosts) {
         alert("No hosts to search for");
-                return;
-        }
+        return;
+    }
 
     aSearchResults = [];
 

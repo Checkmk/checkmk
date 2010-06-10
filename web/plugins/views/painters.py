@@ -415,8 +415,8 @@ def paint_pnpgraph(sitename, host, service = "_HOST_"):
     pnpurl = site["pnp_url"]
     htmlcode = ""
     for source in [ 1, 2, 3, 4, 5, 6, 7 ]:
-        urlvars = '&host=%s&srv=%s&source=%d' % ( htmllib.urlencode(host), htmllib.urlencode(service), source)
-        htmlcode += '<div class=pnpgraph><a href="%s/index.php/graph?%s"><img src="%s/image?%s&view=0"></a></div>' % \
+        urlvars = '&host=%s&srv=%s&view=1&source=%d' % ( htmllib.urlencode(host), htmllib.urlencode(service), source)
+        htmlcode += '<div class=pnpgraph><a href="%s/index.php/graph?%s"><img src="%s/image?%s"></a></div>' % \
             (pnpurl, urlvars, pnpurl, urlvars)
     return "pnpgraph", htmlcode
         
@@ -942,7 +942,7 @@ def pnp_url(row):
     svc = row["service_description"]
     svc = svc.replace(":", "_").replace("\\", "_")
     site = html.site_status[sitename]["site"]
-    url = site["pnp_url"] + ("index.php/graph?host=%s&srv=%s" % (htmllib.urlencode(host), htmllib.urlencode(svc)))
+    url = site["pnp_url"] + ("index.php/graph?view=1&host=%s&srv=%s" % (htmllib.urlencode(host), htmllib.urlencode(svc)))
     return url
 
 

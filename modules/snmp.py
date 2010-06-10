@@ -27,10 +27,18 @@
 # This module is needed only for SNMP based checks
 
 def strip_snmp_value(value):
-   v = value.strip()
-   if v.startswith('"'): v = v[1:]
-   if v.endswith('"'): v = v[:-1]
-   return v.strip()
+    v = value.strip()
+    if v.startswith('"'):
+        return convert_from_hex(v[1:-1])
+    else:
+        return v.strip()
+
+def convert_from_hex(value):
+    hexparts = value.split()
+    r = ""
+    for hx in hexparts:
+	r += chr(int(hx, 16))
+    return r
 
 # Fetch single values via SNMP. This function is only used by snmp_info_single,
 # which is only rarely used. Most checks use snmp_info, which is handled by
@@ -97,7 +105,7 @@ def get_snmp_table(hostname, ip, community, oid_info):
     else:
       oid, suboids, columns = oid_info
 
-    if opt_verbose:
+    if opt_debug:
        sys.stderr.write('Fetching OID %s%s%s%s from IP %s with %s\n' % (tty_bold, tty_green, oid, tty_normal, ip, cmd))
 
     all_values = []
@@ -123,13 +131,13 @@ def get_snmp_table(hostname, ip, community, oid_info):
             if suboid:
                fetchoid += "." + str(suboid)
             
-            command = cmd + " -Oa -OQ -Ov -c %s %s %s.%s 2>/dev/null" % \
+            command = cmd + " -OQ -Ov -c %s %s %s.%s 2>/dev/null" % \
                 (community, ip, fetchoid, str(column))
             snmp_process = os.popen(command, "r").xreadlines()
 	    
 	    # Ugly(1): in some cases snmpwalk inserts line feed within one
 	    # dataset. This happens for example on hexdump outputs longer
-	    # than a few bytes. Those dumps are enclose in double quotes.
+	    # than a few bytes. Those dumps are enclosed in double quotes.
 	    # So if the value begins with a double quote, but the line
 	    # does not end with a double quote, we take the next line(s) as
 	    # a continuation line.

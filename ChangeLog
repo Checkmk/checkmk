@@ -13,6 +13,9 @@
     * Packager: handle broken files in package dir
     * snmp handling: better error handling in cases where multiple tables
       are merged (e.g. fc_brocade_port_detailed)
+    * snmp: new handling of unprintable strings: hex dumps are converted
+      into binary strings now. That way all strings can be displayed and
+      no information is lost - nevertheless.
       
     Checks & Agents:
     * Solaris agent: fixed rare df problems on Solaris 10, fix problem with test -f
@@ -22,6 +25,7 @@
     * Do not use ipmi-sensors if /dev/ipmi0 is missing. ipmi-sensors tries
       to fiddle around with /dev/mem in that case and miserably fails
       in some cases (infinite loop)
+    * fjdary60_run: use new binary encoding of hex strings
 
     Livestatus:
     * Delay starting of threads (and handling of socket) until Nagios has

@@ -27,23 +27,23 @@
 def inventoryfunc(checkname, info):
     inventory = []
     for line in info:
-	hexparts = line[1].split(None, 3)
-	if hexparts[2] == "A0": # RLUN is present
+	rawdata = line[1]
+	if rawdata[2] == '\xa0': # RLUN is present
 	    inventory.append( (line[0], "", None) )
     return inventory
 
 def checkfunc(item, _no_params, info):
     for line in info:
 	if item == line[0]:
-	    hexparts = line[1].split(None, 4)
-	    if hexparts[2] != "A0":
+	    rawdata = line[1]
+	    if rawdata[2] != '\xa0':
 		return (2, "CRIT - RLUN is not present")
-	    elif hexparts[3] == "08":
+	    elif rawdata[3] == '\x08':
 		return (1, "WARN - RLUN is rebuilding") # we assume that ;-)
-            elif hexparts[3] == "00":
+            elif rawdata[3] == '\x00':
 		return (0, "OK - RLUN is in normal state") # assumption
 	    else:
-		return (2, "CRIT - RLUN in unknown state %s" % hexparts[3])
+		return (2, "CRIT - RLUN in unknown state %02x" % ord(rawdata[3]))
 	    
     return (3, "UNKNOWN - No RLUN %s in SNMP output" % item)
 

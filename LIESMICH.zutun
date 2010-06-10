@@ -9,13 +9,10 @@ Kann man den aktuellen Status der Maus irgendwie abfragen - so dass man das
 verlorengegangene Event kompensieren kann? Oder kommt das Event irgendwo
 anders an, wo man es noch abgreifen kann?
 
-Lars: Quicksearch: Wenn man nur ein paar Buchstaben tippt und dann enter
-klickt, könnte man einfach den ersten Host auswählen, der matcht. Momentan
-kommt man zu einer leeren Ansicht, weil es den Host ja nicht gibt, den
-man eingetippt hat.
-
-Quicksearch: Das Dropdown bleibt recht oft auf, obwohl man schon einen
-Host ausgewählt hat.
+Quicksearch: Wenn man die Suchliste aufklappt und dann das Widget mit
+der Maus verlässt, dann klappt es nicht wieder zu. Gut wäre hier,
+wenn wenigstens ein Mausklick auf das Snapin (außerhalb der Liste)
+diese wieder zuklappt.
 
 --------------------------------------------------------------------------------
 NOCH INS RELEASE 1.1.5
@@ -208,3 +205,12 @@ Nur wie?
 Logwatch: Hier sollte man wirklich einen Teil der Meldung ausgeben.
 Kann man evtl. den long_service_output verwenden?
 
+Performance counter: Generell sollten *alle* Counter von Check_MK
+behandelt werden mit get_counter und *nicht* als counter in die
+RRDs geschrieben, sondern bereits als Rate. Dadurch muss man alle
+Graphen einmal wegwerfen. Das ist blöd. Vorteil allerdings: (1)
+man kann Perf-O-Meter machen, (2) die Counter-Wrap-Erkennung
+verhindert, dass in den RRDs nach einem Reboot utopische Werte
+stehen (z.B. für die Kernel counter). (3) Da in den Performancedaten
+bereits eine Rate steht, können auch Tools wie NagVis dafür eine
+Visualisierung machen.

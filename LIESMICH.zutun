@@ -1,28 +1,19 @@
 --------------------------------------------------------------------------------
-Noch fuer den Workshop
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-NOCH INS RELEASE 1.1.5
---------------------------------------------------------------------------------
-Aenderung an default_user_role in multisite.mk erfordert
-Apache-Neustart.
-
-View editor: Wenn man keine Display columns ausgewaehlt
-hat, dann sollte eine Fehlermeldung kommen.
-
---------------------------------------------------------------------------------
 INS RELEASE 1.2
 --------------------------------------------------------------------------------
-Bei Inventur check_mk -I ntp werden auch die SNMP-Geraete abgefragt?
-Werden die nur bei -I tcp ausgeklammert? Sollte nicht sein, sonst
-bekommen wir viele Timeouts.
-
 check_mk -X erzwingen. Das -R soll nur noch klappen, wenn kein Configfehler
 auftritt.
 
 --------------------------------------------------------------------------------
 BUGS
 --------------------------------------------------------------------------------
+Bei Inventur check_mk -I ntp werden auch die SNMP-Geraete abgefragt?
+Werden die nur bei -I tcp ausgeklammert? Sollte nicht sein, sonst
+bekommen wir viele Timeouts.
+
+Multisite: Aenderung an default_user_role in multisite.mk erfordert
+Apache-Neustart.
+
 Sidebar scrollen: Wenn man ein Snapin packt, mit der Maus scrollt und
 dabei die Maus über den Rand des HTML-Bereiches des Browsers rauszieht und
 dort loslässt, dann bekommt die Sidebar das nicht mit. Wenn man mit der Maus
@@ -35,12 +26,6 @@ Quicksearch: Wenn man die Suchliste aufklappt und dann das Widget mit
 der Maus verlässt, dann klappt es nicht wieder zu. Gut wäre hier,
 wenn wenigstens ein Mausklick auf das Snapin (außerhalb der Liste)
 diese wieder zuklappt.
-
-Quicksearch: Wenn man die Suchliste zugeklappt ist aber ein halber
-Hostname drinsteht, dann klappt die Liste auch dann auf, wenn man
-kein neues Zeichen eingetippt hat, sondern z.B. nur Shift losgelassen
-hat. Man bekommt sie dann nur schwer zugeklappt. => Nur aufklappen,
-wenn sich der String geändert hat.
 
 Quicksearch: Kann man die Liste nicht nach X Sekunden Inaktivität
 von selbst zuklappen lassen?
@@ -227,3 +212,7 @@ Visualisierung machen.
 Multisite: Perf-O-Meter für weitere Checks einbauen.
 
 Logfile ansicht: Filter zum suchen nach Texten.
+
+View editor: Wenn man keine Display columns ausgewaehlt
+hat, dann sollte eine Fehlermeldung kommen.
+

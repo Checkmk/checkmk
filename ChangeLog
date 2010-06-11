@@ -1,4 +1,9 @@
 1.1.6rc2:
+    Multisite:
+    * Fix bug in Master control: other sites vanished after klicking buttons.
+      This was due to connection error detection in livestatus.py (Bug found
+      by Benjamin Odenthal)
+
     Core, Setup, etc.:
     * snmp: hopefully fix HEX/string detection now
 

@@ -28,10 +28,23 @@
 
 def strip_snmp_value(value):
     v = value.strip()
-    if v.startswith('"'):
+    if v.startswith('"') and is_hex_string(v[1:-1]):
         return convert_from_hex(v[1:-1])
     else:
         return v.strip()
+
+def is_hex_string(value):
+    hexdigits = "0123456789abcdefABCDEF"
+    n = 0
+    for x in value:
+        if n % 3 == 2:
+            if x != ' ':
+                return False
+        else:
+            if x not in hexdigits:
+                return False
+        n += 1 
+    return True
 
 def convert_from_hex(value):
     hexparts = value.split()
@@ -83,8 +96,6 @@ def get_snmp_explicit(hostname, ipaddress, community, mib, baseoid, suffixes):
             if opt_verbose:
                 sys.stderr.write(tty_red + tty_bold + "ERROR: " + tty_normal + "SNMP error\n")
             return None
-        if opt_verbose:
-               sys.stderr.write(' %d items found\n' % num_found)
     return info
 
 def get_snmp_table(hostname, ip, community, oid_info):

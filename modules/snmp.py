@@ -28,8 +28,12 @@
 
 def strip_snmp_value(value):
     v = value.strip()
-    if v.startswith('"') and is_hex_string(v[1:-1]):
-        return convert_from_hex(v[1:-1])
+    if v.startswith('"'):
+        v = v[1:-1]
+        if is_hex_string(v):
+            return convert_from_hex(v)
+        else:
+            return v.strip()
     else:
         return v.strip()
 

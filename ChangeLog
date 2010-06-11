@@ -2,6 +2,9 @@
     Core, Setup, etc.:
     * snmp: hopefully fix HEX/string detection now
 
+    Checks & Agents:
+    * md: fix inventory bug on resync=PENDING (Thanks to Darin Perusich)
+
 1.1.6rc1:
     Multisite:
     * Repair Perf-O-Meters on webkit based browsers (e.g. Chrome, Safari)

@@ -888,6 +888,8 @@ void Query::outputString(const char *value)
       while (*r) {
 	 if (*r < 32 && *r >= 0) 
 	     outputUnicodeEscape((unsigned)*r);
+         else if ((*r & 0xE0) == 0xC0)
+             outputUnicodeEscape(((*r & 31) << 6) | (*++r & 0x3F)); // 2 byte encoding
 	 else if (*r < 0)
 	     outputUnicodeEscape((unsigned)((int)*r + 256)); // assume latin1 encoding
 	 else { 

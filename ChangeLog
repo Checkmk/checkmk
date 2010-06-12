@@ -3,6 +3,10 @@
     * Assume strings are UTF-8 encoded in Nagios. Convert from latin-1 only
       on invalid UTF-8 sequences (thanks to Alexander Yegorov)
 
+    Multisite:
+    * Correctly display non-ascii characters (fixes exception with 'ascii codec')
+      (Please also update Livestatus to 1.1.6rc3)
+
 1.1.6rc2:
     Multisite:
     * Fix bug in Master control: other sites vanished after klicking buttons.

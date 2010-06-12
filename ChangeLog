@@ -3,6 +3,8 @@
     * Fix bug in Master control: other sites vanished after klicking buttons.
       This was due to connection error detection in livestatus.py (Bug found
       by Benjamin Odenthal)
+    * Add theme and baseurl to links to PNP (using features of new PNP4Nagios
+      0.6.4)
 
     Core, Setup, etc.:
     * snmp: hopefully fix HEX/string detection now

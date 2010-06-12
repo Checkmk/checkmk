@@ -223,3 +223,8 @@ Spalte 'contact_groups'. Man bekommt zwar die Einzelkontakte,
 aber nicht die Gruppen. Bei den Nagios-Datenstrukturen gibt
 es aber einen passenden Zeiger dafür. Sollte also nicht schwer
 sein, das umzusetzen.
+
+Livestatus: Beim Empfangen von Queries gibt es zwei Timeouts:
+den für eine Zeile, den für eine Queriy. Beide sollte man 
+konfigurieren können und auch evtl. im Default etwas erhöhen.
+

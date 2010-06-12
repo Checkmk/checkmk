@@ -204,3 +204,18 @@ Logfile ansicht: Filter zum suchen nach Texten.
 View editor: Wenn man keine Display columns ausgewaehlt
 hat, dann sollte eine Fehlermeldung kommen.
 
+Windows services: Konfiguration von Namen für die Services
+über 
+  windows_service_aliasses = {
+     'ACDSee Lizenzserver' : 'ProductCommunicationService',
+  }
+Der Schlüssel ist dabei der logische Name. Oder man macht es
+umgekert. Verfahren: Als item wird der logische Alias-name
+speichert. So taucht dieser dann in der Service-Description
+auf. Beim Check kommt der logische Name rein. Mit dem dict
+kann ich daraus den physischen berechnen und so die richtige
+Zeile finden. Oder ich kann umgekehrt jede Zeile im dict
+zum Physischen namen den Alias nachschlagen und so zu Zuordnung
+machen.
+
+

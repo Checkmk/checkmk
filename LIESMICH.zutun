@@ -218,4 +218,8 @@ Zeile finden. Oder ich kann umgekehrt jede Zeile im dict
 zum Physischen namen den Alias nachschlagen und so zu Zuordnung
 machen.
 
-
+Livestatus: Bei den Tabellen hosts und services fehlt die
+Spalte 'contact_groups'. Man bekommt zwar die Einzelkontakte,
+aber nicht die Gruppen. Bei den Nagios-Datenstrukturen gibt
+es aber einen passenden Zeiger dafür. Sollte also nicht schwer
+sein, das umzusetzen.

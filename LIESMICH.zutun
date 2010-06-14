@@ -7,6 +7,10 @@ auftritt.
 --------------------------------------------------------------------------------
 BUGS
 --------------------------------------------------------------------------------
+Beim editieren von Views, die mehr als 10 Spalten haben, ignoriert der
+Editor alle Spalten, die man nach der 10. Spalte ändert.
+
+
 Bei Inventur check_mk -I ntp werden auch die SNMP-Geraete abgefragt?
 Werden die nur bei -I tcp ausgeklammert? Sollte nicht sein, sonst
 bekommen wir viele Timeouts.

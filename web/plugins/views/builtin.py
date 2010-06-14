@@ -781,6 +781,7 @@ multisite_builtin_views = {
                           ('service_icons', None),
                           ('service_state', None),
                           ('svc_plugin_output', None),
+                          ('svc_long_plugin_output', None),
                           ('svc_perf_data', None),
                           ('svc_attempt', None),
                           ('svc_check_type', None),

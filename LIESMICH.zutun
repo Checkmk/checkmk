@@ -1,7 +1,20 @@
 --------------------------------------------------------------------------------
-Noch fuer den Workshop
+INS RELEASE 1.2
 --------------------------------------------------------------------------------
-Lars: Sidebar scrollen: Wenn man ein Snapin packt, mit der Maus scrollt und
+check_mk -X erzwingen. Das -R soll nur noch klappen, wenn kein Configfehler
+auftritt.
+
+--------------------------------------------------------------------------------
+BUGS
+--------------------------------------------------------------------------------
+Bei Inventur check_mk -I ntp werden auch die SNMP-Geraete abgefragt?
+Werden die nur bei -I tcp ausgeklammert? Sollte nicht sein, sonst
+bekommen wir viele Timeouts.
+
+Multisite: Aenderung an default_user_role in multisite.mk erfordert
+Apache-Neustart.
+
+Sidebar scrollen: Wenn man ein Snapin packt, mit der Maus scrollt und
 dabei die Maus über den Rand des HTML-Bereiches des Browsers rauszieht und
 dort loslässt, dann bekommt die Sidebar das nicht mit. Wenn man mit der Maus
 wieder reinfährt, ist man - trotz losgelassener Maus - noch im Scrollmodus.
@@ -9,36 +22,16 @@ Kann man den aktuellen Status der Maus irgendwie abfragen - so dass man das
 verlorengegangene Event kompensieren kann? Oder kommt das Event irgendwo
 anders an, wo man es noch abgreifen kann?
 
-Lars: Quicksearch: Wenn man nur ein paar Buchstaben tippt und dann enter
-klickt, könnte man einfach den ersten Host auswählen, der matcht. Momentan
-kommt man zu einer leeren Ansicht, weil es den Host ja nicht gibt, den
-man eingetippt hat.
+Counter wraps: Wenn ein Counter wrapped, liefert dann Check_MK eine Warnung
+"got only 5 out of 9 infos?"
 
-Quicksearch: Das Dropdown bleibt recht oft auf, obwohl man schon einen
-Host ausgewählt hat.
+Livestatus: Bei bestimmten regulären Ausdrücken in ~~ schmiert Nagios
+ab. Ist wohl ein Bug in glibc/regcomp. Weiss nicht, was ich da machen
+kann. Beispiel:
+GET hosts 
+Filter: name ~~ (.*){1,346}[bc] 
 
---------------------------------------------------------------------------------
-NOCH INS RELEASE 1.1.5
---------------------------------------------------------------------------------
-Aenderung an default_user_role in multisite.mk erfordert
-Apache-Neustart.
 
-View editor: Wenn man keine Display columns ausgewaehlt
-hat, dann sollte eine Fehlermeldung kommen.
-
---------------------------------------------------------------------------------
-INS RELEASE 1.2
---------------------------------------------------------------------------------
-Bei Inventur check_mk -I ntp werden auch die SNMP-Geraete abgefragt?
-Werden die nur bei -I tcp ausgeklammert? Sollte nicht sein, sonst
-bekommen wir viele Timeouts.
-
-check_mk -X erzwingen. Das -R soll nur noch klappen, wenn kein Configfehler
-auftritt.
-
---------------------------------------------------------------------------------
-BUGS
---------------------------------------------------------------------------------
 Livestatus: das Nagios-Debuglog ist nicht reentrant. Livestatus muss ein eigenes
 Logfile schreiben. Wir machen das ohne Rotation. Man muss einfach selbst
 aufpassen, dass es nicht zu groß wird. Default ist eh aus. Ins Nagios
@@ -70,10 +63,6 @@ Multisite: Zeitanzeige der Downtimes (ende) zu ungenau.  "in 6 hrs" ist
 blöd. Auch bei Start "19 sec" ist dumm, hier wäre besser (vor 19 sec). Oder
 bei Downtimes immer absolute Zeiten angeben? Evtl. Zusatzspalte der Duration.
 
-logwatch.php und die anderen htdocs/* -Dateien rausschmeissen, nicht mehr
-installieren. Im setup auch das Eintragen von var_dir entfernen. Eventuell
-vorher oben einen Text einbauen mit Link auf das neue Logwatch.
-
 snmp_communities: dictionary nicht mehr verwenden, aus Doku raus, Defaultwert
 leere Liste, aus Code raus, Hinweis im ChangeLog. Evtl einen Test mit
 Abbruch, wenn immer noch type ist dict.
@@ -86,6 +75,8 @@ es ja fuer binaere Hostlisten das NEGATE (=> Doku). In 1.2 einbauen.
 --------------------------------------------------------------------------------
 IDEEN & VERBESSERUNGEN
 --------------------------------------------------------------------------------
+Neue Spalten: * long_service_output, host_notes
+
 Multisite: Kann man - wenn man Aggregation verwendet - beim normalen
 Host einen Links auf den Summary host machen und umgekehrt? Evtl.
 hartkodiert in show_view(), falls die Variable host gesetzt ist?
@@ -167,3 +158,51 @@ Backup durchzuführen.
 
 Livestatus-Limit-Header könnte auch einen Bereich erlauben, z.B.:
 Limit: 1000 2000 (holt die zweiten Tausend Eintraege...)
+
+Windows: Der Agent sollte die Logmeldungen nach UTF-8 konvertieren. 
+Nur wie?
+
+Logwatch: Hier sollte man wirklich einen Teil der Meldung ausgeben.
+Kann man evtl. den long_service_output verwenden?
+
+Performance counter: Generell sollten *alle* Counter von Check_MK
+behandelt werden mit get_counter und *nicht* als counter in die
+RRDs geschrieben, sondern bereits als Rate. Dadurch muss man alle
+Graphen einmal wegwerfen. Das ist blöd. Vorteil allerdings: (1)
+man kann Perf-O-Meter machen, (2) die Counter-Wrap-Erkennung
+verhindert, dass in den RRDs nach einem Reboot utopische Werte
+stehen (z.B. für die Kernel counter). (3) Da in den Performancedaten
+bereits eine Rate steht, können auch Tools wie NagVis dafür eine
+Visualisierung machen.
+
+Multisite: Perf-O-Meter für weitere Checks einbauen.
+
+Logfile ansicht: Filter zum suchen nach Texten.
+
+View editor: Wenn man keine Display columns ausgewaehlt
+hat, dann sollte eine Fehlermeldung kommen.
+
+Windows services: Konfiguration von Namen für die Services
+über 
+  windows_service_aliasses = {
+     'ACDSee Lizenzserver' : 'ProductCommunicationService',
+  }
+Der Schlüssel ist dabei der logische Name. Oder man macht es
+umgekert. Verfahren: Als item wird der logische Alias-name
+speichert. So taucht dieser dann in der Service-Description
+auf. Beim Check kommt der logische Name rein. Mit dem dict
+kann ich daraus den physischen berechnen und so die richtige
+Zeile finden. Oder ich kann umgekehrt jede Zeile im dict
+zum Physischen namen den Alias nachschlagen und so zu Zuordnung
+machen.
+
+Livestatus: Bei den Tabellen hosts und services fehlt die
+Spalte 'contact_groups'. Man bekommt zwar die Einzelkontakte,
+aber nicht die Gruppen. Bei den Nagios-Datenstrukturen gibt
+es aber einen passenden Zeiger dafür. Sollte also nicht schwer
+sein, das umzusetzen.
+
+Livestatus: Beim Empfangen von Queries gibt es zwei Timeouts:
+den für eine Zeile, den für eine Queriy. Beide sollte man 
+konfigurieren können und auch evtl. im Default etwas erhöhen.
+

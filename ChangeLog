@@ -1,3 +1,70 @@
+1.1.6rc3:
+    Core, Setup, etc.:
+    * New option --donate for donating live host data to the community.
+      Please refer to the online documentation for details.
+
+    Livestatus:
+    * Assume strings are UTF-8 encoded in Nagios. Convert from latin-1 only
+      on invalid UTF-8 sequences (thanks to Alexander Yegorov)
+
+    Multisite:
+    * Correctly display non-ascii characters (fixes exception with 'ascii codec')
+      (Please also update Livestatus to 1.1.6rc3)
+
+1.1.6rc2:
+    Multisite:
+    * Fix bug in Master control: other sites vanished after klicking buttons.
+      This was due to connection error detection in livestatus.py (Bug found
+      by Benjamin Odenthal)
+    * Add theme and baseurl to links to PNP (using features of new PNP4Nagios
+      0.6.4)
+
+    Core, Setup, etc.:
+    * snmp: hopefully fix HEX/string detection now
+
+    Checks & Agents:
+    * md: fix inventory bug on resync=PENDING (Thanks to Darin Perusich)
+
+1.1.6rc1:
+    Multisite:
+    * Repair Perf-O-Meters on webkit based browsers (e.g. Chrome, Safari)
+    * Repair layout on IE7/IE8. Even on IE6 something is working (definitely
+      not transparent PNGs though). Thanks to Lars.
+    * Display host state correct if host is pending (painter "host with state")
+    * Logfile: new filter for plugin output
+    * Improve dialog flow when cloning views (button [EDIT] in views snapin)
+    * Quicksearch: do not open search list if text did not change (e.g. Shift up),
+      close at click into field or snapin.
+
+    Core, Setup, etc.:
+    * Included three patched from Jeff Dairiki dealing with compile flags
+      and .gitignore removed from tarballs
+    * Fix problem with clustered_services_of[]: services of one cluster
+      appeared also on others
+    * Packager: handle broken files in package dir
+    * snmp handling: better error handling in cases where multiple tables
+      are merged (e.g. fc_brocade_port_detailed)
+    * snmp: new handling of unprintable strings: hex dumps are converted
+      into binary strings now. That way all strings can be displayed and
+      no information is lost - nevertheless.
+      
+    Checks & Agents:
+    * Solaris agent: fixed rare df problems on Solaris 10, fix problem with test -f
+      (thanks to Ulf Hoffmann)
+    * Converted all PNP templates to format of 0.6.X. Dropped compatibility
+      with 0.4.X.
+    * Do not use ipmi-sensors if /dev/ipmi0 is missing. ipmi-sensors tries
+      to fiddle around with /dev/mem in that case and miserably fails
+      in some cases (infinite loop)
+    * fjdary60_run: use new binary encoding of hex strings
+    * if64: better error handling for cases where clients do not send all information
+    * apc_symmetra: handle status 'smart boost' as OK, not CRITICAL
+
+    Livestatus:
+    * Delay starting of threads (and handling of socket) until Nagios has
+      started its event loop. This prevents showing services as PENDING 
+      a short time during program start.
+
 1.1.6b3:
     Multisite:
     * Quicksearch: hide complete host list if field is emptied via Backspace or Del.

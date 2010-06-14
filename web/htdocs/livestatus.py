@@ -410,6 +410,7 @@ class MultiSiteConnection(Helpers):
 	limit = self.limit
 	for sitename, site, connection in self.connections:
 	    if self.only_sites != None and sitename not in self.only_sites:
+                stillalive.append( (sitename, site, connection) ) # state unknown, assume still alive
 		continue
 	    try:
 		if limit != None:
@@ -428,7 +429,7 @@ class MultiSiteConnection(Helpers):
 		    "exception" : e,
 		    "site" : site,
 		}
-	self.connections = stillalive
+        self.connections = stillalive
 	return result
 
     def command(self, command, sitename = "local"):

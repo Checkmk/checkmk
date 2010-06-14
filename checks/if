@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-if_inventory_porttypes = [ "ethernetCsmacd" ]
+if_inventory_porttypes = [ "6", "ethernetCsmacd" ]
 if_inventory_uses_description = False
 if_default_levels = (0.01, 0.1) # Error percentages
 

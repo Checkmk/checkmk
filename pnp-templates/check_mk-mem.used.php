@@ -27,9 +27,9 @@ $opt[1] = "--vertical-label 'MEMORY(MB)' -X0 --upper-limit " . ($MAX[1] * 120 / 
 
 $maxgb = sprintf("%.1f", $MAX[1] / 1024.0);
 
-$def[1] =  "DEF:ram=$rrdfile:$DS[1]:MAX " ;
-$def[1] .= "DEF:swap=$rrdfile:$DS[2]:MAX " ;
-$def[1] .= "DEF:virt=$rrdfile:$DS[3]:MAX " ;
+$def[1] =  "DEF:ram=$RRDFILE[1]:$DS[1]:MAX " ;
+$def[1] .= "DEF:swap=$RRDFILE[1]:$DS[2]:MAX " ;
+$def[1] .= "DEF:virt=$RRDFILE[1]:$DS[3]:MAX " ;
 $def[1] .= "HRULE:$MAX[3]#000080:\"RAM+SWAP installed\" ";
 $def[1] .= "HRULE:$MAX[1]#2040d0:\"$maxgb GB RAM installed\" ";
 $def[1] .= "HRULE:$WARN[3]#FFFF00:\"Warning\" ";
@@ -54,11 +54,11 @@ $def[1] .= "GPRINT:virt:MAX:\"%6.0lf MB max\\n\" " ;
 /* HACK: Avoid error if RRD does not contain two data
  sources which .XML file *does* */
 $retval = -1;
-system("rrdtool info $rrdfile | fgrep -q 'ds[5]'", $retval);
+system("rrdtool info $RRDFILE[1] | fgrep -q 'ds[5]'", $retval);
 if ($retval == 0)
 {
  if (count($NAME) >= 4 and $NAME[4] == "mapped") {
-   $def[1] .= "DEF:mapped=$rrdfile:$DS[4]:MAX " ;
+   $def[1] .= "DEF:mapped=$RRDFILE[1]:$DS[4]:MAX " ;
    $def[1] .= "LINE2:mapped#8822ff:\"Memory mapped\" " ;
    $def[1] .= "GPRINT:mapped:LAST:\"%6.0lf MB last\" " ;
    $def[1] .= "GPRINT:mapped:AVERAGE:\"%6.0lf MB avg\" " ;
@@ -66,7 +66,7 @@ if ($retval == 0)
   }
 
  if (count($NAME) >= 5 and $NAME[5] == "committed_as") {
-   $def[1] .= "DEF:committed=$rrdfile:$DS[5]:MAX " ;
+   $def[1] .= "DEF:committed=$RRDFILE[1]:$DS[5]:MAX " ;
    $def[1] .= "LINE2:committed#cc00dd:\"Committed    \" " ;
    $def[1] .= "GPRINT:committed:LAST:\"%6.0lf MB last\" " ;
    $def[1] .= "GPRINT:committed:AVERAGE:\"%6.0lf MB avg\" " ;

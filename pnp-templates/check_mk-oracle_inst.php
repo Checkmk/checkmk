@@ -27,7 +27,7 @@
 $instname = substr($servicedesc, 3);
 $opt[1] = "-l0 -u100 --title \"Free Session Slots $instname\" ";
 
-$def[1] = "DEF:slots=$rrdfile:$DS[1]:MIN "; 
+$def[1] = "DEF:slots=$RRDFILE[1]:$DS[1]:MIN "; 
 $def[1] .= "AREA:slots#20ff80:\"Free Session Slots\" "; 
 $def[1] .= "HRULE:$WARN[1]#ffff00:\"Warning at $WARN[1] \" ";
 $def[1] .= "HRULE:$CRIT[1]#ff0000:\"Critical at $CRIT[1] \\n\" ";       

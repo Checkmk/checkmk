@@ -50,7 +50,7 @@ PLUGINSDIR=$MK_LIBDIR/plugins
 LOCALDIR=$MK_LIBDIR/local
 
 echo '<<<check_mk>>>'
-echo Version: 1.1.6b3
+echo Version: 1.1.6rc3
 
 echo '<<<df>>>'
 for fs in ufs zfs
@@ -58,6 +58,7 @@ do
    df -lk -F $fs 2>/dev/null | sed 1d | \
    while read Filesystem kbytes used avail capacity Mountedon
    do
+      kbytes=`expr $used + $avail`
       echo "${Filesystem} $fs ${kbytes} ${used} ${avail} ${capacity} ${Mountedon}"
    done
 done
@@ -113,7 +114,7 @@ then
 fi
 
 # MK's Remote Plugin Executor
-if [ -e "$MK_CONFDIR/mrpe.cfg" ]
+if [ -f "$MK_CONFDIR/mrpe.cfg" ]
 then
     echo '<<<mrpe>>>'
     grep -v '^ *#' "$MK_CONFDIR/mrpe.cfg" | grep -v '^ *$' | \

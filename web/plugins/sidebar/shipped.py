@@ -772,7 +772,7 @@ def ajax_switch_masterstate(h):
 	html.live.set_only_sites([site])
         html.live.query("GET status\nWaitTrigger: program\nWaitTimeout: 10000\nWaitCondition: %s = %d\nColumns: %s\n" % \
                (column, state, column))
-	html.live.set_only_sites(None)
+	html.live.set_only_sites()
         render_master_control()
     else:
 	html.write("Command %s/%d not found" % (column, state))

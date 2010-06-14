@@ -26,7 +26,7 @@
 
 $opt[1] = "--vertical-label 'Celsius' -l0 -u60 --title \"IPMI temperature sensors $hostname\" ";
 
-$def[1] = "DEF:temp=$rrdfile:$DS[1]:MAX ";
+$def[1] = "DEF:temp=$RRDFILE[1]:$DS[1]:MAX ";
 $def[1] .= "AREA:temp#ffd040:\"Average ambient temperature\" ";
 $def[1] .= "LINE:temp#ff8000 ";
 

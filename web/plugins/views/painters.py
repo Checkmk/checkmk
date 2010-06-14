@@ -415,8 +415,9 @@ def paint_pnpgraph(sitename, host, service = "_HOST_"):
     pnpurl = site["pnp_url"]
     htmlcode = ""
     for source in [ 1, 2, 3, 4, 5, 6, 7 ]:
-        urlvars = '&host=%s&srv=%s&source=%d' % ( htmllib.urlencode(host), htmllib.urlencode(service), source)
-        htmlcode += '<div class=pnpgraph><a href="%s/index.php/graph?%s"><img src="%s/image?%s&view=0"></a></div>' % \
+        urlvars = '&host=%s&srv=%s&view=1&source=%d&theme=multisite&baseurl=%s' % \
+                  ( htmllib.urlencode(host), htmllib.urlencode(service), source, htmllib.urlencode(defaults.checkmk_web_uri) )
+        htmlcode += '<div class=pnpgraph><a href="%s/index.php/graph?%s"><img src="%s/image?%s"></a></div>' % \
             (pnpurl, urlvars, pnpurl, urlvars)
     return "pnpgraph", htmlcode
         
@@ -591,11 +592,18 @@ multisite_painters["host_nagios_link"] = {
     "paint" : paint_nagios_link
 }
 
+def paint_host_with_state(row):
+    if row["host_has_been_checked"]:
+        state = row["host_state"]
+    else:
+        state = "p"
+    return "state hstate hstate%s" % state, row["host_name"]
+
 multisite_painters["host_with_state"] = {
     "title" : "Hostname colored with state",
     "short" : "Host",
-    "columns" : ["site", "host_name", "host_state" ],
-    "paint" : lambda row: ("state hstate hstate%d" % row["host_state"], row["host_name"])
+    "columns" : ["site", "host_name", "host_state", "host_has_been_checked" ],
+    "paint" : paint_host_with_state, 
 }
 
 multisite_painters["host"] = {
@@ -935,7 +943,8 @@ def pnp_url(row):
     svc = row["service_description"]
     svc = svc.replace(":", "_").replace("\\", "_")
     site = html.site_status[sitename]["site"]
-    url = site["pnp_url"] + ("index.php/graph?host=%s&srv=%s" % (htmllib.urlencode(host), htmllib.urlencode(svc)))
+    url = site["pnp_url"] + ("index.php/graph?view=1&host=%s&srv=%s&theme=multisite&baseurl=%s" % \
+            (htmllib.urlencode(host), htmllib.urlencode(svc), htmllib.urlencode(defaults.checkmk_web_uri)))
     return url
 
 

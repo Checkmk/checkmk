@@ -31,6 +31,7 @@
 var aSearchResults = [];
 var iCurrent = null;
 var mkSearchTargetFrame = 'main';
+var oldValue = "";
 
 // Register an input field to be a search field and add eventhandlers
 function mkSearchAddField(field, targetFrame) {
@@ -42,7 +43,9 @@ function mkSearchAddField(field, targetFrame) {
 
         oField.onkeydown = function(e) { if (!e) e = window.event; return mkSearchKeyDown(e, oField); }
         oField.onkeyup   = function(e) { if (!e) e = window.event; return mkSearchKeyUp(e, oField);}
-        oField.onclick   = function(e) { if (!e) e = window.event; e.cancelBubble = true; e.returnValue = false; }
+        // oField.onclick   = function(e) { if (!e) e = window.event; e.cancelBubble = true; e.returnValue = false; }
+        // What das e.cancelBubble do? That variable is referenced nowhere. Is it some builtin JavaScript thing?
+        oField.onclick   = function(e) { mkSearchClose(); return true; }
 
         // The keypress event is being ignored. Key presses are handled by onkeydown and onkeyup events
         oField.onkeypress  = function(e) { if (!e) e = window.event; if (e.keyCode == 13) return false; }
@@ -250,11 +253,14 @@ function mkSearch(e, oField) {
     }
     
     var val = oField.value;
+    if (val == oldValue)
+        return; // nothing changed. No new search neccessary
+    oldValue = val;
 
-    if(!aSearchHosts) {
+    if (!aSearchHosts) {
         alert("No hosts to search for");
-                return;
-        }
+        return;
+    }
 
     aSearchResults = [];
 

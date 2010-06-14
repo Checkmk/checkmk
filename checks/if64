@@ -27,11 +27,13 @@
 # Share settings with if, so user needs to configure this
 # only once. Important: The default settings must be the same
 # as in 'if' since they overwrite each other.
-if_inventory_porttypes = [ "ethernetCsmacd" ]
+if_inventory_porttypes = [ "6", "ethernetCsmacd" ]
 if_inventory_uses_description = False
 if_default_levels = (0.01, 0.1) # Error percentages
 
 def inventory_if64(checkname, info):
+    if len(info) == 0 or len(info[0]) != 18:
+	return []
     inventory = []
     for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \
         ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen in info:

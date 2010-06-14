@@ -27,10 +27,35 @@
 # This module is needed only for SNMP based checks
 
 def strip_snmp_value(value):
-   v = value.strip()
-   if v.startswith('"'): v = v[1:]
-   if v.endswith('"'): v = v[:-1]
-   return v.strip()
+    v = value.strip()
+    if v.startswith('"'):
+        v = v[1:-1]
+        if is_hex_string(v):
+            return convert_from_hex(v)
+        else:
+            return v.strip()
+    else:
+        return v.strip()
+
+def is_hex_string(value):
+    hexdigits = "0123456789abcdefABCDEF"
+    n = 0
+    for x in value:
+        if n % 3 == 2:
+            if x != ' ':
+                return False
+        else:
+            if x not in hexdigits:
+                return False
+        n += 1 
+    return True
+
+def convert_from_hex(value):
+    hexparts = value.split()
+    r = ""
+    for hx in hexparts:
+	r += chr(int(hx, 16))
+    return r
 
 # Fetch single values via SNMP. This function is only used by snmp_info_single,
 # which is only rarely used. Most checks use snmp_info, which is handled by
@@ -52,8 +77,8 @@ def get_snmp_explicit(hostname, ipaddress, community, mib, baseoid, suffixes):
             mibinfo = ""
         command = cmd + "%s -OQ -Oe -c %s %s %s.%s 2>/dev/null" % \
                   (mibinfo, community, ipaddress, baseoid, suffix)
-        if opt_verbose:
-            sys.stderr.write('   Running %s...' % (command,))
+        if opt_debug:
+            sys.stderr.write('   Running %s\n' % (command,))
         num_found = 0
         snmp_process = os.popen(command, "r")
         for line in snmp_process.readlines():
@@ -75,8 +100,6 @@ def get_snmp_explicit(hostname, ipaddress, community, mib, baseoid, suffixes):
             if opt_verbose:
                 sys.stderr.write(tty_red + tty_bold + "ERROR: " + tty_normal + "SNMP error\n")
             return None
-        if opt_verbose:
-               sys.stderr.write(' %d items found\n' % num_found)
     return info
 
 def get_snmp_table(hostname, ip, community, oid_info):
@@ -97,7 +120,7 @@ def get_snmp_table(hostname, ip, community, oid_info):
     else:
       oid, suboids, columns = oid_info
 
-    if opt_verbose:
+    if opt_debug:
        sys.stderr.write('Fetching OID %s%s%s%s from IP %s with %s\n' % (tty_bold, tty_green, oid, tty_normal, ip, cmd))
 
     all_values = []
@@ -123,13 +146,15 @@ def get_snmp_table(hostname, ip, community, oid_info):
             if suboid:
                fetchoid += "." + str(suboid)
             
-            command = cmd + " -Oa -OQ -Ov -c %s %s %s.%s 2>/dev/null" % \
+            command = cmd + " -OQ -Ov -c %s %s %s.%s 2>/dev/null" % \
                 (community, ip, fetchoid, str(column))
+            if opt_debug:
+                sys.stderr.write('   Running %s\n' % (command,))
             snmp_process = os.popen(command, "r").xreadlines()
 	    
 	    # Ugly(1): in some cases snmpwalk inserts line feed within one
 	    # dataset. This happens for example on hexdump outputs longer
-	    # than a few bytes. Those dumps are enclose in double quotes.
+	    # than a few bytes. Those dumps are enclosed in double quotes.
 	    # So if the value begins with a double quote, but the line
 	    # does not end with a double quote, we take the next line(s) as
 	    # a continuation line.

@@ -33,7 +33,7 @@
 import views, defaults
 
 def render_searchform():
-    html.write('<div id="mk_side_search">')
+    html.write('<div id="mk_side_search" onclick="mkSearchClose();">')
     html.write('<input id="mk_side_search_field" type="text" name="search" />')
     html.write('</div>')
     html.write('<script type="text/javascript" src="search.js"></script>')

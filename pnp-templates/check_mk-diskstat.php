@@ -25,7 +25,7 @@
 
 $opt[1] = "--vertical-label 'Througput (MByte/s)' -l0  -u 1 --title \"Disk throughput $hostname / $servicedesc\" ";
 
-$def[1]  = "DEF:kb=$rrdfile:$DS[1]:AVERAGE " ;
+$def[1]  = "DEF:kb=$RRDFILE[1]:$DS[1]:AVERAGE " ;
 $def[1] .= "CDEF:mb=kb,1024,/ " ;
 $def[1] .= "AREA:mb#40c080 " ;
 $def[1] .= "GPRINT:mb:LAST:\"%6.1lf MByte/s last\" " ;

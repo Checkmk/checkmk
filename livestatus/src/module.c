@@ -372,6 +372,13 @@ int broker_program(int event_type, void *data)
     pthread_cond_broadcast(&g_wait_cond[WT_PROGRAM]);
 }
 
+int broker_process(int event_type, void *data)
+{
+    struct nebstruct_process_struct *ps = (struct nebstruct_process_struct *)data;
+    if (ps->type == NEBTYPE_PROCESS_EVENTLOOPSTART)
+        start_threads();
+}
+
 void register_callbacks()
 {
     neb_register_callback(NEBCALLBACK_HOST_STATUS_DATA,      g_nagios_handle, 0, broker_host); // Needed to start threads
@@ -383,6 +390,7 @@ void register_callbacks()
     neb_register_callback(NEBCALLBACK_EXTERNAL_COMMAND_DATA, g_nagios_handle, 0, broker_command); // only for trigger 'command'
     neb_register_callback(NEBCALLBACK_STATE_CHANGE_DATA,     g_nagios_handle, 0, broker_state); // only for trigger 'state'
     neb_register_callback(NEBCALLBACK_ADAPTIVE_PROGRAM_DATA, g_nagios_handle, 0, broker_program); // only for trigger 'program'
+    neb_register_callback(NEBCALLBACK_PROCESS_DATA,          g_nagios_handle, 0, broker_process); // used for starting threads
 }
 
 void deregister_callbacks()
@@ -396,6 +404,7 @@ void deregister_callbacks()
     neb_deregister_callback(NEBCALLBACK_EXTERNAL_COMMAND_DATA, broker_command);
     neb_deregister_callback(NEBCALLBACK_STATE_CHANGE_DATA,     broker_state);
     neb_deregister_callback(NEBCALLBACK_ADAPTIVE_PROGRAM_DATA, broker_program);
+    neb_deregister_callback(NEBCALLBACK_PROCESS_DATA,          broker_program);
 }
 
 

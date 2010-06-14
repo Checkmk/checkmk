@@ -268,6 +268,8 @@ extra_summary_host_conf              = {}
 extra_service_conf                   = {}
 extra_nagios_conf                    = ""
 service_descriptions                 = {}
+donation_hosts                       = []
+donation_command                     = 'mail -r checkmk@yoursite.de  -s "Host donation %s" donatehosts@mathias-kettner.de' % check_mk_version
 
 # Settings for filesystem checks (df, df_vms, df_netapp and maybe others)
 filesystem_default_levels          = (80, 90)
@@ -729,7 +731,8 @@ def cluster_of(hostname):
 def host_of_clustered_service(hostname, servicedesc):
     # 1. New style: explicitlely assigned services
     for cluster, conf in clustered_services_of.items():
-        if in_boolean_serviceconf_list(hostname, servicedesc, conf):
+        if hostname in nodes_of(cluster) and \
+            in_boolean_serviceconf_list(hostname, servicedesc, conf):
             return cluster
 
     # 1. Old style: clustered_services assumes that each host belong to
@@ -2768,6 +2771,7 @@ def usage():
  check_mk --backup BACKUPFILE.tar.gz       make backup of configuration and data
  check_mk --restore BACKUPFILE.tar.gz      restore configuration and data
  check_mk --flush [HOST1 HOST2...]         flush all data of some or all hosts
+ check_mk --donate                         Email data of configured hosts to MK
  check_mk -P, --package COMMAND            do package operations
  check_mk -V, --version                    print version
  check_mk -h, --help                       print this help
@@ -2831,12 +2835,22 @@ NOTES:
   -P, --package brings you into packager mode. Packages are
   used to ship inofficial extensions of Check_MK. Call without
   arguments for a help on packaging.
+
+  --donate is for those who decided to help the Check_MK project
+  by donating live host data. It tars the cached agent data of 
+  those host which are configured in main.mk:donation_hosts and sends 
+  them via email to donatehosts@mathias-kettner.de. The host data
+  is then publicly available for others and can be used for setting
+  up demo sites, implementing checks and so on.
+  Do this only with test data from test hosts - not with productive
+  data! By donating real-live host data you help others trying out 
+  Check_MK and developing checks by donating hosts. This is completely
+  voluntary and turned off by default.
   
   Nagios can call check_mk without options and the hostname and its IP
   address as arguments. Much faster is using precompiled host checks,
   though.
 
-  
     
 """ % (check_mk_configfile,
        precompiled_hostchecks_dir,
@@ -2970,6 +2984,26 @@ def do_restart():
         sys.stderr.write("An error occurred: %s\n" % e)
         sys.exit(1)
 
+def do_donation():
+    donate = []
+    cache_files = os.listdir(tcp_cache_dir)
+    for host in all_hosts_untagged:
+        if in_binary_hostlist(host, donation_hosts):
+            for f in cache_files:
+                if f == host or f.startswith("%s." % host):
+                    donate.append(f)
+    if opt_verbose:
+        print "Donating files %s" % " ".join(cache_files)
+    import base64
+    indata = base64.b64encode(os.popen("tar czf - -C %s %s" % (tcp_cache_dir, " ".join(donate))).read())
+    output = os.popen(donation_command, "w")
+    output.write("\n\n@STARTDATA\n")
+    while len(indata) > 0:
+        line = indata[:64]
+        output.write(line)
+        output.write('\n')
+        indata = indata[64:]
+                    
 
 #   +----------------------------------------------------------------------+
 #   |                        __  __       _                                |
@@ -3008,7 +3042,7 @@ if __name__ == "__main__":
     short_options = 'SHVLCURDMd:I:c:nhvpXP'
     long_options = ["help", "version", "verbose", "compile", "debug",
                     "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
-		    "flush", "package",
+		    "flush", "package", "donate",
                     "no-cache", "update", "restart", "dump", "fake-dns=",
                     "man", "nowiki", "config-check", "backup=", "restore=",
                     "check-inventory=", "timeperiods", "paths" ]
@@ -3096,6 +3130,9 @@ if __name__ == "__main__":
         elif o in ['-P', '--package']:
             execfile(modules_dir + "/packaging.py")
             do_packaging(args)
+            done = True
+        elif o == '--donate':
+            do_donation()
             done = True
         elif o in [ '-M', '--man' ]:
             if len(args) > 0:

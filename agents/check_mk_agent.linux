@@ -61,14 +61,14 @@ else
 fi
 
 echo '<<<check_mk>>>'
-echo Version: 1.1.6b3
+echo Version: 1.1.6rc3
 
 # Partitionen (-P verhindert Zeilenumbruch bei langen Mountpunkten)
 # Achtung: NFS-Mounts werden grundsaetzlich ausgeblendet, um
 # Haenger zu vermeiden. Diese sollten ohnehin besser auf dem
 # Server, als auf dem Client ueberwacht werden.
 echo '<<<df>>>'
-df -PTlk -x smbfs -x tmpfs -x cifs -x iso9660 -x nfsv4 | sed 1d
+df -PTlk -x smbfs -x tmpfs -x cifs -x iso9660 -x udf -x nfsv4 | sed 1d
 # VMWare shows its own filesystems with 'vdf'. Just one
 # problem: it outputs not 7 but only 6 columns
 if which vdf > /dev/null
@@ -178,7 +178,7 @@ if which ipmitool >/dev/null ; then
 fi
 
 # IPMI data via ipmi-sensors (of freeipmi)
-if which ipmi-sensors >/dev/null ; then
+if which ipmi-sensors -a -c /dev/ipmi0 >/dev/null ; then
     echo '<<<ipmi_sensors>>>'
     sdrcache=/var/cache/.freeipmi/sdr-cache/sdr-cache-$(hostname).127.0.0.1
     # No cache file existing? => Impose no time limit, this can take a minute and more

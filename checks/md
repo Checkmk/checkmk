@@ -52,6 +52,11 @@
 # md1 : active raid1 sdb3[1] sda3[0]
 #       486239232 blocks [2/2] [UU]
 #
+# md4 : active (auto-read-only) raid1 sda6[0] sdb6[1]
+#       4200952 blocks super 1.0 [2/2] [UU]
+#         resync=PENDING
+#       bitmap: 9/9 pages [36KB], 256KB chunk
+#
 # md3 : active raid0 sdb3[0] sda3[1]
 #       16386048 blocks 64k chunks
 #       
@@ -61,6 +66,8 @@
 def inventory_md(checkname, info):
     inventory = []
     for line in info:
+        if len(line) < 3: 
+            continue
         if line[0].startswith("md") and line[1] == ':':
             device = line[0]
             raid_state = line[2]

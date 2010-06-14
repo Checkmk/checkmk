@@ -8,6 +8,9 @@
     * New painter for long service plugin output (Currently not used
       by any builtin view)
 
+    Checks & Agents:
+    * Linux agent: remove broken check for /dev/ipmi0
+
 1.1.6rc3:
     Core, Setup, etc.:
     * New option --donate for donating live host data to the community.

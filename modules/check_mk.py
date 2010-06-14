@@ -256,6 +256,7 @@ service_aggregations                 = []
 service_dependencies                 = []
 non_aggregated_hosts                 = []
 aggregate_check_mk                   = False
+aggregation_output_format            = "single" # new in 1.1.6. Possible also: "multiline"
 summary_host_groups                  = []
 summary_service_groups               = [] # service groups for aggregated services
 summary_service_contactgroups        = [] # service contact groups for aggregated services
@@ -1866,7 +1867,7 @@ filesystem_default_levels = None
     # Compile in all neccessary global variables
     output.write("\n# Global variables\n")
     for var in [ 'check_mk_version', 'agent_port', 'tcp_connect_timeout', 'agent_min_version',
-                 'perfdata_format',
+                 'perfdata_format', 'aggregation_output_format',
                  'aggr_summary_hostname', 'nagios_command_pipe_path',
                  'var_dir', 'counters_directory', 'tcp_cache_dir',
                  'check_mk_basedir', 'df_magicnumber_normsize', 

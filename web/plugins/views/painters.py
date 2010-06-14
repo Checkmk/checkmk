@@ -273,6 +273,12 @@ multisite_painters["svc_plugin_output"] = {
     "columns" : ["service_plugin_output"],
     "paint" : lambda row: (None, row["service_plugin_output"])
 }
+multisite_painters["svc_long_plugin_output"] = {
+    "title" : "Long output of check plugin (multiline)",
+    "short" : "Status detail",
+    "columns" : ["service_long_plugin_output"],
+    "paint" : lambda row: (None, row["service_long_plugin_output"].replace('\\n', '<br>'))
+}
 multisite_painters["svc_perf_data"] = {
     "title" : "Service performance data",
     "short" : "Perfdata",

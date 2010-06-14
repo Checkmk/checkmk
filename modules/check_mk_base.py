@@ -129,7 +129,7 @@ class MKAgentError(Exception):
 def summary_hostname(hostname):
     return aggr_summary_hostname % hostname
 
-# Updates the state of an aggretated service check from the output of
+# Updates the state of an aggregated service check from the output of
 # one of the underlying service checks. The status of the aggregated
 # service will be updated such that the new status is the maximum
 # (crit > unknown > warn > ok) of all underlying status. Appends the output to
@@ -139,8 +139,8 @@ def store_aggregated_service_result(hostname, detaildesc, aggrdesc, newstatus, n
     count, status, outputlist = g_aggregated_service_results.get(aggrdesc, (0, 0, []))
     if status_worse(newstatus, status):
         status = newstatus
-    if newstatus > 0:
-        outputlist.append( (detaildesc, newoutput) )
+    if newstatus > 0 or aggregation_output_format == "multiline":
+        outputlist.append( (newstatus, detaildesc, newoutput) )
     g_aggregated_service_results[aggrdesc] = (count + 1, status, outputlist)
 
 def status_worse(newstatus, status):
@@ -164,10 +164,20 @@ def submit_aggregated_results(hostname):
     items.sort()
     aggr_hostname = summary_hostname(hostname)
     for servicedesc, (count, status, outputlist) in items:
-        if status == 0:
-            text = "OK - %d services OK" % count
+        if aggregation_output_format == "multiline":
+            longoutput = ""
+	    statuscounts = [ 0, 0, 0, 0 ]
+	    for itemstatus, item, output in outputlist:
+		longoutput += '\\n%s: %s' % (item, output)	
+		statuscounts[itemstatus] = statuscounts[itemstatus] + 1
+	    summarytexts = [ "%d service%s %s" % (x[0], x[0] != 1 and "s" or "", x[1]) 
+			   for x in zip(statuscounts, ["OK", "WARN", "CRIT", "UNKNOWN" ]) if x[0] > 0 ]
+	    text = ", ".join(summarytexts) + longoutput
         else:
-            text = " *** ".join([ item + " " + output for item,output in outputlist ])
+            if status == 0:
+                text = "OK - %d services OK" % count
+            else:
+                text = " *** ".join([ item + " " + output for itemstatus, item, output in outputlist ])
             
         if not opt_dont_submit and nagios_command_pipe:
             nagios_command_pipe.write("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" % 

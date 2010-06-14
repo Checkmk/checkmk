@@ -31,12 +31,10 @@ kann. Beispiel:
 GET hosts 
 Filter: name ~~ (.*){1,346}[bc] 
 
-
 Livestatus: das Nagios-Debuglog ist nicht reentrant. Livestatus muss ein eigenes
 Logfile schreiben. Wir machen das ohne Rotation. Man muss einfach selbst
 aufpassen, dass es nicht zu groß wird. Default ist eh aus. Ins Nagios
 geloggt wird nur das Starten und Beenden (was ja im Hauptthread läuft).
-
 
 Wenn man gerade die Kommandobox auf hat (oder den Filter?) dann sollte
 kein Refresh stattfinden. Sonst wird man mitten im Tippen abgewürgt.
@@ -206,3 +204,28 @@ Livestatus: Beim Empfangen von Queries gibt es zwei Timeouts:
 den für eine Zeile, den für eine Queriy. Beide sollte man 
 konfigurieren können und auch evtl. im Default etwas erhöhen.
 
+Checkboxen: Bei einer View macht man oben einen kleinen Reiter,
+der eine Checkbox symbolisiert. Wenn man den anklickt, wir bei
+jedem Datensatz zusätzlich eine Checkbox angezeigt. Das wird
+als Viewoption persistiert und auch general als Layout-Parameter
+angeboten. Wenn die Checkboxen sichtbar sind, werden Kommandos
+nur noch auf die Datensätze angewandt, welche mit einem Kreuz
+markiert sind. Zur Steigerung des Bedienkomforts gibt es einen
+Knopf, mit dem man alle Boxen markieren oder leeren kann
+(evtl. kann man das auch darüber regeln, dass der Reiter
+oben nicht zwei, sondern drei Zustände hat: Checkboxen aus,
+Checkboxen alle gecheckt, Checkboxen alle leer).
+Damit die Checkboxen funktionieren, muss jeder Datensatz eine
+eindeutige ID erzeugen können. Dazu gibt es bei jeder Datasource
+die Information, welche Spalten das sind. Aktuell gibt es
+dazu schon "keys". Problem hier ist nur, dass da noch die
+Downtime-IDs mitkommen, die man hier nicht braucht. Diese
+sollte man irgendwie weglassen können.
+Die Checkbox bekommt also also HTML-Variablennamen die jeweilige
+ID - irgendwie enkodiert so dass es keine Probleme mit 
+Sonderzeichen gibt.
+Wenn die Schleife der Kommandos ausgeführt wird, muss ich
+jeweils noch kontrollieren, ob der Datensatz, um den es
+gerade geht, auch gecheckt ist (oder Checkboxen generell
+aus sind). Wenn Kein Datensatz gewählt wurde, spucke ich
+eine Fehlermeldung aus.

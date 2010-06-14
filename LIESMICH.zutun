@@ -233,3 +233,10 @@ jeweils noch kontrollieren, ob der Datensatz, um den es
 gerade geht, auch gecheckt ist (oder Checkboxen generell
 aus sind). Wenn Kein Datensatz gewählt wurde, spucke ich
 eine Fehlermeldung aus.
+
+Views: Man könnte eine ASCII-View bauen, die kein HTML ausspuckt, sondern
+simples ASCII. Frage ist dabei, was man mit den Paintern macht. Hier müsste
+man die sichtbare Information aus den HTML-Tags rausholen, also eine Art
+HTML->ASCII Filter programmieren. Auch die Überschrift ist dann betroffen
+und die Fusszeile. Analog dazu könnte man sich eine Ausgabe als CSV oder
+XML vorstellen. Hintergrund ist eine Art Webservice.

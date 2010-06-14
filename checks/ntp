@@ -58,53 +58,84 @@ def inventory_ntp(checktype, info):
 	    inventory.append((peer, "ntp_default_levels"))
     return inventory
 
-def check_ntp(item, params, info):
+def inventory_ntp_summary(checktype, info):
+    if len(info) > 0:
+        return [(None, "ntp_default_levels")]
+    else:
+        return []
+
+# Helper function that parses the information about one 
+# peer and returns a tuple of
+# 0. Nagios state (0, 1, 2 or 3)
+# 1. Nagios check output text
+# 2. The offset (only if state != 3)
+# 3. The jitter (only if state != 3)
+def check_ntp_server_state(line, params):
+    statecode, peer, refid, stratum, t, when, poll, reach, delay, offset, jitter = line
+    if reach == "0":
+        return (3, "peer is unreachable")
+
+    offset  = float(offset)
+    jitter  = float(jitter)
+
+    # Parse time when search was last reached
+    if when == '-':
+        when = 0
+    elif when[-1] == "m":
+        when = int(when[:-1]) * 60
+    elif when[-1] == "h":
+        when = int(when[:-1]) * 60 * 60
+    elif when[-1] == "d":
+        when = int(when[:-1]) * 60 * 60 * 24
+    else:
+        when    = int(when)
+
+    poll    = int(poll)
+    stratum = int(stratum)
+    state = ntp_state_codes.get(statecode, "unknown")
+    infotext = "%s - stratum %d, offset %.2f ms, jitter %.2f ms" % (state, stratum, offset, jitter)
+    if when > 0:
+        infotext += ", last reached %d secs ago" % when
+
     maxstratum, warn, crit = params
+    if abs(offset) >= crit:
+        return (2, "critical offset" + infotext, offset, jitter)
+    elif state in [ "falsetick" ]:
+        return (2, infotext, offset, jitter)
+    elif stratum >= maxstratum:
+        return (2, "stratum %d is too high (max allowed is %d)" % (stratum, maxstratum - 1))
+    elif when > 2*poll and when > 128: # when can exceed poll for small polling values
+        return (3, "response due since %d secs%s" % (when - poll, infotext), offset, jitter)
+        
+    elif abs(offset) >= warn:
+        return (1, "offset too high" + infotext, offset, jitter)
+    else: 
+        return (0, infotext, offset, jitter)
+
+def check_ntp(item, params, info):
     for line in info:
-        statecode, peer, refid, stratum, t, when, poll, reach, delay, offset, jitter = line
-        if peer == item:
-	    if reach == "0":
-		return (2, "CRIT - peer is unreachable")
-            
-	    offset  = float(offset)
-	    jitter  = float(jitter)
-
-            if when == '-':
-		when = 0
-	    elif when[-1] == "m":
-		when = int(when[:-1]) * 60
-	    elif when[-1] == "h":
-		when = int(when[:-1]) * 60 * 60
-	    elif when[-1] == "d":
-		when = int(when[:-1]) * 60 * 60 * 24
-	    else:
-	        when    = int(when)
-
-	    poll    = int(poll)
- 	    stratum = int(stratum)
-	    perfdata = [ ( "offset",  offset, warn, crit, 0, None ),
-			 ( "jitter",  jitter, warn, crit, 0, None ) ]
-	    state = ntp_state_codes.get(statecode, "unknown")
-	    infotext = " - %s - stratum %d, offset %.2f ms, jitter %.2f ms" % (state, stratum, offset, jitter)
-            if when > 0:
-		infotext += ", last reached %d secs ago" % when
-
-	    if abs(offset) >= crit:
-		return (2, "CRIT - critical offset" + infotext, perfdata)
-            elif state in [ "falsetick" ]:
-		return (2, "CRIT" + infotext, perfdata)
-	    elif when > 2*poll and when > 128: # when can exceed poll for small polling values
-		return (2, "CRIT - response due since %d secs%s" % (when - poll, infotext), perfdata)
-            elif stratum >= maxstratum:
-		return (2, "CRIT - stratum %d is too high (max allowed is %d)" % (stratum, maxstratum - 1))
-		
-	    elif abs(offset) >= warn:
-		return (1, "WARN - offset too high" + infotext, perfdata)
-	    else: 
-		return (0, "OK" + infotext, perfdata)
+        if line[1] == item:
+            state = check_ntp_server_state(line, params)
+            if len(state) == 4:
+                state, text, offset, jitter = state
+                maxstratum, warn, crit = params
+                perfdata = [ ( "offset",  offset, warn, crit, 0, None ),
+                             ( "jitter",  jitter, warn, crit, 0, None ) ]
+            else:
+                state, text = state
+                perfdata = []
+            return (state, nagios_state_names[state] + " - " + text, perfdata)
 	    
     return (3, "UNKNOWN - peer not found")
 
+def check_ntp_summary(item, params, info):
+    # We only are interested in our system peer or pulse per second source (pps)
+    for line in info:
+        if line[0] in [ "*", "o" ]:
+            state, text, perfdata = check_ntp(line[1], params, [line])
+            text += " (synchronized on %s)" % line[1]
+            return (state, text, perfdata)
+    return (3, "UKNOWN - no system peer found") 
 
-
-check_info['ntp']  = (check_ntp, "NTP Peer %s", 1, inventory_ntp)
+check_info['ntp']       = (check_ntp,         "NTP Peer %s", 1, inventory_ntp)
+check_info['ntp.time']  = (check_ntp_summary, "NTP Time",    1, inventory_ntp_summary)

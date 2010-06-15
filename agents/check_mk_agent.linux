@@ -61,7 +61,7 @@ else
 fi
 
 echo '<<<check_mk>>>'
-echo Version: 1.1.6rc3
+echo Version: 1.1.6
 
 # Partitionen (-P verhindert Zeilenumbruch bei langen Mountpunkten)
 # Achtung: NFS-Mounts werden grundsaetzlich ausgeblendet, um

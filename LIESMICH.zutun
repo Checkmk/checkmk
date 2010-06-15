@@ -4,6 +4,8 @@ INS RELEASE 1.2
 check_mk -X erzwingen. Das -R soll nur noch klappen, wenn kein Configfehler
 auftritt.
 
+direct rrd-updates deprecaten oder rausnehmen. Diese sorgen dafür, dass
+die Perf-O-Meter und die PNP-Suche in Multisite nicht geht.
 --------------------------------------------------------------------------------
 BUGS
 --------------------------------------------------------------------------------

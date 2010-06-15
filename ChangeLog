@@ -20,6 +20,8 @@
     Core, Setup, etc.:
     * New option --donate for donating live host data to the community.
       Please refer to the online documentation for details.
+    * Tactical Overview: Fixed refresh timeout typo
+      (Was 16 mins instead of 10 secs)
 
     Livestatus:
     * Assume strings are UTF-8 encoded in Nagios. Convert from latin-1 only

@@ -498,7 +498,7 @@ sidebar_snapins["tactical_overview"] = {
     "title" : "Tactical Overview",
     "description" : "The total number of hosts and service with and without problems",
     "author" : "Mathias Kettner",
-    "refresh" : 1010,
+    "refresh" : 10,
     "render" : render_tactical_overview,
     "allowed" : [ "user", "admin", "guest" ],
     "styles" : """

@@ -1,5 +1,5 @@
 title: Check for running process and send additional performance data
-agents: linux, windows, aix, solaris, vms
+agents: linux
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk

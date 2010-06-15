@@ -7,7 +7,7 @@ admin_users = [ "nagiosadmin" ]
 # guest_users = [ "guest" ]
 
 # A lists of all normal operational users allowed to use
-# Multisite. If this variable is no set, then everybody with a correct
+# Multisite. If this variable is not set, then everybody with a correct
 # HTTP login may use Multisite and gets the role "user"
 # users       = [ "meier", "huber", "mueller" ]
 

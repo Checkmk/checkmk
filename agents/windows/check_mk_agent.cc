@@ -53,6 +53,10 @@
 #include <time.h>
 #include <string.h>
 #include <locale.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <dirent.h>
+
 
 #define CHECK_MK_VERSION "1.1.6"
 #define CHECK_MK_AGENT_PORT 6556
@@ -79,6 +83,10 @@ unsigned num_eventlogs = 0;
 DWORD    known_record_numbers[MAX_EVENTLOGS];
 char    *eventlog_names[MAX_EVENTLOGS];
 bool     newly_found[MAX_EVENTLOGS];
+char     g_agent_directory[256];
+char     g_current_directory[256];
+char     g_plugins_dir[256];
+char     g_local_dir[256];
 
 
 #ifdef DEBUG
@@ -949,6 +957,67 @@ void section_eventlog(SOCKET &out)
     first_run = false;
 }
 
+void run_plugin(SOCKET &out, char *path) 
+{
+    FILE *f = popen(path, "r");
+    if (f) {
+        char line[4096];
+        while (0 != fgets(line, sizeof(line), f)) {
+            output(out, line);
+        }
+        pclose(f);
+    }
+}
+
+void run_external_programs(SOCKET &out, char *dirname)
+{
+    char path[256];
+    DIR *dir = opendir(dirname);
+    if (dir) {
+        struct dirent *de;
+        while (0 != (de = readdir(dir))) {
+            char *name = de->d_name;
+            if (name[0] != '.') {
+                snprintf(path, sizeof(path), "%s\\%s", dirname, name);
+                run_plugin(out, path);
+            }
+        }
+        closedir(dir);
+    }
+}
+
+void section_plugins(SOCKET &out)
+{
+    run_external_programs(out, g_plugins_dir);
+}
+
+void section_local(SOCKET &out)
+{
+    output(out, "<<<local>>>\n");
+    run_external_programs(out, g_local_dir);
+}
+
+
+void get_agent_dir(char *buffer, int size)
+{
+    buffer[0] = 0;
+
+    HKEY key;
+    DWORD ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\check_mk_agent", 0, KEY_READ, &key);
+    if (ret == ERROR_SUCCESS)
+    {
+        if (ERROR_SUCCESS == RegQueryValueEx(key, "ImagePath", NULL, NULL, (BYTE *)buffer, (DWORD *)&size))
+        {
+            char *end = buffer + strlen(buffer);
+            // search backwards for backslash 
+            while (end > buffer && *end != '\\')
+                end--;
+            *end = 0; // replace \ with string end => get directory of executable
+        }
+    }
+    RegCloseKey(key);
+}
+
 
 void output_data(SOCKET &out)
 {
@@ -957,12 +1026,19 @@ void output_data(SOCKET &out)
 
     output(out, "<<<check_mk>>>\n");
     output(out, "Version: %s\n", CHECK_MK_VERSION);
-    section_df(out);
-    section_ps(out);
-    section_mem(out);
-    section_services(out);
-    section_winperf(out);
-    section_eventlog(out);
+    output(out, "AgentOS: windows\n");
+    output(out, "WorkingDirectory: %s\n", g_current_directory);
+    output(out, "AgentDirectory: %s\n", g_agent_directory);
+    output(out, "PluginsDirectory: %s\n", g_plugins_dir);
+    output(out, "LocalDirectory: %s\n", g_local_dir);
+
+    // section_df(out);
+    // section_ps(out);
+    // section_mem(out);
+    // section_services(out);
+    // section_winperf(out);
+    // section_eventlog(out);
+    section_plugins(out);
 }
     
 
@@ -1259,8 +1335,19 @@ void show_version()
     printf("Check_MK_Agent version %s\n", CHECK_MK_VERSION);
 }
 
+void determine_directories()
+{
+    // Determine directories once and forever
+    getcwd(g_current_directory, sizeof(g_current_directory));
+    get_agent_dir(g_agent_directory, sizeof(g_agent_directory));
+    snprintf(g_plugins_dir, sizeof(g_plugins_dir), "%s\\plugins", g_agent_directory);
+    snprintf(g_local_dir, sizeof(g_local_dir), "%s\\local", g_agent_directory);
+}
+
+
 int main(int argc, char **argv)
 {
+    determine_directories();
     if (argc > 2)
 	usage();
     else if (argc <= 1)

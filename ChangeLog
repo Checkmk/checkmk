@@ -1,7 +1,10 @@
-1.1.7:
+1.1.7i1:
     Checks & Agents:
+    * New check ntp.time: Similar to 'ntp' but only honors the system peer
+      (that NTP peer where ntpq -p prints a *).
     * wmic_process: new check for ressource consumption of windows processes
-    
+    * Windows agent supports now plugins/ and local/ checks
+
 1.1.6:
     Core, Setup, etc.:
     * Service aggregation: new config option aggregation_output_format.

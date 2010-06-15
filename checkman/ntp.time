@@ -1,21 +1,22 @@
-title: Check state of NTP peers
+title: Check state of NTP time
 agents: linux
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
- This check uses the output of {ntpq -p} as sent by the agent. It is
- a list of all NTP peers with their state, stratum, offset and jitter.
- The check gets critical if the time offset exceeds a configurable level,
- if the stratum is too high or on othe error conditions. It gets UNKNOWN 
- if the peer is unreachable or has not answered for a long time.
+ This check uses the output of {ntpq -p} as sent by the agent in order
+ to check the quality of the NTP time synchronization of the client.
+ If more than one peer is available, NTP chooses the "best" of them
+ as "system peer". This check only measures the time difference to
+ that system peer.
 
- Note: This check creates one individual service for each peer. It is
- usefull for monitoring the health of the peers. If you want to monitor
- only the time of the NTP client, you might rather use {ntp.time}.
+ The check is CRIT or WARN, if the time supplied by the 
+ system peer is not good enough (see below for parameters). It
+ is UNKNOWN if no system peer is present or the system peer is
+ unreachable.
 
-item:
- The name or IP address of the peer (first column in output of {ntpq -p}.
+ Note: If you want to check the health of the peers, you might
+ want to use {ntp}, which creates one individual check per NTP peer.
 
 examples:
  # Set critical stratum to 3, global warning/critical levels to 5.0 and 10.0 ms
@@ -26,7 +27,7 @@ perfdata:
  {jitter} in ms.
 
 inventory:
- Checks are created for all peers which have been contacted at least once.
+ If at least one peer is present, exactly one check is created.
 
 [parameters]
 critical_stratum (int): The stratum at which the check gets critical

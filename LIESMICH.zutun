@@ -9,9 +9,18 @@ die Perf-O-Meter und die PNP-Suche in Multisite nicht geht.
 --------------------------------------------------------------------------------
 BUGS
 --------------------------------------------------------------------------------
-Beim editieren von Views, die mehr als 10 Spalten haben, ignoriert der
+Beim Editieren von Views, die mehr als 10 Spalten haben, ignoriert der
 Editor alle Spalten, die man nach der 10. Spalte ändert.
 
+Multisite: Wenn man die view 'hosts' auf Tablelayout umstellt und
+zwei Spalten einstellt, dann fehlt die mittlere Trennspalte, und
+bei ungerade Spaltenzahl wird am Ende der zweiten Spalte nicht
+eine hellgraue Zelle angezeigt, sondern eine leere mit grauen
+Trennlinien, so wie früher im alten Layout von Multisite.
+
+Multisite: All hosts (Mini) -> Edit (nix ändern) -> Try out und
+jetzt auf den ersten Host klicken: => Fehlermeldung "Internal error: 
+No view name and not datasource defined. (Retry with debug mode)"
 
 Bei Inventur check_mk -I ntp werden auch die SNMP-Geraete abgefragt?
 Werden die nur bei -I tcp ausgeklammert? Sollte nicht sein, sonst

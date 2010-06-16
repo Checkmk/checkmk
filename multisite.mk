@@ -60,6 +60,9 @@ admin_users = [ "nagiosadmin" ]
 # or
 # sound_url = "/nagios/alarms/"
 
+# Tabs for choosing number of columns refresh
+# view_option_refreshes = [ 30, 60, 90, 0 ]
+# view_option_columns   = [ 1, 2, 3, 4, 5, 6, 8 ]
 
 # Custom links for "Custom Links" Snapin. Feel free to add your
 # own links here. The boolean values True and False determine

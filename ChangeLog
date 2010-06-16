@@ -4,9 +4,12 @@
       (that NTP peer where ntpq -p prints a *).
     * wmic_process: new check for ressource consumption of windows processes
     * Windows agent supports now plugins/ and local/ checks
+    * [FIX] ps.perf now correctly detects extended performance data output
+      even if number of matching processes is 0
 
     Multisite:
     * New view showing all PNP graphs of services with the same description
+
 
 1.1.6:
     Core, Setup, etc.:

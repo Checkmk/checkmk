@@ -327,7 +327,7 @@ multisite_builtin_views = {
                        ('perfometer', None)],
           'play_sounds': False,
           'public': True,
-          'show_filters': ['svcstate'],
+          'show_filters': ['svcstate', 'serviceregex'],
           'sorters': [('svcdescr', False)],
           'linktitle': 'Services',
           'title': 'Services of Host'},

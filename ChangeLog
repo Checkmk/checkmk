@@ -5,6 +5,9 @@
     * wmic_process: new check for ressource consumption of windows processes
     * Windows agent supports now plugins/ and local/ checks
 
+    Multisite:
+    * New view showing all PNP graphs of services with the same description
+
 1.1.6:
     Core, Setup, etc.:
     * Service aggregation: new config option aggregation_output_format.

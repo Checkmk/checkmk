@@ -28,6 +28,8 @@
 def check_wmic_process(item, params, info):
     name, memwarn, memcrit, pagewarn, pagecrit, cpuwarn, cpucrit = params
     count, mem, page, userc, kernelc = 0, 0, 0, 0, 0
+    if len(info) == 0:
+        return (3, "UNKNOWN - No output from agent in section wmic_process")
     legend = info[0]
     for line in info[1:]:
         psinfo = dict(zip(legend, line))

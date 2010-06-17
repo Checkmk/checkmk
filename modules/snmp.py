@@ -146,7 +146,7 @@ def get_snmp_table(hostname, ip, community, oid_info):
             if suboid:
                fetchoid += "." + str(suboid)
             
-            command = cmd + " -OQ -Ov -c %s %s %s.%s 2>/dev/null" % \
+            command = cmd + " -OQ -Ov -c '%s' %s %s.%s 2>/dev/null" % \
                 (community, ip, fetchoid, str(column))
             if opt_debug:
                 sys.stderr.write('   Running %s\n' % (command,))
@@ -270,4 +270,72 @@ def check_snmp_fixed(item, targetvalue, info):
              return (0, "OK - %s" % (value,))
    return (3, "Missing item %s in SNMP data" % item)
 
+def do_snmpwalk(hostnames):
+    if len(hostnames) == 0:
+        sys.stderr.write("Please specify host names to walk on.\n")
+        return
+    if not os.path.exists(snmpwalks_dir):
+        os.makedirs(snmpwalks_dir)
+    for host in hostnames:
+        try:
+            do_snmpwalk_on(host, snmpwalks_dir + "/" + host)
+        except Exception, e:
+            sys.stderr.write("Error walking %s: %s\n" % (host, e))
+            if opt_debug:
+                raise
 
+def do_snmpwalk_on(hostname, filename):
+    if opt_verbose:
+        sys.stdout.write("%s:\n" % hostname)
+    community = get_snmp_community(hostname)
+    ip = lookup_ipaddress(hostname)
+    if is_bulkwalk_host(hostname):
+        cmd = "snmpbulkwalk -v2c"
+    else:
+        cmd = "snmpwalk -v1"
+    cmd += " -Ob -OQ -c '%s' %s " % (community, ip)
+    out = file(filename, "w")
+    for oid in [ "", "enterprises" ]:
+        oids = []
+        values = []
+        if opt_verbose:
+            sys.stdout.write("%s..." % (cmd + oid))
+            sys.stdout.flush()
+        count = 0
+        f = os.popen(cmd + oid)
+        while True:
+            line = f.readline()
+            if not line:
+                break
+            parts = line.strip().split("=", 1)
+            if len(parts) != 2:
+                continue
+            oid, value = parts
+            if value.startswith('"'):
+                while value[-1] != '"':
+                    value += f.readline().strip()
+
+            oids.append(oid)
+            values.append(value)
+        numoids = snmptranslate(oids)
+        for numoid, value in zip(numoids, values):
+            out.write("%s %s\n" % (numoid, value.strip()))
+            count += 1
+        if opt_verbose:
+            sys.stdout.write("%d variables.\n" % count)
+        
+    out.close()
+    if opt_verbose:
+        sys.stdout.write("Successfully Wrote %s%s%s.\n" % (tty_bold, filename, tty_normal))
+
+def snmptranslate(oids):
+    numoids = []
+    while len(oids) > 0:
+        m = min(len(oids), 100)
+        cmd = "snmptranslate -On %s 2>/dev/null" % " ".join(["'%s'" % o.strip() for o in oids[:m]])
+        n = os.popen(cmd).read().split()
+        if len(n) != m:
+            raise MKGeneralException("snmptranslated lost %d out of %d oids" % (m - len(n), m))
+        oids = oids[m:]
+        numoids += n
+    return numoids

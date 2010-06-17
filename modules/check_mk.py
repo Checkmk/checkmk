@@ -65,6 +65,7 @@ check_manpages_dir                 = '/usr/share/doc/check_mk/checks'
 modules_dir                        = '/usr/share/check_mk/modules'
 var_dir                            = '/var/lib/check_mk' 
 autochecksdir                      = var_dir + '/autochecks'
+snmpwalks_dir                      = var_dir + '/snmpwalks'
 precompiled_hostchecks_dir         = var_dir + '/precompiled'
 counters_directory                 = var_dir + '/counters'
 tcp_cache_dir			   = var_dir + '/cache'
@@ -99,7 +100,7 @@ if len(sys.argv) >= 2 and sys.argv[1] == '--defaults':
 elif __name__ == "__main__":
     defaults_path = os.path.dirname(sys.argv[0]) + "/defaults"
     
-if opt_verbose:
+if opt_debug:
     sys.stderr.write("Reading default settings from %s\n" % defaults_path)
 try:
     execfile(defaults_path)
@@ -389,7 +390,7 @@ if os.path.exists(final_mk):
     list_of_files.append(final_mk)
 for f in list_of_files:
     try:
-        if opt_verbose:
+        if opt_debug:
             sys.stderr.write("Reading config file %s...\n" % f)
         execfile(f)
     except Exception, e:
@@ -2606,6 +2607,7 @@ def show_paths():
 	( var_dir,                     dir, data, "Base working directory for variable data"),
 	( autochecksdir,               dir, data, "Checks found by inventory"),
 	( precompiled_hostchecks_dir,  dir, data, "Precompiled host checks"),
+        ( snmpwalks_dir,               dir, data, "Stored snmpwalks (output of --snmpwalk)"),
 	( counters_directory,          dir, data, "Current state of performance counters"),
 	( tcp_cache_dir,               dir, data, "Cached output from agents"),
 	( logwatch_dir,                dir, data, "Unacknowledged logfiles of logwatch extension"),
@@ -2773,6 +2775,7 @@ def usage():
  check_mk --restore BACKUPFILE.tar.gz      restore configuration and data
  check_mk --flush [HOST1 HOST2...]         flush all data of some or all hosts
  check_mk --donate                         Email data of configured hosts to MK
+ check_mk --snmpwalk HOST1 HOST2 ...       Do snmpwalk on host
  check_mk -P, --package COMMAND            do package operations
  check_mk -V, --version                    print version
  check_mk -h, --help                       print this help
@@ -2847,6 +2850,10 @@ NOTES:
   data! By donating real-live host data you help others trying out 
   Check_MK and developing checks by donating hosts. This is completely
   voluntary and turned off by default.
+
+  --snmpwalk does a complete snmpwalk for the specifies hosts both
+  on the standard MIB and the enterprises MIB and stores the
+  result in the directory %s.
   
   Nagios can call check_mk without options and the hostname and its IP
   address as arguments. Much faster is using precompiled host checks,
@@ -2855,6 +2862,7 @@ NOTES:
     
 """ % (check_mk_configfile,
        precompiled_hostchecks_dir,
+       snmpwalks_dir,
        )
 
 
@@ -3043,7 +3051,7 @@ if __name__ == "__main__":
     short_options = 'SHVLCURDMd:I:c:nhvpXP'
     long_options = ["help", "version", "verbose", "compile", "debug",
                     "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
-		    "flush", "package", "donate",
+		    "flush", "package", "donate", "snmpwalk",
                     "no-cache", "update", "restart", "dump", "fake-dns=",
                     "man", "nowiki", "config-check", "backup=", "restore=",
                     "check-inventory=", "timeperiods", "paths" ]
@@ -3134,6 +3142,9 @@ if __name__ == "__main__":
             done = True
         elif o == '--donate':
             do_donation()
+            done = True
+        elif o == '--snmpwalk':
+            do_snmpwalk(args)
             done = True
         elif o in [ '-M', '--man' ]:
             if len(args) > 0:

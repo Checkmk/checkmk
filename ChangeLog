@@ -2,6 +2,8 @@
     Core, Setup, etc.:
     * Fix exception if check_mk is called without arguments. Show
       usage in that case.
+    * install_nagios.sh: Fix download URL of NagVis 1.4.7 (sorry,
+      script still uses old version).
 
     Checks & Agents:
     * New check ntp.time: Similar to 'ntp' but only honors the system peer

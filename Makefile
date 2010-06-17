@@ -79,9 +79,7 @@ dist: mk-livestatus
 	cp multisite.mk multisite.mk-$(VERSION)
 	tar  czf $(DISTNAME)/conf.tar.gz $(TAROPTS) main.mk-$(VERSION) multisite.mk-$(VERSION)
 	rm -f main.mk-$(VERSION) multisite.mk-$(VERSION)
-	tar  cf $(DISTNAME)/agents.tar $(TAROPTS) -C agents --exclude "*~" $$(cd agents ; ls | grep -v windows )
-	tar  rf $(DISTNAME)/agents.tar $(TAROPTS) -C agents windows/{check_mk_agent.exe,check_mk_agent.cc,Makefile}
-	gzip $(DISTNAME)/agents.tar
+	tar  czf $(DISTNAME)/agents.tar.gz $(TAROPTS) -C agents --exclude "*~" $$(cd agents ; ls)
 	cd $(DISTNAME) ; ../make_package_info $(VERSION) > package_info
 	install -m 755 scripts/*.{sh,py} $(DISTNAME)
 	install -m 644 COPYING AUTHORS ChangeLog $(DISTNAME)

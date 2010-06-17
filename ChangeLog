@@ -1,4 +1,8 @@
 1.1.7i1:
+    Core, Setup, etc.:
+    * Fix exception if check_mk is called without arguments. Show
+      usage in that case.
+
     Checks & Agents:
     * New check ntp.time: Similar to 'ntp' but only honors the system peer
       (that NTP peer where ntpq -p prints a *).

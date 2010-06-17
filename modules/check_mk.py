@@ -93,7 +93,7 @@ def verbose(t):
 # the first '/'
 
 # Allow to specify defaults file on command line (needed for OMD)
-if sys.argv[1] == '--defaults':
+if len(sys.argv) >= 2 and sys.argv[1] == '--defaults':
     defaults_path = sys.argv[2]
     del sys.argv[1:3]
 elif __name__ == "__main__":

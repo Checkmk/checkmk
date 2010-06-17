@@ -102,6 +102,55 @@ def get_snmp_explicit(hostname, ipaddress, community, mib, baseoid, suffixes):
             return None
     return info
 
+def snmpwalk_on_suboid(hostname, ip, community, oid):
+    if is_bulkwalk_host(hostname):
+        cmd = "snmpbulkwalk -v2c"
+    else:
+        cmd = "snmpwalk -v1"
+    
+    command = cmd + " -OQ -Ov -c '%s' %s %s 2>/dev/null" % (community, ip, oid)
+    if opt_debug:
+        sys.stderr.write('   Running %s\n' % (command,))
+    snmp_process = os.popen(command, "r").xreadlines()
+    
+    # Ugly(1): in some cases snmpwalk inserts line feed within one
+    # dataset. This happens for example on hexdump outputs longer
+    # than a few bytes. Those dumps are enclosed in double quotes.
+    # So if the value begins with a double quote, but the line
+    # does not end with a double quote, we take the next line(s) as
+    # a continuation line.
+    rowinfo = []
+    try:
+        while True: # walk through all lines
+            line = snmp_process.next().strip()
+            if len(line) > 0 and line[0] == '"' and line[-1] != '"': # to be continued
+        	while True: # scan for end of this dataset
+        	    nextline = snmp_process.next().strip()
+        	    line += " " + nextline
+        	    if line[-1] == '"':
+        		break
+            rowinfo.append(strip_snmp_value(line))
+            
+    except StopIteration:
+        pass
+ 
+    exitstatus = snmp_process.close()
+    if exitstatus:
+        if opt_verbose:
+            sys.stderr.write(tty_red + tty_bold + "ERROR: " + tty_normal + "SNMP error\n")
+        return None
+ 
+    # Ugly(2): snmpbulkwalk outputs 'No more variables left in this MIB
+    # View (It is past the end of the MIB tree)' if part of tree is
+    # not available -- on stdout >:-P
+    if len(rowinfo) == 1 and ( \
+        rowinfo[0].startswith('No more variables') or \
+        rowinfo[0].startswith('End of MIB') or \
+        rowinfo[0].startswith('No Such Object available') or \
+        rowinfo[0].startswith('No Such Instance currently exists')):
+        rowinfo = []
+    return rowinfo
+
 def get_snmp_table(hostname, ip, community, oid_info):
     # oid_info is either ( oid, columns ) or
     # ( oid, suboids, columns )
@@ -109,19 +158,11 @@ def get_snmp_table(hostname, ip, community, oid_info):
     # and the columns and also prefixed to the index column. This
     # allows to merge distinct SNMP subtrees with a similar structure
     # to one virtual new tree (look into cmctc_temp for an example)
-    if is_bulkwalk_host(hostname):
-        cmd = "snmpbulkwalk -v2c"
-    else:
-        cmd = "snmpwalk -v1"
-    
     if len(oid_info) == 2:
       oid, columns = oid_info
       suboids = [None]
     else:
       oid, suboids, columns = oid_info
-
-    if opt_debug:
-       sys.stderr.write('Fetching OID %s%s%s%s from IP %s with %s\n' % (tty_bold, tty_green, oid, tty_normal, ip, cmd))
 
     all_values = []
     index_column = -1
@@ -146,48 +187,11 @@ def get_snmp_table(hostname, ip, community, oid_info):
             if suboid:
                fetchoid += "." + str(suboid)
             
-            command = cmd + " -OQ -Ov -c '%s' %s %s.%s 2>/dev/null" % \
-                (community, ip, fetchoid, str(column))
-            if opt_debug:
-                sys.stderr.write('   Running %s\n' % (command,))
-            snmp_process = os.popen(command, "r").xreadlines()
-	    
-	    # Ugly(1): in some cases snmpwalk inserts line feed within one
-	    # dataset. This happens for example on hexdump outputs longer
-	    # than a few bytes. Those dumps are enclosed in double quotes.
-	    # So if the value begins with a double quote, but the line
-	    # does not end with a double quote, we take the next line(s) as
-	    # a continuation line.
-	    rowinfo = []
-	    try:
-	        while True: # walk through all lines
-		    line = snmp_process.next().strip()
-		    if len(line) > 0 and line[0] == '"' and line[-1] != '"': # to be continued
-			while True: # scan for end of this dataset
-			    nextline = snmp_process.next().strip()
-			    line += " " + nextline
-			    if line[-1] == '"':
-				break
-		    rowinfo.append(strip_snmp_value(line))
-		    
-	    except StopIteration:
-		pass
-
-            exitstatus = snmp_process.close()
-            if exitstatus:
-                if opt_verbose:
-                    sys.stderr.write(tty_red + tty_bold + "ERROR: " + tty_normal + "SNMP error\n")
-                return None
-
-            # Ugly(2): snmpbulkwalk outputs 'No more variables left in this MIB
-            # View (It is past the end of the MIB tree)' if part of tree is
-            # not available -- on stdout >:-P
-            if len(rowinfo) == 1 and ( \
-		rowinfo[0].startswith('No more variables') or \
-		rowinfo[0].startswith('End of MIB') or \
-		rowinfo[0].startswith('No Such Object available') or \
-		rowinfo[0].startswith('No Such Instance currently exists')):
-                rowinfo = []
+            if opt_use_snmp_walk:
+                rowinfo = get_stored_snmpwalk(hostname, fetchoid + "." + str(column))
+            else:
+                rowinfo = snmpwalk_on_suboid(hostname, ip, community, fetchoid + "." + str(column))
+                
             if len(rowinfo) > 0:
                # if we are working with suboids, we need to prefix them
                # to the index in order to make the index unique
@@ -339,3 +343,21 @@ def snmptranslate(oids):
         oids = oids[m:]
         numoids += n
     return numoids
+
+def get_stored_snmpwalk(hostname, oid):
+    path = snmpwalks_dir + "/" + hostname
+    if opt_verbose:
+        sys.stderr.write("Getting %s from %s\n" % (oid, path))
+    if not os.path.exists(path):
+        raise MKGeneralException("No snmpwalk file %s\n" % path)
+    rowinfo = []
+    for line in file(path):
+        parts = line.split(None, 1)
+        o = parts[0]
+        if o == oid or o.startswith(oid + "."):
+            if len(parts) > 1:
+                value = parts[1]
+            else:
+                value = ""
+            rowinfo.append(value.strip())
+    return rowinfo

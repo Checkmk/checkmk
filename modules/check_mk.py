@@ -2792,6 +2792,7 @@ OPTIONS:
                  cache files.
   --fake-dns IP  fake IP addresses of all hosts to be IP. This
                  prevents DNS lookups.
+  --usewalk      use snmpwalk stored with --snmpwalk
   --debug        never catch Python exceptions
 
 NOTES:
@@ -3051,7 +3052,7 @@ if __name__ == "__main__":
     short_options = 'SHVLCURDMd:I:c:nhvpXP'
     long_options = ["help", "version", "verbose", "compile", "debug",
                     "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
-		    "flush", "package", "donate", "snmpwalk",
+		    "flush", "package", "donate", "snmpwalk", "usewalk",
                     "no-cache", "update", "restart", "dump", "fake-dns=",
                     "man", "nowiki", "config-check", "backup=", "restore=",
                     "check-inventory=", "timeperiods", "paths" ]
@@ -3083,6 +3084,8 @@ if __name__ == "__main__":
             opt_dont_submit = True
         elif o == '--fake-dns':
             fake_dns = a
+        elif o == '--usewalk':
+            opt_use_snmp_walk = True
         elif o == '--nowiki':
             opt_nowiki = True
         elif o == '--debug':

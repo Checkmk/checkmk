@@ -95,6 +95,7 @@ opt_use_cachefile            = False
 opt_no_tcp                   = False
 opt_no_cache                 = False
 opt_no_snmp_hosts            = False
+opt_use_snmp_walk            = False
 fake_dns                     = False
 
 

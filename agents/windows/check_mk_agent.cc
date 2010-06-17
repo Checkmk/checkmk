@@ -1032,12 +1032,12 @@ void output_data(SOCKET &out)
     output(out, "PluginsDirectory: %s\n", g_plugins_dir);
     output(out, "LocalDirectory: %s\n", g_local_dir);
 
-    // section_df(out);
-    // section_ps(out);
-    // section_mem(out);
-    // section_services(out);
-    // section_winperf(out);
-    // section_eventlog(out);
+    section_df(out);
+    section_ps(out);
+    section_mem(out);
+    section_services(out);
+    section_winperf(out);
+    section_eventlog(out);
     section_plugins(out);
 }
     

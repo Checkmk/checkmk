@@ -108,7 +108,7 @@ def snmpwalk_on_suboid(hostname, ip, community, oid):
     else:
         cmd = "snmpwalk -v1"
     
-    command = cmd + " -OQ -Ov -c '%s' %s %s 2>/dev/null" % (community, ip, oid)
+    command = cmd + " -OQ -On -c '%s' %s %s 2>/dev/null" % (community, ip, oid)
     if opt_debug:
         sys.stderr.write('   Running %s\n' % (command,))
     snmp_process = os.popen(command, "r").xreadlines()
@@ -123,13 +123,18 @@ def snmpwalk_on_suboid(hostname, ip, community, oid):
     try:
         while True: # walk through all lines
             line = snmp_process.next().strip()
-            if len(line) > 0 and line[0] == '"' and line[-1] != '"': # to be continued
+            parts = line.split('=', 1)
+            if len(parts) < 2:
+                continue # broken line, must contain =
+            oid = parts[0].strip()
+            value = parts[1].strip()
+            if len(value) > 0 and value[0] == '"' and value[-1] != '"': # to be continued
         	while True: # scan for end of this dataset
         	    nextline = snmp_process.next().strip()
-        	    line += " " + nextline
-        	    if line[-1] == '"':
+        	    value += " " + nextline
+        	    if value[-1] == '"':
         		break
-            rowinfo.append(strip_snmp_value(line))
+            rowinfo.append((oid, strip_snmp_value(value)))
             
     except StopIteration:
         pass
@@ -138,7 +143,7 @@ def snmpwalk_on_suboid(hostname, ip, community, oid):
     if exitstatus:
         if opt_verbose:
             sys.stderr.write(tty_red + tty_bold + "ERROR: " + tty_normal + "SNMP error\n")
-        return None
+        return []
  
     # Ugly(2): snmpbulkwalk outputs 'No more variables left in this MIB
     # View (It is past the end of the MIB tree)' if part of tree is
@@ -159,10 +164,10 @@ def get_snmp_table(hostname, ip, community, oid_info):
     # allows to merge distinct SNMP subtrees with a similar structure
     # to one virtual new tree (look into cmctc_temp for an example)
     if len(oid_info) == 2:
-      oid, columns = oid_info
+      oid, targetcolumns = oid_info
       suboids = [None]
     else:
-      oid, suboids, columns = oid_info
+      oid, suboids, targetcolumns = oid_info
 
     all_values = []
     index_column = -1
@@ -170,8 +175,8 @@ def get_snmp_table(hostname, ip, community, oid_info):
     info = []
     for suboid in suboids:
        colno = -1
-       values = []
-       for column in columns:
+       columns = []
+       for column in targetcolumns:
             # column may be integer or string like "1.5.4.2.3"
             colno += 1
             # if column is 0, we do not fetch any data from snmp, but use
@@ -180,7 +185,7 @@ def get_snmp_table(hostname, ip, community, oid_info):
             # in later.
             if column == 0:
                index_column = colno
-               values.append([])
+               columns.append([])
                continue
             
             fetchoid = oid
@@ -193,9 +198,7 @@ def get_snmp_table(hostname, ip, community, oid_info):
                 rowinfo = snmpwalk_on_suboid(hostname, ip, community, fetchoid + "." + str(column))
                 
             if len(rowinfo) > 0:
-               # if we are working with suboids, we need to prefix them
-               # to the index in order to make the index unique
-               values.append(rowinfo)
+               columns.append(rowinfo)
                number_rows = len(rowinfo)
 
        if index_column != -1:
@@ -204,22 +207,54 @@ def get_snmp_table(hostname, ip, community, oid_info):
           while x <= number_rows:
              index_rows.append(x)
              x += 1
-          values[index_column] = index_rows
+          columns[index_column] = index_rows
        
        # prepend suboid to first column
-       if suboid and len(values) > 0:
-          first_column = values[0]
+       if suboid and len(columns) > 0:
+          first_column = columns[0]
           new_first_column = []
-          for x in first_column:
-             new_first_column.append(str(suboid) + "." + str(x))
-          values[0] = new_first_column
+          for oid, val in first_column:
+             new_first_column.append((oid, str(suboid) + "." + str(x)))
+          columns[0] = new_first_column
 
-       # swap X and Y axis of table (we want one list of columns per item)
+       # Swap X and Y axis of table (we want one list of columns per item)
+       # Here we have to deal with a nasty problem: Some brain-dead devices
+       # omit entries in some sub OIDs. This happens e.g. for CISCO 3650
+       # in the interfaces MIB with 64 bit counters. So we need to look at
+       # the OIDs and watch out for gaps we need to fill with dummy values.
+
+       # First compute the complete list of end-oids appearing in the output
+       endoids = []
+       for column in columns:
+           for oid, value in column:
+               endoid = oid.rsplit('.', 1)[-1]
+               if endoid not in endoids:
+                   endoids.append(endoid)
+
+       # Now fill gaps in columns where some endois are missing. Remove OIDs
+       new_columns = []
+       for column in columns:
+           i = 0
+           new_column = []
+           for oid, value in column:
+               beginoid, endoid = oid.rsplit('.', 1)
+               while i < len(endoids) and endoids[i] != endoid:
+                  new_column.append("") # (beginoid + '.' +endoids[i], "" ) )
+                  i += 1
+               new_column.append(value)
+               i += 1
+           while i < len(endoids): # trailing OIDs missing
+               new_column.append("") # (beginoid + '.' +endoids[i], "") )
+               i += 1
+           new_columns.append(new_column)
+       columns = new_columns
+           
+       # Now construct table by swapping X and Y
        new_info = []
        index = 0
-       if len(values) > 0:
-          for item in values[0]:
-             new_info.append([ c[index] for c in values ])
+       if len(columns) > 0:
+          for item in columns[0]:
+             new_info.append([ c[index] for c in columns ])
              index += 1
           info += new_info
 
@@ -274,64 +309,6 @@ def check_snmp_fixed(item, targetvalue, info):
              return (0, "OK - %s" % (value,))
    return (3, "Missing item %s in SNMP data" % item)
 
-def do_snmpwalk(hostnames):
-    if len(hostnames) == 0:
-        sys.stderr.write("Please specify host names to walk on.\n")
-        return
-    if not os.path.exists(snmpwalks_dir):
-        os.makedirs(snmpwalks_dir)
-    for host in hostnames:
-        try:
-            do_snmpwalk_on(host, snmpwalks_dir + "/" + host)
-        except Exception, e:
-            sys.stderr.write("Error walking %s: %s\n" % (host, e))
-            if opt_debug:
-                raise
-
-def do_snmpwalk_on(hostname, filename):
-    if opt_verbose:
-        sys.stdout.write("%s:\n" % hostname)
-    community = get_snmp_community(hostname)
-    ip = lookup_ipaddress(hostname)
-    if is_bulkwalk_host(hostname):
-        cmd = "snmpbulkwalk -v2c"
-    else:
-        cmd = "snmpwalk -v1"
-    cmd += " -Ob -OQ -c '%s' %s " % (community, ip)
-    out = file(filename, "w")
-    for oid in [ "", "enterprises" ]:
-        oids = []
-        values = []
-        if opt_verbose:
-            sys.stdout.write("%s..." % (cmd + oid))
-            sys.stdout.flush()
-        count = 0
-        f = os.popen(cmd + oid)
-        while True:
-            line = f.readline()
-            if not line:
-                break
-            parts = line.strip().split("=", 1)
-            if len(parts) != 2:
-                continue
-            oid, value = parts
-            if value.startswith('"'):
-                while value[-1] != '"':
-                    value += f.readline().strip()
-
-            oids.append(oid)
-            values.append(value)
-        numoids = snmptranslate(oids)
-        for numoid, value in zip(numoids, values):
-            out.write("%s %s\n" % (numoid, value.strip()))
-            count += 1
-        if opt_verbose:
-            sys.stdout.write("%d variables.\n" % count)
-        
-    out.close()
-    if opt_verbose:
-        sys.stdout.write("Successfully Wrote %s%s%s.\n" % (tty_bold, filename, tty_normal))
-
 def snmptranslate(oids):
     numoids = []
     while len(oids) > 0:
@@ -345,6 +322,8 @@ def snmptranslate(oids):
     return numoids
 
 def get_stored_snmpwalk(hostname, oid):
+    if oid.startswith("."):
+        oid = oid[1:]
     path = snmpwalks_dir + "/" + hostname
     if opt_verbose:
         sys.stderr.write("Getting %s from %s\n" % (oid, path))
@@ -354,10 +333,12 @@ def get_stored_snmpwalk(hostname, oid):
     for line in file(path):
         parts = line.split(None, 1)
         o = parts[0]
+        if o.startswith('.'):
+            o = o[1:]
         if o == oid or o.startswith(oid + "."):
             if len(parts) > 1:
                 value = parts[1]
             else:
                 value = ""
-            rowinfo.append(value.strip())
+            rowinfo.append((o, strip_snmp_value(value))) # return pair of OID and value
     return rowinfo

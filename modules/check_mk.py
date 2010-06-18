@@ -649,6 +649,13 @@ def get_single_oid(hostname, ipaddress, oid):
     if oid in g_single_oid_cache:
         return g_single_oid_cache[oid]
 
+    if opt_use_snmp_walk:
+        walk = get_stored_snmpwalk(hostname, oid)
+        if len(walk) == 1:
+            return walk[0][1]
+        else:
+            return None
+
     community = get_snmp_community(hostname)
     if is_bulkwalk_host(hostname):
         command = "snmpget -v2c"
@@ -2576,6 +2583,65 @@ def output_plain_hostinfo(hostname):
        sys.stderr.write("Unexpected exception: %s\n" % (e,))
        sys.exit(3)
 
+def do_snmpwalk(hostnames):
+    if len(hostnames) == 0:
+        sys.stderr.write("Please specify host names to walk on.\n")
+        return
+    if not os.path.exists(snmpwalks_dir):
+        os.makedirs(snmpwalks_dir)
+    for host in hostnames:
+        try:
+            do_snmpwalk_on(host, snmpwalks_dir + "/" + host)
+        except Exception, e:
+            sys.stderr.write("Error walking %s: %s\n" % (host, e))
+            if opt_debug:
+                raise
+
+def do_snmpwalk_on(hostname, filename):
+    if opt_verbose:
+        sys.stdout.write("%s:\n" % hostname)
+    community = get_snmp_community(hostname)
+    ip = lookup_ipaddress(hostname)
+    if is_bulkwalk_host(hostname):
+        cmd = "snmpbulkwalk -v2c"
+    else:
+        cmd = "snmpwalk -v1"
+    cmd += " -Ob -OQ -c '%s' %s " % (community, ip)
+    out = file(filename, "w")
+    for oid in [ "", "enterprises" ]:
+        oids = []
+        values = []
+        if opt_verbose:
+            sys.stdout.write("%s..." % (cmd + oid))
+            sys.stdout.flush()
+        count = 0
+        f = os.popen(cmd + oid)
+        while True:
+            line = f.readline()
+            if not line:
+                break
+            parts = line.strip().split("=", 1)
+            if len(parts) != 2:
+                continue
+            oid, value = parts
+            if value.startswith('"'):
+                while value[-1] != '"':
+                    value += f.readline().strip()
+
+            if oid.startswith("."):
+                oid = oid[1:]
+            oids.append(oid)
+            values.append(value)
+        numoids = snmptranslate(oids)
+        for numoid, value in zip(numoids, values):
+            out.write("%s %s\n" % (numoid, value.strip()))
+            count += 1
+        if opt_verbose:
+            sys.stdout.write("%d variables.\n" % count)
+        
+    out.close()
+    if opt_verbose:
+        sys.stdout.write("Successfully Wrote %s%s%s.\n" % (tty_bold, filename, tty_normal))
 
 def show_paths():
     inst = 1

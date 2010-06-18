@@ -322,6 +322,8 @@ def snmptranslate(oids):
     return numoids
 
 def get_stored_snmpwalk(hostname, oid):
+    if oid.startswith("."):
+        oid = oid[1:]
     path = snmpwalks_dir + "/" + hostname
     if opt_verbose:
         sys.stderr.write("Getting %s from %s\n" % (oid, path))
@@ -331,6 +333,8 @@ def get_stored_snmpwalk(hostname, oid):
     for line in file(path):
         parts = line.split(None, 1)
         o = parts[0]
+        if o.startswith('.'):
+            o = o[1:]
         if o == oid or o.startswith(oid + "."):
             if len(parts) > 1:
                 value = parts[1]

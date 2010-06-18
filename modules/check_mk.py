@@ -649,6 +649,13 @@ def get_single_oid(hostname, ipaddress, oid):
     if oid in g_single_oid_cache:
         return g_single_oid_cache[oid]
 
+    if opt_use_snmp_walk:
+        walk = get_stored_snmpwalk(hostname, oid)
+        if len(walk) == 1:
+            return walk[0][1]
+        else:
+            return None
+
     community = get_snmp_community(hostname)
     if is_bulkwalk_host(hostname):
         command = "snmpget -v2c"
@@ -2621,6 +2628,8 @@ def do_snmpwalk_on(hostname, filename):
                 while value[-1] != '"':
                     value += f.readline().strip()
 
+            if oid.startswith("."):
+                oid = oid[1:]
             oids.append(oid)
             values.append(value)
         numoids = snmptranslate(oids)

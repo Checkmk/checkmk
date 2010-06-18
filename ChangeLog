@@ -16,6 +16,8 @@
     * Windows agent supports now plugins/ and local/ checks
     * [FIX] ps.perf now correctly detects extended performance data output
       even if number of matching processes is 0
+    * renamed check cisco_3640_temp to cisco_temp, renamed cisco_temp
+      to cisco_temp_perf, fixed snmp detection of those checks
 
     Multisite:
     * New view showing all PNP graphs of services with the same description

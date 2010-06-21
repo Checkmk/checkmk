@@ -128,6 +128,11 @@ def snmpwalk_on_suboid(hostname, ip, community, oid):
                 continue # broken line, must contain =
             oid = parts[0].strip()
             value = parts[1].strip()
+            # Filter out silly error messages from snmpwalk >:-P
+	    if value.startswith('No more variables') or value.startswith('End of MIB') \
+               or value.startswith('No Such Object available') or value.startswith('No Such Instance currently exists'):
+                 continue
+
             if len(value) > 0 and value[0] == '"' and value[-1] != '"': # to be continued
         	while True: # scan for end of this dataset
         	    nextline = snmp_process.next().strip()
@@ -144,16 +149,6 @@ def snmpwalk_on_suboid(hostname, ip, community, oid):
         if opt_verbose:
             sys.stderr.write(tty_red + tty_bold + "ERROR: " + tty_normal + "SNMP error\n")
         return []
- 
-    # Ugly(2): snmpbulkwalk outputs 'No more variables left in this MIB
-    # View (It is past the end of the MIB tree)' if part of tree is
-    # not available -- on stdout >:-P
-    if len(rowinfo) == 1 and ( \
-        rowinfo[0].startswith('No more variables') or \
-        rowinfo[0].startswith('End of MIB') or \
-        rowinfo[0].startswith('No Such Object available') or \
-        rowinfo[0].startswith('No Such Instance currently exists')):
-        rowinfo = []
     return rowinfo
 
 def get_snmp_table(hostname, ip, community, oid_info):

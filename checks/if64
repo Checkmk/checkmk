@@ -42,7 +42,8 @@ def inventory_if64(checkname, info):
                 item = ifDescr
             else:
                 item = ifIndex
-            inventory.append( (item, "(if_default_levels[0], if_default_levels[1], %d)" % int(ifSpeed)) )
+            if ifSpeed != "":
+		inventory.append( (item, "(if_default_levels[0], if_default_levels[1], %d)" % int(ifSpeed)) )
     return inventory
 
 def ifoperstatus_statename(st):
@@ -51,6 +52,12 @@ def ifoperstatus_statename(st):
 
 def check_if64(item, params, info):
     warn, crit, targetspeed = params
+
+    def saveint(x):
+	if x == '': 
+	    return 0
+        else:
+	    return int(x)
 
     for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \
         ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen in info:
@@ -72,7 +79,7 @@ def check_if64(item, params, info):
             state = 0
 
             # Check speed
-            speed = int(ifSpeed)
+            speed = saveint(ifSpeed)
             bandwidth = speed / 8.0 # in Bytes / sec
             speedtxt = { 
                 10000000    : "10MBit/s", 
@@ -92,20 +99,20 @@ def check_if64(item, params, info):
             for name, counter, warnn, critt, minn, maxx in [ 
                 ( "in",        ifInOctets, None, None, 0, bandwidth), 
                 ( "inucast",   inucast, None, None, None, None),   
-                ( "innucast",  int(inmcast) + int(inbcast), None, None, None, None),
+                ( "innucast",  saveint(inmcast) + saveint(inbcast), None, None, None, None),
                 ( "indisc",    ifInDiscards, None, None, None, None),
                 ( "inerr",     ifInErrors, warn, crit, None, None),
 
                 ( "out",       ifOutOctets, None, None, 0, bandwidth), 
                 ( "outucast",  outucast, None, None, None, None),   
-                ( "outnucast", int(outmcast) + int(outbcast), None, None, None, None),
+                ( "outnucast", saveint(outmcast) + saveint(outbcast), None, None, None, None),
                 ( "outdisc",   ifOutDiscards, None, None, None, None),
                 ( "outerr",    ifOutErrors, warn, crit, None, None) ]:
             
                 try:
                     if counter == '': # due to missing OIDs filled up by Check_MK with empty strings
                         counter = 0
-                    timedif, rate = get_counter("if.%s.%s" % (name, item), this_time, int(counter))
+                    timedif, rate = get_counter("if.%s.%s" % (name, item), this_time, saveint(counter))
                     rates.append(rate)
                     perfdata.append( (name, rate, warn, crit, minn, maxx) )
                 except MKCounterWrapped:
@@ -117,7 +124,7 @@ def check_if64(item, params, info):
                 perfdata = []
             else:
                 MB = 1024 * 1024.0
-                perfdata.append(("outqlen", int(ifOutQLen)))
+                perfdata.append(("outqlen", saveint(ifOutQLen)))
                 for what, errorrate, okrate, traffic in \
                    [ ("in",  rates[4], rates[1] + rates[2], rates[0]),
                      ("out", rates[9], rates[6] + rates[7], rates[1]) ]:

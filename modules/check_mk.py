@@ -672,7 +672,9 @@ def get_single_oid(hostname, ipaddress, oid):
 	value = value.strip()
 	if opt_verbose:
 	   sys.stdout.write("SNMP answer: ==> [%s]\n" % value)
-	
+	if value.startswith('No more variables') or value.startswith('End of MIB') \
+           or value.startswith('No Such Object available') or value.startswith('No Such Instance currently exists'):
+              value = None
 	
         # try to remove text, only keep number
         # value_num = value_text.split(" ")[0]

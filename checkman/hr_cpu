@@ -1,0 +1,27 @@
+title: Check CPU utilization via SNMP HOST-RESOURCES-MIB
+agents: snmp
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ The {HOST-RESOURCES-MIB} is a standardized MIB provided by many
+ SNMP agents. This check uses that MIB in order to monitor the
+ current CPU utilization of the target host. Please note, that - unlike
+ check based on the check_mk_agent, the percentage does not reflect
+ the usage during the complete check interval but is just a snapshot
+ of the current usage.
+
+perfdata:
+ One variable: the current CPU percentage (0..100)
+
+inventory:
+ One check is automatically created if at least one CPU
+ entry is found in the SNMP output.
+
+[parameters]
+warning (int): CPU utilization percentage at which a warning level ist triggered.
+
+critical (int): CPU utilization percentage at which a critical level ist triggered.
+
+[configuration]
+hr_cpu_default_levels (int, int): Default levels used by inventorized checks. This variable is preset to {(80, 90)}.

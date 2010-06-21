@@ -19,6 +19,7 @@
     * renamed check cisco_3640_temp to cisco_temp, renamed cisco_temp
       to cisco_temp_perf, fixed snmp detection of those checks
     * New check hr_cpu - checking the CPU utilization via SNMP
+    * New check hr_fs - checking filesystem usage via SNMP
 
     Multisite:
     * New view showing all PNP graphs of services with the same description

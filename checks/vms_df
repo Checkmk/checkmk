@@ -33,8 +33,7 @@ def inventory_vms_df(checkname, info):
     return [ ( line[0], '""', 'filesystem_default_levels') for line in info ]
     
 def check_vms_df(item, params, info):
-    try:
-      for line in info:
+    for line in info:
         if line[0] == item:
             io_ops_total_per_sec = float(line[1])
             read_perc            = float(line[2])
@@ -51,7 +50,6 @@ def check_vms_df(item, params, info):
 
             warn_mb, crit_mb, levelstext = get_filesystem_levels(g_hostname, item, size_gb, params)
 
-
             perfdata = [
               (item, str(used_mb) + 'MB', warn_mb, crit_mb, 0, size_mb),
               ('iops', "%.2f" % io_ops_total_per_sec )
@@ -65,9 +63,6 @@ def check_vms_df(item, params, info):
             else:
                 return (0, "OK - %s %s" % (used_txt, levelstext), perfdata)
             
-    except 1:
-        return (3, "Invalid output from plugin")
-        
     return (3, "Disk %s not found" % (item,))
 
 check_info['vms_df']        = ( check_vms_df, "fs_%s", 1, inventory_vms_df )

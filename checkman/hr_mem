@@ -1,0 +1,34 @@
+title: Check usage of physical and virtual using SNMP
+agents: snmp
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check measures the usage of physical RAM and virtual memory
+ using the {HOST-RESOURCES-MIB}, which is provided by many SNMP
+ agents (especially those on standard operating systems).
+
+ The logic used for monitoring is exactly the same as in the
+ agent based check {mem.used}. Please refer to the man page
+ of that check for details.
+
+inventory:
+ If the needed information is available via SNMP one service
+ for the target host will be created.
+
+perfdata:
+ Three variables: the physical RAM, the virtual memory and the
+ sum of both.
+
+[parameters]
+warning (int or float): the precentage of virtual memory used 
+ by processes at which WARNING state is triggered. If the
+ level is defined as an integer value then it is interpreted
+ as an absolute value in megabytes.
+critical (int or float): the percentage or absolute value
+ at which CRITICAL state is triggered
+
+[configuration]
+memused_default_levels (float, float): Levels used by
+ all checks that are created by inventory.
+

@@ -103,6 +103,8 @@ def check_if64(item, params, info):
                 ( "outerr",    ifOutErrors, warn, crit, None, None) ]:
             
                 try:
+                    if counter == '': # due to missing OIDs filled up by Check_MK with empty strings
+                        counter = 0
                     timedif, rate = get_counter("if.%s.%s" % (name, item), this_time, int(counter))
                     rates.append(rate)
                     perfdata.append( (name, rate, warn, crit, minn, maxx) )

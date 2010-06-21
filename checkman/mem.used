@@ -62,8 +62,9 @@ examples:
  ]
 
 perfdata:
- Two variables are stored: the physical and RAM and
- the used swap space (Windows: usage of swap file). Maximum
+ Three variables are stored: the physical RAM, 
+ the used swap space (Windows: usage of swap file) and the
+ sum of both. Maximum
  values for both variables are also transmitted, so that
  they can be visualized. All values are in Megabytes (1024 * 1024 bytes).
 
@@ -77,7 +78,7 @@ perfdata:
 [parameters]
 warning (int or float): the precentage of virtual memory used 
  by processes at which WARNING state is triggered. If the
- level is defined as in integer value then it is interpreted
+ level is defined as an integer value then it is interpreted
  as an absolute value in megabytes.
 critical (int or float): the percentage or absolute value
  at which CRITICAL state is triggered
@@ -85,8 +86,7 @@ critical (int or float): the percentage or absolute value
 
 [configuration]
 memused_default_levels (float, float): Levels used by
- all checks that are created by inventory. Please define
- explicit checks for hosts that need more specific levels.
+ all checks that are created by inventory.
 
 mem_extended_perfdata (boolean): If this variable is set
  to {True}, then the checks outputs additional performance

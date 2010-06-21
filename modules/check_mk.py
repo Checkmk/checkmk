@@ -2606,7 +2606,7 @@ def do_snmpwalk_on(hostname, filename):
         cmd = "snmpbulkwalk -v2c"
     else:
         cmd = "snmpwalk -v1"
-    cmd += " -Ob -OQ -c '%s' %s " % (community, ip)
+    cmd += " -Ob -OQ -OU -c '%s' %s " % (community, ip)
     out = file(filename, "w")
     for oid in [ "", "enterprises" ]:
         oids = []

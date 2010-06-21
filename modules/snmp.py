@@ -75,7 +75,7 @@ def get_snmp_explicit(hostname, ipaddress, community, mib, baseoid, suffixes):
             mibinfo = " -m %s" % mib
         else:
             mibinfo = ""
-        command = cmd + "%s -OQ -Oe -c %s %s %s.%s 2>/dev/null" % \
+        command = cmd + "%s -OQ -OU -Oe -c %s %s %s.%s 2>/dev/null" % \
                   (mibinfo, community, ipaddress, baseoid, suffix)
         if opt_debug:
             sys.stderr.write('   Running %s\n' % (command,))
@@ -108,7 +108,7 @@ def snmpwalk_on_suboid(hostname, ip, community, oid):
     else:
         cmd = "snmpwalk -v1"
     
-    command = cmd + " -OQ -On -c '%s' %s %s 2>/dev/null" % (community, ip, oid)
+    command = cmd + " -OQ -OU -On -c '%s' %s %s 2>/dev/null" % (community, ip, oid)
     if opt_debug:
         sys.stderr.write('   Running %s\n' % (command,))
     snmp_process = os.popen(command, "r").xreadlines()

@@ -320,7 +320,7 @@ def get_stored_snmpwalk(hostname, oid):
     if oid.startswith("."):
         oid = oid[1:]
     path = snmpwalks_dir + "/" + hostname
-    if opt_verbose:
+    if opt_debug:
         sys.stderr.write("Getting %s from %s\n" % (oid, path))
     if not os.path.exists(path):
         raise MKGeneralException("No snmpwalk file %s\n" % path)

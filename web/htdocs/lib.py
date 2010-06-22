@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import pwd, defaults, pprint, os
+
 nagios_state_names = { 0: "OK", 1: "WARNING", 2: "CRITICAL", 3: "UNKNOWN", 4: "DEPENDENT" }
 nagios_short_state_names = { 0: "OK", 1: "WARN", 2: "CRIT", 3: "UNKN", 4: "DEP" }
 nagios_short_host_state_names = { 0: "UP", 1: "DOWN", 2: "UNREACH" }
@@ -54,3 +56,17 @@ class MKInternalError(Exception):
     def __init__(self, msg):
         Exception.__init__(self, msg)
 
+# Create directory owned by common group of Nagios and webserver,
+# and make it writable for the group
+def make_nagios_directory(path):
+    if not os.path.exists(path):
+        os.mkdir(path)
+        gid = pwd.getpwnam(defaults.www_group).pw_gid
+        os.chown(path, -1, gid)
+        os.chmod(path, 0770)
+
+def write_settings_file(path, content):
+    file(path, "w", 0).write(pprint.pformat(content) + "\n")
+    gid = pwd.getpwnam(defaults.www_group).pw_gid
+    os.chown(path, -1, gid)
+    os.chmod(path, 0660)

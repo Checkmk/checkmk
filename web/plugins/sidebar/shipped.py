@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import views, time, defaults
+from lib import *
 
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
@@ -794,8 +795,7 @@ def load_bookmarks():
 
 
 def save_bookmarks(bookmarks):
-    path = config.user_confdir + "/bookmarks.mk"
-    file(path, "w").write(repr(bookmarks) + "\n")
+    write_settings_file(config.user_confdir + "/bookmarks.mk", bookmarks)
 
 def render_bookmarks():
     bookmarks = load_bookmarks()

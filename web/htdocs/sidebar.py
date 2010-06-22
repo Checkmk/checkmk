@@ -102,7 +102,7 @@ def save_user_config(user_config):
     if config.may("configure_sidebar"):
         path = config.user_confdir + "/sidebar.mk"
         try:
-            file(path, "w").write(pprint.pformat(user_config) + "\n")
+	    write_settings_file(path, user_config)
         except Exception, e:
             raise MKConfigError("Cannot save user configuration to <tt>%s</tt>: %s" % (path, e))
 

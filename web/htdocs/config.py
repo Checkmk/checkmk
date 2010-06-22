@@ -164,10 +164,7 @@ def login(u):
     # Prepare users' own configuration directory
     global user_confdir
     user_confdir = config_dir + "/" + user
-    try:
-        os.mkdir(user_confdir)
-    except:
-        pass
+    make_nagios_directory(user_confdir)
 
     # determine role of user. Each user may be listed only once
     # in admin_users, guest_users and users.
@@ -200,7 +197,7 @@ def login(u):
 def save_site_config():
     path = user_confdir + "/siteconfig.mk"
     try:
-        file(path, "w").write(pprint.pformat(user_siteconf) + "\n")
+        write_settings_file(path, user_siteconf)
     except Exception, e:
         raise MKConfigError("Cannot save site configuration for user <b>%s</b> into <b>%s</b>: %s" % \
                 (user, path, e))
@@ -246,7 +243,7 @@ def load_permissions():
 	permissions = {}
 
 def save_permissions(permissions):
-    file(config_dir + "/permissions.mk", "w").write(pprint.pformat(permissions) + "\n")
+    write_settings_file(config_dir + "/permissions.mk", permissions)
 
 # -------------------------------------------------------------------
 #    ____  _ _

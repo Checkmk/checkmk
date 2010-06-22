@@ -433,7 +433,7 @@ class html:
     def increase_transid(self, username):
 	current = self.current_transid(username)
 	path = defaults.var_dir + "/web/" + username + "/transid.mk"
-	file(path, "w").write("%d\n" % (current + 1))
+        write_settings_file(path, current + 1)
 
     # Checks wether the current page is a reload or an original real submit
     def transaction_valid(self):

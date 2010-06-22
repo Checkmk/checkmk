@@ -25,7 +25,9 @@
     Multisite:
     * New view showing all PNP graphs of services with the same description
     * Two new filters for host: notifications_enabled and acknowledged
-
+    * Files created by the webserver (*.mk) are now created with the group
+      configured as common group of Nagios and webserver. Group gets write
+      permissions on files and directories.
 
 1.1.6:
     Core, Setup, etc.:

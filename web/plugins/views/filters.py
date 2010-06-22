@@ -313,6 +313,8 @@ declare_filter(251, FilterNagiosExpression("service", "has_performance_data", "H
             "Filter: service_perf_data = \n"))
 
 declare_filter(130, FilterNagiosFlag("host",    "host_in_notification_period",   "Host in notif. period"))
+declare_filter(131, FilterNagiosFlag("host",    "host_acknowledged",             "Host problem has been acknowledged"))
+declare_filter(133, FilterNagiosFlag("host",    "host_notifications_enabled",     "Host notifications enabled"))
 declare_filter(230, FilterNagiosFlag("service", "service_acknowledged",             "Problem acknowledged"))
 declare_filter(231, FilterNagiosFlag("service", "service_in_notification_period",   "Service in notif. per."))
 declare_filter(232, FilterNagiosFlag("service", "service_active_checks_enabled",    "Active checks enabled"))

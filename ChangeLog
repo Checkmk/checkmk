@@ -24,6 +24,7 @@
 
     Multisite:
     * New view showing all PNP graphs of services with the same description
+    * Two new filters for host: notifications_enabled and acknowledged
 
 
 1.1.6:

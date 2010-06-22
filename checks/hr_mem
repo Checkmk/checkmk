@@ -40,6 +40,12 @@ def inventory_hr_mem(checktype, info):
 def check_hr_mem(item, params, info):
     usage = {}
     for hrtype, hrdescr, hrunits, hrsize, hrused in info:
+        # Handle old-style SNMP output with unit, e.g. "1024 Bytes"
+        # Remove this later, if all use 1.1.7
+        hrsize = hrsize.split()[0]
+        hrunits = hrunits.split()[0]
+        hrused = hrused.split()[0]
+
         size = int(hrsize) * int(hrunits) / 1048576.0
         used = int(hrused) * int(hrunits) / 1048576.0
         usage[hrtype] = (size, used)

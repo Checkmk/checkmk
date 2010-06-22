@@ -280,18 +280,18 @@ def get_realhost_info(hostname, ipaddress, checkname, max_cache_age):
        content = read_cache_file(cache_relpath, max_cache_age)
        if content:
            return eval(content)
-       community = get_snmp_community(hostname)
+       credentials = get_snmp_credentials(hostname)
        # New in 1.1.3: oid_info can now be a list: Each element
        # of that list is interpreted as one real oid_info, fetches
        # a separate snmp table. The overall result is then the list
        # of these results.
        if type(oid_info) == list:
-	   table = [ get_snmp_table(hostname, ipaddress, community, entry) for entry in oid_info ]
+	   table = [ get_snmp_table(hostname, ipaddress, credentials, entry) for entry in oid_info ]
            # if at least one query fails, we discard the hole table
            if None in table:
                table = None
        else:
-	   table = get_snmp_table(hostname, ipaddress, community, oid_info)
+	   table = get_snmp_table(hostname, ipaddress, credentials, oid_info)
        store_cached_checkinfo(hostname, checkname, table)
        write_cache_file(cache_relpath, repr(table) + "\n")
        return table
@@ -305,8 +305,8 @@ def get_realhost_info(hostname, ipaddress, checkname, max_cache_age):
        content = read_cache_file(cache_relpath, max_cache_age)
        if content:
            return eval(content)
-       community = get_snmp_community(hostname)
-       table = get_snmp_explicit(hostname, ipaddress, community, mib, baseoid, suffixes)
+       credentials = get_snmp_credentials(hostname)
+       table = get_snmp_explicit(hostname, ipaddress, credentials, mib, baseoid, suffixes)
        store_cached_checkinfo(hostname, checkname, table)
        write_cache_file(cache_relpath, repr(table) + "\n")
        return table

@@ -601,7 +601,7 @@ do
 	       sed -ri 's@^export MK_CONFDIR="(.*)"@export MK_CONFDIR="'"$agentsconfdir"'"@' $agent 
 	   done &&
 	   mkdir -p $DESTDIR$vardir/{autochecks,counters,precompiled,cache,logwatch,web} &&
-	   if [ -z "$DESTDIR" ] && id "$nagiosuser" > /dev/null 2>&1 ; then
+	   if [ -z "$DESTDIR" ] && id "$nagiosuser" > /dev/null 2>&1 && [ $UID = 0 ] ; then
 	     chown -R $nagiosuser $DESTDIR$vardir/{counters,cache,logwatch,web}
            fi &&
 	   if [ -z "$DESTDIR" ] ; then
@@ -629,7 +629,7 @@ do
 	   echo 'All files in this directory that end with .mk will be read in after main.mk' > $DESTDIR$confdir/conf.d/README &&
 	   if [ ! -d $DESTDIR$rrddir ] ; then
 	       mkdir -p $DESTDIR$rrddir && 
-	       if [ -z "$DESTDIR" ] && id "$nagiosuser" > /dev/null 2>&1 ; then
+	       if [ -z "$DESTDIR" ] && id "$nagiosuser" > /dev/null 2>&1 && [ $UID = 0 ] ; then
 		   chown $nagiosuser $DESTDIR$rrddir
                fi
 	   fi &&

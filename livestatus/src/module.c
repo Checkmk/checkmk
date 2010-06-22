@@ -298,9 +298,6 @@ void close_unix_socket()
 
 int broker_host(int event_type, void *data)
 {
-    // This is a hack that assures that our client threads
-    // are started not before Nagios is really up and running!
-    start_threads();
     g_counters[COUNTER_NEB_CALLBACKS]++;
 }
 

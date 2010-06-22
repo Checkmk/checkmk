@@ -60,23 +60,20 @@ def convert_from_hex(value):
 # Fetch single values via SNMP. This function is only used by snmp_info_single,
 # which is only rarely used. Most checks use snmp_info, which is handled by
 # get_snmp_table. 
-def get_snmp_explicit(hostname, ipaddress, community, mib, baseoid, suffixes):
+def get_snmp_explicit(hostname, ipaddress, mib, baseoid, suffixes):
     if opt_verbose:
         sys.stderr.write('Fetching misc values from OID %s%s%s%s from IP %s\n' % \
                          (tty_bold, tty_green, baseoid, tty_normal, ipaddress))
 
     info = []
-    if is_bulkwalk_host(hostname):
-        cmd = "snmpbulkwalk -v2c"
-    else:
-        cmd = "snmpwalk -v1"
+    cmd = snmp_walk_command(hostname)
     for suffix in suffixes:
         if mib:
             mibinfo = " -m %s" % mib
         else:
             mibinfo = ""
-        command = cmd + "%s -OQ -OU -Oe -c %s %s %s.%s 2>/dev/null" % \
-                  (mibinfo, community, ipaddress, baseoid, suffix)
+        command = cmd + "%s -OQ -OU -Oe %s %s.%s 2>/dev/null" % \
+                  (mibinfo, ipaddress, baseoid, suffix)
         if opt_debug:
             sys.stderr.write('   Running %s\n' % (command,))
         num_found = 0
@@ -102,13 +99,9 @@ def get_snmp_explicit(hostname, ipaddress, community, mib, baseoid, suffixes):
             return None
     return info
 
-def snmpwalk_on_suboid(hostname, ip, community, oid):
-    if is_bulkwalk_host(hostname):
-        cmd = "snmpbulkwalk -v2c"
-    else:
-        cmd = "snmpwalk -v1"
-    
-    command = cmd + " -OQ -OU -On -c '%s' %s %s 2>/dev/null" % (community, ip, oid)
+def snmpwalk_on_suboid(hostname, ip, oid):
+    command = snmp_walk_command(hostname) + \
+             " -OQ -OU -On %s %s 2>/dev/null" % (ip, oid)
     if opt_debug:
         sys.stderr.write('   Running %s\n' % (command,))
     snmp_process = os.popen(command, "r").xreadlines()
@@ -151,7 +144,7 @@ def snmpwalk_on_suboid(hostname, ip, community, oid):
         return []
     return rowinfo
 
-def get_snmp_table(hostname, ip, community, oid_info):
+def get_snmp_table(hostname, ip, oid_info):
     # oid_info is either ( oid, columns ) or
     # ( oid, suboids, columns )
     # suboids is a list if OID-infixes that are put between baseoid
@@ -190,7 +183,7 @@ def get_snmp_table(hostname, ip, community, oid_info):
             if opt_use_snmp_walk:
                 rowinfo = get_stored_snmpwalk(hostname, fetchoid + "." + str(column))
             else:
-                rowinfo = snmpwalk_on_suboid(hostname, ip, community, fetchoid + "." + str(column))
+                rowinfo = snmpwalk_on_suboid(hostname, ip, fetchoid + "." + str(column))
                 
             if len(rowinfo) > 0:
                columns.append(rowinfo)

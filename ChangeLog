@@ -9,6 +9,7 @@
     * SNMP: Automatically detect missing entries. That fixes if64
       on some CISCO switches.
     * Do chown only if running as root (avoid error messages)
+    * SNMP: SNMPv3 with user auth is now supported by check_mk
 
     Checks & Agents:
     * New check ntp.time: Similar to 'ntp' but only honors the system peer

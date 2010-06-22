@@ -233,7 +233,7 @@ multiadmin_sidebar                   = [('admin', 'open'), ('tactical_overview',
 # Data to be defined in main.mk
 checks                               = []
 all_hosts                            = []
-snmp_hosts                           = [ (['snmp'], ALL_HOSTS) ]
+snmp_hosts                           = [ (['snmp'],   ALL_HOSTS) ]
 bulkwalk_hosts                       = None
 non_bulkwalk_hosts                   = None
 ignored_checktypes                   = [] # exclude from inventory
@@ -603,11 +603,52 @@ def aggregated_service_name(hostname, servicedesc):
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
+# Returns command lines for snmpwalk and snmpget including
+# options for authentication. This handles communities and
+# authentication for SNMP V3. Also bulkwalk hosts
+def snmp_get_command(hostname):
+    return snmp_base_command('get', hostname)
+
+def snmp_walk_command(hostname):
+    return snmp_base_command('walk', hostname)
+
+# Constructs the basic snmp commands for a host with all important information
+# like the commandname, SNMP version and credentials.
+# This function also changes snmpbulkwalk to snmpwalk for snmpv1.
+def snmp_base_command(what, hostname):
+    # if the credentials are a string, we use that as community,
+    # if it is a four-tuple, we use it as V3 auth parameters
+
+    credentials = snmp_credentials_of(hostname)
+    if what == 'get':
+        command = 'snmpget'
+    else:
+        command = 'snmpbulkwalk'
+
+    # Handle V1 and V2C
+    if type(credentials) == str:
+        if is_bulkwalk_host(hostname):
+            options = '-v2c'
+        else:
+            options = '-v1'
+            if what == 'walk':
+                command = 'snmpwalk'
+        options += " -c '%s'
+
+    # Handle V3
+    else:
+         if len(credentials) != 4:
+            raise MKGeneralException("Invalid SNMP credentials '%r' for host %s: must be string or 4-tuple" % (credentials, hostname)) 
+         options = "'-v3 -u '%s' -l '%s' -a %s -A '%s'" % credentials
+        
+    return command
+
+
 # Determine SNMP community for a specific host.  It the host is found
 # int the map snmp_communities, that community is returned. Otherwise
 # the snmp_default_community is returned (wich is preset with
 # "public", but can be overridden in main.mk
-def get_snmp_community(hostname):
+def snmp_credentials_of(hostname):
     # Keep up old behaviour for a while...
     if type(snmp_communities) == dict:
         for com, hostlist in snmp_communities.items():
@@ -621,7 +662,6 @@ def get_snmp_community(hostname):
 
     # nothing configured for this host -> use default
     return snmp_default_community
-
 
 def check_uses_snmp(check_type):
     check_name = check_type.split(".")[0]
@@ -656,16 +696,12 @@ def get_single_oid(hostname, ipaddress, oid):
         else:
             return None
 
-    community = get_snmp_community(hostname)
-    if is_bulkwalk_host(hostname):
-        command = "snmpget -v2c"
-    else:
-        command = "snmpget -v1" 
-    command += " -On -OQ -Oe -c %s %s %s 2>/dev/null" % (community, ipaddress, oid)
+    command = snmp_get_command(hostname) + \
+         " -On -OQ -Oe %s %s 2>/dev/null" % (ipaddress, oid)
     try:
 	if opt_verbose:
 	    sys.stdout.write("Running '%s'\n" % command)
-	    
+
         snmp_process = os.popen(command, "r")
 	line = snmp_process.readline().strip()
 	item, value = line.split("=")
@@ -675,7 +711,7 @@ def get_single_oid(hostname, ipaddress, oid):
 	if value.startswith('No more variables') or value.startswith('End of MIB') \
            or value.startswith('No Such Object available') or value.startswith('No Such Instance currently exists'):
               value = None
-	
+
         # try to remove text, only keep number
         # value_num = value_text.split(" ")[0]
         # value_num = value_num.lstrip("+")
@@ -1954,7 +1990,8 @@ filesystem_default_levels = None
 
     # snmp hosts
     output.write("def is_snmp_host(hostname):\n   return %r\n\n" % is_snmp_host(hostname))
-    output.write("def is_bulkwalk_host(hostname):\n   return %r\n\n" % is_bulkwalk_host(hostname))
+    output.write("def snmp_get_command(hostname):\n   return %r\n\n" % snmp_get_command(hostname))
+    output.write("def snmp_walk_command(hostname):\n   return %r\n\n" % snmp_walk_command(hostname))
 
     # IP addresses
     needed_ipaddresses = {}
@@ -1982,10 +2019,6 @@ filesystem_default_levels = None
         dsprogs[node] = program
     output.write("def get_datasource_program(hostname, ipaddress):\n" +
                  "    return %r[hostname]\n\n" % dsprogs)
-
-    # SNMP community (might not be needed, but does never harm)
-    snmp_comm = get_snmp_community(hostname)
-    output.write("def get_snmp_community(hostname):\n    return %r\n\n" % snmp_comm)
 
     # aggregation
     output.write("def host_is_aggregated(hostname):\n    return %r\n\n" % host_is_aggregated(hostname))
@@ -2607,13 +2640,9 @@ def do_snmpwalk(hostnames):
 def do_snmpwalk_on(hostname, filename):
     if opt_verbose:
         sys.stdout.write("%s:\n" % hostname)
-    community = get_snmp_community(hostname)
+    credentials = get_snmp_credentials(hostname)
     ip = lookup_ipaddress(hostname)
-    if is_bulkwalk_host(hostname):
-        cmd = "snmpbulkwalk -v2c"
-    else:
-        cmd = "snmpwalk -v1"
-    cmd += " -Ob -OQ -OU -c '%s' %s " % (community, ip)
+    cmd = snmp_walk_command(hostname) + " -Ob -OQ %s " % ip
     out = file(filename, "w")
     for oid in [ "", "enterprises" ]:
         oids = []
@@ -2741,12 +2770,12 @@ def dump_host(hostname):
     print tty_yellow + "Notification:           " + tty_normal + notperiod
     agenttype = "TCP (port: %d)" % agent_port
     if is_snmp_host(hostname):
-        community = get_snmp_community(hostname)
+        credentials = snmp_credentials_of(hostname)
         if is_bulkwalk_host(hostname):
             bulk = "yes"
         else:
             bulk = "no"
-        agenttype = "SNMP (community: '%s', bulk walk: %s)" % (community, bulk)
+        agenttype = "SNMP (community: '%s', bulk walk: %s)" % (credentials, bulk)
     print tty_yellow + "Type of agent:          " + tty_normal + agenttype
     is_aggregated = host_is_aggregated(hostname)
     if is_aggregated:

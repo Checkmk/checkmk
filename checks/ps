@@ -56,15 +56,14 @@ def inventory_ps(check_name, info):
             tags = []
             hostlist = inventry[0]
             inventry = inventry[1:]
-        elif len(inventy) == 9:
+        elif len(inventry) == 9:
             tags = inventry[0]
             hostlist = inventry[1]
             inventry = inventry[2:]
 
         # Filter out rules with do not match our current host
-        if tags != None and (
-            not hosttags_match_taglist(tags_of_host(g_hostname), tags) or
-            not in_extraconf_hostlist(hostlist, g_hostname))
+        if tags != None and ( not hosttags_match_taglist(tags_of_host(g_hostname), tags) or 
+                              not in_extraconf_hostlist(hostlist, g_hostname)):
             continue
 
         servicedesc, pattern, userspec, warnmin, okmin, okmax, warnmax = inventry

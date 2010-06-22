@@ -1656,6 +1656,11 @@ def make_inventory(checkname, hostnamelist, check_only=False):
                      continue
              else:
                  ipaddress = None # not needed, not TCP used
+
+          # Make hostname available as global variable in inventory functions
+          # (used e.g. by ps-inventory)
+          global g_hostname
+          g_hostname = hostname
             
           # On --no-tcp option skip hosts without cache file
           if opt_no_tcp:

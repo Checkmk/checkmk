@@ -48,7 +48,27 @@ def inventory_ps(check_name, info):
     else:
         invdata = inventory_processes_perf
 
-    for servicedesc, pattern, userspec, warnmin, okmin, okmax, warnmax in invdata:
+    for inventry in invdata:
+        # New in 1.1.7i1: inventory_processes may be prefixed with list of
+        # host names or tags + ALL_HOSTS
+        tags = None
+        if len(inventry) == 8:
+            tags = []
+            hostlist = inventry[0]
+            inventry = inventry[1:]
+        elif len(inventy) == 9:
+            tags = inventry[0]
+            hostlist = inventry[1]
+            inventry = inventry[2:]
+
+        # Filter out rules with do not match our current host
+        if tags != None and (
+            not hosttags_match_taglist(tags_of_host(g_hostname), tags) or
+            not in_extraconf_hostlist(hostlist, g_hostname))
+            continue
+
+        servicedesc, pattern, userspec, warnmin, okmin, okmax, warnmax = inventry
+
 	num_perc_s = servicedesc.count("%s")
 	for ps in info:
 	    l_user = [userspec]

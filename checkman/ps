@@ -58,8 +58,11 @@ inventory:
  The {warning and critical levels} are simply copied to the created
  checks.
 
- This version of ps has super cow powers.
-
+ As of version {1.1.7i1} ps inventory allows optional host specification.
+ You can prepend a list of host names or a list of tag names and {ALL_HOSTS}
+ to some of all rules of the inventory specification. That way you can
+ make the inventory apply some rules only to certain hosts.
+ 
 examples:
  # Examples for manually configured checks
  checks += [
@@ -81,7 +84,6 @@ examples:
    # make sure no "sshd" processes owned by user "root" exists
    ( "somehost", "ps", "SSHD[root]", ( "~.*sshd", "root", 0, 0, 0, 0) ),
 
-
  ]
 
  # Examples for automatic inventorization of processes
@@ -89,7 +91,13 @@ examples:
    # if we find a /usr/sbin/ntpd on any host => monitor it
    ( "NTPD", "/usr/sbin/ntpd", ANY_USER, 1, 1, 1, 1),
 
-   # alternative: do the same, but make sure, ntpd is always
+   # alternative(1): do the same, but only on hosts tagged with "ntp":
+   ( ['ntp'], ALL_HOSTS, "NTPD", "/usr/sbin/ntpd", ANY_USER, 1, 1, 1, 1),
+
+   # alternative(2): do the same, but only on two specific hosts
+   ( ['xsrv1', 'xsrv2'], "NTPD", "/usr/sbin/ntpd", ANY_USER, 1, 1, 1, 1),
+
+   # alternative(3): do the same, but make sure, ntpd is always
    # running as the user under which we found it first:
    ( "NTPD2", "/usr/sbin/ntpd", GRAB_USER, 1, 1, 1, 1),
 

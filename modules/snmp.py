@@ -61,7 +61,7 @@ def convert_from_hex(value):
 # which is only rarely used. Most checks use snmp_info, which is handled by
 # get_snmp_table. 
 def get_snmp_explicit(hostname, ipaddress, mib, baseoid, suffixes):
-    if opt_verbose:
+    if opt_debug:
         sys.stderr.write('Fetching misc values from OID %s%s%s%s from IP %s\n' % \
                          (tty_bold, tty_green, baseoid, tty_normal, ipaddress))
 

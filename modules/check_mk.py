@@ -617,7 +617,11 @@ def snmp_walk_command(hostname):
 # This function also changes snmpbulkwalk to snmpwalk for snmpv1.
 def snmp_base_command(what, hostname):
     # if the credentials are a string, we use that as community,
-    # if it is a four-tuple, we use it as V3 auth parameters
+    # if it is a four-tuple, we use it as V3 auth parameters:
+    # (1) security level (-l)
+    # (2) auth protocol (-a, e.g. 'md5')
+    # (3) security name (-u)
+    # (4) auth password (-A)
 
     credentials = snmp_credentials_of(hostname)
     if what == 'get':
@@ -633,15 +637,15 @@ def snmp_base_command(what, hostname):
             options = '-v1'
             if what == 'walk':
                 command = 'snmpwalk'
-        options += " -c '%s'
+        options += " -c '%s'" % credentials
 
     # Handle V3
     else:
          if len(credentials) != 4:
             raise MKGeneralException("Invalid SNMP credentials '%r' for host %s: must be string or 4-tuple" % (credentials, hostname)) 
-         options = "'-v3 -u '%s' -l '%s' -a %s -A '%s'" % credentials
+         options = "-v3 -l '%s' -a '%s' -u '%s' -A '%s'" % credentials
         
-    return command
+    return command + ' ' + options
 
 
 # Determine SNMP community for a specific host.  It the host is found
@@ -2640,7 +2644,6 @@ def do_snmpwalk(hostnames):
 def do_snmpwalk_on(hostname, filename):
     if opt_verbose:
         sys.stdout.write("%s:\n" % hostname)
-    credentials = get_snmp_credentials(hostname)
     ip = lookup_ipaddress(hostname)
     cmd = snmp_walk_command(hostname) + " -Ob -OQ %s " % ip
     out = file(filename, "w")

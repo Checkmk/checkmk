@@ -229,6 +229,12 @@ if which ntpq > /dev/null 2>&1 ; then
    ntpq -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
 fi
 
+if which nvidia-settings >/dev/null
+then
+    echo '<<<nvidia>>>'
+    DISPLAY=:0 nvidia-settings -q GPUCoreTemp -q GPUAmbientTemp | grep Attribute
+fi
+
 # Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
 if cd $PLUGINSDIR
 then

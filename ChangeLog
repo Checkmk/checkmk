@@ -33,6 +33,7 @@
     * Files created by the webserver (*.mk) are now created with the group
       configured as common group of Nagios and webserver. Group gets write
       permissions on files and directories.
+    * Fix problems with Umlauts (non-Ascii-characters) in performance data
 
 1.1.6:
     Core, Setup, etc.:

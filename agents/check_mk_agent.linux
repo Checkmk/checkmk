@@ -179,14 +179,20 @@ fi
 
 # IPMI data via ipmi-sensors (of freeipmi). Please make sure, that if you
 # have installed freeipmi that IPMI is really support by your hardware.
-# Otherwise ipmi-sensors can hang forever.
-if which ipmi-sensors >/dev/null ; then
+# The agent tries to avoid hanging forever by setting a limit of 300 seconds
+# for the first run (where the cache is created). If ipmi-sensors runs into
+# that timeout, it leaves and empty cache file. We skip this check forever
+# if we find that empty cache file.
+sdrcache=/var/cache/.freeipmi/sdr-cache/sdr-cache-$(hostname).127.0.0.1
+if which ipmi-sensors >/dev/null && [ ! -e "$sdrcache" -o -s "$sdrcache" ] 
+then
     echo '<<<ipmi_sensors>>>'
-    sdrcache=/var/cache/.freeipmi/sdr-cache/sdr-cache-$(hostname).127.0.0.1
-    # No cache file existing? => Impose no time limit, this can take a minute and more
+    # No cache file existing? => Impose a high time limit. We do not suffice
+    # in creating the cache we most probably run on a hardware where this tool
+    # is hanging forever. We make sure that we never try again in that case!
     if [ ! -e "$sdrcache" ]
     then
-        WAITMAX=
+        WAITMAX="waitmax 300"
     elif tail --bytes 2 < "$sdrcache" | od -t x2 | grep -q 0a0a
     then
         WAITMAX="waitmax 3"
@@ -203,8 +209,10 @@ if which ipmi-sensors >/dev/null ; then
     fi
     for class in Temperature 'Power Unit' Fan
     do
-       $WAITMAX ipmi-sensors $IPMI_FORMAT --sdr-cache-directory /var/cache -g "$class" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
-       WAITMAX="waitmax 3"
+        $WAITMAX ipmi-sensors $IPMI_FORMAT --sdr-cache-directory /var/cache -g "$class" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
+        # In case of a timeout immediately leave loop. 
+	if [ $? = 255 ] ; then break ; fi
+        WAITMAX="waitmax 3"
     done
 fi
 

@@ -27,6 +27,7 @@
     * New check hr_mem - checking memory usage via SNMP
     * ps: inventory now can configured on a per host / tag base
     * Linux: new check nvidia.temp for monitoring temperature of NVIDIA graphics card
+    * Linux: avoid free-ipmi hanging forever on hardware that does not support IPMI
 
     Multisite:
     * New view showing all PNP graphs of services with the same description

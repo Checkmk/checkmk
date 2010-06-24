@@ -26,6 +26,8 @@
     * New check hr_fs - checking filesystem usage via SNMP
     * New check hr_mem - checking memory usage via SNMP
     * ps: inventory now can configured on a per host / tag base
+    * Linux: new check nvidia.temp for monitoring temperature of NVIDIA graphics card
+    * Linux: avoid free-ipmi hanging forever on hardware that does not support IPMI
 
     Multisite:
     * New view showing all PNP graphs of services with the same description
@@ -34,6 +36,7 @@
       configured as common group of Nagios and webserver. Group gets write
       permissions on files and directories.
     * Fix problems with Umlauts (non-Ascii-characters) in performance data
+    * New context view: all services of a host group
 
 1.1.6:
     Core, Setup, etc.:

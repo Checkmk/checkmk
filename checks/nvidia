@@ -1,0 +1,50 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+nvidia_temp_default_levels = (60, 65, 80, 85)
+
+def inventory_nvidia_temp(checktype, info):
+    return [ (l[1].strip("'"), "nvidia_temp_default_levels") for l in info ]
+
+def check_nvidia_temp(item, params, info):
+    for l in info:
+	if l[1].strip("'") == item:
+	    temp = int(l[3].strip("."))
+	    if item == "GPUCoreTemp":
+		warn, crit = params[2:4]
+	    else:
+		warn, crit = params[0:2]
+	    infotext = " - %dC - levels at %d/%d" % (temp, warn, crit)
+	    perfdata = [ ("temp", temp, warn, crit ) ]
+	    if temp >= crit:
+		return (2, "CRIT" + infotext, perfdata)
+	    elif temp >= warn:
+		return (1, "WARN" + infotext, perfdata)
+	    else:
+		return (0, "OK" + infotext, perfdata)
+    return (3, 'UNKNOWN - sensor not found in agent output')
+
+check_info['nvidia.temp'] = ( check_nvidia_temp, "NVIDIA Temperature %s", 1, inventory_nvidia_temp )

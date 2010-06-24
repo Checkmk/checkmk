@@ -928,3 +928,10 @@ def get_regex(pattern):
 
 # Names of texts usually output by checks
 nagios_state_names = ["OK", "WARN", "CRIT", "UNKNOWN"]
+
+# int() function that return 0 for empty strings
+def saveint(i):
+    if i == '':
+        return 0
+    else:
+        return int(i)

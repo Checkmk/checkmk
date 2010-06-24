@@ -53,12 +53,6 @@ def ifoperstatus_statename(st):
 def check_if64(item, params, info):
     warn, crit, targetspeed = params
 
-    def saveint(x):
-	if x == '': 
-	    return 0
-        else:
-	    return int(x)
-
     for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \
         ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen in info:
         if item == ifIndex or item == ifDescr:

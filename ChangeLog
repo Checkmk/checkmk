@@ -8,6 +8,7 @@
       for SNMP hardware which is not present
     * SNMP: Automatically detect missing entries. That fixes if64
       on some CISCO switches.
+    * SNMP: Fix hex string detection (hopefully)
     * Do chown only if running as root (avoid error messages)
     * SNMP: SNMPv3 support: use 4-tuple of security level, auth protocol,
       security name and password instead of a string in snmp_communities

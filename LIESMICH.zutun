@@ -77,9 +77,8 @@ UNSCHOENHEITEN
 Multisite view 'host': Warum gibt es hier keinen Knopf auf die
 Probleme des Hosts? Umgekehrt gibt es so einen Knopf.
 
-View-Tabellen von Multisite: bei Zeilen mit kritischem Status, sollten
-zwei leicht unterschiedliche Rotoene verwendet werden. Aktuell ist einer
-davon orange...
+Multisite views: Die Zeilenhintergrundfarbe für UNKNOWN passt nicht.
+Hier wird statt orange eher gelb und rot verwendet.
 
 Logwatch.py: Wenn die state-Datei korrupt ist, diese neu anlegen und eine
 Fakemeldung nach oben schicken, die critical ist.

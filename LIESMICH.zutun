@@ -9,6 +9,10 @@ die Perf-O-Meter und die PNP-Suche in Multisite nicht geht.
 --------------------------------------------------------------------------------
 BUGS
 --------------------------------------------------------------------------------
+Multisite: Die neue View, welche die Services einer Hostgruppe darstellt,
+hat Darstellungsprobleme mit den Tabellenschatten, wenn die darstellung
+zweispaltig ist. Komischerweise tauchen diese Probleme bei "All Services"
+nicht auf, obwohl hier das gleiche Layout verwendet wird.
 
 Beim Editieren von Views, die mehr als 10 Spalten haben, ignoriert der
 Editor alle Spalten, die man nach der 10. Spalte ändert.

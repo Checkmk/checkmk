@@ -102,7 +102,7 @@ def save_user_config(user_config):
     if config.may("configure_sidebar"):
         path = config.user_confdir + "/sidebar.mk"
         try:
-	    write_settings_file(path, user_config)
+           write_settings_file(path, user_config)
         except Exception, e:
             raise MKConfigError("Cannot save user configuration to <tt>%s</tt>: %s" % (path, e))
 
@@ -152,8 +152,9 @@ def page_side(h):
 	if state in [ "open", "closed" ]:
 	   render_snapin(name, state)
 	   refresh_time = sidebar_snapins.get(name).get("refresh", 0)
+           refresh_url  = sidebar_snapins.get(name).get("refresh_url", "")
 	   if refresh_time > 0:
-	       refresh_snapins.append([name, refresh_time])
+	       refresh_snapins.append([name, refresh_time, refresh_url])
     html.write('</div>')
     sidebar_foot()
     html.write('</div>')

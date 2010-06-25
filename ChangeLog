@@ -39,6 +39,8 @@
     * New context view: all services of a host group
     * Fix problems with Umlauts (non-Ascii-characters) in performance data
     * New context view: all services of a host group
+    * Added new nagvis_maps snapin which displays all NagVis maps available
+      to the user. Works with NagVis 1.5 and newer.
 
 1.1.6:
     Core, Setup, etc.:

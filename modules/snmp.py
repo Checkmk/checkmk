@@ -197,7 +197,7 @@ def get_snmp_table(hostname, ip, oid_info):
             if len(rowinfo) > 0 or True:
                columns.append(rowinfo)
                number_rows = len(rowinfo)
-              if len(rowinfo) > max_len:
+               if len(rowinfo) > max_len:
                   max_len = len(rowinfo)
                   max_len_col = colno
 

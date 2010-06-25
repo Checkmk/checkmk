@@ -148,13 +148,12 @@ def page_side(h):
     html.write('<div id="side_content">')
     for name, state in user_config:
 	if not name in sidebar_snapins or not config.may("sidesnap." + name):
-	   continue
+	    continue
 	if state in [ "open", "closed" ]:
-	   render_snapin(name, state)
-	   refresh_time = sidebar_snapins.get(name).get("refresh", 0)
-           refresh_url  = sidebar_snapins.get(name).get("refresh_url", "")
-	   if refresh_time > 0:
-	       refresh_snapins.append([name, refresh_time, refresh_url])
+	    refresh_url  = render_snapin(name, state)
+	    refresh_time = sidebar_snapins.get(name).get("refresh", 0)
+	    if refresh_time > 0:
+	        refresh_snapins.append([name, refresh_time, refresh_url])
     html.write('</div>')
     sidebar_foot()
     html.write('</div>')
@@ -200,12 +199,18 @@ def render_snapin(name, state):
     html.write("</div>")
 
     html.write("<div id=\"snapin_%s\" class=content%s>\n" % (name, style))
+    refresh_url = ''
     try:
-	snapin["render"]()
+	url = snapin["render"]()
+        # Fetch the contents from an external URL. Don't render it on our own.
+        if not url is None:
+            refresh_url = url
+            html.write('<script>get_url("%s", updateContents, "snapin_%s")</script>' % (refresh_url, name))
     except Exception, e:
 	snapin_exception(e)
     html.write('</div><div class="foot"%s></div>\n' % style)
     html.write('</div>')
+    return refresh_url
 
 def snapin_exception(e):
     if config.debug:

@@ -33,17 +33,20 @@
 import views, defaults
 
 def render_nagvis_maps():
-    html.write('<script>get_url("%s", updateContents, '
-               '"snapin_nagvis_maps")</script>' %
-                           sidebar_snapins["nagvis_maps"]['refresh_url'])
+    nagvis_base_url = '/nagvis'
+    if hasattr(config, 'nagvis_base_url'):
+        nagvis_base_url = config.nagvis_base_url
+    refresh_url = "%s/server/core/ajax_handler.php?mod=Multisite&act=getMaps" % nagvis_base_url
+    return refresh_url
 
-#sidebar_snapins["nagvis_maps"] = {
-#    "title":       "NagVis Maps",
-#    "description": "List of available NagVis maps",
-#    "author":      "Lars Michelsen",
-#    "render":      render_nagvis_maps,
-#    "allowed":     [ "user", "admin", "guest" ],
-#    "refresh":     30,
-#    "refresh_url": "/nagvis/server/core/ajax_handler.php?mod=Multisite&act=getMaps",
-#    "styles":      ""
-#}
+sidebar_snapins["nagvis_maps"] = {
+    "title":       "NagVis Maps",
+    "description": "List of available NagVis maps. This only works with NagVis 1.5 and above. " \
+                   "At the moment it is neccessarry to authenticate with NagVis first by opening" \
+                   "a NagVis map in the browser. After this the maplist should be filled.",
+    "author":      "Lars Michelsen",
+    "render":      render_nagvis_maps,
+    "allowed":     [ "user", "admin", "guest" ],
+    "refresh":     30,
+    "styles":      ""
+}

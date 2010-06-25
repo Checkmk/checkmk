@@ -37,7 +37,7 @@ def inventory_if(checkname, info):
                 item = ifDescr
             else:
                 item = ifIndex
-            inventory.append( (item, "(if_default_levels[0], if_default_levels[1], %d)" % int(ifSpeed)) )
+            inventory.append( (item, "(if_default_levels[0], if_default_levels[1], %d)" % saveint(ifSpeed)) )
     return inventory
 
 def ifoperstatus_statename(st):
@@ -67,7 +67,7 @@ def check_if(item, params, info):
             state = 0
                 
             # Check speed
-            speed = int(ifSpeed)
+            speed = saveint(ifSpeed)
             bandwidth = speed / 8.0 # in Bytes / sec
             speedtxt = { 
                 10000000    : "10MBit/s", 
@@ -98,7 +98,7 @@ def check_if(item, params, info):
                 ( "outerr",    ifOutErrors, warn, crit, None, None) ]:
             
                 try:
-                    timedif, rate = get_counter("if.%s.%s" % (name, item), this_time, int(counter))
+                    timedif, rate = get_counter("if.%s.%s" % (name, item), this_time, saveint(counter))
                     rates.append(rate)
                     perfdata.append( (name, rate, warn, crit, minn, maxx) )
                 except MKCounterWrapped:
@@ -110,7 +110,7 @@ def check_if(item, params, info):
                 perfdata = []
             else:
                 MB = 1024 * 1024.0
-                perfdata.append(("outqlen", int(ifOutQLen)))
+                perfdata.append(("outqlen", saveint(ifOutQLen)))
                 for what, errorrate, okrate, traffic in \
                    [ ("in",  rates[4], rates[1] + rates[2], rates[0]),
                      ("out", rates[9], rates[6] + rates[7], rates[1]) ]:
@@ -157,4 +157,4 @@ snmp_info['if'] = \
 
 # check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2
 snmp_scan_functions['if'] = \
-	lambda oid: int(oid(".1.3.6.1.2.1.2.1.0")) >= 2 and not oid('.1.3.6.1.2.1.31.1.1.1.6.1') # use if64 if possible
+	lambda oid: saveint(oid(".1.3.6.1.2.1.2.1.0")) >= 2 and not oid('.1.3.6.1.2.1.31.1.1.1.6.1') # use if64 if possible

@@ -169,6 +169,10 @@ def get_snmp_table(hostname, ip, oid_info):
     for suboid in suboids:
        colno = -1
        columns = []
+       # Detect missing (empty columns)
+       max_len = 0
+       max_len_col = -1
+       
        for column in targetcolumns:
             # column may be integer or string like "1.5.4.2.3"
             colno += 1
@@ -190,20 +194,20 @@ def get_snmp_table(hostname, ip, oid_info):
             else:
                 rowinfo = snmpwalk_on_suboid(hostname, ip, fetchoid + "." + str(column))
                 
-            if len(rowinfo) > 0:
+            if len(rowinfo) > 0 or True:
                columns.append(rowinfo)
                number_rows = len(rowinfo)
+              if len(rowinfo) > max_len:
+                  max_len = len(rowinfo)
+                  max_len_col = colno
 
        if index_column != -1:
           index_rows = []
-         # Take end-oids of non-index columns as indices
-         for col in columns:
-             if len(col) > 0:
-                 break
-         for oid, value in col:
+          # Take end-oids of non-index columns as indices
+          for oid, value in columns[max_len_col]:
              index_rows.append((oid, oid.split('.')[-1]))
-
           columns[index_column] = index_rows
+
        
        # prepend suboid to first column
        if suboid and len(columns) > 0:

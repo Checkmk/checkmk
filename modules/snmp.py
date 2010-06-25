@@ -196,10 +196,13 @@ def get_snmp_table(hostname, ip, oid_info):
 
        if index_column != -1:
           index_rows = []
-          x = 1
-          while x <= number_rows:
-             index_rows.append(("0.%d" % x,x))
-             x += 1
+         # Take end-oids of non-index columns as indices
+         for col in columns:
+             if len(col) > 0:
+                 break
+         for oid, value in col:
+             index_rows.append((oid, oid.split('.')[-1]))
+
           columns[index_column] = index_rows
        
        # prepend suboid to first column

@@ -35,6 +35,7 @@
 # '1.3.6.1.4.1.232.22.2.4.1.1.1.12' => 'cpqRackServerBladePresent',
 # '1.3.6.1.4.1.232.22.2.4.1.1.1.16' => 'cpqRackServerBladeSerialNum',
 # '1.3.6.1.4.1.232.22.2.4.1.1.1.17' => 'cpqRackServerBladeProductId',
+# Seems not to be implemented:
 # '1.3.6.1.4.1.232.22.2.4.1.1.1.21' => 'cpqRackServerBladeStatus',
 # '1.3.6.1.4.1.232.22.2.4.1.1.1.22' => 'cpqRackServerBladeFaultMajor',
 # '1.3.6.1.4.1.232.22.2.4.1.1.1.23' => 'cpqRackServerBladeFaultMinor',
@@ -61,17 +62,19 @@ def check_hp_blade_blades(item, params, info):
                            ' (Present state: %s' % present_state)
 
             # Status field can be an empty string.
-            # FIXME: Check with real system to what this should be mapped in real
-            state = line[2] == '' and 1 or line[2]
+            # Seems not to be implemented. The MIB file tells me that this value
+            # should represent a state but is empty. So set it to "fake" OK and
+            # display the other gathered information.
+            state = line[2] == '' and 2 or line[2]
 
             snmp_state = hp_blade_status_map[state]
             status     = hp_blade_status2nagios_map[snmp_state]
-            return (status, '%s - Blade status is %s (Product: %s Name: %s)' %
-                                        (hp_blade_nagios_map[status], snmp_state, line[3], line[4]))
+            return (status, '%s - Blade status is %s (Product: %s Name: %s S/N: %s)' %
+                                        (hp_blade_nagios_map[status], snmp_state, line[3], line[4], line[5]))
     return (3, "UNKNOWN - item not found in snmp data")
 
 
 check_info['hp_blade_blades'] = (check_hp_blade_blades, "Blade %s", 0,  inventory_hp_blade_blades)
-snmp_info['hp_blade_blades']  = ( "1.3.6.1.4.1.232.22.2.4.1.1.1", [ "3", "12", "21", "17", "4" ] )
+snmp_info['hp_blade_blades']  = ( "1.3.6.1.4.1.232.22.2.4.1.1.1", [ "3", "12", "21", "17", "4", "16" ] )
 snmp_scan_functions['hp_blade_blades'] = \
     lambda oid: ".11.5.7.1.2" in oid(".1.3.6.1.2.1.1.2.0").lower()

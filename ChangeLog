@@ -29,6 +29,11 @@
     * ps: inventory now can configured on a per host / tag base
     * Linux: new check nvidia.temp for monitoring temperature of NVIDIA graphics card
     * Linux: avoid free-ipmi hanging forever on hardware that does not support IPMI
+    * SNMP: Instead of an artificial index column, which some checks use, now
+      the last component of the OID is used as index. That means that inventory
+      will find new services and old services will become UNKNOWN. Please remove
+      the outdated checks.
+    * if: handle exception on missing OIDs
 
     Multisite:
     * New view showing all PNP graphs of services with the same description

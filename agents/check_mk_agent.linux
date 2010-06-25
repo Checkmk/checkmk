@@ -254,6 +254,11 @@ then
   done
 fi
 
+if [ -e /proc/drbd ]; then
+  echo '<<<drbd>>>'
+  cat /proc/drbd
+fi
+
 # Lokale Einzelchecks
 echo '<<<local>>>'
 if cd $LOCALDIR

@@ -38,6 +38,11 @@ def strip_snmp_value(value):
         return v.strip()
 
 def is_hex_string(value):
+    # as far as I remember, snmpwalk puts a trailing space within
+    # the quotes in case of hex strings. So we require that space
+    # to be present in order make sure, we really deal with a hex string.
+    if value[-1] != ' ':
+        return False
     hexdigits = "0123456789abcdefABCDEF"
     n = 0
     for x in value:

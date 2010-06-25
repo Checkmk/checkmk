@@ -13,6 +13,7 @@
     * SNMP: SNMPv3 support: use 4-tuple of security level, auth protocol,
       security name and password instead of a string in snmp_communities
       for V3 hosts.
+    * SNMP: Fixed hexstring detection on empty strings
       
     Checks & Agents:
     * New check ntp.time: Similar to 'ntp' but only honors the system peer

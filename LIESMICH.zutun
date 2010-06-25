@@ -9,6 +9,14 @@ die Perf-O-Meter und die PNP-Suche in Multisite nicht geht.
 --------------------------------------------------------------------------------
 BUGS
 --------------------------------------------------------------------------------
+Der Check ntp ist durch 'ntp.peer' in den meisten Fällen obsolet geworden.
+Die Inventur findet immer beide, was blöd ist. Soll man ignored_checktypes
+vorbelegen mit ntp?
+
+Multisite: Die neue View, welche die Services einer Hostgruppe darstellt,
+hat Darstellungsprobleme mit den Tabellenschatten, wenn die darstellung
+zweispaltig ist. Komischerweise tauchen diese Probleme bei "All Services"
+nicht auf, obwohl hier das gleiche Layout verwendet wird.
 
 Beim Editieren von Views, die mehr als 10 Spalten haben, ignoriert der
 Editor alle Spalten, die man nach der 10. Spalte ändert.
@@ -69,9 +77,8 @@ UNSCHOENHEITEN
 Multisite view 'host': Warum gibt es hier keinen Knopf auf die
 Probleme des Hosts? Umgekehrt gibt es so einen Knopf.
 
-View-Tabellen von Multisite: bei Zeilen mit kritischem Status, sollten
-zwei leicht unterschiedliche Rotoene verwendet werden. Aktuell ist einer
-davon orange...
+Multisite views: Die Zeilenhintergrundfarbe für UNKNOWN passt nicht.
+Hier wird statt orange eher gelb und rot verwendet.
 
 Logwatch.py: Wenn die state-Datei korrupt ist, diese neu anlegen und eine
 Fakemeldung nach oben schicken, die critical ist.

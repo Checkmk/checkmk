@@ -61,7 +61,7 @@ for fn in os.listdir(perfometer_plugins_dir):
 
 
 def paint_perfometer(row):
-    perfstring = str(row["service_perf_data"].strip())
+    perfstring = unicode(row["service_perf_data"].strip())
     if not perfstring:
         return "", ""
 
@@ -79,6 +79,11 @@ def paint_perfometer(row):
     if not perf_painter:
         return "", ""
 
+    # Python's isdigit() works only on str. We deal with unicode since
+    # we deal with data coming from Livestatus
+    def isdigit(x):
+        return x in [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' ]
+
     # Parse performance data, at least try
     try:
         perf_data = []
@@ -90,13 +95,15 @@ def paint_perfometer(row):
             value, warn, crit, min, max = value_parts[0:5]
             # separate value from unit
             i = 0
-            while i < len(value) and (str.isdigit(value[i]) or value[i] in ['.', ',', '-']):
+            while i < len(value) and (isdigit(value[i]) or value[i] in ['.', ',', '-']):
                 i += 1
             unit = value[i:]
             value = value[:i]
             perf_data.append((varname, value, unit, warn, crit, min, max))
     except:
         perf_data = None
+    if not perf_data:
+        return "", ""
 
     try:
         title, h = perf_painter(row, check_command, perf_data)

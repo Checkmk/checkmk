@@ -575,10 +575,14 @@ function sidebar_scheduler() {
     var timestamp = Date.parse(new Date()) / 1000;
     var newcontent = "";
     for (var i in refresh_snapins) { 
-        name    = refresh_snapins[i][0];
-        refresh = refresh_snapins[i][1];
+        var name    = refresh_snapins[i][0];
+        var refresh = refresh_snapins[i][1];
+        var url = "sidebar_snapin.py?name=" + name;
+        if(refresh_snapins[i][2] != '')
+            url = refresh_snapins[i][2];
+
         if (timestamp % refresh == 0) {
-            get_url("sidebar_snapin.py?name=" + name, updateContents, "snapin_" + name);
+            get_url(url, updateContents, "snapin_" + name);
         }
     }
     setTimeout(function(){sidebar_scheduler();}, 1000);

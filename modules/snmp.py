@@ -198,7 +198,7 @@ def get_snmp_table(hostname, ip, oid_info):
           index_rows = []
           x = 1
           while x <= number_rows:
-             index_rows.append(x)
+             index_rows.append(("0.%d" % x,x))
              x += 1
           columns[index_column] = index_rows
        

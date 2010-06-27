@@ -1,5 +1,8 @@
 1.1.7i1:
     Core, Setup, etc.:
+    * New option -u for reordering autochecks in per-host-files
+      (please refer to updated documentation about inventory for
+       details)
     * Fix exception if check_mk is called without arguments. Show
       usage in that case.
     * install_nagios.sh: Fix download URL of NagVis 1.4.7 (sorry,

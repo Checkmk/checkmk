@@ -195,6 +195,7 @@ snmp_communities                   = {}
 inventory_check_interval           = None # Nagios intervals (4h = 240)
 inventory_check_severity           = 2    # critical
 inventory_max_cachefile_age        = 120  # secs.
+always_cleanup_autochecks          = False
 
 # Nagios templates and other settings concerning generation
 # of Nagios configuration files. No need to change these values.
@@ -2862,7 +2863,8 @@ Copyright (C) 2009 Mathias Kettner
 def usage():
     print """WAYS TO CALL:
  check_mk [-n] [-v] [-p] HOST [IPADDRESS]  check all services on HOST
- check_mk -I alltcp [HOST1 HOST2...]       inventory - find new services
+ check_mk [-c] -I {tcp|snmp} [HOST1 ...]   inventory - find new services
+ check_mk -c, --cleanup-autochecks         reorder autochecks files
  check_mk -S|-H|--timeperiods              output Nagios configuration files
  check_mk -C, --compile                    precompile host checks
  check_mk -U, --update                     precompile + create Nagios config
@@ -2904,6 +2906,10 @@ NOTES:
   -I can be restricted to certain check types. Write '-I df' if you
   just want to look for new filesystems. Use 'check_mk -L' for a list
   of all check types. SNMP base checks must always named explicitely.
+
+  -u, --cleanup-autochecks resorts all checks found by inventory
+  into per-host files. It can be used as an options to -I or as
+  a standalone operation.
 
   -H, -S and --timeperiods output Nagios configuration data for hosts,
   services and timeperiods resp. to stdout. Two or more of them can
@@ -3119,6 +3125,45 @@ def do_donation():
         output.write('\n')
         indata = indata[64:]
                     
+def do_cleanup_autochecks():
+    # 1. Read in existing autochecks
+    hostdata = {}
+    os.chdir(autochecksdir)
+    checks = 0
+    for f in glob.glob("*.mk"):
+        if opt_debug:
+            sys.stdout.write("Scanning %s...\n" % f)
+        for line in file(f):
+            if line.lstrip().startswith('("'):
+                splitted = line.split('"')
+                hostname = splitted[1]
+                hostchecks = hostdata.get(hostname, [])
+                hostchecks.append(line)
+                checks += 1
+                hostdata[hostname] = hostchecks
+    if opt_verbose:
+        sys.stdout.write("Found %d checks from %d hosts.\n" % (checks, len(hostdata)))
+
+    # 2. Write out new autochecks.
+    newfiles = set([])
+    for host, lines in hostdata.items():
+        fn = host.replace(":","_") + ".mk"
+        if opt_verbose:
+            sys.stdout.write("Writing %s: %d checks\n" % (fn, len(lines)))
+        newfiles.add(fn)
+        f = file(fn, "w+")
+        f.write("[\n")
+        for line in lines:
+            f.write(line)
+        f.write("]\n")
+
+    # 3. Remove obsolete files
+    for f in glob.glob("*.mk"):
+        if f not in newfiles:
+            if opt_verbose:
+                sys.stdout.write("Deleting %s\n" % f)
+            os.remove(f)
+
 
 #   +----------------------------------------------------------------------+
 #   |                        __  __       _                                |
@@ -3154,13 +3199,13 @@ for hostname in strip_tags(all_hosts + clusters.keys()):
 # Do option parsing and execute main function -
 # if check_mk is not called as module
 if __name__ == "__main__":
-    short_options = 'SHVLCURDMd:I:c:nhvpXP'
+    short_options = 'SHVLCURDMd:I:c:nhvpXPu'
     long_options = ["help", "version", "verbose", "compile", "debug",
                     "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
 		    "flush", "package", "donate", "snmpwalk", "usewalk",
                     "no-cache", "update", "restart", "dump", "fake-dns=",
                     "man", "nowiki", "config-check", "backup=", "restore=",
-                    "check-inventory=", "timeperiods", "paths" ]
+                    "check-inventory=", "timeperiods", "paths", "cleanup-autochecks" ]
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -3187,6 +3232,8 @@ if __name__ == "__main__":
             opt_showperfdata = True
         elif o == '-n':
             opt_dont_submit = True
+        elif o == '-u':
+            opt_cleanup_autochecks = True
         elif o == '--fake-dns':
             fake_dns = a
         elif o == '--usewalk':
@@ -3296,6 +3343,8 @@ if __name__ == "__main__":
 			sys.exit(1)
 		    for checkname in checknames:
 			make_inventory(checkname, args)
+            if opt_cleanup_autochecks or always_cleanup_autochecks:
+                do_cleanup_autochecks()
             done = True
         elif o == '--check-inventory':
             check_inventory(a)
@@ -3307,6 +3356,10 @@ if __name__ == "__main__":
         if opt_debug:
             raise
         sys.exit(3)
+
+    if not done and opt_cleanup_autochecks: # -u as standalone option
+        do_cleanup_autochecks()
+        done = True
 
     if done:
         sys.exit(0)

@@ -415,8 +415,9 @@ if do_rrd_update:
 # read automatically generated checks. They are prepended to the check
 # table: explicit user defined checks override automatically generated
 # ones. Do not read in autochecks, if check_mk is called as module.
-autochecks = []
-if __name__ == "__main__":
+def read_all_autochecks():
+    global autochecks
+    autochecks = []
     for f in glob.glob(autochecksdir + '/*.mk'):
         try:
            autochecks += eval(file(f).read())
@@ -426,6 +427,9 @@ if __name__ == "__main__":
         except Exception, e:
            sys.stderr.write("Error in file %s:\n%s\n" % (f, e))
            sys.exit(3)
+
+if __name__ == "__main__":
+    read_all_autochecks()
         
 checks = autochecks + checks
 
@@ -1847,6 +1851,45 @@ def in_boolean_serviceconf_list(hostname, service_description, conflist):
             return not negate
     return False # no match. Do not ignore
 
+
+# Remove all autochecks of a certain host
+def remove_autochecks_of(hostname):
+    for fn in glob.glob(autochecksdir + "/*.mk"):
+        if opt_debug:
+            sys.stdout.write("Scanning %s...\n" % fn)
+        lines = []
+        count = 0
+        for line in file(fn):
+            if line.lstrip().startswith('("'):
+                count += 1
+                splitted = line.split('"')
+                if splitted[1] != hostname:
+                    lines.append(line)
+        if len(lines) == 0:
+            if opt_verbose:
+                sys.stdout.write("Deleting %s.\n" % fn)
+            os.remove(fn)
+        elif count > len(lines):
+            if opt_verbose:
+                sys.stdout.write("Removing %d checks from %s.\n" % (count - len(lines), fn))
+            f = file(fn, "w+")
+            f.write("[\n")
+            for line in lines:
+                f.write(line)
+            f.write("]\n")
+
+def remove_all_autochecks():
+    for f in glob.glob(autochecksdir + '/*.mk'):
+        if opt_verbose:
+            sys.stdout.write("Deleting %s.\n" % f)
+        os.remove(f)
+
+def reread_autochecks():
+    global checks
+    checks = checks[len(autochecks):]
+    read_all_autochecks()
+    checks = autochecks + checks
+
 #   +----------------------------------------------------------------------+
 #   |          ____                                     _ _                |
 #   |         |  _ \ _ __ ___  ___ ___  _ __ ___  _ __ (_) | ___           |
@@ -3130,10 +3173,10 @@ def do_cleanup_autochecks():
     hostdata = {}
     os.chdir(autochecksdir)
     checks = 0
-    for f in glob.glob("*.mk"):
+    for fn in glob.glob("*.mk"):
         if opt_debug:
-            sys.stdout.write("Scanning %s...\n" % f)
-        for line in file(f):
+            sys.stdout.write("Scanning %s...\n" % fn)
+        for line in file(fn):
             if line.lstrip().startswith('("'):
                 splitted = line.split('"')
                 hostname = splitted[1]
@@ -3199,7 +3242,7 @@ for hostname in strip_tags(all_hosts + clusters.keys()):
 # Do option parsing and execute main function -
 # if check_mk is not called as module
 if __name__ == "__main__":
-    short_options = 'SHVLCURDMd:I:c:nhvpXPu'
+    short_options = 'SHVLCURDMd:Ic:nhvpXPu'
     long_options = ["help", "version", "verbose", "compile", "debug",
                     "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
 		    "flush", "package", "donate", "snmpwalk", "usewalk",
@@ -3214,6 +3257,7 @@ if __name__ == "__main__":
         sys.exit(1)
       
     done = False
+    seen_I = 0
     # Scan modifying options first (makes use independent of option order)
     for o,a in opts:
         if o in [ '-v', '--verbose' ]:
@@ -3242,6 +3286,8 @@ if __name__ == "__main__":
             opt_nowiki = True
         elif o == '--debug':
             opt_debug = True
+        elif o == '-I':
+            seen_I += 1
 
     # Perform actions (major modes)
     try:
@@ -3325,27 +3371,6 @@ if __name__ == "__main__":
         elif o == '-d':
             output_plain_hostinfo(a)
             done = True
-        elif o == '-I':
-            if a == 'list':
-                print "Checktypes available for inventory are: %s" % (",".join(inventorable_checktypes()))
-            else:	
-		if a == "allsnmp" or a == "snmp":
-		    do_snmp_scan(args) 
-		else:
-		    if a == 'alltcp' or a == "tcp":
-			checknames = inventorable_checktypes(False)
-			opt_no_snmp_hosts = True
-		    else:
-			checknames = a.split(',')
-		    if len(checknames) == 0:
-			print "Please specify check types."
-			usage()
-			sys.exit(1)
-		    for checkname in checknames:
-			make_inventory(checkname, args)
-            if opt_cleanup_autochecks or always_cleanup_autochecks:
-                do_cleanup_autochecks()
-            done = True
         elif o == '--check-inventory':
             check_inventory(a)
             done = True
@@ -3357,9 +3382,52 @@ if __name__ == "__main__":
             raise
         sys.exit(3)
 
+    if not done and seen_I > 0:
+       if len(args) == 0:
+           sys.stderr.write("Missing checktype or tcp or snmp.\n")
+           sys.exit(1)
+
+       checktype = args[0]
+       hostnames = args[1:]
+
+       if checktype == 'list':
+           print "Checktypes available for inventory are: %s" % (",".join(inventorable_checktypes()))
+       else:	
+           # remove existing checks, if option -I is used twice
+           if seen_I > 1:
+               if len(hostnames) > 0:
+                   for host in hostnames:
+                       remove_autochecks_of(host)
+               else:
+                   sys.stderr.write("Option -II needs explicit specification of host names.\n")
+                   sys.exit(1)
+                   # remove_all_autochecks()
+               reread_autochecks()
+
+           if checktype in [ "allsnmp", "snmp" ]:
+               do_snmp_scan(hostnames) 
+           else:
+               if checktype in [ "alltcp", "tcp" ]:
+           	   checknames = inventorable_checktypes(False)
+           	   opt_no_snmp_hosts = True
+               else:
+           	   checknames = checktype.split(',')
+               if len(checknames) == 0:
+           	   print "Please specify check types."
+           	   usage()
+           	   sys.exit(1)
+               for checkname in checknames:
+           	   make_inventory(checkname, hostnames, False)
+
+       # -u, --cleanup-autochecks called in stand alone mode
+       if opt_cleanup_autochecks or always_cleanup_autochecks:
+           do_cleanup_autochecks()
+       done = True
+
     if not done and opt_cleanup_autochecks: # -u as standalone option
         do_cleanup_autochecks()
         done = True
+
 
     if done:
         sys.exit(0)

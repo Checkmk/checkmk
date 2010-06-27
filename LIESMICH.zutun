@@ -106,7 +106,6 @@ IDEEN & VERBESSERUNGEN
 --usewalk irgendwie auch als binary_hostlist einbauen, damit man
 das Nagios damit starten kann.
 
-
 Neue Spalten: * long_service_output, host_notes
 
 Multisite: Kann man - wenn man Aggregation verwendet - beim normalen
@@ -270,3 +269,33 @@ man die sichtbare Information aus den HTML-Tags rausholen, also eine Art
 HTML->ASCII Filter programmieren. Auch die Überschrift ist dann betroffen
 und die Fusszeile. Analog dazu könnte man sich eine Ausgabe als CSV oder
 XML vorstellen. Hintergrund ist eine Art Webservice.
+
+Precompile und Konfigerzeugung: Das könnte auf mehrere CPUs skalieren.
+Dazu starten man konfigurierbar viele Threads. Bei Precompiled macht
+einfach jeder der N Threads ein N'tel der Hosts. Bei der Konfigerzeugung
+müsste man die Konfig zunächst im Speicher erzeugen und dann die Ergebnisse
+der 8 Threads am Ende zusammenbauen. Davor muss aber die Umstellung
+der Konfigerzeugung gemacht werden, bei der immer ein Host und
+seine Services gemeinsam ausgespuckt werden.
+
+Idee zur Umbenennung von Konfig-Parametern: Wenn z.B. eine Konfigvariable
+hirn hieß und jetzt sepp heißen soll, dann könnte man dies Deklarieren
+in check_mk.py:
+renamed_config_vars = [
+  ( "hirn", "depp", 1127002033 )
+]
+Jetzt könnte man vor dem Einlesen der Konfig die Ist-Werte speichern,
+und zwar mit Objektreferenzen, um festzustellen, ob der Benutzer
+hier etwas geändert hat. Alernativ schaut man nach globals:
+# Nach dem Einlesen der Konfig:
+for old, new, deadline in renamed_config_vars:
+  if old in globals():
+      sys.stderr.write("WARNING: Config var '%s' has been renamed to '%s'. Please fix this until %s" % (old, new, strftime(deadline...)))
+      if time.time() < deadline:
+          eval("%s = '%r'" % (new, eval(old)))
+      else:
+          sys.stderr.write("You had enough time to fix this. Sorry.\n")
+          sys.exit(1)
+Auf diese Art funktioniert erstmal alles weiter. Trotzdem wird die Variable
+irgendwann planmäßig abgeschaltet.
+

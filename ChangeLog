@@ -19,6 +19,7 @@
     * SNMP: Fixed hexstring detection on empty strings
     * New option -II: Is like -I, but removes all previous autochecks
       from inventorized hosts
+    * install_nagios.sh: Fix detection of PNP4Nagios URL
       
     Checks & Agents:
     * New check ntp.time: Similar to 'ntp' but only honors the system peer

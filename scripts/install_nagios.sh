@@ -345,6 +345,7 @@ case "\$1" in
     ;;
 esac
 EOF
+    chmod 775 /etc/init.d/rrdcached
     activate_initd rrdcached
     popd
 fi

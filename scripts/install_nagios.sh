@@ -718,6 +718,7 @@ cat <<EOF > config.php
 \$conf['max_age'] = 60*60*6;   
 \$conf['temp'] = "/var/tmp";
 \$conf['pnp_base'] = "$SITEURL/pnp4nagios";
+\$conf['base_url'] = "$SITEURL/pnp4nagios";
 \$conf['nagios_base'] = "$SITEURL/nagios/cgi-bin";
 \$conf['allowed_for_service_links'] = "EVERYONE";
 \$conf['allowed_for_host_search'] = "EVERYONE";

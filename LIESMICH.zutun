@@ -9,6 +9,8 @@ die Perf-O-Meter und die PNP-Suche in Multisite nicht geht.
 --------------------------------------------------------------------------------
 BUGS
 --------------------------------------------------------------------------------
+Man-Pages für hp_blade_* und drdb fehlen noch.
+
 Der Check ntp ist durch 'ntp.peer' in den meisten Fällen obsolet geworden.
 Die Inventur findet immer beide, was blöd ist. Soll man ignored_checktypes
 vorbelegen mit ntp?

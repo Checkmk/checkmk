@@ -377,7 +377,7 @@ ask_title "Integration with PNP4Nagios 0.6"
 
 ask_dir -d pnp_url /pnp4nagios/ /pnp4nagios/ "URL prefix for PNP4Nagios" \
   "Check_MK automatically creates links to PNP4Nagios for hosts and
-services which have performance data. And multisite supports PNP by
+services which have performance data. And Multisite supports PNP by
 creating links in inline performance graphs. Please specify the URL
 to your installation of PNP4Nagios including the trailing slash if
 you want to use PNP integration (Note: PNP 0.4 is not supported any

@@ -48,7 +48,7 @@ def check_wmic_process(item, params, info):
     timedif, kernel_per_sec = get_counter("wmic_process.kernel.%s.%d" % (name, count), time.time(), kernelc)
     user_perc = user_per_sec / 100000.0
     kernel_perc = kernel_per_sec / 100000.0
-    cpu_perc = user_perc + kernel_per_sec
+    cpu_perc = user_perc + kernel_perc
     perfdata = [
             ("mem",    mem_mb,      memwarn,  memcrit),
             ("page",   page_mb,     pagewarn, pagecrit),
@@ -56,7 +56,7 @@ def check_wmic_process(item, params, info):
             ("kernel", kernel_perc, cpuwarn,  cpucrit,  0, 100) ]
 
     infotext = " - %d processes, %.1fMB RAM, %1.fMB Page, %.0f%% User, %.0f%% Kernel" % \
-                (count, mem_mb, page_mb, user_per_sec / 100000.0, kernel_per_sec / 100000.0)
+                (count, mem_mb, page_mb, user_perc, kernel_perc)
 
     if cpu_perc >= cpucrit:
         state = 2

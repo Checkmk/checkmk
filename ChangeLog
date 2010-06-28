@@ -1,3 +1,6 @@
+1.1.6p1:
+    * install_nagios.sh: Fix detection of PNP4Nagios URL
+
 1.1.6:
     Core, Setup, etc.:
     * Service aggregation: new config option aggregation_output_format.

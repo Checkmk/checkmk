@@ -38,14 +38,14 @@ NAGIOS_VERSION=3.2.1
 PLUGINS_VERSION=1.4.14
 RRDTOOL_VERSION=1.4.3
 CHECK_MK_VERSION=1.1.6
-PNP_VERSION=0.6.3
-NAGVIS_VERSION=1.4.7
+PNP_VERSION=0.6.4
+NAGVIS_VERSION=1.5
 
 SOURCEFORGE_MIRROR=dfn
 NAGIOS_URL="http://downloads.sourceforge.net/project/nagios/nagios-3.x/nagios-$NAGIOS_VERSION/nagios-$NAGIOS_VERSION.tar.gz?use_mirror=$SOURCEFORGE_MIRROR"
 PLUGINS_URL="http://downloads.sourceforge.net/project/nagiosplug/nagiosplug/$PLUGINS_VERSION/nagios-plugins-$PLUGINS_VERSION.tar.gz?use_mirror=$SOURCEFORGE_MIRROR"
 CHECK_MK_URL="http://mathias-kettner.de/download/check_mk-$CHECK_MK_VERSION.tar.gz"
-NAGVIS_URL="http://downloads.sourceforge.net/project/nagvis/NagVis%201.4%20%28stable%29/nagvis-$NAGVIS_VERSION.tar.gz?use_mirror=$SOURCEFORGE_MIRROR"
+NAGVIS_URL="http://downloads.sourceforge.net/project/nagvis/NagVis%20$NAGVIS_VERSION/nagvis-$NAGVIS_VERSION.tar.gz?use_mirror=$SOURCEFORGE_MIRROR"
 
 if [ "${PNP_VERSION:2:1}" = 6 ]
 then
@@ -76,7 +76,7 @@ then
     DISTRO=SUSE
     DISTRONAME="SLES 11"
     DISTROVERS=11
-elif grep -qi "DISTRIB_DESCRIPTION=\"Ubuntu 9.10\"" /etc/lsb-release 2>&1 >/dev/null
+elif grep -qi "DISTRIB_DESCRIPTION=\"Ubuntu 9.10\"" /etc/lsb-release 2>/dev/null 
 then
     DISTRO=UBUNTU
     DISTRONAME="Ubuntu 9.10"
@@ -724,7 +724,7 @@ cat <<EOF > config.php
 \$conf['allowed_for_pages'] = "EVERYONE";
 \$conf['overview-range'] = 1 ;
 \$conf['popup-width'] = "300px";
-\$conf['ui-theme'] = 'smoothness';
+\$conf['ui-theme'] = 'multisite';
 \$conf['lang'] = "en_US";
 \$conf['date_fmt'] = "d.m.y G:i";
 \$conf['enable_recursive_template_search'] = 0;
@@ -833,7 +833,6 @@ rm -f /usr/local/share/pnp4nagios/install.php
 if [ "$SITE" ]
 then
     sed -i 's#^.config..site_domain...*#\$config["site_domain"] = "'"$SITEURL"'/pnp4nagios";#' /usr/local/share/pnp4nagios/application/config/config.php
-    sed -i "s#/pnp4nagios#$SITEURL/pnp4nagios#" /usr/local/share/pnp4nagios/media/js/basket.js
 cat  <<EOF > /usr/local/share/pnp4nagios/application/views/popup.php
 <table><tr><td>
 <?php
@@ -887,8 +886,8 @@ socket="unix:/var/run/nagios/rw/live"
 htmlcgi="$SITEURL/nagios/cgi-bin"
 EOF
     cat <<EOF > /etc/$HTTPD/conf.d/nagvis.conf
-Alias $SITEURL/nagvis/ /usr/local/share/nagvis/
-<Directory /usr/local/share/nagvis/>
+Alias $SITEURL/nagvis/ /usr/local/share/nagvis/share/
+<Directory /usr/local/share/nagvis/share/>
    allow from all
    AuthName "Nagios Access"
    AuthType Basic
@@ -983,6 +982,7 @@ EOF
     ./setup.sh --yes
 
     echo 'do_rrd_update = False' >> /etc/check_mk/main.mk
+    echo "nagvis_base_url = '$SITEURL/nagvis'" >> /etc/check_mk/multisite.mk
     popd
 
     echo "Enabling mod_python"

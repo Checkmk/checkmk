@@ -46,6 +46,8 @@
     * if: handle exception on missing OIDs
     * New checks hp_blade* - Checking health of HP BladeSystem Enclosures via SNMP
     * New check drbd - Checking health of drbd nodes
+    * New SNMP based checks for printers (page counter, supply), contributed
+      by Peter Lauk (many thanks!)
 
     Multisite:
     * New view showing all PNP graphs of services with the same description

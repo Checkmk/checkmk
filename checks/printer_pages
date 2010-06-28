@@ -1,0 +1,49 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# +------------------------------------------------------------------+
+# | This file has been contributed by:                               |
+# |                                                                  |
+# | Peter Lauk <lauk@stuttgart-airport.com>           Copyright 2010 |
+# +------------------------------------------------------------------+
+
+def inventory_printer_pages(checkname, info):
+   return [ (line[0], None ) for line in info ] 
+
+def check_printer_pages(item, params, info):
+    for line in info:
+        if line[0] == item:
+	    infotext = "%d Pages printed" % int(line[1])
+	    return (0, "OK - %s" % infotext)
+
+    return (3, 'UNKNOWN - not found')
+
+check_info['printer_pages'] = (check_printer_pages, "Pages %s", 0, inventory_printer_pages)
+
+snmp_info['printer_pages'] = ( ".1.3.6.1.2.1.43.10.2.1.4.1", [ 0, 1 ] )
+
+snmp_scan_functions['printer_pages'] = \
+    lambda oid: not not oid(".1.3.6.1.2.1.43.10.2.1.4.1.1")

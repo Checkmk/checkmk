@@ -1,0 +1,21 @@
+title: Measure remaining filling level of printer supplys using PRINTER-MIB
+agents: snmp
+author: Peter Lauk <lauk@stuttgart-airport.com>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the remaining filling level in percent of a printers
+ supplys like toner or fuser. The printer has to support the generic
+ PRINTER-MIB.
+ The default check levels are 20% (warning) and 10% of the full level
+ (critical).
+ This levels can be redefined with printer_supply_default_levels = ( w, c ).
+ According the PRINTER-MIB it's possible that a printer couldn't determine
+ how much is remaining in a supply, so the printer says "some remaining".
+ This value produces a warning.
+
+perfdata: 
+ The remaining filling level in units (pages remaining).
+
+inventory:
+ Supported. 

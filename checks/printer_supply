@@ -1,0 +1,67 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# +------------------------------------------------------------------+
+# | This file has been contributed by:                               |
+# |                                                                  |
+# | Peter Lauk <lauk@stuttgart-airport.com>           Copyright 2010 |
+# +------------------------------------------------------------------+
+
+printer_supply_default_levels = (20, 10)
+
+def inventory_printer_supply(checkname, info):
+   return [ (line[0], "printer_supply_default_levels") for line in info ] 
+
+def check_printer_supply(item, params, info):
+    for line in info:
+        if line[0] == item:
+            maxlevel = float(line[1])
+	    current = float(line[2])
+            leftperc = 100.0 * current / maxlevel
+	    warn, crit = params # in percent
+	    infotext = "%.0f%% (levels at %.0f%% / %.0f%%)" % (leftperc, warn, crit)
+	    perfdata = [ ("pages", current, warn / 100.0 * maxlevel, crit / 100.0 * maxlevel, 0, maxlevel ) ]
+	    if current == -1 or maxlevel == -1:
+	        return (0, "OK - there are no restrictions on this supply")
+	    elif current == -2 or maxlevel == -2:
+	        return (3, "UNKNOWN - Couldn't get info about supply")
+	    elif current == -3:
+	        return (1, "WARNING - Some remaining: %s" % current, perfdata)
+	    elif leftperc <= crit:
+                return (2, "CRIT - %s" % infotext, perfdata)
+	    elif leftperc <= warn:
+	        return (1, "WARNING - %s" % infotext, perfdata)
+	    else:
+	        return (0, "OK - %s" % infotext, perfdata)
+
+    return (3, 'UNKNOWN - not found')
+
+check_info['printer_supply'] = (check_printer_supply, "Supply %s", 1, inventory_printer_supply)
+
+snmp_info['printer_supply'] = ( ".1.3.6.1.2.1.43.11.1.1", [ 6, 8, 9 ] )
+
+snmp_scan_functions['printer_supply'] = \
+    lambda oid: not not oid(".1.3.6.1.2.1.43.11.1.1.6.1.1")

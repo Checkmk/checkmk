@@ -21,6 +21,8 @@
       from inventorized hosts
     * install_nagios.sh: Fix detection of PNP4Nagios URL and URL of
       NagVis
+    * Packager: make sanity check prohibiting creating of package files
+      in Check MK's directories
       
     Checks & Agents:
     * New check ntp.time: Similar to 'ntp' but only honors the system peer

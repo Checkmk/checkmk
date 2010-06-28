@@ -246,6 +246,14 @@ def package_pack(args):
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P pack NAME")
 
+    # Make sure, user is not in data directories of Check_MK
+    p = os.path.abspath(os.curdir)
+    for dir in [var_dir] + [ dir for x,y,dir in package_parts ]:
+	if p == dir or p.startswith(dir + "/"):
+	    raise PackageException("You are in %s!\n"
+                               "Please leave the directories of Check_MK before creating\n"
+			       "a packet file. Foreign files lying around here will mix up things." % p)
+
     pacname = args[0]
     package = read_package(pacname)
     if not package:

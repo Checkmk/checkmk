@@ -266,6 +266,7 @@ fi
 if which lpstat > /dev/null 2>&1; then
   echo '<<<cups_queues>>>'
   lpstat -p
+  echo '---'
   for i in $(lpstat -p | grep -E "^(printer|Drucker)" | awk '{print $2}' | grep -v "@"); do
     lpstat -o "$i"
   done

@@ -1,4 +1,4 @@
-title: Check temperature of NVIDIA graphics card
+title: Check temperatures of NVIDIA graphics card
 agents: linux
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
@@ -32,4 +32,4 @@ critical (int): critical level for GPU core temperature
 
 [configuration]
 nvidia_temp_default_levels (int, int, int, int): Default levels for warning
- and critical. This is preset to {(50, 55, 70, 75)}.
+ and critical. This is preset to {(60, 65, 80, 85)}.

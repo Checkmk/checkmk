@@ -27,12 +27,14 @@
 nvidia_temp_default_levels = (60, 65, 80, 85)
 
 def inventory_nvidia_temp(checktype, info):
-    return [ (l[1].strip("'"), "nvidia_temp_default_levels") for l in info ]
+    return [ (l[0].strip(":"), "nvidia_temp_default_levels") 
+            for l in info 
+            if l[0].strip(":").lower().endswith("temp") ]
 
 def check_nvidia_temp(item, params, info):
     for l in info:
-	if l[1].strip("'") == item:
-	    temp = int(l[3].strip("."))
+	if l[0].strip(":") == item:
+	    temp = int(l[1])
 	    if item == "GPUCoreTemp":
 		warn, crit = params[2:4]
 	    else:
@@ -47,4 +49,26 @@ def check_nvidia_temp(item, params, info):
 		return (0, "OK" + infotext, perfdata)
     return (3, 'UNKNOWN - sensor not found in agent output')
 
-check_info['nvidia.temp'] = ( check_nvidia_temp, "NVIDIA Temperature %s", 1, inventory_nvidia_temp )
+check_info['nvidia.temp'] =   ( check_nvidia_temp, "NVIDIA Temperature %s", 1, inventory_nvidia_temp )
+
+
+
+def inventory_nvidia_errors(checktype, info):
+    for line in info:
+        if line[0] == 'GPUErrors:':
+            return [(None, None)]
+    return []
+
+def check_nvidia_errors(item, params, info):
+    for line in info:
+        if line[0] == "GPUErrors:":
+            errors = int(line[1])
+            if errors == 0:
+                return (0, "OK - No GPU errors")
+            else:
+                return (2, "CRIT - %d GPU errors" % errors)
+    return (3, "UNKNOWN - incomplete output from agent")
+
+
+check_info['nvidia.errors'] = ( check_nvidia_errors, "NVIDIA GPU Errors", 0, inventory_nvidia_errors )
+

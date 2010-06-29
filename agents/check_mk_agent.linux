@@ -243,7 +243,7 @@ fi
 if which nvidia-settings >/dev/null && [ -S /tmp/.X11-unix/X0 ] 
 then
     echo '<<<nvidia>>>'
-    DISPLAY=:0 waitmax 2 nvidia-settings -q GPUErrors -q GPUCoreTemp -q GPUAmbientTemp | grep Attribute
+    DISPLAY=:0 waitmax 2 nvidia-settings -t -q all
 fi
 
 # Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben

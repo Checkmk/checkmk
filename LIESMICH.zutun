@@ -9,8 +9,6 @@ die Perf-O-Meter und die PNP-Suche in Multisite nicht geht.
 --------------------------------------------------------------------------------
 BUGS
 --------------------------------------------------------------------------------
-Man-Pages für hp_blade_* und drdb fehlen noch.
-
 Beschreibung zu -II fehlt in Doku.
 
 Der Check ntp ist durch 'ntp.peer' in den meisten Fällen obsolet geworden.

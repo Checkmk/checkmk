@@ -23,6 +23,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Remove locale settings to eliminate localized outputs where possible
+unset LANG
+
 export MK_LIBDIR="/usr/lib/check_mk_agent"
 export MK_CONFDIR="/etc/check_mk"
 
@@ -257,6 +260,16 @@ fi
 if [ -e /proc/drbd ]; then
   echo '<<<drbd>>>'
   cat /proc/drbd
+fi
+
+# Checks for cups monitoring
+if which lpstat > /dev/null 2>&1; then
+  echo '<<<cups_queues>>>'
+  lpstat -p
+  echo '---'
+  for i in $(lpstat -p | grep -E "^(printer|Drucker)" | awk '{print $2}' | grep -v "@"); do
+    lpstat -o "$i"
+  done
 fi
 
 # Lokale Einzelchecks

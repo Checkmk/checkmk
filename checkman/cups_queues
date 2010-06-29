@@ -1,0 +1,39 @@
+title: Check state of CUPS Printer Queues
+agents: linux
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check uses the output of {lpstat -p} and {lpstat -o} as sent by the
+ Check_MK linux agent. It lists the general state of a queue and the jobs
+ in the printer queue of the CUPS printing system.
+
+ The check analyzes the overall state of a printer using the first words in
+ each line of {lpstat -p}. The words "is idle", "disabled since", "now printing"
+ trigger the resulting state.
+ The resulting state also depends on the number of jobs in the queue and
+ the age of the oldest job in the queue.
+
+item:
+ The name of the printer in CUPS as printed by {lpstat -p}.
+
+examples:
+ # Set number of minimum jobs to 5 and a minimum age of 5 minutes in seconds to result in a warning state
+ # And set the number of minimum jobs to 10 and a minimum age of 10 minutes in seconds to result in a critical state
+ cups_queues_default_levels = (5, 360, 10, 720)
+
+perfdata:
+ It contains the current number of jobs in the queue in the {jobs} value.
+
+inventory:
+ Checks are created for all available printers in {lpstat -p} output.
+
+[parameters]
+warning_count (int): Number of jobs to result in a warning state
+warning_age (int): Age of oldest job to result in a warning state
+critical_count (int): Number of jobs to result in a critical state
+critical_age (int): Age of oldest job to result in a critical state
+
+[configuration]
+cups_queues_default_levels (int, int, int, int): The global default levels for
+ all checks of this type. This is {(5, 360, 10, 720)}.

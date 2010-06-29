@@ -1,0 +1,101 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Author: Lars Michelsen <lm@mathias-kettner.de>
+
+# Example output from agent:
+#<<<cups_queues>>>
+#printer lpr1 disabled since Wed Jun 16 14:21:14 2010 -
+#    reason unknown
+#printer lpr2 now printing lpr2-3.  enabled since Tue Jun 29 09:22:04 2010
+#    Wiederherstellbar: Der Netzwerk-Host „lpr2“ ist beschäftigt, erneuter Versuch in 30 Sekunden …
+#printer spr1 is idle.  enabled since Thu Mar 11 14:28:23 2010
+#printer spr2 is idle.  enabled since Thu Mar 11 14:28:23 2010
+#printer spr3 is idle.  enabled since Thu Mar 11 14:28:23 2010
+#printer spr4 is idle.  enabled since Thu Mar 11 14:28:23 2010
+#printer spr5 is idle.  enabled since Thu Mar 11 14:28:23 2010
+#printer spr6 disabled since Mon Jun 21 10:29:39 2010 -
+#    /usr/lib/cups/backend/lpd failed
+#printer spr7 is idle.  enabled since Thu Mar 11 14:28:23 2010
+#printer spr8 is idle.  enabled since Thu Mar 11 14:28:23 2010
+#---
+#lpr2-2                  root              1024   Tue Jun 29 09:02:35 2010
+#lpr2-3                  root              1024   Tue Jun 29 09:05:54 2010
+
+from datetime import datetime, timedelta
+import time
+
+# Default thresholds
+# ("<Warning max entries>", "<Warning entry age in seconds>", "<Critical num entries>", "<Critical entry age>")
+cups_queues_default_levels = (5, 360, 10, 720)
+cups_queues_nagios_map     = {0: 'OK', 1: 'WARN', 2: 'CRIT'}
+
+def inventory_cups_queues(checkname, info):
+    return [ ('%s' % line[1], '', cups_queues_default_levels) for line in info if line[0] == 'printer' ]
+
+def check_cups_queues(item, params, info):
+    warnNum, warnAge, critNum, critAge = params
+    state   = 3
+    output  = "UNKNOWN - Queue not found"
+    numJobs = 0
+    now     = datetime.now()
+    oldest  = now
+    for num, line in enumerate(info):
+        if line[0] == 'printer' and line[1] == item:
+            statusoutput = ' '.join(line[2:])
+            status = ' '.join(line[2:4])
+
+            # If the next line does not start with "printer" append it as additional output
+            if info[num+1][0] != 'printer':
+                statusoutput += " (%s)" % " ".join(info[num+1])
+
+            if status == "disabled since":
+                state = 2
+                output = "%s" % statusoutput
+            elif status in [ "is idle.", "now printing" ]:
+                state = 0
+                output = "%s" % statusoutput
+            else:
+                state = 3
+                output = "Undefined status output in \"lpr -p\""
+        elif line[0].startswith(item+'-'):
+            # This is a queue item count the number of items and check the max age
+            numJobs += 1
+            dt = datetime(*time.strptime(' '.join(line[3:]), '%a %b %d %H:%M:%S %Y')[0:5])
+            if dt < oldest:
+                oldest = dt
+
+    jobOutput = 'Jobs: %d' % numJobs
+    if numJobs > 0:
+        if oldest < now - timedelta(seconds=critAge) or numJobs > critNum:
+            state = 2
+        elif oldest < now - timedelta(seconds=warnAge) or numJobs > warnNum:
+            state = 1
+        jobOutput += ', Oldest job is from %s' % oldest
+
+    return (state, cups_queues_nagios_map[state] + " - " + output + " - " + jobOutput, [ ("jobs", numJobs, warnNum, critNum, 0) ])
+
+check_info['cups_queues'] = (check_cups_queues, "CUPS Queue %s", 1, inventory_cups_queues)

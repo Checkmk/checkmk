@@ -49,15 +49,15 @@ from datetime import datetime, timedelta
 import time
 
 # Default thresholds
-# ("<Warning max entries>", "<Warning entry age in seconds>", "<Critical num entries>", "<Critical entry age>")
-cups_queues_default_levels = (5, 360, 10, 720)
+# ("<Warning max entries>", "<Critical num entries>", "<Warning entry age in seconds>", "<Critical entry age>")
+cups_queues_default_levels = (5, 10, 360, 720)
 cups_queues_nagios_map     = {0: 'OK', 1: 'WARN', 2: 'CRIT'}
 
 def inventory_cups_queues(checkname, info):
     return [ ('%s' % line[1], '', cups_queues_default_levels) for line in info if line[0] == 'printer' ]
 
 def check_cups_queues(item, params, info):
-    warnNum, warnAge, critNum, critAge = params
+    warnNum, critNum, warnAge, critAge = params
     state   = 3
     output  = "UNKNOWN - Queue not found"
     numJobs = 0

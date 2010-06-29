@@ -18,9 +18,10 @@ item:
  The name of the printer in CUPS as printed by {lpstat -p}.
 
 examples:
- # Set number of minimum jobs to 5 and a minimum age of 5 minutes in seconds to result in a warning state
- # And set the number of minimum jobs to 10 and a minimum age of 10 minutes in seconds to result in a critical state
- cups_queues_default_levels = (5, 360, 10, 720)
+ # Set number of minimum jobs to 5 to result in a warning state and 10 to result in a critical state
+ # Set the maximum age of a job to 5 minutes to result in a warning state and 10 minutes to result in
+ # a critical state. The age is given in seconds.
+ cups_queues_default_levels = (5, 10, 360, 720)
 
 perfdata:
  It contains the current number of jobs in the queue in the {jobs} value.
@@ -30,10 +31,10 @@ inventory:
 
 [parameters]
 warning_count (int): Number of jobs to result in a warning state
-warning_age (int): Age of oldest job to result in a warning state
 critical_count (int): Number of jobs to result in a critical state
+warning_age (int): Age of oldest job to result in a warning state
 critical_age (int): Age of oldest job to result in a critical state
 
 [configuration]
 cups_queues_default_levels (int, int, int, int): The global default levels for
- all checks of this type. This is {(5, 360, 10, 720)}.
+ all checks of this type. This is {(5, 10, 360, 720)}.

@@ -1,0 +1,31 @@
+title: Check for blades in an HP BladeSystem Enclosure
+agents: snmp
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the health of blades in HP BladeSysten enclosures.
+
+ It uses the state reported by SNMP and prints the product name and serial
+ number reported of each blade.
+
+ Each blade which is present while the Check_MK inventory will result in an
+ own service. If the blade is not available anymore this service will be shown
+ as CRITICAL service.
+
+ Note: It seems that the MIB is not fully implemented on all systems so the
+ check needs to show a "fake" OK when no status information is available. The
+ other information like serial number and product name are printed anyway.
+
+item:
+ Number of the blade (as string, not int).
+
+examples:
+ checks += [
+  # Manually configured check:
+  # Hostname, checkname, item-id, params
+  ( "examplehost", "hp_blade_blades", "1", None)
+ ]
+
+inventory:
+ All blades with the present state "present" are automatically inventorized.

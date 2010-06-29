@@ -1,0 +1,25 @@
+title: Check for FANs in an HP BladeSystem Enclosure
+agents: snmp
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the health of all FANs in HP BladeSysten enclosures.
+ The check uses the state reported by SNMP.
+
+ Each fan which is present while the Check_MK inventory will result in an
+ own service. If the fan is not available anymore this service will be shown
+ as CRITICAL service.
+
+item:
+ Number of the FAN (as string, not int).
+
+examples:
+ checks += [
+  # Manually configured check:
+  # Hostname, checkname, item-id, params
+  ( "examplehost", "hp_blade_fan", "1", None)
+ ]
+
+inventory:
+ All FANs with the present state "present" are automatically inventorized.

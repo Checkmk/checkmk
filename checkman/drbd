@@ -1,0 +1,29 @@
+title: Check general state of DRBD devices
+agents: linux
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check uses the contents of {/proc/drbd} as sent by the Check_MK linux
+ agent. The check analyzes the "Connection State", "Disk State" and "Roles of
+ the single nodes.
+
+ The check takes a snapshot from the state during the inventory and compares
+ it with the state during the checks. If some of the values differ from the
+ inventorized values a CRITICAL state will be shown.
+
+item:
+ The name of the DRBD device e.g. drbd0
+
+examples:
+ # Set expected "cs" to "Connected", first node to primary and second to secondary
+ # and both nodes to up-to-date.
+ drbd_general_default_levels = ( 'Connected', [ 'Primary', 'Secondary' ], [ 'UpToDate', 'UpToDate' ] )
+
+inventory:
+ Each DRBD device will result in one service during inventory.
+
+[parameters]
+connection_state (string): The expected connection state
+roles (tuple): The expected role of each node
+disk_states (tuple): The expected disk-state of each node

@@ -1,0 +1,13 @@
+title: Simple check of summary health state of HP BladeSystem Enclosures
+agents: snmp
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the summary health of HP BladeSystem Enclorures.
+ The check uses the state information reported by SNMP. Addionally to the
+ reported state the firmware version and the serial number are shown in
+ the check output.
+
+inventory:
+ One check per enclosure is created automatically.

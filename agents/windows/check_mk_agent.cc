@@ -1039,6 +1039,7 @@ void output_data(SOCKET &out)
     section_winperf(out);
     section_eventlog(out);
     section_plugins(out);
+    section_local(out);
 }
     
 

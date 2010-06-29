@@ -24,6 +24,7 @@
 # Boston, MA 02110-1301 USA.
 
 # Remove locale settings to eliminate localized outputs where possible
+export LC_ALL=C
 unset LANG
 
 export MK_LIBDIR="/usr/lib/check_mk_agent"

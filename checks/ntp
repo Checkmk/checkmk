@@ -99,7 +99,7 @@ def check_ntp_server_state(line, params):
 
     maxstratum, warn, crit = params
     if abs(offset) >= crit:
-        return (2, "critical offset" + infotext, offset, jitter)
+        return (2, "critical offset " + infotext, offset, jitter)
     elif state in [ "falsetick" ]:
         return (2, infotext, offset, jitter)
     elif stratum >= maxstratum:

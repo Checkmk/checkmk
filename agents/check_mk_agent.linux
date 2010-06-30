@@ -247,17 +247,6 @@ then
     DISPLAY=:0 waitmax 2 nvidia-settings -t -q all
 fi
 
-# Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
-if cd $PLUGINSDIR
-then
-  for skript in $(ls)
-  do
-    if [ -x "$skript" ] ; then
-        ./$skript
-    fi
-  done
-fi
-
 if [ -e /proc/drbd ]; then
   echo '<<<drbd>>>'
   cat /proc/drbd
@@ -270,6 +259,17 @@ if which lpstat > /dev/null 2>&1; then
   echo '---'
   for i in $(lpstat -p | grep -E "^(printer|Drucker)" | awk '{print $2}' | grep -v "@"); do
     lpstat -o "$i"
+  done
+fi
+
+# Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
+if cd $PLUGINSDIR
+then
+  for skript in $(ls)
+  do
+    if [ -x "$skript" ] ; then
+        ./$skript
+    fi
   done
 fi
 

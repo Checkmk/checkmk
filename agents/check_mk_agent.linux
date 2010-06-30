@@ -262,6 +262,19 @@ if which lpstat > /dev/null 2>&1; then
   done
 fi
 
+# Heartbeat monitoring
+if which cl_status > /dev/null 2>&1; then
+  echo '<<<heartbeat>>>'
+  for N in $(cl_status listnodes); do
+    if [ $N != $HOSTNAME ];then
+			STATUS=$(cl_status rscstatus)
+      for LINK in $(cl_status listhblinks $NODE 2>/dev/null); do
+        echo "$NODE $STATUS $LINK $(cl_status hblinkstatus $NODE $LINK)"
+      done
+    fi
+  done
+fi
+
 # Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
 if cd $PLUGINSDIR
 then

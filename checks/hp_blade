@@ -36,8 +36,6 @@
 # GENERAL MAPS:
 
 hp_blade_status_map =        { 1: 'Other',    2: 'Ok',     3: 'Degraded', 4: 'Failed' }
-hp_blade_nagios_map  =       { 0: 'OK',       1: 'WARN',   2: 'CRIT' }
-
 hp_blade_status2nagios_map = { 'Other':       2, 'Ok':     0, 'Degraded': 1, 'Failed': 2, }
 
 def inventory_hp_blade_general(checkname, info):
@@ -50,7 +48,7 @@ def check_hp_blade_general(item, params, info):
     snmp_state = hp_blade_status_map[int(info[0][1])]
     status     = hp_blade_status2nagios_map[snmp_state]
     return (status, "%s - General Status is %s (Firmware: %s, S/N: %s)" %
-                        (hp_blade_nagios_map[status], snmp_state, info[0][0], info[0][2]))
+                        (nagios_state_names[status], snmp_state, info[0][0], info[0][2]))
 
 
 check_info['hp_blade'] = (check_hp_blade_general, "General Status", 0,  inventory_hp_blade_general)

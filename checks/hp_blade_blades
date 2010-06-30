@@ -46,7 +46,6 @@
 
 hp_blade_present_map =       { 1: 'other',    2: 'absent', 3: 'present' }
 hp_blade_status_map =        { 1: 'Other',    2: 'Ok',     3: 'Degraded', 4: 'Failed' }
-hp_blade_nagios_map  =       { 0: 'OK',       1: 'WARN',   2: 'CRIT' }
 
 hp_blade_status2nagios_map = { 'Other':       2, 'Ok':     0, 'Degraded': 1, 'Failed': 2, }
 
@@ -70,7 +69,7 @@ def check_hp_blade_blades(item, params, info):
             snmp_state = hp_blade_status_map[state]
             status     = hp_blade_status2nagios_map[snmp_state]
             return (status, '%s - Blade status is %s (Product: %s Name: %s S/N: %s)' %
-                                        (hp_blade_nagios_map[status], snmp_state, line[3], line[4], line[5]))
+                                        (nagios_state_names[status], snmp_state, line[3], line[4], line[5]))
     return (3, "UNKNOWN - item not found in snmp data")
 
 

@@ -51,7 +51,6 @@ import time
 # Default thresholds
 # ("<Warning max entries>", "<Critical num entries>", "<Warning entry age in seconds>", "<Critical entry age>")
 cups_queues_default_levels = (5, 10, 360, 720)
-cups_queues_nagios_map     = {0: 'OK', 1: 'WARN', 2: 'CRIT', 3: 'UNKNOWN'}
 
 def inventory_cups_queues(checkname, info):
     return [ ('%s' % line[1], '', "cups_queues_default_levels") for line in info if line[0] == 'printer' ]
@@ -96,6 +95,6 @@ def check_cups_queues(item, params, info):
             state = 1
         jobOutput += ', Oldest job is from %s' % oldest
 
-    return (state, cups_queues_nagios_map[state] + " - " + output + " - " + jobOutput, [ ("jobs", numJobs, warnNum, critNum, 0) ])
+    return (state, nagios_state_names[state] + " - " + output + " - " + jobOutput, [ ("jobs", numJobs, warnNum, critNum, 0) ])
 
 check_info['cups_queues'] = (check_cups_queues, "CUPS Queue %s", 1, inventory_cups_queues)

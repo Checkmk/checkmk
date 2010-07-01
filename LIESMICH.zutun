@@ -11,6 +11,14 @@ BUGS
 --------------------------------------------------------------------------------
 Beschreibung zu -II fehlt in Doku.
 
+Zwei Fragen beim -II mit folgendem Befehl:
+
+> check_mk -II drbd b01srv02
+drbd                  1 new checks
+
+1. Ist das korrekt, dass alle autochecks entfernt und nur dieser dann hinzugefügt wird?
+2. Die Ausgabe könnte man noch etwas tunen. "Removed checks xxx" und "added yyy".
+
 Der Check ntp ist durch 'ntp.peer' in den meisten Fällen obsolet geworden.
 Die Inventur findet immer beide, was blöd ist. Soll man ignored_checktypes
 vorbelegen mit ntp?

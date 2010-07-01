@@ -151,8 +151,6 @@ drbd_net_map     = [ 'ns', 'nr' ]
 drbd_disk_map    = [ 'dw', 'dr' ]
 drbd_stats_map   = [ 'al', 'bm', 'lo', 'pe', 'ua', 'ap', 'ep', 'wo', 'oos' ]
 
-drbd_nagios_map  = { 0:"OK", 1:"WARN", 2:"CRIT" }
-
 drbd_cs_map = {
   'StandAlone':     1, 'Disconnecting':  1,
   'Unconnected':    2, 'Timeout':        2,
@@ -256,7 +254,7 @@ def check_drbd_general(item, params, info):
             state = state < 2 and 2 or state
             output += ' (Expected: %s/%s)' % (params[2][0], params[2][1])
 
-        return (state, "%s - %s" % (drbd_nagios_map[state], output))
+        return (state, "%s - %s" % (nagios_state_names[state], output))
 
     return (3, "UNKNOWN - Undefined state")
 

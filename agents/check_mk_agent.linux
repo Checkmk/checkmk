@@ -247,17 +247,6 @@ then
     DISPLAY=:0 waitmax 10 nvidia-settings -t -q all
 fi
 
-# Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
-if cd $PLUGINSDIR
-then
-  for skript in $(ls)
-  do
-    if [ -x "$skript" ] ; then
-        ./$skript
-    fi
-  done
-fi
-
 if [ -e /proc/drbd ]; then
   echo '<<<drbd>>>'
   cat /proc/drbd
@@ -270,6 +259,42 @@ if which lpstat > /dev/null 2>&1; then
   echo '---'
   for i in $(lpstat -p | grep -E "^(printer|Drucker)" | awk '{print $2}' | grep -v "@"); do
     lpstat -o "$i"
+  done
+fi
+
+# Heartbeat monitoring
+if which cl_status > /dev/null 2>&1; then
+  # Different handling for heartbeat clusters with and without CRM
+  # for the resource state
+  if [ -S /var/run/heartbeat/crm/cib_ro ]; then
+    echo '<<<heartbeat_crm>>>'
+    crm_mon -1 -r | grep -v ^$
+  else
+    echo '<<<heartbeat_rscstatus>>>'
+    cl_status rscstatus
+  fi
+
+  echo '<<<heartbeat_nodes>>>'
+  for NODE in $(cl_status listnodes); do
+    if [ $NODE != $HOSTNAME ]; then
+      STATUS=$(cl_status nodestatus $NODE)
+      echo -n "$NODE $STATUS" 
+      for LINK in $(cl_status listhblinks $NODE 2>/dev/null); do
+        echo -n " $LINK $(cl_status hblinkstatus $NODE $LINK)"
+      done
+      echo
+    fi
+  done
+fi
+
+# Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
+if cd $PLUGINSDIR
+then
+  for skript in $(ls)
+  do
+    if [ -x "$skript" ] ; then
+        ./$skript
+    fi
   done
 fi
 

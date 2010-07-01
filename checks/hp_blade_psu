@@ -41,7 +41,6 @@
 
 hp_blade_present_map =       { 1: 'other',    2: 'absent', 3: 'present' }
 hp_blade_status_map =        { 1: 'Other',    2: 'Ok',     3: 'Degraded', 4: 'Failed' }
-hp_blade_nagios_map  =       { 0: 'OK',       1: 'WARN',   2: 'CRIT' }
 
 hp_blade_status2nagios_map = { 'Other':       2, 'Ok':     0, 'Degraded': 1, 'Failed': 2, }
 
@@ -88,7 +87,7 @@ def check_hp_blade_psu(item, params, info):
             perfdata = [ ('output', line[3]) ]
 
             return (status, '%s - PSU is %s%s (S/N: %s)' %
-                         (hp_blade_nagios_map[status], snmp_state, detail_output, line[6]), perfdata)
+                         (nagios_state_names[status], snmp_state, detail_output, line[6]), perfdata)
     return (3, "UNKNOWN - item not found in snmp data")
 
 

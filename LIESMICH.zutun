@@ -76,6 +76,11 @@ Außerdem sollte der Cachedaemon auch verwendet werden.
 --------------------------------------------------------------------------------
 UNSCHOENHEITEN
 --------------------------------------------------------------------------------
+Multisite Bookmarks: Das Snapin speichert immer absolute URLs mit Hostnamen.
+Das ist aber doof, wenn man die Bookmarksdatei auf einen anderen Host kopiert
+oder mal mit IP-Adresse, mal mit Namen auf Nagios zugreift. Lösung: Beim Speichern
+der Bookmarks den gemeinsamen Pfad vorne wegschneiden.
+
 Multisite view 'host': Warum gibt es hier keinen Knopf auf die
 Probleme des Hosts? Umgekehrt gibt es so einen Knopf.
 

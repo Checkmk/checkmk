@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-nvidia_temp_default_levels = (60, 65, 80, 85)
+nvidia_temp_default_levels = (60, 65, 90, 95)
 
 def inventory_nvidia_temp(checktype, info):
     return [ (l[0].strip(":"), "nvidia_temp_default_levels") 

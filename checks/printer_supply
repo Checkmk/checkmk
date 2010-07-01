@@ -49,7 +49,7 @@ def check_printer_supply(item, params, info):
 	    elif current == -2 or maxlevel == -2:
 	        return (3, "UNKNOWN - Couldn't get info about supply")
 	    elif current == -3:
-	        return (1, "WARNING - Some remaining: %s" % current, perfdata)
+	        return (0, "OK - Some remaining", perfdata)
 	    elif leftperc <= crit:
                 return (2, "CRIT - %s" % infotext, perfdata)
 	    elif leftperc <= warn:

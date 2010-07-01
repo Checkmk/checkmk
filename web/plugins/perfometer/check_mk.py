@@ -113,7 +113,7 @@ def perfometer_check_mk_cpu_loads(row, check_command, perf_data):
 
 perfometers["check_mk-cpu.loads"] = perfometer_check_mk_cpu_loads
 
-def perfometer_ntp_time(row, check_command, perf_data):
+def perfometer_check_mk_ntp(row, check_command, perf_data):
     offset = float(perf_data[0][1])
     absoffset = abs(offset)
     warn = float(perf_data[0][3])
@@ -138,5 +138,33 @@ def perfometer_ntp_time(row, check_command, perf_data):
 
     return "%.1f ms" % offset, h
 
+perfometers["check_mk-ntp"] = perfometer_check_mk_ntp
+perfometers["check_mk-ntp.time"] = perfometer_check_mk_ntp
 
-perfometers["check_mk-ntp.time"] = perfometer_ntp_time
+def perfometer_check_mk_ipmi_sensors(row, check_command, perf_data):
+    state = row["service_state"]
+    color = { 0: "#06f", 1: "#ff2", 2: "#f22", 3: "#fa2" }[state]
+    value = float(perf_data[0][1])
+    crit = float(perf_data[0][4])
+    perc = 100 * value / crit 
+    # some sensors get critical if the value is < crit (fans), some if > crit (temp)
+    h = '<table><tr>'
+    if value <= crit:
+        h += perfometer_td(perc, color)
+        h += perfometer_td(100 - perc, "#fff")
+    elif state == 0: # fan, OK
+        m = max(value, 10000.0)
+        perc_crit = 100 * crit / m
+        perc_value = 100 * (value-crit) / m
+        perc_free = 100 * (m - value) / m
+        h += perfometer_td(perc_crit, color)
+        h += perfometer_td(perc_value, color)
+        h += perfometer_td(perc_free, "#fff")
+    h += '</tr></table>'
+    return "%d" % int(value), h
+
+perfometers["check_mk-ipmi_sensors"] = perfometer_check_mk_ipmi_sensors
+
+        
+
+

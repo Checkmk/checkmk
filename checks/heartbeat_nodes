@@ -1,0 +1,64 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Author: Lars Michelsen <lm@mathias-kettner.de>
+
+# Example outputs from agent:
+#
+# <<<heartbeat_nodes>>>
+# smwp active lanb up lanb up lana up lana up
+# swi04 ping swi04 up
+# swi03 ping swi03 up
+
+def inventory_heartbeat_nodes(checktype, info):
+    return [ (line[0], None) for line in info if line[0] != '' ]
+
+def check_heartbeat_nodes(item, params, info):
+    for line in info:
+        if line[0] == item:
+            status     = 0
+            nodeStatus = line[1]
+            nodeLinks  = zip(line[2::2], line[3::2])
+
+            linkOutput = ''
+            for link, state in nodeLinks:
+                if state != 'up':
+                    status = 2
+                linkOutput += ' %s: %s, ' % (link, state)
+            linkOutput = linkOutput.rstrip(', ')
+
+            if nodeStatus in [ 'active', 'up', 'ping' ] and status <= 0:
+                status = 0
+            elif nodeStatus == 'dead' and status <= 2:
+                status = 2
+            else:
+                return (3, "UNKNOWN - Node %s has an unhandled state: %s" % (line[0], nodeStatus))
+
+            return (status, '%s - Node %s is in state "%s". Links:%s' % (nagios_state_names[status], line[0], nodeStatus, linkOutput))
+
+    return (3, "UNKNOWN - Node is not present anymore")
+
+check_info['heartbeat_nodes'] = (check_heartbeat_nodes, "Heartbeat Node %s",  0, inventory_heartbeat_nodes)

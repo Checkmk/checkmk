@@ -49,6 +49,8 @@
     * New SNMP based checks for printers (page counter, supply), contributed
       by Peter Lauk (many thanks!)
     * New check cups_queues - Checking the state of cups printer queues
+    * New check heartbeat_nodes - Checking the node state and state of the links
+      of heartbeat nodes
 
     Multisite:
     * New view showing all PNP graphs of services with the same description

@@ -10,16 +10,21 @@ description:
  {cpu.loads}.
 
 perfdata:
- Three variable: The percentage of time spent in {user}, {system} and {wait}
+ Three variables: The percentage of time spent in {user}, {system} and {wait}
  (disk wait). The idle time can be computed by substracting those three values 
  from 100%. The user value contains also {nice}. 
 
 inventory:
  One check per host is created if the agent contains a {kernel}
  section containing cpu information. The inventory creates the
- check with the parameter {None} thus imposing no levels and
- making the check always OK.
+ check with the parameter {kernel_util_default_levels}, which is
+ preset to {None} thus imposing no levels and making the check always OK.
 
 [parameters]
-warning (int): The percentage of {wait} that triggers a warning level
+warning (int): The percentage of {wait} that triggers a warning level.
 critical (int): The percentage of {wait} that triggers a critical level
+ The parameters may also be set to {None}, which makes the check alwas {OK}.
+
+[configuration]
+kernel_util_default_levels (int, int): Default levels used by inventorized
+  checks. This is present to {None}, which disables the levels.

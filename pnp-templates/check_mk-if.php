@@ -60,7 +60,7 @@ $def[1] =
 
 # Graph 2: packets
 $ds_name[2] = 'Packets';
-$opt[2] = "--vertical-label \"packets/sec\" -X0 -b 1024 --title \"Packets $hostname / $servicedesc\" ";
+$opt[2] = "--vertical-label \"packets/sec\" -b 1024 --title \"Packets $hostname / $servicedesc\" ";
 $def[2] =
   "HRULE:0#c0c0c0 ".
   "DEF:inu=$RRDFILE[2]:$DS[2]:MAX ".

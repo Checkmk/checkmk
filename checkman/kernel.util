@@ -1,0 +1,25 @@
+title: Check CPU usage (utilisation)
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This cheak measures the CPU utilization during the last check
+ cycle. A level can be set only on {wait} (disk wait). If you
+ want to set levels on your CPU usage you better use the check
+ {cpu.loads}.
+
+perfdata:
+ Three variable: The percentage of time spent in {user}, {system} and {wait}
+ (disk wait). The idle time can be computed by substracting those three values 
+ from 100%. The user value contains also {nice}. 
+
+inventory:
+ One check per host is created if the agent contains a {kernel}
+ section containing cpu information. The inventory creates the
+ check with the parameter {None} thus imposing no levels and
+ making the check always OK.
+
+[parameters]
+warning (int): The percentage of {wait} that triggers a warning level
+critical (int): The percentage of {wait} that triggers a critical level

@@ -188,7 +188,13 @@ def submit_aggregated_results(hostname):
 
         if opt_verbose:
             color = { 0: tty_green, 1: tty_yellow, 2: tty_red, 3: tty_magenta }[status]
-            print "%-20s %s%s%-70s%s" % (servicedesc, tty_bold, color, text.replace("\\n", "\n  "), tty_normal)
+            lines = text.split('\\n')
+            print "%-20s %s%s%-70s%s" % (servicedesc, tty_bold, color, lines[0], tty_normal)
+            if len(lines) > 1:
+                for line in lines[1:]:
+                    print "  %s" % line
+                print "-------------------------------------------------------------------------------"
+
 
 
 def submit_check_mk_aggregation(hostname, status, output):

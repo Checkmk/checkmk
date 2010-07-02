@@ -1006,7 +1006,8 @@ void get_agent_dir(char *buffer, int size)
     DWORD ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\check_mk_agent", 0, KEY_READ, &key);
     if (ret == ERROR_SUCCESS)
     {
-        if (ERROR_SUCCESS == RegQueryValueEx(key, "ImagePath", NULL, NULL, (BYTE *)buffer, (DWORD *)&size))
+        DWORD dsize = size;
+        if (ERROR_SUCCESS == RegQueryValueEx(key, "ImagePath", NULL, NULL, (BYTE *)buffer, &dsize))
         {
             char *end = buffer + strlen(buffer);
             // search backwards for backslash 
@@ -1014,6 +1015,7 @@ void get_agent_dir(char *buffer, int size)
                 end--;
             *end = 0; // replace \ with string end => get directory of executable
         }
+        size = dsize;
     }
     RegCloseKey(key);
 }

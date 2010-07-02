@@ -1,3 +1,9 @@
+1.1.7i2:
+
+    Checks & Agents:
+    * New check ad_replication: Checks active directory replications
+      of domain controllers by using repadm
+
 1.1.7i1:
     Core, Setup, etc.:
     * New option -u for reordering autochecks in per-host-files

@@ -141,7 +141,7 @@ def check_win_dhcp_pools_stats(item, params, info):
                     per_sec = 0
                     pass
                 output += '%s: %.0f/s, ' % (key, per_sec)
-                perfdata.append((key, value))
+                perfdata.append((key, per_sec))
 
     if output == '':
         return (3, "UNKNOWN - Information not available")

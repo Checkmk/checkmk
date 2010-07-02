@@ -5,8 +5,7 @@
        details)
     * Fix exception if check_mk is called without arguments. Show
       usage in that case.
-    * install_nagios.sh: Fix download URL of NagVis 1.4.7 (sorry,
-      script still uses old version).
+    * install_nagios.sh: Updated to NagVis 1.5 and fixed download URL
     * New options --snmpwalk and --usewalk help implemeting checks
       for SNMP hardware which is not present
     * SNMP: Automatically detect missing entries. That fixes if64

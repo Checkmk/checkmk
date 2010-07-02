@@ -39,3 +39,6 @@ crash.exe: crash.cc Makefile
 clean:
 	rm -f *.o *~ svn-*.tmp
 
+mrproper: clean
+	rm -f *.exe
+

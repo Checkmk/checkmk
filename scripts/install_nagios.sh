@@ -81,6 +81,11 @@ then
     DISTRO=UBUNTU
     DISTRONAME="Ubuntu 9.10"
     DISTROVERS=9.10
+elif grep -qi "DISTRIB_DESCRIPTION=\"Ubuntu 10.04 LTS\"" /etc/lsb-release 2>/dev/null
+then
+    DISTRO=UBUNTU
+    DISTRONAME="Ubuntu 10.04 LTS"
+    DISTROVERS=10.04
 else
     debvers=$(cat /etc/debian_version 2>/dev/null)
     debvers=${debvers:0:3}

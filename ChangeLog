@@ -3,6 +3,10 @@
     * New check ad_replication: Checks active directory replications
       of domain controllers by using repadm
 
+    Multisite:
+    * fix chown problem (when nagios user own files to be written
+      by the web server)
+
 1.1.7i1:
     Core, Setup, etc.:
     * New option -u for reordering autochecks in per-host-files

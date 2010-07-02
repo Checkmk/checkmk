@@ -68,5 +68,11 @@ def make_nagios_directory(path):
 def write_settings_file(path, content):
     file(path, "w", 0).write(pprint.pformat(content) + "\n")
     gid = pwd.getpwnam(defaults.www_group).pw_gid
-    os.chown(path, -1, gid)
-    os.chmod(path, 0660)
+    # Tackle user problem: If the file is owned by nagios, the web
+    # user can write it but cannot chown the group. In that case we
+    # assume that the group is correct and ignore the error
+    try:
+        os.chown(path, -1, gid)
+        os.chmod(path, 0660)
+    except:
+        pass

@@ -1,0 +1,154 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Author: Lars Michelsen <lm@mathias-kettner.de>
+
+# Example outputs from agent:
+#
+# <<<win_dhcp_pools>>>
+#
+# MIB-Anzahl:
+#     Entdeckungen = 0.
+#     Angebote = 0.
+#     Anforderungen = 0.
+#     Acks = 0.
+#     Naks = 0.
+#     Abweisungen = 0.
+#     Freigaben = 0.
+#     ServerStartTime = Dienstag, 29. Juni 2010 19:08:55
+#     Bereiche = 1.
+#     Subnetz = 192.168.123.0.
+#         Anzahl der verwendeten Adressen = 0.
+#         Anzahl der freien Adressen = 239.
+#         Anzahl der anstehenden Angebote = 0.
+#
+# MIBCounts:
+#         Discovers = 0.
+#         Offers = 0.
+#         Requests = 0.
+#         Acks = 1.
+#         Naks = 0.
+#         Declines = 0.
+#         Releases = 0.
+#         ServerStartTime = Sunday, May 25, 2008 12:38:06 PM
+#         Scopes = 1.
+#         Subnet = 172.16.11.0.
+#                 No. of Addresses in use = 1.
+#                 No. of free Addresses = 23.
+#                 No. of pending offers = 0.
+
+win_dhcp_pools_default_levels = (10, 5)
+
+win_dhcp_pools_stats_translate = {
+    'Entdeckungen': 'Discovers',
+    'Angebote': 'Offers',
+    'Anforderungen': 'Requests',
+    'Acks': 'Acks',
+    'Naks': 'Nacks',
+    'Abweisungen': 'Declines',
+    'Freigaben': 'Releases',
+    'Subnetz': 'Subnet',
+    'Bereiche': 'Scopes',
+    'Anzahl der verwendeten Adressen': 'No. of Addresses in use',
+    'Anzahl der freien Adressen': 'No. of free Addresses',
+    'Anzahl der anstehenden Angebote': 'No. of pending offers',
+}
+
+def inventory_win_dhcp_pools(checktype, info):
+    return [ (line[2].rstrip('.'), 'win_dhcp_pools_default_levels') for line in info if line[0] in win_dhcp_pools_stats_translate and win_dhcp_pools_stats_translate[line[0]] == 'Subnet' ]
+
+def check_win_dhcp_pools(item, params, info):
+    inBlock = False
+    poolStats = []
+    status = 0
+    for line in info:
+        if line[0] in win_dhcp_pools_stats_translate and win_dhcp_pools_stats_translate[line[0]] == 'Subnet':
+            inBlock = True
+            continue
+        if inBlock:
+            key = ' '.join(line[:-2])
+            if key in win_dhcp_pools_stats_translate:
+                poolStats.append(int(line[-1].rstrip('.')))
+
+    if len(poolStats) == 3:
+        used, free, pending = poolStats
+        size = used + free + pending
+
+        if free > 0:
+            percFree = 100 - size / free
+        else:
+            percFree = 0
+
+        if percFree < params[1]:
+            status = 2
+        elif percFree < params[0]:
+            status = 1
+
+        perfdata = [ ('free', free, params[0], params[1], 0, size),
+                     ('used', used, None, None, 0, size),
+                     ('pending', pending, None, None, 0, size) ]
+
+        return (status, '%s - Addresses Free: %d, Used: %d, Pending: %d' %
+                              (nagios_state_names[status], free, used, pending), perfdata)
+    else:
+        return (3, 'UNKNOWN - Pool information not found')
+
+def inventory_win_dhcp_pools_stats(checktype, info):
+    return [ (None, None) for line in info if line[0] != '' ]
+
+def check_win_dhcp_pools_stats(item, params, info):
+    output = ''
+    perfdata = []
+    this_time = int(time.time())
+    timedif = 0
+
+    for line in info:
+        if len(line) > 0:
+            if line[0] in win_dhcp_pools_stats_translate:
+                key = win_dhcp_pools_stats_translate[line[0]]
+            else:
+                key = line[0]
+
+            if key in [ 'Discovers', 'Offers', 'Requests', 'Acks',
+                        'Nacks', 'Declines', 'Releases', 'Scopes' ]:
+                value = int(line[2].rstrip('.'))
+                try:
+                    timedif, per_sec = get_counter("win_dhcp_stats.%s" % key, this_time, value)
+                except MKCounterWrapped:
+                    per_sec = 0
+                    pass
+                output += '%s: %.0f/s, ' % (key, per_sec)
+                perfdata.append((key, value))
+
+    if output == '':
+        return (3, "UNKNOWN - Information not available")
+    else:
+        if timedif != 0:
+            output = 'In last %d secs: %s' % (timedif, output)
+        return (0, "OK - %s" % (output.rstrip(', ')), perfdata)
+
+check_info['win_dhcp_pools'] = (check_win_dhcp_pools, "DHCP Pool %s",  1, inventory_win_dhcp_pools)
+check_info['win_dhcp_pools.stats'] = (check_win_dhcp_pools_stats, "DHCP Stats",  1, inventory_win_dhcp_pools_stats)

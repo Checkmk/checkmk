@@ -49,12 +49,12 @@
     * New check drbd - Checking health of drbd nodes
     * New SNMP based checks for printers (page counter, supply), contributed
       by Peter Lauk (many thanks!)
-    * New check cups_queues - Checking the state of cups printer queues
-    * kernel.util - added man page
-    * New check heartbeat_nodes - Checking the node state and state of the links
+    * New check cups_queues: Checking the state of cups printer queues
+    * New check heartbeat_nodes: Checking the node state and state of the links
       of heartbeat nodes
-    * New check heartbeat_rscstatus - Checks the local resource status of
+    * New check heartbeat_rscstatus: Checks the local resource status of
       a heartbeat node
+    * New check win_dhcp_pools: Checks the usage of Windows DHCP Server lease pools
 
     Multisite:
     * New view showing all PNP graphs of services with the same description

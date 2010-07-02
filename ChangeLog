@@ -23,6 +23,7 @@
       NagVis
     * Packager: make sanity check prohibiting creating of package files
       in Check MK's directories
+    * install_nagios.sh: Support Ubuntu 10.04 (Thanks to Ben)
       
     Checks & Agents:
     * New check ntp.time: Similar to 'ntp' but only honors the system peer

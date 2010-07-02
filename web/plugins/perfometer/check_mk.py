@@ -67,21 +67,27 @@ perfometers["check_mk-vms_sys.util"] = perfometer_check_mk_kernel_util
 
 def perfometer_check_mk_mem_used(row, check_command, perf_data):
     h = '<table><tr>'
-    ram_total = float(perf_data[0][6])
+    ram_total  = float(perf_data[0][6])
     swap_total = float(perf_data[1][6])
     virt_total = ram_total + swap_total
-    ram_used = float(perf_data[0][1])
-    swap_used = float(perf_data[1][1])
-    virt_used = ram_used + swap_used
+
+    ram_used   = float(perf_data[0][1])
+    swap_used  = float(perf_data[1][1])
+    virt_used  = ram_used + swap_used
+
     state = row["service_state"]
+    # paint used ram and swap
     ram_color, swap_color = { 0: ("#80ff40", "#008030"), 1: ("#ff2", "#dd0"), 2:("#f44", "#d00"), 3:("#fa2", "#d80") }[state]
     h += perfometer_td(100 * ram_used / virt_total, ram_color)
     h += perfometer_td(100 * swap_used / virt_total, swap_color)
+
+    # used virtual memory < ram => show free ram and free total virtual memory
     if virt_used < ram_total:
-        h += perfometer_td(100 * (ram_total - virt_used) / virt_total, "#ccf")
-        h += perfometer_td(100 * (virt_total - ram_total) / virt_total, "#fff")
+        h += perfometer_td(100 * (ram_total - virt_used) / virt_total, "#fff")
+        h += perfometer_td(100 * (virt_total - ram_total) / virt_total, "#ccc")
+    # usage exceeds ram => show only free virtual memory
     else:
-        h += perfometer_td(100 * (virt_total - virt_used), "#fff")
+        h += perfometer_td(100 * (virt_total - virt_used), "#ccc")
     h += "</tr></table>"
     return "%d%%" % (100 * (virt_used / ram_total)), h
 
@@ -106,3 +112,57 @@ def perfometer_check_mk_cpu_loads(row, check_command, perf_data):
 
 
 perfometers["check_mk-cpu.loads"] = perfometer_check_mk_cpu_loads
+
+def perfometer_check_mk_ntp(row, check_command, perf_data):
+    offset = float(perf_data[0][1])
+    absoffset = abs(offset)
+    warn = float(perf_data[0][3])
+    crit = float(perf_data[0][4])
+    max = crit * 2
+    if absoffset > max:
+        absoffset = max
+    rel = 50 * (absoffset / max)
+
+    color = { 0: "#0f8", 1: "#ff2", 2: "#f22", 3: "#fa2" }[row["service_state"]]
+    
+    h = '<table><tr>'
+    if offset > 0:
+        h += perfometer_td(50, "#fff")
+        h += perfometer_td(rel, color)
+        h += perfometer_td(50 - rel, "#fff")
+    else:
+        h += perfometer_td(50 - rel, "#fff")
+        h += perfometer_td(rel, color)
+        h += perfometer_td(50, "#fff")
+    h += '</tr></table>'
+
+    return "%.1f ms" % offset, h
+
+perfometers["check_mk-ntp"] = perfometer_check_mk_ntp
+perfometers["check_mk-ntp.time"] = perfometer_check_mk_ntp
+
+def perfometer_check_mk_ipmi_sensors(row, check_command, perf_data):
+    state = row["service_state"]
+    color = { 0: "#06f", 1: "#ff2", 2: "#f22", 3: "#fa2" }[state]
+    value = float(perf_data[0][1])
+    crit = float(perf_data[0][4])
+    perc = 100 * value / crit 
+    # some sensors get critical if the value is < crit (fans), some if > crit (temp)
+    h = '<table><tr>'
+    if value <= crit:
+        h += perfometer_td(perc, color)
+        h += perfometer_td(100 - perc, "#fff")
+    elif state == 0: # fan, OK
+        m = max(value, 10000.0)
+        perc_crit = 100 * crit / m
+        perc_value = 100 * (value-crit) / m
+        perc_free = 100 * (m - value) / m
+        h += perfometer_td(perc_crit, color)
+        h += perfometer_td(perc_value, color)
+        h += perfometer_td(perc_free, "#fff")
+    h += '</tr></table>'
+    return "%d" % int(value), h
+
+# Also all checks dealing with temperature can use this perfometer
+perfometers["check_mk-ipmi_sensors"] = perfometer_check_mk_ipmi_sensors
+perfometers["check_mk-nvidia.temp"] = perfometer_check_mk_ipmi_sensors

@@ -53,7 +53,7 @@ import time
 cups_queues_default_levels = (5, 10, 360, 720)
 
 def inventory_cups_queues(checkname, info):
-    return [ ('%s' % line[1], '', cups_queues_default_levels) for line in info if line[0] == 'printer' ]
+    return [ ('%s' % line[1], '', "cups_queues_default_levels") for line in info if line[0] == 'printer' ]
 
 def check_cups_queues(item, params, info):
     warnNum, critNum, warnAge, critAge = params

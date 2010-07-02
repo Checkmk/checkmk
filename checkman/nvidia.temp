@@ -32,4 +32,4 @@ critical (int): critical level for GPU core temperature
 
 [configuration]
 nvidia_temp_default_levels (int, int, int, int): Default levels for warning
- and critical. This is preset to {(60, 65, 80, 85)}.
+ and critical. This is preset to {(60, 65, 90, 95)}.

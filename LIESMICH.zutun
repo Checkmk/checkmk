@@ -84,6 +84,11 @@ Außerdem sollte der Cachedaemon auch verwendet werden.
 --------------------------------------------------------------------------------
 UNSCHOENHEITEN
 --------------------------------------------------------------------------------
+Multisite Bookmarks: Das Snapin speichert immer absolute URLs mit Hostnamen.
+Das ist aber doof, wenn man die Bookmarksdatei auf einen anderen Host kopiert
+oder mal mit IP-Adresse, mal mit Namen auf Nagios zugreift. Lösung: Beim Speichern
+der Bookmarks den gemeinsamen Pfad vorne wegschneiden.
+
 Multisite view 'host': Warum gibt es hier keinen Knopf auf die
 Probleme des Hosts? Umgekehrt gibt es so einen Knopf.
 
@@ -109,6 +114,10 @@ es ja fuer binaere Hostlisten das NEGATE (=> Doku). In 1.2 einbauen.
 --------------------------------------------------------------------------------
 IDEEN & VERBESSERUNGEN
 --------------------------------------------------------------------------------
+Quicksearch: Hier sollte man auch nach servicenamen suchen können.
+Einfach wenn man keinen passenden Host findet, in die Services-View
+springen mit Filter auf Servicenamen.
+
 --usewalk irgendwie auch als binary_hostlist einbauen, damit man
 das Nagios damit starten kann.
 
@@ -305,3 +314,28 @@ for old, new, deadline in renamed_config_vars:
 Auf diese Art funktioniert erstmal alles weiter. Trotzdem wird die Variable
 irgendwann planmäßig abgeschaltet.
 
+Multisite: Checkboxen: [1] Neuer Reiter mit drei Zuständen: keine Checkboxen
+alle gecheckt, alle leer. Der Zustand wird als viewoption persistent und
+auch bei der View als Parameter eingebaut, so dass der Admin einen Default
+vorgeben kann. Evtl. kann die View auch festlegen, ob überhaupt ein Reiter
+kommt. [2] Beim Anzeigen eines Layouts muss diese eine extra TD malen,
+welches eine Checkbox enthält (wenn der Reiter sichtbar ist).  Der Name der
+Checkbox muss über eine eindeutige Zeilen-ID bestimmt sein.  und man muss -
+nach der Tabelle - ein eine Javascript-Funktion ausgeben, die das Umschalten
+der über das Tab regelt - alle an / alle aus, umschalten.  Das muss dann
+per Ajax auch die View-Option umstellen und die Optik des Tabs ändern. Wenn
+man auf unsichtbar schaltet, müssen alle Boxen auf gecheckt gesetzt werden,
+damit das Kommando auch wirklich auf allen ausgeführt wird. [3] Wenn man
+jetzt auf ein Kommando klickt, muss ich bei jedem Datensatz wieder die ID
+berechnen. Dann schauen, ob es eine Check-Variable gibt. Falls ja, muss
+diese auf "on" stehen, damit das Kommando ausgeführt wird.  Wenn keines
+gewält ist, soll ein Hinweis kommen (gelb).
+
+View options für Painter: Ein Painter hat eine Liste von Painter-Viewoptions.
+Dazu gibt es ein dict: painter_view_options["pnpsource"] = { 
+( "PNP Timerange", "1", [("0":"4 hours"), ("1", "24 hours"), ... ] )
+Vor dem Anzeigen des Layouts ermittle ich alle benötigten View-Options.
+Analog zu refersh mache ich Persisitierung und HTML-Variablen-Auswertung
+und komme zu einem Ergebnis. Das speichere ich dann in view_option["pnpsource"].
+Dies kann der Painter einfach abfragen. Einsatz: PNP-Zeitraum, Darstellung
+von Zeitstempeln (Delta/Absolute/Mixed).

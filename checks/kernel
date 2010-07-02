@@ -70,14 +70,12 @@ def check_kernel(item, params, info):
     else:
 	return (0, "OK" + infotext, perfdata)
 
+kernel_util_default_levels = None
 
 def inventory_cpu_utilization(checktype, info):
-   try:
-      for x in info:
-         if x[0] == 'cpu':
-            return [(None, "", "None")]
-   except:
-      pass
+   for x in info:
+      if len(x) > 0 and x[0] == 'cpu':
+         return [(None, "kernel_util_default_levels")]
    return []
 
 # Columns of cpu usage /proc/stat:

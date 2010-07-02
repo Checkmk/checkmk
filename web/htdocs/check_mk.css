@@ -5,6 +5,9 @@ td {
 input, td, select {
     font-size: 9pt;
 }
+img {
+    border-style: none;
+}
 /*
    __  __       _        
   |  \/  | __ _(_)_ __   

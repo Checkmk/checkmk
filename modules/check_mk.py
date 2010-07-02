@@ -3190,6 +3190,7 @@ def do_cleanup_autochecks():
     # 2. Write out new autochecks.
     newfiles = set([])
     for host, lines in hostdata.items():
+        lines.sort()
         fn = host.replace(":","_") + ".mk"
         if opt_verbose:
             sys.stdout.write("Writing %s: %d checks\n" % (fn, len(lines)))

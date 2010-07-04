@@ -290,7 +290,7 @@ fi
 # Postfix mailqueue monitoring
 if which mailq >/dev/null 2>&1; then
   echo '<<<postifx_mailq>>>'
-  mailq | grep -v '^Mail queue is empty$'
+  mailq
 fi
 
 

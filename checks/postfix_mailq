@@ -56,7 +56,7 @@
 postfix_mailq_default_levels = (10, 20)
 
 def inventory_postfix_mailq(checkname, info):
-    if info[0] != '':
+    if len(info) > 0 and info[0] != '':
         return [(None, 'postfix_mailq_default_levels')]
     else:
         return []
@@ -72,7 +72,10 @@ def postfix_mailq_to_bytes(value, uom):
 
 def check_postfix_mailq(item, params, info):
     for line in info:
-        if line[0] == '--':
+        if " ".join(line) == 'Mail queue is empty':
+            return (0, 'OK - The mailqueue is empty ', [ ('length', 0, params[0], params[1]),
+                                                         ('size', '0b') ])
+        elif line[0] == '--':
             size    = postfix_mailq_to_bytes(float(line[1]), line[2])
             len     = int(line[4])
             perfdata = [ ('length', len, params[0], params[1]),

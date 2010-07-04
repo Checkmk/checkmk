@@ -1,0 +1,92 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Author: Lars Michelsen <lm@mathias-kettner.de>
+
+# Example output from agent:
+#
+# <<<postfix_mailq>>>
+# -Queue ID- --Size-- ----Arrival Time---- -Sender/Recipient-------
+# CA29995448EB     4638 Fri Jul  2 14:39:01  nagios
+#                                          donatehosts@mathias-kettner.de
+#
+# E085095448EC      240 Fri Jul  2 14:40:01  root
+#                                          lm@mathias-kettner.de
+#
+# D9EBC95448EE     4804 Fri Jul  2 14:40:03  nagios
+#                                          donatehosts@mathias-kettner.de
+#
+# -- 9 Kbytes in 3 Requests.
+#
+#
+# **************
+#
+# <<<postfix_mailq>>>
+# -Queue ID- --Size-- ----Arrival Time---- -Sender/Recipient-------
+# 748C8C3D4AB     1436 Fri Jul  2 16:39:10  lm@mathias-kettner.de
+#      (connect to mail.larsmichelsen.com[78.46.117.178]:25: Connection refused)
+#                                          lm@larsmichelsen.com
+#
+# -- 1 Kbytes in 1 Request.
+
+# WARN num, CRIT num
+postfix_mailq_default_levels = (10, 20)
+
+def inventory_postfix_mailq(checkname, info):
+    if info[0] != '':
+        return [(None, 'postfix_mailq_default_levels')]
+    else:
+        return []
+
+def postfix_mailq_to_bytes(value, uom):
+    uom = uom.lower()
+    if uom == 'kbytes':
+        return value * 1024
+    elif uom == 'mbytes':
+        return value * 1024 * 1024
+    elif uom == 'gbytes':
+        return value * 1024 * 1024 * 1024
+
+def check_postfix_mailq(item, params, info):
+    for line in info:
+        if line[0] == '--':
+            size    = postfix_mailq_to_bytes(float(line[1]), line[2])
+            len     = int(line[4])
+            perfdata = [ ('length', len, params[0], params[1]),
+                         ('size', '%db' % size) ]
+
+            if len > params[1]:
+                return (2, 'CRITICAL - Mailqueue length is %d '
+                           '(More than threshold: %d)' % (len, params[0]), perfdata)
+            elif len > params[0]:
+                return (1, 'WARNING - Mailqueue length is %d '
+                           '(More than threshold: %d)' % (len, params[0]), perfdata)
+            else:
+                return (0, 'OK - Mailqueue length is %d ' % len, perfdata)
+
+    return (3, 'UNKNOWN - Could not find summarizing line in output')
+
+check_info['postfix_mailq'] = (check_postfix_mailq, "Postfix Queue", 1, inventory_postfix_mailq)

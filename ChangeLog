@@ -2,6 +2,7 @@
     Checks & Agents:
     * New check ad_replication: Checks active directory replications
       of domain controllers by using repadm
+    * New check postifx_mailq: Checks mailqueue lengths of postifx mailserves
 
     Multisite:
     * fix chown problem (when nagios user own files to be written

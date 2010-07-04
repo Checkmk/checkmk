@@ -287,6 +287,13 @@ if which cl_status > /dev/null 2>&1; then
   done
 fi
 
+# Postfix mailqueue monitoring
+if which mailq >/dev/null 2>&1; then
+  echo '<<<postifx_mailq>>>'
+  mailq | grep -v '^Mail queue is empty$'
+fi
+
+
 # Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
 if cd $PLUGINSDIR
 then

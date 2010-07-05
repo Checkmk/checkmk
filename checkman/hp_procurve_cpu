@@ -1,0 +1,28 @@
+title: Checks the CPU load on HP Procurve Switches
+agents: snmp
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the CPU load on HP Procurve Switches which support the
+ STATISTICS-MIB. The check reads the percentage CPU load.
+
+ On each switch which supports this MIB one service is being created.
+
+ The check will result in a WARNING/CRITICAL state when the given thresholds
+ for the CPU load are reached.
+
+perfdata:
+ One variable: the current CPU percentage (0..100)
+
+inventory:
+ On each switch which supports this MIB one service {CPU} is being created.
+
+[parameters]
+warning (int): CPU utilization percentage at which a warning level is triggered.
+critical (int): CPU utilization percentage at which a critical level is triggered.
+
+[configuration]
+hp_procurve_cpu_default_levels (int, int): Default levels used by inventorized checks.
+This variable is preset to {(80, 90)}.
+

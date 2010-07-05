@@ -3,6 +3,10 @@
     * New check ad_replication: Checks active directory replications
       of domain controllers by using repadm
     * New check postifx_mailq: Checks mailqueue lengths of postifx mailserves
+    * New check hp_procurve_cpu: Checks the CPU load on HP Procurve switches
+    * New check hp_procurve_mem: Checks the memory usage on HP Procurve switches
+    * New check hp_procurve_sensors: Checks the health of PSUs, FANs and
+      Temperature on HP Procurve switches
 
     Multisite:
     * fix chown problem (when nagios user own files to be written

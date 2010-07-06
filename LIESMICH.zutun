@@ -339,3 +339,11 @@ Analog zu refersh mache ich Persisitierung und HTML-Variablen-Auswertung
 und komme zu einem Ergebnis. Das speichere ich dann in view_option["pnpsource"].
 Dies kann der Painter einfach abfragen. Einsatz: PNP-Zeitraum, Darstellung
 von Zeitstempeln (Delta/Absolute/Mixed).
+
+Multisite: Wenn man bei einer View einen Filter ausfüllt (user), dann
+soll irgendwo ein Icon anzeigen, dass das Resultat gefiltert ist.
+
+Multisite: Hover: Wenn man über einen Painter geht, könnte man eine
+Hover aufmachen, der einen weiteren Painter anzeigt.
+P
+

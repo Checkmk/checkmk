@@ -47,12 +47,9 @@
 from datetime import datetime, timedelta
 import time
 
-# Nails down the single nodes to their roles/resources
-# This means that a cluster where the roles/reources are
-# switched over to another node will be reported by this check
-# even when the cluster is functional.
-# When disabled at least one of the nodes needs to run the resources
-# but the check does not care about which node holds the roles.
+# Nails down the DC to the node which is the DC during inventory. The check
+# will report CRITICAL when another node becomes the DC during later checks.
+# If set to "False" the check will be passed.
 heartbeat_crm_naildown = True
 
 # Max age of "last updated"
@@ -157,10 +154,10 @@ def heartbeat_crm_parse_resources(info):
                 resource = line[-1]
             elif line[0] == '_':
                 # Resource group member
-                resources[resource].append((line[1], line[2], line[4]))
-            elif line[0].startswith('resource_'):
+                resources[resource].append(line[1:])
+            else:
                 # Single resource
-                resources[line[0]] = [ (line[0], line[1], line[3]) ]
+                resources[line[0]] = [ line ]
 
     return resources
 
@@ -176,7 +173,7 @@ def inventory_heartbeat_crm_resources(checkname, info):
     if len(info) > 0:
         for name, resources in heartbeat_crm_parse_resources(info).iteritems():
             if heartbeat_crm_resources_naildown:
-                inventory.append((name, '("%s",)' % resources[0][2]))
+                inventory.append((name, '("%s",)' % resources[0][3]))
             else:
                 inventory.append((name, None))
     return inventory
@@ -185,10 +182,13 @@ def check_heartbeat_crm_resources(item, params, info):
     output = ''
     status = 0
     for resource in [ resources for name, resources in heartbeat_crm_parse_resources(info).iteritems() if name == item ][0]:
-        output += '%s %s %s ' % resource
-        if heartbeat_crm_resources_naildown and resource[2] != params[0]:
+        output += ' '.join(resource)
+        if len(resource) == 3 or resource[2] != 'Started':
             status = 2
-            output += '(CRITICAL: Expected node: %s) ' % params[0]
+            output += ' (CRITICAL: Resource is in state "%s")' % resource[2]
+        elif heartbeat_crm_resources_naildown and resource[3] != params[0]:
+            status = 2
+            output += ' (CRITICAL: Expected node: %s)' % params[0]
         output += ', '
 
     return (status, '%s - %s' % (nagios_state_names[status], output.rstrip(', ')))

@@ -37,7 +37,7 @@ set -e
 NAGIOS_VERSION=3.2.1
 PLUGINS_VERSION=1.4.14
 RRDTOOL_VERSION=1.4.3
-CHECK_MK_VERSION=1.1.7i1
+CHECK_MK_VERSION=1.1.7i2
 PNP_VERSION=0.6.4
 NAGVIS_VERSION=1.5
 
@@ -81,6 +81,11 @@ then
     DISTRO=UBUNTU
     DISTRONAME="Ubuntu 9.10"
     DISTROVERS=9.10
+elif grep -qi "DISTRIB_DESCRIPTION=\"Ubuntu 10.04 LTS\"" /etc/lsb-release 2>/dev/null
+then
+    DISTRO=UBUNTU
+    DISTRONAME="Ubuntu 10.04 LTS"
+    DISTROVERS=10.04
 else
     debvers=$(cat /etc/debian_version 2>/dev/null)
     debvers=${debvers:0:3}

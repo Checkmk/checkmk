@@ -1,3 +1,13 @@
+1.1.7i2:
+    Checks & Agents:
+    * New check ad_replication: Checks active directory replications
+      of domain controllers by using repadm
+    * New check postifx_mailq: Checks mailqueue lengths of postifx mailserves
+
+    Multisite:
+    * fix chown problem (when nagios user own files to be written
+      by the web server)
+
 1.1.7i1:
     Core, Setup, etc.:
     * New option -u for reordering autochecks in per-host-files
@@ -23,6 +33,7 @@
       NagVis
     * Packager: make sanity check prohibiting creating of package files
       in Check MK's directories
+    * install_nagios.sh: Support Ubuntu 10.04 (Thanks to Ben)
       
     Checks & Agents:
     * New check ntp.time: Similar to 'ntp' but only honors the system peer
@@ -48,12 +59,12 @@
     * New check drbd - Checking health of drbd nodes
     * New SNMP based checks for printers (page counter, supply), contributed
       by Peter Lauk (many thanks!)
-    * New check cups_queues - Checking the state of cups printer queues
-    * kernel.util - added man page
-    * New check heartbeat_nodes - Checking the node state and state of the links
+    * New check cups_queues: Checking the state of cups printer queues
+    * New check heartbeat_nodes: Checking the node state and state of the links
       of heartbeat nodes
-    * New check heartbeat_rscstatus - Checks the local resource status of
+    * New check heartbeat_rscstatus: Checks the local resource status of
       a heartbeat node
+    * New check win_dhcp_pools: Checks the usage of Windows DHCP Server lease pools
 
     Multisite:
     * New view showing all PNP graphs of services with the same description

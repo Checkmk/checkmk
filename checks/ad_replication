@@ -1,0 +1,99 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Author: Lars Michelsen <lm@mathias-kettner.de>
+
+# <<<ad_replication>>>
+# showrepl_COLUMNS,Destination DC Site,Destination DC,Naming Context,Source DC Site,Source DC,Transport Type,Number of Failures,Last Failure Time,Last Success Time,Last Failure Status
+# showrepl_INFO,Standardname-des-ersten-Standorts,WIN2003,"DC=corp,DC=de",Standardname-des-ersten-Standorts,WIN2003-DC2,RPC,0,0,2010-07-02 13:33:27,0
+# showrepl_INFO,Standardname-des-ersten-Standorts,WIN2003,"CN=Configuration,DC=corp,DC=de",Standardname-des-ersten-Standorts,WIN2003-DC2,RPC,0,0,2010-07-02 12:54:08,0
+# showrepl_INFO,Standardname-des-ersten-Standorts,WIN2003,"CN=Schema,CN=Configuration,DC=corp,DC=de",Standardname-des-ersten-Standorts,WIN2003-DC2,RPC,0,0,2010-07-02 12:46:28,0
+
+from datetime import datetime, timedelta
+import time
+
+ad_replication_default_params = (20,)
+
+def parse_ad_replication_dates(s):
+    if s == '0':
+        return None
+    else:
+        return datetime(*time.strptime(s, '%Y-%m-%d %H:%M:%S')[0:5])
+
+def parse_ad_replication_info(info):
+    lines = []
+    for l in [ ' '.join(line).replace(',CN', ';CN').replace(',DC', ';DC') for line in info ]:
+        lines.append(l.split(','))
+    return lines
+
+def inventory_ad_replication(checktype, info):
+    inv = []
+    for line in parse_ad_replication_info(info):
+        item = ('%s/%s' % (line[1], line[2]), 'ad_replication_default_params')
+        if line[0] == 'showrepl_INFO' and item not in inv:
+            inv.append(item)
+    return inv
+
+def check_ad_replication(item, params, info):
+    status    = 0
+    output    = ''
+    now       = datetime.now()
+    foundLine = False
+
+    for l in parse_ad_replication_info(info):
+        (lineType, destSite, destDC, namingContext, sourceSite, sourceDC,
+         transport, numFailures, timeLastFailure, timeLastSuccess,
+         statusLastFailure ) = l
+
+        if lineType == 'showrepl_INFO' and destSite+'/'+destDC == item:
+            foundLine = True
+            timeLastFailure = parse_ad_replication_dates(timeLastFailure)
+            timeLastSuccess = parse_ad_replication_dates(timeLastSuccess)
+
+            if int(numFailures) > params[0]:
+                status = 2
+                output += 'CRITICAL: %s/%s replication of context %s reached ' + \
+                          ' the threshold of maxmimum failures (%s) (Last Success: %s, ' + \
+                          'LastFailure: %s NumFailures: %s Status: %s), ' % \
+                         (destSite, destDC, namingContext, params[0], timeLastFailure,
+                          timeLastSuccess, numFailures, statusLastFailure)
+
+            if timeLastFailure is not None and timeLastSuccess is not None \
+               and timeLastFailure > timeLastSuccess:
+                status = 2
+                output += 'CRITICAL: %s/%s replication of context %s failed '+ \
+                         '(Last Success: %s, LastFailure: %s NumFailures: %s Status: %s), ' % \
+                         (destSite, destDC, namingContext, timeLastFailure,
+                          timeLastSuccess, numFailures, statusLastFailure)
+    if not foundLine:
+        return (3, 'UNKNOWN - Replication information for %s not found' % item)
+
+    if status != 0:
+        return (status, output.rstrip(', '))
+    else:
+        return (status, 'OK - All replications are OK.')
+
+check_info['ad_replication'] = (check_ad_replication, "AD Replication %s",  0, inventory_ad_replication)

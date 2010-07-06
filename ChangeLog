@@ -7,6 +7,10 @@
     * New check hp_procurve_mem: Checks the memory usage on HP Procurve switches
     * New check hp_procurve_sensors: Checks the health of PSUs, FANs and
       Temperature on HP Procurve switches
+    * New check heartbeat_crm: Monitors the general state of heartbeat clusters
+      using the CRM
+    * New check heartbeat_crm_resources: Monitors the state of resources and nodes
+      in heartbeat clusters using the CRM
 
     Multisite:
     * fix chown problem (when nagios user own files to be written

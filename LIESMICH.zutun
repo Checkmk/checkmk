@@ -9,6 +9,15 @@ die Perf-O-Meter und die PNP-Suche in Multisite nicht geht.
 --------------------------------------------------------------------------------
 BUGS
 --------------------------------------------------------------------------------
+In Opera (Version 10.6) geht in der Sidebar das Scrollen per Mausrad nicht.
+
+Sidebar Drag&Drop Problem: Die Sidebar ist noch oben hochgesrollt (also
+nicht bei Offset 0. Jetzt packt man ein Snapin zum Draggen => Der Mauszeiger
+ist von er Titelleiste ein Stück entfernt. Weiteres Problem: Wenn man jetzt
+mit der Maus aus dem Fenster raus und wieder reinfährt (ohne loszulassen),
+bleibt das Snapin für immer an der Maus kleben. Hier hilft nur Reload
+der Seite.
+
 Beschreibung zu -II fehlt in Doku.
 
 Zwei Fragen beim -II mit folgendem Befehl:
@@ -339,3 +348,14 @@ Analog zu refersh mache ich Persisitierung und HTML-Variablen-Auswertung
 und komme zu einem Ergebnis. Das speichere ich dann in view_option["pnpsource"].
 Dies kann der Painter einfach abfragen. Einsatz: PNP-Zeitraum, Darstellung
 von Zeitstempeln (Delta/Absolute/Mixed).
+
+Multisite: Wenn man bei einer View einen Filter ausfüllt (user), dann
+soll irgendwo ein Icon anzeigen, dass das Resultat gefiltert ist.
+
+Multisite: Hover: Wenn man über einen Painter geht, könnte man eine
+Hover aufmachen, der einen weiteren Painter anzeigt.
+
+Vorschlag von Bastian: Bei den Views könnte man den Datenbereich (Tabelle)
+per Ajax refreshen und müsste nicht die ganze Seite neu aufbauen. Damit
+wird ein Bildschirmflimmern vermieden.
+

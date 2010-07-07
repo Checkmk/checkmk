@@ -1,4 +1,8 @@
 1.1.7i2:
+    Core, Setup, etc.:
+    * New config option usewalk_hosts, triggers --usewalk during
+      normal checking for selected hosts.
+
     Checks & Agents:
     * New check ad_replication: Checks active directory replications
       of domain controllers by using repadm

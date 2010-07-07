@@ -237,6 +237,7 @@ all_hosts                            = []
 snmp_hosts                           = [ (['snmp'],   ALL_HOSTS) ]
 bulkwalk_hosts                       = None
 non_bulkwalk_hosts                   = None
+usewalk_hosts                        = []
 ignored_checktypes                   = [] # exclude from inventory
 ignored_services                     = [] # exclude from inventory
 host_groups                          = []
@@ -686,6 +687,9 @@ def is_bulkwalk_host(hostname):
         return not in_binary_hostlist(hostname, non_bulkwalk_hosts)
     else:
         return False
+
+def is_usewalk_host(hostname):
+    return in_binary_hostlist(hostname, usewalk_hosts)
 
 def get_single_oid(hostname, ipaddress, oid):
     global g_single_oid_hostname
@@ -2040,6 +2044,7 @@ filesystem_default_levels = None
     output.write("def is_snmp_host(hostname):\n   return %r\n\n" % is_snmp_host(hostname))
     output.write("def snmp_get_command(hostname):\n   return %r\n\n" % snmp_get_command(hostname))
     output.write("def snmp_walk_command(hostname):\n   return %r\n\n" % snmp_walk_command(hostname))
+    output.write("def is_usewalk_host(hostname):\n   return %r\n\n" % is_usewalk_host(hostname))
 
     # IP addresses
     needed_ipaddresses = {}

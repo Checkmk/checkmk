@@ -9,6 +9,8 @@ die Perf-O-Meter und die PNP-Suche in Multisite nicht geht.
 --------------------------------------------------------------------------------
 BUGS
 --------------------------------------------------------------------------------
+manpage von df: Defaultlevels fehlen
+
 check_mk --help:
   Option -II wird nicht beschrieben.
 

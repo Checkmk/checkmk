@@ -15,6 +15,7 @@
       using the CRM
     * New check heartbeat_crm_resources: Monitors the state of resources and nodes
       in heartbeat clusters using the CRM
+    * *nix agents: output AgentOS: in header
 
     Multisite:
     * fix chown problem (when nagios user own files to be written

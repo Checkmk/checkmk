@@ -2912,8 +2912,8 @@ Copyright (C) 2009 Mathias Kettner
 def usage():
     print """WAYS TO CALL:
  check_mk [-n] [-v] [-p] HOST [IPADDRESS]  check all services on HOST
- check_mk [-c] -I {tcp|snmp} [HOST1 ...]   inventory - find new services
- check_mk -c, --cleanup-autochecks         reorder autochecks files
+ check_mk [-u] -I {tcp|snmp} [HOST1 ...]   inventory - find new services
+ check_mk -u, --cleanup-autochecks         reorder autochecks files
  check_mk -S|-H|--timeperiods              output Nagios configuration files
  check_mk -C, --compile                    precompile host checks
  check_mk -U, --update                     precompile + create Nagios config

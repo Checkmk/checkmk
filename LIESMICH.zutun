@@ -9,6 +9,9 @@ die Perf-O-Meter und die PNP-Suche in Multisite nicht geht.
 --------------------------------------------------------------------------------
 BUGS
 --------------------------------------------------------------------------------
+check_mk --help:
+  Option -II wird nicht beschrieben.
+
 In Opera (Version 10.6) geht in der Sidebar das Scrollen per Mausrad nicht.
 
 Sidebar Drag&Drop Problem: Die Sidebar ist noch oben hochgesrollt (also

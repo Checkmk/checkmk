@@ -1973,6 +1973,7 @@ filesystem_default_levels = None
                  'perfdata_format', 'aggregation_output_format',
                  'aggr_summary_hostname', 'nagios_command_pipe_path',
                  'var_dir', 'counters_directory', 'tcp_cache_dir',
+                 'snmpwalks_dir',
                  'check_mk_basedir', 'df_magicnumber_normsize', 
 		 'df_lowest_warning_level', 'df_lowest_critical_level', 'nagios_user',
                  'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',

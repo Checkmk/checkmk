@@ -702,7 +702,7 @@ def get_single_oid(hostname, ipaddress, oid):
     if oid in g_single_oid_cache:
         return g_single_oid_cache[oid]
 
-    if opt_use_snmp_walk:
+    if opt_use_snmp_walk or is_usewalk_host(hostname):
         walk = get_stored_snmpwalk(hostname, oid)
         if len(walk) == 1:
             return walk[0][1]

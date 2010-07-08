@@ -16,6 +16,8 @@
     * New check heartbeat_crm_resources: Monitors the state of resources and nodes
       in heartbeat clusters using the CRM
     * *nix agents: output AgentOS: in header
+    * New agent for FreeBSD: It is based on the linux agent. Most of the sections
+      could not be ported easily. At the moment ps and postfix_queue checks work.
 
     Multisite:
     * fix chown problem (when nagios user own files to be written

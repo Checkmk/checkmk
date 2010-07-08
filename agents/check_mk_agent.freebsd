@@ -132,9 +132,9 @@ ps ax -o user,vsz,rss,pcpu,command | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([
 echo '<<<cpu>>>'
 echo `sysctl -n vm.loadavg | tr -d '{}'` `top -b -n 1 | grep -E '^[0-9]+ processes' | awk '{print $3"/"$1}'` `sysctl -n kern.lastpid` `sysctl -n hw.ncpu`
 
-# Uptime
-#echo '<<<uptime>>>'
-#cat /proc/uptime
+# Calculate the uptime in seconds since epoch compatible to /proc/uptime in linux
+echo '<<<uptime>>>'
+echo `date +%s` - `sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' | tr -d ' '` | bc
 
 # Network interfaces (Link, Autoneg, Speed)
 # This requires ethtool
@@ -247,11 +247,11 @@ echo `sysctl -n vm.loadavg | tr -d '{}'` `top -b -n 1 | grep -E '^[0-9]+ process
 #   vcbVmName -s any
 #fi
 
-#if which ntpq > /dev/null 2>&1 ; then
-#   echo '<<<ntp>>>'
-#   # remote heading, make first column space separated
-#   ntpq -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
-#fi
+if which ntpq > /dev/null 2>&1 ; then
+   echo '<<<ntp>>>'
+   # remote heading, make first column space separated
+   ntpq -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+fi
 
 #if which nvidia-settings >/dev/null && [ -S /tmp/.X11-unix/X0 ]
 #then

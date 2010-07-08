@@ -17,7 +17,8 @@
       in heartbeat clusters using the CRM
     * *nix agents: output AgentOS: in header
     * New agent for FreeBSD: It is based on the linux agent. Most of the sections
-      could not be ported easily. At the moment ps and postfix_queue checks work.
+      could not be ported easily so the FreeBSD agent provides information for less
+      checks than the linux agent.
 
     Multisite:
     * fix chown problem (when nagios user own files to be written

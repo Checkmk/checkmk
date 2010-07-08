@@ -402,3 +402,20 @@ Vorschlag(2) von Bastian:
     
 Livestatus soll im Logfile eine Warnung ausgeben, wenn die
 environment_macros aktiviert sind.
+
+FreeBSD Agent:
+Auf der Homepage sollte ein Hinweis platziert werden, dass es einen neuen
+Agent gibt. Dieser basiert zwar auf dem Linux Agenten, gibt momentan aber
+wesentlich weniger Daten aus, da die Sektionen noch nicht portiert sind.
+
+Dazu wird eine Beschreibung benötigt, wie dieser zu installieren ist.
+1. inetd installieren
+2. /etc/services hinzufügen:
+check_mk_agent  6556/tcp   # Check_MK's agent
+3. /etc/inetd.conf hinzufügen:
+check_mk_agent  stream  tcp     nowait  root    /usr/bin/check_mk_agent check_mk_agent
+4. inetd neu starten
+-> Eventuell noch ein anderer Pfad für den Agent (?). Gibt es da andere Vorgaben
+   auf FreeBSD Systemen?
+
+Die Sektionen/Checks ps und postfix_mailq sind jetzt schon kompatibel.

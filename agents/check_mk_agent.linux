@@ -289,8 +289,13 @@ if which cl_status > /dev/null 2>&1; then
 fi
 
 # Postfix mailqueue monitoring
-if which mailq >/dev/null 2>&1; then
-  echo '<<<postifx_mailq>>>'
+#
+# Only handle mailq when postfix user is present. The mailq command is also
+# available when postfix is not installed. But it produces different outputs
+# which are not handled by the check at the moment. So try to filter out the
+# systems not using postfix by searching for the postfix user.
+if which mailq >/dev/null 2>&1 && getent passwd postfix >/dev/null 2>&1; then
+  echo '<<<postfix_mailq>>>'
   mailq
 fi
 

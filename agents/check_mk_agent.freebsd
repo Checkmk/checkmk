@@ -1,0 +1,346 @@
+#!/bin/sh
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+# 
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+# 
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Author: Lars Michelsen <lm@mathias-kettner.de>
+
+# NOTE: This agent has beed adapted from the Check_MK linux agent.
+#       The most sections are commented out at the moment because
+#       they have not been ported yet. We will try to adapt most
+#       sections to print out the same output as the linux agent so
+#       that the current checks can be used.
+
+# Remove locale settings to eliminate localized outputs where possible
+export LC_ALL=C
+unset LANG
+
+export MK_LIBDIR="/usr/lib/check_mk_agent"
+export MK_CONFDIR="/etc/check_mk"
+
+# Make sure, locally installed binaries are found
+PATH=$PATH:/usr/local/bin
+
+# All executables in PLUGINSDIR will simply be executed and their
+# ouput appended to the output of the agent. Plugins define their own
+# sections and must output headers with '<<<' and '>>>'
+PLUGINSDIR=$MK_LIBDIR/plugins
+
+# All executables in LOCALDIR will by executabled and their
+# output inserted into the section <<<local>>>. They must
+# *not* output a section header. A local extension may output
+# zero, one or several lines. Each line must be in the form
+# EXITCODE CHECK_NAME PERFDATA CHECK_OUTPUT
+# EXITCODE is 0, 1, 2 or 3
+# CHECK_NAME will be used as Nagios's service_descriptions and
+# must be unique for this host
+# PERFDATA is optional performance data in the standard Nagios
+# format for variable=value;warn;crit;min;max. You can send
+# only one variable currently. If you do not want to send 
+# performance data output a single dash instead
+# CHECK_OUTPUT will be used by Nagios as the check's output
+# EXITCODE, CHECK_NAME and PERFDATA must not contain spaces
+# or tabs. CHECK_OUTPUT may contain spaces and tabs
+LOCALDIR=$MK_LIBDIR/local
+
+
+# close standard input (for security reasons) and stderr
+if [ "$1" = -d ]
+then
+    set -xv
+else
+    exec <&- 2>/dev/null
+fi
+
+echo '<<<check_mk>>>'
+echo Version: 1.1.7i2
+echo AgentOS: freebsd
+
+# Partitionen (-P verhindert Zeilenumbruch bei langen Mountpunkten)
+# Achtung: NFS-Mounts werden grundsaetzlich ausgeblendet, um
+# Haenger zu vermeiden. Diese sollten ohnehin besser auf dem
+# Server, als auf dem Client ueberwacht werden.
+#echo '<<<df>>>'
+#df -PTlk -x smbfs -x tmpfs -x cifs -x iso9660 -x udf -x nfsv4 | sed 1d
+# VMWare shows its own filesystems with 'vdf'. Just one
+# problem: it outputs not 7 but only 6 columns
+#if which vdf > /dev/null
+#then
+#   vdf -P | grep ^/vmfs/volumes | sed 's/ / vmfs /'
+#fi
+
+# Check NFS mounts by accessing them with stat -f (System
+# call statfs()). If this lasts more then 2 seconds we
+# consider it as hanging. We need waitmax.
+#if type waitmax >/dev/null
+#then
+#    STAT_VERSION=$(stat --version | head -1 | cut -d" " -f4)
+#    STAT_BROKE="5.3.0"
+#
+#    echo '<<<nfsmounts>>>'
+#    sed -n '/ nfs /s/[^ ]* \([^ ]*\) .*/\1/p' < /proc/mounts |
+#        while read MP
+#  do
+#   if [ $STAT_VERSION != $STAT_BROKE ]; then
+#      waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" || \
+#    echo "$MP hanging 0 0 0 0"
+#   else
+#      waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" && \
+#      printf '\n'|| echo "$MP hanging 0 0 0 0"
+#   fi
+#  done
+#fi
+
+# Check mount options. Filesystems may switch to 'ro' in case
+# of a read error.
+#echo '<<<mounts>>>'
+#grep ^/dev < /proc/mounts
+
+# processes including username, without kernel processes
+echo '<<<ps>>>'
+COLUMNS=10000
+ps ax -o user,vsz,rss,pcpu,command | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
+
+# Speicherauslastung
+#echo '<<<mem>>>'
+#egrep -v '^Swap:|^Mem:|total:' < /proc/meminfo
+
+# Load und Anzahl Prozesse
+#echo '<<<cpu>>>'
+#echo "$(cat /proc/loadavg) $(grep ^processor < /proc/cpuinfo | wc -l)"
+
+# Uptime
+#echo '<<<uptime>>>'
+#cat /proc/uptime
+
+# Network interfaces (Link, Autoneg, Speed)
+# This requires ethtool
+#if which ethtool > /dev/null
+#then
+#  echo '<<<netif>>>'
+#  for eth in $(cat /proc/net/dev | sed -rn -e 's/[[:space:]]*//g' -e  '/ *([^:]):.*/s//\1/p' | egrep -vx '(lo|sit.*)')
+#  do
+#    echo $eth $(ethtool $eth | egrep '(Speed|Duplex|Link detected|Auto-negotiation):' | cut -d: -f2 | sed 's/ *//g')
+#  done
+#fi
+
+# Platten- und RAID-Status von LSI-Controlleren, falls vorhanden
+#if which cfggen > /dev/null ; then
+#   echo '<<<lsi>>>'
+#   cfggen 0 DISPLAY | egrep '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' | sed -e 's/ *//g' -e 's/:/ /'
+#fi
+
+# Multipathgeraete
+#if which multipath >/dev/null ; then
+#    echo '<<<multipath>>>'
+#    multipath -l
+#fi
+
+# Soft-RAID
+#echo '<<<md>>>'
+#cat /proc/mdstat
+
+# Performancecounter Platten
+#echo '<<<diskstat>>>'
+#date +%s
+#egrep ' ([sh]d[a-z]*|cciss/c[0-9]+d[0-9]+) ' < /proc/diskstats
+
+# Performancecounter Kernel
+#echo '<<<kernel>>>'
+#date +%s
+#cat /proc/vmstat /proc/stat
+
+# Statistik der Netzwerkgeraete (Pakete, Kollisionen, etc)
+#echo '<<<netctr>>>'
+# Genauen Zeitstempel einfuegen, da Counter von Zeit abhaengen
+#date +%s
+#sed -e 1,2d -e 's/:/ /g' < /proc/net/dev
+
+# IPMI-Daten (Luefter, CPU, Temperatur, etc)
+#if which ipmitool >/dev/null ; then
+#    echo '<<<ipmi>>>'
+#    # Transform output from |-separated into ' '-separated,
+#    # drop lines with no data (e.g. from non-present CPUs)
+#    # Columns: name value status unrec_low crit_low noncrit_low noncrit_high crit_high unrec_high
+#    # Status: ok, nc (NonCritical=Warning), ??
+#    ipmitool sensor list \
+#        | grep -v 'command failed' \
+#        | sed -e 's/ *| */|/g' -e "s/ /_/g" -e 's/_*$//' -e 's/|/ /g' \
+#        | egrep -v '^[^ ]+ na ' \
+#        | grep -v ' discrete '
+#fi
+
+# IPMI data via ipmi-sensors (of freeipmi). Please make sure, that if you
+# have installed freeipmi that IPMI is really support by your hardware.
+# The agent tries to avoid hanging forever by setting a limit of 300 seconds
+# for the first run (where the cache is created). If ipmi-sensors runs into
+# that timeout, it leaves and empty cache file. We skip this check forever
+# if we find that empty cache file.
+#sdrcache=/var/cache/.freeipmi/sdr-cache/sdr-cache-$(hostname).127.0.0.1
+#if which ipmi-sensors >/dev/null && [ ! -e "$sdrcache" -o -s "$sdrcache" ]
+#then
+#    echo '<<<ipmi_sensors>>>'
+#    # No cache file existing? => Impose a high time limit. We do not suffice
+#    # in creating the cache we most probably run on a hardware where this tool
+#    # is hanging forever. We make sure that we never try again in that case!
+#    if [ ! -e "$sdrcache" ]
+#    then
+#        WAITMAX="waitmax 300"
+#    elif tail --bytes 2 < "$sdrcache" | od -t x2 | grep -q 0a0a
+#    then
+#        WAITMAX="waitmax 3"
+#    else
+#        # Cache file corrupt. Must end with two linefeeds.
+#        rm -f $sdrcache
+#  WAITMAX=
+#    fi
+#    # Newer ipmi-sensors version have new output format; Legacy format can be used
+#    if ipmi-sensors --help | grep -q legacy-output; then
+#        IPMI_FORMAT="--legacy-output"
+#    else
+#        IPMI_FORMAT=""
+#    fi
+#    for class in Temperature 'Power Unit' Fan
+#    do
+#        $WAITMAX ipmi-sensors $IPMI_FORMAT --sdr-cache-directory /var/cache -g "$class" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
+#        # In case of a timeout immediately leave loop. 
+#  if [ $? = 255 ] ; then break ; fi
+#        WAITMAX="waitmax 3"
+#    done
+#fi
+
+# State of LSI MegaRAID controller via MegaCli. You can download that tool from:
+# http://www.lsi.com/DistributionSystem/AssetDocument/support/downloads/megaraid/miscellaneous/linux/2.00.15_Linux_MegaCLI.zip
+#if which MegaCli >/dev/null ; then
+#    echo '<<<megaraid_pdisks>>>'
+#    MegaCli -PDList -aALL -NoLog < /dev/null | egrep 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry'
+#    echo '<<<megaraid_ldisks>>>'
+#    MegaCli -LDInfo -Lall -aALL -NoLog < /dev/null | egrep 'Size|State|Number|Adapter|Virtual'
+#fi
+
+
+#if which vcbVmName > /dev/null 2>&1 ; then
+#   echo '<<<vmware_state>>>'
+#   vcbVmName -s any
+#fi
+
+#if which ntpq > /dev/null 2>&1 ; then
+#   echo '<<<ntp>>>'
+#   # remote heading, make first column space separated
+#   ntpq -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+#fi
+
+#if which nvidia-settings >/dev/null && [ -S /tmp/.X11-unix/X0 ]
+#then
+#    echo '<<<nvidia>>>'
+#    DISPLAY=:0 waitmax 10 nvidia-settings -t -q all
+#fi
+
+#if [ -e /proc/drbd ]; then
+#  echo '<<<drbd>>>'
+#  cat /proc/drbd
+#fi
+
+# Checks for cups monitoring
+#if which lpstat > /dev/null 2>&1; then
+#  echo '<<<cups_queues>>>'
+#  lpstat -p
+#  echo '---'
+#  for i in $(lpstat -p | grep -E "^(printer|Drucker)" | awk '{print $2}' | grep -v "@"); do
+#    lpstat -o "$i"
+#  done
+#fi
+
+# Heartbeat monitoring
+#if which cl_status > /dev/null 2>&1; then
+#  # Different handling for heartbeat clusters with and without CRM
+#  # for the resource state
+#  if [ -S /var/run/heartbeat/crm/cib_ro ]; then
+#    echo '<<<heartbeat_crm>>>'
+#    crm_mon -1 -r | grep -v ^$ | sed 's/^\s/_/g'
+#  else
+#    echo '<<<heartbeat_rscstatus>>>'
+#    cl_status rscstatus
+#  fi
+#
+#  echo '<<<heartbeat_nodes>>>'
+#  for NODE in $(cl_status listnodes); do
+#    if [ $NODE != $HOSTNAME ]; then
+#      STATUS=$(cl_status nodestatus $NODE)
+#      echo -n "$NODE $STATUS" 
+#      for LINK in $(cl_status listhblinks $NODE 2>/dev/null); do
+#        echo -n " $LINK $(cl_status hblinkstatus $NODE $LINK)"
+#      done
+#      echo
+#    fi
+#  done
+#fi
+
+# Postfix mailqueue monitoring
+#
+# Only handle mailq when postfix user is present. The mailq command is also
+# available when postfix is not installed. But it produces different outputs
+# which are not handled by the check at the moment. So try to filter out the
+# systems not using postfix by searching for the postfix user.
+if which mailq >/dev/null 2>&1 && getent passwd postfix >/dev/null 2>&1; then
+  echo '<<<postfix_mailq>>>'
+  mailq
+fi
+
+
+# Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
+if cd $PLUGINSDIR
+then
+  for skript in $(ls)
+  do
+    if [ -x "$skript" ] ; then
+        ./$skript
+    fi
+  done
+fi
+
+# Lokale Einzelchecks
+echo '<<<local>>>'
+if cd $LOCALDIR
+then
+  for skript in $(ls)
+  do
+    if [ -x "$skript" ] ; then
+        ./$skript
+    fi
+  done
+fi
+
+# MK's Remote Plugin Executor
+if [ -e "$MK_CONFDIR/mrpe.cfg" ]
+then
+    echo '<<<mrpe>>>'
+    grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
+    while read descr cmdline
+    do
+        PLUGIN=${cmdline%% *}
+        OUTPUT=$(eval "$cmdline")
+        echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
+        echo
+    done
+fi

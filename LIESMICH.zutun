@@ -398,3 +398,5 @@ Vorschlag(2) von Bastian:
     freshness der kritische Wert zieht, werden die
     Resultate verworfen und die Checks nicht ausgeführt
     
+Livestatus soll im Logfile eine Warnung ausgeben, wenn die
+environment_macros aktiviert sind.

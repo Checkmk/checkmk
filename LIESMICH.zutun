@@ -9,6 +9,8 @@ die Perf-O-Meter und die PNP-Suche in Multisite nicht geht.
 --------------------------------------------------------------------------------
 BUGS
 --------------------------------------------------------------------------------
+install_nagios.sh: rrdcached wird nicht gestartet
+
 Doku Livestatus: group_authorization nicht gesetzt, hat aber Wirkung von
 loose. Stimmt hier der Default? Sieht eher aus, als funktioniert das nicht...
 

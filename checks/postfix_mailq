@@ -72,7 +72,7 @@ def postfix_mailq_to_bytes(value, uom):
 
 def check_postfix_mailq(item, params, info):
     for line in info:
-        if " ".join(line) == 'Mail queue is empty':
+        if " ".join(line[-2:]) == 'is empty':
             return (0, 'OK - The mailqueue is empty ', [ ('length', 0, params[0], params[1]),
                                                          ('size', '0b') ])
         elif line[0] == '--':

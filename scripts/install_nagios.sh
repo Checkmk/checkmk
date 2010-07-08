@@ -276,10 +276,6 @@ then
     make -j 16
     make install
     ldconfig
-    if ! id rrdcached >/dev/null 2>&1 ; then
-       echo 'Creating user rrdcached'
-       useradd rrdcached 
-    fi
 
     # Create start script
     cat <<EOF > /etc/init.d/rrdcached
@@ -303,8 +299,8 @@ CACHE_DIR="/var/lib/rrdcached"
 JOURNAL_DIR="\$CACHE_DIR/journal"
 SOCKET="\$CACHE_DIR/rrdcached.sock"
 PIDFILE="\$CACHE_DIR/rrdcached.pid"
-USER="rrdcached"
-OPTS="\$TIMING -l unix:\$SOCKET -p \$PIDFILE -j \$JOURNAL_DIR -b \$RRD_DIR -B"
+USER="nagios"
+OPTS="\$TIMING -m 0660 -l unix:\$SOCKET -p \$PIDFILE -j \$JOURNAL_DIR -b \$RRD_DIR -B"
 DAEMON="/usr/local/bin/rrdcached"
 
 case "\$1" in
@@ -323,7 +319,7 @@ case "\$1" in
         # make sure, directories are there (ramdisk!)
         mkdir -p \$CACHE_DIR \$RRD_DIR && 
         chown -R \$USER \$CACHE_DIR \$RRD_DIR &&
-        su \$USER -c "\$DAEMON \$OPTS" &&
+        su -s /bin/bash \$USER -c "\$DAEMON \$OPTS" &&
         echo OK || echo Error
     ;;
     stop)
@@ -711,7 +707,7 @@ LOG_FILE = /var/log/nagios/perfdata.log
 LOG_LEVEL = 0
 XML_ENC = UTF-8
 XML_UPDATE_DELAY = 3600
-RRD_DAEMON_OPTS = 
+RRD_DAEMON_OPTS = unix:/var/lib/rrdcached/rrdcached.sock
 EOF
 
 rm -f config.php*
@@ -757,7 +753,7 @@ cat <<EOF > config.php
 \$views[3]["start"] = ( 60*60*24*30 );
 \$views[4]["title"] = "One Year";
 \$views[4]["start"] = ( 60*60*24*365 );
-\$conf['RRD_DAEMON_OPTS'] = '';
+\$conf['RRD_DAEMON_OPTS'] = 'unix:/var/lib/rrdcached/rrdcached.sock';
 \$conf['template_dir'] = '/usr/local/share/pnp4nagios';
 ?>
 EOF

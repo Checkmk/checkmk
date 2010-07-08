@@ -275,6 +275,7 @@ then
     ./configure --prefix=/usr/local --localstatedir=/var --enable-perl-site-install
     make -j 16
     make install
+    ldconfig
     if ! id rrdcached >/dev/null 2>&1 ; then
        echo 'Creating user rrdcached'
        useradd rrdcached 
@@ -326,8 +327,15 @@ case "\$1" in
         echo OK || echo Error
     ;;
     stop)
-        echo -n 'Stopping rrdcached...'
-        killall rrdcached && echo OK || echo "not running"
+	echo -n 'Stopping rrdcached...'
+        PID=\$(cat \$PIDFILE 2>/dev/null)
+        if [ -z "\$PID" ] ; then
+	    echo "not running."
+        elif kill "\$PID" ; then
+	    echo "OK"
+        else
+	    echo "Failed"
+        fi
     ;;
     restart)
         \$0 stop

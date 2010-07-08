@@ -31,6 +31,9 @@
 #       sections to print out the same output as the linux agent so
 #       that the current checks can be used.
 
+# This might be a good source as description of sysctl output:
+# http://people.freebsd.org/~hmp/utilities/satbl/_sysctl.html
+
 # Remove locale settings to eliminate localized outputs where possible
 export LC_ALL=C
 unset LANG
@@ -125,9 +128,9 @@ ps ax -o user,vsz,rss,pcpu,command | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([
 #echo '<<<mem>>>'
 #egrep -v '^Swap:|^Mem:|total:' < /proc/meminfo
 
-# Load und Anzahl Prozesse
-#echo '<<<cpu>>>'
-#echo "$(cat /proc/loadavg) $(grep ^processor < /proc/cpuinfo | wc -l)"
+# Produce compatible load/cpu output to linux agent. Not so easy here.
+echo '<<<cpu>>>'
+echo `sysctl -n vm.loadavg | tr -d '{}'` `top -b -n 1 | grep -E '^[0-9]+ processes' | awk '{print $3"/"$1}'` `sysctl -n kern.lastpid` `sysctl -n hw.ncpu`
 
 # Uptime
 #echo '<<<uptime>>>'

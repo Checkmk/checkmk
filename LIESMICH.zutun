@@ -138,9 +138,6 @@ Quicksearch: Hier sollte man auch nach servicenamen suchen können.
 Einfach wenn man keinen passenden Host findet, in die Services-View
 springen mit Filter auf Servicenamen.
 
---usewalk irgendwie auch als binary_hostlist einbauen, damit man
-das Nagios damit starten kann.
-
 Neue Spalten: * long_service_output, host_notes
 
 Multisite: Kann man - wenn man Aggregation verwendet - beim normalen

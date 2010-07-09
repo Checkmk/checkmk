@@ -1,8 +1,24 @@
 1.1.7i2:
+    Core, Setup, etc.:
+    * New config option usewalk_hosts, triggers --usewalk during
+      normal checking for selected hosts.
+
     Checks & Agents:
     * New check ad_replication: Checks active directory replications
       of domain controllers by using repadm
     * New check postifx_mailq: Checks mailqueue lengths of postifx mailserves
+    * New check hp_procurve_cpu: Checks the CPU load on HP Procurve switches
+    * New check hp_procurve_mem: Checks the memory usage on HP Procurve switches
+    * New check hp_procurve_sensors: Checks the health of PSUs, FANs and
+      Temperature on HP Procurve switches
+    * New check heartbeat_crm: Monitors the general state of heartbeat clusters
+      using the CRM
+    * New check heartbeat_crm_resources: Monitors the state of resources and nodes
+      in heartbeat clusters using the CRM
+    * *nix agents: output AgentOS: in header
+    * New agent for FreeBSD: It is based on the linux agent. Most of the sections
+      could not be ported easily so the FreeBSD agent provides information for less
+      checks than the linux agent.
 
     Multisite:
     * fix chown problem (when nagios user own files to be written

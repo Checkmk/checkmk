@@ -602,7 +602,8 @@ do
 	   done &&
 	   mkdir -p $DESTDIR$vardir/{autochecks,counters,precompiled,cache,logwatch,web} &&
 	   if [ -z "$DESTDIR" ] && id "$nagiosuser" > /dev/null 2>&1 && [ $UID = 0 ] ; then
-	     chown -R $nagiosuser $DESTDIR$vardir/{counters,cache,logwatch,web}
+	     chown -R $nagiosuser $DESTDIR$vardir/{counters,cache,logwatch}
+	     chown $nagiosuser $DESTDIR$vardir/web
            fi &&
 	   if [ -z "$DESTDIR" ] ; then
 	     chgrp -R $wwwgroup $DESTDIR$vardir/web &&

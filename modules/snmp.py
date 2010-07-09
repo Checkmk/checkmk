@@ -189,7 +189,7 @@ def get_snmp_table(hostname, ip, oid_info):
             if suboid:
                fetchoid += "." + str(suboid)
             
-            if opt_use_snmp_walk:
+            if opt_use_snmp_walk or is_usewalk_host(hostname):
                 rowinfo = get_stored_snmpwalk(hostname, fetchoid + "." + str(column))
             else:
                 rowinfo = snmpwalk_on_suboid(hostname, ip, fetchoid + "." + str(column))

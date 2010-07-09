@@ -1,0 +1,39 @@
+title: Check general status of the CRM for heartbeat nodes using crm=yes
+agents: linux
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check uses the output of the {crm_mon} command as sent by the Check_MK
+ linux agent. The check uses general information from that output like: 
+ The last update time of the output, the DC, the number of nodes and the number
+ of resources in the cluster.
+
+ The check reports CRITICAL in the following situations: When the "last update"
+ time is larger than the threshold (normally {60} seconds), when the number
+ of nodes or resources change.
+
+ The check can be run in "naildown" mode by setting the option
+ {heartbeat_crm_naildown} to {True}. In this mode the check reports a critical
+ state when the DC changes to another node. Otherwise the check will ignore
+ changing DCs.
+
+inventory:
+ One service will be created on each node of the cluster.
+
+[parameters]
+max_age (int): Maximum age of the reported "last status" in seconds.
+dc (string): The expected DC of the cluster. The check is disabled when the
+ value is set to an empty string.
+num_nodes (int): Expected number of nodes in the cluster. The check is disabled
+ when the value is set to -1.
+num_resources (int): Expected number of resources in the cluster. The check is
+ disabled when the value is set to -1.
+
+[configuration]
+heartbeat_crm_naildown (bool): Nails down the DC to the node which is the DC
+ during inventory. The check will report CRITICAL when another node becomes the
+ DC during later checks. If set to "False" the check will be passed.
+
+heartbeat_crm_default_levels (int, string, int, int): Max age of "last updated"
+ in seconds, Name of the DC, Number of nodes, Number of resources

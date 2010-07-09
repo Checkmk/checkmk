@@ -509,7 +509,7 @@ def parse_info(lines):
 def lookup_ipaddress(hostname):
     if fake_dns:
         return fake_dns
-    elif simulation_mode or opt_use_snmp_walk:
+    elif simulation_mode or opt_use_snmp_walk or is_usewalk_host(hostname):
         return "127.0.0.1"
     else:
         ipa = ipaddresses.get(hostname)

@@ -237,6 +237,7 @@ all_hosts                            = []
 snmp_hosts                           = [ (['snmp'],   ALL_HOSTS) ]
 bulkwalk_hosts                       = None
 non_bulkwalk_hosts                   = None
+usewalk_hosts                        = []
 ignored_checktypes                   = [] # exclude from inventory
 ignored_services                     = [] # exclude from inventory
 host_groups                          = []
@@ -687,6 +688,9 @@ def is_bulkwalk_host(hostname):
     else:
         return False
 
+def is_usewalk_host(hostname):
+    return in_binary_hostlist(hostname, usewalk_hosts)
+
 def get_single_oid(hostname, ipaddress, oid):
     global g_single_oid_hostname
     global g_single_oid_cache
@@ -698,7 +702,7 @@ def get_single_oid(hostname, ipaddress, oid):
     if oid in g_single_oid_cache:
         return g_single_oid_cache[oid]
 
-    if opt_use_snmp_walk:
+    if opt_use_snmp_walk or is_usewalk_host(hostname):
         walk = get_stored_snmpwalk(hostname, oid)
         if len(walk) == 1:
             return walk[0][1]
@@ -1969,6 +1973,7 @@ filesystem_default_levels = None
                  'perfdata_format', 'aggregation_output_format',
                  'aggr_summary_hostname', 'nagios_command_pipe_path',
                  'var_dir', 'counters_directory', 'tcp_cache_dir',
+                 'snmpwalks_dir',
                  'check_mk_basedir', 'df_magicnumber_normsize', 
 		 'df_lowest_warning_level', 'df_lowest_critical_level', 'nagios_user',
                  'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
@@ -2040,6 +2045,7 @@ filesystem_default_levels = None
     output.write("def is_snmp_host(hostname):\n   return %r\n\n" % is_snmp_host(hostname))
     output.write("def snmp_get_command(hostname):\n   return %r\n\n" % snmp_get_command(hostname))
     output.write("def snmp_walk_command(hostname):\n   return %r\n\n" % snmp_walk_command(hostname))
+    output.write("def is_usewalk_host(hostname):\n   return %r\n\n" % is_usewalk_host(hostname))
 
     # IP addresses
     needed_ipaddresses = {}
@@ -2906,8 +2912,8 @@ Copyright (C) 2009 Mathias Kettner
 def usage():
     print """WAYS TO CALL:
  check_mk [-n] [-v] [-p] HOST [IPADDRESS]  check all services on HOST
- check_mk [-c] -I {tcp|snmp} [HOST1 ...]   inventory - find new services
- check_mk -c, --cleanup-autochecks         reorder autochecks files
+ check_mk [-u] -I {tcp|snmp} [HOST1 ...]   inventory - find new services
+ check_mk -u, --cleanup-autochecks         reorder autochecks files
  check_mk -S|-H|--timeperiods              output Nagios configuration files
  check_mk -C, --compile                    precompile host checks
  check_mk -U, --update                     precompile + create Nagios config

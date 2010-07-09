@@ -202,12 +202,23 @@ function snapinStopDrag(event) {
   snapinDragging = false;
 }
 
+function getDivChildNodes(node) {
+  if(typeof node.children === 'undefined') {
+    var children = [];
+    for(var i in node.childNodes)
+      if(node.childNodes[i].tagName === 'DIV')
+        children.push(node.childNodes[i]);
+    return children;
+  } else
+    return node.children;
+}
+
 function getSnapinList() {
   if (snapinDragging === false)
     return true;
   
   var l = [];
-  var childs = snapinDragging.parentNode.children;
+  var childs = getDivChildNodes(snapinDragging.parentNode);
   for(var i in childs) {
     var child = childs[i];
     // Skip

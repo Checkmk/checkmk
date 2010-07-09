@@ -26,6 +26,7 @@
     * Sidebar: Fixed snapin movement problem using older firefox
       than 3.5.
     * Sidebar: Fixed IE8 and Chrome snapin movement problems
+    * Sidebar: Fixed IE problem where sidebar is too small
 
 1.1.7i1:
     Core, Setup, etc.:

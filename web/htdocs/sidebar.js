@@ -338,7 +338,11 @@ function setSidebarHeight() {
   var oFooter  = document.getElementById('side_footer');
   var height   = pageHeight();
   
-  oContent.style.height = height - oHeader.clientHeight - oFooter.clientHeight - 5;
+
+  if (weAreIEF__k)
+      oContent.style.height = height - oFooter.clientHeight + 5;
+  else
+      oContent.style.height = height - oHeader.clientHeight - oFooter.clientHeight - 5;
 }
 
 var scrolling = true;

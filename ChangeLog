@@ -23,6 +23,8 @@
     Multisite:
     * fix chown problem (when nagios user own files to be written
       by the web server)
+    * Sidebar: Fixed snapin movement problem using older firefox
+      than 3.5.
 
 1.1.7i1:
     Core, Setup, etc.:

@@ -339,3 +339,9 @@ Analog zu refersh mache ich Persisitierung und HTML-Variablen-Auswertung
 und komme zu einem Ergebnis. Das speichere ich dann in view_option["pnpsource"].
 Dies kann der Painter einfach abfragen. Einsatz: PNP-Zeitraum, Darstellung
 von Zeitstempeln (Delta/Absolute/Mixed).
+
+Livestatus: Anstelle von Gesamttimeout beim Querylesen einen Timeout
+zwischen Zwei Zeilen machen. Also immer wenn eine Zeile gelesen wurde,
+den Zähler wieder auf Null setzen. Gleichzeitig die mazimale Größe
+des Queries begrenzen per Config-Option. 
+

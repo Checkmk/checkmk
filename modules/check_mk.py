@@ -3245,11 +3245,18 @@ def do_scan_parents(hosts):
 
     sys.stdout.write("Scanning for parents...")
     for host in hosts:
+        # skip hosts that already have a parent
+        if len(parents_of(host)) > 0:
+            if opt_verbose:
+                sys.stdout.write("(manual parent) ")
+                sys.stdout.flush()
+            continue
         if opt_verbose:
             sys.stdout.write("%s " % host)
         else:
             sys.stdout.write(".")
         sys.stdout.flush()
+
         gw = scan_parent_of(host)
         if gw:
             gateway, gateway_ip = gw

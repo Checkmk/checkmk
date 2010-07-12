@@ -195,3 +195,6 @@ def check_heartbeat_crm_resources(item, params, info):
 
 check_info['heartbeat_crm'] = (check_heartbeat_crm, "Heartbeat CRM General",  0, inventory_heartbeat_crm)
 check_info['heartbeat_crm.resources'] = (check_heartbeat_crm_resources, "Heartbeat CRM %s",  0, inventory_heartbeat_crm_resources)
+
+check_config_variables.append("heartbeat_crm_naildown")
+check_config_variables.append("heartbeat_crm_resources_naildown")

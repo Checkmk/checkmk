@@ -388,7 +388,7 @@ sidebar_snapins["sitestatus"] = {
 }
 
 .snapin table.sitestate td {
-    padding: 0px 0px;
+    padding: 1px 0px;
     text-align: right;
 }
 

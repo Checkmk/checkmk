@@ -13,17 +13,19 @@ description:
  inventorized values a CRITICAL state will be shown.
 
 item:
- The name of the DRBD device e.g. drbd0
+ The name of the DRBD device e.g. {drbd0}
 
 examples:
  # Set expected "cs" to "Connected", first node to primary and second to secondary
  # and both nodes to up-to-date.
- drbd_general_default_levels = ( 'Connected', [ 'Primary', 'Secondary' ], [ 'UpToDate', 'UpToDate' ] )
+ checks += [
+   ( 'srvnd01', 'drbd', 'drbd0', 
+     ( [ 'Primary', 'Secondary' ], [ 'UpToDate', 'UpToDate' ] ) )
+ ]
 
 inventory:
  Each DRBD device will result in one service during inventory.
 
 [parameters]
-connection_state (string): The expected connection state
-roles (tuple): The expected role of each node
-disk_states (tuple): The expected disk-state of each node
+roles (list): The expected role of each node
+disk_states (list): The expected disk-state of each node

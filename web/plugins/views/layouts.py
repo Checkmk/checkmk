@@ -225,7 +225,7 @@ def render_tiled(data, view, group_painters, painters, _ignore_num_columns):
 		state = row.get("host_state", 0)
 		sclass = "hhstate%d" % state
 	    else:
-		state = "hhstatep"
+		sclass = "hhstatep"
 	else:
 	    hbc = row.get("service_has_been_checked", 1)
 	    if hbc:

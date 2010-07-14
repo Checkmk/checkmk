@@ -2,6 +2,8 @@
     Core, Setup, etc.:
     * New config option usewalk_hosts, triggers --usewalk during
       normal checking for selected hosts.
+    * new option --scan-parents for automatically finding and 
+      configuring parent hosts (see online docu for details)
 
     Checks & Agents:
     * New check ad_replication: Checks active directory replications

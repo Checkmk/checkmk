@@ -22,13 +22,6 @@ check_mk --help:
 
 In Opera (Version 10.6) geht in der Sidebar das Scrollen per Mausrad nicht.
 
-Sidebar Drag&Drop Problem: Die Sidebar ist noch oben hochgesrollt (also
-nicht bei Offset 0. Jetzt packt man ein Snapin zum Draggen => Der Mauszeiger
-ist von er Titelleiste ein Stück entfernt. Weiteres Problem: Wenn man jetzt
-mit der Maus aus dem Fenster raus und wieder reinfährt (ohne loszulassen),
-bleibt das Snapin für immer an der Maus kleben. Hier hilft nur Reload
-der Seite.
-
 Beschreibung zu -II fehlt in Doku.
 
 Zwei Fragen beim -II mit folgendem Befehl:
@@ -421,3 +414,8 @@ FreeBSD Agent:
      auf FreeBSD Systemen?
   
   Die Sektionen/Checks ps und postfix_mailq sind jetzt schon kompatibel.
+
+Idee: Bei SNMP-Checks gibt es manchmal Daten, die sich dynamisch nicht ändern
+(z.B. Interfacenamen, etc.). Man könnte diese Daten cachen, so dass sie nicht
+jedes mal geholt werden, sondern z.B. nur alle 10 Minuten.
+

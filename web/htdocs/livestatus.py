@@ -340,8 +340,8 @@ class MultiSiteConnection(Helpers):
             query = "GET hosts\nColumns: name state last_time_up\n"
             for host in hosts:
                 query += "Filter: name = %s\n" % host
-                query += "Or: %d\n" % len(hosts)
-                self.set_only_sites([sitename]) # only connect one site
+            query += "Or: %d\n" % len(hosts)
+            self.set_only_sites([sitename]) # only connect one site
             try:
                 result = self.query_table(query)
                 # raise MKLivestatusConfigError("TRESulT: %s" % (result,))

@@ -1685,6 +1685,7 @@ def make_inventory(checkname, hostnamelist, check_only=False):
         sys.exit(1)
 
     newchecks = []
+    newitems = []   # used by inventory check to display unchecked items
     count_new = 0
     checked_hosts = []
 
@@ -1791,6 +1792,7 @@ def make_inventory(checkname, hostnamelist, check_only=False):
               newcheck += "\n"
               if newcheck not in newchecks: # avoid duplicates if inventory outputs item twice
                   newchecks.append(newcheck)
+                  newitems.append( (hn, checkname, item) )
                   count_new += 1
 
 
@@ -1809,11 +1811,12 @@ def make_inventory(checkname, hostnamelist, check_only=False):
 	    sys.stdout.write('%-30s ' % (tty_blue + checkname + tty_normal))
             sys.stdout.write('%s%d new checks%s\n' % (tty_bold + tty_green, count_new, tty_normal))
     else:
-        return count_new
+        return newitems
 
 
 def check_inventory(hostname):
     newchecks = []
+    newitems = []
     total_count = 0
     only_snmp = is_snmp_host(hostname)
     check_table = get_check_table(hostname)
@@ -1824,7 +1827,9 @@ def check_inventory(hostname):
                 continue # No TCP checks on SNMP-only hosts
             elif check_uses_snmp(ct) and ct not in hosts_checktypes:
                 continue
-            count = make_inventory(ct, [hostname], True)
+            new = make_inventory(ct, [hostname], True)
+            newitems += new
+            count = len(new)
             if count > 0:
                 newchecks.append((ct, count))
                 total_count += count
@@ -1832,6 +1837,9 @@ def check_inventory(hostname):
             info = ", ".join([ "%s:%d" % (ct, count) for ct,count in newchecks ])
             statustext = { 0 : "OK", 1: "WARNING", 2:"CRITICAL" }.get(inventory_check_severity, "UNKNOWN")
             sys.stdout.write("%s - %d unchecked services (%s)\n" % (statustext, total_count, info))
+            # Put detailed list into long pluging output
+            for hostname, checkname, item in newitems:
+                sys.stdout.write("%s: %s\n" % (checkname, service_description(checkname, item)))
             sys.exit(inventory_check_severity)
         else:
             sys.stdout.write("OK - no unchecked services found\n")
@@ -1839,6 +1847,8 @@ def check_inventory(hostname):
     except SystemExit, e:
             raise e
     except Exception, e:
+        if opt_debug:
+            raise
         sys.stdout.write("UNKNOWN - %s\n" % (e,))
         sys.exit(3)
 

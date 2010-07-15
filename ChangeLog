@@ -4,6 +4,8 @@
       normal checking for selected hosts.
     * new option --scan-parents for automatically finding and 
       configuring parent hosts (see online docu for details)
+    * inventory check: put detailed list of unchecked items into long
+      plugin output (to be seen in status details)
 
     Checks & Agents:
     * drbd: changed check parameters (please re-inventorize!)

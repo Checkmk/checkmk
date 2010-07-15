@@ -2171,7 +2171,7 @@ def show_check_manual(checkname):
     subheader_color = tty(fg_color, bg_color, 1)
     header_color_left = tty(0,2)
     header_color_right = tty(7,2,1)
-    parameters_color = tty(6,4)
+    parameters_color = tty(6,4,1)
     examples_color = tty(6,4,1)
 
     filename = check_manpages_dir + "/" + checkname

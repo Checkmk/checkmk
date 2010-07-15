@@ -8,23 +8,21 @@ description:
  linux agent. The check uses the information about the nodes and resources in
  the command output.
 
- The check will report a CRITICAL state when the reported state is not "Started".
-
- The check can be run in "naildown" mode by setting the option
- {heartbeat_crm_resources_naildown} to {True}. In this mode the check reports
- a CRITICAL state when the resource is handled by another node. Otherwise the
- check will ignore changing nodes.
+ The check will report a CRITICAL state when the reported state is not {Started}.
+ In addition the check can report a problem if a ressource is not handled
+ by a specified node.
 
 inventory:
  On each node one service for each resource group or resource will be created.
+ If {heartbeat_crm_resources_naildown} is set to {True}, then for each resource
+ the current node of that resource is hardcoded as target parameter and will
+ be checked in future.
 
 [parameters]
-node (string): The expected node to handle this resource. When set to an empty
- string the check will be disabled.
+node (string): The expected node to handle this resource. When set to {None},
+ then the node will not be checked, only the resource state.
 
 [configuration]
 heartbeat_crm_resources_naildown (bool): Naildown the resources to the nodes
  which care about the resources during the inventory run.
 
-heartbeat_crm_resources_default_levels (string, ): Name of the node where the
- resource runs on (when told to naildown).

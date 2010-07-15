@@ -53,17 +53,11 @@ import time
 heartbeat_crm_naildown = True
 
 # Max age of "last updated"
-# Name of the DC
-# Number of nodes
-# Number of resources
-heartbeat_crm_default_levels = (60, '', -1, -1)
+heartbeat_crm_default_max_age = 60
 
 # Naildown the resources to the nodes which care about the resources during
 # the inventory run
 heartbeat_crm_resources_naildown = True
-
-# Name of the node where the resource runs on (when told to naildown)
-heartbeat_crm_resources_default_levels = ('',)
 
 def heartbeat_crm_parse_general(info, dc = '', numNodes = -1, numResources = -1):
     for line in info:
@@ -89,56 +83,57 @@ def inventory_heartbeat_crm(checktype, info):
     # - Naildown the DC or not.
     # - Check the number of nodes/resources
     # - Check the age of "last updated"
-    lastUpdated  = None
-    dc           = heartbeat_crm_default_levels[1]
-    numNodes     = heartbeat_crm_default_levels[2]
-    numResources = heartbeat_crm_default_levels[3]
     if len(info) > 0:
         lastUpdated, dc, numNodes, numResources = heartbeat_crm_parse_general(info, dc, numNodes, numResources)
-        return [(None, '(%d, "%s", %d, %d)' % (heartbeat_crm_default_levels[0], dc, numNodes, numResources))]
+	if not heartbeat_crm_naildown:
+	    dc = None # Ignore DC on check
+	return [(None, '(heartbeat_crm_default_max_age, %r, %d, %d)' % (dc, numNodes, numRessources))]
     else:
         return []
 
 def check_heartbeat_crm(item, params, info):
     if len(info) > 0:
         lastUpdated, dc, numNodes, numResources = heartbeat_crm_parse_general(info)
+	param_max_age, param_dc, param_nodes, param_ressources = params
 
         # Check the freshness of the crm_mon output and terminate with CRITICAL
         # when too old information are found
-        dt = datetime(*time.strptime(lastUpdated, '%a %b %d %H:%M:%S %Y')[0:5])
-        if dt < datetime.now() - timedelta(seconds=params[0]):
-            return (2, 'CRITICAL - Status output too old: %s' % lastUpdated)
+        dt = int(datetime(*time.strptime(lastUpdated, '%a %b %d %H:%M:%S %Y')[0:5]).strftime("%s"))
+	now = time.time()
+	delta = now - dt
+        if delta > param_max_age:
+            return (2, 'CRITICAL - Status output too old: %d secs' % delta)
 
         output = ''
         status = 0
 
         # Check for correct DC when enabled
-        if params[1] != '' and heartbeat_crm_naildown:
-            if dc == params[1]:
+        if param_dc:
+            if dc == param_dc:
                 output += 'DC: %s, ' % dc
             else:
-                output += 'DC: %s (Expected %s), ' % (dc, params[1])
+                output += 'DC: %s (Expected %s), ' % (dc, param_dc)
                 status = 2
 
         # Check for number of nodes when enabled
-        if params[2] != -1:
-            if numNodes == params[2]:
+        if param_nodes != -1:
+            if numNodes == param_nodes:
                 output += 'Nodes: %d, ' % numNodes
             else:
-                output += 'Nodes: %d (Expected %d), ' % (numNodes, params[2])
+                output += 'Nodes: %d (Expected %d), ' % (numNodes, param_nodes)
                 status = 2
 
         # Check for number of resources when enabled
-        if params[2] != -1:
-            if numResources == params[3]:
+        if param_ressources != -1:
+            if numResources == param_ressources:
                 output += 'Resources: %d, ' % numResources
             else:
-                output += 'Resources: %d (Expected %d), ' % (numResources, params[2])
+                output += 'Resources: %d (Expected %d), ' % (numResources, param_ressources)
                 status = 2
 
         return (status, '%s - %s' % (nagios_state_names[status], output.rstrip(', ')))
 
-    return (3, "UNKNOWN - Invalid information")
+    return (3, "UNKNOWN - Empty output from agent")
 
 def heartbeat_crm_parse_resources(info):
     blockStart = False
@@ -173,12 +168,12 @@ def inventory_heartbeat_crm_resources(checkname, info):
     if len(info) > 0:
         for name, resources in heartbeat_crm_parse_resources(info).iteritems():
             if heartbeat_crm_resources_naildown:
-                inventory.append((name, '("%s",)' % resources[0][3]))
+                inventory.append((name, '"%s"' % resources[0][3]))
             else:
                 inventory.append((name, None))
     return inventory
 
-def check_heartbeat_crm_resources(item, params, info):
+def check_heartbeat_crm_resources(item, target_node, info):
     output = ''
     status = 0
     for resource in [ resources for name, resources in heartbeat_crm_parse_resources(info).iteritems() if name == item ][0]:
@@ -186,9 +181,9 @@ def check_heartbeat_crm_resources(item, params, info):
         if len(resource) == 3 or resource[2] != 'Started':
             status = 2
             output += ' (CRITICAL: Resource is in state "%s")' % resource[2]
-        elif heartbeat_crm_resources_naildown and resource[3] != params[0]:
+        elif target_node and target_node != resource[3]:
             status = 2
-            output += ' (CRITICAL: Expected node: %s)' % params[0]
+            output += ' (CRITICAL: Expected node: %s)' % target_node
         output += ', '
 
     return (status, '%s - %s' % (nagios_state_names[status], output.rstrip(', ')))

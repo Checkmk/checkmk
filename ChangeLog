@@ -24,6 +24,8 @@
     * New agent for FreeBSD: It is based on the linux agent. Most of the sections
       could not be ported easily so the FreeBSD agent provides information for less
       checks than the linux agent.
+    * heartbeat_crm and heartbeat_crm.resources: Change handling of check parameters.
+      Please reinvenurize and read the updated man page of those checks
 
     Multisite:
     * fix chown problem (when nagios user own files to be written

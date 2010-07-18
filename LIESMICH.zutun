@@ -6,8 +6,9 @@ auftritt.
 
 direct rrd-updates deprecaten oder rausnehmen. Diese sorgen dafür, dass
 die Perf-O-Meter und die PNP-Suche in Multisite nicht geht.
+
 --------------------------------------------------------------------------------
-BUGS
+BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
 install_nagios.sh: rrdcached wird nicht gestartet
 
@@ -89,14 +90,11 @@ Kann man das mit Javascript hinbekommen?
 
 Eingabe von Downtimes: Auch hier Umlaute abfangen wie bei Comments
 
-rrdcached-Startskript aus Skript: restart kill das Skript selbst.
-Besser mit PID-Datei arbeiten. Ausserdem Optionen -s und -m verwenden.
-Außerdem sollte der Cachedaemon auch verwendet werden.
-
-
 --------------------------------------------------------------------------------
 UNSCHOENHEITEN
 --------------------------------------------------------------------------------
+multiadmin-Variablen rausnehmen.
+
 Multisite Bookmarks: Das Snapin speichert immer absolute URLs mit Hostnamen.
 Das ist aber doof, wenn man die Bookmarksdatei auf einen anderen Host kopiert
 oder mal mit IP-Adresse, mal mit Namen auf Nagios zugreift. Lösung: Beim Speichern

@@ -416,3 +416,5 @@ FreeBSD Agent:
 Idee: Bei SNMP-Checks gibt es manchmal Daten, die sich dynamisch nicht ändern
 (z.B. Interfacenamen, etc.). Man könnte diese Daten cachen, so dass sie nicht
 jedes mal geholt werden, sondern z.B. nur alle 10 Minuten.
+
+

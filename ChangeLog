@@ -1,4 +1,12 @@
 1.1.7i2:
+    Incompatible Changes:
+    * Remove config option define_timeperiods and option --timeperiods.
+      Check_MK does not longer define timeperiod definitions. Please
+      define them manually in Nagios.
+    * Removed modes -H and -S for creating config data. This now does
+      the new option -N. Please set generate_hostconf = False if you
+      want only services to be defined.
+
     Core, Setup, etc.:
     * New config option usewalk_hosts, triggers --usewalk during
       normal checking for selected hosts.

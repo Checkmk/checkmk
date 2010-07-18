@@ -216,22 +216,6 @@ generate_dummy_commands            = True
 dummy_check_commandline            = 'echo "ERROR - you did an active check on this service - please disable active checks" && exit 1'
 nagios_illegal_chars               = '`~!$%^&*|\'"<>?,()='
 
-# Settings for web pages (THIS IS DEPRECATED AND POINTLESS AND WILL BE REMOVED ANY DECADE NOW)
-multiadmin_users                     = None # means: all
-multiadmin_action_users              = None # means: all
-multiadmin_sites                     = { "" : {} }
-multiadmin_restrict                  = False
-multiadmin_restrict_actions          = False
-multiadmin_unrestricted_users        = []
-multiadmin_unrestricted_action_users = []
-multiadmin_sounds                    = {}
-multiadmin_use_siteicons             = False
-multiadmin_debug                     = False
-multiadmin_sidebar                   = [('admin', 'open'), ('tactical_overview', 'open'), ('sitestatus', 'open'), \
-					('search', 'open'), ('views', 'open'), ('hostgroups', 'closed'), \
-					('servicegroups', 'closed'), ('hosts', 'closed'), ('time', 'open'), \
-					('nagios_legacy', 'closed'), ('performance', 'closed'), ('master_control', 'closed'), ('about', 'closed')]
-
 # Data to be defined in main.mk
 checks                               = []
 all_hosts                            = []

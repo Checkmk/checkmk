@@ -49,6 +49,7 @@ if sys.stdout.isatty():
     tty_bold      = '\033[1m'
     tty_underline = '\033[4m'
     tty_normal    = '\033[0m'
+    tty_ok        = tty_green + tty_bold + 'OK' + tty_normal
     def tty(fg=-1, bg=-1, attr=-1):
         if attr >= 0:
             return "\033[3%d;4%d;%dm" % (fg, bg, attr)
@@ -71,6 +72,7 @@ else:
     tty_bold      = ''
     tty_underline = ''
     tty_normal    = ''
+    tty_ok        = 'OK'
     def tty(fg=-1, bg=-1, attr=-1):
         return ''
 

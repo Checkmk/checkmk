@@ -1,3 +1,48 @@
+1.1.7i2:
+    Incompatible Changes:
+    * Remove config option define_timeperiods and option --timeperiods.
+      Check_MK does not longer define timeperiod definitions. Please
+      define them manually in Nagios.
+    * Removed modes -H and -S for creating config data. This now does
+      the new option -N. Please set generate_hostconf = False if you
+      want only services to be defined.
+
+    Core, Setup, etc.:
+    * New config option usewalk_hosts, triggers --usewalk during
+      normal checking for selected hosts.
+    * new option --scan-parents for automatically finding and 
+      configuring parent hosts (see online docu for details)
+    * inventory check: put detailed list of unchecked items into long
+      plugin output (to be seen in status details)
+
+    Checks & Agents:
+    * drbd: changed check parameters (please re-inventorize!)
+    * New check ad_replication: Checks active directory replications
+      of domain controllers by using repadm
+    * New check postifx_mailq: Checks mailqueue lengths of postifx mailserves
+    * New check hp_procurve_cpu: Checks the CPU load on HP Procurve switches
+    * New check hp_procurve_mem: Checks the memory usage on HP Procurve switches
+    * New check hp_procurve_sensors: Checks the health of PSUs, FANs and
+      Temperature on HP Procurve switches
+    * New check heartbeat_crm: Monitors the general state of heartbeat clusters
+      using the CRM
+    * New check heartbeat_crm_resources: Monitors the state of resources and nodes
+      in heartbeat clusters using the CRM
+    * *nix agents: output AgentOS: in header
+    * New agent for FreeBSD: It is based on the linux agent. Most of the sections
+      could not be ported easily so the FreeBSD agent provides information for less
+      checks than the linux agent.
+    * heartbeat_crm and heartbeat_crm.resources: Change handling of check parameters.
+      Please reinvenurize and read the updated man page of those checks
+
+    Multisite:
+    * fix chown problem (when nagios user own files to be written
+      by the web server)
+    * Sidebar: Fixed snapin movement problem using older firefox
+      than 3.5.
+    * Sidebar: Fixed IE8 and Chrome snapin movement problems
+    * Sidebar: Fixed IE problem where sidebar is too small
+
 1.1.7i1:
     Core, Setup, etc.:
     * New option -u for reordering autochecks in per-host-files

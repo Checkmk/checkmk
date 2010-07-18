@@ -139,10 +139,9 @@
 #   oos (out of sync). Amount of storage currently out of sync; in Kibibytes. Since 8.2.6.
 
 # Default thresholds for drbd checks
-drbd_general_default_levels = ( 'Connected', [ 'Primary', 'Secondary' ], [ 'UpToDate', 'UpToDate' ] )
 drbd_net_default_levels     = ( None, None )
 drbd_disk_default_levels    = ( None, None )
-drbd_stats_default_levels    = ( None, None, None, None, None, None, None, None, None )
+drbd_stats_default_levels   = ( None, None, None, None, None, None, None, None, None )
 
 drbd_block_start_match = re.compile('^[0-9]+:')
 
@@ -171,15 +170,15 @@ def inventory_drbd(checktype, info):
         if drbd_block_start_match.search(line[0]) > 0:
             parsed = drbd_parse_block(drbd_extract_block('drbd%s' % line[0][:-1], info), checktype)
             if checktype == 'drbd':
-                levels = '( "%s", [ "%s", "%s" ], [ "%s", "%s" ] )' % \
-                                    ('', parsed['ro'][0], parsed['ro'][1],
-                                         parsed['ds'][0], parsed['ds'][1])
+                levels = '( [ "%s", "%s" ], [ "%s", "%s" ] )' % \
+                             (parsed['ro'][0], parsed['ro'][1],
+                              parsed['ds'][0], parsed['ds'][1])
             elif checktype == 'drbd.net':
-                levels = '( "%s", "%s" )' % drbd_net_default_levels
+                levels = "drbd_net_default_levels"
             elif checktype == 'drbd.disk':
-                levels = '( "%s", "%s" )' % drbd_disk_default_levels
+                levels = "drbd_disk_default_levels"
             elif checktype == 'drbd.stats':
-                levels = '( "%s", "%s", "%s", "%s", "%s", "%s", "%s", "%s", "%s" )' % drbd_stats_default_levels
+                levels = "drbd_stats_default_levels"
             inventory.append(('drbd%s' % line[0][:-1], levels))
     return inventory
 
@@ -245,14 +244,14 @@ def check_drbd_general(item, params, info):
         output = 'Connection State: %s' % parsed['cs']
 
         output += ', Roles: %s/%s' % (parsed['ro'][0], parsed['ro'][1])
-        if parsed['ro'] != params[1]:
+        if parsed['ro'] != params[0]:
             state = state < 2 and 2 or state
-            output += ' (Expected: %s/%s)' % (params[1][0], params[1][1])
+            output += ' (Expected: %s/%s)' % (params[0][0], params[0][1])
 
         output += ', Disk States: %s/%s' % (parsed['ds'][0], parsed['ds'][1])
-        if parsed['ds'] != params[2]:
+        if parsed['ds'] != params[1]:
             state = state < 2 and 2 or state
-            output += ' (Expected: %s/%s)' % (params[2][0], params[2][1])
+            output += ' (Expected: %s/%s)' % (params[1][0], params[1][1])
 
         return (state, "%s - %s" % (nagios_state_names[state], output))
 

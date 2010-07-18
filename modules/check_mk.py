@@ -186,6 +186,7 @@ cluster_max_cachefile_age          = 90   # secs.
 simulation_mode                    = False
 perfdata_format                    = "standard" # also possible: "pnp"
 debug_log                          = None
+monitoring_host                    = "localhost" # your Nagios host
 
 # SNMP communities
 snmp_default_community             = 'public'
@@ -215,28 +216,13 @@ generate_dummy_commands            = True
 dummy_check_commandline            = 'echo "ERROR - you did an active check on this service - please disable active checks" && exit 1'
 nagios_illegal_chars               = '`~!$%^&*|\'"<>?,()='
 
-# Settings for web pages (THIS IS DEPRECATED AND POINTLESS AND WILL BE REMOVED ANY DECADE NOW)
-multiadmin_users                     = None # means: all
-multiadmin_action_users              = None # means: all
-multiadmin_sites                     = { "" : {} }
-multiadmin_restrict                  = False
-multiadmin_restrict_actions          = False
-multiadmin_unrestricted_users        = []
-multiadmin_unrestricted_action_users = []
-multiadmin_sounds                    = {}
-multiadmin_use_siteicons             = False
-multiadmin_debug                     = False
-multiadmin_sidebar                   = [('admin', 'open'), ('tactical_overview', 'open'), ('sitestatus', 'open'), \
-					('search', 'open'), ('views', 'open'), ('hostgroups', 'closed'), \
-					('servicegroups', 'closed'), ('hosts', 'closed'), ('time', 'open'), \
-					('nagios_legacy', 'closed'), ('performance', 'closed'), ('master_control', 'closed'), ('about', 'closed')]
-
 # Data to be defined in main.mk
 checks                               = []
 all_hosts                            = []
 snmp_hosts                           = [ (['snmp'],   ALL_HOSTS) ]
 bulkwalk_hosts                       = None
 non_bulkwalk_hosts                   = None
+usewalk_hosts                        = []
 ignored_checktypes                   = [] # exclude from inventory
 ignored_services                     = [] # exclude from inventory
 host_groups                          = []
@@ -246,7 +232,6 @@ service_notification_periods         = []
 host_notification_periods            = []
 host_contactgroups                   = []
 parents                              = []
-define_timeperiods                   = {}
 define_hostgroups                    = None
 define_servicegroups                 = None
 define_contactgroups                 = None
@@ -269,10 +254,12 @@ only_hosts                           = None
 extra_host_conf                      = {}
 extra_summary_host_conf              = {}
 extra_service_conf                   = {}
+extra_summary_service_conf           = {}
 extra_nagios_conf                    = ""
 service_descriptions                 = {}
 donation_hosts                       = []
 donation_command                     = 'mail -r checkmk@yoursite.de  -s "Host donation %s" donatehosts@mathias-kettner.de' % check_mk_version
+scanparent_hosts                     = [ ( ALL_HOSTS ) ]
 
 # Settings for filesystem checks (df, df_vms, df_netapp and maybe others)
 filesystem_default_levels          = (80, 90)
@@ -286,6 +273,8 @@ inventory_df_exclude_fs            = [ 'nfs', 'smbfs', 'cifs', 'iso9660' ]
 inventory_df_exclude_mountpoints   = [ '/dev' ]
 inventory_df_check_params          = 'filesystem_default_levels'
 
+# global variables used to cache temporary values (not needed in check_mk_base)
+ip_to_hostname_cache = None
 
 # The following data structures will be filled by the various checks
 # found in the checks/ directory.
@@ -390,6 +379,9 @@ final_mk = check_mk_basedir + "/final.mk"
 if os.path.exists(final_mk):
     list_of_files.append(final_mk)
 for f in list_of_files:
+    # Hack: during parent scan mode we must not read in old version of parents.mk!
+    if '--scan-parents' in sys.argv and f.endswith("/parents.mk"):
+        continue
     try:
         if opt_debug:
             sys.stderr.write("Reading config file %s...\n" % f)
@@ -687,6 +679,9 @@ def is_bulkwalk_host(hostname):
     else:
         return False
 
+def is_usewalk_host(hostname):
+    return in_binary_hostlist(hostname, usewalk_hosts)
+
 def get_single_oid(hostname, ipaddress, oid):
     global g_single_oid_hostname
     global g_single_oid_cache
@@ -698,7 +693,7 @@ def get_single_oid(hostname, ipaddress, oid):
     if oid in g_single_oid_cache:
         return g_single_oid_cache[oid]
 
-    if opt_use_snmp_walk:
+    if opt_use_snmp_walk or is_usewalk_host(hostname):
         walk = get_stored_snmpwalk(hostname, oid)
         if len(walk) == 1:
             return walk[0][1]
@@ -952,12 +947,10 @@ def service_description(checkname, item):
 
 def output_conf_header(outfile):
     outfile.write("""#
-# Automatically created by check_mk at %s
-# Do not edit
+# Created by Check_MK. Do not edit.
 #
 
-
-""" % (time.asctime()))
+""")
 
 def all_active_hosts():
     if only_hosts == None:
@@ -994,7 +987,15 @@ def host_contactgroups_nag(hostlist):
 
 def parents_of(hostname):
     par = host_extra_conf(hostname, parents)
-    return par
+    # Use only those parents which are defined and active in
+    # all_hosts.
+    used_parents = []
+    for p in par:
+        ps = p.split(",")
+        for pss in ps:
+            if pss in all_hosts_untagged:
+                used_parents.append(pss)
+    return used_parents
 
 def extra_host_conf_of(hostname):
    return extra_conf_of(extra_host_conf, hostname, None)
@@ -1004,6 +1005,9 @@ def extra_summary_host_conf_of(hostname):
 
 def extra_service_conf_of(hostname, description):
    return extra_conf_of(extra_service_conf, hostname, description)
+
+def extra_summary_service_conf_of(hostname, description):
+   return extra_conf_of(extra_summary_service_conf, hostname, description)
 
 def extra_conf_of(confdict, hostname, service):
    result = ""
@@ -1178,31 +1182,66 @@ def in_extraconf_servicelist(list, item):
     return False
 
 
-def output_timeperiods(outfile = sys.stdout):
-    daynames = [ "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday" ]
-    
-    output_conf_header(outfile)
-    for name, times in define_timeperiods.items():
-        if len(times) != 7:
-            raise MKGeneralException("Timeperiod definition '%s' needs 7 time ranges, but has %d" % (name, len(times)))
-        outfile.write("define timeperiod {\n"
-                      "  timeperiod_name   %s\n"
-                      "  alias             %s\n" % (name, name))
-        for day, period in zip(daynames, times):
-            if period: # None -> no time
-                outfile.write("  %-16s  %s\n" % (day, period))
-        outfile.write("}\n\n")
-        
-
-# We deal with four kinds of hosts here
-# 1. normal, physical hosts
-# 2. summary hosts of normal hosts (for service aggregation)
-# 3. cluster hosts - consisting of several physical hosts
-# 4. summary cluster hosts
-def output_hostconf(outfile = sys.stdout):
-    need_default_host_group = False
+# NEW IMPLEMENTATION
+def create_nagios_config(outfile = sys.stdout, hostnames = None):
+    global hostgroups_to_define
     hostgroups_to_define = set([])
+    global servicegroups_to_define
+    servicegroups_to_define = set([])
+    global contactgroups_to_define
+    contactgroups_to_define = set([])
+    global checknames_to_define
+    checknames_to_define = set([])
+    
+    if host_notification_periods != []:
+        raise MKGeneralException("host_notification_periods is not longer supported. Please use extra_host_conf['notification_period'] instead.")
+        
+    if summary_host_notification_periods != []:
+        raise MKGeneralException("summary_host_notification_periods is not longer supported. Please use extra_summary_host_conf['notification_period'] instead.")
+
+    if service_notification_periods != []:
+        raise MKGeneralException("service_notification_periods is not longer supported. Please use extra_service_conf['notification_period'] instead.")
+
+    if summary_service_notification_periods != []:
+        raise MKGeneralException("summary_service_notification_periods is not longer supported. Please use extra_summary_service_conf['notification_period'] instead.")
+
     output_conf_header(outfile)
+    if hostnames == None:
+        hostnames = all_hosts_untagged + all_active_clusters()
+
+    for hostname in hostnames:
+        create_nagios_config_host(outfile, hostname)
+
+    create_nagios_config_hostgroups(outfile)
+    create_nagios_config_servicegroups(outfile)
+    create_nagios_config_contactgroups(outfile)
+    create_nagios_config_commands(outfile)
+
+    if extra_nagios_conf:
+	out.write("\n# extra_nagios_conf\n\n")
+	out.write(extra_nagios_conf)
+
+
+
+def create_nagios_config_host(outfile, hostname):
+    outfile.write("\n# ----------------------------------------------------\n")
+    outfile.write("# %s\n" % hostname)
+    outfile.write("# ----------------------------------------------------\n")
+    if generate_hostconf:
+        create_nagios_hostdefs(outfile, hostname)
+    create_nagios_servicedefs(outfile, hostname)
+
+def create_nagios_hostdefs(outfile, hostname):
+    is_clust = is_cluster(hostname)
+
+    # Determine IP address. For cluster hosts this is optional.
+    # A cluster might have or not have a service ip address.
+    try:
+        ip = lookup_ipaddress(hostname)
+    except:
+        if not is_cluster(hostname):  
+            raise MKGeneralException("Cannot determine ip address of %s. Please add to ipaddresses." % hostname)
+        ip = "0.0.0.0"
 
     #   _ 
     #  / |
@@ -1210,385 +1249,274 @@ def output_hostconf(outfile = sys.stdout):
     #  | |
     #  |_|    1. normal, physical hosts
 
-    for hostname in all_hosts_untagged:
-       try:
-          if opt_verbose:
-              sys.stderr.write("getting IP address of %s..." % hostname)
-          ip = lookup_ipaddress(hostname)
-          if opt_verbose:
-              sys.stderr.write("%s\n" % ip)
-       except:
-	  raise MKGeneralException("Cannot determine ip address of %s. Please add to ipaddresses." % hostname)
+    alias = hostname
+    outfile.write("\ndefine host {\n")
+    outfile.write("  host_name      %s\n" % hostname)
+    outfile.write("  use            %s\n" % host_template)
+    outfile.write("  address        %s\n" % ip)
+    outfile.write("  _TAGS          %s\n" % " ".join(tags_of_host(hostname)))
 
-       hgs = hostgroups_of(hostname)
-       hostgroups = ",".join(hgs)
-       if hostgroups == "":
-          hostgroups = default_host_group
-          need_default_host_group = True
-       elif define_hostgroups:
-          hostgroups_to_define.update(hgs)
-       
-       nottimes = host_extra_conf(hostname, host_notification_periods)
-       if len(nottimes) > 0:
-           nottime = "    notification_period      " + nottimes[0] + "\n"
-       else:
-           nottime = ""
+    # Host groups: If the host has no hostgroups it gets the default
+    # hostgrous (Nagios requires each host to be member of at least on
+    # group.
+    hgs = hostgroups_of(hostname)
+    hostgroups = ",".join(hgs)
+    if len(hgs) == 0:
+        hostgroups = default_host_group
+        hostgroups_to_define.add(default_host_group)
+    elif define_hostgroups:
+        hostgroups_to_define.update(hgs)
+    outfile.write("  host_groups    +%s\n" % hostgroups)
 
-       parents_list = parents_of(hostname)
-       if len(parents_list) > 0:
-           parents_txt = "\n    parents        " + (",".join(parents_list))
-       else:
-           parents_txt = ""
-      
-       outfile.write("""define host {
-    use            %s
-    name           host_%s
-    host_name      %s
-    alias          %s%s
-    host_groups    +%s
-%s%s%s    address        %s
-}
+    # Contact groups
+    cgrs = host_contactgroups_of([hostname])
+    if len(cgrs) > 0: 
+        outfile.write("  contact_groups +%s\n" % ",".join(cgrs))
 
-""" % (host_template, hostname, hostname, hostname, parents_txt,
-       hostgroups, nottime, host_contactgroups_nag([hostname]), 
-       extra_host_conf_of(hostname), ip))
+    # Parents for non-clusters
+    if not is_clust:
+        parents_list = parents_of(hostname)
+        if len(parents_list) > 0:
+            outfile.write("  parents        %s\n" % (",".join(parents_list)))
+        
+    # Special handling of clusters
+    if is_clust:
+        nodes = nodes_of(hostname)
+	for node in nodes:
+	    if node not in all_hosts_untagged:
+                raise MKGeneralException("Node %s of cluster %s not in all_hosts." % (node, hostname))
+        node_ips = [ lookup_ipaddress(h) for h in nodes ]
+        alias = "cluster of %s" % ", ".join(nodes)
+        outfile.write("  _NODEIPS       %s\n" % " ".join(node_ips))
+        outfile.write("  parents        %s\n" % ",".join(nodes))
 
-       #   ____  
-       #  |___ \ 
-       #   __) | 
-       #  / __/  
-       #  |_____|  2. summary hosts of physical hosts
+    outfile.write("  alias          %s\n" % alias)
 
-       # Does this host have aggregated services? --> Output definition for
-       # Summary host
-       if host_is_aggregated(hostname):
-	   hgs = summary_hostgroups_of(hostname)
-           hostgroups = ",".join(hgs)
-           if hostgroups == "":
-              hostgroups = default_host_group
-              need_default_host_group = True
-	   elif define_hostgroups:
-	      hostgroups_to_define.update(hgs)
+    # Custom configuration last -> user may override all other values
+    outfile.write(extra_host_conf_of(hostname))
+        
+    outfile.write("}\n")
 
-           nottimes = host_extra_conf(hostname, summary_host_notification_periods)
-           if len(nottimes) > 0:
-               nottime = "    notification_period      " + nottimes[0] + "\n"
-           else:
-               nottime = ""
+    #   ____  
+    #  |___ \ 
+    #   __) | 
+    #  / __/  
+    #  |_____|  2. summary hosts
 
-           outfile.write("""define host {
-    use            %s-summary
-    name           host_%s
-    host_name      %s
-    __realname     %s
-    alias          Summary of %s
-    host_groups    +%s
-    parents        %s
-%s%s%s    address        %s
-}
+    if host_is_aggregated(hostname):
+        outfile.write("\ndefine host {\n")
+        outfile.write("  host_name      %s\n" % summary_hostname(hostname))
+        outfile.write("  use            %s-summary\n" % host_template)
+        outfile.write("  alias          Summary of %s\n" % alias)
+        outfile.write("  address        %s\n" % ip)
+        outfile.write("  _TAGS          %s\n" % " ".join(tags_of_host(hostname)))
+        outfile.write("  __REALNAME     %s\n" % hostname)
+        outfile.write("  parents        %s\n" % hostname)
 
-""" % (host_template, summary_hostname(hostname), summary_hostname(hostname), hostname, hostname,
-       hostgroups, hostname, host_contactgroups_nag([hostname]), nottime, 
-       extra_summary_host_conf_of(hostname), ip))
-	   
+        hgs = summary_hostgroups_of(hostname)
+        hostgroups = ",".join(hgs)
+        if len(hgs) == 0:
+            hostgroups = default_host_group
+            hostgroups_to_define.add(default_host_group)
+        elif define_hostgroups:
+            hostgroups_to_define.update(hgs)
+        outfile.write("  host_groups    +%s\n" % hostgroups)
+        
+        if is_clust:
+            outfile.write("  _NODEIPS       %s\n" % " ".join(node_ips))
+        outfile.write("}\n")
+    outfile.write("\n")
+    
+def create_nagios_servicedefs(outfile, hostname):
     #   _____ 
     #  |___ / 
     #    |_ \ 
     #   ___) |
-    #  |____/   3. Cluster hosts
+    #  |____/   3. Services
 
-    for clustername in all_active_clusters():
-        nodes = nodes_of(clustername)
-	for node in nodes:
-	    if node not in all_hosts_untagged:
-                raise MKGeneralException("Node %s of cluster %s not in all_hosts." % (node, clustername))
-		
-	hgs = hostgroups_of(clustername)
-        hostgroups = ",".join(hgs)
-        if hostgroups == "":
-            hostgroups = default_host_group
-            need_default_host_group = True
-	elif define_hostgroups:
-	    hostgroups_to_define.update(hgs)
-	try:
-	    node_ips = [ lookup_ipaddress(h) for h in nodes ]
-	except:
-	    node_ips = []
-
-        outfile.write("""define host {
-    use            %s
-    name           host_%s
-    host_name      %s
-    alias          Cluster of %s
-    host_groups    +%s
-%s    address        0.0.0.0
-%s    parents        %s
-    _NODEIPS       %s
-}
-
-""" % (cluster_template, clustername, clustername, ", ".join(nodes), hostgroups, 
-       host_contactgroups_nag([clustername]), extra_host_conf_of(clustername),
-       ",".join(nodes), " ".join(node_ips)))
-
-        #   _  _   
-        #  | || |  
-        #  | || |_ 
-        #  |__   _|
-        #     |_|    4. summary hosts of cluster hosts
-
-        # Does this cluster-host have aggregated services? --> Output definition for
-        # Summary host
-        if host_is_aggregated(clustername):
-	   hgs = summary_hostgroups_of(clustername)
-           hostgroups = ",".join(hgs)
-           if hostgroups == "":
-              hostgroups = default_host_group
-              need_default_host_group = True
-	   elif define_hostgroups:
-	      hostgroups_to_define.update(hgs)
-
-           outfile.write("""define host {
-    use            %s-summary
-    name           host_%s
-    host_name      %s
-    __realname     %s
-    alias          Summary of Cluster of %s
-    host_groups    +%s
-%s%s    address        0.0.0.0
-    parents        %s
-    _NODEIPS       %s
-}
-""" % (cluster_template, summary_hostname(clustername), summary_hostname(clustername),
-       clustername, ", ".join(nodes), hostgroups, 
-           host_contactgroups_nag([clustername]), 
-	   extra_summary_host_conf_of(clustername),
-	   clustername, " ".join(node_ips)))
-
-    # output default hostgroup in order to be consistant
-    if need_default_host_group:
-       outfile.write("""# default hostgroup
-define hostgroup {
-    hostgroup_name %s
-    alias          Fallback hostgroup of check_mk
-}
-
-""" % default_host_group)
+    host_checks = get_check_table(hostname).items()
+    aggregated_services_conf = set([])
+    do_aggregation = host_is_aggregated(hostname)
+    have_at_least_one_service = False
+    for ((checkname, item), (params, description, deps)) in host_checks:
+        if have_perfdata(checkname):
+            template = passive_service_template_perf
+        else:
+            template = passive_service_template
     
-    # define hostgroups, if user wants to
-    if define_hostgroups:
-       hgs = list(hostgroups_to_define)
-       hgs.sort()
-       for hg in hgs:
-	  try:
-             alias = define_hostgroups[hg]
-          except:
+        sergr = service_extra_conf(hostname, description, service_groups)
+        if len(sergr) > 0:
+            sg = "    service_groups           +" + ",".join(sergr) + "\n"
+            if define_servicegroups:
+               servicegroups_to_define.update(sergr)
+        else:
+            sg = ""
+            
+        sercgr = service_extra_conf(hostname, description, service_contactgroups)
+        contactgroups_to_define.update(sercgr)
+        if len(sercgr) > 0:
+            scg = "    contact_groups           +" + ",".join(sercgr) + "\n"
+        else:
+            scg = ""
+
+        # Hardcoded for logwatch check: Link to logwatch.php
+        if checkname == "logwatch":
+            logwatch = "    notes_url                " + (logwatch_notes_url % (urllib.quote(hostname), urllib.quote(item))) + "\n"
+        else:
+            logwatch = "";
+
+        # Services Dependencies
+        for dep in deps:
+            outfile.write("define servicedependency {\n"
+                         "    use                           %s\n"
+                         "    host_name                     %s\n"
+                         "    service_description           %s\n"
+                         "    dependent_host_name           %s\n"
+                         "    dependent_service_description %s\n"
+                         "}\n\n" % (service_dependency_template, hostname, dep, hostname, description))
+
+
+        # Handle aggregated services. If this service belongs to an aggregation,
+        # remember, that the aggregated service must be configured. We cannot
+        # do this here, because each aggregated service must occur only once
+        # in the configuration.
+        if do_aggregation:
+            asn = aggregated_service_name(hostname, description)
+            if asn != "":
+                aggregated_services_conf.add(asn)
+
+        outfile.write("""define service {
+  use                      %s
+  host_name                %s
+  service_description      %s
+%s%s%s%s  check_command            check_mk-%s
+}
+
+""" % ( template, hostname, description, sg, scg, logwatch, 
+extra_service_conf_of(hostname, description),
+checkname ))
+        checknames_to_define.add(checkname)
+        have_at_least_one_service = True
+
+
+    # Now create definitions of the aggregated services for this host
+    if do_aggregation and service_aggregations:
+        outfile.write("\n# Aggregated services of host %s\n\n" % hostname)
+
+    aggr_descripts = aggregated_services_conf
+    if aggregate_check_mk and host_is_aggregated(hostname) and have_at_least_one_service:
+        aggr_descripts.add("Check_MK")
+
+    # If a ping-only-host is aggregated, the summary host gets it's own
+    # copy of the ping - as active check. We cannot aggregate the result
+    # from the ping of the real host since no Check_MK is running during 
+    # the check.
+    elif host_is_aggregated(hostname) and not have_at_least_one_service:
+        outfile.write("""
+define service {
+  use                      %s
+%s  host_name                %s
+}
+
+""" % (pingonly_template, extra_service_conf_of(hostname, "PING"), summary_hostname(hostname)))
+
+    for description in aggr_descripts:
+        sergr = service_extra_conf(hostname, description, summary_service_groups)
+        if len(sergr) > 0:
+            sg = "    service_groups            +" + ",".join(sergr) + "\n"
+            if define_servicegroups:
+               servicegroups_to_define.update(sergr)
+        else:
+            sg = ""
+            
+        sercgr = service_extra_conf(hostname, description, summary_service_contactgroups)
+        contactgroups_to_define.update(sercgr)
+        if len(sercgr) > 0:
+            scg = "    contact_groups            +" + ",".join(sercgr) + "\n"
+        else:
+            scg = ""
+
+        nottimes = service_extra_conf(hostname, description, summary_service_notification_periods)
+        if len(nottimes) > 0:
+            nottime = "    notification_period       " + nottimes[0] + "\n"
+        else:
+            nottime = ""
+
+        outfile.write("""define service {
+  use                      %s
+  host_name                %s
+%s%s%s%s  service_description      %s
+}
+
+""" % ( summary_service_template, summary_hostname(hostname), sg, scg, nottime, 
+extra_summary_service_conf_of(hostname, description), description  ))
+
+    # Active check for check_mk
+    if have_at_least_one_service:
+        outfile.write("""
+# Active checks of host %s
+
+define service {
+  use                      %s
+  host_name                %s
+%s  service_description      Check_MK
+}
+
+""" % (hostname, active_service_template, hostname, extra_service_conf_of(hostname, "Check_MK")))
+        # Inventory checks - if user has configured them. Not for clusters.
+        if inventory_check_interval and not is_cluster(hostname):
+            outfile.write("""
+define service {
+  use                      %s
+  host_name                %s
+  normal_check_interval    %d
+%s  service_description      Check_MK inventory
+}
+
+define servicedependency {
+  use                      %s
+  host_name                %s
+  service_description      Check_MK
+  dependent_host_name      %s
+  dependent_service_description Check_MK inventory
+}
+
+
+""" % (inventory_check_template, hostname, inventory_check_interval,
+   extra_service_conf_of(hostname, "Check_MK inventory"),
+   service_dependency_template, hostname, hostname))
+            
+    else:
+        outfile.write("""
+define service {
+  use                      %s
+%s    host_name                %s
+}
+
+""" % (pingonly_template, extra_service_conf_of(hostname, "PING"), hostname))
+
+
+
+
+def create_nagios_config_hostgroups(outfile):
+    outfile.write("\n# -------------------------------------------------------\n")
+    hgs = list(hostgroups_to_define)
+    hgs.sort()
+    for hg in hgs:
+        try:
+            alias = define_hostgroups[hg]
+        except:
              alias = hg
-          outfile.write("""
+        outfile.write("""
 define hostgroup {
     hostgroup_name %s
     alias          %s
 }
 """ % (hg, alias))
 
-    
-
-def output_serviceconf(outfile = sys.stdout):
-    output_conf_header(outfile)
-
-    # Keep list of all check_mk-% check names. We need to define
-    # these as dummy commands. This enables us to have different
-    # specific check names for tools like PNP4Nagios, which assign
-    # templates according to the check names
-    checknames = set([])
-
-    servicegroups_to_output = set([])
-
-    outfile.write("# Service checks generated by check_mk\n\n")
-    clusters_hostdefs = all_active_clusters()
-    for hostname in all_hosts_untagged + clusters_hostdefs:
-
-        outfile.write("# ----------------------------------------------------\n")
-        outfile.write("# %s\n" % hostname)
-        outfile.write("# ----------------------------------------------------\n")
-
-        host_checks = get_check_table(hostname).items()
-        aggregated_services_conf = set([])
-        do_aggregation = host_is_aggregated(hostname)
-        have_at_least_one_service = False
-        for ((checkname, item), (params, description, deps)) in host_checks:
-            if have_perfdata(checkname):
-                template = passive_service_template_perf
-            else:
-                template = passive_service_template
-        
-            sergr = service_extra_conf(hostname, description, service_groups)
-            if len(sergr) > 0:
-                sg = "    service_groups           +" + ",".join(sergr) + "\n"
-                if define_servicegroups:
-	           servicegroups_to_output.update(sergr)
-            else:
-                sg = ""
-                
-            sercgr = service_extra_conf(hostname, description, service_contactgroups)
-	    contactgroups_to_output.update(sercgr)
-            if len(sercgr) > 0:
-                scg = "    contact_groups           +" + ",".join(sercgr) + "\n"
-            else:
-                scg = ""
-
-            nottimes = service_extra_conf(hostname, description, service_notification_periods)
-            if len(nottimes) > 0:
-                nottime = "    notification_period      " + nottimes[0] + "\n"
-            else:
-                nottime = ""
-            
-            # Hardcoded for logwatch check: Link to logwatch.php
-            if checkname == "logwatch":
-                logwatch = "    notes_url                " + (logwatch_notes_url % (urllib.quote(hostname), urllib.quote(item))) + "\n"
-            else:
-                logwatch = "";
-
-            # Services Dependencies
-            for dep in deps:
-                outfile.write("define servicedependency {\n"
-                             "    use                           %s\n"
-                             "    host_name                     %s\n"
-                             "    service_description           %s\n"
-                             "    dependent_host_name           %s\n"
-                             "    dependent_service_description %s\n"
-                             "}\n\n" % (service_dependency_template, hostname, dep, hostname, description))
-
-
-            # Handle aggregated services. If this service belongs to an aggregation,
-            # remember, that the aggregated service must be configured. We cannot
-            # do this here, because each aggregated service must occur only once
-            # in the configuration.
-            if do_aggregation:
-                asn = aggregated_service_name(hostname, description)
-                if asn != "":
-                    aggregated_services_conf.add(asn)
-
-	    outfile.write("""define service {
-    use                      %s
-    host_name                %s
-    service_description      %s
-%s%s%s%s%s    check_command            check_mk-%s
-}
-
-""" % ( template, hostname, description, sg, scg, nottime, logwatch, 
-   extra_service_conf_of(hostname, description),
-   checkname ))
-            checknames.add(checkname)
-            have_at_least_one_service = True
-
-
-        # Now create definitions of the aggregated services for this host
-        if do_aggregation and service_aggregations:
-            outfile.write("\n# Aggregated services of host %s\n\n" % hostname)
-
-        aggr_descripts = aggregated_services_conf
-	if aggregate_check_mk and host_is_aggregated(hostname) and have_at_least_one_service:
-	    aggr_descripts.add("Check_MK")
-
-        # If a ping-only-host is aggregated, the summary host gets it's own
-        # copy of the ping - as active check. We cannot aggregate the result
-        # from the ping of the real host since no Check_MK is running during 
-        # the check.
-        elif host_is_aggregated(hostname) and not have_at_least_one_service:
-            outfile.write("""
-define service {
-    use                      %s
-%s    host_name                %s
-}
-
-""" % (pingonly_template, extra_service_conf_of(hostname, "PING"), summary_hostname(hostname)))
-
-        for description in aggr_descripts:
-            sergr = service_extra_conf(hostname, description, summary_service_groups)
-            if len(sergr) > 0:
-                sg = "    service_groups            +" + ",".join(sergr) + "\n"
-		if define_servicegroups:
-		   servicegroups_to_output.update(sergr)
-            else:
-                sg = ""
-                
-            sercgr = service_extra_conf(hostname, description, summary_service_contactgroups)
-	    contactgroups_to_output.update(sercgr)
-            if len(sercgr) > 0:
-                scg = "    contact_groups            +" + ",".join(sercgr) + "\n"
-            else:
-                scg = ""
-
-            nottimes = service_extra_conf(hostname, description, summary_service_notification_periods)
-            if len(nottimes) > 0:
-                nottime = "    notification_period       " + nottimes[0] + "\n"
-            else:
-                nottime = ""
-
-            outfile.write("""define service {
-    use                      %s
-    host_name                %s
-%s%s%s%s    service_description      %s
-}
-
-""" % ( summary_service_template, summary_hostname(hostname), sg, scg, nottime, 
-   extra_service_conf_of(hostname, description), description  ))
-
-        # Active check for check_mk
-        if have_at_least_one_service:
-            outfile.write("""
-# Active checks of host %s
-
-define service {
-    use                      %s
-    host_name                %s
-%s    service_description      Check_MK
-}
-
-""" % (hostname, active_service_template, hostname, extra_service_conf_of(hostname, "Check_MK")))
-            # Inventory checks - if user has configured them. Not for clusters.
-            if inventory_check_interval and not is_cluster(hostname):
-                outfile.write("""
-define service {
-    use                      %s
-    host_name                %s
-    normal_check_interval    %d
-%s    service_description      Check_MK inventory
-}
-
-define servicedependency {
-    use                      %s
-    host_name                %s
-    service_description      Check_MK
-    dependent_host_name      %s
-    dependent_service_description Check_MK inventory
-}
-
-
-""" % (inventory_check_template, hostname, inventory_check_interval,
-       extra_service_conf_of(hostname, "Check_MK inventory"),
-       service_dependency_template, hostname, hostname))
-                
-        else:
-            outfile.write("""
-define service {
-    use                      %s
-%s    host_name                %s
-}
-
-""" % (pingonly_template, extra_service_conf_of(hostname, "PING"), hostname))
-
-    if generate_dummy_commands:
-        outfile.write("# Dummy check commands for passive services\n\n")
-        for checkname in checknames:
-            outfile.write("""define command {
-        command_name             check_mk-%s
-        command_line             %s
-    }
-
-""" % ( checkname, dummy_check_commandline ))
+def create_nagios_config_servicegroups(outfile):
     if define_servicegroups:
-	 sgs = list(servicegroups_to_output)
+	 sgs = list(servicegroups_to_define)
 	 sgs.sort()
 	 for sg in sgs:
 	    try:
@@ -1602,10 +1530,11 @@ define service {
 
 """ % (sg, alias))
 
-
-
-def output_contactgroups(cgs, outfile = sys.stdout):
-    cgs = list(cgs)
+def create_nagios_config_contactgroups(outfile):
+    if define_contactgroups:
+        contactgroups_to_define.update(host_contactgroups_of(all_active_hosts()))
+	contactgroups_to_define.update(host_contactgroups_of(all_active_clusters()))
+    cgs = list(contactgroups_to_define)
     cgs.sort()
     outfile.write("\n# Contact groups, (controlled by define_contactgroups)\n")
     for name in cgs:
@@ -1618,6 +1547,17 @@ def output_contactgroups(cgs, outfile = sys.stdout):
 		"  alias             %s\n"
 		"}\n" % (name, alias))
 
+
+def create_nagios_config_commands(outfile):
+    if generate_dummy_commands:
+        outfile.write("# Dummy check commands for passive services\n\n")
+        for checkname in checknames_to_define:
+            outfile.write("""define command {
+  command_name   check_mk-%s
+  command_line   %s
+}
+
+""" % ( checkname, dummy_check_commandline ))
 
 #   +----------------------------------------------------------------------+
 #   |            ___                      _                                |
@@ -1666,6 +1606,7 @@ def make_inventory(checkname, hostnamelist, check_only=False):
         sys.exit(1)
 
     newchecks = []
+    newitems = []   # used by inventory check to display unchecked items
     count_new = 0
     checked_hosts = []
 
@@ -1772,6 +1713,7 @@ def make_inventory(checkname, hostnamelist, check_only=False):
               newcheck += "\n"
               if newcheck not in newchecks: # avoid duplicates if inventory outputs item twice
                   newchecks.append(newcheck)
+                  newitems.append( (hn, checkname, item) )
                   count_new += 1
 
 
@@ -1790,11 +1732,12 @@ def make_inventory(checkname, hostnamelist, check_only=False):
 	    sys.stdout.write('%-30s ' % (tty_blue + checkname + tty_normal))
             sys.stdout.write('%s%d new checks%s\n' % (tty_bold + tty_green, count_new, tty_normal))
     else:
-        return count_new
+        return newitems
 
 
 def check_inventory(hostname):
     newchecks = []
+    newitems = []
     total_count = 0
     only_snmp = is_snmp_host(hostname)
     check_table = get_check_table(hostname)
@@ -1805,7 +1748,9 @@ def check_inventory(hostname):
                 continue # No TCP checks on SNMP-only hosts
             elif check_uses_snmp(ct) and ct not in hosts_checktypes:
                 continue
-            count = make_inventory(ct, [hostname], True)
+            new = make_inventory(ct, [hostname], True)
+            newitems += new
+            count = len(new)
             if count > 0:
                 newchecks.append((ct, count))
                 total_count += count
@@ -1813,6 +1758,9 @@ def check_inventory(hostname):
             info = ", ".join([ "%s:%d" % (ct, count) for ct,count in newchecks ])
             statustext = { 0 : "OK", 1: "WARNING", 2:"CRITICAL" }.get(inventory_check_severity, "UNKNOWN")
             sys.stdout.write("%s - %d unchecked services (%s)\n" % (statustext, total_count, info))
+            # Put detailed list into long pluging output
+            for hostname, checkname, item in newitems:
+                sys.stdout.write("%s: %s\n" % (checkname, service_description(checkname, item)))
             sys.exit(inventory_check_severity)
         else:
             sys.stdout.write("OK - no unchecked services found\n")
@@ -1820,6 +1768,8 @@ def check_inventory(hostname):
     except SystemExit, e:
             raise e
     except Exception, e:
+        if opt_debug:
+            raise
         sys.stdout.write("UNKNOWN - %s\n" % (e,))
         sys.exit(3)
 
@@ -1969,6 +1919,7 @@ filesystem_default_levels = None
                  'perfdata_format', 'aggregation_output_format',
                  'aggr_summary_hostname', 'nagios_command_pipe_path',
                  'var_dir', 'counters_directory', 'tcp_cache_dir',
+                 'snmpwalks_dir',
                  'check_mk_basedir', 'df_magicnumber_normsize', 
 		 'df_lowest_warning_level', 'df_lowest_critical_level', 'nagios_user',
                  'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
@@ -2040,6 +1991,7 @@ filesystem_default_levels = None
     output.write("def is_snmp_host(hostname):\n   return %r\n\n" % is_snmp_host(hostname))
     output.write("def snmp_get_command(hostname):\n   return %r\n\n" % snmp_get_command(hostname))
     output.write("def snmp_walk_command(hostname):\n   return %r\n\n" % snmp_walk_command(hostname))
+    output.write("def is_usewalk_host(hostname):\n   return %r\n\n" % is_usewalk_host(hostname))
 
     # IP addresses
     needed_ipaddresses = {}
@@ -2140,7 +2092,7 @@ def show_check_manual(checkname):
     subheader_color = tty(fg_color, bg_color, 1)
     header_color_left = tty(0,2)
     header_color_right = tty(7,2,1)
-    parameters_color = tty(6,4)
+    parameters_color = tty(6,4,1)
     examples_color = tty(6,4,1)
 
     filename = check_manpages_dir + "/" + checkname
@@ -2906,9 +2858,9 @@ Copyright (C) 2009 Mathias Kettner
 def usage():
     print """WAYS TO CALL:
  check_mk [-n] [-v] [-p] HOST [IPADDRESS]  check all services on HOST
- check_mk [-c] -I {tcp|snmp} [HOST1 ...]   inventory - find new services
- check_mk -c, --cleanup-autochecks         reorder autochecks files
- check_mk -S|-H|--timeperiods              output Nagios configuration files
+ check_mk [-u] -I {tcp|snmp} [HOST1 ...]   inventory - find new services
+ check_mk -u, --cleanup-autochecks         reorder autochecks files
+ check_mk -N [HOSTS...]                    output Nagios configuration
  check_mk -C, --compile                    precompile host checks
  check_mk -U, --update                     precompile + create Nagios config
  check_mk -R, --restart                    precompile + config + Nagios restart
@@ -2926,6 +2878,7 @@ def usage():
  check_mk --flush [HOST1 HOST2...]         flush all data of some or all hosts
  check_mk --donate                         Email data of configured hosts to MK
  check_mk --snmpwalk HOST1 HOST2 ...       Do snmpwalk on host
+ check_mk --scan-parents [HOST1 HOST2...]  autoscan parents, create conf.d/parents.mk
  check_mk -P, --package COMMAND            do package operations
  check_mk -V, --version                    print version
  check_mk -h, --help                       print this help
@@ -2954,12 +2907,12 @@ NOTES:
   into per-host files. It can be used as an options to -I or as
   a standalone operation.
 
-  -H, -S and --timeperiods output Nagios configuration data for hosts,
-  services and timeperiods resp. to stdout. Two or more of them can
-  be used at once.
+  -N outputs the Nagios configuration. You may optionally add a list
+  of hosts. In that case the configuration is generated only for
+  that hosts (useful for debugging).
 
-  -U redirects both the output of -S, -H and --timeperiods to the file
-  %s and also calls check_mk -C.
+  -U redirects both the output of -S and -H to the file %s 
+  and also calls check_mk -C.
 
   -D, --dump dumps out the complete configuration and information
   about one, several or all hosts. It shows all services, hostgroups,
@@ -3009,6 +2962,10 @@ NOTES:
   --snmpwalk does a complete snmpwalk for the specifies hosts both
   on the standard MIB and the enterprises MIB and stores the
   result in the directory %s.
+
+  --scan-parents uses traceroute in order to automatically detect
+  hosts's parents. It creates the file conf.d/parents.mk which
+  defines gateway hosts and parent declarations.
   
   Nagios can call check_mk without options and the hostname and its IP
   address as arguments. Much faster is using precompiled host checks,
@@ -3023,44 +2980,21 @@ NOTES:
 
 def do_create_config():
     out = file(nagios_objects_file, "w")
-
-    if define_timeperiods != {}:
-        sys.stdout.write("Generating Nagios configuration for timeperiods...")
-        sys.stdout.flush()
-        output_timeperiods(out)
-        sys.stdout.write("OK\n")
-
-    if generate_hostconf:
-        sys.stdout.write("Generating Nagios configuration for hosts...")
-        sys.stdout.flush()
-        output_hostconf(out)
-        sys.stdout.write("OK\n")
-
-    sys.stdout.write("Generating Nagios configuration for services...")
+    sys.stdout.write("Generating Nagios configuration...")
     sys.stdout.flush()
-    output_serviceconf(out)
-    sys.stdout.write("OK\n")
+    create_nagios_config(out)
+    sys.stdout.write(tty_ok + "\n")
 
-    if define_contactgroups:
-	sys.stdout.write("Generating Nagios configuration for contactsgroups...")
-        sys.stdout.flush()
-        contactgroups_to_output.update(host_contactgroups_of(all_active_hosts()))
-	contactgroups_to_output.update(host_contactgroups_of(all_active_clusters()))
-	output_contactgroups(contactgroups_to_output, out)
-	sys.stdout.write("OK\n")
-
-    if extra_nagios_conf:
-	out.write("\n# extra_nagios_conf\n\n")
-	out.write(extra_nagios_conf)
-
-    sys.stdout.flush()
-    out.close()
+def do_output_nagios_conf(args):
+    if len(args) == 0:
+        args = None
+    create_nagios_config(sys.stdout, args)
 
 def do_precompile_hostchecks():
     sys.stdout.write("Precompiling host checks...")
     sys.stdout.flush()
     precompile_hostchecks()
-    sys.stdout.write("OK\n")
+    sys.stdout.write(tty_ok + "\n")
     
 
 def do_update():
@@ -3074,6 +3008,8 @@ def do_update():
 
     except Exception, e:
         sys.stderr.write("Configuration Error: %s\n" % e)
+        if opt_debug:
+            raise
         sys.exit(1)
 
 
@@ -3088,7 +3024,7 @@ def do_check_nagiosconfig():
     output = process.read()
     exit_status = process.close()
     if not exit_status:
-        sys.stderr.write("OK\n")
+        sys.stderr.write(tty_ok + "\n")
         return True
     else:
         sys.stderr.write("ERROR:\n")
@@ -3106,7 +3042,7 @@ def do_restart_nagios():
         sys.stderr.write("ERROR:\n")
         raise MKGeneralException("Cannot restart Nagios")
     else:
-        sys.stderr.write("OK\n")
+        sys.stderr.write(tty_ok + "\n")
 
 def do_restart():
     try:
@@ -3208,6 +3144,151 @@ def do_cleanup_autochecks():
                 sys.stdout.write("Deleting %s\n" % f)
             os.remove(f)
 
+def do_scan_parents(hosts):
+    if len(hosts) == 0:
+        hosts = filter(lambda h: in_binary_hostlist(h, scanparent_hosts), all_hosts_untagged)
+
+    found = []
+    parent_hosts = []
+    parent_ips   = {}
+    parent_rules = []
+
+    sys.stdout.write("Scanning for parents...")
+    for host in hosts:
+        # skip hosts that already have a parent
+        if len(parents_of(host)) > 0:
+            if opt_verbose:
+                sys.stdout.write("(manual parent) ")
+                sys.stdout.flush()
+            continue
+        if opt_verbose:
+            sys.stdout.write("%s " % host)
+        else:
+            sys.stdout.write(".")
+        sys.stdout.flush()
+
+        gw = scan_parent_of(host)
+        if gw:
+            gateway, gateway_ip = gw
+            if not gateway: # create artificial host
+                gateway = "gw-%s" % (gateway_ip.replace(".", "-"))
+                parent_hosts.append("%s|parent" % gateway)
+                parent_ips[gateway] = gateway_ip
+                parent_rules.append( (monitoring_host, [gateway]) ) # make Nagios a parent of gw
+            parent_rules.append( (gateway, [host]) )
+        elif host != monitoring_host:
+            # make monitoring host the parent of all hosts without real parent
+            parent_rules.append( (monitoring_host, [host]) )
+
+    import pprint
+    outfilename = check_mk_configdir + "/parents.mk"
+    out = file(outfilename, "w")
+    out.write("# Automatically created by --scan-parents at %s\n\n" % time.asctime())
+    out.write("# Do not edit this file. If you want to convert an\n")
+    out.write("# artificial gateway host into a permanent one, then\n")
+    out.write("# move its definition into another *.mk file\n")
+
+    out.write("# Parents which are not listed in your all_hosts:\n")
+    out.write("all_hosts += %s\n\n" % pprint.pformat(parent_hosts))
+
+    out.write("# IP addresses of parents not listed in all_hosts:\n")
+    out.write("ipaddresses.update(%s)\n\n" % pprint.pformat(parent_ips))
+
+    out.write("# Parent definitions\n")
+    out.write("parents += %s\n\n" % pprint.pformat(parent_rules))
+    sys.stdout.write("\nWrote %s\n" % outfilename)
+
+
+def scan_parent_of(host):
+    os.putenv("LANG", "")
+    os.putenv("LC_ALL", "")
+    try:
+        ip = lookup_ipaddress(host)
+    except:
+        sys.stderr.write("%s: cannot resolve host name\n" % host)
+        return None
+
+    command = "traceroute -m 15 -n -w 3 %s" % ip
+    if opt_debug:
+        sys.stderr.write("Running '%s'\n" % command)
+    lines = [l.strip() for l in os.popen(command).readlines()]
+    if len(lines) == 0:
+        raise MKGeneralException("Cannot execute %s. Is traceroute installed? Are you root?" % command)
+    elif len(lines) < 2:
+        sys.stderr.write("%s: %s\n" % (host, ' '.join(lines)))
+        return None
+
+    # Parse output of traceroute:
+    # traceroute to 8.8.8.8 (8.8.8.8), 30 hops max, 40 byte packets
+    #  1  * * *
+    #  2  10.0.0.254  0.417 ms  0.459 ms  0.670 ms
+    #  3  172.16.0.254  0.967 ms  1.031 ms  1.544 ms
+    #  4  217.0.116.201  23.118 ms  25.153 ms  26.959 ms
+    #  5  217.0.76.134  32.103 ms  32.491 ms  32.337 ms
+    #  6  217.239.41.106  32.856 ms  35.279 ms  36.170 ms
+    #  7  74.125.50.149  45.068 ms  44.991 ms *
+    #  8  * 66.249.94.86  41.052 ms 66.249.94.88  40.795 ms
+    #  9  209.85.248.59  43.739 ms  41.106 ms 216.239.46.240  43.208 ms
+    # 10  216.239.48.53  45.608 ms  47.121 ms 64.233.174.29  43.126 ms
+    # 11  209.85.255.245  49.265 ms  40.470 ms  39.870 ms
+    # 12  8.8.8.8  28.339 ms  28.566 ms  28.791 ms
+    routes = []
+    for line in lines[1:]:
+        parts = line.split()
+        route = parts[1]
+        if route.count('.') == 3:
+            routes.append(route)
+        elif route == '*':
+            routes.append(None) # No answer from this router
+        else: 
+            sys.stderr.write("%s: invalid output line from traceroute: '%s'\n" % (host, line))
+
+    if len(routes) == 0:
+        sys.stderr.write("%s: incomplete output from traceroute. No routes found.\n" % host)
+        return None
+
+    # Only one entry -> host is directly reachable and gets nagios as parent - 
+    # if nagios is not the parent itself. Problem here: How can we determine
+    # if the host in question is the monitoring host? The user must configure
+    # this in monitoring_host.
+    elif len(routes) == 1:
+        nagios_ip = lookup_ipaddress(monitoring_host)
+        if ip == nagios_ip:
+            return None # We are the monitoring host
+        else:
+            return (monitoring_host, nagios_ip)
+
+    # Try far most route which is not identical with host itself
+    route = None
+    for r in routes[::-1]:
+        if not r or (r == ip):
+            continue
+        route = r
+        break
+    if not route:
+        sys.stderr.write("%s: No usable routing information\n" % host)
+        return None
+        
+    # TTLs already have been filtered out)
+    gateway_ip = route
+    gateway = ip_to_hostname(route)
+    if opt_verbose:
+        sys.stdout.write("%s(%s) " % (gateway, gateway_ip))
+    return (gateway, gateway_ip)
+
+# find hostname belonging to an ip address. We must not use
+# reverse DNS but the Check_MK mechanisms
+def ip_to_hostname(ip):
+    global ip_to_hostname_cache
+    if ip_to_hostname_cache == None:
+        ip_to_hostname_cache = {}
+        for host in all_hosts_untagged:
+            try:
+                ip_to_hostname_cache[lookup_ipaddress(host)] = host
+            except:
+                pass
+    return ip_to_hostname_cache.get(ip)
+
 
 #   +----------------------------------------------------------------------+
 #   |                        __  __       _                                |
@@ -3243,13 +3324,14 @@ for hostname in strip_tags(all_hosts + clusters.keys()):
 # Do option parsing and execute main function -
 # if check_mk is not called as module
 if __name__ == "__main__":
-    short_options = 'SHVLCURDMd:Ic:nhvpXPu'
+    short_options = 'SHVLCURDMd:Ic:nhvpXPuN'
     long_options = ["help", "version", "verbose", "compile", "debug",
                     "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
 		    "flush", "package", "donate", "snmpwalk", "usewalk",
+                    "scan-parents",
                     "no-cache", "update", "restart", "dump", "fake-dns=",
                     "man", "nowiki", "config-check", "backup=", "restore=",
-                    "check-inventory=", "timeperiods", "paths", "cleanup-autochecks" ]
+                    "check-inventory=", "paths", "cleanup-autochecks" ]
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -3301,18 +3383,14 @@ if __name__ == "__main__":
             sys.exit(0)
         elif o in [ '-X', '--config-check' ]:
             sys.exit(0) # already done
-        elif o == '-S':
-            # import profile
-            # profile.run('output_serviceconf()')
-            output_serviceconf()
+        elif o in [ '-S', '-H' ]:
+            sys.stderr.write(tty_bold + tty_red + "ERROR" + tty_normal + "\n")
+            sys.stderr.write("The options -S and -H have been replaced with the option -N. If you \n")
+            sys.stderr.write("want to generate only the service definitions, please set \n")
+            sys.stderr.write("'generate_hostconf = True' in main.mk.\n")
             done = True
-        elif o == '-H':
-            # import profile
-            # profile.run('output_hostconf()')
-            output_hostconf()
-            done = True
-        elif o == '--timeperiods':
-            output_timeperiods()
+        elif o == '-N':
+            do_output_nagios_conf(args)
             done = True
         elif o in [ '-C', '--compile' ]:
             precompile_hostchecks()
@@ -3374,6 +3452,9 @@ if __name__ == "__main__":
             done = True
         elif o == '--check-inventory':
             check_inventory(a)
+            done = True
+        elif o == '--scan-parents':
+            do_scan_parents(args)
             done = True
 
         

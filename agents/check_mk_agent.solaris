@@ -50,7 +50,8 @@ PLUGINSDIR=$MK_LIBDIR/plugins
 LOCALDIR=$MK_LIBDIR/local
 
 echo '<<<check_mk>>>'
-echo Version: 1.1.7i1
+echo Version: 1.1.7i2
+echo AgentOS: solaris
 
 echo '<<<df>>>'
 for fs in ufs zfs

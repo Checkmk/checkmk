@@ -37,7 +37,7 @@ set -e
 NAGIOS_VERSION=3.2.1
 PLUGINS_VERSION=1.4.14
 RRDTOOL_VERSION=1.4.3
-CHECK_MK_VERSION=1.1.7i1
+CHECK_MK_VERSION=1.1.7i2
 PNP_VERSION=0.6.4
 NAGVIS_VERSION=1.5
 
@@ -275,10 +275,7 @@ then
     ./configure --prefix=/usr/local --localstatedir=/var --enable-perl-site-install
     make -j 16
     make install
-    if ! id rrdcached >/dev/null 2>&1 ; then
-       echo 'Creating user rrdcached'
-       useradd rrdcached 
-    fi
+    ldconfig
 
     # Create start script
     cat <<EOF > /etc/init.d/rrdcached
@@ -302,8 +299,8 @@ CACHE_DIR="/var/lib/rrdcached"
 JOURNAL_DIR="\$CACHE_DIR/journal"
 SOCKET="\$CACHE_DIR/rrdcached.sock"
 PIDFILE="\$CACHE_DIR/rrdcached.pid"
-USER="rrdcached"
-OPTS="\$TIMING -l unix:\$SOCKET -p \$PIDFILE -j \$JOURNAL_DIR -b \$RRD_DIR -B"
+USER="nagios"
+OPTS="\$TIMING -m 0660 -l unix:\$SOCKET -p \$PIDFILE -j \$JOURNAL_DIR -b \$RRD_DIR -B"
 DAEMON="/usr/local/bin/rrdcached"
 
 case "\$1" in
@@ -322,12 +319,19 @@ case "\$1" in
         # make sure, directories are there (ramdisk!)
         mkdir -p \$CACHE_DIR \$RRD_DIR && 
         chown -R \$USER \$CACHE_DIR \$RRD_DIR &&
-        su \$USER -c "\$DAEMON \$OPTS" &&
+        su -s /bin/bash \$USER -c "\$DAEMON \$OPTS" &&
         echo OK || echo Error
     ;;
     stop)
-        echo -n 'Stopping rrdcached...'
-        killall rrdcached && echo OK || echo "not running"
+	echo -n 'Stopping rrdcached...'
+        PID=\$(cat \$PIDFILE 2>/dev/null)
+        if [ -z "\$PID" ] ; then
+	    echo "not running."
+        elif kill "\$PID" ; then
+	    echo "OK"
+        else
+	    echo "Failed"
+        fi
     ;;
     restart)
         \$0 stop
@@ -510,8 +514,8 @@ date_format=iso8601
 enable_embedded_perl=0
 use_regexp_matching=0
 use_true_regexp_matching=0
-use_large_installation_tweaks=0
-enable_environment_macros=1
+use_large_installation_tweaks=1
+enable_environment_macros=0
 debug_level=0
 debug_verbosity=0
 max_debug_file_size=1000000
@@ -702,8 +706,8 @@ RRA_STEP = 60
 LOG_FILE = /var/log/nagios/perfdata.log
 LOG_LEVEL = 0
 XML_ENC = UTF-8
-XML_UPDATE_DELAY = 0
-RRD_DAEMON_OPTS = 
+XML_UPDATE_DELAY = 3600
+RRD_DAEMON_OPTS = unix:/var/lib/rrdcached/rrdcached.sock
 EOF
 
 rm -f config.php*
@@ -749,7 +753,7 @@ cat <<EOF > config.php
 \$views[3]["start"] = ( 60*60*24*30 );
 \$views[4]["title"] = "One Year";
 \$views[4]["start"] = ( 60*60*24*365 );
-\$conf['RRD_DAEMON_OPTS'] = '';
+\$conf['RRD_DAEMON_OPTS'] = 'unix:/var/lib/rrdcached/rrdcached.sock';
 \$conf['template_dir'] = '/usr/local/share/pnp4nagios';
 ?>
 EOF

@@ -22,6 +22,9 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+var browser = navigator.userAgent.toLowerCase();
+var weAreIEF__k = ((browser.indexOf("msie") != -1) && (browser.indexOf("opera") == -1));
+
 //
 // Sidebar styling and scrolling stuff
 //
@@ -62,6 +65,7 @@ if (window.addEventListener) {
 var snapinDragging = false;
 var snapinOffset   = [ 0, 0 ];
 var snapinStartPos = [ 0, 0 ];
+var snapinScrollTop = 0;
 
 function getButton(event) {
   if (event.which == null)
@@ -94,8 +98,10 @@ function snapinStartDrag(event) {
   snapinDragging = target.parentNode;
 
   // Save relative offset of the mouse to the snapin title to prevent flipping on drag start
-  snapinOffset   = [ event.clientY - target.parentNode.offsetTop, event.clientX - target.parentNode.offsetLeft ];
+  snapinOffset   = [ event.clientY - target.parentNode.offsetTop, 
+                     event.clientX - target.parentNode.offsetLeft ];
   snapinStartPos = [ event.clientY, event.clientX ];
+  snapinScrollTop = document.getElementById('side_content').scrollTop;
   
   // Disable the default events for all the different browsers
   if (event.preventDefault)
@@ -112,12 +118,21 @@ function snapinDrag(event) {
   if (snapinDragging === false)
     return true;
 
+  // Is the mouse placed of the title bar of the snapin?
+  // It can move e.g. if the scroll wheel is wheeled during dragging...
+
   // Drag the snapin
   snapinDragging.style.position = 'absolute';
-  snapinDragging.style.top      = event.clientY - snapinOffset[0] - document.getElementById('side_content').scrollTop;
+  var newTop = event.clientY  - snapinOffset[0] - snapinScrollTop;
+  if (weAreIEF__k) 
+      newTop += document.getElementById('side_content').scrollTop;
+  snapinDragging.style.top      = newTop;
   snapinDragging.style.left     = event.clientX - snapinOffset[1];
   snapinDragging.style.width    = '175px';
   snapinDragging.style.zIndex   = 200;
+  // snapinDragging.children[0].children[1].innerHTML = "TOP: " 
+  //      + document.getElementById('side_content').scrollTop 
+  //      + " UT " + snapinScrollTop;
 
   // Refresh the drop marker
   removeSnapinDragIndicator();
@@ -202,12 +217,23 @@ function snapinStopDrag(event) {
   snapinDragging = false;
 }
 
+function getDivChildNodes(node) {
+  if(typeof node.children === 'undefined') {
+    var children = [];
+    for(var i in node.childNodes)
+      if(node.childNodes[i].tagName === 'DIV')
+        children.push(node.childNodes[i]);
+    return children;
+  } else
+    return node.children;
+}
+
 function getSnapinList() {
   if (snapinDragging === false)
     return true;
   
   var l = [];
-  var childs = snapinDragging.parentNode.children;
+  var childs = getDivChildNodes(snapinDragging.parentNode);
   for(var i in childs) {
     var child = childs[i];
     // Skip
@@ -221,7 +247,9 @@ function getSnapinList() {
 }
 
 function getSnapinCoords(obj) {
-  var snapinTop = snapinDragging.offsetTop + document.getElementById('side_content').scrollTop;
+  var snapinTop = snapinDragging.offsetTop;
+  if (!weAreIEF__k)
+      snapinTop += document.getElementById('side_content').scrollTop;
   
   var bottomOffset = obj.offsetTop + obj.clientHeight - snapinTop;
   if (bottomOffset < 0)
@@ -310,7 +338,11 @@ function setSidebarHeight() {
   var oFooter  = document.getElementById('side_footer');
   var height   = pageHeight();
   
-  oContent.style.height = height - oHeader.clientHeight - oFooter.clientHeight - 5;
+
+  if (weAreIEF__k)
+      oContent.style.height = height - oFooter.clientHeight + 5;
+  else
+      oContent.style.height = height - oHeader.clientHeight - oFooter.clientHeight - 5;
 }
 
 var scrolling = true;

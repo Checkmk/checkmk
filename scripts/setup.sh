@@ -24,7 +24,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-VERSION=1.1.7i1
+VERSION=1.1.7i2
 NAME=check_mk
 LANG=
 LC_ALL=
@@ -602,7 +602,8 @@ do
 	   done &&
 	   mkdir -p $DESTDIR$vardir/{autochecks,counters,precompiled,cache,logwatch,web} &&
 	   if [ -z "$DESTDIR" ] && id "$nagiosuser" > /dev/null 2>&1 && [ $UID = 0 ] ; then
-	     chown -R $nagiosuser $DESTDIR$vardir/{counters,cache,logwatch,web}
+	     chown -R $nagiosuser $DESTDIR$vardir/{counters,cache,logwatch}
+	     chown $nagiosuser $DESTDIR$vardir/web
            fi &&
 	   if [ -z "$DESTDIR" ] ; then
 	     chgrp -R $wwwgroup $DESTDIR$vardir/web &&

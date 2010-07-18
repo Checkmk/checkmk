@@ -232,7 +232,6 @@ service_notification_periods         = []
 host_notification_periods            = []
 host_contactgroups                   = []
 parents                              = []
-define_timeperiods                   = {}
 define_hostgroups                    = None
 define_servicegroups                 = None
 define_contactgroups                 = None
@@ -1180,22 +1179,6 @@ def in_extraconf_servicelist(list, item):
     # no match in list -> negative answer
     return False
 
-
-def output_timeperiods(outfile = sys.stdout):
-    daynames = [ "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday" ]
-    
-    output_conf_header(outfile)
-    for name, times in define_timeperiods.items():
-        if len(times) != 7:
-            raise MKGeneralException("Timeperiod definition '%s' needs 7 time ranges, but has %d" % (name, len(times)))
-        outfile.write("define timeperiod {\n"
-                      "  timeperiod_name   %s\n"
-                      "  alias             %s\n" % (name, name))
-        for day, period in zip(daynames, times):
-            if period: # None -> no time
-                outfile.write("  %-16s  %s\n" % (day, period))
-        outfile.write("}\n\n")
-        
 
 # We deal with four kinds of hosts here
 # 1. normal, physical hosts
@@ -2923,7 +2906,7 @@ def usage():
  check_mk [-n] [-v] [-p] HOST [IPADDRESS]  check all services on HOST
  check_mk [-u] -I {tcp|snmp} [HOST1 ...]   inventory - find new services
  check_mk -u, --cleanup-autochecks         reorder autochecks files
- check_mk -S|-H|--timeperiods              output Nagios configuration files
+ check_mk -S|-H             s              output Nagios configuration files
  check_mk -C, --compile                    precompile host checks
  check_mk -U, --update                     precompile + create Nagios config
  check_mk -R, --restart                    precompile + config + Nagios restart
@@ -2970,12 +2953,11 @@ NOTES:
   into per-host files. It can be used as an options to -I or as
   a standalone operation.
 
-  -H, -S and --timeperiods output Nagios configuration data for hosts,
-  services and timeperiods resp. to stdout. Two or more of them can
-  be used at once.
+  -H and -S output Nagios configuration data for hosts and services to stdout. 
+  Both of them cat be used at once.
 
-  -U redirects both the output of -S, -H and --timeperiods to the file
-  %s and also calls check_mk -C.
+  -U redirects both the output of -S and -H to the file %s 
+  and also calls check_mk -C.
 
   -D, --dump dumps out the complete configuration and information
   about one, several or all hosts. It shows all services, hostgroups,
@@ -3043,12 +3025,6 @@ NOTES:
 
 def do_create_config():
     out = file(nagios_objects_file, "w")
-
-    if define_timeperiods != {}:
-        sys.stdout.write("Generating Nagios configuration for timeperiods...")
-        sys.stdout.flush()
-        output_timeperiods(out)
-        sys.stdout.write("OK\n")
 
     if generate_hostconf:
         sys.stdout.write("Generating Nagios configuration for hosts...")
@@ -3415,7 +3391,7 @@ if __name__ == "__main__":
                     "scan-parents",
                     "no-cache", "update", "restart", "dump", "fake-dns=",
                     "man", "nowiki", "config-check", "backup=", "restore=",
-                    "check-inventory=", "timeperiods", "paths", "cleanup-autochecks" ]
+                    "check-inventory=", "paths", "cleanup-autochecks" ]
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -3476,9 +3452,6 @@ if __name__ == "__main__":
             # import profile
             # profile.run('output_hostconf()')
             output_hostconf()
-            done = True
-        elif o == '--timeperiods':
-            output_timeperiods()
             done = True
         elif o in [ '-C', '--compile' ]:
             precompile_hostchecks()

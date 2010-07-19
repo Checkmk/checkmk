@@ -378,10 +378,11 @@ def render_sitestatus():
 
 sidebar_snapins["sitestatus"] = {
   "title" : "Site status",
-    "description" : "Connection state of each site and button for enabling and disabling the site connection",
-    "author" : "Mathias Kettner",
+  "description" : "Connection state of each site and button for enabling and disabling the site connection",
+  "author" : "Mathias Kettner",
   "render" : render_sitestatus,
   "allowed" : [ "user", "admin" ],
+  "refresh" : 90,
   "styles" : """
 .snapin table.sitestate {
     width: %d;

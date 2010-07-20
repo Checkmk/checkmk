@@ -43,7 +43,7 @@ def check_wmic_process(item, params, info):
         return (3, "No process %s found" % name)
 
     mem_mb = mem / 1048576.0
-    page_mb = page / 1048576.0 
+    page_mb = page / 1048576.0
     timedif, user_per_sec = get_counter("wmic_process.user.%s.%d" % (name, count), time.time(), userc)
     timedif, kernel_per_sec = get_counter("wmic_process.kernel.%s.%d" % (name, count), time.time(), kernelc)
     user_perc = user_per_sec / 100000.0

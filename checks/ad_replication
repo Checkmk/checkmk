@@ -52,7 +52,7 @@ def parse_ad_replication_info(info):
 def inventory_ad_replication(checktype, info):
     inv = []
     for line in parse_ad_replication_info(info):
-        item = ('%s/%s' % (line[1], line[2]), 'ad_replication_default_params')
+        item = ('%s/%s' % (line[4], line[5]), 'ad_replication_default_params')
         if line[0] == 'showrepl_INFO' and item not in inv:
             inv.append(item)
     return inv
@@ -68,7 +68,7 @@ def check_ad_replication(item, params, info):
          transport, numFailures, timeLastFailure, timeLastSuccess,
          statusLastFailure ) = l
 
-        if lineType == 'showrepl_INFO' and destSite+'/'+destDC == item:
+        if lineType == 'showrepl_INFO' and sourceSite+'/'+sourceDC == item:
             foundLine = True
             timeLastFailure = parse_ad_replication_dates(timeLastFailure)
             timeLastSuccess = parse_ad_replication_dates(timeLastSuccess)
@@ -78,7 +78,7 @@ def check_ad_replication(item, params, info):
                 output += 'CRITICAL: %s/%s replication of context %s reached ' + \
                           ' the threshold of maxmimum failures (%s) (Last Success: %s, ' + \
                           'LastFailure: %s NumFailures: %s Status: %s), ' % \
-                         (destSite, destDC, namingContext, params[0], timeLastFailure,
+                         (sourceSite, sourceDC, namingContext, params[0], timeLastFailure,
                           timeLastSuccess, numFailures, statusLastFailure)
 
             if timeLastFailure is not None and timeLastSuccess is not None \
@@ -86,7 +86,7 @@ def check_ad_replication(item, params, info):
                 status = 2
                 output += 'CRITICAL: %s/%s replication of context %s failed '+ \
                          '(Last Success: %s, LastFailure: %s NumFailures: %s Status: %s), ' % \
-                         (destSite, destDC, namingContext, timeLastFailure,
+                         (sourceSite, sourceDC, namingContext, timeLastFailure,
                           timeLastSuccess, numFailures, statusLastFailure)
     if not foundLine:
         return (3, 'UNKNOWN - Replication information for %s not found' % item)

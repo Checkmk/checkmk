@@ -34,6 +34,7 @@
       checks than the linux agent.
     * heartbeat_crm and heartbeat_crm.resources: Change handling of check parameters.
       Please reinvenurize and read the updated man page of those checks
+    * New check hp_proliant_cpu: Check the physical state of CPUs in HP Proliant servers
 
     Multisite:
     * fix chown problem (when nagios user own files to be written

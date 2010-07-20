@@ -187,6 +187,7 @@ simulation_mode                    = False
 perfdata_format                    = "standard" # also possible: "pnp"
 debug_log                          = None
 monitoring_host                    = "localhost" # your Nagios host
+max_num_processes                  = 50
 
 # SNMP communities
 snmp_default_community             = 'public'
@@ -2897,6 +2898,7 @@ OPTIONS:
                  prevents DNS lookups.
   --usewalk      use snmpwalk stored with --snmpwalk
   --debug        never catch Python exceptions
+  --procs N      start up to N processes in parallel during --scan-parents
 
 NOTES:
   -I can be restricted to certain check types. Write '-I df' if you
@@ -3145,6 +3147,7 @@ def do_cleanup_autochecks():
             os.remove(f)
 
 def do_scan_parents(hosts):
+    global max_num_processes
     if len(hosts) == 0:
         hosts = filter(lambda h: in_binary_hostlist(h, scanparent_hosts), all_hosts_untagged)
 
@@ -3152,33 +3155,42 @@ def do_scan_parents(hosts):
     parent_hosts = []
     parent_ips   = {}
     parent_rules = []
+    gateway_hosts = set([])
+    
+    if max_num_processes < 1:
+        max_num_processes = 1
 
-    sys.stdout.write("Scanning for parents...")
-    for host in hosts:
-        # skip hosts that already have a parent
-        if len(parents_of(host)) > 0:
-            if opt_verbose:
-                sys.stdout.write("(manual parent) ")
-                sys.stdout.flush()
-            continue
-        if opt_verbose:
-            sys.stdout.write("%s " % host)
-        else:
-            sys.stdout.write(".")
-        sys.stdout.flush()
+    sys.stdout.write("Scanning for parents (%d processes)..." % max_num_processes)
+    sys.stdout.flush()
+    while len(hosts) > 0:
+        chunk = []
+        while len(chunk) < max_num_processes and len(hosts) > 0:
+            host = hosts[0]
+            del hosts[0]
+            # skip hosts that already have a parent
+            if len(parents_of(host)) > 0:
+                if opt_verbose:
+                    sys.stdout.write("(manual parent) ")
+                    sys.stdout.flush()
+                continue
+            chunk.append(host)
 
-        gw = scan_parent_of(host)
-        if gw:
-            gateway, gateway_ip = gw
-            if not gateway: # create artificial host
-                gateway = "gw-%s" % (gateway_ip.replace(".", "-"))
-                parent_hosts.append("%s|parent" % gateway)
-                parent_ips[gateway] = gateway_ip
-                parent_rules.append( (monitoring_host, [gateway]) ) # make Nagios a parent of gw
-            parent_rules.append( (gateway, [host]) )
-        elif host != monitoring_host:
-            # make monitoring host the parent of all hosts without real parent
-            parent_rules.append( (monitoring_host, [host]) )
+        gws = scan_parents_of(chunk)
+
+        for host, gw in zip(chunk, gws):
+            if gw:
+                gateway, gateway_ip = gw
+                if not gateway: # create artificial host
+                    gateway = "gw-%s" % (gateway_ip.replace(".", "-"))
+                    if gateway not in gateway_hosts:
+                        gateway_hosts.add(gateway)
+                        parent_hosts.append("%s|parent" % gateway)
+                        parent_ips[gateway] = gateway_ip
+                        parent_rules.append( (monitoring_host, [gateway]) ) # make Nagios a parent of gw
+                parent_rules.append( (gateway, [host]) )
+            elif host != monitoring_host:
+                # make monitoring host the parent of all hosts without real parent
+                parent_rules.append( (monitoring_host, [host]) )
 
     import pprint
     outfilename = check_mk_configdir + "/parents.mk"
@@ -3199,82 +3211,117 @@ def do_scan_parents(hosts):
     sys.stdout.write("\nWrote %s\n" % outfilename)
 
 
-def scan_parent_of(host):
+def scan_parents_of(hosts):
+    nagios_ip = lookup_ipaddress(monitoring_host)
     os.putenv("LANG", "")
     os.putenv("LC_ALL", "")
-    try:
-        ip = lookup_ipaddress(host)
-    except:
-        sys.stderr.write("%s: cannot resolve host name\n" % host)
-        return None
 
-    command = "traceroute -m 15 -n -w 3 %s" % ip
-    if opt_debug:
-        sys.stderr.write("Running '%s'\n" % command)
-    lines = [l.strip() for l in os.popen(command).readlines()]
-    if len(lines) == 0:
-        raise MKGeneralException("Cannot execute %s. Is traceroute installed? Are you root?" % command)
-    elif len(lines) < 2:
-        sys.stderr.write("%s: %s\n" % (host, ' '.join(lines)))
-        return None
+    # Start processes in parallel
+    procs = []
+    for host in hosts:
+        if opt_verbose:
+            sys.stdout.write("%s " % host)
+            sys.stdout.flush()
+        try:
+            ip = lookup_ipaddress(host)
+        except:
+            sys.stderr.write("%s: cannot resolve host name\n" % host)
+            ip = None
+        command = "traceroute -m 15 -n -w 3 %s" % ip
+        if opt_debug:
+            sys.stderr.write("Running '%s'\n" % command)
+        procs.append( (host, ip, os.popen(command) ) )
 
-    # Parse output of traceroute:
-    # traceroute to 8.8.8.8 (8.8.8.8), 30 hops max, 40 byte packets
-    #  1  * * *
-    #  2  10.0.0.254  0.417 ms  0.459 ms  0.670 ms
-    #  3  172.16.0.254  0.967 ms  1.031 ms  1.544 ms
-    #  4  217.0.116.201  23.118 ms  25.153 ms  26.959 ms
-    #  5  217.0.76.134  32.103 ms  32.491 ms  32.337 ms
-    #  6  217.239.41.106  32.856 ms  35.279 ms  36.170 ms
-    #  7  74.125.50.149  45.068 ms  44.991 ms *
-    #  8  * 66.249.94.86  41.052 ms 66.249.94.88  40.795 ms
-    #  9  209.85.248.59  43.739 ms  41.106 ms 216.239.46.240  43.208 ms
-    # 10  216.239.48.53  45.608 ms  47.121 ms 64.233.174.29  43.126 ms
-    # 11  209.85.255.245  49.265 ms  40.470 ms  39.870 ms
-    # 12  8.8.8.8  28.339 ms  28.566 ms  28.791 ms
-    routes = []
-    for line in lines[1:]:
-        parts = line.split()
-        route = parts[1]
-        if route.count('.') == 3:
-            routes.append(route)
-        elif route == '*':
-            routes.append(None) # No answer from this router
-        else: 
-            sys.stderr.write("%s: invalid output line from traceroute: '%s'\n" % (host, line))
+    # Now all run and we begin to read the answers
+    def dot(color, dot='o'):
+        sys.stdout.write(tty_bold + color + dot + tty_normal)
+        sys.stdout.flush()
 
-    if len(routes) == 0:
-        sys.stderr.write("%s: incomplete output from traceroute. No routes found.\n" % host)
-        return None
-
-    # Only one entry -> host is directly reachable and gets nagios as parent - 
-    # if nagios is not the parent itself. Problem here: How can we determine
-    # if the host in question is the monitoring host? The user must configure
-    # this in monitoring_host.
-    elif len(routes) == 1:
-        nagios_ip = lookup_ipaddress(monitoring_host)
-        if ip == nagios_ip:
-            return None # We are the monitoring host
-        else:
-            return (monitoring_host, nagios_ip)
-
-    # Try far most route which is not identical with host itself
-    route = None
-    for r in routes[::-1]:
-        if not r or (r == ip):
+    gateways = []
+    for host, ip, proc in procs:
+        lines = [l.strip() for l in proc.readlines()]
+        exitstatus = proc.close()
+        if exitstatus:
+            dot(tty_red, str(exitstatus))
+            gateways.append(None)
             continue
-        route = r
-        break
-    if not route:
-        sys.stderr.write("%s: No usable routing information\n" % host)
-        return None
-        
-    # TTLs already have been filtered out)
-    gateway_ip = route
-    gateway = ip_to_hostname(route)
-    if opt_verbose:
-        sys.stdout.write("%s(%s) " % (gateway, gateway_ip))
-    return (gateway, gateway_ip)
+
+        if len(lines) == 0:
+            if opt_debug:
+                raise MKGeneralException("Cannot execute %s. Is traceroute installed? Are you root?" % command)
+            else:
+                dot(tty_red, '!')
+        elif len(lines) < 2:
+            sys.stderr.write("%s: %s\n" % (host, ' '.join(lines)))
+            gateways.append(None)
+            dot(tty_blue)
+            continue
+
+        # Parse output of traceroute:
+        # traceroute to 8.8.8.8 (8.8.8.8), 30 hops max, 40 byte packets
+        #  1  * * *
+        #  2  10.0.0.254  0.417 ms  0.459 ms  0.670 ms
+        #  3  172.16.0.254  0.967 ms  1.031 ms  1.544 ms
+        #  4  217.0.116.201  23.118 ms  25.153 ms  26.959 ms
+        #  5  217.0.76.134  32.103 ms  32.491 ms  32.337 ms
+        #  6  217.239.41.106  32.856 ms  35.279 ms  36.170 ms
+        #  7  74.125.50.149  45.068 ms  44.991 ms *
+        #  8  * 66.249.94.86  41.052 ms 66.249.94.88  40.795 ms
+        #  9  209.85.248.59  43.739 ms  41.106 ms 216.239.46.240  43.208 ms
+        # 10  216.239.48.53  45.608 ms  47.121 ms 64.233.174.29  43.126 ms
+        # 11  209.85.255.245  49.265 ms  40.470 ms  39.870 ms
+        # 12  8.8.8.8  28.339 ms  28.566 ms  28.791 ms
+        routes = []
+        for line in lines[1:]:
+            parts = line.split()
+            route = parts[1]
+            if route.count('.') == 3:
+                routes.append(route)
+            elif route == '*':
+                routes.append(None) # No answer from this router
+            else: 
+                sys.stderr.write("%s: invalid output line from traceroute: '%s'\n" % (host, line))
+
+        if len(routes) == 0:
+            sys.stderr.write("%s: incomplete output from traceroute. No routes found.\n" % host)
+            gateways.append(None)
+            dot(tty_red)
+            continue
+
+        # Only one entry -> host is directly reachable and gets nagios as parent - 
+        # if nagios is not the parent itself. Problem here: How can we determine
+        # if the host in question is the monitoring host? The user must configure
+        # this in monitoring_host.
+        elif len(routes) == 1:
+            if ip == nagios_ip:
+                gateways.append(None) # We are the monitoring host
+                dot(tty_white)
+            else:
+                gateways.append( (monitoring_host, nagios_ip) )
+                dot(tty_cyan)
+            continue
+
+        # Try far most route which is not identical with host itself
+        route = None
+        for r in routes[::-1]:
+            if not r or (r == ip):
+                continue
+            route = r
+            break
+        if not route:
+            sys.stderr.write("%s: No usable routing information\n" % host)
+            gateways.append(None)
+            dot(tty_blue)
+            continue
+            
+        # TTLs already have been filtered out)
+        gateway_ip = route
+        gateway = ip_to_hostname(route)
+        if opt_verbose:
+            sys.stdout.write("%s(%s) " % (gateway, gateway_ip))
+        gateways.append( (gateway, gateway_ip) )
+        dot(tty_green, 'G')
+    return gateways
 
 # find hostname belonging to an ip address. We must not use
 # reverse DNS but the Check_MK mechanisms
@@ -3328,7 +3375,7 @@ if __name__ == "__main__":
     long_options = ["help", "version", "verbose", "compile", "debug",
                     "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
 		    "flush", "package", "donate", "snmpwalk", "usewalk",
-                    "scan-parents",
+                    "scan-parents", "procs=",
                     "no-cache", "update", "restart", "dump", "fake-dns=",
                     "man", "nowiki", "config-check", "backup=", "restore=",
                     "check-inventory=", "paths", "cleanup-autochecks" ]
@@ -3365,6 +3412,8 @@ if __name__ == "__main__":
             fake_dns = a
         elif o == '--usewalk':
             opt_use_snmp_walk = True
+        elif o == '--procs':
+            max_num_processes = int(a)
         elif o == '--nowiki':
             opt_nowiki = True
         elif o == '--debug':

@@ -46,7 +46,7 @@ livestatus_so_SOURCES = \
 	ContactgroupsMemberColumn.cc OffsetStringMacroColumn.cc OffsetStringServiceMacroColumn.cc \
 	OffsetStringHostMacroColumn.cc StatsColumn.cc IntAggregator.cc CountAggregator.cc \
 	DoubleAggregator.cc AttributelistColumn.cc AttributelistFilter.cc \
-	global_counters.c  module.c  logger.c waittriggers.c
+	global_counters.c  module.c  logger.c waittriggers.c TimeperiodsCache.cc
 
 livestatus_so_CXXFLAGS = -I$(top_srcdir)/nagios -fPIC
 livestatus_so_CFLAGS   = $(livestatus_so_CXXFLAGS) 

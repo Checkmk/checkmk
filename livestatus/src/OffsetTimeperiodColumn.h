@@ -35,17 +35,9 @@
 
 class OffsetTimeperiodColumn : public OffsetIntColumn
 {
-    time_t _cache_time;
-    typedef map<timeperiod *, bool> _cache_t;
-    _cache_t _cache;
-    pthread_mutex_t _cache_lock;
-
 public:
     OffsetTimeperiodColumn(string, string, int, int indirect_offset = -1);
-    ~OffsetTimeperiodColumn();
     int32_t getValue(void *data, Query *);
-private:
-    bool inTimeperiod(timeperiod *tp);
 };
 
 

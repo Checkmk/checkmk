@@ -25,6 +25,7 @@
 #include "nagios.h"
 #include "Query.h"
 #include "OffsetStringColumn.h"
+#include "OffsetTimeperiodColumn.h"
 #include "TableTimeperiods.h"
 
 extern timeperiod *timeperiod_list;
@@ -43,6 +44,8 @@ void TableTimeperiods::addColumns(Table *table, string prefix, int indirect_offs
 		"The name of the timeperiod", (char *)(&tp.name) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(prefix + "alias", 
 		"The alias of the timeperiod", (char *)(&tp.alias) - ref, indirect_offset));
+    table->addColumn(new OffsetTimeperiodColumn(prefix + "in", 
+		"Wether we are currently in this period (0/1)", -1, indirect_offset));
     // TODO: add days and exceptions
 }
 

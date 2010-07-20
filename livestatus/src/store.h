@@ -46,6 +46,7 @@ extern "C"
   void queue_add_connection(int cc);
   int  queue_pop_connection();
   void queue_wakeup_all();
+  void update_timeperiods_cache(time_t);
 
 #ifdef __cplusplus
 }

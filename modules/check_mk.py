@@ -3242,7 +3242,7 @@ def scan_parents_of(hosts):
         lines = [l.strip() for l in proc.readlines()]
         exitstatus = proc.close()
         if exitstatus:
-            dot(tty_red, str(exitstatus))
+            dot(tty_red, '*')
             gateways.append(None)
             continue
 
@@ -3295,10 +3295,10 @@ def scan_parents_of(hosts):
         elif len(routes) == 1:
             if ip == nagios_ip:
                 gateways.append(None) # We are the monitoring host
-                dot(tty_white)
+                dot(tty_white, 'N')
             else:
                 gateways.append( (monitoring_host, nagios_ip) )
-                dot(tty_cyan)
+                dot(tty_cyan, 'L')
             continue
 
         # Try far most route which is not identical with host itself

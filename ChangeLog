@@ -3,6 +3,9 @@
     * Remove config option define_timeperiods and option --timeperiods.
       Check_MK does not longer define timeperiod definitions. Please
       define them manually in Nagios.
+    * host_notification_period has been removed. Use host_extra_conf["notification_period"]
+      instead. Same holds for service_notification_periods, summary_host_notification_periods
+      and summary_service_notification_periods.
     * Removed modes -H and -S for creating config data. This now does
       the new option -N. Please set generate_hostconf = False if you
       want only services to be defined.
@@ -42,6 +45,12 @@
       than 3.5.
     * Sidebar: Fixed IE8 and Chrome snapin movement problems
     * Sidebar: Fixed IE problem where sidebar is too small
+
+    Livestatus:
+    * Fix problems with in_*_period. Introduce global
+      timeperiod cache. This also improves performance
+    * Table timeperiods: new column 'in' which is 0/1 if/not the
+      timeperiod is currently active
 
 1.1.7i1:
     Core, Setup, etc.:

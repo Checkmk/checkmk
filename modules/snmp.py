@@ -214,7 +214,7 @@ def get_snmp_table(hostname, ip, oid_info):
           first_column = columns[0]
           new_first_column = []
           for oid, val in first_column:
-             new_first_column.append((oid, str(suboid) + "." + str(x)))
+             new_first_column.append((oid, str(suboid) + "." + str(val)))
           columns[0] = new_first_column
 
        # Swap X and Y axis of table (we want one list of columns per item)

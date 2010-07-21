@@ -219,6 +219,7 @@ nagios_illegal_chars               = '`~!$%^&*|\'"<>?,()='
 
 # Data to be defined in main.mk
 checks                               = []
+check_parameters                     = []
 all_hosts                            = []
 snmp_hosts                           = [ (['snmp'],   ALL_HOSTS) ]
 bulkwalk_hosts                       = None
@@ -357,105 +358,6 @@ if __name__ == "__main__":
                     raise
                 sys.exit(5)
    
-
-#   +----------------------------------------------------------------------+
-#   |         ____                _                    __ _                |
-#   |        |  _ \ ___  __ _  __| |   ___ ___  _ __  / _(_) __ _          |
-#   |        | |_) / _ \/ _` |/ _` |  / __/ _ \| '_ \| |_| |/ _` |         |
-#   |        |  _ <  __/ (_| | (_| | | (_| (_) | | | |  _| | (_| |         |
-#   |        |_| \_\___|\__,_|\__,_|  \___\___/|_| |_|_| |_|\__, |         |
-#   |                                                       |___/          |
-#   +----------------------------------------------------------------------+
-
-# Now - at last - we can read in the user's configuration files
-def all_nonfunction_vars():
-    return set([ name for name,value in globals().items() if name[0] != '_' and type(value) != type(lambda:0) ])
-
-if opt_config_check:
-    vars_before_config = all_nonfunction_vars()
-
-
-list_of_files = [ check_mk_configfile ] + glob.glob(check_mk_configdir + '/*.mk')
-final_mk = check_mk_basedir + "/final.mk"
-if os.path.exists(final_mk):
-    list_of_files.append(final_mk)
-for f in list_of_files:
-    # Hack: during parent scan mode we must not read in old version of parents.mk!
-    if '--scan-parents' in sys.argv and f.endswith("/parents.mk"):
-        continue
-    try:
-        if opt_debug:
-            sys.stderr.write("Reading config file %s...\n" % f)
-        execfile(f)
-    except Exception, e:
-        sys.stderr.write("Cannot read in configuration file %s:\n%s\n" % (f, e))
-        if __name__ == "__main__":
-            sys.exit(3)
-        else:
-            raise
-
-       
-# Load python-rrd if available and not switched off.
-if do_rrd_update:
-    try:
-        import rrdtool
-    except:
-        sys.stdout.write("ERROR: Cannot do direct rrd updates since the Python module\n"+
-                         "'rrdtool' could not be loaded. Please install python-rrdtool\n"+
-                         "or set do_rrd_update to False in main.mk.\n")
-        sys.exit(3)
-
-# read automatically generated checks. They are prepended to the check
-# table: explicit user defined checks override automatically generated
-# ones. Do not read in autochecks, if check_mk is called as module.
-def read_all_autochecks():
-    global autochecks
-    autochecks = []
-    for f in glob.glob(autochecksdir + '/*.mk'):
-        try:
-           autochecks += eval(file(f).read())
-        except SyntaxError,e:
-           sys.stderr.write("Syntax error in file %s: %s\n" % (f, e))
-           sys.exit(3)
-        except Exception, e:
-           sys.stderr.write("Error in file %s:\n%s\n" % (f, e))
-           sys.exit(3)
-
-if __name__ == "__main__":
-    read_all_autochecks()
-        
-checks = autochecks + checks
-
-if opt_config_check:
-    vars_after_config = all_nonfunction_vars()
-    ignored_variables = set(['vars_before_config', 'rrdtool', 'final_mk', 'list_of_files', 'autochecks'])
-    errors = 0
-    for name in vars_after_config:
-        if name not in ignored_variables and name not in vars_before_config:
-            sys.stderr.write("Invalid configuration variable '%s'\n" % name)
-            errors += 1
-    if errors > 0:
-        sys.stderr.write("--> Found %d invalid variables\n" % errors)
-        sys.stderr.write("If you use own helper variables, please prefix them with _.\n")
-        sys.exit(1)
-
-
-# Convert www_group into numeric id
-if type(www_group) == str:
-    try:
-        import grp
-        www_group = grp.getgrnam(www_group)[2]
-    except Exception, e:
-        sys.stderr.write("Cannot convert group '%s' into group id: %s\n" % (www_group, e))
-        sys.stderr.write("Please set www_group to an existing group in main.mk.\n")
-        sys.exit(3)
-
-# --------------------------------------------------------------------------
-# FINISHED WITH READING IN USER DATA
-# Now we are finished with reading in user data and can safely define
-# further functions and variables without fear of name clashes with user
-# defined variables.
-# --------------------------------------------------------------------------
 
 #   +----------------------------------------------------------------------+
 #   |                    ____ _               _                            |
@@ -2396,17 +2298,6 @@ def show_check_manual(checkname):
 #   |                                             |_|                      |
 #   +----------------------------------------------------------------------+
 
-backup_paths = [
-    # tarname               path                 canonical name   description                is_dir owned_by_nagios www_group
-    ('check_mk_configfile', check_mk_configfile, "main.mk",       "Main configuration file",           False, False, False ),
-    ('final_mk',            final_mk,            "final.mk",      "Final configuration file final.mk", False, False, False ),
-    ('check_mk_configdir',  check_mk_configdir,  "",              "Configuration sub files",           True,  False, False ),
-    ('autochecksdir',       autochecksdir,       "",              "Automatically inventorized checks", True,  False, False ),
-    ('counters_directory',  counters_directory,  "",              "Performance counters",              True,  True,  False ),
-    ('tcp_cache_dir',       tcp_cache_dir,       "",              "Agent cache",                       True,  True,  False ),
-    ('logwatch_dir',        logwatch_dir,        "",              "Logwatch",                          True,  True,  True  ),
-    ]
-
 class fake_file:
     def __init__(self, content):
         self.content = content
@@ -3062,6 +2953,8 @@ def do_restart():
         except Exception, e:
             sys.stderr.write("Error creating configuration: %s\n" % e)
             os.rename(backup_path, nagios_objects_file)
+            if opt_debug:
+                raise
             sys.exit(1)
             
         if do_check_nagiosconfig():
@@ -3079,10 +2972,12 @@ def do_restart():
 
     except Exception, e:
         try:
-            if backup_path:
+            if backup_path and os.path.exists(backup_path):
                 os.remove(backup_path)
         except:
             pass
+        if opt_debug:
+            raise
         sys.stderr.write("An error occurred: %s\n" % e)
         sys.exit(1)
 
@@ -3338,13 +3233,41 @@ def ip_to_hostname(ip):
 
 
 #   +----------------------------------------------------------------------+
-#   |                        __  __       _                                |
-#   |                       |  \/  | __ _(_)_ __                           |
-#   |                       | |\/| |/ _` | | '_ \                          |
-#   |                       | |  | | (_| | | | | |                         |
-#   |                       |_|  |_|\__,_|_|_| |_|                         |
-#   |                                                                      |
+#   |         ____                _                    __ _                |
+#   |        |  _ \ ___  __ _  __| |   ___ ___  _ __  / _(_) __ _          |
+#   |        | |_) / _ \/ _` |/ _` |  / __/ _ \| '_ \| |_| |/ _` |         |
+#   |        |  _ <  __/ (_| | (_| | | (_| (_) | | | |  _| | (_| |         |
+#   |        |_| \_\___|\__,_|\__,_|  \___\___/|_| |_|_| |_|\__, |         |
+#   |                                                       |___/          |
 #   +----------------------------------------------------------------------+
+
+
+# Now - at last - we can read in the user's configuration files
+def all_nonfunction_vars():
+    return set([ name for name,value in globals().items() if name[0] != '_' and type(value) != type(lambda:0) ])
+
+if opt_config_check:
+    vars_before_config = all_nonfunction_vars()
+
+
+list_of_files = [ check_mk_configfile ] + glob.glob(check_mk_configdir + '/*.mk')
+final_mk = check_mk_basedir + "/final.mk"
+if os.path.exists(final_mk):
+    list_of_files.append(final_mk)
+for f in list_of_files:
+    # Hack: during parent scan mode we must not read in old version of parents.mk!
+    if '--scan-parents' in sys.argv and f.endswith("/parents.mk"):
+        continue
+    try:
+        if opt_debug:
+            sys.stderr.write("Reading config file %s...\n" % f)
+        execfile(f)
+    except Exception, e:
+        sys.stderr.write("Cannot read in configuration file %s:\n%s\n" % (f, e))
+        if __name__ == "__main__":
+            sys.exit(3)
+        else:
+            raise
 
 # Strip off host tags from the list of all_hosts.  Host tags can be
 # appended to the hostnames in all_hosts, separated by pipe symbols,
@@ -3356,9 +3279,6 @@ for taggedhost in all_hosts + clusters.keys():
     hosttags[parts[0]] = parts[1:]
 all_hosts_untagged = all_active_hosts()
 
-# global helper variable needed by config output
-contactgroups_to_output = set([])
-
 # Sanity check for duplicate hostnames
 seen_hostnames = set([])
 for hostname in strip_tags(all_hosts + clusters.keys()):
@@ -3367,6 +3287,103 @@ for hostname in strip_tags(all_hosts + clusters.keys()):
         sys.exit(4)
     seen_hostnames.add(hostname)
 
+# Load python-rrd if available and not switched off.
+if do_rrd_update:
+    try:
+        import rrdtool
+    except:
+        sys.stdout.write("ERROR: Cannot do direct rrd updates since the Python module\n"+
+                         "'rrdtool' could not be loaded. Please install python-rrdtool\n"+
+                         "or set do_rrd_update to False in main.mk.\n")
+        sys.exit(3)
+
+# read automatically generated checks. They are prepended to the check
+# table: explicit user defined checks override automatically generated
+# ones. Do not read in autochecks, if check_mk is called as module.
+def read_all_autochecks():
+    global autochecks
+    autochecks = []
+    for f in glob.glob(autochecksdir + '/*.mk'):
+        try:
+           autochecks += eval(file(f).read())
+        except SyntaxError,e:
+           sys.stderr.write("Syntax error in file %s: %s\n" % (f, e))
+           sys.exit(3)
+        except Exception, e:
+           sys.stderr.write("Error in file %s:\n%s\n" % (f, e))
+           sys.exit(3)
+    # Exchange inventorized check parameters with those configured by
+    # the user.
+    if check_parameters != []:
+        new_autochecks = []
+        for autocheck in autochecks:
+            host, checktype, item, params = autocheck
+            descr = service_description(checktype, item)
+            entries = service_extra_conf(host, descr, check_parameters)
+            if len(entries) > 0:
+                new_autochecks.append( (host, checktype, item, entries[0] ) )
+            else:
+                new_autochecks.append(autocheck) # leave unchanged
+        autochecks = new_autochecks
+
+if __name__ == "__main__":
+    read_all_autochecks()
+        
+checks = autochecks + checks
+
+
+if opt_config_check:
+    vars_after_config = all_nonfunction_vars()
+    ignored_variables = set(['vars_before_config', 'rrdtool', 'final_mk', 'list_of_files', 'autochecks', 
+                              'parts' ,'hosttags' ,'seen_hostnames' ,'all_hosts_untagged' ,'taggedhost' ,'hostname'])
+    errors = 0
+    for name in vars_after_config:
+        if name not in ignored_variables and name not in vars_before_config:
+            sys.stderr.write("Invalid configuration variable '%s'\n" % name)
+            errors += 1
+    if errors > 0:
+        sys.stderr.write("--> Found %d invalid variables\n" % errors)
+        sys.stderr.write("If you use own helper variables, please prefix them with _.\n")
+        sys.exit(1)
+
+
+# Convert www_group into numeric id
+if type(www_group) == str:
+    try:
+        import grp
+        www_group = grp.getgrnam(www_group)[2]
+    except Exception, e:
+        sys.stderr.write("Cannot convert group '%s' into group id: %s\n" % (www_group, e))
+        sys.stderr.write("Please set www_group to an existing group in main.mk.\n")
+        sys.exit(3)
+
+# --------------------------------------------------------------------------
+# FINISHED WITH READING IN USER DATA
+# Now we are finished with reading in user data and can safely define
+# further functions and variables without fear of name clashes with user
+# defined variables.
+# --------------------------------------------------------------------------
+
+backup_paths = [
+    # tarname               path                 canonical name   description                is_dir owned_by_nagios www_group
+    ('check_mk_configfile', check_mk_configfile, "main.mk",       "Main configuration file",           False, False, False ),
+    ('final_mk',            final_mk,            "final.mk",      "Final configuration file final.mk", False, False, False ),
+    ('check_mk_configdir',  check_mk_configdir,  "",              "Configuration sub files",           True,  False, False ),
+    ('autochecksdir',       autochecksdir,       "",              "Automatically inventorized checks", True,  False, False ),
+    ('counters_directory',  counters_directory,  "",              "Performance counters",              True,  True,  False ),
+    ('tcp_cache_dir',       tcp_cache_dir,       "",              "Agent cache",                       True,  True,  False ),
+    ('logwatch_dir',        logwatch_dir,        "",              "Logwatch",                          True,  True,  True  ),
+    ]
+
+
+#   +----------------------------------------------------------------------+
+#   |                        __  __       _                                |
+#   |                       |  \/  | __ _(_)_ __                           |
+#   |                       | |\/| |/ _` | | '_ \                          |
+#   |                       | |  | | (_| | | | | |                         |
+#   |                       |_|  |_|\__,_|_|_| |_|                         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
 
 # Do option parsing and execute main function -
 # if check_mk is not called as module

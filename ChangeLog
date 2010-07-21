@@ -42,6 +42,7 @@
       Please reinvenurize and read the updated man page of those checks
     * New check hp_proliant_cpu: Check the physical state of CPUs in HP Proliant servers
     * New check hp_proliant_temp: Check the temperature sensors of HP Proliant servers
+    * New check hp_proliant_fans: Check the FAN sensors of HP Proliant servers
 
     Multisite:
     * fix chown problem (when nagios user own files to be written

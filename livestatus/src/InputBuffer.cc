@@ -33,7 +33,10 @@
 #include "logger.h"
 
 #define READ_TIMEOUT_USEC 200000
-#define QUERY_TIMEOUT    5000000  /* complete query must be read within 2 seconds */
+extern int g_query_timeout_msec;
+extern int g_idle_timeout_msec;
+
+bool timeout_reached(const struct timeval *, int);
 
 InputBuffer::InputBuffer(int *termination_flag)
 : _termination_flag(termination_flag)
@@ -56,6 +59,17 @@ void InputBuffer::setFd(int fd)
 // request with nextLine().
 int InputBuffer::readRequest()
 {
+   // Remember when we started waiting for a request. This
+   // is needed for the idle_timeout. A connection may
+   // not be idle longer than that value.
+   struct timeval start_of_idle; // Waiting for the first line
+   gettimeofday(&start_of_idle, NULL);
+
+   // Remember if we have read some part of the query. During
+   // a query the timeout is another (short) than between
+   // queries.
+   bool query_started = false;
+
    // _read_pointer points to the place in the buffer, where the
    // next valid data begins. This data ends at _write_pointer.
    // That data might have been read while reading the previous
@@ -80,12 +94,23 @@ int InputBuffer::readRequest()
 	 if (_write_pointer < _end_pointer) 
 	 {
 	    int rd = readData(); // tries to read in further data into buffer
+            if (rd == IB_TIMEOUT) {
+                if (query_started) {
+                    logger(LG_INFO, "Timeout of %d ms exceeded while reading query", g_query_timeout_msec);
+                    return IB_TIMEOUT;
+                }
+                // Check if we exceeded the maximum time between two queries
+                else if (timeout_reached(&start_of_idle, g_idle_timeout_msec)) {
+                    logger(LG_INFO, "Idle timeout of %d ms exceeded. Going to close connection.", g_idle_timeout_msec);
+                    return IB_TIMEOUT;
+                }
+            }
 
 	    // Are we at end of file? That is only an error, if we've
 	    // read an incomplete line. If the last thing we read was
 	    // a linefeed, then we consider the current request to
 	    // be valid, if it is not empty.
-	    if (rd == IB_END_OF_FILE && r == _read_pointer /* currently at beginning of a line */) 
+            else if (rd == IB_END_OF_FILE && r == _read_pointer /* currently at beginning of a line */) 
 	    {
 	       if (_requestlines.empty()) {
 		  return IB_END_OF_FILE; // empty request -> no request
@@ -105,7 +130,7 @@ int InputBuffer::readRequest()
 	       return IB_UNEXPECTED_END_OF_FILE;
 
 	    // Other status codes
-	    else if (rd == IB_SHOULD_TERMINATE || rd == IB_TIMEOUT)
+	    else if (rd == IB_SHOULD_TERMINATE)
 	       return rd;
 	 }
 	 // OK. So no space is left in the buffer. But maybe at the
@@ -142,6 +167,7 @@ int InputBuffer::readRequest()
 	 }
 	 else { // non-empty line: belongs to current request
 	    storeRequestLine(_read_pointer, r - _read_pointer);
+            query_started = true;
 	    _read_pointer = r + 1;
 	    r = _read_pointer;
 	 }
@@ -149,7 +175,8 @@ int InputBuffer::readRequest()
    }
 }
 
-
+// read at least *some* data. Return IB_TIMEOUT if that
+// lasts more than g_query_timeout_msec msecs.
 int InputBuffer::readData()
 {
    struct timeval start;
@@ -158,14 +185,8 @@ int InputBuffer::readData()
    struct timeval tv;
    while (!*_termination_flag) 
    {
-      struct timeval now;
-      gettimeofday(&now, NULL);
-      int64_t elapsed = (now.tv_sec - start.tv_sec) * 1000000;
-      elapsed += now.tv_usec - start.tv_usec;
-      if (elapsed >= QUERY_TIMEOUT) {
-	  logger(LG_INFO, "Timeout while reading query");
-	  return IB_TIMEOUT;
-      }
+      if (timeout_reached(&start, g_query_timeout_msec))
+          return IB_TIMEOUT;
 
       tv.tv_sec  = READ_TIMEOUT_USEC / 1000000;
       tv.tv_usec = READ_TIMEOUT_USEC % 1000000;
@@ -209,3 +230,13 @@ string InputBuffer::nextLine()
    _requestlines.pop_front();
    return s;
 }
+
+bool timeout_reached(const struct timeval *start, int timeout_ms)
+{
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    int64_t elapsed = (now.tv_sec - start->tv_sec) * 1000000;
+    elapsed += now.tv_usec - start->tv_usec;
+    return elapsed / 1000 >= timeout_ms;
+}
+

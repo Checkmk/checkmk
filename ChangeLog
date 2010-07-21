@@ -51,6 +51,10 @@
       timeperiod cache. This also improves performance
     * Table timeperiods: new column 'in' which is 0/1 if/not the
       timeperiod is currently active
+    * New module option idle_timeout. It sets the time in ms
+      Livestatus waits for the next query. Default is 300000 ms (5 min).
+    * New module option query_timeout. It limits the time between
+      two lines of a query (in ms). Default is 10000 ms (10 sec).
 
 1.1.7i1:
     Core, Setup, etc.:

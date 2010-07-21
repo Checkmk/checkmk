@@ -38,11 +38,13 @@
 #include "InputBuffer.h"
 #include "OutputBuffer.h"
 #include "logger.h"
+#include "TimeperiodsCache.h"
 
 using namespace std;
 
 Store *g_store = 0;
 ClientQueue *g_client_queue = 0;
+TimeperiodsCache *g_timeperiods_cache = 0;
 
 /* API functions for event broker module (with C linkage) */
 
@@ -50,6 +52,7 @@ void store_init()
 {
   g_store = new Store();
   g_client_queue = new ClientQueue();
+  g_timeperiods_cache = new TimeperiodsCache();
 }
 
 
@@ -62,6 +65,10 @@ void store_deinit()
    if (g_client_queue) {
       delete g_client_queue;
       g_client_queue = 0;
+   }
+   if (g_timeperiods_cache) {
+       delete g_timeperiods_cache;
+       g_timeperiods_cache = 0;
    }
 }
 
@@ -124,5 +131,10 @@ void set_inputbuffer_fd(void *ib, int fd)
 void delete_inputbuffer(void *ob)
 {
    delete (InputBuffer *)ob;
+}
+
+void update_timeperiods_cache(time_t now)
+{
+   g_timeperiods_cache->update(now);
 }
 

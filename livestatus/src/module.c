@@ -63,7 +63,10 @@
 
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
 
-int g_accept_timeout_msec = 2500; /* default is 2.5 sec */
+int g_accept_timeout_msec = 2500;          /* maximum time accept() is allowed to take */
+int g_idle_timeout_msec = 300 * 1000; /* maximum idle time for connection in keep alive state */
+int g_query_timeout_msec = 10 * 1000;      /* maximum time for reading a query */
+
 int g_num_clientthreads = 10;     /* allow 10 concurrent connections per default */
 size_t g_thread_stack_size = 65536; /* stack size of threads */
 
@@ -369,6 +372,13 @@ int broker_program(int event_type, void *data)
     pthread_cond_broadcast(&g_wait_cond[WT_PROGRAM]);
 }
 
+int broker_event(int event_type, void *data)
+{
+    g_counters[COUNTER_NEB_CALLBACKS]++;
+    struct nebstruct_timed_event_struct *ts = (struct nebstruct_timed_event_struct *)data;
+    update_timeperiods_cache(ts->timestamp.tv_sec);
+}
+
 int broker_process(int event_type, void *data)
 {
     struct nebstruct_process_struct *ps = (struct nebstruct_process_struct *)data;
@@ -388,6 +398,7 @@ void register_callbacks()
     neb_register_callback(NEBCALLBACK_STATE_CHANGE_DATA,     g_nagios_handle, 0, broker_state); // only for trigger 'state'
     neb_register_callback(NEBCALLBACK_ADAPTIVE_PROGRAM_DATA, g_nagios_handle, 0, broker_program); // only for trigger 'program'
     neb_register_callback(NEBCALLBACK_PROCESS_DATA,          g_nagios_handle, 0, broker_process); // used for starting threads
+    neb_register_callback(NEBCALLBACK_TIMED_EVENT_DATA,      g_nagios_handle, 0, broker_event); // used for timeperiods cache
 }
 
 void deregister_callbacks()
@@ -402,6 +413,7 @@ void deregister_callbacks()
     neb_deregister_callback(NEBCALLBACK_STATE_CHANGE_DATA,     broker_state);
     neb_deregister_callback(NEBCALLBACK_ADAPTIVE_PROGRAM_DATA, broker_program);
     neb_deregister_callback(NEBCALLBACK_PROCESS_DATA,          broker_program);
+    neb_deregister_callback(NEBCALLBACK_TIMED_EVENT_DATA,      broker_event);
 }
 
 
@@ -458,6 +470,24 @@ void livestatus_parse_arguments(const char *args_orig)
 		else {
 		    g_accept_timeout_msec = c;
 		    logger(LG_INFO, "Setting TCP connect timeout to %d ms", c);
+		}
+	    }
+	    else if (!strcmp(left, "query_timeout")) {
+		int c = atoi(right);
+		if (c < 0)
+		    logger(LG_INFO, "Error: query_timeout must be >= 0");
+		else {
+		    g_query_timeout_msec = c;
+		    logger(LG_INFO, "Setting timeout for reading a query to %d ms", c);
+		}
+	    }
+	    else if (!strcmp(left, "idle_timeout")) {
+		int c = atoi(right);
+		if (c < 0)
+		    logger(LG_INFO, "Error: idle_timeout must be >= 0");
+		else {
+		    g_idle_timeout_msec = c;
+		    logger(LG_INFO, "Setting idle timeout to %d ms", c);
 		}
 	    }
 	    else if (!strcmp(left, "service_authorization")) {

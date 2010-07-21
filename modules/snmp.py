@@ -188,11 +188,12 @@ def get_snmp_table(hostname, ip, oid_info):
             fetchoid = oid
             if suboid:
                fetchoid += "." + str(suboid)
+            fetchoid += "." + str(column)
             
             if opt_use_snmp_walk or is_usewalk_host(hostname):
-                rowinfo = get_stored_snmpwalk(hostname, fetchoid + "." + str(column))
+                rowinfo = get_stored_snmpwalk(hostname, fetchoid)
             else:
-                rowinfo = snmpwalk_on_suboid(hostname, ip, fetchoid + "." + str(column))
+                rowinfo = snmpwalk_on_suboid(hostname, ip, fetchoid)
                 
             if len(rowinfo) > 0 or True:
                columns.append(rowinfo)
@@ -204,8 +205,8 @@ def get_snmp_table(hostname, ip, oid_info):
        if index_column != -1:
           index_rows = []
           # Take end-oids of non-index columns as indices
-          for oid, value in columns[max_len_col]:
-             index_rows.append((oid, oid.split('.')[-1]))
+          for o, value in columns[max_len_col]:
+             index_rows.append((o, o.split('.')[-1]))
           columns[index_column] = index_rows
 
        
@@ -213,8 +214,8 @@ def get_snmp_table(hostname, ip, oid_info):
        if suboid and len(columns) > 0:
           first_column = columns[0]
           new_first_column = []
-          for oid, val in first_column:
-             new_first_column.append((oid, str(suboid) + "." + str(x)))
+          for o, val in first_column:
+             new_first_column.append((o, str(suboid) + "." + str(val)))
           columns[0] = new_first_column
 
        # Swap X and Y axis of table (we want one list of columns per item)
@@ -226,8 +227,8 @@ def get_snmp_table(hostname, ip, oid_info):
        # First compute the complete list of end-oids appearing in the output
        endoids = []
        for column in columns:
-           for oid, value in column:
-               endoid = oid.rsplit('.', 1)[-1]
+           for o, value in column:
+               endoid = o.rsplit('.', 1)[-1]
                if endoid not in endoids:
                    endoids.append(endoid)
 
@@ -236,8 +237,8 @@ def get_snmp_table(hostname, ip, oid_info):
        for column in columns:
            i = 0
            new_column = []
-           for oid, value in column:
-               beginoid, endoid = oid.rsplit('.', 1)
+           for o, value in column:
+               beginoid, endoid = o.rsplit('.', 1)
                while i < len(endoids) and endoids[i] != endoid:
                   new_column.append("") # (beginoid + '.' +endoids[i], "" ) )
                   i += 1

@@ -83,7 +83,6 @@ def connect_to_livestatus(html):
 		html.site_status[sitename] = { "state" : "dead", "site" : site }
 		enabled_sites[sitename] = site
 
-	# Now connect to enabled sites with keepalive-connection
 	html.live = livestatus.MultiSiteConnection(enabled_sites)
 
 	# Fetch status of sites by querying the version of Nagios and livestatus

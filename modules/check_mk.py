@@ -187,6 +187,7 @@ simulation_mode                    = False
 perfdata_format                    = "standard" # also possible: "pnp"
 debug_log                          = None
 monitoring_host                    = "localhost" # your Nagios host
+max_num_processes                  = 50
 
 # SNMP communities
 snmp_default_community             = 'public'
@@ -218,6 +219,7 @@ nagios_illegal_chars               = '`~!$%^&*|\'"<>?,()='
 
 # Data to be defined in main.mk
 checks                               = []
+check_parameters                     = []
 all_hosts                            = []
 snmp_hosts                           = [ (['snmp'],   ALL_HOSTS) ]
 bulkwalk_hosts                       = None
@@ -356,105 +358,6 @@ if __name__ == "__main__":
                     raise
                 sys.exit(5)
    
-
-#   +----------------------------------------------------------------------+
-#   |         ____                _                    __ _                |
-#   |        |  _ \ ___  __ _  __| |   ___ ___  _ __  / _(_) __ _          |
-#   |        | |_) / _ \/ _` |/ _` |  / __/ _ \| '_ \| |_| |/ _` |         |
-#   |        |  _ <  __/ (_| | (_| | | (_| (_) | | | |  _| | (_| |         |
-#   |        |_| \_\___|\__,_|\__,_|  \___\___/|_| |_|_| |_|\__, |         |
-#   |                                                       |___/          |
-#   +----------------------------------------------------------------------+
-
-# Now - at last - we can read in the user's configuration files
-def all_nonfunction_vars():
-    return set([ name for name,value in globals().items() if name[0] != '_' and type(value) != type(lambda:0) ])
-
-if opt_config_check:
-    vars_before_config = all_nonfunction_vars()
-
-
-list_of_files = [ check_mk_configfile ] + glob.glob(check_mk_configdir + '/*.mk')
-final_mk = check_mk_basedir + "/final.mk"
-if os.path.exists(final_mk):
-    list_of_files.append(final_mk)
-for f in list_of_files:
-    # Hack: during parent scan mode we must not read in old version of parents.mk!
-    if '--scan-parents' in sys.argv and f.endswith("/parents.mk"):
-        continue
-    try:
-        if opt_debug:
-            sys.stderr.write("Reading config file %s...\n" % f)
-        execfile(f)
-    except Exception, e:
-        sys.stderr.write("Cannot read in configuration file %s:\n%s\n" % (f, e))
-        if __name__ == "__main__":
-            sys.exit(3)
-        else:
-            raise
-
-       
-# Load python-rrd if available and not switched off.
-if do_rrd_update:
-    try:
-        import rrdtool
-    except:
-        sys.stdout.write("ERROR: Cannot do direct rrd updates since the Python module\n"+
-                         "'rrdtool' could not be loaded. Please install python-rrdtool\n"+
-                         "or set do_rrd_update to False in main.mk.\n")
-        sys.exit(3)
-
-# read automatically generated checks. They are prepended to the check
-# table: explicit user defined checks override automatically generated
-# ones. Do not read in autochecks, if check_mk is called as module.
-def read_all_autochecks():
-    global autochecks
-    autochecks = []
-    for f in glob.glob(autochecksdir + '/*.mk'):
-        try:
-           autochecks += eval(file(f).read())
-        except SyntaxError,e:
-           sys.stderr.write("Syntax error in file %s: %s\n" % (f, e))
-           sys.exit(3)
-        except Exception, e:
-           sys.stderr.write("Error in file %s:\n%s\n" % (f, e))
-           sys.exit(3)
-
-if __name__ == "__main__":
-    read_all_autochecks()
-        
-checks = autochecks + checks
-
-if opt_config_check:
-    vars_after_config = all_nonfunction_vars()
-    ignored_variables = set(['vars_before_config', 'rrdtool', 'final_mk', 'list_of_files', 'autochecks'])
-    errors = 0
-    for name in vars_after_config:
-        if name not in ignored_variables and name not in vars_before_config:
-            sys.stderr.write("Invalid configuration variable '%s'\n" % name)
-            errors += 1
-    if errors > 0:
-        sys.stderr.write("--> Found %d invalid variables\n" % errors)
-        sys.stderr.write("If you use own helper variables, please prefix them with _.\n")
-        sys.exit(1)
-
-
-# Convert www_group into numeric id
-if type(www_group) == str:
-    try:
-        import grp
-        www_group = grp.getgrnam(www_group)[2]
-    except Exception, e:
-        sys.stderr.write("Cannot convert group '%s' into group id: %s\n" % (www_group, e))
-        sys.stderr.write("Please set www_group to an existing group in main.mk.\n")
-        sys.exit(3)
-
-# --------------------------------------------------------------------------
-# FINISHED WITH READING IN USER DATA
-# Now we are finished with reading in user data and can safely define
-# further functions and variables without fear of name clashes with user
-# defined variables.
-# --------------------------------------------------------------------------
 
 #   +----------------------------------------------------------------------+
 #   |                    ____ _               _                            |
@@ -2395,17 +2298,6 @@ def show_check_manual(checkname):
 #   |                                             |_|                      |
 #   +----------------------------------------------------------------------+
 
-backup_paths = [
-    # tarname               path                 canonical name   description                is_dir owned_by_nagios www_group
-    ('check_mk_configfile', check_mk_configfile, "main.mk",       "Main configuration file",           False, False, False ),
-    ('final_mk',            final_mk,            "final.mk",      "Final configuration file final.mk", False, False, False ),
-    ('check_mk_configdir',  check_mk_configdir,  "",              "Configuration sub files",           True,  False, False ),
-    ('autochecksdir',       autochecksdir,       "",              "Automatically inventorized checks", True,  False, False ),
-    ('counters_directory',  counters_directory,  "",              "Performance counters",              True,  True,  False ),
-    ('tcp_cache_dir',       tcp_cache_dir,       "",              "Agent cache",                       True,  True,  False ),
-    ('logwatch_dir',        logwatch_dir,        "",              "Logwatch",                          True,  True,  True  ),
-    ]
-
 class fake_file:
     def __init__(self, content):
         self.content = content
@@ -2897,6 +2789,7 @@ OPTIONS:
                  prevents DNS lookups.
   --usewalk      use snmpwalk stored with --snmpwalk
   --debug        never catch Python exceptions
+  --procs N      start up to N processes in parallel during --scan-parents
 
 NOTES:
   -I can be restricted to certain check types. Write '-I df' if you
@@ -3060,6 +2953,8 @@ def do_restart():
         except Exception, e:
             sys.stderr.write("Error creating configuration: %s\n" % e)
             os.rename(backup_path, nagios_objects_file)
+            if opt_debug:
+                raise
             sys.exit(1)
             
         if do_check_nagiosconfig():
@@ -3077,10 +2972,12 @@ def do_restart():
 
     except Exception, e:
         try:
-            if backup_path:
+            if backup_path and os.path.exists(backup_path):
                 os.remove(backup_path)
         except:
             pass
+        if opt_debug:
+            raise
         sys.stderr.write("An error occurred: %s\n" % e)
         sys.exit(1)
 
@@ -3145,6 +3042,7 @@ def do_cleanup_autochecks():
             os.remove(f)
 
 def do_scan_parents(hosts):
+    global max_num_processes
     if len(hosts) == 0:
         hosts = filter(lambda h: in_binary_hostlist(h, scanparent_hosts), all_hosts_untagged)
 
@@ -3152,33 +3050,42 @@ def do_scan_parents(hosts):
     parent_hosts = []
     parent_ips   = {}
     parent_rules = []
+    gateway_hosts = set([])
+    
+    if max_num_processes < 1:
+        max_num_processes = 1
 
-    sys.stdout.write("Scanning for parents...")
-    for host in hosts:
-        # skip hosts that already have a parent
-        if len(parents_of(host)) > 0:
-            if opt_verbose:
-                sys.stdout.write("(manual parent) ")
-                sys.stdout.flush()
-            continue
-        if opt_verbose:
-            sys.stdout.write("%s " % host)
-        else:
-            sys.stdout.write(".")
-        sys.stdout.flush()
+    sys.stdout.write("Scanning for parents (%d processes)..." % max_num_processes)
+    sys.stdout.flush()
+    while len(hosts) > 0:
+        chunk = []
+        while len(chunk) < max_num_processes and len(hosts) > 0:
+            host = hosts[0]
+            del hosts[0]
+            # skip hosts that already have a parent
+            if len(parents_of(host)) > 0:
+                if opt_verbose:
+                    sys.stdout.write("(manual parent) ")
+                    sys.stdout.flush()
+                continue
+            chunk.append(host)
 
-        gw = scan_parent_of(host)
-        if gw:
-            gateway, gateway_ip = gw
-            if not gateway: # create artificial host
-                gateway = "gw-%s" % (gateway_ip.replace(".", "-"))
-                parent_hosts.append("%s|parent" % gateway)
-                parent_ips[gateway] = gateway_ip
-                parent_rules.append( (monitoring_host, [gateway]) ) # make Nagios a parent of gw
-            parent_rules.append( (gateway, [host]) )
-        elif host != monitoring_host:
-            # make monitoring host the parent of all hosts without real parent
-            parent_rules.append( (monitoring_host, [host]) )
+        gws = scan_parents_of(chunk)
+
+        for host, gw in zip(chunk, gws):
+            if gw:
+                gateway, gateway_ip = gw
+                if not gateway: # create artificial host
+                    gateway = "gw-%s" % (gateway_ip.replace(".", "-"))
+                    if gateway not in gateway_hosts:
+                        gateway_hosts.add(gateway)
+                        parent_hosts.append("%s|parent" % gateway)
+                        parent_ips[gateway] = gateway_ip
+                        parent_rules.append( (monitoring_host, [gateway]) ) # make Nagios a parent of gw
+                parent_rules.append( (gateway, [host]) )
+            elif host != monitoring_host:
+                # make monitoring host the parent of all hosts without real parent
+                parent_rules.append( (monitoring_host, [host]) )
 
     import pprint
     outfilename = check_mk_configdir + "/parents.mk"
@@ -3199,82 +3106,117 @@ def do_scan_parents(hosts):
     sys.stdout.write("\nWrote %s\n" % outfilename)
 
 
-def scan_parent_of(host):
+def scan_parents_of(hosts):
+    nagios_ip = lookup_ipaddress(monitoring_host)
     os.putenv("LANG", "")
     os.putenv("LC_ALL", "")
-    try:
-        ip = lookup_ipaddress(host)
-    except:
-        sys.stderr.write("%s: cannot resolve host name\n" % host)
-        return None
 
-    command = "traceroute -m 15 -n -w 3 %s" % ip
-    if opt_debug:
-        sys.stderr.write("Running '%s'\n" % command)
-    lines = [l.strip() for l in os.popen(command).readlines()]
-    if len(lines) == 0:
-        raise MKGeneralException("Cannot execute %s. Is traceroute installed? Are you root?" % command)
-    elif len(lines) < 2:
-        sys.stderr.write("%s: %s\n" % (host, ' '.join(lines)))
-        return None
+    # Start processes in parallel
+    procs = []
+    for host in hosts:
+        if opt_verbose:
+            sys.stdout.write("%s " % host)
+            sys.stdout.flush()
+        try:
+            ip = lookup_ipaddress(host)
+        except:
+            sys.stderr.write("%s: cannot resolve host name\n" % host)
+            ip = None
+        command = "traceroute -m 15 -n -w 3 %s" % ip
+        if opt_debug:
+            sys.stderr.write("Running '%s'\n" % command)
+        procs.append( (host, ip, os.popen(command) ) )
 
-    # Parse output of traceroute:
-    # traceroute to 8.8.8.8 (8.8.8.8), 30 hops max, 40 byte packets
-    #  1  * * *
-    #  2  10.0.0.254  0.417 ms  0.459 ms  0.670 ms
-    #  3  172.16.0.254  0.967 ms  1.031 ms  1.544 ms
-    #  4  217.0.116.201  23.118 ms  25.153 ms  26.959 ms
-    #  5  217.0.76.134  32.103 ms  32.491 ms  32.337 ms
-    #  6  217.239.41.106  32.856 ms  35.279 ms  36.170 ms
-    #  7  74.125.50.149  45.068 ms  44.991 ms *
-    #  8  * 66.249.94.86  41.052 ms 66.249.94.88  40.795 ms
-    #  9  209.85.248.59  43.739 ms  41.106 ms 216.239.46.240  43.208 ms
-    # 10  216.239.48.53  45.608 ms  47.121 ms 64.233.174.29  43.126 ms
-    # 11  209.85.255.245  49.265 ms  40.470 ms  39.870 ms
-    # 12  8.8.8.8  28.339 ms  28.566 ms  28.791 ms
-    routes = []
-    for line in lines[1:]:
-        parts = line.split()
-        route = parts[1]
-        if route.count('.') == 3:
-            routes.append(route)
-        elif route == '*':
-            routes.append(None) # No answer from this router
-        else: 
-            sys.stderr.write("%s: invalid output line from traceroute: '%s'\n" % (host, line))
+    # Now all run and we begin to read the answers
+    def dot(color, dot='o'):
+        sys.stdout.write(tty_bold + color + dot + tty_normal)
+        sys.stdout.flush()
 
-    if len(routes) == 0:
-        sys.stderr.write("%s: incomplete output from traceroute. No routes found.\n" % host)
-        return None
-
-    # Only one entry -> host is directly reachable and gets nagios as parent - 
-    # if nagios is not the parent itself. Problem here: How can we determine
-    # if the host in question is the monitoring host? The user must configure
-    # this in monitoring_host.
-    elif len(routes) == 1:
-        nagios_ip = lookup_ipaddress(monitoring_host)
-        if ip == nagios_ip:
-            return None # We are the monitoring host
-        else:
-            return (monitoring_host, nagios_ip)
-
-    # Try far most route which is not identical with host itself
-    route = None
-    for r in routes[::-1]:
-        if not r or (r == ip):
+    gateways = []
+    for host, ip, proc in procs:
+        lines = [l.strip() for l in proc.readlines()]
+        exitstatus = proc.close()
+        if exitstatus:
+            dot(tty_red, '*')
+            gateways.append(None)
             continue
-        route = r
-        break
-    if not route:
-        sys.stderr.write("%s: No usable routing information\n" % host)
-        return None
-        
-    # TTLs already have been filtered out)
-    gateway_ip = route
-    gateway = ip_to_hostname(route)
-    if opt_verbose:
-        sys.stdout.write("%s(%s) " % (gateway, gateway_ip))
-    return (gateway, gateway_ip)
+
+        if len(lines) == 0:
+            if opt_debug:
+                raise MKGeneralException("Cannot execute %s. Is traceroute installed? Are you root?" % command)
+            else:
+                dot(tty_red, '!')
+        elif len(lines) < 2:
+            sys.stderr.write("%s: %s\n" % (host, ' '.join(lines)))
+            gateways.append(None)
+            dot(tty_blue)
+            continue
+
+        # Parse output of traceroute:
+        # traceroute to 8.8.8.8 (8.8.8.8), 30 hops max, 40 byte packets
+        #  1  * * *
+        #  2  10.0.0.254  0.417 ms  0.459 ms  0.670 ms
+        #  3  172.16.0.254  0.967 ms  1.031 ms  1.544 ms
+        #  4  217.0.116.201  23.118 ms  25.153 ms  26.959 ms
+        #  5  217.0.76.134  32.103 ms  32.491 ms  32.337 ms
+        #  6  217.239.41.106  32.856 ms  35.279 ms  36.170 ms
+        #  7  74.125.50.149  45.068 ms  44.991 ms *
+        #  8  * 66.249.94.86  41.052 ms 66.249.94.88  40.795 ms
+        #  9  209.85.248.59  43.739 ms  41.106 ms 216.239.46.240  43.208 ms
+        # 10  216.239.48.53  45.608 ms  47.121 ms 64.233.174.29  43.126 ms
+        # 11  209.85.255.245  49.265 ms  40.470 ms  39.870 ms
+        # 12  8.8.8.8  28.339 ms  28.566 ms  28.791 ms
+        routes = []
+        for line in lines[1:]:
+            parts = line.split()
+            route = parts[1]
+            if route.count('.') == 3:
+                routes.append(route)
+            elif route == '*':
+                routes.append(None) # No answer from this router
+            else: 
+                sys.stderr.write("%s: invalid output line from traceroute: '%s'\n" % (host, line))
+
+        if len(routes) == 0:
+            sys.stderr.write("%s: incomplete output from traceroute. No routes found.\n" % host)
+            gateways.append(None)
+            dot(tty_red)
+            continue
+
+        # Only one entry -> host is directly reachable and gets nagios as parent - 
+        # if nagios is not the parent itself. Problem here: How can we determine
+        # if the host in question is the monitoring host? The user must configure
+        # this in monitoring_host.
+        elif len(routes) == 1:
+            if ip == nagios_ip:
+                gateways.append(None) # We are the monitoring host
+                dot(tty_white, 'N')
+            else:
+                gateways.append( (monitoring_host, nagios_ip) )
+                dot(tty_cyan, 'L')
+            continue
+
+        # Try far most route which is not identical with host itself
+        route = None
+        for r in routes[::-1]:
+            if not r or (r == ip):
+                continue
+            route = r
+            break
+        if not route:
+            sys.stderr.write("%s: No usable routing information\n" % host)
+            gateways.append(None)
+            dot(tty_blue)
+            continue
+            
+        # TTLs already have been filtered out)
+        gateway_ip = route
+        gateway = ip_to_hostname(route)
+        if opt_verbose:
+            sys.stdout.write("%s(%s) " % (gateway, gateway_ip))
+        gateways.append( (gateway, gateway_ip) )
+        dot(tty_green, 'G')
+    return gateways
 
 # find hostname belonging to an ip address. We must not use
 # reverse DNS but the Check_MK mechanisms
@@ -3291,13 +3233,41 @@ def ip_to_hostname(ip):
 
 
 #   +----------------------------------------------------------------------+
-#   |                        __  __       _                                |
-#   |                       |  \/  | __ _(_)_ __                           |
-#   |                       | |\/| |/ _` | | '_ \                          |
-#   |                       | |  | | (_| | | | | |                         |
-#   |                       |_|  |_|\__,_|_|_| |_|                         |
-#   |                                                                      |
+#   |         ____                _                    __ _                |
+#   |        |  _ \ ___  __ _  __| |   ___ ___  _ __  / _(_) __ _          |
+#   |        | |_) / _ \/ _` |/ _` |  / __/ _ \| '_ \| |_| |/ _` |         |
+#   |        |  _ <  __/ (_| | (_| | | (_| (_) | | | |  _| | (_| |         |
+#   |        |_| \_\___|\__,_|\__,_|  \___\___/|_| |_|_| |_|\__, |         |
+#   |                                                       |___/          |
 #   +----------------------------------------------------------------------+
+
+
+# Now - at last - we can read in the user's configuration files
+def all_nonfunction_vars():
+    return set([ name for name,value in globals().items() if name[0] != '_' and type(value) != type(lambda:0) ])
+
+if opt_config_check:
+    vars_before_config = all_nonfunction_vars()
+
+
+list_of_files = [ check_mk_configfile ] + glob.glob(check_mk_configdir + '/*.mk')
+final_mk = check_mk_basedir + "/final.mk"
+if os.path.exists(final_mk):
+    list_of_files.append(final_mk)
+for f in list_of_files:
+    # Hack: during parent scan mode we must not read in old version of parents.mk!
+    if '--scan-parents' in sys.argv and f.endswith("/parents.mk"):
+        continue
+    try:
+        if opt_debug:
+            sys.stderr.write("Reading config file %s...\n" % f)
+        execfile(f)
+    except Exception, e:
+        sys.stderr.write("Cannot read in configuration file %s:\n%s\n" % (f, e))
+        if __name__ == "__main__":
+            sys.exit(3)
+        else:
+            raise
 
 # Strip off host tags from the list of all_hosts.  Host tags can be
 # appended to the hostnames in all_hosts, separated by pipe symbols,
@@ -3309,9 +3279,6 @@ for taggedhost in all_hosts + clusters.keys():
     hosttags[parts[0]] = parts[1:]
 all_hosts_untagged = all_active_hosts()
 
-# global helper variable needed by config output
-contactgroups_to_output = set([])
-
 # Sanity check for duplicate hostnames
 seen_hostnames = set([])
 for hostname in strip_tags(all_hosts + clusters.keys()):
@@ -3320,6 +3287,103 @@ for hostname in strip_tags(all_hosts + clusters.keys()):
         sys.exit(4)
     seen_hostnames.add(hostname)
 
+# Load python-rrd if available and not switched off.
+if do_rrd_update:
+    try:
+        import rrdtool
+    except:
+        sys.stdout.write("ERROR: Cannot do direct rrd updates since the Python module\n"+
+                         "'rrdtool' could not be loaded. Please install python-rrdtool\n"+
+                         "or set do_rrd_update to False in main.mk.\n")
+        sys.exit(3)
+
+# read automatically generated checks. They are prepended to the check
+# table: explicit user defined checks override automatically generated
+# ones. Do not read in autochecks, if check_mk is called as module.
+def read_all_autochecks():
+    global autochecks
+    autochecks = []
+    for f in glob.glob(autochecksdir + '/*.mk'):
+        try:
+           autochecks += eval(file(f).read())
+        except SyntaxError,e:
+           sys.stderr.write("Syntax error in file %s: %s\n" % (f, e))
+           sys.exit(3)
+        except Exception, e:
+           sys.stderr.write("Error in file %s:\n%s\n" % (f, e))
+           sys.exit(3)
+    # Exchange inventorized check parameters with those configured by
+    # the user.
+    if check_parameters != []:
+        new_autochecks = []
+        for autocheck in autochecks:
+            host, checktype, item, params = autocheck
+            descr = service_description(checktype, item)
+            entries = service_extra_conf(host, descr, check_parameters)
+            if len(entries) > 0:
+                new_autochecks.append( (host, checktype, item, entries[0] ) )
+            else:
+                new_autochecks.append(autocheck) # leave unchanged
+        autochecks = new_autochecks
+
+if __name__ == "__main__":
+    read_all_autochecks()
+        
+checks = autochecks + checks
+
+
+if opt_config_check:
+    vars_after_config = all_nonfunction_vars()
+    ignored_variables = set(['vars_before_config', 'rrdtool', 'final_mk', 'list_of_files', 'autochecks', 
+                              'parts' ,'hosttags' ,'seen_hostnames' ,'all_hosts_untagged' ,'taggedhost' ,'hostname'])
+    errors = 0
+    for name in vars_after_config:
+        if name not in ignored_variables and name not in vars_before_config:
+            sys.stderr.write("Invalid configuration variable '%s'\n" % name)
+            errors += 1
+    if errors > 0:
+        sys.stderr.write("--> Found %d invalid variables\n" % errors)
+        sys.stderr.write("If you use own helper variables, please prefix them with _.\n")
+        sys.exit(1)
+
+
+# Convert www_group into numeric id
+if type(www_group) == str:
+    try:
+        import grp
+        www_group = grp.getgrnam(www_group)[2]
+    except Exception, e:
+        sys.stderr.write("Cannot convert group '%s' into group id: %s\n" % (www_group, e))
+        sys.stderr.write("Please set www_group to an existing group in main.mk.\n")
+        sys.exit(3)
+
+# --------------------------------------------------------------------------
+# FINISHED WITH READING IN USER DATA
+# Now we are finished with reading in user data and can safely define
+# further functions and variables without fear of name clashes with user
+# defined variables.
+# --------------------------------------------------------------------------
+
+backup_paths = [
+    # tarname               path                 canonical name   description                is_dir owned_by_nagios www_group
+    ('check_mk_configfile', check_mk_configfile, "main.mk",       "Main configuration file",           False, False, False ),
+    ('final_mk',            final_mk,            "final.mk",      "Final configuration file final.mk", False, False, False ),
+    ('check_mk_configdir',  check_mk_configdir,  "",              "Configuration sub files",           True,  False, False ),
+    ('autochecksdir',       autochecksdir,       "",              "Automatically inventorized checks", True,  False, False ),
+    ('counters_directory',  counters_directory,  "",              "Performance counters",              True,  True,  False ),
+    ('tcp_cache_dir',       tcp_cache_dir,       "",              "Agent cache",                       True,  True,  False ),
+    ('logwatch_dir',        logwatch_dir,        "",              "Logwatch",                          True,  True,  True  ),
+    ]
+
+
+#   +----------------------------------------------------------------------+
+#   |                        __  __       _                                |
+#   |                       |  \/  | __ _(_)_ __                           |
+#   |                       | |\/| |/ _` | | '_ \                          |
+#   |                       | |  | | (_| | | | | |                         |
+#   |                       |_|  |_|\__,_|_|_| |_|                         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
 
 # Do option parsing and execute main function -
 # if check_mk is not called as module
@@ -3328,7 +3392,7 @@ if __name__ == "__main__":
     long_options = ["help", "version", "verbose", "compile", "debug",
                     "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
 		    "flush", "package", "donate", "snmpwalk", "usewalk",
-                    "scan-parents",
+                    "scan-parents", "procs=",
                     "no-cache", "update", "restart", "dump", "fake-dns=",
                     "man", "nowiki", "config-check", "backup=", "restore=",
                     "check-inventory=", "paths", "cleanup-autochecks" ]
@@ -3365,6 +3429,8 @@ if __name__ == "__main__":
             fake_dns = a
         elif o == '--usewalk':
             opt_use_snmp_walk = True
+        elif o == '--procs':
+            max_num_processes = int(a)
         elif o == '--nowiki':
             opt_nowiki = True
         elif o == '--debug':

@@ -10,6 +10,8 @@ die Perf-O-Meter und die PNP-Suche in Multisite nicht geht.
 --------------------------------------------------------------------------------
 BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
+check_parameters Dokumentieren!
+
 install_nagios.sh: rrdcached wird nicht gestartet
 
 Doku Livestatus: group_authorization nicht gesetzt, hat aber Wirkung von
@@ -93,8 +95,6 @@ Eingabe von Downtimes: Auch hier Umlaute abfangen wie bei Comments
 --------------------------------------------------------------------------------
 UNSCHOENHEITEN
 --------------------------------------------------------------------------------
-multiadmin-Variablen rausnehmen.
-
 Multisite Bookmarks: Das Snapin speichert immer absolute URLs mit Hostnamen.
 Das ist aber doof, wenn man die Bookmarksdatei auf einen anderen Host kopiert
 oder mal mit IP-Adresse, mal mit Namen auf Nagios zugreift. Lösung: Beim Speichern
@@ -177,12 +177,8 @@ Oder eine eigene option, check_mk -O?
 
 check_mk -C soll Liste von Hosts bekommen können.
 
-Generieren der Host- und Serviceconf umbauen und in einer gemeinsamen Schleifen
-machen. Dabei stets zuerst die Services und dann die Hosts generieren.
-Denn dann kann ich bei den Hosts schon wissen, ob es services gibt und für
-die PING-only hosts eine andere Schablone nehmen, wo die check_interval
-für Hostchecks auf 0 ist, also nur on-demand-pings ausgeführt werden
-(damit man nicht doppelt pingt).
+Bei Hosts, die kein keine Services haben, eine andere
+Host-Schablone nehmen, die den Hostcheck nur on-demand ausführt.
 
 Multisite: man kann bei Comments keine Umlaute eingeben. Diese sind aktuell
 verboten, weil Python sonst Exceptions wirft.  Komischerweise kann man
@@ -349,7 +345,7 @@ Dies kann der Painter einfach abfragen. Einsatz: PNP-Zeitraum, Darstellung
 von Zeitstempeln (Delta/Absolute/Mixed).
 
 Livestatus: Anstelle von Gesamttimeout beim Querylesen einen Timeout
-zwischen Zwei Zeilen machen. Also immer wenn eine Zeile gelesen wurde,
+zwischen zwei Zeilen machen. Also immer wenn eine Zeile gelesen wurde,
 den Zähler wieder auf Null setzen. Gleichzeitig die mazimale Größe
 des Queries begrenzen per Config-Option. 
 
@@ -357,7 +353,8 @@ Multisite: Wenn man bei einer View einen Filter ausfüllt (user), dann
 soll irgendwo ein Icon anzeigen, dass das Resultat gefiltert ist.
 
 Multisite: Hover: Wenn man über einen Painter geht, könnte man eine
-Hover aufmachen, der einen weiteren Painter anzeigt.
+Hover aufmachen, der einen weiteren Painter anzeigt. Das macht man
+über eine Auswahlbox analog zu der "Link to".
 
 Vorschlag von Bastian: Bei den Views könnte man den Datenbereich (Tabelle)
 per Ajax refreshen und müsste nicht die ganze Seite neu aufbauen. Damit

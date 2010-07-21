@@ -45,6 +45,11 @@
       than 3.5.
     * Sidebar: Fixed IE8 and Chrome snapin movement problems
     * Sidebar: Fixed IE problem where sidebar is too small
+    * Multisite: improve performance in multi site environments by sending
+      queries to sites in parallel
+    * Multisite: improve performance in high latency situations by
+      allowing persistent Livestatus connections (set "persist" : True 
+      in sites, use current Livestatus version)
 
     Livestatus:
     * Fix problems with in_*_period. Introduce global
@@ -56,8 +61,7 @@
     * New module option query_timeout. It limits the time between
       two lines of a query (in ms). Default is 10000 ms (10 sec).
 
-1.1.7i1:
-    Core, Setup, etc.:
+1.1.7i1: Core, Setup, etc.:
     * New option -u for reordering autochecks in per-host-files
       (please refer to updated documentation about inventory for
        details)

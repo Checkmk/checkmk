@@ -42,8 +42,16 @@ r1 = conn.query_table_assoc("GET hosts")
 r2 = conn.query_row("GET status")
 """
 
-DOWN = 0
-UP   = 1
+# Keep a global array of persistant connections
+persistent_connections = {}
+
+# DEBUGGING PERSISTENT CONNECTIONS
+# import os
+# hirn_debug = file("/tmp/live.log", "a")
+# def hirn(x):
+#     pid = os.getpid()
+#     hirn_debug.write("[\033[1;3%d;4%dm%d\033[0m] %s\n" % (pid%7+1, (pid/7)%7+1, pid, x))
+#     hirn_debug.flush()
 
 class MKLivestatusException(Exception):
    def __init__(self, value):
@@ -54,6 +62,10 @@ class MKLivestatusException(Exception):
 class MKLivestatusSocketError(MKLivestatusException):
    def __init__(self, reason):
       MKLivestatusException.__init__(self, reason)
+
+class MKLivestatusSocketClosed(MKLivestatusSocketError):
+   def __init__(self, reason):
+      MKLivestatusSocketError.__init__(self, reason)
 
 class MKLivestatusConfigError(MKLivestatusException):
    def __init__(self, reason):
@@ -141,60 +153,81 @@ class Helpers:
     
 
 class BaseConnection:
-    def __init__(self, socketurl):
+    def __init__(self, socketurl, persist = False):
 	"""Create a new connection to a MK Livestatus socket"""
-	self.socketurl = socketurl
-	self.socket_state = DOWN
-	self.socket_target = None
-	self.create_socket(socketurl)
 	self.add_headers = ""
+        self.persist = persist
+        self.socketurl = socketurl
+	self.socket = None
+        self.timeout = None
 
     def add_header(self, header):
 	self.add_headers += header + "\n"
     
     def set_timeout(self, timeout):
-	self.socket.settimeout(timeout)
+        self.timeout = timeout
+        if self.socket:
+            self.socket.settimeout(float(timeout))
 
-    def create_socket(self, url):
-	parts = url.split(":")
+    def connect(self):
+        if self.persist and self.socketurl in persistent_connections:
+            self.socket = persistent_connections[self.socketurl]
+            return
+
+        # Create new socket
+        self.socket = None
+	parts = self.socketurl.split(":")
 	if parts[0] == "unix":
 	    if len(parts) != 2:
-		raise MKLivestatusConfigError("Invalid livestatus unix url: %s. Correct example is 'unix:/var/run/nagios/rw/live'" % url)
-	    self.socket_target = parts[1]
+		raise MKLivestatusConfigError("Invalid livestatus unix url: %s. "
+                        "Correct example is 'unix:/var/run/nagios/rw/live'" % url)
 	    self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            target = parts[1]
 
 	elif parts[0] == "tcp":
 	    try:
 		host = parts[1]
 		port = int(parts[2])
 	    except:
-		raise MKLivestatusConfigError("Invalid livestatus tcp url '%s'. Correct example is 'tcp:somehost:6557'" % url)
+		raise MKLivestatusConfigError("Invalid livestatus tcp url '%s'. "
+                        "Correct example is 'tcp:somehost:6557'" % url)
 	    self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	    self.socket_target = ( host, port )
+            target = (host, port)
         else:
-	    raise MKLivestatusConfigError("Invalid livestatus url '%s'. Must begin with 'tcp:' or 'unix:'" % url)
+	    raise MKLivestatusConfigError("Invalid livestatus url '%s'. "
+                    "Must begin with 'tcp:' or 'unix:'" % url)
 
-    def connect(self):
-	if self.socket_state == DOWN:
-	    try:
-		self.socket.connect(self.socket_target)
-	        self.socket_state = UP
-	    except Exception, e:
-		raise MKLivestatusSocketError("Cannot connect to '%s': %s" % (self.socketurl, e))
+        try:
+            if self.timeout:
+                self.socket.settimeout(float(self.timeout))
+	    self.socket.connect(target)
+	except Exception, e:
+            self.socket = None
+	    raise MKLivestatusSocketError("Cannot connect to '%s': %s" % (self.socketurl, e))
 
+        if self.persist:
+            persistent_connections[self.socketurl] = self.socket
+
+    def disconnect(self):
+        self.socket = None
+        if self.persist:
+            del persistent_connections[self.socketurl]
+            
     def receive_data(self, size):
 	result = ""
 	while size > 0:
 	    packet = self.socket.recv(size)
 	    if len(packet) == 0:
-		raise MKLivestatusSocketError("Read zero data from socket")
+		raise MKLivestatusSocketClosed("Read zero data from socket, nagios server closed connection")
 	    size -= len(packet)
 	    result += packet
 	return result
 
     def do_query(self, query, add_headers = ""):
-        if self.socket_state != UP:
-	    self.connect()
+        self.send_query(query, add_headers)
+	return self.recv_response(query, add_headers)
+
+    def send_query(self, query, add_headers = ""):
         if not query.endswith("\n"):
 	    query += "\n"
 	query += self.add_headers
@@ -206,6 +239,17 @@ class BaseConnection:
 
         try:
 	    self.socket.send(query)
+        except IOError, e:
+            if persist:
+                del persistent_connections[self.socketurl]
+	    self.socket = None
+	    raise MKLivestatusSocketError(str(e))
+
+    # Reads a response from the livestatus socket. If the socket is closed
+    # by the livestatus server, we automatically make a reconnect and send
+    # the query again (once). This is due to timeouts during keepalive.
+    def recv_response(self, query = None, add_headers = ""):
+	try:
 	    resp = self.receive_data(16)
 	    code = resp[0:3]
 	    length = int(resp[4:15].lstrip())
@@ -217,25 +261,36 @@ class BaseConnection:
 		    raise MKLivestatusSocketError("Malformed output")
 	    else:
 	       raise MKLivestatusQueryError(code, data.strip())
+        except MKLivestatusSocketClosed:
+            self.disconnect()
+            if query:
+                self.connect()
+                self.send_query(query, add_headers)
+                return self.recv_response() # do not send query again -> danger of infinite loop
+            else:
+                raise
+
         except IOError, e:
-	    self.socket_state = DOWN
+            self.socket = None
+            if persist:
+                del persistent_connections[self.socketurl]
 	    raise MKLivestatusSocketError(str(e))
 
     def do_command(self, command):
-	if self.socket_state != UP:
-	    self.connect()
 	if not command.endswith("\n"):
 	    command += "\n"
 	try:
 	    self.socket.send("COMMAND " + command + "\n")
 	except IOError, e:
-	    self.socket_state = DOWN
+            self.socket = None
+            if persist:
+                del persistent_connections[self.socketurl]
 	    raise MKLivestatusSocketError(str(e))
 
 
 class SingleSiteConnection(BaseConnection, Helpers):
-    def __init__(self, socketurl):
-	BaseConnection.__init__(self, socketurl)
+    def __init__(self, socketurl, persist = False):
+	BaseConnection.__init__(self, socketurl, persist)
 	self.prepend_site = False
 	self.auth_users = {}
 	self.deadsites = {} # never filled, just for compatibility
@@ -292,12 +347,14 @@ class MultiSiteConnection(Helpers):
 	self.prepend_site = False
 	self.only_sites = None
 	self.limit = None
+        self.parallelize = True
 
         # Helper function for connecting to a site
         def connect_to_site(sitename, site):
 	    try:
 		url = site["socket"]
-	        connection = SingleSiteConnection(url)
+                persist = site.get("persist", False)
+	        connection = SingleSiteConnection(url, persist)
 		if "timeout" in site:
 		   connection.set_timeout(int(site["timeout"]))
 		connection.connect()
@@ -405,6 +462,12 @@ class MultiSiteConnection(Helpers):
 	    connection.set_auth_domain(domain)
 
     def query(self, query, add_headers = ""):
+	if self.parallelize:
+	    return self.query_parallel(query, add_headers)
+	else:
+	    return self.query_non_parallel(query, add_headers)
+
+    def query_non_parallel(self, query, add_headers = ""):
 	result = []
 	stillalive = []
 	limit = self.limit
@@ -430,6 +493,59 @@ class MultiSiteConnection(Helpers):
 		    "site" : site,
 		}
         self.connections = stillalive
+	return result
+
+    # New parallelized version of query(). The semantics differs in the handling
+    # of Limit: since all sites are queried in parallel, the Limit: is simply
+    # applied to all sites - resulting in possibly more results then Limit requests.
+    def query_parallel(self, query, add_headers = ""):
+        if self.only_sites != None:
+            active_sites = [ c for c in self.connections if c[0] in self.only_sites ]
+        else:
+            active_sites = self.connections
+
+# hirn("QUERY (PARALLEL %s)" % (" ".join([c[0] for c in active_sites])))
+        start_time = time.time()
+	stillalive = []
+	limit = self.limit
+	if limit != None:
+	    limit_header = "Limit: %d\n" % limit	
+	else:
+	    limit_header = ""
+
+        # First send all queries
+	for sitename, site, connection in active_sites:
+	    try:
+		connection.send_query(query, add_headers + limit_header)
+            except Exception, e:
+		self.deadsites[sitename] = {
+		    "exception" : e,
+		    "site" : site,
+		}
+
+	# Then retrieve all answers. We will be as slow as the slowest of all
+        # connections.
+	result = []
+	for sitename, site, connection in self.connections:
+            if self.only_sites != None and sitename not in self.only_sites:
+                stillalive.append( (sitename, site, connection) ) # state unknown, assume still alive
+                continue
+
+	    try:
+		r = connection.recv_response(query, add_headers + limit_header)
+		stillalive.append( (sitename, site, connection) )
+	        if self.prepend_site:
+	            r = [ [sitename] + l for l in r ]
+	        result += r
+            except Exception, e:
+		self.deadsites[sitename] = {
+		    "exception" : e,
+		    "site" : site,
+		}
+                
+
+        self.connections = stillalive
+# hirn("RESPONSE (\033[1m%.3f\033[0m s)" % ((time.time() - start_time) ))
 	return result
 
     def command(self, command, sitename = "local"):

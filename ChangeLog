@@ -17,6 +17,9 @@
       configuring parent hosts (see online docu for details)
     * inventory check: put detailed list of unchecked items into long
       plugin output (to be seen in status details)
+    * New configuration variable check_parameters, that allows to
+      override default parameters set by inventory, without defining 
+      manual checks!
 
     Checks & Agents:
     * drbd: changed check parameters (please re-inventorize!)

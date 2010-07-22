@@ -26,6 +26,10 @@
 
 # This module is needed only for SNMP based checks
 
+OID_END    =  0
+OID_STRING = -1
+OID_BIN    = -2
+
 def strip_snmp_value(value):
     v = value.strip()
     if v.startswith('"'):
@@ -61,6 +65,9 @@ def convert_from_hex(value):
     for hx in hexparts:
 	r += chr(int(hx, 16))
     return r
+
+def oid_to_bin(oid):
+    return u"".join([ unichr(int(p)) for p in oid.strip(".").split(".") ])
 
 # Fetch single values via SNMP. This function is only used by snmp_info_single,
 # which is only rarely used. Most checks use snmp_info, which is handled by
@@ -164,6 +171,7 @@ def get_snmp_table(hostname, ip, oid_info):
 
     all_values = []
     index_column = -1
+    index_format = None
     number_rows = -1
     info = []
     for suboid in suboids:
@@ -179,10 +187,13 @@ def get_snmp_table(hostname, ip, oid_info):
             # if column is 0, we do not fetch any data from snmp, but use
             # a running counter as index. If the index column is the first one,
             # we do not know the number of entries right now. We need to fill
-            # in later.
-            if column == 0:
+            # in later. If the column in OID_STRING or OID_BIN we do something
+            # similar: we fill in the complete OID of the entry, either as
+            # string or as binary UTF-8 encoded number string
+            if column in [ OID_END, OID_STRING, OID_BIN ]:
                index_column = colno
                columns.append([])
+               index_format = column
                continue
             
             fetchoid = oid
@@ -203,10 +214,16 @@ def get_snmp_table(hostname, ip, oid_info):
                   max_len_col = colno
 
        if index_column != -1:
+          print index_column
           index_rows = []
           # Take end-oids of non-index columns as indices
           for o, value in columns[max_len_col]:
-             index_rows.append((o, o.split('.')[-1]))
+             if index_format == OID_END:
+                 index_rows.append((o, o.split('.')[-1]))
+             elif index_format == OID_STRING:
+                 index_rows.append((o, o))
+             else:
+                 index_rows.append((o, oid_to_bin(o)))
           columns[index_column] = index_rows
 
        

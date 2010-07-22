@@ -1055,6 +1055,8 @@ EOF
     /etc/init.d/xinetd restart
 fi
 
+heading "Starting rrdcached"
+/etc/init.d/rrdcached start
 
 heading "Cleaning up"
 rm -f /etc/nagios/*.cfg-*

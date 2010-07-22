@@ -228,6 +228,8 @@ class BaseConnection:
 	return self.recv_response(query, add_headers)
 
     def send_query(self, query, add_headers = ""):
+	if self.socket == None:
+	    self.connect()
         if not query.endswith("\n"):
 	    query += "\n"
 	query += self.add_headers

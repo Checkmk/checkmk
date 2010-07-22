@@ -58,7 +58,7 @@
 #include <dirent.h>
 
 
-#define CHECK_MK_VERSION "1.1.7i2"
+#define CHECK_MK_VERSION "1.1.7i3"
 #define CHECK_MK_AGENT_PORT 6556
 #define SERVICE_NAME "Check_MK_Agent"
 #define KiloByte 1024

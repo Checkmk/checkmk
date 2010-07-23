@@ -1,3 +1,7 @@
+1.1.7i3:
+    Core, Setup, etc.:
+    * Fix extra_nagios_conf: did not work in 1.1.7i2
+
 1.1.7i2:
     Incompatible Changes:
     * Remove config option define_timeperiods and option --timeperiods.

@@ -1121,8 +1121,8 @@ def create_nagios_config(outfile = sys.stdout, hostnames = None):
     create_nagios_config_commands(outfile)
 
     if extra_nagios_conf:
-	out.write("\n# extra_nagios_conf\n\n")
-	out.write(extra_nagios_conf)
+	outfile.write("\n# extra_nagios_conf\n\n")
+	outfile.write(extra_nagios_conf)
 
 
 

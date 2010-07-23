@@ -214,7 +214,6 @@ def get_snmp_table(hostname, ip, oid_info):
                   max_len_col = colno
 
        if index_column != -1:
-          print index_column
           index_rows = []
           # Take end-oids of non-index columns as indices
           for o, value in columns[max_len_col]:

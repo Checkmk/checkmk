@@ -26,33 +26,36 @@
 
 # Author: Lars Michelsen <lm@mathias-kettner.de>
 
-hp_proliant_status_map = { 1: "unknown", 2: "ok", 3: "degraded", 4: "failed", 5: "disabled" }
-hp_proliant_status2nagios_map = { 'unknown': 3, 'ok': 0, 'degraded': 2, 'failed': 2, 'disabled': 1 }
+hp_proliant_psu_status_map = { 1: 'other', 2: 'ok', 3: 'degraded', 4: 'failed' }
+hp_proliant_status2nagios_map = { 'other': 3, 'ok': 0, 'degraded': 2, 'failed': 2 }
+hp_proliant_present_map = { 1: 'other', 2: 'absent', 3: 'present' }
+hp_proliant_redundant_map = { 1: 'other', 2: 'notRedundant', 3: 'redundant' }
 
-def inventory_hp_proliant_cpu(checkname, info):
+def inventory_hp_proliant_psu(checkname, info):
     if len(info) > 0:
-        return [ (line[0], None) for line in info ]
+        return [ (line[0], None) for line in info if line[2] == '3' ]
     else:
         return []
 
-def check_hp_proliant_cpu(item, params, info):
+def check_hp_proliant_psu(item, params, info):
     for line in info:
         if line[0] == item:
-            index, slot, name, status = line
-            snmp_status = hp_proliant_status_map[int(status)]
+            chassis, bay, present, status, redundant = line
+            snmp_status = hp_proliant_psu_status_map[int(status)]
             status      = hp_proliant_status2nagios_map[snmp_status]
 
-            return (status, '%s - CPU%s "%s" in slot %s is in state "%s"' %
-                         (nagios_state_names[status], index, name, slot, snmp_status))
+            return (status, '%s - PSU in chassis %s, bay %s is in state "%s"' %
+                         (nagios_state_names[status], chassis, bay, snmp_status))
     return (3, "UNKNOWN - item not found in snmp data")
 
 
-check_info['hp_proliant_cpu'] = (check_hp_proliant_cpu, "HW CPU %s", 0,  inventory_hp_proliant_cpu)
-snmp_info['hp_proliant_cpu']  = ( ".1.3.6.1.4.1.232.1.2.2.1.1", [ "1", # cpqSeCpuUnitIndex
-                                                                  "2", # cpqSeCpuSlot
-                                                                  "3", # cpqSeCpuName
-                                                                  "6", # cpqSeCpuStatus
+check_info['hp_proliant_psu'] = (check_hp_proliant_psu, "HW PSU %s", 0,  inventory_hp_proliant_psu)
+snmp_info['hp_proliant_psu']  = ( ".1.3.6.1.4.1.232.6.2.9.3.1", [ "1", # cpqHeFltTolPowerSupplyChassis
+                                                                  "2", # cpqHeFltTolPowerSupplyBay
+                                                                  "3", # cpqHeFltTolPowerSupplyPresent
+                                                                  "4", # cpqHeFltTolPowerSupplyCondition
+                                                                  "9", # cpqHeFltTolPowerSupplyRedundant
                                                                 ] )
 
-snmp_scan_functions['hp_proliant_cpu'] = \
+snmp_scan_functions['hp_proliant_psu'] = \
     lambda oid: oid("1.3.6.1.4.1.232.2.2.4.2.0").startswith('ProLiant')

@@ -1,3 +1,12 @@
+1.1.7i3:
+    Checks & Agents:
+    * New Check: hp_proliant_da_phydrv for monitoring the state of physical disks
+      in HP Proliant Servers
+    * New Check: hp_proliant_mem for monitoring the state of memory modules in
+      HP Proliant Servers
+    * New Check: hp_proliant_psu for monitoring the state of power supplies in
+      HP Proliant Servers
+
 1.1.7i2:
     Incompatible Changes:
     * Remove config option define_timeperiods and option --timeperiods.

@@ -34,6 +34,22 @@
 # 3. The parsed performance data as a list of 7-tuples of
 #    (varname, value, unit, warn, crit, min, max)
 
+def perfometer_check_mk(row, check_command, perf_data):
+    # make maximum value at 90sec.
+    exectime = float(perf_data[0][1])
+    perc = min(100.0, exectime / 90.0 * 100)
+    if exectime < 10:
+        color = "#2d3"
+    elif exectime < 30:
+        color = "#ff4"
+    elif exectime < 60:
+        color = "#f84"
+    else:
+	color = "#f44"
+
+    return "%.1fs" % exectime, perfometer_linear(perc, color)
+perfometers["check-mk"] = perfometer_check_mk
+    
 def perfometer_check_mk_df(row, check_command, perf_data):
     h = '<table><tr>'
     varname, value, unit, warn, crit, minn, maxx = perf_data[0]

@@ -619,6 +619,8 @@ def save_counters(hostname):
 def do_check(hostname, ipaddress):
     if opt_verbose:
         sys.stderr.write("Check_mk version %s\n" % check_mk_version)
+
+    start_time = time.time()
     
     try:
         load_counters(hostname)
@@ -656,7 +658,9 @@ def do_check(hostname, ipaddress):
 	    if opt_debug:
 	        raise
 
-    print(output)
+    run_time = time.time() - start_time
+    output += " in %.1f sec|execution_time=%.3f\n" % (run_time, run_time)
+    sys.stdout.write(output)
     sys.exit(status)
 
 

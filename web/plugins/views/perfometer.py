@@ -33,6 +33,13 @@ perfometers = {}
 def perfometer_td(perc, color):
     return '<td style="background-color: %s; width: %d%%;"></td>' % (color, int(float(perc)))
 
+# Paint linear performeter with one value
+def perfometer_linear(perc, color):
+    return "<table><tr>" + \
+        perfometer_td(perc, color) + \
+        perfometer_td(100 - perc, "white") + \
+        "</tr></table>"
+
 # Paint logarithm with base 10, half_value is being
 # displayed at 50% of the width
 def perfometer_logarithmic(value, half_value, base, color):

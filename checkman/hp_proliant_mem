@@ -1,4 +1,4 @@
-title: Check temperature sensors in HP Proliant servers
+title: Check Memory Module state in HP Proliant servers
 agents: snmp
 author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
@@ -10,10 +10,8 @@ description:
  The systems SNMP agent is extended by the HP Management Agents which need
  to be installed on the monitored systems.
 
- The check monitors the reported state of the builtin temperature sensors.
- There are no thresholds to be defined in this check. The check uses the
- thresholds reported by the system.
+ The check monitors the reported state of the builtin memory state sensors.
 
 inventory:
- One check is automatically created for each temperature sensor which is
- provided in the SNMP output.
+ One check is automatically created for each memory module which is
+ provided in the SNMP output and marked as present.

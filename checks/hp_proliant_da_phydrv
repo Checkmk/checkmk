@@ -62,7 +62,6 @@ def check_hp_proliant_da_phydrv(item, params, info):
     for line in info:
         if line[1] == item:
             cntlr_index, index, bay, status, ref_hours, size, condition, bus_number, smart_status = line
-            # - Output: Bay, BusNumber, Status, SmartStatus, RefHours, Size, Condition,
 
             snmp_status = hp_proliant_da_phydrv_status[int(status)]
 

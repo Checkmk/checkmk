@@ -1435,20 +1435,18 @@ def create_nagios_config_servicegroups(outfile):
 
 def create_nagios_config_contactgroups(outfile):
     if define_contactgroups:
-        contactgroups_to_define.update(host_contactgroups_of(all_active_hosts()))
-	contactgroups_to_define.update(host_contactgroups_of(all_active_clusters()))
-    cgs = list(contactgroups_to_define)
-    cgs.sort()
-    outfile.write("\n# Contact groups, (controlled by define_contactgroups)\n")
-    for name in cgs:
-	if type(define_contactgroups) == dict:
-	    alias = define_contactgroups.get(name, name)
-	else:
-	    alias = name
-        outfile.write("\ndefine contactgroup {\n"
-		"  contactgroup_name %s\n"
-		"  alias             %s\n"
-		"}\n" % (name, alias))
+        cgs = list(contactgroups_to_define)
+        cgs.sort()
+        outfile.write("\n# Contact groups, (controlled by define_contactgroups)\n")
+        for name in cgs:
+            if type(define_contactgroups) == dict:
+                alias = define_contactgroups.get(name, name)
+            else:
+                alias = name
+            outfile.write("\ndefine contactgroup {\n"
+                    "  contactgroup_name %s\n"
+                    "  alias             %s\n"
+                    "}\n" % (name, alias))
 
 
 def create_nagios_config_commands(outfile):

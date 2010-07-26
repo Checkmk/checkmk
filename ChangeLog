@@ -3,6 +3,8 @@
     * Fix extra_nagios_conf: did not work in 1.1.7i2
     * Service Check_MK now displays overall processing time including
       agent communication and adds this as performance data
+    * Fix bug: define_contactgroups was always assumed True. That led to duplicate
+      definitions in case of manual definitions in Nagios 
 
     Checks & Agents:
     * New Check: hp_proliant_da_phydrv for monitoring the state of physical disks

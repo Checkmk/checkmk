@@ -468,7 +468,10 @@ void livestatus_parse_arguments(const char *args_orig)
 		    logger(LG_INFO, "Error: query_timeout must be >= 0");
 		else {
 		    g_query_timeout_msec = c;
-		    logger(LG_INFO, "Setting timeout for reading a query to %d ms", c);
+                    if (c == 0)
+                        logger(LG_INFO, "Disabled query timeout!");
+                    else
+                        logger(LG_INFO, "Setting timeout for reading a query to %d ms", c);
 		}
 	    }
 	    else if (!strcmp(left, "idle_timeout")) {
@@ -477,7 +480,10 @@ void livestatus_parse_arguments(const char *args_orig)
 		    logger(LG_INFO, "Error: idle_timeout must be >= 0");
 		else {
 		    g_idle_timeout_msec = c;
-		    logger(LG_INFO, "Setting idle timeout to %d ms", c);
+                    if (c == 0)
+                        logger(LG_INFO, "Disabled idle timeout!");
+                    else 
+                        logger(LG_INFO, "Setting idle timeout to %d ms", c);
 		}
 	    }
 	    else if (!strcmp(left, "service_authorization")) {

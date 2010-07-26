@@ -14,6 +14,7 @@
 
     Livestatus:
     * Remove obsolete parameter 'accept_timeout'
+    * Allow disabling idle_timeout and query_timeout by setting them to 0.
 
 1.1.7i2:
     Incompatible Changes:

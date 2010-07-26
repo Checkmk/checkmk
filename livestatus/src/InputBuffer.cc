@@ -233,6 +233,9 @@ string InputBuffer::nextLine()
 
 bool timeout_reached(const struct timeval *start, int timeout_ms)
 {
+    if (timeout_ms == 0) 
+        return false; // timeout disabled
+
     struct timeval now;
     gettimeofday(&now, NULL);
     int64_t elapsed = (now.tv_sec - start->tv_sec) * 1000000;

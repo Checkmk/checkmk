@@ -27,7 +27,7 @@ $opt[1] = "--vertical-label \"Celsius\"  -l 0 -u 60 --title \"Battery temperatur
 
 $color = sprintf("ff%02x80", $ACT[2] * 3, $ACT[2] * 2);
 
-$def[1] = "DEF:var1=$RRDFILE[1]:$DS[2]:MAX ";
+$def[1] = "DEF:var1=$RRDFILE[2]:$DS[2]:MAX ";
 $def[1] .= "AREA:var1#$color:\"Temperature\:\" ";
 $def[1] .= "GPRINT:var1:LAST:\"%2.0lfC\" ";
 $def[1] .= "LINE1:var1#800040:\"\" ";

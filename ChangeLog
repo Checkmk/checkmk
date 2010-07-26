@@ -13,6 +13,7 @@
       HP Proliant Servers
     * New Check: hp_proliant_psu for monitoring the state of power supplies in
       HP Proliant Servers
+    * PNP-templates: fix several templates not working with MULTIPLE rrds
 
     Livestatus:
     * Remove obsolete parameter 'accept_timeout'

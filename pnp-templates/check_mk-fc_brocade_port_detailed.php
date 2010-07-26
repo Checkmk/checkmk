@@ -33,7 +33,7 @@
 $ds_name[1] = 'Traffic';
 $opt[1]  = "--vertical-label \"MB/sec\" -X0 -b 1024 --title \"Traffic for $hostname / $servicedesc\" ";
 $def[1]  = "DEF:txwords=$RRDFILE[1]:$DS[1]:AVERAGE " ;
-$def[1] .= "DEF:rxwords=$RRDFILE[1]:$DS[2]:AVERAGE " ;
+$def[1] .= "DEF:rxwords=$RRDFILE[2]:$DS[2]:AVERAGE " ;
 $def[1] .= "CDEF:txbytes=txwords,4,* " ;
 $def[1] .= "CDEF:rxbytes=rxwords,4,* " ;
 $def[1] .= "CDEF:rxMbytes=rxbytes,1048576.0,/ " ;

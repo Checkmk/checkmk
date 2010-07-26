@@ -26,8 +26,8 @@
 $opt[1] = "--vertical-label 'CPU utilization %' -l0  -u 100 --title \"CPU Utilization for $hostname\" ";
 
 $def[1] =  "DEF:user=$RRDFILE[1]:$DS[1]:AVERAGE " ;
-$def[1] .= "DEF:system=$RRDFILE[1]:$DS[2]:AVERAGE " ;
-$def[1] .= "DEF:wait=$RRDFILE[1]:$DS[3]:AVERAGE " ;
+$def[1] .= "DEF:system=$RRDFILE[2]:$DS[2]:AVERAGE " ;
+$def[1] .= "DEF:wait=$RRDFILE[3]:$DS[3]:AVERAGE " ;
 $def[1] .= "CDEF:us=user,system,+ ";
 $def[1] .= "CDEF:sum=us,wait,+ ";
 $def[1] .= "CDEF:idle=100,sum,- ";

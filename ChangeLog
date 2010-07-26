@@ -14,6 +14,7 @@
     * New Check: hp_proliant_psu for monitoring the state of power supplies in
       HP Proliant Servers
     * PNP-templates: fix several templates not working with MULTIPLE rrds
+    * new check mem.vmalloc for monitoring vmalloc address space in Linux kernel.
 
     Livestatus:
     * Remove obsolete parameter 'accept_timeout'

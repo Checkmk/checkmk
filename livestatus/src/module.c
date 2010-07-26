@@ -63,7 +63,6 @@
 
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
 
-int g_accept_timeout_msec = 2500;          /* maximum time accept() is allowed to take */
 int g_idle_timeout_msec = 300 * 1000; /* maximum idle time for connection in keep alive state */
 int g_query_timeout_msec = 10 * 1000;      /* maximum time for reading a query */
 
@@ -136,8 +135,8 @@ void *main_thread(void *data)
 	    // return;
 	}
 	struct timeval tv;
-	tv.tv_sec  = g_accept_timeout_msec / 1000;
-	tv.tv_usec = 1000 * (g_accept_timeout_msec % 1000);
+	tv.tv_sec  = 2;
+	tv.tv_usec = 500 * 1000;
 
 	fd_set fds;
 	FD_ZERO(&fds);
@@ -461,15 +460,6 @@ void livestatus_parse_arguments(const char *args_orig)
 		else {
 		    logger(LG_INFO, "Setting number of client threads to %d", c);
 		    g_num_clientthreads = c;
-		}
-	    }
-	    else if (!strcmp(left, "accept_timeout")) {
-		int c = atoi(right);
-		if (c <= 0)
-		    logger(LG_INFO, "Error: accept_timeout must be > 0");
-		else {
-		    g_accept_timeout_msec = c;
-		    logger(LG_INFO, "Setting TCP connect timeout to %d ms", c);
 		}
 	    }
 	    else if (!strcmp(left, "query_timeout")) {

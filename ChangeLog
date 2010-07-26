@@ -12,6 +12,9 @@
     * New Check: hp_proliant_psu for monitoring the state of power supplies in
       HP Proliant Servers
 
+    Livestatus:
+    * Remove obsolete parameter 'accept_timeout'
+
 1.1.7i2:
     Incompatible Changes:
     * Remove config option define_timeperiods and option --timeperiods.

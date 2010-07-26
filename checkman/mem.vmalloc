@@ -1,0 +1,50 @@
+title: Check usage of Vmalloc address space
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ The linux kernel keeps a part of the available address
+ space free for usage by device drivers, e.g. for address
+ mappings of IO devices into the physical address space.
+ An example is the graphics driver used by the X server,
+ which needs address mappings for communicating with
+ the hardware. In {/proc/meminfo} that area is called
+ {VmallocTotal}.
+
+ This check monitors the current usage of the the vmalloc
+ address space and also the size of the largest available
+ chunk (indicating the degree of fragmentation).
+
+inventory:
+ A check is created if {VmallocTotal} is available in
+ {/proc/meminfo}. Please add {mem.vmalloc} to {ignored_checktypes} 
+ if you do not need this check.
+
+perfdata:
+ Two variables: the current usage in MB and the size of 
+ the largest chunk in MB.
+
+examples:
+ # set warn/used for used size to 100 MB and 120 MB.
+ # set levels for largest chunk to 50% / 30% of total
+ # vmalloc size
+ mem_vmalloc_default_levels = (100, 120, 50.0, 30.0)
+
+[parameters]
+warn_used (int or float): the amount of used vmalloc space
+ triggering a warning. If the level is specified as an integer,
+ it is interpreted as an absolute value in MB. Float values
+ are interpreted as percentages of the total vmalloc area.
+crit_used (int or float): used amount that triggers a critical state.
+warn_chunk (int or float): if the size of the largest chunk reaches
+ that value or is below, a warning is triggered. The value is
+ in MB (int) or percentage of the total vmalloc area (float)
+crit_chunk (int or float): critical level for the size of the
+ largest available chunk.
+
+[configuration]
+mem_vmalloc_default_levels (int/float, int/float, int/float, int/float):
+ Levels used by checks created by inventory. The default value is set
+ to {(80.0, 90.0, 32, 64)}.
+

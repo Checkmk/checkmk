@@ -28,6 +28,9 @@
 memused_default_levels = (150.0, 200.0)
 mem_extended_perfdata = False
 
+def parse_proc_meminfo(info):
+    return dict([ (i[0][:-1], int(i[1])) for i in info ])
+
 def inventory_mem_used(checkname, info):
    try:
       # simply try potential check. If it returns
@@ -41,7 +44,7 @@ def inventory_mem_used(checkname, info):
               
 def check_mem_used(item, params, info):
     try:
-        meminfo = dict([ (i[0][:-1], int(i[1])) for i in info ])
+        meminfo = parse_proc_meminfo(info)
         swapused = meminfo['SwapTotal'] - meminfo['SwapFree']
         memused  = meminfo['MemTotal']  - meminfo['MemFree']
         # Buffers and Cached are optional (not supported on Windows yet)
@@ -110,3 +113,58 @@ def check_mem_used(item, params, info):
 
 check_info['mem.used'] = (check_mem_used, "Memory used", 1,  inventory_mem_used)
 check_config_variables.append("mem_extended_perfdata")
+
+# -------------------------------------------------------------------------------- 
+# Check for virtual address space in kernel (VMALLOC)
+# -------------------------------------------------------------------------------- 
+
+# warn, crit, warn_chunk, crit_chunk. Integers are in MB, floats are in percent
+mem_vmalloc_default_levels = ( 80.0, 90.0, 32, 64 )
+
+def inventory_mem_vmalloc(checktype, info):
+    meminfo = parse_proc_meminfo(info)
+    if "VmallocTotal" in meminfo:
+        return [ (None, "mem_vmalloc_default_levels") ]
+
+def check_mem_vmalloc(item, params, info):
+    meminfo = parse_proc_meminfo(info)
+    total_mb = meminfo["VmallocTotal"] / 1024.0
+    used_mb  = meminfo["VmallocUsed"] / 1024.0
+    free_mb  = total_mb - used_mb
+    chunk_mb = meminfo["VmallocChunk"] / 1024.0
+    warn, crit, warn_chunk, crit_chunk = params
+    
+    state = 0
+    infotxts = []
+    perfdata = []
+    for var, w, c, v, neg, what in [
+        ( "used",  warn,       crit,       used_mb,  False, "used" ),
+        ( "chunk", warn_chunk, crit_chunk, chunk_mb, True,  "largest chunk" )]:
+
+        # convert levels from percentage to MB values
+        if type(w) == float:
+            w_mb = total_mb * w / 100
+        else:
+            w_mb = float(w)
+    
+        if type(c) == float:
+            c_mb = total_mb * c / 100
+        else:
+            c_mb = float(c)
+
+        infotxt = "%s %.1f MB" % (what, v)
+        if (v >= c_mb) != neg:
+            s = 2
+            infotxt += " (critical at %.1f MB!!)" % c_mb
+        elif (v >= w_mb) != neg:
+            s = 1
+            infotxt += " (warning at %.1f MB!)" % w_mb
+        else:
+            s = 0
+        state = max(state, s)
+        infotxts.append(infotxt)
+        perfdata.append( (var, v, w_mb, c_mb, 0, total_mb) )
+    return (state, nagios_state_names[state] + (" - total %.1f MB, " % total_mb) + ", ".join(infotxts), perfdata)
+
+check_info["mem.vmalloc"] = (check_mem_vmalloc, "Vmalloc address space", 1, inventory_mem_vmalloc)
+

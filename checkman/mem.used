@@ -48,7 +48,7 @@ item:
  {None}
 
 inventory:
- {mem} supports inventory. One service per host will be 
+ {mem.used} supports inventory. One service per host will be 
  created if the agent outputs the section {<<<mem>>>}.
 
 examples:

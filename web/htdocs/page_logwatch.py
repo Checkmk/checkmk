@@ -143,7 +143,7 @@ def show_file(host, filename):
         html.write('</tr>\n</table>\n');
 
         for line in log['lines']:
-            html.write('<pre class="%s">%s</pre>\n' % (line['class'], htmllib.attrencode(line['line']) ))
+            html.write('<p class="%s">%s</p>\n' % (line['class'], htmllib.attrencode(line['line']) ))
 
         html.write('</div>\n')
 

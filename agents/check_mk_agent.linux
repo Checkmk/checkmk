@@ -255,12 +255,12 @@ fi
 
 # Checks for cups monitoring
 if which lpstat > /dev/null 2>&1; then
-  echo '<<<cups_queues>>>'
-  lpstat -p
-  echo '---'
-  for i in $(lpstat -p | grep -E "^(printer|Drucker)" | awk '{print $2}' | grep -v "@"); do
-    lpstat -o "$i"
-  done
+    echo '<<<cups_queues>>>'
+    waitmax 3 lpstat -p
+    echo '---'
+    for i in $(waitmax 3 lpstat -p | grep -E "^(printer|Drucker)" | awk '{print $2}' | grep -v "@"); do
+        waitmax 3 lpstat -o "$i"
+    done
 fi
 
 # Heartbeat monitoring

@@ -49,8 +49,8 @@ def check_hr_mem(item, params, info):
         size = int(hrsize) * int(hrunits) / 1048576.0
         used = int(hrused) * int(hrunits) / 1048576.0
         usage[hrtype] = (size, used)
-    totalram_mb,  ramused_mb   = usage.get("HOST-RESOURCES-TYPES::hrStorageRam",           usage.get("2", 0))
-    totalvirt_mb, virtused_mb  = usage.get("HOST-RESOURCES-TYPES::hrStorageVirtualMemory", usage.get("3", 0))
+    totalram_mb,  ramused_mb   = usage.get("HOST-RESOURCES-TYPES::hrStorageRam",           usage.get("2", (0,0)))
+    totalvirt_mb, virtused_mb  = usage.get("HOST-RESOURCES-TYPES::hrStorageVirtualMemory", usage.get("3", (0,0)))
     totalmem_mb,  totalused_mb = totalram_mb + totalvirt_mb, ramused_mb + virtused_mb
     totalused_perc = 100 * totalused_mb / totalmem_mb
 

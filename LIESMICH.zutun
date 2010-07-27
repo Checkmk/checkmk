@@ -17,6 +17,8 @@ local/plugins des Windows-Agenten dokumentieren.
 Doku Livestatus: group_authorization nicht gesetzt, hat aber Wirkung von
 loose. Stimmt hier der Default? Sieht eher aus, als funktioniert das nicht...
 
+Doku Livestatus: Hinweise zur Stabilität (env-Makros, Log)
+
 manpage von df: Defaultlevels fehlen
 
 check_mk --help:

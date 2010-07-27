@@ -1271,19 +1271,27 @@ div#logwatch a.ack {
   -moz-border-radius: 6px;
 }
 
-div#logwatch pre {
-  background-color: #ddd;
-  padding: 0.2ex 0.8ex;
-  border: none;
-  margin: 0px;
+div#logwatch p {
+    font-family: courier, monospace;
+    margin: 0px;
+    padding: 0.2ex 0.5ex;
+    border-left: 1px solid #888;
+    border-right: 1px solid #888;
+    font-size: 10pt;
+    background-color: #ddd;
+    text-indent: -1.0ex;
+    padding-left: 1.5ex;
 }
 
-div#logwatch pre.WARN {
-  background-color: #ff8;
+
+div#logwatch .WARN {
+    background-color: #ff8;
+    border-bottom: 1px solid #cc0;
 }
 
-div#logwatch pre.CRIT {
-  background-color: #f88;
+div#logwatch .CRIT {
+    background-color: #f88;
+    border-bottom: 1px solid #c00;
 }
 
 div#logwatch td.WARN, td.CRIT {

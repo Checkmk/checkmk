@@ -945,8 +945,8 @@ cat <<EOF > /etc/$HTTPD/conf.d/multisite.conf
 # RewriteLog /tmp/rewrite.log
 # RewriteLogLevel 3
 EOF
-    a2enmod proxy
-    a2enmod proxy_http
+    a2enmod proxy || true
+    a2enmod proxy_http || true
 fi
 
 

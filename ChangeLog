@@ -16,6 +16,7 @@
     * PNP-templates: fix several templates not working with MULTIPLE rrds
     * new check mem.vmalloc for monitoring vmalloc address space in Linux kernel.
     * Linux agent: add timeout of 2 secs to ntpq 
+    * wmic_process: make check OK if no matching process is found
 
     Livestatus:
     * Remove obsolete parameter 'accept_timeout'

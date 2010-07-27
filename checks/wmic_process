@@ -39,8 +39,6 @@ def check_wmic_process(item, params, info):
             page += int(psinfo["PageFileUsage"])
             userc += int(psinfo["UserModeTime"])
             kernelc += int(psinfo["KernelModeTime"])
-    if count == 0:
-        return (3, "No process %s found" % name)
 
     mem_mb = mem / 1048576.0
     page_mb = page / 1048576.0

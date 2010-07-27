@@ -15,6 +15,9 @@ description:
  If more than one process matches the name, then all matching processes ressources
  are added.
 
+ If no matching process is found running, then the check is always OK (since
+ no ressources are consumed).
+
 perfdata: 
  Four value are sent: (1) The memory usage in MB, (2) The page file usage in MB,
  (3) The CPU usage in user mode in %, (4) The CPU usage in kernel mode in %.

@@ -66,11 +66,11 @@ then
     DISTRO=REDHAT
     DISTRONAME="RedHat 5.3"
     DISTROVERS=5.3
-elif [ "$(cat /etc/redhat-release 2>/dev/null)" = "CentOS release 5.3 (Final)" ]
+elif [ "$(cat /etc/redhat-release 2>/dev/null)" = "CentOS release 5.5 (Final)" ]
 then
     DISTRO=REDHAT
-    DISTRONAME="CentOS 5.3"
-    DISTROVERS=5.3
+    DISTRONAME="CentOS 5.5"
+    DISTROVERS=5.5
 elif grep -qi "USE Linux Enterprise Server 11" /etc/SuSE-release 2>/dev/null
 then
     DISTRO=SUSE
@@ -251,7 +251,7 @@ then
 	cairo-devel libxml-devel libxml2-devel pango-devel gcc-c++ net-snmp php5-iconv
 else
    yum update
-   yum -y install httpd gcc mailx php php-gd gd-devl xinetd wget psmisc less mod_python \
+   yum -y install httpd gcc mailx php php-gd gd-devel xinetd wget psmisc less mod_python \
      sqlite cairo-devel libxml2-devel pango-devel pango libpng-devel freetype freetype-devel libart_lgpl-devel \
      net-snmp
 fi

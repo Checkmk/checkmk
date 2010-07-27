@@ -125,6 +125,8 @@ def inventory_mem_vmalloc(checktype, info):
     meminfo = parse_proc_meminfo(info)
     if "VmallocTotal" in meminfo:
         return [ (None, "mem_vmalloc_default_levels") ]
+    else:
+        return []
 
 def check_mem_vmalloc(item, params, info):
     meminfo = parse_proc_meminfo(info)

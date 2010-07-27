@@ -12,8 +12,6 @@ BUGS beheben bis => 1.1.7i3
 --------------------------------------------------------------------------------
 check_parameters Dokumentieren!
 
-local/plugins des Windows-Agenten dokumentieren.
-
 Doku Livestatus: Hinweise zur Stabilität (env-Makros, Log)
 
 check_mk --help:

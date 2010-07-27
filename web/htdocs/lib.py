@@ -60,10 +60,17 @@ class MKInternalError(Exception):
 # and make it writable for the group
 def make_nagios_directory(path):
     if not os.path.exists(path):
-        os.mkdir(path)
-        gid = grp.getgrnam(defaults.www_group).gr_gid
-        os.chown(path, -1, gid)
-        os.chmod(path, 0770)
+        try:
+            os.mkdir(path)
+            gid = grp.getgrnam(defaults.www_group).gr_gid
+            os.chown(path, -1, gid)
+            os.chmod(path, 0770)
+        except Exception, e:
+            raise MKConfigError("Your web server cannot create the directory <tt>%s</tt>, "
+                    "or cannot set the group to <tt>%s</tt> or cannot set the permissions to <tt>0770</tt>. "
+                    "Please make sure that:<ul><li>the base directory is writable by the web server.</li>"
+                    "<li>Both Nagios and the web server are in the group <tt>%s</tt>.</ul>Reason: %s" % (
+                        path, defaults.www_group, defaults.www_group, e))
 
 def write_settings_file(path, content):
     file(path, "w", 0).write(pprint.pformat(content) + "\n")

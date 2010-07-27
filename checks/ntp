@@ -135,7 +135,7 @@ def check_ntp_summary(item, params, info):
             state, text, perfdata = check_ntp(line[1], params, [line])
             text += " (synchronized on %s)" % line[1]
             return (state, text, perfdata)
-    return (3, "UKNOWN - no system peer found") 
+    return (3, "UNKNOWN - no system peer found") 
 
 check_info['ntp']       = (check_ntp,         "NTP Peer %s", 1, inventory_ntp)
 check_info['ntp.time']  = (check_ntp_summary, "NTP Time",    1, inventory_ntp_summary)

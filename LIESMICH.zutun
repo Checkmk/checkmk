@@ -8,23 +8,16 @@ direct rrd-updates deprecaten oder rausnehmen. Diese sorgen dafür, dass
 die Perf-O-Meter und die PNP-Suche in Multisite nicht geht.
 
 --------------------------------------------------------------------------------
-BUGS beheben bis => 1.1.8
+BUGS beheben bis => 1.1.7i3
 --------------------------------------------------------------------------------
 check_parameters Dokumentieren!
 
 local/plugins des Windows-Agenten dokumentieren.
 
-Doku Livestatus: group_authorization nicht gesetzt, hat aber Wirkung von
-loose. Stimmt hier der Default? Sieht eher aus, als funktioniert das nicht...
-
 Doku Livestatus: Hinweise zur Stabilität (env-Makros, Log)
-
-manpage von df: Defaultlevels fehlen
 
 check_mk --help:
   Option -II wird nicht beschrieben.
-
-In Opera (Version 10.6) geht in der Sidebar das Scrollen per Mausrad nicht.
 
 Beschreibung zu -II fehlt in Doku.
 
@@ -35,6 +28,17 @@ drbd                  1 new checks
 
 1. Ist das korrekt, dass alle autochecks entfernt und nur dieser dann hinzugefügt wird?
 2. Die Ausgabe könnte man noch etwas tunen. "Removed checks xxx" und "added yyy".
+
+manpage von df: Defaultlevels fehlen
+
+--------------------------------------------------------------------------------
+BUGS beheben bis => 1.1.8
+--------------------------------------------------------------------------------
+Doku Livestatus: group_authorization nicht gesetzt, hat aber Wirkung von
+loose. Stimmt hier der Default? Sieht eher aus, als funktioniert das nicht...
+
+In Opera (Version 10.6) geht in der Sidebar das Scrollen per Mausrad nicht.
+
 
 Der Check ntp ist durch 'ntp.peer' in den meisten Fällen obsolet geworden.
 Die Inventur findet immer beide, was blöd ist. Soll man ignored_checktypes

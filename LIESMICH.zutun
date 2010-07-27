@@ -8,7 +8,7 @@ direct rrd-updates deprecaten oder rausnehmen. Diese sorgen dafür, dass
 die Perf-O-Meter und die PNP-Suche in Multisite nicht geht.
 
 --------------------------------------------------------------------------------
-BUGS beheben bis => 1.1.7i3
+BUGS beheben bis => 1.1.7i4
 --------------------------------------------------------------------------------
 check_parameters Dokumentieren!
 

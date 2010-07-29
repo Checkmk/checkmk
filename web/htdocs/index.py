@@ -25,15 +25,16 @@
 # Boston, MA 02110-1301 USA.
 
 from mod_python import apache,util
-import os, pprint, livestatus
+import os, livestatus
 from lib import *
 import config, htmllib, defaults
 
-# Module containing the actual pages. They must be imported after config.
-import page_logwatch
-import views
-import sidebar
-import permissions
+# Load page handlers
+pagehandlers = {}
+pagehandlers_dir = defaults.web_dir + "/plugins/pages"
+for fn in os.listdir(pagehandlers_dir):
+    if fn.endswith(".py"):
+        execfile(pagehandlers_dir + "/" + fn)
 
 
 def read_get_vars(req):
@@ -43,6 +44,7 @@ def read_get_vars(req):
         for (key,values) in req.rawvars.items():
             if len(values) >= 1:
                 req.vars[key] = values[-1]
+
 
 def connect_to_livestatus(html):
     html.site_status = {}
@@ -116,11 +118,6 @@ def connect_to_livestatus(html):
     # Default auth domain is read. Please set to None to switch off authorization
     html.live.set_auth_domain('read')
 
-# This function does nothing. The sites have already
-# been reconfigured according to the variable _site_switch,
-# because that variable is processed by connect_to_livestatus()
-def ajax_switch_site(html):
-    pass 
 
 def handler(req):
     req.content_type = "text/html; charset=UTF-8"
@@ -158,28 +155,6 @@ def handler(req):
 
         # General access allowed. Now connect to livestatus
 	connect_to_livestatus(html)
-
-	pagehandlers = { "index"                 : page_index,
-			 "main"                  : page_main,
-			 "filter"                : page_main, # for users of multiadmin
-			 "edit_views"            : views.page_edit_views,
-			 "edit_view"             : views.page_edit_view,
-			 "export_views"          : views.ajax_export,
-			 "view"                  : views.page_view,
-			 "logwatch"              : page_logwatch.page,
-			 "side"                  : sidebar.page_side,    # replacement for side.php
-			 "switch_site"           : ajax_switch_site,
-			 "sidebar_add_snapin"    : sidebar.page_add_snapin,
-			 "sidebar_snapin"        : sidebar.ajax_snapin,
-			 "sidebar_openclose"     : sidebar.ajax_openclose,
-			 "sidebar_move_snapin"   : sidebar.move_snapin,
-			 "switch_master_state"   : sidebar.ajax_switch_masterstate,
-			 "add_bookmark"          : sidebar.ajax_add_bookmark,
-			 "del_bookmark"          : sidebar.ajax_del_bookmark,
-			 "edit_bookmark"         : sidebar.page_edit_bookmark,
-			 "view_permissions"      : permissions.page_view_permissions,
-			 "edit_permissions"      : permissions.page_edit_permissions,
-	}
 
 	handler = pagehandlers.get(req.myfile, page_not_found)
 	handler(html)
@@ -224,58 +199,8 @@ def handler(req):
     # Disconnect from livestatus!
     html.live = None
     return apache.OK
-   
-
-def page_index(html):
-    html.req.headers_out.add("Cache-Control", "max-age=7200, public");
-    html.write("""
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd">
-<html>
-<head>
- <title>Check_MK Multisite</title>
- <link rel="shortcut icon" href="images/favicon.ico" type="image/ico">
-</head>
-<frameset cols="280,*" frameborder="0" framespacing="0" border="0">
-    <frame src="side.py" name="side" noresize>
-    <frame src="main.py" name="main" noresize>
-</html>
-""") 
-
-
-def page_main(html):
-    html.header("Check_MK Multisite")
-    html.write("""
-<p>Welcome to Check_MK Multisite - a new GUI for viewing status information
-and controlling your monitoring system. Multisite is not just another GUI
-for Nagios - it uses a completely new architecture and design scheme. It's
-key benefits are:</p>
-<ul>
-<li>It is fast.</li>
-<li>it is flexible.</li>
-<li>It supports distributed monitoring.</li>
-</ul>
-
-<p>Multisite is completely based on
-<a href="http://mathias-kettner.de/checkmk_livestatus.html">MK
-Livestatus</a>, which is what makes it fast in the first place - especially
-in huge installations with a large number of hosts and services. </p>
-
-<p>User customizable <b>views</b> is what makes Multisite flexible. Customize
-the builtin views or create completely own views in order to need your
-demands.</p>
-
-<p>Multisite supports distributed monitoring by allowing you to combine an
-arbitrary number of Monitoring servers under a common visualisation layer,
-without the need of a centralized data storage. No SQL database is needed.
-No network traffic is generated due to the monitoring.</p>
-
-<p>Please learn more about Multisite at its <a href="http://mathias-kettner.de/checkmk_multisite.html">Documentation home page</a>.</p>
-
-""")
-    html.footer()
 
 def page_not_found(html):
     html.header("Page not found")
     html.show_error("This page was not found. Sorry.")
-    H
     html.footer()

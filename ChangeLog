@@ -3,6 +3,7 @@
     * Make page handler modular: this allows for custom pages embedded into
       the Multisite frame work and thus using Multisite for other tasks as
       well.
+    * status_host: new state "waiting", if status host is still pending
 
 1.1.7i3:
     Core, Setup, etc.:

@@ -50,8 +50,8 @@ def connect_to_livestatus(html):
     html.site_status = {}
     # site_status keeps a dictionary for each site with the following
     # keys:
-    # "state"              --> "online", "disabled", "down", "unreach" or "dead"
-    # "exception"          --> An error exception in case of down, unreach or dead
+    # "state"              --> "online", "disabled", "down", "unreach", "dead" or "waiting"
+    # "exception"          --> An error exception in case of down, unreach, dead or waiting
     # "status_host_state"  --> host state of status host (0, 1, 2 or None)
     # "livestatus_version" --> Version of sites livestatus if "online"
     # "program_version"    --> Version of Nagios if "online"
@@ -102,6 +102,8 @@ def connect_to_livestatus(html):
                 html.site_status[sitename]["state"] = "down"
             elif shs == 2:
                 html.site_status[sitename]["state"] = "unreach"
+            elif shs == 3:
+                html.site_status[sitename]["state"] = "waiting"
 
     else:
 	html.live = livestatus.SingleSiteConnection("unix:" + defaults.livestatus_unix_socket)

@@ -396,7 +396,7 @@ class MultiSiteConnection(Helpers):
         status_host_states = {}
         for sitename, hosts in status_hosts.items():
             # Fetch all the states of status hosts of this local site in one query
-            query = "GET hosts\nColumns: name state last_time_up\n"
+            query = "GET hosts\nColumns: name state has_been_checked last_time_up\n"
             for host in hosts:
                 query += "Filter: name = %s\n" % host
             query += "Or: %d\n" % len(hosts)
@@ -404,7 +404,9 @@ class MultiSiteConnection(Helpers):
             try:
                 result = self.query_table(query)
                 # raise MKLivestatusConfigError("TRESulT: %s" % (result,))
-                for host, state, lastup in result:
+                for host, state, has_been_checked, lastup in result:
+		    if has_been_checked == 0:
+			state = 3
                     status_host_states[(sitename, host)] = (state, lastup)
             except Exception, e:
                 raise MKLivestatusConfigError(e)
@@ -427,6 +429,8 @@ class MultiSiteConnection(Helpers):
                         ex = "The remote monitoring host is down"
                     elif shs == 2:
                         ex = "The remote monitoring host is unreachable"
+		    elif shs == 3:
+			ex = "The remote monitoring host's state it not yet determined"
                     else:
                         ex = "Error determining state of remote monitoring host: %s" % shs
                     self.deadsites[sitename] = {

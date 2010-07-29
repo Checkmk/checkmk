@@ -421,6 +421,7 @@ sidebar_snapins["sitestatus"] = {
 .snapin table.sitestate td.online a   { background-color: #3c0; color: #fff; border-color: #0f0; }
 .snapin table.sitestate td.disabled a { background-color: #666; color: #ccc; border-color: #888; }
 .snapin table.sitestate td.dead a     { background-color: #c00; color: #f88; border-color: #f44; }
+.snapin table.sitestate td.waiting a  { background-color: #26c; color: #fff; border-color: #44f; }
 .snapin table.sitestate td.down a     { background-color: #f00; color: #fff; border-color: #800; }
 .snapin table.sitestate td.unreach a  { background-color: #f80; color: #fff; border-color: #840; }
 """ % snapin_width

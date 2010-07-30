@@ -32,6 +32,17 @@ manpage von df: Defaultlevels fehlen
 --------------------------------------------------------------------------------
 BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
+Multisite: noch nicht alle Dateien werden mit den richtigen Rechten angelegt:
+Das hier kommt aus config: Dazu gibt es in lib eine Funktion, die man nehmne
+sollte!
+def save_user_file(name, content):
+        path = user_confdir + "/" + name + ".mk"
+            try:
+                file(path, "w").write(pprint.pformat(content) + "\n")
+            except Exception, e:
+                raise MKConfigError("Cannot save %s options for user <b>%s</b> into <b>%s</b>: %s" % \
+                                        (name, user, path, e))
+
 Die services PING, Check_MK und Check_MK inventory bekommen eine Service-
 und Contactgroups zugeordnet.
 

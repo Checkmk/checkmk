@@ -423,7 +423,7 @@ def paint_pnpgraph(sitename, host, service = "_HOST_"):
     for source in [ 1, 2, 3, 4, 5, 6, 7 ]:
         urlvars = '&host=%s&srv=%s&view=1&source=%d&theme=multisite&baseurl=%s' % \
                   ( htmllib.urlencode(host), htmllib.urlencode(service), source, htmllib.urlencode(defaults.checkmk_web_uri) )
-        htmlcode += '<div class=pnpgraph><a href="%s/index.php/graph?%s"><img src="%s/image?%s"></a></div>' % \
+        htmlcode += '<div class=pnpgraph><a href="%s/index.php/graph?%s"><img src="%s/index.php/image?%s"></a></div>' % \
             (pnpurl, urlvars, pnpurl, urlvars)
     return "pnpgraph", htmlcode
         

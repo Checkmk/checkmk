@@ -1,12 +1,14 @@
 1.1.7i4:
     Core, Setup, etc.:
     * Fixed automatic creation of host contactgroups
+    * templates: make PNP links work without rewrite
 
     Multisite:
     * Make page handler modular: this allows for custom pages embedded into
       the Multisite frame work and thus using Multisite for other tasks as
       well.
     * status_host: new state "waiting", if status host is still pending
+    * make PNP links work without rewrite
 
 
 

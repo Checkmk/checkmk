@@ -1175,6 +1175,7 @@ def create_nagios_hostdefs(outfile, hostname):
     cgrs = host_contactgroups_of([hostname])
     if len(cgrs) > 0: 
         outfile.write("  contact_groups +%s\n" % ",".join(cgrs))
+	contactgroups_to_define.update(cgrs)
 
     # Parents for non-clusters
     if not is_clust:

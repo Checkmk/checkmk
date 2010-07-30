@@ -232,7 +232,7 @@ class BaseConnection:
 	    self.connect()
         if not query.endswith("\n"):
 	    query += "\n"
-	query += self.add_headers
+	query += self.auth_header + self.add_headers
         query += "Localtime: %d\nOutputFormat: python\nKeepAlive: on\nResponseHeader: fixed16\n" % int(time.time())
         query += add_headers
         if not query.endswith("\n"):
@@ -311,7 +311,7 @@ class SingleSiteConnection(BaseConnection, Helpers):
     def query(self, query, add_headers = ""):
 	if self.limit != None:
 	    query += "Limit: %d\n" % self.limit
-	data = self.do_query(query, self.auth_header + add_headers)
+	data = self.do_query(query, add_headers)
 	if self.prepend_site:
 	    return [ [''] + line for line in data ]
 	else:
@@ -510,7 +510,6 @@ class MultiSiteConnection(Helpers):
         else:
             active_sites = self.connections
 
-# hirn("QUERY (PARALLEL %s)" % (" ".join([c[0] for c in active_sites])))
         start_time = time.time()
 	stillalive = []
 	limit = self.limit

@@ -32,6 +32,12 @@ manpage von df: Defaultlevels fehlen
 --------------------------------------------------------------------------------
 BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
+Die services PING, Check_MK und Check_MK inventory bekommen eine Service-
+und Contactgroups zugeordnet.
+
+host_contactgroups: Diese werden nicht automatisch angelegt, obwohl sie
+verwendet werden. Da fehlt einfach eine Zeile Code.
+
 Doku Livestatus: group_authorization nicht gesetzt, hat aber Wirkung von
 loose. Stimmt hier der Default? Sieht eher aus, als funktioniert das nicht...
 

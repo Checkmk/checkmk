@@ -1,8 +1,17 @@
+1.1.7i5:
+    Core, Setup, etc.:
+    * SNMP: do not load any MIB files (speeds up snmpwalk a lot!)
+
+    Checks & Agents:
+    * nvidia: agent now only queries GPUCoreTemp and GPUErrors. This avoids
+      a vmalloc leakage of 32kB per call (bug in NVIDIA driver)
+    * Make all SNMP based checks independent of standard MIB files
+
+
 1.1.7i4:
     Core, Setup, etc.:
     * Fixed automatic creation of host contactgroups
     * templates: make PNP links work without rewrite
-    * SNMP: do not load any MIB files (speeds up snmpwalk a lot!)
 
     Multisite:
     * Make page handler modular: this allows for custom pages embedded into
@@ -10,12 +19,8 @@
       well.
     * status_host: new state "waiting", if status host is still pending
     * make PNP links work without rewrite
-
-    Checks & Agents:
-    * nvidia: agent now only queries GPUCoreTemp and GPUErrors. This avoids
-      a vmalloc leakage of 32kB per call (bug in NVIDIA driver)
-    * Make all SNMP based checks independent of standard MIB files
-
+    * Fix visibility problem: in multisite setups all users could see
+      all objects.
 
 1.1.7i3:
     Core, Setup, etc.:

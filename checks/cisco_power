@@ -38,4 +38,4 @@ def check_cisco_power(item, params, info):
    return (3, "UNKNOWN - item not found in snmp data")
 
 check_info['cisco_power'] = (check_cisco_power, "%s", 0,  inventory_cisco_power)
-snmp_info['cisco_power'] = ( "enterprises.9.9.13.1.5.1", [ 2, 3, 4 ] ) # CISCO-SMI
+snmp_info['cisco_power'] = ( "1.3.6.1.4.1.9.9.13.1.5.1", [ 2, 3, 4 ] ) # CISCO-SMI

@@ -67,5 +67,5 @@ def inventory_df_netapp(checkname, info):
       
 
 check_info['df_netapp']        = (check_df_netapp, "fs_%s", 1, inventory_df_netapp)
-snmp_info['df_netapp']         = ("enterprises.789.1.5.4.1", [ 2, 29, 30 ] )
+snmp_info['df_netapp']         = ("1.3.6.1.4.1.789.1.5.4.1", [ 2, 29, 30 ] )
 precompile_params['df_netapp'] = precompile_filesystem_levels

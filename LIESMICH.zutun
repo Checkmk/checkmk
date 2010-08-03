@@ -32,6 +32,22 @@ manpage von df: Defaultlevels fehlen
 --------------------------------------------------------------------------------
 BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
+habe da wohl noch einen zweiten Bug im Multisite gefunden.
+Der erste war ja, wie bereits geschrieben: Wenn Umlaut in Hostgroup Alias vorkommt,
+    funktioniert nichts mehr, was irgendwie diese Aliases ausliest. Wird wohl auch an anderer Stelle sein,
+    bei der Multisite mit Umlauten arbeiten muss.
+
+
+    noch eine Kleinigkeit im Mulisite, ist zwar kein Bug:
+
+    in der Host View, in der man alle Services zu einem Host sieht, fehlt der Host.
+
+    Beispiel: Nagvis ist ein Host rot, man klickt ihn an, landet in Multisite, und sieht lauter Grüne Dienste (bis auf Check_mk, der ist Gelb und hat "null" im Text stehen. Jetzt muss man erst noch Host Status anklicken, um zu sehen, der ist Down.
+
+            Sprich, in der view Host fehlt jeder Hinweis auf ein Fehler auf dem Host. 
+
+
+
 Multisite: noch nicht alle Dateien werden mit den richtigen Rechten angelegt:
 Das hier kommt aus config: Dazu gibt es in lib eine Funktion, die man nehmne
 sollte!

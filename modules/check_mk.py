@@ -546,6 +546,8 @@ def snmp_base_command(what, hostname):
             raise MKGeneralException("Invalid SNMP credentials '%r' for host %s: must be string or 4-tuple" % (credentials, hostname)) 
          options = "-v3 -l '%s' -a '%s' -u '%s' -A '%s'" % credentials
         
+    # Do not load *any* MIB files. This save lot's of CPU.
+    options += " -m '' -M ''"
     return command + ' ' + options
 
 

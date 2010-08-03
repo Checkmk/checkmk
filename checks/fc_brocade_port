@@ -83,7 +83,7 @@ def check_brocade_port(portno, params, info):
 
 
 check_info['fc_brocade_port'] = (check_brocade_port, "PORT %s", 1,  inventory_brocade_port)
-snmp_info['fc_brocade_port'] = ( "enterprises.1588.2.1.1.1.6.2.1", [ 1, 3, 4, 11, 12, 22, 28 ] )
+snmp_info['fc_brocade_port'] = ( "1.3.6.1.4.1.1588.2.1.1.1.6.2.1", [ 1, 3, 4, 11, 12, 22, 28 ] )
 # 1: swFCPortIndex, 3: swFCPortOpStatus, 4:swFCPortAdmStatus,
 # 11: swFCPortTxWords, 12: swFCPortRxWords
 # 22: swFCPortRxCrcs, 28: swFCPortC3Discards

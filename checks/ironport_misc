@@ -33,7 +33,7 @@ check_info['ironport_misc'] = (
 
 snmp_info_single['ironport_misc'] = (
     "ASYNCOS-MAIL-MIB",
-    "enterprises.15497.1.1.1", 
+    "1.3.6.1.4.1.15497.1.1.1", 
       [ "1.0",
         "2.0",
         "3.0",

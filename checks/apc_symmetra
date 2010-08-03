@@ -133,7 +133,7 @@ def inventory_apc(checkname, info):
 check_info['apc_symmetra'] = ( check_apc, "APC Symmetra status", 1, inventory_apc )
 
 snmp_info['apc_symmetra'] = (
-  "enterprises.318.1.1.1",
+  "1.3.6.1.4.1.318.1.1.1",
   [ "2.1.1.0", "4.1.1.0", "2.2.1.0", "2.2.2.0", 
     "2.2.9.0", "4.2.1.0", "4.2.4.0", "2.2.3.0" ] )
 

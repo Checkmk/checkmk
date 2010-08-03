@@ -48,7 +48,7 @@ def check_decru_temps(item, params, info):
 
 check_info['decru_temps'] = (check_decru_temps, "TEMP %s", 1, inventory_decru_temps)
 
-snmp_info['decru_temps'] = ( "enterprises.12962.1.2.4.1", [ 2, 3 ] )
+snmp_info['decru_temps'] = ( "1.3.6.1.4.1.12962.1.2.4.1", [ 2, 3 ] )
 # snmp_scan_info['decru_temps'] = ( "enterprises.12962.1.1.1.1", "=", "san" )
 # oder (SNMPv2-MIB::sysObjectID.0 = OID: SNMPv2-SMI::enterprises.12962.2.1.4):
 # snmp_scan_info['decru_temps'] = ( ".1.3.6.1.2.1.1.2.0", "=", ".1.3.6.1.4.1.12962.2.1.4" )

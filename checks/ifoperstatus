@@ -28,12 +28,12 @@
 # targetstate is 1 (up)
 
 ifoperstatus_monitor_unused = False
-ifoperstatus_inventory_porttypes = [ "ethernetCsmacd" ]
+ifoperstatus_inventory_porttypes = [ "6" ]
 
 def inventory_ifoperstatus(checkname, info):
     inventory = []
     for name, hwtype, operstatus in info:
-        if hwtype in ifoperstatus_inventory_porttypes and (ifoperstatus_monitor_unused or operstatus in ['1','up']):
+        if hwtype in ifoperstatus_inventory_porttypes and (ifoperstatus_monitor_unused or operstatus == '1'):
             inventory.append( (name, operstatus, repr(operstatus)) )
     return inventory
 

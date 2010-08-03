@@ -245,7 +245,10 @@ fi
 if which nvidia-settings >/dev/null && [ -S /tmp/.X11-unix/X0 ] 
 then
     echo '<<<nvidia>>>'
-    DISPLAY=:0 waitmax 10 nvidia-settings -t -q all
+    for var in GPUErrors GPUCoreTemp
+    do
+        DISPLAY=:0 waitmax 2 nvidia-settings -t -q $var | sed "s/^/$var: /"
+    done
 fi
 
 if [ -e /proc/drbd ]; then

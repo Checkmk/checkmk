@@ -1323,7 +1323,7 @@ def create_nagios_servicedefs(outfile, hostname):
         outfile.write("""
 define service {
   use\t\t\t\t%s
-%s  host_name\t\t\ts
+%s  host_name\t\t\t%s
 }
 
 """ % (pingonly_template, extra_service_conf_of(hostname, "PING"), summary_hostname(hostname)))

@@ -77,7 +77,6 @@ hp_proliant_mem_condition_map = {
 }
 
 def inventory_hp_proliant_mem(checkname, info):
-    print info
     if len(info) > 0:
         return [ (line[1], None) for line in info if int(line[2]) > 0 and int(line[4]) != 2 ]
     else:

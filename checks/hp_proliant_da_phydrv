@@ -52,7 +52,6 @@ hp_proliant_da_phydrv_smart_status = {
 }
 
 def inventory_hp_proliant_da_phydrv(checkname, info):
-    print info
     if len(info) > 0:
         return [ (line[1], None) for line in info ]
     else:

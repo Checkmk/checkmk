@@ -4,6 +4,8 @@
     * legacy_checks: new config variable allowing creating classical
       non-Check_MK checks while using host tags and config options
     * check_mk_objects.cfg: beautify output, use tabs instead of spaces
+    * check_mk -II: delete only specified checktypes, allow to reinventorize
+      all hosts
 
     Checks & Agents:
     * nvidia: agent now only queries GPUCoreTemp and GPUErrors. This avoids

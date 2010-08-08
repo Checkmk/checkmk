@@ -1727,8 +1727,8 @@ def in_boolean_serviceconf_list(hostname, service_description, conflist):
     return False # no match. Do not ignore
 
 
-# Remove all autochecks of a certain host
-def remove_autochecks_of(hostname):
+# Remove all autochecks of certain types of a certain host
+def remove_autochecks_of(hostname, checktypes):
     for fn in glob.glob(autochecksdir + "/*.mk"):
         if opt_debug:
             sys.stdout.write("Scanning %s...\n" % fn)
@@ -1738,7 +1738,7 @@ def remove_autochecks_of(hostname):
             if line.lstrip().startswith('("'):
                 count += 1
                 splitted = line.split('"')
-                if splitted[1] != hostname:
+                if splitted[1] != hostname or splitted[3] not in checktypes:
                     lines.append(line)
         if len(lines) == 0:
             if opt_verbose:
@@ -3565,13 +3565,20 @@ if __name__ == "__main__":
         else:
             # remove existing checks, if option -I is used twice
             if seen_I > 1:
+                if checktype in [ "allsnmp", "snmp" ]:
+                    checknames = [ k for k in check_info.keys() if check_uses_snmp(k) ] 
+                elif checktype in [ "alltcp", "tcp" ]:
+                    checknames = [ k for k in check_info.keys() if not check_uses_snmp(k) ] 
+                else:
+                    checknames = checktype.split(',')
+
                 if len(hostnames) > 0:
                     for host in hostnames:
-                        remove_autochecks_of(host)
+                        remove_autochecks_of(host, checknames)
                 else:
-                    sys.stderr.write("Option -II needs explicit specification of host names.\n")
-                    sys.exit(1)
-                    # remove_all_autochecks()
+                    for host in all_active_hosts() + all_active_clusters():
+                        remove_autochecks_of(host, checknames)
+
                 reread_autochecks()
 
             if checktype in [ "allsnmp", "snmp" ]:

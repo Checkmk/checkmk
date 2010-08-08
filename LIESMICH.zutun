@@ -486,4 +486,6 @@ Idee: Bei SNMP-Checks gibt es manchmal Daten, die sich dynamisch nicht ändern
 (z.B. Interfacenamen, etc.). Man könnte diese Daten cachen, so dass sie nicht
 jedes mal geholt werden, sondern z.B. nur alle 10 Minuten.
 
-
+Bei "Invalid output from plugin" könnte man noch einen Hinweis machen, dass
+man die --debug-Option verwenden soll. Am besten wäre gleich ein Link
+auf meine Homepage auf einen Artikel dazu!

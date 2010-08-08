@@ -7,13 +7,12 @@ auftritt.
 direct rrd-updates deprecaten oder rausnehmen. Diese sorgen dafür, dass
 die Perf-O-Meter und die PNP-Suche in Multisite nicht geht.
 
---------------------------------------------------------------------------------
-BUGS beheben bis => 1.1.7i4
---------------------------------------------------------------------------------
-check_parameters Dokumentieren!
+filesystem_levels rausnehmen. Hinweis, dass check_parameters verwendet werden
+soll.
 
-Doku Livestatus: Hinweise zur Stabilität (env-Makros, Log)
-
+--------------------------------------------------------------------------------
+BUGS beheben bis => 1.1.7i5
+--------------------------------------------------------------------------------
 check_mk --help:
   Option -II wird nicht beschrieben.
 
@@ -27,26 +26,18 @@ drbd                  1 new checks
 1. Ist das korrekt, dass alle autochecks entfernt und nur dieser dann hinzugefügt wird?
 2. Die Ausgabe könnte man noch etwas tunen. "Removed checks xxx" und "added yyy".
 
-manpage von df: Defaultlevels fehlen
-
 --------------------------------------------------------------------------------
 BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
 habe da wohl noch einen zweiten Bug im Multisite gefunden.
 Der erste war ja, wie bereits geschrieben: Wenn Umlaut in Hostgroup Alias vorkommt,
-    funktioniert nichts mehr, was irgendwie diese Aliases ausliest. Wird wohl auch an anderer Stelle sein,
-    bei der Multisite mit Umlauten arbeiten muss.
+funktioniert nichts mehr, was irgendwie diese Aliases ausliest. Wird wohl auch an anderer Stelle sein,
+bei der Multisite mit Umlauten arbeiten muss.
 
-
-    noch eine Kleinigkeit im Mulisite, ist zwar kein Bug:
-
-    in der Host View, in der man alle Services zu einem Host sieht, fehlt der Host.
-
-    Beispiel: Nagvis ist ein Host rot, man klickt ihn an, landet in Multisite, und sieht lauter Grüne Dienste (bis auf Check_mk, der ist Gelb und hat "null" im Text stehen. Jetzt muss man erst noch Host Status anklicken, um zu sehen, der ist Down.
-
-            Sprich, in der view Host fehlt jeder Hinweis auf ein Fehler auf dem Host. 
-
-
+Noch eine Kleinigkeit im Mulisite, ist zwar kein Bug:
+in der Host View, in der man alle Services zu einem Host sieht, fehlt der Host.
+Beispiel: Nagvis ist ein Host rot, man klickt ihn an, landet in Multisite, und sieht lauter Grüne Dienste (bis auf Check_mk, der ist Gelb und hat "null" im Text stehen. Jetzt muss man erst noch Host Status anklicken, um zu sehen, der ist Down.
+Sprich, in der view Host fehlt jeder Hinweis auf ein Fehler auf dem Host. 
 
 Multisite: noch nicht alle Dateien werden mit den richtigen Rechten angelegt:
 Das hier kommt aus config: Dazu gibt es in lib eine Funktion, die man nehmne
@@ -59,17 +50,10 @@ def save_user_file(name, content):
                 raise MKConfigError("Cannot save %s options for user <b>%s</b> into <b>%s</b>: %s" % \
                                         (name, user, path, e))
 
-Die services PING, Check_MK und Check_MK inventory bekommen eine Service-
-und Contactgroups zugeordnet.
-
-host_contactgroups: Diese werden nicht automatisch angelegt, obwohl sie
-verwendet werden. Da fehlt einfach eine Zeile Code.
-
 Doku Livestatus: group_authorization nicht gesetzt, hat aber Wirkung von
 loose. Stimmt hier der Default? Sieht eher aus, als funktioniert das nicht...
 
 In Opera (Version 10.6) geht in der Sidebar das Scrollen per Mausrad nicht.
-
 
 Der Check ntp ist durch 'ntp.peer' in den meisten Fällen obsolet geworden.
 Die Inventur findet immer beide, was blöd ist. Soll man ignored_checktypes

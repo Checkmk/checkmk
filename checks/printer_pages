@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -31,14 +31,14 @@
 # +------------------------------------------------------------------+
 
 def inventory_printer_pages(checkname, info):
-   return [ (line[0], None ) for line in info ] 
+    return [ (line[0], None ) for line in info ]
 
 def check_printer_pages(item, params, info):
     for line in info:
         if line[0] == item:
-	    infotext = "%d Pages printed" % int(line[1])
-	    perfdata = [ ( "pages", int(line[1]) ) ]
-	    return (0, "OK - %s" % infotext, perfdata)
+            infotext = "%d Pages printed" % int(line[1])
+            perfdata = [ ( "pages", int(line[1]) ) ]
+            return (0, "OK - %s" % infotext, perfdata)
 
     return (3, 'UNKNOWN - not found')
 

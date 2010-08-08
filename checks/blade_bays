@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -26,20 +26,20 @@
 
 
 def inventory_blade_bays(checkname, info):
-   # find only modules that are present and switched on
-   return [ (line[0], '', line[1]) for line in info if line[1] == "1" ]
+    # find only modules that are present and switched on
+    return [ (line[0], '', line[1]) for line in info if line[1] == "1" ]
 
 def check_blade_bays(item, params, info):
-   for line in info:
-      if line[0] == item:
-         state = int(line[1])
-         if state == 1:
-            return (0, "OK - State OK")
-         elif state == 2:
-            return (1, "WARNING - Not present")
-         else:
-            return (2, "CRIT - invalid state %d" % state)
-   return (3, "UNKNOWN - no data for '%s' in SNMP info" % item)
+    for line in info:
+        if line[0] == item:
+            state = int(line[1])
+            if state == 1:
+                return (0, "OK - State OK")
+            elif state == 2:
+                return (1, "WARNING - Not present")
+            else:
+                return (2, "CRIT - invalid state %d" % state)
+    return (3, "UNKNOWN - no data for '%s' in SNMP info" % item)
 
 
 check_info['blade_bays'] = (check_blade_bays, "BAY %s", 0,  inventory_blade_bays)

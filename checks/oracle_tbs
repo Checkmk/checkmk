@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -55,18 +55,18 @@ def check_oracle_tbs(item, params, info):
                     return (0, "OK" + infotext, perfdata)
                 else:
                     return (1, "WARNING" + infotext, perfdata)
-            
+
             # For TEMP and UNDOTBS.* autoextend should *NOT*
             # be enabled.
             if tbs == "TEMP" or tbs.startswith("UNDOTBS"):
                 return (1, "WARNING" + infotext, perfdata)
-            
+
             # If tbs is at least by mbfree_ok MBs extendable, then OK
             if free_mb >= mbfree_ok:
                 return (0, "OK" + infotext, perfdata)
-            
+
             # Now check used space
-            if used_perc > crit: 
+            if used_perc > crit:
                 if free_mb >= mbfree_warn and free_mb < mbfree_ok:
                     return (1, "WARNING" + infotext, perfdata)
                 else:
@@ -74,8 +74,8 @@ def check_oracle_tbs(item, params, info):
             elif used_perc > warn:
                 return (1, "WARNING" + infotext + " (warning at %d%%)" % warn, perfdata)
             else:
-                return (0, "OK" + infotext, perfdata)            
-                
+                return (0, "OK" + infotext, perfdata)
+
     return (2, "CRIT - table space missing")
 
 def inventory_oracle_tbs(checkname, info):

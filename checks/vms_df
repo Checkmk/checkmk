@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -31,7 +31,7 @@
 # DSA104  0.30 400.00 0.00 0.00 75934488.00 106669167
 def inventory_vms_df(checkname, info):
     return [ ( line[0], '""', 'filesystem_default_levels') for line in info ]
-    
+
 def check_vms_df(item, params, info):
     for line in info:
         if line[0] == item:
@@ -40,7 +40,7 @@ def check_vms_df(item, params, info):
             disk_util            = float(line[3])
             response_time_ms     = float(line[4])
             blocks_free          = float(line[5])
-            blocks_total	 = float(line[6]) # one block is 512 bytes
+            blocks_total         = float(line[6]) # one block is 512 bytes
 
             free_mb = blocks_free / 2048
             size_mb = blocks_total / 2048
@@ -53,8 +53,8 @@ def check_vms_df(item, params, info):
             perfdata = [
               (item, str(used_mb) + 'MB', warn_mb, crit_mb, 0, size_mb),
               ('iops', "%.2f" % io_ops_total_per_sec )
-            ]             
-            
+            ]
+
             used_txt = "%d%% used (%.2f of %.2f GB)" % (used_perc, used_mb/1024, size_mb/1024)
             if used_mb > crit_mb:
                 return (2, "CRIT - %s %s" % (used_txt, levelstext), perfdata)
@@ -62,7 +62,7 @@ def check_vms_df(item, params, info):
                 return (1, "WARN - %s %s" % (used_txt, levelstext), perfdata)
             else:
                 return (0, "OK - %s %s" % (used_txt, levelstext), perfdata)
-            
+
     return (3, "Disk %s not found" % (item,))
 
 check_info['vms_df']        = ( check_vms_df, "fs_%s", 1, inventory_vms_df )

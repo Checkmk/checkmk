@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -59,12 +59,12 @@ def perfometer_logarithmic(value, half_value, base, color):
       perfometer_td(pos, color) + \
       perfometer_td(100 - pos, "white") + \
       "</tr></table>"
-    
+
 
 perfometer_plugins_dir = defaults.web_dir + "/plugins/perfometer"
 for fn in os.listdir(perfometer_plugins_dir):
     if fn.endswith(".py"):
-	execfile(perfometer_plugins_dir + "/" + fn)
+        execfile(perfometer_plugins_dir + "/" + fn)
 
 
 def paint_perfometer(row):
@@ -127,4 +127,3 @@ multisite_painters["perfometer"] = {
     "columns" : [ "service_perf_data", "service_state", "service_check_command" ],
     "paint" : paint_perfometer
 }
-

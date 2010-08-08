@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -32,51 +32,51 @@ def inventory_kernel(checktype, info):
     inventory = []
     for counter in inventory_kernel_counters:
         hits = [ line[0] for line in info[1:] if line[0] == counter ]
-	if len(hits) == 1:
-	    inventory.append( (counter, "kernel_default_levels") )
+        if len(hits) == 1:
+            inventory.append( (counter, "kernel_default_levels") )
     return inventory
-	
 
-# item is one of the keys in /proc/stat or /proc/vmstat 
+
+# item is one of the keys in /proc/stat or /proc/vmstat
 def check_kernel(item, params, info):
     this_time = int(info[0][0])
 
-    hits = [ line[1] for line in info[1:] if line[0] == item ] 
+    hits = [ line[1] for line in info[1:] if line[0] == item ]
     if len(hits) == 0:
         return (3, "UNKNOWN - item '%s' not found in agent output" % item)
     elif len(hits) > 1:
         return (3, "UNKNOWN - item '%s' not unique (found %d times)" % (item, len(hits)))
 
-    this_val = int(hits[0]) 
-    timedif, per_sec = get_counter("kernel." + item, this_time, this_val) 
-    infotext = " - %.0f/s in last %d secs" % (per_sec, timedif) 
+    this_val = int(hits[0])
+    timedif, per_sec = get_counter("kernel." + item, this_time, this_val)
+    infotext = " - %.0f/s in last %d secs" % (per_sec, timedif)
     if params == None:
-	 perfdata = [ (item, "%dc" % this_val, "", "", 0 ) ] 
-         return (0, "OK" + infotext, perfdata)
+        perfdata = [ (item, "%dc" % this_val, "", "", 0 ) ]
+        return (0, "OK" + infotext, perfdata)
 
-    warn, crit = params 
-    perfdata = [ (item, "%dc" % this_val, warn, crit, 2) ] 
+    warn, crit = params
+    perfdata = [ (item, "%dc" % this_val, warn, crit, 2) ]
     if warn == None and crit != None:
         infotext += " (critical at %.0f/s)" % crit
     elif warn != None and crit == None:
         infotext += " (warning at %.0f/s)" % warn
     elif warn != None:
         infotext += " (warn/crit at %.0f/%.0f per sec)" % (warn, crit)
-        
+
     if crit != None and per_sec >= crit:
-	return (2, "CRIT" + infotext, perfdata)
+        return (2, "CRIT" + infotext, perfdata)
     elif warn != None and per_sec >= warn:
-	return (1, "WARN" + infotext, perfdata)
+        return (1, "WARN" + infotext, perfdata)
     else:
-	return (0, "OK" + infotext, perfdata)
+        return (0, "OK" + infotext, perfdata)
 
 kernel_util_default_levels = None
 
 def inventory_cpu_utilization(checktype, info):
-   for x in info:
-      if len(x) > 0 and x[0] == 'cpu':
-         return [(None, "kernel_util_default_levels")]
-   return []
+    for x in info:
+        if len(x) > 0 and x[0] == 'cpu':
+            return [(None, "kernel_util_default_levels")]
+    return []
 
 # Columns of cpu usage /proc/stat:
 # - cpuX: number of CPU or only 'cpu' for aggregation
@@ -97,7 +97,7 @@ def check_cpu_utilization(item, params, info):
     line = f[0]
     if len(line) < 8:
         line = line + ['0', '0', '0', '0'] # needed for Linux 2.4
-    
+
     # line contains now the following columns:
     # 'cpu' user nice system idle wait hw-int sw-int (steal ...)
     # convert number to int
@@ -111,7 +111,7 @@ def check_cpu_utilization(item, params, info):
         last_time, last_val = g_counters.get(countername, (0, 0))
         diff_values.append(v - last_val)
         g_counters[countername] = (this_time, v)
-        
+
     sum_jiffies = sum(diff_values[0:7]) # do not account for steal!
     if sum_jiffies == 0:
         return (0, "OK - too short interval")
@@ -121,9 +121,9 @@ def check_cpu_utilization(item, params, info):
     user_perc   = 100.0 * float(user)   / float(sum_jiffies)
     system_perc = 100.0 * float(system) / float(sum_jiffies)
     wait_perc   = 100.0 * float(wait)   / float(sum_jiffies)
-    perfdata = [ 
-          ( "user",   "%.3f" % user_perc ), 
-          ( "system", "%.3f" % system_perc ), 
+    perfdata = [
+          ( "user",   "%.3f" % user_perc ),
+          ( "system", "%.3f" % system_perc ),
           ( "wait",   "%.3f" % wait_perc ) ]
 
     # You may set a warning/critical level on the io wait
@@ -131,17 +131,16 @@ def check_cpu_utilization(item, params, info):
     # a pair of (warn, crit)
     result = (0, "OK")
     try:
-       warn, crit = params
-       if wait_perc >= crit:
-          result = (2, "CRIT (wait too large)")
-       elif wait_perc >= warn:
-          result = (1, "WARNING (wait too large)")
+        warn, crit = params
+        if wait_perc >= crit:
+            result = (2, "CRIT (wait too large)")
+        elif wait_perc >= warn:
+            result = (1, "WARNING (wait too large)")
     except:
-       pass
-    
+        pass
+
     return (result[0], result[1] + " - user: %2.1f%%, system: %2.1f%%, wait: %2.1f%%" %
             (user_perc, system_perc, wait_perc), perfdata)
 
 check_info['kernel.util'] = (check_cpu_utilization, "CPU utilization", 1,  inventory_cpu_utilization)
 check_info['kernel'] = (check_kernel, "Kernel %s", 1,  inventory_kernel)
-

@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -51,16 +51,16 @@ def check_statgrab_util(item, params, info):
         last_time, last_val = g_counters.get(countername, (0, 0))
         diff_values.append(v - last_val)
         g_counters[countername] = (this_time, v)
-        
+
     diff_total = diff_values[3]
     if diff_total == 0:
         return (0, "OK - too short interval")
     user_perc   = 100.0 * float(diff_values[0]) / float(diff_total)
     system_perc = 100.0 * float(diff_values[1]) / float(diff_total)
     wait_perc   = 100.0 * float(diff_values[2]) / float(diff_total)
-    perfdata = [ 
-          ( "user",   "%.3f" % user_perc ), 
-          ( "system", "%.3f" % system_perc ), 
+    perfdata = [
+          ( "user",   "%.3f" % user_perc ),
+          ( "system", "%.3f" % system_perc ),
           ( "wait",   "%.3f" % wait_perc ) ]
     return (0, "OK - user: %2.0f%%, system: %2.0f%%, wait: %2.0f%%" % (user_perc, system_perc, wait_perc), perfdata)
 

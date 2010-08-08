@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -35,12 +35,12 @@ except NameError:
     from sets import Set as set
 
 # --------------------------------------------------------------
-#       _    _                 _   
-#      / \  | |__   ___  _   _| |_ 
+#       _    _                 _
+#      / \  | |__   ___  _   _| |_
 #     / _ \ | '_ \ / _ \| | | | __|
-#    / ___ \| |_) | (_) | |_| | |_ 
+#    / ___ \| |_) | (_) | |_| | |_
 #   /_/   \_\_.__/ \___/ \__,_|\__|
-#                                  
+#
 # --------------------------------------------------------------
 def render_about():
     html.write("Version: " + defaults.check_mk_version)
@@ -58,9 +58,9 @@ sidebar_snapins["about"] = {
 }
 
 # -----------------------------------------------------------------------
-#      _       _           _       _     _             _   _             
-#     / \   __| |_ __ ___ (_)_ __ (_)___| |_ _ __ __ _| |_(_) ___  _ __  
-#    / _ \ / _` | '_ ` _ \| | '_ \| / __| __| '__/ _` | __| |/ _ \| '_ \ 
+#      _       _           _       _     _             _   _
+#     / \   __| |_ __ ___ (_)_ __ (_)___| |_ _ __ __ _| |_(_) ___  _ __
+#    / _ \ / _` | '_ ` _ \| | '_ \| / __| __| '__/ _` | __| |/ _ \| '_ \
 #   / ___ \ (_| | | | | | | | | | | \__ \ |_| | | (_| | |_| | (_) | | | |
 #  /_/   \_\__,_|_| |_| |_|_|_| |_|_|___/\__|_|  \__,_|\__|_|\___/|_| |_|
 #
@@ -68,7 +68,7 @@ sidebar_snapins["about"] = {
 def render_admin():
     bulletlink("View permissions", "view_permissions.py")
     if config.may("edit_permissions"):
-	bulletlink("Edit permissions", "edit_permissions.py")
+        bulletlink("Edit permissions", "edit_permissions.py")
 
 sidebar_snapins["admin"] = {
     "title" : "Administration",
@@ -80,12 +80,12 @@ sidebar_snapins["admin"] = {
 
 
 # --------------------------------------------------------------
-#   __     ___                   
-#   \ \   / (_) _____      _____ 
+#   __     ___
+#   \ \   / (_) _____      _____
 #    \ \ / /| |/ _ \ \ /\ / / __|
 #     \ V / | |  __/\ V  V /\__ \
 #      \_/  |_|\___| \_/\_/ |___/
-#                                
+#
 # --------------------------------------------------------------
 def render_views():
     def render_topic(topic, s):
@@ -96,10 +96,10 @@ def render_views():
 
     s = [ (view.get("topic", "Other"), view["title"], name) for name, view in html.available_views.items() if not view["hidden"] ]
     s.sort()
-    
+
     # Enforce a certain order on the topics
-    known_topics = [ "Hosts", "Hostgroups", "Services", "Servicegroups", "Problems", "Addons" ] 
-    for topic in known_topics: 
+    known_topics = [ "Hosts", "Hostgroups", "Services", "Servicegroups", "Problems", "Addons" ]
+    for topic in known_topics:
         render_topic(topic, s)
 
     rest = list(set([ t for (t, _t, _v) in s if t not in known_topics ]))
@@ -110,10 +110,10 @@ def render_views():
 
     links = []
     if config.may("edit_views"):
-	if config.debug:
-	    links.append(("EXPORT", "export_views.py"))
-	links.append(("EDIT", "edit_views.py"))
-	footnotelinks(links)
+        if config.debug:
+            links.append(("EXPORT", "export_views.py"))
+        links.append(("EDIT", "edit_views.py"))
+        footnotelinks(links)
 
 sidebar_snapins["views"] = {
     "title" : "Views",
@@ -126,16 +126,16 @@ sidebar_snapins["views"] = {
 # --------------------------------------------------------------
 #    ____                  _                     __
 #   / ___|  ___ _ ____   _(_) ___ ___           / /
-#   \___ \ / _ \ '__\ \ / / |/ __/ _ \_____    / / 
-#    ___) |  __/ |   \ V /| | (_|  __/_____|  / /  
-#   |____/ \___|_|    \_/ |_|\___\___|       /_/   
-#                                                  
-#   _   _           _                                  
-#  | | | | ___  ___| |_ __ _ _ __ ___  _   _ _ __  ___ 
+#   \___ \ / _ \ '__\ \ / / |/ __/ _ \_____    / /
+#    ___) |  __/ |   \ V /| | (_|  __/_____|  / /
+#   |____/ \___|_|    \_/ |_|\___\___|       /_/
+#
+#   _   _           _
+#  | | | | ___  ___| |_ __ _ _ __ ___  _   _ _ __  ___
 #  | |_| |/ _ \/ __| __/ _` | '__/ _ \| | | | '_ \/ __|
 #  |  _  | (_) \__ \ || (_| | | | (_) | |_| | |_) \__ \
 #  |_| |_|\___/|___/\__\__, |_|  \___/ \__,_| .__/|___/
-#                      |___/                |_|        
+#                      |___/                |_|
 # --------------------------------------------------------------
 def render_groups(what):
     data = html.live.query("GET %sgroups\nColumns: name alias\n" % what)
@@ -144,8 +144,8 @@ def render_groups(what):
     groups.sort() # sort by Alias!
     target = views.get_context_link(html.req.user, "%sgroup" % what)
     if target:
-	for alias, name in groups:
-	    bulletlink(alias, target + "&%sgroup=%s" % (what, htmllib.urlencode(name)))
+        for alias, name in groups:
+            bulletlink(alias, target + "&%sgroup=%s" % (what, htmllib.urlencode(name)))
 
 sidebar_snapins["hostgroups"] = {
     "title" : "Hostgroups",
@@ -163,12 +163,12 @@ sidebar_snapins["servicegroups"] = {
 }
 
 # --------------------------------------------------------------
-#    _   _           _       
-#   | | | | ___  ___| |_ ___ 
+#    _   _           _
+#   | | | | ___  ___| |_ ___
 #   | |_| |/ _ \/ __| __/ __|
 #   |  _  | (_) \__ \ |_\__ \
 #   |_| |_|\___/|___/\__|___/
-#                            
+#
 # --------------------------------------------------------------
 def render_hosts(mode):
     html.live.set_prepend_site(True)
@@ -176,12 +176,12 @@ def render_hosts(mode):
     view = "host"
 
     if mode == "summary":
-	query += "Filter: custom_variable_names >= _REALNAME\n"
+        query += "Filter: custom_variable_names >= _REALNAME\n"
     else:
-	query += "Filter: custom_variable_names < _REALNAME\n"
+        query += "Filter: custom_variable_names < _REALNAME\n"
 
     if mode == "problems":
-	query += "Filter: state > 0\nFilter: worst_service_state > 0\nOr: 2\n"
+        query += "Filter: state > 0\nFilter: worst_service_state > 0\nOr: 2\n"
         view = "problemsofhost"
 
     hosts = html.live.query(query)
@@ -205,16 +205,16 @@ def render_hosts(mode):
         if col == 1:
             html.write("<tr>")
         html.write("<td>")
-        
-	if state > 0 or worstsvc == 2:
-	   statecolor = 2
-	elif worstsvc == 1:
-	   statecolor = 1
-	elif worstsvc == 3:
-	   statecolor = 3
-	else:
-	   statecolor = 0
-	html.write('<div class="statebullet state%d">&nbsp;</div> ' % statecolor)
+
+        if state > 0 or worstsvc == 2:
+            statecolor = 2
+        elif worstsvc == 1:
+            statecolor = 1
+        elif worstsvc == 3:
+            statecolor = 3
+        else:
+            statecolor = 0
+        html.write('<div class="statebullet state%d">&nbsp;</div> ' % statecolor)
         html.write(link(host, target + ("&host=%s&site=%s" % (htmllib.urlencode(host), htmllib.urlencode(site)))))
         html.write("</td>")
         if col == num_columns:
@@ -222,7 +222,7 @@ def render_hosts(mode):
             col = 1
         else:
             col += 1
-        
+
     if col < num_columns:
         html.write("</tr>\n")
     html.write("</table>\n")
@@ -261,14 +261,14 @@ sidebar_snapins["problem_hosts"] = {
     "refresh" : 60,
     "styles" : snapin_allhosts_styles,
 }
-    
+
 # --------------------------------------------------------------
-#  _   _           _     __  __       _        _      
+#  _   _           _     __  __       _        _
 # | | | | ___  ___| |_  |  \/  | __ _| |_ _ __(_)_  __
 # | |_| |/ _ \/ __| __| | |\/| |/ _` | __| '__| \ \/ /
-# |  _  | (_) \__ \ |_  | |  | | (_| | |_| |  | |>  < 
+# |  _  | (_) \__ \ |_  | |  | | (_| | |_| |  | |>  <
 # |_| |_|\___/|___/\__| |_|  |_|\__,_|\__|_|  |_/_/\_\
-#                                                     
+#
 # --------------------------------------------------------------
 def render_hostmatrix():
     html.live.set_prepend_site(True)
@@ -338,43 +338,43 @@ table.hostmatrix td { border: 1px solid white; }
 
 
 # --------------------------------------------------------------
-#    ____  _ _            _        _             
-#   / ___|(_) |_ ___  ___| |_ __ _| |_ _   _ ___ 
+#    ____  _ _            _        _
+#   / ___|(_) |_ ___  ___| |_ __ _| |_ _   _ ___
 #   \___ \| | __/ _ \/ __| __/ _` | __| | | / __|
 #    ___) | | ||  __/\__ \ || (_| | |_| |_| \__ \
 #   |____/|_|\__\___||___/\__\__,_|\__|\__,_|___/
-#                                                
+#
 # --------------------------------------------------------------
 def render_sitestatus():
     if config.is_multisite():
-	html.write("<table cellspacing=0 class=sitestate>")
+        html.write("<table cellspacing=0 class=sitestate>")
         sitenames = config.allsites().keys()
         sitenames.sort()
-	for sitename in sitenames:
-	    site = config.site(sitename)
-	    state = html.site_status[sitename]["state"]
-	    if state == "disabled":
-		switch = "on"
-		text = site["alias"]
+        for sitename in sitenames:
+            site = config.site(sitename)
+            state = html.site_status[sitename]["state"]
+            if state == "disabled":
+                switch = "on"
+                text = site["alias"]
                 title = "Site %s is switched off" % site["alias"]
-	    else:
-		switch = "off"
-		text = link(site["alias"], "view.py?view_name=sitehosts&site=%s" % sitename)
+            else:
+                switch = "off"
+                text = link(site["alias"], "view.py?view_name=sitehosts&site=%s" % sitename)
                 ex = html.site_status[sitename].get("exception")
                 shs = html.site_status[sitename].get("status_host_state")
-                    
+
                 if ex:
                     title = ex
                 else:
                     title = "Site %s is online" % site["alias"]
 
-	    html.write("<tr><td class=left>%s</td>" % text)
-	    onclick = "switch_site('_site_switch=%s:%s')" % (sitename, switch)
-	    html.write("<td class=\"state %s\">" % state)
-	    html.write('<a title="%s" href="#" onclick="%s">%s</a></td>' % (title, onclick, state))
-	    html.write("</tr>\n")
-	html.write("</table>\n")
-    
+            html.write("<tr><td class=left>%s</td>" % text)
+            onclick = "switch_site('_site_switch=%s:%s')" % (sitename, switch)
+            html.write("<td class=\"state %s\">" % state)
+            html.write('<a title="%s" href="#" onclick="%s">%s</a></td>' % (title, onclick, state))
+            html.write("</tr>\n")
+        html.write("</table>\n")
+
 
 sidebar_snapins["sitestatus"] = {
   "title" : "Site status",
@@ -429,40 +429,40 @@ sidebar_snapins["sitestatus"] = {
 
 
 # --------------------------------------------------------------
-#    _____          _   _           _                             _               
+#    _____          _   _           _                             _
 #   |_   _|_ _  ___| |_(_) ___ __ _| |   _____   _____ _ ____   _(_) _____      __
 #     | |/ _` |/ __| __| |/ __/ _` | |  / _ \ \ / / _ \ '__\ \ / / |/ _ \ \ /\ / /
-#     | | (_| | (__| |_| | (_| (_| | | | (_) \ V /  __/ |   \ V /| |  __/\ V  V / 
-#     |_|\__,_|\___|\__|_|\___\__,_|_|  \___/ \_/ \___|_|    \_/ |_|\___| \_/\_/  
-#                                                                                 
+#     | | (_| | (__| |_| | (_| (_| | | | (_) \ V /  __/ |   \ V /| |  __/\ V  V /
+#     |_|\__,_|\___|\__|_|\___\__,_|_|  \___/ \_/ \___|_|    \_/ |_|\___| \_/\_/
+#
 # --------------------------------------------------------------
 def render_tactical_overview():
     host_query = \
         "GET hosts\n" \
         "Stats: state >= 0\n" \
-	"Stats: state > 0\n" \
+        "Stats: state > 0\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "StatsAnd: 2\n" \
-	"Stats: state > 0\n" \
+        "Stats: state > 0\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
-	"Stats: acknowledged = 0\n" \
-	"StatsAnd: 3\n" \
+        "Stats: acknowledged = 0\n" \
+        "StatsAnd: 3\n" \
         "Filter: custom_variable_names < _REALNAME\n"
 
     service_query = \
         "GET services\n" \
         "Stats: state >= 0\n" \
-	"Stats: state > 0\n" \
+        "Stats: state > 0\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
         "Stats: host_state = 0\n" \
         "StatsAnd: 4\n" \
-	"Stats: state > 0\n" \
+        "Stats: state > 0\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
-	"Stats: acknowledged = 0\n" \
+        "Stats: acknowledged = 0\n" \
         "Stats: host_state = 0\n" \
-	"StatsAnd: 5\n" \
+        "StatsAnd: 5\n" \
         "Filter: host_custom_variable_names < _REALNAME\n"
 
     # ACHTUNG: Stats-Filter so anpassen, dass jeder Host gezaehlt wird.
@@ -471,32 +471,32 @@ def render_tactical_overview():
         hstdata = html.live.query_summed_stats(host_query)
         svcdata = html.live.query_summed_stats(service_query)
     except livestatus.MKLivestatusNotFoundError:
-	html.write("<center>No data from any site</center>")
-	return
+        html.write("<center>No data from any site</center>")
+        return
     html.write("<table class=tacticaloverview cellspacing=0 cellpadding=0 border=0>\n")
     for title, data, view, what in [
-	    ("Hosts",    hstdata, 'hostproblems', 'host'),
-	    ("Services", svcdata, 'svcproblems',  'service'), 
-	    ]:
-	html.write("<tr><th>%s</th><th>Problems</th><th>Unhandled</th></tr>\n" % title)
-	html.write("<tr>")
+            ("Hosts",    hstdata, 'hostproblems', 'host'),
+            ("Services", svcdata, 'svcproblems',  'service'),
+            ]:
+        html.write("<tr><th>%s</th><th>Problems</th><th>Unhandled</th></tr>\n" % title)
+        html.write("<tr>")
 
-	html.write('<td class=total><a target="main" href="view.py?view_name=all%ss">%d</a></td>' % (what, data[0]))
-	unhandled = False
-	for value in data[1:]:
-	    if value > 0:
-		href = "view.py?view_name=" + view
-		if unhandled:
-		             
-		    href += "&is_%s_acknowledged=0" % what
-		text = link(str(value), href)
-	    else:
-		text = str(value)
+        html.write('<td class=total><a target="main" href="view.py?view_name=all%ss">%d</a></td>' % (what, data[0]))
+        unhandled = False
+        for value in data[1:]:
+            if value > 0:
+                href = "view.py?view_name=" + view
+                if unhandled:
+
+                    href += "&is_%s_acknowledged=0" % what
+                text = link(str(value), href)
+            else:
+                text = str(value)
             html.write('<td class="%s">%s</td>' % (value == 0 and " " or "states prob", text))
-	    unhandled = True
-	html.write("</tr>\n")
+            unhandled = True
+        html.write("</tr>\n")
     html.write("</table>\n")
-		    
+
 sidebar_snapins["tactical_overview"] = {
     "title" : "Tactical Overview",
     "description" : "The total number of hosts and service with and without problems",
@@ -505,9 +505,9 @@ sidebar_snapins["tactical_overview"] = {
     "render" : render_tactical_overview,
     "allowed" : [ "user", "admin", "guest" ],
     "styles" : """
-table.tacticaloverview { 
-   border-collapse: separate; 
-   border-spacing: 5px 0px; 
+table.tacticaloverview {
+   border-collapse: separate;
+   border-spacing: 5px 0px;
    width: %d;
    position: relative;
    left: -4px;
@@ -520,26 +520,26 @@ table.tacticaloverview td a { display: block; }
 # table.tacticaloverview td.prob { font-weight: bold; }
 
 # --------------------------------------------------------------
-#    ____            __                                           
-#   |  _ \ ___ _ __ / _| ___  _ __ _ __ ___   __ _ _ __   ___ ___ 
+#    ____            __
+#   |  _ \ ___ _ __ / _| ___  _ __ _ __ ___   __ _ _ __   ___ ___
 #   | |_) / _ \ '__| |_ / _ \| '__| '_ ` _ \ / _` | '_ \ / __/ _ \
 #   |  __/  __/ |  |  _| (_) | |  | | | | | | (_| | | | | (_|  __/
 #   |_|   \___|_|  |_|  \___/|_|  |_| |_| |_|\__,_|_| |_|\___\___|
-#                                                                 
+#
 # --------------------------------------------------------------
 def render_performance():
     data = html.live.query("GET status\nColumns: service_checks_rate host_checks_rate connections_rate forks_rate log_messages_rate cached_log_messages\n")
     html.write("<table class=performance>\n")
     for what, col, format in \
-	[("Service checks", 0, "%.2f/s"), 
-	("Host checks", 1, "%.2f/s"),
-	("Livestatus-connections", 2, "%.2f/s"),
-	("Process creations", 3, "%.2f/s"),
+        [("Service checks", 0, "%.2f/s"),
+        ("Host checks", 1, "%.2f/s"),
+        ("Livestatus-connections", 2, "%.2f/s"),
+        ("Process creations", 3, "%.2f/s"),
         ("New log messages", 4, "%.2f/s"),
         ("Cached log messages", 5, "%d")]:
-	html.write(("<tr><td class=left>%s:</td><td class=right>" + format + "</td></tr>\n") % (what, sum([row[col] for row in data])))
+        html.write(("<tr><td class=left>%s:</td><td class=right>" + format + "</td></tr>\n") % (what, sum([row[col] for row in data])))
     html.write("</table>\n")
-		    
+
 sidebar_snapins["performance"] = {
     "title" : "Server performance",
     "description" : "Live monitor of the overall performance of all monitoring servers",
@@ -548,14 +548,14 @@ sidebar_snapins["performance"] = {
     "render" : render_performance,
     "allowed" : [ "admin", ],
     "styles" : """
-table.performance { 
-    -moz-border-radius: 5px; 
-    font-size: 8pt; 
-    width: %d; 
-    border-style: solid; 
-    background-color: #589; 
-    border-color: #444 #bbb #eee #666; 
-    border-width: 1px; 
+table.performance {
+    -moz-border-radius: 5px;
+    font-size: 8pt;
+    width: %d;
+    border-style: solid;
+    background-color: #589;
+    border-color: #444 #bbb #eee #666;
+    border-width: 1px;
     padding: 2px;
 }
 table.performance td { padding: 0px; }
@@ -565,12 +565,12 @@ table.Performance td.right { text-align: right; font-weight: bold; padding: 0px;
 }
 
 # --------------------------------------------------------------
-#    ____                           _   _                
-#   / ___|  ___ _ ____   _____ _ __| |_(_)_ __ ___   ___ 
+#    ____                           _   _
+#   / ___|  ___ _ ____   _____ _ __| |_(_)_ __ ___   ___
 #   \___ \ / _ \ '__\ \ / / _ \ '__| __| | '_ ` _ \ / _ \
 #    ___) |  __/ |   \ V /  __/ |  | |_| | | | | | |  __/
 #   |____/ \___|_|    \_/ \___|_|   \__|_|_| |_| |_|\___|
-#                                                        
+#
 # --------------------------------------------------------------
 def render_current_time():
     import time
@@ -599,21 +599,21 @@ div.time {
 
 
 # --------------------------------------------------------------
-#    _   _             _           
-#   | \ | | __ _  __ _(_) ___  ___ 
+#    _   _             _
+#   | \ | | __ _  __ _(_) ___  ___
 #   |  \| |/ _` |/ _` | |/ _ \/ __|
 #   | |\  | (_| | (_| | | (_) \__ \
 #   |_| \_|\__,_|\__, |_|\___/|___/
-#                |___/             
+#                |___/
 # --------------------------------------------------------------
 def render_nagios():
     bulletlink("Home", "http://www.nagios.org")
     bulletlink("Documentation", "%s/docs/toc.html" % defaults.nagios_url)
     for entry in [
-	"General",
+        "General",
         ("tac.cgi", "Tactical Overview"),
         ("statusmap.cgi?host=all", "Map"),
-	"Current Status",
+        "Current Status",
         ("status.cgi?hostgroup=all&amp;style=hostdetail", "Hosts"),
         ("status.cgi?host=all", "Services"),
         ("status.cgi?hostgroup=all&amp;style=overview", "Host Groups"),
@@ -626,7 +626,7 @@ def render_nagios():
         ("status.cgi?host=all&amp;type=detail&amp;hoststatustypes=3&amp;serviceprops=42&amp;servicestatustypes=28", "*Service (Unhandled)"),
         ("status.cgi?hostgroup=all&amp;style=hostdetail&amp;hoststatustypes=12&amp;hostprops=42", "*Hosts (Unhandled)"),
         ("outages.cgi", "Network Outages"),
-	"Reports",
+        "Reports",
         ("avail.cgi", "Availability"),
         ("trends.cgi", "Trends"),
         ("history.cgi?host=all", "Alerts"),
@@ -635,24 +635,24 @@ def render_nagios():
         ("histogram.cgi", "*Histogram"),
         ("notifications.cgi?contact=all", "Notifications"),
         ("showlog.cgi", "Event Log"),
-	"System",
+        "System",
         ("extinfo.cgi?type=3", "Comments"),
         ("extinfo.cgi?type=6", "Downtime"),
         ("extinfo.cgi?type=0", "Process Info"),
         ("extinfo.cgi?type=4", "Performance Info"),
         ("extinfo.cgi?type=7", "Scheduling Queue"),
         ("config.cgi", "Configuration"),
-	]:
-	if type(entry) == str:
-	    heading(entry)
-	else:
-	    ref, text = entry
-	    if text[0] == "*":
-		html.write("<ul class=link>")
-		nagioscgilink(text[1:], ref)
-		html.write("</ul>")
-	    else:
-		nagioscgilink(text, ref)
+        ]:
+        if type(entry) == str:
+            heading(entry)
+        else:
+            ref, text = entry
+            if text[0] == "*":
+                html.write("<ul class=link>")
+                nagioscgilink(text[1:], ref)
+                html.write("</ul>")
+            else:
+                nagioscgilink(text, ref)
 
 sidebar_snapins["nagios_legacy"] = {
     "title" : "Nagios",
@@ -663,41 +663,41 @@ sidebar_snapins["nagios_legacy"] = {
 }
 
 # ----------------------------------------------------------------
-#   __  __           _                           _             _ 
+#   __  __           _                           _             _
 #  |  \/  | __ _ ___| |_ ___ _ __ ___ ___  _ __ | |_ _ __ ___ | |
 #  | |\/| |/ _` / __| __/ _ \ '__/ __/ _ \| '_ \| __| '__/ _ \| |
 #  | |  | | (_| \__ \ ||  __/ | | (_| (_) | | | | |_| | | (_) | |
 #  |_|  |_|\__,_|___/\__\___|_|  \___\___/|_| |_|\__|_|  \___/|_|
-#                                                                
+#
 # ----------------------------------------------------------------
 def render_master_control():
     items = [
-	( "enable_notifications",     "Notifications", ),
-	( "execute_service_checks",   "Service checks" ),
-	( "execute_host_checks",      "Host checks" ),
-	( "enable_event_handlers",    "Event handlers" ),
-	( "process_performance_data", "Performance data"),
-	]
+        ( "enable_notifications",     "Notifications", ),
+        ( "execute_service_checks",   "Service checks" ),
+        ( "execute_host_checks",      "Host checks" ),
+        ( "enable_event_handlers",    "Event handlers" ),
+        ( "process_performance_data", "Performance data"),
+        ]
 
     html.live.set_prepend_site(True)
     data = html.live.query("GET status\nColumns: %s" % " ".join([ i[0] for i in items ]))
     html.live.set_prepend_site(False)
     html.write("<table class=master_control>\n")
     for siteline in data:
-	siteid = siteline[0]
-	if siteid:
-	    sitealias = html.site_status[siteid]["site"]["alias"]
-	    html.write("<tr><td class=left colspan=2>")
-	    heading(sitealias)
-	    html.write("</tr>\n")
-	for i, (colname, title) in enumerate(items):
-	    colvalue = siteline[i + 1]
-	    url = defaults.checkmk_web_uri + ("/switch_master_state.py?site=%s&switch=%s&state=%d" % (siteid, colname, 1 - colvalue))
-	    onclick = "get_url('%s', updateContents, 'snapin_master_control')" % url
-	    enabled = colvalue and "enabled" or "disabled"
-	    html.write("<tr><td class=left>%s</td><td class=%s><a onclick=\"%s\" href=\"#\">%s</a></td></tr>\n" % (title, enabled, onclick, enabled))
+        siteid = siteline[0]
+        if siteid:
+            sitealias = html.site_status[siteid]["site"]["alias"]
+            html.write("<tr><td class=left colspan=2>")
+            heading(sitealias)
+            html.write("</tr>\n")
+        for i, (colname, title) in enumerate(items):
+            colvalue = siteline[i + 1]
+            url = defaults.checkmk_web_uri + ("/switch_master_state.py?site=%s&switch=%s&state=%d" % (siteid, colname, 1 - colvalue))
+            onclick = "get_url('%s', updateContents, 'snapin_master_control')" % url
+            enabled = colvalue and "enabled" or "disabled"
+            html.write("<tr><td class=left>%s</td><td class=%s><a onclick=\"%s\" href=\"#\">%s</a></td></tr>\n" % (title, enabled, onclick, enabled))
     html.write("</table>")
-	    
+
 sidebar_snapins["master_control"] = {
     "title" : "Master control",
     "description" : "Buttons for switching globally states such as enabling checks and notifications",
@@ -757,43 +757,43 @@ def ajax_switch_masterstate(h):
     column = html.var("switch")
     state = int(html.var("state"))
     commands = {
-	( "enable_notifications",     1) : "ENABLE_NOTIFICATIONS",
-	( "enable_notifications",     0) : "DISABLE_NOTIFICATIONS",
-	( "execute_service_checks",   1) : "START_EXECUTING_SVC_CHECKS",
-	( "execute_service_checks",   0) : "STOP_EXECUTING_SVC_CHECKS",
-	( "execute_host_checks",      1) : "START_EXECUTING_HOST_CHECKS",
-	( "execute_host_checks",      0) : "STOP_EXECUTING_HOST_CHECKS",
-	( "process_performance_data", 1) : "ENABLE_PERFORMANCE_DATA",
-	( "process_performance_data", 0) : "DISABLE_PERFORMANCE_DATA",
-	( "enable_event_handlers",    1) : "ENABLE_EVENT_HANDLERS",
-	( "enable_event_handlers",    0) : "DISABLE_EVENT_HANDLERS",
+        ( "enable_notifications",     1) : "ENABLE_NOTIFICATIONS",
+        ( "enable_notifications",     0) : "DISABLE_NOTIFICATIONS",
+        ( "execute_service_checks",   1) : "START_EXECUTING_SVC_CHECKS",
+        ( "execute_service_checks",   0) : "STOP_EXECUTING_SVC_CHECKS",
+        ( "execute_host_checks",      1) : "START_EXECUTING_HOST_CHECKS",
+        ( "execute_host_checks",      0) : "STOP_EXECUTING_HOST_CHECKS",
+        ( "process_performance_data", 1) : "ENABLE_PERFORMANCE_DATA",
+        ( "process_performance_data", 0) : "DISABLE_PERFORMANCE_DATA",
+        ( "enable_event_handlers",    1) : "ENABLE_EVENT_HANDLERS",
+        ( "enable_event_handlers",    0) : "DISABLE_EVENT_HANDLERS",
     }
 
     command = commands.get((column, state))
     if command:
-	html.live.command("[%d] %s" % (int(time.time()), command), site)
-	html.live.set_only_sites([site])
+        html.live.command("[%d] %s" % (int(time.time()), command), site)
+        html.live.set_only_sites([site])
         html.live.query("GET status\nWaitTrigger: program\nWaitTimeout: 10000\nWaitCondition: %s = %d\nColumns: %s\n" % \
                (column, state, column))
-	html.live.set_only_sites()
+        html.live.set_only_sites()
         render_master_control()
     else:
-	html.write("Command %s/%d not found" % (column, state))
+        html.write("Command %s/%d not found" % (column, state))
 
 # ---------------------------------------------------------
-#   ____              _                         _        
-#  | __ )  ___   ___ | | ___ __ ___   __ _ _ __| | _____ 
+#   ____              _                         _
+#  | __ )  ___   ___ | | ___ __ ___   __ _ _ __| | _____
 #  |  _ \ / _ \ / _ \| |/ / '_ ` _ \ / _` | '__| |/ / __|
 #  | |_) | (_) | (_) |   <| | | | | | (_| | |  |   <\__ \
 #  |____/ \___/ \___/|_|\_\_| |_| |_|\__,_|_|  |_|\_\___/
-#                                                        
+#
 # ---------------------------------------------------------
 def load_bookmarks():
     path = config.user_confdir + "/bookmarks.mk"
     try:
-	return eval(file(path).read())
+        return eval(file(path).read())
     except:
-	return []
+        return []
 
 
 def save_bookmarks(bookmarks):
@@ -804,11 +804,11 @@ def render_bookmarks():
     n = 0
     for title, href in bookmarks:
         html.write("<div id=\"bookmark_%d\">" % n)
-	iconbutton("delete", "del_bookmark.py?num=%d" % n, "side", "updateContents", 'snapin_bookmarks')
-	iconbutton("edit", "edit_bookmark.py?num=%d" % n, "main")
-	html.write(link(title, href))
+        iconbutton("delete", "del_bookmark.py?num=%d" % n, "side", "updateContents", 'snapin_bookmarks')
+        iconbutton("edit", "edit_bookmark.py?num=%d" % n, "main")
+        html.write(link(title, href))
         html.write("</div>")
-	n += 1
+        n += 1
 
     html.write("<div class=footnotelink><a href=\"#\" onclick=\"addBookmark()\">Add Bookmark</a></div>\n")
 
@@ -822,11 +822,11 @@ def page_edit_bookmark(h):
         raise MKGeneralException("Unknown bookmark id: %d. This is probably a problem with reload or browser history. Please try again." % n)
 
     if html.var("save") and html.check_transaction():
-	title = html.var("title")
-	url = html.var("url")
-	bookmarks[n] = (title, url)
-	save_bookmarks(bookmarks)
-	html.reload_sidebar()
+        title = html.var("title")
+        url = html.var("url")
+        bookmarks[n] = (title, url)
+        save_bookmarks(bookmarks)
+        html.reload_sidebar()
 
     html.begin_form("edit_bookmark")
     if html.var("save"):
@@ -839,7 +839,7 @@ def page_edit_bookmark(h):
         title, url = bookmarks[n]
         html.set_var("title", title)
         html.set_var("url", url)
-    
+
     html.write("<table class=edit_bookmarks>")
     html.write("<tr><td>Title:</td><td>")
     html.text_input("title", size = 50)
@@ -850,7 +850,7 @@ def page_edit_bookmark(h):
     html.write("</td></tr></table>\n")
     html.hidden_field("num", str(n))
     html.end_form()
-    
+
     html.footer()
 
 def ajax_del_bookmark(h):
@@ -868,9 +868,9 @@ def ajax_add_bookmark(h):
     title = html.var("title")
     href = html.var("href")
     if title and href:
-	bookmarks = load_bookmarks()
-	bookmarks.append((title, href))
-	save_bookmarks(bookmarks)
+        bookmarks = load_bookmarks()
+        bookmarks.append((title, href))
+        save_bookmarks(bookmarks)
     render_bookmarks()
 
 sidebar_snapins["bookmarks"] = {
@@ -884,12 +884,12 @@ sidebar_snapins["bookmarks"] = {
 
 
 # ------------------------------------------------------------
-#   ____          _                    _     _       _        
-#  / ___|   _ ___| |_ ___  _ __ ___   | |   (_)_ __ | | _____ 
+#   ____          _                    _     _       _
+#  / ___|   _ ___| |_ ___  _ __ ___   | |   (_)_ __ | | _____
 # | |  | | | / __| __/ _ \| '_ ` _ \  | |   | | '_ \| |/ / __|
 # | |__| |_| \__ \ || (_) | | | | | | | |___| | | | |   <\__ \
 #  \____\__,_|___/\__\___/|_| |_| |_| |_____|_|_| |_|_|\_\___/
-#                                                             
+#
 # ------------------------------------------------------------
 
 def render_custom_links():
@@ -913,7 +913,7 @@ def render_custom_links():
                     idss = ids + [str(n)]
                     html.write('<h3 onclick="toggle_folder(this);" ')
                     html.write('onmouseover="this.style.cursor=\'pointer\';" ')
-	            html.write('onmouseout="this.style.cursor=\'auto\';">') 
+                    html.write('onmouseout="this.style.cursor=\'auto\';">')
                     html.write('<img src="images/%s">' % img)
                     html.write("%s</h3>\n" % entry[0])
                     html.write('<div style="display: %s;" class=sublist>' % display)
@@ -929,7 +929,7 @@ def render_custom_links():
                     html.write("Second part of tuple must be list or string, not %s\n" % str(entry[1]))
             except Exception, e:
                 html.write("invalid entry %s: %s<br>\n" % (entry, e))
- 
+
     render_list([], links)
 
 sidebar_snapins["custom_links"] = {
@@ -953,5 +953,3 @@ div#snapin_custom_links img {
 }
 """
 }
-
-

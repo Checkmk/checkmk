@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-           
+
 def inventory_lsi(checkname, info):
 
     # convert [ 0, 1, 2, 3, 4, 5, ...] into [ (0,1), (2,3), (4,5), ... ]
@@ -40,7 +40,7 @@ def inventory_lsi(checkname, info):
             arrays.append((id, state))
         else:
             disks.append((id, state))
-    
+
     if checkname == 'lsi.array':
         return [(id, state, "None") for (id, state) in arrays]
     else:
@@ -59,18 +59,18 @@ def check_lsi_array(item, params, info):
                 return (2, 'CRIT - Status is %s' % (status,))
     return (2, 'CRIT - RAID volume %d not existing' % item)
 
-    
+
 def check_lsi_disk(item, target_state, info):
     target_id = -1
     for line in info:
-       if line[0] == 'TargetID':
-           target_id = int(line[1])
-       elif line[0] == 'State' and target_id == item:
-           state = line[1].split('(')[-1][:-1]
-           if state == target_state:
-               return (0, 'OK - disk has state %s' % state)
-           else:
-               return (2, 'CRIT - disk has state %s (should be %s)' % (state, target_state))
+        if line[0] == 'TargetID':
+            target_id = int(line[1])
+        elif line[0] == 'State' and target_id == item:
+            state = line[1].split('(')[-1][:-1]
+            if state == target_state:
+                return (0, 'OK - disk has state %s' % state)
+            else:
+                return (2, 'CRIT - disk has state %s (should be %s)' % (state, target_state))
     return (2, 'CRIT - disk not present')
 
 

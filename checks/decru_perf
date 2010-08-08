@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -48,9 +48,9 @@ def inventory_decru_perf(checkname, info):
 def check_decru_perf(item, _no_params, info):
     index, name = item.split(":", 1)
     for perf in info:
-       if perf[0] == index:
-          rate = int(perf[1])
-	  return (0, "OK - current rate is %d/s" % rate, [("rate", rate)])
+        if perf[0] == index:
+            rate = int(perf[1])
+            return (0, "OK - current rate is %d/s" % rate, [("rate", rate)])
 
     return (3, "UNKNOWN - item not found")
 
@@ -60,4 +60,3 @@ snmp_info['decru_perf'] = ( "1.3.6.1.4.1.12962.1.1.2.1.1", [ 1, 2 ] )
 # snmp_scan_info['decru_perf'] = ( "enterprises.12962.1.1.1.1", "=", "san" )
 # oder (SNMPv2-MIB::sysObjectID.0 = OID: SNMPv2-SMI::enterprises.12962.2.1.4):
 # snmp_scan_info['decru_perf'] = ( ".1.3.6.1.2.1.1.2.0", "=", ".1.3.6.1.4.1.12962.2.1.4" )
-

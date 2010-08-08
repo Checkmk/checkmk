@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -42,7 +42,7 @@ def inventory_vms_md(checkname, info):
         return []
     else:
         return [(None, '""', shadowsets)]
-  
+
 def check_vms_md(item, params, info):
     shadowsets = []
     errorlevel = 0
@@ -57,11 +57,11 @@ def check_vms_md(item, params, info):
                 errors.append("%s: only %d out of %d disks online" % (name, online, disks) )
             if name not in params:
                 errorlevel = max(errorlevel, 1)
-                errors.append("%s: unknown" % name) 
+                errors.append("%s: unknown" % name)
             shadowsets.append(name)
     except:
         return (3, "UNKNOWN - invalid output from plugin")
-        
+
     # check for missing shadowsets
     for name in params:
         if name not in shadowsets:
@@ -73,6 +73,6 @@ def check_vms_md(item, params, info):
         return (errorlevel, "%s - %s" % (
           { 1: "WARNING", 2: "CRITICAL" }[errorlevel],
           ", ".join(errors)))
-        
+
 
 check_info['vms_md'] = ( check_vms_md, "Shadowsets", 0, inventory_vms_md )

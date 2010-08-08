@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -33,53 +33,53 @@ brocade_perfdata_errors = False
 brocade_default_params = (0.1, 0.01)
 
 def inventory_brocade_port(checkname, info):
-   inventory = []
-   for index, phystate, opstate, txwords, rxwords, crcerrors, c3discards in info:
-      state = (int(phystate), int(opstate))
-      if state == (4,2):
-         used = 0
-         used_txt = "unused"
-      elif phystate == "1" or phystate == "2":
-         used = 0
-         used_txt = "no card or no transceiver"
-      else:
-         used = 1
-         used_txt = "used"
-      # index  is e.g. '3'. But port number printed on switch
-      # and in management software of switch counts from 0, so subtract
-      # one. Also make it 2-digits => '03'
-      if used:
-          index = "%02d" % (int(index) - 1)
-          inventory.append( (index, used_txt, "brocade_default_params") )
-   return inventory
+    inventory = []
+    for index, phystate, opstate, txwords, rxwords, crcerrors, c3discards in info:
+        state = (int(phystate), int(opstate))
+        if state == (4,2):
+            used = 0
+            used_txt = "unused"
+        elif phystate == "1" or phystate == "2":
+            used = 0
+            used_txt = "no card or no transceiver"
+        else:
+            used = 1
+            used_txt = "used"
+        # index  is e.g. '3'. But port number printed on switch
+        # and in management software of switch counts from 0, so subtract
+        # one. Also make it 2-digits => '03'
+        if used:
+            index = "%02d" % (int(index) - 1)
+            inventory.append( (index, used_txt, "brocade_default_params") )
+    return inventory
 
 
 def check_brocade_port(portno, params, info):
-   try:
-       warning, critical = params
-   except:
-       warning, critical = (0.1, 0.01) # percent error rate
+    try:
+        warning, critical = params
+    except:
+        warning, critical = (0.1, 0.01) # percent error rate
 
-   # SNMP counts ports from 1, but management console and hardware from 0
-   portinfo = [ line[1:] for line in info if int(line[0]) == int(portno) + 1 ]
-   if len(portinfo) < 1:
-      return (3, "UNKNOWN - No port number %d present" % int(portno))
-   phystate, opstate, txwords, rxwords, crcerrors, c3discards = map(int, portinfo[0])
-   perfdata = [
-       ( "txwords", "%dc" % txwords ),
-       ( "rxwords", "%dc" % rxwords ) ]
-   if brocade_perfdata_errors:
-       perfdata += [
-           ( "crcerrors", "%dc" % crcerrors ),
-           ( "c3discards", "%dc" % c3discards ) ]
+    # SNMP counts ports from 1, but management console and hardware from 0
+    portinfo = [ line[1:] for line in info if int(line[0]) == int(portno) + 1 ]
+    if len(portinfo) < 1:
+        return (3, "UNKNOWN - No port number %d present" % int(portno))
+    phystate, opstate, txwords, rxwords, crcerrors, c3discards = map(int, portinfo[0])
+    perfdata = [
+        ( "txwords", "%dc" % txwords ),
+        ( "rxwords", "%dc" % rxwords ) ]
+    if brocade_perfdata_errors:
+        perfdata += [
+            ( "crcerrors", "%dc" % crcerrors ),
+            ( "c3discards", "%dc" % c3discards ) ]
 
 
-   state = phystate,opstate
-   if state == (6,1):
-      return (0, "OK - physical and logical link UP", perfdata)
-   else:
-      return (2, "CRIT - physical state %s, opstate %s" % (brocade_pystate_names[phystate],
-                                                           brocade_opstate_names[opstate]), perfdata)
+    state = phystate,opstate
+    if state == (6,1):
+        return (0, "OK - physical and logical link UP", perfdata)
+    else:
+        return (2, "CRIT - physical state %s, opstate %s" % (brocade_pystate_names[phystate],
+                                                             brocade_opstate_names[opstate]), perfdata)
 
 
 check_info['fc_brocade_port'] = (check_brocade_port, "PORT %s", 1,  inventory_brocade_port)

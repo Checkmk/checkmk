@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -26,98 +26,98 @@
 
 
 def inventory_win_cpuusage(checkname, info):
-   for line in info:
-      try:
-         if line[0] == '238:6':
-            return [(None, None, "winperf_cpu_default_levels")]
-      except:
-         pass
-   return []
+    for line in info:
+        try:
+            if line[0] == '238:6':
+                return [(None, None, "winperf_cpu_default_levels")]
+        except:
+            pass
+    return []
 
-winperf_cpu_default_levels = ( 101, 101 ) 
+winperf_cpu_default_levels = ( 101, 101 )
 
 # params: levels for warn / crit in percentage
 def check_win_cpuusage(item, params, info):
-   # get parameters. Be nice to older installations that still use 'None'
-   # as parameters
-   if params == None:
-	params = winperf_cpu_default_levels
-   warn, crit = params
+    # get parameters. Be nice to older installations that still use 'None'
+    # as parameters
+    if params == None:
+        params = winperf_cpu_default_levels
+    warn, crit = params
 
-   for line in info:
-         if line[0] == '238:6':
+    for line in info:
+        if line[0] == '238:6':
             this_time = int(float(line[1]))
             # Windows sends one counter for each CPU plus one counter that
             # I've forgotton what's it for (idle?)
             num_cpus = len(line) - 4
             overall_perc = 0
-	    counter_wrapped = False
+            counter_wrapped = False
             for cpu in range(0, num_cpus):
                 ticks = int(line[2 + cpu])
-		try:
+                try:
                     timedif, ticks_per_sec = get_counter("cpuusage.%d" % cpu, this_time, ticks)
-		except MKCounterWrapped, e:
-		    counter_wrapped = e.reason
-		    timedif, ticks_per_sec = 60, 0
+                except MKCounterWrapped, e:
+                    counter_wrapped = e.reason
+                    timedif, ticks_per_sec = 60, 0
                 secs_per_sec = ticks_per_sec / 10000000.0;
                 used_perc = 100 * (1 - secs_per_sec)
                 overall_perc += used_perc
-	    # At least one counter wrapped or started. This check is useless
-	    if counter_wrapped:
-		raise MKCounterWrapped(counter_wrapped)
+            # At least one counter wrapped or started. This check is useless
+            if counter_wrapped:
+                raise MKCounterWrapped(counter_wrapped)
 
             used_perc = overall_perc / num_cpus
-            
+
             if used_perc < 0:
-               used_perc = 0
+                used_perc = 0
             elif used_perc > 100:
-               used_perc = 100
+                used_perc = 100
             perfdata = [ ("cpuusage", "%.2f" % used_perc, '', '', 0, 100) ]
             if num_cpus == 1:
                 num_txt = ""
             else:
                 num_txt = " / %d CPUs" % num_cpus
 
-	    infotext = " - %d%% used%s (in last %d secs)" % (int(used_perc), num_txt, timedif)
+            infotext = " - %d%% used%s (in last %d secs)" % (int(used_perc), num_txt, timedif)
 
-	    if used_perc >= crit:
-		return (2, "CRIT" + infotext, perfdata) 
+            if used_perc >= crit:
+                return (2, "CRIT" + infotext, perfdata)
             elif used_perc >= warn:
-		return (1, "WARN" + infotext, perfdata)
-	    else:
+                return (1, "WARN" + infotext, perfdata)
+            else:
                 return (0, "OK" + infotext, perfdata)
 
-   return (3, "UNKNOWN - counter for cpu (238:6) not found")
+    return (3, "UNKNOWN - counter for cpu (238:6) not found")
 
 def inventory_win_diskstat(checkname, info):
-   for line in info:
-      try:
-         if line[0] == '2:16' or line[0] == '2:18':
-            return [(None, None, None)]
-      except:
-         pass
-   return []
+    for line in info:
+        try:
+            if line[0] == '2:16' or line[0] == '2:18':
+                return [(None, None, None)]
+        except:
+            pass
+    return []
 
 
 def check_win_diskstat(item, params, info):
     read_bytes_ctr = 0
     write_bytes_ctr = 0
     for line in info:
-	if line[0] == '2:16':
-	    read_bytes_ctr = int(line[2])
-	elif line[0] == '2:18':
-	    write_bytes_ctr = int(line[2])
-	    break
+        if line[0] == '2:16':
+            read_bytes_ctr = int(line[2])
+        elif line[0] == '2:18':
+            write_bytes_ctr = int(line[2])
+            break
     this_time = int(float(line[1]))
 
     try:
-	read_timedif,  read_per_sec  = get_counter("diskstat.read",  this_time, read_bytes_ctr)
-	write_timedif, write_per_sec = get_counter("diskstat.write", this_time, write_bytes_ctr)
+        read_timedif,  read_per_sec  = get_counter("diskstat.read",  this_time, read_bytes_ctr)
+        write_timedif, write_per_sec = get_counter("diskstat.write", this_time, write_bytes_ctr)
     except MKCounterWrapped, e:
         # make sure that inital check does not need three cycles for all counters
         # to be initialized
-	get_counter("diskstat.write", this_time, write_bytes_ctr)
-	raise MKCounterWrapped(e.reason)
+        get_counter("diskstat.write", this_time, write_bytes_ctr)
+        raise MKCounterWrapped(e.reason)
 
     perfdata = [ ("read", "%dc" % read_bytes_ctr),
                  ("write", "%dc" % write_bytes_ctr) ]
@@ -134,5 +134,3 @@ check_config_variables.append("winperf_cpu_default_levels")
 # 4:1380 Available KBytes
 # 4:1382 Available MBytes
 # Frage: Wo bekommt man die installierte Menge an Speicher raus
-
-

@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -29,10 +29,10 @@ cpuload_default_levels = (5, 10)
 threads_default_levels = (2000.0, 4000.0)
 
 def inventory_cpu_load(checkname, info):
-   if len(info) == 1 and len(info[0]) >= 5:
-      return [(None, "", "cpuload_default_levels")]
-   else:
-      return []
+    if len(info) == 1 and len(info[0]) >= 5:
+        return [(None, "", "cpuload_default_levels")]
+    else:
+        return []
 
 def check_cpu_load(item, params, info):
     try:
@@ -40,12 +40,12 @@ def check_cpu_load(item, params, info):
         for i in [ 0, 1, 2 ]:
             load.append(float(info[0][i]))
         if len(info[0]) >= 6:
-           num_cpus = int(info[0][5])
+            num_cpus = int(info[0][5])
         else:
-           num_cpus = 1
+            num_cpus = 1
     except:
         return (3, "Unknown - invalid or incomplete output from plugin")
-  
+
     warn, crit = params # apply on 15min average, relative to number of CPUs
     warn = warn * num_cpus
     crit = crit * num_cpus
@@ -59,10 +59,10 @@ def check_cpu_load(item, params, info):
         return (0, "OK - 15min Load %.2f at %s CPUs" % (load[2], num_cpus), perfdata)
 
 def inventory_cpu_threads(checkname, info):
-   if len(info) == 1 and len(info[0]) >= 5:
-      return [(None, "", "threads_default_levels")]
-   else:
-      return []
+    if len(info) == 1 and len(info[0]) >= 5:
+        return [(None, "", "threads_default_levels")]
+    else:
+        return []
 
 def check_cpu_threads(item, params, info):
     try:

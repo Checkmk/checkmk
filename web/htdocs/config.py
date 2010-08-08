@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -56,7 +56,7 @@ def load_config():
         execfile(filename, globals(), globals())
     except Exception, e:
         global user
-	global role
+        global role
         global user_permissions
         user = "nobody"
         role = None
@@ -173,7 +173,7 @@ def login(u):
         all += users
     if all.count(user) > 1:
         raise MKConfigError("Your username (<b>%s</b>) is listed more than once "
-		"in multisite.mk. This is not allowed. "
+                "in multisite.mk. This is not allowed. "
                 "Please check your config." % user)
 
     role = role_of_user(user)
@@ -183,14 +183,14 @@ def login(u):
     global user_permissions
     user_permissions = set([])
     for p in permissions_by_order:
-	roles = permissions.get(p["name"], p["defaults"])
-	if role in roles:
-	    user_permissions.add(p["name"])
+        roles = permissions.get(p["name"], p["defaults"])
+        if role in roles:
+            user_permissions.add(p["name"])
 
     # Make sure, admin can restore permissions in any case!
     if role == "admin":
-	user_permissions.add("use")
-	user_permissions.add("edit_permissions")
+        user_permissions.add("use")
+        user_permissions.add("edit_permissions")
 
     read_site_config()
 
@@ -216,11 +216,11 @@ def may(permname):
     # handle case where declare_permission is done after login
     # and permname also not contained in save configuration
     if permname not in permissions:
-	perm = permissions_by_name.get(permname)
-	if not perm: # Object does not exists, e.g. sidesnap.multisite if not is_multisite()
-	    return False
-	if role in perm["defaults"]:
-	    user_permissions.add(permname)
+        perm = permissions_by_name.get(permname)
+        if not perm: # Object does not exists, e.g. sidesnap.multisite if not is_multisite()
+            return False
+        if role in perm["defaults"]:
+            user_permissions.add(permname)
 
     return permname in user_permissions
 
@@ -228,19 +228,19 @@ def user_may(u, permname):
     role = role_of_user(u)
     roles = permissions.get(permname)
     if roles == None:
-	perm = permissions_by_name.get(permname)
-	if not perm:
-	    return False # permission target does not exist
+        perm = permissions_by_name.get(permname)
+        if not perm:
+            return False # permission target does not exist
         roles = perm["defaults"]
-    return role in roles 
+    return role in roles
 
 def load_permissions():
     global permissions
     path = config_dir + "/permissions.mk"
     if os.path.exists(path):
-	permissions = eval(file(path).read())
+        permissions = eval(file(path).read())
     else:
-	permissions = {}
+        permissions = {}
 
 def save_permissions(permissions):
     write_settings_file(config_dir + "/permissions.mk", permissions)
@@ -289,7 +289,7 @@ def is_multisite():
         return True
     # Also use Multisite mode if the one and only site is not local
     sitename = sites.keys()[0]
-    return not site_is_local(sitename) 
+    return not site_is_local(sitename)
 
 def read_site_config():
     path = user_confdir + "/siteconfig.mk"
@@ -299,12 +299,12 @@ def read_site_config():
     else:
         user_siteconf = {}
 
-#    ____  _     _      _                
-#   / ___|(_) __| | ___| |__   __ _ _ __ 
+#    ____  _     _      _
+#   / ___|(_) __| | ___| |__   __ _ _ __
 #   \___ \| |/ _` |/ _ \ '_ \ / _` | '__|
-#    ___) | | (_| |  __/ |_) | (_| | |   
-#   |____/|_|\__,_|\___|_.__/ \__,_|_|   
-#                                        
+#    ___) | | (_| |  __/ |_) | (_| | |
+#   |____/|_|\__,_|\___|_.__/ \__,_|_|
+#
 
 sidebar = \
 [('tactical_overview', 'open'),
@@ -313,12 +313,12 @@ sidebar = \
  ('bookmarks', 'open'),
  ('master_control', 'closed')]
 
-#    _     _           _ _       
-#   | |   (_)_ __ ___ (_) |_ ___ 
+#    _     _           _ _
+#   | |   (_)_ __ ___ (_) |_ ___
 #   | |   | | '_ ` _ \| | __/ __|
 #   | |___| | | | | | | | |_\__ \
 #   |_____|_|_| |_| |_|_|\__|___/
-#                                
+#
 
 soft_query_limit = 1000
 hard_query_limit = 5000
@@ -333,22 +333,22 @@ declare_permission("ignore_hard_limit",
      "Allows to ignore the hard query limit imposed upon the number of datasets returned by a query",
      [ "admin" ])
 
-#    ____                        _     
-#   / ___|  ___  _   _ _ __   __| |___ 
+#    ____                        _
+#   / ___|  ___  _   _ _ __   __| |___
 #   \___ \ / _ \| | | | '_ \ / _` / __|
 #    ___) | (_) | |_| | | | | (_| \__ \
 #   |____/ \___/ \__,_|_| |_|\__,_|___/
-#                                      
+#
 
 sound_url = "sounds/"
 sounds = []
 
-#   __     ___                             _   _                 
-#   \ \   / (_) _____      __   ___  _ __ | |_(_) ___  _ __  ___ 
+#   __     ___                             _   _
+#   \ \   / (_) _____      __   ___  _ __ | |_(_) ___  _ __  ___
 #    \ \ / /| |/ _ \ \ /\ / /  / _ \| '_ \| __| |/ _ \| '_ \/ __|
 #     \ V / | |  __/\ V  V /  | (_) | |_) | |_| | (_) | | | \__ \
 #      \_/  |_|\___| \_/\_/    \___/| .__/ \__|_|\___/|_| |_|___/
-#                                   |_|                          
+#                                   |_|
 
 view_option_refreshes = [ 30, 60, 90, 0 ]
 view_option_columns   = [ 1, 2, 3, 4, 5, 6, 8 ]
@@ -374,11 +374,11 @@ def save_user_file(name, content):
                 (name, user, path, e))
 
 
-#   ____          _                    _     _       _        
-#  / ___|   _ ___| |_ ___  _ __ ___   | |   (_)_ __ | | _____ 
+#   ____          _                    _     _       _
+#  / ___|   _ ___| |_ ___  _ __ ___   | |   (_)_ __ | | _____
 # | |  | | | / __| __/ _ \| '_ ` _ \  | |   | | '_ \| |/ / __|
 # | |__| |_| \__ \ || (_) | | | | | | | |___| | | | |   <\__ \
 #  \____\__,_|___/\__\___/|_| |_| |_| |_____|_|_| |_|_|\_\___/
-#                                                             
+#
 
 custom_links = {}

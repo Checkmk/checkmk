@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -65,42 +65,42 @@ def inventory_freeipmi(checkname, info):
 def check_freeipmi(item, _no_params, info):
     for line in info:
         if line[1] == item:
-	    status = line[-1][1:-1]
-	    perfdata = []
-	    infotext = "Sensor status is " + status
+            status = line[-1][1:-1]
+            perfdata = []
+            infotext = "Sensor status is " + status
 
-	    # some sensors have a value and levels (e.g. temperature)
-	    if len(line) == 4:
-		current, levels = line[2].split('(')
+            # some sensors have a value and levels (e.g. temperature)
+            if len(line) == 4:
+                current, levels = line[2].split('(')
 
-		# extract current sensor value
-		cparts = current.split("_")
-		if cparts[0] == "NA":
-		    current = None
-		else:
-		    current = float(cparts[0])
-		    if len(cparts) > 1:
-			unit = " " + cparts[1]
-		    else:
-			unit = ""
-
-		    # extract levels
-		    lower, upper = levels[:-1].split("/")
-		    if lower == "NA" and upper != "NA": 
-			crit = upper
-			levelstext = ", critical at %.1f%s" % (float(upper), unit)
-		    elif lower != "NA" and upper == "NA":
-			crit = lower
-			levelstext = ", critical below %.1f%s" % (float(lower), unit)
-                    elif lower != "NA" and upper != "NA":
-			# PNP 0.4.14 cannot handle ranges in thresholds :-(
-			# crit = "%s:%s" % (lower, upper)
-			crit = upper
-			levelstext = ", valid range is %.1f%s ... %.1f%s" % \
-				      (float(lower), unit, float(upper), unit)
+                # extract current sensor value
+                cparts = current.split("_")
+                if cparts[0] == "NA":
+                    current = None
+                else:
+                    current = float(cparts[0])
+                    if len(cparts) > 1:
+                        unit = " " + cparts[1]
                     else:
-			crit = None
-			levelstext = ""
+                        unit = ""
+
+                    # extract levels
+                    lower, upper = levels[:-1].split("/")
+                    if lower == "NA" and upper != "NA":
+                        crit = upper
+                        levelstext = ", critical at %.1f%s" % (float(upper), unit)
+                    elif lower != "NA" and upper == "NA":
+                        crit = lower
+                        levelstext = ", critical below %.1f%s" % (float(lower), unit)
+                    elif lower != "NA" and upper != "NA":
+                        # PNP 0.4.14 cannot handle ranges in thresholds :-(
+                        # crit = "%s:%s" % (lower, upper)
+                        crit = upper
+                        levelstext = ", valid range is %.1f%s ... %.1f%s" % \
+                                      (float(lower), unit, float(upper), unit)
+                    else:
+                        crit = None
+                        levelstext = ""
 
                     # Do not save performance data for FANs. This produces
                     # much data and is - in my opinion - useless.
@@ -108,13 +108,13 @@ def check_freeipmi(item, _no_params, info):
                         perfdata = []
                     else:
                         perfdata = [ ("value", current, None, crit) ]
-		    infotext = "Current value %.1f%s%s" % (current, unit, levelstext)
-	    if status == "OK" or status.startswith("Fully_Redundant"):
-		return (0, "OK - " + infotext, perfdata)
-	    else:
-		return (2, "CRIT - " + infotext, perfdata)
+                    infotext = "Current value %.1f%s%s" % (current, unit, levelstext)
+            if status == "OK" or status.startswith("Fully_Redundant"):
+                return (0, "OK - " + infotext, perfdata)
+            else:
+                return (2, "CRIT - " + infotext, perfdata)
 
     return (3, "UNKNOWN - item %s not found" % item)
 
-	
+
 check_info['ipmi_sensors'] = (check_freeipmi, "IPMI Sensor %s", 1, inventory_freeipmi)

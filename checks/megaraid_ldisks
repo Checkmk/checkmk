@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -35,27 +35,27 @@
 def inventory_megaraid_ldisks(checkname, info):
     inventory = []
     for line in info:
-	if line[0] == "Adapter":
-	   adapter = int(line[1])
-	elif line[0] == "Virtual" and line[1] == "Disk:":
-	   disk = int(line[2])
-	   inventory.append( ("%d/%d" % (adapter, disk), "", None) )
+        if line[0] == "Adapter":
+            adapter = int(line[1])
+        elif line[0] == "Virtual" and line[1] == "Disk:":
+            disk = int(line[2])
+            inventory.append( ("%d/%d" % (adapter, disk), "", None) )
     return inventory
 
 def check_megaraid_ldisks(item, _no_params, info):
     for line in info:
-	if line[0] == "Adapter":
-	   adapter = int(line[1])
-	elif line[0] == "Virtual" and line[1] == "Disk:":
-	   disk = int(line[2])
-	   found = "%d/%d" % (adapter, disk) == item
-	elif found and line[0] == "State:":
-	   state = " ".join(line[1:])
-	   infotext = "state is %s" % state
-	   if state == "Optimal":
-	      return (0, "OK - " + infotext)
-	   else:
-	      return (2, "CRIT - " + infotext)
+        if line[0] == "Adapter":
+            adapter = int(line[1])
+        elif line[0] == "Virtual" and line[1] == "Disk:":
+            disk = int(line[2])
+            found = "%d/%d" % (adapter, disk) == item
+        elif found and line[0] == "State:":
+            state = " ".join(line[1:])
+            infotext = "state is %s" % state
+            if state == "Optimal":
+                return (0, "OK - " + infotext)
+            else:
+                return (2, "CRIT - " + infotext)
     return (3, "UNKNOWN - no such adapter/logical disk found")
 
 check_info['megaraid_ldisks'] = (check_megaraid_ldisks, "RAID Adapter/LDisk %s", 1, inventory_megaraid_ldisks)

@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -26,16 +26,16 @@
 
 def inventory_decru_cpu(checkname, info):
     if len(info) == 5:
-      return [ (None, "", None) ]
+        return [ (None, "", None) ]
 
 def check_decru_cpu(item, params, info):
     user, nice, system, interrupt, idle = map(lambda x:float(x[0]) / 10.0, info)
     user += nice
 
-    perfdata = [ 
-          ( "user",      "%.3f" % user), 
-          ( "system",    "%.3f" % system),  
-	  ( "interrupt", "%.3f" % interrupt) ]
+    perfdata = [
+          ( "user",      "%.3f" % user),
+          ( "system",    "%.3f" % system),
+          ( "interrupt", "%.3f" % interrupt) ]
 
     return (0, "OK - user %.0f%%, sys %.0f%%, interrupt %.0f%%, idle %.0f%%"
          % (user, system, interrupt, idle), perfdata)
@@ -44,4 +44,3 @@ check_info['decru_cpu'] = (check_decru_cpu, "CPU utilization", 1, inventory_decr
 snmp_info['decru_cpu'] = ( "1.3.6.1.4.1.12962.1.1", [ 8 ] )
 # oder (SNMPv2-MIB::sysObjectID.0 = OID: SNMPv2-SMI::enterprises.12962.2.1.4):
 # snmp_scan_info['decru_cpu'] = ( ".1.3.6.1.2.1.1.2.0", "=", ".1.3.6.1.4.1.12962.2.1.4" )
-

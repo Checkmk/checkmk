@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -26,15 +26,15 @@
 
 
 def inventory_diskstat(checkname, info):
-   if len(info) > 1: # first line is timestamp
-      return [('read', "", "None"),
-              ('write', "", "None")]
-   else:
-      return []
+    if len(info) > 1: # first line is timestamp
+        return [('read', "", "None"),
+                ('write', "", "None")]
+    else:
+        return []
 
 # Fields in /proc/diskstat
 # At the beginning: major minor devicename
-# 
+#
 # Field 1 -- # of reads issued
 # Field 2 -- # of reads merged, field 6 -- # of writes merged
 # Field 3 -- # of sectors read
@@ -66,6 +66,6 @@ def check_diskstat(item, params, info):
     mb_per_s = per_sec / 2048.0    # Diskstat output is in sectors a 512 Byte
     perfdata = [ (item, "%dc" % this_val ) ]
     return (0, "OK - %.1fMB/s (in last %d secs)" % (mb_per_s, timedif), perfdata)
-    
+
 
 check_info['diskstat'] = (check_diskstat, "Disk IO %s", 1,  inventory_diskstat)

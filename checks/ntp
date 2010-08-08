@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -54,8 +54,8 @@ ntp_state_codes = {
 def inventory_ntp(checktype, info):
     inventory = []
     for statecode, peer, refid, stratum, t, when, poll, reach, delay, offset, jitter in info:
- 	if reach != "0" and refid != '.LOCL.':
-	    inventory.append((peer, "ntp_default_levels"))
+        if reach != "0" and refid != '.LOCL.':
+            inventory.append((peer, "ntp_default_levels"))
     return inventory
 
 def inventory_ntp_summary(checktype, info):
@@ -64,7 +64,7 @@ def inventory_ntp_summary(checktype, info):
     else:
         return []
 
-# Helper function that parses the information about one 
+# Helper function that parses the information about one
 # peer and returns a tuple of
 # 0. Nagios state (0, 1, 2 or 3)
 # 1. Nagios check output text
@@ -106,10 +106,10 @@ def check_ntp_server_state(line, params):
         return (2, "stratum %d is too high (max allowed is %d)" % (stratum, maxstratum - 1))
     elif when > 2*poll and when > 128: # when can exceed poll for small polling values
         return (3, "response due since %d secs%s" % (when - poll, infotext), offset, jitter)
-        
+
     elif abs(offset) >= warn:
         return (1, "offset too high" + infotext, offset, jitter)
-    else: 
+    else:
         return (0, infotext, offset, jitter)
 
 def check_ntp(item, params, info):
@@ -125,7 +125,7 @@ def check_ntp(item, params, info):
                 state, text = state
                 perfdata = []
             return (state, nagios_state_names[state] + " - " + text, perfdata)
-	    
+
     return (3, "UNKNOWN - peer not found")
 
 def check_ntp_summary(item, params, info):
@@ -135,7 +135,7 @@ def check_ntp_summary(item, params, info):
             state, text, perfdata = check_ntp(line[1], params, [line])
             text += " (synchronized on %s)" % line[1]
             return (state, text, perfdata)
-    return (3, "UNKNOWN - no system peer found") 
+    return (3, "UNKNOWN - no system peer found")
 
 check_info['ntp']       = (check_ntp,         "NTP Peer %s", 1, inventory_ntp)
 check_info['ntp.time']  = (check_ntp_summary, "NTP Time",    1, inventory_ntp_summary)

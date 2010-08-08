@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -26,25 +26,25 @@
 
 
 def inventory_fsc_temp(checkname, info):
-   return [ (line[0], int(line[1]), None) for line in info if int(line[1]) < 500 ]
+    return [ (line[0], int(line[1]), None) for line in info if int(line[1]) < 500 ]
 
 def check_fsc_temp(item, no_params, info):
-   for line in info: # , value1, value2 in info:
-      name = line[0]
-      if name != item: continue
-      current = int(line[1])
-      warn = int(line[2])
-      crit = int(line[3])
-      infotext = "%d C (levels at %d C / %d C)" % (current, warn, crit)
-      perfdata = [ ("temp", current, warn, crit, 0 ) ]
-      if current >= crit and crit > 0:
-          return (2, "CRIT - %s" % infotext, perfdata)
-      elif current >= warn and warn > 0:
-          return (1, "WARNING - %s" % infotext, perfdata)
-      else:
-          return (0, "OK - %s" % infotext, perfdata)
-         
-   return (3, "UNKNOWN - Sensor %s not found in SNMP data" % item)
+    for line in info: # , value1, value2 in info:
+        name = line[0]
+        if name != item: continue
+        current = int(line[1])
+        warn = int(line[2])
+        crit = int(line[3])
+        infotext = "%d C (levels at %d C / %d C)" % (current, warn, crit)
+        perfdata = [ ("temp", current, warn, crit, 0 ) ]
+        if current >= crit and crit > 0:
+            return (2, "CRIT - %s" % infotext, perfdata)
+        elif current >= warn and warn > 0:
+            return (1, "WARNING - %s" % infotext, perfdata)
+        else:
+            return (0, "OK - %s" % infotext, perfdata)
+
+    return (3, "UNKNOWN - Sensor %s not found in SNMP data" % item)
 
 check_info['fsc_temp'] = (check_fsc_temp, "FSC TEMP %s", 1,  inventory_fsc_temp)
 snmp_info['fsc_temp'] = ( "1.3.6.1.4.1.231.2.10.2.2.5.2.1.1", [ 13, 11, 6, 8 ] )

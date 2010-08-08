@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -30,21 +30,21 @@ from lib import *
 sidebar_snapins = {}
 
 # Constants to be used in snapins
-snapin_width = 229 
+snapin_width = 229
 
 # Load all snapins
 snapins_dir = defaults.web_dir + "/plugins/sidebar"
 for fn in os.listdir(snapins_dir):
     if fn.endswith(".py"):
-	execfile(snapins_dir + "/" + fn)
+        execfile(snapins_dir + "/" + fn)
 
 # Declare permissions: each snapin creates one permission
 config.declare_permission_section("sidesnap", "Sidebar snapins")
 for name, snapin in sidebar_snapins.items():
     config.declare_permission("sidesnap.%s" % name,
-	snapin["title"],
-	"",
-	snapin["allowed"])
+        snapin["title"],
+        "",
+        snapin["allowed"])
 
 # Helper functions to be used by snapins
 def link(text, target):
@@ -54,7 +54,7 @@ def link(text, target):
     # [2] /absolute/link.py
     # [3] relative.py
     if not (":" in target[:10]) and target[0] != '/':
-	target = defaults.checkmk_web_uri + "/" + target
+        target = defaults.checkmk_web_uri + "/" + target
     return "<a target=\"main\" class=link href=\"%s\">%s</a>" % (target, htmllib.attrencode(text))
 
 def simplelink(text, target):
@@ -66,24 +66,24 @@ def bulletlink(text, target):
 def footnotelinks(links):
     html.write("<div class=footnotelink>")
     for text, target in links:
-	html.write(link(text, target))
+        html.write(link(text, target))
     html.write("</div>\n")
 
 def iconbutton(what, url, target="side", handler="", name=""):
     if target == "side":
-	onclick = "onclick=\"get_url('%s', %s, '%s')\"" % \
+        onclick = "onclick=\"get_url('%s', %s, '%s')\"" % \
                    (url, handler, name)
-	href = "#"
-	tg = ""
+        href = "#"
+        tg = ""
     else:
-	onclick = ""
-	href = "%s/%s" % (defaults.checkmk_web_uri, url)
-	tg = "target=%s" % target
+        onclick = ""
+        href = "%s/%s" % (defaults.checkmk_web_uri, url)
+        tg = "target=%s" % target
     html.write("<a href=\"%s\" %s %s><img class=iconbutton onmouseover=\"hilite_icon(this, 1)\" onmouseout=\"hilite_icon(this, 0)\" align=absmiddle src=\"%s/images/button_%s_lo.png\"></a>\n " % (href, onclick, tg, defaults.checkmk_web_uri, what))
 
 def nagioscgilink(text, target):
     html.write("<li class=sidebar><a target=\"main\" class=link href=\"%s/%s\">%s</a></li>" % \
-	    (defaults.nagios_cgi_url, target, htmllib.attrencode(text)))
+            (defaults.nagios_cgi_url, target, htmllib.attrencode(text)))
 
 def heading(text):
     html.write("<h3>%s</h3>\n" % htmllib.attrencode(text))
@@ -91,9 +91,9 @@ def heading(text):
 def load_user_config():
     path = config.user_confdir + "/sidebar.mk"
     try:
-	user_config = eval(file(path).read())
+        user_config = eval(file(path).read())
     except:
-	user_config = config.sidebar
+        user_config = config.sidebar
 
     # Remove entries the user is not allowed for or which have state "off" (from legacy version)
     return [ entry for entry in user_config if entry[1] != "off" and config.may("sidesnap." + entry[0])]
@@ -102,13 +102,13 @@ def save_user_config(user_config):
     if config.may("configure_sidebar"):
         path = config.user_confdir + "/sidebar.mk"
         try:
-           write_settings_file(path, user_config)
+            write_settings_file(path, user_config)
         except Exception, e:
             raise MKConfigError("Cannot save user configuration to <tt>%s</tt>: %s" % (path, e))
 
 def sidebar_head():
     html.write('<div id="side_header">'
-	       '<a class="logo" target="_blank" href="http://mathias-kettner.de"></a>'
+               '<a class="logo" target="_blank" href="http://mathias-kettner.de"></a>'
                '</div>\n')
     html.write('<div id="side_version"><a href="http://mathias-kettner.de/check_mk_download.html" target="main">v%s</a></div>\n' % defaults.check_mk_version)
 # "<img src=\"images/side_up.png\" onmouseover=\"scrolling=true;scrollwindow(-2)\" onmouseout=\"scrolling=false\">"
@@ -125,7 +125,7 @@ def sidebar_foot():
 # Standalone sidebar
 def page_side(h):
     if not config.may("see_sidebar"):
-	return
+        return
 
     global html
     html = h
@@ -147,13 +147,13 @@ def page_side(h):
 
     html.write('<div id="side_content">')
     for name, state in user_config:
-	if not name in sidebar_snapins or not config.may("sidesnap." + name):
-	    continue
-	if state in [ "open", "closed" ]:
-	    refresh_url  = render_snapin(name, state)
-	    refresh_time = sidebar_snapins.get(name).get("refresh", 0)
-	    if refresh_time > 0:
-	        refresh_snapins.append([name, refresh_time, refresh_url])
+        if not name in sidebar_snapins or not config.may("sidesnap." + name):
+            continue
+        if state in [ "open", "closed" ]:
+            refresh_url  = render_snapin(name, state)
+            refresh_time = sidebar_snapins.get(name).get("refresh", 0)
+            if refresh_time > 0:
+                refresh_snapins.append([name, refresh_time, refresh_url])
     html.write('</div>')
     sidebar_foot()
     html.write('</div>')
@@ -172,14 +172,14 @@ def render_snapin(name, state):
     snapin = sidebar_snapins.get(name)
     styles = snapin.get("styles")
     if styles:
-	html.write("<style>\n%s\n</style>\n" % styles)
+        html.write("<style>\n%s\n</style>\n" % styles)
 
     html.write("<div id=\"snapin_container_%s\" class=snapin>\n" % name)
     if state == "closed":
-	style = ' style="display:none"'
+        style = ' style="display:none"'
         headclass = "closed"
     else:
-	style = ""
+        style = ""
         headclass = "open"
     url = "sidebar_openclose.py?name=%s&state=" % name
 
@@ -195,19 +195,19 @@ def render_snapin(name, state):
         html.write('</div>')
         pass
     html.write("<b class=heading onclick=\"toggle_sidebar_snapin(this,'%s')\" onmouseover=\"this.style.cursor='pointer'\" "
-	       "onmouseout=\"this.style.cursor='auto'\">%s</b>" % (url, snapin["title"]))
+               "onmouseout=\"this.style.cursor='auto'\">%s</b>" % (url, snapin["title"]))
     html.write("</div>")
 
     html.write("<div id=\"snapin_%s\" class=content%s>\n" % (name, style))
     refresh_url = ''
     try:
-	url = snapin["render"]()
+        url = snapin["render"]()
         # Fetch the contents from an external URL. Don't render it on our own.
         if not url is None:
             refresh_url = url
             html.write('<script>get_url("%s", updateContents, "snapin_%s")</script>' % (refresh_url, name))
     except Exception, e:
-	snapin_exception(e)
+        snapin_exception(e)
     html.write('</div><div class="foot"%s></div>\n' % style)
     html.write('</div>')
     return refresh_url
@@ -227,8 +227,8 @@ def ajax_openclose(h):
     config = load_user_config()
     new_config = []
     for name, usage in config:
-	if html.var("name") == name:
-	    usage = html.var("state")
+        if html.var("name") == name:
+            usage = html.var("state")
         if usage != "off":
             new_config.append((name, usage))
     save_user_config(new_config)
@@ -238,12 +238,12 @@ def ajax_snapin(h):
     html = h
     snapname = html.var("name")
     if not config.may("sidesnap." + snapname):
-	return
+        return
     snapin = sidebar_snapins.get(snapname)
     try:
-	snapin["render"]()
+        snapin["render"]()
     except Exception, e:
-	snapin_exception(e)
+        snapin_exception(e)
 
 def move_snapin(h):
     if not config.may("configure_sidebar"):
@@ -253,7 +253,7 @@ def move_snapin(h):
     html      = h
     snapname_to_move = html.var("name")
     beforename = html.var("before")
-    
+
     snapin_config = load_user_config()
 
     # Get current state of snaping being moved (open, closed)
@@ -263,7 +263,7 @@ def move_snapin(h):
             snap_to_move = name, state
     if not snap_to_move:
         return # snaping being moved not visible. Cannot be.
-        
+
     # Build new config by removing snaping at current position
     # and add before "beforename" or as last if beforename is not set
     new_config = []
@@ -291,7 +291,7 @@ def page_add_snapin(h):
         user_config = load_user_config() + [(addname, "open")]
         save_user_config(user_config)
         used_snapins = [name for (name, state) in load_user_config()]
-	html.reload_sidebar()
+        html.reload_sidebar()
 
     names = sidebar_snapins.keys()
     names.sort()
@@ -308,20 +308,18 @@ def page_add_snapin(h):
         title = snapin["title"]
         description = snapin.get("description", "")
         author = snapin.get("author")
-	transid = html.current_transid(html.req.user)
+        transid = html.current_transid(html.req.user)
         url = 'sidebar_add_snapin.py?name=%s&_transid=%d&pos=top' % (name, transid)
         html.write('<td onmouseover="this.style.background=\'#cde\'; this.style.cursor=\'pointer\';" '
                 'onmouseout="this.style.background=\'#9bc\' "'
                 'onclick="window.location.href=\'%s\';">' % url)
-        
+
         html.write("<b>%s</b><br>\n"
                 "%s" % (title, description))
         if author:
             html.write("<br><i>Author: %s</i>" % author)
-      
+
     html.write("<td></td>" * (3-n))
 
     html.write("</tr></table>\n")
     html.footer()
-
-

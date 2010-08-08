@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -32,7 +32,7 @@ multisite_builtin_views = {
               'group_painters': [('sitealias', None)],
               'hard_filters': ['summary_host'],
               'hard_filtervars': [('site', ''),
-                                  ('is_summary_host', '0'),  
+                                  ('is_summary_host', '0'),
                                   ('host', ''),
                                   ('opthostgroup', '')],
               'hidden': False,
@@ -65,7 +65,7 @@ multisite_builtin_views = {
                    'hard_filters': ['summary_host',],
                    'hard_filtervars': [('site', ''),
                                        ('host', ''),
-                                       ('is_summary_host', '0'),  
+                                       ('is_summary_host', '0'),
                                        ('opthostgroup', '')],
                    'hidden': False,
                    'hide_filters': [],

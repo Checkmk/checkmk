@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -31,11 +31,11 @@ def inventory_bluecoat_sensors(checkname, info):
 def check_bluecoat_sensors(item, params, info):
     for line in info:
         if line[0] == item:
-           perfdata = [("value", line[1]) ]
-           if line[2] == '1':
-              return (0, "OK - %s" % (line[1],), perfdata)
-           else:
-              return (2, "CRIT - %s" % (line[1], ), perfdata)
+            perfdata = [("value", line[1]) ]
+            if line[2] == '1':
+                return (0, "OK - %s" % (line[1],), perfdata)
+            else:
+                return (2, "CRIT - %s" % (line[1], ), perfdata)
     return (3, "UNKNOWN - item not found in SNMP data")
 
 
@@ -48,4 +48,3 @@ check_info['bluecoat_sensors'] = (
 snmp_info['bluecoat_sensors'] =  (
     "1.3.6.1.4.1.3417.2.1.1.1.1.1",
     [ 9, 5, 7 ]) # BLUECOAT fan, voltage, temperatures
-

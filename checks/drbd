@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -34,18 +34,18 @@
 # GIT-hash: d78846e52224fd00562f7c225bcc25b2d422321d build by cssint@erzc20, 2010-06-17 14:47:26
 #  0: cs:SyncSource ro:Primary/Secondary ds:UpToDate/Inconsistent C r----
 #     ns:12031428 nr:0 dw:12031364 dr:1175992347 al:2179 bm:71877 lo:37 pe:0 ua:37 ap:0 ep:1 wo:b oos:301729988
-# 	[=======>............] sync'ed: 42.4% (294656/510908)M delay_probe: 145637
-# 	finish: 1:23:28 speed: 60,172 (51,448) K/sec
-# 
+#       [=======>............] sync'ed: 42.4% (294656/510908)M delay_probe: 145637
+#       finish: 1:23:28 speed: 60,172 (51,448) K/sec
+#
 # Sync stalled:
 # <<<drbd>>>
-# b01srv05:~ # cat /proc/drbd 
+# b01srv05:~ # cat /proc/drbd
 # version: 8.3.8 (api:88/proto:86-94)
 # GIT-hash: d78846e52224fd00562f7c225bcc25b2d422321d build by cssint@erzc20, 2010-06-17 14:47:26
 #  0: cs:SyncSource ro:Primary/Secondary ds:UpToDate/Inconsistent C r----
 #     ns:11545876 nr:0 dw:11545900 dr:954551211 al:1955 bm:58360 lo:0 pe:0 ua:0 ap:0 ep:1 wo:b oos:523171100
-# 	[>....................] sync'ed:  0.1% (510908/510908)M delay_probe: 135599
-# 	stalled
+#       [>....................] sync'ed:  0.1% (510908/510908)M delay_probe: 135599
+#       stalled
 #
 # Synced:
 # <<<drbd>>>

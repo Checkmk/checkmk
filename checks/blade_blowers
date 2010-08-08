@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -25,15 +25,15 @@
 # Boston, MA 02110-1301 USA.
 
 # The BLADE-MIB is somewhat goofy redarding the blower
-# information. The blowers are listed sequentially 
+# information. The blowers are listed sequentially
 # below the same subtrees:
 
 # BLADE-MIB::blower1speed.0 = STRING: "50% of maximum"
 # BLADE-MIB::blower2speed.0 = STRING: "50% of maximum"
 # BLADE-MIB::blower1State.0 = INTEGER: good(1)
 # BLADE-MIB::blower2State.0 = INTEGER: good(1)
-# BLADE-MIB::blowers.20.0 = STRING: "1712" 
-# BLADE-MIB::blowers.21.0 = STRING: "1696" 
+# BLADE-MIB::blowers.20.0 = STRING: "1712"
+# BLADE-MIB::blowers.21.0 = STRING: "1696"
 # BLADE-MIB::blowers.30.0 = INTEGER: 0
 # BLADE-MIB::blowers.31.0 = INTEGER: 0
 #
@@ -46,23 +46,23 @@
 # .1.3.6.1.4.1.2.3.51.2.2.3.21.0 = STRING: "No Blower"
 # .1.3.6.1.4.1.2.3.51.2.2.3.30.0 = INTEGER: 0
 # .1.3.6.1.4.1.2.3.51.2.2.3.31.0 = INTEGER: 2
-# 
+#
 # How can we safely determine the number of blowers without
-# assuming that each blower has four entries? 
+# assuming that each blower has four entries?
 
 # We assume that all blowers are in state OK (used for
 # inventory only)
 def number_of_blowers(info):
     n = 0
     while len(info[n][0]) > 1: # state lines
-       n += 1
+        n += 1
     return n
 
 def inventory_blade_blowers(checkname, info):
     inventory = []
     n = number_of_blowers(info)
     for i in range(0, n):
-	if info[i + n][0] != "0": # skip unknown blowers
+        if info[i + n][0] != "0": # skip unknown blowers
             inventory.append( ("%d/%d" % (i+1,n), None, None) )
     return inventory
 
@@ -78,9 +78,9 @@ def check_blade_blowers(item, _no_params, info):
     perfdata = [("perc", perc, None, None, 0, 100), ("rpm", rpm)]
     info = "- Speed at %d RPM (%d%% of max)" % (rpm, perc)
     if state == "1":
-	return (0, "OK" + info, perfdata)
+        return (0, "OK" + info, perfdata)
     else:
-	return (2, "CRIT" + info, perfdata)
+        return (2, "CRIT" + info, perfdata)
 
 
 check_info['blade_blowers'] = ( check_blade_blowers, "Blower %s", 1, inventory_blade_blowers)

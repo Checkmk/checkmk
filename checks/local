@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -30,23 +30,23 @@ def inventory_local(checkname, info):
 
 def check_local(item, params, info):
     for line in info:
-       if line[1] == item:
-           state = int(line[0])
-           perftxt = line[2]
-           output = " ".join(line[3:])
-           perfdata = []
-           if perftxt != "-":
-               # new: allow multiple perfdata by using | as separator
-               for entry in perftxt.split('|'):
-                   varname, valuetxt = entry.split('=')
-                   values = valuetxt.split(';')
-                   perfdata.append(tuple( [varname] + values ))
-           return (state, output, perfdata)
+        if line[1] == item:
+            state = int(line[0])
+            perftxt = line[2]
+            output = " ".join(line[3:])
+            perfdata = []
+            if perftxt != "-":
+                # new: allow multiple perfdata by using | as separator
+                for entry in perftxt.split('|'):
+                    varname, valuetxt = entry.split('=')
+                    values = valuetxt.split(';')
+                    perfdata.append(tuple( [varname] + values ))
+            return (state, output, perfdata)
     return (3, "Check output not found in local checks")
-               
+
 
 check_info['local'] = (
-	check_local,
+        check_local,
         "%s",
         1,
         inventory_local)

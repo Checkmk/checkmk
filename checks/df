@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -33,7 +33,7 @@ def check_df(mountpoint, params, df_lines):
     used_list = [ l for l in df_lines if " ".join(l[6:]).replace('\\','/') == mountpoint ]
 
     if len(used_list) == 0:
-	return (3, "UNKNOWN - %s missing or not a partition" % mountpoint )
+        return (3, "UNKNOWN - %s missing or not a partition" % mountpoint )
     used = used_list[0] # might be listed twice. We take the first occurance
 
     # In some rare cases the mountpoint may contain a space (happened on ESX).
@@ -41,24 +41,24 @@ def check_df(mountpoint, params, df_lines):
         used = used[0:6] + [ " ".join(used[6:]) ]
 
     if len(used) != 7 or used[5][-1] != '%':
-	return (3, "UNKNOWN - Invalid output from agent (%s)" % (' '.join(used),))
+        return (3, "UNKNOWN - Invalid output from agent (%s)" % (' '.join(used),))
 
     # Beware: the 6th column of df ("used perc") may includes 5% which are reserved
     # for the superuser, whereas the 4th colum ("used MB") does *not* include that.
     # Beware(2): the column used_mb does not account for the reserved space for
     # superusers. So we rather use the column 'avail' and subtract that from total
     # to compute the used space.
-    
+
     size_mb   = int(used[2]) / 1024.0
     if size_mb == 0:
         return (1, "WARN - size of filesystem is 0 MB")
-        
+
     avail_mb   = int(used[4]) / 1024.0
     used_mb = size_mb - avail_mb
-    
+
     used_perc = 100.0 * (used_mb / size_mb)
     size_gb   = size_mb / 1024.0
-    
+
     # Get warning and critical levels already with 'magic factor' applied
     warn_mb, crit_mb, levelstext = get_filesystem_levels(g_hostname, mountpoint, size_gb, params)
 
@@ -73,12 +73,12 @@ def check_df(mountpoint, params, df_lines):
                 (used_perc, used_mb / 1024.0, size_gb, levelstext)
 
     if used_mb >= crit_mb:
-	return (2, "CRIT - %s" % infotext, perfdata)
+        return (2, "CRIT - %s" % infotext, perfdata)
     elif used_mb >= warn_mb:
-	return (1, "WARN - %s" % infotext, perfdata)
+        return (1, "WARN - %s" % infotext, perfdata)
     else:
-	return (0, "OK - %s" % infotext, perfdata)
-	
+        return (0, "OK - %s" % infotext, perfdata)
+
 
 
 def inventory_df(checkname, info):
@@ -97,9 +97,8 @@ def inventory_df(checkname, info):
         except ValueError,e:
             sys.stderr.write("Invalid plugin output '%s'\n" % (line,))
             pass # ignore e.g. entries for /proc, etc. if plugin sends any
-            
+
     return inventory
 
 check_info['df']        = (check_df, "fs_%s", 1, inventory_df)
 precompile_params['df'] = precompile_filesystem_levels
-

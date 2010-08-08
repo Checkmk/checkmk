@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -32,7 +32,7 @@
 #    /_/   \_\_|  |___|    |____/ \___/ \___|\__,_|                   #
 #                                                                     #
 # =================================================================== #
-# 
+#
 # A painter computes from information from a data row HTML output and
 # a CSS class for one display column. Please note, that there is no
 # 1:1 relation between data columns and display columns. A painter can
@@ -48,7 +48,7 @@
 # "columns": Livestatus columns this painter need. Multisite retrieves
 #            only data columns declared in the painters, so make sure
 #            you do not leave out something here.
-# "paint":   The actual paint function 
+# "paint":   The actual paint function
 #
 # The paint function gets one argument: A data row, which is a python
 # dictionary representing one data object (host, service, ...). Its
@@ -62,72 +62,72 @@
 # change in future.
 # =================================================================== #
 
-#    ___                    
-#   |_ _|___ ___  _ __  ___ 
+#    ___
+#   |_ _|___ ___  _ __  ___
 #    | |/ __/ _ \| '_ \/ __|
 #    | | (_| (_) | | | \__ \
 #   |___\___\___/|_| |_|___/
-#                           
+#
 
 
 icon_columns = [ "acknowledged", "scheduled_downtime_depth", "downtimes_with_info", "comments_with_info",
-	         "notifications_enabled", "is_flapping", "modified_attributes_list", "active_checks_enabled",
-		 "accept_passive_checks", "action_url_expanded", "notes_url_expanded", "in_notification_period" ]
+                 "notifications_enabled", "is_flapping", "modified_attributes_list", "active_checks_enabled",
+                 "accept_passive_checks", "action_url_expanded", "notes_url_expanded", "in_notification_period" ]
 
 def paint_icons(what, row): # what is "host" or "service"
     output = ""
     if what == "host":
-	prefix = "host_"
+        prefix = "host_"
     else:
-	 prefix = "service_"
+        prefix = "service_"
 
     # action_url
     if row[prefix + "action_url_expanded"]:
-	output += "<a href='%s'><img class=icon src=\"images/icon_action.gif\"></a>" % row[prefix + "action_url_expanded"]
+        output += "<a href='%s'><img class=icon src=\"images/icon_action.gif\"></a>" % row[prefix + "action_url_expanded"]
 
     # notes_url
     if row[prefix + "notes_url_expanded"]:
-	output += "<a href='%s'><img class=icon src=\"images/icon_notes.gif\"></a>" % row[prefix + "notes_url_expanded"]
+        output += "<a href='%s'><img class=icon src=\"images/icon_notes.gif\"></a>" % row[prefix + "notes_url_expanded"]
 
     # Problem has been acknowledged
     if row[prefix + "acknowledged"]:
-	output += '<img class=icon title="this problem has been acknowledged" src="images/icon_ack.gif">'
+        output += '<img class=icon title="this problem has been acknowledged" src="images/icon_ack.gif">'
 
     # Currently we are in a downtime + link to list of downtimes for this host / service
     if row[prefix + "scheduled_downtime_depth"] > 0:
-       output += link_to_view('<img class=icon src="images/icon_downtime.gif">', row, 'downtimes_of_' + what)
+        output += link_to_view('<img class=icon src="images/icon_downtime.gif">', row, 'downtimes_of_' + what)
 
     # Comments
     comments = row[prefix + "comments_with_info"]
     if len(comments) > 0:
         text = ""
-	for id, author, comment in comments:
-	    text += "%s: \"%s\" \n" % (author, comment)
-	output += link_to_view('<img class=icon title=\'%s\' src="images/icon_comment.gif">' % text, row, 'comments_of_' + what)
-	
+        for id, author, comment in comments:
+            text += "%s: \"%s\" \n" % (author, comment)
+        output += link_to_view('<img class=icon title=\'%s\' src="images/icon_comment.gif">' % text, row, 'comments_of_' + what)
+
     # Notifications disabled
     if not row[prefix + "notifications_enabled"]:
-	output += '<img class=icon title="notifications are disabled for this %s" src="images/icon_ndisabled.gif">' % \
-		  what
+        output += '<img class=icon title="notifications are disabled for this %s" src="images/icon_ndisabled.gif">' % \
+                  what
 
     # Flapping
     if row[prefix + "is_flapping"]:
-	output += '<img class=icon title="This %s is flapping" src="images/icon_flapping.gif">' % what
-    
+        output += '<img class=icon title="This %s is flapping" src="images/icon_flapping.gif">' % what
+
     # Setting of active checks modified by user
     if "active_checks_enabled" in row[prefix + "modified_attributes_list"]:
-	if row[prefix + "active_checks_enabled"] == 0:
-	    output += '<img class=icon title="Active checks have been manually disabled for this %s!" '\
-		      'src="images/icon_disabled.gif">' % what
-	else:
-	    output += '<img class=icon title="Active checks have been manually enabled for this %s!" '\
-		      'src="images/icon_enabled.gif">' % what
-    
+        if row[prefix + "active_checks_enabled"] == 0:
+            output += '<img class=icon title="Active checks have been manually disabled for this %s!" '\
+                      'src="images/icon_disabled.gif">' % what
+        else:
+            output += '<img class=icon title="Active checks have been manually enabled for this %s!" '\
+                      'src="images/icon_enabled.gif">' % what
+
     # Passive checks disabled manually?
     if "passive_checks_enabled" in row[prefix + "modified_attributes_list"]:
-	if row[prefix + "accept_passive_checks"] == 0:
-	    output += '<img class=icon title="Passive checks have been manually disabled for this %s!" '\
-		      'src="images/icon_npassive.gif">' % what
+        if row[prefix + "accept_passive_checks"] == 0:
+            output += '<img class=icon title="Passive checks have been manually disabled for this %s!" '\
+                      'src="images/icon_npassive.gif">' % what
 
 
     if not row[prefix + "in_notification_period"]:
@@ -174,22 +174,22 @@ def paint_nagios_link(row):
 
 def paint_age(timestamp, has_been_checked, bold_if_younger_than):
     if not has_been_checked:
-	return "age", "-"
-	   
+        return "age", "-"
+
     age = time.time() - timestamp
     if age >= 48 * 3600 or age < -48 * 3600:
-	return "age", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
+        return "age", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
 
     # Time delta less than two days => make relative time
     if age < 0:
-	age = -age
-	prefix = "in "
+        age = -age
+        prefix = "in "
     else:
-	prefix = ""
-    if age < bold_if_younger_than: 
-	age_class = "age recent"
+        prefix = ""
+    if age < bold_if_younger_than:
+        age_class = "age recent"
     else:
-	age_class = "age"
+        age_class = "age"
     return age_class, prefix + html.age_text(age)
 
 def paint_future_time(timestamp):
@@ -203,10 +203,10 @@ def paint_day(timestamp):
 
 def paint_site_icon(row):
     if row["site"] and config.use_siteicons:
-	return None, "<img class=siteicon src=\"icons/site-%s-24.png\">" % row["site"]
+        return None, "<img class=siteicon src=\"icons/site-%s-24.png\">" % row["site"]
     else:
-	return None, ""
-	
+        return None, ""
+
 multisite_painters["sitename_plain"] = {
     "title" : "Site id",
     "short" : "Site",
@@ -220,30 +220,30 @@ multisite_painters["sitealias"] = {
     "paint" : lambda row: (None, config.site(row["site"])["alias"])
 }
 
-#    ____                  _               
-#   / ___|  ___ _ ____   _(_) ___ ___  ___ 
+#    ____                  _
+#   / ___|  ___ _ ____   _(_) ___ ___  ___
 #   \___ \ / _ \ '__\ \ / / |/ __/ _ \/ __|
 #    ___) |  __/ |   \ V /| | (_|  __/\__ \
 #   |____/ \___|_|    \_/ |_|\___\___||___/
-#                                          
+#
 
 def paint_service_state_short(row):
     if row["service_has_been_checked"] == 1:
-	state = row["service_state"]
-	name = nagios_short_state_names[row["service_state"]]
+        state = row["service_state"]
+        name = nagios_short_state_names[row["service_state"]]
     else:
-	state = "p"
-	name = "PEND"
+        state = "p"
+        name = "PEND"
     return "state svcstate state%s" % state, name
 
 def paint_host_state_short(row):
 # return None, str(row)
     if row["host_has_been_checked"] == 1:
-	state = row["host_state"]
-	name = nagios_short_host_state_names[row["host_state"]]
+        state = row["host_state"]
+        name = nagios_short_host_state_names[row["host_state"]]
     else:
-	state = "p"
-	name = "PEND"
+        state = "p"
+        name = "PEND"
     return "state hstate hstate%s" % state, name
 
 multisite_painters["service_nagios_link"] = {
@@ -291,7 +291,7 @@ multisite_painters["svc_check_command"] = {
     "columns" : ["service_check_command"],
     "paint" : lambda row: (None, row["service_check_command"])
 }
-    
+
 multisite_painters["svc_contacts"] = {
     "title" : "Service contacts",
     "short" : "Contacts",
@@ -371,9 +371,9 @@ def paint_nagiosflag(row, field, bold_if_nonzero):
     value = row[field]
     yesno = {True:"yes", False:"no"}[value != 0]
     if (value != 0) == bold_if_nonzero:
-	return "badflag", yesno
+        return "badflag", yesno
     else:
-	return "goodflag", yesno
+        return "goodflag", yesno
 
 multisite_painters["svc_in_downtime"] = {
     "title" : "Currently in downtime",
@@ -393,7 +393,7 @@ multisite_painters["svc_notifper"] = {
    "columns" : [ "service_notification_period" ],
    "paint" : lambda row: (None, row["service_notification_period"])
 }
-      
+
 multisite_painters["svc_flapping"] = {
     "title" : "Is flapping",
     "short" : "flap",
@@ -426,7 +426,7 @@ def paint_pnpgraph(sitename, host, service = "_HOST_"):
         htmlcode += '<div class=pnpgraph><a href="%s/index.php/graph?%s"><img src="%s/index.php/image?%s"></a></div>' % \
             (pnpurl, urlvars, pnpurl, urlvars)
     return "pnpgraph", htmlcode
-        
+
 multisite_painters["svc_pnpgraph" ] = {
     "title"   : "PNP service graph",
     "short"   : "PNP graph",
@@ -434,12 +434,12 @@ multisite_painters["svc_pnpgraph" ] = {
     "paint"   : lambda row: paint_pnpgraph(row["site"], row["host_name"], row["service_description"])
 }
 
-#   _   _           _       
-#  | | | | ___  ___| |_ ___ 
+#   _   _           _
+#  | | | | ___  ___| |_ ___
 #  | |_| |/ _ \/ __| __/ __|
 #  |  _  | (_) \__ \ |_\__ \
 #  |_| |_|\___/|___/\__|___/
-#                           
+#
 
 multisite_painters["host_state"] = {
     "title" : "Host state",
@@ -550,7 +550,7 @@ multisite_painters["host_notifper"] = {
    "columns" : [ "host_notification_period" ],
    "paint" : lambda row: (None, row["host_notification_period"])
 }
-      
+
 multisite_painters["host_pnpgraph" ] = {
     "title"   : "PNP host graph",
     "short"   : "PNP graph",
@@ -578,7 +578,7 @@ def paint_host_black_with_link_to_old_nagios_services(row):
     url = baseurl + "/status.cgi?host=" + htmllib.urlencode(host)
     state = row["host_state"]
     if state != 0:
-        return None, '<div class=hostdown><a href="%s">%s</a></div>' % (url, host) 
+        return None, '<div class=hostdown><a href="%s">%s</a></div>' % (url, host)
     else:
         return None, '<a href="%s">%s</a>' % (url, host)
 
@@ -609,7 +609,7 @@ multisite_painters["host_with_state"] = {
     "title" : "Hostname colored with state",
     "short" : "Host",
     "columns" : ["site", "host_name", "host_state", "host_has_been_checked" ],
-    "paint" : paint_host_with_state, 
+    "paint" : paint_host_with_state,
 }
 
 multisite_painters["host"] = {
@@ -635,9 +635,9 @@ multisite_painters["host_address"] = {
 
 def paint_svc_count(id, count):
     if count > 0:
-	return "count svcstate state%s" % id, str(count)
+        return "count svcstate state%s" % id, str(count)
     else:
-	return "count svcstate statex", "0"
+        return "count svcstate statex", "0"
 
 def paint_host_count(id, count):
     if count > 0:
@@ -647,7 +647,7 @@ def paint_host_count(id, count):
             return "count hstate hstatep", str(count)
 
     else:
-	return "count hstate hstatex", "0"
+        return "count hstate hstatex", "0"
 
 multisite_painters["num_services"] = {
     "title"   : "Number of services",
@@ -702,21 +702,21 @@ def paint_service_list(row, columnname):
     h = "<div class=objectlist>"
     for entry in row[columnname]:
         if columnname.startswith("servicegroup"):
-	    host, svc, state, checked = entry
-	    text = host + " ~ " + svc
-	else:
-	    svc, state, checked = entry
-	    host = row["host_name"]
-	    text = svc
+            host, svc, state, checked = entry
+            text = host + " ~ " + svc
+        else:
+            svc, state, checked = entry
+            host = row["host_name"]
+            text = svc
         link = "view.py?view_name=service&site=%s&host=%s&service=%s" % (
-		htmllib.urlencode(row["site"]),
-		htmllib.urlencode(host),
-		htmllib.urlencode(svc))
-	if checked:
-	    css = "state%d" % state
-	else:
-	    css = "statep"
-	h += "<div class=\"%s\"><a href=\"%s\">%s</a></div>" % (css, link, text) 
+                htmllib.urlencode(row["site"]),
+                htmllib.urlencode(host),
+                htmllib.urlencode(svc))
+        if checked:
+            css = "state%d" % state
+        else:
+            css = "statep"
+        h += "<div class=\"%s\"><a href=\"%s\">%s</a></div>" % (css, link, text)
     h += "</div>"
     return "", h
 
@@ -736,7 +736,7 @@ def paint_host_list(site, hosts):
         else:
             h += ", "
         link = "view.py?view_name=hoststatus&site=%s&host=%s" % (htmllib.urlencode(site), htmllib.urlencode(host))
-	h += "<a href=\"%s\">%s</a></div>" % (link, host) 
+        h += "<a href=\"%s\">%s</a></div>" % (link, host)
     return "", h
 
 multisite_painters["host_parents"] = {
@@ -767,24 +767,24 @@ multisite_painters["host_group_memberlist"] = {
     "paint"   : paint_host_group_memberlist
 }
 
-#    _   _           _                                  
-#   | | | | ___  ___| |_ __ _ _ __ ___  _   _ _ __  ___ 
+#    _   _           _
+#   | | | | ___  ___| |_ __ _ _ __ ___  _   _ _ __  ___
 #   | |_| |/ _ \/ __| __/ _` | '__/ _ \| | | | '_ \/ __|
 #   |  _  | (_) \__ \ || (_| | | | (_) | |_| | |_) \__ \
 #   |_| |_|\___/|___/\__\__, |_|  \___/ \__,_| .__/|___/
-#                       |___/                |_|        
+#                       |___/                |_|
 #
 def paint_hg_host_list(row):
     h = "<div class=objectlist>"
     for host, state, checked in row["hostgroup_members_with_state"]:
         link = "view.py?view_name=host&site=%s&host=%s" % (
-		htmllib.urlencode(row["site"]),
-		htmllib.urlencode(host))
-	if checked:
-	    css = "hstate%d" % state
-	else:
-	    css = "hstatep"
-	h += "<div class=\"%s\"><a href=\"%s\">%s</a></div>" % (css, link, host) 
+                htmllib.urlencode(row["site"]),
+                htmllib.urlencode(host))
+        if checked:
+            css = "hstate%d" % state
+        else:
+            css = "hstatep"
+        h += "<div class=\"%s\"><a href=\"%s\">%s</a></div>" % (css, link, host)
     h += "</div>"
     return "", h
 
@@ -873,12 +873,12 @@ multisite_painters["hg_alias"] = {
     "paint" : lambda row: (None, row["hostgroup_alias"])
 }
 
-#    ____                  _                                          
-#   / ___|  ___ _ ____   _(_) ___ ___  __ _ _ __ ___  _   _ _ __  ___ 
+#    ____                  _
+#   / ___|  ___ _ ____   _(_) ___ ___  __ _ _ __ ___  _   _ _ __  ___
 #   \___ \ / _ \ '__\ \ / / |/ __/ _ \/ _` | '__/ _ \| | | | '_ \/ __|
 #    ___) |  __/ |   \ V /| | (_|  __/ (_| | | | (_) | |_| | |_) \__ \
 #   |____/ \___|_|    \_/ |_|\___\___|\__, |_|  \___/ \__,_| .__/|___/
-#                                     |___/                |_|        
+#                                     |___/                |_|
 
 multisite_painters["sg_services"] = {
     "title"   : "Services colored according to state",
@@ -958,21 +958,21 @@ def pnp_icon_link(row):
     a = "<a href=\"%s\"><img class=icon src=\"images/icon_pnp.gif\"></a>" % pnp_url(row)
 
     if config.site_is_local(row["site"]):
-	# Where is our RRD?
-	basedir = defaults.rrd_path + "/" + row["host_name"]
-	xmlpath = basedir + "/" + row["service_description"].replace("/", "_").replace(" ", "_") + ".xml"
-	if os.path.exists(xmlpath):
-	    return a
-	else:
-	    return ""
-    
+        # Where is our RRD?
+        basedir = defaults.rrd_path + "/" + row["host_name"]
+        xmlpath = basedir + "/" + row["service_description"].replace("/", "_").replace(" ", "_") + ".xml"
+        if os.path.exists(xmlpath):
+            return a
+        else:
+            return ""
+
     # Darn. Remote site. We cannot check for a file but rather use
     # (Lars' idea) the perfdata field
     elif row["service_perf_data"]:
-	return  a
+        return  a
     else:
-	return ""
-        
+        return ""
+
 
 multisite_painters["link_to_pnp_service"] = {
     "title"   : "Link to PNP4Nagios",
@@ -981,12 +981,12 @@ multisite_painters["link_to_pnp_service"] = {
     "paint"   : lambda row: ("", pnp_icon_link(row))
 }
 
-#     ____                                     _       
-#    / ___|___  _ __ ___  _ __ ___   ___ _ __ | |_ ___ 
+#     ____                                     _
+#    / ___|___  _ __ ___  _ __ ___   ___ _ __ | |_ ___
 #   | |   / _ \| '_ ` _ \| '_ ` _ \ / _ \ '_ \| __/ __|
 #   | |__| (_) | | | | | | | | | | |  __/ | | | |_\__ \
 #    \____\___/|_| |_| |_|_| |_| |_|\___|_| |_|\__|___/
-#                                                      
+#
 
 multisite_painters["comment_id"] = {
     "title" : "Comment id",
@@ -1031,19 +1031,19 @@ def paint_comment_entry_type(row):
     linkview = None
     if t == 1:   icon = "comment"
     elif t == 2:
-	icon = "downtime"
-	if row["service_description"]:
-	    linkview = "downtimes_of_service"
-	else:
-	    linkview = "downtimes_of_host"
-	
+        icon = "downtime"
+        if row["service_description"]:
+            linkview = "downtimes_of_service"
+        else:
+            linkview = "downtimes_of_host"
+
     elif t == 3: icon = "flapping"
     elif t == 4: icon = "ack"
     else:
-	return "", ""
+        return "", ""
     code = '<img class=icon src="images/icon_%s.gif">' % icon
     if linkview:
-	code = link_to_view(code, row, linkview)
+        code = link_to_view(code, row, linkview)
     return "icons", code
 
 multisite_painters["comment_entry_type"] = {
@@ -1053,12 +1053,12 @@ multisite_painters["comment_entry_type"] = {
     "paint" : paint_comment_entry_type
 }
 
-#    ____                      _   _                     
-#   |  _ \  _____      ___ __ | |_(_)_ __ ___   ___  ___ 
+#    ____                      _   _
+#   |  _ \  _____      ___ __ | |_(_)_ __ ___   ___  ___
 #   | | | |/ _ \ \ /\ / / '_ \| __| | '_ ` _ \ / _ \/ __|
 #   | |_| | (_) \ V  V /| | | | |_| | | | | | |  __/\__ \
 #   |____/ \___/ \_/\_/ |_| |_|\__|_|_| |_| |_|\___||___/
-#                                                        
+#
 
 
 multisite_painters["downtime_id"] = {
@@ -1112,12 +1112,12 @@ multisite_painters["downtime_end_time"] = {
     "paint" : lambda row: paint_age(row["downtime_end_time"], True, 3600)
 }
 
-#    _                
-#   | |    ___   __ _ 
+#    _
+#   | |    ___   __ _
 #   | |   / _ \ / _` |
 #   | |__| (_) | (_| |
 #   |_____\___/ \__, |
-#               |___/ 
+#               |___/
 
 multisite_painters["log_message"] = {
     "title" : "Log: complete message",
@@ -1208,9 +1208,9 @@ multisite_painters["log_date"] = {
 def paint_log_state(row):
     state = row["log_state"]
     if row["log_service_description"]:
-	return paint_service_state_short({"service_has_been_checked":1, "service_state" : state})
+        return paint_service_state_short({"service_has_been_checked":1, "service_state" : state})
     else:
-	return paint_host_state_short({"host_has_been_checked":1, "host_state" : state})
+        return paint_host_state_short({"host_has_been_checked":1, "host_state" : state})
 
 multisite_painters["log_state"] = {
     "title" : "Log: state of host/service at log time",

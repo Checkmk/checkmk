@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -40,7 +40,7 @@ def check_netif_link(item, targetstate, info):
         link = False
     else:
         return (3, "UNKNOWN - invalid link state '%s'" % link)
-            
+
     if link == targetstate:
         if link:
             return (0, "OK - Link is up")
@@ -55,7 +55,7 @@ def check_netif_link(item, targetstate, info):
 
 def inventory_netif_params(checkname, info):
     return [ (i[0], '', tuple(i[1:4])) for i in info if len(i) == 5 ]
-        
+
 def check_netif_params(item, params, info):
     infolist = [ i[1:4] for i in info if i[0] == item ]
     if len(infolist) == 0:
@@ -68,8 +68,7 @@ def check_netif_params(item, params, info):
     else:
         return (2, "CRIT - %s (should be %s)" %
             (",".join(act_params), ",".join(params)))
-    
+
 
 check_info['netif.link'] = (check_netif_link,      "NIC %s link",            0,  inventory_netif_link)
 check_info['netif.params'] = (check_netif_params,    "NIC %s parameter",       0,  inventory_netif_params)
-

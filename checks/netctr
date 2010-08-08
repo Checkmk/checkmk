@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -31,7 +31,7 @@ netctr_counters  = [ 'rx_bytes', 'tx_bytes', 'rx_packets', 'tx_packets', 'rx_err
 
 # Check counters from network interfaces
 # Item is devicename.countername, eg,
-# eth0.tx_collisions. Available are: 
+# eth0.tx_collisions. Available are:
 
 counter_indices = {
   # Receive
@@ -74,20 +74,20 @@ def check_netctr_combined(nic, params, info):
         infotxt = ""
         problems_per_sec = 0.0
         packets_per_sec = 0.0
-	counter_wrapped = None
+        counter_wrapped = None
         for countername in netctr_counters:
             index = counter_indices[countername]
             value = int(nicline[index + 1])
-	    try:
+            try:
                 timedif, items_per_sec = get_counter( "netctr." + nic + "." + countername, this_time, value)
                 perfdata.append( ( countername, "%dc" % value ) )
             except MKCounterWrapped, e:
-		counter_wrapped = e.reason
-		# Important: continue counter loop, so that *all* counters get initialized.
-		# Otherwise this checks would need 7 check cycles until the first result
-		# would be produced
-		continue
-		
+                counter_wrapped = e.reason
+                # Important: continue counter loop, so that *all* counters get initialized.
+                # Otherwise this checks would need 7 check cycles until the first result
+                # would be produced
+                continue
+
             if countername in [ "rx_errors", "tx_errors", "tx_collisions" ]:
                 problems_per_sec += items_per_sec
             elif countername in [ "rx_packets", "tx_packets" ]:
@@ -97,10 +97,10 @@ def check_netctr_combined(nic, params, info):
             elif countername == 'tx_bytes':
                 infotxt += ' - Send: %.2f MB/sec' % (float(items_per_sec) / float(1024*1024))
 
-	# if at least one counter wrapped, we cannot send or use performance
-	# data and leave out this check for this turn
-	if counter_wrapped: 
-	    raise MKCounterWrapped(counter_wrapped)
+        # if at least one counter wrapped, we cannot send or use performance
+        # data and leave out this check for this turn
+        if counter_wrapped:
+            raise MKCounterWrapped(counter_wrapped)
 
         error_percentage = 0.0
         if problems_per_sec > 0:
@@ -112,7 +112,7 @@ def check_netctr_combined(nic, params, info):
             return (1, "WARNING" + infotxt, perfdata)
         else:
             return (0, "OK" + infotxt, perfdata)
-                
+
     return (3, "UNKNOWN - NIC is not present")
 
 

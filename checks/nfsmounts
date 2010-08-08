@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -35,10 +35,10 @@ def check_nfsmounts(item, params, info):
             size_blocks = int(line[2])
             free_blocks = int(line[4]) # for non-root user
             blocksize = int(line[5])
-            
+
             if size_blocks < 0 or free_blocks < 0 or blocksize > 1024*1024:
                 return (1, "WARNING - Stale NFS handle")
-            
+
             gb = 1024 * 1024 * 1024.0
             size_gb = (size_blocks * blocksize) / gb
             used_gb = (free_blocks * blocksize) / gb
@@ -47,5 +47,5 @@ def check_nfsmounts(item, params, info):
             else:
                 return (2, "CRITICAL - server not responding")
     return (3, "UNKNOWN - not mounted")
-    
+
 check_info['nfsmounts'] = (check_nfsmounts, "NFS mount %s", 0, inventory_nfsmounts)

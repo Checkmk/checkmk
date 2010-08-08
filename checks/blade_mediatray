@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -26,11 +26,11 @@
 
 def inventory_blade_mediatray(checkname, info):
     if len(info) == 1 and info[0][0] == "1":
-	return [(None, None, None)]
+        return [(None, None, None)]
 
 def check_blade_mediatray(_no_item, _no_params, info):
     if len(info) < 1:
-	return (3, "UNKNOWN - no information about media tray in SNMP output")
+        return (3, "UNKNOWN - no information about media tray in SNMP output")
     present = info[0][0]
     communicating = info[0][1]
     if present != "1":
@@ -38,7 +38,7 @@ def check_blade_mediatray(_no_item, _no_params, info):
     elif communicating != "1":
         return (2, "CRIT - media tray not communicating")
     else:
-	return (0, "OK - media tray present and communicating")
+        return (0, "OK - media tray present and communicating")
 
 
 check_info['blade_mediatray'] = ( check_blade_mediatray, "Media tray", 0, inventory_blade_mediatray)

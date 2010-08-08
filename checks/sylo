@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -55,7 +55,7 @@ def inventory_sylo(checkname, info):
 
 def check_sylo(item, params, info):
     if len(info) != 1:
-	return (2, "CRIT - No hint file (sylo probably never ran on this system)")
+        return (2, "CRIT - No hint file (sylo probably never ran on this system)")
 
     if len(info[0]) == 4:
         msg = ""
@@ -67,7 +67,7 @@ def check_sylo(item, params, info):
         outOffset = int(info[0][2])
         size      = int(info[0][3])
         size_mb   = size / (1024 * 1024.0)
-        warn_mb   = size_mb * warn / 100.0 
+        warn_mb   = size_mb * warn / 100.0
         crit_mb   = size_mb * crit / 100.0
 
         # CRIT: too old
@@ -86,7 +86,7 @@ def check_sylo(item, params, info):
             bytesUsed = size - outOffset + inOffset
         percUsed = float(bytesUsed) / size * 100
         used_mb  = bytesUsed / (1024 * 1024.0)
-        
+
         # Rates for input and output
         timedif, in_rate  = get_counter("sylo.in",  mtime, inOffset)
         timedif, out_rate = get_counter("sylo.out", mtime, outOffset)

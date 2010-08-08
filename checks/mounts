@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -27,23 +27,23 @@
 def inventory_mounts(checktype, info):
     inventory = []
     for dev, mp, fstype, options, dump, fsck in info:
-	if fstype not in [ 'tmpfs' ]:
-	    opts = options.split(",")
-	    opts.sort()
-	    inventory.append( (mp, opts) )
+        if fstype not in [ 'tmpfs' ]:
+            opts = options.split(",")
+            opts.sort()
+            inventory.append( (mp, opts) )
     return inventory
 
 def check_mounts(item, targetopts, info):
     for dev, mp, fstype, options, dump, fsck in info:
-	if item == mp:
+        if item == mp:
             targetopts.sort()
-	    opts = options.split(",")
-	    opts.sort()
-	    if opts != targetopts:
-		return (2, "CRIT - mount options are %s, expected are %s" % (",".join(opts), ",".join(targetopts)))
-	    else:
-		return (0, "OK - mount options are %s" % (",".join(opts)))
+            opts = options.split(",")
+            opts.sort()
+            if opts != targetopts:
+                return (2, "CRIT - mount options are %s, expected are %s" % (",".join(opts), ",".join(targetopts)))
+            else:
+                return (0, "OK - mount options are %s" % (",".join(opts)))
     return (3, "UNKNOWN - filesystem not mounted")
-	    
+
 
 check_info['mounts'] = ( check_mounts, "Mount options of %s", 0, inventory_mounts)

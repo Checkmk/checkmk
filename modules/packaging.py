@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -76,7 +76,7 @@ def do_packaging(args):
         sys.exit(1)
     command = args[0]
     args = args[1:]
-        
+
     commands = {
         "create"  : package_create,
         "release" : package_release,
@@ -98,10 +98,10 @@ def do_packaging(args):
         allc = commands.keys()
         allc.sort()
         allc = [ tty_bold + c + tty_normal for c in allc ]
-        sys.stderr.write("Invalid packaging command. Allowed are: %s and %s.\n" % 
+        sys.stderr.write("Invalid packaging command. Allowed are: %s and %s.\n" %
                 (", ".join(allc[:-1]), allc[-1]))
         sys.exit(1)
-    
+
 def package_list(args):
     if len(args) > 0:
         for name in args:
@@ -249,10 +249,10 @@ def package_pack(args):
     # Make sure, user is not in data directories of Check_MK
     p = os.path.abspath(os.curdir)
     for dir in [var_dir] + [ dir for x,y,dir in package_parts ]:
-	if p == dir or p.startswith(dir + "/"):
-	    raise PackageException("You are in %s!\n"
+        if p == dir or p.startswith(dir + "/"):
+            raise PackageException("You are in %s!\n"
                                "Please leave the directories of Check_MK before creating\n"
-			       "a packet file. Foreign files lying around here will mix up things." % p)
+                               "a packet file. Foreign files lying around here will mix up things." % p)
 
     pacname = args[0]
     package = read_package(pacname)
@@ -272,9 +272,9 @@ def package_pack(args):
         info.type = tarfile.REGTYPE
         info.name = filename
         return info
-    
+
     tar = tarfile.open(tarfilename, "w:gz")
-    info_file = fake_file(pprint.pformat(package)) 
+    info_file = fake_file(pprint.pformat(package))
     info = create_info("info", info_file.size())
     tar.addfile(info, info_file)
 
@@ -336,7 +336,7 @@ def package_install(args):
         update = False
 
     # Before installing check for conflicts
-    keep_files = {}    
+    keep_files = {}
     for part, title, dir in package_parts:
         packaged = packaged_files_in_dir(part)
         keep = []
@@ -346,7 +346,7 @@ def package_install(args):
         for fn in package["files"].get(part, []):
             path = dir + "/" + fn
             if update and fn in old_files:
-               keep.append(fn) 
+                keep.append(fn)
             elif fn in packaged:
                 raise PackageException("File conflict: %s is part of another package." % path)
             elif os.path.exists(path):
@@ -391,7 +391,7 @@ def files_in_dir(part, dir, prefix = ""):
     taboo_dirs = [ d for p, t, d in package_parts if p != part ]
     if dir in taboo_dirs:
         return []
-        
+
     result = []
     files = os.listdir(dir)
     for f in files:
@@ -417,7 +417,7 @@ def packaged_files_in_dir(part):
         if package:
             result += package["files"].get(part, [])
     return result
-   
+
 def read_package(pacname):
     try:
         package = eval(file(pac_dir + pacname).read())
@@ -437,5 +437,3 @@ def all_packages():
     all = [ p for p in os.listdir(pac_dir) if p not in [ '.', '..' ] ]
     all.sort()
     return all
-
-

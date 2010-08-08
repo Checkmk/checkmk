@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -56,57 +56,57 @@ def check_oracle_inst(inst, params, info):
         warn, crit = oracle_free_session_slots_levels
 
     for line in info:
-         if line[0] == inst:
-             try:
-                 if len(line) >= 8 and (( line[7] == "OPEN" )
-                                     or ( line[7] == "MOUNTED" and line[13] == "STANDBY")):
-                     since   = line[2]
-                     release = line[6]
-                     db_state = line[7]
-                     recover_files = int(line[10])
-                     logging_ts = int(line[11])
-                     freeslots = int(line[12])
-                     db_type = line[13]
+        if line[0] == inst:
+            try:
+                if len(line) >= 8 and (( line[7] == "OPEN" )
+                                    or ( line[7] == "MOUNTED" and line[13] == "STANDBY")):
+                    since   = line[2]
+                    release = line[6]
+                    db_state = line[7]
+                    recover_files = int(line[10])
+                    logging_ts = int(line[11])
+                    freeslots = int(line[12])
+                    db_type = line[13]
 
-                     if len(line) > 14:
+                    if len(line) > 14:
                         fb_state = line[14]
-                     else:
+                    else:
                         fb_state = "N/A"
 
-                     perfdata=[ ("freeslots", str(freeslots), warn, crit) ]
+                    perfdata=[ ("freeslots", str(freeslots), warn, crit) ]
 
-                     infotxt = ""
-                     status = 0
-                     statustxt = "OK"
-                     if freeslots < crit:
-                         infotxt += " - only %d free session slots" % freeslots
-                         statustxt = "CRIT"
-                         status = 2
-                     elif freeslots < warn:
-                         infotxt += " - only %d free session slots" % freeslots
-                         statustxt = "WARNING"
-                         status = 1
-                     if recover_files > 0:
-                         infotxt += " - %d recover files" % recover_files
-                         statustxt = "CRIT"
-                         status = 2
-                     if logging_ts > 0:
-                         infotxt += " - %d tables spaces with logging" % logging_ts
-                         statustxt = "CRIT"
-                         status = 2
-                     if fb_state == "NO":
-                         infotxt += " - flashback is deactivated"
-                         statustxt = "WARNING"
-                         status = 1
-                     if db_type == "STANDBY" and line[7] == "OPEN":
-                         infotxt += " - standby is open readonly"
-                         statustxt = "CRIT"
-                         status = 2
-                     return (status, (statustxt + " - Type %s State %s Release %s FB %s" + infotxt) % (db_type, db_state, release, fb_state), perfdata)
-                 else:
-                     return (2, "CRIT - Cannot login: %s %s %s" % (line[1], line[2], line[3]))
-             except IndexError:
-                 return (2, "CRIT - Incomplete output from plugin: %s" % (" ".join(line)))
+                    infotxt = ""
+                    status = 0
+                    statustxt = "OK"
+                    if freeslots < crit:
+                        infotxt += " - only %d free session slots" % freeslots
+                        statustxt = "CRIT"
+                        status = 2
+                    elif freeslots < warn:
+                        infotxt += " - only %d free session slots" % freeslots
+                        statustxt = "WARNING"
+                        status = 1
+                    if recover_files > 0:
+                        infotxt += " - %d recover files" % recover_files
+                        statustxt = "CRIT"
+                        status = 2
+                    if logging_ts > 0:
+                        infotxt += " - %d tables spaces with logging" % logging_ts
+                        statustxt = "CRIT"
+                        status = 2
+                    if fb_state == "NO":
+                        infotxt += " - flashback is deactivated"
+                        statustxt = "WARNING"
+                        status = 1
+                    if db_type == "STANDBY" and line[7] == "OPEN":
+                        infotxt += " - standby is open readonly"
+                        statustxt = "CRIT"
+                        status = 2
+                    return (status, (statustxt + " - Type %s State %s Release %s FB %s" + infotxt) % (db_type, db_state, release, fb_state), perfdata)
+                else:
+                    return (2, "CRIT - Cannot login: %s %s %s" % (line[1], line[2], line[3]))
+            except IndexError:
+                return (2, "CRIT - Incomplete output from plugin: %s" % (" ".join(line)))
 
     return (2, "CRIT - ora_pmon_%s not running" % inst)
 

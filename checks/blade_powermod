@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -26,19 +26,19 @@
 
 
 def inventory_blade_powermod(checkname, info):
-   return [ (line[0], '', '""') for line in info if line[1] == '1' ]
+    return [ (line[0], '', '""') for line in info if line[1] == '1' ]
 
 def check_blade_powermod(index, _no_param, info):
-   for line in info:
-      if line[0] == index:
-         present, status, text = line[1:]
-         if present != "1":
-            return (2, "CRIT - Not present")
-         elif status != "1":
-            return (2, "CRIT - %s" % text)
-         else:
-            return (0, "OK - %s" % text)
-   return (3, "Module %s not found in SNMP info" % index)
+    for line in info:
+        if line[0] == index:
+            present, status, text = line[1:]
+            if present != "1":
+                return (2, "CRIT - Not present")
+            elif status != "1":
+                return (2, "CRIT - %s" % text)
+            else:
+                return (0, "OK - %s" % text)
+    return (3, "Module %s not found in SNMP info" % index)
 
 
 check_info['blade_powermod'] = (check_blade_powermod, "Power Module %s", 0, inventory_blade_powermod)

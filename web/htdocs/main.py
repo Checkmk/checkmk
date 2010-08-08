@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -38,7 +38,7 @@ def page_index(html):
     <frame src="side.py" name="side" noresize>
     <frame src="main.py" name="main" noresize>
 </html>
-""") 
+""")
 
 def page_main(html):
     html.header("Check_MK Multisite")
@@ -76,4 +76,4 @@ No network traffic is generated due to the monitoring.</p>
 # been reconfigured according to the variable _site_switch,
 # because that variable is processed by connect_to_livestatus()
 def ajax_switch_site(html):
-    pass 
+    pass

@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -33,13 +33,13 @@
 #    /_/   \_\_|  |___|    |____/ \___/ \___|\__,_|                   #
 #                                                                     #
 # =================================================================== #
-# 
-# A sorter is used for allowing the user to sort the queried data 
+#
+# A sorter is used for allowing the user to sort the queried data
 # according to a certain logic. All sorters declare in plugins/views/*.py
 # are available for the user.
 #
 # Each sorter is a dictionary with the following keys:
-#  
+#
 # "title":    Name of the sorter to be displayed in view editor
 # "columns":  Livestatus-columns needed be the sort algorithm
 # "cmp":      Comparison function
@@ -50,7 +50,7 @@
 #
 # -1: The first row is smaller than the second (should be output first)
 #  0: Both rows are equivalent
-#  1: The first row is greater than the second. 
+#  1: The first row is greater than the second.
 #
 # The rows are dictionaries from column names to values. Each row
 # represents one item in the Livestatus table, for example one host,
@@ -69,41 +69,41 @@ def cmp_atoms(s1, s2):
 
 def cmp_state_equiv(r):
     if r["service_has_been_checked"] == 0:
-	return -1
+        return -1
     s = r["service_state"]
     if s <= 1:
-	return s
+        return s
     else:
-	return 5 - s # swap crit and unknown
+        return 5 - s # swap crit and unknown
 
 def cmp_host_state_equiv(r):
     if r["host_has_been_checked"] == 0:
-	return -1
+        return -1
     s = r["host_state"]
     if s == 0:
-	return 0
+        return 0
     else:
-	return 2 - s # swap down und unreachable
+        return 2 - s # swap down und unreachable
 
 def cmp_svc_states(r1, r2):
     return cmp_atoms(cmp_state_equiv(r1), cmp_state_equiv(r2))
-   
+
 def cmp_hst_states(r1, r2):
     return cmp_atoms(cmp_host_state_equiv(r1), cmp_host_state_equiv(r2))
-   
+
 def cmp_simple_string(column, r1, r2):
     v1, v2 = r1[column], r2[column]
     c = cmp_atoms(v1.lower(), v2.lower())
     # force a strict order in case of equal spelling but different
     # case!
     if c == 0:
-	return cmp_atoms(v1, v2)
+        return cmp_atoms(v1, v2)
     else:
-	return c
-    
+        return c
+
 def cmp_simple_number(column, r1, r2):
     return cmp_atoms(r1[column], r2[column])
-    
+
 multisite_sorters["svcstate"] = {
     "title"   : "Service state",
     "columns" : ["service_state", "service_has_been_checked"],
@@ -119,9 +119,9 @@ multisite_sorters["hoststate"] = {
 def cmp_site_host(r1, r2):
     c = cmp_atoms(r1["site"], r2["site"])
     if c != 0:
-	return c
+        return c
     else:
-	return cmp_simple_string("host_name", r1, r2)
+        return cmp_simple_string("host_name", r1, r2)
 
 multisite_sorters["site_host"] = {
     "title"   : "Host",
@@ -131,8 +131,8 @@ multisite_sorters["site_host"] = {
 
 def declare_simple_sorter(name, title, column, func):
     multisite_sorters[name] = {
-	"title"   : title,
-	"columns" : [ column ],
+        "title"   : title,
+        "columns" : [ column ],
         "cmp"     : lambda r1, r2: func(column, r1, r2)
     }
 

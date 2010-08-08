@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -45,11 +45,11 @@ def perfometer_check_mk(row, check_command, perf_data):
     elif exectime < 60:
         color = "#f84"
     else:
-	color = "#f44"
+        color = "#f44"
 
     return "%.1fs" % exectime, perfometer_linear(perc, color)
 perfometers["check-mk"] = perfometer_check_mk
-    
+
 def perfometer_check_mk_df(row, check_command, perf_data):
     h = '<table><tr>'
     varname, value, unit, warn, crit, minn, maxx = perf_data[0]
@@ -111,7 +111,7 @@ perfometers["check_mk-mem.used"] = perfometer_check_mk_mem_used
 
 # def perfometer_check_mk_kernel(row, check_command, perf_data):
 #     return "%d/s" % int(perf_data[0][1]), perfometer_logarithmic(perf_data[0][1], 1000, 10, "#f2a")
-# 
+#
 # perfometers["check_mk-kernel"] = perfometer_check_mk_kernel
 
 def perfometer_check_mk_cpu_threads(row, check_command, perf_data):
@@ -123,7 +123,7 @@ perfometers["check_mk-cpu.threads"] = perfometer_check_mk_cpu_threads
 
 def perfometer_check_mk_cpu_loads(row, check_command, perf_data):
     color = { 0: "#68f", 1: "#ff2", 2: "#f22", 3: "#fa2" }[row["service_state"]]
-    load = float(perf_data[0][1]) 
+    load = float(perf_data[0][1])
     return "%.1f" % load, perfometer_logarithmic(load, 4, 2, color)
 
 
@@ -140,7 +140,7 @@ def perfometer_check_mk_ntp(row, check_command, perf_data):
     rel = 50 * (absoffset / max)
 
     color = { 0: "#0f8", 1: "#ff2", 2: "#f22", 3: "#fa2" }[row["service_state"]]
-    
+
     h = '<table><tr>'
     if offset > 0:
         h += perfometer_td(50, "#fff")
@@ -162,7 +162,7 @@ def perfometer_check_mk_ipmi_sensors(row, check_command, perf_data):
     color = { 0: "#06f", 1: "#ff2", 2: "#f22", 3: "#fa2" }[state]
     value = float(perf_data[0][1])
     crit = float(perf_data[0][4])
-    perc = 100 * value / crit 
+    perc = 100 * value / crit
     # some sensors get critical if the value is < crit (fans), some if > crit (temp)
     h = '<table><tr>'
     if value <= crit:

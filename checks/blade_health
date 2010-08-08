@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -26,14 +26,14 @@
 
 def inventory_blade_health(checkname, info):
     if len(info) == 1:
-	return [(None, None, None)]
+        return [(None, None, None)]
 
 def check_blade_health(_no_item, _no_params, info):
     state = info[0][0]
     if state == "255":
         return (0, "OK - State is good")
     elif state == "2":
-	return (2, "CRIT - State is degraded (non critical)")
+        return (2, "CRIT - State is degraded (non critical)")
     elif state == "4":
         return (1, "WARN - State is degraded (system level)")
     elif state == "0":

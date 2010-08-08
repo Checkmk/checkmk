@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -160,7 +160,7 @@ def status_worse(newstatus, status):
 def submit_aggregated_results(hostname):
     if not host_is_aggregated(hostname):
         return
-    
+
     if opt_verbose:
         print "\n%s%sAggregates Services:%s" % (tty_bold, tty_blue, tty_normal)
     global g_aggregated_service_results
@@ -170,21 +170,21 @@ def submit_aggregated_results(hostname):
     for servicedesc, (count, status, outputlist) in items:
         if aggregation_output_format == "multiline":
             longoutput = ""
-	    statuscounts = [ 0, 0, 0, 0 ]
-	    for itemstatus, item, output in outputlist:
-		longoutput += '\\n%s: %s' % (item, output)	
-		statuscounts[itemstatus] = statuscounts[itemstatus] + 1
-	    summarytexts = [ "%d service%s %s" % (x[0], x[0] != 1 and "s" or "", x[1]) 
-			   for x in zip(statuscounts, ["OK", "WARN", "CRIT", "UNKNOWN" ]) if x[0] > 0 ]
-	    text = ", ".join(summarytexts) + longoutput
+            statuscounts = [ 0, 0, 0, 0 ]
+            for itemstatus, item, output in outputlist:
+                longoutput += '\\n%s: %s' % (item, output)
+                statuscounts[itemstatus] = statuscounts[itemstatus] + 1
+            summarytexts = [ "%d service%s %s" % (x[0], x[0] != 1 and "s" or "", x[1])
+                           for x in zip(statuscounts, ["OK", "WARN", "CRIT", "UNKNOWN" ]) if x[0] > 0 ]
+            text = ", ".join(summarytexts) + longoutput
         else:
             if status == 0:
                 text = "OK - %d services OK" % count
             else:
                 text = " *** ".join([ item + " " + output for itemstatus, item, output in outputlist ])
-            
+
         if not opt_dont_submit and nagios_command_pipe:
-            nagios_command_pipe.write("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" % 
+            nagios_command_pipe.write("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" %
                 (int(time.time()), aggr_hostname, servicedesc, status, text))
             nagios_command_pipe.flush()
 
@@ -202,18 +202,18 @@ def submit_aggregated_results(hostname):
 def submit_check_mk_aggregation(hostname, status, output):
     if not host_is_aggregated(hostname):
         return
-   	
+
     if not opt_dont_submit:
-       open_command_pipe()
-       if nagios_command_pipe:
-           nagios_command_pipe.write("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;Check_MK;%d;%s\n" % 
-                 (int(time.time()), summary_hostname(hostname), status, output))
-           nagios_command_pipe.flush()
+        open_command_pipe()
+        if nagios_command_pipe:
+            nagios_command_pipe.write("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;Check_MK;%d;%s\n" %
+                  (int(time.time()), summary_hostname(hostname), status, output))
+            nagios_command_pipe.flush()
     if opt_verbose:
         color = { 0: tty_green, 1: tty_yellow, 2: tty_red, 3: tty_magenta }[status]
         print "%-20s %s%s%-70s%s" % ("Check_MK", tty_bold, color, output, tty_normal)
-        
-   
+
+
 #   +----------------------------------------------------------------------+
 #   |                 ____      _         _       _                        |
 #   |                / ___| ___| |_    __| | __ _| |_ __ _                 |
@@ -242,13 +242,13 @@ def submit_check_mk_aggregation(hostname, status, output):
 
 def get_host_info(hostname, ipaddress, checkname):
     nodes = nodes_of(hostname)
-    
+
     if nodes != None:
         info = []
         at_least_one_without_exception = False
         exception_texts = []
-	global opt_use_cachefile
-	opt_use_cachefile = True
+        global opt_use_cachefile
+        opt_use_cachefile = True
         for node in nodes:
             # If an error with the agent occurs, we still can (and must)
             # try the other node.
@@ -277,65 +277,65 @@ def get_host_info(hostname, ipaddress, checkname):
 # This function assumes, that each check type is queried
 # only once for each host.
 def get_realhost_info(hostname, ipaddress, checkname, max_cache_age):
-   info = get_cached_hostinfo(hostname)
-   if info and info.has_key(checkname): 
-       return info[checkname]
+    info = get_cached_hostinfo(hostname)
+    if info and info.has_key(checkname):
+        return info[checkname]
 
-   cache_relpath = hostname + "." + checkname
+    cache_relpath = hostname + "." + checkname
 
-   # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
-   oid_info = snmp_info.get(checkname)
-   if oid_info:
-       content = read_cache_file(cache_relpath, max_cache_age)
-       if content:
-           return eval(content)
-       # New in 1.1.3: oid_info can now be a list: Each element
-       # of that list is interpreted as one real oid_info, fetches
-       # a separate snmp table. The overall result is then the list
-       # of these results.
-       if type(oid_info) == list:
-	   table = [ get_snmp_table(hostname, ipaddress, entry) for entry in oid_info ]
-           # if at least one query fails, we discard the hole table
-           if None in table:
-               table = None
-       else:
-	   table = get_snmp_table(hostname, ipaddress, oid_info)
-       store_cached_checkinfo(hostname, checkname, table)
-       write_cache_file(cache_relpath, repr(table) + "\n")
-       return table
+    # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
+    oid_info = snmp_info.get(checkname)
+    if oid_info:
+        content = read_cache_file(cache_relpath, max_cache_age)
+        if content:
+            return eval(content)
+        # New in 1.1.3: oid_info can now be a list: Each element
+        # of that list is interpreted as one real oid_info, fetches
+        # a separate snmp table. The overall result is then the list
+        # of these results.
+        if type(oid_info) == list:
+            table = [ get_snmp_table(hostname, ipaddress, entry) for entry in oid_info ]
+            # if at least one query fails, we discard the hole table
+            if None in table:
+                table = None
+        else:
+            table = get_snmp_table(hostname, ipaddress, oid_info)
+        store_cached_checkinfo(hostname, checkname, table)
+        write_cache_file(cache_relpath, repr(table) + "\n")
+        return table
 
-   # now try SNMP explicity values
-   try:
-      mib, baseoid, suffixes = snmp_info_single[checkname]
-   except:
-      baseoid = None
-   if baseoid:
-       content = read_cache_file(cache_relpath, max_cache_age)
-       if content:
-           return eval(content)
-       table = get_snmp_explicit(hostname, ipaddress, mib, baseoid, suffixes)
-       store_cached_checkinfo(hostname, checkname, table)
-       write_cache_file(cache_relpath, repr(table) + "\n")
-       return table
+    # now try SNMP explicity values
+    try:
+        mib, baseoid, suffixes = snmp_info_single[checkname]
+    except:
+        baseoid = None
+    if baseoid:
+        content = read_cache_file(cache_relpath, max_cache_age)
+        if content:
+            return eval(content)
+        table = get_snmp_explicit(hostname, ipaddress, mib, baseoid, suffixes)
+        store_cached_checkinfo(hostname, checkname, table)
+        write_cache_file(cache_relpath, repr(table) + "\n")
+        return table
 
-   # No SNMP check. Then we must contact the check_mk_agent. Have we already
-   # to get data from the agent? If yes we must not do that again!
-   if g_agent_already_contacted.has_key(hostname):
-       return []
-   
-   g_agent_already_contacted[hostname] = True
-   store_cached_hostinfo(hostname, []) # leave emtpy info in case of error
+    # No SNMP check. Then we must contact the check_mk_agent. Have we already
+    # to get data from the agent? If yes we must not do that again!
+    if g_agent_already_contacted.has_key(hostname):
+        return []
 
-   output = get_agent_info(hostname, ipaddress, max_cache_age)
-   if len(output) == 0:
-       raise MKAgentError("Empty output from agent")
-   elif len(output) < 16:
-       raise MKAgentError("Too short output from agent: '%s'" % output)
-          
-   lines = [ l.strip() for l in output.split('\n') ]
-   info = parse_info(lines)
-   store_cached_hostinfo(hostname, info)
-   return info.get(checkname, []) # return only data for specified check
+    g_agent_already_contacted[hostname] = True
+    store_cached_hostinfo(hostname, []) # leave emtpy info in case of error
+
+    output = get_agent_info(hostname, ipaddress, max_cache_age)
+    if len(output) == 0:
+        raise MKAgentError("Empty output from agent")
+    elif len(output) < 16:
+        raise MKAgentError("Too short output from agent: '%s'" % output)
+
+    lines = [ l.strip() for l in output.split('\n') ]
+    info = parse_info(lines)
+    store_cached_hostinfo(hostname, info)
+    return info.get(checkname, []) # return only data for specified check
 
 
 def read_cache_file(relpath, max_cache_age):
@@ -371,7 +371,7 @@ def write_cache_file(relpath, output):
             raise MKGeneralException("Cannot create directory %s: %s" % (tcp_cache_dir, e))
     try:
         # write retrieved information to cache file - if we are not root.
-        # We assume that Nagios never runs as root. 
+        # We assume that Nagios never runs as root.
         if not i_am_root():
             f = open(cachefile, "w+")
             f.write(output)
@@ -397,7 +397,7 @@ def get_agent_info(hostname, ipaddress, max_cache_age):
         output = get_agent_info_program(commandline)
     else:
         output = get_agent_info_tcp(hostname, ipaddress)
-    
+
     # Got new data? Write to cache file
     write_cache_file(hostname, output)
 
@@ -480,8 +480,8 @@ def parse_info(lines):
     chunkoptions = {}
     separator = None
     for line in lines:
-	if line[:3] == '<<<' and line[-3:] == '>>>':
-	    chunkheader = line[3:-3]
+        if line[:3] == '<<<' and line[-3:] == '>>>':
+            chunkheader = line[3:-3]
             # chunk header has format <<<name:opt1(args):opt2:opt3(args)>>>
             headerparts = chunkheader.split(":")
             chunkname = headerparts[0]
@@ -496,15 +496,15 @@ def parse_info(lines):
                 chunkoptions[opt_name] = opt_args
 
             chunk = info.get(chunkname, None)
-	    if chunk == None: # chunk appears in output for the first time
-		chunk = []
-	        info[chunkname] = chunk
+            if chunk == None: # chunk appears in output for the first time
+                chunk = []
+                info[chunkname] = chunk
             try:
                 separator = chr(int(chunkoptions["sep"]))
             except:
                 separator = None
         elif line != '':
-	    chunk.append(line.split(separator))
+            chunk.append(line.split(separator))
     return info
 
 
@@ -559,16 +559,16 @@ def get_counter(countername, this_time, this_val):
     if not countername in g_counters:
         g_counters[countername] = (this_time, this_val)
         # Do not suppress this check on check_mk -nv
-	if opt_dont_submit:
-	    return 1.0, 0.0 
-        raise MKCounterWrapped(countername)  
-	 
+        if opt_dont_submit:
+            return 1.0, 0.0
+        raise MKCounterWrapped(countername)
+
     last_time, last_val = g_counters.get(countername)
     timedif = this_time - last_time
     if timedif <= 0: # do not update counter
         # Do not suppress this check on check_mk -nv
-	if opt_dont_submit:
-	    return 1.0, 0.0 
+        if opt_dont_submit:
+            return 1.0, 0.0
         raise MKCounterWrapped(countername)
 
     # update counter for next time
@@ -576,19 +576,19 @@ def get_counter(countername, this_time, this_val):
 
     valuedif = this_val - last_val
     if valuedif < 0:
-	 # Do not try to handle wrapper counters. We do not know
-	 # wether they are 32 or 64 bit. It also could happen counter
-	 # reset (reboot, etc.). Better is to leave this value undefined
-	 # and wait for the next check interval.
-	 # Do not suppress this check on check_mk -nv
-	 if opt_dont_submit:
-	     return 1.0, 0.0 
-	 raise MKCounterWrapped(countername)
+        # Do not try to handle wrapper counters. We do not know
+        # wether they are 32 or 64 bit. It also could happen counter
+        # reset (reboot, etc.). Better is to leave this value undefined
+        # and wait for the next check interval.
+        # Do not suppress this check on check_mk -nv
+        if opt_dont_submit:
+            return 1.0, 0.0
+        raise MKCounterWrapped(countername)
 
     per_sec = float(valuedif) / timedif
     return timedif, per_sec
 
-    
+
 def save_counters(hostname):
     if not opt_dont_submit and not i_am_root(): # never writer counters as root
         global g_counters
@@ -621,7 +621,7 @@ def do_check(hostname, ipaddress):
         sys.stderr.write("Check_mk version %s\n" % check_mk_version)
 
     start_time = time.time()
-    
+
     try:
         load_counters(hostname)
         agent_version, num_success, num_errors = do_all_checks_on_host(hostname, ipaddress)
@@ -635,7 +635,7 @@ def do_check(hostname, ipaddress):
         elif agent_min_version and agent_version < agent_min_version:
             output = "WARNING - old plugin version %s (should be at least %s)" % (agent_version, agent_min_version)
             status = 1
-        else:   
+        else:
             output = "OK - Agent Version %s, processed %d host infos" % (agent_version, num_success)
             status = 0
 
@@ -655,8 +655,8 @@ def do_check(hostname, ipaddress):
         try:
             submit_check_mk_aggregation(hostname, status, output)
         except:
-	    if opt_debug:
-	        raise
+            if opt_debug:
+                raise
 
     run_time = time.time() - start_time
     output += " in %.1f sec|execution_time=%.3f\n" % (run_time, run_time)
@@ -681,65 +681,65 @@ def do_all_checks_on_host(hostname, ipaddress):
             aggrname = info
         else:
             aggrname = aggregated_service_name(hostname, description)
-        
+
         infotype = checkname.split('.')[0]
         info = get_host_info(hostname, ipaddress, infotype)
         if info or info == []:
-           num_success += 1
-           try:
-               check_funktion = check_info[checkname][0]
-           except:
-               raise MKGeneralException("Unknown check type %s" % checkname)
+            num_success += 1
+            try:
+                check_funktion = check_info[checkname][0]
+            except:
+                raise MKGeneralException("Unknown check type %s" % checkname)
 
-           try:
-	       dont_submit = False
-               result = check_funktion(item, params, info)
-           # handle check implementations that do not yet support the
-           # handling of wrapped counters via exception. Do not submit
-           # any check result in that case:
-	   except MKCounterWrapped:
-	       if opt_verbose:
-		  print "Counter wrapped, not handled by check, ignoring this check result"
-	       dont_submit = True
-           except Exception, e:
-               result = (3, "UNKNOWN - invalid output from plugin section <<<%s>>> or error in check type %s" %
-                         (infotype, checkname))
-               if debug_log:
-                   try:
-                       import traceback, pprint
-                       l = file(debug_log, "a")
-                       l.write(("Invalid output from plugin or error in check:\n"
-                               "  Date:         %s\n"
-                               "  Host:         %s\n"
-                               "  Service:      %s\n"
-                               "  Check type:   %s\n"
-                               "  %s\n"
-                               "  Agent info:   %s\n\n") % (
-                               time.strftime("%Y-%d-%m %H:%M:%S"),
-                               hostname, description, checkname,
-                               traceback.format_exc().replace('\n', '\n      '),
-                               pprint.pformat(info)))
-                   except:
-                       pass
+            try:
+                dont_submit = False
+                result = check_funktion(item, params, info)
+            # handle check implementations that do not yet support the
+            # handling of wrapped counters via exception. Do not submit
+            # any check result in that case:
+            except MKCounterWrapped:
+                if opt_verbose:
+                    print "Counter wrapped, not handled by check, ignoring this check result"
+                dont_submit = True
+            except Exception, e:
+                result = (3, "UNKNOWN - invalid output from plugin section <<<%s>>> or error in check type %s" %
+                          (infotype, checkname))
+                if debug_log:
+                    try:
+                        import traceback, pprint
+                        l = file(debug_log, "a")
+                        l.write(("Invalid output from plugin or error in check:\n"
+                                "  Date:         %s\n"
+                                "  Host:         %s\n"
+                                "  Service:      %s\n"
+                                "  Check type:   %s\n"
+                                "  %s\n"
+                                "  Agent info:   %s\n\n") % (
+                                time.strftime("%Y-%d-%m %H:%M:%S"),
+                                hostname, description, checkname,
+                                traceback.format_exc().replace('\n', '\n      '),
+                                pprint.pformat(info)))
+                    except:
+                        pass
 
-               if opt_debug:
-                   raise
-	   if not dont_submit:
-               submit_check_result(hostname, description, result, aggrname)
+                if opt_debug:
+                    raise
+            if not dont_submit:
+                submit_check_result(hostname, description, result, aggrname)
         else:
-           num_errors += 1
+            num_errors += 1
 
     submit_aggregated_results(hostname)
-           
+
     try:
-       if not is_snmp_host(hostname):
-           version_info = get_host_info(hostname, ipaddress, 'check_mk')
-           # TODO: remove this later, when all agents have been converted
-           if not version_info:
-               version_info = get_host_info(hostname, ipaddress, 'mknagios')
-           agent_version = version_info[0][1]
-       else:
-           agent_version = "(unknown)"
+        if not is_snmp_host(hostname):
+            version_info = get_host_info(hostname, ipaddress, 'check_mk')
+            # TODO: remove this later, when all agents have been converted
+            if not version_info:
+                version_info = get_host_info(hostname, ipaddress, 'mknagios')
+            agent_version = version_info[0][1]
+        else:
+            agent_version = "(unknown)"
     except MKAgentError, e:
         raise
     except:
@@ -776,7 +776,7 @@ def none_to_empty(x):
 def submit_check_result(host, servicedesc, result, sa):
     global nagios_command_pipe
     # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
-    
+
     # Aggregated service -> store for later
     if sa != "":
         store_aggregated_service_result(host, servicedesc, sa, result[0], result[1])
@@ -796,27 +796,27 @@ def submit_check_result(host, servicedesc, result, sa):
             del perfdata[-1]
         else:
             check_command = None
-            
+
         for p in perfdata:
-	    # replace None with "" and fill up to 6 values
-	    p = (map(none_to_empty, p) + ['','','',''])[0:6]
+            # replace None with "" and fill up to 6 values
+            p = (map(none_to_empty, p) + ['','','',''])[0:6]
             perftexts.append("%s=%s;%s;%s;%s;%s" %  tuple(p) )
         if perftexts != [] and not direct_rrd_update(host, servicedesc, perfdata):
             if check_command and perfdata_format == "pnp":
                 perftexts.append("[%s]" % check_command)
             perftext = "|" + (" ".join(perftexts))
-    
+
     if not opt_dont_submit:
-       open_command_pipe()
-       if nagios_command_pipe:
-          nagios_command_pipe.write("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" % 
-                                 (int(time.time()), host, servicedesc, result[0], result[1] + perftext)  )
-          # Important: Nagios needs the complete command in one single write() block!
-          # Python buffers and sends chunks of 4096 bytes, if we do not flush.
-          nagios_command_pipe.flush()
+        open_command_pipe()
+        if nagios_command_pipe:
+            nagios_command_pipe.write("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" %
+                                   (int(time.time()), host, servicedesc, result[0], result[1] + perftext)  )
+            # Important: Nagios needs the complete command in one single write() block!
+            # Python buffers and sends chunks of 4096 bytes, if we do not flush.
+            nagios_command_pipe.flush()
 
     if opt_verbose:
-        if opt_showperfdata:  
+        if opt_showperfdata:
             p = ' (%s)' % (" ".join(perftexts))
         else:
             p = ''
@@ -867,7 +867,7 @@ def nodes_of(hostname):
         if hostname == tagged_hostname.split("|")[0]:
             return nodes
     return None
-    
+
 # needed by df, df_netapp and vms_df and maybe others in future:
 # compute warning and critical levels. Takes into account the size of
 # the filesystem and the magic number. Since the size is only known at
@@ -884,19 +884,19 @@ def get_filesystem_levels(host, mountpoint, size_gb, params):
     if len(params) < 3:
         params = (params[0], params[1], 1.0)
         lowest_warning_level = 0
-	lowest_critical_level = 0
+        lowest_critical_level = 0
     else:
-	lowest_warning_level = df_lowest_warning_level
-	lowest_critical_level = df_lowest_critical_level
-      
+        lowest_warning_level = df_lowest_warning_level
+        lowest_critical_level = df_lowest_critical_level
+
     (warn, crit, magicfactor) = params    # warn and crit are in percent
-    
+
     hgb_size = size_gb / float(df_magicnumber_normsize)
     felt_size = hgb_size ** magicfactor
     scale = felt_size / hgb_size
     warn_scaled = 100 - (( 100 - warn ) * scale)
     crit_scaled = 100 - (( 100 - crit ) * scale)
-   
+
     # Make sure, levels do never get too low due to magic factor
     if warn_scaled < lowest_warning_level:
         warn_scaled = lowest_warning_level
@@ -909,7 +909,7 @@ def get_filesystem_levels(host, mountpoint, size_gb, params):
     levelstext  = "(levels at %.1f/%.1f%%)" % (warn_scaled, crit_scaled)
 
     return warn_mb, crit_mb, levelstext
-    
+
 
 #   +----------------------------------------------------------------------+
 #   |     ____ _               _      _          _                         |
@@ -926,8 +926,8 @@ def get_filesystem_levels(host, mountpoint, size_gb, params):
 # check range, values might be negative!
 # returns True, if value is inside the interval
 def within_range(value, minv, maxv):
-   if value >= 0: return value >= minv and value <= maxv
-   else: return value <= minv and value >= maxv
+    if value >= 0: return value >= minv and value <= maxv
+    else: return value <= minv and value >= maxv
 
 # compile regex or look it up in already compiled regexes
 # (compiling is a CPU consuming process. We cache compiled

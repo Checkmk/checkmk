@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -79,9 +79,9 @@ def show_host_log_list(host):
             state = worst_log['level']
             state_name = form_level(state)
             html.write("<tr class=%s%d>\n" % (rowno % 2 == 0 and "odd" or "even", state))
-        
+
             html.write("<td class=\"state%d\">%s</td>\n" % (state, state_name))
-            html.write("<td><a href=\"logwatch.py?host=%s&amp;file=%s\">%s</a></td>\n" % 
+            html.write("<td><a href=\"logwatch.py?host=%s&amp;file=%s\">%s</a></td>\n" %
                         (htmllib.urlencode(host), htmllib.urlencode(file_display),htmllib.attrencode(file_display)))
             html.write("<td>%s</td><td>%s</td></tr>\n" % \
                         (form_datetime(last_log['datetime']), len(logs)))
@@ -212,16 +212,16 @@ def get_last_log(logs):
 
 
 def parse_file(host, file, hidecontext = False):
-    logs = [] 
+    logs = []
     try:
-        file_path = defaults.logwatch_dir + '/' + host + '/' + file 
+        file_path = defaults.logwatch_dir + '/' + host + '/' + file
         if not os.path.exists(file_path):
             return []
-        f = open(file_path, 'r') 
-        chunk_open = False 
-        log = None 
+        f = open(file_path, 'r')
+        chunk_open = False
+        log = None
         for line in f.readlines():
-            line = line.strip() 
+            line = line.strip()
             if line == '':
                 continue
 
@@ -244,7 +244,7 @@ def parse_file(host, file, hidecontext = False):
                 # Gather datetime object
                 # Python versions below 2.5 don't provide datetime.datetime.strptime.
                 # Use the following instead:
-                #log['datetime'] = datetime.datetime.strptime(date + ' ' + logtime, "%Y-%m-%d %H:%M:%S") 
+                #log['datetime'] = datetime.datetime.strptime(date + ' ' + logtime, "%Y-%m-%d %H:%M:%S")
                 log['datetime'] = datetime.datetime(*time.strptime(date + ' ' + logtime, "%Y-%m-%d %H:%M:%S")[0:5])
             elif log: # else: not in a chunk?!
                 # Data line

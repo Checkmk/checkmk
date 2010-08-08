@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -26,9 +26,9 @@
 
 def inventory_uptime(checktype, info):
     if len(info) >= 1 and len(info[0]) >= 1:
-	return [ (None, None) ]
+        return [ (None, None) ]
     else:
-	return []
+        return []
 
 def check_uptime(_no_item, _no_params, info):
     uptime = int(float(info[0][0]))
@@ -38,7 +38,7 @@ def check_uptime(_no_item, _no_params, info):
     hours = rem / 60
     now = int(time.time())
     since = time.strftime("%c", time.localtime(now - uptime))
-    return (0, "OK - up since %s (%d:%02d:%02d)" % (since, hours, minutes, seconds), [ ("uptime", uptime) ]) 
+    return (0, "OK - up since %s (%d:%02d:%02d)" % (since, hours, minutes, seconds), [ ("uptime", uptime) ])
 
 
 check_info["uptime"] = (check_uptime, "Uptime", 1, inventory_uptime)

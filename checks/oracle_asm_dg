@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -40,9 +40,9 @@ def check_oracle_asm_dg(name, params, info):
             used_perc = float(used_mb) / float(size_mb) * 100.0;
             warn_mb = size_mb * warn / 100;
             crit_mb = size_mb * crit / 100;
-            
+
             perfdata = [(name, str(used_mb) + 'MB', warn_mb, crit_mb, 0, size_mb)]
-            
+
             if used_perc >= crit:
                 return (2, "CRIT - %.1f%% used (critical at %d%%)" % (used_perc, crit), perfdata)
             elif used_perc >= warn:
@@ -50,7 +50,7 @@ def check_oracle_asm_dg(name, params, info):
             else:
                 return (0, "OK - %.1f%% used" % used_perc, perfdata)
     return (3, "UNKNOWN - disk group not found")
-        
+
 check_info['oracle_asm_dg'] = (
     check_oracle_asm_dg,
     "ASM disk group %s",

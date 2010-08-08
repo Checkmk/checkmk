@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -43,34 +43,34 @@ def check_mrpe(item, params, info):
             check_name = line[0][1:-1]
             line = line[1:]
         else:
-            check_name = None 
+            check_name = None
         if line[0] == item:
             state = int(line[1])
             rest = " ".join(line[2:])
             parts = rest.split("|", 1)
-            # replace first line break with "\\n" -> Nagios expects it like this 
+            # replace first line break with "\\n" -> Nagios expects it like this
             output = parts[0].replace("\1", "\\n", 1).replace("\1", "<br>")
-                           
+
             perfdata = []
             if len(parts) > 1: # found pipe symbol
                 perftxt = parts[1].strip()
                 for perfinfo in perftxt.split(" "):
-		    try:
-                       varname, valuetxt = perfinfo.split("=", 1)
-                       values = valuetxt.split(";")
-                       perfdata.append(tuple( [varname] + values) )
-	            except:
-		       pass
+                    try:
+                        varname, valuetxt = perfinfo.split("=", 1)
+                        values = valuetxt.split(";")
+                        perfdata.append(tuple( [varname] + values) )
+                    except:
+                        pass
 
             # name of check command needed for PNP to choose the correct template
             if check_name:
                 perfdata.append(check_name)
             return (state, output, perfdata)
     return (3, "Check output not found in local checks")
-        
-            
+
+
 check_info['mrpe'] = (
-	check_mrpe,
+        check_mrpe,
         "%s",
         1,
         inventory_mrpe)

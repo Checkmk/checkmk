@@ -7,7 +7,7 @@ filelists = {}
 package = {
     "name"                 : "check_mk",
     "title"                : "Files shipped with Check_MK",
-    "description"          : 
+    "description"          :
         "This package is automatically created during setup of Check_MK "
         "and contains files shipped with the official release of Check_MK.",
     "version"              : sys.argv[1],
@@ -20,15 +20,15 @@ package = {
 
 parts = [ "checks", "checkman", "agents", "web", "pnp-templates", "doc" ]
 for part in parts:
-   tarfile = part + ".tar.gz"
-   filelist = []
-   filelists[part] = filelist
-   for fn in os.popen("tar tzf %s" % tarfile, "r"):
-       fn = fn.strip()
-       if not fn.endswith("/"):
-           filelist.append(fn)
-   # add file created during setup
-   if part == "web":
-       filelist.append("htdocs/defaults.py")
+    tarfile = part + ".tar.gz"
+    filelist = []
+    filelists[part] = filelist
+    for fn in os.popen("tar tzf %s" % tarfile, "r"):
+        fn = fn.strip()
+        if not fn.endswith("/"):
+            filelist.append(fn)
+    # add file created during setup
+    if part == "web":
+        filelist.append("htdocs/defaults.py")
 
 sys.stdout.write(pprint.pformat(package))

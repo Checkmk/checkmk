@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -30,25 +30,25 @@
 #    Personalities : [raid1]
 #    md1 : active raid1 dm-19[0] dm-9[1]
 #          20971456 blocks [2/2] [UU]
-#          20971456 blocks super 1.2 [2/2] [UU] 
+#          20971456 blocks super 1.2 [2/2] [UU]
 #
 #    md2 : active (auto-read-only) raid1 sda6[0] sdb6[1]
 #          4200952 blocks super 1.0 [2/2] [UU]
 #          bitmap: 0/9 pages [0KB], 256KB chunk
-#          
+#
 #          unused devices: <none>
 # ---------------------------------------------------------
 
 # Another example (with RAID 5 and spare disk (md2) and a RAID-0
 # device (md3)
 # ---------------------------------------------------------
-# Personalities : [raid1] [raid6] [raid5] [raid4] 
+# Personalities : [raid1] [raid6] [raid5] [raid4]
 # md2 : active raid5 sde1[3](S) sdd1[0] sdg1[2] sdf1[1]
 #       976767872 blocks level 5, 64k chunk, algorithm 2 [3/3] [UUU]
-#       
+#
 # md0 : active raid1 sdb1[1] sda1[0]
 #       104320 blocks [2/2] [UU]
-#       
+#
 # md1 : active raid1 sdb3[1] sda3[0]
 #       486239232 blocks [2/2] [UU]
 #
@@ -59,14 +59,14 @@
 #
 # md3 : active raid0 sdb3[0] sda3[1]
 #       16386048 blocks 64k chunks
-#       
+#
 # unused devices: <none>
 # ---------------------------------------------------------
 
 def inventory_md(checkname, info):
     inventory = []
     for line in info:
-        if len(line) < 3: 
+        if len(line) < 3:
             continue
         if line[0].startswith("md") and line[1] == ':':
             device = line[0]
@@ -84,7 +84,7 @@ def check_md(item, params, info):
         if line[0] == item and line[1] == ':':
             raid_state = line[2]
             if raid_state != 'active' and raid_state != 'active(auto-read-only)':
-	        return (2, "CRIT - raid state is '%s' (should be 'active')" % (raid_state,))
+                return (2, "CRIT - raid state is '%s' (should be 'active')" % (raid_state,))
             # Usually (auto-read-only) sticks to active without a space.
             # But on some kernels it appears separated by a space
             if line[3] == '(auto-read-only)':

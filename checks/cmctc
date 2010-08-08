@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -35,52 +35,52 @@
 # 7: description
 
 def inventory_cmctc_temp(checkname, info):
-   # return all temperature sensors
-   return [ (line[0], line[7], None) \
-               for line in info if int(line[1]) == 10 ]
+    # return all temperature sensors
+    return [ (line[0], line[7], None) \
+                for line in info if int(line[1]) == 10 ]
 
 def check_cmctc_temp(item, no_params, info):
-   for line in info: # , value1, value2 in info:
-      if line[0] != item:
-         continue
+    for line in info: # , value1, value2 in info:
+        if line[0] != item:
+            continue
 
-      status_text = {
-         "1" : "notAvail",
-         "2" : "lost",
-         "3" : "changed",
-         "4" : "ok",
-         "5" : "off",
-         "6" : "on",
-         "7" : "warning",
-         "8" : "tooLow",
-         "9" : "tooHigh",
-         }
-      status, current, crit, low, warn, descr = line[2:8]
-            
-      info_text = " - %s at %sC" % (descr, current)
-      levels_text = " (warn/crit at %sC/%sC)" % (warn, crit)
-      status_is = ", status is %s" % status_text.get(status, "UNKNOWN")
-      perfdata = [ ("temp", current, warn, crit, 0 ) ]
-      if status == "7":
-         return (1, "WARNING" + info_text + levels_text, perfdata)
-      elif status == "8":
-         return (1, "WARNING" + info_text + ": too low (below %sC)" % low, perfdata)
-      elif status == "4":
-         return (0, "OK" + info_text, perfdata)
-      else:
-         return (2, "CRIT" + info_text + levels_text + status_is, perfdata)
-         
-   return (3, "UNKNOWN - Sensor %s not found in SNMP data" % item)
+        status_text = {
+           "1" : "notAvail",
+           "2" : "lost",
+           "3" : "changed",
+           "4" : "ok",
+           "5" : "off",
+           "6" : "on",
+           "7" : "warning",
+           "8" : "tooLow",
+           "9" : "tooHigh",
+           }
+        status, current, crit, low, warn, descr = line[2:8]
+
+        info_text = " - %s at %sC" % (descr, current)
+        levels_text = " (warn/crit at %sC/%sC)" % (warn, crit)
+        status_is = ", status is %s" % status_text.get(status, "UNKNOWN")
+        perfdata = [ ("temp", current, warn, crit, 0 ) ]
+        if status == "7":
+            return (1, "WARNING" + info_text + levels_text, perfdata)
+        elif status == "8":
+            return (1, "WARNING" + info_text + ": too low (below %sC)" % low, perfdata)
+        elif status == "4":
+            return (0, "OK" + info_text, perfdata)
+        else:
+            return (2, "CRIT" + info_text + levels_text + status_is, perfdata)
+
+    return (3, "UNKNOWN - Sensor %s not found in SNMP data" % item)
 
 check_info['cmctc.temp'] = (check_cmctc_temp, "CMC Temperature %s", 1,  inventory_cmctc_temp)
-snmp_info['cmctc'] = ( 
+snmp_info['cmctc'] = (
    # Base to all IO units
-   "1.3.6.1.4.1.2606.4.2", 
+   "1.3.6.1.4.1.2606.4.2",
    # Each of the up to 4 units has its own subtree
-   ["3", "4", "5", "6"], 
-   [ 
+   ["3", "4", "5", "6"],
+   [
      # sensors index (1-4)
-     "5.2.1.1", 
+     "5.2.1.1",
      # sensor type (10 = temperature)
      "5.2.1.2",
      # unit status: notAvail(1), lost(2), changed(3), ok(4), off(5), on(6), warning(7), tooLow(8), tooHigh(9)
@@ -97,5 +97,3 @@ snmp_info['cmctc'] = (
      "7.2.1.2"
    ]
    )
-     
-                                                                                                             

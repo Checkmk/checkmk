@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -39,35 +39,35 @@ def inventory_vms_mem(checkname, info):
 def check_vms_mem(item, params, info):
     warn, crit = params
     try:
-      for line in info:
-        if line[0].startswith("MEM"):
-            physical_size_in_pages  = (float(line[1]))  # Gesamtspeicher
-            vms_alloc_pages         = (float(line[2]))  # reserviert fuer Kernel
-            virtual_io_cache_pages  = (float(line[3]))  
-            modified_list_pages     = (float(line[4]))  # dirty pages
-            free_list_size_pages    = (float(line[5]))  # ist so eine Art Cache, letztendlich
-            number_of_processes     = (float(line[6]))
-            interactive_processes   = (float(line[7]))
-            network_processes       = (float(line[8]))
-            batch_processes         = (float(line[9]))
-            proc_in_swapped_persec  = (float(line[10]))
-            proc_out_swapped_persec = (float(line[11]))
-            pagesize                = (float(line[12]))
-            memory_used_perc        = (float(line[13]))
+        for line in info:
+            if line[0].startswith("MEM"):
+                physical_size_in_pages  = (float(line[1]))  # Gesamtspeicher
+                vms_alloc_pages         = (float(line[2]))  # reserviert fuer Kernel
+                virtual_io_cache_pages  = (float(line[3]))
+                modified_list_pages     = (float(line[4]))  # dirty pages
+                free_list_size_pages    = (float(line[5]))  # ist so eine Art Cache, letztendlich
+                number_of_processes     = (float(line[6]))
+                interactive_processes   = (float(line[7]))
+                network_processes       = (float(line[8]))
+                batch_processes         = (float(line[9]))
+                proc_in_swapped_persec  = (float(line[10]))
+                proc_out_swapped_persec = (float(line[11]))
+                pagesize                = (float(line[12]))
+                memory_used_perc        = (float(line[13]))
 
-            mem_total_mb = float(physical_size_in_pages * pagesize) / (1024*1024)
-            mem_used_mb  = mem_total_mb * memory_used_perc / 100.0
-            warn_mb = warn * mem_total_mb / 100
-            crit_mb = crit * mem_total_mb / 100
-            perfdata = [ ('ramused', "%.2fMB" % mem_used_mb, warn_mb, crit_mb, 0, mem_total_mb) ]
+                mem_total_mb = float(physical_size_in_pages * pagesize) / (1024*1024)
+                mem_used_mb  = mem_total_mb * memory_used_perc / 100.0
+                warn_mb = warn * mem_total_mb / 100
+                crit_mb = crit * mem_total_mb / 100
+                perfdata = [ ('ramused', "%.2fMB" % mem_used_mb, warn_mb, crit_mb, 0, mem_total_mb) ]
 
-            used_txt = "%.1f%% of RAM (%.2f of %.2f GB) used by processes" % (memory_used_perc, mem_used_mb/1024, mem_total_mb/1024)
-            if memory_used_perc >= crit:
-                return (2, 'CRIT - %s (critical at %.1f%%)' % (used_txt, crit), perfdata)
-            elif memory_used_perc >= warn:
-                return (1, 'WARN - %s (warning at %.1f%%)' % (used_txt, warn), perfdata)
-            else:
-                return (0, 'OK - %s' % used_txt, perfdata)
+                used_txt = "%.1f%% of RAM (%.2f of %.2f GB) used by processes" % (memory_used_perc, mem_used_mb/1024, mem_total_mb/1024)
+                if memory_used_perc >= crit:
+                    return (2, 'CRIT - %s (critical at %.1f%%)' % (used_txt, crit), perfdata)
+                elif memory_used_perc >= warn:
+                    return (1, 'WARN - %s (warning at %.1f%%)' % (used_txt, warn), perfdata)
+                else:
+                    return (0, 'OK - %s' % used_txt, perfdata)
 
     except 1:
         return (3, "UNKNOWN - invalid output from plugin")
@@ -97,7 +97,7 @@ def check_vms_cpu_utilization(item, param, info):
     # geteilt, so dass das Maximum der Summe 100% ist und
     # nicht 100% mal CPU-Anzahl. Eigentlich sollte der Agent
     # besser die Werte so ausgeben, dass jede einzelne CPU
-    # fuer sich 100% erreichen kann. 
+    # fuer sich 100% erreichen kann.
     # Wir gleichen das aktuell hier im Check aus. Der Agent
     # sollte dahingehend aber ueberprueft werden.
     us = 0.0
@@ -114,19 +114,19 @@ def check_vms_cpu_utilization(item, param, info):
         return (3, "UNKNOWN - incomplete data from host")
 
     if count == 1:
-	cputext = "1 CPU"
+        cputext = "1 CPU"
     else:
-	cputext = "%d CPUS" % count
+        cputext = "%d CPUS" % count
 
     user_perc   = us / count
-    system_perc = sy / count  
+    system_perc = sy / count
     wait_perc   = wa / count
 
-    perfdata = [ 
-          ( "user",   "%.3f" % user_perc ), 
-          ( "system", "%.3f" % system_perc ), 
+    perfdata = [
+          ( "user",   "%.3f" % user_perc ),
+          ( "system", "%.3f" % system_perc ),
           ( "wait",   "%.3f" % wait_perc ) ]
-    return (0, "OK - user: %2.0f%%, system: %2.0f%%, wait: %2.0f%% (%s)" 
-	% (user_perc, system_perc, wait_perc, cputext), perfdata)
-    
+    return (0, "OK - user: %2.0f%%, system: %2.0f%%, wait: %2.0f%% (%s)"
+        % (user_perc, system_perc, wait_perc, cputext), perfdata)
+
 check_info['vms_sys.util'] =  (check_vms_cpu_utilization, "CPU utilization", 1,  inventory_vms_cpu_utilization)

@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -57,45 +57,45 @@ def connect_to_livestatus(html):
     # "program_version"    --> Version of Nagios if "online"
 
     # If there is only one site (non-multisite), than
-    # user cannot enable/disable. 
+    # user cannot enable/disable.
     if config.is_multisite():
-	# do not contact those sites the user has disabled.
-	# Also honor HTML-variables for switching off sites
-	# right now. This is generally done by the variable
-	# _site_switch=sitename1:on,sitename2:off,...
-	enabled_sites = {}
-	switch_var = html.var("_site_switch")
-	if switch_var:
-	    for info in switch_var.split(","):
-		sitename, onoff = info.split(":")	
-		d = config.user_siteconf.get(sitename, {})
-		if onoff == "on":
-		    d["disabled"] = False
-		else:
-		    d["disabled"] = True
-		config.user_siteconf[sitename] = d
-	    config.save_site_config()
+        # do not contact those sites the user has disabled.
+        # Also honor HTML-variables for switching off sites
+        # right now. This is generally done by the variable
+        # _site_switch=sitename1:on,sitename2:off,...
+        enabled_sites = {}
+        switch_var = html.var("_site_switch")
+        if switch_var:
+            for info in switch_var.split(","):
+                sitename, onoff = info.split(":")
+                d = config.user_siteconf.get(sitename, {})
+                if onoff == "on":
+                    d["disabled"] = False
+                else:
+                    d["disabled"] = True
+                config.user_siteconf[sitename] = d
+            config.save_site_config()
 
-	# Make a list of all non-disabled sites. 	
+        # Make a list of all non-disabled sites.
         for sitename, site in config.allsites().items():
-	    siteconf = config.user_siteconf.get(sitename, {})
-	    if siteconf.get("disabled", False):
-		html.site_status[sitename] = { "state" : "disabled", "site" : site } 
-	    else:
-		html.site_status[sitename] = { "state" : "dead", "site" : site }
-		enabled_sites[sitename] = site
+            siteconf = config.user_siteconf.get(sitename, {})
+            if siteconf.get("disabled", False):
+                html.site_status[sitename] = { "state" : "disabled", "site" : site }
+            else:
+                html.site_status[sitename] = { "state" : "dead", "site" : site }
+                enabled_sites[sitename] = site
 
-	html.live = livestatus.MultiSiteConnection(enabled_sites)
+        html.live = livestatus.MultiSiteConnection(enabled_sites)
 
-	# Fetch status of sites by querying the version of Nagios and livestatus
-	html.live.set_prepend_site(True)
+        # Fetch status of sites by querying the version of Nagios and livestatus
+        html.live.set_prepend_site(True)
         for sitename, v1, v2 in html.live.query("GET status\nColumns: livestatus_version program_version"):
-	    html.site_status[sitename].update({ "state" : "online", "livestatus_version": v1, "program_version" : v2 })
-	html.live.set_prepend_site(False)
+            html.site_status[sitename].update({ "state" : "online", "livestatus_version": v1, "program_version" : v2 })
+        html.live.set_prepend_site(False)
 
-	# Get exceptions in case of dead sites
-	for sitename, deadinfo in html.live.dead_sites().items():
-	    html.site_status[sitename]["exception"] = deadinfo["exception"]
+        # Get exceptions in case of dead sites
+        for sitename, deadinfo in html.live.dead_sites().items():
+            html.site_status[sitename]["exception"] = deadinfo["exception"]
             shs = deadinfo.get("status_host_state")
             html.site_status[sitename]["status_host_state"] = shs
             if shs == 1:
@@ -106,16 +106,16 @@ def connect_to_livestatus(html):
                 html.site_status[sitename]["state"] = "waiting"
 
     else:
-	html.live = livestatus.SingleSiteConnection("unix:" + defaults.livestatus_unix_socket)
-	html.site_status = { '': { "state" : "dead", "site" : config.site('') } }
+        html.live = livestatus.SingleSiteConnection("unix:" + defaults.livestatus_unix_socket)
+        html.site_status = { '': { "state" : "dead", "site" : config.site('') } }
         v1, v2 = html.live.query_row("GET status\nColumns: livestatus_version program_version")
-	html.site_status[''].update({ "state" : "online", "livestatus_version": v1, "program_version" : v2 })
+        html.site_status[''].update({ "state" : "online", "livestatus_version": v1, "program_version" : v2 })
 
     # If multiadmin is retricted to data user is a nagios contact for,
     # we need to set an AuthUser: header for livestatus
     if not config.may("see_all"):
-	html.live.set_auth_user('read',   config.user)
-	html.live.set_auth_user('action', config.user)
+        html.live.set_auth_user('read',   config.user)
+        html.live.set_auth_user('action', config.user)
 
     # Default auth domain is read. Please set to None to switch off authorization
     html.live.set_auth_domain('read')
@@ -138,28 +138,28 @@ def handler(req):
     try:
         read_get_vars(req)
         config.load_config() # load multisite.mk
-	if html.var("debug"): # Debug flag may be set via URL
-	    config.debug = True
+        if html.var("debug"): # Debug flag may be set via URL
+            config.debug = True
 
-	if not req.user or type(req.user) != str:
-	    raise MKConfigError("You are not logged in. This should never happen. Please "
-		    "review your Apache configuration. Check_MK Multisite requires HTTP login.")
-	    
+        if not req.user or type(req.user) != str:
+            raise MKConfigError("You are not logged in. This should never happen. Please "
+                    "review your Apache configuration. Check_MK Multisite requires HTTP login.")
+
         # Set all permissions, read site config, and similar stuff
-	config.login(html.req.user)
+        config.login(html.req.user)
 
-	# User allowed to login at all?
+        # User allowed to login at all?
         if not config.may("use"):
-	    reason = "Not Authorized.  You are logged in as <b>%s</b>. Your role is <b>%s</b>:" % (config.user, config.role)
+            reason = "Not Authorized.  You are logged in as <b>%s</b>. Your role is <b>%s</b>:" % (config.user, config.role)
             reason += "If you think this is an error, " \
                        "please ask your administrator to add your login into multisite.mk"
             raise MKAuthException(reason)
 
         # General access allowed. Now connect to livestatus
-	connect_to_livestatus(html)
+        connect_to_livestatus(html)
 
-	handler = pagehandlers.get(req.myfile, page_not_found)
-	handler(html)
+        handler = pagehandlers.get(req.myfile, page_not_found)
+        handler(html)
 
     except MKUserError, e:
         html.header("Invalid User Input")
@@ -178,22 +178,22 @@ def handler(req):
         apache.log_error("Configuration error: %s" % (e,), apache.APLOG_ERR)
 
     except livestatus.MKLivestatusNotFoundError, e:
-	html.header("Data not found")
-	html.show_error("The following query produced no output:\n<pre>\n%s</pre>\n" % \
-		e.query)
-	html.footer()
+        html.header("Data not found")
+        html.show_error("The following query produced no output:\n<pre>\n%s</pre>\n" % \
+                e.query)
+        html.footer()
 
     except livestatus.MKLivestatusException, e:
-	html.header("Livestatus problem")
-	html.show_error("Livestatus problem: %s" % e)
-	html.footer()
-	
+        html.header("Livestatus problem")
+        html.show_error("Livestatus problem: %s" % e)
+        html.footer()
+
     except Exception, e:
-	if config.debug:
+        if config.debug:
             html.live = None
-	    raise
+            raise
         html.header("Internal Error")
-	url = html.makeuri([("debug", "1")])
+        url = html.makeuri([("debug", "1")])
         html.show_error("Internal error: %s (<a href=\"%s\">Retry with debug mode</a>)" % (e, url))
         html.footer()
         apache.log_error("Internal error: %s" % (e,), apache.APLOG_ERR)

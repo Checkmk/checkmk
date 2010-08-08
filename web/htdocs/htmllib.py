@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -69,11 +69,11 @@ def attrencode(value):
 def urlencode_vars(vars):
     output = ""
     for varname, value in vars:
-	if output != "":
-	    output += "&"
-	output += varname
-	output += "="
-	output += urlencode(unicode(value))
+        if output != "":
+            output += "&"
+        output += varname
+        output += "="
+        output += urlencode(unicode(value))
     return output
 
 def urlencode(value):
@@ -105,18 +105,18 @@ class html:
         self.req = req
         self.user_errors = {}
         self.focus_object = None
-	self.global_vars = []
+        self.global_vars = []
         self.browser_reload = 0
         self.events = set([]) # currently used only for sounds
-        
+
     def write(self, text):
         self.req.write(text)
 
     def heading(self, text):
-	self.write("<h2>%s</h2>\n" % text)
+        self.write("<h2>%s</h2>\n" % text)
 
     def rule(self):
-	self.write("<hr/>")
+        self.write("<hr/>")
 
     def age_text(self, timedif):
         timedif = int(timedif)
@@ -126,7 +126,7 @@ class html:
         minutes = timedif / 60
         if minutes < 120:
             return "%d min" % minutes
-            
+
         hours = minutes / 60
         if hours < 48:
             return "%d hrs" % hours
@@ -135,15 +135,15 @@ class html:
         return "%d days" % days
 
     def begin_form(self, name, action = None):
-	self.form_vars = []
-	if action == None:
-	    action = self.req.myfile + ".py"
+        self.form_vars = []
+        if action == None:
+            action = self.req.myfile + ".py"
         self.current_form = name
         self.write("<form name=%s class=%s action=\"%s\" method=GET>\n" %
                    (name, name, action))
-	self.hidden_field("filled_in", "on")
-	self.hidden_field("_transid", str(self.current_transid(self.req.user)))
-	self.hidden_fields(self.global_vars)
+        self.hidden_field("filled_in", "on")
+        self.hidden_field("_transid", str(self.current_transid(self.req.user)))
+        self.hidden_fields(self.global_vars)
 
     def end_form(self):
         self.write("</form>\n")
@@ -163,23 +163,23 @@ class html:
             self.write("<input type=hidden name=%s value=\"%s\">\n" % (var, attrencode(value)))
 
     def hidden_fields(self, varlist = None, **args):
-	add_action_vars = args.get("add_action_vars", False)
+        add_action_vars = args.get("add_action_vars", False)
         if varlist != None:
             for var in varlist:
                 value = self.req.vars.get(var, "")
                 self.hidden_field(var, value)
         else: # add *all* get variables, that are not set by any input!
             for var, value in self.req.vars.items():
-		if var not in self.form_vars and \
-		    (var[0] != "_" or add_action_vars):
-		    self.hidden_field(var, value)
+                if var not in self.form_vars and \
+                    (var[0] != "_" or add_action_vars):
+                    self.hidden_field(var, value)
 
     def add_global_vars(self, varnames):
-	self.global_vars += varnames
-            
+        self.global_vars += varnames
+
     # [('varname1', value1), ('varname2', value2) ]
     def makeuri(self, addvars):
-	vars = [ (v, self.var(v)) for v in self.req.vars if not v.startswith("_") ]
+        vars = [ (v, self.var(v)) for v in self.req.vars if not v.startswith("_") ]
         return self.req.myfile + ".py?" + urlencode_vars(vars + addvars)
 
     def makeuri_contextless(self, vars):
@@ -190,30 +190,30 @@ class html:
                    ( varname, varname, title, cssclass))
 
     def buttonlink(self, href, text, add_transid=False):
-	if add_transid:
-	    href += "&_transid=%d" % self.current_transid(self.req.user)
-	self.write("<a href=\"%s\" class=button>%s</a>" % (href, text))
+        if add_transid:
+            href += "&_transid=%d" % self.current_transid(self.req.user)
+        self.write("<a href=\"%s\" class=button>%s</a>" % (href, text))
 
     def begin_context_buttons(self):
         self.write("<table class=contextlinks><tr><td>\n")
-    
+
     def end_context_buttons(self):
         self.write("</td></tr></table>\n")
-    
+
     def context_button(self, title, url):
         self.write('<div class="contextlink" ')
         self.write(r'''onmouseover='this.style.backgroundImage="url(\"images/contextlink_hi.png\")";' ''')
         self.write(r'''onmouseout='this.style.backgroundImage="url(\"images/contextlink.png\")";' ''')
         self.write('>')
         self.write('<a href="%s">%s</a></div>' % (url, title))
-        
+
     def number_input(self, varname, deflt = "", size=8):
-	self.text_input(varname, str(deflt), "number", size=size)
+        self.text_input(varname, str(deflt), "number", size=size)
 
     def text_input(self, varname, default_value = "", cssclass = "text", **args):
-	addprops = ""
-	if "size" in args:
-	    addprops += " size=%d" % args["size"]
+        addprops = ""
+        if "size" in args:
+            addprops += " size=%d" % args["size"]
 
         value = self.req.vars.get(varname, default_value)
         error = self.user_errors.get(varname)
@@ -225,57 +225,57 @@ class html:
             html += "</x>"
             self.set_focus(self.current_form, varname)
         self.write(html)
-	self.form_vars.append(varname)
+        self.form_vars.append(varname)
 
     def text_area(self, varname, rows):
         value = self.req.vars.get(varname, "")
         self.write("<textarea name=\"%s\">%s</textarea>\n" % (varname, value))
-	self.form_vars.append(varname)
+        self.form_vars.append(varname)
 
     def sorted_select(self, varname, options, deflt="", onchange=None):
         # Sort according to display texts, not keys
-	swapped = [ (disp, key) for key, disp in options ]
-	swapped.sort()
-	swapped = [ (key, disp) for disp, key in swapped ]
-	html.select(self, varname, swapped, deflt, onchange)
+        swapped = [ (disp, key) for key, disp in options ]
+        swapped.sort()
+        swapped = [ (key, disp) for disp, key in swapped ]
+        html.select(self, varname, swapped, deflt, onchange)
 
     def select(self, varname, options, deflt="", onchange=None):
-	current = self.var(varname, deflt)
-	onchange_code = onchange and " id=\"%s\" onchange=\"%s\"" % (varname, onchange) or ""
+        current = self.var(varname, deflt)
+        onchange_code = onchange and " id=\"%s\" onchange=\"%s\"" % (varname, onchange) or ""
         self.write("<select%s name=\"%s\" size=\"1\">\n" % (onchange_code, varname))
         for value, text in options:
             sel = value == current and " selected" or ""
             self.write("<option value=\"%s\"%s>%s</option>\n" % (value, sel, text))
         self.write("</select>\n")
-	self.form_vars.append(varname)
+        self.form_vars.append(varname)
 
     def radiobutton(self, varname, value, checked, text):
-	checked_text = checked and " checked" or ""
-	self.write("<input type=radio name=%s value=\"%s\"%s> %s &nbsp; \n" %
+        checked_text = checked and " checked" or ""
+        self.write("<input type=radio name=%s value=\"%s\"%s> %s &nbsp; \n" %
                       (varname, value, checked_text, text))
-	self.form_vars.append(varname)
+        self.form_vars.append(varname)
 
     def checkbox(self, varname, deflt=""):
-	value = self.req.vars.get(varname, deflt)
-	if value != "" and value != False:
-	    checked = " CHECKED"
-	else:
-	    checked = ""
-	self.write("<input type=checkbox name=%s%s>" % (varname, checked))
-	self.form_vars.append(varname)
+        value = self.req.vars.get(varname, deflt)
+        if value != "" and value != False:
+            checked = " CHECKED"
+        else:
+            checked = ""
+        self.write("<input type=checkbox name=%s%s>" % (varname, checked))
+        self.form_vars.append(varname)
 
     def datetime_input(self, varname, default_value):
         try:
             t = self.get_datetime_input(varname)
         except:
             t = default_value
-        
+
         br = time.localtime(t)
         self.date_input(varname + "_date", br.tm_year, br.tm_mon, br.tm_mday)
         self.write(" ")
         self.time_input(varname + "_time", br.tm_hour, br.tm_min)
-	self.form_vars.append(varname + "_date")
-	self.form_vars.append(varname + "_time")
+        self.form_vars.append(varname + "_date")
+        self.form_vars.append(varname + "_time")
 
     def time_input(self, varname, hours, mins):
         error = self.user_errors.get(varname)
@@ -285,7 +285,7 @@ class html:
                    (varname, hours, mins))
         if error:
             self.write("</x>")
-	self.form_vars.append(varname)
+        self.form_vars.append(varname)
 
     def date_input(self, varname, year, month, day):
         error = self.user_errors.get(varname)
@@ -295,7 +295,7 @@ class html:
                    (varname, year, month, day))
         if error:
             self.write("</x>")
-	self.form_vars.append(varname)
+        self.form_vars.append(varname)
 
     def get_datetime_input(self, varname):
         t = self.var(varname + "_time")
@@ -303,7 +303,7 @@ class html:
         if not t or not d:
             raise MKUserError([varname + "_date", varname + "_time"],
                               "Please specify a date and time")
-        
+
         try:
             br = time.strptime(d + " " + t, "%Y-%m-%d %H:%M")
         except:
@@ -314,18 +314,18 @@ class html:
     def html_head(self, title):
         if not self.req.header_sent:
             self.req.write(
-		'''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-		<html><head>
-		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-		<title>%s</title>
-		<link rel="stylesheet" type="text/css" href="check_mk.css">
-		<script type='text/javascript' src='check_mk.js'></script> 
-		</head>
-		''' % title)
+                '''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+                <html><head>
+                <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+                <title>%s</title>
+                <link rel="stylesheet" type="text/css" href="check_mk.css">
+                <script type='text/javascript' src='check_mk.js'></script>
+                </head>
+                ''' % title)
             self.req.header_sent = True
 
     def html_foot(self):
-	self.write("</html>\n")
+        self.write("</html>\n")
 
     def set_browser_reload(self, secs):
         self.req.headers_out.add("refresh", str(secs))
@@ -336,12 +336,12 @@ class html:
 
     def header(self, title=''):
         if not self.req.header_sent:
-	    self.html_head(title)
-	    if type(self.req.user) == str:
-	       login_text = "<b>%s</b> (%s)" % (config.user, config.role)
-	    else:
-	       login_text = "not logged in"
-	    self.write("<body class=main>"
+            self.html_head(title)
+            if type(self.req.user) == str:
+                login_text = "<b>%s</b> (%s)" % (config.user, config.role)
+            else:
+                login_text = "not logged in"
+            self.write("<body class=main>"
                     "<table class=header><tr><td class=left>%s</td><td class=right>"
                     "%s &nbsp; &nbsp; %s <img src=\"images/mk_logo_klein.png\"></td></tr></table>" %
                     (title, login_text, time.strftime("%H:%M")))
@@ -378,80 +378,80 @@ class html:
         self.write("<div class=warning>%s</div>\n" % msg)
 
     def message(self, msg):
-	self.write("<div class=success>%s</div>\n" % msg)
+        self.write("<div class=success>%s</div>\n" % msg)
 
     def confirm(self, msg):
-        if self.var("_do_actions") == "No": 
+        if self.var("_do_actions") == "No":
             return # user has pressed "No"
         if not self.has_var("_do_confirm"):
             self.write("<div class=really>%s" % msg)
             self.begin_form("confirm")
-            self.hidden_fields(add_action_vars = True) 
+            self.hidden_fields(add_action_vars = True)
             self.button("_do_confirm", "Yes!", "really")
             self.button("_do_actions", "No", "")
             self.end_form()
             self.write("</div>")
             return False
-	else:
-	    return self.check_transaction()
+        else:
+            return self.check_transaction()
 
     def do_actions(self):
-	return self.var("_do_actions") not in [ "", None, "No" ]
+        return self.var("_do_actions") not in [ "", None, "No" ]
 
     def set_focus(self, formname, varname):
         self.focus_object = (formname, varname)
 
     def has_var(self, varname):
         return varname in self.req.vars
-    
+
     def var(self, varname, deflt = None):
         return self.req.vars.get(varname, deflt)
 
     def set_var(self, varname, value):
-	self.req.vars[varname] = value
+        self.req.vars[varname] = value
 
     def javascript(self, code):
-	self.write("<script language=\"javascript\">\n%s\n</script>\n" % code)
+        self.write("<script language=\"javascript\">\n%s\n</script>\n" % code)
 
     def reload_sidebar(self):
         self.javascript("parent.frames[0].location.reload();");
 
     # Get next transaction id for that user
     def current_transid(self, username):
-	dir = defaults.var_dir + "/web/" + username
-	try:
-	    os.makedirs(dir)
+        dir = defaults.var_dir + "/web/" + username
+        try:
+            os.makedirs(dir)
         except:
-	    pass
+            pass
 
-	path = dir + "/transid.mk"
-	try:
-	    return int(file(path).read())
-	except:
-	    return 0
+        path = dir + "/transid.mk"
+        try:
+            return int(file(path).read())
+        except:
+            return 0
 
     def increase_transid(self, username):
-	current = self.current_transid(username)
-	path = defaults.var_dir + "/web/" + username + "/transid.mk"
+        current = self.current_transid(username)
+        path = defaults.var_dir + "/web/" + username + "/transid.mk"
         write_settings_file(path, current + 1)
 
     # Checks wether the current page is a reload or an original real submit
     def transaction_valid(self):
-	if not self.var("_transid"): 
-	    return False
-	transid = int(self.var("_transid"))
-	current = self.current_transid(self.req.user)
-	return transid == current or transid == -1
+        if not self.var("_transid"):
+            return False
+        transid = int(self.var("_transid"))
+        current = self.current_transid(self.req.user)
+        return transid == current or transid == -1
 
     # called by page functions in order to check, if this was
     # a reload or the original form submission. Increases the
     # transid of the user, if the latter was the case
     def check_transaction(self):
-	if self.transaction_valid():
-	    self.increase_transid(self.req.user)
-	    return True
-	else:
-	    return False
+        if self.transaction_valid():
+            self.increase_transid(self.req.user)
+            return True
+        else:
+            return False
 
     def register_event(self, name):
         self.events.add(name)
@@ -465,5 +465,3 @@ class html:
                   '<param name="autostart" value="true"><param name="playcount" value="1"></object>' % (url, url))
         if config.debug:
             self.write("Booom (%s)" % url)
-
-    

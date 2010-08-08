@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -30,43 +30,43 @@
 # | Joerg Linge 2009 <joerg.linge@pnp4nagios.org>     Copyright 2010 |
 # +------------------------------------------------------------------+
 
-#	%user  %sys  %wait  %idle physc %entc  lbusy   app  vcsw phint
-#	-----  ----  -----  ----- ----- ----- ------   ---  ---- -----
-#	  2.5   6.0    0.1   91.5  0.03  11.4    1.8  3.27 1976647217 490545630 
+#       %user  %sys  %wait  %idle physc %entc  lbusy   app  vcsw phint
+#       -----  ----  -----  ----- ----- ----- ------   ---  ---- -----
+#         2.5   6.0    0.1   91.5  0.03  11.4    1.8  3.27 1976647217 490545630
 
 
 lparstat_default_levels = (5, 10)
 
 def inventory_lparstat(checkname, info):
-   if len(info) == 1 and len(info[0]) >= 5:
-      return [(None, "", "lparstat_default_levels")]
-   else:
-      return []
+    if len(info) == 1 and len(info[0]) >= 5:
+        return [(None, "", "lparstat_default_levels")]
+    else:
+        return []
 
 def check_lparstat(item, params, info):
-	try:
-		user  = info[0][0]
-		sys   = info[0][1]
-		wait  = info[0][2]
-		idle  = info[0][3]
-		physc = info[0][4]
-		entc  = info[0][5]
-		lbusy = info[0][6]
-		app   = info[0][7]
-	except:
-		return (3, "Unknown - invalid or incomplete output from plugin")
+    try:
+        user  = info[0][0]
+        sys   = info[0][1]
+        wait  = info[0][2]
+        idle  = info[0][3]
+        physc = info[0][4]
+        entc  = info[0][5]
+        lbusy = info[0][6]
+        app   = info[0][7]
+    except:
+        return (3, "Unknown - invalid or incomplete output from plugin")
 
-	perfdata = [
-			('user', str(user) + '%'),
-			('sys', str(sys) + '%'),
-			('wait', str(wait) + '%'),
-			('idle', str(idle) + '%'),
-			('physc', str(physc) + ''),
-			('entc', str(entc) + '%'),
-			('lbusy', str(lbusy) + ''),
-			('app', str(app) + ''),
-			]
+    perfdata = [
+                    ('user', str(user) + '%'),
+                    ('sys', str(sys) + '%'),
+                    ('wait', str(wait) + '%'),
+                    ('idle', str(idle) + '%'),
+                    ('physc', str(physc) + ''),
+                    ('entc', str(entc) + '%'),
+                    ('lbusy', str(lbusy) + ''),
+                    ('app', str(app) + ''),
+                    ]
 
-	return (0, "OK: AIX lparstat, user=%s%% sys=%s%% wait=%s%% idle=%s%% physc=%s app=%s" % (user,sys,wait,idle,physc,app),perfdata )
+    return (0, "OK: AIX lparstat, user=%s%% sys=%s%% wait=%s%% idle=%s%% physc=%s app=%s" % (user,sys,wait,idle,physc,app),perfdata )
 
 check_info['lparstat_aix'] = (check_lparstat, "lparstat", 1,  inventory_lparstat )

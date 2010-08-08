@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -25,11 +25,11 @@
 # Boston, MA 02110-1301 USA.
 
 # Example for info:
-# [['HTTP',  '1', '1682'], 
-#  ['SMTP',  '1', '216'], 
-#  ['POP3',  '1', '0'], 
-#  ['FTP',   '1', '1'], 
-#  ['HTTPS', '2', '0'], 
+# [['HTTP',  '1', '1682'],
+#  ['SMTP',  '1', '216'],
+#  ['POP3',  '1', '0'],
+#  ['FTP',   '1', '1'],
+#  ['HTTPS', '2', '0'],
 #  ['IMAP',  '1', '48']]
 
 cpsecure_sessions_default_levels = ( 2500, 5000 )
@@ -37,25 +37,25 @@ cpsecure_sessions_default_levels = ( 2500, 5000 )
 def inventory_cpsecure_sessions(checkname, info):
     inventory = []
     for service, enabled, sessions in info:
-	if enabled == '1':
-	    inventory.append( (service, "cpsecure_sessions_default_levels") )
-    return inventory 
+        if enabled == '1':
+            inventory.append( (service, "cpsecure_sessions_default_levels") )
+    return inventory
 
 def check_cpsecure_sessions(item, params, info):
     for service, enabled, sessions in info:
-	if item == service:
-	    if enabled != '1':
-		return (1, "WARN - service not enabled")
-	    num_sessions = int(sessions)
+        if item == service:
+            if enabled != '1':
+                return (1, "WARN - service not enabled")
+            num_sessions = int(sessions)
             warn, crit = params
             perfdata = [ ("sessions", num_sessions, warn, crit, 0 ) ]
 
             if num_sessions >= crit:
-		return (2, "CRIT - %s sessions (critical at %d)" % (sessions, crit), perfdata)
-	    elif num_sessions >= warn:
-		return (1, "WARN - %s sessions (warning at %d)" % (sessions, warn), perfdata)
-	    else:
-	        return (0, "OK - %s sessions" % sessions, perfdata)
+                return (2, "CRIT - %s sessions (critical at %d)" % (sessions, crit), perfdata)
+            elif num_sessions >= warn:
+                return (1, "WARN - %s sessions (warning at %d)" % (sessions, warn), perfdata)
+            else:
+                return (0, "OK - %s sessions" % sessions, perfdata)
 
     return (3, "UNKNOWN - service not found")
 

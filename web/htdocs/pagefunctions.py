@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -28,17 +28,17 @@ import config
 
 def add_site_icon(html, sitename):
     if config.use_siteicons:
-	html.write("<img class=siteicon src=\"icons/site-%s-24.png\"> " % sitename)
+        html.write("<img class=siteicon src=\"icons/site-%s-24.png\"> " % sitename)
         return True
     else:
-	return False
+        return False
 
 def site_selector(html, htmlvar, enforce = True):
     if enforce:
         choices = []
     else:
-	choices = [("","")]
+        choices = [("","")]
     for sitename, state in html.site_status.items():
-	if state["state"] == "online":
-	    choices.append((sitename, config.site(sitename)["alias"]))
+        if state["state"] == "online":
+            choices.append((sitename, config.site(sitename)["alias"]))
     html.sorted_select(htmlvar, choices)

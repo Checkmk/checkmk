@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -194,7 +194,7 @@ def inventory_multipath(checkname, info):
     inventory = []
     parsed = parse_multipath_output(info)
     for uuid, info in parsed.items():
-	# take current number of paths as target value
+        # take current number of paths as target value
         inventory.append( (uuid, " ".join(info['luns']), info['numpaths']) )
     return inventory
 
@@ -235,4 +235,3 @@ check_info['multipath'] = (
     "Multipath %s",
     0,
     inventory_multipath)
-

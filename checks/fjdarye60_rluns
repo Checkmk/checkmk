@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -27,24 +27,24 @@
 def inventoryfunc(checkname, info):
     inventory = []
     for line in info:
-	rawdata = line[1]
-	if rawdata[2] == '\xa0': # RLUN is present
-	    inventory.append( (line[0], "", None) )
+        rawdata = line[1]
+        if rawdata[2] == '\xa0': # RLUN is present
+            inventory.append( (line[0], "", None) )
     return inventory
 
 def checkfunc(item, _no_params, info):
     for line in info:
-	if item == line[0]:
-	    rawdata = line[1]
-	    if rawdata[2] != '\xa0':
-		return (2, "CRIT - RLUN is not present")
-	    elif rawdata[3] == '\x08':
-		return (1, "WARN - RLUN is rebuilding") # we assume that ;-)
+        if item == line[0]:
+            rawdata = line[1]
+            if rawdata[2] != '\xa0':
+                return (2, "CRIT - RLUN is not present")
+            elif rawdata[3] == '\x08':
+                return (1, "WARN - RLUN is rebuilding") # we assume that ;-)
             elif rawdata[3] == '\x00':
-		return (0, "OK - RLUN is in normal state") # assumption
-	    else:
-		return (2, "CRIT - RLUN in unknown state %02x" % ord(rawdata[3]))
-	    
+                return (0, "OK - RLUN is in normal state") # assumption
+            else:
+                return (2, "CRIT - RLUN in unknown state %02x" % ord(rawdata[3]))
+
     return (3, "UNKNOWN - No RLUN %s in SNMP output" % item)
 
 check_info['fjdarye60_rluns'] = (checkfunc, "RLUN %s", 0,  inventoryfunc)

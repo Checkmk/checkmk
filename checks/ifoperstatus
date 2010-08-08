@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -42,22 +42,22 @@ def ifoperstatus_statename(st):
     return names.get(st, st)
 
 def check_ifoperstatus(item, targetstate, info):
-   for name, hwtype, operstatus in info:
-       if item == name:
-	   operstatus = ifoperstatus_statename(operstatus)
-           targetstate = ifoperstatus_statename(targetstate) 
-           if operstatus == targetstate:
-               return (0, "OK - status is %s" % operstatus)
-           elif operstatus == "up":
-               return (1, "WARN - port used, but should not be")
-           else:
-               return (2, "CRIT - status is %s" % operstatus)
-                    
-   return (3, "UNKNOWN - interface %s missing" % item)
+    for name, hwtype, operstatus in info:
+        if item == name:
+            operstatus = ifoperstatus_statename(operstatus)
+            targetstate = ifoperstatus_statename(targetstate)
+            if operstatus == targetstate:
+                return (0, "OK - status is %s" % operstatus)
+            elif operstatus == "up":
+                return (1, "WARN - port used, but should not be")
+            else:
+                return (2, "CRIT - status is %s" % operstatus)
+
+    return (3, "UNKNOWN - interface %s missing" % item)
 
 check_info['ifoperstatus'] = (check_ifoperstatus, "Interface %s", 0,  inventory_ifoperstatus)
 snmp_info['ifoperstatus'] = ( ".1.3.6.1.2.1.2.2.1", [ 2, 3, 8 ] )
 
 # check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2
 # snmp_scan_functions['ifoperstatus'] = \
-# 	lambda oid: int(oid(".1.3.6.1.2.1.2.1.0")) >= 2
+#       lambda oid: int(oid(".1.3.6.1.2.1.2.1.0")) >= 2

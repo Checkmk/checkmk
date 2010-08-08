@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -75,27 +75,27 @@
 # SNMPv2-SMI::mib-2.33.1.9.7.0 = INTEGER: 3
 # SNMPv2-SMI::mib-2.33.1.9.8.0 = INTEGER: 2
 
-ups_power_default_levels = (20, 1) # warning / critical *below* those levels (Watt)  
+ups_power_default_levels = (20, 1) # warning / critical *below* those levels (Watt)
 
 def inventory_ups_power(checkname, info):
-   return [ (line[0], "", "ups_power_default_levels") for line in info ]
+    return [ (line[0], "", "ups_power_default_levels") for line in info ]
 
 def check_ups_power(item, params, info):
     warn, crit = params
     for line in info:
-	if line[0] == item:
-	    power = int(line[1])
-	    perfdata = [ ( "power", power, warn, crit, 0 ) ]
-	    infotext = " - current power: %d W, warn/crit at and below %d/%d W" % \
-	 	(power, warn, crit)	
+        if line[0] == item:
+            power = int(line[1])
+            perfdata = [ ( "power", power, warn, crit, 0 ) ]
+            infotext = " - current power: %d W, warn/crit at and below %d/%d W" % \
+                (power, warn, crit)
 
-	    if power <= crit:
-		return (2, "CRIT" + infotext, perfdata)
-	    elif power <= warn:
-		return (1, "WARN" + infotext, perfdata)
-	    else:
-		return (0, "OK" + infotext, perfdata)
-	    
+            if power <= crit:
+                return (2, "CRIT" + infotext, perfdata)
+            elif power <= warn:
+                return (1, "WARN" + infotext, perfdata)
+            else:
+                return (0, "OK" + infotext, perfdata)
+
     return (3, "UNKNOWN - Phase %s not found in SNMP output" % item)
 
 check_info['ups_power'] = ( check_ups_power, "Power phase %s", 1, inventory_ups_power )

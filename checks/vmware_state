@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -45,17 +45,17 @@
 # ipaddr:
 
 def inventory_vmware_state(checkname, info):
-   inventory = []
-   for line in info:
-    #  print "LINE IS %s" % line[0]
-      if line[0].startswith("name:"):
-	 vm_name = line[0][5:]
-      if line[0].startswith("ipaddr:"):
-	 vm_ipaddr = line[0][7:]
-	 # add machine to inventory (if IP address is not empty)
-	 if vm_ipaddr != '':
-	    inventory.append((vm_name, vm_ipaddr, None))
-   return inventory
+    inventory = []
+    for line in info:
+     #  print "LINE IS %s" % line[0]
+        if line[0].startswith("name:"):
+            vm_name = line[0][5:]
+        if line[0].startswith("ipaddr:"):
+            vm_ipaddr = line[0][7:]
+            # add machine to inventory (if IP address is not empty)
+            if vm_ipaddr != '':
+                inventory.append((vm_name, vm_ipaddr, None))
+    return inventory
 
 # 1. Variant: loop over all machines and
 # remember the ip addresses of all machines.
@@ -66,11 +66,11 @@ def inventory_vmware_state(checkname, info):
 #   vm_ipaddr = {}
 #   for line in info:
 #      if line[0].startswith("name:"):
-#	 vm_name = line[0][5:]
-#   
+#        vm_name = line[0][5:]
+#
 #      if line[0].startswith("ipaddr:"):
-#	 vm_ipaddr[vm_name] = line[0][7:]
-#  
+#        vm_ipaddr[vm_name] = line[0][7:]
+#
 #   ip_addr = vm_ipaddr.get(item)
 #   if ip_addr == "":
 #      return(2, "CRIT - The Machine is DOWN")
@@ -87,18 +87,17 @@ def inventory_vmware_state(checkname, info):
 # If we go through the loop without finding
 # the machine, we return an UNKNOWN state.
 def check_vmware_state(item, params, info):
-   # item is the name of the machine.
-   for line in info:
-      if line[0].startswith("name:"):
-	 vm_name = line[0][5:]
-      elif line[0].startswith("ipaddr:"):
-	 if vm_name == item:
-	    ip_addr = line[0][7:]
-	    if ip_addr == "":
-	       return (2, "CRIT - the machine is down")
-	    else:
-	       return (0, "OK - machine is up (%s)" % ip_addr)
-   return (3, "UNKNOWN - no such machine")
+    # item is the name of the machine.
+    for line in info:
+        if line[0].startswith("name:"):
+            vm_name = line[0][5:]
+        elif line[0].startswith("ipaddr:"):
+            if vm_name == item:
+                ip_addr = line[0][7:]
+                if ip_addr == "":
+                    return (2, "CRIT - the machine is down")
+                else:
+                    return (0, "OK - machine is up (%s)" % ip_addr)
+    return (3, "UNKNOWN - no such machine")
 
-check_info['vmware_state'] = (check_vmware_state, "VM %s", 0, inventory_vmware_state)   
-
+check_info['vmware_state'] = (check_vmware_state, "VM %s", 0, inventory_vmware_state)

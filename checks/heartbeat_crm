@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -85,22 +85,22 @@ def inventory_heartbeat_crm(checktype, info):
     # - Check the age of "last updated"
     if len(info) > 0:
         lastUpdated, dc, numNodes, numResources = heartbeat_crm_parse_general(info, dc, numNodes, numResources)
-	if not heartbeat_crm_naildown:
-	    dc = None # Ignore DC on check
-	return [(None, '(heartbeat_crm_default_max_age, %r, %d, %d)' % (dc, numNodes, numRessources))]
+        if not heartbeat_crm_naildown:
+            dc = None # Ignore DC on check
+        return [(None, '(heartbeat_crm_default_max_age, %r, %d, %d)' % (dc, numNodes, numRessources))]
     else:
         return []
 
 def check_heartbeat_crm(item, params, info):
     if len(info) > 0:
         lastUpdated, dc, numNodes, numResources = heartbeat_crm_parse_general(info)
-	param_max_age, param_dc, param_nodes, param_ressources = params
+        param_max_age, param_dc, param_nodes, param_ressources = params
 
         # Check the freshness of the crm_mon output and terminate with CRITICAL
         # when too old information are found
         dt = int(datetime(*time.strptime(lastUpdated, '%a %b %d %H:%M:%S %Y')[0:5]).strftime("%s"))
-	now = time.time()
-	delta = now - dt
+        now = time.time()
+        delta = now - dt
         if delta > param_max_age:
             return (2, 'CRITICAL - Status output too old: %d secs' % delta)
 

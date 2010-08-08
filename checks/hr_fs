@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -29,7 +29,7 @@ def inventory_hr_fs(checktype, info):
     for hrtype, hrdescr, hrunits, hrsize, hrused in info:
         if hrtype in [ "4", "HOST-RESOURCES-TYPES::hrStorageFixedDisk" ] and \
                 hrdescr not in inventory_df_exclude_mountpoints:
-            inventory.append((hrdescr, "filesystem_default_levels")) 
+            inventory.append((hrdescr, "filesystem_default_levels"))
     return inventory
 
 def check_hr_fs(item, params, info):
@@ -63,7 +63,7 @@ def check_hr_fs(item, params, info):
 
 
 check_info["hr_fs"] = (check_hr_fs, "fs_%s", 1, inventory_hr_fs)
-snmp_info["hr_fs"] = ( ".1.3.6.1.2.1.25.2.3.1", [ 
+snmp_info["hr_fs"] = ( ".1.3.6.1.2.1.25.2.3.1", [
     2, # hrStorageType
     3, # hrStorageDescr
     4, # hrStorageAllocationUnits
@@ -72,4 +72,3 @@ snmp_info["hr_fs"] = ( ".1.3.6.1.2.1.25.2.3.1", [
 ] )
 snmp_scan_functions["hr_fs"] = lambda oid: \
         not not oid('.1.3.6.1.2.1.25.1.1.0') # HOST-RESOURCES-MIB::hrSystemUptime.0
-

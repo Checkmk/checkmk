@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -65,7 +65,7 @@ target_values = {
 class Sorry(Exception):
     def __init__(self, text):
         self.reason = text
-  
+
 def find_pid_and_configfile():
     procs = os.popen("ps ax -o pid,ppid,user,command").readlines()
     pids = []
@@ -113,27 +113,27 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
         raise Exception("Cannot find Apache process. Is it running?")
 
     def scan_apacheconf(apache_conffile):
-	confdirs = []
-	if apache_conffile[0] != '/':
-	    apache_conffile = httpd_root + "/" + apache_conffile
-	confdirs = []
-	for line in file(apache_conffile):
-	    parts = line.strip().split()
-	    if len(parts) == 2 and parts[0].lower() == "include":
-		if parts[1].endswith("/") or parts[1].endswith("/*.conf"):
-		    confdir = "/".join(parts[1].split("/")[:-1])
-		    if confdir[0] != "/":
-			confdir = httpd_root + "/" + confdir
-		    if not os.path.exists(confdir):
-			continue
-		    confdirs.append(confdir) # put at front of list
-		else:
-		    try:
-		        confdirs += scan_apacheconf(parts[1]) # recursive scan
-		    except:
-			pass
-	return confdirs
-	
+        confdirs = []
+        if apache_conffile[0] != '/':
+            apache_conffile = httpd_root + "/" + apache_conffile
+        confdirs = []
+        for line in file(apache_conffile):
+            parts = line.strip().split()
+            if len(parts) == 2 and parts[0].lower() == "include":
+                if parts[1].endswith("/") or parts[1].endswith("/*.conf"):
+                    confdir = "/".join(parts[1].split("/")[:-1])
+                    if confdir[0] != "/":
+                        confdir = httpd_root + "/" + confdir
+                    if not os.path.exists(confdir):
+                        continue
+                    confdirs.append(confdir) # put at front of list
+                else:
+                    try:
+                        confdirs += scan_apacheconf(parts[1]) # recursive scan
+                    except:
+                        pass
+        return confdirs
+
 
     # Find binary
     try:
@@ -142,31 +142,31 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
         apache_binary = process_executable(apache_pid)
         apache_conffile = None
         apache_confdir = None
-	httpd_root = ""
+        httpd_root = ""
         for line in os.popen("%s -V 2>&1" % apache_binary):
             parts = line.split()
             if parts[0] == "-D" and len(parts) > 1:
                 p = parts[1].split("=")
                 if len(p) == 2 and p[0] == "SERVER_CONFIG_FILE":
                     apache_conffile = p[1].replace('"', "")
-		elif len(p) == 2 and p[0] == "HTTPD_ROOT":
-		    httpd_root = p[1].replace('"', "")
+                elif len(p) == 2 and p[0] == "HTTPD_ROOT":
+                    httpd_root = p[1].replace('"', "")
         if apache_conffile:
-	    confdirs = scan_apacheconf(apache_conffile)
+            confdirs = scan_apacheconf(apache_conffile)
 
             if len(confdirs) > 0:
                 apache_confdir = confdirs[0]
 
-	    for dir in confdirs:
+            for dir in confdirs:
                 if dir.endswith("/conf.d"):
-                   apache_confdir = dir
+                    apache_confdir = dir
 
             # Search for Nagios configuration. We are interested
             # in the authentication configuration. Most Nagios
             # installations use HTTP basic auth with a htpasswd
             # user file. We want to use that user file for the
             # check_mk web pages.
-            
+
             def remove_quotes(text):
                 try:
                     if text[0] in '"\'':
@@ -176,8 +176,8 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
                 except:
                     pass
                 return text
-            
-            
+
+
             auth_files = []
             auth_names = []
             try:
@@ -199,16 +199,16 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
                                 if len(parts) > 1 and parts[0].lower() == "authname":
                                     parts = line.split(None, 1)
                                     new_auth_names.append(remove_quotes(parts[1].strip()))
-			        try:
+                                try:
                                     if len(parts) > 1 and parts[0].lower().startswith("<directory") and "pnp4nagios" in line:
-				        cleanedup = line.replace("<", "").replace(">", "").replace('"', "")
-				        cleanedup = cleanedup[9:]
-				        dir = cleanedup.strip()
-				        if os.path.exists(dir) and os.path.exists(dir + "/application/config/config.php"):
-				            result['pnphtdocsdir'] = dir
-					    result['pnptemplates'] = dir + "/templates"
+                                        cleanedup = line.replace("<", "").replace(">", "").replace('"', "")
+                                        cleanedup = cleanedup[9:]
+                                        dir = cleanedup.strip()
+                                        if os.path.exists(dir) and os.path.exists(dir + "/application/config/config.php"):
+                                            result['pnphtdocsdir'] = dir
+                                            result['pnptemplates'] = dir + "/templates"
                                 except Exception,e :
-				    pass
+                                    pass
                             if file_good:
                                 auth_names += new_auth_names
                                 auth_files += new_auth_files
@@ -223,8 +223,8 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
                 if opt_debug:
                     raise
                 pass
-                    
-                    
+
+
     except:
         if opt_debug:
             raise
@@ -321,8 +321,8 @@ def detect_pnp():
                     found.append(dirname + "/templates")
             os.path.walk(cgiconf['physical_html_path'], func, None)
             result['pnptemplates'] = found[0]
-	    if 'pnphtdocsdir' not in result:
-		result['pnphtdocsdir'] = result['pnptemplates'].rsplit('/', 1)[0]
+            if 'pnphtdocsdir' not in result:
+                result['pnphtdocsdir'] = result['pnptemplates'].rsplit('/', 1)[0]
         except:
             pass
 
@@ -341,24 +341,24 @@ def detect_pnp():
                 result['pnpconfdir'] = pnpconffile.rsplit("/", 1)[0]
                 break
     except:
-	pass
+        pass
 
     try:
-	# For PNP 0.6
+        # For PNP 0.6
         if 'pnpconffile' not in result:
-	    kohanaconf = result['pnphtdocsdir'] + "/application/config/config.php"
-	    if os.path.exists(kohanaconf):
-		for line in file(kohanaconf):
+            kohanaconf = result['pnphtdocsdir'] + "/application/config/config.php"
+            if os.path.exists(kohanaconf):
+                for line in file(kohanaconf):
                     line = line.strip()
                     if not line.startswith("#") and "pnp_etc_path" in line:
-			last = line.split('=')[-1].strip()
-			dir = last.replace("'", "").replace(";", "").replace('"', "")
-			if os.path.exists(dir):
-			    result['pnpconfdir'] = dir
-			    result['pnpconffile'] = dir + "/config.php"
+                        last = line.split('=')[-1].strip()
+                        dir = last.replace("'", "").replace(";", "").replace('"', "")
+                        if os.path.exists(dir):
+                            result['pnpconfdir'] = dir
+                            result['pnpconffile'] = dir + "/config.php"
 
     except:
-	pass
+        pass
 
     try:
         for line in file(result['pnpconffile']):
@@ -376,7 +376,7 @@ def detect_pnp():
                     pnp_url += "/"
                 result["pnp_url"] = pnp_url
     except:
-	pass
+        pass
 
 try:
     result = {}
@@ -407,7 +407,7 @@ try:
         result['htdocsdir'] = cgiconf['physical_html_path']
     except:
         cgiconf = {}
-    
+
     # Suche nach cfg_dir Direktiven. Wir suchen
     # einen flauschigen Platz fuer unsere Konfigdateien
     cfg_dirs = [ value for key, value in nagconf if key == 'cfg_dir' ]
@@ -470,31 +470,31 @@ try:
                 uservars[varname.strip()] = value.strip()
     except:
         pass
-    
+
 
     # Suche nach einem Eintrag zum Laden des livestatus
     # Moduls. Er darf auch auskommentiert sein. Dann lassen
     # wir den Benutzer damit in Ruhe
     found = False
     for line in file(configfile):
-       if "broker_module=" in line and "/livestatus.o" in line:
-	  found = True
-	  break
+        if "broker_module=" in line and "/livestatus.o" in line:
+            found = True
+            break
     result['livestatus_in_nagioscfg'] = found
 
     # Jetzt wird's schwieriger: Ich suche nach check_icmp.
-    # Ich will keinen find machen, da das erstens ewig 
+    # Ich will keinen find machen, da das erstens ewig
     # dauern kann und zweitens eventl. eine falsche Stelle
     # findet, z.B. innerhalb eines ausgepackten und kompilierten
     # Quellcodes der nagios-plugins. Daher suche ich in
-    # allen Objektdateien von Nagios nach command_line. 
+    # allen Objektdateien von Nagios nach command_line.
     # Damit ermittle ich alle Verzeichnisse, in denen Plugins
     # liegen. Dort suche ich dann nach check_icmp. Zur Sicherheit
     # suche ich aber auch unter '/usr/lib/nagios' und '/usr/local/nagios/libexec'
     # und '/usr/local/nagios/plugins'
     found = []
     for dir in cfg_dirs:
-       os.path.walk(dir, lambda x,dirname,names: found.append((dirname, names)), None)
+        os.path.walk(dir, lambda x,dirname,names: found.append((dirname, names)), None)
     plugin_paths = []
     for dirname, names in found:
         for name in names:
@@ -513,7 +513,7 @@ try:
                                 plugin_paths.append(path)
                 except:
                     pass
-    
+
     for dir in plugin_paths + \
         [ '/usr/lib/nagios/plugins',
           '/usr/local/nagios/libexec',
@@ -530,7 +530,7 @@ try:
                     break
         except:
             pass
-               
+
 
     # Die Basis-Url fuer Nagios ist leider auch nicht immer
     # gleich

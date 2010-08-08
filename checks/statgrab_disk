@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -34,7 +34,7 @@ def check_statgrab_disk(item, params, info):
     for var, value in info:
         if var.endswith("." + item + "_bytes"):
             this_val += int(value)
-    
+
     this_time = int(time.time())
     timedif, per_sec = get_counter("diskstat." + item, this_time, this_val)
     mb_per_s = per_sec / 1024.0    # Diskstat output is in KB

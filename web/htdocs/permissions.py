@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -41,15 +41,15 @@ def page_view_permissions(h):
     current_section = None
     for perm in config.permissions_by_order:
         pname = perm["name"]
-	if config.may(pname):
-	    if "." in pname:
-		section = pname.split(".")[0]
-		section_title = config.permission_sections[section]
-		if section != current_section:
-		    current_section = section
-		    html.write("</ul>\n<h2>%s</h2><ul>\n" % section_title)
-	    
-	    html.write("<li>%s</li>\n" % perm["title"])
+        if config.may(pname):
+            if "." in pname:
+                section = pname.split(".")[0]
+                section_title = config.permission_sections[section]
+                if section != current_section:
+                    current_section = section
+                    html.write("</ul>\n<h2>%s</h2><ul>\n" % section_title)
+
+            html.write("<li>%s</li>\n" % perm["title"])
     html.write("</ul>\n")
     html.footer()
 
@@ -57,52 +57,52 @@ def page_edit_permissions(h):
     global html
     html = h
     if not config.may("edit_permissions"):
-	raise MKAuthException("You are not allowed to edit permissions.")
+        raise MKAuthException("You are not allowed to edit permissions.")
 
     html.header("Edit permissions")
 
     permissions = {}
     if html.var("save"):
-	for perm in config.permissions_by_order:
-	    mays = [ role for role in config.roles if html.var("p_%s_%s" % (role, perm["name"])) ]
-	    permissions[perm["name"]] = mays
-	
-	config.save_permissions(permissions)	
-	config.load_permissions()
-	html.message("Permissions have beend saved.")
+        for perm in config.permissions_by_order:
+            mays = [ role for role in config.roles if html.var("p_%s_%s" % (role, perm["name"])) ]
+            permissions[perm["name"]] = mays
+
+        config.save_permissions(permissions)
+        config.load_permissions()
+        html.message("Permissions have beend saved.")
 
 
     html.begin_form("permissions")
     html.write('<table class="form">\n')
     html.write("<th>Permission</th>\n")
     for role in config.roles:
-	html.write("<th>%s</th>" % role)
+        html.write("<th>%s</th>" % role)
     html.write("</tr>\n")
 
     current_section = None
     for perm in config.permissions_by_order:
         pname = perm["name"]
-	if "." in pname:
-	    section = pname.split(".")[0]
-	    section_title = config.permission_sections[section]
-	    if section != current_section:
-		current_section = section
-		html.write('<tr><td class="legend border hilite" colspan=%d><b>%s</b></td></tr>\n' % (len(config.roles) + 1, section_title))
-	
-	if current_section == None:
-	    title = "<b>%s</b><br><i>%s</i>" % (perm["title"], perm["description"])
-	    classes="legend border"
-	else:
-	    title = perm["title"]
-	    classes="legend border sub"
+        if "." in pname:
+            section = pname.split(".")[0]
+            section_title = config.permission_sections[section]
+            if section != current_section:
+                current_section = section
+                html.write('<tr><td class="legend border hilite" colspan=%d><b>%s</b></td></tr>\n' % (len(config.roles) + 1, section_title))
 
-	html.write("<tr><td class=\"%s\">%s</td>" % (classes, title))
-	for role in config.roles:
-	    current = role in config.permissions.get(pname, perm["defaults"])
-	    html.write("<td class=\"content %s\">" % role)
-	    html.checkbox("p_%s_%s" % (role, pname), current)
-	    html.write("</td>")
-	html.write("</tr>\n")
+        if current_section == None:
+            title = "<b>%s</b><br><i>%s</i>" % (perm["title"], perm["description"])
+            classes="legend border"
+        else:
+            title = perm["title"]
+            classes="legend border sub"
+
+        html.write("<tr><td class=\"%s\">%s</td>" % (classes, title))
+        for role in config.roles:
+            current = role in config.permissions.get(pname, perm["defaults"])
+            html.write("<td class=\"content %s\">" % role)
+            html.checkbox("p_%s_%s" % (role, pname), current)
+            html.write("</td>")
+        html.write("</tr>\n")
 
     html.write('<tr><td class="legend border button" colspan=%d>' % (1 + len(config.roles)))
     html.button("save", "Save")

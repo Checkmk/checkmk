@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -31,24 +31,24 @@ def check_statgrab_mem(item, params, info):
             if var == 'mem.used':     memused_kb   = int(value) / 1024
             elif var == 'mem.total':  totalmem_kb  = int(value) / 1024
             elif var == 'swap.used':  swapused_kb  = int(value) / 1024 / 4 # BUG in statgrab und Solaris?
-            elif var == 'swap.total': totalswap_kb = int(value) / 1024 / 4 
+            elif var == 'swap.total': totalswap_kb = int(value) / 1024 / 4
             elif var == 'mem.cache':  caches_kb    = int(value) / 1024
-        totalused_kb = (swapused_kb + memused_kb - caches_kb) 
+        totalused_kb = (swapused_kb + memused_kb - caches_kb)
         totalused_mb = totalused_kb / 1024
         totalmem_mb = totalmem_kb / 1024
         totalused_perc = 100 * (float(totalused_kb) / float(totalmem_kb))
         totalvirt_mb = (totalswap_kb + totalmem_kb) / 1024
         warn, crit = params
 
-        perfdata = [ 
+        perfdata = [
             ('ramused', str((memused_kb - caches_kb) / 1024) + 'MB', '', '', 0, totalmem_mb),
             ('swapused', str(swapused_kb / 1024) + 'MB', '', '', 0, totalswap_kb / 1024) ]
-        
+
     except:
         return (3, "UNKNOWN - invalid output from plugin")
 
     # levels may be given either in int -> MB or in float -> percentages
-    
+
     if type(warn) == float:
         perfdata.append(('memused', str(totalused_mb)+'MB', int(warn/100.0 * totalmem_mb), int(crit/100.0 * totalmem_mb), 0, totalvirt_mb))
         if totalused_perc >= crit:

@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -59,20 +59,20 @@ def check_if(item, params, info):
                 infotext = "[%s] " % ifDescr
             else:
                 infotext = "[%s] " % ifIndex
-                
-	    operstatus = ifoperstatus_statename(ifOperStatus)
+
+            operstatus = ifoperstatus_statename(ifOperStatus)
             if operstatus != "up":
                 return (2, "CRIT - %sno link" % infotext)
 
             state = 0
-                
+
             # Check speed
             speed = saveint(ifSpeed)
             bandwidth = speed / 8.0 # in Bytes / sec
-            speedtxt = { 
-                10000000    : "10MBit/s", 
-                100000000   : "100MBit/s", 
-                1000000000  : "1GBit/s", 
+            speedtxt = {
+                10000000    : "10MBit/s",
+                100000000   : "100MBit/s",
+                1000000000  : "1GBit/s",
                 10000000000 : "10GBit/s" }.get(speed, str(speed))
             infotext += speedtxt
             if speed != targetspeed:
@@ -84,19 +84,19 @@ def check_if(item, params, info):
             rates = []
             wrapped = False
             perfdata = []
-            for name, counter, warnn, critt, minn, maxx in [ 
-                ( "in",        ifInOctets, None, None, 0, bandwidth), 
-                ( "inucast",   ifInUcastPkts, None, None, None, None),   
+            for name, counter, warnn, critt, minn, maxx in [
+                ( "in",        ifInOctets, None, None, 0, bandwidth),
+                ( "inucast",   ifInUcastPkts, None, None, None, None),
                 ( "innucast",  ifInNUcastPkts, None, None, None, None),
                 ( "indisc",    ifInDiscards, None, None, None, None),
                 ( "inerr",     ifInErrors, warn, crit, None, None),
 
-                ( "out",       ifOutOctets, None, None, 0, bandwidth), 
-                ( "outucast",  ifOutUcastPkts, None, None, None, None),   
+                ( "out",       ifOutOctets, None, None, 0, bandwidth),
+                ( "outucast",  ifOutUcastPkts, None, None, None, None),
                 ( "outnucast", ifOutNUcastPkts, None, None, None, None),
                 ( "outdisc",   ifOutDiscards, None, None, None, None),
                 ( "outerr",    ifOutErrors, warn, crit, None, None) ]:
-            
+
                 try:
                     timedif, rate = get_counter("if.%s.%s" % (name, item), this_time, saveint(counter))
                     rates.append(rate)
@@ -127,16 +127,16 @@ def check_if(item, params, info):
                         elif errperc >= warn:
                             state = 1
                             infotext += "(!)" + str(warn)
-                              
+
 
             return (state, "%s - %s" % (nagios_state_names[state], infotext), perfdata)
 
-                    
+
     return (3, "UNKNOWN - no such interface")
 
 check_info['if'] = (check_if, "Interface %s", 1,  inventory_if)
 snmp_info['if'] = \
-  ( ".1.3.6.1.2.1.2.2.1", [ 
+  ( ".1.3.6.1.2.1.2.2.1", [
   1, # ifIndex
   2, # ifDescr
   3, # ifType
@@ -157,4 +157,4 @@ snmp_info['if'] = \
 
 # check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2
 snmp_scan_functions['if'] = \
-	lambda oid: saveint(oid(".1.3.6.1.2.1.2.1.0")) >= 2 and not oid('.1.3.6.1.2.1.31.1.1.1.6.1') # use if64 if possible
+        lambda oid: saveint(oid(".1.3.6.1.2.1.2.1.0")) >= 2 and not oid('.1.3.6.1.2.1.31.1.1.1.6.1') # use if64 if possible

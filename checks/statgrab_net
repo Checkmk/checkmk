@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -58,11 +58,11 @@ def check_statgrab_net_link(item, targetstate, info):
                     return (0, "OK - no link / NIC unused")
             else:
                 if link:
-                     return (1, "WARN - Link is up, NIC should be unused")
+                    return (1, "WARN - Link is up, NIC should be unused")
                 else:
-                     return (2, "CRIT - no link")
+                    return (2, "CRIT - no link")
     return (2, "CRIT - unknown network device")
-                 
+
 
 def inventory_statgrab_net_params(checkname, info):
     items = []
@@ -76,7 +76,7 @@ def inventory_statgrab_net_params(checkname, info):
                 params = (speed + "Mb/s", duplex.capitalize())
                 items.append( (nicname, params, "%s" % (params,)) )
     return items
-          
+
 
 def check_statgrab_net_params(item, params, info):
     for var, value in info:
@@ -92,7 +92,7 @@ def check_statgrab_net_params(item, params, info):
                     return (2, "CRIT - %s (should be %s)" %
                            (",".join(act_params), ",".join(params)))
     return (3, "UNKNOWN - network device not found")
-                           
+
 
 
 def inventory_statgrab_net_ctr(checkname, info):
@@ -104,7 +104,7 @@ def inventory_statgrab_net_ctr(checkname, info):
                 items.append( (nicname, '', '""') )
     return items
 
-    
+
 # Example output from statgrab for eri0:
 #eri0.collisions 43154
 #eri0.duplex half
@@ -128,25 +128,25 @@ def check_statgrab_net_ctr(nic, _no_params, info):
     infotxt = ""
     perfdata_dict = {}
     for var, value in info:
-       nicname, ctr = var.split('.')
-       if nicname != nic:
-           continue
-       countername = statgrab_netif_counternames.get(ctr, None)
-       if countername == None:
-           continue
-       value = int(value)
-       timedif, items_per_sec = get_counter( "netctr." + nic + "." + countername, this_time, value)
-       perfdata_dict[countername] = ( countername, "%dc" % value )
-       if countername == 'rx_bytes':
-           infotxt += ' - Receive: %.2f MB/sec' % (float(items_per_sec) / float(1024*1024))
-       elif countername == 'tx_bytes':
-           infotxt += ' - Send: %.2f MB/sec' % (float(items_per_sec) / float(1024*1024))
-       if ctr == 'tx':
-           break # last counter
+        nicname, ctr = var.split('.')
+        if nicname != nic:
+            continue
+        countername = statgrab_netif_counternames.get(ctr, None)
+        if countername == None:
+            continue
+        value = int(value)
+        timedif, items_per_sec = get_counter( "netctr." + nic + "." + countername, this_time, value)
+        perfdata_dict[countername] = ( countername, "%dc" % value )
+        if countername == 'rx_bytes':
+            infotxt += ' - Receive: %.2f MB/sec' % (float(items_per_sec) / float(1024*1024))
+        elif countername == 'tx_bytes':
+            infotxt += ' - Send: %.2f MB/sec' % (float(items_per_sec) / float(1024*1024))
+        if ctr == 'tx':
+            break # last counter
     if infotxt == "":
-        return (3, "UNKNOWN - unknown network interface")       
+        return (3, "UNKNOWN - unknown network interface")
 
-    
+
     perfdata = []
     for countername in inventory_netctr_counters:
         perf = perfdata_dict.get(countername)

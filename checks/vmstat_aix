@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -27,7 +27,7 @@
 
 # Output of vmstat on AIX:
 # System configuration: lcpu=8 mem=6144MB ent=4.00
-# 
+#
 # kthr    memory              page              faults              cpu
 # ----- -----------  ------------------------ ------------ -----------------------
 #  r  b   avm   fre   re  pi  po  fr   sr  cy  in   sy  cs us sy id wa    pc    ec
@@ -50,4 +50,3 @@ def check_vmstat_aix(item, params, info):
 
 
 check_info['vmstat_aix'] = (check_vmstat_aix, "vmstat %s", 1,  no_inventory_possible)
-

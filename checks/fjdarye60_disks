@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -37,16 +37,16 @@ def fjdary60_disks_summary(info):
     # compute the number of disks in each state.
     states = {}
     for index, state in info:
-	state = int(state)
-	statename = fjdarye60_disks_status[state]
-	if state != 3:
-	    states[statename] = states.get(statename, 0) + 1
+        state = int(state)
+        statename = fjdarye60_disks_status[state]
+        if state != 3:
+            states[statename] = states.get(statename, 0) + 1
     return states
 
 def inventory_fjdarye60_disks_summary(checkname, info):
     current_state = fjdary60_disks_summary(info)
     if len(current_state) > 0:
-	return [ (None, '', current_state) ]
+        return [ (None, '', current_state) ]
 
 def fjdarye60_disks_printstates(state):
     return ", ".join(["%s: %s" % (s,c) for (s,c) in state.items()])
@@ -55,21 +55,21 @@ def check_fjdarye60_disks_summary(index, expected_status, info):
     current_state = fjdary60_disks_summary(info)
     infotext = " - " + fjdarye60_disks_printstates(current_state)
     if current_state == expected_status:
-	return (0, "OK" + infotext)
+        return (0, "OK" + infotext)
 
     result = 1
     for ename, ecount in expected_status.items():
-	if current_state.get(ename, 0) < ecount:
-	    result = 2
-	    break
-    
+        if current_state.get(ename, 0) < ecount:
+            result = 2
+            break
+
     return (result, nagios_state_names[result] + infotext + \
-	    " (expected was: %s)" % fjdarye60_disks_printstates(expected_status))
+            " (expected was: %s)" % fjdarye60_disks_printstates(expected_status))
 
 check_info['fjdarye60_disks.summary'] = (check_fjdarye60_disks_summary, "Disk summary", 0,  inventory_fjdarye60_disks_summary)
 snmp_info['fjdarye60_disks.summary'] = (".1.3.6.1.4.1.211.1.21.1.60.2.12.2.1", [ 1, 3 ])
 
-# -------------------------------------------------------------------------------- 
+# --------------------------------------------------------------------------------
 # 2. Single disk version of check -> one check for each disk
 
 def inventory_fjdarye60_disks(checkname, info):
@@ -77,13 +77,13 @@ def inventory_fjdarye60_disks(checkname, info):
 
 def check_fjdarye60_disks(index, expected_status, info):
     for line in info:
-	if int(line[0]) == index:
-	    status = fjdarye60_disks_status[int(line[1])]
+        if int(line[0]) == index:
+            status = fjdarye60_disks_status[int(line[1])]
 
-	    if status == expected_status:
-		return (0, "OK - Status is %s" % status)
-	    else:
-		return (2, "CRIT - Status is %s (expected status is %s)" % (status, expected_status))
+            if status == expected_status:
+                return (0, "OK - Status is %s" % status)
+            else:
+                return (2, "CRIT - Status is %s (expected status is %s)" % (status, expected_status))
 
     return (3, "UNKNOWN - No status for disk number %d present" % index)
 

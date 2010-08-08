@@ -9,10 +9,10 @@
 # |                                                                  |
 # | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
-# 
+#
 # This file is part of Check_MK.
 # The official homepage is at http://mathias-kettner.de/check_mk.
-# 
+#
 # check_mk is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
 # the Free Software Foundation in version 2.  check_mk is  distributed
@@ -29,7 +29,7 @@
 # Data sources
 ##################################################################################
 
-# keys: columns which must be fetched in order to execute commands on 
+# keys: columns which must be fetched in order to execute commands on
 # the items (= in order to identify the items and gather all information
 # needed for constructing Nagios commands)
 
@@ -123,7 +123,7 @@ multisite_datasources["log"] = {
 multisite_datasources["log_events"] = {
     "title"       : "Host and Service Events",
     "table"       : "log",
-    "add_headers" : "Filter: class = 1\n", 
+    "add_headers" : "Filter: class = 1\n",
     "infos"       : [ "log", "host", "service" ],
     "keys"        : [],
 }
@@ -131,8 +131,7 @@ multisite_datasources["log_events"] = {
 multisite_datasources["log_host_events"] = {
     "title"       : "Host Events",
     "table"       : "log",
-    "add_headers" : "Filter: class = 1\nFilter: service_description = \n", 
+    "add_headers" : "Filter: class = 1\nFilter: service_description = \n",
     "infos"       : [ "log", "host" ],
     "keys"        : [],
 }
-

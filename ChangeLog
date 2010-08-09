@@ -11,6 +11,8 @@
     * nvidia: agent now only queries GPUCoreTemp and GPUErrors. This avoids
       a vmalloc leakage of 32kB per call (bug in NVIDIA driver)
     * Make all SNMP based checks independent of standard MIB files
+    * ad_replication: Fixed syntax errors and unhandled date output when
+      not replicated yet
 
 
 1.1.7i4:

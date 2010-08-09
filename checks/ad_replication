@@ -38,7 +38,7 @@ import time
 ad_replication_default_params = (20,)
 
 def parse_ad_replication_dates(s):
-    if s == '0':
+    if s == '0' or s == '(never)':
         return None
     else:
         return datetime(*time.strptime(s, '%Y-%m-%d %H:%M:%S')[0:5])
@@ -75,8 +75,8 @@ def check_ad_replication(item, params, info):
 
             if int(numFailures) > params[0]:
                 status = 2
-                output += 'CRITICAL: %s/%s replication of context %s reached ' + \
-                          ' the threshold of maxmimum failures (%s) (Last Success: %s, ' + \
+                output += 'CRITICAL: %s/%s replication of context %s reached ' \
+                          ' the threshold of maxmimum failures (%s) (Last Success: %s, ' \
                           'LastFailure: %s NumFailures: %s Status: %s), ' % \
                          (sourceSite, sourceDC, namingContext, params[0], timeLastFailure,
                           timeLastSuccess, numFailures, statusLastFailure)
@@ -84,7 +84,7 @@ def check_ad_replication(item, params, info):
             if timeLastFailure is not None and timeLastSuccess is not None \
                and timeLastFailure > timeLastSuccess:
                 status = 2
-                output += 'CRITICAL: %s/%s replication of context %s failed '+ \
+                output += 'CRITICAL: %s/%s replication of context %s failed ' \
                          '(Last Success: %s, LastFailure: %s NumFailures: %s Status: %s), ' % \
                          (sourceSite, sourceDC, namingContext, timeLastFailure,
                           timeLastSuccess, numFailures, statusLastFailure)

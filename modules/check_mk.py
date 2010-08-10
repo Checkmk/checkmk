@@ -2777,6 +2777,7 @@ def usage():
  check_mk -N [HOSTS...]                    output Nagios configuration
  check_mk -C, --compile                    precompile host checks
  check_mk -U, --update                     precompile + create Nagios config
+ check_mk -O, --reload                     precompile + config + Nagios reload
  check_mk -R, --restart                    precompile + config + Nagios restart
  check_mk -D, --dump [H1 H2 ..]            dump all or some hosts
  check_mk -d HOSTNAME|IPADDRESS            show raw information from agent
@@ -2947,19 +2948,23 @@ def do_check_nagiosconfig():
         return False
 
 
-def do_restart_nagios():
-    sys.stderr.write("Restarting Nagios...")
+def do_restart_nagios(only_reload):
+    action = only_reload and "load" or "start"
+    sys.stderr.write("Re%sing Nagios..." % action)
     sys.stderr.flush()
-    command = nagios_startscript + " restart 2>&1"
+    command = nagios_startscript + " re%s 2>&1" % action
     process = os.popen(command, "r")
     output = process.read()
     if process.close():
         sys.stderr.write("ERROR:\n")
-        raise MKGeneralException("Cannot restart Nagios")
+        raise MKGeneralException("Cannot re%s Nagios" % action)
     else:
         sys.stderr.write(tty_ok + "\n")
 
-def do_restart():
+def do_reload():
+    do_restart(True)
+
+def do_restart(only_reload = False):
     try:
         # Save current configuration
         if os.path.exists(nagios_objects_file):
@@ -2983,7 +2988,7 @@ def do_restart():
             if backup_path:
                 os.remove(backup_path)
             do_precompile_hostchecks()
-            do_restart_nagios()
+            do_restart_nagios(only_reload)
         else:
             sys.stderr.write("Nagios configuration is invalid. Rolling back.\n")
             if backup_path:
@@ -3410,12 +3415,12 @@ backup_paths = [
 # Do option parsing and execute main function -
 # if check_mk is not called as module
 if __name__ == "__main__":
-    short_options = 'SHVLCURDMd:Ic:nhvpXPuN'
+    short_options = 'SHVLCURODMd:Ic:nhvpXPuN'
     long_options = ["help", "version", "verbose", "compile", "debug",
                     "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
                     "flush", "package", "donate", "snmpwalk", "usewalk",
                     "scan-parents", "procs=",
-                    "no-cache", "update", "restart", "dump", "fake-dns=",
+                    "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                     "man", "nowiki", "config-check", "backup=", "restore=",
                     "check-inventory=", "paths", "cleanup-autochecks" ]
 
@@ -3488,6 +3493,9 @@ if __name__ == "__main__":
                 done = True
             elif o in [ '-R', '--restart' ] :
                 do_restart()
+                done = True
+            elif o in [ '-O', '--reload' ] :
+                do_reload()
                 done = True
             elif o in [ '-D', '--dump' ]:
                 dump_all_hosts(args)

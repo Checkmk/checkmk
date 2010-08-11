@@ -13,6 +13,7 @@
     * Make all SNMP based checks independent of standard MIB files
     * ad_replication: Fixed syntax errors and unhandled date output when
       not replicated yet
+    * ifoperstatus: Allowing multiple target states as a list now
 
 
 1.1.7i4:

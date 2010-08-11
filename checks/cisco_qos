@@ -1,0 +1,233 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Author: Lars Michelsen <lm@mathias-kettner.de>
+
+# Relevant SNMP OIDs:
+# .1.3.6.1.4.1.9.9.166.1.1.1.1.4.144 9
+# .1.3.6.1.4.1.9.9.166.1.1.1.1.4.258 16
+# .1.3.6.1.4.1.9.9.166.1.1.1.1.4.400 25
+#
+# .1.3.6.1.4.1.9.9.166.1.6.1.1.1.3974704 "6cos"
+# .1.3.6.1.4.1.9.9.166.1.6.1.1.1.6208592 "ingress-map"
+#
+# .1.3.6.1.4.1.9.9.166.1.7.1.1.1.1593 "class-default"
+# .1.3.6.1.4.1.9.9.166.1.7.1.1.1.18785 "EF"
+# .1.3.6.1.4.1.9.9.166.1.7.1.1.1.284945 "AF1"
+# .1.3.6.1.4.1.9.9.166.1.7.1.1.1.284961 "AF2"
+# .1.3.6.1.4.1.9.9.166.1.7.1.1.1.284977 "AF3"
+
+# http://www.oidview.com/mibs/9/CISCO-CLASS-BASED-QOS-MIB.html
+
+# TEST:
+#
+# search class table:
+# .1.3.6.1.4.1.9.9.166.1.7.1.1.1.284945 "AF1"
+# class_id = 284945
+#
+# search config table for matching value
+# .1.3.6.1.4.1.9.9.166.1.5.1.1.2.144.5256 284945
+# key = 144.5256
+#
+# search if table for matchin if_id: 144
+# .1.3.6.1.4.1.9.9.166.1.1.1.1.4.144 9
+# if_policy = 9
+#
+# get policy_id from config table using if_id.if_id 144.144
+# .1.3.6.1.4.1.9.9.166.1.5.1.1.2.144.144 6208592
+# policy_index = 6208592
+#
+# get policy name using the policy_index
+# .1.3.6.1.4.1.9.9.166.1.6.1.1.1.6208592 "ingress-map"
+# policy_name = "ingress-map"
+#
+# get post bytes using the key
+# .1.3.6.1.4.1.9.9.166.1.15.1.1.9.144.5256 0
+# post_bytes = 0
+#
+# get dropped bytes using the key
+# .1.3.6.1.4.1.9.9.166.1.15.1.1.16.144.5256 0
+# dropped_bytes = 0
+#
+# get if_name using the if_policy: 9
+# .1.3.6.1.2.1.31.1.1.1.1.9 Vl1
+# if_name = Vl1
+#
+# get if_speed using the if_policy: 9
+# .1.3.6.1.2.1.2.2.1.5.9 100000000
+# if_speed = 100000000
+#
+###
+# Test to find the badwidth of the classes. Not finished...
+#
+# 'cbQosObjectsType' => {
+#         1 => 'policymap',
+#         2 => 'classmap',
+#         3 => 'matchStatement',
+#         4 => 'queueing',
+#         5 => 'randomDetect',
+#         6 => 'trafficShaping',
+#         7 => 'police',
+#         8 => 'set' },
+#
+# Index:
+# .1.3.6.1.4.1.9.9.166.1.5.1.1.2.258.1244739 1608
+#
+# Type:
+# .1.3.6.1.4.1.9.9.166.1.5.1.1.3.258.1244739 4
+#
+# Parent ID:
+# .1.3.6.1.4.1.9.9.166.1.5.1.1.4.258.1244739 6184
+#
+# cbQosQueueingStatsEntry:
+# .1.3.6.1.4.1.9.9.166.1.18.1.1.2.258.1244739 64
+# ...
+
+# Index:
+# .1.3.6.1.4.1.9.9.166.1.5.1.1.2.258.6184 18785
+# Type:
+# .1.3.6.1.4.1.9.9.166.1.5.1.1.3.258.6184 2
+# Parent ID:
+# .1.3.6.1.4.1.9.9.166.1.5.1.1.4.258.6184 258
+
+# drop warn, drop crit
+cisco_qos_default_levels = (None, None, 0.01, 0.01)
+
+def cisco_qos_get_ifs_by_class_id(config, class_id):
+    return [ if_index.split('.') for if_index, value in config.iteritems() if value == class_id ]
+
+def inventory_cisco_qos(checkname, info):
+    if len(info) == 8:
+        ifs = dict(info[0])
+        config = dict([ ('.'.join(oid.split('.')[-2:]), value) for oid, value in info[3] ])
+        if_names = dict(info[6])
+
+        # Find all interfaces for each class and create one service for each pair
+        items = []
+        for class_id, class_name in info[2]:
+            # Get interface ids which use this qos class
+            for policy_if_id, policy_if_id2 in cisco_qos_get_ifs_by_class_id(config, class_id):
+                if_name = if_names[ifs[policy_if_id]]
+                items += [ ('%s: %s' % (if_name, class_name), 'cisco_qos_default_levels') ]
+
+        return items
+    else:
+        return []
+
+def check_cisco_qos(item, params, info):
+    post_warn, post_crit, drop_warn, drop_crit = params
+
+    # Load values and format them
+    ifs = dict(info[0])
+    policies= dict(info[1])
+    classes = dict(info[2])
+    config = dict([ ('.'.join(oid.split('.')[-2:]), value) for oid, value in info[3] ])
+    post_bytes = dict([ ('.'.join(oid.split('.')[-2:]), value) for oid, value in info[4] ])
+    drop_bytes = dict([ ('.'.join(oid.split('.')[-2:]), value) for oid, value in info[5] ])
+    if_names = dict(info[6])
+    if_speeds = dict(info[7])
+
+    if_name, class_name = item.split(': ')
+
+    # Gather the class id by class_name
+    class_id = None
+    for cid, cname in classes.iteritems():
+        if class_name == cname:
+            class_id = cid
+            break
+
+    # Gather the interface id by class_name
+    if_id = None
+    for iid, iid2 in ifs.iteritems():
+        if if_name == if_names[iid2]:
+            if_id = iid2
+            break
+
+    if not if_id or not class_id:
+        return (3, "UNKNOWN - QoS class not found for that interface")
+
+    # Gather information for this object
+    policy_if_id, policy_if_id2 = cisco_qos_get_ifs_by_class_id(config, class_id)[0]
+    policy_id   = config[policy_if_id+'.'+policy_if_id]
+    policy_name = policies[policy_id]
+    post_b      = post_bytes[policy_if_id+'.'+policy_if_id2]
+    drop_b      = post_bytes[policy_if_id+'.'+policy_if_id2]
+    speed       = saveint(if_speeds[if_id])
+    # Bandwidth needs to be in bytes for later calculations
+    bw          = speed / 8.0
+
+    # Handle counter values
+    state = 0
+    infotext = ''
+    this_time = time.time()
+    rates = []
+    wrapped = False
+    perfdata = []
+    for name, counter, warn, crit, min, max in [ ( "post", post_b, post_warn, post_crit, 0, bw),
+                                                 ( "drop", drop_b, drop_warn, drop_crit, 0, bw) ]:
+
+        try:
+            if counter == '': # due to missing OIDs filled up by Check_MK with empty strings
+                counter = 0
+            timedif, rate = get_counter("cisco_qos.%s" % item, this_time, saveint(counter))
+            rates.append(rate)
+            perfdata.append( (name, rate, warn, crit, min, max) )
+        except MKCounterWrapped:
+            wrapped = True
+            # continue, other counters might wrap as well
+
+    # if at least one counter wrapped, we do not handle the counters at all
+    if wrapped:
+        perfdata = []
+    else:
+        MB = 1024 * 1024.0
+        post_rate, drop_rate = rates
+        for what, rate, warn, crit in [ ("post",  rates[0], post_warn, post_crit),
+                                        ("drop",  rates[1], drop_warn, drop_crit) ]:
+            infotext += ', %s: %.2fMB/s' % (what, rate / MB)
+            if crit is not None and rate >= crit:
+                state = 2
+                infotext += ' (CRIT)'
+            elif warn is not None and rate >= warn:
+                state = 1
+                infotext += ' (WARN)'
+
+    infotext += ', Policy-Name: %s, Int-Bandwidth: %.2fMB/s' % (policy_name, speed / MB)
+    return (state, "%s - %s" % (nagios_state_names[state], infotext.lstrip(', ')), perfdata)
+
+
+check_info['cisco_qos'] = (check_cisco_qos, "QoS %s", 1,  inventory_cisco_qos)
+snmp_info['cisco_qos']  = [ ( '.1.3.6.1.4.1.9.9.166.1', [ OID_END,    '1.1.1.4' ] ),   # qosIfIndex
+                            ( '.1.3.6.1.4.1.9.9.166.1', [ OID_END,    '6.1.1.1' ] ),   # qosPolicies
+                            ( '.1.3.6.1.4.1.9.9.166.1', [ OID_END,    '7.1.1.1' ] ),   # qosClasses
+                            ( '.1.3.6.1.4.1.9.9.166.1', [ OID_STRING, '5.1.1.2' ] ),   # qosConfig
+                            ( '.1.3.6.1.4.1.9.9.166.1', [ OID_STRING, '15.1.1.9' ] ),  # qosPostBytes
+                            ( '.1.3.6.1.4.1.9.9.166.1', [ OID_STRING, '15.1.1.16' ] ), # qosDropBytes
+                            ( '.1.3.6.1.2.1.31.1.1.1',  [ OID_END,    '1' ]),          # ifNames
+                            ( '.1.3.6.1.2.1.2.2.1',     [ OID_END,    '5' ]),          # ifSpeeds
+                          ]
+snmp_scan_functions['cisco_qos'] = \
+    lambda oid: ".9.1.570" in oid(".1.3.6.1.2.1.1.2.0")

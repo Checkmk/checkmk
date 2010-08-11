@@ -14,6 +14,7 @@
     * ad_replication: Fixed syntax errors and unhandled date output when
       not replicated yet
     * ifoperstatus: Allowing multiple target states as a list now
+    * cisco_qos: Added new check to monitor traffic in QoS classes on Cisco routers
 
 
 1.1.7i4:

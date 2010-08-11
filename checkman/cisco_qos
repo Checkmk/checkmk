@@ -1,0 +1,39 @@
+title: Monitors the usage of QoS classes on Cisco Routers using CISCO-CLASS-BASED-QOS-MIB
+agents: snmp
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the usage of QoS classes on Cisco routers using the information
+ provided by the {CISCO-CLASS-BASED-QOS-MIB} SNMP MIB.
+
+ The check creates one service for each interface+class combination.
+
+ The check results in critical/warning states when the there are any packets dropped
+ for this class by default. It is possible to set thresholds on the traffic rate in
+ this QoS class to raise warnings/criticals when the traffic exceeds a given level.
+ The drop thresholds can be customized too.
+
+item:
+ A string: A combination of the interface name as set in IF-MIB::ifDescr and the 
+ name of the QoS class as given in CISCO-CLASS-BASED-QOS-MIB::cbQosCMName.
+
+inventory:
+ For each combination of IF-MIB::ifDescr and CISCO-CLASS-BASED-QOS-MIB::cbQosCMName one
+ check is created.
+
+perfdata:
+ {post}: The number of outbound bytes after executing the QoS.
+ {drop}: The number of dropped bytes.
+
+[parameters]
+post_warn (float): The post QoS bytes per second to raise a warning state. Default is None.
+post_crit (float): The post QoS bytes per second to raise a critical state. Default is None.
+drop_warn (float): The number of dropped bytes per second to raise a warning state. Default is 0.01.
+drop_crit (float): The number of dropped bytes per second to raise a critical state. Default is 0.01.
+
+[configuration]
+if_default_levels (float, float, float, float): Warning and critical rates for post QoS in bytes/s.
+                                                Warning and critical rates for dropped traffic in bytes/s.
+                                                Default is {(None, None, 0.01, 0.01)}
+

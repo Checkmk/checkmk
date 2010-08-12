@@ -218,7 +218,6 @@ def check_cisco_qos(item, params, info):
     infotext += ', Policy-Name: %s, Int-Bandwidth: %.2fMB/s' % (policy_name, speed / MB)
     return (state, "%s - %s" % (nagios_state_names[state], infotext.lstrip(', ')), perfdata)
 
-
 check_info['cisco_qos'] = (check_cisco_qos, "QoS %s", 1,  inventory_cisco_qos)
 snmp_info['cisco_qos']  = [ ( '.1.3.6.1.4.1.9.9.166.1', [ OID_END,    '1.1.1.4' ] ),   # qosIfIndex
                             ( '.1.3.6.1.4.1.9.9.166.1', [ OID_END,    '6.1.1.1' ] ),   # qosPolicies
@@ -226,8 +225,7 @@ snmp_info['cisco_qos']  = [ ( '.1.3.6.1.4.1.9.9.166.1', [ OID_END,    '1.1.1.4' 
                             ( '.1.3.6.1.4.1.9.9.166.1', [ OID_STRING, '5.1.1.2' ] ),   # qosConfig
                             ( '.1.3.6.1.4.1.9.9.166.1', [ OID_STRING, '15.1.1.9' ] ),  # qosPostBytes
                             ( '.1.3.6.1.4.1.9.9.166.1', [ OID_STRING, '15.1.1.16' ] ), # qosDropBytes
-                            ( '.1.3.6.1.2.1.31.1.1.1',  [ OID_END,    '1' ]),          # ifNames
+                            ( '.1.3.6.1.2.1.2.2.1',     [ OID_END,    '2' ]),          # ifNames
                             ( '.1.3.6.1.2.1.2.2.1',     [ OID_END,    '5' ]),          # ifSpeeds
                           ]
-snmp_scan_functions['cisco_qos'] = \
-    lambda oid: ".9.1.570" in oid(".1.3.6.1.2.1.1.2.0")
+snmp_scan_functions['cisco_qos'] = lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower()

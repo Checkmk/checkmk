@@ -15,6 +15,7 @@
       not replicated yet
     * ifoperstatus: Allowing multiple target states as a list now
     * cisco_qos: Added new check to monitor traffic in QoS classes on Cisco routers
+    * cisco_power: Added scan function
 
 
 1.1.7i4:

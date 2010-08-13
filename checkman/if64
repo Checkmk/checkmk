@@ -8,7 +8,7 @@ description:
  the {IF-MIB} below {.1.3.6.1.2.1.31.1.1.1}. This allow to correctly
  monitor switch ports with a traffic of more then 2GB per check interval.
 
- Also this check uses {ifAlias} instead if {ifDescr} for retrieving
+ Also this check can use {ifAlias} instead if {ifDescr} for retrieving
  the admin-configured interface description. This is useful for HP ProCurve
  switches which do not show that aliasses in {ifDescr}.
 
@@ -17,3 +17,14 @@ description:
 
  Please see the manual of {if} for details on configuration, inventory
  and performance values.
+
+[configuration]
+if_inventory_porttypes (list of strings): List of interface types the
+  inventory should create checks for. Default is {[ "ethernetCsmacd" ]}.
+if_inventory_uses_description (boolean): Wether inventory should use the
+  interface description as item (instead of the interface index). Default is {False}.
+if_inventory_uses_alias (boolean): Wether inventory should use the
+ interface description as item (instead of the interface index). Default is {False}.
+if_default_levels (float, float): Warning and critical percentages (not rates!)
+  for errors and discards used by intentorized checks. Default is {(0.01, 0.1)}
+

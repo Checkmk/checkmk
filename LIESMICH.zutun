@@ -34,10 +34,12 @@ Der erste war ja, wie bereits geschrieben: Wenn Umlaut in Hostgroup Alias vorkom
 funktioniert nichts mehr, was irgendwie diese Aliases ausliest. Wird wohl auch an anderer Stelle sein,
 bei der Multisite mit Umlauten arbeiten muss.
 
-Noch eine Kleinigkeit im Mulisite, ist zwar kein Bug:
-in der Host View, in der man alle Services zu einem Host sieht, fehlt der Host.
-Beispiel: Nagvis ist ein Host rot, man klickt ihn an, landet in Multisite, und sieht lauter Grüne Dienste (bis auf Check_mk, der ist Gelb und hat "null" im Text stehen. Jetzt muss man erst noch Host Status anklicken, um zu sehen, der ist Down.
-Sprich, in der view Host fehlt jeder Hinweis auf ein Fehler auf dem Host. 
+Noch eine Kleinigkeit im Mulisite, ist zwar kein Bug: in der Host View, in der
+man alle Services zu einem Host sieht, fehlt der Host.  Beispiel: Nagvis ist
+ein Host rot, man klickt ihn an, landet in Multisite, und sieht lauter Grüne
+Dienste (bis auf Check_mk, der ist Gelb und hat "null" im Text stehen. Jetzt
+muss man erst noch Host Status anklicken, um zu sehen, der ist Down.  Sprich,
+in der view Host fehlt jeder Hinweis auf ein Fehler auf dem Host.
 
 Multisite: noch nicht alle Dateien werden mit den richtigen Rechten angelegt:
 Das hier kommt aus config: Dazu gibt es in lib eine Funktion, die man nehmne
@@ -473,3 +475,21 @@ jedes mal geholt werden, sondern z.B. nur alle 10 Minuten.
 Bei "Invalid output from plugin" könnte man noch einen Hinweis machen, dass
 man die --debug-Option verwenden soll. Am besten wäre gleich ein Link
 auf meine Homepage auf einen Artikel dazu!
+
+IDEE: Prefetching agent: Der agent soll die Daten schon berechnen kurz bevor
+sie abgefragt werden. Das ganze läuft so: Zunächst ermittelt der Agent,
+wie lange die Datenberechnung im Schnitt dauert (z.B. über schleichenden
+Mittelwert), sagen wir 5 Sekunden. Über den gleichen Wert ermittelt er, wie
+oft er abgefragt wird, sagen wir alle 60 Sekunden. Wenn der Agent kontaktiert
+wird, kann er dann einen günstigen Zeitpunkt ermitteln, zu dem er beginnt,
+die Daten aufzubereiten.  Im Beispiel ist das spätestens 55 Sekunden nach
+der letzten Anfrage, mit etwas Puffer kann man z.B. 5 Sekunden früher
+beginnen. Das ganze schützt man über ein Lock, so dass wenn das Prefetch
+noch nicht begonnen hat oder nicht fertig ist, wenn eine Anfrage kommt,
+der Anfrager warten muss. Ergebnis: Auf eine Anfrage kommt im Optimalfall
+immer *sofort* ein Ergebnis. Außerdem kann das Berechnen mit nice laufen.
+Das könnte man auch in den Windows-Agenten integrieren und so die Probleme
+beheben, die auftreten, wenn das System unter hoher Last steht.
+
+
+

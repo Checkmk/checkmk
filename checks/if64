@@ -29,19 +29,23 @@
 # as in 'if' since they overwrite each other.
 if_inventory_porttypes = [ "6", "ethernetCsmacd" ]
 if_inventory_uses_description = False
+if_inventory_uses_alias = False
 if_default_levels = (0.01, 0.1) # Error percentages
 
 def inventory_if64(checkname, info):
     if len(info) == 0 or len(info[0]) != 18:
         return []
     inventory = []
-    for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \
-        ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen in info:
+    for ifIndex, ifAlias, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \
+        ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen, ifDescr in info:
         if ifType in if_inventory_porttypes and ifOperStatus in ['1','up']:
             if if_inventory_uses_description and ifDescr:
                 item = ifDescr
+            elif if_inventory_uses_alias and ifAlias:
+                item = ifAlias
             else:
                 item = ifIndex
+
             if ifSpeed != "":
                 inventory.append( (item, "(if_default_levels[0], if_default_levels[1], %d)" % int(ifSpeed)) )
     return inventory
@@ -53,14 +57,16 @@ def ifoperstatus_statename(st):
 def check_if64(item, params, info):
     warn, crit, targetspeed = params
 
-    for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \
-        ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen in info:
-        if item == ifIndex or item == ifDescr:
+    for ifIndex, ifAlias, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \
+        ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen, ifDescr in info:
+        if item == ifIndex or item == ifAlias or item == ifDescr:
 
             # Display port number or alias in infotext if that is not part
             # of the service description anyway
-            if item == ifIndex and (item == ifDescr or ifDescr == ''): # description trvial
+            if item == ifIndex and (item == ifAlias or ifAlias == '') and (item == ifDescr or ifDescr == ''): # description trvial
                 infotext = ""
+            elif item != ifAlias and ifAlias != '': # alias useful
+                infotext = "[%s] " % ifAlias
             elif item != ifDescr and ifDescr != '': # description useful
                 infotext = "[%s] " % ifDescr
             else:
@@ -104,8 +110,6 @@ def check_if64(item, params, info):
                 ( "outerr",    ifOutErrors, warn, crit, None, None) ]:
 
                 try:
-                    if counter == '': # due to missing OIDs filled up by Check_MK with empty strings
-                        counter = 0
                     timedif, rate = get_counter("if.%s.%s" % (name, item), this_time, saveint(counter))
                     rates.append(rate)
                     perfdata.append( (name, rate, warn, crit, minn, maxx) )
@@ -117,12 +121,11 @@ def check_if64(item, params, info):
             if wrapped:
                 perfdata = []
             else:
-                MB = 1024 * 1024.0
                 perfdata.append(("outqlen", saveint(ifOutQLen)))
                 for what, errorrate, okrate, traffic in \
                    [ ("in",  rates[4], rates[1] + rates[2], rates[0]),
-                     ("out", rates[9], rates[6] + rates[7], rates[1]) ]:
-                    infotext += ", %s: %.1fMB/s" % (what, traffic / MB)
+                     ("out", rates[9], rates[6] + rates[7], rates[5]) ]:
+                    infotext += ", %s: %s/s" % (what, get_bytes_human_readable(traffic))
                     pacrate = okrate + errorrate
                     if pacrate > 0.0: # any packets transmitted?
                         errperc = 100.0 * errorrate / (okrate + errorrate)
@@ -163,6 +166,7 @@ snmp_info['if64'] = \
     "2.2.1.19",    # ifOutDiscards
     "2.2.1.20",    # ifOutErrors
     "2.2.1.21",    # ifOutQLen
+    "2.2.1.2",     # ifDescr
   ] )
 
 # check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2

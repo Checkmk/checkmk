@@ -16,6 +16,11 @@
     * ifoperstatus: Allowing multiple target states as a list now
     * cisco_qos: Added new check to monitor traffic in QoS classes on Cisco routers
     * cisco_power: Added scan function
+    * if64/if/cisco_qos: Traffic is displayed in variable byte scales B/s,KB/s,MB/s,GB/s
+      depending on traffic amount.
+    * if64: really using ifDescr with option if_inventory_uses_description = True
+    * if64: Added option if_inventory_uses_alias to using ifAlias for the item names
+    * if64/if: Fixed bug displaying the out traffic (Perfdata was ok)
 
 
 1.1.7i4:

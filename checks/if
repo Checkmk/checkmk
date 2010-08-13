@@ -113,7 +113,7 @@ def check_if(item, params, info):
                 perfdata.append(("outqlen", saveint(ifOutQLen)))
                 for what, errorrate, okrate, traffic in \
                    [ ("in",  rates[4], rates[1] + rates[2], rates[0]),
-                     ("out", rates[9], rates[6] + rates[7], rates[1]) ]:
+                     ("out", rates[9], rates[6] + rates[7], rates[5]) ]:
                     infotext += ", %s: %.1fMB/s" % (what, traffic / MB)
                     pacrate = okrate + errorrate
                     if pacrate > 0.0: # any packets transmitted?

@@ -948,3 +948,15 @@ def saveint(i):
         return 0
     else:
         return int(i)
+
+# Takes bytes as integer and returns a string which represents the bytes in a
+# more human readable form scaled to GB/MB/KB
+def get_bytes_human_readable(b):
+    if b > 1024 * 1024 * 1024:
+        return '%.2fMB' % (b / 1024 / 1024 / 1024)
+    if b > 1024 * 1024:
+        return '%.2fMB' % (b / 1024 / 1024)
+    elif b > 1024:
+        return '%.2fKB' % (b / 1024)
+    else:
+        return '%.2fB' % b

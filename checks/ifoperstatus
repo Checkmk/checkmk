@@ -45,8 +45,9 @@ def check_ifoperstatus(item, targetstate, info):
     for name, hwtype, operstatus in info:
         if item == name:
             operstatus = ifoperstatus_statename(operstatus)
-            targetstate = ifoperstatus_statename(targetstate)
-            if operstatus == targetstate:
+            if not isinstance(targetstate, list):
+                targetstate = ifoperstatus_statename(targetstate)
+            if operstatus == targetstate or (isinstance(targetstate, list) and operstatus in targetstate):
                 return (0, "OK - status is %s" % operstatus)
             elif operstatus == "up":
                 return (1, "WARN - port used, but should not be")

@@ -113,6 +113,7 @@ def check_if(item, params, info):
             # if at least one counter wrapped, we do not handle the counters at all
             if wrapped:
                 perfdata = []
+                infotext += ', Counter wrapped - Skipping checkresult'
             else:
                 perfdata.append(("outqlen", saveint(ifOutQLen)))
                 for what, errorrate, okrate, traffic in \

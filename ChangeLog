@@ -21,6 +21,7 @@
     * if64: really using ifDescr with option if_inventory_uses_description = True
     * if64: Added option if_inventory_uses_alias to using ifAlias for the item names
     * if64/if: Fixed bug displaying the out traffic (Perfdata was ok)
+    * if64/if: Added WARN/CRIT thresholds for the bandwidth usage to be given as rates
 
 
 1.1.7i4:

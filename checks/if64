@@ -30,7 +30,8 @@
 if_inventory_porttypes = [ "6", "ethernetCsmacd" ]
 if_inventory_uses_description = False
 if_inventory_uses_alias = False
-if_default_levels = (0.01, 0.1) # Error percentages
+# first two: Error percentages, rest: Bandwidth thresholds
+if_default_levels = (0.01, 0.1, None, None)
 
 def inventory_if64(checkname, info):
     if len(info) == 0 or len(info[0]) != 18:
@@ -47,7 +48,10 @@ def inventory_if64(checkname, info):
                 item = ifIndex
 
             if ifSpeed != "":
-                inventory.append( (item, "(if_default_levels[0], if_default_levels[1], %d)" % int(ifSpeed)) )
+                bw_levels = ''
+                if len(if_default_levels[0]) == 4:
+                    bw_levels = ', if_default_levels[2], if_default_levels[3]'
+                inventory.append( (item, "(if_default_levels[0], if_default_levels[1], %d%s)" % (int(ifSpeed), bw_levels)) )
     return inventory
 
 def ifoperstatus_statename(st):
@@ -55,7 +59,11 @@ def ifoperstatus_statename(st):
     return names.get(st, st)
 
 def check_if64(item, params, info):
-    warn, crit, targetspeed = params
+    if len(params) == 3:
+        err_warn, err_crit, targetspeed = params
+        bw_warn, bw_crit = None, None
+    else:
+        err_warn, err_crit, targetspeed, bw_warn, bw_crit = params
 
     for ifIndex, ifAlias, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \
         ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen, ifDescr in info:
@@ -96,23 +104,23 @@ def check_if64(item, params, info):
             rates = []
             wrapped = False
             perfdata = []
-            for name, counter, warnn, critt, minn, maxx in [
-                ( "in",        ifInOctets, None, None, 0, bandwidth),
+            for name, counter, warn, crit, min, max in [
+                ( "in",        ifInOctets, bw_warn, bw_crit, 0, bandwidth),
                 ( "inucast",   inucast, None, None, None, None),
                 ( "innucast",  saveint(inmcast) + saveint(inbcast), None, None, None, None),
                 ( "indisc",    ifInDiscards, None, None, None, None),
-                ( "inerr",     ifInErrors, warn, crit, None, None),
+                ( "inerr",     ifInErrors, err_warn, err_crit, None, None),
 
-                ( "out",       ifOutOctets, None, None, 0, bandwidth),
+                ( "out",       ifOutOctets, bw_warn, bw_crit, 0, bandwidth),
                 ( "outucast",  outucast, None, None, None, None),
                 ( "outnucast", saveint(outmcast) + saveint(outbcast), None, None, None, None),
                 ( "outdisc",   ifOutDiscards, None, None, None, None),
-                ( "outerr",    ifOutErrors, warn, crit, None, None) ]:
+                ( "outerr",    ifOutErrors, err_warn, err_crit, None, None) ]:
 
                 try:
                     timedif, rate = get_counter("if.%s.%s" % (name, item), this_time, saveint(counter))
                     rates.append(rate)
-                    perfdata.append( (name, rate, warn, crit, minn, maxx) )
+                    perfdata.append( (name, rate, warn, crit, min, max) )
                 except MKCounterWrapped:
                     wrapped = True
                     # continue, other counters might wrap as well
@@ -126,19 +134,30 @@ def check_if64(item, params, info):
                    [ ("in",  rates[4], rates[1] + rates[2], rates[0]),
                      ("out", rates[9], rates[6] + rates[7], rates[5]) ]:
                     infotext += ", %s: %s/s" % (what, get_bytes_human_readable(traffic))
+
+                    # Check bandwidth thresholds
+                    if not bw_crit is None and traffic >= bw_crit:
+                        state = 2
+                        infotext += ' (CRIT) >=' + get_bytes_human_readable(bw_crit)
+                    elif not bw_warn is None and traffic >= bw_warn:
+                        state = 1
+                        infotext += ' (WARN) >=' + get_bytes_human_readable(bw_warn)
+
                     pacrate = okrate + errorrate
                     if pacrate > 0.0: # any packets transmitted?
                         errperc = 100.0 * errorrate / (okrate + errorrate)
 
                         if errperc > 0:
                             infotext += ", %s-errors: %.2f%%" % (what, errperc)
-                        if errperc >= crit:
-                            state = 2
-                            infotext += "(!)" + str(crit)
-                        elif errperc >= warn:
-                            state = 1
-                            infotext += "(!)" + str(warn)
 
+                        if errperc >= err_crit:
+                            if state < 2:
+                                state = 2
+                            infotext += "(CRIT) " + str(err_crit)
+                        elif errperc >= err_warn:
+                            if state < 1:
+                                state = 1
+                            infotext += "(WARN) " + str(err_warn)
 
             return (state, "%s - %s" % (nagios_state_names[state], infotext), perfdata)
 

@@ -953,7 +953,7 @@ def saveint(i):
 # more human readable form scaled to GB/MB/KB
 def get_bytes_human_readable(b):
     if b > 1024 * 1024 * 1024:
-        return '%.2fMB' % (b / 1024 / 1024 / 1024)
+        return '%.2fGB' % (b / 1024 / 1024 / 1024)
     if b > 1024 * 1024:
         return '%.2fMB' % (b / 1024 / 1024)
     elif b > 1024:

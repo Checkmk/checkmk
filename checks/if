@@ -109,12 +109,11 @@ def check_if(item, params, info):
             if wrapped:
                 perfdata = []
             else:
-                MB = 1024 * 1024.0
                 perfdata.append(("outqlen", saveint(ifOutQLen)))
                 for what, errorrate, okrate, traffic in \
                    [ ("in",  rates[4], rates[1] + rates[2], rates[0]),
                      ("out", rates[9], rates[6] + rates[7], rates[5]) ]:
-                    infotext += ", %s: %.1fMB/s" % (what, traffic / MB)
+                    infotext += ", %s: %s/s" % (what, get_bytes_human_readable(traffic))
                     pacrate = okrate + errorrate
                     if pacrate > 0.0: # any packets transmitted?
                         errperc = 100.0 * errorrate / (okrate + errorrate)

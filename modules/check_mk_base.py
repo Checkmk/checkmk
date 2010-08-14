@@ -547,7 +547,7 @@ def load_counters(hostname):
         lines = file(counters_directory + "/" + hostname).readlines()
         for line in lines:
             line = line.split()
-            g_counters[line[0]] = ( int(line[1]), int(line[2]) )
+            g_counters[' '.join(line[0:-2])] = ( int(line[-2]), int(line[-1]) )
     except:
         g_counters = {}
 

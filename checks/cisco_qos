@@ -190,7 +190,7 @@ def check_cisco_qos(item, params, info):
                                                  ( "drop", drop_b, drop_warn, drop_crit, 0, bw) ]:
 
         try:
-            timedif, rate = get_counter("cisco_qos.%s.%s" % (name, item), this_time, saveint(counter))
+            timedif, rate = get_counter("cisco_qos.%s" % item, this_time, saveint(counter))
             rates.append(rate)
             perfdata.append( (name, rate, warn, crit, min, max) )
         except MKCounterWrapped:

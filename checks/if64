@@ -89,12 +89,7 @@ def check_if64(item, params, info):
             # Check speed
             speed = saveint(ifSpeed)
             bandwidth = speed / 8.0 # in Bytes / sec
-            speedtxt = {
-                10000000    : "10MBit/s",
-                100000000   : "100MBit/s",
-                1000000000  : "1GBit/s",
-                10000000000 : "10GBit/s" }.get(speed, str(speed))
-            infotext += speedtxt
+            infotext += get_bytes_human_readable(speed, 1000)+'it/s'
             if speed != targetspeed:
                 infotext += "(wrong speed!)"
                 state = 1

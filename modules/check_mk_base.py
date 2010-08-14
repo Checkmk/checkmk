@@ -951,12 +951,12 @@ def saveint(i):
 
 # Takes bytes as integer and returns a string which represents the bytes in a
 # more human readable form scaled to GB/MB/KB
-def get_bytes_human_readable(b):
-    if b > 1024 * 1024 * 1024:
-        return '%.2fGB' % (b / 1024 / 1024 / 1024)
-    if b > 1024 * 1024:
-        return '%.2fMB' % (b / 1024 / 1024)
-    elif b > 1024:
-        return '%.2fKB' % (b / 1024)
+def get_bytes_human_readable(b, base=1024):
+    if b > base * base * base:
+        return '%.2fGB' % (b / base / base / base)
+    if b > base * base:
+        return '%.2fMB' % (b / base / base)
+    elif b > base:
+        return '%.2fKB' % (b / base)
     else:
         return '%.2fB' % b

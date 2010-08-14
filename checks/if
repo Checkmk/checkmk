@@ -41,7 +41,7 @@ def inventory_if(checkname, info):
 
             if ifSpeed != "":
                 bw_levels = ''
-                if len(if_default_levels[0]) == 4:
+                if len(if_default_levels) == 4:
                     bw_levels = ', if_default_levels[2], if_default_levels[3]'
                 inventory.append( (item, "(if_default_levels[0], if_default_levels[1], %d%s)" % (int(ifSpeed), bw_levels)) )
     return inventory

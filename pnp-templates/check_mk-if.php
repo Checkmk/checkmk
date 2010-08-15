@@ -50,13 +50,13 @@ $def[1] =
   "CDEF:outmb=outbytes,1048576,/ ".
   "CDEF:minusoutmb=0,outmb,- ".
   "AREA:inmb#00e060:\"in         \" ".
-  "GPRINT:inmb:LAST:\"%5.1lf MB/s last\" ".
-  "GPRINT:inmb:AVERAGE:\"%5.1lf MB/s avg\" ".
-  "GPRINT:inmb:MAX:\"%5.1lf MB/s max\\n\" ".
+  "GPRINT:inbytes:LAST:\"%5.1lf %sB/s last\" ".
+  "GPRINT:inbytes:AVERAGE:\"%5.1lf %sB/s avg\" ".
+  "GPRINT:inbytes:MAX:\"%5.1lf %sB/s max\\n\" ".
   "AREA:minusoutmb#0080e0:\"out        \" ".
-  "GPRINT:outmb:LAST:\"%5.1lf MB/s last\" ".
-  "GPRINT:outmb:AVERAGE:\"%5.1lf MB/s avg\" ".
-  "GPRINT:outmb:MAX:\"%5.1lf MB/s max\\n\" ";
+  "GPRINT:outbytes:LAST:\"%5.1lf %sB/s last\" ".
+  "GPRINT:outbytes:AVERAGE:\"%5.1lf %sB/s avg\" ".
+  "GPRINT:outbytes:MAX:\"%5.1lf %sB/s max\\n\" ";
 
 # Graph 2: packets
 $ds_name[2] = 'Packets';

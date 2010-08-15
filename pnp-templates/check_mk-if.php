@@ -37,13 +37,26 @@
 # outqlen=0;;;;
 
 # Graph 1: used bandwidth
-$bandwidth = $MAX[1] / 1048576.0;
+$bbandwidth = $MAX[1];
+$bandwidth = $bbandwidth;
+$bwuom = '';
+if($bandwidth > 1024 * 1024 * 1024) {
+	$bandwidth /= 1024 * 1024 * 1024;
+	$bwuom = 'G';
+} elseif($bandwidth > 1024 * 1024) {
+	$bandwidth /= 1024 * 1024;
+	$bwuom = 'M';
+} elseif($bandwidth > 1024) {
+	$bandwidth /= 1024;
+	$bwuom = 'K';
+}
+
 $ds_name[1] = 'Used bandwidth';
 $opt[1] = "--vertical-label \"MB/sec\" -X0 -b 1024 -l -1 -u 1 --title \"Used bandwidth $hostname / $servicedesc\" ";
 $def[1] = 
   "HRULE:0#c0c0c0 ".
-  "HRULE:$bandwidth#808080:\"Port speed\:  " . sprintf("%.1f", $bandwidth) . " MB/s\\n\" ".
-  "HRULE:-$bandwidth#808080: ".
+  "HRULE:$bbandwidth#808080:\"Port speed\:  " . sprintf("%.1f", $bandwidth) . " ".$bwuom."B/s\\n\" ".
+  "HRULE:-$bbandwidth#808080: ".
   "DEF:inbytes=$RRDFILE[1]:$DS[1]:MAX ".
   "DEF:outbytes=$RRDFILE[6]:$DS[6]:MAX ".
   "CDEF:inmb=inbytes,1048576,/ ".

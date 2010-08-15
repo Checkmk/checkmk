@@ -113,7 +113,7 @@
 # Parent ID:
 # .1.3.6.1.4.1.9.9.166.1.5.1.1.4.258.6184 258
 
-# drop warn, drop crit
+# post_warn, post_crit, drop warn, drop crit
 cisco_qos_default_levels = (None, None, 0.01, 0.01)
 
 def cisco_qos_get_ifs_by_class_id(config, class_id):
@@ -174,7 +174,7 @@ def check_cisco_qos(item, params, info):
     policy_id   = config[policy_if_id+'.'+policy_if_id]
     policy_name = policies[policy_id]
     post_b      = post_bytes[policy_if_id+'.'+policy_if_id2]
-    drop_b      = post_bytes[policy_if_id+'.'+policy_if_id2]
+    drop_b      = drop_bytes[policy_if_id+'.'+policy_if_id2]
     speed       = saveint(if_speeds[if_id])
     # Bandwidth needs to be in bytes for later calculations
     bw          = speed / 8.0
@@ -190,12 +190,13 @@ def check_cisco_qos(item, params, info):
                                                  ( "drop", drop_b, drop_warn, drop_crit, 0, bw) ]:
 
         try:
-            timedif, rate = get_counter("cisco_qos.%s" % item, this_time, saveint(counter))
+            timedif, rate = get_counter("cisco_qos.%s.%s" % (name, item), this_time, saveint(counter))
             rates.append(rate)
             perfdata.append( (name, rate, warn, crit, min, max) )
-        except MKCounterWrapped:
+        except MKCounterWrapped, e:
             wrapped = True
             # continue, other counters might wrap as well
+            print e
 
     # if at least one counter wrapped, we do not handle the counters at all
     if wrapped:
@@ -212,7 +213,7 @@ def check_cisco_qos(item, params, info):
                 state = 1
                 infotext += ' (WARN)'
 
-    infotext += ', Policy-Name: %s, Int-Bandwidth: %s/s' % (policy_name, get_bytes_human_readable(speed))
+    infotext += ', Policy-Name: %s, Int-Bandwidth: %sits/s' % (policy_name, get_bytes_human_readable(speed, 1000))
     return (state, "%s - %s" % (nagios_state_names[state], infotext.lstrip(', ')), perfdata)
 
 check_info['cisco_qos'] = (check_cisco_qos, "QoS %s", 1,  inventory_cisco_qos)

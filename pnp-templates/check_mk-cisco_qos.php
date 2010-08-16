@@ -24,26 +24,40 @@
 # Boston, MA 02110-1301 USA.
 
 # Graph 1: used bandwidth
-$bbandwidth = $MAX[1];
-$bandwidth = $bbandwidth;
+$bitBandwidth = $MAX[1] * 8;
+$warn = $WARN[2];
+$crit = $CRIT[2];
+
+$bandwidth = $bitBandwidth;
+$mByteBandwidth = $MAX[1] / 1000 / 1000;
+$mByteWarn      = $WARN[2] / 1000 / 1000;
+$mByteCrit      = $CRIT[2] / 1000 / 1000;
+
 $bwuom = '';
-if($bandwidth > 1024 * 1024 * 1024) {
-	$bandwidth /= 1024 * 1024 * 1024;
+$base = 1000;
+if($bandwidth > $base * $base * $base) {
+	$warn /= $base * $base * $base;
+	$crit /= $base * $base * $base;
+	$bandwidth /= $base * $base * $base;
 	$bwuom = 'G';
-} elseif($bandwidth > 1024 * 1024) {
-	$bandwidth /= 1024 * 1024;
+} elseif($bandwidth > $base * $base) {
+	$warn /= $base * $base;
+	$crit /= $base * $base;
+	$bandwidth /= $base * $base;
 	$bwuom = 'M';
-} elseif($bandwidth > 1024) {
-	$bandwidth /= 1024;
+} elseif($bandwidth > $base) {
+	$warn /= $base;
+	$crit /= $base;
+	$bandwidth /= $base;
 	$bwuom = 'K';
 }
 
 $ds_name[1] = 'QoS Class Traffic';
-$opt[1] = "--vertical-label \"MB/sec\" -X0 -b 1024 -l -1 -u 1 --title \"$hostname / $servicedesc\" ";
+$opt[1] = "--vertical-label \"MB/sec\" -X0 -b 1024 --title \"$hostname / $servicedesc\" ";
 $def[1] = 
   "HRULE:0#c0c0c0 ".
-  "HRULE:$bbandwidth#808080:\"Interface speed\:  " . sprintf("%.1f", $bandwidth) . " ".$bwuom."B/s\\n\" ".
-  "HRULE:-$bbandwidth#808080: ".
+  "HRULE:$mByteBandwidth#808080:\"Interface speed\:  " . sprintf("%.1f", $bandwidth) . " ".$bwuom."Bit/s\\n\" ".
+  "HRULE:-$mByteBandwidth#808080: ".
   "DEF:postbytes=$RRDFILE[1]:$DS[1]:MAX ".
   "DEF:dropbytes=$RRDFILE[2]:$DS[2]:MAX ".
   "CDEF:postmb=postbytes,1048576,/ ".

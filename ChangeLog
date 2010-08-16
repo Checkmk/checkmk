@@ -23,7 +23,7 @@
     * if64/if: Fixed bug displaying the out traffic (Perfdata was ok)
     * if64/if: Added WARN/CRIT thresholds for the bandwidth usage to be given as rates
     * if64/if: Improved PNP-Templates
-
+    * if64/if: The ifoperstatus check in if64/if can now check for multiple target states
 
 1.1.7i4:
     Core, Setup, etc.:

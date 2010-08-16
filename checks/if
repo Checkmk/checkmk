@@ -26,36 +26,49 @@
 
 if_inventory_porttypes = [ "6", "ethernetCsmacd" ]
 if_inventory_uses_description = False
-# first two: Error percentages, rest: Bandwidth thresholds
-if_default_levels = (0.01, 0.1, None, None)
+# first two: Error percentages, second two: Bandwidth thresholds, allowed operstates
+if_default_levels = (0.01, 0.1, None, None, ('1', 'up',))
 
 def inventory_if(checkname, info):
     inventory = []
     for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, ifInUcastPkts, ifInNUcastPkts, ifInDiscards, \
         ifInErrors, ifOutOctets, ifOutUcastPkts, ifOutNUcastPkts, ifOutDiscards, ifOutErrors, ifOutQLen in info:
-        if ifType in if_inventory_porttypes and ifOperStatus in ['1','up']:
+        allowedOperStates = ['1','up']
+        if len(if_default_levels) == 5:
+            allowedOperStates = if_default_levels[4]
+
+        if ifType in if_inventory_porttypes and ifOperStatus in allowedOperStates:
             if if_inventory_uses_description and ifDescr:
                 item = ifDescr
             else:
                 item = ifIndex
 
             if ifSpeed != "":
-                bw_levels = ''
-                if len(if_default_levels) == 4:
-                    bw_levels = ', if_default_levels[2], if_default_levels[3]'
-                inventory.append( (item, "(if_default_levels[0], if_default_levels[1], %d%s)" % (int(ifSpeed), bw_levels)) )
+                add_levels = ''
+                if len(if_default_levels) >= 4:
+                    add_levels = ', if_default_levels[2], if_default_levels[3]'
+                if len(if_default_levels) == 5:
+                    add_levels = ', if_default_levels[4]'
+                inventory.append( (item, "(if_default_levels[0], if_default_levels[1], %d%s)" % (int(ifSpeed), add_levels)) )
     return inventory
 
-def ifoperstatus_statename(st):
-    names = { '1': "up", '2': "down" }
+def if_statename(st):
+    names = { '1': 'up',      '2': 'down',
+              '3': 'testing', '4': 'unknown',
+              '5': 'dormant', '6': 'notPresent',
+              '7': 'lowerLayerDown' }
     return names.get(st, st)
 
 def check_if(item, params, info):
-    if len(params) == 3:
+    allowed_operstates = ('1', 'up')
+    bw_warn, bw_crit = None, None
+    num_params = len(params)
+    if num_params == 3:
         err_warn, err_crit, targetspeed = params
-        bw_warn, bw_crit = None, None
-    else:
+    elif num_params == 5:
         err_warn, err_crit, targetspeed, bw_warn, bw_crit = params
+    elif num_params == 6:
+        err_warn, err_crit, targetspeed, bw_warn, bw_crit, allowed_operstates = params
 
     for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, ifInUcastPkts, ifInNUcastPkts, ifInDiscards, \
         ifInErrors, ifOutOctets, ifOutUcastPkts, ifOutNUcastPkts, ifOutDiscards, ifOutErrors, ifOutQLen in info:
@@ -70,19 +83,20 @@ def check_if(item, params, info):
             else:
                 infotext = "[%s] " % ifIndex
 
-            operstatus = ifoperstatus_statename(ifOperStatus)
-            if operstatus != "up":
-                return (2, "CRIT - %sno link" % infotext)
+            operstatus = if_statename(str(ifOperStatus))
+            if not operstatus in allowed_operstates:
+                return (2, "CRIT - %soperstate: %s (CRIT)" % (infotext, operstatus))
 
             state = 0
 
             # Check speed
             speed = saveint(ifSpeed)
             bandwidth = speed / 8.0 # in Bytes / sec
-            infotext += get_bytes_human_readable(speed, 1000)+'it/s'
             if speed != targetspeed:
-                infotext += "(wrong speed!)"
+                infotext += "%s (wrong speed!)" % speed
                 state = 1
+            else:
+                infotext += get_bytes_human_readable(speed, 1000)+'it/s'
 
             # Performance counters
             this_time = time.time()

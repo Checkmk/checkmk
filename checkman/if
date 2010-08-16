@@ -43,16 +43,20 @@ err_warn (float): The percentage of errors + discards at which a warning should 
 err_crit (float): The percentage of errors + discards at which a critical state is
                   reached. Default is {0.1} percent (one of 1.000).
 targetspeed (int): The target speed in bits per second of the interface.
-err_warn (float): Optional: The in/out rate to raise a WARNING state. Defaults to {None}.
-err_crit (float): Optional: The in/out rate to raise a CRITICAL state. Defaults to {None}.
+bw_warn (float): Optional: The in/out rate to raise a WARNING state. Defaults to {None}.
+bw_crit (float): Optional: The in/out rate to raise a CRITICAL state. Defaults to {None}.
+allowed_operstates (tuple): Optional: A list of allowed operstates. All other states
+  result in a CRITICAL state. Defaults to {('1', 'up')}.
+
 
 [configuration]
 if_inventory_porttypes (list of strings): List of interface types the inventory should create checks for.
   Default is {[ "ethernetCsmacd" ]}.
 if_inventory_uses_description (boolean): Wether inventory should use the interface description as item (instead
   of the interface index). Default is {False}.
-if_default_levels (float, float, float, float): 
+if_default_levels (float, float, float, float, tuple): 
   First two values: Warning and critical percentages (not rates!) for errors
   and discards used by intentorized checks.
-  Last two values: Warning and critical rates for the bandwidth usage. Used by the new inventorized checks.
-  Default is {(0.01, 0.1, None, None)}
+  Second two values: Warning and critical rates for the bandwidth usage. Used by the new inventorized checks.
+  Last value: List of allowed operstates as strings.
+  Default is {(0.01, 0.1, None, None, ('1', 'up'))}

@@ -33,11 +33,11 @@ def inventory_if(checkname, info):
     inventory = []
     for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, ifInUcastPkts, ifInNUcastPkts, ifInDiscards, \
         ifInErrors, ifOutOctets, ifOutUcastPkts, ifOutNUcastPkts, ifOutDiscards, ifOutErrors, ifOutQLen in info:
-        allowedOperStates = ['1','up']
+        allowed_operstates = ['1','up']
         if len(if_default_levels) == 5:
-            allowedOperStates = if_default_levels[4]
+            allowed_operstates = if_default_levels[4]
 
-        if ifType in if_inventory_porttypes and ifOperStatus in allowedOperStates:
+        if ifType in if_inventory_porttypes and ifOperStatus in allowed_operstates:
             if if_inventory_uses_description and ifDescr:
                 item = ifDescr
             else:
@@ -46,9 +46,9 @@ def inventory_if(checkname, info):
             if ifSpeed != "":
                 add_levels = ''
                 if len(if_default_levels) >= 4:
-                    add_levels = ', if_default_levels[2], if_default_levels[3]'
+                    add_levels += ', if_default_levels[2], if_default_levels[3]'
                 if len(if_default_levels) == 5:
-                    add_levels = ', if_default_levels[4]'
+                    add_levels += ', if_default_levels[4]'
                 inventory.append( (item, "(if_default_levels[0], if_default_levels[1], %d%s)" % (int(ifSpeed), add_levels)) )
     return inventory
 

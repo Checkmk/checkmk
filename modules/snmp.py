@@ -63,7 +63,14 @@ def convert_from_hex(value):
     hexparts = value.split()
     r = ""
     for hx in hexparts:
-        r += chr(int(hx, 16))
+        # Remove 0 bytes from strings. They lead to problems e.g. here:
+        # On windows hosts the labels of network interfaces in oid
+        # iso.3.6.1.2.1.2.2.1.2.1 are given as hex strings with tailing
+        # 0 byte. When this string is part of the data which is sent to
+        # the nagios pipe all chars after the 0 byte are stripped of.
+        # Stupid fix: Remove all 0 bytes. Hope this causes no problems.
+        if hx != '00':
+            r += chr(int(hx, 16))
     return r
 
 def oid_to_bin(oid):

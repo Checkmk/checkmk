@@ -43,7 +43,7 @@ def inventory_if64(checkname, info):
         if len(if_default_levels) == 5:
             allowed_operstates = if_default_levels[4]
 
-        if ifType in if_inventory_porttypes and ifOperStatus in allowed_operstates
+        if ifType in if_inventory_porttypes and ifOperStatus in allowed_operstates:
             if if_inventory_uses_description and ifDescr:
                 item = ifDescr
             elif if_inventory_uses_alias and ifAlias:

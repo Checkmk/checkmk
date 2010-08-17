@@ -2556,6 +2556,8 @@ def do_snmpwalk_on(hostname, filename):
         sys.stdout.write("%s:\n" % hostname)
     ip = lookup_ipaddress(hostname)
     cmd = snmp_walk_command(hostname) + " -Ob -OQ %s " % ip
+    if opt_debug:
+        print 'Executing: %s' % cmd
     out = file(filename, "w")
     for oid in [ "", "enterprises" ]:
         oids = []
@@ -2573,7 +2575,7 @@ def do_snmpwalk_on(hostname, filename):
             if len(parts) != 2:
                 continue
             oid, value = parts
-            if value.startswith('"'):
+            if value.strip().startswith('"'):
                 while value[-1] != '"':
                     value += f.readline().strip()
 

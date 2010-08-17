@@ -6,6 +6,7 @@
     * check_mk_objects.cfg: beautify output, use tabs instead of spaces
     * check_mk -II: delete only specified checktypes, allow to reinventorize
       all hosts
+    * SNMP: Fixed string detection in --snmpwalk calls
 
     Checks & Agents:
     * nvidia: agent now only queries GPUCoreTemp and GPUErrors. This avoids

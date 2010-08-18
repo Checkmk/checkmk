@@ -7,7 +7,6 @@
     * check_mk -II: delete only specified checktypes, allow to reinventorize
       all hosts
     * SNMP: Fixed string detection in --snmpwalk calls
-    * SNMP: Removing all null bytes during hex string parsing (These signs Confuse nagios pipe)
 
     Checks & Agents:
     * nvidia: agent now only queries GPUCoreTemp and GPUErrors. This avoids
@@ -26,6 +25,7 @@
     * if64/if: Added WARN/CRIT thresholds for the bandwidth usage to be given as rates
     * if64/if: Improved PNP-Templates
     * if64/if: The ifoperstatus check in if64/if can now check for multiple target states
+    * if64/if: Removing all null bytes during hex string parsing (These signs Confuse nagios pipe)
 
 1.1.7i4:
     Core, Setup, etc.:

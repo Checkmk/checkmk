@@ -41,7 +41,7 @@ if_default_levels = (0.01, 0.1, None, None, ('1', 'up'))
 # Stupid fix: Remove all 0 bytes. Hope this causes no problems.
 def cleanup_if_strings(s):
     if s and s != '':
-        return repr(s.replace(chr(0), ''))
+        return s.replace(chr(0), '')
     else:
         return s
 

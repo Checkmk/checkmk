@@ -29,10 +29,24 @@ if_inventory_uses_description = False
 # first two: Error percentages, second two: Bandwidth thresholds, allowed operstates
 if_default_levels = (0.01, 0.1, None, None, ('1', 'up',))
 
+# Remove 0 bytes from strings. They lead to problems e.g. here:
+# On windows hosts the labels of network interfaces in oid
+# iso.3.6.1.2.1.2.2.1.2.1 are given as hex strings with tailing
+# 0 byte. When this string is part of the data which is sent to
+# the nagios pipe all chars after the 0 byte are stripped of.
+# Stupid fix: Remove all 0 bytes. Hope this causes no problems.
+def cleanup_if_strings(s):
+    if s and s != '':
+        return repr(s.replace(chr(0), ''))
+    else:
+        return s
+
 def inventory_if(checkname, info):
     inventory = []
     for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, ifInUcastPkts, ifInNUcastPkts, ifInDiscards, \
         ifInErrors, ifOutOctets, ifOutUcastPkts, ifOutNUcastPkts, ifOutDiscards, ifOutErrors, ifOutQLen in info:
+        ifDescr = cleanup_if_strings(ifDescr)
+
         allowed_operstates = ['1','up']
         if len(if_default_levels) == 5:
             allowed_operstates = if_default_levels[4]
@@ -72,6 +86,8 @@ def check_if(item, params, info):
 
     for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, ifInUcastPkts, ifInNUcastPkts, ifInDiscards, \
         ifInErrors, ifOutOctets, ifOutUcastPkts, ifOutNUcastPkts, ifOutDiscards, ifOutErrors, ifOutQLen in info:
+        ifDescr = cleanup_if_strings(ifDescr)
+
         if item == ifIndex or item == ifDescr:
 
             # Display port number or alias in infotext if that is not part

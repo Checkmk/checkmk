@@ -7,6 +7,7 @@
     * check_mk -II: delete only specified checktypes, allow to reinventorize
       all hosts
     * SNMP: Fixed string detection in --snmpwalk calls
+    * SNMP: --snmpwalk does walk the enterprises tree correctly now
 
     Checks & Agents:
     * nvidia: agent now only queries GPUCoreTemp and GPUErrors. This avoids

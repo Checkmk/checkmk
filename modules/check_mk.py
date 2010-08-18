@@ -2559,7 +2559,7 @@ def do_snmpwalk_on(hostname, filename):
     if opt_debug:
         print 'Executing: %s' % cmd
     out = file(filename, "w")
-    for oid in [ "", "enterprises" ]:
+    for oid in [ "", "1.3.6.1.4.1" ]: # SNMPv2-SMI::enterprises
         oids = []
         values = []
         if opt_verbose:

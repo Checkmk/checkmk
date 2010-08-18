@@ -27,7 +27,7 @@
 def inventory_hr_fs(checktype, info):
     inventory = []
     for hrtype, hrdescr, hrunits, hrsize, hrused in info:
-        if hrtype in [ "4", "HOST-RESOURCES-TYPES::hrStorageFixedDisk" ] and \
+        if hrtype in [ ".1.3.6.1.2.1.25.2.1.4" ] and \
                 hrdescr not in inventory_df_exclude_mountpoints:
             inventory.append((hrdescr, "filesystem_default_levels"))
     return inventory
@@ -37,13 +37,16 @@ def check_hr_fs(item, params, info):
         if item == hrdescr:
             # Handle old-style SNMP output with unit, e.g. "1024 Bytes"
             # Remove this later, if all use 1.1.7
-            hrsize = hrsize.split()[0]
-            hrunits = hrunits.split()[0]
-            hrused = hrused.split()[0]
+            if ' ' in hrsize:
+                hrsize = hrsize.split()[0]
+            if ' ' in hrunits:
+                hrunits = hrunits.split()[0]
+            if ' ' in hrused:
+                hrused = hrused.split()[0]
 
-            unit_size = int(hrunits)
-            size      = int(hrsize) * unit_size
-            used      = int(hrused) * unit_size
+            unit_size = saveint(hrunits)
+            size      = saveint(hrsize) * unit_size
+            used      = saveint(hrused) * unit_size
             size_mb   = size / 1048576.0
             size_gb   = size_mb / 1024.0
             used_mb   = used / 1048576.0

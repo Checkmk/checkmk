@@ -242,11 +242,11 @@ function mkSearchToggle(e, oField) {
 
 // Close the result list
 function mkSearchClose() {
-  var oContainer = document.getElementById('mk_search_results');
-  if(oContainer) {
-    oContainer.parentNode.removeChild(oContainer);
-    oContainer = null;
-  }
+    var oContainer = document.getElementById('mk_search_results');
+    if(oContainer) {
+        oContainer.parentNode.removeChild(oContainer);
+        oContainer = null;
+    }
     
     aSearchResults = [];
     iCurrent = null;
@@ -347,7 +347,7 @@ function mkSearch(e, oField) {
     }
     
     var val = oField.value;
-    if (val == oldValue)
+    if (aSearchResults[0] && val == oldValue)
         return; // nothing changed. No new search neccessary
     oldValue = val;
 

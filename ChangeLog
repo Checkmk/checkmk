@@ -33,6 +33,7 @@
     * if64/if: The ifoperstatus check in if64/if can now check for multiple target states
     * if64/if: Removing all null bytes during hex string parsing (These signs Confuse nagios pipe)
     * Fixed hr_mem and hr_fs checks to work with new SNMP format
+    * ups_*: Inventory works now on Riello UPS systems 
 
 1.1.7i4:
     Core, Setup, etc.:

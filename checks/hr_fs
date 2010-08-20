@@ -35,15 +35,6 @@ def inventory_hr_fs(checktype, info):
 def check_hr_fs(item, params, info):
     for hrtype, hrdescr, hrunits, hrsize, hrused in info:
         if item == hrdescr:
-            # Handle old-style SNMP output with unit, e.g. "1024 Bytes"
-            # Remove this later, if all use 1.1.7
-            if ' ' in hrsize:
-                hrsize = hrsize.split()[0]
-            if ' ' in hrunits:
-                hrunits = hrunits.split()[0]
-            if ' ' in hrused:
-                hrused = hrused.split()[0]
-
             unit_size = saveint(hrunits)
             size      = saveint(hrsize) * unit_size
             used      = saveint(hrused) * unit_size

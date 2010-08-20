@@ -37,7 +37,7 @@ if_default_levels = (0.01, 0.1, None, None, ('1', 'up',))
 # Stupid fix: Remove all 0 bytes. Hope this causes no problems.
 def cleanup_if_strings(s):
     if s and s != '':
-        return s.replace(chr(0), '')
+	return "".join([ c for c in s if c not in nagios_illegal_chars+chr(0) ]).strip()
     else:
         return s
 
@@ -87,7 +87,7 @@ def check_if(item, params, info):
     for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, ifInUcastPkts, ifInNUcastPkts, ifInDiscards, \
         ifInErrors, ifOutOctets, ifOutUcastPkts, ifOutNUcastPkts, ifOutDiscards, ifOutErrors, ifOutQLen in info:
         ifDescr = cleanup_if_strings(ifDescr)
-
+	
         if item == ifIndex or item == ifDescr:
 
             # Display port number or alias in infotext if that is not part
@@ -204,3 +204,5 @@ snmp_info['if'] = \
 # check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2
 snmp_scan_functions['if'] = \
         lambda oid: saveint(oid(".1.3.6.1.2.1.2.1.0")) >= 2 and not oid('.1.3.6.1.2.1.31.1.1.1.6.1') # use if64 if possible
+
+check_config_variables.append("nagios_illegal_chars")

@@ -36,8 +36,8 @@ def render_searchform():
     html.write('<div id="mk_side_search" onclick="mkSearchClose();">')
     html.write('<input id="mk_side_search_field" type="text" name="search" />')
     html.write('</div>')
-    html.write('<script type="text/javascript" src="search.js"></script>')
-    html.write('<script type="text/javascript">')
+    html.write("<script type='text/javascript' src='search.js'></script>\n")
+    html.write("<script type='text/javascript'>\n")
 
     # Store (user) hosts in JS array
     html.live.set_prepend_site(True)
@@ -62,7 +62,7 @@ def render_searchform():
         html.write("aSearchServices = %s;\n" % data)
     html.live.set_prepend_site(False)
 
-    html.write('</script>')
+    html.write("</script>\n")
 
 sidebar_snapins["search"] = {
     "title" : "Quicksearch",

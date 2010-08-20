@@ -324,11 +324,11 @@ function mkSearchAddSearchResults(aSearchObjects, objType, val) {
 
         if(objName.match(oMatch)) {
             var oResult = {
-                'id':    'result_' + objName,
-                'name':  objName,
-                'site':  objSite,
-                'type':  objType,
-                'url':   mkSearchGetUrl(objType, objName, objSite),
+                'id': 'result_' + objName,
+                'name': objName,
+                'site': objSite,
+                'type': objType,
+                'url': mkSearchGetUrl(objType, objName, objSite)
             };
             
             // Add id to search result array

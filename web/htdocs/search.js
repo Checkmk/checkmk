@@ -29,6 +29,7 @@
 // +------------------------------------------------------------------+
 
 var aSearchResults = [];
+var aSearchContents = '';
 var iCurrent = null;
 var mkSearchTargetFrame = 'main';
 var oldValue = "";
@@ -91,32 +92,34 @@ function mkSearchKeyUp(e, oField) {
     }
 }
 
-function find_host_url(oField)
-{   
-    namepart = oField.value;
-    // first try to find if hostpart is a complete hostname
+function mkSearchFindUrl(aSearchObjects, objType, oField) {
+    var namepart = mkSearchCleanupString(oField.value, objType);
+    // first try to find if namepart is a complete object name
     // found in our list and is unique (found in only one site)
     var url = null;
-    var selected_host = null;
-    for (var i in aSearchHosts) {
-        var hostSite  = aSearchHosts[i][0];
-        var hostName  = aSearchHosts[i][1];
-        if (hostName.indexOf(namepart) > -1) {
+    var selected_obj = null;
+    for (var i in aSearchObjects) {
+        var objSite  = aSearchObjects[i][0];
+        var objName  = aSearchObjects[i][1];
+        if (objName.indexOf(namepart) > -1) {
             if (url != null) { // found second match -> not unique
                 url = null;
                 break; // abort
             }
-            url = 'view.py?view_name=host&host=' + hostName + '&site=' + hostSite;
-            selected_host = hostName;
+            url = mkSearchGetUrl(objType, objName, objSite);
+            selected_obj = objName;
         }
     }
     if (url != null) {
-        oField.value = selected_host;
+        if(objType == 'h')
+            oField.value = selected_obj;
+        else
+            oField.value = objType + ':' + selected_obj;
         return url;
     }
 
-    // not found, not unique or only prefix -> display a view that shows more hosts
-    return 'view.py?view_name=hosts&host=' + namepart;
+    // not found, not unique or only prefix -> display a view that shows more objects
+    return mkSearchGetUrl(objType, namepart, '', false);
 }
 
 // On key press down event handler
@@ -128,13 +131,17 @@ function mkSearchKeyDown(e, oField) {
             case 13:
                 if (iCurrent != null) {
                     mkSearchNavigate();
-                    oField.value = aSearchResults[iCurrent].name;
+                    if(aSearchResults[iCurrent].type == 'h')
+	                      oField.value = aSearchResults[iCurrent].name;
+                    else
+	                      oField.value = aSearchResults[iCurrent].type + ':' + aSearchResults[iCurrent].name;
                     mkSearchClose();
                 } else {
                     // When nothing selected, navigate with the current contents of the field
-                    // TODO: Here is missing site=.... But we can add a site= only, if the entered
-                    // hostname is unique and in our list.
-                    top.frames[mkSearchTargetFrame].location.href = find_host_url(oField);
+                    var objType = mkSearchGetTypePrefix(oField.value);
+                    var aSearchObjects = mkSearchGetSearchObjects(objType);
+                    var url = mkSearchFindUrl(aSearchObjects, objType, oField);
+                    top.frames[mkSearchTargetFrame].location.href = url;
                     mkSearchClose();
                 }
                 
@@ -235,14 +242,101 @@ function mkSearchToggle(e, oField) {
 
 // Close the result list
 function mkSearchClose() {
-  var oContainer = document.getElementById('mk_search_results');
-  if(oContainer) {
-    oContainer.parentNode.removeChild(oContainer);
-    oContainer = null;
-  }
+    var oContainer = document.getElementById('mk_search_results');
+    if(oContainer) {
+        oContainer.parentNode.removeChild(oContainer);
+        oContainer = null;
+    }
     
     aSearchResults = [];
     iCurrent = null;
+}
+
+function mkSearchGetTypePrefix(s) {
+    if(s.indexOf('hg:') == 0)
+        return 'hg';
+    else if(s.indexOf('s:') == 0)
+        return 's';
+    else if(s.indexOf('sg:') == 0)
+        return 'sg';
+    else
+        return 'h';
+}
+
+function mkSearchCleanupString(s, objType) {
+    return s.replace(RegExp('^'+objType+':', 'i'), '');
+}
+
+function mkSearchGetSearchObjects(objType) {
+    if(objType == 'h' && typeof aSearchHosts !== 'undefined')
+        return aSearchHosts;
+    else if(objType == 'hg' && typeof aSearchHostgroups !== 'undefined')
+        return aSearchHostgroups;
+    else if(objType == 's' && typeof aSearchServices !== 'undefined')
+        return aSearchServices;
+    else if(objType == 'sg' && typeof aSearchServicegroups !== 'undefined')
+        return aSearchServicegroups;
+    else
+        return [];
+}
+
+function mkSearchGetUrl(objType, objName, objSite, single) {
+    if(single == null)
+        single = true;
+    
+    if(objType == 'h')
+        if(single)
+            return 'view.py?view_name=host&host=' + objName + '&site=' + objSite;
+        else
+            return 'view.py?view_name=hosts&host=' + objName;
+    else if(objType == 'hg')
+        if(single)
+            return 'view.py?view_name=hostgroup&hostgroup=' + objName + '&site=' + objSite;
+        else
+            // FIXME: not correct. Need a page where the name parameter can be a part match
+            return 'view.py?view_name=hostgroup&hostgroup=' + objName + '&site=' + objSite;
+    else if(objType == 'sg')
+        if(single)
+            return 'view.py?view_name=servicegroup&servicegroup=' + objName + '&site=' + objSite;
+        else
+            // FIXME: not correct. Need a page where the name parameter can be a part match
+            return 'view.py?view_name=servicegroup&servicegroup=' + objName + '&site=' + objSite;
+    else if(objType == 's')
+        if(single)
+            return 'view.py?view_name=servicedesc&service=' + objName + '&site=' + objSite;
+        else
+            // FIXME: not correct. Need a page where the name parameter can be a part match
+            return 'view.py?view_name=servicedesc&service=' + objName + '&site=' + objSite;
+}
+
+function mkSearchAddSearchResults(aSearchObjects, objType, val) {
+    val = mkSearchCleanupString(val, objType);
+    // Build matching regex
+    // var oMatch = new RegExp('^'+val, 'gi');
+    // switch to infix search
+    var oMatch = new RegExp(val, 'gi');
+		
+    var objName, objSite;
+    aSearchContents = '';
+    for(var i in aSearchObjects){
+        objSite  = aSearchObjects[i][0];
+        objName  = aSearchObjects[i][1];
+
+        if(objName.match(oMatch)) {
+            var oResult = {
+                'id': 'result_' + objName,
+                'name': objName,
+                'site': objSite,
+                'type': objType,
+                'url': mkSearchGetUrl(objType, objName, objSite)
+            };
+            
+            // Add id to search result array
+            aSearchResults.push(oResult);
+            aSearchContents += '<a id="' + oResult.id + '" class="' + oResult.type + '" href="' + oResult.url +
+                               '" onclick="mkSearchClose()" target="' + mkSearchTargetFrame + '">'+ objName +"</a>\n";
+        }
+    }
 }
 
 // Build a new result list and show it up
@@ -253,53 +347,29 @@ function mkSearch(e, oField) {
     }
     
     var val = oField.value;
-    if (val == oldValue)
+    if (aSearchResults[0] && val == oldValue)
         return; // nothing changed. No new search neccessary
     oldValue = val;
 
-    if (!aSearchHosts) {
-        alert("No hosts to search for");
+    aSearchResults = [];
+    var objType = mkSearchGetTypePrefix(val);
+    var aSearchObjects = mkSearchGetSearchObjects(objType);
+
+    if (!aSearchObjects || !aSearchObjects[0]) {
+        alert("No objects to search for");
         return;
     }
+    
+    mkSearchAddSearchResults(aSearchObjects, objType, val);
 
-    aSearchResults = [];
-
-    // Build matching regex
-    // var oMatch = new RegExp('^'+val, 'gi');
-    // switch to infix search
-    var oMatch = new RegExp(val, 'gi');
-
-    var content = '';
-    var hostName, hostSite;
-    for(var i in aSearchHosts){
-        hostSite  = aSearchHosts[i][0];
-        hostName  = aSearchHosts[i][1];
-
-        if(hostName.match(oMatch)) {
-            var oResult = {
-                'id': 'result_'+hostName,
-                'name': hostName,
-                'site': hostSite,
-                'url': 'view.py?view_name=host&host='+hostName+'&site='+hostSite
-            };
-            
-            // Add id to search result array
-            aSearchResults.push(oResult);
-            content += '<a id="'+oResult.id+'" href="'+oResult.url+'" onclick="mkSearchClose()" target="'+mkSearchTargetFrame+'">'+ hostName +"</a>\n";
-        }
-    }
-
-    if(content != '') {
+    if(aSearchContents != '') {
         var oContainer = document.getElementById('mk_search_results');
         if(!oContainer) {
             var oContainer = document.createElement('div');
             oContainer.setAttribute('id', 'mk_search_results');
         }
-
-        oContainer.innerHTML = content;
-
+        oContainer.innerHTML = aSearchContents;
         oField.parentNode.appendChild(oContainer);
-
         oContainer = null;
     } else {
         mkSearchClose();

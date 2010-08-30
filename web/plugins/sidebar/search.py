@@ -36,8 +36,8 @@ def render_searchform():
     html.write('<div id="mk_side_search" onclick="mkSearchClose();">')
     html.write('<input id="mk_side_search_field" type="text" name="search" />')
     html.write('</div>')
-    html.write('<script type="text/javascript" src="search.js"></script>')
-    html.write('<script type="text/javascript">')
+    html.write("<script type='text/javascript' src='search.js'></script>\n")
+    html.write("<script type='text/javascript'>\n")
 
     # Store (user) hosts in JS array
     html.live.set_prepend_site(True)
@@ -45,12 +45,24 @@ def render_searchform():
         import json
         data = html.live.query("GET hosts\nColumns: name\n")
         html.write("aSearchHosts = %s;\n" % json.dumps(data))
+        data = html.live.query("GET hostgroups\nColumns: name\n")
+        html.write("aSearchHostgroups = %s;\n" % json.dumps(data))
+        data = html.live.query("GET servicegroups\nColumns: name\n")
+        html.write("aSearchServicegroups = %s;\n" % json.dumps(data))
+        data = html.live.query("GET services\nColumns: name\n")
+        html.write("aSearchServices = %s;\n" % json.dumps(data))
     except:
         data = html.live.query("GET hosts\nColumns: name\n", "OutputFormat: json\n")
         html.write("aSearchHosts = %s;\n" % data)
+        data = html.live.query("GET hostgroups\nColumns: name\n", "OutputFormat: json\n")
+        html.write("aSearchHostgroups = %s;\n" % data)
+        data = html.live.query("GET servicegroups\nColumns: name\n", "OutputFormat: json\n")
+        html.write("aSearchServicegroups = %s;\n" % data)
+        data = html.live.query("GET services\nColumns: description\n", "OutputFormat: json\n")
+        html.write("aSearchServices = %s;\n" % data)
     html.live.set_prepend_site(False)
 
-    html.write('</script>')
+    html.write("</script>\n")
 
 sidebar_snapins["search"] = {
     "title" : "Quicksearch",

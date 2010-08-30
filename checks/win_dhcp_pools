@@ -78,20 +78,32 @@ win_dhcp_pools_stats_translate = {
 }
 
 def inventory_win_dhcp_pools(checktype, info):
-    return [ (line[2].rstrip('.'), 'win_dhcp_pools_default_levels') for line in info if line[0] in win_dhcp_pools_stats_translate and win_dhcp_pools_stats_translate[line[0]] == 'Subnet' ]
+    start = line[0]
+    if start in win_dhcp_pools_stats_translate:
+        start = win_dhcp_pools_stats_translate[line[0]]
+
+    return [ (line[2].rstrip('.'), 'win_dhcp_pools_default_levels') for line in info if start == 'Subnet' ]
 
 def check_win_dhcp_pools(item, params, info):
     inBlock = False
     poolStats = []
     status = 0
     for line in info:
-        if line[0] in win_dhcp_pools_stats_translate and win_dhcp_pools_stats_translate[line[0]] == 'Subnet':
+        # Translate if needed
+        start = line[0]
+        if start in win_dhcp_pools_stats_translate:
+            start = win_dhcp_pools_stats_translate[line[0]]
+
+        if start == 'Subnet' and line[-1] == item+'.':
             inBlock = True
             continue
         if inBlock:
             key = ' '.join(line[:-2])
             if key in win_dhcp_pools_stats_translate:
-                poolStats.append(int(line[-1].rstrip('.')))
+                key = win_dhcp_pools_stats_translate[key]
+            poolStats.append(int(line[-1].rstrip('.')))
+        if len(poolStats) == 3:
+            break
 
     if len(poolStats) == 3:
         used, free, pending = poolStats

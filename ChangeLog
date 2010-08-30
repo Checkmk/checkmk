@@ -8,6 +8,13 @@
       all hosts
     * New option -O, --reload: Does the same as -R, but reloads Nagios
       instead of restarting it.
+    * SNMP: Fixed string detection in --snmpwalk calls
+    * SNMP: --snmpwalk does walk the enterprises tree correctly now
+
+    Multisite:
+    * Sidebar: Improved the quicksearch snapin. It can search for services, 
+      servicegroups and hostgroups now. Simply add a prefix "s:", "sg:" or "hg:"
+      to search for other objects than hosts.
 
     Checks & Agents:
     * nvidia: agent now only queries GPUCoreTemp and GPUErrors. This avoids
@@ -18,7 +25,17 @@
     * ifoperstatus: Allowing multiple target states as a list now
     * cisco_qos: Added new check to monitor traffic in QoS classes on Cisco routers
     * cisco_power: Added scan function
-
+    * if64/if/cisco_qos: Traffic is displayed in variable byte scales B/s,KB/s,MB/s,GB/s
+      depending on traffic amount.
+    * if64: really using ifDescr with option if_inventory_uses_description = True
+    * if64: Added option if_inventory_uses_alias to using ifAlias for the item names
+    * if64/if: Fixed bug displaying the out traffic (Perfdata was ok)
+    * if64/if: Added WARN/CRIT thresholds for the bandwidth usage to be given as rates
+    * if64/if: Improved PNP-Templates
+    * if64/if: The ifoperstatus check in if64/if can now check for multiple target states
+    * if64/if: Removing all null bytes during hex string parsing (These signs Confuse nagios pipe)
+    * Fixed hr_mem and hr_fs checks to work with new SNMP format
+    * ups_*: Inventory works now on Riello UPS systems 
 
 1.1.7i4:
     Core, Setup, etc.:

@@ -109,10 +109,11 @@ class MKGeneralException(Exception):
         return self.reason
 
 class MKCounterWrapped(Exception):
-    def __init__(self, countername):
-        self.reason = countername
+    def __init__(self, countername, reason):
+        self.name = countername
+        self.reason = reason
     def __str__(self):
-        return self.reason
+        return '%s: %s' % (self.name, self.reason)
 
 class MKAgentError(Exception):
     def __init__(self, reason):
@@ -547,7 +548,7 @@ def load_counters(hostname):
         lines = file(counters_directory + "/" + hostname).readlines()
         for line in lines:
             line = line.split()
-            g_counters[line[0]] = ( int(line[1]), int(line[2]) )
+            g_counters[' '.join(line[0:-2])] = ( int(line[-2]), int(line[-1]) )
     except:
         g_counters = {}
 
@@ -561,7 +562,7 @@ def get_counter(countername, this_time, this_val):
         # Do not suppress this check on check_mk -nv
         if opt_dont_submit:
             return 1.0, 0.0
-        raise MKCounterWrapped(countername)
+        raise MKCounterWrapped(countername, 'Counter initialization')
 
     last_time, last_val = g_counters.get(countername)
     timedif = this_time - last_time
@@ -569,7 +570,7 @@ def get_counter(countername, this_time, this_val):
         # Do not suppress this check on check_mk -nv
         if opt_dont_submit:
             return 1.0, 0.0
-        raise MKCounterWrapped(countername)
+        raise MKCounterWrapped(countername, 'No time difference')
 
     # update counter for next time
     g_counters[countername] = (this_time, this_val)
@@ -583,7 +584,7 @@ def get_counter(countername, this_time, this_val):
         # Do not suppress this check on check_mk -nv
         if opt_dont_submit:
             return 1.0, 0.0
-        raise MKCounterWrapped(countername)
+        raise MKCounterWrapped(countername, 'Value overflow')
 
     per_sec = float(valuedif) / timedif
     return timedif, per_sec
@@ -697,9 +698,9 @@ def do_all_checks_on_host(hostname, ipaddress):
             # handle check implementations that do not yet support the
             # handling of wrapped counters via exception. Do not submit
             # any check result in that case:
-            except MKCounterWrapped:
+            except MKCounterWrapped, e:
                 if opt_verbose:
-                    print "Counter wrapped, not handled by check, ignoring this check result"
+                    print "Counter wrapped, not handled by check, ignoring this check result: %s" % e
                 dont_submit = True
             except Exception, e:
                 result = (3, "UNKNOWN - invalid output from plugin section <<<%s>>> or error in check type %s" %
@@ -948,3 +949,15 @@ def saveint(i):
         return 0
     else:
         return int(i)
+
+# Takes bytes as integer and returns a string which represents the bytes in a
+# more human readable form scaled to GB/MB/KB
+def get_bytes_human_readable(b, base=1024):
+    if b > base * base * base:
+        return '%.2fGB' % (b / base / base / base)
+    if b > base * base:
+        return '%.2fMB' % (b / base / base)
+    elif b > base:
+        return '%.2fKB' % (b / base)
+    else:
+        return '%.2fB' % b

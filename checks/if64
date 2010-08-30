@@ -29,86 +29,124 @@
 # as in 'if' since they overwrite each other.
 if_inventory_porttypes = [ "6", "ethernetCsmacd" ]
 if_inventory_uses_description = False
-if_default_levels = (0.01, 0.1) # Error percentages
+if_inventory_uses_alias = False
+# first two: Error percentages, second two: Bandwidth thresholds, allowed operstates
+if_default_levels = (0.01, 0.1, None, None, ('1', 'up'))
+
+# Remove 0 bytes from strings. They lead to problems e.g. here:
+# On windows hosts the labels of network interfaces in oid
+# iso.3.6.1.2.1.2.2.1.2.1 are given as hex strings with tailing
+# 0 byte. When this string is part of the data which is sent to
+# the nagios pipe all chars after the 0 byte are stripped of.
+# Stupid fix: Remove all 0 bytes. Hope this causes no problems.
+def cleanup_if_strings(s):
+    if s and s != '':
+        return "".join([ c for c in s if c not in nagios_illegal_chars+chr(0) ]).strip()
+    else:
+        return s
 
 def inventory_if64(checkname, info):
     if len(info) == 0 or len(info[0]) != 18:
         return []
     inventory = []
-    for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \
-        ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen in info:
-        if ifType in if_inventory_porttypes and ifOperStatus in ['1','up']:
+    for ifIndex, ifAlias, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \
+        ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen, ifDescr in info:
+        ifDescr = cleanup_if_strings(ifDescr)
+        ifAlias = cleanup_if_strings(ifAlias)
+        allowed_operstates = ['1','up']
+        if len(if_default_levels) == 5:
+            allowed_operstates = if_default_levels[4]
+
+        if ifType in if_inventory_porttypes and ifOperStatus in allowed_operstates:
             if if_inventory_uses_description and ifDescr:
                 item = ifDescr
+            elif if_inventory_uses_alias and ifAlias:
+                item = ifAlias
             else:
                 item = ifIndex
+
             if ifSpeed != "":
-                inventory.append( (item, "(if_default_levels[0], if_default_levels[1], %d)" % int(ifSpeed)) )
+                add_levels = ''
+                if len(if_default_levels) >= 4:
+                    add_levels += ', if_default_levels[2], if_default_levels[3]'
+                if len(if_default_levels) == 5:
+                    add_levels += ', if_default_levels[4]'
+                inventory.append( (item, "(if_default_levels[0], if_default_levels[1], %d%s)" % (int(ifSpeed), add_levels)) )
     return inventory
 
-def ifoperstatus_statename(st):
-    names = { '1': "up", '2': "down" }
+def if64_statename(st):
+    names = { '1': 'up',      '2': 'down',
+              '3': 'testing', '4': 'unknown',
+              '5': 'dormant', '6': 'notPresent',
+              '7': 'lowerLayerDown' }
     return names.get(st, st)
 
 def check_if64(item, params, info):
-    warn, crit, targetspeed = params
+    allowed_operstates = ('1', 'up')
+    bw_warn, bw_crit = None, None
+    num_params = len(params)
+    if num_params == 3:
+        err_warn, err_crit, targetspeed = params
+    elif num_params == 5:
+        err_warn, err_crit, targetspeed, bw_warn, bw_crit = params
+    elif num_params == 6:
+        err_warn, err_crit, targetspeed, bw_warn, bw_crit, allowed_operstates = params
 
-    for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \
-        ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen in info:
-        if item == ifIndex or item == ifDescr:
+    for ifIndex, ifAlias, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \
+        ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen, ifDescr in info:
+        ifDescr = cleanup_if_strings(ifDescr)
+        ifAlias = cleanup_if_strings(ifAlias)
+
+        if item == ifIndex or item == ifAlias or item == ifDescr:
 
             # Display port number or alias in infotext if that is not part
             # of the service description anyway
-            if item == ifIndex and (item == ifDescr or ifDescr == ''): # description trvial
+            if item == ifIndex and (item == ifAlias or ifAlias == '') and (item == ifDescr or ifDescr == ''): # description trvial
                 infotext = ""
+            elif item != ifAlias and ifAlias != '': # alias useful
+                infotext = "[%s] " % ifAlias
             elif item != ifDescr and ifDescr != '': # description useful
                 infotext = "[%s] " % ifDescr
             else:
                 infotext = "[%s] " % ifIndex
 
-            operstatus = ifoperstatus_statename(ifOperStatus)
-            if operstatus != "up":
-                return (2, "CRIT - %sno link" % infotext)
+            operstatus = if64_statename(str(ifOperStatus))
+            if not operstatus in allowed_operstates:
+                return (2, "CRIT - %soperstate: %s (CRIT)" % (infotext, operstatus))
 
             state = 0
 
             # Check speed
             speed = saveint(ifSpeed)
             bandwidth = speed / 8.0 # in Bytes / sec
-            speedtxt = {
-                10000000    : "10MBit/s",
-                100000000   : "100MBit/s",
-                1000000000  : "1GBit/s",
-                10000000000 : "10GBit/s" }.get(speed, str(speed))
-            infotext += speedtxt
             if speed != targetspeed:
-                infotext += "(wrong speed!)"
+                infotext += "%s (wrong speed!)" % speed
                 state = 1
+            else:
+                infotext += get_bytes_human_readable(speed, 1000)+'it/s'
 
             # Performance counters
             this_time = time.time()
             rates = []
             wrapped = False
             perfdata = []
-            for name, counter, warnn, critt, minn, maxx in [
-                ( "in",        ifInOctets, None, None, 0, bandwidth),
+            for name, counter, warn, crit, min, max in [
+                ( "in",        ifInOctets, bw_warn, bw_crit, 0, bandwidth),
                 ( "inucast",   inucast, None, None, None, None),
                 ( "innucast",  saveint(inmcast) + saveint(inbcast), None, None, None, None),
                 ( "indisc",    ifInDiscards, None, None, None, None),
-                ( "inerr",     ifInErrors, warn, crit, None, None),
+                ( "inerr",     ifInErrors, err_warn, err_crit, None, None),
 
-                ( "out",       ifOutOctets, None, None, 0, bandwidth),
+                ( "out",       ifOutOctets, bw_warn, bw_crit, 0, bandwidth),
                 ( "outucast",  outucast, None, None, None, None),
                 ( "outnucast", saveint(outmcast) + saveint(outbcast), None, None, None, None),
                 ( "outdisc",   ifOutDiscards, None, None, None, None),
-                ( "outerr",    ifOutErrors, warn, crit, None, None) ]:
+                ( "outerr",    ifOutErrors, err_warn, err_crit, None, None) ]:
 
                 try:
-                    if counter == '': # due to missing OIDs filled up by Check_MK with empty strings
-                        counter = 0
                     timedif, rate = get_counter("if.%s.%s" % (name, item), this_time, saveint(counter))
                     rates.append(rate)
-                    perfdata.append( (name, rate, warn, crit, minn, maxx) )
+                    perfdata.append( (name, rate, warn, crit, min, max) )
                 except MKCounterWrapped:
                     wrapped = True
                     # continue, other counters might wrap as well
@@ -117,25 +155,35 @@ def check_if64(item, params, info):
             if wrapped:
                 perfdata = []
             else:
-                MB = 1024 * 1024.0
                 perfdata.append(("outqlen", saveint(ifOutQLen)))
                 for what, errorrate, okrate, traffic in \
                    [ ("in",  rates[4], rates[1] + rates[2], rates[0]),
-                     ("out", rates[9], rates[6] + rates[7], rates[1]) ]:
-                    infotext += ", %s: %.1fMB/s" % (what, traffic / MB)
+                     ("out", rates[9], rates[6] + rates[7], rates[5]) ]:
+                    infotext += ", %s: %s/s" % (what, get_bytes_human_readable(traffic))
+
+                    # Check bandwidth thresholds
+                    if not bw_crit is None and traffic >= bw_crit:
+                        state = 2
+                        infotext += ' (CRIT) >=' + get_bytes_human_readable(bw_crit)
+                    elif not bw_warn is None and traffic >= bw_warn:
+                        state = 1
+                        infotext += ' (WARN) >=' + get_bytes_human_readable(bw_warn)
+
                     pacrate = okrate + errorrate
                     if pacrate > 0.0: # any packets transmitted?
                         errperc = 100.0 * errorrate / (okrate + errorrate)
 
                         if errperc > 0:
                             infotext += ", %s-errors: %.2f%%" % (what, errperc)
-                        if errperc >= crit:
-                            state = 2
-                            infotext += "(!)" + str(crit)
-                        elif errperc >= warn:
-                            state = 1
-                            infotext += "(!)" + str(warn)
 
+                        if errperc >= err_crit:
+                            if state < 2:
+                                state = 2
+                            infotext += "(CRIT) " + str(err_crit)
+                        elif errperc >= err_warn:
+                            if state < 1:
+                                state = 1
+                            infotext += "(WARN) " + str(err_warn)
 
             return (state, "%s - %s" % (nagios_state_names[state], infotext), perfdata)
 
@@ -163,8 +211,11 @@ snmp_info['if64'] = \
     "2.2.1.19",    # ifOutDiscards
     "2.2.1.20",    # ifOutErrors
     "2.2.1.21",    # ifOutQLen
+    "2.2.1.2",     # ifDescr
   ] )
 
 # check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2
 snmp_scan_functions['if64'] = \
         lambda oid: not not oid(".1.3.6.1.2.1.31.1.1.1.6.1")
+
+check_config_variables.append("nagios_illegal_chars")

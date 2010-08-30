@@ -82,7 +82,7 @@ def check_netctr_combined(nic, params, info):
                 timedif, items_per_sec = get_counter( "netctr." + nic + "." + countername, this_time, value)
                 perfdata.append( ( countername, "%dc" % value ) )
             except MKCounterWrapped, e:
-                counter_wrapped = e.reason
+                counter_wrapped = e
                 # Important: continue counter loop, so that *all* counters get initialized.
                 # Otherwise this checks would need 7 check cycles until the first result
                 # would be produced
@@ -100,7 +100,7 @@ def check_netctr_combined(nic, params, info):
         # if at least one counter wrapped, we cannot send or use performance
         # data and leave out this check for this turn
         if counter_wrapped:
-            raise MKCounterWrapped(counter_wrapped)
+            raise counter_wrapped
 
         error_percentage = 0.0
         if problems_per_sec > 0:

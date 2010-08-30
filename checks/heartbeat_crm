@@ -84,10 +84,10 @@ def inventory_heartbeat_crm(checktype, info):
     # - Check the number of nodes/resources
     # - Check the age of "last updated"
     if len(info) > 0:
-        lastUpdated, dc, numNodes, numResources = heartbeat_crm_parse_general(info, dc, numNodes, numResources)
+        lastUpdated, dc, numNodes, numResources = heartbeat_crm_parse_general(info)
         if not heartbeat_crm_naildown:
             dc = None # Ignore DC on check
-        return [(None, '(heartbeat_crm_default_max_age, %r, %d, %d)' % (dc, numNodes, numRessources))]
+        return [(None, '(heartbeat_crm_default_max_age, %r, %d, %d)' % (dc, numNodes, numResources))]
     else:
         return []
 
@@ -167,7 +167,10 @@ def inventory_heartbeat_crm_resources(checkname, info):
     inventory = []
     if len(info) > 0:
         for name, resources in heartbeat_crm_parse_resources(info).iteritems():
-            if heartbeat_crm_resources_naildown:
+            # In naildown mode only resources which are started somewhere can be
+            # inventorized
+            if heartbeat_crm_resources_naildown and resources[0][2] != 'Stopped':
+
                 inventory.append((name, '"%s"' % resources[0][3]))
             else:
                 inventory.append((name, None))

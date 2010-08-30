@@ -24,6 +24,8 @@
 # Boston, MA 02110-1301 USA.
 
 # Author: Lars Michelsen <lm@mathias-kettner.de>
+#         Florian Heigl <florian.heigl@gmail.com>
+#           (Added sections: df mount mem netctr ipmitool)
 
 # NOTE: This agent has beed adapted from the Check_MK linux agent.
 #       The most sections are commented out at the moment because
@@ -83,14 +85,10 @@ echo AgentOS: freebsd
 # Achtung: NFS-Mounts werden grundsaetzlich ausgeblendet, um
 # Haenger zu vermeiden. Diese sollten ohnehin besser auf dem
 # Server, als auf dem Client ueberwacht werden.
-#echo '<<<df>>>'
-#df -PTlk -x smbfs -x tmpfs -x cifs -x iso9660 -x udf -x nfsv4 | sed 1d
-# VMWare shows its own filesystems with 'vdf'. Just one
-# problem: it outputs not 7 but only 6 columns
-#if which vdf > /dev/null
-#then
-#   vdf -P | grep ^/vmfs/volumes | sed 's/ / vmfs /'
-#fi
+
+echo '<<<df>>>'
+# no special zfs handling so far, actually you won't even SEE zfs fs in this check. Need testers.
+df -kTP -t ufs | egrep -v '(Filesystem|devfs|procfs|fdescfs|basejail)'
 
 # Check NFS mounts by accessing them with stat -f (System
 # call statfs()). If this lasts more then 2 seconds we
@@ -114,19 +112,26 @@ echo AgentOS: freebsd
 #  done
 #fi
 
-# Check mount options. Filesystems may switch to 'ro' in case
-# of a read error.
-#echo '<<<mounts>>>'
-#grep ^/dev < /proc/mounts
+# Check mount options. 
+# FreeBSD doesn't do remount-ro on errors, but the users might consider 
+# security related mount options more important.
+echo '<<<mounts>>>'
+mount -p -t ufs
 
 # processes including username, without kernel processes
 echo '<<<ps>>>'
 COLUMNS=10000
 ps ax -o user,vsz,rss,pcpu,command | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
 
-# Speicherauslastung
-#echo '<<<mem>>>'
-#egrep -v '^Swap:|^Mem:|total:' < /proc/meminfo
+# Memory Usage
+# currently we'll need sysutils/muse for this.
+if [ -x /usr/local/bin/muse ]
+   then 
+	echo '<<<mem>>>'
+# 					yes, i don't know sed well.
+	muse -k 2>/dev/null | sed 's/Total/MemTotal/' | sed 's/Free/MemFree/'
+fi
+
 
 # Produce compatible load/cpu output to linux agent. Not so easy here.
 echo '<<<cpu>>>'
@@ -154,14 +159,11 @@ echo `date +%s` - `sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' | tr 
 #fi
 
 # Multipathgeraete
-#if which multipath >/dev/null ; then
-#    echo '<<<multipath>>>'
-#    multipath -l
-#fi
+# remove, CAM doesn't speak multipath so far.
 
 # Soft-RAID
-#echo '<<<md>>>'
-#cat /proc/mdstat
+# need to replace with extra section for GEOM and ZFS because of larger /
+# different featuresets.
 
 # Performancecounter Platten
 #echo '<<<diskstat>>>'
@@ -173,25 +175,23 @@ echo `date +%s` - `sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' | tr 
 #date +%s
 #cat /proc/vmstat /proc/stat
 
-# Statistik der Netzwerkgeraete (Pakete, Kollisionen, etc)
-#echo '<<<netctr>>>'
-# Genauen Zeitstempel einfuegen, da Counter von Zeit abhaengen
-#date +%s
-#sed -e 1,2d -e 's/:/ /g' < /proc/net/dev
+# Network device statistics (Packets, Collisions, etc)
+# picking the interface dubbed "Link/Num" gives the phys. interface, otherwise we don't see error counters.
+echo '<<<netctr>>>'
+date +%s
+netstat -inb | egrep -v '(^Name|lo|plip)' | grep Link | awk '{print $1" "$8" "$5" "$6" "$7" 0 0 0 0 "$11" "$9" "$10" 0 0 0 0 0"}'
 
-# IPMI-Daten (Luefter, CPU, Temperatur, etc)
-#if which ipmitool >/dev/null ; then
-#    echo '<<<ipmi>>>'
-#    # Transform output from |-separated into ' '-separated,
-#    # drop lines with no data (e.g. from non-present CPUs)
-#    # Columns: name value status unrec_low crit_low noncrit_low noncrit_high crit_high unrec_high
-#    # Status: ok, nc (NonCritical=Warning), ??
-#    ipmitool sensor list \
-#        | grep -v 'command failed' \
-#        | sed -e 's/ *| */|/g' -e "s/ /_/g" -e 's/_*$//' -e 's/|/ /g' \
-#        | egrep -v '^[^ ]+ na ' \
-#        | grep -v ' discrete '
-#fi
+
+# IPMI-Data (Fans, CPU, temperature, etc)
+# needs the sysutils/ipmitool and kldload ipmi.ko
+if which ipmitool >/dev/null ; then
+    echo '<<<ipmi>>>'
+    ipmitool sensor list \
+        | grep -v 'command failed' \
+        | sed -e 's/ *| */|/g' -e "s/ /_/g" -e 's/_*$//' -e 's/|/ /g' \
+        | egrep -v '^[^ ]+ na ' \
+        | grep -v ' discrete '
+fi
 
 # IPMI data via ipmi-sensors (of freeipmi). Please make sure, that if you
 # have installed freeipmi that IPMI is really support by your hardware.
@@ -242,10 +242,6 @@ echo `date +%s` - `sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' | tr 
 #fi
 
 
-#if which vcbVmName > /dev/null 2>&1 ; then
-#   echo '<<<vmware_state>>>'
-#   vcbVmName -s any
-#fi
 
 if which ntpq > /dev/null 2>&1 ; then
    echo '<<<ntp>>>'
@@ -253,16 +249,6 @@ if which ntpq > /dev/null 2>&1 ; then
    ntpq -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
 fi
 
-#if which nvidia-settings >/dev/null && [ -S /tmp/.X11-unix/X0 ]
-#then
-#    echo '<<<nvidia>>>'
-#    DISPLAY=:0 waitmax 10 nvidia-settings -t -q all
-#fi
-
-#if [ -e /proc/drbd ]; then
-#  echo '<<<drbd>>>'
-#  cat /proc/drbd
-#fi
 
 # Checks for cups monitoring
 #if which lpstat > /dev/null 2>&1; then

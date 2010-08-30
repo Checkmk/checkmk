@@ -36,6 +36,7 @@
     * ups_*: Inventory works now on Riello UPS systems
     * ups_power: Working arround wrong implemented RFC in some Riello UPS systems (Fixing negative power
       consumption values)
+    * FreeBSD Agent: Added sections: df mount mem netctr ipmitool (Thanks to Florian Heigl)
 
 1.1.7i4:
     Core, Setup, etc.:

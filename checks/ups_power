@@ -84,7 +84,11 @@ def check_ups_power(item, params, info):
     warn, crit = params
     for line in info:
         if line[0] == item:
-            power = int(line[1])
+            power = saveint(line[1])
+            # Some "RPS SpA" systems are not RFC conform in this value.
+            # The values can get negative but should never be.
+            if power < 0:
+                power *= -1
             perfdata = [ ( "power", power, warn, crit, 0 ) ]
             infotext = " - current power: %d W, warn/crit at and below %d/%d W" % \
                 (power, warn, crit)

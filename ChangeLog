@@ -6,6 +6,8 @@
     * check_mk_objects.cfg: beautify output, use tabs instead of spaces
     * check_mk -II: delete only specified checktypes, allow to reinventorize
       all hosts
+    * New option -O, --reload: Does the same as -R, but reloads Nagios
+      instead of restarting it.
     * SNMP: Fixed string detection in --snmpwalk calls
     * SNMP: --snmpwalk does walk the enterprises tree correctly now
 
@@ -37,6 +39,7 @@
     * ups_power: Working arround wrong implemented RFC in some Riello UPS systems (Fixing negative power
       consumption values)
     * FreeBSD Agent: Added sections: df mount mem netctr ipmitool (Thanks to Florian Heigl)
+    * AIX: exclude NFS and CIFS from df (thanks to Jörg Linge)
     * cisco_locif: Using the interface index as item when no interface name or description are set
 
 1.1.7i4:

@@ -54,7 +54,7 @@ echo Version: 1.1.7i5
 echo AgentOS: aix
 
 echo '<<<df>>>'
-df -kP | sed 's/ / - /' | grep -v ^/proc | grep -v ^Filesystem
+df -kP | sed 's/ / - /' | grep -v ^/proc | grep -v ^Filesystem | grep -v :
 
 echo '<<<ps>>>'
 ps -ef -F args | sed 1d

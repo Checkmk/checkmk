@@ -46,7 +46,7 @@ def cleanup_if_strings(s):
         return s
 
 def inventory_if64(checkname, info):
-    if len(info) == 0 or len(info[0]) != 18:
+    if len(info) == 0 or len(info[0]) != 19:
         return []
     inventory = []
     for ifIndex, ifAlias, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \

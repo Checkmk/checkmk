@@ -30,7 +30,7 @@ Option Explicit
 Dim strName, strHost, checkName, status, output, i
 Dim objShell, objExec, strOutput, arrLines, strLine
 Dim addresses, address, expected, direction, label
-Dim aExpected()
+Dim aExpected(), inAddresses, additionalAddresses, add
 
 status = 0
 output = ""
@@ -65,11 +65,23 @@ strOutput = objExec.StdOut.ReadAll
 arrLines = Split(strOutput, VbCrLf)
 
 addresses = Array()
+inAddresses = False
 For Each strLine In arrLines
     If direction = "forward" AND Left(strLine, 10) = "Addresses:" Then
         addresses = Split(Trim(Mid(strLine, 11)), ", ")
+        inAddresses = True
     ElseIf direction = "reverse" AND Left(strLine, 5) = "Name:" Then
         addresses = Split(Trim(Mid(strLine, 6)), ", ")
+        inAddresses = True
+    End If
+    ' Maybe the answer continues in the following line(s).
+    ' Add until next line with a ":" in it
+    If InStr(strLine, ":") = 0 Then
+        additionalAddresses = Split(Trim(Replace(strLine, vbTab, "")), ", ")
+        For Each add in additionalAddresses
+            Redim Preserve addresses(ubound(addresses) + 1)
+            addresses(ubound(addresses)) = Trim(add)
+        Next   
     End If
 Next
 

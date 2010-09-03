@@ -241,26 +241,37 @@ def get_snmp_table(hostname, ip, oid_info):
         # the OIDs and watch out for gaps we need to fill with dummy values.
 
         # First compute the complete list of end-oids appearing in the output
+        # by looping all results and putting the endoids to a flat list
+        #
+        # The list needs to be sorted to prevent problems when the first
+        # column has missing values in the middle of the tree.
         endoids = []
         for column in columns:
             for o, value in column:
-                endoid = o.rsplit('.', 1)[-1]
+                endoid = int(o.rsplit('.', 1)[-1])
                 if endoid not in endoids:
                     endoids.append(endoid)
+        endoids.sort()
 
-        # Now fill gaps in columns where some endois are missing. Remove OIDs
+        # Now fill gaps in columns where some endois are missing
         new_columns = []
         for column in columns:
             i = 0
             new_column = []
+            # Loop all lines to fill holes in the middle of the list. All
+            # columns check the the following lines for the correct endoid. If
+            # an endoid differs empty values are added until the hole is filled
             for o, value in column:
                 beginoid, endoid = o.rsplit('.', 1)
+                endoid = int(endoid)
                 while i < len(endoids) and endoids[i] != endoid:
                     new_column.append("") # (beginoid + '.' +endoids[i], "" ) )
                     i += 1
                 new_column.append(value)
                 i += 1
-            while i < len(endoids): # trailing OIDs missing
+
+            # At the end check if trailing OIDs are missing
+            while i < len(endoids):
                 new_column.append("") # (beginoid + '.' +endoids[i], "") )
                 i += 1
             new_columns.append(new_column)

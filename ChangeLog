@@ -10,6 +10,8 @@
       instead of restarting it.
     * SNMP: Fixed string detection in --snmpwalk calls
     * SNMP: --snmpwalk does walk the enterprises tree correctly now
+    * SNMP: Fixed missing OID detection in SNMP check processing. There was a problem
+      when the first column had OID gaps in the middle. This affected e.g. the cisco_locif check.
 
     Multisite:
     * Sidebar: Improved the quicksearch snapin. It can search for services, 

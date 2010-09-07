@@ -757,7 +757,12 @@ def create_view():
             group_painternames.append((pname, viewname))
 
     painternames = []
-    for n in range(1, max_display_columns+1):
+    # User can set more than max_display_columns. We cannot easily know
+    # how many variables he has set since holes are allowed. Let's silently
+    # assume that 500 columns are enough. This surely is a hack, but if you
+    # have read this comment you might want to mail me a (simple) patch for
+    # doing this more cleanly...
+    for n in range(1, 500):
         pname = html.var("col_%d" % n)
         viewname = html.var("col_link_%d" % n)
         if pname:

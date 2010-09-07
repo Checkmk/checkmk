@@ -66,9 +66,6 @@ hat Darstellungsprobleme mit den Tabellenschatten, wenn die darstellung
 zweispaltig ist. Komischerweise tauchen diese Probleme bei "All Services"
 nicht auf, obwohl hier das gleiche Layout verwendet wird.
 
-Beim Editieren von Views, die mehr als 10 Spalten haben, ignoriert der
-Editor alle Spalten, die man nach der 10. Spalte ändert.
-
 Multisite: Wenn man die view 'hosts' auf Tablelayout umstellt und
 zwei Spalten einstellt, dann fehlt die mittlere Trennspalte, und
 bei ungerade Spaltenzahl wird am Ende der zweiten Spalte nicht

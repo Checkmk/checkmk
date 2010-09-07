@@ -867,6 +867,7 @@ multisite_builtin_views = {
                           ('svc_in_downtime', None),
                           ('svc_in_notifper', None),
                           ('svc_notifper', None),
+                          ('check_manpage', None),
                           ('svc_pnpgraph', None),
                           ],
              'public': True,

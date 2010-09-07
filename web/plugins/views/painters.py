@@ -434,6 +434,38 @@ multisite_painters["svc_pnpgraph" ] = {
     "paint"   : lambda row: paint_pnpgraph(row["site"], row["host_name"], row["service_description"])
 }
 
+def paint_check_manpage(row):
+    command = row["service_check_command"]
+    if not command.startswith("check_mk-"):
+	return "", ""
+    checktype = command[9:]
+    p = defaults.check_manpages_dir + "/" + checktype
+    if os.path.isfile(p):
+	description = None
+	for line in file(p):
+	    line = line.rstrip()
+	    if line == "description:":
+		description = ""
+	    elif line.strip() == "" and description != None:
+		description += "<p>"
+	    elif not line.startswith(' ') and line[-1] == ':':
+		break
+	    elif description != None:
+	        description += " " + line
+	if not description:
+	    return "", ""
+	else:
+	    return "", description.replace("{", "<b>").replace("}", "</b>")
+    else:
+	return "", "Man-Page: %s not found." % p
+
+multisite_painters["check_manpage"] = {
+    "title" : "Check manual (for Check_MK based checks)",
+    "short" : "Manual",
+    "columns" : [ "service_check_command" ],
+    "paint" : paint_check_manpage
+}
+
 #   _   _           _
 #  | | | | ___  ___| |_ ___
 #  | |_| |/ _ \/ __| __/ __|

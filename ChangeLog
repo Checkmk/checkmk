@@ -18,6 +18,8 @@
       servicegroups and hostgroups now. Simply add a prefix "s:", "sg:" or "hg:"
       to search for other objects than hosts.
     * View editor: fix bug which made it impossible to add more than 10 columns
+    * Service details: for Check_MK checks show description from check manual in
+      service details
 
     Checks & Agents:
     * nvidia: agent now only queries GPUCoreTemp and GPUErrors. This avoids

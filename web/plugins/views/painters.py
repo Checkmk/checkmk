@@ -466,6 +466,44 @@ multisite_painters["check_manpage"] = {
     "paint" : paint_check_manpage
 }
 
+def matching_pattern_entries(dir, item):
+    from fnmatch import fnmatch
+    matching = []
+    entries = filter(lambda d: d[0] != '.', os.listdir(dir))
+    entries.sort()
+    entries.reverse()
+    for pattern in entries:
+	if pattern[0] == '.':
+	    continue
+	if fnmatch(item, pattern):
+	    matching.append(pattern)
+    return matching
+
+
+def paint_custom_notes(row):
+    host = row["host_name"]
+    svc = row.get("service_description")
+    notes_dir = defaults.default_config_dir + "/notes"
+    subdirs = matching_pattern_entries(notes_dir, host)
+    if len(subdirs) == 0:
+	return "", ""
+
+    hostdir = notes_dir + "/" + subdirs[0]
+    files = matching_pattern_entries(hostdir, svc)
+    files.reverse()
+    contents = []
+    for f in files:
+	contents.append(file(hostdir + "/" + f).read())
+    return "", "<hr>".join(contents)
+	
+
+multisite_painters["svc_custom_notes"] = {
+    "title" : "Custom services notes", 
+    "short" : "notes",
+    "columns" : [ "host_name", "service_description" ],
+    "paint" : paint_custom_notes
+}
+
 #   _   _           _
 #  | | | | ___  ___| |_ ___
 #  | |_| |/ _ \/ __| __/ __|

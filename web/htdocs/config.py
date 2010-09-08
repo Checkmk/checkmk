@@ -382,3 +382,14 @@ def save_user_file(name, content):
 #
 
 custom_links = {}
+
+#  __     __         _                 
+#  \ \   / /_ _ _ __(_) ___  _   _ ___ 
+#   \ \ / / _` | '__| |/ _ \| | | / __|
+#    \ V / (_| | |  | | (_) | |_| \__ \
+#     \_/ \__,_|_|  |_|\___/ \__,_|___/
+#                                      
+
+# Show livestatus errors in multi site setup if some sites are
+# not reachable.
+show_livestatus_errors = True

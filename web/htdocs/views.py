@@ -1008,8 +1008,9 @@ def show_view(view, show_heading = False, show_buttons = True):
 
     # In multi site setups error messages of single sites do not block the
     # output and raise now exception. We simply print error messages here:
-    for sitename, info in html.live.deadsites.items():
-        html.show_error("<b>%s - Livestatus error</b><br>%s" % (info["site"]["alias"], info["exception"]))
+    if config.show_livestatus_errors:
+        for sitename, info in html.live.deadsites.items():
+            html.show_error("<b>%s - Livestatus error</b><br>%s" % (info["site"]["alias"], info["exception"]))
 
 def view_options(viewname):
     vo = config.load_user_file("viewoptions", {})

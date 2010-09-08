@@ -104,3 +104,7 @@ custom_links['admin'] = custom_links['user'] + [
       ( "Nagios Portal (German)",       "http://nagios-portal.org"),
   ])
 ]
+
+# Show error messages from unreachable sites in views. Set this
+# to False in order to hide those messages.
+show_livestatus_errors = True

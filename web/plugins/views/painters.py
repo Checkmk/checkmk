@@ -466,7 +466,7 @@ multisite_painters["check_manpage"] = {
     "paint" : paint_check_manpage
 }
 
-def matching_pattern_entries(dir, item):
+def notes_matching_pattern_entries(dir, item):
     from fnmatch import fnmatch
     matching = []
     entries = filter(lambda d: d[0] != '.', os.listdir(dir))
@@ -479,21 +479,29 @@ def matching_pattern_entries(dir, item):
 	    matching.append(pattern)
     return matching
 
-
 def paint_custom_notes(row):
     host = row["host_name"]
     svc = row.get("service_description")
     notes_dir = defaults.default_config_dir + "/notes"
-    subdirs = matching_pattern_entries(notes_dir, host)
+    subdirs = notes_matching_pattern_entries(notes_dir, host)
     if len(subdirs) == 0:
 	return "", ""
 
     hostdir = notes_dir + "/" + subdirs[0]
-    files = matching_pattern_entries(hostdir, svc)
+    # For service notes we search files matching the
+    # service description. For host notes we search a file 
+    # called _HOST_.
+    if not svc:
+        try:
+            return "", file(hostdir + "/_HOST_").read().strip()
+        except:
+            return "",""
+    
+    files = notes_matching_pattern_entries(hostdir, svc)
     files.reverse()
     contents = []
     for f in files:
-	contents.append(file(hostdir + "/" + f).read())
+	contents.append(file(hostdir + "/" + f).read().strip())
     return "", "<hr>".join(contents)
 	
 
@@ -836,6 +844,14 @@ multisite_painters["host_group_memberlist"] = {
     "columns" : [ "host_groups" ],
     "paint"   : paint_host_group_memberlist
 }
+
+multisite_painters["host_custom_notes"] = {
+    "title" : "Custom host notes", 
+    "short" : "notes",
+    "columns" : [ "host_name" ],
+    "paint" : paint_custom_notes
+}
+
 
 #    _   _           _
 #   | | | | ___  ___| |_ __ _ _ __ ___  _   _ _ __  ___

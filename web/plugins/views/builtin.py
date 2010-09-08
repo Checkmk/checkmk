@@ -680,6 +680,7 @@ multisite_builtin_views = {
                              ('num_services_crit', None),
                              ('num_services_unknown', None),
                              ('num_services_pending', None),
+                             ('host_custom_notes', None),
                              ],
                 'public': True,
                 'show_filters': [],

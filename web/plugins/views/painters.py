@@ -466,17 +466,18 @@ multisite_painters["check_manpage"] = {
     "paint" : paint_check_manpage
 }
 
-def notes_matching_pattern_entries(dir, item):
+def notes_matching_pattern_entries(dirs, item):
     from fnmatch import fnmatch
     matching = []
-    entries = filter(lambda d: d[0] != '.', os.listdir(dir))
-    entries.sort()
-    entries.reverse()
-    for pattern in entries:
-	if pattern[0] == '.':
-	    continue
-	if fnmatch(item, pattern):
-	    matching.append(pattern)
+    for dir in dirs:
+        entries = filter(lambda d: d[0] != '.', os.listdir(dir))
+        entries.sort()
+        entries.reverse()
+        for pattern in entries:
+            if pattern[0] == '.':
+                continue
+            if fnmatch(item, pattern):
+                matching.append(dir + "/" + pattern)
     return matching
 
 def paint_custom_notes(row):
@@ -484,29 +485,29 @@ def paint_custom_notes(row):
     svc = row.get("service_description")
     if svc:
         notes_dir = defaults.default_config_dir + "/notes/services"
-        subdirs = notes_matching_pattern_entries(notes_dir, host)
-        if len(subdirs) == 0:
-            return "", ""
-        dir = notes_dir + "/" + subdirs[0]
+        dirs = notes_matching_pattern_entries([notes_dir], host)
         item = svc
     else:
-        dir = defaults.default_config_dir + "/notes/hosts"
+        dirs = [ defaults.default_config_dir + "/notes/hosts" ]
         item = host
 
-    files = notes_matching_pattern_entries(dir, item)
+    files = notes_matching_pattern_entries(dirs, item)
     files.sort()
     files.reverse()
     contents = []
+    def replace_tags(text):
+        return text\
+            .replace('$HOSTNAME$', host)\
+            .replace('$HOSTADDRESS$', row["host_address"])\
+            .replace('$SERVICEDESC$', row.get("service_description", ""))
     for f in files:
-        contents.append(file(dir + "/" + f).read().strip())
+        contents.append(replace_tags(unicode(file(f).read(), "utf-8").strip()))
     return "", "<hr>".join(contents)
-
-	
 
 multisite_painters["svc_custom_notes"] = {
     "title" : "Custom services notes", 
-    "short" : "notes",
-    "columns" : [ "host_name", "service_description" ],
+    "short" : "Notes",
+    "columns" : [ "host_name", "host_address", "service_description" ],
     "paint" : paint_custom_notes
 }
 
@@ -845,8 +846,8 @@ multisite_painters["host_group_memberlist"] = {
 
 multisite_painters["host_custom_notes"] = {
     "title" : "Custom host notes", 
-    "short" : "notes",
-    "columns" : [ "host_name" ],
+    "short" : "Notes",
+    "columns" : [ "host_name", "host_address" ],
     "paint" : paint_custom_notes
 }
 

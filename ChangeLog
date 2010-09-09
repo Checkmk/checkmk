@@ -20,7 +20,7 @@
     * View editor: fix bug which made it impossible to add more than 10 columns
     * Service details: for Check_MK checks show description from check manual in
       service details
-    * Views: new column 'Custom notes' which allows customizable notes
+    * Notes: new column 'Custom notes' which allows customizable notes
       on a per host / per service base (see online docu for details)
     * Configuration: new variable show_livestatus_errors which can be set
       to False in order to hide error about unreachable sites

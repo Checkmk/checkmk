@@ -25,6 +25,8 @@
     * Configuration: new variable show_livestatus_errors which can be set
       to False in order to hide error about unreachable sites
     * hiding views: new configuration variables hidden_views and visible_views
+    * View "Service problems": hide problems of down or unreachable hosts. This
+      makes the view consistant with "Tactical Overview"
 
     Checks & Agents:
     * nvidia: agent now only queries GPUCoreTemp and GPUErrors. This avoids

@@ -87,11 +87,20 @@ sidebar_snapins["admin"] = {
 #      \_/  |_|\___| \_/\_/ |___/
 #
 # --------------------------------------------------------------
+visible_views = [ "allhosts", "searchsvc" ]
+
 def render_views():
     def render_topic(topic, s):
-        html.write("<h3>%s</h3>\n" % topic)
+        first = True
         for t, title, name in s:
+            if config.visible_views and name not in config.visible_views:
+                continue
+            if config.hidden_views and name in config.hidden_views:
+                continue
             if t == topic:
+                if first:
+                    html.write("<h3>%s</h3>\n" % topic)
+                    first = False
                 bulletlink(title, "view.py?view_name=%s" % name)
 
     s = [ (view.get("topic", "Other"), view["title"], name) for name, view in html.available_views.items() if not view["hidden"] ]

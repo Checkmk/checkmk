@@ -108,3 +108,10 @@ custom_links['admin'] = custom_links['user'] + [
 # Show error messages from unreachable sites in views. Set this
 # to False in order to hide those messages.
 show_livestatus_errors = True
+
+# Hide certain views from the sidebar
+# hidden_views = [ "hosttiles", "allhosts_mini" ]
+# Vice versa: hide all views except these (be carefull, this
+
+# will also exclude custom views)
+# visible_views = [ "allhosts", "searchsvc" ]

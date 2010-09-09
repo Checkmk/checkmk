@@ -24,6 +24,7 @@
       on a per host / per service base (see online docu for details)
     * Configuration: new variable show_livestatus_errors which can be set
       to False in order to hide error about unreachable sites
+    * hiding views: new configuration variables hidden_views and visible_views
 
     Checks & Agents:
     * nvidia: agent now only queries GPUCoreTemp and GPUErrors. This avoids

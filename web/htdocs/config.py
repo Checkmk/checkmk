@@ -393,3 +393,9 @@ custom_links = {}
 # Show livestatus errors in multi site setup if some sites are
 # not reachable.
 show_livestatus_errors = True
+
+# Set this to a list in order to globally control which views are
+# being displayed in the sidebar snapin "Views"
+visible_views = None
+# Set this list in order to actively hide certain views
+hidden_views = None

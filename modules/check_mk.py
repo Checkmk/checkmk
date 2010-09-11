@@ -3482,7 +3482,7 @@ if __name__ == "__main__":
                 sys.stderr.write(tty_bold + tty_red + "ERROR" + tty_normal + "\n")
                 sys.stderr.write("The options -S and -H have been replaced with the option -N. If you \n")
                 sys.stderr.write("want to generate only the service definitions, please set \n")
-                sys.stderr.write("'generate_hostconf = True' in main.mk.\n")
+                sys.stderr.write("'generate_hostconf = False' in main.mk.\n")
                 done = True
             elif o == '-N':
                 do_output_nagios_conf(args)

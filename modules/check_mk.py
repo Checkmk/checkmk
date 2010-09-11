@@ -2836,7 +2836,7 @@ NOTES:
   about one, several or all hosts. It shows all services, hostgroups,
   contacts and other information about that host.
 
-  -d does not work not clusters (such defined in main.mk) but only on
+  -d does not work on clusters (such defined in main.mk) but only on
   real hosts.
 
   --check-inventory make check_mk behave as Nagios plugins that

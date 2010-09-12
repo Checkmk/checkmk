@@ -61,7 +61,7 @@ headrify ()
 
   : > $TMP
   if [ -n "$bangpath" ] ; then echo "$bangpath" > $TMP ; fi
-  header | sed "s@^@$comment@" >> $TMP
+  header | sed "s@^@$comment@" | sed 's/ *$//' >> $TMP
   echo >> $TMP
   firstline="$(head -n1 < $file)"
   secondline="$(sed -n 2p < $file)"

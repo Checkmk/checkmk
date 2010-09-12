@@ -2774,7 +2774,8 @@ Copyright (C) 2009 Mathias Kettner
 def usage():
     print """WAYS TO CALL:
  check_mk [-n] [-v] [-p] HOST [IPADDRESS]  check all services on HOST
- check_mk [-u] -I {tcp|snmp} [HOST1 ...]   inventory - find new services
+ check_mk [-u] -I {tcp|snmp|...} [HOST ..] inventory - find new services
+ check_mk [-u] -II ...                     renew inventory, drop old services
  check_mk -u, --cleanup-autochecks         reorder autochecks files
  check_mk -N [HOSTS...]                    output Nagios configuration
  check_mk -C, --compile                    precompile host checks
@@ -2819,7 +2820,11 @@ OPTIONS:
 NOTES:
   -I can be restricted to certain check types. Write '-I df' if you
   just want to look for new filesystems. Use 'check_mk -L' for a list
-  of all check types. SNMP base checks must always named explicitely.
+  of all check types. Use 'tcp' for all TCP based checks and 'snmp' for
+  all SNMP based checks.
+
+  -II does the same as -I but deletes all existing checks of the
+  specified types and hosts.
 
   -u, --cleanup-autochecks resorts all checks found by inventory
   into per-host files. It can be used as an options to -I or as

@@ -74,7 +74,7 @@ then
     DISTRO=UBUNTU
     DISTRONAME="Ubuntu 9.10"
     DISTROVERS=9.10
-elif grep -qi "DISTRIB_DESCRIPTION=\"Ubuntu 10.04 LTS\"" /etc/lsb-release 2>/dev/null
+elif egrep -qi "DISTRIB_DESCRIPTION=\"Ubuntu 10.04(\..*)? LTS\"" /etc/lsb-release 2>/dev/null
 then
     DISTRO=UBUNTU
     DISTRONAME="Ubuntu 10.04 LTS"

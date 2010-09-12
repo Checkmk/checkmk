@@ -1,0 +1,27 @@
+# inventory
+def inventory_3ware_disks(checkname, info):
+    inventory = []
+    for line in info:
+	disk = line[0]
+	inventory.append( (disk, None) )
+    return inventory
+
+# check
+def check_3ware_disks(item, params, info):
+    for line in info:
+	status = str(line[1])
+	if status == "OK":
+	    unit_type = str(line[2])
+	    size = str(line[3])
+	    size_type = str(line[4])
+	    type = str(line[5])
+	    model = str(line[8])
+	    infotext = "%s (unit: %s, size: %s,%s, typ: %s, model: %s)" % (status, unit_type, size, size_type, type, model)
+	    return (0, "OK - disk status is " + infotext)
+	else:
+	    return (2, "CRITICAL - disk status is " + infotext)
+    return (3, "UNKNOWN - disk %s not found in agent output" % item) 
+
+# declare the check to Check_MK
+check_info['3ware_disks'] = \
+	(check_3ware_disks, "RAID 3ware disk %s", 0, inventory_3ware_disks)

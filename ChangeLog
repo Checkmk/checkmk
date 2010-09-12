@@ -54,6 +54,7 @@
     * FreeBSD Agent: Added sections: df mount mem netctr ipmitool (Thanks to Florian Heigl)
     * AIX: exclude NFS and CIFS from df (thanks to Jörg Linge)
     * cisco_locif: Using the interface index as item when no interface name or description are set
+    * 3ware: Three new checks by Radoslav Bak: 3ware_disks, 3ware_units, 3ware_info
 
     Livestatus:
     * table columns: fix type of num_service_* etc.: was list, is now int (thanks to Gerhard Laußer)

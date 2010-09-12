@@ -1,0 +1,15 @@
+def inventory_3ware_info(checkname, info):
+	inventory = []
+    	for line in info:
+    	    controler = line[0]
+    	    inventory.append( (controler, None) )
+    	return inventory
+
+def check_3ware_info(item, params, info):
+	infotext =''	
+	for line in info:
+		line = ' '.join(line[1:])
+		infotext = infotext+line+ ';' 
+	return (0, infotext)
+
+check_info['3ware_info'] = (check_3ware_info, "RAID 3ware controller %s", 0, inventory_3ware_info) 

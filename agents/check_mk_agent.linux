@@ -230,7 +230,17 @@ if which MegaCli >/dev/null ; then
     MegaCli -LDInfo -Lall -aALL -NoLog < /dev/null | egrep 'Size|State|Number|Adapter|Virtual'
 fi
 
-
+# 3WARE disk controller (by Radoslaw Bak)
+if which tw_cli > /dev/null ; then
+    CONTROLER=`tw_cli show | sed -n '4,$p' | cut -c1-2`
+    echo '<<<3ware_info>>>'
+    tw_cli /$CONTROLER show all | egrep 'Model =|Firmware|Serial'
+    echo '<<<3ware_disks>>>'
+    tw_cli /$CONTROLER show drivestatus | egrep 'p[0-50]'
+    echo '<<<3ware_units>>>'
+    tw_cli /$CONTROLER show unitstatus | egrep 'u[0-50]'
+fi
+        
 if which vcbVmName > /dev/null 2>&1 ; then
    echo '<<<vmware_state>>>'
    vcbVmName -s any

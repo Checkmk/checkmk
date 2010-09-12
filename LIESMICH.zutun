@@ -11,12 +11,6 @@ filesystem_levels rausnehmen. Hinweis, dass check_parameters verwendet werden
 soll.
 
 --------------------------------------------------------------------------------
-BUGS beheben bis => 1.1.7i5
---------------------------------------------------------------------------------
-Beschreibung zu -II fehlt in Doku.
-
-
---------------------------------------------------------------------------------
 BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
 habe da wohl noch einen zweiten Bug im Multisite gefunden.

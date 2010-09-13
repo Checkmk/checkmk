@@ -64,11 +64,12 @@ $def[1] .= "AREA:var1#$color:\"$title\:\" ";
 $def[1] .= "LINE1:var1#$line:\"\" ";
 $def[1] .= "GPRINT:var1:LAST:\"Current\: $format\" ";
 if ($WARN[1])
-	$lf = "\\n";
+    $lf = "\\n";
 else
-	$lf = "";
-	
-$def[1] .= "GPRINT:var1:MAX:\"Maximum\: $format$lf\" ";
+    $lf = "";
+
+$def[1] .= "GPRINT:var1:MAX:\"Maximum\: $format\" ";
+$def[1] .= "GPRINT:var1:AVERAGE:\"Average\: $format$lf\" ";
 if ($WARN[1]) {
  $def[1] .= "HRULE:$WARN[1]#FFFF00:\"Warning\: $WARN[1]/s\" ";
  $def[1] .= "HRULE:$CRIT[1]#FF0000:\"Critical\: $CRIT[1]/s\" ";

@@ -31,6 +31,7 @@
       makes the view consistant with "Tactical Overview"
 
     Checks & Agents:
+    * PNP-template for kernel: show average of displayed range
     * ntp and ntp.time: Inventory now per default just creates checks for ntp.time (summary check).
       This is controlled by the new variable ntp_inventory_mode (see check manuals).
     * 3ware: Three new checks by Radoslav Bak: 3ware_disks, 3ware_units, 3ware_info

@@ -18,81 +18,6 @@ wie bereits geschrieben: Wenn Umlaut in Hostgroup Alias vorkommt, funktioniert
 nichts mehr, was irgendwie diese Aliases ausliest. Wird wohl auch an anderer
 Stelle sein, bei der Multisite mit Umlauten arbeiten muss.
 
---------------------------------------------------------------------------------
-BUGS beheben bis => 1.1.8
---------------------------------------------------------------------------------
-
-Noch eine Kleinigkeit im Mulisite, ist zwar kein Bug: in der Host View, in der
-man alle Services zu einem Host sieht, fehlt der Host.  Beispiel: Nagvis ist
-ein Host rot, man klickt ihn an, landet in Multisite, und sieht lauter Grüne
-Dienste (bis auf Check_mk, der ist Gelb und hat "null" im Text stehen. Jetzt
-muss man erst noch Host Status anklicken, um zu sehen, der ist Down.  Sprich,
-in der view Host fehlt jeder Hinweis auf ein Fehler auf dem Host.
-
-Multisite: noch nicht alle Dateien werden mit den richtigen Rechten angelegt:
-Das hier kommt aus config: Dazu gibt es in lib eine Funktion, die man nehmne
-sollte!
-def save_user_file(name, content):
-        path = user_confdir + "/" + name + ".mk"
-            try:
-                file(path, "w").write(pprint.pformat(content) + "\n")
-            except Exception, e:
-                raise MKConfigError("Cannot save %s options for user <b>%s</b> into <b>%s</b>: %s" % \
-                                        (name, user, path, e))
-
-Doku Livestatus: group_authorization nicht gesetzt, hat aber Wirkung von
-loose. Stimmt hier der Default? Sieht eher aus, als funktioniert das nicht...
-
-In Opera (Version 10.6) geht in der Sidebar das Scrollen per Mausrad nicht.
-
-Multisite: Die neue View, welche die Services einer Hostgruppe darstellt,
-hat Darstellungsprobleme mit den Tabellenschatten, wenn die darstellung
-zweispaltig ist. Komischerweise tauchen diese Probleme bei "All Services"
-nicht auf, obwohl hier das gleiche Layout verwendet wird.
-
-Multisite: Wenn man die view 'hosts' auf Tablelayout umstellt und
-zwei Spalten einstellt, dann fehlt die mittlere Trennspalte, und
-bei ungerade Spaltenzahl wird am Ende der zweiten Spalte nicht
-eine hellgraue Zelle angezeigt, sondern eine leere mit grauen
-Trennlinien, so wie früher im alten Layout von Multisite.
-
-Multisite: All hosts (Mini) -> Edit (nix ändern) -> Try out und
-jetzt auf den ersten Host klicken: => Fehlermeldung "Internal error: 
-No view name and not datasource defined. (Retry with debug mode)"
-
-Bei Inventur check_mk -I ntp werden auch die SNMP-Geraete abgefragt?
-Werden die nur bei -I tcp ausgeklammert? Sollte nicht sein, sonst
-bekommen wir viele Timeouts.
-
-Multisite: Aenderung an default_user_role in multisite.mk erfordert
-Apache-Neustart.
-
-Sidebar scrollen: Wenn man ein Snapin packt, mit der Maus scrollt und
-dabei die Maus über den Rand des HTML-Bereiches des Browsers rauszieht und
-dort loslässt, dann bekommt die Sidebar das nicht mit. Wenn man mit der Maus
-wieder reinfährt, ist man - trotz losgelassener Maus - noch im Scrollmodus.
-Kann man den aktuellen Status der Maus irgendwie abfragen - so dass man das
-verlorengegangene Event kompensieren kann? Oder kommt das Event irgendwo
-anders an, wo man es noch abgreifen kann?
-
-Counter wraps: Wenn ein Counter wrapped, liefert dann Check_MK eine Warnung
-"got only 5 out of 9 infos?"
-
-Livestatus: Bei bestimmten regulären Ausdrücken in ~~ schmiert Nagios
-ab. Ist wohl ein Bug in glibc/regcomp. Weiss nicht, was ich da machen
-kann. Beispiel:
-GET hosts 
-Filter: name ~~ (.*){1,346}[bc] 
-
-Livestatus: das Nagios-Debuglog ist nicht reentrant. Livestatus muss ein eigenes
-Logfile schreiben. Wir machen das ohne Rotation. Man muss einfach selbst
-aufpassen, dass es nicht zu groß wird. Default ist eh aus. Ins Nagios
-geloggt wird nur das Starten und Beenden (was ja im Hauptthread läuft).
-
-Wenn man gerade die Kommandobox auf hat (oder den Filter?) dann sollte
-kein Refresh stattfinden. Sonst wird man mitten im Tippen abgewürgt.
-Kann man das mit Javascript hinbekommen?
-
 Eingabe von Downtimes: Auch hier Umlaute abfangen wie bei Comments
 
 Noch ein Problem mit Umlauten: Ein Drucker sendet per SNMP Latin1
@@ -130,8 +55,96 @@ ankommen, die nicht geändert werden dürfen. Also wo dann? Siehe dazu MFP001
 im privaten GIT.
 
 --------------------------------------------------------------------------------
+BUGS beheben bis => 1.1.8
+--------------------------------------------------------------------------------
+CHECK_MK:
+
+Bei Inventur check_mk -I ntp werden auch die SNMP-Geraete abgefragt?
+Werden die nur bei -I tcp ausgeklammert? Sollte nicht sein, sonst
+bekommen wir viele Timeouts.
+
+Counter wraps: Wenn ein Counter wrapped, liefert dann Check_MK eine Warnung
+"got only 5 out of 9 infos?"
+
+MULTISITE:
+
+Multisite: noch nicht alle Dateien werden mit den richtigen Rechten angelegt:
+Das hier kommt aus config: Dazu gibt es in lib eine Funktion, die man nehmne
+sollte!
+def save_user_file(name, content):
+    path = user_confdir + "/" + name + ".mk"
+    try:
+        file(path, "w").write(pprint.pformat(content) + "\n")
+    except Exception, e:
+        raise MKConfigError("Cannot save %s options for user <b>%s</b> into <b>%s</b>: %s" % \
+                           (name, user, path, e))
+
+Wenn man gerade die Kommandobox auf hat (oder den Filter?) dann sollte
+kein Refresh stattfinden. Sonst wird man mitten im Tippen abgewürgt.
+Kann man das mit Javascript hinbekommen? (kann Lars sich hier was
+überlegen? Man müsste das im Javascript irgendwie dynamisch machen).
+
+In Opera (Version 10.6) geht in der Sidebar das Scrollen per Mausrad nicht.
+
+Die neue View, welche die Services einer Hostgruppe darstellt,
+hat Darstellungsprobleme mit den Tabellenschatten, wenn die darstellung
+zweispaltig ist. Komischerweise tauchen diese Probleme bei "All Services"
+nicht auf, obwohl hier das gleiche Layout verwendet wird.
+
+Wenn man die view 'hosts' auf Tablelayout umstellt und
+zwei Spalten einstellt, dann fehlt die mittlere Trennspalte, und
+bei ungerade Spaltenzahl wird am Ende der zweiten Spalte nicht
+eine hellgraue Zelle angezeigt, sondern eine leere mit grauen
+Trennlinien, so wie früher im alten Layout von Multisite.
+
+All hosts (Mini) -> Edit (nix ändern) -> Try out und
+jetzt auf den ersten Host klicken: => Fehlermeldung "Internal error: 
+No view name and not datasource defined. (Retry with debug mode)"
+
+Multisite: Aenderung an default_user_role in multisite.mk erfordert
+Apache-Neustart.
+
+Sidebar scrollen: Wenn man ein Snapin packt, mit der Maus scrollt und
+dabei die Maus über den Rand des HTML-Bereiches des Browsers rauszieht und
+dort loslässt, dann bekommt die Sidebar das nicht mit. Wenn man mit der Maus
+wieder reinfährt, ist man - trotz losgelassener Maus - noch im Scrollmodus.
+Kann man den aktuellen Status der Maus irgendwie abfragen - so dass man das
+verlorengegangene Event kompensieren kann? Oder kommt das Event irgendwo
+anders an, wo man es noch abgreifen kann?
+
+
+LIVESTATUS:
+
+Doku Livestatus: group_authorization nicht gesetzt, hat aber Wirkung von
+loose. Stimmt hier der Default? Sieht eher aus, als funktioniert das nicht...
+
+Livestatus: Bei bestimmten regulären Ausdrücken in ~~ schmiert Nagios
+ab. Ist wohl ein Bug in glibc/regcomp. Weiss nicht, was ich da machen
+kann. Beispiel:
+GET hosts 
+Filter: name ~~ (.*){1,346}[bc] 
+Problem ist: Das scheint ein Bug in der glibc zu sein. Ich sehe nicht,
+wie ich das verhindern kann.
+
+--------------------------------------------------------------------------------
+BUGS beheben ab 1.1.9i1
+--------------------------------------------------------------------------------
+Livestatus: das Nagios-Debuglog ist nicht reentrant. Livestatus muss ein eigenes
+Logfile schreiben. Wir machen das ohne Rotation. Man muss einfach selbst
+aufpassen, dass es nicht zu groß wird. Default ist eh aus. Ins Nagios
+geloggt wird nur das Starten und Beenden (was ja im Hauptthread läuft).
+
+
+--------------------------------------------------------------------------------
 UNSCHOENHEITEN
 --------------------------------------------------------------------------------
+Noch eine Kleinigkeit im Mulisite, ist zwar kein Bug: in der Host View, in der
+man alle Services zu einem Host sieht, fehlt der Host.  Beispiel: Nagvis ist
+ein Host rot, man klickt ihn an, landet in Multisite, und sieht lauter Grüne
+Dienste (bis auf Check_mk, der ist Gelb und hat "null" im Text stehen. Jetzt
+muss man erst noch Host Status anklicken, um zu sehen, der ist Down.  Sprich,
+in der view Host fehlt jeder Hinweis auf ein Fehler auf dem Host.
+
 Multisite Bookmarks: Das Snapin speichert immer absolute URLs mit Hostnamen.
 Das ist aber doof, wenn man die Bookmarksdatei auf einen anderen Host kopiert
 oder mal mit IP-Adresse, mal mit Namen auf Nagios zugreift. Lösung: Beim Speichern

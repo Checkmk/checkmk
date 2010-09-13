@@ -1258,6 +1258,7 @@ def create_nagios_servicedefs(outfile, hostname):
     #  |____/   3. Services
 
     host_checks = get_check_table(hostname).items()
+    host_checks.sort() # Create deterministic order
     aggregated_services_conf = set([])
     do_aggregation = host_is_aggregated(hostname)
     have_at_least_one_service = False

@@ -30,6 +30,9 @@
       makes the view consistant with "Tactical Overview"
 
     Checks & Agents:
+    * ntp and ntp.time: Inventory now per default just creates checks for ntp.time (summary check).
+      This is controlled by the new variable ntp_inventory_mode (see check manuals).
+    * 3ware: Three new checks by Radoslav Bak: 3ware_disks, 3ware_units, 3ware_info
     * nvidia: agent now only queries GPUCoreTemp and GPUErrors. This avoids
       a vmalloc leakage of 32kB per call (bug in NVIDIA driver)
     * Make all SNMP based checks independent of standard MIB files
@@ -54,7 +57,6 @@
     * FreeBSD Agent: Added sections: df mount mem netctr ipmitool (Thanks to Florian Heigl)
     * AIX: exclude NFS and CIFS from df (thanks to Jörg Linge)
     * cisco_locif: Using the interface index as item when no interface name or description are set
-    * 3ware: Three new checks by Radoslav Bak: 3ware_disks, 3ware_units, 3ware_info
 
     Livestatus:
     * table columns: fix type of num_service_* etc.: was list, is now int (thanks to Gerhard Laußer)

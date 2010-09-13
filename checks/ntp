@@ -50,8 +50,13 @@ ntp_state_codes = {
 }
 
 
+# possible values: "summary", "detailed", "both", None
+ntp_inventory_mode = "summary"
+
 # We monitor all servers we have reached at least once
 def inventory_ntp(checktype, info):
+    if inventory_ntp_mode not in [ "detailed", "both" ]:
+        return []
     inventory = []
     for statecode, peer, refid, stratum, t, when, poll, reach, delay, offset, jitter in info:
         if reach != "0" and refid != '.LOCL.':
@@ -59,6 +64,8 @@ def inventory_ntp(checktype, info):
     return inventory
 
 def inventory_ntp_summary(checktype, info):
+    if inventory_ntp_mode not in [ "summary", "both" ]:
+        return []
     if len(info) > 0:
         return [(None, "ntp_default_levels")]
     else:

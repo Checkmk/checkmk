@@ -10,9 +10,9 @@ description:
  if the stratum is too high or on othe error conditions. It gets UNKNOWN 
  if the peer is unreachable or has not answered for a long time.
 
- Note: This check creates one individual service for each peer. It is
- usefull for monitoring the health of the peers. If you want to monitor
- only the time of the NTP client, you might rather use {ntp.time}.
+ Note: This check creates one individual service for each peer. It is useful
+ for monitoring the health of the peers. If you want to monitor only the
+ time of the NTP client, you might rather use {ntp.time}.
 
 item:
  The name or IP address of the peer (first column in output of {ntpq -p}.
@@ -26,7 +26,9 @@ perfdata:
  {jitter} in ms.
 
 inventory:
- Checks are created for all peers which have been contacted at least once.
+ Checks are created for all peers which have been contacted at least once,
+ if {ntp_inventory_mode} is set to {"detailed"} or {"both"}. In case
+ of {"summary"} a check of type {ntp.time} is being created.
 
 [parameters]
 critical_stratum (int): The stratum at which the check gets critical
@@ -37,3 +39,6 @@ critical (float): the critical offset in ms
 ntp_default_levels (int, float, float): The global default levels for all checks
  of this type. This is preset to {(10, 20.0, 50.0)} (which means that the check
  gets critical if the stratum is {10} or higher).
+ntp_inventory_mode (string): This variable controls which kind of NTP checks
+ are created. A check of this type ({ntp}) is only created, if this variable is
+ set to {"detailed"} or {"both"}. Default is {"summary"}.

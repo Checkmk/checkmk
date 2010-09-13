@@ -11,12 +11,16 @@ filesystem_levels rausnehmen. Hinweis, dass check_parameters verwendet werden
 soll.
 
 --------------------------------------------------------------------------------
+UMLAUTPROBLEME (alle gemeinsam angehen)
+--------------------------------------------------------------------------------
+Habe da wohl noch einen zweiten Bug im Multisite gefunden.  Der erste war ja,
+wie bereits geschrieben: Wenn Umlaut in Hostgroup Alias vorkommt, funktioniert
+nichts mehr, was irgendwie diese Aliases ausliest. Wird wohl auch an anderer
+Stelle sein, bei der Multisite mit Umlauten arbeiten muss.
+
+--------------------------------------------------------------------------------
 BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
-habe da wohl noch einen zweiten Bug im Multisite gefunden.
-Der erste war ja, wie bereits geschrieben: Wenn Umlaut in Hostgroup Alias vorkommt,
-funktioniert nichts mehr, was irgendwie diese Aliases ausliest. Wird wohl auch an anderer Stelle sein,
-bei der Multisite mit Umlauten arbeiten muss.
 
 Noch eine Kleinigkeit im Mulisite, ist zwar kein Bug: in der Host View, in der
 man alle Services zu einem Host sieht, fehlt der Host.  Beispiel: Nagvis ist
@@ -40,10 +44,6 @@ Doku Livestatus: group_authorization nicht gesetzt, hat aber Wirkung von
 loose. Stimmt hier der Default? Sieht eher aus, als funktioniert das nicht...
 
 In Opera (Version 10.6) geht in der Sidebar das Scrollen per Mausrad nicht.
-
-Der Check ntp ist durch 'ntp.peer' in den meisten Fällen obsolet geworden.
-Die Inventur findet immer beide, was blöd ist. Soll man ignored_checktypes
-vorbelegen mit ntp?
 
 Multisite: Die neue View, welche die Services einer Hostgruppe darstellt,
 hat Darstellungsprobleme mit den Tabellenschatten, wenn die darstellung

@@ -27,7 +27,8 @@ perfdata:
  {jitter} in ms.
 
 inventory:
- If at least one peer is present, exactly one check is created.
+ If at least one peer is present, exactly one check is created, if
+ {ntp_inventory_mode} is set to {"summary"} or {"both"}.
 
 [parameters]
 critical_stratum (int): The stratum at which the check gets critical
@@ -38,3 +39,6 @@ critical (float): the critical offset in ms
 ntp_default_levels (int, float, float): The global default levels for all checks
  of this type. This is preset to {(10, 20.0, 50.0)} (which means that the check
  gets critical if the stratum is {10} or higher).
+ntp_inventory_mode (string): This variable controls which kind of NTP checks
+ are created. A check of this type ({ntp.time}) is only created, if this variable is
+ set to {"summary"} or {"both"}. Default is {"summary"}.

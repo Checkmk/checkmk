@@ -497,3 +497,7 @@ PNP4Nagios+Multisite: Javascript plus Webservice von Jörg benutzen,
 um festzustellen, welche Grafen es zu einem Service gibt.
 pnp4nagios/index.php/json?host=<hostname>&srv=<servicedesc> 
 
+Livestatus: Spalte bei Services und Hosts, die das ausgeführte Kommando
+(mit expandierten Makros!) enthaelt.
+
+Multisite: Spalte, die das Kommando (die Befehlszeile) ausgibt.

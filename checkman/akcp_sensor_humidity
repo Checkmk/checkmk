@@ -1,0 +1,34 @@
+title: Check AKCP Sensor Temperature
+agents: snmp
+author: Michael Nieporte <michael.nieporte@uk-essen.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the temperature of sensors attached
+ to AKCP SensorProbe. 
+
+item:
+ The item is the sensor description of the sensor as string.
+
+perfdata: 
+ One variable: the current temperature in degrees celsius or fahrenheit.
+
+inventory:
+ All available temperature sensors are automatically inventorized.
+
+examples:
+ # set default levels for all temperature sensors
+ akcp_sensor_temp_defaultlevels = (28, 32)
+
+ # to Overwrite the default levels levels for a sensor
+ checks += [
+   ( 'hostname', "akcp_sensor_temp", 'sensor description', ( warn value, crit value) ),
+ ]
+
+[parameters]
+warning (int): temperature at which a warning level is triggered
+critical (int): critical level for temperature
+
+[configuration]
+akcp_sensor_temp (int, int): default levels for warning
+ and critical. Preset to {(28,32)}.

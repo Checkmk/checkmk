@@ -31,6 +31,7 @@
       makes the view consistant with "Tactical Overview"
 
     Checks & Agents:
+    * Two new checks: akcp_sensor_humidity and akcp_sensor_temp (Thanks to Michael Nieporte)
     * PNP-template for kernel: show average of displayed range
     * ntp and ntp.time: Inventory now per default just creates checks for ntp.time (summary check).
       This is controlled by the new variable ntp_inventory_mode (see check manuals).

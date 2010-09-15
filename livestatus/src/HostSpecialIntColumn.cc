@@ -35,9 +35,10 @@ int32_t HostSpecialIntColumn::getValue(void *data, Query *)
       case HSIC_REAL_HARD_STATE:
 	 if (hst->current_state == 0)
 	    return 0;
+	 else if (hst->state_type == 1)
+	    return hst->current_state; // we have reached a hard state
 	 else
 	    return hst->last_hard_state;
    }
    return -1; // never reached
 }
-

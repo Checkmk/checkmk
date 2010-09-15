@@ -63,6 +63,8 @@
 
     Livestatus:
     * table columns: fix type of num_service_* etc.: was list, is now int (thanks to Gerhard Laußer)
+    * table hosts: repair semantics of hard_state (thanks to Michael Kraus). Transition was one
+      cycle to late in certain situations.
 
 1.1.7i4:
     Core, Setup, etc.:

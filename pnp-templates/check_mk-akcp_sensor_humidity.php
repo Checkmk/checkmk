@@ -29,7 +29,7 @@
 # | Michael Nieporte <Michael.Nieporte@uk-essen.de>                  |
 # +------------------------------------------------------------------+
 
-$opt[1] = "--vertical-label \"Percent\"  -l 0 -u 40 --title \"$servicedesc\" ";
+$opt[1] = "--vertical-label \"Percent\" --title \"$servicedesc\" ";
 
 $def[1] = "DEF:var1=$RRDFILE[1]:$DS[1]:MAX ";
 $def[1] .= "LINE2:var1#2080ff:\"Humidity\:\" ";

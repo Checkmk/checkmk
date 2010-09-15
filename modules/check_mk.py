@@ -1537,10 +1537,14 @@ def make_inventory(checkname, hostnamelist, check_only=False):
     checked_hosts = []
 
     # if no hostnamelist is specified, we use all hosts
+    global opt_use_cachefile
     if not hostnamelist or len(hostnamelist) == 0:
-        global opt_use_cachefile
         opt_use_cachefile = True
         hostnamelist = all_hosts_untagged
+
+    # in case of inventory check we default to using a cache file
+    elif check_only:
+        opt_use_cachefile = True
 
     try:
         for host in hostnamelist:

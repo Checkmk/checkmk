@@ -1,4 +1,4 @@
---------------------------------------------------------------------------------
+j-------------------------------------------------------------------------------
 INS RELEASE 1.2
 --------------------------------------------------------------------------------
 check_mk -X erzwingen. Das -R soll nur noch klappen, wenn kein Configfehler
@@ -66,7 +66,12 @@ bekommen wir viele Timeouts.
 Counter wraps: Wenn ein Counter wrapped, liefert dann Check_MK eine Warnung
 "got only 5 out of 9 infos?"
 
+Windows agent: local/plugins Leerzeichen in C:\Program Files sorgen
+dafür, dass die Plugins nicht ausgeführt werden.
+
 MULTISITE:
+
+Wenn /etc/check_mk/notes/* fehlt, dann schmeißt Multisite Exceptions.
 
 Multisite: noch nicht alle Dateien werden mit den richtigen Rechten angelegt:
 Das hier kommt aus config: Dazu gibt es in lib eine Funktion, die man nehmne

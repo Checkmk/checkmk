@@ -470,14 +470,15 @@ def notes_matching_pattern_entries(dirs, item):
     from fnmatch import fnmatch
     matching = []
     for dir in dirs:
-        entries = filter(lambda d: d[0] != '.', os.listdir(dir))
-        entries.sort()
-        entries.reverse()
-        for pattern in entries:
-            if pattern[0] == '.':
-                continue
-            if fnmatch(item, pattern):
-                matching.append(dir + "/" + pattern)
+        if os.path.isdir(dir):
+            entries = filter(lambda d: d[0] != '.', os.listdir(dir))
+            entries.sort()
+            entries.reverse()
+            for pattern in entries:
+                if pattern[0] == '.':
+                    continue
+                if fnmatch(item, pattern):
+                    matching.append(dir + "/" + pattern)
     return matching
 
 def paint_custom_notes(row):

@@ -501,3 +501,12 @@ Livestatus: Spalte bei Services und Hosts, die das ausgeführte Kommando
 (mit expandierten Makros!) enthaelt.
 
 Multisite: Spalte, die das Kommando (die Befehlszeile) ausgibt.
+
+Multisite: Eine konfigurierbare URL für die Startseite (also
+alternativ zum rechten Startframe.
+
+Multisite: Man soll über eine Variable die URL für die rechte
+Seite mitgeben können. So kann man direkt auf eine Unterseite
+verlinken. Evtl. das sogar abrufbar über ein Icon :-)
+
+

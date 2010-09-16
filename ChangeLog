@@ -14,6 +14,7 @@
       when the first column had OID gaps in the middle. This affected e.g. the cisco_locif check.
     * install_nagios.sh: correctly detect Ubuntu 10.04.1
     * Config output: make order of service deterministic
+    * fix problem with missing default hostgroup
 
     Multisite:
     * Sidebar: Improved the quicksearch snapin. It can search for services, 

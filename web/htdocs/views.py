@@ -28,6 +28,14 @@ import config, defaults, livestatus, htmllib, time, os, re, pprint, time, copy
 from lib import *
 from pagefunctions import *
 
+# Python 2.3 does not have 'set' in normal namespace.
+# But it can be imported from 'sets'
+try:
+    set()
+except NameError:
+    from sets import Set as set
+
+
 config.declare_permission_section("action", "Commands on Objects")
 config.declare_permission("action.notifications",
         "Enable/disable notifications",

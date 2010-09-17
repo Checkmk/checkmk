@@ -9,6 +9,9 @@
     Checks & Agents:
     * New check imm_health by Michael Nieporte
 
+    Multisite:
+    * fix several UTF-8 problems: allow non-ascii characters in host names
+      (must be UTF 8 encoded!)
 
 1.1.7i5:
     Core, Setup, etc.:

@@ -71,9 +71,15 @@ def urlencode_vars(vars):
     for varname, value in vars:
         if output != "":
             output += "&"
+
+	if type(value) == int:
+	    value = str(value)
+        if type(value) == str:
+	    value = unicode(value, 'utf-8')
+        
         output += varname
         output += "="
-        output += urlencode(unicode(value))
+        output += value
     return output
 
 def urlencode(value):
@@ -110,6 +116,8 @@ class html:
         self.events = set([]) # currently used only for sounds
 
     def write(self, text):
+        if type(text) == unicode:
+	    text = text.encode("utf-8")
         self.req.write(text)
 
     def heading(self, text):

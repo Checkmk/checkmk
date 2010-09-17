@@ -51,7 +51,7 @@ def check_rsa_health(_no_item, _no_params, info):
         return (0, "OK - no problem found")
     elif state in ['0', '2']:
         return (2, "CRIT - " + infotext)
-    elif state == ['4']:
+    elif state == '4':
         return (1, "WARN - " + infotext)
     else:
         return (3, "UNKNOWN - " + infotext)

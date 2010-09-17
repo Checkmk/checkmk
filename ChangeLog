@@ -8,6 +8,8 @@
 
     Checks & Agents:
     * New check imm_health by Michael Nieporte
+    * rsa_health: fix bug: detection of WARNING state didn't work (was UNKNOWN
+            instead)
 
     Multisite:
     * fix several UTF-8 problems: allow non-ascii characters in host names

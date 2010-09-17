@@ -509,4 +509,4 @@ Multisite: Man soll über eine Variable die URL für die rechte
 Seite mitgeben können. So kann man direkt auf eine Unterseite
 verlinken. Evtl. das sogar abrufbar über ein Icon :-)
 
-
+Multisite: icon_image von Nagios sollte angezeigt werden

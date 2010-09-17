@@ -1,3 +1,7 @@
+1.1.8b1:
+    Checks & Agents:
+    * New check imm_health by Michael Nieporte
+
 1.1.7i5:
     Core, Setup, etc.:
     * SNMP: do not load any MIB files (speeds up snmpwalk a lot!)

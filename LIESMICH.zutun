@@ -54,6 +54,11 @@ allerdings geht das wieder nicht in snmp.py direkt, weil da teilweise Bytestring
 ankommen, die nicht geändert werden dürfen. Also wo dann? Siehe dazu MFP001
 im privaten GIT.
 
+Sieht so aus, dass das Eurozeichen von Livestatus nicht korrekt kodiert
+wird. Wenn man commant_data=... und ein Euro drinnen hat, verschwindet
+es bei der Ausgabe mit python/json. CSV geht.
+
+
 --------------------------------------------------------------------------------
 BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------

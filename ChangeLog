@@ -2,9 +2,13 @@
     Core, Setup, etc.:
     * SNMPv3: allow privProtocol and privPassword to be specified (thanks
       to Josef Hack)
+    * install_nagios.sh: fix problem with broken filenames produced by wget
+    * install_nagios.sh: updated software to newest versions
+    * install_nagios.sh: fix Apache configuration problem
 
     Checks & Agents:
     * New check imm_health by Michael Nieporte
+
 
 1.1.7i5:
     Core, Setup, etc.:

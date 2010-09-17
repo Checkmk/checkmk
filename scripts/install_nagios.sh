@@ -34,11 +34,11 @@ exec > >(tee $LOGFILE) 2>&1
 
 set -e
 
-NAGIOS_VERSION=3.2.1
-PLUGINS_VERSION=1.4.14
+NAGIOS_VERSION=3.2.2
+PLUGINS_VERSION=1.4.15
 RRDTOOL_VERSION=1.4.3
 CHECK_MK_VERSION=1.1.8b1
-PNP_VERSION=0.6.4
+PNP_VERSION=0.6.6
 NAGVIS_VERSION=1.5.1
 
 SOURCEFORGE_MIRROR=dfn
@@ -355,10 +355,11 @@ fi
 # -----------------------------------------------------------------------------
 heading "Nagios plugins"
 # -----------------------------------------------------------------------------
-[ -e nagios-plugins-$PLUGINS_VERSION.tar.gz ] || wget $PLUGINS_URL
-rm -rf nagios-plugins-$PLUGINS_VERSION
-tar xzf nagios-plugins-$PLUGINS_VERSION.tar.gz $TARXOPTS
-pushd nagios-plugins-$PLUGINS_VERSION
+TAR=nagios-plugins-$PLUGINS_VERSION.tar.gz
+[ -e $TAR ] || wget $PLUGINS_URL -O $TAR
+rm -rf ${TAR%.tar.gz}
+tar xzf $TAR $TARXOPTS
+pushd ${TAR%.tar.gz}
 ./configure \
   --libexecdir=/usr/local/lib/nagios/plugins
 make -j 16
@@ -376,10 +377,11 @@ sed -i '\/var\/lib\/nagios\/spool tmpfs/d' /etc/fstab
 echo 'tmpfs /var/spool/nagios tmpfs defaults 0 0' >> /etc/fstab
 mount /var/spool/nagios
 
-[ -e nagios-$NAGIOS_VERSION.tar.gz ] || wget $NAGIOS_URL
-rm -rf nagios-$NAGIOS_VERSION
-tar xzf nagios-$NAGIOS_VERSION.tar.gz $TARXOPTS
-pushd nagios-$NAGIOS_VERSION
+TAR=nagios-$NAGIOS_VERSION.tar.gz
+[ -e $TAR ] || wget $NAGIOS_URL -O $TAR
+rm -rf ${TAR%.tar.gz}
+tar xzf $TAR $TARXOPTS
+pushd ${TAR%.tar.gz}
 groupadd -r nagios >/dev/null 2>&1 || true
 id nagios >/dev/null 2>&1 || useradd -c 'Nagios Daemon' -s /bin/false -d /var/lib/nagios -r -g nagios nagios
 ./configure \
@@ -640,9 +642,11 @@ popd
 
 # Compile and install PNP4Nagios
 heading "PNP4Nagios"
-[ -e $PNP_NAME-$PNP_VERSION.tar.gz ] || wget "$PNP_URL"
-tar xzf $PNP_NAME-$PNP_VERSION.tar.gz $TARXOPTS
-pushd $PNP_NAME-$PNP_VERSION
+TAR=$PNP_NAME-$PNP_VERSION.tar.gz
+[ -e $TAR ] || wget "$PNP_URL" -O $TAR
+rm -rf ${TAR%.tar.gz}
+tar xzf $TAR $TARXOPTS
+pushd ${TAR%.tar.gz} 
 
 ./configure \
   --bindir=/usr/local/bin \
@@ -859,10 +863,11 @@ fi
 if [ "$NAGVIS_VERSION" ]
 then
 	heading "NagVis"
-	[ -e nagvis-$NAGVIS_VERSION.tar.gz ] || wget "$NAGVIS_URL"
-	rm -rf nagvis-$NAGVIS_VERSION
-	tar xzf nagvis-$NAGVIS_VERSION.tar.gz $TARXOPTS
-	pushd nagvis-$NAGVIS_VERSION
+	TAR=nagvis-$NAGVIS_VERSION.tar.gz
+	[ -e $TAR ] || wget "$NAGVIS_URL" -O $TAR
+	rm -rf ${TAR%.tar.gz}
+	tar xzf $TAR $TARXOPTS
+	pushd ${TAR%.tar.gz}
 	rm -rf /usr/local/share/nagvis
 	./install.sh -q -F -c y \
 	  -u $WWWUSER \
@@ -971,6 +976,7 @@ then
     pushd check_mk-$CHECK_MK_VERSION
     rm -f ~/.check_mk_setup.conf
     rm -rf /var/lib/check_mk /etc/check_mk
+    rm -f /etc/$HTTPD/conf.d/zzz_check_mk.conf
 
     # Set some non-default paths which cannot be 
     # autodetected

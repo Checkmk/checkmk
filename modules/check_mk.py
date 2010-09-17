@@ -1179,7 +1179,7 @@ def create_nagios_hostdefs(outfile, hostname):
     outfile.write("  _TAGS\t\t\t\t%s\n" % " ".join(tags_of_host(hostname)))
 
     # Host groups: If the host has no hostgroups it gets the default
-    # hostgrous (Nagios requires each host to be member of at least on
+    # hostgroup (Nagios requires each host to be member of at least on
     # group.
     hgs = hostgroups_of(hostname)
     hostgroups = ",".join(hgs)
@@ -1434,6 +1434,17 @@ define hostgroup {
   alias\t\t\t\t%s
 }
 """ % (hg, alias))
+
+    # No creation of host groups but we need to define
+    # default host group
+    elif default_host_group in hostgroups_to_define:
+	outfile.write("""
+define hostgroup {
+  hostgroup_name\t\t%s
+  alias\t\t\t\tCheck_MK default hostgroup
+}
+""" % default_host_group)
+	
 
 def create_nagios_config_servicegroups(outfile):
     if define_servicegroups:

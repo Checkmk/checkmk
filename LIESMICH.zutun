@@ -13,46 +13,13 @@ soll.
 --------------------------------------------------------------------------------
 UMLAUTPROBLEME (alle gemeinsam angehen)
 --------------------------------------------------------------------------------
-Habe da wohl noch einen zweiten Bug im Multisite gefunden.  Der erste war ja,
-wie bereits geschrieben: Wenn Umlaut in Hostgroup Alias vorkommt, funktioniert
-nichts mehr, was irgendwie diese Aliases ausliest. Wird wohl auch an anderer
-Stelle sein, bei der Multisite mit Umlauten arbeiten muss.
-
 Eingabe von Downtimes: Auch hier Umlaute abfangen wie bei Comments
 
 Noch ein Problem mit Umlauten: Ein Drucker sendet per SNMP Latin1
 kodierte Wert, z.B. Resttonerbehälter. Daraus baut Check_MK eine
 Servicedesription, die in nagios/conf.d/check_mk_objects.cfg ein
-Latin1-Zeichen enthält. Dieses wandert per Livestatus zu Multisite
-und taucht dort z.B. auf als \u0084. An der Stelle, wo ein Link 
-gerendert wird, kommt es jetzt zu folgendem Fehler:
-File "/usr/lib/python2.5/site-packages/mod_python/importer.py", line 1537, in HandlerDispatch
-    default=default_handler, arg=req, silent=hlist.silent)
-
-      File "/usr/lib/python2.5/site-packages/mod_python/importer.py", line 1229, in _process_target
-          result = _execute_target(config, req, object, arg)
-
-      File "/usr/lib/python2.5/site-packages/mod_python/importer.py", line 1128, in _execute_target
-          result = object(arg)
-
-      File "/usr/share/check_mk/web/htdocs/index.py", line 219, in handler
-          url = html.makeuri([("debug", "1")])
-
-      File "/usr/share/check_mk/web/htdocs/htmllib.py", line 183, in makeuri
-           return self.req.myfile + ".py?" + urlencode_vars(vars + addvars)
-
-       File "/usr/share/check_mk/web/htdocs/htmllib.py", line 76, in urlencode_vars
-           output += urlencode(unicode(value))
-
-    UnicodeDecodeError: 'ascii' codec can't decode byte 0x9a in position 8: ordinal not in range(128)
--> Liegt wohl daran, dass output ascii-kodiert ist und daher += eine Zurückkodierung
-erfordet. Weiteres Problem: Auch in der Nagios-GUI klappt der Service-Link nicht.
-Lösung unklar. Woher können wir wissen, dass die Daten per SNMP Latin1 kodiert sind? 
-Muss man hier eine Variable snmp_encodings machen, wo man pro Host etwas angeben kann,
-z.B. "latin1"? Dann müsste man die Strings an geeigneter Stelle rückkodieren,
-allerdings geht das wieder nicht in snmp.py direkt, weil da teilweise Bytestrings
-ankommen, die nicht geändert werden dürfen. Also wo dann? Siehe dazu MFP001
-im privaten GIT.
+Latin1-Zeichen enthält. Hier sollte unbedingt UTF-8 verwendet
+werden. Nur: woher kennen wir die Kodierung vom Drucker??
 
 Sieht so aus, dass das Eurozeichen von Livestatus nicht korrekt kodiert
 wird. Wenn man commant_data=... und ein Euro drinnen hat, verschwindet
@@ -122,6 +89,10 @@ Kann man den aktuellen Status der Maus irgendwie abfragen - so dass man das
 verlorengegangene Event kompensieren kann? Oder kommt das Event irgendwo
 anders an, wo man es noch abgreifen kann?
 
+Logwatch: was macht man hier bei verteilten Umgebungen?? Muss man das
+wie PNP per Proxy anfahren? Was ist aber dann, wenn man dort rumklickt?
+Dann hat man rechts plötzlich ein anderes System. Lösung ist noch nicht
+in Sicht.
 
 LIVESTATUS:
 

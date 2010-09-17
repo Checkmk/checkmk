@@ -1,4 +1,8 @@
 1.1.8b1:
+    Core, Setup, etc.:
+    * SNMPv3: allow privProtocol and privPassword to be specified (thanks
+      to Josef Hack)
+
     Checks & Agents:
     * New check imm_health by Michael Nieporte
 

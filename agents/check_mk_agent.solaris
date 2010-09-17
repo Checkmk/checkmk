@@ -70,7 +70,7 @@ ps -A -o user,vsz,rss,pcpu,args | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]
 
 # You need statgrab to be installed. You'll find it 
 # here: http://www.i-scream.org/libstatgrab/ 
-if statgrab > /tmp/statgrab.$$ 2>/dev/null
+if statgrab const. cpu. disk. general. load. mem. net. page. proc. swap. user. > /tmp/statgrab.$$ 2>/dev/null
     then
     for s in proc cpu net load disk page
     do

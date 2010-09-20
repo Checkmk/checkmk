@@ -89,6 +89,14 @@
 # \_ round-robin 0 [active]
 #  \_ 1:0:1:0 sdd 8:48  [active]
 
+# Recently I've seen this output >:-P
+# 360080e500017bd72000002eb4c1b1ae8 dm-1 IBM,1814      FAStT
+# size=350G features='1 queue_if_no_path' hwhandler='1 rdac' wp=rw
+# `-+- policy='round-robin 0' prio=-1 status=active
+#   |- 7:0:2:81 sdd 8:48   active undef running
+#   `- 8:0:2:81 sdp 8:240  active undef running
+
+
 def parse_multipath_output(info, only_uuid = None):
     # only_uuid --> look only for data of this uuid or alias
 
@@ -104,7 +112,7 @@ def parse_multipath_output(info, only_uuid = None):
                     (get_regex("^([0-9a-z]{33}|[0-9a-z]{49})\s?dm.+$"), 1, None),
                     (get_regex("^[a-zA-Z0-9_]+dm-.+$"), 0, None) ]
 
-    reg_prio = get_regex("\[prio=")
+    reg_prio = get_regex("[[ ]prio=")
     reg_lun  = get_regex("[0-9]+:[0-9]+:[0-9]+:[0-9]+")
     uuid = None
     alias = None
@@ -128,7 +136,7 @@ def parse_multipath_output(info, only_uuid = None):
             continue
 
         # First simply separate between data row and header row
-        if line[0][0] != '[' and line[0][0] != '\\':
+        if line[0][0] not in [ '[', '`', '|', '\\' ] and not line[0].startswith("size="):
             # Try to match header lines
             matchobject = None
             for regex, uuid_pos, alias_pos in reg_headers:
@@ -176,12 +184,12 @@ def parse_multipath_output(info, only_uuid = None):
         else:
             if uuid != None:
                 if reg_prio.search(l):
-                    group['state'] = line[3]
+                    group['state'] = "".join(line[3:])
                 elif len(line) >= 4 and reg_lun.match(line[1]):
                     luninfo = "%s(%s)" % (line[1], line[2])
                     lun_info.append(luninfo)
                     state = line[4]
-                    if not state.startswith('[active]'):
+                    if not "active" in state:
                         broken_paths.append(luninfo)
                     numpaths += 1
                     group['numpaths'] = numpaths

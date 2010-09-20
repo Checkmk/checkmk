@@ -41,6 +41,9 @@ Counter wraps: Wenn ein Counter wrapped, liefert dann Check_MK eine Warnung
 Windows agent: local/plugins Leerzeichen in C:\Program Files sorgen
 dafür, dass die Plugins nicht ausgeführt werden.
 
+Check_MK-Paket (.mkp) wird scheinbar nicht korrekt gebaut, so
+dass check_mk -P find nach Neuinstallation etwas findet...
+
 MULTISITE:
 
 Wenn /etc/check_mk/notes/* fehlt, dann schmeißt Multisite Exceptions.
@@ -93,6 +96,10 @@ Logwatch: was macht man hier bei verteilten Umgebungen?? Muss man das
 wie PNP per Proxy anfahren? Was ist aber dann, wenn man dort rumklickt?
 Dann hat man rechts plötzlich ein anderes System. Lösung ist noch nicht
 in Sicht.
+
+Master Control: Wenn man zwei Sites hat, wird trotzdem immer nur eine
+angezeigt. Wenn man bei dieser einen Knopf drückt, dann werden plötzlich
+beide angezeigt. Als ob der Ajax-handler hier etwas anders macht...
 
 LIVESTATUS:
 
@@ -517,3 +524,5 @@ scheitert check_mk -O, wenn ein DNS-Eintrag verschwindet.
 Livestatus: neben custom_variable_names und custom_variable_values
 waere noch custom_variables huebsch, welches beides kombiniert.
 
+IE8: Multisite view: wenn man den Edit-Knopf nicht hat, dann werden
+die Tabs ganz komisch ueber die ganze Breite verteilt.

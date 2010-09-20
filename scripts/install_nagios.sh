@@ -720,6 +720,7 @@ cat <<EOF > config.php
 \$conf['pdf_graph_opt'] = ""; 
 \$conf['rrdbase'] = "/var/lib/nagios/rrd/";
 \$conf['page_dir'] = "/etc/nagios/pages/";
+\$conf['special_template_dir'] = '/usr/local/share/pnp4nagios/templates.special';
 \$conf['refresh'] = "90";
 \$conf['max_age'] = 60*60*6;   
 \$conf['temp'] = "/var/tmp";
@@ -752,6 +753,8 @@ cat <<EOF > config.php
 \$views[4]["start"] = ( 60*60*24*365 );
 \$conf['RRD_DAEMON_OPTS'] = 'unix:/var/lib/rrdcached/rrdcached.sock';
 \$conf['template_dir'] = '/usr/local/share/pnp4nagios';
+\$conf['multisite_base_url'] = "$SITEURL/check_mk";
+\$conf['multisite_site'] = "$SITE";
 ?>
 EOF
 

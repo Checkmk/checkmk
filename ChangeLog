@@ -5,6 +5,7 @@
     * install_nagios.sh: fix problem with broken filenames produced by wget
     * install_nagios.sh: updated software to newest versions
     * install_nagios.sh: fix Apache configuration problem
+    * install_nagios.sh: fix configuration vor PNP4Nagios 0.6.6
 
     Checks & Agents:
     * New check imm_health by Michael Nieporte

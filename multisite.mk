@@ -115,3 +115,7 @@ show_livestatus_errors = True
 
 # will also exclude custom views)
 # visible_views = [ "allhosts", "searchsvc" ]
+
+# Load custom style sheet which can override styles defined in check_mk.css
+# Put your style sheet into web/htdocs/
+# custom_style_sheet = "my_styles.css"

@@ -326,10 +326,13 @@ class html:
                 <html><head>
                 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
                 <title>%s</title>
-                <link rel="stylesheet" type="text/css" href="check_mk.css">
+                <link rel="stylesheet" type="text/css" href="check_mk.css">''' % title)
+            if config.custom_style_sheet:
+               self.req.write('                <link rel="stylesheet" type="text/css" href="%s">' % config.custom_style_sheet)
+            self.req.write('''
                 <script type='text/javascript' src='check_mk.js'></script>
                 </head>
-                ''' % title)
+                ''')
             self.req.header_sent = True
 
     def html_foot(self):
@@ -351,7 +354,7 @@ class html:
                 login_text = "not logged in"
             self.write("<body class=main>"
                     "<table class=header><tr><td class=left>%s</td><td class=right>"
-                    "%s &nbsp; &nbsp; %s <img src=\"images/mk_logo_klein.png\"></td></tr></table>" %
+                    "%s &nbsp; &nbsp; <b class=headertime>%s</b> <img src=\"images/mk_logo_klein.png\"></td></tr></table>" %
                     (title, login_text, time.strftime("%H:%M")))
             self.write("<hr class=header>\n")
 

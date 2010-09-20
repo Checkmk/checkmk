@@ -509,3 +509,7 @@ def lookup_ipaddress(hostname):
                 return sockaddr[0]
 Ausserdem kommt check_icmp damit nicht klar. Hier muss dann auf
 check_ping ausgewichen werden. 
+
+Wenn eine IP-Adresse nicht aufgelöst werden kann, sollte stattdessen
+eine (konfigurierbare) Dummyadresse verwendet werden. Sonst
+scheitert check_mk -O, wenn ein DNS-Eintrag verschwindet.

@@ -21,6 +21,7 @@
     * improve compatibility with Python 2.3
     * Allow loading custom style sheet overriding Check_MK styles by setting
       custom_style_sheet in multisite.mk
+    * Host icons show link to detail host, on summary hosts.
 
 
 1.1.7i5:

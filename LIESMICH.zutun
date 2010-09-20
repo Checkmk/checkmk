@@ -513,3 +513,7 @@ check_ping ausgewichen werden.
 Wenn eine IP-Adresse nicht aufgelöst werden kann, sollte stattdessen
 eine (konfigurierbare) Dummyadresse verwendet werden. Sonst
 scheitert check_mk -O, wenn ein DNS-Eintrag verschwindet.
+
+Livestatus: neben custom_variable_names und custom_variable_values
+waere noch custom_variables huebsch, welches beides kombiniert.
+

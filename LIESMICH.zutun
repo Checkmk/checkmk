@@ -1,4 +1,4 @@
-j-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 INS RELEASE 1.2
 --------------------------------------------------------------------------------
 check_mk -X erzwingen. Das -R soll nur noch klappen, wenn kein Configfehler
@@ -46,7 +46,8 @@ dass check_mk -P find nach Neuinstallation etwas findet...
 
 MULTISITE:
 
-Wenn /etc/check_mk/notes/* fehlt, dann schmeißt Multisite Exceptions.
+Quicksearch: s: ersetzen durch Direkteingabe oder evlt. auch beides
+lassen. Aber bei hg: usw. noch Duplikate entfernen.
 
 Multisite: noch nicht alle Dateien werden mit den richtigen Rechten angelegt:
 Das hier kommt aus config: Dazu gibt es in lib eine Funktion, die man nehmne
@@ -65,17 +66,17 @@ Kann man das mit Javascript hinbekommen? (kann Lars sich hier was
 überlegen? Man müsste das im Javascript irgendwie dynamisch machen).
 
 In Opera (Version 10.6) geht in der Sidebar das Scrollen per Mausrad nicht.
+Angeblich in Chrome auch nicht.
 
 Die neue View, welche die Services einer Hostgruppe darstellt,
-hat Darstellungsprobleme mit den Tabellenschatten, wenn die darstellung
+hat Darstellungsprobleme mit den Tabellenschatten, wenn die Darstellung
 zweispaltig ist. Komischerweise tauchen diese Probleme bei "All Services"
 nicht auf, obwohl hier das gleiche Layout verwendet wird.
 
-Wenn man die view 'hosts' auf Tablelayout umstellt und
-zwei Spalten einstellt, dann fehlt die mittlere Trennspalte, und
-bei ungerade Spaltenzahl wird am Ende der zweiten Spalte nicht
-eine hellgraue Zelle angezeigt, sondern eine leere mit grauen
-Trennlinien, so wie früher im alten Layout von Multisite.
+Wenn man die view 'hosts' auf Tablelayout umstellt und zwei Spalten einstellt,
+dann fehlt die mittlere Trennspalte, und bei ungerade Spaltenzahl wird am
+Ende der zweiten Spalte nicht eine hellgraue Zelle angezeigt, sondern eine
+leere mit grauen Trennlinien, so wie früher im alten Layout von Multisite.
 
 All hosts (Mini) -> Edit (nix ändern) -> Try out und
 jetzt auf den ersten Host klicken: => Fehlermeldung "Internal error: 
@@ -96,10 +97,6 @@ Logwatch: was macht man hier bei verteilten Umgebungen?? Muss man das
 wie PNP per Proxy anfahren? Was ist aber dann, wenn man dort rumklickt?
 Dann hat man rechts plötzlich ein anderes System. Lösung ist noch nicht
 in Sicht.
-
-Master Control: Wenn man zwei Sites hat, wird trotzdem immer nur eine
-angezeigt. Wenn man bei dieser einen Knopf drückt, dann werden plötzlich
-beide angezeigt. Als ob der Ajax-handler hier etwas anders macht...
 
 LIVESTATUS:
 

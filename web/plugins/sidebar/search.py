@@ -49,7 +49,7 @@ def render_searchform():
         html.write("aSearchHostgroups = %s;\n" % json.dumps(data))
         data = html.live.query("GET servicegroups\nColumns: name\n")
         html.write("aSearchServicegroups = %s;\n" % json.dumps(data))
-        data = html.live.query("GET services\nColumns: name\n")
+        data = html.live.query("GET services\nColumns: description\n")
         html.write("aSearchServices = %s;\n" % json.dumps(data))
     except:
         data = html.live.query("GET hosts\nColumns: name\n", "OutputFormat: json\n")

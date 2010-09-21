@@ -23,6 +23,7 @@
     * Allow loading custom style sheet overriding Check_MK styles by setting
       custom_style_sheet in multisite.mk
     * Host icons show link to detail host, on summary hosts.
+    * Fix sidebar problem: Master Control did not display data correctly
 
 
 1.1.7i5:

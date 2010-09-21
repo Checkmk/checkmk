@@ -24,7 +24,8 @@
       custom_style_sheet in multisite.mk
     * Host icons show link to detail host, on summary hosts.
     * Fix sidebar problem: Master Control did not display data correctly
-
+    * status_host: honor states even if sites hosting status hosts is disabled
+      (so dead-detection works even if local site is disabled)
 
 1.1.7i5:
     Core, Setup, etc.:

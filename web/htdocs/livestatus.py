@@ -26,6 +26,13 @@
 
 import socket, time
 
+# Python 2.3 does not have 'set' in normal namespace.
+# But it can be imported from 'sets'
+try:
+    set()
+except NameError:
+    from sets import Set as set
+
 """MK Livestatus Python API
 
 This module allows easy access to Nagios via MK Livestatus.
@@ -342,7 +349,7 @@ class SingleSiteConnection(BaseConnection, Helpers):
 # timeout:  timeout for tcp/unix in seconds
 
 class MultiSiteConnection(Helpers):
-    def __init__(self, sites):
+    def __init__(self, sites, disabled_sites = []):
         self.sites = sites
         self.connections = []
         self.deadsites = {}
@@ -352,10 +359,10 @@ class MultiSiteConnection(Helpers):
         self.parallelize = True
 
         # Helper function for connecting to a site
-        def connect_to_site(sitename, site):
+        def connect_to_site(sitename, site, temporary=False):
             try:
                 url = site["socket"]
-                persist = site.get("persist", False)
+                persist = not temporary and site.get("persist", False)
                 connection = SingleSiteConnection(url, persist)
                 if "timeout" in site:
                     connection.set_timeout(int(site["timeout"]))
@@ -368,6 +375,16 @@ class MultiSiteConnection(Helpers):
                     "site"      : site,
                 }
 
+        # Needed for temporary connection for status_hosts in disabled sites
+        def disconnect_site(sitename):
+            i = 0
+            for name, site, connection in self.connections:
+                if name == sitename:
+                    break
+                i += 1
+            del self.connections[i]
+
+
         # Status host: A status host helps to prevent trying to connect
         # to a remote site which is unreachable. This is done by looking
         # at the current state of a certain host on a local site that is
@@ -377,10 +394,30 @@ class MultiSiteConnection(Helpers):
         # entry, then retrieve the host states of the status hosts and then
         # connect to the remote site which are reachable
 
+        # Tackle very special problem: If the user disables a site which
+        # provides status_host information for other sites, the dead-detection
+        # would not work. For that cases we make a temporary connection just
+        # to fetch the status information
+        extra_status_sites = {}
+        if len(disabled_sites) > 0:
+            status_sitenames = set([])
+            for sitename, site in sites.items():
+                try:
+                    s, h = site.get("status_host")
+                    status_sitenames.add(s)
+                except:
+                    continue
+            for sitename in status_sitenames:
+                site = disabled_sites.get(sitename)
+                if site:
+                    extra_status_sites[sitename] = site
+
+
         # First connect to sites without status host. Collect status
         # hosts at the same time.
+
         status_hosts = {} # dict from site to list of status_hosts
-        for sitename, site in sites.items():
+        for sitename, site in sites.items() + extra_status_sites.items():
             status_host = site.get("status_host")
             if status_host:
                 if type(status_host) != tuple or len(status_host) != 2:
@@ -412,6 +449,11 @@ class MultiSiteConnection(Helpers):
                 raise MKLivestatusConfigError(e)
                 status_host_states[(sitename, host)] = (str(e), None)
         self.set_only_sites() # clear site filter
+
+        # Disconnect from disabled sites that we connected to only to
+        # get status information from
+        for sitename, site in extra_status_sites.items():
+            disconnect_site(sitename)
 
         # Now loop over all sites having a status_host and take that state
         # of that into consideration
@@ -550,7 +592,6 @@ class MultiSiteConnection(Helpers):
 
 
         self.connections = stillalive
-# hirn("RESPONSE (\033[1m%.3f\033[0m s)" % ((time.time() - start_time) ))
         return result
 
     def command(self, command, sitename = "local"):

@@ -16,6 +16,7 @@
     * multipath: Handle new output of multipath -l (found on SLES11 SP1)
     * ntp: fix typo in variable ntp_inventory_mode (fixes inventory problem)
     * if64: improve output formatting of link speed
+    * cisco_power: inventory function now ignores non-redundant power supplies
 
     Multisite:
     * fix several UTF-8 problems: allow non-ascii characters in host names

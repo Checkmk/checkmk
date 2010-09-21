@@ -119,3 +119,8 @@ show_livestatus_errors = True
 # Load custom style sheet which can override styles defined in check_mk.css
 # Put your style sheet into web/htdocs/
 # custom_style_sheet = "my_styles.css"
+
+# URL to show as welcome page (in the 'main' frame).
+# You can use relative URL or absolute URLs like 'http://server/url'
+# Default is 'main.py'
+# start_url = 'view.py?view_name=hostgroups'

@@ -402,3 +402,6 @@ hidden_views = None
 
 # Custom user stylesheet to load (resides in htdocs/)
 custom_style_sheet = None
+
+# URL for start page in main frame (welcome page)
+start_url = "main.py"

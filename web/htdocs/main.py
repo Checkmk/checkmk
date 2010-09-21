@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import config
 
 def page_index(html):
     html.req.headers_out.add("Cache-Control", "max-age=7200, public");
@@ -36,9 +37,9 @@ def page_index(html):
 </head>
 <frameset cols="280,*" frameborder="0" framespacing="0" border="0">
     <frame src="side.py" name="side" noresize>
-    <frame src="main.py" name="main" noresize>
+    <frame src="%s" name="main" noresize>
 </html>
-""")
+""" % config.start_url)
 
 def page_main(html):
     html.header("Check_MK Multisite")

@@ -82,6 +82,7 @@ def if64_statename(st):
     return names.get(st, st)
 
 def check_if64(item, params, info):
+
     allowed_operstates = ('1', 'up')
     bw_warn, bw_crit = None, None
     num_params = len(params)
@@ -118,12 +119,11 @@ def check_if64(item, params, info):
 
             # Check speed
             speed = saveint(ifSpeed)
+            infotext += get_nic_speed_human_readable(speed)
             bandwidth = speed / 8.0 # in Bytes / sec
             if speed != targetspeed:
-                infotext += "%s (wrong speed!)" % speed
+                infotext += " (wrong speed!)"
                 state = 1
-            else:
-                infotext += get_bytes_human_readable(speed, 1000)+'it/s'
 
             # Performance counters
             this_time = time.time()

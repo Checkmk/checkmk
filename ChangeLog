@@ -32,6 +32,7 @@
     * new config variable start_url: set url for welcome page
     * Snapin Quicksearch: if no host is matching, automatically search for
       services
+    * Remove links to legacy Nagios GUI (can be added by user if needed)
 
 1.1.7i5:
     Core, Setup, etc.:

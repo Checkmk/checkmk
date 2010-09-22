@@ -46,6 +46,9 @@ dass check_mk -P find nach Neuinstallation etwas findet...
 
 MULTISITE:
 
+Quicksearch: wenn man garnichts eintippt und Enter drückt, soll nichts
+passieren - auf keinen Fall alle Services gezeigt werden!
+
 Multisite: noch nicht alle Dateien werden mit den richtigen Rechten angelegt:
 Das hier kommt aus config: Dazu gibt es in lib eine Funktion, die man nehmne
 sollte!

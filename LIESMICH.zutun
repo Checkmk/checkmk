@@ -46,9 +46,6 @@ dass check_mk -P find nach Neuinstallation etwas findet...
 
 MULTISITE:
 
-Quicksearch: s: ersetzen durch Direkteingabe oder evlt. auch beides
-lassen. Aber bei hg: usw. noch Duplikate entfernen.
-
 Multisite: noch nicht alle Dateien werden mit den richtigen Rechten angelegt:
 Das hier kommt aus config: Dazu gibt es in lib eine Funktion, die man nehmne
 sollte!

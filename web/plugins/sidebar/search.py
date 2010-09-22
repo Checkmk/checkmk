@@ -32,6 +32,13 @@
 
 import views, defaults
 
+# Python 2.3 does not have 'set' in normal namespace.
+# But it can be imported from 'sets'
+try:
+    set()
+except NameError:
+    from sets import Set as set
+
 def render_searchform():
     html.write('<div id="mk_side_search" onclick="mkSearchClose();">')
     html.write('<input id="mk_side_search_field" type="text" name="search" />')
@@ -41,15 +48,26 @@ def render_searchform():
 
     # Store (user) hosts in JS array
     html.live.set_prepend_site(True)
+
+    def sort_data(data):
+        sorted_data = set([])
+        for entry in data:
+            entry = ('', entry[1])
+            if entry not in sorted_data:
+                sorted_data.add(entry)
+        sorted_data = list(sorted_data)
+        sorted_data.sort()
+        return sorted_data
+
     try:
         import json
         data = html.live.query("GET hosts\nColumns: name\n")
         html.write("aSearchHosts = %s;\n" % json.dumps(data))
-        data = html.live.query("GET hostgroups\nColumns: name\n")
+        data = sort_data(html.live.query("GET hostgroups\nColumns: name\n"))
         html.write("aSearchHostgroups = %s;\n" % json.dumps(data))
-        data = html.live.query("GET servicegroups\nColumns: name\n")
+        data = sort_data(html.live.query("GET servicegroups\nColumns: name\n"))
         html.write("aSearchServicegroups = %s;\n" % json.dumps(data))
-        data = html.live.query("GET services\nColumns: description\n")
+        data = sort_data(html.live.query("GET services\nColumns: description\n"))
         html.write("aSearchServices = %s;\n" % json.dumps(data))
     except:
         data = html.live.query("GET hosts\nColumns: name\n", "OutputFormat: json\n")

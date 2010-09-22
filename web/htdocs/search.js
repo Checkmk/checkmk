@@ -98,15 +98,17 @@ function mkSearchFindUrl(aSearchObjects, objType, oField) {
     // found in our list and is unique (found in only one site)
     var url = null;
     var selected_obj = null;
+    var found = 0;
     for (var i in aSearchObjects) {
         var objSite  = aSearchObjects[i][0];
         var objName  = aSearchObjects[i][1];
         if (objName.indexOf(namepart) > -1) {
+            found ++;
             if (url != null) { // found second match -> not unique
                 url = null;
                 break; // abort
             }
-            url = mkSearchGetUrl(objType, objName, objSite);
+            url = mkSearchGetUrl(objType, objName, objSite, found);
             selected_obj = objName;
         }
     }
@@ -119,7 +121,7 @@ function mkSearchFindUrl(aSearchObjects, objType, oField) {
     }
 
     // not found, not unique or only prefix -> display a view that shows more objects
-    return mkSearchGetUrl(objType, namepart, '', false);
+    return mkSearchGetUrl(objType, namepart, '', found);
 }
 
 // On key press down event handler
@@ -280,17 +282,19 @@ function mkSearchGetSearchObjects(objType) {
         return [];
 }
 
-function mkSearchGetUrl(objType, objName, objSite, single) {
-    if(single == null)
-        single = true;
-    
+function mkSearchGetUrl(objType, objName, objSite, numMatches) {
+    if (numMatches == null)
+        numMatches = 0;
+
     if(objType == 'h')
-        if(single)
+        if(numMatches == 1)
             return 'view.py?view_name=host&host=' + objName + '&site=' + objSite;
-        else
+        else if(numMatches > 1)
             return 'view.py?view_name=hosts&host=' + objName;
+        else
+            return 'view.py?view_name=searchsvc&search=Search&filled_in=on&service=' + objName;
     else if(objType == 'hg')
-        if(single)
+        if(numMatches == 1)
             return 'view.py?view_name=hostgroup&hostgroup=' + objName + '&site=' + objSite;
         else
             // FIXME: not correct. Need a page where the name parameter can be a part match
@@ -302,7 +306,7 @@ function mkSearchGetUrl(objType, objName, objSite, single) {
             // FIXME: not correct. Need a page where the name parameter can be a part match
             return 'view.py?view_name=servicegroup&servicegroup=' + objName + '&site=' + objSite;
     else if(objType == 's')
-        if(single)
+        if(numMatches == 1)
             return 'view.py?view_name=servicedesc&service=' + objName + '&site=' + objSite;
         else
             // FIXME: not correct. Need a page where the name parameter can be a part match
@@ -356,7 +360,7 @@ function mkSearch(e, oField) {
     var aSearchObjects = mkSearchGetSearchObjects(objType);
 
     if (!aSearchObjects || !aSearchObjects[0]) {
-        alert("No objects to search for");
+        // alert("No objects to search for");
         return;
     }
     

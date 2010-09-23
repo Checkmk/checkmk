@@ -33,6 +33,7 @@
     * Snapin Quicksearch: if no host is matching, automatically search for
       services
     * Remove links to legacy Nagios GUI (can be added by user if needed)
+    * Sidebar Quicksearch: fix several annoyances
 
 1.1.7i5:
     Core, Setup, etc.:

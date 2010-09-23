@@ -18,6 +18,7 @@
     * ntp: fix typo in variable ntp_inventory_mode (fixes inventory problem)
     * if64: improve output formatting of link speed
     * cisco_power: inventory function now ignores non-redundant power supplies
+    * zpool_status: new check from Darin Perusich for Solaris zpools
 
     Multisite:
     * fix several UTF-8 problems: allow non-ascii characters in host names

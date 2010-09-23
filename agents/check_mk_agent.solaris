@@ -92,6 +92,11 @@ ps=`ps -ef|wc -l|sed -e 's;[ ]\{1,\};;'`
 procs=`psrinfo|wc -l|sed -e 's;[ ]\{1,\};;'`
 echo $load 1/$ps $$ $procs
 
+# check zpool status
+if [ -x /sbin/zpool ]; then
+   echo "<<<zpool_status>>>"
+   /sbin/zpool status -x
+fi
 
 if cd $PLUGINSDIR 2>/dev/null
 then

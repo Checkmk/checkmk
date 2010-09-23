@@ -34,6 +34,7 @@
       services
     * Remove links to legacy Nagios GUI (can be added by user if needed)
     * Sidebar Quicksearch: fix several annoyances
+    * Views with services of one host: add title with host name and status
 
 1.1.7i5:
     Core, Setup, etc.:

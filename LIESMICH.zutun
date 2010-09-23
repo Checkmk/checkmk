@@ -46,15 +46,6 @@ dass check_mk -P find nach Neuinstallation etwas findet...
 
 MULTISITE:
 
-Quicksearch: wenn man garnichts eintippt und Enter drückt, soll nichts
-passieren - auf keinen Fall alle Services gezeigt werden!
-
-Quicksearch: Wenn im Quicksearch ein kompletter Hostname drinsteht
-und das Suchfeld zugeklappt ist und man drück Shift und lässt es
-wieder los, dann klappt das Feld auf. Es soll aber nur aufklappen,
-wenn man am eingetippten Text was verändert hat, nicht bei jedem
-Tastendruck (ging das nicht schonmal)?
-
 Multisite: noch nicht alle Dateien werden mit den richtigen Rechten angelegt:
 Das hier kommt aus config: Dazu gibt es in lib eine Funktion, die man nehmne
 sollte!

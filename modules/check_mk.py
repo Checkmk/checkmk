@@ -1276,7 +1276,7 @@ def create_nagios_servicedefs(outfile, hostname):
 
         # Hardcoded for logwatch check: Link to logwatch.php
         if checkname == "logwatch":
-            logwatch = "    notes_url\t\t\t" + (logwatch_notes_url % (urllib.quote(hostname), urllib.quote(item))) + "\n"
+            logwatch = "  notes_url\t\t\t" + (logwatch_notes_url % (urllib.quote(hostname), urllib.quote(item))) + "\n"
         else:
             logwatch = "";
 

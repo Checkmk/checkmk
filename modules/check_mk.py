@@ -1251,6 +1251,10 @@ def create_nagios_hostdefs(outfile, hostname):
             hostgroups_to_define.update(hgs)
         outfile.write("  host_groups\t\t\t+%s\n" % hostgroups)
 
+        # host gets same contactgroups as real host
+        if len(cgrs) > 0:
+            outfile.write("  contact_groups\t\t+%s\n" % ",".join(cgrs))
+
         if is_clust:
             outfile.write("  _NODEIPS\t\t\t%s\n" % " ".join(node_ips))
         outfile.write("}\n")

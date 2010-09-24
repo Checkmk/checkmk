@@ -40,7 +40,8 @@
 
     Livestatus:
     * fix memory leak: lost ~4K on memory on each StatsAnd: or StatsOr:
-      header (thanks to Sven Nierlein)
+      header (found by Sven Nierlein)
+    * fix invalid json output for empty responses (found by Sven Nierlein)
 
 1.1.7i5:
     Core, Setup, etc.:

@@ -657,8 +657,7 @@ void Query::start()
 	 outputString(column->name());
       }
       outputDatasetEnd();
-      if (_output_format != OUTPUT_FORMAT_CSV)
-	 _output->addBuffer(",\n", 2);
+      _need_ds_separator = true;
    }
 }
 
@@ -784,8 +783,8 @@ void Query::optimizeBitmask(const char *columnname, uint32_t *bitmask)
 // output helpers, called from columns
 void Query::outputDatasetBegin()
 {
-   if (_output_format != OUTPUT_FORMAT_CSV)
-      _output->addChar('[');
+    if (_output_format != OUTPUT_FORMAT_CSV)
+        _output->addChar('[');
 }
 
 void Query::outputDatasetEnd()

@@ -42,6 +42,11 @@
     * fix memory leak: lost ~4K on memory on each StatsAnd: or StatsOr:
       header (found by Sven Nierlein)
     * fix invalid json output for empty responses (found by Sven Nierlein)
+    * fix Stats: avg ___ for 0 matching elements. Output was '-nan' and is
+      now '0.0'
+    * fix output of floating point numbers: always use exponent and make
+      sure a decimal point is contained (this makes JSON/Python detect
+      the correct type)
 
 1.1.7i5:
     Core, Setup, etc.:

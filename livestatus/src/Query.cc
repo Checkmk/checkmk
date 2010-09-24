@@ -841,7 +841,7 @@ void Query::outputCounter(counter_t value)
 void Query::outputDouble(double value)
 {
    char buf[64];
-   int l = snprintf(buf, sizeof(buf), "%.10g", value);
+   int l = snprintf(buf, sizeof(buf), "%.10e", value);
    _output->addBuffer(buf, l);
 }
 

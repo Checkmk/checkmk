@@ -10,6 +10,8 @@
     * config generation: add missing contact groups for summary hosts
     * RPM package of agent: do not overwrite xinetd.d/check_mk, but install
       new version with .rpmnew, if admin has changed his one
+    * legacy_checks: fix missing perfdata, template references where in wrong
+      direction (thanks Daniel Nauck for his precise investigation)
 
     Checks & Agents:
     * New check imm_health by Michael Nieporte

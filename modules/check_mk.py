@@ -1402,12 +1402,12 @@ define servicedependency {
     for command, description, has_perfdata in legchecks:
         extraconf = extra_service_conf_of(hostname, description)
         if has_perfdata:
-            template = ",check_mk_perf"
+            template = "check_mk_perf,"
         else:
             template = ""
         outfile.write("""
 define service {
-  use\t\t\t\tcheck_mk_default%s
+  use\t\t\t\t%scheck_mk_default
   host_name\t\t\t%s
   service_description\t\t%s
   check_command\t\t\t%s

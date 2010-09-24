@@ -38,6 +38,10 @@
     * Sidebar Quicksearch: fix several annoyances
     * Views with services of one host: add title with host name and status
 
+    Livestatus:
+    * fix memory leak: lost ~4K on memory on each StatsAnd: or StatsOr:
+      header (thanks to Sven Nierlein)
+
 1.1.7i5:
     Core, Setup, etc.:
     * SNMP: do not load any MIB files (speeds up snmpwalk a lot!)

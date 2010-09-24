@@ -281,6 +281,7 @@ void Query::parseStatsAndOrLine(char *line, int andor)
 	   return;
        }
        anding->addSubfilter(col->stealFilter());
+       delete col;
        _stats_columns.pop_back();
        number --;
    }

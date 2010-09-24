@@ -1235,7 +1235,7 @@ def create_nagios_hostdefs(outfile, hostname):
     if host_is_aggregated(hostname):
         outfile.write("\ndefine host {\n")
         outfile.write("  host_name\t\t\t%s\n" % summary_hostname(hostname))
-        outfile.write("  use\t\t\t\t%s-summary\n" % host_template)
+        outfile.write("  use\t\t\t\t%s-summary\n" % (is_clust and cluster_template or host_template))
         outfile.write("  alias\t\t\t\tSummary of %s\n" % alias)
         outfile.write("  address\t\t\t%s\n" % ip)
         outfile.write("  _TAGS\t\t\t\t%s\n" % " ".join(tags_of_host(hostname)))

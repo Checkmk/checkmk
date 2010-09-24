@@ -118,6 +118,9 @@ geloggt wird nur das Starten und Beenden (was ja im Hauptthread läuft).
 
 Windows-Agent: Eventlogeinträge nach UTF-8 kodieren.
 
+--snmpwalk: Braucht man das translaten noch? Ich arbeite doch jetzt eh
+nur noch ohne MIB-Dateien. Das würde das ganze deutlich vereinfachen!
+
 --------------------------------------------------------------------------------
 UNSCHOENHEITEN
 --------------------------------------------------------------------------------

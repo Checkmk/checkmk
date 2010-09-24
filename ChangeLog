@@ -8,6 +8,8 @@
     * install_nagios.sh: fix configuration vor PNP4Nagios 0.6.6
     * config generation: fix host check of cluster hosts
     * config generation: add missing contact groups for summary hosts
+    * RPM package of agent: do not overwrite xinetd.d/check_mk, but install
+      new version with .rpmnew, if admin has changed his one
 
     Checks & Agents:
     * New check imm_health by Michael Nieporte

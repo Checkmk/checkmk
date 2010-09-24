@@ -24,15 +24,20 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# inventory
+# <<<3ware_disks>>>
+# p0     OK               u1     298.09 GB   625142448     WD-WCAT19310918
+# p1     OK               u0     298.09 GB   625142448     WD-WCARW3200306
+# p2     OK               u0     298.09 GB   625142448     WD-WCARW3006518
+# p3     OK               u0     298.09 GB   625142448     WD-WCARW3199987 
+
 def inventory_3ware_disks(checkname, info):
     inventory = []
     for line in info:
-	disk = line[0]
-	inventory.append( (disk, None) )
+        if len(line) > 0:
+            disk = line[0]
+            inventory.append( (disk, None) )
     return inventory
 
-# check
 def check_3ware_disks(item, params, info):
     for line in info:
 	status = str(line[1])
@@ -40,9 +45,9 @@ def check_3ware_disks(item, params, info):
 	    unit_type = str(line[2])
 	    size = str(line[3])
 	    size_type = str(line[4])
-	    type = str(line[5])
-	    model = str(line[8])
-	    infotext = "%s (unit: %s, size: %s,%s, typ: %s, model: %s)" % (status, unit_type, size, size_type, type, model)
+	    disk_type = str(line[5])
+	    model = str(line[-1])
+	    infotext = "%s (unit: %s, size: %s,%s, type: %s, model: %s)" % (status, unit_type, size, size_type, disk_type, model)
 	    return (0, "OK - disk status is " + infotext)
 	else:
 	    return (2, "CRITICAL - disk status is " + infotext)

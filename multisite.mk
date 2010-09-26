@@ -70,13 +70,13 @@ admin_users = [ "nagiosadmin" ]
 
 # Links for everyone
 custom_links['guest'] = [
-  ( "Classical Nagios GUI", "/nagios/", "link_home.gif" ),
+  ( "Classical Nagios GUI", "../nagios/", "link_home.gif" ),
   ( "Addons", True, [
-        ( "PNP4Nagios", "/pnp4nagios/",       "link_reporting.gif" ),
+        ( "PNP4Nagios", "../pnp4nagios/",       "link_reporting.gif" ),
         ( "NagVis", False, [
-            ( "Automap",    "/nagvis/index.php?map=__automap", "link_map.gif"),
-            ( "Demo map",   "/nagvis/index.php?map=demo-map",  "link_map.gif"),
-            ( "Demo Map 2", "/nagvis/index.php?map=demo2",     "link_map.gif"),
+            ( "Automap",    "../nagvis/index.php?map=__automap", "link_map.gif"),
+            ( "Demo map",   "../nagvis/index.php?map=demo-map",  "link_map.gif"),
+            ( "Demo Map 2", "../nagvis/index.php?map=demo2",     "link_map.gif"),
         ]),
   ]),
 ]

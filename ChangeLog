@@ -1,3 +1,7 @@
+1.1.8b2:
+    Core, Setup, etc.:
+    * Inventory: skip SNMP-only hosts on non-SNMP checktypes (avoids timeouts)
+    
 1.1.8b1:
     Core, Setup, etc.:
     * SNMPv3: allow privProtocol and privPassword to be specified (thanks

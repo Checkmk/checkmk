@@ -1552,6 +1552,8 @@ def make_inventory(checkname, hostnamelist, check_only=False):
         sys.stderr.write("No such check type '%s'. Try check_mk -I list.\n" % checkname)
         sys.exit(1)
 
+    is_snmp_check = snmp_info.get(checkname) != None
+
     newchecks = []
     newitems = []   # used by inventory check to display unchecked items
     count_new = 0
@@ -1565,9 +1567,8 @@ def make_inventory(checkname, hostnamelist, check_only=False):
 
     try:
         for host in hostnamelist:
-            if opt_no_snmp_hosts and is_snmp_host(host):
-                if opt_verbose:
-                    print "%s is a SNMP-only host. Skipping." % host
+            # Skip SNMP-only hosts if checktype is not of type 'snmp'
+            if not is_snmp_check and is_snmp_host(host): 
                 continue
 
             if is_cluster(host):
@@ -3623,7 +3624,6 @@ if __name__ == "__main__":
             else:
                 if checktype in [ "alltcp", "tcp" ]:
                     checknames = inventorable_checktypes(False)
-                    opt_no_snmp_hosts = True
                 else:
                     checknames = checktype.split(',')
                 if len(checknames) == 0:

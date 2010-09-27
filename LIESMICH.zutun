@@ -31,10 +31,6 @@ BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
 CHECK_MK:
 
-Bei Inventur check_mk -I ntp werden auch die SNMP-Geraete abgefragt?
-Werden die nur bei -I tcp ausgeklammert? Sollte nicht sein, sonst
-bekommen wir viele Timeouts.
-
 Counter wraps: Wenn ein Counter wrapped, liefert dann Check_MK eine Warnung
 "got only 5 out of 9 infos?"
 

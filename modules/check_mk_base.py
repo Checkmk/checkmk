@@ -703,8 +703,7 @@ def do_all_checks_on_host(hostname, ipaddress):
                     print "Counter wrapped, not handled by check, ignoring this check result: %s" % e
                 dont_submit = True
             except Exception, e:
-                result = (3, "UNKNOWN - invalid output from plugin section <<<%s>>> or error in check type %s" %
-                          (infotype, checkname))
+                result = (3, "UNKNOWN - invalid output from agent or error in check %s. Please set <tt>debug_log</tt> to a filename in <tt>main.mk</tt> for enabling exception logging." % checkname)
                 if debug_log:
                     try:
                         import traceback, pprint

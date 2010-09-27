@@ -31,9 +31,6 @@ BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
 CHECK_MK:
 
-Counter wraps: Wenn ein Counter wrapped, liefert dann Check_MK eine Warnung
-"got only 5 out of 9 infos?"
-
 Windows agent: local/plugins Leerzeichen in C:\Program Files sorgen
 dafür, dass die Plugins nicht ausgeführt werden.
 

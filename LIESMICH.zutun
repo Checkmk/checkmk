@@ -44,6 +44,9 @@ BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
 MULTISITE:
 
+Quicksearch: Dropdownlisten begrenzen in Maximalzahl dargestellter Dinge - 
+per Livestatus-Limit:. Das ganze konfigurierbar machen in multisite.mk:
+quicksearch_max_items = 100
 
 LARS: Wenn man gerade die Kommandobox auf hat (oder den Filter?) dann sollte
 kein Refresh stattfinden. Sonst wird man mitten im Tippen abgewürgt.  Kann man

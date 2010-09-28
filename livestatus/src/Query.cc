@@ -407,8 +407,13 @@ void Query::parseAuthUserHeader(char *line)
     if (!_table)
 	return;
     _auth_user = find_contact(line);
-    if (!_auth_user)
-	_output->setError(RESPONSE_CODE_UNAUTHORIZED, "AuthUser: no such user '%s'", line);
+    if (!_auth_user) {
+        // Do not handle this as error any more. In a multi site setup
+        // not all users might be present on all sites by design.
+        _auth_user = UNKNOWN_AUTH_USER;
+	// _output->setError(RESPONSE_CODE_UNAUTHORIZED, "AuthUser: no such user '%s'", line);
+    }
+
 }
 
 void Query::parseStatsGroupLine(char *line)

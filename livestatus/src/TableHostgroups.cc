@@ -123,6 +123,9 @@ void *TableHostgroups::findObject(char *objectspec)
 
 bool TableHostgroups::isAuthorized(contact *ctc, void *data)
 {
+    if (ctc == UNKNOWN_AUTH_USER)
+        return false;
+
    hostgroup *hg = (hostgroup *)data;
    hostsmember *mem = hg->members;
    while (mem) {

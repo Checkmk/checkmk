@@ -158,6 +158,9 @@ void TableServices::answerQuery(Query *query)
 
 bool TableServices::isAuthorized(contact *ctc, void *data)
 {
+    if (ctc == UNKNOWN_AUTH_USER)
+        return false;
+
     service *svc = (service *)data;
     if (g_service_authorization == AUTH_STRICT) {
 	return is_contact_for_service(svc, ctc);

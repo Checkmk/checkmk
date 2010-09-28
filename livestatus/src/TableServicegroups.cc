@@ -102,6 +102,9 @@ void *TableServicegroups::findObject(char *objectspec)
 
 bool TableServicegroups::isAuthorized(contact *ctc, void *data)
 {
+    if (ctc == UNKNOWN_AUTH_USER)
+        return false;
+
    servicegroup *sg = (servicegroup *)data;
    servicesmember *mem = sg->members;
    while (mem) {

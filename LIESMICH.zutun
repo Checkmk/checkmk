@@ -39,19 +39,16 @@ BUGS beheben bis => 1.1.8
 MULTISITE:
 
 
-Wenn man gerade die Kommandobox auf hat (oder den Filter?) dann sollte
-kein Refresh stattfinden. Sonst wird man mitten im Tippen abgewürgt.
-Kann man das mit Javascript hinbekommen? (kann Lars sich hier was
-überlegen? Man müsste das im Javascript irgendwie dynamisch machen).
-LARS: Hast du eine Idee, wie man das (einfach) hinbekommen könnte?
+LARS: Wenn man gerade die Kommandobox auf hat (oder den Filter?) dann sollte
+kein Refresh stattfinden. Sonst wird man mitten im Tippen abgewürgt.  Kann man
+das mit Javascript hinbekommen? (kann Lars sich hier was überlegen? Man
+müsste das im Javascript irgendwie dynamisch machen).  LARS: Hast du eine
+Idee, wie man das (einfach) hinbekommen könnte?
 
-In Opera (Version 10.6) geht in der Sidebar das Scrollen per Mausrad nicht.
-Angeblich in Chrome auch nicht.
+LARS: In Opera (Version 10.6) geht in der Sidebar das Scrollen per Mausrad
+nicht. Angeblich in Chrome auch nicht.
 
-Multisite: Aenderung an default_user_role in multisite.mk erfordert
-Apache-Neustart.
-
-Sidebar scrollen: Wenn man ein Snapin packt, mit der Maus scrollt und
+LARS: Sidebar scrollen: Wenn man ein Snapin packt, mit der Maus scrollt und
 dabei die Maus über den Rand des HTML-Bereiches des Browsers rauszieht und
 dort loslässt, dann bekommt die Sidebar das nicht mit. Wenn man mit der Maus
 wieder reinfährt, ist man - trotz losgelassener Maus - noch im Scrollmodus.

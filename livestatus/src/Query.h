@@ -54,6 +54,8 @@ class Aggregator;
 #define ANDOR_OR  0
 #define ANDOR_AND 1
 
+#define UNKNOWN_AUTH_USER ((contact *)0xdeadbeaf)
+
 class Query
 { 
    OutputBuffer *_output;

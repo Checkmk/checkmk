@@ -55,6 +55,9 @@ struct hostbygroup {
 
 bool TableHosts::isAuthorized(contact *ctc, void *data)
 {
+    if (ctc == UNKNOWN_AUTH_USER)
+        return false;
+
     host *hst = (host *)data;
     return is_contact_for_host(hst, ctc)
 	|| is_escalated_contact_for_host(hst, ctc);

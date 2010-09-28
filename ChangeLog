@@ -3,6 +3,10 @@
     * Inventory: skip SNMP-only hosts on non-SNMP checktypes (avoids timeouts)
     * Improve error output for invalid checks
     
+    Checks & Agents:
+    * fix bug: run local and plugins also when spaces are in path name
+      (such as C:\Program Files\Check_MK\plugins
+
 1.1.8b1:
     Core, Setup, etc.:
     * SNMPv3: allow privProtocol and privPassword to be specified (thanks

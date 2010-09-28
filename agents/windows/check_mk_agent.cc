@@ -978,7 +978,7 @@ void run_external_programs(SOCKET &out, char *dirname)
         while (0 != (de = readdir(dir))) {
             char *name = de->d_name;
             if (name[0] != '.') {
-                snprintf(path, sizeof(path), "%s\\%s", dirname, name);
+                snprintf(path, sizeof(path), "\"%s\\%s\"", dirname, name);
                 run_plugin(out, path);
             }
         }

@@ -34,9 +34,6 @@ CHECK_MK:
 Check_MK-Paket (.mkp) wird scheinbar nicht korrekt gebaut, so
 dass check_mk -P find nach Neuinstallation etwas findet...
 
-VMalloc-Check: nur auf 32-Bit Architekturen ausführen, auf anderen ist
-der Check absurd.
-
 MULTISITE:
 
 Multisite: noch nicht alle Dateien werden mit den richtigen Rechten angelegt:

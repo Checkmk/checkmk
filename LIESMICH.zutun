@@ -6,16 +6,22 @@ die für den Programmstart. Aber auch die Trigger sind ja wichtig.
 
 
 -------------------------------------------------------------------------------
-INS RELEASE 1.2
+ab 1.1.9i1:
 --------------------------------------------------------------------------------
 check_mk -X erzwingen. Das -R soll nur noch klappen, wenn kein Configfehler
 auftritt.
 
-direct rrd-updates deprecaten oder rausnehmen. Diese sorgen dafür, dass
-die Perf-O-Meter und die PNP-Suche in Multisite nicht geht.
+filesystem_levels rausnehmen. Hinweis, dass check_parameters verwendet
+werden soll.
 
-filesystem_levels rausnehmen. Hinweis, dass check_parameters verwendet werden
-soll.
+Perfdatenformat per Default auf 'pnp'
+
+Aggregation per Default auf mehrzeilige Ausgabe
+
+Direct rrd updates ganz entfernen.
+
+Livestatus soll einen Fehler loggen, wenn nicht alle benötigten 
+Brokeroptions gesetzt sind.
 
 --------------------------------------------------------------------------------
 UMLAUTPROBLEME (alle gemeinsam angehen)

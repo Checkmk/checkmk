@@ -9,6 +9,9 @@
     * mem.vmalloc: Do not create a check for 64 bit architectures, where
       vmalloc is always plenty
 
+    Multisite:
+    * cleanup implementation of how user settings are written to disk
+
 1.1.8b1:
     Core, Setup, etc.:
     * SNMPv3: allow privProtocol and privPassword to be specified (thanks

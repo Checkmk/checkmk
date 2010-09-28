@@ -100,11 +100,7 @@ def load_user_config():
 
 def save_user_config(user_config):
     if config.may("configure_sidebar"):
-        path = config.user_confdir + "/sidebar.mk"
-        try:
-            write_settings_file(path, user_config)
-        except Exception, e:
-            raise MKConfigError("Cannot save user configuration to <tt>%s</tt>: %s" % (path, e))
+        config.save_user_file("sidebar", user_config)
 
 def sidebar_head():
     html.write('<div id="side_header">'

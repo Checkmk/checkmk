@@ -265,7 +265,7 @@ def save_views(us):
     for (user, name), view in html.multisite_views.items():
         if us == user:
             userviews[name] = view
-    write_settings_file(config.user_confdir + "/views.mk", userviews)
+    config.save_user_file("views", userviews)
 
 
 # ----------------------------------------------------------------------

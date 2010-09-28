@@ -29,11 +29,6 @@ es bei der Ausgabe mit python/json. CSV geht.
 --------------------------------------------------------------------------------
 BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
-CHECK_MK:
-
-Check_MK-Paket (.mkp) wird scheinbar nicht korrekt gebaut, so
-dass check_mk -P find nach Neuinstallation etwas findet...
-
 MULTISITE:
 
 Multisite: noch nicht alle Dateien werden mit den richtigen Rechten angelegt:

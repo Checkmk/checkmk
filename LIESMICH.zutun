@@ -31,11 +31,11 @@ BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
 CHECK_MK:
 
-Windows agent: local/plugins Leerzeichen in C:\Program Files sorgen
-dafür, dass die Plugins nicht ausgeführt werden.
-
 Check_MK-Paket (.mkp) wird scheinbar nicht korrekt gebaut, so
 dass check_mk -P find nach Neuinstallation etwas findet...
+
+VMalloc-Check: nur auf 32-Bit Architekturen ausführen, auf anderen ist
+der Check absurd.
 
 MULTISITE:
 
@@ -516,3 +516,6 @@ waere noch custom_variables huebsch, welches beides kombiniert.
 
 IE8: Multisite view: wenn man den Edit-Knopf nicht hat, dann werden
 die Tabs ganz komisch ueber die ganze Breite verteilt.
+
+Disk IO read/write: Zu einem Check zusammenfassen. Einen gemeinsamen
+Graphen mit dem Windows-Check erstellen (wo ein Graph eh fehlt).

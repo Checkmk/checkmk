@@ -6,6 +6,8 @@
     Checks & Agents:
     * fix bug: run local and plugins also when spaces are in path name
       (such as C:\Program Files\Check_MK\plugins
+    * mem.vmalloc: Do not create a check for 64 bit architectures, where
+      vmalloc is always plenty
 
 1.1.8b1:
     Core, Setup, etc.:

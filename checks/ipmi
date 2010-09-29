@@ -46,6 +46,29 @@
 # p0.t_core 18.000 degrees_C ok na na na 62.000 67.000 75.000
 # p0.v_vdd 1.332 Volts ok 0.792 0.900 0.996 1.596 1.692 1.800
 
+# Yet another host (HP DL 360G5)
+# UID_Light 0.000 unspecified ok na na 0.000 na na na
+# Int._Health_LED 0.000 unspecified ok na na 0.000 na na na
+# Ext._Health_LED 0.000 unspecified ok na na 0.000 na na na
+# Power_Supply_1 0.000 unspecified nc na na 0.000 na na na
+# Power_Supply_2 0.000 unspecified nc na na 0.000 na na na
+# Power_Supplies 0.000 unspecified nc na na 0.000 na na na
+# VRM_1 0.000 unspecified cr na na 0.000 na na na
+# VRM_2 0.000 unspecified cr na na 0.000 na na na
+# Fan_Block_1 34.888 unspecified nc na na 75.264 na na na
+# Fan_Block_2 29.792 unspecified nc na na 75.264 na na na
+# Fan_Block_3 34.888 unspecified nc na na 75.264 na na na
+# Fan_Blocks 0.000 unspecified nc na na 0.000 na na na
+# Temp_1 39.000 degrees_C ok na na -64.000 na na na
+# Temp_2 16.000 degrees_C ok na na -64.000 na na na
+# Temp_3 30.000 degrees_C ok na na -64.000 na na na
+# Temp_4 30.000 degrees_C ok na na -64.000 na na na
+# Temp_5 25.000 degrees_C ok na na -64.000 na na na
+# Temp_6 30.000 degrees_C ok na na -64.000 na na na
+# Temp_7 30.000 degrees_C ok na na -64.000 na na na
+# Power_Meter 180.000 Watts cr na na 384.000 na na na
+
+
 # IPMI has two operation modes:
 # 1. detailed
 # 2. summarized

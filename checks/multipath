@@ -96,6 +96,16 @@
 #   |- 7:0:2:81 sdd 8:48   active undef running
 #   `- 8:0:2:81 sdp 8:240  active undef running
 
+# And this has been seen on SLES 11 SP1 64 Bit:
+# 3600508b40006d7da0001a00004740000 dm-0 HP,HSV210
+# size=10G features='1 queue_if_no_path' hwhandler='0' wp=rw
+# |-+- policy='round-robin 0' prio=-1 status=active
+# | |- 2:0:0:1 sda        8:0    active undef running
+# | `- 3:0:0:1 sdo        8:224  active undef running
+# `-+- policy='round-robin 0' prio=-1 status=enabled
+#   |- 3:0:1:1 sdv        65:80  active undef running
+#   `- 2:0:1:1 sdh        8:112  active undef running
+
 
 def parse_multipath_output(info, only_uuid = None):
     # only_uuid --> look only for data of this uuid or alias
@@ -183,6 +193,9 @@ def parse_multipath_output(info, only_uuid = None):
             continue
         else:
             if uuid != None:
+		# Handle special syntax | |- 2:0:0:1 sda  ...
+	        if line[0] == '|':
+		    line = line[1:]
                 if reg_prio.search(l):
                     group['state'] = "".join(line[3:])
                 elif len(line) >= 4 and reg_lun.match(line[1]):

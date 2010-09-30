@@ -9,6 +9,7 @@
     * mem.vmalloc: Do not create a check for 64 bit architectures, where
       vmalloc is always plenty
     * postfix_mailq: limit output to 1000 lines
+    * multipath: handle output of SLES 11 SP1 better
 
     Multisite:
     * cleanup implementation of how user settings are written to disk

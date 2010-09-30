@@ -26,7 +26,7 @@ SOCKET=${3:-/var/run/nagios/rw/live}
 
 check ()
 {
-  IFS=\; read COUNT OK CRIT WARN UNKNOWN
+  IFS=\; read COUNT OK WARN CRIT UNKNOWN
   if [ $CRIT -ge $NUM ] 
   then
       status=CRIT

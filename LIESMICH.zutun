@@ -49,7 +49,18 @@ es bei der Ausgabe mit python/json. CSV geht.
 --------------------------------------------------------------------------------
 BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
+CHECK_MK:
+
+Check für Postfix Queue: Der Agent darf unmöglich die komplette
+Queue rauspumpen. Das können beliebig viele Daten werden. Besser
+ist, dass der bereits zählt mit wc oder ähnliches -> LARS?
+
 MULTISITE:
+
+Fehlermeldung von Livestatus sieht komisch aus:
+LAN Monitoring (alt) - Livestatus error
+invalid literal for int() with base 10: 'NIX socket '
+Das tritt dann auf, wenn das Socket nicht erreichbar ist.
 
 Quicksearch: Dropdownlisten begrenzen in Maximalzahl dargestellter Dinge - 
 per Livestatus-Limit:. Das ganze konfigurierbar machen in multisite.mk:

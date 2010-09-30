@@ -29,6 +29,10 @@ snmp_communities: dictionary nicht mehr verwenden, aus Doku raus, Defaultwert
 leere Liste, aus Code raus, Hinweis im ChangeLog. Evtl einen Test mit
 Abbruch, wenn immer noch type ist dict.
 
+[""] deprecaten, aus der Doku raus und durch ALL_SERVICES ersetzen
+
+non_bulkwalk_hosts rausschmeissen. Kann man mit NEGATE nachbilden
+mit bulkwalk_hosts.
 
 --------------------------------------------------------------------------------
 UMLAUTPROBLEME (alle gemeinsam angehen)
@@ -100,6 +104,10 @@ GET hosts
 Filter: name ~~ (.*){1,346}[bc] 
 Problem ist: Das scheint ein Bug in der glibc zu sein. Ich sehe nicht,
 wie ich das verhindern kann.
+
+IE8: Multisite view: wenn man den Edit-Knopf nicht hat, dann werden
+die Tabs ganz komisch ueber die ganze Breite verteilt.
+
 
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
@@ -464,9 +472,6 @@ scheitert check_mk -O, wenn ein DNS-Eintrag verschwindet.
 
 Livestatus: neben custom_variable_names und custom_variable_values
 waere noch custom_variables huebsch, welches beides kombiniert.
-
-IE8: Multisite view: wenn man den Edit-Knopf nicht hat, dann werden
-die Tabs ganz komisch ueber die ganze Breite verteilt.
 
 Disk IO read/write: Zu einem Check zusammenfassen. Einen gemeinsamen
 Graphen mit dem Windows-Check erstellen (wo ein Graph eh fehlt).

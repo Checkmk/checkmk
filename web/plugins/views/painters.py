@@ -508,6 +508,9 @@ def paint_custom_notes(row):
     def replace_tags(text):
         return text\
             .replace('$HOSTNAME$', host)\
+	    .replace('$HOSTNAME_LOWER$', host.lower())\
+            .replace('$HOSTNAME_UPPER$', host.upper())\
+            .replace('$HOSTNAME_TITLE$', host[0].upper() + host[1:].lower())\
             .replace('$HOSTADDRESS$', row["host_address"])\
             .replace('$SERVICEDESC$', row.get("service_description", ""))
     for f in files:

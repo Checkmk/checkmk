@@ -14,6 +14,8 @@
     Multisite:
     * cleanup implementation of how user settings are written to disk
     * fix broken links in 'Edit view -> Try out' situation
+    * new macros $HOSTNAME_LOWER$, $HOSTNAME_UPPER$ and $HOSTNAME_TITLE$ for
+      custom notes
 
 1.1.8b1:
     Core, Setup, etc.:

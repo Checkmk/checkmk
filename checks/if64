@@ -114,6 +114,7 @@ def check_if64(item, params, info):
             operstatus = if64_statename(str(ifOperStatus))
             if not operstatus in allowed_operstates:
                 return (2, "CRIT - %soperstate: %s (CRIT)" % (infotext, operstatus))
+	    infotext += "(%s) " % operstatus
 
             state = 0
 

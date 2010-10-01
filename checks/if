@@ -102,6 +102,7 @@ def check_if(item, params, info):
             operstatus = if_statename(str(ifOperStatus))
             if not operstatus in allowed_operstates:
                 return (2, "CRIT - %soperstate: %s (CRIT)" % (infotext, operstatus))
+	    infotext += "(%s) " % operstatus
 
             state = 0
 

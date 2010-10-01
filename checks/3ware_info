@@ -24,6 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Possible output:
+# # tw_cli show
+# 
+# Ctl   Model        (V)Ports  Drives   Units   NotOpt  RRate   VRate  BBU
+# ------------------------------------------------------------------------
+# c0    9550SXU-4LP  4         3        2       0       1       1      -
+# c1    9550SXU-8LP  8         7        3       0       1       1      -
+# 
+# tw_cli version: 2.01.09.004 
+
 def inventory_3ware_info(checkname, info):
 	inventory = []
     	for line in info:

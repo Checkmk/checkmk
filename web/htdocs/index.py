@@ -63,7 +63,6 @@ def connect_to_livestatus(html):
         # Also honor HTML-variables for switching off sites
         # right now. This is generally done by the variable
         # _site_switch=sitename1:on,sitename2:off,...
-        enabled_sites = {}
         switch_var = html.var("_site_switch")
         if switch_var:
             for info in switch_var.split(","):
@@ -76,16 +75,20 @@ def connect_to_livestatus(html):
                 config.user_siteconf[sitename] = d
             config.save_site_config()
 
-        # Make a list of all non-disabled sites.
+        # Make lists of enabled and disabled sites
+        enabled_sites = {}
+        disabled_sites = {}
+
         for sitename, site in config.allsites().items():
             siteconf = config.user_siteconf.get(sitename, {})
             if siteconf.get("disabled", False):
                 html.site_status[sitename] = { "state" : "disabled", "site" : site }
+                disabled_sites[sitename] = site
             else:
                 html.site_status[sitename] = { "state" : "dead", "site" : site }
                 enabled_sites[sitename] = site
 
-        html.live = livestatus.MultiSiteConnection(enabled_sites)
+        html.live = livestatus.MultiSiteConnection(enabled_sites, disabled_sites)
 
         # Fetch status of sites by querying the version of Nagios and livestatus
         html.live.set_prepend_site(True)

@@ -1,0 +1,9 @@
+This file will help you to write *good* checks for Check_MK.
+
+Agent based checks:
+
+* Put sample output snippets of the agent as comments into
+  the check source code. Add examples for all cases handled
+  by your check. -> That makes the code more easy to understand
+  and help not to break something if someone changes something
+  in the check's parser.

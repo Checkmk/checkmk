@@ -804,9 +804,8 @@ def load_bookmarks():
     except:
         return []
 
-
 def save_bookmarks(bookmarks):
-    write_settings_file(config.user_confdir + "/bookmarks.mk", bookmarks)
+    config.save_user_file("bookmarks", bookmarks)
 
 def render_bookmarks():
     bookmarks = load_bookmarks()

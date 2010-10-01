@@ -32,25 +32,13 @@ export MK_CONFDIR="/to/be/changed"
 PLUGINSDIR=$MK_LIBDIR/plugins
 
 # All executables in LOCALDIR will by executabled and their
-# output inserted into the section <<<local>>>. They must
-# *not* output a section header. A local extension may output
-# zero, one or several lines. Each line must be in the form
-# EXITCODE CHECK_NAME PERFDATA CHECK_OUTPUT
-# EXITCODE is 0, 1, 2 or 3
-# CHECK_NAME will be used as Nagios's service_descriptions and
-# must be unique for this host
-# PERFDATA is optional performance data in the standard Nagios
-# format for variable=value;warn;crit;min;max. You can send
-# only one variable currently. If you do not want to send 
-# performance data output a single dash instead
-# CHECK_OUTPUT will be used by Nagios as the check's output
-# EXITCODE, CHECK_NAME and PERFDATA must not contain spaces
-# or tabs. CHECK_OUTPUT may contain spaces and tabs
+# output inserted into the section <<<local>>>. Please refer
+# to online documentation for details.
 LOCALDIR=$MK_LIBDIR/local
 
 
 echo '<<<check_mk>>>'
-echo Version: 1.1.8b1
+echo Version: 1.1.8b2
 echo AgentOS: aix
 
 echo '<<<df>>>'

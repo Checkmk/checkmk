@@ -195,12 +195,7 @@ def login(u):
     read_site_config()
 
 def save_site_config():
-    path = user_confdir + "/siteconfig.mk"
-    try:
-        write_settings_file(path, user_siteconf)
-    except Exception, e:
-        raise MKConfigError("Cannot save site configuration for user <b>%s</b> into <b>%s</b>: %s" % \
-                (user, path, e))
+    save_user_file("siteconfig", user_siteconf)
 
 def role_of_user(u):
     if u in admin_users:
@@ -292,12 +287,8 @@ def is_multisite():
     return not site_is_local(sitename)
 
 def read_site_config():
-    path = user_confdir + "/siteconfig.mk"
     global user_siteconf
-    if os.path.exists(path):
-        user_siteconf = eval(file(path).read())
-    else:
-        user_siteconf = {}
+    user_siteconf = load_user_file("siteconfig", {})
 
 #    ____  _     _      _
 #   / ___|(_) __| | ___| |__   __ _ _ __
@@ -368,7 +359,7 @@ def load_user_file(name, deflt):
 def save_user_file(name, content):
     path = user_confdir + "/" + name + ".mk"
     try:
-        file(path, "w").write(pprint.pformat(content) + "\n")
+        write_settings_file(path, content)
     except Exception, e:
         raise MKConfigError("Cannot save %s options for user <b>%s</b> into <b>%s</b>: %s" % \
                 (name, user, path, e))
@@ -399,3 +390,9 @@ show_livestatus_errors = True
 visible_views = None
 # Set this list in order to actively hide certain views
 hidden_views = None
+
+# Custom user stylesheet to load (resides in htdocs/)
+custom_style_sheet = None
+
+# URL for start page in main frame (welcome page)
+start_url = "main.py"

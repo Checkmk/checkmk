@@ -265,7 +265,7 @@ def save_views(us):
     for (user, name), view in html.multisite_views.items():
         if us == user:
             userviews[name] = view
-    write_settings_file(config.user_confdir + "/views.mk", userviews)
+    config.save_user_file("views", userviews)
 
 
 # ----------------------------------------------------------------------
@@ -1676,7 +1676,7 @@ def link_to_view(content, row, linkview):
         for filt in filters:
             filtervars += filt.variable_settings(row)
 
-        uri = html.makeuri_contextless([("view_name", linkview)] + filtervars)
+        uri = "view.py?" + htmllib.urlencode_vars([("view_name", linkview)] + filtervars)
         content = "<a href=\"%s\">%s</a>" % (uri, content)
     return content
 

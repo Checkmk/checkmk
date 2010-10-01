@@ -124,9 +124,12 @@ mem_vmalloc_default_levels = ( 80.0, 90.0, 32, 64 )
 def inventory_mem_vmalloc(checktype, info):
     meminfo = parse_proc_meminfo(info)
     if "VmallocTotal" in meminfo:
-        return [ (None, "mem_vmalloc_default_levels") ]
-    else:
-        return []
+        # Do not checks this on 64 Bit systems. They have almost
+        # infinitive vmalloc
+        vmalloc = meminfo["VmallocTotal"] / 1024.4
+        if vmalloc < 4096:
+            return [ (None, "mem_vmalloc_default_levels") ]
+    return []
 
 def check_mem_vmalloc(item, params, info):
     meminfo = parse_proc_meminfo(info)

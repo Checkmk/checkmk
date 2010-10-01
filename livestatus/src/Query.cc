@@ -281,6 +281,7 @@ void Query::parseStatsAndOrLine(char *line, int andor)
 	   return;
        }
        anding->addSubfilter(col->stealFilter());
+       delete col;
        _stats_columns.pop_back();
        number --;
    }
@@ -406,8 +407,13 @@ void Query::parseAuthUserHeader(char *line)
     if (!_table)
 	return;
     _auth_user = find_contact(line);
-    if (!_auth_user)
-	_output->setError(RESPONSE_CODE_UNAUTHORIZED, "AuthUser: no such user '%s'", line);
+    if (!_auth_user) {
+        // Do not handle this as error any more. In a multi site setup
+        // not all users might be present on all sites by design.
+        _auth_user = UNKNOWN_AUTH_USER;
+	// _output->setError(RESPONSE_CODE_UNAUTHORIZED, "AuthUser: no such user '%s'", line);
+    }
+
 }
 
 void Query::parseStatsGroupLine(char *line)
@@ -656,8 +662,7 @@ void Query::start()
 	 outputString(column->name());
       }
       outputDatasetEnd();
-      if (_output_format != OUTPUT_FORMAT_CSV)
-	 _output->addBuffer(",\n", 2);
+      _need_ds_separator = true;
    }
 }
 
@@ -783,8 +788,8 @@ void Query::optimizeBitmask(const char *columnname, uint32_t *bitmask)
 // output helpers, called from columns
 void Query::outputDatasetBegin()
 {
-   if (_output_format != OUTPUT_FORMAT_CSV)
-      _output->addChar('[');
+    if (_output_format != OUTPUT_FORMAT_CSV)
+        _output->addChar('[');
 }
 
 void Query::outputDatasetEnd()
@@ -841,7 +846,7 @@ void Query::outputCounter(counter_t value)
 void Query::outputDouble(double value)
 {
    char buf[64];
-   int l = snprintf(buf, sizeof(buf), "%.10g", value);
+   int l = snprintf(buf, sizeof(buf), "%.10e", value);
    _output->addBuffer(buf, l);
 }
 

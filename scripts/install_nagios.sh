@@ -37,7 +37,7 @@ set -e
 NAGIOS_VERSION=3.2.2
 PLUGINS_VERSION=1.4.15
 RRDTOOL_VERSION=1.4.3
-CHECK_MK_VERSION=1.1.8b1
+CHECK_MK_VERSION=1.1.8b2
 PNP_VERSION=0.6.6
 NAGVIS_VERSION=1.5.1
 
@@ -720,6 +720,7 @@ cat <<EOF > config.php
 \$conf['pdf_graph_opt'] = ""; 
 \$conf['rrdbase'] = "/var/lib/nagios/rrd/";
 \$conf['page_dir'] = "/etc/nagios/pages/";
+\$conf['special_template_dir'] = '/usr/local/share/pnp4nagios/templates.special';
 \$conf['refresh'] = "90";
 \$conf['max_age'] = 60*60*6;   
 \$conf['temp'] = "/var/tmp";
@@ -752,6 +753,8 @@ cat <<EOF > config.php
 \$views[4]["start"] = ( 60*60*24*365 );
 \$conf['RRD_DAEMON_OPTS'] = 'unix:/var/lib/rrdcached/rrdcached.sock';
 \$conf['template_dir'] = '/usr/local/share/pnp4nagios';
+\$conf['multisite_base_url'] = "$SITEURL/check_mk";
+\$conf['multisite_site'] = "$SITE";
 ?>
 EOF
 

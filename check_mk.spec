@@ -119,17 +119,17 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%config /etc/check_mk/main.mk
-%config /etc/check_mk/multisite.mk
+%config(noreplace) /etc/check_mk/main.mk
+%config(noreplace) /etc/check_mk/multisite.mk
 /etc/check_mk/conf.d/README
-%config /etc/nagios/objects/*
+%config(noreplace) /etc/nagios/objects/*
 /usr/bin/check_mk
 %dir /usr/share/check_mk
 /usr/share/check_mk/agents
 /usr/share/check_mk/checks
 /usr/share/check_mk/modules
-%config /usr/share/check_mk/pnp-templates/*
-%config /etc/pnp4nagios/*
+/usr/share/check_mk/pnp-templates/*
+%config(noreplace) /etc/pnp4nagios/*
 /usr/share/doc/check_mk
 %dir /var/lib/check_mk
 %dir %attr(-,nagios,root) /var/lib/check_mk/counters
@@ -147,7 +147,7 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %files agent
-%config /etc/xinetd.d/check_mk
+%config(noreplace) /etc/xinetd.d/check_mk
 /usr/bin/check_mk_agent
 /usr/bin/waitmax
 /usr/share/doc/check_mk_agent
@@ -155,7 +155,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir /usr/lib/check_mk_agent/plugins
 
 %files caching-agent
-%config /etc/xinetd.d/check_mk_caching
+%config(noreplace) /etc/xinetd.d/check_mk_caching
 /usr/bin/check_mk_agent
 /usr/bin/check_mk_caching_agent
 /usr/bin/waitmax
@@ -166,11 +166,11 @@ rm -rf $RPM_BUILD_ROOT
 
 %files agent-logwatch
 /usr/lib/check_mk_agent/plugins/mk_logwatch
-%config /etc/check_mk/logwatch.cfg
+%config(noreplace) /etc/check_mk/logwatch.cfg
 
 %files web
 /usr/share/check_mk/web
-%config /etc/apache2/conf.d/*
+%config(noreplace) /etc/apache2/conf.d/*
 
 %pre
 # Make sure user 'nagios' exists

@@ -1,0 +1,13 @@
+title: Check ZFS Storage Pool status
+agents: solaris
+author: Darin Perusich <darin@darins.net>
+license: GPL
+distribution: check_mk
+description:
+ Checks the current state of a ZFS storage pool. The information
+ is read by the agent from {/usr/sbin/zpool status -x}. If the zpool
+ is healthy you're OK. If an inventoried zpool has been destroyed or
+ has an error the check goes CRITICAL.
+
+inventory:
+ The inventory will automatically find zpools.

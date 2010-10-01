@@ -72,7 +72,8 @@
 
 icon_columns = [ "acknowledged", "scheduled_downtime_depth", "downtimes_with_info", "comments_with_info",
                  "notifications_enabled", "is_flapping", "modified_attributes_list", "active_checks_enabled",
-                 "accept_passive_checks", "action_url_expanded", "notes_url_expanded", "in_notification_period" ]
+                 "accept_passive_checks", "action_url_expanded", "notes_url_expanded", "in_notification_period",
+                 "custom_variable_names", "custom_variable_values" ]
 
 def paint_icons(what, row): # what is "host" or "service"
     output = ""
@@ -80,6 +81,14 @@ def paint_icons(what, row): # what is "host" or "service"
         prefix = "host_"
     else:
         prefix = "service_"
+    custom_vars = dict(zip(row[prefix + "custom_variable_names"], row[prefix + "custom_variable_values"]))
+
+    # Link to detail host if this is a summary host
+    if "_REALNAME" in custom_vars:
+        newrow = row.copy()
+        newrow["host_name"] = custom_vars["_REALNAME"]
+        output += link_to_view("<img class=icon title='Detailed host infos' src='images/icon_detail.gif'>",
+            newrow, 'host')
 
     # action_url
     if row[prefix + "action_url_expanded"]:

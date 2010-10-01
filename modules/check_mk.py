@@ -523,6 +523,9 @@ def snmp_base_command(what, hostname):
     # (2) auth protocol (-a, e.g. 'md5')
     # (3) security name (-u)
     # (4) auth password (-A)
+    # And if it is a six-tuple, it has the following additional arguments:
+    # (5) privacy protocol (DES|AES) (-x)  
+    # (6) privacy protocol pass phrase (-X) 
 
     credentials = snmp_credentials_of(hostname)
     if what == 'get':
@@ -540,7 +543,7 @@ def snmp_base_command(what, hostname):
                 command = 'snmpwalk'
         options += " -c '%s'" % credentials
 
-    # Handle V3
+        # Handle V3
     else:
         if len(credentials) == 6:
            options = "-v3 -l '%s' -a '%s' -u '%s' -A '%s' -x '%s' -X '%s'" % tuple(credentials)
@@ -1177,7 +1180,7 @@ def create_nagios_hostdefs(outfile, hostname):
     alias = hostname
     outfile.write("\ndefine host {\n")
     outfile.write("  host_name\t\t\t%s\n" % hostname)
-    outfile.write("  use\t\t\t\t%s\n" % host_template)
+    outfile.write("  use\t\t\t\t%s\n" % (is_clust and cluster_template or host_template))
     outfile.write("  address\t\t\t%s\n" % ip)
     outfile.write("  _TAGS\t\t\t\t%s\n" % " ".join(tags_of_host(hostname)))
 
@@ -1232,7 +1235,7 @@ def create_nagios_hostdefs(outfile, hostname):
     if host_is_aggregated(hostname):
         outfile.write("\ndefine host {\n")
         outfile.write("  host_name\t\t\t%s\n" % summary_hostname(hostname))
-        outfile.write("  use\t\t\t\t%s-summary\n" % host_template)
+        outfile.write("  use\t\t\t\t%s-summary\n" % (is_clust and cluster_template or host_template))
         outfile.write("  alias\t\t\t\tSummary of %s\n" % alias)
         outfile.write("  address\t\t\t%s\n" % ip)
         outfile.write("  _TAGS\t\t\t\t%s\n" % " ".join(tags_of_host(hostname)))
@@ -1247,6 +1250,10 @@ def create_nagios_hostdefs(outfile, hostname):
         elif define_hostgroups:
             hostgroups_to_define.update(hgs)
         outfile.write("  host_groups\t\t\t+%s\n" % hostgroups)
+
+        # host gets same contactgroups as real host
+        if len(cgrs) > 0:
+            outfile.write("  contact_groups\t\t+%s\n" % ",".join(cgrs))
 
         if is_clust:
             outfile.write("  _NODEIPS\t\t\t%s\n" % " ".join(node_ips))
@@ -1273,7 +1280,7 @@ def create_nagios_servicedefs(outfile, hostname):
 
         # Hardcoded for logwatch check: Link to logwatch.php
         if checkname == "logwatch":
-            logwatch = "    notes_url\t\t\t" + (logwatch_notes_url % (urllib.quote(hostname), urllib.quote(item))) + "\n"
+            logwatch = "  notes_url\t\t\t" + (logwatch_notes_url % (urllib.quote(hostname), urllib.quote(item))) + "\n"
         else:
             logwatch = "";
 
@@ -1395,12 +1402,12 @@ define servicedependency {
     for command, description, has_perfdata in legchecks:
         extraconf = extra_service_conf_of(hostname, description)
         if has_perfdata:
-            template = ",check_mk_perf"
+            template = "check_mk_perf,"
         else:
             template = ""
         outfile.write("""
 define service {
-  use\t\t\t\tcheck_mk_default%s
+  use\t\t\t\t%scheck_mk_default
   host_name\t\t\t%s
   service_description\t\t%s
   check_command\t\t\t%s
@@ -1545,6 +1552,8 @@ def make_inventory(checkname, hostnamelist, check_only=False):
         sys.stderr.write("No such check type '%s'. Try check_mk -I list.\n" % checkname)
         sys.exit(1)
 
+    is_snmp_check = snmp_info.get(checkname) != None
+
     newchecks = []
     newitems = []   # used by inventory check to display unchecked items
     count_new = 0
@@ -1558,9 +1567,8 @@ def make_inventory(checkname, hostnamelist, check_only=False):
 
     try:
         for host in hostnamelist:
-            if opt_no_snmp_hosts and is_snmp_host(host):
-                if opt_verbose:
-                    print "%s is a SNMP-only host. Skipping." % host
+            # Skip SNMP-only hosts if checktype is not of type 'snmp'
+            if not is_snmp_check and is_snmp_host(host): 
                 continue
 
             if is_cluster(host):
@@ -3616,7 +3624,6 @@ if __name__ == "__main__":
             else:
                 if checktype in [ "alltcp", "tcp" ]:
                     checknames = inventorable_checktypes(False)
-                    opt_no_snmp_hosts = True
                 else:
                     checknames = checktype.split(',')
                 if len(checknames) == 0:

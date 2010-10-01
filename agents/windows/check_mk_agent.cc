@@ -58,7 +58,7 @@
 #include <dirent.h>
 
 
-#define CHECK_MK_VERSION "1.1.8b1"
+#define CHECK_MK_VERSION "1.1.8b2"
 #define CHECK_MK_AGENT_PORT 6556
 #define SERVICE_NAME "Check_MK_Agent"
 #define KiloByte 1024
@@ -978,7 +978,7 @@ void run_external_programs(SOCKET &out, char *dirname)
         while (0 != (de = readdir(dir))) {
             char *name = de->d_name;
             if (name[0] != '.') {
-                snprintf(path, sizeof(path), "%s\\%s", dirname, name);
+                snprintf(path, sizeof(path), "\"%s\\%s\"", dirname, name);
                 run_plugin(out, path);
             }
         }

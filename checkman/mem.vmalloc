@@ -10,7 +10,9 @@ description:
  An example is the graphics driver used by the X server,
  which needs address mappings for communicating with
  the hardware. In {/proc/meminfo} that area is called
- {VmallocTotal}.
+ {VmallocTotal}. On 32 bit architectures this area has
+ a very limited size and is subject to fragmentation or
+ consumption by buggy graphics drivers.
 
  This check monitors the current usage of the the vmalloc
  address space and also the size of the largest available
@@ -18,7 +20,11 @@ description:
 
 inventory:
  A check is created if {VmallocTotal} is available in
- {/proc/meminfo}. Please add {mem.vmalloc} to {ignored_checktypes} 
+ {/proc/meminfo} and only if the total size of the vmalloc
+ area is less then 4 GB. This is generally only possible
+ for 32 bit architectures. 
+ 
+ Please add {mem.vmalloc} to {ignored_checktypes} 
  if you do not need this check.
 
 perfdata:

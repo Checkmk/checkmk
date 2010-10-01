@@ -44,12 +44,9 @@ function mkSearchAddField(field, targetFrame) {
 
         oField.onkeydown = function(e) { if (!e) e = window.event; return mkSearchKeyDown(e, oField); }
         oField.onkeyup   = function(e) { if (!e) e = window.event; return mkSearchKeyUp(e, oField);}
-        // oField.onclick   = function(e) { if (!e) e = window.event; e.cancelBubble = true; e.returnValue = false; }
-        // What das e.cancelBubble do? That variable is referenced nowhere. Is it some builtin JavaScript thing?
         oField.onclick   = function(e) { mkSearchClose(); return true; }
-
-        // The keypress event is being ignored. Key presses are handled by onkeydown and onkeyup events
-        oField.onkeypress  = function(e) { if (!e) e = window.event; if (e.keyCode == 13) return false; }
+        // keypress is needed for key-repeation for cursor up/down
+        oField.onkeypress  = function(e) { if (!e) e = window.event; return mkSearchKeyRepeat(e, oField);}
 
         // On doubleclick toggle the list
         oField.ondblclick  = function(e) { if (!e) e = window.event; mkSearchToggle(e, oField); }
@@ -60,6 +57,7 @@ mkSearchAddField("mk_side_search_field", "main");
 
 // On key release event handler
 function mkSearchKeyUp(e, oField) {
+
     var keyCode = e.which || e.keyCode;
 
     switch (keyCode) {
@@ -98,15 +96,17 @@ function mkSearchFindUrl(aSearchObjects, objType, oField) {
     // found in our list and is unique (found in only one site)
     var url = null;
     var selected_obj = null;
+    var found = 0;
     for (var i in aSearchObjects) {
         var objSite  = aSearchObjects[i][0];
         var objName  = aSearchObjects[i][1];
         if (objName.indexOf(namepart) > -1) {
+            found ++;
             if (url != null) { // found second match -> not unique
                 url = null;
                 break; // abort
             }
-            url = mkSearchGetUrl(objType, objName, objSite);
+            url = mkSearchGetUrl(objType, objName, objSite, found);
             selected_obj = objName;
         }
     }
@@ -119,8 +119,35 @@ function mkSearchFindUrl(aSearchObjects, objType, oField) {
     }
 
     // not found, not unique or only prefix -> display a view that shows more objects
-    return mkSearchGetUrl(objType, namepart, '', false);
+    return mkSearchGetUrl(objType, namepart, '', found);
 }
+
+function mkSearchKeyRepeat(e, oField) {
+    var keyCode = e.which || e.keyCode;
+
+    switch (keyCode) {
+            // Up arrow
+            case 38:
+                if(!mkSearchResultShown()) {
+                    mkSearch(e, oField);
+                }
+                
+                mkSearchMoveElement(-1);
+                return false;
+            break;
+            
+            // Down arrow
+            case 40:
+                if(!mkSearchResultShown()) {
+                    mkSearch(e, oField);
+                }
+                
+                mkSearchMoveElement(1);
+                return false;
+            break;
+    }
+}
+
 
 // On key press down event handler
 function mkSearchKeyDown(e, oField) {
@@ -137,6 +164,8 @@ function mkSearchKeyDown(e, oField) {
 	                      oField.value = aSearchResults[iCurrent].type + ':' + aSearchResults[iCurrent].name;
                     mkSearchClose();
                 } else {
+                    if (oField.value == "")
+                        return; /* search field empty, rather not show all services! */
                     // When nothing selected, navigate with the current contents of the field
                     var objType = mkSearchGetTypePrefix(oField.value);
                     var aSearchObjects = mkSearchGetSearchObjects(objType);
@@ -156,16 +185,6 @@ function mkSearchKeyDown(e, oField) {
                 e.cancelBubble = true;
             break;
             
-            // Up arrow
-            case 38:
-                if(!mkSearchResultShown()) {
-                    mkSearch(e, oField);
-                }
-                
-                mkSearchMoveElement(-1);
-                return false;
-            break;
-            
             // Tab
             case 9:
                 if(mkSearchResultShown()) {
@@ -174,21 +193,33 @@ function mkSearchKeyDown(e, oField) {
                 return;
             break;
             
+            // Up arrow
+            // case 38:
+            //     if(!mkSearchResultShown()) {
+            //         mkSearch(e, oField);
+            //     }
+            //     
+            //     mkSearchMoveElement(-1);
+            //     return false;
+            // break;
+            
             // Down arrow
-            case 40:
-                if(!mkSearchResultShown()) {
-                    mkSearch(e, oField);
-                }
-                
-                mkSearchMoveElement(1);
-                return false;
-            break;
-        }
+            // case 40:
+            //     if(!mkSearchResultShown()) {
+            //         mkSearch(e, oField);
+            //     }
+            //     
+            //     mkSearchMoveElement(1);
+            //     return false;
+            // break;
+    }
+    oldValue = oField.value;
 }
 
 // Navigate to the target of the selected event
 function mkSearchNavigate() {
-    top.frames[mkSearchTargetFrame].location.href = aSearchResults[iCurrent].url;
+    if (aSearchResults[iCurrent])
+        top.frames[mkSearchTargetFrame].location.href = aSearchResults[iCurrent].url;
 }
 
 // Move one step of given size in the result list
@@ -205,7 +236,11 @@ function mkSearchMoveElement(step) {
     if(iCurrent > aSearchResults.length-1)
         iCurrent = 0;
 
-    var oResults = document.getElementById('mk_search_results').childNodes;
+    var oResults = document.getElementById('mk_search_results');
+    if (!oResults)
+        return;
+    oResults = oResults.childNodes;
+
     var a = 0;
     for(var i in oResults) {
         if(oResults[i].nodeName == 'A') {
@@ -219,6 +254,7 @@ function mkSearchMoveElement(step) {
             a++;
         }
     }
+    oResults = null;
 }
 
 // Is the result list shown at the moment?
@@ -280,17 +316,19 @@ function mkSearchGetSearchObjects(objType) {
         return [];
 }
 
-function mkSearchGetUrl(objType, objName, objSite, single) {
-    if(single == null)
-        single = true;
-    
+function mkSearchGetUrl(objType, objName, objSite, numMatches) {
+    if (numMatches == null)
+        numMatches = 0;
+
     if(objType == 'h')
-        if(single)
+        if(numMatches == 1)
             return 'view.py?view_name=host&host=' + objName + '&site=' + objSite;
-        else
+        else if(numMatches > 1)
             return 'view.py?view_name=hosts&host=' + objName;
+        else
+            return 'view.py?view_name=searchsvc&search=Search&filled_in=on&service=' + objName;
     else if(objType == 'hg')
-        if(single)
+        if(numMatches == 1)
             return 'view.py?view_name=hostgroup&hostgroup=' + objName + '&site=' + objSite;
         else
             // FIXME: not correct. Need a page where the name parameter can be a part match
@@ -302,7 +340,7 @@ function mkSearchGetUrl(objType, objName, objSite, single) {
             // FIXME: not correct. Need a page where the name parameter can be a part match
             return 'view.py?view_name=servicegroup&servicegroup=' + objName + '&site=' + objSite;
     else if(objType == 's')
-        if(single)
+        if(numMatches == 1)
             return 'view.py?view_name=servicedesc&service=' + objName + '&site=' + objSite;
         else
             // FIXME: not correct. Need a page where the name parameter can be a part match
@@ -314,27 +352,33 @@ function mkSearchAddSearchResults(aSearchObjects, objType, val) {
     // Build matching regex
     // var oMatch = new RegExp('^'+val, 'gi');
     // switch to infix search
-    var oMatch = new RegExp(val, 'gi');
-		
+    // var oMatch = new RegExp(val, 'gi');
+    // 1.1.8: do not use regexes. We would have to quote . and /. User
+    // is not aware of regexes.
+
     var objName, objSite;
     aSearchContents = '';
     for(var i in aSearchObjects){
         objSite  = aSearchObjects[i][0];
         objName  = aSearchObjects[i][1];
 
-        if(objName.match(oMatch)) {
+        // if(objName.match(oMatch)) {
+        if(objName.indexOf(val) > -1) {
+            var url = mkSearchGetUrl(objType, objName, objSite, 1);
             var oResult = {
                 'id': 'result_' + objName,
                 'name': objName,
                 'site': objSite,
                 'type': objType,
-                'url': mkSearchGetUrl(objType, objName, objSite)
+                'url': url
             };
             
             // Add id to search result array
             aSearchResults.push(oResult);
-            aSearchContents += '<a id="' + oResult.id + '" class="' + oResult.type + '" href="' + oResult.url +
-                               '" onclick="mkSearchClose()" target="' + mkSearchTargetFrame + '">'+ objName +"</a>\n";
+            aSearchContents += '<a id="' + oResult.id + '" class="' + oResult.type 
+                + '" href="' + oResult.url 
+                + '" onclick="mkSearchClose()" target="' + mkSearchTargetFrame 
+                + '">'+ objName + "</a>\n";
         }
     }
 }
@@ -342,11 +386,13 @@ function mkSearchAddSearchResults(aSearchObjects, objType, val) {
 // Build a new result list and show it up
 function mkSearch(e, oField) {
     if(oField == null) {
-        alert("Field is null");
         return;
     }
     
     var val = oField.value;
+    if (val == oldValue)
+        return;
+
     if (aSearchResults[0] && val == oldValue)
         return; // nothing changed. No new search neccessary
     oldValue = val;
@@ -356,7 +402,7 @@ function mkSearch(e, oField) {
     var aSearchObjects = mkSearchGetSearchObjects(objType);
 
     if (!aSearchObjects || !aSearchObjects[0]) {
-        alert("No objects to search for");
+        // alert("No objects to search for");
         return;
     }
     

@@ -70,13 +70,13 @@ admin_users = [ "nagiosadmin" ]
 
 # Links for everyone
 custom_links['guest'] = [
-  ( "Classical Nagios GUI", "/nagios/", "link_home.gif" ),
+  ( "Classical Nagios GUI", "../nagios/", "link_home.gif" ),
   ( "Addons", True, [
-        ( "PNP4Nagios", "/pnp4nagios/",       "link_reporting.gif" ),
+        ( "PNP4Nagios", "../pnp4nagios/",       "link_reporting.gif" ),
         ( "NagVis", False, [
-            ( "Automap",    "/nagvis/index.php?map=__automap", "link_map.gif"),
-            ( "Demo map",   "/nagvis/index.php?map=demo-map",  "link_map.gif"),
-            ( "Demo Map 2", "/nagvis/index.php?map=demo2",     "link_map.gif"),
+            ( "Automap",    "../nagvis/index.php?map=__automap", "link_map.gif"),
+            ( "Demo map",   "../nagvis/index.php?map=demo-map",  "link_map.gif"),
+            ( "Demo Map 2", "../nagvis/index.php?map=demo2",     "link_map.gif"),
         ]),
   ]),
 ]
@@ -115,3 +115,12 @@ show_livestatus_errors = True
 
 # will also exclude custom views)
 # visible_views = [ "allhosts", "searchsvc" ]
+
+# Load custom style sheet which can override styles defined in check_mk.css
+# Put your style sheet into web/htdocs/
+# custom_style_sheet = "my_styles.css"
+
+# URL to show as welcome page (in the 'main' frame).
+# You can use relative URL or absolute URLs like 'http://server/url'
+# Default is 'main.py'
+# start_url = 'view.py?view_name=hostgroups'

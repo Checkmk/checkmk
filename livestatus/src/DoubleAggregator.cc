@@ -74,7 +74,10 @@ void DoubleAggregator::output(Query *q)
 	break;
 
     case STATS_OP_AVG:
-	q->outputDouble(_aggr / _count);
+        if (_count == 0)
+            q->outputDouble(0.0);
+        else
+            q->outputDouble(_aggr / _count);
 	break;
     
     case STATS_OP_STD:

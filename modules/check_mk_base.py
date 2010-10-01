@@ -703,8 +703,7 @@ def do_all_checks_on_host(hostname, ipaddress):
                     print "Counter wrapped, not handled by check, ignoring this check result: %s" % e
                 dont_submit = True
             except Exception, e:
-                result = (3, "UNKNOWN - invalid output from plugin section <<<%s>>> or error in check type %s" %
-                          (infotype, checkname))
+                result = (3, "UNKNOWN - invalid output from agent or error in check %s. Please set <tt>debug_log</tt> to a filename in <tt>main.mk</tt> for enabling exception logging." % checkname)
                 if debug_log:
                     try:
                         import traceback, pprint
@@ -961,3 +960,19 @@ def get_bytes_human_readable(b, base=1024):
         return '%.2fKB' % (b / base)
     else:
         return '%.2fB' % b
+
+def get_nic_speed_human_readable(speed):
+    try: 
+        speedi = int(speed)
+        if speedi == 10000000:
+            speed = "10MBit/s"
+        elif speedi == 100000000:
+            speed = "100MBit/s"
+        elif speedi == 1000000000:
+            speed = "1GBit/s"
+        else:
+            speed = "%dGBit/s" % (speedi / 1000000000)
+    except:
+        pass
+    return speed
+

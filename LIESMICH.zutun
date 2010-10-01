@@ -38,6 +38,11 @@ bekommen wir viele Timeouts.
 Counter wraps: Wenn ein Counter wrapped, liefert dann Check_MK eine Warnung
 "got only 5 out of 9 infos?"
 
+Counter wraps: Wenn ein Counter wrapped, werden diese Infos nicht an Nagios
+weitergeleitet. Der Service wird auch nicht in die aggregierten Services eines
+Summary Hosts aufgenommen. Das kann dazu führen, dass die Anzahl der Services
+in einem Summary-Host variabel ist.
+
 Windows agent: local/plugins Leerzeichen in C:\Program Files sorgen
 dafür, dass die Plugins nicht ausgeführt werden.
 

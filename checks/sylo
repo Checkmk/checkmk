@@ -88,11 +88,19 @@ def check_sylo(item, params, info):
         used_mb  = bytesUsed / (1024 * 1024.0)
 
         # Rates for input and output
-        timedif, in_rate  = get_counter("sylo.in",  mtime, inOffset)
-        timedif, out_rate = get_counter("sylo.out", mtime, outOffset)
+        rate_output = ''
+        rate_perfdata = []
+        try:
+            timedif, in_rate  = get_counter("sylo.in",  mtime, inOffset)
+            timedif, out_rate = get_counter("sylo.out", mtime, outOffset)
+            rate_output = ', (in %.1f B/s, out %.1f B/s)' % (in_rate, out_rate)
+            rate_pefdata = [ ('in', '%f' % in_rate ),
+                             ('out', '%f' % out_rate ) ]
+        except MKCounterWrapped, e:
+            pass
 
-        msg += "Silo is filled %.1fMB (%.1f%%), (in %.1f B/s, out %.1f B/s)" % \
-             (bytesUsed / (1024*1024.0), percUsed, in_rate, out_rate)
+        msg += "Silo is filled %.1fMB (%.1f%%)%s" % \
+             (bytesUsed / (1024*1024.0), percUsed, rate_output)
 
         # CRIT/WARN: Filled up
         status = 0
@@ -101,9 +109,7 @@ def check_sylo(item, params, info):
         elif percUsed >= warn and status < 1:
             status = 1
 
-        perfdata = [
-            ('in', '%f' % in_rate ),
-            ('out', '%f' % out_rate ),
+        perfdata = rate_perfdata + [
             ('used', '%f' % used_mb, warn_mb, crit_mb, 0, size_mb)
         ]
 

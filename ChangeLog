@@ -12,6 +12,8 @@
             instead)
     * check_mk_agent.solaris: statgrab now excludes filesystems. This avoids hanging
       in case of an NFS problem. Thanks to Divan Santana.
+    * sylo: The check handles counter wrap by its own and only drops the
+      check results based on the counters. The other results are forwarded as usual.
 
     Multisite:
     * fix several UTF-8 problems: allow non-ascii characters in host names

@@ -34,6 +34,10 @@ Abbruch, wenn immer noch type ist dict.
 non_bulkwalk_hosts rausschmeissen. Kann man mit NEGATE nachbilden
 mit bulkwalk_hosts.
 
+IDEE: Scan-Modus: Wenn man einen Host per SNMP scannt und *keine*
+Antwort kommt, dann probiert man einfach alle SNMP-Checks aus.
+
+
 --------------------------------------------------------------------------------
 UMLAUTPROBLEME (alle gemeinsam angehen)
 --------------------------------------------------------------------------------

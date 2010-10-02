@@ -74,6 +74,14 @@ Quicksearch: Dropdownlisten begrenzen in Maximalzahl dargestellter Dinge -
 per Livestatus-Limit:. Das ganze konfigurierbar machen in multisite.mk:
 quicksearch_max_items = 100
 
+Counter wraps: Wenn ein Counter wrapped, werden diese Infos nicht an Nagios
+weitergeleitet. Der Service wird auch nicht in die aggregierten Services eines
+Summary Hosts aufgenommen. Das kann dazu führen, dass die Anzahl der Services
+in einem Summary-Host variabel ist.
+
+Windows agent: local/plugins Leerzeichen in C:\Program Files sorgen
+dafür, dass die Plugins nicht ausgeführt werden.
+
 LARS: Wenn man gerade die Kommandobox auf hat (oder den Filter?) dann sollte
 kein Refresh stattfinden. Sonst wird man mitten im Tippen abgewürgt.  Kann man
 das mit Javascript hinbekommen? (kann Lars sich hier was überlegen? Man

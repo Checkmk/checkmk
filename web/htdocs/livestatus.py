@@ -249,7 +249,7 @@ class BaseConnection:
         try:
             self.socket.send(query)
         except IOError, e:
-            if persist:
+            if self.persist:
                 del persistent_connections[self.socketurl]
             self.socket = None
             raise MKLivestatusSocketError(str(e))
@@ -281,7 +281,7 @@ class BaseConnection:
 
         except IOError, e:
             self.socket = None
-            if persist:
+            if self.persist:
                 del persistent_connections[self.socketurl]
             raise MKLivestatusSocketError(str(e))
 
@@ -292,7 +292,7 @@ class BaseConnection:
             self.socket.send("COMMAND " + command + "\n")
         except IOError, e:
             self.socket = None
-            if persist:
+            if self.persist:
                 del persistent_connections[self.socketurl]
             raise MKLivestatusSocketError(str(e))
 

@@ -1,5 +1,7 @@
 1.1.8b3:
+    Multisite:
     * added Perf-O-Meter to "Problems of Host" view
+    * fix bug with cleaning up persistent connections
 
 1.1.8b2:
     Core, Setup, etc.:

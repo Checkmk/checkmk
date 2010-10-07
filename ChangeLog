@@ -1,4 +1,7 @@
 1.1.8b3:
+    Core, Setup, etc.:
+    * Added some Livestatus LQL examples to documentation
+
     Multisite:
     * added Perf-O-Meter to "Problems of Host" view
     * fix bug with cleaning up persistent connections

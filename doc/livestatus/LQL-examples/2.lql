@@ -1,0 +1,3 @@
+GET hosts
+Columns: name state
+Filter: state = 0

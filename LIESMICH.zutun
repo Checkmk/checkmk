@@ -66,25 +66,16 @@ CHECK_MK:
 Check für Postfix Queue: Der Agent darf unmöglich die komplette
 Queue rauspumpen. Das können beliebig viele Daten werden. Besser
 ist, dass der bereits zählt mit wc oder ähnliches -> LARS?
-
-MULTISITE:
-
-Fehlermeldung von Livestatus sieht komisch aus:
-LAN Monitoring (alt) - Livestatus error
-invalid literal for int() with base 10: 'NIX socket '
-Das tritt dann auf, wenn das Socket nicht erreichbar ist.
-
-Quicksearch: Dropdownlisten begrenzen in Maximalzahl dargestellter Dinge - 
-per Livestatus-Limit:. Das ganze konfigurierbar machen in multisite.mk:
-quicksearch_max_items = 100
-
-Counter wraps: Wenn ein Counter wrapped, werden diese Infos nicht an Nagios
 weitergeleitet. Der Service wird auch nicht in die aggregierten Services eines
 Summary Hosts aufgenommen. Das kann dazu führen, dass die Anzahl der Services
 in einem Summary-Host variabel ist.
 
-Windows agent: local/plugins Leerzeichen in C:\Program Files sorgen
-dafür, dass die Plugins nicht ausgeführt werden.
+
+MULTISITE:
+
+Quicksearch: Dropdownlisten begrenzen in Maximalzahl dargestellter Dinge - 
+per Livestatus-Limit:. Das ganze konfigurierbar machen in multisite.mk:
+quicksearch_max_items = 100
 
 LARS: Wenn man gerade die Kommandobox auf hat (oder den Filter?) dann sollte
 kein Refresh stattfinden. Sonst wird man mitten im Tippen abgewürgt.  Kann man

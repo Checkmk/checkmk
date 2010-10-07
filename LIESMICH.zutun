@@ -69,10 +69,6 @@ ist, dass der bereits zählt mit wc oder ähnliches -> LARS?
 
 MULTISITE:
 
-Wenn man Nagios durchstartet (Livestatus weg ist?) kommt
-ganz kurz die Fehlermeldung, dass die globale Variable "persist"
-nicht definiert ist oder so ähnlich.
-
 Fehlermeldung von Livestatus sieht komisch aus:
 LAN Monitoring (alt) - Livestatus error
 invalid literal for int() with base 10: 'NIX socket '

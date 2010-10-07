@@ -261,7 +261,10 @@ class BaseConnection:
         try:
             resp = self.receive_data(16)
             code = resp[0:3]
-            length = int(resp[4:15].lstrip())
+            try:
+                length = int(resp[4:15].lstrip())
+            except:
+                raise MKLivestatusSocketError("Malformed output. Livestatus TCP socket might be unreachable.")
             data = self.receive_data(length)
             if code == "200":
                 try:

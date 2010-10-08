@@ -7,6 +7,9 @@
     * added Perf-O-Meter to "All Services" view
     * fix bug with cleaning up persistent connections
 
+    Livestatus:
+    * check for event_broker_options on start
+
 1.1.8b2:
     Core, Setup, etc.:
     * Inventory: skip SNMP-only hosts on non-SNMP checktypes (avoids timeouts)

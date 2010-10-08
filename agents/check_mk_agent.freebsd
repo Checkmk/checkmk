@@ -279,9 +279,15 @@ fi
 # available when postfix is not installed. But it produces different outputs
 # which are not handled by the check at the moment. So try to filter out the
 # systems not using postfix by searching for the postfix user.
+#
+# Cannot take the whole outout. This could produce several MB of agent output
+# on blocking queues.
+# Only handle the last 6 lines (includes the summary line at the bottom and
+# the last message in the queue. The last message is not used at the moment
+# but it could be used to get the timestamp of the last message.
 if which mailq >/dev/null 2>&1 && getent passwd postfix >/dev/null 2>&1; then
   echo '<<<postfix_mailq>>>'
-  mailq
+  mailq | tail -n 6
 fi
 
 

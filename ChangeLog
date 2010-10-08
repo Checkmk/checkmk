@@ -6,6 +6,8 @@
     * added Perf-O-Meter to "Problems of Host" view
     * added Perf-O-Meter to "All Services" view
     * fix bug with cleaning up persistent connections
+    * Quicksearch: limit number of items in dropdown to 80
+      (configurable via quicksearch_dropdown_limit)
 
     Livestatus:
     * check for event_broker_options on start

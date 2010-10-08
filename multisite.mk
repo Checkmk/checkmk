@@ -124,3 +124,8 @@ show_livestatus_errors = True
 # You can use relative URL or absolute URLs like 'http://server/url'
 # Default is 'main.py'
 # start_url = 'view.py?view_name=hostgroups'
+
+
+# Quicksearch: Limit the number of hits to shop in dropdown.
+# Default is to show at most 80 items.
+# quicksearch_dropdown_limit = 80

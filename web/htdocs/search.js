@@ -358,6 +358,7 @@ function mkSearchAddSearchResults(aSearchObjects, objType, val) {
 
     var objName, objSite;
     aSearchContents = '';
+    var numHits = 0;
     for(var i in aSearchObjects){
         objSite  = aSearchObjects[i][0];
         objName  = aSearchObjects[i][1];
@@ -373,6 +374,11 @@ function mkSearchAddSearchResults(aSearchObjects, objType, val) {
                 'url': url
             };
             
+            // limit the number of search hits
+            numHits ++;
+            if (numHits > aSearchLimit)
+                break;
+
             // Add id to search result array
             aSearchResults.push(oResult);
             aSearchContents += '<a id="' + oResult.id + '" class="' + oResult.type 

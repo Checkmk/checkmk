@@ -40,6 +40,11 @@ except NameError:
     from sets import Set as set
 
 def render_searchform():
+    try:
+        limit = config.quicksearch_dropdown_limit
+    except:
+        limit = 80
+
     html.write('<div id="mk_side_search" onclick="mkSearchClose();">')
     html.write('<input id="mk_side_search_field" type="text" name="search" />')
     html.write('</div>')
@@ -78,6 +83,7 @@ def render_searchform():
         html.write("aSearchServicegroups = %s;\n" % data)
         data = html.live.query("GET services\nColumns: description\n", "OutputFormat: json\n")
         html.write("aSearchServices = %s;\n" % data)
+    html.write("aSearchLimit = %d;\n" % limit)
     html.live.set_prepend_site(False)
 
     html.write("</script>\n")

@@ -20,9 +20,6 @@ Aggregation per Default auf mehrzeilige Ausgabe
 
 Direct rrd updates ganz entfernen.
 
-Livestatus soll einen Fehler loggen, wenn nicht alle benötigten 
-Brokeroptions gesetzt sind.
-
 Inventurchecks: severity per Default auf 1 stellen.
 
 snmp_communities: dictionary nicht mehr verwenden, aus Doku raus, Defaultwert
@@ -57,6 +54,9 @@ Sieht so aus, dass das Eurozeichen von Livestatus nicht korrekt kodiert
 wird. Wenn man commant_data=... und ein Euro drinnen hat, verschwindet
 es bei der Ausgabe mit python/json. CSV geht.
 
+In manchen View fehlen noch Links, z.B. bei den Hosts: Auf die
+Anzahl der Warnungen kann man nicht klicken
+
 
 --------------------------------------------------------------------------------
 BUGS beheben bis => 1.1.8
@@ -72,10 +72,6 @@ in einem Summary-Host variabel ist.
 
 
 MULTISITE:
-
-Quicksearch: Dropdownlisten begrenzen in Maximalzahl dargestellter Dinge - 
-per Livestatus-Limit:. Das ganze konfigurierbar machen in multisite.mk:
-quicksearch_max_items = 100
 
 LARS: Wenn man gerade die Kommandobox auf hat (oder den Filter?) dann sollte
 kein Refresh stattfinden. Sonst wird man mitten im Tippen abgewürgt.  Kann man
@@ -101,7 +97,6 @@ in Sicht.
 
 LIVESTATUS:
 
-GET comments liefert nix mehr ???
 
 Doku Livestatus: group_authorization nicht gesetzt, hat aber Wirkung von
 loose. Stimmt hier der Default? Sieht eher aus, als funktioniert das nicht...

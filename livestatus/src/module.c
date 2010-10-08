@@ -62,6 +62,7 @@
 #endif 
 
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
+extern int event_broker_options;
 
 int g_idle_timeout_msec = 300 * 1000; /* maximum idle time for connection in keep alive state */
 int g_query_timeout_msec = 10 * 1000;      /* maximum time for reading a query */
@@ -385,6 +386,57 @@ int broker_process(int event_type, void *data)
         start_threads();
 }
 
+int verify_event_broker_options()
+{
+    int errors = 0;
+    if(!(event_broker_options & BROKER_PROGRAM_STATE)) {
+        logger( LG_CRIT, "need BROKER_PROGRAM_STATE (%i) event_broker_option enabled to work.", BROKER_PROGRAM_STATE );
+        errors++;
+    }
+    if(!(event_broker_options & BROKER_TIMED_EVENTS)) {
+        logger( LG_CRIT, "need BROKER_TIMED_EVENTS (%i) event_broker_option enabled to work.", BROKER_TIMED_EVENTS );
+        errors++;
+    }
+    if(!(event_broker_options & BROKER_SERVICE_CHECKS)) {
+        logger( LG_CRIT, "need BROKER_SERVICE_CHECKS (%i) event_broker_option enabled to work.", BROKER_SERVICE_CHECKS );
+        errors++;
+    }
+    if(!(event_broker_options & BROKER_HOST_CHECKS)) {
+        logger( LG_CRIT, "need BROKER_HOST_CHECKS (%i) event_broker_option enabled to work.", BROKER_HOST_CHECKS );
+        errors++;
+    }
+    if(!(event_broker_options & BROKER_LOGGED_DATA)) {
+        logger( LG_CRIT, "need BROKER_LOGGED_DATA (%i) event_broker_option enabled to work.", BROKER_LOGGED_DATA );
+        errors++;
+    }
+    if(!(event_broker_options & BROKER_COMMENT_DATA)) {
+        logger( LG_CRIT, "need BROKER_COMMENT_DATA (%i) event_broker_option enabled to work.", BROKER_COMMENT_DATA );
+        errors++;
+    }
+    if(!(event_broker_options & BROKER_DOWNTIME_DATA)) {
+        logger( LG_CRIT, "need BROKER_DOWNTIME_DATA (%i) event_broker_option enabled to work.", BROKER_DOWNTIME_DATA );
+        errors++;
+    }
+    if(!(event_broker_options & BROKER_STATUS_DATA)) {
+        logger( LG_CRIT, "need BROKER_STATUS_DATA (%i) event_broker_option enabled to work.", BROKER_STATUS_DATA );
+        errors++;
+    }
+    if(!(event_broker_options & BROKER_ADAPTIVE_DATA)) {
+        logger( LG_CRIT, "need BROKER_ADAPTIVE_DATA (%i) event_broker_option enabled to work.", BROKER_ADAPTIVE_DATA );
+        errors++;
+    }
+    if(!(event_broker_options & BROKER_EXTERNALCOMMAND_DATA)) {
+        logger( LG_CRIT, "need BROKER_EXTERNALCOMMAND_DATA (%i) event_broker_option enabled to work.", BROKER_EXTERNALCOMMAND_DATA );
+        errors++;
+    }
+    if(!(event_broker_options & BROKER_STATECHANGE_DATA)) {
+        logger( LG_CRIT, "need BROKER_STATECHANGE_DATA (%i) event_broker_option enabled to work.", BROKER_STATECHANGE_DATA );
+        errors++;
+    }
+
+    return errors == 0;
+}
+
 void register_callbacks()
 {
     neb_register_callback(NEBCALLBACK_HOST_STATUS_DATA,      g_nagios_handle, 0, broker_host); // Needed to start threads
@@ -513,6 +565,18 @@ void livestatus_parse_arguments(const char *args_orig)
     // free(args); won't free, since we use pointers?
 }
 
+void omd_advertize()
+{
+    char *omd_site = getenv("OMD_SITE");
+    if (omd_site)
+        logger(LG_INFO, "Running on OMD site %s. Cool.", omd_site);
+    else {
+        logger(LG_INFO, "Hint: please try out OMD - the Open Monitoring Distribution");
+        logger(LG_INFO, "Please visit OMD at http://omdistro.org");
+    }
+}
+
+
 /* this function gets called when the module is loaded by the event broker */
 int nebmodule_init(int flags, char *args, void *handle) 
 {
@@ -523,8 +587,18 @@ int nebmodule_init(int flags, char *args, void *handle)
     logger(LG_INFO, "Livestatus has been brought to you by Mathias Kettner");
     logger(LG_INFO, "Please visit us at http://mathias-kettner.de/");
 
+    omd_advertize();
+
     if (!open_unix_socket())
 	return 1;
+
+    if( !verify_event_broker_options() ) {
+        logger(LG_CRIT, "Fatal: bailing out. Please fix event_broker_options.");
+        logger(LG_CRIT, "Hint: your event_broker_options are set to %d. Try setting it to -1.", event_broker_options);
+	return 1;
+    }
+    else 
+        logger(LG_INFO, "Your event_broker_options are sufficient for livestatus.");
 
     store_init();
     register_callbacks();

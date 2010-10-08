@@ -43,7 +43,7 @@ def check_hp_procurve_mem(item, params, info):
     if len(info) == 1:
         mem_total, mem_used = [ int(mem) for mem in info[0] ]
         if mem_total > 0 and mem_used > 0:
-            perc = float(mem_total) / mem_used
+            perc = mem_used * 100 / float(mem_total)
             status = 0
             output = ''
             if perc >= params[1]:

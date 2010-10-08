@@ -531,36 +531,6 @@ function isFirefox() {
   return navigator.userAgent.indexOf("Firefox") > -1;
 }
 
-function get_url(url, handler, id) {
-    if (window.XMLHttpRequest) {
-        var AJAX = new XMLHttpRequest();
-    } else {
-        var AJAX = new ActiveXObject("Microsoft.XMLHTTP");
-    }
-    
-    // Dynamic part to prevent caching
-    var dyn = "_t="+Date.parse(new Date());
-    if (url.indexOf('\?') !== -1) {
-        dyn = "&"+dyn;
-    } else {
-        dyn = "?"+dyn;
-    }
-    
-    if (AJAX) {
-        AJAX.open("GET", url + dyn, true);
-        if (typeof handler === 'function')
-            AJAX.onreadystatechange = function() {
-                if (AJAX.readyState == 4) {
-                    handler(id, AJAX.responseText);
-                }
-            }
-        AJAX.send(null);
-        return true;
-    } else {
-        return false;
-    }
-}
-
 function toggle_sidebar_snapin(oH2, url) {
     var childs = oH2.parentNode.parentNode.childNodes;
     for (var i in childs) {

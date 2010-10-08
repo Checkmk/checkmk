@@ -29,6 +29,7 @@
     * fix broken links in 'Edit view -> Try out' situation
     * new macros $HOSTNAME_LOWER$, $HOSTNAME_UPPER$ and $HOSTNAME_TITLE$ for
       custom notes
+    * Multisite now only fetches the available PNP Graphs of hosts/services
 
 1.1.8b1:
     Core, Setup, etc.:

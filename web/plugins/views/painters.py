@@ -426,15 +426,11 @@ multisite_painters["svc_group_memberlist"] = {
 
 # PNP Graphs
 def paint_pnpgraph(sitename, host, service = "_HOST_"):
-    site = html.site_status[sitename]["site"]
-    pnpurl = site["pnp_url"]
-    htmlcode = ""
-    for source in [ 0, 1, 2, 3, 4, 5, 6, 7 ]:
-        urlvars = '&host=%s&srv=%s&view=1&source=%d&theme=multisite&baseurl=%s' % \
-                  ( htmllib.urlencode(host), htmllib.urlencode(service), source, htmllib.urlencode(defaults.checkmk_web_uri) )
-        htmlcode += '<div class=pnpgraph><a href="%s/index.php/graph?%s"><img src="%s/index.php/image?%s"></a></div>' % \
-            (pnpurl, urlvars, pnpurl, urlvars)
-    return "pnpgraph", htmlcode
+    container_id = "%s_%s_%s_graph" % (sitename, host, service)
+    return "pnpgraph", "<div id=\"%s\"></div>" \
+                       "<script>render_pnp_graphs('%s', '%s', '%s', '%s', '%s', '%s')</script>" % \
+                          (container_id, container_id, sitename, host, service,
+                           defaults.checkmk_web_uri, html.site_status[sitename]["site"]["pnp_url"])
 
 multisite_painters["svc_pnpgraph" ] = {
     "title"   : "PNP service graph",

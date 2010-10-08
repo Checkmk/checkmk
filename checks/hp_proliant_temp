@@ -54,7 +54,7 @@ def check_hp_proliant_temp(item, params, info):
     for line in info:
         if "%s (%s)" % (line[1], hp_proliant_temp_locale[int(line[2])]) == item:
             chassis, index, name, value, threshold, status = line
-            snmp_status = hp_proliant_status_map[int(status)]
+            snmp_status = hp_proliant_temp_status_map[int(status)]
             status      = hp_proliant_status2nagios_map[snmp_status]
 
             detail_output = ': %s Degrees Celsius' % value

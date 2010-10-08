@@ -22,6 +22,47 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+// ----------------------------------------------------------------------------
+// general function
+// ----------------------------------------------------------------------------
+
+function get_url(url, handler, data, errorHandler) {
+    if (window.XMLHttpRequest) {
+        var AJAX = new XMLHttpRequest();
+    } else {
+        var AJAX = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    
+    // Dynamic part to prevent caching
+    var dyn = "_t="+Date.parse(new Date());
+    if (url.indexOf('\?') !== -1) {
+        dyn = "&"+dyn;
+    } else {
+        dyn = "?"+dyn;
+    }
+    
+    if (AJAX) {
+        AJAX.open("GET", url + dyn, true);
+        if (typeof handler === 'function')
+            AJAX.onreadystatechange = function() {
+                if (AJAX.readyState == 4)
+                    if(AJAX.status == 200)
+                        handler(data, AJAX.responseText);
+                    else
+                        if(typeof errorHandler !== 'undefined')
+                            errorHandler(data, AJAX.status);
+            }
+        AJAX.send(null);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+// ----------------------------------------------------------------------------
+// GUI styling
+// ----------------------------------------------------------------------------
+
 function filter_activation(oid)
 {
     var selectobject = document.getElementById(oid);
@@ -72,3 +113,62 @@ function unhover_tab(linkobject)
     linkobject.style.backgroundImage = "url(images/metanav_button.png)";
 }
 
+// ----------------------------------------------------------------------------
+// PNP graph handling
+// ----------------------------------------------------------------------------
+
+function pnp_error_response_handler(data, statusCode) {
+    fallback_graphs(data);
+}
+
+function pnp_response_handler(data, code) {
+    var valid_response = true;
+    var response = null;
+    try {
+        response = eval(code);
+        for(var i in response) {
+            var graph = response[i];
+            create_graph(data, '&' + graph['image_url'].replace('&view=1', ''));
+            i = null;
+        }
+    } catch(e) {
+        valid_response = false;
+    }
+
+    if(!valid_response)
+        fallback_graphs(data);
+}
+
+// Fallback bei doofer/keiner Antwort
+function fallback_graphs(data) {
+   for(var i in [0, 1, 2, 3, 4, 5, 6, 7]) {
+       create_graph(data, '&host=' + data['host'] + '&srv=' + data['service'] + '&source=' + i);
+   }
+}
+
+function create_graph(data, params) {
+    var urlvars = params + '&theme=multisite&baseurl='+data['base_url'];
+    var container = document.getElementById(data['container']);
+
+    var link = document.createElement('a');
+    link.href = data['pnp_url'] + 'index.php/graph?' + urlvars;
+
+    var img = document.createElement('img');
+    img.src = data['pnp_url'] + 'index.php/image?view=1' + urlvars;
+
+    link.appendChild(img);
+    container.appendChild(link);
+
+    img = null;
+    link = null;
+    container = null;
+    urlvars = null;
+}
+
+function render_pnp_graphs(container, site, host, service, base_url, pnp_url) {
+    var data = { 'container': container, 'base_url': base_url,
+                 'pnp_url':   pnp_url,   'site':     site,
+                 'host':      host,      'service':  service};
+    get_url(pnp_url + 'index.php/json?&host=' + host + '&srv=' + service + '&source=0',
+            pnp_response_handler, data, pnp_error_response_handler);
+}

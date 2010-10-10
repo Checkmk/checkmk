@@ -45,7 +45,7 @@ def parse_ad_replication_dates(s):
 
 def parse_ad_replication_info(info):
     lines = []
-    for l in [ ' '.join(line).replace(',CN', ';CN').replace(',DC', ';DC') for line in info ]:
+    for l in [ ' '.join(line).replace(',CN=', ';CN=').replace(',DC=', ';DC=') for line in info ]:
         lines.append(l.split(','))
     return lines
 

@@ -52,8 +52,10 @@ StringColumnFilter::StringColumnFilter(StringColumn *column, int opid, char *val
 
 StringColumnFilter::~StringColumnFilter()
 {
-   if (_regex)
+   if (_regex) {
       regfree(_regex);
+      delete _regex;
+   }
 }
 
 

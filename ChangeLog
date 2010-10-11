@@ -19,6 +19,7 @@
 
     Livestatus:
     * check for event_broker_options on start
+    * Fix memory leakage caused by Filter: headers using regular expressions
 
 1.1.8b2:
     Core, Setup, etc.:

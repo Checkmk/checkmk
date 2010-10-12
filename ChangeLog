@@ -7,7 +7,8 @@
 		information
     * hp_proliant_temp/hp_proliant_fans: Fixed wrong variable name
     * hp_procurve_mem: Fixed wrong mem usage calculation
-    * ad_replication: Works no with domain controller hostnames like DC01,DC02
+    * ad_replication: Works no with domain controller hostnames like DC02,DC02
+    * aironet_client: fix crash on empty variable from SNMP output
 
     Multisite:
     * added Perf-O-Meter to "Problems of Host" view

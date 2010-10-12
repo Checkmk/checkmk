@@ -39,7 +39,8 @@ Logfile::Logfile(const char *path, bool watch)
     , _since(0)
     , _watch(watch)
     , _inode(0)
-      , _logclasses_read(0)
+    , _lineno(0)
+    , _logclasses_read(0)
 {
     int fd = open(path, O_RDONLY);
     if (fd < 0) {
@@ -100,6 +101,10 @@ void Logfile::load(TableLog *tablelog, time_t since, time_t until, unsigned logc
 	    logger(LG_INFO, "Cannot open logfile '%s'", _path);
 	    return;
 	}
+        // If we read this file for the first time, we initialize
+        // the current file position to 0
+        if (_lineno == 0)
+	    fgetpos(file, &_read_pos);
 
 	// file might have grown. Read all classes that we already
 	// have read to the end of the file
@@ -110,8 +115,10 @@ void Logfile::load(TableLog *tablelog, time_t since, time_t until, unsigned logc
 	}
 	if (missing_types) {
 	    fseek(file, 0, SEEK_SET);
+            _lineno = 0;
 	    load(file, missing_types, tablelog, since, until, logclasses);
 	    _logclasses_read |= missing_types;
+	    fgetpos(file, &_read_pos); // remember current end of file
 	}
 	fclose(file);
     }
@@ -135,11 +142,10 @@ void Logfile::load(TableLog *tablelog, time_t since, time_t until, unsigned logc
 void Logfile::load(FILE *file, unsigned missing_types, 
 	TableLog *tablelog, time_t since, time_t until, unsigned logclasses)
 {
-    uint32_t lineno = 0;
     while (fgets(_linebuffer, MAX_LOGLINE, file))
     {
-	lineno++;
-	if (processLogLine(lineno, missing_types)) {
+	_lineno++;
+	if (processLogLine(_lineno, missing_types)) {
 	    num_cached_log_messages ++;
 	    tablelog->handleNewMessage(this, since, until, logclasses); // memory management
 	}
@@ -179,6 +185,11 @@ bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses)
 	uint64_t key = makeKey(entry->_time, lineno);
 	if (_entries.find(key) == _entries.end())
 	    _entries.insert(make_pair(key, entry));
+        else { // this should never happen. The lineno must be unique!
+            logger(LG_ERR, "Strange: duplicate logfile line %s", _linebuffer);
+            delete entry;
+            return false;
+        }
 	return true;
     }
     else {

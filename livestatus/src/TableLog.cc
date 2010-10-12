@@ -269,8 +269,17 @@ void TableLog::scanLogfile(char *path, bool watch)
 {
     Logfile *logfile = new Logfile(path, watch);
     time_t since = logfile->since();
-    if (since)
-	_logfiles.insert(make_pair(since, logfile));
+    if (since) {
+        // make sure that no entry with that 'since' is existing yet.
+        // under normal circumstances this never happens. But the
+        // user might have copied files around.
+        if (_logfiles.find(since) == _logfiles.end())
+            _logfiles.insert(make_pair(since, logfile));
+        else {
+            logger(LG_WARN, "Ignoring duplicate logfile %s", path);
+            delete logfile;
+        }
+    }
     else
 	delete logfile;
 }

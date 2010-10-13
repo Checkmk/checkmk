@@ -30,6 +30,15 @@
 # p2     OK               u0     298.09 GB   625142448     WD-WCARW3006518
 # p3     OK               u0     298.09 GB   625142448     WD-WCARW3199987 
 
+# Another example:
+# p0     OK               u0     298.09 GB   625142448     WD-WCAPD4348449
+# p1     OK               u0     298.09 GB   625142448     WD-WCAPD4168681
+# p2     OK               u0     298.09 GB   625142448     WD-WCAPD4164590
+# p3     OK               u1     298.09 GB   625142448     WD-WCAPD4163656
+# p4     OK               u0     298.09 GB   625142448     WD-WCAPD4160960
+# p5     OK               u0     298.09 GB   625142448     WD-WCAPD4164594
+
+
 def inventory_3ware_disks(checkname, info):
     inventory = []
     for line in info:
@@ -40,17 +49,18 @@ def inventory_3ware_disks(checkname, info):
 
 def check_3ware_disks(item, params, info):
     for line in info:
-	status = str(line[1])
-	if status == "OK":
-	    unit_type = str(line[2])
-	    size = str(line[3])
-	    size_type = str(line[4])
-	    disk_type = str(line[5])
-	    model = str(line[-1])
-	    infotext = "%s (unit: %s, size: %s,%s, type: %s, model: %s)" % (status, unit_type, size, size_type, disk_type, model)
-	    return (0, "OK - disk status is " + infotext)
-	else:
-	    return (2, "CRITICAL - disk status is " + infotext)
+        if line[0] == item:
+            status = line[1]
+            unit_type = line[2]
+            size      = line[3]
+            size_type = line[4]
+            disk_type = line[5]
+            model     = line[-1]
+            infotext = "%s (unit: %s, size: %s,%s, type: %s, model: %s)" % (status, unit_type, size, size_type, disk_type, model)
+            if status == "OK":
+                return (0, "OK - disk status is " + infotext)
+            else:
+                return (2, "CRITICAL - disk status is " + infotext)
     return (3, "UNKNOWN - disk %s not found in agent output" % item) 
 
 # declare the check to Check_MK

@@ -24,25 +24,32 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Example output from agent:
+# <<<3ware_units>>>
+# u0    RAID-5    OK             -       -       64K     1788.08   ON     OFF
+# u1    RAID-5    INOPERABLE     -       -       64K     1788.08   OFF    OFF
+
+
 # inventory
 def inventory_3ware_units(checkname, info):
     inventory = []
     for line in info:
 	unit = line[0]
-	inventory.append( (unit, "", None) )
+	inventory.append( (unit, None) )
     return inventory
 
 # check
 def check_3ware_units(item, param, info):
     for line in info:
-	status = str(line[2])
-	if status == "OK":
-	    unit_type = str(line[1])
-	    size = str(line[6])
-	    infotext = "%s  (typ: %s ,size: %s GB)" % (status, unit_type, size)
-	    return (0, "OK - unit status is " + infotext)
-	else:
-	    return (2, "CRITICAL - unit status is " + infotext)
+        if line[0] == item:
+            status = line[2]
+            unit_type = line[1]
+            size      = line[6]
+            infotext = "%s  (type: %s, size: %s GB)" % (status, unit_type, size)
+            if status == "OK":
+                return (0, "OK - unit status is " + infotext)
+            else:
+                return (2, "CRITICAL - unit status is " + infotext)
     return (3, "UNKNOWN - unit %s not found in agent output" % item) 
 
 # declare the check to Check_MK

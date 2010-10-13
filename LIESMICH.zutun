@@ -25,6 +25,9 @@ weitergeleitet. Der Service wird auch nicht in die aggregierten Services eines
 Summary Hosts aufgenommen. Das kann dazu führen, dass die Anzahl der Services
 in einem Summary-Host variabel ist.
 
+Schablone für check_mk-hr_cpu.php fehlt! Dadurch kann der Graph nicht
+gemalt werden wegen der rra.cfg.
+
 
 MULTISITE:
 
@@ -59,7 +62,7 @@ die Tabs ganz komisch ueber die ganze Breite verteilt.
 LIVESTATUS:
 
 
-Doku Livestatus: group_authorization nicht gesetzt, hat aber Wirkung von
+Livestatus: group_authorization nicht gesetzt, hat aber Wirkung von
 loose. Stimmt hier der Default? Sieht eher aus, als funktioniert das nicht...
 
 Livestatus: Bei bestimmten regulären Ausdrücken in ~~ schmiert Nagios
@@ -69,10 +72,6 @@ GET hosts
 Filter: name ~~ (.*){1,346}[bc] 
 Problem ist: Das scheint ein Bug in der glibc zu sein. Ich sehe nicht,
 wie ich das verhindern kann.
-
-Speicherlöcher von Sven.
-
-
 
 -------------------------------------------------------------------------------
 ab 1.1.9i1:

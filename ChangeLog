@@ -10,6 +10,7 @@
     * hp_procurve_mem: Fixed wrong mem usage calculation
     * ad_replication: Works no with domain controller hostnames like DC02,DC02
     * aironet_client: fix crash on empty variable from SNMP output
+    * 3ware_disks, 3ware_units: hopefully repaired those checks
 
     Multisite:
     * added Perf-O-Meter to "Problems of Host" view

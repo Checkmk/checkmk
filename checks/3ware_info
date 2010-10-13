@@ -34,11 +34,21 @@
 # 
 # tw_cli version: 2.01.09.004 
 
+# Another version produces this output:
+# <<<3ware_info>>>
+# /c0 Model = 9550SXU-8LP
+# /c0 Firmware Version = FE9X 3.08.00.029
+# /c0 Serial Number = L320809A6450122
+# Port   Status           Unit   Size        Blocks        Serial
+
+# This version of the check currently only handles output of the first type
+
 def inventory_3ware_info(checkname, info):
 	inventory = []
     	for line in info:
-    	    controler = line[0]
-    	    inventory.append( (controler, None) )
+            if len(line) == 8:
+                controller = line[0]
+                inventory.append( (controller, None) )
     	return inventory
 
 def check_3ware_info(item, params, info):

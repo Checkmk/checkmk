@@ -9,13 +9,27 @@ description:
  PRINTER-MIB.
  The default check levels are 20% (warning) and 10% of the full level
  (critical).
- This levels can be redefined with printer_supply_default_levels = ( w, c ).
  According the PRINTER-MIB it's possible that a printer couldn't determine
  how much is remaining in a supply, so the printer says "some remaining".
  This value produces a warning.
+
+ Please note, that some manufactures do not have unique names for
+ their supply units in the MIB. They for example name all for toner
+ units {Toner Cartridge OKI DATA CORP}. In that case, only the first
+ unit will be checked (which does not make much sense). A future version
+ of the check might handle that problem - the current one not.
 
 perfdata: 
  The remaining filling level in units (pages remaining).
 
 inventory:
- Supported. 
+ One check is being created for each supply unit with a unique name.
+
+[parameters]
+warning(int): The supply level in percentage at which (and below) a warning is triggered
+critical(int): The supply level in percentage at which (and below) a critical state is reached.
+
+
+[configuration]
+printer_supply_default_levels(int, int): Set global default levels for warning and critical
+

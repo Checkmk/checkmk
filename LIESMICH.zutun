@@ -28,8 +28,15 @@ in einem Summary-Host variabel ist.
 Schablone für check_mk-hr_cpu.php fehlt! Dadurch kann der Graph nicht
 gemalt werden wegen der rra.cfg.
 
+SNMP-Checks: Es wurde berichtet, dass - wenn die Community falsch ist - 
+der Check_MK gruen war, aber die Checks unknown. Sollte es dann nicht
+genau umgekehrt sein? Wird der Exit-code von snmpwalk ausgewertet?
+
 
 MULTISITE:
+
+Bei Links nach PNP muss das Theme richtig gesetzt werden. Ist
+das nicht schon der Fall?
 
 In manchen View fehlen noch Links, z.B. bei den Hosts: Auf die
 Anzahl der Warnungen kann man nicht klicken
@@ -73,6 +80,22 @@ Filter: name ~~ (.*){1,346}[bc]
 Problem ist: Das scheint ein Bug in der glibc zu sein. Ich sehe nicht,
 wie ich das verhindern kann.
 
+--------------------------------------------------------------------------------
+BUGS beheben ab 1.1.9i1
+--------------------------------------------------------------------------------
+Livestatus: das Nagios-Debuglog ist nicht reentrant. Livestatus muss ein eigenes
+Logfile schreiben. Wir machen das ohne Rotation. Man muss einfach selbst
+aufpassen, dass es nicht zu groß wird. Default ist eh aus. Ins Nagios
+geloggt wird nur das Starten und Beenden (was ja im Hauptthread läuft).
+
+Windows-Agent: Eventlogeinträge nach UTF-8 kodieren.
+
+Windows-Agent: Memory-Check neu machen. Swap stimmt nicht. Evtl. zwei
+getrennte Checks für Memory and Pagefile.
+
+--snmpwalk: Braucht man das translaten noch? Ich arbeite doch jetzt eh
+nur noch ohne MIB-Dateien. Das würde das ganze deutlich vereinfachen!
+
 -------------------------------------------------------------------------------
 ab 1.1.9i1:
 --------------------------------------------------------------------------------
@@ -106,22 +129,6 @@ PNP4Nagios-Popups automatisch einbauen, mit eigenen intelligenten
 Icons.
 
 Host- und Serviceicons (icon_image) anzeigen.
-
---------------------------------------------------------------------------------
-BUGS beheben ab 1.1.9i1
---------------------------------------------------------------------------------
-Livestatus: das Nagios-Debuglog ist nicht reentrant. Livestatus muss ein eigenes
-Logfile schreiben. Wir machen das ohne Rotation. Man muss einfach selbst
-aufpassen, dass es nicht zu groß wird. Default ist eh aus. Ins Nagios
-geloggt wird nur das Starten und Beenden (was ja im Hauptthread läuft).
-
-Windows-Agent: Eventlogeinträge nach UTF-8 kodieren.
-
-Windows-Agent: Memory-Check neu machen. Swap stimmt nicht. Evtl. zwei
-getrennte Checks für Memory and Pagefile.
-
---snmpwalk: Braucht man das translaten noch? Ich arbeite doch jetzt eh
-nur noch ohne MIB-Dateien. Das würde das ganze deutlich vereinfachen!
 
 --------------------------------------------------------------------------------
 UNSCHOENHEITEN

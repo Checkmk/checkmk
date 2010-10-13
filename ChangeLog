@@ -11,6 +11,7 @@
     * ad_replication: Works no with domain controller hostnames like DC02,DC02
     * aironet_client: fix crash on empty variable from SNMP output
     * 3ware_disks, 3ware_units: hopefully repaired those checks
+    * added rudimentary agent for HP-UX (found in docs/)
 
     Multisite:
     * added Perf-O-Meter to "Problems of Host" view

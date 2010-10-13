@@ -67,7 +67,7 @@ dist: mk-livestatus
 	tar czf $(DISTNAME)/pnp-rraconf.tar.gz $(TAROPTS) -C pnp-rraconf $$(cd pnp-rraconf ; ls *.rra.cfg README.rra)
 	tar cf $(DISTNAME)/doc.tar $(TAROPTS) -C doc --exclude .svn --exclude "*~" \
 			check_mk_templates.cfg check_mk.1 \
-			check_mk.css screenshot1.png README helpers \
+			check_mk.css screenshot1.png README helpers check_mk_agent.hp \
 			check_mk{,.trans}.200.png windows \
 			df_magic_number.py README.sounds
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) COPYING AUTHORS ChangeLog

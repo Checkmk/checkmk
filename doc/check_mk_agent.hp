@@ -1,0 +1,127 @@
+#!/bin/sh
+
+# This rudimentary agent for HP has been submitted by a 
+# community member and is not part of Check_MK.
+
+export MK_LIBDIR="/usr/lib/check_mk_agent"
+export MK_CONFDIR="/etc/check_mk_agent"
+export TOP_LOG=/tmp/top_info.log
+
+# All executables in PLUGINSDIR will simply be executed and their
+# ouput appended to the output of the agent. Plugins define their own
+# sections and must output headers with '<<<' and '>>>'
+PLUGINSDIR=$MK_LIBDIR/plugins
+
+# All executables in LOCALDIR will by executabled and their
+# output inserted into the section <<<local>>>. They must
+# *not* output a section header. A local extension may output
+# zero, one or several lines. Each line must be in the form
+# EXITCODE CHECK_NAME PERFDATA CHECK_OUTPUT
+# EXITCODE is 0, 1, 2 or 3
+# CHECK_NAME will be used as Nagios's service_descriptions and
+# must be unique for this host
+# PERFDATA is optional performance data in the standard Nagios
+# format for variable=value;warn;crit;min;max. You can send
+# only one variable currently. If you do not want to send 
+# performance data output a single dash instead
+# CHECK_OUTPUT will be used by Nagios as the check's output
+# EXITCODE, CHECK_NAME and PERFDATA must not contain spaces
+# or tabs. CHECK_OUTPUT may contain spaces and tabs
+LOCALDIR=$MK_LIBDIR/local
+PATH=$PATH:/usr/bin:/usr/sbin
+VMLOGDIR=/tmp/vmstat.log
+
+echo '<<<check_mk>>>'
+echo Version: 1.1.0
+
+echo '<<<df>>>'
+df -kPl | sed 's/ / - /' | grep -v ^Filesystem
+
+echo '<<<ps>>>'
+UNIX95= ps -ex -o user,args
+
+# Daten holen
+#rm -f ${VMLOGDIR} 2>/dev/null
+#vmstat 1 5 > ${VMLOGDIR}
+
+# Speicherauslastung
+#echo '<<<mem>>>'
+#echo MemTotal:  ${cat ${VMLOGDIR}|egrep -v "Time|kthr"|awk '{print $4}'|tail -1}
+#echo MemFree:  ${cat ${VMLOGDIR}|egrep -v "Time|kthr"|awk '{print $5}'|tail -1}
+
+## Performancecounter Platten
+#echo '<<<iostat>>>'
+#date
+#/usr/bin/iostat
+
+# Network interfaces (Link, Autoneg, Speed)
+# This requires lanscan
+if which lanscan > /dev/null
+then
+  echo '<<<netif>>>'
+  for eth in $(lanscan -p|cut -d " " -f1)
+  do
+    echo $(lanadmin -g $eth|grep "Description"|cut -d " " -f23) $(lanadmin -x $eth|cut -d " " -f22,23) on $(lanadmin -g 0|grep "Operation Status"|cut -d " " -f12|cut -d "(" -f1|sed -e "s/up/yes/")
+  done
+fi
+
+# Statistik der Netzwerkgeraete (Pakete, Kollisionen, etc)
+#echo '<<<netctr_hp>>>'
+# Genauen Zeitstempel einfuegen, da Counter von Zeit abhaengen
+#date
+#/usr/bin/netstat -iw|grep -v "Name"
+
+# CPU
+#echo '<<<cpu_hp>>>'
+#cat ${VMLOGDIR}|egrep -v "Time|kthr"|awk '{print $15}'|tail -1
+
+# You need statgrab to be installed. You'll find it
+# here: http://www.i-scream.org/libstatgrab/
+if statgrab > /tmp/statgrab.$$ 2>/dev/null
+    then
+    for s in proc cpu net load disk page general
+    do
+        echo "<<<statgrab_$s>>>"
+        cat /tmp/statgrab.$$ | grep "^$s\." | cut -d. -f2-99 | sed 's/ *= */ /'
+    done
+
+    echo '<<<statgrab_mem>>>'
+    cat /tmp/statgrab.$$ | egrep "^(swap|mem)\." | sed 's/ *= */ /'
+
+    rm -f /tmp/statgrab.$$
+fi
+
+# PLUGIN
+if cd $PLUGINSDIR 2>/dev/null
+then
+    for skript in $(ls)
+    do
+        if [ -x "$skript" ] ; then
+            ./$skript
+    fi
+  done
+fi
+
+
+echo '<<<local>>>'
+if cd $LOCALDIR 2>/dev/null
+then
+  for skript in $(ls)
+  do
+    if [ -x "$skript" ] ; then
+        ./$skript
+    fi
+  done
+fi
+
+# MK's Remote Plugin Executor
+if [ -e "$MK_CONFDIR/mrpe.cfg" ]
+then
+    echo '<<<mrpe>>>'
+    grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
+    while read descr cmdline
+    do
+        OUTPUT=$($cmdline)
+        echo "$? $descr $OUTPUT"
+    done
+fi

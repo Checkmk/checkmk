@@ -469,3 +469,6 @@ waere noch custom_variables huebsch, welches beides kombiniert.
 
 Disk IO read/write: Zu einem Check zusammenfassen. Einen gemeinsamen
 Graphen mit dem Windows-Check erstellen (wo ein Graph eh fehlt).
+ 
+Multisite: Quicksearch evtl. case-insensitive machen?
+

@@ -1098,8 +1098,15 @@ def show_context_links(thisview, active_filters):
             if html.has_var(var) and var not in active_filter_vars:
                 active_filter_vars.add(var)
 
+    # sort views after text of possible button (sort buttons after their text)
+    sorted_views = []
+    for view in html.available_views.values():
+        sorted_views.append((view_linktitle(view), view))
+    sorted_views.sort()
+
     first = True
-    for name, view in html.available_views.items():
+    for linktitle, view in sorted_views:
+        name = view["name"]
         if view == thisview:
             continue
         hidden_filternames = view["hide_filters"]

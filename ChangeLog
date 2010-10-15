@@ -24,6 +24,7 @@
       (configurable via quicksearch_dropdown_limit)
     * Views of hosts: make counts of OK/WARN/CRIT klickable, new views
       for services of host in a certain state
+    * Multisite: sort context buttons in views alphabetically
 
     Livestatus:
     * check for event_broker_options on start

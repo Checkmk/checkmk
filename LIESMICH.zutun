@@ -18,13 +18,6 @@ BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
 CHECK_MK:
 
-Check für Postfix Queue: Der Agent darf unmöglich die komplette
-Queue rauspumpen. Das können beliebig viele Daten werden. Besser
-ist, dass der bereits zählt mit wc oder ähnliches -> LARS?
-weitergeleitet. Der Service wird auch nicht in die aggregierten Services eines
-Summary Hosts aufgenommen. Das kann dazu führen, dass die Anzahl der Services
-in einem Summary-Host variabel ist.
-
 Schablone für check_mk-hr_cpu.php fehlt! Dadurch kann der Graph nicht
 gemalt werden wegen der rra.cfg.
 

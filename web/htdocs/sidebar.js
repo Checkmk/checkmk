@@ -24,6 +24,7 @@
 
 var browser = navigator.userAgent.toLowerCase();
 var weAreIEF__k = ((browser.indexOf("msie") != -1) && (browser.indexOf("opera") == -1));
+var contentLocation = parent.frames[1].document.location;
 
 //
 // Sidebar styling and scrolling stuff
@@ -33,7 +34,7 @@ var weAreIEF__k = ((browser.indexOf("msie") != -1) && (browser.indexOf("opera") 
  * Register events
  *************************************************/
 
-// First firefox and the IE
+// First firefox and then IE
 if (window.addEventListener) {
   window.addEventListener("mousemove",     function(e) {
                                              snapinDrag(e);
@@ -56,6 +57,24 @@ if (window.addEventListener) {
   document.documentElement.onmouseup    = stopDragScroll;
   // mousewheel scrolling
   document.documentElement.onmousewheel = scrollWheel;
+}
+
+// This ends drag scrolling when moving the mouse out of the sidebar
+// frame while performing a drag scroll.
+// This is no 100% solution. When moving the mouse out of browser window
+// without moving the mouse over the edge elements the dragging is not ended.
+function registerEdgeListeners(obj) {
+	var edges;
+	if(!obj)
+	  edges = [ parent.frames[1], document.getElementById('side_header'), document.getElementById('side_footer') ];
+	else
+		edges = [ obj ];
+	for(var i in edges)
+	 	if (window.addEventListener)
+	  	edges[i].addEventListener("mousemove", function(e) { stopDragScroll(e); snapinTerminateDrag(e); return false; }, false);
+		else
+  		edges[i].onmousemove = function(e) { stopDragScroll(e); snapinTerminateDrag(e); return false; };
+	edges = null;
 }
 
 /************************************************
@@ -130,9 +149,6 @@ function snapinDrag(event) {
   snapinDragging.style.left     = event.clientX - snapinOffset[1];
   snapinDragging.style.width    = '175px';
   snapinDragging.style.zIndex   = 200;
-  // snapinDragging.children[0].children[1].innerHTML = "TOP: " 
-  //      + document.getElementById('side_content').scrollTop 
-  //      + " UT " + snapinScrollTop;
 
   // Refresh the drop marker
   removeSnapinDragIndicator();
@@ -153,6 +169,7 @@ function snapinDrag(event) {
     snapinAddBefore(snapinDragging.parentNode, null, line);
   }
   line = null;
+	return true;
 }
 
 function snapinAddBefore(par, o, add) {
@@ -206,6 +223,17 @@ function snapinDrop(event, targetpos) {
   get_url('sidebar_move_snapin.py?name=' + thisId + before);
   thisId = null;
   targetpos = null;
+}
+
+function snapinTerminateDrag() {
+  if(snapinDragging == false)
+    return true;
+	removeSnapinDragIndicator();
+  // Reset properties
+  snapinDragging.style.top      = '';
+  snapinDragging.style.left     = '';
+  snapinDragging.style.position = '';
+  snapinDragging = false;
 }
 
 function snapinStopDrag(event) {
@@ -587,6 +615,12 @@ function sidebar_scheduler() {
             get_url(url, updateContents, "snapin_" + name);
         }
     }
+		// Detect page changes and re-register the mousemove event handler
+		// in the content frame. another bad hack ... narf
+		if(contentLocation != parent.frames[1].document.location) {
+			registerEdgeListeners(parent.frames[1]);
+			contentLocation = parent.frames[1].document.location;
+		}
     setTimeout(function(){sidebar_scheduler();}, 1000);
 }
 

@@ -18,10 +18,9 @@ BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
 CHECK_MK:
 
-Check für Postfix Queue: Der Agent darf unmöglich die komplette
-Queue rauspumpen. Das können beliebig viele Daten werden. Besser
-ist, dass der bereits zählt mit wc oder ähnliches -> LARS?
-weitergeleitet. Der Service wird auch nicht in die aggregierten Services eines
+Wenn ein Counter Wrap passiert und der check selbst die Exception nicht abfängt,
+dann wird das Ergebnis nicht an Nagios weitergeleitet.
+Der Service wird auch nicht in die aggregierten Services eines
 Summary Hosts aufgenommen. Das kann dazu führen, dass die Anzahl der Services
 in einem Summary-Host variabel ist.
 
@@ -31,7 +30,6 @@ gemalt werden wegen der rra.cfg.
 SNMP-Checks: Es wurde berichtet, dass - wenn die Community falsch ist - 
 der Check_MK gruen war, aber die Checks unknown. Sollte es dann nicht
 genau umgekehrt sein? Wird der Exit-code von snmpwalk ausgewertet?
-
 
 MULTISITE:
 
@@ -49,14 +47,6 @@ Idee, wie man das (einfach) hinbekommen könnte?
 
 LARS: In Opera (Version 10.6) geht in der Sidebar das Scrollen per Mausrad
 nicht. Angeblich in Chrome auch nicht.
-
-LARS: Sidebar scrollen: Wenn man ein Snapin packt, mit der Maus scrollt und
-dabei die Maus über den Rand des HTML-Bereiches des Browsers rauszieht und
-dort loslässt, dann bekommt die Sidebar das nicht mit. Wenn man mit der Maus
-wieder reinfährt, ist man - trotz losgelassener Maus - noch im Scrollmodus.
-Kann man den aktuellen Status der Maus irgendwie abfragen - so dass man das
-verlorengegangene Event kompensieren kann? Oder kommt das Event irgendwo
-anders an, wo man es noch abgreifen kann?
 
 Logwatch: was macht man hier bei verteilten Umgebungen?? Muss man das
 wie PNP per Proxy anfahren? Was ist aber dann, wenn man dort rumklickt?

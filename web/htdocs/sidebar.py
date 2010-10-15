@@ -107,7 +107,6 @@ def sidebar_head():
                '<a class="logo" target="_blank" href="http://mathias-kettner.de"></a>'
                '</div>\n')
     html.write('<div id="side_version"><a href="http://mathias-kettner.de/check_mk_download.html" target="main">v%s</a></div>\n' % defaults.check_mk_version)
-# "<img src=\"images/side_up.png\" onmouseover=\"scrolling=true;scrollwindow(-2)\" onmouseout=\"scrolling=false\">"
 
 def sidebar_foot():
     html.write('<div id="side_footer">')
@@ -155,6 +154,7 @@ def page_side(h):
     html.write('</div>')
 
     html.write("<script language=\"javascript\">\n")
+    html.write("registerEdgeListeners();\n")
     html.write("setSidebarHeight();\n")
     html.write("refresh_snapins = %r;\n" % refresh_snapins)
     html.write("sidebar_scheduler();\n")

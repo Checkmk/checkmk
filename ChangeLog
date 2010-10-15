@@ -20,6 +20,8 @@
     * Multisite now only fetches the available PNP Graphs of hosts/services
     * Quicksearch: limit number of items in dropdown to 80
       (configurable via quicksearch_dropdown_limit)
+    * Sidebar drag scrolling: Trying to compensate lost mouse events when
+		leaving the sidebar frame while dragging
 
     Livestatus:
     * check for event_broker_options on start

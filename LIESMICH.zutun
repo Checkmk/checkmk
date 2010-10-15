@@ -33,9 +33,6 @@ genau umgekehrt sein? Wird der Exit-code von snmpwalk ausgewertet?
 
 MULTISITE:
 
-Bei Links nach PNP muss das Theme richtig gesetzt werden. Ist
-das nicht schon der Fall?
-
 In manchen View fehlen noch Links, z.B. bei den Hosts: Auf die
 Anzahl der Warnungen kann man nicht klicken
 

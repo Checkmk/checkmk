@@ -54,26 +54,6 @@ die Tabs ganz komisch ueber die ganze Breite verteilt.
 
 LIVESTATUS:
 
-==1435== 460 (320 direct, 140 indirect) bytes in 10 blocks are definitely lost in loss record 7,313 of 7,329
-==1435==    at 0x402569A: operator new(unsigned int) (vg_replace_malloc.c:255)
-==1436==    by 0x462BE2B: TableServices::addColumns(Table*, std::string, int, bool) (TableServices.cc:353)
-==1435==    by 0x463E689: client_thread (module.c:163)
-==1435==    by 0x406F96D: start_thread (pthread_create.c:300)
-==1435==    by 0x4159A4D: clone (clone.S:130)
-==1436==    by 0x460C54F: store_init (store.cc:53)
-==1436==    by 0x463F343: nebmodule_init (module.c:603)
-==1436==    by 0x805B7E1: neb_load_module (nebmods.c:288)
-==1436==    by 0x805B9DF: neb_load_all_modules (nebmods.c:158)
-
-
-==1436== 595,260 (590,364 direct, 4,896 indirect) bytes in 9 blocks are definitely lost in loss record 7,665 of 7,666
-==1436==    at 0x402569A: operator new(unsigned int) (vg_replace_malloc.c:255)
-==1436==    by 0x460C2E2: create_inputbuffer (store.cc:123)
-==1436==    by 0x463E681: client_thread (module.c:162)
-==1436==    by 0x406F96D: start_thread (pthread_create.c:300)
-==1436==    by 0x4159A4D: clone (clone.S:130)
-
-
 Livestatus: group_authorization nicht gesetzt, hat aber Wirkung von
 loose. Stimmt hier der Default? Sieht eher aus, als funktioniert das nicht...
 
@@ -487,3 +467,8 @@ Graphen mit dem Windows-Check erstellen (wo ein Graph eh fehlt).
  
 Multisite: Quicksearch evtl. case-insensitive machen?
 
+if/if64: Irgendwie eine Konfigurationsart finden, welche den
+Linkstatus nicht prüft bzw. deswegen nicht kritisch wird.
+Das kann man evtl. sogar damit kombinieren, dass man alle
+ports monitort. Könnte reichen, wenn das Inventur-Konfigurationen
+sind.

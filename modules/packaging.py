@@ -41,12 +41,13 @@ except:
     pass
 
 package_parts = [
-  ( "checks",        "Checks",               checks_dir ),
-  ( "checkman",      "Checks' man pages",    check_manpages_dir ),
-  ( "agents",        "Agents",               agents_dir ),
-  ( "web",           "Multisite extensions", web_dir ),
-  ( "pnp-templates", "PNP4Nagios templates", pnp_templates_dir ),
-  ( "doc",           "Documentation files",  doc_dir ),
+  ( "checks",        "Checks",                    checks_dir ),
+  ( "checkman",      "Checks' man pages",         check_manpages_dir ),
+  ( "agents",        "Agents",                    agents_dir ),
+  ( "web",           "Multisite extensions",      web_dir ),
+  ( "pnp-templates", "PNP4Nagios templates",      pnp_templates_dir ),
+  ( "pnp-rraconf",   "RRA configuration for PNP", pnp_rraconf_dir ),
+  ( "doc",           "Documentation files",       doc_dir ),
 ]
 
 def packaging_usage():

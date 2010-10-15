@@ -2,6 +2,8 @@
     Core, Setup, etc.:
     * Added some Livestatus LQL examples to documentation
     * Removed cleanup_autochecks.py. Please use check_mk -u now.
+    * RRA configuration for PNP: install in separate directory and do not
+      use per default, since they use an undocumented feature of PNP.
 
     Checks & Agents:
     * postfix_mailq: Changed limit last 6 lines which includes all needed

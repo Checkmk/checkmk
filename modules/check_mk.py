@@ -2634,6 +2634,7 @@ def show_paths():
         ( check_manpages_dir,          dir, inst, "Check manpages (for check_mk -M)"),
         ( lib_dir,                     dir, inst, "Binary plugins (architecture specific)"),
         ( pnp_templates_dir,           dir, inst, "Templates for PNP4Nagios"),
+        ( pnp_rraconf_dir,             dir, inst, "RRA configuration for PNP4Nagios"),
         ( nagios_startscript,          fil, inst, "Startscript for Nagios daemon"),
         ( nagios_binary,               fil, inst, "Path to Nagios executable"),
 

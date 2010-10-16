@@ -585,8 +585,8 @@ do
 	   cp $DESTDIR$modulesdir/defaults $DESTDIR$web_dir/htdocs/defaults.py &&
 	   mkdir -p $DESTDIR$pnptemplates &&
 	   tar xzf $SRCDIR/pnp-templates.tar.gz -C $DESTDIR$pnptemplates &&
-	   mkdir -p $DESTDIR$pnpconfdir &&
-	   tar xzf $SRCDIR/pnp-rraconf.tar.gz -C $DESTDIR$pnpconfdir &&
+	   mkdir -p $DESTDIR$pnprraconf &&
+	   tar xzf $SRCDIR/pnp-rraconf.tar.gz -C $DESTDIR$pnprraconf &&
 	   mkdir -p $DESTDIR$modulesdir &&
 	   rm -f $DESTDIR$modulesdir/check_mk{,_admin} &&
 	   tar xzf $SRCDIR/modules.tar.gz -C $DESTDIR$modulesdir &&

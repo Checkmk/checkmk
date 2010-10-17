@@ -33,21 +33,26 @@
 #include "OutputBuffer.h"
 
 StringColumnFilter::StringColumnFilter(StringColumn *column, int opid, char *value)
-   : _column(column)
-   , _ref_string(value)
-   , _opid(abs(opid))
-   , _negate(opid < 0)
-   , _regex(0)
+    : _column(column)
+    , _ref_string(value)
+    , _opid(abs(opid))
+    , _negate(opid < 0)
+    , _regex(0)
 {
-   if (_opid == OP_REGEX || _opid == OP_REGEX_ICASE) {
-      _regex = new regex_t();
-      if (0 != regcomp(_regex, value, REG_EXTENDED | REG_NOSUB | (_opid == OP_REGEX_ICASE ? REG_ICASE : 0)))
-      {
-	 setError(RESPONSE_CODE_INVALID_HEADER, "invalid regular expression '%s'", value);
-	 delete _regex;
-	 _regex = 0;
-      }
-   }
+    if (_opid == OP_REGEX || _opid == OP_REGEX_ICASE) {
+        if (strchr(value, '{') || strchr(value, '}')) {
+            setError(RESPONSE_CODE_INVALID_HEADER, "disallowed regular expression '%s': must not contain { or }", value);
+        }
+        else {
+            _regex = new regex_t();
+            if (0 != regcomp(_regex, value, REG_EXTENDED | REG_NOSUB | (_opid == OP_REGEX_ICASE ? REG_ICASE : 0)))
+            {
+                setError(RESPONSE_CODE_INVALID_HEADER, "invalid regular expression '%s'", value);
+                delete _regex;
+                _regex = 0;
+            }
+        }
+    }
 }
 
 StringColumnFilter::~StringColumnFilter()

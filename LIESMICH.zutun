@@ -54,14 +54,6 @@ LIVESTATUS:
 Livestatus: group_authorization nicht gesetzt, hat aber Wirkung von
 loose. Stimmt hier der Default? Sieht eher aus, als funktioniert das nicht...
 
-Livestatus: Bei bestimmten regulären Ausdrücken in ~~ schmiert Nagios
-ab. Ist wohl ein Bug in glibc/regcomp. Weiss nicht, was ich da machen
-kann. Beispiel:
-GET hosts 
-Filter: name ~~ (.*){1,346}[bc] 
-Problem ist: Das scheint ein Bug in der glibc zu sein. Ich sehe nicht,
-wie ich das verhindern kann.
-
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
 --------------------------------------------------------------------------------

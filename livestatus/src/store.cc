@@ -128,9 +128,9 @@ void set_inputbuffer_fd(void *ib, int fd)
    ((InputBuffer *)ib)->setFd(fd);
 }
 
-void delete_inputbuffer(void *ob)
+void delete_inputbuffer(void *ib)
 {
-   delete (InputBuffer *)ob;
+   delete (InputBuffer *)ib;
 }
 
 void update_timeperiods_cache(time_t now)

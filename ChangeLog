@@ -7,10 +7,23 @@
     * The custom open/close states of custom links are now stored for each
       user
 
+1.1.8:
+    Checks & Agents:
+    * Added missing PNP template for check_mk-hr_cpu
+    * hr_fs: inventory now ignores filesystem with size 0,
+      check does not longer crash on filesystems with size 0
+
+    Livestatus:
+    * Prohibit { and } in regular expressions. This avoids a segmentation
+      fault caused by regcomp in glibc for certain (very unusual) regular
+      expressions.
+
 1.1.8b3:
     Core, Setup, etc.:
     * Added some Livestatus LQL examples to documentation
     * Removed cleanup_autochecks.py. Please use check_mk -u now.
+    * RRA configuration for PNP: install in separate directory and do not
+      use per default, since they use an undocumented feature of PNP.
 
     Checks & Agents:
     * postfix_mailq: Changed limit last 6 lines which includes all needed
@@ -29,8 +42,11 @@
     * Multisite now only fetches the available PNP Graphs of hosts/services
     * Quicksearch: limit number of items in dropdown to 80
       (configurable via quicksearch_dropdown_limit)
+    * Views of hosts: make counts of OK/WARN/CRIT klickable, new views
+      for services of host in a certain state
+    * Multisite: sort context buttons in views alphabetically
     * Sidebar drag scrolling: Trying to compensate lost mouse events when
-		leaving the sidebar frame while dragging
+	leaving the sidebar frame while dragging
 
     Livestatus:
     * check for event_broker_options on start

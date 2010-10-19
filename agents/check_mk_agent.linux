@@ -53,7 +53,7 @@ else
 fi
 
 echo '<<<check_mk>>>'
-echo Version: 1.1.8b3
+echo Version: 1.1.8
 echo AgentOS: linux
 
 # Partitionen (-P verhindert Zeilenumbruch bei langen Mountpunkten)

@@ -76,7 +76,7 @@ perfdata:
  additional performance data is output (see below).
 
 [parameters]
-warning (int or float): the precentage of virtual memory used 
+warning (int or float): the percentage of virtual memory used 
  by processes at which WARNING state is triggered. If the
  level is defined as an integer value then it is interpreted
  as an absolute value in megabytes.

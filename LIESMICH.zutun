@@ -18,23 +18,43 @@ BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
 CHECK_MK:
 
-Wenn ein Counter Wrap passiert und der check selbst die Exception nicht abfängt,
-dann wird das Ergebnis nicht an Nagios weitergeleitet.
-Der Service wird auch nicht in die aggregierten Services eines
-Summary Hosts aufgenommen. Das kann dazu führen, dass die Anzahl der Services
-in einem Summary-Host variabel ist.
+Wenn ein Counter Wrap passiert und der check selbst die Exception
+nicht abfängt, dann wird das Ergebnis nicht an Nagios weitergeleitet.
+Der Service wird auch nicht in die aggregierten Services eines Summary Hosts
+aufgenommen. Das kann dazu führen, dass die Anzahl der Services in einem
+Summary-Host variabel ist.
 
-Schablone für check_mk-hr_cpu.php fehlt! Dadurch kann der Graph nicht
-gemalt werden wegen der rra.cfg.
+inventory_processes: wenn man hier einen Benuter fest angibt, dann
+wird der nicht übernommen, sondern None fest kodiert.
+
+inventory_processes: Wenn man mit GRAB_USER arbeitet und sich die
+Prozesse nur im Benutzer unterscheiden, dann muss der Benutzer in 
+der Servicedescription auftauchen, sonst heissen alle Services gleich.
+
+akcp_sensor_temp -> Man-Page ist kaputt
+
+--------------------------------------------------------------------------------
+BUGS beheben ab 1.1.9i1
+--------------------------------------------------------------------------------
+Multisite: Table log: Hier wird nur der erste Site angezeigt, bzw. die Chronologie
+Reihenfolge stimmt nicht. Sortieren nach Sekunden plus Zeilennummer.
+
+MULTISITE: IE8: Multisite view: wenn man den Edit-Knopf nicht hat, dann werden
+die Tabs ganz komisch ueber die ganze Breite verteilt. Ich glaube, dass ich
+die ganze Implementierung der Tabs nochmal anders programmiere. Das ist viel
+zu kompliziert gelöst. Ich mache die Tabs doch mit Tabellen und -moz-rounded-border.
+IE hat einfach Pech gehabt und bekommt eckige Kanten.
+
+Logwatch: was macht man hier bei verteilten Umgebungen?? Muss man das wie
+PNP per Proxy anfahren? Was ist aber dann, wenn man dort rumklickt?  Dann hat
+man rechts plötzlich ein anderes System. Lösung ist noch nicht in Sicht.
+
+LARS: In Opera (Version 10.6) geht in der Sidebar das Scrollen per Mausrad
+nicht. Angeblich in Chrome auch nicht.
 
 SNMP-Checks: Es wurde berichtet, dass - wenn die Community falsch ist - 
 der Check_MK gruen war, aber die Checks unknown. Sollte es dann nicht
 genau umgekehrt sein? Wird der Exit-code von snmpwalk ausgewertet?
-
-MULTISITE:
-
-In manchen View fehlen noch Links, z.B. bei den Hosts: Auf die
-Anzahl der Warnungen kann man nicht klicken
 
 LARS: Wenn man gerade die Kommandobox auf hat (oder den Filter?) dann sollte
 kein Refresh stattfinden. Sonst wird man mitten im Tippen abgewürgt.  Kann man
@@ -42,34 +62,6 @@ das mit Javascript hinbekommen? (kann Lars sich hier was überlegen? Man
 müsste das im Javascript irgendwie dynamisch machen).  LARS: Hast du eine
 Idee, wie man das (einfach) hinbekommen könnte?
 
-LARS: In Opera (Version 10.6) geht in der Sidebar das Scrollen per Mausrad
-nicht. Angeblich in Chrome auch nicht.
-
-Logwatch: was macht man hier bei verteilten Umgebungen?? Muss man das
-wie PNP per Proxy anfahren? Was ist aber dann, wenn man dort rumklickt?
-Dann hat man rechts plötzlich ein anderes System. Lösung ist noch nicht
-in Sicht.
-
-IE8: Multisite view: wenn man den Edit-Knopf nicht hat, dann werden
-die Tabs ganz komisch ueber die ganze Breite verteilt.
-
-LIVESTATUS:
-
-
-Livestatus: group_authorization nicht gesetzt, hat aber Wirkung von
-loose. Stimmt hier der Default? Sieht eher aus, als funktioniert das nicht...
-
-Livestatus: Bei bestimmten regulären Ausdrücken in ~~ schmiert Nagios
-ab. Ist wohl ein Bug in glibc/regcomp. Weiss nicht, was ich da machen
-kann. Beispiel:
-GET hosts 
-Filter: name ~~ (.*){1,346}[bc] 
-Problem ist: Das scheint ein Bug in der glibc zu sein. Ich sehe nicht,
-wie ich das verhindern kann.
-
---------------------------------------------------------------------------------
-BUGS beheben ab 1.1.9i1
---------------------------------------------------------------------------------
 Livestatus: das Nagios-Debuglog ist nicht reentrant. Livestatus muss ein eigenes
 Logfile schreiben. Wir machen das ohne Rotation. Man muss einfach selbst
 aufpassen, dass es nicht zu groß wird. Default ist eh aus. Ins Nagios
@@ -147,6 +139,11 @@ es ja fuer binaere Hostlisten das NEGATE (=> Doku). In 1.2 einbauen.
 --------------------------------------------------------------------------------
 IDEEN & VERBESSERUNGEN
 --------------------------------------------------------------------------------
+Livestatus: dritte Authorization-Regel: host_authorization: strict/loose.
+Default ist strict: man muss explizit Kontakt sein, um den Host zu sehen.
+Loose: wenn man für mindestens einen Service des Hosts Kontakt ist, kann
+man ihn sehen.
+
 Kommando was dringend fehlt: Custom notification (mit force und broadcast)
 
 Neue Spalten für Views: * long_service_output, host_notes
@@ -469,3 +466,8 @@ Graphen mit dem Windows-Check erstellen (wo ein Graph eh fehlt).
  
 Multisite: Quicksearch evtl. case-insensitive machen?
 
+if/if64: Irgendwie eine Konfigurationsart finden, welche den
+Linkstatus nicht prüft bzw. deswegen nicht kritisch wird.
+Das kann man evtl. sogar damit kombinieren, dass man alle
+ports monitort. Könnte reichen, wenn das Inventur-Konfigurationen
+sind.

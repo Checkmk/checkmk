@@ -1,6 +1,8 @@
 1.1.9i1
     Checks & Agents:
-    * megaraid_pdisks: Using the real enclosure number as check item now.
+    * megaraid_pdisks: Using the real enclosure number as check item now
+    * if/if64: Added expected interface speed to warning output
+
     Multisite:
     * The custom open/close states of custom links are now stored for each
       user

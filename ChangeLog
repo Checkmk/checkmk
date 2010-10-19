@@ -1,4 +1,6 @@
 1.1.9i1
+    Checks & Agents:
+    * megaraid_pdisks: Using the real enclosure number as check item now.
     Multisite:
     * The custom open/close states of custom links are now stored for each
       user

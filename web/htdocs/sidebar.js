@@ -639,14 +639,14 @@ function hilite_icon(oImg, onoff) {
 }
 
 
-function toggle_folder(o) {
+function toggle_folder(o, folderId) {
     var par = o.parentNode;
     var next = null;
     var one_more = false;
     var img = null;
 
     for (var i in par.childNodes) {
-	var child = par.childNodes[i];
+        var child = par.childNodes[i];
         if (one_more && child.nodeName == "DIV") {
             next = child;
             break;
@@ -665,14 +665,15 @@ function toggle_folder(o) {
 
     if (next) {
         if (next.style.display == "none") {
-	    next.style.display = "";
+            next.style.display = "";
             if (img) 
                 img.src = "images/link_folder_open.gif";
-        }
-        else {
-	    next.style.display = "none";
+            get_url('customlink_openclose.py?name=' + escape(folderId) + '&state=on');
+        } else {
+            next.style.display = "none";
             if (img) 
                 img.src = "images/link_folder.gif";
+            get_url('customlink_openclose.py?name=' + escape(folderId) + '&state=off');
         }
     }
 

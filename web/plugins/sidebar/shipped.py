@@ -900,6 +900,20 @@ sidebar_snapins["bookmarks"] = {
 #
 # ------------------------------------------------------------
 
+def load_customlink_states():
+    return config.load_user_file("customlinks", {})
+
+def save_customlink_states(states):
+    config.save_user_file("customlinks", states)
+
+def ajax_customlink_openclose(h):
+    global html
+    html = h
+
+    states = load_customlink_states()
+    states[html.var("name")] = html.var("state")
+    save_customlink_states(states)
+
 def render_custom_links():
     links = config.custom_links.get(config.role)
     if not links:
@@ -907,19 +921,20 @@ def render_custom_links():
                   (defaults.default_config_dir + "/multisite.mk"))
 
     def render_list(ids, links):
+        states = load_customlink_states()
         n = 0
         for entry in links:
             n += 1
             try:
                 if type(entry[1]) == type(True):
-                    if entry[1]: # open
+                    idss = ids + [str(n)]
+                    if states.get(''.join(idss), entry[1] and 'on' or 'off') == 'on': # open
                         display = ""
                         img = "link_folder_open.gif"
                     else:
                         display = "none"
                         img = "link_folder.gif"
-                    idss = ids + [str(n)]
-                    html.write('<h3 onclick="toggle_folder(this);" ')
+                    html.write('<h3 onclick="toggle_folder(this, \'%s\');" ' % ''.join(idss))
                     html.write('onmouseover="this.style.cursor=\'pointer\';" ')
                     html.write('onmouseout="this.style.cursor=\'auto\';">')
                     html.write('<img src="images/%s">' % img)

@@ -69,7 +69,10 @@ def check_megaraid_pdisks(item, target_state, info):
         if line[0] == "dev2enc":
             dev2enc[line[5]] = 'e'+line[2]
         elif line[0] == "Enclosure":
-            enclosure = item.startswith('e') and dev2enc[line[-1]] or line[-1]
+            if item.startswith('e') and line[-1] in dev2enc:
+                enclosure = dev2enc[line[-1]]
+            else:
+                enclosure = line[-1]
         elif line[0] == "Slot":
             slot = int(line[-1])
             found = "%s/%d" % (enclosure, slot) == item

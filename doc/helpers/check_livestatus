@@ -1,0 +1,13 @@
+#!/bin/sh
+HOST=$1
+SVC=$2
+
+cat <<EOF | unixcat tmp/run/live | { IFS='|' read state output perfdata ; echo "$output|$perfdata" ; exit $state ; }
+GET services
+Filter: host_name = $HOST
+Filter: description = $SVC
+Columns: state plugin_output perf_data
+Separators: 10 124 124 124
+EOF
+
+

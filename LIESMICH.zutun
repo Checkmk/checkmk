@@ -24,9 +24,21 @@ Der Service wird auch nicht in die aggregierten Services eines Summary Hosts
 aufgenommen. Das kann dazu führen, dass die Anzahl der Services in einem
 Summary-Host variabel ist.
 
+inventory_processes: wenn man hier einen Benuter fest angibt, dann
+wird der nicht übernommen, sondern None fest kodiert.
+
+inventory_processes: Wenn man mit GRAB_USER arbeitet und sich die
+Prozesse nur im Benutzer unterscheiden, dann muss der Benutzer in 
+der Servicedescription auftauchen, sonst heissen alle Services gleich.
+
+akcp_sensor_temp -> Man-Page ist kaputt
+
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
 --------------------------------------------------------------------------------
+Multisite: Table log: Hier wird nur der erste Site angezeigt, bzw. die Chronologie
+Reihenfolge stimmt nicht. Sortieren nach Sekunden plus Zeilennummer.
+
 MULTISITE: IE8: Multisite view: wenn man den Edit-Knopf nicht hat, dann werden
 die Tabs ganz komisch ueber die ganze Breite verteilt. Ich glaube, dass ich
 die ganze Implementierung der Tabs nochmal anders programmiere. Das ist viel

@@ -20,6 +20,18 @@
     * Prohibit { and } in regular expressions. This avoids a segmentation
       fault caused by regcomp in glibc for certain (very unusual) regular
       expressions.
+    * Table status: new columns external_command_buffer_slots,
+      external_command_buffer_usage and external_command_buffer_max
+      (this was implemented according to an idea and special request of
+       Heinz Fiebig. Please sue him if this breaks anything for you. I was
+       against it, but he thinks that it is absolutely neccessary to have
+       this in version 1.1.8...)
+    * Table status: new columns external_commands and external_commands_rate
+      (also due to Mr. Fiebig - he would have quit our workshop otherwise...)
+
+    Multisite:
+    * Snapin Performance: show external command per second and usage and
+      size of external command buffer
 
 1.1.8b3:
     Core, Setup, etc.:

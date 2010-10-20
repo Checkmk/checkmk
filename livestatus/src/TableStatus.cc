@@ -55,6 +55,9 @@ extern int check_external_commands;
 extern int num_cached_log_messages;
 extern int interval_length;
 
+extern circular_buffer external_command_buffer;
+extern int external_command_buffer_slots;
+
 TableStatus::TableStatus()
 {
    addColumn(new GlobalCountersColumn("neb_callbacks", 
@@ -91,6 +94,11 @@ TableStatus::TableStatus()
 	    "The number of new log messages since program start",         COUNTER_LOG_MESSAGES,    false));
    addColumn(new GlobalCountersColumn("log_messages_rate", 
 	    "the averaged number of new log messages per second",         COUNTER_LOG_MESSAGES,    true));
+
+   addColumn(new GlobalCountersColumn("external_commands", 
+	    "The number of external commands since program start",        COUNTER_COMMANDS,    false));
+   addColumn(new GlobalCountersColumn("external_commands_rate", 
+	    "the averaged number of external commands per second",        COUNTER_COMMANDS,    true));
 
    // Nagios program status data
    addColumn(new IntPointerColumn("nagios_pid", 
@@ -132,6 +140,17 @@ TableStatus::TableStatus()
 
    addColumn(new StringPointerColumn("program_version", 
 	    "The version of the monitoring daemon", get_program_version()));
+
+   // External command buffer
+   addColumn(new IntPointerColumn("external_command_buffer_slots", 
+               "The size of the buffer for the external commands",
+               &external_command_buffer_slots));
+   addColumn(new IntPointerColumn("external_command_buffer_usage",
+               "The number of slots in use of the external command buffer",
+               &(external_command_buffer.items)));
+   addColumn(new IntPointerColumn("external_command_buffer_max",
+           "The maximum number of slots used in the external command buffer",
+           &(external_command_buffer.high)));
   
    // Livestatus' own status
    addColumn(new IntPointerColumn("cached_log_messages", 

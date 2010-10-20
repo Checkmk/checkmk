@@ -394,7 +394,7 @@ sidebar_snapins["sitestatus"] = {
   "refresh" : 90,
   "styles" : """
 .snapin table.sitestate {
-    width: %d;
+    width: %dpx;
 }
 
 .snapin table.sitestate td {
@@ -517,7 +517,7 @@ sidebar_snapins["tactical_overview"] = {
 table.tacticaloverview {
    border-collapse: separate;
    border-spacing: 5px 0px;
-   width: %d;
+   width: %dpx;
    position: relative;
    left: -4px;
 }

@@ -6,6 +6,8 @@
     Multisite:
     * The custom open/close states of custom links are now stored for each
       user
+    * Setting doctype in sidebar frame now
+    * Fixed invalid sidebar css height/width definition
 
 1.1.8:
     Checks & Agents:

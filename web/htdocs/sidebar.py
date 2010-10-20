@@ -124,7 +124,9 @@ def page_side(h):
 
     global html
     html = h
-    html.write("""<html>
+    html.write("""<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN "http://www.w3.org/TR/html4/frameset.dtd">
+
+<html>
 <head>
 <title>Check_MK Sidebar</title>
 <link href="check_mk.css" type="text/css" rel="stylesheet">

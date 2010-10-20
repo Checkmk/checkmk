@@ -368,9 +368,9 @@ function setSidebarHeight() {
   
 
   if (weAreIEF__k)
-      oContent.style.height = height - oFooter.clientHeight + 5;
+      oContent.style.height = (height - oFooter.clientHeight + 5) + 'px';
   else
-      oContent.style.height = height - oHeader.clientHeight - oFooter.clientHeight - 5;
+      oContent.style.height = (height - oHeader.clientHeight - oFooter.clientHeight - 5) + 'px';
 }
 
 var scrolling = true;

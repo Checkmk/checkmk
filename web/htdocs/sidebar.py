@@ -133,7 +133,7 @@ def page_side(h):
 <script type="text/javascript" src="check_mk.js"></script>
 <script type="text/javascript" src="sidebar.js"></script>
 </head>
-<body class="side">
+<body class="side" onload="initScrollPos()" onunload="storeScrollPos()">
 <div id="check_mk_sidebar">""")
 
     views.html = h

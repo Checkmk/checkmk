@@ -682,3 +682,40 @@ function toggle_folder(o, folderId) {
     next = null;
     img = null;
 }
+
+/************************************************
+ * Save/Restore scroll position
+ *************************************************/
+
+function setCookie(cookieName, value,expiredays) {
+    var exdate = new Date();
+    exdate.setDate(exdate.getDate() + expiredays);
+    document.cookie = cookieName + "=" + escape(value) +
+        ((expiredays == null) ? "" : ";expires=" + exdate.toUTCString());
+}
+
+function getCookie(cookieName) {
+    if(document.cookie.length == 0)
+        return null;
+
+    var cookieStart = document.cookie.indexOf(cookieName + "=");
+    if(cookieStart == -1)
+        return null;
+    
+    cookieStart = cookieStart + cookieName.length + 1;
+    var cookieEnd = document.cookie.indexOf(";", cookieStart);
+    if(cookieEnd == -1)
+        cookieEnd = document.cookie.length;
+    return unescape(document.cookie.substring(cookieStart, cookieEnd));
+}
+
+function initScrollPos() {
+    var scrollPos = getCookie('sidebarScrollPos');
+    if(!scrollPos)
+        scrollPos = 0;
+    document.getElementById('side_content').scrollTop = scrollPos;
+}
+
+function storeScrollPos() {
+    setCookie('sidebarScrollPos', document.getElementById('side_content').scrollTop, null);
+}

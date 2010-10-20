@@ -8,6 +8,7 @@
       user
     * Setting doctype in sidebar frame now
     * Fixed invalid sidebar css height/width definition
+    * Fixed repositioning the sidebar scroll state after refreshing the page
 
 1.1.8:
     Checks & Agents:

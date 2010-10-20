@@ -537,16 +537,22 @@ table.tacticaloverview td a { display: block; }
 #
 # --------------------------------------------------------------
 def render_performance():
-    data = html.live.query("GET status\nColumns: service_checks_rate host_checks_rate connections_rate forks_rate log_messages_rate cached_log_messages\n")
+    data = html.live.query("GET status\nColumns: service_checks_rate host_checks_rate external_commands_rate connections_rate forks_rate log_messages_rate cached_log_messages\n")
     html.write("<table class=performance>\n")
     for what, col, format in \
         [("Service checks", 0, "%.2f/s"),
         ("Host checks", 1, "%.2f/s"),
-        ("Livestatus-connections", 2, "%.2f/s"),
-        ("Process creations", 3, "%.2f/s"),
-        ("New log messages", 4, "%.2f/s"),
-        ("Cached log messages", 5, "%d")]:
+        ("External commands", 2, "%.2f/s"),
+        ("Livestatus-connections", 3, "%.2f/s"),
+        ("Process creations", 4, "%.2f/s"),
+        ("New log messages", 5, "%.2f/s"),
+        ("Cached log messages", 6, "%d")]:
         html.write(("<tr><td class=left>%s:</td><td class=right>" + format + "</td></tr>\n") % (what, sum([row[col] for row in data])))
+    size, usage, max = html.live.query("GET status\nColumns: external_command_buffer_slots external_command_buffer_usage external_command_buffer_max\n")[0]
+    # html.write("<tr><td class=left>Com. buf. c/max/t</td>"
+    #            "<td class=right>%05d/%05d/%05d</td></tr>" % (usage, max, size))
+    html.write("<tr><td class=left>Com. buf. max/total</td>"
+               "<td class=right>%d / %d</td></tr>" % (max, size))
     html.write("</table>\n")
 
 sidebar_snapins["performance"] = {

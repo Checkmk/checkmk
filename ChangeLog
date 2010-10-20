@@ -15,6 +15,7 @@
     * Added missing PNP template for check_mk-hr_cpu
     * hr_fs: inventory now ignores filesystem with size 0,
       check does not longer crash on filesystems with size 0
+    * logwatch: Fixed typo in 'too many unacknowledged logs' error message
 
     Livestatus:
     * Prohibit { and } in regular expressions. This avoids a segmentation

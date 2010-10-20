@@ -95,6 +95,11 @@ TableStatus::TableStatus()
    addColumn(new GlobalCountersColumn("log_messages_rate", 
 	    "the averaged number of new log messages per second",         COUNTER_LOG_MESSAGES,    true));
 
+   addColumn(new GlobalCountersColumn("external_commands", 
+	    "The number of external commands since program start",        COUNTER_COMMANDS,    false));
+   addColumn(new GlobalCountersColumn("external_commands_rate", 
+	    "the averaged number of external commands per second",        COUNTER_COMMANDS,    true));
+
    // Nagios program status data
    addColumn(new IntPointerColumn("nagios_pid", 
 	    "The process ID of the Nagios main process", &nagios_pid ));

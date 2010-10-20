@@ -354,6 +354,7 @@ int broker_log(int event_type, void *data)
 int broker_command(int event_type, void *data)
 {
     g_counters[COUNTER_NEB_CALLBACKS]++;
+    g_counters[COUNTER_COMMANDS]++;
     pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
     pthread_cond_broadcast(&g_wait_cond[WT_COMMAND]);
 }

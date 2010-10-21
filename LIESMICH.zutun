@@ -33,9 +33,15 @@ der Servicedescription auftauchen, sonst heissen alle Services gleich.
 
 akcp_sensor_temp -> Man-Page ist kaputt
 
+doc/ aufräumen und komplett 1:1 installieren.
+
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
 --------------------------------------------------------------------------------
+Livestatus: wenn man mehrere StatsGroupBy macht, wird der Speicher von den 
+alten nicht freigegeben (ist momentan eh nicht erlaubt. Fehlermeldung ausgeben).
+In neuer Version sollte man irgendwann mehrere Group-Header erlauben.
+
 Multisite: Table log: Hier wird nur der erste Site angezeigt, bzw. die Chronologie
 Reihenfolge stimmt nicht. Sortieren nach Sekunden plus Zeilennummer.
 
@@ -471,3 +477,9 @@ Linkstatus nicht prüft bzw. deswegen nicht kritisch wird.
 Das kann man evtl. sogar damit kombinieren, dass man alle
 ports monitort. Könnte reichen, wenn das Inventur-Konfigurationen
 sind.
+
+Livestatus: StatsGroupBy: mehrere Spalten erlauben
+
+Multisite: Die TOP-25 Alerts: Welche Dinge hosts/services
+hatten in einem Zeitraum die meisten Alerts. Das geht
+mit log und StatsGroupBy: host_name service_description

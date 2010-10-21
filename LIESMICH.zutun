@@ -156,6 +156,9 @@ es ja fuer binaere Hostlisten das NEGATE (=> Doku). In 1.2 einbauen.
 --------------------------------------------------------------------------------
 IDEEN & VERBESSERUNGEN
 --------------------------------------------------------------------------------
+Multisite: Ein Link vom Detail-Host zum Summary-Host (umgekehrt ist er doch
+schon da, oder?)
+
 Livestatus: dritte Authorization-Regel: host_authorization: strict/loose.
 Default ist strict: man muss explizit Kontakt sein, um den Host zu sehen.
 Loose: wenn man für mindestens einen Service des Hosts Kontakt ist, kann

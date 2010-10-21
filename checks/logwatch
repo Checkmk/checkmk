@@ -147,7 +147,7 @@ def check_logwatch(item, params, info):
 
     # if logfile has reached maximum size, abort with critical state
     if os.path.exists(logfile) and os.path.getsize(logfile) > logwatch_max_filesize:
-        return (2, "CRIT - ununknowledged messages have exceeded max size (%d Bytes)" % logwatch_max_filesize)
+        return (2, "CRIT - unacknowledged messages have exceeded max size (%d Bytes)" % logwatch_max_filesize)
 
     if len(loglines) > 0 and loglines[0] in [ 'OK', 'WARNING', 'CRITICAL' ]:
         # --------------------------------------------------------------------

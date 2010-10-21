@@ -368,9 +368,9 @@ function setSidebarHeight() {
   
 
   if (weAreIEF__k)
-      oContent.style.height = height - oFooter.clientHeight + 5;
+      oContent.style.height = (height - oFooter.clientHeight + 5) + 'px';
   else
-      oContent.style.height = height - oHeader.clientHeight - oFooter.clientHeight - 5;
+      oContent.style.height = (height - oHeader.clientHeight - oFooter.clientHeight - 5) + 'px';
 }
 
 var scrolling = true;
@@ -639,14 +639,14 @@ function hilite_icon(oImg, onoff) {
 }
 
 
-function toggle_folder(o) {
+function toggle_folder(o, folderId) {
     var par = o.parentNode;
     var next = null;
     var one_more = false;
     var img = null;
 
     for (var i in par.childNodes) {
-	var child = par.childNodes[i];
+        var child = par.childNodes[i];
         if (one_more && child.nodeName == "DIV") {
             next = child;
             break;
@@ -665,14 +665,15 @@ function toggle_folder(o) {
 
     if (next) {
         if (next.style.display == "none") {
-	    next.style.display = "";
+            next.style.display = "";
             if (img) 
                 img.src = "images/link_folder_open.gif";
-        }
-        else {
-	    next.style.display = "none";
+            get_url('customlink_openclose.py?name=' + escape(folderId) + '&state=on');
+        } else {
+            next.style.display = "none";
             if (img) 
                 img.src = "images/link_folder.gif";
+            get_url('customlink_openclose.py?name=' + escape(folderId) + '&state=off');
         }
     }
 
@@ -680,4 +681,41 @@ function toggle_folder(o) {
     par = null;
     next = null;
     img = null;
+}
+
+/************************************************
+ * Save/Restore scroll position
+ *************************************************/
+
+function setCookie(cookieName, value,expiredays) {
+    var exdate = new Date();
+    exdate.setDate(exdate.getDate() + expiredays);
+    document.cookie = cookieName + "=" + escape(value) +
+        ((expiredays == null) ? "" : ";expires=" + exdate.toUTCString());
+}
+
+function getCookie(cookieName) {
+    if(document.cookie.length == 0)
+        return null;
+
+    var cookieStart = document.cookie.indexOf(cookieName + "=");
+    if(cookieStart == -1)
+        return null;
+    
+    cookieStart = cookieStart + cookieName.length + 1;
+    var cookieEnd = document.cookie.indexOf(";", cookieStart);
+    if(cookieEnd == -1)
+        cookieEnd = document.cookie.length;
+    return unescape(document.cookie.substring(cookieStart, cookieEnd));
+}
+
+function initScrollPos() {
+    var scrollPos = getCookie('sidebarScrollPos');
+    if(!scrollPos)
+        scrollPos = 0;
+    document.getElementById('side_content').scrollTop = scrollPos;
+}
+
+function storeScrollPos() {
+    setCookie('sidebarScrollPos', document.getElementById('side_content').scrollTop, null);
 }

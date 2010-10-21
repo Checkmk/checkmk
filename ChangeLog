@@ -1,3 +1,15 @@
+1.1.9i1
+    Checks & Agents:
+    * megaraid_pdisks: Using the real enclosure number as check item now
+    * if/if64: Added expected interface speed to warning output
+
+    Multisite:
+    * The custom open/close states of custom links are now stored for each
+      user
+    * Setting doctype in sidebar frame now
+    * Fixed invalid sidebar css height/width definition
+    * Fixed repositioning the sidebar scroll state after refreshing the page
+
 1.1.8:
     Core, Setup, etc.:
     * Cleaned up documentation directory

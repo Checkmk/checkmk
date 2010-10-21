@@ -35,6 +35,17 @@ akcp_sensor_temp -> Man-Page ist kaputt
 
 doc/ aufräumen und komplett 1:1 installieren.
 
+MULTISITE: Hallo zusammen, mir ist bei meinen Tests mit der Multisite
+GUI aufgefallen, dass keine Comments zu Services oder Hosts dargestellt
+werden.  Comments zu Downtimes, werden hingegen ohne Probleme dargestellt.
+Unter der Default-View "Other - > Comments" wird ebenfalls kein Host /Service
+dargestellt, obwohl Comments hinterlegt sind, welche in der Classic GUI auch
+dargestellt werden.  Beim Versuch eine eigene View zu erstellen, ist mir
+dann auch aufgefallen, dass die Datasource Comments nicht zur Auswahl steht.
+Getestet habe ich dies mit den Versionen: 1.1.6.p1 und 1.1.8.b3 Hat jemand
+schon ähnliche Erfahrungen gesammelt? Vielleicht ist es ja auch nur ein
+Bedienerfehler meinerseits.
+
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
 --------------------------------------------------------------------------------

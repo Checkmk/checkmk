@@ -1,4 +1,7 @@
 1.1.8:
+    Core, Setup, etc.:
+    * Cleaned up documentation directory
+
     Checks & Agents:
     * Added missing PNP template for check_mk-hr_cpu
     * hr_fs: inventory now ignores filesystem with size 0,

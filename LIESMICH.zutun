@@ -38,12 +38,23 @@ doc/ aufräumen und komplett 1:1 installieren.
 Clusters mit IP-Adressen: Der Host-Check soll die IP-Adresse verwenden,
 wenn sie vorhanden ist.
 
+MULTISITE: Hallo zusammen, mir ist bei meinen Tests mit der Multisite
+GUI aufgefallen, dass keine Comments zu Services oder Hosts dargestellt
+werden.  Comments zu Downtimes, werden hingegen ohne Probleme dargestellt.
+Unter der Default-View "Other - > Comments" wird ebenfalls kein Host /Service
+dargestellt, obwohl Comments hinterlegt sind, welche in der Classic GUI auch
+dargestellt werden.  Beim Versuch eine eigene View zu erstellen, ist mir
+dann auch aufgefallen, dass die Datasource Comments nicht zur Auswahl steht.
+Getestet habe ich dies mit den Versionen: 1.1.6.p1 und 1.1.8.b3 Hat jemand
+schon ähnliche Erfahrungen gesammelt? Vielleicht ist es ja auch nur ein
+Bedienerfehler meinerseits.
+
+
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
 --------------------------------------------------------------------------------
 Cluster-Inventur: Wenn ein Service auf der Node sitzt und man die Regeln
 zu Clustered services ändert, entfernt ein -II das nicht von der node
-
 
 Livestatus: wenn man mehrere StatsGroupBy macht, wird der Speicher von den 
 alten nicht freigegeben (ist momentan eh nicht erlaubt. Fehlermeldung ausgeben).
@@ -152,6 +163,9 @@ es ja fuer binaere Hostlisten das NEGATE (=> Doku). In 1.2 einbauen.
 --------------------------------------------------------------------------------
 IDEEN & VERBESSERUNGEN
 --------------------------------------------------------------------------------
+Multisite: Ein Link vom Detail-Host zum Summary-Host (umgekehrt ist er doch
+schon da, oder?)
+
 Livestatus: dritte Authorization-Regel: host_authorization: strict/loose.
 Default ist strict: man muss explizit Kontakt sein, um den Host zu sehen.
 Loose: wenn man für mindestens einen Service des Hosts Kontakt ist, kann

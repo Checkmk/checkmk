@@ -49,7 +49,6 @@ Bedienerfehler meinerseits.
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
 --------------------------------------------------------------------------------
-
 Livestatus: wenn man mehrere StatsGroupBy macht, wird der Speicher von den 
 alten nicht freigegeben (ist momentan eh nicht erlaubt. Fehlermeldung ausgeben).
 In neuer Version sollte man irgendwann mehrere Group-Header erlauben.

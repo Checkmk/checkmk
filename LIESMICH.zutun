@@ -35,9 +35,16 @@ akcp_sensor_temp -> Man-Page ist kaputt
 
 doc/ aufräumen und komplett 1:1 installieren.
 
+Clusters mit IP-Adressen: Der Host-Check soll die IP-Adresse verwenden,
+wenn sie vorhanden ist.
+
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
 --------------------------------------------------------------------------------
+Cluster-Inventur: Wenn ein Service auf der Node sitzt und man die Regeln
+zu Clustered services ändert, entfernt ein -II das nicht von der node
+
+
 Livestatus: wenn man mehrere StatsGroupBy macht, wird der Speicher von den 
 alten nicht freigegeben (ist momentan eh nicht erlaubt. Fehlermeldung ausgeben).
 In neuer Version sollte man irgendwann mehrere Group-Header erlauben.
@@ -483,3 +490,15 @@ Livestatus: StatsGroupBy: mehrere Spalten erlauben
 Multisite: Die TOP-25 Alerts: Welche Dinge hosts/services
 hatten in einem Zeitraum die meisten Alerts. Das geht
 mit log und StatsGroupBy: host_name service_description
+
+Multisite: Filter, der Hosts zeigt, die entweder selbst
+Summary hosts sind oder keinen haben.
+
+Multisite: Könnte man nicht Aggregationen in Views einbauen.
+Man würde dann in der View Regeln definieren, nach denen
+Services und Hosts aggregiert werden können. Dazu müsste man 
+in den View-Editor einen neuen Abschnitt einbauen. Ist das
+nicht ähnlich wie Gruppieren? Allerdings wäre es dann gut,
+wenn man die Aggregationen irgendwo separat editieren kann
+und in der View nur noch drauf verweisen. Sonst muss
+man soviel Copy&Paste zwischen den Views machen...

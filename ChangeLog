@@ -1,5 +1,6 @@
 1.1.8:
     Core, Setup, etc.:
+    * setup.sh: turn off Python debugging
     * Cleaned up documentation directory
 
     Checks & Agents:

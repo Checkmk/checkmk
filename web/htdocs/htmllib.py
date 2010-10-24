@@ -66,6 +66,7 @@ class uriinfo:
 def attrencode(value):
     return cgi.escape(str(value), True)
 
+# This function returns a str object, never unicode!
 def urlencode_vars(vars):
     output = ""
     for varname, value in vars:
@@ -79,10 +80,12 @@ def urlencode_vars(vars):
         
         output += varname
         output += "="
-        output += value
+        output += urlencode(value)
     return output
 
 def urlencode(value):
+    if type(value) == unicode:
+        value = value.encode("utf-8")
     ret = ""
     for c in value:
         if c == " ":
@@ -417,6 +420,9 @@ class html:
 
     def var(self, varname, deflt = None):
         return self.req.vars.get(varname, deflt)
+
+    def var_utf8(self, varname, deflt = None):
+        return unicode(self.req.vars.get(varname, deflt), "utf-8")
 
     def set_var(self, varname, value):
         self.req.vars[varname] = value

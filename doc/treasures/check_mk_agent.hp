@@ -1,7 +1,8 @@
 #!/bin/sh
 
 # This rudimentary agent for HP has been submitted by a 
-# community member and is not part of Check_MK.
+# community member and is not part of Check_MK. It might
+# be more than nothing, though
 
 export MK_LIBDIR="/usr/lib/check_mk_agent"
 export MK_CONFDIR="/etc/check_mk_agent"

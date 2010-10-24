@@ -1,1 +1,1 @@
-cp *.py /usr/share/check_mk/modules
+sudo cp -v *.py /omd/versions/default/share/check_mk/modules/

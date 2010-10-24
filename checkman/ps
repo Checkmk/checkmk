@@ -44,16 +44,19 @@ inventory:
  are used for the service descriptions. The matched substrings corresponding
  to the remaining groups are copied into the regular expression, nevertheless.
 
- Wildcards not enclosed by brackets are simply copied verbatim to the
- created checks. Please refer to the examples for more details. 
-      
+ Wildcards not enclosed by brackets are simply copied verbatim to the created
+ checks. Please refer to the examples for more details.
+
  The {user specification} can either be a user name (string). The inventory
- will then trigger only if that user matches the user the process
- is running as. Alternatively you can specify {ANY_USER} or {GRAB_USER}.
- If you specify {ANY_USER} then the user field will simply be ignored.
- The created check will not check for a specific user. Specifying {GRAB_USER}
- makes the created check expect the process to run as the same user as
- during inventory: the user name will be hardcoded into the check.
+ will then trigger only if that user matches the user the process is running as
+ and the resulting check will require that user.  Alternatively you can specify
+ {ANY_USER} or {GRAB_USER}.  If you specify {ANY_USER} then the user field
+ will simply be ignored.  The created check will not check for a specific user.
+
+ Specifying {GRAB_USER} makes the created check expect the process to run
+ as the same user as during inventory: the user name will be hardcoded into
+ the check. In that case you need to put {%u} into the service description,
+ which will be replace by the actual user name during inventory.
 
  The {warning and critical levels} are simply copied to the created
  checks.
@@ -99,7 +102,7 @@ examples:
 
    # alternative(3): do the same, but make sure, ntpd is always
    # running as the user under which we found it first:
-   ( "NTPD2", "/usr/sbin/ntpd", GRAB_USER, 1, 1, 1, 1),
+   ( "NTPD2 %u", "/usr/sbin/ntpd", GRAB_USER, 1, 1, 1, 1),
 
    # if we find Apache2, monitor it and make sure it's running
    # as the user 'www-data'! Make also sure, that the number
@@ -111,10 +114,11 @@ examples:
    # For each NIC there might by one dhclient. We monitor the
    # processes separately for each NIC at which we find a dhclient
    # running.
-   ( "DHCP-Client NIC %s", "~dhclient.* ([a-z]+[0-9]-*)$", GRAB_USER, 1, 1, 1, 1) ,
+   ( "DHCP-Client NIC %s", "~dhclient.* ([a-z]+[0-9]-*)$", ANY_USER, 1, 1, 1, 1) ,
 
-   # SAP: Search for SAP processes, extract three components
-   ( "SCS %s/%s/%s", "~(..)\.sap(...)_SCS([0-9]+) pf=", ANY_USER, 1, 1, 1, 1 ),
+   # SAP: Search for SAP processes, extract three components, add the
+   # user name the process was running as to the service description
+   ( "SCS %s/%s/%s %u", "~(..)\.sap(...)_SCS([0-9]+) pf=", GRAB_USER, 1, 1, 1, 1 ),
  ]
 [configuration]
 inventory_processes (list): A list of 7-tuples. See {INVENTORY} for details.

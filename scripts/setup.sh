@@ -680,7 +680,7 @@ do
   <Directory $web_dir/htdocs>
         AddHandler mod_python .py
         PythonHandler index
-        PythonDebug On 
+        PythonDebug Off
 	DirectoryIndex index.py
 
 	# Need Nagios authentification. Please edit the

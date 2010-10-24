@@ -84,7 +84,7 @@ def inventory_ps(check_name, info):
                 if userspec == GRAB_USER:
                     i_userspec = l_user[0]
                 else:
-                    i_userspec = ANY_USER
+                    i_userspec = userspec
                 # Problem here: We need to instantiate all subexpressions
                 # with their actual values of the found process.
                 i_pattern = instantiate_regex_pattern(pattern, matches)

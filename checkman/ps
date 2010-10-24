@@ -49,7 +49,8 @@ inventory:
       
  The {user specification} can either be a user name (string). The inventory
  will then trigger only if that user matches the user the process
- is running as. Alternatively you can specify {ANY_USER} or {GRAB_USER}.
+ is running as and the resulting check will require that user. 
+ Alternatively you can specify {ANY_USER} or {GRAB_USER}.
  If you specify {ANY_USER} then the user field will simply be ignored.
  The created check will not check for a specific user. Specifying {GRAB_USER}
  makes the created check expect the process to run as the same user as

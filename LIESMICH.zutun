@@ -12,9 +12,6 @@ BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
 CHECK_MK:
 
-inventory_processes: wenn man hier einen Benuter fest angibt, dann
-wird der nicht übernommen, sondern None fest kodiert.
-
 inventory_processes: Wenn man mit GRAB_USER arbeitet und sich die
 Prozesse nur im Benutzer unterscheiden, dann muss der Benutzer in 
 der Servicedescription auftauchen, sonst heissen alle Services gleich.

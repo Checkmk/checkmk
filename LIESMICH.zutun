@@ -18,12 +18,6 @@ BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
 CHECK_MK:
 
-Wenn ein Counter Wrap passiert und der check selbst die Exception
-nicht abfängt, dann wird das Ergebnis nicht an Nagios weitergeleitet.
-Der Service wird auch nicht in die aggregierten Services eines Summary Hosts
-aufgenommen. Das kann dazu führen, dass die Anzahl der Services in einem
-Summary-Host variabel ist.
-
 inventory_processes: wenn man hier einen Benuter fest angibt, dann
 wird der nicht übernommen, sondern None fest kodiert.
 
@@ -57,20 +51,15 @@ Please only use ASCII characters in your comment.
 Beim Versuch eine Downtime zu setzen:
 Internal error: 'ascii' codec can't decode byte 0xe2 in position 0: ordinal not in range(128) (Retry with debug mode)
 
-I'm running check_mk version 1.1.8b2 on Slackware linux.
-I just added a new host to check_mk to monitor, which added a service called 'CUPS Queue LQ-300+'.
-Works fine, but in the check_mk page a link is generated that doesn't work because the + sign isn't URL encoded.
-So instead of making it:
-<a href="http://nagios/check_mk/view.py?view_name=service&site=&service=CUPS%20Queue%20LQ-300%2B&host=test">CUPS Queue LQ-300+</a>
-It creates:
-<a href="http://nagios/check_mk/view.py?view_name=service&site=&service=CUPS%20Queue%20LQ-300+&host=test">
-(note the + vs %2B)
-
-
-
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
 --------------------------------------------------------------------------------
+Wenn ein Counter Wrap passiert und der check selbst die Exception
+nicht abfängt, dann wird das Ergebnis nicht an Nagios weitergeleitet.
+Der Service wird auch nicht in die aggregierten Services eines Summary Hosts
+aufgenommen. Das kann dazu führen, dass die Anzahl der Services in einem
+Summary-Host variabel ist.
+
 Cluster-Inventur: Wenn ein Service auf der Node sitzt und man die Regeln
 zu Clustered services ändert, entfernt ein -II das nicht von der node
 

@@ -6,9 +6,6 @@ CHECK_MK:
 Clusters mit IP-Adressen: Der Host-Check soll die IP-Adresse verwenden,
 wenn sie vorhanden ist.
 
-check_mk -P Unterverzeichnis von Agents mit Datei darin wird scheinbar
-nicht korrekt installiert.
-
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
 --------------------------------------------------------------------------------

@@ -65,11 +65,7 @@ dist: mk-livestatus
 	tar czf $(DISTNAME)/livestatus.tar.gz $(TAROPTS) -C livestatus  $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) )
 	tar czf $(DISTNAME)/pnp-templates.tar.gz $(TAROPTS) -C pnp-templates $$(cd pnp-templates ; ls *.php)
 	tar czf $(DISTNAME)/pnp-rraconf.tar.gz $(TAROPTS) -C pnp-rraconf $$(cd pnp-rraconf ; ls *.rra.cfg README.rra)
-	tar cf $(DISTNAME)/doc.tar $(TAROPTS) -C doc --exclude .svn --exclude "*~" \
-			check_mk_templates.cfg check_mk.1 \
-			check_mk.css screenshot1.png README treasures helpers check_mk_agent.hp \
-			check_mk{,.trans}.200.png windows \
-			README.sounds
+	tar cf $(DISTNAME)/doc.tar $(TAROPTS) -C doc $$(cd doc ; ls)
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) COPYING AUTHORS ChangeLog
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) livestatus/api --exclude "*~" --exclude "*.pyc" --exclude ".gitignore" --exclude .f12 
 	gzip $(DISTNAME)/doc.tar

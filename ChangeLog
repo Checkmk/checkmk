@@ -2,6 +2,8 @@
     Core, Setup, etc.:
     * setup.sh: turn off Python debugging
     * Cleaned up documentation directory
+    * cluster host: use real IP address for host check if cluster has
+      one (e.g. service IP address)
 
     Checks & Agents:
     * Added missing PNP template for check_mk-hr_cpu

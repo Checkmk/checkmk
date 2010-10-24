@@ -79,7 +79,7 @@ def urlencode_vars(vars):
         
         output += varname
         output += "="
-        output += value
+        output += urlencode(value)
     return output
 
 def urlencode(value):

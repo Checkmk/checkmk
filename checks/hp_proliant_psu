@@ -33,13 +33,13 @@ hp_proliant_redundant_map = { 1: 'other', 2: 'notRedundant', 3: 'redundant' }
 
 def inventory_hp_proliant_psu(checkname, info):
     if len(info) > 0:
-        return [ (line[0], None) for line in info if line[2] == '3' ]
+        return [ (line[0] + '/' + line[1], None) for line in info if line[2] == '3' ]
     else:
         return []
 
 def check_hp_proliant_psu(item, params, info):
     for line in info:
-        if line[0] == item:
+        if '/' in item and line[0] + line [1] == itemi or line[0] == item:
             chassis, bay, present, status, redundant = line
             snmp_status = hp_proliant_psu_status_map[int(status)]
             status      = hp_proliant_status2nagios_map[snmp_status]

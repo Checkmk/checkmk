@@ -2,6 +2,7 @@
     Checks & Agents:
     * megaraid_pdisks: Using the real enclosure number as check item now
     * if/if64: Added expected interface speed to warning output
+    * wut_webtherm: handle more variants of WuT Webtherms (thanks to Lefty)
 
     Multisite:
     * The custom open/close states of custom links are now stored for each

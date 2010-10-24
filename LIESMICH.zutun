@@ -49,6 +49,24 @@ Getestet habe ich dies mit den Versionen: 1.1.6.p1 und 1.1.8.b3 Hat jemand
 schon ähnliche Erfahrungen gesammelt? Vielleicht ist es ja auch nur ein
 Bedienerfehler meinerseits.
 
+Wie siehts denn mit dem utf-8 Problem aus. Kommt das noch in die 1.1.8 rein, bzw, raus :-)
+Zum Ausprobieren reicht es per Nagios oder Thruk eine Downtime "€" zu setzen. Mit Multisite kann man sie zwar
+nicht setzen, aber er zeigt sie auch falsch an.
+Btw, beim Comment setzen kommt:
+Please only use ASCII characters in your comment.
+Beim Versuch eine Downtime zu setzen:
+Internal error: 'ascii' codec can't decode byte 0xe2 in position 0: ordinal not in range(128) (Retry with debug mode)
+
+I'm running check_mk version 1.1.8b2 on Slackware linux.
+I just added a new host to check_mk to monitor, which added a service called 'CUPS Queue LQ-300+'.
+Works fine, but in the check_mk page a link is generated that doesn't work because the + sign isn't URL encoded.
+So instead of making it:
+<a href="http://nagios/check_mk/view.py?view_name=service&site=&service=CUPS%20Queue%20LQ-300%2B&host=test">CUPS Queue LQ-300+</a>
+It creates:
+<a href="http://nagios/check_mk/view.py?view_name=service&site=&service=CUPS%20Queue%20LQ-300+&host=test">
+(note the + vs %2B)
+
+
 
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
@@ -98,6 +116,7 @@ getrennte Checks für Memory and Pagefile.
 
 --snmpwalk: Braucht man das translaten noch? Ich arbeite doch jetzt eh
 nur noch ohne MIB-Dateien. Das würde das ganze deutlich vereinfachen!
+
 
 -------------------------------------------------------------------------------
 ab 1.1.9i1:

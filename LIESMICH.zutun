@@ -1,18 +1,7 @@
 --------------------------------------------------------------------------------
-UMLAUTPROBLEME (alle gemeinsam angehen)
---------------------------------------------------------------------------------
-Noch ein Problem mit Umlauten: Ein Drucker sendet per SNMP Latin1
-kodierte Wert, z.B. Resttonerbehälter. Daraus baut Check_MK eine
-Servicedesription, die in nagios/conf.d/check_mk_objects.cfg ein
-Latin1-Zeichen enthält. Hier sollte unbedingt UTF-8 verwendet
-werden. Nur: woher kennen wir die Kodierung vom Drucker??
-
---------------------------------------------------------------------------------
 BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
 CHECK_MK:
-
-doc/ aufräumen und komplett 1:1 installieren.
 
 Clusters mit IP-Adressen: Der Host-Check soll die IP-Adresse verwenden,
 wenn sie vorhanden ist.
@@ -20,6 +9,12 @@ wenn sie vorhanden ist.
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
 --------------------------------------------------------------------------------
+Noch ein Problem mit Umlauten: Ein Drucker sendet per SNMP Latin1
+kodierte Wert, z.B. Resttonerbehälter. Daraus baut Check_MK eine
+Servicedesription, die in nagios/conf.d/check_mk_objects.cfg ein
+Latin1-Zeichen enthält. Hier sollte unbedingt UTF-8 verwendet
+werden. Nur: woher kennen wir die Kodierung vom Drucker??
+
 Livestatus: bestimmte UTF-8 Zeichen werden nicht korrekt kodiert, z.B. "€".
 Um das umzustellen, muss man wahrscheinlich einfach UTF-8 generell
 annehmen.
@@ -67,8 +62,6 @@ Livestatus: das Nagios-Debuglog ist nicht reentrant. Livestatus muss ein eigenes
 Logfile schreiben. Wir machen das ohne Rotation. Man muss einfach selbst
 aufpassen, dass es nicht zu groß wird. Default ist eh aus. Ins Nagios
 geloggt wird nur das Starten und Beenden (was ja im Hauptthread läuft).
-
-Windows-Agent: Eventlogeinträge nach UTF-8 kodieren.
 
 Windows-Agent: Memory-Check neu machen. Swap stimmt nicht. Evtl. zwei
 getrennte Checks für Memory and Pagefile.
@@ -141,6 +134,8 @@ es ja fuer binaere Hostlisten das NEGATE (=> Doku). In 1.2 einbauen.
 --------------------------------------------------------------------------------
 IDEEN & VERBESSERUNGEN
 --------------------------------------------------------------------------------
+Windows-Agent: Eventlogeinträge nach UTF-8 kodieren.
+
 Multisite: Ein Link vom Detail-Host zum Summary-Host (umgekehrt ist er doch
 schon da, oder?)
 

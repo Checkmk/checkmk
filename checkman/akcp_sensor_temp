@@ -33,4 +33,4 @@ critical high (int): upper border for critical level
 
 [configuration]
 akcp_sensor_humidity (int, int, int, int): default levels for lower critical lower warning
-and upper warning, upper critical. Preset to ( 35, 40, 60, 65 ).
+ and upper warning, upper critical. Preset to ( 35, 40, 60, 65 ).

@@ -12,8 +12,6 @@ BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
 CHECK_MK:
 
-akcp_sensor_temp -> Man-Page ist kaputt
-
 doc/ aufräumen und komplett 1:1 installieren.
 
 Clusters mit IP-Adressen: Der Host-Check soll die IP-Adresse verwenden,

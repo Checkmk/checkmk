@@ -23,6 +23,26 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+cat <<EOF
+
+  NOTE
+  ----------------------------------------------------------
+  This is the last version of this script. There is a better
+  alternative for installing and maintaining Nagios plus 
+  Addons now:
+
+  OMD - The Open Monitoring Distribution
+
+  Please visit OMD at http://omdistro.org/
+
+  OMD has been invented and founded by Mathias Kettner and is
+  developed by a team of many well-known monitoring experts.
+  ----------------------------------------------------------
+  
+Press enter to continue...
+EOF
+read
+
 
 
 # Make sure, /usr/local/bin is in the PATH, since we install

@@ -77,18 +77,25 @@ def inventory_ps(check_name, info):
                     raise MKGeneralException("Invalid entry in inventory_processes: service description '%s' contains "
                             "%d times '%%s', but regular expression '%s' contains only %d subexpression(s)." % \
                             (servicedesc, num_perc_s, pattern, len(matches)))
+
+                if userspec == GRAB_USER:
+                    i_userspec = l_user[0]
+                    if '%u' not in servicedesc:
+                        raise MKGeneralException("Invalid entry in inventory_processes: if you use GRAB_USER, you need to put %%u into the service description. Your description is '%s'" % servicedesc)
+                    i_servicedesc = servicedesc.replace("%u", l_user[0])
+                else:
+                    i_userspec = userspec
+                    i_servicedesc = servicedesc
+
                 # It is allowed (1.1.4) that the pattern contains more subexpressions then the
                 # service description. In that case only the first subexpressions are used as
                 # item.
-                i_servicedesc = servicedesc % (matches[:num_perc_s])
-                if userspec == GRAB_USER:
-                    i_userspec = l_user[0]
-                else:
-                    i_userspec = userspec
+                i_servicedesc = i_servicedesc % (matches[:num_perc_s])
+
                 # Problem here: We need to instantiate all subexpressions
                 # with their actual values of the found process.
                 i_pattern = instantiate_regex_pattern(pattern, matches)
-                inv = ( i_servicedesc, "matched by \"%s\"" % pattern, ( i_pattern, i_userspec, warnmin, okmin, okmax, warnmax ) )
+                inv = ( i_servicedesc, ( i_pattern, i_userspec, warnmin, okmin, okmax, warnmax ) )
                 if inv not in inventory:
                     inventory.append(inv)
 

@@ -1,17 +1,11 @@
 --------------------------------------------------------------------------------
 UMLAUTPROBLEME (alle gemeinsam angehen)
 --------------------------------------------------------------------------------
-Eingabe von Downtimes: Auch hier Umlaute abfangen wie bei Comments
-
 Noch ein Problem mit Umlauten: Ein Drucker sendet per SNMP Latin1
 kodierte Wert, z.B. Resttonerbehälter. Daraus baut Check_MK eine
 Servicedesription, die in nagios/conf.d/check_mk_objects.cfg ein
 Latin1-Zeichen enthält. Hier sollte unbedingt UTF-8 verwendet
 werden. Nur: woher kennen wir die Kodierung vom Drucker??
-
-Sieht so aus, dass das Eurozeichen von Livestatus nicht korrekt kodiert
-wird. Wenn man commant_data=... und ein Euro drinnen hat, verschwindet
-es bei der Ausgabe mit python/json. CSV geht.
 
 --------------------------------------------------------------------------------
 BUGS beheben bis => 1.1.8
@@ -32,28 +26,13 @@ doc/ aufräumen und komplett 1:1 installieren.
 Clusters mit IP-Adressen: Der Host-Check soll die IP-Adresse verwenden,
 wenn sie vorhanden ist.
 
-MULTISITE: Hallo zusammen, mir ist bei meinen Tests mit der Multisite
-GUI aufgefallen, dass keine Comments zu Services oder Hosts dargestellt
-werden.  Comments zu Downtimes, werden hingegen ohne Probleme dargestellt.
-Unter der Default-View "Other - > Comments" wird ebenfalls kein Host /Service
-dargestellt, obwohl Comments hinterlegt sind, welche in der Classic GUI auch
-dargestellt werden.  Beim Versuch eine eigene View zu erstellen, ist mir
-dann auch aufgefallen, dass die Datasource Comments nicht zur Auswahl steht.
-Getestet habe ich dies mit den Versionen: 1.1.6.p1 und 1.1.8.b3 Hat jemand
-schon ähnliche Erfahrungen gesammelt? Vielleicht ist es ja auch nur ein
-Bedienerfehler meinerseits.
-
-Wie siehts denn mit dem utf-8 Problem aus. Kommt das noch in die 1.1.8 rein, bzw, raus :-)
-Zum Ausprobieren reicht es per Nagios oder Thruk eine Downtime "€" zu setzen. Mit Multisite kann man sie zwar
-nicht setzen, aber er zeigt sie auch falsch an.
-Btw, beim Comment setzen kommt:
-Please only use ASCII characters in your comment.
-Beim Versuch eine Downtime zu setzen:
-Internal error: 'ascii' codec can't decode byte 0xe2 in position 0: ordinal not in range(128) (Retry with debug mode)
-
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
 --------------------------------------------------------------------------------
+Livestatus: bestimmte UTF-8 Zeichen werden nicht korrekt kodiert, z.B. "€".
+Um das umzustellen, muss man wahrscheinlich einfach UTF-8 generell
+annehmen.
+
 Wenn ein Counter Wrap passiert und der check selbst die Exception
 nicht abfängt, dann wird das Ergebnis nicht an Nagios weitergeleitet.
 Der Service wird auch nicht in die aggregierten Services eines Summary Hosts

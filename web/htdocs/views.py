@@ -983,7 +983,9 @@ def show_view(view, show_heading = False, show_buttons = True):
             if html.do_actions() and html.transaction_valid(): # submit button pressed, no reload
                 try:
                     html.write("<tr class=form><td class=whiteborder colspan=%d>" % colspan)
-                    has_done_actions = do_actions(datasource["infos"][0], rows, html.makeuri([]))
+                    # Create URI with all actions variables removed
+                    backurl = html.makeuri([])
+                    has_done_actions = do_actions(datasource["infos"][0], rows, backurl)
                     html.write("</td></tr>")
                 except MKUserError, e:
                     html.show_error(e.message)
@@ -1511,25 +1513,19 @@ def nagios_host_service_action_command(what, dataset):
         title = "<b>manually set check results to %s</b> for" % statename
 
     elif html.var("_acknowledge") and config.may("action.acknowledge"):
-        comment = html.var("_ack_comment")
+        comment = html.var_utf8("_ack_comment")
         if not comment:
             raise MKUserError("_ack_comment", "You need to supply a comment.")
-        try:
-            command = "ACKNOWLEDGE_" + cmdtag + "_PROBLEM;%s;2;1;0;%s" % \
+        command = "ACKNOWLEDGE_" + cmdtag + "_PROBLEM;%s;2;1;0;%s" % \
                       (spec, html.req.user) + (";%s" % comment)
-        except:
-            raise MKUserError("_ack_comment", "Please only use ASCII characters in your comment.")
         title = "<b>acknowledge the problems</b> of"
 
     elif html.var("_add_comment") and config.may("action.addcomment"):
-        comment = html.var("_comment")
+        comment = html.var_utf8("_comment")
         if not comment:
             raise MKUserError("_comment", "You need to supply a comment.")
-        try:
-            command = "ADD_" + cmdtag + "_COMMENT;%s;1;%s" % \
+        command = "ADD_" + cmdtag + "_COMMENT;%s;1;%s" % \
                   (spec, html.req.user) + (";%s" % comment)
-        except:
-            raise MKUserError("_ack_comment", "Please only use ASCII characters in your comment.")
         title = "<b>add a comment to</b>"
 
     elif html.var("_remove_ack") and config.may("action.acknowledge"):
@@ -1591,7 +1587,7 @@ def nagios_host_service_action_command(what, dataset):
         raise MKUserError(None, "Sorry. This command is not implemented.")
 
     if down_to:
-        comment = html.var("_down_comment")
+        comment = html.var_utf8("_down_comment")
         if not comment:
             raise MKUserError("_down_comment", "You need to supply a comment for your downtime.")
         command = (("SCHEDULE_" + cmdtag + "_DOWNTIME;%s;" % spec) \
@@ -1616,6 +1612,8 @@ def do_actions(what, rows, backurl):
     for row in rows:
         title, nagios_commands = nagios_action_command(what, row)
         for command in nagios_commands:
+            if type(command) == unicode:
+                command = command.encode("utf-8")
             html.live.command(command, row["site"])
             count += 1
 

@@ -13,6 +13,7 @@
     * ps: inventory with GRAB_USER: require service description to contain
       %u. That will be replaced with the user name and thus makes the
       service description unique.
+    * win_dhcp_pools: better handle invalid agent output
 
     Livestatus:
     * Prohibit { and } in regular expressions. This avoids a segmentation

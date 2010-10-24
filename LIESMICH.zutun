@@ -3,9 +3,6 @@ BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
 CHECK_MK:
 
-Clusters mit IP-Adressen: Der Host-Check soll die IP-Adresse verwenden,
-wenn sie vorhanden ist.
-
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
 --------------------------------------------------------------------------------
@@ -66,15 +63,14 @@ geloggt wird nur das Starten und Beenden (was ja im Hauptthread läuft).
 Windows-Agent: Memory-Check neu machen. Swap stimmt nicht. Evtl. zwei
 getrennte Checks für Memory and Pagefile.
 
---snmpwalk: Braucht man das translaten noch? Ich arbeite doch jetzt eh
-nur noch ohne MIB-Dateien. Das würde das ganze deutlich vereinfachen!
-
-
 -------------------------------------------------------------------------------
 ab 1.1.9i1:
 --------------------------------------------------------------------------------
 check_mk -X erzwingen. Das -R soll nur noch klappen, wenn kein Configfehler
 auftritt.
+
+--snmpwalk: Braucht man das translaten noch? Ich arbeite doch jetzt eh
+nur noch ohne MIB-Dateien. Das würde das ganze deutlich vereinfachen!
 
 filesystem_levels rausnehmen. Hinweis, dass check_parameters verwendet
 werden soll.

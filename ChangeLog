@@ -5,8 +5,9 @@
     * wut_webtherm: handle more variants of WuT Webtherms (thanks to Lefty)
     * blade_bays: Also inventorizes standby blades and has a little more
                   verbose output.
-    * blade_blowers: Can handle responses without rpm values now. Improved output.
-    * cisco_fan: Does not inentorize 'notPresent' sensors anymore. Imporved output.
+    * blade_blowers: Can handle responses without rpm values now. Improved output
+    * cisco_fan: Does not inentorize 'notPresent' sensors anymore. Improved output
+    * cisco_power: Not using power source as threshold anymore. Improved output
 
     Multisite:
     * The custom open/close states of custom links are now stored for each

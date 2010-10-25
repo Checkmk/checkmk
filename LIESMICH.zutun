@@ -45,6 +45,8 @@ man rechts plötzlich ein anderes System. Lösung ist noch nicht in Sicht.
 LARS: Bei Opera kann man kein Snapin nach ganz unten ziehen. Der Indikator 
 springt dann immer nach ganz oben.
 
+LARS: Im Opera wird sich die aktuelle Scroll-Position der Sidebar nicht korrekt gemerkt.
+
 SNMP-Checks: Es wurde berichtet, dass - wenn die Community falsch ist - 
 der Check_MK gruen war, aber die Checks unknown. Sollte es dann nicht
 genau umgekehrt sein? Wird der Exit-code von snmpwalk ausgewertet?

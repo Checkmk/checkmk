@@ -3,6 +3,9 @@
     * megaraid_pdisks: Using the real enclosure number as check item now
     * if/if64: Added expected interface speed to warning output
     * wut_webtherm: handle more variants of WuT Webtherms (thanks to Lefty)
+    * blade_bays: Also inventorizes standby blades and has a little more
+                  verbose output.
+    * blade_blowers: Can handle responses without rpm values now. Improved output.
 
     Multisite:
     * The custom open/close states of custom links are now stored for each

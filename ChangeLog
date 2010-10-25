@@ -6,6 +6,7 @@
     * blade_bays: Also inventorizes standby blades and has a little more
                   verbose output.
     * blade_blowers: Can handle responses without rpm values now. Improved output.
+    * cisco_fan: Does not inentorize 'notPresent' sensors anymore. Imporved output.
 
     Multisite:
     * The custom open/close states of custom links are now stored for each

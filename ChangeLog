@@ -10,6 +10,8 @@
     * Setting doctype in sidebar frame now
     * Fixed invalid sidebar css height/width definition
     * Fixed repositioning the sidebar scroll state after refreshing the page
+    * Fixed mousewheel scrolling in opera/chrome
+    * Fixed resize bug on refresh in chrome
 
 1.1.8:
     Core, Setup, etc.:

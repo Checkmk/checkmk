@@ -36,6 +36,7 @@
     * Fix links for items containing + (e.g. service descriptionen including
       spaces)
     * Allow non-ASCII character in downtimes and comments
+    * Added nagvis_base_url to multisite.mk example configuration
 
 1.1.8b3:
     Core, Setup, etc.:

@@ -41,6 +41,8 @@
       spaces)
     * Allow non-ASCII character in downtimes and comments
     * Added nagvis_base_url to multisite.mk example configuration
+    * Filter for host/service groups: use name instead of alias if 
+      user has no permissions for groups
 
 1.1.8b3:
     Core, Setup, etc.:

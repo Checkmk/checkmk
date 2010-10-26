@@ -1,22 +1,20 @@
 --------------------------------------------------------------------------------
-UMLAUTPROBLEME (alle gemeinsam angehen)
+BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
-Eingabe von Downtimes: Auch hier Umlaute abfangen wie bei Comments
+CHECK_MK:
 
+--------------------------------------------------------------------------------
+BUGS beheben ab 1.1.9i1
+--------------------------------------------------------------------------------
 Noch ein Problem mit Umlauten: Ein Drucker sendet per SNMP Latin1
 kodierte Wert, z.B. Resttonerbehälter. Daraus baut Check_MK eine
 Servicedesription, die in nagios/conf.d/check_mk_objects.cfg ein
 Latin1-Zeichen enthält. Hier sollte unbedingt UTF-8 verwendet
 werden. Nur: woher kennen wir die Kodierung vom Drucker??
 
-Sieht so aus, dass das Eurozeichen von Livestatus nicht korrekt kodiert
-wird. Wenn man commant_data=... und ein Euro drinnen hat, verschwindet
-es bei der Ausgabe mit python/json. CSV geht.
-
---------------------------------------------------------------------------------
-BUGS beheben bis => 1.1.8
---------------------------------------------------------------------------------
-CHECK_MK:
+Livestatus: bestimmte UTF-8 Zeichen werden nicht korrekt kodiert, z.B. "€".
+Um das umzustellen, muss man wahrscheinlich einfach UTF-8 generell
+annehmen.
 
 Wenn ein Counter Wrap passiert und der check selbst die Exception
 nicht abfängt, dann wird das Ergebnis nicht an Nagios weitergeleitet.
@@ -24,31 +22,9 @@ Der Service wird auch nicht in die aggregierten Services eines Summary Hosts
 aufgenommen. Das kann dazu führen, dass die Anzahl der Services in einem
 Summary-Host variabel ist.
 
-inventory_processes: wenn man hier einen Benuter fest angibt, dann
-wird der nicht übernommen, sondern None fest kodiert.
+Cluster-Inventur: Wenn ein Service auf der Node sitzt und man die Regeln
+zu Clustered services ändert, entfernt ein -II das nicht von der node
 
-inventory_processes: Wenn man mit GRAB_USER arbeitet und sich die
-Prozesse nur im Benutzer unterscheiden, dann muss der Benutzer in 
-der Servicedescription auftauchen, sonst heissen alle Services gleich.
-
-akcp_sensor_temp -> Man-Page ist kaputt
-
-doc/ aufräumen und komplett 1:1 installieren.
-
-MULTISITE: Hallo zusammen, mir ist bei meinen Tests mit der Multisite
-GUI aufgefallen, dass keine Comments zu Services oder Hosts dargestellt
-werden.  Comments zu Downtimes, werden hingegen ohne Probleme dargestellt.
-Unter der Default-View "Other - > Comments" wird ebenfalls kein Host /Service
-dargestellt, obwohl Comments hinterlegt sind, welche in der Classic GUI auch
-dargestellt werden.  Beim Versuch eine eigene View zu erstellen, ist mir
-dann auch aufgefallen, dass die Datasource Comments nicht zur Auswahl steht.
-Getestet habe ich dies mit den Versionen: 1.1.6.p1 und 1.1.8.b3 Hat jemand
-schon ähnliche Erfahrungen gesammelt? Vielleicht ist es ja auch nur ein
-Bedienerfehler meinerseits.
-
---------------------------------------------------------------------------------
-BUGS beheben ab 1.1.9i1
---------------------------------------------------------------------------------
 Livestatus: wenn man mehrere StatsGroupBy macht, wird der Speicher von den 
 alten nicht freigegeben (ist momentan eh nicht erlaubt. Fehlermeldung ausgeben).
 In neuer Version sollte man irgendwann mehrere Group-Header erlauben.
@@ -84,19 +60,17 @@ Logfile schreiben. Wir machen das ohne Rotation. Man muss einfach selbst
 aufpassen, dass es nicht zu groß wird. Default ist eh aus. Ins Nagios
 geloggt wird nur das Starten und Beenden (was ja im Hauptthread läuft).
 
-Windows-Agent: Eventlogeinträge nach UTF-8 kodieren.
-
 Windows-Agent: Memory-Check neu machen. Swap stimmt nicht. Evtl. zwei
 getrennte Checks für Memory and Pagefile.
-
---snmpwalk: Braucht man das translaten noch? Ich arbeite doch jetzt eh
-nur noch ohne MIB-Dateien. Das würde das ganze deutlich vereinfachen!
 
 -------------------------------------------------------------------------------
 ab 1.1.9i1:
 --------------------------------------------------------------------------------
 check_mk -X erzwingen. Das -R soll nur noch klappen, wenn kein Configfehler
 auftritt.
+
+--snmpwalk: Braucht man das translaten noch? Ich arbeite doch jetzt eh
+nur noch ohne MIB-Dateien. Das würde das ganze deutlich vereinfachen!
 
 filesystem_levels rausnehmen. Hinweis, dass check_parameters verwendet
 werden soll.
@@ -156,6 +130,8 @@ es ja fuer binaere Hostlisten das NEGATE (=> Doku). In 1.2 einbauen.
 --------------------------------------------------------------------------------
 IDEEN & VERBESSERUNGEN
 --------------------------------------------------------------------------------
+Windows-Agent: Eventlogeinträge nach UTF-8 kodieren.
+
 Multisite: Ein Link vom Detail-Host zum Summary-Host (umgekehrt ist er doch
 schon da, oder?)
 
@@ -497,3 +473,15 @@ Livestatus: StatsGroupBy: mehrere Spalten erlauben
 Multisite: Die TOP-25 Alerts: Welche Dinge hosts/services
 hatten in einem Zeitraum die meisten Alerts. Das geht
 mit log und StatsGroupBy: host_name service_description
+
+Multisite: Filter, der Hosts zeigt, die entweder selbst
+Summary hosts sind oder keinen haben.
+
+Multisite: Könnte man nicht Aggregationen in Views einbauen.
+Man würde dann in der View Regeln definieren, nach denen
+Services und Hosts aggregiert werden können. Dazu müsste man 
+in den View-Editor einen neuen Abschnitt einbauen. Ist das
+nicht ähnlich wie Gruppieren? Allerdings wäre es dann gut,
+wenn man die Aggregationen irgendwo separat editieren kann
+und in der View nur noch drauf verweisen. Sonst muss
+man soviel Copy&Paste zwischen den Views machen...

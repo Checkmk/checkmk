@@ -104,7 +104,7 @@ def check_win_dhcp_pools(item, params, info):
             key = ' '.join(line[:-2])
             if key in win_dhcp_pools_stats_translate:
                 key = win_dhcp_pools_stats_translate[key]
-            poolStats.append(int(line[-1].rstrip('.')))
+            poolStats.append(saveint(line[-1].rstrip('.')))
         if len(poolStats) == 3:
             break
 
@@ -149,7 +149,7 @@ def check_win_dhcp_pools_stats(item, params, info):
 
             if key in [ 'Discovers', 'Offers', 'Requests', 'Acks',
                         'Nacks', 'Declines', 'Releases', 'Scopes' ]:
-                value = int(line[2].rstrip('.'))
+                value = saveint(line[2].rstrip('.'))
                 try:
                     timedif, per_sec = get_counter("win_dhcp_stats.%s" % key, this_time, value)
                 except MKCounterWrapped:

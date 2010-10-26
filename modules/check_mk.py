@@ -1169,7 +1169,7 @@ def create_nagios_hostdefs(outfile, hostname):
     except:
         if not is_cluster(hostname):
             raise MKGeneralException("Cannot determine ip address of %s. Please add to ipaddresses." % hostname)
-        ip = "0.0.0.0"
+        ip = None
 
     #   _
     #  / |
@@ -1181,7 +1181,7 @@ def create_nagios_hostdefs(outfile, hostname):
     outfile.write("\ndefine host {\n")
     outfile.write("  host_name\t\t\t%s\n" % hostname)
     outfile.write("  use\t\t\t\t%s\n" % (is_clust and cluster_template or host_template))
-    outfile.write("  address\t\t\t%s\n" % ip)
+    outfile.write("  address\t\t\t%s\n" % (ip and ip or "0.0.0.0"))
     outfile.write("  _TAGS\t\t\t\t%s\n" % " ".join(tags_of_host(hostname)))
 
     # Host groups: If the host has no hostgroups it gets the default
@@ -1219,6 +1219,10 @@ def create_nagios_hostdefs(outfile, hostname):
         outfile.write("  _NODEIPS\t\t\t%s\n" % " ".join(node_ips))
         outfile.write("  parents\t\t\t%s\n" % ",".join(nodes))
 
+        # Host check uses (service-) IP address if available
+        if ip:
+            outfile.write("  check_command\t\t\tcheck-mk-ping\n")
+
     outfile.write("  alias\t\t\t\t%s\n" % alias)
 
     # Custom configuration last -> user may override all other values
@@ -1237,7 +1241,7 @@ def create_nagios_hostdefs(outfile, hostname):
         outfile.write("  host_name\t\t\t%s\n" % summary_hostname(hostname))
         outfile.write("  use\t\t\t\t%s-summary\n" % (is_clust and cluster_template or host_template))
         outfile.write("  alias\t\t\t\tSummary of %s\n" % alias)
-        outfile.write("  address\t\t\t%s\n" % ip)
+        outfile.write("  address\t\t\t%s\n" % (ip and ip or "0.0.0.0"))
         outfile.write("  _TAGS\t\t\t\t%s\n" % " ".join(tags_of_host(hostname)))
         outfile.write("  __REALNAME\t\t\t%s\n" % hostname)
         outfile.write("  parents\t\t\t%s\n" % hostname)

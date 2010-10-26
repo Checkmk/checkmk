@@ -24,6 +24,7 @@
     Multisite:
     * Snapin Performance: show external command per second and usage and
       size of external command buffer
+    * Downtimes view: Group by hosts and services - just like comments
 
 1.1.8b3:
     Core, Setup, etc.:

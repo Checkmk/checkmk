@@ -1180,6 +1180,12 @@ multisite_painters["downtime_fixed"] = {
     "columns" : ["downtime_fixed"],
     "paint" : lambda row: (None, row["downtime_fixed"] == "0" and "flexible" or "fixed")
 }
+multisite_painters["downtime_what"] = {
+    "title" : "Downtime type (host/service)",
+    "short" : "Type",
+    "columns" : ["is_service"],
+    "paint" : lambda row: (None, row["is_service"] and "Service" or "Host")
+}
 multisite_painters["downtime_type"] = {
     "title" : "Downtime active or pending",
     "short" : "act/pend",

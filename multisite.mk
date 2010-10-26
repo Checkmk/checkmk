@@ -34,6 +34,14 @@ admin_users = [ "nagiosadmin" ]
 #     },
 # }
 
+# 
+# NagVis
+#
+# The NagVis-Snapin needs to know the URL to nagvis.
+# This is not always /nagvis/ - especially not for OMD
+nagvis_base_url = '/nagvis'
+
+
 # Restrict number of datasets queries via Livestatus.
 # This prevents you from consuming too much ressources
 # in case of insensible queries.

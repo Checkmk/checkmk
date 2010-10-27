@@ -16,8 +16,8 @@
       %u. That will be replaced with the user name and thus makes the
       service description unique.
     * win_dhcp_pools: better handle invalid agent output
-    * hp_proliant_psu: Fixed multiple PSU detection on one system (Thanks to
-		Andreas Döhler)
+    * hp_proliant_psu: Fixed multiple PSU detection on one system (Thanks to Andreas Döhler)
+    * megaraid_pdisks: Fixed coding error
 
     Livestatus:
     * Prohibit { and } in regular expressions. This avoids a segmentation

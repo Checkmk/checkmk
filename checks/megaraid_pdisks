@@ -51,6 +51,7 @@ def check_megaraid_pdisks(item, target_state, info):
     # item is "$ENCLOSURE/$SLOT"
     # param is the target state
     for line in info:
+        found = None
         if line[0] == "Enclosure":
             enclosure = int(line[-1])
         elif line[0] == "Slot":

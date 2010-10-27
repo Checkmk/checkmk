@@ -3,9 +3,52 @@ BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
 CHECK_MK:
 
+bei den Server Perf Werten "Com. buf. max.total" wird nicht der eigene
+sonderen einer der anderen sites angezeigt,
+Eigentlich: es sollte (meiner Meinung nach) addiert werden oder evtl.
+auch das MAX genommen werden. Oder ganz rausfliegen. Es muss unbedingt
+konsisten mit den übrigen werden sein.
+
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
 --------------------------------------------------------------------------------
+win_dhcp_pools sendet:
+[['MIBCounts:'],
+ ['Discovers', '=', '193.'],
+ ['Offers', '=', '193.'],
+ ['Delayed', 'Offers', '=', '0.'],
+ ['Requests', '=', '14540.'],
+ ['Acks', '=', '11767.'],
+ ['Naks', '=', '2.'],
+ ['Declines', '=', '0.'],
+ ['Releases', '=', '39.'],
+ ['ServerStartTime', '=', '26', 'June', '2010', '04:47:49'],
+ ['Scopes', '=', '1.'],
+ ['Scopes', 'with', 'Delay', 'configured=', '0.'],
+ ['Subnet', '=', '10.3.108.0.'],
+ ['No.', 'of', 'Addresses', 'in', 'use', '=', '40.'],
+ ['No.', 'of', 'free', 'Addresses', '=', '150.'],
+ ['No.', 'of', 'pending', 'offers', '=', '0.']]
+Besser: = als Trenner nehmen, dann ist das parsen einfacher.
+
+ich bin mir nicht sicher ob das nun ein Thruk Problem oder ein Livestatus Problem ist. Vermutlich beides :-)
+Wenn ich im Thruk im Suchfenster einfach Enter drücke, kommt folgende Query bei raus:
+GET services
+Columns: ..
+Filter: description ~~ 
+Filter: groups >= 
+Filter: plugin_output ~~ 
+Filter: long_plugin_output ~~ 
+Filter: host_name ~~ 
+Filter: host_alias ~~ 
+Filter: host_groups >= 
+Filter: comments ~~
+Filter: downtimes ~~
+Or: 2
+Or: 8
+livestatus: Sorry, Operator 4 for lists not implemented.
+
+
 Noch ein Problem mit Umlauten: Ein Drucker sendet per SNMP Latin1
 kodierte Wert, z.B. Resttonerbehälter. Daraus baut Check_MK eine
 Servicedesription, die in nagios/conf.d/check_mk_objects.cfg ein
@@ -42,8 +85,10 @@ Logwatch: was macht man hier bei verteilten Umgebungen?? Muss man das wie
 PNP per Proxy anfahren? Was ist aber dann, wenn man dort rumklickt?  Dann hat
 man rechts plötzlich ein anderes System. Lösung ist noch nicht in Sicht.
 
-LARS: In Opera (Version 10.6) geht in der Sidebar das Scrollen per Mausrad
-nicht. Angeblich in Chrome auch nicht.
+LARS: Bei Opera kann man kein Snapin nach ganz unten ziehen. Der Indikator 
+springt dann immer nach ganz oben.
+
+LARS: Im Opera wird sich die aktuelle Scroll-Position der Sidebar nicht korrekt gemerkt.
 
 SNMP-Checks: Es wurde berichtet, dass - wenn die Community falsch ist - 
 der Check_MK gruen war, aber die Checks unknown. Sollte es dann nicht

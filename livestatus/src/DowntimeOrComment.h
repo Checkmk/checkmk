@@ -92,6 +92,7 @@ struct DowntimeOrComment
    char *        _author_name;
    char*         _comment;
    unsigned long _id;
+   int           _is_service;
 
    DowntimeOrComment(nebstruct_downtime_struct *data, unsigned long id);
    virtual ~DowntimeOrComment();

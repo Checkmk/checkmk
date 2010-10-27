@@ -69,19 +69,32 @@ def inventory_blade_blowers(checkname, info):
 def check_blade_blowers(item, _no_params, info):
     blower, num_blowers = map(int, item.split("/"))
     text = info[blower-1][0]
+    perfdata = []
+    output = ''
+
+    state = info[blower-1 + num_blowers][0]
+
+    try:
+        rpm = int(info[blower-1 + 2*num_blowers][0])
+        perfdata += [("rpm", rpm)]
+        output += 'Speed at %d RMP' % rpm
+    except:
+        pass
+
     try:
         perc = int(text.split("%")[0])
+        perfdata += [("perc", perc, None, None, 0, 100)]
+        if output == '':
+            output +=  'Speed is at %d%% of max' % perc
+        else:
+            output +=  ' (%d%% of max)' % perc
     except:
-        perc = 0
-    state = info[blower-1 + num_blowers][0]
-    rpm = int(info[blower-1 + 2*num_blowers][0])
-    perfdata = [("perc", perc, None, None, 0, 100), ("rpm", rpm)]
-    info = "- Speed at %d RPM (%d%% of max)" % (rpm, perc)
-    if state == "1":
-        return (0, "OK" + info, perfdata)
-    else:
-        return (2, "CRIT" + info, perfdata)
+        pass
 
+    if state == "1":
+        return (0, "OK - " + output, perfdata)
+    else:
+        return (2, "CRIT - " + output, perfdata)
 
 check_info['blade_blowers'] = ( check_blade_blowers, "Blower %s", 1, inventory_blade_blowers)
 

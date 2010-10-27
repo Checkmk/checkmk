@@ -65,6 +65,7 @@ def check_megaraid_pdisks(item, target_state, info):
     # item is "$ENCLOSURE/$SLOT"
     # param is the target state
     dev2enc = {}
+    found = None
     for line in info:
         if line[0] == "dev2enc":
             dev2enc[line[5]] = 'e'+line[2]

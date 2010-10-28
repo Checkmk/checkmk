@@ -18,6 +18,7 @@
     * win_dhcp_pools: better handle invalid agent output
     * hp_proliant_psu: Fixed multiple PSU detection on one system (Thanks to Andreas Döhler)
     * megaraid_pdisks: Fixed coding error
+    * cisco_fan: fixed check bug in case of critical state
 
     Livestatus:
     * Prohibit { and } in regular expressions. This avoids a segmentation

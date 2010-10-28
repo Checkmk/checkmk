@@ -50,6 +50,7 @@ def inventory_megaraid_pdisks(checkname, info):
 def check_megaraid_pdisks(item, target_state, info):
     # item is "$ENCLOSURE/$SLOT"
     # param is the target state
+    found = None
     for line in info:
         if line[0] == "Enclosure":
             enclosure = int(line[-1])

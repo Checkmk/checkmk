@@ -150,7 +150,7 @@ class FilterGroupCombo(Filter):
         current_value = self.current_value(infoname)
         if current_value:
             alias = html.live.query_value("GET %sgroups\nColumns: alias\nFilter: name = %s\n" %
-                (self.what, current_value))
+                (self.what, current_value), current_value)
             return alias
 
 

@@ -56,6 +56,8 @@ TableDownComm::TableDownComm(bool is_downtime)
     addColumn(new OffsetIntColumn("type",
 		is_downtime ?  "The type of the downtime: 0 if it is active, 1 if it is pending" :
 		"The type of the comment: 1 is host, 2 is service", (char *)&(ref->_type) - (char *)ref));
+    addColumn(new OffsetIntColumn("is_service", 
+                "0, if this entry is for a host, 1 if it is for a service", (char *)&(ref->_is_service) - (char *)ref));
 
     if (is_downtime)
     {

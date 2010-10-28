@@ -3,12 +3,6 @@ BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
 CHECK_MK:
 
-bei den Server Perf Werten "Com. buf. max.total" wird nicht der eigene
-sonderen einer der anderen sites angezeigt,
-Eigentlich: es sollte (meiner Meinung nach) addiert werden oder evtl.
-auch das MAX genommen werden. Oder ganz rausfliegen. Es muss unbedingt
-konsisten mit den übrigen werden sein.
-
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
 --------------------------------------------------------------------------------

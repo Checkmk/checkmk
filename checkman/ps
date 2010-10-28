@@ -55,8 +55,10 @@ inventory:
 
  Specifying {GRAB_USER} makes the created check expect the process to run
  as the same user as during inventory: the user name will be hardcoded into
- the check. In that case you need to put {%u} into the service description,
- which will be replace by the actual user name during inventory.
+ the check. In that case if you put {%u} into the service description,
+ that will be replaced by the actual user name during inventory. You need
+ that if your rule might match for more than one user - your would create
+ duplicate services with the same description otherwise.
 
  The {warning and critical levels} are simply copied to the created
  checks.

@@ -12,6 +12,9 @@ konsisten mit den übrigen werden sein.
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
 --------------------------------------------------------------------------------
+Wenn zwei Checks mit dem gleichen Namen existieren bei einem Host
+soll mit einem Fehler abgebrochen werden.
+
 win_dhcp_pools sendet:
 [['MIBCounts:'],
  ['Discovers', '=', '193.'],

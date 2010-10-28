@@ -1,4 +1,10 @@
 1.1.9i1
+    Core, Setup, etc.:
+    * Improve error handling: if hosts are monitored with SNMP *and* TCP,
+      then after an error with one of those two agents checks from the
+      other haven't been executed. This is fixed now. Inventory check
+      is still not complete in that error condition.
+
     Checks & Agents:
     * megaraid_pdisks: Using the real enclosure number as check item now
     * if/if64: Added expected interface speed to warning output

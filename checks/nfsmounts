@@ -41,9 +41,11 @@ def check_nfsmounts(item, params, info):
 
             gb = 1024 * 1024 * 1024.0
             size_gb = (size_blocks * blocksize) / gb
-            used_gb = (free_blocks * blocksize) / gb
+            free_gb = (free_blocks * blocksize) / gb
+            used_gb = size_gb - free_gb
+            used_perc = 100.0 * used_gb / size_gb
             if line[1] == 'ok':
-                return (0, "OK - server responding (%.2f GB / %.2f GB used)" % (used_gb, size_gb))
+                return (0, "OK - %.1f%% used (%.1f of %.1f GB)" % (used_perc, used_gb, size_gb))
             else:
                 return (2, "CRITICAL - server not responding")
     return (3, "UNKNOWN - not mounted")

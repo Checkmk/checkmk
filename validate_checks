@@ -76,7 +76,36 @@ SCORE_START = 10
 C_OK      = 1
 C_FAILED  = 2
 C_INVALID = 3
-TESTS = { 'manpage': C_OK, 'pnp_tmpl': C_OK, 'pnp_rra': C_OK, 'snmp_scan': C_OK }
+TESTS = { 'manpage': C_OK, 'snmp_scan': C_OK, 'pnp_tmpl': C_OK, 'pnp_rra': C_OK, 'snmp_scan': C_OK }
+WEIGHT = { 'manpage': 2 }
+
+#
+# Check definitions
+#
+
+def is_valid_manpage(check):
+    return True
+
+def verify_manpage(check):
+    return os.path.exists('checkman/%s' % check)
+
+def is_valid_snmp_scan(check):
+    return is_snmp_check(check)
+
+def verify_snmp_scan(check):
+    return check in snmp_scan_functions
+
+def is_valid_pnp_tmpl(check):
+    return check_has_perfdata(check)
+
+def verify_pnp_tmpl(check):
+    return os.path.exists('pnp-templates/check_mk-%s.php' % check)
+
+def is_valid_pnp_rra(check):
+    return check_has_perfdata(check)
+
+def verify_pnp_rra(check):
+    return os.path.exists('pnp-rraconf/check_mk-%s.rra.php' % check)
 
 #
 # 1) Perform checks
@@ -86,26 +115,13 @@ for check in get_all_checks():
     score         = SCORE_START
     check_results = TESTS.copy()
 
-    if not os.path.exists('checkman/%s' % check):
-        check_results['manpage'] = C_FAILED
-        score -= 1
-
-    if check_has_perfdata(check):
-        if not os.path.exists('pnp-templates/check_mk-%s.php' % check):
-            check_results['pnp_tmpl'] = C_FAILED
-            score -= 1
-        if not os.path.exists('pnp-rraconf/check_mk-%s.rra.php' % check):
-            check_results['pnp_rra'] = C_FAILED
-            score -= 1
-    else:
-        check_results['pnp_tmpl'] = C_INVALID
-
-    if is_snmp_check(check):
-        if not check in snmp_scan_functions:
-           check_results['snmp_scan'] = C_FAILED
-           score -= 1
-    else:
-        check_results['snmp_scan'] = C_INVALID
+    for test in TESTS.keys():
+        if eval('is_valid_%s(\'%s\')' % (test, check)):
+            if not eval('verify_%s(\'%s\')' % (test, check)):
+                check_results[test] = C_FAILED
+                score -= WEIGHT.get(test, 1)
+        else:
+            check_results[test] = C_INVALID
 
     results[check] = (score, check_results)
 
@@ -120,7 +136,7 @@ results = sorted(results.iteritems(), key=operator.itemgetter(1))
 #
 sys.stdout.write('%-25s' % 'Check')
 for f in TESTS.keys():
-    sys.stdout.write('%-10s' % f)
+    sys.stdout.write('%-15s' % (f+' (%d)' % WEIGHT.get(f, 1)))
 sys.stdout.write('%-8s' % 'Score')
 sys.stdout.write("\n")
 for check, (score, check_results) in results:
@@ -144,7 +160,7 @@ for check, (score, check_results) in results:
             sub_color = tty_green
             label = ':-)'
 
-        sys.stdout.write('%s%-10s%s' % (sub_color, label, tty_normal))
+        sys.stdout.write('%s%-15s%s' % (sub_color, label, tty_normal))
 
     sys.stdout.write('%s%-8s%s' % (color, score, tty_normal))
     sys.stdout.write("\n")

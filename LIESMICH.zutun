@@ -3,15 +3,12 @@ BUGS beheben bis => 1.1.8
 --------------------------------------------------------------------------------
 CHECK_MK:
 
-bei den Server Perf Werten "Com. buf. max.total" wird nicht der eigene
-sonderen einer der anderen sites angezeigt,
-Eigentlich: es sollte (meiner Meinung nach) addiert werden oder evtl.
-auch das MAX genommen werden. Oder ganz rausfliegen. Es muss unbedingt
-konsisten mit den übrigen werden sein.
-
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
 --------------------------------------------------------------------------------
+Wenn zwei Checks mit dem gleichen Namen existieren bei einem Host
+soll mit einem Fehler abgebrochen werden.
+
 win_dhcp_pools sendet:
 [['MIBCounts:'],
  ['Discovers', '=', '193.'],

@@ -24,22 +24,17 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-cisco_fan_states = ('', 'normal', 'warning', 'critical',
-                        'shutdown', 'notPresent', 'notFunctioning')
 
 def inventory_cisco_fan(checkname, info):
-    return [ (line[0], None) for line in info if line[1] != '5' ]
+    return [ (line[0], None) for line in info ]
 
 def check_cisco_fan(item, params, info):
     for line in info:
         if line[0] == item:
-            state = saveint(line[1])
-            if state == 1:
-                return (0, "OK (State is: %s (%d))" % (cisco_fan_states[state], state))
-            elif state == 2:
-                return (1, "WARNING (state is %s (%d))" % (cisco_fan_states[state], state))
+            if line[1] == "1":
+                return (0, "OK")
             else:
-                return (2, "CRITICAL (state is %s (%d))" % (cisco_fan_states[state], state))
+                return (2, "CRITICAL (state is %s)" % line[1])
     return (3, "UNKNOWN - item not found in snmp data")
 
 check_info['cisco_fan'] = (check_cisco_fan, "FAN %s", 0,  inventory_cisco_fan)

@@ -547,12 +547,12 @@ def render_performance():
         ("Process creations", 4, "%.2f/s"),
         ("New log messages", 5, "%.2f/s"),
         ("Cached log messages", 6, "%d")]:
-        html.write(("<tr><td class=left>%s:</td><td class=right>" + format + "</td></tr>\n") % (what, sum([row[col] for row in data])))
-    size, usage, max = html.live.query("GET status\nColumns: external_command_buffer_slots external_command_buffer_usage external_command_buffer_max\n")[0]
-    # html.write("<tr><td class=left>Com. buf. c/max/t</td>"
-    #            "<td class=right>%05d/%05d/%05d</td></tr>" % (usage, max, size))
+       html.write(("<tr><td class=left>%s:</td><td class=right>" + format + "</td></tr>\n") % (what, sum([row[col] for row in data])))
+    data = html.live.query("GET status\nColumns: external_command_buffer_slots external_command_buffer_max\n")
+    size = sum([row[0] for row in data])
+    maxx = sum([row[1] for row in data])
     html.write("<tr><td class=left>Com. buf. max/total</td>"
-               "<td class=right>%d / %d</td></tr>" % (max, size))
+               "<td class=right>%d / %d</td></tr>" % (maxx, size))
     html.write("</table>\n")
 
 sidebar_snapins["performance"] = {

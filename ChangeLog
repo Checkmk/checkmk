@@ -45,12 +45,13 @@
     * logwatch: Fixed typo in 'too many unacknowledged logs' error message
     * ps: fix bug: inventory with fixed user name now correctly puts
       that user name into the resulting check - not None.
-    * ps: inventory with GRAB_USER: require service description to contain
+    * ps: inventory with GRAB_USER: service description may contain
       %u. That will be replaced with the user name and thus makes the
       service description unique.
     * win_dhcp_pools: better handle invalid agent output
     * hp_proliant_psu: Fixed multiple PSU detection on one system (Thanks to Andreas Döhler)
     * megaraid_pdisks: Fixed coding error
+    * cisco_fan: fixed check bug in case of critical state
 
     Livestatus:
     * Prohibit { and } in regular expressions. This avoids a segmentation

@@ -1618,9 +1618,16 @@ def make_inventory(checkname, hostnamelist, check_only=False):
             try:
                 info = get_realhost_info(hostname, ipaddress, checkname_base, inventory_max_cachefile_age)
             except MKAgentError, e:
-                if check_only:
+                if check_only and str(e):
                     raise
-                sys.stderr.write("Host '%s': %s\n" % (hostname, str(e)))
+		elif str(e):
+		    sys.stderr.write("Host '%s': %s\n" % (hostname, str(e)))
+                continue
+            except MKSNMPError, e:
+                if check_only and str(e):
+                    raise
+		elif str(e):
+                    sys.stderr.write("Host '%s': %s\n" % (hostname, str(e)))
                 continue
             except Exception, e:
                 if check_only or opt_debug:

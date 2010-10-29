@@ -525,3 +525,11 @@ nicht ähnlich wie Gruppieren? Allerdings wäre es dann gut,
 wenn man die Aggregationen irgendwo separat editieren kann
 und in der View nur noch drauf verweisen. Sonst muss
 man soviel Copy&Paste zwischen den Views machen...
+
+Idee: Checks, die eigentlich keine Perfdaten liefern, könnten
+über eine Konfiguration künstlich perfdaten bekommen, ala
+status=0, status=1 etc. Das könnte man über eine Regel
+konfigurierbar machen:
+fake_perfdata = [ ... ]
+
+Idee: Inventurcheck könnte gleich die Checkergebnisse berechnen

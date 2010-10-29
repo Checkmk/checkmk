@@ -3,11 +3,15 @@
     * megaraid_pdisks: Using the real enclosure number as check item now
     * if/if64: Added expected interface speed to warning output
     * wut_webtherm: handle more variants of WuT Webtherms (thanks to Lefty)
+    * cisco_fan: Does not inentorize 'notPresent' sensors anymore. Improved output
+    * cisco_power: Not using power source as threshold anymore. Improved output
+    * blade_*: Added snmp scan functions for better automatic inventory
     * blade_bays: Also inventorizes standby blades and has a little more
                   verbose output.
     * blade_blowers: Can handle responses without rpm values now. Improved output
-    * cisco_fan: Does not inentorize 'notPresent' sensors anymore. Improved output
-    * cisco_power: Not using power source as threshold anymore. Improved output
+    * blade_health: Mor detailed output on problems
+    * blade_blades: Added new check for checking the health-, present- and
+                    power-state of IBM Bladecenter blades
 
     Multisite:
     * The custom open/close states of custom links are now stored for each

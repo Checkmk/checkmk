@@ -403,3 +403,13 @@ custom_style_sheet = None
 
 # URL for start page in main frame (welcome page)
 start_url = "main.py"
+
+#  __        __   _                      __ 
+#  \ \      / /__| |__   ___ ___  _ __  / _|
+#   \ \ /\ / / _ \ '_ \ / __/ _ \| '_ \| |_ 
+#    \ V  V /  __/ |_) | (_| (_) | | | |  _|
+#     \_/\_/ \___|_.__/ \___\___/|_| |_|_|  
+#                                           
+
+config_files = []
+host_tags = []

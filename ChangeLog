@@ -53,6 +53,7 @@
     * hp_proliant_psu: Fixed multiple PSU detection on one system (Thanks to Andreas Döhler)
     * megaraid_pdisks: Fixed coding error
     * cisco_fan: fixed check bug in case of critical state
+    * nfsmounts: fix output (free and used was swapped), make output identical to df
 
     Livestatus:
     * Prohibit { and } in regular expressions. This avoids a segmentation

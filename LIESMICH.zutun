@@ -100,7 +100,7 @@ werden soll.
 
 Perfdatenformat per Default auf 'pnp'
 
-Aggregation per Default auf mehrzeilige Ausgabe
+aggregation_output_format: Aggregation per Default auf mehrzeilige Ausgabe
 
 Direct rrd updates ganz entfernen.
 
@@ -108,7 +108,7 @@ Inventurchecks: severity per Default auf 1 stellen.
 
 snmp_communities: dictionary nicht mehr verwenden, aus Doku raus, Defaultwert
 leere Liste, aus Code raus, Hinweis im ChangeLog. Evtl einen Test mit
-Abbruch, wenn immer noch type ist dict.
+Abbruch, wenn immer noch type ist dict. Gleiches für bulkwalk_hosts
 
 [""] deprecaten, aus der Doku raus und durch ALL_SERVICES ersetzen
 
@@ -508,3 +508,11 @@ nicht ähnlich wie Gruppieren? Allerdings wäre es dann gut,
 wenn man die Aggregationen irgendwo separat editieren kann
 und in der View nur noch drauf verweisen. Sonst muss
 man soviel Copy&Paste zwischen den Views machen...
+
+Idee: Checks, die eigentlich keine Perfdaten liefern, könnten
+über eine Konfiguration künstlich perfdaten bekommen, ala
+status=0, status=1 etc. Das könnte man über eine Regel
+konfigurierbar machen:
+fake_perfdata = [ ... ]
+
+Idee: Inventurcheck könnte gleich die Checkergebnisse berechnen

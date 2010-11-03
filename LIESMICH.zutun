@@ -9,25 +9,6 @@ BUGS beheben ab 1.1.9i1
 Wenn zwei Checks mit dem gleichen Namen existieren bei einem Host
 soll mit einem Fehler abgebrochen werden.
 
-win_dhcp_pools sendet:
-[['MIBCounts:'],
- ['Discovers', '=', '193.'],
- ['Offers', '=', '193.'],
- ['Delayed', 'Offers', '=', '0.'],
- ['Requests', '=', '14540.'],
- ['Acks', '=', '11767.'],
- ['Naks', '=', '2.'],
- ['Declines', '=', '0.'],
- ['Releases', '=', '39.'],
- ['ServerStartTime', '=', '26', 'June', '2010', '04:47:49'],
- ['Scopes', '=', '1.'],
- ['Scopes', 'with', 'Delay', 'configured=', '0.'],
- ['Subnet', '=', '10.3.108.0.'],
- ['No.', 'of', 'Addresses', 'in', 'use', '=', '40.'],
- ['No.', 'of', 'free', 'Addresses', '=', '150.'],
- ['No.', 'of', 'pending', 'offers', '=', '0.']]
-Besser: = als Trenner nehmen, dann ist das parsen einfacher.
-
 ich bin mir nicht sicher ob das nun ein Thruk Problem oder ein Livestatus Problem ist. Vermutlich beides :-)
 Wenn ich im Thruk im Suchfenster einfach Enter drücke, kommt folgende Query bei raus:
 GET services

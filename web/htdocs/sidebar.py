@@ -37,6 +37,12 @@ snapins_dir = defaults.web_dir + "/plugins/sidebar"
 for fn in os.listdir(snapins_dir):
     if fn.endswith(".py"):
         execfile(snapins_dir + "/" + fn)
+if defaults.omd_root:
+    local_snapins_dir = defaults.omd_root + "/local/share/check_mk/web/plugins/sidebar"
+    if os.path.exists(local_snapins_dir):
+        for fn in os.listdir(local_snapins_dir):
+            if fn.endswith(".py"):
+                execfile(local_snapins_dir + "/" + fn)
 
 # Declare permissions: each snapin creates one permission
 config.declare_permission_section("sidesnap", "Sidebar snapins")

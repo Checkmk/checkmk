@@ -1,0 +1,1 @@
+sudo cp -v *.py /omd/versions/default/share/check_mk/web/htdocs

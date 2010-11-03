@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 from mod_python import apache,util
-import os, livestatus
+import os, sys, livestatus
 from lib import *
 import config, htmllib, defaults
 
@@ -35,6 +35,13 @@ pagehandlers_dir = defaults.web_dir + "/plugins/pages"
 for fn in os.listdir(pagehandlers_dir):
     if fn.endswith(".py"):
         execfile(pagehandlers_dir + "/" + fn)
+if defaults.omd_root:
+    sys.path.append(defaults.omd_root + "/local/share/check_mk/web/htdocs")
+    local_pagehandlers_dir = defaults.omd_root + "/local/share/check_mk/web/plugins/pages"
+    if os.path.exists(local_pagehandlers_dir):
+        for fn in os.listdir(local_pagehandlers_dir):
+            if fn.endswith(".py"):
+                execfile(local_pagehandlers_dir + "/" + fn)
 
 
 def read_get_vars(req):

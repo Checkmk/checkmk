@@ -37,6 +37,12 @@ snapins_dir = defaults.web_dir + "/plugins/sidebar"
 for fn in os.listdir(snapins_dir):
     if fn.endswith(".py"):
         execfile(snapins_dir + "/" + fn)
+if defaults.omd_root:
+    local_snapins_dir = defaults.omd_root + "/local/share/check_mk/web/plugins/sidebar"
+    if os.path.exists(local_snapins_dir):
+        for fn in os.listdir(local_snapins_dir):
+            if fn.endswith(".py"):
+                execfile(local_snapins_dir + "/" + fn)
 
 # Declare permissions: each snapin creates one permission
 config.declare_permission_section("sidesnap", "Sidebar snapins")
@@ -124,14 +130,16 @@ def page_side(h):
 
     global html
     html = h
-    html.write("""<html>
+    html.write("""<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN "http://www.w3.org/TR/html4/frameset.dtd">
+
+<html>
 <head>
 <title>Check_MK Sidebar</title>
 <link href="check_mk.css" type="text/css" rel="stylesheet">
 <script type="text/javascript" src="check_mk.js"></script>
 <script type="text/javascript" src="sidebar.js"></script>
 </head>
-<body class="side">
+<body class="side" onload="initScrollPos()" onunload="storeScrollPos()">
 <div id="check_mk_sidebar">""")
 
     views.html = h

@@ -1,6 +1,40 @@
-1.1.8p1
+1.1.9i1
+    Core, Setup, etc.:
+    * Improve error handling: if hosts are monitored with SNMP *and* TCP,
+      then after an error with one of those two agents checks from the
+      other haven't been executed. This is fixed now. Inventory check
+      is still not complete in that error condition.
+    * Packages (MKP): Allow to create and install packages within OMD!
+      Files are installed below ~/local/share/check_mk. No root permissions
+      are neccessary
+
     Checks & Agents:
+    * megaraid_pdisks: Using the real enclosure number as check item now
+    * if/if64: Added expected interface speed to warning output
+    * wut_webtherm: handle more variants of WuT Webtherms (thanks to Lefty)
+    * cisco_fan: Does not inventorize 'notPresent' sensors anymore. Improved output
+    * cisco_power: Not using power source as threshold anymore. Improved output
+    * cisco_fan: Does not inventorize 'notPresent' sensors anymore. Improved output
+    * cisco_power: Not using power source as threshold anymore. Improved output
+    * tcp_conn_stats: new check for monitoring number of current TCP connections
+    * blade_*: Added snmp scan functions for better automatic inventory
+    * blade_bays: Also inventorizes standby blades and has a little more
+                  verbose output.
+    * blade_blowers: Can handle responses without rpm values now. Improved output
+    * blade_health: More detailed output on problems
+    * blade_blades: Added new check for checking the health-, present- and
+                    power-state of IBM Bladecenter blades
+    * win_dhcp_pools: Several cleanups in check
     * heartbeat_rscstatus: Catching empty output from agent correctly
+
+    Multisite:
+    * The custom open/close states of custom links are now stored for each
+      user
+    * Setting doctype in sidebar frame now
+    * Fixed invalid sidebar css height/width definition
+    * Fixed repositioning the sidebar scroll state after refreshing the page
+    * Fixed mousewheel scrolling in opera/chrome
+    * Fixed resize bug on refresh in chrome
 
 1.1.8:
     Core, Setup, etc.:

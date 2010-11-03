@@ -36,27 +36,47 @@
 # Firmware state: Unconfigured(good)
 # Inquiry Data: FUJITSU MBB2147RC       5204BS04P9104BSC
 
+# The agent provides some new information since 1.1.9.
+# The dev2enc infos are sent from the agent to have the
+# real enclosure numbers instead of the device ids which
+# seem to be generated somehow.
+#
+# dev2enc Enclosure 0 Device ID  6
+# dev2enc Enclosure 1 Device ID  252
+#
+# On new inventory runs the enclosure number is used as
+# index and item part.
+
 def inventory_megaraid_pdisks(checkname, info):
     inventory = []
+    dev2enc = {}
     for line in info:
-        if line[0] == "Enclosure":
-            enclosure = int(line[-1])
+        if line[0] == "dev2enc":
+            dev2enc[line[5]] = 'e'+line[2]
+        elif line[0] == "Enclosure":
+            enclosure = dev2enc.get(line[-1], line[-1])
         elif line[0] == "Slot":
             slot = int(line[-1])
         elif line[0] == "Firmware" and line[1] == "state:":
-            inventory.append(( "%d/%d" % (enclosure, slot), "", repr(line[2]) ))
+            inventory.append(( "%s/%d" % (enclosure, slot), "", repr(line[2]) ))
     return inventory
 
 def check_megaraid_pdisks(item, target_state, info):
     # item is "$ENCLOSURE/$SLOT"
     # param is the target state
+    dev2enc = {}
     found = None
     for line in info:
-        if line[0] == "Enclosure":
-            enclosure = int(line[-1])
+        if line[0] == "dev2enc":
+            dev2enc[line[5]] = 'e'+line[2]
+        elif line[0] == "Enclosure":
+            if item.startswith('e') and line[-1] in dev2enc:
+                enclosure = dev2enc[line[-1]]
+            else:
+                enclosure = line[-1]
         elif line[0] == "Slot":
             slot = int(line[-1])
-            found = "%d/%d" % (enclosure, slot) == item
+            found = "%s/%d" % (enclosure, slot) == item
         elif found and line[0] == "Firmware" and line[1] == "state:":
             state = line[2]
         elif found and line[0] == "Inquiry" and line[1] == "Data:":

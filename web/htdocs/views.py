@@ -172,6 +172,12 @@ plugins_path = defaults.web_dir + "/plugins/views"
 for fn in os.listdir(plugins_path):
     if fn.endswith(".py"):
         execfile(plugins_path + "/" + fn)
+if defaults.omd_root:
+    local_plugins_path = defaults.omd_root + "/local/share/check_mk/web/plugins/views"
+    if os.path.exists(local_plugins_path):
+        for fn in os.listdir(local_plugins_path):
+            if fn.endswith(".py"):
+                execfile(local_plugins_path + "/" + fn)
 
 # Declare permissions for builtin views
 config.declare_permission_section("view", "Builtin views")
@@ -816,6 +822,7 @@ def create_view():
 def page_view(h):
     global html
     html = h
+
     load_views()
     view_name = html.var("view_name")
     view = html.available_views.get(view_name)

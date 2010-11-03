@@ -38,6 +38,13 @@ except NameError:
 # Base directory of dynamic configuration
 config_dir = defaults.var_dir + "/web"
 
+# Detect if we are running on OMD
+try:
+    defaults.omd_site
+except:
+    defaults.omd_site = None
+    defaults.omd_root = None
+
 def load_config():
     # reset settings which can be changed at runtime to
     # default values. Otherwise they stick to their changed

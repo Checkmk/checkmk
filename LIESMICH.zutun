@@ -1,32 +1,11 @@
---------------------------------------------------------------------------------
-BUGS beheben bis => 1.1.8
---------------------------------------------------------------------------------
-CHECK_MK:
+Doku: Check_MK und OMD: Installieren von MKPs, local-Hierarchie
+
 
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
 --------------------------------------------------------------------------------
 Wenn zwei Checks mit dem gleichen Namen existieren bei einem Host
 soll mit einem Fehler abgebrochen werden.
-
-win_dhcp_pools sendet:
-[['MIBCounts:'],
- ['Discovers', '=', '193.'],
- ['Offers', '=', '193.'],
- ['Delayed', 'Offers', '=', '0.'],
- ['Requests', '=', '14540.'],
- ['Acks', '=', '11767.'],
- ['Naks', '=', '2.'],
- ['Declines', '=', '0.'],
- ['Releases', '=', '39.'],
- ['ServerStartTime', '=', '26', 'June', '2010', '04:47:49'],
- ['Scopes', '=', '1.'],
- ['Scopes', 'with', 'Delay', 'configured=', '0.'],
- ['Subnet', '=', '10.3.108.0.'],
- ['No.', 'of', 'Addresses', 'in', 'use', '=', '40.'],
- ['No.', 'of', 'free', 'Addresses', '=', '150.'],
- ['No.', 'of', 'pending', 'offers', '=', '0.']]
-Besser: = als Trenner nehmen, dann ist das parsen einfacher.
 
 ich bin mir nicht sicher ob das nun ein Thruk Problem oder ein Livestatus Problem ist. Vermutlich beides :-)
 Wenn ich im Thruk im Suchfenster einfach Enter drücke, kommt folgende Query bei raus:
@@ -82,8 +61,10 @@ Logwatch: was macht man hier bei verteilten Umgebungen?? Muss man das wie
 PNP per Proxy anfahren? Was ist aber dann, wenn man dort rumklickt?  Dann hat
 man rechts plötzlich ein anderes System. Lösung ist noch nicht in Sicht.
 
-LARS: In Opera (Version 10.6) geht in der Sidebar das Scrollen per Mausrad
-nicht. Angeblich in Chrome auch nicht.
+LARS: Bei Opera kann man kein Snapin nach ganz unten ziehen. Der Indikator 
+springt dann immer nach ganz oben.
+
+LARS: Im Opera wird sich die aktuelle Scroll-Position der Sidebar nicht korrekt gemerkt.
 
 SNMP-Checks: Es wurde berichtet, dass - wenn die Community falsch ist - 
 der Check_MK gruen war, aber die Checks unknown. Sollte es dann nicht

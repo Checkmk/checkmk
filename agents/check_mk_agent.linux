@@ -53,7 +53,7 @@ else
 fi
 
 echo '<<<check_mk>>>'
-echo Version: 1.1.8
+echo Version: 1.1.9i1
 echo AgentOS: linux
 
 # Partitionen (-P verhindert Zeilenumbruch bei langen Mountpunkten)
@@ -123,6 +123,10 @@ then
     echo $eth $(ethtool $eth | egrep '(Speed|Duplex|Link detected|Auto-negotiation):' | cut -d: -f2 | sed 's/ *//g')
   done
 fi
+
+# Number of TCP connections in the various states
+echo '<<<tcp_conn_stats>>>'
+netstat -nt | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
 
 # Platten- und RAID-Status von LSI-Controlleren, falls vorhanden
 if which cfggen > /dev/null ; then
@@ -213,6 +217,11 @@ fi
 # http://www.lsi.com/DistributionSystem/AssetDocument/support/downloads/megaraid/miscellaneous/linux/2.00.15_Linux_MegaCLI.zip
 if which MegaCli >/dev/null ; then
     echo '<<<megaraid_pdisks>>>'
+		for part in $(MegaCli -EncInfo -aALL -NoLog < /dev/null | egrep 'Enclosure|Device ID'); do
+        [ $part == 'Enclosure' ] && echo -ne "\ndev2enc"
+        echo -n " ${part//:/}"
+    done
+    echo
     MegaCli -PDList -aALL -NoLog < /dev/null | egrep 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry'
     echo '<<<megaraid_ldisks>>>'
     MegaCli -LDInfo -Lall -aALL -NoLog < /dev/null | egrep 'Size|State|Number|Adapter|Virtual'

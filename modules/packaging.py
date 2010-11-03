@@ -34,21 +34,25 @@ class PackageException(Exception):
     def __str__(self):
         return self.reason
 
-pac_dir = var_dir + "/packages/"
+if omd_root:
+    pac_dir = omd_root + "/var/check_mk/packages/"
+else:
+    pac_dir = var_dir + "/packages/"
 try:
     os.makedirs(pac_dir)
 except:
     pass
 
-package_parts = [
-  ( "checks",        "Checks",                    checks_dir ),
-  ( "checkman",      "Checks' man pages",         check_manpages_dir ),
-  ( "agents",        "Agents",                    agents_dir ),
-  ( "web",           "Multisite extensions",      web_dir ),
-  ( "pnp-templates", "PNP4Nagios templates",      pnp_templates_dir ),
-  ( "pnp-rraconf",   "RRA configuration for PNP", pnp_rraconf_dir ),
-  ( "doc",           "Documentation files",       doc_dir ),
-]
+# in case of local directories (OMD) use those instead
+package_parts = [ (part, title, ldir and ldir or dir) for part, title, dir, ldir in [
+  ( "checks",        "Checks",                    checks_dir,          local_checks_dir),
+  ( "checkman",      "Checks' man pages",         check_manpages_dir,  local_check_manpages_dir ),
+  ( "agents",        "Agents",                    agents_dir,          local_agents_dir ),
+  ( "web",           "Multisite extensions",      web_dir,             local_web_dir ),
+  ( "pnp-templates", "PNP4Nagios templates",      pnp_templates_dir,   local_pnp_templates_dir ),
+  ( "pnp-rraconf",   "RRA configuration for PNP", pnp_rraconf_dir,     local_pnp_rraconf_dir ),
+  ( "doc",           "Documentation files",       doc_dir,             local_doc_dir ),
+]]
 
 def packaging_usage():
     sys.stdout.write("""Usage: check_mk [-v] -P|--package COMMAND [ARGS]
@@ -140,6 +144,8 @@ def show_package(name, show_info = False):
             package = read_package(name)
             if not package:
                 raise PackageException("No such package %s." % name)
+            if show_info:
+                sys.stdout.write("Package file:                  %s%s\n" % (pac_dir, name))
     except PackageException:
         raise
     except Exception, e:
@@ -360,6 +366,10 @@ def package_install(args):
             verbose("  %s%s%s:\n" % (tty_bold, title, tty_normal))
             for fn in filenames:
                 verbose("    %s\n" % fn)
+            # make sure target directory exists
+            if not os.path.exists(dir):
+                verbose("    Creating directory %s\n" % dir)
+                os.makedirs(dir)
             tarsource = tar.extractfile(part + ".tar")
             subtar = "tar xf - -C %s %s" % (dir, " ".join(filenames))
             tardest = os.popen(subtar, "w")
@@ -388,6 +398,9 @@ def package_install(args):
 
 
 def files_in_dir(part, dir, prefix = ""):
+    if not os.path.exists(dir):
+        return []
+
     # Handle case where one part-dir lies below another
     taboo_dirs = [ d for p, t, d in package_parts if p != part ]
     if dir in taboo_dirs:

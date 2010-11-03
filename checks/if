@@ -102,7 +102,7 @@ def check_if(item, params, info):
             operstatus = if_statename(str(ifOperStatus))
             if not operstatus in allowed_operstates:
                 return (2, "CRIT - %soperstate: %s (CRIT)" % (infotext, operstatus))
-	    infotext += "(%s) " % operstatus
+            infotext += "(%s) " % operstatus
 
             state = 0
 
@@ -110,7 +110,7 @@ def check_if(item, params, info):
             speed = saveint(ifSpeed)
             bandwidth = speed / 8.0 # in Bytes / sec
             if speed != targetspeed:
-                infotext += "%s (wrong speed!)" % speed
+                infotext += "%s (wrong speed! expected: %s)" % (speed, get_nic_speed_human_readable(targetspeed))
                 state = 1
             else:
                 infotext += get_bytes_human_readable(speed, 1000)+'it/s'

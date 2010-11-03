@@ -38,6 +38,7 @@ def page_index(html):
 <frameset cols="280,*" frameborder="0" framespacing="0" border="0">
     <frame src="side.py" name="side" noresize>
     <frame src="%s" name="main" noresize>
+</frameset>
 </html>
 """ % config.start_url)
 

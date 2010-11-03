@@ -87,6 +87,8 @@ compiled_regexes             = {}   # avoid recompiling regexes
 nagios_command_pipe          = None # Filedescriptor to open nagios command pipe.
 g_single_oid_hostname        = None
 g_single_oid_cache           = {}
+g_broken_snmp_hosts          = set([])
+g_broken_agent_hosts         = set([])
 
 
 # variables set later by getopt
@@ -116,6 +118,12 @@ class MKCounterWrapped(Exception):
         return '%s: %s' % (self.name, self.reason)
 
 class MKAgentError(Exception):
+    def __init__(self, reason):
+        self.reason = reason
+    def __str__(self):
+        return self.reason
+
+class MKSNMPError(Exception):
     def __init__(self, reason):
         self.reason = reason
     def __str__(self):
@@ -250,6 +258,7 @@ def get_host_info(hostname, ipaddress, checkname):
         exception_texts = []
         global opt_use_cachefile
         opt_use_cachefile = True
+	is_snmp_error = False
         for node in nodes:
             # If an error with the agent occurs, we still can (and must)
             # try the other node.
@@ -259,15 +268,23 @@ def get_host_info(hostname, ipaddress, checkname):
                 at_least_one_without_exception = True
             except MKAgentError, e:
                 exception_texts.append(str(e))
+		g_broken_agent_hosts.add(node)
+            except SNMPErrorError, e:
+                exception_texts.append(str(e))
+		g_broken_snmp_hosts.add(node)
+		is_snmp_error = true
         if not at_least_one_without_exception:
-            raise MKAgentError(", ".join(exception_texts))
+	    if is_snmp_error:
+                raise MKSNMPError(", ".join(exception_texts))
+            else:
+                raise MKAgentError(", ".join(exception_texts))
         return info
     else:
         return get_realhost_info(hostname, ipaddress, checkname, check_max_cachefile_age)
 
 # Gets info from a real host (not a cluster). There are three possible
 # ways: TCP, SNMP and external command.  This function raises
-# MKAgentError, if there could not retrieved any data. It returns [],
+# MKAgentError or MKSNMPError, if there could not retrieved any data. It returns [],
 # if the agent could be contacted but the data is empty (no items of
 # this check type).
 #
@@ -290,6 +307,12 @@ def get_realhost_info(hostname, ipaddress, checkname, max_cache_age):
         content = read_cache_file(cache_relpath, max_cache_age)
         if content:
             return eval(content)
+        # Not cached -> need to get info via SNMP
+
+        # Try to contact host only once
+	if hostname in g_broken_snmp_hosts:
+	    raise MKSNMPError("")
+
         # New in 1.1.3: oid_info can now be a list: Each element
         # of that list is interpreted as one real oid_info, fetches
         # a separate snmp table. The overall result is then the list
@@ -320,9 +343,10 @@ def get_realhost_info(hostname, ipaddress, checkname, max_cache_age):
         return table
 
     # No SNMP check. Then we must contact the check_mk_agent. Have we already
-    # to get data from the agent? If yes we must not do that again!
+    # to get data from the agent? If yes we must not do that again! Even if
+    # no cache file is present
     if g_agent_already_contacted.has_key(hostname):
-        return []
+	raise MKAgentError("")
 
     g_agent_already_contacted[hostname] = True
     store_cached_hostinfo(hostname, []) # leave emtpy info in case of error
@@ -389,6 +413,10 @@ def get_agent_info(hostname, ipaddress, max_cache_age):
     result = read_cache_file(hostname, max_cache_age)
     if result:
         return result
+
+    # Try to contact every host only once
+    if hostname in g_broken_agent_hosts:
+	raise MKAgentError("")
 
     # If the host ist listed in datasource_programs the data from
     # that host is retrieved by calling an external program (such
@@ -625,9 +653,12 @@ def do_check(hostname, ipaddress):
 
     try:
         load_counters(hostname)
-        agent_version, num_success, num_errors = do_all_checks_on_host(hostname, ipaddress)
+        agent_version, num_success, num_errors, problems = do_all_checks_on_host(hostname, ipaddress)
         save_counters(hostname)
-        if num_errors > 0 and num_success > 0:
+        if problems:
+	    output = "CRIT - %s" % problems
+            status = 2
+        elif num_errors > 0 and num_success > 0:
             output = "WARNING - Got only %d out of %d infos" % (num_success, num_success + num_errors)
             status = 1
         elif num_errors > 0:
@@ -645,12 +676,6 @@ def do_check(hostname, ipaddress):
             raise
         output = "UNKNOWN - %s" % e
         status = 3
-
-    except MKAgentError, e:
-        if opt_debug:
-            raise
-        output = "CRIT - %s" % e
-        status = 2
 
     if aggregate_check_mk:
         try:
@@ -675,6 +700,7 @@ def do_all_checks_on_host(hostname, ipaddress):
     num_success = 0
     num_errors = 0
     check_table = get_sorted_check_table(hostname)
+    problems = []
     for checkname, item, params, description, info in check_table:
         # In case of a precompiled check table info is the aggrated
         # service name. In the non-precompiled version there are the dependencies
@@ -684,7 +710,22 @@ def do_all_checks_on_host(hostname, ipaddress):
             aggrname = aggregated_service_name(hostname, description)
 
         infotype = checkname.split('.')[0]
-        info = get_host_info(hostname, ipaddress, infotype)
+        try:
+	    info = get_host_info(hostname, ipaddress, infotype)
+        except MKSNMPError, e:
+	    if str(e):
+	        problems.append(str(e))
+            num_errors += 1
+	    g_broken_snmp_hosts.add(hostname)
+	    continue
+
+        except MKAgentError, e:
+	    if str(e):
+                problems.append(str(e))
+            num_errors += 1
+	    g_broken_agent_hosts.add(hostname)
+	    continue
+
         if info or info == []:
             num_success += 1
             try:
@@ -741,10 +782,11 @@ def do_all_checks_on_host(hostname, ipaddress):
         else:
             agent_version = "(unknown)"
     except MKAgentError, e:
-        raise
+	g_broken_agent_hosts.add(hostname)
+        agent_version = "(unknown)"
     except:
         agent_version = "(unknown)"
-    return agent_version, num_success, num_errors
+    return agent_version, num_success, num_errors, ", ".join(problems)
 
 def nagios_pipe_open_timeout(signum, stackframe):
     raise IOError("Timeout while opening pipe")

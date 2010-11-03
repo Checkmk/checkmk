@@ -36,6 +36,9 @@ def inventory_heartbeat_rscstatus(checktype, info):
     return [ (None, '"%s"' % line[0]) for line in info if line[0] != '' ]
 
 def check_heartbeat_rscstatus(item, expectedState, info):
+    if len(info) == 0 or len(info[0]) == 0:
+        return (3, "UNKNOWN - Got no data from agent")
+
     if info[0][0] == expectedState:
         return (0, "OK - Current state: %s" % (info[0][0]))
     else:

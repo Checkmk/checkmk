@@ -1,3 +1,7 @@
+1.1.8p1
+    Checks & Agents:
+    * heartbeat_rscstatus: Catching empty output from agent correctly
+
 1.1.8:
     Core, Setup, etc.:
     * setup.sh: turn off Python debugging

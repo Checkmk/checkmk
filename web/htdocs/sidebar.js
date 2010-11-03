@@ -22,8 +22,9 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-var browser = navigator.userAgent.toLowerCase();
-var weAreIEF__k = ((browser.indexOf("msie") != -1) && (browser.indexOf("opera") == -1));
+var browser         = navigator.userAgent.toLowerCase();
+var weAreIEF__k     = ((browser.indexOf("msie") != -1) && (browser.indexOf("opera") == -1));
+var weAreFirefox    = browser.indexOf("firefox") != -1 || browser.indexOf("namoroka") != -1;
 var contentLocation = parent.frames[1].document.location;
 
 //
@@ -41,9 +42,12 @@ if (window.addEventListener) {
                                              dragScroll(e);
                                              return false;
                                            }, false);
-  window.addEventListener("mousedown",      startDragScroll, false);
-  window.addEventListener("mouseup",        stopDragScroll,  false);
-  window.addEventListener('DOMMouseScroll', scrollWheel,     false);
+  window.addEventListener("mousedown",        startDragScroll, false);
+  window.addEventListener("mouseup",          stopDragScroll,  false);
+  if(weAreFirefox)
+    window.addEventListener('DOMMouseScroll', scrollWheel,     false);
+  else
+    window.addEventListener('mousewheel',     scrollWheel,     false);
 } else {
   document.documentElement.onmousemove  = function(e) {
     // snapin drag 'n drop
@@ -339,13 +343,13 @@ function getSnapinTargetPos() {
 }
 
 /************************************************
- * misc sidebar styling
+ * misc sidebar stuff
  *************************************************/
 
 function pageHeight() {
   var h;
   
-  if (window.innerHeight !== null && typeof window.innerHeight !== 'undefined')
+  if (window.innerHeight !== null && typeof window.innerHeight !== 'undefined' && window.innerHeight !== 0)
     h = window.innerHeight;
   else if (document.documentElement && document.documentElement.clientHeight)
     h = document.documentElement.clientHeight;
@@ -354,7 +358,7 @@ function pageHeight() {
   else
     h = null;
   
-return h;
+  return h;
 }
 
 // Set the size of the sidebar_content div to fit the whole screen
@@ -365,12 +369,19 @@ function setSidebarHeight() {
   var oContent = document.getElementById('side_content');
   var oFooter  = document.getElementById('side_footer');
   var height   = pageHeight();
-  
+
+	// Don't handle zero heights
+	if(height == 0)
+		return;
 
   if (weAreIEF__k)
-      oContent.style.height = height - oFooter.clientHeight + 5;
+      oContent.style.height = (height - oFooter.clientHeight + 5) + 'px';
   else
-      oContent.style.height = height - oHeader.clientHeight - oFooter.clientHeight - 5;
+      oContent.style.height = (height - oHeader.clientHeight - oFooter.clientHeight - 5) + 'px';
+
+	oFooter = null;
+	oContent = null;
+	oHeader = null;
 }
 
 var scrolling = true;
@@ -476,13 +487,10 @@ function scrollWheel(event){
   if (!event)
     event = window.event;
 
-  if (event.wheelDelta) {
+  if (event.wheelDelta)
     delta = event.wheelDelta / 120;
-    if (window.opera)
-      delta = -delta;
-  } else if (event.detail) {
+  else if (event.detail)
     delta = -event.detail / 3;
-  }
 
   if (delta)
     handle(delta);
@@ -639,14 +647,14 @@ function hilite_icon(oImg, onoff) {
 }
 
 
-function toggle_folder(o) {
+function toggle_folder(o, folderId) {
     var par = o.parentNode;
     var next = null;
     var one_more = false;
     var img = null;
 
     for (var i in par.childNodes) {
-	var child = par.childNodes[i];
+        var child = par.childNodes[i];
         if (one_more && child.nodeName == "DIV") {
             next = child;
             break;
@@ -665,14 +673,15 @@ function toggle_folder(o) {
 
     if (next) {
         if (next.style.display == "none") {
-	    next.style.display = "";
+            next.style.display = "";
             if (img) 
                 img.src = "images/link_folder_open.gif";
-        }
-        else {
-	    next.style.display = "none";
+            get_url('customlink_openclose.py?name=' + escape(folderId) + '&state=on');
+        } else {
+            next.style.display = "none";
             if (img) 
                 img.src = "images/link_folder.gif";
+            get_url('customlink_openclose.py?name=' + escape(folderId) + '&state=off');
         }
     }
 
@@ -680,4 +689,41 @@ function toggle_folder(o) {
     par = null;
     next = null;
     img = null;
+}
+
+/************************************************
+ * Save/Restore scroll position
+ *************************************************/
+
+function setCookie(cookieName, value,expiredays) {
+    var exdate = new Date();
+    exdate.setDate(exdate.getDate() + expiredays);
+    document.cookie = cookieName + "=" + escape(value) +
+        ((expiredays == null) ? "" : ";expires=" + exdate.toUTCString());
+}
+
+function getCookie(cookieName) {
+    if(document.cookie.length == 0)
+        return null;
+
+    var cookieStart = document.cookie.indexOf(cookieName + "=");
+    if(cookieStart == -1)
+        return null;
+    
+    cookieStart = cookieStart + cookieName.length + 1;
+    var cookieEnd = document.cookie.indexOf(";", cookieStart);
+    if(cookieEnd == -1)
+        cookieEnd = document.cookie.length;
+    return unescape(document.cookie.substring(cookieStart, cookieEnd));
+}
+
+function initScrollPos() {
+    var scrollPos = getCookie('sidebarScrollPos');
+    if(!scrollPos)
+        scrollPos = 0;
+    document.getElementById('side_content').scrollTop = scrollPos;
+}
+
+function storeScrollPos() {
+    setCookie('sidebarScrollPos', document.getElementById('side_content').scrollTop, null);
 }

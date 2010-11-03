@@ -82,8 +82,10 @@ Logwatch: was macht man hier bei verteilten Umgebungen?? Muss man das wie
 PNP per Proxy anfahren? Was ist aber dann, wenn man dort rumklickt?  Dann hat
 man rechts plötzlich ein anderes System. Lösung ist noch nicht in Sicht.
 
-LARS: In Opera (Version 10.6) geht in der Sidebar das Scrollen per Mausrad
-nicht. Angeblich in Chrome auch nicht.
+LARS: Bei Opera kann man kein Snapin nach ganz unten ziehen. Der Indikator 
+springt dann immer nach ganz oben.
+
+LARS: Im Opera wird sich die aktuelle Scroll-Position der Sidebar nicht korrekt gemerkt.
 
 SNMP-Checks: Es wurde berichtet, dass - wenn die Community falsch ist - 
 der Check_MK gruen war, aber die Checks unknown. Sollte es dann nicht

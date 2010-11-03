@@ -1,0 +1,27 @@
+title: Monitor number of TCP connections per state
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the number of TCP connections in the various possible states,
+ which are: {ESTABLISHED}, {SYN_SENT}, {SYN_RECV}, {LAST_ACK}, {CLOSE_WAIT}, {TIME_WAIT}, {CLOSED}, {CLOSING}, {FIN_WAIT1}, {FIN_WAIT2}.
+ 
+perfdata:
+ One variable for each of the state types listed in the description (which are ten).
+
+inventory:
+ If there is at least one TCP connection, then one check will be created.
+ On agents supporting {tcp_conn_state} this should always be the case since at
+ least the connection to the agent should be shown.
+
+examples:
+ # set levels for TIME_WAIT and ESTABLISHED
+ tcp_conn_state_default_levels = { "TIME_WAIT" : (20, 50), "ESTABLISHED" : (100, 200) }
+
+[parameters]
+levels(dict from string to (int, int)): A python dictionary from check state to a pair of integers for warning and critical levels. For state types not listed in the dictionary no state check is done. The default parameter is an empty dictionary, which makes this check always OK.
+
+[configuration]
+tcp_conn_state_default_levels (dict from string to (int, int)): default levels used for all
+ inventorized checks.

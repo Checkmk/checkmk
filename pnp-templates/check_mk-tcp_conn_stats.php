@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,25 +23,27 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-cisco_fan_states = ('', 'normal', 'warning', 'critical',
-                        'shutdown', 'notPresent', 'notFunctioning')
+$opt[1] = "--vertical-label 'Number' -u 10 -X0 --title \"TCP Connection stats on $hostname\" ";
 
-def inventory_cisco_fan(checkname, info):
-    return [ (line[0], None) for line in info if line[1] != '5' ]
+$stats = array(
+  array(2,  "SYN_SENT", "   ", "#a00000", ""),
+  array(3,  "SYN_RECV", "   ", "#ff4000", ""),
+  array(1,  "ESTABLISHED", "", "#00f040", ""),
+  array(6,  "TIME_WAIT", "  ", "#00b0b0", "\\n"),
+  array(4,  "LAST_ACK", "   ", "#c060ff", ""),
+  array(5,  "CLOSE_WAIT", " ", "#f000f0", ""),
+  array(7,  "CLOSED", "     ", "#ffc000", ""),
+  array(8,  "CLOSING", "    ", "#ffc080", "\\n"),
+  array(9,  "FIN_WAIT1", "  ", "#cccccc", ""),
+  array(10, "FIN_WAIT2", "  ", "#888888", "\\n")
+);
 
-def check_cisco_fan(item, params, info):
-    for line in info:
-        if line[0] == item:
-            state = saveint(line[1])
-            if state == 1:
-                return (0, "OK (State is: %s (%d))" % (cisco_fan_states[state], state))
-            elif state == 2:
-                return (1, "WARNING (state is %s (%d))" % (cisco_fan_states[state], state))
-            else:
-                return (2, "CRITICAL (state is %s (%d))" % (cisco_fan_states[state], state))
-    return (3, "UNKNOWN - item not found in snmp data")
+$def[1] = "";
 
-check_info['cisco_fan'] = (check_cisco_fan, "FAN %s", 0,  inventory_cisco_fan)
-snmp_info['cisco_fan'] = ( "1.3.6.1.4.1.9.9.13.1.4.1", [ "2", "3" ] )
-snmp_scan_functions['cisco_fan'] = \
-    lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower()
+foreach ($stats as $entry) {
+   list($i, $stat, $spaces, $color, $nl) = $entry;
+   $def[1] .= "DEF:$stat=$RRDFILE[$i]:$DS[$i]:MAX ";
+   $def[1] .= "AREA:$stat$color:\"$stat\":STACK ";
+   $def[1] .= "GPRINT:$stat:LAST:\"$spaces%3.0lf$nl\" ";
+}
+

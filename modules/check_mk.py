@@ -43,6 +43,28 @@ else:
     opt_debug = False
     opt_config_check = False
 
+# are we running OMD? If yes, honor local/ hierarchy
+omd_root = os.getenv("OMD_ROOT", None)
+if omd_root:
+    local_share              = omd_root + "/local/share/check_mk"
+    local_checks_dir         = local_share + "/checks"
+    local_check_manpages_dir = local_share + "/checkman"
+    local_agents_dir         = local_share + "/agents"
+    local_web_dir            = local_share + "/web"
+    local_pnp_templates_dir  = local_share + "/pnp-templates"
+    local_pnp_rraconf_dir    = local_share + "/pnp-rraconf"
+    local_doc_dir            = omd_root + "/local/share/doc/check_mk"
+else:
+    local_checks_dir         = None
+    local_check_manpages_dir = None
+    local_agents_dir         = None
+    local_web_dir            = None
+    local_pnp_templates_dir  = None
+    local_pnp_rraconf_dir    = None
+    local_doc_dir            = None
+
+
+
 #   +----------------------------------------------------------------------+
 #   |        ____       _   _                                              |
 #   |       |  _ \ __ _| |_| |__  _ __   __ _ _ __ ___   ___  ___          |
@@ -349,7 +371,10 @@ def precompile_filesystem_levels(host, item, params):
 # Do not read in the checks if check_mk is called as module
 
 if __name__ == "__main__":
-    for f in glob.glob(checks_dir + "/*"):
+    filelist = glob.glob(checks_dir + "/*")
+    if local_checks_dir:
+        filelist += glob.glob(local_checks_dir + "/*")
+    for f in filelist: 
         if not f.endswith("~"): # ignore emacs-like backup files
             try:
                 execfile(f)
@@ -1809,6 +1834,8 @@ def reread_autochecks():
 #   +----------------------------------------------------------------------+
 
 def find_check_plugin(checktype):
+    if local_checks_dir and os.path.exists(local_checks_dir + "/" + checktype):
+        return local_checks_dir + "/" + checktype
     filename = checks_dir + "/" + checktype
     if os.path.exists(filename):
         return filename
@@ -2026,20 +2053,27 @@ def get_tty_size():
     return (24, 80)
 
 
+def all_manuals():
+    entries = dict([(fn, check_manpages_dir + "/" + fn) for fn in os.listdir(check_manpages_dir)])
+    if local_check_manpages_dir and os.path.exists(local_check_manpages_dir):
+        entries.update(dict([(fn, local_check_manpages_dir + "/" + fn) for fn in os.listdir(local_check_manpages_dir)]))
+    return entries
+
 def list_all_manuals():
     table = []
-    for filename in os.listdir(check_manpages_dir):
+    for filename, path in all_manuals().items():
         if filename.endswith("~"):
             continue
+        
         try:
-            for line in file(check_manpages_dir + "/" + filename):
+            for line in file(path):
                 if line.startswith("title:"):
                     table.append((filename, line.split(":", 1)[1].strip()))
         except:
             pass
 
     table.sort()
-    print_table(['Check type', 'Title'], [tty_blue, tty_cyan], table)
+    print_table(['Check type', 'Title'], [tty_bold, tty_normal], table)
 
 def show_check_manual(checkname):
     bg_color = 4
@@ -2054,11 +2088,9 @@ def show_check_manual(checkname):
     parameters_color = tty(6,4,1)
     examples_color = tty(6,4,1)
 
-    filename = check_manpages_dir + "/" + checkname
-    try:
-        f = file(filename)
-    except:
-        print "No manpage for %s. Sorry." % checkname
+    filename = all_manuals().get(checkname)
+    if not filename:
+        sys.stdout.write("No manpage for %s. Sorry." % checkname)
         return
 
     sections = {}
@@ -2069,7 +2101,7 @@ def show_check_manual(checkname):
     empty_line_count = 0
 
     try:
-        for line in f:
+        for line in file(filename):
             lineno += 1
             if line.startswith(' ') and line.strip() != "": # continuation line
                 empty_line_count = 0
@@ -2100,7 +2132,6 @@ def show_check_manual(checkname):
                 current_variable, restofline = line.split(':', 1)
                 current_section.append((current_variable, restofline.lstrip()))
     except Exception, e:
-        print current_section
         sys.stderr.write("Syntax error in %s line %d (%s).\n" % (filename, lineno, e))
         sys.exit(1)
 
@@ -2633,6 +2664,7 @@ def show_paths():
     conf = 2
     data = 3
     pipe = 4
+    local = 5
     dir = 1
     fil = 2
 
@@ -2671,6 +2703,17 @@ def show_paths():
         ( livestatus_unix_socket,      fil, pipe, "Socket of Check_MK's livestatus module"),
         ]
 
+    if omd_root:
+        paths += [
+         ( local_checks_dir,           dir, local, "Locally installed checks"),
+         ( local_check_manpages_dir,   dir, local, "Locally installed check man pages"),
+         ( local_agents_dir,           dir, local, "Locally installed agents and plugins"),
+         ( local_web_dir,              dir, local, "Locally installed Multisite addons"),
+         ( local_pnp_templates_dir,    dir, local, "Locally installed PNP templates"),
+         ( local_pnp_rraconf_dir,      dir, local, "Locally installed PNP RRA configuration"),
+         ( local_doc_dir,              dir, local, "Locally installed documentation"),
+        ]
+
     def show_paths(title, t):
         if t != inst:
             print
@@ -2686,6 +2729,7 @@ def show_paths():
         ( "Configuration files edited by you", conf ),
         ( "Data created by Nagios/Check_MK at runtime", data ),
         ( "Sockets and pipes", pipe ),
+        ( "Locally installed addons", local ),
         ]:
         show_paths(title, t)
 

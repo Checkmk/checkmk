@@ -4,6 +4,9 @@
       then after an error with one of those two agents checks from the
       other haven't been executed. This is fixed now. Inventory check
       is still not complete in that error condition.
+    * Packages (MKP): Allow to create and install packages within OMD!
+      Files are installed below ~/local/share/check_mk. No root permissions
+      are neccessary
 
     Checks & Agents:
     * megaraid_pdisks: Using the real enclosure number as check item now

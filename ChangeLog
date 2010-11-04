@@ -1,3 +1,12 @@
+1.1.8p1
+    Core, Setup, etc.:
+    * setup.sh: fix problem with missing package_info (only appears if setup
+      is called from another directory)
+
+    Checks & Agents:
+    * heartbeat_nodes: fix Linux agent for hostname with upper case letters (thanks to
+            Thorsten Robers)
+
 1.1.8:
     Core, Setup, etc.:
     * setup.sh: turn off Python debugging

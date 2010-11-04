@@ -7,6 +7,8 @@
     * Packages (MKP): Allow to create and install packages within OMD!
       Files are installed below ~/local/share/check_mk. No root permissions
       are neccessary
+    * setup.sh: fix problem with missing package_info (only appears if setup
+      is called from another directory)
 
     Checks & Agents:
     * megaraid_pdisks: Using the real enclosure number as check item now

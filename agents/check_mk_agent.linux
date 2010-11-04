@@ -287,7 +287,7 @@ if which cl_status > /dev/null 2>&1; then
 
   echo '<<<heartbeat_nodes>>>'
   for NODE in $(cl_status listnodes); do
-    if [ $NODE != $HOSTNAME ]; then
+    if [ $NODE != $(echo $HOSTNAME | tr 'A-Z' 'a-z') ]; then
       STATUS=$(cl_status nodestatus $NODE)
       echo -n "$NODE $STATUS" 
       for LINK in $(cl_status listhblinks $NODE 2>/dev/null); do

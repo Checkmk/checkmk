@@ -26,6 +26,8 @@
                     power-state of IBM Bladecenter blades
     * win_dhcp_pools: Several cleanups in check
     * heartbeat_rscstatus: Catching empty output from agent correctly
+    * heartbeat_nodes: fix Linux agent for hostname with upper case letters (thanks to
+            Thorsten Robers)
 
     Multisite:
     * The custom open/close states of custom links are now stored for each

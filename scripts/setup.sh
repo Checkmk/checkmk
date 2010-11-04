@@ -658,7 +658,7 @@ do
 	   fi &&
 
            mkdir -p $DESTDIR$vardir/packages &&
-           install -m 644 package_info $DESTDIR$vardir/packages/check_mk &&
+           install -m 644 $SRCDIR/package_info $DESTDIR$vardir/packages/check_mk &&
 
 	   mkdir -p $DESTDIR$apache_config_dir &&
 	   if [ ! -e $DESTDIR$apache_config_dir/$NAME -a ! -e $DESTDIR$apache_config_dir/zzz_$NAME.conf ]

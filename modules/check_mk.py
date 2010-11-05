@@ -1670,6 +1670,11 @@ def make_inventory(checkname, hostnamelist, check_only=False):
                 sys.stderr.write("%s: Invalid output from agent or invalid configuration: %s\n" % (hostname, e))
                 continue
 
+            if not isinstance(inventory, list):
+                sys.stderr.write("%s: Check %s returned invalid inventory data: %s\n" %
+                                                    (hostname, checkname, repr(inventory)))
+                continue
+
             for entry in inventory:
                 if len(entry) == 2: # comment is now obsolete
                     item, paramstring = entry

@@ -7,6 +7,9 @@
     * Packages (MKP): Allow to create and install packages within OMD!
       Files are installed below ~/local/share/check_mk. No root permissions
       are neccessary
+    * Inventory: Better error handling on invalid inventory result of checks
+    * setup.sh: fix problem with missing package_info (only appears if setup
+      is called from another directory)
 
     Checks & Agents:
     * megaraid_pdisks: Using the real enclosure number as check item now
@@ -26,6 +29,13 @@
                     power-state of IBM Bladecenter blades
     * win_dhcp_pools: Several cleanups in check
     * Windows agent: allow restriction to ip addresses with only_hosts (like xinetd)
+    * heartbeat_rscstatus: Catching empty output from agent correctly
+    * tcp_conn_stats: Fixed inventory function when no conn stats can be inventoried
+    * heartbeat_nodes: fix Linux agent for hostname with upper case letters (thanks to
+            Thorsten Robers)
+    * heartbeat_rscstatus: Catching empty output from agent correctly
+    * win_dhcp_pools agent plugin: Filtering additional error message on
+      systems without dhcp server
 
     Multisite:
     * The custom open/close states of custom links are now stored for each

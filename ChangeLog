@@ -7,6 +7,8 @@
     * heartbeat_nodes: fix Linux agent for hostname with upper case letters (thanks to
             Thorsten Robers)
     * heartbeat_rscstatus: Catching empty output from agent correctly
+    * win_dhcp_pools agent plugin: Filtering additional error message on
+      systems without dhcp server
 
 1.1.8:
     Core, Setup, etc.:

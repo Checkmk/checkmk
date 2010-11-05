@@ -105,7 +105,7 @@ def is_valid_pnp_rra(check):
     return check_has_perfdata(check)
 
 def verify_pnp_rra(check):
-    return os.path.exists('pnp-rraconf/check_mk-%s.rra.php' % check)
+    return os.path.exists('pnp-rraconf/check_mk-%s.rra.cfg' % check)
 
 #
 # 1) Perform checks

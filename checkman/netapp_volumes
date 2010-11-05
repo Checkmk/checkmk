@@ -1,0 +1,19 @@
+title: Checks health and state of NetAPP volumes
+agents: snmp
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check verifies the state and health of volumes defined in NetAPP systems.
+
+ The check raises a {WARNING} when the state of the volume is {offline}. A {WARNING}
+ state is also raised when the health is reported as {reconstructing} all other states
+ which are not {normal} or {raid_dp} result in a {CRITICAL} state.
+
+item:
+ Name of the volume as defined in the system
+
+inventory:
+ All {local} volumes are automatically inventorized.
+
+

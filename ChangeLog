@@ -438,6 +438,7 @@
     * New check heartbeat_rscstatus: Checks the local resource status of
       a heartbeat node
     * New check win_dhcp_pools: Checks the usage of Windows DHCP Server lease pools
+    * New check netapp_volumes: Checks on/offline-condition and states of netapp volumes 
 
     Multisite:
     * New view showing all PNP graphs of services with the same description

@@ -1,0 +1,113 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Author: Lars Michelsen <lm@mathias-kettner.de>
+
+#.1.3.6.1.4.1.789.1.5.8.1.1.1 = INTEGER: 1
+#.1.3.6.1.4.1.789.1.5.8.1.1.2 = INTEGER: 2
+#.1.3.6.1.4.1.789.1.5.8.1.1.3 = INTEGER: 3
+#.1.3.6.1.4.1.789.1.5.8.1.2.1 = STRING: "vol0"
+#.1.3.6.1.4.1.789.1.5.8.1.2.2 = STRING: "RvRBackup"
+#.1.3.6.1.4.1.789.1.5.8.1.2.3 = STRING: "RundV"
+#.1.3.6.1.4.1.789.1.5.8.1.3.1 = STRING: "67155442"
+#.1.3.6.1.4.1.789.1.5.8.1.3.2 = STRING: "2600515058"
+#.1.3.6.1.4.1.789.1.5.8.1.3.3 = STRING: "788575730"
+#.1.3.6.1.4.1.789.1.5.8.1.4.1 = INTEGER: 1
+#.1.3.6.1.4.1.789.1.5.8.1.4.2 = INTEGER: 1
+#.1.3.6.1.4.1.789.1.5.8.1.4.3 = INTEGER: 1
+#.1.3.6.1.4.1.789.1.5.8.1.5.1 = STRING: "online"
+#.1.3.6.1.4.1.789.1.5.8.1.5.2 = STRING: "online"
+#.1.3.6.1.4.1.789.1.5.8.1.5.3 = STRING: "online"
+#.1.3.6.1.4.1.789.1.5.8.1.6.1 = STRING: "raid_dp"
+#.1.3.6.1.4.1.789.1.5.8.1.6.2 = STRING: "raid_dp"
+#.1.3.6.1.4.1.789.1.5.8.1.6.3 = STRING: "raid_dp"
+#.1.3.6.1.4.1.789.1.5.8.1.7.1 = STRING: "root, diskroot, nosnap=off, nosnapdir=off, minra=off, no_atime_update=off, raidtype=raid_dp, raidsize=16, nvfail=off, snapmirrored=off, resyncsnaptime=60, create_ucode=off, convert_ucode=off, maxdirsize=10485, fs_size_fixed=off, guarantee=volume, svo_enable=off, svo_checksum=off, svo_allow_rman=off, svo_reject_errors=off, no_i2p=off, fractional_reserve=100, extent=off, try_first=volume_grow"
+#.1.3.6.1.4.1.789.1.5.8.1.7.2 = STRING: "nosnap=off, nosnapdir=off, minra=off, no_atime_update=off, raidtype=raid_dp, raidsize=16, nvfail=off, snapmirrored=off, resyncsnaptime=60, create_ucode=off, convert_ucode=off, maxdirsize=10485, fs_size_fixed=off, guarantee=volume, svo_enable=off, svo_checksum=off, svo_allow_rman=off, svo_reject_errors=off, no_i2p=off, fractional_reserve=100, extent=off, try_first=volume_grow"
+#.1.3.6.1.4.1.789.1.5.8.1.7.3 = STRING: "nosnap=on, nosnapdir=on, minra=off, no_atime_update=off, raidtype=raid_dp, raidsize=16, nvfail=off, snapmirrored=off, resyncsnaptime=60, create_ucode=off, convert_ucode=off, maxdirsize=10485, fs_size_fixed=off, guarantee=volume, svo_enable=off, svo_checksum=off, svo_allow_rman=off, svo_reject_errors=off, no_i2p=off, fractional_reserve=100, extent=off, try_first=volume_grow"
+#.1.3.6.1.4.1.789.1.5.8.1.8.1 = STRING: "1ddc9920-496e-11df-aae1-00a09800c998"
+#.1.3.6.1.4.1.789.1.5.8.1.8.2 = STRING: "62ac1040-5a8d-11df-83fd-00a09800c998"
+#.1.3.6.1.4.1.789.1.5.8.1.8.3 = STRING: "4edc66e0-d6a3-11df-8724-00a09800c998"
+#.1.3.6.1.4.1.789.1.5.8.1.9.1 = STRING: "aggr0"
+#.1.3.6.1.4.1.789.1.5.8.1.9.2 = STRING: "aggr0"
+#.1.3.6.1.4.1.789.1.5.8.1.9.3 = STRING: "aggr0"
+#.1.3.6.1.4.1.789.1.5.8.1.10.1 = INTEGER: 2
+#.1.3.6.1.4.1.789.1.5.8.1.10.2 = INTEGER: 2
+#.1.3.6.1.4.1.789.1.5.8.1.10.3 = INTEGER: 2
+#.1.3.6.1.4.1.789.1.5.8.1.11.1 = INTEGER: 1
+#.1.3.6.1.4.1.789.1.5.8.1.11.2 = INTEGER: 1
+#.1.3.6.1.4.1.789.1.5.8.1.11.3 = INTEGER: 1
+#.1.3.6.1.4.1.789.1.5.8.1.12.1 = ""
+#.1.3.6.1.4.1.789.1.5.8.1.12.2 = ""
+#.1.3.6.1.4.1.789.1.5.8.1.12.3 = ""
+#.1.3.6.1.4.1.789.1.5.8.1.13.1 = ""
+#.1.3.6.1.4.1.789.1.5.8.1.13.2 = ""
+#.1.3.6.1.4.1.789.1.5.8.1.13.3 = ""
+
+netapp_volumes_owner = {
+  '1': 'local',
+  '2': 'partner',
+}
+
+def inventory_netapp_volumes(checkname, info):
+    # Only inventorize local volumes
+    return [ (line[0], None) for line in info if netapp_volumes_owner.get(line[2], '') == 'local' ]
+
+def check_netapp_volumes(item, _not_used, info):
+    info = [ line for line in info if line[0] == item ][0]
+
+    if len(info) != 5:
+        return (3, "UNKNOWN - Invalid SNMP response")
+
+    name, fsid, owner, state, status = info
+
+    output = 'FSID: %s, Owner: %s, ' % (fsid, netapp_volumes_owner.get(owner, 'UNKNOWN'))
+
+    ret_state = 0
+    output += 'State: %s' % state
+    if state == 'offline':
+        ret_state = 1
+        output += ' (WARN)'
+
+    output += ', Status: %s' % status
+    if status == 'reconstructing':
+        ret_state = 1
+        output += ' (WARN)'
+    elif status not in [ 'normal', 'raid_dp' ]:
+        ret_state = 2
+        output += ' (CRIT)'
+
+    return (ret_state, "%s - %s" % (nagios_state_names[ret_state], output))
+
+check_info["netapp_volumes"] = (check_netapp_volumes, "NetApp Vol %s", 0, inventory_netapp_volumes)
+snmp_info["netapp_volumes"] = ( ".1.3.6.1.4.1.789.1.5.8.1", ["2",  # volName
+                                                             "3",  # volFSID
+                                                             "4",  # volOwningHost
+                                                             "5",  # volState
+                                                             "6",  # volStatus
+                                                       ] )
+
+snmp_scan_functions['netapp_volumes'] = \
+    lambda oid: oid("1.3.6.1.2.1.1.1.0").startswith('"NetApp Release')

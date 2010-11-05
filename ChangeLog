@@ -32,6 +32,9 @@
     * tcp_conn_stats: Fixed inventory function when no conn stats can be inventoried
     * heartbeat_nodes: fix Linux agent for hostname with upper case letters (thanks to
             Thorsten Robers)
+    * heartbeat_rscstatus: Catching empty output from agent correctly
+    * win_dhcp_pools agent plugin: Filtering additional error message on
+      systems without dhcp server
 
     Multisite:
     * The custom open/close states of custom links are now stored for each

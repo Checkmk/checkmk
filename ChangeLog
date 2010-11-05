@@ -25,6 +25,7 @@
     * blade_blades: Added new check for checking the health-, present- and
                     power-state of IBM Bladecenter blades
     * win_dhcp_pools: Several cleanups in check
+    * Windows agent: allow restriction to ip addresses with only_hosts (like xinetd)
 
     Multisite:
     * The custom open/close states of custom links are now stored for each

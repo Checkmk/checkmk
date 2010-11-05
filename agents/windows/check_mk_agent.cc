@@ -52,10 +52,12 @@
 #include <stdarg.h>
 #include <time.h>
 #include <string.h>
+#include <strings.h>
 #include <locale.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <ctype.h> // isspace()
 
 
 #define CHECK_MK_VERSION "1.1.9i1"
@@ -87,6 +89,16 @@ char     g_agent_directory[256];
 char     g_current_directory[256];
 char     g_plugins_dir[256];
 char     g_local_dir[256];
+char     g_config_file[256];
+
+struct ipspec {
+    uint32_t address;
+    uint32_t netmask;
+};
+
+#define MAX_ONLY_FROM 32
+struct ipspec g_only_from[MAX_ONLY_FROM];
+unsigned int g_num_only_from = 0;
 
 
 #ifdef DEBUG
@@ -1016,24 +1028,36 @@ void get_agent_dir(char *buffer, int size)
             *end = 0; // replace \ with string end => get directory of executable
         }
         size = dsize;
+        RegCloseKey(key);
     }
-    RegCloseKey(key);
+    else {
+        // If the agent is not installed as service, simply
+        // assume the current directory to be the agent 
+        // directory (for test and adhoc mode)
+        strcpy(g_agent_directory, g_current_directory);
+    }
+
 }
 
+
+void section_check_mk(SOCKET &out)
+{
+    output(out, "<<<check_mk>>>\n");
+    output(out, "Version: %s\n", CHECK_MK_VERSION);
+    output(out, "AgentOS: windows\n");
+    output(out, "WorkingDirectory: %s\n", g_current_directory);
+    output(out, "ConfigFile: %s\n", g_config_file);
+    output(out, "AgentDirectory: %s\n", g_agent_directory);
+    output(out, "PluginsDirectory: %s\n", g_plugins_dir);
+    output(out, "LocalDirectory: %s\n", g_local_dir);
+}
 
 void output_data(SOCKET &out)
 {
     // make sure, output of numbers is not localized
     setlocale(LC_ALL, "C");
 
-    output(out, "<<<check_mk>>>\n");
-    output(out, "Version: %s\n", CHECK_MK_VERSION);
-    output(out, "AgentOS: windows\n");
-    output(out, "WorkingDirectory: %s\n", g_current_directory);
-    output(out, "AgentDirectory: %s\n", g_agent_directory);
-    output(out, "PluginsDirectory: %s\n", g_plugins_dir);
-    output(out, "LocalDirectory: %s\n", g_local_dir);
-
+    section_check_mk(out);
     section_df(out);
     section_ps(out);
     section_mem(out);
@@ -1044,6 +1068,32 @@ void output_data(SOCKET &out)
     section_local(out);
 }
     
+
+char *ipv4_to_text(uint32_t ip)
+{
+    static char text[32];
+    snprintf(text, 32, "%u.%u.%u.%u", 
+            ip & 255,
+            ip >> 8 & 255,
+            ip >> 16 & 255,
+            ip >> 24);
+    return text;
+}
+
+bool check_only_from(uint32_t ip)
+{
+    if (g_num_only_from == 0)
+        return true; // no restriction set
+
+    for (unsigned i=0; i<g_num_only_from; i++)
+    {
+        uint32_t signibits = ip & g_only_from[i].netmask;
+        if (signibits == g_only_from[i].address)
+            return true;
+    }
+    return false;
+}
+
 
 void listen_tcp_loop()
 {
@@ -1091,15 +1141,19 @@ void listen_tcp_loop()
 	struct timeval timeout;
 	timeout.tv_sec = 0;
 	timeout.tv_usec = 500000;
+
+        SOCKADDR_IN remote_addr;
+        int addr_len = sizeof(SOCKADDR_IN);
+
 	if (1 == select(1, &fds, NULL, NULL, &timeout)) 
 	{
-	    connection = accept(s, NULL, NULL);
-	    debug("Habe accepted.");
+	    connection = accept(s, (SOCKADDR *)&remote_addr, &addr_len);
 	    if (connection != INVALID_SOCKET) {
-
-		debug("socket ist auch da.");
-		output_data(connection);
-
+                uint32_t ip = 0;
+                if (remote_addr.sin_family == AF_INET)
+                    ip = remote_addr.sin_addr.s_addr;
+                if (check_only_from(ip))
+                    output_data(connection);
 		closesocket(connection);
 	    }
 	}
@@ -1347,16 +1401,162 @@ void determine_directories()
     snprintf(g_local_dir, sizeof(g_local_dir), "%s\\local", g_agent_directory);
 }
 
+char *lstrip(char *s)
+{
+    while (isspace(*s))
+        s++;
+    return s;
+}
+
+
+void rstrip(char *s)
+{
+    char *end = s + strlen(s); // point one beyond last character
+    while (end > s && isspace(*(end - 1))) {
+        end--;
+    }
+    *end = 0;
+}
+
+char *strip(char *s)
+{
+    rstrip(s);
+    return lstrip(s);
+}
+
+void add_only_from(char *value)
+{
+    if (g_num_only_from >= MAX_ONLY_FROM) {
+        fprintf(stderr, "Cannot handle more the %d entries for only_from\r\n", MAX_ONLY_FROM);
+        exit(1);
+    }
+
+    unsigned a, b, c, d;
+    int bits = 32;
+
+    if (strchr(value, '/')) {
+        if (5 != sscanf(value, "%u.%u.%u.%u/%u", &a, &b, &c, &d, &bits)) {
+            fprintf(stderr, "Invalid value %s for only_hosts\n", value);
+            exit(1);
+        }
+    }
+    else {
+        if (4 != sscanf(value, "%u.%u.%u.%u", &a, &b, &c, &d)) {
+            fprintf(stderr, "Invalid value %s for only_hosts\n", value);
+            exit(1);
+        }
+    }
+
+    uint32_t ip = a + b * 0x100 + c * 0x10000 + d * 0x1000000;
+    uint32_t mask_swapped = 0;
+    for (int bit = 0; bit < bits; bit ++) 
+        mask_swapped |= 0x80000000 >> bit;
+    uint32_t mask;
+    unsigned char *s = (unsigned char *)&mask_swapped;
+    unsigned char *t = (unsigned char *)&mask;
+    t[3] = s[0];
+    t[2] = s[1];
+    t[1] = s[2];
+    t[0] = s[3];
+    g_only_from[g_num_only_from].address = ip;
+    g_only_from[g_num_only_from].netmask = mask;
+
+    if ((ip & mask) != ip) {
+        fprintf(stderr, "Invalid only_hosts entry: host part not 0: %s/%u", 
+                ipv4_to_text(ip), bits);
+        exit(1);
+    }
+    g_num_only_from ++;
+}
+
+void parse_only_from(char *value)
+{
+    char *end = value + strlen(value);
+    while (value < end) {
+        value = lstrip(value);
+        char *s = value;
+        while (*s && !isspace(*s))
+            s++;
+        *s = 0;
+        add_only_from(value);
+        value = s + 1;
+    }
+}
+
+void handle_config_variable(char *var, char *value)
+{
+    if (!strcmp(var, "only_from")) {
+        parse_only_from(value);
+    }
+    else {
+        fprintf(stderr, "Invalid configuration variable %s.\r\n", var);
+        exit(1);
+    }
+}
+
+
+void read_config_file()
+{
+    snprintf(g_config_file, sizeof(g_config_file), "%s\\check_mk.ini", g_agent_directory);
+    FILE *file = fopen(g_config_file, "r");
+    if (!file) {
+        g_config_file[0] = 0;
+        return;
+    }
+
+    char line[512];
+    int lineno = 0;
+    while (!feof(file)) {
+        if (!fgets(line, sizeof(line), file))
+            return;
+        lineno ++;
+        char *l = strip(line);
+        if (l[0] == 0 || l[0] == '#' || l[0] == ';')
+            continue; // skip empty lines and comments
+        int len = strlen(l);
+        if (l[0] == '[' && l[len-1] == ']') {
+            // found section header
+            l[len-1] = 0;
+            char *section = l + 1;
+            if (strcmp(section, "global")) {
+                fprintf(stderr, "Invalid section %s in %s.\r\n",
+                        section, g_config_file);
+                exit(1);
+            }
+        }
+        else {
+            // split up line at = sign
+            char *s = l;
+            while (*s && *s != '=') 
+                s++;
+            if (*s != '=') {
+                fprintf(stderr, "Invalid line %d in %s.\r\n",
+                        lineno, g_config_file);
+                exit(1);
+            }
+            *s = 0;
+            char *value = s + 1;
+            char *variable = l;
+            rstrip(variable);
+            value = strip(value);
+            handle_config_variable(variable, value); // add section later
+        }
+    }
+        
+}
 
 int main(int argc, char **argv)
 {
     determine_directories();
+    read_config_file();
+
     if (argc > 2)
 	usage();
     else if (argc <= 1)
 	RunService();
     else if (!strcmp(argv[1], "test"))
 	do_test();
+
     else if (!strcmp(argv[1], "adhoc"))
 	do_adhoc();
     else if (!strcmp(argv[1], "install"))

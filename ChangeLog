@@ -33,6 +33,8 @@
       make Nagios reject the configuration.
     * --snmpwalk: do not translate anymore, use numbers. All checks work
       with numbers now anyway.
+    * check_mk -I snmp will now try all checktypes not having an snmp scan
+      function. That way all possible checks should be inventorized.
 
     Checks & Agents:
     * megaraid_pdisks: Using the real enclosure number as check item now

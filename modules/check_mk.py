@@ -37,11 +37,9 @@ check_mk_version  = '(inofficial)'
 if __name__ == "__main__":
     opt_verbose      = '-v' in sys.argv[1:] or '--verbose' in sys.argv[1:]
     opt_debug        = '--debug' in sys.argv[1:]
-    opt_config_check = '-X' in sys.argv[1:] or '--config-check' in sys.argv[1:]
 else:
     opt_verbose = False
     opt_debug = False
-    opt_config_check = False
 
 # are we running OMD? If yes, honor local/ hierarchy
 omd_root = os.getenv("OMD_ROOT", None)
@@ -3378,8 +3376,7 @@ def ip_to_hostname(ip):
 def all_nonfunction_vars():
     return set([ name for name,value in globals().items() if name[0] != '_' and type(value) != type(lambda:0) ])
 
-if opt_config_check:
-    vars_before_config = all_nonfunction_vars()
+vars_before_config = all_nonfunction_vars()
 
 
 list_of_files = [ check_mk_configfile ] + glob.glob(check_mk_configdir + '/*.mk')
@@ -3463,31 +3460,29 @@ if __name__ == "__main__":
 
 checks = autochecks + checks
 
-
-if opt_config_check:
-    vars_after_config = all_nonfunction_vars()
-    ignored_variables = set(['vars_before_config', 'rrdtool', 'final_mk', 'list_of_files', 'autochecks',
-                              'parts' ,'hosttags' ,'seen_hostnames' ,'all_hosts_untagged' ,'taggedhost' ,'hostname'])
-    errors = 0
-    for name in vars_after_config:
-        if name not in ignored_variables and name not in vars_before_config:
-            sys.stderr.write("Invalid configuration variable '%s'\n" % name)
-            errors += 1
-
-    # Special handling for certain deprecated variables
-    if filesystem_levels != []:
-        sys.stderr.write("WARNING: filesystem_levels is deprecated and will be removed\n"
-            "any decade now. Please use check_parameters instead! Details can be\n"
-            "found at http://mathias-kettner.de/checkmk_check_parameters.html.\n")
-
-    if type(snmp_communities) == dict:
-        sys.stderr.write("ERROR: snmp_communities cannot be a dict any more.\n")
+vars_after_config = all_nonfunction_vars()
+ignored_variables = set(['vars_before_config', 'rrdtool', 'final_mk', 'list_of_files', 'autochecks',
+                          'parts' ,'hosttags' ,'seen_hostnames' ,'all_hosts_untagged' ,'taggedhost' ,'hostname'])
+errors = 0
+for name in vars_after_config:
+    if name not in ignored_variables and name not in vars_before_config:
+        sys.stderr.write("Invalid configuration variable '%s'\n" % name)
         errors += 1
 
-    if errors > 0:
-        sys.stderr.write("--> Found %d invalid variables\n" % errors)
-        sys.stderr.write("If you use own helper variables, please prefix them with _.\n")
-        sys.exit(1)
+# Special handling for certain deprecated variables
+if filesystem_levels != []:
+    sys.stderr.write("WARNING: filesystem_levels is deprecated and will be removed\n"
+        "any decade now. Please use check_parameters instead! Details can be\n"
+        "found at http://mathias-kettner.de/checkmk_check_parameters.html.\n")
+
+if type(snmp_communities) == dict:
+    sys.stderr.write("ERROR: snmp_communities cannot be a dict any more.\n")
+    errors += 1
+
+if errors > 0:
+    sys.stderr.write("--> Found %d invalid variables\n" % errors)
+    sys.stderr.write("If you use own helper variables, please prefix them with _.\n")
+    sys.exit(1)
 
 
 # Convert www_group into numeric id

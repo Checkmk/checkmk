@@ -11,6 +11,9 @@
       be a dict any longer.
     * bulkwalk_hosts is now initizlized with []. You can do += here just
       is with all other rule variables.
+    * Configuration check (-X) is now always done. It is now impossible to
+      call any Check_MK action with an invalid configuration. This saves
+      you agains mistyped variables.
 
     Core, Setup, etc.:
     * Improve error handling: if hosts are monitored with SNMP *and* TCP,

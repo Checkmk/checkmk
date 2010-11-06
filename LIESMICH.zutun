@@ -84,9 +84,6 @@ getrennte Checks für Memory and Pagefile.
 -------------------------------------------------------------------------------
 ab 1.1.9i1:
 --------------------------------------------------------------------------------
-check_mk -X erzwingen. Das -R soll nur noch klappen, wenn kein Configfehler
-auftritt.
-
 --snmpwalk: Braucht man das translaten noch? Ich arbeite doch jetzt eh
 nur noch ohne MIB-Dateien. Das würde das ganze deutlich vereinfachen!
 Direct rrd updates ganz entfernen.

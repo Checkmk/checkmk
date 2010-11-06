@@ -2637,7 +2637,7 @@ def do_snmpwalk_on(hostname, filename):
     if opt_verbose:
         sys.stdout.write("%s:\n" % hostname)
     ip = lookup_ipaddress(hostname)
-    cmd = snmp_walk_command(hostname) + " -Ob -OQ %s " % ip
+    cmd = snmp_walk_command(hostname) + " -On -Ob -OQ %s " % ip
     if opt_debug:
         print 'Executing: %s' % cmd
     out = file(filename, "w")
@@ -2665,9 +2665,8 @@ def do_snmpwalk_on(hostname, filename):
                 oid = oid[1:]
             oids.append(oid)
             values.append(value)
-        numoids = snmptranslate(oids)
-        for numoid, value in zip(numoids, values):
-            out.write("%s %s\n" % (numoid, value.strip()))
+        for oid, value in zip(oids, values):
+            out.write("%s %s\n" % (oid, value.strip()))
             count += 1
         if opt_verbose:
             sys.stdout.write("%d variables.\n" % count)

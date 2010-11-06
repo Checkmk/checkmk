@@ -31,6 +31,8 @@
     * Make sure, host has no duplicate service - this is possible e.g. by
       monitoring via agent and snmp in parallel. duplicate services will
       make Nagios reject the configuration.
+    * --snmpwalk: do not translate anymore, use numbers. All checks work
+      with numbers now anyway.
 
     Checks & Agents:
     * megaraid_pdisks: Using the real enclosure number as check item now

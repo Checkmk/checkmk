@@ -63,10 +63,6 @@ springt dann immer nach ganz oben.
 
 LARS: Im Opera wird sich die aktuelle Scroll-Position der Sidebar nicht korrekt gemerkt.
 
-SNMP-Checks: Es wurde berichtet, dass - wenn die Community falsch ist - 
-der Check_MK gruen war, aber die Checks unknown. Sollte es dann nicht
-genau umgekehrt sein? Wird der Exit-code von snmpwalk ausgewertet?
-
 LARS: Wenn man gerade die Kommandobox auf hat (oder den Filter?) dann sollte
 kein Refresh stattfinden. Sonst wird man mitten im Tippen abgewürgt.  Kann man
 das mit Javascript hinbekommen? (kann Lars sich hier was überlegen? Man
@@ -84,10 +80,6 @@ getrennte Checks für Memory and Pagefile.
 -------------------------------------------------------------------------------
 ab 1.1.9i1:
 --------------------------------------------------------------------------------
---snmpwalk: Braucht man das translaten noch? Ich arbeite doch jetzt eh
-nur noch ohne MIB-Dateien. Das würde das ganze deutlich vereinfachen!
-Direct rrd updates ganz entfernen.
-
 IDEE: Scan-Modus: Wenn man einen Host per SNMP scannt und *keine*
 Antwort kommt, dann probiert man einfach alle SNMP-Checks aus.
 
@@ -127,11 +119,6 @@ Fakemeldung nach oben schicken, die critical ist.
 Multisite: Zeitanzeige der Downtimes (ende) zu ungenau.  "in 6 hrs" ist
 blöd. Auch bei Start "19 sec" ist dumm, hier wäre besser (vor 19 sec). Oder
 bei Downtimes immer absolute Zeiten angeben? Evtl. Zusatzspalte der Duration.
-
-bulkwalk_hosts: Hier ist der Default None und nicht []. Problem dabei
-ist, dass dann ein += nicht funktioniert. Kann man nicht non_bulkwalk_hosts
-ganz rausschmeissen und bulkwalk_hosts auf [] setzen? Ausserdem gibt
-es ja fuer binaere Hostlisten das NEGATE (=> Doku). In 1.2 einbauen.
 
 --------------------------------------------------------------------------------
 IDEEN & VERBESSERUNGEN

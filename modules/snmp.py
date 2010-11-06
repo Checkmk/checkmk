@@ -337,18 +337,6 @@ def check_snmp_fixed(item, targetvalue, info):
                 return (0, "OK - %s" % (value,))
     return (3, "Missing item %s in SNMP data" % item)
 
-def snmptranslate(oids):
-    numoids = []
-    while len(oids) > 0:
-        m = min(len(oids), 100)
-        cmd = "snmptranslate -On %s 2>/dev/null" % " ".join(["'%s'" % o.strip() for o in oids[:m]])
-        n = os.popen(cmd).read().split()
-        if len(n) != m:
-            raise MKGeneralException("snmptranslated lost %d out of %d oids" % (m - len(n), m))
-        oids = oids[m:]
-        numoids += n
-    return numoids
-
 def get_stored_snmpwalk(hostname, oid):
     if oid.startswith("."):
         oid = oid[1:]

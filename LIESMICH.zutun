@@ -100,8 +100,6 @@ aggregation_output_format: Aggregation per Default auf mehrzeilige Ausgabe
 
 Direct rrd updates ganz entfernen.
 
-Inventurchecks: severity per Default auf 1 stellen.
-
 snmp_communities: dictionary nicht mehr verwenden, aus Doku raus, Defaultwert
 leere Liste, aus Code raus, Hinweis im ChangeLog. Evtl einen Test mit
 Abbruch, wenn immer noch type ist dict. Gleiches für bulkwalk_hosts

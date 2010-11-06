@@ -217,7 +217,7 @@ snmp_communities                   = {}
 
 # Inventory and inventory checks
 inventory_check_interval           = None # Nagios intervals (4h = 240)
-inventory_check_severity           = 2    # critical
+inventory_check_severity           = 1    # warning
 inventory_max_cachefile_age        = 120  # secs.
 always_cleanup_autochecks          = False
 

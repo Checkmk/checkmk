@@ -94,10 +94,6 @@ auftritt.
 nur noch ohne MIB-Dateien. Das würde das ganze deutlich vereinfachen!
 Direct rrd updates ganz entfernen.
 
-snmp_communities: dictionary nicht mehr verwenden, aus Doku raus, Defaultwert
-leere Liste, aus Code raus, Hinweis im ChangeLog. Evtl einen Test mit
-Abbruch, wenn immer noch type ist dict. Gleiches für bulkwalk_hosts
-
 IDEE: Scan-Modus: Wenn man einen Host per SNMP scannt und *keine*
 Antwort kommt, dann probiert man einfach alle SNMP-Checks aus.
 

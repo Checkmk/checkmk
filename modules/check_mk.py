@@ -214,7 +214,7 @@ max_num_processes                  = 50
 
 # SNMP communities
 snmp_default_community             = 'public'
-snmp_communities                   = {}
+snmp_communities                   = []
 
 # Inventory and inventory checks
 inventory_check_interval           = None # Nagios intervals (4h = 240)
@@ -587,16 +587,9 @@ def snmp_base_command(what, hostname):
 # the snmp_default_community is returned (wich is preset with
 # "public", but can be overridden in main.mk
 def snmp_credentials_of(hostname):
-    # Keep up old behaviour for a while...
-    if type(snmp_communities) == dict:
-        for com, hostlist in snmp_communities.items():
-            if hostname in strip_tags(hostlist):
-                return com
-
-    else:
-        communities = host_extra_conf(hostname, snmp_communities)
-        if len(communities) > 0:
-            return communities[0]
+    communities = host_extra_conf(hostname, snmp_communities)
+    if len(communities) > 0:
+        return communities[0]
 
     # nothing configured for this host -> use default
     return snmp_default_community
@@ -3462,8 +3455,11 @@ if opt_config_check:
     if filesystem_levels != []:
         sys.stderr.write("WARNING: filesystem_levels is deprecated and will be removed\n"
             "any decade now. Please use check_parameters instead! Details can be\n"
-            "found at http://mathias-kettner.de/checkmk_check_parameters.html.\n");
+            "found at http://mathias-kettner.de/checkmk_check_parameters.html.\n")
 
+    if type(snmp_communities) == dict:
+        sys.stderr.write("ERROR: snmp_communities cannot be a dict any more.\n")
+        errors += 1
 
     if errors > 0:
         sys.stderr.write("--> Found %d invalid variables\n" % errors)

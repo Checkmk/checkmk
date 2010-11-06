@@ -7,6 +7,8 @@
     * aggregation_output_format now defaults to "multiline"
     * Removed non_bulkwalk_hosts. You can use bulkwalk_hosts with NEGATE
       instead (see docu)
+    * snmp_communites is now initialized with [], not with {}. It cannot
+      be a dict any longer.
 
     Core, Setup, etc.:
     * Improve error handling: if hosts are monitored with SNMP *and* TCP,

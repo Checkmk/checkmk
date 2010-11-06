@@ -50,7 +50,7 @@ else:
 
 __name__ = 'asd'
 defaults_path = 'defaults'
-autochecks = []
+#autochecks = []
 execfile('check_mk')
 __name__ = '__main__'
 
@@ -107,7 +107,7 @@ def is_valid_pnp_rra(check):
 def verify_pnp_rra(check):
     return os.path.exists('pnp-rraconf/check_mk-%s.rra.cfg' % check)
 
-#
+ 
 # 1) Perform checks
 #
 results = {}
@@ -135,8 +135,8 @@ results = sorted(results.iteritems(), key=operator.itemgetter(1))
 # 3) Output the results
 #
 sys.stdout.write('%-25s' % 'Check')
-for f in TESTS.keys():
-    sys.stdout.write('%-15s' % (f+' (%d)' % WEIGHT.get(f, 1)))
+for _f in TESTS.keys():
+    sys.stdout.write('%-15s' % (_f+' (%d)' % WEIGHT.get(_f, 1)))
 sys.stdout.write('%-8s' % 'Score')
 sys.stdout.write("\n")
 for check, (score, check_results) in results:
@@ -149,11 +149,11 @@ for check, (score, check_results) in results:
 
     sys.stdout.write('%s%-25s%s' % (color, check, tty_normal))
 
-    for f in TESTS.keys():
-        if check_results[f] == C_FAILED:
+    for _f in TESTS.keys():
+        if check_results[_f] == C_FAILED:
             sub_color = tty_red
             label = ':-('
-        elif check_results[f] == C_INVALID:
+        elif check_results[_f] == C_INVALID:
             sub_color = tty_normal
             label = ''
         else:

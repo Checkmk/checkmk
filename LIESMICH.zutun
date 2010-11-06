@@ -92,10 +92,6 @@ auftritt.
 
 --snmpwalk: Braucht man das translaten noch? Ich arbeite doch jetzt eh
 nur noch ohne MIB-Dateien. Das würde das ganze deutlich vereinfachen!
-
-filesystem_levels rausnehmen. Hinweis, dass check_parameters verwendet
-werden soll.
-
 Direct rrd updates ganz entfernen.
 
 snmp_communities: dictionary nicht mehr verwenden, aus Doku raus, Defaultwert
@@ -112,6 +108,14 @@ Icons.
 
 Host- und Serviceicons (icon_image) anzeigen.
 
+--------------------------------------------------------------------------------
+ab 1.1.11i1
+
+filesystem_levels wirklich rausnehmen. Hinweis, dass check_parameters verwendet
+werden soll.
+
+
+--------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 UNSCHOENHEITEN
 --------------------------------------------------------------------------------

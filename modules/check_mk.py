@@ -195,6 +195,7 @@ else:
 PHYSICAL_HOSTS = [ '@physical' ] # all hosts but not clusters
 CLUSTER_HOSTS  = [ '@cluster' ]  # all cluster hosts
 ALL_HOSTS      = [ '@all' ]      # physical and cluster hosts
+ALL_SERVICES   = [ "" ]          # optical replacement"
 NEGATE         = '@negate'       # negation in boolean lists
 
 # Basic Settings
@@ -3456,6 +3457,14 @@ if opt_config_check:
         if name not in ignored_variables and name not in vars_before_config:
             sys.stderr.write("Invalid configuration variable '%s'\n" % name)
             errors += 1
+
+    # Special handling for certain deprecated variables
+    if filesystem_levels != []:
+        sys.stderr.write("WARNING: filesystem_levels is deprecated and will be removed\n"
+            "any decade now. Please use check_parameters instead! Details can be\n"
+            "found at http://mathias-kettner.de/checkmk_check_parameters.html.\n");
+
+
     if errors > 0:
         sys.stderr.write("--> Found %d invalid variables\n" % errors)
         sys.stderr.write("If you use own helper variables, please prefix them with _.\n")

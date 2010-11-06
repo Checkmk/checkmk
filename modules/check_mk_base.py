@@ -744,20 +744,24 @@ def do_all_checks_on_host(hostname, ipaddress):
                     print "Counter wrapped, not handled by check, ignoring this check result: %s" % e
                 dont_submit = True
             except Exception, e:
-                result = (3, "UNKNOWN - invalid output from agent or error in check %s. Please set <tt>debug_log</tt> to a filename in <tt>main.mk</tt> for enabling exception logging." % checkname)
+                result = (3, "UNKNOWN - invalid output from agent, invalid check parameters or error in implementation of check %s. Please set <tt>debug_log</tt> to a filename in <tt>main.mk</tt> for enabling exception logging." % checkname)
                 if debug_log:
                     try:
                         import traceback, pprint
                         l = file(debug_log, "a")
                         l.write(("Invalid output from plugin or error in check:\n"
-                                "  Date:         %s\n"
-                                "  Host:         %s\n"
-                                "  Service:      %s\n"
-                                "  Check type:   %s\n"
+                                "  Check_MK Version: %s\n"
+                                "  Date:             %s\n"
+                                "  Host:             %s\n"
+                                "  Service:          %s\n"
+                                "  Check type:       %s\n"
+                                "  Item:             %r\n"
+                                "  Parameters:       %s\n"
                                 "  %s\n"
-                                "  Agent info:   %s\n\n") % (
+                                "  Agent info:       %s\n\n") % (
+                                check_mk_version,
                                 time.strftime("%Y-%d-%m %H:%M:%S"),
-                                hostname, description, checkname,
+                                hostname, description, checkname, item, pprint.pformat(params),
                                 traceback.format_exc().replace('\n', '\n      '),
                                 pprint.pformat(info)))
                     except:

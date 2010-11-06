@@ -24,7 +24,7 @@
     * setup.sh: fix problem with missing package_info (only appears if setup
       is called from another directory)
     * ALL_SERVICES: Instead of [ "" ] you can now write ALL_SERVICES
-
+    * debug_log: also output Check_MK version, check item and check parameters
 
     Checks & Agents:
     * megaraid_pdisks: Using the real enclosure number as check item now

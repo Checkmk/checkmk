@@ -9,6 +9,8 @@
       instead (see docu)
     * snmp_communites is now initialized with [], not with {}. It cannot
       be a dict any longer.
+    * bulkwalk_hosts is now initizlized with []. You can do += here just
+      is with all other rule variables.
 
     Core, Setup, etc.:
     * Improve error handling: if hosts are monitored with SNMP *and* TCP,

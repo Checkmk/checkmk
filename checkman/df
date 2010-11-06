@@ -33,17 +33,17 @@ examples:
 
  # Override warning/critical levels for all checks where
  # levels are "filesystem_default_levels"
- filesystem_levels = [ 
+ check_parameters = [ 
     # Hosts with tag "vms" get 85/95
-    ( (85, 95), ["vms"], ALL_HOSTS, [ "" ] ),
+    ( (85, 95), ["vms"], ALL_HOSTS, [ "fs_" ] ),
     # all /sapdata partitions will never be critical
-    ( (101, 101), ALL_HOSTS, [ "/sapdata$" ] ),
+    ( (101, 101), ALL_HOSTS, [ "fs_/sapdata$" ] ),
     # Partitions below "/var" get 80/90 with magic factor 0.5
-    ( (80, 90, 0.5), ALL_HOSTS, [ "/var" ] ),
+    ( (80, 90, 0.5), ALL_HOSTS, [ "fs_/var" ] ),
     # /usr and /opt on hosts zlnx01 and zlnx02
-    ( (98, 99), [ "zlnx01", "zlnx02" ], [ "/usr$", "/opt$" ] ),
+    ( (98, 99), [ "zlnx01", "zlnx02" ], [ "fs_/usr$", "fs_/opt$" ] ),
     # All filesystems on clusters get 80/95
-    ( (80, 95), ALL_CLUSTERS, [ "" ] )
+    ( (80, 95), ALL_CLUSTERS, [ "fs_" ] )
  ]
 
  # Exclude certain filesystems from being inventorized at all
@@ -81,10 +81,6 @@ filesystem_default_levels (int, int): Default levels for filesystem detected by 
 df_magicnumber_normsize (float): Reference filesystem size in GB. Default is 20.0. 
  Levels for File systems larger then that will be raised by a magic
  factor < 1.0. Level for smaller filesystems will be lowered.
-filesystem_levels: Configuration list that allows you to specify
- filesystem levels for groups of hosts and mount points. The configuration
- is analogous to that of {service_contactgroups}. The list is processed from
- top to bottom. The first match wins.
 df_lowest_warning_level (int): When using a magic number, the warning level will never drop
  below this value. The default is {50} (percent).
 df_lowest_critical_level (int): When using a magic number, the critical level will never drop

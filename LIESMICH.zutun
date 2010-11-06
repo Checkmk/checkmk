@@ -483,3 +483,16 @@ konfigurierbar machen:
 fake_perfdata = [ ... ]
 
 Idee: Inventurcheck könnte gleich die Checkergebnisse berechnen
+
+local-Struktur: Hier gibt es scheinbar einen Bug in mod_python.
+index.py -> execfile(plugins/pages/...) -> import config
+Jetzt bekommt man eine neue Instanz von config. In dem importierten
+Modul kann man das wie folgt reparieren:
+from mod_python import importer, apache
+config = importer.import_module("config", 
+    path = ["/omd/sites/webconf/share/check_mk/web/htdocs"])
+Das kann aber doch keine Lösung sein. Andererseits braucht man
+dies nur wenn wenn in config was ändert oder bei livestatus
+(wegen der persistenten Verbindungen). Sonst kanns einem egal
+sein, wenn man ein neues Modul bekommt.
+

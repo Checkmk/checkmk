@@ -37,6 +37,7 @@ for fn in os.listdir(pagehandlers_dir):
         execfile(pagehandlers_dir + "/" + fn)
 if defaults.omd_root:
     sys.path.append(defaults.omd_root + "/local/share/check_mk/web/htdocs")
+    sys.path.append(defaults.web_dir + "/htdocs")
     local_pagehandlers_dir = defaults.omd_root + "/local/share/check_mk/web/plugins/pages"
     if os.path.exists(local_pagehandlers_dir):
         for fn in os.listdir(local_pagehandlers_dir):

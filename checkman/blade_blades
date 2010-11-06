@@ -1,0 +1,25 @@
+title: Check for blades in an IBM blade center
+agents: snmp
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check verifies the present-, health- and power-state of a blade in an
+ IBM blade center.
+
+ The check raises {CRITICAL} and {WARNING} states depending on the different states:
+ When a blade does not exist anymore the check becomes {CRITICAL}, when a blade has
+ been turned off the check becomes {WARNING} and when the health state of the blade
+ is reported as not ok it raises {WARNING} or {CRITICAL} depending on the severity.
+
+item:
+ Number of the blade (as string, not int).
+
+examples:
+ checks += [
+  ( "hostabc", "blade_bays", "8", None)
+ ]
+
+inventory:
+ All blades in the system with the state 1 (present) are automatically 
+ inventorized.

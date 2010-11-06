@@ -80,9 +80,6 @@ getrennte Checks für Memory and Pagefile.
 -------------------------------------------------------------------------------
 ab 1.1.9i1:
 --------------------------------------------------------------------------------
-IDEE: Scan-Modus: Wenn man einen Host per SNMP scannt und *keine*
-Antwort kommt, dann probiert man einfach alle SNMP-Checks aus.
-
 PNP4Nagios-Popups automatisch einbauen, mit eigenen intelligenten
 Icons.
 

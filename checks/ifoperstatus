@@ -59,6 +59,5 @@ def check_ifoperstatus(item, targetstate, info):
 check_info['ifoperstatus'] = (check_ifoperstatus, "Interface %s", 0,  inventory_ifoperstatus)
 snmp_info['ifoperstatus'] = ( ".1.3.6.1.2.1.2.2.1", [ 2, 3, 8 ] )
 
-# check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2
-# snmp_scan_functions['ifoperstatus'] = \
-#       lambda oid: int(oid(".1.3.6.1.2.1.2.1.0")) >= 2
+# Never inventorize automatically. let if/if64 be the default
+snmp_scan_functions['ifoperstatus'] = lambda oid: False

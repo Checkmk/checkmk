@@ -665,10 +665,21 @@ def snmp_scan(hostname, ipaddress):
         try:
             if detect_function(lambda oid: get_single_oid(hostname, ipaddress, oid)):
                 found.append(checktype)
-                sys.stdout.write("%s " % checktype)
+                sys.stdout.write(tty_green + tty_bold + checktype + " " + tty_normal)
                 sys.stdout.flush()
         except:
             pass
+
+    # Now try all checks not having a scan function
+    for checktype in check_info.keys():
+        datatype = checktype.split('.')[0]
+        if datatype not in snmp_info:
+            continue # no snmp check
+        if checktype not in snmp_scan_functions:
+            sys.stdout.write(tty_blue + tty_bold + checktype + tty_normal + " ")
+            sys.stdout.flush()
+            found.append(checktype)
+
     if found == []:
         sys.stdout.write("nothing detected.\n")
     else:
@@ -1583,6 +1594,8 @@ def do_snmp_scan(hostnamelist):
             continue
         checknames = snmp_scan(hostname, ipaddress)
         for checkname in checknames:
+            if opt_debug:
+                sys.stdout.write("Trying inventory for %s on %s\n" % (checkname, hostname))
             make_inventory(checkname, [hostname])
 
 

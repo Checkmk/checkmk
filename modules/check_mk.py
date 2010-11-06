@@ -37,11 +37,9 @@ check_mk_version  = '(inofficial)'
 if __name__ == "__main__":
     opt_verbose      = '-v' in sys.argv[1:] or '--verbose' in sys.argv[1:]
     opt_debug        = '--debug' in sys.argv[1:]
-    opt_config_check = '-X' in sys.argv[1:] or '--config-check' in sys.argv[1:]
 else:
     opt_verbose = False
     opt_debug = False
-    opt_config_check = False
 
 # are we running OMD? If yes, honor local/ hierarchy
 omd_root = os.getenv("OMD_ROOT", None)
@@ -195,6 +193,7 @@ else:
 PHYSICAL_HOSTS = [ '@physical' ] # all hosts but not clusters
 CLUSTER_HOSTS  = [ '@cluster' ]  # all cluster hosts
 ALL_HOSTS      = [ '@all' ]      # physical and cluster hosts
+ALL_SERVICES   = [ "" ]          # optical replacement"
 NEGATE         = '@negate'       # negation in boolean lists
 
 # Basic Settings
@@ -206,18 +205,18 @@ agent_min_version                  = 0 # warn, if plugin has not at least versio
 check_max_cachefile_age            = 0 # per default do not use cache files when checking
 cluster_max_cachefile_age          = 90   # secs.
 simulation_mode                    = False
-perfdata_format                    = "standard" # also possible: "pnp"
+perfdata_format                    = "pnp" # also possible: "standard"
 debug_log                          = None
 monitoring_host                    = "localhost" # your Nagios host
 max_num_processes                  = 50
 
 # SNMP communities
 snmp_default_community             = 'public'
-snmp_communities                   = {}
+snmp_communities                   = []
 
 # Inventory and inventory checks
 inventory_check_interval           = None # Nagios intervals (4h = 240)
-inventory_check_severity           = 2    # critical
+inventory_check_severity           = 1    # warning
 inventory_max_cachefile_age        = 120  # secs.
 always_cleanup_autochecks          = False
 
@@ -245,8 +244,7 @@ check_parameters                     = []
 legacy_checks                        = []
 all_hosts                            = []
 snmp_hosts                           = [ (['snmp'],   ALL_HOSTS) ]
-bulkwalk_hosts                       = None
-non_bulkwalk_hosts                   = None
+bulkwalk_hosts                       = []
 usewalk_hosts                        = []
 ignored_checktypes                   = [] # exclude from inventory
 ignored_services                     = [] # exclude from inventory
@@ -268,7 +266,7 @@ service_aggregations                 = []
 service_dependencies                 = []
 non_aggregated_hosts                 = []
 aggregate_check_mk                   = False
-aggregation_output_format            = "single" # new in 1.1.6. Possible also: "multiline"
+aggregation_output_format            = "multiline" # new in 1.1.6. Possible also: "multiline"
 summary_host_groups                  = []
 summary_service_groups               = [] # service groups for aggregated services
 summary_service_contactgroups        = [] # service contact groups for aggregated services
@@ -587,16 +585,9 @@ def snmp_base_command(what, hostname):
 # the snmp_default_community is returned (wich is preset with
 # "public", but can be overridden in main.mk
 def snmp_credentials_of(hostname):
-    # Keep up old behaviour for a while...
-    if type(snmp_communities) == dict:
-        for com, hostlist in snmp_communities.items():
-            if hostname in strip_tags(hostlist):
-                return com
-
-    else:
-        communities = host_extra_conf(hostname, snmp_communities)
-        if len(communities) > 0:
-            return communities[0]
+    communities = host_extra_conf(hostname, snmp_communities)
+    if len(communities) > 0:
+        return communities[0]
 
     # nothing configured for this host -> use default
     return snmp_default_community
@@ -611,8 +602,6 @@ def is_snmp_host(hostname):
 def is_bulkwalk_host(hostname):
     if bulkwalk_hosts:
         return in_binary_hostlist(hostname, bulkwalk_hosts)
-    elif non_bulkwalk_hosts:
-        return not in_binary_hostlist(hostname, non_bulkwalk_hosts)
     else:
         return False
 
@@ -1301,7 +1290,19 @@ def create_nagios_servicedefs(outfile, hostname):
     aggregated_services_conf = set([])
     do_aggregation = host_is_aggregated(hostname)
     have_at_least_one_service = False
+    used_descriptions = {}
     for ((checkname, item), (params, description, deps)) in host_checks:
+        # Make sure, the service description is unique on this host
+        if description in used_descriptions:
+            cn, it = used_descriptions[description]
+            raise MKGeneralException(
+                    "ERROR: Duplicate service description '%s' for host '%s'!\n"
+                    " - 1st occurrance: checktype = %s, item = %r\n"
+                    " - 2nd occurrance: checktype = %s, item = %r\n" % 
+                    (description, hostname, cn, it, checkname, item))
+
+        else:
+            used_descriptions[description] = ( checkname, item )
         if have_perfdata(checkname):
             template = passive_service_template_perf
         else:
@@ -1429,6 +1430,17 @@ define servicedependency {
     if len(legchecks) > 0:
         outfile.write("\n\n# Legacy checks\n")
     for command, description, has_perfdata in legchecks:
+        if description in used_descriptions:
+            cn, it = used_descriptions[description]
+            raise MKGeneralException(
+                    "ERROR: Duplicate service description (legacy check) '%s' for host '%s'!\n"
+                    " - 1st occurrance: checktype = %s, item = %r\n"
+                    " - 2nd occurrance: checktype = legacy(%s), item = None\n" % 
+                    (description, hostname, cn, it, command))
+
+        else:
+            used_descriptions[description] = ( "legacy(" + command + ")", item )
+        
         extraconf = extra_service_conf_of(hostname, description)
         if has_perfdata:
             template = "check_mk_perf,"
@@ -2625,7 +2637,7 @@ def do_snmpwalk_on(hostname, filename):
     if opt_verbose:
         sys.stdout.write("%s:\n" % hostname)
     ip = lookup_ipaddress(hostname)
-    cmd = snmp_walk_command(hostname) + " -Ob -OQ %s " % ip
+    cmd = snmp_walk_command(hostname) + " -On -Ob -OQ %s " % ip
     if opt_debug:
         print 'Executing: %s' % cmd
     out = file(filename, "w")
@@ -2653,9 +2665,8 @@ def do_snmpwalk_on(hostname, filename):
                 oid = oid[1:]
             oids.append(oid)
             values.append(value)
-        numoids = snmptranslate(oids)
-        for numoid, value in zip(numoids, values):
-            out.write("%s %s\n" % (numoid, value.strip()))
+        for oid, value in zip(oids, values):
+            out.write("%s %s\n" % (oid, value.strip()))
             count += 1
         if opt_verbose:
             sys.stdout.write("%d variables.\n" % count)
@@ -3364,8 +3375,7 @@ def ip_to_hostname(ip):
 def all_nonfunction_vars():
     return set([ name for name,value in globals().items() if name[0] != '_' and type(value) != type(lambda:0) ])
 
-if opt_config_check:
-    vars_before_config = all_nonfunction_vars()
+vars_before_config = all_nonfunction_vars()
 
 
 list_of_files = [ check_mk_configfile ] + glob.glob(check_mk_configdir + '/*.mk')
@@ -3449,20 +3459,29 @@ if __name__ == "__main__":
 
 checks = autochecks + checks
 
+vars_after_config = all_nonfunction_vars()
+ignored_variables = set(['vars_before_config', 'rrdtool', 'final_mk', 'list_of_files', 'autochecks',
+                          'parts' ,'hosttags' ,'seen_hostnames' ,'all_hosts_untagged' ,'taggedhost' ,'hostname'])
+errors = 0
+for name in vars_after_config:
+    if name not in ignored_variables and name not in vars_before_config:
+        sys.stderr.write("Invalid configuration variable '%s'\n" % name)
+        errors += 1
 
-if opt_config_check:
-    vars_after_config = all_nonfunction_vars()
-    ignored_variables = set(['vars_before_config', 'rrdtool', 'final_mk', 'list_of_files', 'autochecks',
-                              'parts' ,'hosttags' ,'seen_hostnames' ,'all_hosts_untagged' ,'taggedhost' ,'hostname'])
-    errors = 0
-    for name in vars_after_config:
-        if name not in ignored_variables and name not in vars_before_config:
-            sys.stderr.write("Invalid configuration variable '%s'\n" % name)
-            errors += 1
-    if errors > 0:
-        sys.stderr.write("--> Found %d invalid variables\n" % errors)
-        sys.stderr.write("If you use own helper variables, please prefix them with _.\n")
-        sys.exit(1)
+# Special handling for certain deprecated variables
+if filesystem_levels != []:
+    sys.stderr.write("WARNING: filesystem_levels is deprecated and will be removed\n"
+        "any decade now. Please use check_parameters instead! Details can be\n"
+        "found at http://mathias-kettner.de/checkmk_check_parameters.html.\n")
+
+if type(snmp_communities) == dict:
+    sys.stderr.write("ERROR: snmp_communities cannot be a dict any more.\n")
+    errors += 1
+
+if errors > 0:
+    sys.stderr.write("--> Found %d invalid variables\n" % errors)
+    sys.stderr.write("If you use own helper variables, please prefix them with _.\n")
+    sys.exit(1)
 
 
 # Convert www_group into numeric id

@@ -1,4 +1,20 @@
 1.1.9i1
+    INCOMPATIBLE CHANGES:
+    * perfdata_format now defaults to "pnp". Previous default was "standard".
+      You might have to change that in main.mk if you are not using PNP (only
+      relevant for MRPE checks)
+    * inventory_check_severity defaults to 1 now (WARNING)
+    * aggregation_output_format now defaults to "multiline"
+    * Removed non_bulkwalk_hosts. You can use bulkwalk_hosts with NEGATE
+      instead (see docu)
+    * snmp_communites is now initialized with [], not with {}. It cannot
+      be a dict any longer.
+    * bulkwalk_hosts is now initizlized with []. You can do += here just
+      is with all other rule variables.
+    * Configuration check (-X) is now always done. It is now impossible to
+      call any Check_MK action with an invalid configuration. This saves
+      you agains mistyped variables.
+
     Core, Setup, etc.:
     * Improve error handling: if hosts are monitored with SNMP *and* TCP,
       then after an error with one of those two agents checks from the
@@ -10,6 +26,13 @@
     * Inventory: Better error handling on invalid inventory result of checks
     * setup.sh: fix problem with missing package_info (only appears if setup
       is called from another directory)
+    * ALL_SERVICES: Instead of [ "" ] you can now write ALL_SERVICES
+    * debug_log: also output Check_MK version, check item and check parameters
+    * Make sure, host has no duplicate service - this is possible e.g. by
+      monitoring via agent and snmp in parallel. duplicate services will
+      make Nagios reject the configuration.
+    * --snmpwalk: do not translate anymore, use numbers. All checks work
+      with numbers now anyway.
 
     Checks & Agents:
     * megaraid_pdisks: Using the real enclosure number as check item now

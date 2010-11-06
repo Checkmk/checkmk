@@ -246,7 +246,6 @@ legacy_checks                        = []
 all_hosts                            = []
 snmp_hosts                           = [ (['snmp'],   ALL_HOSTS) ]
 bulkwalk_hosts                       = None
-non_bulkwalk_hosts                   = None
 usewalk_hosts                        = []
 ignored_checktypes                   = [] # exclude from inventory
 ignored_services                     = [] # exclude from inventory
@@ -611,8 +610,6 @@ def is_snmp_host(hostname):
 def is_bulkwalk_host(hostname):
     if bulkwalk_hosts:
         return in_binary_hostlist(hostname, bulkwalk_hosts)
-    elif non_bulkwalk_hosts:
-        return not in_binary_hostlist(hostname, non_bulkwalk_hosts)
     else:
         return False
 

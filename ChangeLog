@@ -1,4 +1,13 @@
 1.1.9i1
+    INCOMPATIBLE CHANGES:
+    * perfdata_format now defaults to "pnp". Previous default was "standard".
+      You might have to change that in main.mk if you are not using PNP (only
+      relevant for MRPE checks)
+    * inventory_check_severity defaults to 1 now (WARNING)
+    * aggregation_output_format now defaults to "multiline"
+    * Removed non_bulkwalk_hosts. You can use bulkwalk_hosts with NEGATE
+      instead (see docu)
+
     Core, Setup, etc.:
     * Improve error handling: if hosts are monitored with SNMP *and* TCP,
       then after an error with one of those two agents checks from the
@@ -10,11 +19,7 @@
     * Inventory: Better error handling on invalid inventory result of checks
     * setup.sh: fix problem with missing package_info (only appears if setup
       is called from another directory)
-    * perfdata_format now defaults to "pnp". Previous default was "standard".
-      You might have to change that in main.mk if you are not using PNP (only
-      relevant for MRPE checks)
-    * inventory_check_severity defaults to 1 now (WARNING)
-    * aggregation_output_format now defaults to "multiline"
+
 
     Checks & Agents:
     * megaraid_pdisks: Using the real enclosure number as check item now

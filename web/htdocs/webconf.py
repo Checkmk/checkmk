@@ -1,6 +1,13 @@
 #!/usr/bin/python
-import config, pprint
+
+from mod_python import importer
+config = importer.import_module("config", path = ["/omd/sites/webconf/share/check_mk/web/htdocs"])
+# config = importer.import_module("config")
+
+import sys, pprint
 from lib import *
+# import config
+
 
 config.declare_permission("use_webconf",
      "Use Webconfiguration",

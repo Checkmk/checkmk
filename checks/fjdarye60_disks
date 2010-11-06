@@ -47,6 +47,8 @@ def inventory_fjdarye60_disks_summary(checkname, info):
     current_state = fjdary60_disks_summary(info)
     if len(current_state) > 0:
         return [ (None, '', current_state) ]
+    else:
+        return []
 
 def fjdarye60_disks_printstates(state):
     return ", ".join(["%s: %s" % (s,c) for (s,c) in state.items()])

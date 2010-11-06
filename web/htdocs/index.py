@@ -25,9 +25,10 @@
 # Boston, MA 02110-1301 USA.
 
 from mod_python import apache,util
-import os, sys, livestatus
+import sys, os, pprint
 from lib import *
-import config, htmllib, defaults
+import livestatus
+import defaults, config, htmllib
 
 # Load page handlers
 pagehandlers = {}
@@ -35,15 +36,16 @@ pagehandlers_dir = defaults.web_dir + "/plugins/pages"
 for fn in os.listdir(pagehandlers_dir):
     if fn.endswith(".py"):
         execfile(pagehandlers_dir + "/" + fn)
+
 if defaults.omd_root:
-    sys.path.append(defaults.omd_root + "/local/share/check_mk/web/htdocs")
-    sys.path.append(defaults.web_dir + "/htdocs")
+    local_module_path = defaults.omd_root + "/local/share/check_mk/web/htdocs"
+    if local_module_path not in sys.path:
+        sys.path[0:0] = [ local_module_path, defaults.web_dir + "/htdocs" ]
     local_pagehandlers_dir = defaults.omd_root + "/local/share/check_mk/web/plugins/pages"
     if os.path.exists(local_pagehandlers_dir):
         for fn in os.listdir(local_pagehandlers_dir):
             if fn.endswith(".py"):
                 execfile(local_pagehandlers_dir + "/" + fn)
-
 
 def read_get_vars(req):
     req.vars = {}
@@ -187,6 +189,12 @@ def handler(req):
         html.show_error(e)
         html.footer()
         apache.log_error("Configuration error: %s" % (e,), apache.APLOG_ERR)
+
+    except MKGeneralException, e:
+        html.header("Error")
+        html.show_error("Error: %s" % (e,))
+        html.footer()
+        apache.log_error("Error: %s" % (e,), apache.APLOG_ERR)
 
     except livestatus.MKLivestatusNotFoundError, e:
         html.header("Data not found")

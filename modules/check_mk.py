@@ -3395,16 +3395,16 @@ list_of_files = [ check_mk_configfile ] + glob.glob(check_mk_configdir + '/*.mk'
 final_mk = check_mk_basedir + "/final.mk"
 if os.path.exists(final_mk):
     list_of_files.append(final_mk)
-for f in list_of_files:
+for _f in list_of_files:
     # Hack: during parent scan mode we must not read in old version of parents.mk!
-    if '--scan-parents' in sys.argv and f.endswith("/parents.mk"):
+    if '--scan-parents' in sys.argv and _f.endswith("/parents.mk"):
         continue
     try:
         if opt_debug:
-            sys.stderr.write("Reading config file %s...\n" % f)
-        execfile(f)
+            sys.stderr.write("Reading config file %s...\n" % _f)
+        execfile(_f)
     except Exception, e:
-        sys.stderr.write("Cannot read in configuration file %s:\n%s\n" % (f, e))
+        sys.stderr.write("Cannot read in configuration file %s:\n%s\n" % (_f, e))
         if __name__ == "__main__":
             sys.exit(3)
         else:
@@ -3469,8 +3469,7 @@ def read_all_autochecks():
 
 if __name__ == "__main__":
     read_all_autochecks()
-
-checks = autochecks + checks
+    checks = autochecks + checks
 
 vars_after_config = all_nonfunction_vars()
 ignored_variables = set(['vars_before_config', 'rrdtool', 'final_mk', 'list_of_files', 'autochecks',

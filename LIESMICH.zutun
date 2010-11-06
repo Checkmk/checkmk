@@ -85,6 +85,11 @@ Icons.
 
 Host- und Serviceicons (icon_image) anzeigen.
 
+Aliasse einbauen (Wrappen in bin/):
+    cmk = check_mk
+    mkp = check_mk -P
+
+
 --------------------------------------------------------------------------------
 ab 1.1.11i1
 
@@ -171,11 +176,6 @@ check_mk -C soll Liste von Hosts bekommen können.
 
 Bei Hosts, die kein keine Services haben, eine andere
 Host-Schablone nehmen, die den Hostcheck nur on-demand ausführt.
-
-Multisite: man kann bei Comments keine Umlaute eingeben. Diese sind aktuell
-verboten, weil Python sonst Exceptions wirft.  Komischerweise kann man
-in den Filtern problemlos Umlaute eingeben. Keine Ahnung, wo hier der
-Unterschied liegt.
 
 Multisite: ein Filter für Hosts, der dann zuschlägt, wenn ein Host
 einen bestimmten Service hat (geht das auch mit Substrings?)

@@ -25,6 +25,9 @@
       is called from another directory)
     * ALL_SERVICES: Instead of [ "" ] you can now write ALL_SERVICES
     * debug_log: also output Check_MK version, check item and check parameters
+    * Make sure, host has no duplicate service - this is possible e.g. by
+      monitoring via agent and snmp in parallel. duplicate services will
+      make Nagios reject the configuration.
 
     Checks & Agents:
     * megaraid_pdisks: Using the real enclosure number as check item now

@@ -1292,7 +1292,19 @@ def create_nagios_servicedefs(outfile, hostname):
     aggregated_services_conf = set([])
     do_aggregation = host_is_aggregated(hostname)
     have_at_least_one_service = False
+    used_descriptions = {}
     for ((checkname, item), (params, description, deps)) in host_checks:
+        # Make sure, the service description is unique on this host
+        if description in used_descriptions:
+            cn, it = used_descriptions[description]
+            raise MKGeneralException(
+                    "ERROR: Duplicate service description '%s' for host '%s'!\n"
+                    " - 1st occurrance: checktype = %s, item = %r\n"
+                    " - 2nd occurrance: checktype = %s, item = %r\n" % 
+                    (description, hostname, cn, it, checkname, item))
+
+        else:
+            used_descriptions[description] = ( checkname, item )
         if have_perfdata(checkname):
             template = passive_service_template_perf
         else:
@@ -1420,6 +1432,17 @@ define servicedependency {
     if len(legchecks) > 0:
         outfile.write("\n\n# Legacy checks\n")
     for command, description, has_perfdata in legchecks:
+        if description in used_descriptions:
+            cn, it = used_descriptions[description]
+            raise MKGeneralException(
+                    "ERROR: Duplicate service description (legacy check) '%s' for host '%s'!\n"
+                    " - 1st occurrance: checktype = %s, item = %r\n"
+                    " - 2nd occurrance: checktype = legacy(%s), item = None\n" % 
+                    (description, hostname, cn, it, command))
+
+        else:
+            used_descriptions[description] = ( "legacy(" + command + ")", item )
+        
         extraconf = extra_service_conf_of(hostname, description)
         if has_perfdata:
             template = "check_mk_perf,"

@@ -4,9 +4,6 @@ Doku: Check_MK und OMD: Installieren von MKPs, local-Hierarchie
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
 --------------------------------------------------------------------------------
-Wenn zwei Checks mit dem gleichen Namen existieren bei einem Host
-soll mit einem Fehler abgebrochen werden.
-
 ich bin mir nicht sicher ob das nun ein Thruk Problem oder ein Livestatus Problem ist. Vermutlich beides :-)
 Wenn ich im Thruk im Suchfenster einfach Enter drücke, kommt folgende Query bei raus:
 GET services

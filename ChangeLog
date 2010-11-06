@@ -13,7 +13,8 @@
     * perfdata_format now defaults to "pnp". Previous default was "standard".
       You might have to change that in main.mk if you are not using PNP (only
       relevant for MRPE checks)
-    * inventory_check_severity default to 1 now (WARNING)
+    * inventory_check_severity defaults to 1 now (WARNING)
+    * aggregation_output_format now defaults to "multiline"
 
     Checks & Agents:
     * megaraid_pdisks: Using the real enclosure number as check item now

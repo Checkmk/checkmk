@@ -26,9 +26,13 @@ perfdata:
  can set {perfdata_format = "pnp"} in your {main.mk}. This will let
  PNP4Nagios choose a template matching the original check command.
 
+ Note: from version 1.1.9i2 on {"pnp"} is the default setting. You
+ can change it back by setting {perfdata_format} to {"standard"}.
+
 inventory:
  All plugins configured in {mrpe.cfg} are automatically inventorized.
 
 [configuration]
 perfdata_format (string): Set to {"pnp"} for adding the check command
- for PNP4Nagios
+ for PNP4Nagios. Set to {"standard"} for omitting template information
+ and better comply with the Nagios standard.

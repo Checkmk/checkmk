@@ -59,6 +59,7 @@
     * heartbeat_nodes: fix Linux agent for hostname with upper case letters (thanks to
             Thorsten Robers)
     * heartbeat_rscstatus: Catching empty output from agent correctly
+    * heartbeat_rscstatus: Allowing a list as expected state to expect multiple OK states
     * win_dhcp_pools agent plugin: Filtering additional error message on
       systems without dhcp server
 

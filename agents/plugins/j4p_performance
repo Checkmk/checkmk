@@ -4,8 +4,10 @@ import urllib, sys, os
 
 server = "localhost"
 port = 8080
+instance = None
+
 vars = [
- ( "java.lang:type=Memory/NonHeapMemoryUsage/used",     "NoneHeapMemoryUsage" ),
+ ( "java.lang:type=Memory/NonHeapMemoryUsage/used",     "NonHeapMemoryUsage" ),
  ( "java.lang:type=Memory/HeapMemoryUsage/used",        "HeapMemoryUsage" ),
  ( "java.lang:type=Threading/ThreadCount",              "ThreadCount" ),
  ( "java.lang:type=Threading/DaemonhreadCount",         "DeamonThreadCount" ),
@@ -16,6 +18,9 @@ vars = [
 ]
 
 conffile = os.getenv("MK_CONFDIR", "/etc/check_mk") + "/j4p.conf"
+
+if instance == None:
+    instance = str(port)
 
 if os.path.exists(conffile):
     execfile(conffile)
@@ -33,7 +38,7 @@ for path, title in vars:
 	if first:
 	    first = False
 	    sys.stdout.write("<<<j4p_performance>>>\n")
-        sys.stdout.write("%-30s %s\n" % (title, value))
+        sys.stdout.write("%s %-30s %s\n" % (instance, title, value))
     except IOError:
 	sys.exit(1)
     except:

@@ -1,5 +1,13 @@
 #!/usr/bin/python
 
+# Ideen:
+# - Reindent
+# - Header
+# - Copyright drin?
+# - Globale Variablen
+#   - Zu viele?
+#   - Check Namen in der Variable?
+
 import os, sys
 
 on_tty = sys.stdout.isatty()
@@ -107,7 +115,7 @@ def is_valid_pnp_rra(check):
 def verify_pnp_rra(check):
     return os.path.exists('pnp-rraconf/check_mk-%s.rra.cfg' % check)
 
- 
+
 # 1) Perform checks
 #
 results = {}

@@ -7,7 +7,7 @@
 #   - Zu viele?
 #   - Check Namen in der Variable?
 
-import os, sys, re, getopt
+import os, sys, re, getopt, operator
 import reindent
 
 on_tty = sys.stdout.isatty()
@@ -264,7 +264,6 @@ for check in get_all_checks():
 #
 # 2) Sort by score
 #
-import operator
 results = sorted(results.iteritems(), key=operator.itemgetter(1))
 
 #
@@ -306,6 +305,7 @@ if _verbose > 0:
     sys.stdout.write("===========================================================================\n")
     sys.stdout.write("Invalid global vars by check:\n")
     sys.stdout.write("===========================================================================\n")
-    for check, vars in invalid_global_vars.iteritems():
+    # sort checks by name
+    for check, vars in sorted(invalid_global_vars.iteritems(), key=operator.itemgetter(0)):
         for var in vars:
             sys.stdout.write("%-25s: %s\n" % (check, var))

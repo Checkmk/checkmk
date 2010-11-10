@@ -7,7 +7,7 @@
 #   - Zu viele?
 #   - Check Namen in der Variable?
 
-import os, sys, re
+import os, sys, re, getopt
 import reindent
 
 on_tty = sys.stdout.isatty()
@@ -80,6 +80,36 @@ def is_snmp_check(check):
 def all_nonfunction_vars():
     return set([ name for name,value in globals().items() if name[0] != '_' and type(value) != type(lambda:0) ])
 
+def get_manpage(check):
+    if not check in manpage:
+        try:
+            manpage[check] = open('checkman/%s' % check.split('.')[0]).read()
+        except IOError, e:
+            manpage[check] = ""
+    return manpage[check]
+
+def grep_manpage(check, match, section = None):
+    manpage = get_manpage(check)
+    if section is None:
+        return not re.search(match, manpage) is None
+    else:
+        started = False
+        for line in manpage.split("\n"):
+            if line == '[%s]' % section:
+                # Block starts with this line
+                started = True
+            elif started and line == '' or line.startswith('['):
+                # Reached nex section. Didn't find a match ... so return false
+                return False
+            elif started:
+                if not re.search(match, line) is None:
+                    return True
+        return False
+
+def usage():
+    print "No real help available... The only option is -v|--verbose."
+    sys.exit(0)
+
 ignored_variables = []
 
 # Load all checks and record global var definitions
@@ -112,35 +142,13 @@ WEIGHT = { 'manpage': 2, 'global_vars': 2, 'reindent': 2 }
 
 manpage = {}
 
-#
+# #############################################################################
 # Check definitions
-#
+# #############################################################################
 
-def get_manpage(check):
-    if not check in manpage:
-        try:
-            manpage[check] = open('checkman/%s' % check.split('.')[0]).read()
-        except IOError, e:
-            manpage[check] = ""
-    return manpage[check]
-
-def grep_manpage(check, match, section = None):
-    manpage = get_manpage(check)
-    if section is None:
-        return not re.search(match, manpage) is None
-    else:
-        started = False
-        for line in manpage.split("\n"):
-            if line == '[%s]' % section:
-                # Block starts with this line
-                started = True
-            elif started and line == '' or line.startswith('['):
-                # Reached nex section. Didn't find a match ... so return false
-                return False
-            elif started:
-                if not re.search(match, line) is None:
-                    return True
-        return False
+# Verify global vars:
+# - Are the global configuration vars mentioned in the manpage
+# - Are the other (internal) helper vars namend correctly
 
 def is_valid_global_vars(check):
     return True
@@ -172,6 +180,9 @@ def verify_global_vars(check):
 
     return check_file in invalid_global_vars
 
+# Reindent code:
+# - Is there some code to be reindented?
+
 def is_valid_reindent(check):
     return True
 
@@ -181,11 +192,17 @@ def verify_reindent(check):
     f.close()
     return not r.run()
 
+# Manpage:
+# - Does the check have a manpage?
+
 def is_valid_manpage(check):
     return True
 
 def verify_manpage(check):
     return os.path.exists('checkman/%s' % check)
+
+# SNMP scan function:
+# - Does the snmp check have a scan function?
 
 def is_valid_snmp_scan(check):
     return is_snmp_check(check)
@@ -193,11 +210,17 @@ def is_valid_snmp_scan(check):
 def verify_snmp_scan(check):
     return check in snmp_scan_functions
 
+# PNP-Template:
+# Does the chekc which produces perfdata have a pnp template?
+
 def is_valid_pnp_tmpl(check):
     return check_has_perfdata(check)
 
 def verify_pnp_tmpl(check):
     return os.path.exists('pnp-templates/check_mk-%s.php' % check)
+
+# PNP-Template:
+# Does the chekc which produces perfdata have a rra config?
 
 def is_valid_pnp_rra(check):
     return check_has_perfdata(check)
@@ -205,6 +228,21 @@ def is_valid_pnp_rra(check):
 def verify_pnp_rra(check):
     return os.path.exists('pnp-rraconf/check_mk-%s.rra.cfg' % check)
 
+# #############################################################################
+# MAIN
+# #############################################################################
+
+_verbose = 0
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "vh",
+                    ["verbose", "help"])
+except getopt.error, msg:
+    usage(msg)
+for o, a in opts:
+    if o in ('-v', '--verbose'):
+        _verbose += 1
+    elif o in ('-h', '--help'):
+        usage()
 
 # 1) Perform checks
 #
@@ -262,3 +300,12 @@ for check, (score, check_results) in results:
 
     sys.stdout.write('%s%-8s%s' % (color, score, tty_normal))
     sys.stdout.write("\n")
+
+if _verbose > 0:
+    sys.stdout.write("\n")
+    sys.stdout.write("===========================================================================\n")
+    sys.stdout.write("Invalid global vars by check:\n")
+    sys.stdout.write("===========================================================================\n")
+    for check, vars in invalid_global_vars.iteritems():
+        for var in vars:
+            sys.stdout.write("%-25s: %s\n" % (check, var))

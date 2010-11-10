@@ -28,7 +28,7 @@
 # p0     OK               u1     298.09 GB   625142448     WD-WCAT19310918
 # p1     OK               u0     298.09 GB   625142448     WD-WCARW3200306
 # p2     OK               u0     298.09 GB   625142448     WD-WCARW3006518
-# p3     OK               u0     298.09 GB   625142448     WD-WCARW3199987 
+# p3     OK               u0     298.09 GB   625142448     WD-WCARW3199987
 
 # Another example:
 # p0     OK               u0     298.09 GB   625142448     WD-WCAPD4348449
@@ -61,8 +61,8 @@ def check_3ware_disks(item, params, info):
                 return (0, "OK - disk status is " + infotext)
             else:
                 return (2, "CRITICAL - disk status is " + infotext)
-    return (3, "UNKNOWN - disk %s not found in agent output" % item) 
+    return (3, "UNKNOWN - disk %s not found in agent output" % item)
 
 # declare the check to Check_MK
 check_info['3ware_disks'] = \
-	(check_3ware_disks, "RAID 3ware disk %s", 0, inventory_3ware_disks)
+        (check_3ware_disks, "RAID 3ware disk %s", 0, inventory_3ware_disks)

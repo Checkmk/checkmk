@@ -26,13 +26,13 @@
 
 # Possible output:
 # # tw_cli show
-# 
+#
 # Ctl   Model        (V)Ports  Drives   Units   NotOpt  RRate   VRate  BBU
 # ------------------------------------------------------------------------
 # c0    9550SXU-4LP  4         3        2       0       1       1      -
 # c1    9550SXU-8LP  8         7        3       0       1       1      -
-# 
-# tw_cli version: 2.01.09.004 
+#
+# tw_cli version: 2.01.09.004
 
 # Another version produces this output:
 # <<<3ware_info>>>
@@ -44,18 +44,18 @@
 # This version of the check currently only handles output of the first type
 
 def inventory_3ware_info(checkname, info):
-	inventory = []
-    	for line in info:
-            if len(line) == 8:
-                controller = line[0]
-                inventory.append( (controller, None) )
-    	return inventory
+    inventory = []
+    for line in info:
+        if len(line) == 8:
+            controller = line[0]
+            inventory.append( (controller, None) )
+    return inventory
 
 def check_3ware_info(item, params, info):
-	infotext =''	
-	for line in info:
-		line = ' '.join(line[1:])
-		infotext = infotext+line+ ';' 
-	return (0, infotext)
+    infotext =''
+    for line in info:
+        line = ' '.join(line[1:])
+        infotext = infotext+line+ ';'
+    return (0, infotext)
 
-check_info['3ware_info'] = (check_3ware_info, "RAID 3ware controller %s", 0, inventory_3ware_info) 
+check_info['3ware_info'] = (check_3ware_info, "RAID 3ware controller %s", 0, inventory_3ware_info)

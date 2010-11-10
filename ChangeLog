@@ -14,6 +14,9 @@
     * Configuration check (-X) is now always done. It is now impossible to
       call any Check_MK action with an invalid configuration. This saves
       you agains mistyped variables.
+    * Renamed check functions of imm_health check from test_imm to imm_health
+      to have valid function and check names. Please remove remove from
+      inventory and re-inventory those checks.
 
     Core, Setup, etc.:
     * Improve error handling: if hosts are monitored with SNMP *and* TCP,

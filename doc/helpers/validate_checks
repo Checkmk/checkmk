@@ -1,14 +1,13 @@
 #!/usr/bin/python
 
 # Ideen:
-# - Reindent
 # - Header
 # - Copyright drin?
 # - Globale Variablen
 #   - Zu viele?
 #   - Check Namen in der Variable?
 
-import os, sys
+import os, sys, re
 import reindent
 
 on_tty = sys.stdout.isatty()
@@ -78,20 +77,100 @@ def get_all_checks():
 def is_snmp_check(check):
     return check in snmp_info or check in snmp_info_single
 
-# Load all checks
+def all_nonfunction_vars():
+    return set([ name for name,value in globals().items() if name[0] != '_' and type(value) != type(lambda:0) ])
+
+ignored_variables = []
+
+# Load all checks and record global var definitions
+# Also read the man pages
+global_vars = {}
+invalid_global_vars = {}
 for check in get_checks():
+    vars_before_check = all_nonfunction_vars()
     execfile('checks/%s' % check)
+    vars_after_check = all_nonfunction_vars()
+
+    global_vars[check] = []
+    for name in vars_after_check:
+        if name not in ignored_variables and name not in vars_before_check:
+            global_vars[check] += [ name ]
 
 SCORE_START = 10
 C_OK      = 1
 C_FAILED  = 2
 C_INVALID = 3
-TESTS = { 'manpage': C_OK, 'snmp_scan': C_OK, 'pnp_tmpl': C_OK, 'pnp_rra': C_OK, 'snmp_scan': C_OK, 'reindent': C_OK }
-WEIGHT = { 'manpage': 2 }
+TESTS = { 'manpage':     C_OK,
+          'snmp_scan':   C_OK,
+          'pnp_tmpl':    C_OK,
+          'pnp_rra':     C_OK,
+          'snmp_scan':   C_OK,
+          'reindent':    C_OK,
+          'global_vars': C_OK,
+}
+WEIGHT = { 'manpage': 2, 'global_vars': 2, 'reindent': 2 }
+
+manpage = {}
 
 #
 # Check definitions
 #
+
+def get_manpage(check):
+    if not check in manpage:
+        try:
+            manpage[check] = open('checkman/%s' % check.split('.')[0]).read()
+        except IOError, e:
+            manpage[check] = ""
+    return manpage[check]
+
+def grep_manpage(check, match, section = None):
+    manpage = get_manpage(check)
+    if section is None:
+        return not re.search(match, manpage) is None
+    else:
+        started = False
+        for line in manpage.split("\n"):
+            if line == '[%s]' % section:
+                # Block starts with this line
+                started = True
+            elif started and line == '' or line.startswith('['):
+                # Reached nex section. Didn't find a match ... so return false
+                return False
+            elif started:
+                if not re.search(match, line) is None:
+                    return True
+        return False
+
+def is_valid_global_vars(check):
+    return True
+
+def verify_global_vars(check):
+    check_file = check.split('.')[0]
+
+    # No global vars registered by this check
+    if not check_file in global_vars:
+        return True
+
+    # Loop all global vars of this check and verify them
+    for var in global_vars[check_file]:
+        invalid = False
+        if not var.islower():
+            invalid = True
+
+        # Filter out known config vars
+        # And check for correct prefix
+        if not invalid and not grep_manpage(check, "^%s" % var, 'configuration') \
+           and not var.startswith('%s_' % check_file):
+            invalid = True
+
+        if invalid:
+            if not check_file in invalid_global_vars:
+                invalid_global_vars[check_file] = [ var ]
+            else:
+                invalid_global_vars[check_file] += [ var ]
+
+    return check_file in invalid_global_vars
 
 def is_valid_reindent(check):
     return True

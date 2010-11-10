@@ -93,15 +93,15 @@ def grep_manpage(check, match, section = None):
     if section is None:
         return not re.search(match, manpage) is None
     else:
-        started = False
-        for line in manpage.split("\n"):
+        sec_started = False
+        for line in [ l.strip() for l in manpage.split("\n") ]:
             if line == '[%s]' % section:
                 # Block starts with this line
-                started = True
-            elif started and line == '' or line.startswith('['):
+                sec_started = True
+            elif sec_started == True and (line == '' or line.startswith('[')):
                 # Reached nex section. Didn't find a match ... so return false
                 return False
-            elif started:
+            elif sec_started == True:
                 if not re.search(match, line) is None:
                     return True
         return False
@@ -166,10 +166,14 @@ def verify_global_vars(check):
         if not var.islower():
             invalid = True
 
-        # Filter out known config vars
-        # And check for correct prefix
-        if not invalid and not grep_manpage(check, "^%s" % var, 'configuration') \
-           and not var.startswith('%s_' % check_file):
+        # Documented configuration vars can be skipped
+        if not invalid and grep_manpage(check, "^%s" % var, 'configuration'):
+            continue
+        elif check == 'aironet_clients':
+            print 'found'
+
+        # Check unknown vars for correct prefix
+        if not var.startswith('%s_' % check_file):
             invalid = True
 
         if invalid:

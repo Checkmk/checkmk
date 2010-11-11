@@ -42,7 +42,8 @@ err_warn (float): The percentage of errors + discards at which a warning should 
                   triggered. Default is {0.01} percent (one of 10.000).
 err_crit (float): The percentage of errors + discards at which a critical state is
                   reached. Default is {0.1} percent (one of 1.000).
-targetspeed (int): The target speed in bits per second of the interface.
+targetspeed (int): The target speed in bits per second of the interface. Can be {None} to disable the
+                  interface speed check.
 bw_warn (float): Optional: The in/out rate to raise a WARNING state. Defaults to {None}.
 bw_crit (float): Optional: The in/out rate to raise a CRITICAL state. Defaults to {None}.
 allowed_operstates (tuple): Optional: A list of allowed operstates. All other states

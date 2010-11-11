@@ -42,6 +42,7 @@
     Checks & Agents:
     * megaraid_pdisks: Using the real enclosure number as check item now
     * if/if64: Added expected interface speed to warning output
+    * if/if64: Expected speed can also be None to disable interface speed checking
     * wut_webtherm: handle more variants of WuT Webtherms (thanks to Lefty)
     * cisco_fan: Does not inventorize 'notPresent' sensors anymore. Improved output
     * cisco_power: Not using power source as threshold anymore. Improved output

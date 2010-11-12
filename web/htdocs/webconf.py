@@ -5,7 +5,7 @@ import config
 #config = importer.import_module("config", path = ["/omd/sites/webconf/share/check_mk/web/htdocs"])
 # config = importer.import_module("config")
 
-import sys, pprint, socket, re
+import sys, pprint, socket, re, subprocess
 from lib import *
 import htmllib
 # import config
@@ -15,77 +15,6 @@ config.declare_permission("use_webconf",
      "Use Webconfiguration",
      "Only with this permission, users are allowed to use Check_MK web configuration GUI.",
      [ "admin", ])
-
-
-def check_filename():
-    filename = html.var("filename")
-    if not filename:
-        raise MKGeneralException("You called this page without a filename!")
-
-    # Get alias (title) for filename
-    title = None
-    for fn, t, roles in config.config_files:
-        if fn == filename:
-            title = t
-            break
-    if not title:
-        raise MKGeneralException("No config file <tt>%s</tt> is declared in <tt>multisite.mk</tt>" % filename)
-
-    if not config.may("use_webconf") or config.role not in roles:
-        raise MKAuthException("You are not allowed to edit this configuration file!")
-
-    return filename, title
-
-def page_index(h):
-    global html
-    html = h
-    filename, title = check_filename()
-        
-    html.header("Check_MK Configuration: " + title)
-    hosts = read_configuration_file(filename)
-
-    # Deletion of entries
-    delname = html.var("_delete")
-    if delname and delname in hosts and html.confirm("Do you really want to delete the host <tt>%s</tt>?" % delname):
-        del hosts[delname]
-        write_configuration_file(filename, hosts)
-
-    # Form for creating a new host
-    html.begin_context_buttons()
-    html.context_button("Create new host", "webconf_edithost.py?filename=" + filename)
-    html.end_context_buttons()
-    
-    # Show table of hosts in this file
-    html.write("<table class=services>\n")
-    html.write("<tr><th>Hostname</th><th>IP Address</th><th>Tags</th><th>Actions</th></tr>\n")
-    odd = "even"
-
-    hostnames = hosts.keys()
-    hostnames.sort()
-    for hostname in hostnames:
-        ipaddress, tags = hosts[hostname]
-        edit_url = "webconf_edithost.py?filename=%s&host=%s" % (filename, hostname)
-        clone_url = "webconf_edithost.py?filename=%s&clone=%s" % (filename, hostname)
-        delete_url = "webconf.py?filename=%s&_delete=%s" % (filename, hostname)
-        odd = odd == "odd" and "even" or "odd" 
-        html.write("<tr class=\"data %s0\"><td>%s</td>" % (odd, hostname))
-        if not ipaddress:
-            try:
-                ip = socket.gethostbyname(hostname)
-                ipaddress = "(DNS: %s)" % ip
-            except:
-                ipaddress = "(hostname not resolvable!)"
-        html.write("<td>%s</td>" % ipaddress)
-        html.write("<td>%s</td>" % ", ".join(tags))
-        html.write("<td>")
-        html.buttonlink(edit_url, "Edit")
-        html.buttonlink(clone_url, "Clone")
-        html.buttonlink(delete_url, "Delete")
-        html.write("</td>")
-        html.write("</tr>\n")
-    html.write("</table>\n")
-
-    html.footer()
 
 
 def read_configuration_file(filename):
@@ -130,6 +59,83 @@ def write_configuration_file(filename, hosts):
             out.write(pprint.pformat(ipaddresses))
             out.write(")")
         out.write("\n")
+
+def check_filename():
+    filename = html.var("filename")
+    if not filename:
+        raise MKGeneralException("You called this page without a filename!")
+
+    # Get alias (title) for filename
+    title = None
+    for fn, t, roles in config.config_files:
+        if fn == filename:
+            title = t
+            break
+    if not title:
+        raise MKGeneralException("No config file <tt>%s</tt> is declared in <tt>multisite.mk</tt>" % filename)
+
+    if not config.may("use_webconf") or config.role not in roles:
+        raise MKAuthException("You are not allowed to edit this configuration file!")
+
+    return filename, title
+
+def page_index(h):
+    global html
+    html = h
+    filename, title = check_filename()
+        
+    html.header("Check_MK Configuration: " + title)
+    hosts = read_configuration_file(filename)
+
+    # Context buttons
+    html.begin_context_buttons()
+    html.context_button("Create new host", "webconf_edithost.py?filename=" + filename)
+    html.context_button("Activate Changes!", html.makeuri([("_action", "activate")]))
+    html.end_context_buttons()
+
+    action = html.var("_action")
+    if action == "activate":
+        activate_configuration()
+
+    # Deletion of entries
+    delname = html.var("_delete")
+    if delname and delname in hosts and html.confirm("Do you really want to delete the host <tt>%s</tt>?" % delname):
+        del hosts[delname]
+        write_configuration_file(filename, hosts)
+
+    
+    # Show table of hosts in this file
+    html.write("<table class=services>\n")
+    html.write("<tr><th>Hostname</th><th>IP Address</th><th>Tags</th><th>Actions</th></tr>\n")
+    odd = "even"
+
+    hostnames = hosts.keys()
+    hostnames.sort()
+    for hostname in hostnames:
+        ipaddress, tags = hosts[hostname]
+        edit_url = "webconf_edithost.py?filename=%s&host=%s" % (filename, hostname)
+        clone_url = "webconf_edithost.py?filename=%s&clone=%s" % (filename, hostname)
+        delete_url = "webconf.py?filename=%s&_delete=%s" % (filename, hostname)
+        odd = odd == "odd" and "even" or "odd" 
+        html.write("<tr class=\"data %s0\"><td>%s</td>" % (odd, hostname))
+        if not ipaddress:
+            try:
+                ip = socket.gethostbyname(hostname)
+                ipaddress = "(DNS: %s)" % ip
+            except:
+                ipaddress = "(hostname not resolvable!)"
+        html.write("<td>%s</td>" % ipaddress)
+        html.write("<td>%s</td>" % ", ".join(tags))
+        html.write("<td>")
+        html.buttonlink(edit_url, "Edit")
+        html.buttonlink(clone_url, "Clone")
+        html.buttonlink(delete_url, "Delete")
+        html.write("</td>")
+        html.write("</tr>\n")
+    html.write("</table>\n")
+
+    html.footer()
+
 
 def page_edithost(h):
     global html
@@ -233,3 +239,12 @@ def page_edithost(h):
     html.hidden_fields()
     html.end_form()
     html.footer()
+
+def activate_configuration():
+    f = os.popen("check_mk -R 2>&1 >/dev/null")
+    errors = f.read()
+    exitcode = f.close()
+    if exitcode:
+        html.show_error(errors)
+    else:
+        html.message("The new configuration has been successfully activated.")

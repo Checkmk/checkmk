@@ -193,9 +193,9 @@ def parse_multipath_output(info, only_uuid = None):
             continue
         else:
             if uuid != None:
-		# Handle special syntax | |- 2:0:0:1 sda  ...
-	        if line[0] == '|':
-		    line = line[1:]
+                # Handle special syntax | |- 2:0:0:1 sda  ...
+                if line[0] == '|':
+                    line = line[1:]
                 if reg_prio.search(l):
                     group['state'] = "".join(line[3:])
                 elif len(line) >= 4 and reg_lun.match(line[1]):

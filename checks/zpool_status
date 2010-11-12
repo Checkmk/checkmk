@@ -31,7 +31,7 @@
 # +------------------------------------------------------------------+
 #
 # /usr/sbin/zpool status -x
-# 
+#
 # Example output of a healthy spool
 # ---------------------------------
 # all pools are healthy
@@ -53,7 +53,7 @@
 #    see: http://www.sun.com/msg/ZFS-8000-9P
 #  scrub: none requested
 # config:
-# 
+#
 #         NAME        STATE     READ WRITE CKSUM
 #         snapshots   ONLINE       0     0     0
 #           raidz1    ONLINE       0     0     0
@@ -61,37 +61,36 @@
 #             c0d1s7  ONLINE       0     0     0
 #             c1d0s7  ONLINE       0     0     0
 #             c1d1s7  ONLINE       0     0     1
-# 
+#
 # errors: No known data errors
 # ---------------------------------
 
 # inventory function
 def inventory_zpool_status(checkname, info):
     if len(info) == 0:
-       return []
+        return []
     for line in info:
         l = " ".join(line)
         if l == "no pools available":
-           return []
+            return []
         else:
-           return [ (None, None) ]
-# 
+            return [ (None, None) ]
+#
 def check_zpool_status(_no_item, params, info):
-      #print info
-      for line in info:
-          l = " ".join(line)
-          # all is well
-          if l == "all pools are healthy":
-              return ( 0, "OK - %s" % l )
-          # this only happens if pools have been inventoried and subsequently destroyed!
-          elif l == "no pools available":
-              return ( 2, "CRIT - 1 or more storage pools have been destroyed!" )
-          # problem
-          elif line[0] == "pool:":
-             pool = line[1]
-             return ( 2, "CRIT - storage pool '%s' has an error!" % pool)
-      #
-      return (3, "UNKNOWN - invalid output from plugin")
+    #print info
+    for line in info:
+        l = " ".join(line)
+        # all is well
+        if l == "all pools are healthy":
+            return ( 0, "OK - %s" % l )
+        # this only happens if pools have been inventoried and subsequently destroyed!
+        elif l == "no pools available":
+            return ( 2, "CRIT - 1 or more storage pools have been destroyed!" )
+        # problem
+        elif line[0] == "pool:":
+            pool = line[1]
+            return ( 2, "CRIT - storage pool '%s' has an error!" % pool)
+    #
+    return (3, "UNKNOWN - invalid output from plugin")
 #
 check_info['zpool_status'] = ( check_zpool_status, "zpool status", 0, inventory_zpool_status)
-

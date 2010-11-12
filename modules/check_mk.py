@@ -1599,7 +1599,7 @@ def do_snmp_scan(hostnamelist):
             make_inventory(checkname, [hostname])
 
 
-def make_inventory(checkname, hostnamelist, check_only=False):
+def make_inventory(checkname, hostnamelist, check_only=False, include_state=False):
     try:
         inventory_function = check_info[checkname][3]
     except KeyError:
@@ -1703,6 +1703,7 @@ def make_inventory(checkname, hostnamelist, check_only=False):
                 continue
 
             for entry in inventory:
+                state_type = "new" # assume new, change later if wrong
                 if len(entry) == 2: # comment is now obsolete
                     item, paramstring = entry
                 else:
@@ -1720,16 +1721,28 @@ def make_inventory(checkname, hostnamelist, check_only=False):
                 checked_items = [ i for ( (cn, i), (par, descr, deps) ) \
                                   in checktable.items() if cn == checkname ]
                 if item in checked_items:
-                    continue # we have that already
+                    if include_state:
+                        state_type = "old"
+                    else:
+                        continue # we have that already
 
                 if service_ignored(hn, description):
-                    continue # user does not want this item to be checked
+                    if include_state:
+                        if state_type == "old":
+                            state_type = "obsolete"
+                        else:
+                            state_type = "ignored"
+                    else:
+                        continue # user does not want this item to be checked
 
                 newcheck = '  ("%s", "%s", %r, %s),' % (hn, checkname, item, paramstring)
                 newcheck += "\n"
                 if newcheck not in newchecks: # avoid duplicates if inventory outputs item twice
                     newchecks.append(newcheck)
-                    newitems.append( (hn, checkname, item) )
+                    if include_state:
+                        newitems.append( (hn, checkname, item, paramstring, state_type) )
+                    else:
+                        newitems.append( (hn, checkname, item) )
                     count_new += 1
 
 
@@ -3376,6 +3389,113 @@ def ip_to_hostname(ip):
     return ip_to_hostname_cache.get(ip)
 
 
+#       _         _                        _   _             
+#      / \  _   _| |_ ___  _ __ ___   __ _| |_(_) ___  _ __  
+#     / _ \| | | | __/ _ \| '_ ` _ \ / _` | __| |/ _ \| '_ \ 
+#    / ___ \ |_| | || (_) | | | | | | (_| | |_| | (_) | | | |
+#   /_/   \_\__,_|\__\___/|_| |_| |_|\__,_|\__|_|\___/|_| |_|
+#                                                            
+#   
+
+class MKAutomationError(Exception):
+    def __init__(self, reason):
+        self.reason = reason
+    def __str__(self):
+        return self.reason
+
+def automation_try_inventory(args):
+    what = args[0]
+    if what == "tcp":
+        checknames = inventorable_checktypes(False)
+    hostname = args[1]
+    found = {}
+    for cn in checknames:
+        f = make_inventory(cn, [hostname], True, True)
+        for hn, ct, item, params, state_type in f:
+           found[(ct, item)] = ( state_type, params ) 
+
+    # Check if already in autochecks (but not found anymore)
+    for hn, ct, item, params in autochecks:
+        if hn == hostname and (ct, item) not in found:
+            found[(ct, item)] = ( 'vanished', params )
+
+    # Find manual checks
+    existing = get_check_table(hostname)
+    for (ct, item), (params, descr, deps) in existing.items():
+        if (ct, item) not in found:
+            found[(ct, item)] = ('manual', params)
+        
+    # Add legacy checks with artificial type 'legacy'
+    legchecks = host_extra_conf(hostname, legacy_checks)
+    for cmd, descr, perf in legchecks:
+        found[('legacy', descr)] = ( 'legacy', None )
+
+    table = []
+    for (ct, item), (state_type, paramstring) in found.items():
+        if state_type != 'legacy':
+            descr = service_description(ct, item)
+            infotype = ct.split('.')[0]
+            opt_use_cachefile = True
+            opt_no_tcp = True
+            info = get_host_info(hostname, None, infotype)
+            check_function = check_info[ct][0]
+            # apply check_parameters
+            try:
+                if type(paramstring) == str:
+                    params = eval(paramstring)
+                else:
+                    params = paramstring
+            except:
+                raise MKAutomationError("Invalid check parameter string '%s'" % paramstring)
+            if state_type != 'manual':
+                e = service_extra_conf(hostname, descr, check_parameters)
+                if len(e) > 0:
+                    params = e[0]
+
+            try:
+                result = check_function(item, params, info)
+            except MKCounterWrapped, e:
+                result = (0, "WAITING - Counter based check, cannot be done offline")
+            except Exception, e:
+                result = (3, "UNKNOWN - invalid output from agent or error in check implementation")
+            if len(result) == 2:
+                result = (result[0], result[1], [])
+            exitcode, output, perfdata = result
+        else:
+            descr = item
+            exitcode = 0
+            output = "WAITING - Legacy check, cannot be done offline"
+            perfdata = []
+        table.append((state_type, ct, item, params, descr, exitcode, output, perfdata))
+
+    return table
+
+
+def do_automation(cmd, args):
+    try:
+        if cmd == "try-inventory":
+            result = automation_try_inventory(args)
+        else:
+            raise MKAutomationError("Invalid command %s" % cmd)
+    except MKAutomationError, e:
+        sys.stdout.write("None\n")
+        sys.stderr.write("%s\n" % e)
+        sys.exit(1)
+    except Exception, e:
+        if opt_debug:
+            raise
+        else:
+            sys.stdout.write("None\n")
+            sys.stderr.write("%s\n" % e)
+            sys.exit(2)
+
+    if opt_debug:
+        import pprint
+        sys.stdout.write(pprint.pformat(result)+"\n")
+    else:
+        sys.stdout.write("%r\n" % result)
+    sys.exit(0)
+
 #   +----------------------------------------------------------------------+
 #   |         ____                _                    __ _                |
 #   |        |  _ \ ___  __ _  __| |   ___ ___  _ __  / _(_) __ _          |
@@ -3543,7 +3663,7 @@ if __name__ == "__main__":
     long_options = ["help", "version", "verbose", "compile", "debug",
                     "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
                     "flush", "package", "donate", "snmpwalk", "usewalk",
-                    "scan-parents", "procs=",
+                    "scan-parents", "procs=", "automation=", 
                     "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                     "man", "nowiki", "config-check", "backup=", "restore=",
                     "check-inventory=", "paths", "cleanup-autochecks" ]
@@ -3675,6 +3795,9 @@ if __name__ == "__main__":
                 done = True
             elif o == '--scan-parents':
                 do_scan_parents(args)
+                done = True
+            elif o == '--automation':
+                do_automation(a, args)
                 done = True
 
 

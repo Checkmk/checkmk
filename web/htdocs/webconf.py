@@ -159,6 +159,12 @@ def page_edithost(h):
         ipaddress, tags = None, []
         mode = "new"
 
+    
+    html.header(title)
+    html.begin_context_buttons()
+    html.context_button("Hostlist", "webconf.py?filename=" + filename)
+    html.context_button("Services", "webconf_services.py?filename=%s&host=%s" % (filename, hostname))
+    html.end_context_buttons()
 
     # Form submitted
     if html.var("save") and html.check_transaction():
@@ -184,18 +190,14 @@ def page_edithost(h):
 
             hosts[hostname] = (ipaddress, tags)
             write_configuration_file(filename, hosts)
-            html.set_browser_redirect(1, "webconf.py?filename=%s" % htmllib.urlencode(filename))
-            html.header(title)
+# html.set_browser_redirect(1, "webconf.py?filename=%s" % htmllib.urlencode(filename))
             html.message("Saved changes.")
             html.footer()
 
         except MKUserError, e:
-            html.header(title)
             html.write("<div class=error>%s</div>\n" % e.message)
             html.add_user_error(e.varname, e.message)
 
-    else:
-        html.header(title)
 
     html.begin_form("edithost")
     html.write("<table class=form>\n")
@@ -248,3 +250,55 @@ def activate_configuration():
         html.show_error(errors)
     else:
         html.message("The new configuration has been successfully activated.")
+
+def page_services(h):
+    global html
+    html = h
+
+    filename, title = check_filename()
+    hosts = read_configuration_file(filename)
+
+    hostname = html.var("host")
+    html.header("Services of " + hostname)
+    html.begin_context_buttons()
+    html.context_button("Hostlist", "webconf.py?filename=" + filename)
+    html.context_button("Edit host", "webconf_edithost.py?filename=%s&host=%s" % (filename, hostname))
+    html.end_context_buttons()
+
+    f = os.popen("check_mk --automation try-inventory tcp '%s' 2>&1" % (hostname))
+    code = f.read()
+    exit_code = f.close()
+    if exit_code:
+        raise MKGeneralException("Error calling check_mk: %s, exit code %s" % (code, exit_code))
+    table = eval(code)
+    table.sort()
+    
+    html.write("<table class=services>\n")
+    for state_name, state_type in [ 
+        ( "Existing checks", "old", ),
+        ( "Available checks", "new", ),
+        ( "Ignored checks (configured away by admin)", "ignored" ),
+        ( "Obsolete checks (being checked, but should be ignored)", "obsolete" ),
+        ( "Vanished checks (checks, but no longer exist)", "vanished" ),
+        ( "Manual checks (defined in main.mk)", "manual" ),
+        ( "Legacy checks (defined in main.mk)", "legacy")
+        ]:
+        first = True
+        for st, ct, item, params, descr, state, output, perfdata in table:
+            if state_type != st:
+                continue
+            if first:
+                html.write("<tr><td colspan=7>%s</td></tr>\n" % state_name)
+                html.write("<tr><th>Checktype</th><th>Item</th><th>Service Description</th><th>Status</th><th>Current check</th></tr>\n")
+                first = False
+            html.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>" %
+                    (ct, item, descr, state, output))
+    html.write("</table>\n")
+
+
+
+    html.footer()
+
+
+
+

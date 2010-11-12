@@ -1,5 +1,6 @@
 import webconf
 
 pagehandlers.update({
-    "webconf"              : webconf.index,
+    "webconf"          : webconf.page_index,
+    "webconf_edithost" : webconf.page_edithost,
 })

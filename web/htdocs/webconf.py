@@ -6,6 +6,7 @@ config = importer.import_module("config", path = ["/omd/sites/webconf/share/chec
 
 import sys, pprint
 from lib import *
+import htmllib
 # import config
 
 
@@ -41,11 +42,15 @@ def page_index(h):
         
     html.header("Check_MK Configuration: " + title)
     hosts = read_configuration_file(filename)
+    hostnames = hosts.keys()
+    hostnames.sort()
     
     html.write("<table class=services>\n")
-    html.write("<tr><th>Hostname</th><th>IP Address</th><th>Tags</th></tr>\n")
+    html.write("<tr><th>Hostname</th><th>IP Address</th><th>Tags</th><th>Actions</th></tr>\n")
     odd = "even"
-    for hostname, ipaddress, tags in hosts:
+
+    for hostname in hostnames:
+        ipaddress, tags = hosts[hostname]
         edit_url = "webconf_edithost.py?filename=%s&host=%s" % (filename, hostname)
         odd = odd == "odd" and "even" or "odd" 
         html.write("<tr class=\"data %s0\"><td>%s</td>" % (odd, hostname))
@@ -67,31 +72,28 @@ def read_configuration_file(filename):
             "ipaddresses" : {},
         }
         execfile(path, variables, variables)
-        hosts = []
+        hosts = {}
         for h in variables["all_hosts"]:
             parts = h.split('|')
             hostname = parts[0]
             tags = parts[1:]
             ipaddress = variables["ipaddresses"].get(hostname)
-            hosts.append((hostname, ipaddress, tags))
+            hosts[hostname] = (ipaddress, tags)
         return hosts
     else:
-        return []
-
-def lookup_host(hosts, hostname):
-    for hn, ipaddress, tags in hosts:
-        if hn == hostname:
-            return ipaddress, tags
-    raise MKGeneralException("Host %s not configured in this file" % hostname)
-
+        return {}
 
 def write_configuration_file(filename, hosts):
     all_hosts = []
     ipaddresses = {}
-    for hostname, ipaddress, tags in hosts:
+    hostnames = hosts.keys()
+    hostnames.sort()
+    for hostname in hostnames:
+        ipaddress, tags = hosts[hostname]
         all_hosts.append("|".join([hostname] + tags))
         if ipaddress:
             ipaddresses[hostname] = ipaddress
+
     path = defaults.check_mk_configdir + "/" + filename
     out = file(path, "w")
     out.write("# Written by Check_MK Webconf\n\n")
@@ -113,18 +115,21 @@ def page_edithost(h):
     hostname = html.var("host")
     if not hostname:
         MKGeneralException("Host %s does not exist." % hostname)
-    html.header("Edit host %s" % hostname)
 
     # Form submitted
     if html.var("save") and html.check_transaction():
         ipaddress = html.var("ipaddress")
         if not ipaddress: 
             ipaddress = None
-        hosts = change_host(hosts, hostname, ipaddress)
+        hosts[hostname] = (ipaddress, ['hirntag'])
         write_configuration_file(filename, hosts)
-        html.write("Saved.")
+        html.set_browser_redirect(1, "webconf.py?filename=%s" % htmllib.urlencode(filename))
+        html.header("Edit host")
+        html.message("Saved changes.")
+        html.footer()
 
-    ipaddress, tags = lookup_host(hosts, hostname)
+    html.header("Edit host %s" % hostname)
+    ipaddress, tags = hosts[hostname]
     html.begin_form("edithost")
     html.write("<table class=form>\n")
     html.write("<tr><td class=legend>Hostname</td><td class=content>%s</td></tr>" % hostname)

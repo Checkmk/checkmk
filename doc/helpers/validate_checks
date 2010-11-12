@@ -169,8 +169,6 @@ def verify_global_vars(check):
         # Documented configuration vars can be skipped
         if not invalid and grep_manpage(check, "^%s" % var, 'configuration'):
             continue
-        elif check == 'aironet_clients':
-            print 'found'
 
         # Check unknown vars for correct prefix
         if not var.startswith('%s_' % check_file):
@@ -182,7 +180,7 @@ def verify_global_vars(check):
             else:
                 invalid_global_vars[check_file] += [ var ]
 
-    return check_file in invalid_global_vars
+    return not check_file in invalid_global_vars
 
 # Reindent code:
 # - Is there some code to be reindented?

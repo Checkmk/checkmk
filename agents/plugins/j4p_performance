@@ -1,0 +1,45 @@
+#!/usr/bin/python
+
+import urllib, sys, os
+
+server = "localhost"
+port = 8080
+instance = None
+
+vars = [
+ ( "java.lang:type=Memory/NonHeapMemoryUsage/used",     "NonHeapMemoryUsage" ),
+ ( "java.lang:type=Memory/HeapMemoryUsage/used",        "HeapMemoryUsage" ),
+ ( "java.lang:type=Threading/ThreadCount",              "ThreadCount" ),
+ ( "java.lang:type=Threading/DaemonhreadCount",         "DeamonThreadCount" ),
+ ( "java.lang:type=Threading/PeakThreadCount",          "PeakThreadCount" ),
+ ( "java.lang:type=Threading/TotalStartedThreadCount",  "TotalStartedThreadCount" ),
+ ( "java.lang:type=Runtime/Uptime",                     "Uptime" ),
+ 
+]
+
+conffile = os.getenv("MK_CONFDIR", "/etc/check_mk") + "/j4p.conf"
+
+if instance == None:
+    instance = str(port)
+
+if os.path.exists(conffile):
+    execfile(conffile)
+
+def fetch_var(server, port, path):
+    url = "http://%s:%d/j4p/read/%s" % (server, port, path)
+    json = urllib.urlopen(url).read()
+    return eval(json)["value"]
+
+
+first = True
+for path, title in vars:
+    try:
+	value = fetch_var(server, port, path)
+	if first:
+	    first = False
+	    sys.stdout.write("<<<j4p_performance>>>\n")
+        sys.stdout.write("%s %-30s %s\n" % (instance, title, value))
+    except IOError:
+	sys.exit(1)
+    except:
+	pass

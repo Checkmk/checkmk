@@ -1,10 +1,11 @@
 #!/usr/bin/python
 
 from mod_python import importer
-config = importer.import_module("config", path = ["/omd/sites/webconf/share/check_mk/web/htdocs"])
+import config
+#config = importer.import_module("config", path = ["/omd/sites/webconf/share/check_mk/web/htdocs"])
 # config = importer.import_module("config")
 
-import sys, pprint
+import sys, pprint, socket
 from lib import *
 import htmllib
 # import config
@@ -42,21 +43,37 @@ def page_index(h):
         
     html.header("Check_MK Configuration: " + title)
     hosts = read_configuration_file(filename)
-    hostnames = hosts.keys()
-    hostnames.sort()
+
+    # Deletion of entries
+    delname = html.var("_delete")
+    if delname and delname in hosts and html.confirm("Do you really want to delete the host <tt>%s</tt>?" % delname):
+        del hosts[delname]
+        write_configuration_file(filename, hosts)
     
     html.write("<table class=services>\n")
     html.write("<tr><th>Hostname</th><th>IP Address</th><th>Tags</th><th>Actions</th></tr>\n")
     odd = "even"
 
+    hostnames = hosts.keys()
+    hostnames.sort()
     for hostname in hostnames:
         ipaddress, tags = hosts[hostname]
         edit_url = "webconf_edithost.py?filename=%s&host=%s" % (filename, hostname)
+        delete_url = "webconf.py?filename=%s&_delete=%s" % (filename, hostname)
         odd = odd == "odd" and "even" or "odd" 
         html.write("<tr class=\"data %s0\"><td>%s</td>" % (odd, hostname))
-        html.write("<td>%s</td>" % (ipaddress and ipaddress or "(DNS)"))
+        if not ipaddress:
+            try:
+                ip = socket.gethostbyname(hostname)
+                ipaddress = "(DNS: %s)" % ip
+            except:
+                ipaddress = "(hostname not resolvable!)"
+        html.write("<td>%s</td>" % ipaddress)
         html.write("<td>%s</td>" % ", ".join(tags))
-        html.write('<td><a class=button href="%s">edit</a></td>' % edit_url)
+        html.write("<td>")
+        html.buttonlink(edit_url, "Edit")
+        html.buttonlink(delete_url, "Delete")
+        html.write("</td>")
         html.write("</tr>\n")
     html.write("</table>\n")
 
@@ -121,7 +138,12 @@ def page_edithost(h):
         ipaddress = html.var("ipaddress")
         if not ipaddress: 
             ipaddress = None
-        hosts[hostname] = (ipaddress, ['hirntag'])
+        tags = []
+        for tagno, (tagname, taglist) in enumerate(config.host_tags):
+            value = html.var("tag_%d" % tagno)
+            if value:
+                tags.append(value)
+        hosts[hostname] = (ipaddress, tags)
         write_configuration_file(filename, hosts)
         html.set_browser_redirect(1, "webconf.py?filename=%s" % htmllib.urlencode(filename))
         html.header("Edit host")
@@ -138,7 +160,29 @@ def page_edithost(h):
             "IP address lookup via DNS</td><td class=content>")
     html.text_input("ipaddress", ipaddress)
     html.write("</td>\n")
+
+    # Host tags
+    found_tags = []
+    for tagno, (tagname, taglist) in enumerate(config.host_tags):
+        # get current value of tag
+        tagvalue = None
+        duplicate = False
+        for tag, descr in taglist:
+            if tag in tags:
+                if tagvalue:
+                    duplicate = True
+                tagvalue = tag 
+
+        tagvar = "tag_%d" % tagno
+        html.write("<tr><td class=legend>%s</td>" % tagname)
+        html.write("<td class=content>")
+        html.select(tagvar, taglist, tagvalue)
+        if duplicate: # tag not unique before editing
+            html.write("(!)")
+        html.write("</td></tr>\n")
+
     html.write('<tr><td class="legend button" colspan=2>')
+    html.buttonlink("webconf.py?filename=%s" % filename, "Cancel")
     html.button("save", "Save", "submit")
     html.write("</td></tr>\n")
     html.write("</table>\n")

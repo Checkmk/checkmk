@@ -222,6 +222,8 @@ class html:
         self.text_input(varname, str(deflt), "number", size=size)
 
     def text_input(self, varname, default_value = "", cssclass = "text", **args):
+        if default_value == None:
+            default_value = ""
         addprops = ""
         if "size" in args:
             addprops += " size=%d" % args["size"]
@@ -255,6 +257,7 @@ class html:
         onchange_code = onchange and " id=\"%s\" onchange=\"%s\"" % (varname, onchange) or ""
         self.write("<select%s name=\"%s\" size=\"1\">\n" % (onchange_code, varname))
         for value, text in options:
+            if value == None: value = ""
             sel = value == current and " selected" or ""
             self.write("<option value=\"%s\"%s>%s</option>\n" % (value, sel, text))
         self.write("</select>\n")

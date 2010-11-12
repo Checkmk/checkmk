@@ -5,7 +5,7 @@ import config
 #config = importer.import_module("config", path = ["/omd/sites/webconf/share/check_mk/web/htdocs"])
 # config = importer.import_module("config")
 
-import sys, pprint, socket
+import sys, pprint, socket, re
 from lib import *
 import htmllib
 # import config
@@ -49,7 +49,13 @@ def page_index(h):
     if delname and delname in hosts and html.confirm("Do you really want to delete the host <tt>%s</tt>?" % delname):
         del hosts[delname]
         write_configuration_file(filename, hosts)
+
+    # Form for creating a new host
+    html.begin_context_buttons()
+    html.context_button("Create new host", "webconf_edithost.py?filename=" + filename)
+    html.end_context_buttons()
     
+    # Show table of hosts in this file
     html.write("<table class=services>\n")
     html.write("<tr><th>Hostname</th><th>IP Address</th><th>Tags</th><th>Actions</th></tr>\n")
     odd = "even"
@@ -59,6 +65,7 @@ def page_index(h):
     for hostname in hostnames:
         ipaddress, tags = hosts[hostname]
         edit_url = "webconf_edithost.py?filename=%s&host=%s" % (filename, hostname)
+        clone_url = "webconf_edithost.py?filename=%s&clone=%s" % (filename, hostname)
         delete_url = "webconf.py?filename=%s&_delete=%s" % (filename, hostname)
         odd = odd == "odd" and "even" or "odd" 
         html.write("<tr class=\"data %s0\"><td>%s</td>" % (odd, hostname))
@@ -72,6 +79,7 @@ def page_index(h):
         html.write("<td>%s</td>" % ", ".join(tags))
         html.write("<td>")
         html.buttonlink(edit_url, "Edit")
+        html.buttonlink(clone_url, "Clone")
         html.buttonlink(delete_url, "Delete")
         html.write("</td>")
         html.write("</tr>\n")
@@ -128,33 +136,69 @@ def page_edithost(h):
     html = h
     filename, title = check_filename()
     hosts = read_configuration_file(filename)
-
     hostname = html.var("host")
-    if not hostname:
-        MKGeneralException("Host %s does not exist." % hostname)
+
+    # Handle Edit, Clone and New
+    clonename = html.var("clone")
+    if clonename:
+        title = "Create clone of %s" % clonename
+        ipaddress, tags = hosts[clonename]
+        mode = "clone"
+    elif hostname in hosts:
+        title = "Edit host " + hostname
+        ipaddress, tags = hosts.get(hostname)
+        mode = "edit"
+    else:
+        title = "Create new host"
+        ipaddress, tags = None, []
+        mode = "new"
+
 
     # Form submitted
     if html.var("save") and html.check_transaction():
-        ipaddress = html.var("ipaddress")
-        if not ipaddress: 
-            ipaddress = None
-        tags = []
-        for tagno, (tagname, taglist) in enumerate(config.host_tags):
-            value = html.var("tag_%d" % tagno)
-            if value:
-                tags.append(value)
-        hosts[hostname] = (ipaddress, tags)
-        write_configuration_file(filename, hosts)
-        html.set_browser_redirect(1, "webconf.py?filename=%s" % htmllib.urlencode(filename))
-        html.header("Edit host")
-        html.message("Saved changes.")
-        html.footer()
+        try:
+            ipaddress = html.var("ipaddress")
+            if not ipaddress: 
+                ipaddress = None
+            tags = []
+            for tagno, (tagname, taglist) in enumerate(config.host_tags):
+                value = html.var("tag_%d" % tagno)
+                if value:
+                    tags.append(value)
 
-    html.header("Edit host %s" % hostname)
-    ipaddress, tags = hosts[hostname]
+            # handle clone & new
+            if not hostname:
+                hostname = html.var("name")
+                if not hostname:
+                    raise MKUserError("name", "Please specify a host name")
+                elif hostname in hosts:
+                    raise MKUserError("name", "A host with this name already exists.")
+                elif not re.match("^[a-zA-Z0-9-_.]+$", hostname):
+                    raise MKUserError("name", "Invalid host name: must contain only characters, digits, dash, underscore and dot.")
+
+            hosts[hostname] = (ipaddress, tags)
+            write_configuration_file(filename, hosts)
+            html.set_browser_redirect(1, "webconf.py?filename=%s" % htmllib.urlencode(filename))
+            html.header(title)
+            html.message("Saved changes.")
+            html.footer()
+
+        except MKUserError, e:
+            html.header(title)
+            html.write("<div class=error>%s</div>\n" % e.message)
+            html.add_user_error(e.varname, e.message)
+
+    else:
+        html.header(title)
+
     html.begin_form("edithost")
     html.write("<table class=form>\n")
-    html.write("<tr><td class=legend>Hostname</td><td class=content>%s</td></tr>" % hostname)
+    html.write("<tr><td class=legend>Hostname</td><td class=content>")
+    if hostname and mode == "edit":
+        html.write(hostname)
+    else:
+        html.text_input("name")
+    html.write("</td></tr>\n")
     html.write("<tr><td class=legend>IP-Address<br>"
             "<i>Leave empty for automatic<br>"
             "IP address lookup via DNS</td><td class=content>")

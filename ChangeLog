@@ -77,6 +77,7 @@
     * Fixed repositioning the sidebar scroll state after refreshing the page
     * Fixed mousewheel scrolling in opera/chrome
     * Fixed resize bug on refresh in chrome
+    * New view for all services of a site
 
 1.1.8:
     Core, Setup, etc.:

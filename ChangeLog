@@ -78,6 +78,7 @@
     * Fixed mousewheel scrolling in opera/chrome
     * Fixed resize bug on refresh in chrome
     * New view for all services of a site
+    * Sidebar snapin site_status: make link target configurable
 
 1.1.8:
     Core, Setup, etc.:

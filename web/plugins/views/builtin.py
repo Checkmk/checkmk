@@ -1727,7 +1727,7 @@ multisite_builtin_views = {
               'play_sounds': False,
               'public': True,
               'show_filters': ['optservicegroup',
-                               'host',
+                               'hostregex',
                                'serviceregex',
                                'svcstate',
                                'opthostgroup',

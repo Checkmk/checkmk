@@ -1711,7 +1711,7 @@ multisite_builtin_views = {
                                   ('service_output', '')],
               'hidden': True,
               'hide_filters': ['site'],
-              'layout': 'table',
+              'layout': 'boxed',
               'linktitle': 'Services of Site',
               'mustsearch': False,
               'name': 'sitesvcs',

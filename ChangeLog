@@ -17,6 +17,11 @@
     * Renamed check functions of imm_health check from test_imm to imm_health
       to have valid function and check names. Please remove remove from
       inventory and re-inventory those checks.
+    * Check kernel: converted performance data from counters to rates. This
+      fixes RRD problems (spikes) on reboots and also allows better access 
+      to the peformance data for the Perf-O-Meters.  Also changed service 
+      descriptions. You need to reinventurize the kernel checks. You old
+      RRDs will not be deleted, new ones will be created.
 
     Core, Setup, etc.:
     * Improve error handling: if hosts are monitored with SNMP *and* TCP,

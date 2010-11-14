@@ -120,6 +120,12 @@ def perfometer_check_mk_cpu_threads(row, check_command, perf_data):
 
 perfometers["check_mk-cpu.threads"] = perfometer_check_mk_cpu_threads
 
+def perfometer_check_mk_kernel(row, check_command, perf_data):
+    rate = float(perf_data[0][1])
+    return "%.1f/s" % rate, perfometer_logarithmic(rate, 1000, 2, "#da6")
+
+perfometers["check_mk-kernel"] = perfometer_check_mk_kernel
+
 
 def perfometer_check_mk_cpu_loads(row, check_command, perf_data):
     color = { 0: "#68f", 1: "#ff2", 2: "#f22", 3: "#fa2" }[row["service_state"]]

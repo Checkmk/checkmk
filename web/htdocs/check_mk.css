@@ -783,11 +783,10 @@ td.count {
 }
 
 table.services tr.data td.perfometer {
-  padding: 2px 2px;
+  padding: 1px 2px;
   width: 120px;
   height: 22px;
   vertical-align: middle;
-  background-color: #888;
 }
 td.perfometer div.title {
    height: 0px; 
@@ -805,7 +804,8 @@ td.perfometer table {
   border-spacing: 0px;
   padding: 0px;
   margin: 0px;
-  border: none;
+  border: 1px solid #aaa;
+  height: 100%;
 }
 
 table.services tr.data td.perfometer table td {

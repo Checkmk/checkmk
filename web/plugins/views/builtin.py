@@ -1466,7 +1466,7 @@ multisite_builtin_views = {
                'play_sounds': False,
                'public': True,
                'show_filters': ['svc_last_state_change', 'svcstate'],
-               'sorters': [('stateage', False)],
+               'sorters': [('stateage', True)],
                'title': 'Recently changed services',
                'topic': 'Services'},
  'uncheckedsvc': {'browser_reload': 30,

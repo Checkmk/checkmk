@@ -74,6 +74,7 @@
     * j4p_performance: Added experimental agent plugin fetching data via 
       jmx4perl agent (does not need jmx4perl on Nagios)
     * j4p_performance.mem: added new experimental check for memory usage via JMX.
+    * if/if64: added Perf-O-Meter for Multisite
 
     Multisite:
     * The custom open/close states of custom links are now stored for each

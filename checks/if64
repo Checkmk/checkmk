@@ -122,7 +122,7 @@ def check_if64(item, params, info):
             speed = saveint(ifSpeed)
             infotext += get_nic_speed_human_readable(speed)
             bandwidth = speed / 8.0 # in Bytes / sec
-            if speed != targetspeed:
+            if not targetspeed is None and speed != targetspeed:
                 infotext += " (wrong speed! expected: %s)" % get_nic_speed_human_readable(targetspeed)
                 state = 1
 

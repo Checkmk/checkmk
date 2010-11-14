@@ -1,5 +1,13 @@
 Doku: Check_MK und OMD: Installieren von MKPs, local-Hierarchie
 
+Multisite: Kontextknöpfe Services: OK, Services: Crit usw. unsichtbar
+machen. Dazu einen neue View-Option einbauen (hide context button).
+
+Multisite: Bei jedem aktiven Service soll ein Knopf angezeigt werden
+zum Reschedulen. Dieser soll dann per WaitCondition: so lange warten,
+bis der Check auch wirklich ausgeführt wurde!
+
+Inventurcheck: retry_interval evt. anders (kuerzer) einstellbar machen.
 
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1

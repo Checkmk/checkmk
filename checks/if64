@@ -125,6 +125,8 @@ def check_if64(item, params, info):
             if not targetspeed is None and speed != targetspeed:
                 infotext += " (wrong speed! expected: %s)" % get_nic_speed_human_readable(targetspeed)
                 state = 1
+            else:
+                infotext += get_bytes_human_readable(speed, 1000)+'it/s'
 
             # Performance counters
             this_time = time.time()

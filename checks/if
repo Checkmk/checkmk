@@ -37,7 +37,7 @@ if_default_levels = (0.01, 0.1, None, None, ('1', 'up',))
 # Stupid fix: Remove all 0 bytes. Hope this causes no problems.
 def cleanup_if_strings(s):
     if s and s != '':
-        return "".join([ c for c in s if c not in nagios_illegal_chars+chr(0) ]).strip()
+	return "".join([ c for c in s if c not in nagios_illegal_chars+chr(0) ]).strip()
     else:
         return s
 
@@ -87,7 +87,7 @@ def check_if(item, params, info):
     for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, ifInUcastPkts, ifInNUcastPkts, ifInDiscards, \
         ifInErrors, ifOutOctets, ifOutUcastPkts, ifOutNUcastPkts, ifOutDiscards, ifOutErrors, ifOutQLen in info:
         ifDescr = cleanup_if_strings(ifDescr)
-
+	
         if item == ifIndex or item == ifDescr:
 
             # Display port number or alias in infotext if that is not part

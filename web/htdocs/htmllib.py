@@ -275,7 +275,7 @@ class html:
             checked = " CHECKED"
         else:
             checked = ""
-        self.write("<input type=checkbox name=%s%s>" % (varname, checked))
+        self.write("<input type=checkbox name=\"%s\"%s>" % (urlencode(varname), checked))
         self.form_vars.append(varname)
 
     def datetime_input(self, varname, default_value):

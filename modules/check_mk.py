@@ -3455,7 +3455,7 @@ def automation_try_inventory(args):
             try:
                 result = check_function(item, params, info)
             except MKCounterWrapped, e:
-                result = (0, "WAITING - Counter based check, cannot be done offline")
+                result = (None, "WAITING - Counter based check, cannot be done offline")
             except Exception, e:
                 result = (3, "UNKNOWN - invalid output from agent or error in check implementation")
             if len(result) == 2:
@@ -3463,7 +3463,7 @@ def automation_try_inventory(args):
             exitcode, output, perfdata = result
         else:
             descr = item
-            exitcode = 0
+            exitcode = None
             output = "WAITING - Legacy check, cannot be done offline"
             perfdata = []
         table.append((state_type, ct, item, params, descr, exitcode, output, perfdata))

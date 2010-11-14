@@ -272,29 +272,47 @@ def page_services(h):
         raise MKGeneralException("Error calling check_mk: %s, exit code %s" % (code, exit_code))
     table = eval(code)
     table.sort()
-    
+
+
+    html.begin_form("checks")
+    html.button("add", "Add marked checks")
+    html.button("remove", "Remove marked checks")
+    html.hidden_fields()
     html.write("<table class=services>\n")
-    for state_name, state_type in [ 
-        ( "Existing checks", "old", ),
-        ( "Available checks", "new", ),
-        ( "Ignored checks (configured away by admin)", "ignored" ),
-        ( "Obsolete checks (being checked, but should be ignored)", "obsolete" ),
-        ( "Vanished checks (checks, but no longer exist)", "vanished" ),
-        ( "Manual checks (defined in main.mk)", "manual" ),
-        ( "Legacy checks (defined in main.mk)", "legacy")
+    for state_name, state_type, checkbox in [ 
+        ( "Available checks", "new", True ),
+        ( "Ignored checks (configured away by admin)", "ignored", False ),
+        ( "Already configured checks", "old", False, ),
+        ( "Obsolete checks (being checked, but should be ignored)", "obsolete", False ),
+        ( "Vanished checks (checks, but no longer exist)", "vanished", False ),
+        ( "Manual checks (defined in main.mk)", "manual", None ),
+        ( "Legacy checks (defined in main.mk)", "legacy", None)
         ]:
         first = True
+        trclass = "even"
         for st, ct, item, params, descr, state, output, perfdata in table:
             if state_type != st:
                 continue
             if first:
-                html.write("<tr><td colspan=7>%s</td></tr>\n" % state_name)
-                html.write("<tr><th>Checktype</th><th>Item</th><th>Service Description</th><th>Status</th><th>Current check</th></tr>\n")
+                html.write('<tr class=groupheader><td colspan=7><br>%s</td></tr>\n' % state_name)
+                html.write("<tr><th>Status</th><th>Checktype</th><th>Item</th>"
+                           "<th>Service Description</th><th>Current check</th><th></th></tr>\n")
                 first = False
-            html.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>" %
-                    (ct, item, descr, state, output))
+            trclass = trclass == "even" and "odd" or "even"
+            statename = nagios_short_state_names.get(state, "PEND")
+            if statename == "PEND":
+                stateclass = "state svcstate statep"
+                state = 0 # for tr class
+            else:
+                stateclass = "state svcstate state%s" % state
+            html.write("<tr class=\"data %s%d\"><td class=\"%s\">%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>" %
+                    (trclass, state, stateclass, statename, ct, item, descr, output))
+            if checkbox != None:
+                varname = "%s %s" % (ct, item)
+                html.checkbox(varname, checkbox)
+            html.write("</td></tr>\n")
     html.write("</table>\n")
-
+    html.end_form()
 
 
     html.footer()

@@ -3572,6 +3572,8 @@ def automation_parse_autochecks_file(hostname):
 def automation_delete_host(args):
     hostname = args[0]
     for path in [
+        "%s/%s"    % (precompiled_hostchecks_dir, hostname),
+        "%s/%s.py" % (precompiled_hostchecks_dir, hostname),
         "%s/%s.mk" % (autochecksdir, hostname),
         "%s/%s"    % (logwatch_dir, hostname),
         "%s/%s"    % (counters_directory, hostname),

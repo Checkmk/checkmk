@@ -134,7 +134,7 @@ def page_index(h):
     if delname and delname in hosts and html.confirm("Do you really want to delete the host <tt>%s</tt>?" % delname):
         del hosts[delname]
         write_configuration_file(filename, hosts)
-        check_mk_automation("delete-host", delname)
+        check_mk_automation("delete-host", [delname])
 
     
     # Show table of hosts in this file
@@ -199,6 +199,8 @@ def page_edithost(h):
     html.header(title)
     html.begin_context_buttons()
     html.context_button("Hostlist", "webconf.py?filename=" + filename)
+    if hostname == None:
+        hostname = html.var("name")
     html.context_button("Services", "webconf_services.py?filename=%s&host=%s&_activate_available=1" % (filename, hostname))
     html.end_context_buttons()
 

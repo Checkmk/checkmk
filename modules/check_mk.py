@@ -1752,7 +1752,7 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
     if not check_only:
         if newchecks != []:
             filename = autochecksdir + "/" + checkname + "-" + time.strftime("%Y-%m-%d_%H.%M.%S")
-            while os.path.exists(filename + ".mk"): # more that one file a second..
+            while os.path.exists(filename + ".mk"): # in case of more than one file per second and checktype...
                 filename += ".x"
             filename += ".mk"
             if not os.path.exists(autochecksdir):
@@ -3389,13 +3389,14 @@ def ip_to_hostname(ip):
     return ip_to_hostname_cache.get(ip)
 
 
-#       _         _                        _   _             
-#      / \  _   _| |_ ___  _ __ ___   __ _| |_(_) ___  _ __  
-#     / _ \| | | | __/ _ \| '_ ` _ \ / _` | __| |/ _ \| '_ \ 
-#    / ___ \ |_| | || (_) | | | | | | (_| | |_| | (_) | | | |
-#   /_/   \_\__,_|\__\___/|_| |_| |_|\__,_|\__|_|\___/|_| |_|
-#                                                            
-#   
+#   +----------------------------------------------------------------------+
+#   |        _         _                        _   _                      | 
+#   |       / \  _   _| |_ ___  _ __ ___   __ _| |_(_) ___  _ __           |
+#   |      / _ \| | | | __/ _ \| '_ ` _ \ / _` | __| |/ _ \| '_ \          |
+#   |     / ___ \ |_| | || (_) | | | | | | (_| | |_| | (_) | | | |         |
+#   |    /_/   \_\__,_|\__\___/|_| |_| |_|\__,_|\__|_|\___/|_| |_|         |
+#   |                                                                      | 
+#   +----------------------------------------------------------------------+
 
 class MKAutomationError(Exception):
     def __init__(self, reason):
@@ -3411,24 +3412,24 @@ def automation_try_inventory(args):
     found = {}
     for cn in checknames:
         f = make_inventory(cn, [hostname], True, True)
-        for hn, ct, item, params, state_type in f:
-           found[(ct, item)] = ( state_type, params ) 
+        for hn, ct, item, paramstring, state_type in f:
+           found[(ct, item)] = ( state_type, paramstring ) 
 
     # Check if already in autochecks (but not found anymore)
     for hn, ct, item, params in autochecks:
         if hn == hostname and (ct, item) not in found:
-            found[(ct, item)] = ( 'vanished', params )
+            found[(ct, item)] = ( 'vanished', repr(params) ) # This is not the real paramstring!
 
     # Find manual checks
     existing = get_check_table(hostname)
     for (ct, item), (params, descr, deps) in existing.items():
         if (ct, item) not in found:
-            found[(ct, item)] = ('manual', params)
+            found[(ct, item)] = ('manual', repr(params) )
         
     # Add legacy checks with artificial type 'legacy'
     legchecks = host_extra_conf(hostname, legacy_checks)
     for cmd, descr, perf in legchecks:
-        found[('legacy', descr)] = ( 'legacy', None )
+        found[('legacy', descr)] = ( 'legacy', 'None' )
 
     table = []
     for (ct, item), (state_type, paramstring) in found.items():
@@ -3466,26 +3467,140 @@ def automation_try_inventory(args):
             exitcode = None
             output = "WAITING - Legacy check, cannot be done offline"
             perfdata = []
-        table.append((state_type, ct, item, params, descr, exitcode, output, perfdata))
+        table.append((state_type, ct, item, paramstring, params, descr, exitcode, output, perfdata))
 
     return table
 
+# Set the new list of autochecks. This list is specified by a 
+# table of (checktype, item). No parameters are specified. Those
+# are either (1) kept from existing autochecks or (2) computed
+# from a new inventory. Note: we must never convert check parameters
+# from python source code to actual values.
+def automation_set_autochecks(args):
+    hostname = args[0]
+    new_items = eval(sys.stdin.read())
+
+    do_cleanup_autochecks()
+    existing = automation_parse_autochecks_file(hostname)
+
+    # write new autochecks file, but take paramstrings from existing ones
+    # for those checks which are kept
+    new_autochecks = []
+    for ct, item, params, paramstring in existing:
+        if (ct, item) in new_items:
+            new_autochecks.append((ct, item, paramstring))
+            del new_items[(ct, item)]
+
+    for (ct, item), paramstring in new_items.items():
+        new_autochecks.append((ct, item, paramstring))
+
+    # write new autochecks file for that host
+    automation_write_autochecks_file(hostname, new_autochecks)
+
+
+def automation_get_autochecks(args):
+    hostname = args[0]
+    do_cleanup_autochecks()
+    return automation_parse_autochecks_file(hostname)
+
+def automation_write_autochecks_file(hostname, table):
+    if not os.path.exists(autochecksdir):
+        os.makedirs(autochecksdir)
+    path = "%s/%s.mk" % (autochecksdir, hostname)
+    f = file(path, "w")
+    f.write("# Autochecks for host %s, created by Check_MK automation\n[\n" % hostname)
+    for ct, item, paramstring in table:
+        f.write("  (%r, %r, %r, %s),\n" % (hostname, ct, item, paramstring))
+    f.write("]\n")
+
+def automation_parse_autochecks_file(hostname):
+    def split_python_tuple(line):
+        quote = None
+        bracklev = 0
+        backslash = False
+        for i, c in enumerate(line):
+            if backslash:
+                backslash = False
+                continue
+            elif c == '\\':
+                backslash = True
+            elif c == quote:
+                quote = None # end of quoted string
+            elif c in [ '"', "'" ]:
+                quote = c # begin of quoted string
+            elif quote:
+                continue
+            elif c in [ '(', '{', '[' ]:
+                bracklev += 1
+            elif c in [ ')', '}', ']' ]:
+                bracklev -= 1
+            elif bracklev > 0:
+                continue
+            elif c == ',':
+                value = line[0:i]
+                rest = line[i+1:]
+                return value.strip(), rest
+        return line.strip(), None
+
+    path = "%s/%s.mk" % (autochecksdir, hostname)
+    if not os.path.exists(path):
+        return []
+    lineno = 0
+
+    table = []
+    for line in file(path):
+        lineno += 1
+        try:
+            line = line.strip()
+            if not line.startswith("("): 
+                continue
+            if line.endswith(","):
+                line = line[:-1]
+            line = line[1:-1] # drop brackets
+
+            hostnamestring, line = split_python_tuple(line) # should be hostname
+            checktypestring, line = split_python_tuple(line)
+            itemstring, line = split_python_tuple(line)
+            paramstring, line = split_python_tuple(line)
+            table.append((eval(checktypestring), eval(itemstring), eval(paramstring), paramstring))
+        except:
+            if opt_debug:
+                raise
+            raise MKAutomationError("Invalid line %d in autochecks file %s" % (lineno, path))
+    return table
+
+def automation_delete_host(args):
+    hostname = args[0]
+    for path in [
+        "%s/%s.mk" % (autochecksdir, hostname),
+        "%s/%s"    % (logwatch_dir, hostname),
+        "%s/%s"    % (counters_directory, hostname),
+        "%s/%s"    % (tcp_cache_dir, hostname),
+        "%s/%s.*"  % (tcp_cache_dir, hostname)]:
+        os.system("rm -rf '%s'" % path)
 
 def do_automation(cmd, args):
     try:
         if cmd == "try-inventory":
             result = automation_try_inventory(args)
+        elif cmd == "get-autochecks":
+            result = automation_get_autochecks(args)
+        elif cmd == "set-autochecks":
+            result = automation_set_autochecks(args)
+        elif cmd == "delete-host":
+            result = automation_delete_host(args)
         else:
-            raise MKAutomationError("Invalid command %s" % cmd)
+            raise MKAutomationError("Automation command '%s' is not implemented." % cmd)
+
     except MKAutomationError, e:
-        sys.stdout.write("None\n")
         sys.stderr.write("%s\n" % e)
+        if opt_debug:
+            raise
         sys.exit(1)
     except Exception, e:
         if opt_debug:
             raise
         else:
-            sys.stdout.write("None\n")
             sys.stderr.write("%s\n" % e)
             sys.exit(2)
 

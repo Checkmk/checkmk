@@ -16,6 +16,16 @@ config.declare_permission("use_webconf",
      "Only with this permission, users are allowed to use Check_MK web configuration GUI.",
      [ "admin", ])
 
+def check_mk_automation(command, args, indata=""):
+    p = subprocess.Popen(["check_mk", "--automation", command ] + args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    p.stdin.write(repr(indata))
+    p.stdin.close()
+    outdata = p.stdout.read()
+    exitcode = p.wait()
+    if exitcode != 0:
+        raise MKGeneralException(outdata)
+    return eval(outdata)
+
 
 def read_configuration_file(filename):
     path = defaults.check_mk_configdir + "/" + filename
@@ -124,6 +134,7 @@ def page_index(h):
     if delname and delname in hosts and html.confirm("Do you really want to delete the host <tt>%s</tt>?" % delname):
         del hosts[delname]
         write_configuration_file(filename, hosts)
+        check_mk_automation("delete-host", delname)
 
     
     # Show table of hosts in this file
@@ -188,7 +199,7 @@ def page_edithost(h):
     html.header(title)
     html.begin_context_buttons()
     html.context_button("Hostlist", "webconf.py?filename=" + filename)
-    html.context_button("Services", "webconf_services.py?filename=%s&host=%s" % (filename, hostname))
+    html.context_button("Services", "webconf_services.py?filename=%s&host=%s&_activate_available=1" % (filename, hostname))
     html.end_context_buttons()
 
     # Form submitted
@@ -304,32 +315,42 @@ def page_services(h):
     html.context_button("Edit host", "webconf_edithost.py?filename=%s&host=%s" % (filename, hostname))
     html.end_context_buttons()
 
-    f = os.popen("check_mk --automation try-inventory tcp '%s' 2>&1" % (hostname))
-    code = f.read()
-    exit_code = f.close()
-    if exit_code:
-        raise MKGeneralException("Error calling check_mk: %s, exit code %s" % (code, exit_code))
-    table = eval(code)
+    # Read current check configuration
+    table = check_mk_automation("try-inventory", ["tcp", hostname])
     table.sort()
+
+    # Save: add or remove marked changes
+    if html.var("_save") and html.check_transaction():
+        active_checks = {}
+        for st, ct, item, paramstring, params, descr, state, output, perfdata in table:
+            varname = "_%s_%s" % (ct, item)
+            if html.var(varname, "") != "":
+                active_checks[(ct, item)] = paramstring
+
+        check_mk_automation("set-autochecks", [hostname], active_checks)
+        html.message("Saved check configuration with %d checks." % len(active_checks))
+
+        # re-read current check configuration, because it has changed
+        table = check_mk_automation("try-inventory", ["tcp", hostname])
+        table.sort()
 
 
     html.begin_form("checks")
-    html.button("add", "Add marked checks")
-    html.button("remove", "Remove marked checks")
+    html.button("_save", "Save check configuration")
     html.hidden_fields()
     html.write("<table class=services>\n")
     for state_name, state_type, checkbox in [ 
-        ( "Available checks", "new", True ),
+        ( "Available checks", "new", html.has_var("_activate_available") ),
         ( "Ignored checks (configured away by admin)", "ignored", False ),
-        ( "Already configured checks", "old", False, ),
-        ( "Obsolete checks (being checked, but should be ignored)", "obsolete", False ),
-        ( "Vanished checks (checks, but no longer exist)", "vanished", False ),
+        ( "Already configured checks", "old", True, ),
+        ( "Obsolete checks (being checked, but should be ignored)", "obsolete", True ),
+        ( "Vanished checks (checks, but no longer exist)", "vanished", True ),
         ( "Manual checks (defined in main.mk)", "manual", None ),
         ( "Legacy checks (defined in main.mk)", "legacy", None)
         ]:
         first = True
         trclass = "even"
-        for st, ct, item, params, descr, state, output, perfdata in table:
+        for st, ct, item, paramstring, params, descr, state, output, perfdata in table:
             if state_type != st:
                 continue
             if first:
@@ -347,13 +368,10 @@ def page_services(h):
             html.write("<tr class=\"data %s%d\"><td class=\"%s\">%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>" %
                     (trclass, state, stateclass, statename, ct, item, descr, output))
             if checkbox != None:
-                varname = "%s %s" % (ct, item)
+                varname = "_%s_%s" % (ct, item)
                 html.checkbox(varname, checkbox)
             html.write("</td></tr>\n")
     html.write("</table>\n")
     html.end_form()
     html.footer()
-
-
-
 

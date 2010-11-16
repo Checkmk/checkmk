@@ -109,16 +109,17 @@ def perfometer_check_mk_mem_used(row, check_command, perf_data):
 
 perfometers["check_mk-mem.used"] = perfometer_check_mk_mem_used
 
-# def perfometer_check_mk_kernel(row, check_command, perf_data):
-#     return "%d/s" % int(perf_data[0][1]), perfometer_logarithmic(perf_data[0][1], 1000, 10, "#f2a")
-#
-# perfometers["check_mk-kernel"] = perfometer_check_mk_kernel
-
 def perfometer_check_mk_cpu_threads(row, check_command, perf_data):
     color = { 0: "#a4f", 1: "#ff2", 2: "#f22", 3: "#fa2" }[row["service_state"]]
     return "%d" % int(perf_data[0][1]), perfometer_logarithmic(perf_data[0][1], 400, 2, color)
 
 perfometers["check_mk-cpu.threads"] = perfometer_check_mk_cpu_threads
+
+def perfometer_check_mk_kernel(row, check_command, perf_data):
+    rate = float(perf_data[0][1])
+    return "%.1f/s" % rate, perfometer_logarithmic(rate, 1000, 2, "#da6")
+
+perfometers["check_mk-kernel"] = perfometer_check_mk_kernel
 
 
 def perfometer_check_mk_cpu_loads(row, check_command, perf_data):
@@ -182,3 +183,29 @@ def perfometer_check_mk_ipmi_sensors(row, check_command, perf_data):
 # Also all checks dealing with temperature can use this perfometer
 perfometers["check_mk-ipmi_sensors"] = perfometer_check_mk_ipmi_sensors
 perfometers["check_mk-nvidia.temp"] = perfometer_check_mk_ipmi_sensors
+
+def performeter_check_mk_if(row, check_command, perf_data):
+    # return str(perf_data), ""
+    txt = []
+    h = '<table><tr>'
+    for name, perf, color in [
+          ("in", perf_data[0], "#0e6"),
+          ("out", perf_data[5], "#2af") ]:
+        bytes = float(perf[1])
+        bw = float(perf[6])
+        rrate = bytes / bw
+        drate = max(0.02, rrate ** 0.5 ** 0.5)
+        rperc = 100 * rrate
+        dperc = 100 * drate
+        a = perfometer_td(dperc / 2, color)
+        b = perfometer_td(50 - dperc/2, "#fff")
+        if name == "in":
+            h += b + a # white left, color right
+        else:
+            h += a + b # color right, white left
+        txt.append("%.1f%%" % rperc)
+    h += '</tr></table>'
+    return " &nbsp; ".join(txt), h
+
+perfometers["check_mk-if"] = performeter_check_mk_if
+perfometers["check_mk-if64"] = performeter_check_mk_if

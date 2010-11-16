@@ -17,6 +17,11 @@
     * Renamed check functions of imm_health check from test_imm to imm_health
       to have valid function and check names. Please remove remove from
       inventory and re-inventory those checks.
+    * Check kernel: converted performance data from counters to rates. This
+      fixes RRD problems (spikes) on reboots and also allows better access 
+      to the peformance data for the Perf-O-Meters.  Also changed service 
+      descriptions. You need to reinventurize the kernel checks. You old
+      RRDs will not be deleted, new ones will be created.
 
     Core, Setup, etc.:
     * Improve error handling: if hosts are monitored with SNMP *and* TCP,
@@ -42,7 +47,7 @@
     Checks & Agents:
     * megaraid_pdisks: Using the real enclosure number as check item now
     * if/if64: Added expected interface speed to warning output
-    * if/if64: Expected speed can also be None to disable interface speed checking
+    * if/if64: Allow to ignore speed setting (set target speed to None)
     * wut_webtherm: handle more variants of WuT Webtherms (thanks to Lefty)
     * cisco_fan: Does not inventorize 'notPresent' sensors anymore. Improved output
     * cisco_power: Not using power source as threshold anymore. Improved output
@@ -69,6 +74,7 @@
     * j4p_performance: Added experimental agent plugin fetching data via 
       jmx4perl agent (does not need jmx4perl on Nagios)
     * j4p_performance.mem: added new experimental check for memory usage via JMX.
+    * if/if64: added Perf-O-Meter for Multisite
     * Cleaned up several checks to meet the variable naming conventions
 
     Multisite:
@@ -79,6 +85,9 @@
     * Fixed repositioning the sidebar scroll state after refreshing the page
     * Fixed mousewheel scrolling in opera/chrome
     * Fixed resize bug on refresh in chrome
+    * New view for all services of a site
+    * Sidebar snapin site_status: make link target configurable
+    * Multisite view "Recently changed services": sort newest first
 
 1.1.8:
     Core, Setup, etc.:

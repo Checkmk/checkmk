@@ -368,7 +368,11 @@ def render_sitestatus():
                 title = "Site %s is switched off" % site["alias"]
             else:
                 switch = "off"
-                text = link(site["alias"], "view.py?view_name=sitehosts&site=%s" % sitename)
+		try:
+		    linkview = config.sitestatus_link_view
+		except:
+		    linkview = "sitehosts"
+                text = link(site["alias"], "view.py?view_name=%s&site=%s" % (linkview, sitename))
                 ex = html.site_status[sitename].get("exception")
                 shs = html.site_status[sitename].get("status_host_state")
 

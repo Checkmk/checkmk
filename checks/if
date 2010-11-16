@@ -108,12 +108,11 @@ def check_if(item, params, info):
 
             # Check speed
             speed = saveint(ifSpeed)
+            infotext += get_nic_speed_human_readable(speed)
             bandwidth = speed / 8.0 # in Bytes / sec
             if not targetspeed is None and speed != targetspeed:
-                infotext += "%s (wrong speed! expected: %s)" % (speed, get_nic_speed_human_readable(targetspeed))
+                infotext += " (wrong speed! expected: %s)" % get_nic_speed_human_readable(targetspeed)
                 state = 1
-            else:
-                infotext += get_bytes_human_readable(speed, 1000)+'it/s'
 
             # Performance counters
             this_time = time.time()

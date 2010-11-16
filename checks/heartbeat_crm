@@ -44,8 +44,7 @@
 #     resource_slapmaster (ocf::heartbeat:OpenLDAP):  Started mwp
 # resource_slapslave  (ocf::heartbeat:OpenLDAP):  Started smwp
 
-from datetime import datetime, timedelta
-import time
+import time, datetime
 
 # Nails down the DC to the node which is the DC during inventory. The check
 # will report CRITICAL when another node becomes the DC during later checks.
@@ -98,7 +97,7 @@ def check_heartbeat_crm(item, params, info):
 
         # Check the freshness of the crm_mon output and terminate with CRITICAL
         # when too old information are found
-        dt = int(datetime(*time.strptime(lastUpdated, '%a %b %d %H:%M:%S %Y')[0:5]).strftime("%s"))
+        dt = int(datetime.datetime(*time.strptime(lastUpdated, '%a %b %d %H:%M:%S %Y')[0:5]).strftime("%s"))
         now = time.time()
         delta = now - dt
         if delta > param_max_age:

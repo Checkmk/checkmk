@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-blade_bay_module_state = {
+blade_bays_module_state = {
  0:   'standby',
  1:   'on',
  2:   'notPresent',
@@ -42,7 +42,7 @@ def check_blade_bays(item, params, info):
             type = line[2]
             if state == 1:
                 return (0, "OK - State %s (Type: %s, ID: %s)" %
-                    (blade_bay_module_state.get(state, 'Unhandled'), type, line[3]))
+                    (blade_bays_module_state.get(state, 'Unhandled'), type, line[3]))
             elif state == 2:
                 return (1, "WARNING - Not present")
             elif state == 0:

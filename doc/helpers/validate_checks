@@ -110,7 +110,7 @@ def usage():
     print "No real help available... The only option is -v|--verbose."
     sys.exit(0)
 
-ignored_variables = []
+ignored_variables = [ 'datetime', ]
 
 # Load all checks and record global var definitions
 # Also read the man pages

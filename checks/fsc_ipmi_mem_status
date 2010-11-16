@@ -48,8 +48,6 @@ fsc_ipmi_mem_status_levels = [
   (2, 'Prefail (module exceeded the correctable errors threshold)'),
 ]
 
-statname = [ "OK", "WARN", "CRIT" ]
-
 def inventory_fsc_ipmi_mem_status(checkname, info):
     # Skip all lines which have
     # a) An error (Begin with "E")
@@ -64,7 +62,7 @@ def check_fsc_ipmi_mem_status(name, _no_params, info):
         elif line[1] == name:
             level = int(line[2])
             return (fsc_ipmi_mem_status_levels[level][0], "%s: %s" % (
-                          statname[fsc_ipmi_mem_status_levels[level][0]],
+                          nagios_state_names[fsc_ipmi_mem_status_levels[level][0]],
                           fsc_ipmi_mem_status_levels[level][1]))
 
     return (3, "UNKNOWN - item %s not found" % name)

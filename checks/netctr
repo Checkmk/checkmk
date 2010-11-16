@@ -33,7 +33,7 @@ netctr_counters  = [ 'rx_bytes', 'tx_bytes', 'rx_packets', 'tx_packets', 'rx_err
 # Item is devicename.countername, eg,
 # eth0.tx_collisions. Available are:
 
-counter_indices = {
+netctr_counter_indices = {
   # Receive
   'rx_bytes'      : 0,
   'rx_packets'    : 1,
@@ -64,7 +64,7 @@ def check_netctr_combined(nic, params, info):
     except:
         warn, crit = (0.01, 0.1)
 
-    global counter_indices
+    global netctr_counter_indices
     this_time = int(info[0][0])
 
     # Look for line describing this nic
@@ -76,7 +76,7 @@ def check_netctr_combined(nic, params, info):
         packets_per_sec = 0.0
         counter_wrapped = None
         for countername in netctr_counters:
-            index = counter_indices[countername]
+            index = netctr_counter_indices[countername]
             value = int(nicline[index + 1])
             try:
                 timedif, items_per_sec = get_counter( "netctr." + nic + "." + countername, this_time, value)

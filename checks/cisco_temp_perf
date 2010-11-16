@@ -46,7 +46,7 @@
 #                                   sensor generates a abnormal data like
 #                                   1000 C.
 
-cisco_envmon_states = {
+cisco_temp_perf_envmon_states = {
   1: "normal",
   2: "warning",
   3: "critical",
@@ -64,7 +64,7 @@ def check_cisco_temp_perf(item, params, info):
             temp = int(line[1])
             perfdata = [("temp", temp)]
             state = int(line[3])
-            statename = cisco_envmon_states.get(state, "(invalid)")
+            statename = cisco_temp_perf_envmon_states.get(state, "(invalid)")
             if state == 1:
                 return (0, "OK - %s degrees" % temp, perfdata)
             elif state == 2:

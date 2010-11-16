@@ -57,7 +57,7 @@ hp_blade_psu_status = {
   15: 'nvramInvalid',         16: 'calibrationTableInvalid',
 }
 
-hp_blade_inputline_status = {
+hp_blade_psu_inputline_status = {
   1: 'noError',          2: 'lineOverVoltage',
   3: 'lineUnderVoltage', 4: 'lineHit',
   5: 'brownOut',         6: 'linePowerLoss',
@@ -82,7 +82,7 @@ def check_hp_blade_psu(item, params, info):
                 detail_output = ', Output: %sW' % line[3]
             else:
                 detail_output = int(line[4]) >= 1 and ' (%s)' % hp_blade_psu_status[4] or ''
-                detail_output = int(line[5]) >= 1 and ', Inputline: %s' % hp_blade_inputline_status[5] or ''
+                detail_output = int(line[5]) >= 1 and ', Inputline: %s' % hp_blade_psu_inputline_status[5] or ''
 
             perfdata = [ ('output', line[3]) ]
 

@@ -27,7 +27,7 @@
 
 inventory_netctr_counters  = [ 'rx_bytes', 'tx_bytes', 'rx_packets', 'tx_packets', 'rx_errors', 'tx_errors', 'tx_collisions' ]
 
-statgrab_netif_counternames = {
+statgrab_net_counternames = {
     "collisions" :  "tx_collisions",
     "ierrors"    :  "rx_errors",
     "ipackets"   :  "rx_packets",
@@ -131,7 +131,7 @@ def check_statgrab_net_ctr(nic, _no_params, info):
         nicname, ctr = var.split('.')
         if nicname != nic:
             continue
-        countername = statgrab_netif_counternames.get(ctr, None)
+        countername = statgrab_net_counternames.get(ctr, None)
         if countername == None:
             continue
         value = int(value)

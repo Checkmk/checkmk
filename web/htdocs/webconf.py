@@ -41,7 +41,7 @@ def read_configuration_file(filename):
         for h in variables["all_hosts"]:
             parts = h.split('|')
             hostname = parts[0]
-            tags = parts[1:]
+            tags = [ tag for tag in parts[1:] if tag != 'webconf' and not tag.endswith('.mk') ]
             ipaddress = variables["ipaddresses"].get(hostname)
             aliases = host_extra_conf(hostname, variables["extra_host_conf"]["alias"]) 
             if len(aliases) > 0:
@@ -64,7 +64,7 @@ def write_configuration_file(filename, hosts):
         alias, ipaddress, tags = hosts[hostname]
         if alias:
             aliases.append((alias, [hostname]))
-        all_hosts.append("|".join([hostname] + tags))
+        all_hosts.append("|".join([hostname] + tags + [ filename, 'webconf' ]))
         if ipaddress:
             ipaddresses[hostname] = ipaddress
 
@@ -75,7 +75,8 @@ def write_configuration_file(filename, hosts):
         out.write("all_hosts += ")
         out.write(pprint.pformat(all_hosts))
         if len(aliases) > 0:
-            out.write("\n\nif 'alias' not in extra_host_conf:\n    extra_host_conf['alias'] = []\n")
+            out.write("\n\nif 'alias' not in extra_host_conf:\n"
+                    "    extra_host_conf['alias'] = []\n")
             out.write("\nextra_host_conf['alias'] += ")
             out.write(pprint.pformat(aliases))
         if len(ipaddresses) > 0:

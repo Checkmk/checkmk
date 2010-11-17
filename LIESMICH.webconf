@@ -1,0 +1,23 @@
+* Integration mit Multisite:
+  - Bei einem Host muss es einen Kontextknopf zur Konfig-GUI geben, falls
+    dieser host per webconf erstellt wurde.
+  - Link von Webconf auf den Host in Nagios. Dazu muss ich die lokale
+    Site wissen (konfigurieren in multisite.mk)
+
+* Evtl. sollte man den Hosts Tags verpassen: 'webconf' und 'hirni.mk', 
+  also die Datei, aus der der Host kommt. Das würde auch die GUI-Links
+  leichter machen.
+
+* Es fehlt noch SNMP. Keine Ahnung, wie ich das am besten umsetze
+
+* Knopf zum Löschen eines Hosts auch in Detailmaske
+
+* Arbeitsfluss besser umsetzen. Kann/soll man so eine Art Wizard
+  machen?
+
+* Eine Flagdatei, welche klarmacht, dass Änderungen gemacht, aber
+Nagios nicht neugestartet wurde. Evtl. kann man diese als Art
+Logdatei aufbauen - ein Audit-log. Falls ja, sollte es beim Neustarten
+umgeschoben werden in ein generelles Log.
+
+* Doku

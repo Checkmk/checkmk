@@ -200,9 +200,8 @@ def page_edithost(h):
     html.header(title)
     html.begin_context_buttons()
     html.context_button("Hostlist", "webconf.py?filename=" + filename)
-    if hostname == None:
-        hostname = html.var("name")
-    html.context_button("Services", "webconf_services.py?filename=%s&host=%s&_activate_available=1" % (filename, hostname))
+    if hostname:
+        html.context_button("Services", "webconf_services.py?filename=%s&host=%s&_activate_available=1" % (filename, hostname))
     html.end_context_buttons()
 
     # Form submitted
@@ -232,11 +231,11 @@ def page_edithost(h):
                 elif not re.match("^[a-zA-Z0-9-_.]+$", hostname):
                     raise MKUserError("name", "Invalid host name: must contain only characters, digits, dash, underscore and dot.")
 
-            hosts[hostname] = (alias, ipaddress, tags)
-            write_configuration_file(filename, hosts)
+            if hostname:
+                hosts[hostname] = (alias, ipaddress, tags)
+                write_configuration_file(filename, hosts)
 # html.set_browser_redirect(1, "webconf.py?filename=%s" % htmllib.urlencode(filename))
-            html.message("Saved changes.")
-            html.footer()
+                html.message("Saved changes.")
 
         except MKUserError, e:
             html.write("<div class=error>%s</div>\n" % e.message)
@@ -293,6 +292,10 @@ def page_edithost(h):
     html.write("</table>\n")
     html.hidden_fields()
     html.end_form()
+
+    if hostname:
+        show_services_table(hostname)
+
     html.footer()
 
 def activate_configuration():
@@ -304,20 +307,7 @@ def activate_configuration():
     else:
         html.message("The new configuration has been successfully activated.")
 
-def page_services(h):
-    global html
-    html = h
-
-    filename, title = check_filename()
-    hosts = read_configuration_file(filename)
-
-    hostname = html.var("host")
-    html.header("Services of " + hostname)
-    html.begin_context_buttons()
-    html.context_button("Hostlist", "webconf.py?filename=" + filename)
-    html.context_button("Edit host", "webconf_edithost.py?filename=%s&host=%s" % (filename, hostname))
-    html.end_context_buttons()
-
+def show_services_table(hostname):
     # Read current check configuration
     table = check_mk_automation("try-inventory", ["tcp", hostname])
     table.sort()
@@ -376,5 +366,22 @@ def page_services(h):
             html.write("</td></tr>\n")
     html.write("</table>\n")
     html.end_form()
+
+def page_services(h):
+    global html
+    html = h
+
+    filename, title = check_filename()
+    hosts = read_configuration_file(filename)
+
+    hostname = html.var("host")
+    html.header("Services of " + hostname)
+    html.begin_context_buttons()
+    html.context_button("Hostlist", "webconf.py?filename=" + filename)
+    html.context_button("Edit host", "webconf_edithost.py?filename=%s&host=%s" % (filename, hostname))
+    html.end_context_buttons()
+
+    show_services_table(hostname)
+
     html.footer()
 

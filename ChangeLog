@@ -75,6 +75,8 @@
       jmx4perl agent (does not need jmx4perl on Nagios)
     * j4p_performance.mem: added new experimental check for memory usage via JMX.
     * if/if64: added Perf-O-Meter for Multisite
+    * sylo: fix performance data: on first execution (counter wrap) the check did
+      output only one value instead of three. That lead to an invalid RRD.
 
     Multisite:
     * The custom open/close states of custom links are now stored for each

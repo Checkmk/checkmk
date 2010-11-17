@@ -89,7 +89,7 @@ def check_sylo(item, params, info):
 
         # Rates for input and output
         rate_output = ''
-        rate_perfdata = []
+        rate_perfdata = [ ('in', 0.0), ('out', 0.0) ]
         try:
             timedif, in_rate  = get_counter("sylo.in",  mtime, inOffset)
             timedif, out_rate = get_counter("sylo.out", mtime, outOffset)

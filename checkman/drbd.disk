@@ -13,7 +13,8 @@ item:
  The name of the DRBD device e.g. drbd0
 
 inventory:
- Each DRBD device will result in one service during inventory.
+ Each configured DRBD device will result in one service during inventory. All
+ devices with the connection state "Unconfigured" are skipped.
 
 perfdata:
  It contains the current read and write disk I/O given as kb/s

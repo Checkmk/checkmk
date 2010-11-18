@@ -76,6 +76,8 @@
     * j4p_performance.mem: added new experimental check for memory usage via JMX.
     * if/if64: added Perf-O-Meter for Multisite
     * Cleaned up several checks to meet the variable naming conventions
+    * drbd: Handling unconfigured drbd devices correctly. These devices are
+      ignored during nventory
 
     Multisite:
     * The custom open/close states of custom links are now stored for each

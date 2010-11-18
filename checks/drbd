@@ -146,9 +146,9 @@ drbd_stats_default_levels   = ( None, None, None, None, None, None, None, None, 
 drbd_block_start_match = re.compile('^[0-9]+:')
 
 drbd_general_map = [ 'cs', 'ro', 'ds' ]
-drbd_net_map     = [ 'ns', 'nr' ]
-drbd_disk_map    = [ 'dw', 'dr' ]
-drbd_stats_map   = [ 'al', 'bm', 'lo', 'pe', 'ua', 'ap', 'ep', 'wo', 'oos' ]
+drbd_net_map     = [ 'cs', 'ns', 'nr' ]
+drbd_disk_map    = [ 'cs', 'dw', 'dr' ]
+drbd_stats_map   = [ 'cs', 'al', 'bm', 'lo', 'pe', 'ua', 'ap', 'ep', 'wo', 'oos' ]
 
 drbd_cs_map = {
   'StandAlone':     1, 'Disconnecting':  1,
@@ -169,7 +169,11 @@ def inventory_drbd(checktype, info):
     for line in info[2:]:
         if drbd_block_start_match.search(line[0]) > 0:
             parsed = drbd_parse_block(drbd_extract_block('drbd%s' % line[0][:-1], info), checktype)
-            if checktype == 'drbd':
+            # Skip unconfigured drbd devices
+            if parsed['cs'] == 'Unconfigured':
+                continue
+
+            if checktye == 'drbd':
                 levels = '( [ "%s", "%s" ], [ "%s", "%s" ] )' % \
                              (parsed['ro'][0], parsed['ro'][1],
                               parsed['ds'][0], parsed['ds'][1])
@@ -235,7 +239,9 @@ def drbd_get_block(item, info, checktype):
 def check_drbd_general(item, params, info):
     parsed = drbd_get_block(item, info, 'drbd')
     if not parsed is None:
-        if not parsed['cs'] in drbd_cs_map:
+        if parsed['cs'] == 'Unconfigured':
+            return (2, 'CRITICAL - The device is "Unconfigured"')
+        elif not parsed['cs'] in drbd_cs_map:
             return (3, 'UNKNOWN - Undefined "connection state" in drbd output')
 
         # Weight of connection state is calculated by the drbd_cs_map.
@@ -274,6 +280,8 @@ def drbd_get_counters(list):
 def check_drbd_net(item, params, info):
     parsed = drbd_get_block(item, info, 'drbd.net')
     if not parsed is None:
+        if parsed['cs'] == 'Unconfigured':
+            return (2, 'CRITICAL - The device is "Unconfigured"')
         output, perfdata = drbd_get_counters([ ('drbd.net', 'in',  item, int(parsed['nr']), 'kb'),
                                                ('drbd.net', 'out', item, int(parsed['ns']), 'kb') ])
         # FIXME: Maybe handle thresholds in the future
@@ -284,6 +292,8 @@ def check_drbd_net(item, params, info):
 def check_drbd_disk(item, params, info):
     parsed = drbd_get_block(item, info, 'drbd.disk')
     if not parsed is None:
+        if parsed['cs'] == 'Unconfigured':
+            return (2, 'CRITICAL - The device is "Unconfigured"')
         output, perfdata = drbd_get_counters([ ('drbd.disk', 'write',  item, int(parsed['dw']), 'kb'),
                                                ('drbd.disk', 'read',   item, int(parsed['dr']), 'kb') ])
         # FIXME: Maybe handle thresholds in the future
@@ -294,6 +304,8 @@ def check_drbd_disk(item, params, info):
 def check_drbd_stats(item, params, info):
     parsed = drbd_get_block(item, info, 'drbd.stats')
     if not parsed is None:
+        if parsed['cs'] == 'Unconfigured':
+            return (2, 'CRITICAL - The device is "Unconfigured"')
         output = ''
         perfdata = []
         for key, label in [ ('al',  'activity log updates'),    ('bm', 'bit map updates'),

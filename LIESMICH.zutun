@@ -1,3 +1,6 @@
+Livestatus: is_contact_member_of_contactgroup selbst programmieren,
+    da diese Funktion in Nagios rausfliegen wird.
+
 Doku: Check_MK und OMD: Installieren von MKPs, local-Hierarchie
 
 Multisite: Kontextknöpfe Services: OK, Services: Crit usw. unsichtbar

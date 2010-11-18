@@ -9,6 +9,8 @@
     * heartbeat_rscstatus: Catching empty output from agent correctly
     * win_dhcp_pools agent plugin: Filtering additional error message on
       systems without dhcp server
+    * drbd: Handling unconfigured drbd devices correctly. These devices are
+      ignored during nventory
 
 1.1.8:
     Core, Setup, etc.:

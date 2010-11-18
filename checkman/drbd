@@ -24,7 +24,8 @@ examples:
  ]
 
 inventory:
- Each DRBD device will result in one service during inventory.
+ Each configured DRBD device will result in one service during inventory. All
+ devices with the connection state "Unconfigured" are skipped.
 
 [parameters]
 roles (list): The expected role of each node

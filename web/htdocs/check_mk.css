@@ -1154,6 +1154,13 @@ div.really, div.success, div.error, div.message, div.warning {
   border-style: solid;
 }
 
+div.really h1, div.success h1, div.error h1, div.message h1, div.warning h1 { 
+     font-size: 12pt;
+     font-weight: bold;
+     margin-bottom: 5px;
+color: black;
+}
+
 div.really { 
   background-color: #f88;
   border-color: #800;
@@ -1673,3 +1680,23 @@ table.add_snapin i {
     color: white;
 }
 
+/*
+   __        __   _                      __ 
+   \ \      / /__| |__   ___ ___  _ __  / _|
+    \ \ /\ / / _ \ '_ \ / __/ _ \| '_ \| |_ 
+     \ V  V /  __/ |_) | (_| (_) | | | |  _|
+      \_/\_/ \___|_.__/ \___\___/|_| |_|_|  
+
+*/
+table.webconfpending {
+    background-color: #fff;
+    border-collapse: collapse;
+    margin-top: 3px;
+    margin-bottom: 1em;
+    width: 100%;
+}
+                                                      
+table.webconfpending td {
+    border: 1px solid #444;
+    padding: 2px 6px;
+}

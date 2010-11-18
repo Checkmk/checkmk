@@ -5,10 +5,12 @@ import config
 #config = importer.import_module("config", path = ["/omd/sites/webconf/share/check_mk/web/htdocs"])
 # config = importer.import_module("config")
 
-import sys, pprint, socket, re, subprocess
+import sys, pprint, socket, re, subprocess, time
 from lib import *
 import htmllib
 # import config
+
+conf_dir = defaults.var_dir + "/webconf/"
 
 
 config.declare_permission("use_webconf",
@@ -16,8 +18,42 @@ config.declare_permission("use_webconf",
      "Only with this permission, users are allowed to use Check_MK web configuration GUI.",
      [ "admin", ])
 
+
+def log_entry(hostname, action, message, filename):
+    make_nagios_directory(conf_dir)
+    log_file = conf_dir + filename
+    create_user_file(log_file, "a").write("%d %s %s %s\n" % 
+            (int(time.time()), html.req.user, action, message))
+
+
+def log_audit(hostname, what, message):
+    log_entry(hostname, what, message, "audit.log")
+
+
+def log_pending(hostname, what, message):
+    log_entry(hostname, what, message, "pending.log")
+    log_entry(hostname, what, message, "audit.log")
+
+
+def log_commit_pending():
+    pending = conf_dir + "pending.log"
+    if os.path.exists(pending):
+        os.remove(pending)
+
+def parse_pending():
+    pending = conf_dir + "pending.log"
+    if os.path.exists(pending):
+        entries = []
+        for line in file(pending):
+            line = line.rstrip()
+            entries.append(line.split(None, 3))
+        return entries
+    return []
+
+
 def check_mk_automation(command, args, indata=""):
-    p = subprocess.Popen(["check_mk", "--automation", command ] + args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    p = subprocess.Popen(["check_mk", "--automation", command ] + args, 
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     p.stdin.write(repr(indata))
     p.stdin.close()
     outdata = p.stdout.read()
@@ -123,18 +159,33 @@ def page_index(h):
     # Context buttons
     html.begin_context_buttons()
     html.context_button("Create new host", "webconf_edithost.py?filename=" + filename)
-    html.context_button("Activate Changes!", html.makeuri([("_action", "activate")]))
     html.end_context_buttons()
 
+    # Activate changes
     action = html.var("_action")
-    if action == "activate":
+    if action == "activate" and html.transaction_valid():
         activate_configuration()
 
+    pending = parse_pending()
+    if len(pending) > 0:
+        message = "<h1>Changes which are not yet activated:</h1>"
+        message += '<table class="webconfpending">'
+        for t, user, action, text in pending:
+            message += '<tr><td>%s</td><td>%s</td><td width="100%%">%s</td></tr>\n' % (
+                    time.strftime("%Y-%m-%d&nbsp;%H:%M:%S", time.localtime(float(t))),
+                    user,
+                    text)
+        message += "</table>"
+        message += '<a href="%s" class=button>Activate Changes!</a>' % \
+            html.makeuri([("_action", "activate"), ("_transid", html.current_transid(html.req.user))])
+        html.show_warning(message)
+            
     # Deletion of entries
     delname = html.var("_delete")
     if delname and delname in hosts and html.confirm("Do you really want to delete the host <tt>%s</tt>?" % delname):
         del hosts[delname]
         write_configuration_file(filename, hosts)
+        log_pending(delname, "delete-host", "Deleted host %s" % delname)
         check_mk_automation("delete-host", [delname])
 
     
@@ -236,6 +287,10 @@ def page_edithost(h):
                 write_configuration_file(filename, hosts)
 # html.set_browser_redirect(1, "webconf.py?filename=%s" % htmllib.urlencode(filename))
                 html.message("Saved changes.")
+                if not html.var("host"):
+                    log_pending(hostname, "create-host", "Created new host %s" % hostname) 
+                else:
+                    log_pending(hostname, "edit-host", "Edited properties of host %s" % hostname)
 
         except MKUserError, e:
             html.write("<div class=error>%s</div>\n" % e.message)
@@ -306,6 +361,8 @@ def activate_configuration():
         html.show_error(errors)
     else:
         html.message("The new configuration has been successfully activated.")
+        log_commit_pending() # flush logfile with pending actions
+        log_audit(None, "activate-config", "Configuration activated, monitoring server restarted")
 
 def show_services_table(hostname):
     # Read current check configuration
@@ -322,6 +379,7 @@ def show_services_table(hostname):
 
         check_mk_automation("set-autochecks", [hostname], active_checks)
         html.message("Saved check configuration with %d checks." % len(active_checks))
+        log_pending(hostname, "set-autochecks", "Saved check configuration of host %s with %d checks" % (hostname, len(active_checks)))
 
         # re-read current check configuration, because it has changed
         table = check_mk_automation("try-inventory", ["tcp", hostname])

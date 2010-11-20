@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# encoding: utf-8
 
 from mod_python import importer
 import config
@@ -18,10 +19,12 @@ config.declare_permission("use_webconf",
      "Only with this permission, users are allowed to use Check_MK web configuration GUI.",
      [ "admin", ])
 
+# TODO: Ein Logfile pro filename anlegen, z.B. mit Unterverzeichnis
+# var/web/webconf/windows/audit.log
 
-def log_entry(hostname, action, message, filename):
+def log_entry(hostname, action, message, g_filename):
     make_nagios_directory(conf_dir)
-    log_file = conf_dir + filename
+    log_file = conf_dir + g_filename
     create_user_file(log_file, "a").write("%d %s %s %s\n" % 
             (int(time.time()), html.req.user, action, message))
 
@@ -40,11 +43,11 @@ def log_commit_pending():
     if os.path.exists(pending):
         os.remove(pending)
 
-def parse_pending():
-    pending = conf_dir + "pending.log"
-    if os.path.exists(pending):
+def parse_audit_log(what):
+    path = "%s%s.log" % (conf_dir, what)
+    if os.path.exists(path):
         entries = []
-        for line in file(pending):
+        for line in file(path):
             line = line.rstrip()
             entries.append(line.split(None, 3))
         return entries
@@ -63,8 +66,10 @@ def check_mk_automation(command, args, indata=""):
     return eval(outdata)
 
 
-def read_configuration_file(filename):
-    path = defaults.check_mk_configdir + "/" + filename
+def read_configuration_file():
+    global g_hosts
+    g_hosts = {}
+    path = defaults.check_mk_configdir + "/" + g_filename
 
     if os.path.exists(path):
         variables = {
@@ -73,7 +78,6 @@ def read_configuration_file(filename):
             "extra_host_conf" : { "alias" : [] },
         }
         execfile(path, variables, variables)
-        hosts = {}
         for h in variables["all_hosts"]:
             parts = h.split('|')
             hostname = parts[0]
@@ -84,27 +88,24 @@ def read_configuration_file(filename):
                 alias = aliases[0]
             else:
                 alias = None
-            hosts[hostname] = (alias, ipaddress, tags)
+            g_hosts[hostname] = (alias, ipaddress, tags)
             
-        return hosts
-    else:
-        return {}
 
-def write_configuration_file(filename, hosts):
+def write_configuration_file():
     all_hosts = []
     ipaddresses = {}
     aliases = []
-    hostnames = hosts.keys()
+    hostnames = g_hosts.keys()
     hostnames.sort()
     for hostname in hostnames:
-        alias, ipaddress, tags = hosts[hostname]
+        alias, ipaddress, tags = g_hosts[hostname]
         if alias:
             aliases.append((alias, [hostname]))
-        all_hosts.append("|".join([hostname] + tags + [ filename, 'webconf' ]))
+        all_hosts.append("|".join([hostname] + tags + [ g_filename, 'webconf' ]))
         if ipaddress:
             ipaddresses[hostname] = ipaddress
 
-    path = defaults.check_mk_configdir + "/" + filename
+    path = defaults.check_mk_configdir + "/" + g_filename
     out = file(path, "w")
     out.write("# Written by Check_MK Webconf\n\n")
     if len(all_hosts) > 0:
@@ -148,115 +149,112 @@ def check_filename():
 
     return filename, title
 
+def make_link(vars):
+    return html.makeuri(vars)
+
+def make_action_link(vars):
+    return html.makeuri(vars + [("_transid", html.current_transid(html.req.user))])
+
+
+# Der Seitenaufbau besteht aus folgenden Teilen:
+# 1. Kontextbuttons (wo kann man von hier aus hinspringen, ohne Aktion)
+# 2. Verarbeiten einer Aktion, falls eine gültige Transaktion da ist
+# 3. Anzeigen von Inhalten
+#
+# Der Trick: welche Inhalte angezeigt werden, hängt vom Ausgang der Aktion
+# ab. Wenn man z.B. bei einem Host bei "Create new host" auf [Save] klickt,
+# dann kommt bei Erfolg die Inventurseite, bei Misserfolgt bleibt man
+# auf der Neuanlegen-Seite.
+#
+# Dummerweise kann ich aber die Kontextbuttons erst dann anzeigen, wenn
+# ich den Ausgang der Aktion kenne.
+
 def page_index(h):
     global html
     html = h
-    filename, title = check_filename()
-        
+    global g_filename
+    g_filename, title = check_filename()
+    read_configuration_file()
+
     html.header("Check_MK Configuration: " + title)
-    hosts = read_configuration_file(filename)
+    html.write("<div class=webconf>\n")
+
+    # Wir sind hier in einem von folgenden Zuständnen:
+    # 'index':     Ohne Kontext -> wir zeigen die Liste aller Hosts an
+    # 'changelog': Seite der offenen Änderungen, ChangeLog
+    # 'newhost':   Anlegen eines neuen Hosts -> Maske zum Editieren des Hosts
+    # 'edithost':  Editieren eines bestehenden Hosts -> Maske zum Editieren
+    # 'inventory': Serviceliste eines Hosts
+    mode = html.var("mode")
+    if mode not in [ "newhost", "edithost", "inventory", "changelog" ]:
+        mode = "index"
+
+    if html.transaction_valid():
+        mode = do_actions(mode)
+        if mode == None:
+            html.footer()
+            return
+
+
+    # Mögliche Aktionen:
+    # Host löschen
+    # Host anlegen
+    # Host editieren/speichern
+    # Servicekonfiguration speichern
 
     # Context buttons
     html.begin_context_buttons()
-    html.context_button("Create new host", "webconf_edithost.py?filename=" + filename)
+
+    if mode in [ "index", "changelog" ]:
+        html.context_button("Create new host", make_link([("mode", "newhost")]))
+
+    if mode == "index":
+        pending = parse_audit_log("pending")
+        buttontext = "ChangeLog"
+        if len(pending) > 0:
+            buttontext = "<b>%s (%d)</b>" % (buttontext, len(pending))
+        html.context_button(buttontext, make_link([("mode", "changelog")]))
+
+    if mode == "changelog":
+        html.context_button("Host list", make_link([("mode", "index")]))
+
+    if mode in [ "newhost", "edithost", "inventory" ]:
+        html.context_button("Abort", make_link([("mode", "index")]))
+
     html.end_context_buttons()
 
-    # Activate changes
+    # Actions (regardless of current mode)
     action = html.var("_action")
     if action == "activate" and html.transaction_valid():
         activate_configuration()
 
-    pending = parse_pending()
-    if len(pending) > 0:
-        message = "<h1>Changes which are not yet activated:</h1>"
-        message += '<table class="webconfpending">'
-        for t, user, action, text in pending:
-            message += '<tr><td>%s</td><td>%s</td><td width="100%%">%s</td></tr>\n' % (
-                    time.strftime("%Y-%m-%d&nbsp;%H:%M:%S", time.localtime(float(t))),
-                    user,
-                    text)
-        message += "</table>"
-        message += '<a href="%s" class=button>Activate Changes!</a>' % \
-            html.makeuri([("_action", "activate"), ("_transid", html.current_transid(html.req.user))])
-        html.show_warning(message)
-            
-    # Deletion of entries
-    delname = html.var("_delete")
-    if delname and delname in hosts and html.confirm("Do you really want to delete the host <tt>%s</tt>?" % delname):
-        del hosts[delname]
-        write_configuration_file(filename, hosts)
-        log_pending(delname, "delete-host", "Deleted host %s" % delname)
-        check_mk_automation("delete-host", [delname])
+    if mode == "index":
+        show_hosts_table()
+    elif mode == "changelog":
+        show_changelog()
+    elif mode in [ "edithost", "newhost" ]:
+        show_edithost()
 
-    
-    # Show table of hosts in this file
-    html.write("<table class=services>\n")
-    html.write("<tr><th>Hostname</th><th>Alias</th>"
-               "<th>IP Address</th><th>Tags</th><th>Actions</th></tr>\n")
-    odd = "even"
-
-    hostnames = hosts.keys()
-    hostnames.sort()
-    for hostname in hostnames:
-        alias, ipaddress, tags = hosts[hostname]
-        edit_url = "webconf_edithost.py?filename=%s&host=%s" % (filename, hostname)
-        clone_url = "webconf_edithost.py?filename=%s&clone=%s" % (filename, hostname)
-        delete_url = "webconf.py?filename=%s&_delete=%s" % (filename, hostname)
-        odd = odd == "odd" and "even" or "odd" 
-
-        html.write('<tr class="data %s0"><td><a href="%s">%s</a></td>' % 
-                (odd, edit_url, hostname))
-        html.write("<td>%s</td>" % (alias and alias or ""))
-        if not ipaddress:
-            try:
-                ip = socket.gethostbyname(hostname)
-                ipaddress = "(DNS: %s)" % ip
-            except:
-                ipaddress = "(hostname not resolvable!)"
-        html.write("<td>%s</td>" % ipaddress)
-        html.write("<td>%s</td>" % ", ".join(tags))
-        html.write("<td>")
-        html.buttonlink(edit_url, "Edit")
-        html.buttonlink(clone_url, "Clone")
-        html.buttonlink(delete_url, "Delete")
-        html.write("</td>")
-        html.write("</tr>\n")
-
-    html.write("</table>\n")
+    html.write("</div>\n")
     html.footer()
 
-
-def page_edithost(h):
-    global html
-    html = h
-    filename, title = check_filename()
-    hosts = read_configuration_file(filename)
+def do_actions(mode):
     hostname = html.var("host")
 
-    # Handle Edit, Clone and New
-    clonename = html.var("clone")
-    if clonename:
-        title = "Create clone of %s" % clonename
-        alias, ipaddress, tags = hosts[clonename]
-        mode = "clone"
-    elif hostname in hosts:
-        title = "Edit host " + hostname
-        alias, ipaddress, tags = hosts.get(hostname)
-        mode = "edit"
-    else:
-        title = "Create new host"
-        alias, ipaddress, tags = None, None, []
-        mode = "new"
-    
-    html.header(title)
-    html.begin_context_buttons()
-    html.context_button("Hostlist", "webconf.py?filename=" + filename)
-    if hostname:
-        html.context_button("Services", "webconf_services.py?filename=%s&host=%s&_activate_available=1" % (filename, hostname))
-    html.end_context_buttons()
+    # Deletion of entries
+    delname = html.var("_delete")
+    if delname and delname in g_hosts:
+        c = html.confirm("Do you really want to delete the host <tt>%s</tt>?" % delname)
+        if c:
+            del g_hosts[delname]
+            write_configuration_file()
+            log_pending(delname, "delete-host", "Deleted host %s" % delname)
+            check_mk_automation("delete-host", [delname])
+        elif c == False: # not yet confirmed
+            return None
 
-    # Form submitted
-    if html.var("save") and html.check_transaction():
+    # Editing of hosts
+    if html.var("save"):
         try:
             alias = html.var("alias")
             if not alias:
@@ -283,19 +281,109 @@ def page_edithost(h):
                     raise MKUserError("name", "Invalid host name: must contain only characters, digits, dash, underscore and dot.")
 
             if hostname:
-                hosts[hostname] = (alias, ipaddress, tags)
-                write_configuration_file(filename, hosts)
-# html.set_browser_redirect(1, "webconf.py?filename=%s" % htmllib.urlencode(filename))
-                html.message("Saved changes.")
+                g_hosts[hostname] = (alias, ipaddress, tags)
+                write_configuration_file()
                 if not html.var("host"):
                     log_pending(hostname, "create-host", "Created new host %s" % hostname) 
+                    mode = "inventory"
                 else:
                     log_pending(hostname, "edit-host", "Edited properties of host %s" % hostname)
+                    mode = "index"
 
         except MKUserError, e:
             html.write("<div class=error>%s</div>\n" % e.message)
             html.add_user_error(e.varname, e.message)
 
+    return mode
+
+
+def show_hosts_table():
+    # Show table of hosts in this file
+    html.write("<table class=services>\n")
+    html.write("<tr><th>Hostname</th><th>Alias</th>"
+               "<th>IP Address</th><th>Tags</th><th>Actions</th></tr>\n")
+    odd = "even"
+
+    hostnames = g_hosts.keys()
+    hostnames.sort()
+    for hostname in hostnames:
+        alias, ipaddress, tags = g_hosts[hostname]
+        edit_url   = make_link([("mode", "edithost"), ("host", hostname)])
+        clone_url  = make_link([("mode", "newhost"), ("clone", hostname)])
+        delete_url = make_action_link([("mode", "index"), ("_delete", hostname)])
+
+        odd = odd == "odd" and "even" or "odd" 
+
+        html.write('<tr class="data %s0"><td><a href="%s">%s</a></td>' % 
+                (odd, edit_url, hostname))
+        html.write("<td>%s</td>" % (alias and alias or ""))
+        if not ipaddress:
+            try:
+                ip = socket.gethostbyname(hostname)
+                ipaddress = "(DNS: %s)" % ip
+            except:
+                ipaddress = "(hostname not resolvable!)"
+        html.write("<td>%s</td>" % ipaddress)
+        html.write("<td>%s</td>" % ", ".join(tags))
+        html.write("<td>")
+        html.buttonlink(edit_url, "Edit")
+        html.buttonlink(clone_url, "Clone")
+        html.buttonlink(delete_url, "Delete")
+        html.write("</td>")
+        html.write("</tr>\n")
+
+    html.write("</table>\n")
+    
+
+def show_changelog():
+
+    def render_audit_log(log, what):
+        htmlcode = '<table class="webconf auditlog %s">'
+        for t, user, action, text in log:
+            htmlcode += '<tr><td>%s</td><td>%s</td><td>%s</td><td width="100%%">%s</td></tr>\n' % (
+                    time.strftime("%Y-%m-%d", time.localtime(float(t))),
+                    time.strftime("%H:%M:%S", time.localtime(float(t))),
+                    user,
+                    text)
+        htmlcode += "</table>"
+        return htmlcode
+
+    pending = parse_audit_log("pending")
+    if len(pending) > 0:
+        message = "<h1>Changes which are not yet activated:</h1>"
+        message += render_audit_log(pending, "pending")
+        message += '<a href="%s" class=button>Activate Changes!</a>' % \
+            html.makeuri([("_action", "activate"), ("_transid", html.current_transid(html.req.user))])
+        html.show_warning(message)
+    else:
+        html.write("<p>No pending changes, monitoring server is up to date.</p>")
+
+    audit = parse_audit_log("audit")
+    if len(audit) > 0:
+        html.write(render_audit_log(audit, "audit"))
+    else:
+        html.write("<p>Logfile is empty. No host has been created or changed yet.</p>")
+        
+
+
+def show_edithost():
+
+    # Handle Edit, Clone and New
+    clonename = html.var("clone")
+    hostname = html.var("host")
+    if clonename:
+        title = "Create clone of %s" % clonename
+        alias, ipaddress, tags = hosts[clonename]
+        mode = "clone"
+    elif hostname in g_hosts:
+        title = "Edit host " + hostname
+        alias, ipaddress, tags = g_hosts.get(hostname)
+        mode = "edit"
+    else:
+        title = "Create new host"
+        alias, ipaddress, tags = None, None, []
+        mode = "new"
+    
 
     html.begin_form("edithost")
     html.write('<table class=form>\n')
@@ -341,17 +429,12 @@ def page_edithost(h):
         html.write("</td></tr>\n")
 
     html.write('<tr><td class="legend button" colspan=2>')
-    html.buttonlink("webconf.py?filename=%s" % filename, "Cancel")
+    html.buttonlink("webconf.py?filename=%s" % g_filename, "Cancel")
     html.button("save", "Save", "submit")
     html.write("</td></tr>\n")
     html.write("</table>\n")
     html.hidden_fields()
     html.end_form()
-
-    if hostname:
-        show_services_table(hostname)
-
-    html.footer()
 
 def activate_configuration():
     f = os.popen("check_mk -R 2>&1 >/dev/null")
@@ -430,7 +513,6 @@ def page_services(h):
     html = h
 
     filename, title = check_filename()
-    hosts = read_configuration_file(filename)
 
     hostname = html.var("host")
     html.header("Services of " + hostname)

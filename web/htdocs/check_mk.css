@@ -1688,15 +1688,30 @@ table.add_snapin i {
       \_/\_/ \___|_.__/ \___\___/|_| |_|_|  
 
 */
-table.webconfpending {
-    background-color: #fff;
+div.webconf {
+    padding: 0px;
+    margin: 0px;
+}
+
+.webconf table.auditlog {
+    background-image: url("images/form_background.png"); 
+    background-repeat: repeat;
     border-collapse: collapse;
     margin-top: 3px;
     margin-bottom: 1em;
     width: 100%;
 }
                                                       
-table.webconfpending td {
+.webconf table.pending {
+    background-color: #fff;
+}
+
+.webconf table.auditlog td { 
+    border: 1px solid white;
+    padding: 2px 6px;
+}
+
+.webconf .pending td { 
     border: 1px solid #444;
     padding: 2px 6px;
 }

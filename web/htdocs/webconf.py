@@ -213,7 +213,10 @@ def page_index(h):
         buttontext = "ChangeLog"
         if len(pending) > 0:
             buttontext = "<b>%s (%d)</b>" % (buttontext, len(pending))
-        html.context_button(buttontext, make_link([("mode", "changelog")]))
+            hot = True
+        else:
+            hot = False
+        html.context_button(buttontext, make_link([("mode", "changelog")]), hot)
 
     if mode == "changelog":
         html.context_button("Host list", make_link([("mode", "index")]))

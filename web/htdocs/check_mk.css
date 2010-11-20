@@ -501,6 +501,10 @@ div.contextlink {
     left: -4px;
 }
 
+div.contextlink.hot {
+    background-image: url("images/contextlink_hot.png");
+}
+
 div.contextlink a {
     padding-top: 5px;
     color: white;

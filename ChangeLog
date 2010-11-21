@@ -53,6 +53,7 @@
     * cisco_power: Not using power source as threshold anymore. Improved output
     * cisco_fan: Does not inventorize 'notPresent' sensors anymore. Improved output
     * cisco_power: Not using power source as threshold anymore. Improved output
+    * cisco_temp_perf: Do not crash if device does not send current temperature
     * tcp_conn_stats: new check for monitoring number of current TCP connections
     * blade_*: Added snmp scan functions for better automatic inventory
     * blade_bays: Also inventorizes standby blades and has a little more
@@ -77,6 +78,9 @@
     * if/if64: added Perf-O-Meter for Multisite
     * sylo: fix performance data: on first execution (counter wrap) the check did
       output only one value instead of three. That lead to an invalid RRD.
+    * Cleaned up several checks to meet the variable naming conventions
+    * drbd: Handling unconfigured drbd devices correctly. These devices are
+      ignored during nventory
 
     Multisite:
     * The custom open/close states of custom links are now stored for each

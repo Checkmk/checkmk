@@ -155,6 +155,7 @@ class html:
         self.hidden_field("filled_in", "on")
         self.hidden_field("_transid", str(self.current_transid(self.req.user)))
         self.hidden_fields(self.global_vars)
+        self.form_name = name
 
     def end_form(self):
         self.write("</form>\n")
@@ -236,7 +237,7 @@ class html:
         html += "<input type=text class=%s value=\"%s\" name=\"%s\"%s>" % (cssclass, attrencode(value), varname, addprops)
         if error:
             html += "</x>"
-            self.set_focus(self.current_form, varname)
+            self.set_focus(varname)
         self.write(html)
         self.form_vars.append(varname)
 
@@ -415,8 +416,8 @@ class html:
     def do_actions(self):
         return self.var("_do_actions") not in [ "", None, "No" ]
 
-    def set_focus(self, formname, varname):
-        self.focus_object = (formname, varname)
+    def set_focus(self, varname):
+        self.focus_object = (self.form_name, varname)
 
     def has_var(self, varname):
         return varname in self.req.vars

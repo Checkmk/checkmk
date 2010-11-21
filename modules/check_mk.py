@@ -1640,7 +1640,7 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
                     try:
                         ipaddress = lookup_ipaddress(hostname)
                     except:
-                        print "Cannot resolve %s into IP address. Skipping." % hostname
+                        sys.stderr.write("Cannot resolve %s into IP address.\n" % hostname)
                         continue
                 else:
                     ipaddress = None # not needed, not TCP used

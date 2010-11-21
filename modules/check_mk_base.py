@@ -78,6 +78,7 @@ else:
 
 
 # global variables used to cache temporary values
+g_dns_cache                  = {}
 g_infocache                  = {} # In-memory cache of host info.
 g_agent_already_contacted    = {} # do we have agent data from this host?
 g_counters                   = {} # storing counters of one host
@@ -452,6 +453,8 @@ def get_agent_info_program(commandline):
 
 # Get data in case of TCP
 def get_agent_info_tcp(hostname, ipaddress):
+    if not ipaddress:
+        raise MKGeneralException("Cannot contact agent: host '%s' has no IP address." % hostname)
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
@@ -540,15 +543,23 @@ def parse_info(lines):
 def lookup_ipaddress(hostname):
     if fake_dns:
         return fake_dns
+
     elif simulation_mode or opt_use_snmp_walk or is_usewalk_host(hostname):
         return "127.0.0.1"
+    elif hostname in g_dns_cache:
+        return g_dns_cache[hostname]
     else:
         ipa = ipaddresses.get(hostname)
         if ipa:
             return ipa
         else:
-            return socket.gethostbyname(hostname)
-
+            try:
+                ipa = socket.gethostbyname(hostname)
+            except:
+                g_dns_cache[hostname] = None
+                raise
+            g_dns_cache[hostname] = ipa
+            return ipa
 
 def cachefile_age(filename):
     try:

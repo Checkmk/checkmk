@@ -1,26 +1,412 @@
 #!/usr/bin/python
 # encoding: utf-8
 
-from mod_python import importer
+# TODO: Ein Logfile pro filename anlegen, z.B. mit Unterverzeichnis
+# var/web/webconf/windows/audit.log
+
+# -----------------------------------------------------------------
+#       ___       _ _   
+#      |_ _|_ __ (_) |_ 
+#       | || '_ \| | __|
+#       | || | | | | |_ 
+#      |___|_| |_|_|\__|
+#                       
+# -----------------------------------------------------------------
+
 import config
-#config = importer.import_module("config", path = ["/omd/sites/webconf/share/check_mk/web/htdocs"])
-# config = importer.import_module("config")
 
 import sys, pprint, socket, re, subprocess, time
 from lib import *
 import htmllib
-# import config
 
-conf_dir = defaults.var_dir + "/webconf/"
-
+# Problem hier: Das ganze funktioniert noch nicht in der local/-Hierarchie
+# from mod_python import importer
+# config = importer.import_module("config", path = ["/omd/sites/webconf/share/check_mk/web/htdocs"])
+# config = importer.import_module("config")
 
 config.declare_permission("use_webconf",
      "Use Webconfiguration",
      "Only with this permission, users are allowed to use Check_MK web configuration GUI.",
      [ "admin", ])
 
-# TODO: Ein Logfile pro filename anlegen, z.B. mit Unterverzeichnis
-# var/web/webconf/windows/audit.log
+conf_dir = defaults.var_dir + "/webconf/"
+
+# -----------------------------------------------------------------
+#       __  __       _       
+#      |  \/  | __ _(_)_ __  
+#      | |\/| |/ _` | | '_ \ 
+#      | |  | | (_| | | | | |
+#      |_|  |_|\__,_|_|_| |_|
+#                            
+# -----------------------------------------------------------------
+# Der Seitenaufbau besteht aus folgenden Teilen:
+# 1. Kontextbuttons (wo kann man von hier aus hinspringen, ohne Aktion)
+# 2. Verarbeiten einer Aktion, falls eine gültige Transaktion da ist
+# 3. Anzeigen von Inhalten
+#
+# Der Trick: welche Inhalte angezeigt werden, hängt vom Ausgang der Aktion
+# ab. Wenn man z.B. bei einem Host bei "Create new host" auf [Save] klickt,
+# dann kommt bei Erfolg die Inventurseite, bei Misserfolgt bleibt man
+# auf der Neuanlegen-Seite.
+#
+# Dummerweise kann ich aber die Kontextbuttons erst dann anzeigen, wenn
+# ich den Ausgang der Aktion kenne.
+
+def page_index(h):
+    global html
+    html = h
+
+    global g_filename
+    g_filename, title = check_filename()
+    read_configuration_file()
+
+    html.header("Check_MK Configuration - " + title)
+    html.write("<div class=webconf>\n")
+
+    modefuncs = {
+        "newhost"   :      lambda phase: mode_edithost(phase, True),
+        "edithost"  :      lambda phase: mode_edithost(phase, False),
+        "firstinventory" : lambda phase: mode_inventory(phase, True),
+        "inventory" :      lambda phase: mode_inventory(phase, False),
+        "changelog" :      mode_changelog,
+    }
+    modefunc = modefuncs.get(html.var("mode"), mode_index)
+
+    # Do actions (might switch mode)
+    action_message = None
+    if html.transaction_valid():
+        try:
+            result = modefunc("action")
+            if type(result) == tuple:
+                newmode, action_message = result
+            else:
+                newmode = result
+
+            # if newmode is not None, then the mode has been changed
+            if newmode != None:
+                if newmode == "": # no further information: configuration dialog, etc.
+                    html.message(action_message)
+                    html.write("</div>")
+                    html.footer()
+                    return
+                modefunc = modefuncs.get(newmode, mode_index)
+                html.set_var("mode", newmode) # will be used by makeuri
+
+        except MKUserError, e:
+            action_message = e.message
+            html.add_user_error(e.varname, e.message)
+
+    # Show contexts buttons
+    html.begin_context_buttons()
+    modefunc("buttons")
+    html.end_context_buttons()
+
+    # Show outcome of action
+    if html.has_users_errors():
+        html.show_error(action_message)
+    elif action_message:
+        html.message(action_message)
+
+    # Show content
+    modefunc("content")
+
+    html.write("</div>\n")
+    html.footer()
+
+
+# def hirnstuff():
+# 
+#     # Mögliche Aktionen:
+#     # Host löschen
+#     # Host anlegen
+#     # Host editieren/speichern
+#     # Servicekonfiguration speichern
+# 
+#     # Context buttons
+# 
+#     if mode in [ "index", "changelog" ]:
+#         html.context_button("Create new host", make_link([("mode", "newhost")]))
+# 
+#     if mode == "index":
+# 
+#     if mode == "changelog":
+#         html.context_button("Host list", make_link([("mode", "index")]))
+# 
+#     if mode in [ "newhost", "edithost", "inventory" ]:
+#         html.context_button("Abort", make_link([("mode", "index")]))
+# 
+# 
+#     # Actions (regardless of current mode)
+#     action = html.var("_action")
+#     if action == "activate" and html.transaction_valid():
+#         activate_configuration()
+# 
+#     if mode == "index":
+#         show_hosts_table()
+#     elif mode == "changelog":
+#         show_changelog()
+#     elif mode in [ "edithost", "newhost" ]:
+#         show_edithost()
+# 
+#     html.write("</div>\n")
+#     html.footer()
+
+# -----------------------------------------------------------------
+#       ____                       
+#      |  _ \ __ _  __ _  ___  ___ 
+#      | |_) / _` |/ _` |/ _ \/ __|
+#      |  __/ (_| | (_| |  __/\__ \
+#      |_|   \__,_|\__, |\___||___/
+#                  |___/           
+# -----------------------------------------------------------------
+
+def mode_index(phase):
+    if phase == "buttons":
+        html.context_button("Create new host", make_link([("mode", "newhost")]))
+        changelog_button()
+    
+    elif phase == "action":
+        # Deletion of hosts
+        delname = html.var("_delete")
+        if delname and delname in g_hosts:
+            c = html.confirm("Do you really want to delete the host <tt>%s</tt>?" % delname)
+            if c:
+                del g_hosts[delname]
+                write_configuration_file()
+                log_pending(delname, "delete-host", "Deleted host %s" % delname)
+                check_mk_automation("delete-host", [delname])
+            elif c == False: # not yet confirmed
+                return ""
+    else:
+        # Show table of hosts in this file
+        html.write("<table class=services>\n")
+        html.write("<tr><th>Hostname</th><th>Alias</th>"
+                   "<th>IP Address</th><th>Tags</th><th>Actions</th></tr>\n")
+        odd = "even"
+
+        hostnames = g_hosts.keys()
+        hostnames.sort()
+        for hostname in hostnames:
+            alias, ipaddress, tags = g_hosts[hostname]
+            edit_url     = make_link([("mode", "edithost"), ("host", hostname)])
+            services_url = make_link([("mode", "inventory"), ("host", hostname)])
+            clone_url    = make_link([("mode", "newhost"), ("clone", hostname)])
+            delete_url   = make_action_link([("mode", "index"), ("_delete", hostname)])
+
+            odd = odd == "odd" and "even" or "odd" 
+
+            html.write('<tr class="data %s0"><td><a href="%s">%s</a></td>' % 
+                    (odd, edit_url, hostname))
+            html.write("<td>%s</td>" % (alias and alias or ""))
+            if not ipaddress:
+                try:
+                    ip = socket.gethostbyname(hostname)
+                    ipaddress = "(DNS: %s)" % ip
+                except:
+                    ipaddress = "(hostname not resolvable!)"
+            html.write("<td>%s</td>" % ipaddress)
+            html.write("<td>%s</td>" % ", ".join(tags))
+            html.write("<td>")
+            html.buttonlink(edit_url, "Edit")
+            html.buttonlink(clone_url, "Clone")
+            html.buttonlink(delete_url, "Delete")
+            html.buttonlink(services_url, "Services")
+            html.write("</td>")
+            html.write("</tr>\n")
+
+        html.write("</table>\n")
+    
+
+
+def mode_changelog(phase):
+    if phase == "buttons":
+        html.context_button("Create new host", make_link([("mode", "newhost")]))
+        html.context_button("Host list", make_link([("mode", "index")]))
+
+    elif phase == "action":
+         activate_configuration()
+
+    else:
+        def render_audit_log(log, what):
+            htmlcode = '<table class="webconf auditlog %s">'
+            for t, user, action, text in log:
+                htmlcode += '<tr><td>%s</td><td>%s</td><td>%s</td><td width="100%%">%s</td></tr>\n' % (
+                        time.strftime("%Y-%m-%d", time.localtime(float(t))),
+                        time.strftime("%H:%M:%S", time.localtime(float(t))),
+                        user,
+                        text)
+            htmlcode += "</table>"
+            return htmlcode
+
+        pending = parse_audit_log("pending")
+        if len(pending) > 0:
+            message = "<h1>Changes which are not yet activated:</h1>"
+            message += render_audit_log(pending, "pending")
+            message += '<a href="%s" class=button>Activate Changes!</a>' % \
+                html.makeuri([("_action", "activate"), ("_transid", html.current_transid(html.req.user))])
+            html.show_warning(message)
+        else:
+            html.write("<p>No pending changes, monitoring server is up to date.</p>")
+
+        audit = parse_audit_log("audit")
+        if len(audit) > 0:
+            html.write(render_audit_log(audit, "audit"))
+        else:
+            html.write("<p>Logfile is empty. No host has been created or changed yet.</p>")
+        
+
+# Form for host details (new, clone, edit)
+def mode_edithost(phase, new):
+    hostname = html.var("host") # may be empty in new/clone mode
+
+    clonename = html.var("clone")
+    if clonename and clonename not in g_hosts:
+        raise MKGeneralException("You called this page with an invalid host name.")
+    
+    if clonename:
+        title = "Create clone of %s" % clonename
+        alias, ipaddress, tags = hosts[clonename]
+        mode = "clone"
+    elif hostname in g_hosts:
+        title = "Edit host " + hostname
+        alias, ipaddress, tags = g_hosts.get(hostname)
+        mode = "edit"
+    else:
+        title = "Create new host"
+        alias, ipaddress, tags = None, None, []
+        mode = "new"
+
+    if phase == "buttons":
+        html.context_button("Abort", make_link([("mode", "index")]))
+        if not new:
+            html.context_button("Services", make_link([("mode", "inventory"), ("host", hostname)]))
+
+    elif phase == "action":
+        alias = html.var("alias")
+        if not alias:
+            alias = None # make sure no alias is set - not an empty one
+
+        ipaddress = html.var("ipaddress")
+        if not ipaddress: 
+            ipaddress = None # make sure no IP address is set
+
+        tags = []
+        for tagno, (tagname, taglist) in enumerate(config.host_tags):
+            value = html.var("tag_%d" % tagno)
+            if value:
+                tags.append(value)
+
+        # handle clone & new
+        if new:
+            if not hostname:
+                raise MKUserError("host", "Please specify a host name")
+            elif hostname in g_hosts:
+                raise MKUserError("host", "A host with this name already exists.")
+            elif not re.match("^[a-zA-Z0-9-_.]+$", hostname):
+                raise MKUserError("host", "Invalid host name: must contain only characters, digits, dash, underscore and dot.")
+
+        if hostname:
+            g_hosts[hostname] = (alias, ipaddress, tags)
+            write_configuration_file()
+            go_to_services = html.var("services")
+            if new:
+                message = "Created new host %s" % hostname
+                log_pending(hostname, "create-host", message) 
+                return go_to_services and "firstinventory" or "index"
+            else:
+                log_pending(hostname, "edit-host", "Edited properties of host %s" % hostname)
+                return go_to_services and "inventory" or "index"
+
+    else:
+        html.begin_form("edithost")
+        html.write('<table class=form>\n')
+
+        # host name
+        html.write("<tr><td class=legend>Hostname</td><td class=content>")
+        if hostname and mode == "edit":
+            html.write(hostname)
+        else:
+            html.text_input("host")
+            html.set_focus("host")
+        html.write("</td></tr>\n")
+
+        # alias
+        html.write("<tr><td class=legend>Alias<br><i>(optional</i></td><td class=content>")
+        html.text_input("alias", alias)
+        html.write("</td></tr>\n")
+
+        # IP address
+        html.write("<tr><td class=legend>IP-Address<br>"
+                "<i>Leave empty for automatic<br>"
+                "IP address lookup via DNS</td><td class=content>")
+        html.text_input("ipaddress", ipaddress)
+        html.write("</td></tr>\n")
+
+        # Host tags
+        found_tags = []
+        for tagno, (tagname, taglist) in enumerate(config.host_tags):
+            # get current value of tag
+            tagvalue = None
+            duplicate = False
+            for tag, descr in taglist:
+                if tag in tags:
+                    if tagvalue:
+                        duplicate = True
+                    tagvalue = tag 
+
+            tagvar = "tag_%d" % tagno
+            html.write("<tr><td class=legend>%s</td>" % tagname)
+            html.write("<td class=content>")
+            html.select(tagvar, taglist, tagvalue)
+            if duplicate: # tag not unique before editing
+                html.write("(!)")
+            html.write("</td></tr>\n")
+
+        html.write('<tr><td class="legend button" colspan=2>')
+        html.button("save", "Save &amp; Finish", "submit")
+        html.button("services", "Save &amp; got to Services", "submit")
+        html.write("</td></tr>\n")
+        html.write("</table>\n")
+        html.hidden_fields()
+        html.end_form()
+
+
+def mode_inventory(phase, firsttime):
+    hostname = html.var("host")
+    if hostname not in g_hosts:
+        raise MKGeneralException("You called this page for a non-existing host.")
+
+    if phase == "action":
+        table = check_mk_automation("try-inventory", ["tcp", hostname])
+        table.sort()
+        active_checks = {}
+        for st, ct, item, paramstring, params, descr, state, output, perfdata in table:
+            varname = "_%s_%s" % (ct, item)
+            if html.var(varname, "") != "":
+                active_checks[(ct, item)] = paramstring
+
+        check_mk_automation("set-autochecks", [hostname], active_checks)
+        message = "Saved check configuration of host %s with %d checks" % (hostname, len(active_checks)) 
+        log_pending(hostname, "set-autochecks", message) 
+        return "index", message
+
+    elif phase == "buttons":
+        html.context_button("Host list", make_link([("mode", "index")]))
+        html.context_button("Edit host", make_link([("mode", "edithost"), ("host", hostname)]))
+
+    else:
+        show_service_table(hostname, firsttime)
+
+
+# -----------------------------------------------------------------
+#       _   _      _                     
+#      | | | | ___| |_ __   ___ _ __ ___ 
+#      | |_| |/ _ \ | '_ \ / _ \ '__/ __|
+#      |  _  |  __/ | |_) |  __/ |  \__ \
+#      |_| |_|\___|_| .__/ \___|_|  |___/
+#                   |_|                  
+#   
+# -----------------------------------------------------------------
 
 def log_entry(hostname, action, message, g_filename):
     make_nagios_directory(conf_dir)
@@ -50,6 +436,7 @@ def parse_audit_log(what):
         for line in file(path):
             line = line.rstrip()
             entries.append(line.split(None, 3))
+        entries.reverse()
         return entries
     return []
 
@@ -150,340 +537,40 @@ def check_filename():
     return filename, title
 
 def make_link(vars):
-    return html.makeuri(vars)
+    vars = vars + [ ("filename", g_filename) ]
+    return html.makeuri_contextless(vars)
 
 def make_action_link(vars):
-    return html.makeuri(vars + [("_transid", html.current_transid(html.req.user))])
+    vars = vars + [ ("filename", g_filename) ]
+    return html.makeuri_contextless(vars + [("_transid", html.current_transid(html.req.user))])
 
-
-# Der Seitenaufbau besteht aus folgenden Teilen:
-# 1. Kontextbuttons (wo kann man von hier aus hinspringen, ohne Aktion)
-# 2. Verarbeiten einer Aktion, falls eine gültige Transaktion da ist
-# 3. Anzeigen von Inhalten
-#
-# Der Trick: welche Inhalte angezeigt werden, hängt vom Ausgang der Aktion
-# ab. Wenn man z.B. bei einem Host bei "Create new host" auf [Save] klickt,
-# dann kommt bei Erfolg die Inventurseite, bei Misserfolgt bleibt man
-# auf der Neuanlegen-Seite.
-#
-# Dummerweise kann ich aber die Kontextbuttons erst dann anzeigen, wenn
-# ich den Ausgang der Aktion kenne.
-
-def page_index(h):
-    global html
-    html = h
-    global g_filename
-    g_filename, title = check_filename()
-    read_configuration_file()
-
-    html.header("Check_MK Configuration: " + title)
-    html.write("<div class=webconf>\n")
-
-    # Wir sind hier in einem von folgenden Zuständnen:
-    # 'index':     Ohne Kontext -> wir zeigen die Liste aller Hosts an
-    # 'changelog': Seite der offenen Änderungen, ChangeLog
-    # 'newhost':   Anlegen eines neuen Hosts -> Maske zum Editieren des Hosts
-    # 'edithost':  Editieren eines bestehenden Hosts -> Maske zum Editieren
-    # 'inventory': Serviceliste eines Hosts
-    mode = html.var("mode")
-    if mode not in [ "newhost", "edithost", "inventory", "changelog" ]:
-        mode = "index"
-
-    if html.transaction_valid():
-        mode = do_actions(mode)
-        if mode == None:
-            html.footer()
-            return
-
-
-    # Mögliche Aktionen:
-    # Host löschen
-    # Host anlegen
-    # Host editieren/speichern
-    # Servicekonfiguration speichern
-
-    # Context buttons
-    html.begin_context_buttons()
-
-    if mode in [ "index", "changelog" ]:
-        html.context_button("Create new host", make_link([("mode", "newhost")]))
-
-    if mode == "index":
-        pending = parse_audit_log("pending")
-        buttontext = "ChangeLog"
-        if len(pending) > 0:
-            buttontext = "<b>%s (%d)</b>" % (buttontext, len(pending))
-            hot = True
-        else:
-            hot = False
-        html.context_button(buttontext, make_link([("mode", "changelog")]), hot)
-
-    if mode == "changelog":
-        html.context_button("Host list", make_link([("mode", "index")]))
-
-    if mode in [ "newhost", "edithost", "inventory" ]:
-        html.context_button("Abort", make_link([("mode", "index")]))
-
-    html.end_context_buttons()
-
-    # Actions (regardless of current mode)
-    action = html.var("_action")
-    if action == "activate" and html.transaction_valid():
-        activate_configuration()
-
-    if mode == "index":
-        show_hosts_table()
-    elif mode == "changelog":
-        show_changelog()
-    elif mode in [ "edithost", "newhost" ]:
-        show_edithost()
-
-    html.write("</div>\n")
-    html.footer()
-
-def do_actions(mode):
-    hostname = html.var("host")
-
-    # Deletion of entries
-    delname = html.var("_delete")
-    if delname and delname in g_hosts:
-        c = html.confirm("Do you really want to delete the host <tt>%s</tt>?" % delname)
-        if c:
-            del g_hosts[delname]
-            write_configuration_file()
-            log_pending(delname, "delete-host", "Deleted host %s" % delname)
-            check_mk_automation("delete-host", [delname])
-        elif c == False: # not yet confirmed
-            return None
-
-    # Editing of hosts
-    if html.var("save"):
-        try:
-            alias = html.var("alias")
-            if not alias:
-                alias = None # make sure no alias is set - not an empty one
-
-            ipaddress = html.var("ipaddress")
-            if not ipaddress: 
-                ipaddress = None # make sure no IP address is set
-
-            tags = []
-            for tagno, (tagname, taglist) in enumerate(config.host_tags):
-                value = html.var("tag_%d" % tagno)
-                if value:
-                    tags.append(value)
-
-            # handle clone & new
-            if not hostname:
-                hostname = html.var("name")
-                if not hostname:
-                    raise MKUserError("name", "Please specify a host name")
-                elif hostname in hosts:
-                    raise MKUserError("name", "A host with this name already exists.")
-                elif not re.match("^[a-zA-Z0-9-_.]+$", hostname):
-                    raise MKUserError("name", "Invalid host name: must contain only characters, digits, dash, underscore and dot.")
-
-            if hostname:
-                g_hosts[hostname] = (alias, ipaddress, tags)
-                write_configuration_file()
-                if not html.var("host"):
-                    log_pending(hostname, "create-host", "Created new host %s" % hostname) 
-                    mode = "inventory"
-                else:
-                    log_pending(hostname, "edit-host", "Edited properties of host %s" % hostname)
-                    mode = "index"
-
-        except MKUserError, e:
-            html.write("<div class=error>%s</div>\n" % e.message)
-            html.add_user_error(e.varname, e.message)
-
-    return mode
-
-
-def show_hosts_table():
-    # Show table of hosts in this file
-    html.write("<table class=services>\n")
-    html.write("<tr><th>Hostname</th><th>Alias</th>"
-               "<th>IP Address</th><th>Tags</th><th>Actions</th></tr>\n")
-    odd = "even"
-
-    hostnames = g_hosts.keys()
-    hostnames.sort()
-    for hostname in hostnames:
-        alias, ipaddress, tags = g_hosts[hostname]
-        edit_url   = make_link([("mode", "edithost"), ("host", hostname)])
-        clone_url  = make_link([("mode", "newhost"), ("clone", hostname)])
-        delete_url = make_action_link([("mode", "index"), ("_delete", hostname)])
-
-        odd = odd == "odd" and "even" or "odd" 
-
-        html.write('<tr class="data %s0"><td><a href="%s">%s</a></td>' % 
-                (odd, edit_url, hostname))
-        html.write("<td>%s</td>" % (alias and alias or ""))
-        if not ipaddress:
-            try:
-                ip = socket.gethostbyname(hostname)
-                ipaddress = "(DNS: %s)" % ip
-            except:
-                ipaddress = "(hostname not resolvable!)"
-        html.write("<td>%s</td>" % ipaddress)
-        html.write("<td>%s</td>" % ", ".join(tags))
-        html.write("<td>")
-        html.buttonlink(edit_url, "Edit")
-        html.buttonlink(clone_url, "Clone")
-        html.buttonlink(delete_url, "Delete")
-        html.write("</td>")
-        html.write("</tr>\n")
-
-    html.write("</table>\n")
-    
-
-def show_changelog():
-
-    def render_audit_log(log, what):
-        htmlcode = '<table class="webconf auditlog %s">'
-        for t, user, action, text in log:
-            htmlcode += '<tr><td>%s</td><td>%s</td><td>%s</td><td width="100%%">%s</td></tr>\n' % (
-                    time.strftime("%Y-%m-%d", time.localtime(float(t))),
-                    time.strftime("%H:%M:%S", time.localtime(float(t))),
-                    user,
-                    text)
-        htmlcode += "</table>"
-        return htmlcode
-
+def changelog_button():
     pending = parse_audit_log("pending")
+    buttontext = "ChangeLog"
     if len(pending) > 0:
-        message = "<h1>Changes which are not yet activated:</h1>"
-        message += render_audit_log(pending, "pending")
-        message += '<a href="%s" class=button>Activate Changes!</a>' % \
-            html.makeuri([("_action", "activate"), ("_transid", html.current_transid(html.req.user))])
-        html.show_warning(message)
+        buttontext = "<b>%s (%d)</b>" % (buttontext, len(pending))
+        hot = True
     else:
-        html.write("<p>No pending changes, monitoring server is up to date.</p>")
+        hot = False
+    html.context_button(buttontext, make_link([("mode", "changelog")]), hot)
 
-    audit = parse_audit_log("audit")
-    if len(audit) > 0:
-        html.write(render_audit_log(audit, "audit"))
-    else:
-        html.write("<p>Logfile is empty. No host has been created or changed yet.</p>")
-        
-
-
-def show_edithost():
-
-    # Handle Edit, Clone and New
-    clonename = html.var("clone")
-    hostname = html.var("host")
-    if clonename:
-        title = "Create clone of %s" % clonename
-        alias, ipaddress, tags = hosts[clonename]
-        mode = "clone"
-    elif hostname in g_hosts:
-        title = "Edit host " + hostname
-        alias, ipaddress, tags = g_hosts.get(hostname)
-        mode = "edit"
-    else:
-        title = "Create new host"
-        alias, ipaddress, tags = None, None, []
-        mode = "new"
-    
-
-    html.begin_form("edithost")
-    html.write('<table class=form>\n')
-
-    # host name
-    html.write("<tr><td class=legend>Hostname</td><td class=content>")
-    if hostname and mode == "edit":
-        html.write(hostname)
-    else:
-        html.text_input("name")
-    html.write("</td></tr>\n")
-
-    # alias
-    html.write("<tr><td class=legend>Alias<br><i>(optional</i></td><td class=content>")
-    html.text_input("alias", alias)
-    html.write("</td></tr>\n")
-
-    # IP address
-    html.write("<tr><td class=legend>IP-Address<br>"
-            "<i>Leave empty for automatic<br>"
-            "IP address lookup via DNS</td><td class=content>")
-    html.text_input("ipaddress", ipaddress)
-    html.write("</td></tr>\n")
-
-    # Host tags
-    found_tags = []
-    for tagno, (tagname, taglist) in enumerate(config.host_tags):
-        # get current value of tag
-        tagvalue = None
-        duplicate = False
-        for tag, descr in taglist:
-            if tag in tags:
-                if tagvalue:
-                    duplicate = True
-                tagvalue = tag 
-
-        tagvar = "tag_%d" % tagno
-        html.write("<tr><td class=legend>%s</td>" % tagname)
-        html.write("<td class=content>")
-        html.select(tagvar, taglist, tagvalue)
-        if duplicate: # tag not unique before editing
-            html.write("(!)")
-        html.write("</td></tr>\n")
-
-    html.write('<tr><td class="legend button" colspan=2>')
-    html.buttonlink("webconf.py?filename=%s" % g_filename, "Cancel")
-    html.button("save", "Save", "submit")
-    html.write("</td></tr>\n")
-    html.write("</table>\n")
-    html.hidden_fields()
-    html.end_form()
-
-def activate_configuration():
-    f = os.popen("check_mk -R 2>&1 >/dev/null")
-    errors = f.read()
-    exitcode = f.close()
-    if exitcode:
-        html.show_error(errors)
-    else:
-        html.message("The new configuration has been successfully activated.")
-        log_commit_pending() # flush logfile with pending actions
-        log_audit(None, "activate-config", "Configuration activated, monitoring server restarted")
-
-def show_services_table(hostname):
+def show_service_table(hostname, firsttime):
     # Read current check configuration
     table = check_mk_automation("try-inventory", ["tcp", hostname])
     table.sort()
-
-    # Save: add or remove marked changes
-    if html.var("_save") and html.check_transaction():
-        active_checks = {}
-        for st, ct, item, paramstring, params, descr, state, output, perfdata in table:
-            varname = "_%s_%s" % (ct, item)
-            if html.var(varname, "") != "":
-                active_checks[(ct, item)] = paramstring
-
-        check_mk_automation("set-autochecks", [hostname], active_checks)
-        html.message("Saved check configuration with %d checks." % len(active_checks))
-        log_pending(hostname, "set-autochecks", "Saved check configuration of host %s with %d checks" % (hostname, len(active_checks)))
-
-        # re-read current check configuration, because it has changed
-        table = check_mk_automation("try-inventory", ["tcp", hostname])
-        table.sort()
-
 
     html.begin_form("checks")
     html.button("_save", "Save check configuration")
     html.hidden_fields()
     html.write("<table class=services>\n")
     for state_name, state_type, checkbox in [ 
-        ( "Available checks", "new", html.has_var("_activate_available") ),
-        ( "Ignored checks (configured away by admin)", "ignored", False ),
+        ( "Available checks", "new", firsttime ),
         ( "Already configured checks", "old", True, ),
         ( "Obsolete checks (being checked, but should be ignored)", "obsolete", True ),
+        ( "Ignored checks (configured away by admin)", "ignored", False ),
         ( "Vanished checks (checks, but no longer exist)", "vanished", True ),
         ( "Manual checks (defined in main.mk)", "manual", None ),
-        ( "Legacy checks (defined in main.mk)", "legacy", None)
+        ( "Legacy checks (defined in main.mk)", "legacy", None )
         ]:
         first = True
         trclass = "even"
@@ -511,20 +598,13 @@ def show_services_table(hostname):
     html.write("</table>\n")
     html.end_form()
 
-def page_services(h):
-    global html
-    html = h
-
-    filename, title = check_filename()
-
-    hostname = html.var("host")
-    html.header("Services of " + hostname)
-    html.begin_context_buttons()
-    html.context_button("Hostlist", "webconf.py?filename=" + filename)
-    html.context_button("Edit host", "webconf_edithost.py?filename=%s&host=%s" % (filename, hostname))
-    html.end_context_buttons()
-
-    show_services_table(hostname)
-
-    html.footer()
-
+def activate_configuration():
+    f = os.popen("check_mk -R 2>&1 >/dev/null")
+    errors = f.read()
+    exitcode = f.close()
+    if exitcode:
+        html.show_error(errors)
+    else:
+        html.message("The new configuration has been successfully activated.")
+        log_commit_pending() # flush logfile with pending actions
+        log_audit(None, "activate-config", "Configuration activated, monitoring server restarted")

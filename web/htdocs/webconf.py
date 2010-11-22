@@ -156,13 +156,16 @@ def mode_index(phase):
             html.write('<tr class="data %s0"><td><a href="%s">%s</a></td>' % 
                     (odd, edit_url, hostname))
             html.write("<td>%s</td>" % (alias and alias or ""))
+            tdclass = ""
             if not ipaddress:
                 try:
                     ip = socket.gethostbyname(hostname)
                     ipaddress = "(DNS: %s)" % ip
+                    tdclass = ' class="dns"'
                 except:
                     ipaddress = "(hostname not resolvable!)"
-            html.write("<td>%s</td>" % ipaddress)
+                    tdclass = ' class="dnserror"'
+            html.write("<td%s>%s</td>" % (tdclass, ipaddress))
             html.write("<td>%s</td>" % ", ".join(tags))
             html.write("<td>")
             html.buttonlink(edit_url, "Edit")
@@ -182,7 +185,15 @@ def mode_changelog(phase):
         html.context_button("Host list", make_link([("mode", "index")]))
 
     elif phase == "action":
-         activate_configuration()
+        f = os.popen("check_mk -R 2>&1 >/dev/null")
+        errors = f.read()
+        exitcode = f.close()
+        if exitcode:
+            raise MKUserError(None, errors)
+        else:
+            log_commit_pending() # flush logfile with pending actions
+            log_audit(None, "activate-config", "Configuration activated, monitoring server restarted")
+            return None, "The new configuration has been successfully activated."
 
     else:
         def render_audit_log(log, what):
@@ -240,7 +251,7 @@ def mode_edithost(phase, new):
             html.context_button("Services", make_link([("mode", "inventory"), ("host", hostname)]))
 
     elif phase == "action":
-        if html.var("delete"): # Delete this host
+        if not new and html.var("delete"): # Delete this host
             return delete_host_after_confirm(hostname)
 
         alias = html.var("alias")
@@ -250,6 +261,11 @@ def mode_edithost(phase, new):
         ipaddress = html.var("ipaddress")
         if not ipaddress: 
             ipaddress = None # make sure no IP address is set
+            try:
+                ip = socket.gethostbyname(hostname)
+            except:
+                raise MKUserError("ipaddress", "Hostname <b><tt>%s</tt></b> cannot be resolved into an IP address. "
+                            "Please check hostname or specify an explicit IP address." % hostname)
 
         tags = []
         for tagno, (tagname, taglist) in enumerate(config.host_tags):
@@ -324,7 +340,8 @@ def mode_edithost(phase, new):
             html.write("</td></tr>\n")
 
         html.write('<tr><td class="legend button" colspan=2>')
-        html.button("delete", "Delete host!", "submit")
+        if not new:
+            html.button("delete", "Delete host!", "submit")
         html.button("save", "Save &amp; Finish", "submit")
         html.button("services", "Save &amp; got to Services", "submit")
         html.write("</td></tr>\n")
@@ -560,16 +577,6 @@ def show_service_table(hostname, firsttime):
     html.write("</table>\n")
     html.end_form()
 
-def activate_configuration():
-    f = os.popen("check_mk -R 2>&1 >/dev/null")
-    errors = f.read()
-    exitcode = f.close()
-    if exitcode:
-        html.show_error(errors)
-    else:
-        html.message("The new configuration has been successfully activated.")
-        log_commit_pending() # flush logfile with pending actions
-        log_audit(None, "activate-config", "Configuration activated, monitoring server restarted")
 
 def delete_host_after_confirm(delname):
     c = html.confirm("Do you really want to delete the host <tt>%s</tt>?" % delname)

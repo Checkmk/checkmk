@@ -6,10 +6,7 @@
 
 * Es fehlt noch SNMP. Keine Ahnung, wie ich das am besten umsetze
 
-* Knopf zum Löschen eines Hosts auch in Detailmaske
-
-* Arbeitsfluss besser umsetzen. Kann/soll man so eine Art Wizard
-  machen?
+* Reload bei ChangeLog aktivieren wird nicht abgefangen.
 
 * Eine Flagdatei, welche klarmacht, dass Änderungen gemacht, aber
 Nagios nicht neugestartet wurde. Evtl. kann man diese als Art

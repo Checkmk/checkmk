@@ -1719,3 +1719,11 @@ div.webconf {
     border: 1px solid #444;
     padding: 2px 6px;
 }
+
+.webconf td.dns {
+    color: #666;
+}
+
+.webconf td.dnserror {
+    color: #f00;
+}

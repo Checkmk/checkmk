@@ -4,10 +4,6 @@
   - Link von Webconf auf den Host in Nagios. Dazu muss ich die lokale
     Site wissen (konfigurieren in multisite.mk)
 
-* Evtl. sollte man den Hosts Tags verpassen: 'webconf' und 'hirni.mk', 
-  also die Datei, aus der der Host kommt. Das würde auch die GUI-Links
-  leichter machen.
-
 * Es fehlt noch SNMP. Keine Ahnung, wie ich das am besten umsetze
 
 * Knopf zum Löschen eines Hosts auch in Detailmaske

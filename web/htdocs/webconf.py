@@ -46,11 +46,12 @@ conf_dir = defaults.var_dir + "/webconf/"
 #
 # Der Trick: welche Inhalte angezeigt werden, hängt vom Ausgang der Aktion
 # ab. Wenn man z.B. bei einem Host bei "Create new host" auf [Save] klickt,
-# dann kommt bei Erfolg die Inventurseite, bei Misserfolgt bleibt man
+# dann kommt bei Erfolg die Inventurseite, bei Misserfolg bleibt man
 # auf der Neuanlegen-Seite.
 #
 # Dummerweise kann ich aber die Kontextbuttons erst dann anzeigen, wenn
-# ich den Ausgang der Aktion kenne.
+# ich den Ausgang der Aktion kenne. Daher wird zuerst die Aktion ausgeführt,
+# welche aber keinen HTML-Code ausgeben darf.
 
 def page_index(h):
     global html
@@ -85,7 +86,8 @@ def page_index(h):
             # if newmode is not None, then the mode has been changed
             if newmode != None:
                 if newmode == "": # no further information: configuration dialog, etc.
-                    html.message(action_message)
+                    if action_message:
+                        html.message(action_message)
                     html.write("</div>")
                     html.footer()
                     return
@@ -114,43 +116,6 @@ def page_index(h):
     html.footer()
 
 
-# def hirnstuff():
-# 
-#     # Mögliche Aktionen:
-#     # Host löschen
-#     # Host anlegen
-#     # Host editieren/speichern
-#     # Servicekonfiguration speichern
-# 
-#     # Context buttons
-# 
-#     if mode in [ "index", "changelog" ]:
-#         html.context_button("Create new host", make_link([("mode", "newhost")]))
-# 
-#     if mode == "index":
-# 
-#     if mode == "changelog":
-#         html.context_button("Host list", make_link([("mode", "index")]))
-# 
-#     if mode in [ "newhost", "edithost", "inventory" ]:
-#         html.context_button("Abort", make_link([("mode", "index")]))
-# 
-# 
-#     # Actions (regardless of current mode)
-#     action = html.var("_action")
-#     if action == "activate" and html.transaction_valid():
-#         activate_configuration()
-# 
-#     if mode == "index":
-#         show_hosts_table()
-#     elif mode == "changelog":
-#         show_changelog()
-#     elif mode in [ "edithost", "newhost" ]:
-#         show_edithost()
-# 
-#     html.write("</div>\n")
-#     html.footer()
-
 # -----------------------------------------------------------------
 #       ____                       
 #      |  _ \ __ _  __ _  ___  ___ 
@@ -169,14 +134,7 @@ def mode_index(phase):
         # Deletion of hosts
         delname = html.var("_delete")
         if delname and delname in g_hosts:
-            c = html.confirm("Do you really want to delete the host <tt>%s</tt>?" % delname)
-            if c:
-                del g_hosts[delname]
-                write_configuration_file()
-                log_pending(delname, "delete-host", "Deleted host %s" % delname)
-                check_mk_automation("delete-host", [delname])
-            elif c == False: # not yet confirmed
-                return ""
+            return delete_host_after_confirm(delname)
     else:
         # Show table of hosts in this file
         html.write("<table class=services>\n")
@@ -208,9 +166,9 @@ def mode_index(phase):
             html.write("<td>%s</td>" % ", ".join(tags))
             html.write("<td>")
             html.buttonlink(edit_url, "Edit")
+            html.buttonlink(services_url, "Services")
             html.buttonlink(clone_url, "Clone")
             html.buttonlink(delete_url, "Delete")
-            html.buttonlink(services_url, "Services")
             html.write("</td>")
             html.write("</tr>\n")
 
@@ -265,11 +223,11 @@ def mode_edithost(phase, new):
     
     if clonename:
         title = "Create clone of %s" % clonename
-        alias, ipaddress, tags = hosts[clonename]
+        alias, ipaddress, tags = g_hosts[clonename]
         mode = "clone"
     elif hostname in g_hosts:
         title = "Edit host " + hostname
-        alias, ipaddress, tags = g_hosts.get(hostname)
+        alias, ipaddress, tags = g_hosts[hostname]
         mode = "edit"
     else:
         title = "Create new host"
@@ -282,6 +240,9 @@ def mode_edithost(phase, new):
             html.context_button("Services", make_link([("mode", "inventory"), ("host", hostname)]))
 
     elif phase == "action":
+        if html.var("delete"): # Delete this host
+            return delete_host_after_confirm(hostname)
+
         alias = html.var("alias")
         if not alias:
             alias = None # make sure no alias is set - not an empty one
@@ -363,6 +324,7 @@ def mode_edithost(phase, new):
             html.write("</td></tr>\n")
 
         html.write('<tr><td class="legend button" colspan=2>')
+        html.button("delete", "Delete host!", "submit")
         html.button("save", "Save &amp; Finish", "submit")
         html.button("services", "Save &amp; got to Services", "submit")
         html.write("</td></tr>\n")
@@ -608,3 +570,16 @@ def activate_configuration():
         html.message("The new configuration has been successfully activated.")
         log_commit_pending() # flush logfile with pending actions
         log_audit(None, "activate-config", "Configuration activated, monitoring server restarted")
+
+def delete_host_after_confirm(delname):
+    c = html.confirm("Do you really want to delete the host <tt>%s</tt>?" % delname)
+    if c:
+        del g_hosts[delname]
+        write_configuration_file()
+        log_pending(delname, "delete-host", "Deleted host %s" % delname)
+        check_mk_automation("delete-host", [delname])
+        return "index"
+    elif c == False: # not yet confirmed
+        return ""
+    else:
+        return None # browser reload 

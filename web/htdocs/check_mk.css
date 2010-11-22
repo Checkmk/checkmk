@@ -662,17 +662,18 @@ table.services th.tablegap {
   background-repeat: repeat;
   background-position: center;
 }
-table.services tr.odd0  { background-color: #eee; } 
-table.services tr.even0 { background-color: #ddd; }
 
-table.services tr.odd1  { background-color: #ffc; } 
-table.services tr.even1 { background-color: #ffa; }
+tr.odd0  { background-color: #eee; } 
+tr.even0 { background-color: #ddd; }
 
-table.services tr.odd2  { background-color: #fcc; } 
-table.services tr.even2 { background-color: #faa; }
+tr.odd1  { background-color: #ffc; } 
+tr.even1 { background-color: #ffa; }
 
-table.services tr.odd3  { background-color: #fdc; } 
-table.services tr.even3 { background-color: #fea; }
+tr.odd2  { background-color: #fcc; } 
+tr.even2 { background-color: #faa; }
+
+tr.odd3  { background-color: #fdc; } 
+tr.even3 { background-color: #fea; }
 
 
 /* HACK */
@@ -1705,7 +1706,7 @@ div.webconf {
     margin-bottom: 1em;
     width: 100%;
 }
-                                                      
+
 .webconf table.pending {
     background-color: #fff;
 }

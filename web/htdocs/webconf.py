@@ -179,6 +179,45 @@ def mode_index(phase):
         html.write("</table>\n")
     
 
+def parse_host_names(line):
+    newline = ""
+    in_hostname = False
+    hostname = ""
+    for c in line:
+        if c == '[':
+            in_hostname = True
+        elif c == ']':
+            in_hostname = False
+            newline += host_link(hostname)
+        elif in_hostname:
+            hostname += c
+        else:
+            newline += c
+    return newline
+
+
+def host_link(hostname):
+    if hostname in g_hosts:
+        return '<a href="%s">%s</a>' % (make_link([("mode", "edithost"), ("host", hostname)]), hostname)
+    else:
+        return hostname
+
+
+def render_audit_log(log, what):
+    htmlcode = '<table class="webconf auditlog %s">'
+    even = "even"
+    for t, user, action, text in log:
+        text = parse_host_names(text)
+        even = even == "even" and "odd" or "even"
+        htmlcode += '<tr class="%s0"><td>%s</td><td>%s</td><td>%s</td><td width="100%%">%s</td></tr>\n' % (
+                even,
+                time.strftime("%Y-%m-%d", time.localtime(float(t))),
+                time.strftime("%H:%M:%S", time.localtime(float(t))),
+                user,
+                text)
+    htmlcode += "</table>"
+    return htmlcode
+
 
 def mode_changelog(phase):
     if phase == "buttons":
@@ -198,16 +237,6 @@ def mode_changelog(phase):
                 return None, "The new configuration has been successfully activated."
 
     else:
-        def render_audit_log(log, what):
-            htmlcode = '<table class="webconf auditlog %s">'
-            for t, user, action, text in log:
-                htmlcode += '<tr><td>%s</td><td>%s</td><td>%s</td><td width="100%%">%s</td></tr>\n' % (
-                        time.strftime("%Y-%m-%d", time.localtime(float(t))),
-                        time.strftime("%H:%M:%S", time.localtime(float(t))),
-                        user,
-                        text)
-            htmlcode += "</table>"
-            return htmlcode
 
         pending = parse_audit_log("pending")
         if len(pending) > 0:
@@ -293,10 +322,10 @@ def mode_edithost(phase, new):
                 g_hosts[hostname] = (alias, ipaddress, tags)
                 write_configuration_file()
                 if new:
-                    message = "Created new host %s" % hostname
+                    message = "Created new host [%s]." % hostname
                     log_pending(hostname, "create-host", message) 
                 else:
-                    log_pending(hostname, "edit-host", "Edited properties of host %s" % hostname)
+                    log_pending(hostname, "edit-host", "Edited properties of host [%s]" % hostname)
             if new:
                 return go_to_services and "firstinventory" or "index"
             else:
@@ -349,9 +378,9 @@ def mode_edithost(phase, new):
             html.write("</td></tr>\n")
 
         html.write('<tr><td class="legend button" colspan=2>')
+        html.button("save", "Save &amp; Finish", "submit")
         if not new:
             html.button("delete", "Delete host!", "submit")
-        html.button("save", "Save &amp; Finish", "submit")
         html.button("services", "Save &amp; got to Services", "submit")
         html.write("</td></tr>\n")
         html.write("</table>\n")
@@ -375,7 +404,7 @@ def mode_inventory(phase, firsttime):
                     active_checks[(ct, item)] = paramstring
 
             check_mk_automation("set-autochecks", [hostname], active_checks)
-            message = "Saved check configuration of host %s with %d checks" % (hostname, len(active_checks)) 
+            message = "Saved check configuration of host [%s] with %d checks" % (hostname, len(active_checks)) 
             log_pending(hostname, "set-autochecks", message) 
             return "index", message
         return "index"
@@ -597,7 +626,7 @@ def delete_host_after_confirm(delname):
     if c:
         del g_hosts[delname]
         write_configuration_file()
-        log_pending(delname, "delete-host", "Deleted host %s" % delname)
+        log_pending(delname, "delete-host", "Deleted host [%s]" % delname)
         check_mk_automation("delete-host", [delname])
         return "index"
     elif c == False: # not yet confirmed

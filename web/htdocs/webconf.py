@@ -75,7 +75,7 @@ def page_index(h):
 
     # Do actions (might switch mode)
     action_message = None
-    if html.transaction_valid():
+    if html.has_var("_transid"):
         try:
             result = modefunc("action")
             if type(result) == tuple:
@@ -135,6 +135,7 @@ def mode_index(phase):
         delname = html.var("_delete")
         if delname and delname in g_hosts:
             return delete_host_after_confirm(delname)
+
     else:
         # Show table of hosts in this file
         html.write("<table class=services>\n")
@@ -185,15 +186,16 @@ def mode_changelog(phase):
         html.context_button("Host list", make_link([("mode", "index")]))
 
     elif phase == "action":
-        f = os.popen("check_mk -R 2>&1 >/dev/null")
-        errors = f.read()
-        exitcode = f.close()
-        if exitcode:
-            raise MKUserError(None, errors)
-        else:
-            log_commit_pending() # flush logfile with pending actions
-            log_audit(None, "activate-config", "Configuration activated, monitoring server restarted")
-            return None, "The new configuration has been successfully activated."
+        if html.check_transaction():
+            f = os.popen("check_mk -R 2>&1 >/dev/null")
+            errors = f.read()
+            exitcode = f.close()
+            if exitcode:
+                raise MKUserError(None, errors)
+            else:
+                log_commit_pending() # flush logfile with pending actions
+                log_audit(None, "activate-config", "Configuration activated, monitoring server restarted")
+                return None, "The new configuration has been successfully activated."
 
     else:
         def render_audit_log(log, what):
@@ -252,7 +254,10 @@ def mode_edithost(phase, new):
 
     elif phase == "action":
         if not new and html.var("delete"): # Delete this host
-            return delete_host_after_confirm(hostname)
+            if not html.transaction_valid():
+                return "index"
+            else:
+                return delete_host_after_confirm(hostname)
 
         alias = html.var("alias")
         if not alias:
@@ -283,16 +288,20 @@ def mode_edithost(phase, new):
                 raise MKUserError("host", "Invalid host name: must contain only characters, digits, dash, underscore and dot.")
 
         if hostname:
-            g_hosts[hostname] = (alias, ipaddress, tags)
-            write_configuration_file()
             go_to_services = html.var("services")
+            if html.check_transaction():
+                g_hosts[hostname] = (alias, ipaddress, tags)
+                write_configuration_file()
+                if new:
+                    message = "Created new host %s" % hostname
+                    log_pending(hostname, "create-host", message) 
+                else:
+                    log_pending(hostname, "edit-host", "Edited properties of host %s" % hostname)
             if new:
-                message = "Created new host %s" % hostname
-                log_pending(hostname, "create-host", message) 
                 return go_to_services and "firstinventory" or "index"
             else:
-                log_pending(hostname, "edit-host", "Edited properties of host %s" % hostname)
                 return go_to_services and "inventory" or "index"
+
 
     else:
         html.begin_form("edithost")
@@ -356,18 +365,20 @@ def mode_inventory(phase, firsttime):
         raise MKGeneralException("You called this page for a non-existing host.")
 
     if phase == "action":
-        table = check_mk_automation("try-inventory", ["tcp", hostname])
-        table.sort()
-        active_checks = {}
-        for st, ct, item, paramstring, params, descr, state, output, perfdata in table:
-            varname = "_%s_%s" % (ct, item)
-            if html.var(varname, "") != "":
-                active_checks[(ct, item)] = paramstring
+        if html.check_transaction():
+            table = check_mk_automation("try-inventory", ["tcp", hostname])
+            table.sort()
+            active_checks = {}
+            for st, ct, item, paramstring, params, descr, state, output, perfdata in table:
+                varname = "_%s_%s" % (ct, item)
+                if html.var(varname, "") != "":
+                    active_checks[(ct, item)] = paramstring
 
-        check_mk_automation("set-autochecks", [hostname], active_checks)
-        message = "Saved check configuration of host %s with %d checks" % (hostname, len(active_checks)) 
-        log_pending(hostname, "set-autochecks", message) 
-        return "index", message
+            check_mk_automation("set-autochecks", [hostname], active_checks)
+            message = "Saved check configuration of host %s with %d checks" % (hostname, len(active_checks)) 
+            log_pending(hostname, "set-autochecks", message) 
+            return "index", message
+        return "index"
 
     elif phase == "buttons":
         html.context_button("Host list", make_link([("mode", "index")]))
@@ -579,6 +590,9 @@ def show_service_table(hostname, firsttime):
 
 
 def delete_host_after_confirm(delname):
+    if not html.transaction_valid():
+        return None  # Browser reload
+
     c = html.confirm("Do you really want to delete the host <tt>%s</tt>?" % delname)
     if c:
         del g_hosts[delname]

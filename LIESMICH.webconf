@@ -6,23 +6,5 @@
 
 * Es fehlt noch SNMP. Keine Ahnung, wie ich das am besten umsetze
 
-* Reload bei ChangeLog aktivieren wird nicht abgefangen.
-
-* Eine Flagdatei, welche klarmacht, dass Änderungen gemacht, aber
-Nagios nicht neugestartet wurde. Evtl. kann man diese als Art
-Logdatei aufbauen - ein Audit-log. Falls ja, sollte es beim Neustarten
-umgeschoben werden in ein generelles Log.
-
 * Doku
 
-
-Fluss beim Anlegen eines neues Hosts:
-
-1. Es erscheint das leere Formular.
-2. Benutzer füllt aus und drück speichern
-  -> Fehler (eins rot) -> wiederholen
-  -> Cancel -> einfach zurück zur Hauptseite
-  -> OK: Weiter
-
-3. Jetzt kommt die Tabelle der Services
-4. Speichern -> Hauptliste aller Hosts.

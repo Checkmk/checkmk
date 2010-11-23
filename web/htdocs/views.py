@@ -609,6 +609,12 @@ function toggle_section(nr, oImg) {
     html.write("<tr><td>Automatic reload (0 or empty for none):</td><td>")
     html.number_input("browser_reload", 0)
     html.write("</td></tr>\n")
+    html.write("<tr><td>Show page header:</td><td>")
+    html.checkbox("show_header", True)
+    html.write("</td></tr>\n")
+    html.write("<tr><td>Show page controls:</td><td>")
+    html.checkbox("show_controls", True)
+    html.write("</td></tr>\n")
     html.write("<tr><td>Play %s:</td><td>" % docu_link("multisite_sounds", "alarm sounds"))
     html.checkbox("play_sounds", False)
     html.write("</td></tr>\n")
@@ -652,6 +658,8 @@ def load_view_into_html_vars(view):
     html.set_var("public",           view["public"] and "on" or "")
     html.set_var("hidden",           view["hidden"] and "on" or "")
     html.set_var("mustsearch",       view["mustsearch"] and "on" or "")
+    html.set_var("show_header",      view.get("show_header",   True) and "on" or "")
+    html.set_var("show_controls",    view.get("show_controls", True) and "on" or "")
 
     # [3] Filters
     for name, filt in multisite_filters.items():
@@ -732,11 +740,13 @@ def create_view():
     except:
         browser_reload = 0
 
-    play_sounds = html.var("play_sounds", "") != ""
-    public     = html.var("public", "") != "" and config.may("publish_views")
-    hidden     = html.var("hidden", "") != ""
-    mustsearch = html.var("mustsearch", "") != ""
+    play_sounds    = html.var("play_sounds", "") != ""
+    public         = html.var("public", "") != "" and config.may("publish_views")
+    hidden         = html.var("hidden", "") != ""
+    mustsearch     = html.var("mustsearch", "") != ""
     column_headers = html.var("column_headers")
+    show_header    = html.var("show_header", "") != ""
+    show_controls  = html.var("show_controls", "") != ""
     show_filternames = []
     hide_filternames = []
     hard_filternames = []
@@ -806,7 +816,9 @@ def create_view():
         "hard_filtervars" : hard_filtervars,
         "sorters"         : sorternames,
         "group_painters"  : group_painternames,
-        "painters"        : painternames
+        "painters"        : painternames,
+        "show_header"     : show_header,
+        "show_controls"   : show_controls,
     }
 
 
@@ -845,8 +857,10 @@ def show_view(view, show_heading = False, show_buttons = True):
     # User can override the layout settings via HTML variables (buttons)
     # which are safed persistently. This is known as "view options"
     vo = view_options(view["name"])
-    num_columns = vo.get("num_columns", view.get("num_columns", 1))
-    browser_reload = vo.get("refresh", view.get("browser_reload", None))
+    num_columns    = vo.get("num_columns",   view.get("num_columns",    1))
+    browser_reload = vo.get("refresh",       view.get("browser_reload", None))
+    show_header    = vo.get("show_header",   view.get("show_header",    1))
+    show_controls  = vo.get("show_controls", view.get("show_controls",  1))
 
     if browser_reload:
         html.set_browser_reload(browser_reload)
@@ -914,12 +928,16 @@ def show_view(view, show_heading = False, show_buttons = True):
     else:
         columns, rows = [], []
 
-    # Show heading
+    # Show heading (change between "preview" mode and full page mode)
     if show_heading:
-        html.header(view_title(view))
+        # Show/Hide the header with page title, MK logo, etc.
+        if show_header:
+            html.header(view_title(view))
+        else:
+            html.body_start(view_title(view))
 
     has_done_actions = False
-    if show_buttons:
+    if show_buttons and show_controls:
         show_context_links(view, hide_filters)
 
         html.write("<table class=navi><tr>\n")
@@ -1033,6 +1051,7 @@ def view_options(viewname):
     vo = config.load_user_file("viewoptions", {})
     v = vo.get(viewname, {})
     must_save = False
+
     if config.user_may(config.user, "view_option_refresh"):
         if html.has_var("refresh"):
             try:

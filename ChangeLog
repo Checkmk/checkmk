@@ -96,6 +96,8 @@
     * New view for all services of a site
     * Sidebar snapin site_status: make link target configurable
     * Multisite view "Recently changed services": sort newest first
+    * Added options show_header and show_controls to remove the page headers
+      from views
 
 1.1.8:
     Core, Setup, etc.:

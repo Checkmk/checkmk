@@ -2,8 +2,8 @@
 
 import config
 
-def render_webconf_files():
-    if not config.may("use_webconf"):
+def render_wato_files():
+    if not config.may("use_wato"):
         html.write("You are not allowed to use Check_MK's web configuration GUI.")
     elif len(config.config_files)== 0:
         html.write("No configuration files are defined.<br>"
@@ -13,13 +13,13 @@ def render_webconf_files():
     else:
         for filename, title, roles in config.config_files:
             if config.role in roles:
-                bulletlink(title, "webconf.py?filename=%s" % filename)
+                bulletlink(title, "wato.py?filename=%s" % filename)
 
-sidebar_snapins["webconf"] = {
+sidebar_snapins["wato"] = {
     "title" : "Check_MK Web Administration Tool",
     "description" : "WATO - the Web Administration Tool of Check_MK - manage hosts to be monitored without access to the command line",
     "author" : "Mathias Kettner",
-    "render" : render_webconf_files,
+    "render" : render_wato_files,
     "allowed" : [ "admin", "user" ],
 }
         

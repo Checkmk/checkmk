@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 # TODO: Ein Logfile pro filename anlegen, z.B. mit Unterverzeichnis
-# var/web/webconf/windows/audit.log
+# var/web/wato/windows/audit.log
 
 # -----------------------------------------------------------------
 #       ___       _ _   
@@ -21,15 +21,15 @@ import htmllib
 
 # Problem hier: Das ganze funktioniert noch nicht in der local/-Hierarchie
 # from mod_python import importer
-# config = importer.import_module("config", path = ["/omd/sites/webconf/share/check_mk/web/htdocs"])
+# config = importer.import_module("config", path = ["/omd/sites/wato/share/check_mk/web/htdocs"])
 # config = importer.import_module("config")
 
-config.declare_permission("use_webconf",
+config.declare_permission("use_wato",
      "Use Webconfiguration",
      "Only with this permission, users are allowed to use Check_MK web configuration GUI.",
      [ "admin", ])
 
-conf_dir = defaults.var_dir + "/webconf/"
+conf_dir = defaults.var_dir + "/wato/"
 
 # -----------------------------------------------------------------
 #       __  __       _       
@@ -97,7 +97,7 @@ def page_index(h):
 
     # Title
     html.header("Check_MK WATO - %s - %s" % (title, modefunc("title")))
-    html.write("<div class=webconf>\n")
+    html.write("<div class=wato>\n")
 
 
     # Show contexts buttons
@@ -209,7 +209,7 @@ def host_link(hostname):
 
 
 def render_audit_log(log, what):
-    htmlcode = '<table class="webconf auditlog %s">'
+    htmlcode = '<table class="wato auditlog %s">'
     even = "even"
     for t, user, action, text in log:
         text = parse_host_names(text)
@@ -501,7 +501,7 @@ def read_configuration_file():
         for h in variables["all_hosts"]:
             parts = h.split('|')
             hostname = parts[0]
-            tags = [ tag for tag in parts[1:] if tag != 'webconf' and not tag.endswith('.mk') ]
+            tags = [ tag for tag in parts[1:] if tag != 'wato' and not tag.endswith('.mk') ]
             ipaddress = variables["ipaddresses"].get(hostname)
             aliases = host_extra_conf(hostname, variables["extra_host_conf"]["alias"]) 
             if len(aliases) > 0:
@@ -521,7 +521,7 @@ def write_configuration_file():
         alias, ipaddress, tags = g_hosts[hostname]
         if alias:
             aliases.append((alias, [hostname]))
-        all_hosts.append("|".join([hostname] + tags + [ g_filename, 'webconf' ]))
+        all_hosts.append("|".join([hostname] + tags + [ g_filename, 'wato' ]))
         if ipaddress:
             ipaddresses[hostname] = ipaddress
 
@@ -564,7 +564,7 @@ def check_filename():
     if not title:
         raise MKGeneralException("No config file <tt>%s</tt> is declared in <tt>multisite.mk</tt>" % filename)
 
-    if not config.may("use_webconf") or config.role not in roles:
+    if not config.may("use_wato") or config.role not in roles:
         raise MKAuthException("You are not allowed to edit this configuration file!")
 
     return filename, title

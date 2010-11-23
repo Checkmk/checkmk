@@ -13,11 +13,10 @@ description:
  how much is remaining in a supply, so the printer says "some remaining".
  This value produces a warning.
 
- Please note, that some manufactures do not have unique names for
- their supply units in the MIB. They for example name all for toner
- units {Toner Cartridge OKI DATA CORP}. In that case, only the first
- unit will be checked (which does not make much sense). A future version
- of the check might handle that problem - the current one not.
+ In case of OKI c5900 devices the name of the supply units ins not unique.
+ One example is {Toner Cartridge OKI DATA CORP}. In this case the color of
+ the supply unit is added to the beginning of the name to get a unique
+ item name.
 
 perfdata: 
  The remaining filling level in units (pages remaining).

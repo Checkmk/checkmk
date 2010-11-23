@@ -81,6 +81,9 @@
     * Cleaned up several checks to meet the variable naming conventions
     * drbd: Handling unconfigured drbd devices correctly. These devices are
       ignored during nventory
+    * printer_supply: In case of OKI c5900 devices the name of the supply units ins not
+      unique. The color of the supply unit is reported in a dedicated OID and added to the
+      check item name to have a unique name now.
 
     Multisite:
     * The custom open/close states of custom links are now stored for each

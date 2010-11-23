@@ -1,10 +1,32 @@
 * Integration mit Multisite:
   - Bei einem Host muss es einen Kontextknopf zur Konfig-GUI geben, falls
-    dieser host per webconf erstellt wurde.
+    dieser host per webconf erstellt wurde. Dabei muss ich den Site-Prefix
+    benutzen. Problem: in sites muss ich einen neuen Schluessel einführen
+    "link_base" oder "url_base" oder "url_prefix". Dieser ersetzt dann
+    nagios_url, etc. und wird einfach vor alles davor gehängt. Dabei muss
+    ich auch http:// erlauben.
+
+    Der Link erscheint nur, wenn:
+    * der Host das Tag 'wato' hat.
+    * der Benutzer das Rech 'use_wato' hat.
+
+    In den Link wird der wato-Filename eingebaut, so dass man auf der
+    richtigen Seite landet.
+
+    Problem noch: Dafür brauche ich per Livestatus die Host-Tags.
+    Die kann ich über die custom_attributes holen...
+
   - Link von Webconf auf den Host in Nagios. Dazu muss ich die lokale
     Site wissen (konfigurieren in multisite.mk)
 
 * Es fehlt noch SNMP. Keine Ahnung, wie ich das am besten umsetze
 
 * Doku
+
+* Multisite: Das Snapin sollte die Dateien von allen WATO-Sites
+anzeigen. Dazu kann die Liste der Sites durchgehen und für jede
+Site per AJAX einen Webservice abrufen, der die Liste der editierbaren
+Dateien anzeigt.
+
+
 

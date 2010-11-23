@@ -61,9 +61,6 @@ def page_index(h):
     g_filename, title = check_filename()
     read_configuration_file()
 
-    html.header("Check_MK Configuration - " + title)
-    html.write("<div class=webconf>\n")
-
     modefuncs = {
         "newhost"   :      lambda phase: mode_edithost(phase, True),
         "edithost"  :      lambda phase: mode_edithost(phase, False),
@@ -98,6 +95,11 @@ def page_index(h):
             action_message = e.message
             html.add_user_error(e.varname, e.message)
 
+    # Title
+    html.header("Check_MK WATO - %s - %s" % (title, modefunc("title")))
+    html.write("<div class=webconf>\n")
+
+
     # Show contexts buttons
     html.begin_context_buttons()
     modefunc("buttons")
@@ -126,7 +128,10 @@ def page_index(h):
 # -----------------------------------------------------------------
 
 def mode_index(phase):
-    if phase == "buttons":
+    if phase == "title":
+        return "Hosts list"
+
+    elif phase == "buttons":
         html.context_button("Create new host", make_link([("mode", "newhost")]))
         changelog_button()
     
@@ -220,7 +225,10 @@ def render_audit_log(log, what):
 
 
 def mode_changelog(phase):
-    if phase == "buttons":
+    if phase == "title":
+        return "Change log"
+
+    elif phase == "buttons":
         html.context_button("Create new host", make_link([("mode", "newhost")]))
         html.context_button("Host list", make_link([("mode", "index")]))
 
@@ -276,7 +284,10 @@ def mode_edithost(phase, new):
         alias, ipaddress, tags = None, None, []
         mode = "new"
 
-    if phase == "buttons":
+    if phase == "title":
+        return title
+
+    elif phase == "buttons":
         html.context_button("Abort", make_link([("mode", "index")]))
         if not new:
             html.context_button("Services", make_link([("mode", "inventory"), ("host", hostname)]))
@@ -393,7 +404,10 @@ def mode_inventory(phase, firsttime):
     if hostname not in g_hosts:
         raise MKGeneralException("You called this page for a non-existing host.")
 
-    if phase == "action":
+    if phase == "title":
+        return "Services of host %s" % hostname
+
+    elif phase == "action":
         if html.check_transaction():
             table = check_mk_automation("try-inventory", ["tcp", hostname])
             table.sort()

@@ -16,8 +16,8 @@ def render_webconf_files():
                 bulletlink(title, "webconf.py?filename=%s" % filename)
 
 sidebar_snapins["webconf"] = {
-    "title" : "Check_MK Webconfig",
-    "description" : "Web configuration GUI for Check_MK - manage hosts to be monitored without access to the command line",
+    "title" : "Check_MK Web Administration Tool",
+    "description" : "WATO - the Web Administration Tool of Check_MK - manage hosts to be monitored without access to the command line",
     "author" : "Mathias Kettner",
     "render" : render_webconf_files,
     "allowed" : [ "admin", "user" ],

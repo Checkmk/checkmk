@@ -117,6 +117,7 @@ class html:
         self.global_vars = []
         self.browser_reload = 0
         self.events = set([]) # currently used only for sounds
+        self.header_sent = False
 
     def write(self, text):
         if type(text) == unicode:
@@ -353,7 +354,7 @@ class html:
         self.req.headers_out.add("refresh", "%d; URL=%s" % (secs, url))
 
     def header(self, title=''):
-        if not self.req.header_sent:
+        if not self.header_sent:
             self.html_head(title)
             if type(self.req.user) == str:
                 login_text = "<b>%s</b> (%s)" % (config.user, config.role)
@@ -364,6 +365,7 @@ class html:
                     "%s &nbsp; &nbsp; <b class=headertime>%s</b> <img src=\"images/mk_logo_klein.png\"></td></tr></table>" %
                     (title, login_text, time.strftime("%H:%M")))
             self.write("<hr class=header>\n")
+            self.header_sent = True
 
     def footer(self):
         if self.req.header_sent:

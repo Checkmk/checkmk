@@ -170,7 +170,7 @@ multisite_painters["host_icons"] = {
 def paint_nagios_link(row):
     # We need to use the Nagios-URL as configured
     # in sites.
-    baseurl = config.site(row["site"])["nagios_cgi_url"]
+    baseurl = config.site(row["site"])["url_prefix"] + "nagios/cgi-bin"
     url = baseurl + "/extinfo.cgi?host=" + htmllib.urlencode(row["host_name"])
     svc = row.get("service_description")
     if svc:
@@ -427,10 +427,11 @@ multisite_painters["svc_group_memberlist"] = {
 # PNP Graphs
 def paint_pnpgraph(sitename, host, service = "_HOST_"):
     container_id = "%s_%s_%s_graph" % (sitename, host, service)
+    pnp_url = html.site_status[sitename]["site"]["url_prefix"] + "pnp4nagios/"
     return "pnpgraph", "<div id=\"%s\"></div>" \
                        "<script>render_pnp_graphs('%s', '%s', '%s', '%s', '%s', '%s')</script>" % \
                           (container_id, container_id, sitename, host, service,
-                           defaults.checkmk_web_uri, html.site_status[sitename]["site"]["pnp_url"])
+                           defaults.url_prefix + "check_mk/", pnp_url)
 
 multisite_painters["svc_pnpgraph" ] = {
     "title"   : "PNP service graph",
@@ -660,7 +661,7 @@ multisite_painters["host_black"] = {
 
 def paint_host_black_with_link_to_old_nagios_services(row):
     host = row["host_name"]
-    baseurl = config.site(row["site"])["nagios_cgi_url"]
+    baseurl = config.site(row["site"])["url_prefix"] + "nagios/cgi-bin"
     url = baseurl + "/status.cgi?host=" + htmllib.urlencode(host)
     state = row["host_state"]
     if state != 0:
@@ -1043,8 +1044,8 @@ def pnp_url(row):
     svc = row["service_description"]
     svc = svc.replace(":", "_").replace("\\", "_")
     site = html.site_status[sitename]["site"]
-    url = site["pnp_url"] + ("index.php/graph?view=1&host=%s&srv=%s&theme=multisite&baseurl=%s" % \
-            (htmllib.urlencode(host), htmllib.urlencode(svc), htmllib.urlencode(defaults.checkmk_web_uri)))
+    url = site["url_prefix"] + ("pnp4nagios/index.php/graph?view=1&host=%s&srv=%s&theme=multisite&baseurl=%scheck_mk/" % \
+            (htmllib.urlencode(host), htmllib.urlencode(svc), htmllib.urlencode(defaults.url_prefix)))
     return url
 
 

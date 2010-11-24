@@ -273,12 +273,8 @@ def site(name):
         s["alias"] = name
     if "socket" not in s:
         s["socket"] = "unix:" + defaults.livestatus_unix_socket
-    if "nagios_url" not in s:
-        s["nagios_url"] = defaults.nagios_url
-    if "nagios_cgi_url" not in s:
-        s["nagios_cgi_url"] = defaults.nagios_cgi_url
-    if "pnp_url" not in s:
-        s["pnp_url"] = defaults.pnp_url
+    if "url_prefix" not in s:
+        s["url_prefix"] = "../" # relative URL from /check_mk/
     return s
 
 def site_is_local(name):

@@ -437,6 +437,7 @@ sidebar_snapins["sitestatus"] = {
 .snapin table.sitestate td.waiting a  { background-color: #26c; color: #fff; border-color: #44f; }
 .snapin table.sitestate td.down a     { background-color: #f00; color: #fff; border-color: #800; }
 .snapin table.sitestate td.unreach a  { background-color: #f80; color: #fff; border-color: #840; }
+.snapin table.sitestate td.unknown a  { background-color: #62d; color: #fff; border-color: #8ff; }
 """ % snapin_width
 }
 
@@ -627,7 +628,7 @@ div.time {
 # --------------------------------------------------------------
 def render_nagios():
     bulletlink("Home", "http://www.nagios.org")
-    bulletlink("Documentation", "%s/docs/toc.html" % defaults.nagios_url)
+    bulletlink("Documentation", "%snagios/docs/toc.html" % defaults.url_prefix)
     for entry in [
         "General",
         ("tac.cgi", "Tactical Overview"),
@@ -711,7 +712,7 @@ def render_master_control():
             html.write("</tr>\n")
         for i, (colname, title) in enumerate(items):
             colvalue = siteline[i + 1]
-            url = defaults.checkmk_web_uri + ("/switch_master_state.py?site=%s&switch=%s&state=%d" % (siteid, colname, 1 - colvalue))
+            url = defaults.url_prefix + ("check_mk/switch_master_state.py?site=%s&switch=%s&state=%d" % (siteid, colname, 1 - colvalue))
             onclick = "get_url('%s', updateContents, 'snapin_master_control')" % url
             enabled = colvalue and "enabled" or "disabled"
             html.write("<tr><td class=left>%s</td><td class=%s><a onclick=\"%s\" href=\"#\">%s</a></td></tr>\n" % (title, enabled, onclick, enabled))

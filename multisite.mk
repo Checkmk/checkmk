@@ -18,21 +18,26 @@ admin_users = [ "nagiosadmin" ]
 
 # Sites to connect to. If this variable is unset, a single
 # connection to the local host is done.
-# sites = {
-#    # connect to local Nagios
-#    "local" : {
-#         "alias" : "Munich"
+#sites = {
+#   # connect to local Nagios
+#   "local" : {
+#        "alias" : "Munich"
+#   },
+#
+#   # connect to remote site (e.g. local OMD site 'paris')
+#   "paris": {
+#        "alias":          "Paris",
+#        "socket":         "tcp:127.0.0.1:6557",
+#        "url_prefix":     "/paris/",
 #    },
-# 
-#    # connect to remote site
-#    "paris": {
-#         "alias":          "Paris",
-#         "socket":         "tcp:10.0.0.2:6557",
-#         "nagios_url":     "/paris/nagios",
-#         "nagios_cgi_url": "/paris/nagios/cgi-bin",
-#         "pnp_url":        "/paris/pnp4nagios/",
-#     },
-# }
+#
+#   # connect to remote site (site on remote host)
+#   "rome": {
+#        "alias":          "Rome",
+#        "socket":         "tcp:10.0.0.2:6557",
+#        "url_prefix":     "http://10.0.0.2/rome/",
+#    },
+#}
 
 # 
 # NagVis

@@ -1,3 +1,9 @@
+WATO:
+    INCOMPATIBLE CHANGES:
+    * Multisite: parameters nagios_url, nagios_cgi_url and pnp_url are now
+      obsolete. Instead the new parameter url_prefix is used (which must
+      end with a /).
+
 1.1.9i1
     INCOMPATIBLE CHANGES:
     * perfdata_format now defaults to "pnp". Previous default was "standard".

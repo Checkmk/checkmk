@@ -60,7 +60,7 @@ def link(text, target):
     # [2] /absolute/link.py
     # [3] relative.py
     if not (":" in target[:10]) and target[0] != '/':
-        target = defaults.checkmk_web_uri + "/" + target
+        target = defaults.url_prefix + "check_mk/" + target
     return "<a target=\"main\" class=link href=\"%s\">%s</a>" % (target, htmllib.attrencode(text))
 
 def simplelink(text, target):
@@ -83,9 +83,9 @@ def iconbutton(what, url, target="side", handler="", name=""):
         tg = ""
     else:
         onclick = ""
-        href = "%s/%s" % (defaults.checkmk_web_uri, url)
+        href = "%scheck_mk/%s" % (defaults.url_prefix, url)
         tg = "target=%s" % target
-    html.write("<a href=\"%s\" %s %s><img class=iconbutton onmouseover=\"hilite_icon(this, 1)\" onmouseout=\"hilite_icon(this, 0)\" align=absmiddle src=\"%s/images/button_%s_lo.png\"></a>\n " % (href, onclick, tg, defaults.checkmk_web_uri, what))
+    html.write("<a href=\"%s\" %s %s><img class=iconbutton onmouseover=\"hilite_icon(this, 1)\" onmouseout=\"hilite_icon(this, 0)\" align=absmiddle src=\"%scheck_mk/images/button_%s_lo.png\"></a>\n " % (href, onclick, tg, defaults.url_prefix, what))
 
 def nagioscgilink(text, target):
     html.write("<li class=sidebar><a target=\"main\" class=link href=\"%s/%s\">%s</a></li>" % \

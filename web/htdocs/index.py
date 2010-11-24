@@ -111,7 +111,7 @@ def connect_to_livestatus(html):
             html.site_status[sitename]["exception"] = deadinfo["exception"]
             shs = deadinfo.get("status_host_state")
             html.site_status[sitename]["status_host_state"] = shs
-            statename = { 1:"down", 2:"unreach", 3:"waiting", 4:"unknown" }.get(shs)
+            statename = { 1:"down", 2:"unreach", 3:"waiting", }.get(shs, "unknown")
             html.site_status[sitename]["state"] = statename
 
     else:

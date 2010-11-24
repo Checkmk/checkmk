@@ -183,7 +183,8 @@ class BaseConnection:
 
         # Create new socket
         self.socket = None
-        parts = self.socketurl.split(":")
+        url = self.socketurl
+        parts = url.split(":")
         if parts[0] == "unix":
             if len(parts) != 2:
                 raise MKLivestatusConfigError("Invalid livestatus unix url: %s. "

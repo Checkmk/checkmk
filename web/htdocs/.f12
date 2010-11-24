@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
-sudo cp -r images *.css *.py /omd/versions/default/share/check_mk/web/htdocs
+sudo cp -r images *.css *.py *.js /omd/versions/default/share/check_mk/web/htdocs
 sudo cp  ../plugins/pages/*.py /omd/versions/default/share/check_mk/web/plugins/pages/
-sudo cp -v ../plugins/views/*.py /omd/versions/default/share/check_mk/web/plugins/views/
-sudo cp -v ../plugins/sidebar/*.py /omd/versions/default/share/check_mk/web/plugins/sidebar/
+sudo cp  ../plugins/views/*.py /omd/versions/default/share/check_mk/web/plugins/views/
+sudo cp  ../plugins/sidebar/*.py /omd/versions/default/share/check_mk/web/plugins/sidebar/
 sudo omd restart wato apache

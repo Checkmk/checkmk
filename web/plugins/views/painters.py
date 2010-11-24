@@ -75,6 +75,10 @@ icon_columns = [ "acknowledged", "scheduled_downtime_depth", "downtimes_with_inf
                  "accept_passive_checks", "action_url_expanded", "notes_url_expanded", "in_notification_period",
                  "custom_variable_names", "custom_variable_values" ]
 
+def wato_link(filename, site, hostname):
+    prefix = config.site(site)["url_prefix"] + "check_mk/"
+    return prefix + "wato.py?filename=%s&host=%s&mode=edithost" % (htmllib.urlencode(filename), htmllib.urlencode(hostname))
+
 def paint_icons(what, row): # what is "host" or "service"
     output = ""
     if what == "host":
@@ -89,6 +93,12 @@ def paint_icons(what, row): # what is "host" or "service"
         newrow["host_name"] = custom_vars["_REALNAME"]
         output += link_to_view("<img class=icon title='Detailed host infos' src='images/icon_detail.gif'>",
             newrow, 'host')
+
+    # Extract host tags
+    if "TAGS" in custom_vars:
+        tags = custom_vars["TAGS"].split()
+    else:
+        tags = []
 
     # action_url
     if row[prefix + "action_url_expanded"]:
@@ -141,6 +151,16 @@ def paint_icons(what, row): # what is "host" or "service"
 
     if not row[prefix + "in_notification_period"]:
         output += '<img class=icon title="Out of notification period" src="images/icon_outofnot.gif">'
+
+    # Link to WATO
+    if "wato" in tags and what == "host":
+        for tag in tags:
+            if tag.endswith(".mk"):
+                wato_filename = tag
+                output += '<a href="%s"><img class=icon src="images/icon_wato.gif" ' \
+                          'title="Open this host in WATO - the Check_MK Web Administration Tool"></a>' % \
+                wato_link(wato_filename, row["site"], row["host_name"])
+                break
 
     return "icons", output
 

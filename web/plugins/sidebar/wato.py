@@ -11,9 +11,27 @@ def render_wato_files():
         "in <tt>multisite.mk</tt>.")
 
     else:
+        if config.is_multisite():
+            sitenames = config.sites.keys()
+            sitenames.sort()
+            for sitename in sitenames:
+                site = config.sites[sitename]
+                state = html.site_status[sitename]["state"]
+                if state != "disabled":
+                    html.write("<h3>%s</h3>\n" % site["alias"])
+                    ajax_url = site["url_prefix"] + "check_mk/ajax_wato_files.py"
+                    html.javascript("document.write(get_url_sync('%s'));" % ajax_url)
+        else:
+            ajax_wato_files(html)
+
+def ajax_wato_files(h):
+    global html
+    html = h
+    if config.may("use_wato"):
         for filename, title, roles in config.config_files:
             if config.role in roles:
                 bulletlink(title, "wato.py?filename=%s" % filename)
+
 
 sidebar_snapins["wato"] = {
     "title" : "Check_MK Web Administration Tool",

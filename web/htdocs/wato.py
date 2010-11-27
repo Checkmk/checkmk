@@ -551,9 +551,8 @@ def write_configuration_file():
         out.write("\n")
 
     # all WATO information to Check_MK's inventory checks (needed for link in Multisite)
-    out.write("extra_service_conf['_WATO'] = [ \n"
-              "  ('hirni.mk', [ 'wato', 'hirni.mk' ], ALL_HOSTS, [ 'Check_MK inventory' ] ) ]\n")
-
+    out.write("\nextra_service_conf['_WATO'] += [ \n"
+              "  ('%s', [ 'wato', '%s' ], ALL_HOSTS, [ 'Check_MK inventory' ] ) ]\n" % (g_filename, g_filename))
 
 # This is a dummy implementation which works without tags
 # and implements only a special case of Check_MK's real logic.

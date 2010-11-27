@@ -34,8 +34,6 @@ hp_proliant_redundant_map = { 1: 'other', 2: 'notRedundant', 3: 'redundant' }
 def inventory_hp_proliant_psu(checkname, info):
     if len(info) > 0:
         return [ (line[0] + '/' + line[1], None) for line in info if line[2] == '3' ]
-    else:
-        return []
 
 def check_hp_proliant_psu(item, params, info):
     for line in info:

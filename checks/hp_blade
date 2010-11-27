@@ -41,8 +41,6 @@ hp_blade_status2nagios_map = { 'Other':       2, 'Ok':     0, 'Degraded': 1, 'Fa
 def inventory_hp_blade_general(checkname, info):
     if len(info) > 0 and len(info[0]) > 1:
         return [ (None, None) ]
-    else:
-        return []
 
 def check_hp_blade_general(item, params, info):
     snmp_state = hp_blade_status_map[int(info[0][1])]

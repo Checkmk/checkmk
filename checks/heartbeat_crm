@@ -87,8 +87,6 @@ def inventory_heartbeat_crm(checktype, info):
         if not heartbeat_crm_naildown:
             dc = None # Ignore DC on check
         return [(None, '(heartbeat_crm_default_max_age, %r, %d, %d)' % (dc, numNodes, numResources))]
-    else:
-        return []
 
 def check_heartbeat_crm(item, params, info):
     if len(info) > 0:

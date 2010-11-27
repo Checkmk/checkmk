@@ -32,8 +32,6 @@ def inventory_aironet_clients(checkname, info):
         return [("strength", "", "aironet_default_strength_levels"),
                 ("quality", "", "aironet_default_quality_levels"),
                 ("clients", "", None)]
-    else:
-        return []
 
 def check_aironet_clients(item, params, info):
     if len(info) == 0:

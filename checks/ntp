@@ -68,8 +68,6 @@ def inventory_ntp_summary(checktype, info):
         return []
     if len(info) > 0:
         return [(None, "ntp_default_levels")]
-    else:
-        return []
 
 # Helper function that parses the information about one
 # peer and returns a tuple of

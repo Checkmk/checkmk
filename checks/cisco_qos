@@ -134,8 +134,6 @@ def inventory_cisco_qos(checkname, info):
                 items += [ ('%s: %s' % (if_name, class_name), 'cisco_qos_default_levels') ]
 
         return items
-    else:
-        return []
 
 def check_cisco_qos(item, params, info):
     post_warn, post_crit, drop_warn, drop_crit = params

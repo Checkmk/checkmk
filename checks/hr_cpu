@@ -28,7 +28,6 @@ hr_cpu_default_levels = (80, 90)
 def inventory_hr_cpu(checktype, info):
     if len(info) > 1:
         return [(None, "hr_cpu_default_levels")]
-    return []
 
 def check_hr_cpu(item, params, info):
     num_cpus = 0

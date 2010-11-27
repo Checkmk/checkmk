@@ -29,8 +29,6 @@ def inventory_diskstat(checkname, info):
     if len(info) > 1: # first line is timestamp
         return [('read', "", "None"),
                 ('write', "", "None")]
-    else:
-        return []
 
 # Fields in /proc/diskstat
 # At the beginning: major minor devicename

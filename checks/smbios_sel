@@ -100,8 +100,6 @@ smbios_sel_msg_types = {
 def inventory_smbios_sel(checkname, info):
     if len(info) > 0:
         return [(None, "", "None")]
-    else:
-        return []
 
 def check_smbios_sel(_no_item, _no_params, info):
     if len(info) == 0:

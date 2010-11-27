@@ -36,8 +36,6 @@ hp_procurve_mem_default_levels = (80, 90)
 def inventory_hp_procurve_mem(checkname, info):
     if len(info) == 1 and int(info[0][0]) >= 0:
         return [ (None, 'hp_procurve_mem_default_levels') ]
-    else:
-        return []
 
 def check_hp_procurve_mem(item, params, info):
     if len(info) == 1:

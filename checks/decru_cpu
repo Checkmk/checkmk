@@ -27,8 +27,6 @@
 def inventory_decru_cpu(checkname, info):
     if len(info) == 5:
         return [ (None, None) ]
-    else:
-        return []
 
 def check_decru_cpu(item, params, info):
     user, nice, system, interrupt, idle = map(lambda x:float(x[0]) / 10.0, info)

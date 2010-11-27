@@ -84,7 +84,6 @@ def inventory_cpu_utilization(checktype, info):
     for x in info:
         if len(x) > 0 and x[0] == 'cpu':
             return [(None, "kernel_util_default_levels")]
-    return []
 
 # Columns of cpu usage /proc/stat:
 # - cpuX: number of CPU or only 'cpu' for aggregation

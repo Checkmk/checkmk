@@ -47,8 +47,6 @@ hp_proliant_temp_locale = {
 def inventory_hp_proliant_temp(checkname, info):
     if len(info) > 0:
         return [ ("%s (%s)" % (line[1], hp_proliant_temp_locale[int(line[2])]), None) for line in info ]
-    else:
-        return []
 
 def check_hp_proliant_temp(item, params, info):
     for line in info:

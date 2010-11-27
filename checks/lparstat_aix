@@ -40,8 +40,6 @@ lparstat_default_levels = (5, 10)
 def inventory_lparstat(checkname, info):
     if len(info) == 1 and len(info[0]) >= 5:
         return [(None, "", "lparstat_default_levels")]
-    else:
-        return []
 
 def check_lparstat(item, params, info):
     try:

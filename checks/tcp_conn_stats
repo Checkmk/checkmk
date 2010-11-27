@@ -43,7 +43,6 @@ tcp_conn_stats_default_levels = { }
 def inventory_tcp_conn_stats(checkname, info):
     if len(info) > 0:
         return [ (None, 'tcp_conn_stats_default_levels') ]
-    return []
 
 def check_tcp_conn_stats(item, params, info):
     stats = dict(info)

@@ -1689,6 +1689,8 @@ def make_inventory(checkname, hostnamelist, check_only=False):
                 continue
             try:
                 inventory = inventory_function(checkname, info) # inventory is a list of pairs (item, current_value)
+                if inventory == None: # tolerate if function does no explicit return
+                    inventory = []
             except Exception, e:
                 if opt_debug:
                     raise

@@ -32,7 +32,6 @@ def inventory_win_cpuusage(checkname, info):
                 return [(None, None, "winperf_cpu_default_levels")]
         except:
             pass
-    return []
 
 winperf_cpu_default_levels = ( 101, 101 )
 

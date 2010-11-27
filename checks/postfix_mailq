@@ -58,8 +58,6 @@ postfix_mailq_default_levels = (10, 20)
 def inventory_postfix_mailq(checkname, info):
     if len(info) > 0 and info[0] != '':
         return [(None, 'postfix_mailq_default_levels')]
-    else:
-        return []
 
 def postfix_mailq_to_bytes(value, uom):
     uom = uom.lower()

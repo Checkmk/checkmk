@@ -31,8 +31,6 @@ threads_default_levels = (2000.0, 4000.0)
 def inventory_cpu_load(checkname, info):
     if len(info) == 1 and len(info[0]) >= 5:
         return [(None, "", "cpuload_default_levels")]
-    else:
-        return []
 
 def check_cpu_load(item, params, info):
     try:
@@ -61,8 +59,6 @@ def check_cpu_load(item, params, info):
 def inventory_cpu_threads(checkname, info):
     if len(info) == 1 and len(info[0]) >= 5:
         return [(None, "", "threads_default_levels")]
-    else:
-        return []
 
 def check_cpu_threads(item, params, info):
     try:

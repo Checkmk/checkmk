@@ -57,7 +57,6 @@ def inventory_nvidia_errors(checktype, info):
     for line in info:
         if line[0] == 'GPUErrors:':
             return [(None, None)]
-    return []
 
 def check_nvidia_errors(item, params, info):
     for line in info:

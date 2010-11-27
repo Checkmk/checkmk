@@ -32,7 +32,6 @@ def inventory_vms_mem(checkname, info):
     for line in info:
         if line[0] == "MEM":
             return [(None, "", "vms_memused_default_levels")]
-    return []
 
 
 # MEM 524288.00 20106.00 157124.00 26635.00 107394.00 168.00 7.00 9.00 3.00 0.00 0.00 8192.00 79.52

@@ -412,15 +412,21 @@ def mode_inventory(phase, firsttime):
             table = check_mk_automation("try-inventory", ["tcp", hostname])
             table.sort()
             active_checks = {}
+            new_target = "index"
             for st, ct, item, paramstring, params, descr, state, output, perfdata in table:
-                varname = "_%s_%s" % (ct, item)
-                if html.var(varname, "") != "":
+                if (html.has_var("_cleanup") or html.has_var("_fixall")) and st in [ "vanished", "obsolete" ]:
+                    pass
+                elif (html.has_var("_activate_all") or html.has_var("_fixall")) and st == "new":
                     active_checks[(ct, item)] = paramstring
+                else:
+                    varname = "_%s_%s" % (ct, item)
+                    if html.var(varname, "") != "":
+                        active_checks[(ct, item)] = paramstring
 
             check_mk_automation("set-autochecks", [hostname], active_checks)
             message = "Saved check configuration of host [%s] with %d checks" % (hostname, len(active_checks)) 
             log_pending(hostname, "set-autochecks", message) 
-            return "index", message
+            return new_target, message
         return "index"
 
     elif phase == "buttons":
@@ -600,17 +606,33 @@ def show_service_table(hostname, firsttime):
     table.sort()
 
     html.begin_form("checks")
-    html.button("_save", "Save check configuration")
+    fixall = 0
+    for entry in table:
+        if entry[0] == 'new' and not html.has_var("_activate_all") and not firsttime:
+            html.button("_activate_all", "Activate missing")
+            fixall += 1
+            break
+    for entry in table:
+        if entry[0] in [ 'obsolete', 'vanished', ]:
+            html.button("_cleanup", "Remove exceeding")
+            fixall += 1
+            break
+    if fixall == 2:
+        html.button("_fixall", "Fix all missing/exceeding")
+    
+        
+    html.button("_save", "Save manual check configuration")
     html.hidden_fields()
     html.write("<table class=services>\n")
+
     for state_name, state_type, checkbox in [ 
-        ( "Available checks", "new", firsttime ),
-        ( "Already configured checks", "old", True, ),
-        ( "Obsolete checks (being checked, but should be ignored)", "obsolete", True ),
-        ( "Ignored checks (configured away by admin)", "ignored", False ),
-        ( "Vanished checks (checks, but no longer exist)", "vanished", True ),
-        ( "Manual checks (defined in main.mk)", "manual", None ),
-        ( "Legacy checks (defined in main.mk)", "legacy", None )
+        ( "Available (missing) services", "new", firsttime ),
+        ( "Already configured services", "old", True, ),
+        ( "Obsolete services (being checked, but should be ignored)", "obsolete", True ),
+        ( "Ignored services (configured away by admin)", "ignored", False ),
+        ( "Vanished services (checked, but no longer exist)", "vanished", True ),
+        ( "Manual services (defined in main.mk)", "manual", None ),
+        ( "Legacy services (defined in main.mk)", "legacy", None )
         ]:
         first = True
         trclass = "even"

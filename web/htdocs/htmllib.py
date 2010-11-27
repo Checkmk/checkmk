@@ -433,6 +433,9 @@ class html:
     def set_var(self, varname, value):
         self.req.vars[varname] = value
 
+    def del_var(self, varname):
+        del self.req.vars[varname]
+
     def javascript(self, code):
         self.write("<script language=\"javascript\">\n%s\n</script>\n" % code)
 

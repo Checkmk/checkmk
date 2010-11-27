@@ -70,14 +70,27 @@
 #
 
 
+
+# Columns to fetch from hosts or services for displaying the icons
 icon_columns = [ "acknowledged", "scheduled_downtime_depth", "downtimes_with_info", "comments_with_info",
                  "notifications_enabled", "is_flapping", "modified_attributes_list", "active_checks_enabled",
                  "accept_passive_checks", "action_url_expanded", "notes_url_expanded", "in_notification_period",
                  "custom_variable_names", "custom_variable_values" ]
 
-def wato_link(filename, site, hostname):
+# Additional columns only to fetch for services
+icon_service_columns = [ "service_description" ]
+
+def wato_link(filename, site, hostname, where):
     prefix = config.site(site)["url_prefix"] + "check_mk/"
-    return prefix + "wato.py?filename=%s&host=%s&mode=edithost" % (htmllib.urlencode(filename), htmllib.urlencode(hostname))
+    url = prefix + "wato.py?filename=%s&host=%s" % (htmllib.urlencode(filename), htmllib.urlencode(hostname))
+    if where == "inventory":
+        url += "&mode=inventory"
+        help = "Edit services"
+    else:
+        url += "&mode=edithost"
+        help = "Open this host"
+    return '<a href="%s"><img class=icon src="images/icon_wato.gif" ' \
+           'title="%s in WATO - the Check_MK Web Administration Tool"></a>' % (url, help)
 
 def paint_icons(what, row): # what is "host" or "service"
     output = ""
@@ -152,15 +165,19 @@ def paint_icons(what, row): # what is "host" or "service"
     if not row[prefix + "in_notification_period"]:
         output += '<img class=icon title="Out of notification period" src="images/icon_outofnot.gif">'
 
-    # Link to WATO
+    # Link to WATO for hosts
     if "wato" in tags and what == "host":
         for tag in tags:
             if tag.endswith(".mk"):
                 wato_filename = tag
-                output += '<a href="%s"><img class=icon src="images/icon_wato.gif" ' \
-                          'title="Open this host in WATO - the Check_MK Web Administration Tool"></a>' % \
-                wato_link(wato_filename, row["site"], row["host_name"])
-                break
+                output += wato_link(wato_filename, row["site"], row["host_name"], "edithost")
+
+
+    # Link to WATO for Check_MK Inventory service
+    if what == "service":
+        wato_filename = custom_vars.get("WATO")
+        if wato_filename:
+            output += wato_link(wato_filename, row["site"], row["host_name"], "inventory")
 
     return "icons", output
 
@@ -168,7 +185,7 @@ def iconpainter_columns(what):
     cols = [ what + "_" + c for c in icon_columns ]
     cols += [ "host_name" ]
     if what == "service":
-        cols += [ "service_description" ]
+        cols += icon_service_columns
     return cols
 
 multisite_painters["service_icons"] = {

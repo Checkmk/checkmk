@@ -243,7 +243,6 @@ checks                               = []
 check_parameters                     = []
 legacy_checks                        = []
 all_hosts                            = []
-snmp_hosts                           = [ (['snmp'],   ALL_HOSTS) ]
 bulkwalk_hosts                       = []
 usewalk_hosts                        = []
 ignored_checktypes                   = [] # exclude from inventory
@@ -597,7 +596,16 @@ def check_uses_snmp(check_type):
     return snmp_info.has_key(check_name) or snmp_info_single.has_key(check_name)
 
 def is_snmp_host(hostname):
-    return in_binary_hostlist(hostname, snmp_hosts)
+    t = tags_of_host(hostname)
+    return "snmp" in t or "tcp+snmp" in t
+
+def is_tcp_host(hostname):
+    t = tags_of_host(hostname)
+    return "tcp" in t or "tcp+snmp" in t \
+        or ("ping" not in t and "snmp" not in t)
+
+def is_ping_host(hostname):
+    return not is_snmp_host(hostname) and not is_tcp_host(hostname)
 
 def is_bulkwalk_host(hostname):
     if bulkwalk_hosts:
@@ -654,7 +662,8 @@ def get_single_oid(hostname, ipaddress, oid):
     return value
 
 def snmp_scan(hostname, ipaddress):
-    sys.stdout.write("Scanning host %s(%s)..." % (hostname, ipaddress))
+    if opt_verbose:
+        sys.stdout.write("Scanning host %s(%s) for SNMP checks..." % (hostname, ipaddress))
     sys_descr = get_single_oid(hostname, ipaddress, ".1.3.6.1.2.1.1.1.0")
     if sys_descr == None:
         print "no SNMP answer"
@@ -665,8 +674,9 @@ def snmp_scan(hostname, ipaddress):
         try:
             if detect_function(lambda oid: get_single_oid(hostname, ipaddress, oid)):
                 found.append(checktype)
-                sys.stdout.write(tty_green + tty_bold + checktype + " " + tty_normal)
-                sys.stdout.flush()
+                if opt_verbose:
+                    sys.stdout.write(tty_green + tty_bold + checktype + " " + tty_normal)
+                    sys.stdout.flush()
         except:
             pass
 
@@ -676,14 +686,16 @@ def snmp_scan(hostname, ipaddress):
         if datatype not in snmp_info:
             continue # no snmp check
         if checktype not in snmp_scan_functions:
-            sys.stdout.write(tty_blue + tty_bold + checktype + tty_normal + " ")
-            sys.stdout.flush()
+            if opt_verbose:
+                sys.stdout.write(tty_blue + tty_bold + checktype + tty_normal + " ")
+                sys.stdout.flush()
             found.append(checktype)
 
-    if found == []:
-        sys.stdout.write("nothing detected.\n")
-    else:
-        sys.stdout.write("\n")
+    if opt_verbose:
+        if found == []:
+            sys.stdout.write("nothing detected.\n")
+        else:
+            sys.stdout.write("\n")
     return found
 
 
@@ -1568,35 +1580,36 @@ def create_nagios_config_commands(outfile):
 #   +----------------------------------------------------------------------+
 
 
-def inventorable_checktypes(include_snmp = True):
+def inventorable_checktypes(what): # tcp, all
     checknames = [ k for k in check_info.keys()
                    if check_info[k][3] != no_inventory_possible
                    and (k not in ignored_checktypes)
-                   and (include_snmp or not check_uses_snmp(k)) ]
+                   and (what == "all" or k not in snmp_info)
+                 ]
     checknames.sort()
     return checknames
 
-
-def do_snmp_scan(hostnamelist):
-    only_snmp_hosts = False
+def do_snmp_scan(hostnamelist, check_only=False, include_state=False):
     if hostnamelist == []:
         hostnamelist = all_hosts_untagged
-        only_snmp_hosts = True
+
+    result = []
     for hostname in hostnamelist:
-        if only_snmp_hosts and not is_snmp_host(hostname):
+        if not is_snmp_host(hostname):
             if opt_verbose:
                 sys.stdout.write("Skipping %s, not an snmp host\n" % hostname)
             continue
         try:
             ipaddress = lookup_ipaddress(hostname)
         except:
-            print "Cannot resolve %s into IP address. Skipping." % hostname
+            sys.stdout.write("Cannot resolve %s into IP address. Skipping.\n" % hostname)
             continue
         checknames = snmp_scan(hostname, ipaddress)
         for checkname in checknames:
             if opt_debug:
                 sys.stdout.write("Trying inventory for %s on %s\n" % (checkname, hostname))
-            make_inventory(checkname, [hostname])
+            result += make_inventory(checkname, [hostname], check_only, include_state)
+    return result
 
 
 def make_inventory(checkname, hostnamelist, check_only=False, include_state=False):
@@ -1621,12 +1634,16 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
 
     try:
         for host in hostnamelist:
-            # Skip SNMP-only hosts if checktype is not of type 'snmp'
-            if not is_snmp_check and is_snmp_host(host): 
+            # Skip SNMP checks on non-SNMP hosts
+            if is_snmp_check and not is_snmp_host(host): 
+                continue
+
+            # Skip TCP checks on non-TCP hosts
+            if not is_snmp_host and not is_tcp_host(host):
                 continue
 
             if is_cluster(host):
-                print "%s is a cluster host and cannot be inventorized." % host
+                sys.stderr.write("%s is a cluster host and cannot be inventorized.\n" % host)
                 continue
 
             # host is either hostname or "hostname/ipaddress"
@@ -1776,7 +1793,7 @@ def check_inventory(hostname):
             if only_snmp and not check_uses_snmp(ct):
                 continue # No TCP checks on SNMP-only hosts
             elif check_uses_snmp(ct) and ct not in hosts_checktypes:
-                continue
+                continue # Do not look for new SNMP services (why?)
             new = make_inventory(ct, [hostname], True)
             newitems += new
             count = len(new)
@@ -2020,6 +2037,7 @@ filesystem_default_levels = None
 
     # snmp hosts
     output.write("def is_snmp_host(hostname):\n   return %r\n\n" % is_snmp_host(hostname))
+    output.write("def is_tcp_host(hostname):\n   return %r\n\n" % is_tcp_host(hostname))
     output.write("def snmp_get_command(hostname):\n   return %r\n\n" % snmp_get_command(hostname))
     output.write("def snmp_walk_command(hostname):\n   return %r\n\n" % snmp_walk_command(hostname))
     output.write("def is_usewalk_host(hostname):\n   return %r\n\n" % is_usewalk_host(hostname))
@@ -2897,7 +2915,7 @@ Copyright (C) 2009 Mathias Kettner
 def usage():
     print """WAYS TO CALL:
  check_mk [-n] [-v] [-p] HOST [IPADDRESS]  check all services on HOST
- check_mk [-u] -I {tcp|snmp|...} [HOST ..] inventory - find new services
+ check_mk [-u] -I [HOST ..]                inventory - find new services
  check_mk [-u] -II ...                     renew inventory, drop old services
  check_mk -u, --cleanup-autochecks         reorder autochecks files
  check_mk -N [HOSTS...]                    output Nagios configuration
@@ -2939,9 +2957,10 @@ OPTIONS:
   --usewalk      use snmpwalk stored with --snmpwalk
   --debug        never catch Python exceptions
   --procs N      start up to N processes in parallel during --scan-parents
+  --checks A,..  restrict inventory to specified checks (tcp/snmp/check type)
 
 NOTES:
-  -I can be restricted to certain check types. Write '-I df' if you
+  -I can be restricted to certain check types. Write '-I --checks df' if you
   just want to look for new filesystems. Use 'check_mk -L' for a list
   of all check types. Use 'tcp' for all TCP based checks and 'snmp' for
   all SNMP based checks.
@@ -3405,15 +3424,19 @@ class MKAutomationError(Exception):
         return self.reason
 
 def automation_try_inventory(args):
-    what = args[0]
-    if what == "tcp":
-        checknames = inventorable_checktypes(False)
-    hostname = args[1]
+    hostname = args[0]
+    f = []
+
+    if is_snmp_host(hostname):
+        f = do_snmp_scan(hostname, True, True)
+
+    if is_tcp_host(hostname):
+        for cn in inventorable_checktypes("tcp"):
+            f += make_inventory(cn, [hostname], True, True)
+
     found = {}
-    for cn in checknames:
-        f = make_inventory(cn, [hostname], True, True)
-        for hn, ct, item, paramstring, state_type in f:
-           found[(ct, item)] = ( state_type, paramstring ) 
+    for hn, ct, item, paramstring, state_type in f:
+       found[(ct, item)] = ( state_type, paramstring ) 
 
     # Check if already in autochecks (but not found anymore)
     for hn, ct, item, params in autochecks:
@@ -3777,13 +3800,13 @@ backup_paths = [
 # if check_mk is not called as module
 if __name__ == "__main__":
     short_options = 'SHVLCURODMd:Ic:nhvpXPuN'
-    long_options = ["help", "version", "verbose", "compile", "debug",
-                    "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
-                    "flush", "package", "donate", "snmpwalk", "usewalk",
-                    "scan-parents", "procs=", "automation=", 
-                    "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
-                    "man", "nowiki", "config-check", "backup=", "restore=",
-                    "check-inventory=", "paths", "cleanup-autochecks" ]
+    long_options = [ "help", "version", "verbose", "compile", "debug",
+                     "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
+                     "flush", "package", "donate", "snmpwalk", "usewalk",
+                     "scan-parents", "procs=", "automation=", 
+                     "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
+                     "man", "nowiki", "config-check", "backup=", "restore=",
+                     "check-inventory=", "paths", "cleanup-autochecks", "checks=" ]
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -3793,6 +3816,7 @@ if __name__ == "__main__":
 
     done = False
     seen_I = 0
+    inventory_checks = None
     # Scan modifying options first (makes use independent of option order)
     for o,a in opts:
         if o in [ '-v', '--verbose' ]:
@@ -3825,6 +3849,8 @@ if __name__ == "__main__":
             opt_debug = True
         elif o == '-I':
             seen_I += 1
+        elif o == "--checks":
+            inventory_checks = a
 
     # Perform actions (major modes)
     try:
@@ -3925,47 +3951,29 @@ if __name__ == "__main__":
         sys.exit(3)
 
     if not done and seen_I > 0:
-        if len(args) == 0:
-            sys.stderr.write("Missing checktype or tcp or snmp.\n")
-            sys.exit(1)
 
-        checktype = args[0]
-        hostnames = args[1:]
+        hostnames = args
+        if inventory_checks:
+            checknames = inventory_checks.split(",")
 
-        if checktype == 'list':
-            print "Checktypes available for inventory are: %s" % (",".join(inventorable_checktypes()))
-        else:
-            # remove existing checks, if option -I is used twice
-            if seen_I > 1:
-                if checktype in [ "allsnmp", "snmp" ]:
-                    checknames = [ k for k in check_info.keys() if check_uses_snmp(k) ] 
-                elif checktype in [ "alltcp", "tcp" ]:
-                    checknames = [ k for k in check_info.keys() if not check_uses_snmp(k) ] 
-                else:
-                    checknames = checktype.split(',')
-
-                if len(hostnames) > 0:
-                    for host in hostnames:
-                        remove_autochecks_of(host, checknames)
-                else:
-                    for host in all_active_hosts() + all_active_clusters():
-                        remove_autochecks_of(host, checknames)
-
-                reread_autochecks()
-
-            if checktype in [ "allsnmp", "snmp" ]:
-                do_snmp_scan(hostnames)
+        # remove existing checks, if option -I is used twice
+        if seen_I > 1:
+            if inventory_checks == None:
+                checknames = inventorable_checktypes("all")
+            if len(hostnames) > 0:
+                for host in hostnames:
+                    remove_autochecks_of(host, checknames)
             else:
-                if checktype in [ "alltcp", "tcp" ]:
-                    checknames = inventorable_checktypes(False)
-                else:
-                    checknames = checktype.split(',')
-                if len(checknames) == 0:
-                    print "Please specify check types."
-                    usage()
-                    sys.exit(1)
-                for checkname in checknames:
-                    make_inventory(checkname, hostnames, False)
+                for host in all_active_hosts() + all_active_clusters():
+                    remove_autochecks_of(host, checknames)
+            reread_autochecks()
+
+        if inventory_checks == None:
+            do_snmp_scan(hostnames)
+            checknames = inventorable_checktypes("tcp")
+        
+        for checkname in checknames:
+            make_inventory(checkname, hostnames, False)
 
         # -u, --cleanup-autochecks called in stand alone mode
         if opt_cleanup_autochecks or always_cleanup_autochecks:

@@ -3,6 +3,11 @@ WATO:
     * Multisite: parameters nagios_url, nagios_cgi_url and pnp_url are now
       obsolete. Instead the new parameter url_prefix is used (which must
       end with a /).
+    * TCP / SNMP: hosts now must have the tag 'snmp' if they shall be 
+      monitored via SNMP. The variable snmp_hosts is obsolete. Hosts to
+      be monitored with SNMP and TCP must have the tag 'tcp+snmp'. Hosts
+      without any of those tags or with the tag 'tcp' are monitored via
+      'tcp'. Hosts with the tag 'ping' are only monitored via ping.
 
 1.1.9i1
     INCOMPATIBLE CHANGES:

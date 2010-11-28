@@ -361,6 +361,10 @@ class html:
                     (title, login_text, time.strftime("%H:%M")))
             self.write("<hr class=header>\n")
 
+    def body_start(self, title=''):
+        self.html_head(title)
+        self.write("<body class=main>")
+
     def footer(self):
         if self.req.header_sent:
             if self.focus_object:

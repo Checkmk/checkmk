@@ -81,6 +81,10 @@
     * Cleaned up several checks to meet the variable naming conventions
     * drbd: Handling unconfigured drbd devices correctly. These devices are
       ignored during nventory
+    * printer_supply: In case of OKI c5900 devices the name of the supply units ins not
+      unique. The color of the supply unit is reported in a dedicated OID and added to the
+      check item name to have a unique name now.
+    * prnter_supply: Added simple pnp template to have better graph formating for the check results
 
     Multisite:
     * The custom open/close states of custom links are now stored for each
@@ -93,6 +97,8 @@
     * New view for all services of a site
     * Sidebar snapin site_status: make link target configurable
     * Multisite view "Recently changed services": sort newest first
+    * Added options show_header and show_controls to remove the page headers
+      from views
 
 1.1.8:
     Core, Setup, etc.:

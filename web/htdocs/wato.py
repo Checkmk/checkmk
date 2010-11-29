@@ -232,15 +232,13 @@ def mode_changelog(phase):
 
     elif phase == "action":
         if html.check_transaction():
-            f = os.popen("check_mk -R 2>&1 >/dev/null")
-            errors = f.read()
-            exitcode = f.close()
-            if exitcode:
-                raise MKUserError(None, errors)
-            else:
-                log_commit_pending() # flush logfile with pending actions
-                log_audit(None, "activate-config", "Configuration activated, monitoring server restarted")
-                return None, "The new configuration has been successfully activated."
+            try:
+	        check_mk_automation("restart")
+            except Exception, e:
+                raise MKUserError(None, str(e))
+            log_commit_pending() # flush logfile with pending actions
+	    log_audit(None, "activate-config", "Configuration activated, monitoring server restarted")
+	    return None, "The new configuration has been successfully activated."
 
     else:
 
@@ -485,15 +483,20 @@ def parse_audit_log(what):
     return []
 
 
-def check_mk_automation(command, args, indata=""):
-    p = subprocess.Popen(["check_mk", "--automation", command ] + args, 
+def check_mk_automation(command, args=[], indata=""):
+    commandargs = defaults.check_mk_automation.split()
+    try:
+        p = subprocess.Popen(commandargs + [ command ] + args, 
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    except Exception, e:
+	raise MKGeneralException("Cannot execute <tt>%s</tt>: %s" % (commandargs[0], e))
     p.stdin.write(repr(indata))
     p.stdin.close()
     outdata = p.stdout.read()
     exitcode = p.wait()
     if exitcode != 0:
-        raise MKGeneralException(outdata)
+        raise MKGeneralException("Error running <tt>%s %s %s</tt>: <pre>%s</pre>" % 
+              (defaults.check_mk_automation, command, " ".join(args), outdata))
     return eval(outdata)
 
 

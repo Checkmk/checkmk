@@ -586,14 +586,16 @@ do
 	       sed -ri 's@^export MK_LIBDIR="(.*)"@export MK_LIBDIR="'"$agentslibdir"'"@' $agent 
 	       sed -ri 's@^export MK_CONFDIR="(.*)"@export MK_CONFDIR="'"$agentsconfdir"'"@' $agent 
 	   done &&
-	   mkdir -p $DESTDIR$vardir/{autochecks,counters,precompiled,cache,logwatch,web} &&
+	   mkdir -p $DESTDIR$vardir/{autochecks,counters,precompiled,cache,logwatch,web,wato} &&
 	   if [ -z "$DESTDIR" ] && id "$nagiosuser" > /dev/null 2>&1 && [ $UID = 0 ] ; then
 	     chown -R $nagiosuser $DESTDIR$vardir/{counters,cache,logwatch}
 	     chown $nagiosuser $DESTDIR$vardir/web
            fi &&
 	   if [ -z "$DESTDIR" ] ; then
 	     chgrp -R $wwwgroup $DESTDIR$vardir/web &&
-	     chmod -R g+w $DESTDIR$vardir/web
+	     chmod -R g+w $DESTDIR$vardir/web &&
+	     chgrp -R $wwwgroup $DESTDIR$vardir/wato &&
+	     chmod -R g+w $DESTDIR$vardir/wato
 	   fi &&
 	   mkdir -p $DESTDIR$confdir/conf.d && 
 	   tar xzf $SRCDIR/conf.tar.gz -C $DESTDIR$confdir &&

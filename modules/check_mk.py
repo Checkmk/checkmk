@@ -3094,7 +3094,7 @@ def do_update():
 
 def do_check_nagiosconfig():
     command = nagios_binary + " -v "  + nagios_config_file + " 2>&1"
-    sys.stderr.write("Validating Nagios configuration...")
+    sys.stdout.write("Validating Nagios configuration...")
     if opt_verbose:
         sys.stderr.write("Running '%s'" % command)
     sys.stderr.flush()
@@ -3103,26 +3103,26 @@ def do_check_nagiosconfig():
     output = process.read()
     exit_status = process.close()
     if not exit_status:
-        sys.stderr.write(tty_ok + "\n")
+        sys.stdout.write(tty_ok + "\n")
         return True
     else:
-        sys.stderr.write("ERROR:\n")
+        sys.stdout.write("ERROR:\n")
         sys.stderr.write(output)
         return False
 
 
 def do_restart_nagios(only_reload):
     action = only_reload and "load" or "start"
-    sys.stderr.write("Re%sing Nagios..." % action)
-    sys.stderr.flush()
+    sys.stdout.write("Re%sing Nagios..." % action)
+    sys.stdout.flush()
     command = nagios_startscript + " re%s 2>&1" % action
     process = os.popen(command, "r")
     output = process.read()
     if process.close():
-        sys.stderr.write("ERROR:\n")
+        sys.stdout.write("ERROR:\n")
         raise MKGeneralException("Cannot re%s Nagios" % action)
     else:
-        sys.stderr.write(tty_ok + "\n")
+        sys.stdout.write(tty_ok + "\n")
 
 def do_reload():
     do_restart(True)
@@ -3624,6 +3624,43 @@ def automation_delete_host(args):
         "%s/%s.*"  % (tcp_cache_dir, hostname)]:
         os.system("rm -rf '%s'" % path)
 
+def automation_restart():
+    old_stdout = sys.stdout
+    sys.stdout = file('/dev/null', 'w')
+    try:
+        if os.path.exists(nagios_objects_file):
+            backup_path = nagios_objects_file + ".save"
+            os.rename(nagios_objects_file, backup_path)
+        else:
+            backup_path = None
+
+        try:
+	    create_nagios_config(file(nagios_objects_file, "w"))
+        except Exception, e:
+	    if backup_path:
+		os.rename(backup_path, nagios_objects_file)
+	    raise MKAutomationError("Error creating configuration: %s" % e)
+
+        if do_check_nagiosconfig():
+            if backup_path:
+                os.remove(backup_path)
+            do_precompile_hostchecks()
+            do_restart_nagios(False)
+        else:
+            if backup_path:
+                os.rename(backup_path, nagios_objects_file)
+            else:
+                os.remove(nagios_objects_file)
+            raise MKAutomationError("Nagios configuration is invalid. Rolling back.")
+
+    except Exception, e:
+        if backup_path and os.path.exists(backup_path):
+            os.remove(backup_path)
+        raise MKAutomationError(str(e))
+
+    sys.stdout = old_stdout
+
+
 def do_automation(cmd, args):
     try:
         if cmd == "try-inventory":
@@ -3634,6 +3671,8 @@ def do_automation(cmd, args):
             result = automation_set_autochecks(args)
         elif cmd == "delete-host":
             result = automation_delete_host(args)
+        elif cmd == "restart":
+	    result = automation_restart()
         else:
             raise MKAutomationError("Automation command '%s' is not implemented." % cmd)
 

@@ -150,10 +150,15 @@ show_livestatus_errors = True
 #                             
 # Check_MK's Web Administration Tool
 
-# Declare files in conf.d/ to be editable with WATO
+# Declare files in conf.d/ to be editable with WATO. Please make
+# sure, that those files exist and are writable by Apache, e.g.:
+# touch /etc/check_mk/conf.d/network.mk
+# chgrp www /etc/check_mk/conf.d/network.mk
+# chmod 664 /etc/check_mk/conf.d/network.mk
+# 
 # config_files = [
-#   ("datacenter.mk", "Servers in Datacenter", [ "admin" ]),
 #   ("network.mk",    "Network, Infrastructure", [ "admin", "user" ] ),
+#   ("datacenter.mk", "Servers in Datacenter",   [ "admin" ]),
 # ]
 
 # Host tags to be used in WATO

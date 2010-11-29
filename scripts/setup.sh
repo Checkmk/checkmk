@@ -284,6 +284,12 @@ that need to be writable by the Nagios user (which is running check_mk
 in check mode). Please specify the user that should own those 
 directories"
 
+ask_dir -d wwwuser www-data www-data "User of Apache process" \
+  "Check_MK WATO (Web Administration Tool) needs a sudo configuration,
+such that Apache can run certain commands as $(id -un). If you specify
+the correct user of the apache process here, then we can create a valid
+sudo configuration for you later:"
+
 ask_dir -d wwwgroup nagios $(id -un) "Common group of Nagios+Apache" \
   "Check_mk creates files and directories while running as $nagiosuser. 
 Some of those need to be writable by the user that is running the webserver.
@@ -337,7 +343,7 @@ Please specify the complete path (dir + filename) of check_icmp"
 ask_title "Integration with Apache"
 # -------------------------------------------------------------------
 
-ask_dir url_prefix / / "URL Prefix for Multisite and addons" \
+ask_dir url_prefix / / "URL Prefix for Web addons" \
  "Usually the Multisite GUI is available at /check_mk/ and PNP4Nagios
 is located at /pnp4nagios/. In some cases you might want to define some
 prefix in order to be able to run more instances of Nagios on one host.
@@ -378,7 +384,7 @@ Those templates make the history graphs look nice. PNP4Nagios
 expects such templates in the directory pnp/templates in your
 document root for static web pages"
 
-ask_dir pnprraconf /usr/share/$NAME/pnp-rraconf $HOMEBASEDIR/pnp-rraconf "RRA configuration for PNP4Nagios" \
+ask_dir pnprraconf /usr/share/$NAME/pnp-rraconf $HOMEBASEDIR/pnp-rraconf "RRA config for PNP4Nagios" \
   "Check_MK ships RRA configuration files for its checks that 
 can be used by PNP when creating the RRDs. Per default, PNP 
 creates RRD such that for each variable the minimum, maximum
@@ -463,7 +469,7 @@ nagios_command_pipe_path    = '$nagpipe'
 nagios_status_file          = '$nagios_status_file'
 nagios_conf_dir             = '$nagconfdir'
 nagios_user                 = '$nagiosuser'
-logwatch_notes_url          = '$url_prefix/check_mk/logwatch.py?host=%s&file=%s'
+logwatch_notes_url          = '${url_prefix}check_mk/logwatch.py?host=%s&file=%s'
 www_group                   = '$wwwgroup'
 nagios_config_file          = '$nagios_config_file'
 nagios_startscript          = '$nagios_startscript'
@@ -475,10 +481,11 @@ web_dir                     = '$web_dir'
 livestatus_unix_socket      = '$livesock'
 livebackendsdir             = '$livebackendsdir'
 url_prefix                  = '$url_prefix'
-pnp_url                     = '$url_prefix/pnp4nagios/'
+pnp_url                     = '${url_prefix}pnp4nagios/'
 pnp_templates_dir           = '$pnptemplates'
 pnp_rraconf_dir             = '$pnprraconf'
 doc_dir                     = '$docdir'
+check_mk_automation         = 'sudo -u $(id -un) $bindir/check_mk --automation'
 EOF
 }
 
@@ -527,6 +534,37 @@ EOF
    popd 
 }
 
+
+create_sudo_configuration ()
+{
+    # sudo only possible if running as root
+    if [ $UID != 0 ] ; then
+	return
+    fi
+ 
+    sudoline="$wwwuser ALL = (root) NOPASSWD: $bindir/check_mk --automation *"
+
+    if [ ! -e /etc/sudoers ] ; then
+        echo "You do not have sudo installed. Please install sudo "
+        echo "and add the following line to /etc/sudoers if you want"
+        echo "to use WATO - the Check_MK Web Administration Tool"
+        echo
+        echo "$sudoline"
+        echo 
+        echo
+        return
+    fi
+
+    if fgrep -q 'check_mk --automation' /etc/sudoers 2>/dev/null
+    then
+        # already present. Do not touch.
+        return
+    fi
+
+    echo >> /etc/sudoers
+    echo "# Needed for  WATO - the Check_MK Web Administration Tool" >> /etc/sudoers
+    echo "$sudoline" >> /etc/sudoers
+}
 
 while true
 do
@@ -660,7 +698,7 @@ do
 # inconveniance.
 
 <IfModule mod_python.c>
-  Alias $url_prefix/check_mk $web_dir/htdocs
+  Alias ${url_prefix}check_mk $web_dir/htdocs
   <Directory $web_dir/htdocs>
         AddHandler mod_python .py
         PythonHandler index
@@ -695,7 +733,7 @@ and change the path there. Restart Apache afterwards."
 </IfModule>
 
 <IfModule !mod_python.c>
-  Alias $url_prefix/check_mk $web_dir/htdocs
+  Alias ${url_prefix}check_mk $web_dir/htdocs
   <Directory $web_dir/htdocs>
         Deny from all
         ErrorDocument 403 "<h1>Check_mk: Incomplete Apache2 Installation</h1>\
@@ -711,10 +749,11 @@ EOF
 		   sed -i "s@$web_dir@$web_dir/htdocs@g" $d
 	       fi
 	   done &&
+	   create_sudo_configuration &&
 	   if [ -z "$YES" ] ; then
 	       echo -e "Installation completed successfully.\nPlease restart Nagios and Apache in order to update/active check_mk's web pages."
 	       echo
-	       echo -e "You can access the new Multisite GUI at http://localhost$url_prefix/check_mk/"
+	       echo -e "You can access the new Multisite GUI at http://localhost${url_prefix}check_mk/"
            fi ||
 	   echo "ERROR!"
 	   exit

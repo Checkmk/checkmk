@@ -144,8 +144,8 @@ def mode_index(phase):
     else:
         # Show table of hosts in this file
         html.write("<table class=services>\n")
-        html.write("<tr><th>Hostname</th><th>Alias</th>"
-                   "<th>IP Address</th><th>Tags</th><th>Actions</th></tr>\n")
+        html.write("<tr><th></th><th>Hostname</th><th>Alias</th>"
+                   "<th>IP Address</th><th>Tags</th></tr>\n")
         odd = "even"
 
         hostnames = g_hosts.keys()
@@ -161,6 +161,12 @@ def mode_index(phase):
 
             html.write('<tr class="data %s0"><td><a href="%s">%s</a></td>' % 
                     (odd, edit_url, hostname))
+            html.write("<td>")
+            html.buttonlink(edit_url, "Edit")
+            html.buttonlink(services_url, "Services")
+            html.buttonlink(clone_url, "Clone")
+            html.buttonlink(delete_url, "Delete")
+            html.write("</td>")
             html.write("<td>%s</td>" % (alias and alias or ""))
             tdclass = ""
             if not ipaddress:
@@ -173,12 +179,6 @@ def mode_index(phase):
                     tdclass = ' class="dnserror"'
             html.write("<td%s>%s</td>" % (tdclass, ipaddress))
             html.write("<td>%s</td>" % ", ".join(tags))
-            html.write("<td>")
-            html.buttonlink(edit_url, "Edit")
-            html.buttonlink(services_url, "Services")
-            html.buttonlink(clone_url, "Clone")
-            html.buttonlink(delete_url, "Delete")
-            html.write("</td>")
             html.write("</tr>\n")
 
         html.write("</table>\n")
@@ -312,11 +312,14 @@ def mode_edithost(phase, new):
                 raise MKUserError("ipaddress", "Hostname <b><tt>%s</tt></b> cannot be resolved into an IP address. "
                             "Please check hostname or specify an explicit IP address." % hostname)
 
-        tags = []
+        tags = set([])
         for tagno, (tagname, taglist) in enumerate(config.host_tags):
             value = html.var("tag_%d" % tagno)
             if value:
-                tags.append(value)
+                tags.add(value)
+                for entry in taglist:
+                    if entry[0] == value and len(entry) > 2:
+                        tags.update(entry[2]) # extra tags
 
         # handle clone & new
         if new:
@@ -374,7 +377,9 @@ def mode_edithost(phase, new):
             # get current value of tag
             tagvalue = None
             duplicate = False
-            for tag, descr in taglist:
+            for entry in taglist:
+                tag = entry[0]
+                descr = entry[1]
                 if tag in tags:
                     if tagvalue:
                         duplicate = True
@@ -383,7 +388,7 @@ def mode_edithost(phase, new):
             tagvar = "tag_%d" % tagno
             html.write("<tr><td class=legend>%s</td>" % tagname)
             html.write("<td class=content>")
-            html.select(tagvar, taglist, tagvalue)
+            html.select(tagvar, [e[:2] for e in taglist], tagvalue)
             if duplicate: # tag not unique before editing
                 html.write("(!)")
             html.write("</td></tr>\n")
@@ -409,7 +414,7 @@ def mode_inventory(phase, firsttime):
 
     elif phase == "action":
         if html.check_transaction():
-            table = check_mk_automation("try-inventory", ["tcp", hostname])
+            table = check_mk_automation("try-inventory", [hostname])
             table.sort()
             active_checks = {}
             new_target = "index"
@@ -509,7 +514,7 @@ def read_configuration_file():
         for h in variables["all_hosts"]:
             parts = h.split('|')
             hostname = parts[0]
-            tags = [ tag for tag in parts[1:] if tag != 'wato' and not tag.endswith('.mk') ]
+            tags = set([ tag for tag in parts[1:] if tag != 'wato' and not tag.endswith('.mk') ])
             ipaddress = variables["ipaddresses"].get(hostname)
             aliases = host_extra_conf(hostname, variables["extra_host_conf"]["alias"]) 
             if len(aliases) > 0:
@@ -529,7 +534,7 @@ def write_configuration_file():
         alias, ipaddress, tags = g_hosts[hostname]
         if alias:
             aliases.append((alias, [hostname]))
-        all_hosts.append("|".join([hostname] + tags + [ g_filename, 'wato' ]))
+        all_hosts.append("|".join([hostname] + list(tags) + [ g_filename, 'wato' ]))
         if ipaddress:
             ipaddresses[hostname] = ipaddress
 
@@ -604,7 +609,7 @@ def changelog_button():
 
 def show_service_table(hostname, firsttime):
     # Read current check configuration
-    table = check_mk_automation("try-inventory", ["tcp", hostname])
+    table = check_mk_automation("try-inventory", [hostname])
     table.sort()
 
     html.begin_form("checks")
@@ -667,6 +672,7 @@ def delete_host_after_confirm(delname):
     if not html.transaction_valid():
         return None  # Browser reload
 
+    wato_html_head("Confirm host deletion")
     c = html.confirm("Do you really want to delete the host <tt>%s</tt>?" % delname)
     if c:
         del g_hosts[delname]
@@ -678,3 +684,7 @@ def delete_host_after_confirm(delname):
         return ""
     else:
         return None # browser reload 
+
+def wato_html_head(title):
+    html.header("Check_MK WATO - " + title)
+    html.write("<div class=wato>\n")

@@ -14,7 +14,7 @@ Besser wäre es, systematischer Tags einzuführen:
 snmp: Host wird per SNMP angesprochen
 tcp:  Host wird per TCP angesprochen
 ping: Host wird nur angepingt (kein TCP und kein SNMP)
-tcp|snmp: Host wird per TCP und SNMP angesprochen
+tcp+snmp: Host wird per TCP und SNMP angesprochen
 
 gar kein Tag: gleichbedeutend mit tcp
 
@@ -38,8 +38,8 @@ Jetzt könnte man den Aufruf von check_mk -I abwandeln. Man könnte das
 tcp oder snmp weglassen und stattdessen nach den Tags gehen. 
 
 check_mk -I zbghora50                       --> diesen Host inventurisieren, je nach Tag-Lage
-check_mk -I zbghora50 --checks df,mem.used  --> Checktypen explizit angeben
-check_mk -I zbghora50 --checks snmp         --> Alle snmp checks (Warnung, falls Tags snmp bei dem Host fehlt)
+check_mk --checks df,mem.used -I zbghora50  --> Checktypen explizit angeben
+check_mk --checks snmp        -I zbghora50  --> Alle snmp checks (Warnung, falls Tags snmp bei dem Host fehlt)
 
 Die Konfigurationsprüfung prüft folgendes:
 

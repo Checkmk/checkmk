@@ -357,7 +357,7 @@ def mode_edithost(phase, new):
         html.write("</td></tr>\n")
 
         # alias
-        html.write("<tr><td class=legend>Alias<br><i>(optional</i></td><td class=content>")
+        html.write("<tr><td class=legend>Alias<br><i>(optional)</i></td><td class=content>")
         html.text_input("alias", alias)
         html.write("</td></tr>\n")
 

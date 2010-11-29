@@ -138,7 +138,40 @@ show_livestatus_errors = True
 # Default is 'main.py'
 # start_url = 'view.py?view_name=hostgroups'
 
-
 # Quicksearch: Limit the number of hits to shop in dropdown.
 # Default is to show at most 80 items.
 # quicksearch_dropdown_limit = 80
+
+#   __        ___  _____ ___  
+#   \ \      / / \|_   _/ _ \ 
+#    \ \ /\ / / _ \ | || | | |
+#     \ V  V / ___ \| || |_| |
+#      \_/\_/_/   \_\_| \___/ 
+#                             
+# Check_MK's Web Administration Tool
+
+# Declare files in conf.d/ to be editable with WATO
+# config_files = [
+#   ("datacenter.mk", "Servers in Datacenter", [ "admin" ]),
+#   ("network.mk",    "Network, Infrastructure", [ "admin", "user" ] ),
+# ]
+
+# Host tags to be used in WATO
+# host_tags = [
+#  ( "Operating System", [
+#       ( "lnx", "Linux", [ 'tcp' ]),
+#       ( "win", "Windows", [ 'tcp', 'snmp' ]),
+#       ( "net", "Network device", [ 'snmp' ]),
+#       ( "ping", "Other PING-only device", ),
+#    ]),
+#  ( "Productivity", [
+#       ( "prod", "Production System" ),
+#       ( "test", "Test System" ),
+#    ]),
+#  ( "Bulkwalk (SNMP v2c)", [
+#       ( None,   "simple walk (SNMP v1)"),
+#       ( "bulk", "Bulkwalk (SNMP v2c)" ),
+#    ]),
+# 
+# ]
+

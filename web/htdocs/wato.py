@@ -551,6 +551,8 @@ def write_configuration_file():
         out.write("\n")
 
     # all WATO information to Check_MK's inventory checks (needed for link in Multisite)
+    out.write("\n\nif '_WATO' not in extra_service_conf:\n"
+            "    extra_service_conf['_WATO'] = []\n")
     out.write("\nextra_service_conf['_WATO'] += [ \n"
               "  ('%s', [ 'wato', '%s' ], ALL_HOSTS, [ 'Check_MK inventory' ] ) ]\n" % (g_filename, g_filename))
 
@@ -573,6 +575,7 @@ def check_filename():
         if fn == filename:
             title = t
             break
+
     if not title:
         raise MKGeneralException("No config file <tt>%s</tt> is declared in <tt>multisite.mk</tt>" % filename)
 

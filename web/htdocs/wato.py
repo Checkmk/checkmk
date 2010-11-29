@@ -141,8 +141,8 @@ def mode_index(phase):
     else:
         # Show table of hosts in this file
         html.write("<table class=services>\n")
-        html.write("<tr><th></th><th>Hostname</th><th>Alias</th>"
-                   "<th>IP Address</th><th>Tags</th></tr>\n")
+        html.write("<tr><th></th><th>Hostname</th>"
+                   "<th>IP&nbsp;Address</th><th>Tags</th><th>Alias</th></tr>\n")
         odd = "even"
 
         hostnames = g_hosts.keys()
@@ -165,7 +165,6 @@ def mode_index(phase):
             html.buttonlink(delete_url, "Delete")
             html.write("</td>")
             html.write('<td><a href="%s">%s</a></td>' % (edit_url, hostname))
-            html.write("<td>%s</td>" % (alias and alias or ""))
             tdclass = ""
             if not ipaddress:
                 try:
@@ -176,7 +175,8 @@ def mode_index(phase):
                     ipaddress = "(hostname not resolvable!)"
                     tdclass = ' class="dnserror"'
             html.write("<td%s>%s</td>" % (tdclass, ipaddress))
-            html.write("<td>%s</td>" % ", ".join(tags))
+            html.write("<td>%s</td>" % ",&nbsp;".join(tags))
+            html.write("<td class=takeall>%s</td>" % (alias and alias or ""))
             html.write("</tr>\n")
 
         html.write("</table>\n")

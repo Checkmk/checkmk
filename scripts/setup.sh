@@ -542,14 +542,14 @@ create_sudo_configuration ()
 	return
     fi
  
-    sudoline="$wwwuser ALL = (root) NOPASSWD: $bindir/check_mk --automation *"
+    sudolines="Defaults:$wwwuser !requiretty\n$wwwuser ALL = (root) NOPASSWD: $bindir/check_mk --automation *"
 
     if [ ! -e /etc/sudoers ] ; then
         echo "You do not have sudo installed. Please install sudo "
         echo "and add the following line to /etc/sudoers if you want"
         echo "to use WATO - the Check_MK Web Administration Tool"
         echo
-        echo "$sudoline"
+        echo -e "$sudolines"
         echo 
         echo
         return
@@ -563,7 +563,7 @@ create_sudo_configuration ()
 
     echo >> /etc/sudoers
     echo "# Needed for  WATO - the Check_MK Web Administration Tool" >> /etc/sudoers
-    echo "$sudoline" >> /etc/sudoers
+    echo -e "$sudolines" >> /etc/sudoers
 }
 
 while true

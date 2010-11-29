@@ -1,56 +1,14 @@
-* Es fehlt noch SNMP. Keine Ahnung, wie ich das am besten umsetze
-
-Inventursteuerung heute
-
-check_mk -I tcp  --> Alle TCP Checks
-check_mk -I snmp --> Alle SNMP Checks
-
-Inventurcheck: Prüft alle TCP Checks (falls tag snmp fehlt) und
-alle SNMP Checks, von denen der Host schon mindestens einen hat.
--> irgendwie doof.
-
-Besser wäre es, systematischer Tags einzuführen:
-
-snmp: Host wird per SNMP angesprochen
-tcp:  Host wird per TCP angesprochen
-ping: Host wird nur angepingt (kein TCP und kein SNMP)
-tcp+snmp: Host wird per TCP und SNMP angesprochen
-
-gar kein Tag: gleichbedeutend mit tcp
-
-der Inventurcheck wird das berücksichtigen und gleichzeitig
-die Beschränkung aufheben, dass nur nach schon bestehenden 
-Checks gesucht wird.
-
-
-Umsetzung:
-
-Erst Funktionen:
-
-is_snmp_host() --> hat Tag 'snmp'
-is_tcp_host()  --> hat *nicht* 'ping' oder 'snmp' oder hat 'tcp'
-is_ping_host() --> hat 'ping' ( bzw. ist weder snmp_host noch tcp_host )
-
-Beim Generieren der Services wird aber der 'PING' unabhängig von
-den Tags erzeugt, sondern immer dann, wenn kein Service eingerichtet ist.
-
-Jetzt könnte man den Aufruf von check_mk -I abwandeln. Man könnte das
-tcp oder snmp weglassen und stattdessen nach den Tags gehen. 
-
-check_mk -I zbghora50                       --> diesen Host inventurisieren, je nach Tag-Lage
-check_mk --checks df,mem.used -I zbghora50  --> Checktypen explizit angeben
-check_mk --checks snmp        -I zbghora50  --> Alle snmp checks (Warnung, falls Tags snmp bei dem Host fehlt)
-
-Die Konfigurationsprüfung prüft folgendes:
-
-Wenn ein Host SNMP Checks hat, dann muss es auch ein SNMP-Host sein.
-Gleiches gilt für TCP.  
-
-WICHTIG FUER DIE DOKU:
 
 SNMP Hosts *müssen* das Tag snmp bekommen - sonst geht garnichts. Keine Inventur.
 Auch nicht mit expliziten Checks. Nichts.
 
 * Doku
+
+* Logfiles pro Dateiname
+* Berechtigungen für nicht-OMD bzw. OMD 'shared'
+  * check_mk --automation als welcher Benutzer? 
+  * check_mk -R ==> check_mk --automation restart
+  * Rechte für die conf.d/hirni.mk
+
 
 

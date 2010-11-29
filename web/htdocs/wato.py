@@ -1,9 +1,6 @@
 #!/usr/bin/python
 # encoding: utf-8
 
-# TODO: Ein Logfile pro filename anlegen, z.B. mit Unterverzeichnis
-# var/web/wato/windows/audit.log
-
 # -----------------------------------------------------------------
 #       ___       _ _   
 #      |_ _|_ __ (_) |_ 
@@ -29,7 +26,7 @@ config.declare_permission("use_wato",
      "Only with this permission, users are allowed to use Check_MK web configuration GUI.",
      [ "admin", ])
 
-conf_dir = defaults.var_dir + "/wato/"
+conf_dir = defaults.var_dir + "/wato"
 
 # -----------------------------------------------------------------
 #       __  __       _       
@@ -159,14 +156,15 @@ def mode_index(phase):
 
             odd = odd == "odd" and "even" or "odd" 
 
-            html.write('<tr class="data %s0"><td><a href="%s">%s</a></td>' % 
-                    (odd, edit_url, hostname))
+            html.write('<tr class="data %s0">' % odd)
+    
             html.write("<td>")
             html.buttonlink(edit_url, "Edit")
             html.buttonlink(services_url, "Services")
             html.buttonlink(clone_url, "Clone")
             html.buttonlink(delete_url, "Delete")
             html.write("</td>")
+            html.write('<td><a href="%s">%s</a></td>' % (edit_url, hostname))
             html.write("<td>%s</td>" % (alias and alias or ""))
             tdclass = ""
             if not ipaddress:
@@ -452,9 +450,11 @@ def mode_inventory(phase, firsttime):
 #   
 # -----------------------------------------------------------------
 
-def log_entry(hostname, action, message, g_filename):
+def log_entry(hostname, action, message, logfilename):
     make_nagios_directory(conf_dir)
-    log_file = conf_dir + g_filename
+    log_dir = conf_dir + "/" + g_filename
+    make_nagios_directory(log_dir)
+    log_file = log_dir + "/" + logfilename
     create_user_file(log_file, "a").write("%d %s %s %s\n" % 
             (int(time.time()), html.req.user, action, message))
 
@@ -469,12 +469,12 @@ def log_pending(hostname, what, message):
 
 
 def log_commit_pending():
-    pending = conf_dir + "pending.log"
+    pending = conf_dir + "/" + g_filename + "/pending.log"
     if os.path.exists(pending):
         os.remove(pending)
 
 def parse_audit_log(what):
-    path = "%s%s.log" % (conf_dir, what)
+    path = "%s/%s/%s.log" % (conf_dir, g_filename, what)
     if os.path.exists(path):
         entries = []
         for line in file(path):
@@ -573,6 +573,8 @@ def check_filename():
     filename = html.var("filename")
     if not filename:
         raise MKGeneralException("You called this page without a filename!")
+    if '/' in filename:
+        raise MKGeneralException("You called this page with an invalid filename!")
 
     # Get alias (title) for filename
     title = None

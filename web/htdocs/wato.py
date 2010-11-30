@@ -497,7 +497,11 @@ def check_mk_automation(command, args=[], indata=""):
     if exitcode != 0:
         raise MKGeneralException("Error running <tt>%s %s %s</tt>: <pre>%s</pre>" % 
               (defaults.check_mk_automation, command, " ".join(args), outdata))
-    return eval(outdata)
+    try:
+        return eval(outdata)
+    except Exception, e:
+        raise MKGeneralException("Error running <tt>%s %s %s</tt>. Invalid output from webservice (%s): <pre>%s</pre>" %
+                      (defaults.check_mk_automation, command, " ".join(args), e, outdata))
 
 
 def read_configuration_file():
@@ -525,7 +529,7 @@ def read_configuration_file():
             else:
                 alias = None
             g_hosts[hostname] = (alias, ipaddress, tags)
-            
+
 
 def write_configuration_file():
     all_hosts = []

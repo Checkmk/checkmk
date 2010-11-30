@@ -493,27 +493,44 @@ def check_mk_automation(command, args=[], indata=""):
     if defaults.check_mk_automation:
         commandargs = defaults.check_mk_automation.split()
     else:
-        omd_mode, omd_site = html.omd_mode()
+        apache_user, omd_mode, omd_site = html.omd_mode()
         if not omd_mode or omd_mode == 'own':
             commandargs = [ 'check_mk', '--automation' ]
         else:
-            commandargs = [ 'python',
+            commandargs = [ 'sudo', '-u', omd_site, '/usr/bin/env', 'python',
                             '/omd/sites/'+omd_site+'/share/check_mk/modules/check_mk.py',
                             '--defaults', '/omd/sites/'+omd_site+'/etc/check_mk/defaults',
                             '--automation' ]
+
+    if commandargs[0] == 'sudo':
+        sudo_msg = ("<p>The webserver is running as user which has no rights on the "
+                    "needed Check_MK/Nagios files.<br />Please ensure you have set-up "
+                    "the sudo environment correctly. e.g. proceed as follows:</p>\n"
+                    "<ol><li>install sudo package</li>\n"
+                    "<li>Append the following to the <code>/etc/sudoers</code> file:\n"
+                    "<pre># Needed for WATO - the Check_MK Web Administration Tool\n"
+                    "Defaults:%s !requiretty\n"
+                    "%s ALL = (%s) NOPASSWD: %s *\n"
+                    "</pre></li>\n"
+                    "<li>Retry this operation</li></ol>\n" %
+                    (apache_user, apache_user, omd_site, " ".join(commandargs[2:])))
+
     cmd = commandargs + [ command ] + args
     try:
         p = subprocess.Popen(cmd,
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     except Exception, e:
-	raise MKGeneralException("Cannot execute <tt>%s</tt>: %s" % (commandargs[0], e))
+        if commandargs[0] == 'sudo':
+            raise MKGeneralException("Cannot execute <tt>%s</tt>: %s<br /><br >%s" % (commandargs[0], e, sudo_msg))
+        else:
+            raise MKGeneralException("Cannot execute <tt>%s</tt>: %s" % (commandargs[0], e))
     p.stdin.write(repr(indata))
     p.stdin.close()
     outdata = p.stdout.read()
     exitcode = p.wait()
     if exitcode != 0:
-        raise MKGeneralException("Error running <tt>%s</tt>: <pre>%s</pre>" %
-              (" ".join(cmd), outdata))
+        raise MKGeneralException("Error running <tt>%s</tt>: <pre>%s</pre>%s" %
+              (" ".join(cmd), outdata, sudo_msg))
     try:
         return eval(outdata)
     except Exception, e:

@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import time, cgi, config, os, defaults
+import time, cgi, config, os, defaults, pwd
 from lib import *
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
@@ -496,7 +496,8 @@ class html:
             self.write("Booom (%s)" % url)
 
     def omd_mode(self):
+        apache_user = pwd.getpwuid( os.getuid() )[ 0 ]
         if 'OMD_SITE' in self.req.subprocess_env and 'OMD_MODE' in self.req.subprocess_env:
-            return (self.req.subprocess_env['OMD_MODE'], self.req.subprocess_env['OMD_SITE'])
+            return (apache_user, self.req.subprocess_env['OMD_MODE'], self.req.subprocess_env['OMD_SITE'])
         else:
-            return (None, None)
+            return (apache_user, None, None)

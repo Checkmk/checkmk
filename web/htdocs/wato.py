@@ -499,8 +499,7 @@ def check_mk_automation(command, args=[], indata=""):
             cmd = commandargs  + [ command ] + args
         else:
             commandargs = [ 'sudo', '/bin/su', '-', omd_site, '-c', 'check_mk --automation' ]
-            cmd = commandargs
-            cmd[-1] += ' ' + ' '.join([ command ] + args)
+            cmd = commandargs[:-1] + [ commandargs[-1] + ' ' + ' '.join([ command ] + args) ]
 
     if commandargs[0] == 'sudo':
         sudo_msg = ("<p>The webserver is running as user which has no rights on the "
@@ -510,10 +509,10 @@ def check_mk_automation(command, args=[], indata=""):
                     "<li>Append the following to the <code>/etc/sudoers</code> file:\n"
                     "<pre># Needed for WATO - the Check_MK Web Administration Tool\n"
                     "Defaults:%s !requiretty\n"
-                    "%s ALL = (%s) NOPASSWD: %s *\n"
+                    "%s ALL = (root) NOPASSWD: %s\ *\n"
                     "</pre></li>\n"
                     "<li>Retry this operation</li></ol>\n" %
-                    (apache_user, apache_user, omd_site, " ".join(commandargs[1:])))
+                    (apache_user, apache_user, " ".join(commandargs[1:-1] + [ commandargs[-1].replace(' ', '\ ')])))
     try:
         p = subprocess.Popen(cmd,
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)

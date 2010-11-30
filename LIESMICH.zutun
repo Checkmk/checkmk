@@ -88,6 +88,7 @@ geloggt wird nur das Starten und Beenden (was ja im Hauptthread läuft).
 Windows-Agent: Memory-Check neu machen. Swap stimmt nicht. Evtl. zwei
 getrennte Checks für Memory and Pagefile.
 
+
 -------------------------------------------------------------------------------
 ab 1.1.9i1:
 --------------------------------------------------------------------------------
@@ -507,3 +508,4 @@ dies nur wenn wenn in config was ändert oder bei livestatus
 (wegen der persistenten Verbindungen). Sonst kanns einem egal
 sein, wenn man ein neues Modul bekommt.
 
+Windows-Agent: VB-Scripts automatisch mit cscript ausführen.

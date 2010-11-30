@@ -18,21 +18,26 @@ admin_users = [ "nagiosadmin" ]
 
 # Sites to connect to. If this variable is unset, a single
 # connection to the local host is done.
-# sites = {
-#    # connect to local Nagios
-#    "local" : {
-#         "alias" : "Munich"
+#sites = {
+#   # connect to local Nagios
+#   "local" : {
+#        "alias" : "Munich"
+#   },
+#
+#   # connect to remote site (e.g. local OMD site 'paris')
+#   "paris": {
+#        "alias":          "Paris",
+#        "socket":         "tcp:127.0.0.1:6557",
+#        "url_prefix":     "/paris/",
 #    },
-# 
-#    # connect to remote site
-#    "paris": {
-#         "alias":          "Paris",
-#         "socket":         "tcp:10.0.0.2:6557",
-#         "nagios_url":     "/paris/nagios",
-#         "nagios_cgi_url": "/paris/nagios/cgi-bin",
-#         "pnp_url":        "/paris/pnp4nagios/",
-#     },
-# }
+#
+#   # connect to remote site (site on remote host)
+#   "rome": {
+#        "alias":          "Rome",
+#        "socket":         "tcp:10.0.0.2:6557",
+#        "url_prefix":     "http://10.0.0.2/rome/",
+#    },
+#}
 
 # 
 # NagVis
@@ -133,7 +138,45 @@ show_livestatus_errors = True
 # Default is 'main.py'
 # start_url = 'view.py?view_name=hostgroups'
 
-
 # Quicksearch: Limit the number of hits to shop in dropdown.
 # Default is to show at most 80 items.
 # quicksearch_dropdown_limit = 80
+
+#   __        ___  _____ ___  
+#   \ \      / / \|_   _/ _ \ 
+#    \ \ /\ / / _ \ | || | | |
+#     \ V  V / ___ \| || |_| |
+#      \_/\_/_/   \_\_| \___/ 
+#                             
+# Check_MK's Web Administration Tool
+
+# Declare files in conf.d/ to be editable with WATO. Please make
+# sure, that those files exist and are writable by Apache, e.g.:
+# touch /etc/check_mk/conf.d/network.mk
+# chgrp www /etc/check_mk/conf.d/network.mk
+# chmod 664 /etc/check_mk/conf.d/network.mk
+# 
+# config_files = [
+#   ("network.mk",    "Network, Infrastructure", [ "admin", "user" ] ),
+#   ("datacenter.mk", "Servers in Datacenter",   [ "admin" ]),
+# ]
+
+# Host tags to be used in WATO
+# host_tags = [
+#  ( "Operating System", [
+#       ( "lnx", "Linux", [ 'tcp' ]),
+#       ( "win", "Windows", [ 'tcp', 'snmp' ]),
+#       ( "net", "Network device", [ 'snmp' ]),
+#       ( "ping", "Other PING-only device", ),
+#    ]),
+#  ( "Productivity", [
+#       ( "prod", "Production System" ),
+#       ( "test", "Test System" ),
+#    ]),
+#  ( "Bulkwalk (SNMP v2c)", [
+#       ( None,   "simple walk (SNMP v1)"),
+#       ( "bulk", "Bulkwalk (SNMP v2c)" ),
+#    ]),
+# 
+# ]
+

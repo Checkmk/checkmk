@@ -623,12 +623,12 @@ function sidebar_scheduler() {
             get_url(url, updateContents, "snapin_" + name);
         }
     }
-		// Detect page changes and re-register the mousemove event handler
-		// in the content frame. another bad hack ... narf
-		if(contentLocation != parent.frames[1].document.location) {
-			registerEdgeListeners(parent.frames[1]);
-			contentLocation = parent.frames[1].document.location;
-		}
+    // Detect page changes and re-register the mousemove event handler
+    // in the content frame. another bad hack ... narf
+    if (contentLocation != parent.frames[1].document.location) {
+        registerEdgeListeners(parent.frames[1]);
+        contentLocation = parent.frames[1].document.location;
+    }
     setTimeout(function(){sidebar_scheduler();}, 1000);
 }
 

@@ -1,0 +1,5 @@
+#!/bin/bash
+sudo cp web/plugins/sidebar/webconf.py ~webconf/local/share/check_mk/web/plugins/sidebar/
+sudo cp web/plugins/pages/webconf.py ~webconf/local/share/check_mk/web/plugins/pages/
+sudo cp web/htdocs/webconf.py ~webconf/local/share/check_mk/web/htdocs/
+

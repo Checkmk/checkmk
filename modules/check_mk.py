@@ -1700,15 +1700,19 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
             try:
                 info = get_realhost_info(hostname, ipaddress, checkname_base, inventory_max_cachefile_age)
             except MKAgentError, e:
-                if check_only and str(e):
+                # This special handling is needed for the inventory check. It needs special
+                # handling for WATO.
+                if check_only and not include_state and str(e):
                     raise
-		elif str(e):
+		elif not include_state and str(e):
 		    sys.stderr.write("Host '%s': %s\n" % (hostname, str(e)))
                 continue
             except MKSNMPError, e:
-                if check_only and str(e):
+                # This special handling is needed for the inventory check. It needs special
+                # handling for WATO.
+                if check_only and not include_state and str(e):
                     raise
-		elif str(e):
+		elif not include_state and str(e):
                     sys.stderr.write("Host '%s': %s\n" % (hostname, str(e)))
                 continue
             except Exception, e:

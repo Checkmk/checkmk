@@ -513,7 +513,7 @@ def check_mk_automation(command, args=[], indata=""):
                     "%s ALL = (%s) NOPASSWD: %s *\n"
                     "</pre></li>\n"
                     "<li>Retry this operation</li></ol>\n" %
-                    (apache_user, apache_user, omd_site, " ".join(commandargs[2:])))
+                    (apache_user, apache_user, omd_site, " ".join(commandargs[3:])))
 
     cmd = commandargs + [ command ] + args
     try:

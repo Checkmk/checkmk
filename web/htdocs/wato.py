@@ -489,18 +489,18 @@ def check_mk_automation(command, args=[], indata=""):
     # - When not set try to detect the command for OMD or non OMD installations
     #   - OMD 'own' apache mode or non OMD: check_mk --automation
     #   - OMD 'shared' apache mode: Full path to the binary and the defaults
-    commandargs = []
     if defaults.check_mk_automation:
         commandargs = defaults.check_mk_automation.split()
+        cmd = commandargs  + [ command ] + args
     else:
         apache_user, omd_mode, omd_site = html.omd_mode()
         if not omd_mode or omd_mode == 'own':
             commandargs = [ 'check_mk', '--automation' ]
+            cmd = commandargs  + [ command ] + args
         else:
-            commandargs = [ 'sudo', '-u', omd_site, '/usr/bin/env', 'python',
-                            '/omd/sites/'+omd_site+'/share/check_mk/modules/check_mk.py',
-                            '--defaults', '/omd/sites/'+omd_site+'/etc/check_mk/defaults',
-                            '--automation' ]
+            commandargs = [ 'sudo', '/bin/su', '-', omd_site, '-c', 'check_mk --automation' ]
+            cmd = commandargs
+            cmd[-1] += ' ' + ' '.join([ command ] + args)
 
     if commandargs[0] == 'sudo':
         sudo_msg = ("<p>The webserver is running as user which has no rights on the "
@@ -513,9 +513,7 @@ def check_mk_automation(command, args=[], indata=""):
                     "%s ALL = (%s) NOPASSWD: %s *\n"
                     "</pre></li>\n"
                     "<li>Retry this operation</li></ol>\n" %
-                    (apache_user, apache_user, omd_site, " ".join(commandargs[3:])))
-
-    cmd = commandargs + [ command ] + args
+                    (apache_user, apache_user, omd_site, " ".join(commandargs[1:])))
     try:
         p = subprocess.Popen(cmd,
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)

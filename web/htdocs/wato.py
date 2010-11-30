@@ -484,9 +484,26 @@ def parse_audit_log(what):
 
 
 def check_mk_automation(command, args=[], indata=""):
-    commandargs = defaults.check_mk_automation.split()
+    # Gather the command to use for executing --automation calls to check_mk
+    # - First try to use the check_mk_automation option from the defaults
+    # - When not set try to detect the command for OMD or non OMD installations
+    #   - OMD 'own' apache mode or non OMD: check_mk --automation
+    #   - OMD 'shared' apache mode: Full path to the binary and the defaults
+    commandargs = []
+    if defaults.check_mk_automation:
+        commandargs = defaults.check_mk_automation.split()
+    else:
+        omd_mode, omd_site = html.omd_mode()
+        if not omd_mode or omd_mode == 'own':
+            commandargs = [ 'check_mk', '--automation' ]
+        else:
+            commandargs = [ 'python',
+                            '/omd/sites/'+omd_site+'/share/check_mk/modules/check_mk.py',
+                            '--defaults', '/omd/sites/'+omd_site+'/etc/check_mk/defaults',
+                            '--automation' ]
+    cmd = commandargs + [ command ] + args
     try:
-        p = subprocess.Popen(commandargs + [ command ] + args, 
+        p = subprocess.Popen(cmd,
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     except Exception, e:
 	raise MKGeneralException("Cannot execute <tt>%s</tt>: %s" % (commandargs[0], e))
@@ -495,13 +512,13 @@ def check_mk_automation(command, args=[], indata=""):
     outdata = p.stdout.read()
     exitcode = p.wait()
     if exitcode != 0:
-        raise MKGeneralException("Error running <tt>%s %s %s</tt>: <pre>%s</pre>" % 
-              (defaults.check_mk_automation, command, " ".join(args), outdata))
+        raise MKGeneralException("Error running <tt>%s</tt>: <pre>%s</pre>" %
+              (" ".join(cmd), outdata))
     try:
         return eval(outdata)
     except Exception, e:
-        raise MKGeneralException("Error running <tt>%s %s %s</tt>. Invalid output from webservice (%s): <pre>%s</pre>" %
-                      (defaults.check_mk_automation, command, " ".join(args), e, outdata))
+        raise MKGeneralException("Error running <tt>%s</tt>. Invalid output from webservice (%s): <pre>%s</pre>" %
+                      (" ".join(cmd), e, outdata))
 
 
 def read_configuration_file():

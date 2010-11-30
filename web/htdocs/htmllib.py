@@ -494,3 +494,9 @@ class html:
                   '<param name="autostart" value="true"><param name="playcount" value="1"></object>' % (url, url))
         if config.debug:
             self.write("Booom (%s)" % url)
+
+    def omd_mode(self):
+        if 'OMD_SITE' in self.req.subprocess_env and 'OMD_MODE' in self.req.subprocess_env:
+            return (self.req.subprocess_env['OMD_MODE'], self.req.subprocess_env['OMD_SITE'])
+        else:
+            return (None, None)

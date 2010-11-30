@@ -666,7 +666,8 @@ def snmp_scan(hostname, ipaddress):
         sys.stdout.write("Scanning host %s(%s) for SNMP checks..." % (hostname, ipaddress))
     sys_descr = get_single_oid(hostname, ipaddress, ".1.3.6.1.2.1.1.1.0")
     if sys_descr == None:
-        sys.stderr.write("no SNMP answer\n")
+        if opt_verbose:
+            sys.stderr.write("no SNMP answer\n")
         return []
 
     found = []

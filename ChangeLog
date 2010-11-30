@@ -1,3 +1,16 @@
+WATO:
+    INCOMPATIBLE CHANGES:
+    * Multisite: parameters nagios_url, nagios_cgi_url and pnp_url are now
+      obsolete. Instead the new parameter url_prefix is used (which must
+      end with a /).
+    * TCP / SNMP: hosts using TCP and SNMP now must use the tags 'tcp'
+      and 'snmp'. Hosts with the tag 'ping' will not inventorize any
+      service. New configuration variable tcp_hosts.
+
+    Core, Setup, etc.:
+    * new variable ignored_checks: Similar to ignored_checktypes, but allows
+      per-host configuration
+
 1.1.9i1
     INCOMPATIBLE CHANGES:
     * perfdata_format now defaults to "pnp". Previous default was "standard".

@@ -59,6 +59,19 @@ function get_url(url, handler, data, errorHandler) {
     }
 }
 
+function get_url_sync(url) {
+    if (window.XMLHttpRequest) {
+        var AJAX = new XMLHttpRequest();
+    } else {
+        var AJAX = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    
+    AJAX.open("GET", url, false);                             
+    AJAX.send(null);
+    return AJAX.responseText;                                         
+}
+
+
 // ----------------------------------------------------------------------------
 // GUI styling
 // ----------------------------------------------------------------------------

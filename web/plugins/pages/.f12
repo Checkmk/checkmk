@@ -1,0 +1,2 @@
+sudo cp -pv *.py /omd/sites/webconf/local/share/check_mk/web/plugins/pages
+sudo omd restart webconf apache

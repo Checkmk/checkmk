@@ -501,6 +501,10 @@ div.contextlink {
     left: -4px;
 }
 
+div.contextlink.hot {
+    background-image: url("images/contextlink_hot.png");
+}
+
 div.contextlink a {
     padding-top: 5px;
     color: white;
@@ -658,17 +662,18 @@ table.services th.tablegap {
   background-repeat: repeat;
   background-position: center;
 }
-table.services tr.odd0  { background-color: #eee; } 
-table.services tr.even0 { background-color: #ddd; }
 
-table.services tr.odd1  { background-color: #ffc; } 
-table.services tr.even1 { background-color: #ffa; }
+tr.odd0  { background-color: #eee; } 
+tr.even0 { background-color: #ddd; }
 
-table.services tr.odd2  { background-color: #fcc; } 
-table.services tr.even2 { background-color: #faa; }
+tr.odd1  { background-color: #ffc; } 
+tr.even1 { background-color: #ffa; }
 
-table.services tr.odd3  { background-color: #fdc; } 
-table.services tr.even3 { background-color: #fea; }
+tr.odd2  { background-color: #fcc; } 
+tr.even2 { background-color: #faa; }
+
+tr.odd3  { background-color: #fdc; } 
+tr.even3 { background-color: #fea; }
 
 
 /* HACK */
@@ -1152,6 +1157,13 @@ div.really, div.success, div.error, div.message, div.warning {
   padding: 1em 2em;
   border-width: 2px;
   border-style: solid;
+}
+
+div.really h1, div.success h1, div.error h1, div.message h1, div.warning h1 { 
+     font-size: 12pt;
+     font-weight: bold;
+     margin-bottom: 5px;
+color: black;
 }
 
 div.really { 
@@ -1673,3 +1685,50 @@ table.add_snapin i {
     color: white;
 }
 
+/*
+    __        ___  _____ ___  
+    \ \      / / \|_   _/ _ \ 
+     \ \ /\ / / _ \ | || | | |
+      \ V  V / ___ \| || |_| |
+       \_/\_/_/   \_\_| \___/ 
+                              
+*/
+div.wato {
+    padding: 0px;
+    margin: 0px;
+}
+
+.wato table.auditlog {
+    background-image: url("images/form_background.png"); 
+    background-repeat: repeat;
+    border-collapse: collapse;
+    margin-top: 3px;
+    margin-bottom: 1em;
+    width: 100%;
+}
+
+.wato table.pending {
+    background-color: #fff;
+}
+
+.wato table.auditlog td { 
+    border: 1px solid white;
+    padding: 2px 6px;
+}
+
+.wato .pending td { 
+    border: 1px solid #444;
+    padding: 2px 6px;
+}
+
+.wato td.dns {
+    color: #666;
+}
+
+.wato td.dnserror {
+    color: #f00;
+}
+
+.wato td.takeall {
+    width: 100%;
+}

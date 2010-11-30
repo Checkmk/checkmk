@@ -271,7 +271,7 @@ def mode_edithost(phase, new):
         title = "Create clone of %s" % clonename
         alias, ipaddress, tags = g_hosts[clonename]
         mode = "clone"
-    elif hostname in g_hosts:
+    elif not new and hostname in g_hosts:
         title = "Edit host " + hostname
         alias, ipaddress, tags = g_hosts[hostname]
         mode = "edit"

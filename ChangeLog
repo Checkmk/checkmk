@@ -1,16 +1,3 @@
-WATO:
-    INCOMPATIBLE CHANGES:
-    * Multisite: parameters nagios_url, nagios_cgi_url and pnp_url are now
-      obsolete. Instead the new parameter url_prefix is used (which must
-      end with a /).
-    * TCP / SNMP: hosts using TCP and SNMP now must use the tags 'tcp'
-      and 'snmp'. Hosts with the tag 'ping' will not inventorize any
-      service. New configuration variable tcp_hosts.
-
-    Core, Setup, etc.:
-    * new variable ignored_checks: Similar to ignored_checktypes, but allows
-      per-host configuration
-
 1.1.9i1
     INCOMPATIBLE CHANGES:
     * perfdata_format now defaults to "pnp". Previous default was "standard".
@@ -35,6 +22,12 @@ WATO:
       to the peformance data for the Perf-O-Meters.  Also changed service 
       descriptions. You need to reinventurize the kernel checks. You old
       RRDs will not be deleted, new ones will be created.
+    * Multisite: parameters nagios_url, nagios_cgi_url and pnp_url are now
+      obsolete. Instead the new parameter url_prefix is used (which must
+      end with a /).
+    * TCP / SNMP: hosts using TCP and SNMP now must use the tags 'tcp'
+      and 'snmp'. Hosts with the tag 'ping' will not inventorize any
+      service. New configuration variable tcp_hosts.
 
     Core, Setup, etc.:
     * Improve error handling: if hosts are monitored with SNMP *and* TCP,
@@ -56,6 +49,8 @@ WATO:
       with numbers now anyway.
     * check_mk -I snmp will now try all checktypes not having an snmp scan
       function. That way all possible checks should be inventorized.
+    * new variable ignored_checks: Similar to ignored_checktypes, but allows
+      per-host configuration
 
     Checks & Agents:
     * megaraid_pdisks: Using the real enclosure number as check item now

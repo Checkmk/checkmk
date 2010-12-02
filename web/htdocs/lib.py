@@ -72,8 +72,8 @@ def make_nagios_directory(path):
                     "<li>Both Nagios and the web server are in the group <tt>%s</tt>.</ul>Reason: %s" % (
                         path, defaults.www_group, defaults.www_group, e))
 
-def write_settings_file(path, content):
-    file(path, "w", 0).write(pprint.pformat(content) + "\n")
+def create_user_file(path, mode):
+    f = file(path, mode, 0)
     gid = grp.getgrnam(defaults.www_group).gr_gid
     # Tackle user problem: If the file is owned by nagios, the web
     # user can write it but cannot chown the group. In that case we
@@ -83,3 +83,7 @@ def write_settings_file(path, content):
         os.chmod(path, 0660)
     except:
         pass
+    return f
+
+def write_settings_file(path, content):
+    create_user_file(path, "w").write(pprint.pformat(content) + "\n")

@@ -54,7 +54,7 @@
 # inventory only)
 def number_of_blowers(info):
     n = 0
-    while len(info[n][0]) > 1: # state lines
+    while len(info) > n and len(info[n][0]) > 1: # state lines
         n += 1
     return n
 

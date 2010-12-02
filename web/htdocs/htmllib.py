@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import time, cgi, config, os, defaults
+import time, cgi, config, os, defaults, pwd
 from lib import *
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
@@ -117,6 +117,7 @@ class html:
         self.global_vars = []
         self.browser_reload = 0
         self.events = set([]) # currently used only for sounds
+        self.header_sent = False
 
     def write(self, text):
         if type(text) == unicode:
@@ -155,6 +156,7 @@ class html:
         self.hidden_field("filled_in", "on")
         self.hidden_field("_transid", str(self.current_transid(self.req.user)))
         self.hidden_fields(self.global_vars)
+        self.form_name = name
 
     def end_form(self):
         self.write("</form>\n")
@@ -211,10 +213,10 @@ class html:
     def end_context_buttons(self):
         self.write("</td></tr></table>\n")
 
-    def context_button(self, title, url):
-        self.write('<div class="contextlink" ')
-        self.write(r'''onmouseover='this.style.backgroundImage="url(\"images/contextlink_hi.png\")";' ''')
-        self.write(r'''onmouseout='this.style.backgroundImage="url(\"images/contextlink.png\")";' ''')
+    def context_button(self, title, url, hot=False):
+        self.write('<div class="contextlink%s" ' % (hot and " hot" or ""))
+        self.write(r'''onmouseover='this.style.backgroundImage="url(\"images/contextlink%s_hi.png\")";' ''' % (hot and "_hot" or ""))
+        self.write(r'''onmouseout='this.style.backgroundImage="url(\"images/contextlink%s.png\")";' ''' % (hot and "_hot" or ""))
         self.write('>')
         self.write('<a href="%s">%s</a></div>' % (url, title))
 
@@ -222,6 +224,8 @@ class html:
         self.text_input(varname, str(deflt), "number", size=size)
 
     def text_input(self, varname, default_value = "", cssclass = "text", **args):
+        if default_value == None:
+            default_value = ""
         addprops = ""
         if "size" in args:
             addprops += " size=%d" % args["size"]
@@ -234,7 +238,7 @@ class html:
         html += "<input type=text class=%s value=\"%s\" name=\"%s\"%s>" % (cssclass, attrencode(value), varname, addprops)
         if error:
             html += "</x>"
-            self.set_focus(self.current_form, varname)
+            self.set_focus(varname)
         self.write(html)
         self.form_vars.append(varname)
 
@@ -255,6 +259,7 @@ class html:
         onchange_code = onchange and " id=\"%s\" onchange=\"%s\"" % (varname, onchange) or ""
         self.write("<select%s name=\"%s\" size=\"1\">\n" % (onchange_code, varname))
         for value, text in options:
+            if value == None: value = ""
             sel = value == current and " selected" or ""
             self.write("<option value=\"%s\"%s>%s</option>\n" % (value, sel, text))
         self.write("</select>\n")
@@ -272,7 +277,7 @@ class html:
             checked = " CHECKED"
         else:
             checked = ""
-        self.write("<input type=checkbox name=%s%s>" % (varname, checked))
+        self.write("<input type=checkbox name=\"%s\"%s>" % (urlencode(varname), checked))
         self.form_vars.append(varname)
 
     def datetime_input(self, varname, default_value):
@@ -349,7 +354,7 @@ class html:
         self.req.headers_out.add("refresh", "%d; URL=%s" % (secs, url))
 
     def header(self, title=''):
-        if not self.req.header_sent:
+        if not self.header_sent:
             self.html_head(title)
             if type(self.req.user) == str:
                 login_text = "<b>%s</b> (%s)" % (config.user, config.role)
@@ -360,6 +365,11 @@ class html:
                     "%s &nbsp; &nbsp; <b class=headertime>%s</b> <img src=\"images/mk_logo_klein.png\"></td></tr></table>" %
                     (title, login_text, time.strftime("%H:%M")))
             self.write("<hr class=header>\n")
+            self.header_sent = True
+
+    def body_start(self, title=''):
+        self.html_head(title)
+        self.write("<body class=main>")
 
     def footer(self):
         if self.req.header_sent:
@@ -412,8 +422,8 @@ class html:
     def do_actions(self):
         return self.var("_do_actions") not in [ "", None, "No" ]
 
-    def set_focus(self, formname, varname):
-        self.focus_object = (formname, varname)
+    def set_focus(self, varname):
+        self.focus_object = (self.form_name, varname)
 
     def has_var(self, varname):
         return varname in self.req.vars
@@ -426,6 +436,9 @@ class html:
 
     def set_var(self, varname, value):
         self.req.vars[varname] = value
+
+    def del_var(self, varname):
+        del self.req.vars[varname]
 
     def javascript(self, code):
         self.write("<script language=\"javascript\">\n%s\n</script>\n" % code)
@@ -481,3 +494,10 @@ class html:
                   '<param name="autostart" value="true"><param name="playcount" value="1"></object>' % (url, url))
         if config.debug:
             self.write("Booom (%s)" % url)
+
+    def omd_mode(self):
+        apache_user = pwd.getpwuid( os.getuid() )[ 0 ]
+        if 'OMD_SITE' in self.req.subprocess_env and 'OMD_MODE' in self.req.subprocess_env:
+            return (apache_user, self.req.subprocess_env['OMD_MODE'], self.req.subprocess_env['OMD_SITE'])
+        else:
+            return (apache_user, None, None)

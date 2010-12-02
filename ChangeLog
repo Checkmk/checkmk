@@ -22,6 +22,12 @@
       to the peformance data for the Perf-O-Meters.  Also changed service 
       descriptions. You need to reinventurize the kernel checks. You old
       RRDs will not be deleted, new ones will be created.
+    * Multisite: parameters nagios_url, nagios_cgi_url and pnp_url are now
+      obsolete. Instead the new parameter url_prefix is used (which must
+      end with a /).
+    * TCP / SNMP: hosts using TCP and SNMP now must use the tags 'tcp'
+      and 'snmp'. Hosts with the tag 'ping' will not inventorize any
+      service. New configuration variable tcp_hosts.
 
     Core, Setup, etc.:
     * Improve error handling: if hosts are monitored with SNMP *and* TCP,
@@ -43,6 +49,8 @@
       with numbers now anyway.
     * check_mk -I snmp will now try all checktypes not having an snmp scan
       function. That way all possible checks should be inventorized.
+    * new variable ignored_checks: Similar to ignored_checktypes, but allows
+      per-host configuration
 
     Checks & Agents:
     * megaraid_pdisks: Using the real enclosure number as check item now
@@ -81,6 +89,10 @@
     * Cleaned up several checks to meet the variable naming conventions
     * drbd: Handling unconfigured drbd devices correctly. These devices are
       ignored during nventory
+    * printer_supply: In case of OKI c5900 devices the name of the supply units ins not
+      unique. The color of the supply unit is reported in a dedicated OID and added to the
+      check item name to have a unique name now.
+    * prnter_supply: Added simple pnp template to have better graph formating for the check results
 
     Multisite:
     * The custom open/close states of custom links are now stored for each
@@ -93,6 +105,8 @@
     * New view for all services of a site
     * Sidebar snapin site_status: make link target configurable
     * Multisite view "Recently changed services": sort newest first
+    * Added options show_header and show_controls to remove the page headers
+      from views
 
 1.1.8:
     Core, Setup, etc.:

@@ -88,6 +88,9 @@ geloggt wird nur das Starten und Beenden (was ja im Hauptthread läuft).
 Windows-Agent: Memory-Check neu machen. Swap stimmt nicht. Evtl. zwei
 getrennte Checks für Memory and Pagefile.
 
+Ansicht Hostgruppen: Auch wenn man die Gruppierung nach Sites ausschaltet,
+bleibt die Ansicht weiterhin nach Sites gruppiert? --> Sortierung falsch.
+
 -------------------------------------------------------------------------------
 ab 1.1.9i1:
 --------------------------------------------------------------------------------
@@ -507,3 +510,5 @@ dies nur wenn wenn in config was ändert oder bei livestatus
 (wegen der persistenten Verbindungen). Sonst kanns einem egal
 sein, wenn man ein neues Modul bekommt.
 
+Snapins: die letzten 10 Notifikationen, die letzten 10 Alerts
+(evtl. umschaltbar per Tabs)

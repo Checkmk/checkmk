@@ -420,7 +420,7 @@ def mode_inventory(phase, firsttime):
                 elif (html.has_var("_activate_all") or html.has_var("_fixall")) and st == "new":
                     active_checks[(ct, item)] = paramstring
                 else:
-                    varname = "_%s_%s" % (ct, item)
+                    varname = ("_%s_%s" % (ct, item)).replace(' ', '+')
                     if html.var(varname, "") != "":
                         active_checks[(ct, item)] = paramstring
 

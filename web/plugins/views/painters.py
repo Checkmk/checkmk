@@ -184,7 +184,7 @@ def paint_icons(what, row): # what is "host" or "service"
         if what == 'service':
             name2 = row['service_description']
         output += '<a href=\"#\" onclick="performAction(this, \'reschedule\', \'%s\', \'%s\', \'%s\', \'%s\');">' \
-                  '<img class=icon title="Reschedule and imediate check of this %s" ' \
+                  '<img class=icon title="Reschedule an immediate check of this %s" ' \
                   'src="images/icon_reload.gif"></a>' % (what, row["site"], row["host_name"], name2, what)
 
     return "icons", output

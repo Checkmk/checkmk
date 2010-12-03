@@ -400,6 +400,9 @@ custom_style_sheet = None
 # URL for start page in main frame (welcome page)
 start_url = "main.py"
 
+# Timeout for rescheduling of host- and servicechecks
+reschedule_timeout = 10.0
+
 #  __        __   _                      __ 
 #  \ \      / /__| |__   ___ ___  _ __  / _|
 #   \ \ /\ / / _ \ '_ \ / __/ _ \| '_ \| |_ 

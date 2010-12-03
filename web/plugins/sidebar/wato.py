@@ -19,7 +19,7 @@ def render_wato_files():
                 state = html.site_status[sitename]["state"]
                 if state != "disabled":
                     html.write("<h3>%s</h3>\n" % site["alias"])
-                    ajax_url = site["url_prefix"] + "check_mk/ajax_wato_files.py"
+                    ajax_url = site["url_prefix"] + "check_mk/ajax_wato_files.py?site=" + sitename
                     html.javascript("document.write(get_url_sync('%s'));" % ajax_url)
         else:
             ajax_wato_files(html)
@@ -27,10 +27,14 @@ def render_wato_files():
 def ajax_wato_files(h):
     global html
     html = h
+    sitename = html.var('site', '')
     if config.may("use_wato"):
         for filename, title, roles in config.config_files:
             if config.role in roles:
-                bulletlink(title, "wato.py?filename=%s" % filename)
+                if sitename:
+                    bulletlink(title, "/%s/check_mk/wato.py?filename=%s" % (sitename, filename))
+                else:
+                    bulletlink(title, "wato.py?filename=%s" % filename)
 
 
 sidebar_snapins["wato"] = {

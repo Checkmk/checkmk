@@ -420,7 +420,7 @@ def mode_inventory(phase, firsttime):
                 elif (html.has_var("_activate_all") or html.has_var("_fixall")) and st == "new":
                     active_checks[(ct, item)] = paramstring
                 else:
-                    varname = "_%s_%s" % (ct, item)
+                    varname = ("_%s_%s" % (ct, item)).replace(' ', '+')
                     if html.var(varname, "") != "":
                         active_checks[(ct, item)] = paramstring
 
@@ -484,24 +484,56 @@ def parse_audit_log(what):
 
 
 def check_mk_automation(command, args=[], indata=""):
-    commandargs = defaults.check_mk_automation.split()
+    # Gather the command to use for executing --automation calls to check_mk
+    # - First try to use the check_mk_automation option from the defaults
+    # - When not set try to detect the command for OMD or non OMD installations
+    #   - OMD 'own' apache mode or non OMD: check_mk --automation
+    #   - OMD 'shared' apache mode: Full path to the binary and the defaults
+    if defaults.check_mk_automation:
+        commandargs = defaults.check_mk_automation.split()
+        cmd = commandargs  + [ command ] + args
+    else:
+        apache_user, omd_mode, omd_site = html.omd_mode()
+        if not omd_mode or omd_mode == 'own':
+            commandargs = [ 'check_mk', '--automation' ]
+            cmd = commandargs  + [ command ] + args
+        else:
+            commandargs = [ 'sudo', '/bin/su', '-', omd_site, '-c', 'check_mk --automation' ]
+            cmd = commandargs[:-1] + [ commandargs[-1] + ' ' + ' '.join([ command ] + args) ]
+
+    sudo_msg = ''
+    if commandargs[0] == 'sudo':
+        sudo_msg = ("<p>The webserver is running as user which has no rights on the "
+                    "needed Check_MK/Nagios files.<br />Please ensure you have set-up "
+                    "the sudo environment correctly. e.g. proceed as follows:</p>\n"
+                    "<ol><li>install sudo package</li>\n"
+                    "<li>Append the following to the <code>/etc/sudoers</code> file:\n"
+                    "<pre># Needed for WATO - the Check_MK Web Administration Tool\n"
+                    "Defaults:%s !requiretty\n"
+                    "%s ALL = (root) NOPASSWD: %s\ *\n"
+                    "</pre></li>\n"
+                    "<li>Retry this operation</li></ol>\n" %
+                    (apache_user, apache_user, " ".join(commandargs[1:-1] + [ commandargs[-1].replace(' ', '\ ')])))
     try:
-        p = subprocess.Popen(commandargs + [ command ] + args, 
+        p = subprocess.Popen(cmd,
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     except Exception, e:
-	raise MKGeneralException("Cannot execute <tt>%s</tt>: %s" % (commandargs[0], e))
+        if commandargs[0] == 'sudo':
+            raise MKGeneralException("Cannot execute <tt>%s</tt>: %s<br /><br >%s" % (commandargs[0], e, sudo_msg))
+        else:
+            raise MKGeneralException("Cannot execute <tt>%s</tt>: %s" % (commandargs[0], e))
     p.stdin.write(repr(indata))
     p.stdin.close()
     outdata = p.stdout.read()
     exitcode = p.wait()
     if exitcode != 0:
-        raise MKGeneralException("Error running <tt>%s %s %s</tt>: <pre>%s</pre>" % 
-              (defaults.check_mk_automation, command, " ".join(args), outdata))
+        raise MKGeneralException("Error running <tt>%s</tt>: <pre>%s</pre>%s" %
+              (" ".join(cmd), outdata, sudo_msg))
     try:
         return eval(outdata)
     except Exception, e:
-        raise MKGeneralException("Error running <tt>%s %s %s</tt>. Invalid output from webservice (%s): <pre>%s</pre>" %
-                      (defaults.check_mk_automation, command, " ".join(args), e, outdata))
+        raise MKGeneralException("Error running <tt>%s</tt>. Invalid output from webservice (%s): <pre>%s</pre>" %
+                      (" ".join(cmd), e, outdata))
 
 
 def read_configuration_file():

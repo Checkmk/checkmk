@@ -42,6 +42,9 @@ def ajax_action(h):
         html.write("['ERROR', %r]\n" % str(e))
 
 def action_reschedule():
+    if not config.may("action.reschedule"):
+        raise MKGeneralException("You are not allowed to reschedule checks.")
+        
     site = html.var("site")
     host = html.var("host", "")
     if not host:
@@ -65,14 +68,14 @@ def action_reschedule():
         row = html.live.query_row(
                 "GET %ss\n"
                 "WaitObject: %s %s\n"
-                "WaitCondition: last_check > %d\n"
+                "WaitCondition: last_check >= %d\n"
                 "WaitTimeout: %d\n"
                 "WaitTrigger: check\n"
                 "Columns: last_check state plugin_output\n"
                 "Filter: host_name = %s\n%s"
                 % (what, host, service, now, config.reschedule_timeout * 1000, host, add_filter))
         last_check = row[0]
-        if last_check <= now:
+        if last_check < now:
             html.write("['TIMEOUT', 'Check not executed within %d seconds']\n" % (config.reschedule_timeout))
 
         else:

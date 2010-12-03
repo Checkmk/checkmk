@@ -501,6 +501,7 @@ def check_mk_automation(command, args=[], indata=""):
             commandargs = [ 'sudo', '/bin/su', '-', omd_site, '-c', 'check_mk --automation' ]
             cmd = commandargs[:-1] + [ commandargs[-1] + ' ' + ' '.join([ command ] + args) ]
 
+    sudo_msg = ''
     if commandargs[0] == 'sudo':
         sudo_msg = ("<p>The webserver is running as user which has no rights on the "
                     "needed Check_MK/Nagios files.<br />Please ensure you have set-up "

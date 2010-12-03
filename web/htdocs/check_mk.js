@@ -185,3 +185,47 @@ function render_pnp_graphs(container, site, host, service, base_url, pnp_url) {
     get_url(pnp_url + 'index.php/json?&host=' + host + '&srv=' + service + '&source=0',
             pnp_response_handler, data, pnp_error_response_handler);
 }
+
+// ----------------------------------------------------------------------------
+// Synchronous action handling
+// ----------------------------------------------------------------------------
+// Protocol is:
+// For regular response:
+// [ 'OK', 'last check', 'exit status plugin', 'output' ]
+// For timeout:
+// [ 'TIMEOUT', 'output' ]
+// For error:
+// [ 'ERROR', 'output' ]
+// Everything else:
+// <undefined> - Unknown format. Simply echo.
+
+function performAction(oLink, action, type, site, name1, name2) {
+    var oImg = oLink.childNodes[0];
+    oImg.src = 'images/icon_reloading.gif';
+
+    var validResponse = true;
+    var response = get_url_sync('nagios_action.py?action='+action+'&site='+site+'&host='+name1+'&service='+name2);
+
+    try {
+        response = eval(response);
+    } catch(e) {
+        validResponse = false;
+    }
+
+    if(validResponse && response[0] === 'OK') {
+        oImg.src = 'images/icon_reload.gif';
+        window.location.reload();
+    } else if(validResponse && response[0] === 'TIMEOUT') {
+        oImg.src = 'images/icon_reload_failed.gif';
+    } else if(validResponse) {
+        oImg.src = 'images/icon_reload_failed.gif';
+        alert('Problem while processing - Response: ' + response.join(' '));
+    } else {
+        oImg.src = 'images/icon_reload_failed.gif';
+        alert('Invalid response: ' + response);
+    }
+
+    validResponse = null;
+    response = null;
+    oImg = null;
+}

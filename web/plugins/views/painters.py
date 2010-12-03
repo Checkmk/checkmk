@@ -179,6 +179,14 @@ def paint_icons(what, row): # what is "host" or "service"
         if wato_filename:
             output += wato_link(wato_filename, row["site"], row["host_name"], "inventory")
 
+    if row[prefix + "active_checks_enabled"] == 1 and config.may('action.reschedule'):
+        name2 = ''
+        if what == 'service':
+            name2 = row['service_description']
+        output += '<a href=\"#\" onclick="performAction(this, \'reschedule\', \'%s\', \'%s\', \'%s\', \'%s\');">' \
+                  '<img class=icon title="Reschedule a check of this service" ' \
+                  'src="images/icon_reload.gif"></a>' % (what, row["site"], row["host_name"], name2)
+
     return "icons", output
 
 def iconpainter_columns(what):

@@ -213,16 +213,17 @@ function performAction(oLink, action, type, site, name1, name2) {
     }
 
     if(validResponse && response[0] === 'OK') {
-        oImg.src = 'images/icon_reload.gif';
+        oImg.src   = 'images/icon_reload.gif';
         window.location.reload();
     } else if(validResponse && response[0] === 'TIMEOUT') {
-        oImg.src = 'images/icon_reload_failed.gif';
+        oImg.src   = 'images/icon_reload_failed.gif';
+				oImg.title = 'Timeout while performing action: ' + response[1];
     } else if(validResponse) {
-        oImg.src = 'images/icon_reload_failed.gif';
-        alert('Problem while processing - Response: ' + response.join(' '));
+        oImg.src   = 'images/icon_reload_failed.gif';
+				oImg.title = 'Problem while processing - Response: ' + response.join(' ');
     } else {
-        oImg.src = 'images/icon_reload_failed.gif';
-        alert('Invalid response: ' + response);
+        oImg.src   = 'images/icon_reload_failed.gif';
+        oImg.title = 'Invalid response: ' + response;
     }
 
     validResponse = null;

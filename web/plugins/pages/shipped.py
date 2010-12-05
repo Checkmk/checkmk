@@ -31,6 +31,7 @@ import page_logwatch
 import views
 import sidebar
 import permissions
+import actions
 
 # map URLs to page rendering functions
 
@@ -54,4 +55,5 @@ pagehandlers.update({
    "edit_bookmark"         : sidebar.page_edit_bookmark,
    "view_permissions"      : permissions.page_view_permissions,
    "edit_permissions"      : permissions.page_edit_permissions,
+   "nagios_action"         : actions.ajax_action,
 })

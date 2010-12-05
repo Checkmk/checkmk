@@ -420,7 +420,7 @@ def mode_inventory(phase, firsttime):
                 elif (html.has_var("_activate_all") or html.has_var("_fixall")) and st == "new":
                     active_checks[(ct, item)] = paramstring
                 else:
-                    varname = "_%s_%s" % (ct, item)
+                    varname = ("_%s_%s" % (ct, item)).replace(' ', '+')
                     if html.var(varname, "") != "":
                         active_checks[(ct, item)] = paramstring
 
@@ -501,6 +501,7 @@ def check_mk_automation(command, args=[], indata=""):
             commandargs = [ 'sudo', '/bin/su', '-', omd_site, '-c', 'check_mk --automation' ]
             cmd = commandargs[:-1] + [ commandargs[-1] + ' ' + ' '.join([ command ] + args) ]
 
+    sudo_msg = ''
     if commandargs[0] == 'sudo':
         sudo_msg = ("<p>The webserver is running as user which has no rights on the "
                     "needed Check_MK/Nagios files.<br />Please ensure you have set-up "

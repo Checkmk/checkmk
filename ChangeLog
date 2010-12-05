@@ -107,6 +107,10 @@
     * Multisite view "Recently changed services": sort newest first
     * Added options show_header and show_controls to remove the page headers
       from views
+    * Cool: new button for an immediate reschedule of a host or service
+      check: the view is redisplayed exactly at the point of time when
+      Nagios has finished the check. This makes use of MK Livestatus'
+      unique waiting feature.
 
 1.1.8:
     Core, Setup, etc.:

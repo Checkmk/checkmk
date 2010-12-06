@@ -61,6 +61,7 @@
     * cisco_power: Not using power source as threshold anymore. Improved output
     * cisco_fan: Does not inventorize 'notPresent' sensors anymore. Improved output
     * cisco_power: Not using power source as threshold anymore. Improved output
+    * cisco_power: Excluding 'notPresent' devices from inventory now
     * cisco_temp_perf: Do not crash if device does not send current temperature
     * tcp_conn_stats: new check for monitoring number of current TCP connections
     * blade_*: Added snmp scan functions for better automatic inventory

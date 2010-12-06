@@ -15,6 +15,16 @@ Inventurcheck: retry_interval evt. anders (kuerzer) einstellbar machen.
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
 --------------------------------------------------------------------------------
+
+Wenn ein Host nur den snmpwalk benutzen soll, versucht cmk trotzdem den Host via SNMP zu kontaktieren.
+Beim Inventory sieht das z.B. so aus:
+> Host 'BOCBKKMM4000': SNMP Error
+> Host 'BOCBKKMM4000': SNMP Error
+> Host 'BOCBKKMM4000': SNMP Error
+> Host 'BOCBKKMM4000': SNMP Error
+Das liegt an den Checks, die noch snmp_info_single nutzen: blade_misc, ironport_misc, snia_sml, snmp_info
+
+
 ich bin mir nicht sicher ob das nun ein Thruk Problem oder ein Livestatus Problem ist. Vermutlich beides :-)
 Wenn ich im Thruk im Suchfenster einfach Enter drücke, kommt folgende Query bei raus:
 GET services

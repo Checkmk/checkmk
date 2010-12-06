@@ -18,11 +18,12 @@ admin_users = [ "nagiosadmin" ]
 
 # Sites to connect to. If this variable is unset, a single
 # connection to the local host is done.
-#sites = {
-#   # connect to local Nagios
-#   "local" : {
-#        "alias" : "Munich"
-#   },
+sites = {
+   # connect to local Nagios
+   "wato" : {
+        "alias" : "Munich"
+   },
+}
 #
 #   # connect to remote site (e.g. local OMD site 'paris')
 #   "paris": {

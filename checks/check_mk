@@ -1,0 +1,95 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+# Target
+
+
+# Target value for agent's IP access configuration. Only if this
+# is not None, the inventory will create services
+check_mk_only_from_default = None
+
+def inventory_only_from(checkname, info):
+    if check_mk_only_from_default != None:
+        for line in info:
+            if line[0] == "OnlyFrom:":
+                return [(None, 'check_mk_only_from_default')]
+
+def check_mk_factorize_curly(n):
+    # factorize 10.0.0.{1,2,3}
+    if '{' in n:
+        result = []
+        iprange = n[n.find('{') + 1:n.find('}')].split(',')
+        prefix = n[:n.find('{')]
+        for suffix in iprange:
+            result.append(prefix + suffix)
+        return result
+    else:
+        return [n]
+
+def check_mk_normalize_network(n):
+    if '/' in n:
+        return n
+    else:
+        return n + "/32"
+
+
+def check_only_from(item, param, info):
+    if param == None:
+        return (1, "WARN - IP access restriction not monitored for this host")
+    for line in info:
+        if line[0] == "OnlyFrom:":
+            an = []
+            for n in line[1:]:
+                an += check_mk_factorize_curly(n)
+
+            allowed_nets = map(check_mk_normalize_network, an)
+            should_nets = map(check_mk_normalize_network, param)
+
+            too_much = []
+            too_few = []
+
+            for net in allowed_nets:
+                if net not in should_nets:
+                    too_much.append(net)
+            for net in should_nets:
+                if net not in allowed_nets:
+                    too_few.append(net)
+            status = 0
+            infotexts = []
+            if len(too_much) > 0:
+                status = 1
+                infotexts.append("agent allows extra: %s" % (" ".join(too_much)))
+            if len(too_few) > 0:
+                status = 1
+                infotexts.append("agent blocks: %s" % (" ".join(too_few)))
+            if status == 1:
+                return (1, "WARN - invalid access configuration: %s" % (", ".join(infotexts)))
+            else:
+                return (0, "OK - allowed IP ranges: %s" % (" ".join(allowed_nets)))
+    return (3, "UNKNOWN - Agent does not send OnlyFrom: header")
+
+
+check_info['check_mk.only_from'] = (check_only_from, "Check_MK Agent Access", 0, inventory_only_from)
+

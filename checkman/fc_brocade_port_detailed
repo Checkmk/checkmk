@@ -17,14 +17,26 @@ item:
 examples:
  # set levels for errors, not for in/out
  fc_brocade_port_detailed_default_levels = (
-    ( 1, 500    ),     # warn at 1, crit at 500 CRC errors per check intervall
-    ( 0.1, 10.0 ),     # warn/crit if encout is more then 0.1 or 10% of packets
+    ( 1,     500 ),    # warn at 1, crit at 500 CRC errors per check intervall
+    ( 0.1,   10.0 ),   # warn/crit if encout is more then 0.1 or 10% of packets
     ( 101.0, 101.0 ) ) # do never alert C3 discards
 
  # Same, but warning if traffic more than 160MB/s on in or out,
  # no level for critical and assumed link baudrate of 2GBit/s
  fc_brocade_port_detailed_default_levels = (
-    (1, 500), (0.1, 10.0), (101.0, 101.0), (2, 160, None))
+    ( 1,     500), 
+    ( 0.1,   10.0 ), 
+    ( 101.0, 101.0 ), 
+    ( 2, 160, None ) )
+
+ # Some, but additionally specify certain state-combinations to be
+ # only warning / not critical
+ fc_brocade_port_detailed_default_levels = (
+    ( 1,     500), 
+    ( 0.1,   10.0 ),
+    ( 101.0, 101.0 ),
+    ( 2, 160, None, [(1,6,2), (1,4,2)]) )
+
 
 perfdata: 
  Five variables: the number of bytes received and transmitted, and the number
@@ -43,15 +55,26 @@ crcerrors (number, number): A pair of levels for the CRC errors. If the level is
  to the total number of packets received in the last check cycle.
 encout (number, number):    A pair of levels for the ENC out counter. 
 c3discards (number, number): A pair of levels for the C3 discards.
-inoutlevels (number, number, number): An optional triple used for 
- checking in- and outgoing traffic. The first argument is the assumed link speed
- in GBit/sec. For inter switch links (ISL) the brocade MIB contains an
+inoutlevels (number, number, number, list): An optional quadruple used for 
+ checking in- and outgoing traffic and the possible port states. 
+ The first argument is the assumed link speed
+ in GBit/sec. For inter-switch links (ISL) the brocade MIB contains an
  entry for the current speed - which is being used. If that is different
  from the assumed link speed, then the levels are adapted accordingly.
  If you set the assumed link speed to 2, the level to 160 and the detected
- link speed is 4GBit/s, then the level is being raised to 320. The other
+ link speed is 4GBit/s, then the level is being raised to 320. The next
  two arguments are the levels for warning and critical in MB/s. Each of those may
  be set to {None} in order to disable that level.
+ The forth argument is optional and is a list of triples. This list
+ makes selected port states not result in a critical but in a user
+ defined state. Each triple is consists of ({exitcode}, {physical state},
+ {opstate}). The possible exitcodes are {0} for OK, {1} for WARNING, {2} for
+ CRITICAL and {3} for UNKNOWN. The possible physical states are: {noCard(1)},
+ {noTransceiver(2)}, {laserFault(3)}, {noLight(4)}, {noSync(5)}, {inSync(6)},
+ {portFault(7)}, {diagFault(8)}, {lockRef(9)} The possible opstates are:
+ {online(1)}, {offline(2)}, {testing(3)}, {faulty(4)}. So if you want
+ {noLight/offline} to be OK and {inSync/testing} to be WARN, set the list to
+ {[(0,4,2),(1,6,3)]}.
 
 [configuration]
 fc_brocade_port_detailed_default_levels ( pair, pair, pair, triple ):

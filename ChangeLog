@@ -53,6 +53,8 @@
       per-host configuration
 
     Checks & Agents:
+    * fc_brocade_port_detailed: allow to specify port state combinations not 
+      to be critical
     * megaraid_pdisks: Using the real enclosure number as check item now
     * if/if64: Added expected interface speed to warning output
     * if/if64: Allow to ignore speed setting (set target speed to None)

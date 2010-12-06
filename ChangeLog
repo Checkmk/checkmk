@@ -93,7 +93,8 @@
     * printer_supply: In case of OKI c5900 devices the name of the supply units ins not
       unique. The color of the supply unit is reported in a dedicated OID and added to the
       check item name to have a unique name now.
-    * prnter_supply: Added simple pnp template to have better graph formating for the check results
+    * printer_supply: Added simple pnp template to have better graph formating for the check results
+    * snmp_info check: Recoded not to use snmp_info_single anymore
 
     Multisite:
     * The custom open/close states of custom links are now stored for each

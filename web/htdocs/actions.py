@@ -23,7 +23,7 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-    
+
 from lib import *
 import time
 import config
@@ -44,7 +44,7 @@ def ajax_action(h):
 def action_reschedule():
     if not config.may("action.reschedule"):
         raise MKGeneralException("You are not allowed to reschedule checks.")
-        
+
     site = html.var("site")
     host = html.var("host", "")
     if not host:

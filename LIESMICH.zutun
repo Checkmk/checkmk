@@ -20,6 +20,13 @@ einfach die Site-ID als URL-Prefix. Das ist aber nicht immer korrekt.
 Man kann in sites eine site "local" nennen, aber der URL-Prefix ist
 z.B. /wato/.
 
+WATO: Wenn ein Agent einen rauswird (leer Ausgabe), kommt im 
+WATO bei der Inventur keine sinnvolle Fehlermeldung.
+
+Reschedule icon: Auch hier ist scheinbar im Link der Sitename als
+URL-Prefix angenommen. Das ist aber nicht unbedingt als gleich
+anzunehmen - vor allem außerhalb von OMD.
+
 ich bin mir nicht sicher ob das nun ein Thruk Problem oder ein Livestatus Problem ist. Vermutlich beides :-)
 Wenn ich im Thruk im Suchfenster einfach Enter drücke, kommt folgende Query bei raus:
 GET services

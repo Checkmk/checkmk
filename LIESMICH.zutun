@@ -15,6 +15,11 @@ Inventurcheck: retry_interval evt. anders (kuerzer) einstellbar machen.
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
 --------------------------------------------------------------------------------
+WATO Snapin: ajax-Code zum Ausgeben der Links stimmt nicht. Er nimmt
+einfach die Site-ID als URL-Prefix. Das ist aber nicht immer korrekt.
+Man kann in sites eine site "local" nennen, aber der URL-Prefix ist
+z.B. /wato/.
+
 ich bin mir nicht sicher ob das nun ein Thruk Problem oder ein Livestatus Problem ist. Vermutlich beides :-)
 Wenn ich im Thruk im Suchfenster einfach Enter drücke, kommt folgende Query bei raus:
 GET services
@@ -519,3 +524,5 @@ Snapins: die letzten 10 Notifikationen, die letzten 10 Alerts
 (evtl. umschaltbar per Tabs)
 
 Acknowledgements: Ankreuzung, ob persistent oder nicht
+
+

@@ -304,6 +304,7 @@ ip_to_hostname_cache = None
 # The following data structures will be filled by the various checks
 # found in the checks/ directory.
 check_info                         = {} # all known checks
+check_libs                         = {} # library files needed by checks
 precompile_params                  = {} # optional functions for parameter precompilation, look at df for an example
 check_config_variables             = [] # variables (names) in checks/* needed for check itself
 snmp_info                          = {} # whichs OIDs to fetch for which check (for tabular information)
@@ -2023,7 +2024,12 @@ filesystem_default_levels = None
                                      (checktype, checks_dir, checktype))
         filenames.add(path)
 
+        # Add library files needed by check
+        for lib in check_libs.get(checktype, []):
+            filenames.add(checks_dir + "/" + lib)
+
     output.write("check_info = {}\n" +
+                 "check_libs = {}\n" +
                  "precompile_params = {}\n" +
                  "check_config_variables = []\n" +
                  "snmp_info = {}\n" +

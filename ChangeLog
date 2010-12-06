@@ -51,6 +51,8 @@
       function. That way all possible checks should be inventorized.
     * new variable ignored_checks: Similar to ignored_checktypes, but allows
       per-host configuration
+    * allow check implementations to use common include files. See if/if64
+      for an example
 
     Checks & Agents:
     * fc_brocade_port_detailed: allow to specify port state combinations not 

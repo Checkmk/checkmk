@@ -104,6 +104,8 @@
     * Linux Agent: Fixed <<<cpu>>> output on SPARC machines with openSUSE
     * df_netapp/df_netapp32: Made check inventory resistant against empty size values
     * df_netapp32: Added better detection for possible 32bit counter wrap
+    * fc_brocade_port_detailed: Made check handle phystate "noSystemControlAccessToSlot" (10)
+      The check also handles unknown states better now
 
     Multisite:
     * The custom open/close states of custom links are now stored for each

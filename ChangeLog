@@ -58,6 +58,10 @@
     * fc_brocade_port_detailed: allow to specify port state combinations not 
       to be critical
     * megaraid_pdisks: Using the real enclosure number as check item now
+    * if/if64: allow to configure averaging of traffic over time (e.g. 15 min) 
+      and apply traffic levels and averaged values. Also allow to specify relative
+      traffic levels. Allow new parameter configuration via dictionary. Also
+      allow to monitor unused ports and/or to ignore link status.
     * if/if64: Added expected interface speed to warning output
     * if/if64: Allow to ignore speed setting (set target speed to None)
     * wut_webtherm: handle more variants of WuT Webtherms (thanks to Lefty)

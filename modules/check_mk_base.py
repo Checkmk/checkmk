@@ -644,10 +644,9 @@ def get_average(itemname, this_time, this_val, backlog):
     # Get previous value and time difference
     last_time, last_val = g_counters.get(itemname)
     timedif = this_time - last_time
-    timedif_min = timedif / 60.0
 
     # compute weight, but how?
-    weight = math.e ** (-timedif_min / backlog)
+    weight = math.e ** (-timedif / backlog)
 
     new_val = last_val * weight + this_val * (1 - weight)
     g_counters[itemname] = (this_time, new_val)
@@ -1031,9 +1030,15 @@ def saveint(i):
     else:
         return int(i)
 
+def savefloat(f):
+    try:
+        return float(f)
+    except:
+        return 0.0
+
 # Takes bytes as integer and returns a string which represents the bytes in a
 # more human readable form scaled to GB/MB/KB
-def get_bytes_human_readable(b, base=1024):
+def get_bytes_human_readable(b, base=1024.0):
     if b > base * base * base:
         return '%.2fGB' % (b / base / base / base)
     if b > base * base:

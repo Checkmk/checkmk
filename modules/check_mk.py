@@ -638,14 +638,14 @@ def get_single_oid(hostname, ipaddress, oid):
     command = snmp_get_command(hostname) + \
          " -On -OQ -Oe %s %s 2>/dev/null" % (ipaddress, oid)
     try:
-        if opt_verbose:
+        if opt_debug:
             sys.stdout.write("Running '%s'\n" % command)
 
         snmp_process = os.popen(command, "r")
         line = snmp_process.readline().strip()
         item, value = line.split("=")
         value = value.strip()
-        if opt_verbose:
+        if opt_debug:
             sys.stdout.write("SNMP answer: ==> [%s]\n" % value)
         if value.startswith('No more variables') or value.startswith('End of MIB') \
            or value.startswith('No Such Object available') or value.startswith('No Such Instance currently exists'):
@@ -667,7 +667,7 @@ def snmp_scan(hostname, ipaddress):
         sys.stdout.write("Scanning host %s(%s) for SNMP checks..." % (hostname, ipaddress))
     sys_descr = get_single_oid(hostname, ipaddress, ".1.3.6.1.2.1.1.1.0")
     if sys_descr == None:
-        if opt_verbose:
+        if opt_debug:
             sys.stderr.write("no SNMP answer\n")
         return []
 
@@ -1464,7 +1464,7 @@ define servicedependency {
                     (description, hostname, cn, it, command))
 
         else:
-            used_descriptions[description] = ( "legacy(" + command + ")", item )
+            used_descriptions[description] = ( "legacy(" + command + ")", description )
         
         extraconf = extra_service_conf_of(hostname, description)
         if has_perfdata:

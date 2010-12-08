@@ -26,15 +26,17 @@
 
 # Functions and definitions used by if and if64
 
-# Share settings with if, so user needs to configure this
-# only once. Important: The default settings must be the same
-# as in 'if' since they overwrite each other.
-if_inventory_porttypes = [ "6", "32", "117" ]
+if_inventory_porttypes = [ '6', '32', '117' ]
+if_inventory_portstates = [ '1' ]
 if_inventory_uses_description = False
 if_inventory_uses_alias = False
+if_inventory_monitor_speed = True
+if_inventory_monitor_state = True
 
-# first two: Error percentages, second two: Bandwidth thresholds, allowed operstates
-if_default_levels = (0.01, 0.1, None, None, ('1', 'up'))
+if_default_levels = (0.01, 0.1, None, None, ('1', 'up')) # Only defined for legacy compatibility
+if_default_error_levels = (0.01, 0.1)    # percentages or errors!
+if_default_traffic_levels = (None, None) # No levels and bandwidth usage
+if_default_average = None                # No average computing
 
 # Remove 0 bytes from strings. They lead to problems e.g. here:
 # On windows hosts the labels of network interfaces in oid
@@ -51,6 +53,9 @@ def cleanup_if_strings(s):
 # make sure, that configuration variable is present in precompiled host checks
 check_config_variables.append("nagios_illegal_chars")
 
+# default error levels are needed in case of incomplete parameter dictionary
+check_config_variables.append("if_default_error_levels")
+
 # Name of state (lookup SNMP enum)
 def if_statename(st):
     names = { '1': 'up',      '2': 'down',
@@ -63,15 +68,13 @@ def inventory_if_common(info):
     if len(info) == 0 or len(info[0]) != 19:
         return []
     inventory = []
+ 
     for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \
         ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen, ifAlias in info:
         ifDescr = cleanup_if_strings(ifDescr)
         ifAlias = cleanup_if_strings(ifAlias)
-        allowed_operstates = ['1','up']
-        if len(if_default_levels) == 5:
-            allowed_operstates = if_default_levels[4]
 
-        if ifType in if_inventory_porttypes and ifOperStatus in allowed_operstates:
+        if ifType in if_inventory_porttypes and ifOperStatus in if_inventory_portstates:
             if if_inventory_uses_description and ifDescr:
                 item = ifDescr
             elif if_inventory_uses_alias and ifAlias:
@@ -79,26 +82,41 @@ def inventory_if_common(info):
             else:
                 item = ifIndex
 
-            if ifSpeed != "":
-                add_levels = ''
-                if len(if_default_levels) >= 4:
-                    add_levels += ', if_default_levels[2], if_default_levels[3]'
-                if len(if_default_levels) == 5:
-                    add_levels += ', if_default_levels[4]'
-                inventory.append( (item, "(if_default_levels[0], if_default_levels[1], %d%s)" % (int(ifSpeed), add_levels)) )
+            paramstring = '{ "errors" : if_default_error_levels, ' \
+                          '"traffic" : if_default_traffic_levels, ' \
+                          '"average" : if_default_average '
+
+            if if_inventory_monitor_state:
+                paramstring += ', "state" : "%s"' % ifOperStatus
+
+            if ifSpeed != "" and if_inventory_monitor_speed:
+                paramstring += ', "speed" : %d' % int(ifSpeed)
+            paramstring += "}"
+            inventory.append( (item, paramstring) )
     return inventory
 
 
 def check_if_common(item, params, info):
+    err_warn, err_crit = 0, 0
+    targetspeed        = None
+    targetstate        = None 
+    bw_warn, bw_crit   = None, None
+    average            = None 
+    
+    # new style of check parameters since 1.1.9i1
+    if type(params) == dict:
+        err_warn, err_crit = params.get("errors", if_default_error_levels)
+        targetspeed        = params.get("speed")
+        targetstate        = params.get("state")
+        bw_warn, bw_crit   = params.get("traffic", (None, None))
+        average            = params.get("average")
 
-    allowed_operstates = ('1', 'up')
-    bw_warn, bw_crit = None, None
-    num_params = len(params)
-    if num_params == 3:
+    # old style of parameters: tuple with various length
+    elif len(params) == 3:
         err_warn, err_crit, targetspeed = params
-    elif num_params == 5:
+    elif len(params) == 5:
         err_warn, err_crit, targetspeed, bw_warn, bw_crit = params
-    elif num_params == 6:
+    elif len(params) == 6:
         err_warn, err_crit, targetspeed, bw_warn, bw_crit, allowed_operstates = params
 
     for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \
@@ -110,7 +128,7 @@ def check_if_common(item, params, info):
 
             # Display port number or alias in infotext if that is not part
             # of the service description anyway
-            if item == ifIndex and (item == ifAlias or ifAlias == '') and (item == ifDescr or ifDescr == ''): # description trvial
+            if item == ifIndex and (item == ifAlias or ifAlias == '') and (item == ifDescr or ifDescr == ''): # description trivial
                 infotext = ""
             elif item != ifAlias and ifAlias != '': # alias useful
                 infotext = "[%s] " % ifAlias
@@ -120,8 +138,8 @@ def check_if_common(item, params, info):
                 infotext = "[%s] " % ifIndex
 
             operstatus = if_statename(str(ifOperStatus))
-            if not operstatus in allowed_operstates:
-                return (2, "CRIT - %soperstate: %s (CRIT)" % (infotext, operstatus))
+            if targetstate and (ifOperStatus != targetstate):
+                return (2, "CRIT - %soperstatus: %s (CRIT)" % (infotext, operstatus))
             infotext += "(%s) " % operstatus
 
             state = 0
@@ -129,24 +147,38 @@ def check_if_common(item, params, info):
             # Check speed
             speed = saveint(ifSpeed)
             infotext += get_nic_speed_human_readable(speed)
-            bandwidth = speed / 8.0 # in Bytes / sec
             if not targetspeed is None and speed != targetspeed:
                 infotext += " (wrong speed! expected: %s)" % get_nic_speed_human_readable(targetspeed)
                 state = 1
+
+            # convert percentages to absolute values and vice verca - if possible
+            if speed:
+                ref_speed = speed / 8.0
+            elif targetspeed:
+                ref_speed = targetspeed / 8.0
+            else:
+                ref_speed = None
+
+            # convert percentages to absolute values if reference speed available
+            if ref_speed:
+                if bw_warn != None and type(bw_warn) == float:
+                    bw_warn = bw_warn / 100.0 * ref_speed
+                if bw_crit != None and type(bw_crit) == float:
+                    bw_crit = bw_crit / 100.0 * ref_speed
 
             # Performance counters
             this_time = time.time()
             rates = []
             wrapped = False
             perfdata = []
-            for name, counter, warn, crit, min, max in [
-                ( "in",        ifInOctets, bw_warn, bw_crit, 0, bandwidth),
+            for name, counter, warn, crit, mmin, mmax in [
+                ( "in",        ifInOctets, bw_warn, bw_crit, 0, ref_speed),
                 ( "inucast",   inucast, None, None, None, None),
                 ( "innucast",  saveint(inmcast) + saveint(inbcast), None, None, None, None),
                 ( "indisc",    ifInDiscards, None, None, None, None),
                 ( "inerr",     ifInErrors, err_warn, err_crit, None, None),
 
-                ( "out",       ifOutOctets, bw_warn, bw_crit, 0, bandwidth),
+                ( "out",       ifOutOctets, bw_warn, bw_crit, 0, ref_speed),
                 ( "outucast",  outucast, None, None, None, None),
                 ( "outnucast", saveint(outmcast) + saveint(outbcast), None, None, None, None),
                 ( "outdisc",   ifOutDiscards, None, None, None, None),
@@ -155,7 +187,7 @@ def check_if_common(item, params, info):
                 try:
                     timedif, rate = get_counter("if.%s.%s" % (name, item), this_time, saveint(counter))
                     rates.append(rate)
-                    perfdata.append( (name, rate, warn, crit, min, max) )
+                    perfdata.append( (name, rate, warn, crit, mmin, mmax) )
                 except MKCounterWrapped:
                     wrapped = True
                     # continue, other counters might wrap as well
@@ -165,18 +197,31 @@ def check_if_common(item, params, info):
                 perfdata = []
             else:
                 perfdata.append(("outqlen", saveint(ifOutQLen)))
+
                 for what, errorrate, okrate, traffic in \
                    [ ("in",  rates[4], rates[1] + rates[2], rates[0]),
                      ("out", rates[9], rates[6] + rates[7], rates[5]) ]:
+
                     infotext += ", %s: %s/s" % (what, get_bytes_human_readable(traffic))
+
+                    if ref_speed:
+                        perc_used = 100.0 * traffic / ref_speed
+                        infotext += "(%.1f%%)" % perc_used
+
+                    # handle computation of average
+                    if average:
+                        timedif, traffic_avg = get_average("if.%s.%s.avg" % (what, item), this_time, traffic, average * 60)
+                        infotext += ", %dmin avg: %s/s" % (average, get_bytes_human_readable(traffic_avg)) 
+                        perfdata.append( ("%s_avg_%d" % (what, average), traffic_avg, bw_warn, bw_crit, 0, ref_speed) )
+                        traffic = traffic_avg # apply levels to average traffic
 
                     # Check bandwidth thresholds
                     if not bw_crit is None and traffic >= bw_crit:
                         state = 2
-                        infotext += ' (CRIT) >=' + get_bytes_human_readable(bw_crit)
+                        infotext += ' (CRIT) >= ' + get_bytes_human_readable(bw_crit) + "/s"
                     elif not bw_warn is None and traffic >= bw_warn:
-                        state = 1
-                        infotext += ' (WARN) >=' + get_bytes_human_readable(bw_warn)
+                        state = max(state, 1)
+                        infotext += ' (WARN) >= ' + get_bytes_human_readable(bw_warn) + "/s"
 
                     pacrate = okrate + errorrate
                     if pacrate > 0.0: # any packets transmitted?
@@ -186,13 +231,11 @@ def check_if_common(item, params, info):
                             infotext += ", %s-errors: %.2f%%" % (what, errperc)
 
                         if errperc >= err_crit:
-                            if state < 2:
-                                state = 2
-                            infotext += "(CRIT) " + str(err_crit)
+                            state = 2
+                            infotext += "(CRIT) >= " + str(err_crit)
                         elif errperc >= err_warn:
-                            if state < 1:
-                                state = 1
-                            infotext += "(WARN) " + str(err_warn)
+                            state = max(state, 1)
+                            infotext += "(WARN) >= " + str(err_warn)
 
             return (state, "%s - %s" % (nagios_state_names[state], infotext), perfdata)
 

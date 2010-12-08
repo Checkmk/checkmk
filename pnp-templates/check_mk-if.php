@@ -46,7 +46,7 @@ $mByteBandwidth = $MAX[1] / 1000 / 1000;
 $mByteWarn      = $WARN[1] / 1000 / 1000;
 $mByteCrit      = $CRIT[1] / 1000 / 1000;
 
-$bwuom = '';
+$bwuom = ' ';
 $base = 1000;
 if($bandwidth > $base * $base * $base) {
 	$warn /= $base * $base * $base;
@@ -87,6 +87,24 @@ $def[1] =
   "GPRINT:outbytes:AVERAGE:\"%5.1lf %sB/s avg\" ".
   "GPRINT:outbytes:MAX:\"%5.1lf %sB/s max\\n\" ";
 
+if (isset($DS[12])) {
+  $def[1] .= 
+  "DEF:inbytesa=$RRDFILE[12]:$DS[12]:MAX ".
+  "DEF:outbytesa=$RRDFILE[13]:$DS[13]:MAX ".
+  "CDEF:inmba=inbytes,1048576,/ ".
+  "CDEF:outmba=outbytes,1048576,/ ".
+  "CDEF:minusoutmba=0,outmb,- ".
+  "LINE:inmba#007030:\"in (avg)   \" ".
+  "GPRINT:inbytesa:LAST:\"%5.1lf %sB/s last\" ".
+  "GPRINT:inbytesa:AVERAGE:\"%5.1lf %sB/s avg\" ".
+  "GPRINT:inbytesa:MAX:\"%5.1lf %sB/s max\\n\" ".
+  "LINE:minusoutmba#004070:\"out (avg)  \" ".
+  "GPRINT:outbytesa:LAST:\"%5.1lf %sB/s last\" ".
+  "GPRINT:outbytesa:AVERAGE:\"%5.1lf %sB/s avg\" ".
+  "GPRINT:outbytesa:MAX:\"%5.1lf %sB/s max\\n\" ";
+
+}
+
 # Graph 2: packets
 $ds_name[2] = 'Packets';
 $opt[2] = "--vertical-label \"packets/sec\" --title \"Packets $hostname / $servicedesc\" ";
@@ -99,8 +117,8 @@ $def[2] =
   "GPRINT:inu:AVERAGE:\"%5.2lf/s avg\" ".
   "GPRINT:inu:MAX:\"%5.2lf/s max\\n\" ".
   "AREA:innu#00c080:\"in broadcast/multicast \":STACK ".
-  "GPRINT:innu:LAST:\"%5.2lf/s last\" ".
-  "GPRINT:innu:AVERAGE:\"%5.2lf/s avg\" ".
+  "GPRINT:innu:LAST:\"%5.2lf/s last \" ".
+  "GPRINT:innu:AVERAGE:\"%5.2lf/s avg \" ".
   "GPRINT:innu:MAX:\"%5.2lf/s max\\n\" ".
   "DEF:outu=$RRDFILE[2]:$DS[2]:MAX ".
   "DEF:outnu=$RRDFILE[3]:$DS[3]:MAX ".
@@ -111,8 +129,8 @@ $def[2] =
   "GPRINT:outu:AVERAGE:\"%5.2lf/s avg\" ".
   "GPRINT:outu:MAX:\"%5.2lf/s max\\n\" ".
   "AREA:minusoutnu#0080c0:\"out broadcast/multicast\":STACK ".
-  "GPRINT:outnu:LAST:\"%5.2lf/s last\" ".
-  "GPRINT:outnu:AVERAGE:\"%5.2lf/s avg\" ".
+  "GPRINT:outnu:LAST:\"%5.2lf/s last \" ".
+  "GPRINT:outnu:AVERAGE:\"%5.2lf/s avg \"  ".
   "GPRINT:outnu:MAX:\"%5.2lf/s max\\n\" ";
 
 # Graph 3: errors and discards

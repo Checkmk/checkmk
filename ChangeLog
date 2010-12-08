@@ -14,9 +14,6 @@
     * Configuration check (-X) is now always done. It is now impossible to
       call any Check_MK action with an invalid configuration. This saves
       you agains mistyped variables.
-    * Renamed check functions of imm_health check from test_imm to imm_health
-      to have valid function and check names. Please remove remove from
-      inventory and re-inventory those checks.
     * Check kernel: converted performance data from counters to rates. This
       fixes RRD problems (spikes) on reboots and also allows better access 
       to the peformance data for the Perf-O-Meters.  Also changed service 
@@ -55,6 +52,9 @@
       for an example
 
     Checks & Agents:
+    * Renamed check functions of imm_health check from test_imm to imm_health
+      to have valid function and check names. Please remove remove from
+      inventory and re-inventory those checks.
     * fc_brocade_port_detailed: allow to specify port state combinations not 
       to be critical
     * megaraid_pdisks: Using the real enclosure number as check item now

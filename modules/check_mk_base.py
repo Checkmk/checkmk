@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import socket, os, sys, time, re, signal
+import socket, os, sys, time, re, signal, math
 
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
@@ -583,13 +583,18 @@ def cachefile_age(filename):
 # netctr.eth.tx_collisions 112354335 818
 def load_counters(hostname):
     global g_counters
+    filename = counters_directory + "/" + hostname
     try:
-        lines = file(counters_directory + "/" + hostname).readlines()
-        for line in lines:
-            line = line.split()
-            g_counters[' '.join(line[0:-2])] = ( int(line[-2]), int(line[-1]) )
+        g_counters = eval(file(filename).read())
     except:
-        g_counters = {}
+        # Try old syntax
+        try:
+            lines = file(filename).readlines()
+            for line in lines:
+                line = line.split()
+                g_counters[' '.join(line[0:-2])] = ( int(line[-2]), int(line[-1]) )
+        except:
+            g_counters = {}
 
 def get_counter(countername, this_time, this_val):
     global g_counters
@@ -629,6 +634,26 @@ def get_counter(countername, this_time, this_val):
     return timedif, per_sec
 
 
+def get_average(itemname, this_time, this_val, backlog):
+
+    # first call: take current value as average
+    if not itemname in g_counters:
+        g_counters[itemname] = (this_time, this_val)
+        return 1.0, this_val
+
+    # Get previous value and time difference
+    last_time, last_val = g_counters.get(itemname)
+    timedif = this_time - last_time
+    timedif_min = timedif / 60.0
+
+    # compute weight, but how?
+    weight = math.e ** (-timedif_min / backlog)
+
+    new_val = last_val * weight + this_val * (1 - weight)
+    g_counters[itemname] = (this_time, new_val)
+    return timedif, new_val
+
+
 def save_counters(hostname):
     if not opt_dont_submit and not i_am_root(): # never writer counters as root
         global g_counters
@@ -636,11 +661,11 @@ def save_counters(hostname):
         try:
             if not os.path.exists(counters_directory):
                 os.makedirs(counters_directory)
-            file(filename, "w").\
-                writelines([ "%s %d %d\n" % (i[0], i[1][0], i[1][1]) for i in g_counters.items() ])
+            file(filename, "w").write("%r\n" % g_counters)
         except Exception, e:
             raise MKGeneralException("User %s cannot write to %s: %s" % (username(), filename, e))
 
+# writelines([ "%s %d %d\n" % (i[0], i[1][0], i[1][1]) for i in g_counters.items() ])
 
 
 #   +----------------------------------------------------------------------+

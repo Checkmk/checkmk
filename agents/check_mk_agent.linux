@@ -55,6 +55,16 @@ fi
 echo '<<<check_mk>>>'
 echo Version: 1.1.9i1
 echo AgentOS: linux
+echo PluginsDirectory: $PLUGINSDIR
+echo LocalDirectory: $LOCALDIR
+echo AgentDirectory: $MK_CONFDIR
+
+# If we are called via xinetd, try to find only_from configuration
+if [ -n "$REMOTE_HOST" ]
+then
+    echo -n 'OnlyFrom: '
+    sed -n '/^service[[:space:]]*check_mk/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1
+fi
 
 # Partitionen (-P verhindert Zeilenumbruch bei langen Mountpunkten)
 # Achtung: NFS-Mounts werden grundsaetzlich ausgeblendet, um

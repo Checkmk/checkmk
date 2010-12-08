@@ -94,6 +94,7 @@ char     g_config_file[256];
 struct ipspec {
     uint32_t address;
     uint32_t netmask;
+    int      bits;
 };
 
 #define MAX_ONLY_FROM 32
@@ -1050,6 +1051,21 @@ void section_check_mk(SOCKET &out)
     output(out, "AgentDirectory: %s\n", g_agent_directory);
     output(out, "PluginsDirectory: %s\n", g_plugins_dir);
     output(out, "LocalDirectory: %s\n", g_local_dir);
+    output(out, "OnlyFrom:");
+    if (g_num_only_from == 0)
+        output(out, " 0.0.0.0/0\n");
+    else {
+        for (unsigned i=0; i < g_num_only_from; i++) {
+            ipspec *is = &g_only_from[i];
+            output(out, " %d.%d.%d.%d/%d", 
+                    is->address & 0xff,
+                    is->address >> 8 & 0xff,
+                    is->address >> 16 & 0xff,
+                    is->address >> 24 & 0xff,
+                    is->bits);
+        }
+        output(out, "\n");
+    }
 }
 
 void output_data(SOCKET &out)
@@ -1460,6 +1476,7 @@ void add_only_from(char *value)
     t[0] = s[3];
     g_only_from[g_num_only_from].address = ip;
     g_only_from[g_num_only_from].netmask = mask;
+    g_only_from[g_num_only_from].bits = bits;
 
     if ((ip & mask) != ip) {
         fprintf(stderr, "Invalid only_hosts entry: host part not 0: %s/%u", 

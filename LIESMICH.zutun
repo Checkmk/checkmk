@@ -1,3 +1,5 @@
+Man-Pages zu df_netapp und df_netapp32 fehlen (df_netapp geht nur mit bulkwalk_hosts!!)
+
 Livestatus: is_contact_member_of_contactgroup selbst programmieren,
     da diese Funktion in Nagios rausfliegen wird.
 
@@ -15,6 +17,17 @@ Inventurcheck: retry_interval evt. anders (kuerzer) einstellbar machen.
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
 --------------------------------------------------------------------------------
+WATO Snapin: ajax-Code zum Ausgeben der Links stimmt nicht. Er nimmt
+einfach die Site-ID als URL-Prefix. Das ist aber nicht immer korrekt.
+Man kann in sites eine site "local" nennen, aber der URL-Prefix ist
+z.B. /wato/.
+
+WATO: Wenn ein Agent einen rauswird (leer Ausgabe), kommt im 
+WATO bei der Inventur keine sinnvolle Fehlermeldung.
+
+Reschedule icon: Auch hier ist scheinbar im Link der Sitename als
+URL-Prefix angenommen. Das ist aber nicht unbedingt als gleich
+anzunehmen - vor allem außerhalb von OMD.
 
 Wenn ein Host nur den snmpwalk benutzen soll, versucht cmk trotzdem den Host via SNMP zu kontaktieren.
 Beim Inventory sieht das z.B. so aus:
@@ -23,7 +36,6 @@ Beim Inventory sieht das z.B. so aus:
 > Host 'BOCBKKMM4000': SNMP Error
 > Host 'BOCBKKMM4000': SNMP Error
 Das liegt an den Checks, die noch snmp_info_single nutzen: blade_misc, ironport_misc, snia_sml, snmp_info
-
 
 ich bin mir nicht sicher ob das nun ein Thruk Problem oder ein Livestatus Problem ist. Vermutlich beides :-)
 Wenn ich im Thruk im Suchfenster einfach Enter drücke, kommt folgende Query bei raus:
@@ -97,12 +109,6 @@ geloggt wird nur das Starten und Beenden (was ja im Hauptthread läuft).
 
 Windows-Agent: Memory-Check neu machen. Swap stimmt nicht. Evtl. zwei
 getrennte Checks für Memory and Pagefile.
-
-<<<<<<< HEAD
-=======
-Ansicht Hostgruppen: Auch wenn man die Gruppierung nach Sites ausschaltet,
-bleibt die Ansicht weiterhin nach Sites gruppiert? --> Sortierung falsch.
->>>>>>> 904ac8da2097d928201e4c7a177e85ad51a01895
 
 -------------------------------------------------------------------------------
 ab 1.1.9i1:
@@ -529,3 +535,5 @@ Snapins: die letzten 10 Notifikationen, die letzten 10 Alerts
 (evtl. umschaltbar per Tabs)
 
 Acknowledgements: Ankreuzung, ob persistent oder nicht
+
+

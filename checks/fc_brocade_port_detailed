@@ -27,10 +27,12 @@
 
 # targetstate is 1 (used) or 0 (unused)
 # info columns: INDEX PHYSTATE OPSTATE TXWORDS RXWORDS
-brocade_pystate_names = ['', 'noCard', 'noTransceiver', 'laserFault', 'noLight', 'noSync', 'inSync', 'portFault', 'diagFault', 'lockRef']
-brocade_opstate_names = [ 'unknown', 'online', 'offline', 'testing', 'faulty']
+#                          0     1             2             3            4         5          6          7            8          9
+brocade_phystate_names = [ '', 'noCard', 'noTransceiver', 'laserFault', 'noLight', 'noSync', 'inSync', 'portFault', 'diagFault', 'lockRef' ]
+#                            0          1         2          3           4
+brocade_opstate_names = [ 'unknown', 'online', 'offline', 'testing', 'faulty' ]
 
-fc_brocade_port_detailed_default_levels = ( (1, 0.1), (1, 0.1), (1, 0.1), (2, 160, None) )
+fc_brocade_port_detailed_default_levels = ( (1, 0.1), (1, 0.1), (1, 0.1), (2, 160, None, []) )
 
 def inventory_brocade_port(checkname, info):
     porttable, isltable = info
@@ -62,6 +64,7 @@ def check_brocade_port(portno, params, info):
     portinfo = [ line[1:] for line in porttable if int(line[0]) == int(portno) + 1 ]
     if len(portinfo) < 1:
         return (3, "UNKNOWN - No port number %d present" % int(portno))
+
     phystate, opstate, txwords, rxwords, txframes, rxframes, crcerrors, encout, c3discards = map(int, portinfo[0])
     baudrate = None
     baudinfo = ""
@@ -75,8 +78,11 @@ def check_brocade_port(portno, params, info):
             baudrate = 1.0 * (float(brmult) / 16)
             baudinfo = ", ISL with baudrate: %gGBit/s" % (baudrate, )
 
+    special_states = []
     if len(params) >= 4:
-        assumed_baudrate, io_warn, io_crit = params[3]
+        assumed_baudrate, io_warn, io_crit = params[3][0:3]
+        if len(params[3]) >= 4:
+            special_states = params[3][3]
         if not baudinfo:
             baudinfo = ", assumed baudrate: %gGBit/s" % assumed_baudrate
 
@@ -101,9 +107,18 @@ def check_brocade_port(portno, params, info):
     ]
 
     # First check if port has physical and logical link
-    state = phystate,opstate
+    state = phystate, opstate
     if state != (6,1):
-        return (2, "CRIT - physical state %s, opstate %s" % (brocade_pystate_names[phystate], brocade_opstate_names[opstate]), perfdata)
+        # If port is in one of the states that are especially configured in the parameters,
+        # the exit could is set by the admin
+        nagioscode = 2
+        for ncode, phy, op in special_states:
+            if (phy,op) == (phystate, opstate):
+                nagioscode = ncode
+                break
+        return (nagioscode, "%s - physical state %s(%d), opstate %s(%d)" % (
+                nagios_state_names[nagioscode], brocade_phystate_names[phystate], 
+                phystate, brocade_opstate_names[opstate], opstate), perfdata)
 
     # Now check rates of various error counters
     this_time = time.time()

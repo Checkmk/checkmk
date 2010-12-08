@@ -51,8 +51,12 @@
       function. That way all possible checks should be inventorized.
     * new variable ignored_checks: Similar to ignored_checktypes, but allows
       per-host configuration
+    * allow check implementations to use common include files. See if/if64
+      for an example
 
     Checks & Agents:
+    * fc_brocade_port_detailed: allow to specify port state combinations not 
+      to be critical
     * megaraid_pdisks: Using the real enclosure number as check item now
     * if/if64: Added expected interface speed to warning output
     * if/if64: Allow to ignore speed setting (set target speed to None)
@@ -94,6 +98,8 @@
       unique. The color of the supply unit is reported in a dedicated OID and added to the
       check item name to have a unique name now.
     * printer_supply: Added simple pnp template to have better graph formating for the check results
+    * check_mk.only_from: new check for monitoring the IP address access restriction of the
+      agent. The current Linux and Windows agents provide this information.
     * snmp_info check: Recoded not to use snmp_info_single anymore
 
     Multisite:

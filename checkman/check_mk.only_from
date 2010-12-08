@@ -1,0 +1,35 @@
+title: Check IP restriction of Check_MK agent
+agents: linux, windows
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This checks makes sure that the Check_MK agent on the target system
+ has configured certain IP address based access restrictions. The check
+ needs the agent to be configured with those restrictions. The windows
+ agent is configured via an {.ini}-file. The Linux agent is configured
+ via {/etc/xinetd.d/check_mk}.
+
+examples:
+ # Expect agent to accecpt only localhost and one specific network
+ check_mk_only_from_default = [ "192.168.56.0/30", "127.0.0.1" ]
+
+ # Hosts with the tag 'dmz' should have an different configuration
+ check_parameters += [
+  ( [ "10.0.0.0/8" ], [ "dmz" ], ALL_HOSTS, [ "Check_MK Agent Access" ] ),
+ ]
+
+inventory:
+ One check is created per host, if {check_mk_only_from_default} is explicitely
+ set in {main.mk} and the agent provides an {OnlyFrom:} header in the section
+ {<<<check_mk>>>}.
+
+[parameters]
+target_networks (list(string)): A python list of the allowed networks and IP addresses the
+ agent should be configured for. The order of the entries is not relevant. To host addresses
+ a {/32} will be appended automatically.
+
+[configuration]
+check_mk_only_from_default (list(string)): Default IP access configuration expected from agents.
+ This variable must be set in order for the inventory to create checks, even if you configure more
+ more specific parameters via {check_parameters}.                                           

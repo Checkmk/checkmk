@@ -105,6 +105,13 @@
     * check_mk.only_from: new check for monitoring the IP address access restriction of the
       agent. The current Linux and Windows agents provide this information.
     * snmp_info check: Recoded not to use snmp_info_single anymore
+    * Linux Agent: Fixed <<<cpu>>> output on SPARC machines with openSUSE
+    * df_netapp/df_netapp32: Made check inventory resistant against empty size values
+    * df_netapp32: Added better detection for possible 32bit counter wrap
+    * fc_brocade_port_detailed: Made check handle phystate "noSystemControlAccessToSlot" (10)
+      The check also handles unknown states better now
+    * printer_supply: Added new parameter "printer_supply_some_remaining_status" to
+      configure the reported state on small remaining capacity.
 
     Multisite:
     * The custom open/close states of custom links are now stored for each
@@ -123,6 +130,11 @@
       check: the view is redisplayed exactly at the point of time when
       Nagios has finished the check. This makes use of MK Livestatus'
       unique waiting feature.
+
+   Livestatus:
+    * Added no_more_notifications and check_flapping_recovery_notification
+      fields to host table and no_more_notifications field to service table.
+      Thanks to Matthew Kent
 
 1.1.8:
     Core, Setup, etc.:

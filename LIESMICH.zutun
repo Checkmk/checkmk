@@ -113,6 +113,11 @@ getrennte Checks für Memory and Pagefile.
 -------------------------------------------------------------------------------
 ab 1.1.9i1:
 --------------------------------------------------------------------------------
+
+SNMP Version pro Host erkennen und speichern. Man könnte als erstes mit v2
+versuchen und wenn das nicht geht auf v1 umschalten. Falls das nicht geht, dann
+kann man eben kein SNMP machen.
+
 PNP4Nagios-Popups automatisch einbauen, mit eigenen intelligenten
 Icons.
 

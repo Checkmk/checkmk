@@ -244,7 +244,7 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
     table->addColumn(new OffsetIntColumn(prefix + "state", 
 		"The current state of the service (0: OK, 1: WARN, 2: CRITICAL, 3: UNKNOWN)", (char *)&svc.current_state - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "has_been_checked", 
-		"Wether the service already has been checked (0/1)", (char *)&svc.has_been_checked - ref, indirect_offset));
+		"Whether the service already has been checked (0/1)", (char *)&svc.has_been_checked - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "last_state", 
 		"The last state of the service", (char *)&svc.last_state - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "last_hard_state", 
@@ -254,9 +254,11 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
     table->addColumn(new OffsetIntColumn(prefix + "check_type", 
 		"The type of the last check (0: active, 1: passive)", (char *)&svc.check_type - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "acknowledged", 
-		"Wether the current service problem has been acknowledged (0/1)", (char *)&svc.problem_has_been_acknowledged - ref, indirect_offset));
+		"Whether the current service problem has been acknowledged (0/1)", (char *)&svc.problem_has_been_acknowledged - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "acknowledgement_type", 
 		"The type of the acknownledgement (0: none, 1: normal, 2: sticky)", (char *)&svc.acknowledgement_type - ref, indirect_offset));
+    table->addColumn(new OffsetIntColumn(prefix + "no_more_notifications", 
+		"Whether to stop sending notifications (0/1)", (char *)(&svc.no_more_notifications) - ref, indirect_offset));
     table->addColumn(new OffsetTimeColumn(prefix + "last_state_change", 
 		"The time of the last state change (Unix timestamp)", (char *)&svc.last_state_change - ref, indirect_offset));
     table->addColumn(new OffsetTimeColumn(prefix + "last_time_ok", 
@@ -285,27 +287,27 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
     table->addColumn(new OffsetIntColumn(prefix + "scheduled_downtime_depth", 
 		"The number of scheduled downtimes the service is currently in", (char *)(&svc.scheduled_downtime_depth) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "is_flapping", 
-		"Wether the service is flapping (0/1)", (char *)(&svc.is_flapping) - ref, indirect_offset));
+		"Whether the service is flapping (0/1)", (char *)(&svc.is_flapping) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "checks_enabled", 
-		"Wether active checks are enabled for the service (0/1)", (char *)(&svc.checks_enabled) - ref, indirect_offset));
+		"Whether active checks are enabled for the service (0/1)", (char *)(&svc.checks_enabled) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "accept_passive_checks", 
-		"Wether the service accepts passive checks (0/1)", (char *)(&svc.accept_passive_service_checks) - ref, indirect_offset));
+		"Whether the service accepts passive checks (0/1)", (char *)(&svc.accept_passive_service_checks) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "event_handler_enabled", 
-		"Wether and event handler is activated for the service (0/1)", (char *)(&svc.event_handler_enabled) - ref, indirect_offset));
+		"Whether and event handler is activated for the service (0/1)", (char *)(&svc.event_handler_enabled) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "notifications_enabled", 
-		"Wether notifications are enabled for the service (0/1)", (char *)(&svc.notifications_enabled) - ref, indirect_offset));
+		"Whether notifications are enabled for the service (0/1)", (char *)(&svc.notifications_enabled) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "process_performance_data", 
-		"Wether processing of performance data is enabled for the service (0/1)", (char *)(&svc.process_performance_data) - ref, indirect_offset));
+		"Whether processing of performance data is enabled for the service (0/1)", (char *)(&svc.process_performance_data) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "is_executing",
 		"is there a service check currently running... (0/1)", (char *)(&svc.is_executing) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "active_checks_enabled",
-		"Wether active checks are enabled for the service (0/1)", (char *)(&svc.checks_enabled) - ref, indirect_offset));
+		"Whether active checks are enabled for the service (0/1)", (char *)(&svc.checks_enabled) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "check_options",
 		"The current check option, forced, normal, freshness... (0/1)", (char *)(&svc.check_options) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "flap_detection_enabled",
-		"Wether flap detection is enabled for the service (0/1)", (char *)(&svc.flap_detection_enabled) - ref, indirect_offset));
+		"Whether flap detection is enabled for the service (0/1)", (char *)(&svc.flap_detection_enabled) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "obsess_over_service",
-		"Wether 'obsess_over_service' is enabled for the service (0/1)", (char *)(&svc.obsess_over_service) - ref, indirect_offset));
+		"Whether 'obsess_over_service' is enabled for the service (0/1)", (char *)(&svc.obsess_over_service) - ref, indirect_offset));
     table->addColumn(new AttributelistColumn(prefix + "modified_attributes",
 		"A bitmask specifying which attributes have been modified", (char *)(&svc.modified_attributes) - ref, indirect_offset, false));
     table->addColumn(new AttributelistColumn(prefix + "modified_attributes_list",
@@ -333,9 +335,9 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
 
 
     table->addColumn(new OffsetTimeperiodColumn(prefix + "in_check_period", 
-		"Wether the service is currently in its check period (0/1)", (char *)&svc.check_period_ptr - ref, indirect_offset));
+		"Whether the service is currently in its check period (0/1)", (char *)&svc.check_period_ptr - ref, indirect_offset));
     table->addColumn(new OffsetTimeperiodColumn(prefix + "in_notification_period", 
-		"Wether the service is currently in its notification period (0/1)", (char *)&svc.notification_period_ptr - ref, indirect_offset));
+		"Whether the service is currently in its notification period (0/1)", (char *)&svc.notification_period_ptr - ref, indirect_offset));
 
 
     table->addColumn(new ServiceContactsColumn(prefix + "contacts", 

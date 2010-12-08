@@ -117,7 +117,7 @@ egrep -v '^Swap:|^Mem:|total:' < /proc/meminfo
 
 # Load und Anzahl Prozesse
 echo '<<<cpu>>>'
-echo "$(cat /proc/loadavg) $(grep ^processor < /proc/cpuinfo | wc -l)"
+echo "$(cat /proc/loadavg) $(grep -E '^CPU|^processor' < /proc/cpuinfo | wc -l)"
 
 # Uptime
 echo '<<<uptime>>>'

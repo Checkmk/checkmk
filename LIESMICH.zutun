@@ -490,12 +490,6 @@ Graphen mit dem Windows-Check erstellen (wo ein Graph eh fehlt).
  
 Multisite: Quicksearch evtl. case-insensitive machen?
 
-if/if64: Irgendwie eine Konfigurationsart finden, welche den
-Linkstatus nicht prüft bzw. deswegen nicht kritisch wird.
-Das kann man evtl. sogar damit kombinieren, dass man alle
-ports monitort. Könnte reichen, wenn das Inventur-Konfigurationen
-sind.
-
 Livestatus: StatsGroupBy: mehrere Spalten erlauben
 
 Multisite: Die TOP-25 Alerts: Welche Dinge hosts/services

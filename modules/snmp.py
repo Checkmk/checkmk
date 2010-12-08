@@ -293,7 +293,7 @@ def get_snmp_table(hostname, ip, oid_info):
 def check_snmp_misc(item, params, info):
     for line in info:
         if item == line[0]:
-            value = float(line[1])
+            value = savefloat(line[1])
             text = line[2]
             crit_low, warn_low, warn_high, crit_high = params
             # if value is negative, we have to swap >= and <=!
@@ -311,7 +311,7 @@ def check_snmp_misc(item, params, info):
 def inventory_snmp_misc(checkname, info):
     inventory = []
     for line in info:
-        value = float(line[1])
+        value = savefloat(line[1])
         params = "(%.1f, %.1f, %.1f, %.1f)" % (value*.8, value*.9, value*1.1, value*1.2)
         inventory.append( (line[0], line[2], params ) )
     return inventory

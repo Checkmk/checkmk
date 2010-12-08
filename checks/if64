@@ -31,7 +31,7 @@ def check_if64(item, params, info):
     return check_if_common(item, params, info)
 
 check_info['if64'] = (check_if64, "Interface %s", 1,  inventory_if64)
-check_libs['if64'] = [ "if.functions" ]
+check_includes['if64'] = [ "if.include" ]
 
 snmp_info['if64'] = \
   ( ".1.3.6.1.2.1", [

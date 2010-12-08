@@ -126,15 +126,15 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
     table->addColumn(new OffsetIntColumn(prefix + "max_check_attempts", 
 		"Max check attempts for active host checks", (char *)(&hst.max_attempts) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "flap_detection_enabled", 
-		"Wether flap detection is enabled (0/1)", (char *)(&hst.flap_detection_enabled) - ref, indirect_offset));
+		"Whether flap detection is enabled (0/1)", (char *)(&hst.flap_detection_enabled) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "check_freshness", 
-		"Wether freshness checks are activated (0/1)", (char *)(&hst.check_freshness) - ref, indirect_offset));
+		"Whether freshness checks are activated (0/1)", (char *)(&hst.check_freshness) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "process_performance_data", 
-		"Wether processing of performance data is enabled (0/1)", (char *)(&hst.process_performance_data) - ref, indirect_offset));
+		"Whether processing of performance data is enabled (0/1)", (char *)(&hst.process_performance_data) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "accept_passive_checks", 
-		"Wether passive host checks are accepted (0/1)", (char *)(&hst.accept_passive_host_checks) - ref, indirect_offset));
+		"Whether passive host checks are accepted (0/1)", (char *)(&hst.accept_passive_host_checks) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "event_handler_enabled", 
-		"Wether event handling is enabled (0/1)", (char *)(&hst.event_handler_enabled) - ref, indirect_offset));
+		"Whether event handling is enabled (0/1)", (char *)(&hst.event_handler_enabled) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "acknowledgement_type", 
 		"Type of acknowledgement (0: none, 1: normal, 2: stick)", (char *)(&hst.acknowledgement_type) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "check_type", 
@@ -154,23 +154,27 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
     table->addColumn(new OffsetTimeColumn(prefix + "last_hard_state_change", 
 		"Time of the last hard state change (Unix timestamp)", (char *)(&hst.last_hard_state_change) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "has_been_checked", 
-		"Wether the host has already been checked (0/1)", (char *)(&hst.has_been_checked) - ref, indirect_offset));
+		"Whether the host has already been checked (0/1)", (char *)(&hst.has_been_checked) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "current_notification_number", 
 		"Number of the current notification", (char *)(&hst.current_notification_number) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "pending_flex_downtime", 
-		"Wether a flex downtime is pending (0/1)", (char *)(&hst.pending_flex_downtime) - ref, indirect_offset));
+		"Whether a flex downtime is pending (0/1)", (char *)(&hst.pending_flex_downtime) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "total_services", 
 		"The total number of services of the host", (char *)(&hst.total_services) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "checks_enabled", 
-		"Wether checks of the host are enabled (0/1)", (char *)(&hst.checks_enabled) - ref, indirect_offset));
+		"Whether checks of the host are enabled (0/1)", (char *)(&hst.checks_enabled) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "notifications_enabled", 
-		"Wether notifications of the host are enabled (0/1)", (char *)(&hst.notifications_enabled) - ref, indirect_offset));
+		"Whether notifications of the host are enabled (0/1)", (char *)(&hst.notifications_enabled) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "acknowledged", 
-		"Wether the current host problem has been acknowledged (0/1)", (char *)(&hst.problem_has_been_acknowledged) - ref, indirect_offset));
+		"Whether the current host problem has been acknowledged (0/1)", (char *)(&hst.problem_has_been_acknowledged) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "state", 
 		"The current state of the host (0: up, 1: down, 2: unreachable)", (char *)(&hst.current_state) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "state_type", 
 		"Type of the current state (0: soft, 1: hard)", (char *)(&hst.state_type) - ref, indirect_offset));
+    table->addColumn(new OffsetIntColumn(prefix + "no_more_notifications", 
+		"Whether to stop sending notifications (0/1)", (char *)(&hst.no_more_notifications) - ref, indirect_offset));
+    table->addColumn(new OffsetIntColumn(prefix + "check_flapping_recovery_notification", 
+		"Whether to check to send a recovery notification when flapping stops (0/1)", (char *)(&hst.check_flapping_recovery_notification) - ref, indirect_offset));
     table->addColumn(new OffsetTimeColumn(prefix + "last_check", 
 		"Time of the last check (Unix timestamp)", (char *)(&hst.last_check) - ref, indirect_offset));
     table->addColumn(new OffsetTimeColumn(prefix + "last_state_change", 
@@ -184,13 +188,13 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 		"The last time the host was UNREACHABLE (Unix timestamp)", (char *)&hst.last_time_unreachable - ref, indirect_offset));
     
     table->addColumn(new OffsetIntColumn(prefix + "is_flapping", 
-		"Wether the host state is flapping (0/1)", (char *)(&hst.is_flapping) - ref, indirect_offset));
+		"Whether the host state is flapping (0/1)", (char *)(&hst.is_flapping) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "scheduled_downtime_depth", 
 		"The number of downtimes this host is currently in", (char *)(&hst.scheduled_downtime_depth) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "is_executing",
 		"is there a host check currently running... (0/1)", (char *)(&hst.is_executing) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "active_checks_enabled",
-		"Wether active checks are enabled for the host (0/1)", (char *)(&hst.checks_enabled) - ref, indirect_offset));
+		"Whether active checks are enabled for the host (0/1)", (char *)(&hst.checks_enabled) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "check_options",
 		"The current check option, forced, normal, freshness... (0-2)", (char *)(&hst.check_options) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "obsess_over_host",
@@ -227,9 +231,9 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 		"Percent state change", (char *)(&hst.percent_state_change) - ref, indirect_offset));
 
     table->addColumn(new OffsetTimeperiodColumn(prefix + "in_notification_period", 
-		"Wether this host is currently in its notification period (0/1)", (char *)(&hst.notification_period_ptr) - ref, indirect_offset));
+		"Whether this host is currently in its notification period (0/1)", (char *)(&hst.notification_period_ptr) - ref, indirect_offset));
     table->addColumn(new OffsetTimeperiodColumn(prefix + "in_check_period", 
-		"Wether this host is currently in its check period (0/1)", (char *)(&hst.check_period_ptr) - ref, indirect_offset));
+		"Whether this host is currently in its check period (0/1)", (char *)(&hst.check_period_ptr) - ref, indirect_offset));
 
     table->addColumn(new HostContactsColumn(prefix + "contacts", 
 		"A list of all contacts of this host, either direct or via a contact group", indirect_offset));

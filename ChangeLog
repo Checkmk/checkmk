@@ -106,6 +106,8 @@
     * df_netapp32: Added better detection for possible 32bit counter wrap
     * fc_brocade_port_detailed: Made check handle phystate "noSystemControlAccessToSlot" (10)
       The check also handles unknown states better now
+    * printer_supply: Added new parameter "printer_supply_some_remaining_status" to
+      configure the reported state on small remaining capacity.
 
     Multisite:
     * The custom open/close states of custom links are now stored for each

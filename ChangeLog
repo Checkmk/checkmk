@@ -114,6 +114,11 @@
       Nagios has finished the check. This makes use of MK Livestatus'
       unique waiting feature.
 
+   Livestatus:
+    * Added no_more_notifications and check_flapping_recovery_notification
+      fields to host table and no_more_notifications field to service table.
+      Thanks to Matthew Kent
+
 1.1.8:
     Core, Setup, etc.:
     * setup.sh: turn off Python debugging

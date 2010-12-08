@@ -53,6 +53,8 @@
       per-host configuration
     * allow check implementations to use common include files. See if/if64
       for an example
+    * Better handling for removed checks: Removed exceptions in check_mk calls
+      when some configured checks have been removed/renamed
 
     Checks & Agents:
     * fc_brocade_port_detailed: allow to specify port state combinations not 

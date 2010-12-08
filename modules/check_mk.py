@@ -396,7 +396,10 @@ if __name__ == "__main__":
 #   +----------------------------------------------------------------------+
 
 def have_perfdata(checkname):
-    return check_info[checkname][2]
+    try:
+        return check_info[checkname][2]
+    except:
+        return False
 
 def output_check_info():
     print "Available check types:"
@@ -866,8 +869,13 @@ def get_datasource_program(hostname, ipaddress):
 
 def service_description(checkname, item):
     if checkname not in check_info:
-        raise MKGeneralException("Unknown check type '%s'.\n"
-                                 "Please use check_mk -L for a list of all check types.\n" % checkname)
+        if item:
+            return "Unimplmented check %s / %s" % (checkname, item)
+        else:
+            return "Unimplemented check %s" % checkname
+
+        # raise MKGeneralException("Unknown check type '%s'.\n"
+        #                         "Please use check_mk -L for a list of all check types.\n" % checkname)
 
     # use user-supplied service description, of available
     descr_format = service_descriptions.get(checkname)
@@ -1880,6 +1888,9 @@ def remove_autochecks_of(hostname, checktypes):
                 count += 1
                 splitted = line.split('"')
                 if splitted[1] != hostname or splitted[3] not in checktypes:
+                    if splitted[3] not in check_info:
+                        sys.stderr.write('Removing unimplemented check %s\n' % splitted[3])
+                        continue
                     lines.append(line)
         if len(lines) == 0:
             if opt_verbose:
@@ -2006,6 +2017,9 @@ filesystem_default_levels = None
     need_snmp_module = False
     needed_types = set([])
     for checktype, item, param, descr, aggr in check_table:
+        if checktype not in check_info:
+            sys.stderr.write('Warning: Ignoring missing check %s.\n' % checktype)
+            continue
         needed_types.add(checktype.split(".")[0])
         if check_uses_snmp(checktype):
             need_snmp_module = True

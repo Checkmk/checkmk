@@ -724,6 +724,8 @@ def do_check(hostname, ipaddress):
     sys.stdout.write(output)
     sys.exit(status)
 
+def check_unimplemented(checkname, params, info):
+    return (3, 'UNKNOWN - Check not implemented')
 
 # Loops over all checks for a host, gets the data, calls the check
 # function that examines that data and sends the result to Nagios
@@ -766,7 +768,7 @@ def do_all_checks_on_host(hostname, ipaddress):
             try:
                 check_funktion = check_info[checkname][0]
             except:
-                raise MKGeneralException("Unknown check type %s" % checkname)
+                check_funktion = check_unimplemented
 
             try:
                 dont_submit = False

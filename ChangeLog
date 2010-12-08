@@ -50,6 +50,8 @@
       per-host configuration
     * allow check implementations to use common include files. See if/if64
       for an example
+    * Better handling for removed checks: Removed exceptions in check_mk calls
+      when some configured checks have been removed/renamed
 
     Checks & Agents:
     * Renamed check functions of imm_health check from test_imm to imm_health

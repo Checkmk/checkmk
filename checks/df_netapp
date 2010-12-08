@@ -61,7 +61,7 @@ def check_df_netapp(volume, params, info):
 def inventory_df_netapp(checkname, info):
     inventory = []
     for volume, size_kb, used_kb in info:
-        if int(size_kb) > 0: # Exclude filesystems with zero size (some snapshots)
+        if saveint(size_kb) > 0: # Exclude filesystems with zero size (some snapshots)
             inventory.append( (volume, "%.1fG" % (float(size_kb)/1024/1024), inventory_df_check_params) )
     return inventory
 

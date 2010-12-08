@@ -24,6 +24,17 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Example output of wrapped counter:
+#
+#[['aggr1', '2038760', '1502030284']]
+# dfFileSys         1.3.6.1.4.1.789.1.5.4.1.2
+# dfKBytesTotal     1.3.6.1.4.1.789.1.5.4.1.3
+#   The total capacity in KBytes for the referenced file system.
+# dfKBytesUsed      1.3.6.1.4.1.789.1.5.4.1.4
+#   The total disk space in KBytes that is in use on the referenced file system.
+
+# .1.3.6.1.4.1.789.1.5.4.1.3.1 2038760
+# .1.3.6.1.4.1.789.1.5.4.1.4.1 1502030284
 
 def check_df_netapp32(volume, params, info):
     # info columns: NAME SIZE USED
@@ -46,6 +57,9 @@ def check_df_netapp32(volume, params, info):
     elif size_kb < 0 or used_kb < 0:
         return (3, "UNKNOWN - negative size or usage (32 bit SNMP counter wrap!)")
 
+    elif size_kb * 10 < used_kb:
+        return (3, "UNKNOWN - used disk space is much bigger than total space (32 bit SNMP counter wrap!) - use df_netapp check instead")
+
     warn_mb, crit_mb, levelstext = get_filesystem_levels(g_hostname, volume, size_gb, params)
 
     used_perc = int(round(float(used_kb) / float(size_kb) * 100))
@@ -61,7 +75,7 @@ def check_df_netapp32(volume, params, info):
 def inventory_df_netapp32(checkname, info):
     inventory = []
     for volume, size_kb, used_kb in info:
-        if int(size_kb) > 0: # Exclude filesystems with zero size (some snapshots)
+        if saveint(size_kb) > 0: # Exclude filesystems with zero size (some snapshots)
             inventory.append( (volume, "%.1fG" % (float(size_kb)/1024/1024), inventory_df_check_params) )
     return inventory
 

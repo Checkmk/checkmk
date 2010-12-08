@@ -102,6 +102,8 @@
       agent. The current Linux and Windows agents provide this information.
     * snmp_info check: Recoded not to use snmp_info_single anymore
     * Linux Agent: Fixed <<<cpu>>> output on SPARC machines with openSUSE
+    * df_netapp/df_netapp32: Made check inventory resistant against empty size values
+    * df_netapp32: Added better detection for possible 32bit counter wrap
 
     Multisite:
     * The custom open/close states of custom links are now stored for each

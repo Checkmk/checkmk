@@ -65,6 +65,7 @@
     * cisco_power: Not using power source as threshold anymore. Improved output
     * cisco_fan: Does not inventorize 'notPresent' sensors anymore. Improved output
     * cisco_power: Not using power source as threshold anymore. Improved output
+    * cisco_power: Excluding 'notPresent' devices from inventory now
     * cisco_temp_perf: Do not crash if device does not send current temperature
     * tcp_conn_stats: new check for monitoring number of current TCP connections
     * blade_*: Added snmp scan functions for better automatic inventory
@@ -99,6 +100,7 @@
     * printer_supply: Added simple pnp template to have better graph formating for the check results
     * check_mk.only_from: new check for monitoring the IP address access restriction of the
       agent. The current Linux and Windows agents provide this information.
+    * snmp_info check: Recoded not to use snmp_info_single anymore
 
     Multisite:
     * The custom open/close states of custom links are now stored for each

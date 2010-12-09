@@ -88,8 +88,8 @@ def iconbutton(what, url, target="side", handler="", name=""):
     html.write("<a href=\"%s\" %s %s><img class=iconbutton onmouseover=\"hilite_icon(this, 1)\" onmouseout=\"hilite_icon(this, 0)\" align=absmiddle src=\"%scheck_mk/images/button_%s_lo.png\"></a>\n " % (href, onclick, tg, defaults.url_prefix, what))
 
 def nagioscgilink(text, target):
-    html.write("<li class=sidebar><a target=\"main\" class=link href=\"%s/%s\">%s</a></li>" % \
-            (defaults.nagios_cgi_url, target, htmllib.attrencode(text)))
+    html.write("<li class=sidebar><a target=\"main\" class=link href=\"%s/nagios/cgi-bin/%s\">%s</a></li>" % \
+            (defaults.url_prefix, target, htmllib.attrencode(text)))
 
 def heading(text):
     html.write("<h3>%s</h3>\n" % htmllib.attrencode(text))

@@ -17,7 +17,7 @@ Inventurcheck: retry_interval evt. anders (kuerzer) einstellbar machen.
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
 --------------------------------------------------------------------------------
-WATO: Wenn ein Agent einen rauswird (leer Ausgabe), kommt im 
+WATO: Wenn ein Agent einen rauswirft (leere Ausgabe, Connection closed), kommt im 
 WATO bei der Inventur keine sinnvolle Fehlermeldung.
 
 ich bin mir nicht sicher ob das nun ein Thruk Problem oder ein Livestatus Problem ist. Vermutlich beides :-)

@@ -1,5 +1,12 @@
-1.1.9i1
+1.1.9i1:
     INCOMPATIBLE CHANGES:
+    * TCP / SNMP: hosts using TCP and SNMP now must use the tags 'tcp'
+      and 'snmp'. Hosts with the tag 'ping' will not inventorize any
+      service. New configuration variable tcp_hosts.
+    * Inventory: The call syntax for inventory has been simplified. Just
+      call check_mk -I HOSTNAME now. Omit the "tcp" or "snmp". If you
+      want to do inventory just for certain check types, type "check_mk --checks=snmp_info,if -I hostnames..."
+      instead
     * perfdata_format now defaults to "pnp". Previous default was "standard".
       You might have to change that in main.mk if you are not using PNP (only
       relevant for MRPE checks)
@@ -10,21 +17,18 @@
     * snmp_communites is now initialized with [], not with {}. It cannot
       be a dict any longer.
     * bulkwalk_hosts is now initizlized with []. You can do += here just
-      is with all other rule variables.
+      as with all other rule variables.
     * Configuration check (-X) is now always done. It is now impossible to
       call any Check_MK action with an invalid configuration. This saves
-      you agains mistyped variables.
+      you against mistyped variables.
     * Check kernel: converted performance data from counters to rates. This
       fixes RRD problems (spikes) on reboots and also allows better access 
       to the peformance data for the Perf-O-Meters.  Also changed service 
-      descriptions. You need to reinventurize the kernel checks. You old
+      descriptions. You need to reinventurize the kernel checks. Your old
       RRDs will not be deleted, new ones will be created.
     * Multisite: parameters nagios_url, nagios_cgi_url and pnp_url are now
       obsolete. Instead the new parameter url_prefix is used (which must
       end with a /).
-    * TCP / SNMP: hosts using TCP and SNMP now must use the tags 'tcp'
-      and 'snmp'. Hosts with the tag 'ping' will not inventorize any
-      service. New configuration variable tcp_hosts.
 
     Core, Setup, etc.:
     * Improve error handling: if hosts are monitored with SNMP *and* TCP,

@@ -1,5 +1,3 @@
-if/if64: Dokumentation muss aktualisiert werden.
-
 Man-Pages zu df_netapp und df_netapp32 fehlen (df_netapp geht nur mit bulkwalk_hosts!!)
 
 Livestatus: is_contact_member_of_contactgroup selbst programmieren,

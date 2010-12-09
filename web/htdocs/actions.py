@@ -74,6 +74,7 @@ def action_reschedule():
                 "Columns: last_check state plugin_output\n"
                 "Filter: host_name = %s\n%s"
                 % (what, host, service, now, config.reschedule_timeout * 1000, host, add_filter))
+        html.live.set_only_sites()
         last_check = row[0]
         if last_check < now:
             html.write("['TIMEOUT', 'Check not executed within %d seconds']\n" % (config.reschedule_timeout))
@@ -82,6 +83,5 @@ def action_reschedule():
             html.write("['OK', %d, %d, %r]\n" % (row[0], row[1], row[2].encode("utf-8")))
 
     except Exception, e:
-        raise MKGeneralException("Cannot reschedule check: %s" % e)
-    finally:
         html.live.set_only_sites()
+        raise MKGeneralException("Cannot reschedule check: %s" % e)

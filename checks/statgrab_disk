@@ -24,6 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+def inventory_statgrab_disk(checkname, info):
+    for line in info:
+        if line[0].endswith('read_bytes') or line[0].endswith('write_bytes'):
+            return [ ('read', None, None), ('write', None, None) ]
+    return []
 
 def check_statgrab_disk(item, params, info):
     # item is 'read' or 'write'
@@ -37,9 +42,8 @@ def check_statgrab_disk(item, params, info):
 
     this_time = int(time.time())
     timedif, per_sec = get_counter("diskstat." + item, this_time, this_val)
-    mb_per_s = per_sec / 1024.0    # Diskstat output is in KB
     perfdata = [ (item, "%dc" % this_val ) ]
-    return (0, "OK - %.1fMB/s (in last %d secs)" % (mb_per_s, timedif), perfdata)
+    return (0, "OK - %s/s (in last %d secs)" % (get_bytes_human_readable(per_sec), timedif), perfdata)
 
 
-check_info['statgrab_disk'] = (check_statgrab_disk, "Disk IO %s", 1,  no_inventory_possible)
+check_info['statgrab_disk'] = (check_statgrab_disk, "Disk IO %s", 1,  inventory_statgrab_disk)

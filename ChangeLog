@@ -117,6 +117,8 @@
     * Windows agent: .vbs scripts in agents plugins/ directory are executed
       automatically with "cscript.exe /Nologo" to prevent wrong file handlers
     * aironet_clients: Only counting clients which don't have empty values for strength
+    * statgrab_disk: Fixed byte calculation in plugin output
+    * statgrab_disk: Added inventory function
 
     Multisite:
     * The custom open/close states of custom links are now stored for each

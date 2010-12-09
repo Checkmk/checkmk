@@ -116,6 +116,7 @@
       configure the reported state on small remaining capacity.
     * Windows agent: .vbs scripts in agents plugins/ directory are executed
       automatically with "cscript.exe /Nologo" to prevent wrong file handlers
+    * aironet_clients: Only counting clients which don't have empty values for strength
 
     Multisite:
     * The custom open/close states of custom links are now stored for each

@@ -34,6 +34,8 @@ def inventory_aironet_clients(checkname, info):
                 ("clients", "", None)]
 
 def check_aironet_clients(item, params, info):
+    info = [ line for line in info if line[0] != '' ]
+
     if len(info) == 0:
         return (0, "OK - No clients currently logged in")
 

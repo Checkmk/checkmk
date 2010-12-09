@@ -23,10 +23,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-$opt[1] = "--vertical-label 'Uptime (s)' -l0 --title \"Uptime (time since last reboot)\" ";
+$opt[1] = "--vertical-label 'Uptime (d)' -l0 --title \"Uptime (time since last reboot)\" ";
 
-$def[1] = "DEF:uptime=$RRDFILE[1]:$DS[1]:MAX ";
-$def[1] .= "AREA:uptime#80f000:\"Uptime (sec)\" ";
+$def[1] = "DEF:sec=$RRDFILE[1]:$DS[1]:MAX ";
+$def[1] .= "CDEF:uptime=sec,86400,/ ";
+$def[1] .= "AREA:uptime#80f000:\"Uptime (days)\" ";
 $def[1] .= "LINE:uptime#408000 ";
-
+$def[1] .= "GPRINT:uptime:LAST:\"%7.2lf %s LAST\" ";
+$def[1] .= "GPRINT:uptime:MAX:\"%7.2lf %s MAX\" ";
 ?>

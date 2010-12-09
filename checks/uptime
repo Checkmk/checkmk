@@ -33,10 +33,11 @@ def check_uptime(_no_item, _no_params, info):
     seconds = uptime % 60
     rem = uptime / 60
     minutes = rem % 60
-    hours = rem / 60
+    hours = (rem % 1440) / 60
+    days = rem / 1440
     now = int(time.time())
     since = time.strftime("%c", time.localtime(now - uptime))
-    return (0, "OK - up since %s (%d:%02d:%02d)" % (since, hours, minutes, seconds), [ ("uptime", uptime) ])
+    return (0, "OK - up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds), [ ("uptime", uptime) ])
 
 
 check_info["uptime"] = (check_uptime, "Uptime", 1, inventory_uptime)

@@ -666,10 +666,9 @@ do
 	   chmod 755 $DESTDIR$bindir/check_mk &&
 	   sed -i "s#@BINDIR@#$bindir#g"              $DESTDIR$docdir/check_mk_templates.cfg &&
 	   sed -i "s#@VARDIR@#$vardir#g"              $DESTDIR$docdir/check_mk_templates.cfg &&
-	   sed -i "s#@CGIURL@#$cgiurl#g"              $DESTDIR$docdir/check_mk_templates.cfg &&
 	   sed -i "s#@CHECK_ICMP@#$check_icmp_path#g" $DESTDIR$docdir/check_mk_templates.cfg &&
-	   sed -i "s#@NAGIOSURL@#$nagiosurl#g"        $DESTDIR$docdir/check_mk_templates.cfg &&
-	   sed -i "s#@PNPURL@#$pnp_url#g"             $DESTDIR$docdir/check_mk_templates.cfg &&
+	   sed -i "s#@CGIURL@#${url_prefix}nagios/cgi-bin/#g" $DESTDIR$docdir/check_mk_templates.cfg &&
+	   sed -i "s#@PNPURL@#${url_prefix}pnp4nagios/#g" $DESTDIR$docdir/check_mk_templates.cfg &&
            mkdir -p "$DESTDIR$nagconfdir"
 	   if [ ! -e $DESTDIR$nagconfdir/check_mk_templates.cfg ] ; then
  	       ln -s $docdir/check_mk_templates.cfg $DESTDIR$nagconfdir 2>/dev/null

@@ -165,6 +165,11 @@ bei Downtimes immer absolute Zeiten angeben? Evtl. Zusatzspalte der Duration.
 --------------------------------------------------------------------------------
 IDEEN & VERBESSERUNGEN
 --------------------------------------------------------------------------------
+
+Windows Agent: Auch den Startmodus (Automatisch, Manuell, Deaktiviert) ausgeben
+So ist es einfacher Dienste zu überwachen. Man kann z.B. einfach alle "automatischen"
+Dienste pauschal überwachen.
+
 Windows-Agent: Eventlogeinträge nach UTF-8 kodieren.
 
 Multisite: Ein Link vom Detail-Host zum Summary-Host (umgekehrt ist er doch
@@ -529,8 +534,6 @@ Das kann aber doch keine Lösung sein. Andererseits braucht man
 dies nur wenn wenn in config was ändert oder bei livestatus
 (wegen der persistenten Verbindungen). Sonst kanns einem egal
 sein, wenn man ein neues Modul bekommt.
-
-Windows-Agent: VB-Scripts automatisch mit cscript ausführen.
 
 Snapins: die letzten 10 Notifikationen, die letzten 10 Alerts
 (evtl. umschaltbar per Tabs)

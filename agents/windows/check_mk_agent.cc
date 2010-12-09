@@ -220,6 +220,18 @@ void output(SOCKET &out, const char *format, ...)
 }
 
 
+void section_uptime(SOCKET &out)
+{
+    output(out, "<<<uptime>>>\n");
+    static LARGE_INTEGER Frequency,Ticks;
+    QueryPerformanceFrequency (&Frequency);
+    QueryPerformanceCounter (&Ticks);
+    Ticks.QuadPart = Ticks.QuadPart - Frequency.QuadPart;
+    unsigned int uptime = (double)Ticks.QuadPart / Frequency.QuadPart;
+    output(out, "%s\n", llu_to_string(uptime));
+}
+
+
 void section_df(SOCKET &out)
 {
     output(out, "<<<df>>>\n");
@@ -1094,6 +1106,7 @@ void output_data(SOCKET &out)
     setlocale(LC_ALL, "C");
 
     section_check_mk(out);
+    section_uptime(out);
     section_df(out);
     section_ps(out);
     section_mem(out);

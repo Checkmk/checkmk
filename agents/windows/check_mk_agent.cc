@@ -983,28 +983,25 @@ void section_eventlog(SOCKET &out)
     first_run = false;
 }
 
-void add_interpreter(char *path)
+char *add_interpreter(char *path, char *newpath)
 {
-    if((strcmp(&path[strlen(path) - 5], ".vbs\"")) == 0) {
+    if (!strcmp(path + strlen(path) - 5, ".vbs\"")) {
         // If this is a vbscript don't rely on the default handler for this
         // file extensions. This might be notepad or some other editor by
         // default on a lot of systems. So better add cscript as interpreter.
-        //
-        snprintf(path, 256, "cscript.exe //Nologo %s", path);
-        //
-        //char path_tmp[256];
-        //strcpy(path_tmp, path);
-        //strcpy(path, "cscript.exe //Nologo ");
-        //strcat(path, path_tmp);
-        //free(path_tmp);
+        snprintf(newpath, 256, "cscript.exe //Nologo %s", path);
+        return newpath;
     }
+    else
+        return path;
 }
 
 void run_plugin(SOCKET &out, char *path) 
 {
-    add_interpreter(path);
+    char newpath[256];
+    char *execpath = add_interpreter(path, newpath);
     
-    FILE *f = popen(path, "r");
+    FILE *f = popen(execpath, "r");
     if (f) {
         char line[4096];
         while (0 != fgets(line, sizeof(line), f)) {

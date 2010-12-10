@@ -1,3 +1,7 @@
+1.1.9i2:
+    Checks & Agents:
+    * ibm_imm_health: fix inventory function
+    
 1.1.9i1:
     INCOMPATIBLE CHANGES:
     * TCP / SNMP: hosts using TCP and SNMP now must use the tags 'tcp'

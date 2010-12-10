@@ -1,6 +1,9 @@
 1.1.9i2:
     Checks & Agents:
     * ibm_imm_health: fix inventory function
+
+    Multisite:
+    * WATO: Fixed omd mode/site detection
     
 1.1.9i1:
     INCOMPATIBLE CHANGES:

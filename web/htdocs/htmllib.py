@@ -495,9 +495,18 @@ class html:
         if config.debug:
             self.write("Booom (%s)" % url)
 
+    def apache_user(self):
+        return pwd.getpwuid( os.getuid() )[ 0 ]
+
     def omd_mode(self):
-        apache_user = pwd.getpwuid( os.getuid() )[ 0 ]
-        if 'OMD_SITE' in self.req.subprocess_env and 'OMD_MODE' in self.req.subprocess_env:
-            return (apache_user, self.req.subprocess_env['OMD_MODE'], self.req.subprocess_env['OMD_SITE'])
-        else:
-            return (apache_user, None, None)
+        # Load mod_python env into regular environment
+        os.environ.update(self.req.subprocess_env)
+
+        omd_mode = None
+        omd_site = None
+        if 'OMD_SITE' in os.environ:
+            omd_site = os.environ['OMD_SITE']
+            omd_mode = 'shared'
+            if omd_site == self.apache_user():
+                omd_mode = 'own'
+        return (omd_mode, omd_site)

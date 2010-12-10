@@ -54,8 +54,17 @@ Der Service wird auch nicht in die aggregierten Services eines Summary Hosts
 aufgenommen. Das kann dazu führen, dass die Anzahl der Services in einem
 Summary-Host variabel ist.
 
-Cluster-Inventur: Wenn ein Service auf der Node sitzt und man die Regeln
-zu Clustered services ändert, entfernt ein -II das nicht von der node
+Cluster-Inventur(1): Wenn man ein check_mk -II macht, dann werden clustered
+services nicht entfernt. Um das sauber hinzubekommen, muss man sicherstellen,
+dass der Anwender  check_mk -II mit *allen* nodes aufgerufen hat. Denn nur
+so darf man die Checks auf dem Cluster entfernen. Sonst kann man nicht sicher
+sein, dass Services wegfliegen, die eigentlich von einem anderem Node kommen.
+Das müsste dann auch micht clustered_services_of funktionieren. Ich muss
+einfach alle Cluster durchgehen, feststellen, ob jeweils alle deren Nodes
+inventurisiert werden, und darf dann die betroffenen Services wegwerfen.
+
+Cluster-Inventur(2): Wenn ein Service auf der Node sitzt und man die Regeln
+zu Clustered services ändert, entfernt ein -II das nicht von der node.
 
 Livestatus: wenn man mehrere StatsGroupBy macht, wird der Speicher von den 
 alten nicht freigegeben (ist momentan eh nicht erlaubt. Fehlermeldung ausgeben).

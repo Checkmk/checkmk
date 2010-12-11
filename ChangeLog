@@ -4,6 +4,8 @@
 
     Multisite:
     * WATO: Fixed omd mode/site detection
+    * Sidebar Quicksearch: Now really disabling browser built-in completion
+      dropdown selections
     
 1.1.9i1:
     INCOMPATIBLE CHANGES:

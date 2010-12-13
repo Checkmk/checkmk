@@ -95,7 +95,7 @@ if (isset($DS[12])) {
   "DEF:outbytesa=$RRDFILE[13]:$DS[13]:MAX ".
   "CDEF:inmba=inbytesa,1048576,/ ".
   "CDEF:outmba=outbytesa,1048576,/ ".
-  "CDEF:minusoutmba=0,outmb,- ".
+  "CDEF:minusoutmba=0,outmba,- ".
   "LINE:inmba#007030:\"in (avg)   \" ".
   "GPRINT:inbytesa:LAST:\"%5.1lf %sB/s last\" ".
   "GPRINT:inbytesa:AVERAGE:\"%5.1lf %sB/s avg\" ".

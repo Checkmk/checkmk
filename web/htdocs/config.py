@@ -45,16 +45,9 @@ except:
     defaults.omd_site = None
     defaults.omd_root = None
 
-def load_config():
-    # reset settings which can be changed at runtime to
-    # default values. Otherwise they stick to their changed
-    # value - within the Apache process that has answered
-    # the query, if that variable is not explicitely defined
-    # in multisite.mk
-    global debug
-    debug = False
-
-    filename = defaults.default_config_dir + "/multisite.mk"
+def include(filename):
+    if not filename.startswith("/"):
+        filename = defaults.default_config_dir + "/" + filename
 
     # Config file is obligatory. An empty example is installed
     # during setup.sh. Better signal an error then simply ignore
@@ -69,6 +62,19 @@ def load_config():
         role = None
         user_permissions = []
         raise MKConfigError("Cannot read configuration file %s: %s:" % (filename, e))
+
+
+def load_config():
+    # reset settings which can be changed at runtime to
+    # default values. Otherwise they stick to their changed
+    # value - within the Apache process that has answered
+    # the query, if that variable is not explicitely defined
+    # in multisite.mk
+    global debug
+    debug = False
+
+    include("multisite.mk")
+
 
 # -------------------------------------------------------------------
 #    ____                     _         _

@@ -1,6 +1,8 @@
 1.1.9i2:
     Checks & Agents:
     * ibm_imm_health: fix inventory function
+    * if/if64: fix average line in PNP-template, fix display of speed for 20MBit
+      lines (e.g. Frame Relay)
 
     Multisite:
     * WATO: Fixed omd mode/site detection

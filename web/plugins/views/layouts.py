@@ -145,7 +145,8 @@ def render_grouped_boxes(data, view, group_painters, painters, num_columns):
                 trclass = "even"
             else:
                 trclass = "odd"
-            state = row.get("service_state", None)
+            # state = row.get("service_state", row.get("aggr_state"))
+            state = row.get("service_state")
             if state == None:
                 state = row.get("host_state", 0)
                 if state > 0: state +=1 # 1 is critical for hosts

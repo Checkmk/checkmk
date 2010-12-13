@@ -1049,7 +1049,14 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     if (not view["mustsearch"]) or html.var("search"):
         # names for additional columns (through Stats: headers)
         add_columns = datasource.get("add_columns", [])
-        columns, rows = query_data(datasource, columns, add_columns, query, only_sites, get_limit())
+
+        # tablename may be a function instead of a livestatus tablename
+        # In that case that function is used to compute the result.
+        if type(tablename) == type(lambda x:None):
+            columns, rows = tablename(html, columns, query, only_sites, get_limit())
+        else:
+            columns, rows = query_data(datasource, columns, add_columns, query, only_sites, get_limit())
+
         sort_data(rows, sorters)
     else:
         columns, rows = [], []
@@ -1347,7 +1354,7 @@ def query_data(datasource, columns, add_columns, add_headers, only_sites = [], l
     if merge_column:
         columns = [merge_column] + columns
 
-    # Most layouts need current state of objekt in order to
+    # Most layouts need current state of object in order to
     # choose background color - even if no painter for state
     # is selected. Make sure those columns are fetched. This
     # must not be done for the table 'log' as it cannot correctly

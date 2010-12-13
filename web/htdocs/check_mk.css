@@ -1774,3 +1774,25 @@ div.wato {
 .wato td.takeall {
     width: 100%;
 }
+
+/* 
+        _                                    _   _             
+       / \   __ _  __ _ _ __ ___  __ _  __ _| |_(_) ___  _ __  
+      / _ \ / _` |/ _` | '__/ _ \/ _` |/ _` | __| |/ _ \| '_ \ 
+     / ___ \ (_| | (_| | | |  __/ (_| | (_| | |_| | (_) | | | |
+    /_/   \_\__, |\__, |_|  \___|\__, |\__,_|\__|_|\___/|_| |_|
+            |___/ |___/          |___/                         
+    
+*/
+table.services td.aggr.svcdetail {
+    padding: 0px;
+}
+
+.aggr.svcdetail table {
+    border-collapse: collapse;
+    width: 100%;
+}
+table.services tr.data .aggr.svcdetail table td {
+    font-size: 80%;
+    padding: 1px 2px;
+}

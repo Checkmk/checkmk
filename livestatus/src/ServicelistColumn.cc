@@ -53,7 +53,7 @@ void ServicelistColumn::output(void *data, Query *query)
 	    else
 		first = false;
 	    // show only service name => no sublist
-	    if (!_show_host && !_show_state)
+	    if (!_show_host && _info_depth == 0)
 		query->outputString(svc->description);
 	    else
 	    {
@@ -63,12 +63,16 @@ void ServicelistColumn::output(void *data, Query *query)
 		    query->outputSublistSeparator();
 		}
 		query->outputString(svc->description);
-		if (_show_state) {
+		if (_info_depth >= 1) {
 		    query->outputSublistSeparator();
 		    query->outputInteger(svc->current_state);
 		    query->outputSublistSeparator();
 		    query->outputInteger(svc->has_been_checked);
 		}
+                if (_info_depth >= 2) {
+		    query->outputSublistSeparator();
+		    query->outputString(svc->plugin_output);
+                }
 		query->outputEndSublist();
 	    }
 	}

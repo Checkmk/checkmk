@@ -66,12 +66,14 @@ if($bandwidth > $base * $base * $base) {
 }
 
 $ds_name[1] = 'Used bandwidth';
-$opt[1] = "--vertical-label \"MB/sec\" -X0 -b 1024 --title \"Used bandwidth $hostname / $servicedesc\" ";
+$opt[1] = "--vertical-label \"MByte/sec\" -X0 -b 1024 --title \"Used bandwidth $hostname / $servicedesc\" ";
 $def[1] = 
   "HRULE:0#c0c0c0 ".
   "LINE:$mByteBandwidth#808080:\"Port speed\:  " . sprintf("%.1f", $bandwidth) . " ".$bwuom."Bit/s  \" ".
-  "LINE:$mByteWarn#ffff00:\"Warning\:  " . sprintf("%.1f", $warn) . " ".$bwuom."Bit/s  \" ".
-  "LINE:$mByteCrit#ff0000:\"Critical\:  " . sprintf("%.1f", $crit) . " ".$bwuom."Bit/s\\n\" ".
+  "LINE:$mByteWarn#ffff00:\"Warning\:  " . sprintf("%.1f", $warn) . " ".$bwuom."Byte/s  \" ".
+  "LINE:$mByteCrit#ff0000:\"Critical\:  " . sprintf("%.1f", $crit) . " ".$bwuom."Byte/s\\n\" ".
+  "LINE:-$mByteWarn#ffff00: ".
+  "LINE:-$mByteCrit#ff0000: ".
   "LINE:-$mByteBandwidth#808080: ".
   "DEF:inbytes=$RRDFILE[1]:$DS[1]:MAX ".
   "DEF:outbytes=$RRDFILE[6]:$DS[6]:MAX ".
@@ -91,8 +93,8 @@ if (isset($DS[12])) {
   $def[1] .= 
   "DEF:inbytesa=$RRDFILE[12]:$DS[12]:MAX ".
   "DEF:outbytesa=$RRDFILE[13]:$DS[13]:MAX ".
-  "CDEF:inmba=inbytes,1048576,/ ".
-  "CDEF:outmba=outbytes,1048576,/ ".
+  "CDEF:inmba=inbytesa,1048576,/ ".
+  "CDEF:outmba=outbytesa,1048576,/ ".
   "CDEF:minusoutmba=0,outmb,- ".
   "LINE:inmba#007030:\"in (avg)   \" ".
   "GPRINT:inbytesa:LAST:\"%5.1lf %sB/s last\" ".
@@ -102,7 +104,6 @@ if (isset($DS[12])) {
   "GPRINT:outbytesa:LAST:\"%5.1lf %sB/s last\" ".
   "GPRINT:outbytesa:AVERAGE:\"%5.1lf %sB/s avg\" ".
   "GPRINT:outbytesa:MAX:\"%5.1lf %sB/s max\\n\" ";
-
 }
 
 # Graph 2: packets

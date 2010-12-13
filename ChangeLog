@@ -1,6 +1,11 @@
 1.1.9i2:
     Checks & Agents:
     * ibm_imm_health: fix inventory function
+
+    Multisite:
+    * WATO: Fixed omd mode/site detection
+    * Sidebar Quicksearch: Now really disabling browser built-in completion
+      dropdown selections
     
 1.1.9i1:
     INCOMPATIBLE CHANGES:

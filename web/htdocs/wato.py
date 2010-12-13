@@ -493,7 +493,7 @@ def check_mk_automation(command, args=[], indata=""):
         commandargs = defaults.check_mk_automation.split()
         cmd = commandargs  + [ command ] + args
     else:
-        apache_user, omd_mode, omd_site = html.omd_mode()
+        omd_mode, omd_site = html.omd_mode()
         if not omd_mode or omd_mode == 'own':
             commandargs = [ 'check_mk', '--automation' ]
             cmd = commandargs  + [ command ] + args
@@ -513,7 +513,8 @@ def check_mk_automation(command, args=[], indata=""):
                     "%s ALL = (root) NOPASSWD: %s\ *\n"
                     "</pre></li>\n"
                     "<li>Retry this operation</li></ol>\n" %
-                    (apache_user, apache_user, " ".join(commandargs[1:-1] + [ commandargs[-1].replace(' ', '\ ')])))
+                    (html.apache_user(), html.apache_user(), " ".join(commandargs[1:-1] + [ commandargs[-1].replace(' ', '\ ')])))
+
     try:
         p = subprocess.Popen(cmd,
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)

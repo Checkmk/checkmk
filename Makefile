@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL           = /bin/bash
-VERSION        	= 1.1.9i1
+VERSION        	= 1.1.9i2
 NAME           	= check_mk
 RPM_TOPDIR     	= rpm.topdir
 RPM_BUILDROOT  	= rpm.buildroot
@@ -104,7 +104,7 @@ version:
 	if [ -n "$$newversion" ] ; then \
 	    sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$$newversion/" Makefile ; \
 	    for agent in agents/* ; do \
-	        if [ "$$agent" != agents/windows ] ; then \
+	        if [ "$$agent" != agents/windows -a "$$agent" != agents/plugins ] ; then \
 	            sed -i 's/echo Version: [0-9.a-z]*/'"echo Version: $$newversion/g" $$agent; \
 	        fi ; \
 	    done ; \

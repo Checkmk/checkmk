@@ -496,6 +496,7 @@ def check_mk_automation(command, args=[], indata=""):
     # - When not set try to detect the command for OMD or non OMD installations
     #   - OMD 'own' apache mode or non OMD: check_mk --automation
     #   - OMD 'shared' apache mode: Full path to the binary and the defaults
+    sudoline = None
     if defaults.check_mk_automation:
         commandargs = defaults.check_mk_automation.split()
         cmd = commandargs + [ command ] + args
@@ -507,9 +508,16 @@ def check_mk_automation(command, args=[], indata=""):
         else: # OMD shared mode
             commandargs = [ 'sudo', '/bin/su', '-', omd_site, '-c', 'check_mk --automation' ]
             cmd = commandargs[:-1] + [ commandargs[-1] + ' ' + ' '.join([ command ] + args) ]
+            sudoline = "%s ALL = (root) NOPASSWD: /bin/su - %s -c check_mk\\ --automation\\ *" % (html.apache_user(), omd_site)
 
     sudo_msg = ''
     if commandargs[0] == 'sudo':
+        if not sudoline:
+            if commandargs[1] == '-u': # skip -u USER in /etc/sudoers
+                sudoline = "%s ALL = (%s) NOPASSWD: %s *" % (html.apache_user(), commandargs[2], " ".join(commandargs[3:]))
+            else:
+                sudoline = "%s ALL = (root) NOPASSWD: %s *" % (html.apache_user(), commandargs[0], " ".join(commandargs[1:]))
+            
         sudo_msg = ("<p>The webserver is running as user which has no rights on the "
                     "needed Check_MK/Nagios files.<br />Please ensure you have set-up "
                     "the sudo environment correctly. e.g. proceed as follows:</p>\n"
@@ -517,10 +525,10 @@ def check_mk_automation(command, args=[], indata=""):
                     "<li>Append the following to the <code>/etc/sudoers</code> file:\n"
                     "<pre># Needed for WATO - the Check_MK Web Administration Tool\n"
                     "Defaults:%s !requiretty\n"
-                    "%s ALL = (root) NOPASSWD: %s\ *\n"
+                    "%s\n"
                     "</pre></li>\n"
                     "<li>Retry this operation</li></ol>\n" %
-                    (html.apache_user(), html.apache_user(), " ".join(commandargs[1:-1] + [ commandargs[-1].replace(' ', '\ ')])))
+                    (html.apache_user(), sudoline))
 
     try:
         p = subprocess.Popen(cmd,

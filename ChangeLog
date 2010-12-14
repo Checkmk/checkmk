@@ -6,6 +6,7 @@
 
     Multisite:
     * WATO: Fixed omd mode/site detection
+    * WATO: Use and show common log for pending changes 
     * Sidebar Quicksearch: Now really disabling browser built-in completion
       dropdown selections
     

@@ -3144,8 +3144,8 @@ def do_restart_nagios(only_reload):
     process = os.popen(command, "r")
     output = process.read()
     if process.close():
-        sys.stdout.write("ERROR:\n")
-        raise MKGeneralException("Cannot re%s Nagios" % action)
+        sys.stdout.write("ERROR: %s\n" % output)
+        raise MKGeneralException("Cannot re%s Nagios: %s" % (action, output))
     else:
         sys.stdout.write(tty_ok + "\n")
 
@@ -3506,7 +3506,20 @@ def automation_try_inventory(args):
             infotype = ct.split('.')[0]
             opt_use_cachefile = True
             opt_no_tcp = True
-            info = get_host_info(hostname, ipaddress, infotype)
+            try:
+                info = get_host_info(hostname, ipaddress, infotype)
+            # Handle cases where agent does not output data
+            except MKAgentError, e:
+                if str(e) == "":
+                    continue
+                else:
+                    raise
+            except MKSNMPError, e:
+                if str(e) == "":
+                    continue
+                else:
+                    raise
+            
             check_function = check_info[ct][0]
             # apply check_parameters
             try:
@@ -3706,6 +3719,7 @@ def do_automation(cmd, args):
         if opt_debug:
             raise
         sys.exit(1)
+
     except Exception, e:
         if opt_debug:
             raise

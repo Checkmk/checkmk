@@ -544,3 +544,7 @@ Bei den Views z.B. im Titel die Anzahl der Antwortzeilen der Anfrage
 anzeigen - Generell und bei jeder View. Bei Gruppierten Views evtl.
 die Anzahl der Gruppen? Dann wüsste man die Zahl aber erst nach dem
 rendern. Also geht das nicht...
+
+if-Check: Die Bandbreiten-Erkennung klappt manchmal nicht, z.B.
+weil der Provider die Bandbreite runterregelt. In den Check-Params
+sollte man die tatsächliche Bandbreite angeben können.

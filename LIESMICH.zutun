@@ -546,3 +546,7 @@ rendern. Also geht das nicht...
 if-Check: Die Bandbreiten-Erkennung klappt manchmal nicht, z.B.
 weil der Provider die Bandbreite runterregelt. In den Check-Params
 sollte man die tatsächliche Bandbreite angeben können.
+
+SNMP: Hier könnte man weiter Parameter konfigurierbar machen,
+z.B. snmp_parameters = []. Auf die Art kann man auch z.B. eine
+alternative Portnummer angeben.

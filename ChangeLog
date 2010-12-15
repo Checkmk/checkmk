@@ -1,14 +1,22 @@
 1.1.9i3:
+    INCOMPATIBLE CHANGES:
+    * You need a current version of Livestatus for Multisite to work!
+
     Multisite:
     * Finally show host/services icons from the nagios value "icon_image".
       Put your icon files in /usr/share/check_mk/web/htdocs/images/icons.
       OMD users put the icons into ~/local/share/check_mk/web/htdocs/images/icons.
-    * fix problem with PNP-links with services containing a ':' (thanks to Dirk Mayer)
-
+    * New automatic PNP-link icons: These icons automatically appear, if
+      the new livestatus is configured correctly (see below). 
     Checks & Agents:
     * Fixed problem with OnlyFrom: in Linux agent (df didn't work properly)
     * cups_queues: fixed plugin error due to invalid import of datetime,
       converted other checks from 'from datetime import...' to 'import datetime'.
+
+    Livestatus:
+    * new column pnpgraph_present in table host and service. In order for this
+      column to work you need to specify the base directory of the PNP graphs
+      with the module option pnp_path=, e.g. pnp_path=/omd/sites/wato/var/pnp4nagios/perfdata
 
 1.1.9i2:
     Checks & Agents:

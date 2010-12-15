@@ -22,26 +22,19 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "HostSpecialIntColumn.h"
+#include "ServiceSpecialIntColumn.h"
 #include "nagios.h"
 #include "pnp4nagios.h"
 
-int32_t HostSpecialIntColumn::getValue(void *data, Query *)
+int32_t ServiceSpecialIntColumn::getValue(void *data, Query *)
 {
    data = shiftPointer(data);
    if (!data) return 0;
 
-   host *hst = (host *)data;
+   service *svc = (service *)data;
    switch (_type) {
-      case HSIC_REAL_HARD_STATE:
-	 if (hst->current_state == 0)
-	    return 0;
-	 else if (hst->state_type == 1)
-	    return hst->current_state; // we have reached a hard state
-	 else
-	    return hst->last_hard_state;
-      case HSIC_PNP_GRAPH_PRESENT:
-         return pnpgraph_present(hst->name, 0);
+      case SSIC_PNP_GRAPH_PRESENT:
+         return pnpgraph_present(svc->host_ptr->name, svc->description);
    }
    return -1; // never reached
 }

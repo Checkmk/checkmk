@@ -6,6 +6,10 @@ Hostnamen in ipaddresses eintragen: Das sollte man dokumentieren
 Man-Pages zu df_netapp und df_netapp32 fehlen (df_netapp geht nur mit bulkwalk_hosts!!)
 
 Doku: Check_MK und OMD: Installieren von MKPs, local-Hierarchie
+
+[""] deprecaten, aus der Doku raus und durch ALL_SERVICES ersetzen. Das geht
+aber erst, wenn eine stabile Version das ALL_SERVICES erlaubt!
+
 --------------------------------------------------------------------------------
 
 Livestatus: is_contact_member_of_contactgroup selbst programmieren,
@@ -127,9 +131,6 @@ ab 1.1.11i1
 
 filesystem_levels wirklich rausnehmen. Hinweis, dass check_parameters verwendet
 werden soll.
-
-[""] deprecaten, aus der Doku raus und durch ALL_SERVICES ersetzen. Das geht
-aber erst, wenn eine stabile Version das ALL_SERVICES erlaubt!
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------

@@ -32,6 +32,7 @@
 #include "OffsetDoubleColumn.h"
 #include "OffsetTimeperiodColumn.h"
 #include "OffsetStringServiceMacroColumn.h"
+#include "ServiceSpecialIntColumn.h"
 #include "AttributelistColumn.h"
 #include "TableHosts.h"
 #include "TableServicegroups.h"
@@ -312,6 +313,8 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
 		"A bitmask specifying which attributes have been modified", (char *)(&svc.modified_attributes) - ref, indirect_offset, false));
     table->addColumn(new AttributelistColumn(prefix + "modified_attributes_list",
 		"A list of all modified attributes", (char *)(&svc.modified_attributes) - ref, indirect_offset, true));
+    table->addColumn(new ServiceSpecialIntColumn(prefix + "pnpgraph_present",
+		"Whether there is a PNP4Nagios graph present for this service (0/1)", SSIC_PNP_GRAPH_PRESENT, indirect_offset));
 
     // columns of type double
     table->addColumn(new OffsetDoubleColumn(prefix + "check_interval",

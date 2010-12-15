@@ -33,7 +33,7 @@ livestatus_so_SOURCES = \
 	DoubleColumnFilter.cc DowntimeOrComment.cc DownCommColumn.cc EmptyColumn.cc \
 	Filter.cc GlobalCountersColumn.cc HostContactsColumn.cc HostgroupsColumn.cc \
 	HostlistColumn.cc HostlistColumnFilter.cc HostlistStateColumn.cc \
-	HostSpecialIntColumn.cc InputBuffer.cc IntColumn.cc IntColumnFilter.cc \
+	HostSpecialIntColumn.cc ServiceSpecialIntColumn.cc InputBuffer.cc IntColumn.cc IntColumnFilter.cc \
 	ListColumn.cc ListColumnFilter.cc OffsetDoubleColumn.cc OffsetIntColumn.cc \
 	OffsetStringColumn.cc OffsetTimeperiodColumn.cc OringFilter.cc OutputBuffer.cc \
 	OffsetTimeColumn.cc TimePointerColumn.cc TimeColumnFilter.cc \
@@ -46,7 +46,7 @@ livestatus_so_SOURCES = \
 	ContactgroupsMemberColumn.cc OffsetStringMacroColumn.cc OffsetStringServiceMacroColumn.cc \
 	OffsetStringHostMacroColumn.cc StatsColumn.cc IntAggregator.cc CountAggregator.cc \
 	DoubleAggregator.cc AttributelistColumn.cc AttributelistFilter.cc \
-	global_counters.c  module.c  logger.c waittriggers.c TimeperiodsCache.cc
+	global_counters.c  module.c  logger.c waittriggers.c TimeperiodsCache.cc pnp4nagios.cc
 
 livestatus_so_CXXFLAGS = -I$(top_srcdir)/nagios -fPIC
 livestatus_so_CFLAGS   = $(livestatus_so_CXXFLAGS) 

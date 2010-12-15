@@ -284,6 +284,8 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 
     table->addColumn(new HostSpecialIntColumn(prefix + "hard_state",
 		"The effective hard state of the host (eliminates a problem in hard_state)", HSIC_REAL_HARD_STATE, indirect_offset));
+    table->addColumn(new HostSpecialIntColumn(prefix + "pnpgraph_present",
+		"Whether there is a PNP4Nagios graph present for this host (0/1)", HSIC_PNP_GRAPH_PRESENT, indirect_offset));
 
     table->addColumn(new HostgroupsColumn(prefix + "groups",
 		"A list of all host groups this host is in", (char *)(&hst.hostgroups_ptr) - ref, indirect_offset));

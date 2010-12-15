@@ -22,26 +22,45 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "HostSpecialIntColumn.h"
-#include "nagios.h"
+#include <string.h>
+#include <unistd.h>
+
 #include "pnp4nagios.h"
 
-int32_t HostSpecialIntColumn::getValue(void *data, Query *)
-{
-   data = shiftPointer(data);
-   if (!data) return 0;
+extern char g_pnp_path[];
 
-   host *hst = (host *)data;
-   switch (_type) {
-      case HSIC_REAL_HARD_STATE:
-	 if (hst->current_state == 0)
-	    return 0;
-	 else if (hst->state_type == 1)
-	    return hst->current_state; // we have reached a hard state
-	 else
-	    return hst->last_hard_state;
-      case HSIC_PNP_GRAPH_PRESENT:
-         return pnpgraph_present(hst->name, 0);
-   }
-   return -1; // never reached
+void cleanup_pnpname(char *p)
+{
+    while (*p) {
+        if (*p == ' ' || *p == '/' || *p == '\\' || *p == ':') 
+            *p = '_';
+        p++;
+    }
 }
+
+int pnpgraph_present(char *host, char *service)
+{
+    if (!g_pnp_path[0])
+        return -1;
+
+    char path[4096];
+    strcpy(path, g_pnp_path);
+    char *end = path + strlen(path);
+    strcpy(end, host);
+    cleanup_pnpname(end);
+    strcat(end, "/");
+    end = end + strlen(end);
+    if (service) {
+        strcat(end, service);
+        cleanup_pnpname(end);
+        strcat(end, ".xml");
+    }
+    else 
+        strcat(end, "_HOST_.xml");
+
+    if (0 == access(path, R_OK))
+        return 1;
+    else
+        return 0;
+}
+

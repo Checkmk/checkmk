@@ -29,7 +29,8 @@
 
 #include "IntColumn.h"
 
-#define HSIC_REAL_HARD_STATE 0
+#define HSIC_REAL_HARD_STATE   0
+#define HSIC_PNP_GRAPH_PRESENT 1
 
 class HostSpecialIntColumn : public IntColumn
 {

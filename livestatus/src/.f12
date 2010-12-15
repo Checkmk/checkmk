@@ -1,3 +1,5 @@
 #!/bin/sh
 set -e
 make -j 8
+sudo install livestatus.o /omd/versions/default/lib/mk-livestatus/
+sudo omd restart wato nagios

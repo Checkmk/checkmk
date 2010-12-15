@@ -78,6 +78,7 @@ void *g_nagios_handle;
 int g_unix_socket = -1;
 int g_max_fd_ever = 0;
 char g_socket_path[4096];
+char g_pnp_path[4096];
 int g_debug_level = 0;
 int g_should_terminate = false;
 pthread_t g_mainthread_id;
@@ -471,10 +472,29 @@ void deregister_callbacks()
 }
 
 
+void check_pnp_path()
+{
+    struct stat st;
+    if (0 == stat(g_pnp_path, &st)) {
+        if (0 != access(g_pnp_path, R_OK)) {
+            logger(LG_ERR, "PNP perfdata directory '%s' not readable. Please fix permissions.", g_pnp_path);
+            g_pnp_path[0] = 0; // disable
+        }
+    }
+    else {
+        logger(LG_ERR, "PNP perfdata directory '%s' not existing. Please check pnp_path option!", g_pnp_path);
+        g_pnp_path[0] = 0; // disable
+    }
+}
+
+
 void livestatus_parse_arguments(const char *args_orig)
 {
     /* set default socket path */
     strcpy(g_socket_path, DEFAULT_SOCKET_PATH);
+
+    /* there is no default PNP path */
+    g_pnp_path[0] = 0;
 
     if (!args_orig) 
         return; // no arguments, use default options
@@ -559,7 +579,12 @@ void livestatus_parse_arguments(const char *args_orig)
 		    logger(LG_INFO, "Invalid group authorization mode. Allowed are strict and loose.");
 		}
 	    }
-		 
+            else if (!strcmp(left, "pnp_path")) {
+                strcpy(g_pnp_path, right);
+                if (right[strlen(right) - 1] != '/')
+                    strcat(g_pnp_path, "/"); // make sure, that trailing slash is always there
+                check_pnp_path();
+            }
 	    else {
 		logger(LG_INFO, "Ignoring invalid option %s=%s", left, right);
 	    }

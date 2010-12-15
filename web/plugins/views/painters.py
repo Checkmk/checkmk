@@ -75,10 +75,32 @@
 icon_columns = [ "acknowledged", "scheduled_downtime_depth", "downtimes_with_info", "comments_with_info",
                  "notifications_enabled", "is_flapping", "modified_attributes_list", "active_checks_enabled",
                  "accept_passive_checks", "action_url_expanded", "notes_url_expanded", "in_notification_period",
-                 "custom_variable_names", "custom_variable_values", "icon_image" ]
+                 "custom_variable_names", "custom_variable_values", "icon_image", "pnpgraph_present" ]
 
 # Additional columns only to fetch for services
 icon_service_columns = [ "service_description" ]
+
+# Intelligent Links to PNP4Nagios 0.6.X
+def pnp_cleanup(s):
+    return s \
+        .replace(' ', '_') \
+        .replace(':', '_') \
+        .replace('/', '_') \
+        .replace('\\', '_')
+
+def pnp_url(row, what = 'graph'):
+    sitename = row["site"]
+    host = pnp_cleanup(row["host_name"])
+    svc = pnp_cleanup(row.get("service_description", "_HOST_"))
+    site = html.site_status[sitename]["site"]
+    url = site["url_prefix"] + ("pnp4nagios/index.php/%s?host=%s&srv=%s" % \
+            (what, htmllib.urlencode(host), htmllib.urlencode(svc)))
+    if what == 'graph':
+        url += "&theme=multisite&baseurl=%scheck_mk/" % htmllib.urlencode(defaults.url_prefix)
+    return url
+
+def pnp_popup_url(row):
+    return pnp_url(row, 'popup')
 
 def wato_link(filename, site, hostname, where):
     prefix = config.site(site)["url_prefix"] + "check_mk/"
@@ -118,8 +140,14 @@ def paint_icons(what, row): # what is "host" or "service"
     else:
         tags = []
 
-    # action_url
-    if row[prefix + "action_url_expanded"]:
+    # PNP Graph
+    pnpgraph_present = row[prefix + "pnpgraph_present"]
+    if pnpgraph_present == 1:
+        output += '<a class=tips rel="%s" href="%s"><img class=icon src="images/icon_pnp.png"></a>' % (pnp_popup_url(row), pnp_url(row))
+
+    # action_url (only, if not a PNP-URL and pnp_graph is working!)
+    action_url = row[prefix + "action_url_expanded"]
+    if action_url and not ('/pnp4nagios/' in action_url and pnpgraph_present >= 0): 
         output += "<a href='%s'><img class=icon src=\"images/icon_action.gif\"></a>" % row[prefix + "action_url_expanded"]
 
     # notes_url
@@ -1086,44 +1114,12 @@ multisite_painters["sg_alias"] = {
     "paint" : lambda row: (None, row["servicegroup_alias"])
 }
 
-# Intelligent Links to PNP4Nagios 0.6.X
-
-def pnp_url(row):
-    sitename = row["site"]
-    host = row["host_name"]
-    svc = row["service_description"]
-    svc = svc.replace(":", "_").replace("\\", "_")
-    site = html.site_status[sitename]["site"]
-    url = site["url_prefix"] + ("pnp4nagios/index.php/graph?view=1&host=%s&srv=%s&theme=multisite&baseurl=%scheck_mk/" % \
-            (htmllib.urlencode(host), htmllib.urlencode(svc), htmllib.urlencode(defaults.url_prefix)))
-    return url
-
-
-def pnp_icon_link(row):
-    a = "<a href=\"%s\"><img class=icon src=\"images/icon_pnp.gif\"></a>" % pnp_url(row)
-
-    if config.site_is_local(row["site"]):
-        # Where is our RRD?
-        basedir = defaults.rrd_path + "/" + row["host_name"]
-        xmlpath = basedir + "/" + row["service_description"].replace("/", "_").replace(" ", "_").replace(":", "_") + ".xml"
-        if os.path.exists(xmlpath):
-            return a
-        else:
-            return ""
-
-    # Darn. Remote site. We cannot check for a file but rather use
-    # (Lars' idea) the perfdata field
-    elif row["service_perf_data"]:
-        return  a
-    else:
-        return ""
-
 
 multisite_painters["link_to_pnp_service"] = {
-    "title"   : "Link to PNP4Nagios",
+    "title"   : "(obsolete) Link to PNP4Nagios",
     "short"   : "PNP",
     "columns" : [ "site", "host_name", "service_description", "service_perf_data"],
-    "paint"   : lambda row: ("", pnp_icon_link(row))
+    "paint"   : lambda row: ("", "")
 }
 
 #     ____                                     _

@@ -136,8 +136,8 @@ def page_side(h):
 <head>
 <title>Check_MK Sidebar</title>
 <link href="check_mk.css" type="text/css" rel="stylesheet">
-<script type="text/javascript" src="check_mk.js"></script>
-<script type="text/javascript" src="sidebar.js"></script>
+<script type="text/javascript" src="js/check_mk.js"></script>
+<script type="text/javascript" src="js/sidebar.js"></script>
 </head>
 <body class="side" onload="initScrollPos()" onunload="storeScrollPos()">
 <div id="check_mk_sidebar">""")

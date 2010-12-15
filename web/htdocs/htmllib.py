@@ -338,7 +338,16 @@ class html:
             if config.custom_style_sheet:
                self.req.write('                <link rel="stylesheet" type="text/css" href="%s">' % config.custom_style_sheet)
             self.req.write('''
-                <script type='text/javascript' src='check_mk.js'></script>
+                <script type='text/javascript' src='js/check_mk.js'></script>
+                <script type="text/javascript" src='js/jquery-min.js'></script>
+                <script type="text/javascript" src='js/jquery.cluetip.js'></script>
+                <script type="text/javascript">
+                jQuery.noConflict();
+                jQuery(document).ready(function() {
+                      jQuery('a.tips').cluetip({ajaxCache: false, dropShadow: false, showTitle: false });
+                        });
+                </script>
+
                 </head>
                 ''')
             self.req.header_sent = True

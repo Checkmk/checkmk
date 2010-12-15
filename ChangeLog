@@ -5,6 +5,9 @@
       OMD users put the icons into ~/local/share/check_mk/web/htdocs/images/icons.
     * fix problem with PNP-links with services containing a ':' (thanks to Dirk Mayer)
 
+    Checks & Agents:
+    * Fixed problem with OnlyFrom: in Linux agent (df didn't work properly)
+
 1.1.9i2:
     Checks & Agents:
     * ibm_imm_health: fix inventory function

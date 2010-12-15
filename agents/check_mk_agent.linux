@@ -63,7 +63,7 @@ echo AgentDirectory: $MK_CONFDIR
 if [ -n "$REMOTE_HOST" ]
 then
     echo -n 'OnlyFrom: '
-    sed -n '/^service[[:space:]]*check_mk/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1
+    echo $(sed -n '/^service[[:space:]]*check_mk/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1)
 fi
 
 # Partitionen (-P verhindert Zeilenumbruch bei langen Mountpunkten)

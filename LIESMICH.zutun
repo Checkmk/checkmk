@@ -1,21 +1,22 @@
+DOKU:
+--------------------------------------------------------------------------------
 Hostnamen in ipaddresses eintragen: Das sollte man dokumentieren
 (wegen dynamischen Hosts.)
 
 Man-Pages zu df_netapp und df_netapp32 fehlen (df_netapp geht nur mit bulkwalk_hosts!!)
 
+Doku: Check_MK und OMD: Installieren von MKPs, local-Hierarchie
+--------------------------------------------------------------------------------
+
 Livestatus: is_contact_member_of_contactgroup selbst programmieren,
     da diese Funktion in Nagios rausfliegen wird.
-
-Doku: Check_MK und OMD: Installieren von MKPs, local-Hierarchie
 
 Multisite: Kontextknöpfe Services: OK, Services: Crit usw. unsichtbar
 machen. Dazu einen neue View-Option einbauen (hide context button).
 
-Multisite: Bei jedem aktiven Service soll ein Knopf angezeigt werden
-zum Reschedulen. Dieser soll dann per WaitCondition: so lange warten,
-bis der Check auch wirklich ausgeführt wurde!
-
 Inventurcheck: retry_interval evt. anders (kuerzer) einstellbar machen.
+Das geht aber auch mit extra_service_conf. Evtl. reicht hier die Doku.
+Ein sinnvoller Default-Wert wäre aber schon gut.
 
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
@@ -152,6 +153,8 @@ Fakemeldung nach oben schicken, die critical ist.
 Multisite: Zeitanzeige der Downtimes (ende) zu ungenau.  "in 6 hrs" ist
 blöd. Auch bei Start "19 sec" ist dumm, hier wäre besser (vor 19 sec). Oder
 bei Downtimes immer absolute Zeiten angeben? Evtl. Zusatzspalte der Duration.
+
+
 
 --------------------------------------------------------------------------------
 IDEEN & VERBESSERUNGEN

@@ -66,8 +66,7 @@
 #   0xFF       End-of-Log
 #};
 
-from datetime import datetime
-import time
+import datetime, time
 
 smbios_sel_msg_types = {
   #Type: (Number-of-Entries Threshold, Status-Code, Current Count, Last Entry, Alias)
@@ -118,14 +117,14 @@ def check_smbios_sel(_no_item, _no_params, info):
         if type == "E":
             sum_status = 2
             num_errors += 1;
-            smbios_sel_msg_types["E%d"%num_errors] = [1, 2, 1, datetime.now(), msg]
+            smbios_sel_msg_types["E%d"%num_errors] = [1, 2, 1, datetime.datetime.now(), msg]
             continue
 
         # Informational messages are explicit created by our binary when the
         # sel is empty. This is needed to create the smbios_sel service in Nagios.
         if type == "I":
             sum_status = 0
-            smbios_sel_msg_types["I%d"%num_errors] = [1, 0, 1, datetime.now(), msg]
+            smbios_sel_msg_types["I%d"%num_errors] = [1, 0, 1, datetime.datetime.now(), msg]
             continue
 
         type = int(type)
@@ -144,14 +143,14 @@ def check_smbios_sel(_no_item, _no_params, info):
                     sum_status = smbios_sel_msg_types[type][1]
 
             # Save the date when the current entry is newer
-            dt = datetime(*time.strptime(isodate, "%Y-%m-%d %H:%M:%S")[0:5])
+            dt = datetime.datetime(*time.strptime(isodate, "%Y-%m-%d %H:%M:%S")[0:5])
             if smbios_sel_msg_types[type][3] == None or smbios_sel_msg_types[type][3] < dt:
                 smbios_sel_msg_types[type][3] = dt;
         else:
             # Unknown types will result in UNKNOWN state
             sum_status = 3
             smbios_sel_msg_types[type] = [1, 3, 1,
-                                          datetime.now(),
+                                          datetime.datetime.now(),
                                           "Unknown log type (%s)" % type]
 
     sum_output = ""

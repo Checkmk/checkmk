@@ -7,6 +7,8 @@
 
     Checks & Agents:
     * Fixed problem with OnlyFrom: in Linux agent (df didn't work properly)
+    * cups_queues: fixed plugin error due to invalid import of datetime,
+      converted other checks from 'from datetime import...' to 'import datetime'.
 
 1.1.9i2:
     Checks & Agents:

@@ -45,8 +45,7 @@
 #lpr2-2                  root              1024   Tue Jun 29 09:02:35 2010
 #lpr2-3                  root              1024   Tue Jun 29 09:05:54 2010
 
-from datetime import datetime, timedelta
-import time
+import time, datetime
 
 # Default thresholds
 # ("<Warning max entries>", "<Critical num entries>", "<Warning entry age in seconds>", "<Critical entry age>")
@@ -60,7 +59,7 @@ def check_cups_queues(item, params, info):
     state   = 3
     output  = "UNKNOWN - Queue not found"
     numJobs = 0
-    now     = datetime.now()
+    now     = datetime.datetime.now()
     oldest  = now
     for num, line in enumerate(info):
         if line[0] == 'printer' and line[1] == item:
@@ -83,15 +82,15 @@ def check_cups_queues(item, params, info):
         elif line[0].startswith(item+'-'):
             # This is a queue item count the number of items and check the max age
             numJobs += 1
-            dt = datetime(*time.strptime(' '.join(line[3:]), '%a %b %d %H:%M:%S %Y')[0:5])
+            dt = datetime.datetime(*time.strptime(' '.join(line[3:]), '%a %b %d %H:%M:%S %Y')[0:5])
             if dt < oldest:
                 oldest = dt
 
     jobOutput = 'Jobs: %d' % numJobs
     if numJobs > 0:
-        if oldest < now - timedelta(seconds=critAge) or numJobs > critNum:
+        if oldest < now - datetime.timedelta(seconds=critAge) or numJobs > critNum:
             state = 2
-        elif oldest < now - timedelta(seconds=warnAge) or numJobs > warnNum:
+        elif oldest < now - datetime.timedelta(seconds=warnAge) or numJobs > warnNum:
             state = 1
         jobOutput += ', Oldest job is from %s' % oldest
 

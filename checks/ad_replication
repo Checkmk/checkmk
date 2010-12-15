@@ -32,8 +32,7 @@
 # showrepl_INFO,Standardname-des-ersten-Standorts,WIN2003,"CN=Configuration,DC=corp,DC=de",Standardname-des-ersten-Standorts,WIN2003-DC2,RPC,0,0,2010-07-02 12:54:08,0
 # showrepl_INFO,Standardname-des-ersten-Standorts,WIN2003,"CN=Schema,CN=Configuration,DC=corp,DC=de",Standardname-des-ersten-Standorts,WIN2003-DC2,RPC,0,0,2010-07-02 12:46:28,0
 
-from datetime import datetime, timedelta
-import time
+import datetime, time
 
 ad_replication_default_params = (20,)
 
@@ -41,7 +40,7 @@ def parse_ad_replication_dates(s):
     if s == '0' or s == '(never)':
         return None
     else:
-        return datetime(*time.strptime(s, '%Y-%m-%d %H:%M:%S')[0:5])
+        return datetime.datetime(*time.strptime(s, '%Y-%m-%d %H:%M:%S')[0:5])
 
 def parse_ad_replication_info(info):
     lines = []
@@ -60,7 +59,7 @@ def inventory_ad_replication(checktype, info):
 def check_ad_replication(item, params, info):
     status    = 0
     output    = ''
-    now       = datetime.now()
+    now       = datetime.datetime.now()
     foundLine = False
 
     for l in parse_ad_replication_info(info):

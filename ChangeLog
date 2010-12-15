@@ -11,7 +11,8 @@
       lines (e.g. Frame Relay)
 
     Multisite:
-    * WATO: Fixed omd mode/site detection
+    * WATO: Fixed omd mode/site detection and help for /etc/sudoers
+    * WATO: Use and show common log for pending changes 
     * Sidebar Quicksearch: Now really disabling browser built-in completion
       dropdown selections
     

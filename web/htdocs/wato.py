@@ -22,8 +22,8 @@ import htmllib
 # config = importer.import_module("config")
 
 config.declare_permission("use_wato",
-     "Use Webconfiguration",
-     "Only with this permission, users are allowed to use Check_MK web configuration GUI.",
+     "Use WATO",
+     "This permissions allows users to use WATO - Check_MK's Web Administration Tool. Please make sure, that they also have the permission for the WATO snapin.",
      [ "admin", ])
 
 conf_dir = defaults.var_dir + "/wato"
@@ -169,7 +169,7 @@ def mode_index(phase):
             if not ipaddress:
                 try:
                     ip = socket.gethostbyname(hostname)
-                    ipaddress = "(DNS: %s)" % ip
+                    ipaddress = "%s&nbsp;(DNS)" % ip
                     tdclass = ' class="dns"'
                 except:
                     ipaddress = "(hostname not resolvable!)"
@@ -206,14 +206,19 @@ def host_link(hostname):
         return hostname
 
 
-def render_audit_log(log, what):
+def render_audit_log(log, what, with_filename = False):
     htmlcode = '<table class="wato auditlog %s">'
     even = "even"
-    for t, user, action, text in log:
+    for t, filename, user, action, text in log:
         text = parse_host_names(text)
         even = even == "even" and "odd" or "even"
-        htmlcode += '<tr class="%s0"><td>%s</td><td>%s</td><td>%s</td><td width="100%%">%s</td></tr>\n' % (
-                even,
+        htmlcode += '<tr class="%s0">' % even
+        if with_filename:
+            if filename != g_filename:
+                htmlcode += '<td><a href="wato.py?mode=changelog&filename=%s">%s</a></td>' % (filename, filename)
+            else:
+                htmlcode += '<td>%s</td>' % filename
+        htmlcode += '<td>%s</td><td>%s</td><td>%s</td><td width="100%%">%s</td></tr>\n' % (
                 time.strftime("%Y-%m-%d", time.localtime(float(t))),
                 time.strftime("%H:%M:%S", time.localtime(float(t))),
                 user,
@@ -241,11 +246,10 @@ def mode_changelog(phase):
 	    return None, "The new configuration has been successfully activated."
 
     else:
-
         pending = parse_audit_log("pending")
         if len(pending) > 0:
             message = "<h1>Changes which are not yet activated:</h1>"
-            message += render_audit_log(pending, "pending")
+            message += render_audit_log(pending, "pending", True)
             message += '<a href="%s" class=button>Activate Changes!</a>' % \
                 html.makeuri([("_action", "activate"), ("_transid", html.current_transid(html.req.user))])
             html.show_warning(message)
@@ -254,7 +258,8 @@ def mode_changelog(phase):
 
         audit = parse_audit_log("audit")
         if len(audit) > 0:
-            html.write(render_audit_log(audit, "audit"))
+            html.write("<b>Audit log of configuration file %s</b><br>" % g_filename)
+            html.write(render_audit_log(audit, "audit", False))
         else:
             html.write("<p>Logfile is empty. No host has been created or changed yet.</p>")
         
@@ -453,8 +458,8 @@ def log_entry(hostname, action, message, logfilename):
     log_dir = conf_dir + "/" + g_filename
     make_nagios_directory(log_dir)
     log_file = log_dir + "/" + logfilename
-    create_user_file(log_file, "a").write("%d %s %s %s\n" % 
-            (int(time.time()), html.req.user, action, message))
+    create_user_file(log_file, "a").write("%d %s %s %s %s\n" % 
+            (int(time.time()), g_filename, html.req.user, action, message))
 
 
 def log_audit(hostname, what, message):
@@ -462,22 +467,24 @@ def log_audit(hostname, what, message):
 
 
 def log_pending(hostname, what, message):
-    log_entry(hostname, what, message, "pending.log")
+    log_entry(hostname, what, message, "../pending.log")
     log_entry(hostname, what, message, "audit.log")
 
-
 def log_commit_pending():
-    pending = conf_dir + "/" + g_filename + "/pending.log"
+    pending = conf_dir + "/pending.log"
     if os.path.exists(pending):
         os.remove(pending)
 
 def parse_audit_log(what):
-    path = "%s/%s/%s.log" % (conf_dir, g_filename, what)
+    if what == "pending":
+        path = "%s/%s.log" % (conf_dir, what)
+    else:
+        path = "%s/%s/%s.log" % (conf_dir, g_filename, what)
     if os.path.exists(path):
         entries = []
         for line in file(path):
             line = line.rstrip()
-            entries.append(line.split(None, 3))
+            entries.append(line.split(None, 4))
         entries.reverse()
         return entries
     return []
@@ -489,20 +496,28 @@ def check_mk_automation(command, args=[], indata=""):
     # - When not set try to detect the command for OMD or non OMD installations
     #   - OMD 'own' apache mode or non OMD: check_mk --automation
     #   - OMD 'shared' apache mode: Full path to the binary and the defaults
+    sudoline = None
     if defaults.check_mk_automation:
         commandargs = defaults.check_mk_automation.split()
-        cmd = commandargs  + [ command ] + args
+        cmd = commandargs + [ command ] + args
     else:
         omd_mode, omd_site = html.omd_mode()
         if not omd_mode or omd_mode == 'own':
             commandargs = [ 'check_mk', '--automation' ]
             cmd = commandargs  + [ command ] + args
-        else:
+        else: # OMD shared mode
             commandargs = [ 'sudo', '/bin/su', '-', omd_site, '-c', 'check_mk --automation' ]
             cmd = commandargs[:-1] + [ commandargs[-1] + ' ' + ' '.join([ command ] + args) ]
+            sudoline = "%s ALL = (root) NOPASSWD: /bin/su - %s -c check_mk\\ --automation\\ *" % (html.apache_user(), omd_site)
 
     sudo_msg = ''
     if commandargs[0] == 'sudo':
+        if not sudoline:
+            if commandargs[1] == '-u': # skip -u USER in /etc/sudoers
+                sudoline = "%s ALL = (%s) NOPASSWD: %s *" % (html.apache_user(), commandargs[2], " ".join(commandargs[3:]))
+            else:
+                sudoline = "%s ALL = (root) NOPASSWD: %s *" % (html.apache_user(), commandargs[0], " ".join(commandargs[1:]))
+            
         sudo_msg = ("<p>The webserver is running as user which has no rights on the "
                     "needed Check_MK/Nagios files.<br />Please ensure you have set-up "
                     "the sudo environment correctly. e.g. proceed as follows:</p>\n"
@@ -510,10 +525,10 @@ def check_mk_automation(command, args=[], indata=""):
                     "<li>Append the following to the <code>/etc/sudoers</code> file:\n"
                     "<pre># Needed for WATO - the Check_MK Web Administration Tool\n"
                     "Defaults:%s !requiretty\n"
-                    "%s ALL = (root) NOPASSWD: %s\ *\n"
+                    "%s\n"
                     "</pre></li>\n"
                     "<li>Retry this operation</li></ol>\n" %
-                    (html.apache_user(), html.apache_user(), " ".join(commandargs[1:-1] + [ commandargs[-1].replace(' ', '\ ')])))
+                    (html.apache_user(), sudoline))
 
     try:
         p = subprocess.Popen(cmd,
@@ -528,8 +543,8 @@ def check_mk_automation(command, args=[], indata=""):
     outdata = p.stdout.read()
     exitcode = p.wait()
     if exitcode != 0:
-        raise MKGeneralException("Error running <tt>%s</tt>: <pre>%s</pre>%s" %
-              (" ".join(cmd), outdata, sudo_msg))
+        raise MKGeneralException("Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>%s" %
+              (" ".join(cmd), exitcode, outdata, sudo_msg))
     try:
         return eval(outdata)
     except Exception, e:

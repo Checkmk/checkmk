@@ -1,3 +1,9 @@
+1.1.9i3:
+    Multisite:
+    * Finally show host/services icons from the nagios value "icon_image".
+      Put your icon files in /usr/share/check_mk/web/htdocs/images/icons.
+      OMD users put the icons into ~/local/share/check_mk/web/htdocs/images/icons.
+
 1.1.9i2:
     Checks & Agents:
     * ibm_imm_health: fix inventory function

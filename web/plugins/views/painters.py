@@ -75,7 +75,7 @@
 icon_columns = [ "acknowledged", "scheduled_downtime_depth", "downtimes_with_info", "comments_with_info",
                  "notifications_enabled", "is_flapping", "modified_attributes_list", "active_checks_enabled",
                  "accept_passive_checks", "action_url_expanded", "notes_url_expanded", "in_notification_period",
-                 "custom_variable_names", "custom_variable_values" ]
+                 "custom_variable_names", "custom_variable_values", "icon_image" ]
 
 # Additional columns only to fetch for services
 icon_service_columns = [ "service_description" ]
@@ -100,6 +100,11 @@ def paint_icons(what, row): # what is "host" or "service"
         prefix = "service_"
     custom_vars = dict(zip(row[prefix + "custom_variable_names"], row[prefix + "custom_variable_values"]))
 
+    # Icons configured in Nagios via icon_image
+    if row[prefix + "icon_image"]:
+        image = row[prefix + "icon_image"]
+        output += '<img class=icon src="images/icons/%s">' % image
+    
     # Link to detail host if this is a summary host
     if "_REALNAME" in custom_vars:
         newrow = row.copy()

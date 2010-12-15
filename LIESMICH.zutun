@@ -116,8 +116,6 @@ kann man eben kein SNMP machen.
 PNP4Nagios-Popups automatisch einbauen, mit eigenen intelligenten
 Icons.
 
-Host- und Serviceicons (icon_image) anzeigen.
-
 Aliasse einbauen (Wrappen in bin/):
     cmk = check_mk
     mkp = check_mk -P

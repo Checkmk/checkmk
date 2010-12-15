@@ -3,6 +3,7 @@
     * Finally show host/services icons from the nagios value "icon_image".
       Put your icon files in /usr/share/check_mk/web/htdocs/images/icons.
       OMD users put the icons into ~/local/share/check_mk/web/htdocs/images/icons.
+    * fix problem with PNP-links with services containing a ':' (thanks to Dirk Mayer)
 
 1.1.9i2:
     Checks & Agents:

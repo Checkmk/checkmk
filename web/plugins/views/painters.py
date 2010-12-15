@@ -1105,7 +1105,7 @@ def pnp_icon_link(row):
     if config.site_is_local(row["site"]):
         # Where is our RRD?
         basedir = defaults.rrd_path + "/" + row["host_name"]
-        xmlpath = basedir + "/" + row["service_description"].replace("/", "_").replace(" ", "_") + ".xml"
+        xmlpath = basedir + "/" + row["service_description"].replace("/", "_").replace(" ", "_").replace(":", "_") + ".xml"
         if os.path.exists(xmlpath):
             return a
         else:

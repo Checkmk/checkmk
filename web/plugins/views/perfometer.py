@@ -120,7 +120,12 @@ def paint_perfometer(row):
 
     try:
         title, h = perf_painter(row, check_command, perf_data)
-        return "perfometer", '<a href="%s"><div class=title>%s</div>%s</a>' % (pnp_url(row), title, h)
+        content = "<div class=title>%s</div>%s" % (title, h)
+        if 'X' in html.display_options:
+            return "perfometer", ('<a href="%s">%s</a>' % (pnp_url(row), content))
+        else:
+            return "perfometer", content
+
     except Exception, e:
         if config.debug:
             raise

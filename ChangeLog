@@ -1,6 +1,8 @@
 1.1.9i3:
     INCOMPATIBLE CHANGES:
     * You need a current version of Livestatus for Multisite to work!
+    * Multisite: removed (undocumented) view parameters show_buttons and show_controls.
+      Please use display_options instead.
 
     Multisite:
     * Finally show host/services icons from the nagios value "icon_image".
@@ -11,6 +13,8 @@
     * new view property "hidebutton": allow to hide context button to a view.
     * Defaults views 'Services: OK', 'Services: WARN, etc. do now not create
       context buttons (cleans up button bar).
+    * new HTML parameter display_options, which allows to switch off several
+      parts of the output (e.g. the HTML header, external links, etc).
 
     Checks & Agents:
     * Fixed problem with OnlyFrom: in Linux agent (df didn't work properly)

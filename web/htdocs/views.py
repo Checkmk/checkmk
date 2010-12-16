@@ -611,12 +611,6 @@ function toggle_section(nr, oImg) {
     html.write("<tr><td>Automatic reload (0 or empty for none):</td><td>")
     html.number_input("browser_reload", 0)
     html.write("</td></tr>\n")
-    html.write("<tr><td>Show page header:</td><td>")
-    html.checkbox("show_header", True)
-    html.write("</td></tr>\n")
-    html.write("<tr><td>Show page controls:</td><td>")
-    html.checkbox("show_controls", True)
-    html.write("</td></tr>\n")
     html.write("<tr><td>Play %s:</td><td>" % docu_link("multisite_sounds", "alarm sounds"))
     html.checkbox("play_sounds", False)
     html.write("</td></tr>\n")
@@ -661,8 +655,6 @@ def load_view_into_html_vars(view):
     html.set_var("hidden",           view["hidden"] and "on" or "")
     html.set_var("mustsearch",       view["mustsearch"] and "on" or "")
     html.set_var("hidebutton",       view.get("hidebutton",  False) and "on" or "")
-    html.set_var("show_header",      view.get("show_header",   True) and "on" or "")
-    html.set_var("show_controls",    view.get("show_controls", True) and "on" or "")
 
     # [3] Filters
     for name, filt in multisite_filters.items():
@@ -749,8 +741,6 @@ def create_view():
     mustsearch     = html.var("mustsearch", "") != ""
     hidebutton     = html.var("hidebutton", "") != ""
     column_headers = html.var("column_headers")
-    show_header    = html.var("show_header", "") != ""
-    show_controls  = html.var("show_controls", "") != ""
     show_filternames = []
     hide_filternames = []
     hard_filternames = []
@@ -822,8 +812,6 @@ def create_view():
         "sorters"         : sorternames,
         "group_painters"  : group_painternames,
         "painters"        : painternames,
-        "show_header"     : show_header,
-        "show_controls"   : show_controls,
     }
 
 
@@ -846,12 +834,19 @@ def page_view(h):
     if not view:
         raise MKGeneralException("No view defined with the name '%s'." % view_name)
 
-    show_view(view, True)
-    html.footer()
+    show_view(view, True, True, True)
 
 # Display view with real data. This is *the* function everying
 # is about.
-def show_view(view, show_heading = False, show_buttons = True):
+def show_view(view, show_heading = False, show_buttons = True, show_footer = True):
+    # Parse display options
+    display_options = html.var("display_options", "")
+    # assume all missing options as active (upper case)
+    for c in "HTBFCEOZRSIX":
+        if c not in display_options and c.lower() not in display_options:
+            display_options += c 
+    html.display_options = display_options
+
     # [1] Datasource
     datasource = multisite_datasources[view["datasource"]]
     tablename = datasource["table"]
@@ -864,10 +859,8 @@ def show_view(view, show_heading = False, show_buttons = True):
     vo = view_options(view["name"])
     num_columns    = vo.get("num_columns",   view.get("num_columns",    1))
     browser_reload = vo.get("refresh",       view.get("browser_reload", None))
-    show_header    = vo.get("show_header",   view.get("show_header",    1))
-    show_controls  = vo.get("show_controls", view.get("show_controls",  1))
 
-    if browser_reload:
+    if browser_reload and 'R' in display_options:
         html.set_browser_reload(browser_reload)
 
     # [3] Filters
@@ -936,64 +929,67 @@ def show_view(view, show_heading = False, show_buttons = True):
     # Show heading (change between "preview" mode and full page mode)
     if show_heading:
         # Show/Hide the header with page title, MK logo, etc.
-        if show_header:
-            html.header(view_title(view))
-        else:
+        if 'H' in display_options: 
             html.body_start(view_title(view))
+        if 'T' in display_options:
+            html.top_heading(view_title(view))
 
     has_done_actions = False
-    if show_buttons and show_controls:
+
+    if show_buttons and 'B' in display_options:
         show_context_links(view, hide_filters)
 
+    need_navi = show_buttons and ('F' in display_options or 'C' in display_options or 'O' in display_options or 'E' in display_options)
+    if need_navi:
         html.write("<table class=navi><tr>\n")
         colspan = 0
 
         # Filter-button
-        if len(show_filters) > 0 and not html.do_actions():
+        if 'F' in display_options and len(show_filters) > 0 and not html.do_actions():
             filter_isopen = html.var("search", "") == "" and view["mustsearch"]
             toggle_button("table_filter", filter_isopen, "Filter", ["filter"])
             html.write("<td class=minigap></td>\n")
             colspan += 2
 
         # Command-button
-        if len(rows) > 0 and config.may("act") and not html.do_actions():
+        if 'C' in display_options and len(rows) > 0 and config.may("act") and not html.do_actions():
             toggle_button("table_actions", False, "Commands")
             html.write("<td class=minigap></td>\n")
             colspan += 2
 
-
         # Buttons for view options
-        if config.user_may(config.user, "view_option_columns"):
-            for col in config.view_option_columns:
-                uri = html.makeuri([("num_columns", col)])
-                if col == num_columns:
-                    addclass = " selected"
-                else:
-                    addclass = ""
-                html.write('<td class="left w30%s"><a href="%s">%s</a></td>\n' % (addclass, uri, col))
-                html.write("<td class=minigap></td>\n")
-                colspan += 2
+        if 'O' in display_options:
+            if config.user_may(config.user, "view_option_columns"):
+                for col in config.view_option_columns:
+                    uri = html.makeuri([("num_columns", col)])
+                    if col == num_columns:
+                        addclass = " selected"
+                    else:
+                        addclass = ""
+                    html.write('<td class="left w30%s"><a href="%s">%s</a></td>\n' % (addclass, uri, col))
+                    html.write("<td class=minigap></td>\n")
+                    colspan += 2
 
-        if config.user_may(config.user, "view_option_refresh"):
-            for ref in config.view_option_refreshes:
-                uri = html.makeuri([("refresh", ref)])
-                if ref == browser_reload or (not ref and not browser_reload):
-                    addclass = " selected"
-                else:
-                    addclass = ""
-                if ref:
-                    reftext = "%d s" % ref
-                else:
-                    reftext = "&#8734;"
-                html.write('<td class="left w40%s"><a href="%s">%s</a></td>\n' % (addclass, uri, reftext))
-                html.write("<td class=minigap></td>\n")
-                colspan += 2
+            if 'R' in display_options and config.user_may(config.user, "view_option_refresh"):
+                for ref in config.view_option_refreshes:
+                    uri = html.makeuri([("refresh", ref)])
+                    if ref == browser_reload or (not ref and not browser_reload):
+                        addclass = " selected"
+                    else:
+                        addclass = ""
+                    if ref:
+                        reftext = "%d s" % ref
+                    else:
+                        reftext = "&#8734;"
+                    html.write('<td class="left w40%s"><a href="%s">%s</a></td>\n' % (addclass, uri, reftext))
+                    html.write("<td class=minigap></td>\n")
+                    colspan += 2
 
         html.write("<td class=gap></td>\n")
         colspan += 1
 
         # Customize/Edit view button
-        if config.may("edit_views"):
+        if 'E' in display_options and config.may("edit_views"):
             backurl = htmllib.urlencode(html.makeuri([]))
             html.write('<td class="right" onmouseover="hover_tab(this);" onmouseout="unhover_tab(this);">')
             if view["owner"] == html.req.user:
@@ -1005,11 +1001,11 @@ def show_view(view, show_heading = False, show_buttons = True):
         html.write("</tr>")
 
         # Filter form
-        if len(show_filters) > 0 and not html.do_actions():
+        if 'F' in display_options and len(show_filters) > 0 and not html.do_actions():
             show_filter_form(filter_isopen, show_filters, colspan)
 
         # Actions
-        if len(rows) > 0:
+        if 'C' in display_options and len(rows) > 0:
             if html.do_actions() and html.transaction_valid(): # submit button pressed, no reload
                 try:
                     html.write("<tr class=form><td class=whiteborder colspan=%d>" % colspan)
@@ -1043,7 +1039,7 @@ def show_view(view, show_heading = False, show_buttons = True):
         layout["render"]((columns, rows), view, group_painters, painters, num_columns)
 
         # Play alarm sounds, if critical events have been displayed
-        if view.get("play_sounds"):
+        if 'S' in display_options and view.get("play_sounds"):
             play_alarm_sounds()
 
     # In multi site setups error messages of single sites do not block the
@@ -1051,6 +1047,13 @@ def show_view(view, show_heading = False, show_buttons = True):
     if config.show_livestatus_errors:
         for sitename, info in html.live.deadsites.items():
             html.show_error("<b>%s - Livestatus error</b><br>%s" % (info["site"]["alias"], info["exception"]))
+
+    if show_footer:
+        html.bottom_focuscode()
+        if 'Z' in display_options:
+            html.bottom_footer()
+        if 'H' in display_options:
+            html.body_end()
 
 def view_options(viewname):
     vo = config.load_user_file("viewoptions", {})
@@ -1675,6 +1678,7 @@ def ajax_export(h):
         view["public"] = True
     html.write(pprint.pformat(html.available_views))
 
+
 def page_message_and_forward(h, message, default_url, addhtml=""):
     global html
     html = h
@@ -1707,14 +1711,20 @@ def prepare_paint(p, row):
     return tdclass, content
 
 def link_to_view(content, row, linkview):
+    if 'I' not in html.display_options:
+        return content
+
     view = html.available_views.get(linkview)
     if view:
         filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
-        filtervars = []
+        vars = []
         for filt in filters:
-            filtervars += filt.variable_settings(row)
+            vars += filt.variable_settings(row)
+        do = html.var("display_options")
+        if do:
+            vars.append(("display_options", do))
 
-        uri = "view.py?" + htmllib.urlencode_vars([("view_name", linkview)] + filtervars)
+        uri = "view.py?" + htmllib.urlencode_vars([("view_name", linkview)] + vars)
         content = "<a href=\"%s\">%s</a>" % (uri, content)
     return content
 

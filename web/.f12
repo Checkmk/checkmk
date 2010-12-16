@@ -1,2 +1,2 @@
 sudo cp -prv * /omd/versions/default/share/check_mk/web/
-sudo omd restart wato apache
+sudo su - -c 'omd restart wato apache'

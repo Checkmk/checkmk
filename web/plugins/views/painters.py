@@ -103,16 +103,19 @@ def pnp_popup_url(row):
     return pnp_url(row, 'popup')
 
 def wato_link(filename, site, hostname, where):
-    prefix = config.site(site)["url_prefix"] + "check_mk/"
-    url = prefix + "wato.py?filename=%s&host=%s" % (htmllib.urlencode(filename), htmllib.urlencode(hostname))
-    if where == "inventory":
-        url += "&mode=inventory"
-        help = "Edit services"
+    if 'X' in html.display_options:
+        prefix = config.site(site)["url_prefix"] + "check_mk/"
+        url = prefix + "wato.py?filename=%s&host=%s" % (htmllib.urlencode(filename), htmllib.urlencode(hostname))
+        if where == "inventory":
+            url += "&mode=inventory"
+            help = "Edit services"
+        else:
+            url += "&mode=edithost"
+            help = "Open this host"
+        return '<a href="%s"><img class=icon src="images/icon_wato.gif" ' \
+               'title="%s in WATO - the Check_MK Web Administration Tool"></a>' % (url, help)
     else:
-        url += "&mode=edithost"
-        help = "Open this host"
-    return '<a href="%s"><img class=icon src="images/icon_wato.gif" ' \
-           'title="%s in WATO - the Check_MK Web Administration Tool"></a>' % (url, help)
+        return ""
 
 def paint_icons(what, row): # what is "host" or "service"
     output = ""
@@ -143,16 +146,21 @@ def paint_icons(what, row): # what is "host" or "service"
     # PNP Graph
     pnpgraph_present = row[prefix + "pnpgraph_present"]
     if pnpgraph_present == 1:
-        output += '<a class=tips rel="%s" href="%s"><img class=icon src="images/icon_pnp.png"></a>' % (pnp_popup_url(row), pnp_url(row))
+        if 'X' in html.display_options:
+            url = pnp_url(row)
+        else:
+            url = ""
+        output += '<a class=tips rel="%s" href="%s"><img class=icon src="images/icon_pnp.png"></a>' % (pnp_popup_url(row), url)
 
-    # action_url (only, if not a PNP-URL and pnp_graph is working!)
-    action_url = row[prefix + "action_url_expanded"]
-    if action_url and not ('/pnp4nagios/' in action_url and pnpgraph_present >= 0): 
-        output += "<a href='%s'><img class=icon src=\"images/icon_action.gif\"></a>" % row[prefix + "action_url_expanded"]
+    if 'X' in html.display_options:
+        # action_url (only, if not a PNP-URL and pnp_graph is working!)
+        action_url = row[prefix + "action_url_expanded"]
+        if action_url and not ('/pnp4nagios/' in action_url and pnpgraph_present >= 0): 
+            output += "<a href='%s'><img class=icon src=\"images/icon_action.gif\"></a>" % row[prefix + "action_url_expanded"]
 
-    # notes_url
-    if row[prefix + "notes_url_expanded"]:
-        output += "<a href='%s'><img class=icon src=\"images/icon_notes.gif\"></a>" % row[prefix + "notes_url_expanded"]
+        # notes_url
+        if row[prefix + "notes_url_expanded"]:
+            output += "<a href='%s'><img class=icon src=\"images/icon_notes.gif\"></a>" % row[prefix + "notes_url_expanded"]
 
     # Problem has been acknowledged
     if row[prefix + "acknowledged"]:
@@ -212,7 +220,8 @@ def paint_icons(what, row): # what is "host" or "service"
         if wato_filename:
             output += wato_link(wato_filename, row["site"], row["host_name"], "inventory")
 
-    if row[prefix + "active_checks_enabled"] == 1 and config.may('action.reschedule'):
+    # Reschedule button
+    if 'C' in html.display_options and row[prefix + "active_checks_enabled"] == 1 and config.may('action.reschedule'):
         name2 = ''
         if what == 'service':
             name2 = row['service_description']
@@ -506,10 +515,14 @@ multisite_painters["svc_group_memberlist"] = {
 def paint_pnpgraph(sitename, host, service = "_HOST_"):
     container_id = "%s_%s_%s_graph" % (sitename, host, service)
     pnp_url = html.site_status[sitename]["site"]["url_prefix"] + "pnp4nagios/"
+    if 'X' in html.display_options:
+        with_link = 'true'
+    else:
+        with_link = 'false'
     return "pnpgraph", "<div id=\"%s\"></div>" \
-                       "<script>render_pnp_graphs('%s', '%s', '%s', '%s', '%s', '%s')</script>" % \
+                       "<script>render_pnp_graphs('%s', '%s', '%s', '%s', '%s', '%s', %s)</script>" % \
                           (container_id, container_id, sitename, host, service,
-                           defaults.url_prefix + "check_mk/", pnp_url)
+                           defaults.url_prefix + "check_mk/", pnp_url, with_link)
 
 multisite_painters["svc_pnpgraph" ] = {
     "title"   : "PNP service graph",
@@ -901,6 +914,8 @@ def paint_host_list(site, hosts):
         else:
             h += ", "
         link = "view.py?view_name=hoststatus&site=%s&host=%s" % (htmllib.urlencode(site), htmllib.urlencode(host))
+        if html.var("display_options"):
+            link += "&display_options=%s" % html.var("display_options")
         h += "<a href=\"%s\">%s</a></div>" % (link, host)
     return "", h
 
@@ -922,6 +937,8 @@ def paint_host_group_memberlist(row):
     links = []
     for group in row["host_groups"]:
         link = "view.py?view_name=hostgroup&hostgroup=" + group
+        if html.var("display_options"):
+            link += "&display_options=%s" % html.var("display_options")
         links.append('<a href="%s">%s</a>' % (link, group))
     return "", ", ".join(links)
 

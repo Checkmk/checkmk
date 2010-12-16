@@ -365,34 +365,39 @@ class html:
     def header(self, title=''):
         if not self.header_sent:
             self.html_head(title)
-            if type(self.req.user) == str:
-                login_text = "<b>%s</b> (%s)" % (config.user, config.role)
-            else:
-                login_text = "not logged in"
-            self.write("<body class=main>"
-                    "<table class=header><tr><td class=left>%s</td><td class=right>"
-                    "%s &nbsp; &nbsp; <b class=headertime>%s</b> <img src=\"images/mk_logo_klein.png\"></td></tr></table>" %
-                    (title, login_text, time.strftime("%H:%M")))
-            self.write("<hr class=header>\n")
+            self.write("<body class=main>")
             self.header_sent = True
+            self.top_heading(title)
+
+    def top_heading(self, title):
+        if type(self.req.user) == str:
+            login_text = "<b>%s</b> (%s)" % (config.user, config.role)
+        else:
+            login_text = "not logged in"
+        self.write("<table class=header><tr><td class=left>%s</td><td class=right>"
+                   "%s &nbsp; &nbsp; <b class=headertime>%s</b> <img src=\"images/mk_logo_klein.png\"></td></tr></table>" %
+                   (title, login_text, time.strftime("%H:%M")))
+        self.write("<hr class=header>\n")
+
 
     def body_start(self, title=''):
         self.html_head(title)
         self.write("<body class=main>")
 
-    def footer(self):
+    def bottom_focuscode(self):
+        if self.focus_object:
+            formname, varname = self.focus_object
+            obj = formname + "." + varname
+            self.req.write("<script language=\"javascript\" type=\"text/javascript\">\n"
+                           "<!--\n"
+                           "document.%s.focus();\n"
+                           "document.%s.select();\n"
+                           "// -->\n"
+                           "</script>\n" % (obj, obj))
+
+    def bottom_footer(self):
         if self.req.header_sent:
-            if self.focus_object:
-                formname, varname = self.focus_object
-                obj = formname + "." + varname
-                self.req.write("<script language=\"javascript\" type=\"text/javascript\">\n"
-                               "<!--\n"
-                               "document.%s.focus();\n"
-                               "document.%s.select();\n"
-                               "// -->\n"
-                               "</script>\n" % (obj, obj))
-
-
+            self.bottom_focuscode()
             corner_text = ""
             if self.browser_reload:
                 corner_text += "refresh: %d secs" % self.browser_reload
@@ -401,7 +406,13 @@ class html:
                            "<td class=middle></td>"
                            "<td class=right>%s</td></tr></table>"
                            % (corner_text))
-            self.req.write("</body></html>\n")
+
+    def body_end(self):
+        self.write("</body></html>\n")
+
+    def footer(self):
+            self.bottom_footer()
+            self.body_end()
 
 
     def show_error(self, msg):

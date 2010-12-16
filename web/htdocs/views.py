@@ -531,7 +531,9 @@ function toggle_section(nr, oImg) {
     html.write(" hide this view from the sidebar")
     html.write("<br />\n")
     html.checkbox("mustsearch")
-    html.write(" show data only on search")
+    html.write(" show data only on search<br>")
+    html.checkbox("hidebutton")
+    html.write(" do not show a context button to this view")
     section_footer()
 
     # [3] Filters
@@ -658,6 +660,7 @@ def load_view_into_html_vars(view):
     html.set_var("public",           view["public"] and "on" or "")
     html.set_var("hidden",           view["hidden"] and "on" or "")
     html.set_var("mustsearch",       view["mustsearch"] and "on" or "")
+    html.set_var("hidebutton",       view.get("hidebutton",  False) and "on" or "")
     html.set_var("show_header",      view.get("show_header",   True) and "on" or "")
     html.set_var("show_controls",    view.get("show_controls", True) and "on" or "")
 
@@ -744,6 +747,7 @@ def create_view():
     public         = html.var("public", "") != "" and config.may("publish_views")
     hidden         = html.var("hidden", "") != ""
     mustsearch     = html.var("mustsearch", "") != ""
+    hidebutton     = html.var("hidebutton", "") != ""
     column_headers = html.var("column_headers")
     show_header    = html.var("show_header", "") != ""
     show_controls  = html.var("show_controls", "") != ""
@@ -805,6 +809,7 @@ def create_view():
         "public"          : public,
         "hidden"          : hidden,
         "mustsearch"      : mustsearch,
+        "hidebutton"      : hidebutton,
         "layout"          : layoutname,
         "num_columns"     : num_columns,
         "browser_reload"  : browser_reload,
@@ -1137,6 +1142,8 @@ def show_context_links(thisview, active_filters):
         name = view["name"]
         if view == thisview:
             continue
+        if view.get("hidebutton", False):
+            continue # this view does not want a button to be displayed
         hidden_filternames = view["hide_filters"]
         used_contextvars = []
         skip = False

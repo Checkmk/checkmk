@@ -8,6 +8,10 @@
       OMD users put the icons into ~/local/share/check_mk/web/htdocs/images/icons.
     * New automatic PNP-link icons: These icons automatically appear, if
       the new livestatus is configured correctly (see below). 
+    * new view property "hidebutton": allow to hide context button to a view.
+    * Defaults views 'Services: OK', 'Services: WARN, etc. do now not create
+      context buttons (cleans up button bar).
+
     Checks & Agents:
     * Fixed problem with OnlyFrom: in Linux agent (df didn't work properly)
     * cups_queues: fixed plugin error due to invalid import of datetime,

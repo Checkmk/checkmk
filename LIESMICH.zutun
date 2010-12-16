@@ -15,9 +15,6 @@ aber erst, wenn eine stabile Version das ALL_SERVICES erlaubt!
 Livestatus: is_contact_member_of_contactgroup selbst programmieren,
     da diese Funktion in Nagios rausfliegen wird.
 
-Multisite: Kontextknöpfe Services: OK, Services: Crit usw. unsichtbar
-machen. Dazu einen neue View-Option einbauen (hide context button).
-
 Inventurcheck: retry_interval evt. anders (kuerzer) einstellbar machen.
 Das geht aber auch mit extra_service_conf. Evtl. reicht hier die Doku.
 Ein sinnvoller Default-Wert wäre aber schon gut.

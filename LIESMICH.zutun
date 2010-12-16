@@ -87,10 +87,6 @@ die ganze Implementierung der Tabs nochmal anders programmiere. Das ist viel
 zu kompliziert gelöst. Ich mache die Tabs doch mit Tabellen und -moz-rounded-border.
 IE hat einfach Pech gehabt und bekommt eckige Kanten.
 
-Logwatch: was macht man hier bei verteilten Umgebungen?? Muss man das wie
-PNP per Proxy anfahren? Was ist aber dann, wenn man dort rumklickt?  Dann hat
-man rechts plötzlich ein anderes System. Lösung ist noch nicht in Sicht.
-
 LARS: Bei Opera kann man kein Snapin nach ganz unten ziehen. Der Indikator 
 springt dann immer nach ganz oben.
 
@@ -117,9 +113,6 @@ ab 1.1.9i1:
 SNMP Version pro Host erkennen und speichern. Man könnte als erstes mit v2
 versuchen und wenn das nicht geht auf v1 umschalten. Falls das nicht geht, dann
 kann man eben kein SNMP machen.
-
-PNP4Nagios-Popups automatisch einbauen, mit eigenen intelligenten
-Icons.
 
 Aliasse einbauen (Wrappen in bin/):
     cmk = check_mk

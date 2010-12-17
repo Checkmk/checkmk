@@ -338,16 +338,16 @@ Auf diese Art funktioniert erstmal alles weiter. Trotzdem wird die Variable
 irgendwann planmäßig abgeschaltet.
 
 View options für Painter: Ein Painter hat eine Liste von Painter-Viewoptions.
-Dazu gibt es ein dict: painter_view_options["pnpsource"] = { 
-( "PNP Timerange", "1", [("0":"4 hours"), ("1", "24 hours"), ... ] )
-Vor dem Anzeigen des Layouts ermittle ich alle benötigten View-Options.
-Analog zu refersh mache ich Persisitierung und HTML-Variablen-Auswertung
-und komme zu einem Ergebnis. Das speichere ich dann in view_option["pnpsource"].
-Dies kann der Painter einfach abfragen. Einsatz: PNP-Zeitraum, Darstellung
-von Zeitstempeln (Delta/Absolute/Mixed).
+Dazu gibt es ein dict: painter_view_options["pnpsource"] = { ( "PNP Timerange",
+"1", [("0":"4 hours"), ("1", "24 hours"), ... ] ) Vor dem Anzeigen des
+Layouts ermittle ich alle benötigten View-Options.  Analog zu refersh
+mache ich Persisitierung und HTML-Variablen-Auswertung und komme zu einem
+Ergebnis. Das speichere ich dann in view_option["pnpsource"].  Dies kann der
+Painter einfach abfragen. Einsatz: PNP-Zeitraum, Darstellung von Zeitstempeln
+(Delta/Absolute/Mixed).
 
-Multisite: Wenn man bei einer View einen Filter ausfüllt (user), dann
-soll irgendwo ein Icon anzeigen, dass das Resultat gefiltert ist.
+Multisite: Wenn man bei einer View einen Filter ausfüllt (user), dann soll
+irgendwo ein Icon anzeigen, dass das Resultat gefiltert ist.
 
 Multisite: Hover: Wenn man über einen Painter geht, könnte man eine
 Hover aufmachen, der einen weiteren Painter anzeigt. Das macht man
@@ -408,8 +408,8 @@ FreeBSD Agent:
   Die Sektionen/Checks ps und postfix_mailq sind jetzt schon kompatibel.
 
 Idee: Bei SNMP-Checks gibt es manchmal Daten, die sich dynamisch nicht ändern
-(z.B. Interfacenamen, etc.). Man könnte diese Daten cachen, so dass sie nicht
-jedes mal geholt werden, sondern z.B. nur alle 10 Minuten.
+(z.B. Interfacenamen, etc.). Man könnte diese Daten cachen, so dass sie
+nicht jedes mal geholt werden, sondern z.B. nur alle 10 Minuten.
 
 IDEE: Prefetching agent: Der agent soll die Daten schon berechnen kurz bevor
 sie abgefragt werden. Das ganze läuft so: Zunächst ermittelt der Agent,
@@ -433,12 +433,12 @@ Livestatus: Spalte bei Services und Hosts, die das ausgeführte Kommando
 
 Multisite: Spalte, die das Kommando (die Befehlszeile) ausgibt.
 
-Multisite: Man soll über eine Variable die URL für die rechte
-Seite mitgeben können. So kann man direkt auf eine Unterseite
-verlinken. Evtl. das sogar abrufbar über ein Icon :-)
+Multisite: Man soll über eine Variable die URL für die rechte Seite mitgeben
+können. So kann man direkt auf eine Unterseite verlinken. Evtl. das sogar
+abrufbar über ein Icon :-)
 
-Livestatus: Informationen ueber Eskalationen ausgeben (eigene Tabelle
-        oder Anreicherung von contacts, hosts, services)
+Livestatus: Informationen ueber Eskalationen ausgeben (eigene Tabelle oder
+Anreicherung von contacts, hosts, services)
 
 IPv6-Support in Check_MK:
 def lookup_ipaddress(hostname):
@@ -459,41 +459,31 @@ def lookup_ipaddress(hostname):
 Ausserdem kommt check_icmp damit nicht klar. Hier muss dann auf
 check_ping ausgewichen werden. 
 
-Wenn eine IP-Adresse nicht aufgelöst werden kann, sollte stattdessen
-eine (konfigurierbare) Dummyadresse verwendet werden. Sonst
-scheitert check_mk -O, wenn ein DNS-Eintrag verschwindet.
+Wenn eine IP-Adresse nicht aufgelöst werden kann, sollte stattdessen eine
+(konfigurierbare) Dummyadresse verwendet werden. Sonst scheitert check_mk -O,
+wenn ein DNS-Eintrag verschwindet.
 
-Livestatus: neben custom_variable_names und custom_variable_values
-waere noch custom_variables huebsch, welches beides kombiniert.
+Livestatus: neben custom_variable_names und custom_variable_values waere
+noch custom_variables huebsch, welches beides kombiniert.
 
-Disk IO read/write: Zu einem Check zusammenfassen. Einen gemeinsamen
-Graphen mit dem Windows-Check erstellen (wo ein Graph eh fehlt).
- 
+Disk IO read/write: Zu einem Check zusammenfassen. Einen gemeinsamen Graphen
+mit dem Windows-Check erstellen (wo ein Graph eh fehlt).
+
 Multisite: Quicksearch evtl. case-insensitive machen?
 
 Livestatus: StatsGroupBy: mehrere Spalten erlauben
 
-Multisite: Die TOP-25 Alerts: Welche Dinge hosts/services
-hatten in einem Zeitraum die meisten Alerts. Das geht
-mit log und StatsGroupBy: host_name service_description
+Multisite: Die TOP-25 Alerts: Welche Dinge hosts/services hatten in einem
+Zeitraum die meisten Alerts. Das geht mit log und StatsGroupBy: host_name
+service_description. Dazu muss ich allerdings zuerst eine Gruppierung nach
+mehr als einem Feld einbauen.
 
-Multisite: Filter, der Hosts zeigt, die entweder selbst
-Summary hosts sind oder keinen haben.
+Multisite: Filter, der Hosts zeigt, die entweder selbst Summary hosts sind
+oder keinen haben.
 
-Multisite: Könnte man nicht Aggregationen in Views einbauen.
-Man würde dann in der View Regeln definieren, nach denen
-Services und Hosts aggregiert werden können. Dazu müsste man 
-in den View-Editor einen neuen Abschnitt einbauen. Ist das
-nicht ähnlich wie Gruppieren? Allerdings wäre es dann gut,
-wenn man die Aggregationen irgendwo separat editieren kann
-und in der View nur noch drauf verweisen. Sonst muss
-man soviel Copy&Paste zwischen den Views machen...
-
-Idee: Checks, die eigentlich keine Perfdaten liefern, könnten
-über eine Konfiguration künstlich perfdaten bekommen, ala
-status=0, status=1 etc. Das könnte man über eine Regel
-konfigurierbar machen:
-fake_perfdata = [ ... ]
+Idee: Checks, die eigentlich keine Perfdaten liefern, könnten über eine
+Konfiguration künstlich perfdaten bekommen, ala status=0, status=1 etc. Das
+könnte man über eine Regel konfigurierbar machen: fake_perfdata = [ ... ]
 
 Idee: Inventurcheck könnte gleich die Checkergebnisse berechnen
 
@@ -513,6 +503,9 @@ Snapins: die letzten 10 Notifikationen, die letzten 10 Alerts
 (evtl. umschaltbar per Tabs)
 
 Acknowledgements: Ankreuzung, ob persistent oder nicht
+Hm. Komisch. Im Code sehe ich, dass ich für persistent eine 0
+setzen. Trotzdem bleibt das Acknowledgment über einen Nagios-
+Neustart erhalten.
 
 Tactical Overview: Man könnte folgendes machen: Die Kästchen
 enthalten ja Links zu Views, welche die entsprechenden Probleme

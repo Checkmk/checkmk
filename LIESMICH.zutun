@@ -111,11 +111,6 @@ SNMP Version pro Host erkennen und speichern. Man könnte als erstes mit v2
 versuchen und wenn das nicht geht auf v1 umschalten. Falls das nicht geht, dann
 kann man eben kein SNMP machen.
 
-Aliasse einbauen (Wrappen in bin/):
-    cmk = check_mk
-    mkp = check_mk -P
-
-
 --------------------------------------------------------------------------------
 ab 1.1.11i1
 

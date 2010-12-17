@@ -662,8 +662,11 @@ do
 	   fi &&
 	   mkdir -p $DESTDIR$bindir &&
 	   rm -f $DESTDIR$bindir/check_mk &&
-	   echo -e "#!/bin/sh\nexec python $modulesdir/check_mk.py "'"$@"' > $DESTDIR$bindir/check_mk
+	   echo -e "#!/bin/sh\nexec python $modulesdir/check_mk.py "'"$@"' > $DESTDIR$bindir/check_mk &&
 	   chmod 755 $DESTDIR$bindir/check_mk &&
+           ln -s $DESTDIR$bindir/check_mk cmk &&
+	   echo -e "#!/bin/sh\nexec python $modulesdir/check_mk.py -P "'"$@"' > $DESTDIR$bindir/mkp &&
+           chmod 755 $DESTDIR$bindir/mkp &&
 	   sed -i "s#@BINDIR@#$bindir#g"              $DESTDIR$docdir/check_mk_templates.cfg &&
 	   sed -i "s#@VARDIR@#$vardir#g"              $DESTDIR$docdir/check_mk_templates.cfg &&
 	   sed -i "s#@CHECK_ICMP@#$check_icmp_path#g" $DESTDIR$docdir/check_mk_templates.cfg &&

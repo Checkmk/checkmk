@@ -4,6 +4,10 @@
     * Multisite: removed (undocumented) view parameters show_buttons and show_controls.
       Please use display_options instead.
 
+    Core, Setup, etc.:
+    * Create alias 'cmk' for check_mk in bin/ (easier typing)
+    * Create alias 'mkp' for check_mk -P in bin/ (easier typing) 
+
     Multisite:
     * Finally show host/services icons from the nagios value "icon_image".
       Put your icon files in /usr/share/check_mk/web/htdocs/images/icons.

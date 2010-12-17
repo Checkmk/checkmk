@@ -66,4 +66,3 @@ def check_vms_df(item, params, info):
     return (3, "Disk %s not found" % (item,))
 
 check_info['vms_df']        = ( check_vms_df, "fs_%s", 1, inventory_vms_df )
-precompile_params['vms_df'] = precompile_filesystem_levels

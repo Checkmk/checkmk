@@ -112,12 +112,11 @@ versuchen und wenn das nicht geht auf v1 umschalten. Falls das nicht geht, dann
 kann man eben kein SNMP machen.
 
 --------------------------------------------------------------------------------
-ab 1.1.11i1
+AUFRAUMEN bis 1.2.0:
 
-filesystem_levels wirklich rausnehmen. Hinweis, dass check_parameters verwendet
-werden soll.
+Gemeinsamen Code von df-Checks in df.include auslagern (get_filesystem_levels,
+filesystem_default_levels, etc.)
 
---------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 UNSCHOENHEITEN
 --------------------------------------------------------------------------------

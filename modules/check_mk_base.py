@@ -956,13 +956,6 @@ def nodes_of(hostname):
 # the filesystem and the magic number. Since the size is only known at
 # check time this function's result cannot be precompiled.
 def get_filesystem_levels(host, mountpoint, size_gb, params):
-    # If no explicit levels are set, we take the configuration variable
-    # 'filesystem_levels' into account. This can *never* happen when
-    # we are running precompiled since the levels are then always
-    # explicit.
-    if params is filesystem_default_levels:
-        params = lookup_filesystem_levels(g_hostname, mountpoint)
-
     # If no magic factor is given, we use the neutral factor 1.0
     if len(params) < 3:
         params = (params[0], params[1], 1.0)

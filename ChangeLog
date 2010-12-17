@@ -3,6 +3,7 @@
     * You need a current version of Livestatus for Multisite to work!
     * Multisite: removed (undocumented) view parameters show_buttons and show_controls.
       Please use display_options instead.
+    * Finally removed deprecated filesystem_levels. Please use check_parameters instead.
 
     Core, Setup, etc.:
     * Create alias 'cmk' for check_mk in bin/ (easier typing)

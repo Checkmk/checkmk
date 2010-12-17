@@ -101,4 +101,3 @@ def inventory_df(checkname, info):
     return inventory
 
 check_info['df']        = (check_df, "fs_%s", 1, inventory_df)
-precompile_params['df'] = precompile_filesystem_levels

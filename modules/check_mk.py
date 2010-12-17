@@ -343,19 +343,6 @@ def no_inventory_possible(checkname, info):
     sys.stderr.write("Sorry. No inventory possible for check type %s.\n" % checkname)
     sys.exit(3)
 
-def lookup_filesystem_levels(host, mountpoint):
-    levels = service_extra_conf(host, mountpoint, filesystem_levels)
-    # may return 0, 1 or more answers
-    if len(levels) == 0:
-        return filesystem_default_levels
-    else:
-        return levels[0]
-
-def precompile_filesystem_levels(host, item, params):
-    if  params is filesystem_default_levels:
-        params = lookup_filesystem_levels(host, item)
-    return params
-
 
 #   +----------------------------------------------------------------------+
 #   |       _                    _        _               _                |
@@ -1180,6 +1167,12 @@ def create_nagios_config(outfile = sys.stdout, hostnames = None):
     if summary_service_notification_periods != []:
         raise MKGeneralException("summary_service_notification_periods is not longer supported. Please use extra_summary_service_conf['notification_period'] instead.")
 
+    if filesystem_levels != []:
+        raise MKGeneralException("filesystem_levels is not longer supported.\n"
+                "Please use check_parameters instead.\n"
+                "Please refer to documentation:\n"
+                " --> http://mathias-kettner.de/checkmk_check_parameters.html\n")
+
     output_conf_header(outfile)
     if hostnames == None:
         hostnames = all_hosts_untagged + all_active_clusters()
@@ -1988,8 +1981,6 @@ opt_debug   = False
 
 # make sure these names are defined (even if never needed)
 no_inventory_possible = None
-precompile_filesystem_levels = None
-filesystem_default_levels = None
 """)
 
     # Compile in all neccessary global variables
@@ -3841,11 +3832,6 @@ for name in vars_after_config:
         errors += 1
 
 # Special handling for certain deprecated variables
-if filesystem_levels != []:
-    sys.stderr.write("WARNING: filesystem_levels is deprecated and will be removed\n"
-        "any decade now. Please use check_parameters instead! Details can be\n"
-        "found at http://mathias-kettner.de/checkmk_check_parameters.html.\n")
-
 if type(snmp_communities) == dict:
     sys.stderr.write("ERROR: snmp_communities cannot be a dict any more.\n")
     errors += 1

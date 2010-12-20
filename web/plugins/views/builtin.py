@@ -842,6 +842,7 @@ multisite_builtin_views = {
                              ('num_services_unknown', 'host_unknown'),
                              ('num_services_pending', 'host_pending'),
                              ('host_custom_notes', None),
+                             ('host_pnpgraph', None),
                              ],
                 'public': True,
                 'show_filters': [],

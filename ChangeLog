@@ -20,6 +20,7 @@
       context buttons (cleans up button bar).
     * new HTML parameter display_options, which allows to switch off several
       parts of the output (e.g. the HTML header, external links, etc).
+    * View hoststatus: show PNP graph of host (usually ping stats)
 
     Checks & Agents:
     * Fixed problem with OnlyFrom: in Linux agent (df didn't work properly)

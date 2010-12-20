@@ -458,9 +458,14 @@ mit dem Windows-Check erstellen (wo ein Graph eh fehlt).
 
 Multisite: Quicksearch evtl. case-insensitive machen?
 
-Multisite: Die TOP-25 Alerts: Welche Dinge hosts/services hatten in einem
-Zeitraum die meisten Alerts. Das geht mit log und StatsGroupBy: host_name
-service_description.
+Multisite: Für die Alerts-Stats braucht man noch die Möglichkeit,
+*nach* dem Sortieren ein Limit zu setzen. Das kann auch für andere
+Dinge nützlich sein. Implementierung einfach über eine view property.
+
+Livestatus: Filter, welche auf Gruppen angewendet werden. Beispiel:
+Eine Anfrage, die die Alert-Statistiken erzeugt aber nur Datensätze
+ausgibt, welche mindestens ein Problem haben.
+GroupFilter: col_1 > 0
 
 Multisite: Filter, der Hosts zeigt, die entweder selbst Summary hosts sind
 oder keinen haben.

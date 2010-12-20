@@ -1445,3 +1445,38 @@ multisite_painters["log_state"] = {
     "columns" : ["log_state", "log_service_description"],
     "paint" : paint_log_state
 }
+
+multisite_painters["alert_stats_ok"] = {
+    "title" : "Alert Statistics: Number of recoveries",
+    "short" : "OK",
+    "columns" : [ "alerts_ok" ],
+    "paint" : lambda row: ("", str(row["alerts_ok"]))
+}
+
+multisite_painters["alert_stats_warn"] = {
+    "title" : "Alert Statistics: Number of warnings",
+    "short" : "WARN",
+    "columns" : [ "alerts_warn" ],
+    "paint" : lambda row: paint_svc_count(1, row["alerts_warn"])
+}
+
+multisite_painters["alert_stats_crit"] = {
+    "title" : "Alert Statistics: Number of critical alerts",
+    "short" : "CRIT",
+    "columns" : [ "alerts_crit" ],
+    "paint" : lambda row: paint_svc_count(2, row["alerts_crit"])
+}
+
+multisite_painters["alert_stats_unknown"] = {
+    "title" : "Alert Statistics: Number of unknown alerts",
+    "short" : "UNKN",
+    "columns" : [ "alerts_unknown" ],
+    "paint" : lambda row: paint_svc_count(3, row["alerts_unknown"])
+}
+
+multisite_painters["alert_stats_problem"] = {
+    "title" : "Alert Statistics: Number of problem alerts",
+    "short" : "PROB",
+    "columns" : [ "alerts_problem" ],
+    "paint" : lambda row: paint_svc_count('s', row["alerts_problem"])
+}

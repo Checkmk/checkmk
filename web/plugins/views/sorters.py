@@ -153,3 +153,11 @@ declare_simple_sorter("downtime_what",   "Downtime type (host/service)",  "is_se
 declare_simple_sorter("downtime_start_time",   "Downtime start",    "downtime_start_time",            cmp_simple_number)
 declare_simple_sorter("downtime_end_time",     "Downtime end",       "downtime_end_time",             cmp_simple_number)
 declare_simple_sorter("downtime_entry_time", "Downtime entry time",  "downtime_entry_time", cmp_simple_number)
+
+# Alert statistics
+declare_simple_sorter("alerts_ok",       "Number of recoveries",      "alerts_ok",      cmp_simple_number)
+declare_simple_sorter("alerts_warn",     "Number of warnings",        "alerts_warn",    cmp_simple_number)
+declare_simple_sorter("alerts_crit",     "Number of critical alerts", "alerts_crit",    cmp_simple_number)
+declare_simple_sorter("alerts_unknown",  "Number of unknown alerts",  "alerts_unknown", cmp_simple_number)
+declare_simple_sorter("alerts_problem",  "Number of problem alerts",  "alerts_problem", cmp_simple_number)
+

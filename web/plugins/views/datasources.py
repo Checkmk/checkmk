@@ -135,3 +135,12 @@ multisite_datasources["log_host_events"] = {
     "infos"       : [ "log", "host" ],
     "keys"        : [],
 }
+
+multisite_datasources["alert_stats"] = {
+    "title"       : "Alert Statistics",
+    "table"       : "log",
+    "add_headers" : "Filter: class = 1\nStats: state = 0\nStats: state = 1\nStats: state = 2\nStats: state = 3\nStats: state != 0\n",
+    "add_columns" : [ "alerts_ok", "alerts_warn", "alerts_crit", "alerts_unknown", "alerts_problem" ],
+    "infos"       : [ "log", "host", "service", "contact", "command" ],
+    "keys"        : [],
+}

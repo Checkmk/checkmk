@@ -330,7 +330,13 @@ def page_edit_views(h, msg=None):
         # Reload sidebar (snapin views needs a refresh)
         html.javascript("top.frames[0].location.reload();");
 
+    html.begin_form("create_view", "edit_view.py")
     html.write("<table class=views>\n")
+
+    html.write("<tr><td class=legend colspan=7>")
+    html.button("create", "Create new view")
+    html.write(" for datasource: ")
+    html.sorted_select("datasource", [ (k, v["title"]) for k, v in multisite_datasources.items() ])
 
     keys_sorted = html.multisite_views.keys()
     def cmp_viewkey(a, b):
@@ -387,11 +393,6 @@ def page_edit_views(h, msg=None):
                 html.buttonlink("edit_views.py?_delete=%s" % viewname, "Delete!", True)
             html.write("</td></tr>\n")
 
-    html.write("<tr><td class=legend colspan=7>")
-    html.begin_form("create_view", "edit_view.py")
-    html.button("create", "Create new view")
-    html.write(" for datasource: ")
-    html.sorted_select("datasource", [ (k, v["title"]) for k, v in multisite_datasources.items() ])
     html.write("</table>\n")
     html.end_form()
     html.footer()
@@ -950,10 +951,14 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
 
     # Fetch data. Some views show data only after pressing [Search]
     if (not view["mustsearch"]) or html.var("search"):
-        columns, rows = query_data(datasource, columns, query, only_sites, get_limit())
+        # names for additional columns (through Stats: headers)
+        add_columns = datasource.get("add_columns", [])
+        columns, rows = query_data(datasource, columns, add_columns, query, only_sites, get_limit())
         sort_data(rows, sorters)
     else:
         columns, rows = [], []
+
+    # html.write("<pre>%s</pre>" % pprint.pformat((columns, rows)))
 
     # Show heading (change between "preview" mode and full page mode)
     if show_heading:
@@ -1238,7 +1243,7 @@ def show_context_links(thisview, active_filters):
 
 # Retrieve data via livestatus, convert into list of dicts,
 # prepare row-function needed for painters
-def query_data(datasource, columns, add_headers, only_sites = [], limit = None):
+def query_data(datasource, columns, add_columns, add_headers, only_sites = [], limit = None):
     tablename = datasource["table"]
     add_headers += datasource.get("add_headers", "")
     merge_column = datasource.get("merge_by")
@@ -1259,6 +1264,9 @@ def query_data(datasource, columns, add_headers, only_sites = [], limit = None):
         for c in state_columns:
             if c not in columns:
                 columns.append(c)
+
+    # Remove columns which are implicitely added by the datasource
+    columns = [ c for c in columns if c not in add_columns ]
 
     query = "GET %s\n" % tablename
     query += "Columns: %s\n" % " ".join(columns)
@@ -1281,7 +1289,7 @@ def query_data(datasource, columns, add_headers, only_sites = [], limit = None):
 
     # convert lists-rows into dictionaries.
     # performance, but makes live much easier later.
-    columns = ["site"] + columns
+    columns = ["site"] + columns + add_columns
     assoc = [ dict(zip(columns, row)) for row in data ]
 
     return (columns, assoc)
@@ -1386,10 +1394,11 @@ def list_in_list(a, b):
 def allowed_for_datasource(collection, datasourcename):
     datasource = multisite_datasources[datasourcename]
     infos_available = set(datasource["infos"])
+    add_columns = datasource.get("add_columns", [])
     allowed = {}
     for name, item in collection.items():
         columns = item["columns"]
-        infos_needed = set([ c.split("_", 1)[0] for c in columns if c != "site" ])
+        infos_needed = set([ c.split("_", 1)[0] for c in columns if c != "site" and c not in add_columns])
         if len(infos_needed.difference(infos_available)) == 0:
             allowed[name] = item
     return allowed

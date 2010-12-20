@@ -27,6 +27,9 @@
     * new tab "Display": here the user can choose time stamp
       display format and PNP graph ranges
     * new column "host_tags", showing the Check_MK host tags of a host
+    * new datasource "alert_stats" for computing alert statistics
+    * new view "Alert Statistics" showing alert statistics for all hosts
+      and services
 
     Checks & Agents:
     * Fixed problem with OnlyFrom: in Linux agent (df didn't work properly)

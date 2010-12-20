@@ -840,6 +840,9 @@ td.statex {  /* zero count */
   background-color: #0b3; color: #fff;
 }
 
+.hstate {
+    white-space: nowrap;
+}
 /* WARN */
 .state1, .state1 a { 
   background-color: #ff0; color: #000;

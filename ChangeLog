@@ -35,6 +35,7 @@
     * Fixed problem with OnlyFrom: in Linux agent (df didn't work properly)
     * cups_queues: fixed plugin error due to invalid import of datetime,
       converted other checks from 'from datetime import...' to 'import datetime'.
+    * printer_supply: handle the case where the current value is missing
 
     Livestatus:
     * new column pnpgraph_present in table host and service. In order for this

@@ -79,7 +79,7 @@ def check_printer_supply(item, params, info):
     for line in printer_supply_fix_infos(info):
         if line[0] == item:
             maxlevel = float(line[1])
-            current = float(line[2])
+            current = savefloat(line[2])
             leftperc = 100.0 * current / maxlevel
             warn, crit = params # in percent
             infotext = "%.0f%% (levels at %.0f%% / %.0f%%)" % (leftperc, warn, crit)

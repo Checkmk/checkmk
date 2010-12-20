@@ -21,8 +21,9 @@
     * new HTML parameter display_options, which allows to switch off several
       parts of the output (e.g. the HTML header, external links, etc).
     * View hoststatus: show PNP graph of host (usually ping stats)
-    * Multisite: new tab "Display": here the user can choose time stamp
+    * new tab "Display": here the user can choose time stamp
       display format and PNP graph ranges
+    * new column "host_tags", showing the Check_MK host tags of a host
 
     Checks & Agents:
     * Fixed problem with OnlyFrom: in Linux agent (df didn't work properly)

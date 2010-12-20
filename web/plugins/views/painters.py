@@ -1000,6 +1000,19 @@ multisite_painters["host_custom_notes"] = {
     "paint" : paint_custom_notes
 }
 
+def paint_host_tags(row):
+    for name, val in zip(row["host_custom_variable_names"], 
+            row["host_custom_variable_values"]):
+        if name == "TAGS":
+            return "", val
+    return "",""
+
+multisite_painters["host_tags"] = {
+    "title" : "Host Tags (Check_MK)",
+    "short" : "Tags",
+    "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
+    "paint" : paint_host_tags
+}
 
 #    _   _           _
 #   | | | | ___  ___| |_ __ _ _ __ ___  _   _ _ __  ___

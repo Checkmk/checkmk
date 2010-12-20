@@ -22,6 +22,16 @@ Ein sinnvoller Default-Wert wäre aber schon gut.
 --------------------------------------------------------------------------------
 BUGS beheben ab 1.1.9i1
 --------------------------------------------------------------------------------
+Multisite: Endgültig kompatibel mit IE machen. Bekannte Probleme: 
+* reschedule Knopf geht irgendwie garnicht. Weder Animation noch reschedule.
+  Nur das reload macht er
+* Bug mit Verschieben der Sidebar wo das Tabellengerüst stehen bleibt
+* Snapin "Views": Die Spiegelpunkt sind zu weit links, die Einrückung
+  klappt nicht.
+
+Multsite: Kompatible mit Chrome machen. Probleme:
+* reschedule Knopf wird nicht animiert
+
 WATO: Wenn ein Agent einen rauswirft (leere Ausgabe, Connection closed), kommt im 
 WATO bei der Inventur keine sinnvolle Fehlermeldung.
 

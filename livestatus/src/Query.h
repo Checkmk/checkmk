@@ -86,8 +86,12 @@ class Query
    typedef vector<StatsColumn *> _stats_columns_t;
    _stats_columns_t _stats_columns; // must also delete
    Aggregator **_stats_aggregators;
-   Column *_stats_group_column;
-   typedef map<string, Aggregator **> _stats_groups_t;
+
+   typedef vector <Column *> _stats_group_columns_t;
+   _stats_group_columns_t _stats_group_columns;
+
+   typedef vector<string> _stats_group_spec_t;
+   typedef map<_stats_group_spec_t, Aggregator **> _stats_groups_t;
    _stats_groups_t _stats_groups; 
 
 public:
@@ -128,7 +132,8 @@ public:
 private:
    bool doStats();
    void doWait();
-   Aggregator **getStatsGroup(string name);
+   Aggregator **getStatsGroup(_stats_group_spec_t &groupspec);
+   void computeStatsGroupSpec(_stats_group_spec_t &groupspec, void *data);
    Filter *createFilter(Column *column, int operator_id, char *value);
    void parseFilterLine(char *line, bool filter /* and not cond */);
    void parseStatsLine(char *line);

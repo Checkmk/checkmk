@@ -71,10 +71,6 @@ inventurisiert werden, und darf dann die betroffenen Services wegwerfen.
 Cluster-Inventur(2): Wenn ein Service auf der Node sitzt und man die Regeln
 zu Clustered services ändert, entfernt ein -II das nicht von der node.
 
-Livestatus: wenn man mehrere StatsGroupBy macht, wird der Speicher von den 
-alten nicht freigegeben (ist momentan eh nicht erlaubt. Fehlermeldung ausgeben).
-In neuer Version sollte man irgendwann mehrere Group-Header erlauben.
-
 Multisite: Table log: Hier wird nur der erste Site angezeigt, bzw. die Chronologie
 Reihenfolge stimmt nicht. Sortieren nach Sekunden plus Zeilennummer.
 
@@ -462,12 +458,9 @@ mit dem Windows-Check erstellen (wo ein Graph eh fehlt).
 
 Multisite: Quicksearch evtl. case-insensitive machen?
 
-Livestatus: StatsGroupBy: mehrere Spalten erlauben
-
 Multisite: Die TOP-25 Alerts: Welche Dinge hosts/services hatten in einem
 Zeitraum die meisten Alerts. Das geht mit log und StatsGroupBy: host_name
-service_description. Dazu muss ich allerdings zuerst eine Gruppierung nach
-mehr als einem Feld einbauen.
+service_description.
 
 Multisite: Filter, der Hosts zeigt, die entweder selbst Summary hosts sind
 oder keinen haben.

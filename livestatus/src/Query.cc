@@ -62,8 +62,7 @@ Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
    _output_format(OUTPUT_FORMAT_CSV),
    _limit(-1),
    _current_line(0),
-   _timezone_offset(0),
-   _stats_group_column(0)
+   _timezone_offset(0)
 {
    while (input->moreLines())
    {
@@ -151,6 +150,8 @@ Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
 
 Query::~Query()
 {
+   return;
+
    // delete dummy-columns
    for (_columns_t::iterator it = _dummy_columns.begin();
 	 it != _dummy_columns.end();
@@ -418,22 +419,23 @@ void Query::parseAuthUserHeader(char *line)
 
 void Query::parseStatsGroupLine(char *line)
 {
-   if (!_table)
-      return;
+    if (!_table)
+        return;
 
-   char *column_name = next_field(&line);
-   if (!column_name) {
-      _output->setError(RESPONSE_CODE_INVALID_HEADER, "StatsGroupBy: missing an argument");
-      return;
-   }
+    char *column_name;
+    while (column_name = next_field(&line)) {
+        Column *column = _table->column(column_name);
+        if (!column) {
+            _output->setError(RESPONSE_CODE_INVALID_HEADER, "StatsGroupBy: unknown column '%s'", column_name);
+            return;
+        }
+        _stats_group_columns.push_back(column);
+    }
 
-   Column *column = _table->column(column_name);
-   if (!column) {
-      _output->setError(RESPONSE_CODE_INVALID_HEADER, "StatsGroupBy: unknown column '%s'", column_name);
-      return;
-   }
-
-   _stats_group_column = column;
+    if (_stats_group_columns.size() == 0) {
+        _output->setError(RESPONSE_CODE_INVALID_HEADER, "StatsGroupBy: missing an argument");
+        return;
+    }
 }
 
 
@@ -628,6 +630,7 @@ bool Query::doStats()
    return _stats_columns.size() > 0;
 }
 
+
 void Query::start()
 {
    doWait();
@@ -642,7 +645,7 @@ void Query::start()
       // if we have no StatsGroupBy: column, we allocate one only row of Aggregators,
       // directly in _stats_aggregators. When grouping the rows of aggregators
       // will be created each time a new group is found.
-      if (!_stats_group_column) 
+      if (_stats_group_columns.size() == 0) 
       {
 	 _stats_aggregators = new Aggregator *[_stats_columns.size()];
 	 for (unsigned i=0; i<_stats_columns.size(); i++)
@@ -685,21 +688,22 @@ bool Query::processDataset(void *data)
 
       if (doStats())
       {
-	 Aggregator **aggr;
-	 // When doing grouped stats, we need to fetch/create a row
-	 // of aggregators for the current group
-	 if (_stats_group_column) {
-	    string groupname = _stats_group_column->valueAsString(data, this);
-	    aggr = getStatsGroup(groupname);
-	 }
-	 else
-	    aggr = _stats_aggregators;
+         Aggregator **aggr;
+         // When doing grouped stats, we need to fetch/create a row
+         // of aggregators for the current group
+         if (_stats_group_columns.size() > 0) {
+            _stats_group_spec_t groupspec;
+            computeStatsGroupSpec(groupspec, data);
+            aggr = getStatsGroup(groupspec);
+         }
+         else
+            aggr = _stats_aggregators;
 
-	 for (unsigned i=0; i<_stats_columns.size(); i++) 
-	     aggr[i]->consume(data, this);
+         for (unsigned i=0; i<_stats_columns.size(); i++) 
+            aggr[i]->consume(data, this);
 
-	 // No output is done while processing the data, we only
-	 // collect stats.
+         // No output is done while processing the data, we only
+         // collect stats.
       }
       else
       {
@@ -728,16 +732,32 @@ bool Query::processDataset(void *data)
 void Query::finish()
 {
     // grouped stats
-    if (doStats() && _stats_group_column) 
+    if (doStats() && _stats_group_columns.size() > 0) 
     {
+        // output values of all stats groups (output has been post poned until now)
 	for (_stats_groups_t::iterator it = _stats_groups.begin();
 		it != _stats_groups.end();
 		++it)
 	{
+            // dataset separator after first group
 	    if (it != _stats_groups.begin() && _output_format != OUTPUT_FORMAT_CSV)
 		_output->addBuffer(",\n", 2);
+
 	    outputDatasetBegin();
-	    outputString(it->first.c_str());
+
+            // output group columns first
+            _stats_group_spec_t groupspec = it->first;
+            bool first = true;
+            for (_stats_group_spec_t::iterator iit = groupspec.begin();
+                  iit != groupspec.end();
+                  ++iit)
+            {
+               if (!first)
+                  outputFieldSeparator();
+               else
+                  first = false;
+	       outputString((*iit).c_str());
+            }
 
 	    Aggregator **aggr = it->second;
 	    for (unsigned i=0; i<_stats_columns.size(); i++) {
@@ -818,7 +838,7 @@ void Query::outputInteger(int32_t value)
 void Query::outputInteger64(int64_t value)
 {
    char buf[32];
-   int l = snprintf(buf, 32, "%lld", value);
+   int l = snprintf(buf, 32, "%lld", (long long int )value);
    _output->addBuffer(buf, l);
 }
 
@@ -948,19 +968,31 @@ void Query::outputEndSublist()
       _output->addChar(']');
 }
 
-Aggregator **Query::getStatsGroup(string name)
+Aggregator **Query::getStatsGroup(Query::_stats_group_spec_t &groupspec)
 {
-   _stats_groups_t::iterator it = _stats_groups.find(name);
+   _stats_groups_t::iterator it = _stats_groups.find(groupspec);
    if (it == _stats_groups.end()) {
        Aggregator **aggr = new Aggregator *[_stats_columns.size()];
        for (unsigned i=0; i<_stats_columns.size(); i++)
 	   aggr[i] = _stats_columns[i]->createAggregator();
-       _stats_groups.insert(make_pair(string(name), aggr));
+       _stats_groups.insert(make_pair(groupspec, aggr));
        return aggr;
    }
    else
       return it->second;
 }
+
+void Query::computeStatsGroupSpec(Query::_stats_group_spec_t &groupspec, void *data)
+{
+   for (_stats_group_columns_t::iterator it = _stats_group_columns.begin();
+         it != _stats_group_columns.end();
+         ++it)
+   {
+      Column *column = *it;
+      groupspec.push_back(column->valueAsString(data, this));
+   }
+}
+
 
 void Query::doWait()
 {
@@ -1016,3 +1048,5 @@ void Query::doWait()
 	}
     } while (!_wait_condition.accepts(_wait_object));
 }
+
+

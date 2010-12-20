@@ -34,6 +34,7 @@
     * new column pnpgraph_present in table host and service. In order for this
       column to work you need to specify the base directory of the PNP graphs
       with the module option pnp_path=, e.g. pnp_path=/omd/sites/wato/var/pnp4nagios/perfdata
+    * Allow more than one column for StatsGroupBy:
 
 1.1.9i2:
     Checks & Agents:

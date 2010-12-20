@@ -817,6 +817,7 @@ table.services tr.data td.perfometer table td {
     padding: 0px;
     margin: 0px;
     border: none;
+    height: 22px;
 }
 
 table.services tr.data td.perfometer a {

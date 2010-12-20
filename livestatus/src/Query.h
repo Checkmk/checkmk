@@ -87,9 +87,6 @@ class Query
    _stats_columns_t _stats_columns; // must also delete
    Aggregator **_stats_aggregators;
 
-   typedef vector <Column *> _stats_group_columns_t;
-   _stats_group_columns_t _stats_group_columns;
-
    typedef vector<string> _stats_group_spec_t;
    typedef map<_stats_group_spec_t, Aggregator **> _stats_groups_t;
    _stats_groups_t _stats_groups; 

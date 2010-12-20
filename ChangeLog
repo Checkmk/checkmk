@@ -4,6 +4,9 @@
     * Multisite: removed (undocumented) view parameters show_buttons and show_controls.
       Please use display_options instead.
     * Finally removed deprecated filesystem_levels. Please use check_parameters instead.
+    * Livestatus: The StatsGroupBy: header is still working but now deprecated.
+      Please simply use Columns: instead. If your query contains at least one Stats:
+      header than Columns: has the meaning of the old StatsGroupBy: header
 
     Core, Setup, etc.:
     * Create alias 'cmk' for check_mk in bin/ (easier typing)

@@ -177,11 +177,11 @@ Column *Query::createDummyColumn(const char *name)
 }
 
 
-
 void Query::addColumn(Column *column)
 {
    _columns.push_back(column);
 }
+
 
 bool Query::hasNoColumns()
 {
@@ -419,23 +419,8 @@ void Query::parseAuthUserHeader(char *line)
 
 void Query::parseStatsGroupLine(char *line)
 {
-    if (!_table)
-        return;
-
-    char *column_name;
-    while (column_name = next_field(&line)) {
-        Column *column = _table->column(column_name);
-        if (!column) {
-            _output->setError(RESPONSE_CODE_INVALID_HEADER, "StatsGroupBy: unknown column '%s'", column_name);
-            return;
-        }
-        _stats_group_columns.push_back(column);
-    }
-
-    if (_stats_group_columns.size() == 0) {
-        _output->setError(RESPONSE_CODE_INVALID_HEADER, "StatsGroupBy: missing an argument");
-        return;
-    }
+    logger(LOG_WARNING, "Warning: StatsGroupBy is deprecated. Please use Columns instead.");
+    parseColumnsLine(line);
 }
 
 
@@ -645,7 +630,7 @@ void Query::start()
       // if we have no StatsGroupBy: column, we allocate one only row of Aggregators,
       // directly in _stats_aggregators. When grouping the rows of aggregators
       // will be created each time a new group is found.
-      if (_stats_group_columns.size() == 0) 
+      if (_columns.size() == 0) 
       {
 	 _stats_aggregators = new Aggregator *[_stats_columns.size()];
 	 for (unsigned i=0; i<_stats_columns.size(); i++)
@@ -691,7 +676,7 @@ bool Query::processDataset(void *data)
          Aggregator **aggr;
          // When doing grouped stats, we need to fetch/create a row
          // of aggregators for the current group
-         if (_stats_group_columns.size() > 0) {
+         if (_columns.size() > 0) {
             _stats_group_spec_t groupspec;
             computeStatsGroupSpec(groupspec, data);
             aggr = getStatsGroup(groupspec);
@@ -732,7 +717,7 @@ bool Query::processDataset(void *data)
 void Query::finish()
 {
     // grouped stats
-    if (doStats() && _stats_group_columns.size() > 0) 
+    if (doStats() && _columns.size() > 0) 
     {
         // output values of all stats groups (output has been post poned until now)
 	for (_stats_groups_t::iterator it = _stats_groups.begin();
@@ -984,8 +969,8 @@ Aggregator **Query::getStatsGroup(Query::_stats_group_spec_t &groupspec)
 
 void Query::computeStatsGroupSpec(Query::_stats_group_spec_t &groupspec, void *data)
 {
-   for (_stats_group_columns_t::iterator it = _stats_group_columns.begin();
-         it != _stats_group_columns.end();
+   for (_columns_t::iterator it = _columns.begin();
+         it != _columns.end();
          ++it)
    {
       Column *column = *it;

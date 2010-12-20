@@ -68,12 +68,13 @@ config.declare_permission("action.downtimes",
 
 # Datastructures and functions needed before plugins can be loaded
 
-multisite_datasources   = {}
-multisite_filters       = {}
-multisite_layouts       = {}
-multisite_painters      = {}
-multisite_sorters       = {}
-multisite_builtin_views = {}
+multisite_datasources      = {}
+multisite_filters          = {}
+multisite_layouts          = {}
+multisite_painters         = {}
+multisite_sorters          = {}
+multisite_builtin_views    = {}
+multisite_painter_options  = {}
 
 
 ##################################################################################
@@ -125,6 +126,28 @@ def show_filter_form(is_open, filters, colspan):
 
     html.write("</div>")
     html.write("</td></tr>\n")
+
+def show_painter_options(painter_options, colspan):
+    html.write('<tr class=form id=painter_options style="display: none">')
+    html.write("<td colspan=%d>" % colspan)
+    html.begin_form("painteroptions")
+    html.write("<div class=whiteborder>\n")
+
+    html.write("<table class=form>\n")
+    for on in painter_options:
+        opt = multisite_painter_options[on]
+        html.write("<tr>")
+        html.write("<td class=legend>%s</td>" % opt["title"])
+        html.write("<td class=content>")
+        html.select(on, opt["values"], opt["default"], "submit();" )
+        html.write("</td></tr>\n")
+    html.write("</table>\n")
+
+    html.hidden_fields()
+    html.end_form()
+    html.write("</div>")
+    html.write("</td></tr>\n")
+
 
 ##################################################################################
 # Filters
@@ -896,19 +919,25 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     # Those are: (1) columns used by the sorters in use, (2) columns use by
     # column- and group-painters in use and - note - (3) columns used to
     # satisfy external references (filters) of views we link to. The last bit
-    # is the trickiest.
+    # is the trickiest. Also compute this list of view options use by the 
+    # painters
     columns = []
+    painter_options = []
     for s, r in sorters:
         columns += s["columns"]
 
     for p, v in (group_painters + painters):
         columns += p["columns"]
+        painter_options += p.get("options", [])
         if v:
             linkview = html.available_views.get(v)
             if linkview:
                 for ef in linkview["hide_filters"]:
                     f = multisite_filters[ef]
                     columns += f.link_columns
+
+    painter_options = list(set(painter_options))
+    painter_options.sort()
 
     # Add key columns, needed for executing commands
     columns += datasource["keys"]
@@ -954,6 +983,12 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         # Command-button
         if 'C' in display_options and len(rows) > 0 and config.may("act") and not html.do_actions():
             toggle_button("table_actions", False, "Commands")
+            html.write("<td class=minigap></td>\n")
+            colspan += 2
+
+        # Painter-Options
+        if len(painter_options) > 0 and config.may("painter_options"):
+            toggle_button("painter_options", False, "Display")
             html.write("<td class=minigap></td>\n")
             colspan += 2
 
@@ -1022,7 +1057,12 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
             else:
                 show_action_form(False, datasource, colspan)
 
+        if 'O' in display_options and len(painter_options) > 0 and config.may("painter_options"):
+            show_painter_options(painter_options, colspan)
+
+        # Ende des Bereichs mit den Tabs
         html.write("</table>\n") # class=navi
+
 
     if not has_done_actions:
         # Limit exceeded? Show warning
@@ -1056,8 +1096,10 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
             html.body_end()
 
 def view_options(viewname):
-    vo = config.load_user_file("viewoptions", {})
-    v = vo.get(viewname, {})
+    # Options are stored per view. Get all options for all views
+    vo = config.load_user_file("viewoptions", {}) 
+    # Now get options for the view in question
+    v = vo.get(viewname, {}) 
     must_save = False
 
     if config.user_may(config.user, "view_option_refresh"):
@@ -1079,6 +1121,23 @@ def view_options(viewname):
             must_save = True
     elif "num_columns" in v:
         del v["num_columns"]
+
+    if config.user_may(config.user, "painter_options"):
+        for on, opt in multisite_painter_options.items():
+            v[on] = opt["default"]
+            if html.has_var(on):
+                must_save = True
+                # Make sure only allowed values are returned
+                value = html.var(on)
+                for val, title in opt["values"]:
+                    if value == val:
+                        v[on] = value
+            opt["value"] = v[on]
+
+    else:
+        for on, opt in multisite_painter_options.items():
+            del v[on]
+            opt["value"] = None
 
     if must_save:
         vo[viewname] = v
@@ -1765,3 +1824,10 @@ def group_value(row, group_painters):
             for c in p["columns"]:
                 group.append(row[c])
     return group
+
+def get_painter_option(name):
+    opt = multisite_painter_options[name]
+    if not config.may("painter_options"):
+        return opt["default"]
+    return opt.get("value", opt["default"])
+

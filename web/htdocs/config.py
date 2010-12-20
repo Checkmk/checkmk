@@ -142,6 +142,12 @@ declare_permission("view_option_refresh",
      "Interactively change the automatic browser reload of a view being displayed<br>(does not edit or customize the view)",
      [ "admin", "user" ])
 
+declare_permission("painter_options",
+     "Change column display options",
+     "Some of the display columns offer options for customizing their output. For example time stamp columns can be displayed "
+     "absolute, relative or in a mixed style. This permission allows the user to modify display options",
+     [ "admin", "user", "guest" ])
+
 declare_permission("act",
      "Perform commands",
      "Allows users to perform Nagios commands. If now futher permissions are granted,<br>actions can only be done one objects one is a contact for",

@@ -164,7 +164,7 @@ function create_graph(data, params) {
     var container = document.getElementById(data['container']);
 
     var img = document.createElement('img');
-    img.src = data['pnp_url'] + 'index.php/image?view=1' + urlvars;
+    img.src = data['pnp_url'] + 'index.php/image?view=' + data['view'] + urlvars;
 
     if (data.with_link) {
         var link = document.createElement('a');
@@ -182,11 +182,11 @@ function create_graph(data, params) {
     urlvars = null;
 }
 
-function render_pnp_graphs(container, site, host, service, base_url, pnp_url, with_link) {
+function render_pnp_graphs(container, site, host, service, pnpview, base_url, pnp_url, with_link) {
     var data = { 'container': container, 'base_url': base_url,
                  'pnp_url':   pnp_url,   'site':     site,
                  'host':      host,      'service':  service,
-                 'with_link': with_link};
+                 'with_link': with_link, 'view':     pnpview};
     get_url(pnp_url + 'index.php/json?&host=' + host + '&srv=' + service + '&source=0',
             pnp_response_handler, data, pnp_error_response_handler);
 }

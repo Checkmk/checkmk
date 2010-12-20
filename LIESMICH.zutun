@@ -337,15 +337,6 @@ for old, new, deadline in renamed_config_vars:
 Auf diese Art funktioniert erstmal alles weiter. Trotzdem wird die Variable
 irgendwann planmäßig abgeschaltet.
 
-View options für Painter: Ein Painter hat eine Liste von Painter-Viewoptions.
-Dazu gibt es ein dict: painter_view_options["pnpsource"] = { ( "PNP Timerange",
-"1", [("0":"4 hours"), ("1", "24 hours"), ... ] ) Vor dem Anzeigen des
-Layouts ermittle ich alle benötigten View-Options.  Analog zu refersh
-mache ich Persisitierung und HTML-Variablen-Auswertung und komme zu einem
-Ergebnis. Das speichere ich dann in view_option["pnpsource"].  Dies kann der
-Painter einfach abfragen. Einsatz: PNP-Zeitraum, Darstellung von Zeitstempeln
-(Delta/Absolute/Mixed).
-
 Multisite: Wenn man bei einer View einen Filter ausfüllt (user), dann soll
 irgendwo ein Icon anzeigen, dass das Resultat gefiltert ist.
 

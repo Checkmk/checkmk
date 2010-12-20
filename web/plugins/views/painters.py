@@ -62,6 +62,38 @@
 # change in future.
 # =================================================================== #
 
+#     ____       _       _                          _   _                 
+#    |  _ \ __ _(_)_ __ | |_ ___ _ __    ___  _ __ | |_(_) ___  _ __  ___ 
+#    | |_) / _` | | '_ \| __/ _ \ '__|  / _ \| '_ \| __| |/ _ \| '_ \/ __|
+#    |  __/ (_| | | | | | ||  __/ |    | (_) | |_) | |_| | (_) | | | \__ \
+#    |_|   \__,_|_|_| |_|\__\___|_|     \___/| .__/ \__|_|\___/|_| |_|___/
+#                                            |_|                          
+# 
+# Painter options influence how painters render their data. Painter options
+# are stored together with "refresh" and "columns" as "View options".
+
+multisite_painter_options["pnpview"] = {
+ "title"   : "PNP Timerange",
+ "default" : "1",
+ "values"  : [ ("0", "4 Hours"), ("1", "25 Hours"), ("2", "One week"), ("3", "One Month"), ("4", "One Year"), ]
+}
+
+multisite_painter_options["ts_format"] = {
+ "title"   : "Time stamp format",
+ "default" : "mixed",
+ "values"  : [ ("mixed", "Mixed"), ("abs", "Absolute"), ("rel", "Relative") ]
+}
+
+multisite_painter_options["ts_date"] = {
+ "title" : "Date format",
+ "default" : "%Y-%m-%d",
+ "values" : [ ("%Y-%m-%d", "1970-12-18"), 
+              ("%d.%m.%Y", "18.12.1970"), 
+              ("%m/%d/%Y", "12/18/1970"), 
+              ("%d.%m.",   "18.12."), 
+              ("%m/%d",    "12/18") ]
+}
+
 #    ___
 #   |_ _|___ ___  _ __  ___
 #    | |/ __/ _ \| '_ \/ __|
@@ -272,9 +304,12 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than):
     if not has_been_checked:
         return "age", "-"
 
+    mode = get_painter_option("ts_format")
+    dateformat = get_painter_option("ts_date")
     age = time.time() - timestamp
-    if age >= 48 * 3600 or age < -48 * 3600:
-        return "age", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
+    if mode == "abs" or \
+        (mode == "mixed" and age >= 48 * 3600 or age < -48 * 3600):
+        return "age", time.strftime(dateformat + " %H:%M:%S", time.localtime(timestamp))
 
     # Time delta less than two days => make relative time
     if age < 0:
@@ -406,12 +441,14 @@ multisite_painters["svc_state_age"] = {
     "title" : "The age of the current service state",
     "short" : "Age",
     "columns" : [ "service_has_been_checked", "service_last_state_change" ],
+    "options" : [ "ts_format", "ts_date" ],
     "paint" : lambda row: paint_age(row["service_last_state_change"], row["service_has_been_checked"] == 1, 60 * 10)
 }
 multisite_painters["svc_check_age"] = {
     "title" : "The time since the last check of the service",
     "short" : "Checked",
     "columns" : [ "service_has_been_checked", "service_last_check" ],
+    "options" : [ "ts_format", "ts_date" ],
     "paint" : lambda row: paint_age(row["service_last_check"], row["service_has_been_checked"] == 1, 0)
 }
 
@@ -433,6 +470,7 @@ multisite_painters["svc_last_notification"] = {
     "title" : "The time of the last service notification",
     "short" : "last notification",
     "columns" : [ "service_last_notification" ],
+    "options" : [ "ts_format", "ts_date" ],
     "paint" : lambda row: paint_age(row["service_last_notification"], row["service_last_notification"], 0)
 }
 
@@ -519,15 +557,17 @@ def paint_pnpgraph(sitename, host, service = "_HOST_"):
         with_link = 'true'
     else:
         with_link = 'false'
+    pnpview = get_painter_option("pnpview")
     return "pnpgraph", "<div id=\"%s\"></div>" \
-                       "<script>render_pnp_graphs('%s', '%s', '%s', '%s', '%s', '%s', %s)</script>" % \
-                          (container_id, container_id, sitename, host, service,
+                       "<script>render_pnp_graphs('%s', '%s', '%s', '%s', '%s', '%s', '%s', %s)</script>" % \
+                          (container_id, container_id, sitename, host, service, pnpview,
                            defaults.url_prefix + "check_mk/", pnp_url, with_link)
 
 multisite_painters["svc_pnpgraph" ] = {
     "title"   : "PNP service graph",
     "short"   : "PNP graph",
     "columns" : [ "host_name", "service_description" ],
+    "options" : [ "pnpview" ],
     "paint"   : lambda row: paint_pnpgraph(row["site"], row["host_name"], row["service_description"])
 }
 
@@ -651,6 +691,7 @@ multisite_painters["host_state_age"] = {
     "title" : "The age of the current host state",
     "short" : "Age",
     "columns" : [ "host_has_been_checked", "host_last_state_change" ],
+    "options" : [ "ts_format", "ts_date" ],
     "paint" : lambda row: paint_age(row["host_last_state_change"], row["host_has_been_checked"] == 1, 60 * 10)
 }
 
@@ -658,6 +699,7 @@ multisite_painters["host_check_age"] = {
     "title" : "The time since the last check of the host",
     "short" : "Checked",
     "columns" : [ "host_has_been_checked", "host_last_check" ],
+    "options" : [ "ts_format", "ts_date" ],
     "paint" : lambda row: paint_age(row["host_last_check"], row["host_has_been_checked"] == 1, 0)
 }
 
@@ -679,6 +721,7 @@ multisite_painters["host_last_notification"] = {
     "title" : "The time of the last host notification",
     "short" : "last notification",
     "columns" : [ "host_last_notification" ],
+    "options" : [ "ts_format", "ts_date" ],
     "paint" : lambda row: paint_age(row["host_last_notification"], row["host_last_notification"], 0)
 }
 
@@ -733,6 +776,7 @@ multisite_painters["host_pnpgraph" ] = {
     "title"   : "PNP host graph",
     "short"   : "PNP graph",
     "columns" : [ "host_name" ],
+    "options" : [ "pnpview" ],
     "paint"   : lambda row: paint_pnpgraph(row["site"], row["host_name"])
 }
 
@@ -1175,12 +1219,14 @@ multisite_painters["comment_time"] = {
     "title" : "Comment entry time",
     "short" : "Time",
     "columns" : ["comment_entry_time"],
+    "options" : [ "ts_format", "ts_date" ],
     "paint" : lambda row: paint_age(row["comment_entry_time"], True, 3600)
 }
 multisite_painters["comment_expires"] = {
     "title" : "Comment expiry time",
     "short" : "Expires",
     "columns" : ["comment_expire_time"],
+    "options" : [ "ts_format", "ts_date" ],
     "paint" : lambda row: paint_age(row["comment_expire_time"], row["comment_expire_time"] != 0, 3600)
 }
 
@@ -1260,6 +1306,7 @@ multisite_painters["downtime_entry_time"] = {
     "title" : "Downtime entry time",
     "short" : "Entry",
     "columns" : ["downtime_entry_time"],
+    "options" : [ "ts_format", "ts_date" ],
     "paint" : lambda row: paint_age(row["downtime_entry_time"], True, 3600)
 }
 
@@ -1267,12 +1314,14 @@ multisite_painters["downtime_start_time"] = {
     "title" : "Downtime start time",
     "short" : "Start",
     "columns" : ["downtime_start_time"],
+    "options" : [ "ts_format", "ts_date" ],
     "paint" : lambda row: paint_age(row["downtime_start_time"], True, 3600)
 }
 multisite_painters["downtime_end_time"] = {
     "title" : "Downtime end time",
     "short" : "End",
     "columns" : ["downtime_end_time"],
+    "options" : [ "ts_format", "ts_date" ],
     "paint" : lambda row: paint_age(row["downtime_end_time"], True, 3600)
 }
 
@@ -1358,6 +1407,7 @@ multisite_painters["log_time"] = {
     "title" : "Log: entry time",
     "short" : "Time",
     "columns" : ["log_time"],
+    "options" : [ "ts_format", "ts_date" ],
     "paint" : lambda row: paint_age(row["log_time"], True, 3600 * 24)
 }
 

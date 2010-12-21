@@ -1,0 +1,290 @@
+#!/usr/bin/python
+
+import sys, os, time, termios, tty
+
+# colored output, if stdout is a tty
+if sys.stdout.isatty():
+    tty_red       = '\033[31m'
+    tty_green     = '\033[32m'
+    tty_yellow    = '\033[33m'
+    tty_blue      = '\033[34m'
+    tty_magenta   = '\033[35m'
+    tty_cyan      = '\033[36m'
+    tty_white     = '\033[37m'
+    tty_bgblue    = '\033[44m'
+    tty_bgmagenta = '\033[45m'
+    tty_bgwhite   = '\033[47m'
+    tty_bold      = '\033[1m'
+    tty_underline = '\033[4m'
+    tty_normal    = '\033[0m'
+else:
+    tty_red       = ''
+    tty_green     = ''
+    tty_yellow    = ''
+    tty_blue      = ''
+    tty_magenta   = ''
+    tty_cyan      = ''
+    tty_white     = ''
+    tty_bgblue    = ''
+    tty_bgmagenta = ''
+    tty_bold      = ''
+    tty_underline = ''
+    tty_normal    = ''
+    tty_ok        = 'OK'
+
+state_colors = {
+    "open"   : tty_blue,
+    "done"   : tty_green,
+    "closed" : tty_normal,
+}
+
+components = [ "core", "checks", "multisite", "livestatus", "wato" ]
+
+def bail_out(text):
+    sys.stderr.write(text + "\n")
+    sys.exit(1)
+
+
+def goto_bugsdir():
+    base_dir = os.path.abspath('.')
+    while not os.path.exists(".bugs") and os.path.abspath('.') != '/':
+        os.chdir("..")
+
+    try:
+        os.chdir(".bugs")
+    except:
+        sys.stderr.write("Cannot find directory .bugs\n")
+        sys.exit(1)
+
+def load_bugs():
+    global g_bugs
+    g_bugs = {}
+    for entry in os.listdir("."):
+        try:
+            bugid = int(entry)
+            try:
+                g_bugs[bugid] = load_bug(bugid)
+            except:
+                sys.stderr.write("SKIPPING INVALID BUG %d\n" % bugid)
+        except:
+            continue
+
+
+def load_bug(bugid):
+    bug = { 
+        "id"        : bugid,
+        "cost"      : 1,
+        "benefit"   : 1,
+        "fun"       : 0,
+        "state"     : "unknown",
+        "title"     : "unknown",
+        "component" : "general",
+    }
+    
+    f = file(str(bugid))
+    for line in f:
+        line = line.strip()
+        if line == "":
+            break
+        header, value = line.split(":", 1)
+        bug[header.strip().lower()] = value.strip()
+
+    description = ""
+    for line in f:
+        description += line
+
+    bug["description"] = description
+    return bug
+
+def save_bug(bug):
+    f = file(str(bug["id"]), "w")
+    f.write("Title: %s\n" % bug["title"])
+    for key, val in bug.items():
+        if key not in [ "title", "description", "id" ]:
+            f.write("%s%s: %s\n" % (key[0].upper(), key[1:], val))
+    f.write("\n")
+    f.write(bug["description"])
+    f.close()
+    os.system("git add %d" % bug["id"])
+
+def next_bug_id():
+    return max(g_bugs.keys()) + 1
+
+def add_comment(bug, title, comment):
+    bug["description"] += """
+%s: %s
+%s""" % (time.strftime("%F %T"), title, comment)
+    
+
+
+def usage():
+    sys.stdout.write("""Usage: gb COMMAND [ARGS...]
+
+where COMMAND is one of:
+
+  list [STATE]   ... list bugs
+  new            ... create a new bug
+  show [ID ID..] ... show several bugs (or all open)
+  resolve ID     ... change a bugs state
+  delete ID..    ... delete bug(s)
+
+""")
+    sys.exit(1)
+
+def bug_state(bug):
+    state = bug["state"]
+    return "%s%-7s%s" % (tty_bold + state_colors.get(state, ""), state, tty_normal)
+
+def list_bug(bug):
+    sys.stdout.write("#%04d %-7s %-60s\n" %
+            (int(bug["id"]), bug_state(bug), bug["title"]))
+
+def show_bug(bug):
+    list_bug(bug)
+    sys.stdout.write("\n%s\n" % bug["description"])
+
+def main_list(args):
+    bugs = g_bugs.values()
+    # sort
+    for bug in bugs:
+        if len(args) == 0 or bug["state"].startswith(args[0]):
+            list_bug(bug)
+
+
+def main_show(args):
+    ids = args
+    if len(ids) == 0:
+        ids = [ id for (id, bug) in g_bugs.items() if bug["state"] == "open" ]
+    for id in ids:
+        if id != ids[0]:
+            sys.stdout.write("-------------------------------------------------------------------------------\n")
+        show_bug(g_bugs[int(id)])
+
+def get_input(what, default = ""):
+    sys.stdout.write("%s: " % what)
+    sys.stdout.flush()
+    value = sys.stdin.readline().strip()
+    if value == "":
+        return default
+    else:
+        return value
+    
+def get_long_input(what):
+    sys.stdout.write("Enter %s. End with CTRL-D.\n" % what)
+    usertext = sys.stdin.read()
+    # remove leading and trailing empty lines
+    while usertext.startswith("\n"):
+        usertext = usertext[1:]
+    while usertext.endswith("\n\n"):
+        usertext = usertext[:-1]
+    return usertext
+
+def getch():
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+        tty.setraw(sys.stdin.fileno())
+        ch = sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    if ord(ch) == 3:
+        raise KeyboardInterrupt()
+    return ch
+
+def input_choice(what, choices):
+    ctc = {}
+    texts = []
+    for choice in choices:
+        for c in choice:
+            if c not in ctc:
+                ctc[c] = choice
+                texts.append(choice.replace(c, tty_bold + c + tty_normal, 1))
+                break
+    
+    while True:
+        sys.stdout.write("%s (%s): " % (what, ", ".join(texts)))
+        sys.stdout.flush()
+        c = getch()
+        if c in ctc:
+            return ctc[c]
+
+def main_new(args):
+    bug = {}
+    bug["id"]      = next_bug_id()
+    bug["state"]   = "open"
+    bug["date"]    = time.strftime("%F %T")
+    bug["title"]   = get_input("Title")
+    if  bug["title"] == "":
+        sys.stderr.write("Cancelled.\n")
+        sys.exit(0)
+    bug["cost"]    = int(get_input("Cost", 1))
+    bug["benefit"] = int(get_input("Benefit", 1))
+    
+    bug["description"] = get_long_input("description")
+    g_bugs[bug["id"]] = bug
+    save_bug(bug)
+    sys.stdout.write("Bug saved with id %d.\n" % bug["id"])
+
+def main_resolve(args):
+    if len(args) != 1:
+        usage()
+    id = int(args[0])
+    bug = g_bugs.get(id)
+    if not bug:
+        bail_out("No such bug.\n")
+
+    list_bug(bug)
+    state = input_choice("State", state_colors.keys())
+
+    comment = get_long_input("comment")
+    add_comment(bug, "changed state %s -> %s" % (bug["state"], state), comment)
+    bug["state"] = state
+    save_bug(bug)
+
+def main_delete(args):
+    for ids in args:
+        if 0 == os.system("git rm %s" % ids):
+            sys.stdout.write("Delete bug %s (%s)\n" % (ids, g_bugs[int(ids)]["descriptions"]))
+
+
+
+#                    _       
+#    _ __ ___   __ _(_)_ __  
+#   | '_ ` _ \ / _` | | '_ \ 
+#   | | | | | | (_| | | | | |
+#   |_| |_| |_|\__,_|_|_| |_|
+#                            
+
+goto_bugsdir()
+load_bugs()
+
+if len(sys.argv) < 2:
+    usage()
+
+cmd = sys.argv[1]
+commands = {
+  "list"    : main_list,
+  "show"    : main_show,
+  "new"     : main_new,
+  "resolve" : main_resolve,
+  "delete"  : main_delete,
+}
+
+hits = [] 
+for name, func in commands.items():
+    if name == cmd:
+        hits = [ (name, func) ]
+        break
+    elif name.startswith(cmd):
+        hits.append((name, func))
+
+if len(hits) < 1:
+    usage()
+
+elif len(hits) > 1:
+    sys.stderr.write("Command '%s' is ambigous. Possible are: %s\n" % \
+            ", ".join([ n for (n,f) in hits]))
+
+else:
+    hits[0][1](sys.argv[2:])
+

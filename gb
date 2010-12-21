@@ -134,7 +134,7 @@ def bug_state(bug):
     return "%s%-7s%s" % (tty_bold + states.get(state, ""), state, tty_normal)
 
 def list_bug(bug):
-    sys.stdout.write("#%04d %-6s %-7s %-10s %-60s\n" %
+    sys.stdout.write("#%04d %-6s %-9s %-10s %-60s\n" %
             (int(bug["id"]), bug_state(bug), bug["class"], bug["component"], bug["title"]))
 
 def show_bug(bug):

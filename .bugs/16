@@ -1,0 +1,22 @@
+Title: check_mk -II bei Clustern löscht die Checks nicht
+Component: core
+Benefit: 2
+State: open
+Cost: 3
+Date: 2010-12-21 12:15:32
+Class: bug
+
+Wenn man ein check_mk -II macht, dann werden clustered
+services nicht entfernt. Um das sauber hinzubekommen, muss man sicherstellen,
+dass der Anwender  check_mk -II mit *allen* nodes aufgerufen hat. Denn nur
+so darf man die Checks auf dem Cluster entfernen. Sonst kann man nicht sicher
+sein, dass Services wegfliegen, die eigentlich von einem anderem Node kommen.
+Das müsste dann auch micht clustered_services_of funktionieren. Ich muss
+einfach alle Cluster durchgehen, feststellen, ob jeweils alle deren Nodes
+inventurisiert werden, und darf dann die betroffenen Services wegwerfen.
+
+Man könnte auch überlegen, dass man ein -I oder -II auf den Cluster-Namen
+zulässt und dann einfach automatisch anstelle dessen die Nodes inventarisiert
+und zusätzlich die Checks vom Cluster entfernt. Das könnte eine einfache
+Lösung sein. So sorgt der User selbst dafür, dass der Cluster richtig
+behandelt wird. 

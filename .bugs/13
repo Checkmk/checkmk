@@ -1,0 +1,13 @@
+Title: Umlaute in SNMP-Daten und Servicedescription
+Component: checks
+Benefit: 1
+State: open
+Cost: 4
+Date: 2010-12-21 12:12:02
+Class: bug
+
+Ein Drucker sendet per SNMP Latin1
+kodierte Wert, z.B. Resttonerbehälter. Daraus baut Check_MK eine
+Servicedesription, die in nagios/conf.d/check_mk_objects.cfg ein
+Latin1-Zeichen enthält. Hier sollte unbedingt UTF-8 verwendet
+werden. Nur: woher kennen wir die Kodierung vom Drucker??

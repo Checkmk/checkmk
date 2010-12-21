@@ -15,6 +15,7 @@ components = [
 
 classes = [ 
   "cleanup",
+  "nastiness",
   "bug",
   "todo",
   "phantasm",

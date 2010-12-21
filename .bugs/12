@@ -1,0 +1,24 @@
+Title: Sorry, Operator 4 for lists not implemented.
+Component: livestatus
+Benefit: 1
+State: open
+Cost: 3
+Date: 2010-12-21 12:11:12
+Class: nastiness
+
+Wenn ich im Thruk im Suchfenster einfach Enter drücke, kommt folgende Query bei raus:
+GET services
+Columns: ..
+Filter: description ~~
+Filter: groups >=
+Filter: plugin_output ~~
+Filter: long_plugin_output ~~
+Filter: host_name ~~
+Filter: host_alias ~~
+Filter: host_groups >=
+Filter: comments ~~
+Filter: downtimes ~~
+Or: 2
+Or: 8
+livestatus: Sorry, Operator 4 for lists not implemented.
+Was ist eigentlich Operator 4?

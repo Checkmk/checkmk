@@ -1,0 +1,13 @@
+Title: Counter-Wrap: bei service aggregation fehlen Checks
+Component: core
+Benefit: 1
+State: open
+Cost: 3
+Date: 2010-12-21 12:14:07
+Class: nastiness
+
+Wenn ein Counter Wrap passiert und der check selbst die Exception
+nicht abfängt, dann wird das Ergebnis nicht an Nagios weitergeleitet.
+Der Service wird auch nicht in die aggregierten Services eines Summary Hosts
+aufgenommen. Das kann dazu führen, dass die Anzahl der Services in einem
+Summary-Host variabel ist.

@@ -143,9 +143,33 @@ def show_bug(bug):
 
 def main_list(args):
     bugs = g_bugs.values()
+    # arguments are tags from state, component and class. Multiple values
+    # in one class are orred. Multiple types are anded.
+    filters = {}
+    for a in args:
+        hit = False
+        for tp, values in [
+          ( "component", components ), ( "state", states ), ( "class", classes ),  ]:
+            for v in values:
+                if v.startswith(a):
+                    entries = filters.get(tp, [])
+                    entries.append(v)
+                    filters[tp] = entries
+                    hit = True
+                    break
+            if hit:
+                break
+        if not hit:
+            bail_out("No such component, state or class: %s" % a)
+
     # sort
     for bug in bugs:
-        if len(args) == 0 or bug["state"].startswith(args[0]):
+        skip = False
+        for tp, entries in filters.items():
+            if bug[tp] not in entries:
+                skip = True
+                break
+        if not skip:
             list_bug(bug)
 
 

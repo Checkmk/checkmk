@@ -1,0 +1,11 @@
+Title: Logfileansicht: Filter zum Suchen nach Texten.
+Component: multisite
+Benefit: 1
+State: open
+Cost: 1
+Date: 2010-12-21 21:30:31
+Class: feature
+
+Einfach ein Filter, mit dem man nach Logtexten suchen kann. Evlt.
+sollte der Filter auch bei der generellen Logfileansicht immer
+ausgeklappt sein?

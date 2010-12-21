@@ -1,0 +1,15 @@
+Title: URL-Variable für index.py mit URL von main.py
+Component: multisite
+Benefit: 2
+State: open
+Cost: 1
+Date: 2010-12-21 22:26:06
+Class: feature
+
+So könnte man einen Link auf das ganze Frameset machen. Wenn man dann
+mal in der View ein Icon macht, bei der man einen Link auf die Seite
+bekommt, könnte man dort den Benutzer gleich den vollen Link kopieren
+lassen.
+
+Man könnte sogar darüber nachdenken, dass die URL auf der rechten
+Seite persistiert wird...

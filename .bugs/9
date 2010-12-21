@@ -10,7 +10,7 @@ Multisite: Endgültig kompatibel mit IE machen. Bekannte Probleme:
 * reschedule Knopf geht irgendwie garnicht. Weder Animation noch reschedule.
   Nur das reload macht er
 * Bug mit Verschieben der Sidebar wo das Tabellengerüst stehen bleibt
-* Snapin "Views": Die Spiegelpunkt sind zu weit links, die Einrückung
+* Snapin "Views": Die Spiegelpunkte sind zu weit links, die Einrückung
   klappt nicht.
 * wenn man den Edit-Knopf nicht hat (wegen Berechtigungen), dann werden
   alle Tabs ganz komisch über die Breite verteilt. Am Ende ist die

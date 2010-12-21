@@ -1,0 +1,16 @@
+Title: checkresult-Files direkt schreiben
+Component: core
+Benefit: 3
+State: open
+Cost: 2
+Date: 2010-12-21 21:16:28
+Class: feature
+
+Anstelle von der Pipe sollte man direkt die checkresults-Files schreiben.
+Das natürlich konfigurierbar aber evtl. per Default an. Dazu muss
+man beim autodetect noch das richtige Verzeichnis rausfinden und
+die die defaults aufnehmen.
+
+Matthias Flacke meint, dass das viel an Performance bringt...
+Die normale Methode muss aber bleiben, damit man z.B. zu Shinken
+kompatibel bleibt.

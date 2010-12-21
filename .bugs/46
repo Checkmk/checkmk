@@ -1,0 +1,17 @@
+Title: Keine Counter mehr in den Perfdaten senden
+Component: checks
+Benefit: 2
+State: open
+Cost: 5
+Date: 2010-12-21 21:28:27
+Class: cleanup
+
+Performance counter: Generell sollten *alle* Counter von Check_MK
+behandelt werden mit get_counter und *nicht* als counter in die
+RRDs geschrieben, sondern bereits als Rate. Dadurch muss man alle
+Graphen einmal wegwerfen. Das ist blöd. Vorteil allerdings: (1)
+man kann Perf-O-Meter machen, (2) die Counter-Wrap-Erkennung
+verhindert, dass in den RRDs nach einem Reboot utopische Werte
+stehen (z.B. für die Kernel counter). (3) Da in den Performancedaten
+bereits eine Rate steht, können auch Tools wie NagVis dafür eine
+Visualisierung machen.

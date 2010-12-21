@@ -1,0 +1,11 @@
+Title: View editor: Warnung, wenn keine Spalten ausgewählt
+Component: multisite
+Benefit: 1
+State: open
+Cost: 1
+Date: 2010-12-21 21:31:11
+Class: nastiness
+
+Wenn der Benutzer keine einzige Spalte ausgewält hat, darf
+er die View nicht speichern können. Es gab schon User, die sich
+gewundert haben, dass sie nix sehen.

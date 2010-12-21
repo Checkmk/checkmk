@@ -1,0 +1,13 @@
+Title: logwatch: Teil der Meldung im Check ausgeben
+Component: checks
+Benefit: 2
+State: open
+Cost: 2
+Date: 2010-12-21 21:27:03
+Class: feature
+
+Kann man dazu evtl. den long_service_output nehmen? Es wäre auf jeden
+Fall gut, wenn neue Meldungen zu sehen sind, auch wenn die später
+wieder verschwinden. Noch besser wäre, wenn der logwatch-Check sogar
+auch später immer die letzten Fehlermeldungen anzeigt. Diese kann
+man ja problemlos aus der Datei holen.

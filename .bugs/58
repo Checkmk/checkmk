@@ -1,0 +1,11 @@
+Title: Views per Ajax refreshen, Reload der Seite verhindern
+Component: multisite
+Benefit: 1
+State: open
+Cost: 3
+Date: 2010-12-21 22:16:00
+Class: feature
+
+orschlag von Bastian: Bei den Views könnte man den Datenbereich (Tabelle)
+per Ajax refreshen und müsste nicht die ganze Seite neu aufbauen. Damit
+wird ein Bildschirmflimmern vermieden.

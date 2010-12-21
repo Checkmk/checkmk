@@ -1,0 +1,9 @@
+Title: cmk -d verwendet --cache nicht
+Component: core
+Benefit: 1
+State: open
+Cost: 2
+Date: 2010-12-21 21:15:52
+Class: nastiness
+
+Sollte es aber tun. So wird es erwartet.

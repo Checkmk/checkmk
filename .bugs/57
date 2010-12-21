@@ -1,0 +1,18 @@
+Title: Konfigurierbare Hover-Popups bei Paintern
+Component: multisite
+Benefit: 4
+State: open
+Cost: 2
+Date: 2010-12-21 22:14:15
+Class: feature
+
+Hover: Wenn man über einen Painter geht, könnte man eine
+Hover aufmachen, der einen weiteren Painter anzeigt. Das macht man
+über eine Auswahlbox analog zu der "Link to".
+
+Kritisch ist hier wahrscheinlich hauptsächlich die Frage, wie man
+das im View-Editor noch sinnvoll unterbringt. Die ganze Spalten-geschicht
+muss man dann wohl endgültig neu aufbauen.
+
+In so einem Hover-Ding könnte man aber viele Interessante Dinge
+unterbringen, z.B. host notes, PNP popups und vieles mehr.

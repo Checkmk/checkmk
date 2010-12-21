@@ -1,0 +1,13 @@
+Title: Spalte contact_groups bei hosts und services fehlt
+Component: livestatus
+Benefit: 1
+State: open
+Cost: 2
+Date: 2010-12-21 22:01:17
+Class: cleanup
+
+Livestatus: Bei den Tabellen hosts und services fehlt die
+Spalte 'contact_groups'. Man bekommt zwar die Einzelkontakte,
+aber nicht die Gruppen. Bei den Nagios-Datenstrukturen gibt
+es aber einen passenden Zeiger dafür. Sollte also nicht schwer
+sein, das umzusetzen.

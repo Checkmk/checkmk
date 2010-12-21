@@ -1,0 +1,11 @@
+Title: cmk --restore: cache/ und counters/ können Links sein
+Component: core
+Benefit: 1
+State: open
+Cost: 1
+Date: 2010-12-21 21:24:30
+Class: bug
+
+Sicherstellen, dass der --restore nur die Inhalte dieser Verzeichnisse
+löscht. Denn wenn es sich hier um Symlinks handelt, würden die beim
+Restore durch Verzeichnisse ersetzt werden.

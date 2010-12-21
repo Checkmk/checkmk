@@ -1,0 +1,25 @@
+Title: IPv6 Support in Check_MK
+Component: core
+Benefit: 1
+State: open
+Cost: 3
+Date: 2010-12-21 22:28:25
+Class: feature
+
+def lookup_ipaddress(hostname):
+    if fake_dns:
+        return fake_dns
+    elif simulation_mode:
+        return "127.0.0.1"
+    else:
+        ipa = ipaddresses.get(hostname)
+        if ipa:
+            return ipa
+        else:
+            #return socket.gethostbyname(hostname)
+            #gets only the first address of the first interface...
+            for res in socket.getaddrinfo(hostname, None):
+                family, socktype, proto, canonname, sockaddr = res
+                return sockaddr[0]
+Ausserdem kommt check_icmp damit nicht klar. Hier muss dann auf
+check_ping ausgewichen werden.

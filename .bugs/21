@@ -8,3 +8,8 @@ Class: bug
 
 Das Einrechnen in Swap ist Müll. Windows tickt anders. Hier muss
 ein eigener Check und eine eigene PNP-Schablone gemacht werden.
+
+TotalPage und UsedPage verwenden. Im Quellcode ist das schon
+drin, der Check muss angepasst werden und auch die Schablone. Evtl. macht
+man einen eigenen Check. Oder man löst es über das Check-Item.
+

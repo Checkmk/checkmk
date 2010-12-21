@@ -1,0 +1,13 @@
+Title: Windows: lodctr in die Doku aufnehmen
+Component: doku
+Benefit: 1
+State: open
+Cost: 3
+Date: 2010-12-21 21:14:50
+Class: feature
+
+C:\> lodctr /s:c:\counter.txt
+==> Holt aus der Registry die Namen und Beschreibungen der
+ganzen Performancecounter :-)
+Dazu bräuchte man aber noch eine Doku, wie man damit eigene
+Checks programmieren kann.

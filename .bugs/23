@@ -1,0 +1,10 @@
+Title: Gemeinsamen Code der df-Checks auslagern in df.include
+Component: checks
+Benefit: 1
+State: open
+Cost: 2
+Date: 2010-12-21 16:27:39
+Class: cleanup
+
+z.B. das mit der Magic-Number. Der df-spezifische Code kann dann
+aus check_mk_base.py ganz raus.

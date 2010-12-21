@@ -1,0 +1,10 @@
+Title: Windows-Speichercheck: Page-File separat berechnen
+Component: checks
+Benefit: 2
+State: open
+Cost: 2
+Date: 2010-12-21 16:23:51
+Class: bug
+
+Das Einrechnen in Swap ist Müll. Windows tickt anders. Hier muss
+ein eigener Check und eine eigene PNP-Schablone gemacht werden.

@@ -1,0 +1,11 @@
+Title: Windows agent: Eventlog nach UTF-8 kodieren
+Component: checks
+Benefit: 2
+State: open
+Cost: 4
+Date: 2010-12-21 16:41:20
+Class: feature
+
+Dazu müsste man aber erstmal rausfinden, wie man bei Windows
+dies anstellt. Es hängt ja von der Landeseinstellung ab. Vielleicht
+gibt es ja dafür eine spezielle Hilfsfunktion.

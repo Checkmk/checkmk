@@ -1,0 +1,12 @@
+Title: windows agent: Startmodus von Dienstens ausgeben
+Component: checks
+Benefit: 2
+State: open
+Cost: 2
+Date: 2010-12-21 16:40:20
+Class: feature
+
+So kann die Inventur z.B. automatisch alle Dienste
+überwachen, welche auf 'automatisch' stehen. Oder man macht
+nur einen einzigen Check für alle Dienste, der prüft, das
+alle auf automatisch stehenden Dinge auch gestartet sind.

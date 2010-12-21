@@ -1,0 +1,12 @@
+Title: Multisite Bookmarks: relative (minimale) URLs speichern
+Component: multisite
+Benefit: 1
+State: open
+Cost: 1
+Date: 2010-12-21 16:28:32
+Class: nastiness
+
+Das Snapin speichert immer absolute URLs mit Hostnamen.
+Das ist aber doof, wenn man die Bookmarksdatei auf einen anderen Host kopiert
+oder mal mit IP-Adresse, mal mit Namen auf Nagios zugreift. Lösung: Beim Speichern
+der Bookmarks den gemeinsamen Pfad vorne wegschneiden.

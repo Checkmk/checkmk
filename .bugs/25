@@ -1,0 +1,9 @@
+Title: Zeilenhintergrund von UNKNOWN passt nicht
+Component: multisite
+Benefit: 1
+State: open
+Cost: 1
+Date: 2010-12-21 16:30:14
+Class: nastiness
+
+Sieht schon fast gelb aus. check_mk.css anpassen.

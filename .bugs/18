@@ -1,0 +1,13 @@
+Title: Browserprobleme bei Opera
+Component: multisite
+Benefit: 1
+State: open
+Cost: 3
+Date: 2010-12-21 16:18:53
+Class: bug
+
+* Bei Opera kann man kein Snapin nach ganz unten ziehen. Der Indikator
+springt dann immer nach ganz oben.
+
+* Im Opera wird sich die aktuelle Scroll-Position der Sidebar nicht korrekt
+gemerkt.

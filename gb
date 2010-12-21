@@ -11,6 +11,8 @@ if sys.stdout.isatty():
     tty_magenta   = '\033[35m'
     tty_cyan      = '\033[36m'
     tty_white     = '\033[37m'
+    tty_bgred     = '\033[41m'
+    tty_bgyellow  = '\033[43m'
     tty_bgblue    = '\033[44m'
     tty_bgmagenta = '\033[45m'
     tty_bgwhite   = '\033[47m'
@@ -31,6 +33,8 @@ else:
     tty_underline = ''
     tty_normal    = ''
     tty_ok        = 'OK'
+
+grep_color = tty_bold + tty_green
 
 def bail_out(text):
     sys.stderr.write(text + "\n")
@@ -100,6 +104,9 @@ def save_bug(bug):
     f.write("\n")
     f.write(bug["description"])
     f.close()
+    git_add(bug)
+
+def git_add(bug):
     os.system("git add %d" % bug["id"])
 
 def next_bug_id():
@@ -120,11 +127,13 @@ def usage():
 
 where COMMAND is one of:
 
-  list [STATE]   ... list bugs
-  new            ... create a new bug
-  show [ID ID..] ... show several bugs (or all open)
-  resolve ID     ... change a bugs state
-  delete ID..    ... delete bug(s)
+  list [STATE]   - list bugs
+  new            - create a new bug
+  show [# #..]   - show several bugs (or all open)
+  resolve ID     - change a bugs state
+  delete #..     - delete bug(s)
+  grep WHAT...   - grep in titles and descriptions
+  edit [#]       - open bug # in editor (or newest bug)
 
 """)
     sys.exit(1)
@@ -134,8 +143,9 @@ def bug_state(bug):
     return "%s%-7s%s" % (tty_bold + states.get(state, ""), state, tty_normal)
 
 def list_bug(bug):
-    sys.stdout.write("#%04d %-6s %-9s %-10s %-60s\n" %
-            (int(bug["id"]), bug_state(bug), bug["class"], bug["component"], bug["title"]))
+    sys.stdout.write("%s#%04d%s %-6s %-9s %-10s %-60s\n" %
+            (tty_bold, int(bug["id"]), tty_normal, bug_state(bug), 
+             bug["class"], bug["component"], bug["title"]))
 
 def show_bug(bug):
     list_bug(bug)
@@ -274,6 +284,53 @@ def main_delete(args):
         if 0 == os.system("git rm %s" % ids):
             sys.stdout.write("Delete bug %s (%s)\n" % (ids, g_bugs[int(ids)]["descriptions"]))
 
+def grep(line, kw):
+    lc = kw.lower()
+    i = line.lower().find(lc)
+    if i == -1:
+        return None
+    else:
+        return line[0:i] + grep_color + line[i:i+len(kw)] + tty_normal + line[i+len(kw):]
+    
+
+def main_grep(args):
+    if len(args) == 0:
+        usage()
+    for bug in g_bugs.values():
+        didmatch = False
+        for kw in args:
+            match = grep(bug["title"], kw)
+            if match:
+                bug["title"] = match
+            lines = bug["description"].split("\n")
+            bodylines = ""
+            for line in lines:
+                match = grep(line, kw)
+                if match:
+                    bodylines += "  " + match + "\n"
+                    didmatch = True
+        if didmatch:
+            list_bug(bug)
+            sys.stdout.write(bodylines)
+
+def main_edit(args):
+    if len(args) == 0:
+        ids = str(max(g_bugs.keys()))
+    else:
+        ids = args[0] 
+    if not os.path.exists(ids):
+        bail_out("No bug with this id.")
+    editor = os.getenv("EDITOR")
+    if not editor:
+        for p in [ "/usr/bin/editor", "/usr/bin/vim", "/bin/vi" ]:
+            if os.path.exists(p):
+                editor = p
+                break
+    if not editor:
+        bail_out("No editor available (please set EDITOR).\n")
+
+    if 0 == os.system("%s %s" % (editor, ids)):
+        git_add(g_bugs[int(ids)])
 
 
 #                    _       
@@ -297,6 +354,8 @@ commands = {
   "new"     : main_new,
   "resolve" : main_resolve,
   "delete"  : main_delete,
+  "grep"    : main_grep,
+  "edit"    : main_edit,
 }
 
 hits = [] 

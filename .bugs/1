@@ -1,0 +1,9 @@
+Title: Describe StatsGroupBy
+Component: doku
+Benefit: 1
+State: open
+Cost: 1
+Date: 2010-12-21 10:45:58
+Class: todo
+
+multiple columns are allowed now. Columns: used.

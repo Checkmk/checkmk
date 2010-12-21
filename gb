@@ -32,14 +32,6 @@ else:
     tty_normal    = ''
     tty_ok        = 'OK'
 
-state_colors = {
-    "open"   : tty_blue,
-    "done"   : tty_green,
-    "closed" : tty_normal,
-}
-
-components = [ "core", "checks", "multisite", "livestatus", "wato" ]
-
 def bail_out(text):
     sys.stderr.write(text + "\n")
     sys.exit(1)
@@ -55,6 +47,9 @@ def goto_bugsdir():
     except:
         sys.stderr.write("Cannot find directory .bugs\n")
         sys.exit(1)
+
+def load_config():
+    execfile("config", globals(), globals())
 
 def load_bugs():
     global g_bugs
@@ -108,7 +103,10 @@ def save_bug(bug):
     os.system("git add %d" % bug["id"])
 
 def next_bug_id():
-    return max(g_bugs.keys()) + 1
+    if len(g_bugs) == 0:
+        return 1
+    else:
+        return max(g_bugs.keys()) + 1
 
 def add_comment(bug, title, comment):
     bug["description"] += """
@@ -133,11 +131,11 @@ where COMMAND is one of:
 
 def bug_state(bug):
     state = bug["state"]
-    return "%s%-7s%s" % (tty_bold + state_colors.get(state, ""), state, tty_normal)
+    return "%s%-7s%s" % (tty_bold + states.get(state, ""), state, tty_normal)
 
 def list_bug(bug):
-    sys.stdout.write("#%04d %-7s %-60s\n" %
-            (int(bug["id"]), bug_state(bug), bug["title"]))
+    sys.stdout.write("#%04d %-6s %-7s %-10s %-60s\n" %
+            (int(bug["id"]), bug_state(bug), bug["class"], bug["component"], bug["title"]))
 
 def show_bug(bug):
     list_bug(bug)
@@ -206,7 +204,11 @@ def input_choice(what, choices):
         sys.stdout.flush()
         c = getch()
         if c in ctc:
+            sys.stdout.write(" %s%s%s\n" % (
+                        tty_bold, ctc[c], tty_normal))
             return ctc[c]
+        else:
+            sys.stdout.write("\n")
 
 def main_new(args):
     bug = {}
@@ -217,8 +219,10 @@ def main_new(args):
     if  bug["title"] == "":
         sys.stderr.write("Cancelled.\n")
         sys.exit(0)
-    bug["cost"]    = int(get_input("Cost", 1))
-    bug["benefit"] = int(get_input("Benefit", 1))
+    bug["class"]     = input_choice("Class",     classes)
+    bug["component"] = input_choice("Component", components)
+    bug["cost"]      = input_choice("Cost",      "123456789")
+    bug["benefit"]   = input_choice("Benefit",   "123456789")
     
     bug["description"] = get_long_input("description")
     g_bugs[bug["id"]] = bug
@@ -234,7 +238,7 @@ def main_resolve(args):
         bail_out("No such bug.\n")
 
     list_bug(bug)
-    state = input_choice("State", state_colors.keys())
+    state = input_choice("State", states.keys())
 
     comment = get_long_input("comment")
     add_comment(bug, "changed state %s -> %s" % (bug["state"], state), comment)
@@ -256,6 +260,7 @@ def main_delete(args):
 #                            
 
 goto_bugsdir()
+load_config()
 load_bugs()
 
 if len(sys.argv) < 2:

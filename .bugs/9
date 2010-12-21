@@ -1,0 +1,14 @@
+Title: Multisite mit IE kompatibel machen
+Component: multisite
+Benefit: 4
+State: open
+Cost: 3
+Date: 2010-12-21 11:01:09
+Class: bug
+
+Multisite: Endgültig kompatibel mit IE machen. Bekannte Probleme:
+* reschedule Knopf geht irgendwie garnicht. Weder Animation noch reschedule.
+  Nur das reload macht er
+* Bug mit Verschieben der Sidebar wo das Tabellengerüst stehen bleibt
+* Snapin "Views": Die Spiegelpunkt sind zu weit links, die Einrückung
+  klappt nicht.

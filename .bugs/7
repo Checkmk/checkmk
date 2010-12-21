@@ -1,0 +1,14 @@
+Title: Timeperiod-Übergänge ins Nagios-Log schreiben
+Component: livestatus
+Benefit: 3
+State: open
+Cost: 1
+Date: 2010-12-21 10:56:28
+Class: feature
+
+Livestatus hält ja ohnehin einen Cache der Timeperiods. Immer
+wenn eine umschaltet, sollte ein Logeintrag gemacht werden. 
+Auch initial beim Starten des Systems. Anhand dieser Einträge
+ist es später viel einfacher, die Verfügbarkeiten zu berechnen.
+Das sollte man recht bald programmieren, damit die Leute
+schon Gelegenheit haben, Daten zu sammeln.

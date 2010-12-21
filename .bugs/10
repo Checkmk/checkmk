@@ -1,0 +1,10 @@
+Title: Multisite mit Chrome kompatible machen
+Component: multisite
+Benefit: 1
+State: open
+Cost: 2
+Date: 2010-12-21 11:01:49
+Class: bug
+
+Bekannte Probleme:
+* reschedule Knopf wird nicht animiert

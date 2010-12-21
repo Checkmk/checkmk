@@ -1,0 +1,22 @@
+states = {
+    "open"   : tty_blue,
+    "done"   : tty_green,
+    "closed" : tty_normal,
+}
+
+components = [ 
+  "core", 
+  "checks",
+  "multisite", 
+  "livestatus",
+  "wato",
+  "doku"
+]
+
+classes = [ 
+  "cleanup",
+  "bug",
+  "todo",
+  "phantasm",
+  "feature",
+]

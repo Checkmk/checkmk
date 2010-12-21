@@ -1,37 +1,3 @@
-DOKU:
---------------------------------------------------------------------------------
-Hostnamen in ipaddresses eintragen: Das sollte man dokumentieren
-(wegen dynamischen Hosts.)
-
-Man-Pages zu df_netapp und df_netapp32 fehlen (df_netapp geht nur mit bulkwalk_hosts!!)
-
-Doku: Check_MK und OMD: Installieren von MKPs, local-Hierarchie
-
-[""] deprecaten, aus der Doku raus und durch ALL_SERVICES ersetzen. Das geht
-aber erst, wenn eine stabile Version das ALL_SERVICES erlaubt!
-
---------------------------------------------------------------------------------
-
-Livestatus: is_contact_member_of_contactgroup selbst programmieren,
-    da diese Funktion in Nagios rausfliegen wird.
-
-Inventurcheck: retry_interval evt. anders (kuerzer) einstellbar machen.
-Das geht aber auch mit extra_service_conf. Evtl. reicht hier die Doku.
-Ein sinnvoller Default-Wert wäre aber schon gut.
-
---------------------------------------------------------------------------------
-BUGS beheben ab 1.1.9i1
---------------------------------------------------------------------------------
-Multisite: Endgültig kompatibel mit IE machen. Bekannte Probleme: 
-* reschedule Knopf geht irgendwie garnicht. Weder Animation noch reschedule.
-  Nur das reload macht er
-* Bug mit Verschieben der Sidebar wo das Tabellengerüst stehen bleibt
-* Snapin "Views": Die Spiegelpunkt sind zu weit links, die Einrückung
-  klappt nicht.
-
-Multsite: Kompatible mit Chrome machen. Probleme:
-* reschedule Knopf wird nicht animiert
-
 WATO: Wenn ein Agent einen rauswirft (leere Ausgabe, Connection closed), kommt im 
 WATO bei der Inventur keine sinnvolle Fehlermeldung.
 

@@ -1,0 +1,10 @@
+Title: ALL_SERVICES anstelle von [""] verwenden
+Component: doku
+Benefit: 1
+State: open
+Cost: 1
+Date: 2010-12-21 10:54:20
+Class: todo
+
+Sobald ALL_SERVICES in der aktuelle stabilen Version verfügbar ist,
+in der Doku überall [""] entfernen und dadurch ersetzten.

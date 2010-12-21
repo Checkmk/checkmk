@@ -1,0 +1,11 @@
+Title: View-Editor: Spaltenzahl irgendwie dynamisch machen
+Component: multisite
+Benefit: 3
+State: open
+Cost: 4
+Date: 2010-12-21 20:51:19
+Class: feature
+
+Das aktuelle Prinzip ist eh doof, weil man keine Spalten in der Mitte
+einfügen kann. Das müsste man irgendwie über Javascript hinbekommen.
+Auch dass man nicht auf 10 begrenzt ist.

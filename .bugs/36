@@ -1,0 +1,13 @@
+Title: Linux-NICs: Check kompatibel zu if/if64 machen
+Component: core
+Benefit: 2
+State: open
+Cost: 2
+Date: 2010-12-21 20:52:24
+Class: cleanup
+
+Man könnte das doch evtl. kompatibel mit if machen. Und dann evtl auch die
+Ausgabe noch kompatibel. Man monitort dann nur die verwendeten NICs. Und
+man bau eine neue Sektion <<<nics>>>, welche die Ausgaben von ethtool
+und /proc/net/dev kombiniert, damit man einen Check bauen kann, der
+wirklich 100% kompatibel zu if ist (dann klappen auch die Network Wethermaps)

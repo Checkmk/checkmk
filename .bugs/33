@@ -1,0 +1,10 @@
+Title: Datei local.mk, die nicht gebackupt wird
+Component: core
+Benefit: 1
+State: open
+Cost: 1
+Date: 2010-12-21 20:50:02
+Class: feature
+
+Analog zu final, kommt noch nach final und wird von backup/restore
+nicht angefasst.

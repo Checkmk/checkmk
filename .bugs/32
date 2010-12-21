@@ -1,0 +1,13 @@
+Title: modified_attributes bei Bedarf zurücksetzen
+Component: multisite
+Benefit: 1
+State: open
+Cost: 3
+Date: 2010-12-21 20:48:09
+Class: nastiness
+
+Wenn man z.B. die active checks aus und wieder eingeschaltet hat,
+dann erscheint der grüne Haken. Irgendwie müsste man die modified
+Attributes zurücksetzen können. Evtl. hilft auch die Doku, dass
+man das über die state retention konfiguriert. Das Kommando
+zum Zurücksetzen heisst CHANGE_SVC_MODATTR;<host_name>;<service_description>;<value>

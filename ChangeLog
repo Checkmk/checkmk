@@ -42,6 +42,8 @@
       column to work you need to specify the base directory of the PNP graphs
       with the module option pnp_path=, e.g. pnp_path=/omd/sites/wato/var/pnp4nagios/perfdata
     * Allow more than one column for StatsGroupBy:
+    * Do not use function is_contact_member_of_contactgroup anymore (get compatible
+      with Nagios CVS)
 
 1.1.9i2:
     Checks & Agents:

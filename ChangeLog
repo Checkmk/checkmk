@@ -44,6 +44,9 @@
     * Allow more than one column for StatsGroupBy:
     * Do not use function is_contact_member_of_contactgroup anymore (get compatible
       with Nagios CVS)
+    * Livestatus: log timeperiod transitions (active <-> inactive) into Nagios
+      log file. This will enable us to create availability reports more simple
+      in future.
 
 1.1.9i2:
     Checks & Agents:

@@ -40,6 +40,8 @@ public:
     ~TimeperiodsCache();
     void update(time_t now);
     bool inTimeperiod(timeperiod *tp);
+private:
+    void logTransition(char *name, int from, int to);
 };
 
 #endif // _TimeperiodsCache_h

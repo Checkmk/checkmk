@@ -386,54 +386,56 @@ int broker_event(int event_type, void *data)
 int broker_process(int event_type, void *data)
 {
     struct nebstruct_process_struct *ps = (struct nebstruct_process_struct *)data;
-    if (ps->type == NEBTYPE_PROCESS_EVENTLOOPSTART)
+    if (ps->type == NEBTYPE_PROCESS_EVENTLOOPSTART) {
+        update_timeperiods_cache(time(0));
         start_threads();
+    }
 }
 
 int verify_event_broker_options()
 {
     int errors = 0;
-    if(!(event_broker_options & BROKER_PROGRAM_STATE)) {
+    if (!(event_broker_options & BROKER_PROGRAM_STATE)) {
         logger( LG_CRIT, "need BROKER_PROGRAM_STATE (%i) event_broker_option enabled to work.", BROKER_PROGRAM_STATE );
         errors++;
     }
-    if(!(event_broker_options & BROKER_TIMED_EVENTS)) {
+    if (!(event_broker_options & BROKER_TIMED_EVENTS)) {
         logger( LG_CRIT, "need BROKER_TIMED_EVENTS (%i) event_broker_option enabled to work.", BROKER_TIMED_EVENTS );
         errors++;
     }
-    if(!(event_broker_options & BROKER_SERVICE_CHECKS)) {
+    if (!(event_broker_options & BROKER_SERVICE_CHECKS)) {
         logger( LG_CRIT, "need BROKER_SERVICE_CHECKS (%i) event_broker_option enabled to work.", BROKER_SERVICE_CHECKS );
         errors++;
     }
-    if(!(event_broker_options & BROKER_HOST_CHECKS)) {
+    if (!(event_broker_options & BROKER_HOST_CHECKS)) {
         logger( LG_CRIT, "need BROKER_HOST_CHECKS (%i) event_broker_option enabled to work.", BROKER_HOST_CHECKS );
         errors++;
     }
-    if(!(event_broker_options & BROKER_LOGGED_DATA)) {
+    if (!(event_broker_options & BROKER_LOGGED_DATA)) {
         logger( LG_CRIT, "need BROKER_LOGGED_DATA (%i) event_broker_option enabled to work.", BROKER_LOGGED_DATA );
         errors++;
     }
-    if(!(event_broker_options & BROKER_COMMENT_DATA)) {
+    if (!(event_broker_options & BROKER_COMMENT_DATA)) {
         logger( LG_CRIT, "need BROKER_COMMENT_DATA (%i) event_broker_option enabled to work.", BROKER_COMMENT_DATA );
         errors++;
     }
-    if(!(event_broker_options & BROKER_DOWNTIME_DATA)) {
+    if (!(event_broker_options & BROKER_DOWNTIME_DATA)) {
         logger( LG_CRIT, "need BROKER_DOWNTIME_DATA (%i) event_broker_option enabled to work.", BROKER_DOWNTIME_DATA );
         errors++;
     }
-    if(!(event_broker_options & BROKER_STATUS_DATA)) {
+    if (!(event_broker_options & BROKER_STATUS_DATA)) {
         logger( LG_CRIT, "need BROKER_STATUS_DATA (%i) event_broker_option enabled to work.", BROKER_STATUS_DATA );
         errors++;
     }
-    if(!(event_broker_options & BROKER_ADAPTIVE_DATA)) {
+    if (!(event_broker_options & BROKER_ADAPTIVE_DATA)) {
         logger( LG_CRIT, "need BROKER_ADAPTIVE_DATA (%i) event_broker_option enabled to work.", BROKER_ADAPTIVE_DATA );
         errors++;
     }
-    if(!(event_broker_options & BROKER_EXTERNALCOMMAND_DATA)) {
+    if (!(event_broker_options & BROKER_EXTERNALCOMMAND_DATA)) {
         logger( LG_CRIT, "need BROKER_EXTERNALCOMMAND_DATA (%i) event_broker_option enabled to work.", BROKER_EXTERNALCOMMAND_DATA );
         errors++;
     }
-    if(!(event_broker_options & BROKER_STATECHANGE_DATA)) {
+    if (!(event_broker_options & BROKER_STATECHANGE_DATA)) {
         logger( LG_CRIT, "need BROKER_STATECHANGE_DATA (%i) event_broker_option enabled to work.", BROKER_STATECHANGE_DATA );
         errors++;
     }

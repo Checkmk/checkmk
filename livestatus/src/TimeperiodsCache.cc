@@ -57,14 +57,24 @@ void TimeperiodsCache::update(time_t now)
     }
 
     _cache_time = minutes;
-    _cache.clear();
 
     // Loop over all timeperiods and compute if we are
     // currently in
     timeperiod *tp = timeperiod_list;
     while (tp) {
         bool is_in = 0 == check_time_against_period(now, tp);
-	_cache.insert(std::make_pair(tp, is_in));
+
+        // check previous state and log transition if state has changed
+        _cache_t::iterator it = _cache.find(tp);
+        if (it == _cache.end()) { // first entry
+            logTransition(tp->name, -1, is_in ? 1 : 0);
+	    _cache.insert(std::make_pair(tp, is_in));
+        }
+        else if (it->second != is_in) {
+            logTransition(tp->name, it->second ? 1 : 0, is_in ? 1 : 0);
+            it->second = is_in;
+        }
+
 	tp = tp->next;
     }
     pthread_mutex_unlock(&_cache_lock);
@@ -87,3 +97,10 @@ bool TimeperiodsCache::inTimeperiod(timeperiod *tp)
     return is_in;
 }
 
+
+void TimeperiodsCache::logTransition(char *name, int from, int to)
+{
+    char buffer[64];
+    snprintf(buffer, sizeof(buffer), "TIMEPERIOD TRANSITION: %s;%d;%d", name, from, to);
+    write_to_all_logs(buffer, LOG_INFO);
+}

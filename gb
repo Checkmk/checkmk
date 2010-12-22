@@ -15,10 +15,13 @@ if sys.stdout.isatty():
     tty_bgyellow  = '\033[43m'
     tty_bgblue    = '\033[44m'
     tty_bgmagenta = '\033[45m'
+    tty_bgcyan    = '\033[46m'
     tty_bgwhite   = '\033[47m'
     tty_bold      = '\033[1m'
     tty_underline = '\033[4m'
     tty_normal    = '\033[0m'
+    def tty_colors(codes):
+        return '\033[%sm' % (';'.join([str(c) for c in codes]))
 else:
     tty_red       = ''
     tty_green     = ''
@@ -29,10 +32,13 @@ else:
     tty_white     = ''
     tty_bgblue    = ''
     tty_bgmagenta = ''
+    tty_bgcyan    = ''
     tty_bold      = ''
     tty_underline = ''
     tty_normal    = ''
     tty_ok        = 'OK'
+    def tty_colors(c):
+        return ""
 
 grep_color = tty_bold + tty_green
 
@@ -58,6 +64,7 @@ def load_config():
 def load_bugs():
     global g_bugs
     g_bugs = {}
+    check_modified()
     for entry in os.listdir("."):
         try:
             bugid = int(entry)
@@ -67,6 +74,20 @@ def load_bugs():
                 sys.stderr.write("SKIPPING INVALID BUG %d\n" % bugid)
         except:
             continue
+
+def check_modified():
+    global g_modified
+    g_modified = set([])
+    for line in os.popen("git status --porcelain"):
+        if line.startswith("M") and ".bugs/" in line:
+            try:
+                id = line.rsplit("/", 1)[-1].strip()
+                g_modified.add(int(id))
+            except:
+                pass
+
+def bug_is_modified(bugid):
+    return bugid in g_modified
 
 
 def load_bug(bugid):
@@ -127,13 +148,13 @@ def usage():
 
 where COMMAND is one of:
 
-  list [STATE]   - list bugs
-  new            - create a new bug
-  show [# #..]   - show several bugs (or all open)
-  resolve ID     - change a bugs state
-  delete #..     - delete bug(s)
-  grep WHAT...   - grep in titles and descriptions
-  edit [#]       - open bug # in editor (or newest bug)
+  list [-g] [-r] [STATE] - list bugs (-g: sort after gain, -r: reverse)
+  new                    - create a new bug
+  show [# #..]           - show several bugs (or all open)
+  resolve ID             - change a bugs state
+  delete #..             - delete bug(s)
+  grep WHAT...           - grep in titles and descriptions
+  edit [#]               - open bug # in editor (or newest bug)
 
 """)
     sys.exit(1)
@@ -142,10 +163,43 @@ def bug_state(bug):
     state = bug["state"]
     return "%s%-7s%s" % (tty_bold + states.get(state, ""), state, tty_normal)
 
+def num_color(n, colors, inverse):
+    if inverse:
+        b = 40
+    else:
+        b = 30
+
+    c = colors[n-1]
+    return tty_colors([b + c, 1])
+
+def bug_gain(bug):
+    cost    = int(bug["cost"])
+    benefit = int(bug["benefit"])
+    gain = benefit - cost
+    if gain >= 2:
+        color = 2
+    elif gain > 0:
+        color = 6
+    elif gain <= -3:
+        color = 1
+    elif gain <= -2:
+        color = 5
+    elif gain < 0:
+        color = 3
+    else:
+        color = 4
+    return "%s%d%s%d%s" % (
+            tty_colors([40 + color, 1]), cost, tty_colors([0, 30 + color, 1]), benefit, tty_normal)
+
 def list_bug(bug):
-    sys.stdout.write("%s#%04d%s %-6s %-9s %-10s %-60s\n" %
-            (tty_bold, int(bug["id"]), tty_normal, bug_state(bug), 
-             bug["class"], bug["component"], bug["title"]))
+    if bug_is_modified(bug["id"]):
+        bold = tty_bold + tty_cyan + "(*) "
+    else:
+        bold = ""
+    sys.stdout.write("#%04d %s %-6s %-9s %-10s %s%-60s%s\n" %
+            (int(bug["id"]),
+             bug_gain(bug), bug_state(bug), 
+             bug["class"], bug["component"], bold, bug["title"], tty_normal))
 
 def show_bug(bug):
     list_bug(bug)
@@ -153,10 +207,26 @@ def show_bug(bug):
 
 def main_list(args):
     bugs = g_bugs.values()
+
     # arguments are tags from state, component and class. Multiple values
     # in one class are orred. Multiple types are anded.
     filters = {}
+    def cmp_gain(a, b):
+        ga = int(a["benefit"]) - int(a["cost"])
+        gb = int(b["benefit"]) - int(b["cost"])
+        return ga - gb
+
+    sort = None
+    reverse = False
     for a in args:
+        if a == '-g':
+            sort = cmp_gain
+            continue
+
+        if a == '-r':
+            reverse = True
+            continue
+
         hit = False
         for tp, values in [
           ( "component", components ), ( "state", states ), ( "class", classes ),  ]:
@@ -172,7 +242,8 @@ def main_list(args):
         if not hit:
             bail_out("No such component, state or class: %s" % a)
 
-    # sort
+    # Filter
+    newbugs = []
     for bug in bugs:
         skip = False
         for tp, entries in filters.items():
@@ -180,7 +251,18 @@ def main_list(args):
                 skip = True
                 break
         if not skip:
-            list_bug(bug)
+            newbugs.append(bug)
+    bugs = newbugs
+            
+    # Sort
+    if sort:
+        newbugs.sort(sort)
+    if reverse:
+        newbugs.reverse()
+
+    # Output
+    for bug in bugs:
+        list_bug(bug)
 
 
 def main_show(args):

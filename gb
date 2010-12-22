@@ -384,6 +384,7 @@ def main_grep(args):
             match = grep(bug["title"], kw)
             if match:
                 bug["title"] = match
+                didmatch = True
             lines = bug["description"].split("\n")
             bodylines = ""
             for line in lines:

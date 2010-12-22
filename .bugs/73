@@ -1,0 +1,11 @@
+Title: Limit, dass nach dem Sortieren angewandt wird
+Component: multisite
+Benefit: 2
+State: open
+Cost: 2
+Date: 2010-12-22 11:08:52
+Class: feature
+
+Für die Alerts-Stats braucht man noch die Möglichkeit,
+*nach* dem Sortieren ein Limit zu setzen. Das kann auch für andere
+Dinge nützlich sein. Implementierung einfach über eine view property.

@@ -1,0 +1,18 @@
+Title: SNMP parameter konfigurierbar machen
+Component: core
+Benefit: 2
+State: open
+Cost: 2
+Date: 2010-12-22 11:24:45
+Class: feature
+
+Neue Variable snmp_paramters:
+
+snmp_parameters = [
+  ( "-p 4711", ["dmz"], ALL_HOSTS )
+]
+
+So kann man z.B. auch eine alternative Portnummer verwenden oder 
+evtl. Dinge für die Sicherheitseinstellung einfacher konfigurieren.
+Die Parameter sollen immer am Ende kommen. Dann kann man darüber
+sogar die Community einstellen und Parameter für V3. 

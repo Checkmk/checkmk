@@ -1,0 +1,11 @@
+Title: Quicksearch case-insensitive
+Component: multisite
+Benefit: 1
+State: open
+Cost: 1
+Date: 2010-12-22 11:07:51
+Class: feature
+
+Evtl. sollte das Case-Insensitive werden. Es spricht doch eigentlich
+nix dagegen. Gefordert wird das von Leuten, die ihre Hosts mit Großbuchstaben
+schreiben. Ich denke bei den Services ist es jetzt schon ci.

@@ -54,12 +54,12 @@ exec > >(tee $LOGFILE) 2>&1
 
 set -e
 
-NAGIOS_VERSION=3.2.2
+NAGIOS_VERSION=3.2.3
 PLUGINS_VERSION=1.4.15
-RRDTOOL_VERSION=1.4.3
+RRDTOOL_VERSION=1.4.4
 CHECK_MK_VERSION=1.1.9i3
 PNP_VERSION=0.6.6
-NAGVIS_VERSION=1.5.1
+NAGVIS_VERSION=1.5.6
 
 SOURCEFORGE_MIRROR=dfn
 NAGIOS_URL="http://downloads.sourceforge.net/project/nagios/nagios-3.x/nagios-$NAGIOS_VERSION/nagios-$NAGIOS_VERSION.tar.gz?use_mirror=$SOURCEFORGE_MIRROR"
@@ -148,10 +148,15 @@ esac
 
 # Process command line options
 if [ $# -gt 0 ]; then
-  while getopts "s:y" options $OPTS; do
+  while getopts "s:ym" options $OPTS; do
     case $options in
       y)
         YES=1
+      ;;
+      m)
+        WITHOUT_MK=1
+        NOTICE="
+Setting up without Check_MK!"
       ;;
       s)
         SITE=$OPTARG
@@ -190,6 +195,7 @@ Check_MK on a freshly installed Linux system. It will:
 The output of this script is logged into $LOGFILE.
 
 No user interaction is neccesary.
+$NOTICE
 EOF
 
 if [ -z "$YES" ]; then
@@ -985,7 +991,7 @@ killall nagios || true
 /etc/init.d/nagios start
 activate_initd nagios || true
 
-if [ "$CHECK_MK_VERSION" ]
+if [ "$CHECK_MK_VERSION" -a -z "$WITHOUT_MK" ]
 then
     # -----------------------------------------------------------------------------
     heading "Check_MK"

@@ -124,6 +124,8 @@ rm -rf $RPM_BUILD_ROOT
 /etc/check_mk/conf.d/README
 %config(noreplace) /etc/nagios/objects/*
 /usr/bin/check_mk
+/usr/bin/cmk
+/usr/bin/mkp
 %dir /usr/share/check_mk
 /usr/share/check_mk/agents
 /usr/share/check_mk/checks

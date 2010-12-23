@@ -5,7 +5,7 @@
       Please use display_options instead.
     * Finally removed deprecated filesystem_levels. Please use check_parameters instead.
     * Livestatus: The StatsGroupBy: header is still working but now deprecated.
-      Please simply use Columns: instead. If your query contains at least one Stats:
+      Please simply use Columns: instead. If your query contains at least one Stats:-
       header than Columns: has the meaning of the old StatsGroupBy: header
 
     Core, Setup, etc.:

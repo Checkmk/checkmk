@@ -164,17 +164,25 @@ ask_title ()
 if [ -z "$YES" ] ; then cat <<EOF
 
 
-[1;44;37m                  _               _                  _                  [0m
-[1;44;37m              ___| |__   ___  ___| | __    _ __ ___ | | __              [0m
-[1;44;37m             / __| '_ \ / _ \/ __| |/ /   | '_ \` _ \| |/ /              [0m
-[1;44;37m            | (__| | | |  __/ (__|   <    | | | | | |   <               [0m
-[1;44;37m             \___|_| |_|\___|\___|_|\_\___|_| |_| |_|_|\_\              [0m
-[1;44;37m                                     |_____|                            [0m
+
+
+
+
+
+
+
+
+[1;44;37m               ____ _               _        __  __ _  __               [0m
+[1;44;37m              / ___| |__   ___  ___| | __   |  \/  | |/ /               [0m
+[1;44;37m             | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /                [0m
+[1;44;37m             | |___| | | |  __/ (__|   <    | |  | | . \                [0m
+[1;44;37m              \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\               [0m
+[1;44;37m                                       |_____|                          [0m
 [1;44;37m                                                                        [0m
-[1;45;37m   check_mk setup                  $(printf "%32s" Version:' '$VERSION)     [0m
+[1;45;37m   Check_MK setup                  $(printf "%32s" Version:' '$VERSION)     [0m
 
 
-Welcome to check_mk. This setup will install check_mk into user defined
+Welcome to Check_MK. This setup will install Check_MK into user defined
 directories. If you run this script as root, installation paths below
 /usr will be suggested. If you run this script as non-root user paths
 in your home directory will be suggested. You may override the default
@@ -234,16 +242,12 @@ ask_dir modulesdir /usr/share/$NAME/modules $HOMEBASEDIR/modules "check_mk modul
 also create a file 'defaults' in that directory that reflects all settings
 you are doing right now" 
 
-ask_dir web_dir /usr/share/$NAME/web $HOMEBASEDIR/web "check_mk's web pages" \
-  "Directory where Check_mk's web pages should be installed. Currently these
-web pages allow you to search in all of Nagios services and send several
-different commands to all found services. That directory should [4;1mnot[0m be
+ask_dir web_dir /usr/share/$NAME/web $HOMEBASEDIR/web "Check_MK Multisite GUI" \
+  "Directory where Check_mk's Multisite GUI should be installed. Multisite is
+an optional replacement for the Nagios GUI, but is also needed for the 
+logwatch extension.  That directory should [4;1mnot[0m be
 in your WWW document root. A separate apache configuration file will be
 installed that maps the directory into your URL schema"
-
-ask_dir mibsdir /usr/share/snmp/mibs $HOMEBASEDIR/mibs "SNMP mibs" \
-  "Directory for SNMP MIB files (for copyright reasons we currently do
-not ship any MIB files, though...)" 
 
 ask_dir docdir /usr/share/doc/$NAME $HOMEBASEDIR/doc "documentation" \
   "Some documentation about check_mk will be installed here. Please note,
@@ -614,10 +618,6 @@ do
 	   tar xzf $SRCDIR/doc.tar.gz -C $DESTDIR$docdir &&
 	   mkdir -p $DESTDIR$checkmandir &&
 	   tar xzf $SRCDIR/checkman.tar.gz -C $DESTDIR$checkmandir &&
-	   if [ -e $SRCDIR/mibs.tar.gz ] ; then 
-	       mkdir -p $DESTDIR$mibsdir &&
-	       tar xzf $SRCDIR/mibs.tar.gz -C $DESTDIR$mibsdir
-	   fi &&
 	   mkdir -p $DESTDIR$agentsdir &&
 	   tar xzf $SRCDIR/agents.tar.gz -C $DESTDIR$agentsdir &&
 	   for agent in $DESTDIR/$agentsdir/check_mk_*agent.* $DESTDIR/$agentsdir/mk_logwatch ; do 
@@ -664,7 +664,7 @@ do
 	   rm -f $DESTDIR$bindir/check_mk &&
 	   echo -e "#!/bin/sh\nexec python $modulesdir/check_mk.py "'"$@"' > $DESTDIR$bindir/check_mk &&
 	   chmod 755 $DESTDIR$bindir/check_mk &&
-           ln -s $DESTDIR$bindir/check_mk cmk &&
+           ln -s check_mk $DESTDIR$bindir/cmk &&
 	   echo -e "#!/bin/sh\nexec python $modulesdir/check_mk.py -P "'"$@"' > $DESTDIR$bindir/mkp &&
            chmod 755 $DESTDIR$bindir/mkp &&
 	   sed -i "s#@BINDIR@#$bindir#g"              $DESTDIR$docdir/check_mk_templates.cfg &&

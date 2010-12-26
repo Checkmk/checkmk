@@ -61,7 +61,7 @@
 #include <ctype.h> // isspace()
 
 
-#define CHECK_MK_VERSION "1.1.9i3"
+#define CHECK_MK_VERSION "1.1.9i4"
 #define CHECK_MK_AGENT_PORT 6556
 #define SERVICE_NAME "Check_MK_Agent"
 #define KiloByte 1024

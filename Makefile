@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL           = /bin/bash
-VERSION        	= 1.1.9i3
+VERSION        	= 1.1.9i4
 NAME           	= check_mk
 RPM_TOPDIR     	= rpm.topdir
 RPM_BUILDROOT  	= rpm.buildroot
@@ -100,6 +100,7 @@ mk-livestatus:
 
 
 version:
+	[ "$$(head -c 14 /etc/issue)" = "Ubuntu 10.04.1" ] || { echo 'You are not on the reference system!' ; exit 1; }
 	@newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)") ; \
 	if [ -n "$$newversion" ] ; then \
 	    sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$$newversion/" Makefile ; \
@@ -114,6 +115,7 @@ version:
 	    echo 'check-mk_$$newversion-1_all.deb net optional' > debian/files ; \
 	    sed -i 's/^CHECK_MK_VERSION=.*/CHECK_MK_VERSION='$$newversion/ scripts/install_nagios.sh ; \
 	fi ; \
+	cd agents/windows ; rm *.exe ; make
 
 headers:
 	./headrify

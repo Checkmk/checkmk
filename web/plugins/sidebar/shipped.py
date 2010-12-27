@@ -307,7 +307,7 @@ def render_hostmatrix():
     style = 'height: %dpx; ' % (snapin_width)
     if rows > 10:
         style += "border-collapse: collapse;"
-    html.write('<table class=hostmatrix style="%s"\n' % style)
+    html.write('<table class=hostmatrix style="%s">\n' % style)
     col = 1
     row = 1
     for site, host, state, has_been_checked, worstsvc, downtimedepth in hosts:
@@ -344,7 +344,7 @@ sidebar_snapins["hostmatrix"] = {
     "allowed"     : [ "user", "admin", "guest" ],
     "refresh"     : 10,
     "styles"      : """
-table.hostmatrix { width: %dpx; cell-spacing: 1px; }
+table.hostmatrix { width: %dpx; border-spacing: 1px; }
 table.hostmatrix a { display: block; width: 100%%; height: 100%%; }
 table.hostmatrix td { border: 1px solid white; }
 """ % snapin_width

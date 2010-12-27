@@ -1,10 +1,15 @@
 Title: Multisite mit Chrome kompatible machen
 Component: multisite
-Benefit: 1
-State: open
-Cost: 2
-Date: 2010-12-21 11:01:49
+State: done
 Class: bug
+Date: 2010-12-21 11:01:49
+Benefit: 1
+Cost: 2
+Fun: 0
 
 Bekannte Probleme:
 * reschedule Knopf wird nicht animiert
+
+2010-12-27 12:41:36: changed state open -> done
+Animated gif images are stopped duing sync ajax requests in chrome. So the reloading image is not rotating.
+Switched the request to async ajax request.

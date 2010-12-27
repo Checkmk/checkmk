@@ -204,15 +204,12 @@ function render_pnp_graphs(container, site, host, service, pnpview, base_url, pn
 // Everything else:
 // <undefined> - Unknown format. Simply echo.
 
-function performAction(oLink, action, type, site, name1, name2) {
-    var oImg = oLink.childNodes[0];
-    oImg.src = 'images/icon_reloading.gif';
-
+function actionResponseHandler(oImg, code) {
     var validResponse = true;
-    var response = get_url_sync('nagios_action.py?action='+action+'&site='+site+'&host='+name1+'&service='+name2);
+    var response = null;
 
     try {
-        response = eval(response);
+        response = eval(code);
     } catch(e) {
         validResponse = false;
     }
@@ -231,7 +228,18 @@ function performAction(oLink, action, type, site, name1, name2) {
         oImg.title = 'Invalid response: ' + response;
     }
 
-    validResponse = null;
-    response = null;
+		response = null;
+		validResponse = null;
+		oImg = null;
+}
+
+function performAction(oLink, action, type, site, name1, name2) {
+    var oImg = oLink.childNodes[0];
+    oImg.src = 'images/icon_reloading.gif';
+
+		// Chrome and IE are not animating the gif during sync ajax request
+		// So better use the async request here
+    get_url('nagios_action.py?action='+action+'&site='+site+'&host='+name1+'&service='+name2,
+            actionResponseHandler, oImg);
     oImg = null;
 }

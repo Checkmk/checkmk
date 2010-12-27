@@ -13,6 +13,9 @@ Multisite: Endgültig kompatibel mit IE machen. Bekannte Probleme:
 	=> Wurde behoben. Lösung: Async Request statt Sync Request
 
 * Bug mit Verschieben der Sidebar wo das Tabellengerüst stehen bleibt
+  -> LM: Lässt sich bei mir nur im IE8 mit aktivierter Kompatibilitätsansicht
+	       nachvollziehen
+
 * Snapin "Views": Die Spiegelpunkte sind zu weit links, die Einrückung
   klappt nicht.
 * wenn man den Edit-Knopf nicht hat (wegen Berechtigungen), dann werden

@@ -304,7 +304,7 @@ def render_hostmatrix():
     if lastcols > 0:
         rows += 1
 
-    style = 'height: %d; ' % (snapin_width)
+    style = 'height: %dpx; ' % (snapin_width)
     if rows > 10:
         style += "border-collapse: collapse;"
     html.write('<table class=hostmatrix style="%s"\n' % style)
@@ -344,7 +344,7 @@ sidebar_snapins["hostmatrix"] = {
     "allowed"     : [ "user", "admin", "guest" ],
     "refresh"     : 10,
     "styles"      : """
-table.hostmatrix { width: %d; cell-spacing: 1px; }
+table.hostmatrix { width: %dpx; cell-spacing: 1px; }
 table.hostmatrix a { display: block; width: 100%%; height: 100%%; }
 table.hostmatrix td { border: 1px solid white; }
 """ % snapin_width
@@ -579,7 +579,7 @@ sidebar_snapins["performance"] = {
 table.performance {
     -moz-border-radius: 5px;
     font-size: 8pt;
-    width: %d;
+    width: %dpx;
     border-style: solid;
     background-color: #589;
     border-color: #444 #bbb #eee #666;
@@ -620,7 +620,7 @@ div.time {
    -moz-border-radius: 10px;
    background-color: #588;
    color: #aff;
-   width: %d
+   width: %dpx;
 }
 """  % (snapin_width - 2)
 }
@@ -738,7 +738,7 @@ sidebar_snapins["master_control"] = {
     "allowed" : [ "admin", ],
     "styles" : """
 div#check_mk_sidebar table.master_control {
-    width: %d;
+    width: %dpx;
     margin: 0px;
     border-spacing: 0px;
 }

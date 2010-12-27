@@ -92,10 +92,10 @@ def toggle_button(id, isopen, text, addclasses=[]):
                'onmouseout="this.style.cursor=\'auto\'; unhover_tab(this);">%s</td>\n' % (cssclass, id, text))
 
 
-def show_filter_form(is_open, filters, colspan):
+def show_filter_form(is_open, filters):
     # Table muss einen anderen Namen, als das Formular
     html.write("<tr class=form id=table_filter %s>\n" % (not is_open and 'style="display: none"' or '') )
-    html.write("<td colspan=%d>" % colspan)
+    html.write("<td>")
     html.begin_form("filter")
     html.write("<div class=whiteborder>\n")
 
@@ -127,9 +127,9 @@ def show_filter_form(is_open, filters, colspan):
     html.write("</div>")
     html.write("</td></tr>\n")
 
-def show_painter_options(painter_options, colspan):
+def show_painter_options(painter_options):
     html.write('<tr class=form id=painter_options style="display: none">')
-    html.write("<td colspan=%d>" % colspan)
+    html.write("<td>")
     html.begin_form("painteroptions")
     html.write("<div class=whiteborder>\n")
 
@@ -976,26 +976,22 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     need_navi = show_buttons and ('F' in display_options or 'C' in display_options or 'O' in display_options or 'E' in display_options)
     if need_navi:
         html.write("<table class=navi><tr>\n")
-        colspan = 0
 
         # Filter-button
         if 'F' in display_options and len(show_filters) > 0 and not html.do_actions():
             filter_isopen = html.var("search", "") == "" and view["mustsearch"]
             toggle_button("table_filter", filter_isopen, "Filter", ["filter"])
             html.write("<td class=minigap></td>\n")
-            colspan += 2
 
         # Command-button
         if 'C' in display_options and len(rows) > 0 and config.may("act") and not html.do_actions():
             toggle_button("table_actions", False, "Commands")
             html.write("<td class=minigap></td>\n")
-            colspan += 2
 
         # Painter-Options
         if len(painter_options) > 0 and config.may("painter_options"):
             toggle_button("painter_options", False, "Display")
             html.write("<td class=minigap></td>\n")
-            colspan += 2
 
         # Buttons for view options
         if 'O' in display_options:
@@ -1008,7 +1004,6 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
                         addclass = ""
                     html.write('<td class="left w30%s"><a href="%s">%s</a></td>\n' % (addclass, uri, col))
                     html.write("<td class=minigap></td>\n")
-                    colspan += 2
 
             if 'R' in display_options and config.user_may(config.user, "view_option_refresh"):
                 for ref in config.view_option_refreshes:
@@ -1023,10 +1018,8 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
                         reftext = "&#8734;"
                     html.write('<td class="left w40%s"><a href="%s">%s</a></td>\n' % (addclass, uri, reftext))
                     html.write("<td class=minigap></td>\n")
-                    colspan += 2
 
-        html.write("<td class=gap></td>\n")
-        colspan += 1
+        html.write("<td class=gap>&nbsp;</td>\n")
 
         # Customize/Edit view button
         if 'E' in display_options and config.may("edit_views"):
@@ -1037,18 +1030,19 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
             else:
                 html.write('<a href="edit_view.py?clonefrom=%s&load_view=%s&back=%s">Edit</a>\n' % (view["owner"], view["name"], backurl))
             html.write('</td>')
-            colspan += 1
+
         html.write("</tr>")
+        html.write("</table><table class=navi><tr>\n")
 
         # Filter form
         if 'F' in display_options and len(show_filters) > 0 and not html.do_actions():
-            show_filter_form(filter_isopen, show_filters, colspan)
+            show_filter_form(filter_isopen, show_filters)
 
         # Actions
         if 'C' in display_options and len(rows) > 0:
             if html.do_actions() and html.transaction_valid(): # submit button pressed, no reload
                 try:
-                    html.write("<tr class=form><td class=whiteborder colspan=%d>" % colspan)
+                    html.write("<tr class=form><td class=whiteborder>")
                     # Create URI with all actions variables removed
                     backurl = html.makeuri([])
                     has_done_actions = do_actions(datasource["infos"][0], rows, backurl)
@@ -1057,13 +1051,13 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
                     html.show_error(e.message)
                     html.write("</td></tr>")
                     html.add_user_error(e.varname, e.message)
-                    show_action_form(True, datasource, colspan)
+                    show_action_form(True, datasource)
 
             else:
-                show_action_form(False, datasource, colspan)
+                show_action_form(False, datasource)
 
         if 'O' in display_options and len(painter_options) > 0 and config.may("painter_options"):
-            show_painter_options(painter_options, colspan)
+            show_painter_options(painter_options)
 
         # Ende des Bereichs mit den Tabs
         html.write("</table>\n") # class=navi
@@ -1412,7 +1406,7 @@ def allowed_for_datasource(collection, datasourcename):
 #
 # -----------------------------------------------------------------------------
 
-def show_action_form(is_open, datasource, colspan):
+def show_action_form(is_open, datasource):
     if not config.may("act"):
         return
 
@@ -1424,7 +1418,7 @@ def show_action_form(is_open, datasource, colspan):
 
     # Table muss einen anderen Namen, als das Formular
 
-    html.write("<tr class=form id=table_actions %s><td colspan=%d>" % ((not is_open and 'style="display: none"' or ''), colspan) )
+    html.write("<tr class=form id=table_actions %s><td>" % (not is_open and 'style="display: none"' or '') )
     html.begin_form("actions")
     html.hidden_field("_do_actions", "yes")
     html.hidden_field("actions", "yes")

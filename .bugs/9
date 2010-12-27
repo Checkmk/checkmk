@@ -32,3 +32,4 @@ Multisite: Endgültig kompatibel mit IE machen. Bekannte Probleme:
   Ich könnte die Tabs anstelle von Grafiken mit Rahmen von TDs machen
   und einfach -moz-border-radius verwenden. Schaut bei IE a bisserl
   anders aus, aber was solls.
+  => Fixed

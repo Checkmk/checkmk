@@ -514,12 +514,16 @@ div.naviend {
 }
 
 table.navi {
-    margin: 0px 0px 10px 5px;
+    margin: 0px 0px 0px 5px;
     width: 100%;
     border-collapse: collapse;
     border-spacing: 0px;
-position: relative;
-left: -5px;
+    position: relative;
+    left: -5px;
+}
+
+table.naviform {
+    margin-bottom: 10px;
 }
 
 table.navi td {
@@ -527,6 +531,7 @@ table.navi td {
     margin: 0px;
 /* border: 1px solid green; */
 }
+
 table.navi td.gap, table.navi td.minigap {
     border-bottom: 1px solid white;
 }

@@ -156,9 +156,6 @@ div#check_mk_sidebar div#side_header a.logo {
 /* Scrolling part with snapins */
 div#check_mk_sidebar div#side_content {
     z-index: 5;
-    /*position: relative;
-    top: -4px;
-    left: 0px;*/
     width: 100%;
     height: 500px;
     overflow: hidden;
@@ -226,40 +223,34 @@ color: white;
 
 /* General layout of snapins */
 div.snapin {
-    /*width: 280px;*/
     width: 100%;
     margin: 0;
     padding: 0;
 }
-
 
 /* snapin header */
 div.snapin div.head {
     width: 260px;
     text-align: center;
     color: white;
+		padding-top: 9px;
 }
 
 div.snapin div.head.open {
     background-image: url("images/snapin_header.png");
-    height: 26px;
+    height: 17px;
 }
 
 div.snapin div.head.closed {
     background-image: url("images/snapin_closed.png");
-    height: 33px;
+    height: 22px;
 }
 
 /* close button on header */
 div.snapin div.closesnapin {
     float: right;
     margin-right: 10px;
-    margin-top:   11px;
-}
-
-div.snapin div.head b.heading {
-    position: relative;
-    top:9px;
+    margin-top:   2px;
 }
 
 div.snapin div.content {
@@ -313,17 +304,15 @@ div.snapin a:hover {
     text-decoration: underline;
     color: #fff;
 }
+div.snapin ul {
+    margin: 0;
+    padding: 0;
+    padding-left: 16px;
+		width: 220px;
+}
 li.sidebar {
     margin-left: 0px;
-    padding-left: 1ex;
-}
-div.snapin ul.link {
-    margin: 0px;
-    padding-left: 32px;
-}
-div.snapin ul.link li {
-    margin: 0px;
-    padding: 0px;
+    margin-left: 0px;
 }
 
 div.snapin div.footnote {
@@ -525,12 +514,16 @@ div.naviend {
 }
 
 table.navi {
-    margin: 0px 0px 10px 5px;
+    margin: 0px 0px 0px 5px;
     width: 100%;
     border-collapse: collapse;
     border-spacing: 0px;
-position: relative;
-left: -5px;
+    position: relative;
+    left: -5px;
+}
+
+table.naviform {
+    margin-bottom: 10px;
 }
 
 table.navi td {
@@ -538,6 +531,7 @@ table.navi td {
     margin: 0px;
 /* border: 1px solid green; */
 }
+
 table.navi td.gap, table.navi td.minigap {
     border-bottom: 1px solid white;
 }

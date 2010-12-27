@@ -33,6 +33,11 @@
     * Sidebar: Fixed snapin movement to the bottom of the snapin list in Opera
     * Sidebar: Fixed scroll position saving in Opera
     * Fixed reloading button animation in Chrome/IE (Changed request to async mode)
+    * Sidebar: Removed scrollbars of in older IE versions and IE8 with compat mode
+    * Sidebar: Fixed scrolling problem in IE8 with compat mode (or maybe older IE versions)
+      which broke the snapin titles and also the tactical overview table
+    * Sidebar: Fixed bulletlist positioning
+    * Fixed header displaying on views when the edit button is not shown to the user
 
     Checks & Agents:
     * Fixed problem with OnlyFrom: in Linux agent (df didn't work properly)

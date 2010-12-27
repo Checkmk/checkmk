@@ -66,9 +66,11 @@ sidebar_snapins["about"] = {
 #
 # -----------------------------------------------------------------------
 def render_admin():
+    html.write('<ul>')
     bulletlink("View permissions", "view_permissions.py")
     if config.may("edit_permissions"):
         bulletlink("Edit permissions", "edit_permissions.py")
+    html.write('</ul>')
 
 sidebar_snapins["admin"] = {
     "title" : "Administration",
@@ -99,8 +101,10 @@ def render_views():
                 continue
             if t == topic:
                 if first:
+                    html.write("</ul>")
                     html.write("<h3>%s</h3>\n" % topic)
                     first = False
+                    html.write("<ul>")
                 bulletlink(title, "view.py?view_name=%s" % name)
 
     s = [ (view.get("topic", "Other"), view["title"], name) for name, view in html.available_views.items() if not view["hidden"] ]
@@ -153,8 +157,10 @@ def render_groups(what):
     groups.sort() # sort by Alias!
     target = views.get_context_link(html.req.user, "%sgroup" % what)
     if target:
+        html.write('<ul>')
         for alias, name in groups:
             bulletlink(alias, target + "&%sgroup=%s" % (what, htmllib.urlencode(name)))
+        html.write('</ul>')
 
 sidebar_snapins["hostgroups"] = {
     "title" : "Hostgroups",
@@ -298,10 +304,10 @@ def render_hostmatrix():
     if lastcols > 0:
         rows += 1
 
-    style = 'height: %d; ' % (snapin_width)
+    style = 'height: %dpx; ' % (snapin_width)
     if rows > 10:
         style += "border-collapse: collapse;"
-    html.write('<table class=hostmatrix style="%s"\n' % style)
+    html.write('<table class=hostmatrix style="%s">\n' % style)
     col = 1
     row = 1
     for site, host, state, has_been_checked, worstsvc, downtimedepth in hosts:
@@ -338,7 +344,7 @@ sidebar_snapins["hostmatrix"] = {
     "allowed"     : [ "user", "admin", "guest" ],
     "refresh"     : 10,
     "styles"      : """
-table.hostmatrix { width: %d; cell-spacing: 1px; }
+table.hostmatrix { width: %dpx; border-spacing: 1px; }
 table.hostmatrix a { display: block; width: 100%%; height: 100%%; }
 table.hostmatrix td { border: 1px solid white; }
 """ % snapin_width
@@ -487,7 +493,7 @@ def render_tactical_overview():
     except livestatus.MKLivestatusNotFoundError:
         html.write("<center>No data from any site</center>")
         return
-    html.write("<table class=tacticaloverview cellspacing=0 cellpadding=0 border=0>\n")
+    html.write("<table class=tacticaloverview cellspacing=2 cellpadding=0 border=0>\n")
     for title, data, view, what in [
             ("Hosts",    hstdata, 'hostproblems', 'host'),
             ("Services", svcdata, 'svcproblems',  'service'),
@@ -521,15 +527,17 @@ sidebar_snapins["tactical_overview"] = {
     "styles" : """
 table.tacticaloverview {
    border-collapse: separate;
-   border-spacing: 5px 0px;
+   /**
+    * Don't use border-spacing. It is not supported by IE8 with compat mode and older IE versions.
+    * Better set cellspacing in HTML code. This works in all browsers.
+    * border-spacing: 5px 2px;
+    */
    width: %dpx;
-   position: relative;
-   left: -4px;
 }
 table.tacticaloverview th { font-size: 7pt; text-align: left; font-weight: normal; padding: 0px; padding-top: 2px; }
-table.tacticaloverview td { text-align: right; border: 1px solid #444; padding: 0px; padding-right: 2px; }
-table.tacticaloverview td a { display: block; }
-""" % (snapin_width + 9)
+table.tacticaloverview td { text-align: right; border: 1px solid #444; padding: 0px; }
+table.tacticaloverview td a { display: block; margin-right: 2px; }
+""" % (snapin_width + 5)
 }
 # table.tacticaloverview td.prob { font-weight: bold; }
 
@@ -571,7 +579,7 @@ sidebar_snapins["performance"] = {
 table.performance {
     -moz-border-radius: 5px;
     font-size: 8pt;
-    width: %d;
+    width: %dpx;
     border-style: solid;
     background-color: #589;
     border-color: #444 #bbb #eee #666;
@@ -612,7 +620,7 @@ div.time {
    -moz-border-radius: 10px;
    background-color: #588;
    color: #aff;
-   width: %d
+   width: %dpx;
 }
 """  % (snapin_width - 2)
 }
@@ -627,8 +635,10 @@ div.time {
 #                |___/
 # --------------------------------------------------------------
 def render_nagios():
+    html.write('<ul>')
     bulletlink("Home", "http://www.nagios.org")
     bulletlink("Documentation", "%snagios/docs/toc.html" % defaults.url_prefix)
+    html.write('</ul>')
     for entry in [
         "General",
         ("tac.cgi", "Tactical Overview"),
@@ -664,7 +674,9 @@ def render_nagios():
         ("config.cgi", "Configuration"),
         ]:
         if type(entry) == str:
+            html.write('</ul>')
             heading(entry)
+            html.write('<ul>')
         else:
             ref, text = entry
             if text[0] == "*":
@@ -726,7 +738,7 @@ sidebar_snapins["master_control"] = {
     "allowed" : [ "admin", ],
     "styles" : """
 div#check_mk_sidebar table.master_control {
-    width: %d;
+    width: %dpx;
     margin: 0px;
     border-spacing: 0px;
 }
@@ -943,14 +955,14 @@ def render_custom_links():
                         display = ""
                         img = "link_folder_open.gif"
                     else:
-                        display = "none"
+                        display = "display: none; "
                         img = "link_folder.gif"
                     html.write('<h3 onclick="toggle_folder(this, \'%s\');" ' % ''.join(idss))
                     html.write('onmouseover="this.style.cursor=\'pointer\';" ')
                     html.write('onmouseout="this.style.cursor=\'auto\';">')
-                    html.write('<img src="images/%s">' % img)
+                    html.write('<img src="images/%s" align="center" />' % img)
                     html.write("%s</h3>\n" % entry[0])
-                    html.write('<div style="display: %s;" class=sublist>' % display)
+                    html.write('<div style="%s" class=sublist>' % display)
                     render_list(idss, entry[2])
                     html.write('</div>\n')
                 elif type(entry[1]) == str:
@@ -973,16 +985,10 @@ sidebar_snapins["custom_links"] = {
     "render" : render_custom_links,
     "allowed" : [ "user", "admin", "guest" ],
     "styles" : """
-div#snapin_custom_links {
-}
 div#snapin_custom_links div.sublist {
     padding-left: 10px;
 }
-div#snapin_custom_links h3 {
-}
 div#snapin_custom_links img {
-    position: relative;
-    top: 3px;
     margin-right: 5px;
 }
 """

@@ -24,6 +24,7 @@
 
 var browser         = navigator.userAgent.toLowerCase();
 var weAreIEF__k     = ((browser.indexOf("msie") != -1) && (browser.indexOf("opera") == -1));
+var weAreOpera      = browser.indexOf("opera") != -1;
 var weAreFirefox    = browser.indexOf("firefox") != -1 || browser.indexOf("namoroka") != -1;
 var contentLocation = parent.frames[1].document.location;
 
@@ -456,6 +457,11 @@ function dragScroll(event) {
   var diff = startY - event.clientY;
   
   inhalt.scrollTop += diff;
+
+	// Opera does not fire onunload event which is used to store the scroll
+	// position. So call the store function manually here.
+  if(weAreOpera)
+    storeScrollPos();
   
   startY = event.clientY;
   
@@ -495,6 +501,11 @@ function scrollWheel(event){
 
   if (delta)
     handle(delta);
+
+	// Opera does not fire onunload event which is used to store the scroll
+	// position. So call the store function manually here.
+  if(weAreOpera)
+    storeScrollPos();
 
   if (event.preventDefault)
     event.preventDefault();

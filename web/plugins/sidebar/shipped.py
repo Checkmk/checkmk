@@ -960,7 +960,7 @@ def render_custom_links():
                     html.write('<h3 onclick="toggle_folder(this, \'%s\');" ' % ''.join(idss))
                     html.write('onmouseover="this.style.cursor=\'pointer\';" ')
                     html.write('onmouseout="this.style.cursor=\'auto\';">')
-                    html.write('<img src="images/%s">' % img)
+                    html.write('<img src="images/%s" align="center" />' % img)
                     html.write("%s</h3>\n" % entry[0])
                     html.write('<div style="%s" class=sublist>' % display)
                     render_list(idss, entry[2])
@@ -985,16 +985,10 @@ sidebar_snapins["custom_links"] = {
     "render" : render_custom_links,
     "allowed" : [ "user", "admin", "guest" ],
     "styles" : """
-div#snapin_custom_links {
-}
 div#snapin_custom_links div.sublist {
     padding-left: 10px;
 }
-div#snapin_custom_links h3 {
-}
 div#snapin_custom_links img {
-    position: relative;
-    top: 3px;
     margin-right: 5px;
 }
 """

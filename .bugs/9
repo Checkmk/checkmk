@@ -21,6 +21,11 @@ Multisite: Endgültig kompatibel mit IE machen. Bekannte Probleme:
 
 * Snapin "Views": Die Spiegelpunkte sind zu weit links, die Einrückung
   klappt nicht.
+  => <li> Tags sollten nicht ohne <ul> oder <ol> verwendet werden - das Verhalten
+	   der Browser in dem Fall ist nicht ordentlich definiert.
+		 Ich habe nun um alle <li> Elemente in der sidebar <ul> Elemente gebaut, damit
+		 verhalten sich die Browser einheitlich
+
 * wenn man den Edit-Knopf nicht hat (wegen Berechtigungen), dann werden
   alle Tabs ganz komisch über die Breite verteilt. Am Ende ist die
   ganze Implementierung der Tabs murks und muss eh neu gemacht werden.

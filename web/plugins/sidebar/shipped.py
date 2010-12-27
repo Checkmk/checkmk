@@ -66,9 +66,11 @@ sidebar_snapins["about"] = {
 #
 # -----------------------------------------------------------------------
 def render_admin():
+    html.write('<ul>')
     bulletlink("View permissions", "view_permissions.py")
     if config.may("edit_permissions"):
         bulletlink("Edit permissions", "edit_permissions.py")
+    html.write('</ul>')
 
 sidebar_snapins["admin"] = {
     "title" : "Administration",
@@ -99,8 +101,10 @@ def render_views():
                 continue
             if t == topic:
                 if first:
+                    html.write("</ul>")
                     html.write("<h3>%s</h3>\n" % topic)
                     first = False
+                    html.write("<ul>")
                 bulletlink(title, "view.py?view_name=%s" % name)
 
     s = [ (view.get("topic", "Other"), view["title"], name) for name, view in html.available_views.items() if not view["hidden"] ]
@@ -153,8 +157,10 @@ def render_groups(what):
     groups.sort() # sort by Alias!
     target = views.get_context_link(html.req.user, "%sgroup" % what)
     if target:
+        html.write('<ul>')
         for alias, name in groups:
             bulletlink(alias, target + "&%sgroup=%s" % (what, htmllib.urlencode(name)))
+        html.write('</ul>')
 
 sidebar_snapins["hostgroups"] = {
     "title" : "Hostgroups",
@@ -521,7 +527,11 @@ sidebar_snapins["tactical_overview"] = {
     "styles" : """
 table.tacticaloverview {
    border-collapse: separate;
-   /*border-spacing: 5px 2px;*/
+   /**
+    * Don't use border-spacing. It is not supported by IE8 with compat mode and older IE versions.
+    * Better set cellspacing in HTML code. This works in all browsers.
+    * border-spacing: 5px 2px;
+    */
    width: %dpx;
 }
 table.tacticaloverview th { font-size: 7pt; text-align: left; font-weight: normal; padding: 0px; padding-top: 2px; }
@@ -625,8 +635,10 @@ div.time {
 #                |___/
 # --------------------------------------------------------------
 def render_nagios():
+    html.write('<ul>')
     bulletlink("Home", "http://www.nagios.org")
     bulletlink("Documentation", "%snagios/docs/toc.html" % defaults.url_prefix)
+    html.write('</ul>')
     for entry in [
         "General",
         ("tac.cgi", "Tactical Overview"),
@@ -662,7 +674,9 @@ def render_nagios():
         ("config.cgi", "Configuration"),
         ]:
         if type(entry) == str:
+            html.write('</ul>')
             heading(entry)
+            html.write('<ul>')
         else:
             ref, text = entry
             if text[0] == "*":

@@ -36,6 +36,7 @@
     * Sidebar: Removed scrollbars of in older IE versions and IE8 with compat mode
     * Sidebar: Fixed scrolling problem in IE8 with compat mode (or maybe older IE versions)
       which broke the snapin titles and also the tactical overview table
+    * Sidebar: Fixed bulletlist positioning
 
     Checks & Agents:
     * Fixed problem with OnlyFrom: in Linux agent (df didn't work properly)

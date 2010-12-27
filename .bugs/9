@@ -9,6 +9,9 @@ Class: bug
 Multisite: Endgültig kompatibel mit IE machen. Bekannte Probleme:
 * reschedule Knopf geht irgendwie garnicht. Weder Animation noch reschedule.
   Nur das reload macht er
+
+	=> Wurde behoben. Lösung: Async Request statt Sync Request
+
 * Bug mit Verschieben der Sidebar wo das Tabellengerüst stehen bleibt
 * Snapin "Views": Die Spiegelpunkte sind zu weit links, die Einrückung
   klappt nicht.

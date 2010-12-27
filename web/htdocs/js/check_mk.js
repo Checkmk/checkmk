@@ -237,7 +237,7 @@ function performAction(oLink, action, type, site, name1, name2) {
     var oImg = oLink.childNodes[0];
     oImg.src = 'images/icon_reloading.gif';
 
-		// Chrome is not animating the gif during sync ajax request
+		// Chrome and IE are not animating the gif during sync ajax request
 		// So better use the async request here
     get_url('nagios_action.py?action='+action+'&site='+site+'&host='+name1+'&service='+name2,
             actionResponseHandler, oImg);

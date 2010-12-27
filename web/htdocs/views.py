@@ -595,7 +595,7 @@ function toggle_section(nr, oImg) {
     html.write("</script>\n")
     section_footer()
 
-    def column_selection(id, title, var_prefix, maxnum, data, order=False):
+    def sorter_selection(id, title, var_prefix, maxnum, data):
         allowed = allowed_for_datasource(data, datasourcename)
         section_header(id, title)
         # make sure, at least 3 selection boxes are free for new columns
@@ -605,17 +605,38 @@ function toggle_section(nr, oImg) {
             collist = [ ("", "") ] + [ (name, p["title"]) for name, p in allowed.items() ]
             html.write("%02d " % n)
             html.sorted_select("%s%d" % (var_prefix, n), collist)
-            if order:
-                html.write(" ")
-                html.select("%sorder_%d" % (var_prefix, n), [("asc", "Ascending"), ("dsc", "Descending")])
-            else:
-                html.write("<i> with link to </i>")
-                select_view("%slink_%d" % (var_prefix, n))
-            html.write("<br />")
+            html.write(" ")
+            html.select("%sorder_%d" % (var_prefix, n), [("asc", "Ascending"), ("dsc", "Descending")])
+            html.write("<br>")
+        section_footer()
+
+    def column_selection(id, title, var_prefix, maxnum, data):
+        allowed = allowed_for_datasource(data, datasourcename)
+        section_header(id, title)
+        # make sure, at least 3 selection boxes are free for new columns
+        html.write("<br>")
+        while html.has_var("%s%d" % (var_prefix, maxnum - 2)):
+            maxnum += 1
+        for n in range(1, maxnum + 1):
+            collist = [ ("", "") ] + [ (name, p["title"]) for name, p in allowed.items() ]
+            html.write("<div class=columneditor><table><tr>")
+            html.write('<td rowspan=3>'
+                    '<img onclick="delete_view_column(this);" '
+                    'onmouseover=\"hilite_icon(this, 1)\" '
+                    'onmouseout=\"hilite_icon(this, 0)\" '
+                    'src="images/button_closesnapin_lo.png"></td>')
+            html.write("<td class=celeft>Column %d:</td><td>" % n)
+            html.sorted_select("%s%d" % (var_prefix, n), collist)
+            html.write("</td></tr><tr><td class=celeft>Link:</td><td>")
+            select_view("%slink_%d" % (var_prefix, n))
+            html.write("</td></tr><tr><td class=celeft>Tooltip:</td><td>")
+            html.sorted_select("%stooltip_%d" % (var_prefix, n), collist)
+            html.write("</td></table>")
+            html.write("</div>")
         section_footer()
 
     # [4] Sorting
-    column_selection(4, "Sorting", "sort_", max_sort_columns, multisite_sorters, True)
+    sorter_selection(4, "Sorting", "sort_", max_sort_columns, multisite_sorters)
 
     # [5] Grouping
     column_selection(5, "Group by", "group_", max_group_columns, multisite_painters)
@@ -706,18 +727,28 @@ def load_view_into_html_vars(view):
 
     # [5] Grouping
     n = 1
-    for name, viewname in view["group_painters"]:
+    for entry in view["group_painters"]:
+        name = entry[0]
+        viewname = entry[1]
+        tooltip = len(entry) > 2 and entry[2] or None
         html.set_var("group_%d" % n, name)
         if viewname:
             html.set_var("group_link_%d" % n, viewname)
+        if tooltip:
+            html.set_var("group_tooltip_%d" % n, tooltip)
         n += 1
 
     # [6] Columns
     n = 1
-    for name, viewname in view["painters"]:
+    for entry in view["painters"]:
+        name = entry[0]
+        viewname = entry[1]
+        tooltip = len(entry) > 2 and entry[2] or None
         html.set_var("col_%d" % n, name)
         if viewname:
             html.set_var("col_link_%d" % n, viewname)
+        if tooltip:
+            html.set_var("col_tooltip_%d" % n, tooltip)
         n += 1
 
     # Make sure, checkboxes with default "on" do no set "on". Otherwise they
@@ -807,10 +838,11 @@ def create_view():
     for n in range(1, 500):
         pname = html.var("col_%d" % n)
         viewname = html.var("col_link_%d" % n)
+        tooltip = html.var("col_tooltip_%d" % n)
         if pname:
             if viewname not in  html.available_views:
                 viewname = None
-            painternames.append((pname, viewname))
+            painternames.append((pname, viewname, tooltip))
 
     return {
         "name"            : name,
@@ -911,10 +943,10 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     sorters = [ (multisite_sorters[sn], reverse) for sn, reverse in view["sorters"] ]
 
     # [5] Grouping
-    group_painters = [ (multisite_painters[n], v) for n, v in view["group_painters"] ]
+    group_painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["group_painters"] ]
 
     # [6] Columns
-    painters = [ (multisite_painters[n], v) for n, v in view["painters"] ]
+    painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["painters"] ]
 
     # Now compute this list of all columns we need to query via Livestatus.
     # Those are: (1) columns used by the sorters in use, (2) columns use by
@@ -927,7 +959,9 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     for s, r in sorters:
         columns += s["columns"]
 
-    for p, v in (group_painters + painters):
+    for entry in (group_painters + painters):
+        p = entry[0]
+        v = entry[1]
         columns += p["columns"]
         painter_options += p.get("options", [])
         if v:
@@ -936,6 +970,9 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
                 for ef in linkview["hide_filters"]:
                     f = multisite_filters[ef]
                     columns += f.link_columns
+        if len(entry) > 2 and entry[2]:
+            tt = entry[2]
+            columns += multisite_painters[tt]["columns"]
 
     painter_options = list(set(painter_options))
     painter_options.sort()
@@ -1762,7 +1799,10 @@ def page_message_and_forward(h, message, default_url, addhtml=""):
 #                 |___/                           |_|
 
 def prepare_paint(p, row):
-    painter, linkview = p
+    painter = p[0]
+    linkview = p[1]
+    tooltip = len(p) > 2 and p[2] or None
+
     tdclass, content = painter["paint"](row)
 
     content = htmllib.utf8_to_entities(content)
@@ -1770,6 +1810,12 @@ def prepare_paint(p, row):
     # Create contextlink to other view
     if content and linkview:
         content = link_to_view(content, row, linkview)
+
+    # Tooltip
+    if tooltip:
+        cla, txt = multisite_painters[tooltip]["paint"](row)
+        tooltiptext = htmllib.strip_tags(txt)
+        content = '<span title="%s">%s</span>' % (tooltiptext, content)
     return tdclass, content
 
 def link_to_view(content, row, linkview):
@@ -1788,6 +1834,8 @@ def link_to_view(content, row, linkview):
 
         uri = "view.py?" + htmllib.urlencode_vars([("view_name", linkview)] + vars)
         content = "<a href=\"%s\">%s</a>" % (uri, content)
+#        rel = 'view.py?view_name=hoststatus&site=local&host=erdb-lit&display_options=htbfcoezrsix'
+#        content = '<a class=tips rel="%s" href="%s">%s</a>' % (rel, uri, content)
     return content
 
 def docu_link(topic, text):
@@ -1802,7 +1850,7 @@ def paint(p, row):
     return content != ""
 
 def paint_header(p):
-    painter, linkview = p
+    painter = p[0]
     t = painter.get("short", painter["title"])
     html.write("<th>%s</th>" % t)
 

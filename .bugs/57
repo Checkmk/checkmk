@@ -18,6 +18,5 @@ dass man neben dem Hover-Painter auch Hover-Views einbaut (siehe #0086).
 In so einem Hover-Ding könnte man aber viele Interessante Dinge
 unterbringen, z.B. host notes, PNP popups und vieles mehr.
 
-Stand jetzt: Halb programmiert. Man kann Tooltips konfigurieren.
-Der Editor schaut noch doof aus. Die Builtin-Views müssen noch
-mit Tooltips ausgestattet werden, wo sinnvoll.
+Stand jetzt: Code funktioniert. Builtin-Views müssen angepasst
+werden. Dokumentation fehlt.

@@ -645,15 +645,6 @@ function addBookmark() {
     get_url("add_bookmark.py?title=" + escape(title) + "&href=" + escape(href), updateContents, "snapin_bookmarks");
 }
 
-function hilite_icon(oImg, onoff) {
-    src = oImg.src;
-    if (onoff == 0)
-        oImg.src = oImg.src.replace("hi.png", "lo.png");
-    else
-        oImg.src = oImg.src.replace("lo.png", "hi.png");
-}
-
-
 function toggle_folder(o, folderId) {
     var par = o.parentNode;
     var next = null;

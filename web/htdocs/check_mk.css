@@ -1570,10 +1570,42 @@ table.views td, table.views th{
     padding: 2px 1ex;
 }
 
+/* Column editor */
+div.columneditor {
+    padding: 0px;
+    margin-bottom: 6px;
+}
+
+div.columneditor table {
+    padding: 0px;
+    margin: 0px;
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+    border: 1px solid white;
+    -moz-border-radius: 5px;
+    width: 100%;
+}
+
+div.columneditor td.celeft {
+    width: 60px;
+}
+
+div.columneditor td {
+    padding: 0px 4px;
+}
+
+div.columneditor select {
+    width: 100%;
+}
+
+div.columneditor td, div.columneditor select {
+    font-size: 80%;
+}
+
 table.views td {
-height: 25px;
-        padding-top: 3px;
-color: white;
+    height: 25px;
+    padding-top: 3px;
+    color: white;
 }
 
 table.views th {

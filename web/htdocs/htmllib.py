@@ -109,6 +109,17 @@ def utf8_to_entities(text):
         n += u8(c)
     return n
 
+# remove all HTML-tags
+def strip_tags(ht):
+    while True:
+        x = ht.find('<')
+        if x == -1:
+            break
+        y = ht.find('>')
+        ht = ht[0:x] + ht[y+1:]
+    return ht
+
+
 class html:
     def __init__(self, req):
         self.req = req

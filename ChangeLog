@@ -13,6 +13,8 @@
     * Create alias 'mkp' for check_mk -P in bin/ (easier typing) 
 
     Multisite:
+    * Each column can now have a tooltip showing another painter (e.g.
+      show the IP address of a host when hovering over its name)
     * Finally show host/services icons from the nagios value "icon_image".
       Put your icon files in /usr/share/check_mk/web/htdocs/images/icons.
       OMD users put the icons into ~/local/share/check_mk/web/htdocs/images/icons.

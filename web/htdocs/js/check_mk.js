@@ -26,6 +26,15 @@
 // general function
 // ----------------------------------------------------------------------------
 
+function hilite_icon(oImg, onoff) {
+    src = oImg.src;
+    if (onoff == 0)
+        oImg.src = oImg.src.replace("hi.png", "lo.png");
+    else
+        oImg.src = oImg.src.replace("lo.png", "hi.png");
+}
+
+
 function get_url(url, handler, data, errorHandler) {
     if (window.XMLHttpRequest) {
         var AJAX = new XMLHttpRequest();
@@ -243,3 +252,15 @@ function performAction(oLink, action, type, site, name1, name2) {
             actionResponseHandler, oImg);
     oImg = null;
 }
+
+/* -----------------------------------------------------
+   View editor
+   -------------------------------------------------- */
+function delete_view_column(oImg) {
+    var oDiv = oImg;
+    while (oDiv.nodeName != "DIV")
+        oDiv = oDiv.parentNode;
+    oDiv.parentNode.removeChild(oDiv);
+    oDiv = null;
+}
+

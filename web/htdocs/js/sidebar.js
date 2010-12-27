@@ -148,8 +148,8 @@ function snapinDrag(event) {
   // Drag the snapin
   snapinDragging.style.position = 'absolute';
   var newTop = event.clientY  - snapinOffset[0] - snapinScrollTop;
-  if (weAreIEF__k) 
-      newTop += document.getElementById('side_content').scrollTop;
+  /*if (weAreIEF__k) 
+      newTop += document.getElementById('side_content').scrollTop;*/
   snapinDragging.style.top      = newTop + 'px';
   snapinDragging.style.left     = (event.clientX - snapinOffset[1]) + 'px';
   snapinDragging.style.width    = '175px';
@@ -277,9 +277,7 @@ function getSnapinList() {
 }
 
 function getSnapinCoords(obj) {
-  var snapinTop = snapinDragging.offsetTop;
-  if (!weAreIEF__k)
-      snapinTop += document.getElementById('side_content').scrollTop;
+  var snapinTop = snapinDragging.offsetTop + document.getElementById('side_content').scrollTop;
   
   var bottomOffset = obj.offsetTop + obj.clientHeight - snapinTop;
   if (bottomOffset < 0)
@@ -376,9 +374,6 @@ function setSidebarHeight() {
 	if(height == 0)
 		return;
 
-	/*if (weAreIEF__k)
-    oContent.style.height = (height - oFooter.clientHeight + 5) + 'px';
-  else*/
   oContent.style.height = (height - oHeader.clientHeight - oFooter.clientHeight - 5) + 'px';
 
 	oFooter = null;

@@ -250,14 +250,11 @@ function snapinStopDrag(event) {
 }
 
 function getDivChildNodes(node) {
-  if(typeof node.children === 'undefined') {
-    var children = [];
-    for(var i in node.childNodes)
-      if(node.childNodes[i].tagName === 'DIV')
-        children.push(node.childNodes[i]);
-    return children;
-  } else
-    return node.children;
+  var children = [];
+  for(var i in node.childNodes)
+    if(node.childNodes[i].tagName === 'DIV')
+      children.push(node.childNodes[i]);
+  return children;
 }
 
 function getSnapinList() {
@@ -345,6 +342,10 @@ function getSnapinTargetPos() {
 /************************************************
  * misc sidebar stuff
  *************************************************/
+
+function debug(s) {
+  window.parent.frames[1].document.write(s+'<br />');
+}
 
 function pageHeight() {
   var h;

@@ -9,5 +9,7 @@ Class: bug
 * Bei Opera kann man kein Snapin nach ganz unten ziehen. Der Indikator
 springt dann immer nach ganz oben.
 
+  ==> Ist behoben.
+
 * Im Opera wird sich die aktuelle Scroll-Position der Sidebar nicht korrekt
 gemerkt.

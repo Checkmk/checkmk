@@ -30,6 +30,7 @@
     * new datasource "alert_stats" for computing alert statistics
     * new view "Alert Statistics" showing alert statistics for all hosts
       and services
+    * Sidebar: Fixed snapin movement to the bottom of the snapin list in Opera
 
     Checks & Agents:
     * Fixed problem with OnlyFrom: in Linux agent (df didn't work properly)

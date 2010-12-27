@@ -487,7 +487,7 @@ def render_tactical_overview():
     except livestatus.MKLivestatusNotFoundError:
         html.write("<center>No data from any site</center>")
         return
-    html.write("<table class=tacticaloverview cellspacing=0 cellpadding=0 border=0>\n")
+    html.write("<table class=tacticaloverview cellspacing=2 cellpadding=0 border=0>\n")
     for title, data, view, what in [
             ("Hosts",    hstdata, 'hostproblems', 'host'),
             ("Services", svcdata, 'svcproblems',  'service'),
@@ -521,15 +521,13 @@ sidebar_snapins["tactical_overview"] = {
     "styles" : """
 table.tacticaloverview {
    border-collapse: separate;
-   border-spacing: 5px 0px;
+   /*border-spacing: 5px 2px;*/
    width: %dpx;
-   position: relative;
-   left: -4px;
 }
 table.tacticaloverview th { font-size: 7pt; text-align: left; font-weight: normal; padding: 0px; padding-top: 2px; }
-table.tacticaloverview td { text-align: right; border: 1px solid #444; padding: 0px; padding-right: 2px; }
-table.tacticaloverview td a { display: block; }
-""" % (snapin_width + 9)
+table.tacticaloverview td { text-align: right; border: 1px solid #444; padding: 0px; }
+table.tacticaloverview td a { display: block; margin-right: 2px; }
+""" % (snapin_width + 5)
 }
 # table.tacticaloverview td.prob { font-weight: bold; }
 

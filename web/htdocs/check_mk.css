@@ -226,40 +226,34 @@ color: white;
 
 /* General layout of snapins */
 div.snapin {
-    /*width: 280px;*/
     width: 100%;
     margin: 0;
     padding: 0;
 }
-
 
 /* snapin header */
 div.snapin div.head {
     width: 260px;
     text-align: center;
     color: white;
+		padding-top: 9px;
 }
 
 div.snapin div.head.open {
     background-image: url("images/snapin_header.png");
-    height: 26px;
+    height: 17px;
 }
 
 div.snapin div.head.closed {
     background-image: url("images/snapin_closed.png");
-    height: 33px;
+    height: 22px;
 }
 
 /* close button on header */
 div.snapin div.closesnapin {
     float: right;
     margin-right: 10px;
-    margin-top:   11px;
-}
-
-div.snapin div.head b.heading {
-    position: relative;
-    top:9px;
+    margin-top:   2px;
 }
 
 div.snapin div.content {

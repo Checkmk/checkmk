@@ -15,6 +15,9 @@ Multisite: Endgültig kompatibel mit IE machen. Bekannte Probleme:
 * Bug mit Verschieben der Sidebar wo das Tabellengerüst stehen bleibt
   -> LM: Lässt sich bei mir nur im IE8 mit aktivierter Kompatibilitätsansicht
 	       nachvollziehen
+  => Problem waren "position: relative;" Definitionen in den Snapins. Damit kann
+	   IE < 8 nicht ordentlich umgehen. Die Definitionen sind nun umgebaut.
+		 Damit ist das hier auch behoben.
 
 * Snapin "Views": Die Spiegelpunkte sind zu weit links, die Einrückung
   klappt nicht.

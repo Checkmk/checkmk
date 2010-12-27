@@ -1,10 +1,11 @@
 Title: Multisite mit IE kompatibel machen
 Component: multisite
-Benefit: 4
-State: open
-Cost: 3
-Date: 2010-12-21 11:01:09
+State: done
 Class: bug
+Date: 2010-12-21 11:01:09
+Benefit: 4
+Cost: 3
+Fun: 0
 
 Multisite: Endgültig kompatibel mit IE machen. Bekannte Probleme:
 * reschedule Knopf geht irgendwie garnicht. Weder Animation noch reschedule.
@@ -33,3 +34,6 @@ Multisite: Endgültig kompatibel mit IE machen. Bekannte Probleme:
   und einfach -moz-border-radius verwenden. Schaut bei IE a bisserl
   anders aus, aber was solls.
   => Fixed
+
+2010-12-27 16:19:35: changed state open -> done
+Fixed all the listed problems

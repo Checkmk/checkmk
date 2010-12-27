@@ -150,8 +150,8 @@ function snapinDrag(event) {
   var newTop = event.clientY  - snapinOffset[0] - snapinScrollTop;
   if (weAreIEF__k) 
       newTop += document.getElementById('side_content').scrollTop;
-  snapinDragging.style.top      = newTop;
-  snapinDragging.style.left     = event.clientX - snapinOffset[1];
+  snapinDragging.style.top      = newTop + 'px';
+  snapinDragging.style.left     = (event.clientX - snapinOffset[1]) + 'px';
   snapinDragging.style.width    = '175px';
   snapinDragging.style.zIndex   = 200;
 

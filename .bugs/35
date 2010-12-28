@@ -1,4 +1,4 @@
-Title: View-Editor: Spaltenzahl irgendwie dynamisch machen
+Title: View-Editor: Spalten-Editieren komfortabler machen
 Component: multisite
 Benefit: 3
 State: open
@@ -9,3 +9,19 @@ Class: feature
 Das aktuelle Prinzip ist eh doof, weil man keine Spalten in der Mitte
 einfügen kann. Das müsste man irgendwie über Javascript hinbekommen.
 Auch dass man nicht auf 10 begrenzt ist.
+
+Was fehlt ist:
+- einfügen von Spalten
+- Umsortieren von Spalten (noch oben/unten verschieben)
+
+Problem dabei: Die HTML-Variablen sind durchnummeriert. Die
+Nummern bleiben erhalten, selbst wenn man die Elemente im
+DOM-Baum verschiebt.
+
+Wenn man die Nummern im DOM-Baum nicht anpassen kann, dann 
+bietet sich vielleicht als Lösung, dass alle Elemente die
+*gleichen* HTML-Variablen verwenden. Diese kommen ja bei
+Apache trotzdem an. Und dass man dann nicht html.var()
+verwendet, sondern eine Hilfsfunktion, die mehrfach genannte
+Variablen konserviert und z.B. als Array zur Verfügung stellt.
+

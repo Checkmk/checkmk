@@ -79,7 +79,7 @@ def check_modified():
     global g_modified
     g_modified = set([])
     for line in os.popen("git status --porcelain"):
-        if line.startswith("M") and ".bugs/" in line:
+        if line[0] in "AM" and ".bugs/" in line:
             try:
                 id = line.rsplit("/", 1)[-1].strip()
                 g_modified.add(int(id))
@@ -155,6 +155,7 @@ where COMMAND is one of:
   delete #..             - delete bug(s)
   grep WHAT...           - grep in titles and descriptions
   edit [#]               - open bug # in editor (or newest bug)
+  commit                 - commit all changed and new bugs
 
 """)
     sys.exit(1)
@@ -416,6 +417,18 @@ def main_edit(args):
         git_add(g_bugs[int(ids)])
 
 
+def main_commit(args):
+    if len(g_modified) == 0:
+        bail_out("No new or modified bug.")
+    else:
+        sys.stdout.write("Commiting:\n")
+        for id in g_modified:
+            list_bug(g_bugs[id])
+        if 0 == os.system("git commit -m 'Updated bug entries' ."):
+            sys.stdout.write("--> Successfully committed %d bugs." % len(g_modified))
+        else:
+            bail_out("Cannot commit.")
+
 #                    _       
 #    _ __ ___   __ _(_)_ __  
 #   | '_ ` _ \ / _` | | '_ \ 
@@ -439,6 +452,7 @@ commands = {
   "delete"  : main_delete,
   "grep"    : main_grep,
   "edit"    : main_edit,
+  "commit"  : main_commit,
 }
 
 hits = [] 

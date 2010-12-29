@@ -1,6 +1,7 @@
 #!/usr/bin/python
+# encoding: utf-8
 
-import config, re
+import config, re, pprint
 from lib import *
 
 # Python 2.3 does not have 'set' in normal namespace.
@@ -10,6 +11,216 @@ try:
 except NameError:
     from sets import Set as set
 
+# ZWEITER VERSUCH, komplett von vorne
+
+aggregation_rules = {}
+
+aggregation_rules["HostRessources"] = (
+    "Host Ressources", "worst", [ "HOST" ], [ 
+        ( "Kernel",      [ "$HOST$" ]       ), 
+        ( "Filesystems", [ "$HOST$" ]       ),
+        ( "NIC",         [ "$HOST$", ".*" ] ),
+    ]
+)
+
+aggregation_rules["Kernel"] = (
+    "Kernel", [ "HOST" ], "worst", [ 
+        ( "$HOST$", "Kernel" ), 
+    ]
+)
+
+aggregation_rules["Filesystems"] = (
+    "Filesystems", [ "HOST" ], "worst", [
+        ( "$HOST$", "fs" ),
+    ]
+)
+
+aggregation_rules["NIC"] = (
+    "Network Interface $NIC$", ["HOST", "NIC"], "worst", [ 
+        ( "$HOST$", "NIC ($NIC$) " )
+    ]
+)
+
+aggregation_rules["OS"] = (
+    "Operating System", [ "HOST" ], "worst", [
+        ( "HostRessources", [ "$HOST$" ] ),
+        ( "$HOST$", "Check_MK" ),
+    ]
+)
+
+aggregations = [
+# ( "OSses", "OS", [ [ 'linux' ], ALL_HOSTS, ] )
+ ( "OSses", "OS", [ 'localhost' ] ),
+]
+
+
+aggregation_forest = {}
+
+g_services = {
+  "localhost" : ([ 'linux', 'test' ], [
+       "fs_/home", "fs_/cdarchiv", "fs_/boot", "fs_/", "Uptime",
+       "Test_Michael", "TCP-Port-80", "TCP-Port-22", "TCP Connections",
+       "Postfix Queue", "Number of threads", "NIC wlan0 counters",
+       "NIC vboxnet0 counters", "NIC usb0 counters", "NIC pan0 counters",
+       "NIC eth0 parameter", "NIC eth0 link", "NIC eth0 counters",
+       "Mount options of /home", "Mount options of /cdarchiv",
+       "Mount options of /boot", "Mount options of /",
+       "Memory used", "Mathias_2", "Mathias_1", "Kernel Process Creations",
+       "Kernel Major Page Faults", "Kernel Context Switches",
+       "Filecount_/var/log", "Filecount_/tmp", "Filecount_/sbin", "Filecount_/root",
+       "Disk IO write", "Disk IO read", "Check_MK",
+       "CUPS Queue HP-Color-LaserJet-4700", "CPU utilization", "CPU load", 
+       "Check_MK Inventory"])
+}
+
+def compile_forest():
+    for group, rulename, args in aggregations:
+        # Schwierigkeit hier: die args können reguläre Ausdrücke enthalten.
+        rule = aggregation_rules[rulename]
+        entries = aggregation_forest.get(group, [])
+        entries += compile_aggregation(rule, args)
+        aggregation_forest[group] = entries
+
+
+def compile_aggregation(rule, args):
+    description, arglist, func, nodes = rule
+    arg = dict(zip(arglist, args))
+    # Die Argumente enthalten reguläre Ausdrücke. Wir müssen jetzt alle Inkarnationen
+    # finden
+    elements = []
+    for node in nodes:
+        elements += aggregate_node(arg, node)
+    return elements
+    
+
+def aggregate_node(arg, node):
+    if type(node[1]) == str: # leaf node
+        elements = aggregate_leaf_node(arg, node[0], node[1])
+    else:
+        elements = aggregate_inter_node(arg, node[0], node[1])
+    return elements
+
+def find_variables(pattern, varname):
+    found = []
+    start = 0
+    while True:
+        pos = pattern.find('$' + varname + '$', start)
+        if pos >= 0:
+            found.append(pos)
+            start = pos + 1
+        else:
+            return found
+
+def instantiate(pattern, arg):
+    # Wir bekommen hier z.B. rein:
+    # pattern = "Some $DB$ and some $PROC$"
+    # arg = { "PROC": "[a-z].*", "DB": "X..",  }
+    # Die Antwort ist:
+    # return "Some (X..) and some ([a-z].*)", [ 'DB', 'PROC' ]
+    # Bedenke: Eine Variable kann mehrfachersetzt werden.
+
+    substed = []
+    newpattern = pattern
+    for k, v in arg.items():
+        places = find_variables(pattern, v)
+        for p in places:
+            substed.append((p, v))
+        newpattern = newpattern.replace('$'+k+'$', '('+v+')')
+    substed.sort()
+    return newpattern, [ v for (p,v) in substed ]
+
+def do_match(reg, text):
+    mo = regex(reg).match(text)
+    if not mo:
+        return None
+    else:
+        return list(mo.groups())
+
+
+def aggregate_leaf_node(arg, host, service):
+    debug("LEAF NODE: %s" % ((arg, host, service),))
+
+    # replace placeholders in host and service with arg
+    # service = 'NIC $NIC$ .*'
+    host_re, host_vars = instantiate(host, arg)
+    # service = 'NIC $NIC$ .*'
+    service_re, service_vars = instantiate(service, arg)
+    # service_re = (['NIC'], 'NIC (.*) .*')  # Liste von argumenten
+
+    found = {}
+    for host, (tags, services) in g_services.items():
+        # Tags vom Host prüfen (hier noch nicht in Konfiguration enthalten)
+        instargs = do_match(host_re, host)
+        if instargs:
+            newarg = arg.copy()
+            newarg.update(dict(zip(host_vars, instargs)))
+            for service in services:
+                instargs = do_match(service_re, service)
+                if instargs != None:
+                    newarg = arg.copy()
+                    newarg.update(dict(zip(service_vars, instargs)))
+                    entries = found.get(repr(newarg), [])
+                    entries.append((host, service))
+                    found[repr(newarg)] = entries
+
+    # Jetzt in eine Liste umwandeln
+    # return in_liste(found)
+    debug("==> %s" % found.items())
+    return found.items()
+
+def aggregate_inter_node(arg, rulename, args):
+    rule = aggregation_rules[rulename]
+    description, arglist, funcname, nodelist = rule
+    elements = compile_aggregation(rule, args)
+    debug("ARG: %s" % arg)
+    debug("RULENAME: %s" % rulename)
+    debug("ELEMENTS: %s" % elements)
+    return []
+
+regex_cache = {}
+def regex(r):
+    rx = regex_cache.get(r)
+    if rx:
+        return rx
+    rx = re.compile(r)
+    regex_cache[r] = rx
+    return rx
+
+
+def page_debug(h):
+    global html
+    html = h
+    compile_forest()
+    html.header("BI Debug")
+    html.write("<pre>%s</pre>" % aggregation_forest)
+    html.footer()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ==========================================================================
 
 def aggr_worst(atoms):
     state = 0 
@@ -29,14 +240,6 @@ aggregation_functions = {
     "worst" : aggr_worst,
 }
 
-regex_cache = {}
-def regex(r):
-    rx = regex_cache.get(r)
-    if rx:
-        return rx
-    rx = re.compile(r)
-    regex_cache[r] = rx
-    return rx
 
 ALL_HOSTS  = [ '@all' ]
 
@@ -142,3 +345,5 @@ def aggregate(row, func, atoms):
 
 def host_matches(a,b,c,d):
     return True
+
+

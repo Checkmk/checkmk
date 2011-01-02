@@ -49,31 +49,27 @@ aggregation_rules["OS"] = (
 )
 
 aggregations = [
-# ( "OSses", "OS", [ [ 'linux' ], ALL_HOSTS, ] )
- ( "OSses", "OS", [ 'localhost' ] ),
+ ( "OSses",   "OS",  [ '.*' ] ),
+ ( "Network", "NIC", [ 'localhost', 'eth0' ] ),
 ]
 
 
 aggregation_forest = {}
 
-g_services = {
-  "localhost" : ([ 'linux', 'test' ], [
-       "fs_/home", "fs_/cdarchiv", "fs_/boot", "fs_/", "Uptime",
-       "Test_Michael", "TCP-Port-80", "TCP-Port-22", "TCP Connections",
-       "Postfix Queue", "Number of threads", "NIC wlan0 counters",
-       "NIC vboxnet0 counters", "NIC usb0 counters", "NIC pan0 counters",
-       "NIC eth0 parameter", "NIC eth0 link", "NIC eth0 counters",
-       "Mount options of /home", "Mount options of /cdarchiv",
-       "Mount options of /boot", "Mount options of /",
-       "Memory used", "Mathias_2", "Mathias_1", "Kernel Process Creations",
-       "Kernel Major Page Faults", "Kernel Context Switches",
-       "Filecount_/var/log", "Filecount_/tmp", "Filecount_/sbin", "Filecount_/root",
-       "Disk IO write", "Disk IO read", "Check_MK",
-       "CUPS Queue HP-Color-LaserJet-4700", "CPU utilization", "CPU load", 
-       "Check_MK Inventory"])
-}
+
+def load_services():
+    global g_services
+    g_services = {}
+    data = html.live.query("GET hosts\nColumns: name custom_variable_names custom_variable_values services\n")
+    for host, varnames, values, services in data:
+        vars = dict(zip(varnames, values))
+        tags = vars.get("TAGS", "").split(" ")
+        g_services[host] = (tags, services)
+        
 
 def compile_forest():
+    load_services()
+
     for group, rulename, args in aggregations:
         # Schwierigkeit hier: die args können reguläre Ausdrücke enthalten.
         rule = aggregation_rules[rulename]
@@ -85,13 +81,13 @@ def compile_forest():
 def compile_aggregation(rule, args):
     description, arglist, func, nodes = rule
     arg = dict(zip(arglist, args))
-    # Die Argumente enthalten reguläre Ausdrücke. Wir müssen jetzt alle Inkarnationen
-    # finden
     elements = []
     for node in nodes:
+        # Each node can return more than one incarnation (due to regexes in 
+        # the arguments)
         elements += aggregate_node(arg, node)
     return elements
-    
+
 
 def aggregate_node(arg, node):
     if type(node[1]) == str: # leaf node
@@ -99,6 +95,7 @@ def aggregate_node(arg, node):
     else:
         elements = aggregate_inter_node(arg, node[0], node[1])
     return elements
+
 
 def find_variables(pattern, varname):
     found = []
@@ -147,7 +144,8 @@ def aggregate_leaf_node(arg, host, service):
     service_re, service_vars = instantiate(service, arg)
     # service_re = (['NIC'], 'NIC (.*) .*')  # Liste von argumenten
 
-    found = {}
+    found = []
+
     for host, (tags, services) in g_services.items():
         # Tags vom Host prüfen (hier noch nicht in Konfiguration enthalten)
         instargs = do_match(host_re, host)
@@ -159,14 +157,12 @@ def aggregate_leaf_node(arg, host, service):
                 if instargs != None:
                     newarg = arg.copy()
                     newarg.update(dict(zip(service_vars, instargs)))
-                    entries = found.get(repr(newarg), [])
-                    entries.append((host, service))
-                    found[repr(newarg)] = entries
+                    found.append((host, service))
 
     # Jetzt in eine Liste umwandeln
     # return in_liste(found)
-    debug("==> %s" % found.items())
-    return found.items()
+    debug("==> %s" % pprint.pformat(found))
+    return found
 
 def aggregate_inter_node(arg, rulename, args):
     rule = aggregation_rules[rulename]
@@ -196,6 +192,12 @@ def page_debug(h):
     html.footer()
 
 
+# So schaut ein vorkompiliertes Aggregat aus:
+hirn = ( 
+ "Names (Description)", 'worst', [
+   # HIER KOMMEN DIE NODES
+ ]
+)
 
 
 

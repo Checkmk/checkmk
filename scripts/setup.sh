@@ -664,7 +664,7 @@ do
 	   rm -f $DESTDIR$bindir/check_mk &&
 	   echo -e "#!/bin/sh\nexec python $modulesdir/check_mk.py "'"$@"' > $DESTDIR$bindir/check_mk &&
 	   chmod 755 $DESTDIR$bindir/check_mk &&
-           ln -s check_mk $DESTDIR$bindir/cmk &&
+           ln -sns check_mk $DESTDIR$bindir/cmk &&
 	   echo -e "#!/bin/sh\nexec python $modulesdir/check_mk.py -P "'"$@"' > $DESTDIR$bindir/mkp &&
            chmod 755 $DESTDIR$bindir/mkp &&
 	   sed -i "s#@BINDIR@#$bindir#g"              $DESTDIR$docdir/check_mk_templates.cfg &&

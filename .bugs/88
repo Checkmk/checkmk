@@ -1,0 +1,11 @@
+Title: Move check_mk_templates.cfg to /usr/share/check_mk
+Component: core
+Benefit: 1
+State: open
+Cost: 2
+Date: 2011-01-04 13:51:15
+Class: cleanup
+
+The directory /usr/share/doc is not optimal since the templates
+are no longer an example but a vital part - usually never changed
+by the admin.

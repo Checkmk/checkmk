@@ -62,9 +62,9 @@ def action_reschedule():
         add_filter = ""
 
     try:
-        html.live.set_only_sites([site])
         now = int(time.time())
-        html.live.command("[%d] SCHEDULE_FORCED_%s_CHECK;%s;%d" % (now, cmd, spec, now))
+        html.live.command("[%d] SCHEDULE_FORCED_%s_CHECK;%s;%d" % (now, cmd, spec, now), site)
+        html.live.set_only_sites([site])
         row = html.live.query_row(
                 "GET %ss\n"
                 "WaitObject: %s %s\n"

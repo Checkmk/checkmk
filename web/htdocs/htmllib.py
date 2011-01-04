@@ -471,6 +471,9 @@ class html:
     def var(self, varname, deflt = None):
         return self.req.vars.get(varname, deflt)
 
+    def multivar(self, varname, deflt = None):
+        return self.req.multivars.get(varname, deflt)
+
     def var_utf8(self, varname, deflt = None):
         return unicode(self.req.vars.get(varname, deflt), "utf-8")
 

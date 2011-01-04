@@ -6,6 +6,9 @@
     Multisite:
     * New reschedule icon now also works for non-local sites.
 
+    Livestatus:
+    * Check for buffer overflows (replace strcat with strncat, etc.)
+
 1.1.9i3:
     INCOMPATIBLE CHANGES:
     * You need a current version of Livestatus for Multisite to work!

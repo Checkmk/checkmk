@@ -493,7 +493,7 @@ void check_pnp_path()
 void livestatus_parse_arguments(const char *args_orig)
 {
     /* set default socket path */
-    strcpy(g_socket_path, DEFAULT_SOCKET_PATH);
+    strncpy(g_socket_path, DEFAULT_SOCKET_PATH, sizeof(g_socket_path) - 1);
 
     /* there is no default PNP path */
     g_pnp_path[0] = 0;
@@ -510,7 +510,7 @@ void livestatus_parse_arguments(const char *args_orig)
 	char *left = next_token(&part, '=');
 	char *right = next_token(&part, 0);
 	if (!right) {
-	    strncpy(g_socket_path, left, sizeof(g_socket_path));
+	    strncpy(g_socket_path, left, sizeof(g_socket_path) - 1);
 	}
 	else {
 	    if (!strcmp(left, "debug")) {
@@ -582,9 +582,9 @@ void livestatus_parse_arguments(const char *args_orig)
 		}
 	    }
             else if (!strcmp(left, "pnp_path")) {
-                strcpy(g_pnp_path, right);
+                strncpy(g_pnp_path, right, sizeof(g_pnp_path) - 1);
                 if (right[strlen(right) - 1] != '/')
-                    strcat(g_pnp_path, "/"); // make sure, that trailing slash is always there
+                    strncat(g_pnp_path, "/",  sizeof(g_pnp_path) - strlen(g_pnp_path) - 1 ); // make sure, that trailing slash is always there
                 check_pnp_path();
             }
 	    else {

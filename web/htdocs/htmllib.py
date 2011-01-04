@@ -127,6 +127,7 @@ class html:
         self.focus_object = None
         self.global_vars = []
         self.browser_reload = 0
+        self.browser_redirect = ''
         self.events = set([]) # currently used only for sounds
         self.header_sent = False
 
@@ -358,20 +359,28 @@ class html:
                       jQuery('a.tips').cluetip({ajaxCache: false, dropShadow: false, showTitle: false });
                         });
                 </script>
-
-                </head>
                 ''')
+
+            if self.browser_reload != 0:
+                if self.browser_redirect != '':
+                    self.req.write("<script type=\"text/javascript\">setReload(%s, '%s')</script>\n" %
+                                                                  (self.browser_reload, self.browser_redirect))
+                else:
+                    self.req.write("<script type=\"text/javascript\">setReload(%s)</script>\n" % self.browser_reload)
+
+
+            self.req.write("</head>\n")
             self.req.header_sent = True
 
     def html_foot(self):
         self.write("</html>\n")
 
     def set_browser_reload(self, secs):
-        self.req.headers_out.add("refresh", str(secs))
         self.browser_reload = secs
 
     def set_browser_redirect(self, secs, url):
-        self.req.headers_out.add("refresh", "%d; URL=%s" % (secs, url))
+        self.browser_reload   = secs
+        self.browser_redirect = url
 
     def header(self, title=''):
         if not self.header_sent:

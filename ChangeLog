@@ -40,6 +40,8 @@
       which broke the snapin titles and also the tactical overview table
     * Sidebar: Fixed bulletlist positioning
     * Fixed header displaying on views when the edit button is not shown to the user
+    * View pages are not refreshed when at least one form (Filter, Commands,
+      Display Options) is open
 
     Checks & Agents:
     * Fixed problem with OnlyFrom: in Linux agent (df didn't work properly)

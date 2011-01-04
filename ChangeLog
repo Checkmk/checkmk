@@ -3,6 +3,9 @@
     * added missing 'register 0' to host template
     * setup: fix creation of symlink cmk if already existing
 
+    Multisite:
+    * New reschedule icon now also works for non-local sites.
+
 1.1.9i3:
     INCOMPATIBLE CHANGES:
     * You need a current version of Livestatus for Multisite to work!

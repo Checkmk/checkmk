@@ -34,23 +34,26 @@
 
 def inventory_megaraid_ldisks(checkname, info):
     inventory = []
+    adapter = None
     for line in info:
         if line[0] == "Adapter":
             adapter = int(line[1])
-        elif line[0] == "Virtual" and line[1] == "Disk:":
+        elif line[0] == "Virtual" and (line[1] == "Disk:" or line[1] == "Drive:"):
             disk = int(line[2])
             inventory.append( ("%d/%d" % (adapter, disk), "", None) )
     return inventory
 
 def check_megaraid_ldisks(item, _no_params, info):
+    adapter = None
     for line in info:
+        print line
         if line[0] == "Adapter":
             adapter = int(line[1])
-        elif line[0] == "Virtual" and line[1] == "Disk:":
+        elif line[0] == "Virtual" and (line[1] == "Disk:" or line[1] == "Drive:"):
             disk = int(line[2])
             found = "%d/%d" % (adapter, disk) == item
-        elif found and line[0] == "State:":
-            state = " ".join(line[1:])
+        elif found and line[0].startswith("State"):
+            state = " ".join(line[1:]).replace(': ', '')
             infotext = "state is %s" % state
             if state == "Optimal":
                 return (0, "OK - " + infotext)

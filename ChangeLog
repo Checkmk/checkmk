@@ -49,6 +49,7 @@
     * cups_queues: fixed plugin error due to invalid import of datetime,
       converted other checks from 'from datetime import...' to 'import datetime'.
     * printer_supply: handle the case where the current value is missing
+    * megaraid_ldisks: Fixed item detection to be compatible with different versions of megaraid
 
     Livestatus:
     * new column pnpgraph_present in table host and service. In order for this

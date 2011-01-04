@@ -1053,7 +1053,8 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
                         reftext = "%d s" % ref
                     else:
                         reftext = "&#8734;"
-                    html.write('<td class="left w40%s"><a href="%s">%s</a></td>\n' % (addclass, uri, reftext))
+                    html.write('<td class="left w40%s" id="button-refresh-%s"><a href="%s">%s</a></td>\n' %
+                                                                               (addclass, ref, uri, reftext))
                     html.write("<td class=minigap></td>\n")
 
         html.write("<td class=gap>&nbsp;</td>\n")

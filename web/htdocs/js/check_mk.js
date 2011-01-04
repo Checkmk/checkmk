@@ -98,10 +98,10 @@ function filter_activation(oid)
 
     var disabled = usage != "hard" && usage != "show";
     for (var i in oTd.childNodes) {
-	oNode = oTd.childNodes[i];
-	if (oNode.nodeName == "INPUT" || oNode.nodeName == "SELECT") {
-	    oNode.disabled = disabled;
-	}
+        oNode = oTd.childNodes[i];
+        if (oNode.nodeName == "INPUT" || oNode.nodeName == "SELECT") {
+            oNode.disabled = disabled;
+        }
     }
 
     p = null;
@@ -109,18 +109,29 @@ function filter_activation(oid)
     selectobject = null;
 }
 
+var gNumOpenTabs = 0;
+
 function toggle_tab(linkobject, oid)
 {
     var table = document.getElementById(oid);
     if (table.style.display == "none") {
-	table.style.display = "";
+        table.style.display = "";
         linkobject.setAttribute("className", "left open");
         linkobject.setAttribute("class", "left open");
+
+        // Stop the refresh while at least one tab is open
+        gNumOpenTabs += 1;
+        setReload(0);
     }
     else {
-	table.style.display = "none";
+        table.style.display = "none";
         linkobject.setAttribute("className", "left closed");
         linkobject.setAttribute("class", "left closed");
+
+        // Re-Enable the reload
+        gNumOpenTabs -= 1;
+        if(gNumOpenTabs == 0)
+            setReload(gReloadTime);
     }
     table = null;
 }
@@ -228,33 +239,33 @@ function actionResponseHandler(oImg, code) {
         window.location.reload();
     } else if(validResponse && response[0] === 'TIMEOUT') {
         oImg.src   = 'images/icon_reload_failed.gif';
-				oImg.title = 'Timeout while performing action: ' + response[1];
+        oImg.title = 'Timeout while performing action: ' + response[1];
     } else if(validResponse) {
         oImg.src   = 'images/icon_reload_failed.gif';
-				oImg.title = 'Problem while processing - Response: ' + response.join(' ');
+        oImg.title = 'Problem while processing - Response: ' + response.join(' ');
     } else {
         oImg.src   = 'images/icon_reload_failed.gif';
         oImg.title = 'Invalid response: ' + response;
     }
 
-		response = null;
-		validResponse = null;
-		oImg = null;
+    response = null;
+    validResponse = null;
+    oImg = null;
 }
 
 function performAction(oLink, action, type, site, name1, name2) {
     var oImg = oLink.childNodes[0];
     oImg.src = 'images/icon_reloading.gif';
 
-		// Chrome and IE are not animating the gif during sync ajax request
-		// So better use the async request here
+    // Chrome and IE are not animating the gif during sync ajax request
+    // So better use the async request here
     get_url('nagios_action.py?action='+action+'&site='+site+'&host='+name1+'&service='+name2,
             actionResponseHandler, oImg);
     oImg = null;
 }
 
 /* -----------------------------------------------------
-   View editor
+   view editor
    -------------------------------------------------- */
 function delete_view_column(oImg) {
     var oDiv = oImg;
@@ -264,3 +275,56 @@ function delete_view_column(oImg) {
     oDiv = null;
 }
 
+
+// ----------------------------------------------------------------------------
+// page reload stuff
+// ----------------------------------------------------------------------------
+
+//Stores the reload timer object
+var gReloadTimer = null;
+// This stores the last refresh time of the page (But never 0)
+var gReloadTime = 0;
+
+// Highlights/Unhighlights a refresh button
+function toggleRefreshButton(s, enable) {
+    var o = document.getElementById('button-refresh-' + s);
+    if(o) {
+        if(enable) {
+            o.setAttribute("className", "left w40 selected");
+            o.setAttribute("class", "left w40 selected");
+        } else {
+            o.setAttribute("className", "left w40");
+            o.setAttribute("class", "left w40");
+        }
+    }
+    o = null;
+}
+
+
+// When called with one or more parameters parameters it reschedules the
+// timer to the given interval. If the parameter is 0 the reload is stopped.
+// When called with two parmeters the 2nd one is used as new url.
+function setReload(secs, url) {
+    if(typeof url === 'undefined')
+        url = '';
+    
+    if (gReloadTimer) {
+        toggleRefreshButton(0, false);
+        toggleRefreshButton(gReloadTime, false);
+        clearTimeout(gReloadTimer);
+    }
+
+    toggleRefreshButton(secs, true);
+
+    if (secs !== 0) {
+        gReloadTime  = secs;
+        gReloadTimer = setTimeout("handleReload('" + url + "')", Math.ceil(parseFloat(secs) * 1000));
+    }
+}
+
+function handleReload(url) {
+    if (url === '')
+        window.location.reload(false);
+    else
+        window.location.href = url;
+}

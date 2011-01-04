@@ -100,7 +100,7 @@ function mkSearchFindUrl(aSearchObjects, objType, oField) {
     for (var i in aSearchObjects) {
         var objSite  = aSearchObjects[i][0];
         var objName  = aSearchObjects[i][1];
-        if (objName.indexOf(namepart) > -1) {
+        if (mkSearchMatch(objName, namepart)) {
             found ++;
             if (url != null) { // found second match -> not unique
                 url = null;
@@ -347,6 +347,12 @@ function mkSearchGetUrl(objType, objName, objSite, numMatches) {
             return 'view.py?view_name=servicedesc&service=' + objName + '&site=' + objSite;
 }
 
+// This performs a case insensitive search of a substring in a string
+// Returns true if found and false if not
+function mkSearchMatch(base, search) {
+	return base.toLowerCase().indexOf(search.toLowerCase()) > -1;
+}
+
 function mkSearchAddSearchResults(aSearchObjects, objType, val) {
     val = mkSearchCleanupString(val, objType);
     // Build matching regex
@@ -364,7 +370,8 @@ function mkSearchAddSearchResults(aSearchObjects, objType, val) {
         objName  = aSearchObjects[i][1];
 
         // if(objName.match(oMatch)) {
-        if(objName.indexOf(val) > -1) {
+				// case insensitive search!
+        if(mkSearchMatch(objName, val)) {
             var url = mkSearchGetUrl(objType, objName, objSite, 1);
             var oResult = {
                 'id': 'result_' + objName,

@@ -39,6 +39,7 @@
     * Sidebar: Fixed scrolling problem in IE8 with compat mode (or maybe older IE versions)
       which broke the snapin titles and also the tactical overview table
     * Sidebar: Fixed bulletlist positioning
+    * Sidebar: The sidebar quicksearch snapin is case insensitive again
     * Fixed header displaying on views when the edit button is not shown to the user
     * View pages are not refreshed when at least one form (Filter, Commands,
       Display Options) is open

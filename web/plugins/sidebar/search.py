@@ -48,7 +48,7 @@ def render_searchform():
     html.write('<div id="mk_side_search" onclick="mkSearchClose();">')
     html.write('<input id="mk_side_search_field" type="text" name="search" autocomplete="off" />')
     html.write('</div>')
-    html.write("<script type='text/javascript' src='search.js'></script>\n")
+    html.write("<script type='text/javascript' src='js/search.js'></script>\n")
     html.write("<script type='text/javascript'>\n")
 
     # Store (user) hosts in JS array

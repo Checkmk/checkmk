@@ -26,7 +26,9 @@ var browser         = navigator.userAgent.toLowerCase();
 var weAreIEF__k     = ((browser.indexOf("msie") != -1) && (browser.indexOf("opera") == -1));
 var weAreOpera      = browser.indexOf("opera") != -1;
 var weAreFirefox    = browser.indexOf("firefox") != -1 || browser.indexOf("namoroka") != -1;
-var contentLocation = parent.frames[1].document.location;
+var contentLocation = null;
+if(contentFrameAccessible())
+    var contentLocation = parent.frames[1].document.location;
 
 //
 // Sidebar styling and scrolling stuff
@@ -357,6 +359,18 @@ function getSnapinTargetPos() {
  * misc sidebar stuff
  *************************************************/
 
+// Checks if the sidebar can access the content frame. It might be denied
+// by the browser since it blocks cross domain access.
+function contentFrameAccessible() {
+    try {
+        var d = parent.frames[1].document;
+        d = null;
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
 function debug(s) {
   window.parent.frames[1].document.write(s+'<br />');
 }
@@ -652,18 +666,6 @@ function sidebar_scheduler() {
         contentLocation = parent.frames[1].document.location;
     }
     setTimeout(function(){sidebar_scheduler();}, 1000);
-}
-
-// Checks if the sidebar can access the content frame. It might be denied
-// by the browser since it blocks cross domain access.
-function contentFrameAccessible() {
-    try {
-        var d = parent.frames[1].document;
-        d = null;
-        return true;
-    } catch (e) {
-        return false;
-    }
 }
 
 function addBookmark() {

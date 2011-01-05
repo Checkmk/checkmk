@@ -69,17 +69,32 @@ if (window.addEventListener) {
 // This is no 100% solution. When moving the mouse out of browser window
 // without moving the mouse over the edge elements the dragging is not ended.
 function registerEdgeListeners(obj) {
-	var edges;
-	if(!obj)
-	  edges = [ parent.frames[1], document.getElementById('side_header'), document.getElementById('side_footer') ];
-	else
-		edges = [ obj ];
-	for(var i in edges)
-	 	if (window.addEventListener)
-	  	edges[i].addEventListener("mousemove", function(e) { stopDragScroll(e); snapinTerminateDrag(e); return false; }, false);
-		else
-  		edges[i].onmousemove = function(e) { stopDragScroll(e); snapinTerminateDrag(e); return false; };
-	edges = null;
+    var edges;
+    if (!obj)
+        edges = [ parent.frames[1], document.getElementById('side_header'), document.getElementById('side_footer') ];
+    else
+        edges = [ obj ];
+
+    for(var i in edges) {
+        // It is possible to open other domains in the content frame - don't register
+        // the event in that case. It is not permitted by most browsers!
+        if(!contentFrameAccessible())
+            continue;
+
+        if (window.addEventListener)
+            edges[i].addEventListener("mousemove", function(e) {
+                                                       stopDragScroll(e);
+                                                       snapinTerminateDrag(e);
+                                                       return false;
+                                                   }, false);
+        else
+            edges[i].onmousemove = function(e) {
+                                       stopDragScroll(e);
+                                       snapinTerminateDrag(e);
+                                       return false;
+                                   };
+    }
+    edges = null;
 }
 
 /************************************************
@@ -632,11 +647,23 @@ function sidebar_scheduler() {
     }
     // Detect page changes and re-register the mousemove event handler
     // in the content frame. another bad hack ... narf
-    if (contentLocation != parent.frames[1].document.location) {
+    if (contentFrameAccessible() && contentLocation != parent.frames[1].document.location) {
         registerEdgeListeners(parent.frames[1]);
         contentLocation = parent.frames[1].document.location;
     }
     setTimeout(function(){sidebar_scheduler();}, 1000);
+}
+
+// Checks if the sidebar can access the content frame. It might be denied
+// by the browser since it blocks cross domain access.
+function contentFrameAccessible() {
+    try {
+        var d = parent.frames[1].document;
+        d = null;
+        return true;
+    } catch (e) {
+        return false;
+    }
 }
 
 function addBookmark() {

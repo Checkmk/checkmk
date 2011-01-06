@@ -436,4 +436,5 @@ host_tags = []
 ALL_HOSTS = ['@all']
 aggregation_rules = {}
 aggregations = []
+aggregation_functions = {}
 

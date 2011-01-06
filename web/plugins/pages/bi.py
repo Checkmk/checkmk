@@ -1,5 +1,6 @@
 import bi
 
 pagehandlers.update({
-    "bi" : bi.page_debug,
+    "bi_debug" : bi.page_debug,
+    "bi" :       bi.page_all,
 })

@@ -11,6 +11,16 @@ try:
 except NameError:
     from sets import Set as set
 
+ALL_HOSTS = config.ALL_HOSTS
+
+#      ____                      _ _       _   _             
+#     / ___|___  _ __ ___  _ __ (_) | __ _| |_(_) ___  _ __  
+#    | |   / _ \| '_ ` _ \| '_ \| | |/ _` | __| |/ _ \| '_ \ 
+#    | |__| (_) | | | | | | |_) | | | (_| | |_| | (_) | | | |
+#     \____\___/|_| |_| |_| .__/|_|_|\__,_|\__|_|\___/|_| |_|
+#                         |_|                                
+
+
 SINGLE = 'single'
 MULTIPLE = 'multi'
 
@@ -280,6 +290,115 @@ def regex(r):
     return rx
 
 
+
+#     _____                     _   _             
+#    | ____|_  _____  ___ _   _| |_(_) ___  _ __  
+#    |  _| \ \/ / _ \/ __| | | | __| |/ _ \| '_ \ 
+#    | |___ >  <  __/ (__| |_| | |_| | (_) | | | |
+#    |_____/_/\_\___|\___|\__,_|\__|_|\___/|_| |_|
+#                                                 
+
+# Predefinde aggregation functions
+MISSING = -2
+PENDING = -1
+OK = 0
+WARN = 1
+CRIT = 2
+UNKNOWN = 3
+UNAVAIL = 4
+
+
+def get_status_info(required_hosts):
+    filter = ""
+    for host in required_hosts:
+        filter += "Filter: name = %s\n" % host
+    if len(required_hosts) > 1:
+        filter += "Or: %d\n" % len(required_hosts)
+    data = html.live.query(
+            "GET hosts\n"
+            "Columns: name state plugin_output services_with_info\n"
+            + filter)
+    tuples = [(e[0], e[1:]) for e in data]
+    return dict(tuples)
+
+
+# Execution of the trees. Returns a tree object reflecting
+# the states of all nodes
+def execute_tree(tree):
+    required_hosts = tree[0]
+    status_info = get_status_info(required_hosts)
+    return execute_node(tree, status_info)
+
+def execute_node(node, status_info):
+    if len(node) == 3:
+        return execute_leaf_node(node, status_info) + (None, None,)
+    else:
+        return execute_inter_node(node, status_info)
+
+
+def execute_leaf_node(node, status_info):
+    required_hosts, host, service = node
+    status = status_info.get(host)
+    if status == None:
+        return (MISSING, "Host", "Host %s not found" % host) 
+    host_state, host_output, service_state = status
+
+    if service == None:
+        aggr_state = {0:OK, 1:CRIT, 2:UNKNOWN}[host_state]
+        return (aggr_state, "Host", host_output)
+
+    else:
+        for entry in service_state:
+            if entry[0] == service:
+                state, has_been_checked, plugin_output = entry[1:]
+                if has_been_checked == 0:
+                    return (PENDING, service, "This service has not been checked yet")
+                else:
+                    return (state, service, plugin_output)
+        return (service, MISSING, "This host has no such service")
+
+def execute_inter_node(node, status_info):
+    required_hosts, title, funcname, nodes = node
+    func = config.aggregation_functions.get(funcname)
+    if not func:
+        raise MKConfigError("Undefined aggregation function '%s'. Available are: %s" % 
+                (funcname, ", ".join(config.aggregation_functions.keys())))
+    node_states = []
+    for n in nodes:
+        node_states.append(execute_node(n, status_info))
+    return func(node_states) + (title, funcname, node_states, )
+
+#       _                      _____                 _   _                 
+#      / \   __ _  __ _ _ __  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___ 
+#     / _ \ / _` |/ _` | '__| | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+#    / ___ \ (_| | (_| | | _  |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
+#   /_/   \_\__, |\__, |_|(_) |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+#           |___/ |___/                                                    
+
+def aggr_worst(nodes):
+    state = 0 
+    problems = []
+    for node in nodes:
+        s = node[0]
+        if s != OK:
+            problems.append(node[1])
+
+        if s == CRIT:
+            state = s
+        else:
+            state = max(s, state)
+
+    return state, ", ".join(problems)
+
+config.aggregation_functions["worst"] = aggr_worst
+
+#      ____                       
+#     |  _ \ __ _  __ _  ___  ___ 
+#     | |_) / _` |/ _` |/ _ \/ __|
+#     |  __/ (_| | (_| |  __/\__ \
+#     |_|   \__,_|\__, |\___||___/
+#                 |___/           
+
 def page_debug(h):
     global html
     html = h
@@ -289,51 +408,24 @@ def page_debug(h):
     render_forest()
     html.footer()
 
+def page_all(h):
+    global html
+    html = h
+    html.header("All")
+    compile_forest()
+    for group, trees in aggregation_forest.items():
+        html.write("<h2>%s</h2>" % group)
+        for inst_args, tree in trees:
+            state = execute_tree(tree)
+            debug(state)
+    html.footer()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# ==========================================================================
-
-def aggr_worst(atoms):
-    state = 0 
-    problems = []
-    for descr, s, hbc, output in atoms:
-        if s != 0:
-            problems.append(descr)
-
-        if s == 2:
-            state = 2
-        elif state != 2:
-            state = max(s, state)
-
-    return state, ", ".join(problems)
-
-aggregation_functions = {
-    "worst" : aggr_worst,
-}
-
-
-ALL_HOSTS  = [ '@all' ]
+#     _____                 ____             
+#    |  ___|__   ___       | __ )  __ _ _ __ 
+#    | |_ / _ \ / _ \ _____|  _ \ / _` | '__|
+#    |  _| (_) | (_) |_____| |_) | (_| | |   
+#    |_|  \___/ \___/      |____/ \__,_|_|   
+#                                            
 
 def debug(x):
     import pprint

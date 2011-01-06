@@ -415,12 +415,25 @@ start_url = "main.py"
 # Timeout for rescheduling of host- and servicechecks
 reschedule_timeout = 10.0
 
-#  __        __   _                      __ 
-#  \ \      / /__| |__   ___ ___  _ __  / _|
-#   \ \ /\ / / _ \ '_ \ / __/ _ \| '_ \| |_ 
-#    \ V  V /  __/ |_) | (_| (_) | | | |  _|
-#     \_/\_/ \___|_.__/ \___\___/|_| |_|_|  
-#                                           
+#    __        ___  _____ ___  
+#    \ \      / / \|_   _/ _ \ 
+#     \ \ /\ / / _ \ | || | | |
+#      \ V  V / ___ \| || |_| |
+#       \_/\_/_/   \_\_| \___/ 
+#                              
 
 config_files = []
 host_tags = []
+
+
+#     ____ ___ 
+#    | __ )_ _|
+#    |  _ \| | 
+#    | |_) | | 
+#    |____/___|
+#              
+
+ALL_HOSTS = ['@all']
+aggregation_rules = {}
+aggregations = []
+

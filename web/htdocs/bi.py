@@ -11,95 +11,8 @@ try:
 except NameError:
     from sets import Set as set
 
-# ZWEITER VERSUCH, komplett von vorne
 SINGLE = 'single'
 MULTIPLE = 'multi'
-
-aggregation_rules = {}
-
-aggregation_rules["HostRessources"] = (
-    "Host Ressources", [ "aHOST" ], "worst", [ 
-        ( "Kernel",      [ "$HOST$" ] ), 
-        ( "Filesystems", [ "$HOST$" ] ),
-        ( "Networking",  [ "$HOST$" ] ),
-    ]
-)
-
-aggregation_rules["Database"] = (
-    "Database $DB", [ "aDB", "HOSTs" ], "worst", [
-        ( "proc_.*$DB$.*", "$HOST$" ),
-        ( "LOG /var/ora/$DB$.log", "$HOST$" ),
-    ]
-)
-
-aggregation_rules["Kernel"] = (
-    "Kernel of $HOST$", [ "aHOST" ], "worst", [ 
-        ( "$HOST$", "Kernel" ), 
-    ]
-)
-
-aggregation_rules["Filesystems"] = (
-    "Filesystems", [ "aHOST" ], "worst", [
-        ( "$HOST$", "fs" ),
-    ]
-)
-
-aggregation_rules["Networking"] = (
-    "Networking", [ "aHOST" ], "worst", [
-        ( "NIC", [ "$HOST$", ".*" ] )
-    ]
-)
-
-aggregation_rules["NIC"] = (
-    "Network Interface $NIC$", ["aHOST", "aNIC"], "worst", [ 
-        ( "$HOST$", "NIC ($NIC$) " )
-    ]
-)
-
-aggregation_rules["OS"] = (
-    "Operating System", [ "aHOST" ], "worst", [
-        ( "HostRessources", [ "$HOST$" ] ),
-        ( "$HOST$", "Check_MK" ),
-    ]
-)
-
-aggregation_rules["Check_MK"] = (
-    "Check_MK", [ "HOSTs" ], "worst", [
-        ( "$HOST$", "Check_MK$" ),
-        ( "$HOST$", "Check_MK Inventory$" ),
-    ]
-)
-
-aggregation_rules["GlobalService"] = (
-    "$SERVICE$", [ "HOSTs", "aSERVICE" ], "worst", [
-        ( "$HOST$", "$SERVICE$" )
-    ]
-)
-
-aggregations = [
-# ( "OSses",      "OS",            [ 'localhost' ] ),
- ( "OSses",      "HostRessources",            [ '.*' ] ),
-# ( "Kernel",     "Kernel",        [ '.*' ] ),
-# ( "Network",    "NIC",           [ 'localhost', 'eth0' ] ),
-# ( "Monitoring", "Check_MK",      [ '.*' ] ), 
-# ( "Monitoring", "GlobalService", [ '.*', 'Check.*' ] ),
-]
-
-# Ueberlegung: Wenn man als Hostname '.*' angibt (oder ALL_HOSTS und irgendwelche Tags),
-# dann ist die Frage, *wo* genau das Ausmultipliziren stattfindet. So könnte die Regel
-# ( "OSses",   "OS",  [ '.*' ] ) eigentlich das .* schon auf der höchsten Ebene auflösen
-# und mehrere Aggegationen erzeugen. Wenn das .* ganz nach unten geht, wird nur eine
-# einzige Aggregation erzeugt, welche die Daten von allen Hosts vereint.
-
-# Alternativ könnte eine untere Regel irgendwie erzwingen, dass sie für jedes unterschiedliche
-# Vorkommen des Musters separat erzeugt wird. Es ist ja so, dass von einer Blatt-Regel, die man
-# mit Mustern aufruft, für jede Inkarnation die Instanziierung der Argumente hochgemeldet wird.
-
-
-# Idee zur Syntax der Host-Tags:
-# '.*|linux' ==> ['linux'], ALL_HOSTS
-
-aggregation_forest = {}
 
 
 # Load the static configuration of all services and hosts (including tags)
@@ -117,16 +30,21 @@ def load_services():
 # Precompile the forest of BI rules. Forest? A collection of trees.
 # The compiled forest does not contain any regular expressions.
 def compile_forest():
+    global aggregation_forest
+    aggregation_forest = {}
+
     load_services()
-    for group, rulename, args in aggregations:
-        rule = aggregation_rules[rulename]
+    for group, rulename, args in config.aggregations:
+        args = compile_args(args)
+        rule = config.aggregation_rules[rulename]
         # Compute new trees and add them to group
         entries = aggregation_forest.get(group, [])
         entries += compile_aggregation(rule, args)
         aggregation_forest[group] = entries
 
+def render_forest():
     for group, trees in aggregation_forest.items():
-        debug("GROUP %s" % group)
+        html.write("<h2>%s</h2>" % group)
         for tree in trees:
             instargs, node = tree
             ascii = render_tree(node)
@@ -175,11 +93,11 @@ def compile_aggregation(rule, args):
     for node in nodes:
         # Each node can return more than one incarnation (due to regexes in 
         # the arguments)
-        if type(node[1]) == str: # leaf node
+        if node[1] == None or type(node[1]) == str: # leaf node
             elements += aggregate_leaf_node(arginfo, node[0], node[1])
         else:
-            rule = aggregation_rules[node[0]]
-            instargs = [ instantiate(arg, arginfo)[0] for arg in node[1] ]
+            rule = config.aggregation_rules[node[0]]
+            instargs = compile_args([ instantiate(arg, arginfo)[0] for arg in node[1] ])
             elements += compile_aggregation(rule, instargs)
 
     # Now compile one or more rules from elements. We group
@@ -199,9 +117,29 @@ def compile_aggregation(rule, args):
         for node in nodes:
             needed_hosts.update(node[0])
         inst = dict(zip(single_names, key))
-        description = subst_vars(description, inst)
-        result.append((inst, (list(needed_hosts), description, funcname, nodes)))
+        inst_description = subst_vars(description, inst)
+        result.append((inst, (list(needed_hosts), inst_description, funcname, nodes)))
     return result
+
+
+# Reduce [ [ 'linux', 'test' ], ALL_HOSTS, ... ] to [ 'linux|test|@all', ... ]
+# Reduce [ [ 'xsrvab1', 'xsrvab2' ], ... ]       to [ 'xsrvab1|xsrvab2', ... ]
+# Reduce [ [ ALL_HOSTS, ... ] ]                  to [ '.*', ... ]
+def compile_args(args):
+    newargs = []
+    while len(args) > 0:
+        if args[0] == ALL_HOSTS:
+            newargs.append('.*')
+        elif type(args[0]) == list and len(args) >= 2 and args[1] == ALL_HOSTS:
+            newargs.append('|'.join(args[0] + ALL_HOSTS))
+            args = args[1:]
+        elif type(args[0]) == list:
+            newargs.append('|'.join(args[0]))
+        else:
+            newargs.append(args[0])
+        args = args[1:]
+    return newargs
+
 
 # Helper function that finds all occurrances of a variable
 # enclosed with $ and $. Returns a list of positions.
@@ -278,28 +216,52 @@ def do_match(reg, text):
     else:
         return list(mo.groups())
 
+def match_host_tags(host, tags):
+    required_tags = host.split('|')
+    for tag in required_tags:
+        if tag.startswith('!'):
+            negate = True
+            tag = tag[1:]
+        else:
+            negate = False
+        has_it = tag in tags
+        if has_it == negate:
+            return False
+    return True
 
 def aggregate_leaf_node(arginfo, host, service):
     # replace placeholders in host and service with arg
-    # service = 'NIC $NIC$ .*'
     host_re, host_vars = instantiate(host, arginfo)
-    # service = 'NIC $NIC$ .*'
-    service_re, service_vars = instantiate(service, arginfo)
-    # service_re = (['NIC'], 'NIC (.*) .*')  # Liste von argumenten
+    if service != None:
+        service_re, service_vars = instantiate(service, arginfo)
 
     found = []
 
-    for host, (tags, services) in g_services.items():
-        # Tags vom Host prüfen (hier noch nicht in Konfiguration enthalten)
-        host_instargs = do_match(host_re, host)
-        if host_instargs:
-            for service in services:
-                svc_instargs = do_match(service_re, service)
-                if svc_instargs != None:
-                    newarg = {} # dict([ (k,v) for (k,(e,v)) in arginfo.items()])
-                    newarg.update(dict(zip(host_vars, host_instargs)))
-                    newarg.update(dict(zip(service_vars, svc_instargs)))
-                    found.append((newarg, ([host], host, service)))
+    for hostname, (tags, services) in g_services.items():
+        # If host ends with '|@all', we need to check host tags instead
+        # of regexes.
+        if host_re.endswith('|@all'):
+            if not match_host_tags(host_re[:-5], tags):
+                continue
+            host_instargs = []
+        elif host_re.endswith('|@all)'):
+            if not match_host_tags(host_re[1:-6], tags):
+                continue
+            host_instargs = [ hostname ]
+        else:
+            host_instargs = do_match(host_re, hostname)
+
+        if host_instargs != None:
+            if service == None:
+                newarg = dict(zip(host_vars, host_instargs))
+                found.append((newarg, ([hostname], hostname, service)))
+            else:
+                for service in services:
+                    svc_instargs = do_match(service_re, service)
+                    if svc_instargs != None:
+                        newarg = dict(zip(host_vars, host_instargs))
+                        newarg.update(dict(zip(service_vars, svc_instargs)))
+                        found.append((newarg, ([hostname], hostname, service)))
 
     # Jetzt in eine Liste umwandeln
     # return in_liste(found)
@@ -322,17 +284,10 @@ def page_debug(h):
     global html
     html = h
     compile_forest()
+    
     html.header("BI Debug")
-    html.write("<pre>%s</pre>" % aggregation_forest)
+    render_forest()
     html.footer()
-
-
-# So schaut ein vorkompiliertes Aggregat aus:
-hirn = ( 
- "Names (Description)", 'worst', [
-   # HIER KOMMEN DIE NODES
- ]
-)
 
 
 

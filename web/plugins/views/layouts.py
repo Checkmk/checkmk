@@ -33,8 +33,7 @@
 #   |____/|_|_| |_|\__, |_|\___|
 #                  |___/
 # -------------------------------------------------------------------------
-def render_single_dataset(data, view, group_painters, painters, num_columns):
-    columns, rows = data
+def render_single_dataset(rows, view, group_painters, painters, num_columns):
     for row in rows:
         register_events(row) # needed for playing sounds
 
@@ -69,8 +68,7 @@ multisite_layouts["dataset"] = {
 #   |____/ \___/_/\_\___|\__,_|
 #
 # -------------------------------------------------------------------------
-def render_grouped_boxes(data, view, group_painters, painters, num_columns):
-    columns, rows = data
+def render_grouped_boxes(rows, view, group_painters, painters, num_columns):
     # N columns. Each should contain approx the same number of entries
     groups = []
     last_group = None
@@ -109,7 +107,7 @@ def render_grouped_boxes(data, view, group_painters, painters, num_columns):
             return True
         return False
 
-    # Shift from left to right as long as usefull
+    # Shift from left to right as long as useful
     did_something = True
     while did_something:
         did_something = False
@@ -190,8 +188,7 @@ multisite_layouts["boxed"] = {
 #     |_| |_|_|\___|\__,_|
 #
 # -------------------------------------------------------------------------
-def render_tiled(data, view, group_painters, painters, _ignore_num_columns):
-    columns, rows = data
+def render_tiled(rows, view, group_painters, painters, _ignore_num_columns):
     html.write("<table class=\"services tiled\">\n")
 
     last_group = None
@@ -275,8 +272,7 @@ multisite_layouts["tiled"] = {
 #     |_|\__,_|_.__/|_|\___|
 #
 # ------------------------------------------------------------------------
-def render_grouped_list(data, view, group_painters, painters, num_columns):
-    columns, rows = data
+def render_grouped_list(rows, view, group_painters, painters, num_columns):
     html.write("<table class=services>\n")
     last_group = None
     trclass = None

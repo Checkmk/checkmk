@@ -331,7 +331,7 @@ def execute_tree(tree):
 
 def execute_node(node, status_info):
     if len(node) == 3:
-        return execute_leaf_node(node, status_info) + (None, None,)
+        return execute_leaf_node(node, status_info) + ([node[0]], None, None,)
     else:
         return execute_inter_node(node, status_info)
 
@@ -366,7 +366,7 @@ def execute_inter_node(node, status_info):
     node_states = []
     for n in nodes:
         node_states.append(execute_node(n, status_info))
-    return func(node_states) + (title, funcname, node_states, )
+    return func(node_states) + (required_hosts, title, funcname, node_states, )
 
 #       _                      _____                 _   _                 
 #      / \   __ _  __ _ _ __  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___ 
@@ -420,6 +420,92 @@ def page_all(h):
             debug(state)
     html.footer()
 
+#    ____        _                                          
+#   |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___ 
+#   | | | |/ _` | __/ _` / __|/ _ \| | | | '__/ __/ _ \/ __|
+#   | |_| | (_| | || (_| \__ \ (_) | |_| | | | (_|  __/\__ \
+#   |____/ \__,_|\__\__,_|___/\___/ \__,_|_|  \___\___||___/
+#                                                           
+
+def create_aggregation_row(tree):
+    state = execute_tree(tree)
+    return {
+        "aggr_tree"      : tree,
+        "aggr_treestate" : state,
+        "aggr_state"     : state[0],
+        "aggr_output"    : state[1],
+        "aggr_hosts"     : state[2],
+        "aggr_name"      : state[3],
+        "aggr_function"  : state[4],
+    }
+
+def table(h, columns, add_headers, only_sites, limit):
+    global html
+    html = h
+    compile_forest()
+    # Hier müsste man jetzt die Filter kennen, damit man nicht sinnlos
+    # alle Aggregationen berechnet.
+    rows = []
+    for group, trees in aggregation_forest.items():
+        for inst_args, tree in trees:
+            row = create_aggregation_row(tree)
+            row["aggr_group"] = group
+            rows.append(row)
+    return rows
+        
+
+def host_table(h, columns, add_headers, only_sites, limit):
+    return []  
+    global html
+    html = h
+    compile_forest()
+    # Hier müsste man jetzt die Filter kennen, damit man nicht sinnlos
+    # alle Aggregationen berechnet.
+
+    # First compute list of hosts that have aggregations
+    required_hosts = set([])
+    host_aggregations = {}
+    for group, trees in aggregation_forest.items():
+        for inst_args, tree in trees:
+            req_hosts = state[2]
+            if len(req_hosts) != 1:
+                continue
+            host = req_hosts[0]
+            required_hosts.add(host)
+            aggrs = host_aggregations.get(host, [])
+            aggrs.append((group, tree))
+            host_aggregations[host] = aggrs
+
+    # Retrieve information about these hosts
+    host_columns = filter(lambda c: c.startswith("host_"), columns)
+    if "host_name" not in host_columns:
+        host_columns.append("host_name")
+
+    query = "GET hosts\n"
+    query += "Columns: %s\n" % " ".join(host_columns)
+    query += add_headers
+    html.live.set_prepend_site(True)
+    if limit != None:
+        html.live.set_limit(limit + 1) # + 1: We need to know, if limit is exceeded
+    if only_sites:
+        html.live.set_only_sites(only_sites)
+
+    host_data = html.live.query(query)
+    html.live.set_only_sites(None)
+    html.live.set_prepend_site(False)
+    html.live.set_limit() # removes limit
+
+    rows = []
+    for r in host_data:
+        row = dict(zip(host_columns, r))
+        host = row["host_name"]
+        for group, tree in host_aggregations.get(host, []):
+            row = row.copy()
+            row.update(create_aggregation_row(tree))
+            row["aggr_group"] = group
+            rows.append(row)
+    return rows
+
 #     _____                 ____             
 #    |  ___|__   ___       | __ )  __ _ _ __ 
 #    | |_ / _ \ / _ \ _____|  _ \ / _` | '__|
@@ -432,40 +518,6 @@ def debug(x):
     p = pprint.pformat(x)
     html.write("<pre>%s</pre>\n" % p)
 
-
-def host_table(h, columns, add_headers, only_sites, limit):
-    global html
-    html = h
-    host_columns = filter(lambda c: c.startswith("host_"), columns)
-    for c in [ "host_name", "host_custom_variable_names", "host_custom_variable_values", "host_services_with_info" ]:
-        if c not in host_columns:
-            host_columns.append(c)
-
-    # First get information about hosts
-    query = "GET hosts\n"
-    query += "Columns: %s\n" % " ".join(host_columns)
-    query += add_headers
-    html.live.set_prepend_site(True)
-    if limit != None:
-        html.live.set_limit(limit + 1) # + 1: We need to know, if limit is exceeded
-    if only_sites:
-        html.live.set_only_sites(only_sites)
-
-    host_data = html.live.query(query)
-
-    html.live.set_only_sites(None)
-    html.live.set_prepend_site(False)
-    html.live.set_limit() # removes limit
-
-    host_columns = ["site"] + host_columns
-
-    rows = []
-    for r in host_data:
-        row = dict(zip(host_columns, r))
-        rows += compute_host_aggregations(row)
-
-# debug(rows)
-    return columns, rows
 
 def compute_host_aggregations(row):
     customvars = dict(zip(row["host_custom_variable_names"], row["host_custom_variable_values"]))

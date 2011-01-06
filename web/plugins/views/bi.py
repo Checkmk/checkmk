@@ -2,6 +2,13 @@ import bi
 
 multisite_datasources["bi_aggregations"] = {
     "title"       : "BI Aggregations",
+    "table"       : bi.table, 
+    "infos"       : [ "aggr" ],
+    "keys"        : [],
+}
+
+multisite_datasources["bi_host_aggregations"] = {
+    "title"       : "BI Host Aggregations",
     "table"       : bi.host_table, 
     "infos"       : [ "host", "aggr" ],
     "keys"        : [],
@@ -23,9 +30,16 @@ multisite_painters["aggr_state"] = {
     "paint"   : paint_aggr_state_short
 }
 
+multisite_painters["aggr_group"] = {
+    "title"   : "Aggregation group",
+    "short"   : "Group",
+    "columns" : [ "aggr_group" ],
+    "paint"   : lambda row: ("", row["aggr_group"])
+}
+
 multisite_painters["aggr_name"] = {
     "title"   : "Aggregation name",
-    "short"   : "Aggregate",
+    "short"   : "Aggregation",
     "columns" : [ "aggr_name" ],
     "paint"   : lambda row: ("", row["aggr_name"])
 }
@@ -35,6 +49,19 @@ multisite_painters["aggr_output"] = {
     "short"   : "Output",
     "columns" : [ "aggr_output" ],
     "paint"   : lambda row: ("", row["aggr_output"])
+}
+
+def paint_aggr_hosts(row):
+    h = []
+    for host in row["aggr_hosts"]:
+        h.append('<a href="view.py?view_name=host&host=%s">%s</a>' % (host, host))
+    return "", " ".join(h)
+
+multisite_painters["aggr_hosts"] = {
+    "title"   : "Aggregation: affected hosts",
+    "short"   : "Hosts",
+    "columns" : [ "aggr_hosts" ],
+    "paint"   : paint_aggr_hosts,
 }
 
 def paint_aggregated_services(row):
@@ -47,10 +74,10 @@ def paint_aggregated_services(row):
     h += '</table>'
     return "aggr svcdetail", h 
 
-multisite_painters["aggr_services"] = {
-    "title"   : "Aggregated services in detail",
-    "short"   : "Services",
-    "columns" : [ "aggr_atoms" ],
-    "paint"   : paint_aggregated_services,
-}
-
+# multisite_painters["aggr_services"] = {
+#     "title"   : "Aggregated services in detail",
+#     "short"   : "Services",
+#     "columns" : [ "aggr_atoms" ],
+#     "paint"   : paint_aggregated_services,
+# }
+# 

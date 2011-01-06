@@ -1053,13 +1053,13 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         # tablename may be a function instead of a livestatus tablename
         # In that case that function is used to compute the result.
         if type(tablename) == type(lambda x:None):
-            columns, rows = tablename(html, columns, query, only_sites, get_limit())
+            rows = tablename(html, columns, query, only_sites, get_limit())
         else:
-            columns, rows = query_data(datasource, columns, add_columns, query, only_sites, get_limit())
+            rows = query_data(datasource, columns, add_columns, query, only_sites, get_limit())
 
         sort_data(rows, sorters)
     else:
-        columns, rows = [], []
+        rows = []
 
     # html.write("<pre>%s</pre>" % pprint.pformat((columns, rows)))
 
@@ -1184,7 +1184,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
                 text += '<a href="%s">Repeat query without limit.</a>' % html.makeuri([("limit", "none")])
             html.show_warning(text)
             del rows[-1]
-        layout["render"]((columns, rows), view, group_painters, painters, num_columns)
+        layout["render"](rows, view, group_painters, painters, num_columns)
 
         # Play alarm sounds, if critical events have been displayed
         if 'S' in display_options and view.get("play_sounds"):
@@ -1394,9 +1394,9 @@ def query_data(datasource, columns, add_columns, add_headers, only_sites = [], l
     # convert lists-rows into dictionaries.
     # performance, but makes live much easier later.
     columns = ["site"] + columns + add_columns
-    assoc = [ dict(zip(columns, row)) for row in data ]
+    rows = [ dict(zip(columns, row)) for row in data ]
 
-    return (columns, assoc)
+    return rows
 
 
 # Merge all data rows with different sites but the same value

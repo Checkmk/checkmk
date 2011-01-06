@@ -1,0 +1,8 @@
+Die Sites müssen mitgespeichert werden bei den Hosts. Von mir aus
+können wir es so machen, dass man auf Sites nicht filtern kann. Aber
+an allen Stellen, wo die betroffenen Hosts stehen im kompilierten
+Baum muss die Site dabei stehen. Das gilt auch für required_hosts.
+Die Anfrage, die die Daten holt, muss dann pro Site eine separate
+Anfrage machen - mit angepassten Filtern. Auch bei den paintern
+aggr_hosts muss in den Link dann die Site eingebaut werden. Und
+aggr_sites wäre auch gut: affected sites.

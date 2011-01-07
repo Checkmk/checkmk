@@ -1793,6 +1793,13 @@ div.aggr div.state {
     margin-right: 4px;
     width: 30px;
     text-align: center;
+    -moz-border-radius: 2px;
+}
+
+.state.assumed {
+    background-image: url("images/assumption_background.png");
+    background-repeat: repeat;
+    /* background-position: center middle; */
 }
 
 div.aggr div.leaf {

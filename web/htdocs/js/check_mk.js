@@ -472,3 +472,21 @@ function handleReload(url) {
     else
         window.location.href = url;
 }
+
+// --------------------------------------------------------------------------
+// BI
+// --------------------------------------------------------------------------
+function toggle_subtree(oName) 
+{
+    var oParent = oName.parentNode;
+    var oSubtree = oParent.childNodes[2];
+
+    if (oSubtree.style.display == "none") {
+        oSubtree.style.display = "";
+    }
+    else {
+        oSubtree.style.display = "none";
+    }
+    oSubtree = null;
+}
+

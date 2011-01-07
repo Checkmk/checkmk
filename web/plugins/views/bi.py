@@ -89,7 +89,15 @@ multisite_painter_options["aggr_expand"] = {
  "values"  : [ ("0", "collapsed"), ("1", "first level"), ("2", "two levels"), ("3", "three levels"), ("999", "complete")]
 }
 
+multisite_painter_options["aggr_onlyproblems"] = {
+ "title"   : "Show only problems",
+ "default" : "0",
+ "values"  : [ ("0", "show all"), ("1", "show only problems")]
+}
+
 def paint_aggregated_tree_state(row):
+    only_problems = get_painter_option("aggr_onlyproblems") == "1"
+
     def render_subtree(tree, level=1):
         nodes = tree[5]
         is_leaf = nodes == None
@@ -122,6 +130,8 @@ def paint_aggregated_tree_state(row):
                 style = ''
             h += '<div %sclass="subtree">' % style
             for node in tree[5]:
+                if only_problems and node[0] == 0:
+                    continue
                 h += render_subtree(node, level + 1)
             h += "</div>"
         return h + "</div>"
@@ -133,7 +143,7 @@ multisite_painters["aggr_treestate"] = {
     "title"   : "Aggregation: complete tree",
     "short"   : "Tree",
     "columns" : [ "aggr_treestate" ],
-    "options" : [ "aggr_expand" ],
+    "options" : [ "aggr_expand", "aggr_onlyproblems" ],
     "paint"   : paint_aggregated_tree_state,
 }
 

@@ -94,6 +94,13 @@ multisite_painter_options["aggr_onlyproblems"] = {
  "values"  : [ ("0", "show all"), ("1", "show only problems")]
 }
 
+multisite_painter_options["aggr_treetype"] = {
+ "title"   : "Type of tree layout",
+ "default" : "foldable",
+ "values"  : [ ("foldable", "foldable"), ("bottom-up", "bottom up"), ("top-down", "top down")]
+}
+
+
 def render_bi_state(state):
     return { bi.OK:      "OK", 
              bi.WARN:    "WA",
@@ -114,56 +121,60 @@ def render_assume_icon(site, host, service):
     current = str(ass).lower()
     return '<img state="%s" class=assumption %s src="images/assume_%s.png">' % (current, mousecode, current)
 
-def paint_aggregated_tree_state(row):
+def aggr_render_leaf(tree):
+    site = 'local'
+    host = tree[4][0]
+    service = tree[2]
+    content = render_assume_icon(site, host, service) 
+    # site fehlt!
+    if service:
+        url = html.makeuri([("view_name", "service"), ("host", host), ("service", service)])
+    else:
+        url = html.makeuri([("view_name", "hoststatus"), ("host", host)])
+        service = "Host status"
+    content += '<a href="%s">%s</a>' % (url, service)
+    return '<div class="aggr leaf">' + aggr_render_node(tree, content, "") + '</div>'
+
+def aggr_render_node(tree, title, mousecode):
+    state = tree[0]
+    assumed_state = tree[1]
+    if assumed_state != None:
+        effective_state = assumed_state 
+    else:
+        effective_state = state
+
+    if (effective_state != state):
+        addclass = " assumed"
+    else:
+        addclass = ""
+    h = '<div style="float: left" class="content state state%d%s">%s</div>' \
+         % (effective_state, addclass, render_bi_state(effective_state))
+    h += '<div style="float: left;" %s class="content name">%s</div>' % (mousecode, title)
+    output = tree[3]
+    if output:
+        output = "&nbsp;&diams; " + output
+    else:
+        output = "&nbsp;"
+    h += '<div class="content output">%s</div>' % output
+    return h
+
+
+def paint_aggr_tree_foldable(row):
     only_problems = get_painter_option("aggr_onlyproblems") == "1"
 
     def render_subtree(tree, level=1):
         nodes = tree[6]
         is_leaf = nodes == None
         if is_leaf:
-            h = '<div class="aggr leaf">'
-            site = 'local'
-            host = tree[4][0]
-            service = tree[2]
-            content = render_assume_icon(site, host, service) 
-            # site fehlt!
-            if service:
-                url = html.makeuri([("view_name", "service"), ("host", host), ("service", service)])
-            else:
-                url = html.makeuri([("view_name", "hoststatus"), ("host", host)])
-                service = "Host status"
-            content += '<a href="%s">%s</a>' % (url, service)
-            mousecode = ""
+            return aggr_render_leaf(tree)
         else:
             mousecode = \
                'onmouseover="this.style.cursor=\'pointer\';" ' \
                'onmouseout="this.style.cursor=\'auto\';" ' \
                'onclick="toggle_subtree(this);" '
             h = '<div class="aggr tree">'
-            content = tree[2]
+            h += aggr_render_node(tree, tree[2], mousecode)
 
-        state = tree[0]
-        assumed_state = tree[1]
-        if assumed_state != None:
-            effective_state = assumed_state 
-        else:
-            effective_state = state
-
-        if (effective_state != state):
-            addclass = " assumed"
-        else:
-            addclass = ""
-        h += '<div style="float: left" class="content state state%d%s">%s</div>' \
-             % (effective_state, addclass, render_bi_state(effective_state))
-        h += '<div style="float: left;" %s class="content name">%s</div>' % (mousecode, content)
-        output = tree[3]
-        if output:
-            output = "&nbsp;&diams; " + output
-        else:
-            output = "&nbsp;"
-        h += '<div class="content output">%s</div>' % output
-
-        if nodes != None:
             expansion_level = int(get_painter_option("aggr_expand"))
             if level > expansion_level:
                 style = 'style="display: none" '
@@ -174,17 +185,71 @@ def paint_aggregated_tree_state(row):
                 if only_problems and node[0] == 0:
                     continue
                 h += render_subtree(node, level + 1)
-            h += "</div>"
-        return h + "</div>"
+            return h + '</div></div>'
 
     tree = row["aggr_treestate"]
     return "", render_subtree(tree)
+
+
+def paint_aggr_tree_ltr(row, mirror):
+    # We need to know the depth of the tree
+
+    def gen_table(tree, height):
+        nodes = tree[6]
+        is_leaf = nodes == None
+        if is_leaf:
+            return gen_leaf(tree, height)
+        else:
+            return gen_node(tree, height)
+
+    def gen_leaf(tree, height):
+        return [(aggr_render_leaf(tree), height, [])]
+
+    def gen_node(tree, height):
+        leaves = []
+        for node in tree[6]:
+            leaves += gen_table(node, height - 1)
+        h = '<div class="aggr tree">' + aggr_render_node(tree, tree[2], '') + "</div>"
+        leaves[0][2].append((len(leaves), h))
+        return leaves
+
+    tree = row["aggr_treestate"]
+    depth = bi.status_tree_depth(tree)
+    leaves = gen_table(tree, depth)
+    h = '<table class="aggrtree">'
+    odd = "odd"
+    for code, colspan, parents in leaves:
+        h += '<tr>\n'
+        leaf_td = '<td class="leaf %s"' % odd
+        odd = odd == "odd" and "even" or "odd"
+        if colspan > 1:
+            leaf_td += ' colspan=%d' % colspan
+        leaf_td += '>%s</td>\n' % code
+
+        tds = [leaf_td]
+        for rowspan, c in parents:
+            tds.append('<td class=node rowspan=%d>%s</td>\n' % (rowspan, c))
+        if mirror:
+            tds.reverse()
+        h += "".join(tds)
+        h += '</tr>\n'
+
+    h += '</table>'
+    return "", h
+
+def paint_aggregated_tree_state(row):
+    treetype = get_painter_option("aggr_treetype")
+    if treetype == "foldable":
+        return paint_aggr_tree_foldable(row)
+    elif treetype == "bottom-up":
+        return paint_aggr_tree_ltr(row, False)
+    else:
+        return paint_aggr_tree_ltr(row, True)
 
 multisite_painters["aggr_treestate"] = {
     "title"   : "Aggregation: complete tree",
     "short"   : "Tree",
     "columns" : [ "aggr_treestate" ],
-    "options" : [ "aggr_expand", "aggr_onlyproblems" ],
+    "options" : [ "aggr_expand", "aggr_onlyproblems", "aggr_treetype" ],
     "paint"   : paint_aggregated_tree_state,
 }
-

@@ -1822,3 +1822,17 @@ div.aggr img.assumption {
     border-style: none;
 }
 
+table.aggrtree {
+    border-collapse: collapse;
+    width: 100%;
+}
+table.aggrtree td.leaf.odd {
+    background-color: #e0e0e0;
+}
+
+table.aggrtree td.leaf.even {
+    background-color: #f0f0f0;
+}
+table.aggrtree td.node {
+    background-color: #e8e8e8;
+}

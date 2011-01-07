@@ -387,7 +387,8 @@ def execute_inter_node(node, status_info):
         assumed_state, output = func(assumed_node_states)
     else:
         assumed_state = None
-    return (state, assumed_state, title, output, required_hosts, funcname, node_states )
+    return (state, assumed_state, title, output, 
+            required_hosts, funcname, node_states )
 
 #       _                      _____                 _   _                 
 #      / \   __ _  __ _ _ __  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___ 
@@ -577,6 +578,15 @@ def load_assumptions():
 def save_assumptions():
     config.save_user_file("bi_assumptions", g_assumptions)
 
+def status_tree_depth(tree):
+    nodes = tree[6]
+    if nodes == None:
+        return 1
+    else:
+        maxdepth = 0
+        for node in nodes:
+            maxdepth = max(maxdepth, status_tree_depth(node))
+        return maxdepth + 1
 
 #     _____                 ____             
 #    |  ___|__   ___       | __ )  __ _ _ __ 

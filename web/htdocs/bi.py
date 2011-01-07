@@ -330,8 +330,11 @@ def execute_tree(tree):
     return execute_node(tree, status_info)
 
 def execute_node(node, status_info):
+    # Each returned node consists of
+    # (state, name, output, required_hosts, funcname, subtrees)
+    # For leaf-nodes, subtrees is None
     if len(node) == 3:
-        return execute_leaf_node(node, status_info) + ([node[0]], None, None,)
+        return execute_leaf_node(node, status_info) + (node[0], None, None,)
     else:
         return execute_inter_node(node, status_info)
 
@@ -340,12 +343,12 @@ def execute_leaf_node(node, status_info):
     required_hosts, host, service = node
     status = status_info.get(host)
     if status == None:
-        return (MISSING, "Host", "Host %s not found" % host) 
+        return (MISSING, None, "Host %s not found" % host) 
     host_state, host_output, service_state = status
 
     if service == None:
         aggr_state = {0:OK, 1:CRIT, 2:UNKNOWN}[host_state]
-        return (aggr_state, "Host", host_output)
+        return (aggr_state, None, host_output)
 
     else:
         for entry in service_state:
@@ -366,7 +369,8 @@ def execute_inter_node(node, status_info):
     node_states = []
     for n in nodes:
         node_states.append(execute_node(n, status_info))
-    return func(node_states) + (required_hosts, title, funcname, node_states, )
+    state, output = func(node_states)
+    return (state, title, output, required_hosts, funcname, node_states )
 
 #       _                      _____                 _   _                 
 #      / \   __ _  __ _ _ __  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___ 
@@ -434,8 +438,8 @@ def create_aggregation_row(tree):
         "aggr_treestate" : state,
         "aggr_state"     : state[0],
         "aggr_output"    : state[1],
-        "aggr_hosts"     : state[2],
-        "aggr_name"      : state[3],
+        "aggr_name"      : state[2],
+        "aggr_hosts"     : state[3],
         "aggr_function"  : state[4],
     }
 

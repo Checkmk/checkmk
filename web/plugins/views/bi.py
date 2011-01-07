@@ -95,6 +95,15 @@ multisite_painter_options["aggr_onlyproblems"] = {
  "values"  : [ ("0", "show all"), ("1", "show only problems")]
 }
 
+def render_bi_state(state):
+    return { bi.OK:      "OK", 
+             bi.WARN:    "WA",
+             bi.CRIT:    "CR", 
+             bi.UNKNOWN: "UN",
+             bi.MISSING: "MI",
+             bi.UNAVAIL: "NA",
+    }[state]
+
 def paint_aggregated_tree_state(row):
     only_problems = get_painter_option("aggr_onlyproblems") == "1"
 
@@ -120,8 +129,16 @@ def paint_aggregated_tree_state(row):
                'onclick="toggle_subtree(this);" '
             h = '<div class="aggr tree">'
             content = tree[1]
-        h += '<div class="content state state%d">%s</div>' % (tree[0], tree[0])
-        h += '<div %s class="content name">%s</div>' % (mousecode, content)
+        h += '<div style="float: left" class="content state state%d">%s</div>' \
+             % (tree[0], render_bi_state(tree[0]))
+        h += '<div style="float: left;" %s class="content name">%s</div>' % (mousecode, content)
+        output = tree[2]
+        if output:
+            output = "&nbsp;&diams; " + output
+        else:
+            output = "&nbsp;"
+        h += '<div class="content output">%s</div>' % output
+
         if nodes != None:
             expansion_level = int(get_painter_option("aggr_expand"))
             if level > expansion_level:

@@ -455,7 +455,6 @@ def table(h, columns, add_headers, only_sites, limit):
         
 
 def host_table(h, columns, add_headers, only_sites, limit):
-    return []  
     global html
     html = h
     compile_forest()
@@ -467,7 +466,7 @@ def host_table(h, columns, add_headers, only_sites, limit):
     host_aggregations = {}
     for group, trees in aggregation_forest.items():
         for inst_args, tree in trees:
-            req_hosts = state[2]
+            req_hosts = tree[0]
             if len(req_hosts) != 1:
                 continue
             host = req_hosts[0]
@@ -483,6 +482,15 @@ def host_table(h, columns, add_headers, only_sites, limit):
 
     query = "GET hosts\n"
     query += "Columns: %s\n" % " ".join(host_columns)
+
+    # Fetch only hosts required for this query. This seems not
+    # yet optimal. In some cases all or almost all hosts are
+    # queried...
+    for host in required_hosts:
+        query += "Filter: name = %s\n" % host
+    if len(required_hosts) > 1:
+        query += "Or: %d\n" % len(required_hosts)
+
     query += add_headers
     html.live.set_prepend_site(True)
     if limit != None:
@@ -497,7 +505,7 @@ def host_table(h, columns, add_headers, only_sites, limit):
 
     rows = []
     for r in host_data:
-        row = dict(zip(host_columns, r))
+        row = dict(zip(["site"] + host_columns, r))
         host = row["host_name"]
         for group, tree in host_aggregations.get(host, []):
             row = row.copy()

@@ -14,21 +14,37 @@ multisite_datasources["bi_host_aggregations"] = {
     "keys"        : [],
 }
 
-def paint_aggr_state_short(row):
-    if True: # row["service_has_been_checked"] == 1:
-        state = row["aggr_state"]
-        name = nagios_short_state_names[state]
+def paint_aggr_state_short(state, assumed = False):
+    if state == None:
+        return "", ""
     else:
-        state = "p"
-        name = "PEND"
-    return "state svcstate state%s" % state, name
+        name = nagios_short_state_names[state]
+        classes = "state svcstate state%s" % state
+        if assumed:
+            classes += " assumed"
+        return classes, name
 
 multisite_painters["aggr_state"] = {
     "title"   : "Aggregated state",
     "short"   : "State",
-    "columns" : [ "aggr_state" ],
-    "paint"   : paint_aggr_state_short
+    "columns" : [ "aggr_effective_state" ],
+    "paint"   : lambda row: paint_aggr_state_short(row["aggr_effective_state"], row["aggr_effective_state"] != row["aggr_state"])
 }
+
+multisite_painters["aggr_real_state"] = {
+    "title"   : "Aggregated real state (never assumed)",
+    "short"   : "R.State",
+    "columns" : [ "aggr_state" ],
+    "paint"   : lambda row: paint_aggr_state_short(row["aggr_state"])
+}
+
+multisite_painters["aggr_assumed_state"] = {
+    "title"   : "Aggregated assumed state",
+    "short"   : "Assumed",
+    "columns" : [ "aggr_assumed_state" ],
+    "paint"   : lambda row: paint_aggr_state_short(row["aggr_assumed_state"])
+}
+
 
 multisite_painters["aggr_group"] = {
     "title"   : "Aggregation group",
@@ -65,23 +81,6 @@ multisite_painters["aggr_hosts"] = {
     "paint"   : paint_aggr_hosts,
 }
 
-# def paint_aggregated_services(row):
-#     h = "<table>"
-#     for de, st, pd, out in row["aggr_atoms"]:
-#         svclink = '<a href="view.py?view_name=service&site=%s&host=%s&service=%s">%s</a>' % \
-#                   (row['site'], row['host_name'], htmllib.urlencode(de), de)
-#         h += '<tr><td class="state svcstate state%s">%s</td><td>%s</td><td>%s</td></tr>' %  \
-#              (st, nagios_short_state_names[st], svclink, out)
-#     h += '</table>'
-#     return "aggr svcdetail", h 
-
-# multisite_painters["aggr_services"] = {
-#     "title"   : "Aggregated services in detail",
-#     "short"   : "Services",
-#     "columns" : [ "aggr_atoms" ],
-#     "paint"   : paint_aggregated_services,
-# }
-# 
 
 multisite_painter_options["aggr_expand"] = {
  "title"   : "Initial expansion of aggregations",
@@ -119,13 +118,13 @@ def paint_aggregated_tree_state(row):
     only_problems = get_painter_option("aggr_onlyproblems") == "1"
 
     def render_subtree(tree, level=1):
-        nodes = tree[5]
+        nodes = tree[6]
         is_leaf = nodes == None
         if is_leaf:
             h = '<div class="aggr leaf">'
             site = 'local'
-            host = tree[3][0]
-            service = tree[1]
+            host = tree[4][0]
+            service = tree[2]
             content = render_assume_icon(site, host, service) 
             # site fehlt!
             if service:
@@ -141,11 +140,23 @@ def paint_aggregated_tree_state(row):
                'onmouseout="this.style.cursor=\'auto\';" ' \
                'onclick="toggle_subtree(this);" '
             h = '<div class="aggr tree">'
-            content = tree[1]
-        h += '<div style="float: left" class="content state state%d">%s</div>' \
-             % (tree[0], render_bi_state(tree[0]))
+            content = tree[2]
+
+        state = tree[0]
+        assumed_state = tree[1]
+        if assumed_state != None:
+            effective_state = assumed_state 
+        else:
+            effective_state = state
+
+        if (effective_state != state):
+            addclass = " assumed"
+        else:
+            addclass = ""
+        h += '<div style="float: left" class="content state state%d%s">%s</div>' \
+             % (effective_state, addclass, render_bi_state(effective_state))
         h += '<div style="float: left;" %s class="content name">%s</div>' % (mousecode, content)
-        output = tree[2]
+        output = tree[3]
         if output:
             output = "&nbsp;&diams; " + output
         else:
@@ -159,7 +170,7 @@ def paint_aggregated_tree_state(row):
             else:
                 style = ''
             h += '<div %sclass="subtree">' % style
-            for node in tree[5]:
+            for node in tree[6]:
                 if only_problems and node[0] == 0:
                     continue
                 h += render_subtree(node, level + 1)

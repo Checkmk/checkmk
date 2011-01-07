@@ -331,7 +331,7 @@ def execute_tree(tree):
 
 def execute_node(node, status_info):
     # Each returned node consists of
-    # (state, name, output, required_hosts, funcname, subtrees)
+    # (state, assumed_state, name, output, required_hosts, funcname, subtrees)
     # For leaf-nodes, subtrees is None
     if len(node) == 3:
         return execute_leaf_node(node, status_info) + (node[0], None, None,)
@@ -341,24 +341,27 @@ def execute_node(node, status_info):
 
 def execute_leaf_node(node, status_info):
     required_hosts, host, service = node
+# TODO: site
+    site = 'local' ### HIRN HACK TODO
     status = status_info.get(host)
     if status == None:
-        return (MISSING, None, "Host %s not found" % host) 
+        return (MISSING, None, None, "Host %s not found" % host) 
     host_state, host_output, service_state = status
+    assumed_state = g_assumptions.get((site, host, service))
 
     if service == None:
         aggr_state = {0:OK, 1:CRIT, 2:UNKNOWN}[host_state]
-        return (aggr_state, None, host_output)
+        return (aggr_state, assumed_state, None, host_output)
 
     else:
         for entry in service_state:
             if entry[0] == service:
                 state, has_been_checked, plugin_output = entry[1:]
                 if has_been_checked == 0:
-                    return (PENDING, service, "This service has not been checked yet")
+                    return (PENDING, assumed_state, service, "This service has not been checked yet")
                 else:
-                    return (state, service, plugin_output)
-        return (service, MISSING, "This host has no such service")
+                    return (state, assumed_state, service, plugin_output)
+        return (MISSING, assumed_state, service, "This host has no such service")
 
 def execute_inter_node(node, status_info):
     required_hosts, title, funcname, nodes = node
@@ -367,10 +370,24 @@ def execute_inter_node(node, status_info):
         raise MKConfigError("Undefined aggregation function '%s'. Available are: %s" % 
                 (funcname, ", ".join(config.aggregation_functions.keys())))
     node_states = []
+    assumed_node_states = []
+    one_assumption = False
     for n in nodes:
-        node_states.append(execute_node(n, status_info))
+        node_state = execute_node(n, status_info)
+        node_states.append(node_state)
+        assumed_state = node_state[1]
+        if assumed_state != None:
+            assumed_node_states.append((node_state[1],) + node_state[1:])
+            one_assumption = True
+        else:
+            assumed_node_states.append(node_state)
+
     state, output = func(node_states)
-    return (state, title, output, required_hosts, funcname, node_states )
+    if one_assumption:
+        assumed_state, output = func(assumed_node_states)
+    else:
+        assumed_state = None
+    return (state, assumed_state, title, output, required_hosts, funcname, node_states )
 
 #       _                      _____                 _   _                 
 #      / \   __ _  __ _ _ __  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___ 
@@ -439,7 +456,7 @@ def ajax_set_assumption(h):
     if state == 'none':
         del g_assumptions[(site, host, service)]
     else:
-        g_assumptions[(site, host, service)] = state
+        g_assumptions[(site, host, service)] = int(state)
     save_assumptions()
 
 #    ____        _                                          
@@ -451,14 +468,21 @@ def ajax_set_assumption(h):
 
 def create_aggregation_row(tree):
     state = execute_tree(tree)
+    eff_state = state[0]
+    if state[1] != None:
+        eff_state = state[1]
+    else:
+        eff_state = state[0]
     return {
-        "aggr_tree"      : tree,
-        "aggr_treestate" : state,
-        "aggr_state"     : state[0],
-        "aggr_output"    : state[1],
-        "aggr_name"      : state[2],
-        "aggr_hosts"     : state[3],
-        "aggr_function"  : state[4],
+        "aggr_tree"            : tree,
+        "aggr_treestate"       : state,
+        "aggr_state"           : state[0],
+        "aggr_assumed_state"   : state[1],
+        "aggr_effective_state" : eff_state,
+        "aggr_output"          : state[2],
+        "aggr_name"            : state[3],
+        "aggr_hosts"           : state[4],
+        "aggr_function"        : state[5],
     }
 
 def table(h, columns, add_headers, only_sites, limit):

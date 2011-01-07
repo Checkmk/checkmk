@@ -69,8 +69,8 @@ multisite_painters["aggr_output"] = {
 
 def paint_aggr_hosts(row):
     h = []
-    for host in row["aggr_hosts"]:
-        url = html.makeuri([("view_name", "host"), ("host", host)])
+    for site, host in row["aggr_hosts"]:
+        url = html.makeuri([("view_name", "host"), ("site", site), ("host", host)])
         h.append('<a href="%s">%s</a>' % (url, host))
     return "", " ".join(h)
 
@@ -122,15 +122,14 @@ def render_assume_icon(site, host, service):
     return '<img state="%s" class=assumption %s src="images/assume_%s.png">' % (current, mousecode, current)
 
 def aggr_render_leaf(tree):
-    site = 'local'
-    host = tree[4][0]
+    site, host = tree[4][0]
     service = tree[2]
     content = render_assume_icon(site, host, service) 
     # site fehlt!
     if service:
-        url = html.makeuri([("view_name", "service"), ("host", host), ("service", service)])
+        url = html.makeuri([("view_name", "service"), ("site", site), ("host", host), ("service", service)])
     else:
-        url = html.makeuri([("view_name", "hoststatus"), ("host", host)])
+        url = html.makeuri([("view_name", "hoststatus"), ("site", site), ("host", host)])
         service = "Host status"
     content += '<a href="%s">%s</a>' % (url, service)
     return '<div class="aggr leaf">' + aggr_render_node(tree, content, "") + '</div>'

@@ -1,19 +1,12 @@
-Die Sites müssen mitgespeichert werden bei den Hosts. Von mir aus
-können wir es so machen, dass man auf Sites nicht filtern kann. Aber
-an allen Stellen, wo die betroffenen Hosts stehen im kompilierten
-Baum muss die Site dabei stehen. Das gilt auch für required_hosts.
-Die Anfrage, die die Daten holt, muss dann pro Site eine separate
-Anfrage machen - mit angepassten Filtern. Auch bei den paintern
-aggr_hosts muss in den Link dann die Site eingebaut werden. Und
-aggr_sites wäre auch gut: affected sites.
+Filter:
+ * Gruppe der Aggregation
+ * Affected host contains
+ * effective/real/assumed state
+ * title
+ * output
 
 Pending muss korrekt behandelt werden. Am einfachsten wäre ein
 eigener BI-Status dafür.
-
-Downtimes: sollte man hierfür nicht auch einen BI-Status machen?
-Oder muss diese Information separat noch oben driften?
-
-Acknowledgments: Sollen wir diese auch nach oben leiten?
 
 Snapin für alle Toplevel-Gruppen von Aggregationen.
 
@@ -27,3 +20,9 @@ erscheinen, wenn:
  * Überhaupt Aggregationen definiert sind (len(config.aggregations) > 0)
  * Man das Recht dazu hat, was zu assumen
  * Die (neue) display option dafür eingeschaltet ist.
+
+FEATURE: Downtimes: sollte man hierfür nicht auch einen BI-Status machen?
+Oder muss diese Information separat noch oben driften?
+
+FEATURE: Acknowledgements: Sollen wir diese auch nach oben leiten?
+

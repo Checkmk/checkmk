@@ -41,6 +41,7 @@ pagehandlers.update({
    "switch_site"           : main.ajax_switch_site,
    "edit_views"            : views.page_edit_views,
    "edit_view"             : views.page_edit_view,
+   "get_edit_column"       : views.ajax_get_edit_column,
    "export_views"          : views.ajax_export,
    "view"                  : views.page_view,
    "logwatch"              : page_logwatch.page,

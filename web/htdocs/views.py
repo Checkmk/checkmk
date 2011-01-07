@@ -212,7 +212,6 @@ for name, view in multisite_builtin_views.items():
 
 
 max_display_columns   = 12
-max_group_columns     = 4
 max_sort_columns      = 5
 
 # Load all views - users or builtins
@@ -610,39 +609,28 @@ function toggle_section(nr, oImg) {
             html.write("<br>")
         section_footer()
 
-    def column_selection(id, title, var_prefix, maxnum, data):
+    def column_selection(id, title, var_prefix, data):
         allowed = allowed_for_datasource(data, datasourcename)
         section_header(id, title)
         # make sure, at least 3 selection boxes are free for new columns
-        html.write("<br>")
-        while html.has_var("%s%d" % (var_prefix, maxnum - 2)):
+        maxnum = 1
+        while html.has_var("%s%d" % (var_prefix, maxnum)):
             maxnum += 1
-        for n in range(1, maxnum + 1):
-            collist = [ ("", "") ] + [ (name, p["title"]) for name, p in allowed.items() ]
-            html.write("<div class=columneditor><table><tr>")
-            html.write('<td rowspan=3>'
-                    '<img onclick="delete_view_column(this);" '
-                    'onmouseover=\"hilite_icon(this, 1)\" '
-                    'onmouseout=\"hilite_icon(this, 0)\" '
-                    'src="images/button_closesnapin_lo.png"></td>')
-            html.write("<td class=celeft>Column %d:</td><td>" % n)
-            html.sorted_select("%s%d" % (var_prefix, n), collist)
-            html.write("</td></tr><tr><td class=celeft>Link:</td><td>")
-            select_view("%slink_%d" % (var_prefix, n))
-            html.write("</td></tr><tr><td class=celeft>Tooltip:</td><td>")
-            html.sorted_select("%stooltip_%d" % (var_prefix, n), collist)
-            html.write("</td></table>")
-            html.write("</div>")
+        html.write('<div>')
+        for n in range(1, maxnum):
+            view_edit_column(n, var_prefix, maxnum, allowed)
+        html.write('</div>')
+        html.buttonlink("javascript:add_view_column(%d, '%s', '%s')" % (id, datasourcename, var_prefix), "Add Column")
         section_footer()
 
     # [4] Sorting
     sorter_selection(4, "Sorting", "sort_", max_sort_columns, multisite_sorters)
 
     # [5] Grouping
-    column_selection(5, "Group by", "group_", max_group_columns, multisite_painters)
+    column_selection(5, "Group by", "group_", multisite_painters)
 
     # [6] Columns (painters)
-    column_selection(6, "Columns", "col_", max_display_columns, multisite_painters)
+    column_selection(6, "Columns", "col_", multisite_painters)
 
     # [2] Layout
     section_header(7, "Layout")
@@ -682,6 +670,53 @@ function toggle_section(nr, oImg) {
 
     html.footer()
 
+def view_edit_column(n, var_prefix, maxnum, allowed):
+    collist = [ ("", "") ] + [ (name, p["title"]) for name, p in allowed.items() ]
+    html.write("<div class=columneditor id=%seditor_%d><table><tr>" % (var_prefix, n))
+    html.write('<td rowspan=3>')
+    html.write('<img onclick="delete_view_column(this);" '
+            'onmouseover=\"hilite_icon(this, 1)\" '
+            'onmouseout=\"hilite_icon(this, 0)\" '
+            'src="images/button_closesnapin_lo.png">')
+
+    display = n == 1 and ' style="display:none;"' or ''
+    html.write('<img id="%sup_%d" onclick="move_column_up(this);" '
+            'onmouseover=\"hilite_icon(this, 1)\" '
+            'onmouseout=\"hilite_icon(this, 0)\" '
+            'src="images/button_moveup_lo.png"%s>' % (var_prefix, n, display))
+
+    display = n == maxnum - 1 and ' style="display:none;"' or ''
+    html.write('<img id="%sdown_%d" onclick="move_column_down(this);" '
+            'onmouseover=\"hilite_icon(this, 1)\" '
+            'onmouseout=\"hilite_icon(this, 0)\" '
+            'src="images/button_movedown_lo.png"%s>' % (var_prefix, n, display))
+    html.write('</td>')
+    html.write('<td id="%slabel_%d" class=celeft>Column %d:</td><td>' % (var_prefix, n, n))
+    html.sorted_select("%s%d" % (var_prefix, n), collist)
+    html.write("</td></tr><tr><td class=celeft>Link:</td><td>")
+    select_view("%slink_%d" % (var_prefix, n))
+    html.write("</td></tr><tr><td class=celeft>Tooltip:</td><td>")
+    html.sorted_select("%stooltip_%d" % (var_prefix, n), collist)
+    html.write("</td></table>")
+    html.write("</div>")
+
+def ajax_get_edit_column(h):
+    global html
+    html = h
+    if not config.may("edit_views"):
+        raise MKAuthException("You are not allowed to edit views.")
+
+    if not html.has_var('ds') or not html.has_var('num') or not html.has_var('pre'):
+        raise MKInternalError("Missing attributes")
+
+    load_views()
+
+    allowed = allowed_for_datasource(multisite_painters, html.var('ds'))
+    num = int(html.var('num', 0))
+
+    html.form_vars = []
+    view_edit_column(num, html.var('pre'), num + 1, allowed)
+
 # Called by edit function in order to prefill HTML form
 def load_view_into_html_vars(view):
     # view is well formed, not checks neccessary
@@ -695,7 +730,7 @@ def load_view_into_html_vars(view):
     html.set_var("layout",           view["layout"])
     html.set_var("num_columns",      view.get("num_columns", 1))
     html.set_var("browser_reload",   view.get("browser_reload", 0))
-    html.set_var("play_sounds",      view.get("play_sounds", False))
+    html.set_var("play_sounds",      view.get("play_sounds", False) and "on" or "")
     html.set_var("public",           view["public"] and "on" or "")
     html.set_var("hidden",           view["hidden"] and "on" or "")
     html.set_var("mustsearch",       view["mustsearch"] and "on" or "")
@@ -821,7 +856,12 @@ def create_view():
             sorternames.append((sname, reverse))
 
     group_painternames = []
-    for n in range(1, max_group_columns+1):
+    # User can set more than max_display_columns. We cannot easily know
+    # how many variables he has set since holes are allowed. Let's silently
+    # assume that 500 columns are enough. This surely is a hack, but if you
+    # have read this comment you might want to mail me a (simple) patch for
+    # doing this more cleanly...
+    for n in range(1, 500):
         pname = html.var("group_%d" % n)
         viewname = html.var("group_link_%d" % n)
         if pname:
@@ -897,10 +937,14 @@ def page_view(h):
 def show_view(view, show_heading = False, show_buttons = True, show_footer = True):
     # Parse display options
     display_options = html.var("display_options", "")
-    # assume all missing options as active (upper case)
-    for c in "HTBFCEOZRSIX":
-        if c not in display_options and c.lower() not in display_options:
-            display_options += c 
+
+    # If all display_options are upper case assume all not given values default
+    # to lower-case. Vice versa when all display_options are lower case.
+    # When the display_options are mixed case assume all unset options to be enabled
+    do_defaults =  display_options.isupper() and "htbfceozrsix" or "HTBFCEOZRSIX"
+    for c in do_defaults:
+        if c.lower() not in display_options.lower():
+            display_options += c
     html.display_options = display_options
 
     # [1] Datasource

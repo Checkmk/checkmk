@@ -55,6 +55,7 @@
     * View pages are not refreshed when at least one form (Filter, Commands,
       Display Options) is open
     * Catching javascript errors when pages from other domain are opened in content frame
+    * Columns in view editor can now be added/removed/moved easily
 
     Checks & Agents:
     * Fixed problem with OnlyFrom: in Linux agent (df didn't work properly)

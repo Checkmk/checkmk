@@ -1599,7 +1599,7 @@ div.columneditor select {
 }
 
 div.columneditor td, div.columneditor select {
-    font-size: 80%;
+    font-size: 0.9em;
 }
 
 table.views td {

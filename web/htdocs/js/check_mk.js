@@ -267,12 +267,147 @@ function performAction(oLink, action, type, site, name1, name2) {
 /* -----------------------------------------------------
    view editor
    -------------------------------------------------- */
+
+function get_column_container(oImg) {
+    var oNode = oImg;
+    while (oNode.nodeName != "DIV")
+        oNode = oNode.parentNode;
+    return oNode;
+}
+
+function toggle_button(oDiv, name, display) {
+    var parts = oDiv.id.split('_');
+    var type  = parts[0];
+    var num   = parts[2];
+    var o     = document.getElementById(type+'_'+name+'_'+num);
+    if (o)
+        if (display)
+            o.style.display = '';
+        else
+            o.style.display = 'none';
+    o = null;
+}
+
+function column_swap_ids(o1, o2) {
+    var parts = o1.id.split('_');
+    var type  = parts[0];
+    var num1  = parts[2];
+    var num2  = o2.id.split('_')[2];
+
+    var o1 = null, o2 = null;
+    var objects = [ '', '_editor', '_up', '_down', '_label', '_link', '_tooltip' ];
+    for(var i = 0,len = objects.length; key = type+objects[i]+'_', i < len; i++) {
+        o1 = document.getElementById(key + num1);
+        o2 = document.getElementById(key + num2);
+        if(o1 && o2) {
+            if(o1.id && o2.id) {
+                o1.id = key + num2;
+                o2.id = key + num1;
+            }
+            if(o1.name && o2.name) {
+                o1.name = key + num2;
+                o2.name = key + num1;
+            }
+            if(objects[i] === '_label') {
+                o1.innerHTML = 'Column ' + num2 + ':'
+                o2.innerHTML = 'Column ' + num1 + ':'
+            }
+        }
+    }
+    objects = null;
+    o1 = null;
+    o2 = null;
+}
+
+function add_view_column_handler(id, code) {
+    var oContainer = document.getElementById('ed_'+id).firstChild;
+    oContainer.innerHTML += code;
+
+    if (oContainer.lastChild.previousSibling)
+        fix_buttons(oContainer, oContainer.lastChild.previousSibling);
+    oContainer = null;
+}
+
+function add_view_column(id, datasourcename, prefix) {
+    get_url('get_edit_column.py?ds=' + datasourcename + '&pre=' + prefix
+          + '&num=' + (document.getElementById('ed_'+id).firstChild.childNodes.length + 1),
+            add_view_column_handler, id);
+}
+
 function delete_view_column(oImg) {
-    var oDiv = oImg;
-    while (oDiv.nodeName != "DIV")
-        oDiv = oDiv.parentNode;
-    oDiv.parentNode.removeChild(oDiv);
-    oDiv = null;
+    var oNode = get_column_container(oImg);
+    var oContainer = oNode.parentNode;
+
+    var prev = oNode.previousSibling;
+    var next = oNode.nextSibling;
+
+    oContainer.removeChild(oNode);
+
+    if (prev)
+        fix_buttons(oContainer, prev);
+    if (next)
+        fix_buttons(oContainer, next);
+
+    oContainer = null;
+    oNode = null;
+}
+
+function fix_buttons(oContainer, oNode) {
+    var num = oContainer.childNodes.length;
+    if (num === 0)
+        return;
+
+    if (oContainer.firstChild == oNode)
+        toggle_button(oNode, 'up', false);
+    else
+        toggle_button(oNode, 'up', true);
+    if (oContainer.lastChild == oNode)
+        toggle_button(oNode, 'down', false);
+    else
+        toggle_button(oNode, 'down', true);
+}
+
+function move_column_up(oImg) {
+    var oNode = get_column_container(oImg);
+    var oContainer = oNode.parentNode;
+    
+    // The column is the first one - skip moving
+    if (oNode.previousSibling === null)
+        return;
+
+    oContainer.insertBefore(oNode, oNode.previousSibling);
+
+    fix_buttons(oContainer, oNode);
+    fix_buttons(oContainer, oNode.nextSibling);
+
+    column_swap_ids(oNode, oNode.nextSibling);
+
+    oContainer = null;
+    oNode = null;
+    oImg = null;
+}
+
+function move_column_down(oImg) {
+    var oNode = get_column_container(oImg);
+    var oContainer = oNode.parentNode;
+    
+    // The column is the last one - skip moving
+    if (oNode.nextSibling === null)
+        return;
+
+    if (oContainer.lastChild == oNode.nextSibling)
+        oContainer.appendChild(oNode);
+    else
+        oContainer.insertBefore(oNode, oNode.nextSibling.nextSibling);
+
+    fix_buttons(oContainer, oNode);
+    fix_buttons(oContainer, oNode.previousSibling);
+
+    column_swap_ids(oNode, oNode.previousSibling);
+
+    oContainer = null;
+    oNode = null;
+    oImg = null;
 }
 
 

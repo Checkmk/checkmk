@@ -16,3 +16,14 @@ Oder muss diese Information separat noch oben driften?
 Acknowledgments: Sollen wir diese auch nach oben leiten?
 
 Snapin für alle Toplevel-Gruppen von Aggregationen.
+
+Berechtigungen für:
+  Aggregationen ansehen generell??
+  Assume state ausführen
+
+Icon zum Assumen soll auch bei den normalen Icons
+erscheinen, wenn:
+
+ * Überhaupt Aggregationen definiert sind (len(config.aggregations) > 0)
+ * Man das Recht dazu hat, was zu assumen
+ * Die (neue) display option dafür eingeschaltet ist.

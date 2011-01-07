@@ -6,3 +6,11 @@ Die Anfrage, die die Daten holt, muss dann pro Site eine separate
 Anfrage machen - mit angepassten Filtern. Auch bei den paintern
 aggr_hosts muss in den Link dann die Site eingebaut werden. Und
 aggr_sites wäre auch gut: affected sites.
+
+Pending muss korrekt behandelt werden. Am einfachsten wäre ein
+eigener BI-Status dafür.
+
+Downtimes: sollte man hierfür nicht auch einen BI-Status machen?
+Oder muss diese Information separat noch oben driften?
+
+Acknowledgments: Sollen wir diese auch nach oben leiten?

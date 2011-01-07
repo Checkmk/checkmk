@@ -427,6 +427,21 @@ def page_all(h):
             debug(state)
     html.footer()
 
+
+def ajax_set_assumption(h):
+    global html
+    html = h
+    site = html.var("site")
+    host = html.var("host")
+    service = html.var("service")
+    state = html.var("state")
+    load_assumptions()
+    if state == 'none':
+        del g_assumptions[(site, host, service)]
+    else:
+        g_assumptions[(site, host, service)] = state
+    save_assumptions()
+
 #    ____        _                                          
 #   |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___ 
 #   | | | |/ _` | __/ _` / __|/ _ \| | | | '__/ __/ _ \/ __|
@@ -449,7 +464,8 @@ def create_aggregation_row(tree):
 def table(h, columns, add_headers, only_sites, limit):
     global html
     html = h
-    compile_forest()
+    compile_forest()   # should be cached later
+    load_assumptions() # user specific, always loaded
     # Hier müsste man jetzt die Filter kennen, damit man nicht sinnlos
     # alle Aggregationen berechnet.
     rows = []
@@ -464,7 +480,8 @@ def table(h, columns, add_headers, only_sites, limit):
 def host_table(h, columns, add_headers, only_sites, limit):
     global html
     html = h
-    compile_forest()
+    compile_forest()   # should be cached later
+    load_assumptions() # user specific, always loaded
     # Hier müsste man jetzt die Filter kennen, damit man nicht sinnlos
     # alle Aggregationen berechnet.
 
@@ -520,6 +537,22 @@ def host_table(h, columns, add_headers, only_sites, limit):
             row["aggr_group"] = group
             rows.append(row)
     return rows
+
+
+#     _   _      _                     
+#    | | | | ___| |_ __   ___ _ __ ___ 
+#    | |_| |/ _ \ | '_ \ / _ \ '__/ __|
+#    |  _  |  __/ | |_) |  __/ |  \__ \
+#    |_| |_|\___|_| .__/ \___|_|  |___/
+#                 |_|                  
+
+def load_assumptions():
+    global g_assumptions
+    g_assumptions = config.load_user_file("bi_assumptions", {})
+
+def save_assumptions():
+    config.save_user_file("bi_assumptions", g_assumptions)
+
 
 #     _____                 ____             
 #    |  ___|__   ___       | __ )  __ _ _ __ 

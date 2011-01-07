@@ -1807,3 +1807,11 @@ div.aggr {
     float: none;
 }
 
+div.aggr img.assumption {
+    width: 13px;
+    height: 13px;
+    margin: 0px;
+    margin-right: 3px;
+    border-style: none;
+}
+

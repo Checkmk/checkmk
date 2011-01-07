@@ -104,6 +104,17 @@ def render_bi_state(state):
              bi.UNAVAIL: "NA",
     }[state]
 
+def render_assume_icon(site, host, service):
+    ass = bi.g_assumptions.get((site, host, service))
+    mousecode = \
+       'onmouseover="this.style.cursor=\'pointer\';" ' \
+       'onmouseout="this.style.cursor=\'auto\';" ' \
+       'title="Assume another state for this item" ' \
+       'onclick="toggle_assumption(this, %s, %s, %s);" ' % \
+         (repr(site), repr(str(host)), service == None and 'null' or repr(str(service)))
+    current = str(ass).lower()
+    return '<img state="%s" class=assumption %s src="images/assume_%s.png">' % (current, mousecode, current)
+
 def paint_aggregated_tree_state(row):
     only_problems = get_painter_option("aggr_onlyproblems") == "1"
 
@@ -112,15 +123,17 @@ def paint_aggregated_tree_state(row):
         is_leaf = nodes == None
         if is_leaf:
             h = '<div class="aggr leaf">'
+            site = 'local'
             host = tree[3][0]
             service = tree[1]
+            content = render_assume_icon(site, host, service) 
             # site fehlt!
             if service:
                 url = html.makeuri([("view_name", "service"), ("host", host), ("service", service)])
             else:
                 url = html.makeuri([("view_name", "hoststatus"), ("host", host)])
                 service = "Host status"
-            content = '<a href="%s">%s</a>' % (url, service)
+            content += '<a href="%s">%s</a>' % (url, service)
             mousecode = ""
         else:
             mousecode = \

@@ -490,3 +490,27 @@ function toggle_subtree(oName)
     oSubtree = null;
 }
 
+function toggle_assumption(oImg, site, host, service)
+{
+    // get current state
+    var current = oImg.src;
+    while (current.indexOf('/') > -1)
+        current = current.substr(current.indexOf('/') + 1);
+    current = current.substr(7);
+    current = current.substr(0, current.length - 4);
+    if (current == 'none')
+        current = '0';
+    else if (current == '3')
+        current = 'none'
+    else
+        current = parseInt(current) + 1; 
+
+    url = "bi_set_assumption.py?site=" + site + '&host=' + host;
+    if (service) {
+        url += '&service=' + service;
+    }
+    url += '&state=' + current; 
+    oImg.src = "images/assume_" + current + ".png";
+    get_url(url);
+}
+            

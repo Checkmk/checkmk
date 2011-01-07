@@ -64,6 +64,7 @@
     * printer_supply: handle the case where the current value is missing
     * megaraid_ldisks: Fixed item detection to be compatible with different versions of megaraid
     * Linux Agent: Added new 3ware agent code to support multiple controllers
+      (Re-inventory of 3ware checks needed due to changed check item names)
 
     Livestatus:
     * new column pnpgraph_present in table host and service. In order for this

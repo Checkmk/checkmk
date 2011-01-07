@@ -1784,50 +1784,23 @@ div.wato {
             |___/ |___/          |___/                         
     
 */
-table.services td.aggr.svcdetail {
-    padding: 0px;
-}
-
-.aggr.svcdetail table {
-    border-collapse: collapse;
-    width: 100%;
-}
-table.services tr.data .aggr.svcdetail table td {
-    font-size: 80%;
-    padding: 1px 2px;
-}
 
 div.aggr div.tree {
-padding: 1px 0px;
+    padding: 1px 0px;
 }
 
 div.aggr div.state {
     margin-right: 4px;
-}
-
-div.aggr div.leaf {
-padding: 1px 0px;
-}
-
-div.aggr div.state {
     width: 30px;
     text-align: center;
 }
 
+div.aggr div.leaf {
+    padding: 1px 0px;
+}
+
 div.aggr div.subtree {
     padding-left: 30px;
-}
-
-div.aggr div.state {
-    float: left;
-}
-
-div.aggr div.subtree {
-    float: none;
-}
-
-div.aggr div.name {
-    float: none;
 }
 
 div.aggr {

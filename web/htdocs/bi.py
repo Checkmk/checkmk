@@ -392,7 +392,10 @@ def aggr_worst(nodes):
         else:
             state = max(s, state)
 
-    return state, ", ".join(problems)
+    if len(problems) > 0:
+        return state, "%d problems" % len(problems)
+    else:
+        return state, ""
 
 config.aggregation_functions["worst"] = aggr_worst
 

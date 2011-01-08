@@ -437,11 +437,11 @@ def execute_inter_node(node, status_info):
 
     state, output = func(*([node_states] + funcargs))
     if one_assumption:
-        assumed_state, output = func(assumed_node_states)
+        assumed_state, output = func(*([assumed_node_states] + funcargs))
     else:
         assumed_state = None
     return (state, assumed_state, title, output, 
-            required_hosts, funcname, node_states )
+            required_hosts, funcspec, node_states )
     
 
 #       _                      _____                 _   _                 
@@ -477,6 +477,8 @@ def aggr_nth_state(nodes, n):
             problems.append(node[1])
     state = x_best_state(states, n)
 
+# debug((states, n, state))
+
     if len(problems) > 0:
         return state, "%d problems" % len(problems)
     else:
@@ -485,7 +487,7 @@ def aggr_nth_state(nodes, n):
 def aggr_worst(nodes, n = 1):
     return aggr_nth_state(nodes, -int(n))
 
-def aggr_best(nodes, n=1):
+def aggr_best(nodes, n = 1):
     return aggr_nth_state(nodes, int(n))
 
 config.aggregation_functions["worst"] = aggr_worst 

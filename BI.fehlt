@@ -2,8 +2,6 @@ Modi, untern denen eine Aggr berechnet werden kann:
 * mit/ohne Authuser
 * hard/soft states
 
-Weitere Aggregationsfunktionen.
-
 Pending muss korrekt behandelt werden. Am einfachsten wäre ein
 eigener BI-Status dafür.
 

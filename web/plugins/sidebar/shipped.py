@@ -114,7 +114,8 @@ def render_views():
     s.sort()
 
     # Enforce a certain order on the topics
-    known_topics = [ "Hosts", "Hostgroups", "Services", "Servicegroups", "Problems", "Addons" ]
+    known_topics = [ "Hosts", "Hostgroups", "Services", "Servicegroups", 
+                     "Business Intelligence", "Problems", "Addons" ]
     for topic in known_topics:
         render_topic(topic, s)
 

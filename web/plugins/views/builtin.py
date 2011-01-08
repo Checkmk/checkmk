@@ -2015,9 +2015,7 @@ multisite_builtin_views = {
             'owner': 'omdadmin',
             'painters': [('aggr_state', None, ''),
                          ('aggr_treestate', None, ''),
-                         ('aggr_hosts', None, ''),
-                         ('aggr_name', None, ''),
-                         ('aggr_output', None, '')],
+                         ('aggr_hosts', None, '')],
             'play_sounds': False,
             'public': False,
             'show_filters': ['aggr_hosts',
@@ -2087,9 +2085,7 @@ multisite_builtin_views = {
                      'owner': 'omdadmin',
                      'painters': [('aggr_state', None, ''),
                                   ('aggr_treestate', None, ''),
-                                  ('aggr_hosts', None, ''),
-                                  ('aggr_name', None, ''),
-                                  ('aggr_output', None, '')],
+                                  ('aggr_hosts', None, '')],
                      'play_sounds': False,
                      'public': False,
                      'show_filters': ['aggr_hosts',
@@ -2099,7 +2095,7 @@ multisite_builtin_views = {
                                       'aggr_effective_state'],
                      'sorters': [],
                      'title': 'Problem aggregations',
-                     'topic': 'Business Intelligence'},
+                     'topic': 'Problems'},
 
 
 }

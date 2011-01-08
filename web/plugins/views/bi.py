@@ -187,7 +187,7 @@ def paint_aggr_tree_foldable(row):
             return h + '</div></div>'
 
     tree = row["aggr_treestate"]
-    return "", render_subtree(tree)
+    return "aggrtree", render_subtree(tree)
 
 
 def paint_aggr_tree_ltr(row, mirror):
@@ -234,7 +234,7 @@ def paint_aggr_tree_ltr(row, mirror):
         h += '</tr>\n'
 
     h += '</table>'
-    return "", h
+    return "aggrtree", h
 
 def paint_aggregated_tree_state(row):
     treetype = get_painter_option("aggr_treetype")

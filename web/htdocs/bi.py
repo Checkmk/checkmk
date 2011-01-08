@@ -627,7 +627,7 @@ def host_table(h, columns, add_headers, only_sites, limit, filters):
 
         host_data = html.live.query(query)
         for r in host_data:
-            row = dict(host_columns, r)
+            row = dict(zip(host_columns, r))
             row['site'] = site
             host = row["host_name"]
             for group, tree in host_aggregations.get((site, host), []):

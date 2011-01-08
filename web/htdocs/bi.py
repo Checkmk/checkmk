@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # encoding: utf-8
 
-import config, re, pprint
+import config, re, pprint, time
 from lib import *
 
 # Python 2.3 does not have 'set' in normal namespace.
@@ -42,9 +42,14 @@ UNAVAIL = 4
 #     \____\___/|_| |_| |_| .__/|_|_|\__,_|\__|_|\___/|_| |_|
 #                         |_|                                
 
+# global variables
+g_aggregation_forest = None
+g_config_information = None
+g_services = None
 
 # Load the static configuration of all services and hosts (including tags)
 # without state and store it in the global variable g_services.
+
 def load_services():
     global g_services
     g_services = {}
@@ -57,6 +62,18 @@ def load_services():
         tags = vars.get("TAGS", "").split(" ")
         g_services[(site, host)] = (tags, services)
         
+# Keep complete list of time stamps of configuration
+# and start of each site. Unreachable sites are registered
+# with 0.
+def forest_needs_update():
+    new_config_information = [config.last_time_modified]
+    for site in html.site_status.values():
+        new_config_information.append(site.get("program_start", 0))
+
+    if new_config_information != g_config_information or g_aggregation_forest == None:
+        return new_config_information
+    else:
+        return False
 
 # Precompile the forest of BI rules. Forest? A collection of trees.
 # The compiled forest does not contain any regular expressions anymore.
@@ -64,6 +81,10 @@ def load_services():
 # aggregation functions are still left as names. That way the forest
 # printable (and storable in Python syntax to a file).
 def compile_forest():
+    new_config_information = forest_needs_update()
+    if not new_config_information:
+        return
+
     global g_aggregation_forest
     g_aggregation_forest = {}
 
@@ -75,6 +96,9 @@ def compile_forest():
         entries = g_aggregation_forest.get(group, [])
         entries += compile_aggregation(rule, args)
         g_aggregation_forest[group] = entries
+
+    global g_config_information
+    g_config_information = new_config_information
 
 # Debugging function
 def render_forest():
@@ -521,7 +545,7 @@ def create_aggregation_row(tree):
 def table(h, columns, add_headers, only_sites, limit, filters):
     global html
     html = h
-    compile_forest()   # should be cached later
+    compile_forest()
     load_assumptions() # user specific, always loaded
     # Hier müsste man jetzt die Filter kennen, damit man nicht sinnlos
     # alle Aggregationen berechnet.
@@ -549,7 +573,7 @@ def table(h, columns, add_headers, only_sites, limit, filters):
 def host_table(h, columns, add_headers, only_sites, limit, filters):
     global html
     html = h
-    compile_forest()   # should be cached later
+    compile_forest()
     load_assumptions() # user specific, always loaded
     # Hier müsste man jetzt die Filter kennen, damit man nicht sinnlos
     # alle Aggregationen berechnet.

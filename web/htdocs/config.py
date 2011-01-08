@@ -53,7 +53,11 @@ def include(filename):
     # during setup.sh. Better signal an error then simply ignore
     # Absence.
     try:
+        lm = os.stat(filename).st_mtime
         execfile(filename, globals(), globals())
+        global last_time_modified
+        if lm > last_time_modified:
+            last_time_modified = lm
     except Exception, e:
         global user
         global role
@@ -63,6 +67,7 @@ def include(filename):
         user_permissions = []
         raise MKConfigError("Cannot read configuration file %s: %s:" % (filename, e))
 
+last_time_modified = 0
 
 def load_config():
     # reset settings which can be changed at runtime to
@@ -73,6 +78,8 @@ def load_config():
     global debug
     debug = False
 
+    global last_time_modified
+    last_time_modified = 0
     include("multisite.mk")
 
 

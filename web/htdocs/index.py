@@ -110,8 +110,8 @@ def connect_to_livestatus(html):
 
         # Fetch status of sites by querying the version of Nagios and livestatus
         html.live.set_prepend_site(True)
-        for sitename, v1, v2 in html.live.query("GET status\nColumns: livestatus_version program_version"):
-            html.site_status[sitename].update({ "state" : "online", "livestatus_version": v1, "program_version" : v2 })
+        for sitename, v1, v2, ps in html.live.query("GET status\nColumns: livestatus_version program_version program_start"):
+            html.site_status[sitename].update({ "state" : "online", "livestatus_version": v1, "program_version" : v2, "program_start" : ps })
         html.live.set_prepend_site(False)
 
         # Get exceptions in case of dead sites

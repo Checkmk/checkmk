@@ -20,8 +20,6 @@ innerhalb einer Gruppe eindeutig ist? Könnten wir das dann so
 vereinfachen, dass - wenn die Aggregation sich nur auf einen
 Host bezieht - dieser implizit herangezogen wird?
 
-Alle vordefinierten Views ausliefern.
-
 ----------------------------------------------------------------------------
 FEATURE: Icon zum Assumen soll auch bei den normalen Icons erscheinen, wenn:
  * Überhaupt Aggregationen definiert sind (len(config.aggregations) > 0)

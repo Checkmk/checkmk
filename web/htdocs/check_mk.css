@@ -1793,7 +1793,10 @@ div.aggr div.state {
     margin-right: 4px;
     width: 30px;
     text-align: center;
-    -moz-border-radius: 2px;
+    -moz-border-radius: 3px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #eee #888 #999 #ccc;
 }
 
 .state.assumed {

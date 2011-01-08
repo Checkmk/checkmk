@@ -413,7 +413,10 @@ def execute_leaf_node(node, status_info):
 
 
 def execute_inter_node(node, status_info):
-    required_hosts, title, funcname, nodes = node
+    required_hosts, title, funcspec, nodes = node
+    parts = funcspec.split('!')
+    funcname = parts[0]
+    funcargs = parts[1:]
     func = config.aggregation_functions.get(funcname)
     if not func:
         raise MKConfigError("Undefined aggregation function '%s'. Available are: %s" % 
@@ -432,7 +435,7 @@ def execute_inter_node(node, status_info):
         else:
             assumed_node_states.append(node_state)
 
-    state, output = func(node_states)
+    state, output = func(*([node_states] + funcargs))
     if one_assumption:
         assumed_state, output = func(assumed_node_states)
     else:
@@ -448,25 +451,45 @@ def execute_inter_node(node, status_info):
 #   /_/   \_\__, |\__, |_|(_) |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
 #           |___/ |___/                                                    
 
-def aggr_worst(nodes):
-    state = 0 
+def state_weight(s):
+    if s == CRIT:
+        return 10
+    else:
+        return s
+
+def x_best_state(l, x):
+    ll = [ (state_weight(s), s) for s in l ]
+    ll.sort()
+    if x < 0:
+        ll.reverse()
+    n = abs(x)
+    if len(ll) < n:
+        n = len(ll)
+        
+    return ll[n-1][1]
+
+def aggr_nth_state(nodes, n):
+    states = []
     problems = []
     for node in nodes:
-        s = node[0]
-        if s != OK:
+        states.append(node[0])
+        if node[0] != OK:
             problems.append(node[1])
-
-        if s == CRIT:
-            state = s
-        else:
-            state = max(s, state)
+    state = x_best_state(states, n)
 
     if len(problems) > 0:
         return state, "%d problems" % len(problems)
     else:
         return state, ""
 
-config.aggregation_functions["worst"] = aggr_worst
+def aggr_worst(nodes, n = 1):
+    return aggr_nth_state(nodes, -int(n))
+
+def aggr_best(nodes, n=1):
+    return aggr_nth_state(nodes, int(n))
+
+config.aggregation_functions["worst"] = aggr_worst 
+config.aggregation_functions["best"]  = aggr_best
 
 #      ____                       
 #     |  _ \ __ _  __ _  ___  ___ 

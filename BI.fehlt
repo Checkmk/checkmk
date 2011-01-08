@@ -1,3 +1,7 @@
+Modi, untern denen eine Aggr berechnet werden kann:
+* mit/ohne Authuser
+* hard/soft states
+
 Weitere Aggregationsfunktionen.
 
 Pending muss korrekt behandelt werden. Am einfachsten wäre ein
@@ -11,6 +15,16 @@ Was ist, wenn man keine Rechte hat zum sehen aller Basisitems?
 Lösung vorläufig: AuthUser generell nirgendwo setzen. Oder:
 Eigene Berechtigung dafür. 
 
+View, die nur eine einzige Aggregation zeigt. Frage ist nur,
+was wir dafür als Schlüssel nehmen. Brauchen wir eine eindeutige
+ID?? Oder müssen wir dafür sorgen, dass der Namen der Aggregation
+innerhalb einer Gruppe eindeutig ist? Könnten wir das dann so
+vereinfachen, dass - wenn die Aggregation sich nur auf einen
+Host bezieht - dieser implizit herangezogen wird?
+
+Alle vordefinierten Views ausliefern.
+
+----------------------------------------------------------------------------
 FEATURE: Icon zum Assumen soll auch bei den normalen Icons erscheinen, wenn:
  * Überhaupt Aggregationen definiert sind (len(config.aggregations) > 0)
  * Man das Recht dazu hat, was zu assumen
@@ -24,8 +38,4 @@ FEATURE: Acknowledgements: Sollen wir diese auch nach oben leiten?
 FEATURE: Was ist mit hard states? Sollen wir alles auf hard oder
 soft states basieren lassen? Oder soll man das als View-Option
 angeben können? Mal überlegen...
-
-Modi, untern denen eine Aggr berechnet werden kann:
-* mit/ohne Authuser
-* hard/soft states
 

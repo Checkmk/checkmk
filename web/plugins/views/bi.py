@@ -115,7 +115,7 @@ def render_assume_icon(site, host, service):
     mousecode = \
        'onmouseover="this.style.cursor=\'pointer\';" ' \
        'onmouseout="this.style.cursor=\'auto\';" ' \
-       'title="Assume another state for this item" ' \
+       'title="Assume another state for this item (reload page to activate)" ' \
        'onclick="toggle_assumption(this, %s, %s, %s);" ' % \
          (repr(site), repr(str(host)), service == None and 'null' or repr(str(service)))
     current = str(ass).lower()

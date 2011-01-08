@@ -512,8 +512,8 @@ def create_aggregation_row(tree):
         "aggr_state"           : state[0],
         "aggr_assumed_state"   : state[1],
         "aggr_effective_state" : eff_state,
-        "aggr_output"          : state[2],
-        "aggr_name"            : state[3],
+        "aggr_name"            : state[2],
+        "aggr_output"          : state[3],
         "aggr_hosts"           : state[4],
         "aggr_function"        : state[5],
     }
@@ -647,76 +647,3 @@ def status_tree_depth(tree):
             maxdepth = max(maxdepth, status_tree_depth(node))
         return maxdepth + 1
 
-#     _____                 ____             
-#    |  ___|__   ___       | __ )  __ _ _ __ 
-#    | |_ / _ \ / _ \ _____|  _ \ / _` | '__|
-#    |  _| (_) | (_) |_____| |_) | (_| | |   
-#    |_|  \___/ \___/      |____/ \__,_|_|   
-#                                            
-
-# 
-# 
-# def compute_host_aggregations(row):
-#     customvars = dict(zip(row["host_custom_variable_names"], row["host_custom_variable_values"]))
-#     tags = customvars.get("TAGS", "").split(" ")
-#     row["host_tags"] = tags
-# 
-#     instances = {}
-#     seen_services = set([])
-#     for entry in config.bi_host_aggregations:
-#         if len(entry) == 5:
-#             aggrname, ruletags, hostlist, svcmatch, aggrfunc = entry 
-#         elif len(entry) == 4:
-#             aggrname, hostlist, svcmatch, aggrfunc = entry
-#             ruletags = []
-#         else:
-#             raise MKConfigError("Invalid entry in bi_host_aggregations: %r" % entry)
-# 
-#         # Check if we need to apply the rule on this host
-#         if host_matches(row["host_name"], tags, hostlist, ruletags):
-#             r = regex(svcmatch)
-#             for svc_desc, svc_state, svc_hasbeenchecked, svc_output in row["host_services_with_info"]:
-#                 # make sure that each service is only aggregated once
-#                 matchobject = r.search(svc_desc)
-#                 if matchobject:
-#                     if svc_desc in seen_services:
-#                         continue
-#                     else:
-#                         seen_services.add(svc_desc)
-#                     try:
-#                         item = matchobject.groups()[-1]
-#                         rulename = aggrname % item
-#                     except:
-#                         rulename = aggrname
-#                     atoms, func = instances.get(rulename, ([], None))
-#                     atoms.append((svc_desc, svc_state, svc_hasbeenchecked, svc_output))
-#                     instances[rulename] = atoms, aggrfunc
-# 
-#     newrows = []
-#     for name, (atoms, func) in instances.items():
-#         newrow = row.copy()
-#         newrow["aggr_name"] = name
-#         aggregate(newrow, func, atoms)
-#         newrows.append(newrow)
-# 
-#     return newrows 
-# 
-# 
-# def aggregate(row, func, atoms):
-#     descr = "%d entries" % len(atoms)
-#     if type(func) == type(lambda: None):
-#         function = func
-#     else:
-#         function = aggregation_functions.get(func)
-#         if not function:
-#             raise MKConfigError("Invalid aggregation function '%s'" % func)
-# 
-#     state, output = function(atoms)
-#     row["aggr_state"] = state
-#     row["aggr_output"] = output
-#     row["aggr_atoms"] = atoms
-# 
-# def host_matches(a,b,c,d):
-#     return True
-# 
-# 

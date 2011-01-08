@@ -252,3 +252,32 @@ multisite_painters["aggr_treestate"] = {
     "options" : [ "aggr_expand", "aggr_onlyproblems", "aggr_treetype" ],
     "paint"   : paint_aggregated_tree_state,
 }
+
+class BIGroupFilter(Filter):
+    def __init__(self):
+        Filter.__init__(self, "aggr_group", "Aggregation Group", "aggr", ["aggr_group"], ["aggr_group"])
+        self.column = "aggr_group"
+
+    def filter(self, tablename):
+        return ""
+
+    def variable_settings(self, row):
+        return [ (self.htmlvars[0], row[self.column]) ]
+
+    def display(self):
+        htmlvar = self.htmlvars[0]
+        html.select(htmlvar, [(g,g) for g in bi.g_aggregation_forest.keys()])
+
+    def selected_group(self):
+        return html.var(self.htmlvars[0])
+
+    def heading_info(self, infoname):
+        htmlvar = self.htmlvars[0]
+        return html.var(self.htmlvars[0])
+
+#     def filter_table(self, rows):
+#         htmlvar = self.htmlvars[0]
+#         group = html.var(htmlvar)
+#         return [row for row in rows if row["aggr_group"] == group]
+
+declare_filter(90, BIGroupFilter())

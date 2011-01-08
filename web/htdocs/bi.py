@@ -64,21 +64,21 @@ def load_services():
 # aggregation functions are still left as names. That way the forest
 # printable (and storable in Python syntax to a file).
 def compile_forest():
-    global aggregation_forest
-    aggregation_forest = {}
+    global g_aggregation_forest
+    g_aggregation_forest = {}
 
     load_services()
     for group, rulename, args in config.aggregations:
         args = compile_args(args)
         rule = config.aggregation_rules[rulename]
         # Compute new trees and add them to group
-        entries = aggregation_forest.get(group, [])
+        entries = g_aggregation_forest.get(group, [])
         entries += compile_aggregation(rule, args)
-        aggregation_forest[group] = entries
+        g_aggregation_forest[group] = entries
 
 # Debugging function
 def render_forest():
-    for group, trees in aggregation_forest.items():
+    for group, trees in g_aggregation_forest.items():
         html.write("<h2>%s</h2>" % group)
         for tree in trees:
             instargs, node = tree
@@ -469,7 +469,7 @@ def page_all(h):
     html.header("All")
     compile_forest()
     load_assumptions()
-    for group, trees in aggregation_forest.items():
+    for group, trees in g_aggregation_forest.items():
         html.write("<h2>%s</h2>" % group)
         for inst_args, tree in trees:
             state = execute_tree(tree)
@@ -518,7 +518,7 @@ def create_aggregation_row(tree):
         "aggr_function"        : state[5],
     }
 
-def table(h, columns, add_headers, only_sites, limit):
+def table(h, columns, add_headers, only_sites, limit, filters):
     global html
     html = h
     compile_forest()   # should be cached later
@@ -526,7 +526,19 @@ def table(h, columns, add_headers, only_sites, limit):
     # Hier müsste man jetzt die Filter kennen, damit man nicht sinnlos
     # alle Aggregationen berechnet.
     rows = []
-    for group, trees in aggregation_forest.items():
+    # Apply group filter. This is important for performance. We 
+    # must not compute any aggregations from other groups and filter 
+    # later out again.
+    only_group = None
+    for filter in filters:
+        if filter.name == "aggr_group":
+            only_group = filter.selected_group()
+            break
+
+    for group, trees in g_aggregation_forest.items():
+        if only_group not in [ None, group ]:
+            continue
+
         for inst_args, tree in trees:
             row = create_aggregation_row(tree)
             row["aggr_group"] = group
@@ -534,7 +546,7 @@ def table(h, columns, add_headers, only_sites, limit):
     return rows
         
 
-def host_table(h, columns, add_headers, only_sites, limit):
+def host_table(h, columns, add_headers, only_sites, limit, filters):
     global html
     html = h
     compile_forest()   # should be cached later
@@ -545,7 +557,7 @@ def host_table(h, columns, add_headers, only_sites, limit):
     # First compute list of hosts that have aggregations
     required_hosts = {}
     host_aggregations = {}
-    for group, trees in aggregation_forest.items():
+    for group, trees in g_aggregation_forest.items():
         for inst_args, tree in trees:
             req_hosts = tree[0]
             if len(req_hosts) != 1:

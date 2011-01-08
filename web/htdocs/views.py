@@ -172,10 +172,14 @@ class Filter:
                 (self.name, self.title))
         html.write("FILTER NOT IMPLEMENTED")
 
-    def filter(self):
+    def filter(self, tablename):
         raise MKInternalError("Incomplete implementation of filter %s '%s': missing filter()" % \
             (self.name, self.title))
         html.write("FILTER NOT IMPLEMENTED")
+
+    # post-Livestatus filtering (e.g. for BI aggregations)
+    def filter_table(self, rows):
+        return rows
 
     def variable_settings(self, row):
         return [] # return pairs of htmlvar and name according to dataset in row
@@ -987,9 +991,11 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         if not html.var("filled_in") and not html.has_var(varname):
             html.set_var(varname, value)
 
+    # Prepare Filter headers for Livestatus
     filterheaders = ""
     only_sites = None
-    for filt in show_filters + hide_filters + hard_filters:
+    all_active_filters = show_filters + hide_filters + hard_filters
+    for filt in all_active_filters: 
         header = filt.filter(tablename)
         if header.startswith("Sites:"):
             only_sites = header.strip().split(" ")[1:]
@@ -1053,15 +1059,13 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         # tablename may be a function instead of a livestatus tablename
         # In that case that function is used to compute the result.
         if type(tablename) == type(lambda x:None):
-            rows = tablename(html, columns, query, only_sites, get_limit())
+            rows = tablename(html, columns, query, only_sites, get_limit(), all_active_filters)
         else:
             rows = query_data(datasource, columns, add_columns, query, only_sites, get_limit())
 
         sort_data(rows, sorters)
     else:
         rows = []
-
-    # html.write("<pre>%s</pre>" % pprint.pformat((columns, rows)))
 
     # Show heading (change between "preview" mode and full page mode)
     if show_heading:

@@ -173,9 +173,7 @@ class Filter:
         html.write("FILTER NOT IMPLEMENTED")
 
     def filter(self, tablename):
-        raise MKInternalError("Incomplete implementation of filter %s '%s': missing filter()" % \
-            (self.name, self.title))
-        html.write("FILTER NOT IMPLEMENTED")
+        return ""
 
     # post-Livestatus filtering (e.g. for BI aggregations)
     def filter_table(self, rows):
@@ -1066,6 +1064,10 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         sort_data(rows, sorters)
     else:
         rows = []
+
+    # Apply non-Livestatus filters
+    for filter in all_active_filters:
+        rows = filter.filter_table(rows)
 
     # Show heading (change between "preview" mode and full page mode)
     if show_heading:

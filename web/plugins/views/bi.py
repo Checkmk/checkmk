@@ -255,16 +255,15 @@ multisite_painters["aggr_treestate"] = {
 
 class BIGroupFilter(Filter):
     def __init__(self):
-        Filter.__init__(self, "aggr_group", "Aggregation Group", "aggr", ["aggr_group"], ["aggr_group"])
         self.column = "aggr_group"
-
-    def filter(self, tablename):
-        return ""
+        Filter.__init__(self, self.column, "Aggregation group", "aggr", [self.column], [self.column])
 
     def variable_settings(self, row):
         return [ (self.htmlvars[0], row[self.column]) ]
 
     def display(self):
+        bi.html = html
+        bi.compile_forest()
         htmlvar = self.htmlvars[0]
         html.select(htmlvar, [(g,g) for g in bi.g_aggregation_forest.keys()])
 
@@ -272,12 +271,111 @@ class BIGroupFilter(Filter):
         return html.var(self.htmlvars[0])
 
     def heading_info(self, infoname):
-        htmlvar = self.htmlvars[0]
         return html.var(self.htmlvars[0])
 
-#     def filter_table(self, rows):
-#         htmlvar = self.htmlvars[0]
-#         group = html.var(htmlvar)
-#         return [row for row in rows if row["aggr_group"] == group]
+declare_filter( 90,  BIGroupFilter())
 
-declare_filter(90, BIGroupFilter())
+class BITextFilter(Filter):
+    def __init__(self, what):
+        self.column = "aggr_" + what 
+        Filter.__init__(self, self.column, "Aggregation " + what, "aggr", [self.column], [self.column])
+
+    def variable_settings(self, row):
+        return [ (self.htmlvars[0], row[self.column]) ]
+
+    def display(self):
+        html.text_input(self.htmlvars[0])
+
+    def heading_info(self, infoname):
+        return html.var(self.htmlvars[0])
+
+    def filter_table(self, rows):
+        val = html.var(self.htmlvars[0])
+        if not val:
+            return rows
+        reg = re.compile(val.lower())
+        return [ row for row in rows if reg.search(row[self.column].lower()) ]
+
+declare_filter(120, BITextFilter("name"))
+declare_filter(121, BITextFilter("output"))
+
+class BIHostFilter(Filter):
+    def __init__(self):
+        self.column = "aggr_hosts"
+        Filter.__init__(self, self.column, "Affected hosts contain", "aggr", [self.column], [])
+
+    def display(self):
+        html.text_input(self.htmlvars[0])
+
+    def heading_info(self, infoname):
+        return html.var(self.htmlvars[0])
+
+    def find_host(self, host, hostlist):
+        for s, h in hostlist:
+            if h == host:
+                return True
+        return False
+
+    def filter_table(self, rows):
+        val = html.var(self.htmlvars[0])
+        if not val:
+            return rows
+        return [ row for row in rows if self.find_host(val, row["aggr_hosts"]) ]
+
+declare_filter(130, BIHostFilter(), "Filter for all aggregations that base on status information of that host. Exact match (no regular expression)")
+
+class BIStatusFilter(Filter):
+    def __init__(self, what):
+        title = (what.replace("_", " ") + " state").title()
+        self.column = "aggr_" + what + "state"
+        if what == "":
+            self.code = 'r'
+        else:
+            self.code = what[0]
+        self.prefix = "bi%ss" % self.code
+        vars = [ self.prefix + str(x) for x in [ 0, 1, 2, 3 ] ]
+        if self.code == 'a':
+            vars.append(self.prefix + "n")
+        Filter.__init__(self, self.column, title, "aggr", vars, [])
+
+    def filter(self, tablename):
+        return ""
+
+    def display(self):
+        if html.var("filled_in"):
+            defval = "on"
+        else:
+            defval = "on"
+        for varend, text in [('0', 'OK'), ('1', 'WARN'), ('2', 'CRIT'), ('3', 'UNKNOWN'), ('n', 'unset')]:
+            if self.code != 'a' and varend == 'n':
+                continue # no unset for read and effective state
+            var = self.prefix + varend
+            html.checkbox(var, defval)
+            html.write(" %s " % text)
+
+    def filter_table(self, rows):
+        headers = []
+        if html.var("filled_in"):
+            defval = ""
+        else:
+            defval = "on"
+
+        allowed_states = []
+        for i in ['0','1','2','3','n']:
+            if html.var(self.prefix + i, defval) == "on":
+                if i == 'n':
+                    s = None
+                else:
+                    s = int(i)
+                allowed_states.append(s)
+        newrows = []
+        for row in rows:
+            if row[self.column] in allowed_states:
+                newrows.append(row)
+        return newrows
+
+declare_filter(150,  BIStatusFilter(""))
+declare_filter(151,  BIStatusFilter("effective_"))
+declare_filter(152,  BIStatusFilter("assumed_"))
+
+

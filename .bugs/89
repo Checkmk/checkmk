@@ -1,0 +1,12 @@
+Title: bulletlink in sidebarsnapin: broken layout
+Component: multisite
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-01-08 11:22:25
+Class: bug
+
+Since shortly the small blue bullets lefts to links
+like in "Site status" are indented too much left (on 
+Firefox). This could be the effect of fixing this for
+IE and Chrome.

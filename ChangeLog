@@ -5,6 +5,7 @@
 
     Multisite:
     * New reschedule icon now also works for non-local sites.
+    * painter options are now persisted on a per-user-base
 
     Livestatus:
     * Check for buffer overflows (replace strcat with strncat, etc.)

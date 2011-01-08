@@ -1161,7 +1161,6 @@ def view_options(viewname):
 
     if config.user_may(config.user, "painter_options"):
         for on, opt in multisite_painter_options.items():
-            v[on] = opt["default"]
             if html.has_var(on):
                 must_save = True
                 # Make sure only allowed values are returned
@@ -1169,6 +1168,8 @@ def view_options(viewname):
                 for val, title in opt["values"]:
                     if value == val:
                         v[on] = value
+            elif on not in v:
+                v[on] = opt["default"]
             opt["value"] = v[on]
 
     else:

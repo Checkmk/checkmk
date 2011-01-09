@@ -1,10 +1,11 @@
 Title: View-Editor: Spalten-Editieren komfortabler machen
 Component: multisite
-Benefit: 3
-State: open
-Cost: 4
-Date: 2010-12-21 20:51:19
+State: done
 Class: feature
+Date: 2010-12-21 20:51:19
+Benefit: 3
+Cost: 4
+Fun: 0
 
 Das aktuelle Prinzip ist eh doof, weil man keine Spalten in der Mitte
 einfügen kann. Das müsste man irgendwie über Javascript hinbekommen.
@@ -25,3 +26,13 @@ Apache trotzdem an. Und dass man dann nicht html.var()
 verwendet, sondern eine Hilfsfunktion, die mehrfach genannte
 Variablen konserviert und z.B. als Array zur Verfügung stellt.
 
+
+2011-01-05 16:21:34: changed state open -> done
+Ich habs nun so gebaut, dass die IDs/Namen im DOM Baum umgebogen werden. Das mit den gleichen
+HTML Variablen hätte - soweit ich das gesehen habe - zuviele Auswirkungen auf allgemeinen Code
+im Multisite. Da war es mir lieber die Arbeit in den speziellen Code für den View Editor zu stecken.
+
+Zudem musste ich um das dynamische Hinzufügen von Columns zu ermöglichen eine neue Ajax Anfrage
+einbauen um den Code zum zeichnen der Felder nicht zu duplizieren.
+
+Scheint nun ganz gut zu funktionieren.

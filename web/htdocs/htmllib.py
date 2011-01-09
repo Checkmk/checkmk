@@ -268,8 +268,8 @@ class html:
 
     def select(self, varname, options, deflt="", onchange=None):
         current = self.var(varname, deflt)
-        onchange_code = onchange and " id=\"%s\" onchange=\"%s\"" % (varname, onchange) or ""
-        self.write("<select%s name=\"%s\" size=\"1\">\n" % (onchange_code, varname))
+        onchange_code = onchange and " onchange=\"%s\"" % (onchange) or ""
+        self.write("<select%s name=\"%s\" id=\"%s\" size=\"1\">\n" % (onchange_code, varname, varname))
         for value, text in options:
             if value == None: value = ""
             sel = value == current and " selected" or ""

@@ -1,12 +1,11 @@
-Title: bulletlink in sidebarsnapin: broken layout
-Component: multisite
-Benefit: 1
+Title: Re-Enable StatsGroupBy deprecated warning (1.2i1)
+Component: livestatus
+Benefit: 5
 State: open
 Cost: 1
-Date: 2011-01-08 11:22:25
-Class: bug
+Date: 2011-01-05 10:33:21
+Class: cleanup
 
-Since shortly the small blue bullets lefts to links
-like in "Site status" are indented too much left (on 
-Firefox). This could be the effect of fixing this for
-IE and Chrome.
+StatsGroupBy ist deprecated. Die Warnung dazu erst ab 1.2i1 aktivieren:
+
+src/Query.cc:442

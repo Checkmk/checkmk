@@ -218,7 +218,7 @@ then
     do
         $WAITMAX ipmi-sensors $IPMI_FORMAT --sdr-cache-directory /var/cache -g "$class" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
         # In case of a timeout immediately leave loop. 
-	if [ $? = 255 ] ; then break ; fi
+    if [ $? = 255 ] ; then break ; fi
         WAITMAX="waitmax 3"
     done
 fi
@@ -227,7 +227,7 @@ fi
 # http://www.lsi.com/DistributionSystem/AssetDocument/support/downloads/megaraid/miscellaneous/linux/2.00.15_Linux_MegaCLI.zip
 if which MegaCli >/dev/null ; then
     echo '<<<megaraid_pdisks>>>'
-		for part in $(MegaCli -EncInfo -aALL -NoLog < /dev/null | egrep 'Enclosure|Device ID'); do
+    for part in $(MegaCli -EncInfo -aALL -NoLog < /dev/null | egrep 'Enclosure|Device ID'); do
         [ $part == 'Enclosure' ] && echo -ne "\ndev2enc"
         echo -n " ${part//:/}"
     done
@@ -239,15 +239,16 @@ fi
 
 # 3WARE disk controller (by Radoslaw Bak)
 if which tw_cli > /dev/null ; then
-    CONTROLLER=`tw_cli show | sed -n '4,$p' | cut -c1-2`
-    echo '<<<3ware_info>>>'
-    tw_cli /$CONTROLLER show all | egrep 'Model =|Firmware|Serial'
-    echo '<<<3ware_disks>>>'
-    tw_cli /$CONTROLLER show drivestatus | egrep 'p[0-9]'
-    echo '<<<3ware_units>>>'
-    tw_cli /$CONTROLLER show unitstatus | egrep 'u[0-9]'
+    for C in $(tw_cli show | awk 'NR < 4 { next } { print $1 }'); do
+        echo '<<<3ware_info>>>'
+        tw_cli /$C show all | egrep 'Model =|Firmware|Serial'
+        echo '<<<3ware_disks>>>'
+        tw_cli /$C show drivestatus | egrep 'p[0-9]' | sed "s/^/$C\//"
+        echo '<<<3ware_units>>>'
+        tw_cli /$C show unitstatus | egrep 'u[0-9]' | sed "s/^/$C\//"
+    done
 fi
-        
+
 if which vcbVmName > /dev/null 2>&1 ; then
    echo '<<<vmware_state>>>'
    vcbVmName -s any

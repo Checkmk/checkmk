@@ -35,3 +35,7 @@ FEATURE: Was ist mit hard states? Sollen wir alles auf hard oder
 soft states basieren lassen? Oder soll man das als View-Option
 angeben können? Mal überlegen...
 
+FEATURE: Risikoanalyse oder Meantime To Failure: Wenn man die
+Ausfallswahrscheinlichkeiten der einzelnen Services hat, könnte
+man daraus die Ausfallswahrscheinlich
+

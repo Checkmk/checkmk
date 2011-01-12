@@ -1033,15 +1033,21 @@ def savefloat(f):
 
 # Takes bytes as integer and returns a string which represents the bytes in a
 # more human readable form scaled to GB/MB/KB
-def get_bytes_human_readable(b, base=1024.0):
+def get_bytes_human_readable(b, base=1024):
+    # Handle negative bytes correctly
+    prefix = ''
+    if b < 0:
+        prefix = '-'
+        b *= -1
+
     if b > base * base * base:
-        return '%.2fGB' % (b / base / base / base)
+        return '%s%.2fGB' % (prefix, b / base / base / base)
     if b > base * base:
-        return '%.2fMB' % (b / base / base)
+        return '%s%.2fMB' % (prefix, b / base / base)
     elif b > base:
-        return '%.2fKB' % (b / base)
+        return '%s%.2fKB' % (prefix, b / base)
     else:
-        return '%.2fB' % b
+        return '%s%.2fB' % (prefix, b)
 
 def get_nic_speed_human_readable(speed):
     try: 

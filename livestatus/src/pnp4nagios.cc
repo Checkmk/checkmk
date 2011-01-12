@@ -44,19 +44,25 @@ int pnpgraph_present(char *host, char *service)
         return -1;
 
     char path[4096];
-    strncpy(path, g_pnp_path, sizeof(path) - 1);
+    int needed_size = strlen(g_pnp_path) + strlen(host) + 16;
+    if (service)
+        needed_size += strlen(service);
+    if (needed_size > sizeof(path))
+        return -1;
+
+    strcpy(path, g_pnp_path);
     char *end = path + strlen(path);
-    strncpy(end, host, sizeof(end) - 1);
+    strcpy(end, host);
     cleanup_pnpname(end);
-    strncat(end, "/", sizeof(end) - strlen(end) - 1);
+    strcat(end, "/");
     end = end + strlen(end);
     if (service) {
-        strncat(end, service, sizeof(end) - strlen(end) - 1);
+        strcat(end, service);
         cleanup_pnpname(end);
         strcat(end, ".xml");
     }
     else 
-        strncat(end, "_HOST_.xml", sizeof(end) - strlen(end) - 1);
+        strcat(end, "_HOST_.xml");
 
     if (0 == access(path, R_OK))
         return 1;

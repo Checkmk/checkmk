@@ -42,3 +42,21 @@ jetzt auf ein Kommando klickt, muss ich bei jedem Datensatz wieder die ID
 berechnen. Dann schauen, ob es eine Check-Variable gibt. Falls ja, muss
 diese auf "on" stehen, damit das Kommando ausgeführt wird.  Wenn keines
 gewält ist, soll ein Hinweis kommen (gelb).
+
+Checkboxen(3): Jetzt ist mir noch eine Idee für die Implementierung
+gekommen. Man könnte die Checkboxen anstellen von HTML-Formularen
+mit Icons machen wie sie bei den BI assumed states verwendet werden.
+Also per Ajax die angecheckten Dinge in einer Datei persistieren.
+Die Implementierung wäre sehr einfach. Und die Häckchen bleiben für
+spätere Zwecke auch da. Wenn man eine Aktion auslöst, müsste diese
+einfach nur noch bei jeder Zeile prüfen, ob das Item gecheckt ist.
+Die Aktionen uncheck all entfernt dann einfach alle Häckchen, die
+in der aktuellen View sichtbar sind. Wichtig ist allerdings hier
+umsomehr: Wenn mehrere Leute mit dem gleichen Account arbeiten, wirds
+gefährlich. Kann man ein Browserfenster identifizieren und evtl.
+transid und Checkboxen relativ zum Browserfenster machen???
+Evtl. könnte man in ein Formular eine zufällige ID einkodieren
+und mit der transid nur noch prüfen, ob dieses Formular bereits
+abgeschickt wurde? Man würde dann pro Benutzer mehrere Transids
+speichern.
+

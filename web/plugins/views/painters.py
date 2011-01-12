@@ -128,7 +128,7 @@ def pnp_url(row, what = 'graph'):
     url = site["url_prefix"] + ("pnp4nagios/index.php/%s?host=%s&srv=%s" % \
             (what, htmllib.urlencode(host), htmllib.urlencode(svc)))
     if what == 'graph':
-        url += "&theme=multisite&baseurl=%scheck_mk/" % htmllib.urlencode(defaults.url_prefix)
+        url += "&theme=multisite&baseurl=%scheck_mk/" % htmllib.urlencode(site["url_prefix"])
     return url
 
 def pnp_popup_url(row):

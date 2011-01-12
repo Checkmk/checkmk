@@ -5,9 +5,14 @@
 
     Multisite:
     * New reschedule icon now also works for non-local sites.
+    * painter options are now persisted on a per-user-base
 
     Livestatus:
     * Check for buffer overflows (replace strcat with strncat, etc.)
+    * Reduce number of log messages (reclassify to debug)
+
+    Checks & Agents:
+    * apc_symmetra: handle empty SNMP variables and treat as 0.
 
 1.1.9i3:
     INCOMPATIBLE CHANGES:

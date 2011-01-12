@@ -153,7 +153,7 @@ where COMMAND is one of:
   show [# #..]           - show several bugs (or all open)
   resolve ID             - change a bugs state
   delete #..             - delete bug(s)
-  grep WHAT...           - grep in titles and descriptions
+  grep [-v] WHAT...      - grep in titles and descriptions (-v: verbose)
   edit [#]               - open bug # in editor (or newest bug)
   commit                 - commit all changed and new bugs
 
@@ -377,8 +377,15 @@ def grep(line, kw):
     
 
 def main_grep(args):
+    if '-v' in args:
+        verbose = True
+        args = [ a for a in args if a != '-v' ]
+    else:
+        verbose = False
+
     if len(args) == 0:
         usage()
+
     for bug in g_bugs.values():
         didmatch = False
         for kw in args:
@@ -395,7 +402,8 @@ def main_grep(args):
                     didmatch = True
         if didmatch:
             list_bug(bug)
-            sys.stdout.write(bodylines)
+            if verbose:
+                sys.stdout.write(bodylines)
 
 def main_edit(args):
     if len(args) == 0:

@@ -13,6 +13,7 @@
 
     Checks & Agents:
     * apc_symmetra: handle empty SNMP variables and treat as 0.
+    * Added new check df.trend to analyze df growth during given timeranges
 
 1.1.9i3:
     INCOMPATIBLE CHANGES:

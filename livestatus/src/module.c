@@ -128,7 +128,6 @@ void livestatus_cleanup_after_fork()
 void *main_thread(void *data)
 {
     g_thread_pid = getpid();
-    logger(LG_INFO, "Entering main loop, listening on UNIX socket. PID is %d", g_thread_pid);
     while (!g_should_terminate) 
     {
 	do_statistics();
@@ -192,7 +191,8 @@ void start_threads()
 	/* start thread that listens on socket */
 	pthread_atfork(livestatus_count_fork, NULL, livestatus_cleanup_after_fork);
 	pthread_create(&g_mainthread_id, 0, main_thread, (void *)0);
-	logger(LG_INFO, "Starting %d client threads", g_num_clientthreads);
+        if (g_debug_level > 0)
+            logger(LG_INFO, "Starting %d client threads", g_num_clientthreads);
 
 	unsigned t;
 	g_clientthread_id = (pthread_t *)malloc(sizeof(pthread_t) * g_num_clientthreads);
@@ -228,7 +228,8 @@ void terminate_threads()
 	    if (0 != pthread_join(g_clientthread_id[t], NULL))
 		logger(LG_INFO, "Warning: could not join thread %p", g_clientthread_id[t]);
 	}
-	logger(LG_INFO, "Main thread + %u client threads have finished", g_num_clientthreads);
+        if (g_debug_level > 0)
+            logger(LG_INFO, "Main thread + %u client threads have finished", g_num_clientthreads);
 	g_thread_running = 0;
     }
     free(g_clientthread_id);
@@ -255,7 +256,6 @@ int open_unix_socket()
 	logger(LG_CRIT , "Unable to create UNIX socket: %s", strerror(errno));
 	return false;
     }
-    logger(LG_INFO , "Created UNIX control socket at %s", g_socket_path);
 
     // Imortant: close on exec -> check plugins must not inherit it!
     if (0 < fcntl(g_unix_socket, F_SETFD, FD_CLOEXEC))
@@ -286,7 +286,8 @@ int open_unix_socket()
 	return false;
     }
 
-    logger(LG_INFO, "Opened UNIX socket %s\n", g_socket_path);
+    if (g_debug_level > 0)
+        logger(LG_INFO, "Opened UNIX socket %s\n", g_socket_path);
     return true;
 
 }
@@ -598,8 +599,10 @@ void livestatus_parse_arguments(const char *args_orig)
 void omd_advertize()
 {
     char *omd_site = getenv("OMD_SITE");
-    if (omd_site)
-        logger(LG_INFO, "Running on OMD site %s. Cool.", omd_site);
+    if (omd_site) {
+        if (g_debug_level > 0)
+            logger(LG_INFO, "Running on OMD site %s. Cool.", omd_site);
+    }
     else {
         logger(LG_INFO, "Hint: please try out OMD - the Open Monitoring Distribution");
         logger(LG_INFO, "Please visit OMD at http://omdistro.org");
@@ -613,8 +616,7 @@ int nebmodule_init(int flags, char *args, void *handle)
     g_nagios_handle = handle;
     livestatus_parse_arguments(args);
 
-    logger(LG_INFO, "Version %s initializing. Socket path: '%s'", VERSION, g_socket_path);
-    logger(LG_INFO, "Livestatus has been brought to you by Mathias Kettner");
+    logger(LG_INFO, "Livestatus %s by Mathias Kettner. Socket: '%s'", VERSION, g_socket_path);
     logger(LG_INFO, "Please visit us at http://mathias-kettner.de/");
 
     omd_advertize();
@@ -622,12 +624,12 @@ int nebmodule_init(int flags, char *args, void *handle)
     if (!open_unix_socket())
 	return 1;
 
-    if( !verify_event_broker_options() ) {
+    if (!verify_event_broker_options()) {
         logger(LG_CRIT, "Fatal: bailing out. Please fix event_broker_options.");
         logger(LG_CRIT, "Hint: your event_broker_options are set to %d. Try setting it to -1.", event_broker_options);
 	return 1;
     }
-    else 
+    else if (g_debug_level > 0)
         logger(LG_INFO, "Your event_broker_options are sufficient for livestatus.");
 
     store_init();
@@ -639,7 +641,8 @@ int nebmodule_init(int flags, char *args, void *handle)
        thread the first time one of our callbacks is called. Before
        that happens, we haven't got any data anyway... */
 
-    logger(LG_INFO, "successfully finished initialization");
+    if (g_debug_level > 0)
+        logger(LG_INFO, "successfully finished initialization");
     return 0;
 }
 

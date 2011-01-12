@@ -41,7 +41,7 @@ apc_default_levels = ( 95, 40, 1, 220 )
 def check_apc(item, params, info):
     BasicBatteryStatus, BasicOutputStatus, AdvBatteryCapacity, \
     AdvBatteryTemperature, AdvBatteryCurrent, AdvOutputVoltage, \
-    AdvOutputCurrent = [int(x) for x in info[0][:7]]
+    AdvOutputCurrent = [ saveint(x) for x in info[0][:7] ]
     RunTimeRemaining = info[0][7]
 
     crit_capacity, crit_batt_temp, crit_batt_curr, crit_voltage = params

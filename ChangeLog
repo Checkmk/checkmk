@@ -6,6 +6,8 @@
     Multisite:
     * New reschedule icon now also works for non-local sites.
     * painter options are now persisted on a per-user-base
+    * new optional column for displaying host and service comments
+      (not used in shipped views but available in view editor)
 
     Livestatus:
     * Check for buffer overflows (replace strcat with strncat, etc.)

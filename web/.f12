@@ -1,2 +1,2 @@
 sudo cp -prv * /omd/versions/default/share/check_mk/web/
-sudo su - -c 'omd reload eins apache'
+sudo su - -c 'omd reload wato apache'

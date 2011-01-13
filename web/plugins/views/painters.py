@@ -603,6 +603,21 @@ multisite_painters["check_manpage"] = {
     "paint" : paint_check_manpage
 }
 
+def paint_comments(prefix, row):
+    comments = row[ prefix + "comments_with_info"]
+    text = ", ".join(["<i>%s</i>: %s" % (a,c) for (id,a,c) in comments ])
+    return "", text
+
+multisite_painters["svc_comments"] = {
+    "title" : "Service Comments",
+    "short" : "Comments",
+    "columns" : [ "service_comments_with_info" ],
+    "paint" : lambda row: paint_comments("service_", row)
+}
+
+
+
+
 def notes_matching_pattern_entries(dirs, item):
     from fnmatch import fnmatch
     matching = []
@@ -1013,6 +1028,14 @@ multisite_painters["host_tags"] = {
     "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
     "paint" : paint_host_tags
 }
+
+multisite_painters["host_comments"] = {
+    "title" : "Host Comments",
+    "short" : "Comments",
+    "columns" : [ "host_comments_with_info" ],
+    "paint" : lambda row: paint_comments("host_", row)
+}
+
 
 #    _   _           _
 #   | | | | ___  ___| |_ __ _ _ __ ___  _   _ _ __  ___

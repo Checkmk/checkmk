@@ -44,10 +44,12 @@ except NameError:
 # --------------------------------------------------------------
 def render_about():
     html.write("Version: " + defaults.check_mk_version)
+    html.write("<ul>")
     bulletlink("Homepage",        "http://mathias-kettner.de/check_mk.html")
     bulletlink("Documentation",   "http://mathias-kettner.de/checkmk.html")
     bulletlink("Download",        "http://mathias-kettner.de/check_mk_download.html")
     bulletlink("Mathias Kettner", "http://mathias-kettner.de")
+    html.write("</ul>")
 
 sidebar_snapins["about"] = {
     "title" : "About Check_MK",

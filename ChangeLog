@@ -1,3 +1,8 @@
+1.1.9i5:
+    Multisite:
+    * custom notes: new macros $URL_PREFIX$ and $SITE$, making 
+      multi site setups easier
+
 1.1.9i4:
     Core, Setup, etc.:
     * added missing 'register 0' to host template

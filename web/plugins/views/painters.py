@@ -649,13 +649,17 @@ def paint_custom_notes(row):
     files.reverse()
     contents = []
     def replace_tags(text):
+        sitename = row["site"]
+        site = html.site_status[sitename]["site"]
         return text\
-            .replace('$HOSTNAME$', host)\
+            .replace('$URL_PREFIX$',     site["url_prefix"])\
+            .replace('$SITE$',           sitename)\
+            .replace('$HOSTNAME$',       host)\
 	    .replace('$HOSTNAME_LOWER$', host.lower())\
             .replace('$HOSTNAME_UPPER$', host.upper())\
             .replace('$HOSTNAME_TITLE$', host[0].upper() + host[1:].lower())\
-            .replace('$HOSTADDRESS$', row["host_address"])\
-            .replace('$SERVICEDESC$', row.get("service_description", ""))
+            .replace('$HOSTADDRESS$',    row["host_address"])\
+            .replace('$SERVICEDESC$',    row.get("service_description", ""))
     for f in files:
         contents.append(replace_tags(unicode(file(f).read(), "utf-8").strip()))
     return "", "<hr>".join(contents)

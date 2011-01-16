@@ -107,7 +107,7 @@ multisite_painter_options["ts_date"] = {
 icon_columns = [ "acknowledged", "scheduled_downtime_depth", "downtimes_with_info", "comments_with_info",
                  "notifications_enabled", "is_flapping", "modified_attributes_list", "active_checks_enabled",
                  "accept_passive_checks", "action_url_expanded", "notes_url_expanded", "in_notification_period",
-                 "custom_variable_names", "custom_variable_values", "icon_image", "pnpgraph_present" ]
+                 "custom_variable_names", "custom_variable_values", "icon_image", "pnpgraph_present", "check_command" ]
 
 # Additional columns only to fetch for services
 icon_service_columns = [ "service_description" ]
@@ -133,6 +133,12 @@ def pnp_url(row, what = 'graph'):
 
 def pnp_popup_url(row):
     return pnp_url(row, 'popup')
+
+def logwatch_url(sitename, notes_url):
+    i = notes_url.index("/check_mk/logwatch.py")
+    site = html.site_status[sitename]["site"]
+    return site["url_prefix"] + notes_url[i:]
+
 
 def wato_link(filename, site, hostname, where):
     if 'X' in html.display_options:
@@ -190,9 +196,16 @@ def paint_icons(what, row): # what is "host" or "service"
         if action_url and not ('/pnp4nagios/' in action_url and pnpgraph_present >= 0): 
             output += "<a href='%s'><img class=icon src=\"images/icon_action.gif\"></a>" % row[prefix + "action_url_expanded"]
 
-        # notes_url
-        if row[prefix + "notes_url_expanded"]:
-            output += "<a href='%s'><img class=icon src=\"images/icon_notes.gif\"></a>" % row[prefix + "notes_url_expanded"]
+        # notes_url (only, if not a Check_MK logwatch check pointing to logwatch.py. These is done by a special icon)
+        notes_url = row[prefix + "notes_url_expanded"] 
+        check_command = row[prefix + "check_command"]
+        if notes_url:
+            # unmodified original logwatch link -> translate into more intelligent icon
+            if check_command == 'check_mk-logwatch' and "/check_mk/logwatch.py" in notes_url:
+                output += '<a href="%s"><img class=icon src="images/icon_logwatch.png\"></a>' % logwatch_url(row["site"], notes_url)
+            else:
+                output += "<a href='%s'><img class=icon src=\"images/icon_notes.gif\"></a>" % notes_url
+
 
     # Problem has been acknowledged
     if row[prefix + "acknowledged"]:

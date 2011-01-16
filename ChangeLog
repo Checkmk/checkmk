@@ -2,6 +2,8 @@
     Multisite:
     * custom notes: new macros $URL_PREFIX$ and $SITE$, making 
       multi site setups easier
+    * new intelligent logwatch icon, using url_prefix in multi site
+      setups
 
 1.1.9i4:
     Core, Setup, etc.:

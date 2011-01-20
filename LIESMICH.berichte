@@ -1,0 +1,130 @@
+Erstellung von Berichten zur Verfügbarkeit.
+
+Grundlage von allen sind die Nagios-Logfiles mit folgende Einträgen:
+
+Initial states
+Alerts
+Downtime begin/ends
+timeperiod transitions (durch Livestatus eingetragen).
+
+Jedem Bericht zugrund liegt eine Menge von Hosts oder Services.
+Zu Aggregationen kommen wir später.
+
+Idee: Die Menge definiert sich automatisch durch eine View. Eine View
+entspricht ja einem Filter. Und wenn man diesen Filter hat, kann man
+ihn ja auch wunderbar auf die Log-Tabelle anwenden. Auch die Gruppierung
+der View kann man sich zunutze machen. Mithin könnte man direkt eine
+1:1 Beziehung zu einer View (inklusive ausgefüllter Filter) und einem
+Bericht machen. Daraus ergibt sich bei einer View auch ein Kontextbutton
+"Reporting".
+
+Bei der Reporterstellung gibt es jetzt zwei Schritte:
+
+1. Sammlung der Rohdaten
+2. Visualisierung auf verschiedene mögliche Arten
+
+[1] Sammlung der Rohdaten
+
+Aus der View wird ein passender Livestatus-Filter erzeugt. Gleichzeitig ist
+noch ein Berichtszeitraum und evtl. weitere Berichtsoptionen notwendig.
+Dazu gibt es in Berichtsviews einen Reiter analog zu "Filter". Der Filter-Reiter
+wird 1:1 von der View übernommen. Anstelle von "Commands" erscheint aber
+der Reiter "Reporting". Hier kann man Optionen einstellen, die pro
+View und User persistiert werden. Dazu kann man evtl. die gleiche Mechanik
+verwenden, wie bei den Painteroptions. Mögliche Optionen sind:
+
+a) Zeitraum
+[This year][Last year][Last month][This month][last week][current week][yesterday][today]
+from: [____] to: [____]
+(evtl. auch die Namen der Monate stattdessen)
+
+b) Art der Darstellung
+
+c) evtl. weiteres, z.B. wie pending behandelt wird und wie Downtimes gerechnet werden.
+
+Jetzt macht man eine Livestatusquery auf die Tabelle 'log'. Dabei wird verwendet:
+* Der Filterausdruck von der View
+* Ein weiterer Filter, welche die richtige Logklassen wählt (alerts, timeperiods, evtl. auch Programmstart- und Ende)
+
+Problem hierbei ist: Wir müssen eigentlich weiter in die Vergangenheit
+zurück, damit wir auf jeden Fall die CURRENT_SERVICE_STATE einträge vom
+letzten mal mitnehmen.
+
+Diese Rohdaten werden jetzt weiterverarbeitet. Dazu wird eine
+Python-Datenstruktur aufgebaut, welche zu jedem gefundenen Host und Service
+eine Historie aufzeichnet. Das ist ein Dictionary, dass nach und nach
+aufgebaut wird. Am Ende wird evtl. irgendwie sortiert, aber dazu später.
+
+Pro Objekt gibt es also eine History - eine Liste. Diese bekommt immer
+einen neuen Eintrag, wenn ein Alert oder eine Downtime zu dem Objekt kommt.
+Im Falle von einer Timeperiod-Transition wird bei den betroffenen Objekten
+der Zustand "in_notification_period" entsprechend angepasst und ein neuer
+Eintrag gemacht.
+
+Noch ein Problem: wenn wir über Services reden, möchten wir auch den Zustand
+des Hosts wissen. Evtl. muss auch eine Abhängigkeit vom Service Check_MK
+eingebaut werden. Was machen wir für Intervalle, in denen dieser rot ist?
+Wir müssen sie evtl. als unbekannt markieren. Intervalle, in denen der Host
+down ist, müssen auch entsprechend gekennzeichnet werden.
+
+Ein Eintrag beschreibt letztlich ein *Intervall* und besteht aus folgenden Feldern:
+
+Intervall-Anfang
+Dauer (brauchen wir das?)
+Host-State
+Service-State
+in_notification_period
+in_downtime
+host_in_downtime
+nagios_running (?)
+check output (vom alert)
+
+Wenn wir diese gefüllt haben, sind die Rohdaten bereit.
+
+Als nächstes könnte man das ganze wieder in eine Tabelle umformatieren?
+Ich denke gerade daran, dass man die Sortierung nach site, host und service
+noch machen muss.
+
+[2] Darstellung
+
+Jetzt sind verschiedene Arten der Darstellung denkbar, z.B.:
+
+Aufsummierung über die Zeiten in einem bestimmten Zustand:
+
+Objekt       % OK       | % WARN      | % CRIT     | % UNKNOWN    | % UNDETERMINED
+------------+---------------------------------------------------------------------
+Dabei kann man auch jedes mal % und Zeiten angeben (gleichzeitig oder alternativ).
+Das könnte man über eine Reportoption oder Painteroption steuern.
+
+Technisch wäre es wohl gut, das ganze als Tabelle zu lösen und damit wieder mit 
+dem normalen View-Mechanismus.
+
+Als nächstes könnte man - analog zu Nagios - eine Zeitachse malen, in der man 
+den Zustand von einem Objekt visualisiert.
+
+Weitere Anregungen muss man sich von anderen Tools holen. Auch nicht vergessen:
+die SLA-Graphen von IT-Cockpit.
+
+-------------------------------------------------------------------------------
+Aggregation:
+
+Hier gibt es als Vorschritt erstmal das Problem, dass man den Filterausdruck
+anders berechnen muss, um an die Daten zu kommen. Dazu liefert aber die
+Aggregation ja einen Filter wenigstens über die Hosts. Man kombiniert einfach
+die Filter über alle Aggregate.
+
+Jetzt baut man ein g_services auf (siehe bi.py). Jedesmal wenn ein Alert
+kommt, muss der Endzustand von allen Aggregaten neu berechnet werden. 
+Diejenigen, bei denen sich der Zustand ändert, bekommen einen neuen
+Eintrag. Hierbei ist noch nicht klar, wie es mit den Downtimes ist. Eigentlich
+bräuchten wir hierfür bereits die Downtime-Aggregation. So kann man die
+ganze Aggregation als "in downtime" betrachten, wenn auf allen kritischen
+Einzelservices, die zum Problem beitragen, auch eine Downtime gesetzt ist.
+
+Wenn man die Tabelle dann wie oben fertig aufgebaut hat, kann man die
+gleiche Visualisierung verwenden. Zusätzlich muss es noch Verknüpfungslinks
+geben, damit man z.B. auch einen Bericht über alle Einzelatome eines
+Aggregats bekommen kann. Also muss ein Aggregat auch einen (präzisen)
+Livestatusfilter liefern können. Man könnte einen View-Filter erfinden
+ala (used by aggregate...). Diesen könnte man auch in Views verwenden.
+

@@ -107,7 +107,7 @@ multisite_painter_options["ts_date"] = {
 icon_columns = [ "acknowledged", "scheduled_downtime_depth", "downtimes_with_info", "comments_with_info",
                  "notifications_enabled", "is_flapping", "modified_attributes_list", "active_checks_enabled",
                  "accept_passive_checks", "action_url_expanded", "notes_url_expanded", "in_notification_period",
-                 "custom_variable_names", "custom_variable_values", "icon_image", "pnpgraph_present" ]
+                 "custom_variable_names", "custom_variable_values", "icon_image", "pnpgraph_present", "check_command" ]
 
 # Additional columns only to fetch for services
 icon_service_columns = [ "service_description" ]
@@ -133,6 +133,12 @@ def pnp_url(row, what = 'graph'):
 
 def pnp_popup_url(row):
     return pnp_url(row, 'popup')
+
+def logwatch_url(sitename, notes_url):
+    i = notes_url.index("/check_mk/logwatch.py")
+    site = html.site_status[sitename]["site"]
+    return site["url_prefix"] + notes_url[i:]
+
 
 def wato_link(filename, site, hostname, where):
     if 'X' in html.display_options:
@@ -190,9 +196,16 @@ def paint_icons(what, row): # what is "host" or "service"
         if action_url and not ('/pnp4nagios/' in action_url and pnpgraph_present >= 0): 
             output += "<a href='%s'><img class=icon src=\"images/icon_action.gif\"></a>" % row[prefix + "action_url_expanded"]
 
-        # notes_url
-        if row[prefix + "notes_url_expanded"]:
-            output += "<a href='%s'><img class=icon src=\"images/icon_notes.gif\"></a>" % row[prefix + "notes_url_expanded"]
+        # notes_url (only, if not a Check_MK logwatch check pointing to logwatch.py. These is done by a special icon)
+        notes_url = row[prefix + "notes_url_expanded"] 
+        check_command = row[prefix + "check_command"]
+        if notes_url:
+            # unmodified original logwatch link -> translate into more intelligent icon
+            if check_command == 'check_mk-logwatch' and "/check_mk/logwatch.py" in notes_url:
+                output += '<a href="%s"><img class=icon src="images/icon_logwatch.png\"></a>' % logwatch_url(row["site"], notes_url)
+            else:
+                output += "<a href='%s'><img class=icon src=\"images/icon_notes.gif\"></a>" % notes_url
+
 
     # Problem has been acknowledged
     if row[prefix + "acknowledged"]:
@@ -603,6 +616,21 @@ multisite_painters["check_manpage"] = {
     "paint" : paint_check_manpage
 }
 
+def paint_comments(prefix, row):
+    comments = row[ prefix + "comments_with_info"]
+    text = ", ".join(["<i>%s</i>: %s" % (a,c) for (id,a,c) in comments ])
+    return "", text
+
+multisite_painters["svc_comments"] = {
+    "title" : "Service Comments",
+    "short" : "Comments",
+    "columns" : [ "service_comments_with_info" ],
+    "paint" : lambda row: paint_comments("service_", row)
+}
+
+
+
+
 def notes_matching_pattern_entries(dirs, item):
     from fnmatch import fnmatch
     matching = []
@@ -634,13 +662,17 @@ def paint_custom_notes(row):
     files.reverse()
     contents = []
     def replace_tags(text):
+        sitename = row["site"]
+        site = html.site_status[sitename]["site"]
         return text\
-            .replace('$HOSTNAME$', host)\
+            .replace('$URL_PREFIX$',     site["url_prefix"])\
+            .replace('$SITE$',           sitename)\
+            .replace('$HOSTNAME$',       host)\
 	    .replace('$HOSTNAME_LOWER$', host.lower())\
             .replace('$HOSTNAME_UPPER$', host.upper())\
             .replace('$HOSTNAME_TITLE$', host[0].upper() + host[1:].lower())\
-            .replace('$HOSTADDRESS$', row["host_address"])\
-            .replace('$SERVICEDESC$', row.get("service_description", ""))
+            .replace('$HOSTADDRESS$',    row["host_address"])\
+            .replace('$SERVICEDESC$',    row.get("service_description", ""))
     for f in files:
         contents.append(replace_tags(unicode(file(f).read(), "utf-8").strip()))
     return "", "<hr>".join(contents)
@@ -1013,6 +1045,14 @@ multisite_painters["host_tags"] = {
     "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
     "paint" : paint_host_tags
 }
+
+multisite_painters["host_comments"] = {
+    "title" : "Host Comments",
+    "short" : "Comments",
+    "columns" : [ "host_comments_with_info" ],
+    "paint" : lambda row: paint_comments("host_", row)
+}
+
 
 #    _   _           _
 #   | | | | ___  ___| |_ __ _ _ __ ___  _   _ _ __  ___

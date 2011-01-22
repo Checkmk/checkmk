@@ -1,3 +1,10 @@
+1.1.9i5:
+    Multisite:
+    * custom notes: new macros $URL_PREFIX$ and $SITE$, making 
+      multi site setups easier
+    * new intelligent logwatch icon, using url_prefix in multi site
+      setups
+
 1.1.9i4:
     Core, Setup, etc.:
     * added missing 'register 0' to host template
@@ -6,6 +13,8 @@
     Multisite:
     * New reschedule icon now also works for non-local sites.
     * painter options are now persisted on a per-user-base
+    * new optional column for displaying host and service comments
+      (not used in shipped views but available in view editor)
 
     Livestatus:
     * Check for buffer overflows (replace strcat with strncat, etc.)
@@ -13,7 +22,6 @@
 
     Checks & Agents:
     * apc_symmetra: handle empty SNMP variables and treat as 0.
-    * Added new check df.trend to analyze df growth during given timeranges
 
 1.1.9i3:
     INCOMPATIBLE CHANGES:

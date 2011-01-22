@@ -1,0 +1,14 @@
+Title: PNP Popup does not work with HTTP-Login on different host
+Component: multisite
+Benefit: 2
+State: open
+Cost: 2
+Date: 2011-01-16 10:57:40
+Class: bug
+
+In a multi site setup where the remote hosts are not transparently
+reachable via HTTP proxy but are directly connected by the browser,
+the user has to enter his login again for each remote site. While
+this is not nice, it works nevertheless. 
+
+But: the PNP popups do *not* work, even after one is logged in.

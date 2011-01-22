@@ -28,9 +28,11 @@ def ajax_wato_files(h):
     global html
     html = h
     if config.may("use_wato"):
+        html.write('<ul>')
         for filename, title, roles in config.config_files:
             if config.role in roles:
                 bulletlink(title, "wato.py?filename=%s" % filename)
+        html.write('</ul>')
 
 
 sidebar_snapins["wato"] = {

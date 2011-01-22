@@ -1,0 +1,11 @@
+Title: Restart nagios on OMD - use OMD method
+Component: core
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-01-22 13:53:40
+Class: cleanup
+
+When doing a restart of Nagios or a config check while running
+under OMD, then better not call the start scripts directly, but
+use omd to do this 'omd restart nagios'.

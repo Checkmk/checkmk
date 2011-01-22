@@ -1,9 +1,15 @@
+1.1.9i6:
+    Checks & Agents:
+    * megaraid_ldisks: remove debug output
+
+
 1.1.9i5:
     Multisite:
     * custom notes: new macros $URL_PREFIX$ and $SITE$, making 
       multi site setups easier
     * new intelligent logwatch icon, using url_prefix in multi site
       setups
+
 
 1.1.9i4:
     Core, Setup, etc.:
@@ -22,6 +28,7 @@
 
     Checks & Agents:
     * apc_symmetra: handle empty SNMP variables and treat as 0.
+
 
 1.1.9i3:
     INCOMPATIBLE CHANGES:

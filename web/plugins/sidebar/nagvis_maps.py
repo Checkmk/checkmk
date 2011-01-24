@@ -42,7 +42,7 @@ def render_nagvis_maps():
 sidebar_snapins["nagvis_maps"] = {
     "title":       "NagVis Maps",
     "description": "List of available NagVis maps. This only works with NagVis 1.5 and above. " \
-                   "At the moment it is neccessarry to authenticate with NagVis first by opening" \
+                   "At the moment it is neccessarry to authenticate with NagVis first by opening " \
                    "a NagVis map in the browser. After this the maplist should be filled.",
     "author":      "Lars Michelsen",
     "render":      render_nagvis_maps,

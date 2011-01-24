@@ -1,0 +1,10 @@
+Title: SNMP scan: implement missing scan functions for all checks
+Component: core
+Benefit: 2
+State: open
+Cost: 2
+Date: 2011-01-24 16:22:26
+Class: cleanup
+
+All SNMP checks must define scan functions. Otherwise the scan
+can take a long time on some slow devices.

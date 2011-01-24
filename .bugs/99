@@ -1,0 +1,13 @@
+Title: WATO: allow empty config file list
+Component: wato
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-01-24 11:55:54
+Class: cleanup
+
+Das WATO-Snapin funktioniert nicht, wenn man eine leere
+Liste von Konfigfiles hat. In einem Multi site setup kann
+es aber durchaus sein, dass der *lokale* Multisite keine
+Konfigfiles definiert und das WATO-Snapin nur die von
+Remote-Sites anzeigt.

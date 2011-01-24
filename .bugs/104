@@ -1,0 +1,10 @@
+Title: Quicksearch: field is not centered
+Component: multisite
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-01-24 16:20:52
+Class: bug
+
+The search field (text entry) is not centered in Firefox.
+Also tactical overview seems unprecise.

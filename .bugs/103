@@ -1,0 +1,15 @@
+Title: Snapin Hostmatrix: mouse hover title not working
+Component: multisite
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-01-24 15:40:40
+Class: bug
+
+If you hover of a host square the name of the host should
+popup in a small windows (via title attribute). This is
+not working. Also clicking does not work. Checked at
+about 790 hosts.
+
+Das alles ist in Firefox. In Chrome funktioniert es, aber
+dort sind dumme Abstände zwischen den Zeilen.

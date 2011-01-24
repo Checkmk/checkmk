@@ -1,0 +1,11 @@
+Title: cmk -D should show ipaddress
+Component: core
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-01-24 16:33:31
+Class: feature
+
+The dump of a output (cmk -D) should show the hosts
+IP addresses and maybe also if it was retrieved via
+DNS, fakedns or other.

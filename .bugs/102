@@ -1,0 +1,12 @@
+Title: SNMP scan gets OID twice
+Component: core
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-01-24 15:07:41
+Class: nastiness
+
+In some scan functions 1.3.6.1.2.1.1.1.0 is used, in other
+ones .1.3.6.1.2.1.1.1.0. Therefore the OID is fetched twice.
+Either fix all checks or automatically normalize OIDs to
+always or never begin with a dot.

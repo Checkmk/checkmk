@@ -1628,7 +1628,7 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
     try:
         inventory_function = check_info[checkname][3]
     except KeyError:
-        sys.stderr.write("No such check type '%s'. Try check_mk -I list.\n" % checkname)
+        sys.stderr.write("No such check type '%s'. Try check_mk -L.\n" % checkname)
         sys.exit(1)
 
     is_snmp_check = check_uses_snmp(checkname)

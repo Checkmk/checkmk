@@ -173,7 +173,7 @@ def inventory_drbd(checktype, info):
             if parsed['cs'] == 'Unconfigured':
                 continue
 
-            if checktye == 'drbd':
+            if checktype == 'drbd':
                 levels = '( [ "%s", "%s" ], [ "%s", "%s" ] )' % \
                              (parsed['ro'][0], parsed['ro'][1],
                               parsed['ds'][0], parsed['ds'][1])

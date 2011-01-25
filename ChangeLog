@@ -1,4 +1,7 @@
 1.1.9i6:
+    Core, Setup, etc.:
+    * cmk -D: show ip address of host 
+
     Checks & Agents:
     * megaraid_ldisks: remove debug output
     * fc_brocade_port: hide on SNMP scan, prefer fc_brocade_port_detailed

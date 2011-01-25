@@ -1,0 +1,136 @@
+#!/usr/bin/ksh
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+export PATH=$PATH:/usr/sbin:/usr/bin:/usr/contrib/bin
+
+export MK_LIBDIR="/omd/versions/0.45.20110123/lib/check_mk_agent"
+export MK_CONFDIR="/etc/check_mk"
+
+# All executables in PLUGINSDIR will simply be executed and their
+# ouput appended to the output of the agent. Plugins define their own
+# sections and must output headers with '<<<' and '>>>'
+PLUGINSDIR=$MK_LIBDIR/plugins
+
+# All executables in LOCALDIR will by executabled and their
+# output inserted into the section <<<local>>>. Please
+# refer to online documentation for details about local checks.
+LOCALDIR=$MK_LIBDIR/local
+
+exec <&- 2>/dev/null
+
+echo '<<<check_mk>>>'
+echo Version: 1.1.9i5
+echo AgentOS: hpux
+echo PluginsDirectory: $PLUGINSDIR
+echo LocalDirectory: $LOCALDIR
+echo AgentDirectory: $MK_CONFDIR
+
+# Filesystems. HP-UX does not provide a filesystem type. We assume
+# modern systems with vxfs only here. The filesystem type is currently
+# not used by the check anyway.
+echo '<<<df>>>'
+df -Pkl | sed -e 's/ / vxfs /' -e 1d
+
+# Process table: HP-UX does not provide a resident size of processes.
+# We send a 0 here for RSZ.
+echo '<<<ps>>>'
+UNIX95=yes ps -ef -o user,vsz,pcpu,args | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,0,\3) /'
+
+
+echo '<<<hpux_cpu>>>'
+uptime
+machinfo | grep 'logical proc'
+
+# Several machine performance counters
+echo '<<<hpux_vmstat>>>'
+vmstat -s
+
+# Memory information
+echo '<<<hpux_mem>>>'
+machinfo | grep ^Memory
+vmstat | sed -n 3p
+
+# TCP connection states
+echo '<<<tcp_conn_stats>>>'
+netstat -f inet -n | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
+
+# Network interfaces
+echo '<<<hpux_nics>>>'
+netstat -niw | sed 1d
+for nic in `nwmgr -g | sed -n '/^lan/s/\(^[^ ]* \).*/\1/p'` 
+do 
+    nwmgr -A speed,link_state -c $nic --script
+done
+
+# Logical Volume Manager
+echo '<<<hpux_lvm:sep(58)>>>'
+vgdisplay -v -F
+
+# Multipathing
+scsimgr lun_map | egrep '^[[:space:]]*(LUN PATH|State)'
+
+echo '<<<ntp>>>'
+# remove heading, make first column space separated
+ntpq -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+
+
+# Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
+if cd $PLUGINSDIR
+then
+  for skript in $(ls)
+  do
+    if [ -x "$skript" ] ; then
+        ./$skript
+    fi
+  done
+fi
+
+
+# Lokale Einzelchecks
+echo '<<<local>>>'
+if cd $LOCALDIR
+then
+  for skript in $(ls)
+  do
+    if [ -x "$skript" ] ; then
+        ./$skript
+    fi
+  done
+fi
+
+
+# MK's Remote Plugin Executor
+if [ -e "$MK_CONFDIR/mrpe.cfg" ]
+then
+    echo '<<<mrpe>>>'
+    grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
+    while read descr cmdline
+    do
+        PLUGIN=${cmdline%% *}
+        OUTPUT=$(eval "$cmdline")
+        echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
+        echo
+    done
+fi

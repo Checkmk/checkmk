@@ -1,6 +1,8 @@
 1.1.9i6:
     Checks & Agents:
     * megaraid_ldisks: remove debug output
+    * drbd: Fixed var typo which prevented inventory of drbd general check
+      (Thanks to Andreas Behler)
 
 
 1.1.9i5:

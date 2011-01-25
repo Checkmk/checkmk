@@ -535,11 +535,12 @@ table.tacticaloverview {
     * border-spacing: 5px 2px;
     */
    width: %dpx;
+   margin-top: 0px;
 }
 table.tacticaloverview th { font-size: 7pt; text-align: left; font-weight: normal; padding: 0px; padding-top: 2px; }
 table.tacticaloverview td { text-align: right; border: 1px solid #444; padding: 0px; }
 table.tacticaloverview td a { display: block; margin-right: 2px; }
-""" % (snapin_width + 5)
+""" % (snapin_width + 8)
 }
 # table.tacticaloverview td.prob { font-weight: bold; }
 

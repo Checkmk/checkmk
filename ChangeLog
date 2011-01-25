@@ -7,7 +7,8 @@
     * fc_brocade_port: hide on SNMP scan, prefer fc_brocade_port_detailed
     * fc_brocade_port_detailed: improve scan function, find more devices
     * New agent for HP-UX
-    * New check hpux_cpu: CPU load average on HP-UX
+    * hpux_cpu: new check for monitoring CPU load average on HP-UX
+    * hpux_if: New check for monitoring NICs on HP-UX (compatible to if/if64)
 
 
 1.1.9i5:

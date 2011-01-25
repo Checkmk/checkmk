@@ -1,0 +1,132 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+## Name    Mtu    Network        Address        Ipkts   Ierrs  Opkts Oerrs Coll
+# <<<hpux_if>>>
+# 
+# ***          lan0 64 bit MIB statistics:
+# Interface Name               = lan0
+# PPA Number                   = 0
+# Description                  = lan0 HP PCI-X 1000Base-T Release PHNE_36238 B.11.31.0709.02
+# Interface Type               = 1000Base-T
+# MTU Size                     = 1500
+# Speed                        = 1 Gbps
+# Station Address              = 0x001A4B067700
+# Administration Status        = UP
+# Operation Status             = UP
+# Last Change                  = Tue Jul 13 10:36:24 2010
+# Inbound Octets               = 30886837904
+# Inbound Unicast Packets      = 25436296
+# Inbound Multicast Packets    = 0
+# Inbound Broadcast Packets    = 357491069
+# Inbound Discards             = 0
+# Inbound Errors               = 0
+# Inbound Unknown Protocols    = 357491069
+# Outbound Octets              = 3510268106
+# Outbound Unicast Packets     = 25436308
+# Outbound Multicast Packets   = 0
+# Outbound Broadcast Packets   = 0
+# Outbound Discards            = 0
+# Outbound Errors              = 0
+# Counter Discontinuity Time   = Tue Jul 13 10:36:24 2010
+# Physical Promiscuous Mode    = FALSE
+# Physical Connector Present   = TRUE
+# Interface Alias              = 
+# Link Up/Down Trap Enable     = Enabled
+
+
+def hpux_convert_to_if64(info):
+    nics = []
+    for line in info:
+        if '***' in line:
+	    nicname = line[1]
+            nic = ['0'] * 19
+	    nics.append(nic)
+            nic[2] = '6' # fake port type Ethernet
+        elif '=' in line:
+	    x = " ".join(line)
+            left, right = x.split("=")
+            left = left.strip()
+            right = right.strip()
+            if left == "PPA Number":
+                nic[0] = right
+            elif left == "Speed":
+	        nic[3] = hpux_parse_speed(right)
+            elif left == "Inbound Octets":
+		nic[5] = right
+            elif left == "Inbound Unicast Packets":
+		nic[6] = right
+            elif left == "Inbound Multicast Packets":
+		nic[7] = right
+            elif left == "Inbound Broadcast Packets":
+                nic[8] = right
+            elif left == "Inbound Discards":
+                nic[9] = right
+            elif left == "Inbound Errors":
+                nic[10] = right
+            elif left == "Outbound Octets":
+                nic[11] = right
+            elif left == "Outbound Unicast Packets":
+                nic[12] = right
+            elif left == "Outbound Multicast Packets":
+                nic[13] = right
+            elif left == "Outbound Broadcast Packets":
+                nic[14] = right
+            elif left == "Outbound Discards":
+                nic[15] = right
+            elif left == "Outbound Errors":
+                nic[16] = right
+            elif left == "Operation Status":
+                nic[4] = hpux_parse_operstatus(right)
+            elif left == "Interface Name":
+                nic[1] = right
+                nic[18] = right
+    return nics
+            
+
+def hpux_parse_speed(speed):
+    parts = speed.split()
+    if parts[1] == "Gbps":
+	mult = 1000 * 1000 * 1000
+    else:
+	mult = 1000 * 1000
+    return int(parts[0]) * mult
+
+def hpux_parse_operstatus(txt):
+    if txt.lower() == "up":
+	return '1'
+    else:
+	return '2'
+
+def inventory_hpux_if(checkname, info):
+    return inventory_if_common(hpux_convert_to_if64(info))
+
+def check_hpux_if(item, params, info):
+    return check_if_common(item, params, hpux_convert_to_if64(info))
+
+check_includes['hpux_if'] = [ "if.include" ]
+check_info['hpux_if'] = (check_hpux_if, "NIC %s", 1,  inventory_hpux_if )
+

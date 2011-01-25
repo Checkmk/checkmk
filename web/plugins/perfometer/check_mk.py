@@ -209,3 +209,5 @@ def performeter_check_mk_if(row, check_command, perf_data):
 
 perfometers["check_mk-if"] = performeter_check_mk_if
 perfometers["check_mk-if64"] = performeter_check_mk_if
+perfometers["check_mk-hpux_if"] = performeter_check_mk_if
+

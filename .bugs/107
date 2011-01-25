@@ -1,0 +1,9 @@
+Title: Snapin Serverperformance: number should be bold
+Component: multisite
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-01-25 10:03:20
+Class: cleanup
+
+The numbers had been bold once. This looked better. Make them bold again.

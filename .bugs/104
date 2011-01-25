@@ -8,3 +8,7 @@ Class: bug
 
 The search field (text entry) is not centered in Firefox.
 Also tactical overview seems unprecise.
+
+This has been introduced since 1.1.8. In OMD 0.44 everything is
+still fine. Might have todo with the fixing of the bullet indentation.
+

@@ -88,7 +88,8 @@ echo '<<<hpux_lvm:sep(58)>>>'
 vgdisplay -v -F
 
 # Multipathing
-scsimgr lun_map | egrep '^[[:space:]]*(LUN PATH|State)'
+echo '<<<hpux_multipath>>>'
+scsimgr lun_map | egrep '^[[:space:]]*(LUN PATH|State|World Wide Identifier)'
 
 echo '<<<ntp>>>'
 # remove heading, make first column space separated

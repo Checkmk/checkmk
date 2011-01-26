@@ -1,0 +1,112 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<hpux_multipath>>>
+# 	LUN PATH INFORMATION FOR LUN : /dev/rtape/tape1_BEST
+# World Wide Identifier(WWID)    = 0x600508b4000139e500049000075e0000
+# State                         = UNOPEN
+# 	LUN PATH INFORMATION FOR LUN : /dev/rdisk/disk10
+# World Wide Identifier(WWID)    = 0x600508b4000139e500009000075e00b0
+# State                         = ACTIVE
+# 	LUN PATH INFORMATION FOR LUN : /dev/rdisk/disk13
+# World Wide Identifier(WWID)    = 0x600508b4000139e500009000075e00c0
+# State                         = UNOPEN
+# 	LUN PATH INFORMATION FOR LUN : /dev/pt/pt2
+# World Wide Identifier(WWID)    = 0x600508b4000139e500009000075e00d0
+# State                         = UNOPEN
+# State                         = UNOPEN
+# State                         = UNOPEN
+# State                         = UNOPEN
+# State                         = UNOPEN
+# State                         = UNOPEN
+# State                         = UNOPEN
+# State                         = UNOPEN
+#         LUN PATH INFORMATION FOR LUN : /dev/rdisk/disk781
+# World Wide Identifier(WWID)    = 0x600508b4000139e500009000075e00e0
+# State                         = ACTIVE
+# State                         = STANDBY
+# State                         = FAILED
+# State                         = FAILED
+# State                         = ACTIVE
+# State                         = STANDBY
+# 	LUN PATH INFORMATION FOR LUN : /dev/rdisk/disk912
+# World Wide Identifier(WWID)    = 0x600508b4000139e500009000075e00f0
+# State                         = ACTIVE
+# State                         = STANDBY
+# State                         = ACTIVE
+# State                         = STANDBY
+
+hpux_multipath_pathstates = { "ACTIVE": 0, "STANDBY": 1, "FAILED": 2, "UNOPEN": 3 }
+
+def parse_hpux_multipath(info):
+    disks = {}
+    for line in info:
+	if ':' in line:
+	    disk = line[-1]
+        elif line[0] == "World":
+	    wwid = line[-1]
+	    paths = [0,0,0,0] # ACTIVE, STANBY, FAILED, UNOPEN
+            disks[wwid] = (disk, paths)
+        elif '=' in line:
+            state = line[-1]
+	    paths[hpux_multipath_pathstates[state]] += 1
+    return disks
+
+def inventory_hpux_multipath(checkname, info):
+    inventory = []
+    disks = parse_hpux_multipath(info)
+    for wwid, (disk, (active, standby, failed, unopen)) in disks.items():
+	if active + standby + failed >= 2:
+	    inventory.append((wwid, (active, standby, failed, unopen)))
+    return inventory
+
+def hpux_multipath_format_pathstatus(pathcounts):
+    infos = []
+    for name, i in hpux_multipath_pathstates.items():
+        c = pathcounts[i]
+        if c > 0:
+	    infos.append("%d %s" % (c, name))
+    return ", ".join(infos)
+
+def check_hpux_multipath(item, params, info):
+    disks = parse_hpux_multipath(info)
+    if item not in disks:
+	return (3, "UNKNOWN - no LUN with this WWID found")
+    disk, pathcounts = disks[item]
+	
+    if pathcounts[2] > 0:
+	return (2, "CRIT - %s: %d failed paths! (%s)" % (disk, pathcounts[2], hpux_multipath_format_pathstatus(pathcounts)))
+
+    elif list(pathcounts) != list(params):
+	return (1, "WARN - %s: Invalid path status %s (should be %s)" % 
+		(disk, hpux_multipath_format_pathstatus(pathcounts), 
+		       hpux_multipath_format_pathstatus(params)))
+    else:
+	return (0, "OK - %s: %s" % (disk, hpux_multipath_format_pathstatus(pathcounts)))
+    
+
+check_info['hpux_multipath'] = (check_hpux_multipath, "Multipath %s", 0, inventory_hpux_multipath )

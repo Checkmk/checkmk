@@ -9,6 +9,7 @@
     * New agent for HP-UX
     * hpux_cpu: new check for monitoring CPU load average on HP-UX
     * hpux_if: New check for monitoring NICs on HP-UX (compatible to if/if64)
+    * hpux_multipath: New check for monitoring Multipathing on HP-UX
 
 
 1.1.9i5:

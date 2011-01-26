@@ -1,0 +1,16 @@
+Title: Restart of Nagios makes Nagios inherit TCP port
+Component: wato
+Benefit: 4
+State: open
+Cost: 2
+Date: 2011-01-26 09:12:21
+Class: bug
+
+If you restart Nagios via WATO, then Apache restarts Nagios
+und the new Nagios process inherits the open files of Apache.
+That way Nagios inherits also the listening Port 5000. This
+makes it impossible to restart apache later.
+
+Solution unclear. Either user reload instead of restart or
+try to explicitely close all filedescriptors after forking.
+But how can we do that?

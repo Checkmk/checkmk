@@ -1,0 +1,10 @@
+Title: WATO: link hosts to view in Multisite
+Component: wato
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-01-25 16:53:59
+Class: feature
+
+A host should show a link directly to the correct view in Multisite
+(if this is possible).

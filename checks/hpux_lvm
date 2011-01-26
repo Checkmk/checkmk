@@ -1,0 +1,67 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<hpux_lvm:sep(58)>>>
+# vg_name=/dev/vg00:vg_write_access=read,write:vg_status=available:max_lv=255:cur_lv=8:open_lv=8:max_pv=16:cur_pv=4:act_pv=4:max_pe_per_pv=4384:vgda=8:pe_size=16:to
+# tal_pe=17388:alloc_pe=13920:free_pe=3468:total_pvg=0:total_spare_pvs=0:total_spare_pvs_in_use=0:vg_version=1.0.0
+# lv_name=/dev/vg00/lvol1:lv_status=available,syncd:lv_size=1792:current_le=112:allocated_pe=224:used_pv=2
+# lv_name=/dev/vg00/lvol2:lv_status=available,syncd:lv_size=32768:current_le=2048:allocated_pe=4096:used_pv=2
+# lv_name=/dev/vg00/lvol3:lv_status=available,syncd:lv_size=2048:current_le=128:allocated_pe=256:used_pv=2
+# lv_name=/dev/vg00/lvol4:lv_status=available,syncd:lv_size=32768:current_le=2048:allocated_pe=4096:used_pv=2
+# lv_name=/dev/vg00/lvol5:lv_status=available,syncd:lv_size=12288:current_le=768:allocated_pe=1536:used_pv=2
+# lv_name=/dev/vg00/lvol6:lv_status=available,syncd:lv_size=5120:current_le=320:allocated_pe=640:used_pv=2
+# lv_name=/dev/vg00/lvol7:lv_status=available,syncd:lv_size=12288:current_le=768:allocated_pe=1536:used_pv=2
+# lv_name=/dev/vg00/lvol8:lv_status=available,syncd:lv_size=12288:current_le=768:allocated_pe=1536:used_pv=3
+# pv_name=/dev/disk/disk7_p2:pv_status=available:total_pe=4319:free_pe=0:autoswitch=On:proactive_polling=On
+# pv_name=/dev/disk/disk9:pv_status=available:total_pe=4375:free_pe=1734:autoswitch=On:proactive_polling=On
+# pv_name=/dev/disk/disk11_p2:pv_status=available:total_pe=4319:free_pe=175:autoswitch=On:proactive_polling=On
+# pv_name=/dev/disk/disk10:pv_status=available:total_pe=4375:free_pe=1559:autoswitch=On:proactive_polling=On
+
+def inventory_hpux_lvm(checkname, info):
+    inventory = []
+    for line in info:
+	if line[0].startswith("lv_name="):
+	    lv_name = line[0].split("=")[1]
+            inventory.append((lv_name, None))
+    return inventory
+
+def check_hpux_lvm(item, params, info):
+    for line in info:
+	if line[0].startswith("vg_name"):
+	    vg_name = line[0].split("=")[1]
+        elif line[0].startswith("lv_name"):
+	    lv_name = line[0].split("=")[1]
+            if lv_name == item:
+		status = line[1].split("=")[1]
+		infotext = " - status is %s (VG = %s)" % (status, vg_name)
+                if status == "available,syncd":
+		    return (0, "OK" + infotext)
+                else:
+		    return (2, "CRIT" + infotext)
+
+    return (3, "UNKNOWN - no such volume found")
+
+check_info['hpux_lvm'] = (check_hpux_lvm, "Logical Volume %s", 0,  inventory_hpux_lvm )

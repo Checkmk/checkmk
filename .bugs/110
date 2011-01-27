@@ -1,0 +1,10 @@
+Title: Remove obsolete code of snmp_info_single
+Component: core
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-01-27 09:39:10
+Class: cleanup
+
+Obsolete code formerly used by snmp_info_single should be removed
+from the code.

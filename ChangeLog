@@ -1,4 +1,8 @@
 1.1.9i6:
+    INCOMPATIBLE CHANGES:
+    * Removed out-dated checks blade_misc, ironport_misc and snia_sml. Replaced
+      with dummy checks begin always UNKNOWN.
+
     Core, Setup, etc.:
     * cmk -D: show ip address of host 
     * Fix SNMP inventory find snmp misc checks inspite of negative scan function

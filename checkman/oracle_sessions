@@ -1,0 +1,42 @@
+title: Check number of active sessions in ORACLE database
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the number of active sessions in an
+ ORACLE database. You can set warn/crit levels. 
+
+ This check needs the Check_MK {mk_oracle}-plugin installed in
+ the agent. Please refer to the online documentation
+ for how to install that plugin.
+
+item:
+ The SID of the database (as appearing in the process
+ name of the pmon_... process).
+
+examples:
+ # Set global default values to 20 sessions for 
+ # warning and 100 sessions for critical
+ oracle_sessions_default_levels = (20, 100)
+
+ # Set higher levels for productive systems
+ # (having the host tag 'prod')
+ check_parameters += [
+    ( (80, 160), [ 'prod' ], ALL_HOSTS, [ "ORA .* sessions" ])
+ ]
+
+perfdata:
+ One value: the current number of active sessions.
+
+inventory:
+ One separate check for each database found running will
+ be created.
+
+[parameters]
+warning(int): The number of active sessions triggering a warning
+critical(int): The number of active sessions making the check critical 
+
+[configuration]
+oracle_sessions_default_levels(int, int): Global default levels used for all checks which have no specific configuration. This is preset to {(50, 100)}.
+

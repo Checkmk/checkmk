@@ -6,6 +6,7 @@
     Core, Setup, etc.:
     * cmk -D: show ip address of host 
     * Fix SNMP inventory find snmp misc checks inspite of negative scan function
+    * Fix output of MB and GB values (fraction part was zero)
 
     Checks & Agents:
     * megaraid_ldisks: remove debug output

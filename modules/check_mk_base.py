@@ -1033,7 +1033,7 @@ def savefloat(f):
 
 # Takes bytes as integer and returns a string which represents the bytes in a
 # more human readable form scaled to GB/MB/KB
-def get_bytes_human_readable(b, base=1024):
+def get_bytes_human_readable(b, base=1024.0):
     # Handle negative bytes correctly
     prefix = ''
     if b < 0:

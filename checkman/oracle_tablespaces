@@ -1,0 +1,60 @@
+title: Check size, state and auto extension of ORACLE tablespaces
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of ORACLE tablespaces. It
+ checks the current and maximum size, the online state
+ and the autoextension.
+
+ {Autoextension}: During inventory the autoextension
+ setting is determined and frozen into the check parameter.
+ That means that if the auto extension setting changes
+ later, the check will get critical. A table space may
+ consist of several data files with different settings.
+ If at least one data file has auto extension turned on,
+ the table space is considered to have auto extension
+ turned on.
+
+ {State}: Only table spaces in state {ONLINE} will be
+ found by inventory and monitored. If the state changes
+ later, the check will get critical. 
+
+ {Size}: The logic of the size check depends on whether
+ autoextend is on or off. If auto extension is on, then
+ the still possible extensions are accounted for as free
+ spaces as well as the space currently free in the
+ data files. If auto extension is off, only the currently
+ free space will be honored. 
+
+ This check needs the Check_MK {mk_oracle}-plugin installed in
+ the agent. Please refer to the online documentation
+ for how to install that plugin.
+
+item:
+ A string composited of the SID and the tablespace name,
+ separated by a dot, for example {"pengt.TEMP"}.
+
+examples:
+ # Set levels for free space to 20% (WARN) and 10% (CRIT)
+ # of maximum tablespace size
+ oracle_tablespaces_default_levels = (20.0, 10.0)
+
+perfdata:
+ Three values in bytes: the current size, the used size of the tablespace
+ and the maximum size of the table space.
+
+inventory:
+ One separate check will be created for each tablespace
+ which is {ONLINE}.
+
+[parameters]
+autoextend(bool): Either {True} or {False} - depending on
+ wether auto extension is expected to be on or off.
+warn(int / float): Warning level for free space. If this is a float, it is considered as percentage of the maximum size of the tablespace. If it is an integer, it is considered to be MB of free space. If the space drops to this level or below, the check will get into warning state.
+crit(int / float): The critical level for free space.
+
+[configuration]
+oracle_tablespaces_default_levels(int/float, int/float): The default warning and critical levels used for inventorized checks. This is preset to {(10.0, 5.0)}.
+

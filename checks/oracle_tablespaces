@@ -1,0 +1,161 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<oracle_tablespaces>>>
+# pengt /database/pengt/daten155/dbf/system_01.dbf SYSTEM AVAILABLE YES 38400 4194302 38392 1280 SYSTEM 8192 ONLINE
+# pengt /database/pengt/daten155/dbf/undotbs_01.dbf UNDOTBS1 AVAILABLE YES 128000 4194302 127992 640 ONLINE 8192 ONLINE
+# pengt /database/pengt/daten155/dbf/sysaux_01.dbf SYSAUX AVAILABLE YES 25600 4194302 25592 1280 ONLINE 8192 ONLINE
+# pengt /database/pengt/daten155/dbf/ts_user_01.dbf TS_USER AVAILABLE YES 8480 1280000 8472 160 ONLINE 8192 ONLINE
+# pengt /database/pengt/daten155/dbf/TS_PENG_ABR_01.dbf TS_PENG_ABR AVAILABLE YES 12800 1280000 12792 12800 ONLINE 8192 ONLINE
+
+#  
+# Order of columns (it is a table of data files, so table spaces appear multiple times)
+# 0. database SID
+# 1. data file name
+# 2. table space name
+# 3. status of the data file
+# 4. whether the file is auto extensible
+# 5. current size of data file in blocks
+# 6. maximum size of data file in blocks (if auto extensible)
+# 7. currently number of blocks used by user data
+# 8. size of next increment in blocks (if auto extensible)
+# 9. wheter the file is in use (online) 
+# 10. block size in bytes
+# 11. status of the table space
+
+# default levels for *free* space. float: percent,
+# integer: MB.
+oracle_tablespaces_default_levels = (10.0, 5.0)
+
+
+def inventory_oracle_tablespaces(checkname, info):
+    tablespaces = set([])
+    autoextensible = set([])
+    for line in info:
+        ts = (line[0], line[2])
+	if line[11] == "ONLINE":
+	    tablespaces.add(ts)
+        if line[4] == "YES":
+	    autoextensible.add(ts)
+    return [("%s.%s" % t, 
+       "(%s, oracle_tablespaces_default_levels[0], oracle_tablespaces_default_levels[1])" % (t in autoextensible))
+       for t in tablespaces]
+
+def check_oracle_tablespaces(item, params, info):
+    sid, tbsname = item.split('.')
+    ts_status = None
+    num_files = 0 
+    num_avail = 0
+    num_extensible = 0
+    current_size = 0
+    max_size = 0
+    used = 0
+    num_increments = 0
+    increment_size = 0
+    free_space = 0
+
+    for line in info:
+        if line[0] == sid and line[2] == tbsname:
+            ts_status = line[11] 
+            blocksize = int(line[10])
+            num_files += 1
+            if line[3] in [ "AVAILABLE", "ONLINE" ]:
+	        num_avail += 1
+                current_size += blocksize * int(line[5])
+                used += blocksize * int(line[7])
+                # Autoextensible? Honor max size
+                if line[4] == "YES":
+		    num_extensible += 1
+                    my_max_size = blocksize * int(line[6]) 
+                    max_size += my_max_size
+                    free_bl = int(line[6]) - int(line[5]) # number of free extension blocks
+                    incsize = int(line[8]) # size of next increment in blocks
+                    incs = free_bl / incsize
+                    num_increments += incs
+                    increment_size += blocksize * incsize * incs
+                    free_space += blocksize * (incsize * incs + (int(line[5]) - int(line[7])))
+                # not autoextensible: take current size as maximum
+                else:
+                    my_max_size = blocksize * int(line[5])
+                    max_size += my_max_size
+                    free_space += blocksize * (int(line[5]) - int(line[7]))
+
+
+    if ts_status == None:
+	return (3, "UNKNOWN - Tablespace not found")
+
+    if ts_status != "ONLINE":
+	return (2, "CRIT - Tablespace is not online, but %s" % ts_status)
+
+    infotext = " - size %s, used %s" % \
+       (get_bytes_human_readable(current_size),
+        get_bytes_human_readable(used))
+
+    if num_extensible > 0:
+        infotext += ", max %s" % get_bytes_human_readable(max_size)
+        infotext += " - %d increments (%s)" % \
+            (num_increments, get_bytes_human_readable(increment_size))
+
+    status = 0
+    autoext, warn, crit = params
+    if autoext and num_extensible == 0:
+	infotext += ", Autoextend is off!!"
+        status = 2
+    elif not autoext and num_extensible > 0:
+        infotext += ", Autotextend is on!!"
+        status = 2
+
+    # warn/crit level are float => percentages of max size, otherwise MB
+    if type(warn) == float:
+	warn = warn / 100.0 * max_size
+    else:
+	warn *= 1024 * 1024
+
+    if type(crit) == float:
+        crit = crit / 100.0 * max_size
+    else:
+	crit *= 1024 * 1024
+    
+    if free_space <= crit or free_space <= warn:
+	infotext += ", only %s left" % get_bytes_human_readable(free_space)
+	infotext += " (levels at %s/%s)" % (
+         get_bytes_human_readable(warn), get_bytes_human_readable(crit))
+        if free_space <= crit:
+ 	    status = 2
+        else:
+             status = max(1, status)
+
+    perfdata = [ ("size", current_size, max_size - warn, max_size - crit),
+                 ("used", used),
+                 ("max_size", max_size) ]
+
+    if num_files != 1 or num_avail != 1 or num_extensible != 1:
+        infotext += ", %d data files (%d avail, %d autoext)" % (num_files, num_avail, num_extensible)
+
+    return (status, nagios_state_names[status] + infotext, perfdata)
+
+check_info['oracle_tablespaces'] = (check_oracle_tablespaces, "ORA %s Tablespace", 1,  inventory_oracle_tablespaces )
+

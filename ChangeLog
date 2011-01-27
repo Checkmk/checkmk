@@ -1,6 +1,7 @@
 1.1.9i6:
     Core, Setup, etc.:
     * cmk -D: show ip address of host 
+    * Fix SNMP inventory find snmp misc checks inspite of negative scan function
 
     Checks & Agents:
     * megaraid_ldisks: remove debug output

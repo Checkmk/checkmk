@@ -675,7 +675,7 @@ def snmp_scan(hostname, ipaddress):
     # Now try all checks not having a scan function
     for checktype in check_info.keys():
         datatype = checktype.split('.')[0]
-        if datatype not in snmp_info:
+        if not check_uses_snmp(datatype):
             continue # no snmp check
         if checktype not in snmp_scan_functions:
             if opt_verbose:

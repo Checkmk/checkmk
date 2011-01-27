@@ -45,16 +45,4 @@ $def[1] .= "AREA:used_gb#f0b000:\"Used by user data\" " ;
 $def[1] .= "LINE:used_gb#806000:\"\" " ;
 $def[1] .= "GPRINT:used_gb:LAST:\"%2.2lfGB\" ";
 
-# $def[1] .= "AREA:system#ff6000:\"System\" " ;
-# $def[1] .= "GPRINT:system:LAST:\"%2.1lf%%\" " ;
-# 
-# $def[1] .= "AREA:user#60f020:\"User\":STACK " ;
-# $def[1] .= "GPRINT:user:LAST:\"%2.1lf%%\" " ;
-# 
-# $def[1] .= "AREA:wait#00b0c0:\"$thirdname\":STACK " ;
-# $def[1] .= "GPRINT:wait:LAST:\"%2.1lf%%\" " ;
-# 
-# $def[1] .= "LINE:sum#004080:\"Utilization\" " ;
-# $def[1] .= "GPRINT:sum:LAST:\"%2.1lf%%\" " ;
-
 ?>

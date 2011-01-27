@@ -211,3 +211,17 @@ perfometers["check_mk-if"] = performeter_check_mk_if
 perfometers["check_mk-if64"] = performeter_check_mk_if
 perfometers["check_mk-hpux_if"] = performeter_check_mk_if
 
+def performeter_oracle_tablespaces(row, check_command, perf_data):
+    current = float(perf_data[0][1])
+    used = float(perf_data[1][1])
+    max = float(perf_data[2][1])
+    used_perc = used / max * 100
+    curr_perc = (current / max * 100) - used_perc
+    h = '<table><tr>'
+    h += perfometer_td(used_perc, "#f0b000");
+    h += perfometer_td(curr_perc, "#00ff80");
+    h += perfometer_td(100 - used_perc - curr_perc, "#80c0ff");
+    h += '</tr></table>'
+    return "%.1f%%" % used_perc, h
+
+perfometers["check_mk-oracle_tablespaces"] = performeter_oracle_tablespaces

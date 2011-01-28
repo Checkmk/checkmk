@@ -8,7 +8,7 @@
 # It is your task to adapt this script so that the ORACLE environment
 # is setup and the correct user chosen to execute sqlplus.
 
-# The script we get the query on stdin and shall output the
+# The script will get the query on stdin and shall output the
 # result on stdout. Error messages goes to stderr.
 
 ORACLE_SID=$1

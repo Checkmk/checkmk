@@ -28,6 +28,9 @@
       of an ORACLE instances in the last 60 minutes.
     * oracle_tablespaces: new check for monitoring size, state and autoextension
       of ORACLE tablespaces.
+    * h3c_lanswitch_cpu: new check for monitoring CPU usage of H3C/HP/3COM switches
+    * h3c_lanswitch_sensors: new check for monitoring hardware sensors of H3C/HP/3COM switches
+    * superstack3_sensors: new check for monitoring hardware sensors of 3COM Superstack 3 switches
 
 1.1.9i5:
     Multisite:

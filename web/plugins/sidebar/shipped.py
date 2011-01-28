@@ -306,10 +306,19 @@ def render_hostmatrix():
     if lastcols > 0:
         rows += 1
 
-    style = 'height: %dpx; ' % (snapin_width)
-    if rows > 10:
-        style += "border-collapse: collapse;"
-    html.write('<table class=hostmatrix style="%s">\n' % style)
+    # Calculate cell size (Automatic sizing with 100% does not work here)
+    # - Get cell spacing: 1px between each cell
+    # - Substract the cell spacing for each column from the total width
+    # - Then divide the total width through the number of columns
+    # - Then get the full-digit width of the cell and summarize the rest
+    #   to be substracted from the cell width
+    # This is not a 100% solution but way better than having no links
+    cell_spacing = 1
+    cell_size = ((snapin_width - cell_spacing * (n+1)) / n)
+    cell_size, cell_size_rest = divmod(cell_size, 1)
+    style = 'width:%spx' % (snapin_width - n * cell_size_rest)
+
+    html.write('<table class="content_center hostmatrix" cellspacing="0" style="border-collapse:collapse;%s">\n' % style)
     col = 1
     row = 1
     for site, host, state, has_been_checked, worstsvc, downtimedepth in hosts:
@@ -328,7 +337,8 @@ def render_hostmatrix():
         else:
             s = 0
         url = "view.py?view_name=host&site=%s&host=%s" % (htmllib.urlencode(site), htmllib.urlencode(host))
-        html.write('<td class="state state%s"><a href="%s" title="%s" target="main"></a></td>' % (s, url, host))
+        html.write('<td class="state state%s"><a href="%s" title="%s" target="main" style="width:%spx;height:%spx;"></a></td>' %
+                                                                                           (s, url, host, cell_size, cell_size))
         if col == n or (row == rows and n == lastcols):
             html.write("<tr>\n")
             col = 1
@@ -346,10 +356,11 @@ sidebar_snapins["hostmatrix"] = {
     "allowed"     : [ "user", "admin", "guest" ],
     "refresh"     : 10,
     "styles"      : """
-table.hostmatrix { width: %dpx; border-spacing: 1px; }
-table.hostmatrix a { display: block; width: 100%%; height: 100%%; }
-table.hostmatrix td { border: 1px solid white; }
-""" % snapin_width
+table.hostmatrix { border-spacing: 0;  }
+table.hostmatrix tr { padding: 0; border-spacing: 0; }
+table.hostmatrix a { display: block; width: 100%%; height: 100%%; line-height: 100%%; }
+table.hostmatrix td { border: 1px solid white; padding: 0; border-spacing: 0; }
+"""
 
 }
 
@@ -495,7 +506,7 @@ def render_tactical_overview():
     except livestatus.MKLivestatusNotFoundError:
         html.write("<center>No data from any site</center>")
         return
-    html.write("<table class=tacticaloverview cellspacing=2 cellpadding=0 border=0>\n")
+    html.write("<table class=\"content_center tacticaloverview\" cellspacing=2 cellpadding=0 border=0>\n")
     for title, data, view, what in [
             ("Hosts",    hstdata, 'hostproblems', 'host'),
             ("Services", svcdata, 'svcproblems',  'service'),
@@ -535,12 +546,12 @@ table.tacticaloverview {
     * border-spacing: 5px 2px;
     */
    width: %dpx;
-   margin-top: 0px;
+   margin-top: 0;
 }
-table.tacticaloverview th { font-size: 7pt; text-align: left; font-weight: normal; padding: 0px; padding-top: 2px; }
+table.tacticaloverview th { font-size: 7pt; text-align: left; font-weight: normal; padding: 0; padding-top: 2px; }
 table.tacticaloverview td { text-align: right; border: 1px solid #444; padding: 0px; }
 table.tacticaloverview td a { display: block; margin-right: 2px; }
-""" % (snapin_width + 8)
+""" % snapin_width
 }
 # table.tacticaloverview td.prob { font-weight: bold; }
 
@@ -554,7 +565,7 @@ table.tacticaloverview td a { display: block; margin-right: 2px; }
 # --------------------------------------------------------------
 def render_performance():
     data = html.live.query("GET status\nColumns: service_checks_rate host_checks_rate external_commands_rate connections_rate forks_rate log_messages_rate cached_log_messages\n")
-    html.write("<table class=performance>\n")
+    html.write("<table class=\"content_center performance\">\n")
     for what, col, format in \
         [("Service checks", 0, "%.2f/s"),
         ("Host checks", 1, "%.2f/s"),
@@ -563,12 +574,12 @@ def render_performance():
         ("Process creations", 4, "%.2f/s"),
         ("New log messages", 5, "%.2f/s"),
         ("Cached log messages", 6, "%d")]:
-       html.write(("<tr><td class=left>%s:</td><td class=right>" + format + "</td></tr>\n") % (what, sum([row[col] for row in data])))
+       html.write(("<tr><td class=left>%s:</td><td class=right><strong>" + format + "</strong></td></tr>\n") % (what, sum([row[col] for row in data])))
     data = html.live.query("GET status\nColumns: external_command_buffer_slots external_command_buffer_max\n")
     size = sum([row[0] for row in data])
     maxx = sum([row[1] for row in data])
     html.write("<tr><td class=left>Com. buf. max/total</td>"
-               "<td class=right>%d / %d</td></tr>" % (maxx, size))
+               "<td class=right><strong>%d / %d</strong></td></tr>" % (maxx, size))
     html.write("</table>\n")
 
 sidebar_snapins["performance"] = {
@@ -580,19 +591,19 @@ sidebar_snapins["performance"] = {
     "allowed" : [ "admin", ],
     "styles" : """
 table.performance {
+    width: %dpx;
     -moz-border-radius: 5px;
     font-size: 8pt;
-    width: %dpx;
-    border-style: solid;
     background-color: #589;
+    border-style: solid;
     border-color: #444 #bbb #eee #666;
+    /* The border needs to be substracted from the width */
     border-width: 1px;
-    padding: 2px;
 }
 table.performance td { padding: 0px; }
-table.Performance td.right { text-align: right; font-weight: bold; padding: 0px; }
+table.Performance td.right { text-align: right; padding: 0px; }
 
-""" % snapin_width
+""" % (snapin_width - 2)
 }
 
 # --------------------------------------------------------------
@@ -619,6 +630,7 @@ div.time {
    text-align: center;
    font-size: 18pt;
    font-weight: bold;
+   /* The border needs to be substracted from the width */
    border: 1px solid #8cc;
    -moz-border-radius: 10px;
    background-color: #588;

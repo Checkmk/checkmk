@@ -1732,7 +1732,8 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
             except Exception, e:
                 if opt_debug:
                     raise
-                sys.stderr.write("%s: Invalid output from agent or invalid configuration: %s\n" % (hostname, e))
+                if opt_verbose:
+		    sys.stderr.write("%s: Invalid output from agent or invalid configuration: %s\n" % (hostname, e))
                 continue
 
             if not isinstance(inventory, list):

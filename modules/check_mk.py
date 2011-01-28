@@ -3654,8 +3654,23 @@ def automation_delete_host(args):
         os.system("rm -rf '%s'" % path)
 
 def automation_restart():
+    # make sure, Nagios does not inherit any open
+    # filedescriptors. This really happens, e.g. if
+    # check_mk is called by WATO via Apache. Nagios inherits
+    # the open file where Apache is listening for incoming
+    # HTTP connections. Really.
+    os.closerange(3, 256)
+
+    class fake_file():
+        def write(self, stuff):
+           pass
+        def flush(self):
+           pass
+
+    # Deactivate stdout by introducing fake file without filedescriptor
     old_stdout = sys.stdout
-    sys.stdout = file('/dev/null', 'w')
+    sys.stdout = fake_file()
+
     try:
         if os.path.exists(nagios_objects_file):
             backup_path = nagios_objects_file + ".save"

@@ -563,12 +563,12 @@ def render_performance():
         ("Process creations", 4, "%.2f/s"),
         ("New log messages", 5, "%.2f/s"),
         ("Cached log messages", 6, "%d")]:
-       html.write(("<tr><td class=left>%s:</td><td class=right>" + format + "</td></tr>\n") % (what, sum([row[col] for row in data])))
+       html.write(("<tr><td class=left>%s:</td><td class=right><strong>" + format + "</strong></td></tr>\n") % (what, sum([row[col] for row in data])))
     data = html.live.query("GET status\nColumns: external_command_buffer_slots external_command_buffer_max\n")
     size = sum([row[0] for row in data])
     maxx = sum([row[1] for row in data])
     html.write("<tr><td class=left>Com. buf. max/total</td>"
-               "<td class=right>%d / %d</td></tr>" % (maxx, size))
+               "<td class=right><strong>%d / %d</strong></td></tr>" % (maxx, size))
     html.write("</table>\n")
 
 sidebar_snapins["performance"] = {
@@ -586,11 +586,11 @@ table.performance {
     background-color: #589;
     border-style: solid;
     border-color: #444 #bbb #eee #666;
-   /* The border needs to be substracted from the width */
+    /* The border needs to be substracted from the width */
     border-width: 1px;
 }
 table.performance td { padding: 0px; }
-table.Performance td.right { text-align: right; font-weight: bold; padding: 0px; }
+table.Performance td.right { text-align: right; padding: 0px; }
 
 """ % (snapin_width - 2)
 }

@@ -45,7 +45,7 @@ def render_searchform():
     except:
         limit = 80
 
-    html.write('<div id="mk_side_search" onclick="mkSearchClose();">')
+    html.write('<div id="mk_side_search" class="content_center" onclick="mkSearchClose();">')
     html.write('<input id="mk_side_search_field" type="text" name="search" autocomplete="off" />')
     html.write('</div>')
     html.write("<script type='text/javascript' src='js/search.js'></script>\n")
@@ -96,14 +96,22 @@ sidebar_snapins["search"] = {
     "allowed" : [ "user", "admin", "guest" ],
     "styles" : """
 div#mk_side_search {
-    padding-left: 1px;
     width: %dpx;
+    padding: 0;
 }
 
-div#mk_side_search input{
-    margin: 0px 1px 0px 0px;
-    width: 100%%;
+div#mk_side_search input {
+    margin:  0;
+    padding: 0;
     font-size: 8pt;
+    /* The padding and border defined below stretch the object by 2px in each
+     * direction. This needs to be substracted from the width to position the
+     * field correctly
+     */
+    width: %dpx;
+    padding: 1px;
+    border: 1px #73767A solid;
+    outline: 1px solid #fff;
 }
 
 div#mk_side_search #mk_search_results {
@@ -129,5 +137,5 @@ div#mk_side_search #mk_search_results a:hover, div#mk_side_search #mk_search_res
 background-color: #BFBFBF;
 }
 
-""" % (snapin_width - 1)
+""" % (snapin_width - 4, snapin_width - 8)
 }

@@ -309,7 +309,7 @@ def render_hostmatrix():
     style = 'height: %dpx; ' % (snapin_width)
     if rows > 10:
         style += "border-collapse: collapse;"
-    html.write('<table class=hostmatrix style="%s">\n' % style)
+    html.write('<table class="content_center hostmatrix" style="%s">\n' % style)
     col = 1
     row = 1
     for site, host, state, has_been_checked, worstsvc, downtimedepth in hosts:
@@ -495,7 +495,7 @@ def render_tactical_overview():
     except livestatus.MKLivestatusNotFoundError:
         html.write("<center>No data from any site</center>")
         return
-    html.write("<table class=tacticaloverview cellspacing=2 cellpadding=0 border=0>\n")
+    html.write("<table class=\"content_center tacticaloverview\" cellspacing=2 cellpadding=0 border=0>\n")
     for title, data, view, what in [
             ("Hosts",    hstdata, 'hostproblems', 'host'),
             ("Services", svcdata, 'svcproblems',  'service'),
@@ -535,12 +535,12 @@ table.tacticaloverview {
     * border-spacing: 5px 2px;
     */
    width: %dpx;
-   margin-top: 0px;
+   margin-top: 0;
 }
-table.tacticaloverview th { font-size: 7pt; text-align: left; font-weight: normal; padding: 0px; padding-top: 2px; }
+table.tacticaloverview th { font-size: 7pt; text-align: left; font-weight: normal; padding: 0; padding-top: 2px; }
 table.tacticaloverview td { text-align: right; border: 1px solid #444; padding: 0px; }
 table.tacticaloverview td a { display: block; margin-right: 2px; }
-""" % (snapin_width + 8)
+""" % snapin_width
 }
 # table.tacticaloverview td.prob { font-weight: bold; }
 
@@ -554,7 +554,7 @@ table.tacticaloverview td a { display: block; margin-right: 2px; }
 # --------------------------------------------------------------
 def render_performance():
     data = html.live.query("GET status\nColumns: service_checks_rate host_checks_rate external_commands_rate connections_rate forks_rate log_messages_rate cached_log_messages\n")
-    html.write("<table class=performance>\n")
+    html.write("<table class=\"content_center performance\">\n")
     for what, col, format in \
         [("Service checks", 0, "%.2f/s"),
         ("Host checks", 1, "%.2f/s"),
@@ -580,19 +580,19 @@ sidebar_snapins["performance"] = {
     "allowed" : [ "admin", ],
     "styles" : """
 table.performance {
+    width: %dpx;
     -moz-border-radius: 5px;
     font-size: 8pt;
-    width: %dpx;
-    border-style: solid;
     background-color: #589;
+    border-style: solid;
     border-color: #444 #bbb #eee #666;
+   /* The border needs to be substracted from the width */
     border-width: 1px;
-    padding: 2px;
 }
 table.performance td { padding: 0px; }
 table.Performance td.right { text-align: right; font-weight: bold; padding: 0px; }
 
-""" % snapin_width
+""" % (snapin_width - 2)
 }
 
 # --------------------------------------------------------------
@@ -619,6 +619,7 @@ div.time {
    text-align: center;
    font-size: 18pt;
    font-weight: bold;
+   /* The border needs to be substracted from the width */
    border: 1px solid #8cc;
    -moz-border-radius: 10px;
    background-color: #588;

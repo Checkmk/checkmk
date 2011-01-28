@@ -107,7 +107,7 @@ body.side {
     font-size: 9pt;
     padding: 0;
     margin: 0;
-    width: 100%;
+    width: 280px;
     height: 100%;
     overflow:hidden;
 }
@@ -160,7 +160,6 @@ div#check_mk_sidebar div#side_content {
     height: 500px;
     overflow: hidden;
     color: #000000;
-    padding-left: 5px;
     padding-top: 60px;
     padding-bottom: 5px;
 }
@@ -187,7 +186,7 @@ div#check_mk_sidebar div#side_footer div.button {
     top: 10px;
     left: 15px;
     float: left;
-padding: 0px;
+    padding: 0px;
 }
 div#check_mk_sidebar div#side_footer div.button a {
     width: 75px;
@@ -200,7 +199,7 @@ div#check_mk_sidebar div#side_footer div.button a {
     text-decoration: none;
     background-repeat: repeat;
     background-image: url("images/sidebar_button_lo.png");
-margin: 0px;
+    margin: 0px;
 }
 div#check_mk_sidebar div#side_footer div.button a:hover {
     background-image: url("images/sidebar_button_hi.png");
@@ -223,8 +222,8 @@ color: white;
 
 /* General layout of snapins */
 div.snapin {
-    width: 100%;
-    margin: 0;
+    width: 275px;
+    margin: 0 0 0 5px;
     padding: 0;
 }
 
@@ -233,7 +232,7 @@ div.snapin div.head {
     width: 260px;
     text-align: center;
     color: white;
-		padding-top: 9px;
+    padding-top: 9px;
 }
 
 div.snapin div.head.open {
@@ -257,11 +256,12 @@ div.snapin div.content {
     background-image: url("images/snapin_background.png");
     background-repeat: repeat-y;
     background-position: left;
-    padding-top: 10px;
-    padding-left: 12px;
-    padding-right: 12px;
-    padding-bottom: 5px;
-    width: 240px;
+
+    /* It's important for the left/right padding to be substracted
+     * from the width defined below. The regular width would be 260px. */
+    padding: 10px 15px 5px;
+    width: 230px;
+    margin: 0;
 }
 
 div.snapin div.foot {
@@ -272,7 +272,15 @@ div.snapin div.foot {
     line-height: 10px;
 }
 
-/* General styles for snapin contents */
+/*
+ * General styles for snapin contents
+ */
+
+div.snapin .content_center {
+    margin-left:  auto;
+    margin-right: auto;
+}
+
 div.snapin {
     font-family: arial, helvetica, sans-serif;
 }
@@ -280,6 +288,7 @@ div.snapin {
 div.snapin td {
     color: #fff;
 }
+
 div.snapin h3 {
     margin: 2px 0px;
     color: #fff;

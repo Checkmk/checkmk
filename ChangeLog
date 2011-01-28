@@ -16,7 +16,8 @@
       (Thanks to Andreas Behler)
 
     Multisite:
-    * Fixed aligns/widths of snapin contents
+    * Fixed aligns/widths of snapin contents and several small styling issues
+    * Fixed links and border-styling of host matrix snapin
 
 
 1.1.9i5:

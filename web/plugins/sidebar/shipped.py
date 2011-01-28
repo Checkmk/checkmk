@@ -306,10 +306,19 @@ def render_hostmatrix():
     if lastcols > 0:
         rows += 1
 
-    style = 'height: %dpx; ' % (snapin_width)
-    if rows > 10:
-        style += "border-collapse: collapse;"
-    html.write('<table class="content_center hostmatrix" style="%s">\n' % style)
+    # Calculate cell size (Automatic sizing with 100% does not work here)
+    # - Get cell spacing: 1px between each cell
+    # - Substract the cell spacing for each column from the total width
+    # - Then divide the total width through the number of columns
+    # - Then get the full-digit width of the cell and summarize the rest
+    #   to be substracted from the cell width
+    # This is not a 100% solution but way better than having no links
+    cell_spacing = 1
+    cell_size = ((snapin_width - cell_spacing * (n+1)) / n)
+    cell_size, cell_size_rest = divmod(cell_size, 1)
+    style = 'width:%spx' % (snapin_width - n * cell_size_rest)
+
+    html.write('<table class="content_center hostmatrix" cellspacing="0" style="border-collapse:collapse;%s">\n' % style)
     col = 1
     row = 1
     for site, host, state, has_been_checked, worstsvc, downtimedepth in hosts:
@@ -328,7 +337,8 @@ def render_hostmatrix():
         else:
             s = 0
         url = "view.py?view_name=host&site=%s&host=%s" % (htmllib.urlencode(site), htmllib.urlencode(host))
-        html.write('<td class="state state%s"><a href="%s" title="%s" target="main"></a></td>' % (s, url, host))
+        html.write('<td class="state state%s"><a href="%s" title="%s" target="main" style="width:%spx;height:%spx;"></a></td>' %
+                                                                                           (s, url, host, cell_size, cell_size))
         if col == n or (row == rows and n == lastcols):
             html.write("<tr>\n")
             col = 1
@@ -346,10 +356,11 @@ sidebar_snapins["hostmatrix"] = {
     "allowed"     : [ "user", "admin", "guest" ],
     "refresh"     : 10,
     "styles"      : """
-table.hostmatrix { width: %dpx; border-spacing: 1px; }
-table.hostmatrix a { display: block; width: 100%%; height: 100%%; }
-table.hostmatrix td { border: 1px solid white; }
-""" % snapin_width
+table.hostmatrix { border-spacing: 0;  }
+table.hostmatrix tr { padding: 0; border-spacing: 0; }
+table.hostmatrix a { display: block; width: 100%%; height: 100%%; line-height: 100%%; }
+table.hostmatrix td { border: 1px solid white; padding: 0; border-spacing: 0; }
+"""
 
 }
 

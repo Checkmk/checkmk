@@ -18,6 +18,7 @@
     Multisite:
     * Fixed aligns/widths of snapin contents and several small styling issues
     * Fixed links and border-styling of host matrix snapin
+    * Removed jQuery hover menu and replaced it with own code
 
 
 1.1.9i5:

@@ -167,7 +167,7 @@ def paint_icons(what, row): # what is "host" or "service"
     if row[prefix + "icon_image"]:
         image = row[prefix + "icon_image"]
         output += '<img class=icon src="images/icons/%s">' % image
-    
+
     # Link to detail host if this is a summary host
     if "_REALNAME" in custom_vars:
         newrow = row.copy()
@@ -188,7 +188,8 @@ def paint_icons(what, row): # what is "host" or "service"
             url = pnp_url(row)
         else:
             url = ""
-        output += '<a class=tips rel="%s" href="%s"><img class=icon src="images/icon_pnp.png"></a>' % (pnp_popup_url(row), url)
+        output += '<a href="%s" onmouseover="displayHoverMenu(event, get_url_sync(\'%s\'))" onmouseout="hoverHide()">' \
+                  '<img class=icon src="images/icon_pnp.png"></a>' % (url, pnp_popup_url(row))
 
     if 'X' in html.display_options:
         # action_url (only, if not a PNP-URL and pnp_graph is working!)

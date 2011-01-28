@@ -21,7 +21,7 @@
     * drbd: Fixed var typo which prevented inventory of drbd general check
       (Thanks to Andreas Behler)
     * mk_oracle: new agent plugin for monitoring ORACLE (currently only
-      on Linux, but easily portable to other Unices)
+      on Linux and HP-UX, but easily portable to other Unices)
     * oracle_sessions: new check for monitoring the current number of active
       database sessions.
     * oracle_logswitches: new check for monitoring the number of logswitches

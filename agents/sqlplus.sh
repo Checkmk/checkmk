@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# EXAMPLE
+
 # This script is called by the Check_MK ORACLE plugin in order to 
 # execute an SQL query. 
 
@@ -15,7 +17,7 @@ if [ -z "$ORACLE_SID" ] ; then
     exit 1
 fi
 
-su - nagios -c "
+su nagios -c "
 ORACLE_SID=$ORACLE_SID
 ORAENV_ASK=NO
 . /usr/local/bin/oraenv

@@ -26,23 +26,30 @@
 # Check_MK agent plugin for monitoring ORACLE databases
 
 # Get list of all running databases
-SIDS=$(UNIX95=true ps ax -o args | sed -n '/^ora_pmon_\([^ ]*\)/s//\1/p')
+if [ $(uname -s) = Linux ]
+then
+    PS="ps ax -o args"
+else
+    PS="ps -ef -o args"
+fi
+
+SIDS=$(UNIX95=true $PS | sed -n '/^ora_pmon_\([^ ]*\)/s//\1/p')
 if [ -z "$SIDS" ] ; then exit 0 ; fi
 
 # Make an sqlplus query, clean up the result and add an artificial
 # column with the SID at the front of each line. If the query fails,
 # no output at all is made.
-function sqlplus ()
-{   
+function sqlplus 
+{
     OUTPUT=$({ echo 'set pages 0' ; echo 'set lines 8000' ; echo 'set feedback off'; cat ; } | $MK_CONFDIR/sqlplus.sh $1) || return 1
-    echo "${OUTPUT}" | sed -e 's/[[:space:]]\+/ /g' -e '/^[[:space:]]*$/d' -e "s/^/$1 /"
+    echo "${OUTPUT}" | sed -e 's/[[:space:]][[:space:]]*/ /g' -e '/^[[:space:]]*$/d' -e "s/^/$1 /"
 }
 
 # Sessions
 echo '<<<oracle_sessions>>>'
 for SID in $SIDS
 do
-    echo "select count(*) from v"'$'"session where status = 'ACTIVE';" | sqlplus "$SID" 
+    echo "select count(*) from v"'$'"session where status = 'ACTIVE';" | sqlplus "$SID"
 done
 
 echo '<<<oracle_logswitches>>>'
@@ -53,13 +60,13 @@ select count(*) from v\$loghist where first_time > sysdate - 1/24;
 EOF
 done
 
-    
+
 # Tablespaces
 echo '<<<oracle_tablespaces>>>'
 for SID in $SIDS
 do
-    sqlplus "$SID" <<EOF
-select f.file_name, f.tablespace_name, f.status, f.AUTOEXTENSIBLE, f.blocks, f.maxblocks,  f.USER_BLOCKS,  f.INCREMENT_BY, f.ONLINE_STATUS, t.BLOCK_SIZE, t.status from dba_data_files f, dba_tablespaces t where f.tablespace_name = t.tablespace_name 
+    sqlplus "$SID" <<EOF | sed 's/READ ONLY/READONLY/g'
+select f.file_name, f.tablespace_name, f.status, f.AUTOEXTENSIBLE, f.blocks, f.maxblocks,  f.USER_BLOCKS,  f.INCREMENT_BY, f.ONLINE_STATUS, t.BLOCK_SIZE, t.status from dba_data_files f, dba_tablespaces t where f.tablespace_name = t.tablespace_name
 UNION
 select f.file_name, f.tablespace_name, f.status, f.AUTOEXTENSIBLE, f.blocks, f.maxblocks,  f.USER_BLOCKS,  f.INCREMENT_BY, 'TEMP', t.BLOCK_SIZE, t.status from dba_temp_files f, dba_tablespaces t where f.tablespace_name = t.tablespace_name;
 EOF

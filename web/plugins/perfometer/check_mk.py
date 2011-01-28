@@ -225,3 +225,17 @@ def performeter_oracle_tablespaces(row, check_command, perf_data):
     return "%.1f%%" % used_perc, h
 
 perfometers["check_mk-oracle_tablespaces"] = performeter_oracle_tablespaces
+
+def perfometer_oracle_sessions(row, check_command, perf_data):
+    if check_command == "check_mk-oracle_sessions":
+	color = "#00ff48";
+        unit = "";
+    else:
+	color = "#4800ff";
+        unit = "/h";
+    value = int(perf_data[0][1]);
+    return "%d%s" % (value, unit), perfometer_logarithmic(value, 50, 2, color);
+ 
+perfometers["check_mk-oracle_sessions"] = perfometer_oracle_sessions
+perfometers["check_mk-oracle_logswitches"] = perfometer_oracle_sessions
+

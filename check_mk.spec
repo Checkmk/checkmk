@@ -84,7 +84,7 @@ Requires:  check_mk-agent
 Summary: ORACLE-Plugin for check_mk agent
 AutoReq:   off
 AutoProv:  off
-%description agent-logwatch
+%description agent-oracle
 The ORACLE plugin for the check_mk agent allows you to monitor
 several aspects of ORACLE databases. You need to adapt the
 script /etc/check_mk/sqlplus.sh to your needs.

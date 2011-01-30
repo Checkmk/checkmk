@@ -1,0 +1,21 @@
+Title: Make configurable limit on lines processed by mk_logwatch
+Component: checks
+Benefit: 1
+State: open
+Cost: 2
+Date: 2011-01-30 13:42:20
+Class: feature
+
+Logfile that grow fast make problems with mk_logwatch since
+the processing takes too long. We could make the following
+solution:
+
+in logwatch.cfg one can add paramters to logfiles, e.g.
+/var/log/*  ; maxlines=20000
+
+That way processing would parse at most 20000 new lines in the
+file and *add an artificial error message* with state "C"
+or "W" if this limit is exceeded.
+
+Exceeding lines are not lost but processed in the next
+turn.

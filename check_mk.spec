@@ -78,6 +78,17 @@ specify patters for log messages that should raise a warning or
 critical state. For each logfile the current position is remembered.
 This way only new messages are being sent.
 
+%package agent-oracle
+Group:     System/Monitoring
+Requires:  check_mk-agent
+Summary: ORACLE-Plugin for check_mk agent
+AutoReq:   off
+AutoProv:  off
+%description agent-logwatch
+The ORACLE plugin for the check_mk agent allows you to monitor
+several aspects of ORACLE databases. You need to adapt the
+script /etc/check_mk/sqlplus.sh to your needs.
+
 %package web
 Group:     System/Monitoring
 Requires:  python
@@ -110,9 +121,10 @@ install -m 755 $R/usr/share/check_mk/agents/waitmax $R/usr/bin
 mkdir -p $R/usr/lib/check_mk_agent/plugins
 mkdir -p $R/usr/lib/check_mk_agent/local
 
-# logwatch extension
-install -m 755 $R/usr/share/check_mk/agents/mk_logwatch $R/usr/lib/check_mk_agent/plugins
+# logwatch and oracle extension
+install -m 755 $R/usr/share/check_mk/agents/plugins/mk_* $R/usr/lib/check_mk_agent/plugins
 install -m 755 $R/usr/share/check_mk/agents/logwatch.cfg $R/etc/check_mk
+install -m 644 $R/usr/share/check_mk/agents/sqlplus.sh   $R/etc/check_mk
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -169,6 +181,10 @@ rm -rf $RPM_BUILD_ROOT
 %files agent-logwatch
 /usr/lib/check_mk_agent/plugins/mk_logwatch
 %config(noreplace) /etc/check_mk/logwatch.cfg
+
+%files agent-oracle
+/usr/lib/check_mk_agent/plugins/mk_oracle
+%config(noreplace) /etc/check_mk/sqlplus.sh
 
 %files web
 /usr/share/check_mk/web

@@ -149,12 +149,12 @@ deb-base:
 	mv -v deb.bauen/*.deb .
 	rm -rf deb.bauen
 
-deb-agent: $(NAME)-agent-$(VERSION)-1.noarch.rpm $(NAME)-agent-logwatch-$(VERSION)-1.noarch.rpm 
+deb-agent: $(NAME)-agent-$(VERSION)-1.noarch.rpm $(NAME)-agent-logwatch-$(VERSION)-1.noarch.rpm $(NAME)-agent-oracle-$(VERSION)-1.noarch.rpm 
 	@echo "Sorry. Debian packages currently via alien"
 	@for pac in $^ ; do \
 	  fakeroot alien --scripts -d $$pac ; \
 	done
-	@for p in agent agent-logwatch ; do \
+	@for p in agent agent-logwatch agent-oracle ; do \
 	   pac="check-mk-$${p}_$(VERSION)-2_all.deb" ; \
 	   echo "Repackaging $$pac" ; \
 	   rm -rf deb-unpack && \

@@ -25,23 +25,12 @@
 # Boston, MA 02110-1301 USA.
 
 
-# This inventory collects the current state of several SNMP
-# variables. The check monitors if they are unchanged
+def check_snia_sml(item, params, info):
+    return (3, "UNKNOWN - Sorry. Check not implemented in this version.")
 
-check_info['snia_sml'] = (check_snmp_fixed, "SNMP %s", 0,  inventory_snmp_fixed)
-# e.g. IBM TAPELIB 3584
+check_info['snia_sml'] = (
+    check_snia_sml,
+    "%s",
+    0,
+    no_inventory_possible)
 
-snmp_info_single['snia_sml'] = ( "SNIA-SML-MIB", "1.3.6.1.4.1.14851.3.1",
-   [ "4.5",        # SNIA-SML-MIB::chassis-SecurityBreach
-     "4.6",        # SNIA-SML-MIB::chassis-IsLocked
-     "4.10.1.5",   # SNIA-SML-MIB::subChassis-LockPresent
-     "4.10.1.6",   # SNIA-SML-MIB::subChassis-SecurityBreach
-     "4.10.1.7",   # SNIA-SML-MIB::subChassis-IsLocked
-     "6.2.1.5",    # SNIA-SML-MIB::mediaAccessDevice-Availability
-     "6.2.1.11",   # SNIA-SML-MIB::mediaAccessDevice-OperationalStatus
-     "11.2.1.8",   # SNIA-SML-MIB::changerDevice-Availability
-     "11.2.1.9",   # SNIA-SML-MIB::changerDevice-OperationalStatus
-     "12.2.1.6",   # SNIA-SML-MIB::scsiProtocolController-Availability
-     "12.2.1.4",   # SNIA-SML-MIB::scsiProtocolController-OperationalStatus
-     "15.2.1.6",   # SNIA-SML-MIB::fCPortController-OperationalStatus
-     ] )

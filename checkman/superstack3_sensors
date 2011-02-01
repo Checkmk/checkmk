@@ -1,0 +1,20 @@
+title: Check 3Com SuperStack 3 Hardware / FRU sensors
+agents: snmp
+author: Florian Heigl <fh@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check queries the snmp sensors for internal and addon modules 
+ of 3Com SuperStack 3 switches. It can notify you of a fan or add-on module failure.
+
+ It will generate OK status for any item that shows "operational" via SNMP, CRIT any that is in "failure" state and "warning" in all other states.
+
+
+item:
+ The description of the sensor as provided by the device.
+
+inventory:
+ One service is created for each item found in the switch.
+
+perfdata:
+ It does not generate any performance data as the info from the switches is just textual.

@@ -675,7 +675,7 @@ def snmp_scan(hostname, ipaddress):
     # Now try all checks not having a scan function
     for checktype in check_info.keys():
         datatype = checktype.split('.')[0]
-        if datatype not in snmp_info:
+        if not check_uses_snmp(datatype):
             continue # no snmp check
         if checktype not in snmp_scan_functions:
             if opt_verbose:
@@ -1732,7 +1732,8 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
             except Exception, e:
                 if opt_debug:
                     raise
-                sys.stderr.write("%s: Invalid output from agent or invalid configuration: %s\n" % (hostname, e))
+                if opt_verbose:
+		    sys.stderr.write("%s: Invalid output from agent or invalid configuration: %s\n" % (hostname, e))
                 continue
 
             if not isinstance(inventory, list):
@@ -3654,8 +3655,23 @@ def automation_delete_host(args):
         os.system("rm -rf '%s'" % path)
 
 def automation_restart():
+    # make sure, Nagios does not inherit any open
+    # filedescriptors. This really happens, e.g. if
+    # check_mk is called by WATO via Apache. Nagios inherits
+    # the open file where Apache is listening for incoming
+    # HTTP connections. Really.
+    os.closerange(3, 256)
+
+    class fake_file():
+        def write(self, stuff):
+           pass
+        def flush(self):
+           pass
+
+    # Deactivate stdout by introducing fake file without filedescriptor
     old_stdout = sys.stdout
-    sys.stdout = file('/dev/null', 'w')
+    sys.stdout = fake_file()
+
     try:
         if os.path.exists(nagios_objects_file):
             backup_path = nagios_objects_file + ".save"

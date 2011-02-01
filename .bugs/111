@@ -1,0 +1,11 @@
+Title: View editor does not save tool tips (in group header)
+Component: multisite
+Benefit: 2
+State: open
+Cost: 1
+Date: 2011-01-27 17:02:58
+Class: bug
+
+When you add tooltips to a group column in the view editor,
+the tooltip is not saved. This might appear at normal columns
+also, but is not tested.

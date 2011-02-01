@@ -1,0 +1,30 @@
+title: Check 3Com SuperStack 4 CPU Utilization
+agents: snmp
+author: Florian Heigl <fh@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This Check queries the CPU utilization for SuperStack 4 switches, either standalone or that of the CPUs of all units in the stack. Note these switches don't handle snmp well and you should lower the frequence of SNMP based checks with them. 
+ The CPU usage ratio returned by the check is the average load of the last 60 seconds.
+
+
+inventory:
+ The check will add one service per Unit/CPU in a stack.
+
+[parameters]
+warning (int): the percentage of 1-minute average load at which the switch is considered too busy.
+
+critical (int): the percentage of 1-minute average load at which the switch is considered overloaded.
+
+
+[configuration] 
+superstack4_cpu_default_levels (int, int): the warn and critical levels for the checkl.
+ They are set to default to 50% for "WARN" and 75% for "CRIT".
+
+
+item:
+ The CPU found by inventory (it's OID is a multiple of 65536 and will be divided to come to a sane value)
+
+
+perfdata:
+ It does not generate any performance data yet.

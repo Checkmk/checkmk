@@ -24,7 +24,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-VERSION=1.1.9i6
+VERSION=1.1.9i7
 NAME=check_mk
 LANG=
 LC_ALL=
@@ -620,7 +620,7 @@ do
 	   tar xzf $SRCDIR/checkman.tar.gz -C $DESTDIR$checkmandir &&
 	   mkdir -p $DESTDIR$agentsdir &&
 	   tar xzf $SRCDIR/agents.tar.gz -C $DESTDIR$agentsdir &&
-	   for agent in $DESTDIR/$agentsdir/check_mk_*agent.* $DESTDIR/$agentsdir/mk_logwatch ; do 
+	   for agent in $DESTDIR/$agentsdir/check_mk_*agent.* ; do 
 	       sed -ri 's@^export MK_LIBDIR="(.*)"@export MK_LIBDIR="'"$agentslibdir"'"@' $agent 
 	       sed -ri 's@^export MK_CONFDIR="(.*)"@export MK_CONFDIR="'"$agentsconfdir"'"@' $agent 
 	   done &&

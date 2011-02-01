@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,52 +23,26 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#                                               -*- Autoconf -*-
-# Process this file with autoconf to produce a configure script.
+$title = str_replace("_", " ", $servicedesc);
 
-AC_PREREQ(2.61)
-AC_INIT([MK Livestatus], [1.1.9i7], [mk@mathias-kettner.de])
-AM_INIT_AUTOMAKE([-Wall foreign])
-AC_CONFIG_SRCDIR([config.h.in])
-AC_CONFIG_HEADER([config.h])
 
-# Checks for programs.
-AC_PROG_CXX
-AC_PROG_CC
-AC_PROG_RANLIB
-# AC_PROG_LIBTOOL
+$opt[1] = "--vertical-label 'GB' -l0 --title \"$title\" ";
+#
+$def[1] =  "DEF:current=$RRDFILE[1]:$DS[1]:MAX " ;
+$def[1] .= "DEF:used=$RRDFILE[2]:$DS[2]:MAX " ;
+$def[1] .= "DEF:max=$RRDFILE[3]:$DS[3]:MAX " ;
+$def[1] .= "CDEF:current_gb=current,1073741824.0,/ ";
+$def[1] .= "CDEF:max_gb=max,1073741824.0,/ ";
+$def[1] .= "CDEF:used_gb=used,1073741824.0,/ ";
 
-# Checks for libraries.
-AC_CHECK_LIB(socket, socket)
-AC_CHECK_LIB(socket, connect)
-AC_CHECK_LIB(socket, shutdown)
+$def[1] .= "AREA:max_gb#80c0ff:\"Maximum size\" " ;
+$def[1] .= "LINE:max_gb#6080c0:\"\" " ;
+$def[1] .= "GPRINT:max_gb:LAST:\"%2.2lfGB\" ";
+$def[1] .= "AREA:current_gb#00ff80:\"Current size\" " ;
+$def[1] .= "LINE:current_gb#008040:\"\" " ;
+$def[1] .= "GPRINT:current_gb:LAST:\"%2.2lfGB\" ";
+$def[1] .= "AREA:used_gb#f0b000:\"Used by user data\" " ;
+$def[1] .= "LINE:used_gb#806000:\"\" " ;
+$def[1] .= "GPRINT:used_gb:LAST:\"%2.2lfGB\" ";
 
-# Checks for header files.
-AC_HEADER_DIRENT
-AC_HEADER_STDC
-AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdint.h stdlib.h string.h strings.h sys/socket.h sys/time.h sys/timeb.h syslog.h unistd.h])
-
-# Checks for typedefs, structures, and compiler characteristics.
-AC_HEADER_STDBOOL
-AC_C_CONST
-AC_C_INLINE
-AC_TYPE_INT32_T
-AC_TYPE_INT64_T
-AC_TYPE_SIZE_T
-AC_TYPE_SSIZE_T
-AC_HEADER_TIME
-AC_TYPE_UINT32_T
-AC_TYPE_UINT64_T
-
-# Checks for library functions.
-AC_FUNC_MALLOC
-AC_FUNC_REALLOC
-AC_FUNC_SELECT_ARGTYPES
-AC_TYPE_SIGNAL
-AC_FUNC_STAT
-AC_CHECK_FUNCS([bzero gettimeofday memmove regcomp select socket strcasecmp strdup strerror strtoul])
-
-AC_CONFIG_FILES([Makefile
-                 src/Makefile])
-AC_OUTPUT
+?>

@@ -1,10 +1,11 @@
 Title: Restart of Nagios makes Nagios inherit TCP port
 Component: wato
-Benefit: 4
-State: open
-Cost: 2
-Date: 2011-01-26 09:12:21
+State: done
 Class: bug
+Date: 2011-01-26 09:12:21
+Benefit: 4
+Cost: 2
+Fun: 0
 
 If you restart Nagios via WATO, then Apache restarts Nagios
 und the new Nagios process inherits the open files of Apache.
@@ -14,3 +15,7 @@ makes it impossible to restart apache later.
 Solution unclear. Either user reload instead of restart or
 try to explicitely close all filedescriptors after forking.
 But how can we do that?
+
+2011-01-28 10:18:26: changed state open -> done
+Fixed in modules/check_mk.py. We close all filedescriptors from 3..256 before 
+restarting Nagios.

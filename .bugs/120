@@ -1,0 +1,9 @@
+Title: bytes_readable function to format negative values
+Component: core
+Benefit: 7
+State: open
+Cost: 1
+Date: 2011-02-01 13:47:06
+Class: nastiness
+
+The bytes readable formating function was not able to format negative values over here. This should really be possible.

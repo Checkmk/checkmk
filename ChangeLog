@@ -1,6 +1,12 @@
 1.1.9i6:
+    INCOMPATIBLE CHANGES:
+    * Removed out-dated checks blade_misc, ironport_misc and snia_sml. Replaced
+      with dummy checks begin always UNKNOWN.
+
     Core, Setup, etc.:
     * cmk -D: show ip address of host 
+    * Fix SNMP inventory find snmp misc checks inspite of negative scan function
+    * Fix output of MB and GB values (fraction part was zero)
 
     Checks & Agents:
     * megaraid_ldisks: remove debug output
@@ -14,12 +20,22 @@
     * hpux_serviceguard: new check for monitoring HP-UX Serviceguard
     * drbd: Fixed var typo which prevented inventory of drbd general check
       (Thanks to Andreas Behler)
+    * mk_oracle: new agent plugin for monitoring ORACLE (currently only
+      on Linux and HP-UX, but easily portable to other Unices)
+    * oracle_sessions: new check for monitoring the current number of active
+      database sessions.
+    * oracle_logswitches: new check for monitoring the number of logswitches
+      of an ORACLE instances in the last 60 minutes.
+    * oracle_tablespaces: new check for monitoring size, state and autoextension
+      of ORACLE tablespaces.
+    * h3c_lanswitch_cpu: new check for monitoring CPU usage of H3C/HP/3COM switches
+    * h3c_lanswitch_sensors: new check for monitoring hardware sensors of H3C/HP/3COM switches
+    * superstack3_sensors: new check for monitoring hardware sensors of 3COM Superstack 3 switches
 
     Multisite:
     * Fixed aligns/widths of snapin contents and several small styling issues
     * Fixed links and border-styling of host matrix snapin
     * Removed jQuery hover menu and replaced it with own code
-
 
 1.1.9i5:
     Multisite:

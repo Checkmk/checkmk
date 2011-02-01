@@ -1,0 +1,33 @@
+
+
+# Reasonably low warning and crit levels
+h3c_lanswitch_cpu_default_levels = (50, 75)
+
+
+def inventory_h3c_lanswitch_cpu(checkname, info):
+    return [ ( int(line[0]) / 65536 , "h3c_lanswitch_cpu_default_levels" ) for line in info ]
+
+def check_h3c_lanswitch_cpu(item, params, info):
+    warn, crit = params
+    for line in info:
+	unitid = int(line[0]) / 65536
+ 	if unitid == item:
+            util = int(line[1])
+  	    if util > crit: 
+                return (2, "CRIT - Unit %d Utilization: %s%%" % (unitid, util) )
+            elif util > warn:
+                return (1, "WARN - Unit %d Utilization: %s%%" % (unitid, util) )
+	    else: 
+                return (0, "OK - Unit %d Utilization: %s%%" % (unitid, util) )
+    return (3, "UNKNOWN - Unit/CPU %s not found" % item)
+
+
+check_info["h3c_lanswitch_cpu"] = (check_h3c_lanswitch_cpu, "Unit CPU Util %s", 0, inventory_h3c_lanswitch_cpu )
+
+snmp_info["h3c_lanswitch_cpu"] = \
+   ( "1.3.6.1.4.1.43.45.1.6.1.1.1", [ OID_END, "3" ] )
+
+
+snmp_scan_functions["h3c_lanswitch_cpu"] = \
+    lambda oid: "3com superstack 4" in oid (".1.3.6.1.2.1.1.1.0").lower() 
+# alternatively: 3Com Switch 8814

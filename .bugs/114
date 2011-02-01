@@ -1,0 +1,10 @@
+Title: Inventory of Windows services should support regex and host tags
+Component: core
+Benefit: 1
+State: open
+Cost: 2
+Date: 2011-01-30 13:03:57
+Class: feature
+
+We could do this similar to ps. There should be a rule based variant
+that supports host specific configuration as well as regular expressions.

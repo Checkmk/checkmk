@@ -107,7 +107,7 @@ def render_views():
                     first = False
                     html.write("<ul>")
                 bulletlink(title, "view.py?view_name=%s" % name)
-        if first: # at least one item rendered
+        if not first: # at least one item rendered
             html.write("</ul>")
 
     s = [ (view.get("topic", "Other"), view["title"], name) for name, view in html.available_views.items() if not view["hidden"] ]

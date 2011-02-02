@@ -270,10 +270,10 @@ def get_host_info(hostname, ipaddress, checkname):
             except MKAgentError, e:
                 exception_texts.append(str(e))
 		g_broken_agent_hosts.add(node)
-            except SNMPErrorError, e:
+            except MKSNMPError, e:
                 exception_texts.append(str(e))
 		g_broken_snmp_hosts.add(node)
-		is_snmp_error = true
+		is_snmp_error = True
         if not at_least_one_without_exception:
 	    if is_snmp_error:
                 raise MKSNMPError(", ".join(exception_texts))

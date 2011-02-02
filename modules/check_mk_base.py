@@ -705,7 +705,7 @@ def do_check(hostname, ipaddress):
             output = "WARNING - old plugin version %s (should be at least %s)" % (agent_version, agent_min_version)
             status = 1
         else:
-            output = "OK - Agent version %s" % (agent_version, num_success)
+            output = "OK - Agent version %s" % agent_version
             status = 0
 
     except MKGeneralException, e:

@@ -1,3 +1,7 @@
+1.1.9i7:
+    Core, Setup, etc.:
+    * Fix crash on Python 2.4 (e.g. RedHat) with fake_file
+
 1.1.9i6:
     INCOMPATIBLE CHANGES:
     * Removed out-dated checks blade_misc, ironport_misc and snia_sml. Replaced

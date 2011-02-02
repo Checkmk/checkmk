@@ -108,7 +108,7 @@ def get_snmp_explicit(hostname, ipaddress, mib, baseoid, suffixes):
         if exitstatus:
             if opt_verbose:
                 sys.stderr.write(tty_red + tty_bold + "ERROR: " + tty_normal + "SNMP error\n")
-	    raise MKSNMPError("SNMP Error")
+	    raise MKSNMPError("SNMP Error on %s" % ipaddress)
     return info
 
 def snmpwalk_on_suboid(hostname, ip, oid):
@@ -153,7 +153,7 @@ def snmpwalk_on_suboid(hostname, ip, oid):
     if exitstatus:
         if opt_verbose:
             sys.stderr.write(tty_red + tty_bold + "ERROR: " + tty_normal + "SNMP error\n")
-	raise MKSNMPError("SNMP Error")
+	raise MKSNMPError("SNMP Error on %s" % ip)
     return rowinfo
 
 def get_snmp_table(hostname, ip, oid_info):

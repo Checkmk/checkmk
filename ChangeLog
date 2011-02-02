@@ -2,6 +2,7 @@
     Core, Setup, etc.:
     * Fix crash on Python 2.4 (e.g. RedHat) with fake_file
     * Fixed clustering of SNMP hosts
+    * Fix status output of Check_MK check in mixed cluster setups
 
 1.1.9i6:
     INCOMPATIBLE CHANGES:

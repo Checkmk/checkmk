@@ -268,10 +268,12 @@ def get_host_info(hostname, ipaddress, checkname):
                 info += get_realhost_info(node, ipaddress, checkname, cluster_max_cachefile_age)
                 at_least_one_without_exception = True
             except MKAgentError, e:
-                exception_texts.append(str(e))
+		if str(e) != "": # only first error contains text
+                    exception_texts.append(str(e))
 		g_broken_agent_hosts.add(node)
             except MKSNMPError, e:
-                exception_texts.append(str(e))
+		if str(e) != "": # only first error contains text
+		    exception_texts.append(str(e))
 		g_broken_snmp_hosts.add(node)
 		is_snmp_error = True
         if not at_least_one_without_exception:
@@ -703,7 +705,7 @@ def do_check(hostname, ipaddress):
             output = "WARNING - old plugin version %s (should be at least %s)" % (agent_version, agent_min_version)
             status = 1
         else:
-            output = "OK - Agent Version %s, processed %d host infos" % (agent_version, num_success)
+            output = "OK - Agent version %s" % (agent_version, num_success)
             status = 0
 
     except MKGeneralException, e:
@@ -720,7 +722,7 @@ def do_check(hostname, ipaddress):
                 raise
 
     run_time = time.time() - start_time
-    output += " in %.1f sec|execution_time=%.3f\n" % (run_time, run_time)
+    output += ", execution time %.1f sec|execution_time=%.3f\n" % (run_time, run_time)
     sys.stdout.write(output)
     sys.exit(status)
 

@@ -3662,7 +3662,7 @@ def automation_restart():
     # HTTP connections. Really.
     os.closerange(3, 256)
 
-    class fake_file():
+    class null_file:
         def write(self, stuff):
            pass
         def flush(self):
@@ -3670,7 +3670,7 @@ def automation_restart():
 
     # Deactivate stdout by introducing fake file without filedescriptor
     old_stdout = sys.stdout
-    sys.stdout = fake_file()
+    sys.stdout = null_file()
 
     try:
         if os.path.exists(nagios_objects_file):

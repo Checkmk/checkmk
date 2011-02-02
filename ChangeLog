@@ -4,6 +4,11 @@
     * Fixed clustering of SNMP hosts
     * Fix status output of Check_MK check in mixed cluster setups
 
+    Checks & Agents:
+    * PNP templates for if/if64: fix bugs: outgoing packets had been
+      same as incoming, errors and discards were swapped (thanks to 
+      Paul Freeman)
+
 1.1.9i6:
     INCOMPATIBLE CHANGES:
     * Removed out-dated checks blade_misc, ironport_misc and snia_sml. Replaced

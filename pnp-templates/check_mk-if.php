@@ -41,10 +41,12 @@ $bitBandwidth = $MAX[1] * 8;
 $warn = $WARN[1];
 $crit = $CRIT[1];
 
+$megabyte = 1024.0 * 1024.0;
+
 $bandwidth = $bitBandwidth;
-$mByteBandwidth = $MAX[1] / 1000 / 1000;
-$mByteWarn      = $WARN[1] / 1000 / 1000;
-$mByteCrit      = $CRIT[1] / 1000 / 1000;
+$mByteBandwidth = $MAX[1] / $megabyte;
+$mByteWarn      = $WARN[1] / $megabyte;
+$mByteCrit      = $CRIT[1] / $megabyte;
 
 $bwuom = ' ';
 $base = 1000;
@@ -53,41 +55,50 @@ if($bandwidth > $base * $base * $base) {
 	$crit /= $base * $base * $base;
 	$bandwidth /= $base * $base * $base;
 	$bwuom = 'G';
-} elseif($bandwidth > $base * $base) {
+} elseif ($bandwidth > $base * $base) {
 	$warn /= $base * $base;
 	$crit /= $base * $base;
 	$bandwidth /= $base * $base;
 	$bwuom = 'M';
-} elseif($bandwidth > $base) {
+} elseif ($bandwidth > $base) {
 	$warn /= $base;
 	$crit /= $base;
 	$bandwidth /= $base;
 	$bwuom = 'K';
 }
 
+if ($mByteBandwidth < 10)
+   $range = $mByteBandwidth;
+else
+   $range = 10.0;
+
+
 $ds_name[1] = 'Used bandwidth';
-$opt[1] = "--vertical-label \"MByte/sec\" -X0 -b 1024 --title \"Used bandwidth $hostname / $servicedesc\" ";
+$opt[1] = "--vertical-label \"MByte/sec\" -l -$range -u $range -X0 -b 1024 --title \"Used bandwidth $hostname / $servicedesc at $bandwidth${bwuom}Bit/s;\" ";
 $def[1] = 
   "HRULE:0#c0c0c0 ".
-  "LINE:$mByteBandwidth#808080:\"Port speed\:  " . sprintf("%.1f", $bandwidth) . " ".$bwuom."Bit/s  \" ".
-  "LINE:$mByteWarn#ffff00:\"Warning\:  " . sprintf("%.1f", $warn) . " ".$bwuom."Byte/s  \" ".
-  "LINE:$mByteCrit#ff0000:\"Critical\:  " . sprintf("%.1f", $crit) . " ".$bwuom."Byte/s\\n\" ".
-  "LINE:-$mByteWarn#ffff00: ".
-  "LINE:-$mByteCrit#ff0000: ".
-  "LINE:-$mByteBandwidth#808080: ".
-  "DEF:inbytes=$RRDFILE[1]:$DS[1]:MAX ".
+  "HRULE:$mByteBandwidth#808080:\"Port speed\:  " . sprintf("%.1f", $bandwidth) . " ".$bwuom."Bit/s\\n\" ".
+  "HRULE:-$mByteBandwidth#808080: ";
+   if ($warn)
+      $def[1] .= "HRULE:$mByteWarn#ffff00:\"Warning\:                " . sprintf("%6.1f", $warn) . " ".$bwuom."B/s\\n\" ".
+                 "HRULE:-$mByteWarn#ffff00: ";
+   if ($crit)
+      $def[1] .= "HRULE:$mByteCrit#ff0000:\"Critical\:               " . sprintf("%6.1f", $crit) . " ".$bwuom."B/s\\n\" ".
+                 "HRULE:-$mByteCrit#ff0000: ";
+
+  $def[1] .= "DEF:inbytes=$RRDFILE[1]:$DS[1]:MAX ".
   "DEF:outbytes=$RRDFILE[6]:$DS[6]:MAX ".
   "CDEF:inmb=inbytes,1048576,/ ".
   "CDEF:outmb=outbytes,1048576,/ ".
   "CDEF:minusoutmb=0,outmb,- ".
-  "AREA:inmb#00e060:\"in         \" ".
-  "GPRINT:inbytes:LAST:\"%5.1lf %sB/s last\" ".
-  "GPRINT:inbytes:AVERAGE:\"%5.1lf %sB/s avg\" ".
-  "GPRINT:inbytes:MAX:\"%5.1lf %sB/s max\\n\" ".
-  "AREA:minusoutmb#0080e0:\"out        \" ".
-  "GPRINT:outbytes:LAST:\"%5.1lf %sB/s last\" ".
-  "GPRINT:outbytes:AVERAGE:\"%5.1lf %sB/s avg\" ".
-  "GPRINT:outbytes:MAX:\"%5.1lf %sB/s max\\n\" ";
+  "AREA:inmb#00e060:\"in                    \" ".
+  "GPRINT:inbytes:LAST:\"%6.1lf %sB/s last\" ".
+  "GPRINT:inbytes:AVERAGE:\"%6.1lf %sB/s avg\" ".
+  "GPRINT:inbytes:MAX:\"%6.1lf %sB/s max\\n\" ".
+  "AREA:minusoutmb#0080e0:\"out                   \" ".
+  "GPRINT:outbytes:LAST:\"%6.1lf %sB/s last\" ".
+  "GPRINT:outbytes:AVERAGE:\"%6.1lf %sB/s avg\" ".
+  "GPRINT:outbytes:MAX:\"%6.1lf %sB/s max\\n\" ";
 
 if (isset($DS[12])) {
   $def[1] .= 
@@ -96,14 +107,14 @@ if (isset($DS[12])) {
   "CDEF:inmba=inbytesa,1048576,/ ".
   "CDEF:outmba=outbytesa,1048576,/ ".
   "CDEF:minusoutmba=0,outmba,- ".
-  "LINE:inmba#007030:\"in (avg)   \" ".
-  "GPRINT:inbytesa:LAST:\"%5.1lf %sB/s last\" ".
-  "GPRINT:inbytesa:AVERAGE:\"%5.1lf %sB/s avg\" ".
-  "GPRINT:inbytesa:MAX:\"%5.1lf %sB/s max\\n\" ".
-  "LINE:minusoutmba#004070:\"out (avg)  \" ".
-  "GPRINT:outbytesa:LAST:\"%5.1lf %sB/s last\" ".
-  "GPRINT:outbytesa:AVERAGE:\"%5.1lf %sB/s avg\" ".
-  "GPRINT:outbytesa:MAX:\"%5.1lf %sB/s max\\n\" ";
+  "LINE:inmba#00a060:\"in (avg)              \" ".
+  "GPRINT:inbytesa:LAST:\"%6.1lf %sB/s last\" ".
+  "GPRINT:inbytesa:AVERAGE:\"%6.1lf %sB/s avg\" ".
+  "GPRINT:inbytesa:MAX:\"%6.1lf %sB/s max\\n\" ".
+  "LINE:minusoutmba#0060c0:\"out (avg)             \" ".
+  "GPRINT:outbytesa:LAST:\"%6.1lf %sB/s last\" ".
+  "GPRINT:outbytesa:AVERAGE:\"%6.1lf %sB/s avg\" ".
+  "GPRINT:outbytesa:MAX:\"%6.1lf %sB/s max\\n\" ";
 }
 
 # Graph 2: packets
@@ -113,52 +124,52 @@ $def[2] =
   "HRULE:0#c0c0c0 ".
   "DEF:inu=$RRDFILE[2]:$DS[2]:MAX ".
   "DEF:innu=$RRDFILE[3]:$DS[3]:MAX ".
-  "AREA:inu#00ffc0:\"in unicast             \" ".
-  "GPRINT:inu:LAST:\"%5.2lf/s last\" ".
-  "GPRINT:inu:AVERAGE:\"%5.2lf/s avg\" ".
-  "GPRINT:inu:MAX:\"%5.2lf/s max\\n\" ".
-  "AREA:innu#00c080:\"in broadcast/multicast \":STACK ".
-  "GPRINT:innu:LAST:\"%5.2lf/s last \" ".
-  "GPRINT:innu:AVERAGE:\"%5.2lf/s avg \" ".
-  "GPRINT:innu:MAX:\"%5.2lf/s max\\n\" ".
-  "DEF:outu=$RRDFILE[2]:$DS[2]:MAX ".
-  "DEF:outnu=$RRDFILE[3]:$DS[3]:MAX ".
+  "AREA:inu#00ffc0:\"in unicast              \" ".
+  "GPRINT:inu:LAST:\"%7.2lf/s last  \" ".
+  "GPRINT:inu:AVERAGE:\"%7.2lf/s avg  \" ".
+  "GPRINT:inu:MAX:\"%7.2lf/s max\\n\" ".
+  "AREA:innu#00c080:\"in broadcast/multicast  \":STACK ".
+  "GPRINT:innu:LAST:\"%7.2lf/s last  \" ".
+  "GPRINT:innu:AVERAGE:\"%7.2lf/s avg  \" ".
+  "GPRINT:innu:MAX:\"%7.2lf/s max\\n\" ".
+  "DEF:outu=$RRDFILE[7]:$DS[7]:MAX ".
+  "DEF:outnu=$RRDFILE[8]:$DS[8]:MAX ".
   "CDEF:minusoutu=0,outu,- ".
   "CDEF:minusoutnu=0,outnu,- ".
-  "AREA:minusoutu#00c0ff:\"out unicast            \" ".
-  "GPRINT:outu:LAST:\"%5.2lf/s last\" ".
-  "GPRINT:outu:AVERAGE:\"%5.2lf/s avg\" ".
-  "GPRINT:outu:MAX:\"%5.2lf/s max\\n\" ".
-  "AREA:minusoutnu#0080c0:\"out broadcast/multicast\":STACK ".
-  "GPRINT:outnu:LAST:\"%5.2lf/s last \" ".
-  "GPRINT:outnu:AVERAGE:\"%5.2lf/s avg \"  ".
-  "GPRINT:outnu:MAX:\"%5.2lf/s max\\n\" ";
+  "AREA:minusoutu#00c0ff:\"out unicast             \" ".
+  "GPRINT:outu:LAST:\"%7.2lf/s last  \" ".
+  "GPRINT:outu:AVERAGE:\"%7.2lf/s avg  \" ".
+  "GPRINT:outu:MAX:\"%7.2lf/s max\\n\" ".
+  "AREA:minusoutnu#0080c0:\"out broadcast/multicast \":STACK ".
+  "GPRINT:outnu:LAST:\"%7.2lf/s last  \" ".
+  "GPRINT:outnu:AVERAGE:\"%7.2lf/s avg  \"  ".
+  "GPRINT:outnu:MAX:\"%7.2lf/s max\\n\" ";
 
 # Graph 3: errors and discards
 $ds_name[3] = 'Errors and discards';
 $opt[3] = "--vertical-label \"packets/sec\" -X0 --title \"Problems $hostname / $servicedesc\" ";
 $def[3] =
   "HRULE:0#c0c0c0 ".
-  "DEF:inerr=$RRDFILE[4]:$DS[4]:MAX ".
-  "DEF:indisc=$RRDFILE[5]:$DS[5]:MAX ".
-  "AREA:inerr#ff0000:\"in errors   \" ".
-  "GPRINT:inerr:LAST:\"%5.2lf/s last\" ".
-  "GPRINT:inerr:AVERAGE:\"%5.2lf/s avg\" ".
-  "GPRINT:inerr:MAX:\"%5.2lf/s max\\n\" ".
-  "AREA:indisc#ff8000:\"in discards \":STACK ".
-  "GPRINT:indisc:LAST:\"%5.2lf/s last\" ".
-  "GPRINT:indisc:AVERAGE:\"%5.2lf/s avg\" ".
-  "GPRINT:indisc:MAX:\"%5.2lf/s max\\n\" ".
-  "DEF:outerr=$RRDFILE[9]:$DS[9]:MAX ".
-  "DEF:outdisc=$RRDFILE[10]:$DS[10]:MAX ".
+  "DEF:inerr=$RRDFILE[5]:$DS[5]:MAX ".
+  "DEF:indisc=$RRDFILE[4]:$DS[4]:MAX ".
+  "AREA:inerr#ff0000:\"in errors               \" ".
+  "GPRINT:inerr:LAST:\"%7.2lf/s last  \" ".
+  "GPRINT:inerr:AVERAGE:\"%7.2lf/s avg  \" ".
+  "GPRINT:inerr:MAX:\"%7.2lf/s max\\n\" ".
+  "AREA:indisc#ff8000:\"in discards             \":STACK ".
+  "GPRINT:indisc:LAST:\"%7.2lf/s last  \" ".
+  "GPRINT:indisc:AVERAGE:\"%7.2lf/s avg  \" ".
+  "GPRINT:indisc:MAX:\"%7.2lf/s max\\n\" ".
+  "DEF:outerr=$RRDFILE[10]:$DS[10]:MAX ".
+  "DEF:outdisc=$RRDFILE[9]:$DS[9]:MAX ".
   "CDEF:minusouterr=0,outerr,- ".
   "CDEF:minusoutdisc=0,outdisc,- ".
-  "AREA:minusouterr#ff0080:\"out errors  \" ".
-  "GPRINT:outerr:LAST:\"%5.2lf/s last\" ".
-  "GPRINT:outerr:AVERAGE:\"%5.2lf/s avg\" ".
-  "GPRINT:outerr:MAX:\"%5.2lf/s max\\n\" ".
-  "AREA:minusoutdisc#ff8080:\"out discards\":STACK ".
-  "GPRINT:outdisc:LAST:\"%5.2lf/s last\" ".
-  "GPRINT:outdisc:AVERAGE:\"%5.2lf/s avg\" ".
-  "GPRINT:outdisc:MAX:\"%5.2lf/s max\\n\" ";
+  "AREA:minusouterr#ff0080:\"out errors              \" ".
+  "GPRINT:outerr:LAST:\"%7.2lf/s last  \" ".
+  "GPRINT:outerr:AVERAGE:\"%7.2lf/s avg  \" ".
+  "GPRINT:outerr:MAX:\"%7.2lf/s max\\n\" ".
+  "AREA:minusoutdisc#ff8080:\"out discards            \":STACK ".
+  "GPRINT:outdisc:LAST:\"%7.2lf/s last  \" ".
+  "GPRINT:outdisc:AVERAGE:\"%7.2lf/s avg  \" ".
+  "GPRINT:outdisc:MAX:\"%7.2lf/s max\\n\" ";
 ?>

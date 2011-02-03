@@ -158,13 +158,13 @@ class html:
         days = hours / 24
         return "%d days" % days
 
-    def begin_form(self, name, action = None):
+    def begin_form(self, name, action = None, method = "GET"):
         self.form_vars = []
         if action == None:
             action = self.req.myfile + ".py"
         self.current_form = name
-        self.write("<form name=%s class=%s action=\"%s\" method=GET>\n" %
-                   (name, name, action))
+        self.write("<form name=%s class=%s action=\"%s\" method=%s>\n" %
+                   (name, name, action, method))
         self.hidden_field("filled_in", "on")
         self.hidden_field("_transid", str(self.current_transid(self.req.user)))
         self.hidden_fields(self.global_vars)

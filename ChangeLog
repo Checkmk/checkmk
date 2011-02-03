@@ -10,6 +10,9 @@
       Paul Freeman)
     * Linux Agent: Added suport for vdx and xvdx volumes (KVM+Virtio, XEN+xvda)
 
+    WATO:
+    * Fix too-long-URL problem in cases of many services on one host
+
 1.1.9i6:
     INCOMPATIBLE CHANGES:
     * Removed out-dated checks blade_misc, ironport_misc and snia_sml. Replaced

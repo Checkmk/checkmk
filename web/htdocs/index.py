@@ -48,14 +48,20 @@ if defaults.omd_root:
                 execfile(local_pagehandlers_dir + "/" + fn)
 
 def read_get_vars(req):
-    req.multivars = {}
-    req.vars = {}
-    if req.args:
-        req.rawvars = util.parse_qs(req.args, True)
+    def parse_vars(vars):
+        req.rawvars = util.parse_qs(vars, True)
         for (key,values) in req.rawvars.items():
             if len(values) >= 1:
                 req.vars[key] = values[-1]
                 req.multivars[key] = values
+
+    req.multivars = {}
+    req.vars = {}
+    if req.args:
+        parse_vars(req.args)
+    postvars = req.read()
+    if postvars:
+        parse_vars(postvars)
 
 def connect_to_livestatus(html):
     html.site_status = {}

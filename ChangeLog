@@ -9,8 +9,13 @@
       same as incoming, errors and discards were swapped (thanks to 
       Paul Freeman)
 
+    Multisite:
+    * Fix encoding problem when host/service groups contain non-ascii
+      characters.
+
     WATO:
     * Fix too-long-URL problem in cases of many services on one host
+
 
 1.1.9i6:
     INCOMPATIBLE CHANGES:

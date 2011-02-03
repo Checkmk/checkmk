@@ -64,7 +64,10 @@ class uriinfo:
                          if i[0] not in omit ])
 
 def attrencode(value):
-    return cgi.escape(str(value), True)
+    if type(value) in [str, unicode]:
+        return cgi.escape(value)
+    else:
+        return cgi.escape(str(value), True)
 
 # This function returns a str object, never unicode!
 def urlencode_vars(vars):
@@ -342,11 +345,13 @@ class html:
     def html_head(self, title):
         if not self.req.header_sent:
             self.req.write(
-                '''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+                u'''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
                 <html><head>
                 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-                <title>%s</title>
-                <link rel="stylesheet" type="text/css" href="check_mk.css">''' % title)
+                <title>''')
+            self.req.write(title.encode("utf-8"))
+            self.req.write('''</title>
+                <link rel="stylesheet" type="text/css" href="check_mk.css">''')
             if config.custom_style_sheet:
                self.req.write('                <link rel="stylesheet" type="text/css" href="%s">' % config.custom_style_sheet)
             self.req.write('''

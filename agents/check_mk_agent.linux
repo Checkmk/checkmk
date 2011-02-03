@@ -157,7 +157,7 @@ cat /proc/mdstat
 # Performancecounter Platten
 echo '<<<diskstat>>>'
 date +%s
-egrep ' ([sh]d[a-z]*|cciss/c[0-9]+d[0-9]+) ' < /proc/diskstats
+egrep ' (x?[shv]d[a-z]*|cciss/c[0-9]+d[0-9]+) ' < /proc/diskstats
 
 # Performancecounter Kernel
 echo '<<<kernel>>>'

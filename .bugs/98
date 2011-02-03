@@ -1,10 +1,11 @@
 Title: Restart of Nagios makes Multisite murk
 Component: multisite
-Benefit: 2
-State: open
-Cost: 2
-Date: 2011-01-22 14:20:58
+State: done
 Class: bug
+Date: 2011-01-22 14:20:58
+Benefit: 2
+Cost: 2
+Fun: 0
 
 When Nagios is restarted (e.g. via WATO), then for a short time the
 Livestatus socket is gone. This leads to error messages in various
@@ -14,3 +15,6 @@ errors.
 We need to find a solution for a cleaner handling of this. Couldn't
 be a site in the state "restarting". If yes - how can we detect such
 a state. The livestatus socket is missing in such a case.
+
+2011-02-03 10:23:30: changed state open -> done
+jQuery was removed - the window is gone.

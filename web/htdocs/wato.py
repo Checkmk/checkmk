@@ -669,7 +669,7 @@ def show_service_table(hostname, firsttime):
     table = check_mk_automation("try-inventory", [hostname])
     table.sort()
 
-    html.begin_form("checks")
+    html.begin_form("checks", None, "POST")
     fixall = 0
     for entry in table:
         if entry[0] == 'new' and not html.has_var("_activate_all") and not firsttime:

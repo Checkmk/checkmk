@@ -1584,21 +1584,23 @@ def show_host_service_actions(what):
         html.write("</td></tr>\n")
 
     if config.may("action.acknowledge"):
-        html.write("<tr><td rowspan=2 class=legend>Acknowledge</td>\n")
+        html.write("<tr><td rowspan=3 class=legend>Acknowledge</td>\n")
         html.write("<td class=content><input type=submit name=_acknowledge value=\"Acknowledge\"> &nbsp; "
-                   "<input type=submit name=_remove_ack value=\"Remove Acknowledgement\"></td></tr><tr>"
-                   "<td class=content><div class=textinputlegend>Comment:</div>")
-        html.text_input("_ack_comment")
-        html.write("<br>")
+                   "<input type=submit name=_remove_ack value=\"Remove Acknowledgement\"></td></tr>\n")
+
+        html.write("<tr><td class=content>")
         html.checkbox("_ack_sticky", True)
         html.write(" sticky &nbsp; ")
         html.checkbox("_ack_notify", True)
         html.write(" send notification &nbsp; ")
         html.checkbox("_ack_persistent", False)
         html.write(" persistent comment")
-
         html.write("</td></tr>\n")
 
+        html.write("<tr><td class=content><div class=textinputlegend>Comment:</div>")
+        html.text_input("_ack_comment")
+        html.write("</td></tr>\n")
+        
     if config.may("action.addcomment"):
         html.write("<tr><td rowspan=2 class=legend>Add comment</td>\n")
         html.write("<td class=content><input type=submit name=_add_comment value=\"Add comment\"></td></tr>\n"
@@ -1607,7 +1609,7 @@ def show_host_service_actions(what):
         html.write("</td></tr>\n")
 
     if config.may("action.downtimes"):
-        html.write("<tr><td class=legend rowspan=3>Schedule Downtimes</td>\n"
+        html.write("<tr><td class=legend rowspan=4>Schedule Downtimes</td>\n"
                    "<td class=content>\n"
                    "<input type=submit name=_down_2h value=\"2 hours\"> "
                    "<input type=submit name=_down_today value=\"Today\"> "
@@ -1623,6 +1625,11 @@ def show_host_service_actions(what):
         html.write("&nbsp; to &nbsp;")
         html.datetime_input("_down_to", time.time() + 7200)
         html.write("</td></tr>")
+        html.write("<tr><td class=content>")
+        html.checkbox("_down_flexible", False)
+        html.write(" flexible (automatically end downtime as soon as %s is %s again)" % 
+                (what, what == "host" and "up" or "OK"))
+        html.write("</td></tr>\n")
         html.write("<tr><td class=content><div class=textinputlegend>Comment:</div>\n")
         html.text_input("_down_comment")
 
@@ -1792,8 +1799,12 @@ def nagios_host_service_action_command(what, dataset):
         comment = html.var_utf8("_down_comment")
         if not comment:
             raise MKUserError("_down_comment", "You need to supply a comment for your downtime.")
+        if html.var("_down_flexible"):
+            fixed = 0
+        else:
+            fixed = 1
         command = (("SCHEDULE_" + cmdtag + "_DOWNTIME;%s;" % spec) \
-                   + ("%d;%d;1;0;0;%s;" % (int(down_from), int(down_to), html.req.user)) \
+                   + ("%d;%d;%d;0;0;%s;" % (int(down_from), int(down_to), fixed, html.req.user)) \
                    + comment)
 
     nagios_command = ("[%d] " % int(time.time())) + command + "\n"

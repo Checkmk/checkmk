@@ -6,6 +6,7 @@
       or &output_format=python to your view URL.
     * Acknowledgement of problem now has checkboxes for sticky,
       send notification and persisten comment
+    * Downtimes: allow to specify fixed/flexible downtime
 
     WATO:
     * Fixed problem appearing at restart on older Python version (RH)

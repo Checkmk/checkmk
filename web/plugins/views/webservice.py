@@ -29,3 +29,28 @@ multisite_layouts["python"] = {
     "hide"   : True,
 }
 
+def render_json(data, view, group_painters, painters, num_columns):
+    columns, rows = data
+    html.write("[\n")
+    html.write(repr([p[0]["title"] for p in painters]))
+    for row in rows:
+        html.write(",\n[")
+        first = True
+        for p in painters:
+            if first:
+                first = False
+            else:
+                html.write(",")
+            tdclass, content = prepare_paint(p, row)
+            stripped = htmllib.strip_tags(content)
+            utf8 = stripped.encode("utf-8")
+            html.write(repr(utf8))
+        html.write("]")
+    html.write("\n]\n")
+
+multisite_layouts["json"] = {
+    "title"  : "JSON data output",
+    "render" : render_json,
+    "group"  : False,
+    "hide"   : True,
+}

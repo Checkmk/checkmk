@@ -1370,7 +1370,7 @@ multisite_painters["downtime_fixed"] = {
     "title" : "Downtime is fixed",
     "short" : "Fixed",
     "columns" : ["downtime_fixed"],
-    "paint" : lambda row: (None, row["downtime_fixed"] == "0" and "flexible" or "fixed")
+    "paint" : lambda row: (None, row["downtime_fixed"] == 0 and "flexible" or "fixed")
 }
 multisite_painters["downtime_what"] = {
     "title" : "Downtime type (host/service)",
@@ -1405,6 +1405,18 @@ multisite_painters["downtime_end_time"] = {
     "columns" : ["downtime_end_time"],
     "options" : [ "ts_format", "ts_date" ],
     "paint" : lambda row: paint_age(row["downtime_end_time"], True, 3600)
+}
+def paint_downtime_duration(row):
+    if row["downtime_fixed"] == 1:
+        return None, ""
+    else:
+        return None, "%02d:%02d" % divmod(row["downtime_duration"] / 60, 60)
+
+multisite_painters["downtime_duration"] = {
+    "title" : "Downtime duration (if flexible)",
+    "short" : "Duration",
+    "columns" : ["downtime_duration", "downtime_fixed"],
+    "paint" : paint_downtime_duration
 }
 
 #    _

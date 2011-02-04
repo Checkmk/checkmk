@@ -1632,9 +1632,9 @@ def show_host_service_actions(what):
         html.write("</td></tr>")
         html.write("<tr><td class=content>")
         html.checkbox("_down_flexible", False)
-        html.write(" flexible (automatically end downtime as soon as %s is %s again)" % 
-                (what, what == "host" and "up" or "OK"))
-        html.write("</td></tr>\n")
+        html.write(" flexible with max. duration ")
+        html.time_input("_down_duration", 2, 0)
+        html.write(" (HH:MM)</td></tr>\n")
         html.write("<tr><td class=content><div class=textinputlegend>Comment:</div>\n")
         html.text_input("_down_comment")
 
@@ -1786,12 +1786,6 @@ def nagios_host_service_action_command(what, dataset):
             time.asctime(time.localtime(down_from)),
             time.asctime(time.localtime(down_to)))
 
-    # handle hidden field (added for NagStaMon)
-    elif html.var("_down_duration") and config.may("action.downtimes"):
-        duration = int(html.var("_down_duration"))
-        down_to = down_from + duration
-        title = "<b>schedule a downtime from now lasting for %d seconds</b> on " % duration
-
     elif html.var("_down_remove") and config.may("action.downtimes"):
         downtime_ids = []
         for id in dataset[prefix + "downtimes"]:
@@ -1812,11 +1806,10 @@ def nagios_host_service_action_command(what, dataset):
             raise MKUserError("_down_comment", "You need to supply a comment for your downtime.")
         if html.var("_down_flexible"):
             fixed = 0
+            duration = html.get_time_input("_down_duration", "the duration")
         else:
             fixed = 1
-        duration = down_to - down_from
-        if fixed == 0 and abs(down_from - time.time()) > 80:
-            raise MKUserError("_down_from", "When creating flexible downtimes the start time must be now.")
+            duration = 0
         command = (("SCHEDULE_" + cmdtag + "_DOWNTIME;%s;" % spec) \
                    + ("%d;%d;%d;0;%d;%s;" % (down_from, down_to, fixed, duration, html.req.user)) \
                    + comment)

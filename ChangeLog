@@ -8,6 +8,7 @@
       send notification and persisten comment
     * Downtimes: allow to specify fixed/flexible downtime
     * new display_options d/D for switching on/off the tab "Display"
+    * Improved builtin views for downtimes
 
     WATO:
     * Fixed problem appearing at restart on older Python version (RH)

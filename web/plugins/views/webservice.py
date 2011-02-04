@@ -16,7 +16,7 @@ def render_python(data, view, group_painters, painters, num_columns):
     for row in rows:
         html.write("[")
         for p in painters:
-            tdclass, content = prepare_paint(p, row)
+            tdclass, content = p[0]["paint"](row)
             html.write(repr(htmllib.strip_tags(content)))
             html.write(",")
         html.write("],")
@@ -28,6 +28,26 @@ multisite_layouts["python"] = {
     "group"  : False,
     "hide"   : True,
 }
+
+    
+json_escape = re.compile(r'[\x00-\x1f\\"\b\f\n\r\t]')
+ESCAPE_DCT = {
+    '\\': '\\\\',
+    '"': '\\"',
+    '\b': '\\b',
+    '\f': '\\f',
+    '\n': '\\n',
+    '\r': '\\r',
+    '\t': '\\t',
+}
+for i in range(0x20):
+    ESCAPE_DCT.setdefault(chr(i), '\\u{0:04x}'.format(i))
+
+def encode_string_json(s):
+    def replace(match):
+        return ESCAPE_DCT[match.group(0)]
+    return '"' + ESCAPE.sub(replace, s) + '"'
+
 
 def render_json(data, view, group_painters, painters, num_columns):
     columns, rows = data
@@ -41,10 +61,11 @@ def render_json(data, view, group_painters, painters, num_columns):
                 first = False
             else:
                 html.write(",")
-            tdclass, content = prepare_paint(p, row)
+            tdclass, content = p[0]["paint"](row)
             stripped = htmllib.strip_tags(content)
             utf8 = stripped.encode("utf-8")
-            html.write(repr(utf8))
+            utf8 += r'\"'
+            html.write(encode_string_json(utf8))
         html.write("]")
     html.write("\n]\n")
 

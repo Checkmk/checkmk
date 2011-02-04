@@ -935,7 +935,7 @@ def page_view(h):
 # Display view with real data. This is *the* function everying
 # is about.
 def show_view(view, show_heading = False, show_buttons = True, show_footer = True):
-    all_display_options = "HTBFCEOZRSIX" 
+    all_display_options = "HTBFCEOZRSIXD" 
 
     # Parse display options and
     if html.output_format == "html":
@@ -1064,7 +1064,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     if show_buttons and 'B' in display_options:
         show_context_links(view, hide_filters)
 
-    need_navi = show_buttons and ('F' in display_options or 'C' in display_options or 'O' in display_options or 'E' in display_options)
+    need_navi = show_buttons and ('D' in display_options or 'F' in display_options or 'C' in display_options or 'O' in display_options or 'E' in display_options)
     if need_navi:
         html.write("<table class=navi><tr>\n")
 
@@ -1080,7 +1080,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
             html.write("<td class=minigap></td>\n")
 
         # Painter-Options
-        if len(painter_options) > 0 and config.may("painter_options"):
+        if 'D' in display_options and len(painter_options) > 0 and config.may("painter_options"):
             toggle_button("painter_options", False, "Display")
             html.write("<td class=minigap></td>\n")
 
@@ -1130,24 +1130,29 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         if 'F' in display_options and len(show_filters) > 0 and not html.do_actions():
             show_filter_form(filter_isopen, show_filters)
 
-        # Actions
-        if 'C' in display_options and len(rows) > 0:
-            if html.do_actions() and html.transaction_valid(): # submit button pressed, no reload
-                try:
+    # Actions
+    if len(rows) > 0:
+        if html.do_actions() and html.transaction_valid(): # submit button pressed, no reload
+            try:
+                if 'C' in display_options:
                     html.write("<tr class=form><td class=whiteborder>")
-                    # Create URI with all actions variables removed
-                    backurl = html.makeuri([])
-                    has_done_actions = do_actions(datasource["infos"][0], rows, backurl)
+                # Create URI with all actions variables removed
+                backurl = html.makeuri([])
+                has_done_actions = do_actions(datasource["infos"][0], rows, backurl)
+                if 'C' in display_options:
                     html.write("</td></tr>")
-                except MKUserError, e:
-                    html.show_error(e.message)
+            except MKUserError, e:
+                html.show_error(e.message)
+                if 'C' in display_options:
                     html.write("</td></tr>")
-                    html.add_user_error(e.varname, e.message)
+                html.add_user_error(e.varname, e.message)
+                if 'C' in display_options:
                     show_action_form(True, datasource)
 
-            else:
-                show_action_form(False, datasource)
+        elif 'C' in display_options:
+            show_action_form(False, datasource)
 
+    if need_navi:
         if 'O' in display_options and len(painter_options) > 0 and config.may("painter_options"):
             show_painter_options(painter_options)
 
@@ -1834,7 +1839,8 @@ def do_actions(what, rows, backurl):
         message = "Successfully sent %d commands to Nagios." % count
         if config.debug:
             message += "The last one was: <pre>%s</pre>" % command
-        message += '<br><a href="%s">Back to view</a>' % backurl
+        if html.output_format == "html": # sorry for this hack
+            message += '<br><a href="%s">Back to view</a>' % backurl
         html.message(message)
     elif count == 0:
         html.message("No matching service. No command sent.")

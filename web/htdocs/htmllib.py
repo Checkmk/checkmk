@@ -456,7 +456,12 @@ class html:
             self.write("\n")
 
     def message(self, msg):
-        self.write("<div class=success>%s</div>\n" % msg)
+        if self.output_format == "html":
+            self.write("<div class=success>%s</div>\n" % msg)
+        else:
+            self.write("MESSAGE: ")
+            self.write(strip_tags(msg))
+            self.write("\n")
 
     def confirm(self, msg):
         if self.var("_do_actions") == "No":

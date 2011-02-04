@@ -543,10 +543,24 @@ multisite_painters["svc_notifper"] = {
 }
 
 multisite_painters["svc_flapping"] = {
-    "title" : "Is flapping",
-    "short" : "flap",
+    "title" : "Service is flapping",
+    "short" : "Flap",
     "columns" : [ "service_is_flapping" ],
     "paint" : lambda row: paint_nagiosflag(row, "service_is_flapping", True)
+}
+
+multisite_painters["svc_notifications_enabled"] = {
+    "title" : "Service notifications enabled",
+    "short" : "Notif.",
+    "columns" : [ "service_notifications_enabled" ],
+    "paint" : lambda row: paint_nagiosflag(row, "service_notifications_enabled", False)
+}
+
+multisite_painters["svc_is_active"] = {
+    "title" : "Service is active",
+    "short" : "Active",
+    "columns" : [ "service_active_checks_enabled" ],
+    "paint" : lambda row: paint_nagiosflag(row, "service_active_checks_enabled", None)
 }
 
 def paint_service_group_memberlist(row):
@@ -1052,6 +1066,20 @@ multisite_painters["host_comments"] = {
     "short" : "Comments",
     "columns" : [ "host_comments_with_info" ],
     "paint" : lambda row: paint_comments("host_", row)
+}
+
+multisite_painters["host_in_downtime"] = {
+    "title" : "Host in downtime",
+    "short" : "Downtime",
+    "columns" : ["host_scheduled_downtime_depth"],
+    "paint" : lambda row: paint_nagiosflag(row, "host_scheduled_downtime_depth", True)
+}
+
+multisite_painters["host_acknowledged"] = {
+    "title" : "Host problem acknowledged",
+    "short" : "Ack",
+    "columns" : ["host_acknowledged"],
+    "paint" : lambda row: paint_nagiosflag(row, "host_acknowledged", False)
 }
 
 

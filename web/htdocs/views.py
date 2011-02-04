@@ -636,7 +636,7 @@ function toggle_section(nr, oImg) {
     section_header(7, "Layout")
     html.write("<table border=0>")
     html.write("<tr><td>Basic Layout:</td><td>")
-    html.sorted_select("layout", [ (k, v["title"]) for k,v in multisite_layouts.items() ])
+    html.sorted_select("layout", [ (k, v["title"]) for k,v in multisite_layouts.items() if not v.get("hide")])
     html.write("</td></tr>\n")
     html.write("<tr><td>Number of columns:</td><td>")
     html.number_input("num_columns", 1)
@@ -935,13 +935,18 @@ def page_view(h):
 # Display view with real data. This is *the* function everying
 # is about.
 def show_view(view, show_heading = False, show_buttons = True, show_footer = True):
-    # Parse display options
-    display_options = html.var("display_options", "")
+    all_display_options = "HTBFCEOZRSIX" 
+
+    # Parse display options and
+    if html.output_format == "html":
+        display_options = html.var("display_options", "")
+    else:
+        display_options = all_display_options.lower()
 
     # If all display_options are upper case assume all not given values default
     # to lower-case. Vice versa when all display_options are lower case.
     # When the display_options are mixed case assume all unset options to be enabled
-    do_defaults =  display_options.isupper() and "htbfceozrsix" or "HTBFCEOZRSIX"
+    do_defaults =  display_options.isupper() and all_display_options.lower() or all_display_options
     for c in do_defaults:
         if c.lower() not in display_options.lower():
             display_options += c
@@ -952,7 +957,12 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     tablename = datasource["table"]
 
     # [2] Layout
-    layout = multisite_layouts[view["layout"]]
+    if html.output_format == "html":
+        layout = multisite_layouts[view["layout"]]
+    else:
+        layout = multisite_layouts.get(html.output_format)
+        if not layout:
+            layout = multisite_layouts["json"]
 
     # User can override the layout settings via HTML variables (buttons)
     # which are safed persistently. This is known as "view options"
@@ -1351,7 +1361,7 @@ def query_data(datasource, columns, add_columns, add_headers, only_sites = [], l
     html.live.set_prepend_site(True)
     if limit != None:
         html.live.set_limit(limit + 1) # + 1: We need to know, if limit is exceeded
-    if config.debug:
+    if config.debug and html.output_format == "html":
         html.write("<div class=message><tt>%s</tt></div>\n" % (query.replace('\n', '<br>\n')))
 
     if only_sites:

@@ -133,6 +133,10 @@ class html:
         self.browser_redirect = ''
         self.events = set([]) # currently used only for sounds
         self.header_sent = False
+        self.output_format = "html"
+
+    def set_output_format(self, f):
+        self.output_format = f
 
     def write(self, text):
         if type(text) == unicode:
@@ -381,11 +385,12 @@ class html:
         self.browser_redirect = url
 
     def header(self, title=''):
-        if not self.header_sent:
-            self.html_head(title)
-            self.write("<body class=main>")
-            self.header_sent = True
-            self.top_heading(title)
+        if self.output_format == "html":
+            if not self.header_sent:
+                self.html_head(title)
+                self.write("<body class=main>")
+                self.header_sent = True
+                self.top_heading(title)
 
     def top_heading(self, title):
         if type(self.req.user) == str:
@@ -429,15 +434,26 @@ class html:
         self.write("</body></html>\n")
 
     def footer(self):
+        if self.output_format == "html":
             self.bottom_footer()
             self.body_end()
 
 
     def show_error(self, msg):
-        self.write("<div class=error>%s</div>\n" % msg)
+        if self.output_format == "html":
+            self.write("<div class=error>%s</div>\n" % msg)
+        else:
+            self.write("ERROR: ")
+            self.write(strip_tags(msg))
+            self.write("\n")
 
     def show_warning(self, msg):
-        self.write("<div class=warning>%s</div>\n" % msg)
+        if self.output_format == "html":
+            self.write("<div class=warning>%s</div>\n" % msg)
+        else:
+            self.write("WARNING: ")
+            self.write(strip_tags(msg))
+            self.write("\n")
 
     def message(self, msg):
         self.write("<div class=success>%s</div>\n" % msg)

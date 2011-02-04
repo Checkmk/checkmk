@@ -1,3 +1,7 @@
+1.1.9i8:
+    WATO:
+    * Fixed problem appearing at restart on older Python version (RH)
+
 1.1.9i7:
     Core, Setup, etc.:
     * Fix crash on Python 2.4 (e.g. RedHat) with fake_file

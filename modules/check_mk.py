@@ -3660,7 +3660,12 @@ def automation_restart():
     # check_mk is called by WATO via Apache. Nagios inherits
     # the open file where Apache is listening for incoming
     # HTTP connections. Really.
-    os.closerange(3, 256)
+    for fd in range(3, 256):
+        try:
+            os.close(fd)
+        except:
+            pass
+    # os.closerange(3, 256) --> not available in older Python versions
 
     class null_file:
         def write(self, stuff):

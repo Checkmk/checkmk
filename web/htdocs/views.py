@@ -1670,7 +1670,7 @@ def nagios_host_service_action_command(what, dataset):
     host = dataset.get("host_name")
     descr = dataset.get("service_description")
 
-    down_from = time.time()
+    down_from = int(time.time())
     down_to = None
     if what == "host":
         spec = host
@@ -1814,8 +1814,11 @@ def nagios_host_service_action_command(what, dataset):
             fixed = 0
         else:
             fixed = 1
+        duration = down_to - down_from
+        if fixed == 0 and abs(down_from - time.time()) > 80:
+            raise MKUserError("_down_from", "When creating flexible downtimes the start time must be now.")
         command = (("SCHEDULE_" + cmdtag + "_DOWNTIME;%s;" % spec) \
-                   + ("%d;%d;%d;0;0;%s;" % (int(down_from), int(down_to), fixed, html.req.user)) \
+                   + ("%d;%d;%d;0;%d;%s;" % (down_from, down_to, fixed, duration, html.req.user)) \
                    + comment)
 
     nagios_command = ("[%d] " % int(time.time())) + command + "\n"

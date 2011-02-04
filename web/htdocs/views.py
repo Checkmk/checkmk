@@ -1786,6 +1786,12 @@ def nagios_host_service_action_command(what, dataset):
             time.asctime(time.localtime(down_from)),
             time.asctime(time.localtime(down_to)))
 
+    # handle hidden field (added for NagStaMon)
+    elif html.var("_down_duration") and config.may("action.downtimes"):
+        duration = int(html.var("_down_duration"))
+        down_to = down_from + duration
+        title = "<b>schedule a downtime from now lasting for %d seconds</b> on " % duration
+
     elif html.var("_down_remove") and config.may("action.downtimes"):
         downtime_ids = []
         for id in dataset[prefix + "downtimes"]:

@@ -1,4 +1,9 @@
 1.1.9i8:
+    Multisite:
+    * New "web service" for retrieving data from views as Python
+      objects (similar to JSON). This allows to connect with
+      NagStaMon (requires patch in NagStaMon).
+
     WATO:
     * Fixed problem appearing at restart on older Python version (RH)
 

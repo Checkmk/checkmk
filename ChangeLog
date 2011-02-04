@@ -4,6 +4,7 @@
       Python objects. This allows to connect with NagStaMon 
       (requires patch in NagStaMon). Simply add &output_format=json
       or &output_format=python to your view URL.
+    * Added two builtin views for NagStaMon.
     * Acknowledgement of problem now has checkboxes for sticky,
       send notification and persisten comment
     * Downtimes: allow to specify fixed/flexible downtime

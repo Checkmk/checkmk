@@ -1589,6 +1589,14 @@ def show_host_service_actions(what):
                    "<input type=submit name=_remove_ack value=\"Remove Acknowledgement\"></td></tr><tr>"
                    "<td class=content><div class=textinputlegend>Comment:</div>")
         html.text_input("_ack_comment")
+        html.write("<br>")
+        html.checkbox("_ack_sticky", True)
+        html.write(" sticky &nbsp; ")
+        html.checkbox("_ack_notify", True)
+        html.write(" send notification &nbsp; ")
+        html.checkbox("_ack_persistent", False)
+        html.write(" persistent comment")
+
         html.write("</td></tr>\n")
 
     if config.may("action.addcomment"):
@@ -1707,8 +1715,11 @@ def nagios_host_service_action_command(what, dataset):
         comment = html.var_utf8("_ack_comment")
         if not comment:
             raise MKUserError("_ack_comment", "You need to supply a comment.")
-        command = "ACKNOWLEDGE_" + cmdtag + "_PROBLEM;%s;2;1;0;%s" % \
-                      (spec, html.req.user) + (";%s" % comment)
+        sticky = html.var("_ack_sticky") and 2 or 0
+        sendnot = html.var("_ack_notify") and 1 or 0
+        perscomm = html.var("_ack_persistent") and 1 or 0
+        command = "ACKNOWLEDGE_" + cmdtag + "_PROBLEM;%s;%d;%d;%d;%s" % \
+                      (spec, sticky, sendnot, perscomm, html.req.user) + (";%s" % comment)
         title = "<b>acknowledge the problems</b> of"
 
     elif html.var("_add_comment") and config.may("action.addcomment"):

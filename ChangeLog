@@ -4,6 +4,8 @@
       Python objects. This allows to connect with NagStaMon 
       (requires patch in NagStaMon). Simply add &output_format=json
       or &output_format=python to your view URL.
+    * Acknowledgement of problem now has checkboxes for sticky,
+      send notification and persisten comment
 
     WATO:
     * Fixed problem appearing at restart on older Python version (RH)

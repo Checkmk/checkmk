@@ -334,7 +334,7 @@ function mkSearchGetUrl(objType, objName, objSite, numMatches) {
             // FIXME: not correct. Need a page where the name parameter can be a part match
             return 'view.py?view_name=hostgroup&hostgroup=' + objName + '&site=' + objSite;
     else if(objType == 'sg')
-        if(single)
+        if(numMatches == 1)
             return 'view.py?view_name=servicegroup&servicegroup=' + objName + '&site=' + objSite;
         else
             // FIXME: not correct. Need a page where the name parameter can be a part match

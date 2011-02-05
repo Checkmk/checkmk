@@ -10,6 +10,8 @@
     * Downtimes: allow to specify fixed/flexible downtime
     * new display_options d/D for switching on/off the tab "Display"
     * Improved builtin views for downtimes
+    * Bugfix: Servicegroups can be searched with the quicksearch snapin using
+      the 'sg:' prefix again
 
     WATO:
     * Fixed problem appearing at restart on older Python version (RH)

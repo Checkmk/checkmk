@@ -1,3 +1,8 @@
+1.1.9i9:
+    Core, Setup, etc.:
+    * check_mk_templates.cfg: add missing check_period for hosts
+      (needed for Shinken)
+    
 1.1.9i8:
     Multisite:
     * New "web service" for retrieving data from views as JSON or 

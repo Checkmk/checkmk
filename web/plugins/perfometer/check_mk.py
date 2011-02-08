@@ -80,6 +80,7 @@ def perfometer_check_mk_kernel_util(row, check_command, perf_data):
 
 perfometers["check_mk-kernel.util"] = perfometer_check_mk_kernel_util
 perfometers["check_mk-vms_sys.util"] = perfometer_check_mk_kernel_util
+perfometers["check_mk-ucd_cpu_util"] = perfometer_check_mk_kernel_util
 
 def perfometer_check_mk_mem_used(row, check_command, perf_data):
     h = '<table><tr>'
@@ -129,6 +130,7 @@ def perfometer_check_mk_cpu_loads(row, check_command, perf_data):
 
 
 perfometers["check_mk-cpu.loads"] = perfometer_check_mk_cpu_loads
+perfometers["check_mk-ucd_cpu_load"] = perfometer_check_mk_cpu_loads
 
 def perfometer_check_mk_ntp(row, check_command, perf_data):
     offset = float(perf_data[0][1])

@@ -1,0 +1,12 @@
+Title: Rename kernel_util_default_levels to cpu_utilization_default_levels
+Component: checks
+Benefit: 1
+State: open
+Cost: 2
+Date: 2011-02-08 14:45:45
+Class: cleanup
+
+This is an incompatible change. Make sure that the old variable is
+still defined for some time. Also look for further checks using
+that variable or doing an utilization check (windows) and bring
+these checks together (maybe with an include)?

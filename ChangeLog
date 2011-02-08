@@ -2,6 +2,12 @@
     Core, Setup, etc.:
     * check_mk_templates.cfg: add missing check_period for hosts
       (needed for Shinken)
+
+    Checks & Agents:
+    * ucd_cpu_load: new check for CPU load via UCD SNMP agent
+    * ucd_cpu_util: new check for CPU utilization via UCD SNMP agent
+    * steelhead_status: new check for overall health of Riverbed Steelhead appliance
+    * steelhead_connections: new check for Riverbed Steelhead connections
     
 1.1.9i8:
     Multisite:

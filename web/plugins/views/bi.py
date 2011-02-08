@@ -102,14 +102,14 @@ multisite_painter_options["aggr_treetype"] = {
 
 
 def render_bi_state(state):
-    return { bi.OK:      "OK", 
+    return { bi.PENDING: "PD",
+             bi.OK:      "OK", 
              bi.WARN:    "WA",
              bi.CRIT:    "CR", 
              bi.UNKNOWN: "UN",
              bi.MISSING: "MI",
              bi.UNAVAIL: "NA",
-    }.get(state, "NA")
-# }[state]
+    }.get(state, "??")
 
 def render_assume_icon(site, host, service):
     ass = bi.g_assumptions.get((site, host, service))

@@ -1,0 +1,15 @@
+Title: --snmpwalk creates OIDs without leading .
+Component: core
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-02-08 12:13:30
+Class: bug
+
+The --snmpwalk stores the OIDs without a leading dot, 
+whereas the real snmpwalk outputs a dot. This leads
+to slightly incompatible behaviour in some checks.
+Resolution: make --snmpwalk also prepend a dot.
+
+Note: This was detected in a case where OID_STRING
+was used.

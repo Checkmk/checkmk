@@ -108,7 +108,8 @@ def render_bi_state(state):
              bi.UNKNOWN: "UN",
              bi.MISSING: "MI",
              bi.UNAVAIL: "NA",
-    }[state]
+    }.get(state, "NA")
+# }[state]
 
 def render_assume_icon(site, host, service):
     ass = bi.g_assumptions.get((site, host, service))

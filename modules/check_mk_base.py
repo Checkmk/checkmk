@@ -598,7 +598,7 @@ def load_counters(hostname):
         except:
             g_counters = {}
 
-def get_counter(countername, this_time, this_val):
+def get_counter(countername, this_time, this_val, allow_negative=False):
     global g_counters
 
     # First time we see this counter? Do not return
@@ -622,7 +622,7 @@ def get_counter(countername, this_time, this_val):
     g_counters[countername] = (this_time, this_val)
 
     valuedif = this_val - last_val
-    if valuedif < 0:
+    if valuedif < 0 and not allow_negative:
         # Do not try to handle wrapper counters. We do not know
         # wether they are 32 or 64 bit. It also could happen counter
         # reset (reboot, etc.). Better is to leave this value undefined
@@ -953,41 +953,6 @@ def nodes_of(hostname):
             return nodes
     return None
 
-# needed by df, df_netapp and vms_df and maybe others in future:
-# compute warning and critical levels. Takes into account the size of
-# the filesystem and the magic number. Since the size is only known at
-# check time this function's result cannot be precompiled.
-def get_filesystem_levels(host, mountpoint, size_gb, params):
-    # If no magic factor is given, we use the neutral factor 1.0
-    if len(params) < 3:
-        params = (params[0], params[1], 1.0)
-        lowest_warning_level = 0
-        lowest_critical_level = 0
-    else:
-        lowest_warning_level = df_lowest_warning_level
-        lowest_critical_level = df_lowest_critical_level
-
-    (warn, crit, magicfactor) = params    # warn and crit are in percent
-
-    hgb_size = size_gb / float(df_magicnumber_normsize)
-    felt_size = hgb_size ** magicfactor
-    scale = felt_size / hgb_size
-    warn_scaled = 100 - (( 100 - warn ) * scale)
-    crit_scaled = 100 - (( 100 - crit ) * scale)
-
-    # Make sure, levels do never get too low due to magic factor
-    if warn_scaled < lowest_warning_level:
-        warn_scaled = lowest_warning_level
-    if crit_scaled < lowest_critical_level:
-        crit_scaled = lowest_critical_level
-
-    size_mb     = size_gb * 1024
-    warn_mb     = int(size_mb * warn_scaled / 100)
-    crit_mb     = int(size_mb * crit_scaled / 100)
-    levelstext  = "(levels at %.1f/%.1f%%)" % (warn_scaled, crit_scaled)
-
-    return warn_mb, crit_mb, levelstext
-
 
 #   +----------------------------------------------------------------------+
 #   |     ____ _               _      _          _                         |
@@ -1042,11 +1007,11 @@ def get_bytes_human_readable(b, base=1024.0):
         prefix = '-'
         b *= -1
 
-    if b > base * base * base:
+    if b >= base * base * base:
         return '%s%.2fGB' % (prefix, b / base / base / base)
-    if b > base * base:
+    if b >= base * base:
         return '%s%.2fMB' % (prefix, b / base / base)
-    elif b > base:
+    elif b >= base:
         return '%s%.2fKB' % (prefix, b / base)
     else:
         return '%s%.2fB' % (prefix, b)

@@ -286,18 +286,6 @@ donation_hosts                       = []
 donation_command                     = 'mail -r checkmk@yoursite.de  -s "Host donation %s" donatehosts@mathias-kettner.de' % check_mk_version
 scanparent_hosts                     = [ ( ALL_HOSTS ) ]
 
-# Settings for filesystem checks (df, df_vms, df_netapp and maybe others)
-filesystem_default_levels          = (80, 90)
-filesystem_levels                  = []
-df_magicnumber_normsize            = 20 # Standard size if 20 GB
-df_lowest_warning_level            = 50 # Never move warn level below 50% due to magic factor
-df_lowest_critical_level           = 60 # Never move crit level below 60% due to magic factor
-
-# This is obsolete stuff and should be moved to the check plugins some day
-inventory_df_exclude_fs            = [ 'nfs', 'smbfs', 'cifs', 'iso9660' ]
-inventory_df_exclude_mountpoints   = [ '/dev' ]
-inventory_df_check_params          = 'filesystem_default_levels'
-
 # global variables used to cache temporary values (not needed in check_mk_base)
 ip_to_hostname_cache = None
 
@@ -1990,9 +1978,7 @@ no_inventory_possible = None
                  'perfdata_format', 'aggregation_output_format',
                  'aggr_summary_hostname', 'nagios_command_pipe_path',
                  'var_dir', 'counters_directory', 'tcp_cache_dir',
-                 'snmpwalks_dir',
-                 'check_mk_basedir', 'df_magicnumber_normsize',
-                 'df_lowest_warning_level', 'df_lowest_critical_level', 'nagios_user',
+                 'snmpwalks_dir', 'check_mk_basedir', 'nagios_user',
                  'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
                  'simulation_mode', 'aggregate_check_mk', 'debug_log',
                  ]:
@@ -2030,9 +2016,12 @@ no_inventory_possible = None
                                      (checktype, checks_dir, checktype))
         filenames.add(path)
 
-        # Add library files needed by check
+        # Add library files needed by check (also look in local)
         for lib in check_includes.get(checktype, []):
-            filenames.add(checks_dir + "/" + lib)
+            if local_checks_dir and os.path.exists(local_checks_dir + "/" + lib):
+                filenames.add(local_checks_dir + "/" + lib)
+            else:
+                filenames.add(checks_dir + "/" + lib)
 
     output.write("check_info = {}\n" +
                  "check_includes = {}\n" +

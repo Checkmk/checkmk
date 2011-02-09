@@ -1,4 +1,11 @@
 1.1.9i9:
+    INCOMPATIBLE CHANGES:
+    * All filesystem checks now have trends enabled per default. The checks
+      output now three performance values instead of one. This can break
+      updates of PNP graphs. Either delete all PNP graphs of {fs_} checks
+      or switch off trend reporting in order for your graphs to work. Trends
+      are very usefull, however...
+
     Core, Setup, etc.:
     * check_mk_templates.cfg: add missing check_period for hosts
       (needed for Shinken)
@@ -8,6 +15,8 @@
     * ucd_cpu_util: new check for CPU utilization via UCD SNMP agent
     * steelhead_status: new check for overall health of Riverbed Steelhead appliance
     * steelhead_connections: new check for Riverbed Steelhead connections
+    * df, df_netapp, df_netapp32, hr_fs, vms_df: all filesystem checks now support
+      trends. Please look at check manpage of df for details.
     
 1.1.9i8:
     Multisite:

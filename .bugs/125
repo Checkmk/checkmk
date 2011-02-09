@@ -1,0 +1,12 @@
+Title: Allow --checks options while checking
+Component: core
+Benefit: 1
+State: open
+Cost: 2
+Date: 2011-02-09 09:20:52
+Class: feature
+
+When performing a check while testing (e.g. check_mk -nv ...)
+it would be nice to be able to specify --checks. That way
+one could e.g. only check the filesystems on a host with
+many checks by doing cmk --checks df -nv superhost123

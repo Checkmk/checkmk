@@ -24,31 +24,21 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-check_includes['hr_fs'] = [ "df.include" ]
+def inventory_steelhead_status(checkname, info):
+    if len(info) == 1:
+	return [(None, None)]
 
-# DSA101  0.77 400.00 0.07 0.93 16271539.00 35556389
-# DSA102  0.00 400.00 0.00 0.00 86651840.00 106669167
-# DSA103  0.00 400.00 0.00 0.00 97962784.00 106669167
-# DSA104  0.30 400.00 0.00 0.00 75934488.00 106669167
-def inventory_vms_df(checkname, info):
-    return [ ( line[0], 'filesystem_default_levels') for line in info ]
+def check_steelhead_status(item, params, info):
+    health, status = info[0]
+    if health == "Healthy" and status == "running":
+	return (0, "OK - Healthy and running")
+    else:
+	return (2, "CRIT - Status is %s and %s" % (health, status))
 
-def check_vms_df(item, params, info):
-    for line in info:
-        if line[0] == item:
-            io_ops_total_per_sec = float(line[1])
-            read_perc            = float(line[2])
-            disk_util            = float(line[3])
-            response_time_ms     = float(line[4])
-            blocks_free          = float(line[5])
-            blocks_total         = float(line[6]) # one block is 512 bytes
 
-            free_mb = blocks_free / 2048
-            size_mb = blocks_total / 2048
-            status, text, perfdata = df_check_filesystem(g_hostname, item, size_mb, free_mb, params) 
+check_info['steelhead_status'] = (check_steelhead_status, "Status", 0, inventory_steelhead_status)
 
-            perfdata.append( ('iops', "%.2f" % io_ops_total_per_sec ) )
+snmp_info['steelhead_status']  = ( "1.3.6.1.4.1.17163.1.1.2", [ 2, 3 ])
 
-    return (3, "Disk %s not found" % (item,))
-
-check_info['vms_df']  = ( check_vms_df, "fs_%s", 1, inventory_vms_df )
+snmp_scan_functions['steelhead_status'] = \
+    lambda oid: oid("1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.17163.")

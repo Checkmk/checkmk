@@ -1,0 +1,12 @@
+Title: Reschedule button on Check_MK service should be delayed
+Component: multisite
+Benefit: 2
+State: open
+Cost: 1
+Date: 2011-02-09 12:04:09
+Class: nastiness
+
+If you press the reschedule button on the Check_MK service then it
+sometimes misses the update of the passive services of Check_MK.
+It might be sufficient to add a short delay of 0.5 sec in order to
+make sure they are always updated.

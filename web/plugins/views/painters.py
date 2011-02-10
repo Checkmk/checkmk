@@ -543,10 +543,24 @@ multisite_painters["svc_notifper"] = {
 }
 
 multisite_painters["svc_flapping"] = {
-    "title" : "Is flapping",
-    "short" : "flap",
+    "title" : "Service is flapping",
+    "short" : "Flap",
     "columns" : [ "service_is_flapping" ],
     "paint" : lambda row: paint_nagiosflag(row, "service_is_flapping", True)
+}
+
+multisite_painters["svc_notifications_enabled"] = {
+    "title" : "Service notifications enabled",
+    "short" : "Notif.",
+    "columns" : [ "service_notifications_enabled" ],
+    "paint" : lambda row: paint_nagiosflag(row, "service_notifications_enabled", False)
+}
+
+multisite_painters["svc_is_active"] = {
+    "title" : "Service is active",
+    "short" : "Active",
+    "columns" : [ "service_active_checks_enabled" ],
+    "paint" : lambda row: paint_nagiosflag(row, "service_active_checks_enabled", None)
 }
 
 def paint_service_group_memberlist(row):
@@ -1054,6 +1068,20 @@ multisite_painters["host_comments"] = {
     "paint" : lambda row: paint_comments("host_", row)
 }
 
+multisite_painters["host_in_downtime"] = {
+    "title" : "Host in downtime",
+    "short" : "Downtime",
+    "columns" : ["host_scheduled_downtime_depth"],
+    "paint" : lambda row: paint_nagiosflag(row, "host_scheduled_downtime_depth", True)
+}
+
+multisite_painters["host_acknowledged"] = {
+    "title" : "Host problem acknowledged",
+    "short" : "Ack",
+    "columns" : ["host_acknowledged"],
+    "paint" : lambda row: paint_nagiosflag(row, "host_acknowledged", False)
+}
+
 
 #    _   _           _
 #   | | | | ___  ___| |_ __ _ _ __ ___  _   _ _ __  ___
@@ -1342,7 +1370,7 @@ multisite_painters["downtime_fixed"] = {
     "title" : "Downtime is fixed",
     "short" : "Fixed",
     "columns" : ["downtime_fixed"],
-    "paint" : lambda row: (None, row["downtime_fixed"] == "0" and "flexible" or "fixed")
+    "paint" : lambda row: (None, row["downtime_fixed"] == 0 and "flexible" or "fixed")
 }
 multisite_painters["downtime_what"] = {
     "title" : "Downtime type (host/service)",
@@ -1377,6 +1405,18 @@ multisite_painters["downtime_end_time"] = {
     "columns" : ["downtime_end_time"],
     "options" : [ "ts_format", "ts_date" ],
     "paint" : lambda row: paint_age(row["downtime_end_time"], True, 3600)
+}
+def paint_downtime_duration(row):
+    if row["downtime_fixed"] == 1:
+        return None, ""
+    else:
+        return None, "%02d:%02d" % divmod(row["downtime_duration"] / 60, 60)
+
+multisite_painters["downtime_duration"] = {
+    "title" : "Downtime duration (if flexible)",
+    "short" : "Duration",
+    "columns" : ["downtime_duration", "downtime_fixed"],
+    "paint" : paint_downtime_duration
 }
 
 #    _

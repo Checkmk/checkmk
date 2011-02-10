@@ -153,6 +153,11 @@ def handler(req):
 
     try:
         read_get_vars(req)
+
+        # Prepare output format
+        output_format = html.var("output_format", "html")
+        html.set_output_format(output_format)
+
         config.load_config() # load multisite.mk
         if html.var("debug"): # Debug flag may be set via URL
             config.debug = True
@@ -179,23 +184,23 @@ def handler(req):
 
     except MKUserError, e:
         html.header("Invalid User Input")
-        html.show_error(e)
+        html.show_error(str(e))
         html.footer()
 
     except MKAuthException, e:
         html.header("Permission denied")
-        html.show_error(e)
+        html.show_error(str(e))
         html.footer()
 
     except MKConfigError, e:
         html.header("Configuration Error")
-        html.show_error(e)
+        html.show_error(str(e))
         html.footer()
         apache.log_error("Configuration error: %s" % (e,), apache.APLOG_ERR)
 
     except MKGeneralException, e:
         html.header("Error")
-        html.show_error("Error: %s" % (e,))
+        html.show_error(str(e))
         html.footer()
         apache.log_error("Error: %s" % (e,), apache.APLOG_ERR)
 

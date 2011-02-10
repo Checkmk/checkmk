@@ -636,7 +636,7 @@ function toggle_section(nr, oImg) {
     section_header(7, "Layout")
     html.write("<table border=0>")
     html.write("<tr><td>Basic Layout:</td><td>")
-    html.sorted_select("layout", [ (k, v["title"]) for k,v in multisite_layouts.items() ])
+    html.sorted_select("layout", [ (k, v["title"]) for k,v in multisite_layouts.items() if not v.get("hide")])
     html.write("</td></tr>\n")
     html.write("<tr><td>Number of columns:</td><td>")
     html.number_input("num_columns", 1)
@@ -935,13 +935,18 @@ def page_view(h):
 # Display view with real data. This is *the* function everying
 # is about.
 def show_view(view, show_heading = False, show_buttons = True, show_footer = True):
-    # Parse display options
-    display_options = html.var("display_options", "")
+    all_display_options = "HTBFCEOZRSIXD" 
+
+    # Parse display options and
+    if html.output_format == "html":
+        display_options = html.var("display_options", "")
+    else:
+        display_options = all_display_options.lower()
 
     # If all display_options are upper case assume all not given values default
     # to lower-case. Vice versa when all display_options are lower case.
     # When the display_options are mixed case assume all unset options to be enabled
-    do_defaults =  display_options.isupper() and "htbfceozrsix" or "HTBFCEOZRSIX"
+    do_defaults =  display_options.isupper() and all_display_options.lower() or all_display_options
     for c in do_defaults:
         if c.lower() not in display_options.lower():
             display_options += c
@@ -952,7 +957,12 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     tablename = datasource["table"]
 
     # [2] Layout
-    layout = multisite_layouts[view["layout"]]
+    if html.output_format == "html":
+        layout = multisite_layouts[view["layout"]]
+    else:
+        layout = multisite_layouts.get(html.output_format)
+        if not layout:
+            layout = multisite_layouts["json"]
 
     # User can override the layout settings via HTML variables (buttons)
     # which are safed persistently. This is known as "view options"
@@ -1054,7 +1064,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     if show_buttons and 'B' in display_options:
         show_context_links(view, hide_filters)
 
-    need_navi = show_buttons and ('F' in display_options or 'C' in display_options or 'O' in display_options or 'E' in display_options)
+    need_navi = show_buttons and ('D' in display_options or 'F' in display_options or 'C' in display_options or 'O' in display_options or 'E' in display_options)
     if need_navi:
         html.write("<table class=navi><tr>\n")
 
@@ -1070,7 +1080,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
             html.write("<td class=minigap></td>\n")
 
         # Painter-Options
-        if len(painter_options) > 0 and config.may("painter_options"):
+        if 'D' in display_options and len(painter_options) > 0 and config.may("painter_options"):
             toggle_button("painter_options", False, "Display")
             html.write("<td class=minigap></td>\n")
 
@@ -1120,24 +1130,29 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         if 'F' in display_options and len(show_filters) > 0 and not html.do_actions():
             show_filter_form(filter_isopen, show_filters)
 
-        # Actions
-        if 'C' in display_options and len(rows) > 0:
-            if html.do_actions() and html.transaction_valid(): # submit button pressed, no reload
-                try:
+    # Actions
+    if len(rows) > 0:
+        if html.do_actions() and html.transaction_valid(): # submit button pressed, no reload
+            try:
+                if 'C' in display_options:
                     html.write("<tr class=form><td class=whiteborder>")
-                    # Create URI with all actions variables removed
-                    backurl = html.makeuri([])
-                    has_done_actions = do_actions(datasource["infos"][0], rows, backurl)
+                # Create URI with all actions variables removed
+                backurl = html.makeuri([])
+                has_done_actions = do_actions(datasource["infos"][0], rows, backurl)
+                if 'C' in display_options:
                     html.write("</td></tr>")
-                except MKUserError, e:
-                    html.show_error(e.message)
+            except MKUserError, e:
+                html.show_error(e.message)
+                if 'C' in display_options:
                     html.write("</td></tr>")
-                    html.add_user_error(e.varname, e.message)
+                html.add_user_error(e.varname, e.message)
+                if 'C' in display_options:
                     show_action_form(True, datasource)
 
-            else:
-                show_action_form(False, datasource)
+        elif 'C' in display_options:
+            show_action_form(False, datasource)
 
+    if need_navi:
         if 'O' in display_options and len(painter_options) > 0 and config.may("painter_options"):
             show_painter_options(painter_options)
 
@@ -1351,7 +1366,7 @@ def query_data(datasource, columns, add_columns, add_headers, only_sites = [], l
     html.live.set_prepend_site(True)
     if limit != None:
         html.live.set_limit(limit + 1) # + 1: We need to know, if limit is exceeded
-    if config.debug:
+    if config.debug and html.output_format == "html":
         html.write("<div class=message><tt>%s</tt></div>\n" % (query.replace('\n', '<br>\n')))
 
     if only_sites:
@@ -1574,13 +1589,23 @@ def show_host_service_actions(what):
         html.write("</td></tr>\n")
 
     if config.may("action.acknowledge"):
-        html.write("<tr><td rowspan=2 class=legend>Acknowledge</td>\n")
+        html.write("<tr><td rowspan=3 class=legend>Acknowledge</td>\n")
         html.write("<td class=content><input type=submit name=_acknowledge value=\"Acknowledge\"> &nbsp; "
-                   "<input type=submit name=_remove_ack value=\"Remove Acknowledgement\"></td></tr><tr>"
-                   "<td class=content><div class=textinputlegend>Comment:</div>")
-        html.text_input("_ack_comment")
+                   "<input type=submit name=_remove_ack value=\"Remove Acknowledgement\"></td></tr>\n")
+
+        html.write("<tr><td class=content>")
+        html.checkbox("_ack_sticky", True)
+        html.write(" sticky &nbsp; ")
+        html.checkbox("_ack_notify", True)
+        html.write(" send notification &nbsp; ")
+        html.checkbox("_ack_persistent", False)
+        html.write(" persistent comment")
         html.write("</td></tr>\n")
 
+        html.write("<tr><td class=content><div class=textinputlegend>Comment:</div>")
+        html.text_input("_ack_comment")
+        html.write("</td></tr>\n")
+        
     if config.may("action.addcomment"):
         html.write("<tr><td rowspan=2 class=legend>Add comment</td>\n")
         html.write("<td class=content><input type=submit name=_add_comment value=\"Add comment\"></td></tr>\n"
@@ -1589,7 +1614,7 @@ def show_host_service_actions(what):
         html.write("</td></tr>\n")
 
     if config.may("action.downtimes"):
-        html.write("<tr><td class=legend rowspan=3>Schedule Downtimes</td>\n"
+        html.write("<tr><td class=legend rowspan=4>Schedule Downtimes</td>\n"
                    "<td class=content>\n"
                    "<input type=submit name=_down_2h value=\"2 hours\"> "
                    "<input type=submit name=_down_today value=\"Today\"> "
@@ -1605,6 +1630,11 @@ def show_host_service_actions(what):
         html.write("&nbsp; to &nbsp;")
         html.datetime_input("_down_to", time.time() + 7200)
         html.write("</td></tr>")
+        html.write("<tr><td class=content>")
+        html.checkbox("_down_flexible", False)
+        html.write(" flexible with max. duration ")
+        html.time_input("_down_duration", 2, 0)
+        html.write(" (HH:MM)</td></tr>\n")
         html.write("<tr><td class=content><div class=textinputlegend>Comment:</div>\n")
         html.text_input("_down_comment")
 
@@ -1640,7 +1670,7 @@ def nagios_host_service_action_command(what, dataset):
     host = dataset.get("host_name")
     descr = dataset.get("service_description")
 
-    down_from = time.time()
+    down_from = int(time.time())
     down_to = None
     if what == "host":
         spec = host
@@ -1697,8 +1727,11 @@ def nagios_host_service_action_command(what, dataset):
         comment = html.var_utf8("_ack_comment")
         if not comment:
             raise MKUserError("_ack_comment", "You need to supply a comment.")
-        command = "ACKNOWLEDGE_" + cmdtag + "_PROBLEM;%s;2;1;0;%s" % \
-                      (spec, html.req.user) + (";%s" % comment)
+        sticky = html.var("_ack_sticky") and 2 or 0
+        sendnot = html.var("_ack_notify") and 1 or 0
+        perscomm = html.var("_ack_persistent") and 1 or 0
+        command = "ACKNOWLEDGE_" + cmdtag + "_PROBLEM;%s;%d;%d;%d;%s" % \
+                      (spec, sticky, sendnot, perscomm, html.req.user) + (";%s" % comment)
         title = "<b>acknowledge the problems</b> of"
 
     elif html.var("_add_comment") and config.may("action.addcomment"):
@@ -1771,8 +1804,14 @@ def nagios_host_service_action_command(what, dataset):
         comment = html.var_utf8("_down_comment")
         if not comment:
             raise MKUserError("_down_comment", "You need to supply a comment for your downtime.")
+        if html.var("_down_flexible"):
+            fixed = 0
+            duration = html.get_time_input("_down_duration", "the duration")
+        else:
+            fixed = 1
+            duration = 0
         command = (("SCHEDULE_" + cmdtag + "_DOWNTIME;%s;" % spec) \
-                   + ("%d;%d;1;0;0;%s;" % (int(down_from), int(down_to), html.req.user)) \
+                   + ("%d;%d;%d;0;%d;%s;" % (down_from, down_to, fixed, duration, html.req.user)) \
                    + comment)
 
     nagios_command = ("[%d] " % int(time.time())) + command + "\n"
@@ -1802,7 +1841,8 @@ def do_actions(what, rows, backurl):
         message = "Successfully sent %d commands to Nagios." % count
         if config.debug:
             message += "The last one was: <pre>%s</pre>" % command
-        message += '<br><a href="%s">Back to view</a>' % backurl
+        if html.output_format == "html": # sorry for this hack
+            message += '<br><a href="%s">Back to view</a>' % backurl
         html.message(message)
     elif count == 0:
         html.message("No matching service. No command sent.")

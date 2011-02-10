@@ -133,6 +133,10 @@ class html:
         self.browser_redirect = ''
         self.events = set([]) # currently used only for sounds
         self.header_sent = False
+        self.output_format = "html"
+
+    def set_output_format(self, f):
+        self.output_format = f
 
     def write(self, text):
         if type(text) == unicode:
@@ -342,6 +346,22 @@ class html:
                               "Please enter the date/time in the format YYYY-MM-DD HH:MM")
         return int(time.mktime(br))
 
+    def get_time_input(self, varname, what):
+        t = self.var(varname)
+        if not t:
+            raise MKUserError(varname, "Please specify %s" % what)
+
+        try:
+            h, m = t.split(":")
+            m = int(m)
+            h = int(h)
+            if m < 0 or m > 59 or h < 0:
+                raise Exception()
+        except:
+            raise MKUserError(varname, "Please enter the time in the format HH:MM")
+        return m * 60 + h * 3600
+
+
     def html_head(self, title):
         if not self.req.header_sent:
             self.req.write(
@@ -381,11 +401,12 @@ class html:
         self.browser_redirect = url
 
     def header(self, title=''):
-        if not self.header_sent:
-            self.html_head(title)
-            self.write("<body class=main>")
-            self.header_sent = True
-            self.top_heading(title)
+        if self.output_format == "html":
+            if not self.header_sent:
+                self.html_head(title)
+                self.write("<body class=main>")
+                self.header_sent = True
+                self.top_heading(title)
 
     def top_heading(self, title):
         if type(self.req.user) == str:
@@ -429,18 +450,34 @@ class html:
         self.write("</body></html>\n")
 
     def footer(self):
+        if self.output_format == "html":
             self.bottom_footer()
             self.body_end()
 
 
     def show_error(self, msg):
-        self.write("<div class=error>%s</div>\n" % msg)
+        if self.output_format == "html":
+            self.write("<div class=error>%s</div>\n" % msg)
+        else:
+            self.write("ERROR: ")
+            self.write(strip_tags(msg))
+            self.write("\n")
 
     def show_warning(self, msg):
-        self.write("<div class=warning>%s</div>\n" % msg)
+        if self.output_format == "html":
+            self.write("<div class=warning>%s</div>\n" % msg)
+        else:
+            self.write("WARNING: ")
+            self.write(strip_tags(msg))
+            self.write("\n")
 
     def message(self, msg):
-        self.write("<div class=success>%s</div>\n" % msg)
+        if self.output_format == "html":
+            self.write("<div class=success>%s</div>\n" % msg)
+        else:
+            self.write("MESSAGE: ")
+            self.write(strip_tags(msg))
+            self.write("\n")
 
     def confirm(self, msg):
         if self.var("_do_actions") == "No":

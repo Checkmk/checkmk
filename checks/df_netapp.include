@@ -24,31 +24,23 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-check_includes['hr_fs'] = [ "df.include" ]
+def inventory_df_netapp(checkname, info):
+    inventory = []
+    for volume, size_kb, used_kb in info:
+        if saveint(size_kb) > 0: # Exclude filesystems with zero size (some snapshots)
+            inventory.append((volume, "filesystem_default_levels"))
+    return inventory
 
-# DSA101  0.77 400.00 0.07 0.93 16271539.00 35556389
-# DSA102  0.00 400.00 0.00 0.00 86651840.00 106669167
-# DSA103  0.00 400.00 0.00 0.00 97962784.00 106669167
-# DSA104  0.30 400.00 0.00 0.00 75934488.00 106669167
-def inventory_vms_df(checkname, info):
-    return [ ( line[0], 'filesystem_default_levels') for line in info ]
+def check_df_netapp(volume, params, info):
+    # info columns: NAME SIZE USED
+    infolines = [ l for l in info if l[0] == volume ]
+    if len(infolines) == 0:
+        return (2, "CRIT - volume %s is missing" % volume )
+    elif len(infolines) > 1:
+        return (3, "UNKNOWN - Volume listed more than once!")
 
-def check_vms_df(item, params, info):
-    for line in info:
-        if line[0] == item:
-            io_ops_total_per_sec = float(line[1])
-            read_perc            = float(line[2])
-            disk_util            = float(line[3])
-            response_time_ms     = float(line[4])
-            blocks_free          = float(line[5])
-            blocks_total         = float(line[6]) # one block is 512 bytes
+    size_mb = int(infolines[0][1]) / 1024
+    used_mb = int(infolines[0][2]) / 1024
+    avail_mb = size_mb - used_mb
 
-            free_mb = blocks_free / 2048
-            size_mb = blocks_total / 2048
-            status, text, perfdata = df_check_filesystem(g_hostname, item, size_mb, free_mb, params) 
-
-            perfdata.append( ('iops', "%.2f" % io_ops_total_per_sec ) )
-
-    return (3, "Disk %s not found" % (item,))
-
-check_info['vms_df']  = ( check_vms_df, "fs_%s", 1, inventory_vms_df )
+    return df_check_filesystem(g_hostname, volume, size_mb, avail_mb, params) 

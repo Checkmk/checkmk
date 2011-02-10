@@ -45,9 +45,8 @@ $warngbtxt = sprintf("%.1f", $warngb);
 $critgbtxt = sprintf("%.1f", $critgb);
 
 $opt[1] = "--vertical-label GB -l 0 -u $maxgb --title '$hostname: Filesystem $fstitle ($sizegb GB)' ";
-#
-#
-# Graphen Definitions
+
+# First graph show current filesystem usage
 $def[1] = "DEF:mb=$RRDFILE[1]:$DS[1]:MAX "; 
 $def[1] .= "CDEF:var1=mb,1024,/ ";
 $def[1] .= "AREA:var1#00ffc6:\"used space on $fsname\\n\" "; 
@@ -58,4 +57,31 @@ $def[1] .= "HRULE:$critgb#ff0000:\"Critical at $critgbtxt GB \\n\" ";
 $def[1] .= "GPRINT:var1:LAST:\"current\: %6.2lf GB\" ";
 $def[1] .= "GPRINT:var1:MAX:\"max\: %6.2lf GB \" ";
 $def[1] .= "GPRINT:var1:AVERAGE:\"avg\: %6.2lf GB\" ";
+
+# Second graph is optional and shows trend
+if (isset($DS[2])) {
+
+    $size_mb_per_hours = floatval($MAX[3]); // this is size_mb / range(hours)
+    $size_mb = floatval($MAX[1]);
+    $hours = 1.0 / ($size_mb_per_hours / $size_mb);
+    $range = sprintf("%.1fh", $hours);
+
+    $opt[2] = "--vertical-label '+/- MB / $range' -l -1 -u 1 --title '$hostname: Trend for $fstitle' ";
+    $def[2] = "DEF:growth=$RRDFILE[2]:$DS[2]:AVERAGE ";
+    $def[2] .= "DEF:trend=$RRDFILE[3]:$DS[3]:AVERAGE ";
+    $def[2] .= "CDEF:growth_pos=growth,0,MAX ";
+    $def[2] .= "CDEF:growth_neg=growth,0,MIN ";
+    $def[2] .= "HRULE:0#c0c0c0 ";
+    $def[2] .= "AREA:growth_pos#3060f0:'Grow' "; 
+    $def[2] .= "AREA:growth_neg#30f060:\"Shrink\" "; 
+    $def[2] .= "LINE1:trend#000000:\"Trend   \" "; 
+    if ($WARN[3])
+        $def[2] .= "LINE1:$WARN[3]#ffff00:\"Warning at $WARN[3]MB/$range\" ";
+    if ($CRIT[3])
+        $def[2] .= "LINE1:$CRIT[3]#ff0000:\"Critical at $CRIT[3]MB/$range\\n\" ";
+    $def[2] .= "GPRINT:growth:LAST:\"Current\: %+9.2lf MB/$range\" ";
+    $def[2] .= "GPRINT:trend:LAST:\"  Trend\: %+7.2lf MB/$range\\n\" "; 
+}
+
+
 ?>

@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,31 +23,39 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-check_includes['hr_fs'] = [ "df.include" ]
+# active=20;;;; established=8;;;; halfOpened=3;;;; halfClosed=4;;;; passthrough=35;;;;
+$opt[1] = "--vertical-label 'Connections' -l0  --title \"Current connections on $hostname\" ";
 
-# DSA101  0.77 400.00 0.07 0.93 16271539.00 35556389
-# DSA102  0.00 400.00 0.00 0.00 86651840.00 106669167
-# DSA103  0.00 400.00 0.00 0.00 97962784.00 106669167
-# DSA104  0.30 400.00 0.00 0.00 75934488.00 106669167
-def inventory_vms_df(checkname, info):
-    return [ ( line[0], 'filesystem_default_levels') for line in info ]
+$def[1] =  "DEF:active=$RRDFILE[1]:$DS[1]:MAX " ;
+$def[1] .= "DEF:est=$RRDFILE[2]:$DS[2]:MAX " ;
+$def[1] .= "DEF:open=$RRDFILE[3]:$DS[3]:MAX " ;
+$def[1] .= "DEF:close=$RRDFILE[4]:$DS[4]:MAX " ;
+$def[1] .= "DEF:pass=$RRDFILE[5]:$DS[5]:MAX " ;
+$def[1] .= "CDEF:opt=active,est,open,close,+,+,+ ";
+$def[1] .= "CDEF:total=opt,pass,+ ";
 
-def check_vms_df(item, params, info):
-    for line in info:
-        if line[0] == item:
-            io_ops_total_per_sec = float(line[1])
-            read_perc            = float(line[2])
-            disk_util            = float(line[3])
-            response_time_ms     = float(line[4])
-            blocks_free          = float(line[5])
-            blocks_total         = float(line[6]) # one block is 512 bytes
+$def[1] .= "AREA:active#30c040:\"Active    \" " ;
+$def[1] .= "GPRINT:active:LAST:\"%3.0lf\" " ;
 
-            free_mb = blocks_free / 2048
-            size_mb = blocks_total / 2048
-            status, text, perfdata = df_check_filesystem(g_hostname, item, size_mb, free_mb, params) 
+$def[1] .= "AREA:est#40ff80:\"Established\":STACK " ;
+$def[1] .= "GPRINT:est:LAST:\"%3.0lf\" " ;
 
-            perfdata.append( ('iops', "%.2f" % io_ops_total_per_sec ) )
+$def[1] .= "AREA:open#0080c0:\"Half opened\":STACK " ;
+$def[1] .= "GPRINT:open:LAST:\"%2.0lf\" " ;
 
-    return (3, "Disk %s not found" % (item,))
+$def[1] .= "AREA:close#00a0f0:\"Half closed\":STACK " ;
+$def[1] .= "GPRINT:close:LAST:\"%2.0lf\\n\" " ;
 
-check_info['vms_df']  = ( check_vms_df, "fs_%s", 1, inventory_vms_df )
+
+$def[1] .= "LINE:total#ff3030:\"Total     \" " ;
+$def[1] .= "GPRINT:total:LAST:\"%3.0lf\" " ;
+
+$def[1] .= "LINE:opt#008000:\"Optimized  \" " ;
+$def[1] .= "GPRINT:opt:LAST:\"%3.0lf\" " ;
+
+$def[1] .= "AREA:pass#ffd0d0:\"Passthrough\":STACK " ;
+$def[1] .= "GPRINT:pass:LAST:\"%3.0lf\"\\n " ;
+
+
+
+?>

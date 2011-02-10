@@ -27,6 +27,7 @@
 import config
 
 def page_index(html):
+    start_url = html.var("start_url", config.start_url)
     html.req.headers_out.add("Cache-Control", "max-age=7200, public");
     html.write("""
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd">
@@ -40,7 +41,7 @@ def page_index(html):
     <frame src="%s" name="main" noresize>
 </frameset>
 </html>
-""" % config.start_url)
+""" % start_url)
 
 def page_main(html):
     html.header("Check_MK Multisite")

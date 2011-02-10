@@ -1,0 +1,11 @@
+Title: Adding more than one column at once fails
+Component: multisite
+Benefit: 2
+State: open
+Cost: 1
+Date: 2011-02-04 10:06:44
+Class: bug
+
+In view editor if you add more than one column in one turn
+without saving in between the first added column will be
+erased.

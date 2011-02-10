@@ -1,0 +1,25 @@
+title: Monitor connections stats on Riverbed Steelhead appliance
+agents: snmp
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check measures the current number of connections on a Riverbed
+ Steelhead appliance. The total number of connections is first split
+ up into {optimized} and {passthrough}. The optimized connections
+ are divided into {active}, {established}, {half opened} and {half closed}.
+
+ Currently there is no way to apply levels and the check is always {OK}.
+
+
+perfdata: 
+ Five values: {active}: the number of currently active connections (optimized),
+ {established}: the number of established connections (optimized), {halfOpened}:
+ the number of half opened connections (optimized), {halfClosed}: the number
+ of half closed connections (optimizied), {passthrough}: the number of unoptimized
+ connections. The total number and the number of optimized connections can be computed
+ from these values by simple additions.
+
+inventory:
+ One service per Riverbed Steelhead appliance will be created.
+

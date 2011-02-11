@@ -11,7 +11,7 @@ multisite_layouts["python-raw"] = {
 def render_python(data, view, group_painters, painters, num_columns):
     columns, rows = data
     html.write("[\n")
-    html.write(repr([p[0]["title"] for p in painters]))
+    html.write(repr([p[0]["name"] for p in painters]))
     html.write(",\n")
     for row in rows:
         html.write("[")
@@ -41,7 +41,7 @@ def encode_string_json(s):
 def render_json(data, view, group_painters, painters, num_columns):
     columns, rows = data
     html.write("[\n")
-    html.write(repr([p[0]["title"] for p in painters]))
+    html.write(repr([p[0]["name"] for p in painters]))
     for row in rows:
         html.write(",\n[")
         first = True

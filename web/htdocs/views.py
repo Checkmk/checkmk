@@ -210,6 +210,10 @@ for name, view in multisite_builtin_views.items():
             "",
             config.roles)
 
+# Add painter names to painter objects (e.g. for JSON web service)
+for n, p in multisite_painters.items():
+    p["name"] = n
+
 
 max_display_columns   = 12
 max_sort_columns      = 5

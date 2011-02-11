@@ -1,0 +1,11 @@
+Title: check include files must be loaded first
+Component: core
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-02-11 09:13:34
+Class: bug
+
+When loading all check files, the files with the extension ".include"
+must be loaded first. Otherwise unresolved functions might occur
+(see df_netapp32).

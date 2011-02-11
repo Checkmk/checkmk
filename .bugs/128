@@ -1,0 +1,9 @@
+Title: df trends: Peak values after changing the levels_range param
+Component: checks
+Benefit: 5
+State: open
+Cost: 4
+Date: 2011-02-10 09:45:24
+Class: bug
+
+After changing the trend_range to a larger time the check reports a peak value which is wrong. It might be needed to detect such a change and reset the values.

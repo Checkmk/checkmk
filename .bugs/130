@@ -1,0 +1,10 @@
+Title: Edit button and Add Bookmark button to much left
+Component: multisite
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-02-11 09:45:12
+Class: cleanup
+
+The Buttons in the snapins are too left. This looks
+ugly.

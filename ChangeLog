@@ -22,6 +22,8 @@
     Multisite:
     * FIX: fix "too many values to unpack" when editing views in single layout
       mode (such as host or service detail)
+    * FIX: fix PNP icon in cases where host and service icons are displayed in 
+      same view (found by Wolfgang Barth)
     
 1.1.9i8:
     Multisite:

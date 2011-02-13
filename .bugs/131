@@ -1,0 +1,19 @@
+Title: if checks: Add 0 prefix on port numbers below 10
+Component: core
+Benefit: 3
+State: open
+Cost: 5
+Date: 2011-02-11 11:17:50
+Class: todo
+
+When monitoring switches the services are ordered as follows:
+
+1
+10
+11
+12
+..
+2
+20
+
+It would be good to cleanup such interface names by adding a leading zero to the numbers to have a proper sorting of the elements.

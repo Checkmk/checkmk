@@ -1,0 +1,10 @@
+Title: remove direct RRD updates from code and docu
+Component: core
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-02-13 18:59:18
+Class: cleanup
+
+They are not longer neccessary since we have rrdcached. And
+they break perf-o-meters and other nice things.

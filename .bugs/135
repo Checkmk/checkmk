@@ -1,0 +1,10 @@
+Title: No config check on --help
+Component: core
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-02-15 10:02:09
+Class: cleanup
+
+When calling check_mk --help the config check should
+be skipped.

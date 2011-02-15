@@ -122,7 +122,7 @@ def paint_perfometer(row):
         title, h = perf_painter(row, check_command, perf_data)
         content = "<div class=title>%s</div>%s" % (title, h)
         if 'X' in html.display_options:
-            return "perfometer", ('<a href="%s">%s</a>' % (pnp_url(row), content))
+            return "perfometer", ('<a href="%s">%s</a>' % (pnp_url(row, "service"), content))
         else:
             return "perfometer", content
 

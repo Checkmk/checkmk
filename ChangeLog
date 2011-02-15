@@ -9,6 +9,8 @@
     Core, Setup, etc.:
     * FIX: check_mk_templates.cfg: add missing check_period for hosts
       (needed for Shinken)
+    * FIX: read *.include files before checks. Fixes df_netapp not finding
+      its check function
 
     Checks & Agents:
     * ucd_cpu_load: new check for CPU load via UCD SNMP agent

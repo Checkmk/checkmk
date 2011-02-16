@@ -1,0 +1,10 @@
+Title: import files in conf.d/*.mk in sorted order
+Component: core
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-02-16 17:12:01
+Class: feature
+
+Simple do a sort() of the globbed files. That way users have a way
+to force a certain order of execution. And write that into the documentation.

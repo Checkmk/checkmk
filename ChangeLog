@@ -7,8 +7,10 @@
       are very usefull, however...
 
     Core, Setup, etc.:
-    * check_mk_templates.cfg: add missing check_period for hosts
+    * FIX: check_mk_templates.cfg: add missing check_period for hosts
       (needed for Shinken)
+    * FIX: read *.include files before checks. Fixes df_netapp not finding
+      its check function
 
     Checks & Agents:
     * ucd_cpu_load: new check for CPU load via UCD SNMP agent
@@ -17,7 +19,13 @@
     * steelhead_connections: new check for Riverbed Steelhead connections
     * df, df_netapp, df_netapp32, hr_fs, vms_df: all filesystem checks now support
       trends. Please look at check manpage of df for details.
-    * heartbeat_nodes: Fixed error handling when node is active but at least one link is dead
+    * FIX: heartbeat_nodes: Fixed error handling when node is active but at least one link is dead
+
+    Multisite:
+    * FIX: fix "too many values to unpack" when editing views in single layout
+      mode (such as host or service detail)
+    * FIX: fix PNP icon in cases where host and service icons are displayed in 
+      same view (found by Wolfgang Barth)
     
 1.1.9i8:
     Multisite:

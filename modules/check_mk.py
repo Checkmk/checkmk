@@ -350,6 +350,9 @@ if __name__ == "__main__":
     filelist = glob.glob(checks_dir + "/*")
     if local_checks_dir:
         filelist += glob.glob(local_checks_dir + "/*")
+    # read include files first!
+    filelist = [ f for f in filelist if f.endswith(".include") ] + \
+               [ f for f in filelist if not f.endswith(".include") ]
     for f in filelist: 
         if not f.endswith("~"): # ignore emacs-like backup files
             try:

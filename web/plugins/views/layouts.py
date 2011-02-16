@@ -45,7 +45,7 @@ def render_single_dataset(data, view, group_painters, painters, num_columns):
             html.write("<tr class=gap><td class=gap colspan=%d></td></tr>\n" % (1 + num_columns))
         thispart = rows[rownum:rownum + num_columns]
         for p in painters:
-            painter, link = p
+            painter, link = p[0:2]
             html.write("<tr class=data><td class=left>%s</td>" % painter["title"])
             for row in thispart:
                 paint(p, row)

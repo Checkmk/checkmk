@@ -120,19 +120,22 @@ def pnp_cleanup(s):
         .replace('/', '_') \
         .replace('\\', '_')
 
-def pnp_url(row, what = 'graph'):
+def pnp_url(row, what, how = 'graph'):
     sitename = row["site"]
     host = pnp_cleanup(row["host_name"])
-    svc = pnp_cleanup(row.get("service_description", "_HOST_"))
+    if what == "host":
+        svc = "_HOST_"
+    else:
+        svc = pnp_cleanup(row["service_description"])
     site = html.site_status[sitename]["site"]
     url = site["url_prefix"] + ("pnp4nagios/index.php/%s?host=%s&srv=%s" % \
-            (what, htmllib.urlencode(host), htmllib.urlencode(svc)))
-    if what == 'graph':
+            (how, htmllib.urlencode(host), htmllib.urlencode(svc)))
+    if how == 'graph':
         url += "&theme=multisite&baseurl=%scheck_mk/" % htmllib.urlencode(site["url_prefix"])
     return url
 
-def pnp_popup_url(row):
-    return pnp_url(row, 'popup')
+def pnp_popup_url(row, what):
+    return pnp_url(row, what, 'popup')
 
 def logwatch_url(sitename, notes_url):
     i = notes_url.index("/check_mk/logwatch.py")
@@ -185,11 +188,11 @@ def paint_icons(what, row): # what is "host" or "service"
     pnpgraph_present = row[prefix + "pnpgraph_present"]
     if pnpgraph_present == 1:
         if 'X' in html.display_options:
-            url = pnp_url(row)
+            url = pnp_url(row, what)
         else:
             url = ""
         output += '<a href="%s" onmouseover="displayHoverMenu(event, get_url_sync(\'%s\'))" onmouseout="hoverHide()">' \
-                  '<img class=icon src="images/icon_pnp.png"></a>' % (url, pnp_popup_url(row))
+                  '<img class=icon src="images/icon_pnp.png"></a>' % (url, pnp_popup_url(row, what))
 
     if 'X' in html.display_options:
         # action_url (only, if not a PNP-URL and pnp_graph is working!)

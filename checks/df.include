@@ -69,7 +69,7 @@ def get_filesystem_levels(host, mountpoint, size_gb, params):
     if type(filesystem_default_levels) == dict:
         levels = filesystem_default_levels.copy()
     else:
-        levels = { "levels": filesystem_default_magic[:2] }
+        levels = { "levels": filesystem_default_levels[:2] }
         if len(filesystem_default_levels) == 2:
             levels["magic"] = None
         else:
@@ -152,7 +152,7 @@ def df_check_filesystem(hostname, mountpoint, size_mb, avail_mb, params):
 
     MB = 1024 * 1024.0
 
-    if levels["trend_range"]:
+    if levels.get("trend_range"):
         try:
             range = levels["trend_range"] # in hours
             range_sec = range * 3600.0

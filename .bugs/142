@@ -1,0 +1,9 @@
+Title: Customlinks snapin does not persists folding any more
+Component: multisite
+Benefit: 2
+State: open
+Cost: 1
+Date: 2011-02-16 11:49:44
+Class: bug
+
+Somehow this feature is broken.

@@ -1,0 +1,9 @@
+Title: Perf-O-Meter in single datasetlayout has wrong height
+Component: multisite
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-02-16 10:18:38
+Class: bug
+
+Just try ist out. Height is too low.

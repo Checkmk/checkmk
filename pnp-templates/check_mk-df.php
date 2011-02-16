@@ -72,9 +72,9 @@ if (isset($DS[2])) {
     $def[2] .= "CDEF:growth_pos=growth,0,MAX ";
     $def[2] .= "CDEF:growth_neg=growth,0,MIN ";
     $def[2] .= "HRULE:0#c0c0c0 ";
-    $def[2] .= "AREA:growth_pos#3060f0:'Grow' "; 
-    $def[2] .= "AREA:growth_neg#30f060:\"Shrink\" "; 
-    $def[2] .= "LINE1:trend#000000:\"Trend   \" "; 
+    $def[2] .= "AREA:growth_pos#3060f0:\"Grow\" "; 
+    $def[2] .= "AREA:growth_neg#30f060:\"Shrink \" "; 
+    $def[2] .= "LINE1:trend#000000:\"Trend  \" "; 
     if ($WARN[3])
         $def[2] .= "LINE1:$WARN[3]#ffff00:\"Warning at $WARN[3]MB/$range\" ";
     if ($CRIT[3])

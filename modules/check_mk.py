@@ -1798,15 +1798,19 @@ def check_inventory(hostname):
     newchecks = []
     newitems = []
     total_count = 0
-    only_snmp = is_snmp_host(hostname)
+    is_snmp = is_snmp_host(hostname)
+    is_tcp  = is_tcp_host(hostname)
     check_table = get_check_table(hostname)
     hosts_checktypes = set([ ct for (ct, item), params in check_table.items() ])
     try:
         for ct in inventorable_checktypes("all"):
-            if only_snmp and not check_uses_snmp(ct):
-                continue # No TCP checks on SNMP-only hosts
+            if check_uses_snmp(ct) and not is_snmp:
+                continue # Skip SNMP checks on non-SNMP hosts
             elif check_uses_snmp(ct) and ct not in hosts_checktypes:
-                continue # Do not look for new SNMP services (why?)
+ 		continue # Do not look for new SNMP services (maybe change in future)
+            elif not check_uses_snmp(ct) and not is_tcp:
+                continue # Skip TCP checks on non-TCP hosts
+
             new = make_inventory(ct, [hostname], True)
             newitems += new
             count = len(new)

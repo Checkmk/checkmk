@@ -29,6 +29,14 @@
 # u0    RAID-5    OK             -       -       64K     1788.08   ON     OFF
 # u1    RAID-5    INOPERABLE     -       -       64K     1788.08   OFF    OFF
 
+# Different versions of tw_cli have different outputs. This means the size column
+# used by this check is in different places. Here is a an example:
+#
+# Unit  UnitType  Status         %Cmpl  Stripe  Size(GB)  Cache  AVerify IgnECC
+# u0    RAID-5    INITIALIZING   84     64K     1396.95   ON     ON      OFF
+#
+# Unit  UnitType  Status         %RCmpl  %V/I/M  Stripe  Size(GB)  Cache  AVrfy
+# u0    RAID-5    OK             -       -       64K     1396.95   ON     ON
 
 # inventory
 def inventory_3ware_units(checkname, info):
@@ -42,12 +50,26 @@ def inventory_3ware_units(checkname, info):
 def check_3ware_units(item, param, info):
     for line in info:
         if line[0] == item:
-            status = line[2]
             unit_type = line[1]
-            size      = line[6]
-            infotext = "%s  (type: %s, size: %s GB)" % (status, unit_type, size)
+            status    = line[2]
+            complete  = line[3]
+
+            # Handle different outputs of tw_cli
+            try:
+                size = float(line[6])
+            except ValueError:
+                size = float(line[5])
+
+            complete_txt = ''
+            if complete != '-':
+                complete_txt = ' complete: %s%%' % complete
+
+            infotext = "%s (type: %s, size: %sGB%s)" % (status, unit_type, size, complete_txt)
+
             if status == "OK":
                 return (0, "OK - unit status is " + infotext)
+            elif status == "INITIALIZING":
+                return (1, "WARNING - unit status is " + infotext)
             else:
                 return (2, "CRITICAL - unit status is " + infotext)
     return (3, "UNKNOWN - unit %s not found in agent output" % item)

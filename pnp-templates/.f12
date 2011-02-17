@@ -1,0 +1,2 @@
+sudo cp * /omd/versions/default/share/check_mk/pnp-templates
+

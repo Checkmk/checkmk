@@ -1,0 +1,12 @@
+Title: New config option snmp_options
+Component: core
+Benefit: 2
+State: open
+Cost: 1
+Date: 2011-02-17 11:43:29
+Class: feature
+
+With the new config variable snmp_options one could add custom
+options for the snmpget/walk command line. That way one could
+e.g. add a -Cc for certain devices (see docu of snmpwalk).
+Adding -Cc generally might be dangerous.

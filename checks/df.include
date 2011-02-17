@@ -214,7 +214,11 @@ def df_check_filesystem(hostname, mountpoint, size_mb, avail_mb, params):
                 
 
         except MKCounterWrapped:
-            pass # need more data for computing a trend
+            # need more data for computing a trend
+
+            # In this case erase all perfdata to prevent an rrd file which has no space
+            # for the trend information
+            perfdata = []
 
 
     if used_mb >= crit_mb:

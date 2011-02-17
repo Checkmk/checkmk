@@ -636,10 +636,12 @@ def get_counter(countername, this_time, this_val, allow_negative=False):
     return timedif, per_sec
 
 
-def get_average(itemname, this_time, this_val, backlog):
+def get_average(itemname, this_time, this_val, backlog, initialize_zero = True):
 
     # first call: take current value as average
     if not itemname in g_counters:
+        if initialize_zero:
+            this_val = 0
         g_counters[itemname] = (this_time, this_val)
         return 1.0, this_val
 

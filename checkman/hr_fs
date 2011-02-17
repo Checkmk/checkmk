@@ -11,6 +11,14 @@ description:
  For configuration parameters and examples please refer to the man page
  of {df}.
 
+ Please note, that due to the fact that Linux usually reserves 5% of
+ the filesystem for root, the amount of used space output by this
+ check and the native {df} check of Linux differs by up to 5%. The
+ {df} check accounts the reserved space as used, as this is a safer
+ assumption. Whereas the SNMP agent accounts it as free. There is no
+ way to get the information about the reserved space via SNMP, so
+ there is no way to fix this, unfortunately.
+
 item:
  The description of the filesystem as in {hrStorageDescr}. For
  Linux SNMP agents this is the mount point.

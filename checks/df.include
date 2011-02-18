@@ -157,14 +157,16 @@ def df_check_filesystem(hostname, mountpoint, size_mb, avail_mb, params):
             range = levels["trend_range"] # in hours
             range_sec = range * 3600.0
             this_time = time.time()
-            timdif, rate = get_counter("df.%s.delta" % mountpoint, this_time, used_mb, True) # rate in MB/s, allow negative
+            # rate in MB/s, allow negative
+            timdif, rate = get_counter("df.%s.delta" % mountpoint, this_time, used_mb, True)
             perfdata.append(("growth", rate * range_sec))
-            timedif, rate_avg = get_average("df.%s.trend" % mountpoint, this_time, rate, range_sec)
-            
-            # rate_avg is groth in MB/sec 
+            # average trend, initialize with zero
+            timedif, rate_avg = get_average("df.%s.trend" % mountpoint, this_time, rate, range_sec, True)
+
+            # rate_avg is groth in MB/sec
             trend = rate_avg * range_sec
             sign = trend > 0 and "+" or ""
-            infotext += ", trend: %s%s / %g hours" % (sign, get_bytes_human_readable(trend * MB), range) 
+            infotext += ", trend: %s%s / %g hours" % (sign, get_bytes_human_readable(trend * MB), range)
 
             # apply levels for absolute growth in MB / interval
             trend_mb = levels.get("trend_mb")
@@ -211,7 +213,7 @@ def df_check_filesystem(hostname, mountpoint, size_mb, avail_mb, params):
                         problems.append("only %.1fh until disk full!" % hours_left)
                     elif hours_left <= wa * 2:
                         problems.append("time left: %.1fh" % hours_left)
-                
+
 
         except MKCounterWrapped:
             # need more data for computing a trend

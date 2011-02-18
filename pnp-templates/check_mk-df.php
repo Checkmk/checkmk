@@ -53,14 +53,13 @@ $def[1] .= "AREA:var1#00ffc6:\"used space on $fsname\\n\" ";
 $def[1] .= "LINE1:var1#226600: "; 
 $def[1] .= "HRULE:$maxgb#003300:\"Size ($sizegb GB) \" ";
 $def[1] .= "HRULE:$warngb#ffff00:\"Warning at $warngbtxt GB \" ";
-$def[1] .= "HRULE:$critgb#ff0000:\"Critical at $critgbtxt GB \\n\" ";       
+$def[1] .= "HRULE:$critgb#ff0000:\"Critical at $critgbtxt GB \\n\" ";
 $def[1] .= "GPRINT:var1:LAST:\"current\: %6.2lf GB\" ";
 $def[1] .= "GPRINT:var1:MAX:\"max\: %6.2lf GB \" ";
 $def[1] .= "GPRINT:var1:AVERAGE:\"avg\: %6.2lf GB\" ";
 
 # Second graph is optional and shows trend
 if (isset($DS[2])) {
-
     $size_mb_per_hours = floatval($MAX[3]); // this is size_mb / range(hours)
     $size_mb = floatval($MAX[1]);
     $hours = 1.0 / ($size_mb_per_hours / $size_mb);
@@ -78,7 +77,8 @@ if (isset($DS[2])) {
     if ($WARN[3])
         $def[2] .= "LINE1:$WARN[3]#ffff00:\"Warning at $WARN[3]MB/$range\" ";
     if ($CRIT[3])
-        $def[2] .= "LINE1:$CRIT[3]#ff0000:\"Critical at $CRIT[3]MB/$range\\n\" ";
+        $def[2] .= "LINE1:$CRIT[3]#ff0000:\"Critical at $CRIT[3]MB/$range\" ";
+    $def[2] .= "COMMENT:\"\\n\" ";
     $def[2] .= "GPRINT:growth:LAST:\"Current\: %+9.2lf MB/$range\" ";
     $def[2] .= "GPRINT:trend:LAST:\"  Trend\: %+7.2lf MB/$range\\n\" "; 
 }

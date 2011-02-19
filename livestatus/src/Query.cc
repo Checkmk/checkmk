@@ -150,8 +150,6 @@ Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
 
 Query::~Query()
 {
-   return;
-
    // delete dummy-columns
    for (_columns_t::iterator it = _dummy_columns.begin();
 	 it != _dummy_columns.end();

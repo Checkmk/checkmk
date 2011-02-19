@@ -1,0 +1,9 @@
+Title: .f12 files is shipped with agents
+Component: core
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-02-18 11:03:18
+Class: cleanup
+
+The setup seems to install the .f12 files into the agents directory.

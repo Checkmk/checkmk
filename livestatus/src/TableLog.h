@@ -45,8 +45,8 @@ class TableLog : public Table
 public:
     TableLog(unsigned long max_cached_messages);
     ~TableLog();
-    const char *name() { return "log"; };
-    const char *prefixname() { return "logs"; };
+    const char *name() { return "log"; }
+    const char *prefixname() { return "logs"; }
     bool isAuthorized(contact *ctc, void *data);
     void handleNewMessage(Logfile *logfile, time_t since, time_t until, unsigned logclasses);
     void answerQuery(Query *query);

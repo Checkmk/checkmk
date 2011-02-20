@@ -49,6 +49,7 @@
 #endif 
 
 int copy_data(int from, int to);
+void *voidp;
 
 struct thread_info
 {
@@ -96,7 +97,7 @@ void *copy_thread(void *info)
 	    shutdown(to, SHUT_WR);
 	 if (ti->terminate_on_read_eof) {
 	    exit(0);
-	    return;
+	    return voidp;
 	 }
 	 break;
       }
@@ -114,6 +115,7 @@ void *copy_thread(void *info)
 	 }
       }
    }
+   return voidp;
 }
 
 int main(int argc, char **argv)

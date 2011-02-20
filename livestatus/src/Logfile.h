@@ -55,12 +55,12 @@ public:
     Logfile(const char *path, bool watch);
     ~Logfile();
 
-    char *path() { return _path; };
+    char *path() { return _path; }
     void load(TableLog *tablelog, time_t since, time_t until, unsigned logclasses);
     void flush();
-    time_t since() { return _since; };
-    unsigned classesRead() { return _logclasses_read; };
-    long numEntries() { return _entries.size(); };
+    time_t since() { return _since; }
+    unsigned classesRead() { return _logclasses_read; }
+    long numEntries() { return _entries.size(); }
     bool answerQuery(Query *query, TableLog *tl, time_t since, time_t until, unsigned);
     bool answerQueryReverse(Query *query, TableLog *tl, time_t since, time_t until, unsigned);
     long freeMessages(unsigned logclasses);

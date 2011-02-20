@@ -39,11 +39,11 @@ class OffsetTimeColumn : public OffsetIntColumn
 {
 public:
     OffsetTimeColumn(string name, string description, int offset, int indirect_offset = -1) 
-	: OffsetIntColumn(name, description, offset, indirect_offset) {}; 
-    int type() { return COLTYPE_TIME; };
+	: OffsetIntColumn(name, description, offset, indirect_offset) {}
+    int type() { return COLTYPE_TIME; }
     void output(void *data, Query *query);
     Filter *createFilter(int operator_id, char *value);
-    string valueAsString(void *data, Query *) { return "invalid"; };
+    string valueAsString(void *data __attribute__ ((__unused__)), Query *) { return "invalid"; }
 };
 
 

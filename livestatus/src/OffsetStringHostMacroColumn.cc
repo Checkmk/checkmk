@@ -31,7 +31,7 @@ host *OffsetStringHostMacroColumn::getHost(void *data)
     return (host *)data;
 }
 
-service *OffsetStringHostMacroColumn::getService(void *data)
+service *OffsetStringHostMacroColumn::getService(void *data __attribute__ ((__unused__)))
 {
     return 0;
 }

@@ -66,8 +66,8 @@ void debug(const char *loginfo, ...)
 
 
 TableLog::TableLog(unsigned long max_cached_messages)
-    : _max_cached_messages(max_cached_messages)
-    , _num_cached_messages(0)
+    : _num_cached_messages(0)
+    , _max_cached_messages(max_cached_messages)
     , _num_at_last_check(0)
 {
     pthread_mutex_init(&_lock, 0);
@@ -303,7 +303,7 @@ void TableLog::dumpLogfiles()
    The parameters to this method reflect the current query,
    not the messages that just has been loaded.
 */
-void TableLog::handleNewMessage(Logfile *logfile, time_t since, time_t until, unsigned logclasses)
+void TableLog::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((__unused__)), time_t until __attribute__ ((__unused__)), unsigned logclasses)
 {
     if (++_num_cached_messages <= _max_cached_messages)
 	return; // current message count still allowed, everything ok

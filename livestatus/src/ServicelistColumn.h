@@ -37,8 +37,8 @@ class ServicelistColumn : public Column
    bool _show_state;
 public:
    ServicelistColumn(string name, string description, int offset, int indirect_offset, bool show_host, bool show_state)
-      : Column(name, description, indirect_offset), _offset(offset), _show_host(show_host), _show_state(show_state) {};
-   int type() { return COLTYPE_LIST; };
+      : Column(name, description, indirect_offset), _offset(offset), _show_host(show_host), _show_state(show_state) {}
+   int type() { return COLTYPE_LIST; }
    void output(void *, Query *);
    Filter *createFilter(int opid, char *value);
    servicesmember *getMembers(void *data);

@@ -25,7 +25,7 @@
 #include "EmptyColumn.h"
 #include "Query.h"
 
-void EmptyColumn::output(void *data, Query *query)
+void EmptyColumn::output(void *data __attribute__ ((__unused__)), Query *query)
 {
    query->outputString("");
 }

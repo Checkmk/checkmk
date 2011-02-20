@@ -44,16 +44,16 @@ protected:
     void setError(unsigned code, const char *format, ...);
 
 public:
-    Filter() : _query(0) {};
-    virtual ~Filter() {};
-    string errorMessage() { return _error_message; };
-    unsigned errorCode() { return _error_code; };
-    bool hasError() { return _error_message != ""; };
-    void setQuery(Query *q) { _query = q; };
+    Filter() : _query(0) {}
+    virtual ~Filter() {}
+    string errorMessage() { return _error_message; }
+    unsigned errorCode() { return _error_code; }
+    bool hasError() { return _error_message != ""; }
+    void setQuery(Query *q) { _query = q; }
     virtual bool accepts(void *data) = 0;
-    virtual void *indexFilter(const char *columnname) { return 0; };
-    virtual void findIntLimits(const char *columnname, int *lower, int *upper) {};
-    virtual bool optimizeBitmask(const char *columnname, uint32_t *mask) { return false; };
+    virtual void *indexFilter(const char *columnname __attribute__ ((__unused__))) { return 0; }
+    virtual void findIntLimits(const char *columnname __attribute__ ((__unused__)), int *lower __attribute__ ((__unused__)), int *upper __attribute__ ((__unused__))) {}
+    virtual bool optimizeBitmask(const char *columnname __attribute__ ((__unused__)), uint32_t *mask __attribute__ ((__unused__))) { return false; }
 };
 
 #endif // Filter_h

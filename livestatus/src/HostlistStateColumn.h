@@ -59,7 +59,7 @@ class HostlistStateColumn : public IntColumn
 
 public:
    HostlistStateColumn(string name, string description, int logictype, int offset, int indirect_offset)
-    : IntColumn(name, description, indirect_offset), _offset(offset), _logictype(logictype) {};
+    : IntColumn(name, description, indirect_offset), _offset(offset), _logictype(logictype) {}
    int32_t getValue(void *data, Query *);
    hostsmember *getMembers(void *data);
 };

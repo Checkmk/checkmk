@@ -35,7 +35,7 @@ protected:
     int      _operation;
     uint32_t _count;
 public:
-    Aggregator(int o) : _operation(o), _count(0) {};
+    Aggregator(int o) : _operation(o), _count(0) {}
     virtual void consume(void *data, Query *) = 0;
     virtual void output(Query *) = 0;
 };

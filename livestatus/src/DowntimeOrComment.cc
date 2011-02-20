@@ -64,10 +64,10 @@ Downtime::Downtime(nebstruct_downtime_struct *dt)
 
 Comment::Comment(nebstruct_comment_struct *co)
    : DowntimeOrComment((nebstruct_downtime_struct *)co, co->comment_id)
+     , _expire_time(co->expire_time)
      , _persistent(co->persistent)
      , _source(co->source)
-     , _expires(co->expires)
-     , _expire_time(co->expire_time)
      , _entry_type(co->entry_type)
+     , _expires(co->expires)
 {
 }

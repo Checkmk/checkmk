@@ -59,7 +59,7 @@ public:
    InputBuffer(int *termination_flag);
    void setFd(int fd);
    int readRequest();
-   bool moreLines() { return !_requestlines.empty(); };
+   bool moreLines() { return !_requestlines.empty(); }
    string nextLine();
 
 private:

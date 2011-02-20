@@ -102,7 +102,7 @@ Filter *AttributelistColumn::createFilter(int opid, char *value)
     else {
 	char *scan = value;
 	char *t;
-	while (t = next_token(&scan)) {
+	while ((t = next_token(&scan))) {
 	    unsigned i = 0;
 	    while (al_entries[i].name) {
 		if (!strcmp(t, al_entries[i].name)) {

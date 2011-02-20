@@ -34,7 +34,7 @@ class TableStatus : public Table
 {
 public:
    TableStatus();
-   const char *name() { return "status"; };
+   const char *name() { return "status"; }
    void answerQuery(Query *query);
 };
 

@@ -43,8 +43,8 @@ class CustomVarsColumn : public Column
 
 public:
    CustomVarsColumn(string name, string description, int offset, int indirect_offset, int what) 
-      : Column(name, description, indirect_offset),  _offset(offset), _what(what) {};
-   int type() { return COLTYPE_LIST; };
+      : Column(name, description, indirect_offset),  _offset(offset), _what(what) {}
+   int type() { return COLTYPE_LIST; }
    void output(void *, Query *);
    Filter *createFilter(int opid, char *value);
    bool contains(void *data, const char *value);

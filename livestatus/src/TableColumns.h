@@ -36,7 +36,7 @@ class TableColumns : public Table
    _tables_t _tables;
 public:
    TableColumns();
-   const char *name() { return "columns"; };
+   const char *name() { return "columns"; }
    void addTable(Table *);
    void answerQuery(Query *query);
    const char *getValue(Column *column, int colcol);

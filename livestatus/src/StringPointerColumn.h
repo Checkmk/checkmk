@@ -32,8 +32,8 @@ class StringPointerColumn : public StringColumn
     char *_string;
 public:
     StringPointerColumn(string name, string description, char *string)
-       : StringColumn(name, description, -1), _string(string) {};
-    char* getValue(void* ) { return _string; };
+       : StringColumn(name, description, -1), _string(string) {}
+    char* getValue(void* ) { return _string; }
 };
 
 

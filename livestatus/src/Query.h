@@ -99,9 +99,9 @@ public:
    void finish();
    void setDefaultColumns(const char *);
    void addColumn(Column *column);
-   void setShowColumnHeaders(bool x) { _show_column_headers = x; };
+   void setShowColumnHeaders(bool x) { _show_column_headers = x; }
    bool hasNoColumns();
-   contact *authUser() { return _auth_user; };
+   contact *authUser() { return _auth_user; }
    void outputDatasetBegin();
    void outputDatasetEnd();
    void outputFieldSeparator();
@@ -124,7 +124,7 @@ public:
    void *findTimerangeFilter(const char *columnname, time_t *, time_t *);
    void findIntLimits(const char *columnname, int *lower, int *upper);
    void optimizeBitmask(const char *columnname, uint32_t *bitmask);
-   int timezoneOffset() { return _timezone_offset; };
+   int timezoneOffset() { return _timezone_offset; }
 
 private:
    bool doStats();

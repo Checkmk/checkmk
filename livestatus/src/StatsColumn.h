@@ -44,10 +44,10 @@ class StatsColumn
 
 public:
     StatsColumn(Column *c, Filter *f, int o) : 
-	_column(c), _filter(f), _operation(o) {};
+	_column(c), _filter(f), _operation(o) {}
     ~StatsColumn();
-    int operation() { return _operation; };
-    Filter *stealFilter() { Filter *f = _filter; _filter=0; return f; };
+    int operation() { return _operation; }
+    Filter *stealFilter() { Filter *f = _filter; _filter=0; return f; }
     Aggregator *createAggregator();
 };
 

@@ -38,7 +38,7 @@ class CustomVarsFilter : public Filter
 
 public:
    CustomVarsFilter(CustomVarsColumn *column, int opid, char *value) :
-      _column(column), _opid(opid), _ref_text(value) {};
+      _column(column), _opid(opid), _ref_text(value) {}
    bool accepts(void *data);
 };
 

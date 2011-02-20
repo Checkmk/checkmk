@@ -39,11 +39,11 @@ extern int g_debug_level;
 extern unsigned long g_max_cached_messages;
 
 Store::Store()
-    : _table_services(false, false)
+    :_table_hosts(false)
+    , _table_hostsbygroup(true)
+    , _table_services(false, false)
     , _table_servicesbygroup(true, false)
     , _table_servicesbyhostgroup(false, true)
-    , _table_hosts(false)
-    , _table_hostsbygroup(true)
     , _table_downtimes(true)
     , _table_comments(false)
     , _table_log(g_max_cached_messages)

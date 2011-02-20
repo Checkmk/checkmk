@@ -49,13 +49,13 @@ public:
 
 public:
     Column(string name, string description, int indirect_offset);
-    virtual ~Column() {};
-    const char *name() const { return _name.c_str(); };
-    const char *description() const { return _description.c_str(); };
-    virtual string valueAsString(void *data, Query *) { return "invalid"; };
+    virtual ~Column() {}
+    const char *name() const { return _name.c_str(); }
+    const char *description() const { return _description.c_str(); }
+    virtual string valueAsString(void *data __attribute__ ((__unused__)), Query *) { return "invalid"; }
     virtual int type() = 0;
     virtual void output(void *data, Query *) = 0;
-    virtual Filter *createFilter(int opid, char *value) { return 0; };
+    virtual Filter *createFilter(int opid __attribute__ ((__unused__)), char *value __attribute__ ((__unused__))) { return 0; }
     void *shiftPointer(void *data);
 };
 

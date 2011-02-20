@@ -70,7 +70,7 @@ void OffsetStringMacroColumn::output(void *data, Query *query)
     query->outputString(s.c_str());
 }
 
-Filter *OffsetStringMacroColumn::createFilter(int opid, char *value)
+Filter *OffsetStringMacroColumn::createFilter(int opid __attribute__ ((__unused__)), char *value __attribute__ ((__unused__)))
 {
     logger(LG_INFO, "Sorry. No filtering on macro columns implemented yet");
     return new AndingFilter(); // always true

@@ -54,19 +54,19 @@ class OutputBuffer
 public:
    OutputBuffer();
    ~OutputBuffer();
-   const char *buffer() { return _buffer; };
-   unsigned size() { return _writepos - _buffer; };
+   const char *buffer() { return _buffer; }
+   unsigned size() { return _writepos - _buffer; }
    void addChar(char c);
    void addString(const char *);
    void addBuffer(const char *, unsigned);
    void reset();
    void flush(int fd, int *termination_flag);
-   void setResponseHeader(int r) { _response_header = r; };
-   int responseHeader() { return _response_header; };
-   void setDoKeepalive(bool d) { _do_keepalive = d; };
-   bool doKeepalive() { return _do_keepalive; };
+   void setResponseHeader(int r) { _response_header = r; }
+   int responseHeader() { return _response_header; }
+   void setDoKeepalive(bool d) { _do_keepalive = d; }
+   bool doKeepalive() { return _do_keepalive; }
    void setError(unsigned code, const char *format, ...);
-   bool hasError() { return _error_message != ""; };
+   bool hasError() { return _error_message != ""; }
 
 private:
    void needSpace(unsigned);

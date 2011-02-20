@@ -35,7 +35,7 @@ class TableCommands : public Table
 {
 public:
   TableCommands();
-  const char *name() { return "commands"; };
+  const char *name() { return "commands"; }
   void answerQuery(Query *query);
   void addColumns(Table *table, string prefix, int indirect_offset);
 };

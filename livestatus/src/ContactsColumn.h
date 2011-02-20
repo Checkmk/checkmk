@@ -34,8 +34,8 @@ class ContactsColumn : public ListColumn
 {
 public:
    ContactsColumn(string name, string description, int indirect_offset)
-      : ListColumn(name, description, indirect_offset)  {};
-   int type() { return COLTYPE_LIST; };
+      : ListColumn(name, description, indirect_offset)  {}
+   int type() { return COLTYPE_LIST; }
    void *getNagiosObject(char *name);
    bool isEmpty(void *data);
    void output(void *, Query *);

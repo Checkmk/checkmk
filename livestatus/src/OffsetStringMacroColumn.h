@@ -33,7 +33,7 @@ class OffsetStringMacroColumn : public OffsetStringColumn
     int _offset;
 public:
     OffsetStringMacroColumn(string name, string description, int offset, int indirect_offset = -1) :
-	OffsetStringColumn(name, description, offset, indirect_offset) {};
+	OffsetStringColumn(name, description, offset, indirect_offset) {}
     // reimplement several functions from StringColumn
 
     string valueAsString(void *data, Query *);

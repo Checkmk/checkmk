@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "logger.h"
+#include "nagios.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>

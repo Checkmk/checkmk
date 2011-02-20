@@ -32,8 +32,8 @@ class IntPointerColumn : public IntColumn
     int *_number;
 public:
     IntPointerColumn(string name, string description, int* number)
-       : IntColumn(name, description, -1), _number(number) {};
-    int32_t getValue(void *, Query *) { return *_number; };
+       : IntColumn(name, description, -1), _number(number) {}
+    int32_t getValue(void *, Query *) { return *_number; }
 };
 
 

@@ -35,10 +35,10 @@ class OffsetDoubleColumn : public DoubleColumn
     int _offset;
 public:
     OffsetDoubleColumn(string name, string description, int offset, int indirect_offset = -1) 
-	: DoubleColumn(name, description, indirect_offset), _offset(offset) {};
+	: DoubleColumn(name, description, indirect_offset), _offset(offset) {}
     double getValue(void *data);
 protected:
-    int offset() { return _offset; };
+    int offset() { return _offset; }
 };
 
 

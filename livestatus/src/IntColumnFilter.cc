@@ -31,9 +31,9 @@
 
 IntColumnFilter::IntColumnFilter(IntColumn *column, int opid, char *value)
    : _column(column)
-   , _ref_string(value)
    , _opid(abs(opid))
    , _negate(opid < 0)
+   , _ref_string(value)
 {
 }
 

@@ -41,16 +41,16 @@ class AttributelistColumn : public IntColumn
     bool _show_list;
 public:
     AttributelistColumn(string name, string description, int offset, int indirect_offset, bool show_list)
-	: IntColumn(name, description, indirect_offset), _offset(offset), _show_list(show_list) {};
+	: IntColumn(name, description, indirect_offset), _offset(offset), _show_list(show_list) {}
 
     /* API of Column */
-    int type() { return _show_list ? COLTYPE_LIST : COLTYPE_INT; };
+    int type() { return _show_list ? COLTYPE_LIST : COLTYPE_INT; }
     virtual string valueAsString(void *data, Query *);
     void output(void *, Query *);
     Filter *createFilter(int opid, char *value);
 
     /* API of IntColumn */
-    virtual int32_t getValue(void *data, Query *) { return getValue(data); };
+    virtual int32_t getValue(void *data, Query *) { return getValue(data); }
 
     unsigned long getValue(void *data);
 };

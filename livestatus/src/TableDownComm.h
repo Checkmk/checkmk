@@ -46,7 +46,7 @@ class TableDownComm : public Table
 
 public:
    TableDownComm(bool is_downtime);
-   const char *name() { return _name; };
+   const char *name() { return _name; }
    ~TableDownComm();
    DowntimeOrComment *findEntry(unsigned long id);
    void addDowntime(nebstruct_downtime_data *);

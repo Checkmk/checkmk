@@ -67,7 +67,7 @@ extern int event_broker_options;
 int g_idle_timeout_msec = 300 * 1000; /* maximum idle time for connection in keep alive state */
 int g_query_timeout_msec = 10 * 1000;      /* maximum time for reading a query */
 
-int g_num_clientthreads = 10;     /* allow 10 concurrent connections per default */
+unsigned g_num_clientthreads = 10;     /* allow 10 concurrent connections per default */
 size_t g_thread_stack_size = 65536; /* stack size of threads */
 
 #define false 0
@@ -89,6 +89,8 @@ int g_thread_running = 0;
 int g_thread_pid = 0;
 int g_service_authorization = AUTH_LOOSE;
 int g_group_authorization = AUTH_STRICT;
+
+void* voidp;
 
 void livestatus_count_fork()
 {
@@ -125,7 +127,7 @@ void livestatus_cleanup_after_fork()
     }
 }
 
-void *main_thread(void *data)
+void *main_thread(void *data __attribute__ ((__unused__)))
 {
     g_thread_pid = getpid();
     while (!g_should_terminate) 
@@ -154,10 +156,11 @@ void *main_thread(void *data)
 	}
     }
     logger(LG_INFO, "Socket thread has terminated");
+    return voidp;
 }
 
 
-void *client_thread(void *data)
+void *client_thread(void *data __attribute__ ((__unused__)))
 {
     void *input_buffer = create_inputbuffer(&g_should_terminate);
     void *output_buffer = create_outputbuffer();
@@ -183,6 +186,7 @@ void *client_thread(void *data)
     }
     delete_outputbuffer(output_buffer);
     delete_inputbuffer(input_buffer);
+    return voidp;
 }
 
 void start_threads()
@@ -301,9 +305,10 @@ void close_unix_socket()
     }
 }
 
-int broker_host(int event_type, void *data)
+int broker_host(int event_type __attribute__ ((__unused__)), void *data __attribute__ ((__unused__)))
 {
     g_counters[COUNTER_NEB_CALLBACKS]++;
+    return 0;
 }
 
 
@@ -323,37 +328,41 @@ int broker_check(int event_type, void *data)
     }
     pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
     pthread_cond_broadcast(&g_wait_cond[WT_CHECK]);
+    return 0;
 }
 
 
-int broker_comment(int event_type, void *data)
+int broker_comment(int event_type __attribute__ ((__unused__)), void *data)
 {
     nebstruct_comment_data *co = (nebstruct_comment_data *)data;
     store_register_comment(co);
     g_counters[COUNTER_NEB_CALLBACKS]++;
     pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
     pthread_cond_broadcast(&g_wait_cond[WT_COMMENT]);
+    return 0;
 }
 
-int broker_downtime(int event_type, void *data)
+int broker_downtime(int event_type __attribute__ ((__unused__)), void *data)
 {
     nebstruct_downtime_data *dt = (nebstruct_downtime_data *)data;
     store_register_downtime(dt);
     g_counters[COUNTER_NEB_CALLBACKS]++;
     pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
     pthread_cond_broadcast(&g_wait_cond[WT_DOWNTIME]);
+    return 0;
 }
 
-int broker_log(int event_type, void *data)
+int broker_log(int event_type __attribute__ ((__unused__)), void *data __attribute__ ((__unused__)))
 {
     g_counters[COUNTER_NEB_CALLBACKS]++;
     g_counters[COUNTER_LOG_MESSAGES]++;
     pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
     pthread_cond_broadcast(&g_wait_cond[WT_LOG]);
+    return 0;
 }
 
 
-int broker_command(int event_type, void *data)
+int broker_command(int event_type __attribute__ ((__unused__)), void *data)
 {
     nebstruct_external_command_data *sc = (nebstruct_external_command_data *)data;
     if (sc->type == NEBTYPE_EXTERNALCOMMAND_START) 
@@ -361,36 +370,41 @@ int broker_command(int event_type, void *data)
     g_counters[COUNTER_NEB_CALLBACKS]++;
     pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
     pthread_cond_broadcast(&g_wait_cond[WT_COMMAND]);
+    return 0;
 }
 
-int broker_state(int event_type, void *data)
+int broker_state(int event_type __attribute__ ((__unused__)), void *data __attribute__ ((__unused__)))
 {
     g_counters[COUNTER_NEB_CALLBACKS]++;
     pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
     pthread_cond_broadcast(&g_wait_cond[WT_STATE]);
+    return 0;
 }
 
-int broker_program(int event_type, void *data)
+int broker_program(int event_type __attribute__ ((__unused__)), void *data __attribute__ ((__unused__)))
 {
     g_counters[COUNTER_NEB_CALLBACKS]++;
     pthread_cond_broadcast(&g_wait_cond[WT_ALL]);
     pthread_cond_broadcast(&g_wait_cond[WT_PROGRAM]);
+    return 0;
 }
 
-int broker_event(int event_type, void *data)
+int broker_event(int event_type __attribute__ ((__unused__)), void *data)
 {
     g_counters[COUNTER_NEB_CALLBACKS]++;
     struct nebstruct_timed_event_struct *ts = (struct nebstruct_timed_event_struct *)data;
     update_timeperiods_cache(ts->timestamp.tv_sec);
+    return 0;
 }
 
-int broker_process(int event_type, void *data)
+int broker_process(int event_type __attribute__ ((__unused__)), void *data)
 {
     struct nebstruct_process_struct *ps = (struct nebstruct_process_struct *)data;
     if (ps->type == NEBTYPE_PROCESS_EVENTLOOPSTART) {
         update_timeperiods_cache(time(0));
         start_threads();
     }
+    return 0;
 }
 
 int verify_event_broker_options()
@@ -611,7 +625,7 @@ void omd_advertize()
 
 
 /* this function gets called when the module is loaded by the event broker */
-int nebmodule_init(int flags, char *args, void *handle) 
+int nebmodule_init(int flags __attribute__ ((__unused__)), char *args, void *handle) 
 {
     g_nagios_handle = handle;
     livestatus_parse_arguments(args);
@@ -647,12 +661,13 @@ int nebmodule_init(int flags, char *args, void *handle)
 }
 
 
-int nebmodule_deinit(int flags, int reason)
+int nebmodule_deinit(int flags __attribute__ ((__unused__)), int reason __attribute__ ((__unused__)))
 {
     logger(LG_INFO, "deinitializing");
     terminate_threads();
     close_unix_socket();
     store_deinit();
     deregister_callbacks();
+    return 0;
 }
 

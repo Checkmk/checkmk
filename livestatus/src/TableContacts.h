@@ -33,7 +33,7 @@ class TableContacts : public Table
 {
 public:
   TableContacts();
-  const char *name() { return "contacts"; };
+  const char *name() { return "contacts"; }
   void *findObject(char *objectspec);
   void addColumns(Table *, string prefix, int indirect_offset);
   void answerQuery(Query *query);

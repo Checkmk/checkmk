@@ -41,7 +41,7 @@ class HostlistColumnFilter : public Filter
 
 public:
    HostlistColumnFilter(HostlistColumn *column, int opid, char *refvalue)
-      : _hostlist_column(column), _opid(opid), _ref_value(refvalue) {};
+      : _hostlist_column(column), _opid(opid), _ref_value(refvalue) {}
    bool accepts(void *data);
 };
 

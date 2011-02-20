@@ -44,7 +44,7 @@ int pnpgraph_present(char *host, char *service)
         return -1;
 
     char path[4096];
-    int needed_size = strlen(g_pnp_path) + strlen(host) + 16;
+    size_t needed_size = strlen(g_pnp_path) + strlen(host) + 16;
     if (service)
         needed_size += strlen(service);
     if (needed_size > sizeof(path))

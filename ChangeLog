@@ -29,6 +29,9 @@
       mode (such as host or service detail)
     * FIX: fix PNP icon in cases where host and service icons are displayed in 
       same view (found by Wolfgang Barth)
+
+    Livestatus:
+    * FIX: fix most compiler warnings (thanks to patch by Sami Kerola)
     
 1.1.9i8:
     Multisite:

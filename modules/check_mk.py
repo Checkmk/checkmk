@@ -617,7 +617,7 @@ def get_single_oid(hostname, ipaddress, oid):
             return None
 
     command = snmp_get_command(hostname) + \
-         " -On -OQ -Oe %s %s 2>/dev/null" % (ipaddress, oid)
+         " -On -OQ -Oe -Ot %s %s 2>/dev/null" % (ipaddress, oid)
     try:
         if opt_debug:
             sys.stdout.write("Running '%s'\n" % command)
@@ -2710,7 +2710,7 @@ def do_snmpwalk_on(hostname, filename):
     if opt_verbose:
         sys.stdout.write("%s:\n" % hostname)
     ip = lookup_ipaddress(hostname)
-    cmd = snmp_walk_command(hostname) + " -On -Ob -OQ %s " % ip
+    cmd = snmp_walk_command(hostname) + " -On -Ob -OQ -Ot %s " % ip
     if opt_debug:
         print 'Executing: %s' % cmd
     out = file(filename, "w")

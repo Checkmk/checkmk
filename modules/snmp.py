@@ -113,7 +113,7 @@ def get_snmp_explicit(hostname, ipaddress, mib, baseoid, suffixes):
 
 def snmpwalk_on_suboid(hostname, ip, oid):
     command = snmp_walk_command(hostname) + \
-             " -OQ -OU -On %s %s 2>/dev/null" % (ip, oid)
+             " -OQ -OU -On -Ot %s %s 2>/dev/null" % (ip, oid)
     if opt_debug:
         sys.stderr.write('   Running %s\n' % (command,))
     snmp_process = os.popen(command, "r").xreadlines()

@@ -25,12 +25,18 @@ description:
  precise predection and a simpler implementation, which does not need any
  access to any RRDs or similar storage.
 
- Please note that after an update to {1.1.9i1} the output of the performance
+ Please note, that when a filesystem is started being monitored, then
+ the trend of the past is unknown and will be assumed to be {zero}. That means
+ that it will take at least one trend range of time until the trend approximately
+ reflects the reality.
+
+ Please note that after an update to {1.1.9i9} the output of the performance
  data is not compatible with older versions any longer since it outputs two
  additional values.  If you use PNP in {MULTIPLE} mode then this should not be
  a problem.  If you use PNP in {SINGLE} mode - which still is the default
  - then you either have to {(1)} delete your RRD files beginning with {fs_}
- or {(2)} switch off trend computing by setting {filesystem_default_levels["trend_rangE"] = None}.
+ or {(2)} switch off trend computing by setting 
+ {filesystem_default_levels["trend_range"] = None}.
 
 item:
  The mount point of the filesystem (UNIX) or the drive

@@ -3756,13 +3756,20 @@ def do_automation(cmd, args):
 def all_nonfunction_vars():
     return set([ name for name,value in globals().items() if name[0] != '_' and type(value) != type(lambda:0) ])
 
-vars_before_config = all_nonfunction_vars()
 
 
-list_of_files = [ check_mk_configfile ] + glob.glob(check_mk_configdir + '/*.mk')
+# Create list of all files to be included
+list_of_files = glob.glob(check_mk_configdir + '/*.mk')
+list_of_files.sort()
+list_of_files = [ check_mk_configfile ] + list_of_files
 final_mk = check_mk_basedir + "/final.mk"
 if os.path.exists(final_mk):
     list_of_files.append(final_mk)
+local_mk = check_mk_basedir + "/local.mk"
+if os.path.exists(local_mk):
+    list_of_files.append(local_mk)
+
+vars_before_config = all_nonfunction_vars()
 for _f in list_of_files:
     # Hack: during parent scan mode we must not read in old version of parents.mk!
     if '--scan-parents' in sys.argv and _f.endswith("/parents.mk"):
@@ -3840,7 +3847,7 @@ if __name__ == "__main__":
     checks = autochecks + checks
 
 vars_after_config = all_nonfunction_vars()
-ignored_variables = set(['vars_before_config', 'rrdtool', 'final_mk', 'list_of_files', 'autochecks',
+ignored_variables = set(['vars_before_config', 'rrdtool', 'autochecks',
                           'parts' ,'hosttags' ,'seen_hostnames' ,'all_hosts_untagged' ,'taggedhost' ,'hostname'])
 errors = 0
 for name in vars_after_config:

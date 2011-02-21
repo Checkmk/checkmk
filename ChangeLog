@@ -12,6 +12,9 @@
     * FIX: read *.include files before checks. Fixes df_netapp not finding
       its check function
     * FIX: inventory checks on SNMP+TCP hosts ignored new TCP checks
+    * local.mk: This file is read after final.mk and *not* backup up
+      or restored
+    * read all files in conf.d/*.mk in alphabetical order now.
 
     Checks & Agents:
     * ucd_cpu_load: new check for CPU load via UCD SNMP agent

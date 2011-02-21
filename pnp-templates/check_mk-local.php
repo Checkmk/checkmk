@@ -23,19 +23,26 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-$x = getcwd();
-
 // try to find template matching a prefix of the service
 // description first. Slashes are replaced by underscores.
+$template_dirs = array('.');
+if (isset($this->config->conf['template_dirs'])) {
+	$template_dirs = $this->config->conf['template_dirs'];
+}
 $descr = str_replace("/", "_", $servicedesc);
-$found = 0;
-for ($i = strlen($descr); $i > 0; $i--)
-{
-   $tryname = 'templates/'.substr($descr, 0, $i) . ".php";
-   if (file_exists($tryname) && include($tryname)) {
-      $found = 1;
-      break;
-   }      
+foreach ($template_dirs as $template_dir) {
+  $found = 0;
+  for ($i = strlen($descr); $i > 0; $i--)
+  {
+     $tryname = $template_dir . '/' . substr($descr, 0, $i) . '.php';
+     if (file_exists($tryname) && include($tryname)) {
+        $found = 1;
+        break;
+     }
+  }
+  if ($found) {
+     break;
+  }
 }
 
 if (!$found) {

@@ -22,7 +22,9 @@
       trends. Please look at check manpage of df for details.
     * FIX: heartbeat_nodes: Fixed error handling when node is active but at least one link is dead
     * 3ware_units: Handling INITIALIZING state as warning now
-    * 3ware_units: Better handling of outputs from different tw_cli versions now
+    * FIX: 3ware_units: Better handling of outputs from different tw_cli versions now
+    * FIX: local: PNP template for local now looks in all template directories for
+      specific templates (thanks to Patrick Schaaf)
 
     Multisite:
     * FIX: fix "too many values to unpack" when editing views in single layout

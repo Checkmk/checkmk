@@ -425,12 +425,12 @@ def mode_inventory(phase, firsttime):
                 elif (html.has_var("_activate_all") or html.has_var("_fixall")) and st == "new":
                     active_checks[(ct, item)] = paramstring
                 else:
-                    varname = ("_%s_%s" % (ct, item)).replace(' ', '+')
+                    varname = "_%s_%s" % (ct, item)
                     if html.var(varname, "") != "":
                         active_checks[(ct, item)] = paramstring
 
             check_mk_automation("set-autochecks", [hostname], active_checks)
-            message = "Saved check configuration of host [%s] with %d checks" % (hostname, len(active_checks)) 
+            message = "Saved check configuration of host [%s] with %d services" % (hostname, len(active_checks)) 
             log_pending(hostname, "set-autochecks", message) 
             return new_target, message
         return "index"

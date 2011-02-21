@@ -51,6 +51,7 @@ def read_get_vars(req):
     def parse_vars(vars):
         req.rawvars = util.parse_qs(vars, True)
         for (key,values) in req.rawvars.items():
+            key = htmllib.urldecode(key)
             if len(values) >= 1:
                 req.vars[key] = values[-1]
                 req.multivars[key] = values

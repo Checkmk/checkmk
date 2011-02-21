@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import time, cgi, config, os, defaults, pwd
+import time, cgi, config, os, defaults, pwd, urllib
 from lib import *
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
@@ -97,6 +97,9 @@ def urlencode(value):
             c = "%%%02x" % ord(c)
         ret += c
     return ret
+
+def urldecode(value):
+    return urllib.unquote_plus(value)
 
 def u8(c):
     if ord(c) > 127:

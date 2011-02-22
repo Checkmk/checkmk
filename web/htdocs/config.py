@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import os, pprint
+import os, pprint, glob
 from lib import *
 import defaults
 
@@ -34,6 +34,9 @@ try:
     set()
 except NameError:
     from sets import Set as set
+
+user = None
+role = None
 
 # Base directory of dynamic configuration
 config_dir = defaults.var_dir + "/web"
@@ -81,6 +84,13 @@ def load_config():
     global last_time_modified
     last_time_modified = 0
     include("multisite.mk")
+    # Load also all files below multisite.d
+    conf_dir = defaults.default_config_dir + "/multisite.d"
+    if os.path.isdir(conf_dir):
+        filelist = glob.glob(conf_dir + "/*.mk")
+        filelist.sort()
+        for p in filelist:
+            include(p)
 
 
 # -------------------------------------------------------------------

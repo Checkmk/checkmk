@@ -83,7 +83,8 @@ def urlencode_vars(vars):
         
         output += varname
         output += "="
-        output += urlencode(value)
+        # output += urlencode(value)
+        output += urllib.quote(value)
     return output
 
 def urlencode(value):
@@ -110,6 +111,10 @@ def u8(c):
 def utf8_to_entities(text):
     if type(text) != unicode:
         return text
+    else:
+        return text.encode("utf-8")
+
+    # Old code is soooooooo slow...
     n = ""
     for c in text:
         n += u8(c)

@@ -664,6 +664,7 @@ do
 	   if [ ! -e $DESTDIR$confdir/multisite.mk ] ; then
 	      cp $DESTDIR$confdir/multisite.mk-$VERSION $DESTDIR$confdir/multisite.mk
            fi &&
+           mkdir -p $DESTDIR$confdir/multisite.d &&
 	   mkdir -p $DESTDIR$confdir/conf.d &&
 	   echo 'All files in this directory that end with .mk will be read in after main.mk' > $DESTDIR$confdir/conf.d/README &&
 	   if [ ! -d $DESTDIR$rrddir ] ; then

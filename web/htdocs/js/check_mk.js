@@ -479,7 +479,7 @@ function handleReload(url) {
 function toggle_subtree(oName) 
 {
     var oParent = oName.parentNode;
-    var oSubtree = oParent.childNodes[3];
+    var oSubtree = oParent.childNodes[5];
 
     if (oSubtree.style.display == "none") {
         oSubtree.style.display = "";

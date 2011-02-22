@@ -1173,7 +1173,8 @@ div.really h1, div.success h1, div.error h1, div.message h1, div.warning h1 {
      font-size: 12pt;
      font-weight: bold;
      margin-bottom: 5px;
-color: black;
+     color: black;
+     margin-left: 0px;
 }
 
 div.really { 
@@ -1785,44 +1786,53 @@ div.wato {
     
 */
 
-div.aggr div.tree {
-    padding: 1px 0px;
+.aggrtree ul.title {
+    padding-left: 0px;
+    margin-top: 2px;
+    margin-bottom: 0px;
 }
 
-div.aggr div.state {
-    margin-right: 4px;
+.aggrtree ul.subtree {
+    padding-left: 32px;
+    padding-top: 0px;
+    list-style-type: none;
+    border-top: 1px solid #ccc;
+    margin-top: 4px;
+}
+
+.aggrtree ul.subtree li {
+    padding-top: 2px;
+}
+
+.aggrtree div.state {
+    margin-right: 3px;
     width: 30px;
     text-align: center;
     -moz-border-radius: 3px;
     border-style: solid;
     border-width: 1px;
     border-color: #eee #888 #999 #ccc;
+    float: left;
+    font-weight: bold;
+}
+
+.aggrtree img.assumption {
+    width: 13px;
+    height: 13px;
+    margin: 0px;
+    margin-right: 0px;
+    border-style: none;
+    vertical-align: middle;
+}
+
+.aggrtree b.bullet {
+    color: #aaa;
+    margin: 0px 5px;
 }
 
 .state.assumed {
     background-image: url("images/assumption_background.png");
     background-repeat: repeat;
-    /* background-position: center middle; */
-}
-
-div.aggr div.leaf {
-    padding: 1px 0px;
-}
-
-div.aggr div.subtree {
-    padding-left: 30px;
-}
-
-div.aggr {
-    float: none;
-}
-
-div.aggr img.assumption {
-    width: 13px;
-    height: 13px;
-    margin: 0px;
-    margin-right: 3px;
-    border-style: none;
 }
 
 table.services td.aggrtree {
@@ -1836,7 +1846,6 @@ table.aggrtree {
 table.aggrtree td.leaf.odd {
     background-color: #e0e0e0;
 }
-
 table.aggrtree td.leaf.even {
     background-color: #f0f0f0;
 }

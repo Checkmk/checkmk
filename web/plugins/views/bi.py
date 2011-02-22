@@ -120,22 +120,21 @@ def render_assume_icon(site, host, service):
        'onclick="toggle_assumption(this, %s, %s, %s);" ' % \
          (repr(site), repr(str(host)), service == None and 'null' or repr(str(service)))
     current = str(ass).lower()
-    return '<img state="%s" class=assumption %s src="images/assume_%s.png">' % (current, mousecode, current)
+    return '<img state="%s" class=assumption %s src="images/assume_%s.png">\n' % (current, mousecode, current)
 
 def aggr_render_leaf(tree):
     site, host = tree[4][0]
     service = tree[2]
     content = render_assume_icon(site, host, service) 
-    # site fehlt!
     if service:
         url = html.makeuri([("view_name", "service"), ("site", site), ("host", host), ("service", service)])
     else:
         url = html.makeuri([("view_name", "hoststatus"), ("site", site), ("host", host)])
         service = "Host status"
-    content += '<a href="%s">%s</a>' % (url, service)
-    return '<div class="aggr leaf">' + aggr_render_node(tree, content, "") + '</div>'
+    descr = '<a href="%s">%s</a>' % (url, service)
+    return content + aggr_render_node(tree, descr)
 
-def aggr_render_node(tree, title, mousecode):
+def aggr_render_node(tree, title, mousecode = None):
     state = tree[0]
     assumed_state = tree[1]
     if assumed_state != None:
@@ -147,32 +146,35 @@ def aggr_render_node(tree, title, mousecode):
         addclass = " assumed"
     else:
         addclass = ""
-    h = '<div style="float: left" class="content state state%d%s">%s</div>' \
+    h = '<div class="content state state%d%s">%s</div>\n' \
          % (effective_state, addclass, render_bi_state(effective_state))
-    h += '<div style="float: left;" %s class="content name">%s</div>' % (mousecode, title)
+    if mousecode:
+        h += '<span %s class="content name">%s</span>' % (mousecode, title)
+    else:
+        h += title
     output = tree[3]
     if output:
-        output = "&nbsp;&diams; " + output
+        output = "<b class=bullet>&diams;</b>" + output
     else:
-        output = "&nbsp;"
-    h += '<div class="content output">%s</div>' % output
+        output = ""
+    h += '<span class="content output">%s</span>\n' % output
     return h
 
 
 def paint_aggr_tree_foldable(row):
     only_problems = get_painter_option("aggr_onlyproblems") == "1"
 
+    mousecode = \
+       'onmouseover="this.style.cursor=\'pointer\';" ' \
+       'onmouseout="this.style.cursor=\'auto\';" ' \
+       'onclick="toggle_subtree(this);" '
+
     def render_subtree(tree, level=1):
         nodes = tree[6]
-        is_leaf = nodes == None
-        if is_leaf:
+        if nodes == None:
             return aggr_render_leaf(tree)
         else:
-            mousecode = \
-               'onmouseover="this.style.cursor=\'pointer\';" ' \
-               'onmouseout="this.style.cursor=\'auto\';" ' \
-               'onclick="toggle_subtree(this);" '
-            h = '<div class="aggr tree">'
+            h = '<ul class=title>'
             h += aggr_render_node(tree, tree[2], mousecode)
 
             expansion_level = int(get_painter_option("aggr_expand"))
@@ -180,12 +182,13 @@ def paint_aggr_tree_foldable(row):
                 style = 'style="display: none" '
             else:
                 style = ''
-            h += '<div %sclass="subtree">' % style
+            h += '<ul %sclass="subtree">' % style
+
             for node in tree[6]:
                 if only_problems and node[0] == 0:
                     continue
-                h += render_subtree(node, level + 1)
-            return h + '</div></div>'
+                h += '<li>' + render_subtree(node, level + 1) + '</li>\n'
+            return h + '</ul></ul>\n'
 
     tree = row["aggr_treestate"]
     return "aggrtree", render_subtree(tree)

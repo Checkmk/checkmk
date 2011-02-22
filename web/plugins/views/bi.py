@@ -191,7 +191,8 @@ def paint_aggr_tree_foldable(row):
             return h + '</ul></ul>\n'
 
     tree = row["aggr_treestate"]
-    return "aggrtree", render_subtree(tree)
+    htmlcode = render_subtree(tree)
+    return "aggrtree", htmlcode
 
 
 def paint_aggr_tree_ltr(row, mirror):

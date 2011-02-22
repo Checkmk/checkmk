@@ -3,6 +3,7 @@
 
 import config, re, pprint, time
 from lib import *
+import views
 
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
@@ -94,8 +95,15 @@ def compile_forest():
     g_host_aggregations = {}
 
     load_services()
-    for group, rulename, args in config.aggregations:
+    for entry in config.aggregations:
+        if len(entry) != 3 or type(entry[2]) != list:
+            raise MKConfigError("<h1>Invalid aggregation <tt>%s</tt></h1>"
+                    "must have 3 entries (has %d), last entry must be list (is %s)" % (
+                        (entry, len(entry), len(entry) > 2 and type(entry[2]) or None)))
+        
+        group, rulename, args = entry
         args = compile_args(args)
+        
         if rulename not in config.aggregation_rules:
             raise MKConfigError("<h1>Invalid configuration in variable <tt>aggregations</tt></h1>"
                     "There is no rule named <tt>%s</tt>. Available are: <tt>%s</tt>" % 
@@ -335,11 +343,11 @@ def aggregate_leaf_node(arginfo, host, service):
         # If host ends with '|@all', we need to check host tags instead
         # of regexes.
         if host_re_stripped.endswith('|@all'):
-            if not match_host_tags(host_re[:-5], tags):
+            if not match_host_tags(host_re_stripped[:-5], tags):
                 continue
             host_instargs = []
-        elif host_re.endswith('|@all)'):
-            if not match_host_tags(host_re[1:-6], tags):
+        elif host_re_stripped.endswith('|@all)'):
+            if not match_host_tags(host_re_stripped[1:-6], tags):
                  continue
             host_instargs = [ hostname ]
         elif host_re_stripped == '@all':
@@ -350,17 +358,19 @@ def aggregate_leaf_node(arginfo, host, service):
             # For regex to have '$' anchor for end. Users might be surprised
             # to get a prefix match on host names. This is almost never what
             # they want. For services this is useful, however.
-            if not host_re.endswith("$"):
-                host_re += "$"
+            if host_re.endswith("$"):
+                anchored = host_re
+            else:
+                anchored = host_re + "$"
 
             # In order to distinguish hosts with the same name on different
             # sites we prepend the site to the host name. If the host specification
             # does not contain the site separator - though - we ignore the site
             # an match the rule for all sites.
             if honor_site:
-                host_instargs = do_match(host_re, "%s%s%s" % (site, SITE_SEP, hostname))
+                host_instargs = do_match(anchored, "%s%s%s" % (site, SITE_SEP, hostname))
             else:
-                host_instargs = do_match(host_re, hostname)
+                host_instargs = do_match(anchored, hostname)
 
         if host_instargs != None:
             if service == None:
@@ -691,6 +701,8 @@ def host_table(h, columns, add_headers, only_sites, limit, filters):
 
     host_columns = filter(lambda c: c.startswith("host_"), columns)
     hostrows = get_status_info_filtered(filter_code, only_sites, limit, host_columns)
+    if limit:
+        views.check_limit(hostrows, limit)
 
     rows = []
     # Now compute aggregations of these hosts

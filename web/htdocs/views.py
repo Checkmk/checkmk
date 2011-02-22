@@ -939,6 +939,17 @@ def page_view(h):
 
     show_view(view, True, True, True)
 
+def check_limit(rows, limit):
+    count = len(rows)
+    if limit != None and count == limit + 1:
+        text = "Your query produced more then %d results. " % limit
+        if html.var("limit", "soft") == "soft" and config.may("ignore_soft_limit"):
+            text += '<a href="%s">Repeat query and allow more results.</a>' % html.makeuri([("limit", "hard")])
+        elif html.var("limit") == "hard" and config.may("ignore_hard_limit"):
+            text += '<a href="%s">Repeat query without limit.</a>' % html.makeuri([("limit", "none")])
+        html.show_warning(text)
+        del rows[-1]
+
 # Display view with real data. This is *the* function everying
 # is about.
 def show_view(view, show_heading = False, show_buttons = True, show_footer = True):
@@ -1180,16 +1191,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
 
     if not has_done_actions:
         # Limit exceeded? Show warning
-        count = len(rows)
-        limit = get_limit()
-        if limit != None and count == limit + 1:
-            text = "Your query produced more then %d results. " % limit
-            if html.var("limit", "soft") == "soft" and config.may("ignore_soft_limit"):
-                text += '<a href="%s">Repeat query and allow more results.</a>' % html.makeuri([("limit", "hard")])
-            elif html.var("limit") == "hard" and config.may("ignore_hard_limit"):
-                text += '<a href="%s">Repeat query without limit.</a>' % html.makeuri([("limit", "none")])
-            html.show_warning(text)
-            del rows[-1]
+        check_limit(rows, get_limit())
         layout["render"](rows, view, group_painters, painters, num_columns)
 
         # Play alarm sounds, if critical events have been displayed

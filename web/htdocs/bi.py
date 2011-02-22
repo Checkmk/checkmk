@@ -46,6 +46,7 @@ SITE_SEP = '#'
 
 # global variables
 g_aggregation_forest = None
+g_host_aggregations = None # aggregations with exactly one host
 g_config_information = None
 g_services = None
 
@@ -89,6 +90,8 @@ def compile_forest():
 
     global g_aggregation_forest
     g_aggregation_forest = {}
+    global g_host_aggregations
+    g_host_aggregations = {}
 
     load_services()
     for group, rulename, args in config.aggregations:
@@ -98,10 +101,21 @@ def compile_forest():
                     "There is no rule named <tt>%s</tt>. Available are: <tt>%s</tt>" % 
                     (rulename, "</tt>, </tt>".join(config.aggregation_rules.keys())))
         rule = config.aggregation_rules[rulename]
+
         # Compute new trees and add them to group
+        new_entries = compile_aggregation(rule, args)
         entries = g_aggregation_forest.get(group, [])
-        entries += compile_aggregation(rule, args)
+        entries += new_entries
         g_aggregation_forest[group] = entries
+
+        # Update global index for one-host-only aggregations
+        for entry in new_entries:
+            req_hosts = entry[1][0]
+            if len(req_hosts) == 1:
+                host = req_hosts[0] # pair of (site, host)
+                entries = g_host_aggregations.get(host, [])
+                entries.append((group, entry[1]))
+                g_host_aggregations[host] = entries
 
     global g_config_information
     g_config_information = new_config_information
@@ -158,8 +172,17 @@ def compile_aggregation(rule, args):
                 "Aggregation rules must contain four elements: description, argument list, "
                 "aggregation function and list of nodes. Your rule has %d elements: "
                 "<pre>%s</pre>" % (len(rule),pprint.pformat(rule)))
+
     description, arglist, funcname, nodes = rule
+
+    # check arguments and convert into dictionary
+    if len(arglist) != len(args):
+        raise MKConfigError("<h1>Invalid rule usage</h1>"
+                "The rule '%s' needs %d arguments: <tt>%s</tt><br>"
+                "You've specified %d arguments: <tt>%s</tt>" % (
+                    description, len(arglist), repr(arglist), len(args), repr(args)))
     arginfo = make_arginfo(arglist, args)
+
     elements = []
     for node in nodes:
         # Each node can return more than one incarnation (due to regexes in 
@@ -302,19 +325,34 @@ def aggregate_leaf_node(arginfo, host, service):
 
     found = []
 
+    # strip ( ) of re - needed for host tags
+    host_re_stripped = host_re
+    while host_re_stripped.startswith("((") and host_re_stripped.endswith("))"):
+        host_re_stripped = host_re_stripped[1:-1]
+
     honor_site = SITE_SEP in host_re
     for (site, hostname), (tags, services) in g_services.items():
         # If host ends with '|@all', we need to check host tags instead
         # of regexes.
-        if host_re.endswith('|@all'):
+        if host_re_stripped.endswith('|@all'):
             if not match_host_tags(host_re[:-5], tags):
                 continue
             host_instargs = []
         elif host_re.endswith('|@all)'):
             if not match_host_tags(host_re[1:-6], tags):
-                continue
+                 continue
+            host_instargs = [ hostname ]
+        elif host_re_stripped == '@all':
+            host_instargs = []
+        elif host_re_stripped == '(@all)':
             host_instargs = [ hostname ]
         else:
+            # For regex to have '$' anchor for end. Users might be surprised
+            # to get a prefix match on host names. This is almost never what
+            # they want. For services this is useful, however.
+            if not host_re.endswith("$"):
+                host_re += "$"
+
             # In order to distinguish hosts with the same name on different
             # sites we prepend the site to the host name. If the host specification
             # does not contain the site separator - though - we ignore the site
@@ -336,6 +374,7 @@ def aggregate_leaf_node(arginfo, host, service):
                         newarg.update(dict(zip(service_vars, svc_instargs)))
                         found.append((newarg, ([(site, hostname)], (site, hostname), service)))
 
+    found.sort()
     return found
 
 regex_cache = {}
@@ -387,12 +426,34 @@ def get_status_info(required_hosts):
 
     return dict(tuples)
 
+# This variant of the function is configured not with a list of
+# hosts but with a livestatus filter header and a list of columns
+# that need to be fetched in any case
+def get_status_info_filtered(filter_header, only_sites, limit, add_columns):
+    columns = [ "name", "state", "plugin_output", "services_with_info" ] + add_columns
+
+    if limit != None:
+        html.live.set_limit(limit + 1) # + 1: We need to know, if limit is exceeded
+    html.live.set_only_sites(only_sites)
+    html.live.set_prepend_site(True)
+    data = html.live.query(
+            "GET hosts\n" +
+            "Columns: " + (" ".join(columns)) + "\n" +
+            filter_header)
+    html.live.set_prepend_site(False)
+    html.live.set_only_sites(None)
+    html.live.set_limit()
+
+    headers = [ "site" ] + columns
+    rows = [ dict(zip(headers, row)) for row in data]
+    return rows
 
 # Execution of the trees. Returns a tree object reflecting
 # the states of all nodes
-def execute_tree(tree):
-    required_hosts = tree[0]
-    status_info = get_status_info(required_hosts)
+def execute_tree(tree, status_info = None):
+    if status_info == None:
+        required_hosts = tree[0]
+        status_info = get_status_info(required_hosts)
     return execute_node(tree, status_info)
 
 def execute_node(node, status_info):
@@ -565,8 +626,8 @@ def ajax_set_assumption(h):
 #   |____/ \__,_|\__\__,_|___/\___/ \__,_|_|  \___\___||___/
 #                                                           
 
-def create_aggregation_row(tree):
-    state = execute_tree(tree)
+def create_aggregation_row(tree, status_info = None):
+    state = execute_tree(tree, status_info)
     eff_state = state[0]
     if state[1] != None:
         eff_state = state[1]
@@ -612,74 +673,36 @@ def table(h, columns, add_headers, only_sites, limit, filters):
     return rows
         
 
+# Table of all host aggregations, i.e. aggregations using data from exactly one host
 def host_table(h, columns, add_headers, only_sites, limit, filters):
     global html
     html = h
     compile_forest()
     load_assumptions() # user specific, always loaded
-    # Hier müsste man jetzt die Filter kennen, damit man nicht sinnlos
-    # alle Aggregationen berechnet.
 
-    # First compute list of hosts that have aggregations
-    required_hosts = {}
-    host_aggregations = {}
-    for group, trees in g_aggregation_forest.items():
-        for inst_args, tree in trees:
-            req_hosts = tree[0]
-            if len(req_hosts) != 1:
-                continue
-            site, host = req_hosts[0]
-            hosts = required_hosts.get(site, None)
-            if hosts != None:
-                hosts.append(host)
-            else:
-                required_hosts[site] = [host]
-            aggrs = host_aggregations.get((site, host), [])
-            aggrs.append((group, tree))
-            host_aggregations[(site, host)] = aggrs
+    # Create livestatus filter for filtering out hosts. We can
+    # simply use all those filters since we have a 1:n mapping between
+    # hosts and host aggregations
+    filter_code = ""
+    for filt in filters: 
+        header = filt.filter("bi_host_aggregations")
+        if not header.startswith("Sites:"):
+            filter_code += header
 
-    # Retrieve information about these hosts
     host_columns = filter(lambda c: c.startswith("host_"), columns)
-    if "host_name" not in host_columns:
-        host_columns.append("host_name")
+    hostrows = get_status_info_filtered(filter_code, only_sites, limit, host_columns)
 
     rows = []
-    for site, hosts in required_hosts.iteritems():
-        # Skip deselected sites
-        if only_sites and site not in only_sites:
-            continue
-
-        query = "GET hosts\n"
-        query += "Columns: %s\n" % " ".join(host_columns)
-
-        # Fetch only hosts required for this query. This seems not
-        # yet optimal. In some cases all or almost all hosts are
-        # queried...
-        for host in hosts:
-            query += "Filter: name = %s\n" % host
-        if len(required_hosts) > 1:
-            query += "Or: %d\n" % len(hosts)
-
-        query += add_headers
-        html.live.set_only_sites([site])
-        if limit != None:
-            html.live.set_limit(limit + 1) # + 1: We need to know, if limit is exceeded
-        if only_sites:
-            html.live.set_only_sites(only_sites)
-
-        host_data = html.live.query(query)
-        for r in host_data:
-            row = dict(zip(host_columns, r))
-            row['site'] = site
-            host = row["host_name"]
-            for group, tree in host_aggregations.get((site, host), []):
-                row = row.copy()
-                row.update(create_aggregation_row(tree))
-                row["aggr_group"] = group
-                rows.append(row)
-
-    html.live.set_only_sites(None)
-    html.live.set_limit() # removes limit
+    # Now compute aggregations of these hosts
+    for hostrow in hostrows:
+        site = hostrow["site"]
+        host = hostrow["name"]
+        status_info = { (site, host) : [ hostrow["state"], hostrow["plugin_output"], hostrow["services_with_info"] ] }
+        for group, aggregation in g_host_aggregations.get((site, host), []):
+            row = hostrow.copy()
+            row.update(create_aggregation_row(aggregation, status_info))
+            row["aggr_group"] = group
+            rows.append(row)
 
     return rows
 

@@ -1793,13 +1793,23 @@ div.wato {
 }
 
 .aggrtree ul.subtree {
-    padding-left: 32px;
+    margin-left: 34px;
+    padding-bottom: 4px;
+    padding-left: 3px;
     padding-top: 0px;
-    list-style-type: none;
-    border-top: 1px solid #ccc;
     margin-top: 4px;
+    list-style-type: none;
+    border-top: 1px solid #aaa;
+    border-bottom: 1px solid #aaa;
+    border-left: 1px solid #aaa;
 }
 
+tr.odd0 .aggrtree ul.subtree {
+    border-color: #ccc;
+}
+tr.even0 .aggrtree ul.subtree {
+    border-color: #aaa;
+}
 .aggrtree ul.subtree li {
     padding-top: 2px;
 }

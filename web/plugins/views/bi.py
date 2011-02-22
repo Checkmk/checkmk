@@ -70,7 +70,7 @@ multisite_painters["aggr_output"] = {
 def paint_aggr_hosts(row):
     h = []
     for site, host in row["aggr_hosts"]:
-        url = html.makeuri([("view_name", "host"), ("site", site), ("host", host)])
+        url = html.makeuri([("view_name", "aggrhost"), ("site", site), ("host", host)])
         h.append('<a href="%s">%s</a>' % (url, host))
     return "", " ".join(h)
 

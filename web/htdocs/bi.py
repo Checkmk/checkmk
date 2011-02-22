@@ -33,6 +33,8 @@ CRIT = 2
 UNKNOWN = 3
 UNAVAIL = 4
 
+# character that separates sites and hosts
+SITE_SEP = '#'
 
 
 #      ____                      _ _       _   _             
@@ -91,6 +93,10 @@ def compile_forest():
     load_services()
     for group, rulename, args in config.aggregations:
         args = compile_args(args)
+        if rulename not in config.aggregation_rules:
+            raise MKConfigError("<h1>Invalid configuration in variable <tt>aggregations</tt></h1>"
+                    "There is no rule named <tt>%s</tt>. Available are: <tt>%s</tt>" % 
+                    (rulename, "</tt>, </tt>".join(config.aggregation_rules.keys())))
         rule = config.aggregation_rules[rulename]
         # Compute new trees and add them to group
         entries = g_aggregation_forest.get(group, [])
@@ -147,6 +153,11 @@ def make_arginfo(arglist, args):
 # Precompile one aggregation rule. This outputs a list of trees.
 # This function is called recursively.
 def compile_aggregation(rule, args):
+    if len(rule) != 4:
+        raise MKConfigError("<h1>Invalid aggregation rule</h1>"
+                "Aggregation rules must contain four elements: description, argument list, "
+                "aggregation function and list of nodes. Your rule has %d elements: "
+                "<pre>%s</pre>" % (len(rule),pprint.pformat(rule)))
     description, arglist, funcname, nodes = rule
     arginfo = make_arginfo(arglist, args)
     elements = []
@@ -291,6 +302,7 @@ def aggregate_leaf_node(arginfo, host, service):
 
     found = []
 
+    honor_site = SITE_SEP in host_re
     for (site, hostname), (tags, services) in g_services.items():
         # If host ends with '|@all', we need to check host tags instead
         # of regexes.
@@ -303,9 +315,14 @@ def aggregate_leaf_node(arginfo, host, service):
                 continue
             host_instargs = [ hostname ]
         else:
-            # in order to distinguish hosts with the same name on different
-            # sites by prepending the site and a colon to the host name
-            host_instargs = do_match(host_re, "%s:%s" % (site, hostname))
+            # In order to distinguish hosts with the same name on different
+            # sites we prepend the site to the host name. If the host specification
+            # does not contain the site separator - though - we ignore the site
+            # an match the rule for all sites.
+            if honor_site:
+                host_instargs = do_match(host_re, "%s%s%s" % (site, SITE_SEP, hostname))
+            else:
+                host_instargs = do_match(host_re, hostname)
 
         if host_instargs != None:
             if service == None:

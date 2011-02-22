@@ -80,6 +80,8 @@ def load_config():
     # in multisite.mk
     global debug
     debug = False
+    global profile
+    profile = False
 
     global last_time_modified
     last_time_modified = 0

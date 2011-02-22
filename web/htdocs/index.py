@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from mod_python import apache,util
+from mod_python import apache, util
 import sys, os, pprint
 from lib import *
 import livestatus
@@ -137,8 +137,7 @@ def connect_to_livestatus(html):
     # Default auth domain is read. Please set to None to switch off authorization
     html.live.set_auth_domain('read')
 
-
-def handler(req):
+def handler(req, profiling = True):
     req.content_type = "text/html; charset=UTF-8"
     req.header_sent = False
 
@@ -154,14 +153,27 @@ def handler(req):
 
     try:
         read_get_vars(req)
+        config.load_config() # load multisite.mk
+        if html.var("debug"): # Debug flag may be set via URL
+            config.debug = True
+
+        # profiling can be enabled in multisite.mk
+        if profiling and config.profile:
+            import cProfile # , pstats, sys, StringIO, tempfile
+            # the profiler looses the memory about all modules. We need to park
+            # the request object in the apache module. This seems to be persistent.
+            # Ubuntu: install python-profiler when using this feature
+            apache._profiling_req = req
+            profilefile = defaults.var_dir + "/web/multisite.profile"
+            retcode = cProfile.run("import index; from mod_python import apache; index.handler(apache._profiling_req, False)", profilefile)
+            file(profilefile + ".py", "w").write("#!/usr/bin/python\nimport pstats\nstats = pstats.Stats(%r)\nstats.sort_stats('time').print_stats()\n" % profilefile)
+            os.chmod(profilefile + ".py", 0755)
+            return apache.OK
+
 
         # Prepare output format
         output_format = html.var("output_format", "html")
         html.set_output_format(output_format)
-
-        config.load_config() # load multisite.mk
-        if html.var("debug"): # Debug flag may be set via URL
-            config.debug = True
 
         if not req.user or type(req.user) != str:
             raise MKConfigError("You are not logged in. This should never happen. Please "

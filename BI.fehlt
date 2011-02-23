@@ -1,4 +1,6 @@
 Performance:
+* Durch das rekursive doppelte laden von BI gehen scheinbar die persistenten
+  globalen Variablen kaputt und das compile_forest() wir immer neu aufgerufen.
 * Bei der Tabelle bi_aggregations gibt es Filter, die die Menge der Daten
   reduzieren, die man berechnen muss. Z.B. der Filter aggr_hosts, der die
   Aggregationen selektiert, die einen Host enthalten. Dazu gibt es bereits

@@ -1803,6 +1803,7 @@ div.wato {
     border-top: 1px solid #aaa;
     border-bottom: 1px solid #aaa;
     border-left: 1px solid #aaa;
+    -moz-border-radius: 3px;
 }
 
 tr.odd0 .aggrtree ul.subtree {
@@ -1812,7 +1813,8 @@ tr.even0 .aggrtree ul.subtree {
     border-color: #aaa;
 }
 .aggrtree ul.subtree li {
-    padding-top: 2px;
+    padding-top: 1px;
+    padding-bottom: 1px;
 }
 
 .aggrtree div.state {

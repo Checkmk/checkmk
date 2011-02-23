@@ -453,6 +453,7 @@ host_tags = []
 #              
 
 ALL_HOSTS = ['@all']
+HOST_STATE = '__HOST_STATE__'
 aggregation_rules = {}
 aggregations = []
 aggregation_functions = {}

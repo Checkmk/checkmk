@@ -205,7 +205,7 @@ def compile_aggregation(rule, args):
         raise MKConfigError("<h1>Invalid aggregation rule</h1>"
                 "Aggregation rules must contain four elements: description, argument list, "
                 "aggregation function and list of nodes. Your rule has %d elements: "
-                "<pre>%s</pre>" % (len(rule),pprint.pformat(rule)))
+                "<pre>%s</pre>" % (len(rule), pprint.pformat(rule)))
 
     description, arglist, funcname, nodes = rule
 
@@ -215,14 +215,15 @@ def compile_aggregation(rule, args):
                 "The rule '%s' needs %d arguments: <tt>%s</tt><br>"
                 "You've specified %d arguments: <tt>%s</tt>" % (
                     description, len(arglist), repr(arglist), len(args), repr(args)))
+
     arginfo = make_arginfo(arglist, args)
 
     elements = []
     for node in nodes:
         # Each node can return more than one incarnation (due to regexes in 
         # the arguments)
-        if node[1] == None or type(node[1]) == str: # leaf node
-            elements += aggregate_leaf_node(arginfo, node[0], node[1])
+        if node[1] == config.HOST_STATE or type(node[1]) == str: # leaf node
+            elements += compile_leaf_node(arginfo, node[0], node[1])
         else:
             rule = config.aggregation_rules[node[0]]
             instargs = compile_args([ instantiate(arg, arginfo)[0] for arg in node[1] ])
@@ -234,7 +235,8 @@ def compile_aggregation(rule, args):
     groups = {}
     single_names = [ varname for (varname, (expansion, value)) in arginfo.items() if expansion == SINGLE ]
     for instargs, node in elements:
-        key = tuple([ instargs[varname] for varname in single_names ])
+        # Honor that some variables might be unused and thus not contained in instargs
+        key = tuple([ instargs[varname] for varname in single_names if varname in instargs ])
         nodes = groups.get(key, [])
         nodes.append(node)
         groups[key] = nodes
@@ -351,10 +353,10 @@ def match_host_tags(host, tags):
             return False
     return True
 
-def aggregate_leaf_node(arginfo, host, service):
+def compile_leaf_node(arginfo, host, service):
     # replace placeholders in host and service with arg
     host_re, host_vars = instantiate(host, arginfo)
-    if service != None:
+    if service != config.HOST_STATE:
         service_re, service_vars = instantiate(service, arginfo)
 
     found = []
@@ -365,6 +367,8 @@ def aggregate_leaf_node(arginfo, host, service):
         host_re_stripped = host_re_stripped[1:-1]
 
     honor_site = SITE_SEP in host_re
+
+    # TODO: If we already know the host we deal with, we could avoid this loop
     for (site, hostname), (tags, services) in g_services.items():
         # If host ends with '|@all', we need to check host tags instead
         # of regexes.
@@ -399,9 +403,9 @@ def aggregate_leaf_node(arginfo, host, service):
                 host_instargs = do_match(anchored, hostname)
 
         if host_instargs != None:
-            if service == None:
+            if config.HOST_STATE in service_re:
                 newarg = dict(zip(host_vars, host_instargs))
-                found.append((newarg, ([(site, hostname)], (site, hostname), service)))
+                found.append((newarg, ([(site, hostname)], (site, hostname), config.HOST_STATE)))
             else:
                 for service in services:
                     svc_instargs = do_match(service_re, service)
@@ -511,7 +515,7 @@ def execute_leaf_node(node, status_info):
     host_state, host_output, service_state = status
     assumed_state = g_assumptions.get((site, host, service))
 
-    if service == None: # host state
+    if service == config.HOST_STATE:
         aggr_state = {0:OK, 1:CRIT, 2:UNKNOWN}[host_state]
         return (aggr_state, assumed_state, None, host_output)
 

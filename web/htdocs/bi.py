@@ -126,15 +126,18 @@ def compile_forest():
         for entry in new_entries:
             aggr = entry[1]
             req_hosts = aggr[0]
+
             if len(req_hosts) == 1:
                 host = req_hosts[0] # pair of (site, host)
                 entries = g_host_aggregations.get(host, [])
                 entries.append((group, aggr))
                 g_host_aggregations[host] = entries
+
             for h in req_hosts:
-                entries = g_affected_hosts.get(host, [])
+                entries = g_affected_hosts.get(h, [])
                 entries.append((group, aggr))
-                g_affected_hosts[host] = entries
+                g_affected_hosts[h] = entries
+
             services = find_all_leaves(aggr)
             for s in services: # triples of site, host, service
                 entries = g_affected_services.get(s, []) 

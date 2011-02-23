@@ -1,6 +1,15 @@
+Performance:
+* Bei der Tabelle bi_aggregations gibt es Filter, die die Menge der Daten
+  reduzieren, die man berechnen muss. Z.B. der Filter aggr_hosts, der die
+  Aggregationen selektiert, die einen Host enthalten. Dazu gibt es bereits
+  einen Index. Dieser muss genutzt werden, damit nicht alle Aggregationen
+  berechnet und erst danach gefiltert wird.
+
 Modi, untern denen eine Aggr berechnet werden kann:
 * mit/ohne Authuser
 * hard/soft states
+* mit 'force worst'
+* Downtimeanalyse (Downtime wie crit behandeln)
 
 Pending muss korrekt behandelt werden. Am einfachsten wäre ein
 eigener BI-Status dafür.
@@ -21,6 +30,8 @@ vereinfachen, dass - wenn die Aggregation sich nur auf einen
 Host bezieht - dieser implizit herangezogen wird?
 
 ----------------------------------------------------------------------------
+PHANTASIEN:
+
 FEATURE: Icon zum Assumen soll auch bei den normalen Icons erscheinen, wenn:
  * Überhaupt Aggregationen definiert sind (len(config.aggregations) > 0)
  * Man das Recht dazu hat, was zu assumen

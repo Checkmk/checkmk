@@ -47,7 +47,9 @@ SITE_SEP = '#'
 
 # global variables
 g_aggregation_forest = None
-g_host_aggregations = None # aggregations with exactly one host
+g_host_aggregations = None  # aggregations with exactly one host
+g_affected_hosts = None     # all aggregations affecting a host
+g_affected_services = None  # all aggregations affecting a service
 g_config_information = None
 g_services = None
 
@@ -93,6 +95,10 @@ def compile_forest():
     g_aggregation_forest = {}
     global g_host_aggregations
     g_host_aggregations = {}
+    global g_affected_hosts
+    g_affected_hosts = {}
+    global g_affected_services
+    g_affected_services = {}
 
     load_services()
     for entry in config.aggregations:
@@ -118,12 +124,22 @@ def compile_forest():
 
         # Update global index for one-host-only aggregations
         for entry in new_entries:
-            req_hosts = entry[1][0]
+            aggr = entry[1]
+            req_hosts = aggr[0]
             if len(req_hosts) == 1:
                 host = req_hosts[0] # pair of (site, host)
                 entries = g_host_aggregations.get(host, [])
-                entries.append((group, entry[1]))
+                entries.append((group, aggr))
                 g_host_aggregations[host] = entries
+            for h in req_hosts:
+                entries = g_affected_hosts.get(host, [])
+                entries.append((group, aggr))
+                g_affected_hosts[host] = entries
+            services = find_all_leaves(aggr)
+            for s in services: # triples of site, host, service
+                entries = g_affected_services.get(s, []) 
+                entries.append((group, entry))
+                g_affected_services[s] = entries
 
     global g_config_information
     g_config_information = new_config_information
@@ -170,6 +186,16 @@ def make_arginfo(arglist, args):
             raise MKConfigError("Invalid argument name %s. Must begin with 'a' or end with 's'." % name)
         arginfo[name] = (expansion, value)
     return arginfo
+
+def find_all_leaves(node):
+    if len(node) == 3:
+        required_hosts, (site, host), service = node 
+        return [ (site, host, service) ]
+    else:
+        entries = []
+        for n in node[3]:
+            entries += find_all_leaves(n)
+        return entries
 
 
 # Precompile one aggregation rule. This outputs a list of trees.
@@ -646,9 +672,9 @@ def create_aggregation_row(tree, status_info = None):
     return {
         "aggr_tree"            : tree,
         "aggr_treestate"       : state,
-        "aggr_state"           : state[0],
-        "aggr_assumed_state"   : state[1],
-        "aggr_effective_state" : eff_state,
+        "aggr_state"           : state[0],  # state disregarding assumptions
+        "aggr_assumed_state"   : state[1],  # is None, if no assumptions are done
+        "aggr_effective_state" : eff_state, # is assumed_state, if there are assumptions, else real state
         "aggr_name"            : state[2],
         "aggr_output"          : state[3],
         "aggr_hosts"           : state[4],
@@ -667,12 +693,28 @@ def table(h, columns, add_headers, only_sites, limit, filters):
     # must not compute any aggregations from other groups and filter 
     # later out again.
     only_group = None
+    only_service = None
     for filter in filters:
         if filter.name == "aggr_group":
             only_group = filter.selected_group()
-            break
+        elif filter.name == "aggr_service":
+            only_service = filter.service_spec()
 
-    for group, trees in g_aggregation_forest.items():
+    # TODO: Optimation of affected_hosts filter!
+
+    if only_service:
+        affected = g_affected_services.get(only_service)
+        by_groups = {}
+        for group, aggr in affected:
+            entries = by_groups.get(group, [])
+            entries.append(aggr)
+            by_groups[group] = entries
+        items = by_groups.items()
+
+    else:
+        items = g_aggregation_forest.items()
+
+    for group, trees in items:
         if only_group not in [ None, group ]:
             continue
 
@@ -747,4 +789,13 @@ def status_tree_depth(tree):
         for node in nodes:
             maxdepth = max(maxdepth, status_tree_depth(node))
         return maxdepth + 1
+
+def is_part_of_aggregation(h, what, site, host, service):
+    global html
+    html = h
+    compile_forest()
+    if what == "host":
+        return (site, host) in g_affected_hosts
+    else:
+        return (site, host, service) in g_affected_services
 

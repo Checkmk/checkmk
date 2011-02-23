@@ -355,9 +355,8 @@ def match_host_tags(host, tags):
 
 def compile_leaf_node(arginfo, host, service):
     # replace placeholders in host and service with arg
-    host_re, host_vars = instantiate(host, arginfo)
-    if service != config.HOST_STATE:
-        service_re, service_vars = instantiate(service, arginfo)
+    host_re, host_vars       = instantiate(host, arginfo)
+    service_re, service_vars = instantiate(service, arginfo)
 
     found = []
 

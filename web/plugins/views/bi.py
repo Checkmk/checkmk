@@ -1,5 +1,13 @@
 import bi
 
+#     ____        _                                          
+#    |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___ 
+#    | | | |/ _` | __/ _` / __|/ _ \| | | | '__/ __/ _ \/ __|
+#    | |_| | (_| | || (_| \__ \ (_) | |_| | | | (_|  __/\__ \
+#    |____/ \__,_|\__\__,_|___/\___/ \__,_|_|  \___\___||___/
+#                                                            
+
+
 multisite_datasources["bi_aggregations"] = {
     "title"       : "BI Aggregations",
     "table"       : bi.table, 
@@ -13,6 +21,13 @@ multisite_datasources["bi_host_aggregations"] = {
     "infos"       : [ "host", "aggr" ],
     "keys"        : [],
 }
+
+#     ____       _       _                
+#    |  _ \ __ _(_)_ __ | |_ ___ _ __ ___ 
+#    | |_) / _` | | '_ \| __/ _ \ '__/ __|
+#    |  __/ (_| | | | | | ||  __/ |  \__ \
+#    |_|   \__,_|_|_| |_|\__\___|_|  |___/
+#                                         
 
 def paint_aggr_state_short(state, assumed = False):
     if state == None:
@@ -70,7 +85,7 @@ multisite_painters["aggr_output"] = {
 def paint_aggr_hosts(row):
     h = []
     for site, host in row["aggr_hosts"]:
-        url = html.makeuri([("view_name", "aggrhost"), ("site", site), ("host", host)])
+        url = html.makeuri([("view_name", "aggr_host"), ("site", site), ("host", host)])
         h.append('<a href="%s">%s</a>' % (url, host))
     return "", " ".join(h)
 
@@ -258,6 +273,14 @@ multisite_painters["aggr_treestate"] = {
     "paint"   : paint_aggregated_tree_state,
 }
 
+
+#     _____ _ _ _                
+#    |  ___(_) | |_ ___ _ __ ___ 
+#    | |_  | | | __/ _ \ '__/ __|
+#    |  _| | | | ||  __/ |  \__ \
+#    |_|   |_|_|\__\___|_|  |___/
+#                                
+
 class BIGroupFilter(Filter):
     def __init__(self):
         self.column = "aggr_group"
@@ -307,13 +330,13 @@ declare_filter(121, BITextFilter("output"))
 class BIHostFilter(Filter):
     def __init__(self):
         self.column = "aggr_hosts"
-        Filter.__init__(self, self.column, "Affected hosts contain", "aggr", [self.column], [])
+        Filter.__init__(self, self.column, "Affected hosts contain", "aggr", ["site", "host"], [])
 
     def display(self):
-        html.text_input(self.htmlvars[0])
+        html.text_input(self.htmlvars[1])
 
     def heading_info(self, infoname):
-        return html.var(self.htmlvars[0])
+        return html.var(self.htmlvars[1])
 
     def find_host(self, host, hostlist):
         for s, h in hostlist:
@@ -321,13 +344,39 @@ class BIHostFilter(Filter):
                 return True
         return False
 
+    # Used for linking
+    def variable_settings(self, row):
+        return [ ("host", row["host_name"]), ("site", row["site"]) ]
+
     def filter_table(self, rows):
-        val = html.var(self.htmlvars[0])
+        val = html.var(self.htmlvars[1])
         if not val:
             return rows
         return [ row for row in rows if self.find_host(val, row["aggr_hosts"]) ]
 
 declare_filter(130, BIHostFilter(), "Filter for all aggregations that base on status information of that host. Exact match (no regular expression)")
+
+class BIServiceFilter(Filter):
+    def __init__(self):
+        Filter.__init__(self, "aggr_service", "Affected by service", "host", ["site", "host", "service"], [])
+
+    def display(self):
+        html.write("Host: ")
+        html.text_input("host")
+        html.write("Service: ")
+        html.text_input("service")
+
+    def heading_info(self, infoname):
+        return html.var("host") + " / " + html.var("service")
+
+    def service_spec(self):
+        return html.var("site"), html.var("host"), html.var("service")
+
+    # Used for linking
+    def variable_settings(self, row):
+        return [ ("site", row["site"]), ("host", row["host_name"]), ("service", row["service_description"]) ]
+
+declare_filter(131, BIServiceFilter(), "Filter for all aggregations that are affected by one specific service on a specific host (no regular expression)")
 
 class BIStatusFilter(Filter):
     def __init__(self, what):
@@ -348,7 +397,7 @@ class BIStatusFilter(Filter):
 
     def display(self):
         if html.var("filled_in"):
-            defval = "on"
+            defval = ""
         else:
             defval = "on"
         for varend, text in [('0', 'OK'), ('1', 'WARN'), ('2', 'CRIT'), ('3', 'UNKNOWN'), ('n', 'unset')]:

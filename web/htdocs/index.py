@@ -229,14 +229,18 @@ def handler(req, profiling = True):
         html.footer()
 
     except Exception, e:
-        if config.debug:
-            html.live = None
-            raise
         html.header("Internal Error")
-        url = html.makeuri([("debug", "1")])
-        html.show_error("Internal error: %s (<a href=\"%s\">Retry with debug mode</a>)" % (e, url))
+        if config.debug:
+            import traceback, StringIO
+            txt = StringIO.StringIO()
+            t, v, tb = sys.exc_info()
+            traceback.print_exception(t, v, tb, None, txt)
+            html.show_error("Internal error: %s<pre>%s</pre>" % (e, txt.getvalue()))
+        else:
+            url = html.makeuri([("debug", "1")])
+            html.show_error("Internal error: %s (<a href=\"%s\">Retry with debug mode</a>)" % (e, url))
+            apache.log_error("Internal error: %s" % (e,), apache.APLOG_ERR)
         html.footer()
-        apache.log_error("Internal error: %s" % (e,), apache.APLOG_ERR)
 
     # Disconnect from livestatus!
     html.live = None

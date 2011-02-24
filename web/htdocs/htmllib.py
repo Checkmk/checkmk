@@ -142,6 +142,7 @@ class html:
         self.events = set([]) # currently used only for sounds
         self.header_sent = False
         self.output_format = "html"
+        self.status_icons = {}
 
     def set_output_format(self, f):
         self.output_format = f
@@ -448,11 +449,12 @@ class html:
             corner_text = ""
             if self.browser_reload:
                 corner_text += "refresh: %d secs" % self.browser_reload
+            si = self.render_status_icons()
             self.req.write("<table class=footer><tr>"
-                           "<td class=left></td>"
+                           "<td class=left>%s</td>"
                            "<td class=middle></td>"
                            "<td class=right>%s</td></tr></table>"
-                           % (corner_text))
+                           % (si, corner_text))
 
     def body_end(self):
         self.write("</body></html>\n")
@@ -462,6 +464,14 @@ class html:
             self.bottom_footer()
             self.body_end()
 
+    def add_status_icon(self, img, tooltip):
+        self.status_icons[img] = tooltip
+
+    def render_status_icons(self):
+        h = ""
+        for img, tooltip in self.status_icons.items():
+            h += '<img class=statusicon src="images/status_%s.png" title="%s">' % (img, tooltip)
+        return h
 
     def show_error(self, msg):
         if self.output_format == "html":

@@ -3,7 +3,7 @@
 
 import config, re, pprint, time
 from lib import *
-import views
+
 
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
@@ -81,6 +81,15 @@ def forest_needs_update():
     else:
         return False
 
+def reset_cache_status():
+    global did_compilation
+    did_compilation = False
+    global used_cache 
+    used_cache = False
+
+def reused_compilation():
+    return used_cache and not did_compilation
+
 # Precompile the forest of BI rules. Forest? A collection of trees.
 # The compiled forest does not contain any regular expressions anymore.
 # Everything is resolved. Sites, hosts and services are hardcoded. The
@@ -89,7 +98,12 @@ def forest_needs_update():
 def compile_forest():
     new_config_information = forest_needs_update()
     if not new_config_information:
+        global used_cache
+        used_cache = True
         return
+
+    global did_compilation
+    did_compilation = True
 
     global g_aggregation_forest
     g_aggregation_forest = {}
@@ -749,8 +763,8 @@ def host_table(h, columns, add_headers, only_sites, limit, filters):
 
     host_columns = filter(lambda c: c.startswith("host_"), columns)
     hostrows = get_status_info_filtered(filter_code, only_sites, limit, host_columns)
-    if limit:
-        views.check_limit(hostrows, limit)
+    # if limit:
+    #     views.check_limit(hostrows, limit)
 
     rows = []
     # Now compute aggregations of these hosts

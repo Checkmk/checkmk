@@ -85,6 +85,13 @@ body.main table.footer {
     color: white;
 }
 
+body.main table.footer img.statusicon {
+    width: 16px;
+    top: 16px;
+    position: relative;
+    top: -3px;
+}
+
 div.main {
     padding-left: 10px;
 border-left: 1px solid red;

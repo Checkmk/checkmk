@@ -930,6 +930,7 @@ def create_view():
 def page_view(h):
     global html
     html = h
+    bi.reset_cache_status() # needed for status icon
 
     load_views()
     view_name = html.var("view_name")
@@ -1205,6 +1206,11 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
             html.show_error("<b>%s - Livestatus error</b><br>%s" % (info["site"]["alias"], info["exception"]))
 
     if show_footer:
+        if html.live.successfully_persisted():
+            html.add_status_icon("persist", "Reused livestatus connection from earlier request")
+        if bi.reused_compilation():
+            html.add_status_icon("aggrcomp", "Reused cached compiled BI aggregations")
+
         html.bottom_focuscode()
         if 'Z' in display_options:
             html.bottom_footer()

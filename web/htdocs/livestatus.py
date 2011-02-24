@@ -167,6 +167,10 @@ class BaseConnection:
         self.socketurl = socketurl
         self.socket = None
         self.timeout = None
+        self.successful_persistence = False
+
+    def successfully_persisted(self):
+        return self.successful_persistence
 
     def add_header(self, header):
         self.add_headers += header + "\n"
@@ -179,7 +183,10 @@ class BaseConnection:
     def connect(self):
         if self.persist and self.socketurl in persistent_connections:
             self.socket = persistent_connections[self.socketurl]
+            self.successful_persistence = True
             return
+        
+        self.successful_persistence = False
 
         # Create new socket
         self.socket = None
@@ -252,6 +259,7 @@ class BaseConnection:
         except IOError, e:
             if self.persist:
                 del persistent_connections[self.socketurl]
+                self.successful_persistence = False
             self.socket = None
             raise MKLivestatusSocketError(str(e))
 
@@ -506,6 +514,12 @@ class MultiSiteConnection(Helpers):
 
     def alive_sites(self):
         return self.connections.keys()
+
+    def successfully_persisted(self):
+        for sitename, site, connection in self.connections:
+            if connection.successfully_persisted():
+                return True
+        return False
 
     def set_auth_user(self, domain, user):
         for sitename, site, connection in self.connections:

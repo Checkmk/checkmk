@@ -497,6 +497,19 @@ class html:
             self.write(strip_tags(msg))
             self.write("\n")
 
+    def check_limit(self, rows, limit):
+        count = len(rows)
+        if limit != None and count == limit + 1:
+            text = "Your query produced more then %d results. " % limit
+            if self.var("limit", "soft") == "soft" and config.may("ignore_soft_limit"):
+                text += '<a href="%s">Repeat query and allow more results.</a>' % self.makeuri([("limit", "hard")])
+            elif self.var("limit") == "hard" and config.may("ignore_hard_limit"):
+                text += '<a href="%s">Repeat query without limit.</a>' % self.makeuri([("limit", "none")])
+            self.show_warning(text)
+            del rows[-1]
+            return False
+        return True
+
     def confirm(self, msg):
         if self.var("_do_actions") == "No":
             return # user has pressed "No"

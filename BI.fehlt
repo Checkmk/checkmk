@@ -5,8 +5,6 @@ Performance:
   einen Index. Dieser muss genutzt werden, damit nicht alle Aggregationen
   berechnet und erst danach gefiltert wird.
 
-* Der Limit greift nicht für die BI-Tabellen.
-
 Modi, untern denen eine Aggr berechnet werden kann:
 * mit/ohne Authuser
 * hard/soft states

@@ -1,11 +1,4 @@
 1.1.9i9:
-    INCOMPATIBLE CHANGES:
-    * All filesystem checks now have trends enabled per default. The checks
-      output now three performance values instead of one. This can break
-      updates of PNP graphs. Either delete all PNP graphs of {fs_} checks
-      or switch off trend reporting in order for your graphs to work. Trends
-      are very usefull, however...
-
     Core, Setup, etc.:
     * FIX: check_mk_templates.cfg: add missing check_period for hosts
       (needed for Shinken)

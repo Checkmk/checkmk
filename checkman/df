@@ -22,21 +22,13 @@ description:
  a logarithmic average that weights the more recent time more than time
  farer away. Also data beyond the 24 hours will to some small degree be
  reflected in the computation. The advantage of this algorithm is a more
- precise predection and a simpler implementation, which does not need any
+ precise prediction and a simpler implementation, which does not need any
  access to any RRDs or similar storage.
 
  Please note, that when a filesystem is started being monitored, then
  the trend of the past is unknown and will be assumed to be {zero}. That means
  that it will take at least one trend range of time until the trend approximately
  reflects the reality.
-
- Please note that after an update to {1.1.9i9} the output of the performance
- data is not compatible with older versions any longer since it outputs two
- additional values.  If you use PNP in {MULTIPLE} mode then this should not be
- a problem.  If you use PNP in {SINGLE} mode - which still is the default
- - then you either have to {(1)} delete your RRD files beginning with {fs_}
- or {(2)} switch off trend computing by setting 
- {filesystem_default_levels["trend_range"] = None}.
 
 item:
  The mount point of the filesystem (UNIX) or the drive
@@ -89,10 +81,15 @@ examples:
 perfdata: 
  One or three values: The first value is the used space of the filesystem 
  in MB. Also the minimum (0 MB), maximum (size of the filesystem) and the warning and critical
- levels in MB are provided. If {trend_range} is set (the default), then
+ levels in MB are provided. If you set {filesystem_trend_perfdata = True}, then
  two additional values are output: the change of the usage in MB per range 
  since the last check (e.g. in MB per 24 hours) and the averaged change (so called trend),
  also in MB per range.
+
+ Please note, that - until you use the storage type {MULTIPLE} in PNP4Nagios - 
+ changing the setting of {filesystem_trend_perfdata} will stop all updates to
+ your existing filesystem RRDs. You need either to delete or convert your RRDs
+ if you want to change.
 
 inventory:
  df supports inventory. All filesystem the agent reports
@@ -164,3 +161,6 @@ inventory_df_exclude_mountpoints (list of strings): List of mount points to excl
 filesystem_default_levels: Default levels for filesystem detected by inventory. 
  This variable is preset to {{ "levels" : (80, 90), "magic_normsize"  : 20, 
  "levels_low" : (50, 60), "trend_range" : 24 }}
+filesystem_trend_perfdata (boolean): Whether or not to output trend performance data. This is
+ preset to {False} so that no trend performance data is output. If you change this setting you
+ need to convert or delete all RRD databases of filesystems.

@@ -153,7 +153,7 @@ def aggr_render_leaf(tree):
         url = html.makeuri([("view_name", "hoststatus"), ("site", site), ("host", host)])
         service = "Host status"
     descr = '<a href="%s">%s</a>' % (url, service)
-    return content + aggr_render_node(tree, descr)
+    return aggr_render_node(tree, content + descr)
 
 def aggr_render_node(tree, title, mousecode = None):
     state = tree[0]

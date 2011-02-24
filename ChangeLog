@@ -36,6 +36,8 @@
 
     Livestatus:
     * FIX: fix most compiler warnings (thanks to patch by Sami Kerola)
+    * FIX: fix memory leak. The leak caused increasing check latency in some
+      situations
     
 1.1.9i8:
     Multisite:

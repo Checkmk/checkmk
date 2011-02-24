@@ -115,6 +115,12 @@ multisite_painter_options["aggr_treetype"] = {
  "values"  : [ ("foldable", "foldable"), ("bottom-up", "bottom up"), ("top-down", "top down")]
 }
 
+multisite_painter_options["aggr_wrap"] = {
+ "title"   : "Handling of too long texts",
+ "default" : "wrap",
+ "values"  : [ ("wrap", "wrap"), ("nowrap", "don't wrap")]
+}
+
 
 def render_bi_state(state):
     return { bi.PENDING: "PD",
@@ -211,7 +217,11 @@ def paint_aggr_tree_foldable(row):
 
 
 def paint_aggr_tree_ltr(row, mirror):
-    # We need to know the depth of the tree
+    wrap = get_painter_option("aggr_wrap")
+    if wrap == "wrap":
+        td = '<td'
+    else:
+        td = '<td style="white-space: nowrap;"'
 
     def gen_table(tree, height):
         nodes = tree[6]
@@ -239,7 +249,7 @@ def paint_aggr_tree_ltr(row, mirror):
     odd = "odd"
     for code, colspan, parents in leaves:
         h += '<tr>\n'
-        leaf_td = '<td class="leaf %s"' % odd
+        leaf_td = td + ' class="leaf %s"' % odd
         odd = odd == "odd" and "even" or "odd"
         if colspan > 1:
             leaf_td += ' colspan=%d' % colspan
@@ -247,7 +257,7 @@ def paint_aggr_tree_ltr(row, mirror):
 
         tds = [leaf_td]
         for rowspan, c in parents:
-            tds.append('<td class=node rowspan=%d>%s</td>\n' % (rowspan, c))
+            tds.append(td + ' class=node rowspan=%d>%s</td>\n' % (rowspan, c))
         if mirror:
             tds.reverse()
         h += "".join(tds)
@@ -269,7 +279,7 @@ multisite_painters["aggr_treestate"] = {
     "title"   : "Aggregation: complete tree",
     "short"   : "Tree",
     "columns" : [ "aggr_treestate" ],
-    "options" : [ "aggr_expand", "aggr_onlyproblems", "aggr_treetype" ],
+    "options" : [ "aggr_expand", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap" ],
     "paint"   : paint_aggregated_tree_state,
 }
 

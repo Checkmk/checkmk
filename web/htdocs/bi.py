@@ -488,8 +488,6 @@ def get_status_info(required_hosts):
 def get_status_info_filtered(filter_header, only_sites, limit, add_columns):
     columns = [ "name", "state", "plugin_output", "services_with_info" ] + add_columns
 
-    if limit != None:
-        html.live.set_limit(limit + 1) # + 1: We need to know, if limit is exceeded
     html.live.set_only_sites(only_sites)
     html.live.set_prepend_site(True)
     data = html.live.query(
@@ -498,7 +496,6 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns):
             filter_header)
     html.live.set_prepend_site(False)
     html.live.set_only_sites(None)
-    html.live.set_limit()
 
     headers = [ "site" ] + columns
     rows = [ dict(zip(headers, row)) for row in data]
@@ -742,6 +739,8 @@ def table(h, columns, add_headers, only_sites, limit, filters):
             row = create_aggregation_row(tree)
             row["aggr_group"] = group
             rows.append(row)
+            if not html.check_limit(rows, limit):
+                return rows
     return rows
         
 
@@ -777,6 +776,8 @@ def host_table(h, columns, add_headers, only_sites, limit, filters):
             row.update(create_aggregation_row(aggregation, status_info))
             row["aggr_group"] = group
             rows.append(row)
+            if not html.check_limit(rows, limit):
+                return rows
 
     return rows
 

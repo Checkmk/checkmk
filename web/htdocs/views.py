@@ -1196,7 +1196,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
 
     if show_footer:
         if html.live.successfully_persisted():
-            html.add_status_icon("persist", "Reused livestatus connection from earlier request")
+            html.add_status_icon("persist", "Reused persistent livestatus connection from earlier request")
         if bi.reused_compilation():
             html.add_status_icon("aggrcomp", "Reused cached compiled BI aggregations")
 

@@ -1,5 +1,23 @@
 This file will help you to write *good* checks for Check_MK.
 
+Code styling:
+* Use four spaces for intending your code. Just don't use tab chars.
+  And if you relly can't life without tabs set the tab width to 8 spaces.
+
+Manpages:
+* 
+
+Performance data:
+* All performance data checks need to provide a pnp template
+
+* pnp rra configuration
+
+SNMP based checks:
+* Only use numeric OIDs in your checks. Name based OIDs rely on MIB files
+  and the check won't work when the MIB files are not in place.
+
+* Scan function:
+
 Agent based checks:
 
 * Put sample output snippets of the agent as comments into

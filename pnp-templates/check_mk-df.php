@@ -66,10 +66,11 @@ if (isset($DS[2])) {
     $range = sprintf("%.1fh", $hours);
 
     $opt[2] = "--vertical-label '+/- MB / $range' -l -1 -u 1 --title '$hostname: Trend for $fstitle' ";
-    $def[2] = "DEF:growth=$RRDFILE[2]:$DS[2]:AVERAGE ";
+    $def[2] = "DEF:growth_max=$RRDFILE[2]:$DS[2]:MAX ";
+    $def[2] .= "DEF:growth_min=$RRDFILE[2]:$DS[2]:MIN ";
     $def[2] .= "DEF:trend=$RRDFILE[3]:$DS[3]:AVERAGE ";
-    $def[2] .= "CDEF:growth_pos=growth,0,MAX ";
-    $def[2] .= "CDEF:growth_neg=growth,0,MIN ";
+    $def[2] .= "CDEF:growth_pos=growth_max,0,MAX ";
+    $def[2] .= "CDEF:growth_neg=growth_min,0,MIN ";
     $def[2] .= "HRULE:0#c0c0c0 ";
     $def[2] .= "AREA:growth_pos#3060f0:\"Grow\" "; 
     $def[2] .= "AREA:growth_neg#30f060:\"Shrink \" "; 

@@ -241,3 +241,18 @@ def perfometer_oracle_sessions(row, check_command, perf_data):
 perfometers["check_mk-oracle_sessions"] = perfometer_oracle_sessions
 perfometers["check_mk-oracle_logswitches"] = perfometer_oracle_sessions
 
+def perfometer_h3c_lanswitch_cpu(row, check_command, perf_data):
+    util = float(perf_data[0][1]) # is already percentage
+    warn = float(perf_data[0][3])
+    crit = float(perf_data[0][4])
+    if util < warn:
+        color = "#6f2"
+    elif util < crit:
+        color = "#9f2"
+    else:
+        color = "#cf2"
+
+    return "%.0f%%" % util, perfometer_linear(util, color)
+
+#perfometer_linear(perc, color)
+perfometers["check_mk-h3c_lanswitch_cpu"] = perfometer_h3c_lanswitch_cpu

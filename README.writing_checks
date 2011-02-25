@@ -134,7 +134,9 @@ Performance data:
   graph in its current (and maybe future) forms. Those are in pnp-rraconf.
   Use a symlink here.
 
-* pnp rra configuration
+* Each check that outputs performance data should have a perf-o-meter.
+  For checks part of Check_MK this must be done in web/plugins/perfometer/check_mk.py.
+  For third party checks this should be done in a separate file in web/plugins/perfometer.
 
 SNMP based checks:
 * Only use numeric OIDs in your checks. Name based OIDs rely on MIB files

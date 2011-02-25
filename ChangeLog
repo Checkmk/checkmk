@@ -39,6 +39,7 @@
     * FIX: PNP timerange painter option field takes selected value as default now
     * FIX: Fixed perfometer styling in single dataset layouts
     * FIX: Tooltips work in group headers now
+    * FIX: Catching exceptions caused by unset bandwidth in interface perfometer
 
     WATO:
     * FIX: fix problem with vanishing services on Windows. Affected were services

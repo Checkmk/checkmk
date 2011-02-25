@@ -193,9 +193,12 @@ def performeter_check_mk_if(row, check_command, perf_data):
     for name, perf, color in [
           ("in", perf_data[0], "#0e6"),
           ("out", perf_data[5], "#2af") ]:
-        bytes = float(perf[1])
-        bw = float(perf[6])
-        rrate = bytes / bw
+        bytes = savefloat(perf[1])
+        bw    = savefloat(perf[6])
+        if bw > 0.0:
+            rrate = bytes / bw
+        else:
+            rrate = 0
         drate = max(0.02, rrate ** 0.5 ** 0.5)
         rperc = 100 * rrate
         dperc = 100 * drate

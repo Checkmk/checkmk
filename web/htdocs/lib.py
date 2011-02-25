@@ -87,3 +87,9 @@ def create_user_file(path, mode):
 
 def write_settings_file(path, content):
     create_user_file(path, "w").write(pprint.pformat(content) + "\n")
+
+def savefloat(f):
+    try:
+        return float(f)
+    except:
+        return 0.0

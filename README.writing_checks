@@ -121,9 +121,6 @@ Other issues:
   with the rest of the data and produce useful results. use int() in all other cases,
   e.g. if the check does not make any sense if you have no valid data.
 
-Manpages:
-* 
-
 Performance data:
 * Only set perfdata flag when the check really produces performance data
   output.
@@ -136,14 +133,18 @@ SNMP based checks:
 * Only use numeric OIDs in your checks. Name based OIDs rely on MIB files
   and the check won't work when the MIB files are not in place.
 
-* Scan function:
+Manpages
 
-Agent based checks:
-
-* Put sample output snippets of the agent as comments into
-  the check source code. Add examples for all cases handled
-  by your check. -> That makes the code more easy to understand
-  and help not to break something if someone changes something
-  in the check's parser.
-  In an optimal case you include several code examples of different
-  states.
+* Each check *must* have a man page. This should be:
+  - complete
+  - precise
+  - terse
+  - helpful!!
+ 
+* Information that must be contained in the description:
+  - What does the check exactly?
+  - Under which circumstances goes the check to WARN/CRIT?
+  - Which devices are supported by the check?
+  - Does the check require some configuration of the agent or
+    some separate plugin? (example: The logwatch check requires
+    the agent plugin mk_logwatch to be installed)

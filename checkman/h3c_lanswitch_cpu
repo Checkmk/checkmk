@@ -1,39 +1,42 @@
-title: Check CPU Utilization of 3COM and H3C switches.
+title: Check CPU utilization of 3COM and H3C switches
 agents: snmp
 author: Florian Heigl <fh@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
-This Check queries the CPU utilization for various LAN switches that are supporting the MIB for H3C lan switches.
-These are: 
-Newer 3Com switches (Superstack 4 and later), H3C branded switches and now for example the HP "A-Series" Networking gear. The same switches from the original maker Huawei are not supporting the MIB. These also only support cpu stats, whereas the H3C Mib also gives Memory stats and Fabric status etc.
-The check should correctly label the CPU in your switch / stack / core switch module slots.
+ This Check queries the CPU utilization of various LAN switches that are
+ supporting the MIB for H3C lan switches.  These are: newer 3COM switches
+ (Superstack 4 and later), H3C branded switches and now for example the HP
+ "A-Series" Networking gear. The same switches from the original maker Huawei
+ are {not} supporting the MIB.  The check tries to correctly label the CPU in
+ your switch / stack / core switch module slots.
 
-Note some of these switches don't handle snmp well and might generate up to 90% cpu load while queried.
-To accomodate for this you should lower the frequency of SNMP based checks with them. 
-The CPU usage ratio returned by the check is the average load of the last 5 minutes.
+ The check goes WARN/CRIT if the average CPU usage of the last {five minutes}
+ exceeds configurable levels.
 
+ Note that some of these switches don't handle SNMP well and might generate
+ up to 90% cpu load while queried.  To accomodate for this you should lower
+ the frequency of SNMP based checks with them.
 
-
+ Some devices have a high usage even in normal conditions (i.e. running full 
+ BGP tables). In that case you might have to fine tune the check parameters
+ or even have to disable the check.
 
 inventory:
- The check will add one service per Unit/CPU in a stack.
-
-[parameters]
-warning (int): the percentage of 1-minute average load at which the switch is considered too busy.
-
-critical (int): the percentage of 1-minute average load at which the switch is considered overloaded.
-
-
-[configuration] 
-h3c_lanswitch_cpu_default_levels (int, int): the warn and critical levels for the check.
- They are set to default to 50% for "WARN" and 75% for "CRIT".
- If you expect heavy load (i.e. running full BGP tables) then you might want to adjust these.
-
+ The check will create one separate service per CPU.
 
 item:
- The CPU found by inventory (it's OID is a multiple of 65536 for stackable switches, or the slot Id it resides at for multicontroller switches and will be divided to come to a sane value). Later multicore CPU switches should be supported already.
-
+ A string describing the switch and unit number, for example {"Switch 2 CPU 0"} 
+ or {"Switch 1 Slot 11"}.
 
 perfdata:
- It does generate performance data (the 5min average CPU load)
+ One value: the 5 minute average CPU usage in percent (from 0 to 100).
+
+[parameters]
+warning (int): the percentage of 5-minute average usage at which the check returns WARN.
+critical (int): the percentage of 5-minute average usage at which the check goes critical.
+
+[configuration] 
+switch_cpu_default_levels (int, int): the default warn and critical levels. 
+ They are preset to {(50,75)} (meaning 50% for WARN and 75% for CRIT).
+

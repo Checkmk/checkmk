@@ -311,9 +311,12 @@ def check_drbd_stats(item, params, info):
         for key, label in [ ('al',  'activity log updates'),    ('bm', 'bit map updates'),
                             ('lo',  'local count requests'),    ('pe', 'pending requests'),
                             ('ua',  'unacknowledged requests'), ('ap', 'application pending requests'),
-                            ('ep',  'epch objects'),            ('wo', 'write order'),
+                            ('ep',  'epoch objects'),           ('wo', 'write order'),
                             ('oos', 'kb out of sync') ]:
-            output += '%s: %s, ' % (label, parsed[key])
+	    if key in parsed:
+                output += '%s: %s, ' % (label, parsed[key])
+            else:
+		parsed[key] = 0 # perfdata must always have same number of entries
             perfdata.append(('%s' % label.replace(" ", "_"), parsed[key]))
         return (0, 'OK - ' + output.rstrip(', '), perfdata)
 

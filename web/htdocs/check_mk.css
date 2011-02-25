@@ -790,7 +790,9 @@ td.count {
   font-family: sans-serif;
 }
 
-table.services tr.data td.perfometer {
+/* Performeter styling */
+
+td.perfometer {
   padding: 1px 2px;
   width: 120px;
   height: 22px;
@@ -810,20 +812,21 @@ td.perfometer table {
   width: 120px;
   height: 22px;
   border-spacing: 0px;
+  border-collapse:collapse;
   padding: 0px;
   margin: 0px;
   border: 1px solid #aaa;
   height: 100%;
 }
 
-table.services tr.data td.perfometer table td {
+td.perfometer td {
     padding: 0px;
     margin: 0px;
     border: none;
     height: 22px;
 }
 
-table.services tr.data td.perfometer a {
+td.perfometer a {
     color: black;
     text-decoration: none;
 }

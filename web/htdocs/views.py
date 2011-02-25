@@ -139,7 +139,7 @@ def show_painter_options(painter_options):
         html.write("<tr>")
         html.write("<td class=legend>%s</td>" % opt["title"])
         html.write("<td class=content>")
-        html.select(on, opt["values"], opt["default"], "submit();" )
+        html.select(on, opt["values"], get_painter_option(on), "submit();" )
         html.write("</td></tr>\n")
     html.write("</table>\n")
 
@@ -868,10 +868,11 @@ def create_view():
     for n in range(1, 500):
         pname = html.var("group_%d" % n)
         viewname = html.var("group_link_%d" % n)
+        tooltip = html.var("group_tooltip_%d" % n)
         if pname:
             if viewname not in  html.available_views:
                 viewname = None
-            group_painternames.append((pname, viewname))
+            group_painternames.append((pname, viewname, tooltip))
 
     painternames = []
     # User can set more than max_display_columns. We cannot easily know
@@ -1902,7 +1903,7 @@ def prepare_paint(p, row):
         content = link_to_view(content, row, linkview)
 
     # Tooltip
-    if tooltip:
+    if content != '' and tooltip:
         cla, txt = multisite_painters[tooltip]["paint"](row)
         tooltiptext = htmllib.strip_tags(txt)
         content = '<span title="%s">%s</span>' % (tooltiptext, content)
@@ -1957,12 +1958,12 @@ def register_events(row):
 # two rows are in the same group or not
 def group_value(row, group_painters):
     group = []
-    for p, l in group_painters:
-        groupvalfunc = p.get("groupby")
+    for p in group_painters:
+        groupvalfunc = p[0].get("groupby")
         if groupvalfunc:
             group.append(groupvalfunc(row))
         else:
-            for c in p["columns"]:
+            for c in p[0]["columns"]:
                 group.append(row[c])
     return group
 

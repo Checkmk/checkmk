@@ -546,7 +546,8 @@ def lookup_ipaddress(hostname):
     if fake_dns:
         return fake_dns
 
-    elif simulation_mode or opt_use_snmp_walk or is_usewalk_host(hostname):
+    elif simulation_mode or opt_use_snmp_walk or \
+         (is_usewalk_host(hostname) and is_snmp_host(hostname)):
         return "127.0.0.1"
     elif hostname in g_dns_cache:
         return g_dns_cache[hostname]

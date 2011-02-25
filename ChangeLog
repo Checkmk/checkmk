@@ -1,6 +1,12 @@
 1.1.10b1:
+    Core, Setup, etc.:
+    * FIX: do not assume 127.0.0.1 as IP address for usewalk_hosts if
+      they are not SNMP hosts.
+
     Checks & Agents:
     * FIX: drbd now handles output of older version without an ep field
+
+
 
 1.1.9i9:
     Core, Setup, etc.:

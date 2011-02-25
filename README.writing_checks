@@ -1,8 +1,57 @@
 This file will help you to write *good* checks for Check_MK.
 
 Code styling:
+
 * Use four spaces for intending your code. Just don't use tab chars.
-  And if you relly can't life without tabs set the tab width to 8 spaces.
+  And if you really can't life without tabs set the tab width to 8 spaces.
+
+* For parts part of the official Check_MK the file header with the
+  copyright information must be present. This will be automatically
+  created if you call 'make headers' in the main source directory 
+
+* TCP-Agent based checks *must* put an output example of the 
+  agent in comments into the check file right after the header
+  and before the implementation. If the agent output can have 
+  different formats or output style then put an example for each
+  kind of style the check supports (e.g.: the output of multipath -l
+  has changed its layout between SLES 10 and SLES 11). 
+
+  For SNMP based checks put examples if the kind of output is
+  in some respect remarkable.
+
+  The example output is very helpful for understanding how the
+  check parser works.
+
+* Configuration variable for main.mk should be named after
+  the check, if they are only used by this check. This does 
+  not hold for variables, that are used by several checks 
+  (e.g. filesystem_levels is used by df, hr_fs, df_netapp, ...)
+
+* The service description of different check types that essentially
+  do the same must be identical (e.g. if/if64/ifoperstatus). Reason:
+  this makes rules in main.mk simpler for the user!
+
+* If a check does not use check parameter, then the inventory function
+  must return None as parameter and the check function must name
+  the parameter argument _no_params.
+
+* The name of the inventory and check function must be prefixed
+  with the name of the check type, for example inventory_h3c_lanswitch_cpu
+  for 'h3c_lanswitch'
+
+* Order of implementation:
+
+  1. fileheader with GPL
+  2. example output from agent
+  3. default settings of configuration variables
+  4. helper functions and variable, if any needed
+  5. inventory function
+  6. check function
+  7. check_info[] definition
+  8. snmp_info[] definition
+  9. snmp_scan_functions[] definition
+
+* Configuration variables for main.mk 
 
 Manpages:
 * 

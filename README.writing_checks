@@ -1,5 +1,8 @@
 This file will help you to write *good* checks for Check_MK.
 
+Check Naming:
+* 
+
 Code styling:
 * Use four spaces for intending your code. Just don't use tab chars.
   And if you relly can't life without tabs set the tab width to 8 spaces.
@@ -8,6 +11,9 @@ Manpages:
 * 
 
 Performance data:
+* Only set perfdata flag when the check really produces performance data
+  output.
+
 * All performance data checks need to provide a pnp template
 
 * pnp rra configuration

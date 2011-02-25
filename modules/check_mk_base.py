@@ -1035,3 +1035,8 @@ def get_nic_speed_human_readable(speed):
         pass
     return speed
 
+# Convert Fahrenheit to Celsius
+def to_celsius(f):
+    return round(float(f) - 32.0) * 5.0 / 9.0
+
+

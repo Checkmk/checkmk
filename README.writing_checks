@@ -1,5 +1,7 @@
 This file will help you to write *good* checks for Check_MK.
 
+Naming
+
 * Check file names should be named short and unique. They must consist
   only of lower case characters, digits and underscores and begin
   with a lower case character.
@@ -16,10 +18,9 @@ This file will help you to write *good* checks for Check_MK.
   not be named after the vendor but after the MIB. An example are the
   hr_* checks.
 
-In case of SNMP checks you might use the name of the MIB you fetch data from as
-  part of check name
 
-Header notes:
+Coding style
+
 * If the check is contributed by a third party (like you), you must
   add your name and your email address.
 
@@ -81,6 +82,44 @@ Header notes:
 * Creating nagios state strings: There is a dictionary named 'nagios_state_names'.
   You can use it to get nagios state string from nagios return codes. e.g.:
 	nagios_state_names[0] gives you 'OK'.
+
+SNMP Scan function:
+
+* Every SNMP check *must* have an SNMP scan function. That function
+  should as *minimal* as possible: It should only fire at those devices
+  that really can support the check. Reason: unneccessary SNMP walks
+  on devices not supporting that check must be avoied.
+  The scan function must on the other hand not be so strict that it 
+  rules out devices where the check would work. If in conflict between
+  these two issues than rather make the scan function not too strict.
+  The scan function should avoid fetching non-standard-OIDs by any
+  means. It should rather try to use the basic SMIv2 OIDs as these will 
+  already have been fetched and cached by the scan functions of other checks! 
+  All scan functions of all checks together should fetch as few OIDs as
+  possible!
+
+Other issues:
+
+* Default values for check parameters (e.g. switch_cpu_default_levels) must be
+  chosen in a way that they make sense for *everybody*, not just for your special
+  case. In case you are not sure then rather choose too loose than too tight levels.
+  This helps avoid false alarms.
+
+* If the same configuration variable is used in multiple checks, *all* of them
+  must set a default value and all those values must be identical!
+
+* Your check should assume that the agent is always producing valid data. It
+  should *not* try to handle cases where the agent output is broken. This is
+  handled by Check_MK via Python exceptions. Otherwise you would make the code
+  uglier and also disable the debug handler.
+
+* int() vs. saveint(), float vs. savefloat():  int(s) will throw an exception if
+  if is not a valid number string (or empty). Then Check_MK will catch the exception
+  and make the check result "UNKNOWN" with an according error message. saveint(s) will
+  assume 0, if s is not valid. Important: use saveint() in all places, where you know
+  or suspect that some device does not supply valid data *but* the check can work
+  with the rest of the data and produce useful results. use int() in all other cases,
+  e.g. if the check does not make any sense if you have no valid data.
 
 Manpages:
 * 

@@ -59,8 +59,9 @@ Coding style
   must return None as parameter and the check function must name
   the parameter argument _no_params.
 
-* The name of the inventory and check function must be prefixed with the name of the check type, for example inventory_h3c_lanswitch_cpu
-  for 'h3c_lanswitch'
+* The name of the inventory and check function must be
+  prefixed with the name of the check type, for example
+  inventory_h3c_lanswitch_cpu for 'h3c_lanswitch'
 
 * Order of implementation:
 

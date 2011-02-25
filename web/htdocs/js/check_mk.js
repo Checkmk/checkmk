@@ -320,8 +320,17 @@ function column_swap_ids(o1, o2) {
 }
 
 function add_view_column_handler(id, code) {
+    // Can not simply add the new code to the innerHTML code of the target
+    // container. So first creating a temporary container and fetch the
+    // just created DOM node of the editor fields to add it to the real
+    // container afterwards.
+		var tmpContainer = document.createElement('div');
+		tmpContainer.innerHTML = code;
+		var oNewEditor = tmpContainer.lastChild;
+
     var oContainer = document.getElementById('ed_'+id).firstChild;
-    oContainer.innerHTML += code;
+    oContainer.appendChild(oNewEditor);
+		tmpContainer = null;
 
     if (oContainer.lastChild.previousSibling)
         fix_buttons(oContainer, oContainer.lastChild.previousSibling);

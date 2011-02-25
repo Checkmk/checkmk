@@ -1,9 +1,13 @@
 Title: Customlinks snapin does not persists folding any more
 Component: multisite
-Benefit: 2
-State: open
-Cost: 1
-Date: 2011-02-16 11:49:44
+State: done
 Class: bug
+Date: 2011-02-16 11:49:44
+Benefit: 2
+Cost: 1
+Fun: 0
 
 Somehow this feature is broken.
+
+2011-02-25 14:02:25: changed state open -> done
+The ajax target url was not present in current python pagehandler. Must have been lost in some rewrite.

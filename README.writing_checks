@@ -12,11 +12,14 @@ Naming
   Product specific checks must be prefixed with a product abbreviation, for
   example "steelhead_status" for a Steelhead appliance of Riverbed.
 
-
 * SNMP based checks: if the check makes use of a standardized MIB which
   is or might be implemented by more than one vendor, then the check should
   not be named after the vendor but after the MIB. An example are the
   hr_* checks.
+
+* The service description of different check types that essentially
+  do the same must be identical (e.g. if/if64/ifoperstatus). Reason:
+  this makes rules in main.mk simpler for the user!
 
 
 Coding style
@@ -51,10 +54,6 @@ Coding style
   the check, if they are only used by this check. This does 
   not hold for variables, that are used by several checks 
   (e.g. filesystem_levels is used by df, hr_fs, df_netapp, ...)
-
-* The service description of different check types that essentially
-  do the same must be identical (e.g. if/if64/ifoperstatus). Reason:
-  this makes rules in main.mk simpler for the user!
 
 * If a check does not use check parameter, then the inventory function
   must return None as parameter and the check function must name
@@ -125,7 +124,15 @@ Performance data:
 * Only set perfdata flag when the check really produces performance data
   output.
 
-* All performance data checks need to provide a pnp template
+* Each check that outputs performance data *must* have a dedicated PNP
+  graph definition in pnp-templates. If the check has warning and critical
+  levels then the graph must display those levels as yellow and red 
+  lines.
+
+* Each check that outputs performance data must also have an RRA definition
+  the specifies which of MAX, MIN and AVERAGE is needed to display the 
+  graph in its current (and maybe future) forms. Those are in pnp-rraconf.
+  Use a symlink here.
 
 * pnp rra configuration
 

@@ -147,20 +147,33 @@ for check in get_checks():
             global_vars[check] += [ name ]
 
 SCORE_START = 10
+
 C_OK        = 1
 C_FAILED    = 2
 C_INVALID   = 3
-TESTS = { 'manpage':     C_OK,
-          'snmp_scan':   C_OK,
-          'pnp_tmpl':    C_OK,
-          'pnp_rra':     C_OK,
-          'snmp_scan':   C_OK,
-          'reindent':    C_OK,
-          'global_vars': C_OK,
-}
-WEIGHT = { 'manpage': 2, 'global_vars': 2, 'reindent': 2 }
 
-manpage = {}
+LINELENGTH_LIMIT = 100
+
+TESTS = {
+    'manpage':     C_OK,
+    'snmp_scan':   C_OK,
+    'pnp_tmpl':    C_OK,
+    'pnp_rra':     C_OK,
+    'snmp_scan':   C_OK,
+    'reindent':    C_OK,
+    'global_vars': C_OK,
+    'linelength':  C_OK,
+}
+
+WEIGHT = {
+    'manpage':      2,
+    'global_vars':  2,
+    'reindent':     2,
+    'linelength':   2,
+}
+
+manpage    = {}
+checkfiles = {}
 
 # #############################################################################
 # Check definitions
@@ -221,7 +234,11 @@ def is_valid_linelength(check):
     return True
 
 def verify_linelength(check):
-
+    """ Read the checkfile and compare all lines with the maximum line length """
+    for line in get_checkfile(check).split("\n"):
+        if len(line) > LINELENGTH_LIMIT:
+            return False
+    return True
 
 # Manpage:
 # - Does the check have a manpage?

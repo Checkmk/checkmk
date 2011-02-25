@@ -78,8 +78,8 @@ function hoverShow(x, y, code) {
         _hoverMenu = document.createElement('div');
         _hoverMenu.style.position = 'absolute';
         _hoverMenu.style.width = 'auto';
-				document.body.appendChild(_hoverMenu);
-		}
+        document.body.appendChild(_hoverMenu);
+    }
     _hoverMenu.innerHTML = code;
     
     // Change cursor to "hand" when displaying hover menu

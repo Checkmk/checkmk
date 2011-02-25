@@ -232,6 +232,13 @@ void section_uptime(SOCKET &out)
 }
 
 
+void section_localtime(SOCKET &out)
+{
+    output(out, "<<<localtime>>>\n");
+    sprintf(out, "%ld\n", time(0));
+}
+
+
 void section_df(SOCKET &out)
 {
     output(out, "<<<df>>>\n");
@@ -1112,6 +1119,7 @@ void output_data(SOCKET &out)
     section_eventlog(out);
     section_plugins(out);
     section_local(out);
+    section_localtime(out);
 }
     
 

@@ -36,6 +36,7 @@
     * FIX: Fixed view column editor forgetting pending changes to other form
            fields
     * FIX: Customlinks snapin persists folding states again
+    * FIX: PNP timerange painter option field takes selected value as default now
 
     WATO:
     * FIX: fix problem with vanishing services on Windows. Affected were services

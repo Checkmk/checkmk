@@ -139,7 +139,7 @@ def show_painter_options(painter_options):
         html.write("<tr>")
         html.write("<td class=legend>%s</td>" % opt["title"])
         html.write("<td class=content>")
-        html.select(on, opt["values"], opt["default"], "submit();" )
+        html.select(on, opt["values"], get_painter_option(on), "submit();" )
         html.write("</td></tr>\n")
     html.write("</table>\n")
 

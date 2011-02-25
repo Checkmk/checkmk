@@ -1,10 +1,11 @@
 This file will help you to write *good* checks for Check_MK.
 
 Check Naming:
-* 
+* In case of SNMP checks you might use the name of the MIB you fetch data from as
+  part of check name
 
 Header notes:
-* Add lincense notes
+* Add licence notes
 
 * Add author notes. At least a contact mail address.
 

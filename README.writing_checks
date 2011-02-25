@@ -3,9 +3,23 @@ This file will help you to write *good* checks for Check_MK.
 Check Naming:
 * 
 
-Code styling:
+Header notes:
+* Add lincense notes
+
+* Add author notes. At least a contact mail address.
+
+Coding styling:
+* Avoid long lines. In an optimal case your lines don't exceed 80 chars.
+  100 chars.
+
 * Use four spaces for intending your code. Just don't use tab chars.
   And if you relly can't life without tabs set the tab width to 8 spaces.
+
+* Variable naming. Use lower case variable names where the keywords are splitted by _ signs.
+
+* Creating nagios state strings: There is a dictionary named 'nagios_state_names'.
+  You can use it to get nagios state string from nagios return codes. e.g.:
+	nagios_state_names[0] gives you 'OK'.
 
 Manpages:
 * 
@@ -31,3 +45,5 @@ Agent based checks:
   by your check. -> That makes the code more easy to understand
   and help not to break something if someone changes something
   in the check's parser.
+  In an optimal case you include several code examples of different
+  states.

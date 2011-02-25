@@ -90,6 +90,14 @@ def get_manpage(check):
             manpage[check] = ""
     return manpage[check]
 
+def get_checkfile(check):
+    if not check in checkfiles:
+        try:
+            checkfiles[check] = open('checks/%s' % check.split('.')[0]).read()
+        except IOError, e:
+            checkfiles[check] = ""
+    return checkfiles[check]
+
 def grep_manpage(check, match, section = None):
     manpage = get_manpage(check)
     if section is None:
@@ -205,6 +213,15 @@ def verify_reindent(check):
     r = reindent.Reindenter(f)
     f.close()
     return not r.run()
+
+# Toooo long lines:
+# - Are there too long lines in the check?
+
+def is_valid_linelength(check):
+    return True
+
+def verify_linelength(check):
+
 
 # Manpage:
 # - Does the check have a manpage?

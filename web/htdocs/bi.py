@@ -249,6 +249,19 @@ def compile_aggregation(rule, args):
     # Now compile one or more rules from elements. We group
     # all elements into one rule together, that have the same
     # value for all SINGLE arguments
+    
+    # Problem here: consider the following example:
+    #
+    #      aggregation_rules["tcp_cluster"] = (
+    #        "TCP Port $PORT$ $HOST1$ / $HOST2$", [ "aPORT", "aHOST1", "aHOST2" ], "best", [
+    #            ( "$HOST1$", "TCP-Port-$PORT$$" ),
+    #            ( "$HOST2$", "TCP-Port-$PORT$$" ),
+    #        ]
+    #      )
+    #
+    # Not in each leaf node each variable is present. That way not all
+    # variables are present in the instargs of each element. 
+
     groups = {}
     single_names = [ varname for (varname, (expansion, value)) in arginfo.items() if expansion == SINGLE ]
     for instargs, node in elements:
@@ -266,6 +279,7 @@ def compile_aggregation(rule, args):
         inst = dict(zip(single_names, key))
         inst_description = subst_vars(description, inst)
         result.append((inst, (list(needed_hosts), inst_description, funcname, nodes)))
+    debug(result)
     return result
 
 

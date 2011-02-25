@@ -1,0 +1,1 @@
+sudo cp -r * /omd/versions/default/share/check_mk/agents/

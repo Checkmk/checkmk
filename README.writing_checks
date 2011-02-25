@@ -1,6 +1,30 @@
 This file will help you to write *good* checks for Check_MK.
 
-Code styling:
+* Check file names should be named short and unique. They must consist
+  only of lower case characters, digits and underscores and begin
+  with a lower case character.
+
+  Vendor specific checks must be prefixed with a vendor specific unique
+  abbreviation (which you think of). Example: fsc_ for Fujitsu Siemens Computers.
+
+  Product specific checks must be prefixed with a product abbreviation, for
+  example "steelhead_status" for a Steelhead appliance of Riverbed.
+
+
+* SNMP based checks: if the check makes use of a standardized MIB which
+  is or might be implemented by more than one vendor, then the check should
+  not be named after the vendor but after the MIB. An example are the
+  hr_* checks.
+
+In case of SNMP checks you might use the name of the MIB you fetch data from as
+  part of check name
+
+Header notes:
+* If the check is contributed by a third party (like you), you must
+  add your name and your email address.
+
+* Avoid long lines. In an optimal case your lines don't exceed 80 chars.
+  100 chars.
 
 * Use four spaces for intending your code. Just don't use tab chars.
   And if you really can't life without tabs set the tab width to 8 spaces.
@@ -35,8 +59,7 @@ Code styling:
   must return None as parameter and the check function must name
   the parameter argument _no_params.
 
-* The name of the inventory and check function must be prefixed
-  with the name of the check type, for example inventory_h3c_lanswitch_cpu
+* The name of the inventory and check function must be prefixed with the name of the check type, for example inventory_h3c_lanswitch_cpu
   for 'h3c_lanswitch'
 
 * Order of implementation:
@@ -53,10 +76,19 @@ Code styling:
 
 * Configuration variables for main.mk 
 
+* Variable naming. Use lower case variable names where the keywords are splitted by _ signs.
+
+* Creating nagios state strings: There is a dictionary named 'nagios_state_names'.
+  You can use it to get nagios state string from nagios return codes. e.g.:
+	nagios_state_names[0] gives you 'OK'.
+
 Manpages:
 * 
 
 Performance data:
+* Only set perfdata flag when the check really produces performance data
+  output.
+
 * All performance data checks need to provide a pnp template
 
 * pnp rra configuration
@@ -74,3 +106,5 @@ Agent based checks:
   by your check. -> That makes the code more easy to understand
   and help not to break something if someone changes something
   in the check's parser.
+  In an optimal case you include several code examples of different
+  states.

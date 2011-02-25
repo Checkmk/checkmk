@@ -109,9 +109,12 @@ def grep_manpage(check, match, section = None):
         return False
 
 def usage(msg = ''):
-    print "No real help available..."
     if msg:
         print msg
+    print
+    for s, l, t in _args:
+        print '  %3s, %-15s    %s' % (s, l, t)
+    print
     sys.exit(0)
 
 ignored_variables = [
@@ -243,11 +246,16 @@ def verify_pnp_rra(check):
 # MAIN
 # #############################################################################
 
+_args = [
+    ('l:', 'score-limit=', 'Set an upper score limit. Only checks with a lower score will be shown'),
+    ('v',  'verbose',      'Enable verbose output'),
+    ('h',  'help',         'Show help message'),
+]
+
 _verbose     = 0
 _score_limit = None
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "vhl:",
-                    ["verbose", "help", "score-limit="])
+    opts, args = getopt.getopt(sys.argv[1:], ''.join([ x[0] for x in _args ]), [ x[1] for x in _args ])
 except getopt.error, msg:
     usage(msg)
 for o, a in opts:

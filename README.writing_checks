@@ -59,8 +59,9 @@ Coding style
   must return None as parameter and the check function must name
   the parameter argument _no_params.
 
-* The name of the inventory and check function must be prefixed with the name of the check type, for example inventory_h3c_lanswitch_cpu
-  for 'h3c_lanswitch'
+* The name of the inventory and check function must be
+  prefixed with the name of the check type, for example
+  inventory_h3c_lanswitch_cpu for 'h3c_lanswitch'
 
 * Order of implementation:
 
@@ -134,7 +135,9 @@ Performance data:
   graph in its current (and maybe future) forms. Those are in pnp-rraconf.
   Use a symlink here.
 
-* pnp rra configuration
+* Each check that outputs performance data should have a perf-o-meter.
+  For checks part of Check_MK this must be done in web/plugins/perfometer/check_mk.py.
+  For third party checks this should be done in a separate file in web/plugins/perfometer.
 
 SNMP based checks:
 * Only use numeric OIDs in your checks. Name based OIDs rely on MIB files

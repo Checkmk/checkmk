@@ -29,6 +29,8 @@
       mode (such as host or service detail)
     * FIX: fix PNP icon in cases where host and service icons are displayed in 
       same view (found by Wolfgang Barth)
+    * FIX: Fixed view column editor forgetting pending changes to other form
+           fields
 
     WATO:
     * FIX: fix problem with vanishing services on Windows. Affected were services

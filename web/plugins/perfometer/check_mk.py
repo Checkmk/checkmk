@@ -198,7 +198,7 @@ def performeter_check_mk_if(row, check_command, perf_data):
         if bw > 0.0:
             rrate = bytes / bw
         else:
-            rrate = 0
+            return 'No bandwidth given', '<table></table>'
         drate = max(0.02, rrate ** 0.5 ** 0.5)
         rperc = 100 * rrate
         dperc = 100 * drate

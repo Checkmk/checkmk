@@ -108,8 +108,10 @@ def grep_manpage(check, match, section = None):
                     return True
         return False
 
-def usage():
-    print "No real help available... The only option is -v|--verbose."
+def usage(msg = ''):
+    print "No real help available..."
+    if msg:
+        print msg
     sys.exit(0)
 
 ignored_variables = [
@@ -134,9 +136,9 @@ for check in get_checks():
             global_vars[check] += [ name ]
 
 SCORE_START = 10
-C_OK      = 1
-C_FAILED  = 2
-C_INVALID = 3
+C_OK        = 1
+C_FAILED    = 2
+C_INVALID   = 3
 TESTS = { 'manpage':     C_OK,
           'snmp_scan':   C_OK,
           'pnp_tmpl':    C_OK,
@@ -241,15 +243,18 @@ def verify_pnp_rra(check):
 # MAIN
 # #############################################################################
 
-_verbose = 0
+_verbose     = 0
+_score_limit = None
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "vh",
-                    ["verbose", "help"])
+    opts, args = getopt.getopt(sys.argv[1:], "vhl:",
+                    ["verbose", "help", "score-limit="])
 except getopt.error, msg:
     usage(msg)
 for o, a in opts:
     if o in ('-v', '--verbose'):
         _verbose += 1
+    elif o in ('-l', '--score-limit'):
+        _score_limit = int(a)
     elif o in ('-h', '--help'):
         usage()
 
@@ -268,7 +273,8 @@ for check in get_all_checks():
         else:
             check_results[test] = C_INVALID
 
-    results[check] = (score, check_results)
+    if _score_limit is None or score < _score_limit:
+        results[check] = (score, check_results)
 
 #
 # 2) Sort by score

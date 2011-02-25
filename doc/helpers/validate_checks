@@ -64,7 +64,9 @@ execfile('check_mk')
 __name__ = '__main__'
 
 def get_checks():
-    return [ l for l in os.listdir('checks') if not l.startswith('.') ]
+    files = os.listdir('checks')
+    return [ f for f in files if f.endswith(".include") and not f.startswith('.') ] + \
+       [ f for f in files if not f.endswith(".include") and not f.startswith('.') ]
 
 def check_has_perfdata(check):
     return check_info[check][2] == 1

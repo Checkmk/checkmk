@@ -1,11 +1,19 @@
-title: Check 3Com SuperStack 4 CPU Utilization
+title: Check CPU Utilization of 3COM and H3C switches.
 agents: snmp
 author: Florian Heigl <fh@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
- This Check queries the CPU utilization for SuperStack 4 switches, either standalone or that of the CPUs of all units in the stack. Note these switches don't handle snmp well and you should lower the frequence of SNMP based checks with them. 
- The CPU usage ratio returned by the check is the average load of the last 60 seconds.
+This Check queries the CPU utilization for various LAN switches that are supporting the MIB for H3C lan switches.
+These are: 
+Newer 3Com switches (Superstack 4 and later), H3C branded switches and now for example the HP "A-Series" Networking gear. The same switches from the original maker Huawei are not supporting the MIB. These also only support cpu stats, whereas the H3C Mib also gives Memory stats and Fabric status etc.
+The check should correctly label the CPU in your switch / stack / core switch module slots.
+
+Note some of these switches don't handle snmp well and might generate up to 90% cpu load while queried.
+To accomodate for this you should lower the frequency of SNMP based checks with them. 
+The CPU usage ratio returned by the check is the average load of the last 5 minutes.
+
+
 
 
 inventory:
@@ -18,13 +26,14 @@ critical (int): the percentage of 1-minute average load at which the switch is c
 
 
 [configuration] 
-superstack4_cpu_default_levels (int, int): the warn and critical levels for the checkl.
+h3c_lanswitch_cpu_default_levels (int, int): the warn and critical levels for the check.
  They are set to default to 50% for "WARN" and 75% for "CRIT".
+ If you expect heavy load (i.e. running full BGP tables) then you might want to adjust these.
 
 
 item:
- The CPU found by inventory (it's OID is a multiple of 65536 and will be divided to come to a sane value)
+ The CPU found by inventory (it's OID is a multiple of 65536 for stackable switches, or the slot Id it resides at for multicontroller switches and will be divided to come to a sane value). Later multicore CPU switches should be supported already.
 
 
 perfdata:
- It does not generate any performance data yet.
+ It does generate performance data (the 5min average CPU load)

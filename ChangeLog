@@ -5,7 +5,8 @@
 
     Checks & Agents:
     * FIX: drbd now handles output of older version without an ep field
-
+    * systemtime: new simple check for time synchronization on Windows
+      (needs agent update)
 
 
 1.1.9i9:

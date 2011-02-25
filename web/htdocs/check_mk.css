@@ -812,18 +812,18 @@ td.perfometer table {
   width: 120px;
   height: 22px;
   border-spacing: 0px;
-  border-collapse:collapse;
   padding: 0px;
   margin: 0px;
   border: 1px solid #aaa;
   height: 100%;
 }
 
-td.perfometer td {
+td.perfometer table tr td.inner {
     padding: 0px;
     margin: 0px;
     border: none;
     height: 22px;
+    padding-left: 1px;
 }
 
 td.perfometer a {

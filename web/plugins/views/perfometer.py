@@ -31,7 +31,7 @@ perfometers = {}
 
 # Helper functions for perfometers
 def perfometer_td(perc, color):
-    return '<td style="background-color: %s; width: %d%%;"></td>' % (color, int(float(perc)))
+    return '<td class="inner" style="background-color: %s; width: %d%%;"></td>' % (color, int(float(perc)))
 
 # Paint linear performeter with one value
 def perfometer_linear(perc, color):

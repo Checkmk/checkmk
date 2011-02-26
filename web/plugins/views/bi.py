@@ -143,19 +143,27 @@ def render_assume_icon(site, host, service):
     current = str(ass).lower()
     return '<img state="%s" class=assumption %s src="images/assume_%s.png">\n' % (current, mousecode, current)
 
-def aggr_render_leaf(tree):
+def aggr_render_leaf(tree, show_host):
     site, host = tree[4][0]
     service = tree[2]
     content = render_assume_icon(site, host, service) 
-    if service:
-        url = html.makeuri([("view_name", "service"), ("site", site), ("host", host), ("service", service)])
-    else:
+    if show_host or not service:
+        if not service:
+            text = "Host status"
+        else:
+            text = host
         url = html.makeuri([("view_name", "hoststatus"), ("site", site), ("host", host)])
-        service = "Host status"
-    descr = '<a href="%s">%s</a>' % (url, service)
-    return aggr_render_node(tree, content + descr)
+        content += '<a href="%s">%s</a>' % (url, text)
 
-def aggr_render_node(tree, title, mousecode = None):
+    if service:
+        if show_host:
+            content += "<b class=bullet>&diams;</b>"
+        url = html.makeuri([("view_name", "service"), ("site", site), ("host", host), ("service", service)])
+        content += '<a href="%s">%s</a>' % (url, service)
+
+    return aggr_render_node(tree, content, None, show_host)
+
+def aggr_render_node(tree, title, mousecode, show_host):
     state = tree[0]
     assumed_state = tree[1]
     if assumed_state != None:
@@ -190,13 +198,13 @@ def paint_aggr_tree_foldable(row):
        'onmouseout="this.style.cursor=\'auto\';" ' \
        'onclick="toggle_subtree(this);" '
 
-    def render_subtree(tree, level=1):
+    def render_subtree(tree, level, show_host):
         nodes = tree[6]
         if nodes == None:
-            return aggr_render_leaf(tree)
+            return aggr_render_leaf(tree, show_host)
         else:
             h = '<ul class=title>'
-            h += aggr_render_node(tree, tree[2], mousecode)
+            h += aggr_render_node(tree, tree[2], mousecode, show_host)
 
             expansion_level = int(get_painter_option("aggr_expand"))
             if level > expansion_level:
@@ -208,11 +216,12 @@ def paint_aggr_tree_foldable(row):
             for node in tree[6]:
                 if only_problems and node[0] == 0:
                     continue
-                h += '<li>' + render_subtree(node, level + 1) + '</li>\n'
+                h += '<li>' + render_subtree(node, level + 1, show_host) + '</li>\n'
             return h + '</ul></ul>\n'
 
     tree = row["aggr_treestate"]
-    htmlcode = render_subtree(tree)
+    affected_hosts = row["aggr_hosts"]
+    htmlcode = render_subtree(tree, 1, len(affected_hosts) > 1)
     return "aggrtree", htmlcode
 
 
@@ -223,22 +232,22 @@ def paint_aggr_tree_ltr(row, mirror):
     else:
         td = '<td style="white-space: nowrap;"'
 
-    def gen_table(tree, height):
+    def gen_table(tree, height, show_host):
         nodes = tree[6]
         is_leaf = nodes == None
         if is_leaf:
-            return gen_leaf(tree, height)
+            return gen_leaf(tree, height, show_host)
         else:
-            return gen_node(tree, height)
+            return gen_node(tree, height, show_host)
 
-    def gen_leaf(tree, height):
-        return [(aggr_render_leaf(tree), height, [])]
+    def gen_leaf(tree, height, show_host):
+        return [(aggr_render_leaf(tree, show_host), height, [])]
 
-    def gen_node(tree, height):
+    def gen_node(tree, height, show_host):
         leaves = []
         for node in tree[6]:
-            leaves += gen_table(node, height - 1)
-        h = '<div class="aggr tree">' + aggr_render_node(tree, tree[2], '') + "</div>"
+            leaves += gen_table(node, height - 1, show_host)
+        h = '<div class="aggr tree">' + aggr_render_node(tree, tree[2], '', show_host) + "</div>"
         leaves[0][2].append((len(leaves), h))
         return leaves
 
@@ -278,7 +287,7 @@ def paint_aggregated_tree_state(row):
 multisite_painters["aggr_treestate"] = {
     "title"   : "Aggregation: complete tree",
     "short"   : "Tree",
-    "columns" : [ "aggr_treestate" ],
+    "columns" : [ "aggr_treestate", "aggr_hosts" ],
     "options" : [ "aggr_expand", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap" ],
     "paint"   : paint_aggregated_tree_state,
 }

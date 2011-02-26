@@ -250,6 +250,16 @@ def compile_aggregation(rule, args):
     # all elements into one rule together, that have the same
     # value for all SINGLE arguments
     
+
+    groups = {}
+    single_names = [ varname for (varname, (expansion, value)) in arginfo.items() if expansion == SINGLE ]
+    for instargs, node in elements:
+        # Honor that some variables might be unused and thus not contained in instargs
+        key = tuple([ (varname, instargs[varname]) for varname in single_names if varname in instargs ])
+        nodes = groups.get(key, [])
+        nodes.append(node)
+        groups[key] = nodes
+
     # Problem here: consider the following example:
     #
     #      aggregation_rules["tcp_cluster"] = (
@@ -261,25 +271,62 @@ def compile_aggregation(rule, args):
     #
     # Not in each leaf node each variable is present. That way not all
     # variables are present in the instargs of each element. 
+    # Resolution: We need to merge incomplete instantiations together in
+    # order to make them complete
+    num = len(single_names) # number of needed variables
 
-    groups = {}
-    single_names = [ varname for (varname, (expansion, value)) in arginfo.items() if expansion == SINGLE ]
-    for instargs, node in elements:
-        # Honor that some variables might be unused and thus not contained in instargs
-        key = tuple([ instargs[varname] for varname in single_names if varname in instargs ])
-        nodes = groups.get(key, [])
-        nodes.append(node)
-        groups[key] = nodes
+    # Two keys can be merged if for all identical keys
+    # they have identical values
+    def merge_keys(keya, keyb):
+        b = dict(keyb)
+        for var, val in keya:
+            if var in b and b[var] != val:
+                return None
+            elif var not in b:
+                b[var] = val
+        return tuple(b.items())
+
+    def merge_groups(groups):
+        one_merge = False
+        for ikey, inodes in groups.items():
+            if len(ikey) != num:
+                for key, nodes in groups.items():
+                    if key != ikey:
+                        newkey = merge_keys(ikey, key)
+                        if newkey:
+                            if key in groups: del groups[key]
+                            if ikey in groups: del groups[ikey]
+                            newnodes = nodes + inodes
+                            groups[newkey] = newnodes
+                            return True
+                            one_merge = True
+        return one_merge
+
+    while merge_groups(groups):
+        pass
+    
+    # Check for unmergeable entries, fill up missing values
+    # from parameters (assuming they are not regexes)
+    for ikey, inodes in groups.items():
+        if len(ikey) != num:
+            d = dict(ikey)
+            for var in single_names:
+                if var not in d:
+                    d[var] = arginfo[var][1]
+            newkey = tuple(d.items())
+            groups[newkey] = inodes
+            del groups[ikey]
+            
 
     result = []
     for key, nodes in groups.items():
+        nodes.sort()
         needed_hosts = set([])
         for node in nodes:
             needed_hosts.update(node[0])
-        inst = dict(zip(single_names, key))
+        inst = dict(key)
         inst_description = subst_vars(description, inst)
         result.append((inst, (list(needed_hosts), inst_description, funcname, nodes)))
-    debug(result)
     return result
 
 

@@ -1,0 +1,10 @@
+Title: df magic broken
+Component: checks
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-02-26 13:15:33
+Class: bug
+
+filesystem_default_levels["magic"] = 0.8 
+seems to break the df check in 1.1.9i9

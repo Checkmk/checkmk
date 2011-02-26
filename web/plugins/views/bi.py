@@ -253,7 +253,7 @@ def paint_aggr_tree_ltr(row, mirror):
 
     tree = row["aggr_treestate"]
     depth = bi.status_tree_depth(tree)
-    leaves = gen_table(tree, depth)
+    leaves = gen_table(tree, depth, row["aggr_hosts"] > 1)
     h = '<table class="aggrtree">'
     odd = "odd"
     for code, colspan, parents in leaves:

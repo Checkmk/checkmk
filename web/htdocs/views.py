@@ -1196,9 +1196,10 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
 
     if show_footer:
         if html.live.successfully_persisted():
-            html.add_status_icon("persist", "Reused persistent livestatus connection from earlier request")
+            pid = os.getpid()
+            html.add_status_icon("persist", "Reused persistent livestatus connection from earlier request (PID %d)" % pid)
         if bi.reused_compilation():
-            html.add_status_icon("aggrcomp", "Reused cached compiled BI aggregations")
+            html.add_status_icon("aggrcomp", "Reused cached compiled BI aggregations (PID %d)" % pid)
 
         html.bottom_focuscode()
         if 'Z' in display_options:

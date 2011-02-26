@@ -406,7 +406,7 @@ class BIStatusFilter(Filter):
         else:
             self.code = what[0]
         self.prefix = "bi%ss" % self.code
-        vars = [ self.prefix + str(x) for x in [ 0, 1, 2, 3 ] ]
+        vars = [ self.prefix + str(x) for x in [ -1, 0, 1, 2, 3 ] ]
         if self.code == 'a':
             vars.append(self.prefix + "n")
         Filter.__init__(self, self.column, title, "aggr", vars, [])
@@ -419,7 +419,7 @@ class BIStatusFilter(Filter):
             defval = ""
         else:
             defval = "on"
-        for varend, text in [('0', 'OK'), ('1', 'WARN'), ('2', 'CRIT'), ('3', 'UNKNOWN'), ('n', 'unset')]:
+        for varend, text in [('0', 'OK'), ('1', 'WARN'), ('2', 'CRIT'), ('3', 'UNKNOWN'), ('-1', 'PENDING'), ('n', 'unset')]:
             if self.code != 'a' and varend == 'n':
                 continue # no unset for read and effective state
             var = self.prefix + varend
@@ -427,14 +427,14 @@ class BIStatusFilter(Filter):
             html.write(" %s " % text)
 
     def filter_table(self, rows):
-        headers = []
+        jeaders = []
         if html.var("filled_in"):
             defval = ""
         else:
             defval = "on"
 
         allowed_states = []
-        for i in ['0','1','2','3','n']:
+        for i in ['0','1','2','3','-1','n']:
             if html.var(self.prefix + i, defval) == "on":
                 if i == 'n':
                     s = None

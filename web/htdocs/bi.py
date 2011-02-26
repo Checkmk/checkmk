@@ -772,6 +772,7 @@ def table(h, columns, add_headers, only_sites, limit, filters):
     # later out again.
     only_group = None
     only_service = None
+    
     for filter in filters:
         if filter.name == "aggr_group":
             only_group = filter.selected_group()

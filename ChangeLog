@@ -7,6 +7,8 @@
     * FIX: drbd now handles output of older version without an ep field
     * systemtime: new simple check for time synchronization on Windows
       (needs agent update)
+    * FIX: repaired df_netapp32
+    * Added SNMP scan function of df_netapp and df_netapp32
 
 
 1.1.9i9:

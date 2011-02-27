@@ -1,0 +1,10 @@
+Title: Drop direct RRD updates
+Component: core
+Benefit: 1
+State: open
+Cost: 2
+Date: 2011-02-27 14:24:50
+Class: cleanup
+
+That feature should be completely removed from the code and
+documentation as soon as we open the 1.1.11 series.

@@ -30,6 +30,7 @@
       now df-parameter "trend_perfdata" (see new man page of df)
     * hp_proliant_*: improve scan function (now just looks for "proliant")
     * FIX: cisco_temp_perf: fix return state in case of WARNING (was 0 = OK)
+    * FIX: repair PNP template for df when using trends
 
 1.1.9i9:
     Core, Setup, etc.:

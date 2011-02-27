@@ -71,6 +71,8 @@ if (isset($DS[2])) {
     $def[2] .= "DEF:trend=$RRDFILE[3]:$DS[3]:AVERAGE ";
     $def[2] .= "CDEF:growth_pos=growth_max,0,MAX ";
     $def[2] .= "CDEF:growth_neg=growth_min,0,MIN ";
+    $def[2] .= "CDEF:growth_minabs=0,growth_min,- "; 
+    $def[2] .= "CDEF:growth=growth_minabs,growth_max,MAX ";
     $def[2] .= "HRULE:0#c0c0c0 ";
     $def[2] .= "AREA:growth_pos#3060f0:\"Grow\" "; 
     $def[2] .= "AREA:growth_neg#30f060:\"Shrink \" "; 

@@ -42,7 +42,7 @@ inventory_df_exclude_mountpoints   = [ '/dev' ]
 # Alternative syntax for parameters:
 # {  "levels"         : (80, 90),  # levels in percent
 #    "magic"          : 0.5,       # magic factor
-#    "magic_norm"     : 20,        # normsize in GB
+#    "magic_normsize" : 20,        # normsize in GB
 #    "levels_low"     : (50, 60),  # magic never lowers levels below this (percent)
 #    "trend_range"    : 24,        # hours
 #    "trend_mb"       : (10, 20),  # MB of change during trend_range

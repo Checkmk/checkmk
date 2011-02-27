@@ -42,7 +42,7 @@ examples:
  filesystem_default_levels = {
     "levels"         : (80, 90),  # levels in percent
     "magic"          : 0.8,       # magic factor
-    "magic_norm"     : 20,        # normsize in GB
+    "magic_normsize" : 20,        # normsize in GB
     "levels_low"     : (50, 60),  # magic never lowers levels below this (percent)
     "trend_range"    : 48,        # hours
     "trend_mb"       : (10, 20),  # MB of change during trend_range
@@ -113,7 +113,7 @@ parameters (dict): This check supports two types of parameters. The
  the levels for large filesystems and lowers them for small ones. Please
  look at online documentation for more details about the magic factor.
 
- {"magic_norm"}: Norm size of a filesystem for the magic computation.
+ {"magic_normsize"}: Norm size of a filesystem for the magic computation.
  The default for this is {20}. It is measured in {GB}.
 
  {"levels_low"}: When applying the magic factor the warn/crit levels 

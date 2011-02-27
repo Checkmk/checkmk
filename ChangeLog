@@ -21,6 +21,7 @@
       (thanks to Claas Rockmann-Buchterkirche)
     * FIX: df_netapp/32: fixed output of used percentage (was always
       0% due to integer division)
+    * FIX: fixed manual of df (magic_norm -> magic_normsize)
 
 
 1.1.9i9:

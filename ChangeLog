@@ -9,6 +9,8 @@
       (needs agent update)
     * FIX: repaired df_netapp32
     * Added SNMP scan function of df_netapp and df_netapp32
+    * FIX: repaired apc_symmetra (was broken due to new option -Ot 
+      for SNMP)
 
 
 1.1.9i9:

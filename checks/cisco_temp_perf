@@ -74,7 +74,7 @@ def check_cisco_temp_perf(item, params, info):
             if state == 1:
                 return (0, "OK - state is normal%s" % temptext, perfdata)
             elif state == 2:
-                return (0, "WARN - state is %s%s" % (statename, temptext), perfdata)
+                return (1, "WARN - state is %s%s" % (statename, temptext), perfdata)
             elif state in [ 5, 6 ]:
                 return (3, "UNKNOWN - state is %s" % statename)
             else:

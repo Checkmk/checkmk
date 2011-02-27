@@ -28,7 +28,7 @@
     * Added Perf-O-Meter for non-df filesystem checks (e.g. netapp)
     * FIX: removed filesystem_trend_perfdata. It didn't work. Use
       now df-parameter "trend_perfdata" (see new man page of df)
-
+    * hp_proliant_*: improve scan function (now just looks for "proliant")
 
 1.1.9i9:
     Core, Setup, etc.:

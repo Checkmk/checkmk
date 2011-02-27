@@ -6,6 +6,7 @@
       checks
     * RPM: use BuildArch: noarch in spec file rather than as a command
       line option (thanks to Ulrich Kiermayr)
+    * FIX: setup.sh: do not prepend current directory to url_prefix
 
     Checks & Agents:
     * FIX: drbd now handles output of older version without an ep field

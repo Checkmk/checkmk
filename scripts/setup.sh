@@ -347,7 +347,7 @@ Please specify the complete path (dir + filename) of check_icmp"
 ask_title "Integration with Apache"
 # -------------------------------------------------------------------
 
-ask_dir url_prefix / / "URL Prefix for Web addons" \
+ask_dir -d url_prefix / / "URL Prefix for Web addons" \
  "Usually the Multisite GUI is available at /check_mk/ and PNP4Nagios
 is located at /pnp4nagios/. In some cases you might want to define some
 prefix in order to be able to run more instances of Nagios on one host.

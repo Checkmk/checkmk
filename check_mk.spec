@@ -33,6 +33,8 @@ Source:    check_mk-%{version}.tar.gz
 BuildRoot: /tmp/rpm.buildroot.check_mk-%{version}
 AutoReq:   off
 AutoProv:  off
+BuildArch: noarch
+
 
 %description
 check_mk is a xinetd-based remote agent for monitoring Linux and Unix-Servers

@@ -130,7 +130,7 @@ rpm $(DISTNAME)-1.noarch.rpm:
 	$(MAKE) dist
 	cp $(DISTNAME).tar.gz $(RPM_TOPDIR)/SOURCES
 	sed "s/^Version:.*/Version: $(VERSION)/" $(NAME).spec > $(NAME)-$(VERSION).spec
-	rpmbuild -ba --target=noarch --buildroot "$$(pwd)/$(RPM_BUILDROOT)" --define "_topdir $$(pwd)/$(RPM_TOPDIR)" $(NAME)-$(VERSION).spec
+	rpmbuild -ba --buildroot "$$(pwd)/$(RPM_BUILDROOT)" --define "_topdir $$(pwd)/$(RPM_TOPDIR)" $(NAME)-$(VERSION).spec
 	rm -f $(DISTNAME).spec
 	mv -v $(RPM_TOPDIR)/RPMS/*/* .
 	mv -v $(RPM_TOPDIR)/SRPMS/* .

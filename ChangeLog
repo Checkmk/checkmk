@@ -4,6 +4,8 @@
       they are not SNMP hosts.
     * FIX: precompile: make sure check includes are added before actual
       checks
+    * RPM: use BuildArch: noarch in spec file rather than as a command
+      line option (thanks to Ulrich Kiermayr)
 
     Checks & Agents:
     * FIX: drbd now handles output of older version without an ep field

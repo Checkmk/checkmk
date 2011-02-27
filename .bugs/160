@@ -1,0 +1,9 @@
+Title: Uptime-Check for SNMP hosts
+Component: checks
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-02-27 13:18:21
+Class: feature
+
+Like the agent based one but retrieved via SNMP.

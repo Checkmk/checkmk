@@ -2015,20 +2015,25 @@ no_inventory_possible = None
     # check info table
     # We need to include all those plugins that are referenced in the host's
     # check table
-    filenames = set([])
+    filenames = []
     for checktype in needed_types:
+        # Add library files needed by check (also look in local)
+        for lib in check_includes.get(checktype, []):
+            if local_checks_dir and os.path.exists(local_checks_dir + "/" + lib):
+                to_add = local_checks_dir + "/" + lib
+            else:
+                to_add = checks_dir + "/" + lib
+            if to_add not in filenames:
+                filenames.append(to_add)
+
+        # Now add check file itself
         path = find_check_plugin(checktype)
         if not path:
             raise MKGeneralException("Cannot find plugin for check type %s (missing file %s/%s)\n" % \
                                      (checktype, checks_dir, checktype))
-        filenames.add(path)
+        if path not in filenames:
+            filenames.append(path)
 
-        # Add library files needed by check (also look in local)
-        for lib in check_includes.get(checktype, []):
-            if local_checks_dir and os.path.exists(local_checks_dir + "/" + lib):
-                filenames.add(local_checks_dir + "/" + lib)
-            else:
-                filenames.add(checks_dir + "/" + lib)
 
     output.write("check_info = {}\n" +
                  "check_includes = {}\n" +
@@ -2037,7 +2042,6 @@ no_inventory_possible = None
                  "snmp_info = {}\n" +
                  "snmp_info_single = {}\n" +
                  "snmp_scan_functions = {}\n")
-
 
     for filename in filenames:
         output.write("# %s\n" % filename)

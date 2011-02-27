@@ -13,6 +13,8 @@
       for SNMP)
     * FIX: df, hr_fs and other filesystem checks: fix bug if using
       magic number.
+    * FIX: scan function avoids hr_cpu and ucd_cpu_utilization
+      at the same time
 
 
 1.1.9i9:

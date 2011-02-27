@@ -1,0 +1,18 @@
+Title: Add -Cc to snmpwalk options
+Component: core
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-02-27 14:08:10
+Class: feature
+
+This avoids problem on some devices. Might other introduce new ones.
+So I'm not sure what to do here. From the manpage of snmpwalk:
+
+-Cc Do not check whether the returned OIDs are increasing.  Some agents
+(LaserJets are an example) return OIDs out of order, but can complete the walk
+anyway.  Other agents return OIDs that are out of order and can cause
+snmpwalk to loop indefinitely.  By default, snmpwalk tries to detect
+this behavior and warns you when it hits an agent acting illegally.
+Use -Cc to turn off this check.
+

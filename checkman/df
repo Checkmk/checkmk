@@ -48,10 +48,14 @@ examples:
     "trend_mb"       : (10, 20),  # MB of change during trend_range
     "trend_perc"     : (1, 2),    # Percent change during trend_range
     "trend_timeleft" : (72, 48)   # run time left in hours until full
+    "trend_perfdata" : False      # no performance data for trends
  }
 
  # alternative[2]: Just change the default partially
  filesystem_default_levels["magic"] = 0.8
+
+ # Make df output trend performance data (beware of exsting RRDs)
+ filesystem_default_levels["trend_perfdata"] = True
 
 
  # Override warning/critical levels for all checks where
@@ -81,13 +85,13 @@ examples:
 perfdata: 
  One or three values: The first value is the used space of the filesystem 
  in MB. Also the minimum (0 MB), maximum (size of the filesystem) and the warning and critical
- levels in MB are provided. If you set {filesystem_trend_perfdata = True}, then
+ levels in MB are provided. If you set the parameter {"trend_perfdata" : True}, then
  two additional values are output: the change of the usage in MB per range 
  since the last check (e.g. in MB per 24 hours) and the averaged change (so called trend),
- also in MB per range.
+ also in MB per range. This can done globally in {main.mk} by {filesystem_default_levels["trend_perfdata"] = True}.
 
  Please note, that - until you use the storage type {MULTIPLE} in PNP4Nagios - 
- changing the setting of {filesystem_trend_perfdata} will stop all updates to
+ changing the parameter {"trend_perfdata"} will stop all updates to
  your existing filesystem RRDs. You need either to delete or convert your RRDs
  if you want to change.
 
@@ -141,6 +145,10 @@ parameters (dict): This check supports two types of parameters. The
  the disk is full is 48 hours or less. It will get critical if only
  24 hours are assumed to be left.
 
+ {"trend_perfdata"}: If this is set to {True}, then the check will
+ output two further performance data values: the current growth
+ and the trend.
+
  It is still possible to specify a pair or triple of numbers
  {instead} of a dictionary:
 
@@ -161,6 +169,3 @@ inventory_df_exclude_mountpoints (list of strings): List of mount points to excl
 filesystem_default_levels: Default levels for filesystem detected by inventory. 
  This variable is preset to {{ "levels" : (80, 90), "magic_normsize"  : 20, 
  "levels_low" : (50, 60), "trend_range" : 24 }}
-filesystem_trend_perfdata (boolean): Whether or not to output trend performance data. This is
- preset to {False} so that no trend performance data is output. If you change this setting you
- need to convert or delete all RRD databases of filesystems.

@@ -53,15 +53,11 @@ filesystem_default_levels = {
     "levels"          : (80, 90), # warn/crit in percent
     "magic_normsize"  : 20,       # Standard size if 20 GB
     "levels_low"      : (50, 60), # Never move warn level below 50% due to magic factor
-    "trend_range"     : 24
+    "trend_range"     : 24,
+    "trend_perfdata"  : False,    # do not send performance data for trends
 }
 
 # Users might have set filesystem_default_levels to old format like (80, 90)
-
-# Turn off trend perfdata per default in order to keep
-# compatible to existing RRDs
-filesystem_trend_perfdata = False
-
 
 # needed by df, df_netapp and vms_df and maybe others in future:
 # compute warning and critical levels. Takes into account the size of
@@ -164,7 +160,7 @@ def df_check_filesystem(hostname, mountpoint, size_mb, avail_mb, params):
             this_time = time.time()
             # rate in MB/s, allow negative
             timdif, rate = get_counter("df.%s.delta" % mountpoint, this_time, used_mb, True)
-            if filesystem_trend_perfdata:
+            if levels.get("trend_perfdata"):
                 perfdata.append(("growth", rate * range_sec))
             # average trend, initialize with zero
             timedif, rate_avg = get_average("df.%s.trend" % mountpoint, this_time, rate, range_sec, True)
@@ -202,7 +198,7 @@ def df_check_filesystem(hostname, mountpoint, size_mb, avail_mb, params):
                         status = 2
                         problems[-1] += "!"
 
-            if filesystem_trend_perfdata:
+            if levels.get("trend_perfdata"):
                 perfdata.append(("trend", trend, wa, cr, 0, size_mb / range))
 
             # compute time until filesystem is full (only for positive trend, of course)

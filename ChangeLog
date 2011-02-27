@@ -25,6 +25,8 @@
       0% due to integer division)
     * FIX: fixed manual of df (magic_norm -> magic_normsize)
     * Added Perf-O-Meter for non-df filesystem checks (e.g. netapp)
+    * FIX: removed filesystem_trend_perfdata. It didn't work. Use
+      now df-parameter "trend_perfdata" (see new man page of df)
 
 
 1.1.9i9:

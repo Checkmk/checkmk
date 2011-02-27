@@ -59,13 +59,14 @@ def perfometer_check_mk_df(row, check_command, perf_data):
     h += perfometer_td(perc_used, color)
     h += perfometer_td(perc_free, "white")
     h += "</tr></table>"
-    # return "%d%% of %.1fGB used" % (perc_used, float(value)/1024.0), h
     return "%d%%" % perc_used, h
-    return "%d%% used" % perc_used, h
 
 perfometers["check_mk-df"] = perfometer_check_mk_df
 perfometers["check_mk-vms_df"] = perfometer_check_mk_df
 perfometers["check_disk"] = perfometer_check_mk_df
+perfometers["check_mk-df_netapp"] = perfometer_check_mk_df
+perfometers["check_mk-df_netapp32"] = perfometer_check_mk_df
+perfometers["check_mk-hr_fs"] = perfometer_check_mk_df
 
 
 def perfometer_check_mk_kernel_util(row, check_command, perf_data):

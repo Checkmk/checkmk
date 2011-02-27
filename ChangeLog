@@ -24,6 +24,7 @@
     * FIX: df_netapp/32: fixed output of used percentage (was always
       0% due to integer division)
     * FIX: fixed manual of df (magic_norm -> magic_normsize)
+    * Added Perf-O-Meter for non-df filesystem checks (e.g. netapp)
 
 
 1.1.9i9:

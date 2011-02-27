@@ -123,7 +123,7 @@ def df_check_filesystem(hostname, mountpoint, size_mb, avail_mb, params):
         return (1, "WARN - size of filesystem is 0 MB")
 
     used_mb   = size_mb - avail_mb
-    used_perc = 100.0 * (used_mb / size_mb)
+    used_perc = 100.0 * (float(used_mb) / size_mb)
     size_gb   = size_mb / 1024.0
 
     # Get warning and critical levels already with 'magic factor' applied

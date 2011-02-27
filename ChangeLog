@@ -17,8 +17,10 @@
       magic number.
     * FIX: scan function avoids hr_cpu and ucd_cpu_utilization
       at the same time
-    * FIX: HP-UX agent: fix output of df for long mount points
+    * FIX: HP-UX agent: fixed output of df for long mount points
       (thanks to Claas Rockmann-Buchterkirche)
+    * FIX: df_netapp/32: fixed output of used percentage (was always
+      0% due to integer division)
 
 
 1.1.9i9:

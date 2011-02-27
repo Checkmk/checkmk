@@ -164,5 +164,3 @@ filesystem_default_levels: Default levels for filesystem detected by inventory.
 filesystem_trend_perfdata (boolean): Whether or not to output trend performance data. This is
  preset to {False} so that no trend performance data is output. If you change this setting you
  need to convert or delete all RRD databases of filesystems.
-df_lowest_warning_level(int): The magic factor will never lower the warning level for filesystems below this percentage. The default is {50}.
-df_lowest_critical_level(int): This is the minimum critical level when using the magic factor. This is preset to {60} (percent).

@@ -28,9 +28,8 @@
 
 # OBSOLETE:
 # df_magicnumber_normsize            = 20 # Standard size if 20 GB
-
-df_lowest_warning_level            = 50 # Never move warn level below 50% due to magic factor
-df_lowest_critical_level           = 60 # Never move crit level below 60% due to magic factor
+# df_lowest_warning_level            = 50 # Never move warn level below 50% due to magic factor
+# df_lowest_critical_level           = 60 # Never move crit level below 60% due to magic factor
 
 # Settings for filesystem checks (df, df_vms, df_netapp and maybe others)
 filesystem_levels                  = [] # obsolete. Just here to check config and warn if changed
@@ -103,10 +102,11 @@ def get_filesystem_levels(host, mountpoint, size_gb, params):
         crit_scaled = 100 - (( 100 - crit ) * scale)
 
         # Make sure, levels do never get too low due to magic factor
-        if warn_scaled < df_lowest_warning_level:
-            warn_scaled = df_lowest_warning_level
-        if crit_scaled < df_lowest_critical_level:
-            crit_scaled = df_lowest_critical_level
+        lowest_warning_level, lowest_critical_level = levels["levels_low"]
+        if warn_scaled < lowest_warning_level:
+            warn_scaled = lowest_warning_level
+        if crit_scaled < lowest_critical_level:
+            crit_scaled = lowest_critical_level
     else:
         warn_scaled = warn
         crit_scaled = crit

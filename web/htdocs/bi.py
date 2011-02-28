@@ -217,12 +217,18 @@ def find_all_leaves(node):
 
 # Precompile one aggregation rule. This outputs a list of trees.
 # This function is called recursively.
-def compile_aggregation(rule, args):
+def compile_aggregation(rule, args, lvl = 0):
     if len(rule) != 4:
         raise MKConfigError("<h1>Invalid aggregation rule</h1>"
                 "Aggregation rules must contain four elements: description, argument list, "
                 "aggregation function and list of nodes. Your rule has %d elements: "
                 "<pre>%s</pre>" % (len(rule), pprint.pformat(rule)))
+
+    if lvl == 50:
+        raise MKConfigError("<h1>Depth limit reached</h1>"
+                "The nesting level of aggregations is limited to 50. You either configured "
+                "too many levels or built an infinite recursion.<br /><br />"
+                "You should really review your config!")
 
     description, arglist, funcname, nodes = rule
 
@@ -244,7 +250,7 @@ def compile_aggregation(rule, args):
         else:
             rule = config.aggregation_rules[node[0]]
             instargs = compile_args([ instantiate(arg, arginfo)[0] for arg in node[1] ])
-            elements += compile_aggregation(rule, instargs)
+            elements += compile_aggregation(rule, instargs, lvl + 1)
 
     # Now compile one or more rules from elements. We group
     # all elements into one rule together, that have the same

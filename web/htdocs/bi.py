@@ -439,9 +439,8 @@ def compile_leaf_node(arginfo, host, service):
     found = []
 
     # strip ( ) of re - needed for host tags
-    host_re_stripped = host_re
-    while host_re_stripped.startswith("((") and host_re_stripped.endswith("))"):
-        host_re_stripped = host_re_stripped[1:-1]
+    host_re_stripped    = strip_re(host_re)
+    service_re_stripped = strip_re(service_re)
 
     honor_site = SITE_SEP in host_re
 
@@ -466,9 +465,9 @@ def compile_leaf_node(arginfo, host, service):
             # to get a prefix match on host names. This is almost never what
             # they want. For services this is useful, however.
             if host_re.endswith("$"):
-                anchored = host_re
+                anchored = host_re_stripped
             else:
-                anchored = host_re + "$"
+                anchored = host_re_stripped + "$"
 
             # In order to distinguish hosts with the same name on different
             # sites we prepend the site to the host name. If the host specification
@@ -485,7 +484,7 @@ def compile_leaf_node(arginfo, host, service):
                 found.append((newarg, ([(site, hostname)], (site, hostname), config.HOST_STATE)))
             else:
                 for service in services:
-                    svc_instargs = do_match(service_re, service)
+                    svc_instargs = do_match(service_re_stripped, service)
                     if svc_instargs != None:
                         newarg = dict(zip(host_vars, host_instargs))
                         newarg.update(dict(zip(service_vars, svc_instargs)))
@@ -493,6 +492,11 @@ def compile_leaf_node(arginfo, host, service):
 
     found.sort()
     return found
+
+def strip_re(re):
+    while re.startswith("((") and re.endswith("))"):
+        re = re[1:-1]
+    return re
 
 regex_cache = {}
 def regex(r):

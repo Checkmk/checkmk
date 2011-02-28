@@ -7,6 +7,8 @@
     * RPM: use BuildArch: noarch in spec file rather than as a command
       line option (thanks to Ulrich Kiermayr)
     * FIX: setup.sh: do not prepend current directory to url_prefix
+    * setup.sh: Allow to install Check_MK into existing OMD site (>= 0.46).
+      This is still experimental!
 
     Checks & Agents:
     * FIX: drbd now handles output of older version without an ep field

@@ -378,189 +378,232 @@ def detect_pnp():
     except:
         pass
 
-try:
-    result = {}
 
-    pid, nagiosuser, configfile = find_pid_and_configfile()
-    nagios_dir = os.path.dirname(configfile)
-    result['nagios_config_file'] = configfile
-    result['nagiosuser'] = nagiosuser
-    pipes = find_pipes(open_files(pid))
-    if len(pipes) > 0:
-        result['nagpipe'] = pipes[0]
-
-    # Path to executable
-    result['nagios_binary'] = process_executable(pid)
-
-    # Path to startscript
-    for path in [ '/etc/init.d/nagios', '/etc/init.d/nagios3', '/etc/init.d/icinga' ]:
-        if os.path.exists(path):
-            result['nagios_startscript'] = path
-            break
-
-    nagconf = parse_nagios_config(configfile)
-    nagconf_dict = dict(nagconf)
-
-    try:
-        cgifile = os.path.dirname(configfile) + "/cgi.cfg"
-        cgiconf = dict(parse_nagios_config(cgifile))
-        result['htdocsdir'] = cgiconf['physical_html_path']
-    except:
-        cgiconf = {}
-
-    # Suche nach cfg_dir Direktiven. Wir suchen
-    # einen flauschigen Platz fuer unsere Konfigdateien
-    cfg_dirs = [ value for key, value in nagconf if key == 'cfg_dir' ]
-    if len(cfg_dirs) > 0:
-        # Wenn es mehrere gibt, bevorzuge ich das, das im gleichen
-        # Verzeichnis, wie die Nagios-Konfigdatei selbst liegt.
-        # Debian legt ein cfg_dir fuer die Plugins an....
-        if len(cfg_dirs) == 1:
-            result['nagconfdir'] = cfg_dirs[0]
-        else:
-            dir = os.path.dirname(configfile)
-            for d in cfg_dirs:
-                if os.path.dirname(d) == dir:
-                    result['nagconfdir'] = d
-                    break
-            else:
-                result['nagconfdir'] = cfg_dirs[0]
+def detect_omd():
+    site = os.getenv("OMD_SITE")
+    root = os.getenv("OMD_ROOT")
+    if not site or not root:
+        return None
     else:
-        # Mist. Kein cfg_dir in nagios.cfg. Das ist z.B. bei
-        # der immer noch verbreiteten Defaultkonfig der Fall.
-        # Wir legen einfach selbst eins fest und hängen das
-        # eigenmächtig hinten an die Config an
-        nagconfdir = nagios_dir + "/check_mk.d"
-        result['nagconfdir'] = nagconfdir
-        result['nagiosaddconf'] = "cfg_dir=" + nagconfdir
+        return {
+      'apache_config_dir'       : root + "/etc/apache/conf.d",
+      'cgiurl'                  : "/" + site + "/nagios/cgi-bin/",
+      'check_icmp_path'         : root + "/lib/nagios/plugins/check_icmp",
+      'htdocsdir'               : root + "/share/nagios/htdocs",
+      'htpasswd_file'           : root + "/etc/htpasswd",
+      'livestatus_in_nagioscfg' : False,
+      'nagconfdir'              : root + "/etc/nagios/conf.d",
+      'nagiosaddconf'           : "",
+      'nagios_auth_name'        : "OMD Monitoring Site " + site,
+      'nagios_binary'           : root + "/bin/nagios",
+      'nagios_config_file'      : root + "/tmp/nagios/nagios.cfg",
+      'nagios_startscript'      : root + "/etc/init.d/nagios",
+      'nagios_status_file'      : root + "/var/nagios/status.dat",
+      'nagiosurl'               : "/" + site + "/nagios/",
+      'nagiosuser'              : site,
+      'nagpipe'                 : root + "/tmp/run/nagios.cmd",
+      'pnp_url'                 : "/" + site + "/pnp4nagios/",
+      'pnpconffile'             : root + "/etc/pnp4nagios/config.php",
+      'pnphtdocsdir'            : root + "/share/pnp4nagios/htdocs",
+      'pnptemplates'            : root + "/local/share/check_mk/pnp-templates",
+      'rrddir'                  : root + "/var/pnp4nagios/perfdata",
+      'wwwgroup'                : site,
+      'wwwuser'                 : site, 
+    }
 
-    # Find path to status.dat, the Nagios status file. We
-    # need that for the check_mk web pages. Normally the
-    # path is configured in nagios.cfg. If no - we still
-    # have a chance by parsing the output of nagios3stats.
-    nagios_status_file = nagconf_dict.get("status_file")
-    if not nagios_status_file:
-        for stats_name in [ "stats", "tats" ]:
-            try:
-                stats_bin = result['nagios_binary'] + stats_name
-                for line in os.popen(stats_bin + " 2>/dev/null"):
-                    if line.startswith("Status File:"):
-                        parts = line.split()
-                        nagios_status_file = parts[-1]
+
+#                    _       
+#    _ __ ___   __ _(_)_ __  
+#   | '_ ` _ \ / _` | | '_ \ 
+#   | | | | | | (_| | | | | |
+#   |_| |_| |_|\__,_|_|_| |_|
+#   
+
+try:
+    result = detect_omd()
+    if not result:
+        result = {}
+
+        pid, nagiosuser, configfile = find_pid_and_configfile()
+        nagios_dir = os.path.dirname(configfile)
+        result['nagios_config_file'] = configfile
+        result['nagiosuser'] = nagiosuser
+        pipes = find_pipes(open_files(pid))
+        if len(pipes) > 0:
+            result['nagpipe'] = pipes[0]
+
+        # Path to executable
+        result['nagios_binary'] = process_executable(pid)
+
+        # Path to startscript
+        for path in [ '/etc/init.d/nagios', '/etc/init.d/nagios3', '/etc/init.d/icinga' ]:
+            if os.path.exists(path):
+                result['nagios_startscript'] = path
+                break
+
+        nagconf = parse_nagios_config(configfile)
+        nagconf_dict = dict(nagconf)
+
+        try:
+            cgifile = os.path.dirname(configfile) + "/cgi.cfg"
+            cgiconf = dict(parse_nagios_config(cgifile))
+            result['htdocsdir'] = cgiconf['physical_html_path']
+        except:
+            cgiconf = {}
+
+        # Suche nach cfg_dir Direktiven. Wir suchen
+        # einen flauschigen Platz fuer unsere Konfigdateien
+        cfg_dirs = [ value for key, value in nagconf if key == 'cfg_dir' ]
+        if len(cfg_dirs) > 0:
+            # Wenn es mehrere gibt, bevorzuge ich das, das im gleichen
+            # Verzeichnis, wie die Nagios-Konfigdatei selbst liegt.
+            # Debian legt ein cfg_dir fuer die Plugins an....
+            if len(cfg_dirs) == 1:
+                result['nagconfdir'] = cfg_dirs[0]
+            else:
+                dir = os.path.dirname(configfile)
+                for d in cfg_dirs:
+                    if os.path.dirname(d) == dir:
+                        result['nagconfdir'] = d
                         break
-                    elif line.startswith("Error reading status file"):
-                        parts = line.split()
-                        nagios_status_file = parts[-1][1:-1]
-                        break
-            except:
-                pass
+                else:
+                    result['nagconfdir'] = cfg_dirs[0]
+        else:
+            # Mist. Kein cfg_dir in nagios.cfg. Das ist z.B. bei
+            # der immer noch verbreiteten Defaultkonfig der Fall.
+            # Wir legen einfach selbst eins fest und hängen das
+            # eigenmächtig hinten an die Config an
+            nagconfdir = nagios_dir + "/check_mk.d"
+            result['nagconfdir'] = nagconfdir
+            result['nagiosaddconf'] = "cfg_dir=" + nagconfdir
 
-    if nagios_status_file:
-        result['nagios_status_file'] = nagios_status_file
-
-
-    # Ermittle $USER1$ Variablen, da sie in den Plugin-Pfaden
-    # auftauchen koennen.
-    uservars = {}
-    try:
-        for line in file(nagconf_dict['resource_file']):
-            line = line.strip()
-            if line.startswith('$') and '=' in line:
-                varname, value = line.split('=', 1)
-                uservars[varname.strip()] = value.strip()
-    except:
-        pass
-
-
-    # Suche nach einem Eintrag zum Laden des livestatus
-    # Moduls. Er darf auch auskommentiert sein. Dann lassen
-    # wir den Benutzer damit in Ruhe
-    found = False
-    for line in file(configfile):
-        if "broker_module=" in line and "/livestatus.o" in line:
-            found = True
-            break
-    result['livestatus_in_nagioscfg'] = found
-
-    # Jetzt wird's schwieriger: Ich suche nach check_icmp.
-    # Ich will keinen find machen, da das erstens ewig
-    # dauern kann und zweitens eventl. eine falsche Stelle
-    # findet, z.B. innerhalb eines ausgepackten und kompilierten
-    # Quellcodes der nagios-plugins. Daher suche ich in
-    # allen Objektdateien von Nagios nach command_line.
-    # Damit ermittle ich alle Verzeichnisse, in denen Plugins
-    # liegen. Dort suche ich dann nach check_icmp. Zur Sicherheit
-    # suche ich aber auch unter '/usr/lib/nagios' und '/usr/local/nagios/libexec'
-    # und '/usr/local/nagios/plugins'
-    found = []
-    for dir in cfg_dirs:
-        os.path.walk(dir, lambda x,dirname,names: found.append((dirname, names)), None)
-    plugin_paths = []
-    for dirname, names in found:
-        for name in names:
-            if name.endswith(".cfg"):
-                path = dirname + "/" + name
+        # Find path to status.dat, the Nagios status file. We
+        # need that for the check_mk web pages. Normally the
+        # path is configured in nagios.cfg. If no - we still
+        # have a chance by parsing the output of nagios3stats.
+        nagios_status_file = nagconf_dict.get("status_file")
+        if not nagios_status_file:
+            for stats_name in [ "stats", "tats" ]:
                 try:
-                    for line in file(path):
-                        if line.strip() == '':
-                            continue
-                        parts = line.strip().split()
-                        if parts[0] == "command_line":
-                            path = parts[1]
-                            for var, value in uservars.items():
-                                path = path.replace(var, value)
-                            if path.startswith('/') and path not in plugin_paths:
-                                plugin_paths.append(path)
+                    stats_bin = result['nagios_binary'] + stats_name
+                    for line in os.popen(stats_bin + " 2>/dev/null"):
+                        if line.startswith("Status File:"):
+                            parts = line.split()
+                            nagios_status_file = parts[-1]
+                            break
+                        elif line.startswith("Error reading status file"):
+                            parts = line.split()
+                            nagios_status_file = parts[-1][1:-1]
+                            break
                 except:
                     pass
 
-    for dir in plugin_paths + \
-        [ '/usr/lib/nagios/plugins',
-          '/usr/local/nagios/libexec',
-          '/usr/local/nagios/plugins' ]:
-        try:
-            mode = os.stat(dir)[stat.ST_MODE]
-            if not stat.S_ISDIR(mode):
-                dir = os.path.dirname(dir)
-            filenames = os.listdir(dir)
+        if nagios_status_file:
+            result['nagios_status_file'] = nagios_status_file
 
-            for filename in filenames:
-                if filename == 'check_icmp':
-                    result['check_icmp_path'] = dir + '/' + filename
-                    break
+
+        # Ermittle $USER1$ Variablen, da sie in den Plugin-Pfaden
+        # auftauchen koennen.
+        uservars = {}
+        try:
+            for line in file(nagconf_dict['resource_file']):
+                line = line.strip()
+                if line.startswith('$') and '=' in line:
+                    varname, value = line.split('=', 1)
+                    uservars[varname.strip()] = value.strip()
         except:
             pass
 
 
-    # Die Basis-Url fuer Nagios ist leider auch nicht immer
-    # gleich
-    try:
-        result['nagiosurl'] = cgiconf['url_html_path']
-        result['cgiurl'] = result['nagiosurl'] + "/cgi-bin"
-    except:
-        pass
+        # Suche nach einem Eintrag zum Laden des livestatus
+        # Moduls. Er darf auch auskommentiert sein. Dann lassen
+        # wir den Benutzer damit in Ruhe
+        found = False
+        for line in file(configfile):
+            if "broker_module=" in line and "/livestatus.o" in line:
+                found = True
+                break
+        result['livestatus_in_nagioscfg'] = found
 
-    # Suche eine Gruppe, die Nagios mit dem Apache gemeinsam
-    # hat. Diese brauchen wir z.B. für logwatch
-    try:
-        wwwuser, wwwgroup, apache_confdir, nagios_htpasswd_file, nagios_auth_name = \
-                 find_apache_properties(nagiosuser, result['htdocsdir'])
-        if wwwuser:
-            result['wwwuser']  = wwwuser
-        if wwwgroup:
-            result['wwwgroup'] = wwwgroup
-        if apache_confdir:
-            result['apache_config_dir'] = apache_confdir
-        if nagios_htpasswd_file:
-            result['htpasswd_file'] = nagios_htpasswd_file
-        if nagios_auth_name:
-            result['nagios_auth_name'] = nagios_auth_name
-    except Exception, e:
-        sys.stderr.write("\033[1;41;35m Cannot determine Apache properties. \033[0m\n"
-                         "Reason: %s\n" % e)
+        # Jetzt wird's schwieriger: Ich suche nach check_icmp.
+        # Ich will keinen find machen, da das erstens ewig
+        # dauern kann und zweitens eventl. eine falsche Stelle
+        # findet, z.B. innerhalb eines ausgepackten und kompilierten
+        # Quellcodes der nagios-plugins. Daher suche ich in
+        # allen Objektdateien von Nagios nach command_line.
+        # Damit ermittle ich alle Verzeichnisse, in denen Plugins
+        # liegen. Dort suche ich dann nach check_icmp. Zur Sicherheit
+        # suche ich aber auch unter '/usr/lib/nagios' und '/usr/local/nagios/libexec'
+        # und '/usr/local/nagios/plugins'
+        found = []
+        for dir in cfg_dirs:
+            os.path.walk(dir, lambda x,dirname,names: found.append((dirname, names)), None)
+        plugin_paths = []
+        for dirname, names in found:
+            for name in names:
+                if name.endswith(".cfg"):
+                    path = dirname + "/" + name
+                    try:
+                        for line in file(path):
+                            if line.strip() == '':
+                                continue
+                            parts = line.strip().split()
+                            if parts[0] == "command_line":
+                                path = parts[1]
+                                for var, value in uservars.items():
+                                    path = path.replace(var, value)
+                                if path.startswith('/') and path not in plugin_paths:
+                                    plugin_paths.append(path)
+                    except:
+                        pass
+
+        for dir in plugin_paths + \
+            [ '/usr/lib/nagios/plugins',
+              '/usr/local/nagios/libexec',
+              '/usr/local/nagios/plugins' ]:
+            try:
+                mode = os.stat(dir)[stat.ST_MODE]
+                if not stat.S_ISDIR(mode):
+                    dir = os.path.dirname(dir)
+                filenames = os.listdir(dir)
+
+                for filename in filenames:
+                    if filename == 'check_icmp':
+                        result['check_icmp_path'] = dir + '/' + filename
+                        break
+            except:
+                pass
 
 
-    detect_pnp()
+        # Die Basis-Url fuer Nagios ist leider auch nicht immer
+        # gleich
+        try:
+            result['nagiosurl'] = cgiconf['url_html_path']
+            result['cgiurl'] = result['nagiosurl'] + "/cgi-bin"
+        except:
+            pass
+
+        # Suche eine Gruppe, die Nagios mit dem Apache gemeinsam
+        # hat. Diese brauchen wir z.B. für logwatch
+        try:
+            wwwuser, wwwgroup, apache_confdir, nagios_htpasswd_file, nagios_auth_name = \
+                     find_apache_properties(nagiosuser, result['htdocsdir'])
+            if wwwuser:
+                result['wwwuser']  = wwwuser
+            if wwwgroup:
+                result['wwwgroup'] = wwwgroup
+            if apache_confdir:
+                result['apache_config_dir'] = apache_confdir
+            if nagios_htpasswd_file:
+                result['htpasswd_file'] = nagios_htpasswd_file
+            if nagios_auth_name:
+                result['nagios_auth_name'] = nagios_auth_name
+        except Exception, e:
+            sys.stderr.write("\033[1;41;35m Cannot determine Apache properties. \033[0m\n"
+                             "Reason: %s\n" % e)
+
+
+        detect_pnp()
 
     print "# Result of autodetection"
     for var, value in result.items():

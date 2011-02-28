@@ -88,8 +88,9 @@ ask_dir ()
     VARNAME=$1
     DEF_ROOT=$2
     DEF_USER=$3
-    SHORT=$4
-    DESCR=$5
+    DEF_OMD=$4
+    SHORT=$5
+    DESCR=$6
 
     # maybe variable already set (via environment, via autodetection,
     # or view $SETUPCONF)
@@ -111,7 +112,9 @@ ask_dir ()
 
 	if [ -z "$DIR" ] ; then
 	    class="[1;44;37m default [0m"
-	    if [ "$ROOT" ] ; then
+            if [ "$OMD_SITE" ] ; then
+                DEF=$DEF_OMD
+	    elif [ "$ROOT" ] ; then
 		DEF=$DEF_ROOT
 	    else
 		DEF=$DEF_USER
@@ -222,96 +225,96 @@ HOMEBASEDIR=$HOME/$NAME
 
 ask_title "Installation directories of check_mk"
 
-ask_dir bindir /usr/bin $HOMEBASEDIR/bin "Executable programs" \
+ask_dir bindir /usr/bin $HOMEBASEDIR/bin $OMD_ROOT/local/bin "Executable programs" \
   "Directory where to install executable programs such as check_mk itself.
 This directory should be in your search path (\$PATH). Otherwise you
 always have to specify the installation path when calling check_mk"
 
-ask_dir confdir /etc/$NAME $HOMEBASEDIR "check_mk configuration" \
+ask_dir confdir /etc/$NAME $HOMEBASEDIR $OMD_ROOT/etc/check_mk "Check_MK configuration" \
   "Directory where check_mk looks for its main configuration file main.mk. 
 An example configuration file will be installed there if no main.mk is 
 present from a previous version."
 
-ask_dir checksdir /usr/share/$NAME/checks $HOMEBASEDIR/checks "check_mk checks" \
+ask_dir checksdir /usr/share/$NAME/checks $HOMEBASEDIR/checks $OMD_ROOT/local/share/check_mk/checks "check_mk checks" \
   "check_mk's different checks are implemented as small Python scriptlets 
 that parse and interpret the various output sections of the agents. Where 
 shall those be installed"
 
-ask_dir modulesdir /usr/share/$NAME/modules $HOMEBASEDIR/modules "check_mk modules" \
+ask_dir modulesdir /usr/share/$NAME/modules $HOMEBASEDIR/modules $OMD_ROOT/local/share/check_mk/modules "check_mk modules" \
   "Directory for main componentents of check_mk itself. The setup will
 also create a file 'defaults' in that directory that reflects all settings
 you are doing right now" 
 
-ask_dir web_dir /usr/share/$NAME/web $HOMEBASEDIR/web "Check_MK Multisite GUI" \
+ask_dir web_dir /usr/share/$NAME/web $HOMEBASEDIR/web $OMD_ROOT/local/share/check_mk/web "Check_MK Multisite GUI" \
   "Directory where Check_mk's Multisite GUI should be installed. Multisite is
 an optional replacement for the Nagios GUI, but is also needed for the 
 logwatch extension.  That directory should [4;1mnot[0m be
 in your WWW document root. A separate apache configuration file will be
 installed that maps the directory into your URL schema"
 
-ask_dir docdir /usr/share/doc/$NAME $HOMEBASEDIR/doc "documentation" \
+ask_dir docdir /usr/share/doc/$NAME $HOMEBASEDIR/doc $OMD_ROOT/local/share/check_mk/doc "documentation" \
   "Some documentation about check_mk will be installed here. Please note,
 however, that most of check_mk's documentation is available only online at
 http://mathias-kettner.de/check_mk.html"
 
-ask_dir checkmandir /usr/share/doc/$NAME/checks $HOMEBASEDIR/doc/checks "check manuals" \
+ask_dir checkmandir /usr/share/doc/$NAME/checks $HOMEBASEDIR/doc/checks $OMD_ROOT/local/share/check_mk/checkman "check manuals" \
   "Directory for manuals for the various checks. The manuals can be viewed 
 with check_mk -M <CHECKNAME>"
 
-ask_dir vardir /var/lib/$NAME $HOMEBASEDIR/var "working directory of check_mk" \
+ask_dir vardir /var/lib/$NAME $HOMEBASEDIR/var $OMD_ROOT/var/check_mk "working directory of check_mk" \
   "check_mk will create caches files, automatically created checks and
 other files into this directory. The setup will create several subdirectories
 and makes them writable by the Nagios process"
 
-ask_dir agentsdir /usr/share/$NAME/agents $HOMEBASEDIR/agents "agents for operating systems" \
+ask_dir agentsdir /usr/share/$NAME/agents $HOMEBASEDIR/agents $OMD_ROOT/local/share/check_mk/agents "agents for operating systems" \
   "Agents for various operating systems will be installed here for your 
 conveniance. Take them and install them onto your target hosts"
 
 ask_title "Configuration of Linux/UNIX Agents"
 
 
-ask_dir agentslibdir /usr/lib/check_mk_agent $HOMEBASEDIR/check_mk_agent "extensions for agents" \
+ask_dir agentslibdir /usr/lib/check_mk_agent $HOMEBASEDIR/check_mk_agent /usr/lib/check_mk_agent "extensions for agents" \
   "This directory will not be created on the server. It will be hardcoded 
 into the Linux and UNIX agents. The agent will look for extensions in the 
 subdirectories plugins/ and local/ of that directory"
 
-ask_dir agentsconfdir /etc/check_mk $HOMEBASEDIR "configuration dir for agents" \
+ask_dir agentsconfdir /etc/check_mk $HOMEBASEDIR /etc/check_mk "configuration dir for agents" \
   "This directory will not be created on the server. It will be hardcoded
 into the Linux and UNIX agents. The agent will look for its configuration
 files here (currently only the logwatch extension needs a configuration file)"
 
 ask_title "Integration with Nagios"
 
-ask_dir -d nagiosuser nagios $(id -un) "Name of Nagios user" \
+ask_dir -d nagiosuser nagios $(id -un) $OMD_SITE "Name of Nagios user" \
   "The working directory for check_mk contains several subdirectories
 that need to be writable by the Nagios user (which is running check_mk 
 in check mode). Please specify the user that should own those 
 directories"
 
-ask_dir -d wwwuser www-data www-data "User of Apache process" \
+ask_dir -d wwwuser www-data www-data $OMD_SITE "User of Apache process" \
   "Check_MK WATO (Web Administration Tool) needs a sudo configuration,
 such that Apache can run certain commands as $(id -un). If you specify
 the correct user of the apache process here, then we can create a valid
 sudo configuration for you later:"
 
-ask_dir -d wwwgroup nagios $(id -un) "Common group of Nagios+Apache" \
+ask_dir -d wwwgroup nagios $(id -un) $OMD_SITE "Common group of Nagios+Apache" \
   "Check_mk creates files and directories while running as $nagiosuser. 
 Some of those need to be writable by the user that is running the webserver.
 Therefore a group is needed in which both Nagios and the webserver are
 members (every valid Nagios installation uses such a group to allow
 the web server access to Nagios' command pipe):"
 
-ask_dir nagios_binary /usr/sbin/nagios $HOMEBASEDIR/nagios/bin/nagios "Nagios binary" \
+ask_dir nagios_binary /usr/sbin/nagios $HOMEBASEDIR/nagios/bin/nagios $OMD_ROOT/bin/nagios "Nagios binary" \
   "The complete path to the Nagios executable. This is needed by the
 option -R/--restart in order to do a configuration check."
 
-ask_dir nagios_config_file /etc/nagios/nagios.cfg $HOMEBASEDIR/nagios/etc/nagios.cfg "Nagios main configuration file" \
+ask_dir nagios_config_file /etc/nagios/nagios.cfg $HOMEBASEDIR/nagios/etc/nagios.cfg $OMD_ROOT/tmp/nagios/nagios.cfg "Nagios main configuration file" \
   "Path to the main configuration file of Nagios. That file is always 
 named 'nagios.cfg'. The default path when compiling Nagios yourself
 is /usr/local/nagios/etc/nagios.cfg. The path to this file is needed
 for the check_mk option -R/--restart"
 
-ask_dir nagconfdir /etc/nagios/objects $HOMEBASEDIR/nagios/etc "Nagios object directory" \
+ask_dir nagconfdir /etc/nagios/objects $HOMEBASEDIR/nagios/etc $OMD_ROOT/etc/nagios/conf.d "Nagios object directory" \
   "Nagios' object definitions for hosts, services and contacts are
 usually stored in various files with the extension .cfg. These files
 are located in a directory that is configured in nagios.cfg with the
@@ -320,15 +323,15 @@ directive 'cfg_dir'. Please specify the path to that directory
 file but does not find at least one cfg_dir directive, then it will
 add one to your configuration file for your conveniance)"
 
-ask_dir nagios_startscript /etc/init.d/nagios /etc/init.d/nagios "Nagios startskript" \
+ask_dir nagios_startscript /etc/init.d/nagios /etc/init.d/nagios $OMD_ROOT/etc/init.d/nagios "Nagios startskript" \
   "The complete path to the Nagios startskript is used by the option
 -R/--restart to restart Nagios."
 
-ask_dir nagpipe /var/log/nagios/rw/nagios.cmd /var/log/nagios/rw/nagios.cmd "Nagios command pipe" \
+ask_dir nagpipe /var/log/nagios/rw/nagios.cmd /var/log/nagios/rw/nagios.cmd $OMD_ROOT/tmp/run/nagios.cmd "Nagios command pipe" \
   "Complete path to the Nagios command pipe. check_mk needs write access
 to this pipe in order to operate"
 
-ask_dir nagios_status_file /var/log/nagios/status.dat /var/log/nagios/status.dat "Nagios status file" \
+ask_dir nagios_status_file /var/log/nagios/status.dat /var/log/nagios/status.dat $OMD_ROOT/tmp/nagios/status.dat "Nagios status file" \
   "The web pages of check_mk need to read the file 'status.dat', which is
 regularily created by Nagios. The path to that status file is usually
 configured in nagios.cfg with the parameter 'status_file'. If
@@ -337,7 +340,7 @@ FHS-conforming installations, that file usually is in /var/lib/nagios
 or /var/log/nagios. If you've compiled Nagios yourself, that file
 might be found below /usr/local/nagios"
 
-ask_dir check_icmp_path /usr/lib/nagios/plugins/check_icmp $HOMEBASEDIR/libexec/check_icmp "Path to check_icmp" \
+ask_dir check_icmp_path /usr/lib/nagios/plugins/check_icmp $HOMEBASEDIR/libexec/check_icmp $OMD_ROOT/lib/nagios/plugins/check_icmp "Path to check_icmp" \
   "check_mk ships a Nagios configuration file with several host and
 service templates. Some host templates need check_icmp as host check.
 That check plugin is contained in the standard Nagios plugins.
@@ -347,27 +350,27 @@ Please specify the complete path (dir + filename) of check_icmp"
 ask_title "Integration with Apache"
 # -------------------------------------------------------------------
 
-ask_dir -d url_prefix / / "URL Prefix for Web addons" \
+ask_dir -d url_prefix / / /$OMD_SITE/ "URL Prefix for Web addons" \
  "Usually the Multisite GUI is available at /check_mk/ and PNP4Nagios
 is located at /pnp4nagios/. In some cases you might want to define some
 prefix in order to be able to run more instances of Nagios on one host.
 If you say /test/ here, for example, then Multisite will be located
 at /test/check_mk/. Please do not forget the trailing slash."
 
-ask_dir apache_config_dir /etc/apache2/conf.d /etc/apache2/conf.d "Apache config dir" \
+ask_dir apache_config_dir /etc/apache2/conf.d /etc/apache2/conf.d $OMD_ROOT/etc/apache/conf.d "Apache config dir" \
  "Check_mk ships several web pages implemented in Python with Apache
 mod_python. That module needs an apache configuration section which
 will be installed by this setup. Please specify the path to a directory
 where Apache reads in configuration files."
 
-ask_dir htpasswd_file /etc/nagios/htpasswd.users $HOMEBASEDIR/etc/htpasswd.users "HTTP authentication file" \
+ask_dir htpasswd_file /etc/nagios/htpasswd.users $HOMEBASEDIR/etc/htpasswd.users $OMD_ROOT/etc/htpasswd "HTTP authentication file" \
  "Check_mk's web pages should be secured from unauthorized access via
 HTTP authenticaion - just as Nagios. The configuration file for Apache
 that will be installed contains a valid configuration for HTTP basic
 auth. The most conveniant way for you is to use the same user file as
 for Nagios. Please enter your htpasswd file to use here"
 
-ask_dir -d nagios_auth_name "Nagios Access" "Nagios Access" "HTTP AuthName" \
+ask_dir -d nagios_auth_name "Nagios Access" "Nagios Access" "OMD Monitoring Site $OMD_SITE" "HTTP AuthName" \
  "Check_mk's Apache configuration file will need an AuthName. That
 string will be displayed to the user when asking for the password.
 You should use the same AuthName as for Nagios. Otherwise the user will 
@@ -377,18 +380,18 @@ have to log in twice"
 ask_title "Integration with PNP4Nagios 0.6"
 # -------------------------------------------------------------------
 
-ask_dir rrddir $vardir/rrd $vardir/rrd "round robin databases" \
+ask_dir rrddir $vardir/rrd $vardir/rrd $OMD_ROOT/var/pnp4nagios/perfdata "round robin databases" \
   "Base directory for round robin databases. If you use PNP4Nagios as
 graphing tool check_mk can directly write into the exsting databases.
 This saves CPU and disk IO"
 
-ask_dir pnptemplates /usr/share/$NAME/pnp-templates $HOMEBASEDIR/pnp-templates "PNP4Nagios templates" \
+ask_dir pnptemplates /usr/share/$NAME/pnp-templates $HOMEBASEDIR/pnp-templates $OMD_ROOT/local/share/check_mk/pnp-templates "PNP4Nagios templates" \
   "Check_MK ships templates for PNP4Nagios for most of its checks.
 Those templates make the history graphs look nice. PNP4Nagios
 expects such templates in the directory pnp/templates in your
 document root for static web pages"
 
-ask_dir pnprraconf /usr/share/$NAME/pnp-rraconf $HOMEBASEDIR/pnp-rraconf "RRA config for PNP4Nagios" \
+ask_dir pnprraconf /usr/share/$NAME/pnp-rraconf $HOMEBASEDIR/pnp-rraconf $OMD_ROOT/local/share/check_mk/rra-config "RRA config for PNP4Nagios" \
   "Check_MK ships RRA configuration files for its checks that 
 can be used by PNP when creating the RRDs. Per default, PNP 
 creates RRD such that for each variable the minimum, maximum
@@ -404,7 +407,7 @@ does not enable them"
 ask_title "Check_MK Livestatus Module"
 # -------------------------------------------------------------------
 
-ask_dir -d enable_livestatus yes yes "compile livestatus module" \
+ask_dir -d enable_livestatus yes yes yes "compile livestatus module" \
   "This version of Check_mk ships a completely new and experimental
 Nagios event broker module that provides direct access to Nagios
 internal data structures. This module is called the Check_MK Livestatus
@@ -422,18 +425,18 @@ C++ compiler installed in order to do this"
 
 if [ "$enable_livestatus" = yes ]
 then
-  ask_dir libdir /usr/lib/$NAME $HOMEBASEDIR/lib "check_mk's binary modules" \
+  ask_dir libdir /usr/lib/$NAME $HOMEBASEDIR/lib $OMD_ROOT/local/lib/mk-livestatus "check_mk's binary modules" \
    "Directory for architecture dependent binary libraries and plugins
 of check_mk"
 
-  ask_dir livesock ${nagpipe%/*}/live ${nagpipe%/*}/live "Unix socket for Livestatus" \
+  ask_dir livesock ${nagpipe%/*}/live ${nagpipe%/*}/live $OMD_ROOT/tmp/run/live "Unix socket for Livestatus" \
    "The Livestatus Module provides Nagios status data via a unix
 socket. This is similar to the Nagios command pipe, but allows
 bidirectional communication. Please enter the path to that pipe.
 It is recommended to put it into the same directory as Nagios'
 command pipe"
 
-  ask_dir livebackendsdir /usr/share/$NAME/livestatus $HOMEBASEDIR/livestatus "Backends for other systems" \
+  ask_dir livebackendsdir /usr/share/$NAME/livestatus $HOMEBASEDIR/livestatus $OMD_ROOT/local/share/mk-livestatus "Backends for other systems" \
    "Directory where to put backends and configuration examples for
 other systems. Currently this is only Nagvis, but other might follow
 later."
@@ -491,6 +494,15 @@ pnp_rraconf_dir             = '$pnprraconf'
 doc_dir                     = '$docdir'
 check_mk_automation         = 'sudo -u $(id -un) $bindir/check_mk --automation'
 EOF
+
+    if [ -n "$OMD_ROOT" ] ; then
+cat <<EOF  
+
+# Special for OMD
+omd_site                    = '$OMD_SITE'
+omd_root                    = '$OMD_ROOT'
+EOF
+   fi
 }
 
 
@@ -685,7 +697,7 @@ do
            install -m 644 $SRCDIR/package_info $DESTDIR$vardir/packages/check_mk &&
 
 	   mkdir -p $DESTDIR$apache_config_dir &&
-	   if [ ! -e $DESTDIR$apache_config_dir/$NAME -a ! -e $DESTDIR$apache_config_dir/zzz_$NAME.conf ]
+	   if [ ! -e $DESTDIR$apache_config_dir/$NAME -a ! -e $DESTDIR$apache_config_dir/zzz_$NAME.conf -a -z "$OMD_ROOT" ]
 	   then
 	       cat <<EOF > $DESTDIR$apache_config_dir/zzz_$NAME.conf
 # Created by setup of check_mk version $VERSION
@@ -741,6 +753,47 @@ and change the path there. Restart Apache afterwards."
         ErrorDocument 403 "<h1>Check_mk: Incomplete Apache2 Installation</h1>\
 You need mod_python in order to run the web interface of check_mk.<br> \
 Please install mod_python and restart Apache."
+  </Directory>
+</IfModule>
+EOF
+           elif [ "$OMD_ROOT" ] ; then
+           ln -sfn ../../check_mk/apache-local.conf $OMD_ROOT/etc/apache/conf.d/check_mk.conf
+           cat <<EOF > $OMD_ROOT/etc/check_mk/apache-local.conf
+# Local Apache configuration file for Check_MK
+# This file has been created by a local ./setup.sh of Check_MK
+# within the OMD site $OMD_SITE
+#
+# This shares the check_mk agents delivered with the OMD
+# version via HTTP
+Alias /$OMD_SITE/check_mk/agents $OMD_ROOT/local/share/check_mk/agents
+<Directory $OMD_ROOT/local/share/check_mk/agents>
+  Options +Indexes
+  Order deny,allow
+  allow from all
+</Directory>
+
+<IfModule mod_python.c>
+
+  Alias /$OMD_SITE/check_mk $OMD_ROOT/local/share/check_mk/web/htdocs
+  <Directory $OMD_ROOT/local/share/check_mk/web/htdocs>
+        AddHandler mod_python .py
+        PythonHandler index
+        PythonInterpreter $OMD_SITE
+        DirectoryIndex index.py
+
+        Order deny,allow
+        allow from all
+
+        ErrorDocument 403 "<h1>Authentication Problem</h1>Either you've entered an invalid password or the authentication<br>configuration of your check_mk web pages is incorrect.<br>"
+        ErrorDocument 500 "<h1>Server or Configuration Problem</h1>A Server problem occurred. You'll find details in the error log of Apache. One possible reason is, that the file <tt>$OMD_ROOT/etc/htpasswd</tt> is missing. You can manage that file with <tt>htpasswd</tt> or <tt>htpasswd2</tt>."
+  </Directory>
+</IfModule>
+
+<IfModule !mod_python.c>
+  Alias /$OMD_SITE/check_mk $OMD_ROOT/local/share/check_mk/web/htdocs
+  <Directory $OMD_ROOT/local/share/check_mk/web/htdocs>
+        Deny from all
+        ErrorDocument 403 "<h1>Check_mk: Incomplete Apache2 Installation</h1>You need mod_python in order to run the web interface of check_mk.<br> Please install mod_python and restart Apache."
   </Directory>
 </IfModule>
 EOF

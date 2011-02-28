@@ -125,8 +125,8 @@ def connect_to_livestatus(html):
     else:
         html.live = livestatus.SingleSiteConnection("unix:" + defaults.livestatus_unix_socket)
         html.site_status = { '': { "state" : "dead", "site" : config.site('') } }
-        v1, v2 = html.live.query_row("GET status\nColumns: livestatus_version program_version")
-        html.site_status[''].update({ "state" : "online", "livestatus_version": v1, "program_version" : v2 })
+        v1, v2, ps = html.live.query_row("GET status\nColumns: livestatus_version program_version program_start")
+        html.site_status[''].update({ "state" : "online", "livestatus_version": v1, "program_version" : v2, "program_start" : ps })
 
     # If multiadmin is retricted to data user is a nagios contact for,
     # we need to set an AuthUser: header for livestatus

@@ -10,6 +10,7 @@ components = [
   "multisite", 
   "livestatus",
   "wato",
+  "bi",
   "doku"
 ]
 

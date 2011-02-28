@@ -1195,8 +1195,8 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
             html.show_error("<b>%s - Livestatus error</b><br>%s" % (info["site"]["alias"], info["exception"]))
 
     if show_footer:
+        pid = os.getpid()
         if html.live.successfully_persisted():
-            pid = os.getpid()
             html.add_status_icon("persist", "Reused persistent livestatus connection from earlier request (PID %d)" % pid)
         if bi.reused_compilation():
             html.add_status_icon("aggrcomp", "Reused cached compiled BI aggregations (PID %d)" % pid)

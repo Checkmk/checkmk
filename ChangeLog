@@ -34,6 +34,9 @@
     * FIX: cisco_temp_perf: fix return state in case of WARNING (was 0 = OK)
     * FIX: repair PNP template for df when using trends
 
+    Multisite:
+    * FIX: fix json/python Webservice
+
 1.1.9i9:
     Core, Setup, etc.:
     * FIX: check_mk_templates.cfg: add missing check_period for hosts

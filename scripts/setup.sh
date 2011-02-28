@@ -601,10 +601,14 @@ do
 	       if [ "${PIPESTATUS[0]}" = 0 ]
 	       then
 
-		   if [ "$livestatus_in_nagioscfg" = False -a -n "$DESTDIR$nagios_config_file" ]
+		   if [ -z "$OMD_ROOT" -a "$livestatus_in_nagioscfg" = False -a -n "$DESTDIR$nagios_config_file" ]
 		   then
 			echo -e "# Load Livestatus Module\nbroker_module=$libdir/livestatus.o $livesock\nevent_broker_options=-1" \
 			   >> $DESTDIR$nagios_config_file
+                   elif [ "$OMD_ROOT" ] ; then
+			echo -e "# Load Livestatus Module\nbroker_module=$OMD_ROOT/local/lib/mk-livestatus/livestatus.o pnp_path=$OMD_ROOT/var/pnp4nagios/perfdata $livesock\nevent_broker_options=-1" \
+			   >> $OMD_ROOT/etc/mk-livestatus/nagios-local.cfg
+			ln -sfn ../../mk-livestatus/nagios-local.cfg $OMD_ROOT/etc/nagios/nagios.d/mk-livestatus.cfg
 		   fi
 	       else
 		   echo -e "\E[1;31;40m ERROR compiling livestatus! \E[0m.\nLogfile is in $SRCDIR/livestatus.log"
@@ -664,6 +668,7 @@ do
 	   if [ ! -e $DESTDIR$confdir/multisite.mk ] ; then
 	      cp $DESTDIR$confdir/multisite.mk-$VERSION $DESTDIR$confdir/multisite.mk
            fi &&
+           mkdir -p $DESTDIR$confdir/multisite.d &&
 	   mkdir -p $DESTDIR$confdir/conf.d &&
 	   echo 'All files in this directory that end with .mk will be read in after main.mk' > $DESTDIR$confdir/conf.d/README &&
 	   if [ ! -d $DESTDIR$rrddir ] ; then

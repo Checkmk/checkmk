@@ -438,6 +438,11 @@ def compile_leaf_node(arginfo, host, service):
 
     found = []
 
+    def strip_re(re):
+        while re.startswith("((") and re.endswith("))"):
+            re = re[1:-1]
+        return re
+
     # strip ( ) of re - needed for host tags
     host_re_stripped    = strip_re(host_re)
     service_re_stripped = strip_re(service_re)
@@ -492,11 +497,6 @@ def compile_leaf_node(arginfo, host, service):
 
     found.sort()
     return found
-
-def strip_re(re):
-    while re.startswith("((") and re.endswith("))"):
-        re = re[1:-1]
-    return re
 
 regex_cache = {}
 def regex(r):

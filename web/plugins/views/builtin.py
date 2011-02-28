@@ -2237,7 +2237,7 @@ multisite_builtin_views = {
             'hard_filtervars': [('host', ''),
                                 ('aggr_name', ''),
                                 ('aggr_output', ''),
-                                ('birs0', 'on'),
+                                ('birs0', ''),
                                 ('birs1', 'on'),
                                 ('birs2', 'on'),
                                 ('birs3', 'on'),

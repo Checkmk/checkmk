@@ -175,7 +175,7 @@ def aggr_render_node(tree, title, mousecode, show_host):
         addclass = " assumed"
     else:
         addclass = ""
-    h = '<div class="content state state%d%s">%s</div>\n' \
+    h = '<span class="content state state%d%s">%s</span>\n' \
          % (effective_state, addclass, render_bi_state(effective_state))
     if mousecode:
         h += '<span %s class="content name">%s</span>' % (mousecode, title)

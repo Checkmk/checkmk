@@ -6,7 +6,7 @@ Cost: 1
 Date: 2011-02-27 14:08:10
 Class: feature
 
-This avoids problem on some devices. Might other introduce new ones.
+This avoids problem on some devices. But Might also introduce new ones.
 So I'm not sure what to do here. From the manpage of snmpwalk:
 
 -Cc Do not check whether the returned OIDs are increasing.  Some agents
@@ -16,3 +16,5 @@ snmpwalk to loop indefinitely.  By default, snmpwalk tries to detect
 this behavior and warns you when it hits an agent acting illegally.
 Use -Cc to turn off this check.
 
+I think we simply enable this option in 1.1.11i1 and see what
+happens...

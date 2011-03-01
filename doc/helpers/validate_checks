@@ -163,6 +163,7 @@ TESTS = {
     'reindent':    C_OK,
     'global_vars': C_OK,
     'linelength':  C_OK,
+    'debug':       C_OK,
 }
 
 WEIGHT = {
@@ -170,6 +171,7 @@ WEIGHT = {
     'global_vars':  2,
     'reindent':     2,
     'linelength':   2,
+    'debug':       10,
 }
 
 manpage    = {}
@@ -226,6 +228,26 @@ def verify_reindent(check):
     r = reindent.Reindenter(f)
     f.close()
     return not r.run()
+
+# Debug:
+# - are there 'print' statements in the code?
+# - are there 'sys.*.write' statements?
+
+def is_valid_debug(check):
+    return True
+
+def verify_debug(check):
+    f = open('checks/%s' % check.split('.')[0])
+    for l in f.read().split("\n"):
+        l = l.strip()
+        if l.startswith('print ') or l.startswith('print('):
+            return False
+        elif l.startswith('sys.stdout.write'):
+            return False
+        elif l.startswith('sys.stderr.write'):
+            return False
+    f.close()
+    return True
 
 # Toooo long lines:
 # - Are there too long lines in the check?

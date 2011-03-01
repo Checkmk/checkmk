@@ -122,11 +122,11 @@ def grep_manpage(check, match, section = None):
 
 def usage(msg = ''):
     if msg:
-        print msg
-    print
+        sys.stderr.write("%s\n" % msg)
+    sys.stderr.write("\n")
     for s, l, t in _args:
-        print '  %3s, %-15s    %s' % (s, l, t)
-    print
+        sys.stderr.write('  %3s, --%-15s    %s\n' % ('-'+s.rstrip(':'), l, t))
+    sys.stderr.write("\n")
     sys.exit(0)
 
 ignored_variables = [
@@ -322,6 +322,7 @@ def verify_perfometer(check):
 # #############################################################################
 
 _args = [
+    ('c:', 'checks=',      'Put one or more checks (comma separated) to limit the checks to validate'),
     ('l:', 'score-limit=', 'Set an upper score limit. Only checks with a lower score will be shown'),
     ('v',  'verbose',      'Enable verbose output'),
     ('h',  'help',         'Show help message'),
@@ -329,6 +330,7 @@ _args = [
 
 _verbose     = 0
 _score_limit = None
+_checks      = []
 try:
     opts, args = getopt.getopt(sys.argv[1:], ''.join([ x[0] for x in _args ]), [ x[1] for x in _args ])
 except getopt.error, msg:
@@ -338,13 +340,20 @@ for o, a in opts:
         _verbose += 1
     elif o in ('-l', '--score-limit'):
         _score_limit = int(a)
+    elif o in ('-c', '--checks'):
+        _checks = a.split(',')
     elif o in ('-h', '--help'):
         usage()
+    else:
+        usage('Unhandled parameter: %s' % str(o))
 
 # 1) Perform checks
 #
 results = {}
 for check in get_all_checks():
+    if _checks and not check in _checks:
+        continue
+
     score         = SCORE_START
     check_results = TESTS.copy()
 

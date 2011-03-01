@@ -1788,7 +1788,7 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
             if not os.path.exists(autochecksdir):
                 os.makedirs(autochecksdir)
             file(filename, "w").write('# %s\n[\n%s]\n' % (filename, ''.join(newchecks)))
-            sys.stdout.write('%-30s ' % (tty_blue + checkname + tty_normal))
+            sys.stdout.write('%-30s ' % (tty_cyan + tty_bold + checkname + tty_normal))
             sys.stdout.write('%s%d new checks%s\n' % (tty_bold + tty_green, count_new, tty_normal))
 
     return newitems

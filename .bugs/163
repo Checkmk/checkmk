@@ -75,4 +75,3 @@ index 135b1ed..6a870d1 100644
              html.write('<tr class="data %s%d">' % (trclass, state))
  
          for p in painters:
->>>>>>> 5eed47a670da84b7bea45e2e63e9441120d9d13a

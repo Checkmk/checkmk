@@ -18,6 +18,11 @@ description:
  If no matching process is found running, then the check is always OK (since
  no ressources are consumed).
 
+item:
+ A user definable string that is used as part of the service description.
+ If you choose {"APACHE"} as item, for example, then the check will be
+ named {proc_APACHE}.
+
 perfdata: 
  Four value are sent: (1) The memory usage in MB, (2) The page file usage in MB,
  (3) The CPU usage in user mode in %, (4) The CPU usage in kernel mode in %.

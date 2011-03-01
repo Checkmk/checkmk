@@ -37,7 +37,6 @@ fc_brocade_port_detailed_default_levels = ( (1, 0.1), (1, 0.1), (1, 0.1), (2, 16
 def inventory_brocade_port(checkname, info):
     porttable, isltable = info
     inventory = []
-    print 
     for index, phystate, opstate, txwords, rxwords, txframes, rxframes, crcerrors, encout, c3discards in porttable:
         state = (int(phystate), int(opstate))
         if state == (4,2):
@@ -117,7 +116,6 @@ def check_brocade_port(portno, params, info):
             if (phy,op) == (phystate, opstate):
                 nagioscode = ncode
                 break
-        print phystate, len(brocade_phystate_names)
         return (nagioscode, "%s - physical state %s(%d), opstate %s(%d)" % (
                 nagios_state_names[nagioscode], 
                 (len(brocade_phystate_names) > phystate and brocade_phystate_names[phystate] or 'UNHANDLED'),

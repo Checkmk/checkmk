@@ -33,6 +33,7 @@
     * hp_proliant_*: improve scan function (now just looks for "proliant")
     * FIX: cisco_temp_perf: fix return state in case of WARNING (was 0 = OK)
     * FIX: repair PNP template for df when using trends
+    * FIX: blade_health, fc_brocade_port_detailed removed debug outputs
 
     Multisite:
     * FIX: fix json/python Webservice

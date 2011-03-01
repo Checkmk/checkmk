@@ -1,24 +1,78 @@
-Title: Automatic detection of host tags
-Component: core
-Benefit: 5
+Title: backgrounds in downtime view not shown for host downtimes
+Component: multisite
+Benefit: 2
 State: open
-Cost: 3
-Date: 2011-03-01 09:33:42
-Class: feature
+Cost: 4
+Date: 2011-03-01 14:42:34
+Class: nastiness
 
-A quite new idea: during inventory we could allow check types
-to make hints for host tags. The way we could set automatic
-host tags which would be saved in var/check_mk/autotags/$HOST
-(or maybe a global file for all hosts together)?
+The problem is that the host_state is not fetched via livestatus. These code parts were written by sir hack-a-lot ;-).
+This would workaround the problem and bring the color to the host columns . And the host_state and host_has_been_checked columns are fetched from much more views (maybe useless in most cases).
 
-Also the SNMP scan could set an auto tag after trying if
-SNMPv2c is possible. That way the manual configuration
-of bulkwalk hosts would be neccessary only in a few
-rare situtations.
+Patch:
 
-Possible examples for autotags:
-
-- Type of Agent (snmp, linux, windows, hpux, etc.)
-- Operating System (sles10)
-- Architecture (x86_64, ppc, etc.)
-- Type of device (host, switch, appliance, ?)
+diff --git a/web/htdocs/views.py b/web/htdocs/views.py
+index e8c9498..9baddb6 100644
+--- a/web/htdocs/views.py
++++ b/web/htdocs/views.py
+@@ -1049,6 +1049,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
+     if (not view["mustsearch"]) or html.var("search"):
+         # names for additional columns (through Stats: headers)
+         add_columns = datasource.get("add_columns", [])
++
+         columns, rows = query_data(datasource, columns, add_columns, query, only_sites, get_limit())
+         sort_data(rows, sorters)
+     else:
+@@ -1356,7 +1357,7 @@ def query_data(datasource, columns, add_columns, add_headers, only_sites = [], l
+         state_columns = []
+         if "service" in datasource["infos"]:
+             state_columns += [ "service_has_been_checked", "service_state" ]
+-        elif "host" in datasource["infos"]:
++        if "host" in datasource["infos"]:
+             state_columns += [ "host_has_been_checked", "host_state" ]
+         for c in state_columns:
+             if c not in columns:
+diff --git a/web/plugins/views/layouts.py b/web/plugins/views/layouts.py
+index 135b1ed..6a870d1 100644
+--- a/web/plugins/views/layouts.py
++++ b/web/plugins/views/layouts.py
+@@ -141,14 +141,17 @@ def render_grouped_boxes(data, view, group_painters, painters, num_columns):
+ 
+         for row in rows:
+             register_events(row) # needed for playing sounds
++
+             if trclass == "odd":
+                 trclass = "even"
+             else:
+                 trclass = "odd"
++
+             state = row.get("service_state", None)
+             if state == None:
+                 state = row.get("host_state", 0)
+                 if state > 0: state +=1 # 1 is critical for hosts
++
+             html.write('<tr class="data %s%d">' % (trclass, state))
+             for p in painters:
+                 paint(p, row)
+@@ -368,13 +371,19 @@ def render_grouped_list(data, view, group_painters, painters, num_columns):
+             # or host - if available - to color the complete line
+             if num_columns == 1:
+                 # render state, if available through whole tr
+-                state = row.get("service_state", 0)
++                if row.get('service_description', '') == '':
++                    state = row.get("host_state", 0)
++                    if state > 0: state +=1 # 1 is critical for hosts
++                else:
++                    state = row.get("service_state", None)
+             else:
+                 state = 0
++
+             if trclass == "odd":
+                 trclass = "even"
+             else:
+                 trclass = "odd"
++
+             html.write('<tr class="data %s%d">' % (trclass, state))
+ 
+         for p in painters:
+>>>>>>> 5eed47a670da84b7bea45e2e63e9441120d9d13a

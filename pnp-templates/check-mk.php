@@ -25,11 +25,11 @@
 
 $range = $CRIT[1];
 
-$opt[1] = "--vertical-label 'time (s)' -l 0 -u 10 --title '$hostname: Check_MK check execution time' ";
+$opt[1] = "--vertical-label 'time (s)' -l 0  --title '$hostname: Check_MK check execution time' ";
 
 $def[1] = "DEF:extime=$RRDFILE[1]:$DS[1]:MAX "; 
-$def[1] .= "AREA:extime#4080ff:\"time offset \" "; 
-$def[1] .= "LINE1:extime#2060d0: "; 
+$def[1] .= "AREA:extime#d080af:\"execution time \" "; 
+$def[1] .= "LINE1:extime#d020a0: "; 
 $def[1] .= "GPRINT:extime:LAST:\"current\: %.2lf s\" ";
 $def[1] .= "GPRINT:extime:MAX:\"max(+/-)\: %.2lf s \" ";
 $def[1] .= "GPRINT:extime:AVERAGE:\"avg(+/-)\: %.2lf s\" ";

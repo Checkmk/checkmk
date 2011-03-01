@@ -131,6 +131,7 @@ def git_add(bug):
     os.system("git add %d" % bug["id"])
 
 def next_bug_id():
+    # FIXME: Better use combination of Branch + User + Date
     if len(g_bugs) == 0:
         return 1
     else:

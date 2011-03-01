@@ -226,7 +226,9 @@ def paint_aggr_tree_foldable(row):
 
 
 def paint_aggr_tree_ltr(row, mirror):
-    wrap = get_painter_option("aggr_wrap")
+    only_problems = get_painter_option("aggr_onlyproblems") == "1"
+    wrap          = get_painter_option("aggr_wrap")
+
     if wrap == "wrap":
         td = '<td'
     else:
@@ -246,9 +248,12 @@ def paint_aggr_tree_ltr(row, mirror):
     def gen_node(tree, height, show_host):
         leaves = []
         for node in tree[6]:
+            if only_problems and node[0] == 0:
+                continue
             leaves += gen_table(node, height - 1, show_host)
         h = '<div class="aggr tree">' + aggr_render_node(tree, tree[2], '', show_host) + "</div>"
-        leaves[0][2].append((len(leaves), h))
+        if leaves:
+            leaves[0][2].append((len(leaves), h))
         return leaves
 
     tree = row["aggr_treestate"]

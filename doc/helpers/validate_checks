@@ -68,6 +68,10 @@ def get_checks():
     return [ f for f in files if f.endswith(".include") and not f.startswith('.') ] + \
        [ f for f in files if not f.endswith(".include") and not f.startswith('.') ]
 
+def get_perfometer_files():
+    files = os.listdir('web/plugins/perfometer')
+    return [ f for f in files if f.endswith(".py") and not f.startswith('.') ]
+
 def check_has_perfdata(check):
     return check_info[check][2] == 1
 
@@ -146,6 +150,11 @@ for check in get_checks():
         if name not in ignored_variables and name not in vars_before_check:
             global_vars[check] += [ name ]
 
+# Load all perfometers
+perfometers = {}
+for f in get_perfometer_files():
+    execfile('web/plugins/perfometer/' + f)
+
 SCORE_START = 10
 
 C_OK        = 1
@@ -159,6 +168,7 @@ TESTS = {
     'snmp_scan':   C_OK,
     'pnp_tmpl':    C_OK,
     'pnp_rra':     C_OK,
+    'perfometer':  C_OK,
     'snmp_scan':   C_OK,
     'reindent':    C_OK,
     'global_vars': C_OK,
@@ -297,6 +307,15 @@ def is_valid_pnp_rra(check):
 
 def verify_pnp_rra(check):
     return os.path.exists('pnp-rraconf/check_mk-%s.rra.cfg' % check)
+
+# Perfometer:
+# Checks with perfdata should provide a perfometer
+
+def is_valid_perfometer(check):
+    return check_has_perfdata(check)
+
+def verify_perfometer(check):
+    return 'check_mk-' + check in perfometers
 
 # #############################################################################
 # MAIN

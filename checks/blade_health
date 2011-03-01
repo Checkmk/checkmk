@@ -31,7 +31,6 @@ def inventory_blade_health(checkname, info):
 def check_blade_health(_no_item, _no_params, info):
     state = info[0][0]
     descr = ''
-    print info
     if len(info) > 1:
         descr = ': %s' % info[1][1]
 

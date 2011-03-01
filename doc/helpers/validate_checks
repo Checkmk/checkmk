@@ -68,6 +68,10 @@ def get_checks():
     return [ f for f in files if f.endswith(".include") and not f.startswith('.') ] + \
        [ f for f in files if not f.endswith(".include") and not f.startswith('.') ]
 
+def get_perfometer_files():
+    files = os.listdir('web/plugins/perfometer')
+    return [ f for f in files if f.endswith(".py") and not f.startswith('.') ]
+
 def check_has_perfdata(check):
     return check_info[check][2] == 1
 
@@ -118,11 +122,11 @@ def grep_manpage(check, match, section = None):
 
 def usage(msg = ''):
     if msg:
-        print msg
-    print
+        sys.stderr.write("%s\n" % msg)
+    sys.stderr.write("\n")
     for s, l, t in _args:
-        print '  %3s, %-15s    %s' % (s, l, t)
-    print
+        sys.stderr.write('  %3s, --%-15s    %s\n' % ('-'+s.rstrip(':'), l, t))
+    sys.stderr.write("\n")
     sys.exit(0)
 
 ignored_variables = [
@@ -146,6 +150,11 @@ for check in get_checks():
         if name not in ignored_variables and name not in vars_before_check:
             global_vars[check] += [ name ]
 
+# Load all perfometers
+perfometers = {}
+for f in get_perfometer_files():
+    execfile('web/plugins/perfometer/' + f)
+
 SCORE_START = 10
 
 C_OK        = 1
@@ -159,10 +168,12 @@ TESTS = {
     'snmp_scan':   C_OK,
     'pnp_tmpl':    C_OK,
     'pnp_rra':     C_OK,
+    'perfometer':  C_OK,
     'snmp_scan':   C_OK,
     'reindent':    C_OK,
     'global_vars': C_OK,
     'linelength':  C_OK,
+    'debug':       C_OK,
 }
 
 WEIGHT = {
@@ -170,6 +181,7 @@ WEIGHT = {
     'global_vars':  2,
     'reindent':     2,
     'linelength':   2,
+    'debug':       10,
 }
 
 manpage    = {}
@@ -227,6 +239,26 @@ def verify_reindent(check):
     f.close()
     return not r.run()
 
+# Debug:
+# - are there 'print' statements in the code?
+# - are there 'sys.*.write' statements?
+
+def is_valid_debug(check):
+    return True
+
+def verify_debug(check):
+    f = open('checks/%s' % check.split('.')[0])
+    for l in f.read().split("\n"):
+        l = l.strip()
+        if l.startswith('print ') or l.startswith('print('):
+            return False
+        elif l.startswith('sys.stdout.write'):
+            return False
+        elif l.startswith('sys.stderr.write'):
+            return False
+    f.close()
+    return True
+
 # Toooo long lines:
 # - Are there too long lines in the check?
 
@@ -276,11 +308,22 @@ def is_valid_pnp_rra(check):
 def verify_pnp_rra(check):
     return os.path.exists('pnp-rraconf/check_mk-%s.rra.cfg' % check)
 
+# Perfometer:
+# Checks with perfdata should provide a perfometer
+
+def is_valid_perfometer(check):
+    return check_has_perfdata(check)
+
+def verify_perfometer(check):
+    return 'check_mk-' + check in perfometers
+
 # #############################################################################
 # MAIN
 # #############################################################################
 
 _args = [
+    ('t:', 'tests=',       'Put one or more tests (comma separated) to limit the validations to perform'),
+    ('c:', 'checks=',      'Put one or more checks (comma separated) to limit the checks to validate'),
     ('l:', 'score-limit=', 'Set an upper score limit. Only checks with a lower score will be shown'),
     ('v',  'verbose',      'Enable verbose output'),
     ('h',  'help',         'Show help message'),
@@ -288,6 +331,8 @@ _args = [
 
 _verbose     = 0
 _score_limit = None
+_checks      = []
+_tests       = []
 try:
     opts, args = getopt.getopt(sys.argv[1:], ''.join([ x[0] for x in _args ]), [ x[1] for x in _args ])
 except getopt.error, msg:
@@ -297,13 +342,23 @@ for o, a in opts:
         _verbose += 1
     elif o in ('-l', '--score-limit'):
         _score_limit = int(a)
+    elif o in ('-c', '--checks'):
+        _checks = a.split(',')
+    elif o in ('-t', '--tests'):
+        _tests = a.split(',')
+        TESTS = dict([ (k, v) for k, v in TESTS.iteritems() if k in _tests ])
     elif o in ('-h', '--help'):
         usage()
+    else:
+        usage('Unhandled parameter: %s' % str(o))
 
 # 1) Perform checks
 #
 results = {}
 for check in get_all_checks():
+    if _checks and not check in _checks:
+        continue
+
     score         = SCORE_START
     check_results = TESTS.copy()
 

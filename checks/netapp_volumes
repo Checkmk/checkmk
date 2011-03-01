@@ -95,7 +95,7 @@ def check_netapp_volumes(item, _not_used, info):
     if status == 'reconstructing':
         ret_state = 1
         output += ' (WARN)'
-    elif status not in [ 'normal', 'raid_dp', 'raid0', 'raid0, mirrored' ]:
+    elif status.split(',')[0] not in [ 'normal', 'raid_dp', 'raid0', 'raid0, mirrored' ]:
         ret_state = 2
         output += ' (CRIT)'
 
@@ -110,4 +110,4 @@ snmp_info["netapp_volumes"] = ( ".1.3.6.1.4.1.789.1.5.8.1", ["2",  # volName
                                                        ] )
 
 snmp_scan_functions['netapp_volumes'] = \
-    lambda oid: oid("1.3.6.1.2.1.1.1.0").startswith('"NetApp Release')
+    lambda oid: oid("1.3.6.1.2.1.1.1.0").startswith('NetApp Release')

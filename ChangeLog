@@ -34,6 +34,9 @@
     * FIX: cisco_temp_perf: fix return state in case of WARNING (was 0 = OK)
     * FIX: repair PNP template for df when using trends
     * FIX: blade_health, fc_brocade_port_detailed removed debug outputs
+    * FIX: netapp_volumes: The check handled 64-bit aggregates correctly
+    * FIX: netapp_volumes: Fixed snmp scan function
+    * FIX: blade_*: Fixed snmp scan function
 
     Multisite:
     * FIX: fix json/python Webservice

@@ -1,10 +1,14 @@
 Title: WATO services does not display manually configured checks
 Component: wato
-Benefit: 1
-State: open
-Cost: 1
-Date: 2011-02-16 16:26:02
+State: done
 Class: bug
+Date: 2011-02-16 16:26:02
+Benefit: 1
+Cost: 1
+Fun: 0
 
 If you add checks with checks +=, then WATO should display
 them, but does not. Problem seems to ly in check_mk --automation try-inventory.
+
+2011-03-01 18:09:24: changed state open -> done
+Works for me. Cannot reproduce this bug.

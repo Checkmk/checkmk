@@ -1,8 +1,8 @@
 Title: df trends: Peak values after changing the levels_range param
 Component: checks
-Benefit: 5
+Benefit: 1
 State: open
-Cost: 4
+Cost: 2
 Date: 2011-02-10 09:45:24
 Class: bug
 

@@ -189,10 +189,32 @@ def aggr_render_node(tree, title, mousecode, show_host):
     h += '<span class="content output">%s</span>\n' % output
     return h
 
+def filter_tree_only_problems(tree):
+
+    def get_worst(subtree, worst = 0):
+        nodes = subtree[6]
+        if not nodes is None:
+            work = nodes[:]
+            for i, node in enumerate(work):
+                # Go deep!
+                my_worst = get_worst(node)[1]
+
+                # Cleanup this node+below
+                if my_worst == 0:
+                    nodes.remove(node)
+
+                # Add state of this node to summary state for nodes above
+                if my_worst > worst:
+                    worst = my_worst
+
+        if subtree[0] > worst:
+            worst = subtree[0]
+
+        return nodes, worst
+
+    tree = tree[:5] + (get_worst(tree), ) + tree[6:]
 
 def paint_aggr_tree_foldable(row):
-    only_problems = get_painter_option("aggr_onlyproblems") == "1"
-
     mousecode = \
        'onmouseover="this.style.cursor=\'pointer\';" ' \
        'onmouseout="this.style.cursor=\'auto\';" ' \
@@ -200,6 +222,8 @@ def paint_aggr_tree_foldable(row):
 
     def render_subtree(tree, level, show_host):
         nodes = tree[6]
+        if nodes == []:
+            return ''
         if nodes == None:
             return aggr_render_leaf(tree, show_host)
         else:
@@ -214,19 +238,18 @@ def paint_aggr_tree_foldable(row):
             h += '<ul %sclass="subtree">' % style
 
             for node in tree[6]:
-                if only_problems and node[0] == 0:
-                    continue
                 h += '<li>' + render_subtree(node, level + 1, show_host) + '</li>\n'
             return h + '</ul></ul>\n'
 
     tree = row["aggr_treestate"]
+    if get_painter_option("aggr_onlyproblems") == "1":
+        filter_tree_only_problems(tree)
     affected_hosts = row["aggr_hosts"]
     htmlcode = render_subtree(tree, 1, len(affected_hosts) > 1)
     return "aggrtree", htmlcode
 
 
 def paint_aggr_tree_ltr(row, mirror):
-    only_problems = get_painter_option("aggr_onlyproblems") == "1"
     wrap          = get_painter_option("aggr_wrap")
 
     if wrap == "wrap":
@@ -248,8 +271,6 @@ def paint_aggr_tree_ltr(row, mirror):
     def gen_node(tree, height, show_host):
         leaves = []
         for node in tree[6]:
-            if only_problems and node[0] == 0:
-                continue
             leaves += gen_table(node, height - 1, show_host)
         h = '<div class="aggr tree">' + aggr_render_node(tree, tree[2], '', show_host) + "</div>"
         if leaves:
@@ -257,6 +278,8 @@ def paint_aggr_tree_ltr(row, mirror):
         return leaves
 
     tree = row["aggr_treestate"]
+    if get_painter_option("aggr_onlyproblems") == "1":
+        filter_tree_only_problems(tree)
     depth = bi.status_tree_depth(tree)
     leaves = gen_table(tree, depth, row["aggr_hosts"] > 1)
     h = '<table class="aggrtree">'

@@ -1,0 +1,10 @@
+Title: Update Livestatus API for Python
+Component: livestatus
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-03-01 18:35:46
+Class: cleanup
+
+Take the API from web/htdocs/livestatus.py, rework the examples,
+make it work.

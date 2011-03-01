@@ -322,6 +322,7 @@ def verify_perfometer(check):
 # #############################################################################
 
 _args = [
+    ('t:', 'tests=',       'Put one or more tests (comma separated) to limit the validations to perform'),
     ('c:', 'checks=',      'Put one or more checks (comma separated) to limit the checks to validate'),
     ('l:', 'score-limit=', 'Set an upper score limit. Only checks with a lower score will be shown'),
     ('v',  'verbose',      'Enable verbose output'),
@@ -331,6 +332,7 @@ _args = [
 _verbose     = 0
 _score_limit = None
 _checks      = []
+_tests       = []
 try:
     opts, args = getopt.getopt(sys.argv[1:], ''.join([ x[0] for x in _args ]), [ x[1] for x in _args ])
 except getopt.error, msg:
@@ -342,6 +344,9 @@ for o, a in opts:
         _score_limit = int(a)
     elif o in ('-c', '--checks'):
         _checks = a.split(',')
+    elif o in ('-t', '--tests'):
+        _tests = a.split(',')
+        TESTS = dict([ (k, v) for k, v in TESTS.iteritems() if k in _tests ])
     elif o in ('-h', '--help'):
         usage()
     else:

@@ -193,8 +193,6 @@ def check_cisco_qos(item, params, info):
             perfdata.append( (name, rate, warn, crit, min, max) )
         except MKCounterWrapped, e:
             wrapped = True
-            # continue, other counters might wrap as well
-            print e
 
     # if at least one counter wrapped, we do not handle the counters at all
     if wrapped:

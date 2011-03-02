@@ -12,6 +12,7 @@
       This is still experimental!
 
     Checks & Agents:
+    * FIX: Windows agent: fix output of event ID of log messages
     * FIX: if/if64: output speed correctly (1.50MB/s instead of 1MB/s)
     * FIX: drbd now handles output of older version without an ep field
     * FIX: repaired df_netapp32

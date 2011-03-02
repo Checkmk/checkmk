@@ -651,7 +651,7 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
     char timestamp[64];
     strftime(timestamp, sizeof(timestamp), "%b %d %H:%M:%S", t);
     
-    output(out, "%c %s %lu %lu %s %s\n", type_char, timestamp, 
+    output(out, "%c %s %lu.%lu %s %s\n", type_char, timestamp, 
             event->EventID / 65536, // "Qualifiers": no idea what *that* is 
             event->EventID % 65536, // the actual event id
             source_name, msgbuffer);

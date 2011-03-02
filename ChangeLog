@@ -9,6 +9,7 @@
     * FIX: setup.sh: do not prepend current directory to url_prefix
     * setup.sh: Allow to install Check_MK into existing OMD site (>= 0.46).
       This is still experimental!
+    * FIX: output agent version also for mixed (tcp|snmp) hosts
 
     Checks & Agents:
     * FIX: drbd now handles output of older version without an ep field

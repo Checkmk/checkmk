@@ -6,6 +6,15 @@ Cost: 2
 Date: 2011-03-02 11:16:29
 Class: bug
 
+The event ID as output by the agent is wrong. Looks like we need to
+do a % 65536:
+
+>>> a = 3238133770
+>>> a % 65536
+10
+
+Or maybe we need %u instead of %lu.
+
 > Allerdings erschliesst sich mir nicht ganz der Zusammenbau der Event-ID.
 > 
 > Text auf Check_MK Log-Website (nagios-host mit check_mk Plugin):

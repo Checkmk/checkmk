@@ -39,12 +39,12 @@ def check_nfsmounts(item, params, info):
             if size_blocks < 0 or free_blocks < 0 or blocksize > 1024*1024:
                 return (1, "WARNING - Stale NFS handle")
 
-            gb = 1024 * 1024 * 1024.0
-            size_gb = (size_blocks * blocksize) / gb
-            free_gb = (free_blocks * blocksize) / gb
-            used_gb = size_gb - free_gb
-            used_perc = 100.0 * used_gb / size_gb
             if line[1] == 'ok':
+                gb = 1024 * 1024 * 1024.0
+                size_gb = (size_blocks * blocksize) / gb
+                free_gb = (free_blocks * blocksize) / gb
+                used_gb = size_gb - free_gb
+                used_perc = 100.0 * used_gb / size_gb
                 return (0, "OK - %.1f%% used (%.1f of %.1f GB)" % (used_perc, used_gb, size_gb))
             else:
                 return (2, "CRITICAL - server not responding")

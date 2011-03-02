@@ -39,6 +39,7 @@
     * FIX: netapp_volumes: The check handled 64-bit aggregates correctly
     * FIX: netapp_volumes: Fixed snmp scan function
     * FIX: blade_*: Fixed snmp scan function
+    * FIX: nfsmount: fix exception in check in case of 'hanging'
 
     Multisite:
     * FIX: fix json/python Webservice

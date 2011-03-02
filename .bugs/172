@@ -1,0 +1,16 @@
+Title: Windows agent hangs if *.txt files lie around in plugins
+Component: checks
+Benefit: 1
+State: open
+Cost: 2
+Date: 2011-03-02 10:51:14
+Class: bug
+
+This is unbelievable. But on Windows popen() on a .txt
+files really starts notepad.exe - even if the agent
+is running as service. That process appears in the process
+list and hangs forever - without using CPU or opening
+a window. The agent waits until eternity for its termination.
+
+Solution is not quite clear. Maybe keep a fixed list
+of supported extensions (.cmd, .com, .exe, .vbs).

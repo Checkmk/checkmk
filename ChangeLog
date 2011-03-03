@@ -5,6 +5,9 @@
     WATO:
     * FIX: Fixed bug that lost autochecks when using WATO and cmk -II together
 
+    Checks & Agents:
+    * Added check man page for systemtime, multipath
+
 
 1.1.10b1:
     Core, Setup, etc.:

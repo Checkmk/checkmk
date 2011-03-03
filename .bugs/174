@@ -1,0 +1,10 @@
+Title: local installation on OMD uses invalid cache path
+Component: core
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-03-03 09:06:58
+Class: bug
+
+If you install Check_MK locally in OMD, the cache path is
+var/check_mk/cache, but should be tmp/check_mk/cache.

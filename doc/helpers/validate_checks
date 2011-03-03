@@ -161,7 +161,7 @@ C_OK        = 1
 C_FAILED    = 2
 C_INVALID   = 3
 
-LINELENGTH_LIMIT = 100
+LINELENGTH_LIMIT = 140
 
 TESTS = {
     'manpage':     C_OK,

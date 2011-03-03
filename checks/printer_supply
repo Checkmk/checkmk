@@ -89,7 +89,8 @@ def check_printer_supply(item, params, info):
             elif current == -2 or maxlevel == -2:
                 return (3, "UNKNOWN - Couldn't get info about supply")
             elif current == -3:
-                return (printer_supply_some_remaining_status, "%s - Some remaining" % (nagios_state_names[printer_supply_some_remaining_status]), perfdata)
+                return (printer_supply_some_remaining_status, "%s - Some remaining" % 
+                        (nagios_state_names[printer_supply_some_remaining_status]), perfdata)
             elif leftperc <= crit:
                 return (2, "CRIT - %s" % infotext, perfdata)
             elif leftperc <= warn:

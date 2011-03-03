@@ -102,7 +102,8 @@ def check_oracle_inst(inst, params, info):
                         infotxt += " - standby is open readonly"
                         statustxt = "CRIT"
                         status = 2
-                    return (status, (statustxt + " - Type %s State %s Release %s FB %s" + infotxt) % (db_type, db_state, release, fb_state), perfdata)
+                    return (status, (statustxt + " - Type %s State %s Release %s FB %s" + infotxt)
+                            % (db_type, db_state, release, fb_state), perfdata)
                 else:
                     return (2, "CRIT - Cannot login: %s %s %s" % (line[1], line[2], line[3]))
             except IndexError:

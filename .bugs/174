@@ -1,0 +1,9 @@
+Title: Reinventory removes e.g. snmp_uptime check when not given via cmdline
+Component: core
+Benefit: 4
+State: open
+Cost: 4
+Date: 2011-03-03 09:56:23
+Class: bug
+
+When a service has been added with --checks snmp_uptime -I <hostname> and one executes a re-inventory for all checks the snmp_uptime check is lost and needs to be re-added with --checks snmp_uptime -I or --checks snmp_uptime -II.

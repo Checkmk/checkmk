@@ -1,3 +1,7 @@
+1.1.10b2:
+    WATO:
+    * FIX: Fixed bug that lost autochecks when using WATO and cmk -II together
+
 1.1.10b1:
     Core, Setup, etc.:
     * FIX: do not assume 127.0.0.1 as IP address for usewalk_hosts if

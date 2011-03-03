@@ -1873,9 +1873,11 @@ def remove_autochecks_of(hostname, checktypes):
         lines = []
         count = 0
         for line in file(fn):
-            if line.lstrip().startswith('("'):
+            # hostname and check type can be quoted with ' or with "
+            double_quoted = line.replace("'", '"').lstrip()
+            if double_quoted.startswith('("'):
                 count += 1
-                splitted = line.split('"')
+                splitted = double_quoted.split('"')
                 if splitted[1] != hostname or splitted[3] not in checktypes:
                     if splitted[3] not in check_info:
                         sys.stderr.write('Removing unimplemented check %s\n' % splitted[3])

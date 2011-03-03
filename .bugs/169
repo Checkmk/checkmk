@@ -1,10 +1,11 @@
 Title: WATO misses services
 Component: wato
-Benefit: 4
-State: open
-Cost: 2
-Date: 2011-03-02 09:45:16
+State: done
 Class: bug
+Date: 2011-03-02 09:45:16
+Benefit: 4
+Cost: 2
+Fun: 0
 
 In some strange cases WATO seems to loose services:
 
@@ -26,3 +27,7 @@ In some strange cases WATO seems to loose services:
 > services were legacy services that I had much earlier added (globally)
 > via editing files.
 
+
+2011-03-03 06:48:36: changed state open -> done
+Was due to different quote types used in autochecks files.
+Should be fixed now.

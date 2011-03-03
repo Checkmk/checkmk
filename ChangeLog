@@ -1,3 +1,7 @@
+Checks & Agents:
+  * Added SNMP uptime check which behaves identical to the agent base uptime
+	check
+
 1.1.10b1:
     Core, Setup, etc.:
     * FIX: do not assume 127.0.0.1 as IP address for usewalk_hosts if

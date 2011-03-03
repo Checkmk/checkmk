@@ -325,14 +325,17 @@ _args = [
     ('t:', 'tests=',       'Put one or more tests (comma separated) to limit the validations to perform'),
     ('c:', 'checks=',      'Put one or more checks (comma separated) to limit the checks to validate'),
     ('l:', 'score-limit=', 'Set an upper score limit. Only checks with a lower score will be shown'),
+    ('a', 'alternative-output', 'Choose an alternative output format (only listing the problems)'),
     ('v',  'verbose',      'Enable verbose output'),
     ('h',  'help',         'Show help message'),
 ]
 
-_verbose     = 0
-_score_limit = None
-_checks      = []
-_tests       = []
+_verbose            = 0
+_score_limit        = None
+_checks             = []
+_tests              = []
+_alternative_output = False
+
 try:
     opts, args = getopt.getopt(sys.argv[1:], ''.join([ x[0] for x in _args ]), [ x[1] for x in _args ])
 except getopt.error, msg:
@@ -342,6 +345,9 @@ for o, a in opts:
         _verbose += 1
     elif o in ('-l', '--score-limit'):
         _score_limit = int(a)
+    elif o in ('-a', '--alternative-output'):
+        _alternative_output = True
+
     elif o in ('-c', '--checks'):
         _checks = a.split(',')
     elif o in ('-t', '--tests'):
@@ -376,16 +382,18 @@ for check in get_all_checks():
 #
 # 2) Sort by score
 #
-results = sorted(results.iteritems(), key=operator.itemgetter(1))
+results = sorted(results.iteritems(), key=lambda x: (x[1], x[0]))
 
 #
 # 3) Output the results
 #
-sys.stdout.write('%-25s' % 'Check')
-for _f in TESTS.keys():
-    sys.stdout.write('%-15s' % (_f+' (%d)' % WEIGHT.get(_f, 1)))
-sys.stdout.write('%-8s' % 'Score')
-sys.stdout.write("\n")
+if not _alternative_output:
+    sys.stdout.write('%-25s' % 'Check')
+    for _f in TESTS.keys():
+        sys.stdout.write('%-15s' % (_f+' (%d)' % WEIGHT.get(_f, 1)))
+    sys.stdout.write('%-8s' % 'Score')
+    sys.stdout.write("\n")
+
 for check, (score, check_results) in results:
     if score == SCORE_START:
         color = tty_green
@@ -394,23 +402,34 @@ for check, (score, check_results) in results:
     else:
         color = tty_red
 
-    sys.stdout.write('%s%-25s%s' % (color, check, tty_normal))
+    if not _alternative_output:
+        sys.stdout.write('%s%-25s%s' % (color, check, tty_normal))
 
+    first = True
     for _f in TESTS.keys():
-        if check_results[_f] == C_FAILED:
-            sub_color = tty_red
-            label = ':-('
-        elif check_results[_f] == C_INVALID:
-            sub_color = tty_normal
-            label = ''
+        if _alternative_output:
+            if check_results[_f] == C_FAILED:
+                if first:
+                    sys.stdout.write("%-25s" % check)
+                    first = False
+                sys.stdout.write("%s " % _f)
         else:
-            sub_color = tty_green
-            label = ':-)'
+            if check_results[_f] == C_FAILED:
+                sub_color = tty_red
+                label = ':-('
+            elif check_results[_f] == C_INVALID:
+                sub_color = tty_normal
+                label = ''
+            else:
+                sub_color = tty_green
+                label = ':-)'
 
-        sys.stdout.write('%s%-15s%s' % (sub_color, label, tty_normal))
+            sys.stdout.write('%s%-15s%s' % (sub_color, label, tty_normal))
 
-    sys.stdout.write('%s%-8s%s' % (color, score, tty_normal))
-    sys.stdout.write("\n")
+    if not _alternative_output:
+        sys.stdout.write('%s%-8s%s' % (color, score, tty_normal))
+    if not _alternative_output or not first:
+        sys.stdout.write("\n")
 
 if _verbose > 0:
     sys.stdout.write("\n")

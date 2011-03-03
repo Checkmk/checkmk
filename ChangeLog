@@ -6,7 +6,7 @@
     * FIX: Fixed bug that lost autochecks when using WATO and cmk -II together
 
     Checks & Agents:
-    * Added check man page for systemtime, multipath
+    * Added check man page for systemtime, multipath, snmp_info
 
 
 1.1.10b1:

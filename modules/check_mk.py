@@ -632,6 +632,9 @@ def get_single_oid(hostname, ipaddress, oid):
            or value.startswith('No Such Object available') or value.startswith('No Such Instance currently exists'):
             value = None
 
+        # Strip quotes
+        if value.startswith('"') and value.endswith('"'):
+            value = value[1:-1]
         # try to remove text, only keep number
         # value_num = value_text.split(" ")[0]
         # value_num = value_num.lstrip("+")

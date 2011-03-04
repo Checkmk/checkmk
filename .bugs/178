@@ -1,12 +1,16 @@
 Title: get_single_oid should drop quotes on strings
 Component: core
-Benefit: 1
-State: open
-Cost: 1
-Date: 2011-03-04 14:30:38
+State: done
 Class: bug
+Date: 2011-03-04 14:30:38
+Benefit: 1
+Cost: 1
+Fun: 0
 
 The snmp scan function uses get_single_oid(). That function
 does not strip the quotes from strings. This is a bug.
 Some scan functions depend on the quotes, so fix them as
 well.
+
+2011-03-04 14:38:49: changed state open -> done
+Done. Strings are stripped if existing.

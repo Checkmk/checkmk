@@ -28,7 +28,7 @@
 
 def inventory_snmp_uptime(checktype, info):
     if len(info[0]) >= 1:
-        return [ (None, None, None) ]
+        return [ (None, None) ]
 
 def check_snmp_uptime(checktype, params, info):
     if len(info[0]) >= 1:

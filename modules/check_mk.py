@@ -2842,7 +2842,10 @@ def dump_host(hostname):
         add_txt = " (cluster of " + (",".join(nodes_of(hostname))) + ")"
     else:
         color = tty_bgblue
-        add_txt = " (%s)" % lookup_ipaddress(hostname)
+        try:
+            add_txt = " (%s)" % lookup_ipaddress(hostname)
+        except:
+            add_txt = " (no DNS, no entry in ipaddresses)"
     print "%s%s%s%-78s %s" % (color, tty_bold, tty_white, hostname + add_txt, tty_normal)
 
     tags = tags_of_host(hostname)

@@ -9,7 +9,7 @@
     Checks & Agents:
     * Added check man pages for systemtime, multipath, snmp_info, sylo,
       ad_replication
-
+    * Added SNMP uptime check which behaves identical to the agent uptime check
 
 1.1.10b1:
     Core, Setup, etc.:

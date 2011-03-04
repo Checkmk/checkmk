@@ -134,7 +134,7 @@ def git_add(bug):
 def next_bug_id():
     my_bug_ids = get_bug_ids()
     if not my_bug_ids:
-        bail_out('You have no bug ids left. Please reserve additional bug ids.')
+        bail_out('You have no bug IDS left. You can reserve 10 additional bug IDS with "gb ids 10".')
     return my_bug_ids[0]
 
 
@@ -150,8 +150,8 @@ def usage():
 
 where COMMAND is one of:
 
-  ids [#]                - Shows the number of reserved bug ids. With a number
-                           given as parameter the command will reserve new bug ids.
+  ids [#]                - Shows the number of reserved bug IDS. With a number
+                           given as parameter the command will reserve new bug IDS.
   list [-g] [-r] [STATE] - list bugs (-g: sort after gain, -r: reverse)
   new                    - create a new bug
   show [# #..]           - show several bugs (or all open)
@@ -457,7 +457,7 @@ def invalidate_my_bugid(id):
 
 
 def store_bug_ids(l):
-    file('.my_ids', 'w').write(repr(l))
+    file('.my_ids', 'w').write(repr(l) + "\n")
 
 
 def main_fetch_ids(args):
@@ -486,8 +486,8 @@ def main_fetch_ids(args):
     sys.stdout.write('Reserved %d additional IDs now. You have %d reserved IDs now.\n' %
                                                                       (num, len(my_ids)))
 
-    if 0 == os.system("git commit -m 'Reserved %d bug ids' ." % num):
-        sys.stdout.write("--> Successfully committed reserved bug ids. Please push it soon!\n")
+    if 0 == os.system("git commit -m 'Reserved %d bug IDS' ." % num):
+        sys.stdout.write("--> Successfully committed reserved bug IDS. Please push it soon!\n")
     else:
         bail_out("Cannot commit.")
 

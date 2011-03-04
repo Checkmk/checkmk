@@ -71,15 +71,15 @@ def check_h3c_lanswitch_cpu(item, params, info):
     warn, crit = params
     for line in info:
         if h3c_lanswitch_cpu_genitem(line[0]) == item:
-             util = int(line[1])
-	     infotext = (" - average usage was %d%% over last 5 minutes." % util)
-	     perfdata = [ ( "usage", util, warn, crit, 0, 100) ]
+            util = int(line[1])
+            infotext = (" - average usage was %d%% over last 5 minutes." % util)
+            perfdata = [ ( "usage", util, warn, crit, 0, 100) ]
 
-  	     if util > crit: 
+            if util > crit: 
                 return (2, "CRIT" + infotext, perfdata)
-             elif util > warn:
+            elif util > warn:
                 return (1, "WARN" + infotext, perfdata)
-	     else: 
+            else: 
                 return (0, "OK" + infotext, perfdata)
 
     return (3, "UNKNOWN - %s not found" % item)

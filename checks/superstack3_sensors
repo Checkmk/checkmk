@@ -42,7 +42,7 @@ def check_superstack3_sensors(item, params, info):
 check_info["superstack3_sensors"] = (check_superstack3_sensors, "%s", 0, inventory_superstack3_sensors )
 
 snmp_info["superstack3_sensors"] = \
-    ( "1.3.6.1.4.1.43.43.1.1", [ "7", "10" ] )
+    ( ".1.3.6.1.4.1.43.43.1.1", [ "7", "10" ] )
 
 
 snmp_scan_functions["superstack3_sensors"] = \

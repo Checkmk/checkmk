@@ -103,7 +103,7 @@ def check_ups_power(item, params, info):
     return (3, "UNKNOWN - Phase %s not found in SNMP output" % item)
 
 check_info['ups_power'] = ( check_ups_power, "Power phase %s", 1, inventory_ups_power )
-snmp_info['ups_power'] = ( "1.3.6.1.2.1.33.1.4.4.1", [ 0, 4 ] )
+snmp_info['ups_power'] = ( ".1.3.6.1.2.1.33.1.4.4.1", [ 0, 4 ] )
 # also on some devices on: enterprises.818.1.1.10.4.4.1
 # .1.3.6.1.2.1.33.1.1.1.0 "RPS SpA": Some usvs only support the UPS-MIB
 snmp_scan_functions['ups_power'] = \

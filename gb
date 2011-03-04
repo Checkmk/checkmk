@@ -130,11 +130,13 @@ def save_bug(bug):
 def git_add(bug):
     os.system("git add %d" % bug["id"])
 
+
 def next_bug_id():
-    if len(g_bugs) == 0:
-        return 1
-    else:
-        return max(g_bugs.keys()) + 1
+    my_bug_ids = get_bug_ids()
+    if not my_bug_ids:
+        bail_out('You have no bug ids left. Please reserve additional bug ids.')
+    return my_bug_ids[0]
+
 
 def add_comment(bug, title, comment):
     bug["description"] += """
@@ -148,6 +150,7 @@ def usage():
 
 where COMMAND is one of:
 
+  ids [#]                - Fetch a bundle of bug ids to be reserved (Default: 10)
   list [-g] [-r] [STATE] - list bugs (-g: sort after gain, -r: reverse)
   new                    - create a new bug
   show [# #..]           - show several bugs (or all open)
@@ -344,6 +347,7 @@ def main_new(args):
     bug["description"] = get_long_input("description")
     g_bugs[bug["id"]] = bug
     save_bug(bug)
+    invalidate_my_bugid(bug["id"])
     sys.stdout.write("Bug saved with id %d.\n" % bug["id"])
 
 def main_resolve(args):
@@ -437,6 +441,50 @@ def main_commit(args):
         else:
             bail_out("Cannot commit.")
 
+
+def get_bug_ids():
+    try:
+        return eval(file('.my_ids', 'r').read())
+    except:
+        return []
+
+
+def invalidate_my_bugid(id):
+    ids = get_bug_ids()
+    ids.remove(id)
+    store_bug_ids(ids)
+
+
+def store_bug_ids(l):
+    file('.my_ids', 'w').write(repr(l))
+
+
+def main_fetch_ids(args):
+    if not args:
+        num = 10
+    elif len(args) == 1:
+        num = int(args[0])
+    else:
+        usage()
+
+    # Get the start bug_id to reserve
+    try:
+        first_free = int(eval(file('first_free').read()))
+    except:
+        first_free = 0
+    new_first_free = first_free + num
+
+    # Store the bug_ids to reserve
+    my_ids = get_bug_ids() + range(first_free, first_free + num)
+    store_bug_ids(my_ids)
+
+    # Store the new reserved bug ids
+    file('first_free', 'w').write(str(new_first_free))
+
+    sys.stdout.write('Reserved %d additional IDs now. You have %d reserved IDs now.\n' %
+                                                                      (num, len(my_ids)))
+
+
 #                    _       
 #    _ __ ___   __ _(_)_ __  
 #   | '_ ` _ \ / _` | | '_ \ 
@@ -461,6 +509,7 @@ commands = {
   "grep"    : main_grep,
   "edit"    : main_edit,
   "commit"  : main_commit,
+  "ids"     : main_fetch_ids,
 }
 
 hits = [] 

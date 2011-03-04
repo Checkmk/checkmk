@@ -8,3 +8,4 @@ rpm.topdir/
 *.rpm
 *.deb
 var/
+.bugs/.my_ids

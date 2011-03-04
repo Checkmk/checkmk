@@ -632,6 +632,9 @@ def get_single_oid(hostname, ipaddress, oid):
            or value.startswith('No Such Object available') or value.startswith('No Such Instance currently exists'):
             value = None
 
+        # Strip quotes
+        if value.startswith('"') and value.endswith('"'):
+            value = value[1:-1]
         # try to remove text, only keep number
         # value_num = value_text.split(" ")[0]
         # value_num = value_num.lstrip("+")
@@ -2754,6 +2757,18 @@ def do_snmpwalk_on(hostname, filename):
     if opt_verbose:
         sys.stdout.write("Successfully Wrote %s%s%s.\n" % (tty_bold, filename, tty_normal))
 
+def do_snmpget(oid, hostnames):
+    if len(hostnames) == 0:
+        for host in all_active_hosts():
+            if is_snmp_host(host):
+                hostnames.append(host)
+
+    for host in hostnames:
+        ip = lookup_ipaddress(host)
+        value = get_single_oid(host, ip, oid)
+        sys.stdout.write("%s (%s): %r\n" % (host, ip, value))
+
+
 def show_paths():
     inst = 1
     conf = 2
@@ -2973,6 +2988,7 @@ def usage():
  check_mk --flush [HOST1 HOST2...]         flush all data of some or all hosts
  check_mk --donate                         Email data of configured hosts to MK
  check_mk --snmpwalk HOST1 HOST2 ...       Do snmpwalk on host
+ check_mk --snmpget OID HOST1 HOST2 ...    Fetch single OIDs and output them
  check_mk --scan-parents [HOST1 HOST2...]  autoscan parents, create conf.d/parents.mk
  check_mk -P, --package COMMAND            do package operations
  check_mk -V, --version                    print version
@@ -3921,6 +3937,7 @@ if __name__ == "__main__":
                      "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
                      "flush", "package", "donate", "snmpwalk", "usewalk",
                      "scan-parents", "procs=", "automation=", 
+                     "snmpget=", 
                      "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                      "man", "nowiki", "config-check", "backup=", "restore=",
                      "check-inventory=", "paths", "cleanup-autochecks", "checks=" ]
@@ -4025,6 +4042,9 @@ if __name__ == "__main__":
                 done = True
             elif o == '--snmpwalk':
                 do_snmpwalk(args)
+                done = True
+            elif o == '--snmpget':
+                do_snmpget(a, args)
                 done = True
             elif o in [ '-M', '--man' ]:
                 if len(args) > 0:

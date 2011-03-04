@@ -1,0 +1,31 @@
+title: Check state of the Microsoft Active Directory Replication between DCs
+agents: window
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ The check analyzes the replication status of Microsoft Active Directory Domain
+ Controllers. Each replication partner of a Domain Controller results in one
+ separate service.
+
+ The number of replication failures and the times of the last successful/failed
+ replications are checked. The check raises a CRITICAL state when the maximum failed
+ threshold is reached and when the last failed replication is newer than the last
+ successful replication.
+
+ The windows agent needs to be extended with the {ad_replication.bat} provided
+ in {agents/windows/plugins}.
+
+inventory:
+ Each replication partner results in one service.
+
+item:
+ The name of the replication partner.
+
+[parameters]
+max_failed (int): The maximum number of failures to be tolerated. All counts above
+ will raise a CRITICAL state
+
+[configuration]
+ad_replication_default_params (tuple of ints): Default value is set to a maximum amount of
+ 20 failed replications {(20, )}.

@@ -60,6 +60,6 @@ def detect_webtherm(oid):
 check_info['wut_webtherm'] = ( check_webtherm, "Thermograph Sensor %s", 1, inventory_webtherm)
 
 snmp_info['wut_webtherm'] = (
-   "1.3.6.1.4.1.5040.1.2", ["1", "2", "3", "6", "8", "16"],  [ "1.2.1.1", "1.3.1.1" ])
+   ".1.3.6.1.4.1.5040.1.2", ["1", "2", "3", "6", "8", "16"],  [ "1.2.1.1", "1.3.1.1" ])
 
 snmp_scan_functions['wut_webtherm'] = detect_webtherm

@@ -2,6 +2,7 @@
     Core, Setup, etc.:
     * FIX: setup.sh on OMD: fix paths for cache and counters
     * FIX: check_mk -D did bail out if host had no ip address
+    * cleanup: all OIDs in checks now begin with ".1.3.6", not "1.3.6"
 
     WATO:
     * FIX: Fixed bug that lost autochecks when using WATO and cmk -II together

@@ -150,7 +150,8 @@ def usage():
 
 where COMMAND is one of:
 
-  ids [#]                - Fetch a bundle of bug ids to be reserved (Default: 10)
+  ids [#]                - Shows the number of reserved bug ids. With a number
+                           given as parameter the command will reserve new bug ids.
   list [-g] [-r] [STATE] - list bugs (-g: sort after gain, -r: reverse)
   new                    - create a new bug
   show [# #..]           - show several bugs (or all open)
@@ -461,7 +462,8 @@ def store_bug_ids(l):
 
 def main_fetch_ids(args):
     if not args:
-        num = 10
+        sys.stdout.write('You have %d reserved IDs.\n' % (len(get_bug_ids())))
+        sys.exit(0)
     elif len(args) == 1:
         num = int(args[0])
     else:

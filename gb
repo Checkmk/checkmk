@@ -484,6 +484,11 @@ def main_fetch_ids(args):
     sys.stdout.write('Reserved %d additional IDs now. You have %d reserved IDs now.\n' %
                                                                       (num, len(my_ids)))
 
+    if 0 == os.system("git commit -m 'Reserved %d bug ids' ." % num):
+        sys.stdout.write("--> Successfully committed reserved bug ids. Please push it soon!\n")
+    else:
+        bail_out("Cannot commit.")
+
 
 #                    _       
 #    _ __ ___   __ _(_)_ __  

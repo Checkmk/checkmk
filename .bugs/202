@@ -1,0 +1,12 @@
+Title: Cleanup check API: drop parameter checktype from inventory function
+Component: core
+Benefit: 1
+State: open
+Cost: 3
+Date: 2011-03-06 10:25:28
+Class: cleanup
+
+The first parameter - the checktype - is never used. Remove it.
+From all checks. From the API. But make Check_MK somehow detect
+oldfashioned checks and stay compatible. Also remove the middle
+component in the checks still returning triples at inventory.

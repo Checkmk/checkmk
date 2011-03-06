@@ -1869,7 +1869,8 @@ def in_boolean_serviceconf_list(hostname, service_description, conflist):
 
 
 # Remove all autochecks of certain types of a certain host
-def remove_autochecks_of(hostname, checktypes):
+def remove_autochecks_of(hostname, checktypes = None): # None = all
+    removed = 0
     for fn in glob.glob(autochecksdir + "/*.mk"):
         if opt_debug:
             sys.stdout.write("Scanning %s...\n" % fn)
@@ -1881,11 +1882,13 @@ def remove_autochecks_of(hostname, checktypes):
             if double_quoted.startswith('("'):
                 count += 1
                 splitted = double_quoted.split('"')
-                if splitted[1] != hostname or splitted[3] not in checktypes:
+                if splitted[1] != hostname or (checktypes != None and splitted[3] not in checktypes):
                     if splitted[3] not in check_info:
                         sys.stderr.write('Removing unimplemented check %s\n' % splitted[3])
                         continue
                     lines.append(line)
+                else:
+                    removed += 1
         if len(lines) == 0:
             if opt_verbose:
                 sys.stdout.write("Deleting %s.\n" % fn)
@@ -1898,6 +1901,8 @@ def remove_autochecks_of(hostname, checktypes):
             for line in lines:
                 f.write(line)
             f.write("]\n")
+
+    return removed
 
 def remove_all_autochecks():
     for f in glob.glob(autochecksdir + '/*.mk'):
@@ -2609,7 +2614,7 @@ def do_flush(hosts):
         # counters
         try:
             os.remove(counters_directory + "/" + host)
-            sys.stdout.write(tty_blue + " counters")
+            sys.stdout.write(tty_bold + tty_blue + " counters")
             sys.stdout.flush()
             flushed = True
         except:
@@ -2627,9 +2632,9 @@ def do_flush(hosts):
                 except:
                     pass
         if d == 1:
-            sys.stdout.write(tty_green + " cache")
+            sys.stdout.write(tty_bold + tty_green + " cache")
         elif d > 1:
-            sys.stdout.write(tty_green + " cache(%d)" % d)
+            sys.stdout.write(tty_bold + tty_green + " cache(%d)" % d)
         sys.stdout.flush()
 
         # logfiles
@@ -2645,9 +2650,17 @@ def do_flush(hosts):
                     except:
                         pass
             if d > 0:
-                sys.stdout.write(tty_magenta + " logfiles(%d)" % d)
+                sys.stdout.write(tty_bold + tty_magenta + " logfiles(%d)" % d)
+
+        # autochecks
+        d = remove_autochecks_of(host)
+        if d > 0:
+            flushed = True
+            sys.stdout.write(tty_bold + tty_cyan + " autochecks(%d)" % d)
+
         if not flushed:
             sys.stdout.write("(nothing)")
+
 
         sys.stdout.write(tty_normal + "\n")
 

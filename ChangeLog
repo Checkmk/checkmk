@@ -1,5 +1,10 @@
 1.1.10b2:
     Core, Setup, etc.:
+    * --flush now also deletes all autochecks 
+
+
+1.1.10b2:
+    Core, Setup, etc.:
     * FIX: setup.sh on OMD: fix paths for cache and counters
     * FIX: check_mk -D did bail out if host had no ip address
     * cleanup: all OIDs in checks now begin with ".1.3.6", not "1.3.6"
@@ -11,6 +16,7 @@
     * Added check man pages for systemtime, multipath, snmp_info, sylo,
       ad_replication, fsc_fans, fsc_temp, fsc_subsystems
     * Added SNMP uptime check which behaves identical to the agent uptime check
+
 
 1.1.10b1:
     Core, Setup, etc.:

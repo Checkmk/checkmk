@@ -647,7 +647,11 @@ def execute_leaf_node(node, status_info):
         return (MISSING, None, None, "Host %s not found" % host) 
 
     host_state, host_output, service_state = status
-    assumed_state = g_assumptions.get((site, host, service))
+    if service != config.HOST_STATE:
+        key = (site, host, service)
+    else:
+        key = (site, host)
+    assumed_state = g_assumptions.get(key)
 
     if service == config.HOST_STATE:
         aggr_state = {0:OK, 1:CRIT, 2:UNKNOWN}[host_state]
@@ -784,12 +788,16 @@ def ajax_set_assumption(h):
     site = html.var("site")
     host = html.var("host")
     service = html.var("service")
+    if service:
+        key = (site, host, service)
+    else:
+        key = (site, host)
     state = html.var("state")
     load_assumptions()
     if state == 'none':
-        del g_assumptions[(site, host, service)]
+        del g_assumptions[key]
     else:
-        g_assumptions[(site, host, service)] = int(state)
+        g_assumptions[key] = int(state)
     save_assumptions()
 
 

@@ -30,9 +30,6 @@ Wünsche:
   Jetzt möchte ich sagen, dass die Host-Ressource von *dem*
   Host mit eingebaut werden, für den die anderen Regeln matchen.
 
-- State assumption von host states scheint nicht zu funktionieren.
-
-
 
 Performance:
 * Bei der Tabelle bi_aggregations gibt es Filter, die die Menge der Daten

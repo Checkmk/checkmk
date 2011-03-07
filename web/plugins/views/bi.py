@@ -133,7 +133,11 @@ def render_bi_state(state):
     }.get(state, "??")
 
 def render_assume_icon(site, host, service):
-    ass = bi.g_assumptions.get((site, host, service))
+    if service:
+        key = (site, host, service)
+    else:
+        key = (site, host)
+    ass = bi.g_assumptions.get(key)
     mousecode = \
        'onmouseover="this.style.cursor=\'pointer\';" ' \
        'onmouseout="this.style.cursor=\'auto\';" ' \

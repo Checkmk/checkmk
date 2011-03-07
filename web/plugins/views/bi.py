@@ -189,7 +189,8 @@ def aggr_render_node(tree, title, mousecode, show_host):
     h = '<div class="content state state%d%s">%s</div>\n' \
          % (effective_state, addclass, render_bi_state(effective_state))
     if mousecode:
-        h += '<span %s class="content name">%s</span>' % (mousecode, title)
+        h += '<img class=opentree %s>' % mousecode
+        h += '<span class="content name">%s</span>' % title
     else:
         h += title
     output = tree[3]
@@ -207,7 +208,7 @@ def paint_aggr_tree_foldable(row):
     mousecode = \
        'onmouseover="this.style.cursor=\'pointer\';" ' \
        'onmouseout="this.style.cursor=\'auto\';" ' \
-       'onclick="toggle_subtree(this);" '
+       'onclick="toggle_subtree(this);" ' 
 
     def render_subtree(tree, level, show_host):
         nodes = tree[6]
@@ -215,13 +216,16 @@ def paint_aggr_tree_foldable(row):
             return aggr_render_leaf(tree, show_host)
         else:
             h = '<ul class=title>'
-            h += aggr_render_node(tree, tree[2], mousecode, show_host)
 
             expansion_level = int(get_painter_option("aggr_expand"))
             if level > expansion_level:
                 style = 'style="display: none" '
+                mc = mousecode + 'src="images/tree_closed.png" '
             else:
                 style = ''
+                mc = mousecode + 'src="images/tree_open.png" '
+
+            h += aggr_render_node(tree, tree[2], mc, show_host)
             h += '<ul %sclass="subtree">' % style
 
             for node in tree[6]:

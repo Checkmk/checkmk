@@ -476,16 +476,18 @@ function handleReload(url) {
 // --------------------------------------------------------------------------
 // BI
 // --------------------------------------------------------------------------
-function toggle_subtree(oName) 
+function toggle_subtree(oImg) 
 {
-    var oParent = oName.parentNode;
-    var oSubtree = oParent.childNodes[5];
+    var oParent = oImg.parentNode;
+    var oSubtree = oParent.childNodes[6];
 
     if (oSubtree.style.display == "none") {
         oSubtree.style.display = "";
+        oImg.src = "images/tree_open.png";
     }
     else {
         oSubtree.style.display = "none";
+        oImg.src = "images/tree_closed.png";
     }
     oSubtree = null;
 }

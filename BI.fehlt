@@ -1,18 +1,14 @@
 Wünsche:
 
-- Reihenfolge der Nodes sollte so sein, wie die Regeln auftauchen.
-  Wir müssen also - nach dem kompilieren von einem Subnode, diesen
-  separat sortieren, die Gesamtmenge dann aber *nicht* sortieren!
-
 - Aufklappzustand von Baum muss persistiert werden. Das ist vor allem
   deshalb wichtig, weil bei einem Reload/Refresh der Baum sonst wieder
   umgeklappt wird. Die Frage ist dann allerdings, wie man das mit
   den Displayoptions zum Aufklappen macht. Ich glaube man braucht dann
   stattdessen einen Kopf oder sowas.
 
-- Man sieht zunächst nicht, dass man überhaupt aufklappen kann. Deswegen
-  sollte man ein Dreieck oder sowas anzeigen, aus dem klar wird, dass
-  es hier was zum Aufklappen gibt.
+- Reihenfolge der Nodes sollte so sein, wie die Regeln auftauchen.
+  Wir müssen also - nach dem kompilieren von einem Subnode, diesen
+  separat sortieren, die Gesamtmenge dann aber *nicht* sortieren!
 
 - Erkennung, ob Konfigfile geändert wurde, klappt nicht zuverlässig.
   Fall: Dateien heinz.mk und bi.mk sind da. Beide mit aggregations +=.

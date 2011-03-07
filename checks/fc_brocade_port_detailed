@@ -29,7 +29,7 @@
 # info columns: INDEX PHYSTATE OPSTATE TXWORDS RXWORDS
 #                          0     1             2             3            4      
 brocade_phystate_names = [ '', 'noCard', 'noTransceiver', 'laserFault', 'noLight', 
-#                            6          7            8          9         10
+#                            5         6          7            8          9         10
                           'noSync', 'inSync', 'portFault', 'diagFault', 'lockRef', 'noSystemControlAccessToSlot' ]
 #                            0          1         2          3           4
 brocade_opstate_names = [ 'unknown', 'online', 'offline', 'testing', 'faulty' ]

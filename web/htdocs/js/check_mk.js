@@ -499,8 +499,10 @@ function toggle_assumption(oImg, site, host, service)
     current = current.substr(7);
     current = current.substr(0, current.length - 4);
     if (current == 'none')
-        current = '0';
+        current = '1';
     else if (current == '3')
+        current = '0'
+    else if (current == '0')
         current = 'none'
     else
         current = parseInt(current) + 1; 

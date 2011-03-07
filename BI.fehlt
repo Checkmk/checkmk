@@ -6,11 +6,7 @@ Wünsche:
   den Displayoptions zum Aufklappen macht. Ich glaube man braucht dann
   stattdessen einen Kopf oder sowas.
 
-- Reihenfolge der Nodes sollte so sein, wie die Regeln auftauchen.
-  Wir müssen also - nach dem kompilieren von einem Subnode, diesen
-  separat sortieren, die Gesamtmenge dann aber *nicht* sortieren!
-
-- Erkennung, ob Konfigfile geändert wurde, klappt nicht zuverlässig.
+* Erkennung, ob Konfigfile geändert wurde, klappt nicht zuverlässig.
   Fall: Dateien heinz.mk und bi.mk sind da. Beide mit aggregations +=.
   Klappt. Danach wird bi.mk in bi.mk.weg umbenannt. Jetzt springt 
   es immer wild hin und her zwischen da, nicht da, etc.

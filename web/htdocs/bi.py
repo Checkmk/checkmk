@@ -360,7 +360,7 @@ def compile_aggregation(rule, args, lvl = 0):
 
     while bilateral_mergegroups(groups):
         pass
-    
+
     # Check for unmergeable entries, fill up missing values
     # from parameters (assuming they are not regexes)
     for ikey, inodes in groups.items():
@@ -373,16 +373,31 @@ def compile_aggregation(rule, args, lvl = 0):
             groups[newkey] = inodes
             del groups[ikey]
             
+    # now sort groups after instantiations
+    def cmp_group(a, b):
+        keya = list(a[0])
+        keya.sort()
+        keyb = list(b[0])
+        keyb.sort()
+        if a < b:
+            return -1
+        elif a > b:
+            return 1
+        else:
+            return 0
 
+    group_items = groups.items()
+    group_items.sort(cmp=cmp_group)
+    
     result = []
-    for key, nodes in groups.items():
-        nodes.sort()
+    for key, nodes in group_items:
         needed_hosts = set([])
         for node in nodes:
             needed_hosts.update(node[0])
         inst = dict(key)
         inst_description = subst_vars(description, inst)
         result.append((inst, (list(needed_hosts), inst_description, funcname, nodes)))
+
     return result
 
 

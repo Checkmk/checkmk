@@ -1,6 +1,9 @@
 1.1.10b3:
     Core, Setup, etc.:
     * --flush now also deletes all autochecks 
+    
+    Checks & Agents:
+    * FIX: hr_cpu: fix inventory on 1-CPU systems (thanks to Ulrich Kiermayr)
 
 
 1.1.10b2:

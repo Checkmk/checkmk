@@ -227,8 +227,8 @@ def compile_aggregation(rule, args, lvl = 0):
     if lvl == 50:
         raise MKConfigError("<h1>Depth limit reached</h1>"
                 "The nesting level of aggregations is limited to 50. You either configured "
-                "too many levels or built an infinite recursion.<br /><br />"
-                "You should really review your config!")
+                "too many levels or built an infinite recursion. This happened in rule <pre>%s</pre>"
+                  % pprint.pformat(rule))
 
     description, arglist, funcname, nodes = rule
 

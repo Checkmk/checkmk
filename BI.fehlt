@@ -23,6 +23,9 @@ Wünsche:
   Jetzt möchte ich sagen, dass die Host-Ressource von *dem*
   Host mit eingebaut werden, für den die anderen Regeln matchen.
 
+- Breite der verdammten Zustandicons ist nicht konstant. Müssen
+  wir jetzt doch Bilder machen, oder was?!?
+
 
 Performance:
 * Bei der Tabelle bi_aggregations gibt es Filter, die die Menge der Daten

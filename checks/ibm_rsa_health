@@ -25,8 +25,12 @@
 # Boston, MA 02110-1301 USA.
 
 # Example for info:
-# [['0'], ['1'], ['2'], ['3'], ['4'], ['5'], ['Critical'], ['Critical'], ['Warning'], ['Warning'], ['Warning'], ['Multiple fan failures'], ['Power Supply 1 AC Power Removed'], ['System Running Nonredundant Power'], ['Fan 7 Failure'], ['Fan 8 Failure']]
-# state definitions from RSA-MIB:
+
+# [['0'], ['1'], ['2'], ['3'], ['4'], ['5'], ['Critical'], ['Critical'],
+# ['Warning'], ['Warning'], ['Warning'], ['Multiple fan failures'], 
+# ['Power Supply 1 AC Power Removed'], ['System Running Nonredundant Power'],
+# ['Fan 7 Failure'], ['Fan 8 Failure']]
+
 #   critical(0),
 #   nonCritical(2),
 #   systemLevel(4),

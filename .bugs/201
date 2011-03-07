@@ -1,0 +1,11 @@
+Title: cmk -N HOSTNAME outputs legacy checks of all hosts
+Component: core
+Benefit: 1
+State: open
+Cost: 2
+Date: 2011-03-05 23:02:05
+Class: bug
+
+Somebody said that cmk -N HOSTNAME outputs always all
+legacy checks, not only that of a specific host.
+Check and maybe fix this.

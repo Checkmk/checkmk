@@ -99,6 +99,6 @@ def check_hp_procurve_sensors(item, _not_used, info):
 
 
 check_info['hp_procurve_sensors'] = (check_hp_procurve_sensors, "Sensor %s", 0,  inventory_hp_procurve_sensors)
-snmp_info['hp_procurve_sensors']  = ( "1.3.6.1.4.1.11.2.14.11.1.2.6.1", [ "1", "2", "4", "7" ] )
+snmp_info['hp_procurve_sensors']  = ( ".1.3.6.1.4.1.11.2.14.11.1.2.6.1", [ "1", "2", "4", "7" ] )
 snmp_scan_functions['hp_procurve_sensors'] = \
     lambda oid: ".11.2.3.7.11" in oid(".1.3.6.1.2.1.1.2.0")

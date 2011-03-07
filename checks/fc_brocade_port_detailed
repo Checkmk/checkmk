@@ -27,8 +27,10 @@
 
 # targetstate is 1 (used) or 0 (unused)
 # info columns: INDEX PHYSTATE OPSTATE TXWORDS RXWORDS
-#                          0     1             2             3            4         5          6          7            8          9         10
-brocade_phystate_names = [ '', 'noCard', 'noTransceiver', 'laserFault', 'noLight', 'noSync', 'inSync', 'portFault', 'diagFault', 'lockRef', 'noSystemControlAccessToSlot' ]
+#                          0     1             2             3            4      
+brocade_phystate_names = [ '', 'noCard', 'noTransceiver', 'laserFault', 'noLight', 
+#                            6          7            8          9         10
+                          'noSync', 'inSync', 'portFault', 'diagFault', 'lockRef', 'noSystemControlAccessToSlot' ]
 #                            0          1         2          3           4
 brocade_opstate_names = [ 'unknown', 'online', 'offline', 'testing', 'faulty' ]
 
@@ -37,7 +39,6 @@ fc_brocade_port_detailed_default_levels = ( (1, 0.1), (1, 0.1), (1, 0.1), (2, 16
 def inventory_brocade_port(checkname, info):
     porttable, isltable = info
     inventory = []
-    print 
     for index, phystate, opstate, txwords, rxwords, txframes, rxframes, crcerrors, encout, c3discards in porttable:
         state = (int(phystate), int(opstate))
         if state == (4,2):
@@ -117,7 +118,6 @@ def check_brocade_port(portno, params, info):
             if (phy,op) == (phystate, opstate):
                 nagioscode = ncode
                 break
-        print phystate, len(brocade_phystate_names)
         return (nagioscode, "%s - physical state %s(%d), opstate %s(%d)" % (
                 nagios_state_names[nagioscode], 
                 (len(brocade_phystate_names) > phystate and brocade_phystate_names[phystate] or 'UNHANDLED'),
@@ -202,7 +202,7 @@ check_info['fc_brocade_port_detailed'] = (check_brocade_port, "PORT %s", 1,  inv
 # not merge the subtables but simply appends the main lists. But does anyone
 # out there use cluster checks for SNMP devices?
 snmp_info['fc_brocade_port_detailed'] = [
-   ( "1.3.6.1.4.1.1588.2.1.1.1.6.2.1", [
+   ( ".1.3.6.1.4.1.1588.2.1.1.1.6.2.1", [
     1, # swFCPortIndex
     3, # swFCPortOpStatus
     4, # swFCPortAdmStatus
@@ -216,7 +216,7 @@ snmp_info['fc_brocade_port_detailed'] = [
    ]),
 
    # Information about Inter-Switch-Links (contains baud rate of port)
-   ( "1.3.6.1.4.1.1588.2.1.1.1.2.9.1", [
+   ( ".1.3.6.1.4.1.1588.2.1.1.1.2.9.1", [
      2, # swNbMyPort
      5, # swNbBaudRate
    ])

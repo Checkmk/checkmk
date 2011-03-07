@@ -142,6 +142,13 @@ Performance data:
 SNMP based checks:
 * Only use numeric OIDs in your checks. Name based OIDs rely on MIB files
   and the check won't work when the MIB files are not in place.
+* The used numeric OIDs MUST be given with a leading dot.
+
+Forbidden things:
+* Neither the check- nor the inventory function may use the print command
+  or otherwise output any data to stdout or stderr nor otherwise communicate
+  with the outside. An rare exception to this are checks that need a dedicated
+  data storage (such as logwatch: it keeps unread log messages in files).
 
 Manpages
 

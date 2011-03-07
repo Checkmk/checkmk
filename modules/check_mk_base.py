@@ -743,6 +743,7 @@ def do_all_checks_on_host(hostname, ipaddress):
     num_errors = 0
     check_table = get_sorted_check_table(hostname)
     problems = []
+
     for checkname, item, params, description, info in check_table:
         # In case of a precompiled check table info is the aggrated
         # service name. In the non-precompiled version there are the dependencies
@@ -819,11 +820,8 @@ def do_all_checks_on_host(hostname, ipaddress):
     submit_aggregated_results(hostname)
 
     try:
-        if not is_snmp_host(hostname):
+        if is_tcp_host(hostname):
             version_info = get_host_info(hostname, ipaddress, 'check_mk')
-            # TODO: remove this later, when all agents have been converted
-            if not version_info:
-                version_info = get_host_info(hostname, ipaddress, 'mknagios')
             agent_version = version_info[0][1]
         else:
             agent_version = "(unknown)"
@@ -1029,9 +1027,9 @@ def get_nic_speed_human_readable(speed):
         elif speedi == 1000000000:
             speed = "1GBit/s"
         elif speed < 1500000000:
-            speed = "%dMBit/s" % (speedi / 1000000)
+            speed = "%.2fMBit/s" % (speedi / 1000000.0)
         else:
-            speed = "%dGBit/s" % (speedi / 1000000000)
+            speed = "%.2fGBit/s" % (speedi / 1000000000.0)
     except:
         pass
     return speed

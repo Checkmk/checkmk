@@ -1,0 +1,32 @@
+title: Monitor state of multipathing on Linux
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of multipath devices on Linux
+ hosts. For each multipath device at time of inventory the number
+ of paths is put into the check parameters. If later the number
+ of paths is less then expected, the check goes critical. So it
+ does if any of the paths is broken.
+
+ If the number of paths is higher than expected, the check goes
+ warning. A reinventory of the check might be neccessary in that
+ case.
+
+ This check is based on the output of the command {multipath -l} as
+ sent by the Linux agent. It correctly deals with various subtle
+ differences between the available versions of the multipath tools.
+
+item:
+ The UUID of the multipath device, e.g. {"360a980004334644d654a364469555a76"}.
+ If the multipath device has an alias you can alternatively specify the
+ alias as item.
+
+inventory:
+ One check for each multipath device is created.
+
+[parameters]
+numpaths(int): The only parameter is the number of expected paths. This is not 
+  a tuple but a simple integer value.
+

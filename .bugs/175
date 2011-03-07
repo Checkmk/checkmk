@@ -1,0 +1,11 @@
+Title: Scan parents scans only the first gateway
+Component: core
+Benefit: 3
+State: open
+Cost: 3
+Date: 2011-03-03 12:09:11
+Class: bug
+
+In our tests the parent scan did only find and add the nearest gateway to the target system. The gateways in the middle of the route to the target host were not be added to the configuration.
+
+Platform: Ubuntu 10.04 64, OMD 0.46

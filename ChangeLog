@@ -1,21 +1,42 @@
+1.1.10b2:
+    Core, Setup, etc.:
+    * --flush now also deletes all autochecks 
+
+
+1.1.10b2:
+    Core, Setup, etc.:
+    * FIX: setup.sh on OMD: fix paths for cache and counters
+    * FIX: check_mk -D did bail out if host had no ip address
+    * cleanup: all OIDs in checks now begin with ".1.3.6", not "1.3.6"
+
+    WATO:
+    * FIX: Fixed bug that lost autochecks when using WATO and cmk -II together
+
+    Checks & Agents:
+    * Added check man pages for systemtime, multipath, snmp_info, sylo,
+      ad_replication, fsc_fans, fsc_temp, fsc_subsystems
+    * Added SNMP uptime check which behaves identical to the agent uptime check
+
+
 1.1.10b1:
     Core, Setup, etc.:
     * FIX: do not assume 127.0.0.1 as IP address for usewalk_hosts if
       they are not SNMP hosts.
     * FIX: precompile: make sure check includes are added before actual
       checks
+    * FIX: setup.sh: do not prepend current directory to url_prefix
+    * FIX: output agent version also for mixed (tcp|snmp) hosts
     * RPM: use BuildArch: noarch in spec file rather than as a command
       line option (thanks to Ulrich Kiermayr)
-    * FIX: setup.sh: do not prepend current directory to url_prefix
     * setup.sh: Allow to install Check_MK into existing OMD site (>= 0.46).
       This is still experimental!
 
     Checks & Agents:
+    * FIX: Windows agent: fix output of event ID of log messages
+    * FIX: if/if64: output speed correctly (1.50MB/s instead of 1MB/s)
     * FIX: drbd now handles output of older version without an ep field
-    * systemtime: new simple check for time synchronization on Windows
-      (needs agent update)
     * FIX: repaired df_netapp32
-    * Added SNMP scan function of df_netapp and df_netapp32
+    * FIX: Added SNMP scan function of df_netapp and df_netapp32
     * FIX: repaired apc_symmetra (was broken due to new option -Ot 
       for SNMP)
     * FIX: df, hr_fs and other filesystem checks: fix bug if using
@@ -27,12 +48,24 @@
     * FIX: df_netapp/32: fixed output of used percentage (was always
       0% due to integer division)
     * FIX: fixed manual of df (magic_norm -> magic_normsize)
-    * Added Perf-O-Meter for non-df filesystem checks (e.g. netapp)
     * FIX: removed filesystem_trend_perfdata. It didn't work. Use
       now df-parameter "trend_perfdata" (see new man page of df)
-    * hp_proliant_*: improve scan function (now just looks for "proliant")
     * FIX: cisco_temp_perf: fix return state in case of WARNING (was 0 = OK)
     * FIX: repair PNP template for df when using trends
+    * FIX: cisco_qos: fix WATO exception (was due to print command in check)
+    * FIX: check_mk check: fixed template for execution time
+    * FIX: blade_health, fc_brocade_port_detailed removed debug outputs
+    * FIX: netapp_volumes: The check handled 64-bit aggregates correctly
+    * FIX: netapp_volumes: Fixed snmp scan function
+    * FIX: blade_*: Fixed snmp scan function
+    * FIX: nfsmount: fix exception in check in case of 'hanging'
+    * systemtime: new simple check for time synchronization on Windows
+      (needs agent update)
+    * Added Perf-O-Meter for non-df filesystem checks (e.g. netapp)
+    * hp_proliant_*: improve scan function (now just looks for "proliant")
+
+    Multisite:
+    * FIX: fix json/python Webservice
 
 1.1.9i9:
     Core, Setup, etc.:

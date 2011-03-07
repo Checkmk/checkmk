@@ -27,10 +27,14 @@
 # Author: Lars Michelsen <lm@mathias-kettner.de>
 
 # <<<ad_replication>>>
-# showrepl_COLUMNS,Destination DC Site,Destination DC,Naming Context,Source DC Site,Source DC,Transport Type,Number of Failures,Last Failure Time,Last Success Time,Last Failure Status
-# showrepl_INFO,Standardname-des-ersten-Standorts,WIN2003,"DC=corp,DC=de",Standardname-des-ersten-Standorts,WIN2003-DC2,RPC,0,0,2010-07-02 13:33:27,0
-# showrepl_INFO,Standardname-des-ersten-Standorts,WIN2003,"CN=Configuration,DC=corp,DC=de",Standardname-des-ersten-Standorts,WIN2003-DC2,RPC,0,0,2010-07-02 12:54:08,0
-# showrepl_INFO,Standardname-des-ersten-Standorts,WIN2003,"CN=Schema,CN=Configuration,DC=corp,DC=de",Standardname-des-ersten-Standorts,WIN2003-DC2,RPC,0,0,2010-07-02 12:46:28,0
+# showrepl_COLUMNS,Destination DC Site,Destination DC,Naming Context,Source DC Site,Source DC,\
+#Transport Type,Number of Failures,Last Failure Time,Last Success Time,Last Failure Status
+# showrepl_INFO,Standardname-des-ersten-Standorts,WIN2003,"DC=corp,DC=de",Standardname-des-ers\
+#ten-Standorts,WIN2003-DC2,RPC,0,0,2010-07-02 13:33:27,0
+# showrepl_INFO,Standardname-des-ersten-Standorts,WIN2003,"CN=Configuration,DC=corp,DC=de",Sta\
+#ndardname-des-ersten-Standorts,WIN2003-DC2,RPC,0,0,2010-07-02 12:54:08,0
+# showrepl_INFO,Standardname-des-ersten-Standorts,WIN2003,"CN=Schema,CN=Configuration,DC=corp,\
+#DC=de",Standardname-des-ersten-Standorts,WIN2003-DC2,RPC,0,0,2010-07-02 12:46:28,0
 
 import datetime, time
 

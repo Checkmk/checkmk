@@ -632,6 +632,9 @@ def get_single_oid(hostname, ipaddress, oid):
            or value.startswith('No Such Object available') or value.startswith('No Such Instance currently exists'):
             value = None
 
+        # Strip quotes
+        if value.startswith('"') and value.endswith('"'):
+            value = value[1:-1]
         # try to remove text, only keep number
         # value_num = value_text.split(" ")[0]
         # value_num = value_num.lstrip("+")
@@ -1788,7 +1791,7 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
             if not os.path.exists(autochecksdir):
                 os.makedirs(autochecksdir)
             file(filename, "w").write('# %s\n[\n%s]\n' % (filename, ''.join(newchecks)))
-            sys.stdout.write('%-30s ' % (tty_blue + checkname + tty_normal))
+            sys.stdout.write('%-30s ' % (tty_cyan + tty_bold + checkname + tty_normal))
             sys.stdout.write('%s%d new checks%s\n' % (tty_bold + tty_green, count_new, tty_normal))
 
     return newitems
@@ -1866,21 +1869,26 @@ def in_boolean_serviceconf_list(hostname, service_description, conflist):
 
 
 # Remove all autochecks of certain types of a certain host
-def remove_autochecks_of(hostname, checktypes):
+def remove_autochecks_of(hostname, checktypes = None): # None = all
+    removed = 0
     for fn in glob.glob(autochecksdir + "/*.mk"):
         if opt_debug:
             sys.stdout.write("Scanning %s...\n" % fn)
         lines = []
         count = 0
         for line in file(fn):
-            if line.lstrip().startswith('("'):
+            # hostname and check type can be quoted with ' or with "
+            double_quoted = line.replace("'", '"').lstrip()
+            if double_quoted.startswith('("'):
                 count += 1
-                splitted = line.split('"')
-                if splitted[1] != hostname or splitted[3] not in checktypes:
+                splitted = double_quoted.split('"')
+                if splitted[1] != hostname or (checktypes != None and splitted[3] not in checktypes):
                     if splitted[3] not in check_info:
                         sys.stderr.write('Removing unimplemented check %s\n' % splitted[3])
                         continue
                     lines.append(line)
+                else:
+                    removed += 1
         if len(lines) == 0:
             if opt_verbose:
                 sys.stdout.write("Deleting %s.\n" % fn)
@@ -1893,6 +1901,8 @@ def remove_autochecks_of(hostname, checktypes):
             for line in lines:
                 f.write(line)
             f.write("]\n")
+
+    return removed
 
 def remove_all_autochecks():
     for f in glob.glob(autochecksdir + '/*.mk'):
@@ -2604,7 +2614,7 @@ def do_flush(hosts):
         # counters
         try:
             os.remove(counters_directory + "/" + host)
-            sys.stdout.write(tty_blue + " counters")
+            sys.stdout.write(tty_bold + tty_blue + " counters")
             sys.stdout.flush()
             flushed = True
         except:
@@ -2622,9 +2632,9 @@ def do_flush(hosts):
                 except:
                     pass
         if d == 1:
-            sys.stdout.write(tty_green + " cache")
+            sys.stdout.write(tty_bold + tty_green + " cache")
         elif d > 1:
-            sys.stdout.write(tty_green + " cache(%d)" % d)
+            sys.stdout.write(tty_bold + tty_green + " cache(%d)" % d)
         sys.stdout.flush()
 
         # logfiles
@@ -2640,9 +2650,17 @@ def do_flush(hosts):
                     except:
                         pass
             if d > 0:
-                sys.stdout.write(tty_magenta + " logfiles(%d)" % d)
+                sys.stdout.write(tty_bold + tty_magenta + " logfiles(%d)" % d)
+
+        # autochecks
+        d = remove_autochecks_of(host)
+        if d > 0:
+            flushed = True
+            sys.stdout.write(tty_bold + tty_cyan + " autochecks(%d)" % d)
+
         if not flushed:
             sys.stdout.write("(nothing)")
+
 
         sys.stdout.write(tty_normal + "\n")
 
@@ -2752,6 +2770,18 @@ def do_snmpwalk_on(hostname, filename):
     if opt_verbose:
         sys.stdout.write("Successfully Wrote %s%s%s.\n" % (tty_bold, filename, tty_normal))
 
+def do_snmpget(oid, hostnames):
+    if len(hostnames) == 0:
+        for host in all_active_hosts():
+            if is_snmp_host(host):
+                hostnames.append(host)
+
+    for host in hostnames:
+        ip = lookup_ipaddress(host)
+        value = get_single_oid(host, ip, oid)
+        sys.stdout.write("%s (%s): %r\n" % (host, ip, value))
+
+
 def show_paths():
     inst = 1
     conf = 2
@@ -2840,7 +2870,10 @@ def dump_host(hostname):
         add_txt = " (cluster of " + (",".join(nodes_of(hostname))) + ")"
     else:
         color = tty_bgblue
-        add_txt = " (%s)" % lookup_ipaddress(hostname)
+        try:
+            add_txt = " (%s)" % lookup_ipaddress(hostname)
+        except:
+            add_txt = " (no DNS, no entry in ipaddresses)"
     print "%s%s%s%-78s %s" % (color, tty_bold, tty_white, hostname + add_txt, tty_normal)
 
     tags = tags_of_host(hostname)
@@ -2968,6 +3001,7 @@ def usage():
  check_mk --flush [HOST1 HOST2...]         flush all data of some or all hosts
  check_mk --donate                         Email data of configured hosts to MK
  check_mk --snmpwalk HOST1 HOST2 ...       Do snmpwalk on host
+ check_mk --snmpget OID HOST1 HOST2 ...    Fetch single OIDs and output them
  check_mk --scan-parents [HOST1 HOST2...]  autoscan parents, create conf.d/parents.mk
  check_mk -P, --package COMMAND            do package operations
  check_mk -V, --version                    print version
@@ -3916,6 +3950,7 @@ if __name__ == "__main__":
                      "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
                      "flush", "package", "donate", "snmpwalk", "usewalk",
                      "scan-parents", "procs=", "automation=", 
+                     "snmpget=", 
                      "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                      "man", "nowiki", "config-check", "backup=", "restore=",
                      "check-inventory=", "paths", "cleanup-autochecks", "checks=" ]
@@ -4020,6 +4055,9 @@ if __name__ == "__main__":
                 done = True
             elif o == '--snmpwalk':
                 do_snmpwalk(args)
+                done = True
+            elif o == '--snmpget':
+                do_snmpget(a, args)
                 done = True
             elif o in [ '-M', '--man' ]:
                 if len(args) > 0:

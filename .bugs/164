@@ -1,0 +1,13 @@
+Title: PNP template for local check should support multiple values
+Component: checks
+Benefit: 1
+State: open
+Cost: 2
+Date: 2011-03-01 11:21:46
+Class: bug
+
+Currently only one value is painted. The best way would be probably
+to call the PNP default template in case no special local template
+is existent.
+
+Beware: we must look in all template dirs for the default template.

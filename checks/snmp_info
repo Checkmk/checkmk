@@ -26,7 +26,7 @@
 
 def inventory_snmp_info(checktype, info):
     if len(info[0]) >= 4:
-        return [ (None, None, None) ]
+        return [ (None, None) ]
 
 def check_snmp_info(checktype, params, info):
     if len(info[0]) >= 4:

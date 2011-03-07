@@ -61,7 +61,7 @@
 #include <ctype.h> // isspace()
 
 
-#define CHECK_MK_VERSION "1.1.10b1"
+#define CHECK_MK_VERSION "1.1.10b3"
 #define CHECK_MK_AGENT_PORT 6556
 #define SERVICE_NAME "Check_MK_Agent"
 #define KiloByte 1024
@@ -651,7 +651,10 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
     char timestamp[64];
     strftime(timestamp, sizeof(timestamp), "%b %d %H:%M:%S", t);
     
-    output(out, "%c %s %lu %s %s\n", type_char, timestamp, event->EventID, source_name, msgbuffer);
+    output(out, "%c %s %lu.%lu %s %s\n", type_char, timestamp, 
+            event->EventID / 65536, // "Qualifiers": no idea what *that* is 
+            event->EventID % 65536, // the actual event id
+            source_name, msgbuffer);
     return true;
 }
 

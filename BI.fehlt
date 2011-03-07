@@ -1,3 +1,39 @@
+Wünsche:
+
+- Ansicht "only problems": hier sollten auch die assumed states
+  berücksichtigt werden.
+
+- Reihenfolge der Nodes sollte so sein, wie die Regeln auftauchen.
+  Wir müssen also - nach dem kompilieren von einem Subnode, diesen
+  separat sortieren, die Gesamtmenge dann aber *nicht* sortieren!
+
+- Aufklappzustand von Baum muss persistiert werden. Das ist vor allem
+  deshalb wichtig, weil bei einem Reload/Refresh der Baum sonst wieder
+  umgeklappt wird. Die Frage ist dann allerdings, wie man das mit
+  den Displayoptions zum Aufklappen macht. Ich glaube man braucht dann
+  stattdessen einen Kopf oder sowas.
+
+- Man sieht zunächst nicht, dass man überhaupt aufklappen kann. Deswegen
+  sollte man ein Dreieck oder sowas anzeigen, aus dem klar wird, dass
+  es hier was zum Aufklappen gibt.
+
+- Erkennung, ob Konfigfile geändert wurde, klappt nicht zuverlässig.
+  Fall: Dateien heinz.mk und bi.mk sind da. Beide mit aggregations +=.
+  Klappt. Danach wird bi.mk in bi.mk.weg umbenannt. Jetzt springt 
+  es immer wild hin und her zwischen da, nicht da, etc.
+  Selbst bei einem Restart von Apache gibt es jetzt Duplikate (wegen +=!)
+
+- Etwas wie "Other": Alle Services (eines Hosts), die in der aktuellen
+  Aggregation noch nicht enthalten sind.
+
+- Idee: Problem: Ich mache eine Regel für eine Datenbank DB71.
+  Jetzt möchte ich sagen, dass die Host-Ressource von *dem*
+  Host mit eingebaut werden, für den die anderen Regeln matchen.
+
+- State assumption von host states scheint nicht zu funktionieren.
+
+
+
 Performance:
 * Bei der Tabelle bi_aggregations gibt es Filter, die die Menge der Daten
   reduzieren, die man berechnen muss. Z.B. der Filter aggr_hosts, der die

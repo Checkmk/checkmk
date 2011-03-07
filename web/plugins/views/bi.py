@@ -147,19 +147,26 @@ def aggr_render_leaf(tree, show_host):
     site, host = tree[4][0]
     service = tree[2]
     content = render_assume_icon(site, host, service) 
+
+    # Four cases:
+    # (1) zbghora17 . Host status   (show_host == True, service == None)
+    # (2) zbghora17 . CPU load      (show_host == True, service != None)
+    # (3) Host Status               (show_host == False, service == None)
+    # (4) CPU load                  (show_host == False, service != None)
+
     if show_host or not service:
-        if not service:
-            text = "Host status"
-        else:
-            text = host
-        url = html.makeuri([("view_name", "hoststatus"), ("site", site), ("host", host)])
-        content += '<a href="%s">%s</a>' % (url, text)
+        host_url = html.makeuri([("view_name", "hoststatus"), ("site", site), ("host", host)])
 
     if service:
-        if show_host:
-            content += "<b class=bullet>&diams;</b>"
-        url = html.makeuri([("view_name", "service"), ("site", site), ("host", host), ("service", service)])
-        content += '<a href="%s">%s</a>' % (url, service)
+        service_url = html.makeuri([("view_name", "service"), ("site", site), ("host", host), ("service", service)])
+
+    if show_host:
+        content += '<a href="%s">%s</a><b class=bullet>&diams;</b>' % (host_url, host)
+
+    if not service:
+        content += '<a href="%s">Host status</a>' % host_url
+    else:
+        content += '<a href="%s">%s</a>' % (service_url, service)
 
     return aggr_render_node(tree, content, None, show_host)
 

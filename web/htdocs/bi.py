@@ -268,6 +268,7 @@ def compile_aggregation(rule, args, lvl = 0):
 
     # Problem here: consider the following example:
     #
+    #      [1]
     #      aggregation_rules["tcp_cluster"] = (
     #        "TCP Port $PORT$ $HOST1$ / $HOST2$", [ "aPORT", "aHOST1", "aHOST2" ], "best", [
     #            ( "$HOST1$", "TCP-Port-$PORT$$" ),
@@ -275,40 +276,89 @@ def compile_aggregation(rule, args, lvl = 0):
     #        ]
     #      )
     #
+    # And also the following one:
+    #
+    #      [2]
+    #      aggregation_rules["database"] = (
+    #        "$DB$", [ "aHOST", "aDB" ], "worst", [
+    #          ( "oracle_db_status", [ "$HOST$", "$DB$" ] ),
+    #          ( "$HOST$", "CPU" ),
+    #        ]
+    #      )
+    # 
     # Not in each leaf node each variable is present. That way not all
     # variables are present in the instargs of each element. 
     # Resolution: We need to merge incomplete instantiations together in
     # order to make them complete
+
     num = len(single_names) # number of needed variables
 
-    # Two keys can be merged if for all identical keys
-    # they have identical values
-    def merge_keys(keya, keyb):
+    # [1] Two keys can be merged if for all identical variable
+    # they have identical values *and* each key has at least
+    # one variable the other key has not 
+    def bilateral_merge(keya, keyb):
         b = dict(keyb)
+        a_new_in_b = False
         for var, val in keya:
             if var in b and b[var] != val:
-                return None
+                return None # conflict
             elif var not in b:
                 b[var] = val
-        return tuple(b.items())
+                a_new_in_b = True
+        if not a_new_in_b:
+            return None
+        a = dict(keya)
+        for var, val in keyb:
+            if var not in a:
+                return tuple(b.items())
+        return False # Not a real bilateral merge
 
-    def merge_groups(groups):
-        one_merge = False
-        for ikey, inodes in groups.items():
-            if len(ikey) != num:
-                for key, nodes in groups.items():
-                    if key != ikey:
-                        newkey = merge_keys(ikey, key)
+    # [2] Two keys can be merged, if all variables of a
+    # are contained in b and also have the same value *and*
+    # b has more keys than a.
+    def unilateral_merge(keya, keyb): 
+        if len(keyb) <= len(keya): 
+            return False
+        b = dict(keyb)
+        for var, val in keya:
+            if var not in b or b[var] != val:
+                return False
+        return True
+
+    # Now first make all unilateral merges. This operation
+    # can (und must) duplicate nodes.
+    def unilateral_mergegroups(groups):
+        for keya, anodes in groups.items():
+            merged = False
+            if len(keya) != num: # incomplete
+                # compare this group with all other existing groups
+                for keyb, bnodes in groups.items():
+                    if keya != keyb: # do not compare group with itself
+                        if unilateral_merge(keya, keyb):
+                            bnodes += anodes
+                            merged = True
+            if merged:
+                del groups[keya]
+                return True
+
+    def bilateral_mergegroups(groups):
+        for keya, anodes in groups.items():
+            if len(keya) != num: # incomplete
+                # compare this group with all other existing groups
+                for keyb, bnodes in groups.items():
+                    if keya != keyb: # do not compare group with itself
+                        newkey = bilateral_merge(keya, keyb)
                         if newkey:
-                            if key in groups: del groups[key]
-                            if ikey in groups: del groups[ikey]
-                            newnodes = nodes + inodes
-                            groups[newkey] = newnodes
+                            if keyb in groups: del groups[keyb]
+                            if keya in groups: del groups[keya]
+                            groups[newkey] = anodes + bnodes
                             return True
-                            one_merge = True
-        return one_merge
 
-    while merge_groups(groups):
+
+    while unilateral_mergegroups(groups):
+        pass
+
+    while bilateral_mergegroups(groups):
         pass
     
     # Check for unmergeable entries, fill up missing values

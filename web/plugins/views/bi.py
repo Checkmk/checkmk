@@ -225,7 +225,8 @@ def paint_aggr_tree_foldable(row):
             h += '<ul %sclass="subtree">' % style
 
             for node in tree[6]:
-                if only_problems and node[0] == 0:
+                estate = node[1] != None and node[1] or node[0]
+                if only_problems and estate == 0:
                     continue
                 h += '<li>' + render_subtree(node, level + 1, show_host) + '</li>\n'
             return h + '</ul></ul>\n'

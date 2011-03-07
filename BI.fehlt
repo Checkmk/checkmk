@@ -1,8 +1,5 @@
 Wünsche:
 
-- Ansicht "only problems": hier sollten auch die assumed states
-  berücksichtigt werden.
-
 - Reihenfolge der Nodes sollte so sein, wie die Regeln auftauchen.
   Wir müssen also - nach dem kompilieren von einem Subnode, diesen
   separat sortieren, die Gesamtmenge dann aber *nicht* sortieren!

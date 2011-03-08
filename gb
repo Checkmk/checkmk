@@ -481,7 +481,7 @@ def main_fetch_ids(args):
     store_bug_ids(my_ids)
 
     # Store the new reserved bug ids
-    file('first_free', 'w').write(str(new_first_free))
+    file('first_free', 'w').write(str(new_first_free) + "\n")
 
     sys.stdout.write('Reserved %d additional IDs now. You have %d reserved IDs now.\n' %
                                                                       (num, len(my_ids)))

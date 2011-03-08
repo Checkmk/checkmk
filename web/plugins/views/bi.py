@@ -232,6 +232,8 @@ def paint_aggr_tree_foldable(row):
        'onmouseout="this.style.cursor=\'auto\';" ' \
        'onclick="toggle_subtree(this);" ' 
 
+    only_problems = get_painter_option("aggr_onlyproblems") == "1" 
+
     def render_subtree(tree, level, show_host):
         nodes = tree[6]
         if nodes == []:
@@ -261,8 +263,9 @@ def paint_aggr_tree_foldable(row):
             return h + '</ul></ul>\n'
 
     tree = row["aggr_treestate"]
-    if get_painter_option("aggr_onlyproblems") == "1":
+    if only_problems: 
         filter_tree_only_problems(tree)
+
     affected_hosts = row["aggr_hosts"]
     htmlcode = render_subtree(tree, 1, len(affected_hosts) > 1)
     return "aggrtree", htmlcode

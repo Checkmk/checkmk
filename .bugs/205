@@ -1,0 +1,16 @@
+Title: Warn on Hosts without services if 'ping' tag is missing
+Component: core
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-03-08 16:30:03
+Class: feature
+
+If a host has no services and also no ping tag the could
+be a potential configuration error. Lets introduce a setting
+in main.mk:
+
+allow_empty_hosts = False
+
+A check_mk -U/-O/-I should fail in that case. Also a automation
+reload.

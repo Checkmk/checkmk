@@ -41,7 +41,7 @@ def render_bi_groups():
     html.write("<ul>")
     for group, trees in bi.g_aggregation_forest.items():
         if len(trees) > 0:
-            bulletlink(group, "view.py?view_name=aggr_group&aggr_group=%s" % 
+            bulletlink(group, "view.py?view_name=aggr_group&aggr_group=%s" %
                     htmllib.urlencode(group))
     html.write("</ul>")
 

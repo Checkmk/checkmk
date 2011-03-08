@@ -1820,14 +1820,15 @@ tr.even0 .aggrtree ul.subtree {
     border-color: #aaa;
 }
 .aggrtree ul.subtree li {
+    margin-top: 2px;
     padding-top: 1px;
     padding-bottom: 1px;
 }
 
-.aggrtree div.state {
+.aggrtree span.state {
     margin-right: 3px;
-    width: 30px;
-    padding: 0px 8px;
+    width: 34px;
+    padding: 0px 0px;
     text-align: center;
     -moz-border-radius: 3px;
     border-style: solid;
@@ -1835,7 +1836,7 @@ tr.even0 .aggrtree ul.subtree {
     border-color: #eee #888 #999 #ccc;
     float: none;
     font-weight: bold;
-    display: inline;
+    display: inline-block;
 }
 
 .aggrtree img.assumption {

@@ -1,0 +1,13 @@
+Title: BI does not detect infinite recursions correctly
+Component: core
+Benefit: 1
+State: open
+Cost: 2
+Date: 2011-02-28 15:48:05
+Class: bug
+
+At the moment BI does not catch direct loops (an object pointing to itselfs)
+or indirect loops (some childs object points back to a parent object).
+
+In the first case the python error message is OK but in the second case the
+python error message is not very clear.

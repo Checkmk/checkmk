@@ -1,6 +1,6 @@
 Wünsche:
 
-- Bei einer Node (NEED, "$HOST$", "DB $DB$") ==>
++ Bei einer Node (NEED, "$HOST$", "DB $DB$") ==>
   Die ganze Regel wird nur dann instanziiert, wenn es hier ein 
   Match gibt. So kann man z.B. sagen, dass zu einer Datenbank
   mindestens ein DB ... gehört.
@@ -11,20 +11,14 @@ Wünsche:
   den Displayoptions zum Aufklappen macht. Ich glaube man braucht dann
   stattdessen einen Kopf oder sowas.
 
-* Erkennung, ob Konfigfile geändert wurde, klappt nicht zuverlässig.
-  Fall: Dateien heinz.mk und bi.mk sind da. Beide mit aggregations +=.
-  Klappt. Danach wird bi.mk in bi.mk.weg umbenannt. Jetzt springt 
-  es immer wild hin und her zwischen da, nicht da, etc.
-  Selbst bei einem Restart von Apache gibt es jetzt Duplikate (wegen +=!)
-
-- Etwas wie "Other": Alle Services (eines Hosts), die in der aktuellen
++ Etwas wie "Other": Alle Services (eines Hosts), die in der aktuellen
   Aggregation noch nicht enthalten sind.
 
-- Idee: Problem: Ich mache eine Regel für eine Datenbank DB71.
++ Idee: Problem: Ich mache eine Regel für eine Datenbank DB71.
   Jetzt möchte ich sagen, dass die Host-Ressource von *dem*
   Host mit eingebaut werden, für den die anderen Regeln matchen.
 
-- Breite der verdammten Zustandicons ist nicht konstant. Müssen
++ Breite der verdammten Zustandicons ist nicht konstant. Müssen
   wir jetzt doch Bilder machen, oder was?!?
 
 

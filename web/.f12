@@ -1,2 +1,2 @@
 sudo cp -prv * ~bi/local/share/check_mk/web/
-# sudo su - -c 'omd restart bi apache'
+sudo su - -c 'omd restart bi apache'

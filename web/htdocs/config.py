@@ -58,9 +58,7 @@ def include(filename):
     try:
         lm = os.stat(filename).st_mtime
         execfile(filename, globals(), globals())
-        global last_time_modified
-        if lm > last_time_modified:
-            last_time_modified = lm
+        modification_timestamps.append(lm)
     except Exception, e:
         global user
         global role
@@ -70,7 +68,7 @@ def include(filename):
         user_permissions = []
         raise MKConfigError("Cannot read configuration file %s: %s:" % (filename, e))
 
-last_time_modified = 0
+modification_timestamps = []
 
 def load_config():
     # reset settings which can be changed at runtime to
@@ -83,8 +81,13 @@ def load_config():
     global profile
     profile = False
 
-    global last_time_modified
-    last_time_modified = 0
+    # Reset values that can be appended to
+    global aggregations
+    aggregations = []
+
+    global modification_timestamps
+    modification_timestamps = []
+
     include("multisite.mk")
     # Load also all files below multisite.d
     conf_dir = defaults.default_config_dir + "/multisite.d"

@@ -72,7 +72,7 @@ def load_services():
 # and start of each site. Unreachable sites are registered
 # with 0.
 def forest_needs_update():
-    new_config_information = [config.last_time_modified]
+    new_config_information = [tuple(config.modification_timestamps)]
     for site in html.site_status.values():
         new_config_information.append(site.get("program_start", 0))
 

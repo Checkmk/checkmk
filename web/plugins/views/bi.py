@@ -227,6 +227,11 @@ def filter_tree_only_problems(tree):
     tree = tree[:5] + (get_worst(tree), ) + tree[6:]
 
 def paint_aggr_tree_foldable(row):
+    saved_expansion_level, treestate = bi.load_treestate()
+    expansion_level = int(get_painter_option("aggr_expand"))
+    if expansion_level != saved_expansion_level:
+        treestate = {}
+
     mousecode = \
        'onmouseover="this.style.cursor=\'pointer\';" ' \
        'onmouseout="this.style.cursor=\'auto\';" ' \
@@ -234,7 +239,7 @@ def paint_aggr_tree_foldable(row):
 
     only_problems = get_painter_option("aggr_onlyproblems") == "1" 
 
-    def render_subtree(tree, level, show_host):
+    def render_subtree(tree, path, show_host):
         nodes = tree[6]
         if nodes == []:
             return ''
@@ -243,23 +248,27 @@ def paint_aggr_tree_foldable(row):
         else:
             h = '<ul class=title>'
 
-            expansion_level = int(get_painter_option("aggr_expand"))
-            if level > expansion_level:
-                style = 'style="display: none" '
-                mc = mousecode + 'src="images/tree_closed.png" '
-            else:
+            path_id = "/".join(path)
+            is_open = treestate.get(path_id)
+            if is_open == None:
+                is_open = len(path) <= expansion_level
+
+            if is_open:
                 style = ''
                 mc = mousecode + 'src="images/tree_open.png" '
+            else:
+                style = 'style="display: none" '
+                mc = mousecode + 'src="images/tree_closed.png" '
 
             h += aggr_render_node(tree, tree[2], mc, show_host)
-            h += '<ul %sclass="subtree">' % style
+            h += '<ul id="%d:%s" %sclass="subtree">' % (expansion_level, path_id, style)
 
             for node in tree[6]:
                 estate = node[1] != None and node[1] or node[0]
                 if only_problems and estate == 0:
                     continue
 
-                h += '<li>' + render_subtree(node, level + 1, show_host) + '</li>\n'
+                h += '<li>' + render_subtree(node, path + [node[2]], show_host) + '</li>\n'
             return h + '</ul></ul>\n'
 
     tree = row["aggr_treestate"]
@@ -267,7 +276,7 @@ def paint_aggr_tree_foldable(row):
         filter_tree_only_problems(tree)
 
     affected_hosts = row["aggr_hosts"]
-    htmlcode = render_subtree(tree, 1, len(affected_hosts) > 1)
+    htmlcode = render_subtree(tree, [tree[2]], len(affected_hosts) > 1)
     return "aggrtree", htmlcode
 
 

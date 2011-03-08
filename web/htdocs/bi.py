@@ -816,6 +816,20 @@ def ajax_set_assumption(h):
     save_assumptions()
 
 
+def ajax_save_treestate(h):
+    global html
+    html = h
+    path_id = html.var("path")
+    current_ex_level, path = path_id.split(":", 1)
+    current_ex_level = int(current_ex_level)
+    state = html.var("state") == "open"
+    saved_ex_level, treestate = load_treestate()
+    if saved_ex_level != current_ex_level:
+        treestate = {}
+    treestate[path] = state
+    save_treestate(current_ex_level, treestate)
+
+
 #    ____        _                                          
 #   |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___ 
 #   | | | |/ _` | __/ _` / __|/ _ \| | | | '__/ __/ _ \/ __|
@@ -945,6 +959,12 @@ def load_assumptions():
 
 def save_assumptions():
     config.save_user_file("bi_assumptions", g_assumptions)
+
+def load_treestate():
+    return config.load_user_file("bi_treestate", (None, {}))
+
+def save_treestate(current_ex_level, treestate):
+    config.save_user_file("bi_treestate", (current_ex_level, treestate))
 
 def status_tree_depth(tree):
     nodes = tree[6]

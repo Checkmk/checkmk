@@ -482,11 +482,14 @@ function toggle_subtree(oImg)
 {
     var oParent = oImg.parentNode;
     var oSubtree = oParent.childNodes[6];
+    var path_id = oSubtree.id;
+    var url = "bi_save_treestate.py?path=" + escape(path_id);
 
+    tree_anim_o = oImg;
     if (oSubtree.style.display == "none") {
         oSubtree.style.display = "";
+        url += "&state=open";
         oImg.src = "images/tree_10.png";
-        tree_anim_o = oImg;
         setTimeout("set_tree_animation_step('20');", 10);
         setTimeout("set_tree_animation_step('30');", 20);
         setTimeout("set_tree_animation_step('40');", 35);
@@ -497,8 +500,8 @@ function toggle_subtree(oImg)
         setTimeout("set_tree_animation_step('90');", 260);
     }
     else {
-        tree_anim_o = oImg;
         oSubtree.style.display = "none";
+        url += "&state=closed";
         oImg.src = "images/tree_80.png";
         setTimeout("set_tree_animation_step('70');", 10);
         setTimeout("set_tree_animation_step('60');", 20);
@@ -510,6 +513,8 @@ function toggle_subtree(oImg)
         setTimeout("set_tree_animation_step('00');", 260);
     }
     oSubtree = null;
+    oParent = null;
+    get_url(url);
 }
 
 function set_tree_animation_step(num)
@@ -535,7 +540,7 @@ function toggle_assumption(oImg, site, host, service)
     else
         current = parseInt(current) + 1; 
 
-    url = "bi_set_assumption.py?site=" + site + '&host=' + host;
+    var url = "bi_set_assumption.py?site=" + site + '&host=' + host;
     if (service) {
         url += '&service=' + service;
     }

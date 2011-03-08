@@ -1,5 +1,10 @@
 Wünsche:
 
+- Bei einer Node (NEED, "$HOST$", "DB $DB$") ==>
+  Die ganze Regel wird nur dann instanziiert, wenn es hier ein 
+  Match gibt. So kann man z.B. sagen, dass zu einer Datenbank
+  mindestens ein DB ... gehört.
+
 - Aufklappzustand von Baum muss persistiert werden. Das ist vor allem
   deshalb wichtig, weil bei einem Reload/Refresh der Baum sonst wieder
   umgeklappt wird. Die Frage ist dann allerdings, wie man das mit

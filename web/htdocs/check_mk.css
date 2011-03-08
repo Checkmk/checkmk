@@ -1802,7 +1802,7 @@ div.wato {
 
 .aggrtree ul.subtree {
     margin-left: 34px;
-    padding-bottom: 4px;
+    padding-bottom: 3px;
     padding-left: 3px;
     padding-top: 0px;
     margin-top: 4px;
@@ -1859,11 +1859,14 @@ tr.even0 .aggrtree ul.subtree {
 }
 
 .aggrtree img.opentree {
-    width: 14px;
-    height: 14px;
+    width: 15px;
+    height: 15px;
     margin-right: 2px;
     margin-left: 0px;
     vertical-align: middle;
+    position: relative;
+    top: -1px;
+    left: -1px;
 }
 
 table.services td.aggrtree {

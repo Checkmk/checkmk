@@ -1,15 +1,21 @@
 Wünsche:
 
-+ Bei einer Node (NEED, "$HOST$", "DB $DB$") ==>
-  Die ganze Regel wird nur dann instanziiert, wenn es hier ein 
-  Match gibt. So kann man z.B. sagen, dass zu einer Datenbank
-  mindestens ein DB ... gehört.
-
 - Aufklappzustand von Baum muss persistiert werden. Das ist vor allem
   deshalb wichtig, weil bei einem Reload/Refresh der Baum sonst wieder
   umgeklappt wird. Die Frage ist dann allerdings, wie man das mit
   den Displayoptions zum Aufklappen macht. Ich glaube man braucht dann
   stattdessen einen Kopf oder sowas.
+
+  Fuck. Dann braucht man noch für jeden verdammten Knoten eine
+  ID oder sowas. Was ist, wenn sich die Konfiguration dann auch
+  noch ändern kann? Muss ich das gemerkte Löschen, wenn die BIs
+  neu kompiliert wurden? Geht auch nicht, weil das ja pro Apache-
+  prozess passiert.
+
++ Bei einer Node (NEED, "$HOST$", "DB $DB$") ==>
+  Die ganze Regel wird nur dann instanziiert, wenn es hier ein 
+  Match gibt. So kann man z.B. sagen, dass zu einer Datenbank
+  mindestens ein DB ... gehört.
 
 + Etwas wie "Other": Alle Services (eines Hosts), die in der aktuellen
   Aggregation noch nicht enthalten sind.

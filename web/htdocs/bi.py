@@ -242,20 +242,34 @@ def compile_aggregation(rule, args, lvl = 0):
     arginfo = make_arginfo(arglist, args)
 
     elements = []
+    needed_insts = []
+
     for node in nodes:
         # Each node can return more than one incarnation (due to regexes in 
         # the arguments)
+
+        # Handle NEED flag: This node *must* have some entries. Otherwise drop the rule
+        if node[0] == config.NEED:
+            need_subnodes = True
+            node = node[1:]
+        else:
+            need_subnodes = False
+            
         if node[1] == config.HOST_STATE or type(node[1]) == str: # leaf node
-            elements += compile_leaf_node(arginfo, node[0], node[1])
+            new_elements = compile_leaf_node(arginfo, node[0], node[1])
         else:
             rule = config.aggregation_rules[node[0]]
             instargs = compile_args([ instantiate(arg, arginfo)[0] for arg in node[1] ])
-            elements += compile_aggregation(rule, instargs, lvl + 1)
+            new_elements = compile_aggregation(rule, instargs, lvl + 1)
+
+        if need_subnodes:
+            needed_insts.append([ e[0] for e in new_elements ])
+
+        elements += new_elements
 
     # Now compile one or more rules from elements. We group
     # all elements into one rule together, that have the same
     # value for all SINGLE arguments
-    
 
     groups = {}
     single_names = [ varname for (varname, (expansion, value)) in arginfo.items() if expansion == SINGLE ]
@@ -391,10 +405,20 @@ def compile_aggregation(rule, args, lvl = 0):
     
     result = []
     for key, nodes in group_items:
+        inst = dict(key)
+
+        # Include only those groups that are included in all needed_insts
+        exclude = False
+        for ni in needed_insts:
+            if inst not in ni:
+                exclude = True
+        if exclude:
+            continue
+
+
         needed_hosts = set([])
         for node in nodes:
             needed_hosts.update(node[0])
-        inst = dict(key)
         inst_description = subst_vars(description, inst)
         result.append((inst, (list(needed_hosts), inst_description, funcname, nodes)))
 

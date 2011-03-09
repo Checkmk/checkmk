@@ -3,10 +3,6 @@ Wünsche:
 + Etwas wie "Other": Alle Services (eines Hosts), die in der aktuellen
   Aggregation noch nicht enthalten sind.
 
-+ Idee: Problem: Ich mache eine Regel für eine Datenbank DB71.
-  Jetzt möchte ich sagen, dass die Host-Ressource von *dem*
-  Host mit eingebaut werden, für den die anderen Regeln matchen.
-
 + Breite der verdammten Zustandicons ist nicht konstant. Müssen
   wir jetzt doch Bilder machen, oder was?!?
 

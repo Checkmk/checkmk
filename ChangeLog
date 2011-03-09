@@ -298,6 +298,16 @@
       log file. This will enable us to create availability reports more simple
       in future.
 
+    Multisite:
+    * allow include('somefile.mk') in multisite.mk: Include other files.
+      Paths not beginning with '/' are interpreted relative to the directory
+      of multisite.mk
+
+    Livestatus:
+    * new columns services_with_info: similar to services_with_state but with
+      the plugin output appended as additional tuple element. This tuple may
+      grow in future so do not depend on its length!
+
 1.1.9i2:
     Checks & Agents:
     * ibm_imm_health: fix inventory function

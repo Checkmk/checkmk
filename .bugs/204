@@ -1,12 +1,13 @@
-Title: Make sections in windows agent configurable
-Component: checks
-Benefit: 2
+Title: BI does not detect infinite recursions correctly
+Component: core
+Benefit: 1
 State: open
-Cost: 3
-Date: 2011-03-07 19:06:24
-Class: feature
+Cost: 2
+Date: 2011-02-28 15:48:05
+Class: bug
 
-For debugging and performance tuning it would be good to
-have the possibility to configure which sections are 
-executed and also which performance counters and logfiles
-should be queried.
+At the moment BI does not catch direct loops (an object pointing to itselfs)
+or indirect loops (some childs object points back to a parent object).
+
+In the first case the python error message is OK but in the second case the
+python error message is not very clear.

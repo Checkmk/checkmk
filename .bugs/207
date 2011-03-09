@@ -1,0 +1,12 @@
+Title: Make sections in windows agent configurable
+Component: checks
+Benefit: 2
+State: open
+Cost: 3
+Date: 2011-03-07 19:06:24
+Class: feature
+
+For debugging and performance tuning it would be good to
+have the possibility to configure which sections are 
+executed and also which performance counters and logfiles
+should be queried.

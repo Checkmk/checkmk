@@ -72,6 +72,8 @@
 # Painter options influence how painters render their data. Painter options
 # are stored together with "refresh" and "columns" as "View options".
 
+import bi # needed for aggregation icon
+
 multisite_painter_options["pnpview"] = {
  "title"   : "PNP Timerange",
  "default" : "1",
@@ -255,6 +257,10 @@ def paint_icons(what, row): # what is "host" or "service"
     if not row[prefix + "in_notification_period"]:
         output += '<img class=icon title="Out of notification period" src="images/icon_outofnot.gif">'
 
+    # Link to aggregations
+    if bi.is_part_of_aggregation(html, what, row["site"], row["host_name"], row.get("service_description")):
+         output += link_to_view('<img class=icon src="images/icon_aggr.gif" title="Aggregations containing this %s">' % what, row, 'aggr_' + what)
+
     # Link to WATO for hosts
     if "wato" in tags and what == "host":
         for tag in tags:
@@ -279,6 +285,7 @@ def paint_icons(what, row): # what is "host" or "service"
                   'src="images/icon_reload.gif" /></a>' % (what, row["site"], row["host_name"], name2, what)
 
     return "icons", output
+
 
 def iconpainter_columns(what):
     cols = [ what + "_" + c for c in icon_columns ]

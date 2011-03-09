@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import os, pprint
+import os, pprint, glob
 from lib import *
 import defaults
 
@@ -34,6 +34,9 @@ try:
     set()
 except NameError:
     from sets import Set as set
+
+user = None
+role = None
 
 # Base directory of dynamic configuration
 config_dir = defaults.var_dir + "/web"
@@ -45,22 +48,17 @@ except:
     defaults.omd_site = None
     defaults.omd_root = None
 
-def load_config():
-    # reset settings which can be changed at runtime to
-    # default values. Otherwise they stick to their changed
-    # value - within the Apache process that has answered
-    # the query, if that variable is not explicitely defined
-    # in multisite.mk
-    global debug
-    debug = False
-
-    filename = defaults.default_config_dir + "/multisite.mk"
+def include(filename):
+    if not filename.startswith("/"):
+        filename = defaults.default_config_dir + "/" + filename
 
     # Config file is obligatory. An empty example is installed
     # during setup.sh. Better signal an error then simply ignore
     # Absence.
     try:
+        lm = os.stat(filename).st_mtime
         execfile(filename, globals(), globals())
+        modification_timestamps.append(lm)
     except Exception, e:
         global user
         global role
@@ -69,6 +67,36 @@ def load_config():
         role = None
         user_permissions = []
         raise MKConfigError("Cannot read configuration file %s: %s:" % (filename, e))
+
+modification_timestamps = []
+
+def load_config():
+    # reset settings which can be changed at runtime to
+    # default values. Otherwise they stick to their changed
+    # value - within the Apache process that has answered
+    # the query, if that variable is not explicitely defined
+    # in multisite.mk
+    global debug
+    debug = False
+    global profile
+    profile = False
+
+    # Reset values that can be appended to
+    global aggregations
+    aggregations = []
+
+    global modification_timestamps
+    modification_timestamps = []
+
+    include("multisite.mk")
+    # Load also all files below multisite.d
+    conf_dir = defaults.default_config_dir + "/multisite.d"
+    if os.path.isdir(conf_dir):
+        filelist = glob.glob(conf_dir + "/*.mk")
+        filelist.sort()
+        for p in filelist:
+            include(p)
+
 
 # -------------------------------------------------------------------
 #    ____                     _         _
@@ -409,12 +437,28 @@ start_url = "main.py"
 # Timeout for rescheduling of host- and servicechecks
 reschedule_timeout = 10.0
 
-#  __        __   _                      __ 
-#  \ \      / /__| |__   ___ ___  _ __  / _|
-#   \ \ /\ / / _ \ '_ \ / __/ _ \| '_ \| |_ 
-#    \ V  V /  __/ |_) | (_| (_) | | | |  _|
-#     \_/\_/ \___|_.__/ \___\___/|_| |_|_|  
-#                                           
+#    __        ___  _____ ___  
+#    \ \      / / \|_   _/ _ \ 
+#     \ \ /\ / / _ \ | || | | |
+#      \ V  V / ___ \| || |_| |
+#       \_/\_/_/   \_\_| \___/ 
+#                              
 
 config_files = []
 host_tags = []
+
+
+#     ____ ___ 
+#    | __ )_ _|
+#    |  _ \| | 
+#    | |_) | | 
+#    |____/___|
+#              
+
+ALL_HOSTS = ['@all']
+HOST_STATE = '__HOST_STATE__'
+class NEED: pass
+aggregation_rules = {}
+aggregations = []
+aggregation_functions = {}
+

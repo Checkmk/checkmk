@@ -83,7 +83,8 @@ def urlencode_vars(vars):
         
         output += varname
         output += "="
-        output += urlencode(value)
+        # output += urlencode(value)
+        output += urllib.quote(value)
     return output
 
 def urlencode(value):
@@ -110,6 +111,10 @@ def u8(c):
 def utf8_to_entities(text):
     if type(text) != unicode:
         return text
+    else:
+        return text.encode("utf-8")
+
+    # Old code is soooooooo slow...
     n = ""
     for c in text:
         n += u8(c)
@@ -137,6 +142,7 @@ class html:
         self.events = set([]) # currently used only for sounds
         self.header_sent = False
         self.output_format = "html"
+        self.status_icons = {}
 
     def set_output_format(self, f):
         self.output_format = f
@@ -443,11 +449,12 @@ class html:
             corner_text = ""
             if self.browser_reload:
                 corner_text += "refresh: %d secs" % self.browser_reload
+            si = self.render_status_icons()
             self.req.write("<table class=footer><tr>"
-                           "<td class=left></td>"
+                           "<td class=left>%s</td>"
                            "<td class=middle></td>"
                            "<td class=right>%s</td></tr></table>"
-                           % (corner_text))
+                           % (si, corner_text))
 
     def body_end(self):
         self.write("</body></html>\n")
@@ -457,6 +464,14 @@ class html:
             self.bottom_footer()
             self.body_end()
 
+    def add_status_icon(self, img, tooltip):
+        self.status_icons[img] = tooltip
+
+    def render_status_icons(self):
+        h = ""
+        for img, tooltip in self.status_icons.items():
+            h += '<img class=statusicon src="images/status_%s.png" title="%s">' % (img, tooltip)
+        return h
 
     def show_error(self, msg):
         if self.output_format == "html":
@@ -481,6 +496,19 @@ class html:
             self.write("MESSAGE: ")
             self.write(strip_tags(msg))
             self.write("\n")
+
+    def check_limit(self, rows, limit):
+        count = len(rows)
+        if limit != None and count == limit + 1:
+            text = "Your query produced more then %d results. " % limit
+            if self.var("limit", "soft") == "soft" and config.may("ignore_soft_limit"):
+                text += '<a href="%s">Repeat query and allow more results.</a>' % self.makeuri([("limit", "hard")])
+            elif self.var("limit") == "hard" and config.may("ignore_hard_limit"):
+                text += '<a href="%s">Repeat query without limit.</a>' % self.makeuri([("limit", "none")])
+            self.show_warning(text)
+            del rows[-1]
+            return False
+        return True
 
     def confirm(self, msg):
         if self.var("_do_actions") == "No":

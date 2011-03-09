@@ -161,3 +161,5 @@ declare_simple_sorter("alerts_crit",     "Number of critical alerts", "alerts_cr
 declare_simple_sorter("alerts_unknown",  "Number of unknown alerts",  "alerts_unknown", cmp_simple_number)
 declare_simple_sorter("alerts_problem",  "Number of problem alerts",  "alerts_problem", cmp_simple_number)
 
+# Aggregations
+declare_simple_sorter("aggr_name",   "Aggregation name",  "aggr_name",       cmp_simple_string)

@@ -1,0 +1,69 @@
+aggregation_rules["HostRessources"] = (
+    "Host Ressources", [ "aHOST" ], "worst", [ 
+        ( "Kernel",      [ "$HOST$" ] ), 
+        ( "Filesystems", [ "$HOST$" ] ),
+        ( "Networking",  [ "$HOST$" ] ),
+    ]
+)
+
+aggregation_rules["Database"] = (
+    "Database $DB", [ "aDB", "HOSTs" ], "worst", [
+        ( "proc_.*$DB$.*", "$HOST$" ),
+        ( "LOG /var/ora/$DB$.log", "$HOST$" ),
+    ]
+)
+
+aggregation_rules["Kernel"] = (
+    "Kernel of $HOST$", [ "aHOST" ], "worst", [ 
+        ( "$HOST$", "Kernel" ), 
+    ]
+)
+
+aggregation_rules["Filesystems"] = (
+    "Filesystems", [ "aHOST" ], "worst", [
+        ( "$HOST$", "fs" ),
+    ]
+)
+
+aggregation_rules["Networking"] = (
+    "Networking", [ "aHOST" ], "worst", [
+        ( "NIC", [ "$HOST$", ".*" ] )
+    ]
+)
+
+aggregation_rules["NIC"] = (
+    "Network Interface $NIC$", ["aHOST", "aNIC"], "worst", [ 
+        ( "$HOST$", "NIC ($NIC$) " )
+    ]
+)
+
+aggregation_rules["OS"] = (
+    "Operating System", [ "aHOST" ], "worst", [
+        ( "HostRessources", [ "$HOST$" ] ),
+        ( "$HOST$", "Check_MK" ),
+        ( "$HOST$", None ),
+    ]
+)
+
+aggregation_rules["Check_MK"] = (
+    "Check_MK", [ "HOSTs" ], "worst", [
+        ( "$HOST$", "Check_MK$" ),
+        ( "$HOST$", "Check_MK Inventory$" ),
+    ]
+)
+
+aggregation_rules["GlobalService"] = (
+    "$SERVICE$", [ "HOSTs", "aSERVICE" ], "worst", [
+        ( "$HOST$", "$SERVICE$" )
+    ]
+)
+
+aggregations = [
+ ( "OSses",      "OS",            [ '.*' ] ),
+# ( "OSses",      "HostRessources",            [ '.*' ] ),
+# ( "Kernel",     "Kernel",        [ '.*' ] ),
+# ( "Network",    "NIC",           [ 'localhost', 'eth0' ] ),
+# ( "Monitoring", "Check_MK",      [ '.*' ] ), 
+ ( "Monitoring", "GlobalService", [ '.*', 'Check.*' ] ),
+]
+

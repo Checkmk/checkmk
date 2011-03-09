@@ -137,7 +137,6 @@ def next_bug_id():
         bail_out('You have no bug IDS left. You can reserve 10 additional bug IDS with "gb ids 10".')
     return my_bug_ids[0]
 
-
 def add_comment(bug, title, comment):
     bug["description"] += """
 %s: %s

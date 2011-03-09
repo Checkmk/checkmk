@@ -472,3 +472,79 @@ function handleReload(url) {
     else
         window.location.href = url;
 }
+
+// --------------------------------------------------------------------------
+// BI
+// --------------------------------------------------------------------------
+var tree_anim_o = null;
+
+function toggle_subtree(oImg) 
+{
+    var oParent = oImg.parentNode;
+    var oSubtree = oParent.childNodes[6];
+    var path_id = oSubtree.id;
+    var url = "bi_save_treestate.py?path=" + escape(path_id);
+
+    tree_anim_o = oImg;
+    if (oSubtree.style.display == "none") {
+        oSubtree.style.display = "";
+        url += "&state=open";
+        oImg.src = "images/tree_10.png";
+        setTimeout("set_tree_animation_step('20');", 10);
+        setTimeout("set_tree_animation_step('30');", 20);
+        setTimeout("set_tree_animation_step('40');", 35);
+        setTimeout("set_tree_animation_step('50');", 55);
+        setTimeout("set_tree_animation_step('60');", 85);
+        setTimeout("set_tree_animation_step('70');", 125);
+        setTimeout("set_tree_animation_step('80');", 180);
+        setTimeout("set_tree_animation_step('90');", 260);
+    }
+    else {
+        oSubtree.style.display = "none";
+        url += "&state=closed";
+        oImg.src = "images/tree_80.png";
+        setTimeout("set_tree_animation_step('70');", 10);
+        setTimeout("set_tree_animation_step('60');", 20);
+        setTimeout("set_tree_animation_step('50');", 35);
+        setTimeout("set_tree_animation_step('40');", 55);
+        setTimeout("set_tree_animation_step('30');", 85);
+        setTimeout("set_tree_animation_step('20');", 125);
+        setTimeout("set_tree_animation_step('10');", 180);
+        setTimeout("set_tree_animation_step('00');", 260);
+    }
+    oSubtree = null;
+    oParent = null;
+    get_url(url);
+}
+
+function set_tree_animation_step(num)
+{
+    tree_anim_o.src = "images/tree_" + num + ".png";
+}
+
+
+function toggle_assumption(oImg, site, host, service)
+{
+    // get current state
+    var current = oImg.src;
+    while (current.indexOf('/') > -1)
+        current = current.substr(current.indexOf('/') + 1);
+    current = current.substr(7);
+    current = current.substr(0, current.length - 4);
+    if (current == 'none')
+        current = '1';
+    else if (current == '3')
+        current = '0'
+    else if (current == '0')
+        current = 'none'
+    else
+        current = parseInt(current) + 1; 
+
+    var url = "bi_set_assumption.py?site=" + site + '&host=' + host;
+    if (service) {
+        url += '&service=' + service;
+    }
+    url += '&state=' + current; 
+    oImg.src = "images/assume_" + current + ".png";
+    get_url(url);
+}

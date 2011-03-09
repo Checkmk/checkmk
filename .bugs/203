@@ -1,10 +1,14 @@
-Title: View editor has layout problems in IE 8
-Component: multisite
+Title: Bulk update/delete assumed states
+Component: bi
 Benefit: 2
 State: open
-Cost: 1
-Date: 2011-03-07 16:08:31
-Class: bug
+Cost: 3
+Date: 2011-02-28 17:16:37
+Class: feature
 
-For example the column editor: the input box is far too small.
-Also the input boxes of title, etc. are too long.
+One might want to cleanup all assumed stats or switch a bunch of assumed
+states.
+
+This could maybe be realized as dedicated page which lists all assumed states
+or as command for the aggregation view
+

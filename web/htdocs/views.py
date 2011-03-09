@@ -172,10 +172,12 @@ class Filter:
                 (self.name, self.title))
         html.write("FILTER NOT IMPLEMENTED")
 
-    def filter(self):
-        raise MKInternalError("Incomplete implementation of filter %s '%s': missing filter()" % \
-            (self.name, self.title))
-        html.write("FILTER NOT IMPLEMENTED")
+    def filter(self, tablename):
+        return ""
+
+    # post-Livestatus filtering (e.g. for BI aggregations)
+    def filter_table(self, rows):
+        return rows
 
     def variable_settings(self, row):
         return [] # return pairs of htmlvar and name according to dataset in row
@@ -928,6 +930,7 @@ def create_view():
 def page_view(h):
     global html
     html = h
+    bi.reset_cache_status() # needed for status icon
 
     load_views()
     view_name = html.var("view_name")
@@ -987,9 +990,11 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         if not html.var("filled_in") and not html.has_var(varname):
             html.set_var(varname, value)
 
+    # Prepare Filter headers for Livestatus
     filterheaders = ""
     only_sites = None
-    for filt in show_filters + hide_filters + hard_filters:
+    all_active_filters = show_filters + hide_filters + hard_filters
+    for filt in all_active_filters: 
         header = filt.filter(tablename)
         if header.startswith("Sites:"):
             only_sites = header.strip().split(" ")[1:]
@@ -1049,12 +1054,21 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     if (not view["mustsearch"]) or html.var("search"):
         # names for additional columns (through Stats: headers)
         add_columns = datasource.get("add_columns", [])
-        columns, rows = query_data(datasource, columns, add_columns, query, only_sites, get_limit())
+
+        # tablename may be a function instead of a livestatus tablename
+        # In that case that function is used to compute the result.
+        if type(tablename) == type(lambda x:None):
+            rows = tablename(html, columns, query, only_sites, get_limit(), all_active_filters)
+        else:
+            rows = query_data(datasource, columns, add_columns, query, only_sites, get_limit())
+
         sort_data(rows, sorters)
     else:
-        columns, rows = [], []
+        rows = []
 
-    # html.write("<pre>%s</pre>" % pprint.pformat((columns, rows)))
+    # Apply non-Livestatus filters
+    for filter in all_active_filters:
+        rows = filter.filter_table(rows)
 
     # Show heading (change between "preview" mode and full page mode)
     if show_heading:
@@ -1167,17 +1181,8 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
 
     if not has_done_actions:
         # Limit exceeded? Show warning
-        count = len(rows)
-        limit = get_limit()
-        if limit != None and count == limit + 1:
-            text = "Your query produced more then %d results. " % limit
-            if html.var("limit", "soft") == "soft" and config.may("ignore_soft_limit"):
-                text += '<a href="%s">Repeat query and allow more results.</a>' % html.makeuri([("limit", "hard")])
-            elif html.var("limit") == "hard" and config.may("ignore_hard_limit"):
-                text += '<a href="%s">Repeat query without limit.</a>' % html.makeuri([("limit", "none")])
-            html.show_warning(text)
-            del rows[-1]
-        layout["render"]((columns, rows), view, group_painters, painters, num_columns)
+        html.check_limit(rows, get_limit())
+        layout["render"](rows, view, group_painters, painters, num_columns)
 
         # Play alarm sounds, if critical events have been displayed
         if 'S' in display_options and view.get("play_sounds"):
@@ -1190,6 +1195,12 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
             html.show_error("<b>%s - Livestatus error</b><br>%s" % (info["site"]["alias"], info["exception"]))
 
     if show_footer:
+        pid = os.getpid()
+        if html.live.successfully_persisted():
+            html.add_status_icon("persist", "Reused persistent livestatus connection from earlier request (PID %d)" % pid)
+        if bi.reused_compilation():
+            html.add_status_icon("aggrcomp", "Reused cached compiled BI aggregations (PID %d)" % pid)
+
         html.bottom_focuscode()
         if 'Z' in display_options:
             html.bottom_footer()
@@ -1347,7 +1358,7 @@ def query_data(datasource, columns, add_columns, add_headers, only_sites = [], l
     if merge_column:
         columns = [merge_column] + columns
 
-    # Most layouts need current state of objekt in order to
+    # Most layouts need current state of object in order to
     # choose background color - even if no painter for state
     # is selected. Make sure those columns are fetched. This
     # must not be done for the table 'log' as it cannot correctly
@@ -1387,9 +1398,9 @@ def query_data(datasource, columns, add_columns, add_headers, only_sites = [], l
     # convert lists-rows into dictionaries.
     # performance, but makes live much easier later.
     columns = ["site"] + columns + add_columns
-    assoc = [ dict(zip(columns, row)) for row in data ]
+    rows = [ dict(zip(columns, row)) for row in data ]
 
-    return (columns, assoc)
+    return rows
 
 
 # Merge all data rows with different sites but the same value

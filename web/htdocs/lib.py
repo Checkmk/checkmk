@@ -26,8 +26,8 @@
 
 import grp, defaults, pprint, os
 
-nagios_state_names = { 0: "OK", 1: "WARNING", 2: "CRITICAL", 3: "UNKNOWN", 4: "DEPENDENT" }
-nagios_short_state_names = { 0: "OK", 1: "WARN", 2: "CRIT", 3: "UNKN", 4: "DEP" }
+nagios_state_names = { -1: "NODATA", 0: "OK", 1: "WARNING", 2: "CRITICAL", 3: "UNKNOWN", 4: "DEPENDENT" }
+nagios_short_state_names = { -1: "PEND", 0: "OK", 1: "WARN", 2: "CRIT", 3: "UNKN", 4: "DEP" }
 nagios_short_host_state_names = { 0: "UP", 1: "DOWN", 2: "UNREACH" }
 
 class MKGeneralException(Exception):

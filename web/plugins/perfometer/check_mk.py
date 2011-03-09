@@ -261,3 +261,13 @@ def perfometer_h3c_lanswitch_cpu(row, check_command, perf_data):
 
 #perfometer_linear(perc, color)
 perfometers["check_mk-h3c_lanswitch_cpu"] = perfometer_h3c_lanswitch_cpu
+
+def perfometer_check_mk_uptime(row, check_command, perf_data):
+    days,    rest    = divmod(int(perf_data[0][1]), 60*60*24)
+    hours,   rest    = divmod(rest,   60*60)
+    minutes, seconds = divmod(rest,      60)
+
+    return "%02dd %02dh %02dm" % (days, hours, minutes), perfometer_logarithmic(perf_data[0][1], 400, 2, '#80F000')
+
+perfometers["check_mk-uptime"]      = perfometer_check_mk_uptime
+perfometers["check_mk-snmp_uptime"] = perfometer_check_mk_uptime

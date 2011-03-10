@@ -285,19 +285,19 @@ files here (currently only the logwatch extension needs a configuration file)"
 
 ask_title "Integration with Nagios"
 
-ask_dir -d nagiosuser nagios $(id -un) $OMD_SITE "Name of Nagios user" \
+ask_dir -d nagiosuser nagios $(id -un) "$OMD_SITE" "Name of Nagios user" \
   "The working directory for check_mk contains several subdirectories
 that need to be writable by the Nagios user (which is running check_mk 
 in check mode). Please specify the user that should own those 
 directories"
 
-ask_dir -d wwwuser www-data www-data $OMD_SITE "User of Apache process" \
+ask_dir -d wwwuser www-data www-data "$OMD_SITE" "User of Apache process" \
   "Check_MK WATO (Web Administration Tool) needs a sudo configuration,
 such that Apache can run certain commands as $(id -un). If you specify
 the correct user of the apache process here, then we can create a valid
 sudo configuration for you later:"
 
-ask_dir -d wwwgroup nagios $(id -un) $OMD_SITE "Common group of Nagios+Apache" \
+ask_dir -d wwwgroup nagios $(id -un) "$OMD_SITE" "Common group of Nagios+Apache" \
   "Check_mk creates files and directories while running as $nagiosuser. 
 Some of those need to be writable by the user that is running the webserver.
 Therefore a group is needed in which both Nagios and the webserver are

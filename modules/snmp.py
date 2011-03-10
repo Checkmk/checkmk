@@ -340,6 +340,14 @@ def check_snmp_fixed(item, targetvalue, info):
 def get_stored_snmpwalk(hostname, oid):
     if oid.startswith("."):
         oid = oid[1:]
+
+    if oid.endswith(".*"):
+        oid_prefix = oid[:-2]
+        dot_star = True
+    else:
+        oid_prefix = oid
+        dot_star = False
+
     path = snmpwalks_dir + "/" + hostname
     if opt_debug:
         sys.stderr.write("Getting %s from %s\n" % (oid, path))
@@ -351,10 +359,12 @@ def get_stored_snmpwalk(hostname, oid):
         o = parts[0]
         if o.startswith('.'):
             o = o[1:]
-        if o == oid or o.startswith(oid + "."):
+        if o == oid or o.startswith(oid_prefix + "."):
             if len(parts) > 1:
                 value = parts[1]
             else:
                 value = ""
             rowinfo.append((o, strip_snmp_value(value))) # return pair of OID and value
+            if dot_star:
+                return rowinfo # only return first (used by get_single_oid)
     return rowinfo

@@ -514,9 +514,6 @@ def aggregated_service_name(hostname, servicedesc):
 # Returns command lines for snmpwalk and snmpget including
 # options for authentication. This handles communities and
 # authentication for SNMP V3. Also bulkwalk hosts
-def snmp_get_command(hostname):
-    return snmp_base_command('get', hostname)
-
 def snmp_walk_command(hostname):
     return snmp_base_command('walk', hostname)
 
@@ -537,6 +534,8 @@ def snmp_base_command(what, hostname):
     credentials = snmp_credentials_of(hostname)
     if what == 'get':
         command = 'snmpget'
+    elif what == 'getnext':
+        command = 'snmpgetnext'
     else:
         command = 'snmpbulkwalk'
 
@@ -599,6 +598,10 @@ def is_usewalk_host(hostname):
     return in_binary_hostlist(hostname, usewalk_hosts)
 
 def get_single_oid(hostname, ipaddress, oid):
+    # New in Check_MK 1.1.11: oid can end with ".*". In that case
+    # we do a snmpgetnext and try to find an OID with the prefix
+    # in question. The *cache* is working including the X, however.
+
     global g_single_oid_hostname
     global g_single_oid_cache
 
@@ -616,8 +619,15 @@ def get_single_oid(hostname, ipaddress, oid):
         else:
             return None
 
-    command = snmp_get_command(hostname) + \
-         " -On -OQ -Oe -Ot %s %s 2>/dev/null" % (ipaddress, oid)
+    if oid.endswith(".*"):
+        oid_prefix = oid[:-2]
+        commandtype = "getnext"
+    else:
+        oid_prefix = oid
+        commandtype = "get"
+
+    command = snmp_base_command(commandtype, hostname) + \
+         " -On -OQ -Oe -Ot %s %s 2>/dev/null" % (ipaddress, oid_prefix)
     try:
         if opt_debug:
             sys.stdout.write("Running '%s'\n" % command)
@@ -630,6 +640,10 @@ def get_single_oid(hostname, ipaddress, oid):
             sys.stdout.write("SNMP answer: ==> [%s]\n" % value)
         if value.startswith('No more variables') or value.startswith('End of MIB') \
            or value.startswith('No Such Object available') or value.startswith('No Such Instance currently exists'):
+            value = None
+
+        # In case of .*, check if prefix is the one we are looking for
+        if commandtype == "getnext" and not item.startswith(oid_prefix + "."):
             value = None
 
         # Strip quotes
@@ -2079,7 +2093,6 @@ no_inventory_possible = None
     # snmp hosts
     output.write("def is_snmp_host(hostname):\n   return %r\n\n" % is_snmp_host(hostname))
     output.write("def is_tcp_host(hostname):\n   return %r\n\n" % is_tcp_host(hostname))
-    output.write("def snmp_get_command(hostname):\n   return %r\n\n" % snmp_get_command(hostname))
     output.write("def snmp_walk_command(hostname):\n   return %r\n\n" % snmp_walk_command(hostname))
     output.write("def is_usewalk_host(hostname):\n   return %r\n\n" % is_usewalk_host(hostname))
 

@@ -1,4 +1,8 @@
 1.1.11i1:
+    Core, Setup, etc.:
+    * SNMP scan functions can now call oid(".1.3.6.1.4.1.9.9.13.1.3.1.3.*")
+      That will return the *first* OID beginning with .1.3.6.1.4.1.9.9.13.1.3.1.3
+
     Multisite:
     * Added snmp_uptime and uptime perfometers
 
@@ -10,7 +14,12 @@
 
     Checks & Agents:
     * printer_supply: Changed order of tests. When a printer reports -3 this
-    is used before the check if maxlevel is -2.
+      is used before the check if maxlevel is -2.
+    * if/if64: scan function now also detects devices where the first port
+      has not the index 1
+    * cisco_temp/cisco_temp_perf: scan function handles sensors not beginning
+      with index 1
+
 
 1.1.10:
     Core, Setup, etc.:

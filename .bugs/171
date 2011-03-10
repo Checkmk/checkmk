@@ -1,10 +1,11 @@
 Title: SNMP scan should be able to use snmpgetnext
 Component: core
-Benefit: 2
-State: open
-Cost: 3
-Date: 2011-03-02 10:27:12
+State: done
 Class: feature
+Date: 2011-03-02 10:27:12
+Benefit: 2
+Cost: 3
+Fun: 0
 
 In some cases the scan-function does not work well because the
 OID it asks is unclear. Here might be a solution:
@@ -22,3 +23,7 @@ OID it asks is unclear. Here might be a solution:
 > Das duerfte das patchen in grenzen halten und sonst hoffentlich nichts
 > kaputt machen.
 
+
+2011-03-10 13:47:01: changed state open -> done
+Is now done with oid(".1.3.6.1.4.1.9.9.13.1.3.1.3.*"). Also
+works with stored walks.

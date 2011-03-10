@@ -69,4 +69,4 @@ snmp_info["h3c_lanswitch_sensors"] = \
 
 
 snmp_scan_functions["h3c_lanswitch_sensors"] = \
-    lambda oid: "3com switch 5500" in oid (".1.3.6.1.2.1.1.1.0").lower()
+    lambda oid: '3com s' in oid(".1.3.6.1.2.1.1.1.0").lower()

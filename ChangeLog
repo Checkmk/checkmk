@@ -5,6 +5,9 @@
     BI:
     * Added new component BI to Multisite.
 
+    WATO:
+    * Allow moving hosts from one to another config file
+
     Checks & Agents:
     * printer_supply: Changed order of tests. When a printer reports -3 this
     is used before the check if maxlevel is -2.

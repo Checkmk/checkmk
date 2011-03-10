@@ -182,7 +182,7 @@ class html:
         self.write("<form name=%s class=%s action=\"%s\" method=%s>\n" %
                    (name, name, action, method))
         self.hidden_field("filled_in", "on")
-        self.hidden_field("_transid", str(self.current_transid(self.req.user)))
+        self.hidden_field("_transid", str(self.current_transid()))
         self.hidden_fields(self.global_vars)
         self.form_name = name
 
@@ -232,7 +232,7 @@ class html:
 
     def buttonlink(self, href, text, add_transid=False):
         if add_transid:
-            href += "&_transid=%d" % self.current_transid(self.req.user)
+            href += "&_transid=%d" % self.current_transid()
         self.write("<a href=\"%s\" class=button>%s</a>" % (href, text))
 
     def begin_context_buttons(self):
@@ -291,7 +291,8 @@ class html:
             sel = value == current and " selected" or ""
             self.write("<option value=\"%s\"%s>%s</option>\n" % (value, sel, text))
         self.write("</select>\n")
-        self.form_vars.append(varname)
+        if varname:
+            self.form_vars.append(varname)
 
     def radiobutton(self, varname, value, checked, text):
         checked_text = checked and " checked" or ""
@@ -556,8 +557,9 @@ class html:
         self.javascript("parent.frames[0].location.reload();");
 
     # Get next transaction id for that user
-    def current_transid(self, username):
-        dir = defaults.var_dir + "/web/" + username
+    def current_transid(self):
+        user = self.req.user
+        dir = defaults.var_dir + "/web/" + user
         try:
             os.makedirs(dir)
         except:
@@ -569,8 +571,8 @@ class html:
         except:
             return 0
 
-    def increase_transid(self, username):
-        current = self.current_transid(username)
+    def increase_transid(self):
+        current = self.current_transid()
         config.save_user_file("transid", current + 1)
 
     # Checks wether the current page is a reload or an original real submit
@@ -578,7 +580,7 @@ class html:
         if not self.var("_transid"):
             return False
         transid = int(self.var("_transid"))
-        current = self.current_transid(self.req.user)
+        current = self.current_transid()
         return transid == current or transid == -1
 
     # called by page functions in order to check, if this was
@@ -586,7 +588,7 @@ class html:
     # transid of the user, if the latter was the case
     def check_transaction(self):
         if self.transaction_valid():
-            self.increase_transid(self.req.user)
+            self.increase_transid()
             return True
         else:
             return False

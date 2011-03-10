@@ -8,7 +8,8 @@
     Checks & Agents:
     * printer_supply: Changed order of tests. When a printer reports -3 this
     is used before the check if maxlevel is -2.
-    * cisco_locif: Added snmp scan function
+    * cisco_locif: The check has been removed. Please switch to if/if64
+
 
 1.1.10:
     Core, Setup, etc.:

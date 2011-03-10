@@ -2,6 +2,9 @@
     Core, Setup, etc.:
     * SNMP scan functions can now call oid(".1.3.6.1.4.1.9.9.13.1.3.1.3.*")
       That will return the *first* OID beginning with .1.3.6.1.4.1.9.9.13.1.3.1.3
+    * New config option: Set check_submission = "file" in order to write
+      check result files instead of using Nagios command pipe (safes
+      CPU ressources)
 
     Multisite:
     * Added snmp_uptime and uptime perfometers

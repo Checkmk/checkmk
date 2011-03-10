@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import socket, os, sys, time, re, signal, math
+import socket, os, sys, time, re, signal, math, tempfile
 
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
@@ -86,6 +86,8 @@ g_hostname                   = "unknown" # Host currently being checked
 g_aggregated_service_results = {}   # store results for later submission
 compiled_regexes             = {}   # avoid recompiling regexes
 nagios_command_pipe          = None # Filedescriptor to open nagios command pipe.
+checkresult_file_fd          = None
+checkresult_file_path        = None
 g_single_oid_hostname        = None
 g_single_oid_cache           = {}
 g_broken_snmp_hosts          = set([])
@@ -193,10 +195,8 @@ def submit_aggregated_results(hostname):
             else:
                 text = " *** ".join([ item + " " + output for itemstatus, item, output in outputlist ])
 
-        if not opt_dont_submit and nagios_command_pipe:
-            nagios_command_pipe.write("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" %
-                (int(time.time()), aggr_hostname, servicedesc, status, text))
-            nagios_command_pipe.flush()
+        if not opt_dont_submit:
+            submit_to_nagios(aggr_hostname, servicedesc, status, text)
 
         if opt_verbose:
             color = { 0: tty_green, 1: tty_yellow, 2: tty_red, 3: tty_magenta }[status]
@@ -214,14 +214,13 @@ def submit_check_mk_aggregation(hostname, status, output):
         return
 
     if not opt_dont_submit:
-        open_command_pipe()
-        if nagios_command_pipe:
-            nagios_command_pipe.write("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;Check_MK;%d;%s\n" %
-                  (int(time.time()), summary_hostname(hostname), status, output))
-            nagios_command_pipe.flush()
+        submit_to_nagios(hostname, "Check_MK", status, output)
+
     if opt_verbose:
         color = { 0: tty_green, 1: tty_yellow, 2: tty_red, 3: tty_magenta }[status]
         print "%-20s %s%s%-70s%s" % ("Check_MK", tty_bold, color, output, tty_normal)
+
+
 
 
 #   +----------------------------------------------------------------------+
@@ -818,6 +817,8 @@ def do_all_checks_on_host(hostname, ipaddress):
             num_errors += 1
 
     submit_aggregated_results(hostname)
+    if checkresult_file_fd != None:
+        close_checkresult_file()
 
     try:
         if is_tcp_host(hostname):
@@ -832,8 +833,28 @@ def do_all_checks_on_host(hostname, ipaddress):
         agent_version = "(unknown)"
     return agent_version, num_success, num_errors, ", ".join(problems)
 
+
+def open_checkresult_file():
+    global checkresult_file_fd
+    global checkresult_file_path
+    if checkresult_file_fd == None:
+        try:
+            checkresult_file_fd, checkresult_file_path = \
+                tempfile.mkstemp('', 'c', check_result_path)
+        except Exception, e:
+            raise MKGeneralException("Cannot create check result file in %s: %s" % 
+                    (check_result_path, e))
+
+
+def close_checkresult_file():
+    if checkresult_file_fd != None:
+        os.close(checkresult_file_fd)
+        file(checkresult_file_path + ".ok", "w")
+
+
 def nagios_pipe_open_timeout(signum, stackframe):
     raise IOError("Timeout while opening pipe")
+
 
 def open_command_pipe():
     global nagios_command_pipe
@@ -858,6 +879,7 @@ def none_to_empty(x):
         return ""
     else:
         return x
+
 
 def submit_check_result(host, servicedesc, result, sa):
     global nagios_command_pipe
@@ -893,13 +915,7 @@ def submit_check_result(host, servicedesc, result, sa):
             perftext = "|" + (" ".join(perftexts))
 
     if not opt_dont_submit:
-        open_command_pipe()
-        if nagios_command_pipe:
-            nagios_command_pipe.write("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" %
-                                   (int(time.time()), host, servicedesc, result[0], result[1] + perftext)  )
-            # Important: Nagios needs the complete command in one single write() block!
-            # Python buffers and sends chunks of 4096 bytes, if we do not flush.
-            nagios_command_pipe.flush()
+        submit_to_nagios(host, servicedesc, result[0], result[1] + perftext)
 
     if opt_verbose:
         if opt_showperfdata:
@@ -924,6 +940,36 @@ def direct_rrd_update(host, servicedesc, perfdata):
             return False # Update not successfull or XML file missing or too old
         return True
     return False
+
+
+def submit_to_nagios(host, service, state, output):
+    if check_submission == "pipe":
+        open_command_pipe()
+        if nagios_command_pipe:
+            nagios_command_pipe.write("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" %
+                                   (int(time.time()), host, service, state, output)  )
+            # Important: Nagios needs the complete command in one single write() block!
+            # Python buffers and sends chunks of 4096 bytes, if we do not flush.
+            nagios_command_pipe.flush()
+    elif check_submission == "file":
+        open_checkresult_file()
+        if checkresult_file_fd:
+            now = time.time()
+            os.write(checkresult_file_fd, 
+                """host_name=%s
+service_description=%s
+check_type=1
+check_options=0
+reschedule_check
+latency=0.0
+start_time=%.1f
+finish_time=%.1f
+return_code=%d
+output=%s
+
+""" % (host, service, now, now, state, output))
+    else:
+        raise MKGeneralException("Invalid setting %r for check_submission. Must be 'pipe' or 'file'" % check_submission)
 
 
 #   +----------------------------------------------------------------------+

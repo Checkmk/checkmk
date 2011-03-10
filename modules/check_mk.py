@@ -92,7 +92,8 @@ tcp_cache_dir                      = var_dir + '/cache'
 rrd_path                           = var_dir + '/rrd'
 logwatch_dir                       = var_dir + '/logwatch'
 nagios_objects_file                = var_dir + '/check_mk_objects.cfg'
-nagios_command_pipe_path           = '/var/log/nagios/rw/nagios.cmd'
+nagios_command_pipe_path           = '/usr/local/nagios/var/rw/nagios.cmd'
+check_result_path                  = '/usr/local/nagios/var/spool/checkresults'
 www_group                          = None # unset
 nagios_startscript                 = '/etc/init.d/nagios'
 nagios_binary                      = '/usr/sbin/nagios'
@@ -200,6 +201,7 @@ NEGATE         = '@negate'       # negation in boolean lists
 agent_port                         = 6556
 tcp_connect_timeout                = 5.0
 do_rrd_update                      = False
+check_submission                   = "pipe" # alternative: "files"
 aggr_summary_hostname              = "%s-s"
 agent_min_version                  = 0 # warn, if plugin has not at least version
 check_max_cachefile_age            = 0 # per default do not use cache files when checking
@@ -2008,6 +2010,7 @@ no_inventory_possible = None
     for var in [ 'check_mk_version', 'agent_port', 'tcp_connect_timeout', 'agent_min_version',
                  'perfdata_format', 'aggregation_output_format',
                  'aggr_summary_hostname', 'nagios_command_pipe_path',
+                 'check_result_path', 'check_submission',
                  'var_dir', 'counters_directory', 'tcp_cache_dir',
                  'snmpwalks_dir', 'check_mk_basedir', 'nagios_user',
                  'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
@@ -2835,7 +2838,8 @@ def show_paths():
         ( rrd_path,                    dir, data, "Base directory of round robin databases"),
         ( nagios_status_file,          fil, data, "Path to Nagios status.dat"),
 
-        ( nagios_command_pipe_path,    fil, pipe, "Nagios command pipe"),
+        ( nagios_command_pipe_path,    fil, pipe, "Nagios' command pipe"),
+        ( check_result_path,           fil, pipe, "Nagios' check results directory"),
         ( livestatus_unix_socket,      fil, pipe, "Socket of Check_MK's livestatus module"),
         ]
 

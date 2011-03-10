@@ -327,9 +327,13 @@ ask_dir nagios_startscript /etc/init.d/nagios /etc/init.d/nagios $OMD_ROOT/etc/i
   "The complete path to the Nagios startskript is used by the option
 -R/--restart to restart Nagios."
 
-ask_dir nagpipe /var/log/nagios/rw/nagios.cmd /var/log/nagios/rw/nagios.cmd $OMD_ROOT/tmp/run/nagios.cmd "Nagios command pipe" \
+ask_dir nagpipe /var/log/nagios/rw/nagios.cmd $HOMEBASEDIR/var/nagios/rw/nagios.cmd $OMD_ROOT/tmp/run/nagios.cmd "Nagios command pipe" \
   "Complete path to the Nagios command pipe. check_mk needs write access
 to this pipe in order to operate"
+
+ask_dir check_result_path /usr/local/nagios/var/spool/checkresults $HOMEBASEDIR/var/nagios/checkresults $OMD_ROOT/tmp/nagios/checkresults "Check results directory" \
+  "Complete path to the directory where Nagios stores its check results.
+Using that directory instead of the command pipe is faster."
 
 ask_dir nagios_status_file /var/log/nagios/status.dat /var/log/nagios/status.dat $OMD_ROOT/tmp/nagios/status.dat "Nagios status file" \
   "The web pages of check_mk need to read the file 'status.dat', which is
@@ -474,6 +478,7 @@ logwatch_dir                = '$vardir/logwatch'
 nagios_objects_file         = '$nagconfdir/check_mk_objects.cfg'
 rrd_path                    = '$rrddir'
 nagios_command_pipe_path    = '$nagpipe'
+check_result_path           = '$check_result_path'
 nagios_status_file          = '$nagios_status_file'
 nagios_conf_dir             = '$nagconfdir'
 nagios_user                 = '$nagiosuser'

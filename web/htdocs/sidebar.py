@@ -312,7 +312,7 @@ def page_add_snapin(h):
         title = snapin["title"]
         description = snapin.get("description", "")
         author = snapin.get("author")
-        transid = html.current_transid(html.req.user)
+        transid = html.current_transid()
         url = 'sidebar_add_snapin.py?name=%s&_transid=%d&pos=top' % (name, transid)
         html.write('<td onmouseover="this.style.background=\'#cde\'; this.style.cursor=\'pointer\';" '
                 'onmouseout="this.style.background=\'#9bc\' "'

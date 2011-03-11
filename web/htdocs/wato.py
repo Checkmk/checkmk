@@ -82,7 +82,7 @@ def page_index(h):
 
     global g_filename
     g_filename, title = check_filename()
-    read_configuration_file()
+    read_the_configuration_file()
 
     modefuncs = {
         "newhost"   :      lambda phase: mode_edithost(phase, True),
@@ -164,11 +164,16 @@ def mode_index(phase):
         if delname and delname in g_hosts:
             return delete_host_after_confirm(delname)
 
+        move_to = html.var("_move_host_to")
+        hostname = html.var("host")
+        if move_to and hostname:
+            move_host_to(hostname, move_to)
+
     else:
         # Show table of hosts in this file
         html.write("<table class=services>\n")
         html.write("<tr><th></th><th>Hostname</th>"
-                   "<th>IP&nbsp;Address</th><th>Tags</th><th>Alias</th></tr>\n")
+                   "<th>IP&nbsp;Address</th><th>Tags</th><th>Alias</th><th>Move To</th></tr>\n")
         odd = "even"
 
         hostnames = g_hosts.keys()
@@ -203,6 +208,9 @@ def mode_index(phase):
             html.write("<td%s>%s</td>" % (tdclass, ipaddress))
             html.write("<td>%s</td>" % ",&nbsp;".join(tags))
             html.write("<td class=takeall>%s</td>" % (alias and alias or ""))
+            html.write("<td>")
+            host_move_combo(hostname)
+            html.write("</td>")
             html.write("</tr>\n")
 
         html.write("</table>\n")
@@ -277,7 +285,7 @@ def mode_changelog(phase):
             message = "<h1>Changes which are not yet activated:</h1>"
             message += render_audit_log(pending, "pending", True)
             message += '<a href="%s" class=button>Activate Changes!</a>' % \
-                html.makeuri([("_action", "activate"), ("_transid", html.current_transid(html.req.user))])
+                html.makeuri([("_action", "activate"), ("_transid", html.current_transid())])
             html.show_warning(message)
         else:
             html.write("<p>No pending changes, monitoring server is up to date.</p>")
@@ -361,7 +369,7 @@ def mode_edithost(phase, new):
             go_to_services = html.var("services")
             if html.check_transaction():
                 g_hosts[hostname] = (alias, ipaddress, tags)
-                write_configuration_file()
+                write_the_configuration_file()
                 if new:
                     message = "Created new host [%s]." % hostname
                     log_pending(hostname, "create-host", message) 
@@ -578,10 +586,13 @@ def check_mk_automation(command, args=[], indata=""):
                       (" ".join(cmd), e, outdata))
 
 
-def read_configuration_file():
+def read_the_configuration_file():
     global g_hosts
-    g_hosts = {}
-    path = defaults.check_mk_configdir + "/" + g_filename
+    g_hosts = read_configuration_file(g_filename)
+
+def read_configuration_file(filename):
+    hosts = {}
+    path = defaults.check_mk_configdir + "/" + filename
 
     if os.path.exists(path):
         variables = {
@@ -602,24 +613,28 @@ def read_configuration_file():
                 alias = aliases[0]
             else:
                 alias = None
-            g_hosts[hostname] = (alias, ipaddress, tags)
+            hosts[hostname] = (alias, ipaddress, tags)
+    return hosts
 
 
-def write_configuration_file():
+def write_the_configuration_file():
+    write_configuration_file(g_filename, g_hosts)
+
+def write_configuration_file(filename, hosts):
     all_hosts = []
     ipaddresses = {}
     aliases = []
-    hostnames = g_hosts.keys()
+    hostnames = hosts.keys()
     hostnames.sort()
     for hostname in hostnames:
-        alias, ipaddress, tags = g_hosts[hostname]
+        alias, ipaddress, tags = hosts[hostname]
         if alias:
             aliases.append((alias, [hostname]))
-        all_hosts.append("|".join([hostname] + list(tags) + [ g_filename, 'wato' ]))
+        all_hosts.append("|".join([hostname] + list(tags) + [ filename, 'wato' ]))
         if ipaddress:
             ipaddresses[hostname] = ipaddress
 
-    path = defaults.check_mk_configdir + "/" + g_filename
+    path = defaults.check_mk_configdir + "/" + filename
     out = file(path, "w")
     out.write("# Written by Check_MK Webconf\n\n")
     if len(all_hosts) > 0:
@@ -640,7 +655,8 @@ def write_configuration_file():
     out.write("\n\nif '_WATO' not in extra_service_conf:\n"
             "    extra_service_conf['_WATO'] = []\n")
     out.write("\nextra_service_conf['_WATO'] += [ \n"
-              "  ('%s', [ 'wato', '%s' ], ALL_HOSTS, [ 'Check_MK inventory' ] ) ]\n" % (g_filename, g_filename))
+              "  ('%s', [ 'wato', '%s' ], ALL_HOSTS, [ 'Check_MK inventory' ] ) ]\n" % (filename, filename))
+
 
 # This is a dummy implementation which works without tags
 # and implements only a special case of Check_MK's real logic.
@@ -678,7 +694,7 @@ def make_link(vars):
 
 def make_action_link(vars):
     vars = vars + [ ("filename", g_filename) ]
-    return html.makeuri_contextless(vars + [("_transid", html.current_transid(html.req.user))])
+    return html.makeuri_contextless(vars + [("_transid", html.current_transid())])
 
 def changelog_button():
     pending = parse_audit_log("pending")
@@ -759,7 +775,7 @@ def delete_host_after_confirm(delname):
     c = html.confirm("Do you really want to delete the host <tt>%s</tt>?" % delname)
     if c:
         del g_hosts[delname]
-        write_configuration_file()
+        write_the_configuration_file()
         log_pending(delname, "delete-host", "Deleted host [%s]" % delname)
         check_mk_automation("delete-host", [delname])
         return "index"
@@ -771,3 +787,29 @@ def delete_host_after_confirm(delname):
 def wato_html_head(title):
     html.header("Check_MK WATO - " + title)
     html.write("<div class=wato>\n")
+
+def host_move_combo(host):
+    other_files = []
+    for filename, title, roles in config.config_files:
+        if config.role in roles and filename != g_filename:
+            other_files.append((filename, title))
+    if len(other_files) > 0:
+        html.hidden_field("host", host)
+        uri = html.makeuri([("host", host), ("_transid", html.current_transid() )])
+        html.select(None, [("", "(select file)")] + other_files, 
+                "", 
+                "location.href='%s' + '&_move_host_to=' + this.value;" % uri);
+
+def move_host_to(hostname, target_filename):
+    if target_filename == g_filename or hostname not in g_hosts:
+        return
+
+    # Check permissions
+    for filename, title, roles in config.config_files:
+        if config.role in roles and filename == target_filename:
+            hosts = read_configuration_file(target_filename)
+            hosts[hostname] = g_hosts[hostname]
+            del g_hosts[hostname]
+            write_configuration_file(target_filename, hosts)
+            write_the_configuration_file()
+

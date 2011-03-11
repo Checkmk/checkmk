@@ -1,0 +1,12 @@
+Title: Snapins should not show error on Nagios reload
+Component: multisite
+Benefit: 1
+State: open
+Cost: 2
+Date: 2011-03-10 11:06:15
+Class: feature
+
+When Nagios reloads and there is a Livestatus error, then
+the Snapins should - on their refresh - not display that
+error but reject the Ajax response completely and stay in
+their old state.

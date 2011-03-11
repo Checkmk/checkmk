@@ -92,7 +92,8 @@ tcp_cache_dir                      = var_dir + '/cache'
 rrd_path                           = var_dir + '/rrd'
 logwatch_dir                       = var_dir + '/logwatch'
 nagios_objects_file                = var_dir + '/check_mk_objects.cfg'
-nagios_command_pipe_path           = '/var/log/nagios/rw/nagios.cmd'
+nagios_command_pipe_path           = '/usr/local/nagios/var/rw/nagios.cmd'
+check_result_path                  = '/usr/local/nagios/var/spool/checkresults'
 www_group                          = None # unset
 nagios_startscript                 = '/etc/init.d/nagios'
 nagios_binary                      = '/usr/sbin/nagios'
@@ -200,6 +201,7 @@ NEGATE         = '@negate'       # negation in boolean lists
 agent_port                         = 6556
 tcp_connect_timeout                = 5.0
 do_rrd_update                      = False
+check_submission                   = "pipe" # alternative: "files"
 aggr_summary_hostname              = "%s-s"
 agent_min_version                  = 0 # warn, if plugin has not at least version
 check_max_cachefile_age            = 0 # per default do not use cache files when checking
@@ -514,9 +516,6 @@ def aggregated_service_name(hostname, servicedesc):
 # Returns command lines for snmpwalk and snmpget including
 # options for authentication. This handles communities and
 # authentication for SNMP V3. Also bulkwalk hosts
-def snmp_get_command(hostname):
-    return snmp_base_command('get', hostname)
-
 def snmp_walk_command(hostname):
     return snmp_base_command('walk', hostname)
 
@@ -537,6 +536,8 @@ def snmp_base_command(what, hostname):
     credentials = snmp_credentials_of(hostname)
     if what == 'get':
         command = 'snmpget'
+    elif what == 'getnext':
+        command = 'snmpgetnext'
     else:
         command = 'snmpbulkwalk'
 
@@ -599,6 +600,10 @@ def is_usewalk_host(hostname):
     return in_binary_hostlist(hostname, usewalk_hosts)
 
 def get_single_oid(hostname, ipaddress, oid):
+    # New in Check_MK 1.1.11: oid can end with ".*". In that case
+    # we do a snmpgetnext and try to find an OID with the prefix
+    # in question. The *cache* is working including the X, however.
+
     global g_single_oid_hostname
     global g_single_oid_cache
 
@@ -616,8 +621,15 @@ def get_single_oid(hostname, ipaddress, oid):
         else:
             return None
 
-    command = snmp_get_command(hostname) + \
-         " -On -OQ -Oe -Ot %s %s 2>/dev/null" % (ipaddress, oid)
+    if oid.endswith(".*"):
+        oid_prefix = oid[:-2]
+        commandtype = "getnext"
+    else:
+        oid_prefix = oid
+        commandtype = "get"
+
+    command = snmp_base_command(commandtype, hostname) + \
+         " -On -OQ -Oe -Ot %s %s 2>/dev/null" % (ipaddress, oid_prefix)
     try:
         if opt_debug:
             sys.stdout.write("Running '%s'\n" % command)
@@ -630,6 +642,10 @@ def get_single_oid(hostname, ipaddress, oid):
             sys.stdout.write("SNMP answer: ==> [%s]\n" % value)
         if value.startswith('No more variables') or value.startswith('End of MIB') \
            or value.startswith('No Such Object available') or value.startswith('No Such Instance currently exists'):
+            value = None
+
+        # In case of .*, check if prefix is the one we are looking for
+        if commandtype == "getnext" and not item.startswith(oid_prefix + "."):
             value = None
 
         # Strip quotes
@@ -1994,6 +2010,7 @@ no_inventory_possible = None
     for var in [ 'check_mk_version', 'agent_port', 'tcp_connect_timeout', 'agent_min_version',
                  'perfdata_format', 'aggregation_output_format',
                  'aggr_summary_hostname', 'nagios_command_pipe_path',
+                 'check_result_path', 'check_submission',
                  'var_dir', 'counters_directory', 'tcp_cache_dir',
                  'snmpwalks_dir', 'check_mk_basedir', 'nagios_user',
                  'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
@@ -2079,7 +2096,6 @@ no_inventory_possible = None
     # snmp hosts
     output.write("def is_snmp_host(hostname):\n   return %r\n\n" % is_snmp_host(hostname))
     output.write("def is_tcp_host(hostname):\n   return %r\n\n" % is_tcp_host(hostname))
-    output.write("def snmp_get_command(hostname):\n   return %r\n\n" % snmp_get_command(hostname))
     output.write("def snmp_walk_command(hostname):\n   return %r\n\n" % snmp_walk_command(hostname))
     output.write("def is_usewalk_host(hostname):\n   return %r\n\n" % is_usewalk_host(hostname))
 
@@ -2822,7 +2838,8 @@ def show_paths():
         ( rrd_path,                    dir, data, "Base directory of round robin databases"),
         ( nagios_status_file,          fil, data, "Path to Nagios status.dat"),
 
-        ( nagios_command_pipe_path,    fil, pipe, "Nagios command pipe"),
+        ( nagios_command_pipe_path,    fil, pipe, "Nagios' command pipe"),
+        ( check_result_path,           fil, pipe, "Nagios' check results directory"),
         ( livestatus_unix_socket,      fil, pipe, "Socket of Check_MK's livestatus module"),
         ]
 

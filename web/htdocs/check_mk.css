@@ -8,6 +8,9 @@ input, td, select {
 img {
     border-style: none;
 }
+th {
+    white-space: nowrap;
+}
 /*
    __  __       _        
   |  \/  | __ _(_)_ __   

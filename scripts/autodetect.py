@@ -45,7 +45,8 @@ target_values = {
     'nagios_status_file': "Absolute path to Nagios' status.dat",
     'nagiosurl'         : "Base-URL of Nagios web pages",
     'nagiosuser'        : "System user running the Nagios process",
-    'nagpipe'           : "Absolute path to Nagios command pipe (nagios.cmd)",
+    'nagpipe'           : "Absolute path to Nagios' command pipe (nagios.cmd)",
+    'check_result_path' : "Absolute path to Nagios' checkresults directory",
     'pnp_url'           : "URL of PNP4Nagios",
     'pnpconffile'       : "PNP4Nagios configuration file for its PHP pages",
     'pnphtdocsdir'      : "PNP4Nagios www document root directory",
@@ -402,6 +403,7 @@ def detect_omd():
       'nagiosurl'               : "/" + site + "/nagios/",
       'nagiosuser'              : site,
       'nagpipe'                 : root + "/tmp/run/nagios.cmd",
+      'check_result_path'       : root + "/tmp/nagios/checkresults",
       'pnp_url'                 : "/" + site + "/pnp4nagios/",
       'pnpconffile'             : root + "/etc/pnp4nagios/config.php",
       'pnphtdocsdir'            : root + "/share/pnp4nagios/htdocs",
@@ -443,6 +445,8 @@ try:
 
         nagconf = parse_nagios_config(configfile)
         nagconf_dict = dict(nagconf)
+        if "check_result_path" in nagconf_dict:
+            result['check_result_path'] = nagconf_dict['check_result_path']
 
         try:
             cgifile = os.path.dirname(configfile) + "/cgi.cfg"

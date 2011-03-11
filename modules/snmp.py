@@ -362,6 +362,8 @@ def get_stored_snmpwalk(hostname, oid):
         if o == oid or o.startswith(oid_prefix + "."):
             if len(parts) > 1:
                 value = parts[1]
+                if agent_simulator:
+                    value = agent_simulator_process(value)
             else:
                 value = ""
             rowinfo.append((o, strip_snmp_value(value))) # return pair of OID and value

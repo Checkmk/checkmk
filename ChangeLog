@@ -5,6 +5,7 @@
     * New config option: Set check_submission = "file" in order to write
       check result files instead of using Nagios command pipe (safes
       CPU ressources)
+    * Agent simulation mode (for internal use and check development)
 
     Multisite:
     * Added snmp_uptime and uptime perfometers

@@ -207,6 +207,7 @@ agent_min_version                  = 0 # warn, if plugin has not at least versio
 check_max_cachefile_age            = 0 # per default do not use cache files when checking
 cluster_max_cachefile_age          = 90   # secs.
 simulation_mode                    = False
+agent_simulator                    = False
 perfdata_format                    = "pnp" # also possible: "standard"
 debug_log                          = None
 monitoring_host                    = "localhost" # your Nagios host
@@ -305,7 +306,8 @@ snmp_scan_functions                = {} # SNMP autodetection
 # Now include the other modules. They contain everything that is needed
 # at check time (and many of that is also needed at administration time).
 try:
-    for module in [ 'check_mk_base', 'snmp' ]:
+    modules =  [ 'check_mk_base', 'snmp' ]
+    for module in modules:
         filename = modules_dir + "/" + module + ".py"
         execfile(filename)
 
@@ -2014,7 +2016,7 @@ no_inventory_possible = None
                  'var_dir', 'counters_directory', 'tcp_cache_dir',
                  'snmpwalks_dir', 'check_mk_basedir', 'nagios_user',
                  'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
-                 'simulation_mode', 'aggregate_check_mk', 'debug_log',
+                 'simulation_mode', 'agent_simulator', 'aggregate_check_mk', 'debug_log',
                  ]:
         output.write("%s = %r\n" % (var, globals()[var]))
 
@@ -2038,6 +2040,9 @@ no_inventory_possible = None
 
     if need_snmp_module:
         output.write(stripped_python_file(modules_dir + "/snmp.py"))
+
+    if agent_simulator:
+        output.write(stripped_python_file(modules_dir + "/simulator.py"))
 
     # check info table
     # We need to include all those plugins that are referenced in the host's
@@ -3863,10 +3868,14 @@ if do_rrd_update:
     try:
         import rrdtool
     except:
-        sys.stdout.write("ERROR: Cannot do direct rrd updates since the Python module\n"+
+        sys.stderr.write("ERROR: Cannot do direct rrd updates since the Python module\n"+
                          "'rrdtool' could not be loaded. Please install python-rrdtool\n"+
                          "or set do_rrd_update to False in main.mk.\n")
         sys.exit(3)
+
+# Load agent simulator if enabled
+if agent_simulator:
+    execfile(modules_dir + "/agent_simulator.py")
 
 # read automatically generated checks. They are prepended to the check
 # table: explicit user defined checks override automatically generated

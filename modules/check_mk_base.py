@@ -33,7 +33,6 @@ try:
 except NameError:
     from sets import Set as set
 
-
 # colored output, if stdout is a tty
 if sys.stdout.isatty():
     tty_red       = '\033[31m'
@@ -358,6 +357,9 @@ def get_realhost_info(hostname, ipaddress, checkname, max_cache_age):
         raise MKAgentError("Empty output from agent")
     elif len(output) < 16:
         raise MKAgentError("Too short output from agent: '%s'" % output)
+
+    if agent_simulator:
+        output = agent_simulator_process(output)
 
     lines = [ l.strip() for l in output.split('\n') ]
     info = parse_info(lines)

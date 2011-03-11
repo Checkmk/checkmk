@@ -1,3 +1,13 @@
 #!/bin/sh
 set -e
+if [ ! -f configure ]; then
+    aclocal && autoheader && automake -a && autoconf
+fi
+
+if [ ! -f Makefile ]; then
+    ./configure
+fi
+
 make -j 8
+
+sudo cp src/livestatus.o /omd/versions/default/lib/mk-livestatus/livestatus.o

@@ -246,7 +246,7 @@ def paint_aggr_tree_foldable(row):
         if nodes == None:
             return aggr_render_leaf(tree, show_host)
         else:
-            h = '<ul class=title>'
+            h = '<span class=title>'
 
             path_id = "/".join(path)
             is_open = treestate.get(path_id)
@@ -269,7 +269,7 @@ def paint_aggr_tree_foldable(row):
                     continue
 
                 h += '<li>' + render_subtree(node, path + [node[2]], show_host) + '</li>\n'
-            return h + '</ul></ul>\n'
+            return h + '</ul></span>\n'
 
     tree = row["aggr_treestate"]
     if only_problems: 

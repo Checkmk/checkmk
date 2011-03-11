@@ -10,4 +10,4 @@ fi
 
 make -j 8
 
-sudo cp src/livestatus.o /omd/versions/default/lib/mk-livestatus/livestatus.o
+install cp src/livestatus.o /omd/versions/default/lib/mk-livestatus/livestatus.o

@@ -2042,7 +2042,7 @@ no_inventory_possible = None
         output.write(stripped_python_file(modules_dir + "/snmp.py"))
 
     if agent_simulator:
-        output.write(stripped_python_file(modules_dir + "/simulator.py"))
+        output.write(stripped_python_file(modules_dir + "/agent_simulator.py"))
 
     # check info table
     # We need to include all those plugins that are referenced in the host's

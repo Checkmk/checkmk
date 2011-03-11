@@ -1,2 +1,3 @@
 sudo cp -prv * /omd/versions/default/share/check_mk/web/
-sudo su - -c 'omd restart bi apache'
+SITE=$(omd sites --bare | head -n 1)
+sudo su - -c "omd restart $SITE apache"

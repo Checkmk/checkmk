@@ -10,3 +10,7 @@ Quicksearch should also do a refresh every 10 Seconds but only retrieve
 the start time of the nagios sites. These are always available
 in the html.live object. If at least one site as restarted since
 the last time, all items (hosts, services) should be loaded new.
+
+The See Also: should link to all check manpages concerning df.include
+checks. Also there should be a table of these checks.
+

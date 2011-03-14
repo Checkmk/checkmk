@@ -1,0 +1,10 @@
+Title: Describe trends in "Monitoring filesystems"
+Component: doku
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-03-14 09:33:22
+Class: cleanup
+
+The article about filesystems should contain all information about
+trends. Also hints to the various filesystem checks.

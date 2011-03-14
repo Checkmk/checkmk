@@ -41,6 +41,7 @@
       with index 1
     * FIX: df: fix layout problems in PNP template
     * FIX: df: fix trend computation (thanks to Sebastian Talmon)
+    * FIX: df: fix status in case of critical trend and warning used
 
 
 1.1.10:

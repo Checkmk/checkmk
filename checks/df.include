@@ -229,7 +229,7 @@ def df_check_filesystem(hostname, mountpoint, size_mb, avail_mb, params):
     if used_mb >= crit_mb:
         status = 2
     elif used_mb >= warn_mb:
-        status = 1
+        status = max(1, status)
 
     if len(problems) > 0:
       infotext += " - " + ", ".join(problems)

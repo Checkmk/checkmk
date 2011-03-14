@@ -169,11 +169,14 @@ def df_check_filesystem(hostname, mountpoint, size_mb, avail_mb, params):
             trend = rate_avg * range_sec
             sign = trend > 0 and "+" or ""
             infotext += ", trend: %s%s / %g hours" % (sign, get_bytes_human_readable(trend * MB), range)
+	    # levels for performance data
+	    warn_perf, crit_perf = None, None
 
             # apply levels for absolute growth in MB / interval
             trend_mb = levels.get("trend_mb")
             if trend_mb:
                 wa, cr = trend_mb
+	        warn_perf, crit_perf = wa, cr
                 if trend >= wa:
                     problems.append("growing too fast (levels at %s/%s per %.1fh)!" %
                        ( get_bytes_human_readable(wa * MB), get_bytes_human_readable(cr * MB), range))
@@ -190,6 +193,11 @@ def df_check_filesystem(hostname, mountpoint, size_mb, avail_mb, params):
                 wa_perc, cr_perc = trend_perc
                 wa = wa_perc / 100.0 * size_mb
                 cr = cr_perc / 100.0 * size_mb
+		if warn_perf != None:
+		    warn_perf = min(warn_perf, wa)
+		    crit_perf = min(crit_perf, cr)
+		else:	
+		    warn_perf, crit_perf = wa, cr
                 if trend >= wa:
                     problems.append("growing too fast (levels at %.3f%%/%.3f%% per %.1fh)!" %
                        ( wa_perc, cr_perc, range))
@@ -199,7 +207,7 @@ def df_check_filesystem(hostname, mountpoint, size_mb, avail_mb, params):
                         problems[-1] += "!"
 
             if levels.get("trend_perfdata"):
-                perfdata.append(("trend", trend, wa, cr, 0, size_mb / range))
+                perfdata.append(("trend", trend, warn_perf, crit_perf, 0, size_mb / range))
 
             # compute time until filesystem is full (only for positive trend, of course)
             if trend > 0:

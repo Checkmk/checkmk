@@ -27,6 +27,7 @@
     * FIX: df: fix layout problems in PNP template
     * FIX: df: fix trend computation (thanks to Sebastian Talmon)
     * FIX: df: fix status in case of critical trend and warning used
+    * FIX: df: fix display of trend warn/crit in PNP-graph
 
 
 1.1.10:

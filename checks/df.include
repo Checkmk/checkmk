@@ -204,7 +204,7 @@ def df_check_filesystem(hostname, mountpoint, size_mb, avail_mb, params):
             # compute time until filesystem is full (only for positive trend, of course)
             if trend > 0:
                 space_left = size_mb - used_mb
-                hours_left = space_left / trend
+                hours_left = space_left / trend * range
                 timeleft = levels.get("trend_timeleft")
                 if timeleft:
                     wa, cr = timeleft

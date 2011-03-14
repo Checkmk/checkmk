@@ -24,6 +24,7 @@
       has not the index 1
     * cisco_temp/cisco_temp_perf: scan function handles sensors not beginning
       with index 1
+    * FIX: df: fix layout problems in PNP template
 
 
 1.1.10:

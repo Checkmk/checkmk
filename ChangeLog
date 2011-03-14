@@ -28,6 +28,7 @@
     * FIX: df: fix trend computation (thanks to Sebastian Talmon)
     * FIX: df: fix status in case of critical trend and warning used
     * FIX: df: fix display of trend warn/crit in PNP-graph
+    * df: split PNP graphs for growth/trend into two graphs
 
 
 1.1.10:

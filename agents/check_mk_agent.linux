@@ -326,6 +326,12 @@ if which mailq >/dev/null 2>&1 && getent passwd postfix >/dev/null 2>&1; then
   mailq | tail -n 6
 fi
 
+# Check status of OMD sites
+if type omd >/dev/null
+then
+   echo '<<<omd_status>>>'
+   omd status --bare --auto
+fi
 
 # Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
 if cd $PLUGINSDIR

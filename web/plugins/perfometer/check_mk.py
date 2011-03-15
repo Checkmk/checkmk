@@ -271,3 +271,39 @@ def perfometer_check_mk_uptime(row, check_command, perf_data):
 
 perfometers["check_mk-uptime"]      = perfometer_check_mk_uptime
 perfometers["check_mk-snmp_uptime"] = perfometer_check_mk_uptime
+
+
+def perfometer_check_mk_printer_supply(row, check_command, perf_data):
+    left = float(perf_data[0][1])
+    warn = float(perf_data[0][3])
+    crit = float(perf_data[0][4])
+    mini = float(perf_data[0][5])
+    maxi = float(perf_data[0][6])
+
+    # If there is no 100% given, calculate the percentage
+    if maxi != 100.0:
+        left = left * 100 / maxi
+
+    s = row['service_description'].lower()
+
+    if 'black' in s:
+        colors = [ '#000000', '#6E6F00', '#6F0000' ]
+    elif 'magenta' in s:
+        colors = [ '#fc00ff', '#FC7FFF', '#FEDFFF' ]
+    elif 'yellow' in s:
+        colors = [ '#ffff00', '#FEFF7F', '#FFFFCF' ]
+    elif 'cyan' in s:
+        colors = [ '#00ffff', '#7FFFFF', '#DFFFFF' ]
+    else:
+        colors = [ '#cccccc', '#ffff00', '#ff0000' ]
+
+    if left > warn:
+        color = colors[0]
+    elif left > crit:
+        color = colors[1]
+    else:
+        color = colors[2]
+
+    return "%.0f%%" % left, perfometer_linear(left, color)
+
+perfometers["check_mk-printer_supply"] = perfometer_check_mk_printer_supply

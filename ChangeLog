@@ -8,7 +8,7 @@
     * Agent simulation mode (for internal use and check development)
 
     Multisite:
-    * Added snmp_uptime and uptime perfometers
+    * Added snmp_uptime, uptime and printer_supply perfometers
 
     BI:
     * Added new component BI to Multisite.

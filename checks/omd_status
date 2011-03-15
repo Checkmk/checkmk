@@ -1,0 +1,40 @@
+# <<<omd_status>>>
+# [kaputt]
+# apache 1
+# rrdcached 1
+# npcd 1
+# nagios 1
+# crontab 1
+# OVERALL 1
+# [test]
+# apache 1
+# rrdcached 1
+# npcd 0
+# nagios 1
+# crontab 1
+# OVERALL 2
+
+def inventory_omd_status(checkname, info):
+    return [ ( line[0][1:-1], None ) for line in info if line[0][0] == '[' ]
+
+def check_omd_status(item, _no_params, info):
+    active = False
+    for line in info:
+        if line[0] == '[' + item + ']':
+            active = True
+            stopped = []
+        elif active:
+            if line[0] == 'OVERALL':
+                if line[1] == '0':
+                    return (0, 'OK - all services are running')
+                elif line[1] == '1':
+                    return (2, 'CRIT - site is stopped')
+                else:
+                    return (2, 'CRIT - partially running! stopped services: %s' % ", ".join(stopped))
+            elif line[1] != '0':
+                stopped.append(line[0])
+    return (3, "UNKNOWN - site not existing or AUTOSTART off")
+
+check_info['omd_status'] = \
+    (check_omd_status, "OMD %s status", 0, inventory_omd_status)
+

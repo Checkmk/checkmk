@@ -1,0 +1,10 @@
+Title: check_mk -D HOST does not display datasource_programs
+Component: core
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-03-15 15:20:50
+Class: cleanup
+
+It should rather display the command line of that host
+than (TCP port 6556).

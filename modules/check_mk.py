@@ -2215,7 +2215,7 @@ def show_check_manual(checkname):
 
     filename = all_manuals().get(checkname)
     if not filename:
-        sys.stdout.write("No manpage for %s. Sorry." % checkname)
+        sys.stdout.write("No manpage for %s. Sorry.\n" % checkname)
         return
 
     sections = {}

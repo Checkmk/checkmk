@@ -24,6 +24,8 @@
     * FIX: cmctc: fix inventory in case of incomplete entries
     * printer_supply: Changed order of tests. When a printer reports -3 this
       is used before the check if maxlevel is -2.
+    * printer_supply: Skipping inventory of supplies which have current value
+    and maxlevel both set to -2.
     * cisco_locif: The check has been removed. Please switch to if/if64
     * if/if64: scan function now also detects devices where the first port
       has not the index 1

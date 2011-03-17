@@ -73,7 +73,9 @@ def printer_supply_fix_infos(info):
     return info
 
 def inventory_printer_supply(checkname, info):
-    return [ (line[0], "printer_supply_default_levels") for line in printer_supply_fix_infos(info) ]
+    # Ignore devices which show -2 for current value and -2 for max value -> useless
+    return [ (line[0], "printer_supply_default_levels") for line in printer_supply_fix_infos(info)
+                                                 if savefloat(line[2]) != -2 and float(line[1]) != -2 ]
 
 def check_printer_supply(item, params, info):
     for line in printer_supply_fix_infos(info):

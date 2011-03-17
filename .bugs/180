@@ -1,0 +1,18 @@
+Title: PING service of ping only hosts shown no 'perfdata' icon in multisite
+Component: core
+Benefit: 4
+State: open
+Cost: 2
+Date: 2011-03-16 11:29:45
+Class: bug
+
+The perfdata icon is missing on PING checks created for ping only hosts. The
+check creates perfdata but the detections seems to fail.
+
+The problem is that the PING service in check_mk_templates.cfg does not use
+the template 'check_mk_perf'. The use line should look like this:
+
+  use check_mk_perf,check_mk_default
+
+In fact the data is gathered in the host check but the missing link seems
+to confuse the users since the check generates performance data.

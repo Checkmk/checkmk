@@ -9,7 +9,7 @@
     * Agent simulation mode (for internal use and check development)
 
     Multisite:
-    * Added snmp_uptime and uptime perfometers
+    * Added snmp_uptime, uptime and printer_supply perfometers
 
     BI:
     * Added new component BI to Multisite.
@@ -28,6 +28,8 @@
     * FIX: ucd_cpu_util: fix check in case of missing hi, si and st
     * printer_supply: Changed order of tests. When a printer reports -3 this
       is used before the check if maxlevel is -2.
+    * printer_supply: Skipping inventory of supplies which have current value
+    and maxlevel both set to -2.
     * cisco_locif: The check has been removed. Please switch to if/if64
     * if/if64: scan function now also detects devices where the first port
       has not the index 1

@@ -36,9 +36,9 @@ if (isset($DS[2])) {
                "DEF:read=$RRDFILE[1]:$DS[1]:MAX ".
                "CDEF:read_mb=read,1048576,/ ".
                "AREA:read_mb#40c080:\"Read \" ".
-               "GPRINT:read_mb:LAST:\"%6.1lf MByte/s last\" ".
-               "GPRINT:read_mb:AVERAGE:\"%6.1lf MByte/s avg\" ".
-               "GPRINT:read_mb:MAX:\"%6.1lf MByte/s max\\n\" ";
+               "GPRINT:read_mb:LAST:\"%8.1lf MB/s last\" ".
+               "GPRINT:read_mb:AVERAGE:\"%6.1lf MB/s avg\" ".
+               "GPRINT:read_mb:MAX:\"%6.1lf MB/s max\\n\" ";
 
     # read average
     if (isset($DS[3])) {
@@ -53,11 +53,23 @@ if (isset($DS[2])) {
                "DEF:write=$RRDFILE[2]:$DS[2]:MAX ".
                "CDEF:write_mb=write,1048576,/ ".
                "CDEF:write_mb_neg=write_mb,-1,* ".
-               "AREA:write_mb_neg#4080c0:Write ".
-               "GPRINT:write_mb:LAST:\"%6.1lf MByte/s last\" ".
-               "GPRINT:write_mb:AVERAGE:\"%6.1lf MByte/s avg\" ".
-               "GPRINT:write_mb:MAX:\"%6.1lf MByte/s max\\n\" ".
+               "AREA:write_mb_neg#4080c0:\"Write  \"  ".
+               "GPRINT:write_mb:LAST:\"%6.1lf MB/s last\" ".
+               "GPRINT:write_mb:AVERAGE:\"%6.1lf MB/s avg\" ".
+               "GPRINT:write_mb:MAX:\"%6.1lf MB/s max\\n\" ".
                "";
+
+    # show levels for read
+    if ($WARN[1]) {
+        $def[1] .= "HRULE:$WARN[1]#ffd000:\"Warning for read at  " . sprintf("%6.1f", $WARN[1]) . " MB/s  \" ";
+        $def[1] .= "HRULE:$CRIT[1]#ff0000:\"Critical for read at  " . sprintf("%6.1f", $CRIT[1]) . " MB/s\\n\" ";
+    }
+
+    # show levels for write
+    if ($WARN[2]) {
+        $def[1] .= "HRULE:-$WARN[2]#ffd000:\"Warning for write at " . sprintf("%6.1f", $WARN[2]) . " MB/s  \" ";
+        $def[1] .= "HRULE:-$CRIT[2]#ff0000:\"Critical for write at " . sprintf("%6.1f", $CRIT[2]) . " MB/s\\n\" ";
+    }
 
     # write average
     if (isset($DS[3])) {

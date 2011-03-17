@@ -76,11 +76,18 @@ def check_diskstat_line(this_time, item, params, line):
     for what, ctr in [ ("read",  line[5]), ("write", line[9]) ]:
         countername = "diskstat.%s.%s" % (item, what)
 
+        # unpack levels now, need also for perfdata
+        levels = params.get(what)
+        if levels:
+            warn, crit = levels
+        else:
+            warn, crit = None, None
+
         # compute IO rate in bytes/sec
         timedif, sectors_per_sec = get_counter(countername, this_time, int(ctr))
         bytes_per_sec = sectors_per_sec * 512
         infos.append("%s/sec %s" % (get_bytes_human_readable(bytes_per_sec), what))
-        perfdata.append( (what, bytes_per_sec) )
+        perfdata.append( (what, bytes_per_sec, warn, crit) )
 
         # compute average of the rate over ___ minutes
         if average_range != None:
@@ -89,10 +96,8 @@ def check_diskstat_line(this_time, item, params, line):
             bytes_per_sec = avg
 
         # check levels
-        levels = params.get(what)
         if levels != None:
             mb_per_sec = bytes_per_sec / 1048576
-            warn, crit = levels
             if mb_per_sec >= crit:
                 status = 2 
                 infos[-1] += "!!"

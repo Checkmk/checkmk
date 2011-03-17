@@ -33,6 +33,8 @@
       with index 1
     * df: split PNP graphs for growth/trend into two graphs
     * omd_status: new check for checking status of OMD sites
+    * printer_alerts: Added new check for monitoring alert states reported by
+      printers using the PRINTER-MIB
 
 
 1.1.10:

@@ -91,7 +91,7 @@ def check_diskstat_line(this_time, item, params, line):
 
         # compute average of the rate over ___ minutes
         if average_range != None:
-            timedif, avg = get_average(countername + ".avg", this_time, bytes_per_sec, average_range * 60)
+            timedif, avg = get_average(countername + ".avg", this_time, bytes_per_sec, average_range)
             perfdata.append( (what + ".avg", avg) )
             bytes_per_sec = avg
 

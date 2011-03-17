@@ -63,7 +63,7 @@ def inventory_diskstat(checkname, info):
         return inventory
     elif len(info) > 1:
         if diskstat_inventory_mode == "summary":
-            return [ ( "summary", "diskstat_default_levels") ]
+            return [ ( "SUMMARY", "diskstat_default_levels") ]
         else:
             return [ ( "read", None ), ( "write", None ) ]
 
@@ -114,7 +114,7 @@ def check_diskstat(item, params, info):
     this_time = int(info[0][0])
 
     # summary mode
-    if item == 'summary': # summary mode
+    if item == 'SUMMARY': # summary mode
         summary_line = [0] * 13
         for line in info[1:]:
             summary_line = map(lambda e: e[0] + int(e[1]), zip(summary_line, line[3:]))

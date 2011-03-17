@@ -34,6 +34,7 @@
       with index 1
     * df: split PNP graphs for growth/trend into two graphs
     * omd_status: new check for checking status of OMD sites
+    * diskstat: rewritten check: now show different devices, r+w in one check
 
 
 1.1.10:

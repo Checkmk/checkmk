@@ -24,46 +24,81 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# <<<diskstat>>>
+# 1300264105
+#    8       0 sda 691860 951191 13559915 491748 234686 197346 3359512 94944 0 56844 586312
+#    8      32 sdb 791860 91191 23589915 491748 234686 197346 3359512 94944 0 56844 586312
 
-def inventory_diskstat(checkname, info):
-    if len(info) > 1: # first line is timestamp
-        return [('read', "", "None"),
-                ('write', "", "None")]
-
-# Fields in /proc/diskstat
-# At the beginning: major minor devicename
-#
-# Field 1 -- # of reads issued
-# Field 2 -- # of reads merged, field 6 -- # of writes merged
-# Field 3 -- # of sectors read
-# Field 4 -- # of milliseconds spent reading
-# Field 5 -- # of writes completed
-# Field 7 -- # of sectors written
-# Field 8 -- # of milliseconds spent writing
-# Field 9 -- # of I/Os currently in progress
-# Field 10 -- # of milliseconds spent doing I/Os
-# Field 11 -- weighted # of milliseconds spent doing I/Os
+# Fields in /proc/diskstats
+#  Index 0 -- major number
+#  Index 1 -- minor number
+#  Index 2 -- device name
+#  Index 3 -- # of reads issued
+#  Index 4 -- # of reads merged, field 6 -- # of writes merged
+#  Index 5 -- # of sectors read (a 512 Byte)
+#  Index 6 -- # of milliseconds spent reading
+#  Index 7 -- # of writes completed
+#  Index 8 -- # of sectors written (a 512 Byte)
+#  Index 9 -- # of milliseconds spent writing
+#  Index 10 -- # of I/Os currently in progress
+#  Index 11 -- # of milliseconds spent doing I/Os
+#  Index 12 -- weighted # of milliseconds spent doing I/Os
 #
 # -> Field 1 has index 3
 
+diskstat_default_levels = {
+#    "read" :    (10, 20),   # MB/sec
+#    "write" :   (20, 40),   # MB/sec
+#    "average" : 15,         # min
+}
 
-# major minor device ...
+def inventory_diskstat(checkname, info):
+    inventory = []
+    for line in info[1:]:
+        inventory.append( (line[2], "diskstat_default_levels" ) )
+    return inventory
+
 def check_diskstat(item, params, info):
-    # sum up over all devices
-    if item == 'read':
-        index = 5 # sectors read
-    elif item == 'write':
-        index = 9 # sectors written
-    else:
-        return (3, "UNKNOWN - invalid item %s" % (item,))
-
+    average_range = params.get("average")
     this_time = int(info[0][0])
-    this_val  = sum([int(x[index]) for x in info[1:]])
+    for line in info[1:]:
+        if line[2] == item:
+            perfdata = []
+            infos = []
+            status = 0
+            for what, ctr in [ ("read",  line[5]), ("write", line[8]) ]:
+                countername = "diskstat.%s.%s" % (item, what)
 
-    timedif, per_sec = get_counter("diskstat." + item, this_time, this_val)
-    mb_per_s = per_sec / 2048.0    # Diskstat output is in sectors a 512 Byte
-    perfdata = [ (item, "%dc" % this_val ) ]
-    return (0, "OK - %.1fMB/s (in last %d secs)" % (mb_per_s, timedif), perfdata)
+                # compute IO rate in bytes/sec
+                timedif, sectors_per_sec = get_counter(countername, this_time, int(ctr))
+                bytes_per_sec = sectors_per_sec * 512
+                infos.append("%s/sec %s" % (get_bytes_human_readable(bytes_per_sec), what))
+                perfdata.append( (what, bytes_per_sec) )
 
+                # compute average of the rate over ___ minutes
+                if average_range != None:
+                    timedif, avg = get_average(countername + ".avg", this_time, bytes_per_sec, average_range * 60)
+                    perfdata.append( (what + ".avg", avg) )
+                    bytes_per_sec = avg
+
+                # check levels
+                levels = params.get(what)
+                if levels != None:
+                    mb_per_sec = bytes_per_sec / 1048576
+                    warn, crit = levels
+                    if mb_per_sec >= crit:
+                        status = 2 
+                        infos[-1] += "!!"
+                    elif mb_per_sec >= warn:
+                        status = max(status, 1)
+                        infos[-1] += "!"
+
+            if average_range != None:
+                perfdata = [ perfdata[0], perfdata[2], perfdata[1], perfdata[3] ]
+
+            return (status, nagios_state_names[status] + " - " + ", ".join(infos) , perfdata)
+
+    
+    return (3, "UNKNOWN - device missing")
 
 check_info['diskstat'] = (check_diskstat, "Disk IO %s", 1,  inventory_diskstat)

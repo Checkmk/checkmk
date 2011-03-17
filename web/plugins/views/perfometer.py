@@ -61,6 +61,34 @@ def perfometer_logarithmic(value, half_value, base, color):
       "</tr></table>"
 
 
+# Dual logarithmic Perf-O-Meter
+def perfometer_logarithmic_dual(value_left, color_left, value_right, color_right, half_value, base):
+    result = '<table><tr>'
+    for where, value, color in [ 
+        ("left", value_left, color_left), 
+        ("right", value_right, color_right) ]:
+        value = float(value)
+        if value == 0.0:
+            pos = 0
+        else:
+            half_value = float(half_value)
+            h = math.log(half_value, base) # value to be displayed at 50%
+            pos = 25 + 10.0 * (math.log(value, base) - h)
+            if pos < 1:
+                pos = 1
+            if pos > 49:
+                pos = 49
+
+        if where == "right":
+            result += perfometer_td(pos, color) + \
+                 perfometer_td(50 - pos, "white")
+        else:
+            result += perfometer_td(50 - pos, "white") + \
+                 perfometer_td(pos, color)
+
+    return result + '</tr></table>'
+
+
 perfometer_plugins_dir = defaults.web_dir + "/plugins/perfometer"
 for fn in os.listdir(perfometer_plugins_dir):
     if fn.endswith(".py"):

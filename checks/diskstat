@@ -34,17 +34,20 @@
 #  Index 1 -- minor number
 #  Index 2 -- device name
 #  Index 3 -- # of reads issued
-#  Index 4 -- # of reads merged, field 6 -- # of writes merged
-#  Index 5 -- # of sectors read (a 512 Byte)
-#  Index 6 -- # of milliseconds spent reading
-#  Index 7 -- # of writes completed
-#  Index 8 -- # of sectors written (a 512 Byte)
-#  Index 9 -- # of milliseconds spent writing
-#  Index 10 -- # of I/Os currently in progress
-#  Index 11 -- # of milliseconds spent doing I/Os
-#  Index 12 -- weighted # of milliseconds spent doing I/Os
+#  Index 4 -- # of reads merged, 
+#  Index 5 -- # of writes merged
+#  Index 6 -- # of sectors read (a 512 Byte)
+#  Index 7 -- # of milliseconds spent reading
+#  Index 8 -- # of writes completed
+#  Index 9 -- # of sectors written (a 512 Byte)
+#  Index 10 -- # of milliseconds spent writing
+#  Index 11 -- # of I/Os currently in progress
+#  Index 12 -- # of milliseconds spent doing I/Os
+#  Index 13 -- weighted # of milliseconds spent doing I/Os
 #
 # -> Field 1 has index 3
+
+diskstat_inventory_mode = "single" # also possible: "summary", "legacy"
 
 diskstat_default_levels = {
 #    "read" :    (10, 20),   # MB/sec
@@ -53,52 +56,97 @@ diskstat_default_levels = {
 }
 
 def inventory_diskstat(checkname, info):
-    inventory = []
-    for line in info[1:]:
-        inventory.append( (line[2], "diskstat_default_levels" ) )
-    return inventory
+    if diskstat_inventory_mode == "single":
+        inventory = []
+        for line in info[1:]:
+            inventory.append( (line[2], "diskstat_default_levels" ) )
+        return inventory
+    elif len(info) > 1:
+        if diskstat_inventory_mode == "summary":
+            return [ ( "summary", "diskstat_default_levels") ]
+        else:
+            return [ ( "read", None ), ( "write", None ) ]
+
+
+def check_diskstat_line(this_time, item, params, line):
+    average_range = params.get("average")
+    perfdata = []
+    infos = []
+    status = 0
+    for what, ctr in [ ("read",  line[5]), ("write", line[9]) ]:
+        countername = "diskstat.%s.%s" % (item, what)
+
+        # compute IO rate in bytes/sec
+        timedif, sectors_per_sec = get_counter(countername, this_time, int(ctr))
+        bytes_per_sec = sectors_per_sec * 512
+        infos.append("%s/sec %s" % (get_bytes_human_readable(bytes_per_sec), what))
+        perfdata.append( (what, bytes_per_sec) )
+
+        # compute average of the rate over ___ minutes
+        if average_range != None:
+            timedif, avg = get_average(countername + ".avg", this_time, bytes_per_sec, average_range * 60)
+            perfdata.append( (what + ".avg", avg) )
+            bytes_per_sec = avg
+
+        # check levels
+        levels = params.get(what)
+        if levels != None:
+            mb_per_sec = bytes_per_sec / 1048576
+            warn, crit = levels
+            if mb_per_sec >= crit:
+                status = 2 
+                infos[-1] += "!!"
+            elif mb_per_sec >= warn:
+                status = max(status, 1)
+                infos[-1] += "!"
+
+    if average_range != None:
+        perfdata = [ perfdata[0], perfdata[2], perfdata[1], perfdata[3] ]
+
+    return (status, nagios_state_names[status] + " - " + ", ".join(infos) , perfdata)
+
 
 def check_diskstat(item, params, info):
-    average_range = params.get("average")
+    # legacy version if item is "read" or "write"
+    if item in [ 'read', 'write' ]:
+        return check_diskstat_old(item, params, info)
+
     this_time = int(info[0][0])
+
+    # summary mode
+    if item == 'summary': # summary mode
+        summary_line = [0] * 13
+        for line in info[1:]:
+            summary_line = map(lambda e: e[0] + int(e[1]), zip(summary_line, line[3:]))
+        return check_diskstat_line(this_time, "SUMMARY", params, ['', '', '' ] + summary_line)
+
+    # single mode
     for line in info[1:]:
         if line[2] == item:
-            perfdata = []
-            infos = []
-            status = 0
-            for what, ctr in [ ("read",  line[5]), ("write", line[8]) ]:
-                countername = "diskstat.%s.%s" % (item, what)
-
-                # compute IO rate in bytes/sec
-                timedif, sectors_per_sec = get_counter(countername, this_time, int(ctr))
-                bytes_per_sec = sectors_per_sec * 512
-                infos.append("%s/sec %s" % (get_bytes_human_readable(bytes_per_sec), what))
-                perfdata.append( (what, bytes_per_sec) )
-
-                # compute average of the rate over ___ minutes
-                if average_range != None:
-                    timedif, avg = get_average(countername + ".avg", this_time, bytes_per_sec, average_range * 60)
-                    perfdata.append( (what + ".avg", avg) )
-                    bytes_per_sec = avg
-
-                # check levels
-                levels = params.get(what)
-                if levels != None:
-                    mb_per_sec = bytes_per_sec / 1048576
-                    warn, crit = levels
-                    if mb_per_sec >= crit:
-                        status = 2 
-                        infos[-1] += "!!"
-                    elif mb_per_sec >= warn:
-                        status = max(status, 1)
-                        infos[-1] += "!"
-
-            if average_range != None:
-                perfdata = [ perfdata[0], perfdata[2], perfdata[1], perfdata[3] ]
-
-            return (status, nagios_state_names[status] + " - " + ", ".join(infos) , perfdata)
-
+            return check_diskstat_line(this_time, item, params, line)
     
     return (3, "UNKNOWN - device missing")
+
+
+# This is the legacy version of diskstat as used in <= 1.1.10. 
+# We keep it here for a while in order to be compatible with
+# old installations.
+def check_diskstat_old(item, params, info):
+    # sum up over all devices
+    if item == 'read':
+        index = 5 # sectors read
+    elif item == 'write':
+        index = 9 # sectors written
+    else:
+        return (3, "UNKNOWN - invalid item %s" % (item,))
+
+    this_time = int(info[0][0])
+    this_val  = sum([int(x[index]) for x in info[1:]])
+
+    timedif, per_sec = get_counter("diskstat." + item, this_time, this_val)
+    mb_per_s = per_sec / 2048.0    # Diskstat output is in sectors a 512 Byte
+    perfdata = [ (item, "%dc" % this_val ) ]
+    return (0, "OK - %.1fMB/s (in last %d secs)" % (mb_per_s, timedif), perfdata)
+
 
 check_info['diskstat'] = (check_diskstat, "Disk IO %s", 1,  inventory_diskstat)

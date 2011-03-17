@@ -272,7 +272,12 @@ def perfometer_check_mk_uptime(row, check_command, perf_data):
 perfometers["check_mk-uptime"]      = perfometer_check_mk_uptime
 perfometers["check_mk-snmp_uptime"] = perfometer_check_mk_uptime
 
+
 def perfometer_check_mk_diskstat(row, check_command, perf_data):
+    # No Perf-O-Meter for legacy version of diskstat possible
+    if len(perf_data) < 2:
+        return "", ""
+
     read_bytes = float(perf_data[0][1])
     write_bytes = float(perf_data[1][1])
 
@@ -283,4 +288,6 @@ def perfometer_check_mk_diskstat(row, check_command, perf_data):
             read_bytes, "#60e0a0", write_bytes, "#60a0e0", 5000000, 10)
 
 perfometers["check_mk-diskstat"] = perfometer_check_mk_diskstat
+
+
 

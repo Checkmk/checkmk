@@ -14,5 +14,7 @@ the template 'check_mk_perf'. The use line should look like this:
 
   use check_mk_perf,check_mk_default
 
+Plus the process_perfdata 0 line need to be removed.
+
 In fact the data is gathered in the host check but the missing link seems
 to confuse the users since the check generates performance data.

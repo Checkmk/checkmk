@@ -1,0 +1,112 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Author: Lars Michelsen <lm@mathias-kettner.de>, 2011-03-16
+
+# Example output for this case:
+#
+# 1.3.6.1.2.1.43.18.1.1.2.1.1  4
+# 1.3.6.1.2.1.43.18.1.1.4.1.1  11
+# 1.3.6.1.2.1.43.18.1.1.5.1.1  -1
+# 1.3.6.1.2.1.43.18.1.1.7.1.1  1107
+# 1.3.6.1.2.1.43.18.1.1.8.1.1  "The waste toner container is full soon."
+#
+# [['4', '11', '-1', '1107', 'The waste toner container is full soon.']]
+
+printer_alerts_group_map = {
+  '1': 'other',
+  '3': 'hostResourcesMIBStorageTable',
+  '4': 'hostResourcesMIBDeviceTable',
+  '5': 'generalPrinter',
+  '6': 'cover',
+  '7': 'localization',
+  '8': 'input',
+  '9': 'output',
+  '10': 'marker',
+  '11': 'markerSupplies',
+  '12': 'markerColorant',
+  '13': 'mediaPath',
+  '14': 'channel',
+  '15': 'interpreter',
+  '16': 'consoleDisplayBuffer',
+  '17': 'consoleLights',
+  '18': 'alert',
+  '30': 'finDevice',
+  '31': 'finSypply',
+  '32': 'finSupplyMediaInput',
+  '33': 'finAttributeTable',
+}
+
+printer_alerts_state_map = {
+  2: [ 8, 1101, 1102, 1112, 1114, 1115 ],
+  1: [ ],
+  0: [ 4, 6, 7, 19, 20, 23, 24, 25, 27, 35, 36, 37, 38, 502, 503, 504, 505, 506, 507, 802, 803, 804, 805, 806, 807, 808, 809, 810, 1001, 1002, 1005, 1106, 1107, 1108, 1111, 1113, 1302, 1304, 1501, 1502, 1503, 1504, 1505, 1506, 1509 ],
+}
+
+def inventory_printer_alerts(checkname, info):
+    return [ (None, None) ]
+
+def check_printer_alerts(_not_used, _not_used1, info):
+    if not info:
+        return (0, 'OK - No alerts present')
+
+    sum_state  = 0
+    sum_txt    = []
+    for alert in info:
+        sev, group, group_index, code, desc = alert
+
+        state = 3
+        for s in [ 2, 1, 0 ]:
+            if saveint(sev) in printer_alerts_state_map[s]:
+                state = s
+                break
+
+        group_txt = printer_alerts_group_map.get(group, 'UNKNOWN')
+        if group_index != '-1':
+            group_txt += ' #%s' % group_index
+
+        if state > sum_state:
+            sum_state = state
+
+        sum_txt.append('%s - %s - %s (%s)' % (nagios_state_names[state],
+                                              group_txt, desc, code))
+
+    return (sum_state, ', '.join(sum_txt))
+
+check_info['printer_alerts'] = (check_printer_alerts, "Alerts", 0, inventory_printer_alerts)
+
+snmp_info['printer_alerts'] = ( ".1.3.6.1.2.1.43.18.1.1", [
+                                                     '2', #prtAlertSeverityLevel
+                                                     '4', #prtAlertGroup
+                                                     '5', #prtAlertGroupIndex
+                                                     '7', #prtAlertCode
+                                                     '8', #prtAlertDescription
+ ] )
+
+check_config_variables.append("printer_alerts_state_map")
+
+snmp_scan_functions['printer_alerts'] = \
+    lambda oid: oid(".1.3.6.1.2.1.43.11.1.1.6.1.1") != None

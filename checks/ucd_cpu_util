@@ -39,7 +39,7 @@ def inventory_ucd_cpu_util(checktype, info):
         return [(None, "kernel_util_default_levels")]
 
 def check_ucd_cpu_util(item, params, info):
-    counters = map(int, info[0])
+    counters = map(saveint, info[0])
     rates = []
     this_time = time.time()
     some_counter_wrapped = False

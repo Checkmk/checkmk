@@ -29,6 +29,7 @@
     * FIX: df: fix display of trend warn/crit in PNP-graph
     * FIX: cmctc: fix inventory in case of incomplete entries
     * FIX: ucd_cpu_load and ucd_cpu_util: make scan function find Rittal
+    * FIX: ucd_cpu_util: fix check in case of missing hi, si and st
     * printer_supply: Changed order of tests. When a printer reports -3 this
       is used before the check if maxlevel is -2.
     * cisco_locif: The check has been removed. Please switch to if/if64

@@ -31,11 +31,11 @@ $WARNPERC = $WARN[1]*100/$MAX[1];
 $opt[1] = "--vertical-label \"Percent left\" -l -20 -u 100 --title \"$hostname / $servicedesc  \" ";
 
 if(preg_match('/black/i', $servicedesc))
-	$color = '000000';
+  $color = '000000';
 elseif(preg_match('/magenta/i', $servicedesc))
-	$color = 'fc00ff';
+  $color = 'fc00ff';
 elseif(preg_match('/yellow/i', $servicedesc))
-  $color = 'ff0000';
+  $color = 'ffff00';
 elseif(preg_match('/cyan/i', $servicedesc))
   $color = '00ffff';
 else

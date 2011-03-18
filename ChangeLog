@@ -1,5 +1,6 @@
 1.1.11i1:
     Core, Setup, etc.:
+    * FIX: fix computation of weight when averaging
     * SNMP scan functions can now call oid(".1.3.6.1.4.1.9.9.13.1.3.1.3.*")
       That will return the *first* OID beginning with .1.3.6.1.4.1.9.9.13.1.3.1.3
     * New config option: Set check_submission = "file" in order to write
@@ -22,6 +23,9 @@
     * FIX: df: fix status in case of critical trend and warning used
     * FIX: df: fix display of trend warn/crit in PNP-graph
     * FIX: cmctc: fix inventory in case of incomplete entries
+    * FIX: cmctc: add scan function
+    * FIX: ucd_cpu_load and ucd_cpu_util: make scan function find Rittal
+    * FIX: ucd_cpu_util: fix check in case of missing hi, si and st
     * printer_supply: Changed order of tests. When a printer reports -3 this
       is used before the check if maxlevel is -2.
     * printer_supply: Skipping inventory of supplies which have current value
@@ -35,6 +39,7 @@
     * omd_status: new check for checking status of OMD sites
     * printer_alerts: Added new check for monitoring alert states reported by
       printers using the PRINTER-MIB
+    * diskstat: rewritten check: now show different devices, r+w in one check
 
 
 1.1.10:

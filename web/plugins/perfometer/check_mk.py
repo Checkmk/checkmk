@@ -273,6 +273,23 @@ perfometers["check_mk-uptime"]      = perfometer_check_mk_uptime
 perfometers["check_mk-snmp_uptime"] = perfometer_check_mk_uptime
 
 
+def perfometer_check_mk_diskstat(row, check_command, perf_data):
+    # No Perf-O-Meter for legacy version of diskstat possible
+    if len(perf_data) < 2:
+        return "", ""
+
+    read_bytes = float(perf_data[0][1])
+    write_bytes = float(perf_data[1][1])
+
+    text = "%-.2fM/s  %-.2fM/s" % \
+            (read_bytes / (1024*1024.0), write_bytes / (1024*1024.0))
+    
+    return text, perfometer_logarithmic_dual(
+            read_bytes, "#60e0a0", write_bytes, "#60a0e0", 5000000, 10)
+
+perfometers["check_mk-diskstat"] = perfometer_check_mk_diskstat
+
+
 def perfometer_check_mk_printer_supply(row, check_command, perf_data):
     left = float(perf_data[0][1])
     warn = float(perf_data[0][3])

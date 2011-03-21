@@ -40,6 +40,8 @@
     * printer_alerts: Added new check for monitoring alert states reported by
       printers using the PRINTER-MIB
     * diskstat: rewritten check: now show different devices, r+w in one check
+    * FIX: fjdarye60_devencs, fjdarye60_disks.summary: added snmp scan functions
+    * FIX: decru_*: added snmp scan functions
 
 
 1.1.10:

@@ -52,5 +52,5 @@ check_info['fjdarye60_devencs'] = (check_fjdarye60, "Device Enclosure %s", 0,  i
 # 1: fjdaryDeIndex, 3: fjdaryDeStatus
 snmp_info['fjdarye60_devencs'] = (".1.3.6.1.4.1.211.1.21.1.60.2.7.2.1", [ 1, 3 ])
 
-snmp_scan_functions['fjdarye60_disks'] \
+snmp_scan_functions['fjdarye60_devencs'] \
         = lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.60"

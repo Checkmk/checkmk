@@ -42,5 +42,5 @@ def check_decru_cpu(item, _no_params, info):
 
 check_info['decru_cpu'] = (check_decru_cpu, "CPU utilization", 1, inventory_decru_cpu)
 snmp_info['decru_cpu'] = ( ".1.3.6.1.4.1.12962.1.1", [ 8 ] )
-# oder (SNMPv2-MIB::sysObjectID.0 = OID: SNMPv2-SMI::enterprises.12962.2.1.4):
-# snmp_scan_info['decru_cpu'] = ( ".1.3.6.1.2.1.1.2.0", "=", ".1.3.6.1.4.1.12962.2.1.4" )
+snmp_scan_functions['decru_cpu'] = \
+    lambda oid: "datafort" in oid('.1.3.6.1.2.1.1.1.0').lower()

@@ -100,21 +100,22 @@ mk-livestatus:
 
 
 version:
-	[ "$$(head -c 14 /etc/issue)" = "Ubuntu 10.04.2" ] || { echo 'You are not on the reference system!' ; exit 1; }
+	[ "$$(head -c 12 /etc/issue)" = "Ubuntu 10.10" ] || { echo 'You are not on the reference system!' ; exit 1; }
 	@newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)") ; \
-	if [ -n "$$newversion" ] ; then \
-	    sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$$newversion/" Makefile ; \
-	    for agent in agents/* ; do \
-	        if [ "$$agent" != agents/windows -a "$$agent" != agents/plugins ] ; then \
-	            sed -i 's/echo Version: [0-9.a-z]*/'"echo Version: $$newversion/g" $$agent; \
-	        fi ; \
-	    done ; \
-	    sed -i 's/#define CHECK_MK_VERSION .*/#define CHECK_MK_VERSION "'$$newversion'"/' agents/windows/check_mk_agent.cc ; \
-	    sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$$newversion"'], [mk@mathias-kettner.de])/' livestatus/configure.ac ; \
-	    sed -i 's/^VERSION=.*/VERSION='"$$newversion"'/' scripts/setup.sh ; \
-	    echo 'check-mk_$$newversion-1_all.deb net optional' > debian/files ; \
-	    sed -i 's/^CHECK_MK_VERSION=.*/CHECK_MK_VERSION='$$newversion/ scripts/install_nagios.sh ; \
-	fi ; \
+	if [ -n "$$newversion" ] ; then $(MAKE) NEW_VERSION=$$newversion setversion ; fi
+
+setversion:
+	sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
+	for agent in agents/* ; do \
+	    if [ "$$agent" != agents/windows -a "$$agent" != agents/plugins ] ; then \
+	        sed -i 's/echo Version: [0-9.a-z]*/'"echo Version: $(NEW_VERSION)/g" $$agent; \
+	    fi ; \
+	done ; \
+	sed -i 's/#define CHECK_MK_VERSION .*/#define CHECK_MK_VERSION "'$(NEW_VERSION)'"/' agents/windows/check_mk_agent.cc ; \
+	sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$(NEW_VERSION)"'], [mk@mathias-kettner.de])/' livestatus/configure.ac ; \
+	sed -i 's/^VERSION=.*/VERSION='"$(NEW_VERSION)"'/' scripts/setup.sh ; \
+	echo 'check-mk_$(NEW_VERSION)-1_all.deb net optional' > debian/files ; \
+	sed -i 's/^CHECK_MK_VERSION=.*/CHECK_MK_VERSION='$(NEW_VERSION)/ scripts/install_nagios.sh ; \
 	cd agents/windows ; rm *.exe ; make
 
 headers:

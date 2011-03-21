@@ -15,7 +15,7 @@ description:
 
  Depending on the check paramters this check can go WARN or CRIT when the
  port status changes (i.e. is down), when the link speed changes (e.g. a
- port expected to be set to 1GBit/s operates only at 1000MBit/s), when the
+ port expected to be set to 1GBit/s operates only at 100MBit/s), when the
  absolute or procentual traffic of a port exceeds certain levels or if the
  rate of errors or discards exceeds configurable limits.
 

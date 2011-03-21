@@ -42,6 +42,8 @@
     * diskstat: rewritten check: now show different devices, r+w in one check
     * FIX: fjdarye60_devencs, fjdarye60_disks.summary: added snmp scan functions
     * FIX: decru_*: added snmp scan functions
+    * canon_pages: Added new check for monitoring processed pages on canon
+    printer/multi-function devices
 
 
 1.1.10:

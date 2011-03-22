@@ -48,7 +48,7 @@
     * windows_update: Added check to monitor windows update states on windows
       clients. The check monitors the number of pending updates and checks if
       a reboot is needed after updates have been installed.
-    * Linux mk_oracle: Updated tablespace query to use 'used blocks' instead of 'user blocks'
+    * FIX: Linux mk_oracle: Updated tablespace query to use 'used blocks' instead of 'user blocks'
 
 
 1.1.10:

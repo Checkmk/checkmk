@@ -746,11 +746,15 @@ def execute_inter_node(node, status_info):
 #   /_/   \_\__, |\__, |_|(_) |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
 #           |___/ |___/                                                    
 
+# Function for sorting states. Pending should be slightly
+# worst then OK. CRIT is worse than UNKNOWN.
 def state_weight(s):
     if s == CRIT:
-        return 10
+        return 10.0
+    elif s == PENDING:
+        return 0.5
     else:
-        return s
+        return float(s)
 
 def x_best_state(l, x):
     ll = [ (state_weight(s), s) for s in l ]
@@ -763,7 +767,7 @@ def x_best_state(l, x):
         
     return ll[n-1][1]
 
-def aggr_nth_state(nodes, n):
+def aggr_nth_state(nodes, n, worst_state):
     states = []
     problems = []
     for node in nodes:
@@ -771,19 +775,19 @@ def aggr_nth_state(nodes, n):
         if node[0] != OK:
             problems.append(node[1])
     state = x_best_state(states, n)
-
-# debug((states, n, state))
+    if state_weight(state) > state_weight(worst_state):
+        state = worst_state # limit to worst state
 
     if len(problems) > 0:
         return state, "%d problems" % len(problems)
     else:
         return state, ""
 
-def aggr_worst(nodes, n = 1):
-    return aggr_nth_state(nodes, -int(n))
+def aggr_worst(nodes, n = 1, worst_state = 3):
+    return aggr_nth_state(nodes, -int(n), int(worst_state))
 
-def aggr_best(nodes, n = 1):
-    return aggr_nth_state(nodes, int(n))
+def aggr_best(nodes, n = 1, worst_state = 3):
+    return aggr_nth_state(nodes, int(n), int(worst_state))
 
 config.aggregation_functions["worst"] = aggr_worst 
 config.aggregation_functions["best"]  = aggr_best

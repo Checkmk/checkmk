@@ -44,6 +44,7 @@
     * FIX: decru_*: added snmp scan functions
     * canon_pages: Added new check for monitoring processed pages on canon
     printer/multi-function devices
+    * strem1_sensors: added check to monitor sensors attached to Sensatorinc EM1 devices
 
 
 1.1.10:

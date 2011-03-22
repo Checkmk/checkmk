@@ -45,6 +45,9 @@
     * canon_pages: Added new check for monitoring processed pages on canon
     printer/multi-function devices
     * strem1_sensors: added check to monitor sensors attached to Sensatorinc EM1 devices
+    * windows_update: Added check to monitor windows update states on windows
+      clients. The check monitors the number of pending updates and checks if
+      a reboot is needed after updates have been installed.
 
 
 1.1.10:

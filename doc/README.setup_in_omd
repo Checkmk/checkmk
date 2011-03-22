@@ -1,0 +1,28 @@
+How to install Check_MK into an exisiting OMD site
+==================================================
+This feature is experimental: You can install Check_MK
+into an existing OMD site by unpacking the installation
+tarball and running ./setup --yes as OMD site user.
+This will install Check_MK into the site's local/
+filesystem hierarchy.
+
+After that relogin (to make sure the shell really 
+executes the new cmk command) and do a cmk -U in order
+to re-create your Nagios configuration.
+
+Uninstalling must be done manually. This can be
+done with the following commands provided that no
+other files you need are lying around below local!
+Use at your own risk!
+
+omd stop
+cd ~
+find local -type f | xargs rm 
+cd etc/apache/conf.d
+ln -sfn ../../check_mk/apache.conf check_mk.conf
+cd ~/etc/nagios/nagios.d
+ln -sfn ../../mk-livestatus/nagios.cfg mk-livestatus.cfg 
+rm -f ~/etc/check_mk/apache-local.conf 
+rm -f ~/etc/mk-livestatus/nagios-local.cfg 
+cmk -U
+omd start

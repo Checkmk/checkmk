@@ -1,0 +1,83 @@
+#!/usr/bin/python
+# -*- encoding: utf-8 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Author: Lars Michelsen <lm@mathias-kettner.de>
+
+# <<<windows_updates>>>
+# 0 2 5
+# Windows XP Service Pack 3 (KB936929); Windows-Tool zum Entfernen sch�dlicher Software - M�rz 2011 (KB890830) 
+# Update f�r WMDRM-f�hige Medienplayer (KB891122); Windows Media Player 11; Windows Search 4.0 f�r Windows XP (KB940157); Microsoft Base Smartcard-Kryptografiedienstanbieter-Paket: x86 (KB909520); Update f�r die Microsoft .NET Framework 3.5 Service Pack 1- und .NET Framework 3.5-Produktfamilie (KB951847) x86
+
+# First row:  Reboot_required, num_important, num_optional
+# Second row: List of all important updates
+# Thirt row:  List of all optional updates
+
+windows_updates_default_params = (None, None, None, None)
+
+def inventory_windows_updates(checktype, info):
+    if info and len(info[0]) == 3:
+        return [(None, "windows_updates_default_params")]
+
+def check_windows_updates(_unused, params, info):
+    if info and len(info[0]) == 3:
+        status = 0
+        reboot_required, num_imp, num_opt = map(saveint, info[0])
+        imp_warn, imp_crit, opt_warn, opt_crit = params
+        important = ''
+        if len(info) >= 2:
+            important = ' '.join(info[1])
+        optional = ''
+        if len(info) >= 3:
+            optional = ' '.join(info[2])
+
+        txt = []
+        perfdata = []
+        for label, updates, cur, warn, crit in [ ('important', important, num_imp, imp_warn, imp_crit),
+                                                 ('optional',  optional,  num_opt, opt_warn, opt_crit) ]:
+            this_txt = '%d %s' % (cur, label)
+            if label == 'important' and cur > 0:
+                this_txt += ' (%s)' % updates
+	    if crit and cur >= crit:
+                this_txt += ' (CRIT: >=%d)' % crit
+                if status < 2:
+                    status = 2
+	    elif warn and cur >= warn:
+                this_txt += ' (WARN: >=%d)' % warn
+                if status < 1:
+                    status = 1
+            txt.append(this_txt)
+            perfdata.append((label, cur, warn, crit))
+
+        if reboot_required == 1:
+            if status < 1:
+                status = 1
+            txt.append('WARN: A reboot is required to finish update installations')
+
+        return (status, '%s - %s' % (nagios_state_names[status], ', '.join(txt)), perfdata)
+
+    return (3, 'UNKNOWN - No windows update information provided')
+
+check_info['windows_updates'] = (check_windows_updates, "System Updates",  1, inventory_windows_updates)

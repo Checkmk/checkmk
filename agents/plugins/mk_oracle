@@ -66,8 +66,14 @@ echo '<<<oracle_tablespaces>>>'
 for SID in $SIDS
 do
     sqlplus "$SID" <<EOF | sed 's/READ ONLY/READONLY/g'
-select f.file_name, f.tablespace_name, f.status, f.AUTOEXTENSIBLE, f.blocks, f.maxblocks,  f.USER_BLOCKS,  f.INCREMENT_BY, f.ONLINE_STATUS, t.BLOCK_SIZE, t.status from dba_data_files f, dba_tablespaces t where f.tablespace_name = t.tablespace_name
+select f.file_name, f.tablespace_name, f.status, f.AUTOEXTENSIBLE, f.blocks, f.maxblocks, f.blocks - b.free_blocks as used_blocks,  f.INCREMENT_BY, f.ONLINE_STATUS, t.BLOCK_SIZE, t.status
+from dba_data_files f, dba_tablespaces t ,(SELECT file_id, SUM(blocks) free_blocks FROM dba_free_space b GROUP BY file_id) b
+where f.tablespace_name = t.tablespace_name
+and f.file_id=b.file_id
 UNION
-select f.file_name, f.tablespace_name, f.status, f.AUTOEXTENSIBLE, f.blocks, f.maxblocks,  f.USER_BLOCKS,  f.INCREMENT_BY, 'TEMP', t.BLOCK_SIZE, t.status from dba_temp_files f, dba_tablespaces t where f.tablespace_name = t.tablespace_name;
+select f.file_name, f.tablespace_name, f.status, f.AUTOEXTENSIBLE, f.blocks, f.maxblocks,  f.blocks - b.free_blocks as used_blocks,  f.INCREMENT_BY, 'TEMP', t.BLOCK_SIZE, t.status
+from dba_temp_files f, dba_tablespaces t ,(SELECT file_id, SUM(blocks) free_blocks FROM dba_free_space b GROUP BY file_id) b
+where f.tablespace_name = t.tablespace_name
+and f.file_id=b.file_id ;
 EOF
 done

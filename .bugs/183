@@ -1,0 +1,14 @@
+Title: bluecoat_sensors pnp links/hover menus are broken
+Component: multisite
+Benefit: 2
+State: open
+Cost: 3
+Date: 2011-03-22 15:25:58
+Class: cleanup
+
+The bluecoat sensors check creates checks with plus signs in the name, eg +12V bus voltage.
+This seems to break the links/hovers to pnp. This might also be a problem in pnp.
+
+The rrd files are named '+12V_bus_voltage.rrd'.
+
+Need to be analyzed.

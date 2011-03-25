@@ -17,6 +17,8 @@
 
     Multisite:
     * Added snmp_uptime and uptime perfometers
+    * FIX: custom_style_sheet now also honored by sidebar
+    * Added snmp_uptime, uptime and printer_supply perfometers
 
     BI:
     * Added new component BI to Multisite.

@@ -2,7 +2,7 @@
     Checks & Agents:
     * FIX: fix computation of weight when averaging
     * FIX: df: fix layout problems in PNP template
-
+    * FIX: df: fix trend computation (thanks to Sebastian Talmon)
 
 
 1.1.11i1:
@@ -25,7 +25,6 @@
     * Allow moving hosts from one to another config file
 
     Checks & Agents:
-    * FIX: df: fix trend computation (thanks to Sebastian Talmon)
     * FIX: df: fix status in case of critical trend and warning used
     * FIX: df: fix display of trend warn/crit in PNP-graph
     * FIX: cmctc: fix inventory in case of incomplete entries
@@ -40,6 +39,8 @@
       has not the index 1
     * cisco_temp/cisco_temp_perf: scan function handles sensors not beginning
       with index 1
+    * FIX: df: fix layout problems in PNP template
+    * FIX: df: fix trend computation (thanks to Sebastian Talmon)
 
 
 1.1.10:

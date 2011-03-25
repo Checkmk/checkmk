@@ -49,7 +49,13 @@
     * diskstat: rewritten check: now show different devices, r+w in one check
     * FIX: fjdarye60_devencs, fjdarye60_disks.summary: added snmp scan functions
     * FIX: decru_*: added snmp scan functions
-
+    * canon_pages: Added new check for monitoring processed pages on canon
+    printer/multi-function devices
+    * strem1_sensors: added check to monitor sensors attached to Sensatorinc EM1 devices
+    * windows_update: Added check to monitor windows update states on windows
+      clients. The check monitors the number of pending updates and checks if
+      a reboot is needed after updates have been installed.
+    * Linux mk_oracle: Updated tablespace query to use 'used blocks' instead of 'user blocks'
 
 1.1.10:
     Core, Setup, etc.:

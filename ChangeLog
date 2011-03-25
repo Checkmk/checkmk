@@ -1,68 +1,32 @@
 1.1.10p1:
-    Checks & Agents:
-    * FIX: fix computation of weight when averaging
-    * FIX: df: fix layout problems in PNP template
-    * FIX: df: fix trend computation (thanks to Sebastian Talmon)
 
-
-1.1.11i1:
     Core, Setup, etc.:
     * FIX: fix computation of weight when averaging
-    * SNMP scan functions can now call oid(".1.3.6.1.4.1.9.9.13.1.3.1.3.*")
-      That will return the *first* OID beginning with .1.3.6.1.4.1.9.9.13.1.3.1.3
-    * New config option: Set check_submission = "file" in order to write
-      check result files instead of using Nagios command pipe (safes
-      CPU ressources)
-    * Agent simulation mode (for internal use and check development)
-
-    Multisite:
-    * Added snmp_uptime and uptime perfometers
-    * FIX: custom_style_sheet now also honored by sidebar
-    * Added snmp_uptime, uptime and printer_supply perfometers
-
-    BI:
-    * Added new component BI to Multisite.
-
-    WATO:
-    * Allow moving hosts from one to another config file
+    * FIX: added missing \n in error output
+    * FIX: setup.sh: fix optical bugs in output of summary
 
     Checks & Agents:
-    * FIX: df: fix status in case of critical trend and warning used
-    * FIX: df: fix display of trend warn/crit in PNP-graph
-    * FIX: cmctc: fix inventory in case of incomplete entries
-    * FIX: cmctc: add scan function
-    * FIX: ucd_cpu_load and ucd_cpu_util: make scan function find Rittal
-    * FIX: ucd_cpu_util: fix check in case of missing hi, si and st
-    * printer_supply: Changed order of tests. When a printer reports -3 this
-      is used before the check if maxlevel is -2.
-    * cisco_locif: The check has been removed. Please switch to if/if64
-    * if/if64: scan function now also detects devices where the first port
-      has not the index 1
-    * cisco_temp/cisco_temp_perf: scan function handles sensors not beginning
-      with index 1
+    * FIX: mk_oracle: Updated tablespace query to use 'used blocks' instead of 'user blocks'
     * FIX: df: fix layout problems in PNP template
     * FIX: df: fix trend computation (thanks to Sebastian Talmon)
-    * FIX: df: fix status in case of critical trend and warning used
     * FIX: df: fix display of trend warn/crit in PNP-graph
-    * df: split PNP graphs for growth/trend into two graphs
-    * omd_status: new check for checking status of OMD sites
-    * printer_alerts: Added new check for monitoring alert states reported by
-      printers using the PRINTER-MIB
-    * diskstat: rewritten check: now show different devices, r+w in one check
+    * FIX: df: fix status in case of critical trend and warning used
+    * FIX: df: fix syntax error in manpages (in examples)
+    * FIX: bluecoat_sensors: Using scale parameter provided by the host for reported values
     * FIX: fjdarye60_devencs, fjdarye60_disks.summary: added snmp scan functions
     * FIX: decru_*: added snmp scan functions
-    * canon_pages: Added new check for monitoring processed pages on canon
-    printer/multi-function devices
-    * strem1_sensors: added check to monitor sensors attached to Sensatorinc EM1 devices
-    * windows_update: Added check to monitor windows update states on windows
-      clients. The check monitors the number of pending updates and checks if
-      a reboot is needed after updates have been installed.
-    * Linux mk_oracle: Updated tablespace query to use 'used blocks' instead of 'user blocks'
-    * FIX: Linux mk_oracle: Updated tablespace query to use 'used blocks' instead of 'user blocks'
-    * FIX: bluecoat_sensors: Using scale parameter provided by the host for reported values
+    * FIX: cmctc: add scan function
+    * FIX: cmctc: fix inventory in case of incomplete entries
+    * FIX: ucd_cpu_load and ucd_cpu_util: make scan function find Rittal
+    * FIX: ucd_cpu_util: fix check in case of missing hi, si and st
+    * FIX: mk_logwatch: dont use readlines(), save RAM
+
+    Multisite:
+    * FIX: custom_style_sheet now also honored by sidebar
 
 
 1.1.10:
+
     Core, Setup, etc.:
     * --flush now also deletes all autochecks 
     

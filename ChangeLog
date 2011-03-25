@@ -9,6 +9,7 @@
     * Agent simulation mode (for internal use and check development)
 
     Multisite:
+    * FIX: custom_style_sheet now also honored by sidebar
     * Added snmp_uptime, uptime and printer_supply perfometers
 
     BI:

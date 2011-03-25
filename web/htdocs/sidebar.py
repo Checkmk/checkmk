@@ -135,7 +135,11 @@ def page_side(h):
 <html>
 <head>
 <title>Check_MK Sidebar</title>
-<link href="check_mk.css" type="text/css" rel="stylesheet">
+<link href="check_mk.css" type="text/css" rel="stylesheet">""")
+    if config.custom_style_sheet:
+        html.write('<link rel="stylesheet" type="text/css" href="%s">' % config.custom_style_sheet)
+
+    html.write("""
 <script type="text/javascript" src="js/check_mk.js"></script>
 <script type="text/javascript" src="js/sidebar.js"></script>
 </head>

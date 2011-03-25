@@ -650,10 +650,24 @@ def get_average(itemname, this_time, this_val, backlog, initialize_zero = True):
     last_time, last_val = g_counters.get(itemname)
     timedif = this_time - last_time
 
-    # compute weight, but how?
-    weight = math.e ** (-timedif / backlog)
+    # Compute the weight: We do it like this: First we assume that
+    # we get one sample per minute. And that backlog is the number
+    # of minutes we should average over. Then we want that the weight
+    # of the values of the last average minutes have a fraction of W%
+    # in the result and the rest until infinity the rest (1-W%). 
+    # Then the weight can be computed as backlog'th root of 1-W
+    percentile = 0.50
+
+    weight_per_minute = (1 - percentile) ** (1.0 / backlog)
+
+    # now let's compute the weight per second. This is done 
+    weight = weight_per_minute ** (timedif / 60.0)
 
     new_val = last_val * weight + this_val * (1 - weight)
+
+    # print "Alt: %.5f, Jetzt: %.5f, Timedif: %.1f, Gewicht: %.5f, Neu: %.5f" % \
+    #     (last_val, this_val, timedif, weight, new_val)
+
     g_counters[itemname] = (this_time, new_val)
     return timedif, new_val
 

@@ -212,7 +212,7 @@ def check_if_common(item, params, info):
 
                     # handle computation of average
                     if average:
-                        timedif, traffic_avg = get_average("if.%s.%s.avg" % (what, item), this_time, traffic, average * 60)
+                        timedif, traffic_avg = get_average("if.%s.%s.avg" % (what, item), this_time, traffic, average)
                         infotext += ", %dmin avg: %s/s" % (average, get_bytes_human_readable(traffic_avg)) 
                         perfdata.append( ("%s_avg_%d" % (what, average), traffic_avg, bw_warn, bw_crit, 0, ref_speed) )
                         traffic = traffic_avg # apply levels to average traffic

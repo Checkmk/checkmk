@@ -1,3 +1,49 @@
+1.1.10p1:
+    Checks & Agents:
+    * FIX: fix computation of weight when averaging
+
+
+
+1.1.11i1:
+    Core, Setup, etc.:
+    * FIX: fix computation of weight when averaging
+    * SNMP scan functions can now call oid(".1.3.6.1.4.1.9.9.13.1.3.1.3.*")
+      That will return the *first* OID beginning with .1.3.6.1.4.1.9.9.13.1.3.1.3
+    * New config option: Set check_submission = "file" in order to write
+      check result files instead of using Nagios command pipe (safes
+      CPU ressources)
+    * Agent simulation mode (for internal use and check development)
+
+    Multisite:
+    * Added snmp_uptime and uptime perfometers
+
+    BI:
+    * Added new component BI to Multisite.
+
+    WATO:
+    * Allow moving hosts from one to another config file
+
+    Checks & Agents:
+    * FIX: df: fix layout problems in PNP template
+    * FIX: df: fix trend computation (thanks to Sebastian Talmon)
+    * FIX: df: fix status in case of critical trend and warning used
+    * FIX: df: fix display of trend warn/crit in PNP-graph
+    * FIX: cmctc: fix inventory in case of incomplete entries
+    * FIX: cmctc: add scan function
+    * FIX: ucd_cpu_load and ucd_cpu_util: make scan function find Rittal
+    * FIX: ucd_cpu_util: fix check in case of missing hi, si and st
+    * printer_supply: Changed order of tests. When a printer reports -3 this
+      is used before the check if maxlevel is -2.
+    * cisco_locif: The check has been removed. Please switch to if/if64
+    * if/if64: scan function now also detects devices where the first port
+      has not the index 1
+    * cisco_temp/cisco_temp_perf: scan function handles sensors not beginning
+      with index 1
+    * df: split PNP graphs for growth/trend into two graphs
+    * omd_status: new check for checking status of OMD sites
+    * diskstat: rewritten check: now show different devices, r+w in one check
+
+
 1.1.10:
     Core, Setup, etc.:
     * --flush now also deletes all autochecks 

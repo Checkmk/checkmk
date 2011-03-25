@@ -56,6 +56,9 @@
       clients. The check monitors the number of pending updates and checks if
       a reboot is needed after updates have been installed.
     * Linux mk_oracle: Updated tablespace query to use 'used blocks' instead of 'user blocks'
+    * FIX: Linux mk_oracle: Updated tablespace query to use 'used blocks' instead of 'user blocks'
+    * FIX: bluecoat_sensors: Using scale parameter provided by the host for reported values
+
 
 1.1.10:
     Core, Setup, etc.:

@@ -8,6 +8,8 @@
       CPU ressources)
     * Agent simulation mode (for internal use and check development)
     * Call snmpgetnext with the option -Cf (fixes some client errors)
+    * Call snmp(bulk)walk always with the option -Cc (fixes problems in some
+      cases where OIDs are missing)
 
     Multisite:
     * FIX: custom_style_sheet now also honored by sidebar

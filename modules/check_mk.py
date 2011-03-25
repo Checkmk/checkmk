@@ -519,7 +519,7 @@ def aggregated_service_name(hostname, servicedesc):
 # options for authentication. This handles communities and
 # authentication for SNMP V3. Also bulkwalk hosts
 def snmp_walk_command(hostname):
-    return snmp_base_command('walk', hostname)
+    return snmp_base_command('walk', hostname) + " -Cc"
 
 # Constructs the basic snmp commands for a host with all important information
 # like the commandname, SNMP version and credentials.

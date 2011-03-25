@@ -63,7 +63,7 @@ if (isset($DS[2])) {
     $size_mb_per_hours = floatval($MAX[3]); // this is size_mb / range(hours)
     $size_mb = floatval($MAX[1]);
     $hours = 1.0 / ($size_mb_per_hours / $size_mb);
-    $range = sprintf("%.1fh", $hours);
+    $range = sprintf("%.0fh", $hours);
 
     $opt[2] = "--vertical-label '+/- MB / $range' -l -1 -u 1 --title '$hostname: Trend for $fstitle' ";
     $def[2] = "DEF:growth_max=$RRDFILE[2]:$DS[2]:MAX ";
@@ -77,13 +77,17 @@ if (isset($DS[2])) {
     $def[2] .= "AREA:growth_pos#3060f0:\"Grow\" "; 
     $def[2] .= "AREA:growth_neg#30f060:\"Shrink \" "; 
     $def[2] .= "LINE1:trend#000000:\"Trend  \" "; 
-    if ($WARN[3])
-        $def[2] .= "LINE1:$WARN[3]#ffff00:\"Warning at $WARN[3]MB/$range\" ";
-    if ($CRIT[3])
-        $def[2] .= "LINE1:$CRIT[3]#ff0000:\"Critical at $CRIT[3]MB/$range\" ";
+    if ($WARN[3]) {
+        $warn_mb = sprintf("%.2fMB", $WARN[3]);
+        $def[2] .= "LINE1:$WARN[3]#ffff00:\"Warn\: $warn_mb / $range\" ";
+    }
+    if ($CRIT[3]) {
+        $crit_mb = sprintf("%.2fMB", $CRIT[3]);
+        $def[2] .= "LINE1:$CRIT[3]#ff0000:\"Crit\: $crit_mb / $range\" ";
+    }
     $def[2] .= "COMMENT:\"\\n\" ";
     $def[2] .= "GPRINT:growth:LAST:\"Current\: %+9.2lf MB/$range\" ";
-    $def[2] .= "GPRINT:trend:LAST:\"  Trend\: %+7.2lf MB/$range\\n\" "; 
+    $def[2] .= "GPRINT:trend:LAST:\"   Average trend\: %+7.2lf MB/$range\\n\" "; 
 }
 
 

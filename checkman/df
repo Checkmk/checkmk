@@ -47,7 +47,7 @@ examples:
     "trend_range"    : 48,        # hours
     "trend_mb"       : (10, 20),  # MB of change during trend_range
     "trend_perc"     : (1, 2),    # Percent change during trend_range
-    "trend_timeleft" : (72, 48)   # run time left in hours until full
+    "trend_timeleft" : (72, 48),  # run time left in hours until full
     "trend_perfdata" : False      # no performance data for trends
  }
 

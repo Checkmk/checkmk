@@ -20,9 +20,6 @@ Modi, untern denen eine Aggr berechnet werden kann:
 * mit 'force worst'
 * Downtimeanalyse (Downtime wie crit behandeln)
 
-Pending muss korrekt behandelt werden. Am einfachsten wäre ein
-eigener BI-Status dafür.
-
 Berechtigungen für:
   Aggregationen ansehen generell??
   Assume state ausführen
@@ -45,9 +42,20 @@ FEATURE: Icon zum Assumen soll auch bei den normalen Icons erscheinen, wenn:
  * Überhaupt Aggregationen definiert sind (len(config.aggregations) > 0)
  * Man das Recht dazu hat, was zu assumen
  * Die (neue) display option dafür eingeschaltet ist.
+ * Man könnte auch anstelle der jetzt vorhandenen Legobausteine das Assume-Icon
+   malen?
 
 FEATURE: Downtimes: sollte man hierfür nicht auch einen BI-Status machen?
 Oder muss diese Information separat noch oben driften?
+Wenn ja, dann muss aber klar sein, ob der Status - wenn man die Downtimes
+ausklammern - grün wäre? Besser ist es so:
+Wenn das Aggregat rot ist gilt es dann als "in downtime", wenn alle Zustände,
+die zum rot beitragen, selbst in Downtime sind. Solange die Downtimes nur
+Komponenten betreffen, die nicht den kritischen Status hervorrufen,
+gilt es nicht als in Downtime?
+
+Das Aggregat gilt als "in downtime", wenn
+
 
 FEATURE: Acknowledgements: Sollen wir diese auch nach oben leiten?
 

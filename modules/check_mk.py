@@ -539,7 +539,7 @@ def snmp_base_command(what, hostname):
     if what == 'get':
         command = 'snmpget'
     elif what == 'getnext':
-        command = 'snmpgetnext'
+        command = 'snmpgetnext -Cf'
     else:
         command = 'snmpbulkwalk'
 

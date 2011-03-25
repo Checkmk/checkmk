@@ -7,6 +7,7 @@
       check result files instead of using Nagios command pipe (safes
       CPU ressources)
     * Agent simulation mode (for internal use and check development)
+    * Call snmpgetnext with the option -Cf (fixes some client errors)
 
     Multisite:
     * FIX: custom_style_sheet now also honored by sidebar

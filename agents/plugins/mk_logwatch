@@ -102,7 +102,7 @@ def read_config():
 # /var/test/x12134.log|12345|32444355
 def read_status():
     status = {}
-    for line in file(status_filename).readlines():
+    for line in file(status_filename):
         # TODO: Remove variants with spaces. rsplit is
         # not portale. split fails if logfilename contains
         # spaces
@@ -179,7 +179,7 @@ def process_logfile(logfile, patterns):
     f = os.fdopen(fl)
     worst = 0
     outputtxt = ""
-    for line in f.readlines():
+    for line in f:
         level = "."
         for lev, pattern in patterns:
             if pattern.search(line[:-1]):

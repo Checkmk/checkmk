@@ -68,6 +68,8 @@ def check_fjdarye60_disks_summary(index, expected_status, info):
 
 check_info['fjdarye60_disks.summary'] = (check_fjdarye60_disks_summary, "Disk summary", 0,  inventory_fjdarye60_disks_summary)
 snmp_info['fjdarye60_disks.summary'] = (".1.3.6.1.4.1.211.1.21.1.60.2.12.2.1", [ 1, 3 ])
+snmp_scan_functions['fjdarye60_disks.summary'] \
+        = lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.60"
 
 # --------------------------------------------------------------------------------
 # 2. Single disk version of check -> one check for each disk

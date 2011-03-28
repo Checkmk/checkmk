@@ -1,7 +1,7 @@
 Title: PING service of ping only hosts shown no 'perfdata' icon in multisite
 Component: core
 Benefit: 4
-State: open
+State: wontfix
 Cost: 2
 Date: 2011-03-16 11:29:45
 Class: bug
@@ -18,3 +18,9 @@ Plus the process_perfdata 0 line need to be removed.
 
 In fact the data is gathered in the host check but the missing link seems
 to confuse the users since the check generates performance data.
+
+Resolution: wontfix. This is per design. The PING-services on PING-only
+hosts does not process performance data since this is already done
+in the host check itself. It would be a bad idea to store this data
+twice. Also on all other hosts the PING data is at the host check.
+So putting it here on the PING would not be consistent.

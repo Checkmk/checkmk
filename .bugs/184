@@ -1,8 +1,8 @@
 Title: if/if64 problem when using description as item when having duplicate descr
 Component: checks
-Benefit: 6
+Benefit: 2
 State: open
-Cost: 3
+Cost: 2
 Date: 2011-03-25 09:39:07
 Class: bug
 

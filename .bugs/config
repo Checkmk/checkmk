@@ -1,7 +1,8 @@
 states = {
-    "open"   : tty_blue,
-    "done"   : tty_green,
-    "closed" : tty_normal,
+    "open"    : tty_blue,
+    "done"    : tty_green,
+    "closed"  : tty_normal,
+    "wontfix" : tty_magenta,
 }
 
 components = [ 

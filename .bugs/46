@@ -15,3 +15,7 @@ verhindert, dass in den RRDs nach einem Reboot utopische Werte
 stehen (z.B. für die Kernel counter). (3) Da in den Performancedaten
 bereits eine Rate steht, können auch Tools wie NagVis dafür eine
 Visualisierung machen.
+
+Kernel (Context switches) und diskstat ist bereits umgestellt.
+Unklar, was noch fehlt. Aktuell fällt mir z.B. die Linux-NICS
+ein. Winperf auch?

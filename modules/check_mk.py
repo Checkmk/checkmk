@@ -2644,19 +2644,20 @@ def do_flush(hosts):
         # cache files
         d = 0
         dir = tcp_cache_dir
-        for f in os.listdir(dir):
-            if f == host or f.startswith(host + "."):
-                try:
-                    os.remove(dir + "/" + f)
-                    d += 1
-                    flushed = True
-                except:
-                    pass
-        if d == 1:
-            sys.stdout.write(tty_bold + tty_green + " cache")
-        elif d > 1:
-            sys.stdout.write(tty_bold + tty_green + " cache(%d)" % d)
-        sys.stdout.flush()
+        if os.path.exists(tcp_cache_dir):
+            for f in os.listdir(dir):
+                if f == host or f.startswith(host + "."):
+                    try:
+                        os.remove(dir + "/" + f)
+                        d += 1
+                        flushed = True
+                    except:
+                        pass
+            if d == 1:
+                sys.stdout.write(tty_bold + tty_green + " cache")
+            elif d > 1:
+                sys.stdout.write(tty_bold + tty_green + " cache(%d)" % d)
+            sys.stdout.flush()
 
         # logfiles
         dir = logwatch_dir + "/" + host

@@ -1,0 +1,142 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+
+# <<<lnx_if:sep(58)>>>
+#    lo:   4520   54  0  0  0  0  0  0    4520  54    0   0   0   0   0   0
+#  eth0:      0    0  0  0  0  0  0  0    1710   5    0   0   0   0   0   0
+#  eth1:  78505  555  0  0  0  0  0  0  132569  523   0   0   0   0   0    0
+# [lo]
+#         Link detected: yes
+# [eth0]
+#         Speed: 65535Mb/s
+#         Duplex: Unknown! (255)
+#         Auto-negotiation: on
+#         Link detected: no
+# [eth1]
+#         Speed: 1000Mb/s
+#         Duplex: Full
+#         Auto-negotiation: on
+#         Link detected: yes
+
+check_includes['lnx_if'] = [ "if.include" ]
+
+linux_nic_check = "legacy"
+
+def if_lnx_convert_to_if64(info):
+    nic_info = {}
+    current_nic = None
+    index = 0
+    for line in info:
+        if line[0].startswith('['):
+            current_nic = line[0][1:-1]
+            index += 1
+            nic_info[current_nic]['index'] = index
+        elif current_nic == None: # still in perf-counters subsection
+            nic = line[0]
+            nic_info[nic] = { "counters": map(int, line[1].split()) }
+        else:
+            nic_info[current_nic][line[0].strip()] = line[1].strip()
+
+    # if index is 0 we either have found no nics or no information
+    # from ethtool is present. In the latter case we continue and
+    # just monitor the performance. We set the state to 'unknown'
+    # in that case.
+
+    if_table = []
+    for nic, attr in nic_info.items():
+        counters = attr.get("counters", [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
+
+        ifIndex = attr["index"]
+        ifDescr = nic
+        ifAlias = nic
+
+        # Guess type from name of interface
+        if nic == "lo":
+            ifType = 24
+        else:
+            ifType = 6 
+
+        # Compute speed
+        speed_text = attr.get("Speed")
+        if speed_text == None:
+            ifSpeed = ''
+        else:
+            if speed_text == '65535Mb/s': # unknown
+                ifSpeed = ''
+            elif speed_text.endswith("Kb/s"):
+                ifSpeed = int(speed_text[:-4]) * 1000
+            elif speed_text.endswith("Mb/s"):
+                ifSpeed = int(speed_text[:-4]) * 1000000
+            elif speed_text.endswith("Gb/s"):
+                ifSpeed = int(speed_text[:-4]) * 1000000000
+            else:
+                ifSpeed = ''
+
+        # Link state from ethtool. If ethtool has no information about
+        # this NIC, we set the state to unknown.
+        ld = attr.get("Link detected")
+        if ld == "yes":
+            ifOperStatus = 1
+        elif ld == "no":
+            ifOperStatus = 2
+        else:
+            ifOperStatus = 4 # unknown
+
+        # Performance counters
+        ifInOctets = counters[0]
+        inucast = counters[1] + counters[7]
+        inmcast = counters[7]
+        inbcast = 0
+        ifInDiscards = counters[3]
+        ifInErrors = counters[2]
+        ifOutOctets = counters[8]
+        outucast = counters[9]
+        outmcast = 0
+        outbcast = 0
+        ifOutDiscards = counters[11]
+        ifOutErrors = counters[10]
+        ifOutQLen = counters[12]
+
+        if_table.append(map(str, [
+          ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus,
+          ifInOctets, inucast, inmcast, inbcast, ifInDiscards,
+          ifInErrors, ifOutOctets, outucast, outmcast, outbcast,
+          ifOutDiscards, ifOutErrors, ifOutQLen, ifAlias ]))
+
+    return if_table
+        
+def inventory_lnx_if(checkname, info):
+    if linux_nic_check == "legacy":
+        return []
+    return inventory_if_common(if_lnx_convert_to_if64(info))
+
+def check_lnx_if(item, params, info):
+    return check_if_common(item, params, if_lnx_convert_to_if64(info))
+
+check_info['lnx_if'] = (check_lnx_if, "Interface %s", 1,  inventory_lnx_if)
+

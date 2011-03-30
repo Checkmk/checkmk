@@ -200,7 +200,7 @@ def performeter_check_mk_if(row, check_command, perf_data):
         if bw > 0.0:
             rrate = bytes / bw
         else:
-            return 'No bandwidth given', '<table></table>'
+            return 'unknown bandwidth', '<table></table>'
         drate = max(0.02, rrate ** 0.5 ** 0.5)
         rperc = 100 * rrate
         dperc = 100 * drate
@@ -216,6 +216,7 @@ def performeter_check_mk_if(row, check_command, perf_data):
 
 perfometers["check_mk-if"] = performeter_check_mk_if
 perfometers["check_mk-if64"] = performeter_check_mk_if
+perfometers["check_mk-lnx_if"] = performeter_check_mk_if
 perfometers["check_mk-hpux_if"] = performeter_check_mk_if
 
 def performeter_oracle_tablespaces(row, check_command, perf_data):

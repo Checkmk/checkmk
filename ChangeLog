@@ -34,6 +34,8 @@
     * FIX: ucd_cpu_load and ucd_cpu_util: make scan function find Rittal
     * FIX: ucd_cpu_util: fix check in case of missing hi, si and st
     * FIX: mk_logwatch: improve implementation in order to save RAM
+    * FIX: mk_oracle: Updated tablespace query to use 'used blocks' instead of 'user blocks'
+    * FIX: bluecoat_sensors: Using scale parameter provided by the host for reported values
     * printer_supply: Changed order of tests. When a printer reports -3 this
       is used before the check if maxlevel is -2.
     * printer_supply: Skipping inventory of supplies which have current value
@@ -56,8 +58,8 @@
     * windows_update: Added check to monitor windows update states on windows
       clients. The check monitors the number of pending updates and checks if
       a reboot is needed after updates have been installed.
-    * FIX: mk_oracle: Updated tablespace query to use 'used blocks' instead of 'user blocks'
-    * FIX: bluecoat_sensors: Using scale parameter provided by the host for reported values
+    * lnx_if: new check for Linux NICs compatible with if/if64 replacing 
+      netif.* and netctr.
 
 
 1.1.10:

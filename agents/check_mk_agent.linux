@@ -134,6 +134,18 @@ then
   done
 fi
 
+# New variant: Information about speed and state in one section
+echo '<<<lnx_if:sep(58)>>>'
+sed 1,2d /proc/net/dev
+if which ethtool > /dev/null
+then
+    for eth in $(sed -e 1,2d < /proc/net/dev | cut -d':' -f1)
+    do
+      echo "[$eth]" 
+      ethtool $eth | egrep '(Speed|Duplex|Link detected|Auto-negotiation):'
+    done
+fi
+
 # Number of TCP connections in the various states
 echo '<<<tcp_conn_stats>>>'
 netstat -nt | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'

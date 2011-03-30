@@ -74,7 +74,7 @@ else
 
 
 $ds_name[1] = 'Used bandwidth';
-$opt[1] = "--vertical-label \"MByte/sec\" -l -$range -u $range -X0 -b 1024 --title \"Used bandwidth $hostname / $servicedesc at $bandwidth${bwuom}Bit/s;\" ";
+$opt[1] = "--vertical-label \"MByte/sec\" -l -$range -u $range -X0 -b 1024 --title \"Used bandwidth $hostname / $servicedesc at $bandwidth${bwuom}Bit/s\" ";
 $def[1] = 
   "HRULE:0#c0c0c0 ".
   "HRULE:$mByteBandwidth#808080:\"Port speed\:  " . sprintf("%.1f", $bandwidth) . " ".$bwuom."Bit/s\\n\" ".

@@ -358,9 +358,6 @@ def get_realhost_info(hostname, ipaddress, checkname, max_cache_age):
     elif len(output) < 16:
         raise MKAgentError("Too short output from agent: '%s'" % output)
 
-    if agent_simulator:
-        output = agent_simulator_process(output)
-
     lines = [ l.strip() for l in output.split('\n') ]
     info = parse_info(lines)
     store_cached_hostinfo(hostname, info)
@@ -414,25 +411,26 @@ def write_cache_file(relpath, output):
 # In that case it will be looked up if needed. Also caching will
 # be handled here
 def get_agent_info(hostname, ipaddress, max_cache_age):
-    result = read_cache_file(hostname, max_cache_age)
-    if result:
-        return result
+    output = read_cache_file(hostname, max_cache_age)
+    if not output:
+        # Try to contact every host only once
+        if hostname in g_broken_agent_hosts:
+            raise MKAgentError("")
 
-    # Try to contact every host only once
-    if hostname in g_broken_agent_hosts:
-	raise MKAgentError("")
+        # If the host ist listed in datasource_programs the data from
+        # that host is retrieved by calling an external program (such
+        # as ssh or rsy) instead of a TCP connect.
+        commandline = get_datasource_program(hostname, ipaddress)
+        if commandline:
+            output = get_agent_info_program(commandline)
+        else:
+            output = get_agent_info_tcp(hostname, ipaddress)
 
-    # If the host ist listed in datasource_programs the data from
-    # that host is retrieved by calling an external program (such
-    # as ssh or rsy) instead of a TCP connect.
-    commandline = get_datasource_program(hostname, ipaddress)
-    if commandline:
-        output = get_agent_info_program(commandline)
-    else:
-        output = get_agent_info_tcp(hostname, ipaddress)
+        # Got new data? Write to cache file
+        write_cache_file(hostname, output)
 
-    # Got new data? Write to cache file
-    write_cache_file(hostname, output)
+    if agent_simulator:
+        output = agent_simulator_process(output)
 
     return output
 

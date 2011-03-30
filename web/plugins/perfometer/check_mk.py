@@ -189,8 +189,8 @@ perfometers["check_mk-ipmi_sensors"] = perfometer_check_mk_ipmi_sensors
 perfometers["check_mk-nvidia.temp"] = perfometer_check_mk_ipmi_sensors
 
 def performeter_check_mk_if(row, check_command, perf_data):
-    # return str(perf_data), ""
     txt = []
+    have_bw = True
     h = '<table><tr>'
     for name, perf, color in [
           ("in", perf_data[0], "#0e6"),
@@ -200,7 +200,8 @@ def performeter_check_mk_if(row, check_command, perf_data):
         if bw > 0.0:
             rrate = bytes / bw
         else:
-            return 'unknown bandwidth', '<table></table>'
+            have_bw = False
+            break
         drate = max(0.02, rrate ** 0.5 ** 0.5)
         rperc = 100 * rrate
         dperc = 100 * drate
@@ -211,8 +212,18 @@ def performeter_check_mk_if(row, check_command, perf_data):
         else:
             h += a + b # color right, white left
         txt.append("%.1f%%" % rperc)
-    h += '</tr></table>'
-    return " &nbsp; ".join(txt), h
+    if have_bw:
+        h += '</tr></table>'
+        return " &nbsp; ".join(txt), h
+
+    # make logarithmic perf-o-meter
+    in_bytes  = savefloat(perf_data[0][1])
+    out_bytes = savefloat(perf_data[5][1])
+    MB = 1000000.0
+    text = "%.1fM/s  %.1fM/s" % (in_bytes/MB, out_bytes/MB)
+
+    return text, perfometer_logarithmic_dual(
+                 in_bytes, "#0e6", out_bytes, "#2af", 1000000, 10)
 
 perfometers["check_mk-if"] = performeter_check_mk_if
 perfometers["check_mk-if64"] = performeter_check_mk_if

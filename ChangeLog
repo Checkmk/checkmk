@@ -60,6 +60,7 @@
       a reboot is needed after updates have been installed.
     * lnx_if: new check for Linux NICs compatible with if/if64 replacing 
       netif.* and netctr.
+    * if/if64: also output performance data if operstate not as expected
 
 
 1.1.10:

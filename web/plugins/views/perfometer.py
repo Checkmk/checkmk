@@ -89,6 +89,18 @@ def perfometer_logarithmic_dual(value_left, color_left, value_right, color_right
     return result + '</tr></table>'
 
 
+def number_human_readable(n):
+    n = float(n)
+    if abs(n) > 1024 * 1024 * 1024:
+        return "%.1fG" % (n / (1024.0 * 1024 * 1024))
+    elif abs(n) > 1024 * 1024:
+        return "%.1fM" % (n / (1024.0 * 1024))
+    elif abs(n) > 1024:
+        return "%.fK" % (n / 1024.0)
+    else:
+        return "%.1fB" % n
+
+
 perfometer_plugins_dir = defaults.web_dir + "/plugins/perfometer"
 for fn in os.listdir(perfometer_plugins_dir):
     if fn.endswith(".py"):

@@ -220,10 +220,11 @@ def performeter_check_mk_if(row, check_command, perf_data):
     in_bytes  = savefloat(perf_data[0][1])
     out_bytes = savefloat(perf_data[5][1])
     MB = 1000000.0
-    text = "%.1fM/s  %.1fM/s" % (in_bytes/MB, out_bytes/MB)
+    text = "%s/s&nbsp;&nbsp;&nbsp;%s/s" % (
+        number_human_readable(in_bytes), number_human_readable(out_bytes))
 
     return text, perfometer_logarithmic_dual(
-                 in_bytes, "#0e6", out_bytes, "#2af", 1000000, 10)
+                 in_bytes, "#0e6", out_bytes, "#2af", 1000000, 5)
 
 perfometers["check_mk-if"] = performeter_check_mk_if
 perfometers["check_mk-if64"] = performeter_check_mk_if

@@ -36,12 +36,13 @@
     * FIX: mk_logwatch: improve implementation in order to save RAM
     * FIX: mk_oracle: Updated tablespace query to use 'used blocks' instead of 'user blocks'
     * FIX: bluecoat_sensors: Using scale parameter provided by the host for reported values
+    * FIX: fjdarye60_devencs, fjdarye60_disks.summary: added snmp scan functions
+    * FIX: decru_*: added snmp scan functions
     * printer_supply: Changed order of tests. When a printer reports -3 this
       is used before the check if maxlevel is -2.
     * printer_supply: Skipping inventory of supplies which have current value
     and maxlevel both set to -2.
     * cisco_locif: The check has been removed. Please switch to if/if64
-    * if/if64: scan function now also detects devices where the first port
       has not the index 1
     * cisco_temp/cisco_temp_perf: scan function handles sensors not beginning
       with index 1
@@ -50,8 +51,6 @@
     * printer_alerts: Added new check for monitoring alert states reported by
       printers using the PRINTER-MIB
     * diskstat: rewritten check: now show different devices, r+w in one check
-    * FIX: fjdarye60_devencs, fjdarye60_disks.summary: added snmp scan functions
-    * FIX: decru_*: added snmp scan functions
     * canon_pages: Added new check for monitoring processed pages on canon
     printer/multi-function devices
     * strem1_sensors: added check to monitor sensors attached to Sensatorinc EM1 devices
@@ -61,6 +60,8 @@
     * lnx_if: new check for Linux NICs compatible with if/if64 replacing 
       netif.* and netctr.
     * if/if64: also output performance data if operstate not as expected
+    * if/if64: scan function now also detects devices where the first port
+    * if/if64: also show perf-o-meter if speed is unknown
 
 
 1.1.10:

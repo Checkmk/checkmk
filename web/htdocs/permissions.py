@@ -69,7 +69,7 @@ def page_edit_permissions(h):
 
         config.save_permissions(permissions)
         config.load_permissions()
-        html.message("Permissions have beend saved.")
+        html.message("Permissions have been saved.")
 
 
     html.begin_form("permissions")

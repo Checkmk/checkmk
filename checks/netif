@@ -57,6 +57,8 @@ def check_netif_link(item, targetstate, info):
 
 
 def inventory_netif_params(checkname, info):
+    if linux_nic_check != "legacy":
+        return []
     return [ (i[0], '', tuple(i[1:4])) for i in info if len(i) == 5 ]
 
 def check_netif_params(item, params, info):

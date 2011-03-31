@@ -272,10 +272,13 @@ def compile_aggregation(rule, args, lvl = 0):
     # value for all SINGLE arguments
 
     groups = {}
+    used_parameters = set([])
     single_names = [ varname for (varname, (expansion, value)) in arginfo.items() if expansion == SINGLE ]
     for instargs, node in elements:
         # Honor that some variables might be unused and thus not contained in instargs
         key = tuple([ (varname, instargs[varname]) for varname in single_names if varname in instargs ])
+        for var in instargs:
+            used_parameters.add(var)
         nodes = groups.get(key, [])
         nodes.append(node)
         groups[key] = nodes
@@ -375,6 +378,7 @@ def compile_aggregation(rule, args, lvl = 0):
     while bilateral_mergegroups(groups):
         pass
 
+
     # Check for unmergeable entries, fill up missing values
     # from parameters (assuming they are not regexes)
     for ikey, inodes in groups.items():
@@ -386,6 +390,15 @@ def compile_aggregation(rule, args, lvl = 0):
             newkey = tuple(d.items())
             groups[newkey] = inodes
             del groups[ikey]
+
+    # track unused parameters - if we are not empty anyway
+    if len(groups) > 0:
+        for var in single_names:
+            if var not in used_parameters:
+                raise MKConfigError("<h1>Invalid rule</h1>"
+                        "The rule '<tt>%s</tt>' never uses the variable '<tt>%s</tt>'.<br>"
+                    "This is not allowed. All singleton parameters must be used in the rule." \
+                    % (description, var))
             
     # now sort groups after instantiations
     def cmp_group(a, b):

@@ -17,9 +17,6 @@
 
     BI:
     * Added new component BI to Multisite.
-    * New third argument for worst and best: the worst possible
-      state (see docu)
-    * Make PENDING be slightly worst than OK
 
     WATO:
     * Allow moving hosts from one to another config file

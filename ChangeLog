@@ -59,6 +59,7 @@
     * if/if64: also output performance data if operstate not as expected
     * if/if64: scan function now also detects devices where the first port
     * if/if64: also show perf-o-meter if speed is unknown
+    * FIX: heartbeat_rscstatus handles empty agent output correctly
 
 
 1.1.10:

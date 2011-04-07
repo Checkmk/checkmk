@@ -8,6 +8,7 @@
 
     Checks & Agents:
     * FIX: mk_oracle: Updated tablespace query to use 'used blocks' instead of 'user blocks'
+    * FIX: blade_bays: add missing SNMP OIDs (check was always UNKNOWN)
     * FIX: df: fix layout problems in PNP template
     * FIX: df: fix trend computation (thanks to Sebastian Talmon)
     * FIX: df: fix display of trend warn/crit in PNP-graph

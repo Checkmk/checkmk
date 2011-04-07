@@ -4,6 +4,7 @@
     * FIX: fix computation of weight when averaging
     * FIX: added missing \n in error output
     * FIX: setup.sh: fix optical bugs in output of summary
+    * FIX: --flush handles missing cache directory
 
     Checks & Agents:
     * FIX: mk_oracle: Updated tablespace query to use 'used blocks' instead of 'user blocks'

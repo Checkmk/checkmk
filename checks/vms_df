@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-check_includes['hr_fs'] = [ "df.include" ]
+check_includes['vms_df'] = [ "df.include" ]
 
 # DSA101  0.77 400.00 0.07 0.93 16271539.00 35556389
 # DSA102  0.00 400.00 0.00 0.00 86651840.00 106669167
@@ -48,6 +48,7 @@ def check_vms_df(item, params, info):
             status, text, perfdata = df_check_filesystem(g_hostname, item, size_mb, free_mb, params) 
 
             perfdata.append( ('iops', "%.2f" % io_ops_total_per_sec ) )
+            return status, text, perfdata
 
     return (3, "Disk %s not found" % (item,))
 

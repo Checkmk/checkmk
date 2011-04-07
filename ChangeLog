@@ -24,6 +24,7 @@
 
     Multisite:
     * FIX: custom_style_sheet now also honored by sidebar
+    * FIX: fix typo in permissions page
 
 
 1.1.10:

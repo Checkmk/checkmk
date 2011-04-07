@@ -1,0 +1,10 @@
+Title: BI filter for aggregation group does not work
+Component: bi
+Benefit: 2
+State: open
+Cost: 2
+Date: 2011-04-07 17:12:11
+Class: bug
+
+In the table single host aggregations the filter for the 
+BI group is not effective. It is simply ignored.

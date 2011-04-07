@@ -1,0 +1,10 @@
+Title: Filter for only_service in BI aggregations needs error handling
+Component: bi
+Benefit: 2
+State: open
+Cost: 2
+Date: 2011-04-07 17:44:13
+Class: bug
+
+If the selected service does not exist, an exception occurs. Tis
+is already fixed by not tested.

@@ -921,12 +921,15 @@ def table(h, columns, add_headers, only_sites, limit, filters):
 
     if only_service:
         affected = g_affected_services.get(only_service)
-        by_groups = {}
-        for group, aggr in affected:
-            entries = by_groups.get(group, [])
-            entries.append(aggr)
-            by_groups[group] = entries
-        items = by_groups.items()
+        if affected == None:
+            items = []
+        else:
+            by_groups = {}
+            for group, aggr in affected:
+                entries = by_groups.get(group, [])
+                entries.append(aggr)
+                by_groups[group] = entries
+            items = by_groups.items()
 
     else:
         items = g_aggregation_forest.items()

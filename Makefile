@@ -100,7 +100,8 @@ mk-livestatus:
 
 
 version:
-	[ "$$(head -c 14 /etc/issue)" = "Ubuntu 10.04.2" ] || { echo 'You are not on the reference system!' ; exit 1; }
+	[ "$$(head -c 14 /etc/issue)" = "Ubuntu 10.04.2" -o "$$(head -c 12 /etc/issue)" = "Ubuntu 10.10" ] \
+            || { echo 'You are not on the reference system!' ; exit 1; }
 	@newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)") ; \
 	if [ -n "$$newversion" ] ; then \
 	    sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$$newversion/" Makefile ; \

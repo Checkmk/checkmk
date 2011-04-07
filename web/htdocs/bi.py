@@ -796,10 +796,10 @@ def aggr_nth_state(nodes, n, worst_state):
     else:
         return state, ""
 
-def aggr_worst(nodes, n = 1, worst_state = 3):
+def aggr_worst(nodes, n = 1, worst_state = CRIT):
     return aggr_nth_state(nodes, -int(n), int(worst_state))
 
-def aggr_best(nodes, n = 1, worst_state = 3):
+def aggr_best(nodes, n = 1, worst_state = CRIT):
     return aggr_nth_state(nodes, int(n), int(worst_state))
 
 config.aggregation_functions["worst"] = aggr_worst 

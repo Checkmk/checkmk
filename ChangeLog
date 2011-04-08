@@ -35,6 +35,7 @@
     * FIX: ucd_cpu_util: fix check in case of missing hi, si and st
     * FIX: mk_logwatch: improve implementation in order to save RAM
     * FIX: mk_oracle: Updated tablespace query to use 'used blocks' instead of 'user blocks'
+    * FIX: mk_oracle: Fixed computation for TEMP table spaces
     * FIX: bluecoat_sensors: Using scale parameter provided by the host for reported values
     * FIX: fjdarye60_devencs, fjdarye60_disks.summary: added snmp scan functions
     * FIX: decru_*: added snmp scan functions

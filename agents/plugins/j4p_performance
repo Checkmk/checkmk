@@ -14,7 +14,6 @@ vars = [
  ( "java.lang:type=Threading/PeakThreadCount",          "PeakThreadCount" ),
  ( "java.lang:type=Threading/TotalStartedThreadCount",  "TotalStartedThreadCount" ),
  ( "java.lang:type=Runtime/Uptime",                     "Uptime" ),
- 
 ]
 
 conffile = os.getenv("MK_CONFDIR", "/etc/check_mk") + "/j4p.conf"
@@ -24,6 +23,13 @@ if instance == None:
 
 if os.path.exists(conffile):
     execfile(conffile)
+
+# We have to deal with socket timeouts. Python > 2.6
+# supports timeout parameter for the urllib2.urlopen method
+# but we are on a python 2.5 system here which seem to use the
+# default socket timeout. We are local here so  set it to 1 second.
+import socket
+socket.setdefaulttimeout(1.0)
 
 def fetch_var(server, port, path):
     url = "http://%s:%d/j4p/read/%s" % (server, port, path)
@@ -41,5 +47,8 @@ for path, title in vars:
         sys.stdout.write("%s %-30s %s\n" % (instance, title, value))
     except IOError:
 	sys.exit(1)
+    except socket.timeout:
+	sys.exit(1)
     except:
+        # Simply ignore exceptions. Need to be removed for debugging
 	pass

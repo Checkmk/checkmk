@@ -39,6 +39,7 @@
     * FIX: bluecoat_sensors: Using scale parameter provided by the host for reported values
     * FIX: fjdarye60_devencs, fjdarye60_disks.summary: added snmp scan functions
     * FIX: decru_*: added snmp scan functions
+    * FIX: heartbeat_rscstatus handles empty agent output correctly
     * printer_supply: Changed order of tests. When a printer reports -3 this
       is used before the check if maxlevel is -2.
     * printer_supply: Skipping inventory of supplies which have current value
@@ -63,7 +64,8 @@
     * if/if64: also output performance data if operstate not as expected
     * if/if64: scan function now also detects devices where the first port
     * if/if64: also show perf-o-meter if speed is unknown
-    * FIX: heartbeat_rscstatus handles empty agent output correctly
+    * f5_bigip_pool: status of F5 BIP/ip load balancing pools
+    * f5_bigip_vserver: status of F5 BIP/ip virtual servers
 
 
 1.1.10:

@@ -15,6 +15,7 @@
     * FIX: df: fix display of trend warn/crit in PNP-graph
     * FIX: df: fix status in case of critical trend and warning used
     * FIX: df: fix syntax error in manpages (in examples)
+    * FIX: mk_oracle: Fixed computation for TEMP table spaces
     * FIX: bluecoat_sensors: Using scale parameter provided by the host for reported values
     * FIX: fjdarye60_devencs, fjdarye60_disks.summary: added snmp scan functions
     * FIX: decru_*: added snmp scan functions

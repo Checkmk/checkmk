@@ -70,7 +70,7 @@ select f.file_name, f.tablespace_name, f.status, f.AUTOEXTENSIBLE, f.blocks, f.m
 from dba_data_files f, dba_tablespaces t ,(SELECT file_id, SUM(blocks) free_blocks FROM dba_free_space b GROUP BY file_id) b
 where f.tablespace_name = t.tablespace_name and f.file_id=b.file_id
 UNION
-select f.file_name, f.tablespace_name, f.status, f.AUTOEXTENSIBLE, f.blocks, f.maxblocks,  f.blocks - b.blocks_used as used_blocks,  f.INCREMENT_BY, 'TEMP', t.BLOCK_SIZE, t.status
+select f.file_name, f.tablespace_name, f.status, f.AUTOEXTENSIBLE, f.blocks, f.maxblocks, b.blocks_used as used_blocks,  f.INCREMENT_BY, 'TEMP', t.BLOCK_SIZE, t.status
 from dba_temp_files f, dba_tablespaces t ,V\$TEMP_SPACE_HEADER b
 where f.tablespace_name = t.tablespace_name and f.file_id=b.file_id ;
 EOF

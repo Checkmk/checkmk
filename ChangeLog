@@ -25,6 +25,7 @@
     * FIX: mk_logwatch: dont use readlines(), save RAM
 
     Multisite:
+    * FIX: Nagios-Snapin: avoid duplicate slash in URL
     * FIX: custom_style_sheet now also honored by sidebar
     * FIX: fix typo in permissions page
 

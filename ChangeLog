@@ -72,6 +72,7 @@
     * f5_bigip_pool: status of F5 BIP/ip load balancing pools
     * f5_bigip_vserver: status of F5 BIP/ip virtual servers
     * ipmi: new configuration variable ipmi_ignored_sensors (see man page)
+    * hp_procurve_cpu: rename services description to CPU utilization
 
 
 1.1.10:

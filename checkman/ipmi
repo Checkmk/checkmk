@@ -7,16 +7,19 @@ description:
  This check makes use of the output of a working {ipmitool} on
  a Linux system. If the kernel properly supports IPMI and {ipmitool}
  is installed, then the agent will output the current state of
- power supplies, cooling devices and temperatures. This check makes
+ power supplies, cooling devices, temperatures and other devices
+ avaiable via IPMI. This check makes
  sure that all those devices are working properly.
 
- Fortunately, IPMI provides not only the current sensor values
- but also their state, so no levels need to be configured for
- this checks.
+ Fortunately, IPMI provides not only the current sensor values but also
+ their state, so no levels need to be configured for this checks.
 
- This check provides a summarized mode, where all sensors
- appear as one summary check per host and a detailed mode
- with one check per sensor.
+ This check provides a summarized mode, where all sensors appear as one
+ summary check per host and a detailed mode with one check per sensor.
+
+ Please note: on some systems IPMI reports sensors in a non-ok state wheras
+ actually no problem exists. As of version 1.1.11i1 these sensors can be
+ ignored with the configuration variable {ipmi_ignored_sensors}.
 
 item:
  {"Summary"} for summary mode, the name of the IPMI item
@@ -44,9 +47,16 @@ examples:
  # Make inventory produce detailed IPMI checks
  ipmi_summarize = False
 
+ # Ignore certain types of sensors
+ ipmi_ignored_sensors = [ "Power_Meter", "Virtual_Fan" ]
+
 [configuration]
 ipmi_ignore_nr (boolean): If set to {True}, sensors
  with the state {nr} will be ignored. Default is {False}.
 ipmi_summarize (boolean): If set to {False}, the inventory
  will create a separate service for each IPMI device. Default
  is {True}.
+ipmi_ignored_sensors(list): A list of sensors names that should
+ be ignored when doing inventory (for non-summarized mode) or
+ during check for summarized mode). The check does a {prefix}
+ match on the names.

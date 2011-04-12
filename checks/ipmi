@@ -149,6 +149,8 @@ def check_ipmi_summarized(info):
         if len(crit_texts) > 0:
             infotext += "critical are: %s" % ", ".join(crit_texts)
         if len(warn_texts) > 0:
+            if infotext != "":
+                infotext += ", "
             infotext += "warning are: %s" % ", ".join(warn_texts)
     return (worst_status, "%s - %s" % (statname, infotext), perfdata)
 

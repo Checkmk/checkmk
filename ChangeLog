@@ -23,6 +23,7 @@
     * Allow moving hosts from one to another config file
 
     Checks & Agents:
+    * FIX: ipmi: fix ugly ouput in case of warning and error
     * FIX: vms_df: fix, was completely broken due to conversion to df.include
     * FIX: blade_bays: add missing SNMP OIDs (check was always UNKNOWN)
     * FIX: df: fix layout problems in PNP template

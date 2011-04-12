@@ -75,6 +75,7 @@
     * f5_bigip_vserver: status of F5 BIP/ip virtual servers
     * ipmi: new configuration variable ipmi_ignored_sensors (see man page)
     * hp_procurve_cpu: rename services description to CPU utilization
+    * ipmi: Linux agent now (asynchronously) caches output of ipmitool for 20 minutes
 
 
 1.1.10:

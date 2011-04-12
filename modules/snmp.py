@@ -224,7 +224,8 @@ def get_snmp_table(hostname, ip, oid_info):
         if index_column != -1:
             index_rows = []
             # Take end-oids of non-index columns as indices
-            for o, value in columns[max_len_col][1]:
+            fetchoid, max_column  = columns[max_len_col]
+            for o, value in max_column: 
                 if index_format == OID_END:
 		    eo = extract_end_oid(columns[max_len_col][0], o)
                     index_rows.append((o, eo))
@@ -232,16 +233,16 @@ def get_snmp_table(hostname, ip, oid_info):
                     index_rows.append((o, o))
                 else:
                     index_rows.append((o, oid_to_bin(o)))
-            columns[index_column] = index_rows
+            columns[index_column] = fetchoid, index_rows
 
 
         # prepend suboid to first column
         if suboid and len(columns) > 0:
-            first_column = columns[0]
+            fetchoid, first_column = columns[0]
             new_first_column = []
             for o, val in first_column:
                 new_first_column.append((o, str(suboid) + "." + str(val)))
-            columns[0] = new_first_column
+            columns[0] = fetchoid, new_first_column
 
         # Swap X and Y axis of table (we want one list of columns per item)
         # Here we have to deal with a nasty problem: Some brain-dead devices

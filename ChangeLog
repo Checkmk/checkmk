@@ -21,6 +21,7 @@
     * Added new component BI to Multisite.
 
     WATO:
+    * FIX: fix crash when saving services after migration from old version
     * Allow moving hosts from one to another config file
 
     Checks & Agents:

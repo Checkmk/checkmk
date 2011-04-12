@@ -1,6 +1,7 @@
 1.1.11i1:
     Core, Setup, etc.:
     * FIX: fix computation of weight when averaging
+    * FIX: fix detection of missing OIDs (led to empty lines) 
     * SNMP scan functions can now call oid(".1.3.6.1.4.1.9.9.13.1.3.1.3.*")
       That will return the *first* OID beginning with .1.3.6.1.4.1.9.9.13.1.3.1.3
     * New config option: Set check_submission = "file" in order to write

@@ -3662,6 +3662,14 @@ def automation_parse_autochecks_file(hostname):
             line = line.strip()
             if not line.startswith("("): 
                 continue
+
+            # drop everything after potential '#' (from older versions)
+	    i = line.rfind('#')
+	    if i > 0: # make sure # is not contained in string
+		rest = line[i:]
+		if '"' not in rest and "'" not in rest:
+		    line = line[:i].strip()
+
             if line.endswith(","):
                 line = line[:-1]
             line = line[1:-1] # drop brackets

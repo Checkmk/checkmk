@@ -25,6 +25,7 @@
     * FIX: ucd_cpu_load and ucd_cpu_util: make scan function find Rittal
     * FIX: ucd_cpu_util: fix check in case of missing hi, si and st
     * FIX: mk_logwatch: dont use readlines(), save RAM
+    * FIX: hp_procurve_cpu: fix syntax error in man page
 
     Multisite:
     * FIX: Nagios-Snapin: avoid duplicate slash in URL

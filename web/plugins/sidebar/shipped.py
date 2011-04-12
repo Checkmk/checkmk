@@ -157,12 +157,12 @@ sidebar_snapins["views"] = {
 def render_groups(what):
     data = html.live.query("GET %sgroups\nColumns: name alias\n" % what)
     name_to_alias = dict(data)
-    groups = [(name_to_alias[name], name) for name in name_to_alias.keys()]
-    groups.sort() # sort by Alias!
+    groups = [(name_to_alias[name].lower(), name_to_alias[name], name) for name in name_to_alias.keys()]
+    groups.sort() # sort by Alias in lowercase
     target = views.get_context_link(html.req.user, "%sgroup" % what)
     if target:
         html.write('<ul>')
-        for alias, name in groups:
+        for alias_lower, alias, name in groups:
             bulletlink(alias, target + "&%sgroup=%s" % (what, htmllib.urlencode(name)))
         html.write('</ul>')
 

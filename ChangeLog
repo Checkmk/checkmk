@@ -44,6 +44,7 @@
     * FIX: fjdarye60_devencs, fjdarye60_disks.summary: added snmp scan functions
     * FIX: decru_*: added snmp scan functions
     * FIX: heartbeat_rscstatus handles empty agent output correctly
+    * FIX: hp_procurve_cpu: fix synatx error in man page
     * printer_supply: Changed order of tests. When a printer reports -3 this
       is used before the check if maxlevel is -2.
     * printer_supply: Skipping inventory of supplies which have current value

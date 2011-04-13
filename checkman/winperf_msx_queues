@@ -1,0 +1,59 @@
+title: Check length of MS Exchange queues
+agents: windows
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the current length of various MS Exchange
+ mail queues. You need a Windows agent of version {1.1.11i1} or
+ later and have the counter object {msx_queues} activated. 
+ This counter is activated per default with the number {10332}.
+
+ If the counter number is different in your installation or
+ you are using a {check_mk.ini} with custom counter definitions,
+ add the counter to the section {[winperf]} with {counters = 10332:msx_queues} ... .
+
+ You can set levels for warning and critical. Per default
+ the queues {Active Remote Delivery}, {Active Mailbox Delivery},
+ {Retry Remote Delivery} and {Poison} are monitored.
+
+item:
+ The name of the queue as defined in {winperf_msx_queues}.
+
+examples:
+ # Define queues to be monitored
+ winperf_msx_queues = {
+        "Active Remote Delivery"          : "10334", 
+        "Retry Remote Delivery"           : "10336", 
+        "Active Mailbox Delivery"         : "10338", 
+        "Retry Non-Smtp Delivery"         : "10344",
+        "Items Queued For Delivery Total" : "10350",
+ }
+
+ # Default levels for all queues
+ msx_queues_default_levels = (100, 200)
+
+perfdata: 
+ One value: the current length of the queue in question.
+
+inventory:
+ For each queue that is defined in {winperf_msx_queues} one check
+ will be created if the agent outputs the matching performance counters.
+
+[parameters]
+warn(int): Warning level for number of mails in queue
+crit(int): Critical level
+
+[configuration]
+msx_queues_default_levels(int, int): Default warning and critical levels for
+ inventorized checks
+
+winperf_msx_queues(dict): A dictionary defining the mail queues to be
+  inventorized. The keys of this dictionary are names of the queues to be
+  used in the service descriptions. These names are freely definable and need
+  not to be identical to the "official" names.  The values
+  are the numbers (as string) of the according performance counters. If you
+  are in search of those numbers, open a command box on your Windows host,
+  call {lodctr /s:counters.ini} and than copy the file {counters.ini} to
+  Linux. There convert it with {recode UTF-16LE..UTF-8 counters.ini}. Now
+  you can view it e.g. with {less} and look for the counter numbers.

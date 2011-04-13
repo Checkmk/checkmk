@@ -26,6 +26,7 @@
 
 
 # Example of output from ipmi:
+# <<<ipmi>>>
 # ambienttemp 25.800 degrees_C ok na na na 34.800 40.200 na
 # bulk.v12-0-s0 11.940 Volts ok na 10.200 na na 13.800 na
 # bulk.v3_3-s0 3.360 Volts ok na 3.000 na na 3.600 na
@@ -47,6 +48,7 @@
 # p0.v_vdd 1.332 Volts ok 0.792 0.900 0.996 1.596 1.692 1.800
 
 # Yet another host (HP DL 360G5)
+# <<<ipmi>>>
 # UID_Light 0.000 unspecified ok na na 0.000 na na na
 # Int._Health_LED 0.000 unspecified ok na na 0.000 na na na
 # Ext._Health_LED 0.000 unspecified ok na na 0.000 na na na
@@ -68,6 +70,21 @@
 # Temp_7 30.000 degrees_C ok na na -64.000 na na na
 # Power_Meter 180.000 Watts cr na na 384.000 na na na
 
+# And this host has some false-criticals (PowerMeter, VirtualFan)
+# <<<ipmi>>>
+# Temp_1 17.000 degrees_C ok 0.000 0.000 0.000 40.000 42.000 46.000
+# Temp_2 40.000 degrees_C ok 0.000 0.000 0.000 0.000 82.000 83.000
+# Temp_3 44.000 degrees_C ok 0.000 0.000 0.000 0.000 82.000 83.000
+# Temp_4 52.000 degrees_C ok 0.000 0.000 0.000 0.000 87.000 92.000
+# Temp_5 46.000 degrees_C ok 0.000 0.000 0.000 0.000 85.000 90.000
+# Temp_6 55.000 degrees_C ok 0.000 0.000 0.000 0.000 85.000 90.000
+# Temp_7 51.000 degrees_C ok 0.000 0.000 0.000 0.000 85.000 90.000
+# Temp_8 58.000 degrees_C ok 0.000 0.000 0.000 0.000 78.000 83.000
+# Temp_9 74.000 degrees_C ok 0.000 0.000 0.000 0.000 110.000 115.000
+# Temp_10 31.000 degrees_C ok 0.000 0.000 0.000 0.000 60.000 65.000
+# Virtual_Fan 19.600 unspecified nc na na na na na na
+# Power_Meter 236.000 Watts cr na na na na na na
+
 
 # IPMI has two operation modes:
 # 1. detailed
@@ -79,12 +96,23 @@
 
 ipmi_summarize = True
 ipmi_ignore_nr = False # set to True in order to ignore entries with state 'nr'
+ipmi_ignored_sensors = [] # example: [ "Power_Meter", "Virtual_Fan" ]
+
+def ipmi_ignore_entry(name, state):
+    if ipmi_ignore_nr and state == 'nr':
+        return True
+    for e in ipmi_ignored_sensors:
+        if name.startswith(e):
+            return True
+    return False
 
 def inventory_ipmi(checkname, info):
     if ipmi_summarize and len(info) > 0:
-        return [ ( "Summary", None, None ) ]
+        return [ ( "Summary", None ) ]
     else:
-        return [ ( line[0], line[1], None ) for line in info if not ipmi_ignore_nr or line[3] != 'nr' ]
+        return [ ( line[0], None ) 
+                 for line in info 
+                 if not ipmi_ignore_entry(line[0], line[3]) ]
 
 def check_ipmi(item, params, info):
     if item == "Summary":
@@ -94,7 +122,8 @@ def check_ipmi(item, params, info):
 
 def check_ipmi_detailed(item, info):
     try:
-        for name,val,unit,status,unrec_low,crit_low,warn_low,warn_high,crit_high,unrec_high in info:
+        for name, val, unit, status, unrec_low, crit_low, \
+            warn_low, warn_high, crit_high, unrec_high in info:
             if name == item:
                 perfdata = [ (name, val + unit) ] # TODO: add warn and crit levels
                 if status == 'ok':
@@ -115,7 +144,11 @@ def check_ipmi_summarized(info):
     ambient_count = 0
     ambient_sum = 0.0
     try:
-        for name,val,unit,status,unrec_low,crit_low,warn_low,warn_high,crit_high,unrec_high in info:
+        for name, val, unit, status, unrec_low, crit_low, \
+            warn_low, warn_high, crit_high, unrec_high in info:
+            if ipmi_ignore_entry(name, status):
+                continue
+
             text = "%s is %s %s" % (name, val, unit)
             count += 1
             if status == 'nc':
@@ -149,8 +182,14 @@ def check_ipmi_summarized(info):
         if len(crit_texts) > 0:
             infotext += "critical are: %s" % ", ".join(crit_texts)
         if len(warn_texts) > 0:
+            if infotext != "":
+                infotext += ", "
             infotext += "warning are: %s" % ", ".join(warn_texts)
     return (worst_status, "%s - %s" % (statname, infotext), perfdata)
 
 check_info['ipmi'] = (check_ipmi, "IPMI Sensor %s", 1,  inventory_ipmi)
+
+# Make sure, configuration variables needed during check time are present
+# in precompiled code
 check_config_variables.append("ipmi_ignore_nr")
+check_config_variables.append("ipmi_ignored_sensors")

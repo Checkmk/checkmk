@@ -156,6 +156,15 @@ def snmpwalk_on_suboid(hostname, ip, oid):
 	raise MKSNMPError("SNMP Error on %s" % ip)
     return rowinfo
 
+def extract_end_oid(prefix, complete):
+    return complete[len(prefix):].lstrip('.')
+
+# sort OID strings numerically
+def cmp_oids(o1, o2):
+    i1 = map(int, o1.split('.')) 
+    i2 = map(int, o2.split('.')) 
+    return cmp(i1, i2)
+
 def get_snmp_table(hostname, ip, oid_info):
     # oid_info is either ( oid, columns ) or
     # ( oid, suboids, columns )
@@ -206,33 +215,34 @@ def get_snmp_table(hostname, ip, oid_info):
             else:
                 rowinfo = snmpwalk_on_suboid(hostname, ip, fetchoid)
 
-            if len(rowinfo) > 0 or True:
-                columns.append(rowinfo)
-                number_rows = len(rowinfo)
-                if len(rowinfo) > max_len:
-                    max_len = len(rowinfo)
-                    max_len_col = colno
+            columns.append((fetchoid, rowinfo))
+            number_rows = len(rowinfo)
+            if len(rowinfo) > max_len:
+                max_len = len(rowinfo)
+                max_len_col = colno
 
         if index_column != -1:
             index_rows = []
             # Take end-oids of non-index columns as indices
-            for o, value in columns[max_len_col]:
+            fetchoid, max_column  = columns[max_len_col]
+            for o, value in max_column: 
                 if index_format == OID_END:
-                    index_rows.append((o, o.split('.')[-1]))
+		    eo = extract_end_oid(columns[max_len_col][0], o)
+                    index_rows.append((o, eo))
                 elif index_format == OID_STRING:
                     index_rows.append((o, o))
                 else:
                     index_rows.append((o, oid_to_bin(o)))
-            columns[index_column] = index_rows
+            columns[index_column] = fetchoid, index_rows
 
 
         # prepend suboid to first column
         if suboid and len(columns) > 0:
-            first_column = columns[0]
+            fetchoid, first_column = columns[0]
             new_first_column = []
             for o, val in first_column:
                 new_first_column.append((o, str(suboid) + "." + str(val)))
-            columns[0] = new_first_column
+            columns[0] = fetchoid, new_first_column
 
         # Swap X and Y axis of table (we want one list of columns per item)
         # Here we have to deal with a nasty problem: Some brain-dead devices
@@ -242,29 +252,30 @@ def get_snmp_table(hostname, ip, oid_info):
 
         # First compute the complete list of end-oids appearing in the output
         # by looping all results and putting the endoids to a flat list
-        #
-        # The list needs to be sorted to prevent problems when the first
-        # column has missing values in the middle of the tree.
         endoids = []
-        for column in columns:
+        for fetchoid, column in columns:
             for o, value in column:
-                endoid = int(o.rsplit('.', 1)[-1])
+                endoid = extract_end_oid(fetchoid, o)
                 if endoid not in endoids:
                     endoids.append(endoid)
-        endoids.sort()
+
+        # The list needs to be sorted to prevent problems when the first
+        # column has missing values in the middle of the tree. Since we
+        # work with strings of numerical components, a simple string sort
+        # is not correct. 1.14 must come after 1.2!
+        endoids.sort(cmp = cmp_oids)
 
         # Now fill gaps in columns where some endois are missing
         new_columns = []
-        for column in columns:
+        for fetchoid, column in columns:
             i = 0
             new_column = []
             # Loop all lines to fill holes in the middle of the list. All
-            # columns check the the following lines for the correct endoid. If
+            # columns check the following lines for the correct endoid. If
             # an endoid differs empty values are added until the hole is filled
             for o, value in column:
-                beginoid, endoid = o.rsplit('.', 1)
-                endoid = int(endoid)
-                while i < len(endoids) and endoids[i] != endoid:
+                eo = extract_end_oid(fetchoid, o)
+                while i < len(endoids) and endoids[i] != eo:
                     new_column.append("") # (beginoid + '.' +endoids[i], "" ) )
                     i += 1
                 new_column.append(value)

@@ -103,6 +103,16 @@ struct ipspec g_only_from[MAX_ONLY_FROM];
 unsigned int g_num_only_from = 0;
 
 
+struct winperf_counter {
+    int   id;
+    char *name;
+};
+
+#define MAX_WINPERF_COUNTERS 64
+struct winperf_counter g_winperf_counters[MAX_WINPERF_COUNTERS];
+unsigned int g_num_winperf_counters = 0;
+
+
 #ifdef DEBUG
 void debug(char *text)
 {
@@ -135,7 +145,7 @@ void verbose(const char *format, ...)
 
 void outputCounter(SOCKET &out, BYTE *datablock, int counter, 
 		   PERF_OBJECT_TYPE *objectPtr, PERF_COUNTER_DEFINITION *counterPtr);
-void outputCounterValue(SOCKET &out, PERF_COUNTER_BLOCK *counterBlockPtr, int size, unsigned offset);
+void outputCounterValue(SOCKET &out, PERF_COUNTER_DEFINITION *counterPtr, PERF_COUNTER_BLOCK *counterBlockPtr);
 double current_time();
 
 
@@ -377,8 +387,11 @@ PERF_INSTANCE_DEFINITION *NextInstance (PERF_INSTANCE_DEFINITION *pInstance) {
 }
 
 
-void dump_performance_counters(SOCKET &out, unsigned counter)
+void dump_performance_counters(SOCKET &out, unsigned counter, const char *countername)
 {
+    output(out, "<<<winperf_%s>>>\n", countername);
+    output(out, "%.2f\n", current_time());
+
     // registry entry is ascii representation of counter index
     char counter_index_name[8];
     snprintf(counter_index_name, sizeof(counter_index_name), "%u", counter);
@@ -418,7 +431,7 @@ void dump_performance_counters(SOCKET &out, unsigned counter)
   
     // Now walk through the list of objects. The bad news is:
     // even if we expect only one object, windows might send
-    // us more that one object. We need to scan a list of objects
+    // us more than one object. We need to scan a list of objects
     // in order to find the one we have asked for. >:-P
     for (unsigned int a=0 ; a < dataBlockPtr->NumObjectTypes ; a++) 
     {
@@ -435,13 +448,30 @@ void dump_performance_counters(SOCKET &out, unsigned counter)
 	    // to find the beginning of the data block (which comes after the
 	    // counter definitions)
 	    PERF_COUNTER_DEFINITION *last_counter = FirstCounter(objectPtr);
-	    for(unsigned int b=0 ; b < objectPtr->NumCounters ; b++) 
+	    for (unsigned int b=0 ; b < objectPtr->NumCounters ; b++) 
 		last_counter = NextCounter(last_counter);
 	    BYTE *datablock = (BYTE *)last_counter;
+            
+            // In case of multi-instance objects, output a list of all instance names
+            int num_instances = objectPtr->NumInstances;
+            if (num_instances >= 0) 
+            {
+                output(out, "%d instances:", num_instances);
+                char name[512];
+                PERF_INSTANCE_DEFINITION *instancePtr = FirstInstance(objectPtr);
+                for(int b=0 ; b<objectPtr->NumInstances ; b++) 
+                {
+                    WCHAR *name_start = (WCHAR *)((char *)(instancePtr) + instancePtr->NameOffset);
+                    memcpy(name, name_start, instancePtr->NameLength);
+                    WideCharToMultiByte(CP_UTF8, 0, name_start, instancePtr->NameLength, name, sizeof(name), NULL, NULL);
+                    output(out, " %s", name);
+	            instancePtr = NextInstance(instancePtr);
+                }
+                output(out, "\n");
+            }
 
-	    // Now walk through the counter list a second time and output
-	    // all non-zero counters
-	    for(unsigned int b=0 ; b < objectPtr->NumCounters ; b++) 
+	    // Now walk through the counter list a second time and output all counters
+	    for (unsigned int b=0 ; b < objectPtr->NumCounters ; b++) 
 	    {
 		outputCounter(out, datablock, counter, objectPtr, counterPtr);
 		counterPtr = NextCounter(counterPtr);
@@ -457,9 +487,6 @@ void dump_performance_counters(SOCKET &out, unsigned counter)
 void outputCounter(SOCKET &out, BYTE *datablock, int counter, 
 		   PERF_OBJECT_TYPE *objectPtr, PERF_COUNTER_DEFINITION *counterPtr)
 {
-    int num_instances = objectPtr->NumInstances;
-    unsigned offset = counterPtr->CounterOffset;
-    int size = counterPtr->CounterSize;
 
     // determine the type of the counter (for verbose output)
     const char *countertypename = "(unknown)";
@@ -506,39 +533,59 @@ void outputCounter(SOCKET &out, BYTE *datablock, int counter,
     }
 	      
     // Output index of counter object and counter, and timestamp
-    output(out, "%d:%d %.2f", counter, counterPtr->CounterNameTitleIndex, current_time());
+    output(out, "%d", counterPtr->CounterNameTitleIndex);
 
     // If this is a multi-instance-counter, loop over the instances
+    int num_instances = objectPtr->NumInstances;
     if (num_instances >= 0) 
     {
 	// get pointer to first instance
 	PERF_INSTANCE_DEFINITION *instancePtr = FirstInstance(objectPtr);
 		  
-	for(int b=0 ; b<objectPtr->NumInstances ; b++) 
+	for (int b=0 ; b<objectPtr->NumInstances ; b++) 
 	{
 	    // PERF_COUNTER_BLOCK dieser Instanz ermitteln.
 	    PERF_COUNTER_BLOCK *counterBlockPtr = GetCounterBlock(instancePtr);
-	    outputCounterValue(out, counterBlockPtr, size, offset);
+	    outputCounterValue(out, counterPtr, counterBlockPtr);
 	    instancePtr = NextInstance(instancePtr);
 	}
 
     }
     else { // instanceless counter
 	PERF_COUNTER_BLOCK *counterBlockPtr = (PERF_COUNTER_BLOCK *) datablock;
-	outputCounterValue(out, counterBlockPtr, size, offset);
+	outputCounterValue(out, counterPtr, counterBlockPtr);
     }
     output(out, " %s\n", countertypename);
 }
 
 
-void outputCounterValue(SOCKET &out, PERF_COUNTER_BLOCK *counterBlockPtr, int size, unsigned offset)
+void outputCounterValue(SOCKET &out, PERF_COUNTER_DEFINITION *counterPtr, PERF_COUNTER_BLOCK *counterBlockPtr)
 {
+    unsigned offset = counterPtr->CounterOffset;
+    int size = counterPtr->CounterSize;
+    BYTE *pData = ((BYTE *)counterBlockPtr) + offset;
+
+    switch (counterPtr->CounterType) {
+    case PERF_COUNTER_RAWCOUNT:
+    case PERF_COUNTER_RAWCOUNT_HEX:
+	output(out, " %llu", (ULONGLONG)(*(DWORD*)pData));
+        return;
+
+    case PERF_COUNTER_LARGE_RAWCOUNT:
+    case PERF_COUNTER_LARGE_RAWCOUNT_HEX:
+	output(out, " %llu", *(UNALIGNED ULONGLONG*)pData);
+        return;
+    }
+   
+    // handle other data generically. This is wrong in some situation.
+    // Once upon a time in future we might implement a conversion as
+    // described in http://msdn.microsoft.com/en-us/library/aa373178%28v=vs.85%29.aspx
     if (size == 4) {
-	DWORD value = *((DWORD *)((BYTE *)counterBlockPtr) + offset);
+	DWORD value = *((DWORD *)pData);
 	output(out, " %lu", value);
     }
     else if (size == 8) {
-	DWORD *data_at = (DWORD *)(((BYTE *)counterBlockPtr) + offset);
+	DWORD *data_at = (DWORD *)pData;
 	DWORDLONG value = (DWORDLONG)*data_at + ((DWORDLONG)*(data_at + 1) << 32);
 	output(out, " %s", llu_to_string(value));
     }
@@ -881,15 +928,20 @@ void section_mem(SOCKET &out)
 
 void section_winperf(SOCKET &out)
 {
-
-    output(out, "<<<winperf>>>\n");
-  
-    for (int i=0; i<700; i+=2) {
-	if (i != 230 && i != 232 && i != 786 && i != 740)
-	    dump_performance_counters(out, i);
+    // no counters configured in check_mk.ini => output all below 700 except some
+    if (g_num_winperf_counters == 0) {
+        dump_performance_counters(out, 2, "system");
+        dump_performance_counters(out, 238, "processor");
+        dump_performance_counters(out, 11838, "msx_owa");
+        dump_performance_counters(out, 12042, "msx_async");
+        dump_performance_counters(out, 10332, "msx_queues");
     }
-    // Terminalservices
-    dump_performance_counters(out, 2102);
+
+    // output configured counters
+    else {
+        for (unsigned i=0; i<g_num_winperf_counters; i++)
+            dump_performance_counters(out, g_winperf_counters[i].id, g_winperf_counters[i].name);
+    }
 }
 
 
@@ -1527,31 +1579,66 @@ void add_only_from(char *value)
     g_num_only_from ++;
 }
 
-void parse_only_from(char *value)
+char *next_word(char **line)
 {
-    char *end = value + strlen(value);
+    char *end = *line + strlen(*line);
+    char *value = *line;
     while (value < end) {
         value = lstrip(value);
         char *s = value;
         while (*s && !isspace(*s))
             s++;
         *s = 0;
-        add_only_from(value);
-        value = s + 1;
+        *line = s + 1;
+        return value;
     }
+    return 0;
 }
 
-void handle_config_variable(char *var, char *value)
+
+void parse_only_from(char *value)
+{
+    char *word;
+    while (0 != (word = next_word(&value)))
+        add_only_from(word);
+}
+
+void handle_global_config_variable(char *var, char *value)
 {
     if (!strcmp(var, "only_from")) {
         parse_only_from(value);
     }
     else {
-        fprintf(stderr, "Invalid configuration variable %s.\r\n", var);
+        fprintf(stderr, "Invalid configuration variable %s in section [global].\r\n", var);
         exit(1);
     }
 }
 
+void handle_winperf_config_variable(char *var, char *value)
+{
+    if (!strcmp(var, "counters")) {
+        char *word;
+        while (0 != (word = next_word(&value))) {
+            if (g_num_winperf_counters >= MAX_WINPERF_COUNTERS) {
+                fprintf(stderr, "Defined too many counters in [winperf]:counters.\r\n");
+                exit(1);
+            }
+            char *colon = strchr(word, ':');
+            if (!colon) {
+                fprintf(stderr, "Invalid counter '%s' in section [winperf]: need number and colon, e.g. 238:processor.\n", word);
+                exit(1);
+            }
+            *colon = 0;
+            g_winperf_counters[g_num_winperf_counters].name = strdup(colon + 1);
+            g_winperf_counters[g_num_winperf_counters].id = atoi(word);
+            g_num_winperf_counters ++;
+        }
+    }
+    else {
+        fprintf(stderr, "Invalid configuration variable %s in section [winperf].\r\n", var);
+        exit(1);
+    }
+}
 
 void read_config_file()
 {
@@ -1564,6 +1651,8 @@ void read_config_file()
 
     char line[512];
     int lineno = 0;
+    void (*variable_handler)(char *var, char *value) = 0;
+
     while (!feof(file)) {
         if (!fgets(line, sizeof(line), file))
             return;
@@ -1576,11 +1665,19 @@ void read_config_file()
             // found section header
             l[len-1] = 0;
             char *section = l + 1;
-            if (strcmp(section, "global")) {
-                fprintf(stderr, "Invalid section %s in %s.\r\n",
-                        section, g_config_file);
+            if (!strcmp(section, "global"))
+                variable_handler = handle_global_config_variable;
+            else if (!strcmp(section, "winperf"))
+                variable_handler = handle_winperf_config_variable;
+            else {
+                fprintf(stderr, "Invalid section [%s] in %s in line %d.\r\n",
+                        section, g_config_file, lineno);
                 exit(1);
             }
+        }
+        else if (!variable_handler) {
+            fprintf(stderr, "Line %d is outside of any section.\r\n", lineno);
+            exit(1);
         }
         else {
             // split up line at = sign
@@ -1597,7 +1694,7 @@ void read_config_file()
             char *variable = l;
             rstrip(variable);
             value = strip(value);
-            handle_config_variable(variable, value); // add section later
+            variable_handler(variable, value); // add section later
         }
     }
         

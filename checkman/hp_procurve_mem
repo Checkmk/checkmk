@@ -25,5 +25,5 @@ critical (int): Memory usage percentage at which a critical level is triggered.
 
 [configuration]
 hp_procurve_mem_default_levels (int, int): Default levels used by inventorized checks.
-This variable is preset to {(80, 90)}.
+ This variable is preset to {(80, 90)}.
 

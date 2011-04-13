@@ -67,7 +67,7 @@ def if_statename(st):
 def inventory_if_common(info):
     if len(info) == 0 or len(info[0]) != 19:
         return []
-    inventory = []
+    pre_inventory = []
  
     for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \
         ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen, ifAlias in info:
@@ -92,7 +92,23 @@ def inventory_if_common(info):
             if ifSpeed != "" and if_inventory_monitor_speed:
                 paramstring += ', "speed" : %d' % int(ifSpeed)
             paramstring += "}"
-            inventory.append( (item, paramstring) )
+            pre_inventory.append( (item, paramstring, int(ifIndex)) )
+
+    # Check for duplicate items (e.g. when using Alias as item and the alias is not unique)
+    seen_items = set([])
+    duplicate = set([])
+    for item, params, index in pre_inventory:
+        if item in seen_items: # duplicate
+            duplicate.add(item)
+        seen_items.add(item)
+        
+    inventory = []
+    for item, params, index in pre_inventory:
+        if item in duplicate:
+            new_item = "%s %d" % (item, index)
+        else:
+            new_item = item
+        inventory.append((new_item, params))
     return inventory
 
 
@@ -126,13 +142,18 @@ def check_if_common(item, params, info):
         ifDescr = cleanup_if_strings(ifDescr)
         ifAlias = cleanup_if_strings(ifAlias)
 
-        if item == ifIndex or item == ifAlias or item == ifDescr:
+        if item == ifIndex \
+            or item == ifAlias \
+            or item == ifDescr \
+            or item == "%s %s" % (ifAlias, ifIndex):
 
             # Display port number or alias in infotext if that is not part
             # of the service description anyway
             if item == ifIndex and (item == ifAlias or ifAlias == '') \
                 and (item == ifDescr or ifDescr == ''): # description trivial
                 infotext = ""
+            elif item == "%s %s" % (ifAlias, ifIndex) and ifDescr != '': # non-unique Alias
+                infotext = "[%s/%s]" % (ifAlias, ifDescr)
             elif item != ifAlias and ifAlias != '': # alias useful
                 infotext = "[%s] " % ifAlias
             elif item != ifDescr and ifDescr != '': # description useful

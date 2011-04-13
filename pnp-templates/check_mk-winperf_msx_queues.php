@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,38 +23,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Author: Lars Michelsen <lm@mathias-kettner.de>
+$queue = str_replace("_", " ", substr($servicedesc, 6));
+$opt[1] = "--vertical-label 'Queue length' -l0 --title \"$hostname / Exchange Queue: $queue\" ";
 
-# Relevant SNMP OIDs:
-# 1.3.6.1.4.1.11.2.14.11.5.1.9.6.1
-
-hp_procurve_cpu_default_levels = (80, 90)
-
-def inventory_hp_procurve_cpu(checkname, info):
-    if len(info) == 1 and int(info[0][0]) >= 0 <= 100:
-        return [ (None, 'hp_procurve_cpu_default_levels') ]
-
-def check_hp_procurve_cpu(item, params, info):
-    if len(info) == 1:
-        cpu_load = int(info[0][0])
-        if cpu_load >= 0 <= 100:
-            status = 0
-            output = ''
-            if cpu_load >= params[1]:
-                status = 2
-                output = ' (Above %d%%)' % params[1]
-            elif cpu_load >= params[0]:
-                status = 1
-                output = ' (Above %d%%)' % params[0]
-
-            return (status, '%s - CPU load is %d%% %s' %
-                        (nagios_state_names[status], cpu_load, output),
-                   [('load', '%d%%' % cpu_load, params[0], params[1], 0, 100)])
-
-    return (3, "UNKNOWN - Invalid  information in snmp data")
-
-
-check_info['hp_procurve_cpu'] = (check_hp_procurve_cpu, "CPU utilization", 1,  inventory_hp_procurve_cpu)
-snmp_info['hp_procurve_cpu']  = ( ".1.3.6.1.4.1.11.2.14.11.5.1.9.6", [ "1" ] )
-snmp_scan_functions['hp_procurve_cpu'] = \
-    lambda oid: ".11.2.3.7.11" in oid(".1.3.6.1.2.1.1.2.0")
+$def[1] = "DEF:length=$RRDFILE[1]:$DS[1]:MAX ";
+$def[1] .= "AREA:length#6090ff:\"length\" ";
+$def[1] .= "LINE:length#304f80 ";
+$def[1] .= "GPRINT:length:LAST:\"last\: %.0lf %s\" ";
+$def[1] .= "GPRINT:length:AVERAGE:\"average\: %.0lf %s\" ";
+$def[1] .= "GPRINT:length:MAX:\"max\:%.0lf %s\\n\" ";
+?>

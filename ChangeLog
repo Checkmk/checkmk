@@ -1,6 +1,7 @@
 1.1.11i1:
     Core, Setup, etc.:
     * FIX: fix computation of weight when averaging
+    * FIX: fix detection of missing OIDs (led to empty lines) 
     * SNMP scan functions can now call oid(".1.3.6.1.4.1.9.9.13.1.3.1.3.*")
       That will return the *first* OID beginning with .1.3.6.1.4.1.9.9.13.1.3.1.3
     * New config option: Set check_submission = "file" in order to write
@@ -14,15 +15,19 @@
     Multisite:
     * FIX: Nagios-Snapin: avoid duplicate slash in URL
     * FIX: custom_style_sheet now also honored by sidebar
+    * FIX: ignore case when sorting groups in ...groups snapin
     * Added snmp_uptime, uptime and printer_supply perfometers
 
     BI:
     * Added new component BI to Multisite.
 
     WATO:
+    * FIX: fix crash when saving services after migration from old version
     * Allow moving hosts from one to another config file
 
     Checks & Agents:
+    * FIX: if/if64: always generate unique items (in case ifAlias is used)
+    * FIX: ipmi: fix ugly ouput in case of warning and error
     * FIX: vms_df: fix, was completely broken due to conversion to df.include
     * FIX: blade_bays: add missing SNMP OIDs (check was always UNKNOWN)
     * FIX: df: fix layout problems in PNP template
@@ -40,6 +45,8 @@
     * FIX: fjdarye60_devencs, fjdarye60_disks.summary: added snmp scan functions
     * FIX: decru_*: added snmp scan functions
     * FIX: heartbeat_rscstatus handles empty agent output correctly
+    * FIX: hp_procurve_cpu: fix synatx error in man page
+    * FIX: hp_procurve_memory: fix syntax error in man page
     * printer_supply: Changed order of tests. When a printer reports -3 this
       is used before the check if maxlevel is -2.
     * printer_supply: Skipping inventory of supplies which have current value
@@ -66,9 +73,15 @@
     * if/if64: also show perf-o-meter if speed is unknown
     * f5_bigip_pool: status of F5 BIP/ip load balancing pools
     * f5_bigip_vserver: status of F5 BIP/ip virtual servers
+    * ipmi: new configuration variable ipmi_ignored_sensors (see man page)
+    * hp_procurve_cpu: rename services description to CPU utilization
+    * ipmi: Linux agent now (asynchronously) caches output of ipmitool for 20 minutes
+    * windows: agent has new output format for performance counters
+    * winperf_process.util: new version of winperf.cpuusage supporting new agent
+    * winperf_system.diskio: new version of winperf.diskstat supporting new agent
+    * winperf_msx_queues: new check for MS Exchange message queues
     * smart.temp/smart.stats: added new check for monitoring health of HDDs
       using S.M.A.R.T
-
 
 1.1.10:
     Core, Setup, etc.:

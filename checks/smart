@@ -47,22 +47,15 @@
 
 smart_temp_default_values  = (35, 40)
 smart_stats_default_values = {
-  'realloc_events_warn':  1,
-  'realloc_events_crit':  1,
-  'realloc_sectors_warn': 1,
-  'realloc_sectors_crit': 1,
-  'spin_retries_warn':    1,
-  'spin_retries_crit':    1,
-  'pending_retries_warn': 1,
-  'pending_retries_crit': 1,
-  'cmd_timeouts_warn':    5,
-  'cmd_timeouts_crit':    10,
-  'end_to_end_warn':      1,
-  'end_to_end_crit':      1,
-  'uncorr_errs_warn':     1,
-  'uncorr_errs_crit':     1,
-  'udma_crcs_warn':       1,
-  'udma_crcs_crit':       1,
+   'realloc_events':  (1,  1),
+   'realloc_sectors': (1,  1),
+   'spin_retries':    (1,  1),
+   'pending_retries': (1,  1),
+   'pending_sectors': (1,  1),
+   'cmd_timeouts':    (5, 10),
+   'e2e_errs':        (1,  1),
+   'uncorr_errs':     (1,  1),
+   'udma_crcs':       (1,  1),
 }
 
 
@@ -109,16 +102,14 @@ def check_smart_stats(item, params, info):
 
             if line[4] == lab:
                 warn, crit, cur_status, thresh_out = None, None, 0, ''
-                if thresh and thresh + '_crit' in params and value >= params[thresh + '_crit']:
-                    crit       = params[thresh + '_crit']
+                if thresh and thresh + '_crit' in params and value >= params[thresh][1]:
                     cur_status = 2
                     thresh_out = ' (CRIT)'
-                elif thresh and thresh + '_warn' in params and value >= params[thresh + '_warn']:
-                    warn       = params[thresh + '_warn']
+                elif thresh and thresh + '_warn' in params and value >= params[thresh][0]:
                     cur_status = 1
                     thresh_out = ' (WARN)'
 
-                perfdata.append((lab, val, warn, crit))
+                perfdata.append((lab, val, thresh and params[thresh][0] or None, thresh and params[thresh][1] or None))
                 output.append('%s: %d%s%s' % (txt, val, uom, thresh_out))
                 status = max(status, cur_status)
 

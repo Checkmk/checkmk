@@ -66,6 +66,8 @@
     * if/if64: also show perf-o-meter if speed is unknown
     * f5_bigip_pool: status of F5 BIP/ip load balancing pools
     * f5_bigip_vserver: status of F5 BIP/ip virtual servers
+    * smart.temp/smart.stats: added new check for monitoring health of HDDs
+      using S.M.A.R.T
 
 
 1.1.10:

@@ -76,7 +76,10 @@
     * ipmi: new configuration variable ipmi_ignored_sensors (see man page)
     * hp_procurve_cpu: rename services description to CPU utilization
     * ipmi: Linux agent now (asynchronously) caches output of ipmitool for 20 minutes
-
+    * windows: agent has new output format for performance counters
+    * winperf_process.util: new version of winperf.cpuusage supporting new agent
+    * winperf_system.diskio: new version of winperf.diskstat supporting new agent
+    * winperf_msx_queues: new check for MS Exchange message queues
 
 1.1.10:
     Core, Setup, etc.:

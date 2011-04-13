@@ -1,0 +1,85 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<winperf_msx_queues>>>
+# 12947176002.19
+# 1 instances: _total
+# 10334 0 rawcount
+# 10336 810 rawcount
+# 10338 0 rawcount
+# 10340 0 rawcount
+# 10342 0 rawcount
+# 10344 0 rawcount
+# 10346 810 rawcount
+# 10348 810 rawcount
+# 10350 821 rawcount
+# 10352 821 counter
+# 10354 10 rawcount
+# 10356 10 counter
+# 10358 0 rawcount
+# 10360 0 rawcount
+# 10362 0 rawcount
+# 10364 811 rawcount
+
+# Default warn/crit levels for length of queues
+msx_queues_default_levels = (500, 2000)
+
+# Queues to be inventorized
+winperf_msx_queues = {
+   "Active Remote Delivery"  :  "10334", 
+   "Retry Remote Delivery"   :  "10336", 
+   "Active Mailbox Delivery" :  "10338", 
+   "Poison Queue Length"     :  "10376", 
+}
+
+def inventory_winperf_msx_queues(checktype, info):
+    num_instances = int(info[1][0])
+    if num_instances > 0:
+        return [ (name, "msx_queues_default_levels") for name in winperf_msx_queues ]
+
+def check_winperf_msx_queues(item, params, info):
+    num_instances = int(info[1][0])
+    if num_instances < 1:
+        return (3, "UNKNOWN - no counters available, transport service running?")
+ 
+    for line in info[2:]:
+        if line[0] == winperf_msx_queues.get(item):
+            length = int(line[1])
+            warn, crit = params
+            perfdata = [("length", length, warn, crit)]
+            infotext = " - %d entries" % length
+            if length >= crit:
+                return (2, "CRIT" + infotext, perfdata)
+            elif length >= warn:
+                return (1, "WARN" + infotext, perfdata)
+            return (0, "OK" + infotext, perfdata)
+
+    return (3, "UNKNOWN - counter not found")
+
+check_info['winperf_msx_queues'] = (check_winperf_msx_queues, "Queue %s", 1, inventory_winperf_msx_queues)
+
+check_config_variables.append("winperf_msx_queues")

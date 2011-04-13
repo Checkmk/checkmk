@@ -337,3 +337,16 @@ def perfometer_check_mk_printer_supply(row, check_command, perf_data):
     return "%.0f%%" % left, perfometer_linear(left, color)
 
 perfometers["check_mk-printer_supply"] = perfometer_check_mk_printer_supply
+
+def perfometer_msx_queues(row, check_command, perf_data):
+    length = int(perf_data[0][1])
+    state = row["service_state"]
+    if state == 1:
+        color = "#ffd020"
+    elif state == 2:
+        color = "#ff2020"
+    else:
+        color = "#6090ff"
+    return "%d" % length, perfometer_logarithmic(length, 100, 2, color)
+
+perfometers["check_mk-winperf_msx_queues"] = perfometer_msx_queues

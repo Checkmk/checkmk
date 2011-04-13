@@ -1,0 +1,26 @@
+title: Measure Disk IO on Windows systems
+agents: windows
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the summarized disk IO on a Windows system 
+ using the windows performance counters (agent section {<<<winperf_system>>>}).
+
+ The current implementation does not allow to set levels, and the check
+ is thus always OK. The reason is, that currently only data of the
+ last check cycle is available for measurement. In order to define
+ useful levels an average over a longer period of time would be needed.
+ A future implementation might change this.
+
+ This check replaces the old check {winperf.diskstat} and is compatible
+ with the new agent version {1.1.11i1}.
+
+perfdata:
+ Two variables: the averaged disk throughput summed up over all disks,
+ for read and for write access.
+
+inventory:
+ A check of this type is automatically created for all Windows
+ hosts.
+

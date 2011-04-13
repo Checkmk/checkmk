@@ -1,0 +1,76 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+winperf_cpu_default_levels = ( 101, 101 )
+
+def inventory_winperf_util(checkname, info):
+    for line in info[1:]:
+        try:
+            if line[0] == '6':
+                return [(None, "winperf_cpu_default_levels")]
+        except:
+            pass
+
+
+# params: levels for warn / crit in percentage
+def check_winperf_util(item, params, info):
+    this_time = int(float(info[0][0]))
+
+    for line in info[1:]:
+        if line[0] == '6':
+            # Windows sends one counter for each CPU plus one counter that
+            # sums up to total (called _Total). We only need that last value.
+            ticks = int(line[-2])
+            num_cpus = len(line) - 3
+            counter_wrapped = False
+            timedif, ticks_per_sec = get_counter("winperf_util", this_time, ticks)
+            secs_per_sec = ticks_per_sec / 10000000.0;
+            used_perc = 100 * (1 - secs_per_sec)
+
+            if used_perc < 0:
+                used_perc = 0
+            elif used_perc > 100:
+                used_perc = 100
+            perfdata = [ ("util", "%.2f" % used_perc, '', '', 0, 100) ]
+            if num_cpus == 1:
+                num_txt = ""
+            else:
+                num_txt = " / %d CPUs" % num_cpus
+
+            infotext = " - %d%% used%s (in last %d secs)" % (int(used_perc), num_txt, timedif)
+
+            warn, crit = params
+            if used_perc >= crit:
+                return (2, "CRIT" + infotext, perfdata)
+            elif used_perc >= warn:
+                return (1, "WARN" + infotext, perfdata)
+            else:
+                return (0, "OK" + infotext, perfdata)
+
+    return (3, "UNKNOWN - counter for CPU (6) not found")
+
+check_info['winperf_processor.util'] = (check_winperf_util, "CPU utilization", 1, inventory_winperf_util)

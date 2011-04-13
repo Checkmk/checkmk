@@ -128,8 +128,3 @@ check_info['winperf.diskstat'] = (check_win_diskstat, "Disk IO", 1,  inventory_w
 check_info['winperf.cpuusage'] = (check_win_cpuusage, "CPU Usage", 1, inventory_win_cpuusage)
 check_config_variables.append("winperf_cpu_default_levels")
 
-# Speicher kann man rausziehen aus
-# 4:24: Available Bytes
-# 4:1380 Available KBytes
-# 4:1382 Available MBytes
-# Frage: Wo bekommt man die installierte Menge an Speicher raus

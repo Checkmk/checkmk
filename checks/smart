@@ -1,0 +1,151 @@
+#!/usr/bin/python
+# -*- encoding: utf-8 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Author: Lars Michelsen <lm@mathias-kettner.de>
+
+# EXAMPLE DATA FROM: WDC SSC-D0128SC-2100
+#<<<smart>>>
+#/dev/sda ATA WDC_SSC-D0128SC-   1 Raw_Read_Error_Rate     0x000b   100   100   050    Pre-fail  Always       -       16777215
+#/dev/sda ATA WDC_SSC-D0128SC-   3 Spin_Up_Time            0x0007   100   100   050    Pre-fail  Always       -       0
+#/dev/sda ATA WDC_SSC-D0128SC-   5 Reallocated_Sector_Ct   0x0013   100   100   050    Pre-fail  Always       -       0
+#/dev/sda ATA WDC_SSC-D0128SC-   7 Seek_Error_Rate         0x000b   100   100   050    Pre-fail  Always       -       0
+#/dev/sda ATA WDC_SSC-D0128SC-   9 Power_On_Hours          0x0012   100   100   000    Old_age   Always       -       1408
+#/dev/sda ATA WDC_SSC-D0128SC-  10 Spin_Retry_Count        0x0013   100   100   050    Pre-fail  Always       -       0
+#/dev/sda ATA WDC_SSC-D0128SC-  12 Power_Cycle_Count       0x0012   100   100   000    Old_age   Always       -       523
+#/dev/sda ATA WDC_SSC-D0128SC- 168 Unknown_Attribute       0x0012   100   100   000    Old_age   Always       -       1
+#/dev/sda ATA WDC_SSC-D0128SC- 175 Program_Fail_Count_Chip 0x0003   100   100   010    Pre-fail  Always       -       0
+#/dev/sda ATA WDC_SSC-D0128SC- 192 Power-Off_Retract_Count 0x0012   100   100   000    Old_age   Always       -       0
+#/dev/sda ATA WDC_SSC-D0128SC- 194 Temperature_Celsius     0x0022   040   100   000    Old_age   Always       -       40 (Lifetime Min/Max 30/60)
+#/dev/sda ATA WDC_SSC-D0128SC- 197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always       -       0
+#/dev/sda ATA WDC_SSC-D0128SC- 240 Head_Flying_Hours       0x0013   100   100   050    Pre-fail  Always       -       0
+#/dev/sda ATA WDC_SSC-D0128SC- 170 Unknown_Attribute       0x0003   100   100   010    Pre-fail  Always       -       1769478
+#/dev/sda ATA WDC_SSC-D0128SC- 173 Unknown_Attribute       0x0012   100   100   000    Old_age   Always       -       4217788040605
+
+
+smart_temp_default_values  = (35, 40)
+smart_stats_default_values = {
+  'realloc_events_warn':  1,
+  'realloc_events_crit':  1,
+  'realloc_sectors_warn': 1,
+  'realloc_sectors_crit': 1,
+  'spin_retries_warn':    1,
+  'spin_retries_crit':    1,
+  'pending_retries_warn': 1,
+  'pending_retries_crit': 1,
+  'cmd_timeouts_warn':    5,
+  'cmd_timeouts_crit':    10,
+  'end_to_end_warn':      1,
+  'end_to_end_crit':      1,
+  'uncorr_errs_warn':     1,
+  'uncorr_errs_crit':     1,
+  'udma_crcs_warn':       1,
+  'udma_crcs_crit':       1,
+}
+
+
+def inventory_smart(checktype, info):
+    inventory = []
+    for line in info:
+        if len(line) < 13:
+            continue
+
+        if checktype == 'smart.stats' \
+           and line[4] in [ 'Power_On_Hours',          'Power_Cycle_Count',
+                            'Reallocated_Sector_Ct',   'Spin_Retry_Count',
+                            'Reallocated_Event_Count', 'Current_Pending_Sector',
+                            'Command_Timeout',         'End-to-End_Error',
+                            'Reported_Uncorrect',      'UDMA_CRC_Error_Count', ] \
+           and not (line[0], None) in inventory:
+            inventory.append((line[0], None, 'smart_stats_default_values'))
+        elif checktype == 'smart.temp' and line[4] == 'Temperature_Celsius':
+            inventory.append((line[0], None, 'smart_temp_default_values'))
+    return inventory
+
+
+def check_smart_stats(item, params, info):
+    status   = 0
+    output   = []
+    perfdata = []
+    for line in info:
+        if len(line) != 13 or line[0] != item:
+            continue
+
+        value = int(line[12])
+        for val, uom, lab, txt, thresh in [
+                      (value, ' hours', 'Power_On_Hours',          'Powered on',           None),
+                      (value, '',       'Power_Cycle_Count',       'Power cycles',         None),
+                      (value, '',       'Reallocated_Sector_Ct',   'Reallocated sectors',  'realloc_sectors'),
+                      (value, '',       'Reallocated_Event_Count', 'Reallocated events',   'realloc_events'),
+                      (value, '',       'Spin_Retry_Count',        'Spin retries',         'spin_retries'),
+                      (value, '',       'Current_Pending_Sector',  'Pending sectors',      'pending_sectors'),
+                      (value, '',       'Command_Timeout',         'Command timeouts',     'cmd_timeouts'),
+                      (value, '',       'End-to-End_Error',        'End-to-End errors',    'e2e_errs'),
+                      (value, '',       'Reported_Uncorrect',      'Uncorrectable errors', 'uncorr_errs'),
+                      (value, '',       'UDMA_CRC_Error_Count',    'UDMA CRC errors',      'udma_crcs'),
+                   ]:
+
+            if line[4] == lab:
+                warn, crit, cur_status, thresh_out = None, None, 0, ''
+                if thresh and thresh + '_crit' in params and value >= params[thresh + '_crit']:
+                    crit       = params[thresh + '_crit']
+                    cur_status = 2
+                    thresh_out = ' (CRIT)'
+                elif thresh and thresh + '_warn' in params and value >= params[thresh + '_warn']:
+                    warn       = params[thresh + '_warn']
+                    cur_status = 1
+                    thresh_out = ' (WARN)'
+
+                perfdata.append((lab, val, warn, crit))
+                output.append('%s: %d%s%s' % (txt, val, uom, thresh_out))
+                status = max(status, cur_status)
+
+    if not output:
+        return (3, 'UNKNOWN - Found no info in agent outout')
+
+    return (status, '%s - %s' % (nagios_state_names[status], ', '.join(output)), perfdata)
+
+
+# Written by Benjamin Odenthal
+# http://exchange.check-mk.org/index.php?option=com_remository&Itemid=53&func=fileinfo&id=1
+def check_smart_temp(item, params, info):
+   warn, crit = params
+
+   for line in info:
+      if len(line) >= 13 and line[0] == item and line[4] == "Temperature_Celsius":
+         celsius = int(line[12])
+         perfdata = [ ( "temp", celsius, warn, crit ) ]
+         if celsius > crit:
+            return (2, "CRITICAL - Temperature is %dC" % celsius, perfdata)
+         elif celsius > warn:
+            return (1, "WARNING - Temperature is %dC" % celsius, perfdata)
+         else:
+            return (0, "OK - Temperature is %dC" % celsius, perfdata)
+   return (3, "UNKNOWN - Temperature_Celsius not found in agent output for disk %s" % item)
+
+
+check_info['smart.stats'] = (check_smart_stats, "SMART %s Stats",       1, inventory_smart)
+check_info['smart.temp']  = (check_smart_temp,  "SMART %s Temperature", 1, inventory_smart)
+

@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Only handle always updated values, add device path and vendor/model
+if which smartctl > /dev/null 2>&1 ; then
+    echo '<<<smart>>>'
+    for D in /dev/[sh]d[a-z] /dev/[sh]d[a-z][a-z]; do
+        N=${D##*/}
+        VEND=$(cat /sys/block/$N/device/vendor | tr -d ' ')
+        MODEL=$(cat /sys/block/$N/device/model | tr ' ' _ | sed 's/_*$//g')
+        smartctl -A $D | grep Always | sed "s|^|$D $VEND $MODEL | tr ' ' _) |"
+    done
+fi

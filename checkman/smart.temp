@@ -1,0 +1,33 @@
+title: Monitors temperature of HDDs using S.M.A.R.T
+agents: snmp
+author: Benjamin Odenthal <benjamin.odenthal@tuxclouds.org>, Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the temperature of HDDs using the information reported by
+ S.M.A.R.T. This check works only for HDDs which report the value {Temperature_Celsius}
+ via {smartctl -A <device>}.
+
+ The check uses information provided by the Check_MK linux agent which are available when the agent
+ has been extended with the {smart} agent plugin.
+
+ The original check has been created by Benjamin Odenthal and provided on Check_MK exchange and
+ improved, integrated and documented by Lars Michelsen.
+
+inventory:
+ All devices reported by smartctl which support the temperature value are
+ automatically inventorized. One service is being created for each HDD.
+
+item:
+ The device name. Example: {/dev/sda}
+
+perfdata: 
+ One variable: the current temperature in degrees celsius.
+
+examples:
+ # Set the warning threshold to 40 and critical to 50 degrees celsius.
+ smart_temp_default_values = (35, 40)
+
+[parameters]
+warning (int): The degrees celsius to trigger a WARNING state
+critical (int): The degrees celsius to trigger a CRITICAL state

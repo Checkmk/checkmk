@@ -919,7 +919,6 @@ void section_winperf(SOCKET &out)
 {
     // no counters configured in check_mk.ini => output all below 700 except some
     if (g_num_winperf_counters == 0) {
-        dump_performance_counters(out, 2, "system");
         dump_performance_counters(out, 234, "phydisk");
         dump_performance_counters(out, 238, "processor");
         dump_performance_counters(out, 11838, "msx_owa");

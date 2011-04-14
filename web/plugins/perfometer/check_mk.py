@@ -260,7 +260,7 @@ def perfometer_oracle_sessions(row, check_command, perf_data):
 perfometers["check_mk-oracle_sessions"] = perfometer_oracle_sessions
 perfometers["check_mk-oracle_logswitches"] = perfometer_oracle_sessions
 
-def perfometer_h3c_lanswitch_cpu(row, check_command, perf_data):
+def perfometer_cpu_utilization(row, check_command, perf_data):
     util = float(perf_data[0][1]) # is already percentage
     warn = float(perf_data[0][3])
     crit = float(perf_data[0][4])
@@ -274,7 +274,8 @@ def perfometer_h3c_lanswitch_cpu(row, check_command, perf_data):
     return "%.0f%%" % util, perfometer_linear(util, color)
 
 #perfometer_linear(perc, color)
-perfometers["check_mk-h3c_lanswitch_cpu"] = perfometer_h3c_lanswitch_cpu
+perfometers["check_mk-h3c_lanswitch_cpu"] = perfometer_cpu_utilization
+perfometers["check_mk-winperf_processor.util"] = perfometer_cpu_utilization
 
 def perfometer_check_mk_uptime(row, check_command, perf_data):
     days,    rest    = divmod(int(perf_data[0][1]), 60*60*24)

@@ -85,6 +85,7 @@
       using S.M.A.R.T
     * mcdata_fcport: new check for ports of MCData FC Switches
     * hp_procurve_cpu: add PNP template
+    * hp_procurve_cpu: rename load to utilization, rename service to CPU utilizition
 
 1.1.10:
     Core, Setup, etc.:

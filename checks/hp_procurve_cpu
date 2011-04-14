@@ -24,8 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Author: Lars Michelsen <lm@mathias-kettner.de>
-
 # Relevant SNMP OIDs:
 # 1.3.6.1.4.1.11.2.14.11.5.1.9.6.1
 
@@ -37,20 +35,20 @@ def inventory_hp_procurve_cpu(checkname, info):
 
 def check_hp_procurve_cpu(item, params, info):
     if len(info) == 1:
-        cpu_load = int(info[0][0])
-        if cpu_load >= 0 <= 100:
+        cpu_util = int(info[0][0])
+        if cpu_util >= 0 <= 100:
             status = 0
             output = ''
-            if cpu_load >= params[1]:
+            if cpu_util >= params[1]:
                 status = 2
                 output = ' (Above %d%%)' % params[1]
-            elif cpu_load >= params[0]:
+            elif cpu_util >= params[0]:
                 status = 1
                 output = ' (Above %d%%)' % params[0]
 
-            return (status, '%s - CPU load is %d%% %s' %
-                        (nagios_state_names[status], cpu_load, output),
-                   [('load', '%d%%' % cpu_load, params[0], params[1], 0, 100)])
+            return (status, '%s - CPU utilization is %d%% %s' %
+                        (nagios_state_names[status], cpu_util, output),
+                   [('util', '%d%%' % cpu_util, params[0], params[1], 0, 100)])
 
     return (3, "UNKNOWN - Invalid  information in snmp data")
 

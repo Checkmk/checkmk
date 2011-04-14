@@ -84,6 +84,7 @@
     * smart.temp/smart.stats: added new check for monitoring health of HDDs
       using S.M.A.R.T
     * mcdata_fcport: new check for ports of MCData FC Switches
+    * hp_procurve_cpu: add PNP template
 
 1.1.10:
     Core, Setup, etc.:

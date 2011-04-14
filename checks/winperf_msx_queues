@@ -48,12 +48,12 @@
 # Default warn/crit levels for length of queues
 msx_queues_default_levels = (500, 2000)
 
-# Queues to be inventorized
+# Queues to be inventorized (number are relative to counter base)
 winperf_msx_queues = {
-   "Active Remote Delivery"  :  "10334", 
-   "Retry Remote Delivery"   :  "10336", 
-   "Active Mailbox Delivery" :  "10338", 
-   "Poison Queue Length"     :  "10376", 
+   "Active Remote Delivery"  :  "2", 
+   "Retry Remote Delivery"   :  "4", 
+   "Active Mailbox Delivery" :  "6", 
+   "Poison Queue Length"     :  "44", 
 }
 
 def inventory_winperf_msx_queues(checktype, info):

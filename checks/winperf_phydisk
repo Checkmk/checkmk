@@ -56,9 +56,9 @@ check_includes['winperf_phydisk'] = [ "diskstat.include" ]
 def winperf_phydisk_convert(info):
     disks = [ d.split('_')[-1] for d in info[1][2:-1] ]
     for line in info[2:]:
-        if line[0] == '220':
+        if line[0] == '-14':
             disk_reads = [ int(x) / 512 for x in line[1:-2] ]
-        elif line[0] == '222':
+        elif line[0] == '-12':
             disk_writes = [ int(x) / 512 for x in line[1:-2] ]
 
     return zip(disks, disk_reads, disk_writes)

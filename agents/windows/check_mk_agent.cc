@@ -387,14 +387,14 @@ PERF_INSTANCE_DEFINITION *NextInstance (PERF_INSTANCE_DEFINITION *pInstance) {
 }
 
 
-void dump_performance_counters(SOCKET &out, unsigned counter, const char *countername)
+void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const char *countername)
 {
     output(out, "<<<winperf_%s>>>\n", countername);
-    output(out, "%.2f\n", current_time());
+    output(out, "%.2f %u\n", current_time(), counter_base_number);
 
     // registry entry is ascii representation of counter index
     char counter_index_name[8];
-    snprintf(counter_index_name, sizeof(counter_index_name), "%u", counter);
+    snprintf(counter_index_name, sizeof(counter_index_name), "%u", counter_base_number);
 
     // allocate block to store counter data block
     DWORD size = DEFAULT_BUFFER_SIZE;
@@ -436,7 +436,7 @@ void dump_performance_counters(SOCKET &out, unsigned counter, const char *counte
     for (unsigned int a=0 ; a < dataBlockPtr->NumObjectTypes ; a++) 
     {
 	// Have we found the object we seek? 
-	if (objectPtr->ObjectNameTitleIndex == counter)
+	if (objectPtr->ObjectNameTitleIndex == counter_base_number)
 	{
 	    // Yes. Great. Now: each object consist of a lot of counters.
 	    // We walk through the list of counters in this object:
@@ -477,7 +477,7 @@ void dump_performance_counters(SOCKET &out, unsigned counter, const char *counte
 	    // Now walk through the counter list a second time and output all counters
 	    for (unsigned int b=0 ; b < objectPtr->NumCounters ; b++) 
 	    {
-		outputCounter(out, datablock, counter, objectPtr, counterPtr);
+		outputCounter(out, datablock, counter_base_number, objectPtr, counterPtr);
 		counterPtr = NextCounter(counterPtr);
 	    }
 	}
@@ -488,7 +488,7 @@ void dump_performance_counters(SOCKET &out, unsigned counter, const char *counte
 }
 
 
-void outputCounter(SOCKET &out, BYTE *datablock, int counter, 
+void outputCounter(SOCKET &out, BYTE *datablock, int counter_base_number, 
 		   PERF_OBJECT_TYPE *objectPtr, PERF_COUNTER_DEFINITION *counterPtr)
 {
 
@@ -525,7 +525,7 @@ void outputCounter(SOCKET &out, BYTE *datablock, int counter,
     }
 	      
     // Output index of counter object and counter, and timestamp
-    output(out, "%d", counterPtr->CounterNameTitleIndex);
+    output(out, "%d", counterPtr->CounterNameTitleIndex - counter_base_number);
 
     // If this is a multi-instance-counter, loop over the instances
     int num_instances = objectPtr->NumInstances;
@@ -921,9 +921,6 @@ void section_winperf(SOCKET &out)
     if (g_num_winperf_counters == 0) {
         dump_performance_counters(out, 234, "phydisk");
         dump_performance_counters(out, 238, "processor");
-        dump_performance_counters(out, 11838, "msx_owa");
-        dump_performance_counters(out, 12042, "msx_async");
-        dump_performance_counters(out, 10332, "msx_queues");
     }
 
     // output configured counters

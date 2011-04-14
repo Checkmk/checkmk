@@ -28,9 +28,12 @@
 winperf_cpu_default_levels = ( 101, 101 )
 
 def inventory_winperf_util(checkname, info):
+    if len(info) <= 1:
+        return None
+
     for line in info[1:]:
         try:
-            if line[0] == '6':
+            if line[0] == '-232':
                 return [(None, "winperf_cpu_default_levels")]
         except:
             pass
@@ -41,7 +44,7 @@ def check_winperf_util(item, params, info):
     this_time = int(float(info[0][0]))
 
     for line in info[1:]:
-        if line[0] == '6':
+        if line[0] == '-232':
             # Windows sends one counter for each CPU plus one counter that
             # sums up to total (called _Total). We only need that last value.
             ticks = int(line[-2])

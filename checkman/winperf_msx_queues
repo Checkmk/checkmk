@@ -12,6 +12,8 @@ description:
  If the counter number is different in your installation or
  you are using a {check_mk.ini} with custom counter definitions,
  add the counter to the section {[winperf]} with {counters = 10332:msx_queues} ... .
+ Look in the output of {lodctr /s:counters.ini} for the object with
+ the name {MSExchangeTransport Queues}.
 
  You can set levels for warning and critical. Per default
  the queues {Active Remote Delivery}, {Active Mailbox Delivery},

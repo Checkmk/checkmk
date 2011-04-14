@@ -64,13 +64,13 @@ if ($MAX[1] != "")  {
 
 $ds_name[2] = 'Error counter';
 $opt[2]  = "--vertical-label \"Error counter\" --title \"Problems on $hostname / $servicedesc\" ";
-$def[2]  = "DEF:crcerrors=$RRDFILE[1]:$DS[3]:MAX " ;
-$def[2] .= "DEF:encout=$RRDFILE[1]:$DS[4]:MAX " ;
-$def[2] .= "DEF:c3discards=$RRDFILE[1]:$DS[5]:MAX " ;
+$def[2]  = "DEF:crcerrors=$RRDFILE[3]:$DS[3]:MAX " ;
+$def[2] .= "DEF:encout=$RRDFILE[4]:$DS[4]:MAX " ;
+$def[2] .= "DEF:c3discards=$RRDFILE[5]:$DS[5]:MAX " ;
 $def[2] .= "LINE1:crcerrors#ff0000:\"CRC Errors      \" " ;
-$def[2] .= "GPRINT:crcerrors:LAST:\"%.0lf\\n\" " ;
+$def[2] .= "GPRINT:crcerrors:LAST:\"last\: %.0lf\\n\" " ;
 $def[2] .= "LINE1:encout#60a020:\"ENC-Out         \" " ;
-$def[2] .= "GPRINT:encout:LAST:\"%.0lf\\n\" " ;
+$def[2] .= "GPRINT:encout:LAST:\"last\: %.0lf\\n\" " ;
 $def[2] .= "LINE1:c3discards#2060a0:\"Class 3 Discards\" " ;
-$def[2] .= "GPRINT:c3discards:LAST:\"%.0lf\\n\" " ;
+$def[2] .= "GPRINT:c3discards:LAST:\"last\: %.0lf\\n\" " ;
 ?>

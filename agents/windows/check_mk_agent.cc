@@ -917,17 +917,12 @@ void section_mem(SOCKET &out)
 
 void section_winperf(SOCKET &out)
 {
-    // no counters configured in check_mk.ini => output all below 700 except some
-    if (g_num_winperf_counters == 0) {
-        dump_performance_counters(out, 234, "phydisk");
-        dump_performance_counters(out, 238, "processor");
-    }
+    dump_performance_counters(out, 234, "phydisk");
+    dump_performance_counters(out, 238, "processor");
 
-    // output configured counters
-    else {
-        for (unsigned i=0; i<g_num_winperf_counters; i++)
-            dump_performance_counters(out, g_winperf_counters[i].id, g_winperf_counters[i].name);
-    }
+    // also output additionally configured counters
+    for (unsigned i=0; i<g_num_winperf_counters; i++)
+        dump_performance_counters(out, g_winperf_counters[i].id, g_winperf_counters[i].name);
 }
 
 
@@ -1576,7 +1571,11 @@ char *next_word(char **line)
             s++;
         *s = 0;
         *line = s + 1;
-        return value;
+        rstrip(value);
+        if (strlen(value) > 0)
+            return value;
+        else
+            return 0;
     }
     return 0;
 }

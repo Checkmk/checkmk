@@ -68,20 +68,29 @@ def inventory_if_common(info):
     if len(info) == 0 or len(info[0]) != 19:
         return []
     pre_inventory = []
+
+    seen_items = set([])
+    duplicate = set([])
  
     for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \
         ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen, ifAlias in info:
         ifDescr = cleanup_if_strings(ifDescr)
         ifAlias = cleanup_if_strings(ifAlias)
 
-        if ifType in if_inventory_porttypes and ifOperStatus in if_inventory_portstates:
-            if if_inventory_uses_description and ifDescr:
-                item = ifDescr
-            elif if_inventory_uses_alias and ifAlias:
-                item = ifAlias
-            else:
-                item = ifIndex
+        # compute item now - also for unmonitored ports - in order to see if it
+        # is uninque.
+        if if_inventory_uses_description and ifDescr:
+            item = ifDescr
+        elif if_inventory_uses_alias and ifAlias:
+            item = ifAlias
+        else:
+            item = ifIndex
 
+        if item in seen_items: # duplicate
+            duplicate.add(item)
+        seen_items.add(item)
+
+        if ifType in if_inventory_porttypes and ifOperStatus in if_inventory_portstates:
             paramstring = '{ "errors" : if_default_error_levels, ' \
                           '"traffic" : if_default_traffic_levels, ' \
                           '"average" : if_default_average '
@@ -95,13 +104,6 @@ def inventory_if_common(info):
             pre_inventory.append( (item, paramstring, int(ifIndex)) )
 
     # Check for duplicate items (e.g. when using Alias as item and the alias is not unique)
-    seen_items = set([])
-    duplicate = set([])
-    for item, params, index in pre_inventory:
-        if item in seen_items: # duplicate
-            duplicate.add(item)
-        seen_items.add(item)
-        
     inventory = []
     for item, params, index in pre_inventory:
         if item in duplicate:
@@ -109,6 +111,7 @@ def inventory_if_common(info):
         else:
             new_item = item
         inventory.append((new_item, params))
+    
     return inventory
 
 

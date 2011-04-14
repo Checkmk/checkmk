@@ -188,7 +188,7 @@ def perfometer_check_mk_ipmi_sensors(row, check_command, perf_data):
 perfometers["check_mk-ipmi_sensors"] = perfometer_check_mk_ipmi_sensors
 perfometers["check_mk-nvidia.temp"] = perfometer_check_mk_ipmi_sensors
 
-def performeter_check_mk_if(row, check_command, perf_data):
+def perfometer_check_mk_if(row, check_command, perf_data):
     txt = []
     have_bw = True
     h = '<table><tr>'
@@ -226,12 +226,13 @@ def performeter_check_mk_if(row, check_command, perf_data):
     return text, perfometer_logarithmic_dual(
                  in_bytes, "#0e6", out_bytes, "#2af", 1000000, 5)
 
-perfometers["check_mk-if"] = performeter_check_mk_if
-perfometers["check_mk-if64"] = performeter_check_mk_if
-perfometers["check_mk-lnx_if"] = performeter_check_mk_if
-perfometers["check_mk-hpux_if"] = performeter_check_mk_if
+perfometers["check_mk-if"] = perfometer_check_mk_if
+perfometers["check_mk-if64"] = perfometer_check_mk_if
+perfometers["check_mk-lnx_if"] = perfometer_check_mk_if
+perfometers["check_mk-hpux_if"] = perfometer_check_mk_if
+perfometers["check_mk-mcdata_fcport"] = perfometer_check_mk_if
 
-def performeter_oracle_tablespaces(row, check_command, perf_data):
+def perfometer_oracle_tablespaces(row, check_command, perf_data):
     current = float(perf_data[0][1])
     used = float(perf_data[1][1])
     max = float(perf_data[2][1])
@@ -244,7 +245,7 @@ def performeter_oracle_tablespaces(row, check_command, perf_data):
     h += '</tr></table>'
     return "%.1f%%" % used_perc, h
 
-perfometers["check_mk-oracle_tablespaces"] = performeter_oracle_tablespaces
+perfometers["check_mk-oracle_tablespaces"] = perfometer_oracle_tablespaces
 
 def perfometer_oracle_sessions(row, check_command, perf_data):
     if check_command == "check_mk-oracle_sessions":
@@ -259,7 +260,7 @@ def perfometer_oracle_sessions(row, check_command, perf_data):
 perfometers["check_mk-oracle_sessions"] = perfometer_oracle_sessions
 perfometers["check_mk-oracle_logswitches"] = perfometer_oracle_sessions
 
-def perfometer_h3c_lanswitch_cpu(row, check_command, perf_data):
+def perfometer_cpu_utilization(row, check_command, perf_data):
     util = float(perf_data[0][1]) # is already percentage
     warn = float(perf_data[0][3])
     crit = float(perf_data[0][4])
@@ -273,7 +274,8 @@ def perfometer_h3c_lanswitch_cpu(row, check_command, perf_data):
     return "%.0f%%" % util, perfometer_linear(util, color)
 
 #perfometer_linear(perc, color)
-perfometers["check_mk-h3c_lanswitch_cpu"] = perfometer_h3c_lanswitch_cpu
+perfometers["check_mk-h3c_lanswitch_cpu"] = perfometer_cpu_utilization
+perfometers["check_mk-winperf_processor.util"] = perfometer_cpu_utilization
 
 def perfometer_check_mk_uptime(row, check_command, perf_data):
     days,    rest    = divmod(int(perf_data[0][1]), 60*60*24)
@@ -301,6 +303,7 @@ def perfometer_check_mk_diskstat(row, check_command, perf_data):
             read_bytes, "#60e0a0", write_bytes, "#60a0e0", 5000000, 10)
 
 perfometers["check_mk-diskstat"] = perfometer_check_mk_diskstat
+perfometers["check_mk-winperf_phydisk"] = perfometer_check_mk_diskstat
 
 
 def perfometer_check_mk_printer_supply(row, check_command, perf_data):

@@ -387,14 +387,14 @@ PERF_INSTANCE_DEFINITION *NextInstance (PERF_INSTANCE_DEFINITION *pInstance) {
 }
 
 
-void dump_performance_counters(SOCKET &out, unsigned counter, const char *countername)
+void dump_performance_counters(SOCKET &out, unsigned counter_base_number, const char *countername)
 {
     output(out, "<<<winperf_%s>>>\n", countername);
-    output(out, "%.2f\n", current_time());
+    output(out, "%.2f %u\n", current_time(), counter_base_number);
 
     // registry entry is ascii representation of counter index
     char counter_index_name[8];
-    snprintf(counter_index_name, sizeof(counter_index_name), "%u", counter);
+    snprintf(counter_index_name, sizeof(counter_index_name), "%u", counter_base_number);
 
     // allocate block to store counter data block
     DWORD size = DEFAULT_BUFFER_SIZE;
@@ -436,7 +436,7 @@ void dump_performance_counters(SOCKET &out, unsigned counter, const char *counte
     for (unsigned int a=0 ; a < dataBlockPtr->NumObjectTypes ; a++) 
     {
 	// Have we found the object we seek? 
-	if (objectPtr->ObjectNameTitleIndex == counter)
+	if (objectPtr->ObjectNameTitleIndex == counter_base_number)
 	{
 	    // Yes. Great. Now: each object consist of a lot of counters.
 	    // We walk through the list of counters in this object:
@@ -464,6 +464,10 @@ void dump_performance_counters(SOCKET &out, unsigned counter, const char *counte
                     WCHAR *name_start = (WCHAR *)((char *)(instancePtr) + instancePtr->NameOffset);
                     memcpy(name, name_start, instancePtr->NameLength);
                     WideCharToMultiByte(CP_UTF8, 0, name_start, instancePtr->NameLength, name, sizeof(name), NULL, NULL);
+                    // replace spaces with '_'
+                    for (char *s = name; *s; s++) 
+                        if (*s == ' ') *s = '_';
+
                     output(out, " %s", name);
 	            instancePtr = NextInstance(instancePtr);
                 }
@@ -473,7 +477,7 @@ void dump_performance_counters(SOCKET &out, unsigned counter, const char *counte
 	    // Now walk through the counter list a second time and output all counters
 	    for (unsigned int b=0 ; b < objectPtr->NumCounters ; b++) 
 	    {
-		outputCounter(out, datablock, counter, objectPtr, counterPtr);
+		outputCounter(out, datablock, counter_base_number, objectPtr, counterPtr);
 		counterPtr = NextCounter(counterPtr);
 	    }
 	}
@@ -484,56 +488,44 @@ void dump_performance_counters(SOCKET &out, unsigned counter, const char *counte
 }
 
 
-void outputCounter(SOCKET &out, BYTE *datablock, int counter, 
+void outputCounter(SOCKET &out, BYTE *datablock, int counter_base_number, 
 		   PERF_OBJECT_TYPE *objectPtr, PERF_COUNTER_DEFINITION *counterPtr)
 {
 
     // determine the type of the counter (for verbose output)
-    const char *countertypename = "(unknown)";
+    const char *countertypename = 0;
     switch (counterPtr->CounterType) {
     case PERF_COUNTER_COUNTER:                countertypename = "counter"; break;
-    case PERF_COUNTER_QUEUELEN_TYPE:          countertypename = "queuelen_type" ; break;
-    case PERF_SAMPLE_COUNTER:                 countertypename = "sample_counter"; break;
-//  case PERF_OBJ_TIME_TIMER:                 countertypename = "obj_time_timer"; break;
-//  case PERF_COUNTER_100NS_QUEUELEN_TYPE:    countertypename = "100ns_queuelen_type"; break;
-//  case PERF_COUNTER_OBJ_TIME_QUEUELEN_TYPE: countertypename = "obj_time_queuelen_type"; break;
     case PERF_COUNTER_TIMER:                  countertypename = "timer"; break;
-    case PERF_COUNTER_TIMER_INV:              countertypename = "timer_inv"; break;
+    case PERF_COUNTER_QUEUELEN_TYPE:          countertypename = "queuelen_type"; break;
     case PERF_COUNTER_BULK_COUNT:             countertypename = "bulk_count"; break;
-//  case PERF_COUNTER_LARGE_QUEUELEN_TYPE:    countertypename = "large_queuelen_type"; break;
-    case PERF_COUNTER_MULTI_TIMER:            countertypename = "multi_timer"; break;
-    case PERF_COUNTER_MULTI_TIMER_INV:        countertypename = "multi_timer_inv"; break;
+    case PERF_COUNTER_TEXT:                   countertypename = "text"; break;
     case PERF_COUNTER_RAWCOUNT:               countertypename = "rawcount"; break;
-    case PERF_COUNTER_RAWCOUNT_HEX:           countertypename = "rawcount_hex"; break;
-//  case PERF_COUNTER_DELTA:                  countertypename = "delta"; break;
     case PERF_COUNTER_LARGE_RAWCOUNT:         countertypename = "large_rawcount"; break;
-    case PERF_COUNTER_LARGE_RAWCOUNT_HEX:     countertypename = "large_rawcount_hex"; break;
-//  case PERF_COUNTER_LARGE_DELTA:            countertypename = "large_delta"; break;
+    case PERF_COUNTER_RAWCOUNT_HEX:           countertypename = "rawcount_hex"; break;
+    case PERF_COUNTER_LARGE_RAWCOUNT_HEX:     countertypename = "large_rawcount_HEX"; break;
+    case PERF_SAMPLE_FRACTION:                countertypename = "sample_fraction"; break;
+    case PERF_SAMPLE_COUNTER:                 countertypename = "sample_counter"; break;
+    case PERF_COUNTER_NODATA:                 countertypename = "nodata"; break;
+    case PERF_COUNTER_TIMER_INV:              countertypename = "timer_inv"; break;
+    case PERF_SAMPLE_BASE:                    countertypename = "sample_base"; break;
+    case PERF_AVERAGE_TIMER:                  countertypename = "average_timer"; break;
+    case PERF_AVERAGE_BASE:                   countertypename = "average_base"; break;
+    case PERF_AVERAGE_BULK:                   countertypename = "average_bulk"; break;
     case PERF_100NSEC_TIMER:                  countertypename = "100nsec_timer"; break;
     case PERF_100NSEC_TIMER_INV:              countertypename = "100nsec_timer_inv"; break;
+    case PERF_COUNTER_MULTI_TIMER:            countertypename = "multi_timer"; break;
+    case PERF_COUNTER_MULTI_TIMER_INV:        countertypename = "multi_timer_inV"; break;
+    case PERF_COUNTER_MULTI_BASE:             countertypename = "multi_base"; break;
     case PERF_100NSEC_MULTI_TIMER:            countertypename = "100nsec_multi_timer"; break;
-    case PERF_100NSEC_MULTI_TIMER_INV:        countertypename = "100nsec_multi_timer_inv"; break;
-    case PERF_SAMPLE_FRACTION:                countertypename = "sample_fraction"; break;
+    case PERF_100NSEC_MULTI_TIMER_INV:        countertypename = "100nsec_multi_timer_inV"; break;
     case PERF_RAW_FRACTION:                   countertypename = "raw_fraction"; break;
-//  case PERF_LARGE_RAW_FRACTION:             countertypename = "large_raw_fraction"; break;
-//  case PERF_PRECISION_SYSTEM_TIMER:         countertypename = "precision_system_timer"; break;
-//  case PERF_PRECISION_100NS_TIMER:          countertypename = "precision_100ns_timer"; break;
-//  case PERF_PRECISION_OBJECT_TIMER:         countertypename = "precision_object_timer"; break;
-    case PERF_AVERAGE_TIMER:                  countertypename = "average_timer"; break;
-    case PERF_AVERAGE_BULK:                   countertypename = "average_bulk"; break;
-    case PERF_SAMPLE_BASE:        	      countertypename = "sample_base"; break;
-    case PERF_AVERAGE_BASE:       	      countertypename = "average_base"; break;
-    case PERF_COUNTER_MULTI_BASE: 	      countertypename = "multi_base"; break;
-    case PERF_RAW_BASE:           	      countertypename = "raw_base"; break;
-//  case PERF_LARGE_RAW_BASE:     	      countertypename = "large_raw_base"; break;
-    case PERF_ELAPSED_TIME:       	      countertypename = "elapsed_time"; break;
-    case PERF_COUNTER_TEXT:       	      countertypename = "text"; break;
-    case PERF_COUNTER_NODATA:     	      countertypename = "nodata"; break;
-    case PERF_COUNTER_HISTOGRAM_TYPE:         countertypename = "histogram_type"; break;
+    case PERF_RAW_BASE:                       countertypename = "raw_base"; break;
+    case PERF_ELAPSED_TIME:                   countertypename = "elapsed_time"; break;
     }
 	      
     // Output index of counter object and counter, and timestamp
-    output(out, "%d", counterPtr->CounterNameTitleIndex);
+    output(out, "%d", counterPtr->CounterNameTitleIndex - counter_base_number);
 
     // If this is a multi-instance-counter, loop over the instances
     int num_instances = objectPtr->NumInstances;
@@ -555,7 +547,10 @@ void outputCounter(SOCKET &out, BYTE *datablock, int counter,
 	PERF_COUNTER_BLOCK *counterBlockPtr = (PERF_COUNTER_BLOCK *) datablock;
 	outputCounterValue(out, counterPtr, counterBlockPtr);
     }
-    output(out, " %s\n", countertypename);
+    if (countertypename)
+        output(out, " %s\n", countertypename);
+    else
+        output(out, " type(%lx)\n", counterPtr->CounterType);
 }
 
 
@@ -565,22 +560,16 @@ void outputCounterValue(SOCKET &out, PERF_COUNTER_DEFINITION *counterPtr, PERF_C
     int size = counterPtr->CounterSize;
     BYTE *pData = ((BYTE *)counterBlockPtr) + offset;
 
-    switch (counterPtr->CounterType) {
-    case PERF_COUNTER_RAWCOUNT:
-    case PERF_COUNTER_RAWCOUNT_HEX:
+    if (counterPtr->CounterType | PERF_SIZE_DWORD) 
 	output(out, " %llu", (ULONGLONG)(*(DWORD*)pData));
-        return;
 
-    case PERF_COUNTER_LARGE_RAWCOUNT:
-    case PERF_COUNTER_LARGE_RAWCOUNT_HEX:
+    else if (counterPtr->CounterType | PERF_SIZE_LARGE)
 	output(out, " %llu", *(UNALIGNED ULONGLONG*)pData);
-        return;
-    }
    
     // handle other data generically. This is wrong in some situation.
     // Once upon a time in future we might implement a conversion as
     // described in http://msdn.microsoft.com/en-us/library/aa373178%28v=vs.85%29.aspx
-    if (size == 4) {
+    else if (size == 4) {
 	DWORD value = *((DWORD *)pData);
 	output(out, " %lu", value);
     }
@@ -928,20 +917,12 @@ void section_mem(SOCKET &out)
 
 void section_winperf(SOCKET &out)
 {
-    // no counters configured in check_mk.ini => output all below 700 except some
-    if (g_num_winperf_counters == 0) {
-        dump_performance_counters(out, 2, "system");
-        dump_performance_counters(out, 238, "processor");
-        dump_performance_counters(out, 11838, "msx_owa");
-        dump_performance_counters(out, 12042, "msx_async");
-        dump_performance_counters(out, 10332, "msx_queues");
-    }
+    dump_performance_counters(out, 234, "phydisk");
+    dump_performance_counters(out, 238, "processor");
 
-    // output configured counters
-    else {
-        for (unsigned i=0; i<g_num_winperf_counters; i++)
-            dump_performance_counters(out, g_winperf_counters[i].id, g_winperf_counters[i].name);
-    }
+    // also output additionally configured counters
+    for (unsigned i=0; i<g_num_winperf_counters; i++)
+        dump_performance_counters(out, g_winperf_counters[i].id, g_winperf_counters[i].name);
 }
 
 
@@ -1590,7 +1571,11 @@ char *next_word(char **line)
             s++;
         *s = 0;
         *line = s + 1;
-        return value;
+        rstrip(value);
+        if (strlen(value) > 0)
+            return value;
+        else
+            return 0;
     }
     return 0;
 }

@@ -1,0 +1,127 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+diskstat_inventory_mode = "single" # also possible: "summary", "legacy"
+
+diskstat_default_levels = {
+#    "read" :    (10, 20),   # MB/sec
+#    "write" :   (20, 40),   # MB/sec
+#    "average" : 15,         # min
+}
+
+def inventory_diskstat_generic(info):
+    if diskstat_inventory_mode == "single":
+        return [ (line[0], "diskstat_default_levels") for line in info ]
+    elif len(info) > 0:
+        if diskstat_inventory_mode == "summary":
+            return [ ( "SUMMARY", "diskstat_default_levels") ]
+        else:
+            return [ ( "read", None ), ( "write", None ) ]
+
+
+def check_diskstat_line(this_time, item, params, line):
+    average_range = params.get("average")
+    perfdata = []
+    infos = []
+    status = 0
+    for what, ctr in [ ("read",  line[1]), ("write", line[2]) ]:
+        countername = "diskstat.%s.%s" % (item, what)
+
+        # unpack levels now, need also for perfdata
+        levels = params.get(what)
+        if levels:
+            warn, crit = levels
+        else:
+            warn, crit = None, None
+
+        # compute IO rate in bytes/sec
+        timedif, sectors_per_sec = get_counter(countername, this_time, int(ctr))
+        bytes_per_sec = sectors_per_sec * 512
+        infos.append("%s/sec %s" % (get_bytes_human_readable(bytes_per_sec), what))
+        perfdata.append( (what, bytes_per_sec, warn, crit) )
+
+        # compute average of the rate over ___ minutes
+        if average_range != None:
+            timedif, avg = get_average(countername + ".avg", this_time, bytes_per_sec, average_range)
+            perfdata.append( (what + ".avg", avg) )
+            bytes_per_sec = avg
+
+        # check levels
+        if levels != None:
+            mb_per_sec = bytes_per_sec / 1048576
+            if mb_per_sec >= crit:
+                status = 2 
+                infos[-1] += "!!"
+            elif mb_per_sec >= warn:
+                status = max(status, 1)
+                infos[-1] += "!"
+
+    if average_range != None:
+        perfdata = [ perfdata[0], perfdata[2], perfdata[1], perfdata[3] ]
+
+    return (status, nagios_state_names[status] + " - " + ", ".join(infos) , perfdata)
+
+
+def check_diskstat_generic(item, params, this_time, info):
+    # legacy version if item is "read" or "write"
+    if item in [ 'read', 'write' ]:
+        return check_diskstat_old(item, params, this_time, info)
+
+    # summary mode
+    if item == 'SUMMARY': # summary mode
+        summary_line = [0] * 13
+        for line in info:
+            summary_line = map(lambda e: e[0] + int(e[1]), zip(summary_line, line[1:]))
+        return check_diskstat_line(this_time, "SUMMARY", params, [''] + summary_line)
+
+    # single mode
+    for line in info:
+        if line[0] == item:
+            return check_diskstat_line(this_time, item, params, line)
+    
+    return (3, "UNKNOWN - device missing")
+
+
+# This is the legacy version of diskstat as used in <= 1.1.10. 
+# We keep it here for a while in order to be compatible with
+# old installations.
+def check_diskstat_old(item, params, this_time, info):
+    # sum up over all devices
+    if item == 'read':
+        index = 1 # sectors read
+    elif item == 'write':
+        index = 2 # sectors written
+    else:
+        return (3, "UNKNOWN - invalid item %s" % (item,))
+
+    this_val  = sum([int(x[index]) for x in info])
+
+    timedif, per_sec = get_counter("diskstat." + item, this_time, this_val)
+    mb_per_s = per_sec / 2048.0    # Diskstat output is in sectors a 512 Byte
+    perfdata = [ (item, "%dc" % this_val ) ]
+    return (0, "OK - %.1fMB/s (in last %d secs)" % (mb_per_s, timedif), perfdata)
+
+

@@ -188,7 +188,7 @@ def perfometer_check_mk_ipmi_sensors(row, check_command, perf_data):
 perfometers["check_mk-ipmi_sensors"] = perfometer_check_mk_ipmi_sensors
 perfometers["check_mk-nvidia.temp"] = perfometer_check_mk_ipmi_sensors
 
-def performeter_check_mk_if(row, check_command, perf_data):
+def perfometer_check_mk_if(row, check_command, perf_data):
     txt = []
     have_bw = True
     h = '<table><tr>'
@@ -226,12 +226,13 @@ def performeter_check_mk_if(row, check_command, perf_data):
     return text, perfometer_logarithmic_dual(
                  in_bytes, "#0e6", out_bytes, "#2af", 1000000, 5)
 
-perfometers["check_mk-if"] = performeter_check_mk_if
-perfometers["check_mk-if64"] = performeter_check_mk_if
-perfometers["check_mk-lnx_if"] = performeter_check_mk_if
-perfometers["check_mk-hpux_if"] = performeter_check_mk_if
+perfometers["check_mk-if"] = perfometer_check_mk_if
+perfometers["check_mk-if64"] = perfometer_check_mk_if
+perfometers["check_mk-lnx_if"] = perfometer_check_mk_if
+perfometers["check_mk-hpux_if"] = perfometer_check_mk_if
+perfometers["check_mk-mcdata_fcport"] = perfometer_check_mk_if
 
-def performeter_oracle_tablespaces(row, check_command, perf_data):
+def perfometer_oracle_tablespaces(row, check_command, perf_data):
     current = float(perf_data[0][1])
     used = float(perf_data[1][1])
     max = float(perf_data[2][1])
@@ -244,7 +245,7 @@ def performeter_oracle_tablespaces(row, check_command, perf_data):
     h += '</tr></table>'
     return "%.1f%%" % used_perc, h
 
-perfometers["check_mk-oracle_tablespaces"] = performeter_oracle_tablespaces
+perfometers["check_mk-oracle_tablespaces"] = perfometer_oracle_tablespaces
 
 def perfometer_oracle_sessions(row, check_command, perf_data):
     if check_command == "check_mk-oracle_sessions":

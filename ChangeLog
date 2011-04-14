@@ -82,6 +82,7 @@
     * winperf_msx_queues: new check for MS Exchange message queues
     * smart.temp/smart.stats: added new check for monitoring health of HDDs
       using S.M.A.R.T
+    * mcdata_fcport: new check for ports of MCData FC Switches
 
 1.1.10:
     Core, Setup, etc.:

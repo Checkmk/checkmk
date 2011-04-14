@@ -1,0 +1,99 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+mcdata_fcport_speedbits = { "2": '1000000000', "3": '2000000000' }
+mcdata_fcport_opstatus = { "1" : "1", "2": "2", "3": "testing", "4": "faulty" }
+
+def mcdata_bin_to_64(bin):
+    # McData encodes 64 bit counters as big endian HEX strings, 
+    # e.g. Hex-STRING: 00 00 00 01 AC C2 8C EE. Check_MK converts
+    # such strings into binary Python strings
+    value = 0
+    mult = 1
+    for byte in bin[::-1]:
+        value += mult * ord(byte)
+        mult *= 256
+    return str(value)
+
+def mcdata_fcport_convert_to_if64(info):
+    return map(mcdata_fcport_convert_line_to_if64, info)
+
+def mcdata_fcport_convert_line_to_if64(line):
+    index, opStatus, speed, txWords64, rxWords64, \
+      txFrames64, rxFrames64, c3Discards64, crcs = line
+
+    speed = mcdata_fcport_speedbits.get(speed, '')
+    opStatus = mcdata_fcport_opstatus.get(opStatus, 'unknown')
+    index = "%02d" % int(index)
+
+    return [
+      index,                          # ifIndex                   0
+      index,                          # ifDescr                   1
+      '6',                            # ifType                    2
+      speed,                          # ifSpeed                   3
+      opStatus,                       # ifOperStatus              4
+      mcdata_bin_to_64(rxWords64),    # ifHCInOctets              5
+      mcdata_bin_to_64(rxFrames64),   # ifHCInUcastPkts           6
+      '0',                            # ifHCInMulticastPkts       7
+      '0',                            # ifHCInBroadcastPkts       8
+      '0',                            # ifInDiscards              9
+      crcs,                           # ifInErrors               10
+      mcdata_bin_to_64(txWords64),    # ifHCOutOctets            11
+      mcdata_bin_to_64(txFrames64),   # ifHCOutUcastPkts         12
+      '0',                            # ifHCOutMulticastPkts     13
+      '0',                            # ifHCOutBroadcastPkts     14
+      mcdata_bin_to_64(c3Discards64), # ifOutDiscards            15
+      '0',                            # ifOutErrors              16
+      '0',                            # ifOutQLen                17
+      index,                          # ifAlias                  18
+    ]
+        
+
+def inventory_mcdata_fcport(checkname, info):
+    return inventory_if_common(mcdata_fcport_convert_to_if64(info))
+
+def check_mcdata_fcport(item, params, info):
+    return check_if_common(item, params, mcdata_fcport_convert_to_if64(info))
+
+check_info['mcdata_fcport'] = (check_mcdata_fcport, "Port %s", 1,  inventory_mcdata_fcport)
+check_includes['mcdata_fcport'] = [ "if.include" ]
+
+snmp_info['mcdata_fcport'] = \
+  ( ".1.3.6.1.4.1.289.2.1.1.2.3.1.1", [
+      1,                  # EF-6000-MIB::ef6000PortIndex
+      3,                  # EF-6000-MIB::ef6000PortOpStatus
+      11,                 # EF-6000-MIB::ef6000PortSpeed
+      67,                 # EF-6000-MIB::ef6000PortTxWords64
+      68,                 # EF-6000-MIB::ef6000PortRxWords64
+      69,                 # EF-6000-MIB::ef6000PortTxFrames64
+      70,                 # EF-6000-MIB::ef6000PortRxFrames64
+      83,                 # EF-6000-MIB::ef6000PortC3Discards64
+      65,                 # EF-6000-MIB::ef6000PortCrcs
+  ] )
+
+# check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2
+snmp_scan_functions['mcdata_fcport'] = \
+        lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.289.")

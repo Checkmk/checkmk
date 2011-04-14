@@ -1,0 +1,74 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent
+# <<<winperf_pydisk>>>
+# 12947256139.12
+# 2 instances: 0_C: _Total
+# 198 0 0 rawcount
+# 200 3716463928 3716463928 type(20570500)
+# 200 3454184016 3454184016 type(40030500)
+# 1400 3716463928 3716463928 type(550500)
+# 202 1070680520 1070680520 type(20570500)
+# 202 3454184016 3454184016 type(40030500)
+# 1402 1070680520 1070680520 type(550500)
+# 204 2645783408 2645783408 type(20570500)
+# 204 3454184016 3454184016 type(40030500)
+# 1404 2645783408 2645783408 type(550500)
+# 206 627690886 627690886 average_timer
+# 206 571096 571096 average_base
+# 208 1856854327 1856854327 average_timer
+# 208 453714 453714 average_base
+# 210 3065803855 3065803855 average_timer
+# 210 117382 117382 average_base
+# 212 571096 571096 counter
+# 214 453714 453714 counter
+# 216 117382 117382 counter
+# 218 304823296 304823296 bulk_count
+# 220 2434501632 2434501632 bulk_count ----> Disk Read Bytes/sec
+# 222 2165288960 2165288960 bulk_count ----> Disk Write Bytes/sec
+
+check_includes['winperf_phydisk'] = [ "diskstat.include" ]
+
+def winperf_phydisk_convert(info):
+    disks = [ d.split('_')[-1] for d in info[1][2:-1] ]
+    for line in info[2:]:
+        if line[0] == '220':
+            disk_reads = [ int(x) / 512 for x in line[1:-2] ]
+        elif line[0] == '222':
+            disk_writes = [ int(x) / 512 for x in line[1:-2] ]
+
+    return zip(disks, disk_reads, disk_writes)
+
+def inventory_winperf_phydisk(checktype, info):
+    return inventory_diskstat_generic(winperf_phydisk_convert(info))
+
+def check_winperf_phydisk(item, params, info):
+    this_time = int(float(info[0][0]))
+    return check_diskstat_generic(item, params, this_time, winperf_phydisk_convert(info))
+
+check_info['winperf_phydisk'] = (check_winperf_phydisk, "Disk IO %s", 1,  inventory_winperf_phydisk)
+

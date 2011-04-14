@@ -302,6 +302,7 @@ def perfometer_check_mk_diskstat(row, check_command, perf_data):
             read_bytes, "#60e0a0", write_bytes, "#60a0e0", 5000000, 10)
 
 perfometers["check_mk-diskstat"] = perfometer_check_mk_diskstat
+perfometers["check_mk-winperf_phydisk"] = perfometer_check_mk_diskstat
 
 
 def perfometer_check_mk_printer_supply(row, check_command, perf_data):

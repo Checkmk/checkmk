@@ -81,6 +81,7 @@
     * winperf_process.util: new version of winperf.cpuusage supporting new agent
     * winperf_system.diskio: new version of winperf.diskstat supporting new agent
     * winperf_msx_queues: new check for MS Exchange message queues
+    * winperf_phydisk: new check compatible with Linux diskstat (Disk IO per device!)
     * smart.temp/smart.stats: added new check for monitoring health of HDDs
       using S.M.A.R.T
     * mcdata_fcport: new check for ports of MCData FC Switches

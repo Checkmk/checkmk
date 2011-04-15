@@ -258,7 +258,12 @@ def compile_aggregation(rule, args, lvl = 0):
         if node[1] == config.HOST_STATE or type(node[1]) == str: # leaf node
             new_elements = compile_leaf_node(arginfo, node[0], node[1])
         else:
-            rule = config.aggregation_rules[node[0]]
+            rule = config.aggregation_rules.get(node[0])
+            if not rule:
+                raise MKConfigError("<h1>Missing rule</h1>"
+                "The rule '%s' calls the rule <tt>%s</tt>, but that is not defined." %
+                    (description, node[0]))
+
             instargs = compile_args([ instantiate(arg, arginfo)[0] for arg in node[1] ])
             new_elements = compile_aggregation(rule, instargs, lvl + 1)
 

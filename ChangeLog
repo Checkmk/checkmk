@@ -29,6 +29,7 @@
     * FIX: hp_procurve_cpu: fix syntax error in man page
     * FIX: hp_procurve_memory: fix syntax error in man page
     * FIX: fc_brocade_port_detailed: fix PNP template in MULTIPLE mode
+    * FIX: cmctc.temp: fix typo in man page
 
     Multisite:
     * FIX: Nagios-Snapin: avoid duplicate slash in URL

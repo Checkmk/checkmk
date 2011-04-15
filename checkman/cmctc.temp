@@ -15,7 +15,7 @@ item:
  Example: {"3.2"} for first IO unit and second sensor.
 
 perfdata: 
- One variable: the current temperatur in degrees celsius.
+ One variable: the current temperature in degrees celsius.
 
 inventory:
  All available temperature sensors are automatically inventorized.

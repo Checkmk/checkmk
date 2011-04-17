@@ -7,6 +7,6 @@ if which smartctl > /dev/null 2>&1 ; then
         N=${D##*/}
         VEND=$(cat /sys/block/$N/device/vendor | tr -d ' ')
         MODEL=$(cat /sys/block/$N/device/model | tr ' ' _ | sed 's/_*$//g')
-        smartctl -A $D | grep Always | sed "s|^|$D $VEND $MODEL | tr ' ' _) |"
+        smartctl -A $D | grep Always | sed "s|^|$D $VEND $MODEL |"
     done
 fi

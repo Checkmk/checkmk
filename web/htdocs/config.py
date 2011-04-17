@@ -458,6 +458,7 @@ host_tags = []
 ALL_HOSTS = ['@all']
 HOST_STATE = '__HOST_STATE__'
 class NEED: pass
+class FOREACH: pass
 aggregation_rules = {}
 aggregations = []
 aggregation_functions = {}

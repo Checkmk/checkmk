@@ -116,29 +116,20 @@ def compile_forest():
 
     load_services()
     for entry in config.aggregations:
-        if len(entry) != 3 or type(entry[2]) != list:
+        if len(entry) < 3:
             raise MKConfigError("<h1>Invalid aggregation <tt>%s</tt></h1>"
-                    "must have 3 entries (has %d), last entry must be list (is %s)" % (
-                        (entry, len(entry), len(entry) > 2 and type(entry[2]) or None)))
+             "must have at least 3 entries (has %d)" % (entry, len(entry)))
         
-        group, rulename, args = entry
-        args = compile_args(args)
-        
-        if rulename not in config.aggregation_rules:
-            raise MKConfigError("<h1>Invalid configuration in variable <tt>aggregations</tt></h1>"
-                    "There is no rule named <tt>%s</tt>. Available are: <tt>%s</tt>" % 
-                    (rulename, "</tt>, </tt>".join(config.aggregation_rules.keys())))
-        rule = config.aggregation_rules[rulename]
+        group = entry[0]
+        new_entries = compile_rule_node(entry[1:], 0)
 
-        # Compute new trees and add them to group
-        new_entries = compile_aggregation(rule, args)
+        # enter new aggregations into dictionary for that group
         entries = g_aggregation_forest.get(group, [])
         entries += new_entries
         g_aggregation_forest[group] = entries
 
-        # Update global index for one-host-only aggregations
-        for entry in new_entries:
-            aggr = entry[1]
+        # Update several global speed-up indices
+        for aggr in new_entries:
             req_hosts = aggr[0]
 
             if len(req_hosts) == 1:
@@ -158,8 +149,105 @@ def compile_forest():
                 entries.append((group, entry))
                 g_affected_services[s] = entries
 
-    global g_config_information
-    g_config_information = new_config_information
+        # Remember successful compile in cache
+        global g_config_information
+        g_config_information = new_config_information
+
+
+# Execute an aggregation rule, but prepare arguments 
+# and iterate FOREACH first
+def compile_rule_node(calllist, lvl):
+    # Lookup rule source code        
+    rulename, arglist = calllist[-2:]
+    if rulename not in config.aggregation_rules:
+        raise MKConfigError("<h1>Invalid configuration in variable <tt>aggregations</tt></h1>"
+                "There is no rule named <tt>%s</tt>. Available are: <tt>%s</tt>" % 
+                (rulename, "</tt>, </tt>".join(config.aggregation_rules.keys())))
+    rule = config.aggregation_rules[rulename]
+
+    # Execute FOREACH: iterate over matching hosts/services and 
+    # for each hit create an argument list where $1$, $2$, ... are
+    # substituted with matched strings.
+    if calllist[0] == config.FOREACH:
+        matches = find_matching_services(calllist[1:])
+        new_elements = []
+        for match in matches:
+            args = [ substitute_matches(a, match) for a in arglist ]
+            new_elements += compile_aggregation_rule(rule, args, lvl)
+        return new_elements
+
+    else:
+        return compile_aggregation_rule(rule, arglist, lvl)
+
+
+def find_matching_services(calllist):
+    host_re = calllist[0]
+    service_re = calllist[1]
+    honor_site = SITE_SEP in host_re
+
+    matches = set([])
+
+    for (site, hostname), (tags, services) in g_services.items():
+        host_matches = None
+
+        # If host ends with '|@all', we need to check host tags instead
+        # of regexes.
+        if host_re.endswith('|@all'):
+            if not match_host_tags(host_re[:-5], tags):
+                continue
+            host_matches = []
+        elif host_re.endswith('|@all)'):
+            if not match_host_tags(host_re[1:-6], tags):
+                 continue
+            host_matches = ( hostname, )
+        elif host_re == '@all':
+            host_matches = []
+        elif host_re == '(@all)':
+            host_matches = ( hostname, )
+        else:
+            # For regex to have '$' anchor for end. Users might be surprised
+            # to get a prefix match on host names. This is almost never what
+            # they want. For services this is useful, however.
+            if host_re.endswith("$"):
+                anchored = host_re
+            else:
+                anchored = host_re + "$"
+
+            # In order to distinguish hosts with the same name on different
+            # sites we prepend the site to the host name. If the host specification
+            # does not contain the site separator - though - we ignore the site
+            # an match the rule for all sites.
+            if honor_site:
+                host_matches = do_match(anchored, "%s%s%s" % (site, SITE_SEP, hostname))
+            else:
+                host_matches = do_match(anchored, hostname)
+
+        if host_matches != None:
+            if config.HOST_STATE in service_re:
+                matches.add(host_matches)
+            else:
+                for service in services:
+                    svc_matches = do_match(service_re, service)
+                    if svc_matches != None:
+                        matches.add(host_matches + svc_matches)
+
+    matches = list(matches)
+    matches.sort()
+    return matches
+
+def do_match(reg, text):
+    mo = regex(reg).match(text)
+    if not mo:
+        return None
+    else:
+        return tuple(mo.groups())
+
+
+def substitute_matches(arg, match):
+    for n, m in enumerate(match):
+        arg = arg.replace("$%d$" % (n+1), m)
+    return arg
+
 
 # Debugging function
 def render_forest():
@@ -205,9 +293,12 @@ def make_arginfo(arglist, args):
     return arginfo
 
 def find_all_leaves(node):
+    # leaf node: ( NEEDED_HOSTS, HOSTSPEC, SERVICE )
     if len(node) == 3:
-        required_hosts, (site, host), service = node 
+        needed_hosts, (site, host), service = node 
         return [ (site, host, service) ]
+
+    # rule node: ( NEEDED_HOSTS, DESCRIPTION, FUNCNAME, NODES )
     else:
         entries = []
         for n in node[3]:
@@ -216,16 +307,16 @@ def find_all_leaves(node):
 
 
 # Precompile one aggregation rule. This outputs a list of trees.
-# This function is called recursively.
-def compile_aggregation(rule, args, lvl = 0):
+# The length of this list is current either 0 or 1
+def compile_aggregation_rule(rule, args, lvl = 0):
     if len(rule) != 4:
-        raise MKConfigError("<h1>Invalid aggregation rule</h1>"
+        raise MKConfigError("<h3>Invalid aggregation rule</h1>"
                 "Aggregation rules must contain four elements: description, argument list, "
                 "aggregation function and list of nodes. Your rule has %d elements: "
                 "<pre>%s</pre>" % (len(rule), pprint.pformat(rule)))
 
     if lvl == 50:
-        raise MKConfigError("<h1>Depth limit reached</h1>"
+        raise MKConfigError("<h3>Depth limit reached</h3>"
                 "The nesting level of aggregations is limited to 50. You either configured "
                 "too many levels or built an infinite recursion. This happened in rule <pre>%s</pre>"
                   % pprint.pformat(rule))
@@ -239,208 +330,34 @@ def compile_aggregation(rule, args, lvl = 0):
                 "You've specified %d arguments: <tt>%s</tt>" % (
                     description, len(arglist), repr(arglist), len(args), repr(args)))
 
-    arginfo = make_arginfo(arglist, args)
+    arginfo = dict(zip(arglist, args))
+    inst_description = subst_vars(description, arginfo)
 
     elements = []
-    needed_insts = []
 
     for node in nodes:
         # Each node can return more than one incarnation (due to regexes in 
-        # the arguments)
+        # leaf nodes and FOREACH in rule nodes)
 
-        # Handle NEED flag: This node *must* have some entries. Otherwise drop the rule
-        if node[0] == config.NEED:
-            need_subnodes = True
-            node = node[1:]
+        if node[1] == config.HOST_STATE:
+            new_elements = compile_leaf_node(subst_vars(node[0], arginfo))
+        elif type(node[-1]) != list:
+            new_elements = compile_leaf_node(subst_vars(node[0], arginfo), subst_vars(node[1], arginfo))
         else:
-            need_subnodes = False
-            
-        if node[1] == config.HOST_STATE or type(node[1]) == str: # leaf node
-            new_elements = compile_leaf_node(arginfo, node[0], node[1])
-        else:
-            rule = config.aggregation_rules.get(node[0])
-            if not rule:
-                raise MKConfigError("<h1>Missing rule</h1>"
-                "The rule '%s' calls the rule <tt>%s</tt>, but that is not defined." %
-                    (description, node[0]))
-
-            instargs = compile_args([ instantiate(arg, arginfo)[0] for arg in node[1] ])
-            new_elements = compile_aggregation(rule, instargs, lvl + 1)
-
-        if need_subnodes:
-            needed_insts.append([ e[0] for e in new_elements ])
+            # substitute our arguments in rule arguments
+            rule_args = [ subst_vars(a, arginfo) for a in node[-1] ]
+            rule_parts = tuple([ subst_vars(part, arginfo) for part in node[:-1] ])
+            new_elements = compile_rule_node(rule_parts + (rule_args,), lvl + 1)
 
         elements += new_elements
 
-    # Now compile one or more rules from elements. We group
-    # all elements into one rule together, that have the same
-    # value for all SINGLE arguments
+    if len(elements) == 0:
+        return [] # this aggregation is empty
 
-    groups = {}
-    used_parameters = set([])
-    single_names = [ varname for (varname, (expansion, value)) in arginfo.items() if expansion == SINGLE ]
-    for instargs, node in elements:
-        # Honor that some variables might be unused and thus not contained in instargs
-        key = tuple([ (varname, instargs[varname]) for varname in single_names if varname in instargs ])
-        for var in instargs:
-            used_parameters.add(var)
-        nodes = groups.get(key, [])
-        nodes.append(node)
-        groups[key] = nodes
-
-    # Problem here: consider the following example:
-    #
-    #      [1]
-    #      aggregation_rules["tcp_cluster"] = (
-    #        "TCP Port $PORT$ $HOST1$ / $HOST2$", [ "aPORT", "aHOST1", "aHOST2" ], "best", [
-    #            ( "$HOST1$", "TCP-Port-$PORT$$" ),
-    #            ( "$HOST2$", "TCP-Port-$PORT$$" ),
-    #        ]
-    #      )
-    #
-    # And also the following one:
-    #
-    #      [2]
-    #      aggregation_rules["database"] = (
-    #        "$DB$", [ "aHOST", "aDB" ], "worst", [
-    #          ( "oracle_db_status", [ "$HOST$", "$DB$" ] ),
-    #          ( "$HOST$", "CPU" ),
-    #        ]
-    #      )
-    # 
-    # Not in each leaf node each variable is present. That way not all
-    # variables are present in the instargs of each element. 
-    # Resolution: We need to merge incomplete instantiations together in
-    # order to make them complete
-
-    num = len(single_names) # number of needed variables
-
-    # [1] Two keys can be merged if for all identical variable
-    # they have identical values *and* each key has at least
-    # one variable the other key has not 
-    def bilateral_merge(keya, keyb):
-        b = dict(keyb)
-        a_new_in_b = False
-        for var, val in keya:
-            if var in b and b[var] != val:
-                return None # conflict
-            elif var not in b:
-                b[var] = val
-                a_new_in_b = True
-        if not a_new_in_b:
-            return None
-        a = dict(keya)
-        for var, val in keyb:
-            if var not in a:
-                return tuple(b.items())
-        return False # Not a real bilateral merge
-
-    # [2] Two keys can be merged, if all variables of a
-    # are contained in b and also have the same value *and*
-    # b has more keys than a.
-    def unilateral_merge(keya, keyb): 
-        if len(keyb) <= len(keya): 
-            return False
-        b = dict(keyb)
-        for var, val in keya:
-            if var not in b or b[var] != val:
-                return False
-        return True
-
-    # Now first make all unilateral merges. This operation
-    # can (und must) duplicate nodes.
-    def unilateral_mergegroups(groups):
-        for keya, anodes in groups.items():
-            merged = False
-            if len(keya) != num: # incomplete
-                # compare this group with all other existing groups
-                for keyb, bnodes in groups.items():
-                    if keya != keyb: # do not compare group with itself
-                        if unilateral_merge(keya, keyb):
-                            bnodes += anodes
-                            merged = True
-            if merged:
-                del groups[keya]
-                return True
-
-    def bilateral_mergegroups(groups):
-        for keya, anodes in groups.items():
-            if len(keya) != num: # incomplete
-                # compare this group with all other existing groups
-                for keyb, bnodes in groups.items():
-                    if keya != keyb: # do not compare group with itself
-                        newkey = bilateral_merge(keya, keyb)
-                        if newkey:
-                            if keyb in groups: del groups[keyb]
-                            if keya in groups: del groups[keya]
-                            groups[newkey] = anodes + bnodes
-                            return True
-
-
-    while unilateral_mergegroups(groups):
-        pass
-
-    while bilateral_mergegroups(groups):
-        pass
-
-
-    # Check for unmergeable entries, fill up missing values
-    # from parameters (assuming they are not regexes)
-    for ikey, inodes in groups.items():
-        if len(ikey) != num:
-            d = dict(ikey)
-            for var in single_names:
-                if var not in d:
-                    d[var] = arginfo[var][1]
-            newkey = tuple(d.items())
-            groups[newkey] = inodes
-            del groups[ikey]
-
-    # track unused parameters - if we are not empty anyway
-    if len(groups) > 0:
-        for var in single_names:
-            if var not in used_parameters:
-                raise MKConfigError("<h1>Invalid rule</h1>"
-                        "The rule '<tt>%s</tt>' never uses the variable '<tt>%s</tt>'.<br>"
-                    "This is not allowed. All singleton parameters must be used in the rule." \
-                    % (description, var))
-            
-    # now sort groups after instantiations
-    def cmp_group(a, b):
-        keya = list(a[0])
-        keya.sort()
-        keyb = list(b[0])
-        keyb.sort()
-        if a < b:
-            return -1
-        elif a > b:
-            return 1
-        else:
-            return 0
-
-    group_items = groups.items()
-    group_items.sort(cmp=cmp_group)
-    
-    result = []
-    for key, nodes in group_items:
-        inst = dict(key)
-
-        # Include only those groups that are included in all needed_insts
-        exclude = False
-        for ni in needed_insts:
-            if inst not in ni:
-                exclude = True
-        if exclude:
-            continue
-
-
-        needed_hosts = set([])
-        for node in nodes:
-            needed_hosts.update(node[0])
-        inst_description = subst_vars(description, inst)
-        result.append((inst, (list(needed_hosts), inst_description, funcname, nodes)))
-
-    return result
+    needed_hosts = set([])
+    for element in elements:
+        needed_hosts.update(element[0])
+    return [ (list(needed_hosts), inst_description, funcname, elements) ]
 
 
 # Reduce [ [ 'linux', 'test' ], ALL_HOSTS, ... ] to [ 'linux|test|@all', ... ]
@@ -476,60 +393,11 @@ def find_variables(pattern, varname):
             return found
 
 # replace variables in a string
-def subst_vars(pattern, arg):
-    for name, value in arg.items():
-        pattern = pattern.replace('$'+name+'$', value)
+def subst_vars(pattern, arginfo):
+    for name, value in arginfo.items():
+        if type(pattern) in [ str, unicode ]:
+            pattern = pattern.replace('$'+name+'$', value)
     return pattern
-
-def instantiate(pattern, arginfo):
-    # Replace variables with values. Values are assumed to 
-    # contain regular expressions and are put into brackets.
-    # This allows us later to get the actual value when the regex
-    # is matched against an actual host or service name.
-    # Difficulty: when a variable appears twice, the second
-    # occurrance must be a back reference to the first one. We
-    # need to make sure, that both occurrances match the *same*
-    # string. 
-
-    # Example:
-    # "some text $A$ other $B$ and $A$"
-    # A = "a.*z", B => "hirn"
-    # result: "some text (a.*z) other (hirn) and (\1)"
-    substed = []
-    newpattern = pattern
-
-    first_places = []
-    # Determine order of first occurrance of each variable
-    for varname, (expansion, value) in arginfo.items():
-        places = find_variables(pattern, varname)
-        if len(places) > 0:
-            first_places.append((places[0], varname))
-    first_places.sort()
-    varorder = [ varname for (place, varname) in first_places ]
-    backrefs = {}
-    for num, var in enumerate(varorder):
-        backrefs[var] = num + 1
-    
-    # Replace variables
-    for varname, (expansion, value) in arginfo.items():
-        places = find_variables(pattern, varname)
-        value = value.replace('$', '\001') # make $ invisible
-        if len(places) > 0:
-            for p in places:
-                substed.append((p, varname))
-            newpattern = newpattern.replace('$' + varname + '$', '(' + value + ')', 1)
-            newpattern = newpattern.replace('$' + varname + '$', '(\\%d)' % backrefs[varname])
-    substed.sort()
-    newpattern = newpattern.replace('\001', '$')
-    return newpattern, [ v for (p, v) in substed ]
-
-            
-def do_match(reg, text):
-    mo = regex(reg).match(text)
-    if not mo:
-        return None
-    else:
-        return list(mo.groups())
 
 def match_host_tags(host, tags):
     required_tags = host.split('|')
@@ -544,72 +412,47 @@ def match_host_tags(host, tags):
             return False
     return True
 
-def compile_leaf_node(arginfo, host, service):
-    # replace placeholders in host and service with arg
-    host_re, host_vars       = instantiate(host, arginfo)
-    service_re, service_vars = instantiate(service, arginfo)
-
+def compile_leaf_node(host_re, service_re = config.HOST_STATE):
     found = []
-
-    def strip_re(re):
-        while re.startswith("((") and re.endswith("))"):
-            re = re[1:-1]
-        return re
-
-    # strip ( ) of re - needed for host tags
-    host_re_stripped    = strip_re(host_re)
-    service_re_stripped = strip_re(service_re)
-
     honor_site = SITE_SEP in host_re
 
     # TODO: If we already know the host we deal with, we could avoid this loop
     for (site, hostname), (tags, services) in g_services.items():
         # If host ends with '|@all', we need to check host tags instead
         # of regexes.
-        if host_re_stripped.endswith('|@all'):
-            if not match_host_tags(host_re_stripped[:-5], tags):
+        if host_re.endswith('|@all'):
+            if not match_host_tags(host_re[:-5], tags):
                 continue
-            host_instargs = []
-        elif host_re_stripped.endswith('|@all)'):
-            if not match_host_tags(host_re_stripped[1:-6], tags):
-                 continue
-            host_instargs = [ hostname ]
-        elif host_re_stripped == '@all':
-            host_instargs = []
-        elif host_re_stripped == '(@all)':
-            host_instargs = [ hostname ]
-        else:
+        elif host_re != '@all':
             # For regex to have '$' anchor for end. Users might be surprised
             # to get a prefix match on host names. This is almost never what
             # they want. For services this is useful, however.
             if host_re.endswith("$"):
-                anchored = host_re_stripped
+                anchored = host_re
             else:
-                anchored = host_re_stripped + "$"
+                anchored = host_re + "$"
 
             # In order to distinguish hosts with the same name on different
             # sites we prepend the site to the host name. If the host specification
             # does not contain the site separator - though - we ignore the site
             # an match the rule for all sites.
             if honor_site:
-                host_instargs = do_match(anchored, "%s%s%s" % (site, SITE_SEP, hostname))
+                if not regex(anchored).match("%s%s%s" % (site, SITE_SEP, hostname)):
+                    continue
             else:
-                host_instargs = do_match(anchored, hostname)
+                if not regex(anchored).match(hostname):
+                    continue
 
-        if host_instargs != None:
-            if config.HOST_STATE in service_re:
-                newarg = dict(zip(host_vars, host_instargs))
-                found.append((newarg, ([(site, hostname)], (site, hostname), config.HOST_STATE)))
-            else:
-                for service in services:
-                    svc_instargs = do_match(service_re_stripped, service)
-                    if svc_instargs != None:
-                        newarg = dict(zip(host_vars, host_instargs))
-                        newarg.update(dict(zip(service_vars, svc_instargs)))
-                        found.append((newarg, ([(site, hostname)], (site, hostname), service)))
+            if service_re == config.HOST_STATE:
+                found.append(([(site, hostname)], (site, hostname), config.HOST_STATE))
+
+            for service in services:
+                if regex(service_re).match(service):
+                    found.append(([(site, hostname)], (site, hostname), service))
 
     found.sort()
     return found
+
 
 regex_cache = {}
 def regex(r):
@@ -943,7 +786,7 @@ def table(h, columns, add_headers, only_sites, limit, filters):
         if only_group not in [ None, group ]:
             continue
 
-        for inst_args, tree in trees:
+        for tree in trees:
             row = create_aggregation_row(tree)
             row["aggr_group"] = group
             rows.append(row)

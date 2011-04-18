@@ -13,6 +13,8 @@ aggregation_rules["host"] = (
       ( "checkmk",      [ "$HOST$" ] ),
       ( "applications", [ "$HOST$" ] ),
       ( "logfiles",     [ "$HOST$" ] ),
+      ( "hardware",     [ "$HOST$" ] ),
+      ( "other",        [ "$HOST$" ] ),
   ]
 )
 
@@ -41,7 +43,16 @@ aggregation_rules["cpuandmem"] = (
   [ "HOST" ],
   "worst",
   [
-      ( "$HOST$", "CPU|Memory|Kernel" ),
+      ( "$HOST$", "CPU|Memory|Kernel|Number of threads" ),
+  ]
+)
+
+aggregation_rules["hardware"] = (
+  "Hardware", 
+  [ "HOST" ],
+  "worst",
+  [
+      ( "$HOST$", "IPMI|RAID" ),
   ]
 )
 
@@ -50,6 +61,7 @@ aggregation_rules["networking"] = (
   [ "HOST" ],
   "worst",
   [
+      ( "$HOST$", "NFS" ),
       ( FOREACH, "$HOST$", "NIC ([a-z]*).* counters", "nic", [ "$HOST$", "$1$" ] ),
   ]
 )
@@ -86,6 +98,15 @@ aggregation_rules["applications"] = (
   "worst",
   [
       ( "$HOST$", "ASM|ORACLE|proc" ),
+  ]
+)
+
+aggregation_rules["other"] = (
+  "Other", 
+  [ "HOST" ],
+  "worst",
+  [
+      ( "$HOST$", REMAINING ),
   ]
 )
 

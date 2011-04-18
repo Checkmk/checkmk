@@ -123,6 +123,11 @@ def compile_forest():
         group = entry[0]
         new_entries = compile_rule_node(entry[1:], 0)
 
+        for entry in new_entries:
+            remove_empty_nodes(entry)
+
+        new_entries = [ e for e in new_entries if len(e[-3]) > 0 ]
+        
         # enter new aggregations into dictionary for that group
         entries = g_aggregation_forest.get(group, [])
         entries += new_entries
@@ -305,10 +310,34 @@ def find_all_leaves(node):
             entries += find_all_leaves(n)
         return entries
 
+def remove_empty_nodes(node):
+    if len(node) == 3: # leaf node
+        return node
+    else:
+        subnodes = node[3]
+        for i in range(0, len(subnodes)):
+            remove_empty_nodes(subnodes[i])
+        for i in range(0, len(subnodes))[::-1]:
+            if node_is_empty(subnodes[i]):
+                del subnodes[i]
 
+def node_is_empty(node):
+    if len(node) == 3:
+        return False # leaf node
+    else:
+        return len(node[3]) == 0 
+
+    
 # Precompile one aggregation rule. This outputs a list of trees.
 # The length of this list is current either 0 or 1
 def compile_aggregation_rule(rule, args, lvl = 0):
+    # When compiling root nodes we essentially create 
+    # complete top-level aggregations. In that case we
+    # need to deal with REMAINING-entries
+    if lvl == 0:
+        global g_remaining_refs
+        g_remaining_refs = []
+
     if len(rule) != 4:
         raise MKConfigError("<h3>Invalid aggregation rule</h1>"
                 "Aggregation rules must contain four elements: description, argument list, "
@@ -339,8 +368,21 @@ def compile_aggregation_rule(rule, args, lvl = 0):
         # Each node can return more than one incarnation (due to regexes in 
         # leaf nodes and FOREACH in rule nodes)
 
-        if node[1] == config.HOST_STATE:
-            new_elements = compile_leaf_node(subst_vars(node[0], arginfo))
+        if node[1] in [ config.HOST_STATE, config.REMAINING ]:
+            new_elements = compile_leaf_node(subst_vars(node[0], arginfo), node[1])
+            new_new_elements = []
+            for entry in new_elements:
+                # Postpone: remember reference to list where we need to add
+                # remaining services of host
+                if entry[0] == config.REMAINING:
+                    # create unique pointer which we find later
+                    placeholder = ([], (None, None), str(len(g_remaining_refs)))
+                    g_remaining_refs.append((entry[1], elements, placeholder))
+                    new_new_elements.append(placeholder)
+                else:
+                    new_new_elements.append(entry)
+            new_elements = new_new_elements
+
         elif type(node[-1]) != list:
             new_elements = compile_leaf_node(subst_vars(node[0], arginfo), subst_vars(node[1], arginfo))
         else:
@@ -351,13 +393,31 @@ def compile_aggregation_rule(rule, args, lvl = 0):
 
         elements += new_elements
 
-    if len(elements) == 0:
-        return [] # this aggregation is empty
-
     needed_hosts = set([])
     for element in elements:
         needed_hosts.update(element[0])
-    return [ (list(needed_hosts), inst_description, funcname, elements) ]
+
+    aggregation = (list(needed_hosts), inst_description, funcname, elements)
+
+    # Handle REMAINING references, if we are a root node
+    if lvl == 0:
+        for hostspec, ref, placeholder in g_remaining_refs:
+            new_entries = find_remaining_services(hostspec, aggregation)
+            where_to_put = ref.index(placeholder)
+            ref[where_to_put:where_to_put+1] = new_entries
+    
+    return [ aggregation ]
+
+
+def find_remaining_services(hostspec, aggregation):
+    tags, all_services = g_services[hostspec]
+    all_services = set(all_services)
+    for site, host, service in find_all_leaves(aggregation):
+        if (site, host) == hostspec:
+            all_services.discard(service)
+    remaining = list(all_services)
+    remaining.sort()
+    return [ ( [hostspec], hostspec, service ) for service in remaining ]
 
 
 # Reduce [ [ 'linux', 'test' ], ALL_HOSTS, ... ] to [ 'linux|test|@all', ... ]
@@ -446,9 +506,13 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
             if service_re == config.HOST_STATE:
                 found.append(([(site, hostname)], (site, hostname), config.HOST_STATE))
 
-            for service in services:
-                if regex(service_re).match(service):
-                    found.append(([(site, hostname)], (site, hostname), service))
+            elif service_re == config.REMAINING:
+                found.append((config.REMAINING, (site, hostname)))
+
+            else:
+                for service in services:
+                    if regex(service_re).match(service):
+                        found.append(([(site, hostname)], (site, hostname), service))
 
     found.sort()
     return found

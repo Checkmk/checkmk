@@ -1,5 +1,4 @@
 1.1.10p1:
-
     Core, Setup, etc.:
     * FIX: fix computation of weight when averaging
     * FIX: added missing \n in error output
@@ -42,7 +41,6 @@
 
 
 1.1.10:
-
     Core, Setup, etc.:
     * --flush now also deletes all autochecks 
     

@@ -242,7 +242,7 @@ def host_link(hostname):
 
 
 def render_audit_log(log, what, with_filename = False):
-    htmlcode = '<table class="wato auditlog %s">'
+    htmlcode = '<table class="wato auditlog bg_brighten">'
     even = "even"
     for t, filename, user, action, text in log:
         text = parse_host_names(text)

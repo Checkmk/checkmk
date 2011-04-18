@@ -1,16 +1,36 @@
-/* Generel styles */
+/* General styles */
+
+body {
+    font-family: arial, helvetica, sans-serif;
+    font-size: 9pt;
+    background-attachment: fixed;
+    background-repeat: repeat;
+    margin: 0;
+}
+
 td {
     vertical-align: top;
 }
+
 input, td, select {
     font-size: 9pt;
 }
+
 img {
     border-style: none;
 }
+
 th {
     white-space: nowrap;
 }
+
+/* Lightens up background colors  of tables/divs and so on
+ * form_background.png is a fully transparent image */
+.bg_brighten {
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+}
+
 /*
    __  __       _        
   |  \/  | __ _(_)_ __   
@@ -21,13 +41,8 @@ th {
 */
 
 body.main {
-    background-attachment: fixed;
     background-image: url("images/contentframe_background.jpg"); 
-    background-repeat: repeat;
-    font-family: arial, helvetica, sans-serif;
-    font-size: 9pt;
     padding: 0px 10px 0px 10px;
-    margin: 0px;
 }
 
 body.main table.header {
@@ -110,13 +125,8 @@ border-left: 1px solid red;
 */
 
 body.side {
-    background-attachment: fixed;
-    background-repeat: repeat;
-    background-image: url("images/snapinframe_background.jpg");
-    font-family: arial, helvetica, sans-serif;
-    font-size: 9pt;
+    background-image: url("images/sidebar_background.jpg");
     padding: 0;
-    margin: 0;
     width: 280px;
     height: 100%;
     overflow:hidden;
@@ -136,7 +146,7 @@ div#check_mk_sidebar div#side_header {
     height: 55px;
     z-index: 10;
     background-repeat: no-repeat;
-    background-image: url("images/sidebar_oben.png");
+    background-image: url("images/sidebar_top.png");
 }
 
 div#side_version {
@@ -184,15 +194,13 @@ div#check_mk_sidebar div#side_footer {
     width: 100%;
     z-index: 10;
     background-repeat: no-repeat;
-    background-image: url("images/sidebar_unten.png");
+    background-image: url("images/sidebar_bottom.png");
 }
 div#check_mk_sidebar div#side_footer div.button {
     width: 75px;
     height: 20px;
     z-index: 20;
     position: absolute;
-    /* background-attachment: fixed; */
-    /* background-position: 15px 20px; */
     top: 10px;
     left: 15px;
     float: left;
@@ -289,10 +297,6 @@ div.snapin div.foot {
 div.snapin .content_center {
     margin-left:  auto;
     margin-right: auto;
-}
-
-div.snapin {
-    font-family: arial, helvetica, sans-serif;
 }
 
 div.snapin td {
@@ -563,8 +567,6 @@ table.navi td.left, table.navi td.right {
     background-image: url("images/metanav_button.png");
     background-repeat: no-repeat;
     background-position: left;
-    /* border: 1px solid transparent; */
-    /* border-bottom: 1px solid white; */
     color: white;
     padding: 0px;
     margin: 0px;
@@ -671,7 +673,7 @@ table.services th {
 
 }
 table.services th.tablegap {
-  background-image: url("images/background.jpg");
+  background-image: url("images/contentframe_background.jpg");
   background-repeat: repeat;
   background-position: center;
 }
@@ -932,14 +934,6 @@ td.icons img {
  margin-right: 3px;
 }
 
-td.icon {
-    width: 20px;
-    background-image: url("images/whiteglass.png");
-}
-td.icon img {
-  border-style: none;
-}
-
 img.icon {
    width: 20px;
    border-style: none;
@@ -1097,8 +1091,6 @@ h2.formcaption {
 table.form {
     border-collapse: collapse;
     empty-cells: show;
-    background-image: url("images/form_background.png"); 
-    background-repeat: repeat;
     border-spacing: 0px;
     margin: 10px;
 }
@@ -1122,14 +1114,15 @@ table.form th {
     padding: 4px 4px;
 }
 
-table.form b.toggleheader {
+table.form img.toggleheader {
+    width: 20px;
+    height: 20px;
     cursor: auto;
-    background-image: none;
+    padding-right: 5px;
+    vertical-align:middle;
 }
-table.form b.toggleheader.hover {
+table.form img.toggleheader.hover {
     cursor: pointer;
-    color: white;
-    /* background-image: url("images/form_background.png"); */
 }
 
 table.form td.legend { 
@@ -1146,8 +1139,6 @@ table.form td.legend.border {
     border-right-style: solid;
 }
 table.form td.hilite {
-    background-image: url("images/form_background.png"); 
-    background-repeat: repeat;
     margin: 10px;
 }
 
@@ -1162,16 +1153,6 @@ table.form td.content {
     border-left-style: none;
     vertical-align: top;
 }
-
-table#displayoptions td.content { 
-  background-image: url("images/background-brown.jpg");
-  background-repeat: repeat;
-  background-position: center;
-}
-table#displayoptions td.legend, 
-input.tab#displayoptions, 
-input.tabactive#displayoptions    { background-color: #f84; }
-
 
 input.tab#results, input.tabactive#results { background-color: #fe6; }
 
@@ -1530,7 +1511,7 @@ table.filters td
    border-bottom: 1px dotted #fff;
    vertical-align: middle;
    height: 36px;
-padding: 4px 8px;
+    padding: 4px 8px;
 }
 
 
@@ -1575,27 +1556,19 @@ table.filters td.usagehard select
     background-color: #67c;
 }
 
-table.filters td.widgetshow
-{
-    background-image: url("images/background-gold.jpg");
-    background-repeat: repeat;
-    background-position: center;
-    background-color: transparent;
-    color: #000;
+table.filters td.widgetshow {
+    background-color: #FAF995;
 }
-table.filters td.widgetoff
-{
+table.filters td.widgetoff {
     background-image: none;
     color: #aa6;
 }
-table.filters td.widgethard
-{
+table.filters td.widgethard {
     background-image: none;
     background-color: #abf;
     color: #000;
 }
-table.filters td.widgethide
-{
+table.filters td.widgethide {
     background-image: none;
     background-color: #e8e;
     color: #000;
@@ -1627,8 +1600,6 @@ div.columneditor {
 div.columneditor table {
     padding: 0px;
     margin: 0px;
-    background-image: url("images/form_background.png");
-    background-repeat: repeat;
     border: 1px solid white;
     -moz-border-radius: 5px;
     width: 100%;
@@ -1777,8 +1748,6 @@ div.wato {
 }
 
 .wato table.auditlog {
-    background-image: url("images/form_background.png"); 
-    background-repeat: repeat;
     border-collapse: collapse;
     margin-top: 3px;
     margin-bottom: 1em;
@@ -1880,7 +1849,7 @@ tr.even0 .aggrtree ul.subtree {
 }
 
 .state.assumed {
-    background-image: url("images/assumption_background.png");
+    background-image: url("images/assume_bg.png");
     background-repeat: repeat;
 }
 

@@ -3822,6 +3822,9 @@ def do_automation(cmd, args):
 #   |                                                       |___/          |
 #   +----------------------------------------------------------------------+
 
+# Initialize dictionary-type default levels variables
+for varname in check_default_levels.values():
+    globals()[varname] = {}
 
 # Now - at last - we can read in the user's configuration files
 def all_nonfunction_vars():
@@ -3897,11 +3900,16 @@ def compute_check_parameters(host, checktype, item, params):
     if def_levels_varname:
         vars_before_config.add(def_levels_varname)
     if def_levels_varname and type(params) == dict:
+
         # Start with factory settings
         new_params = factory_settings.get(def_levels_varname, {}).copy()
+
         # Merge user's default settings onto it
         if def_levels_varname in globals():
             new_params.update(eval(def_levels_varname))
+
+        # Merge params from inventory onto it
+        new_params.update(params)
         params = new_params
 
     descr = service_description(checktype, item)

@@ -26,16 +26,16 @@
 
 
 # lookup tables for check implementation
-brocade_fcport_phystates = [ '', '', 'noCard', 'laserFault', 'noLight', 'noSync', 'inSync', 'portFault', 'diagFault', 'lockRef' ]
+brocade_fcport_phystates = [ '', 'noCard', 'noTransceiver', 'laserFault', 'noLight', 'noSync', 'inSync', 'portFault', 'diagFault', 'lockRef' ]
 brocade_fcport_opstates  = [ 'unknown', 'online', 'offline', 'testing', 'faulty' ]
 brocade_fcport_admstates = [ '', 'online', 'offline', 'testing', 'faulty' ] 
 brocade_fcport_speed     = [ '', '1Gbit', '2Gbit', 'auto-Neg', '4Gbit', '8Gbit', '10Gbit', ]
 
 
 # settings for inventory: which ports should be inventorized
-brocade_fcport_inventory_phystates = [ 2, 3, 4, 5, 6, 7, 8, 9, ]
+brocade_fcport_inventory_phystates = [ 3, 4, 5, 6, 7, 8, 9, ]
 brocade_fcport_inventory_opstates  = [ 1, 2, 3, 4, ] 
-brocade_fcport_inventory_admstates = [ 1, 2, 3, 4, ]  
+brocade_fcport_inventory_admstates = [ 1, 3, 4, ]  
 
 
 check_default_levels["brocade_fcport"] = "brocade_fcport_default_levels"
@@ -86,7 +86,7 @@ def check_brocade_fcport(item, params, info):
     portinfo = [ line for line in info[0] if brocade_fcport_getitem(info[0], int(line[0])) == item ]
     if len(portinfo) < 1:
         return (3, "UNKOWN - Port not found in SNMP data")
-    
+ 
     # Prepare data, convert to int
     index, phystate, opstate, admstate, txwords, rxwords, txframes, rxframes, \
          notxcredits, rxcrcs, rxencoutframes, c3discards, speed = map(int, portinfo[0])
@@ -111,40 +111,6 @@ def check_brocade_fcport(item, params, info):
            speedmsg  = ("%.0fGbit/s" % gbit)
 
 
-    # Port Status (physical layer)
-    errorflag = ""
-    if params["phystate"] != None and phystate != params['phystate']:
-    # noCard(1) laserFault(2) noLight(3) noSync(4) inSync(5) portFault(6) diagFault(7) lockRef()
-        if phystate in [1, 5]:
-            errorflag = "(!)"
-            summarystate = max(summarystate, 1) 
-        else:
-            errorflag = "(!!)"
-            summarystate = 2
-    output.append("Physical state: %s%s" % (brocade_fcport_phystates[phystate], errorflag))
-
-    errorflag = ""
-    #unknown(0) online(1) offline(2) testing(3) faulty(4) ]
-    if params["opstate"] != None and opstate != params['opstate']:
-        if opstate in [1, 3]:
-            errorflag = "(!)"
-            summarystate = max(summarystate, 1)
-        else:
-            errorflag = "(!!)"
-            summarystate = 2
-    output.append("Operational state: %s%s" % (brocade_fcport_opstates[opstate], errorflag))
-
-    errorflag = ""
-    # online(1) offline(2) testing(3) faulty(4)
-    if "admstate" in params and admstate != params['admstate']:
-        if admstate not in [2, 4]:
-            errorflag = "(!)"
-            summarystate = max(summarystate, 1)
-        else:
-            errorflag = "(!!)"
-            summarystate = 2
-    output.append("Admin state: %s%s" % (brocade_fcport_opstates[admstate], errorflag))
-
     # convert gbit netto link-rate to Byte/s (8/10 enc)
     wirespeed = gbit * 0.8 * 1000000.0 / 8
 
@@ -152,14 +118,10 @@ def check_brocade_fcport(item, params, info):
     # Now check rates of various error counters
     this_time = time.time()
     try:
-        timedif, rxframes_rate         = get_counter("brocade_fcport.rxframes.%s"       % index, this_time, rxframes)
-        timedif, txframes_rate         = get_counter("brocade_fcport.txframes.%s"       % index, this_time, txframes)
-        timedif, rxwords_rate          = get_counter("brocade_fcport.rxwords.%s"        % index, this_time, rxwords)
-        timedif, txwords_rate          = get_counter("brocade_fcport.txwords.%s"        % index, this_time, txwords)
-        timedif, notxcredits_rate      = get_counter("brocade_fcport.notxcredits.%s"    % index, this_time, notxcredits)
-        timedif, rxcrcs_rate           = get_counter("brocade_fcport.rxcrcs.%s"         % index, this_time, rxcrcs)
-        timedif, rxencoutframes_rate   = get_counter("brocade_fcport.rxencoutframes.%s" % index, this_time, rxencoutframes)
-        timedif, c3discards_rate       = get_counter("brocade_fcport.c3discards.%s"     % index, this_time, c3discards)
+        timedif, rxframes_rate  = get_counter("brocade_fcport.rxframes.%s"  % index, this_time, rxframes)
+        timedif, txframes_rate  = get_counter("brocade_fcport.txframes.%s"  % index, this_time, txframes)
+        timedif, rxwords_rate   = get_counter("brocade_fcport.rxwords.%s"   % index, this_time, rxwords)
+        timedif, txwords_rate   = get_counter("brocade_fcport.txwords.%s"   % index, this_time, txwords)
    
         # compute traffic in B/s and MB/s
 	in_bytes = rxwords_rate * 4
@@ -171,7 +133,7 @@ def check_brocade_fcport(item, params, info):
 	# convert thresholds in percentage into MB/s
         bw_thresh = params.get("bw")
 	if bw_thresh == None: # no levels
-	    bw_thresh = None, None
+	    warn_bytes, crit_bytes = None, None
 	else:
 	    warn, crit = bw_thresh
 	    if type(warn) == float:
@@ -194,10 +156,10 @@ def check_brocade_fcport(item, params, info):
 	        perfdata.append( ("%s_avg" % what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed))
 
             # handle levels for in/out
-            if crit != None and value >= crit_bytes:
+            if crit_bytes != None and value >= crit_bytes:
                 summarystate = 2
                 output.append(" >= %s/s(!!)" % (get_bytes_human_readable(crit_bytes)))
-            elif warn != None and value >= warn_bytes:
+            elif warn_bytes != None and value >= warn_bytes:
                 summarystate = max(1, summarystate)
                 output.append(" >= %s/s(!!)" % (get_bytes_human_readable(warn_bytes)))
 
@@ -229,7 +191,7 @@ def check_brocade_fcport(item, params, info):
 	    # Honor averaging of error rate
 	    if average:
                 timedif, rate = get_average("brocade_fcport.%s.%s.avgrate" % (counter, item), this_time, rate, average)
-	        text += ", Avg: %.2f%%" % rate * 100.0
+	        text += ", Avg: %.2f%%" % (rate * 100.0)
 
 	    error_percentage = rate * 100.0
 	    warn, crit = params[counter]
@@ -243,22 +205,59 @@ def check_brocade_fcport(item, params, info):
                 output.append(text)
 
 
-    except MKCounterWrapped:
+    except MKCounterWrapped, e:
         # Assume that this is the first check of this port. Make sure, all counters
         # are initialized. If a counter is updated twice, get_counter will handle
         # that correctly.
-        for counter, value in [ ("rxwords", rxwords), 
-				("txwords", txwords), 
-				("txframes", txframes, ),
+        for counter, value in [ ( "rxwords", rxwords), 
+				( "txwords", txwords), 
+				( "txframes", txframes, ),
                                 ( "notxcredits", notxcredits), 
-				("rxcrcs", rxcrcs), 
+				( "rxcrcs", rxcrcs), 
                                 ( "rxencoutframes", rxencoutframes), 
-				("c3discards", c3discards)]:
+				( "c3discards", c3discards)]:
             try:
                 get_counter("brocade_fcport.%s.%s" % (counter, index), this_time, value)
-            except:
+            except MKCounterWrapped, e:
                 pass
         perfdata = [] # perfdata might not be valid
+
+
+    # P O R T S T A T E
+    # Port Status (physical layer)
+    errorflag = ""
+    if params.get("phystate") != None and phystate != params['phystate']:
+        # noCard (1), noTransceiver (2), laserFault (3), noLight (4), 
+        # noSync (5), inSync (6), portFault (7), diagFault (8), lockRef (9)
+        if phystate in [1, 6]:
+            errorflag = "(!)"
+            summarystate = max(summarystate, 1) 
+        else:
+            errorflag = "(!!)"
+            summarystate = 2
+    output.append("Phy:%s(%d)%s" % (brocade_fcport_phystates[phystate], phystate, errorflag))
+
+    errorflag = ""
+    #unknown(0) online(1) offline(2) testing(3) faulty(4) ]
+    if params.get("opstate") != None and opstate != params['opstate']:
+        if opstate in [1, 3]:
+            errorflag = "(!)"
+            summarystate = max(summarystate, 1)
+        else:
+            errorflag = "(!!)"
+            summarystate = 2
+    output.append("Op:%s(%d)%s" % (brocade_fcport_opstates[opstate], opstate, errorflag))
+
+    errorflag = ""
+    # online(1) offline(2) testing(3) faulty(4)
+    if params.get("admstate") and admstate != params['admstate']:
+        if admstate not in [2, 4]:
+            errorflag = "(!)"
+            summarystate = max(summarystate, 1)
+        else:
+            errorflag = "(!!)"
+            summarystate = 2
+    output.append("Adm:%s(%d)%s" % (brocade_fcport_admstates[admstate], admstate, errorflag))
 
     return (summarystate, '%s - %s' % (nagios_state_names[summarystate], ', '.join(output)), perfdata)
 

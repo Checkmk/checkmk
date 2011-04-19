@@ -3925,11 +3925,15 @@ def read_all_autochecks():
         try:
             autochecks += eval(file(f).read())
         except SyntaxError,e:
-            sys.stderr.write("Syntax error in file %s: %s\n" % (f, e))
-            sys.exit(3)
+            if opt_verbose:
+                sys.stderr.write("Syntax error in file %s: %s\n" % (f, e))
+            if opt_debug: 
+                sys.exit(3)
         except Exception, e:
-            sys.stderr.write("Error in file %s:\n%s\n" % (f, e))
-            sys.exit(3)
+            if opt_verbose:
+                sys.stderr.write("Error in file %s:\n%s\n" % (f, e))
+            if opt_debug: 
+                sys.exit(3)
 
     # Exchange inventorized check parameters with those configured by
     # the user. Also merge with default levels for modern dictionary based checks.

@@ -95,12 +95,12 @@ sidebar_snapins["search"] = {
     "render" : render_searchform,
     "allowed" : [ "user", "admin", "guest" ],
     "styles" : """
-div#mk_side_search {
+#mk_side_search {
     width: %dpx;
     padding: 0;
 }
 
-div#mk_side_search input {
+#mk_side_search input {
     margin:  0;
     padding: 0;
     font-size: 8pt;
@@ -114,7 +114,7 @@ div#mk_side_search input {
     outline: 1px solid #fff;
 }
 
-div#mk_side_search #mk_search_results {
+#mk_search_results {
     position: relative;
     border: 1px solid white;
     top: 1px;
@@ -124,7 +124,7 @@ div#mk_side_search #mk_search_results {
     width:140px;
 }
 
-div#mk_side_search #mk_search_results a {
+#mk_search_results a {
     display: block;
     color: #000;
     text-decoration: none;
@@ -133,8 +133,8 @@ div#mk_side_search #mk_search_results a {
     width: 135px;
 }
 
-div#mk_side_search #mk_search_results a:hover, div#mk_side_search #mk_search_results a.active {
-background-color: #BFBFBF;
+#mk_search_results a:hover, #mk_search_results a.active {
+    background-color: #BFBFBF;
 }
 
 """ % (snapin_width - 4, snapin_width - 8)

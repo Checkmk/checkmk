@@ -126,7 +126,7 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns):
             painted = paint(p, rows[0])
         html.write("</tr></table>\n")
 
-        html.write("<div class=tableshadow><table class=services>")
+        html.write("<div class=tableshadow><table class=data>")
         trclass = None
 
         # paint table headers, if configured
@@ -189,7 +189,7 @@ multisite_layouts["boxed"] = {
 #
 # -------------------------------------------------------------------------
 def render_tiled(rows, view, group_painters, painters, _ignore_num_columns):
-    html.write("<table class=\"services tiled\">\n")
+    html.write("<table class=\"data tiled\">\n")
 
     last_group = None
     group_open = False
@@ -273,7 +273,7 @@ multisite_layouts["tiled"] = {
 #
 # ------------------------------------------------------------------------
 def render_grouped_list(rows, view, group_painters, painters, num_columns):
-    html.write("<table class=services>\n")
+    html.write("<table class=data>\n")
     last_group = None
     trclass = None
     column = 1

@@ -12,6 +12,7 @@
     * Call snmp(bulk)walk always with the option -Cc (fixes problems in some
       cases where OIDs are missing)
     * Allow merging of dictionary based check parameters
+    * --debug now implies -v
 
     Multisite:
     * FIX: Nagios-Snapin: avoid duplicate slash in URL

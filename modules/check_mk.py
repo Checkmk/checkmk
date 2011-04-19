@@ -35,8 +35,8 @@ check_mk_version  = '(inofficial)'
 # Some things have to be done before option parsing and might
 # want to output some verbose messages.
 if __name__ == "__main__":
-    opt_verbose      = '-v' in sys.argv[1:] or '--verbose' in sys.argv[1:]
     opt_debug        = '--debug' in sys.argv[1:]
+    opt_verbose      = opt_debug or '-v' in sys.argv[1:] or '--verbose' in sys.argv[1:]
 else:
     opt_verbose = False
     opt_debug = False

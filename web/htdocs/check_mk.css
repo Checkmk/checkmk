@@ -534,13 +534,13 @@ table.navi tr.form td.form {
     padding: 0;
 }
 
-table.navi tr.form td.#fffborder {
+table.navi tr.form td.whiteborder {
     border-left: 1px solid #fff;
     border-right: 1px solid #fff;
     border-bottom: 1px solid #fff;
 }
 
-table.navi tr.form div.#fffborder, table.navi tr.form table.#fffborder {
+table.navi tr.form div.whiteborder, table.navi tr.form table.whiteborder {
     border-left: 1px solid #fff;
     border-right: 1px solid #fff;
     margin: 0;

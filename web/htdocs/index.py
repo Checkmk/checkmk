@@ -128,11 +128,15 @@ def connect_to_livestatus(html):
         v1, v2, ps = html.live.query_row("GET status\nColumns: livestatus_version program_version program_start")
         html.site_status[''].update({ "state" : "online", "livestatus_version": v1, "program_version" : v2, "program_start" : ps })
 
-    # If multiadmin is retricted to data user is a nagios contact for,
+    # If Multisite is retricted to data user is a nagios contact for,
     # we need to set an AuthUser: header for livestatus
     if not config.may("see_all"):
         html.live.set_auth_user('read',   config.user)
         html.live.set_auth_user('action', config.user)
+
+    # May the user see all objects in BI aggregations or only some? 
+    if not config.may("bi.see_all"):
+        html.live.set_auth_user('bi', config.user)
 
     # Default auth domain is read. Please set to None to switch off authorization
     html.live.set_auth_domain('read')

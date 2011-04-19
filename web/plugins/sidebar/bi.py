@@ -37,9 +37,9 @@ except NameError:
 
 def render_bi_groups():
     bi.html = html
-    bi.compile_forest()
+    bi.compile_forest(html.req.user)
     html.write("<ul>")
-    for group, trees in bi.g_aggregation_forest.items():
+    for group, trees in bi.g_user_cache["forest"].items():
         if len(trees) > 0:
             bulletlink(group, "view.py?view_name=aggr_group&aggr_group=%s" %
                     htmllib.urlencode(group))

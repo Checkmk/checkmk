@@ -14,6 +14,15 @@ except NameError:
 
 
 
+config.declare_permission_section("bi", "BI - Check_MK Business Intelligence")
+config.declare_permission("bi.see_all",
+        "See all hosts and services",
+        "With this permission set, the BI aggregation rules are applied to all "
+        "hosts and services - not only those the user is a contact for. If you "
+        "remove this permissions then the user will see incomplete aggregation "
+        "trees with status based only on those items.",
+        [ "admin", "guest" ])
+
 #      ____                _              _       
 #     / ___|___  _ __  ___| |_ __ _ _ __ | |_ ___ 
 #    | |   / _ \| '_ \/ __| __/ _` | '_ \| __/ __|
@@ -46,37 +55,35 @@ SITE_SEP = '#'
 #                         |_|                                
 
 # global variables
-g_aggregation_forest = None
-g_host_aggregations = None  # aggregations with exactly one host
-g_affected_hosts = None     # all aggregations affecting a host
-g_affected_services = None  # all aggregations affecting a service
-g_config_information = None
-g_services = None
+g_cache = {}                # per-user cache
+g_config_information = None # for invalidating cache after config change
 
 # Load the static configuration of all services and hosts (including tags)
-# without state and store it in the global variable g_services.
-
+# without state.
 def load_services():
-    global g_services
-    g_services = {}
+    services = {}
     html.live.set_prepend_site(True)
+    html.live.set_auth_domain('bi')
     data = html.live.query("GET hosts\nColumns: name custom_variable_names custom_variable_values services\n")
     html.live.set_prepend_site(False)
+    html.live.set_auth_domain('read')
 
-    for site, host, varnames, values, services in data:
+    for site, host, varnames, values, svcs in data:
         vars = dict(zip(varnames, values))
         tags = vars.get("TAGS", "").split(" ")
-        g_services[(site, host)] = (tags, services)
+        services[(site, host)] = (tags, svcs)
+
+    return services
         
 # Keep complete list of time stamps of configuration
 # and start of each site. Unreachable sites are registered
 # with 0.
-def forest_needs_update():
+def cache_needs_update():
     new_config_information = [tuple(config.modification_timestamps)]
     for site in html.site_status.values():
         new_config_information.append(site.get("program_start", 0))
 
-    if new_config_information != g_config_information or g_aggregation_forest == None:
+    if new_config_information != g_config_information:
         return new_config_information
     else:
         return False
@@ -95,26 +102,33 @@ def reused_compilation():
 # Everything is resolved. Sites, hosts and services are hardcoded. The
 # aggregation functions are still left as names. That way the forest
 # printable (and storable in Python syntax to a file).
-def compile_forest():
-    new_config_information = forest_needs_update()
+def compile_forest(user):
+    global g_user_cache
+
+    new_config_information = cache_needs_update()
     if not new_config_information:
-        global used_cache
-        used_cache = True
-        return
+        cache = g_cache.get(user)
+        if cache:
+            # make sure, BI permissions have not changed since last time
+            if cache["see_all"] == config.may("bi.see_all"):
+                g_user_cache = cache
+                global used_cache
+                used_cache = True
+                return cache["forest"]
 
     global did_compilation
     did_compilation = True
 
-    global g_aggregation_forest
-    g_aggregation_forest = {}
-    global g_host_aggregations
-    g_host_aggregations = {}
-    global g_affected_hosts
-    g_affected_hosts = {}
-    global g_affected_services
-    g_affected_services = {}
+    cache = {
+        "forest" :            {},
+        "host_aggregations" : {},
+        "affected_hosts" :    {},
+        "affected_services":  {},
+        "services" : load_services(),
+        "see_all" : config.may("bi.see_all"),
+    }
+    g_user_cache = cache
 
-    load_services()
     for entry in config.aggregations:
         if len(entry) < 3:
             raise MKConfigError("<h1>Invalid aggregation <tt>%s</tt></h1>"
@@ -129,9 +143,9 @@ def compile_forest():
         new_entries = [ e for e in new_entries if len(e[-3]) > 0 ]
         
         # enter new aggregations into dictionary for that group
-        entries = g_aggregation_forest.get(group, [])
+        entries = cache["forest"].get(group, [])
         entries += new_entries
-        g_aggregation_forest[group] = entries
+        cache["forest"][group] = entries
 
         # Update several global speed-up indices
         for aggr in new_entries:
@@ -140,26 +154,27 @@ def compile_forest():
             # All single-host aggregations looked up per host
             if len(req_hosts) == 1:
                 host = req_hosts[0] # pair of (site, host)
-                entries = g_host_aggregations.get(host, [])
+                entries = cache["host_aggregations"].get(host, [])
                 entries.append((group, aggr))
-                g_host_aggregations[host] = entries
+                cache["host_aggregations"][host] = entries
 
             # All aggregations containing a specific host
             for h in req_hosts:
-                entries = g_affected_hosts.get(h, [])
+                entries = cache["affected_hosts"].get(h, [])
                 entries.append((group, aggr))
-                g_affected_hosts[h] = entries
+                cache["affected_hosts"][h] = entries
 
             # All aggregations containing a specific service
             services = find_all_leaves(aggr)
             for s in services: # triples of site, host, service
-                entries = g_affected_services.get(s, []) 
+                entries = cache["affected_services"].get(s, []) 
                 entries.append((group, aggr))
-                g_affected_services[s] = entries
+                cache["affected_services"][s] = entries
 
         # Remember successful compile in cache
         global g_config_information
         g_config_information = new_config_information
+        g_cache[user] = cache
 
 
 # Execute an aggregation rule, but prepare arguments 
@@ -195,7 +210,7 @@ def find_matching_services(calllist):
 
     matches = set([])
 
-    for (site, hostname), (tags, services) in g_services.items():
+    for (site, hostname), (tags, services) in g_user_cache["services"].items():
         host_matches = None
 
         # If host ends with '|@all', we need to check host tags instead
@@ -259,7 +274,7 @@ def substitute_matches(arg, match):
 
 # Debugging function
 def render_forest():
-    for group, trees in g_aggregation_forest.items():
+    for group, trees in g_user_cache["forest"].items():
         html.write("<h2>%s</h2>" % group)
         for tree in trees:
             instargs, node = tree
@@ -413,7 +428,7 @@ def compile_aggregation_rule(rule, args, lvl = 0):
 
 
 def find_remaining_services(hostspec, aggregation):
-    tags, all_services = g_services[hostspec]
+    tags, all_services = g_user_cache["services"][hostspec]
     all_services = set(all_services)
     for site, host, service in find_all_leaves(aggregation):
         if (site, host) == hostspec:
@@ -480,7 +495,7 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
     honor_site = SITE_SEP in host_re
 
     # TODO: If we already know the host we deal with, we could avoid this loop
-    for (site, hostname), (tags, services) in g_services.items():
+    for (site, hostname), (tags, services) in g_user_cache["services"].items():
         # If host ends with '|@all', we need to check host tags instead
         # of regexes.
         if host_re.endswith('|@all'):
@@ -731,7 +746,7 @@ config.aggregation_functions["best"]  = aggr_best
 def page_debug(h):
     global html
     html = h
-    compile_forest()
+    compile_forest(html.req.user)
     
     html.header("BI Debug")
     render_forest()
@@ -743,9 +758,9 @@ def page_all(h):
     global html
     html = h
     html.header("All")
-    compile_forest()
+    compile_forest(html.req.user)
     load_assumptions()
-    for group, trees in g_aggregation_forest.items():
+    for group, trees in g_user_cache["forest"].items():
         html.write("<h2>%s</h2>" % group)
         for inst_args, tree in trees:
             state = execute_tree(tree)
@@ -815,7 +830,7 @@ def create_aggregation_row(tree, status_info = None):
 def table(h, columns, add_headers, only_sites, limit, filters):
     global html
     html = h
-    compile_forest()
+    compile_forest(html.req.user)
     load_assumptions() # user specific, always loaded
     # Hier müsste man jetzt die Filter kennen, damit man nicht sinnlos
     # alle Aggregationen berechnet.
@@ -835,7 +850,7 @@ def table(h, columns, add_headers, only_sites, limit, filters):
     # TODO: Optimation of affected_hosts filter!
 
     if only_service:
-        affected = g_affected_services.get(only_service)
+        affected = g_user_cache["affected_services"].get(only_service)
         if affected == None:
             items = []
         else:
@@ -847,7 +862,7 @@ def table(h, columns, add_headers, only_sites, limit, filters):
             items = by_groups.items()
 
     else:
-        items = g_aggregation_forest.items()
+        items = g_user_cache["forest"].items()
 
     for group, trees in items:
         if only_group not in [ None, group ]:
@@ -866,7 +881,7 @@ def table(h, columns, add_headers, only_sites, limit, filters):
 def host_table(h, columns, add_headers, only_sites, limit, filters):
     global html
     html = h
-    compile_forest()
+    compile_forest(html.req.user)
     load_assumptions() # user specific, always loaded
 
     # Create livestatus filter for filtering out hosts. We can
@@ -889,7 +904,7 @@ def host_table(h, columns, add_headers, only_sites, limit, filters):
         site = hostrow["site"]
         host = hostrow["name"]
         status_info = { (site, host) : [ hostrow["state"], hostrow["plugin_output"], hostrow["services_with_info"] ] }
-        for group, aggregation in g_host_aggregations.get((site, host), []):
+        for group, aggregation in g_user_cache["host_aggregations"].get((site, host), []):
             row = hostrow.copy()
             row.update(create_aggregation_row(aggregation, status_info))
             row["aggr_group"] = group
@@ -938,9 +953,9 @@ def status_tree_depth(tree):
 def is_part_of_aggregation(h, what, site, host, service):
     global html
     html = h
-    compile_forest()
+    compile_forest(html)
     if what == "host":
-        return (site, host) in g_affected_hosts
+        return (site, host) in g_user_cache["affected_hosts"]
     else:
-        return (site, host, service) in g_affected_services
+        return (site, host, service) in g_user_cache["affected_services"]
 

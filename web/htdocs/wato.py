@@ -49,7 +49,8 @@ import htmllib
 
 config.declare_permission("use_wato",
      "Use WATO",
-     "This permissions allows users to use WATO - Check_MK's Web Administration Tool. Please make sure, that they also have the permission for the WATO snapin.",
+     "This permissions allows users to use WATO - Check_MK's Web Administration Tool.<br>"
+     "Please make sure, that they also have the permission for the WATO snapin.",
      [ "admin", ])
 
 conf_dir = defaults.var_dir + "/wato"

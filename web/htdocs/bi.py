@@ -137,21 +137,24 @@ def compile_forest():
         for aggr in new_entries:
             req_hosts = aggr[0]
 
+            # All single-host aggregations looked up per host
             if len(req_hosts) == 1:
                 host = req_hosts[0] # pair of (site, host)
                 entries = g_host_aggregations.get(host, [])
                 entries.append((group, aggr))
                 g_host_aggregations[host] = entries
 
+            # All aggregations containing a specific host
             for h in req_hosts:
                 entries = g_affected_hosts.get(h, [])
                 entries.append((group, aggr))
                 g_affected_hosts[h] = entries
 
+            # All aggregations containing a specific service
             services = find_all_leaves(aggr)
             for s in services: # triples of site, host, service
                 entries = g_affected_services.get(s, []) 
-                entries.append((group, entry))
+                entries.append((group, aggr))
                 g_affected_services[s] = entries
 
         # Remember successful compile in cache

@@ -456,9 +456,10 @@ host_tags = []
 #    |____/___|
 #              
 
-ALL_HOSTS = ['@all']
+ALL_HOSTS = '(.*)'
 HOST_STATE = '__HOST_STATE__'
-class FOREACH: pass
+class FOREACH_HOST: pass
+class FOREACH_SERVICE: pass
 class REMAINING: pass
 aggregation_rules = {}
 aggregations = []

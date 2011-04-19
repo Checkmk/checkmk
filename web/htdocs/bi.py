@@ -140,7 +140,7 @@ def compile_forest(user):
         for entry in new_entries:
             remove_empty_nodes(entry)
 
-        new_entries = [ e for e in new_entries if len(e[-3]) > 0 ]
+        new_entries = [ e for e in new_entries if len(e[3]) > 0 ]
         
         # enter new aggregations into dictionary for that group
         entries = cache["forest"].get(group, [])
@@ -191,8 +191,8 @@ def compile_rule_node(calllist, lvl):
     # Execute FOREACH: iterate over matching hosts/services and 
     # for each hit create an argument list where $1$, $2$, ... are
     # substituted with matched strings.
-    if calllist[0] == config.FOREACH:
-        matches = find_matching_services(calllist[1:])
+    if calllist[0] in [ config.FOREACH_HOST, config.FOREACH_SERVICE ]:
+        matches = find_matching_services(calllist[0], calllist[1:])
         new_elements = []
         for match in matches:
             args = [ substitute_matches(a, match) for a in arglist ]
@@ -203,47 +203,45 @@ def compile_rule_node(calllist, lvl):
         return compile_aggregation_rule(rule, arglist, lvl)
 
 
-def find_matching_services(calllist):
+def find_matching_services(what, calllist):
+    # honor list of host tags preceding the host_re
+    if type(calllist[0]) == list:
+        required_tags = calllist[0]
+        calllist = calllist[1:]
+    else:
+        required_tags = []
+
     host_re = calllist[0]
-    service_re = calllist[1]
+    if what == config.FOREACH_HOST:
+        service_re = config.HOST_STATE
+    else:
+        service_re = calllist[1]
+
     honor_site = SITE_SEP in host_re
 
     matches = set([])
 
     for (site, hostname), (tags, services) in g_user_cache["services"].items():
         host_matches = None
+        if not match_host_tags(tags, required_tags):
+            continue
 
-        # If host ends with '|@all', we need to check host tags instead
-        # of regexes.
-        if host_re.endswith('|@all'):
-            if not match_host_tags(host_re[:-5], tags):
-                continue
-            host_matches = []
-        elif host_re.endswith('|@all)'):
-            if not match_host_tags(host_re[1:-6], tags):
-                 continue
-            host_matches = ( hostname, )
-        elif host_re == '@all':
-            host_matches = []
-        elif host_re == '(@all)':
-            host_matches = ( hostname, )
+        # For regex to have '$' anchor for end. Users might be surprised
+        # to get a prefix match on host names. This is almost never what
+        # they want. For services this is useful, however.
+        if host_re.endswith("$"):
+            anchored = host_re
         else:
-            # For regex to have '$' anchor for end. Users might be surprised
-            # to get a prefix match on host names. This is almost never what
-            # they want. For services this is useful, however.
-            if host_re.endswith("$"):
-                anchored = host_re
-            else:
-                anchored = host_re + "$"
+            anchored = host_re + "$"
 
-            # In order to distinguish hosts with the same name on different
-            # sites we prepend the site to the host name. If the host specification
-            # does not contain the site separator - though - we ignore the site
-            # an match the rule for all sites.
-            if honor_site:
-                host_matches = do_match(anchored, "%s%s%s" % (site, SITE_SEP, hostname))
-            else:
-                host_matches = do_match(anchored, hostname)
+        # In order to distinguish hosts with the same name on different
+        # sites we prepend the site to the host name. If the host specification
+        # does not contain the site separator - though - we ignore the site
+        # an match the rule for all sites.
+        if honor_site:
+            host_matches = do_match(anchored, "%s%s%s" % (site, SITE_SEP, hostname))
+        else:
+            host_matches = do_match(anchored, hostname)
 
         if host_matches != None:
             if config.HOST_STATE in service_re:
@@ -277,8 +275,7 @@ def render_forest():
     for group, trees in g_user_cache["forest"].items():
         html.write("<h2>%s</h2>" % group)
         for tree in trees:
-            instargs, node = tree
-            ascii = render_tree(node)
+            ascii = render_tree(tree)
             html.write("<pre>\n" + ascii + "<pre>\n")
 
 # Debugging function
@@ -438,25 +435,6 @@ def find_remaining_services(hostspec, aggregation):
     return [ ( [hostspec], hostspec, service ) for service in remaining ]
 
 
-# Reduce [ [ 'linux', 'test' ], ALL_HOSTS, ... ] to [ 'linux|test|@all', ... ]
-# Reduce [ [ 'xsrvab1', 'xsrvab2' ], ... ]       to [ 'xsrvab1|xsrvab2', ... ]
-# Reduce [ [ ALL_HOSTS, ... ] ]                  to [ '.*', ... ]
-def compile_args(args):
-    newargs = []
-    while len(args) > 0:
-        if args[0] == config.ALL_HOSTS:
-            newargs.append('.*')
-        elif type(args[0]) == list and len(args) >= 2 and args[1] == config.ALL_HOSTS:
-            newargs.append('|'.join(args[0] + config.ALL_HOSTS))
-            args = args[1:]
-        elif type(args[0]) == list:
-            newargs.append('|'.join(args[0]))
-        else:
-            newargs.append(args[0])
-        args = args[1:]
-    return newargs
-
-
 # Helper function that finds all occurrances of a variable
 # enclosed with $ and $. Returns a list of positions.
 def find_variables(pattern, varname):
@@ -477,15 +455,14 @@ def subst_vars(pattern, arginfo):
             pattern = pattern.replace('$'+name+'$', value)
     return pattern
 
-def match_host_tags(host, tags):
-    required_tags = host.split('|')
+def match_host_tags(have_tags, required_tags):
     for tag in required_tags:
         if tag.startswith('!'):
             negate = True
             tag = tag[1:]
         else:
             negate = False
-        has_it = tag in tags
+        has_it = tag in have_tags
         if has_it == negate:
             return False
     return True

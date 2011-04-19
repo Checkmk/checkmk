@@ -28,7 +28,7 @@ def inventory_df_netapp(checkname, info):
     inventory = []
     for volume, size_kb, used_kb in info:
         if saveint(size_kb) > 0: # Exclude filesystems with zero size (some snapshots)
-            inventory.append((volume, "filesystem_default_levels"))
+            inventory.append((volume, {}))
     return inventory
 
 def check_df_netapp(volume, params, info):

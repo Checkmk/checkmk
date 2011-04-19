@@ -32,7 +32,7 @@ def inventory_hr_fs(checktype, info):
         if hrtype in [ ".1.3.6.1.2.1.25.2.1.4" ] and \
                 hrdescr not in inventory_df_exclude_mountpoints and \
                 saveint(hrsize) != 0:
-            inventory.append((hrdescr, "filesystem_default_levels"))
+            inventory.append((hrdescr, {}))
     return inventory
 
 def check_hr_fs(item, params, info):
@@ -62,3 +62,5 @@ snmp_info["hr_fs"] = ( ".1.3.6.1.2.1.25.2.3.1", [
 
 snmp_scan_functions["hr_fs"] = lambda oid: \
         not not oid('.1.3.6.1.2.1.25.1.1.0') # HOST-RESOURCES-MIB::hrSystemUptime.0
+
+check_default_levels["hr_fs"] = "filesystem_default_levels"

@@ -297,6 +297,8 @@ ip_to_hostname_cache = None
 check_info                         = {} # all known checks
 check_includes                     = {} # library files needed by checks
 precompile_params                  = {} # optional functions for parameter precompilation, look at df for an example
+check_default_levels               = {} # dictionary-configured checks declare their default level variables here
+factory_settings                   = {} # factory settings for dictionary-configured checks
 check_config_variables             = [] # variables (names) in checks/* needed for check itself
 snmp_info                          = {} # whichs OIDs to fetch for which check (for tabular information)
 snmp_info_single                   = {} # similar, but for single SNMP variables (MIB-Name BASE-OID List-of-Suffixes)
@@ -2070,7 +2072,9 @@ no_inventory_possible = None
     output.write("check_info = {}\n" +
                  "check_includes = {}\n" +
                  "precompile_params = {}\n" +
+                 "factory_settings = {}\n" + 
                  "check_config_variables = []\n" +
+                 "check_default_levels = {}\n" +
                  "snmp_info = {}\n" +
                  "snmp_info_single = {}\n" +
                  "snmp_scan_functions = {}\n")
@@ -2936,7 +2940,7 @@ def dump_host(hostname):
     format_string = " %-15s %s%-10s %s%-17s %s%-14s%s %s%-16s%s"
     print tty_yellow + "Services:" + tty_normal
     check_items = get_sorted_check_table(hostname)
-    # check_items.sort()
+
     headers = ["checktype", "item",    "params", "description", "groups", "summarized to", "groups"]
     colors =  [ tty_normal,  tty_blue, tty_normal, tty_green,     tty_normal, tty_red, tty_white ]
     if service_dependencies != []:
@@ -3579,9 +3583,7 @@ def automation_try_inventory(args):
             except:
                 raise MKAutomationError("Invalid check parameter string '%s'" % paramstring)
             if state_type != 'manual':
-                e = service_extra_conf(hostname, descr, check_parameters)
-                if len(e) > 0:
-                    params = e[0]
+                params = compute_check_parameters(hostname, ct, item, params)
 
             try:
                 result = check_function(item, params, info)
@@ -3886,6 +3888,33 @@ if do_rrd_update:
 if agent_simulator:
     execfile(modules_dir + "/agent_simulator.py")
 
+# Compute parameters for a check honoring factory settings,
+# default settings of user in main.mk, check_parameters[] and
+# the values code in autochecks (given as parameter params)
+def compute_check_parameters(host, checktype, item, params):
+    # Handle dictionary based checks
+    def_levels_varname = check_default_levels.get(checktype)
+    if def_levels_varname:
+        vars_before_config.add(def_levels_varname)
+    if def_levels_varname and type(params) == dict:
+        # Start with factory settings
+        new_params = factory_settings.get(def_levels_varname, {}).copy()
+        # Merge user's default settings onto it
+        if def_levels_varname in globals():
+            new_params.update(eval(def_levels_varname))
+        params = new_params
+
+    descr = service_description(checktype, item)
+    entries = service_extra_conf(host, descr, check_parameters)
+    if len(entries) > 0:
+        # loop from last to first (first must have precedence)
+        for entry in entries[::-1]:
+            if def_levels_varname and type(entry) == dict:
+                params.update(entry)
+            else:
+                params = entry
+    return params
+
 # read automatically generated checks. They are prepended to the check
 # table: explicit user defined checks override automatically generated
 # ones. Do not read in autochecks, if check_mk is called as module.
@@ -3901,19 +3930,14 @@ def read_all_autochecks():
         except Exception, e:
             sys.stderr.write("Error in file %s:\n%s\n" % (f, e))
             sys.exit(3)
+
     # Exchange inventorized check parameters with those configured by
-    # the user.
-    if check_parameters != []:
-        new_autochecks = []
-        for autocheck in autochecks:
-            host, checktype, item, params = autocheck
-            descr = service_description(checktype, item)
-            entries = service_extra_conf(host, descr, check_parameters)
-            if len(entries) > 0:
-                new_autochecks.append( (host, checktype, item, entries[0] ) )
-            else:
-                new_autochecks.append(autocheck) # leave unchanged
-        autochecks = new_autochecks
+    # the user. Also merge with default levels for modern dictionary based checks.
+    autochecks = [ (host, ct, it, compute_check_parameters(host, ct, it, par)) 
+                   for (host, ct, it, par) in autochecks ]
+
+
+
 
 if __name__ == "__main__":
     read_all_autochecks()

@@ -47,7 +47,7 @@ def inventory_df(checkname, info):
         if mountpoint in inventory_df_exclude_mountpoints:
             continue # exclude this mount point (/tmp, /proc, whatever user wants)
 
-        inventory.append((mountpoint, "filesystem_default_levels"))
+        inventory.append((mountpoint, {}))
 
     return inventory
 
@@ -83,3 +83,4 @@ def check_df(mountpoint, params, info):
 
 
 check_info['df']        = (check_df, "fs_%s", 1, inventory_df)
+check_default_levels['df'] = "filesystem_default_levels"

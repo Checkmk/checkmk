@@ -26,13 +26,9 @@
 
 # Common include file for all filesystem checks (df, df_netapp, hr_fs, ...)
 
-# OBSOLETE:
-# df_magicnumber_normsize            = 20 # Standard size if 20 GB
-# df_lowest_warning_level            = 50 # Never move warn level below 50% due to magic factor
-# df_lowest_critical_level           = 60 # Never move crit level below 60% due to magic factor
-
 # Settings for filesystem checks (df, df_vms, df_netapp and maybe others)
 filesystem_levels                  = [] # obsolete. Just here to check config and warn if changed
+filesystem_default_levels = {} # can also be dropped some day in future
 
 # Filesystems to ignore (shouldn't be sent by agent anyway)
 inventory_df_exclude_fs            = [ 'nfs', 'smbfs', 'cifs', 'iso9660' ]
@@ -49,7 +45,7 @@ inventory_df_exclude_mountpoints   = [ '/dev' ]
 #    "trend_timeleft" : (72, 48)   # run time left in hours until full
 # }
 
-filesystem_default_levels = {
+factory_settings["filesystem_default_levels"] = {
     "levels"          : (80, 90), # warn/crit in percent
     "magic_normsize"  : 20,       # Standard size if 20 GB
     "levels_low"      : (50, 60), # Never move warn level below 50% due to magic factor

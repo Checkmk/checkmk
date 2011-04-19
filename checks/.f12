@@ -1,2 +1,2 @@
-sudo cp * /omd/versions/default/share/check_mk/checks
+sudo cp -v * /omd/versions/default/share/check_mk/checks
 

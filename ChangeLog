@@ -53,6 +53,7 @@
     * FIX: fc_brocade_port_detailed: fix PNP template in MULTIPLE mode
     * FIX: ad_replication.bat only generates output on domain controllers now.
            This is useful to prevent checks on non DC hosts (Thanks to Alex Greenwood)
+    * FIX: cisco_temp_perf: handle sensors without names correctly
     * printer_supply: Changed order of tests. When a printer reports -3 this
       is used before the check if maxlevel is -2.
     * printer_supply: Skipping inventory of supplies which have current value

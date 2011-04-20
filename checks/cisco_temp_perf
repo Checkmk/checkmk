@@ -56,11 +56,17 @@ cisco_temp_perf_envmon_states = {
 }
 
 def inventory_cisco_temp_perf(checkname, info):
-    return [ (line[0], None) for line in info if len(line) == 4 ]
+    inventory = []
+    for line in info:
+        name = line[0]
+        if name == "":
+            name = line[4]
+        inventory.append((name, None))
+    return inventory
 
 def check_cisco_temp_perf(item, params, info):
     for line in info:
-        if line[0] == item:
+        if line[0] == item or line[4] == item:
             temp = saveint(line[1])
             if temp != 0:
                 perfdata = [("temp", temp)]
@@ -81,8 +87,8 @@ def check_cisco_temp_perf(item, params, info):
                 return (2, "CRIT - state is %s%s" % (statename, temptext), perfdata)
     return (3, "UNKNOWN - Item %s not found in SNMP data" % item)
 
-check_info['cisco_temp_perf'] = (check_cisco_temp_perf, "%s", 1,  inventory_cisco_temp_perf)
-snmp_info['cisco_temp_perf'] = ( ".1.3.6.1.4.1.9.9.13.1.3.1", [ 2, 3, 4, 6 ] ) # CISCO-SMI
+check_info['cisco_temp_perf'] = (check_cisco_temp_perf, "Temperature %s", 1,  inventory_cisco_temp_perf)
+snmp_info['cisco_temp_perf'] = ( ".1.3.6.1.4.1.9.9.13.1.3.1", [ 2, 3, 4, 6, OID_END ] ) # CISCO-SMI
 snmp_scan_functions['cisco_temp_perf'] = \
     lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() and \
            oid(".1.3.6.1.4.1.9.9.13.1.3.1.3.*") != None

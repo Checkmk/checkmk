@@ -8,6 +8,7 @@
     * FIX: local: fixed search for custom templates PNP template
 
     Multisite:
+    * FIX: webservice: suppress livestatus errors in multi-site setups
     * FIX: install missing example icons in web/htdocs/images/icons
     * FIX: repair python/json webservice needed for NagStaMon
 

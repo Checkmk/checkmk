@@ -1184,8 +1184,9 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
             play_alarm_sounds()
 
     # In multi site setups error messages of single sites do not block the
-    # output and raise now exception. We simply print error messages here:
-    if config.show_livestatus_errors:
+    # output and raise now exception. We simply print error messages here.
+    # In case of the web service we show errors only on single site installations.
+    if config.show_livestatus_errors and (html.output_format == "html" or not config.is_multisite()):
         for sitename, info in html.live.deadsites.items():
             html.show_error("<b>%s - Livestatus error</b><br>%s" % (info["site"]["alias"], info["exception"]))
 

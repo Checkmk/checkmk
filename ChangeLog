@@ -1,5 +1,6 @@
 1.1.11i1:
     Core, Setup, etc.:
+    * FIX: cmk -D: drop obsolete (and always empty) Notification:
     * FIX: better handling of broken checks returning empty services
     * FIX: fix computation of weight when averaging
     * FIX: fix detection of missing OIDs (led to empty lines) 

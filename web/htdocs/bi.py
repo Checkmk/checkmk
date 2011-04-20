@@ -717,6 +717,30 @@ def aggr_best(nodes, n = 1, worst_state = CRIT):
 config.aggregation_functions["worst"] = aggr_worst 
 config.aggregation_functions["best"]  = aggr_best
 
+import re
+
+def aggr_running_on(nodes, regex):
+    first_check = nodes[0]
+
+    # extract hostname we run on
+    mo = re.match(regex, first_check[3])
+
+    # if not found, then do normal aggregation with 'worst'
+    if not mo or len(mo.groups()) == 0:
+        state, text = aggregation_functions['worst'](nodes[1:])
+        return state, text + ", running nowhere"
+
+    running_on = mo.groups()[0]
+    for host_node in nodes[1:]:
+        if host_node[2] == running_on:
+            return host_node[0], (host_node[3] + ", running on %s" % running_on)
+
+    # host we run on not found. Strange...
+    return 3, "running on unknown host '%s'" % running_on
+
+config.aggregation_functions['running_on'] = aggr_running_on
+
+
 #      ____                       
 #     |  _ \ __ _  __ _  ___  ___ 
 #     | |_) / _` |/ _` |/ _ \/ __|

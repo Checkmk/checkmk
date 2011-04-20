@@ -25,7 +25,7 @@
 
 // try to find template matching a prefix of the service
 // description first. Slashes are replaced by underscores.
-$template_dirs = array('.');
+$template_dirs = array('templates');
 if (isset($this->config->conf['template_dirs'])) {
 	$template_dirs = $this->config->conf['template_dirs'];
 }

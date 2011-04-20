@@ -4,6 +4,7 @@
 
     Checks & Agents:
     * FIX: cisco_temp_perf: handle sensors without names correctly
+    * FIX: local: fixed search for custom templates PNP template
 
 1.1.10p1:
     Core, Setup, etc.:

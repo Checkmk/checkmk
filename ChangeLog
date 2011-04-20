@@ -29,6 +29,7 @@
     * Allow moving hosts from one to another config file
 
     Checks & Agents:
+    * FIX: local: fixed search for custom templates PNP template
     * FIX: if/if64: always generate unique items (in case ifAlias is used)
     * FIX: ipmi: fix ugly ouput in case of warning and error
     * FIX: vms_df: fix, was completely broken due to conversion to df.include

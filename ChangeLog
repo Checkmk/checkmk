@@ -9,6 +9,7 @@
 
     Multisite:
     * FIX: install missing example icons in web/htdocs/images/icons
+    * FIX: repair python/json webservice needed for NagStaMon
 
 1.1.10p1:
     Core, Setup, etc.:

@@ -34,7 +34,8 @@ multisite_layouts["python-raw"] = {
     "hide"   : True,
 }
 
-def render_python(rows, view, group_painters, painters, num_columns):
+def render_python(data, view, group_painters, painters, num_columns):
+    rows = data[1]
     html.write("[\n")
     html.write(repr([p[0]["name"] for p in painters]))
     html.write(",\n")
@@ -63,7 +64,8 @@ def encode_string_json(s):
     return '"' + json_escape.sub(lambda m: json_encoding_table[m.group(0)], s) + '"'
 
 
-def render_json(rows, view, group_painters, painters, num_columns):
+def render_json(data, view, group_painters, painters, num_columns):
+    rows = data[1]
     html.write("[\n")
     html.write(repr([p[0]["name"] for p in painters]))
     for row in rows:

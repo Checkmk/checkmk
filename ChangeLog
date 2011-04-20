@@ -17,6 +17,7 @@
     * --debug now implies -v
 
     Multisite:
+    * FIX: install missing example icons in web/htdocs/images/icons
     * FIX: Nagios-Snapin: avoid duplicate slash in URL
     * FIX: custom_style_sheet now also honored by sidebar
     * FIX: ignore case when sorting groups in ...groups snapin

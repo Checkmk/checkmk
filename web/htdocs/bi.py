@@ -103,18 +103,25 @@ def reused_compilation():
 # aggregation functions are still left as names. That way the forest
 # printable (and storable in Python syntax to a file).
 def compile_forest(user):
+    global g_cache
     global g_user_cache
 
     new_config_information = cache_needs_update()
-    if not new_config_information:
-        cache = g_cache.get(user)
-        if cache:
-            # make sure, BI permissions have not changed since last time
-            if cache["see_all"] == config.may("bi.see_all"):
-                g_user_cache = cache
-                global used_cache
-                used_cache = True
-                return cache["forest"]
+    if new_config_information: # config changed are Nagios restarted, clear cache
+        global g_cache
+        g_cache = {}
+        global g_config_information
+        g_config_information = new_config_information
+
+    # Try to get data from per-user cache:
+    cache = g_cache.get(user)
+    if cache:
+        # make sure, BI permissions have not changed since last time
+        if cache["see_all"] == config.may("bi.see_all"):
+            g_user_cache = cache
+            global used_cache
+            used_cache = True
+            return cache["forest"]
 
     global did_compilation
     did_compilation = True
@@ -171,10 +178,8 @@ def compile_forest(user):
                 entries.append((group, aggr))
                 cache["affected_services"][s] = entries
 
-        # Remember successful compile in cache
-        global g_config_information
-        g_config_information = new_config_information
-        g_cache[user] = cache
+    # Remember successful compile in cache
+    g_cache[user] = cache
 
 
 # Execute an aggregation rule, but prepare arguments 
@@ -930,7 +935,7 @@ def status_tree_depth(tree):
 def is_part_of_aggregation(h, what, site, host, service):
     global html
     html = h
-    compile_forest(html)
+    compile_forest(html.req.user)
     if what == "host":
         return (site, host) in g_user_cache["affected_hosts"]
     else:

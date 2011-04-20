@@ -2893,8 +2893,6 @@ def dump_host(hostname):
         print tty_yellow + "Parents:                " + tty_normal + ", ".join(parents_list)
     print tty_yellow + "Host groups:            " + tty_normal + ", ".join(hostgroups_of(hostname))
     print tty_yellow + "Contact groups:         " + tty_normal + ", ".join(host_contactgroups_of([hostname]))
-    notperiod = (host_extra_conf(hostname, host_notification_periods) + [""])[0]
-    print tty_yellow + "Notification:           " + tty_normal + notperiod
     agenttype = "TCP (port: %d)" % agent_port
     if is_snmp_host(hostname):
         credentials = snmp_credentials_of(hostname)

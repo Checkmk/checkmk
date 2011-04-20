@@ -1,7 +1,9 @@
-1.1.10p1:
-
+1.1.10p2:
     Core, Setup, etc.:
     * FIX: better handling of broken checks returning empty services
+
+1.1.10p1:
+    Core, Setup, etc.:
     * FIX: fix computation of weight when averaging
     * FIX: added missing \n in error output
     * FIX: setup.sh: fix optical bugs in output of summary

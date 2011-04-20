@@ -989,7 +989,7 @@ def extra_summary_service_conf_of(hostname, description):
 def extra_conf_of(confdict, hostname, service):
     result = ""
     for key, conflist in confdict.items():
-        if service:
+        if service != None:
             values = service_extra_conf(hostname, service, conflist)
         else:
             values = host_extra_conf(hostname, conflist)
@@ -1763,6 +1763,12 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
                     item, comment, paramstring = entry
 
                 description = service_description(checkname, item)
+                # make sanity check
+                if len(description) == 0:
+                    sys.stderr.write("%s: Check %s returned empty service description - ignoring it.\n" %
+                                                    (hostname, checkname))
+                    continue
+
 
                 # Find logical host this check belongs to. The service might belong to a cluster.
                 hn = host_of_clustered_service(hostname, description)

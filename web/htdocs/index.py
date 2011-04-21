@@ -174,7 +174,6 @@ def handler(req, profiling = True):
             os.chmod(profilefile + ".py", 0755)
             return apache.OK
 
-
         # Prepare output format
         output_format = html.var("output_format", "html")
         html.set_output_format(output_format)

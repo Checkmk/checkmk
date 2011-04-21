@@ -43,6 +43,10 @@ CRIT = 2
 UNKNOWN = 3
 UNAVAIL = 4
 
+service_state_names = { OK:"OK", WARN:"WARN", CRIT:"CRIT", UNKNOWN:"UNKNOWN", PENDING:"PENDING", UNAVAIL:"UNAVAILABLE"}
+host_state_names = { OK:"UP", CRIT:"DOWN", UNKNOWN:"UNREACHABLE" }
+
+
 # character that separates sites and hosts
 SITE_SEP = '#'
 
@@ -447,7 +451,7 @@ def compile_aggregation_rule(rule, args, lvl = 0):
 
         if hidden:
             for element in elements:
-                elements[-1]["hidden"] = True
+                element["hidden"] = True
 
         elements += new_elements
 
@@ -480,10 +484,12 @@ def find_remaining_services(hostspec, aggregation):
     remaining = list(all_services)
     remaining.sort()
     return [ {
-        "type" : NT_LEAF,
-        "host" : hostspec,
+        "type"     : NT_LEAF,
+        "host"     : hostspec,
         "reqhosts" : [hostspec], 
-        "service" : service } for service in remaining ]
+        "service"  : service,
+        "title"    : "%s - %s" % (host, service)} 
+        for service in remaining ]
 
 
 # Helper function that finds all occurrances of a variable
@@ -552,19 +558,21 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
             if service_re == config.HOST_STATE:
                 found.append({"type"     : NT_LEAF,
                               "reqhosts" : [(site, hostname)], 
-                              "host"     : (site, hostname)})
+                              "host"     : (site, hostname),
+                              "title"    : hostname})
 
             elif service_re == config.REMAINING:
-                found.append({"type" : NT_REMAINING, 
-                              "host" : (site, hostname)} )
+                found.append({"type"  : NT_REMAINING, 
+                              "host"  : (site, hostname)})
 
             else:
                 for service in services:
                     if regex(service_re).match(service):
-                        found.append({"type" : NT_LEAF, 
+                        found.append({"type"     : NT_LEAF, 
                                       "reqhosts" : [(site, hostname)], 
-                                      "host" : (site, hostname), 
-                                      "service" : service} )
+                                      "host"     : (site, hostname), 
+                                      "service"  : service,
+                                      "title"    : "%s - %s" % (hostname, service)} )
 
     found.sort()
     return found
@@ -590,6 +598,116 @@ def regex(r):
 #    | |___ >  <  __/ (__| |_| | |_| | (_) | | | |
 #    |_____/_/\_\___|\___|\__,_|\__|_|\___/|_| |_|
 #                                                 
+
+#                  + services               + states
+# multisite.d/*.mk =========> compiled tree ========> executed tree
+#                   compile                 execute
+
+# Format of executed tree:
+# leaf: ( state, assumed_state, compiled_node )
+# rule: ( state, assumed_state, compiled_node, nodes )
+
+# Format of state and assumed_state:
+# { "state" : OK, WARN ...
+#   "output" : aggregated output or service output }
+
+
+# Execution of the trees. Returns a tree object reflecting
+# the states of all nodes
+def execute_tree(tree, status_info = None):
+    if status_info == None:
+        required_hosts = tree["reqhosts"]
+        status_info = get_status_info(required_hosts)
+    return execute_node(tree, status_info)
+
+def execute_node(node, status_info):
+    if node["type"] == NT_LEAF:
+        return execute_leaf_node(node, status_info)
+    else:
+        return execute_rule_node(node, status_info)
+
+
+def execute_leaf_node(node, status_info):
+
+    site, host = node["host"]
+    service = node.get("service")
+
+    # Get current state of host and services
+    status = status_info.get((site, host))
+    if status == None:
+        return ({ "state" : MISSING, "output" : "Host %s not found" % host}, None, node)
+    host_state, host_output, service_state = status
+
+    # Get state assumption from user
+    if service:
+        key = (site, host, service)
+    else:
+        key = (site, host)
+    state_assumption = g_assumptions.get(key)
+
+    # assemble state
+    if service:
+        for entry in service_state: # list of all services of that host
+            if entry[0] == service:
+                state, has_been_checked, output = entry[1:]
+                if has_been_checked == 0:
+                    output = "This service has not been checked yet"
+                    state = PENDING
+                state = {"state":state, "output":output}
+                if state_assumption != None:
+                    assumed_state = {"state":state_assumption, 
+                                     "output" : "Assumed to be %s" % service_state_names[state_assumption]}
+                else:
+                    assumed_state = None
+                return (state, assumed_state, node)
+
+        return ({"state":MISSING, "output": "This host has no such service"}, None, node)
+
+    else:
+        aggr_state = {0:OK, 1:CRIT, 2:UNKNOWN}[host_state]
+        state = {"state":aggr_state, "output" : host_output}
+        if state_assumption != None:
+            assumed_state = {"state":assumed_state, "output" : "Assumed to be %s" % host_state_names[state_assumption]}
+        else:
+            assumed_state = None
+        return (state, assumed_state, node)
+
+
+def execute_rule_node(node, status_info):
+    # get aggregation function
+    funcspec = node["func"]
+    parts = funcspec.split('!')
+    funcname = parts[0]
+    funcargs = parts[1:]
+    func = config.aggregation_functions.get(funcname)
+    if not func:
+        raise MKConfigError("Undefined aggregation function '%s'. Available are: %s" % 
+                (funcname, ", ".join(config.aggregation_functions.keys())))
+
+    # prepare information for aggregation function
+    subtrees = []
+    node_states = []
+    assumed_states = []
+    one_assumption = False
+    for n in node["nodes"]:
+        result = execute_node(n, status_info) # state, assumed_state, node [, subtrees]
+        subtrees.append(result)
+
+        node_states.append((result[0], result[2]))
+        if result[1] != None:
+            assumed_states.append((result[1], result[2]))
+            one_assumption = True
+        else: 
+            # no assumption, take real state into assumption array
+            assumed_states.append(node_states[-1])
+
+    state = func(*([node_states] + funcargs))
+    if one_assumption:
+        assumed_state = func(*([assumed_states] + funcargs))
+    else:
+        assumed_state = None
+    return (state, assumed_state, node, subtrees)
+    
 
 # Get all status information we need for the aggregation from
 # a known lists of lists (list of site/host pairs)
@@ -638,92 +756,27 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns):
     rows = [ dict(zip(headers, row)) for row in data]
     return rows
 
-# Execution of the trees. Returns a tree object reflecting
-# the states of all nodes
-def execute_tree(tree, status_info = None):
-    if status_info == None:
-        required_hosts = tree["reqhosts"]
-        status_info = get_status_info(required_hosts)
-    return execute_node(tree, status_info)
-
-def execute_node(node, status_info):
-    # Each returned node consists of
-    # (state, assumed_state, name, output, required_hosts, funcname, subtrees)
-    # For leaf-nodes, subtrees is None
-    if node["type"] == NT_LEAF:
-        return execute_leaf_node(node, status_info) + (node["reqhosts"], None, None,)
-    else:
-        return execute_inter_node(node, status_info)
-
-
-def execute_leaf_node(node, status_info):
-    site, host = node["host"]
-    status = status_info.get((site, host))
-    if status == None:
-        return (MISSING, None, None, "Host %s not found" % host) 
-
-    host_state, host_output, service_state = status
-    service = node.get("service")
-    if service:
-        key = (site, host, service)
-    else:
-        key = (site, host)
-    assumed_state = g_assumptions.get(key)
-
-    if service == config.HOST_STATE:
-        aggr_state = {0:OK, 1:CRIT, 2:UNKNOWN}[host_state]
-        return (aggr_state, assumed_state, None, host_output)
-
-    else:
-        for entry in service_state:
-            if entry[0] == service:
-                state, has_been_checked, plugin_output = entry[1:]
-                if has_been_checked == 0:
-                    return (PENDING, assumed_state, service, "This service has not been checked yet")
-                else:
-                    return (state, assumed_state, service, plugin_output)
-        return (MISSING, assumed_state, service, "This host has no such service")
-
-
-def execute_inter_node(node, status_info):
-    # get aggregation function
-    funcspec = node["func"]
-    parts = funcspec.split('!')
-    funcname = parts[0]
-    funcargs = parts[1:]
-    func = config.aggregation_functions.get(funcname)
-    if not func:
-        raise MKConfigError("Undefined aggregation function '%s'. Available are: %s" % 
-                (funcname, ", ".join(config.aggregation_functions.keys())))
-
-    node_states = []
-    assumed_node_states = []
-    one_assumption = False
-    for n in node["nodes"]:
-        node_state = execute_node(n, status_info)
-        node_states.append(node_state)
-        assumed_state = node_state[1]
-        if assumed_state != None:
-            assumed_node_states.append((node_state[1],) + node_state[1:])
-            one_assumption = True
-        else:
-            assumed_node_states.append(node_state)
-
-    state, output = func(*([node_states] + funcargs))
-    if one_assumption:
-        assumed_state, output = func(*([assumed_node_states] + funcargs))
-    else:
-        assumed_state = None
-    return (state, assumed_state, node["title"], output, 
-            node["reqhosts"], funcspec, node_states )
-    
-
 #       _                      _____                 _   _                 
 #      / \   __ _  __ _ _ __  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___ 
 #     / _ \ / _` |/ _` | '__| | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|
 #    / ___ \ (_| | (_| | | _  |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
 #   /_/   \_\__, |\__, |_|(_) |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
 #           |___/ |___/                                                    
+
+# API for aggregation functions
+# it is called with at least one argument: a list of node infos.
+# Each node info is a pair of the node state and the compiled node information.
+# The node state is a dictionary with at least "state" and "output", where
+# "state" is the Nagios state. It is allowed to place arbitrary additional
+# information to the array, e.g. downtime & acknowledgement information.
+# The compiled node information is a dictionary as created by the rule
+# compiler. It contains "type" (NT_LEAF, NT_RULE), "reqhosts" and "title". For rule
+# node it contains also "func". For leaf nodes it contains 
+# host" and (if not a host leaf) "service".
+#
+# The aggregation function must return one state dictionary containing
+# at least "state" and "output".
+
 
 # Function for sorting states. Pending should be slightly
 # worst then OK. CRIT is worse than UNKNOWN.
@@ -746,21 +799,15 @@ def x_best_state(l, x):
         
     return ll[n-1][1]
 
-def aggr_nth_state(nodes, n, worst_state):
-    states = []
-    problems = []
-    for node in nodes:
-        states.append(node[0])
-        if node[0] != OK:
-            problems.append(node[1])
+def aggr_nth_state(nodelist, n, worst_state):
+    states = [ i[0]["state"] for i in nodelist ]
     state = x_best_state(states, n)
-    if state_weight(state) > state_weight(worst_state):
-        state = worst_state # limit to worst state
 
-    if len(problems) > 0:
-        return state, "%d problems" % len(problems)
-    else:
-        return state, ""
+    # limit to worst state
+    if state_weight(state) > state_weight(worst_state):
+        state = worst_state
+
+    return { "state" : state, "output" : "" }
 
 def aggr_worst(nodes, n = 1, worst_state = CRIT):
     return aggr_nth_state(nodes, -int(n), int(worst_state))
@@ -869,23 +916,24 @@ def ajax_save_treestate(h):
 #                                                           
 
 def create_aggregation_row(tree, status_info = None):
-    state = execute_tree(tree, status_info)
-    eff_state = state[0]
-    if state[1] != None:
-        eff_state = state[1]
-    else:
-        eff_state = state[0]
+    tree_state = execute_tree(tree, status_info)
+    state, assumed_state, node, subtrees = tree_state
+    eff_state = state
+    if assumed_state != None:
+        eff_state = assumed_state
+
     return {
         "aggr_tree"            : tree,
-        "aggr_treestate"       : state,
-        "aggr_state"           : state[0],  # state disregarding assumptions
-        "aggr_assumed_state"   : state[1],  # is None, if no assumptions are done
-        "aggr_effective_state" : eff_state, # is assumed_state, if there are assumptions, else real state
-        "aggr_name"            : state[2],
-        "aggr_output"          : state[3],
-        "aggr_hosts"           : state[4],
-        "aggr_function"        : state[5],
+        "aggr_treestate"       : tree_state,
+        "aggr_state"           : state,          # state disregarding assumptions
+        "aggr_assumed_state"   : assumed_state,  # is None, if there are no assumptions
+        "aggr_effective_state" : eff_state,      # is assumed_state, if there are assumptions, else real state
+        "aggr_name"            : node["title"],
+        "aggr_output"          : eff_state["output"],
+        "aggr_hosts"           : node["reqhosts"],
+        "aggr_function"        : node["func"],
     }
+
 
 def table(h, columns, add_headers, only_sites, limit, filters):
     global html
@@ -1001,12 +1049,12 @@ def save_treestate(current_ex_level, treestate):
     config.save_user_file("bi_treestate", (current_ex_level, treestate))
 
 def status_tree_depth(tree):
-    nodes = tree[6]
-    if nodes == None:
+    if len(tree) == 3:
         return 1
     else:
+        subtrees = tree[3]
         maxdepth = 0
-        for node in nodes:
+        for node in subtrees:
             maxdepth = max(maxdepth, status_tree_depth(node))
         return maxdepth + 1
 

@@ -33,8 +33,8 @@ def paint_aggr_state_short(state, assumed = False):
     if state == None:
         return "", ""
     else:
-        name = nagios_short_state_names[state]
-        classes = "state svcstate state%s" % state
+        name = nagios_short_state_names[state["state"]]
+        classes = "state svcstate state%s" % state["state"]
         if assumed:
             classes += " assumed"
         return classes, name
@@ -148,8 +148,8 @@ def render_assume_icon(site, host, service):
     return '<img state="%s" class=assumption %s src="images/assume_%s.png">\n' % (current, mousecode, current)
 
 def aggr_render_leaf(tree, show_host):
-    site, host = tree[4][0]
-    service = tree[2]
+    site, host = tree[2]["host"]
+    service = tree[2].get("service")
     content = render_assume_icon(site, host, service) 
 
     # Four cases:
@@ -186,14 +186,16 @@ def aggr_render_node(tree, title, mousecode, show_host):
         addclass = " assumed"
     else:
         addclass = ""
+
     h = '<span class="content state state%d%s">%s</span>\n' \
-         % (effective_state, addclass, render_bi_state(effective_state))
+         % (effective_state["state"], addclass, render_bi_state(effective_state["state"]))
     if mousecode:
         h += '<img class=opentree %s>' % mousecode
         h += '<span class="content name">%s</span>' % title
     else:
         h += title
-    output = tree[3]
+
+    output = effective_state["output"]
     if output:
         output = "<b class=bullet>&diams;</b>" + output
     else:
@@ -201,30 +203,21 @@ def aggr_render_node(tree, title, mousecode, show_host):
     h += '<span class="content output">%s</span>\n' % output
     return h
 
+
+# Convert tree to tree contain only node in non-OK state
 def filter_tree_only_problems(tree):
+    state, assumed_state, node, subtrees = tree
+    # remove subtrees in state OK
+    new_subtrees = []
+    for subtree in subtrees:
+        effective_state = subtree[1] != None and subtree[1] or subtree[0]
+        if effective_state["state"] != bi.OK:
+            if len(subtree) == 3:
+                new_subtrees.append(subtree)
+            else:
+                new_subtrees.append(filter_tree_only_problems(subtree))
 
-    def get_worst(subtree, worst = 0):
-        nodes = subtree[6]
-        if not nodes is None:
-            work = nodes[:]
-            for i, node in enumerate(work):
-                # Go deep!
-                my_worst = get_worst(node)[1]
-
-                # Cleanup this node+below
-                if my_worst == 0:
-                    nodes.remove(node)
-
-                # Add state of this node to summary state for nodes above
-                if my_worst > worst:
-                    worst = my_worst
-
-        if subtree[0] > worst:
-            worst = subtree[0]
-
-        return nodes, worst
-
-    tree = tree[:5] + (get_worst(tree), ) + tree[6:]
+    return state, assumed_state, node, new_subtrees
 
 def paint_aggr_tree_foldable(row):
     saved_expansion_level, treestate = bi.load_treestate()
@@ -237,13 +230,9 @@ def paint_aggr_tree_foldable(row):
        'onmouseout="this.style.cursor=\'auto\';" ' \
        'onclick="toggle_subtree(this);" ' 
 
-    only_problems = get_painter_option("aggr_onlyproblems") == "1" 
 
     def render_subtree(tree, path, show_host):
-        nodes = tree[6]
-        if nodes == []:
-            return ''
-        if nodes == None:
+        if len(tree) == 3: # leaf
             return aggr_render_leaf(tree, show_host)
         else:
             h = '<span class=title>'
@@ -253,35 +242,44 @@ def paint_aggr_tree_foldable(row):
             if is_open == None:
                 is_open = len(path) <= expansion_level
 
-            if is_open:
+            is_empty = len(tree[3]) == 0
+
+            if is_empty:
+                style = ''
+                mc = ''
+            elif is_open:
                 style = ''
                 mc = mousecode + 'src="images/tree_open.png" '
             else:
                 style = 'style="display: none" '
                 mc = mousecode + 'src="images/tree_closed.png" '
 
-            h += aggr_render_node(tree, tree[2], mc, show_host)
-            h += '<ul id="%d:%s" %sclass="subtree">' % (expansion_level, path_id, style)
+            h += aggr_render_node(tree, tree[2]["title"], mc, show_host)
+            if not is_empty:
+                h += '<ul id="%d:%s" %sclass="subtree">' % (expansion_level, path_id, style)
 
-            for node in tree[6]:
-                estate = node[1] != None and node[1] or node[0]
-                if only_problems and estate == 0:
-                    continue
+                for node in tree[3]:
+                    estate = node[1] != None and node[1] or node[0]
 
-                h += '<li>' + render_subtree(node, path + [node[2]], show_host) + '</li>\n'
-            return h + '</ul></span>\n'
+                    if "title" not in node[2]:
+                        html.write("%r"%(node,))
+
+                    new_path = path + [node[2]["title"]]
+                    h += '<li>' + render_subtree(node, new_path, show_host) + '</li>\n'
+                h += '</ul>'
+            return h + '</span>\n'
 
     tree = row["aggr_treestate"]
-    if only_problems: 
-        filter_tree_only_problems(tree)
+    if get_painter_option("aggr_onlyproblems") == "1":
+        tree = filter_tree_only_problems(tree)
 
     affected_hosts = row["aggr_hosts"]
-    htmlcode = render_subtree(tree, [tree[2]], len(affected_hosts) > 1)
+    htmlcode = render_subtree(tree, [tree[2]["title"]], len(affected_hosts) > 1)
     return "aggrtree", htmlcode
 
 
 def paint_aggr_tree_ltr(row, mirror):
-    wrap          = get_painter_option("aggr_wrap")
+    wrap = get_painter_option("aggr_wrap")
 
     if wrap == "wrap":
         td = '<td'
@@ -289,9 +287,7 @@ def paint_aggr_tree_ltr(row, mirror):
         td = '<td style="white-space: nowrap;"'
 
     def gen_table(tree, height, show_host):
-        nodes = tree[6]
-        is_leaf = nodes == None
-        if is_leaf:
+        if len(tree) == 3: 
             return gen_leaf(tree, height, show_host)
         else:
             return gen_node(tree, height, show_host)
@@ -301,16 +297,16 @@ def paint_aggr_tree_ltr(row, mirror):
 
     def gen_node(tree, height, show_host):
         leaves = []
-        for node in tree[6]:
+        for node in tree[3]:
             leaves += gen_table(node, height - 1, show_host)
-        h = '<div class="aggr tree">' + aggr_render_node(tree, tree[2], '', show_host) + "</div>"
+        h = '<div class="aggr tree">' + aggr_render_node(tree, tree[2]["title"], '', show_host) + "</div>"
         if leaves:
             leaves[0][2].append((len(leaves), h))
         return leaves
 
     tree = row["aggr_treestate"]
     if get_painter_option("aggr_onlyproblems") == "1":
-        filter_tree_only_problems(tree)
+        tree = filter_tree_only_problems(tree)
     depth = bi.status_tree_depth(tree)
     leaves = gen_table(tree, depth, row["aggr_hosts"] > 1)
     h = '<table class="aggrtree">'

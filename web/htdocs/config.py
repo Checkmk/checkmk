@@ -457,7 +457,8 @@ host_tags = []
 #              
 
 ALL_HOSTS = '(.*)'
-HOST_STATE = '__HOST_STATE__'
+HOST_STATE = ('__HOST_STATE__',)
+HIDDEN = ('__HIDDEN__',)
 class FOREACH_HOST: pass
 class FOREACH_SERVICE: pass
 class REMAINING: pass

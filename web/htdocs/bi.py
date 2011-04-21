@@ -54,6 +54,24 @@ SITE_SEP = '#'
 #     \____\___/|_| |_| |_| .__/|_|_|\__,_|\__|_|\___/|_| |_|
 #                         |_|                                
 
+# format of a node
+# { 
+#     "type" : NT_LEAF, NT_RULE, NT_REMAINING,
+#     "reqhosts" : [ list of required hosts ],
+#     "host" : host spec for leaf node,
+#     "service" : service name for leaf node, missing if HOST_STATE
+#     "title" : title in case of rule nodes
+#     "hide" : True if hidden
+#     "func" : Name of aggregation function for rule nodes
+#     "nodes" : List of subnodes for rule nodes
+# }
+
+NT_LEAF = 1
+NT_RULE = 2
+NT_REMAINING = 3
+NT_PLACEHOLDER = 4 # temporary dummy entry needed for REMAINING
+
+
 # global variables
 g_cache = {}                # per-user cache
 g_config_information = None # for invalidating cache after config change
@@ -147,7 +165,7 @@ def compile_forest(user):
         for entry in new_entries:
             remove_empty_nodes(entry)
 
-        new_entries = [ e for e in new_entries if len(e[3]) > 0 ]
+        new_entries = [ e for e in new_entries if len(e["nodes"]) > 0 ]
         
         # enter new aggregations into dictionary for that group
         entries = cache["forest"].get(group, [])
@@ -156,7 +174,7 @@ def compile_forest(user):
 
         # Update several global speed-up indices
         for aggr in new_entries:
-            req_hosts = aggr[0]
+            req_hosts = aggr["reqhosts"]
 
             # All single-host aggregations looked up per host
             if len(req_hosts) == 1:
@@ -226,6 +244,8 @@ def find_matching_services(what, calllist):
 
     matches = set([])
 
+    # TODO: Hier könnte man - wenn der Host bekannt ist, effektiver arbeiten, als
+    # komplett alles durchzugehen.
     for (site, hostname), (tags, services) in g_user_cache["services"].items():
         host_matches = None
         if not match_host_tags(tags, required_tags):
@@ -249,7 +269,7 @@ def find_matching_services(what, calllist):
             host_matches = do_match(anchored, hostname)
 
         if host_matches != None:
-            if config.HOST_STATE in service_re:
+            if service_re == config.HOST_STATE:
                 matches.add(host_matches)
             else:
                 for service in services:
@@ -286,16 +306,16 @@ def render_forest():
 # Debugging function
 def render_tree(node, indent = ""):
     h = ""
-    if len(node) == 3: # leaf node
-        h += indent + "S/H/S: %s/%s/%s\n" % (node[1][0], node[1][1], node[2])
+    if node["type"] == NT_LEAF: # leaf node
+        h += indent + "S/H/S: %s/%s/%s\n" % (node["host"][0], node["host"][1], node.get("service"))
     else:
         h += indent + "Aggregation:\n"
         indent += "    "
-        h += indent + "Description:  %s\n" % node[1]
-        h += indent + "Needed Hosts: %s\n" % " ".join([("%s/%s" % h_s) for h_s in node[0]])
-        h += indent + "Aggregation:  %s\n" % node[2]
+        h += indent + "Description:  %s\n" % node["title"]
+        h += indent + "Needed Hosts: %s\n" % " ".join([("%s/%s" % h_s) for h_s in node["reqhosts"]])
+        h += indent + "Aggregation:  %s\n" % node["func"]
         h += indent + "Nodes:\n"
-        for node in node[3]:
+        for node in node["nodes"]:
             h += render_tree(node, indent + "  ")
         h += "\n"
     return h
@@ -318,23 +338,27 @@ def make_arginfo(arglist, args):
     return arginfo
 
 def find_all_leaves(node):
-    # leaf node: ( NEEDED_HOSTS, HOSTSPEC, SERVICE )
-    if len(node) == 3:
-        needed_hosts, (site, host), service = node 
-        return [ (site, host, service) ]
+    # leaf node
+    if node["type"] == NT_LEAF:
+        site, host = node["host"]
+        return [ (site, host, node.get("service") ) ]
 
-    # rule node: ( NEEDED_HOSTS, DESCRIPTION, FUNCNAME, NODES )
-    else:
+    # rule node
+    elif node["type"] == NT_RULE:
         entries = []
-        for n in node[3]:
+        for n in node["nodes"]:
             entries += find_all_leaves(n)
         return entries
 
+    # place holders
+    else:
+        return []
+
 def remove_empty_nodes(node):
-    if len(node) == 3: # leaf node
+    if node["type"] != NT_RULE: # leaf node
         return node
     else:
-        subnodes = node[3]
+        subnodes = node["nodes"]
         for i in range(0, len(subnodes)):
             remove_empty_nodes(subnodes[i])
         for i in range(0, len(subnodes))[::-1]:
@@ -342,10 +366,10 @@ def remove_empty_nodes(node):
                 del subnodes[i]
 
 def node_is_empty(node):
-    if len(node) == 3:
-        return False # leaf node
+    if node["type"] != NT_RULE: # leaf node
+        return False
     else:
-        return len(node[3]) == 0 
+        return len(node["nodes"]) == 0 
 
     
 # Precompile one aggregation rule. This outputs a list of trees.
@@ -385,6 +409,16 @@ def compile_aggregation_rule(rule, args, lvl = 0):
     elements = []
 
     for node in nodes:
+        # Handle HIDDEN nodes. There are compiled just as normal nodes, but
+        # will not be visible in the tree view later (at least not per default).
+        # The HIDDEN flag needs just to be packed into the compilation and not
+        # further handled here.
+        if node[0] == config.HIDDEN:
+            hidden = True
+            node = node[1:]
+        else:
+            hidden = False
+
         # Each node can return more than one incarnation (due to regexes in 
         # leaf nodes and FOREACH in rule nodes)
 
@@ -394,10 +428,10 @@ def compile_aggregation_rule(rule, args, lvl = 0):
             for entry in new_elements:
                 # Postpone: remember reference to list where we need to add
                 # remaining services of host
-                if entry[0] == config.REMAINING:
+                if entry["type"] == NT_REMAINING:
                     # create unique pointer which we find later
-                    placeholder = ([], (None, None), str(len(g_remaining_refs)))
-                    g_remaining_refs.append((entry[1], elements, placeholder))
+                    placeholder = {"type" : NT_PLACEHOLDER, "id" : str(len(g_remaining_refs)) }
+                    g_remaining_refs.append((entry["host"], elements, placeholder))
                     new_new_elements.append(placeholder)
                 else:
                     new_new_elements.append(entry)
@@ -411,13 +445,21 @@ def compile_aggregation_rule(rule, args, lvl = 0):
             rule_parts = tuple([ subst_vars(part, arginfo) for part in node[:-1] ])
             new_elements = compile_rule_node(rule_parts + (rule_args,), lvl + 1)
 
+        if hidden:
+            for element in elements:
+                elements[-1]["hidden"] = True
+
         elements += new_elements
 
     needed_hosts = set([])
     for element in elements:
-        needed_hosts.update(element[0])
+        needed_hosts.update(element.get("reqhosts", []))
 
-    aggregation = (list(needed_hosts), inst_description, funcname, elements)
+    aggregation = { "type"     : NT_RULE,
+                    "reqhosts" : list(needed_hosts), 
+                    "title"    : inst_description, 
+                    "func"     : funcname, 
+                    "nodes"    : elements}
 
     # Handle REMAINING references, if we are a root node
     if lvl == 0:
@@ -437,7 +479,11 @@ def find_remaining_services(hostspec, aggregation):
             all_services.discard(service)
     remaining = list(all_services)
     remaining.sort()
-    return [ ( [hostspec], hostspec, service ) for service in remaining ]
+    return [ {
+        "type" : NT_LEAF,
+        "host" : hostspec,
+        "reqhosts" : [hostspec], 
+        "service" : service } for service in remaining ]
 
 
 # Helper function that finds all occurrances of a variable
@@ -504,15 +550,21 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
                     continue
 
             if service_re == config.HOST_STATE:
-                found.append(([(site, hostname)], (site, hostname), config.HOST_STATE))
+                found.append({"type"     : NT_LEAF,
+                              "reqhosts" : [(site, hostname)], 
+                              "host"     : (site, hostname)})
 
             elif service_re == config.REMAINING:
-                found.append((config.REMAINING, (site, hostname)))
+                found.append({"type" : NT_REMAINING, 
+                              "host" : (site, hostname)} )
 
             else:
                 for service in services:
                     if regex(service_re).match(service):
-                        found.append(([(site, hostname)], (site, hostname), service))
+                        found.append({"type" : NT_LEAF, 
+                                      "reqhosts" : [(site, hostname)], 
+                                      "host" : (site, hostname), 
+                                      "service" : service} )
 
     found.sort()
     return found
@@ -590,7 +642,7 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns):
 # the states of all nodes
 def execute_tree(tree, status_info = None):
     if status_info == None:
-        required_hosts = tree[0]
+        required_hosts = tree["reqhosts"]
         status_info = get_status_info(required_hosts)
     return execute_node(tree, status_info)
 
@@ -598,20 +650,21 @@ def execute_node(node, status_info):
     # Each returned node consists of
     # (state, assumed_state, name, output, required_hosts, funcname, subtrees)
     # For leaf-nodes, subtrees is None
-    if len(node) == 3:
-        return execute_leaf_node(node, status_info) + (node[0], None, None,)
+    if node["type"] == NT_LEAF:
+        return execute_leaf_node(node, status_info) + (node["reqhosts"], None, None,)
     else:
         return execute_inter_node(node, status_info)
 
 
 def execute_leaf_node(node, status_info):
-    required_hosts, (site, host), service = node
+    site, host = node["host"]
     status = status_info.get((site, host))
     if status == None:
         return (MISSING, None, None, "Host %s not found" % host) 
 
     host_state, host_output, service_state = status
-    if service != config.HOST_STATE:
+    service = node.get("service")
+    if service:
         key = (site, host, service)
     else:
         key = (site, host)
@@ -633,7 +686,8 @@ def execute_leaf_node(node, status_info):
 
 
 def execute_inter_node(node, status_info):
-    required_hosts, title, funcspec, nodes = node
+    # get aggregation function
+    funcspec = node["func"]
     parts = funcspec.split('!')
     funcname = parts[0]
     funcargs = parts[1:]
@@ -645,7 +699,7 @@ def execute_inter_node(node, status_info):
     node_states = []
     assumed_node_states = []
     one_assumption = False
-    for n in nodes:
+    for n in node["nodes"]:
         node_state = execute_node(n, status_info)
         node_states.append(node_state)
         assumed_state = node_state[1]
@@ -660,8 +714,8 @@ def execute_inter_node(node, status_info):
         assumed_state, output = func(*([assumed_node_states] + funcargs))
     else:
         assumed_state = None
-    return (state, assumed_state, title, output, 
-            required_hosts, funcspec, node_states )
+    return (state, assumed_state, node["title"], output, 
+            node["reqhosts"], funcspec, node_states )
     
 
 #       _                      _____                 _   _                 

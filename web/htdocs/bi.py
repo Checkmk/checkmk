@@ -44,7 +44,7 @@ UNKNOWN = 3
 UNAVAIL = 4
 
 service_state_names = { OK:"OK", WARN:"WARN", CRIT:"CRIT", UNKNOWN:"UNKNOWN", PENDING:"PENDING", UNAVAIL:"UNAVAILABLE"}
-host_state_names = { OK:"UP", CRIT:"DOWN", UNKNOWN:"UNREACHABLE" }
+host_state_names = { 0:"UP", 1:"DOWN", 2:"UNREACHABLE" }
 
 
 # character that separates sites and hosts
@@ -669,7 +669,8 @@ def execute_leaf_node(node, status_info):
         aggr_state = {0:OK, 1:CRIT, 2:UNKNOWN}[host_state]
         state = {"state":aggr_state, "output" : host_output}
         if state_assumption != None:
-            assumed_state = {"state":assumed_state, "output" : "Assumed to be %s" % host_state_names[state_assumption]}
+            assumed_state = {"state": state_assumption,
+                             "output" : "Assumed to be %s" % host_state_names[state_assumption]}
         else:
             assumed_state = None
         return (state, assumed_state, node)
@@ -826,20 +827,23 @@ def aggr_running_on(nodes, regex):
     first_check = nodes[0]
 
     # extract hostname we run on
-    mo = re.match(regex, first_check[3])
+    mo = re.match(regex, first_check[0]["output"])
 
     # if not found, then do normal aggregation with 'worst'
     if not mo or len(mo.groups()) == 0:
-        state, text = aggregation_functions['worst'](nodes[1:])
-        return state, text + ", running nowhere"
+        state = aggregation_functions['worst'](nodes[1:])
+        state["output"] += ", running nowhere"
+        return state
 
     running_on = mo.groups()[0]
-    for host_node in nodes[1:]:
-        if host_node[2] == running_on:
-            return host_node[0], (host_node[3] + ", running on %s" % running_on)
+    for state, node in nodes[1:]:
+        for site, host in node["reqhosts"]:
+            if host == running_on:
+                state["output"] += ", running on %s" % running_on
+                return state
 
     # host we run on not found. Strange...
-    return 3, "running on unknown host '%s'" % running_on
+    return {"state": UNKNOWN, "output": "running on unknown host '%s'" % running_on }
 
 config.aggregation_functions['running_on'] = aggr_running_on
 

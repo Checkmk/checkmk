@@ -498,7 +498,11 @@ class BIStatusFilter(Filter):
                 allowed_states.append(s)
         newrows = []
         for row in rows:
-            if row[self.column]["state"] in allowed_states:
+            if row[self.column] != None:
+                s = row[self.column]["state"]
+            else:
+                s = None
+            if s in allowed_states:
                 newrows.append(row)
         return newrows
 

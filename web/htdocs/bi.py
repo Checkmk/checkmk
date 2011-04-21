@@ -65,7 +65,7 @@ SITE_SEP = '#'
 #     "host" : host spec for leaf node,
 #     "service" : service name for leaf node, missing if HOST_STATE
 #     "title" : title in case of rule nodes
-#     "hide" : True if hidden
+#     "hidden" : True if hidden
 #     "func" : Name of aggregation function for rule nodes
 #     "nodes" : List of subnodes for rule nodes
 # }
@@ -311,11 +311,13 @@ def render_forest():
 def render_tree(node, indent = ""):
     h = ""
     if node["type"] == NT_LEAF: # leaf node
-        h += indent + "S/H/S: %s/%s/%s\n" % (node["host"][0], node["host"][1], node.get("service"))
+        h += indent + "S/H/S: %s/%s/%s%s\n" % (node["host"][0], node["host"][1], node.get("service"),
+                node.get("hidden") == True and " (hidden)" or "")
     else:
         h += indent + "Aggregation:\n"
         indent += "    "
         h += indent + "Description:  %s\n" % node["title"]
+        h += indent + "Hidden:       %s\n" % (node.get("hidden") == True and "yes" or "no")
         h += indent + "Needed Hosts: %s\n" % " ".join([("%s/%s" % h_s) for h_s in node["reqhosts"]])
         h += indent + "Aggregation:  %s\n" % node["func"]
         h += indent + "Nodes:\n"
@@ -450,7 +452,7 @@ def compile_aggregation_rule(rule, args, lvl = 0):
             new_elements = compile_rule_node(rule_parts + (rule_args,), lvl + 1)
 
         if hidden:
-            for element in elements:
+            for element in new_elements:
                 element["hidden"] = True
 
         elements += new_elements

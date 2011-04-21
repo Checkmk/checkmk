@@ -219,6 +219,7 @@ def filter_tree_only_problems(tree):
 
     return state, assumed_state, node, new_subtrees
 
+
 def paint_aggr_tree_foldable(row):
     saved_expansion_level, treestate = bi.load_treestate()
     expansion_level = int(get_painter_option("aggr_expand"))
@@ -261,11 +262,9 @@ def paint_aggr_tree_foldable(row):
                 for node in tree[3]:
                     estate = node[1] != None and node[1] or node[0]
 
-                    if "title" not in node[2]:
-                        html.write("%r"%(node,))
-
-                    new_path = path + [node[2]["title"]]
-                    h += '<li>' + render_subtree(node, new_path, show_host) + '</li>\n'
+                    if not node[2].get("hidden"):
+                        new_path = path + [node[2]["title"]]
+                        h += '<li>' + render_subtree(node, new_path, show_host) + '</li>\n'
                 h += '</ul>'
             return h + '</span>\n'
 
@@ -298,7 +297,8 @@ def paint_aggr_tree_ltr(row, mirror):
     def gen_node(tree, height, show_host):
         leaves = []
         for node in tree[3]:
-            leaves += gen_table(node, height - 1, show_host)
+            if not node[2].get("hidden"):
+                leaves += gen_table(node, height - 1, show_host)
         h = '<div class="aggr tree">' + aggr_render_node(tree, tree[2]["title"], '', show_host) + "</div>"
         if leaves:
             leaves[0][2].append((len(leaves), h))

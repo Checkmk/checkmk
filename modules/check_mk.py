@@ -3910,7 +3910,9 @@ def compute_check_parameters(host, checktype, item, params):
 
         # Merge user's default settings onto it
         if def_levels_varname in globals():
-            new_params.update(eval(def_levels_varname))
+            def_levels = eval(def_levels_varname)
+            if type(def_levels) == dict:
+                new_params.update(eval(def_levels_varname))
 
         # Merge params from inventory onto it
         new_params.update(params)

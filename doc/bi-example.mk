@@ -23,7 +23,7 @@ aggregation_rules["filesystems"] = (
   [ "HOST" ],
   "worst",
   [
-      ( "$HOST$", "fs_" ),
+      ( HIDDEN, "$HOST$", "fs_" ),
       ( "$HOST$", "Mount|Disk" ),
       ( "multipathing", [ "$HOST$" ]),
   ]
@@ -62,7 +62,7 @@ aggregation_rules["networking"] = (
   "worst",
   [
       ( "$HOST$", "NFS" ),
-      ( FOREACH, "$HOST$", "NIC ([a-z]*).* counters", "nic", [ "$HOST$", "$1$" ] ),
+      ( FOREACH_SERVICE, "$HOST$", "NIC ([a-z]*).* counters", "nic", [ "$HOST$", "$1$" ] ),
   ]
 )
 
@@ -111,6 +111,6 @@ aggregation_rules["other"] = (
 )
 
 aggregations += [
-  ( "Hosts", FOREACH, "(.*)", "Check_MK$", "host", ["$1$"] ),
+  ( "Hosts", FOREACH_HOST, ALL_HOSTS, "host", ["$1$"] ),
 ]
 

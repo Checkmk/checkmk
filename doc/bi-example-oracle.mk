@@ -79,7 +79,7 @@ aggregation_rules["cluster_db"] = (
 )
 
 aggregations += [
-  ( "ORACLE", FOREACH, "([^:]*)",   "DB_(.*)", "noncluster_db", ["$1$", "$2$" ] ),
-  ( "ORACLE", FOREACH, "(.*):(.*)", "DB_(.*)", "cluster_db", ["$1$", "$2$", "$3$" ] ),
+  ( "ORACLE", FOREACH_SERVICE, "([^:]*)",   "DB_(.*)", "noncluster_db", ["$1$", "$2$" ] ),
+  ( "ORACLE", FOREACH_SERVICE, "(.*):(.*)", "DB_(.*)", "cluster_db", ["$1$", "$2$", "$3$" ] ),
 ]
 

@@ -6,11 +6,10 @@ aggregation_rules["host"] = (
   [ "HOST" ],
   "worst",
   [
-      ( "$HOST$", HOST_STATE ),
+      ( "general",      [ "$HOST$" ] ),
+      ( "performance",    [ "$HOST$" ] ),
       ( "filesystems",  [ "$HOST$" ] ),
-      ( "cpuandmem",    [ "$HOST$" ] ),
       ( "networking",   [ "$HOST$" ] ),
-      ( "checkmk",      [ "$HOST$" ] ),
       ( "applications", [ "$HOST$" ] ),
       ( "logfiles",     [ "$HOST$" ] ),
       ( "hardware",     [ "$HOST$" ] ),
@@ -18,14 +17,35 @@ aggregation_rules["host"] = (
   ]
 )
 
-aggregation_rules["filesystems"] = (
-  "Filesystems", 
+aggregation_rules["general"] = (
+  "General State", 
   [ "HOST" ],
   "worst",
   [
-      ( HIDDEN, "$HOST$", "fs_" ),
-      ( "$HOST$", "Mount|Disk" ),
+      ( "$HOST$", HOST_STATE ),
+      ( "$HOST$", "Uptime" ),
+      ( "checkmk",  [ "$HOST$" ] ),
+  ]
+)
+
+aggregation_rules["filesystems"] = (
+  "Disk & Filesystems", 
+  [ "HOST" ],
+  "worst",
+  [
+      ( "$HOST$", "Disk|MD" ),
       ( "multipathing", [ "$HOST$" ]),
+      ( FOREACH_SERVICE, "$HOST$", "fs_(.*)", "filesystem", [ "$HOST$", "$1$" ] ),
+  ]
+)
+
+aggregation_rules["filesystem"] = (
+  "$FS$", 
+  [ "HOST", "FS" ],
+  "worst",
+  [
+      ( "$HOST$", "fs_$FS$$" ),
+      ( "$HOST$", "Mount options of $FS$$" ),
   ]
 )
 
@@ -38,12 +58,12 @@ aggregation_rules["multipathing"] = (
   ]
 )
 
-aggregation_rules["cpuandmem"] = (
-  "CPU, Kernel, Memory", 
+aggregation_rules["performance"] = (
+  "Performance", 
   [ "HOST" ],
   "worst",
   [
-      ( "$HOST$", "CPU|Memory|Kernel|Number of threads" ),
+      ( "$HOST$", "CPU|Memory|Vmalloc|Kernel|Number of threads" ),
   ]
 )
 
@@ -61,8 +81,7 @@ aggregation_rules["networking"] = (
   [ "HOST" ],
   "worst",
   [
-      ( "$HOST$", "NFS" ),
-      ( FOREACH_SERVICE, "$HOST$", "NIC ([a-z]*).* counters", "nic", [ "$HOST$", "$1$" ] ),
+      ( "$HOST$", "NFS|Interface|TCP" ),
   ]
 )
 

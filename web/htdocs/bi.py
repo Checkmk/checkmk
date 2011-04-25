@@ -490,7 +490,7 @@ def find_remaining_services(hostspec, aggregation):
         "host"     : hostspec,
         "reqhosts" : [hostspec], 
         "service"  : service,
-        "title"    : "%s - %s" % (host, service)} 
+        "title"    : "%s - %s" % (hostspec[1], service)} 
         for service in remaining ]
 
 

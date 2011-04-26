@@ -867,11 +867,15 @@ def open_command_pipe():
 
 
 
-def none_to_empty(x):
+def convert_perf_value(x):
     if x == None:
         return ""
-    else:
+    elif type(x) in [ str, unicode ]:
         return x
+    elif type(x) == float:
+        return ("%.6f" % x).rstrip("0").rstrip(".")
+    else:
+        return str(x)
 
 def submit_check_result(host, servicedesc, result, sa):
     global nagios_command_pipe
@@ -899,7 +903,7 @@ def submit_check_result(host, servicedesc, result, sa):
 
         for p in perfdata:
             # replace None with "" and fill up to 6 values
-            p = (map(none_to_empty, p) + ['','','',''])[0:6]
+            p = (map(convert_perf_value, p) + ['','','',''])[0:6]
             perftexts.append("%s=%s;%s;%s;%s;%s" %  tuple(p) )
         if perftexts != [] and not direct_rrd_update(host, servicedesc, perfdata):
             if check_command and perfdata_format == "pnp":

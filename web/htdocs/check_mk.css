@@ -743,16 +743,6 @@ td.perfometer img.glass {
    height: 22px; 
    margin-bottom: 1px;
    z-index: 30;
-=======
-td.perfometer div.title {
-    height: 0px; 
-    position: relative; 
-    top: 3px; 
-    left: 0px;
-    width: 120px;
-    text-align: center;
-    white-space: nowrap;
->>>>>>> A lot of additional styling cleanups
 }
 
 

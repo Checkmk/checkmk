@@ -99,7 +99,7 @@ def show_filter_form(is_open, filters):
     html.begin_form("filter")
     html.write("<div class=whiteborder>\n")
 
-    html.write("<table class=form>\n")
+    html.write("<table class=\"form bg_brighten\">\n")
     # sort filters according to title
     s = [(f.sort_index, f.title, f) for f in filters]
     s.sort()
@@ -133,7 +133,7 @@ def show_painter_options(painter_options):
     html.begin_form("painteroptions")
     html.write("<div class=whiteborder>\n")
 
-    html.write("<table class=form>\n")
+    html.write("<table class=\"form bg_brighten\">\n")
     for on in painter_options:
         opt = multisite_painter_options[on]
         html.write("<tr>")
@@ -496,7 +496,7 @@ def page_edit_view(h):
     html.begin_form("view")
     html.hidden_field("back", html.var("back", ""))
     html.hidden_field("old_name", viewname) # safe old name in case user changes it
-    html.write("<table class=form>\n")
+    html.write("<table class=\"form bg_brighten\">\n")
 
     html.write("<tr><td class=legend>Title</td><td class=content>")
     html.text_input("view_title")
@@ -521,27 +521,25 @@ def page_edit_view(h):
     # Larger sections are foldable and closed by default
     html.javascript("""
 function toggle_section(nr, oImg) {
-  var oContent =  document.getElementById("ed_"   + nr);
-  var closed = oContent.style.display == "none";
+  var oContent = document.getElementById("ed_"   + nr);
+  var closed   = oContent.style.display == "none";
   if (closed) {
     oContent.style.display = "";
-    oImg.src = "images/open.gif";
-  }
-  else {
+    toggle_folding(oImg, 1);
+  } else {
     oContent.style.display = "none";
-    oImg.src = "images/closed.gif";
+    toggle_folding(oImg, 0);
   }
   oContent = null;
-  oImg = null;
 }
 """)
 
     def section_header(id, title):
         html.write("<tr><td class=legend>")
-        html.write("<b class=toggleheader onclick=\"toggle_section('%d', this) \""
+        html.write("<img src=images/tree_00.png id=img_%d onclick=\"toggle_section('%d', this)\" class=toggleheader "
                    "title=\"Click to open this section\" "
                    "onmouseover=\"this.className='toggleheader hover';\" "
-                   "onmouseout=\"this.className='toggleheader';\">%s</b> " % (id, title))
+                   "onmouseout=\"this.className='toggleheader';\"><b>%s</b> " % (id, id, title))
         html.write("</td><td class=content>")
         html.write("<div id=\"ed_%d\" style=\"display: none;\">" % id)
 
@@ -679,7 +677,7 @@ function toggle_section(nr, oImg) {
 
 def view_edit_column(n, var_prefix, maxnum, allowed):
     collist = [ ("", "") ] + [ (name, p["title"]) for name, p in allowed.items() ]
-    html.write("<div class=columneditor id=%seditor_%d><table><tr>" % (var_prefix, n))
+    html.write("<div class=columneditor id=%seditor_%d><table class=bg_brighten><tr>" % (var_prefix, n))
     html.write('<td rowspan=3>')
     html.write('<img onclick="delete_view_column(this);" '
             'onmouseover=\"hilite_icon(this, 1)\" '
@@ -1545,7 +1543,7 @@ def show_action_form(is_open, datasource):
     html.hidden_field("actions", "yes")
     html.hidden_fields() # set all current variables, exception action vars
     html.write("<div class=whiteborder>\n")
-    html.write("<table class=form>\n")
+    html.write("<table class=\"form bg_brighten\">\n")
 
     if what in [ "host", "service" ]:
         show_host_service_actions(what)

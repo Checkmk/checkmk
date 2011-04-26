@@ -62,7 +62,7 @@ def show_host_log_list(host):
     for file in host_logs(host):
         rowno += 1
         if rowno == 1:
-            html.write("<table class=services>\n")
+            html.write("<table class=data>\n")
             html.write("<tr class=groupheader>\n")
             html.write("<th>Level</th><th>Logfile</th><th>Last Entry</th><th>Entries</th></tr>\n")
 

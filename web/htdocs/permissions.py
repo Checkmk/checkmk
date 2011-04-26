@@ -87,7 +87,7 @@ def page_edit_permissions(h):
             section_title = config.permission_sections[section]
             if section != current_section:
                 current_section = section
-                html.write('<tr><td class="legend border hilite" colspan=%d><b>%s</b></td></tr>\n' % (len(config.roles) + 1, section_title))
+                html.write('<tr><td class="legend border hilite bg_brighten" colspan=%d><b>%s</b></td></tr>\n' % (len(config.roles) + 1, section_title))
 
         if current_section == None:
             title = "<b>%s</b><br><i>%s</i>" % (perm["title"], perm["description"])

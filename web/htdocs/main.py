@@ -71,7 +71,6 @@ without the need of a centralized data storage. No SQL database is needed.
 No network traffic is generated due to the monitoring.</p>
 
 <p>Please learn more about Multisite at its <a href="http://mathias-kettner.de/checkmk_multisite.html">Documentation home page</a>.</p>
-
 """)
     html.footer()
 

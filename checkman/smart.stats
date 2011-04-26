@@ -20,7 +20,7 @@ inventory:
 
 examples:
  # These are the default thresholds of the check.
- smart_stats_default_values = {
+ smart_stats_default_levels = {
    'realloc_events':  (1,  1),
    'realloc_sectors': (1,  1),
    'spin_retries':    (1,  1), 
@@ -38,5 +38,5 @@ params(dict from string to (int, int)): A python dictionary which contains
  threshold threshold for each supported value.
 
 [configuration]
-smart_stats_default_values (dict from string to (int, int)): default levels
+smart_stats_default_levels (dict from string to (int, int)): default levels
  used for all inventorized checks.

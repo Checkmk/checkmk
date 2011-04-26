@@ -478,17 +478,9 @@ function handleReload(url) {
 // --------------------------------------------------------------------------
 var tree_anim_o = null;
 
-function toggle_subtree(oImg) 
-{
-    var oParent = oImg.parentNode;
-    var oSubtree = oParent.childNodes[6];
-    var path_id = oSubtree.id;
-    var url = "bi_save_treestate.py?path=" + escape(path_id);
-
+function toggle_folding(oImg, state) {
     tree_anim_o = oImg;
-    if (oSubtree.style.display == "none") {
-        oSubtree.style.display = "";
-        url += "&state=open";
+    if(state === 1) {
         oImg.src = "images/tree_10.png";
         setTimeout("set_tree_animation_step('20');", 10);
         setTimeout("set_tree_animation_step('30');", 20);
@@ -498,10 +490,8 @@ function toggle_subtree(oImg)
         setTimeout("set_tree_animation_step('70');", 125);
         setTimeout("set_tree_animation_step('80');", 180);
         setTimeout("set_tree_animation_step('90');", 260);
-    }
-    else {
-        oSubtree.style.display = "none";
-        url += "&state=closed";
+
+    } else {
         oImg.src = "images/tree_80.png";
         setTimeout("set_tree_animation_step('70');", 10);
         setTimeout("set_tree_animation_step('60');", 20);
@@ -512,8 +502,24 @@ function toggle_subtree(oImg)
         setTimeout("set_tree_animation_step('10');", 180);
         setTimeout("set_tree_animation_step('00');", 260);
     }
+}
+
+function toggle_subtree(oImg) 
+{
+    var oSubtree = oImg.parentNode.childNodes[6];
+    var url = "bi_save_treestate.py?path=" + escape(oSubtree.id);
+
+    if (oSubtree.style.display == "none") {
+        oSubtree.style.display = "";
+        url += "&state=open";
+        toggle_folding(oImg, 1);
+    }
+    else {
+        oSubtree.style.display = "none";
+        url += "&state=closed";
+        toggle_folding(oImg, 0);
+    }
     oSubtree = null;
-    oParent = null;
     get_url(url);
 }
 

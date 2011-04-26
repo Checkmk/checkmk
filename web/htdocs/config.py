@@ -172,8 +172,9 @@ declare_permission("view_option_refresh",
 
 declare_permission("painter_options",
      "Change column display options",
-     "Some of the display columns offer options for customizing their output. For example time stamp columns can be displayed "
-     "absolute, relative or in a mixed style. This permission allows the user to modify display options",
+     "Some of the display columns offer options for customizing their output.<br>"
+     "For example time stamp columns can be displayed absolute, relative or<br>"
+     "in a mixed style. This permission allows the user to modify display options",
      [ "admin", "user", "guest" ])
 
 declare_permission("act",
@@ -455,10 +456,12 @@ host_tags = []
 #    |____/___|
 #              
 
-ALL_HOSTS = ['@all']
-HOST_STATE = '__HOST_STATE__'
-class NEED: pass
-class FOREACH: pass
+ALL_HOSTS = '(.*)'
+HOST_STATE = ('__HOST_STATE__',)
+HIDDEN = ('__HIDDEN__',)
+class FOREACH_HOST: pass
+class FOREACH_SERVICE: pass
+class REMAINING: pass
 aggregation_rules = {}
 aggregations = []
 aggregation_functions = {}

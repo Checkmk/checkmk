@@ -1,0 +1,12 @@
+Title: lnx_if greift auch bei nicht-linux agents
+Component: checks
+Benefit: 5
+State: open
+Cost: 2
+Date: 2011-04-11 16:41:52
+Class: bug
+
+offenbar greift der lnx_if auch wenn ein agent-OS != linux vom agent gemeldet wird.
+das fuehrt dazu, dass durch das umstellen des linux if-checks andere OS auch betroffen sind und ihre interfaces nicht mehr inventorisierbar sind.
+beim reinventorisieren muss man also mindestens mit tag "linux" arbeiten oder so.
+waere aber schoener, wenn agent OS - und auch die agent version - angescden

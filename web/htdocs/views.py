@@ -197,6 +197,7 @@ plugins_path = defaults.web_dir + "/plugins/views"
 for fn in os.listdir(plugins_path):
     if fn.endswith(".py"):
         execfile(plugins_path + "/" + fn)
+
 if defaults.omd_root:
     local_plugins_path = defaults.omd_root + "/local/share/check_mk/web/plugins/views"
     if os.path.exists(local_plugins_path):
@@ -1083,7 +1084,12 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     if show_buttons and 'B' in display_options:
         show_context_links(view, hide_filters)
 
-    need_navi = show_buttons and ('D' in display_options or 'F' in display_options or 'C' in display_options or 'O' in display_options or 'E' in display_options)
+    need_navi = show_buttons and (
+        'D' in display_options or 
+        'F' in display_options or 
+        'C' in display_options or 
+        'O' in display_options or 
+        'E' in display_options)
     if need_navi:
         html.write("<table class=navi><tr>\n")
 
@@ -1189,8 +1195,9 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
             play_alarm_sounds()
 
     # In multi site setups error messages of single sites do not block the
-    # output and raise now exception. We simply print error messages here:
-    if config.show_livestatus_errors:
+    # output and raise now exception. We simply print error messages here.
+    # In case of the web service we show errors only on single site installations.
+    if config.show_livestatus_errors and (html.output_format == "html" or not config.is_multisite()):
         for sitename, info in html.live.deadsites.items():
             html.show_error("<b>%s - Livestatus error</b><br>%s" % (info["site"]["alias"], info["exception"]))
 

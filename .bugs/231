@@ -1,0 +1,12 @@
+Title: do_rrd_update inkompatibel mit perfdata
+Component: core
+Benefit: 1
+State: open
+Cost: 3
+Date: 2011-04-11 16:37:13
+Class: nastiness
+
+ich hatte sehr lange gesucht, warum bei mir die perfdata fuer nagvis und perf-o-meter kaputt war. es gab keine fehlermeldungen, an denen es nachvollziehbar war. ursache war do_rrd_update, nach entfernen der einstellung ging es sofort.
+ich weiss leider nicht mehr, in welchem kontext ich die aktiviert hatte.
+vermutlich ist die funktion aelter als das nagvis livestatus-be und die 
+perf-o-meter und das problem tritt so nur in alten installationen auf?

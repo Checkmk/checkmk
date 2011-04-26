@@ -6,24 +6,46 @@ aggregation_rules["host"] = (
   [ "HOST" ],
   "worst",
   [
-      ( "$HOST$", HOST_STATE ),
+      ( "general",      [ "$HOST$" ] ),
+      ( "performance",    [ "$HOST$" ] ),
       ( "filesystems",  [ "$HOST$" ] ),
-      ( "cpuandmem",    [ "$HOST$" ] ),
       ( "networking",   [ "$HOST$" ] ),
-      ( "checkmk",      [ "$HOST$" ] ),
       ( "applications", [ "$HOST$" ] ),
       ( "logfiles",     [ "$HOST$" ] ),
+      ( "hardware",     [ "$HOST$" ] ),
+      ( "other",        [ "$HOST$" ] ),
+  ]
+)
+
+aggregation_rules["general"] = (
+  "General State", 
+  [ "HOST" ],
+  "worst",
+  [
+      ( "$HOST$", HOST_STATE ),
+      ( "$HOST$", "Uptime" ),
+      ( "checkmk",  [ "$HOST$" ] ),
   ]
 )
 
 aggregation_rules["filesystems"] = (
-  "Filesystems", 
+  "Disk & Filesystems", 
   [ "HOST" ],
   "worst",
   [
-      ( "$HOST$", "fs_" ),
-      ( "$HOST$", "Mount|Disk" ),
+      ( "$HOST$", "Disk|MD" ),
       ( "multipathing", [ "$HOST$" ]),
+      ( FOREACH_SERVICE, "$HOST$", "fs_(.*)", "filesystem", [ "$HOST$", "$1$" ] ),
+  ]
+)
+
+aggregation_rules["filesystem"] = (
+  "$FS$", 
+  [ "HOST", "FS" ],
+  "worst",
+  [
+      ( "$HOST$", "fs_$FS$$" ),
+      ( "$HOST$", "Mount options of $FS$$" ),
   ]
 )
 
@@ -36,12 +58,21 @@ aggregation_rules["multipathing"] = (
   ]
 )
 
-aggregation_rules["cpuandmem"] = (
-  "CPU, Kernel, Memory", 
+aggregation_rules["performance"] = (
+  "Performance", 
   [ "HOST" ],
   "worst",
   [
-      ( "$HOST$", "CPU|Memory|Kernel" ),
+      ( "$HOST$", "CPU|Memory|Vmalloc|Kernel|Number of threads" ),
+  ]
+)
+
+aggregation_rules["hardware"] = (
+  "Hardware", 
+  [ "HOST" ],
+  "worst",
+  [
+      ( "$HOST$", "IPMI|RAID" ),
   ]
 )
 
@@ -50,7 +81,7 @@ aggregation_rules["networking"] = (
   [ "HOST" ],
   "worst",
   [
-      ( FOREACH, "$HOST$", "NIC ([a-z]*).* counters", "nic", [ "$HOST$", "$1$" ] ),
+      ( "$HOST$", "NFS|Interface|TCP" ),
   ]
 )
 
@@ -89,7 +120,16 @@ aggregation_rules["applications"] = (
   ]
 )
 
+aggregation_rules["other"] = (
+  "Other", 
+  [ "HOST" ],
+  "worst",
+  [
+      ( "$HOST$", REMAINING ),
+  ]
+)
+
 aggregations += [
-  ( "Hosts", FOREACH, "(.*)", "Check_MK$", "host", ["$1$"] ),
+  ( "Hosts", FOREACH_HOST, ALL_HOSTS, "host", ["$1$"] ),
 ]
 

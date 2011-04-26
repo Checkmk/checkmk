@@ -1,0 +1,10 @@
+Title: Speed up use of stored snmpwalks
+Component: core
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-04-20 10:50:15
+Class: feature
+
+For large walks it takes almost for ever to make an inventory.
+Use an in-memory cache.

@@ -1,0 +1,11 @@
+Title: lnx_if only works on ethernet interfaces
+Component: checks
+Benefit: 3
+State: open
+Cost: 4
+Date: 2011-04-19 13:49:29
+Class: bug
+
+lnx_if should only rely on ethtool for ethernet interfaces
+it seems to instead only detect ethernet interfaces because others wont support ethtool
+examples: tunnel interfaces, wan stuff?, vlans? & infiniband

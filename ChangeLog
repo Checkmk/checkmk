@@ -1,5 +1,7 @@
 1.1.11i1:
     Core, Setup, etc.:
+    * FIX: cmk -D: drop obsolete (and always empty) Notification:
+    * FIX: better handling of broken checks returning empty services
     * FIX: fix computation of weight when averaging
     * FIX: fix detection of missing OIDs (led to empty lines) 
     * SNMP scan functions can now call oid(".1.3.6.1.4.1.9.9.13.1.3.1.3.*")
@@ -11,8 +13,12 @@
     * Call snmpgetnext with the option -Cf (fixes some client errors)
     * Call snmp(bulk)walk always with the option -Cc (fixes problems in some
       cases where OIDs are missing)
+    * Allow merging of dictionary based check parameters
+    * --debug now implies -v
 
     Multisite:
+    * FIX: webservice: suppress livestatus errors in multi-site setups
+    * FIX: install missing example icons in web/htdocs/images/icons
     * FIX: Nagios-Snapin: avoid duplicate slash in URL
     * FIX: custom_style_sheet now also honored by sidebar
     * FIX: ignore case when sorting groups in ...groups snapin
@@ -26,6 +32,7 @@
     * Allow moving hosts from one to another config file
 
     Checks & Agents:
+    * FIX: local: fixed search for custom templates PNP template
     * FIX: if/if64: always generate unique items (in case ifAlias is used)
     * FIX: ipmi: fix ugly ouput in case of warning and error
     * FIX: vms_df: fix, was completely broken due to conversion to df.include
@@ -48,6 +55,9 @@
     * FIX: hp_procurve_cpu: fix synatx error in man page
     * FIX: hp_procurve_memory: fix syntax error in man page
     * FIX: fc_brocade_port_detailed: fix PNP template in MULTIPLE mode
+    * FIX: ad_replication.bat only generates output on domain controllers now.
+           This is useful to prevent checks on non DC hosts (Thanks to Alex Greenwood)
+    * FIX: cisco_temp_perf: handle sensors without names correctly
     * printer_supply: Changed order of tests. When a printer reports -3 this
       is used before the check if maxlevel is -2.
     * printer_supply: Skipping inventory of supplies which have current value
@@ -87,8 +97,7 @@
     * mcdata_fcport: new check for ports of MCData FC Switches
     * hp_procurve_cpu: add PNP template
     * hp_procurve_cpu: rename load to utilization, rename service to CPU utilizition
-    * FIX: ad_replication.bat only generates output on domain controllers now.
-           This is useful to prevent checks on non DC hosts (Thanks to Alex Greenwood)
+    * df,df_netapp,df_netapp32,hr_fs,vms_df: convert to mergeable dictionaries
 
 1.1.10:
     Core, Setup, etc.:

@@ -1,3 +1,3 @@
-sudo cp -prv * /omd/versions/default/share/check_mk/web/
-SITE=$(omd sites --bare | head -n 1)
-sudo su - -c "omd restart $SITE apache"
+#!/bin/bash
+C=$(sudo cp -prv * /omd/versions/default/share/check_mk/web/ | wc -l)
+echo "$C files copied"

@@ -1,0 +1,13 @@
+Title: unifiy all temperature checks
+Component: checks
+Benefit: 2
+State: open
+Cost: 2
+Date: 2011-04-20 10:48:22
+Class: cleanup
+
+There are already a lot of temperature checks. *Each* of them
+uses a different scheme for the service description. Make
+all checks use "Temperature %s". Also use a common PNP-template
+that handles a missing WARN/CRIT. Maybe use a common code base,
+if this makes sense.

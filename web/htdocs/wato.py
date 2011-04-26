@@ -51,7 +51,7 @@ config.declare_permission("use_wato",
      "Use WATO",
      "This permissions allows users to use WATO - Check_MK's Web Administration Tool.<br>"
      "Please make sure, that they also have the permission for the WATO snapin.",
-     [ "admin", ])
+     [ "admin", "user" ])
 
 conf_dir = defaults.var_dir + "/wato"
 
@@ -77,22 +77,36 @@ conf_dir = defaults.var_dir + "/wato"
 # ich den Ausgang der Aktion kenne. Daher wird zuerst die Aktion ausgeführt,
 # welche aber keinen HTML-Code ausgeben darf.
 
-def page_index(h):
+def page_handler(h):
     global html
     html = h
 
-    global g_filename
-    g_filename, title = check_filename()
-    read_the_configuration_file()
+    if not config.may("use_wato"):
+        raise MKAuthException("You are not allowed to use WATO!")
+
+    load_folder_config()
+
+    global g_folder, g_file
+    g_folder, g_file = get_folder_and_file()
+    if g_file:
+        title = g_file["title"]
+        read_the_configuration_file()
+    else:
+        title = g_folder["title"]
 
     modefuncs = {
-        "newhost"   :      lambda phase: mode_edithost(phase, True),
-        "edithost"  :      lambda phase: mode_edithost(phase, False),
+        "folder"         : mode_folder,
+        "newfolder"      : lambda phase: mode_editfolder(phase, True),
+        "editfolder"     : lambda phase: mode_editfolder(phase, False),
+        "newhost"        : lambda phase: mode_edithost(phase, True),
+        "edithost"       : lambda phase: mode_edithost(phase, False),
         "firstinventory" : lambda phase: mode_inventory(phase, True),
-        "inventory" :      lambda phase: mode_inventory(phase, False),
-        "changelog" :      mode_changelog,
+        "inventory"      : lambda phase: mode_inventory(phase, False),
+        "changelog"      : mode_changelog,
+        "hostindex"      : mode_hostindex,
     }
-    modefunc = modefuncs.get(html.var("mode"), mode_index)
+    default_mode = g_file and mode_hostindex or mode_folder
+    modefunc = modefuncs.get(html.var("mode"), default_mode)
 
     # Do actions (might switch mode)
     action_message = None
@@ -112,7 +126,7 @@ def page_index(h):
                     html.write("</div>")
                     html.footer()
                     return
-                modefunc = modefuncs.get(newmode, mode_index)
+                modefunc = modefuncs.get(newmode, mode_hostindex)
                 html.set_var("mode", newmode) # will be used by makeuri
 
         except MKUserError, e:
@@ -151,7 +165,166 @@ def page_index(h):
 #                  |___/           
 # -----------------------------------------------------------------
 
-def mode_index(phase):
+def mode_folder(phase):
+    if phase == "title":
+        return "Folder contents"
+
+    elif phase == "buttons":
+        html.context_button("New folder", make_link([("mode", "newfolder")]))
+        html.context_button("New file", make_link([("mode", "newfile")]))
+        changelog_button()
+    
+    elif phase == "action":
+        pass
+
+    else:
+        html.write("Contents of folder ")
+        path = ()
+        for p in g_folder["path"]:
+            html.write('<a href="%s">%s</a> / ' % (make_link([], path), g_folders[path]["title"]))
+            path += (p,)
+        html.write(g_folder["title"])
+        html.write("<p>")
+
+
+        if len(g_folder["folders"]) > 0:
+            html.write("<b>Subfolders</b>")
+            html.write("<table class=data>\n")
+            html.write("<tr><th>Title</th><th>Actions</th>\n")
+            odd = "even"
+            for subfolder in g_folder["folders"].values():
+                name = subfolder["name"]
+                path = subfolder["path"]
+                edit_url     = make_link([("mode", "editfolder")], path)
+                delete_url   = make_action_link([("mode", "folder"), ("_delete", name)], path)
+                enter_url    = make_link([], path)
+
+                odd = odd == "odd" and "even" or "odd" 
+                html.write('<tr class="data %s0">' % odd)
+
+                html.write('<td class=takefall><a href="%s">%s</a></td>' % 
+                            (enter_url, subfolder["title"]))
+                html.write("<td>")
+                html.buttonlink(edit_url, "Edit")
+                html.buttonlink(delete_url, "Delete")
+                html.write("</td>")
+                html.write("</tr>")
+            html.write("</table>")
+
+
+def mode_editfolder(phase, new):
+    # In editing mode, we always edit the *current* folder, i.e. that
+    # one g_folder points to. In new mode the new folder is created
+    # within g_folder
+    if new:
+        title = "Create new folder"
+        name, title, roles = None, None, []
+        mode = "new"
+    else:
+        title = "Edit folder " + g_folder["name"]
+        name = g_folder["name"]
+        title = g_folder["title"]
+        roles = g_folder["roles"]
+        mode = "edit"
+
+    if phase == "title":
+        return title
+
+    elif phase == "buttons":
+        # Abort-Button must go to parent!
+        global g_folder
+        old_g_folder = g_folder
+        g_folder = g_folders[g_folder["path"][:-1]]
+        html.context_button("Abort", make_link([("mode", "folder")]))
+        g_folder = old_g_folder
+
+    elif phase == "action":
+        if not new and html.var("delete"): # Delete this host
+            if not html.transaction_valid():
+                return "folder"
+            else:
+                return delete_folder_after_confirm(hostname)
+
+        if new:
+            name = html.var("name")
+            if name in g_folder["folders"]:
+                raise MKUserError("name", "A folder with that name already exists")
+            if not re.match("^[-a-z0-9A-Z_]*$", name):
+                raise MKUserError("name", "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed.")
+
+        else:
+            name = g_folder["name"]
+
+
+        title = html.var("title")
+        if not title:
+            raise MKUserError("title", "Please supply a title for your folder")
+
+        roles = [ role for role in config.roles if html.var("role_" + role) ]
+        
+        if new:
+            newpath = g_folder["path"] + (name,)
+            new_folder = { 
+                "name" : name,
+                "path" : newpath,
+                "title" : title, 
+                "roles" : roles,
+                "folders" : {},
+                "files" : {},
+            }
+            g_folder["folders"][name] = new_folder
+            g_folders[newpath] = new_folder
+            global g_folder
+            g_folder = new_folder
+
+        else:
+            g_folder["title"] = title
+            g_folder["roles"] = roles
+
+        save_folder_config()
+        return "folder"
+
+
+    else:
+        html.begin_form("editfolder")
+        html.write('<table class="form bg_brighten">\n')
+        
+        # title
+        html.write("<tr><td class=legend>Title</td><td class=content>")
+        html.text_input("title", title)
+        html.write("</td></tr>\n")
+
+        # folder name
+        html.write("<tr><td class=legend>Internal directory name<br>"
+        "<i>This is the name of subdirectory where the files and<br> "
+        "other folders will be created. You cannot change this later</i>"
+        "</td><td class=content>")
+        if new:
+            html.text_input("name")
+            html.set_focus("name")
+        else:
+            html.write(name)
+
+        html.write("</td></tr>\n")
+
+        # permissions
+        html.write("<tr><td class=legend>Grant access to</td><td class=content>")
+        for role in config.roles:
+            html.checkbox("role_" + role, role in g_folder["roles"])
+            html.write(" " + role + "<br>")
+        html.write("</td></tr>")
+
+        html.write('<tr><td class="legend button" colspan=2>')
+        html.button("save", "Save &amp; Finish", "submit")
+        if not new:
+            html.button("delete", "Delete this folder!", "submit")
+        html.write("</td></tr>\n")
+        html.write("</table>\n")
+        html.hidden_fields()
+        html.end_form()
+        
+
+def mode_hostindex(phase):
     if phase == "title":
         return "Hosts list"
 
@@ -184,10 +357,9 @@ def mode_index(phase):
             edit_url     = make_link([("mode", "edithost"), ("host", hostname)])
             services_url = make_link([("mode", "inventory"), ("host", hostname)])
             clone_url    = make_link([("mode", "newhost"), ("clone", hostname)])
-            delete_url   = make_action_link([("mode", "index"), ("_delete", hostname)])
+            delete_url   = make_action_link([("mode", "hostindex"), ("_delete", hostname)])
 
             odd = odd == "odd" and "even" or "odd" 
-
             html.write('<tr class="data %s0">' % odd)
     
             html.write("<td>")
@@ -268,7 +440,7 @@ def mode_changelog(phase):
 
     elif phase == "buttons":
         html.context_button("Create new host", make_link([("mode", "newhost")]))
-        html.context_button("Host list", make_link([("mode", "index")]))
+        html.context_button("Host list", make_link([("mode", "hostindex")]))
 
     elif phase == "action":
         if html.check_transaction():
@@ -324,14 +496,14 @@ def mode_edithost(phase, new):
         return title
 
     elif phase == "buttons":
-        html.context_button("Abort", make_link([("mode", "index")]))
+        html.context_button("Abort", make_link([("mode", "hostindex")]))
         if not new:
             html.context_button("Services", make_link([("mode", "inventory"), ("host", hostname)]))
 
     elif phase == "action":
         if not new and html.var("delete"): # Delete this host
             if not html.transaction_valid():
-                return "index"
+                return "hostindex"
             else:
                 return delete_host_after_confirm(hostname)
 
@@ -377,9 +549,9 @@ def mode_edithost(phase, new):
                 else:
                     log_pending(hostname, "edit-host", "Edited properties of host [%s]" % hostname)
             if new:
-                return go_to_services and "firstinventory" or "index"
+                return go_to_services and "firstinventory" or "hostindex"
             else:
-                return go_to_services and "inventory" or "index"
+                return go_to_services and "inventory" or "hostindex"
 
 
     else:
@@ -453,7 +625,7 @@ def mode_inventory(phase, firsttime):
             table = check_mk_automation("try-inventory", [hostname])
             table.sort()
             active_checks = {}
-            new_target = "index"
+            new_target = "hostindex"
             for st, ct, item, paramstring, params, descr, state, output, perfdata in table:
                 if (html.has_var("_cleanup") or html.has_var("_fixall")) and st in [ "vanished", "obsolete" ]:
                     pass
@@ -468,10 +640,10 @@ def mode_inventory(phase, firsttime):
             message = "Saved check configuration of host [%s] with %d services" % (hostname, len(active_checks)) 
             log_pending(hostname, "set-autochecks", message) 
             return new_target, message
-        return "index"
+        return "hostindex"
 
     elif phase == "buttons":
-        html.context_button("Host list", make_link([("mode", "index")]))
+        html.context_button("Host list", make_link([("mode", "hostindex")]))
         html.context_button("Edit host", make_link([("mode", "edithost"), ("host", hostname)]))
 
     else:
@@ -587,14 +759,23 @@ def check_mk_automation(command, args=[], indata=""):
                       (" ".join(cmd), e, outdata))
 
 
+def make_config_path(folder, file = None):
+    parts = folder["path"]
+    if type(file) == dict:
+        parts.append(file["name"])
+    elif file:
+        parts.append(file)
+
+    return defaults.check_mk_configdir + "/" + "/".join(parts)
+
 def read_the_configuration_file():
     global g_hosts
-    g_hosts = read_configuration_file(g_filename)
+    g_hosts = read_configuration_file(g_folder, g_file)
 
-def read_configuration_file(filename):
+def read_configuration_file(folder, file):
     hosts = {}
-    path = defaults.check_mk_configdir + "/" + filename
 
+    path = make_config_path(folder, file)
     if os.path.exists(path):
         variables = {
             "ALL_HOSTS"          : ['@all'],
@@ -618,8 +799,29 @@ def read_configuration_file(filename):
     return hosts
 
 
+def load_folder_config():
+    global g_folders
+    path = config.config_dir + "/watofolders.mk"
+    if os.path.exists(path):
+        g_folders = eval(file(path).read())
+    else:
+        g_folders = { () : { 
+            "path" : (), 
+            "name" : "", 
+            "title" : "ROOT", 
+            "files" : {}, 
+            "folders" : {}, 
+            "roles" : [ "admin" ] } 
+        }
+
+
+def save_folder_config():
+    config.write_settings_file(config.config_dir + "/watofolders.mk", g_folders)
+
+
 def write_the_configuration_file():
     write_configuration_file(g_filename, g_hosts)
+
 
 def write_configuration_file(filename, hosts):
     all_hosts = []
@@ -667,35 +869,55 @@ def host_extra_conf(hostname, conflist):
             return [value]
     return []
 
-def check_filename():
-    filename = html.var("filename")
+def get_folder_and_file():
+    path = html.var("filename", "/")
+    if path[0] != '/' :
+        raise MKGeneralException("You called this page with an invalid WATO filename!")
+
+    parts = path[1:].split("/")
+    path = tuple(parts[:-1])
+    filename = parts[-1]
+
+    if path not in g_folders:
+        raise MKGeneralException('You called this page with an non-existing folder!'
+                                 'Go back to the <a href="wato.py">main index</a>')
+
+    the_folder = g_folders[path]
+    the_folder["path"] = path
     if not filename:
-        raise MKGeneralException("You called this page without a filename!")
-    if '/' in filename:
-        raise MKGeneralException("You called this page with an invalid filename!")
+        return the_folder, None
 
-    # Get alias (title) for filename
-    title = None
-    for fn, t, roles in config.config_files:
-        if fn == filename:
-            title = t
-            break
+    html.write("parts: %s, path: %r, filename: %r, keyes: %r" % \
+    (parts, path, filename, the_folder.keys()))
+    if not filename in the_folder["files"]:
+        raise MKGeneralException('You called this page with an non-existing file! '
+                                 'Go back to the <a href="wato.py">main index</a>')
 
-    if not title:
-        raise MKGeneralException("No config file <tt>%s</tt> is declared in <tt>multisite.mk</tt>" % filename)
+    the_file = the_folder["files"][filename]
+    the_file["name"] = filename
+    if config.role not in the_file["roles"]:
+        raise MKAuthException("You have no permissions on this configuration file!")
+    return the_folder, the_file 
 
-    if not config.may("use_wato") or config.role not in roles:
-        raise MKAuthException("You are not allowed to edit this configuration file!")
 
-    return filename, title
+def make_link(vars, path = None):
+    if path == None:
+        path = g_folder["path"]
 
-def make_link(vars):
-    vars = vars + [ ("filename", g_filename) ]
+    if len(path) > 0:
+        filename = "/" + "/".join(path) + "/"
+    else:
+        filename = "/"
+
+    if g_file:
+        filename += g_file["name"]
+    vars = vars + [ ("filename", filename) ]
     return html.makeuri_contextless(vars)
 
-def make_action_link(vars):
-    vars = vars + [ ("filename", g_filename) ]
-    return html.makeuri_contextless(vars + [("_transid", html.current_transid())])
+
+def make_action_link(vars, path = None):
+    return make_link(vars + [("_transid", html.current_transid())], path)
+
 
 def changelog_button():
     pending = parse_audit_log("pending")
@@ -706,6 +928,7 @@ def changelog_button():
     else:
         hot = False
     html.context_button(buttontext, make_link([("mode", "changelog")]), hot)
+
 
 def show_service_table(hostname, firsttime):
     # Read current check configuration
@@ -779,7 +1002,7 @@ def delete_host_after_confirm(delname):
         write_the_configuration_file()
         log_pending(delname, "delete-host", "Deleted host [%s]" % delname)
         check_mk_automation("delete-host", [delname])
-        return "index"
+        return "hostindex"
     elif c == False: # not yet confirmed
         return ""
     else:

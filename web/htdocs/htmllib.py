@@ -83,7 +83,6 @@ def urlencode_vars(vars):
         
         output += varname
         output += "="
-        # output += urlencode(value)
         output += urllib.quote(value)
     return output
 

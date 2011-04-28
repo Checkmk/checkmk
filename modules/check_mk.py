@@ -703,7 +703,7 @@ def is_cluster(hostname):
     return False
 
 # If host is node of a cluster, return name of that cluster
-# (untagged). If not, return None. If a host belongt to
+# (untagged). If not, return None. If a host belongs to
 # more than one cluster, then a random cluster is choosen.
 def cluster_of(hostname):
     for clustername, nodes in clusters.items():
@@ -4126,6 +4126,24 @@ if __name__ == "__main__":
             if len(hostnames) > 0:
                 for host in hostnames:
                     remove_autochecks_of(host, checknames)
+                    clust = cluster_of(host)
+                    if clust:
+                        missing = []
+                        for node in clusters[clust]:
+                            if node not in hostnames:
+                                missing.append(node)
+                        if len(missing) == 0:
+                            if opt_verbose:
+                                sys.stdout.write("All nodes of %s specified, dropping checks of %s, too.\n" % (clust, clust))
+                            remove_autochecks_of(clust, checknames)
+                        else:
+                            sys.stdout.write("Warning: %s is part of cluster %s, but you didn't specify %s as well.\nChecks on %s will be kept.\n" % 
+                            (host, clust, ",".join(missing), clust))
+                    # if the host is part of a cluster and
+                    # the other nodes of that cluster are
+                    # also present in the list, then we also
+                    # drop the checks of the clusters
+
             else:
                 for host in all_active_hosts() + all_active_clusters():
                     remove_autochecks_of(host, checknames)

@@ -1,5 +1,6 @@
 1.1.11i1:
     Core, Setup, etc.:
+    * FIX: cmk -II also refreshes cluster checks, if all nodes are specified
     * FIX: avoid floating points with 'e' in performance data
     * FIX: cmk -D: drop obsolete (and always empty) Notification:
     * FIX: better handling of broken checks returning empty services

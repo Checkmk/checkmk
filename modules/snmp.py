@@ -191,6 +191,11 @@ def get_snmp_table(hostname, ip, oid_info):
         max_len_col = -1
 
         for column in targetcolumns:
+            fetchoid = oid
+            if suboid:
+                fetchoid += "." + str(suboid)
+            fetchoid += "." + str(column)
+
             # column may be integer or string like "1.5.4.2.3"
             colno += 1
             # if column is 0, we do not fetch any data from snmp, but use
@@ -201,14 +206,10 @@ def get_snmp_table(hostname, ip, oid_info):
             # string or as binary UTF-8 encoded number string
             if column in [ OID_END, OID_STRING, OID_BIN ]:
                 index_column = colno
-                columns.append([])
+                columns.append((fetchoid, []))
                 index_format = column
                 continue
 
-            fetchoid = oid
-            if suboid:
-                fetchoid += "." + str(suboid)
-            fetchoid += "." + str(column)
 
             if opt_use_snmp_walk or is_usewalk_host(hostname):
                 rowinfo = get_stored_snmpwalk(hostname, fetchoid)

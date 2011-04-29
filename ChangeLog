@@ -18,6 +18,7 @@
     * Allow merging of dictionary based check parameters
     * --debug now implies -v
     * new option --debug: creates execution profile of check_mk itself
+    * sped up use of stored snmp walks
 
     Multisite:
     * FIX: webservice: suppress livestatus errors in multi-site setups

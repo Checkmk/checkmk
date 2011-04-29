@@ -365,13 +365,16 @@ def get_stored_snmpwalk(hostname, oid):
         sys.stderr.write("Getting %s from %s\n" % (oid, path))
     if not os.path.exists(path):
         raise MKGeneralException("No snmpwalk file %s\n" % path)
+
     rowinfo = []
+    hot = False
     for line in file(path):
         parts = line.split(None, 1)
         o = parts[0]
         if o.startswith('.'):
             o = o[1:]
         if o == oid or o.startswith(oid_prefix + "."):
+            hot = True
             if len(parts) > 1:
                 value = parts[1]
                 if agent_simulator:
@@ -381,4 +384,6 @@ def get_stored_snmpwalk(hostname, oid):
             rowinfo.append((o, strip_snmp_value(value))) # return pair of OID and value
             if dot_star:
                 return rowinfo # only return first (used by get_single_oid)
+        elif hot: # end of interesting part, no point in further search
+            return rowinfo
     return rowinfo

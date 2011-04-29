@@ -26,7 +26,7 @@
 
 #!/usr/bin/python
 
-import config
+import config, wato
 
 def render_wato_files():
     if not config.may("use_wato"):
@@ -54,11 +54,8 @@ def ajax_wato_files(h):
     global html
     html = h
     if config.may("use_wato"):
-        html.write('<ul>')
-        for filename, title, roles in config.config_files:
-            if config.role in roles:
-                bulletlink(title, "wato.py?filename=%s" % filename)
-        html.write('</ul>')
+        format = ("<li class=sidebar>%s</li>" % link("XX", "XX")).replace("XX", "%s")
+        wato.render_link_tree(html, format)
 
 
 sidebar_snapins["wato"] = {

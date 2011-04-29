@@ -34,6 +34,7 @@
     * Allow moving hosts from one to another config file
 
     Checks & Agents:
+    * FIX: cisco_power: fix syntax error in man page (broke also Multisite)
     * FIX: local: fixed search for custom templates PNP template
     * FIX: if/if64: always generate unique items (in case ifAlias is used)
     * FIX: ipmi: fix ugly ouput in case of warning and error

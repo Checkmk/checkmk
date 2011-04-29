@@ -294,7 +294,7 @@ def mode_editfolder(phase, what, new):
                 raise MKUserError("name", "Invalid %s name. Only the characters a-z, A-Z, 0-9, _ and - are allowed." % what)
 
 
-        title = html.var("title")
+        title = html.var_utf8("title")
         if not title:
             raise MKUserError("title", "Please supply a title.")
 
@@ -371,8 +371,6 @@ def mode_editfolder(phase, what, new):
 
         html.write('<tr><td class="legend button" colspan=2>')
         html.button("save", "Save &amp; Finish", "submit")
-        if not new:
-            html.button("delete", "Delete this folder!", "submit")
         html.write("</td></tr>\n")
         html.write("</table>\n")
         html.hidden_fields()
@@ -483,6 +481,8 @@ def render_linkinfo(linkinfo):
         elif find_folder(path):
             url = html.makeuri_contextless([("mode", "folder"), ("filename", linkinfo)])
             title = find_folder(path)["title"]
+        else:
+            return linkinfo
     else:
         return ""
 
@@ -782,7 +782,7 @@ def log_entry(linkinfo, action, message, logfilename):
 
     log_file = conf_dir + "/" + logfilename
     create_user_file(log_file, "a").write("%d %s %s %s %s\n" % 
-            (int(time.time()), link, html.req.user, action, message))
+            (int(time.time()), link, html.req.user, action, message.encode("utf-8")))
 
 
 def log_audit(linkinfo, what, message):
@@ -803,7 +803,7 @@ def parse_audit_log(what):
     if os.path.exists(path):
         entries = []
         for line in file(path):
-            line = line.rstrip()
+            line = line.rstrip().decode("utf-8")
             entries.append(line.split(None, 4))
         entries.reverse()
         return entries

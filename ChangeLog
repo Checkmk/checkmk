@@ -19,6 +19,7 @@
     * --debug now implies -v
     * new option --debug: creates execution profile of check_mk itself
     * sped up use of stored snmp walks
+    * find configuration file in subdirectories of conf.d also
 
     Multisite:
     * FIX: webservice: suppress livestatus errors in multi-site setups

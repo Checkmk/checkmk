@@ -94,9 +94,9 @@ def page_handler(h):
     else:
         title = g_folder["title"]
 
-    default_mode = g_file and mode_file or mode_folder
-    current_mode = html.var("mode", "folder")
-    modefunc = mode_functions.get(current_mode, default_mode)
+    default_mode = g_file and "file" or "folder"
+    current_mode = html.var("mode", default_mode)
+    modefunc = mode_functions.get(current_mode)
 
     # Do actions (might switch mode)
     action_message = None

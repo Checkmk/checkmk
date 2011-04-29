@@ -45,13 +45,6 @@ div {
     padding: 0;
 }
 
-/* Lightens up background colors  of tables/divs and so on
- * form_background.png is a fully transparent image */
-.bg_brighten {
-    background-image: url("images/form_background.png");
-    background-repeat: repeat;
-}
-
 /*
    __  __       _        
   |  \/  | __ _(_)_ __   
@@ -1020,6 +1013,8 @@ h2.formcaption {
 }
 
 table.form {
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
     border-collapse: collapse;
     empty-cells: show;
     border-spacing: 0px;
@@ -1063,6 +1058,8 @@ table.form td.legend.border {
     border-right-style: solid;
 }
 table.form td.hilite {
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
     margin: 10px;
 }
 
@@ -1452,6 +1449,8 @@ div.columneditor {
 div.columneditor table {
     padding: 0;
     margin: 0;
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
     border: 1px solid #fff;
     -moz-border-radius: 5px;
     width: 100%;
@@ -1586,6 +1585,8 @@ table.add_snapin i {
 */
 
 .wato table.auditlog {
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
     border-collapse: collapse;
     margin-top: 3px;
     margin-bottom: 1em;

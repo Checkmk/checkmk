@@ -3846,7 +3846,9 @@ def all_nonfunction_vars():
 
 
 # Create list of all files to be included
-list_of_files = glob.glob(check_mk_configdir + '/*.mk')
+list_of_files = reduce(lambda a,b: a+b, 
+   [ [ "%s/%s" % (d, f) for f in fs if f.endswith(".mk")] 
+     for d, sb, fs in os.walk(check_mk_configdir) ], [])
 list_of_files.sort()
 list_of_files = [ check_mk_configfile ] + list_of_files
 final_mk = check_mk_basedir + "/final.mk"

@@ -161,7 +161,8 @@ function pnp_response_handler(data, code) {
         response = eval(code);
         for(var i in response) {
             var graph = response[i];
-            create_graph(data, '&' + graph['image_url'].replace('&view=1', ''));
+            var view = data['view'] == '' ? '0' : data['view'];
+            create_graph(data, '&' + graph['image_url'].replace('&view='+view, ''));
             i = null;
         }
     } catch(e) {
@@ -207,8 +208,8 @@ function render_pnp_graphs(container, site, host, service, pnpview, base_url, pn
                  'pnp_url':   pnp_url,   'site':     site,
                  'host':      host,      'service':  service,
                  'with_link': with_link, 'view':     pnpview};
-    get_url(pnp_url + 'index.php/json?&host=' + host + '&srv=' + service + '&source=0',
-            pnp_response_handler, data, pnp_error_response_handler);
+    get_url(pnp_url + 'index.php/json?&host=' + host + '&srv=' + service + '&source=0&view=' + pnpview,
+                                                 pnp_response_handler, data, pnp_error_response_handler);
 }
 
 // ----------------------------------------------------------------------------

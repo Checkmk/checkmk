@@ -75,7 +75,7 @@
 multisite_painter_options["pnpview"] = {
  "title"   : "PNP Timerange",
  "default" : "1",
- "values"  : [ ("0", "4 Hours"), ("1", "25 Hours"), ("2", "One week"), ("3", "One Month"), ("4", "One Year"), ]
+ "values"  : [ ("0", "4 Hours"), ("1", "25 Hours"), ("2", "One week"), ("3", "One Month"), ("4", "One Year"), ("", "All") ]
 }
 
 multisite_painter_options["ts_format"] = {

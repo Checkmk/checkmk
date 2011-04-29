@@ -94,21 +94,9 @@ def page_handler(h):
     else:
         title = g_folder["title"]
 
-    modefuncs = {
-        "folder"         : mode_folder,
-        "newfolder"      : lambda phase: mode_editfolder(phase, "folder", True),
-        "editfolder"     : lambda phase: mode_editfolder(phase, "folder", False),
-        "newfile"        : lambda phase: mode_editfolder(phase, "file", True),
-        "editfile"       : lambda phase: mode_editfolder(phase, "file", False),
-        "newhost"        : lambda phase: mode_edithost(phase, True),
-        "edithost"       : lambda phase: mode_edithost(phase, False),
-        "firstinventory" : lambda phase: mode_inventory(phase, True),
-        "inventory"      : lambda phase: mode_inventory(phase, False),
-        "changelog"      : mode_changelog,
-        "file"      : mode_file,
-    }
     default_mode = g_file and mode_file or mode_folder
-    modefunc = modefuncs.get(html.var("mode"), default_mode)
+    current_mode = html.var("mode", "folder")
+    modefunc = mode_functions.get(current_mode, default_mode)
 
     # Do actions (might switch mode)
     action_message = None
@@ -128,7 +116,8 @@ def page_handler(h):
                     html.write("</div>")
                     html.footer()
                     return
-                modefunc = modefuncs.get(newmode, mode_file)
+                modefunc = mode_functions.get(newmode, mode_file)
+                current_mode = newmode
                 html.set_var("mode", newmode) # will be used by makeuri
 
         except MKUserError, e:
@@ -142,6 +131,9 @@ def page_handler(h):
     # Show contexts buttons
     html.begin_context_buttons()
     modefunc("buttons")
+    for inmode, buttontext, targetmode in extra_buttons:
+        if inmode == current_mode:
+            html.context_button(buttontext, make_link([("mode", targetmode)]))
     html.end_context_buttons()
 
     # Show outcome of action
@@ -393,6 +385,7 @@ def mode_file(phase):
         return "Hosts list"
 
     elif phase == "buttons":
+        html.context_button("Back", make_link_to([("mode", "folder")], g_folder["path"]))
         html.context_button("Properties", make_link_to([("mode", "editfile")], g_folder["path"], g_file["name"]))
         html.context_button("New host", make_link([("mode", "newhost")]))
         changelog_button()
@@ -1310,3 +1303,47 @@ def render_folder_path():
         html.write(g_file["title"])
     else:
         html.write(g_folder["title"])
+
+#   +----------------------------------------------------------------------+
+#   |                   ____  _             _                              |
+#   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
+#   |                  | |_) | | | | |/ _` | | '_ \/ __|                   |
+#   |                  |  __/| | |_| | (_| | | | | \__ \                   |
+#   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
+#   |                                 |___/                                |
+#   +----------------------------------------------------------------------+
+#   | Prepare plugin-datastructures and load WATO plugins                  |
+#   +----------------------------------------------------------------------+
+
+
+mode_functions = {
+   "folder"         : mode_folder,
+   "newfolder"      : lambda phase: mode_editfolder(phase, "folder", True),
+   "editfolder"     : lambda phase: mode_editfolder(phase, "folder", False),
+   "newfile"        : lambda phase: mode_editfolder(phase, "file", True),
+   "editfile"       : lambda phase: mode_editfolder(phase, "file", False),
+   "newhost"        : lambda phase: mode_edithost(phase, True),
+   "edithost"       : lambda phase: mode_edithost(phase, False),
+   "firstinventory" : lambda phase: mode_inventory(phase, True),
+   "inventory"      : lambda phase: mode_inventory(phase, False),
+   "changelog"      : mode_changelog,
+   "file"           : mode_file,
+}
+
+extra_buttons = [
+]
+
+
+# Load all wato plugins
+plugins_path = defaults.web_dir + "/plugins/wato"
+for fn in os.listdir(plugins_path):
+    if fn.endswith(".py"):
+        execfile(plugins_path + "/" + fn)
+
+if defaults.omd_root:
+    local_plugins_path = defaults.omd_root + "/local/share/check_mk/web/plugins/wato"
+    if os.path.exists(local_plugins_path):
+        for fn in os.listdir(local_plugins_path):
+            if fn.endswith(".py"):
+                execfile(local_plugins_path + "/" + fn)
+

@@ -34,9 +34,18 @@ check_mk_version  = '(inofficial)'
 
 # Some things have to be done before option parsing and might
 # want to output some verbose messages.
+g_profile = None
+
 if __name__ == "__main__":
     opt_debug        = '--debug' in sys.argv[1:]
     opt_verbose      = opt_debug or '-v' in sys.argv[1:] or '--verbose' in sys.argv[1:]
+    if '--profile' in sys.argv[1:]:
+        import cProfile
+        g_profile = cProfile.Profile()
+        g_profile.enable()
+        if opt_verbose:
+            sys.stderr.write("Enabled profiling.\n")
+        
 else:
     opt_verbose = False
     opt_debug = False
@@ -4010,6 +4019,18 @@ backup_paths = [
     ]
 
 
+def output_profile():
+    if g_profile:
+        g_profile.dump_stats("profile.out")
+        file("show_profile.py", "w")\
+            .write("#!/usr/bin/python\n"
+                   "import pstats\n"
+                   "stats = pstats.Stats('profile.out')\n"
+                   "stats.sort_stats('time').print_stats()\n")
+        os.chmod("show_profile.py", 0755)
+
+        sys.stderr.write("Profile 'profile.out' written. Please run ./show_profile.py.\n")
+
 #   +----------------------------------------------------------------------+
 #   |                        __  __       _                                |
 #   |                       |  \/  | __ _(_)_ __                           |
@@ -4027,7 +4048,7 @@ if __name__ == "__main__":
                      "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
                      "flush", "package", "donate", "snmpwalk", "usewalk",
                      "scan-parents", "procs=", "automation=", 
-                     "snmpget=", 
+                     "snmpget=", "profile",
                      "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                      "man", "nowiki", "config-check", "backup=", "restore=",
                      "check-inventory=", "paths", "cleanup-autochecks", "checks=" ]
@@ -4081,12 +4102,12 @@ if __name__ == "__main__":
         for o,a in opts:
             if o in [ '-h', '--help' ]:
                 usage()
-                sys.exit(0)
+                done = True
             elif o in [ '-V', '--version' ]:
                 print_version()
-                sys.exit(0)
+                done = True
             elif o in [ '-X', '--config-check' ]:
-                sys.exit(0) # already done
+                done = True
             elif o in [ '-S', '-H' ]:
                 sys.stderr.write(tty_bold + tty_red + "ERROR" + tty_normal + "\n")
                 sys.stderr.write("The options -S and -H have been replaced with the option -N. If you \n")
@@ -4205,8 +4226,7 @@ if __name__ == "__main__":
                             (host, clust, ",".join(missing), clust))
                     # if the host is part of a cluster and
                     # the other nodes of that cluster are
-                    # also present in the list, then we also
-                    # drop the checks of the clusters
+                    # also present in the list, then we also # drop the checks of the clusters
 
             else:
                 for host in all_active_hosts() + all_active_clusters():
@@ -4231,6 +4251,7 @@ if __name__ == "__main__":
 
 
     if done:
+        output_profile()
         sys.exit(0)
     elif len(args) == 0 or len(args) > 2:
         usage()
@@ -4251,3 +4272,4 @@ if __name__ == "__main__":
                     sys.exit(2)
 
         do_check(hostname, ipaddress)
+

@@ -749,12 +749,12 @@ td.perfometer table {
     height: 100%;
 }
 
-td.perfometer td.inner {
+table.data td.perfometer td.inner {
     padding: 0;
     margin: 0;
     border: none;
     height: 22px;
-    padding-left: 1px;
+    padding: 0px 0px 0px 1px;
 }
 
 td.perfometer a {

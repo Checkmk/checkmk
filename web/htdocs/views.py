@@ -1086,7 +1086,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
 
         # Now add join information, if there are join columns
         if len(join_painters) > 0:
-            do_table_join(rows, filterheaders, join_painters, join_columns, only_sites)
+            do_table_join(datasource, rows, filterheaders, join_painters, join_columns, only_sites)
     else:
         rows = []
 
@@ -1289,12 +1289,10 @@ def view_options(viewname):
         config.save_user_file("viewoptions", vo)
     return v
             
-def do_table_join(master_rows, master_filters, join_painters, join_columns, only_sites):
-    # TODO: Do not hard code this values, put it into the datasource?
-    join_table = "services" # TODO: detect / lookup
-    join_master_column = "host_name"
-    join_slave_column = "service_description"
-    datasource = multisite_datasources[join_table]
+def do_table_join(master_ds, master_rows, master_filters, join_painters, join_columns, only_sites):
+    join_table, join_master_column = master_ds["join"]
+    slave_ds = multisite_datasources[join_table]
+    join_slave_column = slave_ds["joinkey"]
 
     # Create additional filters
     join_filter = ""
@@ -1302,7 +1300,7 @@ def do_table_join(master_rows, master_filters, join_painters, join_columns, only
         join_filter += "Filter: %s = %s\n" % (join_slave_column, join_key )
     join_filter += "Or: %d\n" % len(join_painters)
     query = master_filters + join_filter 
-    rows = query_data(datasource, [join_master_column, join_slave_column] + join_columns, [], query, only_sites, None) 
+    rows = query_data(slave_ds, [join_master_column, join_slave_column] + join_columns, [], query, only_sites, None) 
     per_master_entry = {}
     current_key = None
     current_entry = None

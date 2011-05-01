@@ -28,6 +28,7 @@
     * FIX: custom_style_sheet now also honored by sidebar
     * FIX: ignore case when sorting groups in ...groups snapin
     * Added snmp_uptime, uptime and printer_supply perfometers
+    * Allow for displaying service data in host tables
 
     BI:
     * Added new component BI to Multisite.

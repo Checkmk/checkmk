@@ -1,0 +1,73 @@
+Beim Zusammenbauen der Daten haue ich in die geholte Tabelle zu jeder Zeile
+zusätzliche Daten rein, und zwar eine neue Spalte, die "JOIN" heißt und
+ein Dictionary von Dictionaries trägt. Der Schlüssel des Dictionaries
+ist das Argument des Join-Painters (z.B. CPU load). Der Wert ist der
+Datensatz aus der Livestatus-Tabelle.
+
+Zum Holen der Servicestabelle brauche ich:
+
+Spalten:
+ - Der Schlüssel der Haupttabelle (woher bekomme ich den? In meinem Fall
+   ist es "host_name". Evtl. einfach als Argument in die Datasources
+   aufnehmen unter dem Argument "joinkey".
+ - Der Schlüssel der Nebentabelle (woher bekomme ich den? In meinem Fall
+   ist es "service_description"
+ - alle Spalten, die die Nebenpainter brauchen. Dazu muss ich eine Hilfsfunktion
+   einführen (wenn es die nicht schon gibt)
+
+Filter:
+ - alle Filter-Header von der Haupttabelle (vom Host)
+ - *kein* Limit-Filter!
+ - ein Zusatzfilter, der die Services auswählt:
+
+   Filter: service_description = CPU load
+   Filter: service_description = CPU utilization
+   Or: 2
+
+   Hier brauche ich wieder den Schlüssel der Nebentabelle.
+
+Jetzt die Tabelle holen. Ich bekomme dann eine Liste von Einträgen. Diese
+müssen jetzt gruppiert werden, nach dem Schlüssel der Haupttabelle (zzgl. "site").
+Ich gehe also die Liste Zeile für Zeile durch und baue parallel dazu ein
+dictionary join_information {} auf, beim dem der Schlüssel der Join-Key ist.
+
+Beispiel:
+
+join_information = {
+    ( "muc", "zbghlnx04" ) : { 
+         "CPU load"        : { "service_description" : ...", ... },
+         "CPU utilization" : { "service_description" : ...", ... },
+    }
+}
+
+Jetzt gehe ich die Hosts-Tabelle nochmal durch und baue diese join-Information
+als eigene Spalte unter dem Namen "JOIN" ein.
+
+Wenn dann später die Painter aufgerufen werden und die Spalte malen sollen,
+dann müssen sie mit einer row aufgerufen werden, die aus diesem dictionary
+kommt. Als Titel für die Spalte muss der Join-Key genommen werden (z.B. CPU load).
+Alternativ kann man einen Titel konfigurieren.
+
+======================================================
+Was jetzt noch fehlt:
+
+* View-Editor: Editieren der neuen Spaltentypen. Hier muss man mehrstufig vorgehen.
+  Evtl. macht man einen Reiter mit zwei Varianten: Hostspalte, Servicespalte. Bei
+  Hostspalte kommt der Dialog von bisher. Bei Servicespalte kommt zusätzlich das
+  Feld "Service", in welchem man die Servicedescription einträgt. Außerdem kommt
+  anstelle der Spalten für den Host hier die Spalten für die Services.
+  Oder: Man macht nur eine Ansicht und zeigt gleich in der Spaltenliste auch die
+  Painter für die Services (am Ende, nach einem Trenner). Dann - wenn man einen Servicepainter
+  auswählt - poppt noch ein Textfeld auf, in dem man die Servicebeschreibung angeben
+  kann. Alternativ kommt eine Dropdownliste. Diese hat allerdings den Nachteil, dass
+  sie recht groß und langsam werden kann. Wahrscheinlich hat das so nicht hin.
+
+  Wenn man einen Service ausgewählt hat, kann man bei den Tootips auch Daten des
+  Services anzeigen. Frage ist, ob man das in Javascript irgendwie managen kann.
+
+Was aktuell noch nicht geht, ist die Daten im Group-Painter zu verwenden. Ich würde
+das auch einfach ausschließen. Oder gibt es hier sinnvolle Anwendungen? Z.B. Hosts
+danach zu gruppieren nach dem Status eines Filesystems?? Wenn ja, ist hier noch
+ein Bug zu beheben.
+
+

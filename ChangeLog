@@ -27,6 +27,8 @@
     * FIX: Nagios-Snapin: avoid duplicate slash in URL
     * FIX: custom_style_sheet now also honored by sidebar
     * FIX: ignore case when sorting groups in ...groups snapin
+    * FIX: Fixed handling of embedded graphs to support the changes made to
+    the PNP webservice
     * Added snmp_uptime, uptime and printer_supply perfometers
     * Allow for displaying service data in host tables
 

@@ -718,7 +718,7 @@ td.perfometer div.content {
 
 td.perfometer div.title {
    position: relative; 
-   top: 3px; 
+   top: 5px; 
    left: 0px;
    width: 120px;
    height: 0px; 
@@ -749,12 +749,12 @@ td.perfometer table {
     height: 100%;
 }
 
-td.perfometer td.inner {
+table.data td.perfometer td.inner {
     padding: 0;
     margin: 0;
     border: none;
     height: 22px;
-    padding-left: 1px;
+    padding: 0px 0px 0px 1px;
 }
 
 td.perfometer a {
@@ -1456,6 +1456,9 @@ div.columneditor table {
     width: 100%;
 }
 
+div.columneditor td.cebuttons {
+    width: 33px;
+}
 div.columneditor td.celeft {
     width: 60px;
 }

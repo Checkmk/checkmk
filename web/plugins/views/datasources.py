@@ -39,6 +39,7 @@ multisite_datasources["hosts"] = {
     "table"   : "hosts",
     "infos"   : [ "host" ],
     "keys"    : [ "host_name", "host_downtimes" ],
+    "join"    : ( "services", "host_name" ),
 }
 
 multisite_datasources["hostsbygroup"] = {
@@ -46,6 +47,7 @@ multisite_datasources["hostsbygroup"] = {
     "table"   : "hostsbygroup",
     "infos"   : [ "host", "hostgroup" ],
     "keys"    : [ "host_name", "host_downtimes" ],
+    "join"    : ( "services", "host_name" ),
 }
 
 multisite_datasources["services"] = {
@@ -53,6 +55,7 @@ multisite_datasources["services"] = {
     "table"   : "services",
     "infos"   : [ "service", "host" ],
     "keys"    : [ "host_name", "service_description", "service_downtimes" ],
+    "joinkey" : "service_description",
 }
 
 multisite_datasources["servicesbygroup"] = {

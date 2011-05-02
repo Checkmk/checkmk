@@ -678,7 +678,7 @@ function toggle_section(nr, oImg) {
 def view_edit_column(n, var_prefix, maxnum, allowed):
     collist = [ ("", "") ] + [ (name, p["title"]) for name, p in allowed.items() ]
     html.write("<div class=columneditor id=%seditor_%d><table><tr>" % (var_prefix, n))
-    html.write('<td rowspan=3>')
+    html.write('<td class="cebuttons" rowspan=3>')
     html.write('<img onclick="delete_view_column(this);" '
             'onmouseover=\"hilite_icon(this, 1)\" '
             'onmouseout=\"hilite_icon(this, 0)\" '
@@ -698,6 +698,9 @@ def view_edit_column(n, var_prefix, maxnum, allowed):
     html.write('</td>')
     html.write('<td id="%slabel_%d" class=celeft>Column %d:</td><td>' % (var_prefix, n, n))
     html.sorted_select("%s%d" % (var_prefix, n), collist)
+    # html.write('<div style="display: yes;">of Service: ')
+    # html.text_input("%s_svc%d" % (var_prefix, n), "")
+    # html.write('</div>')
     html.write("</td></tr><tr><td class=celeft>Link:</td><td>")
     select_view("%slink_%d" % (var_prefix, n))
     html.write("</td></tr><tr><td class=celeft>Tooltip:</td><td>")
@@ -939,6 +942,30 @@ def page_view(h):
 
     show_view(view, True, True, True)
 
+
+# Get a list of columns we need to fetch in order to
+# render a given list of painters. If join_columns is True,
+# then we only return the list needed by "Join" columns, i.e.
+# columns that need to fetch information from another table
+# (e.g. from the services table while we are in a hosts view)
+# If join_columns is False, we only return the "normal" columns.
+def get_needed_columns(painters):
+    columns = []
+    for entry in painters:
+        p = entry[0]
+        v = entry[1]
+        columns += p["columns"]
+        if v:
+            linkview = html.available_views.get(v)
+            if linkview:
+                for ef in linkview["hide_filters"]:
+                    f = multisite_filters[ef]
+                    columns += f.link_columns
+        if len(entry) > 2 and entry[2]:
+            tt = entry[2]
+            columns += multisite_painters[tt]["columns"]
+    return columns
+
 # Display view with real data. This is *the* function everying
 # is about.
 def show_view(view, show_heading = False, show_buttons = True, show_footer = True):
@@ -1017,28 +1044,16 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     # satisfy external references (filters) of views we link to. The last bit
     # is the trickiest. Also compute this list of view options use by the 
     # painters
-    columns = []
-    painter_options = []
+
+    all_painters = group_painters + painters
+    join_painters = [ p for p in all_painters if len(p) >= 4 ]
+    master_painters = [ p for p in all_painters if len(p) < 4 ]
+    columns      = get_needed_columns(master_painters)
+    join_columns = get_needed_columns(join_painters)
+    
+    # Columns needed for sorters (what shall we do with the join columns?)
     for s, r in sorters:
         columns += s["columns"]
-
-    for entry in (group_painters + painters):
-        p = entry[0]
-        v = entry[1]
-        columns += p["columns"]
-        painter_options += p.get("options", [])
-        if v:
-            linkview = html.available_views.get(v)
-            if linkview:
-                for ef in linkview["hide_filters"]:
-                    f = multisite_filters[ef]
-                    columns += f.link_columns
-        if len(entry) > 2 and entry[2]:
-            tt = entry[2]
-            columns += multisite_painters[tt]["columns"]
-
-    painter_options = list(set(painter_options))
-    painter_options.sort()
 
     # Add key columns, needed for executing commands
     columns += datasource["keys"]
@@ -1048,6 +1063,15 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     if "site" in colset:
         colset.remove("site")
     columns = list(colset)
+
+    # Get list of painter options we need to display (such as PNP time range
+    # or the format being used for timestamp display
+    painter_options = []
+    for entry in all_painters:
+        p = entry[0]
+        painter_options += p.get("options", [])
+    painter_options = list(set(painter_options))
+    painter_options.sort()
 
     # Fetch data. Some views show data only after pressing [Search]
     if (not view["mustsearch"]) or html.var("search"):
@@ -1062,8 +1086,14 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
             rows = query_data(datasource, columns, add_columns, query, only_sites, get_limit())
 
         sort_data(rows, sorters)
+
+        # Now add join information, if there are join columns
+        if len(join_painters) > 0:
+            do_table_join(datasource, rows, filterheaders, join_painters, join_columns, only_sites)
     else:
         rows = []
+
+    # html.write("<pre>%s</pre>" % pprint.pformat(rows))
 
     # Apply non-Livestatus filters
     for filter in all_active_filters:
@@ -1261,6 +1291,36 @@ def view_options(viewname):
         vo[viewname] = v
         config.save_user_file("viewoptions", vo)
     return v
+            
+def do_table_join(master_ds, master_rows, master_filters, join_painters, join_columns, only_sites):
+    join_table, join_master_column = master_ds["join"]
+    slave_ds = multisite_datasources[join_table]
+    join_slave_column = slave_ds["joinkey"]
+
+    # Create additional filters
+    join_filter = ""
+    for paintfunc, linkview, title, join_key in join_painters:
+        join_filter += "Filter: %s = %s\n" % (join_slave_column, join_key )
+    join_filter += "Or: %d\n" % len(join_painters)
+    query = master_filters + join_filter 
+    rows = query_data(slave_ds, [join_master_column, join_slave_column] + join_columns, [], query, only_sites, None) 
+    per_master_entry = {}
+    current_key = None
+    current_entry = None
+    for row in rows:
+        master_key = (row["site"], row[join_master_column])
+        if master_key != current_key:
+            current_key = master_key
+            current_entry = {}
+            per_master_entry[current_key] = current_entry
+        current_entry[row[join_slave_column]] = row
+
+    # Add this information into master table in artificial column "JOIN"
+    for row in master_rows:
+        key = (row["site"], row[join_master_column])
+        joininfo = per_master_entry.get(key, {})
+        row["JOIN"] = joininfo
+
 
 
 def play_alarm_sounds():
@@ -1490,17 +1550,6 @@ def filters_allowed_for_datasource(datasourcename):
             allowed[fname] = filt
     return allowed
 
-def painters_allowed_for_datasource(datasourcename):
-    return allowed_for_datasource(multisite_painters, datasourcename)
-
-def sorters_allowed_for_datasource(datasourcename):
-    return allowed_for_datasource(multisite_sorters, datasourcename)
-
-def list_in_list(a, b):
-    for ele in a:
-        if ele not in b:
-            return False
-    return True
 
 # Filters a list of sorters or painters and decides which of
 # those are available for a certain data source
@@ -1909,6 +1958,11 @@ def prepare_paint(p, row):
     painter = p[0]
     linkview = p[1]
     tooltip = len(p) > 2 and p[2] or None
+    if len(p) >= 4:
+        join_key = p[3]
+        row = row.get("JOIN", {}).get(p[3])
+        if not row:
+            return "", ""  # no join information available for that column
 
     tdclass, content = painter["paint"](row)
 
@@ -1958,7 +2012,10 @@ def paint(p, row):
 
 def paint_header(p):
     painter = p[0]
-    t = painter.get("short", painter["title"])
+    if len(p) >= 4: # join column
+        t = p[3]
+    else:
+        t = painter.get("short", painter["title"])
     html.write("<th>%s</th>" % t)
 
 def register_events(row):

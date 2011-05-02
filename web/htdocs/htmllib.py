@@ -375,7 +375,13 @@ class html:
         return m * 60 + h * 3600
 
     def upload_file(self, varname):
+        error = self.user_errors.get(varname)
+        if error:
+            self.write("<x class=inputerror>")
         self.write('<input type="file" name="%s">' % varname)
+        if error:
+            self.write("</x>")
+        self.form_vars.append(varname)
 
     def html_head(self, title):
         if not self.req.header_sent:
@@ -544,7 +550,9 @@ class html:
         return self.req.vars.get(varname, deflt)
 
     def var_utf8(self, varname, deflt = None):
-        return unicode(self.req.vars.get(varname, deflt), "utf-8")
+        return self.var(varname, deflt)
+        # Now all variables from the user are Unicode strings...
+        # return unicode(self.req.vars.get(varname, deflt), "utf-8")
 
     def set_var(self, varname, value):
         self.req.vars[varname] = value

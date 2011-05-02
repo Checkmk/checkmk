@@ -304,6 +304,9 @@ class html:
         self.form_vars.append(varname)
 
     def checkbox(self, varname, deflt=""):
+        error = self.user_errors.get(varname)
+        if error:
+            html = "<x class=inputerror>"
         value = self.req.vars.get(varname, deflt)
         if value != "" and value != False:
             checked = " CHECKED"
@@ -311,6 +314,8 @@ class html:
             checked = ""
         self.write("<input type=checkbox name=\"%s\"%s>" % (urlencode(varname), checked))
         self.form_vars.append(varname)
+        if error:
+            html += "</x>"
 
     def datetime_input(self, varname, default_value):
         try:

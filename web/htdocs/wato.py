@@ -394,15 +394,39 @@ def mode_file(phase):
         changelog_button()
     
     elif phase == "action":
-        # Deletion of hosts
+        # Deletion of single hosts
         delname = html.var("_delete")
         if delname and delname in g_hosts:
             return delete_host_after_confirm(delname)
 
+        # Move single hosts to other files
         move_to = html.var("_move_host_to")
         hostname = html.var("host")
         if move_to and hostname:
             move_host_to(hostname, move_to)
+
+        # Mass operation on hosts
+        if not html.transaction_valid():
+            return
+
+        hostnames = g_hosts.keys()
+        hostnames.sort()
+        selected_hosts = []
+        for name in hostnames:
+            if html.var("sel_" + name):
+                selected_hosts.append(name)
+
+        if len(selected_hosts) == 0:
+            raise MKUserError("sel_" + hostnames[0], 
+            "Please select some hosts before doing mass operations on hosts.")
+
+        # Deletion
+        if html.var("_mass_delete"):
+            return delete_hosts_after_confirm(selected_hosts)
+
+
+    elif len(g_hosts) == 0:
+        html.write("There are no hosts in this file.")
 
     else:
         html.write("Hosts in file ")
@@ -410,22 +434,33 @@ def mode_file(phase):
         html.write("<p>")
 
         # Show table of hosts in this file
+        html.begin_form("hosts")
+        html.hidden_fields()
         html.write("<table class=data>\n")
-        html.write("<tr><th></th><th>Hostname</th>"
+        html.write("<tr><th></th><th></th><th>Hostname</th>"
                    "<th>IP&nbsp;Address</th><th>Tags</th><th>Alias</th><th>Move To</th></tr>\n")
-        odd = "even"
+        odd = "odd"
 
         hostnames = g_hosts.keys()
         hostnames.sort()
         for hostname in hostnames:
             alias, ipaddress, tags = g_hosts[hostname]
+
+            # Rows with alternating odd/even styles
+            html.write('<tr class="data %s0">' % odd)
+            odd = odd == "odd" and "even" or "odd" 
+
+            # Check box
+            html.write("<td>")
+            html.checkbox("sel_%s" % hostname)
+            html.write("</td>")
+
+            # Column with actions (buttons)
             edit_url     = make_link([("mode", "edithost"), ("host", hostname)])
             services_url = make_link([("mode", "inventory"), ("host", hostname)])
             clone_url    = make_link([("mode", "newhost"), ("clone", hostname)])
             delete_url   = make_action_link([("mode", "file"), ("_delete", hostname)])
 
-            odd = odd == "odd" and "even" or "odd" 
-            html.write('<tr class="data %s0">' % odd)
     
             html.write("<td>")
             html.buttonlink(edit_url, "Edit")
@@ -433,7 +468,11 @@ def mode_file(phase):
             html.buttonlink(clone_url, "Clone")
             html.buttonlink(delete_url, "Delete")
             html.write("</td>")
+
+            # Hostname with link to edit form
             html.write('<td><a href="%s">%s</a></td>' % (edit_url, hostname))
+
+            # IP address and DNS lookup
             tdclass = ""
             if not ipaddress:
                 try:
@@ -444,6 +483,8 @@ def mode_file(phase):
                     ipaddress = "(hostname not resolvable!)"
                     tdclass = ' class="dnserror"'
             html.write("<td%s>%s</td>" % (tdclass, ipaddress))
+
+            # Further static information
             html.write("<td>%s</td>" % ",&nbsp;".join(tags))
             html.write("<td class=takeall>%s</td>" % (alias and alias or ""))
             html.write("<td>")
@@ -451,7 +492,18 @@ def mode_file(phase):
             html.write("</td>")
             html.write("</tr>\n")
 
+        # mass actions
+        html.write('<tr class="data %s0">' % odd)
+        html.write('<td><b class=checkall onclick="wato_check_all_hosts();"> </b>')
+        html.write("</td><td colspan=6>On all selected hosts:\n")
+        html.button("_mass_delete", "Delete")
+        html.button("_mass_edit", "Edit")
+        html.button("_mass_inventory", "Auto-configure Services")
+        host_move_combo("", "Move To: ")
+        html.write("</td></tr>\n")
+
         html.write("</table>\n")
+        html.end_form()
     
 
 def render_linkinfo(linkinfo):
@@ -1213,6 +1265,22 @@ def delete_host_after_confirm(delname):
     else:
         return None # browser reload 
 
+def delete_hosts_after_confirm(hosts):
+    wato_html_head("Confirm deletion of %d hosts" % len(hosts))
+    c = html.confirm("Do you really want to delete the %d selected hosts?" % len(hosts))
+    if c:
+        for delname in hosts:
+            del g_hosts[delname]
+            g_file["num_hosts"] -= 1
+            check_mk_automation("delete-host", [delname])
+            log_pending(delname, "delete-host", "Deleted host %s" % delname)
+        write_the_configuration_file()
+        return "file", "Successfully deleted %d hosts" % len(hosts)
+    elif c == False: # not yet confirmed
+        return ""
+    else:
+        return None # browser reload 
+
 def delete_folder_after_confirm(del_folder):
     wato_html_head("Confirm folder deletion")
     c = html.confirm("Do you really want to delete the folder <tt>%s</tt> (%s)?" 
@@ -1260,7 +1328,7 @@ def wato_html_head(title):
     html.header("Check_MK WATO - " + title)
     html.write("<div class=wato>\n")
 
-def host_move_combo(host):
+def host_move_combo(host = None, title = ""):
     other_files = []
     for path, afile in g_files.items():
         if config.role in afile["roles"] and afile != g_file:
@@ -1268,11 +1336,17 @@ def host_move_combo(host):
             other_files.append((os_path, "%s (%s)" % (afile["title"], os_path)))
 
     if len(other_files) > 0:
-        html.hidden_field("host", host)
-        uri = html.makeuri([("host", host), ("_transid", html.current_transid() )])
-        html.select(None, [("", "(select file)")] + other_files, 
-                "", 
+        if title:
+            html.write(title)
+        selections = [("", "(select file)")] + other_files 
+        if host:
+            html.hidden_field("host", host)
+            uri = html.makeuri([("host", host), ("_transid", html.current_transid() )])
+            html.select(None, selections, "", 
                 "location.href='%s' + '&_move_host_to=' + this.value;" % uri);
+        else:
+            html.select("_mass_moveto", selections, "")
+
 
 def move_host_to(hostname, target_filename):
     path = tuple(target_filename[1:].split('/'))

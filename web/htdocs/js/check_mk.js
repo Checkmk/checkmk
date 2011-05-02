@@ -421,13 +421,19 @@ function move_column_down(oImg) {
 }
 
 function toggle_join_fields(prefix, n, obj) {
+    var r1 = document.getElementById(prefix + 'join_index_row' + n);
+    var r2 = document.getElementById(prefix + 'title_row' + n)
     if(obj.options[obj.selectedIndex].text.substr(0, 8) == 'SERVICE:') {
-        document.getElementById(prefix + 'join_index_row' + n).style.display = '';
-        document.getElementById(prefix + 'title_row' + n).style.display = '';
+        r1.style.display = '';
+        r2.style.display = '';
     } else {
-        document.getElementById(prefix + 'join_index_row' + n).style.display = 'none';
-        document.getElementById(prefix + 'title_row' + n).style.display = 'none';
+        r1.style.display = 'none';
+        r2.style.display = 'none';
+        r1.childNodes[1].firstChild.value = '';
+        r2.childNodes[1].firstChild.value = '';
     }
+    r1 = null;
+    r2 = null;
 }
 
 // ----------------------------------------------------------------------------

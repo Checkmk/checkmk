@@ -618,8 +618,8 @@ function toggle_section(nr, oImg) {
         allowed = allowed_for_datasource(data, datasourcename)
 
         joined = []
-        if var_prefix == 'col_' and ds_joined(datasourcename):
-            joined  = allowed_for_datasource(data, multisite_datasources[datasourcename]['join'][0])
+        if var_prefix == 'col_':
+            joined  = allowed_for_joined_datasource(data, datasourcename)
 
         section_header(id, title)
         # make sure, at least 3 selection boxes are free for new columns
@@ -681,15 +681,10 @@ function toggle_section(nr, oImg) {
     html.footer()
 
 def view_edit_column(n, var_prefix, maxnum, allowed, joined = []):
-    def sort_list(l):
-        # Sort the lists but don't mix them up
-        swapped = [ (disp, key) for key, disp in l ]
-        swapped.sort()
-        return [ (key, disp) for disp, key in swapped ]
 
-    collist = sort_list([ ("", "") ] + [ (name, p["title"]) for name, p in allowed.items() ])
+    collist = [ ("", "") ] + collist_of_collection(allowed)
     if joined:
-        collist += [ ("-", "---") ] + sort_list([ (name, 'SERVICE: ' + p["title"]) for name, p in joined.items() if (name, p["title"]) not in collist])
+        collist += [ ("-", "---") ] + collist_of_collection(joined, collist)
 
     html.write("<div class=columneditor id=%seditor_%d><table><tr>" % (var_prefix, n))
     html.write('<td class="cebuttons" rowspan=5>')
@@ -712,11 +707,7 @@ def view_edit_column(n, var_prefix, maxnum, allowed, joined = []):
     html.write('</td>')
     html.write('<td id="%slabel_%d" class=celeft>Column %d:</td><td>' % (var_prefix, n, n))
     html.select("%s%d" % (var_prefix, n), collist, "", "toggle_join_fields('%s', %d, this)" % (var_prefix, n))
-    display = 'none'
-    if joined:
-        selected_label = [ label for name, label in collist if name == html.var("%s%d" % (var_prefix, n), '') ][0]
-        if selected_label[:8] == 'SERVICE:':
-            display = ''
+    display = joined and not is_joined_value(collist, "%s%d" % (var_prefix, n)) and 'none' or ''
     html.write("</td></tr><tr id='%sjoin_index_row%d' style='display:%s'><td class=celeft>of Service:</td><td>" % (var_prefix, n, display))
     html.text_input("%sjoin_index_%d" % (var_prefix, n))
     html.write("</td></tr><tr><td class=celeft>Link:</td><td>")
@@ -742,13 +733,13 @@ def ajax_get_edit_column(h):
     allowed = allowed_for_datasource(multisite_painters, html.var('ds'))
 
     joined = []
-    if html.var('pre') == 'col_' and ds_joined(html.var('ds')):
-        joined = allowed_for_datasource(multisite_painters, multisite_datasources[html.var('ds')]['join'][0])
+    if html.var('pre') == 'col_':
+        joined  = allowed_for_joined_datasource(multisite_painters, html.var('ds'))
 
     num = int(html.var('num', 0))
 
     html.form_vars = []
-    view_edit_column(num, html.var('pre'), num + 1, allowed)
+    view_edit_column(num, html.var('pre'), num + 1, allowed, joined)
 
 # Called by edit function in order to prefill HTML form
 def load_view_into_html_vars(view):
@@ -813,7 +804,7 @@ def load_view_into_html_vars(view):
         viewname   = entry[1]
         tooltip    = len(entry) > 2 and entry[2] or None
         join_index = len(entry) > 3 and entry[3] or None
-        title      = len(entry) > 4 and entry[4] or None
+        col_title  = len(entry) > 4 and entry[4] or None
         html.set_var("col_%d" % n, name)
         if viewname:
             html.set_var("col_link_%d" % n, viewname)
@@ -821,8 +812,8 @@ def load_view_into_html_vars(view):
             html.set_var("col_tooltip_%d" % n, tooltip)
         if join_index:
             html.set_var("col_join_index_%d" % n, join_index)
-        if title:
-            html.set_var("col_title_%d" % n, title)
+        if col_title:
+            html.set_var("col_title_%d" % n, col_title)
         n += 1
 
     # Make sure, checkboxes with default "on" do no set "on". Otherwise they
@@ -920,11 +911,22 @@ def create_view():
         viewname   = html.var("col_link_%d" % n)
         tooltip    = html.var("col_tooltip_%d" % n)
         join_index = html.var('col_join_index_%d' % n)
-        title      = html.var('col_title_%d' % n)
+        col_title  = html.var('col_title_%d' % n)
         if pname:
             if viewname not in  html.available_views:
                 viewname = None
-            painternames.append((pname, viewname, tooltip, join_index, title))
+
+            allowed_cols = collist_of_collection(allowed_for_datasource(multisite_painters, datasourcename))
+            joined_cols  = collist_of_collection(allowed_for_joined_datasource(multisite_painters, datasourcename), allowed_cols)
+            if is_joined_value(joined_cols, "col_%d" % n) and not join_index:
+                raise MKUserError('col_join_index_%d' % n, "Please specify the service to show the data for")
+
+            if join_index != '' and col_title != '':
+                painternames.append((pname, viewname, tooltip, join_index, col_title))
+            elif join_index != '':
+                painternames.append((pname, viewname, tooltip, join_index))
+            else:
+                painternames.append((pname, viewname, tooltip))
 
     return {
         "name"            : name,
@@ -1600,14 +1602,26 @@ def allowed_for_datasource(collection, datasourcename):
             allowed[name] = item
     return allowed
 
-#def joined_datasource(c
-#        joined = multisite_datasources[datasource['join'][0]]
-#        infos_available.update(set(joined['infos']))
-#        add_columns += joined.get("add_columns", [])
-#    html.write(repr(set(collection)))
+def allowed_for_joined_datasource(collection, datasourcename):
+    if 'join' not in multisite_datasources[datasourcename]:
+        return []
+    return allowed_for_datasource(collection, multisite_datasources[datasourcename]['join'][0])
 
-def ds_joined(datasourcename):
-    return 'join' in multisite_datasources[datasourcename]
+def is_joined_value(collection, varname):
+    selected_label = [ label for name, label in collection if name == html.var(varname, '') ]
+    return selected_label and selected_label[0][:8] == 'SERVICE:'
+
+def collist_of_collection(collection, join_target = []):
+    def sort_list(l):
+        # Sort the lists but don't mix them up
+        swapped = [ (disp, key) for key, disp in l ]
+        swapped.sort()
+        return [ (key, disp) for disp, key in swapped ]
+
+    if not join_target:
+        return sort_list([ (name, p["title"]) for name, p in collection.items() ])
+    else:
+        return sort_list([ (name, 'SERVICE: ' + p["title"]) for name, p in collection.items() if (name, p["title"]) not in join_target ])
 
 # -----------------------------------------------------------------------------
 #         _        _   _

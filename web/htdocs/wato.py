@@ -276,15 +276,7 @@ def mode_editfolder(phase, what, new):
     elif phase == "action":
         if new:
             name = html.var("name").strip()
-            if what == "folder" and name in g_folder["folders"]:
-                raise MKUserError("name", "A folder with that name already exists.")
-            elif what == "file" and name in g_folder["files"]:
-                raise MKUserError("name", "A file with that name already exists.")
-            if not name:
-                raise MKUserError("name", "Please specify a name.")
-            if not re.match("^[-a-z0-9A-Z_]*$", name):
-                raise MKUserError("name", "Invalid %s name. Only the characters a-z, A-Z, 0-9, _ and - are allowed." % what)
-
+            check_wato_filename("name", name, what)
 
         title = html.var_utf8("title")
         if not title:
@@ -324,7 +316,7 @@ def mode_editfolder(phase, what, new):
 
     else:
         html.begin_form("edit" + what)
-        html.write('<table class="form bg_brighten">\n')
+        html.write('<table class="form">\n')
         
         # title
         html.write("<tr><td class=legend>Title</td><td class=content>")
@@ -368,6 +360,16 @@ def mode_editfolder(phase, what, new):
         html.hidden_fields()
         html.end_form()
         
+
+def check_wato_filename(htmlvarname, name, what):
+    if what == "folder" and name in g_folder["folders"]:
+        raise MKUserError(htmlvarname, "A folder with that name already exists.")
+    elif what == "file" and name in g_folder["files"]:
+        raise MKUserError(htmlvarname, "A file with that name already exists.")
+    if not name:
+        raise MKUserError(htmlvarname, "Please specify a name.")
+    if not re.match("^[-a-z0-9A-Z_]*$", name):
+        raise MKUserError(htmlvarname, "Invalid %s name. Only the characters a-z, A-Z, 0-9, _ and - are allowed." % what)
 
 #   +----------------------------------------------------------------------+
 #   |       ____                           _   _           _               |

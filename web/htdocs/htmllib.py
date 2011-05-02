@@ -178,8 +178,12 @@ class html:
         if action == None:
             action = self.req.myfile + ".py"
         self.current_form = name
-        self.write("<form name=%s class=%s action=\"%s\" method=%s>\n" %
-                   (name, name, action, method))
+        if method.lower() == "post":
+            enctype = ' enctype="multipart/form-data"'
+        else:
+            enctype = ''
+        self.write("<form name=%s class=%s action=\"%s\" method=%s%s>\n" %
+                   (name, name, action, method, enctype))
         self.hidden_field("filled_in", "on")
         self.hidden_field("_transid", str(self.current_transid()))
         self.hidden_fields(self.global_vars)
@@ -370,6 +374,8 @@ class html:
             raise MKUserError(varname, "Please enter the time in the format HH:MM")
         return m * 60 + h * 3600
 
+    def upload_file(self, varname):
+        self.write('<input type="file" name="%s">' % varname)
 
     def html_head(self, title):
         if not self.req.header_sent:
@@ -536,9 +542,6 @@ class html:
 
     def var(self, varname, deflt = None):
         return self.req.vars.get(varname, deflt)
-
-    def multivar(self, varname, deflt = None):
-        return self.req.multivars.get(varname, deflt)
 
     def var_utf8(self, varname, deflt = None):
         return unicode(self.req.vars.get(varname, deflt), "utf-8")

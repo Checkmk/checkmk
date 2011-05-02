@@ -958,6 +958,7 @@ def render_custom_links():
     if not links:
         html.write("Please edit <tt>%s</tt> in order to configure which links are shown in this snapin.\n" %
                   (defaults.default_config_dir + "/multisite.mk"))
+        return
 
     def render_list(ids, links):
         states = load_customlink_states()

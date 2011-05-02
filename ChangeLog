@@ -15,6 +15,7 @@
     * FIX: install missing example icons in web/htdocs/images/icons
     * FIX: repair python/json webservice needed for NagStaMon
     * FIX: Fixed handling of embedded graphs to support the changes made to the PNP webservice
+    * FIX: Added acks/downtimes to NagStaMon views
 
 1.1.10p1:
     Core, Setup, etc.:

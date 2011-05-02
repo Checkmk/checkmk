@@ -678,7 +678,7 @@ function toggle_section(nr, oImg) {
 def view_edit_column(n, var_prefix, maxnum, allowed):
     collist = [ ("", "") ] + [ (name, p["title"]) for name, p in allowed.items() ]
     html.write("<div class=columneditor id=%seditor_%d><table><tr>" % (var_prefix, n))
-    html.write('<td rowspan=3>')
+    html.write('<td class="cebuttons" rowspan=3>')
     html.write('<img onclick="delete_view_column(this);" '
             'onmouseover=\"hilite_icon(this, 1)\" '
             'onmouseout=\"hilite_icon(this, 0)\" '
@@ -698,6 +698,9 @@ def view_edit_column(n, var_prefix, maxnum, allowed):
     html.write('</td>')
     html.write('<td id="%slabel_%d" class=celeft>Column %d:</td><td>' % (var_prefix, n, n))
     html.sorted_select("%s%d" % (var_prefix, n), collist)
+    # html.write('<div style="display: yes;">of Service: ')
+    # html.text_input("%s_svc%d" % (var_prefix, n), "")
+    # html.write('</div>')
     html.write("</td></tr><tr><td class=celeft>Link:</td><td>")
     select_view("%slink_%d" % (var_prefix, n))
     html.write("</td></tr><tr><td class=celeft>Tooltip:</td><td>")
@@ -1547,17 +1550,6 @@ def filters_allowed_for_datasource(datasourcename):
             allowed[fname] = filt
     return allowed
 
-def painters_allowed_for_datasource(datasourcename):
-    return allowed_for_datasource(multisite_painters, datasourcename)
-
-def sorters_allowed_for_datasource(datasourcename):
-    return allowed_for_datasource(multisite_sorters, datasourcename)
-
-def list_in_list(a, b):
-    for ele in a:
-        if ele not in b:
-            return False
-    return True
 
 # Filters a list of sorters or painters and decides which of
 # those are available for a certain data source

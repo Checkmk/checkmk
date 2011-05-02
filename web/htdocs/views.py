@@ -712,7 +712,9 @@ def view_edit_column(n, var_prefix, maxnum, allowed, joined = []):
     html.write('</td>')
     html.write('<td id="%slabel_%d" class=celeft>Column %d:</td><td>' % (var_prefix, n, n))
     html.select("%s%d" % (var_prefix, n), collist, "", "toggle_join_fields('%s', %d, this)" % (var_prefix, n))
-    display = joined and not is_joined_value(collist, "%s%d" % (var_prefix, n)) and 'none' or ''
+    display = 'none'
+    if joined and is_joined_value(collist, "%s%d" % (var_prefix, n)):
+        display = ''
     html.write("</td></tr><tr id='%sjoin_index_row%d' style='display:%s'><td class=celeft>of Service:</td><td>" % (var_prefix, n, display))
     html.text_input("%sjoin_index_%d" % (var_prefix, n))
     html.write("</td></tr><tr><td class=celeft>Link:</td><td>")

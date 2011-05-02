@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config, defaults, livestatus, htmllib, time, os, re, pprint, time, copy
+import weblib
 from lib import *
 from pagefunctions import *
 
@@ -522,32 +523,34 @@ def page_edit_view(h):
     html.javascript("""
 function toggle_section(nr, oImg) {
   var oContent = document.getElementById("ed_"   + nr);
-  var closed   = oContent.style.display == "none";
-  if (closed) {
-    oContent.style.display = "";
+  toggle_tree_state('vieweditor', nr, oContent);
+  if (oContent.style.display == "none")
     toggle_folding(oImg, 1);
-  } else {
-    oContent.style.display = "none";
+  else
     toggle_folding(oImg, 0);
-  }
   oContent = null;
 }
 """)
 
-    def section_header(id, title):
+
+    def section_header(sid, title):
         html.write("<tr><td class=legend>")
         html.write("<img src=images/tree_00.png id=img_%d onclick=\"toggle_section('%d', this)\" class=toggleheader "
                    "title=\"Click to open this section\" "
                    "onmouseover=\"this.className='toggleheader hover';\" "
-                   "onmouseout=\"this.className='toggleheader';\"><b>%s</b> " % (id, id, title))
+                   "onmouseout=\"this.className='toggleheader';\"><b>%s</b> " % (sid, sid, title))
         html.write("</td><td class=content>")
-        html.write("<div id=\"ed_%d\" style=\"display: none;\">" % id)
+        html.write("<div id=\"ed_%d\" style=\"display: none;\">" % sid)
 
-    def section_footer():
+    def section_footer(sid):
         html.write("</div></td></tr>\n")
+        states = weblib.get_tree_states('vieweditor')
+        if states.get(str(sid), 'off') == 'on':
+            html.javascript('toggle_section("%d", this)' % sid)
 
     # Properties
-    section_header(2, "Properties")
+    sid = 2
+    section_header(sid, "Properties")
     datasource_title = multisite_datasources[datasourcename]["title"]
     html.write("Datasource: <b>%s</b><br>\n" % datasource_title)
     html.hidden_field("datasource", datasourcename)
@@ -562,10 +565,11 @@ function toggle_section(nr, oImg) {
     html.write(" show data only on search<br>")
     html.checkbox("hidebutton")
     html.write(" do not show a context button to this view")
-    section_footer()
+    section_footer(sid)
 
     # [3] Filters
-    section_header(3, "Filters")
+    sid = 3
+    section_header(sid, "Filters")
     html.write("<table class=filters>")
     html.write("<tr><th>Filter</th><th>usage</th><th>hardcoded settings</th><th>HTML variables</th></tr>\n")
     allowed_filters = filters_allowed_for_datasource(datasourcename)
@@ -597,7 +601,7 @@ function toggle_section(nr, oImg) {
     for fname, filt in allowed_filters.items():
         html.write("filter_activation(\"filter_%s\");\n" % fname)
     html.write("</script>\n")
-    section_footer()
+    section_footer(sid)
 
     def sorter_selection(id, title, var_prefix, maxnum, data):
         allowed = allowed_for_datasource(data, datasourcename)
@@ -612,7 +616,7 @@ function toggle_section(nr, oImg) {
             html.write(" ")
             html.select("%sorder_%d" % (var_prefix, n), [("asc", "Ascending"), ("dsc", "Descending")])
             html.write("<br>")
-        section_footer()
+        section_footer(id)
 
     def column_selection(id, title, var_prefix, data):
         allowed = allowed_for_datasource(data, datasourcename)
@@ -631,7 +635,7 @@ function toggle_section(nr, oImg) {
             view_edit_column(n, var_prefix, maxnum, allowed, joined)
         html.write('</div>')
         html.buttonlink("javascript:add_view_column(%d, '%s', '%s')" % (id, datasourcename, var_prefix), "Add Column")
-        section_footer()
+        section_footer(id)
 
     # [4] Sorting
     sorter_selection(4, "Sorting", "sort_", max_sort_columns, multisite_sorters)
@@ -642,8 +646,9 @@ function toggle_section(nr, oImg) {
     # [6] Columns (painters)
     column_selection(6, "Columns", "col_", multisite_painters)
 
-    # [2] Layout
-    section_header(7, "Layout")
+    # [7] Layout
+    sid = 7
+    section_header(sid, "Layout")
     html.write("<table border=0>")
     html.write("<tr><td>Basic Layout:</td><td>")
     html.sorted_select("layout", [ (k, v["title"]) for k,v in multisite_layouts.items() if not v.get("hide")])
@@ -661,7 +666,7 @@ function toggle_section(nr, oImg) {
     html.select("column_headers", [ ("off", "off"), ("pergroup", "once per group") ])
     html.write("</td><tr>\n")
     html.write("</table>\n")
-    section_footer()
+    section_footer(sid)
 
 
     html.write('<tr><td class="legend button" colspan=2>')

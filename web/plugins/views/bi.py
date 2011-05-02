@@ -221,10 +221,13 @@ def filter_tree_only_problems(tree):
 
 
 def paint_aggr_tree_foldable(row):
-    saved_expansion_level, treestate = bi.load_treestate()
+    saved_expansion_level = bi.load_ex_level()
+    treestate = weblib.get_tree_states('bi')
     expansion_level = int(get_painter_option("aggr_expand"))
     if expansion_level != saved_expansion_level:
         treestate = {}
+        weblib.set_tree_states('bi', treestate)
+        weblib.save_tree_states()
 
     mousecode = \
        'onmouseover="this.style.cursor=\'pointer\';" ' \

@@ -520,6 +520,19 @@ function toggle_folding(oImg, state) {
     }
 }
 
+function toggle_tree_state(tree, name, oContainer) {
+    var state;
+    if(oContainer.style.display == 'none') {
+        oContainer.style.display = '';
+        state = 'on';
+    } else {
+        oContainer.style.display = 'none';
+        state = 'off';
+    }
+    get_url('tree_openclose.py?tree=' + escape(tree) + '&name=' + escape(name) + '&state=' + state);
+    oContainer = null;
+}
+
 function toggle_subtree(oImg) 
 {
     var oSubtree = oImg.parentNode.childNodes[6];

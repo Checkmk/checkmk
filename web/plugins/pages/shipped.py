@@ -32,6 +32,7 @@ import views
 import sidebar
 import permissions
 import actions
+import weblib
 
 # map URLs to page rendering functions
 
@@ -53,7 +54,7 @@ pagehandlers.update({
    "switch_master_state"   : sidebar.ajax_switch_masterstate,
    "add_bookmark"          : sidebar.ajax_add_bookmark,
    "del_bookmark"          : sidebar.ajax_del_bookmark,
-   "customlink_openclose"  : sidebar.ajax_customlink_openclose,
+   "tree_openclose"        : weblib.ajax_tree_openclose,
    "edit_bookmark"         : sidebar.page_edit_bookmark,
    "view_permissions"      : permissions.page_view_permissions,
    "edit_permissions"      : permissions.page_edit_permissions,

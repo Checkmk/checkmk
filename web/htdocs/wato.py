@@ -71,7 +71,7 @@ g_pathname    = ""   # textual path name of current folder
 #   | Der Trick: welche Inhalte angezeigt werden, hängt vom Ausgang der    |
 #   | Aktion ab. Wenn man z.B. bei einem Host bei "Create new host" auf    |
 #   | [Save] klickt, dann kommt bei Erfolg die Inventurseite, bei Miss-    |
-#   | bleibt man auf der Neuanlegen-Seite                                  |.
+#   | bleibt man auf der Neuanlegen-Seite                                  |
 #   |                                                                      | 
 #   | Dummerweise kann ich aber die Kontextbuttons erst dann anzeigen,     |
 #   | wenn ich den Ausgang der Aktion kenne. Daher wird zuerst die Aktion  |
@@ -185,8 +185,8 @@ def mode_folder(phase):
             elif delname in g_folder["files"]:
                 del_file = g_folder["files"][delname]
                 return delete_file_after_confirm(del_file)
-
-        pass
+            else:
+                raise MKGeneralException("You called this page with a non-existing folder/file %s" % delname)
 
     else:
         html.write("Contents of folder ")
@@ -278,7 +278,7 @@ def mode_editfolder(phase, what, new):
             name = html.var("name").strip()
             check_wato_filename("name", name, what)
 
-        title = html.var_utf8("title")
+        title = html.var("title")
         if not title:
             raise MKUserError("title", "Please supply a title.")
 
@@ -304,7 +304,8 @@ def mode_editfolder(phase, what, new):
                 g_files[newpath] = new_thing
             
             g_folder[what + "s"][name] = new_thing
-            log_audit(new_thing, "new-" + what, "Created new %s %s" % (what, title))
+            log_audit(new_thing, "new-" + what, u"Created new %s %s" % 
+                    (what, title))
 
         else:
             the_thing["title"] = title
@@ -776,8 +777,10 @@ def log_entry(linkinfo, action, message, logfilename):
         link = file_os_path(g_file) + ":" + linkinfo
 
     log_file = conf_dir + "/" + logfilename
-    create_user_file(log_file, "a").write("%d %s %s %s %s\n" % 
-            (int(time.time()), link, html.req.user, action, message.encode("utf-8")))
+    f = create_user_file(log_file, "ab")
+    f.write("%d %s %s %s " % (int(time.time()), link, html.req.user, action))
+    f.write(message.encode("utf-8"))
+    f.write("\n")
 
 
 def log_audit(linkinfo, what, message):
@@ -950,6 +953,16 @@ def count_files(folder):
         num += count_files(sf)
     return num
 
+# Load all hosts from all configuration files.
+def load_all_hosts(base_folder = None):
+    if base_folder == None:
+        base_folder = g_root_folder
+    hosts = {}
+    for f in base_folder["files"].values():
+        hosts.update(read_configuration_file(base_folder, f))
+    for f in base_folder["folders"].values():
+        hosts.update(load_all_hosts(f))
+    return hosts
 
 def read_the_configuration_file():
     global g_hosts

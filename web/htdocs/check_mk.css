@@ -1456,6 +1456,9 @@ div.columneditor table {
     width: 100%;
 }
 
+div.columneditor td.cebuttons {
+    width: 33px;
+}
 div.columneditor td.celeft {
     width: 60px;
 }

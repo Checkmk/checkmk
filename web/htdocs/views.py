@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config, defaults, livestatus, htmllib, time, os, re, pprint, time, copy
+import weblib
 from lib import *
 from pagefunctions import *
 
@@ -522,32 +523,34 @@ def page_edit_view(h):
     html.javascript("""
 function toggle_section(nr, oImg) {
   var oContent = document.getElementById("ed_"   + nr);
-  var closed   = oContent.style.display == "none";
-  if (closed) {
-    oContent.style.display = "";
+  toggle_tree_state('vieweditor', nr, oContent);
+  if (oContent.style.display == "none")
     toggle_folding(oImg, 1);
-  } else {
-    oContent.style.display = "none";
+  else
     toggle_folding(oImg, 0);
-  }
   oContent = null;
 }
 """)
 
-    def section_header(id, title):
+
+    def section_header(sid, title):
         html.write("<tr><td class=legend>")
         html.write("<img src=images/tree_00.png id=img_%d onclick=\"toggle_section('%d', this)\" class=toggleheader "
                    "title=\"Click to open this section\" "
                    "onmouseover=\"this.className='toggleheader hover';\" "
-                   "onmouseout=\"this.className='toggleheader';\"><b>%s</b> " % (id, id, title))
+                   "onmouseout=\"this.className='toggleheader';\"><b>%s</b> " % (sid, sid, title))
         html.write("</td><td class=content>")
-        html.write("<div id=\"ed_%d\" style=\"display: none;\">" % id)
+        html.write("<div id=\"ed_%d\" style=\"display: none;\">" % sid)
 
-    def section_footer():
+    def section_footer(sid):
         html.write("</div></td></tr>\n")
+        states = weblib.get_tree_states('vieweditor')
+        if states.get(str(sid), 'off') == 'on':
+            html.javascript('toggle_section("%d", this)' % sid)
 
     # Properties
-    section_header(2, "Properties")
+    sid = 2
+    section_header(sid, "Properties")
     datasource_title = multisite_datasources[datasourcename]["title"]
     html.write("Datasource: <b>%s</b><br>\n" % datasource_title)
     html.hidden_field("datasource", datasourcename)
@@ -562,10 +565,11 @@ function toggle_section(nr, oImg) {
     html.write(" show data only on search<br>")
     html.checkbox("hidebutton")
     html.write(" do not show a context button to this view")
-    section_footer()
+    section_footer(sid)
 
     # [3] Filters
-    section_header(3, "Filters")
+    sid = 3
+    section_header(sid, "Filters")
     html.write("<table class=filters>")
     html.write("<tr><th>Filter</th><th>usage</th><th>hardcoded settings</th><th>HTML variables</th></tr>\n")
     allowed_filters = filters_allowed_for_datasource(datasourcename)
@@ -597,7 +601,7 @@ function toggle_section(nr, oImg) {
     for fname, filt in allowed_filters.items():
         html.write("filter_activation(\"filter_%s\");\n" % fname)
     html.write("</script>\n")
-    section_footer()
+    section_footer(sid)
 
     def sorter_selection(id, title, var_prefix, maxnum, data):
         allowed = allowed_for_datasource(data, datasourcename)
@@ -612,10 +616,15 @@ function toggle_section(nr, oImg) {
             html.write(" ")
             html.select("%sorder_%d" % (var_prefix, n), [("asc", "Ascending"), ("dsc", "Descending")])
             html.write("<br>")
-        section_footer()
+        section_footer(id)
 
     def column_selection(id, title, var_prefix, data):
         allowed = allowed_for_datasource(data, datasourcename)
+
+        joined = []
+        if var_prefix == 'col_':
+            joined  = allowed_for_joined_datasource(data, datasourcename)
+
         section_header(id, title)
         # make sure, at least 3 selection boxes are free for new columns
         maxnum = 1
@@ -623,10 +632,10 @@ function toggle_section(nr, oImg) {
             maxnum += 1
         html.write('<div>')
         for n in range(1, maxnum):
-            view_edit_column(n, var_prefix, maxnum, allowed)
+            view_edit_column(n, var_prefix, maxnum, allowed, joined)
         html.write('</div>')
         html.buttonlink("javascript:add_view_column(%d, '%s', '%s')" % (id, datasourcename, var_prefix), "Add Column")
-        section_footer()
+        section_footer(id)
 
     # [4] Sorting
     sorter_selection(4, "Sorting", "sort_", max_sort_columns, multisite_sorters)
@@ -637,8 +646,9 @@ function toggle_section(nr, oImg) {
     # [6] Columns (painters)
     column_selection(6, "Columns", "col_", multisite_painters)
 
-    # [2] Layout
-    section_header(7, "Layout")
+    # [7] Layout
+    sid = 7
+    section_header(sid, "Layout")
     html.write("<table border=0>")
     html.write("<tr><td>Basic Layout:</td><td>")
     html.sorted_select("layout", [ (k, v["title"]) for k,v in multisite_layouts.items() if not v.get("hide")])
@@ -656,7 +666,7 @@ function toggle_section(nr, oImg) {
     html.select("column_headers", [ ("off", "off"), ("pergroup", "once per group") ])
     html.write("</td><tr>\n")
     html.write("</table>\n")
-    section_footer()
+    section_footer(sid)
 
 
     html.write('<tr><td class="legend button" colspan=2>')
@@ -675,10 +685,14 @@ function toggle_section(nr, oImg) {
 
     html.footer()
 
-def view_edit_column(n, var_prefix, maxnum, allowed):
-    collist = [ ("", "") ] + [ (name, p["title"]) for name, p in allowed.items() ]
+def view_edit_column(n, var_prefix, maxnum, allowed, joined = []):
+
+    collist = [ ("", "") ] + collist_of_collection(allowed)
+    if joined:
+        collist += [ ("-", "---") ] + collist_of_collection(joined, collist)
+
     html.write("<div class=columneditor id=%seditor_%d><table><tr>" % (var_prefix, n))
-    html.write('<td class="cebuttons" rowspan=3>')
+    html.write('<td class="cebuttons" rowspan=5>')
     html.write('<img onclick="delete_view_column(this);" '
             'onmouseover=\"hilite_icon(this, 1)\" '
             'onmouseout=\"hilite_icon(this, 0)\" '
@@ -697,15 +711,19 @@ def view_edit_column(n, var_prefix, maxnum, allowed):
             'src="images/button_movedown_lo.png"%s>' % (var_prefix, n, display))
     html.write('</td>')
     html.write('<td id="%slabel_%d" class=celeft>Column %d:</td><td>' % (var_prefix, n, n))
-    html.sorted_select("%s%d" % (var_prefix, n), collist)
-    # html.write('<div style="display: yes;">of Service: ')
-    # html.text_input("%s_svc%d" % (var_prefix, n), "")
-    # html.write('</div>')
+    html.select("%s%d" % (var_prefix, n), collist, "", "toggle_join_fields('%s', %d, this)" % (var_prefix, n))
+    display = 'none'
+    if joined and is_joined_value(collist, "%s%d" % (var_prefix, n)):
+        display = ''
+    html.write("</td></tr><tr id='%sjoin_index_row%d' style='display:%s'><td class=celeft>of Service:</td><td>" % (var_prefix, n, display))
+    html.text_input("%sjoin_index_%d" % (var_prefix, n))
     html.write("</td></tr><tr><td class=celeft>Link:</td><td>")
     select_view("%slink_%d" % (var_prefix, n))
     html.write("</td></tr><tr><td class=celeft>Tooltip:</td><td>")
-    html.sorted_select("%stooltip_%d" % (var_prefix, n), collist)
-    html.write("</td></table>")
+    html.select("%stooltip_%d" % (var_prefix, n), collist)
+    html.write("</td></tr><tr id='%stitle_row%d' style='display:%s'><td class=celeft>Title:</td><td>" % (var_prefix, n, display))
+    html.text_input("%stitle_%d" % (var_prefix, n))
+    html.write("</td></tr></table>")
     html.write("</div>")
 
 def ajax_get_edit_column(h):
@@ -720,10 +738,15 @@ def ajax_get_edit_column(h):
     load_views()
 
     allowed = allowed_for_datasource(multisite_painters, html.var('ds'))
+
+    joined = []
+    if html.var('pre') == 'col_':
+        joined  = allowed_for_joined_datasource(multisite_painters, html.var('ds'))
+
     num = int(html.var('num', 0))
 
     html.form_vars = []
-    view_edit_column(num, html.var('pre'), num + 1, allowed)
+    view_edit_column(num, html.var('pre'), num + 1, allowed, joined)
 
 # Called by edit function in order to prefill HTML form
 def load_view_into_html_vars(view):
@@ -784,14 +807,20 @@ def load_view_into_html_vars(view):
     # [6] Columns
     n = 1
     for entry in view["painters"]:
-        name = entry[0]
-        viewname = entry[1]
-        tooltip = len(entry) > 2 and entry[2] or None
+        name       = entry[0]
+        viewname   = entry[1]
+        tooltip    = len(entry) > 2 and entry[2] or None
+        join_index = len(entry) > 3 and entry[3] or None
+        col_title  = len(entry) > 4 and entry[4] or None
         html.set_var("col_%d" % n, name)
         if viewname:
             html.set_var("col_link_%d" % n, viewname)
         if tooltip:
             html.set_var("col_tooltip_%d" % n, tooltip)
+        if join_index:
+            html.set_var("col_join_index_%d" % n, join_index)
+        if col_title:
+            html.set_var("col_title_%d" % n, col_title)
         n += 1
 
     # Make sure, checkboxes with default "on" do no set "on". Otherwise they
@@ -885,13 +914,26 @@ def create_view():
     # have read this comment you might want to mail me a (simple) patch for
     # doing this more cleanly...
     for n in range(1, 500):
-        pname = html.var("col_%d" % n)
-        viewname = html.var("col_link_%d" % n)
-        tooltip = html.var("col_tooltip_%d" % n)
-        if pname:
+        pname      = html.var("col_%d" % n)
+        viewname   = html.var("col_link_%d" % n)
+        tooltip    = html.var("col_tooltip_%d" % n)
+        join_index = html.var('col_join_index_%d' % n)
+        col_title  = html.var('col_title_%d' % n)
+        if pname and pname != '-':
             if viewname not in  html.available_views:
                 viewname = None
-            painternames.append((pname, viewname, tooltip))
+
+            allowed_cols = collist_of_collection(allowed_for_datasource(multisite_painters, datasourcename))
+            joined_cols  = collist_of_collection(allowed_for_joined_datasource(multisite_painters, datasourcename), allowed_cols)
+            if is_joined_value(joined_cols, "col_%d" % n) and not join_index:
+                raise MKUserError('col_join_index_%d' % n, "Please specify the service to show the data for")
+
+            if join_index != '' and col_title != '':
+                painternames.append((pname, viewname, tooltip, join_index, col_title))
+            elif join_index != '':
+                painternames.append((pname, viewname, tooltip, join_index))
+            else:
+                painternames.append((pname, viewname, tooltip))
 
     return {
         "name"            : name,
@@ -1558,6 +1600,7 @@ def allowed_for_datasource(collection, datasourcename):
     datasource = multisite_datasources[datasourcename]
     infos_available = set(datasource["infos"])
     add_columns = datasource.get("add_columns", [])
+
     allowed = {}
     for name, item in collection.items():
         columns = item["columns"]
@@ -1565,6 +1608,27 @@ def allowed_for_datasource(collection, datasourcename):
         if len(infos_needed.difference(infos_available)) == 0:
             allowed[name] = item
     return allowed
+
+def allowed_for_joined_datasource(collection, datasourcename):
+    if 'join' not in multisite_datasources[datasourcename]:
+        return []
+    return allowed_for_datasource(collection, multisite_datasources[datasourcename]['join'][0])
+
+def is_joined_value(collection, varname):
+    selected_label = [ label for name, label in collection if name == html.var(varname, '') ]
+    return selected_label and selected_label[0][:8] == 'SERVICE:'
+
+def collist_of_collection(collection, join_target = []):
+    def sort_list(l):
+        # Sort the lists but don't mix them up
+        swapped = [ (disp, key) for key, disp in l ]
+        swapped.sort()
+        return [ (key, disp) for disp, key in swapped ]
+
+    if not join_target:
+        return sort_list([ (name, p["title"]) for name, p in collection.items() ])
+    else:
+        return sort_list([ (name, 'SERVICE: ' + p["title"]) for name, p in collection.items() if (name, p["title"]) not in join_target ])
 
 # -----------------------------------------------------------------------------
 #         _        _   _

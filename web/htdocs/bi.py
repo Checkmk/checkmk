@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import config, re, pprint, time
+import weblib
 from lib import *
 
 
@@ -899,19 +900,22 @@ def ajax_set_assumption(h):
         g_assumptions[key] = int(state)
     save_assumptions()
 
-
 def ajax_save_treestate(h):
     global html
     html = h
+
     path_id = html.var("path")
     current_ex_level, path = path_id.split(":", 1)
     current_ex_level = int(current_ex_level)
-    state = html.var("state") == "open"
-    saved_ex_level, treestate = load_treestate()
+
+    saved_ex_level = load_ex_level()
+
     if saved_ex_level != current_ex_level:
-        treestate = {}
-    treestate[path] = state
-    save_treestate(current_ex_level, treestate)
+        weblib.set_tree_states('bi', {})
+    weblib.set_tree_state('bi', path, html.var("state") == "open")
+    weblib.save_tree_states()
+
+    save_ex_level(current_ex_level)
 
 
 #    ____        _                                          
@@ -1048,11 +1052,11 @@ def load_assumptions():
 def save_assumptions():
     config.save_user_file("bi_assumptions", g_assumptions)
 
-def load_treestate():
-    return config.load_user_file("bi_treestate", (None, {}))
+def load_ex_level():
+    return config.load_user_file("bi_treestate", (None, ))[0]
 
-def save_treestate(current_ex_level, treestate):
-    config.save_user_file("bi_treestate", (current_ex_level, treestate))
+def save_ex_level(current_ex_level):
+    config.save_user_file("bi_treestate", (current_ex_level, ))
 
 def status_tree_depth(tree):
     if len(tree) == 3:

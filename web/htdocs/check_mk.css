@@ -1703,10 +1703,6 @@ tr.even0 .aggrtree ul.subtree {
     vertical-align:middle;
 }
 
-td.aggrtree {
-    width: 100%;
-}
-
 table.aggrtree {
     border-collapse: collapse;
     width: 100%;

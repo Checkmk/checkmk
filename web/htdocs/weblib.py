@@ -24,39 +24,51 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Import modules that contain the page functions
+import config
+import lib
 
-import main
-import page_logwatch
-import views
-import sidebar
-import permissions
-import actions
-import weblib
+treestates = {}
 
-# map URLs to page rendering functions
+def load_tree_states():
+    global treestates
+    treestates = config.load_user_file("treestates", {})
 
-pagehandlers.update({
-   "index"                 : main.page_index,
-   "main"                  : main.page_main,
-   "switch_site"           : main.ajax_switch_site,
-   "edit_views"            : views.page_edit_views,
-   "edit_view"             : views.page_edit_view,
-   "get_edit_column"       : views.ajax_get_edit_column,
-   "export_views"          : views.ajax_export,
-   "view"                  : views.page_view,
-   "logwatch"              : page_logwatch.page,
-   "side"                  : sidebar.page_side,
-   "sidebar_add_snapin"    : sidebar.page_add_snapin,
-   "sidebar_snapin"        : sidebar.ajax_snapin,
-   "sidebar_openclose"     : sidebar.ajax_openclose,
-   "sidebar_move_snapin"   : sidebar.move_snapin,
-   "switch_master_state"   : sidebar.ajax_switch_masterstate,
-   "add_bookmark"          : sidebar.ajax_add_bookmark,
-   "del_bookmark"          : sidebar.ajax_del_bookmark,
-   "tree_openclose"        : weblib.ajax_tree_openclose,
-   "edit_bookmark"         : sidebar.page_edit_bookmark,
-   "view_permissions"      : permissions.page_view_permissions,
-   "edit_permissions"      : permissions.page_edit_permissions,
-   "nagios_action"         : actions.ajax_action,
-})
+def save_tree_states():
+    config.save_user_file("treestates", treestates)
+
+def get_tree_states(tree):
+    if not treestates:
+        load_tree_states()
+    return treestates.get(tree, {})
+
+def set_tree_state(tree, key, val):
+    global treestates
+
+    if not treestates:
+        load_tree_states()
+
+    if tree not in treestates:
+        treestates[tree] = {}
+
+    treestates[tree][key] = val
+
+
+def set_tree_states(tree, val):
+    global treestates
+    if not treestates:
+        load_tree_states()
+    treestates[tree] = val
+
+def ajax_tree_openclose(h):
+    global html
+    html = h
+
+    tree = html.var("tree")
+    name = html.var("name")
+
+    if not tree or not name:
+        MKUserError('tree or name parameter missing')
+
+    set_tree_state(tree, name, html.var("state"))
+    save_tree_states()
+

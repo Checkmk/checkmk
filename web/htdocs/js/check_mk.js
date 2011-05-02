@@ -420,6 +420,21 @@ function move_column_down(oImg) {
     oImg = null;
 }
 
+function toggle_join_fields(prefix, n, obj) {
+    var r1 = document.getElementById(prefix + 'join_index_row' + n);
+    var r2 = document.getElementById(prefix + 'title_row' + n)
+    if(obj.options[obj.selectedIndex].text.substr(0, 8) == 'SERVICE:') {
+        r1.style.display = '';
+        r2.style.display = '';
+    } else {
+        r1.style.display = 'none';
+        r2.style.display = 'none';
+        r1.childNodes[1].firstChild.value = '';
+        r2.childNodes[1].firstChild.value = '';
+    }
+    r1 = null;
+    r2 = null;
+}
 
 // ----------------------------------------------------------------------------
 // page reload stuff
@@ -503,6 +518,19 @@ function toggle_folding(oImg, state) {
         setTimeout("set_tree_animation_step('10');", 180);
         setTimeout("set_tree_animation_step('00');", 260);
     }
+}
+
+function toggle_tree_state(tree, name, oContainer) {
+    var state;
+    if(oContainer.style.display == 'none') {
+        oContainer.style.display = '';
+        state = 'on';
+    } else {
+        oContainer.style.display = 'none';
+        state = 'off';
+    }
+    get_url('tree_openclose.py?tree=' + escape(tree) + '&name=' + escape(name) + '&state=' + state);
+    oContainer = null;
 }
 
 function toggle_subtree(oImg) 

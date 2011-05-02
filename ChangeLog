@@ -22,6 +22,7 @@
     * find configuration file in subdirectories of conf.d also
 
     Multisite:
+    * FIX: customlinks snapin: Suppressing exception when no links configured
     * FIX: webservice: suppress livestatus errors in multi-site setups
     * FIX: install missing example icons in web/htdocs/images/icons
     * FIX: Nagios-Snapin: avoid duplicate slash in URL
@@ -31,6 +32,7 @@
     the PNP webservice
     * Added snmp_uptime, uptime and printer_supply perfometers
     * Allow for displaying service data in host tables
+    * View editor foldable states are now permament per user
 
     BI:
     * Added new component BI to Multisite.

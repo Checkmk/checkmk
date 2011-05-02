@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import views, time, defaults
+import weblib
 from lib import *
 
 # Python 2.3 does not have 'set' in normal namespace.
@@ -941,28 +942,15 @@ sidebar_snapins["bookmarks"] = {
 #
 # ------------------------------------------------------------
 
-def load_customlink_states():
-    return config.load_user_file("customlinks", {})
-
-def save_customlink_states(states):
-    config.save_user_file("customlinks", states)
-
-def ajax_customlink_openclose(h):
-    global html
-    html = h
-
-    states = load_customlink_states()
-    states[html.var("name")] = html.var("state")
-    save_customlink_states(states)
-
 def render_custom_links():
     links = config.custom_links.get(config.role)
     if not links:
         html.write("Please edit <tt>%s</tt> in order to configure which links are shown in this snapin.\n" %
                   (defaults.default_config_dir + "/multisite.mk"))
+        return
 
     def render_list(ids, links):
-        states = load_customlink_states()
+        states = weblib.get_tree_states('customlinks')
         n = 0
         for entry in links:
             n += 1

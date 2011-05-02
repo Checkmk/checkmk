@@ -1332,7 +1332,8 @@ def do_table_join(master_ds, master_rows, master_filters, join_painters, join_co
 
     # Create additional filters
     join_filter = ""
-    for paintfunc, linkview, title, join_key in join_painters:
+    for entry in join_painters:
+        paintfunc, linkview, title, join_key = entry[:4]
         join_filter += "Filter: %s = %s\n" % (join_slave_column, join_key )
     join_filter += "Or: %d\n" % len(join_painters)
     query = master_filters + join_filter 
@@ -2056,7 +2057,10 @@ def paint(p, row):
 def paint_header(p):
     painter = p[0]
     if len(p) >= 4: # join column
-        t = p[3]
+        if len(p) >= 5 and p[4]:
+            t = p[4]
+        else:
+            t = p[3]
     else:
         t = painter.get("short", painter["title"])
     html.write("<th>%s</th>" % t)

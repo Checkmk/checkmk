@@ -912,7 +912,7 @@ def create_view():
         tooltip    = html.var("col_tooltip_%d" % n)
         join_index = html.var('col_join_index_%d' % n)
         col_title  = html.var('col_title_%d' % n)
-        if pname:
+        if pname and pname != '-':
             if viewname not in  html.available_views:
                 viewname = None
 

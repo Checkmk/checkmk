@@ -420,6 +420,15 @@ function move_column_down(oImg) {
     oImg = null;
 }
 
+function toggle_join_fields(prefix, n, obj) {
+    if(obj.options[obj.selectedIndex].text.substr(0, 8) == 'SERVICE:') {
+        document.getElementById(prefix + 'join_index_row' + n).style.display = '';
+        document.getElementById(prefix + 'title_row' + n).style.display = '';
+    } else {
+        document.getElementById(prefix + 'join_index_row' + n).style.display = 'none';
+        document.getElementById(prefix + 'title_row' + n).style.display = 'none';
+    }
+}
 
 // ----------------------------------------------------------------------------
 // page reload stuff

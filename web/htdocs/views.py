@@ -616,6 +616,11 @@ function toggle_section(nr, oImg) {
 
     def column_selection(id, title, var_prefix, data):
         allowed = allowed_for_datasource(data, datasourcename)
+
+        joined = []
+        if var_prefix == 'col_' and ds_joined(datasourcename):
+            joined  = allowed_for_datasource(data, multisite_datasources[datasourcename]['join'][0])
+
         section_header(id, title)
         # make sure, at least 3 selection boxes are free for new columns
         maxnum = 1
@@ -623,7 +628,7 @@ function toggle_section(nr, oImg) {
             maxnum += 1
         html.write('<div>')
         for n in range(1, maxnum):
-            view_edit_column(n, var_prefix, maxnum, allowed)
+            view_edit_column(n, var_prefix, maxnum, allowed, joined)
         html.write('</div>')
         html.buttonlink("javascript:add_view_column(%d, '%s', '%s')" % (id, datasourcename, var_prefix), "Add Column")
         section_footer()
@@ -675,10 +680,19 @@ function toggle_section(nr, oImg) {
 
     html.footer()
 
-def view_edit_column(n, var_prefix, maxnum, allowed):
-    collist = [ ("", "") ] + [ (name, p["title"]) for name, p in allowed.items() ]
+def view_edit_column(n, var_prefix, maxnum, allowed, joined = []):
+    def sort_list(l):
+        # Sort the lists but don't mix them up
+        swapped = [ (disp, key) for key, disp in l ]
+        swapped.sort()
+        return [ (key, disp) for disp, key in swapped ]
+
+    collist = sort_list([ ("", "") ] + [ (name, p["title"]) for name, p in allowed.items() ])
+    if joined:
+        collist += [ ("-", "---") ] + sort_list([ (name, 'SERVICE: ' + p["title"]) for name, p in joined.items() if (name, p["title"]) not in collist])
+
     html.write("<div class=columneditor id=%seditor_%d><table><tr>" % (var_prefix, n))
-    html.write('<td class="cebuttons" rowspan=3>')
+    html.write('<td class="cebuttons" rowspan=5>')
     html.write('<img onclick="delete_view_column(this);" '
             'onmouseover=\"hilite_icon(this, 1)\" '
             'onmouseout=\"hilite_icon(this, 0)\" '
@@ -697,15 +711,21 @@ def view_edit_column(n, var_prefix, maxnum, allowed):
             'src="images/button_movedown_lo.png"%s>' % (var_prefix, n, display))
     html.write('</td>')
     html.write('<td id="%slabel_%d" class=celeft>Column %d:</td><td>' % (var_prefix, n, n))
-    html.sorted_select("%s%d" % (var_prefix, n), collist)
-    # html.write('<div style="display: yes;">of Service: ')
-    # html.text_input("%s_svc%d" % (var_prefix, n), "")
-    # html.write('</div>')
+    html.select("%s%d" % (var_prefix, n), collist, "", "toggle_join_fields('%s', %d, this)" % (var_prefix, n))
+    display = 'none'
+    if joined:
+        selected_label = [ label for name, label in collist if name == html.var("%s%d" % (var_prefix, n), '') ][0]
+        if selected_label[:8] == 'SERVICE:':
+            display = ''
+    html.write("</td></tr><tr id='%sjoin_index_row%d' style='display:%s'><td class=celeft>of Service:</td><td>" % (var_prefix, n, display))
+    html.text_input("%sjoin_index_%d" % (var_prefix, n))
     html.write("</td></tr><tr><td class=celeft>Link:</td><td>")
     select_view("%slink_%d" % (var_prefix, n))
     html.write("</td></tr><tr><td class=celeft>Tooltip:</td><td>")
-    html.sorted_select("%stooltip_%d" % (var_prefix, n), collist)
-    html.write("</td></table>")
+    html.select("%stooltip_%d" % (var_prefix, n), collist)
+    html.write("</td></tr><tr id='%stitle_row%d' style='display:%s'><td class=celeft>Title:</td><td>" % (var_prefix, n, display))
+    html.text_input("%stitle_%d" % (var_prefix, n))
+    html.write("</td></tr></table>")
     html.write("</div>")
 
 def ajax_get_edit_column(h):
@@ -720,6 +740,11 @@ def ajax_get_edit_column(h):
     load_views()
 
     allowed = allowed_for_datasource(multisite_painters, html.var('ds'))
+
+    joined = []
+    if html.var('pre') == 'col_' and ds_joined(html.var('ds')):
+        joined = allowed_for_datasource(multisite_painters, multisite_datasources[html.var('ds')]['join'][0])
+
     num = int(html.var('num', 0))
 
     html.form_vars = []
@@ -784,14 +809,20 @@ def load_view_into_html_vars(view):
     # [6] Columns
     n = 1
     for entry in view["painters"]:
-        name = entry[0]
-        viewname = entry[1]
-        tooltip = len(entry) > 2 and entry[2] or None
+        name       = entry[0]
+        viewname   = entry[1]
+        tooltip    = len(entry) > 2 and entry[2] or None
+        join_index = len(entry) > 3 and entry[3] or None
+        title      = len(entry) > 4 and entry[4] or None
         html.set_var("col_%d" % n, name)
         if viewname:
             html.set_var("col_link_%d" % n, viewname)
         if tooltip:
             html.set_var("col_tooltip_%d" % n, tooltip)
+        if join_index:
+            html.set_var("col_join_index_%d" % n, join_index)
+        if title:
+            html.set_var("col_title_%d" % n, title)
         n += 1
 
     # Make sure, checkboxes with default "on" do no set "on". Otherwise they
@@ -885,13 +916,15 @@ def create_view():
     # have read this comment you might want to mail me a (simple) patch for
     # doing this more cleanly...
     for n in range(1, 500):
-        pname = html.var("col_%d" % n)
-        viewname = html.var("col_link_%d" % n)
-        tooltip = html.var("col_tooltip_%d" % n)
+        pname      = html.var("col_%d" % n)
+        viewname   = html.var("col_link_%d" % n)
+        tooltip    = html.var("col_tooltip_%d" % n)
+        join_index = html.var('col_join_index_%d' % n)
+        title      = html.var('col_title_%d' % n)
         if pname:
             if viewname not in  html.available_views:
                 viewname = None
-            painternames.append((pname, viewname, tooltip))
+            painternames.append((pname, viewname, tooltip, join_index, title))
 
     return {
         "name"            : name,
@@ -1557,6 +1590,7 @@ def allowed_for_datasource(collection, datasourcename):
     datasource = multisite_datasources[datasourcename]
     infos_available = set(datasource["infos"])
     add_columns = datasource.get("add_columns", [])
+
     allowed = {}
     for name, item in collection.items():
         columns = item["columns"]
@@ -1564,6 +1598,15 @@ def allowed_for_datasource(collection, datasourcename):
         if len(infos_needed.difference(infos_available)) == 0:
             allowed[name] = item
     return allowed
+
+#def joined_datasource(c
+#        joined = multisite_datasources[datasource['join'][0]]
+#        infos_available.update(set(joined['infos']))
+#        add_columns += joined.get("add_columns", [])
+#    html.write(repr(set(collection)))
+
+def ds_joined(datasourcename):
+    return 'join' in multisite_datasources[datasourcename]
 
 # -----------------------------------------------------------------------------
 #         _        _   _

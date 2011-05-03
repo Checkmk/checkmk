@@ -113,8 +113,9 @@ def page_handler(h):
                 if newmode == "": # no further information: configuration dialog, etc.
                     if action_message:
                         html.message(action_message)
-                    html.write("</div>")
-                    html.footer()
+                    if g_html_head_open:
+                        html.write("</div>")
+                        html.footer()
                     return
                 modefunc = mode_functions.get(newmode, mode_file)
                 current_mode = newmode
@@ -803,24 +804,7 @@ def mode_bulk_inventory(phase):
         return
 
     elif phase == "action":
-        return
-
-    # interactive progress is *not* done in action phase. It
-    # renders the page content itself.
-
-    if html.var("_start"):
-        hostnames = get_hostnames_from_checkboxes()
-        item = html.var("_item") # current item in interactive progress (called via webservice)
-        if not item:
-            # Start interactive progress
-            interactive_progress(
-                hostnames,         # list of items
-                "Bulk inventory",  # title
-                [ ("Services added", 0), ("Services removed", 0), ("Services found", 0) ], # stats table
-                [ ("mode", "file") ], # URL for "Stop/Finish" button
-                50, # ms to sleep between two steps
-            )
-        else:
+        if html.var("_item"):
             # We are called via AJAX by the interactive process in order to execute
             # the next step.
             # handle item item....
@@ -831,7 +815,22 @@ def mode_bulk_inventory(phase):
             result = "[ 'continue', %d, %d, %d ]\n" % (num_added, num_removed, num_found)
             result += "Das hier ist HTML-Code"
             html.write(result)
-            return None # Hier wird der Request sofort beendet - ohne HTML-Title
+            return ""
+        return
+
+    # interactive progress is *not* done in action phase. It
+    # renders the page content itself.
+
+    if html.var("_start"):
+        hostnames = get_hostnames_from_checkboxes()
+        # Start interactive progress
+        interactive_progress(
+            hostnames,         # list of items
+            "Bulk inventory",  # title
+            [ ("Services added", 0), ("Services removed", 0), ("Services found", 0) ], # stats table
+            [ ("mode", "file") ], # URL for "Stop/Finish" button
+            50, # ms to sleep between two steps
+        )
 
     else:
         html.begin_form("bulkinventory")
@@ -1416,7 +1415,11 @@ def delete_file_after_confirm(del_file):
 def file_os_path(f):
     return "/" + "/".join(f["path"]) 
 
+g_html_head_open = False
+
 def wato_html_head(title):
+    global g_html_head_open
+    g_html_head_open = True
     html.header("Check_MK WATO - " + title)
     html.write("<div class=wato>\n")
 
@@ -1502,13 +1505,18 @@ def interactive_progress(items, title, stats, finishvars, timewait):
     html.write("<script type='text/javascript' src='js/wato.js'></script>")
     html.write("<table class=progress>")
     html.write("<tr><th>%s</th></tr>" % title)
-    html.write("<tr><td class=log>Hier kommt das Logfile</td></tr>")
+    html.write("<tr><td class=log id=progress_log></td></tr>")
     html.write("<tr><td class=bar>Hier kommt die Progressbar</td></tr>")
-    html.write("<tr><td class=stats>Hier kommen die Statistiken</td></tr>")
+    html.write("<tr><td class=stats>")
+    html.write("  <table>")
+    for num, (label, value) in enumerate(stats):
+        html.write("    <tr><th>%s</th><td id='progress_stat%d'>%d</td></tr>" % (label, num, value))
+    html.write("  </table>")
+    html.write("</td></tr>")
     html.write("<tr><td class=buttons>Und hier die Knöpfe</td></tr>")
     html.write("</table>")
     json_items = '[ %s ]' % ','.join([ "'" + h + "'" for h in items ])
-    html.javascript('progress_scheduler("%s", %s, 50);' % (html.var('mode'), json_items))
+    html.javascript('progress_scheduler("%s", "%s", 50, %s);' % (html.var('mode'), html.makeuri([]), json_items))
 
 #   +----------------------------------------------------------------------+
 #   |                   ____  _             _                              |

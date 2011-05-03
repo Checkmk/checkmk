@@ -54,30 +54,69 @@ function wato_check_all(css_class) {
 // Interactive progress code
 // ----------------------------------------------------------------------------
 
+
+// Keeps the items to be fetched
+var progress_items = null;
+// Is set to true while one request is waiting for a response
+var progress_running = false;
+
 function progress_handle_response(data, code) {
     var mode = data[0];
     var item = data[1];
 
-    var arr = code.split("\n", 1);
-    var head = arr[0];
-    var body = arr[1];
     var header = null;
     try {
-        var header = eval(head);
+        var header = eval(code.split("\n", 1)[0]);
     } catch(err) {
         alert('Invalid response: ' + code);    
     }
-    alert('Header: ' + header + ' Body: ' + body);
-}
 
-function progress_scheduler(mode, items, timeout) {
-    if(items.length > 0) {
-        // Progressing
-        get_url('wato.py?mode=' + escape(ty) + '&phase=action&_item=' + escape(items[0]) + '&_transid=-1', progress_handle_response, [ mode, items[0] ]);
-    } else {
-        // Finished
-        alert('finished');
+    if(header === null) {
+        alert('Header is null!');
     }
 
-    setTimeout(function() { progress_scheduler(mode, items, timeout); }, timeout);
+    // Extract the body from the response
+    var body = code.split('\n');
+    body.splice(0,1);
+    body = body.join('\n');
+
+    // FIXME: Process statistics
+    //
+
+    // Process optional body
+    if(typeof(body) !== 'undefined' && body != '')
+        progress_attach_log(body);
+
+    if(header[0] !== 'continue') {
+        alert('ABORT!');
+    }
+
+    progress_items.shift();
+    progress_running = false;
+}
+
+function progress_attach_log(t) {
+    var log = document.getElementById('progress_log');
+    log.innerHTML += t;
+    log = null;
+}
+
+function progress_scheduler(mode, url_prefix, timeout, items) {
+    if(progress_items === null)
+        progress_items = items;
+
+    if(progress_running === false) {
+        if(progress_items.length > 0) {
+            // Progressing
+            progress_running = true;
+            alert('item ' + progress_items[0]);
+            get_url(url_prefix + '&_transid=-1&_item=' + escape(progress_items[0]), progress_handle_response, [ mode, progress_items[0] ]);
+        } else {
+            // Finished
+            alert('finished');
+            return;
+        }
+    }
+
+    setTimeout(function() { progress_scheduler(mode, url_prefix, timeout, []); }, timeout);
 }

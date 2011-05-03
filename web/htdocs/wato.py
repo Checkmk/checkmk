@@ -127,6 +127,7 @@ def page_handler(h):
 
     # Title
     html.header("Check_MK WATO - %s - %s" % (title, modefunc("title")))
+    html.write("<script type='text/javascript' src='js/wato.js'></script>")
     html.write("<div class=wato>\n")
 
     # Show contexts buttons
@@ -494,8 +495,8 @@ def mode_file(phase):
             html.write("</tr>\n")
 
         # bulk actions
-        html.write('<tr class="data %s0">' % odd)
-        html.write('<td><button class=checkall onclick="wato_check_all(\'wato_select\');return false;">X</button>')
+        html.write('<tr class="data %s0"><td>' % odd)
+        html.buttonlink('javascript:wato_check_all(\'wato_select\');', 'X')
         html.write("</td><td colspan=6>On all selected hosts:\n")
         html.button("_bulk_delete", "Delete")
         html.button("_bulk_edit", "Edit")
@@ -505,7 +506,7 @@ def mode_file(phase):
 
         html.write("</table>\n")
         html.end_form()
-    
+
 # Create list of all hosts that are select with checkboxes in the current file
 def get_hostnames_from_checkboxes():
     hostnames = g_hosts.keys()
@@ -1502,7 +1503,6 @@ def render_folder_path():
 #   +----------------------------------------------------------------------+
 
 def interactive_progress(items, title, stats, finishvars, timewait):
-    html.write("<script type='text/javascript' src='js/wato.js'></script>")
     html.write("<center>")
     html.write("<table class=progress>")
     html.write("<tr><th colspan=2>%s</th></tr>" % title)
@@ -1518,11 +1518,11 @@ def interactive_progress(items, title, stats, finishvars, timewait):
     html.write("  </table>")
     html.write("</td>")
     html.write("<td class=buttons>")
-    html.write("<button id='progress_pause' onclick='progress_pause()'>Pause!</button>")
-    html.write("<button id='progress_proceed' style='display:none' onclick='progress_proceed()'>Proceed!</button>")
-    html.write("<button id='progress_finished' style='display:none' onclick='progress_end()'>Finish!</button>")
-    html.write("<button id='progress_restart' onclick='location.reload()'>Restart!</button>")
-    html.write("<button id='progress_abort' onclick='progress_end()'>Abort!</button>")
+    html.buttonlink('javascript:progress_pause()',    'Pause!',   obj_id = 'progress_pause')
+    html.buttonlink('javascript:progress_proceed()',  'Proceed!', obj_id = 'progress_proceed', style = 'display:none')
+    html.buttonlink('javascript:progress_finished()', 'Finish!',  obj_id = 'progress_finished', style = 'display:none')
+    html.buttonlink('javascript:location.reload()',   'Restart!', obj_id = 'progress_restart')
+    html.buttonlink('javascript:progress_end()',      'Abort!',   obj_id = 'progress_abort')
     html.write("</td></tr>")
     html.write("</table>")
     html.write("</center>")

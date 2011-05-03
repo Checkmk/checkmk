@@ -233,10 +233,14 @@ class html:
         self.write("<input type=submit name=\"%s\" id=\"%s\" value=\"%s\" class=\"%s\">\n" % \
                    ( varname, varname, title, cssclass))
 
-    def buttonlink(self, href, text, add_transid=False):
+    def buttonlink(self, href, text, add_transid=False, obj_id='', style=''):
         if add_transid:
             href += "&_transid=%d" % self.current_transid()
-        self.write("<a href=\"%s\" class=button>%s</a>" % (href, text))
+        if obj_id:
+            obj_id = ' id=%s' % obj_id
+        if style:
+            style = ' style="%s"' % style 
+        self.write("<a href=\"%s\" class=button%s%s>%s</a>" % (href, obj_id, style, text))
 
     def begin_context_buttons(self):
         self.write("<table class=contextlinks><tr><td>\n")

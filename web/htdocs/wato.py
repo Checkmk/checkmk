@@ -452,7 +452,7 @@ def mode_file(phase):
 
             # Check box
             html.write("<td>")
-            html.checkbox("sel_%s" % hostname, '', 'wato_select')
+            html.checkbox("sel_%s" % hostname, True, 'wato_select')
             html.write("</td>")
 
             # Column with actions (buttons)

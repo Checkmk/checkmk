@@ -20,7 +20,7 @@ td, th {
     vertical-align: top;
 }
 
-input, td, select {
+button, input, td, select {
     font-size: 9pt;
 }
 

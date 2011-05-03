@@ -1644,6 +1644,7 @@ table.add_snapin i {
     padding: 3px 0px;
 }
 
+/* Log window */
 .wato table.progress td.log div { 
     background-image: url("images/form_background.png");
     background-repeat: repeat;
@@ -1658,6 +1659,53 @@ table.add_snapin i {
     padding: 12px 12px 0px 12px;
 }
 
+/* progress bar */
+.wato table.progress td.bar { 
+    padding: 12px 12px 12px 12px;
+}
+
+.wato table.progress td.bar table { 
+    width: 100%;
+    height: 22px;
+    background-color: #fff;
+    border-spacing: 1px 2px;
+}
+
+.wato table.progress td.bar #progress_title {
+   position: relative; 
+   top: -18px; 
+   left: 0px;
+   width: 100%;
+   height: 0px; 
+   text-align: center;
+   white-space: nowrap;
+   float: left;
+   z-index: 40;
+   font-weight: bold;
+}
+
+.wato table.progress td.bar img.glass {
+   position: relative;
+   top: -22px; 
+   width: 100%;
+   height: 22px; 
+   z-index: 30;
+}
+
+.wato table.progress td.bar td.left { 
+    background-color: #4080ff;
+    width: 0px;
+}
+
+.wato #progress_bar.finished td.left {
+    background-color: #80ff00;
+    padding: 0px;
+}
+.wato #progress_bar.finished td.right {
+    padding: 0px;
+}
+
+/* Statistics table */
 .wato table.progress td.stats { 
     padding: 0px 12px 12px 12px;
 }
@@ -1682,42 +1730,6 @@ table.add_snapin i {
     width: 5em;
 }
 
-.wato table.progress td.bar table { 
-    width: 100%;
-    height: 22px;
-    background-color: #fff;
-}
-
-.wato table.progress td.bar #progress_title {
-   position: relative; 
-   top: -18px; 
-   left: 0px;
-   width: 100%;
-   height: 0px; 
-   text-align: center;
-   white-space: nowrap;
-   float: left;
-   z-index: 40;
-
-   font-weight: bold;
-}
-
-.wato table.progress td.bar img.glass {
-   position: relative;
-   top: -22px; 
-   width: 100%;
-   height: 22px; 
-   z-index: 30;
-}
-
-.wato table.progress td.bar td.left { 
-    background-color: #ff0000;
-    width: 0px;
-}
-
-#progress_bar.finished td.left {
-    background-color: #00ff00;
-}
 
 /* 
       _                                    _   _             

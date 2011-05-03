@@ -1509,7 +1509,8 @@ def interactive_progress(items, title, stats, finishvars, timewait):
     html.write("<tr><th colspan=2>%s</th></tr>" % title)
     html.write("<tr><td colspan=2 class=log><div id=progress_log></div></td></tr>")
     html.write("<tr><td colspan=2 class=bar>")
-    html.write("  <table id=progress_bar><tbody><tr><td class=left></td><td class=right></td></tr></tbody></table>")
+    html.write("  <table id=progress_bar><tbody><tr><td class=left></td>"
+               "<td class=right></td></tr></tbody></table>")
     html.write("  <div id=progress_title></div>")
     html.write("  <img class=glass src=images/perfometer-bg.png />")
     html.write("</td></tr>")

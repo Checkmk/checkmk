@@ -1523,7 +1523,7 @@ def interactive_progress(items, title, stats, finishvars, timewait):
     html.write("<td class=buttons>")
     html.jsbutton('progress_pause',    'Pause',   'javascript:progress_pause()')
     html.jsbutton('progress_proceed',  'Proceed', 'javascript:progress_proceed()',  'display:none')
-    html.jsbutton('progress_finished', 'Finish',  'javascript:progress_finished()', 'display:none')
+    html.jsbutton('progress_finished', 'Finish',  'javascript:progress_end()', 'display:none')
     html.jsbutton('progress_restart',  'Restart', 'javascript:location.reload()')
     html.jsbutton('progress_abort',    'Abort',   'javascript:progress_end()')
     html.write("</td></tr>")

@@ -1702,6 +1702,14 @@ table.add_snapin i {
    font-weight: bold;
 }
 
+.wato table.progress td.bar img.glass {
+   position: relative;
+   top: -22px; 
+   width: 100%;
+   height: 22px; 
+   z-index: 30;
+}
+
 .wato table.progress td.bar td.left { 
     background-color: #ff0000;
     width: 0px;

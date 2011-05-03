@@ -79,7 +79,7 @@ function progress_handle_response(data, code) {
     // Extract the body from the response
     var body = code.split('\n');
     body.splice(0,1);
-    body = body.join('<br />');
+    body = body.join('');
 
     // Process statistics
     update_progress_stats(header);
@@ -115,7 +115,7 @@ function update_progress_bar(header) {
 
 function progress_attach_log(t) {
     var log = document.getElementById('progress_log');
-    log.innerHTML += t + '<br />';
+    log.innerHTML += t;
     log = null;
 }
 

@@ -405,7 +405,7 @@ def mode_file(phase):
         if move_to and hostname:
             move_host_to(hostname, move_to)
 
-        # Mass operation on hosts
+        # bulk operation on hosts
         if not html.transaction_valid():
             return
 
@@ -418,10 +418,10 @@ def mode_file(phase):
 
         if len(selected_hosts) == 0:
             raise MKUserError("sel_" + hostnames[0], 
-            "Please select some hosts before doing mass operations on hosts.")
+            "Please select some hosts before doing bulk operations on hosts.")
 
         # Deletion
-        if html.var("_mass_delete"):
+        if html.var("_bulk_delete"):
             return delete_hosts_after_confirm(selected_hosts)
 
 
@@ -452,7 +452,7 @@ def mode_file(phase):
 
             # Check box
             html.write("<td>")
-            html.checkbox("sel_%s" % hostname, '', 'wato_select')
+            html.checkbox("sel_%s" % hostname, True, 'wato_select')
             html.write("</td>")
 
             # Column with actions (buttons)
@@ -492,13 +492,13 @@ def mode_file(phase):
             html.write("</td>")
             html.write("</tr>\n")
 
-        # mass actions
+        # bulk actions
         html.write('<tr class="data %s0">' % odd)
         html.write('<td><button class=checkall onclick="wato_check_all(\'wato_select\');return false;">X</button>')
         html.write("</td><td colspan=6>On all selected hosts:\n")
-        html.button("_mass_delete", "Delete")
-        html.button("_mass_edit", "Edit")
-        html.button("_mass_inventory", "Auto-configure Services")
+        html.button("_bulk_delete", "Delete")
+        html.button("_bulk_edit", "Edit")
+        html.button("_bulk_inventory", "Auto-configure Services")
         host_move_combo("", "Move To: ")
         html.write("</td></tr>\n")
 
@@ -767,6 +767,77 @@ def mode_inventory(phase, firsttime):
 
     else:
         show_service_table(hostname, firsttime)
+
+#   +----------------------------------------------------------------------+
+#   |  ____        _ _      ___                      _                     |
+#   | | __ ) _   _| | | __ |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _   |
+#   | |  _ \| | | | | |/ /  | || '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |  |
+#   | | |_) | |_| | |   <   | || | | \ V /  __/ | | | || (_) | |  | |_| |  |
+#   | |____/ \__,_|_|_|\_\ |___|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |  |
+#   |                                                              |___/   |
+#   +----------------------------------------------------------------------+
+#   | When the user wants to scan the services of multiple hosts at once   |
+#   | this function is used. There is no fine-tuning possibility. We       |
+#   | simply do something like -I or -II on the list of hosts.             |
+#   +----------------------------------------------------------------------+
+
+def mode_bulk_inventory(phase):
+    if phase == "title":
+        return "Bulk service detection (inventory)"
+
+    elif phase == "buttons":
+        html.context_button("Back", make_link([("mode", "file")]))
+
+    elif phase == "action":
+        if html.check_transaction():
+            hostnames = hosts_aus_sel_variablen_rausziehen()
+            item = html.var("_item") # current item in interactive progress (called via webservice)
+            if not item:
+                # Start interactive progress
+                interactive_progress(
+                    hostnames,         # list of items
+                    "Bulk inventory",  # title
+                    [ ("Services added", 0), ("Services removed", 0), ("Services found", 0) ], # stats table
+                    [ ("mode", "file") ], # URL for "Stop/Finish" button
+                    50, # ms to sleep between two steps
+                )
+            else:
+                # We are called via AJAX by the interactive process in order to execute
+                # the next step.
+                # handle item item....
+                # Werte für result: "continue" => weitermachen. "abort" => stoppen, "pause" => "Pause"
+                result = "[ 'continue', %d, %d, %d ]\n" % (num_added, num_removed, num_found)
+                result += "Das hier ist HTML-Code"
+                html.write(result)
+                return None # Hier wird der Request sofort beendet - ohne HTML-Title
+
+        pass
+
+    else:
+        html.begin_form("bulkinventory")
+        html.hidden_fields()
+
+        # Mode of action
+        html.write("<table class=form>")
+        html.write("<tr><td class=legend>Mode</td><td class=content>")
+        html.radiobutton("how", "new", "Find only new services")
+        html.radiobutton("how", "remove", "Remove obsolete services")
+        html.radiobutton("how", "both", "Find new &amp; remove obsolete")
+        html.radiobutton("how", "refresh", "Refresh all services (tabula rasa)")
+        html.write("</td></tr>")
+
+        # Check type
+        html.write("<tr><td class=legend>Checktype</td><td class=content>")
+        selection = html.live.query_column_unique("GET commands\nColumns: name\nFilter: name ~ ^check_mk-")
+        html.sorted_select("check_command", [("", "all types")] + [(x,x) for x in selection])
+        html.write("</td></tr>")
+
+        html.write("<tr><td colspan=2 class=buttons>")
+        html.button("start", "Start!")
+        html.write("</tr>")
+
+        html.write("</table>")
+
 
 
 #   +----------------------------------------------------------------------+
@@ -1345,7 +1416,7 @@ def host_move_combo(host = None, title = ""):
             html.select(None, selections, "", 
                 "location.href='%s' + '&_move_host_to=' + this.value;" % uri);
         else:
-            html.select("_mass_moveto", selections, "")
+            html.select("_bulk_moveto", selections, "")
 
 
 def move_host_to(hostname, target_filename):
@@ -1415,6 +1486,7 @@ mode_functions = {
    "edithost"       : lambda phase: mode_edithost(phase, False),
    "firstinventory" : lambda phase: mode_inventory(phase, True),
    "inventory"      : lambda phase: mode_inventory(phase, False),
+   "bulkinventory"  : mode_bulk_inventory,
    "changelog"      : mode_changelog,
    "file"           : mode_file,
 }

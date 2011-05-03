@@ -453,6 +453,8 @@ def page_edit_view(h):
                 view["title"] += " (Copy)"
         else:
             view = html.multisite_views.get((html.req.user, viewname))
+            if not view:
+                view = html.multisite_views.get(('', viewname)) # load builtin view
 
         datasourcename = view["datasource"]
         if view:
@@ -928,9 +930,9 @@ def create_view():
             if is_joined_value(joined_cols, "col_%d" % n) and not join_index:
                 raise MKUserError('col_join_index_%d' % n, "Please specify the service to show the data for")
 
-            if join_index != '' and col_title != '':
+            if join_index and col_title:
                 painternames.append((pname, viewname, tooltip, join_index, col_title))
-            elif join_index != '':
+            elif join_index:
                 painternames.append((pname, viewname, tooltip, join_index))
             else:
                 painternames.append((pname, viewname, tooltip))

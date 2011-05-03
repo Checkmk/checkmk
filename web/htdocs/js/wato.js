@@ -57,6 +57,7 @@ function wato_check_all(css_class) {
 
 // Keeps the items to be fetched
 var progress_items = null;
+var progress_perc_step = 0;
 // Is set to true while one request is waiting for a response
 var progress_running = false;
 
@@ -83,6 +84,9 @@ function progress_handle_response(data, code) {
     // Process statistics
     update_progress_stats(header);
 
+    // Process the bar
+    update_progress_bar(header);
+
     // Process optional body
     if(typeof(body) !== 'undefined' && body != '')
         progress_attach_log(body);
@@ -105,6 +109,10 @@ function update_progress_stats(header) {
     }
 }
 
+function update_progress_bar(header) {
+    return false;
+}
+
 function progress_attach_log(t) {
     var log = document.getElementById('progress_log');
     log.innerHTML += t + '<br />';
@@ -116,8 +124,10 @@ function progress_finished() {
 }
 
 function progress_scheduler(mode, url_prefix, timeout, items) {
-    if(progress_items === null)
-        progress_items = items;
+    if(progress_items === null) {
+        progress_items     = items;
+        progress_perc_step = items.length / 100;
+    }
 
     if(progress_running === false) {
         if(progress_items.length > 0) {

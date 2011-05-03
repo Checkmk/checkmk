@@ -1661,7 +1661,7 @@ table.add_snapin i {
 
 /* progress bar */
 .wato table.progress td.bar { 
-    padding: 12px 12px 12px 12px;
+    padding: 12px 12px 0px 12px;
 }
 
 .wato table.progress td.bar table { 
@@ -1717,19 +1717,29 @@ table.add_snapin i {
 .wato table.progress td.stats th { 
     text-align: left;
     background-color: transparent;
+    padding-right: 3em;
+    padding-left: 6px;
 }
 .wato table.progress td.stats th, .wato table.progress td.stats td { 
     border-bottom: 1px solid white;
-    padding: 3px 6px;
+    padding-top: 3px;
+    padding-bottom: 3px;
 }
 
 .wato table.progress td.stats td { 
     background-image: url("images/form_background.png");
     background-repeat: repeat;
     text-align: right;
-    width: 5em;
+    width: 4em;
+    padding-right: 6px;
 }
 
+/* Buttons */
+.wato table.progress td.buttons { 
+    padding: 0px 12px 12px 12px;
+    text-align: right;
+    vertical-align: bottom;
+}
 
 /* 
       _                                    _   _             

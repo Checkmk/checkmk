@@ -56,8 +56,8 @@ function wato_check_all(css_class) {
 
 
 // Keeps the items to be fetched
-var progress_items = null;
-var progress_perc_step = 0;
+var progress_items     = null;
+var progress_total_num = 0;
 // Is set to true while one request is waiting for a response
 var progress_running = false;
 
@@ -91,8 +91,12 @@ function progress_handle_response(data, code) {
     if(typeof(body) !== 'undefined' && body != '')
         progress_attach_log(body);
 
-    if(header[0] !== 'continue') {
+    if(header[0] === 'pause') {
+        alert('PAUSE!');
+        return;
+    } else if(header[0] === 'abort') {
         alert('ABORT!');
+        return;
     }
 
     progress_items.shift();
@@ -110,7 +114,20 @@ function update_progress_stats(header) {
 }
 
 function update_progress_bar(header) {
+    var num_done  = progress_total_num - progress_items.length + 1;
+    var perc_done = num_done / progress_total_num * 100;
+
+    var bar      = document.getElementById('progress_bar');
+    var leftCell = bar.firstChild.firstChild.firstChild;
+    leftCell.style.width = (bar.clientWidth * perc_done / 100) + 'px';
+    leftCell = null;
+    bar      = null;
+
     return false;
+}
+
+function update_progress_title(t) {
+    document.getElementById('progress_title').innerHTML = t;
 }
 
 function progress_attach_log(t) {
@@ -120,19 +137,21 @@ function progress_attach_log(t) {
 }
 
 function progress_finished() {
+    update_progress_title('--- FINISHED ---');
     document.getElementById('progress_finished').style.display = '';
 }
 
 function progress_scheduler(mode, url_prefix, timeout, items) {
     if(progress_items === null) {
         progress_items     = items;
-        progress_perc_step = items.length / 100;
+        progress_total_num = items.length;
     }
 
     if(progress_running === false) {
         if(progress_items.length > 0) {
             // Progressing
             progress_running = true;
+            update_progress_title('Processing ' + progress_items[0]);
             get_url(url_prefix + '&_transid=-1&_item=' + escape(progress_items[0]), progress_handle_response, [ mode, progress_items[0] ]);
         } else {
             progress_finished();

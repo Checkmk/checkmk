@@ -1528,7 +1528,8 @@ def interactive_progress(items, title, stats, finishvars, timewait):
     html.write("</table>")
     html.write("</center>")
     json_items = '[ %s ]' % ','.join([ "'" + h + "'" for h in items ])
-    html.javascript('progress_scheduler("%s", "%s", "%s", 50, %s);' % (html.var('mode'), html.makeuri([]), html.makeuri(finishvars), json_items))
+    html.javascript('progress_scheduler("%s", "%s", 50, %s, "%s", "FINISHED.");' %
+                     (html.var('mode'), html.makeuri([]), json_items, html.makeuri(finishvars)))
 
 #   +----------------------------------------------------------------------+
 #   |                   ____  _             _                              |

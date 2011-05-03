@@ -61,6 +61,8 @@ var progress_items     = null;
 var progress_total_num = 0;
 // The URL to redirect to after finish/abort button pressed
 var progress_end_url   = '';
+// The text to show in the progress bar after finished processing
+var progress_fin_txt   = '';
 // Is set to true while one request is waiting for a response
 var progress_running = false;
 // Is set to true to put the processing to sleep
@@ -126,7 +128,7 @@ function progress_proceed() {
 
 /* Is called when the processing is completely finished */
 function progress_finished() {
-    update_progress_title('');
+    update_progress_title(progress_fin_txt);
     document.getElementById('progress_bar').className = 'finished';
 
     document.getElementById('progress_finished').style.display = '';
@@ -176,12 +178,13 @@ function progress_attach_log(t) {
     log = null;
 }
 
-function progress_scheduler(mode, url_prefix, end_url, timeout, items) {
+function progress_scheduler(mode, url_prefix, timeout, items, end_url, finished_txt) {
     // Initialize
     if(progress_items === null) {
         progress_items     = items;
         progress_total_num = items.length;
         progress_end_url   = end_url;
+        progress_fin_txt   = finished_txt;
     }
 
     // Escape the loop when ended
@@ -201,5 +204,5 @@ function progress_scheduler(mode, url_prefix, end_url, timeout, items) {
         }
     }
 
-    setTimeout(function() { progress_scheduler(mode, url_prefix, "", timeout, []); }, timeout);
+    setTimeout(function() { progress_scheduler(mode, url_prefix, timeout, [], "", ""); }, timeout);
 }

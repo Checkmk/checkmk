@@ -204,9 +204,12 @@ def show_filefolder_list(thing, what, title):
     if len(thing[what + "s" ]) > 0:
         html.write("<h3>%s</h3>" % title)
         html.write("<table class=data>\n")
-        html.write("<tr><th>Title</th><th>Hosts</th><th>Actions</th>\n")
+        html.write("<tr><th>Actions</th><th>Title</th><th>Hosts</th></tr>\n")
         odd = "even"
         for entry in thing[what + "s"].values():
+            odd = odd == "odd" and "even" or "odd" 
+            html.write('<tr class="data %s0">' % odd)
+
             name = entry["name"]
             if what == "folder":
                 folder_path = entry["path"]
@@ -218,21 +221,21 @@ def show_filefolder_list(thing, what, title):
             edit_url     = make_link_to([("mode", "edit" + what)], folder_path, filename)
             delete_url   = make_action_link([("mode", "folder"), ("_delete", entry["name"])])
             enter_url    = make_link_to([], folder_path, filename)
+            html.write("<td>")
+            html.buttonlink(edit_url, "Properties")
+            html.buttonlink(delete_url, "Delete")
+            html.write("</td>")
+
+            # Number of hosts
             if what == "file":
                 num_hosts = entry["num_hosts"]
             else:
                 num_hosts = count_files(entry)
 
-            odd = odd == "odd" and "even" or "odd" 
-            html.write('<tr class="data %s0">' % odd)
 
             html.write('<td class=takeall><a href="%s">%s</a></td>' % 
                         (enter_url, entry["title"]))
             html.write("<td>%d</td>" % num_hosts)
-            html.write("<td>")
-            html.buttonlink(edit_url, "Properties")
-            html.buttonlink(delete_url, "Delete")
-            html.write("</td>")
             html.write("</tr>")
         html.write("</table>")
     else:

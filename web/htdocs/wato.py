@@ -1505,9 +1505,9 @@ def interactive_progress(items, title, stats, finishvars, timewait):
     html.write("<script type='text/javascript' src='js/wato.js'></script>")
     html.write("<center>")
     html.write("<table class=progress>")
-    html.write("<tr><th>%s</th></tr>" % title)
-    html.write("<tr><td class=log><div id=progress_log></div></td></tr>")
-    html.write("<tr><td class=bar>")
+    html.write("<tr><th colspan=2>%s</th></tr>" % title)
+    html.write("<tr><td colspan=2 class=log><div id=progress_log></div></td></tr>")
+    html.write("<tr><td colspan=2 class=bar>")
     html.write("  <table id=progress_bar><tbody><tr><td class=left></td><td class=right></td></tr></tbody></table>")
     html.write("  <div id=progress_title></div>")
     html.write("</td></tr>")
@@ -1516,12 +1516,18 @@ def interactive_progress(items, title, stats, finishvars, timewait):
     for num, (label, value) in enumerate(stats):
         html.write("    <tr><th>%s</th><td id='progress_stat%d'>%d</td></tr>" % (label, num, value))
     html.write("  </table>")
+    html.write("</td>")
+    html.write("<td class=buttons>")
+    html.write("<button id='progress_pause' onclick='progress_pause()'>Pause!</button>")
+    html.write("<button id='progress_proceed' style='display:none' onclick='progress_proceed()'>Proceed!</button>")
+    html.write("<button id='progress_finished' style='display:none' onclick='progress_end()'>Finish!</button>")
+    html.write("<button id='progress_restart' onclick='location.reload()'>Restart!</button>")
+    html.write("<button id='progress_abort' onclick='progress_end()'>Abort!</button>")
     html.write("</td></tr>")
-    html.write("<tr><td class=buttons><button id='progress_finished' style='display:none'>Finish!</button></td></tr>")
     html.write("</table>")
     html.write("</center>")
     json_items = '[ %s ]' % ','.join([ "'" + h + "'" for h in items ])
-    html.javascript('progress_scheduler("%s", "%s", 50, %s);' % (html.var('mode'), html.makeuri([]), json_items))
+    html.javascript('progress_scheduler("%s", "%s", "%s", 50, %s);' % (html.var('mode'), html.makeuri([]), html.makeuri(finishvars), json_items))
 
 #   +----------------------------------------------------------------------+
 #   |                   ____  _             _                              |

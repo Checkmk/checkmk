@@ -1622,7 +1622,16 @@ table.add_snapin i {
     width: 100%;
 }
 
-/* Interactive progress, e.g. in bulk inventory */
+/* 
+   ____                                    
+   |  _ \ _ __ ___   __ _ _ __ ___  ___ ___ 
+   | |_) | '__/ _ \ / _` | '__/ _ \/ __/ __|
+   |  __/| | | (_) | (_| | | |  __/\__ \__ \
+   |_|   |_|  \___/ \__, |_|  \___||___/___/
+                    |___/                   
+  
+  WATO - Interactive progress, e.g. in bulk inventory
+*/
 .wato table.progress {
     background-image: url("images/form_background.png");
     background-repeat: repeat;
@@ -1640,14 +1649,13 @@ table.add_snapin i {
     background-repeat: repeat;
     border: 1px solid white;
     padding: 5px;
-    height: 100px;
+    height: 250px;
     overflow: auto;
 }
 
 .wato table.progress td.log { 
     font-family: monospace, sans-serif;
     padding: 12px 12px 0px 12px;
-
 }
 
 .wato table.progress td.stats { 
@@ -1697,6 +1705,10 @@ table.add_snapin i {
 .wato table.progress td.bar td.left { 
     background-color: #ff0000;
     width: 0px;
+}
+
+#progress_bar.finished td.left {
+    background-color: #00ff00;
 }
 
 /* 

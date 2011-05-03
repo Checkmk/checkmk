@@ -57,9 +57,16 @@ function wato_check_all(css_class) {
 
 // Keeps the items to be fetched
 var progress_items     = null;
+// Number of total items to handle
 var progress_total_num = 0;
+// The URL to redirect to after finish/abort button pressed
+var progress_end_url   = '';
 // Is set to true while one request is waiting for a response
 var progress_running = false;
+// Is set to true to put the processing to sleep
+var progress_paused  = false;
+// Is set to true when the user hit aborted/finished
+var progress_ended   = false;
 
 function progress_handle_response(data, code) {
     var mode = data[0];
@@ -92,15 +99,47 @@ function progress_handle_response(data, code) {
         progress_attach_log(body);
 
     if(header[0] === 'pause') {
-        alert('PAUSE!');
-        return;
+        progress_pause();
     } else if(header[0] === 'abort') {
-        alert('ABORT!');
         return;
     }
 
     progress_items.shift();
     progress_running = false;
+}
+
+/* Is called when the user or the response wants the processing to be paused */
+function progress_pause() {
+    progress_paused = true;
+    progress_attach_log('+++ PAUSE<br />');
+    document.getElementById('progress_pause').style.display = 'none';
+    document.getElementById('progress_proceed').style.display = '';
+}
+
+/* Is called when the user or the response wants the processing to be proceeded after pause */
+function progress_proceed() {
+    progress_paused = false;
+    progress_attach_log('+++ PROCEEDING<br />');
+    document.getElementById('progress_pause').style.display = '';
+    document.getElementById('progress_proceed').style.display = 'none';
+}
+
+/* Is called when the processing is completely finished */
+function progress_finished() {
+    update_progress_title('');
+    document.getElementById('progress_bar').className = 'finished';
+
+    document.getElementById('progress_finished').style.display = '';
+    document.getElementById('progress_pause').style.display    = 'none';
+    document.getElementById('progress_proceed').style.display  = 'none';
+    document.getElementById('progress_abort').style.display    = 'none';
+}
+
+/* Is called by the users abort/finish button click */
+function progress_end() {
+    // Mark as ended to catch currently running requests
+    progress_ended = true;
+    location.href = progress_end_url;
 }
 
 function update_progress_stats(header) {
@@ -133,25 +172,28 @@ function update_progress_title(t) {
 function progress_attach_log(t) {
     var log = document.getElementById('progress_log');
     log.innerHTML += t;
+    log.scrollTop = log.scrollHeight;
     log = null;
 }
 
-function progress_finished() {
-    update_progress_title('--- FINISHED ---');
-    document.getElementById('progress_finished').style.display = '';
-}
-
-function progress_scheduler(mode, url_prefix, timeout, items) {
+function progress_scheduler(mode, url_prefix, end_url, timeout, items) {
+    // Initialize
     if(progress_items === null) {
         progress_items     = items;
         progress_total_num = items.length;
+        progress_end_url   = end_url;
     }
 
-    if(progress_running === false) {
+    // Escape the loop when ended
+    if(progress_ended)
+        return false;
+
+    // Regular processing when not paused and not already running
+    if(!progress_paused && !progress_running) {
         if(progress_items.length > 0) {
             // Progressing
             progress_running = true;
-            update_progress_title('Processing ' + progress_items[0]);
+            update_progress_title(progress_items[0]);
             get_url(url_prefix + '&_transid=-1&_item=' + escape(progress_items[0]), progress_handle_response, [ mode, progress_items[0] ]);
         } else {
             progress_finished();
@@ -159,5 +201,5 @@ function progress_scheduler(mode, url_prefix, timeout, items) {
         }
     }
 
-    setTimeout(function() { progress_scheduler(mode, url_prefix, timeout, []); }, timeout);
+    setTimeout(function() { progress_scheduler(mode, url_prefix, "", timeout, []); }, timeout);
 }

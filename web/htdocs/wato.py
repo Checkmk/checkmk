@@ -384,6 +384,7 @@ def check_wato_filename(htmlvarname, name, what):
 #   +----------------------------------------------------------------------+
 
 def mode_file(phase):
+
     if phase == "title":
         return "Hosts list"
 
@@ -413,7 +414,6 @@ def mode_file(phase):
             return "bulkinventory"
 
         selected_hosts = get_hostnames_from_checkboxes()
-
         if len(selected_hosts) == 0:
             raise MKUserError("sel_" + hostnames[0], 
             "Please select some hosts before doing bulk operations on hosts.")
@@ -448,9 +448,11 @@ def mode_file(phase):
             html.write('<tr class="data %s0">' % odd)
             odd = odd == "odd" and "even" or "odd" 
 
-            # Check box
+            # Check box (if none is checked, then the default is to check all)
+            selected_hosts = get_hostnames_from_checkboxes()
+            def_value = selected_hosts == []
             html.write("<td>")
-            html.checkbox("sel_%s" % hostname, True, 'wato_select')
+            html.checkbox("sel_%s" % hostname, def_value, 'wato_select')
             html.write("</td>")
 
             # Column with actions (buttons)

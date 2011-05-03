@@ -356,7 +356,7 @@ def mode_editfolder(phase, what, new):
             html.write(" " + role + "<br>")
         html.write("</td></tr>")
 
-        html.write('<tr><td class="legend button" colspan=2>')
+        html.write('<tr><td class="legend button border" colspan=2>')
         html.button("save", "Save &amp; Finish", "submit")
         html.write("</td></tr>\n")
         html.write("</table>\n")
@@ -838,8 +838,10 @@ def mode_bulk_inventory(phase):
         html.hidden_fields()
 
         # Mode of action
+        html.write("<p>You have selected <b>%d</b> hosts for bulk inventory. "
+                   "Check_MK inventory will automatically find and configure "
+                   "services to be checked on your hosts.</p>" % len(hostnames))
         html.write("<table class=form>")
-        html.write("<tr><td class=content colspan=2>Bulk inventory (automatic service detection) on %d selected hosts</td></tr>" % len(hostnames))
         html.write("<tr><td class=legend>Mode</td><td class=content>")
         html.radiobutton("how", "new",     True,  "Find only new services<br>")
         html.radiobutton("how", "remove",  False, "Remove obsolete services<br>")
@@ -854,7 +856,7 @@ def mode_bulk_inventory(phase):
         # html.write("</td></tr>")
 
         # Start button 
-        html.write('<tr><td colspan=2 class="content">')
+        html.write('<tr><td colspan=2 class="legend button border">')
         html.button("_start", "Start!")
         html.write("</tr>")
 

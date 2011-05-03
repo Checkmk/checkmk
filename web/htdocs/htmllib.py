@@ -308,7 +308,7 @@ class html:
 
     def radiobutton(self, varname, value, checked, text):
         checked_text = checked and " checked" or ""
-        self.write("<input type=radio name=%s value=\"%s\"%s> %s &nbsp; \n" %
+        self.write("<input type=radio name=%s value=\"%s\"%s> %s\n" %
                       (varname, value, checked_text, text))
         self.form_vars.append(varname)
 

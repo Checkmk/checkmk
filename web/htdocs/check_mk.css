@@ -1661,10 +1661,13 @@ table.add_snapin i {
 
 /* progress bar */
 .wato table.progress td.bar { 
-    padding: 12px 12px 0px 12px;
+    padding: 0 12px 0 12px;
+    height: 46px;
 }
 
 .wato table.progress td.bar table { 
+    position: relative;
+    top: 12px;
     width: 100%;
     height: 22px;
     background-color: #fff;
@@ -1672,24 +1675,24 @@ table.add_snapin i {
 }
 
 .wato table.progress td.bar #progress_title {
-   position: relative; 
-   top: -18px; 
-   left: 0px;
-   width: 100%;
-   height: 0px; 
-   text-align: center;
-   white-space: nowrap;
-   float: left;
-   z-index: 40;
-   font-weight: bold;
+    position: relative; 
+    top: -6px; 
+    left: 0px;
+    width: 100%;
+    height: 0px; 
+    text-align: center;
+    white-space: nowrap;
+    float: left;
+    z-index: 40;
+    font-weight: bold;
 }
 
 .wato table.progress td.bar img.glass {
-   position: relative;
-   top: -22px; 
-   width: 100%;
-   height: 22px; 
-   z-index: 30;
+    position: relative;
+    top: -10px; 
+    width: 100%;
+    height: 22px; 
+    z-index: 30;
 }
 
 .wato table.progress td.bar td.left { 

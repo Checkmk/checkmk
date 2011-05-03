@@ -805,15 +805,15 @@ def mode_bulk_inventory(phase):
 
     elif phase == "action":
         if html.var("_item"):
-            # We are called via AJAX by the interactive process in order to execute
-            # the next step.
-            # handle item item....
-            # Werte für result: "continue" => weitermachen. "abort" => stoppen, "pause" => "Pause"
-            num_added = 1
-            num_removed = 0
-            num_found = 0
-            result = "[ 'continue', %d, %d, %d ]\n" % (num_added, num_removed, num_found)
-            result += "Das hier ist HTML-Code"
+            how = html.var("how")
+            hostname = html.var("_item").encode("utf-8")
+            try:
+                counts = check_mk_automation("inventory", [how, hostname])
+                result = repr([ 'continue' ] + list(counts)) + "\n"
+                result += "Inventorized %s<br>\n" % hostname
+            except Exception, e:
+                result = repr([ 'pause', 0, 0, 0, 0, ]) + "\n"
+                result += "Error during inventory of %s: %s<br>\n" % (hostname, e)
             html.write(result)
             return ""
         return
@@ -827,7 +827,7 @@ def mode_bulk_inventory(phase):
         interactive_progress(
             hostnames,         # list of items
             "Bulk inventory",  # title
-            [ ("Services added", 0), ("Services removed", 0), ("Services found", 0) ], # stats table
+            [ ("Services added", 0), ("Services removed", 0), ("Services kept", 0), ("Total services", 0) ], # stats table
             [ ("mode", "file") ], # URL for "Stop/Finish" button
             50, # ms to sleep between two steps
         )
@@ -841,7 +841,7 @@ def mode_bulk_inventory(phase):
         html.write("<tr><td class=legend>Mode</td><td class=content>")
         html.radiobutton("how", "new",     True,  "Find only new services<br>")
         html.radiobutton("how", "remove",  False, "Remove obsolete services<br>")
-        html.radiobutton("how", "both",    False, "Find new &amp; remove obsolete<br>")
+        html.radiobutton("how", "fixall",  False, "Find new &amp; remove obsolete<br>")
         html.radiobutton("how", "refresh", False, "Refresh all services (tabula rasa)<br>")
         html.write("</td></tr>")
 

@@ -1503,9 +1503,10 @@ def render_folder_path():
 
 def interactive_progress(items, title, stats, finishvars, timewait):
     html.write("<script type='text/javascript' src='js/wato.js'></script>")
+    html.write("<center>")
     html.write("<table class=progress>")
     html.write("<tr><th>%s</th></tr>" % title)
-    html.write("<tr><td class=log id=progress_log></td></tr>")
+    html.write("<tr><td class=log><div id=progress_log></div></td></tr>")
     html.write("<tr><td class=bar>")
     html.write("  <table id=progress_bar style='width:100px;background-color:#fff;'><tbody><tr><td class=left style='background-color:#ff0000;width:0px;'></td><td class=right></td></tr></tbody></table>")
     html.write("</td></tr>")
@@ -1517,6 +1518,7 @@ def interactive_progress(items, title, stats, finishvars, timewait):
     html.write("</td></tr>")
     html.write("<tr><td class=buttons><button id='progress_finished' style='display:none'>Finish!</button></td></tr>")
     html.write("</table>")
+    html.write("</center>")
     json_items = '[ %s ]' % ','.join([ "'" + h + "'" for h in items ])
     html.javascript('progress_scheduler("%s", "%s", 50, %s);' % (html.var('mode'), html.makeuri([]), json_items))
 

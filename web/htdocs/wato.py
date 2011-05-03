@@ -417,7 +417,7 @@ def mode_file(phase):
 
         selected_hosts = get_hostnames_from_checkboxes()
         if len(selected_hosts) == 0:
-            raise MKUserError("sel_" + hostnames[0], 
+            raise MKUserError(None,
             "Please select some hosts before doing bulk operations on hosts.")
 
         # Deletion
@@ -821,9 +821,9 @@ def mode_bulk_inventory(phase):
 
     # interactive progress is *not* done in action phase. It
     # renders the page content itself.
+    hostnames = get_hostnames_from_checkboxes()
 
     if html.var("_start"):
-        hostnames = get_hostnames_from_checkboxes()
         # Start interactive progress
         interactive_progress(
             hostnames,         # list of items
@@ -834,11 +834,12 @@ def mode_bulk_inventory(phase):
         )
 
     else:
-        html.begin_form("bulkinventory")
+        html.begin_form("bulkinventory", None, "POST")
         html.hidden_fields()
 
         # Mode of action
         html.write("<table class=form>")
+        html.write("<tr><td class=content colspan=2>Bulk inventory (automatic service detection) on %d selected hosts</td></tr>" % len(hostnames))
         html.write("<tr><td class=legend>Mode</td><td class=content>")
         html.radiobutton("how", "new",     True,  "Find only new services<br>")
         html.radiobutton("how", "remove",  False, "Remove obsolete services<br>")
@@ -853,7 +854,7 @@ def mode_bulk_inventory(phase):
         # html.write("</td></tr>")
 
         # Start button 
-        html.write('<tr><td colspan=2 class="legend button">')
+        html.write('<tr><td colspan=2 class="content">')
         html.button("_start", "Start!")
         html.write("</tr>")
 

@@ -126,6 +126,10 @@ function update_progress_bar(header) {
     return false;
 }
 
+function update_progress_title(t) {
+    document.getElementById('progress_title').innerHTML = t;
+}
+
 function progress_attach_log(t) {
     var log = document.getElementById('progress_log');
     log.innerHTML += t;
@@ -133,6 +137,7 @@ function progress_attach_log(t) {
 }
 
 function progress_finished() {
+    update_progress_title('--- FINISHED ---');
     document.getElementById('progress_finished').style.display = '';
 }
 
@@ -146,6 +151,7 @@ function progress_scheduler(mode, url_prefix, timeout, items) {
         if(progress_items.length > 0) {
             // Progressing
             progress_running = true;
+            update_progress_title('Processing ' + progress_items[0]);
             get_url(url_prefix + '&_transid=-1&_item=' + escape(progress_items[0]), progress_handle_response, [ mode, progress_items[0] ]);
         } else {
             progress_finished();

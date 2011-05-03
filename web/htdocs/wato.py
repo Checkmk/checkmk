@@ -409,12 +409,10 @@ def mode_file(phase):
         if not html.transaction_valid():
             return
 
-        hostnames = g_hosts.keys()
-        hostnames.sort()
-        selected_hosts = []
-        for name in hostnames:
-            if html.var("sel_" + name):
-                selected_hosts.append(name)
+        if html.var("_bulk_inventory"):
+            return "bulkinventory"
+
+        selected_hosts = get_hostnames_from_checkboxes()
 
         if len(selected_hosts) == 0:
             raise MKUserError("sel_" + hostnames[0], 
@@ -498,13 +496,23 @@ def mode_file(phase):
         html.write("</td><td colspan=6>On all selected hosts:\n")
         html.button("_bulk_delete", "Delete")
         html.button("_bulk_edit", "Edit")
-        html.button("_bulk_inventory", "Auto-configure Services")
+        html.button("_bulk_inventory", "Bulk inventory")
         host_move_combo("", "Move To: ")
         html.write("</td></tr>\n")
 
         html.write("</table>\n")
         html.end_form()
     
+# Create list of all hosts that are select with checkboxes in the current file
+def get_hostnames_from_checkboxes():
+    hostnames = g_hosts.keys()
+    hostnames.sort()
+    selected_hosts = []
+    for name in hostnames:
+        if html.var("sel_" + name):
+            selected_hosts.append(name)
+    return selected_hosts
+
 
 def render_linkinfo(linkinfo):
     if ':' in linkinfo:
@@ -790,7 +798,7 @@ def mode_bulk_inventory(phase):
 
     elif phase == "action":
         if html.check_transaction():
-            hostnames = hosts_aus_sel_variablen_rausziehen()
+            hostnames = get_hostnames_from_checkboxes()
             item = html.var("_item") # current item in interactive progress (called via webservice)
             if not item:
                 # Start interactive progress
@@ -806,12 +814,15 @@ def mode_bulk_inventory(phase):
                 # the next step.
                 # handle item item....
                 # Werte für result: "continue" => weitermachen. "abort" => stoppen, "pause" => "Pause"
+                num_added = 1
+                num_removed = 0
+                num_found = 0
                 result = "[ 'continue', %d, %d, %d ]\n" % (num_added, num_removed, num_found)
                 result += "Das hier ist HTML-Code"
                 html.write(result)
                 return None # Hier wird der Request sofort beendet - ohne HTML-Title
 
-        pass
+        return "bulkinventory"
 
     else:
         html.begin_form("bulkinventory")
@@ -820,19 +831,20 @@ def mode_bulk_inventory(phase):
         # Mode of action
         html.write("<table class=form>")
         html.write("<tr><td class=legend>Mode</td><td class=content>")
-        html.radiobutton("how", "new", "Find only new services")
-        html.radiobutton("how", "remove", "Remove obsolete services")
-        html.radiobutton("how", "both", "Find new &amp; remove obsolete")
-        html.radiobutton("how", "refresh", "Refresh all services (tabula rasa)")
+        html.radiobutton("how", "new",     True,  "Find only new services<br>")
+        html.radiobutton("how", "remove",  False, "Remove obsolete services<br>")
+        html.radiobutton("how", "both",    False, "Find new &amp; remove obsolete<br>")
+        html.radiobutton("how", "refresh", False, "Refresh all services (tabula rasa)<br>")
         html.write("</td></tr>")
 
-        # Check type
-        html.write("<tr><td class=legend>Checktype</td><td class=content>")
-        selection = html.live.query_column_unique("GET commands\nColumns: name\nFilter: name ~ ^check_mk-")
-        html.sorted_select("check_command", [("", "all types")] + [(x,x) for x in selection])
-        html.write("</td></tr>")
+        # Check type (first we need a Check_MK automation service for getting the list of checktype)
+        # html.write("<tr><td class=legend>Checktype</td><td class=content>")
+        # selection = check_mk_automation('get-checktypes')
+        # html.sorted_select("check_command", [("", "all types")] + [(x,x) for x in selection])
+        # html.write("</td></tr>")
 
-        html.write("<tr><td colspan=2 class=buttons>")
+        # Start button 
+        html.write('<tr><td colspan=2 class="legend button">')
         html.button("start", "Start!")
         html.write("</tr>")
 
@@ -1463,6 +1475,28 @@ def render_folder_path():
         html.write(g_file["title"])
     else:
         html.write(g_folder["title"])
+
+#   +----------------------------------------------------------------------+
+#   |               ____                                                   |
+#   |              |  _ \ _ __ ___   __ _ _ __ ___  ___ ___                |
+#   |              | |_) | '__/ _ \ / _` | '__/ _ \/ __/ __|               |
+#   |              |  __/| | | (_) | (_| | | |  __/\__ \__ \               |
+#   |              |_|   |_|  \___/ \__, |_|  \___||___/___/               |
+#   |                               |___/                                  |
+#   +----------------------------------------------------------------------+
+#   | Bulk inventory and other longer procedures are separated in single   |
+#   | steps and run by an JavaScript scheduler showing a progress bar and  |
+#   | buttons for aborting and pausing.                                    |
+#   +----------------------------------------------------------------------+
+
+def interactive_progress(items, title, stats, finishvars, timewait):
+    html.write("<table class=progress>")
+    html.write("<tr><th>%s</th></tr>" % title)
+    html.write("<tr><td class=log>Hier kommt das Logfile</td></tr>")
+    html.write("<tr><td class=bar>Hier kommt die Progressbar</td></tr>")
+    html.write("<tr><td class=stats>Hier kommen die Statistiken</td></tr>")
+    html.write("<tr><td class=buttons>Und hier die Knöpfe</td></tr>")
+    html.write("</table>")
 
 #   +----------------------------------------------------------------------+
 #   |                   ____  _             _                              |

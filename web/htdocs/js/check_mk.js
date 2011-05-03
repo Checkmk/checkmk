@@ -583,30 +583,3 @@ function toggle_assumption(oImg, site, host, service)
     oImg.src = "images/assume_" + current + ".png";
     get_url(url);
 }
-
-// ----------------------------------------------------------------------------
-// WATO
-// ----------------------------------------------------------------------------
-
-function getElementsByClass(cl) {
-    var items = new Array();
-    var elements = document.getElementsByTagName('*');
-    for(var i = 0; i < elements.length; i++)
-        if(elements[i].className == cl)
-            items.push(elements[i]);
-    return items;
-}
-
-function wato_check_all(css_class) {
-    var items = getElementsByClass(css_class);
-
-    // First check if all boxes are checked
-    var all_checked = true;
-    for(var i = 0; i < items.length && all_checked == true; i++)
-        if(items[i].checked == false)
-            all_checked = false;
-
-    // Now set the new state
-    for(var i = 0; i < items.length; i++)
-        items[i].checked = !all_checked;
-}

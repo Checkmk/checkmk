@@ -433,7 +433,7 @@ def mode_file(phase):
         html.write("<p>")
 
         # Show table of hosts in this file
-        html.begin_form("hosts")
+        html.begin_form("hosts", None, "POST")
         html.hidden_fields()
         html.write("<table class=data>\n")
         html.write("<tr><th></th><th></th><th>Hostname</th>"

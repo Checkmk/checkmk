@@ -452,7 +452,7 @@ def mode_file(phase):
 
             # Check box
             html.write("<td>")
-            html.checkbox("sel_%s" % hostname)
+            html.checkbox("sel_%s" % hostname, '', 'wato_select')
             html.write("</td>")
 
             # Column with actions (buttons)
@@ -461,7 +461,7 @@ def mode_file(phase):
             clone_url    = make_link([("mode", "newhost"), ("clone", hostname)])
             delete_url   = make_action_link([("mode", "file"), ("_delete", hostname)])
 
-    
+
             html.write("<td>")
             html.buttonlink(edit_url, "Edit")
             html.buttonlink(services_url, "Services")
@@ -494,7 +494,7 @@ def mode_file(phase):
 
         # mass actions
         html.write('<tr class="data %s0">' % odd)
-        html.write('<td><b class=checkall onclick="wato_check_all_hosts();"> </b>')
+        html.write('<td><button class=checkall onclick="wato_check_all(\'wato_select\');return false;">X</button>')
         html.write("</td><td colspan=6>On all selected hosts:\n")
         html.button("_mass_delete", "Delete")
         html.button("_mass_edit", "Edit")

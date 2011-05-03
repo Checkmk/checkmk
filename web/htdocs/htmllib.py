@@ -303,7 +303,7 @@ class html:
                       (varname, value, checked_text, text))
         self.form_vars.append(varname)
 
-    def checkbox(self, varname, deflt=""):
+    def checkbox(self, varname, deflt="", cssclass = ''):
         error = self.user_errors.get(varname)
         if error:
             html = "<x class=inputerror>"
@@ -312,7 +312,9 @@ class html:
             checked = " CHECKED"
         else:
             checked = ""
-        self.write("<input type=checkbox name=\"%s\"%s>" % (urlencode(varname), checked))
+        if cssclass:
+            cssclass = ' class="%s"' % cssclass
+        self.write("<input type=checkbox name=\"%s\"%s%s>" % (urlencode(varname), checked, cssclass))
         self.form_vars.append(varname)
         if error:
             html += "</x>"

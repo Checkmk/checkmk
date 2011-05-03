@@ -1506,7 +1506,10 @@ def interactive_progress(items, title, stats, finishvars, timewait):
     html.write("<table class=progress>")
     html.write("<tr><th>%s</th></tr>" % title)
     html.write("<tr><td class=log id=progress_log></td></tr>")
-    html.write("<tr><td class=bar>Hier kommt die Progressbar</td></tr>")
+    html.write("<tr><td class=bar>")
+    html.write("  <table id=progress_bar><tr><td></td><td></td></tr></table>")
+    html.write("  </table>")
+    html.write("</td></tr>")
     html.write("<tr><td class=stats>")
     html.write("  <table>")
     for num, (label, value) in enumerate(stats):
@@ -1515,6 +1518,7 @@ def interactive_progress(items, title, stats, finishvars, timewait):
     html.write("</td></tr>")
     html.write("<tr><td class=buttons>Und hier die Knöpfe</td></tr>")
     html.write("</table>")
+    html.write("<button id='progress_finished' style='display:none'>Finish!</button>")
     json_items = '[ %s ]' % ','.join([ "'" + h + "'" for h in items ])
     html.javascript('progress_scheduler("%s", "%s", 50, %s);' % (html.var('mode'), html.makeuri([]), json_items))
 

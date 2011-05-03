@@ -78,10 +78,10 @@ function progress_handle_response(data, code) {
     // Extract the body from the response
     var body = code.split('\n');
     body.splice(0,1);
-    body = body.join('\n');
+    body = body.join('<br />');
 
-    // FIXME: Process statistics
-    //
+    // Process statistics
+    update_progress_stats(header);
 
     // Process optional body
     if(typeof(body) !== 'undefined' && body != '')
@@ -95,10 +95,24 @@ function progress_handle_response(data, code) {
     progress_running = false;
 }
 
+function update_progress_stats(header) {
+    for(var i = 1; i < header.length; i++) {
+        var o = document.getElementById('progress_stat' + (i - 1));
+        if(o) {
+            o.innerHTML = parseInt(o.innerHTML) + parseInt(header[i]);
+            o = null;
+        }
+    }
+}
+
 function progress_attach_log(t) {
     var log = document.getElementById('progress_log');
-    log.innerHTML += t;
+    log.innerHTML += t + '<br />';
     log = null;
+}
+
+function progress_finished() {
+    document.getElementById('progress_finished').style.display = '';
 }
 
 function progress_scheduler(mode, url_prefix, timeout, items) {
@@ -109,11 +123,9 @@ function progress_scheduler(mode, url_prefix, timeout, items) {
         if(progress_items.length > 0) {
             // Progressing
             progress_running = true;
-            alert('item ' + progress_items[0]);
             get_url(url_prefix + '&_transid=-1&_item=' + escape(progress_items[0]), progress_handle_response, [ mode, progress_items[0] ]);
         } else {
-            // Finished
-            alert('finished');
+            progress_finished();
             return;
         }
     }

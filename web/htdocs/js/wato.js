@@ -111,7 +111,7 @@ function progress_handle_response(data, code) {
 /* Is called when the user or the response wants the processing to be paused */
 function progress_pause() {
     progress_paused = true;
-    progress_attach_log('+++ PAUSE<br />');
+    //progress_attach_log('+++ PAUSE<br />');
     document.getElementById('progress_pause').style.display = 'none';
     document.getElementById('progress_proceed').style.display = '';
 }
@@ -119,7 +119,7 @@ function progress_pause() {
 /* Is called when the user or the response wants the processing to be proceeded after pause */
 function progress_proceed() {
     progress_paused = false;
-    progress_attach_log('+++ PROCEEDING<br />');
+    //progress_attach_log('+++ PROCEEDING<br />');
     document.getElementById('progress_pause').style.display = '';
     document.getElementById('progress_proceed').style.display = 'none';
 }

@@ -239,8 +239,13 @@ class html:
         if obj_id:
             obj_id = ' id=%s' % obj_id
         if style:
-            style = ' style="%s"' % style 
+            style = ' style="%s"' % style
         self.write("<a href=\"%s\" class=button%s%s>%s</a>" % (href, obj_id, style, text))
+
+    def jsbutton(self, varname, text, onclick, style=''):
+        if style:
+            style = ' style="%s"' % style
+        self.write("<input type=button name=%s id=%s onclick=\"%s\" class=button%s value=\"%s\" />" % (varname, varname, onclick, style, text))
 
     def begin_context_buttons(self):
         self.write("<table class=contextlinks><tr><td>\n")

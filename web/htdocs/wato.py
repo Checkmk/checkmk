@@ -794,35 +794,42 @@ def mode_bulk_inventory(phase):
         return "Bulk service detection (inventory)"
 
     elif phase == "buttons":
-        html.context_button("Back", make_link([("mode", "file")]))
+        if html.var("_start"):
+            html.context_button("Back", html.makeuri([]))
+        else:
+            html.context_button("Back", html.makeuri([("mode", "file")]))
+        return
 
     elif phase == "action":
-        if html.check_transaction():
-            hostnames = get_hostnames_from_checkboxes()
-            item = html.var("_item") # current item in interactive progress (called via webservice)
-            if not item:
-                # Start interactive progress
-                interactive_progress(
-                    hostnames,         # list of items
-                    "Bulk inventory",  # title
-                    [ ("Services added", 0), ("Services removed", 0), ("Services found", 0) ], # stats table
-                    [ ("mode", "file") ], # URL for "Stop/Finish" button
-                    50, # ms to sleep between two steps
-                )
-            else:
-                # We are called via AJAX by the interactive process in order to execute
-                # the next step.
-                # handle item item....
-                # Werte für result: "continue" => weitermachen. "abort" => stoppen, "pause" => "Pause"
-                num_added = 1
-                num_removed = 0
-                num_found = 0
-                result = "[ 'continue', %d, %d, %d ]\n" % (num_added, num_removed, num_found)
-                result += "Das hier ist HTML-Code"
-                html.write(result)
-                return None # Hier wird der Request sofort beendet - ohne HTML-Title
+        return
 
-        return "bulkinventory"
+    # interactive progress is *not* done in action phase. It
+    # renders the page content itself.
+
+    if html.var("_start"):
+        hostnames = get_hostnames_from_checkboxes()
+        item = html.var("_item") # current item in interactive progress (called via webservice)
+        if not item:
+            # Start interactive progress
+            interactive_progress(
+                hostnames,         # list of items
+                "Bulk inventory",  # title
+                [ ("Services added", 0), ("Services removed", 0), ("Services found", 0) ], # stats table
+                [ ("mode", "file") ], # URL for "Stop/Finish" button
+                50, # ms to sleep between two steps
+            )
+        else:
+            # We are called via AJAX by the interactive process in order to execute
+            # the next step.
+            # handle item item....
+            # Werte für result: "continue" => weitermachen. "abort" => stoppen, "pause" => "Pause"
+            num_added = 1
+            num_removed = 0
+            num_found = 0
+            result = "[ 'continue', %d, %d, %d ]\n" % (num_added, num_removed, num_found)
+            result += "Das hier ist HTML-Code"
+            html.write(result)
+            return None # Hier wird der Request sofort beendet - ohne HTML-Title
 
     else:
         html.begin_form("bulkinventory")
@@ -845,7 +852,7 @@ def mode_bulk_inventory(phase):
 
         # Start button 
         html.write('<tr><td colspan=2 class="legend button">')
-        html.button("start", "Start!")
+        html.button("_start", "Start!")
         html.write("</tr>")
 
         html.write("</table>")

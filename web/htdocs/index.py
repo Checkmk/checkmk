@@ -52,7 +52,7 @@ def read_get_vars(req):
     fields = util.FieldStorage(req)
     for field in fields.list:
         varname = field.name
-        value = field.value.decode("utf-8")
+        value = field.value
         req.vars[varname] = value
 
 def connect_to_livestatus(html):

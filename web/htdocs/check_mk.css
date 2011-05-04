@@ -1054,6 +1054,13 @@ table.form td.legend {
     height: 32px;
     padding-top: 10px;
 }
+table.form td.buttons { 
+    color: #274750;
+    border: 1px solid #fff;
+    height: 32px;
+    padding-top: 10px;
+    text-align: right;
+}
 table.form td.legend.border { 
     border-right-style: solid;
 }

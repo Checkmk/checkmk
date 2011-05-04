@@ -566,9 +566,7 @@ class html:
         return self.req.vars.get(varname, deflt)
 
     def var_utf8(self, varname, deflt = None):
-        return self.var(varname, deflt)
-        # Now all variables from the user are Unicode strings...
-        # return unicode(self.req.vars.get(varname, deflt), "utf-8")
+        return self.req.vars.get(varname, deflt).decode("utf-8")
 
     def set_var(self, varname, value):
         self.req.vars[varname] = value

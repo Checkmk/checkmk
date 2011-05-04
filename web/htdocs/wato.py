@@ -283,7 +283,7 @@ def mode_editfolder(phase, what, new):
             name = html.var("name").strip()
             check_wato_filename("name", name, what)
 
-        title = html.var("title")
+        title = html.var_utf8("title")
         if not title:
             raise MKUserError("title", "Please supply a title.")
 
@@ -359,7 +359,7 @@ def mode_editfolder(phase, what, new):
             html.write(" " + role + "<br>")
         html.write("</td></tr>")
 
-        html.write('<tr><td class="legend button border" colspan=2>')
+        html.write('<tr><td colspan=2 class="buttons">')
         html.button("save", "Save &amp; Finish", "submit")
         html.write("</td></tr>\n")
         html.write("</table>\n")
@@ -426,6 +426,10 @@ def mode_file(phase):
         # Deletion
         if html.var("_bulk_delete"):
             return delete_hosts_after_confirm(selected_hosts)
+
+        elif html.var("_bulk_edit"):
+            return "bulkedit"
+
 
 
     elif len(g_hosts) == 0:
@@ -662,14 +666,7 @@ def mode_edithost(phase, new):
                 raise MKUserError("ipaddress", "Hostname <b><tt>%s</tt></b> cannot be resolved into an IP address. "
                             "Please check hostname or specify an explicit IP address." % hostname)
 
-        tags = set([])
-        for tagno, (tagname, taglist) in enumerate(config.host_tags):
-            value = html.var("tag_%d" % tagno)
-            if value:
-                tags.add(value)
-                for entry in taglist:
-                    if entry[0] == value and len(entry) > 2:
-                        tags.update(entry[2]) # extra tags
+        tags = get_selected_host_tags()
 
         # handle clone & new
         if new:
@@ -722,29 +719,9 @@ def mode_edithost(phase, new):
         html.text_input("ipaddress", ipaddress)
         html.write("</td></tr>\n")
 
-        # Host tags
-        found_tags = []
-        for tagno, (tagname, taglist) in enumerate(config.host_tags):
-            # get current value of tag
-            tagvalue = None
-            duplicate = False
-            for entry in taglist:
-                tag = entry[0]
-                descr = entry[1]
-                if tag in tags:
-                    if tagvalue:
-                        duplicate = True
-                    tagvalue = tag 
+        configure_hosttags(tags)
 
-            tagvar = "tag_%d" % tagno
-            html.write("<tr><td class=legend>%s</td>" % tagname)
-            html.write("<td class=content>")
-            html.select(tagvar, [e[:2] for e in taglist], tagvalue)
-            if duplicate: # tag not unique before editing
-                html.write("(!)")
-            html.write("</td></tr>\n")
-
-        html.write('<tr><td class="legend button" colspan=2>')
+        html.write('<tr><td class="buttons" colspan=2>')
         html.button("save", "Save &amp; Finish", "submit")
         if not new:
             html.button("delete", "Delete host!", "submit")
@@ -811,9 +788,9 @@ def mode_bulk_inventory(phase):
 
     elif phase == "buttons":
         if html.var("_start"):
-            html.context_button("Back", html.makeuri([]))
+            html.context_button("Back", make_link([("mode", "file")]))
         else:
-            html.context_button("Back", html.makeuri([("mode", "file")]))
+            html.context_button("Back", make_link([("mode", "file")]))
         return
 
     elif phase == "action":
@@ -868,12 +845,84 @@ def mode_bulk_inventory(phase):
         # html.write("</td></tr>")
 
         # Start button 
-        html.write('<tr><td colspan=2 class="legend button border">')
+        html.write('<tr><td colspan=2 class="buttons">')
         html.button("_start", "Start!")
         html.write("</tr>")
 
         html.write("</table>")
 
+#   +----------------------------------------------------------------------+
+#   |                ____        _ _      _____    _ _ _                   |
+#   |               | __ ) _   _| | | __ | ____|__| (_) |_                 |
+#   |               |  _ \| | | | | |/ / |  _| / _` | | __|                |
+#   |               | |_) | |_| | |   <  | |__| (_| | | |_                 |
+#   |               |____/ \__,_|_|_|\_\ |_____\__,_|_|\__|                |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Change the host tags of a number of selected host at once.           |
+#   +----------------------------------------------------------------------+
+
+def mode_bulk_edit(phase):
+    if phase == "title":
+        return "Bulk edit hosts"
+
+    elif phase == "buttons":
+        html.context_button("Back", make_link([("mode", "file")]))
+        return
+
+    elif phase == "action":
+        if html.check_transaction():
+            hostnames = get_hostnames_from_checkboxes()
+            for host in hostnames:
+                alias, ipaddress, tags = g_hosts[host]
+                new_tags = get_selected_host_tags(tags)
+                g_hosts[host] = (alias, ipaddress, new_tags)
+            write_the_configuration_file()
+            return "file"
+
+    hostnames = get_hostnames_from_checkboxes()
+
+    # Get the list of tags that are common of all selected hosts
+
+
+    preset_tags = {}
+    for tagno, (tagname, taglist) in enumerate(config.host_tags):
+        # check if all hosts have the same setting for this tag
+        host_counts = {}
+        for entry in taglist:
+            tag = entry[0]
+            count = 0
+            for hostname in hostnames:
+                alias, ipaddress, tags = g_hosts[hostname]
+                if tag in tags:
+                    count += 1
+            host_counts[tag] = count
+        
+        # now check, if all hosts have the same setting
+        non_zero = None
+        matches = 0
+        for tag, count in host_counts.items():
+            if count > 0:
+                matches += 1
+                non_zero = tag
+        if matches == 1:
+            preset_tags[tagno] = non_zero
+
+    html.write("<p>You have selected <b>%d</b> hosts for bulk edit. You can now change "
+               "host tags for all selected hosts at once. " % len(hostnames))
+    html.write("If a select is set to <i>don't change</i> then currenty not all selected "
+    "hosts share the same setting for this tag. If you leave that selection, all hosts "
+    "will keep their individual settings.</p>")
+
+    html.begin_form("bulkedit", None, "POST")
+    html.hidden_fields()
+    html.write("<table class=form>")
+    configure_hosttags(preset_tags)
+    html.write('<tr><td colspan=2 class="buttons">')
+    html.button("_save", "Save &amp; Finish")
+    html.write("</td></tr>")
+    html.write("</table>")
+    html.end_form()
 
 
 #   +----------------------------------------------------------------------+
@@ -911,6 +960,82 @@ def render_link_tree(h, format):
 
     render_folder(g_root_folder)
 
+#   +----------------------------------------------------------------------+
+#   |              _   _           _     _____                             |
+#   |             | | | | ___  ___| |_  |_   _|_ _  __ _ ___               |
+#   |             | |_| |/ _ \/ __| __|   | |/ _` |/ _` / __|              |
+#   |             |  _  | (_) \__ \ |_    | | (_| | (_| \__ \              |
+#   |             |_| |_|\___/|___/\__|   |_|\__,_|\__, |___/              |
+#   |                                              |___/                   |
+#   +----------------------------------------------------------------------+
+#   | Helper functions dealing with host tags                              |
+#   +----------------------------------------------------------------------+
+
+# Add selection boxes for all host tags to a form. If current tags is a list
+# of strings, then this is interpreted as the current setting of tags to
+# display in the selection boxes. If it is a dictionary, then it is a mapping
+# from tag number to the setting to display. If there is no entry for a certain
+# number, then *no* tag is preselected. This is needed for bulk updates where
+# not all hosts agree in the tag settings. The box goes to "(don't change)" 
+# in that case.
+def configure_hosttags(current_tags):
+    # Host tags
+    found_tags = []
+    for tagno, (tagname, taglist) in enumerate(config.host_tags):
+        choices = [e[:2] for e in taglist]
+        # get current value of tag
+        if type(current_tags) != dict:
+            tagvalue = None
+            duplicate = False
+            for entry in taglist:
+                tag = entry[0]
+                descr = entry[1]
+                if tag in current_tags:
+                    if tagvalue:
+                        duplicate = True
+                    tagvalue = tag 
+        else:
+            duplicate = False
+            if tagno in current_tags:
+                tagvalue = current_tags[tagno]
+            else:
+                choices = [("|", "(don't change)")] + choices
+                tagvalue = "|"
+
+        tagvar = "_tag_%d" % tagno
+        html.write("<tr><td class=legend>%s</td>" % tagname)
+        html.write("<td class=content>")
+        html.select(tagvar, choices, tagvalue)
+        if duplicate: # tag not unique before editing
+            html.write("(!)")
+        html.write("</td></tr>\n")
+
+
+def get_selected_host_tags(current_tags = {}):
+    tags = set([])
+    for tagno, (tagname, taglist) in enumerate(config.host_tags):
+        value = html.var("_tag_%d" % tagno)
+        if value == "|": # keep current setting of host (see current tags)
+            found = False
+            for entry in taglist:
+                tag = entry[0]
+                if tag in current_tags:
+                    tags.add(tag)
+                    if len(entry) > 2: # add additional tags
+                        tags.update(entry[2])
+                    found = True
+                    break
+            if not found: # handle None-Tag
+                for entry in taglist:
+                    if entry[0] == None and len(entry) > 2:
+                        tags.update(entry[2])
+                    
+        elif value:
+            tags.add(value)
+            for entry in taglist:
+                if entry[0] == value and len(entry) > 2:
+                    tags.update(entry[2]) # extra tags
+    return tags
 
 #   +----------------------------------------------------------------------+
 #   |                  _   _      _                                        |
@@ -1570,6 +1695,7 @@ mode_functions = {
    "firstinventory" : lambda phase: mode_inventory(phase, True),
    "inventory"      : lambda phase: mode_inventory(phase, False),
    "bulkinventory"  : mode_bulk_inventory,
+   "bulkedit"       : mode_bulk_edit,
    "changelog"      : mode_changelog,
    "file"           : mode_file,
 }

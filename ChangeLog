@@ -22,6 +22,7 @@
     * find configuration file in subdirectories of conf.d also
 
     Multisite:
+    * FIX: Display limit-exceeded message also in multi site setups
     * FIX: Tactical Overview: fix unhandled host problems view
     * FIX: customlinks snapin: Suppressing exception when no links configured
     * FIX: webservice: suppress livestatus errors in multi-site setups

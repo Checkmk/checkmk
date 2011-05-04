@@ -161,7 +161,8 @@ function pnp_response_handler(data, code) {
         response = eval(code);
         for(var i in response) {
             var graph = response[i];
-            create_graph(data, '&' + graph['image_url'].replace('&view=1', ''));
+            var view = data['view'] == '' ? '0' : data['view'];
+            create_graph(data, '&' + graph['image_url'].replace('&view='+view, ''));
             i = null;
         }
     } catch(e) {
@@ -207,8 +208,8 @@ function render_pnp_graphs(container, site, host, service, pnpview, base_url, pn
                  'pnp_url':   pnp_url,   'site':     site,
                  'host':      host,      'service':  service,
                  'with_link': with_link, 'view':     pnpview};
-    get_url(pnp_url + 'index.php/json?&host=' + host + '&srv=' + service + '&source=0',
-            pnp_response_handler, data, pnp_error_response_handler);
+    get_url(pnp_url + 'index.php/json?&host=' + host + '&srv=' + service + '&source=0&view=' + pnpview,
+                                                 pnp_response_handler, data, pnp_error_response_handler);
 }
 
 // ----------------------------------------------------------------------------
@@ -419,6 +420,21 @@ function move_column_down(oImg) {
     oImg = null;
 }
 
+function toggle_join_fields(prefix, n, obj) {
+    var r1 = document.getElementById(prefix + 'join_index_row' + n);
+    var r2 = document.getElementById(prefix + 'title_row' + n)
+    if(obj.options[obj.selectedIndex].text.substr(0, 8) == 'SERVICE:') {
+        r1.style.display = '';
+        r2.style.display = '';
+    } else {
+        r1.style.display = 'none';
+        r2.style.display = 'none';
+        r1.childNodes[1].firstChild.value = '';
+        r2.childNodes[1].firstChild.value = '';
+    }
+    r1 = null;
+    r2 = null;
+}
 
 // ----------------------------------------------------------------------------
 // page reload stuff
@@ -478,17 +494,9 @@ function handleReload(url) {
 // --------------------------------------------------------------------------
 var tree_anim_o = null;
 
-function toggle_subtree(oImg) 
-{
-    var oParent = oImg.parentNode;
-    var oSubtree = oParent.childNodes[6];
-    var path_id = oSubtree.id;
-    var url = "bi_save_treestate.py?path=" + escape(path_id);
-
+function toggle_folding(oImg, state) {
     tree_anim_o = oImg;
-    if (oSubtree.style.display == "none") {
-        oSubtree.style.display = "";
-        url += "&state=open";
+    if(state === 1) {
         oImg.src = "images/tree_10.png";
         setTimeout("set_tree_animation_step('20');", 10);
         setTimeout("set_tree_animation_step('30');", 20);
@@ -498,10 +506,8 @@ function toggle_subtree(oImg)
         setTimeout("set_tree_animation_step('70');", 125);
         setTimeout("set_tree_animation_step('80');", 180);
         setTimeout("set_tree_animation_step('90');", 260);
-    }
-    else {
-        oSubtree.style.display = "none";
-        url += "&state=closed";
+
+    } else {
         oImg.src = "images/tree_80.png";
         setTimeout("set_tree_animation_step('70');", 10);
         setTimeout("set_tree_animation_step('60');", 20);
@@ -512,8 +518,37 @@ function toggle_subtree(oImg)
         setTimeout("set_tree_animation_step('10');", 180);
         setTimeout("set_tree_animation_step('00');", 260);
     }
+}
+
+function toggle_tree_state(tree, name, oContainer) {
+    var state;
+    if(oContainer.style.display == 'none') {
+        oContainer.style.display = '';
+        state = 'on';
+    } else {
+        oContainer.style.display = 'none';
+        state = 'off';
+    }
+    get_url('tree_openclose.py?tree=' + escape(tree) + '&name=' + escape(name) + '&state=' + state);
+    oContainer = null;
+}
+
+function toggle_subtree(oImg) 
+{
+    var oSubtree = oImg.parentNode.childNodes[6];
+    var url = "bi_save_treestate.py?path=" + escape(oSubtree.id);
+
+    if (oSubtree.style.display == "none") {
+        oSubtree.style.display = "";
+        url += "&state=open";
+        toggle_folding(oImg, 1);
+    }
+    else {
+        oSubtree.style.display = "none";
+        url += "&state=closed";
+        toggle_folding(oImg, 0);
+    }
     oSubtree = null;
-    oParent = null;
     get_url(url);
 }
 

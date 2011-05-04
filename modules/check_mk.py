@@ -34,9 +34,18 @@ check_mk_version  = '(inofficial)'
 
 # Some things have to be done before option parsing and might
 # want to output some verbose messages.
+g_profile = None
+
 if __name__ == "__main__":
     opt_debug        = '--debug' in sys.argv[1:]
     opt_verbose      = opt_debug or '-v' in sys.argv[1:] or '--verbose' in sys.argv[1:]
+    if '--profile' in sys.argv[1:]:
+        import cProfile
+        g_profile = cProfile.Profile()
+        g_profile.enable()
+        if opt_verbose:
+            sys.stderr.write("Enabled profiling.\n")
+        
 else:
     opt_verbose = False
     opt_debug = False
@@ -723,7 +732,7 @@ def is_cluster(hostname):
     return False
 
 # If host is node of a cluster, return name of that cluster
-# (untagged). If not, return None. If a host belongt to
+# (untagged). If not, return None. If a host belongs to
 # more than one cluster, then a random cluster is choosen.
 def cluster_of(hostname):
     for clustername, nodes in clusters.items():
@@ -3837,7 +3846,9 @@ def all_nonfunction_vars():
 
 
 # Create list of all files to be included
-list_of_files = glob.glob(check_mk_configdir + '/*.mk')
+list_of_files = reduce(lambda a,b: a+b, 
+   [ [ "%s/%s" % (d, f) for f in fs if f.endswith(".mk")] 
+     for d, sb, fs in os.walk(check_mk_configdir) ], [])
 list_of_files.sort()
 list_of_files = [ check_mk_configfile ] + list_of_files
 final_mk = check_mk_basedir + "/final.mk"
@@ -3910,7 +3921,9 @@ def compute_check_parameters(host, checktype, item, params):
 
         # Merge user's default settings onto it
         if def_levels_varname in globals():
-            new_params.update(eval(def_levels_varname))
+            def_levels = eval(def_levels_varname)
+            if type(def_levels) == dict:
+                new_params.update(eval(def_levels_varname))
 
         # Merge params from inventory onto it
         new_params.update(params)
@@ -4008,6 +4021,18 @@ backup_paths = [
     ]
 
 
+def output_profile():
+    if g_profile:
+        g_profile.dump_stats("profile.out")
+        file("show_profile.py", "w")\
+            .write("#!/usr/bin/python\n"
+                   "import pstats\n"
+                   "stats = pstats.Stats('profile.out')\n"
+                   "stats.sort_stats('time').print_stats()\n")
+        os.chmod("show_profile.py", 0755)
+
+        sys.stderr.write("Profile 'profile.out' written. Please run ./show_profile.py.\n")
+
 #   +----------------------------------------------------------------------+
 #   |                        __  __       _                                |
 #   |                       |  \/  | __ _(_)_ __                           |
@@ -4025,7 +4050,7 @@ if __name__ == "__main__":
                      "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
                      "flush", "package", "donate", "snmpwalk", "usewalk",
                      "scan-parents", "procs=", "automation=", 
-                     "snmpget=", 
+                     "snmpget=", "profile",
                      "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                      "man", "nowiki", "config-check", "backup=", "restore=",
                      "check-inventory=", "paths", "cleanup-autochecks", "checks=" ]
@@ -4079,12 +4104,12 @@ if __name__ == "__main__":
         for o,a in opts:
             if o in [ '-h', '--help' ]:
                 usage()
-                sys.exit(0)
+                done = True
             elif o in [ '-V', '--version' ]:
                 print_version()
-                sys.exit(0)
+                done = True
             elif o in [ '-X', '--config-check' ]:
-                sys.exit(0) # already done
+                done = True
             elif o in [ '-S', '-H' ]:
                 sys.stderr.write(tty_bold + tty_red + "ERROR" + tty_normal + "\n")
                 sys.stderr.write("The options -S and -H have been replaced with the option -N. If you \n")
@@ -4188,6 +4213,23 @@ if __name__ == "__main__":
             if len(hostnames) > 0:
                 for host in hostnames:
                     remove_autochecks_of(host, checknames)
+                    clust = cluster_of(host)
+                    if clust:
+                        missing = []
+                        for node in clusters[clust]:
+                            if node not in hostnames:
+                                missing.append(node)
+                        if len(missing) == 0:
+                            if opt_verbose:
+                                sys.stdout.write("All nodes of %s specified, dropping checks of %s, too.\n" % (clust, clust))
+                            remove_autochecks_of(clust, checknames)
+                        else:
+                            sys.stdout.write("Warning: %s is part of cluster %s, but you didn't specify %s as well.\nChecks on %s will be kept.\n" % 
+                            (host, clust, ",".join(missing), clust))
+                    # if the host is part of a cluster and
+                    # the other nodes of that cluster are
+                    # also present in the list, then we also # drop the checks of the clusters
+
             else:
                 for host in all_active_hosts() + all_active_clusters():
                     remove_autochecks_of(host, checknames)
@@ -4211,6 +4253,7 @@ if __name__ == "__main__":
 
 
     if done:
+        output_profile()
         sys.exit(0)
     elif len(args) == 0 or len(args) > 2:
         usage()
@@ -4231,3 +4274,4 @@ if __name__ == "__main__":
                     sys.exit(2)
 
         do_check(hostname, ipaddress)
+

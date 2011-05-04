@@ -77,7 +77,7 @@ import bi # needed for aggregation icon
 multisite_painter_options["pnpview"] = {
  "title"   : "PNP Timerange",
  "default" : "1",
- "values"  : [ ("0", "4 Hours"), ("1", "25 Hours"), ("2", "One week"), ("3", "One Month"), ("4", "One Year"), ]
+ "values"  : [ ("0", "4 Hours"), ("1", "25 Hours"), ("2", "One week"), ("3", "One Month"), ("4", "One Year"), ("", "All") ]
 }
 
 multisite_painter_options["ts_format"] = {
@@ -653,7 +653,12 @@ multisite_painters["svc_comments"] = {
     "paint" : lambda row: paint_comments("service_", row)
 }
 
-
+multisite_painters["svc_acknowledged"] = {
+    "title" : "Service problem acknowledged",
+    "short" : "Ack",
+    "columns" : ["service_acknowledged"],
+    "paint" : lambda row: paint_nagiosflag(row, "service_acknowledged", False)
+}
 
 
 def notes_matching_pattern_entries(dirs, item):

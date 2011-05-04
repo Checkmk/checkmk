@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config, defaults, livestatus, htmllib, time, os, re, pprint, time, copy
+import weblib
 from lib import *
 from pagefunctions import *
 
@@ -99,7 +100,7 @@ def show_filter_form(is_open, filters):
     html.begin_form("filter")
     html.write("<div class=whiteborder>\n")
 
-    html.write("<table class=form>\n")
+    html.write("<table class=\"form\">\n")
     # sort filters according to title
     s = [(f.sort_index, f.title, f) for f in filters]
     s.sort()
@@ -133,7 +134,7 @@ def show_painter_options(painter_options):
     html.begin_form("painteroptions")
     html.write("<div class=whiteborder>\n")
 
-    html.write("<table class=form>\n")
+    html.write("<table class=\"form\">\n")
     for on in painter_options:
         opt = multisite_painter_options[on]
         html.write("<tr>")
@@ -452,6 +453,8 @@ def page_edit_view(h):
                 view["title"] += " (Copy)"
         else:
             view = html.multisite_views.get((html.req.user, viewname))
+            if not view:
+                view = html.multisite_views.get(('', viewname)) # load builtin view
 
         datasourcename = view["datasource"]
         if view:
@@ -496,7 +499,7 @@ def page_edit_view(h):
     html.begin_form("view")
     html.hidden_field("back", html.var("back", ""))
     html.hidden_field("old_name", viewname) # safe old name in case user changes it
-    html.write("<table class=form>\n")
+    html.write("<table class=\"form\">\n")
 
     html.write("<tr><td class=legend>Title</td><td class=content>")
     html.text_input("view_title")
@@ -521,35 +524,35 @@ def page_edit_view(h):
     # Larger sections are foldable and closed by default
     html.javascript("""
 function toggle_section(nr, oImg) {
-  var oContent =  document.getElementById("ed_"   + nr);
-  var closed = oContent.style.display == "none";
-  if (closed) {
-    oContent.style.display = "";
-    oImg.src = "images/open.gif";
-  }
-  else {
-    oContent.style.display = "none";
-    oImg.src = "images/closed.gif";
-  }
+  var oContent = document.getElementById("ed_"   + nr);
+  toggle_tree_state('vieweditor', nr, oContent);
+  if (oContent.style.display == "none")
+    toggle_folding(oImg, 1);
+  else
+    toggle_folding(oImg, 0);
   oContent = null;
-  oImg = null;
 }
 """)
 
-    def section_header(id, title):
+
+    def section_header(sid, title):
         html.write("<tr><td class=legend>")
-        html.write("<b class=toggleheader onclick=\"toggle_section('%d', this) \""
+        html.write("<img src=images/tree_00.png id=img_%d onclick=\"toggle_section('%d', this)\" class=toggleheader "
                    "title=\"Click to open this section\" "
                    "onmouseover=\"this.className='toggleheader hover';\" "
-                   "onmouseout=\"this.className='toggleheader';\">%s</b> " % (id, title))
+                   "onmouseout=\"this.className='toggleheader';\"><b>%s</b> " % (sid, sid, title))
         html.write("</td><td class=content>")
-        html.write("<div id=\"ed_%d\" style=\"display: none;\">" % id)
+        html.write("<div id=\"ed_%d\" style=\"display: none;\">" % sid)
 
-    def section_footer():
+    def section_footer(sid):
         html.write("</div></td></tr>\n")
+        states = weblib.get_tree_states('vieweditor')
+        if states.get(str(sid), 'off') == 'on':
+            html.javascript('toggle_section("%d", this)' % sid)
 
     # Properties
-    section_header(2, "Properties")
+    sid = 2
+    section_header(sid, "Properties")
     datasource_title = multisite_datasources[datasourcename]["title"]
     html.write("Datasource: <b>%s</b><br>\n" % datasource_title)
     html.hidden_field("datasource", datasourcename)
@@ -564,10 +567,11 @@ function toggle_section(nr, oImg) {
     html.write(" show data only on search<br>")
     html.checkbox("hidebutton")
     html.write(" do not show a context button to this view")
-    section_footer()
+    section_footer(sid)
 
     # [3] Filters
-    section_header(3, "Filters")
+    sid = 3
+    section_header(sid, "Filters")
     html.write("<table class=filters>")
     html.write("<tr><th>Filter</th><th>usage</th><th>hardcoded settings</th><th>HTML variables</th></tr>\n")
     allowed_filters = filters_allowed_for_datasource(datasourcename)
@@ -599,7 +603,7 @@ function toggle_section(nr, oImg) {
     for fname, filt in allowed_filters.items():
         html.write("filter_activation(\"filter_%s\");\n" % fname)
     html.write("</script>\n")
-    section_footer()
+    section_footer(sid)
 
     def sorter_selection(id, title, var_prefix, maxnum, data):
         allowed = allowed_for_datasource(data, datasourcename)
@@ -614,10 +618,15 @@ function toggle_section(nr, oImg) {
             html.write(" ")
             html.select("%sorder_%d" % (var_prefix, n), [("asc", "Ascending"), ("dsc", "Descending")])
             html.write("<br>")
-        section_footer()
+        section_footer(id)
 
     def column_selection(id, title, var_prefix, data):
         allowed = allowed_for_datasource(data, datasourcename)
+
+        joined = []
+        if var_prefix == 'col_':
+            joined  = allowed_for_joined_datasource(data, datasourcename)
+
         section_header(id, title)
         # make sure, at least 3 selection boxes are free for new columns
         maxnum = 1
@@ -625,10 +634,10 @@ function toggle_section(nr, oImg) {
             maxnum += 1
         html.write('<div>')
         for n in range(1, maxnum):
-            view_edit_column(n, var_prefix, maxnum, allowed)
+            view_edit_column(n, var_prefix, maxnum, allowed, joined)
         html.write('</div>')
         html.buttonlink("javascript:add_view_column(%d, '%s', '%s')" % (id, datasourcename, var_prefix), "Add Column")
-        section_footer()
+        section_footer(id)
 
     # [4] Sorting
     sorter_selection(4, "Sorting", "sort_", max_sort_columns, multisite_sorters)
@@ -639,8 +648,9 @@ function toggle_section(nr, oImg) {
     # [6] Columns (painters)
     column_selection(6, "Columns", "col_", multisite_painters)
 
-    # [2] Layout
-    section_header(7, "Layout")
+    # [7] Layout
+    sid = 7
+    section_header(sid, "Layout")
     html.write("<table border=0>")
     html.write("<tr><td>Basic Layout:</td><td>")
     html.sorted_select("layout", [ (k, v["title"]) for k,v in multisite_layouts.items() if not v.get("hide")])
@@ -658,7 +668,7 @@ function toggle_section(nr, oImg) {
     html.select("column_headers", [ ("off", "off"), ("pergroup", "once per group") ])
     html.write("</td><tr>\n")
     html.write("</table>\n")
-    section_footer()
+    section_footer(sid)
 
 
     html.write('<tr><td class="legend button" colspan=2>')
@@ -677,10 +687,14 @@ function toggle_section(nr, oImg) {
 
     html.footer()
 
-def view_edit_column(n, var_prefix, maxnum, allowed):
-    collist = [ ("", "") ] + [ (name, p["title"]) for name, p in allowed.items() ]
+def view_edit_column(n, var_prefix, maxnum, allowed, joined = []):
+
+    collist = [ ("", "") ] + collist_of_collection(allowed)
+    if joined:
+        collist += [ ("-", "---") ] + collist_of_collection(joined, collist)
+
     html.write("<div class=columneditor id=%seditor_%d><table><tr>" % (var_prefix, n))
-    html.write('<td rowspan=3>')
+    html.write('<td class="cebuttons" rowspan=5>')
     html.write('<img onclick="delete_view_column(this);" '
             'onmouseover=\"hilite_icon(this, 1)\" '
             'onmouseout=\"hilite_icon(this, 0)\" '
@@ -699,12 +713,19 @@ def view_edit_column(n, var_prefix, maxnum, allowed):
             'src="images/button_movedown_lo.png"%s>' % (var_prefix, n, display))
     html.write('</td>')
     html.write('<td id="%slabel_%d" class=celeft>Column %d:</td><td>' % (var_prefix, n, n))
-    html.sorted_select("%s%d" % (var_prefix, n), collist)
+    html.select("%s%d" % (var_prefix, n), collist, "", "toggle_join_fields('%s', %d, this)" % (var_prefix, n))
+    display = 'none'
+    if joined and is_joined_value(collist, "%s%d" % (var_prefix, n)):
+        display = ''
+    html.write("</td></tr><tr id='%sjoin_index_row%d' style='display:%s'><td class=celeft>of Service:</td><td>" % (var_prefix, n, display))
+    html.text_input("%sjoin_index_%d" % (var_prefix, n))
     html.write("</td></tr><tr><td class=celeft>Link:</td><td>")
     select_view("%slink_%d" % (var_prefix, n))
     html.write("</td></tr><tr><td class=celeft>Tooltip:</td><td>")
-    html.sorted_select("%stooltip_%d" % (var_prefix, n), collist)
-    html.write("</td></table>")
+    html.select("%stooltip_%d" % (var_prefix, n), collist)
+    html.write("</td></tr><tr id='%stitle_row%d' style='display:%s'><td class=celeft>Title:</td><td>" % (var_prefix, n, display))
+    html.text_input("%stitle_%d" % (var_prefix, n))
+    html.write("</td></tr></table>")
     html.write("</div>")
 
 def ajax_get_edit_column(h):
@@ -719,10 +740,15 @@ def ajax_get_edit_column(h):
     load_views()
 
     allowed = allowed_for_datasource(multisite_painters, html.var('ds'))
+
+    joined = []
+    if html.var('pre') == 'col_':
+        joined  = allowed_for_joined_datasource(multisite_painters, html.var('ds'))
+
     num = int(html.var('num', 0))
 
     html.form_vars = []
-    view_edit_column(num, html.var('pre'), num + 1, allowed)
+    view_edit_column(num, html.var('pre'), num + 1, allowed, joined)
 
 # Called by edit function in order to prefill HTML form
 def load_view_into_html_vars(view):
@@ -783,14 +809,20 @@ def load_view_into_html_vars(view):
     # [6] Columns
     n = 1
     for entry in view["painters"]:
-        name = entry[0]
-        viewname = entry[1]
-        tooltip = len(entry) > 2 and entry[2] or None
+        name       = entry[0]
+        viewname   = entry[1]
+        tooltip    = len(entry) > 2 and entry[2] or None
+        join_index = len(entry) > 3 and entry[3] or None
+        col_title  = len(entry) > 4 and entry[4] or None
         html.set_var("col_%d" % n, name)
         if viewname:
             html.set_var("col_link_%d" % n, viewname)
         if tooltip:
             html.set_var("col_tooltip_%d" % n, tooltip)
+        if join_index:
+            html.set_var("col_join_index_%d" % n, join_index)
+        if col_title:
+            html.set_var("col_title_%d" % n, col_title)
         n += 1
 
     # Make sure, checkboxes with default "on" do no set "on". Otherwise they
@@ -884,13 +916,26 @@ def create_view():
     # have read this comment you might want to mail me a (simple) patch for
     # doing this more cleanly...
     for n in range(1, 500):
-        pname = html.var("col_%d" % n)
-        viewname = html.var("col_link_%d" % n)
-        tooltip = html.var("col_tooltip_%d" % n)
-        if pname:
+        pname      = html.var("col_%d" % n)
+        viewname   = html.var("col_link_%d" % n)
+        tooltip    = html.var("col_tooltip_%d" % n)
+        join_index = html.var('col_join_index_%d' % n)
+        col_title  = html.var('col_title_%d' % n)
+        if pname and pname != '-':
             if viewname not in  html.available_views:
                 viewname = None
-            painternames.append((pname, viewname, tooltip))
+
+            allowed_cols = collist_of_collection(allowed_for_datasource(multisite_painters, datasourcename))
+            joined_cols  = collist_of_collection(allowed_for_joined_datasource(multisite_painters, datasourcename), allowed_cols)
+            if is_joined_value(joined_cols, "col_%d" % n) and not join_index:
+                raise MKUserError('col_join_index_%d' % n, "Please specify the service to show the data for")
+
+            if join_index and col_title:
+                painternames.append((pname, viewname, tooltip, join_index, col_title))
+            elif join_index:
+                painternames.append((pname, viewname, tooltip, join_index))
+            else:
+                painternames.append((pname, viewname, tooltip))
 
     return {
         "name"            : name,
@@ -940,6 +985,30 @@ def page_view(h):
         raise MKGeneralException("No view defined with the name '%s'." % view_name)
 
     show_view(view, True, True, True)
+
+
+# Get a list of columns we need to fetch in order to
+# render a given list of painters. If join_columns is True,
+# then we only return the list needed by "Join" columns, i.e.
+# columns that need to fetch information from another table
+# (e.g. from the services table while we are in a hosts view)
+# If join_columns is False, we only return the "normal" columns.
+def get_needed_columns(painters):
+    columns = []
+    for entry in painters:
+        p = entry[0]
+        v = entry[1]
+        columns += p["columns"]
+        if v:
+            linkview = html.available_views.get(v)
+            if linkview:
+                for ef in linkview["hide_filters"]:
+                    f = multisite_filters[ef]
+                    columns += f.link_columns
+        if len(entry) > 2 and entry[2]:
+            tt = entry[2]
+            columns += multisite_painters[tt]["columns"]
+    return columns
 
 # Display view with real data. This is *the* function everying
 # is about.
@@ -1019,28 +1088,16 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     # satisfy external references (filters) of views we link to. The last bit
     # is the trickiest. Also compute this list of view options use by the 
     # painters
-    columns = []
-    painter_options = []
+
+    all_painters = group_painters + painters
+    join_painters = [ p for p in all_painters if len(p) >= 4 ]
+    master_painters = [ p for p in all_painters if len(p) < 4 ]
+    columns      = get_needed_columns(master_painters)
+    join_columns = get_needed_columns(join_painters)
+    
+    # Columns needed for sorters (what shall we do with the join columns?)
     for s, r in sorters:
         columns += s["columns"]
-
-    for entry in (group_painters + painters):
-        p = entry[0]
-        v = entry[1]
-        columns += p["columns"]
-        painter_options += p.get("options", [])
-        if v:
-            linkview = html.available_views.get(v)
-            if linkview:
-                for ef in linkview["hide_filters"]:
-                    f = multisite_filters[ef]
-                    columns += f.link_columns
-        if len(entry) > 2 and entry[2]:
-            tt = entry[2]
-            columns += multisite_painters[tt]["columns"]
-
-    painter_options = list(set(painter_options))
-    painter_options.sort()
 
     # Add key columns, needed for executing commands
     columns += datasource["keys"]
@@ -1050,6 +1107,15 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     if "site" in colset:
         colset.remove("site")
     columns = list(colset)
+
+    # Get list of painter options we need to display (such as PNP time range
+    # or the format being used for timestamp display
+    painter_options = []
+    for entry in all_painters:
+        p = entry[0]
+        painter_options += p.get("options", [])
+    painter_options = list(set(painter_options))
+    painter_options.sort()
 
     # Fetch data. Some views show data only after pressing [Search]
     if (not view["mustsearch"]) or html.var("search"):
@@ -1064,8 +1130,14 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
             rows = query_data(datasource, columns, add_columns, query, only_sites, get_limit())
 
         sort_data(rows, sorters)
+
+        # Now add join information, if there are join columns
+        if len(join_painters) > 0:
+            do_table_join(datasource, rows, filterheaders, join_painters, join_columns, only_sites)
     else:
         rows = []
+
+    # html.write("<pre>%s</pre>" % pprint.pformat(rows))
 
     # Apply non-Livestatus filters
     for filter in all_active_filters:
@@ -1263,6 +1335,37 @@ def view_options(viewname):
         vo[viewname] = v
         config.save_user_file("viewoptions", vo)
     return v
+            
+def do_table_join(master_ds, master_rows, master_filters, join_painters, join_columns, only_sites):
+    join_table, join_master_column = master_ds["join"]
+    slave_ds = multisite_datasources[join_table]
+    join_slave_column = slave_ds["joinkey"]
+
+    # Create additional filters
+    join_filter = ""
+    for entry in join_painters:
+        paintfunc, linkview, title, join_key = entry[:4]
+        join_filter += "Filter: %s = %s\n" % (join_slave_column, join_key )
+    join_filter += "Or: %d\n" % len(join_painters)
+    query = master_filters + join_filter 
+    rows = query_data(slave_ds, [join_master_column, join_slave_column] + join_columns, [], query, only_sites, None) 
+    per_master_entry = {}
+    current_key = None
+    current_entry = None
+    for row in rows:
+        master_key = (row["site"], row[join_master_column])
+        if master_key != current_key:
+            current_key = master_key
+            current_entry = {}
+            per_master_entry[current_key] = current_entry
+        current_entry[row[join_slave_column]] = row
+
+    # Add this information into master table in artificial column "JOIN"
+    for row in master_rows:
+        key = (row["site"], row[join_master_column])
+        joininfo = per_master_entry.get(key, {})
+        row["JOIN"] = joininfo
+
 
 
 def play_alarm_sounds():
@@ -1492,17 +1595,6 @@ def filters_allowed_for_datasource(datasourcename):
             allowed[fname] = filt
     return allowed
 
-def painters_allowed_for_datasource(datasourcename):
-    return allowed_for_datasource(multisite_painters, datasourcename)
-
-def sorters_allowed_for_datasource(datasourcename):
-    return allowed_for_datasource(multisite_sorters, datasourcename)
-
-def list_in_list(a, b):
-    for ele in a:
-        if ele not in b:
-            return False
-    return True
 
 # Filters a list of sorters or painters and decides which of
 # those are available for a certain data source
@@ -1510,6 +1602,7 @@ def allowed_for_datasource(collection, datasourcename):
     datasource = multisite_datasources[datasourcename]
     infos_available = set(datasource["infos"])
     add_columns = datasource.get("add_columns", [])
+
     allowed = {}
     for name, item in collection.items():
         columns = item["columns"]
@@ -1517,6 +1610,27 @@ def allowed_for_datasource(collection, datasourcename):
         if len(infos_needed.difference(infos_available)) == 0:
             allowed[name] = item
     return allowed
+
+def allowed_for_joined_datasource(collection, datasourcename):
+    if 'join' not in multisite_datasources[datasourcename]:
+        return []
+    return allowed_for_datasource(collection, multisite_datasources[datasourcename]['join'][0])
+
+def is_joined_value(collection, varname):
+    selected_label = [ label for name, label in collection if name == html.var(varname, '') ]
+    return selected_label and selected_label[0][:8] == 'SERVICE:'
+
+def collist_of_collection(collection, join_target = []):
+    def sort_list(l):
+        # Sort the lists but don't mix them up
+        swapped = [ (disp, key) for key, disp in l ]
+        swapped.sort()
+        return [ (key, disp) for disp, key in swapped ]
+
+    if not join_target:
+        return sort_list([ (name, p["title"]) for name, p in collection.items() ])
+    else:
+        return sort_list([ (name, 'SERVICE: ' + p["title"]) for name, p in collection.items() if (name, p["title"]) not in join_target ])
 
 # -----------------------------------------------------------------------------
 #         _        _   _
@@ -1545,7 +1659,7 @@ def show_action_form(is_open, datasource):
     html.hidden_field("actions", "yes")
     html.hidden_fields() # set all current variables, exception action vars
     html.write("<div class=whiteborder>\n")
-    html.write("<table class=form>\n")
+    html.write("<table class=\"form\">\n")
 
     if what in [ "host", "service" ]:
         show_host_service_actions(what)
@@ -1911,6 +2025,11 @@ def prepare_paint(p, row):
     painter = p[0]
     linkview = p[1]
     tooltip = len(p) > 2 and p[2] or None
+    if len(p) >= 4:
+        join_key = p[3]
+        row = row.get("JOIN", {}).get(p[3])
+        if not row:
+            return "", ""  # no join information available for that column
 
     tdclass, content = painter["paint"](row)
 
@@ -1960,7 +2079,13 @@ def paint(p, row):
 
 def paint_header(p):
     painter = p[0]
-    t = painter.get("short", painter["title"])
+    if len(p) >= 4: # join column
+        if len(p) >= 5 and p[4]:
+            t = p[4]
+        else:
+            t = p[3]
+    else:
+        t = painter.get("short", painter["title"])
     html.write("<th>%s</th>" % t)
 
 def register_events(row):

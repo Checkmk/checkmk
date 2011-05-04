@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import views, time, defaults
+import weblib
 from lib import *
 
 # Python 2.3 does not have 'set' in normal namespace.
@@ -404,8 +405,8 @@ def render_sitestatus():
 
             html.write("<tr><td class=left>%s</td>" % text)
             onclick = "switch_site('_site_switch=%s:%s')" % (sitename, switch)
-            html.write("<td class=\"state %s\">" % state)
-            html.write('<a title="%s" href="#" onclick="%s">%s</a></td>' % (title, onclick, state))
+            html.write("<td class=state>")
+            html.write('<a title="%s" href="#" onclick="%s" class=%s>%s</a></td>' % (title, onclick, state, state))
             html.write("</tr>\n")
         html.write("</table>\n")
 
@@ -418,16 +419,20 @@ sidebar_snapins["sitestatus"] = {
   "allowed" : [ "user", "admin" ],
   "refresh" : 90,
   "styles" : """
-.snapin table.sitestate {
+table.sitestate {
     width: %dpx;
 }
 
-.snapin table.sitestate td {
+table.sitestate td {
     padding: 1px 0px;
     text-align: right;
 }
 
-.snapin table.sitestate td a {
+table.sitestate td.left {
+    text-align: left;
+}
+
+table.sitestate a {
     font-weight: bold;
     -moz-border-radius: 4px;
     margin: 0px;
@@ -435,30 +440,27 @@ sidebar_snapins["sitestatus"] = {
     text-align: center;
     display: block;
 }
-.snapin table.sitestate td.left a {
+table.sitestate td.left a {
     text-align: left;
     font-weight: normal;
 }
 
-.snapin table.sitestate td.state {
+table.sitestate td.state {
     width: 60px;
     font-size: 7pt;
 }
-.snapin table.sitestate td.left {
-    text-align: left;
-}
 
-.snapin table.sitestate td.state a {
+table.sitestate td.state a {
     border-width: 1px;
     border-style: solid;
 }
-.snapin table.sitestate td.online a   { background-color: #3c0; color: #fff; border-color: #0f0; }
-.snapin table.sitestate td.disabled a { background-color: #666; color: #ccc; border-color: #888; }
-.snapin table.sitestate td.dead a     { background-color: #c00; color: #f88; border-color: #f44; }
-.snapin table.sitestate td.waiting a  { background-color: #666; color: #fff; border-color: #ccc; }
-.snapin table.sitestate td.down a     { background-color: #f00; color: #fff; border-color: #800; }
-.snapin table.sitestate td.unreach a  { background-color: #f80; color: #fff; border-color: #840; }
-.snapin table.sitestate td.unknown a  { background-color: #26c; color: #fff; border-color: #44f; }
+table.sitestate a.online   { background-color: #3c0; color: #fff; border-color: #0f0; }
+table.sitestate a.disabled { background-color: #666; color: #ccc; border-color: #888; }
+table.sitestate a.dead     { background-color: #c00; color: #f88; border-color: #f44; }
+table.sitestate a.waiting  { background-color: #666; color: #fff; border-color: #ccc; }
+table.sitestate a.down     { background-color: #f00; color: #fff; border-color: #800; }
+table.sitestate a.unreach  { background-color: #f80; color: #fff; border-color: #840; }
+table.sitestate a.unknown  { background-color: #26c; color: #fff; border-color: #44f; }
 """ % snapin_width
 }
 
@@ -552,7 +554,7 @@ table.tacticaloverview {
 }
 table.tacticaloverview th { font-size: 7pt; text-align: left; font-weight: normal; padding: 0; padding-top: 2px; }
 table.tacticaloverview td { text-align: right; border: 1px solid #444; padding: 0px; }
-table.tacticaloverview td a { display: block; margin-right: 2px; }
+table.tacticaloverview a { display: block; margin-right: 2px; }
 """ % snapin_width
 }
 # table.tacticaloverview td.prob { font-weight: bold; }
@@ -940,28 +942,15 @@ sidebar_snapins["bookmarks"] = {
 #
 # ------------------------------------------------------------
 
-def load_customlink_states():
-    return config.load_user_file("customlinks", {})
-
-def save_customlink_states(states):
-    config.save_user_file("customlinks", states)
-
-def ajax_customlink_openclose(h):
-    global html
-    html = h
-
-    states = load_customlink_states()
-    states[html.var("name")] = html.var("state")
-    save_customlink_states(states)
-
 def render_custom_links():
     links = config.custom_links.get(config.role)
     if not links:
         html.write("Please edit <tt>%s</tt> in order to configure which links are shown in this snapin.\n" %
                   (defaults.default_config_dir + "/multisite.mk"))
+        return
 
     def render_list(ids, links):
-        states = load_customlink_states()
+        states = weblib.get_tree_states('customlinks')
         n = 0
         for entry in links:
             n += 1
@@ -1002,10 +991,10 @@ sidebar_snapins["custom_links"] = {
     "render" : render_custom_links,
     "allowed" : [ "user", "admin", "guest" ],
     "styles" : """
-div#snapin_custom_links div.sublist {
+#snapin_custom_links div.sublist {
     padding-left: 10px;
 }
-div#snapin_custom_links img {
+#snapin_custom_links img {
     margin-right: 5px;
 }
 """

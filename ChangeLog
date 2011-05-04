@@ -1,5 +1,7 @@
 1.1.11i1:
     Core, Setup, etc.:
+    * FIX: cmk -II also refreshes cluster checks, if all nodes are specified
+    * FIX: avoid floating points with 'e' in performance data
     * FIX: cmk -D: drop obsolete (and always empty) Notification:
     * FIX: better handling of broken checks returning empty services
     * FIX: fix computation of weight when averaging
@@ -15,14 +17,22 @@
       cases where OIDs are missing)
     * Allow merging of dictionary based check parameters
     * --debug now implies -v
+    * new option --debug: creates execution profile of check_mk itself
+    * sped up use of stored snmp walks
+    * find configuration file in subdirectories of conf.d also
 
     Multisite:
+    * FIX: customlinks snapin: Suppressing exception when no links configured
     * FIX: webservice: suppress livestatus errors in multi-site setups
     * FIX: install missing example icons in web/htdocs/images/icons
     * FIX: Nagios-Snapin: avoid duplicate slash in URL
     * FIX: custom_style_sheet now also honored by sidebar
     * FIX: ignore case when sorting groups in ...groups snapin
+    * FIX: Fixed handling of embedded graphs to support the changes made to
+    the PNP webservice
     * Added snmp_uptime, uptime and printer_supply perfometers
+    * Allow for displaying service data in host tables
+    * View editor foldable states are now permament per user
 
     BI:
     * Added new component BI to Multisite.
@@ -32,6 +42,7 @@
     * Allow moving hosts from one to another config file
 
     Checks & Agents:
+    * FIX: cisco_power: fix syntax error in man page (broke also Multisite)
     * FIX: local: fixed search for custom templates PNP template
     * FIX: if/if64: always generate unique items (in case ifAlias is used)
     * FIX: ipmi: fix ugly ouput in case of warning and error

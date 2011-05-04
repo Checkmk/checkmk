@@ -698,19 +698,8 @@ function toggle_folder(o, folderId) {
         }
     }
 
-    if (next) {
-        if (next.style.display == "none") {
-            next.style.display = "";
-            if (img) 
-                img.src = "images/link_folder_open.gif";
-            get_url('customlink_openclose.py?name=' + escape(folderId) + '&state=on');
-        } else {
-            next.style.display = "none";
-            if (img) 
-                img.src = "images/link_folder.gif";
-            get_url('customlink_openclose.py?name=' + escape(folderId) + '&state=off');
-        }
-    }
+    if (next)
+	toggle_tree_state('customlinks', folderId, next);
 
     child = null;
     par = null;

@@ -172,7 +172,7 @@ def mode_index(phase):
 
     else:
         # Show table of hosts in this file
-        html.write("<table class=services>\n")
+        html.write("<table class=data>\n")
         html.write("<tr><th></th><th>Hostname</th>"
                    "<th>IP&nbsp;Address</th><th>Tags</th><th>Alias</th><th>Move To</th></tr>\n")
         odd = "even"
@@ -242,7 +242,7 @@ def host_link(hostname):
 
 
 def render_audit_log(log, what, with_filename = False):
-    htmlcode = '<table class="wato auditlog %s">'
+    htmlcode = '<table class="wato auditlog">'
     even = "even"
     for t, filename, user, action, text in log:
         text = parse_host_names(text)
@@ -726,11 +726,11 @@ def show_service_table(hostname, firsttime):
             break
     if fixall == 2:
         html.button("_fixall", "Fix all missing/exceeding")
-    
-        
+
+
     html.button("_save", "Save manual check configuration")
     html.hidden_fields()
-    html.write("<table class=services>\n")
+    html.write("<table class=data>\n")
 
     for state_name, state_type, checkbox in [ 
         ( "Available (missing) services", "new", firsttime ),

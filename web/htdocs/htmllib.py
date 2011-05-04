@@ -424,7 +424,7 @@ class html:
         else:
             login_text = "not logged in"
         self.write("<table class=header><tr><td class=left>%s</td><td class=right>"
-                   "%s &nbsp; &nbsp; <b class=headertime>%s</b> <img src=\"images/mk_logo_klein.png\"></td></tr></table>" %
+                   "%s &nbsp; &nbsp; <b class=headertime>%s</b> <img src=\"images/mk_logo_small.gif\" /></td></tr></table>" %
                    (title, login_text, time.strftime("%H:%M")))
         self.write("<hr class=header>\n")
 

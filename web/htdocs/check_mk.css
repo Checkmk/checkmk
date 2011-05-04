@@ -1,69 +1,93 @@
-/* Generel styles */
-td {
+/*
+   ____                           _ 
+  / ___| ___ _ __   ___ _ __ __ _| |
+ | |  _ / _ \ '_ \ / _ \ '__/ _` | |
+ | |_| |  __/ | | |  __/ | | (_| | |
+  \____|\___|_| |_|\___|_|  \__,_|_|                                    
+
+ General styles - used on all pages
+*/
+
+body {
+    font-family: arial, helvetica, sans-serif;
+    font-size: 9pt;
+    background-attachment: fixed;
+    background-repeat: repeat;
+    margin: 0;
+}
+
+td, th {
     vertical-align: top;
 }
+
 input, td, select {
     font-size: 9pt;
 }
+
 img {
     border-style: none;
 }
+
 th {
     white-space: nowrap;
 }
+
+h1 {
+    color: #fff;
+    font-size: 17pt;
+    margin-top: 0;
+    margin-bottom: 5px;
+    margin-left: 5px;
+}
+
+div {
+    margin: 0;
+    padding: 0;
+}
+
 /*
    __  __       _        
   |  \/  | __ _(_)_ __   
   | |\/| |/ _` | | '_ \  
   | |  | | (_| | | | | | 
-  |_|  |_|\__,_|_|_| |_| 
+  |_|  |_|\__,_|_|_| |_|
 
+  Main - Layout for the content frame
 */
 
 body.main {
-    background-attachment: fixed;
     background-image: url("images/contentframe_background.jpg"); 
-    background-repeat: repeat;
-    font-family: arial, helvetica, sans-serif;
-    font-size: 9pt;
-    padding: 0px 10px 0px 10px;
-    margin: 0px;
+    padding: 0 10px 0 10px;
 }
 
+div.main {
+    padding-left: 10px;
+    border-left: 1px solid red;
+}
+
+/* The content page header containing the title, user, date */
 body.main table.header {
     width: 100%;
     margin-bottom: 10px;
     margin-left: 0px;
     padding: 8px 0px 10px 0px;
     border-spacing: 0px;
+    color: #fff;
 } 
 
 body.main hr.header {
-    color: white;
-    background-color: white;
+    background-color: #fff;
     border-style: none;
     height: 1px;
     position: absolute;
     width: 100%;
     left: 0px;
     top: 35px;
-
-}
-
-body.main hr.hxeader {
-    position: absolute;
-    left: 50px;
-    top: 70px;
-    height: 1px;
-    color: white;
-    background-color: white;
-border: none;
 }
 
 body.main table.header td.left {
     font-size: 15pt;
     font-weight: bold;
-    color: #fff;
     vertical-align: bottom;
     padding-left: 0px;
     height: 31px;
@@ -81,23 +105,23 @@ body.main table.header td.right img {
     top: 5px;
 }
 
-
-body.main table.footer { 
+/* The content page footer containing optional status icons */
+table.footer { 
     margin-top: 10px;
     width: 100%;
-    color: white;
+    color: #fff;
 }
 
-body.main table.footer img.statusicon {
+table.footer td.left   { text-align: left; }
+table.footer td.middle { text-align: center; }
+table.footer td.right  { text-align: right; }
+table.footer a { color: #246; }
+
+table.footer img.statusicon {
     width: 16px;
     top: 16px;
     position: relative;
     top: -3px;
-}
-
-div.main {
-    padding-left: 10px;
-border-left: 1px solid red;
 }
 
 /*
@@ -106,29 +130,20 @@ border-left: 1px solid red;
    \___ \| |/ _` |/ _ \ '_ \ / _` | '__|
     ___) | | (_| |  __/ |_) | (_| | |   
    |____/|_|\__,_|\___|_.__/ \__,_|_|   
-                                        
+
+    Styling for the navidation sidebar
 */
 
 body.side {
-    background-attachment: fixed;
-    background-repeat: repeat;
-    background-image: url("images/snapinframe_background.jpg");
-    font-family: arial, helvetica, sans-serif;
-    font-size: 9pt;
+    background-image: url("images/sidebar_background.jpg");
     padding: 0;
-    margin: 0;
     width: 280px;
     height: 100%;
     overflow:hidden;
 }
 
-div#check_mk_sidebar {
-    padding: 0;
-    margin: 0;
-}
-
 /* Top logo part */
-div#check_mk_sidebar div#side_header {
+#side_header {
     position: absolute;
     top: 0px;
     left: 0px;
@@ -136,35 +151,37 @@ div#check_mk_sidebar div#side_header {
     height: 55px;
     z-index: 10;
     background-repeat: no-repeat;
-    background-image: url("images/sidebar_oben.png");
+    background-image: url("images/sidebar_top.png");
 }
 
-div#side_version {
-    position: absolute;
-    top: 24px;
-    left: 54px;
-    z-index: 54;
-    color: white;
-    text-align: right;
-    width: 200px;
-}
-div#side_version a {
-    text-decoration: none;
-    color: #e8e8e8;
-}
-div#side_version a:hover {
-    text-decoration: underline;
-    color: #fff;
-}
-
-div#check_mk_sidebar div#side_header a.logo {
+#side_header a.logo {
     display: block;
     height: 55px;
     width: 270px;
 }
 
+#side_version {
+    position: absolute;
+    top: 24px;
+    left: 54px;
+    z-index: 54;
+    color: #fff;
+    text-align: right;
+    width: 200px;
+}
+
+#side_version a {
+    text-decoration: none;
+    color: #e8e8e8;
+}
+
+#side_version a:hover {
+    text-decoration: underline;
+    color: #fff;
+}
+
 /* Scrolling part with snapins */
-div#check_mk_sidebar div#side_content {
+#side_content {
     z-index: 5;
     width: 100%;
     height: 500px;
@@ -174,31 +191,29 @@ div#check_mk_sidebar div#side_content {
     padding-bottom: 5px;
 }
 
-div#check_mk_sidebar div#side_footer {
+/* The footer of the sidebar */
+#side_footer {
     position: absolute;
     bottom: 0;
     left: 0;
-    margin: 0;
-    padding: 0;
     height: 35px;
     width: 100%;
     z-index: 10;
     background-repeat: no-repeat;
-    background-image: url("images/sidebar_unten.png");
+    background-image: url("images/sidebar_bottom.png");
 }
-div#check_mk_sidebar div#side_footer div.button {
+
+#side_footer div.button {
     width: 75px;
     height: 20px;
     z-index: 20;
     position: absolute;
-    /* background-attachment: fixed; */
-    /* background-position: 15px 20px; */
     top: 10px;
     left: 15px;
     float: left;
-    padding: 0px;
 }
-div#check_mk_sidebar div#side_footer div.button a {
+
+#side_footer div.button a {
     width: 75px;
     height: 17px;
     display: block;
@@ -209,13 +224,15 @@ div#check_mk_sidebar div#side_footer div.button a {
     text-decoration: none;
     background-repeat: repeat;
     background-image: url("images/sidebar_button_lo.png");
-    margin: 0px;
+    margin: 0;
 }
-div#check_mk_sidebar div#side_footer div.button a:hover {
+
+#side_footer div.button a:hover {
     background-image: url("images/sidebar_button_hi.png");
 }
-div#check_mk_sidebar div#side_footer div.copyright {
-    color: white;
+
+#side_footer div.copyright {
+    color: #fff;
     position: relative;
     left: 130px;
     top: 12px;
@@ -223,11 +240,12 @@ div#check_mk_sidebar div#side_footer div.copyright {
     text-align: right;
 }
 
-div#side_footer a {
-color: #eee;
+#side_footer a {
+    color: #eee;
 }
-div#side_footer a:hover {
-color: white;
+
+#side_footer a:hover {
+    color: #fff;
 }
 
 /* General layout of snapins */
@@ -237,11 +255,11 @@ div.snapin {
     padding: 0;
 }
 
-/* snapin header */
+/* Header of the snapin */
 div.snapin div.head {
     width: 260px;
     text-align: center;
-    color: white;
+    color: #fff;
     padding-top: 9px;
 }
 
@@ -271,7 +289,6 @@ div.snapin div.content {
      * from the width defined below. The regular width would be 260px. */
     padding: 10px 15px 5px;
     width: 230px;
-    margin: 0;
 }
 
 div.snapin div.foot {
@@ -291,10 +308,6 @@ div.snapin .content_center {
     margin-right: auto;
 }
 
-div.snapin {
-    font-family: arial, helvetica, sans-serif;
-}
-
 div.snapin td {
     color: #fff;
 }
@@ -311,8 +324,7 @@ body.side li {
     color: #478;
 }
 
-
-/* Normal link in sidebar */
+/* Normal link in snapins */
 div.snapin a {
     text-decoration: none;
     font-weight: normal;
@@ -323,12 +335,14 @@ div.snapin a:hover {
     text-decoration: underline;
     color: #fff;
 }
+
 div.snapin ul {
     margin: 0;
     padding: 0;
     padding-left: 16px;
-		width: 220px;
+    width: 220px;
 }
+
 li.sidebar {
     margin-left: 0px;
     margin-left: 0px;
@@ -339,6 +353,7 @@ div.snapin div.footnote {
     text-align: right;
 }
 
+/* Style for exceptions displayed in snapins */
 div.snapin div.snapinexception {
     background-color: #f88;
     -moz-border-radius: 4px;
@@ -346,30 +361,36 @@ div.snapin div.snapinexception {
     border: 1px solid #f00;
     width: 220px;
 }
+
 div.snapin div.snapinexception h2 {
     font-size: 9pt;
     color: #f00;
     margin-top: 0px;
 }
+
 div.snapin div.snapinexception p {
     color: #800;
 }
+
+/* The right-aligned link at the bottom of some snapins like the "views" snapin. */
 div.snapin div.footnotelink {
     margin-top: 5px;
     text-align: right;
     padding-right: 31px;
 }
+
 div.snapin div.footnotelink a {
     border: 1px solid #ddd;
     font-size: 7pt;
     -moz-border-radius: 4px;
     padding: 1px 4px;
 }
+
 div.snapin div.footnotelink a:hover {
     background-image: url("images/form_background.png");
     background-repeat: repeat;
     text-decoration: none;
-    border: 1px solid white;
+    border: 1px solid #fff;
 }
 
 /* Small iconbutton (e.g. at bookmarks) */
@@ -388,107 +409,10 @@ div.statebullet {
     float: left; 
 }
 
-table.sidebarconfig {
-  margin-top: 1em;
-  border-collapse: collapse;
-  empty-cells: show;
-}
-
-table.sidebarconfig th {
-    background-color: #830;
-    text-align: left;
-    color: white;
-    border: 1px solid #c60;
-    padding: 2px 5px;
-}
-
-table.sidebarconfig td {
-    background-color: #d72;
-    border: 1px solid #f84;
-    padding: 0px 5px;
-}
-
-
-.footer td.left   { text-align: left; }
-.footer td.middle { text-align: center; }
-.footer td.right  { text-align: right; }
-.footer a { color: #246; }
-
-h1 {
-    color: white;
-    font-size: 17pt;
-    margin-top: 0px;
-    margin-bottom: 5px;
-    margin-left: 5px;
-}
-
-table.heading {
-    width: 100%;
-    margin-bottom: 6px;
-    border-bottom: 1px solid black;
-    margin-top: 0px;
-    padding-top: 3px;
-}
-
-table.heading td {
-    vertical-align: bottom;
-    padding: 0px;
-}
-
-table.heading td.right img {
-    margin-left: 15px;
-    margin-right: 8px;
-}
-table.heading b.headtime { 
-  color: black;
-  font-size: 120%;
-}
-table.heading td.right {
-    text-align: right;
-    white-space: nowrap;
-}
-
-/* site header --------------------------------------------------------------- */
-table.siteheader {
-    margin-bottom: 0px;
-    margin-top: 5px;
-}
-
-table.siteheader td img {
-    vertical-align: middle;
-}
-
-table.siteheader td a {
-    height: 18px;
-    display: block;
-    padding: 2px 1ex;
-    border-style: solid;
-    text-decoration: none;
-    vertical-align: middle;
-}
-
-table.siteheader td.online a {
-    border-width: 1px;
-    background-color: #cfa;
-    border-color: #222 #ccc #fff #555;
-    color: #080;
-}
-
-table.siteheader td.offline a {
-    border-width: 1px;
-    background-color: #fca;
-    border-color: #222 #ccc #fff #555;
-    color: #800;
-}
-
-table.siteheader td.disabled a {
-    border-width: 1px;
-    background-color: #ccc;
-    border-color: #ccc #777 #444 #aaa;
-    color: #444;
-}
-
-/* navigation ---------------------------------------------------------------- */
+/* navigation ----------------------------------------------------------------
+   The contextlinks are placed as secondary navigation at the top of the
+   content page
+*/
 table.contextlinks {
     margin-bottom: 10px;
 }
@@ -504,7 +428,6 @@ div.contextlink {
     background-image: url("images/contextlink.png");
     background-repeat: no-repeat;
     background-position: center center;
-    margin: 0px;
     position: relative;
     left: -4px;
 }
@@ -515,7 +438,7 @@ div.contextlink.hot {
 
 div.contextlink a {
     padding-top: 5px;
-    color: white;
+    color: #fff;
     text-decoration: none;
     font-weight: bold;
     display: block;
@@ -523,15 +446,8 @@ div.contextlink a {
     height: 25px;
 }
 
-div.naviend {
-    width: 0px;
-    height: 0px;
-    display: block;
-    float: none;
-    background-color: green;
-    overflow: hidden;
-}
-
+/* The navi table contains the tab navigation above the content tables
+   containing the buttons "filter", "commands", "display" and so on. */
 table.navi {
     margin: 0px 0px 0px 5px;
     width: 100%;
@@ -546,13 +462,12 @@ table.naviform {
 }
 
 table.navi td {
-    padding: 0px;
-    margin: 0px;
-/* border: 1px solid green; */
+    padding: 0;
+    margin: 0;
 }
 
 table.navi td.gap, table.navi td.minigap {
-    border-bottom: 1px solid white;
+    border-bottom: 1px solid #fff;
 }
 
 table.navi td.left, table.navi td.right {
@@ -563,11 +478,9 @@ table.navi td.left, table.navi td.right {
     background-image: url("images/metanav_button.png");
     background-repeat: no-repeat;
     background-position: left;
-    /* border: 1px solid transparent; */
-    /* border-bottom: 1px solid white; */
-    color: white;
-    padding: 0px;
-    margin: 0px;
+    color: #fff;
+    padding: 0;
+    margin: 0;
     border: 1px dotted transparent;
 }
 
@@ -576,7 +489,7 @@ table.navi td.left.open {
 }
 
 table.navi td.left.closed, table.navi td.right, table.navi td.w30, table.navi td.w40 {
-    border-bottom: 1px solid white;
+    border-bottom: 1px solid #fff;
 }
 
 table.navi td.left.w30 {
@@ -605,77 +518,64 @@ table.navi td.left a, table.navi td.right a {
     text-align: center;
     font-weight: normal;
     text-decoration: none;
-    color: white;
+    color: #fff;
     display: block;
 }
 
-a.viewoption {
-    background-color: transparent;
-}
-a.viewoption.columns {
-    width: 20px;
-}
-a.viewoption.refresh {
-    width: 30px;
-}
-a.viewoption.selected, a.viewoption:hover {
-    background-color: #ace;
-}
-
 table.navi tr.form td.form {
-    margin: 0px;
-    padding: 0px;
+    margin: 0;
+    padding: 0;
 }
 
 table.navi tr.form td.whiteborder {
-    border-left: 1px solid white;
-    border-right: 1px solid white;
-    border-bottom: 1px solid white;
+    border-left: 1px solid #fff;
+    border-right: 1px solid #fff;
+    border-bottom: 1px solid #fff;
 }
 
 table.navi tr.form div.whiteborder, table.navi tr.form table.whiteborder {
-    border-left: 1px solid white;
-    border-right: 1px solid white;
-    margin: 0px;
-    padding: 0px;
-    border-bottom: 1px solid white;
-width: 100%;
+    border-left: 1px solid #fff;
+    border-right: 1px solid #fff;
+    margin: 0;
+    padding: 0;
+    border-bottom: 1px solid #fff;
+    width: 100%;
 }
 
-/* FILTER and ACTIONS */
+/*
+  ____        _       _____     _     _      
+ |  _ \  __ _| |_ __ |_   _|_ _| |__ | | ___ 
+ | | | |/ _` | __/ _` || |/ _` | '_ \| |/ _ \
+ | |_| | (_| | || (_| || | (_| | |_) | |  __/
+ |____/ \__,_|\__\__,_||_|\__,_|_.__/|_|\___|
+ 
+ Tables containing data like the services, wato, logwatch and so on.
+*/
 
-/* tabs ---------------------------------------------------------------------- */
-
-
-
-/* table of services -------------------------------------------------------------- */
-
-table.services { 
+table.data { 
     border-spacing: 0px;
-    margin: 0px;
-    padding: 0px;
+    margin: 0;
+    padding: 0;
     border-collapse: collapse;
     empty-cells: show;
     width: 100%;
 }
 
-table.services th {
+table.data th {
     font-weight: normal;
     border-left: 1px solid #ccc;
     border-right: 1px solid #ccc;
     background-color: #abb;
-    padding: 0px 4px;
+    padding: 0 4px;
     text-align: center;
-    font-size: 9pt;
-    color: white;
-
-}
-table.services th.tablegap {
-  background-image: url("images/background.jpg");
-  background-repeat: repeat;
-  background-position: center;
+    color: #fff;
 }
 
+table.data th.tablegap {
+    background-color: none;
+}
+
+/* Row coloring in case of the different states */
 tr.odd0  { background-color: #eee; } 
 tr.even0 { background-color: #ddd; }
 
@@ -688,27 +588,26 @@ tr.even2 { background-color: #faa; }
 tr.odd3  { background-color: #fdc; } 
 tr.even3 { background-color: #fea; }
 
-
 /* HACK */
-table.services tr.data td { 
-  border: 1px solid #bbb;
-  padding: 3px 6px;
+table.data tr.data td { 
+    border: 1px solid #bbb;
+    padding: 2px 4px;
 }
 
-table.services td.host { 
-  border-style: none;
-  font-weight: bold;
-  padding-top: 1ex;
-  padding-left: 0px;
-  font-size: 120%;
-}
-
-table.services td.singleicon img {
-    margin: 0px;
-    padding: 0px;
+table.data td.host { 
     border-style: none;
+    font-weight: bold;
+    padding-top: 1ex;
+    padding-left: 0px;
+    font-size: 120%;
 }
-table.services td.singleicon {
+
+/* Link to object in the classic nagios GUI */
+table.data td.singleicon img {
+    margin: 0;
+    padding: 0;
+}
+table.data td.singleicon {
     width: 16px;
     text-align: center;
 }
@@ -727,8 +626,8 @@ tr.groupheader td {
     font-weight: bold;
 }
 tr.groupheader a {
-   color: black;
-   text-decoration: none;
+    color: #000;
+    text-decoration: none;
 }
 
 tr.groupheader a:hover {
@@ -737,19 +636,19 @@ tr.groupheader a:hover {
 
 /* state in group header must have fixed width */
 .groupheader td.state {
-  width: 50px;
-  padding: 2px 5px;
-  border: 1px solid white;
+    width: 50px;
+    padding: 2px 5px;
+    border: 1px solid #fff;
 } 
 
-.services div.hostdown { 
+/* Styles the background of host columns which have a red colored background when critical */
+.data div.hostdown { 
     background-color: #f22;
     -moz-border-radius: 4px;
     border: 2px solid #000;
     padding-left: 3px;
     padding-right: 3px;
 }
-
 
 /*
   ____       _       _                
@@ -759,85 +658,107 @@ tr.groupheader a:hover {
  |_|   \__,_|_|_| |_|\__\___|_|  |___/
 
 */                                    
-table.services img {
-    border-style: none;
-}
-table.services td.age { 
-  text-align: right;
-  color: #666;
-  white-space: nowrap;
-  width: 40px;
-}
-table.services td.age.recent { 
-  font-weight: bold;
-  color: #000;
+
+table.data td.age { 
+    text-align: right;
+    color: #666;
+    white-space: nowrap;
+    width: 40px;
 }
 
+table.data td.age.recent { 
+    font-weight: bold;
+    color: #000;
+}
 
-table.services td.nowrap {
-  white-space: nowrap;
+table.data td.nowrap {
+    white-space: nowrap;
 }  
 
 td.badflag {
     font-weight: bold;
     background-color: #f64;
 }
+
 td.goodflag {
     color: #080;
 }
 
-
 td.state {  
-  text-align: center;
-  font-weight: bold;
-  font-family: sans-serif;
-  width: 32px;
+    text-align: center;
+    font-weight: bold;
+    font-family: sans-serif;
+    width: 32px;
 }
 
 td.count {
-  text-align: right;
-  font-weight: bold;
-  font-family: sans-serif;
+    text-align: right;
+    font-weight: bold;
+    font-family: sans-serif;
 }
 
 /* Performeter styling */
 
 td.perfometer {
-  padding: 1px 2px;
-  width: 120px;
-  height: 22px;
-  vertical-align: middle;
+    padding: 1px 1px 1px 0px;
+    width: 120px;
+    height: 22px;
+    vertical-align: middle;
 }
-td.perfometer div.title {
+
+td.perfometer div.content {
+   position: relative;
+   top: 0px; 
+   left: 1px;
+   width: 119px;
    height: 0px; 
+   float: left;
+   z-index: 20;
+}
+
+td.perfometer div.title {
    position: relative; 
-   top: 3px; 
+   top: 5px; 
    left: 0px;
    width: 120px;
+   height: 0px; 
    text-align: center;
    white-space: nowrap;
+   float: left;
+   z-index: 40;
 }
+
+td.perfometer img.glass {
+   position: relative;
+   top: 1px; 
+   left: 2px;
+   width: 118px;
+   height: 22px; 
+   margin-bottom: 1px;
+   z-index: 30;
+}
+
 
 td.perfometer table {
-  width: 120px;
-  height: 22px;
-  border-spacing: 0px;
-  padding: 0px;
-  margin: 0px;
-  border: 1px solid #aaa;
-  height: 100%;
+    width: 120px;
+    height: 22px;
+    border-spacing: 0px;
+    padding: 0;
+    margin: 0;
+    border: 1px solid #aaa;
+    height: 100%;
 }
 
-td.perfometer table tr td.inner {
-    padding: 0px;
-    margin: 0px;
+table.data td.perfometer td.inner {
+    padding: 0;
+    margin: 0;
     border: none;
     height: 22px;
-    padding-left: 1px;
+    padding: 0px 0px 0px 1px;
 }
 
 td.perfometer a {
-    color: black;
+    color: #000;
     text-decoration: none;
 }
 
@@ -854,7 +775,7 @@ td.statex {  /* zero count */
 
 /* OK/UP */
 .state0, .hstate0, .state0 a, .hstate0 a { 
-  background-color: #0b3; color: #fff;
+    background-color: #0b3; color: #fff;
 }
 
 .hstate {
@@ -862,27 +783,27 @@ td.statex {  /* zero count */
 }
 /* WARN */
 .state1, .state1 a { 
-  background-color: #ff0; color: #000;
+    background-color: #ff0; color: #000;
 }
 
 /* CRIT/DOWN */
 .state2, .hstate1, .state2 a, .hstate2 a { 
-  background-color: #f00; color: #fff;
+    background-color: #f00; color: #fff;
 }
 
 /* UNKNOWN / UNREACH */
 .state3, .hstate2, .state3 a, .hstate2 a { 
-  background-color: #f80; color: #fff;
+    background-color: #f80; color: #fff;
 }
 
 /* PENDING */
 .statep, .hstatep, .statep a, .hstatep a { 
-  background-color: #888; color: #fff;
+    background-color: #888; color: #fff;
 }
 
 /* in DOWNTIME */
 .stated, .hstated, .stated a, .hstated a { 
-  background-color: #0af; color: #fff;
+    background-color: #0af; color: #fff;
 }
 
 /* *some* problem */
@@ -903,35 +824,25 @@ td.icons {
     white-space: nowrap;
 }
 td.icons img {
- height: 20px;
- margin-right: 3px;
-}
-
-td.icon {
-    width: 20px;
-    background-image: url("images/whiteglass.png");
-}
-td.icon img {
-  border-style: none;
+    height: 20px;
+    margin-right: 3px;
 }
 
 img.icon {
    width: 20px;
-   border-style: none;
 }
 
 /* Styles used by specific painters. These should be modularized later ... */
 div.objectlist div {
-  float: left;
-  padding: 1px 3px;
-  border-style: solid;
-  border-width: 1px;
-  margin: 1px;
+    float: left;
+    padding: 1px 3px;
+    border-style: solid;
+    border-width: 1px;
+    margin: 1px;
 }
 
-
-table.services tr.data td.pnpgraph {
-   padding: 0px;
+table.data tr.data td.pnpgraph {
+   padding: 0;
    border-bottom: 1px solid #666;
    border-right: 1px solid #666;
 }
@@ -952,17 +863,13 @@ div.tableshadow {
     border-style: none;
 }
 
-div.tableshadow.left {
-    /* margin-left: 5px; */
-}
-    
 td.shadowtop, td.shadowbottom {
     background-image: url("images/tableshadow.png");
     background-repeat: repeat;
     height: 1px;
     border-style: none;
     border-width: 0px;
-    padding: 0px;
+    padding: 0;
 }
 td.shadowleft, td.shadowright {
     background-image: url("images/tableshadow.png");
@@ -970,21 +877,18 @@ td.shadowleft, td.shadowright {
     width: 1px;
     border-style: none;
     border-width: 0px;
-    padding: 0px;
+    padding: 0;
 }
 td.shadowright {
   width: 1px;
 }
 
-td.tablegap {
-    /* background-color: yellow; */
-}
 td.fillup {
     background-color: #eee;
 }
 td.groupheader {
-    margin: 0px;
-    padding: 0px;
+    margin: 0;
+    padding: 0;
 }
 
 /* boxed layout */
@@ -992,16 +896,13 @@ table.boxlayout {
     border-spacing: 0px;
 }
 table.boxlayout td.boxcolumn {
-    vertical-align: top;
     padding-right: 20px;
 }
 
 
 .inputerror input { 
-  background-color: #f84;
+    background-color: #f84;
 }
-
-/* table layout */
 
 /* tiled layout */
 table.tiled td {
@@ -1009,22 +910,22 @@ table.tiled td {
 }
 
 .tile {
-   width: 160px;
-   border: 1px solid black;
-   float: left;
-   -moz-border-radius: 4px;
-   margin-right: 3px;
-   margin-bottom: 3px;
-   border-right: 2px solid black;
-   border-bottom: 2px solid black;
+    width: 160px;
+    border: 1px solid #000;
+    float: left;
+    -moz-border-radius: 4px;
+    margin-right: 3px;
+    margin-bottom: 3px;
+    border-right: 2px solid #000;
+    border-bottom: 2px solid #000;
 }
 
 .tile table {
-height: 70px;
+    height: 70px;
 }
 .tile td {
     border-style: none;
-   font-size: 7pt;
+    font-size: 7pt;
 }
 .tile.sstate0, .tile.hhstate0 {
     background-color: #afa;
@@ -1040,7 +941,7 @@ height: 70px;
 }
 
 .tile table {
-width: 100%;
+    width: 100%;
 }
 .tile td.tl, .tile td.bl {
     text-align: left;
@@ -1059,7 +960,49 @@ width: 100%;
 }
 
 .tile td.bl, .tile td.br, .tile td.tl, .tile td.tr {
-height: 20px;
+    height: 20px;
+}
+
+/*
+ LAYOUT: dataset
+ The dataset layout is used to display detailed information
+ about a single host/service on a page. e.g. the "host defails"
+ page uses thislayout
+*/
+table.dataset {
+    border-spacing: 1px;
+    padding: 0;
+    border-collapse: collapse;
+    empty-cells: show;
+    width: 100%;
+}
+
+table.dataset tr.data {
+    background-color: #eee;
+}
+
+table.dataset tr.gap {
+    background-color: transparent;
+}
+
+table.dataset td {
+    padding-bottom: 4px;
+    padding: 1px 10px 5px 10px;
+    text-align: left;
+    vertical-align: middle;
+    border: 1px solid #bbb;
+}
+table.dataset td.left {
+    padding-right: 10px;
+    color: #fff;
+    background-color: #888;
+    width: 10%;
+    white-space: nowrap;
+}
+table.dataset td.gap {
+    background-color: transparent;
+    border-left-style: none;
+    border-right-style: none;
 }
 
 /* forms in general */
@@ -1070,10 +1013,10 @@ h2.formcaption {
 }
 
 table.form {
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
     border-collapse: collapse;
     empty-cells: show;
-    background-image: url("images/form_background.png"); 
-    background-repeat: repeat;
     border-spacing: 0px;
     margin: 10px;
 }
@@ -1083,11 +1026,7 @@ table.form textarea {
     height: 4em;
 }
 
-table.form input { 
-    font-size: 9pt;
-}
 table.form td { 
-    vertical-align: top;
     padding: 4px 10px;
 }
 table.form th {
@@ -1097,64 +1036,50 @@ table.form th {
     padding: 4px 4px;
 }
 
-table.form b.toggleheader {
+table.form img.toggleheader {
+    width: 20px;
+    height: 20px;
     cursor: auto;
-    background-image: none;
+    padding-right: 5px;
+    vertical-align:middle;
 }
-table.form b.toggleheader.hover {
+table.form img.toggleheader.hover {
     cursor: pointer;
-    color: white;
-    /* background-image: url("images/form_background.png"); */
 }
 
 table.form td.legend { 
-    vertical-align: top;
     color: #274750;
-    border: 1px solid white;
+    border: 1px solid #fff;
     border-right-style: none;
-    /* white-space: nowrap; */
     height: 32px;
-    vertical-align: top;
     padding-top: 10px;
 }
 table.form td.legend.border { 
     border-right-style: solid;
 }
 table.form td.hilite {
-    background-image: url("images/form_background.png"); 
+    background-image: url("images/form_background.png");
     background-repeat: repeat;
     margin: 10px;
 }
 
 table.form td.legend.button { 
     text-align: right;
-    border-right: 1px solid white;
+    border-right: 1px solid #fff;
 }
 
 table.form td.content { 
     padding-right: 2ex;
-    border: 1px solid white;
+    border: 1px solid #fff;
     border-left-style: none;
-    vertical-align: top;
 }
-
-table#displayoptions td.content { 
-  background-image: url("images/background-brown.jpg");
-  background-repeat: repeat;
-  background-position: center;
-}
-table#displayoptions td.legend, 
-input.tab#displayoptions, 
-input.tabactive#displayoptions    { background-color: #f84; }
-
 
 input.tab#results, input.tabactive#results { background-color: #fe6; }
-
 
 /* input elements in forms */
 
 table.form input.text { 
-  width: 100%;
+    width: 100%;
 }
 
 table.form input.number { 
@@ -1162,151 +1087,110 @@ table.form input.number {
 }
 
 div.textinputlegend { 
-  font-size: 80%;
+    font-size: 80%;
 }
 
 input.date, input.time { 
-  padding: 0ex 0.5ex;
-  font-family: monospace;
+    padding: 0ex 0.5ex;
+    font-family: monospace;
 }
 
 /* actions */
 div.really, div.success, div.error, div.message, div.warning { 
-  margin: 2em 2em 2em 2em;
-  -moz-border-radius: 1ex;
-  padding: 1em 2em;
-  border-width: 2px;
-  border-style: solid;
+    margin: 2em 2em 2em 2em;
+    -moz-border-radius: 1ex;
+    padding: 1em 2em;
+    border-width: 2px;
+    border-style: solid;
 }
 
 div.really h1, div.success h1, div.error h1, div.message h1, div.warning h1 { 
      font-size: 12pt;
      font-weight: bold;
      margin-bottom: 5px;
-     color: black;
+     color: #000;
      margin-left: 0px;
 }
 
 div.really { 
-  background-color: #f88;
-  border-color: #800;
+    background-color: #f88;
+    border-color: #800;
 }
 
 div.really input { 
-  font-weight: bold;
-  margin-top: 1em;
-  padding: 0.5ex 2em;
+    font-weight: bold;
+    margin-top: 1em;
+    padding: 0.5ex 2em;
 }
 
 div.success { 
-  background-color: #8f8;
-  border-color: #080;
+    background-color: #8f8;
+    border-color: #080;
 }
 div.message {
-  background-color: #8cf;
-  border-color: #048;
+    background-color: #8cf;
+    border-color: #048;
 }
 
 div.error { 
-  background-color: #f84;
-  border-color: #e40;
+    background-color: #f84;
+    border-color: #e40;
 }
 
 div.warning { 
-  background-color: #ff4;
-  border-color: #fc0;
+    background-color: #ff4;
+    border-color: #fc0;
 }
-/* -------------------------------------------------------------- */
 
+/*
+ Sites can be represented by small icons with a size of 24x24 px.
+ This is the styling for these icons.
+ */
 img.siteicon {
-width: 24px;
-height: 24px;
-border: 1px solid #666;
-}
-
-/* ---- site overview ------------------------------------------- */
-table.siteoverview {
-}
-
-table.siteoverview td {
-    vertical-align: bottom;
-    padding-bottom: 13px;
-}
-
-table.siteoverview td.icon img {
-    margin-right: 10px;
+    width: 24px;
+    height: 24px;
     border: 1px solid #666;
-    margin-left: 20px;
-}
-
-table.siteoverview table {
-    margin-top: 3px;
-    border-collapse: collapse;
-    empty-cells: show;
-    border: 3px solid white;
-    height: 64px;
-}
-
-table.siteoverview table td {
-    border: 1px solid #666;
-    text-align: center;
-    width: 3em;
-    padding-bottom: 0px;
-}
-
-table.siteoverview table th {
-    background-color: #ddd;
-    text-align: left;
-    border-right: 1px solid #666;
-    padding-left: 0.5ex;
-}
-table.siteoverview table td.legend {
-    background-color: #ddd;
-    text-align: left;
-}
-table.siteoverview table td.zero {
-    background-color: #cbc;
 }
 
 /* ---- logwatch ------------------------------------------------ */
-div#logwatch {
+#logwatch {
     margin-top: 1ex;
 }
 
-div#logwatch div.chunk {
-  border-width: 1px;
-  border-style: solid;
-  margin-bottom: 1em;
-  padding: 0.5ex;
-  border-color: #bbb #555 #222 #bbb;
-  background-color: white;
+#logwatch div.chunk {
+    border-width: 1px;
+    border-style: solid;
+    margin-bottom: 1em;
+    padding: 0.5ex;
+    border-color: #bbb #555 #222 #bbb;
+    background-color: #fff;
 }
 
-div#logwatch a {
-  font-family: sans-serif;
-  font-weight: bold;
-  width: 4em;
-  color: #008;
+#logwatch a {
+    font-family: sans-serif;
+    font-weight: bold;
+    width: 4em;
+    color: #008;
 }
 
-div#logwatch a b {
-  color: #08f;
+#logwatch a b {
+    color: #08f;
 }
 
-div#logwatch a.ack {
-  background-color: #33c;
-  color: #fff;
-  text-decoration: none;
-  border-width: 2px;
-  border-style: solid;
-  border-color: #ccc #888 #333 #777;
-  padding: 0.3ex 1ex;
-  -moz-border-radius: 6px;
+#logwatch a.ack {
+    background-color: #33c;
+    color: #fff;
+    text-decoration: none;
+    border-width: 2px;
+    border-style: solid;
+    border-color: #ccc #888 #333 #777;
+    padding: 0.3ex 1ex;
+    -moz-border-radius: 6px;
 }
 
-div#logwatch p {
+#logwatch p {
     font-family: courier, monospace;
-    margin: 0px;
+    margin: 0;
     padding: 0.2ex 0.5ex;
     border-left: 1px solid #888;
     border-right: 1px solid #888;
@@ -1316,125 +1200,125 @@ div#logwatch p {
     padding-left: 1.5ex;
 }
 
-
-div#logwatch .WARN {
+#logwatch .WARN {
     background-color: #ff8;
     border-bottom: 1px solid #cc0;
 }
 
-div#logwatch .CRIT {
+#logwatch .CRIT {
     background-color: #f88;
     border-bottom: 1px solid #c00;
 }
 
-div#logwatch td.WARN, td.CRIT {
-  width: 5em;
-  text-align: center;
-  padding: 0em 0.5ex;
-  margin: 0px;
-  border: 1px solid black;
-  font-weight: bold;
+#logwatch td.WARN, td.CRIT {
+    width: 5em;
+    text-align: center;
+    padding: 0em 0.5ex;
+    margin: 0;
+    border: 1px solid #000;
+    font-weight: bold;
 }
 
-div#logwatch td.WARN {
-  background-color: #ff0;
+#logwatch td.WARN {
+    background-color: #ff0;
 }
 
-div#logwatch td.CRIT {
-  background-color: #f00;
-  color: white;
+#logwatch td.CRIT {
+    background-color: #f00;
+    color: #fff;
 }
 
-div#logwatch table.section {
-  margin: 0ex 0ex 0.8ex 0ex;
-  width: 100%
+#logwatch table.section {
+    margin: 0ex 0ex 0.8ex 0ex;
+    width: 100%
 }
 
-div#logwatch .date {
-  font-weight: normal;
-  padding-left: 1ex;
-  color: #666;
+#logwatch .date {
+    font-weight: normal;
+    padding-left: 1ex;
+    color: #666;
 }
 
-div#logwatch td.button {
-  text-align: right;
+#logwatch td.button {
+    text-align: right;
 }
 
-div#logwatch td.button a {
-  background-color: #cca;
-  color: #000;
-  text-decoration: none;
-  font-weight: normal;
-  border-width: 1px;
-  border-style: solid;
-  border-color: #ddd #888 #333 #ddd;
-  padding: 0.1ex 1ex;
-  -moz-border-radius: 4px;
+#logwatch td.button a {
+    background-color: #cca;
+    color: #000;
+    text-decoration: none;
+    font-weight: normal;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #ddd #888 #333 #ddd;
+    padding: 0.1ex 1ex;
+    -moz-border-radius: 4px;
 }
 
-div#logwatch td.button a:active {
+#logwatch td.button a:active {
   background-color: #aa8;
 }
 
 /* --- navigation tabs in logwatch ------------------ */
 
-div#logwatch a.tab, div#logwatch a.tabactive {
-  -moz-border-radius: 12px 12px 0px 0px;
-	display: block;
-  margin-bottom: 0px;
-  color: #000;
-  padding: 0.4ex 1em;
-  border-style: none;
-  vertical-align: top;
-  margin-right: 0.3ex;
-	background-color: #fc0;
-	border-bottom: 1px solid black;
-	text-decoration: none;
-	font-size: 100%;
-	width: 140px;
+#logwatch a.tab, #logwatch a.tabactive {
+    -moz-border-radius: 12px 12px 0px 0px;
+    display: block;
+    margin-bottom: 0px;
+    color: #000;
+    padding: 0.4ex 1em;
+    border-style: none;
+    vertical-align: top;
+    margin-right: 0.3ex;
+    background-color: #fc0;
+    border-bottom: 1px solid #000;
+    text-decoration: none;
+    width: 140px;
 }
 
-div#logwatch a.tab:hover {
-  padding-bottom: 10px;
+#logwatch a.tab:hover {
+    padding-bottom: 10px;
 }
 
-div#logwatch a.tabactive {
-  padding-bottom: 6px;
-  border-bottom-style: none;
+#logwatch a.tabactive {
+    padding-bottom: 6px;
+    border-bottom-style: none;
 }
 
-/* edit permissions */
+/*
+  ____                     _         _                 
+ |  _ \ ___ _ __ _ __ ___ (_)___ ___(_) ___  _ __  ___ 
+ | |_) / _ \ '__| '_ ` _ \| / __/ __| |/ _ \| '_ \/ __|
+ |  __/  __/ |  | | | | | | \__ \__ \ | (_) | | | \__ \
+ |_|   \___|_|  |_| |_| |_|_|___/___/_|\___/|_| |_|___/
+
+ These styles are used on the "Edit Permissions" page
+*/
 table.permissions {
-  border-collapse: collapse;
-  empty-cells: show;
-  border-spacing: 0px;
+    border-collapse: collapse;
+    empty-cells: show;
+    border-spacing: 0px;
 }
 
 table.permissions td, table.permissions th {
-    border: 1px solid white;
+    border: 1px solid #fff;
     padding: 3px 0.5ex;
-    vertical-align: top;
 }
 table.permissions th {
     text-align: left;
     background-color: #98a;
-    color: white;
-}
-
-table.permissions td i {
-    font-size: 9pt;
+    color: #fff;
 }
 
 table.permissions td.legend {
     background-color: #769;
-    color: white;
+    color: #fff;
 }
 table.permissions td.legend.sub {
     border-top-style: none;
     border-bottom-style: none;
     background-color: #87a;
     padding-left: 1em;
-    font-size: 9pt;
     padding-top: 2px;
     padding-bottom: 0px;
 }
@@ -1454,21 +1338,28 @@ table.permissions td.content.guest {
     background-color: #d86;
 }
 
-/* view editor */
+/*
+ __     ___               _____    _ _ _             
+ \ \   / (_) _____      _| ____|__| (_) |_ ___  _ __ 
+  \ \ / /| |/ _ \ \ /\ / /  _| / _` | | __/ _ \| '__|
+   \ V / | |  __/\ V  V /| |__| (_| | | || (_) | |   
+    \_/  |_|\___| \_/\_/ |_____\__,_|_|\__\___/|_|   
+
+ The view editor is a HTML form to modify the contents of the single views.
+*/
+
 table.view {
     width: 100%;
     border-collapse: collapse;
     empty-cells: show;
 }
 td.legend, td.content {
-   border: 1px solid #884;
-   padding: 2px 0.5ex;
-    vertical-align: top;
+    border: 1px solid #884;
+    padding: 2px 0.5ex;
 }
 td.legend {
     padding-top: 3px;
     color: #884;
-    vertical-align: top;
     white-space: nowrap; 
     width: 150px;
 }
@@ -1498,90 +1389,101 @@ div.filtercomment {
     padding-bottom: 6px;
 }
 
-
-table.filters td
-{
-   border-style: none;
-   border-bottom: 1px dotted #fff;
-   vertical-align: middle;
-   height: 36px;
-padding: 4px 8px;
+table.filters td {
+    border-style: none;
+    border-bottom: 1px dotted #fff;
+    vertical-align: middle;
+    height: 36px;
+    padding: 4px 8px;
 }
 
-
-table.filters th
-{
+table.filters th {
     text-align: left;
     padding-bottom: 3px;
     padding-left: 8px;
     font-weight: normal;
-    color: white;
+    color: #fff;
     border-bottom: 1px solid #fff;
 }
 
-table.filters td.usageshow
-{
-    background-color: #ff0;
-}
-table.filters td.usagehide
-{
-    background-color: #f0f;
-}
-table.filters td.usagehard
-{
-    background-color: #89f;
-}
-table.filters td.usageoff
-{
+table.filters td.usageshow { background-color: #ff0; }
+table.filters td.usagehide { background-color: #f0f; }
+table.filters td.usagehard { background-color: #89f; }
+
+table.filters td.usageoff {
     background-image: url("images/tableshadow.png");
     background-repeat: repeat;
 }
 
-table.filters td.usageshow select
-{
-    background-color: #cc0;
-}
-table.filters td.usagehide select
-{
-    background-color: #f6f;
-}
-table.filters td.usagehard select
-{
-    background-color: #67c;
-}
+table.filters td.usageshow select { background-color: #cc0; }
+table.filters td.usagehide select { background-color: #f6f; }
+table.filters td.usagehard select { background-color: #67c; }
 
-table.filters td.widgetshow
-{
-    background-image: url("images/background-gold.jpg");
-    background-repeat: repeat;
-    background-position: center;
-    background-color: transparent;
-    color: #000;
+table.filters td.widgetshow {
+    background-color: #FAF995;
 }
-table.filters td.widgetoff
-{
+table.filters td.widgetoff {
     background-image: none;
     color: #aa6;
 }
-table.filters td.widgethard
-{
+table.filters td.widgethard {
     background-image: none;
     background-color: #abf;
     color: #000;
 }
-table.filters td.widgethide
-{
+table.filters td.widgethide {
     background-image: none;
     background-color: #e8e;
     color: #000;
 }
 
 table.filters td.title {
-    /* border-style: none; */
     padding-right: 1em;
 }
 
-/* TABLE OF ALL VIEWS */
+/* The column editor is part of the view editor */
+div.columneditor {
+    margin-bottom: 6px;
+}
+
+div.columneditor table {
+    padding: 0;
+    margin: 0;
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+    border: 1px solid #fff;
+    -moz-border-radius: 5px;
+    width: 100%;
+}
+
+div.columneditor td.cebuttons {
+    width: 33px;
+}
+div.columneditor td.celeft {
+    width: 60px;
+}
+
+div.columneditor td {
+    padding: 0 4px;
+}
+
+div.columneditor select {
+    width: 100%;
+}
+
+div.columneditor td, div.columneditor select {
+    font-size: 0.9em;
+}
+
+/*
+ __     ___               _     _     _   
+ \ \   / (_) _____      _| |   (_)___| |_ 
+  \ \ / /| |/ _ \ \ /\ / / |   | / __| __|
+   \ V / | |  __/\ V  V /| |___| \__ \ |_ 
+    \_/  |_|\___| \_/\_/ |_____|_|___/\__|
+
+ Table to list all available views
+*/
 table.views {
     border-collapse: collapse;
     empty-cells: show;
@@ -1593,58 +1495,25 @@ table.views td, table.views th{
     padding: 2px 1ex;
 }
 
-/* Column editor */
-div.columneditor {
-    padding: 0px;
-    margin-bottom: 6px;
-}
-
-div.columneditor table {
-    padding: 0px;
-    margin: 0px;
-    background-image: url("images/form_background.png");
-    background-repeat: repeat;
-    border: 1px solid white;
-    -moz-border-radius: 5px;
-    width: 100%;
-}
-
-div.columneditor td.celeft {
-    width: 60px;
-}
-
-div.columneditor td {
-    padding: 0px 4px;
-}
-
-div.columneditor select {
-    width: 100%;
-}
-
-div.columneditor td, div.columneditor select {
-    font-size: 0.9em;
-}
-
 table.views td {
     height: 25px;
     padding-top: 3px;
-    color: white;
+    color: #fff;
 }
 
 table.views th {
     background-color: #709aa5;
-    color: white;
+    color: #fff;
 }
 
 table.views td.legend {
     background-color: #8eaeb8;
-    color: white;
-
+    color: #fff;
 }
 
 table.views td.content {
     background-color: #9ebec8;
-    color: white;
+    color: #fff;
 }
 
 table.views td.edit {
@@ -1670,52 +1539,23 @@ a.button {
     height: 24px;
     -moz-border-radius: 4px;
     margin: 2px;
-    font-size: 9pt;
 }
 
 
-/* layout dataset */
-table.dataset {
-    border-spacing: 1px;
-    padding: 0px;
-    border-collapse: collapse;
-    empty-cells: show;
-    width: 100%;
-}
-
-table.dataset tr.data {
-    background-color: #eee;
-}
-table.dataset tr.gap {
-    background-color: transparent;
-}
-
-table.dataset td {
-    padding-bottom: 4px;
-    padding: 1px 10px 5px 10px;
-    text-align: left;
-    vertical-align: middle;
-    border: 1px solid #bbb;
-}
-table.dataset td.left {
-    padding-right: 10px;
-    color: white;
-    background-color: #888;
-    width: 10%;
-    white-space: nowrap;
-    vertical-align: top;
-}
-table.dataset td.gap {
-    background-color: transparent;
-    border-left-style: none;
-    border-right-style: none;
-}
-
-/* page for adding snapins */
+/*
+    _       _     _ ____                    _           
+   / \   __| | __| / ___| _ __   __ _ _ __ (_)_ __  ___ 
+  / _ \ / _` |/ _` \___ \| '_ \ / _` | '_ \| | '_ \/ __|
+ / ___ \ (_| | (_| |___) | | | | (_| | |_) | | | | \__ \
+/_/   \_\__,_|\__,_|____/|_| |_|\__,_| .__/|_|_| |_|___/
+                                     |_|                
+The page to add snapins to the sidebar - linked from the
+footer of the sidebar
+*/
 
 table.add_snapin {
-    margin: 0px;
-    padding: 0px;
+    margin: 0;
+    padding: 0;
     border-spacing: 5px;
     empty-cells: hide;
     width: 100%;
@@ -1732,10 +1572,10 @@ table.add_snapin td {
     color: #369;
 }
 table.add_snapin b {
-    color: black;
+    color: #000;
 }
 table.add_snapin i {
-    color: white;
+    color: #fff;
 }
 
 /*
@@ -1746,13 +1586,9 @@ table.add_snapin i {
        \_/\_/_/   \_\_| \___/ 
                               
 */
-div.wato {
-    padding: 0px;
-    margin: 0px;
-}
 
 .wato table.auditlog {
-    background-image: url("images/form_background.png"); 
+    background-image: url("images/form_background.png");
     background-repeat: repeat;
     border-collapse: collapse;
     margin-top: 3px;
@@ -1765,7 +1601,7 @@ div.wato {
 }
 
 .wato table.auditlog td { 
-    border: 1px solid white;
+    border: 1px solid #fff;
     padding: 2px 6px;
 }
 
@@ -1787,13 +1623,14 @@ div.wato {
 }
 
 /* 
-        _                                    _   _             
-       / \   __ _  __ _ _ __ ___  __ _  __ _| |_(_) ___  _ __  
-      / _ \ / _` |/ _` | '__/ _ \/ _` |/ _` | __| |/ _ \| '_ \ 
-     / ___ \ (_| | (_| | | |  __/ (_| | (_| | |_| | (_) | | | |
-    /_/   \_\__, |\__, |_|  \___|\__, |\__,_|\__|_|\___/|_| |_|
-            |___/ |___/          |___/                         
-    
+      _                                    _   _             
+     / \   __ _  __ _ _ __ ___  __ _  __ _| |_(_) ___  _ __  
+    / _ \ / _` |/ _` | '__/ _ \/ _` |/ _` | __| |/ _ \| '_ \ 
+   / ___ \ (_| | (_| | | |  __/ (_| | (_| | |_| | (_) | | | |
+  /_/   \_\__, |\__, |_|  \___|\__, |\__,_|\__|_|\___/|_| |_|
+           |___/ |___/          |___/                         
+ 
+ The new host/service aggregation view as part of the BI extension
 */
 
 .aggrtree ul.subtree {
@@ -1843,9 +1680,8 @@ tr.even0 .aggrtree ul.subtree {
 .aggrtree img.assumption {
     width: 13px;
     height: 13px;
-    margin: 0px;
+    margin: 0;
     margin-right: 0px;
-    border-style: none;
     vertical-align: middle;
 }
 
@@ -1855,7 +1691,7 @@ tr.even0 .aggrtree ul.subtree {
 }
 
 .state.assumed {
-    background-image: url("images/assumption_background.png");
+    background-image: url("images/assume_bg.png");
     background-repeat: repeat;
 }
 
@@ -1865,10 +1701,6 @@ tr.even0 .aggrtree ul.subtree {
     margin-right: 2px;
     margin-left: 0px;
     vertical-align:middle;
-}
-
-table.services td.aggrtree {
-    width: 100%;
 }
 
 table.aggrtree {

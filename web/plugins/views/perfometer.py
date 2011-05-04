@@ -160,11 +160,15 @@ def paint_perfometer(row):
 
     try:
         title, h = perf_painter(row, check_command, perf_data)
-        content = "<div class=title>%s</div>%s" % (title, h)
+        content =  '<div class=content>%s</div>' % h
+        content += '<div class=title>%s</div>' % title
+        content += '<img class=glass src="images/perfometer-bg.png">'
+
         if 'X' in html.display_options:
             return "perfometer", ('<a href="%s">%s</a>' % (pnp_url(row, "service"), content))
         else:
             return "perfometer", content
+
 
     except Exception, e:
         if config.debug:

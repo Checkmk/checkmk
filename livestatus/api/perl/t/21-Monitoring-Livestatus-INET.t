@@ -5,7 +5,7 @@
 use strict;
 use Test::More tests => 3;
 use IO::Socket::INET;
-BEGIN { use_ok('Nagios::MKLivestatus::INET') };
+BEGIN { use_ok('Monitoring::Livestatus::INET') };
 
 #########################
 # create a tmp listener
@@ -14,17 +14,17 @@ my $listener = IO::Socket::INET->new(
                                   ) or die("failed to open port as test listener: $!");
 #########################
 # create object with single arg
-my $nl = Nagios::MKLivestatus::INET->new( $server );
-isa_ok($nl, 'Nagios::MKLivestatus', 'Nagios::MKLivestatus::INET->new()');
+my $ml = Monitoring::Livestatus::INET->new( $server );
+isa_ok($ml, 'Monitoring::Livestatus', 'Monitoring::Livestatus::INET->new()');
 
 #########################
 # create object with hash args
 my $line_seperator        = 10;
 my $column_seperator      = 0;
-$nl = Nagios::MKLivestatus::INET->new(
+$ml = Monitoring::Livestatus::INET->new(
                                     verbose             => 0,
                                     server              => $server,
                                     line_seperator      => $line_seperator,
                                     column_seperator    => $column_seperator,
                                 );
-isa_ok($nl, 'Nagios::MKLivestatus', 'Nagios::MKLivestatus::INET->new(%args)');
+isa_ok($ml, 'Monitoring::Livestatus', 'Monitoring::Livestatus::INET->new(%args)');

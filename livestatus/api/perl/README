@@ -1,8 +1,8 @@
-Nagios-MKLivestatus version 0.15
-==============================
+Monitoring-Livestatus
+=====================
 
-    Nagios::MKLivestatus can be used to access the data of the check_mk
-    Livestatus Addon for Nagios.
+    Monitoring::Livestatus can be used to access the data of the check_mk
+    Livestatus Addon for Nagios and Icinga.
 
 INSTALLATION
 
@@ -18,8 +18,8 @@ DEPENDENCIES
     This module requires no other modules.
 
 SYNOPSIS
-    my $nl = Nagios::MKLivestatus->new( socket => '/var/lib/nagios3/rw/livestatus.sock' );
-    my $hosts = $nl->selectall_arrayref("GET hosts");
+    my $ml = Monitoring::Livestatus->new( socket => '/var/lib/livestatus/livestatus.sock' );
+    my $hosts = $ml->selectall_arrayref("GET hosts");
 
 AUTHOR
     Sven Nierlein <nierlein@cpan.org>

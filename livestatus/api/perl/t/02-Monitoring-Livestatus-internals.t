@@ -3,11 +3,20 @@
 #########################
 
 use strict;
-use Test::More tests => 14;
+use Test::More;
 use File::Temp;
 use Data::Dumper;
 use IO::Socket::UNIX qw( SOCK_STREAM SOMAXCONN );
-use_ok('Nagios::MKLivestatus');
+use_ok('Monitoring::Livestatus');
+
+BEGIN {
+    if( $^O eq 'MSWin32' ) {
+        plan skip_all => 'no sockets on windows';
+    }
+    else {
+        plan tests => 14;
+    }
+}
 
 #########################
 # get a temp file from File::Temp and replace it with our socket
@@ -22,22 +31,22 @@ my $listener = IO::Socket::UNIX->new(
 
 #########################
 # create object with single arg
-my $nl = Nagios::MKLivestatus->new( 'localhost:12345' );
-isa_ok($nl, 'Nagios::MKLivestatus', 'single args server');
-isa_ok($nl->{'CONNECTOR'}, 'Nagios::MKLivestatus::INET', 'single args server peer');
-is($nl->{'CONNECTOR'}->peer_name, 'localhost:12345', 'single args server peer name');
-is($nl->{'CONNECTOR'}->peer_addr, 'localhost:12345', 'single args server peer addr');
+my $ml = Monitoring::Livestatus->new( 'localhost:12345' );
+isa_ok($ml, 'Monitoring::Livestatus', 'single args server');
+isa_ok($ml->{'CONNECTOR'}, 'Monitoring::Livestatus::INET', 'single args server peer');
+is($ml->{'CONNECTOR'}->peer_name, 'localhost:12345', 'single args server peer name');
+is($ml->{'CONNECTOR'}->peer_addr, 'localhost:12345', 'single args server peer addr');
 
 #########################
 # create object with single arg
-$nl = Nagios::MKLivestatus->new( $socket_path );
-isa_ok($nl, 'Nagios::MKLivestatus', 'single args socket');
-isa_ok($nl->{'CONNECTOR'}, 'Nagios::MKLivestatus::UNIX', 'single args socket peer');
-is($nl->{'CONNECTOR'}->peer_name, $socket_path, 'single args socket peer name');
-is($nl->{'CONNECTOR'}->peer_addr, $socket_path, 'single args socket peer addr');
+$ml = Monitoring::Livestatus->new( $socket_path );
+isa_ok($ml, 'Monitoring::Livestatus', 'single args socket');
+isa_ok($ml->{'CONNECTOR'}, 'Monitoring::Livestatus::UNIX', 'single args socket peer');
+is($ml->{'CONNECTOR'}->peer_name, $socket_path, 'single args socket peer name');
+is($ml->{'CONNECTOR'}->peer_addr, $socket_path, 'single args socket peer addr');
 
 my $header = "404          43\n";
-my($error,$error_msg) = $nl->_parse_header($header);
+my($error,$error_msg) = $ml->_parse_header($header);
 is($error, '404', 'error code 404');
 isnt($error_msg, undef, 'error code 404 message');
 
@@ -76,7 +85,7 @@ my @expected_keys1 = (
             'host_state != 0 && state = 3 && active_checks = 1',
             'state = 3 || active_checks = 1',
         );
-my @got_keys1 = @{$nl->_extract_keys_from_stats_statement($stats_query1)};
+my @got_keys1 = @{$ml->_extract_keys_from_stats_statement($stats_query1)};
 is_deeply(\@got_keys1, \@expected_keys1, 'statsAnd, statsOr query keys')
     or ( diag('got keys: '.Dumper(\@got_keys1)) );
 
@@ -116,7 +125,7 @@ my @expected_keys2 = (
             'all_unknown_active_on_down_hosts',
             'all_active_or_unknown',
         );
-my @got_keys2 = @{$nl->_extract_keys_from_stats_statement($stats_query2)};
+my @got_keys2 = @{$ml->_extract_keys_from_stats_statement($stats_query2)};
 is_deeply(\@got_keys2, \@expected_keys2, 'stats query keys2')
     or ( diag('got keys: '.Dumper(\@got_keys2)) );
 
@@ -131,7 +140,7 @@ my @expected_keys3 = (
             'name',
             'state',
         );
-my @got_keys3 = @{$nl->_extract_keys_from_columns_header($normal_query1)};
+my @got_keys3 = @{$ml->_extract_keys_from_columns_header($normal_query1)};
 is_deeply(\@got_keys3, \@expected_keys3, 'normal query keys')
     or ( diag('got keys: '.Dumper(\@got_keys3)) );
 

@@ -55,7 +55,7 @@ use Getopt::Long;
 use Pod::Usage;
 use lib 'lib';
 use lib '../lib';
-use Nagios::MKLivestatus;
+use Monitoring::Livestatus;
 
 $Data::Dumper::Sortkeys = 1;
 
@@ -87,7 +87,7 @@ if(!defined $opt_f) {
 }
 
 #########################################################################
-my $nl = Nagios::MKLivestatus->new( peer => $opt_f, verbose => $opt_v );
+my $nl = Monitoring::Livestatus->new( peer => $opt_f, verbose => $opt_v );
 
 #########################################################################
 #my $hosts = $nl->selectall_hashref('GET hosts', 'name');

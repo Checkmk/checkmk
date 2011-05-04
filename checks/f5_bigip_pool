@@ -50,9 +50,9 @@ def check_f5_bigip_pool(item, _no_params, info):
 	        return (0, "OK - all members online")
             elif pool_act_members > 1:
                 return (1, "WARN - only %i of %i pool members are up" % (pool_act_members, pool_def_members))
-            elif pool_members == 1:
+            elif pool_act_members == 1:
 		return (2, "CRIT - only 1 pool member left")
-            elif pool_members == 0:
+            elif pool_act_members == 0:
                 return (2, "CRIT - no pool members left")
             else:
                 return (3, "UNKNOWN output for pool %s" % item)

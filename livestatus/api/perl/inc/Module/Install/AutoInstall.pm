@@ -6,7 +6,7 @@ use Module::Install::Base ();
 
 use vars qw{$VERSION @ISA $ISCORE};
 BEGIN {
-	$VERSION = '0.91';
+	$VERSION = '1.00';
 	@ISA     = 'Module::Install::Base';
 	$ISCORE  = 1;
 }
@@ -37,11 +37,32 @@ sub auto_install {
     $self->include('Module::AutoInstall');
     require Module::AutoInstall;
 
-    Module::AutoInstall->import(
+    my @features_require = Module::AutoInstall->import(
         (@config ? (-config => \@config) : ()),
         (@core   ? (-core   => \@core)   : ()),
         $self->features,
     );
+
+    my %seen;
+    my @requires = map @$_, map @$_, grep ref, $self->requires;
+    while (my ($mod, $ver) = splice(@requires, 0, 2)) {
+        $seen{$mod}{$ver}++;
+    }
+    my @build_requires = map @$_, map @$_, grep ref, $self->build_requires;
+    while (my ($mod, $ver) = splice(@build_requires, 0, 2)) {
+        $seen{$mod}{$ver}++;
+    }
+    my @configure_requires = map @$_, map @$_, grep ref, $self->configure_requires;
+    while (my ($mod, $ver) = splice(@configure_requires, 0, 2)) {
+        $seen{$mod}{$ver}++;
+    }
+
+    my @deduped;
+    while (my ($mod, $ver) = splice(@features_require, 0, 2)) {
+        push @deduped, $mod => $ver unless $seen{$mod}{$ver}++;
+    }
+
+    $self->requires(@deduped);
 
     $self->makemaker_args( Module::AutoInstall::_make_args() );
 

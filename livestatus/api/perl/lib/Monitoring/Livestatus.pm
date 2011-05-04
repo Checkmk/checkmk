@@ -1,4 +1,4 @@
-package Nagios::MKLivestatus;
+package Monitoring::Livestatus;
 
 use 5.006;
 use strict;
@@ -6,37 +6,39 @@ use warnings;
 use Data::Dumper;
 use Carp;
 use Digest::MD5 qw(md5_hex);
-use Nagios::MKLivestatus::INET;
-use Nagios::MKLivestatus::UNIX;
-use Nagios::MKLivestatus::MULTI;
+use Monitoring::Livestatus::INET;
+use Monitoring::Livestatus::UNIX;
+use Monitoring::Livestatus::MULTI;
+use Encode;
+use JSON::XS;
 
-our $VERSION = '0.28';
+our $VERSION = '0.74';
 
 
 =head1 NAME
 
-Nagios::MKLivestatus - access nagios runtime data from check_mk livestatus
-Nagios addon
+Monitoring::Livestatus - Perl API for check_mk livestatus to access runtime
+data from Nagios and Icinga
 
 =head1 SYNOPSIS
 
-    use Nagios::MKLivestatus;
-    my $nl = Nagios::MKLivestatus->new(
-      socket => '/var/lib/nagios3/rw/livestatus.sock'
+    use Monitoring::Livestatus;
+    my $ml = Monitoring::Livestatus->new(
+      socket => '/var/lib/livestatus/livestatus.sock'
     );
-    my $hosts = $nl->selectall_arrayref("GET hosts");
+    my $hosts = $ml->selectall_arrayref("GET hosts");
 
 =head1 DESCRIPTION
 
-This module connects via socket to the check_mk livestatus nagios addon. You
-first have to install and activate the livestatus addon in your nagios
-installation.
+This module connects via socket/tcp to the check_mk livestatus addon for Nagios
+and Icinga. You first have to install and activate the mklivestatus addon in your
+monitoring installation.
 
 =head1 CONSTRUCTOR
 
 =head2 new ( [ARGS] )
 
-Creates an C<Nagios::MKLivestatus> object. C<new> takes at least the
+Creates an C<Monitoring::Livestatus> object. C<new> takes at least the
 socketpath.  Arguments are in key-value pairs.
 See L<EXAMPLES> for more complex variants.
 
@@ -95,12 +97,23 @@ currently only querys without Columns: Header will result in a warning
 
 =item timeout
 
-set a general timeout. Used for connect and querys, Default 10sec
+set a general timeout. Used for connect and querys, no default
+
+=item query_timeout
+
+set a query timeout. Used for retrieving querys, Default 60sec
+
+=item connect_timeout
+
+set a connect timeout. Used for initial connections, default 5sec
 
 =item use_threads
 
 only used with multiple backend connections.
-Default is to use threads where available.
+Default is to don't threads where available. As threads in perl
+are causing problems with tied resultset and using more memory.
+Querys are usually faster without threads, except for very slow backends
+connections.
 
 =back
 
@@ -115,22 +128,29 @@ sub new {
     my(%options) = @_;
 
     my $self = {
-      "verbose"                   => 0,       # enable verbose output
-      "socket"                    => undef,   # use unix sockets
-      "server"                    => undef,   # use tcp connections
-      "peer"                      => undef,   # use for socket / server connections
-      "name"                      => undef,   # human readable name
-      "line_seperator"            => 10,      # defaults to newline
-      "column_seperator"          => 0,       # defaults to null byte
-      "list_seperator"            => 44,      # defaults to comma
-      "host_service_seperator"    => 124,     # defaults to pipe
-      "keepalive"                 => 0,       # enable keepalive?
-      "errors_are_fatal"          => 1,       # die on errors
-      "backend"                   => undef,   # should be keept undef, used internally
-      "timeout"                   => 10,      # timeout for tcp connections
-      "use_threads"               => undef,   # use threads, default is to use threads where available
-      "warnings"                  => 1,       # show warnings, for example on querys without Column: Header
-      "logger"                    => undef,   # logger object used for statistical informations and errors / warnings
+      "verbose"                     => 0,       # enable verbose output
+      "socket"                      => undef,   # use unix sockets
+      "server"                      => undef,   # use tcp connections
+      "peer"                        => undef,   # use for socket / server connections
+      "name"                        => undef,   # human readable name
+      "line_seperator"              => 10,      # defaults to newline
+      "column_seperator"            => 0,       # defaults to null byte
+      "list_seperator"              => 44,      # defaults to comma
+      "host_service_seperator"      => 124,     # defaults to pipe
+      "keepalive"                   => 0,       # enable keepalive?
+      "errors_are_fatal"            => 1,       # die on errors
+      "backend"                     => undef,   # should be keept undef, used internally
+      "timeout"                     => undef,   # timeout for tcp connections
+      "query_timeout"               => 60,      # query timeout for tcp connections
+      "connect_timeout"             => 5,       # connect timeout for tcp connections
+      "timeout"                     => undef,   # timeout for tcp connections
+      "use_threads"                 => undef,   # use threads, default is to use threads where available
+      "warnings"                    => 1,       # show warnings, for example on querys without Column: Header
+      "logger"                      => undef,   # logger object used for statistical informations and errors / warnings
+      "deepcopy"                    => undef,   # copy result set to avoid errors with tied structures
+      "disabled"                    => 0,       # if disabled, this peer will not receive any query
+      "retries_on_connection_error" => 3,       # retry x times to connect
+      "retry_interval"              => 1,       # retry after x seconds
     };
 
     for my $opt_key (keys %options) {
@@ -140,6 +160,17 @@ sub new {
         else {
             croak("unknown option: $opt_key");
         }
+    }
+
+    if($self->{'verbose'} and !defined $self->{'logger'}) {
+        croak('please specify a logger object when using verbose mode');
+        $self->{'verbose'} = 0;
+    }
+
+    # setting a general timeout?
+    if(defined $self->{'timeout'}) {
+        $self->{'query_timeout'}   = $self->{'timeout'};
+        $self->{'connect_timeout'} = $self->{'timeout'};
     }
 
     bless $self, $class;
@@ -157,16 +188,16 @@ sub new {
             $options{'name'} = $peer->{'name'};
             $options{'peer'} = $peer->{'peer'};
             if($peer->{'type'} eq 'UNIX') {
-                $self->{'CONNECTOR'} = new Nagios::MKLivestatus::UNIX(%options);
+                $self->{'CONNECTOR'} = new Monitoring::Livestatus::UNIX(%options);
             }
             elsif($peer->{'type'} eq 'INET') {
-                $self->{'CONNECTOR'} = new Nagios::MKLivestatus::INET(%options);
+                $self->{'CONNECTOR'} = new Monitoring::Livestatus::INET(%options);
             }
             $self->{'peer'} = $peer->{'peer'};
         }
         else {
             $options{'peer'} = $peers;
-            return new Nagios::MKLivestatus::MULTI(%options);
+            return new Monitoring::Livestatus::MULTI(%options);
         }
     }
 
@@ -178,7 +209,9 @@ sub new {
         $self->{'peer'} = $self->{'CONNECTOR'}->{'peer'};
     }
 
-    $self->{'logger'}->debug('initialized Nagios::MKLivestatus ('.$self->peer_name.')') if defined $self->{'logger'};
+    if($self->{'verbose'} and (!defined $self->{'backend'} or $self->{'backend'} ne 'Monitoring::Livestatus::MULTI')) {
+        $self->{'logger'}->debug('initialized Monitoring::Livestatus ('.$self->peer_name.')');
+    }
 
     return $self;
 }
@@ -201,6 +234,7 @@ Always returns true.
 sub do {
     my $self      = shift;
     my $statement = shift;
+    return if $self->{'disabled'};
     $self->_send($statement);
     return(1);
 }
@@ -216,17 +250,17 @@ sub do {
 
 Sends a query and returns an array reference of arrays
 
-    my $arr_refs = $nl->selectall_arrayref("GET hosts");
+    my $arr_refs = $ml->selectall_arrayref("GET hosts");
 
 to get an array of hash references do something like
 
-    my $hash_refs = $nl->selectall_arrayref(
+    my $hash_refs = $ml->selectall_arrayref(
       "GET hosts", { Slice => {} }
     );
 
 to get an array of hash references from the first 2 returned rows only
 
-    my $hash_refs = $nl->selectall_arrayref(
+    my $hash_refs = $ml->selectall_arrayref(
       "GET hosts", { Slice => {} }, 2
     );
 
@@ -234,7 +268,7 @@ use limit to limit the result to this number of rows
 
 column aliases can be defined with a rename hash
 
-    my $hash_refs = $nl->selectall_arrayref(
+    my $hash_refs = $ml->selectall_arrayref(
       "GET hosts", {
         Slice => {},
         rename => {
@@ -250,27 +284,15 @@ sub selectall_arrayref {
     my $statement = shift;
     my $opt       = shift;
     my $limit     = shift || 0;
+    return if $self->{'disabled'};
     my $result;
 
     # make opt hash keys lowercase
-    %{$opt} = map { lc $_ => $opt->{$_} } keys %{$opt};
+    $opt = $self->_lowercase_and_verify_options($opt);
 
-    if(defined $self->{'logger'}) {
-        my $d = Data::Dumper->new([$opt]);
-        $d->Indent(0);
-        my $optstring = $d->Dump;
-        $optstring =~ s/^\$VAR1\s+=\s+//mx;
-        $optstring =~ s/;$//mx;
-        my $cleanstatement = $statement;
-        $cleanstatement =~ s/\n/\\n/gmx;
-        $self->{'logger'}->debug('selectall_arrayref("'.$cleanstatement.'", '.$optstring.', '.$limit.')')
-    }
+    $self->_log_statement($statement, $opt, $limit) if $self->{'verbose'};
 
-    if(defined $opt->{'addpeer'} and $opt->{'addpeer'}) {
-        $result = $self->_send($statement, 1);
-    } else {
-        $result = $self->_send($statement);
-    }
+    $result = $self->_send($statement, $opt);
 
     if(!defined $result) {
         return unless $self->{'errors_are_fatal'};
@@ -296,9 +318,31 @@ sub selectall_arrayref {
                 }
                 $hash_ref->{$key} = $res->[$x];
             }
+            # add callbacks
+            if(exists $opt->{'callbacks'}) {
+                for my $key (keys %{$opt->{'callbacks'}}) {
+                    $hash_ref->{$key} = $opt->{'callbacks'}->{$key}->($hash_ref);
+                }
+            }
             push @hash_refs, $hash_ref;
         }
         return(\@hash_refs);
+    }
+    elsif(exists $opt->{'callbacks'}) {
+        for my $res (@{$result->{'result'}}) {
+            # add callbacks
+            if(exists $opt->{'callbacks'}) {
+                for my $key (keys %{$opt->{'callbacks'}}) {
+                    push @{$res}, $opt->{'callbacks'}->{$key}->($res);
+                }
+            }
+        }
+    }
+
+    if(exists $opt->{'callbacks'}) {
+        for my $key (keys %{$opt->{'callbacks'}}) {
+            push @{$result->{'keys'}}, $key;
+        }
     }
 
     return($result->{'result'});
@@ -314,7 +358,7 @@ sub selectall_arrayref {
 
 Sends a query and returns a hashref with the given key
 
-    my $hashrefs = $nl->selectall_hashref("GET hosts", "name");
+    my $hashrefs = $ml->selectall_hashref("GET hosts", "name");
 
 =cut
 
@@ -324,7 +368,9 @@ sub selectall_hashref {
     my $key_field = shift;
     my $opt       = shift;
 
-    $opt->{'Slice'} = 1 unless defined $opt->{'Slice'};
+    $opt = $self->_lowercase_and_verify_options($opt);
+
+    $opt->{'slice'} = 1;
 
     croak("key is required for selectall_hashref") if !defined $key_field;
 
@@ -355,7 +401,7 @@ sub selectall_hashref {
 
 Sends a query an returns an arrayref for the first columns
 
-    my $array_ref = $nl->selectcol_arrayref("GET hosts\nColumns: name");
+    my $array_ref = $ml->selectcol_arrayref("GET hosts\nColumns: name");
 
     $VAR1 = [
               'localhost',
@@ -366,7 +412,7 @@ returns an empty array if nothing was found
 
 to get a different column use this
 
-    my $array_ref = $nl->selectcol_arrayref(
+    my $array_ref = $ml->selectcol_arrayref(
        "GET hosts\nColumns: name contacts",
        { Columns => [2] }
     );
@@ -374,7 +420,7 @@ to get a different column use this
  you can link 2 columns in a hash result set
 
     my %hash = @{
-      $nl->selectcol_arrayref(
+      $ml->selectcol_arrayref(
         "GET hosts\nColumns: name contacts",
         { Columns => [1,2] }
       )
@@ -395,7 +441,7 @@ sub selectcol_arrayref {
     my $opt       = shift;
 
     # make opt hash keys lowercase
-    %{$opt} = map { lc $_ => $opt->{$_} } keys %{$opt};
+    $opt = $self->_lowercase_and_verify_options($opt);
 
     # if now colums are set, use just the first one
     if(!defined $opt->{'columns'} or ref $opt->{'columns'} ne 'ARRAY') {
@@ -423,7 +469,7 @@ sub selectcol_arrayref {
 
 Sends a query and returns an array for the first row
 
-    my @array = $nl->selectrow_array("GET hosts");
+    my @array = $ml->selectrow_array("GET hosts");
 
 returns undef if nothing was found
 
@@ -432,7 +478,9 @@ sub selectrow_array {
     my $self      = shift;
     my $statement = shift;
     my $opt       = shift;
-    $opt          = {} unless defined $opt;
+
+    # make opt hash keys lowercase
+    $opt = $self->_lowercase_and_verify_options($opt);
 
     my @result = @{$self->selectall_arrayref($statement, $opt, 1)};
     return @{$result[0]} if scalar @result > 0;
@@ -449,7 +497,7 @@ sub selectrow_array {
 
 Sends a query and returns an array reference for the first row
 
-    my $arrayref = $nl->selectrow_arrayref("GET hosts");
+    my $arrayref = $ml->selectrow_arrayref("GET hosts");
 
 returns undef if nothing was found
 
@@ -458,7 +506,9 @@ sub selectrow_arrayref {
     my $self      = shift;
     my $statement = shift;
     my $opt       = shift;
-    $opt          = {} unless defined $opt;
+
+    # make opt hash keys lowercase
+    $opt = $self->_lowercase_and_verify_options($opt);
 
     my $result = $self->selectall_arrayref($statement, $opt, 1);
     return if !defined $result;
@@ -476,7 +526,7 @@ sub selectrow_arrayref {
 
 Sends a query and returns a hash reference for the first row
 
-    my $hashref = $nl->selectrow_hashref("GET hosts");
+    my $hashref = $ml->selectrow_hashref("GET hosts");
 
 returns undef if nothing was found
 
@@ -486,7 +536,9 @@ sub selectrow_hashref {
     my $statement = shift;
     my $opt       = shift;
 
-    $opt->{'Slice'} = 1 unless defined $opt->{'Slice'};
+    # make opt hash keys lowercase
+    $opt = $self->_lowercase_and_verify_options($opt);
+    $opt->{slice} = 1;
 
     my $result = $self->selectall_arrayref($statement, $opt, 1);
     return if !defined $result;
@@ -497,22 +549,25 @@ sub selectrow_hashref {
 
 ########################################
 
-=head2 select_scalar_value
+=head2 selectscalar_value
 
- select_scalar_value($statement)
- select_scalar_value($statement, %opt)
+ selectscalar_value($statement)
+ selectscalar_value($statement, %opt)
 
 Sends a query and returns a single scalar
 
-    my $count = $nl->select_scalar_value("GET hosts\nStats: state = 0");
+    my $count = $ml->selectscalar_value("GET hosts\nStats: state = 0");
 
 returns undef if nothing was found
 
 =cut
-sub select_scalar_value {
+sub selectscalar_value {
     my $self      = shift;
     my $statement = shift;
     my $opt       = shift;
+
+    # make opt hash keys lowercase
+    $opt = $self->_lowercase_and_verify_options($opt);
 
     my $row = $self->selectrow_arrayref($statement);
     return if !defined $row;
@@ -596,7 +651,7 @@ sub verbose {
 
 =head2 peer_addr
 
- $nl->peer_addr()
+ $ml->peer_addr()
 
 returns the current peer address
 
@@ -614,8 +669,8 @@ sub peer_addr {
 
 =head2 peer_name
 
- $nl->peer_name()
- $nl->peer_name($string)
+ $ml->peer_name()
+ $ml->peer_name($string)
 
 if new value is set, name is set to this value
 
@@ -640,7 +695,7 @@ sub peer_name {
 
 =head2 peer_key
 
- $nl->peer_key()
+ $ml->peer_key()
 
 returns a uniq key for this peer
 
@@ -660,7 +715,7 @@ sub peer_key {
 
 =head2 marked_bad
 
- $nl->marked_bad()
+ $ml->marked_bad()
 
 returns true if the current connection is marked down
 
@@ -673,23 +728,61 @@ sub marked_bad {
 
 
 ########################################
+
+=head2 disable
+
+ $ml->disable()
+
+disables this connection, returns the last state.
+
+=cut
+sub disable {
+    my $self  = shift;
+    my $prev = $self->{'disabled'};
+    $self->{'disabled'} = 1;
+    return $prev;
+}
+
+
+########################################
+
+=head2 enable
+
+ $ml->enable()
+
+enables this connection, returns the last state.
+
+=cut
+sub enable {
+    my $self  = shift;
+    my $prev = $self->{'disabled'};
+    $self->{'disabled'} = 0;
+    return $prev;
+}
+
+########################################
 # INTERNAL SUBS
 ########################################
 sub _send {
     my $self       = shift;
     my $statement  = shift;
-    my $with_peers = shift;
+    my $opt        = shift;
+
+    delete $self->{'meta_data'};
+
     my $header     = "";
     my $keys;
 
-    $Nagios::MKLivestatus::ErrorCode = 0;
-    undef $Nagios::MKLivestatus::ErrorMessage;
+    my $with_peers = 0;
+    if(defined $opt->{'addpeer'} and $opt->{'addpeer'}) {
+        $with_peers = 1;
+    }
+
+    $Monitoring::Livestatus::ErrorCode = 0;
+    undef $Monitoring::Livestatus::ErrorMessage;
 
     return(490, $self->_get_error(490), undef) if !defined $statement;
     chomp($statement);
-
-    # remove empty lines from statement
-    $statement =~ s/\n+/\n/gmx;
 
     my($status,$msg,$body);
     if($statement =~ m/^Separators:/mx) {
@@ -738,6 +831,11 @@ sub _send {
 
     else {
 
+        # Add Limits header
+        if(defined $opt->{'limit_start'}) {
+            $statement .= "\nLimit: ".($opt->{'limit_start'} + $opt->{'limit_length'});
+        }
+
         # for querys with column header, no seperate columns will be returned
         if($statement =~ m/^Columns:\ (.*)$/mx) {
             ($statement,$keys) = $self->_extract_keys_from_columns_header($statement);
@@ -747,35 +845,47 @@ sub _send {
 
         # Commands need no additional header
         if($statement !~ m/^COMMAND/mx) {
-            $header .= "Separators: $self->{'line_seperator'} $self->{'column_seperator'} $self->{'list_seperator'} $self->{'host_service_seperator'}\n";
+            $header .= "OutputFormat: json\n";
             $header .= "ResponseHeader: fixed16\n";
             if($self->{'keepalive'}) {
                 $header .= "KeepAlive: on\n";
             }
+            # remove empty lines from statement
+            $statement =~ s/\n+/\n/gmx;
         }
+
+        # add additional headers
+        if(defined $opt->{'header'} and ref $opt->{'header'} eq 'HASH') {
+            for my $key ( keys %{$opt->{'header'}}) {
+                $header .= $key.": ".$opt->{'header'}->{$key}."\n";
+            }
+        }
+
         chomp($statement);
         my $send = "$statement\n$header";
-        print "> ".Dumper($send) if $self->{'verbose'};
+        $self->{'logger'}->debug("> ".Dumper($send)) if $self->{'verbose'};
         ($status,$msg,$body) = $self->_send_socket($send);
         if($self->{'verbose'}) {
-            print "status: ".Dumper($status);
-            print "msg:    ".Dumper($msg);
-            print "< ".Dumper($body);
+            #$self->{'logger'}->debug("got:");
+            #$self->{'logger'}->debug(Dumper(\@erg));
+            $self->{'logger'}->debug("status: ".Dumper($status));
+            $self->{'logger'}->debug("msg:    ".Dumper($msg));
+            $self->{'logger'}->debug("< ".Dumper($body));
         }
     }
 
     if($status >= 300) {
         $body = '' if !defined $body;
         chomp($body);
-        $Nagios::MKLivestatus::ErrorCode    = $status;
+        $Monitoring::Livestatus::ErrorCode    = $status;
         if(defined $body and $body ne '') {
-            $Nagios::MKLivestatus::ErrorMessage = $body;
+            $Monitoring::Livestatus::ErrorMessage = $body;
         } else {
-            $Nagios::MKLivestatus::ErrorMessage = $msg;
+            $Monitoring::Livestatus::ErrorMessage = $msg;
         }
-        $self->{'logger'}->error($status." - ".$Nagios::MKLivestatus::ErrorMessage." in query:\n'".$statement) if defined $self->{'logger'};
+        $self->{'logger'}->error($status." - ".$Monitoring::Livestatus::ErrorMessage." in query:\n'".$statement) if $self->{'verbose'};
         if($self->{'errors_are_fatal'}) {
-            croak("ERROR ".$status." - ".$Nagios::MKLivestatus::ErrorMessage." in query:\n'".$statement."'\n");
+            croak("ERROR ".$status." - ".$Monitoring::Livestatus::ErrorMessage." in query:\n'".$statement."'\n");
         }
         return;
     }
@@ -790,42 +900,50 @@ sub _send {
     my $peer_addr = $self->peer_addr;
     my $peer_key  = $self->peer_key;
 
-    my @result;
-    ## no critic
-    for my $line (split/$line_seperator/m, $body) {
-        my $row = [ split/$col_seperator/m, $line ];
-        if(defined $with_peers and $with_peers == 1) {
-            unshift @{$row}, $peer_name;
-            unshift @{$row}, $peer_addr;
-            unshift @{$row}, $peer_key;
+    my $limit_start = 0;
+    if(defined $opt->{'limit_start'}) { $limit_start = $opt->{'limit_start'}; }
+    my $result;
+    # fix json output
+    $body =~ s/\],\n\]\n$/]]/mx;
+    eval {
+        $result = decode_json($body);
+    };
+    if($@) {
+        my $message = "ERROR ".$@." in text: '".$body."'\" for statement: '$statement'\n";
+        $self->{'logger'}->error($message) if $self->{'verbose'};
+        if($self->{'errors_are_fatal'}) {
+            croak($message);
         }
-        push @result, $row;
     }
-    ## use critic
 
-    # for querys with column header, no seperate columns will be returned
+    # for querys with column header, no separate columns will be returned
     if(!defined $keys) {
-        $self->{'logger'}->warn("got statement without Columns: header!") if defined $self->{'logger'};
+        $self->{'logger'}->warn("got statement without Columns: header!") if $self->{'verbose'};
         if($self->{'warnings'}) {
             carp("got statement without Columns: header! -> ".$statement);
         }
-        $keys = shift @result;
-
-        # remove first element of keys, because its the peer_name
-        if(defined $with_peers and $with_peers == 1) {
-            shift @{$keys};
-            shift @{$keys};
-            shift @{$keys};
-        }
+        $keys = shift @{$result};
     }
 
+    # add peer information?
     if(defined $with_peers and $with_peers == 1) {
         unshift @{$keys}, 'peer_name';
         unshift @{$keys}, 'peer_addr';
         unshift @{$keys}, 'peer_key';
+
+        for my $row (@{$result}) {
+            unshift @{$row}, $peer_name;
+            unshift @{$row}, $peer_addr;
+            unshift @{$row}, $peer_key;
+        }
     }
 
-    return({ keys => $keys, result => \@result});
+    # set some metadata
+    $self->{'meta_data'} = {
+                    'result_count' => scalar @${result},
+    };
+
+    return({ keys => $keys, result => $result });
 }
 
 ########################################
@@ -834,7 +952,8 @@ sub _open {
     my $statement = shift;
 
     # return the current socket in keep alive mode
-    if($self->{'keepalive'} and defined $self->{'sock'} and $self->{'sock'}->atmark()) {
+    if($self->{'keepalive'} and defined $self->{'sock'} and $self->{'sock'}->connected) {
+        $self->{'logger'}->debug("reusing old connection") if $self->{'verbose'};
         return($self->{'sock'});
     }
 
@@ -845,9 +964,7 @@ sub _open {
         $self->{'sock'} = $sock;
     }
 
-    # set timeout
-    $sock->timeout($self->{'timeout'}) if defined $sock;
-
+    $self->{'logger'}->debug("using new connection") if $self->{'verbose'};
     return($sock);
 }
 
@@ -855,6 +972,7 @@ sub _open {
 sub _close {
     my $self  = shift;
     my $sock  = shift;
+    undef $self->{'sock'};
     return($self->{'CONNECTOR'}->_close($sock));
 }
 
@@ -870,7 +988,7 @@ possible to set column aliases in various ways.
 
 adds the peers name, addr and key to the result set:
 
- my $hosts = $nl->selectall_hashref(
+ my $hosts = $ml->selectall_hashref(
    "GET hosts\nColumns: name alias state",
    "name",
    { AddPeer => 1 }
@@ -881,7 +999,7 @@ adds the peers name, addr and key to the result set:
 send the query only to some specific backends. Only
 useful when using multiple backends.
 
- my $hosts = $nl->selectall_arrayref(
+ my $hosts = $ml->selectall_arrayref(
    "GET hosts\nColumns: name alias state",
    { Backends => [ 'key1', 'key4' ] }
  );
@@ -890,12 +1008,50 @@ useful when using multiple backends.
 
     only return the given column indexes
 
-    my $array_ref = $nl->selectcol_arrayref(
+    my $array_ref = $ml->selectcol_arrayref(
        "GET hosts\nColumns: name contacts",
        { Columns => [2] }
     );
 
   see L<selectcol_arrayref> for more examples
+
+=head2 Deepcopy
+
+    deep copy/clone the result set.
+
+    Only effective when using multiple backends and threads.
+    This can be safely turned off if you dont change the
+    result set.
+    If you get an error like "Invalid value for shared scalar" error" this
+    should be turned on.
+
+    my $array_ref = $ml->selectcol_arrayref(
+       "GET hosts\nColumns: name contacts",
+       { Deepcopy => 1 }
+    );
+
+=head2 Limit
+
+    Just like the Limit: <nr> option from livestatus itself.
+    In addition you can add a start,length limit.
+
+    my $array_ref = $ml->selectcol_arrayref(
+       "GET hosts\nColumns: name contacts",
+       { Limit => "10,20" }
+    );
+
+    This example will return 20 rows starting at row 10. You will
+    get row 10-30.
+
+    Cannot be combined with a Limit inside the query
+    because a Limit will be added automatically.
+
+    Adding a limit this way will greatly increase performance and
+    reduce memory usage.
+
+    This option is multibackend safe contrary to the "Limit: " part of a statement.
+    Sending a statement like "GET...Limit: 10" with 3 backends will result in 30 rows.
+    Using this options, you will receive only the first 10 rows.
 
 =head2 Rename
 
@@ -910,7 +1066,7 @@ useful when using multiple backends.
 The Sum option only applies when using multiple backends.
 The values from all backends with be summed up to a total.
 
- my $stats = $nl->selectrow_hashref(
+ my $stats = $ml->selectrow_hashref(
    "GET hosts\nStats: state = 0\nStats: state = 1",
    { Sum => 1 }
  );
@@ -919,27 +1075,71 @@ The values from all backends with be summed up to a total.
 
 
 ########################################
+# wrapper around _send_socket_do
 sub _send_socket {
+    my $self      = shift;
+    my $statement = shift;
+
+    my $retries = 0;
+    my($status, $msg, $recv);
+
+
+    # try to avoid connection errors
+    eval {
+        local $SIG{PIPE} = sub {
+            die("broken pipe");
+            $self->{'logger'}->debug("broken pipe, closing socket") if $self->{'verbose'};
+            $self->_close($self->{'sock'});
+        };
+
+        if($self->{'retries_on_connection_error'} <= 0) {
+            ($status, $msg, $recv) = $self->_send_socket_do($statement);
+            return;
+        }
+
+        while((!defined $status or ($status == 491 or $status == 497 or $status == 500)) and $retries < $self->{'retries_on_connection_error'}) {
+            $retries++;
+            ($status, $msg, $recv) = $self->_send_socket_do($statement);
+            $self->{'logger'}->debug('query status '.$status) if $self->{'verbose'};
+            if($status == 491 or $status == 497 or $status == 500) {
+                $self->{'logger'}->debug('got status '.$status.' retrying in '.$self->{'retry_interval'}.' seconds') if $self->{'verbose'};
+                $self->_close();
+                sleep($self->{'retry_interval'}) if $retries < $self->{'retries_on_connection_error'};
+            }
+        }
+    };
+    if($@) {
+        $self->{'logger'}->debug("try 1 failed: $@") if $self->{'verbose'};
+        if(defined $@ and $@ =~ /broken\ pipe/mx) {
+            return $self->_send_socket_do($statement);
+        }
+        croak($@) if $self->{'errors_are_fatal'};
+    }
+
+    croak($msg) if($status >= 400 and $self->{'errors_are_fatal'});
+
+    return($status, $msg, $recv);
+}
+
+########################################
+sub _send_socket_do {
     my $self      = shift;
     my $statement = shift;
     my($recv,$header);
 
     my $sock = $self->_open() or return(491, $self->_get_error(491), $!);
-    print $sock $statement or return($self->_socket_error($statement, $sock, 'connection failed: '.$!));;
-    if($self->{'keepalive'}) {
-        print $sock "\n";
-    }else {
-        $sock->shutdown(1) or croak("shutdown failed: $!");
-    }
+    utf8::decode($statement);
+    print $sock encode('utf-8' => $statement) or return($self->_socket_error($statement, $sock, 'write to socket failed: '.$!));
+
+    print $sock "\n";
 
     # COMMAND statements never return something
     if($statement =~ m/^COMMAND/mx) {
-        $self->_close($sock);
         return('201', $self->_get_error(201), undef);
     }
 
-    $sock->read($header, 16) or return($self->_socket_error($statement, $sock, 'reading header failed: '.$!));
-    print "header: $header" if $self->{'verbose'};
+    $sock->read($header, 16) or return($self->_socket_error($statement, $sock, 'reading header from socket failed, check your livestatus logfile: '.$!));
+    $self->{'logger'}->debug("header: $header") if $self->{'verbose'};
     my($status, $msg, $content_length) = $self->_parse_header($header, $sock);
     return($status, $msg, undef) if !defined $content_length;
     if($content_length > 0) {
@@ -960,19 +1160,19 @@ sub _socket_error {
     my $message = "\n";
     $message   .= "peer                ".Dumper($self->peer_name);
     $message   .= "statement           ".Dumper($statement);
-    $message   .= "socket->sockname()  ".Dumper($sock->sockname());
-    $message   .= "socket->atmark()    ".Dumper($sock->atmark());
-    $message   .= "socket->error()     ".Dumper($sock->error());
-    $message   .= "socket->timeout()   ".Dumper($sock->timeout());
     $message   .= "message             ".Dumper($body);
 
-    $self->{'logger'}->error($message) if defined $self->{'logger'};
+    $self->{'logger'}->error($message) if $self->{'verbose'};
 
-    if($self->{'errors_are_fatal'}) {
-        croak($message);
-    } else {
-        carp($message);
+    if($self->{'retries_on_connection_error'} <= 0) {
+        if($self->{'errors_are_fatal'}) {
+            croak($message);
+        }
+        else {
+            carp($message);
+        }
     }
+    $self->_close();
     return(500, $self->_get_error(500), $message);
 }
 
@@ -1012,13 +1212,13 @@ possible to set column aliases in various ways.
 
 A valid Columns: Header could look like this:
 
- my $hosts = $nl->selectall_arrayref(
+ my $hosts = $ml->selectall_arrayref(
    "GET hosts\nColumns: state as status"
  );
 
 Stats queries could be aliased too:
 
- my $stats = $nl->selectall_arrayref(
+ my $stats = $ml->selectall_arrayref(
    "GET hosts\nStats: state = 0 as up"
  );
 
@@ -1028,7 +1228,7 @@ This syntax is available for: Stats, StatsAnd, StatsOr and StatsGroupBy
 An alternative way to set column aliases is to define rename option key/value
 pairs:
 
- my $hosts = $nl->selectall_arrayref(
+ my $hosts = $ml->selectall_arrayref(
    "GET hosts\nColumns: name", {
      rename => { 'name' => 'hostname' }
    }
@@ -1125,14 +1325,14 @@ sub _extract_keys_from_columns_header {
 
 Errorhandling can be done like this:
 
-    use Nagios::MKLivestatus;
-    my $nl = Nagios::MKLivestatus->new(
-      socket => '/var/lib/nagios3/rw/livestatus.sock'
+    use Monitoring::Livestatus;
+    my $ml = Monitoring::Livestatus->new(
+      socket => '/var/lib/livestatus/livestatus.sock'
     );
-    $nl->errors_are_fatal(0);
-    my $hosts = $nl->selectall_arrayref("GET hosts");
-    if($Nagios::MKLivestatus::ErrorCode) {
-        croak($Nagios::MKLivestatus::ErrorMessage);
+    $ml->errors_are_fatal(0);
+    my $hosts = $ml->selectall_arrayref("GET hosts");
+    if($Monitoring::Livestatus::ErrorCode) {
+        croak($Monitoring::Livestatus::ErrorMessage);
     }
 
 =cut
@@ -1143,6 +1343,7 @@ sub _get_error {
     my $codes = {
         '200' => 'OK. Reponse contains the queried data.',
         '201' => 'COMMANDs never return something',
+        '400' => 'The request contains an invalid header.',
         '401' => 'The request contains an invalid header.',
         '402' => 'The request is completely invalid.',
         '403' => 'The request is incomplete.',
@@ -1244,33 +1445,103 @@ sub _get_peers {
     return $peers;
 }
 
+
+########################################
+sub _lowercase_and_verify_options {
+    my $self   = shift;
+    my $opts   = shift;
+    my $return = {};
+
+    # list of allowed options
+    my $allowed_options = {
+        'addpeer'       => 1,
+        'backend'       => 1,
+        'columns'       => 1,
+        'deepcopy'      => 1,
+        'header'        => 1,
+        'limit'         => 1,
+        'limit_start'   => 1,
+        'limit_length'  => 1,
+        'rename'        => 1,
+        'slice'         => 1,
+        'sum'           => 1,
+        'callbacks'     => 1,
+    };
+
+    for my $key (keys %{$opts}) {
+        if($self->{'warnings'} and !defined $allowed_options->{lc $key}) {
+            carp("unknown option used: $key - please use only: ".join(", ", keys %{$allowed_options}));
+        }
+        $return->{lc $key} = $opts->{$key};
+    }
+
+    # set limits
+    if(defined $return->{'limit'}) {
+        if(index($return->{'limit'}, ',') != -1) {
+            my($limit_start,$limit_length) = split /,/mx, $return->{'limit'};
+            $return->{'limit_start'}  = $limit_start;
+            $return->{'limit_length'} = $limit_length;
+        }
+        else {
+            $return->{'limit_start'}  = 0;
+            $return->{'limit_length'} = $return->{'limit'};
+        }
+        delete $return->{'limit'};
+    }
+
+    return($return);
+}
+
+########################################
+sub _log_statement {
+    my $self      = shift;
+    my $statement = shift;
+    my $opt       = shift;
+    my $limit     = shift;
+    my $d = Data::Dumper->new([$opt]);
+    $d->Indent(0);
+    my $optstring = $d->Dump;
+    $optstring =~ s/^\$VAR1\s+=\s+//mx;
+    $optstring =~ s/;$//mx;
+
+    # remove empty lines from statement
+    $statement =~ s/\n+/\n/gmx;
+
+    my $cleanstatement = $statement;
+    $cleanstatement =~ s/\n/\\n/gmx;
+    $self->{'logger'}->debug('selectall_arrayref("'.$cleanstatement.'", '.$optstring.', '.$limit.')');
+    return 1;
+}
+
+########################################
+
 1;
 
 =head1 EXAMPLES
 
 =head2 Multibackend Configuration
 
-    use Nagios::MKLivestatus;
-    my $nl = Nagios::MKLivestatus->new(
+    use Monitoring::Livestatus;
+    my $ml = Monitoring::Livestatus->new(
       name       => 'multiple connector',
       verbose   => 0,
       keepalive => 1,
       peer      => [
             {
-                name => 'DMZ Nagios',
+                name => 'DMZ Monitoring',
                 peer => '50.50.50.50:9999',
             },
             {
-                name => 'Local Nagios',
+                name => 'Local Monitoring',
                 peer => '/tmp/livestatus.socket',
             },
             {
-                name => 'Special Nagios',
+                name => 'Special Monitoring',
                 peer => '100.100.100.100:9999',
             }
       ],
     );
-    my $hosts = $nl->selectall_arrayref("GET hosts");
+    my $hosts = $ml->selectall_arrayref("GET hosts");
 
 =head1 SEE ALSO
 

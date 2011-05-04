@@ -22,6 +22,8 @@
     * find configuration file in subdirectories of conf.d also
 
     Multisite:
+    * FIX: Display limit-exceeded message also in multi site setups
+    * FIX: Tactical Overview: fix unhandled host problems view
     * FIX: customlinks snapin: Suppressing exception when no links configured
     * FIX: webservice: suppress livestatus errors in multi-site setups
     * FIX: install missing example icons in web/htdocs/images/icons
@@ -109,6 +111,9 @@
     * hp_procurve_cpu: add PNP template
     * hp_procurve_cpu: rename load to utilization, rename service to CPU utilizition
     * df,df_netapp,df_netapp32,hr_fs,vms_df: convert to mergeable dictionaries
+
+    Livestatus:
+    * Updated Perl API to version 0.74 (thanks to Sven Nierlein)
 
 1.1.10:
     Core, Setup, etc.:

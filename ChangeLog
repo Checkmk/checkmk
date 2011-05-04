@@ -11,6 +11,7 @@
     * FIX: cisco_power: fix syntax error in man page (broke also Multisite)
 
     Multisite:
+    * FIX: Tactical Overview: fix unhandled host problems view
     * FIX: webservice: suppress livestatus errors in multi-site setups
     * FIX: install missing example icons in web/htdocs/images/icons
     * FIX: repair python/json webservice needed for NagStaMon

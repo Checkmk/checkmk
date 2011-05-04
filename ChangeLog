@@ -22,6 +22,7 @@
     * find configuration file in subdirectories of conf.d also
 
     Multisite:
+    * FIX: Tactical Overview: fix unhandled host problems view
     * FIX: customlinks snapin: Suppressing exception when no links configured
     * FIX: webservice: suppress livestatus errors in multi-site setups
     * FIX: install missing example icons in web/htdocs/images/icons

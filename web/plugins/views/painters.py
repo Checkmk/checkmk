@@ -646,7 +646,12 @@ multisite_painters["svc_comments"] = {
     "paint" : lambda row: paint_comments("service_", row)
 }
 
-
+multisite_painters["svc_acknowledged"] = {
+    "title" : "Service problem acknowledged",
+    "short" : "Ack",
+    "columns" : ["service_acknowledged"],
+    "paint" : lambda row: paint_nagiosflag(row, "service_acknowledged", False)
+}
 
 
 def notes_matching_pattern_entries(dirs, item):

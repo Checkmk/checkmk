@@ -436,16 +436,16 @@ def mode_file(phase):
         render_folder_path()
         html.write("<p>")
 
+        hostnames = g_hosts.keys()
+        hostnames.sort()
+
         # Show table of hosts in this file
         html.begin_form("hosts", None, "POST")
-        html.hidden_fields()
         html.write("<table class=data>\n")
         html.write("<tr><th></th><th></th><th>Hostname</th>"
                    "<th>IP&nbsp;Address</th><th>Tags</th><th>Alias</th><th>Move To</th></tr>\n")
         odd = "odd"
 
-        hostnames = g_hosts.keys()
-        hostnames.sort()
         for hostname in hostnames:
             alias, ipaddress, tags = g_hosts[hostname]
 
@@ -508,6 +508,15 @@ def mode_file(phase):
         html.write("</td></tr>\n")
 
         html.write("</table>\n")
+
+        # Important: remove selected hosts from the hidden fields. Otherwise
+        # hosts once selected will be selected for ever...
+        for host in hostnames:
+            varname = "sel_%s" % host
+            if html.has_var(varname):
+                html.del_var("sel_%s" % host)
+        html.hidden_fields()
+
         html.end_form()
 
 # Create list of all hosts that are select with checkboxes in the current file

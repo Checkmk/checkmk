@@ -1333,6 +1333,7 @@ def write_the_configuration_file():
 
 
 def write_configuration_file(folder, thefile, hosts):
+    wato_filename = "/" + "/".join(thefile["path"])  # used as tag
     all_hosts = []
     ipaddresses = {}
     aliases = []
@@ -1342,7 +1343,7 @@ def write_configuration_file(folder, thefile, hosts):
         alias, ipaddress, tags = hosts[hostname]
         if alias:
             aliases.append((alias, [hostname]))
-        all_hosts.append("|".join([hostname] + list(tags) + [ thefile["name"], 'wato' ]))
+        all_hosts.append("|".join([hostname] + list(tags) + [ wato_filename, 'wato' ]))
         if ipaddress:
             ipaddresses[hostname] = ipaddress
 
@@ -1372,7 +1373,7 @@ def write_configuration_file(folder, thefile, hosts):
             "    extra_service_conf['_WATO'] = []\n")
     out.write("\nextra_service_conf['_WATO'] += [ \n"
               "  ('%s', [ 'wato', '%s' ], ALL_HOSTS, [ 'Check_MK inventory' ] ) ]\n" % 
-              (thefile["name"], thefile["name"]))
+              (wato_filename, wato_filename))
 
 def delete_configuration_file(folder, thefile):
     path = make_config_path(folder, thefile)

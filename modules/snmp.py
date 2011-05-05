@@ -178,6 +178,9 @@ def get_snmp_table(hostname, ip, oid_info):
     else:
         oid, suboids, targetcolumns = oid_info
 
+    if not oid.startswith("."):
+        raise MKGeneralException("OID definition '%s' does not begin with ." % oid)
+
     all_values = []
     index_column = -1
     index_format = None

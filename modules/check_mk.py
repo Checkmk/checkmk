@@ -1986,6 +1986,8 @@ def precompile_hostchecks():
         try:
             precompile_hostcheck(host)
         except Exception, e:
+            if opt_debug:
+                raise
             sys.stderr.write("Error precompiling checks for host %s: %s\n" % (host, e))
             sys.exit(5)
 
@@ -2080,6 +2082,7 @@ no_inventory_possible = None
         if not path:
             raise MKGeneralException("Cannot find plugin for check type %s (missing file %s/%s)\n" % \
                                      (checktype, checks_dir, checktype))
+
         if path not in filenames:
             filenames.append(path)
 

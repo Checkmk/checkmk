@@ -283,7 +283,7 @@ def mode_editfolder(phase, what, new):
 
     elif phase == "action":
         if new:
-            name = html.var("name").strip()
+            name = html.var("name", "").strip()
             check_wato_filename("name", name, what)
 
         title = html.var_utf8("title")

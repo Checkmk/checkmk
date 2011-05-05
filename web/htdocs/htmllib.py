@@ -543,7 +543,7 @@ class html:
             return # user has pressed "No"
         if not self.has_var("_do_confirm"):
             self.write("<div class=really>%s" % msg)
-            self.begin_form("confirm")
+            self.begin_form("confirm", None, "POST")
             self.hidden_fields(add_action_vars = True)
             self.button("_do_confirm", "Yes!", "really")
             self.button("_do_actions", "No", "")

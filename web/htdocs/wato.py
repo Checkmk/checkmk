@@ -920,8 +920,22 @@ def mode_bulk_edit(phase):
             count = 0
             for hostname in hostnames:
                 alias, ipaddress, tags = g_hosts[hostname]
-                if tag in tags:
-                    count += 1
+                # if the tag is "None" it means, that the host
+                # has selected this option, if none of the other
+                # tags of this selection is found at the host.
+                if tag == None:
+                    other_tags = [ e[0] for e in taglist if e[0] != None ]
+                    has_other = False
+                    for t in tags:
+                        if t in other_tags:
+                            has_other = True
+                            break
+                    if not has_other:
+                        count += 1
+                # otherwise simply check if the host has the tag
+                else:
+                    if tag in tags:
+                        count += 1
             host_counts[tag] = count
         
         # now check, if all hosts have the same setting

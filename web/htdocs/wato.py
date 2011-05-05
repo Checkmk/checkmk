@@ -563,88 +563,6 @@ def get_hostnames_from_checkboxes():
     return selected_hosts
 
 
-def render_linkinfo(linkinfo):
-    if ':' in linkinfo:
-        pathname, host = linkinfo.split(':', 1)
-        path = tuple(pathname[1:].split("/"))
-        if path in g_files:
-            the_file = g_files[path]
-            the_folder = find_folder(path[:-1])
-            hosts = read_configuration_file(the_folder, the_file)
-            if host in hosts:
-                url = html.makeuri_contextless([("mode", "edithost"), ("filename", pathname), ("host", host)])
-                title = host
-            else:
-                return host
-        else:
-            return host
-    elif linkinfo[0] == '/':
-        path = tuple(linkinfo[1:].split("/"))
-        if path in g_files:
-            url = html.makeuri_contextless([("mode", "file"), ("filename", linkinfo)])
-            title = g_files[path]["title"]
-        elif find_folder(path):
-            url = html.makeuri_contextless([("mode", "folder"), ("filename", linkinfo)])
-            title = find_folder(path)["title"]
-        else:
-            return linkinfo
-    else:
-        return ""
-
-    return '<a href="%s">%s</a>' % (url, title)
-
-
-def render_audit_log(log, what, with_filename = False):
-    htmlcode = '<table class="wato auditlog">'
-    even = "even"
-    for t, linkinfo, user, action, text in log:
-        even = even == "even" and "odd" or "even"
-        htmlcode += '<tr class="%s0">' % even
-        htmlcode += '<td>%s</td>' % render_linkinfo(linkinfo)
-        htmlcode += '<td>%s</td><td>%s</td><td>%s</td><td width="100%%">%s</td></tr>\n' % (
-                time.strftime("%Y-%m-%d", time.localtime(float(t))),
-                time.strftime("%H:%M:%S", time.localtime(float(t))),
-                user,
-                text)
-    htmlcode += "</table>"
-    return htmlcode
-
-
-def mode_changelog(phase):
-    if phase == "title":
-        return "Change log"
-
-    elif phase == "buttons":
-        html.context_button("Back", make_link([("mode", "folder")]))
-
-    elif phase == "action":
-        if html.check_transaction():
-            try:
-	        check_mk_automation("restart")
-            except Exception, e:
-                raise MKUserError(None, str(e))
-            log_commit_pending() # flush logfile with pending actions
-	    log_audit(None, "activate-config", "Configuration activated, monitoring server restarted")
-	    return None, "The new configuration has been successfully activated."
-
-    else:
-        pending = parse_audit_log("pending")
-        if len(pending) > 0:
-            message = "<h1>Changes which are not yet activated:</h1>"
-            message += render_audit_log(pending, "pending")
-            message += '<a href="%s" class=button>Activate Changes!</a>' % \
-                html.makeuri([("_action", "activate"), ("_transid", html.current_transid())])
-            html.show_warning(message)
-        else:
-            html.write("<p>No pending changes, monitoring server is up to date.</p>")
-
-        audit = parse_audit_log("audit")
-        if len(audit) > 0:
-            html.write("<b>All Changes</b>")
-            html.write(render_audit_log(audit, "audit"))
-        else:
-            html.write("<p>Logfile is empty. No host has been created or changed yet.</p>")
-        
 
 # Form for host details (new, clone, edit)
 def mode_edithost(phase, new):
@@ -1084,17 +1002,51 @@ def get_selected_host_tags(current_tags = {}):
     return tags
 
 #   +----------------------------------------------------------------------+
-#   |                  _   _      _                                        |
-#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
-#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
-#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
-#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
-#   |                              |_|                                     |
+#   |                    _                 __ _ _                          |
+#   |                   | |    ___   __ _ / _(_) | ___                     |
+#   |                   | |   / _ \ / _` | |_| | |/ _ \                    |
+#   |                   | |__| (_) | (_| |  _| | |  __/                    |
+#   |                   |_____\___/ \__, |_| |_|_|\___|                    |
+#   |                               |___/                                  |
 #   +----------------------------------------------------------------------+
-#   | Functions needed at various places                                   |
+#   | Handling of the audit logfiles                                       |
 #   +----------------------------------------------------------------------+
 
+def mode_changelog(phase):
+    if phase == "title":
+        return "Change log"
 
+    elif phase == "buttons":
+        html.context_button("Back", make_link([("mode", "folder")]))
+
+    elif phase == "action":
+        if html.check_transaction():
+            try:
+	        check_mk_automation("restart")
+            except Exception, e:
+                raise MKUserError(None, str(e))
+            log_commit_pending() # flush logfile with pending actions
+	    log_audit(None, "activate-config", "Configuration activated, monitoring server restarted")
+	    return None, "The new configuration has been successfully activated."
+
+    else:
+        pending = parse_audit_log("pending")
+        if len(pending) > 0:
+            message = "<h1>Changes which are not yet activated:</h1>"
+            message += render_audit_log(pending, "pending")
+            message += '<a href="%s" class=button>Activate Changes!</a>' % \
+                html.makeuri([("_action", "activate"), ("_transid", html.current_transid())])
+            html.show_warning(message)
+        else:
+            html.write("<p>No pending changes, monitoring server is up to date.</p>")
+
+        audit = parse_audit_log("audit")
+        if len(audit) > 0:
+            html.write("<b>All Changes</b>")
+            html.write(render_audit_log(audit, "audit"))
+        else:
+            html.write("<p>Logfile is empty. No host has been created or changed yet.</p>")
+        
 def log_entry(linkinfo, action, message, logfilename):
     make_nagios_directory(conf_dir)
     if linkinfo in g_files.values():
@@ -1137,6 +1089,63 @@ def parse_audit_log(what):
         return entries
     return []
 
+
+def render_linkinfo(linkinfo):
+    if ':' in linkinfo:
+        pathname, host = linkinfo.split(':', 1)
+        path = tuple(pathname[1:].split("/"))
+        if path in g_files:
+            the_file = g_files[path]
+            the_folder = find_folder(path[:-1])
+            hosts = read_configuration_file(the_folder, the_file)
+            if host in hosts:
+                url = html.makeuri_contextless([("mode", "edithost"), ("filename", pathname), ("host", host)])
+                title = host
+            else:
+                return host
+        else:
+            return host
+    elif linkinfo[0] == '/':
+        path = tuple(linkinfo[1:].strip("/").split("/"))
+        if path in g_files:
+            url = html.makeuri_contextless([("mode", "file"), ("filename", linkinfo)])
+            title = g_files[path]["title"]
+        elif find_folder(path):
+            url = html.makeuri_contextless([("mode", "folder"), ("filename", linkinfo)])
+            title = find_folder(path)["title"]
+        else:
+            return linkinfo
+    else:
+        return ""
+
+    return '<a href="%s">%s</a>' % (url, title)
+
+
+def render_audit_log(log, what, with_filename = False):
+    htmlcode = '<table class="wato auditlog">'
+    even = "even"
+    for t, linkinfo, user, action, text in log:
+        even = even == "even" and "odd" or "even"
+        htmlcode += '<tr class="%s0">' % even
+        htmlcode += '<td>%s</td>' % render_linkinfo(linkinfo)
+        htmlcode += '<td>%s</td><td>%s</td><td>%s</td><td width="100%%">%s</td></tr>\n' % (
+                time.strftime("%Y-%m-%d", time.localtime(float(t))),
+                time.strftime("%H:%M:%S", time.localtime(float(t))),
+                user,
+                text)
+    htmlcode += "</table>"
+    return htmlcode
+
+#   +----------------------------------------------------------------------+
+#   |                  _   _      _                                        |
+#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
+#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
+#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
+#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
+#   |                              |_|                                     |
+#   +----------------------------------------------------------------------+
+#   | Functions needed at various places                                   |
+#   +----------------------------------------------------------------------+
 
 def check_mk_automation(command, args=[], indata=""):
     # Gather the command to use for executing --automation calls to check_mk

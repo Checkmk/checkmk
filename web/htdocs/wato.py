@@ -400,6 +400,9 @@ def mode_file(phase):
         changelog_button()
     
     elif phase == "action":
+        if html.var("_search"): # just commit to search form
+            return
+
         # Deletion of single hosts
         delname = html.var("_delete")
         if delname and delname in g_hosts:
@@ -449,6 +452,14 @@ def mode_file(phase):
         render_folder_path()
         html.write("<p>")
 
+        html.begin_form("search")
+        html.text_input("search")
+        html.button("_search", "Search")
+        html.set_focus("search")
+        html.hidden_fields()
+        html.end_form()
+        html.write("<p>")
+
         hostnames = g_hosts.keys()
         hostnames.sort()
 
@@ -459,7 +470,11 @@ def mode_file(phase):
                    "<th>IP&nbsp;Address</th><th>Tags</th><th>Alias</th><th>Move To</th></tr>\n")
         odd = "odd"
 
+        search_text = html.var("search")
         for hostname in hostnames:
+            if search_text and (search_text.lower() not in hostname.lower()):
+                continue
+
             alias, ipaddress, tags = g_hosts[hostname]
 
             # Rows with alternating odd/even styles
@@ -537,8 +552,10 @@ def get_hostnames_from_checkboxes():
     hostnames = g_hosts.keys()
     hostnames.sort()
     selected_hosts = []
+    search_text = html.var("search")
     for name in hostnames:
-        if html.var("sel_" + name):
+        if (not search_text or (search_text.lower() in name.lower()) \
+            and html.var("sel_" + name)):
             selected_hosts.append(name)
     return selected_hosts
 

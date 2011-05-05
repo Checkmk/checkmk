@@ -440,6 +440,27 @@ multisite_painters["svc_perf_data"] = {
     "columns" : ["service_perf_data"],
     "paint" : lambda row: (None, row["service_perf_data"])
 }
+
+def paint_perfdata_nth_value(row, n):
+    perfdata = row["service_perf_data"]
+    try:
+        parts = perfdata.split()
+        varname, rest = parts[n].split("=")
+        number = rest.split(';')[0]
+        while len(number) > 0 and not number[-1].isdigit():
+            number = number[:-1]
+        return "", number
+    except Exception, e:
+        return "", str(e)
+    
+
+
+multisite_painters["svc_perf_firstval"] = {
+    "title" : "Service performance data - only first value",
+    "short" : "Value",
+    "columns" : ["service_perf_data"],
+    "paint" : lambda row: paint_perfdata_nth_value(row, 0)
+}
 multisite_painters["svc_check_command"] = {
     "title" : "Service check command",
     "short" : "Check command",

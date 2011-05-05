@@ -410,6 +410,7 @@ def mode_file(phase):
         hostname = html.var("host")
         if move_to and hostname:
             move_host_to(hostname, move_to)
+            return
 
         # bulk operation on hosts
         if not html.transaction_valid():
@@ -426,6 +427,14 @@ def mode_file(phase):
         # Deletion
         if html.var("_bulk_delete"):
             return delete_hosts_after_confirm(selected_hosts)
+
+        # Move
+        if html.var("_bulk_move"):
+            target_file = html.var("bulk_moveto")
+            if not target_file:
+                raise MKUserError("bulk_moveto", "Please select the destination file")
+            num_moved = move_hosts_to(selected_hosts, target_file)
+            return None, "Successfully moved %d hosts to %s" % (num_moved, target_file)
 
         elif html.var("_bulk_edit"):
             return "bulkedit"
@@ -507,8 +516,8 @@ def mode_file(phase):
         html.write("</td><td colspan=6>On all selected hosts:\n")
         html.button("_bulk_delete", "Delete")
         html.button("_bulk_edit", "Edit")
-        html.button("_bulk_inventory", "Bulk inventory")
-        host_move_combo("", "Move To: ")
+        html.button("_bulk_inventory", "Inventory")
+        host_move_combo(None)
         html.write("</td></tr>\n")
 
         html.write("</table>\n")
@@ -1564,7 +1573,7 @@ def wato_html_head(title):
     html.header("Check_MK WATO - " + title)
     html.write("<div class=wato>\n")
 
-def host_move_combo(host = None, title = ""):
+def host_move_combo(host = None):
     other_files = []
     for path, afile in g_files.items():
         if config.role in afile["roles"] and afile != g_file:
@@ -1572,25 +1581,21 @@ def host_move_combo(host = None, title = ""):
             other_files.append((os_path, "%s (%s)" % (afile["title"], os_path)))
 
     if len(other_files) > 0:
-        if title:
-            html.write(title)
         selections = [("", "(select file)")] + other_files 
-        if host:
+        if host == None:
+            html.button("_bulk_move", "Move To:")
+            html.select("bulk_moveto", selections, "")
+        else:
             html.hidden_field("host", host)
             uri = html.makeuri([("host", host), ("_transid", html.current_transid() )])
             html.select(None, selections, "", 
                 "location.href='%s' + '&_move_host_to=' + this.value;" % uri);
-        else:
-            html.select("_bulk_moveto", selections, "")
 
 
-def move_host_to(hostname, target_filename):
+def move_hosts_to(hostnames, target_filename):
     path = tuple(target_filename[1:].split('/'))
     
     if path not in g_files: # invalid file
-        return
-
-    if hostname not in g_hosts: # non-existant host
         return
 
     target_file = g_files[path]
@@ -1602,16 +1607,36 @@ def move_host_to(hostname, target_filename):
     if not target_folder:
         return
 
-    if config.role in target_file["roles"]:
-        hosts = read_configuration_file(target_folder, target_file)
-        hosts[hostname] = g_hosts[hostname]
+    if config.role not in target_file["roles"]:
+        raise MKAuthException("You have no change permissions on the target file")
+
+    # read hosts currently in target file
+    target_hosts = read_configuration_file(target_folder, target_file)
+
+    num_moved = 0
+    for hostname in hostnames:
+        if hostname not in g_hosts: # non-existant host
+            continue
+
+        target_hosts[hostname] = g_hosts[hostname]
         target_file["num_hosts"] += 1
         g_file["num_hosts"] -= 1
         del g_hosts[hostname]
-        write_configuration_file(target_folder, target_file, hosts)
-        write_the_configuration_file()
-        log_audit(hostname, "move-host", "Moved host from %s to %s" %
-            (file_os_path(g_file), file_os_path(target_file)))
+        if len(hostnames) == 1:
+            log_audit(hostname, "move-host", "Moved host from %s to %s" %
+                (file_os_path(g_file), file_os_path(target_file)))
+        num_moved += 1
+
+    write_configuration_file(target_folder, target_file, target_hosts)
+    write_the_configuration_file()
+    if len(hostnames) > 1:
+        log_audit(target_file, "move-host", "Moved %d hosts from %s to %s" %
+            (num_moved, file_os_path(g_file), file_os_path(target_file)))
+    return num_moved 
+        
+
+def move_host_to(hostname, target_filename):
+    move_hosts_to([hostname], target_filename)
 
 def render_folder_path():
 

@@ -471,6 +471,7 @@ def mode_file(phase):
         odd = "odd"
 
         search_text = html.var("search")
+        selected_hosts = get_hostnames_from_checkboxes()
         for hostname in hostnames:
             if search_text and (search_text.lower() not in hostname.lower()):
                 continue
@@ -482,7 +483,6 @@ def mode_file(phase):
             odd = odd == "odd" and "even" or "odd" 
 
             # Check box (if none is checked, then the default is to check all)
-            selected_hosts = get_hostnames_from_checkboxes()
             def_value = selected_hosts == []
             html.write("<td>")
             html.checkbox("sel_%s" % hostname, def_value, 'wato_select')
@@ -554,8 +554,8 @@ def get_hostnames_from_checkboxes():
     selected_hosts = []
     search_text = html.var("search")
     for name in hostnames:
-        if (not search_text or (search_text.lower() in name.lower()) \
-            and html.var("sel_" + name)):
+        if (not search_text or (search_text.lower() in name.lower())) \
+            and html.var("sel_" + name):
             selected_hosts.append(name)
     return selected_hosts
 

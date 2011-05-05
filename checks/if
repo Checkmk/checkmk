@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 def inventory_if(checkname, info):
+    # import pprint; pprint.pprint(info)
     return inventory_if_common(if_convert_to_if64(info))
 
 def check_if(item, params, info):

@@ -126,7 +126,7 @@ def page_handler(h):
             html.add_user_error(e.varname, e.message)
 
     # Title
-    html.header("Check_MK WATO - %s - %s" % (title, modefunc("title")))
+    html.header("%s - %s" % (title, modefunc("title")))
     html.write("<script type='text/javascript' src='js/wato.js'></script>")
     html.write("<div class=wato>\n")
 

@@ -277,6 +277,9 @@ def mode_editfolder(phase, what, new):
         else:
             target_folder = g_folder
         html.context_button("Abort", make_link([("mode", "folder")]))
+        if what == "file" and not new:
+            html.context_button("Hosts", make_link([("mode", "file")]))
+            
 
     elif phase == "action":
         if new:
@@ -903,8 +906,11 @@ def mode_bulk_edit(phase):
                 alias, ipaddress, tags = g_hosts[host]
                 new_tags = get_selected_host_tags(tags)
                 g_hosts[host] = (alias, ipaddress, new_tags)
+                log_pending(host, "edit-host-tags", "Changed tags of host %s to %s in bulk mode" %
+                           (host, ", ".join(new_tags)))
             write_the_configuration_file()
             return "file"
+        return
 
     hostnames = get_hostnames_from_checkboxes()
 

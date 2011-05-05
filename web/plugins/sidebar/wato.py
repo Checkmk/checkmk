@@ -31,10 +31,6 @@ import config, wato
 def render_wato_files():
     if not config.may("use_wato"):
         html.write("You are not allowed to use Check_MK's web configuration GUI.")
-    elif len(config.config_files)== 0:
-        html.write("No configuration files are defined.<br>"
-	"Please set the variable <tt>config_files</tt><br>"
-        "in <tt>multisite.mk</tt>.")
 
     else:
         if config.is_multisite():

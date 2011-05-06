@@ -748,6 +748,7 @@ def mode_bulk_inventory(phase):
                 counts = check_mk_automation("inventory", [how, hostname])
                 result = repr([ 'continue' ] + list(counts)) + "\n"
                 result += "Inventorized %s<br>\n" % hostname
+                log_pending(hostname, "bulk-inventory", "Inventorized host: %d added, %d removed, %d kept, %d total services" % counts)
             except Exception, e:
                 result = repr([ 'pause', 0, 0, 0, 0, ]) + "\n"
                 result += "Error during inventory of %s: %s<br>\n" % (hostname, e)

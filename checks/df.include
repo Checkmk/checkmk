@@ -59,13 +59,20 @@ factory_settings["filesystem_default_levels"] = {
 # compute warning and critical levels. Takes into account the size of
 # the filesystem and the magic number. Since the size is only known at
 # check time this function's result cannot be precompiled.
+# Note: this function is in our days only needed in order to support
+# old style params a'la (80, 90). As soon as we drop support for that
+# (can happen any decade now), we can get rid of this function.
 def get_filesystem_levels(host, mountpoint, size_gb, params):
 
-    # convert default levels to dictionary
+    # Start with factory settings
+    levels = factory_settings["filesystem_default_levels"].copy()
+    # convert default levels to dictionary. This is in order support
+    # old style levels like (80, 90)
     if type(filesystem_default_levels) == dict:
-        levels = filesystem_default_levels.copy()
+        levels.update(filesystem_default_levels)
     else:
-        levels = { "levels": filesystem_default_levels[:2] }
+        levels = factory_settings["filesystem_default_levels"].copy()
+        levels["levels"] = filesystem_default_levels[:2] 
         if len(filesystem_default_levels) == 2:
             levels["magic"] = None
         else:

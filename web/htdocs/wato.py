@@ -921,8 +921,12 @@ def render_link_tree(h, format):
 
         subfolders = f["folders"]
         if len(subfolders) > 0:
+            def folder_cmp(f1, f2):
+                return cmp(f1["title"].lower(), f2["title"].lower())
+            values = subfolders.values()
+            values.sort(cmp = folder_cmp)
             html.write('<ul>')
-            for sf in subfolders.values():
+            for sf in values:
                 render_folder(sf)
             html.write('</ul>')
 

@@ -206,7 +206,8 @@ def show_filefolder_list(thing, what, title):
         html.write("<table class=data>\n")
         html.write("<tr><th>Actions</th><th>Title</th><th>Hosts</th></tr>\n")
         odd = "even"
-        for entry in thing[what + "s"].values():
+
+        for entry in sort_by_title(thing[what + "s"].values()):
             odd = odd == "odd" and "even" or "odd" 
             html.write('<tr class="data %s0">' % odd)
 
@@ -921,12 +922,8 @@ def render_link_tree(h, format):
 
         subfolders = f["folders"]
         if len(subfolders) > 0:
-            def folder_cmp(f1, f2):
-                return cmp(f1["title"].lower(), f2["title"].lower())
-            values = subfolders.values()
-            values.sort(cmp = folder_cmp)
             html.write('<ul>')
-            for sf in values:
+            for sf in sort_by_title(subfolders.values()):
                 render_folder(sf)
             html.write('</ul>')
 
@@ -1154,6 +1151,13 @@ def render_audit_log(log, what, with_filename = False):
 #   +----------------------------------------------------------------------+
 #   | Functions needed at various places                                   |
 #   +----------------------------------------------------------------------+
+
+# sort list of folders or files by their title
+def sort_by_title(folders):
+    def folder_cmp(f1, f2):
+        return cmp(f1["title"].lower(), f2["title"].lower())
+    folders.sort(cmp = folder_cmp)
+    return folders
 
 def check_mk_automation(command, args=[], indata=""):
     # Gather the command to use for executing --automation calls to check_mk

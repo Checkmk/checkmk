@@ -375,10 +375,10 @@ def read_cache_file(relpath, max_cache_age):
             result = f.read(10000000)
             f.close()
             if len(result) > 0:
-                if opt_verbose:
+                if opt_debug:
                     sys.stderr.write("Using data from cachefile %s.\n" % cachefile)
                 return result
-        elif opt_verbose:
+        elif opt_debug:
             sys.stderr.write("Skipping cache file %s: Too old\n" % cachefile)
 
     if simulation_mode and not opt_no_cache:

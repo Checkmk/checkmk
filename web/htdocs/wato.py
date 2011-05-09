@@ -1060,8 +1060,12 @@ def log_entry(linkinfo, action, message, logfilename):
         link = file_os_path(linkinfo) + "/"
     elif linkinfo == None:
         link = "-"
-    else: # hostname
+    elif g_file: # hostname
         link = file_os_path(g_file) + ":" + linkinfo
+    else:
+        link = linkinfo
+    
+
 
     log_file = conf_dir + "/" + logfilename
     f = create_user_file(log_file, "ab")

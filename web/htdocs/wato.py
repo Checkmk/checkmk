@@ -222,9 +222,12 @@ def show_filefolder_list(thing, what, title):
             edit_url     = make_link_to([("mode", "edit" + what)], folder_path, filename)
             delete_url   = make_action_link([("mode", "folder"), ("_delete", entry["name"])])
             enter_url    = make_link_to([], folder_path, filename)
+
             html.write("<td>")
             html.buttonlink(edit_url, "Properties")
             html.buttonlink(delete_url, "Delete")
+            if what == "file":
+                html.buttonlink(enter_url, "Hosts")
             html.write("</td>")
 
             # Number of hosts

@@ -447,6 +447,7 @@ reschedule_timeout = 10.0
 
 config_files = []
 host_tags = []
+wato_hide_filenames = False
 
 
 #     ____ ___ 

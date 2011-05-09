@@ -204,7 +204,11 @@ def show_filefolder_list(thing, what, title):
     if len(thing[what + "s" ]) > 0:
         html.write("<h3>%s</h3>" % title)
         html.write("<table class=data>\n")
-        html.write("<tr><th>Actions</th><th>Title</th><th>Hosts</th></tr>\n")
+        html.write("<tr><th>Actions</th><th>Title</th>")
+        if not config.wato_hide_filenames:
+            html.write("<th>%s</th>" % what.title())
+        html.write("<th>Hosts</th></tr>\n")
+
         odd = "even"
 
         for entry in sort_by_title(thing[what + "s"].values()):
@@ -230,15 +234,18 @@ def show_filefolder_list(thing, what, title):
                 html.buttonlink(enter_url, "Hosts")
             html.write("</td>")
 
+
+            # Title and filename
+            html.write('<td class=takeall><a href="%s">%s</a></td>' % 
+                        (enter_url, entry["title"]))
+            if not config.wato_hide_filenames:
+                html.write("<td>%s</td>" % name)
+
             # Number of hosts
             if what == "file":
                 num_hosts = entry["num_hosts"]
             else:
                 num_hosts = count_files(entry)
-
-
-            html.write('<td class=takeall><a href="%s">%s</a></td>' % 
-                        (enter_url, entry["title"]))
             html.write("<td>%d</td>" % num_hosts)
             html.write("</tr>")
         html.write("</table>")
@@ -286,19 +293,25 @@ def mode_editfolder(phase, what, new):
             
 
     elif phase == "action":
-        if new:
-            name = html.var("name", "").strip()
-            check_wato_filename("name", name, what)
-
+        # Title
         title = html.var_utf8("title")
         if not title:
             raise MKUserError("title", "Please supply a title.")
 
+        # OS filename
+        if new:
+            if not config.wato_hide_filenames:
+                name = html.var("name", "").strip()
+                if what == "file" and not name.endswith(".mk"):
+                    name += ".mk"
+                check_wato_filename("name", name, what)
+            else:
+                name = create_wato_filename(title, what)
+
+        # Roles and Permissions
         roles = [ role for role in config.roles if html.var("role_" + role) ]
         
         if new:
-            if what == "file" and not name.endswith(".mk"):
-                name += ".mk"
             newpath = g_folder["path"] + (name,)
             new_thing = { 
                 "name"  : name,
@@ -342,25 +355,26 @@ def mode_editfolder(phase, what, new):
 
         # folder/file name (omit this for root folder)
         if not (what == "folder" and not new and g_folder == g_root_folder):
-            if what == "folder":
-                html.write("<tr><td class=legend>Internal directory name<br>"
-                    "<i>This is the name of subdirectory where the files and<br> "
-                    "other folders will be created. You cannot change this later</i>"
-                    "</td><td class=content>")
-            else:
-                html.write("<tr><td class=legend>Internal file name<br>"
-                    "<i>This is the name of Check_MK configuration file where<br>"
-                    "the hosts will be created. It well automatically get the<br>"
-                    "extension <tt>.mk</tt>. Do not specify this extension here.<br>"
-                    "You cannot change the file name later.</i>"
-                    "</td><td class=content>")
+            if not config.wato_hide_filenames:
+                if what == "folder":
+                    html.write("<tr><td class=legend>Internal directory name<br>"
+                        "<i>This is the name of subdirectory where the files and<br> "
+                        "other folders will be created. You cannot change this later</i>"
+                        "</td><td class=content>")
+                else:
+                    html.write("<tr><td class=legend>Internal file name<br>"
+                        "<i>This is the name of Check_MK configuration file where<br>"
+                        "the hosts will be created. It well automatically get the<br>"
+                        "extension <tt>.mk</tt>. Do not specify this extension here.<br>"
+                        "You cannot change the file name later.</i>"
+                        "</td><td class=content>")
 
-            if new:
-                html.text_input("name")
-            else:
-                html.write(name)
+                if new:
+                    html.text_input("name")
+                else:
+                    html.write(name)
 
-            html.write("</td></tr>\n")
+                html.write("</td></tr>\n")
 
         # permissions
         html.write("<tr><td class=legend>Grant access to</td><td class=content>")
@@ -378,6 +392,10 @@ def mode_editfolder(phase, what, new):
         
 
 def check_wato_filename(htmlvarname, name, what):
+    if what == "file":
+        if not name.endswith(".mk"):
+            raise MKUserError(htmlvarname, "The name of the file must end with .mk")
+        name = name[:-3]
     if what == "folder" and name in g_folder["folders"]:
         raise MKUserError(htmlvarname, "A folder with that name already exists.")
     elif what == "file" and name in g_folder["files"]:
@@ -386,6 +404,32 @@ def check_wato_filename(htmlvarname, name, what):
         raise MKUserError(htmlvarname, "Please specify a name.")
     if not re.match("^[-a-z0-9A-Z_]*$", name):
         raise MKUserError(htmlvarname, "Invalid %s name. Only the characters a-z, A-Z, 0-9, _ and - are allowed." % what)
+
+def create_wato_filename(title, what):
+    basename = convert_title_to_filename(title)
+    c = 1
+    name = basename
+    while True:
+        if what == "folder" and name not in g_folder["folders"]:
+            break
+        elif what == "file" and name not in g_folder["files"]:
+            break
+        c += 1
+        name = "%s-%d" % (basename, c)
+    if what == "file":
+        return name + ".mk"
+    else:
+        return name
+
+
+def convert_title_to_filename(title):
+    converted = ""
+    for c in title.lower():
+        if c.isalnum() or c in "-_":
+            converted += c
+        else:
+            converted += "_"
+    return converted
 
 #   +----------------------------------------------------------------------+
 #   |       ____                           _   _           _               |

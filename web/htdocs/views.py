@@ -1613,7 +1613,7 @@ def allowed_for_datasource(collection, datasourcename):
 
 def allowed_for_joined_datasource(collection, datasourcename):
     if 'join' not in multisite_datasources[datasourcename]:
-        return []
+        return {}
     return allowed_for_datasource(collection, multisite_datasources[datasourcename]['join'][0])
 
 def is_joined_value(collection, varname):

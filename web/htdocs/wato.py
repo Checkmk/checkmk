@@ -319,6 +319,9 @@ def mode_editfolder(phase, what, new):
             the_thing["title"] = title
             the_thing["roles"] = roles
 
+        if what == "folder":
+           html.reload_sidebar() # refresh WATO snapin
+
         save_folder_config()
         return "folder"
 
@@ -1583,6 +1586,7 @@ def delete_folder_after_confirm(del_folder):
 
         save_folder_config()
         log_audit(file_os_path(del_folder), "delete-folder", "Deleted empty folder %s"% file_os_path(del_folder))
+        html.reload_sidebar() # refresh WATO snapin
         return "folder"
     elif c == False: # not yet confirmed
         return ""

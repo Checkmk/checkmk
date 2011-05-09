@@ -334,8 +334,7 @@ def page_edit_views(h, msg=None):
     if delname and html.confirm("Please confirm the deletion of the view <tt>%s</tt>" % delname):
         del html.multisite_views[(html.req.user, delname)]
         save_views(html.req.user)
-        # Reload sidebar (snapin views needs a refresh)
-        html.javascript("top.frames[0].location.reload();");
+        html.reload_sidebar();
 
     html.begin_form("create_view", "edit_view.py")
     html.write("<table class=views>\n")

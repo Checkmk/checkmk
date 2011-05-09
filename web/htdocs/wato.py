@@ -169,7 +169,7 @@ def mode_folder(phase):
     elif phase == "buttons":
         html.context_button("Properties", make_link_to([("mode", "editfolder")], g_folder["path"]))
         html.context_button("New folder", make_link([("mode", "newfolder")]))
-        html.context_button("New file", make_link([("mode", "newfile")]))
+        html.context_button("New host list", make_link([("mode", "newfile")]))
         changelog_button()
     
     elif phase == "action":
@@ -196,7 +196,7 @@ def mode_folder(phase):
         html.write("<p>")
 
         show_filefolder_list(g_folder, "folder", "Subfolders")
-        show_filefolder_list(g_folder, "file",   "Files")
+        show_filefolder_list(g_folder, "file",   "Host lists")
 
 
 def show_filefolder_list(thing, what, title):
@@ -271,7 +271,8 @@ def mode_editfolder(phase, what, new):
         name, title, roles = None, None, []
         mode = "new"
     else:
-        page_title = "Edit %s %s" % (what, g_folder["name"])
+        page_title = "Edit %s %s" % (
+                      what == "file" and "host list" or "Folder", g_folder["name"])
         if what == "file":
             page_title += "/" + g_file["name"]
         name  = the_thing["name"]
@@ -1655,8 +1656,8 @@ def delete_folder_after_confirm(del_folder):
 
 def delete_file_after_confirm(del_file):
     wato_html_head("Confirm file deletion")
-    c = html.confirm("Do you really want to delete the configuration file <tt>%s</tt> (%s), "
-                    "which is containing %d hosts?" % (file_os_path(del_file), del_file["title"], del_file["num_hosts"]))
+    c = html.confirm("Do you really want to delete the host list <b>%s</b>, "
+                    "which is containing %d hosts?" % (del_file["title"], del_file["num_hosts"]))
     if c:
         hosts = read_configuration_file(g_folder, del_file)
         for delname in hosts:

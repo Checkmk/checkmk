@@ -101,6 +101,7 @@ def show_filter_form(is_open, filters):
     html.write("<div class=whiteborder>\n")
 
     html.write("<table class=\"form\">\n")
+
     # sort filters according to title
     s = [(f.sort_index, f.title, f) for f in filters]
     s.sort()
@@ -112,12 +113,12 @@ def show_filter_form(is_open, filters):
         html.write("<td class=content>")
         f.display()
         html.write("</td>")
-        if col == 1:
+        if col == config.filter_columns - 1:
             html.write("</tr>\n")
-        col = (col + 1) % 2
+        col = (col + 1) % config.filter_columns
     if col == 1:
         html.write("<td class=legend></td>\n<td class=content></td></tr>\n")
-    html.write('<tr><td class="legend button" colspan=4>')
+    html.write('<tr><td class="legend button" colspan=%d>' % (config.filter_columns * 2))
     html.button("search", "Search", "submit")
     html.write("</td></tr>\n")
     html.write("</table>\n")

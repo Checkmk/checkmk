@@ -38,6 +38,7 @@
     * Added snmp_uptime, uptime and printer_supply perfometers
     * Allow for displaying service data in host tables
     * View editor foldable states are now permament per user
+    * New config variable filter_columns (default is 2)
 
     BI:
     * Added new component BI to Multisite.

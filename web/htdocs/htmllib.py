@@ -323,7 +323,7 @@ class html:
             checked = ""
         if cssclass:
             cssclass = ' class="%s"' % cssclass
-        self.write("<input type=checkbox name=\"%s\"%s%s>" % (urlencode(varname), checked, cssclass))
+        self.write("<input type=checkbox name=\"%s\"%s%s>" % (varname, checked, cssclass))
         self.form_vars.append(varname)
         if error:
             html += "</x>"

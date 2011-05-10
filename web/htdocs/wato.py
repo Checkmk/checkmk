@@ -413,7 +413,7 @@ def create_wato_filename(title, what):
     while True:
         if what == "folder" and name not in g_folder["folders"]:
             break
-        elif what == "file" and name not in g_folder["files"]:
+        elif what == "file" and name + ".mk" not in g_folder["files"]:
             break
         c += 1
         name = "%s-%d" % (basename, c)

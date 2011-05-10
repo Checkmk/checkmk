@@ -195,16 +195,21 @@ class Filter:
 
 # Load all view plugins
 plugins_path = defaults.web_dir + "/plugins/views"
-for fn in os.listdir(plugins_path):
+fns = os.listdir(plugins_path)
+fns.sort()
+for fn in fns:
     if fn.endswith(".py"):
         execfile(plugins_path + "/" + fn)
 
 if defaults.omd_root:
     local_plugins_path = defaults.omd_root + "/local/share/check_mk/web/plugins/views"
-    if os.path.exists(local_plugins_path):
-        for fn in os.listdir(local_plugins_path):
-            if fn.endswith(".py"):
-                execfile(local_plugins_path + "/" + fn)
+    if local_plugins_path != plugins_path: # honor ./setup.sh in site
+        if os.path.exists(local_plugins_path):
+            fns = os.listdir(local_plugins_path)
+            fns.sort()
+            for fn in fns:
+                if fn.endswith(".py"):
+                    execfile(local_plugins_path + "/" + fn)
 
 # Declare permissions for builtin views
 config.declare_permission_section("view", "Builtin views")

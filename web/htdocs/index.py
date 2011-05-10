@@ -49,7 +49,7 @@ if defaults.omd_root:
 
 def read_get_vars(req):
     req.vars = {}
-    fields = util.FieldStorage(req)
+    fields = util.FieldStorage(req, keep_blank_values = 1)
     for field in fields.list:
         varname = field.name
         value = field.value

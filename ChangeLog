@@ -1,5 +1,6 @@
 1.1.10p3:
     Core, Setup, etc.:
+    * FIX: Avoid duplicate SNMP scan of checktypes containing a period
     * FIX: honor ignored_checktypes also on SNMP scan
     
     Multisite:

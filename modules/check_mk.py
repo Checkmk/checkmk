@@ -685,7 +685,9 @@ def snmp_scan(hostname, ipaddress):
         return []
 
     found = []
-    for checktype, detect_function in snmp_scan_functions.items():
+    items = snmp_scan_functions.items()
+    items.sort()
+    for checktype, detect_function in items:
         if checktype in ignored_checktypes:
             continue
         try:
@@ -698,7 +700,9 @@ def snmp_scan(hostname, ipaddress):
             pass
 
     # Now try all checks not having a scan function
-    for checktype in check_info.keys():
+    items = check_info.keys()
+    items.sort()
+    for checktype in items:
         if checktype in ignored_checktypes:
             continue
 
@@ -1615,7 +1619,7 @@ def inventorable_checktypes(what): # tcp, all
     checknames = [ k for k in check_info.keys()
                    if check_info[k][3] != no_inventory_possible
 #                   and (k not in ignored_checktypes)
-                   and (what == "all" or k not in snmp_info)
+                   and (what == "all" or k.split('.')[0] not in snmp_info)
                  ]
     checknames.sort()
     return checknames
@@ -1650,6 +1654,7 @@ def do_snmp_scan(hostnamelist, check_only=False, include_state=False):
                 sys.stdout.write("Trying inventory for %s on %s\n" % (checkname, hostname))
             result += make_inventory(checkname, [hostname], check_only, include_state)
     return result
+
 
 
 def make_inventory(checkname, hostnamelist, check_only=False, include_state=False):

@@ -686,6 +686,8 @@ def snmp_scan(hostname, ipaddress):
 
     found = []
     for checktype, detect_function in snmp_scan_functions.items():
+        if checktype in ignored_checktypes:
+            continue
         try:
             if detect_function(lambda oid: get_single_oid(hostname, ipaddress, oid)):
                 found.append(checktype)
@@ -697,6 +699,9 @@ def snmp_scan(hostname, ipaddress):
 
     # Now try all checks not having a scan function
     for checktype in check_info.keys():
+        if checktype in ignored_checktypes:
+            continue
+
         datatype = checktype.split('.')[0]
         if not check_uses_snmp(datatype):
             continue # no snmp check

@@ -1849,7 +1849,7 @@ for fn in os.listdir(plugins_path):
 
 if defaults.omd_root:
     local_plugins_path = defaults.omd_root + "/local/share/check_mk/web/plugins/wato"
-    if os.path.exists(local_plugins_path):
+    if local_plugins_path != plugins_path and os.path.exists(local_plugins_path):
         for fn in os.listdir(local_plugins_path):
             if fn.endswith(".py"):
                 execfile(local_plugins_path + "/" + fn)

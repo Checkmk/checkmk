@@ -454,13 +454,21 @@ def paint_perfdata_nth_value(row, n):
         return "", str(e)
     
 
+for n in range(1, 11):
+    multisite_painters["svc_perf_val%02d" % n] = {
+        "title" : "Service performance data - value number %2d" % n,
+        "short" : "Val. %d" % n,
+        "columns" : ["service_perf_data"],
+        "paint" : lambda row: paint_perfdata_nth_value(row, n-1)
+    }
 
 multisite_painters["svc_perf_firstval"] = {
-    "title" : "Service performance data - only first value",
+    "title" : "OBSOLETE - DO NOT USE THIS COLUMN",
     "short" : "Value",
     "columns" : ["service_perf_data"],
     "paint" : lambda row: paint_perfdata_nth_value(row, 0)
 }
+
 multisite_painters["svc_check_command"] = {
     "title" : "Service check command",
     "short" : "Check command",

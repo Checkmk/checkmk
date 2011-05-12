@@ -898,6 +898,11 @@ def convert_perf_value(x):
     else:
         return str(x)
 
+def convert_perf_data(p):
+    # replace None with "" and fill up to 7 values
+    p = (map(convert_perf_value, p) + ['','','',''])[0:6]
+    return "%s=%s;%s;%s;%s;%s" %  tuple(p)
+
 
 def submit_check_result(host, servicedesc, result, sa):
     global nagios_command_pipe
@@ -924,9 +929,8 @@ def submit_check_result(host, servicedesc, result, sa):
             check_command = None
 
         for p in perfdata:
-            # replace None with "" and fill up to 6 values
-            p = (map(convert_perf_value, p) + ['','','',''])[0:6]
-            perftexts.append("%s=%s;%s;%s;%s;%s" %  tuple(p) )
+            perftexts.append(convert_perf_data(p))
+
         if perftexts != [] and not direct_rrd_update(host, servicedesc, perfdata):
             if check_command and perfdata_format == "pnp":
                 perftexts.append("[%s]" % check_command)

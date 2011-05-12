@@ -22,6 +22,7 @@
     * new option --debug: creates execution profile of check_mk itself
     * sped up use of stored snmp walks
     * find configuration file in subdirectories of conf.d also
+    * check_mk_templates.cfg: make check-mk-ping take arguments
 
     Multisite:
     * FIX: Display limit-exceeded message also in multi site setups

@@ -139,6 +139,14 @@ def pnp_url(row, what, how = 'graph'):
 def pnp_popup_url(row, what):
     return pnp_url(row, what, 'popup')
 
+def pnp_icon(row, what):
+    if 'X' in html.display_options:
+        url = pnp_url(row, what)
+    else:
+        url = ""
+    return '<a href="%s" onmouseover="displayHoverMenu(event, get_url_sync(\'%s\'))" onmouseout="hoverHide()">' \
+              '<img class=icon src="images/icon_pnp.png"></a>' % (url, pnp_popup_url(row, what))
+
 def logwatch_url(sitename, notes_url):
     i = notes_url.index("/check_mk/logwatch.py")
     site = html.site_status[sitename]["site"]
@@ -189,12 +197,7 @@ def paint_icons(what, row): # what is "host" or "service"
     # PNP Graph
     pnpgraph_present = row[prefix + "pnpgraph_present"]
     if pnpgraph_present == 1:
-        if 'X' in html.display_options:
-            url = pnp_url(row, what)
-        else:
-            url = ""
-        output += '<a href="%s" onmouseover="displayHoverMenu(event, get_url_sync(\'%s\'))" onmouseout="hoverHide()">' \
-                  '<img class=icon src="images/icon_pnp.png"></a>' % (url, pnp_popup_url(row, what))
+        output += pnp_icon(row, what)
 
     if 'X' in html.display_options:
         # action_url (only, if not a PNP-URL and pnp_graph is working!)

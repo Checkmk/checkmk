@@ -36,7 +36,7 @@
     * FIX: Fixed handling of embedded graphs to support the changes made to
     * FIX: avoid duplicate import of plugins in OMD local installation
     the PNP webservice
-    * FIX: Added host_is_active and host_is_flapping columns for NagStaMon views
+    * FIX: Added host_is_active and host_flapping columns for NagStaMon views
     * Added snmp_uptime, uptime and printer_supply perfometers
     * Allow for displaying service data in host tables
     * View editor foldable states are now permament per user

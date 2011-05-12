@@ -330,8 +330,7 @@ def mode_editfolder(phase, what, new):
                 g_files[newpath] = new_thing
             
             g_folder[what + "s"][name] = new_thing
-            log_audit(new_thing, "new-" + what, u"Created new %s %s" % 
-                    (what, title))
+            log_audit(new_thing, "new-" + what, u"Created new %s %s" % (what, title))
 
         else:
             the_thing["title"] = title
@@ -426,11 +425,19 @@ def create_wato_filename(title, what):
 def convert_title_to_filename(title):
     converted = ""
     for c in title.lower():
-        if c.isalnum() or c in "-_":
+        if c == u'ä':
+            converted += 'ae'
+        elif c == u'ö':
+            converted += 'oe'
+        elif c == u'ü':
+            converted += 'ue'
+        elif c == u'ß':
+            converted += 'ss'
+        elif c in "abcdefghijklmnopqrstuvwxyz0123456789-_":
             converted += c
         else:
             converted += "_"
-    return converted
+    return str(converted)
 
 #   +----------------------------------------------------------------------+
 #   |       ____                           _   _           _               |
@@ -1101,6 +1108,8 @@ def mode_changelog(phase):
             html.write("<p>Logfile is empty. No host has been created or changed yet.</p>")
         
 def log_entry(linkinfo, action, message, logfilename):
+    if type(message) == unicode:
+        message = message.encode("utf-8")
     make_nagios_directory(conf_dir)
     if linkinfo in g_files.values():
         link = file_os_path(linkinfo)
@@ -1112,13 +1121,11 @@ def log_entry(linkinfo, action, message, logfilename):
         link = file_os_path(g_file) + ":" + linkinfo
     else:
         link = linkinfo
-    
-
 
     log_file = conf_dir + "/" + logfilename
     f = create_user_file(log_file, "ab")
     f.write("%d %s %s %s " % (int(time.time()), link, html.req.user, action))
-    f.write(message.encode("utf-8"))
+    f.write(message)
     f.write("\n")
 
 

@@ -45,7 +45,11 @@ def render_single_dataset(rows, view, group_painters, painters, num_columns):
         thispart = rows[rownum:rownum + num_columns]
         for p in painters:
             painter, link = p[0:2]
-            html.write("<tr class=data><td class=left>%s</td>" % painter["title"])
+            if len(p) >= 5 and p[4]:
+                title = p[4] # Use custom title
+            else:
+                title = painter["title"]
+            html.write("<tr class=data><td class=left>%s</td>" % title)
             for row in thispart:
                 paint(p, row)
             if len(thispart) < num_columns:

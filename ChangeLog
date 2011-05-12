@@ -22,6 +22,7 @@
     * new option --debug: creates execution profile of check_mk itself
     * sped up use of stored snmp walks
     * find configuration file in subdirectories of conf.d also
+    * check_mk_templates.cfg: make check-mk-ping take arguments
 
     Multisite:
     * FIX: Display limit-exceeded message also in multi site setups
@@ -48,6 +49,7 @@
     * Allow moving hosts from one to another config file
 
     Checks & Agents:
+    * FIX: hr_mem: ignore devices that report zero memory
     * FIX: cisco_power: fix syntax error in man page (broke also Multisite)
     * FIX: local: fixed search for custom templates PNP template
     * FIX: if/if64: always generate unique items (in case ifAlias is used)

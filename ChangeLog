@@ -115,6 +115,8 @@
     * hp_procurve_cpu: add PNP template
     * hp_procurve_cpu: rename load to utilization, rename service to CPU utilizition
     * df,df_netapp,df_netapp32,hr_fs,vms_df: convert to mergeable dictionaries
+    * mbg_lantime_state,mbg_lantime_refclock: added new checks to monitor 
+      Meinberg LANTIME GPS clocks
 
     Livestatus:
     * Updated Perl API to version 0.74 (thanks to Sven Nierlein)

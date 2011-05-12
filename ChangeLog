@@ -48,6 +48,7 @@
     * Allow moving hosts from one to another config file
 
     Checks & Agents:
+    * FIX: hr_mem: ignore devices that report zero memory
     * FIX: cisco_power: fix syntax error in man page (broke also Multisite)
     * FIX: local: fixed search for custom templates PNP template
     * FIX: if/if64: always generate unique items (in case ifAlias is used)

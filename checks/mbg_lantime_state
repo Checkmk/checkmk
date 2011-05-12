@@ -57,10 +57,10 @@ def check_mbg_lantime_state(item, params, info):
 
         # handle the reported stratum
         thr_txt = ''
-        if params[0] is not None and int(stratum) > params[0]:
+        if params[0] is not None and int(stratum) > params[1]:
             state   = max(state, 2)
             thr_txt = ' (!!)'
-        elif params[1] is not None and int(stratum) > params[1]:
+        elif params[1] is not None and int(stratum) > params[0]:
             state   = max(state, 1)
             thr_txt = ' (!)'
         state_txt.append('Stratum: %s%s' % (stratum, thr_txt))
@@ -69,10 +69,10 @@ def check_mbg_lantime_state(item, params, info):
         state_txt.append('Refclock: %s (%s)' % (refclock_name, refclock_id))
 
  	thr_txt = ''
-        if params[2] is not None and int(refclock_offset) > params[2]:
+        if params[2] is not None and int(refclock_offset) > params[3]:
             state   = max(state, 2)
             thr_txt = ' (!!)'
-        elif params[3] is not None and int(refclock_offset) > params[3]:
+        elif params[3] is not None and int(refclock_offset) > params[2]:
             state   = max(state, 1)
             thr_txt = ' (!)'
         state_txt.append('Refclock Offset: %sms%s' % (refclock_offset, thr_txt))

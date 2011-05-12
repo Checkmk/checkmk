@@ -1,3 +1,10 @@
+1.1.11i2:
+    WATO:
+    * Configration files can now be administered via the WEB UI
+      (config_files in multisite.mk is obsolete)
+    * Bulk operation on host lists (inventory, tags changed, etc)
+
+
 1.1.11i1:
     Core, Setup, etc.:
     * FIX: Avoid duplicate SNMP scan of checktypes containing a period

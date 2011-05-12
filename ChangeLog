@@ -9,7 +9,7 @@
     
     Multisite:
     * FIX: avoid duplicate import of plugins in OMD local installation
-    * FIX: Added host_is_active and host_is_flapping columns for NagStaMon views
+    * FIX: Added host_is_active and host_flapping columns for NagStaMon views
 
 1.1.10p2:
     Core, Setup, etc.:

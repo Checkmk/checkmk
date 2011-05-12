@@ -454,13 +454,75 @@ def paint_perfdata_nth_value(row, n):
         return "", str(e)
     
 
-for n in range(1, 11):
-    multisite_painters["svc_perf_val%02d" % n] = {
-        "title" : "Service performance data - value number %2d" % n,
-        "short" : "Val. %d" % n,
-        "columns" : ["service_perf_data"],
-        "paint" : lambda row: paint_perfdata_nth_value(row, n-1)
-    }
+multisite_painters["svc_perf_val01"] = {
+    "title" : "Service performance data - value number  1",
+    "short" : "Val. 1", 
+    "columns" : ["service_perf_data"],
+    "paint" : lambda row: paint_perfdata_nth_value(row, 0)
+}
+
+multisite_painters["svc_perf_val02"] = {
+    "title" : "Service performance data - value number  2",
+    "short" : "Val. 2", 
+    "columns" : ["service_perf_data"],
+    "paint" : lambda row: paint_perfdata_nth_value(row, 1)
+}
+
+multisite_painters["svc_perf_val03"] = {
+    "title" : "Service performance data - value number  3",
+    "short" : "Val. 3", 
+    "columns" : ["service_perf_data"],
+    "paint" : lambda row: paint_perfdata_nth_value(row, 2)
+}
+
+multisite_painters["svc_perf_val04"] = {
+    "title" : "Service performance data - value number  4",
+    "short" : "Val. 4", 
+    "columns" : ["service_perf_data"],
+    "paint" : lambda row: paint_perfdata_nth_value(row, 3)
+}
+
+multisite_painters["svc_perf_val05"] = {
+    "title" : "Service performance data - value number  5",
+    "short" : "Val. 5", 
+    "columns" : ["service_perf_data"],
+    "paint" : lambda row: paint_perfdata_nth_value(row, 4)
+}
+
+multisite_painters["svc_perf_val06"] = {
+    "title" : "Service performance data - value number  6",
+    "short" : "Val. 6", 
+    "columns" : ["service_perf_data"],
+    "paint" : lambda row: paint_perfdata_nth_value(row, 5)
+}
+
+multisite_painters["svc_perf_val07"] = {
+    "title" : "Service performance data - value number  7",
+    "short" : "Val. 7", 
+    "columns" : ["service_perf_data"],
+    "paint" : lambda row: paint_perfdata_nth_value(row, 6)
+}
+
+multisite_painters["svc_perf_val08"] = {
+    "title" : "Service performance data - value number  8",
+    "short" : "Val. 8", 
+    "columns" : ["service_perf_data"],
+    "paint" : lambda row: paint_perfdata_nth_value(row, 7)
+}
+
+multisite_painters["svc_perf_val09"] = {
+    "title" : "Service performance data - value number  9",
+    "short" : "Val. 9", 
+    "columns" : ["service_perf_data"],
+    "paint" : lambda row: paint_perfdata_nth_value(row, 8)
+}
+
+multisite_painters["svc_perf_val10"] = {
+    "title" : "Service performance data - value number 10",
+    "short" : "Val. 10", 
+    "columns" : ["service_perf_data"],
+    "paint" : lambda row: paint_perfdata_nth_value(row, 9)
+}
 
 multisite_painters["svc_perf_firstval"] = {
     "title" : "OBSOLETE - DO NOT USE THIS COLUMN",

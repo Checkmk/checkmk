@@ -2,6 +2,9 @@
     Core, Setup, etc.:
     * FIX: Avoid duplicate SNMP scan of checktypes containing a period
     * FIX: honor ignored_checktypes also on SNMP scan
+
+    Checks & Agents:
+    * FIX: hr_mem: ignore devices that report zero memory
     
     Multisite:
     * FIX: avoid duplicate import of plugins in OMD local installation

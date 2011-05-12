@@ -753,9 +753,17 @@ def cluster_of(hostname):
 # service and - if yes - return the cluster host of the service. If
 # no, returns the hostname of the physical host.
 def host_of_clustered_service(hostname, servicedesc):
+    my_cluster = cluster_of(hostname)
+    if not my_cluster: # we are not a cluster node
+        return hostname
+
     # 1. New style: explicitlely assigned services
     for cluster, conf in clustered_services_of.items():
-        if hostname in nodes_of(cluster) and \
+        nodes = nodes_of(cluster)
+        if not nodes:
+            raise MKGeneralException("Invalid entry clustered_services_of['%s']: %s is not a cluster." % 
+                   (cluster, cluster))
+        if hostname in nodes and \
             in_boolean_serviceconf_list(hostname, servicedesc, conf):
             return cluster
 
@@ -4229,7 +4237,7 @@ if __name__ == "__main__":
                     clust = cluster_of(host)
                     if clust:
                         missing = []
-                        for node in clusters[clust]:
+                        for node in nodes_of(clust):
                             if node not in hostnames:
                                 missing.append(node)
                         if len(missing) == 0:

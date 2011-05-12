@@ -1,0 +1,37 @@
+title: Checks reflock state of Meinberg LANTIME devices
+agents: snmp
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the reflock state of Meinberg LANTIME clocks supporting the
+ MBG-SNMP-MIB::mbgLantime ({1.3.6.1.4.1.5597.3.1}) MIB. The check has been
+ developed with a GPS170 M3x lantime V5.30k.
+
+ The check handles the reported state of the refclock, the GPS signal and the number of
+ satellites connected to.
+
+ The check raises a {CRITICAL} when the refclock is in a bad state ({notavailable}, 
+ {antennaFaulty} or {antennaShortcircuit}) and a {WARNING} state when the refclock is
+ in one of the states {trackingSearching}, {warmBoot} or {coldBoot}.
+ The GPS state raises a {CRITICAL} state when {not available} or {not synchronized} is
+ reported by the device.
+ It also handles a warning/critical threshold for the number of good satellites.
+
+inventory:
+ One check per device is created automatically.
+
+[parameters]
+good_warn (int): This is a lower threshold. When the number of good satellites drops
+ below this value a {WARNING} state is raised.
+ The default is set to {3}. The threshold can be disabled by setting to {None}.
+good_crit (int): This is a lower threshold. When the number of good satellites drops
+ below this value a {CRITICAL} state is raised.
+ The default is set to {3}. The threshold can be disabled by setting to {None}.
+
+[configuration]
+mbg_lantime_refclock_default_levels (int, int): A tuple ofintegers: The default
+ levels. These levels are used for inventorized checks. This variable
+ is preset to {(0, 0)}
+
+

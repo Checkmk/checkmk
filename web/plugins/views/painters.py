@@ -834,6 +834,20 @@ multisite_painters["host_notifper"] = {
    "paint" : lambda row: (None, row["host_notification_period"])
 }
 
+multisite_painters["host_flapping"] = {
+    "title" : "Host is flapping",
+    "short" : "Flap",
+    "columns" : [ "host_is_flapping" ],
+    "paint" : lambda row: paint_nagiosflag(row, "host_is_flapping", True)
+}
+
+multisite_painters["host_is_active"] = {
+    "title" : "Host is active",
+    "short" : "Active",
+    "columns" : [ "host_active_checks_enabled" ],
+    "paint" : lambda row: paint_nagiosflag(row, "host_active_checks_enabled", None)
+}
+
 multisite_painters["host_pnpgraph" ] = {
     "title"   : "PNP host graph",
     "short"   : "PNP graph",

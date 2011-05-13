@@ -54,7 +54,7 @@ multisite_builtin_views = {
               'public': True,
               'show_filters': ['siteopt', 'hostregex', 'opthostgroup'],
               'sorters': [('site', False), ('site_host', False)],
-              'title': 'All hosts',
+              'title': _('All hosts'),
               'topic': "Hosts"},
  'allhosts_mini': {'browser_reload': 30,
                    'column_headers': 'pergroup',

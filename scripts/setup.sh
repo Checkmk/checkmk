@@ -252,6 +252,10 @@ logwatch extension.  That directory should [4;1mnot[0m be
 in your WWW document root. A separate apache configuration file will be
 installed that maps the directory into your URL schema"
 
+ask_dir localedir /usr/share/$NAME/locale $HOMEBASEDIR/locale $OMD_ROOT/local/share/check_mk/locale "Localization dir" \
+  "Base directory for gettext localization files. Multisite comes prepared for localzation
+but does not ship any language per default." 
+
 ask_dir docdir /usr/share/doc/$NAME $HOMEBASEDIR/doc $OMD_ROOT/local/share/check_mk/doc "documentation" \
   "Some documentation about check_mk will be installed here. Please note,
 however, that most of check_mk's documentation is available only online at
@@ -466,6 +470,7 @@ check_mk_configdir          = '$confdir/conf.d'
 checks_dir                  = '$checksdir'
 check_manpages_dir          = '$checkmandir'
 modules_dir                 = '$modulesdir'
+locale_dir                  = '$localedir'
 agents_dir                  = '$agentsdir'
 var_dir                     = '$vardir'
 lib_dir                     = '$libdir'
@@ -630,6 +635,7 @@ do
 	   fi &&
 	   mkdir -p $DESTDIR$modulesdir &&
 	   create_defaults > $DESTDIR$modulesdir/defaults &&
+           mkdir -p $DESTDIR$localedir &&
 	   mkdir -p $DESTDIR$checksdir &&
 	   tar xzf $SRCDIR/checks.tar.gz -C $DESTDIR$checksdir &&
 	   mkdir -p $DESTDIR$web_dir &&

@@ -441,6 +441,9 @@ reschedule_timeout = 10.0
 # Number of columsn in "Filter" form
 filter_columns = 2
 
+# Default language for l10n
+default_language = None
+
 #    __        ___  _____ ___  
 #    \ \      / / \|_   _/ _ \ 
 #     \ \ /\ / / _ \ | || | | |

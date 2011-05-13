@@ -24,6 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import __builtin__
+__builtin__._ = lambda x: "HIRNI: " + x
+__builtin__.current_language = None
+
 from mod_python import apache, util
 import sys, os, pprint
 from lib import *
@@ -155,6 +159,10 @@ def handler(req, profiling = True):
 
         # Initialize the multiste i18n
         lang = config.default_language
+
+        # Make current language globally known to all of our modules
+        __builtin__.current_language = lang
+
         if lang:
             locale_base = defaults.locale_dir
             po_path = '/%s/LC_MESSAGES/multisite.po' % lang
@@ -167,8 +175,12 @@ def handler(req, profiling = True):
             except IOError, e:
                 raise MKUserError('lang', 'No translation file found for the given language.')
         else:
-            import __builtin__
-            __builtin__._ = lambda x: x
+            __builtin__._ = lambda x: "PASST: " + x
+
+        # All plugins might have to be reloaded due to a language change
+        __all_our_fucking_moudles = [ views ]
+        for module in __all_our_fucking_moudles:
+            module.load_plugins()
 
 
         # profiling can be enabled in multisite.mk

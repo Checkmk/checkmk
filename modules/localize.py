@@ -60,6 +60,7 @@ Available commands are:
    update  LANG     ...  Creates or updates a .po file for the given language.
    compile LANG     ...  Compiles the .po file into a .mo file which can
                          be used by gettext.
+   edit    LANG     ...  Call update, open .po in editor and compile in one step
 
   The regular process for translating is:
 
@@ -84,6 +85,7 @@ def do_localize(args):
     commands = {
         "update"  : localize_update,
         "compile" : localize_compile,
+        "edit"    : localize_edit,
     }
     f = commands.get(command)
     if f:
@@ -190,6 +192,19 @@ msgstr ""
         f = open(pot_file).read()
         open(pot_file, 'w').write(header + f)
         sys.stdout.write('Success! Output: %s\n' % pot_file)
+
+
+def localize_edit(lang):
+    localize_update(lang)
+
+    editor = os.getenv("VISUAL", os.getenv("EDITOR", "/usr/bin/vi")) 
+    if not os.path.exists(editor): 
+        editor = 'vi' 
+
+    if 0 == os.system("%s '%s'" % (editor, po_file)):
+        localize_compile(lang)
+    else:
+        sys.stderr.write("Aborted.\n")
 
 
 # Start translating in a new language

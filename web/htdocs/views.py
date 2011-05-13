@@ -29,6 +29,9 @@ import weblib
 from lib import *
 from pagefunctions import *
 
+max_display_columns   = 12
+max_sort_columns      = 5
+
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
 try:
@@ -36,39 +39,8 @@ try:
 except NameError:
     from sets import Set as set
 
-
-config.declare_permission_section("action", "Commands on Objects")
-config.declare_permission("action.notifications",
-        "Enable/disable notifications",
-        "Enable and disable notifications on hosts and services",
-        [ "admin" ])
-config.declare_permission("action.enablechecks",
-        "Enable/disable checks",
-        "Enable and disable active or passive checks on hosts and services",
-        [ "admin" ])
-config.declare_permission("action.reschedule",
-        "Reschedule checks",
-        "Reschedule host and service checks",
-        [ "user", "admin" ])
-config.declare_permission("action.fakechecks",
-        "Fake check results",
-        "Manually submit check results for host and service checks",
-        [ "admin" ])
-config.declare_permission("action.acknowledge",
-        "Acknowledge",
-        "Acknowledge host and service problems and remove acknowledgements",
-        [ "user", "admin" ])
-config.declare_permission("action.addcomment",
-        "Add comments",
-        "Add comments to hosts or services, and remove comments",
-        [ "user", "admin" ])
-config.declare_permission("action.downtimes",
-        "Set/Remove Downtimes",
-        "Schedule and remove downtimes on hosts and services",
-        [ "user", "admin" ])
-
 # Datastructures and functions needed before plugins can be loaded
-
+loaded_with_language = False
 multisite_datasources      = {}
 multisite_filters          = {}
 multisite_layouts          = {}
@@ -76,6 +48,76 @@ multisite_painters         = {}
 multisite_sorters          = {}
 multisite_builtin_views    = {}
 multisite_painter_options  = {}
+
+# Load all view plugins
+def load_plugins():
+    if loaded_with_language == current_language:
+        return
+
+    global loaded_with_language
+    loaded_with_language = current_language
+
+    config.declare_permission_section("action", "Commands on Objects")
+    config.declare_permission("action.notifications",
+            "Enable/disable notifications",
+            "Enable and disable notifications on hosts and services",
+            [ "admin" ])
+    config.declare_permission("action.enablechecks",
+            "Enable/disable checks",
+            "Enable and disable active or passive checks on hosts and services",
+            [ "admin" ])
+    config.declare_permission("action.reschedule",
+            "Reschedule checks",
+            "Reschedule host and service checks",
+            [ "user", "admin" ])
+    config.declare_permission("action.fakechecks",
+            "Fake check results",
+            "Manually submit check results for host and service checks",
+            [ "admin" ])
+    config.declare_permission("action.acknowledge",
+            "Acknowledge",
+            "Acknowledge host and service problems and remove acknowledgements",
+            [ "user", "admin" ])
+    config.declare_permission("action.addcomment",
+            "Add comments",
+            "Add comments to hosts or services, and remove comments",
+            [ "user", "admin" ])
+    config.declare_permission("action.downtimes",
+            "Set/Remove Downtimes",
+            "Schedule and remove downtimes on hosts and services",
+            [ "user", "admin" ])
+
+    plugins_path = defaults.web_dir + "/plugins/views"
+
+    fns = os.listdir(plugins_path)
+    fns.sort()
+    for fn in fns:
+        if fn.endswith(".py"):
+            execfile(plugins_path + "/" + fn, globals())
+
+    if defaults.omd_root:
+        local_plugins_path = defaults.omd_root + "/local/share/check_mk/web/plugins/views"
+        if local_plugins_path != plugins_path: # honor ./setup.sh in site
+            if os.path.exists(local_plugins_path):
+                fns = os.listdir(local_plugins_path)
+                fns.sort()
+                for fn in fns:
+                    if fn.endswith(".py"):
+                        execfile(local_plugins_path + "/" + fn, globals())
+
+    # Declare permissions for builtin views
+    config.declare_permission_section("view", _("Builtin views"))
+    for name, view in multisite_builtin_views.items():
+        config.declare_permission("view.%s" % name,
+                view["title"],
+                "",
+                config.roles)
+
+    # Add painter names to painter objects (e.g. for JSON web service)
+    for n, p in multisite_painters.items():
+        p["name"] = n
+
+
 
 
 ##################################################################################
@@ -194,39 +236,6 @@ class Filter:
     def heading_info(self, infoname):
         return None
 
-# Load all view plugins
-plugins_path = defaults.web_dir + "/plugins/views"
-fns = os.listdir(plugins_path)
-fns.sort()
-for fn in fns:
-    if fn.endswith(".py"):
-        execfile(plugins_path + "/" + fn)
-
-if defaults.omd_root:
-    local_plugins_path = defaults.omd_root + "/local/share/check_mk/web/plugins/views"
-    if local_plugins_path != plugins_path: # honor ./setup.sh in site
-        if os.path.exists(local_plugins_path):
-            fns = os.listdir(local_plugins_path)
-            fns.sort()
-            for fn in fns:
-                if fn.endswith(".py"):
-                    execfile(local_plugins_path + "/" + fn)
-
-# Declare permissions for builtin views
-config.declare_permission_section("view", "Builtin views")
-for name, view in multisite_builtin_views.items():
-    config.declare_permission("view.%s" % name,
-            view["title"],
-            "",
-            config.roles)
-
-# Add painter names to painter objects (e.g. for JSON web service)
-for n, p in multisite_painters.items():
-    p["name"] = n
-
-
-max_display_columns   = 12
-max_sort_columns      = 5
 
 # Load all views - users or builtins
 def load_views():
@@ -578,7 +587,9 @@ function toggle_section(nr, oImg) {
     sid = 3
     section_header(sid, "Filters")
     html.write("<table class=filters>")
-    html.write("<tr><th>Filter</th><th>usage</th><th>hardcoded settings</th><th>HTML variables</th></tr>\n")
+    html.write("<tr><th>")
+    html.write(_("Filter"))
+    html.write("</th><th>usage</th><th>hardcoded settings</th><th>HTML variables</th></tr>\n")
     allowed_filters = filters_allowed_for_datasource(datasourcename)
     # sort filters according to title
     s = [(filt.sort_index, filt.title, fname, filt) for fname, filt in allowed_filters.items()]
@@ -1173,12 +1184,12 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         # Filter-button
         if 'F' in display_options and len(show_filters) > 0 and not html.do_actions():
             filter_isopen = html.var("search", "") == "" and view["mustsearch"]
-            toggle_button("table_filter", filter_isopen, "Filter", ["filter"])
+            toggle_button("table_filter", filter_isopen, _("Filter"), ["filter"])
             html.write("<td class=minigap></td>\n")
 
         # Command-button
         if 'C' in display_options and len(rows) > 0 and config.may("act") and not html.do_actions():
-            toggle_button("table_actions", False, "Commands")
+            toggle_button("table_actions", False, _("Commands"))
             html.write("<td class=minigap></td>\n")
 
         # Painter-Options
@@ -2120,4 +2131,7 @@ def get_painter_option(name):
     if not config.may("painter_options"):
         return opt["default"]
     return opt.get("value", opt["default"])
+
+
+load_plugins()
 

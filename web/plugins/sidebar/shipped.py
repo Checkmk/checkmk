@@ -516,7 +516,7 @@ def render_tactical_overview():
             (_("Services"), svcdata, 'svcproblems',  'service'),
             ]:
         html.write("<tr><th>%s</th><th>%s</th><th>%s</th></tr>\n" % \
-                                     (title, _('Problems'), _('Unhandled'))
+                                     (title, _('Problems'), _('Unhandled')))
         html.write("<tr>")
 
         html.write('<td class=total><a target="main" href="view.py?view_name=all%ss">%d</a></td>' % (what, data[0]))
@@ -895,7 +895,7 @@ def page_edit_bookmark(h):
     html.write("<table class=edit_bookmarks>")
     html.write("<tr><td>%s</td><td>" % _('Title:'))
     html.text_input("title", size = 50)
-    html.write("</td></tr><tr><td>%s:</td><td>" % _('URL:')
+    html.write("</td></tr><tr><td>%s:</td><td>" % _('URL:'))
     html.text_input("url", size = 50)
     html.write("</td></tr><tr><td></td><td>")
     html.button("save", _("Save"))

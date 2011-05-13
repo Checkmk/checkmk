@@ -27,30 +27,40 @@
 import config, defaults, livestatus, htmllib, views, pprint, os, copy
 from lib import *
 
-sidebar_snapins = {}
-
 # Constants to be used in snapins
 snapin_width = 230
 
-# Load all snapins
-snapins_dir = defaults.web_dir + "/plugins/sidebar"
-for fn in os.listdir(snapins_dir):
-    if fn.endswith(".py"):
-        execfile(snapins_dir + "/" + fn)
-if defaults.omd_root:
-    local_snapins_dir = defaults.omd_root + "/local/share/check_mk/web/plugins/sidebar"
-    if os.path.exists(local_snapins_dir):
-        for fn in os.listdir(local_snapins_dir):
-            if fn.endswith(".py"):
-                execfile(local_snapins_dir + "/" + fn)
 
-# Declare permissions: each snapin creates one permission
-config.declare_permission_section("sidesnap", "Sidebar snapins")
-for name, snapin in sidebar_snapins.items():
-    config.declare_permission("sidesnap.%s" % name,
-        snapin["title"],
-        "",
-        snapin["allowed"])
+# Datastructures and functions needed before plugins can be loaded
+loaded_with_language = False
+sidebar_snapins = {}
+
+def load_plugins():
+    if loaded_with_language == current_language:
+        return
+
+    global loaded_with_language
+    loaded_with_language = current_language
+
+    # Load all snapins
+    snapins_dir = defaults.web_dir + "/plugins/sidebar"
+    for fn in os.listdir(snapins_dir):
+        if fn.endswith(".py"):
+            execfile(snapins_dir + "/" + fn, globals())
+    if defaults.omd_root:
+        local_snapins_dir = defaults.omd_root + "/local/share/check_mk/web/plugins/sidebar"
+        if os.path.exists(local_snapins_dir):
+            for fn in os.listdir(local_snapins_dir):
+                if fn.endswith(".py"):
+                    execfile(local_snapins_dir + "/" + fn, globals())
+
+    # Declare permissions: each snapin creates one permission
+    config.declare_permission_section("sidesnap", "Sidebar snapins")
+    for name, snapin in sidebar_snapins.items():
+        config.declare_permission("sidesnap.%s" % name,
+            snapin["title"],
+            "",
+            snapin["allowed"])
 
 # Helper functions to be used by snapins
 def link(text, target):
@@ -330,3 +340,5 @@ def page_add_snapin(h):
 
     html.write("</tr></table>\n")
     html.footer()
+
+load_plugins()

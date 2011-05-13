@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import __builtin__
-__builtin__._ = lambda x: "HIRNI: " + x
+__builtin__._ = lambda x: x
 __builtin__.current_language = None
 
 from mod_python import apache, util
@@ -158,7 +158,7 @@ def handler(req, profiling = True):
             config.debug = True
 
         # Initialize the multiste i18n
-        lang = config.default_language
+        lang = html.var("lang", config.default_language)
 
         # Make current language globally known to all of our modules
         __builtin__.current_language = lang
@@ -175,12 +175,14 @@ def handler(req, profiling = True):
             except IOError, e:
                 raise MKUserError('lang', 'No translation file found for the given language.')
         else:
-            __builtin__._ = lambda x: "PASST: " + x
+            __builtin__._ = lambda x: x
 
         # All plugins might have to be reloaded due to a language change
-        __all_our_fucking_moudles = [ views ]
-        for module in __all_our_fucking_moudles:
-            module.load_plugins()
+        for module in [ views, sidebar, wato, bi]:
+            try:
+                module.load_plugins()
+            except:
+                pass
 
 
         # profiling can be enabled in multisite.mk

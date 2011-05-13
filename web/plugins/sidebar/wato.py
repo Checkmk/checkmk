@@ -24,8 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#!/usr/bin/python
-
 import config, wato
 
 def render_wato_files():
@@ -55,8 +53,8 @@ def ajax_wato_files(h):
 
 
 sidebar_snapins["wato"] = {
-    "title" : "Check_MK Web Administration Tool",
-    "description" : "WATO - the Web Administration Tool of Check_MK - manage hosts to be monitored without access to the command line",
+    "title" : _("Check_MK Web Administration Tool"),
+    "description" : _("WATO - the Web Administration Tool of Check_MK - manage hosts to be monitored without access to the command line"),
     "author" : "Mathias Kettner",
     "render" : render_wato_files,
     "allowed" : [ "admin", "user" ],

@@ -138,10 +138,15 @@ def localize_init_po(lang):
 def localize_sniff():
     sys.stdout.write('Sniffing source code...\n')
 
+    if local_web_dir and os.path.exists(local_web_dir):
+        paths = web_dir + ' ' + local_web_dir
+    else:
+        paths = web_dir
+
     if os.system('xgettext --no-wrap --sort-output --force-po '
                  '-L Python --from-code=utf-8 --omit-header '
                  '-o %s $(find %s -type f -name \*.py | xargs) >/dev/null' % \
-                   (pot_file, web_dir)) != 0:
+                   (pot_file, paths)) != 0:
         sys.stderr.write('Failed!\n')
     else:
         header = '''# +------------------------------------------------------------------+

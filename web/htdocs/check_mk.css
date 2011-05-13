@@ -850,6 +850,10 @@ table.data tr.data td.pnpgraph {
    border-right: 1px solid #666;
 }
 
+tr.data td.pnpgraph img {
+    border: 1px solid #888;
+    margin: 7px 3px 3px 0px; 
+}
 /*
  _                            _       
 | |    __ _ _   _  ___  _   _| |_ ___ 
@@ -1001,6 +1005,7 @@ table.dataset td.left {
     background-color: #888;
     width: 10%;
     white-space: nowrap;
+    vertical-align: top;
 }
 table.dataset td.gap {
     background-color: transparent;

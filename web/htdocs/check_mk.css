@@ -691,12 +691,15 @@ td.state {
     width: 32px;
 }
 
-td.count {
+table.data td.count {
     text-align: right;
     font-weight: bold;
     font-family: sans-serif;
 }
 
+table.data td.number {
+    text-align: right;
+}
 /* Performeter styling */
 
 td.perfometer {

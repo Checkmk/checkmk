@@ -163,7 +163,7 @@ def handler(req, profiling = True):
             config.debug = True
 
         # Initialize the multiste i18n
-        lang = html.var('lang')
+        lang = config.default_language
         if lang:
             locale_base = defaults.locale_dir
             po_path = '/%s/LC_MESSAGES/multisite.po' % lang
@@ -171,8 +171,8 @@ def handler(req, profiling = True):
             if os.path.exists(local_locale_path + po_path):
                 locale_base = local_locale_path
             try:
-                i18n = gettext.translation('multisite', locale_base, languages = [ lang ])
-                i18n.install()
+                i18n = gettext.translation('multisite', locale_base, languages = [ lang ], codeset = 'UTF-8')
+                i18n.install(unicode = True)
             except IOError, e:
                 raise MKUserError('lang', 'No translation file found for the given language.')
         else:

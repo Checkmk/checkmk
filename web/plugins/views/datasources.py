@@ -35,7 +35,7 @@
 
 
 multisite_datasources["hosts"] = {
-    "title"   : "All hosts",
+    "title"   : _("All hosts"),
     "table"   : "hosts",
     "infos"   : [ "host" ],
     "keys"    : [ "host_name", "host_downtimes" ],

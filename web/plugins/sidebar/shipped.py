@@ -44,17 +44,17 @@ except NameError:
 #
 # --------------------------------------------------------------
 def render_about():
-    html.write("Version: " + defaults.check_mk_version)
+    html.write(_("Version: ") + defaults.check_mk_version)
     html.write("<ul>")
-    bulletlink("Homepage",        "http://mathias-kettner.de/check_mk.html")
-    bulletlink("Documentation",   "http://mathias-kettner.de/checkmk.html")
-    bulletlink("Download",        "http://mathias-kettner.de/check_mk_download.html")
+    bulletlink(_("Homepage"),        "http://mathias-kettner.de/check_mk.html")
+    bulletlink(_("Documentation"),   "http://mathias-kettner.de/checkmk.html")
+    bulletlink(_("Download"),        "http://mathias-kettner.de/check_mk_download.html")
     bulletlink("Mathias Kettner", "http://mathias-kettner.de")
     html.write("</ul>")
 
 sidebar_snapins["about"] = {
-    "title" : "About Check_MK",
-    "description" : "Version information and Links to Documentation, Homepage and Download of Check_MK",
+    "title" : _("About Check_MK"),
+    "description" : _("Version information and Links to Documentation, Homepage and Download of Check_MK"),
     "author" : "Mathias Kettner",
     "render" : render_about,
     "allowed" : [ "admin", "user", "guest" ],
@@ -70,14 +70,14 @@ sidebar_snapins["about"] = {
 # -----------------------------------------------------------------------
 def render_admin():
     html.write('<ul>')
-    bulletlink("View permissions", "view_permissions.py")
+    bulletlink(_("View permissions"), "view_permissions.py")
     if config.may("edit_permissions"):
-        bulletlink("Edit permissions", "edit_permissions.py")
+        bulletlink(_("Edit permissions"), "edit_permissions.py")
     html.write('</ul>')
 
 sidebar_snapins["admin"] = {
-    "title" : "Administration",
-    "description" : "Links to administrations functions, e.g. configuration of permissions",
+    "title" : _("Administration"),
+    "description" : _("Links to administrations functions, e.g. configuration of permissions"),
     "author" : "Mathias Kettner",
     "render" : render_admin,
     "allowed" : [ "admin" ],
@@ -111,12 +111,12 @@ def render_views():
         if not first: # at least one item rendered
             html.write("</ul>")
 
-    s = [ (view.get("topic", "Other"), view["title"], name) for name, view in html.available_views.items() if not view["hidden"] ]
+    s = [ (view.get("topic", _("Other")), view["title"], name) for name, view in html.available_views.items() if not view["hidden"] ]
     s.sort()
 
     # Enforce a certain order on the topics
     known_topics = [ "Hosts", "Hostgroups", "Services", "Servicegroups", 
-                     "Business Intelligence", "Problems", "Addons" ]
+                     _("Business Intelligence"), _("Problems"), _("Addons") ]
     for topic in known_topics:
         render_topic(topic, s)
 
@@ -129,13 +129,13 @@ def render_views():
     links = []
     if config.may("edit_views"):
         if config.debug:
-            links.append(("EXPORT", "export_views.py"))
-        links.append(("EDIT", "edit_views.py"))
+            links.append((_("EXPORT"), "export_views.py"))
+        links.append((_("EDIT"), "edit_views.py"))
         footnotelinks(links)
 
 sidebar_snapins["views"] = {
-    "title" : "Views",
-    "description" : "Links to all views",
+    "title" : _("Views"),
+    "description" : _("Links to all views"),
     "author" : "Mathias Kettner",
     "render" : render_views,
     "allowed" : [ "user", "admin", "guest" ],
@@ -168,15 +168,15 @@ def render_groups(what):
         html.write('</ul>')
 
 sidebar_snapins["hostgroups"] = {
-    "title" : "Hostgroups",
-    "description" : "Directs links to all host groups",
+    "title" : _("Hostgroups"),
+    "description" : _("Directs links to all host groups"),
     "author" : "Mathias Kettner",
     "render" : lambda: render_groups("host"),
     "allowed" : [ "user", "admin", "guest" ]
 }
 sidebar_snapins["servicegroups"] = {
-    "title" : "Servicegroups",
-    "description" : "Direct links to all service groups",
+    "title" : _("Servicegroups"),
+    "description" : _("Direct links to all service groups"),
     "author" : "Mathias Kettner",
     "render" : lambda: render_groups("service"),
     "allowed" : [ "user", "admin", "guest" ]
@@ -253,8 +253,8 @@ snapin_allhosts_styles = """
 """
 
 sidebar_snapins["hosts"] = {
-    "title" : "All hosts",
-    "description" : "A summary state of each host with a link to the view showing its services",
+    "title" : _("All hosts"),
+    "description" : _("A summary state of each host with a link to the view showing its services"),
     "author" : "Mathias Kettner",
     "render" : lambda: render_hosts("hosts"),
     "allowed" : [ "user", "admin", "guest" ],
@@ -263,8 +263,8 @@ sidebar_snapins["hosts"] = {
 }
 
 sidebar_snapins["summary_hosts"] = {
-    "title" : "Summary hosts",
-    "description" : "A summary state of all summary hosts (summary hosts hold aggregated service states and are a feature of Check_MK)",
+    "title" : _("Summary hosts"),
+    "description" : _("A summary state of all summary hosts (summary hosts hold aggregated service states and are a feature of Check_MK)"),
     "author" : "Mathias Kettner",
     "render" : lambda: render_hosts("summary"),
     "allowed" : [ "user", "admin", "guest" ],
@@ -273,8 +273,8 @@ sidebar_snapins["summary_hosts"] = {
 }
 
 sidebar_snapins["problem_hosts"] = {
-    "title" : "Problem hosts",
-    "description" : "A summary state of all hosts that have problem, with links to problems of those hosts",
+    "title" : _("Problem hosts"),
+    "description" : _("A summary state of all hosts that have problem, with links to problems of those hosts"),
     "author" : "Mathias Kettner",
     "render" : lambda: render_hosts("problems"),
     "allowed" : [ "user", "admin", "guest" ],
@@ -352,8 +352,8 @@ def render_hostmatrix():
 
 
 sidebar_snapins["hostmatrix"] = {
-    "title"       : "Host Matrix",
-    "description" : "A matrix showing s colored square for each host",
+    "title"       : _("Host Matrix"),
+    "description" : _("A matrix showing s colored square for each host"),
     "author"      : "Mathias Kettner",
     "render"      : render_hostmatrix,
     "allowed"     : [ "user", "admin", "guest" ],
@@ -387,7 +387,7 @@ def render_sitestatus():
             if state == "disabled":
                 switch = "on"
                 text = site["alias"]
-                title = "Site %s is switched off" % site["alias"]
+                title = _("Site %s is switched off") % site["alias"]
             else:
                 switch = "off"
 		try:
@@ -412,8 +412,8 @@ def render_sitestatus():
 
 
 sidebar_snapins["sitestatus"] = {
-  "title" : "Site status",
-  "description" : "Connection state of each site and button for enabling and disabling the site connection",
+  "title" : _("Site status"),
+  "description" : _("Connection state of each site and button for enabling and disabling the site connection"),
   "author" : "Mathias Kettner",
   "render" : render_sitestatus,
   "allowed" : [ "user", "admin" ],
@@ -512,10 +512,11 @@ def render_tactical_overview():
         return
     html.write("<table class=\"content_center tacticaloverview\" cellspacing=2 cellpadding=0 border=0>\n")
     for title, data, view, what in [
-            ("Hosts",    hstdata, 'hostproblems', 'host'),
-            ("Services", svcdata, 'svcproblems',  'service'),
+            (_("Hosts"),    hstdata, 'hostproblems', 'host'),
+            (_("Services"), svcdata, 'svcproblems',  'service'),
             ]:
-        html.write("<tr><th>%s</th><th>Problems</th><th>Unhandled</th></tr>\n" % title)
+        html.write("<tr><th>%s</th><th>%s</th><th>%s</th></tr>\n" % \
+                                     (title, _('Problems'), _('Unhandled'))
         html.write("<tr>")
 
         html.write('<td class=total><a target="main" href="view.py?view_name=all%ss">%d</a></td>' % (what, data[0]))
@@ -535,8 +536,8 @@ def render_tactical_overview():
     html.write("</table>\n")
 
 sidebar_snapins["tactical_overview"] = {
-    "title" : "Tactical Overview",
-    "description" : "The total number of hosts and service with and without problems",
+    "title" : _("Tactical Overview"),
+    "description" : _("The total number of hosts and service with and without problems"),
     "author" : "Mathias Kettner",
     "refresh" : 10,
     "render" : render_tactical_overview,
@@ -582,13 +583,14 @@ def render_performance():
     data = html.live.query("GET status\nColumns: external_command_buffer_slots external_command_buffer_max\n")
     size = sum([row[0] for row in data])
     maxx = sum([row[1] for row in data])
-    html.write("<tr><td class=left>Com. buf. max/total</td>"
-               "<td class=right><strong>%d / %d</strong></td></tr>" % (maxx, size))
+    html.write("<tr><td class=left>%s</td>"
+               "<td class=right><strong>%d / %d</strong></td></tr>" % \
+                                        (_('Com. buf. max/total'), maxx, size))
     html.write("</table>\n")
 
 sidebar_snapins["performance"] = {
-    "title" : "Server performance",
-    "description" : "Live monitor of the overall performance of all monitoring servers",
+    "title" : _("Server performance"),
+    "description" : _("Live monitor of the overall performance of all monitoring servers"),
     "author" : "Mathias Kettner",
     "refresh" : 10,
     "render" : render_performance,
@@ -623,8 +625,8 @@ def render_current_time():
     html.write("<div class=time>%s</div>" % time.strftime("%H:%M"))
 
 sidebar_snapins["time"] = {
-    "title" : "Server time",
-    "description" : "A large clock showing the current time of the web server",
+    "title" : _("Server time"),
+    "description" : _("A large clock showing the current time of the web server"),
     "author" : "Mathias Kettner",
     "refresh" : 30,
     "render" : render_current_time,
@@ -706,8 +708,8 @@ def render_nagios():
                 nagioscgilink(text, ref)
 
 sidebar_snapins["nagios_legacy"] = {
-    "title" : "Nagios",
-    "description" : "The classical sidebar of Nagios 3.2.0 with links to your local Nagios instance (no multi site support)",
+    "title" : _("Nagios"),
+    "description" : _("The classical sidebar of Nagios 3.2.0 with links to your local Nagios instance (no multi site support)"),
     "author" : "Mathias Kettner",
     "render" : render_nagios,
     "allowed" : [ "user", "admin", "guest", ],
@@ -723,11 +725,11 @@ sidebar_snapins["nagios_legacy"] = {
 # ----------------------------------------------------------------
 def render_master_control():
     items = [
-        ( "enable_notifications",     "Notifications", ),
-        ( "execute_service_checks",   "Service checks" ),
-        ( "execute_host_checks",      "Host checks" ),
-        ( "enable_event_handlers",    "Event handlers" ),
-        ( "process_performance_data", "Performance data"),
+        ( "enable_notifications",     _("Notifications" )),
+        ( "execute_service_checks",   _("Service checks" )),
+        ( "execute_host_checks",      _("Host checks" )),
+        ( "enable_event_handlers",    _("Event handlers" )),
+        ( "process_performance_data", _("Performance data" )),
         ]
 
     html.live.set_prepend_site(True)
@@ -750,8 +752,8 @@ def render_master_control():
     html.write("</table>")
 
 sidebar_snapins["master_control"] = {
-    "title" : "Master control",
-    "description" : "Buttons for switching globally states such as enabling checks and notifications",
+    "title" : _("Master control"),
+    "description" : _("Buttons for switching globally states such as enabling checks and notifications"),
     "author" : "Mathias Kettner",
     "render" : render_master_control,
     "allowed" : [ "admin", ],
@@ -829,7 +831,7 @@ def ajax_switch_masterstate(h):
         html.live.set_only_sites()
         render_master_control()
     else:
-        html.write("Command %s/%d not found" % (column, state))
+        html.write(_("Command %s/%d not found") % (column, state))
 
 # ---------------------------------------------------------
 #   ____              _                         _
@@ -854,22 +856,22 @@ def render_bookmarks():
     n = 0
     for title, href in bookmarks:
         html.write("<div id=\"bookmark_%d\">" % n)
-        iconbutton("delete", "del_bookmark.py?num=%d" % n, "side", "updateContents", 'snapin_bookmarks')
-        iconbutton("edit", "edit_bookmark.py?num=%d" % n, "main")
+        iconbutton(_("delete"), "del_bookmark.py?num=%d" % n, "side", "updateContents", 'snapin_bookmarks')
+        iconbutton(_("edit"), "edit_bookmark.py?num=%d" % n, "main")
         html.write(link(title, href))
         html.write("</div>")
         n += 1
 
-    html.write("<div class=footnotelink><a href=\"#\" onclick=\"addBookmark()\">Add Bookmark</a></div>\n")
+    html.write("<div class=footnotelink><a href=\"#\" onclick=\"addBookmark()\">%s</a></div>\n" % _('Add Bookmark'))
 
 def page_edit_bookmark(h):
     global html
     html = h
-    html.header("Edit Bookmark")
+    html.header(_("Edit Bookmark"))
     n = int(html.var("num"))
     bookmarks = load_bookmarks()
     if n >= len(bookmarks):
-        raise MKGeneralException("Unknown bookmark id: %d. This is probably a problem with reload or browser history. Please try again." % n)
+        raise MKGeneralException(_("Unknown bookmark id: %d. This is probably a problem with reload or browser history. Please try again.") % n)
 
     if html.var("save") and html.check_transaction():
         title = html.var("title")
@@ -891,12 +893,12 @@ def page_edit_bookmark(h):
         html.set_var("url", url)
 
     html.write("<table class=edit_bookmarks>")
-    html.write("<tr><td>Title:</td><td>")
+    html.write("<tr><td>%s</td><td>" % _('Title:'))
     html.text_input("title", size = 50)
-    html.write("</td></tr><tr><td>URL:</td><td>")
+    html.write("</td></tr><tr><td>%s:</td><td>" % _('URL:')
     html.text_input("url", size = 50)
     html.write("</td></tr><tr><td></td><td>")
-    html.button("save", "Save")
+    html.button("save", _("Save"))
     html.write("</td></tr></table>\n")
     html.hidden_field("num", str(n))
     html.end_form()
@@ -924,8 +926,8 @@ def ajax_add_bookmark(h):
     render_bookmarks()
 
 sidebar_snapins["bookmarks"] = {
-    "title" : "Bookmarks",
-    "description" : "A simple and yet practical snapin allowing to create bookmarks to views and other content in the main frame",
+    "title" : _("Bookmarks"),
+    "description" : _("A simple and yet practical snapin allowing to create bookmarks to views and other content in the main frame"),
     "author" : "Mathias Kettner",
     "render" : render_bookmarks,
     "allowed": [ "user", "admin", "guest" ],
@@ -945,7 +947,7 @@ sidebar_snapins["bookmarks"] = {
 def render_custom_links():
     links = config.custom_links.get(config.role)
     if not links:
-        html.write("Please edit <tt>%s</tt> in order to configure which links are shown in this snapin.\n" %
+        html.write(_("Please edit <tt>%s</tt> in order to configure which links are shown in this snapin.\n") %
                   (defaults.default_config_dir + "/multisite.mk"))
         return
 
@@ -978,15 +980,15 @@ def render_custom_links():
                         html.write('<img src="images/link_link.gif">')
                     simplelink(entry[0], entry[1])
                 else:
-                    html.write("Second part of tuple must be list or string, not %s\n" % str(entry[1]))
+                    html.write(_("Second part of tuple must be list or string, not %s\n") % str(entry[1]))
             except Exception, e:
-                html.write("invalid entry %s: %s<br>\n" % (entry, e))
+                html.write(_("invalid entry %s: %s<br>\n") % (entry, e))
 
     render_list([], links)
 
 sidebar_snapins["custom_links"] = {
-    "title" : "Custom Links",
-    "description" : "This snapin contains custom links which can be configured via the configuration variable <tt>custom_links</tt> in <tt>multisite.mk</tt>",
+    "title" : _("Custom Links"),
+    "description" : _("This snapin contains custom links which can be configured via the configuration variable <tt>custom_links</tt> in <tt>multisite.mk</tt>"),
     "author" : "Mathias Kettner",
     "render" : render_custom_links,
     "allowed" : [ "user", "admin", "guest" ],

@@ -54,7 +54,7 @@ multisite_layouts["python"] = {
     "hide"   : True,
 }
 
-    
+
 json_escape = re.compile(r'[\\"\r\n\t\b\f\x00-\x1f]')
 json_encoding_table = dict([(chr(i), '\\u%04x' % i) for i in range(32)])
 json_encoding_table.update({'\b': '\\b', '\f': '\\f', '\n': '\\n', '\r': '\\r', '\t': '\\t', '\\': '\\\\', '"': '\\"' })

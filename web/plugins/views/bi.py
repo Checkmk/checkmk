@@ -123,14 +123,14 @@ multisite_painter_options["aggr_wrap"] = {
 
 
 def render_bi_state(state):
-    return { bi.PENDING: "PD",
-             bi.OK:      "OK", 
-             bi.WARN:    "WA",
-             bi.CRIT:    "CR", 
-             bi.UNKNOWN: "UN",
-             bi.MISSING: "MI",
-             bi.UNAVAIL: "NA",
-    }.get(state, "??")
+    return { bi.PENDING: _("PD"),
+             bi.OK:      _("OK"),
+             bi.WARN:    _("WA"),
+             bi.CRIT:    _("CR"),
+             bi.UNKNOWN: _("UN"),
+             bi.MISSING: _("MI"),
+             bi.UNAVAIL: _("NA"),
+    }.get(state, _("??"))
 
 def render_assume_icon(site, host, service):
     if service:
@@ -141,9 +141,10 @@ def render_assume_icon(site, host, service):
     mousecode = \
        'onmouseover="this.style.cursor=\'pointer\';" ' \
        'onmouseout="this.style.cursor=\'auto\';" ' \
-       'title="Assume another state for this item (reload page to activate)" ' \
+       'title="%s" ' \
        'onclick="toggle_assumption(this, %s, %s, %s);" ' % \
-         (repr(site), repr(str(host)), service == None and 'null' or repr(str(service)))
+         (_("Assume another state for this item (reload page to activate)"),
+          repr(site), repr(str(host)), service == None and 'null' or repr(str(service)))
     current = str(ass).lower()
     return '<img state="%s" class=assumption %s src="images/assume_%s.png">\n' % (current, mousecode, current)
 
@@ -168,7 +169,7 @@ def aggr_render_leaf(tree, show_host):
         content += '<a href="%s">%s</a><b class=bullet>&diams;</b>' % (host_url, host)
 
     if not service:
-        content += '<a href="%s">Host status</a>' % host_url
+        content += '<a href="%s">%s</a>' % (_("Host status"), host_url)
     else:
         content += '<a href="%s">%s</a>' % (service_url, service)
 
@@ -183,7 +184,7 @@ def aggr_render_node(tree, title, mousecode, show_host):
         effective_state = state
 
     if (effective_state != state):
-        addclass = " assumed"
+        addclass = " " + _("assumed")
     else:
         addclass = ""
 
@@ -232,7 +233,7 @@ def paint_aggr_tree_foldable(row):
     mousecode = \
        'onmouseover="this.style.cursor=\'pointer\';" ' \
        'onmouseout="this.style.cursor=\'auto\';" ' \
-       'onclick="toggle_subtree(this);" ' 
+       'onclick="toggle_subtree(this);" '
 
 
     def render_subtree(tree, path, show_host):
@@ -361,7 +362,7 @@ multisite_painters["aggr_treestate"] = {
 class BIGroupFilter(Filter):
     def __init__(self):
         self.column = "aggr_group"
-        Filter.__init__(self, self.column, "Aggregation group", "aggr", [self.column], [self.column])
+        Filter.__init__(self, self.column, _("Aggregation group"), "aggr", [self.column], [self.column])
 
     def variable_settings(self, row):
         return [ (self.htmlvars[0], row[self.column]) ]
@@ -382,8 +383,13 @@ declare_filter( 90,  BIGroupFilter())
 
 class BITextFilter(Filter):
     def __init__(self, what):
-        self.column = "aggr_" + what 
-        Filter.__init__(self, self.column, "Aggregation " + what, "aggr", [self.column], [self.column])
+        self.column = "aggr_" + what
+        label = ''
+        if what == 'name':
+            label = _('Aggregation name')
+        elif what == 'output':
+            label = _('Aggregation output')
+        Filter.__init__(self, self.column, label, "aggr", [self.column], [self.column])
 
     def variable_settings(self, row):
         return [ (self.htmlvars[0], row[self.column]) ]
@@ -407,7 +413,7 @@ declare_filter(121, BITextFilter("output"))
 class BIHostFilter(Filter):
     def __init__(self):
         self.column = "aggr_hosts"
-        Filter.__init__(self, self.column, "Affected hosts contain", "aggr", ["site", "host"], [])
+        Filter.__init__(self, self.column, _("Affected hosts contain"), "aggr", ["site", "host"], [])
 
     def display(self):
         html.text_input(self.htmlvars[1])
@@ -431,16 +437,16 @@ class BIHostFilter(Filter):
             return rows
         return [ row for row in rows if self.find_host(val, row["aggr_hosts"]) ]
 
-declare_filter(130, BIHostFilter(), "Filter for all aggregations that base on status information of that host. Exact match (no regular expression)")
+declare_filter(130, BIHostFilter(), _("Filter for all aggregations that base on status information of that host. Exact match (no regular expression)"))
 
 class BIServiceFilter(Filter):
     def __init__(self):
-        Filter.__init__(self, "aggr_service", "Affected by service", "host", ["site", "host", "service"], [])
+        Filter.__init__(self, "aggr_service", _("Affected by service"), "host", ["site", "host", "service"], [])
 
     def display(self):
-        html.write("Host: ")
+        html.write(_("Host") + ": ")
         html.text_input("host")
-        html.write("Service: ")
+        html.write(_("Service") + ": ")
         html.text_input("service")
 
     def heading_info(self, infoname):
@@ -453,7 +459,7 @@ class BIServiceFilter(Filter):
     def variable_settings(self, row):
         return [ ("site", row["site"]), ("host", row["host_name"]), ("service", row["service_description"]) ]
 
-declare_filter(131, BIServiceFilter(), "Filter for all aggregations that are affected by one specific service on a specific host (no regular expression)")
+declare_filter(131, BIServiceFilter(), _("Filter for all aggregations that are affected by one specific service on a specific host (no regular expression)"))
 
 class BIStatusFilter(Filter):
     def __init__(self, what):

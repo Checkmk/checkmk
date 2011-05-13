@@ -137,29 +137,29 @@ def declare_simple_sorter(name, title, column, func):
     }
 
 #                      name           title                    column                       sortfunction
-declare_simple_sorter("svcdescr",     "Service description",   "service_description",       cmp_simple_string)
-declare_simple_sorter("svcoutput",    "Service plugin output", "service_plugin_output",     cmp_simple_string)
-declare_simple_sorter("site",         "Site",                  "site",                      cmp_simple_string)
-declare_simple_sorter("stateage",     "Service state age",     "service_last_state_change", cmp_simple_number)
-declare_simple_sorter("servicegroup", "Servicegroup",          "servicegroup_alias",        cmp_simple_string)
-declare_simple_sorter("hostgroup",    "Hostgroup",             "hostgroup_alias",           cmp_simple_string)
+declare_simple_sorter("svcdescr",     _("Service description"),   "service_description",       cmp_simple_string)
+declare_simple_sorter("svcoutput",    _("Service plugin output"), "service_plugin_output",     cmp_simple_string)
+declare_simple_sorter("site",         _("Site"),                  "site",                      cmp_simple_string)
+declare_simple_sorter("stateage",     _("Service state age"),     "service_last_state_change", cmp_simple_number)
+declare_simple_sorter("servicegroup", _("Servicegroup"),          "servicegroup_alias",        cmp_simple_string)
+declare_simple_sorter("hostgroup",    _("Hostgroup"),             "hostgroup_alias",           cmp_simple_string)
 
 # Comments
-declare_simple_sorter("comment_author", "Comment author",      "comment_author",            cmp_simple_string)
-declare_simple_sorter("comment_type",   "Comment type",        "comment_type",              cmp_simple_number)
+declare_simple_sorter("comment_author", _("Comment author"),      "comment_author",            cmp_simple_string)
+declare_simple_sorter("comment_type",   _("Comment type"),        "comment_type",              cmp_simple_number)
 
 # Downtimes
-declare_simple_sorter("downtime_what",   "Downtime type (host/service)",  "is_service",   cmp_simple_number)
-declare_simple_sorter("downtime_start_time",   "Downtime start",    "downtime_start_time",            cmp_simple_number)
-declare_simple_sorter("downtime_end_time",     "Downtime end",       "downtime_end_time",             cmp_simple_number)
-declare_simple_sorter("downtime_entry_time", "Downtime entry time",  "downtime_entry_time", cmp_simple_number)
+declare_simple_sorter("downtime_what",         _("Downtime type (host/service)"),  "is_service",            cmp_simple_number)
+declare_simple_sorter("downtime_start_time",   _("Downtime start"),                "downtime_start_time",   cmp_simple_number)
+declare_simple_sorter("downtime_end_time",     _("Downtime end"),                  "downtime_end_time",     cmp_simple_number)
+declare_simple_sorter("downtime_entry_time",   _("Downtime entry time"),           "downtime_entry_time",   cmp_simple_number)
 
 # Alert statistics
-declare_simple_sorter("alerts_ok",       "Number of recoveries",      "alerts_ok",      cmp_simple_number)
-declare_simple_sorter("alerts_warn",     "Number of warnings",        "alerts_warn",    cmp_simple_number)
-declare_simple_sorter("alerts_crit",     "Number of critical alerts", "alerts_crit",    cmp_simple_number)
-declare_simple_sorter("alerts_unknown",  "Number of unknown alerts",  "alerts_unknown", cmp_simple_number)
-declare_simple_sorter("alerts_problem",  "Number of problem alerts",  "alerts_problem", cmp_simple_number)
+declare_simple_sorter("alerts_ok",       _("Number of recoveries"),      "alerts_ok",      cmp_simple_number)
+declare_simple_sorter("alerts_warn",     _("Number of warnings"),        "alerts_warn",    cmp_simple_number)
+declare_simple_sorter("alerts_crit",     _("Number of critical alerts"), "alerts_crit",    cmp_simple_number)
+declare_simple_sorter("alerts_unknown",  _("Number of unknown alerts"),  "alerts_unknown", cmp_simple_number)
+declare_simple_sorter("alerts_problem",  _("Number of problem alerts"),  "alerts_problem", cmp_simple_number)
 
 # Aggregations
-declare_simple_sorter("aggr_name",   "Aggregation name",  "aggr_name",       cmp_simple_string)
+declare_simple_sorter("aggr_name",   _("Aggregation name"),  "aggr_name",       cmp_simple_string)

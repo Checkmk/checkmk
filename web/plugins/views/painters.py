@@ -159,12 +159,12 @@ def wato_link(filename, site, hostname, where):
         url = prefix + "wato.py?filename=%s&host=%s" % (htmllib.urlencode(filename), htmllib.urlencode(hostname))
         if where == "inventory":
             url += "&mode=inventory"
-            help = "Edit services"
+            help = _("Edit services in WATO - the Check_MK Web Administration Tool")
         else:
             url += "&mode=edithost"
-            help = "Open this host"
+            help = _("Open this host in WATO - the Check_MK Web Administration Tool")
         return '<a href="%s"><img class=icon src="images/icon_wato.gif" ' \
-               'title="%s in WATO - the Check_MK Web Administration Tool"></a>' % (url, help)
+               'title="%s"></a>' % (url, help)
     else:
         return ""
 
@@ -185,7 +185,7 @@ def paint_icons(what, row): # what is "host" or "service"
     if "_REALNAME" in custom_vars:
         newrow = row.copy()
         newrow["host_name"] = custom_vars["_REALNAME"]
-        output += link_to_view("<img class=icon title='Detailed host infos' src='images/icon_detail.gif'>",
+        output += link_to_view("<img class=icon title='"+_("Detailed host infos")+"' src='images/icon_detail.gif'>",
             newrow, 'host')
 
     # Extract host tags
@@ -218,7 +218,7 @@ def paint_icons(what, row): # what is "host" or "service"
 
     # Problem has been acknowledged
     if row[prefix + "acknowledged"]:
-        output += '<img class=icon title="this problem has been acknowledged" src="images/icon_ack.gif">'
+        output += '<img class=icon title="'+_('This problem has been acknowledged')+'" src="images/icon_ack.gif">'
 
     # Currently we are in a downtime + link to list of downtimes for this host / service
     if row[prefix + "scheduled_downtime_depth"] > 0:
@@ -234,35 +234,36 @@ def paint_icons(what, row): # what is "host" or "service"
 
     # Notifications disabled
     if not row[prefix + "notifications_enabled"]:
-        output += '<img class=icon title="notifications are disabled for this %s" src="images/icon_ndisabled.gif">' % \
-                  what
+        output += '<img class=icon title="%s" src="images/icon_ndisabled.gif">' % \
+                                              _('Notifications are disabled for this %s') % what
 
     # Flapping
     if row[prefix + "is_flapping"]:
-        output += '<img class=icon title="This %s is flapping" src="images/icon_flapping.gif">' % what
+        output += '<img class=icon title="%s" src="images/icon_flapping.gif">' % \
+                                                                   'This %s is flapping') % what
 
     # Setting of active checks modified by user
     if "active_checks_enabled" in row[prefix + "modified_attributes_list"]:
         if row[prefix + "active_checks_enabled"] == 0:
-            output += '<img class=icon title="Active checks have been manually disabled for this %s!" '\
-                      'src="images/icon_disabled.gif">' % what
+            output += '<img class=icon title="%s" src="images/icon_disabled.gif">' % \
+                              _('Active checks have been manually disabled for this %s!') % what
         else:
-            output += '<img class=icon title="Active checks have been manually enabled for this %s!" '\
-                      'src="images/icon_enabled.gif">' % what
+            output += '<img class=icon title="%s" src="images/icon_enabled.gif">' % \
+                               _('Active checks have been manually enabled for this %s!') % what
 
     # Passive checks disabled manually?
     if "passive_checks_enabled" in row[prefix + "modified_attributes_list"]:
         if row[prefix + "accept_passive_checks"] == 0:
-            output += '<img class=icon title="Passive checks have been manually disabled for this %s!" '\
-                      'src="images/icon_npassive.gif">' % what
+            output += '<img class=icon title="%s" src="images/icon_npassive.gif">' % \
+                             _('Passive checks have been manually disabled for this %s!') % what
 
 
     if not row[prefix + "in_notification_period"]:
-        output += '<img class=icon title="Out of notification period" src="images/icon_outofnot.gif">'
+        output += '<img class=icon title="%s" src="images/icon_outofnot.gif">' % _('Out of notification period')
 
     # Link to aggregations
     if bi.is_part_of_aggregation(html, what, row["site"], row["host_name"], row.get("service_description")):
-         output += link_to_view('<img class=icon src="images/icon_aggr.gif" title="Aggregations containing this %s">' % what, row, 'aggr_' + what)
+         output += link_to_view('<img class=icon src="images/icon_aggr.gif" title="%s">' % _('Aggregations containing this %s') % what, row, 'aggr_' + what)
 
     # Link to WATO for hosts
     if "wato" in tags and what == "host":
@@ -284,8 +285,8 @@ def paint_icons(what, row): # what is "host" or "service"
         if what == 'service':
             name2 = row['service_description']
         output += '<a href=\"#\" onclick="performAction(this, \'reschedule\', \'%s\', \'%s\', \'%s\', \'%s\');">' \
-                  '<img class=icon title="Reschedule an immediate check of this %s" ' \
-                  'src="images/icon_reload.gif" /></a>' % (what, row["site"], row["host_name"], name2, what)
+                  '<img class=icon title="%s" src="images/icon_reload.gif" /></a>' % \
+                        (_('Reschedule an immediate check of this %s') % what, row["site"], row["host_name"], name2, what)
 
     return "icons", output
 
@@ -325,7 +326,7 @@ def paint_nagios_link(row):
     else:
         url += "&type=1"
         what = "host"
-    return "singleicon", "<a href=\"%s\"><img title=\"Show this %s in Nagios\" src=\"images/icon_nagios.gif\"></a>" % (url, what)
+    return "singleicon", "<a href=\"%s\"><img title=\"%s\" src=\"images/icon_nagios.gif\"></a>" % (url, _('Show this %s in Nagios') % what)
 
 def paint_age(timestamp, has_been_checked, bold_if_younger_than):
     if not has_been_checked:
@@ -455,7 +456,7 @@ def paint_perfdata_nth_value(row, n):
         return "", number
     except Exception, e:
         return "", str(e)
-    
+
 
 multisite_painters["svc_perf_val01"] = {
     "title" : _("Service performance data - value number  1"),
@@ -726,7 +727,7 @@ def paint_check_manpage(row):
 	else:
 	    return "", description.replace("{", "<b>").replace("}", "</b>")
     else:
-	return "", "Man-Page: %s not found." % p
+	return "", _("Man-Page: %s not found.") % p
 
 multisite_painters["check_manpage"] = {
     "title" : _("Check manual (for Check_MK based checks)"),
@@ -802,7 +803,7 @@ def paint_custom_notes(row):
     return "", "<hr>".join(contents)
 
 multisite_painters["svc_custom_notes"] = {
-    "title" : _("Custom services notes"), 
+    "title" : _("Custom services notes"),
     "short" : _("Notes"),
     "columns" : [ "host_name", "host_address", "service_description" ],
     "paint" : paint_custom_notes
@@ -1418,7 +1419,7 @@ multisite_painters["comment_what"] = {
     "title" : _("Comment type (host/service)"),
     "short" : _("Type"),
     "columns" : ["comment_type"],
-    "paint" : lambda row: (None, row["comment_type"] == 1 and "Host" or "Service")
+    "paint" : lambda row: (None, row["comment_type"] == 1 and _("Host") or _("Service"))
 }
 multisite_painters["comment_time"] = {
     "title" : _("Comment entry time"),

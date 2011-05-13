@@ -24,7 +24,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-VERSION=1.1.11i1
+VERSION=1.1.11i2
 NAME=check_mk
 LANG=
 LC_ALL=
@@ -498,17 +498,21 @@ pnp_url                     = '${url_prefix}pnp4nagios/'
 pnp_templates_dir           = '$pnptemplates'
 pnp_rraconf_dir             = '$pnprraconf'
 doc_dir                     = '$docdir'
-check_mk_automation         = 'sudo -u $(id -un) $bindir/check_mk --automation'
 EOF
 
     if [ -n "$OMD_ROOT" ] ; then
 cat <<EOF  
 
 # Special for OMD
+check_mk_automation         = None
 omd_site                    = '$OMD_SITE'
 omd_root                    = '$OMD_ROOT'
 tcp_cache_dir		    = '$OMD_ROOT/tmp/check_mk/cache'
 counters_directory          = '$OMD_ROOT/tmp/check_mk/counters'
+EOF
+   else
+cat <<EOF
+check_mk_automation         = 'sudo -u $(id -un) $bindir/check_mk --automation'
 EOF
    fi
 }

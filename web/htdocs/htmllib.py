@@ -83,7 +83,6 @@ def urlencode_vars(vars):
         
         output += varname
         output += "="
-        # output += urlencode(value)
         output += urllib.quote(value)
     return output
 
@@ -179,8 +178,12 @@ class html:
         if action == None:
             action = self.req.myfile + ".py"
         self.current_form = name
-        self.write("<form name=%s class=%s action=\"%s\" method=%s>\n" %
-                   (name, name, action, method))
+        if method.lower() == "post":
+            enctype = ' enctype="multipart/form-data"'
+        else:
+            enctype = ''
+        self.write("<form name=%s class=%s action=\"%s\" method=%s%s>\n" %
+                   (name, name, action, method, enctype))
         self.hidden_field("filled_in", "on")
         self.hidden_field("_transid", str(self.current_transid()))
         self.hidden_fields(self.global_vars)
@@ -230,10 +233,19 @@ class html:
         self.write("<input type=submit name=\"%s\" id=\"%s\" value=\"%s\" class=\"%s\">\n" % \
                    ( varname, varname, title, cssclass))
 
-    def buttonlink(self, href, text, add_transid=False):
+    def buttonlink(self, href, text, add_transid=False, obj_id='', style=''):
         if add_transid:
             href += "&_transid=%d" % self.current_transid()
-        self.write("<a href=\"%s\" class=button>%s</a>" % (href, text))
+        if obj_id:
+            obj_id = ' id=%s' % obj_id
+        if style:
+            style = ' style="%s"' % style
+        self.write("<a href=\"%s\" class=button%s%s>%s</a>" % (href, obj_id, style, text))
+
+    def jsbutton(self, varname, text, onclick, style=''):
+        if style:
+            style = ' style="%s"' % style
+        self.write("<input type=button name=%s id=%s onclick=\"%s\" class=button%s value=\"%s\" />" % (varname, varname, onclick, style, text))
 
     def begin_context_buttons(self):
         self.write("<table class=contextlinks><tr><td>\n")
@@ -296,18 +308,25 @@ class html:
 
     def radiobutton(self, varname, value, checked, text):
         checked_text = checked and " checked" or ""
-        self.write("<input type=radio name=%s value=\"%s\"%s> %s &nbsp; \n" %
+        self.write("<input type=radio name=%s value=\"%s\"%s> %s\n" %
                       (varname, value, checked_text, text))
         self.form_vars.append(varname)
 
-    def checkbox(self, varname, deflt=""):
+    def checkbox(self, varname, deflt="", cssclass = ''):
+        error = self.user_errors.get(varname)
+        if error:
+            html = "<x class=inputerror>"
         value = self.req.vars.get(varname, deflt)
         if value != "" and value != False:
             checked = " CHECKED"
         else:
             checked = ""
-        self.write("<input type=checkbox name=\"%s\"%s>" % (urlencode(varname), checked))
+        if cssclass:
+            cssclass = ' class="%s"' % cssclass
+        self.write("<input type=checkbox name=\"%s\"%s%s>" % (varname, checked, cssclass))
         self.form_vars.append(varname)
+        if error:
+            html += "</x>"
 
     def datetime_input(self, varname, default_value):
         try:
@@ -371,6 +390,14 @@ class html:
             raise MKUserError(varname, "Please enter the time in the format HH:MM")
         return m * 60 + h * 3600
 
+    def upload_file(self, varname):
+        error = self.user_errors.get(varname)
+        if error:
+            self.write("<x class=inputerror>")
+        self.write('<input type="file" name="%s">' % varname)
+        if error:
+            self.write("</x>")
+        self.form_vars.append(varname)
 
     def html_head(self, title):
         if not self.req.header_sent:
@@ -516,7 +543,7 @@ class html:
             return # user has pressed "No"
         if not self.has_var("_do_confirm"):
             self.write("<div class=really>%s" % msg)
-            self.begin_form("confirm")
+            self.begin_form("confirm", None, "POST")
             self.hidden_fields(add_action_vars = True)
             self.button("_do_confirm", "Yes!", "really")
             self.button("_do_actions", "No", "")
@@ -538,11 +565,8 @@ class html:
     def var(self, varname, deflt = None):
         return self.req.vars.get(varname, deflt)
 
-    def multivar(self, varname, deflt = None):
-        return self.req.multivars.get(varname, deflt)
-
     def var_utf8(self, varname, deflt = None):
-        return unicode(self.req.vars.get(varname, deflt), "utf-8")
+        return self.req.vars.get(varname, deflt).decode("utf-8")
 
     def set_var(self, varname, value):
         self.req.vars[varname] = value

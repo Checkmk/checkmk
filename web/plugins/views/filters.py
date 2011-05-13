@@ -267,7 +267,7 @@ class FilterTristate(Filter):
         current = html.var(self.varname)
         for value, text in [("1", "yes"), ("0", "no"), ("-1", "(ignore)")]:
             checked = current == value or (current in [ None, ""] and int(value) == self.deflt)
-            html.radiobutton(self.varname, value, checked, text)
+            html.radiobutton(self.varname, value, checked, text + " &nbsp; ")
 
     def tristate_value(self):
         current = html.var(self.varname)
@@ -383,7 +383,7 @@ class FilterTime(Filter):
         html.write("<br>\n")
         current = html.var(self.name, "since")
         for t in [ "before", "since" ]:
-            html.radiobutton(self.name, t, current == t, t)
+            html.radiobutton(self.name, t, current == t, t + " &nbsp; ")
             html.write(" ")
 
     def filter(self, infoname):

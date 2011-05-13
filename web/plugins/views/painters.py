@@ -139,6 +139,14 @@ def pnp_url(row, what, how = 'graph'):
 def pnp_popup_url(row, what):
     return pnp_url(row, what, 'popup')
 
+def pnp_icon(row, what):
+    if 'X' in html.display_options:
+        url = pnp_url(row, what)
+    else:
+        url = ""
+    return '<a href="%s" onmouseover="displayHoverMenu(event, get_url_sync(\'%s\'))" onmouseout="hoverHide()">' \
+              '<img class=icon src="images/icon_pnp.png"></a>' % (url, pnp_popup_url(row, what))
+
 def logwatch_url(sitename, notes_url):
     i = notes_url.index("/check_mk/logwatch.py")
     site = html.site_status[sitename]["site"]
@@ -189,12 +197,7 @@ def paint_icons(what, row): # what is "host" or "service"
     # PNP Graph
     pnpgraph_present = row[prefix + "pnpgraph_present"]
     if pnpgraph_present == 1:
-        if 'X' in html.display_options:
-            url = pnp_url(row, what)
-        else:
-            url = ""
-        output += '<a href="%s" onmouseover="displayHoverMenu(event, get_url_sync(\'%s\'))" onmouseout="hoverHide()">' \
-                  '<img class=icon src="images/icon_pnp.png"></a>' % (url, pnp_popup_url(row, what))
+        output += pnp_icon(row, what)
 
     if 'X' in html.display_options:
         # action_url (only, if not a PNP-URL and pnp_graph is working!)
@@ -440,6 +443,97 @@ multisite_painters["svc_perf_data"] = {
     "columns" : ["service_perf_data"],
     "paint" : lambda row: (None, row["service_perf_data"])
 }
+
+def paint_perfdata_nth_value(row, n):
+    perfdata = row["service_perf_data"]
+    try:
+        parts = perfdata.split()
+        varname, rest = parts[n].split("=")
+        number = rest.split(';')[0]
+        while len(number) > 0 and not number[-1].isdigit():
+            number = number[:-1]
+        return "", number
+    except Exception, e:
+        return "", str(e)
+    
+
+multisite_painters["svc_perf_val01"] = {
+    "title" : "Service performance data - value number  1",
+    "short" : "Val. 1", 
+    "columns" : ["service_perf_data"],
+    "paint" : lambda row: paint_perfdata_nth_value(row, 0)
+}
+
+multisite_painters["svc_perf_val02"] = {
+    "title" : "Service performance data - value number  2",
+    "short" : "Val. 2", 
+    "columns" : ["service_perf_data"],
+    "paint" : lambda row: paint_perfdata_nth_value(row, 1)
+}
+
+multisite_painters["svc_perf_val03"] = {
+    "title" : "Service performance data - value number  3",
+    "short" : "Val. 3", 
+    "columns" : ["service_perf_data"],
+    "paint" : lambda row: paint_perfdata_nth_value(row, 2)
+}
+
+multisite_painters["svc_perf_val04"] = {
+    "title" : "Service performance data - value number  4",
+    "short" : "Val. 4", 
+    "columns" : ["service_perf_data"],
+    "paint" : lambda row: paint_perfdata_nth_value(row, 3)
+}
+
+multisite_painters["svc_perf_val05"] = {
+    "title" : "Service performance data - value number  5",
+    "short" : "Val. 5", 
+    "columns" : ["service_perf_data"],
+    "paint" : lambda row: paint_perfdata_nth_value(row, 4)
+}
+
+multisite_painters["svc_perf_val06"] = {
+    "title" : "Service performance data - value number  6",
+    "short" : "Val. 6", 
+    "columns" : ["service_perf_data"],
+    "paint" : lambda row: paint_perfdata_nth_value(row, 5)
+}
+
+multisite_painters["svc_perf_val07"] = {
+    "title" : "Service performance data - value number  7",
+    "short" : "Val. 7", 
+    "columns" : ["service_perf_data"],
+    "paint" : lambda row: paint_perfdata_nth_value(row, 6)
+}
+
+multisite_painters["svc_perf_val08"] = {
+    "title" : "Service performance data - value number  8",
+    "short" : "Val. 8", 
+    "columns" : ["service_perf_data"],
+    "paint" : lambda row: paint_perfdata_nth_value(row, 7)
+}
+
+multisite_painters["svc_perf_val09"] = {
+    "title" : "Service performance data - value number  9",
+    "short" : "Val. 9", 
+    "columns" : ["service_perf_data"],
+    "paint" : lambda row: paint_perfdata_nth_value(row, 8)
+}
+
+multisite_painters["svc_perf_val10"] = {
+    "title" : "Service performance data - value number 10",
+    "short" : "Val. 10", 
+    "columns" : ["service_perf_data"],
+    "paint" : lambda row: paint_perfdata_nth_value(row, 9)
+}
+
+multisite_painters["svc_perf_firstval"] = {
+    "title" : "OBSOLETE - DO NOT USE THIS COLUMN",
+    "short" : "Value",
+    "columns" : ["service_perf_data"],
+    "paint" : lambda row: paint_perfdata_nth_value(row, 0)
+}
+
 multisite_painters["svc_check_command"] = {
     "title" : "Service check command",
     "short" : "Check command",

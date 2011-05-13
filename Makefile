@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL           = /bin/bash
-VERSION        	= 1.1.11i1
+VERSION        	= 1.1.11i2
 NAME           	= check_mk
 RPM_TOPDIR     	= rpm.topdir
 RPM_BUILDROOT  	= rpm.buildroot
@@ -100,7 +100,9 @@ mk-livestatus:
 
 
 version:
-	[ "$$(head -c 12 /etc/issue)" = "Ubuntu 10.10" ] || { echo 'You are not on the reference system!' ; exit 1; }
+	[ "$$(head -c 12 /etc/issue)" = "Ubuntu 10.10" \
+          -o "$$(head -c 12 /etc/issue)" = "Ubuntu 11.04" ] \
+          || { echo 'You are not on the reference system!' ; exit 1; }
 	@newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)") ; \
 	if [ -n "$$newversion" ] ; then $(MAKE) NEW_VERSION=$$newversion setversion ; fi
 

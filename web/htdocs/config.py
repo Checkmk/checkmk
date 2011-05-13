@@ -450,6 +450,7 @@ filter_columns = 2
 
 config_files = []
 host_tags = []
+wato_hide_filenames = False
 
 
 #     ____ ___ 

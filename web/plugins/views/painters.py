@@ -240,7 +240,7 @@ def paint_icons(what, row): # what is "host" or "service"
     # Flapping
     if row[prefix + "is_flapping"]:
         output += '<img class=icon title="%s" src="images/icon_flapping.gif">' % \
-                                                                   'This %s is flapping') % what
+                                                                   _('This %s is flapping') % what
 
     # Setting of active checks modified by user
     if "active_checks_enabled" in row[prefix + "modified_attributes_list"]:

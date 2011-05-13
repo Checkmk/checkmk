@@ -2033,6 +2033,7 @@ def precompile_hostcheck(hostname):
     source_filename = compiled_filename + ".py"
     output = file(source_filename, "w")
     output.write("#!/usr/bin/python\n")
+    output.write("# encoding: utf-8\n")
     output.write(stripped_python_file(modules_dir + "/check_mk_base.py"))
 
     # initialize global variables

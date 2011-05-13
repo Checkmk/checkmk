@@ -61,6 +61,7 @@ if omd_root:
     local_pnp_templates_dir  = local_share + "/pnp-templates"
     local_pnp_rraconf_dir    = local_share + "/pnp-rraconf"
     local_doc_dir            = omd_root + "/local/share/doc/check_mk"
+    local_locale_dir         = local_share + "/locale"
 else:
     local_checks_dir         = None
     local_check_manpages_dir = None
@@ -69,6 +70,7 @@ else:
     local_pnp_templates_dir  = None
     local_pnp_rraconf_dir    = None
     local_doc_dir            = None
+    local_locale_dir         = None
 
 
 
@@ -2898,6 +2900,7 @@ def show_paths():
          ( local_pnp_templates_dir,    dir, local, "Locally installed PNP templates"),
          ( local_pnp_rraconf_dir,      dir, local, "Locally installed PNP RRA configuration"),
          ( local_doc_dir,              dir, local, "Locally installed documentation"),
+         ( local_locale_dir,           dir, local, "Locally installed localizations"),
         ]
 
     def show_paths(title, t):
@@ -3065,6 +3068,7 @@ def usage():
  check_mk --snmpget OID HOST1 HOST2 ...    Fetch single OIDs and output them
  check_mk --scan-parents [HOST1 HOST2...]  autoscan parents, create conf.d/parents.mk
  check_mk -P, --package COMMAND            do package operations
+ check_mk --localize COMMAND               do localization operations
  check_mk -V, --version                    print version
  check_mk -h, --help                       print this help
 
@@ -3138,6 +3142,10 @@ NOTES:
   -P, --package brings you into packager mode. Packages are
   used to ship inofficial extensions of Check_MK. Call without
   arguments for a help on packaging.
+
+  --localize brings you into localization mode. You can create
+  and/or improve the localization of Check_MKs Multisite.  Call without
+  arguments for a help on localization.
 
   --donate is for those who decided to help the Check_MK project
   by donating live host data. It tars the cached agent data of
@@ -4069,7 +4077,7 @@ if __name__ == "__main__":
     short_options = 'SHVLCURODMd:Ic:nhvpXPuN'
     long_options = [ "help", "version", "verbose", "compile", "debug",
                      "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
-                     "flush", "package", "donate", "snmpwalk", "usewalk",
+                     "flush", "package", "localize", "donate", "snmpwalk", "usewalk",
                      "scan-parents", "procs=", "automation=", 
                      "snmpget=", "profile",
                      "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
@@ -4170,6 +4178,10 @@ if __name__ == "__main__":
             elif o in ['-P', '--package']:
                 execfile(modules_dir + "/packaging.py")
                 do_packaging(args)
+                done = True
+            elif o in ['--localize']:
+                execfile(modules_dir + "/localize.py")
+                do_localize(args)
                 done = True
             elif o == '--donate':
                 do_donation()

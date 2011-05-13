@@ -1,3 +1,7 @@
+1.1.11i2:
+    Multisite:
+    * Introduced basic infrastructure for multilanguage support in Multisite
+
 1.1.11i1:
     Core, Setup, etc.:
     * FIX: Avoid duplicate SNMP scan of checktypes containing a period

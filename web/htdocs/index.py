@@ -39,6 +39,7 @@ for fn in os.listdir(pagehandlers_dir):
 
 if defaults.omd_root:
     local_module_path = defaults.omd_root + "/local/share/check_mk/web/htdocs"
+    local_locale_path = defaults.omd_root + "/local/share/check_mk/locale"
     if local_module_path not in sys.path:
         sys.path[0:0] = [ local_module_path, defaults.web_dir + "/htdocs" ]
     local_pagehandlers_dir = defaults.omd_root + "/local/share/check_mk/web/plugins/pages"
@@ -161,6 +162,24 @@ def handler(req, profiling = True):
         if html.var("debug"): # Debug flag may be set via URL
             config.debug = True
 
+        # Initialize the multiste i18n
+        lang = html.var('lang')
+        if lang:
+            locale_base = defaults.locale_dir
+            po_path = '/%s/LC_MESSAGES/multisite.po' % lang
+            # Use file in OMD local strucuture when existing
+            if os.path.exists(local_locale_path + po_path):
+                locale_base = local_locale_path
+            try:
+                i18n = gettext.translation('multisite', locale_base, languages = [ lang ])
+                i18n.install()
+            except IOError, e:
+                raise MKUserError('lang', 'No translation file found for the given language.')
+        else:
+            import __builtin__
+            __builtin__._ = lambda x: x
+
+
         # profiling can be enabled in multisite.mk
         if profiling and config.profile:
             import cProfile # , pstats, sys, StringIO, tempfile
@@ -179,17 +198,17 @@ def handler(req, profiling = True):
         html.set_output_format(output_format)
 
         if not req.user or type(req.user) != str:
-            raise MKConfigError("You are not logged in. This should never happen. Please "
-                    "review your Apache configuration. Check_MK Multisite requires HTTP login.")
+            raise MKConfigError(_("You are not logged in. This should never happen. Please "
+                    "review your Apache configuration. Check_MK Multisite requires HTTP login."))
 
         # Set all permissions, read site config, and similar stuff
         config.login(html.req.user)
 
         # User allowed to login at all?
         if not config.may("use"):
-            reason = "Not Authorized.  You are logged in as <b>%s</b>. Your role is <b>%s</b>:" % (config.user, config.role)
-            reason += "If you think this is an error, " \
-                       "please ask your administrator to add your login into multisite.mk"
+            reason = _("Not Authorized. You are logged in as <b>%s</b>. Your role is <b>%s</b>."
+                     "If you think this is an error, "
+                     "please ask your administrator to add your login into multisite.mk") % (config.user, config.role)
             raise MKAuthException(reason)
 
         # General access allowed. Now connect to livestatus
@@ -204,45 +223,45 @@ def handler(req, profiling = True):
         html.footer()
 
     except MKAuthException, e:
-        html.header("Permission denied")
+        html.header(_("Permission denied"))
         html.show_error(str(e))
         html.footer()
 
     except MKConfigError, e:
-        html.header("Configuration Error")
+        html.header(_("Configuration Error"))
         html.show_error(str(e))
         html.footer()
-        apache.log_error("Configuration error: %s" % (e,), apache.APLOG_ERR)
+        apache.log_error(_("Configuration error: %s") % (e,), apache.APLOG_ERR)
 
     except MKGeneralException, e:
-        html.header("Error")
+        html.header(_("Error"))
         html.show_error(str(e))
         html.footer()
-        apache.log_error("Error: %s" % (e,), apache.APLOG_ERR)
+        apache.log_error(_("Error: %s") % (e,), apache.APLOG_ERR)
 
     except livestatus.MKLivestatusNotFoundError, e:
-        html.header("Data not found")
-        html.show_error("The following query produced no output:\n<pre>\n%s</pre>\n" % \
+        html.header(_("Data not found"))
+        html.show_error(_("The following query produced no output:\n<pre>\n%s</pre>\n") % \
                 e.query)
         html.footer()
 
     except livestatus.MKLivestatusException, e:
-        html.header("Livestatus problem")
-        html.show_error("Livestatus problem: %s" % e)
+        html.header(_("Livestatus problem"))
+        html.show_error(_("Livestatus problem: %s") % e)
         html.footer()
 
     except Exception, e:
-        html.header("Internal Error")
+        html.header(_("Internal Error"))
         if config.debug:
             import traceback, StringIO
             txt = StringIO.StringIO()
             t, v, tb = sys.exc_info()
             traceback.print_exception(t, v, tb, None, txt)
-            html.show_error("Internal error: %s<pre>%s</pre>" % (e, txt.getvalue()))
+            html.show_error("%s: %s<pre>%s</pre>" % (_('Internal error:'), e, txt.getvalue()))
         else:
             url = html.makeuri([("debug", "1")])
-            html.show_error("Internal error: %s (<a href=\"%s\">Retry with debug mode</a>)" % (e, url))
-            apache.log_error("Internal error: %s" % (e,), apache.APLOG_ERR)
+            html.show_error("%s: %s (<a href=\"%s\">%s</a>)" % (_('Internal error:'), e, url, _('Retry with debug mode')))
+            apache.log_error("%s %s" % (_('Internal error:'), e), apache.APLOG_ERR)
         html.footer()
 
     # Disconnect from livestatus!
@@ -250,6 +269,6 @@ def handler(req, profiling = True):
     return apache.OK
 
 def page_not_found(html):
-    html.header("Page not found")
-    html.show_error("This page was not found. Sorry.")
+    html.header(_("Page not found"))
+    html.show_error(_("This page was not found. Sorry."))
     html.footer()

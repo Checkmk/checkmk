@@ -28,7 +28,7 @@ def render_python_raw(data, view, group_painters, painters, num_columns):
     html.write(repr(data))
 
 multisite_layouts["python-raw"] = {
-    "title"  : "Python raw data output",
+    "title"  : _("Python raw data output"),
     "render" : render_python_raw,
     "group"  : False,
     "hide"   : True,
@@ -48,7 +48,7 @@ def render_python(rows, view, group_painters, painters, num_columns):
     html.write("\n]\n")
 
 multisite_layouts["python"] = {
-    "title"  : "Python data output",
+    "title"  : _("Python data output"),
     "render" : render_python,
     "group"  : False,
     "hide"   : True,
@@ -82,7 +82,7 @@ def render_json(rows, view, group_painters, painters, num_columns):
     html.write("\n]\n")
 
 multisite_layouts["json"] = {
-    "title"  : "JSON data output",
+    "title"  : _("JSON data output"),
     "render" : render_json,
     "group"  : False,
     "hide"   : True,

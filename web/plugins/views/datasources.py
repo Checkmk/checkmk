@@ -43,7 +43,7 @@ multisite_datasources["hosts"] = {
 }
 
 multisite_datasources["hostsbygroup"] = {
-    "title"   : "Hosts grouped by host groups",
+    "title"   : _("Hosts grouped by host groups"),
     "table"   : "hostsbygroup",
     "infos"   : [ "host", "hostgroup" ],
     "keys"    : [ "host_name", "host_downtimes" ],
@@ -51,7 +51,7 @@ multisite_datasources["hostsbygroup"] = {
 }
 
 multisite_datasources["services"] = {
-    "title"   : "All services",
+    "title"   : _("All services"),
     "table"   : "services",
     "infos"   : [ "service", "host" ],
     "keys"    : [ "host_name", "service_description", "service_downtimes" ],
@@ -59,28 +59,28 @@ multisite_datasources["services"] = {
 }
 
 multisite_datasources["servicesbygroup"] = {
-    "title"   : "Services grouped by service groups",
+    "title"   : _("Services grouped by service groups"),
     "table"   : "servicesbygroup",
     "infos"   : [ "service", "host", "servicegroup" ],
     "keys"    : [ "host_name", "service_description", "service_downtimes" ],
 }
 
 multisite_datasources["servicesbyhostgroup"] = {
-    "title"   : "Services grouped by host groups",
+    "title"   : _("Services grouped by host groups"),
     "table"   : "servicesbyhostgroup",
     "infos"   : [ "service", "host", "hostgroup" ],
     "keys"    : [ "host_name", "service_description", "service_downtimes" ],
 }
 
 multisite_datasources["hostgroups"] = {
-    "title" : "Hostgroups",
+    "title" : _("Hostgroups"),
     "table" : "hostgroups",
     "infos" : [ "hostgroup" ],
     "keys"    : [ "hostgroup_name" ],
 }
 
 multisite_datasources["merged_hostgroups"] = {
-    "title"    : "Hostgroups, merged",
+    "title"    : _("Hostgroups, merged"),
     "table"    : "hostgroups",
     "merge_by" : "hostgroup_name",
     "infos"    : [ "hostgroup" ],
@@ -88,14 +88,14 @@ multisite_datasources["merged_hostgroups"] = {
 }
 
 multisite_datasources["servicegroups"] = {
-    "title"    : "Servicegroups",
+    "title"    : _("Servicegroups"),
     "table"    : "servicegroups",
     "infos"    : [ "servicegroup" ],
     "keys"    : [ "servicegroup_name" ],
 }
 
 multisite_datasources["merged_servicegroups"] = {
-    "title"    : "Servicegroups, merged",
+    "title"    : _("Servicegroups, merged"),
     "table"    : "servicegroups",
     "merge_by" : "servicegroup_name",
     "infos"    : [ "servicegroup" ],
@@ -103,28 +103,28 @@ multisite_datasources["merged_servicegroups"] = {
 }
 
 multisite_datasources["comments"] = {
-    "title"    : "Host- und Servicecomments",
+    "title"    : _("Host- und Servicecomments"),
     "table"    : "comments",
     "infos"    : [ "comment", "host", "service" ],
     "keys"    : [ "comment_id", "comment_type" ],
 }
 
 multisite_datasources["downtimes"] = {
-    "title"    : "Schedules Downtimes",
+    "title"    : _("Schedules Downtimes"),
     "table"    : "downtimes",
     "infos"    : [ "downtime", "host", "service" ],
     "keys"    : [ "downtime_id", "service_description" ],
 }
 
 multisite_datasources["log"] = {
-    "title"    : "The Logfile",
+    "title"    : _("The Logfile"),
     "table"    : "log",
     "infos"    : [ "log", "host", "service", "contact", "command" ],
     "keys"     : [],
 }
 
 multisite_datasources["log_events"] = {
-    "title"       : "Host and Service Events",
+    "title"       : _("Host and Service Events"),
     "table"       : "log",
     "add_headers" : "Filter: class = 1\n",
     "infos"       : [ "log", "host", "service" ],
@@ -132,7 +132,7 @@ multisite_datasources["log_events"] = {
 }
 
 multisite_datasources["log_host_events"] = {
-    "title"       : "Host Events",
+    "title"       : _("Host Events"),
     "table"       : "log",
     "add_headers" : "Filter: class = 1\nFilter: service_description = \n",
     "infos"       : [ "log", "host" ],
@@ -140,7 +140,7 @@ multisite_datasources["log_host_events"] = {
 }
 
 multisite_datasources["alert_stats"] = {
-    "title"       : "Alert Statistics",
+    "title"       : _("Alert Statistics"),
     "table"       : "log",
     "add_headers" : "Filter: class = 1\nStats: state = 0\nStats: state = 1\nStats: state = 2\nStats: state = 3\nStats: state != 0\n",
     "add_columns" : [ "alerts_ok", "alerts_warn", "alerts_crit", "alerts_unknown", "alerts_problem" ],

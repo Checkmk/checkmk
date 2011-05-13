@@ -105,13 +105,13 @@ def cmp_simple_number(column, r1, r2):
     return cmp_atoms(r1[column], r2[column])
 
 multisite_sorters["svcstate"] = {
-    "title"   : "Service state",
+    "title"   : _("Service state"),
     "columns" : ["service_state", "service_has_been_checked"],
     "cmp"     : cmp_svc_states
 }
 
 multisite_sorters["hoststate"] = {
-    "title"   : "Host state",
+    "title"   : _("Host state"),
     "columns" : ["host_state", "host_has_been_checked"],
     "cmp"     : cmp_hst_states
 }
@@ -124,7 +124,7 @@ def cmp_site_host(r1, r2):
         return cmp_simple_string("host_name", r1, r2)
 
 multisite_sorters["site_host"] = {
-    "title"   : "Host",
+    "title"   : _("Host"),
     "columns" : ["site", "host_name" ],
     "cmp"     : cmp_site_host
 }

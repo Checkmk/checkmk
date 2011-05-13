@@ -9,14 +9,14 @@ import bi
 
 
 multisite_datasources["bi_aggregations"] = {
-    "title"       : "BI Aggregations",
+    "title"       : _("BI Aggregations"),
     "table"       : bi.table, 
     "infos"       : [ "aggr" ],
     "keys"        : [],
 }
 
 multisite_datasources["bi_host_aggregations"] = {
-    "title"       : "BI Host Aggregations",
+    "title"       : _("BI Host Aggregations"),
     "table"       : bi.host_table, 
     "infos"       : [ "host", "aggr" ],
     "keys"        : [],
@@ -40,44 +40,44 @@ def paint_aggr_state_short(state, assumed = False):
         return classes, name
 
 multisite_painters["aggr_state"] = {
-    "title"   : "Aggregated state",
-    "short"   : "State",
+    "title"   : _("Aggregated state"),
+    "short"   : _("State"),
     "columns" : [ "aggr_effective_state" ],
     "paint"   : lambda row: paint_aggr_state_short(row["aggr_effective_state"], row["aggr_effective_state"] != row["aggr_state"])
 }
 
 multisite_painters["aggr_real_state"] = {
-    "title"   : "Aggregated real state (never assumed)",
-    "short"   : "R.State",
+    "title"   : _("Aggregated real state (never assumed)"),
+    "short"   : _("R.State"),
     "columns" : [ "aggr_state" ],
     "paint"   : lambda row: paint_aggr_state_short(row["aggr_state"])
 }
 
 multisite_painters["aggr_assumed_state"] = {
-    "title"   : "Aggregated assumed state",
-    "short"   : "Assumed",
+    "title"   : _("Aggregated assumed state"),
+    "short"   : _("Assumed"),
     "columns" : [ "aggr_assumed_state" ],
     "paint"   : lambda row: paint_aggr_state_short(row["aggr_assumed_state"])
 }
 
 
 multisite_painters["aggr_group"] = {
-    "title"   : "Aggregation group",
-    "short"   : "Group",
+    "title"   : _("Aggregation group"),
+    "short"   : _("Group"),
     "columns" : [ "aggr_group" ],
     "paint"   : lambda row: ("", row["aggr_group"])
 }
 
 multisite_painters["aggr_name"] = {
-    "title"   : "Aggregation name",
-    "short"   : "Aggregation",
+    "title"   : _("Aggregation name"),
+    "short"   : _("Aggregation"),
     "columns" : [ "aggr_name" ],
     "paint"   : lambda row: ("", row["aggr_name"])
 }
 
 multisite_painters["aggr_output"] = {
-    "title"   : "Aggregation status output",
-    "short"   : "Output",
+    "title"   : _("Aggregation status output"),
+    "short"   : _("Output"),
     "columns" : [ "aggr_output" ],
     "paint"   : lambda row: ("", row["aggr_output"])
 }
@@ -90,33 +90,33 @@ def paint_aggr_hosts(row):
     return "", " ".join(h)
 
 multisite_painters["aggr_hosts"] = {
-    "title"   : "Aggregation: affected hosts",
-    "short"   : "Hosts",
+    "title"   : _("Aggregation: affected hosts"),
+    "short"   : _("Hosts"),
     "columns" : [ "aggr_hosts" ],
     "paint"   : paint_aggr_hosts,
 }
 
 
 multisite_painter_options["aggr_expand"] = {
- "title"   : "Initial expansion of aggregations",
+ "title"   : _("Initial expansion of aggregations"),
  "default" : "0",
  "values"  : [ ("0", "collapsed"), ("1", "first level"), ("2", "two levels"), ("3", "three levels"), ("999", "complete")]
 }
 
 multisite_painter_options["aggr_onlyproblems"] = {
- "title"   : "Show only problems",
+ "title"   : _("Show only problems"),
  "default" : "0",
  "values"  : [ ("0", "show all"), ("1", "show only problems")]
 }
 
 multisite_painter_options["aggr_treetype"] = {
- "title"   : "Type of tree layout",
+ "title"   : _("Type of tree layout"),
  "default" : "foldable",
  "values"  : [ ("foldable", "foldable"), ("bottom-up", "bottom up"), ("top-down", "top down")]
 }
 
 multisite_painter_options["aggr_wrap"] = {
- "title"   : "Handling of too long texts",
+ "title"   : _("Handling of too long texts"),
  "default" : "wrap",
  "values"  : [ ("wrap", "wrap"), ("nowrap", "don't wrap")]
 }
@@ -343,8 +343,8 @@ def paint_aggregated_tree_state(row):
         return paint_aggr_tree_ltr(row, True)
 
 multisite_painters["aggr_treestate"] = {
-    "title"   : "Aggregation: complete tree",
-    "short"   : "Tree",
+    "title"   : _("Aggregation: complete tree"),
+    "short"   : _("Tree"),
     "columns" : [ "aggr_treestate", "aggr_hosts" ],
     "options" : [ "aggr_expand", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap" ],
     "paint"   : paint_aggregated_tree_state,

@@ -176,8 +176,8 @@ def paint_perfometer(row):
         return "perfometer", ("invalid data: %s" % e)
 
 multisite_painters["perfometer"] = {
-    "title" : "Service Perf-O-Meter",
-    "short" : "Perf-O-Meter",
+    "title" : _("Service Perf-O-Meter"),
+    "short" : _("Perf-O-Meter"),
     "columns" : [ "service_perf_data", "service_state", "service_check_command" ],
     "paint" : paint_perfometer
 }

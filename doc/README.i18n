@@ -1,0 +1,27 @@
+Multisite ist beginning to support internationalization (i18n) and
+localization (l10n) via GNU Gettext.
+
+The code is not yet i18n'ed completely yet, but might be in near
+future.
+
+Current the project is not planning to ship any actual translations,
+as of our current planning. But you can do your own ones. This tutorial
+tells you how to create your own translations:
+
+1. Work with OMD (omdistro.org), create a site if you don't have one.
+2. Install GNU gettext (should come prepackaged for you distro).
+3. Choose your target language, e.g. "de"
+4. Get site user and call:
+   OMD[yousite]:~$ cmk --localize update de
+   -> this will create local/share/check_mk/locale/de/LC_MESSAGES/multisite.po
+5. Edit this file with a text editor and add translations
+6. Install your translations:
+   OMD[yousite]:~$ cmk --localize compile de
+   -> this will create local/share/check_mk/locale/de/LC_MESSAGES/multisite.mo
+7. Set "de" as default language in multisite.mk:
+   multisite.mk:
+   default_language = "de"
+
+Currently users cannot switch the language themselves. This will come.
+Please be patient...
+

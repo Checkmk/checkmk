@@ -2822,8 +2822,8 @@ def do_snmpwalk_on(hostname, filename):
                 while value[-1] != '"':
                     value += f.readline().strip()
 
-            if oid.startswith("."):
-                oid = oid[1:]
+            if not oid.startswith("."):
+                oid = "." + oid
             oids.append(oid)
             values.append(value)
         for oid, value in zip(oids, values):

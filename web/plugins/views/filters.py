@@ -380,7 +380,8 @@ class FilterTime(Filter):
             html.write("<nobr>")
             html.number_input(htmlvar, 0, 2)
             html.write(" %s</nobr> " % n)
-        html.write("<br>\n")
+        if config.filter_columns > 1:
+            html.write("<br>\n")
         current = html.var(self.name, "since")
         for t in [ "before", "since" ]:
             html.radiobutton(self.name, t, current == t, t + " &nbsp; ")
@@ -457,6 +458,10 @@ class FilterLogClass(Filter):
         else:
             defval = "on"
         html.write("<table cellspacing=0 cellpadding=0>")
+        if config.filter_columns == 1:
+            num_cols = 4
+        else:
+            num_cols = 2
         col = 1
         for l, c in self.log_classes:
             if col == 1:
@@ -465,12 +470,12 @@ class FilterLogClass(Filter):
             html.checkbox("logclass%d" % l, defval)
             html.write(c)
             html.write("</td>")
-            if col == 2:
+            if col == num_cols:
                 html.write("</tr>\n")
                 col = 1
             else:
                 col += 1
-        if col == 1:
+        if col < num_cols:
             html.write("<td></td></tr>")
         html.write("</table>\n")
 

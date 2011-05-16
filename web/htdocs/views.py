@@ -51,10 +51,9 @@ multisite_painter_options  = {}
 
 # Load all view plugins
 def load_plugins():
+    global loaded_with_language
     if loaded_with_language == current_language:
         return
-
-    global loaded_with_language
     loaded_with_language = current_language
 
     config.declare_permission_section("action", "Commands on Objects")

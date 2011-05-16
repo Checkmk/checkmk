@@ -36,10 +36,9 @@ loaded_with_language = False
 sidebar_snapins = {}
 
 def load_plugins():
+    global loaded_with_language
     if loaded_with_language == current_language:
         return
-
-    global loaded_with_language
     loaded_with_language = current_language
 
     # Load all snapins

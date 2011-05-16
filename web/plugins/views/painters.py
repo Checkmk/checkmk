@@ -407,7 +407,7 @@ def paint_host_state_short(row):
 
 multisite_painters["service_nagios_link"] = {
     "title" : _("Icon with link to service in Nagios GUI"),
-    "short" : _(""),
+    "short" : "",
     "columns" : [ "site", "host_name", "service_description" ],
     "paint" : paint_nagios_link
 }
@@ -421,7 +421,7 @@ multisite_painters["service_state"] = {
 
 multisite_painters["site_icon"] = {
     "title" : _("Icon showing the site"),
-    "short" : _(""),
+    "short" : "",
     "columns" : ["site"],
     "paint" : paint_site_icon
 }
@@ -989,7 +989,7 @@ multisite_painters["host_black_nagios"] = {
 
 multisite_painters["host_nagios_link"] = {
     "title" : _("Icon with link to host to Nagios GUI"),
-    "short" : _(""),
+    "short" : "",
     "columns" : [ "site", "host_name" ],
     "paint" : paint_nagios_link
 }
@@ -1047,7 +1047,7 @@ def paint_host_count(id, count):
 
 multisite_painters["num_services"] = {
     "title"   : _("Number of services"),
-    "short"   : _(""),
+    "short"   : "",
     "columns" : [ "host_num_services" ],
     "paint"   : lambda row: (None, str(row["host_num_services"])),
 }
@@ -1240,7 +1240,7 @@ multisite_painters["hostgroup_hosts"] = {
 
 multisite_painters["hg_num_services"] = {
     "title"   : _("Number of services"),
-    "short"   : _(""),
+    "short"   : "",
     "columns" : [ "hostgroup_num_services" ],
     "paint"   : lambda row: (None, str(row["hostgroup_num_services"])),
 }
@@ -1332,7 +1332,7 @@ multisite_painters["sg_services"] = {
 
 multisite_painters["sg_num_services"] = {
     "title"   : _("Number of services"),
-    "short"   : _(""),
+    "short"   : "",
     "columns" : [ "servicegroup_num_services" ],
     "paint"   : lambda row: (None, str(row["servicegroup_num_services"])),
 }
@@ -1613,7 +1613,7 @@ def paint_log_icon(row):
 
 multisite_painters["log_icon"] = {
     "title" : _("Log: event icon"),
-    "short" : _(""),
+    "short" : "",
     "columns" : ["log_type", "log_state", "log_state_type"],
     "paint" : paint_log_icon,
 }

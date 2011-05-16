@@ -449,6 +449,8 @@ def paint_perfdata_nth_value(row, n):
     perfdata = row["service_perf_data"]
     try:
         parts = perfdata.split()
+        if len(parts) <= n:
+            return "", "" # too few values in perfdata
         varname, rest = parts[n].split("=")
         number = rest.split(';')[0]
         while len(number) > 0 and not number[-1].isdigit():

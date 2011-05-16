@@ -223,5 +223,6 @@ snmp_info['fc_brocade_port_detailed'] = [
 ]
 
 snmp_scan_functions['fc_brocade_port_detailed'] = \
-       lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1588.2.1.1.")
+    lambda oid: False # prefer new brocade_fcport
+    #   lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1588.2.1.1.")
 

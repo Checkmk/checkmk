@@ -1,6 +1,10 @@
 1.1.11i2:
     Core, Setup, etc.:
     * FIX: sort output of cmk --list-hosts alphabetically
+    
+    Checks & Agents:
+    * brocade_port: check for Brocade FC ports has been rewritten with
+      lots of new features.
 
     Multisite:
     * Introduced basic infrastructure for multilanguage support in Multisite

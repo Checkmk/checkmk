@@ -89,8 +89,8 @@ def render_searchform():
     html.write("</script>\n")
 
 sidebar_snapins["search"] = {
-    "title" : "Quicksearch",
-    "description" : "Interactive search field for direct access to hosts",
+    "title" : _("Quicksearch"),
+    "description" : _("Interactive search field for direct access to hosts"),
     "author" : "Lars Michelsen",
     "render" : render_searchform,
     "allowed" : [ "user", "admin", "guest" ],

@@ -28,7 +28,7 @@ import config, wato
 
 def render_wato_files():
     if not config.may("use_wato"):
-        html.write("You are not allowed to use Check_MK's web configuration GUI.")
+        html.write(_("You are not allowed to use Check_MK's web configuration GUI."))
 
     else:
         if config.is_multisite():

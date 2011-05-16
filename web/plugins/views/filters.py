@@ -42,7 +42,7 @@ class FilterText(Filter):
         htmlvar = self.htmlvars[0]
         current_value = html.var(htmlvar)
         if current_value:
-            return "Filter: %s %s %s\n" % (self.column, self.op, current_value)
+            return _("Filter: %s %s %s\n") % (self.column, self.op, current_value)
         else:
             return ""
 
@@ -54,25 +54,25 @@ class FilterText(Filter):
         return html.var(self.htmlvars[0])
 
 #                               filter          title              info       column           htmlvar
-declare_filter(100, FilterText("hostregex",    "Hostname",        "host",    "host_name",      "host",    "~~"),
-                          "Search field allowing regular expressions and partial matches")
+declare_filter(100, FilterText("hostregex",    _("Hostname"),        "host",    "host_name",      "host",    "~~"),
+                          _("Search field allowing regular expressions and partial matches"))
 
-declare_filter(101, FilterText("host",    "Hostname",             "host",    "host_name",          "host",    "="),
-                          "Exact match, used for linking")
+declare_filter(101, FilterText("host",    _("Hostname"),             "host",    "host_name",          "host",    "="),
+                          _("Exact match, used for linking"))
 
-declare_filter(200, FilterText("serviceregex", "Service",         "service", "service_description",   "service", "~~"),
-                          "Search field allowing regular expressions and partial matches")
+declare_filter(200, FilterText("serviceregex", _("Service"),         "service", "service_description",   "service", "~~"),
+                          _("Search field allowing regular expressions and partial matches"))
 
-declare_filter(201, FilterText("service", "Service",              "service", "service_description",   "service", "="),
-                          "Exact match, used for linking")
+declare_filter(201, FilterText("service", _("Service"),              "service", "service_description",   "service", "="),
+                          _("Exact match, used for linking"))
 
-declare_filter(100, FilterText("servicegroupname", "Servicegroup",   "servicegroup", "servicegroup_name",   "servicegroup_name", "="),
-                          "Exact match, used for linking")
+declare_filter(100, FilterText("servicegroupname", _("Servicegroup"),   "servicegroup", "servicegroup_name",   "servicegroup_name", "="),
+                          _("Exact match, used for linking"))
 
-declare_filter(101, FilterText("servicegroupnameregex", "Servicegroup",   "servicegroup", "servicegroup_name",   "servicegroup_name", "~~"),
-                          "Search field allowing regular expression and partial matches")
+declare_filter(101, FilterText("servicegroupnameregex", _("Servicegroup"),   "servicegroup", "servicegroup_name",   "servicegroup_name", "~~"),
+                          _("Search field allowing regular expression and partial matches"))
 
-declare_filter(202, FilterText("output",  "Service check output", "service", "service_plugin_output", "service_output", "~~"))
+declare_filter(202, FilterText("output",  _("Service check output"), "service", "service_plugin_output", "service_output", "~~"))
 
 
 
@@ -105,7 +105,7 @@ class FilterGroupCombo(Filter):
         if not self.enforce:
             html.write(" <nobr>")
             html.checkbox(self.htmlvars[1])
-            html.write("negate")
+            html.write(_("negate"))
             html.write("</nobr>")
 
     def current_value(self, infoname):
@@ -154,10 +154,10 @@ class FilterGroupCombo(Filter):
             return alias
 
 
-declare_filter(104, FilterGroupCombo("host",    True),  "Dropdown list, selection of host group is <b>enforced</b>")
-declare_filter(204, FilterGroupCombo("service", True),  "Dropdown list, selection of service group is <b>enforced</b>")
-declare_filter(105, FilterGroupCombo("host",    False), "Optional selection of host group")
-declare_filter(205, FilterGroupCombo("service", False), "Optional selection of service group")
+declare_filter(104, FilterGroupCombo("host",    True),  _("Dropdown list, selection of host group is <b>enforced</b>"))
+declare_filter(204, FilterGroupCombo("service", True),  _("Dropdown list, selection of service group is <b>enforced</b>"))
+declare_filter(105, FilterGroupCombo("host",    False), _("Optional selection of host group"))
+declare_filter(205, FilterGroupCombo("service", False), _("Optional selection of service group"))
 # Livestatus still misses "contact_groups" column.
 # declare_filter(FilterGroupCombo("contact"))
 
@@ -178,9 +178,9 @@ class FilterQueryDropdown(Filter):
         else:
             return ""
 
-declare_filter(110, FilterQueryDropdown("host_check_command", "Host check command", "host", \
+declare_filter(110, FilterQueryDropdown("host_check_command", _("Host check command"), "host", \
         "GET commands\nColumns: name\n", "Filter: host_check_command = %s\n"))
-declare_filter(210, FilterQueryDropdown("check_command", "Service check command", "service", \
+declare_filter(210, FilterQueryDropdown("check_command", _("Service check command"), "service", \
         "GET commands\nColumns: name\n", "Filter: service_check_command = %s\n"))
 
 class FilterServiceState(Filter):
@@ -220,12 +220,12 @@ class FilterServiceState(Filter):
         else:
             return "".join(headers) + ("Or: %d\n" % len(headers))
 
-declare_filter(215, FilterServiceState("svcstate",     "Service states",      ""))
-declare_filter(216, FilterServiceState("svchardstate", "Service hard states", "h"))
+declare_filter(215, FilterServiceState("svcstate",     _("Service states"),      ""))
+declare_filter(216, FilterServiceState("svchardstate", _("Service hard states"), "h"))
 
 class FilterHostState(Filter):
     def __init__(self):
-        Filter.__init__(self, "hoststate", "Host states",
+        Filter.__init__(self, "hoststate", _("Host states"),
                 "host", [ "hst0", "hst1", "hst2", "hstp" ], [])
 
     def display(self):
@@ -357,8 +357,8 @@ class FilterSite(Filter):
     def variable_settings(self, row):
         return [("site", row["site"])]
 
-declare_filter(500, FilterSite("site",    True), "Selection of site is enforced, use this filter for joining")
-declare_filter(501, FilterSite("siteopt", False), "Optional selection of a site")
+declare_filter(500, FilterSite("site",    True),  _("Selection of site is enforced, use this filter for joining"))
+declare_filter(501, FilterSite("siteopt", False), _("Optional selection of a site"))
 
 # Filter for setting time ranges, e.g. on last_state_change and last_check
 # Variante eins:
@@ -420,10 +420,10 @@ class FilterTime(Filter):
         return vars
 
     def heading_info(self, infoname):
-        return "since the last couple of seconds"
+        return _("since the last couple of seconds")
 
-declare_filter(250, FilterTime("service", "svc_last_state_change", "Last service state change", "service_last_state_change"))
-declare_filter(251, FilterTime("service", "svc_last_check", "Last service check", "service_last_check"))
+declare_filter(250, FilterTime("service", "svc_last_state_change", _("Last service state change"), "service_last_state_change"))
+declare_filter(251, FilterTime("service", "svc_last_check", _("Last service check"), "service_last_check"))
 
 #    _
 #   | |    ___   __ _
@@ -432,7 +432,7 @@ declare_filter(251, FilterTime("service", "svc_last_check", "Last service check"
 #   |_____\___/ \__, |
 #               |___/
 
-declare_filter(252, FilterTime("log", "logtime", "Time of log entry", "log_time"))
+declare_filter(252, FilterTime("log", "logtime", _("Time of log entry"), "log_time"))
 # INFO          0 // all messages not in any other class
 # ALERT         1 // alerts: the change service/host state
 # PROGRAM       2 // important programm events (restart, ...)
@@ -444,9 +444,9 @@ declare_filter(252, FilterTime("log", "logtime", "Time of log entry", "log_time"
 class FilterLogClass(Filter):
     def __init__(self):
         self.log_classes = [
-            (0, "Informational"), (1, "Alerts"), (2, "Program"),
-            (3, "Notifications"), (4, "Passive checks"),
-            (5, "Commands"), (6, "States") ]
+            (0, _("Informational")), (1, _("Alerts")), (2, _("Program")),
+            (3, _("Notifications")), (4, _("Passive checks")),
+            (5, _("Commands")),      (6, _("States")) ]
 
         Filter.__init__(self, "log_class", "Logentry class",
                 "log", [ "logclass%d" % l for l, c in self.log_classes ], [])
@@ -490,4 +490,4 @@ class FilterLogClass(Filter):
             return "".join(headers) + ("Or: %d\n" % len(headers))
 
 declare_filter(255, FilterLogClass())
-declare_filter(202, FilterText("log_plugin_output",  "Log: plugin output", "log", "log_plugin_output", "log_plugin_output", "~~"))
+declare_filter(202, FilterText("log_plugin_output",  _("Log: plugin output"), "log", "log_plugin_output", "log_plugin_output", "~~"))

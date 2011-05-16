@@ -453,8 +453,9 @@ def paint_perfdata_nth_value(row, n):
             return "", "" # too few values in perfdata
         varname, rest = parts[n].split("=")
         number = rest.split(';')[0]
-        while len(number) > 0 and not number[-1].isdigit():
-            number = number[:-1]
+        # Remove unit. Why should we?
+        # while len(number) > 0 and not number[-1].isdigit():
+        #    number = number[:-1]
         return "", number
     except Exception, e:
         return "", str(e)

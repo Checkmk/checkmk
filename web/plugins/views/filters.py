@@ -388,6 +388,21 @@ class FilterTime(Filter):
             html.write(" ")
 
     def filter(self, infoname):
+        range = self.get_time_range()
+        if range == None:
+            return ""
+
+        timestamp, negate = range
+        if negate:
+            neg = "!"
+        else:
+            neg = ""
+
+        return "Filter: %s %s>= %d\n" % (self.column, neg, timestamp)
+
+
+    # Extract timerange user has selected from HTML variables
+    def get_time_range(self):
         secs = 0
         for s, n in self.ranges:
             htmlvar = self.name + "_" + n
@@ -400,13 +415,10 @@ class FilterTime(Filter):
 
         if secs > 0:
             timestamp = int(time.time()) - secs
-            if html.var(self.name, "since") != "since":
-                neg = "!"
-            else:
-                neg = ""
-            return "Filter: %s %s>= %d\n" % (self.column, neg, timestamp)
+            neg = html.var(self.name, "since") != "since"
+            return timestamp, neg
         else:
-            return ""
+            return None
 
     # I'm not sure if this function is useful or ever been called.
     # Problem is, that it is not clear wether to use "since" or "before"

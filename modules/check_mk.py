@@ -2706,6 +2706,7 @@ def list_all_hosts(hostgroups):
                 if hg in hostgroups:
                     hostlist.append(hn)
                     break
+    hostlist.sort()
     return hostlist
 
 # Same for host tags, needed for --list-tag

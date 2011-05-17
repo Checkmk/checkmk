@@ -9,6 +9,7 @@
 
     Multisite:
     * Introduced basic infrastructure for multilanguage support in Multisite
+    * FIX: make non-Ascii characters in services names work again
 
     WATO:
     * Configration files can now be administered via the WEB UI

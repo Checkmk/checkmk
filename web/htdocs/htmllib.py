@@ -70,6 +70,10 @@ def attrencode(value):
         return cgi.escape(str(value), True)
 
 # This function returns a str object, never unicode!
+# Beware: this code is crucial for the performance of Multisite!
+# Changing from the self coded urlencode to urllib.quote
+# is saving more then 90% of the total HTML generating time
+# on more complex pages!
 def urlencode_vars(vars):
     output = ""
     for varname, value in vars:
@@ -78,12 +82,17 @@ def urlencode_vars(vars):
 
 	if type(value) == int:
 	    value = str(value)
-        if type(value) == str:
-	    value = unicode(value, 'utf-8')
+        elif type(value) == unicode:
+            value = value.encode("utf-8")
         
         output += varname
         output += "="
-        output += urllib.quote(value)
+        try:
+            # urllib is not able to encode non-Ascii characters. Yurks
+            output += urllib.quote(value)
+        except:
+            output += urlencode(value) # slow but working
+
     return output
 
 def urlencode(value):
@@ -406,7 +415,9 @@ class html:
                 <html><head>
                 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
                 <title>''')
-            self.req.write(title.encode("utf-8"))
+            # Ich versteh mit dem drecks UTF-8 bald garnix mehr...
+            # self.req.write(title.encode("utf-8"))
+            self.req.write(title)
             self.req.write('''</title>
                 <link rel="stylesheet" type="text/css" href="check_mk.css">''')
             if config.custom_style_sheet:

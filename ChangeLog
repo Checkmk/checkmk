@@ -3,6 +3,7 @@
     * FIX: sort output of cmk --list-hosts alphabetically
     
     Checks & Agents:
+    * FIX: apc_symmetra: fix remaining runtime calculation (by factor 100)
     * brocade_port: check for Brocade FC ports has been rewritten with
       lots of new features.
     * AIX agent now simulates <<<netctr>>> output (by Jörg Linge)

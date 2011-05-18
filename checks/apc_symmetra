@@ -44,7 +44,7 @@ def check_apc(item, params, info):
     BasicBatteryStatus, BasicOutputStatus, AdvBatteryCapacity, \
     AdvBatteryTemperature, AdvBatteryCurrent, AdvOutputVoltage, \
     AdvOutputCurrent = [ saveint(x) for x in info[0][:7] ]
-    RunTimeRemaining = info[0][7]
+    RunTimeRemaining = int(info[0][7]) / 100
 
     crit_capacity, crit_batt_temp, crit_batt_curr, crit_voltage = params
 
@@ -55,7 +55,7 @@ def check_apc(item, params, info):
     infotxt = "Battery status %s" % (status_text.get(BasicBatteryStatus))
     if BasicBatteryStatus != 2:
         state = 2
-        infotxt += "(!)"
+        infotxt += "(!!)"
     else:
         state = 0
     single_states.append( (state, infotxt, None) )
@@ -68,7 +68,7 @@ def check_apc(item, params, info):
     infotxt = "output status %s" % (status_text.get(BasicOutputStatus))
     if BasicOutputStatus not in [2, 4, 12]:
         state = 2
-        infotxt += "(!)"
+        infotxt += "(!!)"
     else:
         state = 0
     single_states.append( (state, infotxt, None) )
@@ -77,7 +77,7 @@ def check_apc(item, params, info):
     infotxt = "capacity %d%%" % AdvBatteryCapacity
     if AdvBatteryCapacity <= crit_capacity:
         state = 2
-        infotxt += "(!)"
+        infotxt += "(!!)"
     else:
         state = 0
     single_states.append( (state, infotxt, ("capacity", AdvBatteryCapacity, "", crit_capacity, 0, 100)) )
@@ -86,7 +86,7 @@ def check_apc(item, params, info):
     infotxt = "bat. temp. %dC" % AdvBatteryTemperature
     if AdvBatteryTemperature >= crit_batt_temp:
         state = 2
-        infotxt += "(!)"
+        infotxt += "(!!)"
     else:
         state = 0
     single_states.append( (state, infotxt, ("battemp", AdvBatteryTemperature, "", crit_batt_temp) ) )
@@ -95,7 +95,7 @@ def check_apc(item, params, info):
     infotxt = "bat. curr. %dA" % AdvBatteryCurrent
     if AdvBatteryCurrent >= crit_batt_curr:
         state = 2
-        infotxt += "(!)"
+        infotxt += "(!!)"
     else:
         state = 0
     single_states.append( (state, infotxt, ("batcurr", AdvBatteryCurrent, "", crit_batt_curr, 0) ) )
@@ -104,7 +104,7 @@ def check_apc(item, params, info):
     infotxt = "output voltage %dV" % AdvOutputVoltage
     if AdvOutputVoltage <= crit_voltage:
         state = 2
-        infotxt += "(!)"
+        infotxt += "(!!)"
     else:
         state = 0
     single_states.append( (state, infotxt, ("voltage", AdvOutputVoltage, "", crit_voltage, 0) ) )
@@ -127,7 +127,7 @@ def check_apc(item, params, info):
 
 def inventory_apc(checkname, info):
     if len(info) > 0:
-        return [(None, "", "apc_default_levels")]
+        return [(None, "apc_default_levels")]
 
 
 check_info['apc_symmetra'] = ( check_apc, "APC Symmetra status", 1, inventory_apc )

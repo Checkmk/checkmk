@@ -6,8 +6,9 @@
     * FIX: fix two crashes of cmk -II in combination with clusters
 
     Checks & Agents:
+    * FIX: apc_symmetra: fix remaining runtime calculation (by factor 100)
     * FIX: hr_mem: ignore devices that report zero memory
-    
+
     Multisite:
     * FIX: avoid duplicate import of plugins in OMD local installation
     * FIX: Added host_is_active and host_flapping columns for NagStaMon views

@@ -589,9 +589,12 @@ tr.odd3  { background-color: #fdc; }
 tr.even3 { background-color: #fea; }
 
 /* HACK */
+
 table.data tr.data td { 
     border: 1px solid #bbb;
     padding: 2px 4px;
+    height: 22px;
+    vertical-align: middle;
 }
 
 table.data td.host { 
@@ -663,7 +666,6 @@ table.data td.age {
     text-align: right;
     color: #666;
     white-space: nowrap;
-    width: 40px;
 }
 
 table.data td.age.recent { 

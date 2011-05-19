@@ -13,7 +13,8 @@ description:
 
  The check raises a {CRITICAL} when the clock is in state {notSynchronized} or
  {noGoodRefclock}. It also handles bad stratums and refclock offsets which can be
- configured.
+ configured. The refclock offset can either be a positive or negative integer.
+
 
 inventory:
  One check per device is created automatically.
@@ -24,13 +25,13 @@ stratum_warn (int): stratums above this value will raise a {WARNING} state.
 stratum_warn (int): stratums above this value will raise a {CRITICAL} state.
   The default is set to {0}. The threshold can be disabled by setting to {None}.
 ref_offset_warn (int): refclock offsets above this value will raise a {WARNING} state.
-  The default is set to {0}. The threshold can be disabled by setting to {None}.
+  The default is set to {5}. The threshold can be disabled by setting to {None}.
 ref_offset_crit (int): refclock offsets above this value will raise a {CRITICAL} state.
-  The default is set to {0}. The threshold can be disabled by setting to {None}.
+  The default is set to {10}. The threshold can be disabled by setting to {None}.
 
 [configuration]
 mbg_lantime_state_default_levels (int, int, int, int): A tuple of four floats or integers: The default
  levels. These levels are used for inventorized checks. This variable
- is preset to {(0, 0, 0, 0)}
+ is preset to {(0, 0, 5, 10)}
 
 

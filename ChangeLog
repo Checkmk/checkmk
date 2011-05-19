@@ -7,6 +7,8 @@
     * brocade_port: check for Brocade FC ports has been rewritten with
       lots of new features.
     * AIX agent now simulates <<<netctr>>> output (by Jörg Linge)
+    * mbg_lantime_state: Handling refclock offsets correctly now; Changed
+      default thresholds to 5/10 refclock offset
 
     Multisite:
     * Introduced basic infrastructure for multilanguage support in Multisite

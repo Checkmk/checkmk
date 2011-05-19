@@ -3093,7 +3093,7 @@ OPTIONS:
   --checks A,..  restrict inventory to specified checks (tcp/snmp/check type)
 
 NOTES:
-  -I can be restricted to certain check types. Write '-I --checks df' if you
+  -I can be restricted to certain check types. Write '--checks df -I' if you
   just want to look for new filesystems. Use 'check_mk -L' for a list
   of all check types. Use 'tcp' for all TCP based checks and 'snmp' for
   all SNMP based checks.

@@ -27,20 +27,20 @@
 # Author: Lars Michelsen <lm@mathias-kettner.de>
 
 # Blades:
-# '1.3.6.1.4.1.232.22.2.4.1.1.1.3'  => 'cpqRackServerBladeIndex',
-# '1.3.6.1.4.1.232.22.2.4.1.1.1.4'  => 'cpqRackServerBladeName',
-# '1.3.6.1.4.1.232.22.2.4.1.1.1.6'  => 'cpqRackServerBladePartNumber',
-# '1.3.6.1.4.1.232.22.2.4.1.1.1.7'  => 'cpqRackServerBladeSparePartNumber',
-# '1.3.6.1.4.1.232.22.2.4.1.1.1.8'  => 'cpqRackServerBladePosition',
-# '1.3.6.1.4.1.232.22.2.4.1.1.1.12' => 'cpqRackServerBladePresent',
-# '1.3.6.1.4.1.232.22.2.4.1.1.1.16' => 'cpqRackServerBladeSerialNum',
-# '1.3.6.1.4.1.232.22.2.4.1.1.1.17' => 'cpqRackServerBladeProductId',
+# '.1.3.6.1.4.1.232.22.2.4.1.1.1.3'  => 'cpqRackServerBladeIndex',
+# '.1.3.6.1.4.1.232.22.2.4.1.1.1.4'  => 'cpqRackServerBladeName',
+# '.1.3.6.1.4.1.232.22.2.4.1.1.1.6'  => 'cpqRackServerBladePartNumber',
+# '.1.3.6.1.4.1.232.22.2.4.1.1.1.7'  => 'cpqRackServerBladeSparePartNumber',
+# '.1.3.6.1.4.1.232.22.2.4.1.1.1.8'  => 'cpqRackServerBladePosition',
+# '.1.3.6.1.4.1.232.22.2.4.1.1.1.12' => 'cpqRackServerBladePresent',
+# '.1.3.6.1.4.1.232.22.2.4.1.1.1.16' => 'cpqRackServerBladeSerialNum',
+# '.1.3.6.1.4.1.232.22.2.4.1.1.1.17' => 'cpqRackServerBladeProductId',
 # Seems not to be implemented:
-# '1.3.6.1.4.1.232.22.2.4.1.1.1.21' => 'cpqRackServerBladeStatus',
-# '1.3.6.1.4.1.232.22.2.4.1.1.1.22' => 'cpqRackServerBladeFaultMajor',
-# '1.3.6.1.4.1.232.22.2.4.1.1.1.23' => 'cpqRackServerBladeFaultMinor',
-# '1.3.6.1.4.1.232.22.2.4.1.1.1.24' => 'cpqRackServerBladeFaultDiagnosticString',
-# '1.3.6.1.4.1.232.22.2.4.1.1.1.25' => 'cpqRackServerBladePowered',
+# '.1.3.6.1.4.1.232.22.2.4.1.1.1.21' => 'cpqRackServerBladeStatus',
+# '.1.3.6.1.4.1.232.22.2.4.1.1.1.22' => 'cpqRackServerBladeFaultMajor',
+# '.1.3.6.1.4.1.232.22.2.4.1.1.1.23' => 'cpqRackServerBladeFaultMinor',
+# '.1.3.6.1.4.1.232.22.2.4.1.1.1.24' => 'cpqRackServerBladeFaultDiagnosticString',
+# '.1.3.6.1.4.1.232.22.2.4.1.1.1.25' => 'cpqRackServerBladePowered',
 
 # GENERAL MAPS:
 

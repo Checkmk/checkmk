@@ -27,13 +27,13 @@
 # Author: Lars Michelsen <lm@mathias-kettner.de>
 
 # Manager:
-# '1.3.6.1.4.1.232.22.2.3.1.6.1.3'  => 'cpqRackCommonEnclosureManagerIndex',
-# '1.3.6.1.4.1.232.22.2.3.1.6.1.6'  => 'cpqRackCommonEnclosureManagerPartNumber',
-# '1.3.6.1.4.1.232.22.2.3.1.6.1.7'  => 'cpqRackCommonEnclosureManagerSparePartNumber',
-# '1.3.6.1.4.1.232.22.2.3.1.6.1.8'  => 'cpqRackCommonEnclosureManagerSerialNum',
-# '1.3.6.1.4.1.232.22.2.3.1.6.1.9'  => 'cpqRackCommonEnclosureManagerRole',
-# '1.3.6.1.4.1.232.22.2.3.1.6.1.10' => 'cpqRackCommonEnclosureManagerPresent',
-# '1.3.6.1.4.1.232.22.2.3.1.6.1.12' => 'cpqRackCommonEnclosureManagerCondition',
+# '.1.3.6.1.4.1.232.22.2.3.1.6.1.3'  => 'cpqRackCommonEnclosureManagerIndex',
+# '.1.3.6.1.4.1.232.22.2.3.1.6.1.6'  => 'cpqRackCommonEnclosureManagerPartNumber',
+# '.1.3.6.1.4.1.232.22.2.3.1.6.1.7'  => 'cpqRackCommonEnclosureManagerSparePartNumber',
+# '.1.3.6.1.4.1.232.22.2.3.1.6.1.8'  => 'cpqRackCommonEnclosureManagerSerialNum',
+# '.1.3.6.1.4.1.232.22.2.3.1.6.1.9'  => 'cpqRackCommonEnclosureManagerRole',
+# '.1.3.6.1.4.1.232.22.2.3.1.6.1.10' => 'cpqRackCommonEnclosureManagerPresent',
+# '.1.3.6.1.4.1.232.22.2.3.1.6.1.12' => 'cpqRackCommonEnclosureManagerCondition',
 
 
 # GENERAL MAPS:

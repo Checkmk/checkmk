@@ -27,11 +27,11 @@
 # Author: Lars Michelsen <lm@mathias-kettner.de>
 
 # General Status:
-# '1.3.6.1.4.1.232.22.2.3.1.1.1.5'  => 'cpqRackCommonEnclosurePartNumber',
-# '1.3.6.1.4.1.232.22.2.3.1.1.1.6'  => 'cpqRackCommonEnclosureSparePartNumber',
-# '1.3.6.1.4.1.232.22.2.3.1.1.1.7'  => 'cpqRackCommonEnclosureSerialNum',
-# '1.3.6.1.4.1.232.22.2.3.1.1.1.8'  => 'cpqRackCommonEnclosureFWRev',
-# '1.3.6.1.4.1.232.22.2.3.1.1.1.16' => 'cpqRackCommonEnclosureCondition',
+# '.1.3.6.1.4.1.232.22.2.3.1.1.1.5'  => 'cpqRackCommonEnclosurePartNumber',
+# '.1.3.6.1.4.1.232.22.2.3.1.1.1.6'  => 'cpqRackCommonEnclosureSparePartNumber',
+# '.1.3.6.1.4.1.232.22.2.3.1.1.1.7'  => 'cpqRackCommonEnclosureSerialNum',
+# '.1.3.6.1.4.1.232.22.2.3.1.1.1.8'  => 'cpqRackCommonEnclosureFWRev',
+# '.1.3.6.1.4.1.232.22.2.3.1.1.1.16' => 'cpqRackCommonEnclosureCondition',
 
 # GENERAL MAPS:
 

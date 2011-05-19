@@ -57,15 +57,6 @@
 # one service, etc.
 # =================================================================== #
 
-# Helper functions
-# return -1, if r1 < r2, 0 if they are equal, 1 otherwise
-def cmp_atoms(s1, s2):
-    if s1 < s2:
-        return -1
-    elif s1 == s2:
-        return 0
-    else:
-        return 1
 
 def cmp_state_equiv(r):
     if r["service_has_been_checked"] == 0:
@@ -86,23 +77,11 @@ def cmp_host_state_equiv(r):
         return 2 - s # swap down und unreachable
 
 def cmp_svc_states(r1, r2):
-    return cmp_atoms(cmp_state_equiv(r1), cmp_state_equiv(r2))
+    return cmp(cmp_state_equiv(r1), cmp_state_equiv(r2))
 
 def cmp_hst_states(r1, r2):
-    return cmp_atoms(cmp_host_state_equiv(r1), cmp_host_state_equiv(r2))
+    return cmp(cmp_host_state_equiv(r1), cmp_host_state_equiv(r2))
 
-def cmp_simple_string(column, r1, r2):
-    v1, v2 = r1[column], r2[column]
-    c = cmp_atoms(v1.lower(), v2.lower())
-    # force a strict order in case of equal spelling but different
-    # case!
-    if c == 0:
-        return cmp_atoms(v1, v2)
-    else:
-        return c
-
-def cmp_simple_number(column, r1, r2):
-    return cmp_atoms(r1[column], r2[column])
 
 multisite_sorters["svcstate"] = {
     "title"   : _("Service state"),
@@ -117,7 +96,7 @@ multisite_sorters["hoststate"] = {
 }
 
 def cmp_site_host(r1, r2):
-    c = cmp_atoms(r1["site"], r2["site"])
+    c = cmp(r1["site"], r2["site"])
     if c != 0:
         return c
     else:
@@ -129,12 +108,6 @@ multisite_sorters["site_host"] = {
     "cmp"     : cmp_site_host
 }
 
-def declare_simple_sorter(name, title, column, func):
-    multisite_sorters[name] = {
-        "title"   : title,
-        "columns" : [ column ],
-        "cmp"     : lambda r1, r2: func(column, r1, r2)
-    }
 
 #                      name           title                    column                       sortfunction
 declare_simple_sorter("svcdescr",     _("Service description"),   "service_description",       cmp_simple_string)

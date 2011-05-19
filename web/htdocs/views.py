@@ -2132,5 +2132,27 @@ def get_painter_option(name):
     return opt.get("value", opt["default"])
 
 
+# Sorting
+def cmp_simple_string(column, r1, r2):
+    v1, v2 = r1[column], r2[column]
+    c = cmp(v1.lower(), v2.lower())
+    # force a strict order in case of equal spelling but different
+    # case!
+    if c == 0:
+        return cmp(v1, v2)
+    else:
+        return c
+
+def cmp_simple_number(column, r1, r2):
+    return cmp(r1[column], r2[column])
+
+def declare_simple_sorter(name, title, column, func):
+    multisite_sorters[name] = {
+        "title"   : title,
+        "columns" : [ column ],
+        "cmp"     : lambda r1, r2: func(column, r1, r2)
+    }
+
+
 load_plugins()
 

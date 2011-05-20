@@ -17,6 +17,9 @@
       (config_files in multisite.mk is obsolete)
     * Bulk operation on host lists (inventory, tags changed, etc)
 
+    MK Livestatus:
+    * Column aggregation (Stats) now also works for perf_data
+
 1.1.11i1:
     Core, Setup, etc.:
     * FIX: Avoid duplicate SNMP scan of checktypes containing a period

@@ -86,3 +86,9 @@ char *next_token(char **c, char delim)
     return begin;
 }
 
+int ends_with(const char *a, const char *b)
+{
+    return !strcmp(a + strlen(a) - strlen(b), b);
+}
+
+

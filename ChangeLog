@@ -13,6 +13,7 @@
     Multisite:
     * Introduced basic infrastructure for multilanguage support in Multisite
     * FIX: make non-Ascii characters in services names work again
+    * FIX: printer_supply perfometer: Using white font for black toners
 
     WATO:
     * Configration files can now be administered via the WEB UI

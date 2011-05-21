@@ -32,6 +32,7 @@ extern "C" {
 #endif
     void rstrip(char *);
     char *lstrip(char *line);
+    int ends_with(const char *a, const char *b);
 #ifdef __cplusplus
     char *next_token(char **c, char delim = ',');
 #else

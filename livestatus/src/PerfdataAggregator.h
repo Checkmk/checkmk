@@ -22,32 +22,35 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "StatsColumn.h"
-#include "Column.h"
-#include "Filter.h"
-#include "CountAggregator.h"
-#include "IntAggregator.h"
-#include "DoubleAggregator.h"
-#include "PerfdataAggregator.h"
-#include "strutil.h"
+#ifndef PerfdataAggregator_h
+#define PerfdataAggregator_h
 
-StatsColumn::~StatsColumn()
+#include <map>
+#include <string>
+#include "Aggregator.h"
+
+class StringColumn;
+
+struct perf_aggr {
+    double _aggr;
+    double _count;
+    double _sumq;
+};
+
+class PerfdataAggregator : public Aggregator
 {
-    if (_filter)
-	delete _filter;
-}
+    StringColumn *_column;
+    typedef std::map<std::string, perf_aggr> _aggr_t;
+    _aggr_t _aggr;
 
+public:
+    PerfdataAggregator(StringColumn *c, int o) : Aggregator(o), _column(c) {}
+    void consume(void *data, Query *);
+    void output(Query *);
 
-Aggregator *StatsColumn::createAggregator()
-{
-    if (_operation == STATS_OP_COUNT) 
-	return new CountAggregator(_filter);
-    else if (_column->type() == COLTYPE_INT)
-	return new IntAggregator((IntColumn *)_column, _operation);
-    else if (_column->type() == COLTYPE_DOUBLE)
-	return new DoubleAggregator((DoubleColumn *)_column, _operation);
-    else if (_column->type() == COLTYPE_STRING and ends_with(_column->name(), "perf_data"))
-        return new PerfdataAggregator((StringColumn *)_column, _operation);
-    else  // unaggregateble column
-	return new CountAggregator(_filter);
-}
+private:
+    void consumeVariable(const char *varname, double value);
+};
+
+#endif // PerfdataAggregator_h
+

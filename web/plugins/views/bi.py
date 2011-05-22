@@ -169,7 +169,7 @@ def aggr_render_leaf(tree, show_host):
         content += '<a href="%s">%s</a><b class=bullet>&diams;</b>' % (host_url, host)
 
     if not service:
-        content += '<a href="%s">%s</a>' % (_("Host status"), host_url)
+        content += '<a href="%s">%s</a>' % (host_url, _("Host status"))
     else:
         content += '<a href="%s">%s</a>' % (service_url, service)
 

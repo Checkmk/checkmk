@@ -20,6 +20,9 @@
       (config_files in multisite.mk is obsolete)
     * Bulk operation on host lists (inventory, tags changed, etc)
 
+    BI:
+    * Fixed displaying of host states (after i18n introduction)h
+
     MK Livestatus:
     * Column aggregation (Stats) now also works for perf_data
 

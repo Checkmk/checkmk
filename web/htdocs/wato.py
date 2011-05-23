@@ -1850,9 +1850,10 @@ extra_buttons = [
 
 # Load all wato plugins
 plugins_path = defaults.web_dir + "/plugins/wato"
-for fn in os.listdir(plugins_path):
-    if fn.endswith(".py"):
-        execfile(plugins_path + "/" + fn)
+if os.path.exists(plugins_path):
+    for fn in os.listdir(plugins_path):
+        if fn.endswith(".py"):
+            execfile(plugins_path + "/" + fn)
 
 if defaults.omd_root:
     local_plugins_path = defaults.omd_root + "/local/share/check_mk/web/plugins/wato"

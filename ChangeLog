@@ -3,9 +3,6 @@
     * FIX: sort output of cmk --list-hosts alphabetically
     
     Checks & Agents:
-    * FIX: brocade_fcport: port numbers where shifted by one
-    * FIX: brocade_fcport: inventory handles invalid data better
-    * FIX: brocade_fcport: add missing perfdata for frames
     * FIX: apc_symmetra: fix remaining runtime calculation (by factor 100)
     * brocade_port: check for Brocade FC ports has been rewritten with
       lots of new features.

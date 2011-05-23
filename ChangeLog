@@ -3,15 +3,17 @@
     * FIX: sort output of cmk --list-hosts alphabetically
     
     Checks & Agents:
+    * FIX: brocade_fcport: port numbers where shifted by one
+    * FIX: brocade_fcport: inventory handles invalid data better
+    * FIX: brocade_fcport: add missing perfdata for frames
     * FIX: apc_symmetra: fix remaining runtime calculation (by factor 100)
     * brocade_port: check for Brocade FC ports has been rewritten with
       lots of new features.
     * AIX agent now simulates <<<netctr>>> output (by Jörg Linge)
-    * brocade_fcport: inventory handles invalid data better
 
     Multisite:
-    * Introduced basic infrastructure for multilanguage support in Multisite
     * FIX: make non-Ascii characters in services names work again
+    * Introduced basic infrastructure for multilanguage support in Multisite
 
     WATO:
     * Configration files can now be administered via the WEB UI

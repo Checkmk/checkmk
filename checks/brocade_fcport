@@ -64,6 +64,7 @@ def brocade_fcport_getitem(ports, index, portname, is_isl):
     
 
 def inventory_brocade_fcport(checkname, info):
+    # info[0] is port table, info[1] is ISL table
     if len(info) != 2:
         return
 
@@ -72,17 +73,17 @@ def inventory_brocade_fcport(checkname, info):
     if len(info) > 1:
         isl_ports = dict(info[1])
 
-    for item in info[0]:
-        if len(item) == 14:
+    for line in info[0]:
+        if len(line) == 14:
             try:
-                index    = int(item[0])
-                phystate = int(item[1])
-                opstate  = int(item[2])
-                admstate = int(item[3])
+                index    = int(line[0])
+                phystate = int(line[1])
+                opstate  = int(line[2])
+                admstate = int(line[3])
             except: # missing vital data. Skipping this port
                 continue
-            portname = item[13]
-            is_isl = item[0] in isl_ports
+            portname = line[13]
+            is_isl = line[0] in isl_ports
 
             if admstate in brocade_fcport_inventory_admstates and \
                 opstate in brocade_fcport_inventory_opstates  and \
@@ -97,24 +98,19 @@ def inventory_brocade_fcport(checkname, info):
 
 def check_brocade_fcport(item, params, info):
     # Accept item, even if port name or ISL state has changed
-    item_index = int(item.split()[0])
+    item_index = int(item.split()[0]) + 1 # we substracted 1 at inventory
     portinfo = [ line for line in info[0] if int(line[0]) == item_index ]
-    if len(portinfo) < 1:
-        return (3, "UNKOWN - Port not found in SNMP data")
-   
-    isl_ports = dict(info[1])
-
-    # Prepare data, convert to int
     index, phystate, opstate, admstate, txwords, rxwords, txframes, rxframes, \
          notxcredits, rxcrcs, rxencoutframes, c3discards, speed = map(int, portinfo[0][:-1])
 
- 
+
     summarystate = 0
     output = []
     perfdata = []
 
     # Lookup port speed in ISL table for ISL ports (older switches do not provide this
     # information in the normal table)
+    isl_ports = dict(info[1])
     if str(index) in isl_ports:
         gbit = float(int(isl_ports.get(str(index))) / 16)
 	speedmsg = ("ISL at %.0fGbit/s"  % gbit)
@@ -134,8 +130,6 @@ def check_brocade_fcport(item, params, info):
     # Now check rates of various error counters
     this_time = time.time()
     try:
-        timedif, rxframes_rate  = get_counter("brocade_fcport.rxframes.%s"  % index, this_time, rxframes)
-        timedif, txframes_rate  = get_counter("brocade_fcport.txframes.%s"  % index, this_time, txframes)
         timedif, rxwords_rate   = get_counter("brocade_fcport.rxwords.%s"   % index, this_time, rxwords)
         timedif, txwords_rate   = get_counter("brocade_fcport.txwords.%s"   % index, this_time, txwords)
    
@@ -179,6 +173,15 @@ def check_brocade_fcport(item, params, info):
                 summarystate = max(1, summarystate)
                 output.append(" >= %s/s(!!)" % (get_bytes_human_readable(warn_bytes)))
 
+        # R X F R A M E S & T X F R A M E S
+        # Put number of frames into performance data (honor averaging)
+        timedif, rxframes_rate  = get_counter("brocade_fcport.rxframes.%s"  % index, this_time, rxframes)
+        timedif, txframes_rate  = get_counter("brocade_fcport.txframes.%s"  % index, this_time, txframes)
+        for what, value in [ ("rxframes", rxframes_rate), ("txframes", txframes_rate) ]:
+            perfdata.append((what, value))
+            if average:
+                timedif, value = get_average("brocade_fcport.%s.%s.avg" % (what, item), this_time, value, average)
+	        perfdata.append( ("%s_avg" % what, value) )
 
         # E R R O R C O U N T E R S
         # handle levels on error counters

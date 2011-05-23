@@ -231,6 +231,7 @@ perfometers["check_mk-if64"] = perfometer_check_mk_if
 perfometers["check_mk-lnx_if"] = perfometer_check_mk_if
 perfometers["check_mk-hpux_if"] = perfometer_check_mk_if
 perfometers["check_mk-mcdata_fcport"] = perfometer_check_mk_if
+perfometers["check_mk-brocade_fcport"] = perfometer_check_mk_if
 
 def perfometer_oracle_tablespaces(row, check_command, perf_data):
     current = float(perf_data[0][1])

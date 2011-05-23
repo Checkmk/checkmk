@@ -98,11 +98,10 @@ def inventory_brocade_fcport(checkname, info):
 
 def check_brocade_fcport(item, params, info):
     # Accept item, even if port name or ISL state has changed
-    item_index = int(item.split()[0]) + 1 # we substracted 1 at inventory
-    portinfo = [ line for line in info[0] if int(line[0]) == item_index ]
+    item_index = int(item.split()[0])
+    portinfo = [ line for line in info[0] if int(line[0]) == item_index + 1]
     index, phystate, opstate, admstate, txwords, rxwords, txframes, rxframes, \
          notxcredits, rxcrcs, rxencoutframes, c3discards, speed = map(int, portinfo[0][:-1])
-
 
     summarystate = 0
     output = []
@@ -123,15 +122,16 @@ def check_brocade_fcport(item, params, info):
            gbit = float(brocade_fcport_speed[speed].replace("Gbit", ""))
            speedmsg  = ("%.0fGbit/s" % gbit)
 
+    output.append(speedmsg)
 
     # convert gbit netto link-rate to Byte/s (8/10 enc)
-    wirespeed = gbit * 0.8 * 1000000.0 / 8
+    wirespeed = gbit * 1000000000.0 * 0.8 / 8
 
     # Now check rates of various error counters
     this_time = time.time()
     try:
-        timedif, rxwords_rate   = get_counter("brocade_fcport.rxwords.%s"   % index, this_time, rxwords)
-        timedif, txwords_rate   = get_counter("brocade_fcport.txwords.%s"   % index, this_time, txwords)
+        timedif, rxwords_rate = get_counter("brocade_fcport.rxwords.%s" % index, this_time, rxwords)
+        timedif, txwords_rate = get_counter("brocade_fcport.txwords.%s" % index, this_time, txwords)
    
         # compute traffic in B/s and MB/s
 	in_bytes = rxwords_rate * 4
@@ -148,12 +148,12 @@ def check_brocade_fcport(item, params, info):
 	    warn, crit = bw_thresh
 	    if type(warn) == float:
 		warn_bytes = wirespeed * warn / 100.0
-	    else:
-		warn_bytes = warn / 1048576.0
+	    else: # in MB
+		warn_bytes = warn * 1048576.0
 	    if type(crit) == float:
 		crit_bytes = wirespeed * crit / 100.0
-	    else:
-		crit_bytes = crit / 1048576.0
+	    else: # in MB
+		crit_bytes = crit * 1048576.0
 
         for what, value in [("In", in_bytes), ("Out", out_bytes)]:
 	    output.append("%s: %s/s" % (what, get_bytes_human_readable(value)))
@@ -197,7 +197,8 @@ def check_brocade_fcport(item, params, info):
 	    
 	    # if averaging is on, compute average and apply levels to average
             if average:
-                timedif, per_sec_avg = get_average("brocade_fcport.%s.%s.avg" % (counter, item), this_time, per_sec, average)
+                timedif, per_sec_avg = get_average("brocade_fcport.%s.%s.avg" % \
+                        (counter, item), this_time, per_sec, average)
                 perfdata.append( ("%s_avg" % counter, per_sec_avg ) )
                 
 	    # compute error rate (errors in relation to number of frames) (from 0.0 to 1.0)
@@ -209,7 +210,8 @@ def check_brocade_fcport(item, params, info):
 		
 	    # Honor averaging of error rate
 	    if average:
-                timedif, rate = get_average("brocade_fcport.%s.%s.avgrate" % (counter, item), this_time, rate, average)
+                timedif, rate = get_average("brocade_fcport.%s.%s.avgrate" % 
+                        (counter, item), this_time, rate, average)
 	        text += ", Avg: %.2f%%" % (rate * 100.0)
 
 	    error_percentage = rate * 100.0

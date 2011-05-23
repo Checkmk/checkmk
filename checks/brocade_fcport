@@ -44,10 +44,10 @@ brocade_fcport_inventory_show_isl = True     # add "ISL" to service description 
 check_default_levels["brocade_fcport"] = "brocade_fcport_default_levels"
 
 factory_settings["brocade_fcport_default_levels"] = {
-    "rxcrcs":           (3.0, 20.0),
-    "rxencoutframes":   (3.0, 20.0),
-    "notxcredits":      (3.0, 20.0),
-    "c3discards":       (3.0, 20.0),
+    "rxcrcs":           (3.0, 20.0),   # allowed percentage of CRC errors
+    "rxencoutframes":   (3.0, 20.0),   # allowed percentage of Enc-OUT Frames
+    "notxcredits":      (3.0, 20.0),   # allowed percentage of No Tx Credits
+    "c3discards":       (3.0, 20.0),   # allowed percentage of CRC errors
     "assumed_speed":    2.0,           # used, if speed not available in SNMP data
 }
 

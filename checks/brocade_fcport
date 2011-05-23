@@ -74,10 +74,13 @@ def inventory_brocade_fcport(checkname, info):
 
     for item in info[0]:
         if len(item) == 14:
-            index    = int(item[0])
-            phystate = int(item[1])
-            opstate  = int(item[2])
-            admstate = int(item[3])
+            try:
+                index    = int(item[0])
+                phystate = int(item[1])
+                opstate  = int(item[2])
+                admstate = int(item[3])
+            except: # missing vital data. Skipping this port
+                continue
             portname = item[13]
             is_isl = item[0] in isl_ports
 

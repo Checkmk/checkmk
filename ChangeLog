@@ -7,6 +7,7 @@
     * brocade_port: check for Brocade FC ports has been rewritten with
       lots of new features.
     * AIX agent now simulates <<<netctr>>> output (by Jörg Linge)
+    * brocade_fcport: inventory handles invalid data better
 
     Multisite:
     * Introduced basic infrastructure for multilanguage support in Multisite

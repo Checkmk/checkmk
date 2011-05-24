@@ -45,6 +45,18 @@ div {
     padding: 0;
 }
 
+/* foldable trees */
+img.treeangle {
+    width: 14px;
+    height: 14px;
+    margin-right: 3px;
+    margin-top: 2px;
+}
+b.treeangle.title {
+   font-weight: bold;
+   color: #ffffff;
+}
+
 /*
    __  __       _        
   |  \/  | __ _(_)_ __   

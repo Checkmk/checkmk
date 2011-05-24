@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import time, cgi, config, os, defaults, pwd, urllib
+import time, cgi, config, os, defaults, pwd, urllib, weblib
 from lib import *
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
@@ -656,3 +656,25 @@ class html:
             if omd_site == self.apache_user():
                 omd_mode = 'own'
         return (omd_mode, omd_site)
+
+    def begin_foldable_container(self, treename, id, isopen, title):
+        # try to get persistet state of tree
+        tree_state = weblib.get_tree_states(treename)
+        if id in tree_state:
+            isopen = tree_state[id] == "on"
+
+        img_num = isopen and "90" or "00"
+        onclick = ' onclick="toggle_foldable_container(\'%s\', \'%s\')"' % (treename, id)
+        onclick += ' onmouseover="this.style.cursor=\'pointer\';" '
+        onclick += ' onmouseout="this.style.cursor=\'auto\';" '
+        
+        self.write('<img align=absbottom class="treeangle" id="treeimg.%s.%s" '
+                   'src="images/tree_%s.png" %s>' % 
+                (treename, id, img_num, onclick))
+        self.write('<b class="treeangle title" class=treeangle %s>%s</b><br>' % 
+                 (onclick, title))
+        self.write('<ul class="treeangle" style="display: %s" id="tree.%s.%s">' % 
+             ((not isopen) and "none" or "",  treename, id))
+    
+    def end_foldable_container(self):
+        self.write("</ul>")

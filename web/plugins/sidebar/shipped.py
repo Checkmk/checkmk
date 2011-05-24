@@ -104,12 +104,14 @@ def render_views():
                 continue
             if t == topic:
                 if first:
-                    html.write("<h3>%s</h3>\n" % topic)
+                    html.begin_foldable_container("views", topic, False, topic)
+                    # html.write("<h3>%s</h3>\n" % topic)
                     first = False
-                    html.write("<ul>")
+                    # html.write("<ul>")
                 bulletlink(title, "view.py?view_name=%s" % name)
         if not first: # at least one item rendered
-            html.write("</ul>")
+            html.end_foldable_container()
+            # html.write("</ul>")
 
     s = [ (view.get("topic", _("Other")), view["title"], name) for name, view in html.available_views.items() if not view["hidden"] ]
     s.sort()

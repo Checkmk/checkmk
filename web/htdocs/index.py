@@ -149,6 +149,8 @@ def handler(req, profiling = True):
     # helper functions for creating valid HTML. Parse URI and
     # store results in the request object for later usage.
     html = htmllib.html(req)
+    html.id = {} # create unique ID for this request
+    __builtin__.html = html
     req.uriinfo = htmllib.uriinfo(req)
 
     try:

@@ -11,6 +11,7 @@
     Multisite:
     * FIX: make non-Ascii characters in services names work again
     * Introduced basic infrastructure for multilanguage support in Multisite
+    * Make 'Views' snapin foldable
 
     WATO:
     * Configration files can now be administered via the WEB UI

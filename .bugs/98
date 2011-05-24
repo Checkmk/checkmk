@@ -18,3 +18,7 @@ a state. The livestatus socket is missing in such a case.
 
 2011-02-03 10:23:30: changed state open -> done
 jQuery was removed - the window is gone.
+
+2011-05-24 11:08:02: changed state done -> done
+All Ajax-Requests now get a clean error code 500 and handle this
+in case of Livestatus errors.

@@ -43,7 +43,7 @@ function get_url(url, handler, data, errorHandler) {
     }
     
     // Dynamic part to prevent caching
-    var dyn = "_t="+Date.parse(new Date());
+    var dyn = "_ajaxid="+Date.parse(new Date());
     if (url.indexOf('\?') !== -1) {
         dyn = "&"+dyn;
     } else {
@@ -55,11 +55,13 @@ function get_url(url, handler, data, errorHandler) {
         if (typeof handler === 'function')
             AJAX.onreadystatechange = function() {
                 if (AJAX.readyState == 4)
-                    if(AJAX.status == 200)
+                    if (AJAX.status == 200) {
                         handler(data, AJAX.responseText);
-                    else
-                        if(typeof errorHandler !== 'undefined')
+                    }
+                    else {
+                        if (typeof errorHandler !== 'undefined')
                             errorHandler(data, AJAX.status);
+                    }
             }
         AJAX.send(null);
         return true;

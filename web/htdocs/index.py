@@ -153,8 +153,14 @@ def handler(req, profiling = True):
     __builtin__.html = html
     req.uriinfo = htmllib.uriinfo(req)
 
+    response_code = apache.OK
     try:
         read_get_vars(req)
+        
+        # Ajax-Functions want no HTML output in case of an error but
+        # just a plain server result code of 500
+        fail_silently = html.has_var("_ajaxid")
+
         config.load_config() # load multisite.mk
         if html.var("debug"): # Debug flag may be set via URL
             config.debug = True
@@ -225,55 +231,69 @@ def handler(req, profiling = True):
         handler(html)
 
     except MKUserError, e:
-        html.header("Invalid User Input")
-        html.show_error(str(e))
-        html.footer()
+        if not fail_silently:
+            html.header("Invalid User Input")
+            html.show_error(str(e))
+            html.footer()
+        response_code = apache.HTTP_BAD_REQUEST
 
     except MKAuthException, e:
-        html.header(_("Permission denied"))
-        html.show_error(str(e))
-        html.footer()
+        if not fail_silently:
+            html.header(_("Permission denied"))
+            html.show_error(str(e))
+            html.footer()
+        response_code = apache.HTTP_FORBIDDEN
 
     except MKConfigError, e:
-        html.header(_("Configuration Error"))
-        html.show_error(str(e))
-        html.footer()
+        if not fail_silently:
+            html.header(_("Configuration Error"))
+            html.show_error(str(e))
+            html.footer()
         apache.log_error(_("Configuration error: %s") % (e,), apache.APLOG_ERR)
+        response_code = apache.HTTP_INTERNAL_SERVER_ERROR
 
     except MKGeneralException, e:
-        html.header(_("Error"))
-        html.show_error(str(e))
-        html.footer()
+        if not fail_silently:
+            html.header(_("Error"))
+            html.show_error(str(e))
+            html.footer()
         apache.log_error(_("Error: %s") % (e,), apache.APLOG_ERR)
+        response_code = apache.HTTP_INTERNAL_SERVER_ERROR
 
     except livestatus.MKLivestatusNotFoundError, e:
-        html.header(_("Data not found"))
-        html.show_error(_("The following query produced no output:\n<pre>\n%s</pre>\n") % \
-                e.query)
-        html.footer()
+        if not fail_silently:
+            html.header(_("Data not found"))
+            html.show_error(_("The following query produced no output:\n<pre>\n%s</pre>\n") % \
+                    e.query)
+            html.footer()
+        response_code = apache.HTTP_NOT_FOUND
 
     except livestatus.MKLivestatusException, e:
-        html.header(_("Livestatus problem"))
-        html.show_error(_("Livestatus problem: %s") % e)
-        html.footer()
+        if not fail_silently:
+            html.header(_("Livestatus problem"))
+            html.show_error(_("Livestatus problem: %s") % e)
+            html.footer()
+        response_code = apache.HTTP_INTERNAL_SERVER_ERROR
 
     except Exception, e:
-        html.header(_("Internal Error"))
-        if config.debug:
-            import traceback, StringIO
-            txt = StringIO.StringIO()
-            t, v, tb = sys.exc_info()
-            traceback.print_exception(t, v, tb, None, txt)
-            html.show_error("%s: %s<pre>%s</pre>" % (_('Internal error:'), e, txt.getvalue()))
-        else:
-            url = html.makeuri([("debug", "1")])
-            html.show_error("%s: %s (<a href=\"%s\">%s</a>)" % (_('Internal error:'), e, url, _('Retry with debug mode')))
-            apache.log_error("%s %s" % (_('Internal error:'), e), apache.APLOG_ERR)
-        html.footer()
+        if not fail_silently:
+            html.header(_("Internal Error"))
+            if config.debug:
+                import traceback, StringIO
+                txt = StringIO.StringIO()
+                t, v, tb = sys.exc_info()
+                traceback.print_exception(t, v, tb, None, txt)
+                html.show_error("%s: %s<pre>%s</pre>" % (_('Internal error:'), e, txt.getvalue()))
+            else:
+                url = html.makeuri([("debug", "1")])
+                html.show_error("%s: %s (<a href=\"%s\">%s</a>)" % (_('Internal error:'), e, url, _('Retry with debug mode')))
+                apache.log_error("%s %s" % (_('Internal error:'), e), apache.APLOG_ERR)
+            html.footer()
+        response_code = apache.HTTP_INTERNAL_SERVER_ERROR
 
     # Disconnect from livestatus!
     html.live = None
-    return apache.OK
+    return response_code
 
 def page_not_found(html):
     html.header(_("Page not found"))

@@ -10,6 +10,7 @@
 
     Multisite:
     * FIX: make non-Ascii characters in services names work again
+    * FIX: Avoid exceptions in sidebar on Nagios restart
     * Introduced basic infrastructure for multilanguage support in Multisite
     * Make 'Views' snapin foldable
 

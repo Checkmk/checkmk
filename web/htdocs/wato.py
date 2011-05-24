@@ -171,6 +171,7 @@ def mode_folder(phase):
         html.context_button("New folder", make_link([("mode", "newfolder")]))
         html.context_button("New host list", make_link([("mode", "newfile")]))
         changelog_button()
+        search_button()
     
     elif phase == "action":
         if html.var("_delete") and html.transaction_valid():
@@ -460,6 +461,7 @@ def mode_file(phase):
         html.context_button("Properties", make_link_to([("mode", "editfile")], g_folder["path"], g_file["name"]))
         html.context_button("New host", make_link([("mode", "newhost")]))
         changelog_button()
+        search_button()
     
     elif phase == "action":
         if html.var("_search"): # just commit to search form
@@ -503,8 +505,6 @@ def mode_file(phase):
 
         elif html.var("_bulk_edit"):
             return "bulkedit"
-
-
 
     elif len(g_hosts) == 0:
         html.write("There are no hosts in this file.")
@@ -776,6 +776,161 @@ def mode_inventory(phase, firsttime):
         show_service_table(hostname, firsttime)
 
 #   +----------------------------------------------------------------------+
+#   |                   ____                      _                        |
+#   |                  / ___|  ___  __ _ _ __ ___| |__                     |
+#   |                  \___ \ / _ \/ _` | '__/ __| '_ \                    |
+#   |                   ___) |  __/ (_| | | | (__| | | |                   |
+#   |                  |____/ \___|\__,_|_|  \___|_| |_|                   |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Dialog for searching for hosts - globally in all files               |
+#   +----------------------------------------------------------------------+
+
+def mode_search(phase):
+    if phase == "title":
+        return _("Search for hosts in %s and below" % (g_folder["title"]))
+
+    elif phase == "buttons":
+        html.context_button(_("Back"), make_link_to([("mode", "folder")], g_folder["path"]))
+
+    elif phase == "action":
+        pass
+
+    else:
+        html.write("<table><tr><td>\n")
+
+        ## # Show search form
+        html.begin_form("search")
+        html.hidden_fields()
+        html.write("<table class=form>")
+
+        # host name
+        html.write("<tr><td class=legend>Hostname</td><td class=content>")
+        html.text_input("host")
+        html.set_focus("host")
+        html.write("</td></tr>\n")
+
+        # alias
+        html.write("<tr><td class=legend>Alias</td><td class=content>")
+        html.text_input("alias")
+        html.write("</td></tr>\n")
+
+        # IP address
+        html.write("<tr><td class=legend>IP-Address (prefix)</td><td class=content>")
+        html.text_input("ipaddress")
+        html.write("</td></tr>\n")
+
+        # Host tags
+        configure_hosttags(None)
+
+        # Button
+        html.write('<tr><td class="buttons" colspan=2>')
+        html.button("save", _("Search"), "submit")
+        html.write("</td></tr>\n")
+        
+        html.write("</table>\n")
+        html.end_form()
+
+        # Show search results
+        if html.transaction_valid():
+            html.write("</td><td>")
+            # prepare tag settings
+            tags = []
+            for tagno, (tagname, taglist) in enumerate(config.host_tags):
+                value = html.var("_tag_%d" % tagno)
+                if value == "|": # skip this tag
+                    tags.append(False)
+                else:
+                    tags.append(value and value or None)
+
+            crit = {
+                "name"      : html.var("host"),
+                "alias"     : html.var("alias"),
+                "ipaddress" : html.var("ipaddress", "").strip(".").strip("*"),
+                "tags"      : tags,
+            }
+            html.write("<h3>Search results:</h3>")
+            if not search_hosts_in_folder(g_folder, crit):
+                html.message(_("No matching hosts found."))
+
+        html.write("</td></tr></table>")
+
+
+
+def search_hosts_in_folder(folder, crit):
+    num_found = 0
+    for f in folder["files"].values():
+        num_found += search_hosts_in_file(folder, f, crit)
+    for f in folder["folders"].values():
+        num_found += search_hosts_in_folder(f, crit)
+    return num_found
+
+
+def tuple_starts_with(t1, t2):
+    return t1[0:len(t2)] == t2
+
+def search_hosts_in_file(the_folder, the_file, crit):
+    found = []
+    hosts = read_configuration_file(the_folder, the_file)
+    for hostname, (alias, ipaddress, tags) in hosts.items():
+        if not ipaddress:
+            try:
+                ipaddress = socket.gethostbyname(hostname)
+            except:
+                ipaddress = _("(not in DNS)")
+        if not alias:
+            alias = ""
+        if crit["name"] and crit["name"].lower() not in hostname.lower():
+            continue
+        if crit["alias"] and crit["alias"].lower() not in alias.lower():
+            continue
+        if crit["ipaddress"]:
+            # Need to do a DNS-lookup. Yurks.
+            search_parts = tuple(crit["ipaddress"].split("."))
+            have_parts =   tuple(ipaddress.split("."))
+            if not tuple_starts_with(have_parts, search_parts):
+                continue
+
+        # Check tags
+        tags_ok = True
+        for search_val, (tagname, taglist) in zip(crit["tags"], config.host_tags):
+            if search_val == False: # tag not selected
+                continue
+            elif search_val != None: # explicit tag
+                if search_val not in tags:
+                    tags_ok = False
+                    break
+            else: # tag is None -> make sure that not other tag if this set is set
+                for ot, odescr in taglist:
+                    if ot in tags:
+                        tags_ok = False
+                        break
+
+        if not tags_ok:
+            continue
+
+        found.append((hostname, (alias, ipaddress, tags)))
+
+    if found:
+        render_folder_path(the_folder, 0, True)
+        file_url = make_link_to([("mode", "file")], the_folder["path"], the_file["name"]) 
+        html.write(' / <a href="%s">%s</a>' % (file_url, the_file["title"]))
+        html.write(":")
+        found.sort()
+        html.write("<table class=data><tr><th>%s</th><th>%s</th><th>%s</th></tr>" %
+                (_("Hostname"), _("Alias"), _("IP Address")))
+        even = "even"
+        for hostname, (alias, ipaddress, tags) in found:
+            even = even == "even" and "odd" or "even"
+            host_url =  make_link_to([("mode", "edithost"), ("host", hostname)], the_folder["path"], the_file["name"])
+            html.write('<tr class="data %s0"><td><a href="%s">%s</a></td><td>%s</td><td>%s</td></tr>\n' % 
+               (even, host_url, hostname, alias, ipaddress))
+        html.write("</table><br>\n")
+
+    return len(found)
+
+
+#   +----------------------------------------------------------------------+
 #   |  ____        _ _      ___                      _                     |
 #   | | __ ) _   _| | | __ |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _   |
 #   | |  _ \| | | | | |/ /  | || '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |  |
@@ -793,10 +948,7 @@ def mode_bulk_inventory(phase):
         return "Bulk service detection (inventory)"
 
     elif phase == "buttons":
-        if html.var("_start"):
-            html.context_button("Back", make_link([("mode", "file")]))
-        else:
-            html.context_button("Back", make_link([("mode", "file")]))
+        html.context_button("Back", make_link([("mode", "file")]))
         return
 
     elif phase == "action":
@@ -1014,7 +1166,12 @@ def configure_hosttags(current_tags):
     for tagno, (tagname, taglist) in enumerate(config.host_tags):
         choices = [e[:2] for e in taglist]
         # get current value of tag
-        if type(current_tags) != dict:
+        if current_tags == None:
+            duplicate = False
+            tagvalue = None
+            choices = [("|", "")] + choices
+
+        elif type(current_tags) != dict:
             tagvalue = None
             duplicate = False
             for entry in taglist:
@@ -1045,7 +1202,7 @@ def get_selected_host_tags(current_tags = {}):
     tags = set([])
     for tagno, (tagname, taglist) in enumerate(config.host_tags):
         value = html.var("_tag_%d" % tagno)
-        if value == "|": # keep current setting of host (see current tags)
+        if value == "|": # keep current setting of host (see current tags), or don't use for search
             found = False
             for entry in taglist:
                 tag = entry[0]
@@ -1542,6 +1699,10 @@ def make_action_link(vars):
 def make_action_link_to(vars, folder_path, filename = None):
     return make_link_to(vars + [("_transid", html.current_transid())], folder_path, filename)
 
+def search_button():
+    if len(g_folder["files"]) > 0 or len(g_folder["folders"]) > 0:
+        html.context_button(_("Search"), make_link([("mode", "search")]))
+
 def changelog_button():
     pending = parse_audit_log("pending")
     buttontext = "ChangeLog"
@@ -1765,21 +1926,34 @@ def move_hosts_to(hostnames, target_filename):
 def move_host_to(hostname, target_filename):
     move_hosts_to([hostname], target_filename)
 
-def render_folder_path():
+def render_folder_path(the_folder = 0, the_file = 0, link_to_last = False):
+    if the_folder == 0:
+        the_folder = g_folder
+        the_file = g_file
 
     def render_component(p, title):
-        html.write('<a href="%s">%s</a> / ' % (make_link_to([], path), title))
+        return '<a href="%s">%s</a>' % (make_link_to([], path), title)
 
     path = ()
-    for p in g_folder["path"]:
-        render_component(path, find_folder(path)["title"])
+    comps = []
+    
+    for p in the_folder["path"]:
+        comps.append(render_component(path, find_folder(path)["title"]))
         path += (p,)
 
-    if g_file:
-        render_component(g_folder["path"], g_folder["title"])
-        html.write(g_file["title"])
-    else:
-        html.write(g_folder["title"])
+    if the_file or link_to_last:
+        comps.append(render_component(the_folder["path"], the_folder["title"]))
+
+    if the_file:
+        if link_to_last:
+            comps.append(render_component(the_file["path"], the_file["title"]))
+        else:
+            comps.append(the_file["title"])
+
+    if not the_file and not link_to_last:
+        comps.append(the_folder["title"])
+
+    html.write(" / ".join(comps))
 
 #   +----------------------------------------------------------------------+
 #   |               ____                                                   |
@@ -1846,6 +2020,7 @@ mode_functions = {
    "edithost"       : lambda phase: mode_edithost(phase, False),
    "firstinventory" : lambda phase: mode_inventory(phase, True),
    "inventory"      : lambda phase: mode_inventory(phase, False),
+   "search"         : mode_search,
    "bulkinventory"  : mode_bulk_inventory,
    "bulkedit"       : mode_bulk_edit,
    "changelog"      : mode_changelog,

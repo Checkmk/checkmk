@@ -19,6 +19,8 @@
       (config_files in multisite.mk is obsolete)
     * Snapin is tree-based and foldable
     * Bulk operation on host lists (inventory, tags changed, etc)
+    * Easy search operation in host lists
+    * Dialog for global host search
 
     MK Livestatus:
     * Column aggregation (Stats) now also works for perf_data

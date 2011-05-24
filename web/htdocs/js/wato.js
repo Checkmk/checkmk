@@ -30,7 +30,7 @@ function getElementsByClass(cl) {
     var items = new Array();
     var elements = document.getElementsByTagName('*');
     for(var i = 0; i < elements.length; i++)
-        if(elements[i].className == cl)
+        if (elements[i].className == cl)
             items.push(elements[i]);
     return items;
 }
@@ -42,7 +42,7 @@ function wato_check_all(css_class) {
     // First check if all boxes are checked
     var all_checked = true;
     for(var i = 0; i < items.length && all_checked == true; i++)
-        if(items[i].checked == false)
+        if (items[i].checked == false)
             all_checked = false;
 
     // Now set the new state
@@ -55,8 +55,16 @@ function wato_check_all(css_class) {
 // ----------------------------------------------------------------------------
 
 
+// WATO mode during progress
+var progress_mode      = null;
+// WATO url belonging to progress
+var progress_url       = null;
+// timeout for progress
+var progress_timeout   = null;
 // Keeps the items to be fetched
 var progress_items     = null;
+// items failed, needed for retry
+var failed_items       = null;
 // Number of total items to handle
 var progress_total_num = 0;
 // The URL to redirect to after finish/abort button pressed
@@ -81,7 +89,7 @@ function progress_handle_response(data, code) {
         alert('Invalid response: ' + code);    
     }
 
-    if(header === null) {
+    if (header === null) {
         alert('Header is null!');
     }
 
@@ -97,14 +105,15 @@ function progress_handle_response(data, code) {
     update_progress_bar(header);
 
     // Process optional body
-    if(typeof(body) !== 'undefined' && body != '')
+    if (typeof(body) !== 'undefined' && body != '')
         progress_attach_log(body);
 
-    if(header[0] === 'pause') {
+    if (header[0] === 'pause')
         progress_pause();
-    } else if(header[0] === 'abort') {
+    else if (header[0] == 'failed')
+        failed_items.push(item);
+    else if (header[0] === 'abort')
         return;
-    }
 
     progress_items.shift();
     progress_running = false;
@@ -126,6 +135,19 @@ function progress_proceed() {
     document.getElementById('progress_proceed').style.display = 'none';
 }
 
+function progress_retry() {
+    document.getElementById('progress_retry').style.display    = 'none';
+    document.getElementById('progress_pause').style.display    = '';
+    document.getElementById('progress_abort').style.display    = '';
+    progress_clean_log();
+    clear_progress_stats();
+    progress_items = failed_items;
+    failed_items = Array();
+    progress_scheduler(progress_mode, progress_url, progress_timeout, [], "", ""); 
+}
+
+
+
 /* Is called when the processing is completely finished */
 function progress_finished() {
     update_progress_title(progress_fin_txt);
@@ -135,6 +157,9 @@ function progress_finished() {
     document.getElementById('progress_pause').style.display    = 'none';
     document.getElementById('progress_proceed').style.display  = 'none';
     document.getElementById('progress_abort').style.display    = 'none';
+    if (failed_items.length > 0)
+        document.getElementById('progress_retry').style.display = '';
+
 }
 
 /* Is called by the users abort/finish button click */
@@ -144,10 +169,22 @@ function progress_end() {
     location.href = progress_end_url;
 }
 
+function clear_progress_stats() {
+    for(var i = 1; i < 100; i++) {
+        var o = document.getElementById('progress_stat' + (i - 1));
+        if (o) {
+            o.innerHTML = "0";
+            o = null;
+        }
+        else 
+            break;
+    }
+}
+
 function update_progress_stats(header) {
     for(var i = 1; i < header.length; i++) {
         var o = document.getElementById('progress_stat' + (i - 1));
-        if(o) {
+        if (o) {
             o.innerHTML = parseInt(o.innerHTML) + parseInt(header[i]);
             o = null;
         }
@@ -178,26 +215,38 @@ function progress_attach_log(t) {
     log = null;
 }
 
+function progress_clean_log() {
+    var log = document.getElementById('progress_log');
+    log.innerHTML = '';
+    log.scrollTop = 0;
+    log = null;
+}
+
 function progress_scheduler(mode, url_prefix, timeout, items, end_url, finished_txt) {
     // Initialize
-    if(progress_items === null) {
+    if (progress_items === null) {
         progress_items     = items;
+        failed_items       = Array();
         progress_total_num = items.length;
         progress_end_url   = end_url;
         progress_fin_txt   = finished_txt;
+        progress_mode      = mode;
+        progress_url       = url_prefix;
+        progress_timeout   = timeout;
     }
 
     // Escape the loop when ended
-    if(progress_ended)
+    if (progress_ended)
         return false;
 
     // Regular processing when not paused and not already running
-    if(!progress_paused && !progress_running) {
-        if(progress_items.length > 0) {
+    if (!progress_paused && !progress_running) {
+        if (progress_items.length > 0) {
             // Progressing
             progress_running = true;
             update_progress_title(progress_items[0]);
-            get_url(url_prefix + '&_transid=-1&_item=' + escape(progress_items[0]), progress_handle_response, [ mode, progress_items[0] ]);
+            get_url(url_prefix + '&_transid=-1&_item=' + 
+                   escape(progress_items[0]), progress_handle_response, [ mode, progress_items[0] ]);
         } else {
             progress_finished();
             return;

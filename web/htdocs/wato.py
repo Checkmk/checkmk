@@ -954,14 +954,14 @@ def mode_bulk_inventory(phase):
     elif phase == "action":
         if html.var("_item"):
             how = html.var("how")
-            hostname = html.var("_item").encode("utf-8")
+            hostname = html.var("_item")
             try:
                 counts = check_mk_automation("inventory", [how, hostname])
-                result = repr([ 'continue' ] + list(counts)) + "\n"
+                result = repr([ 'continue', 0 ] + list(counts)) + "\n"
                 result += "Inventorized %s<br>\n" % hostname
                 log_pending(hostname, "bulk-inventory", "Inventorized host: %d added, %d removed, %d kept, %d total services" % counts)
             except Exception, e:
-                result = repr([ 'pause', 0, 0, 0, 0, ]) + "\n"
+                result = repr([ 'failed', 1, 0, 0, 0, 0, ]) + "\n"
                 result += "Error during inventory of %s: %s<br>\n" % (hostname, e)
             html.write(result)
             return ""
@@ -976,7 +976,7 @@ def mode_bulk_inventory(phase):
         interactive_progress(
             hostnames,         # list of items
             "Bulk inventory",  # title
-            [ ("Services added", 0), ("Services removed", 0), ("Services kept", 0), ("Total services", 0) ], # stats table
+            [ ("Failed hosts", 0), ("Services added", 0), ("Services removed", 0), ("Services kept", 0), ("Total services", 0) ], # stats table
             [ ("mode", "file") ], # URL for "Stop/Finish" button
             50, # ms to sleep between two steps
         )
@@ -1986,11 +1986,12 @@ def interactive_progress(items, title, stats, finishvars, timewait):
     html.write("  </table>")
     html.write("</td>")
     html.write("<td class=buttons>")
-    html.jsbutton('progress_pause',    'Pause',   'javascript:progress_pause()')
-    html.jsbutton('progress_proceed',  'Proceed', 'javascript:progress_proceed()',  'display:none')
-    html.jsbutton('progress_finished', 'Finish',  'javascript:progress_end()', 'display:none')
-    html.jsbutton('progress_restart',  'Restart', 'javascript:location.reload()')
-    html.jsbutton('progress_abort',    'Abort',   'javascript:progress_end()')
+    html.jsbutton('progress_pause',    _('Pause'),   'javascript:progress_pause()')
+    html.jsbutton('progress_proceed',  _('Proceed'), 'javascript:progress_proceed()',  'display:none')
+    html.jsbutton('progress_finished', _('Finish'),  'javascript:progress_end()', 'display:none')
+    html.jsbutton('progress_retry',    _('Retry Failed Hosts'), 'javascript:progress_retry()', 'display:none')
+    html.jsbutton('progress_restart',  _('Restart'), 'javascript:location.reload()')
+    html.jsbutton('progress_abort',    _('Abort'),   'javascript:progress_end()')
     html.write("</td></tr>")
     html.write("</table>")
     html.write("</center>")

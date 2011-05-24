@@ -1084,6 +1084,10 @@ def mode_changelog(phase):
 
     elif phase == "buttons":
         html.context_button("Back", make_link([("mode", "folder")]))
+        pending = parse_audit_log("pending")
+        if len(pending) > 0:
+            html.context_button(_("Activate Changes!"), 
+                     html.makeuri([("_action", "activate"), ("_transid", html.current_transid())]), True)
 
     elif phase == "action":
         if html.check_transaction():
@@ -1098,10 +1102,8 @@ def mode_changelog(phase):
     else:
         pending = parse_audit_log("pending")
         if len(pending) > 0:
-            message = "<h1>Changes which are not yet activated:</h1>"
+            message = "<h1>" + _("Changes which are not yet activated:") + "</h1>"
             message += render_audit_log(pending, "pending")
-            message += '<a href="%s" class=button>Activate Changes!</a>' % \
-                html.makeuri([("_action", "activate"), ("_transid", html.current_transid())])
             html.show_warning(message)
         else:
             html.write("<p>No pending changes, monitoring server is up to date.</p>")

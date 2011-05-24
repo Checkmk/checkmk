@@ -48,7 +48,7 @@ def ajax_wato_files(h):
     global html
     html = h
     if config.may("use_wato"):
-        format = ("<li class=sidebar>%s</li>" % link("XX", "XX")).replace("XX", "%s")
+        format = ("<li>%s</li>" % link("XX", "XX")).replace("XX", "%s")
         wato.render_link_tree(html, format)
 
 

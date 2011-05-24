@@ -967,20 +967,26 @@ def render_link_tree(h, format):
     load_folder_config()
 
     def render_folder(f):
-        path = f["path"]
-        if len(path) > 0:
-            filename = "/" + "/".join(path) + "/"
-            url = "wato.py?filename=" + htmllib.urlencode(filename)
-            html.write(format % (url, f["title"]))
-        else:
-            html.write('<a target=main href="wato.py">%s</a>' % f["title"])
 
         subfolders = f["folders"]
+        path = f["path"]
+        filename = "/" + "/".join(path) + "/"
+        if len(path) > 0:
+            url = "wato.py?filename=" + htmllib.urlencode(filename)
+            if len(subfolders) == 0:
+                title = format % (url, f["title"])
+            else:
+                title = '<a target=main href="%s">%s</a>' % (url, f["title"]) 
+        else:
+            title  = '<a target=main href="wato.py">%s</a>' % f["title"]
+
         if len(subfolders) > 0:
-            html.write('<ul>')
+            html.begin_foldable_container('wato', filename, False, title)
             for sf in sort_by_title(subfolders.values()):
                 render_folder(sf)
-            html.write('</ul>')
+            html.end_foldable_container()
+        else:
+            html.write(title)
 
     render_folder(g_root_folder)
 

@@ -671,8 +671,11 @@ class html:
         self.write('<img align=absbottom class="treeangle" id="treeimg.%s.%s" '
                    'src="images/tree_%s.png" %s>' % 
                 (treename, id, img_num, onclick))
-        self.write('<b class="treeangle title" class=treeangle %s>%s</b><br>' % 
-                 (onclick, title))
+        if title[0] == '<': # custom HTML code
+            self.write(title)
+        else:
+            self.write('<b class="treeangle title" class=treeangle %s>%s</b><br>' % 
+                     (onclick, title))
         self.write('<ul class="treeangle" style="display: %s" id="tree.%s.%s">' % 
              ((not isopen) and "none" or "",  treename, id))
     

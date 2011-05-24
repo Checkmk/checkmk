@@ -56,6 +56,15 @@ b.treeangle.title {
    font-weight: bold;
    color: #ffffff;
 }
+ul.treeangle {
+    /* border: 1px solid #4060ff; */
+    padding-left: 20px;
+}
+ul.treeangle li {
+    margin: 0px;
+    margin-left: 16px;
+    padding-left: 20px;
+}
 
 /*
    __  __       _        
@@ -352,7 +361,7 @@ div.snapin ul {
     margin: 0;
     padding: 0;
     padding-left: 16px;
-    width: 220px;
+    /* width: 220px; Bei mehrstufigen Einrueckungen stimmt der rechte Rand nicht */
 }
 
 li.sidebar {

@@ -744,11 +744,22 @@ def mode_inventory(phase, firsttime):
         raise MKGeneralException("You called this page for a non-existing host.")
 
     if phase == "title":
-        return "Services of host %s" % hostname
+        title = "Services of host %s" % hostname
+        if html.var("scan"):
+            title += " (live scan)"
+        else:
+            title += " (cached data)"
+        return title
+
+    elif phase == "buttons":
+        html.context_button(_("Host list"), make_link([("mode", "file")]))
+        html.context_button(_("Edit host"), make_link([("mode", "edithost"), ("host", hostname)]))
+        html.context_button(_("Full Scan"), html.makeuri([("scan", "yes")]))
 
     elif phase == "action":
         if html.check_transaction():
-            table = check_mk_automation("try-inventory", [hostname])
+            cache_options = not html.var("scan") and [ '--cache' ] or []
+            table = check_mk_automation("try-inventory", cache_options + [hostname])
             table.sort()
             active_checks = {}
             new_target = "file"
@@ -768,9 +779,6 @@ def mode_inventory(phase, firsttime):
             return new_target, message
         return "file"
 
-    elif phase == "buttons":
-        html.context_button("Host list", make_link([("mode", "file")]))
-        html.context_button("Edit host", make_link([("mode", "edithost"), ("host", hostname)]))
 
     else:
         show_service_table(hostname, firsttime)
@@ -1429,15 +1437,15 @@ def check_mk_automation(command, args=[], indata=""):
     sudoline = None
     if defaults.check_mk_automation:
         commandargs = defaults.check_mk_automation.split()
-        cmd = commandargs + [ command ] + args
+        cmd = commandargs + [ command, '--' ] + args
     else:
         omd_mode, omd_site = html.omd_mode()
         if not omd_mode or omd_mode == 'own':
             commandargs = [ 'check_mk', '--automation' ]
-            cmd = commandargs  + [ command ] + args
+            cmd = commandargs  + [ command, '--' ] + args
         else: # OMD shared mode
             commandargs = [ 'sudo', '/bin/su', '-', omd_site, '-c', 'check_mk --automation' ]
-            cmd = commandargs[:-1] + [ commandargs[-1] + ' ' + ' '.join([ command ] + args) ]
+            cmd = commandargs[:-1] + [ commandargs[-1] + ' ' + ' '.join([ command, '--' ] + args) ]
             sudoline = "%s ALL = (root) NOPASSWD: /bin/su - %s -c check_mk\\ --automation\\ *" % (html.apache_user(), omd_site)
 
     sudo_msg = ''
@@ -1753,7 +1761,8 @@ def changelog_button():
 
 def show_service_table(hostname, firsttime):
     # Read current check configuration
-    table = check_mk_automation("try-inventory", [hostname])
+    cache_options = not html.var("scan") and [ '--cache' ] or []
+    table = check_mk_automation("try-inventory", cache_options + [hostname])
     table.sort()
 
     html.begin_form("checks", None, "POST")
@@ -1771,8 +1780,9 @@ def show_service_table(hostname, firsttime):
     if fixall == 2:
         html.button("_fixall", "Fix all missing/exceeding")
 
+    if len(table) > 0:
+        html.button("_save", _("Save manual check configuration"))
 
-    html.button("_save", "Save manual check configuration")
     html.hidden_fields()
     html.write("<table class=data>\n")
 

@@ -1241,20 +1241,25 @@ def mode_changelog(phase):
 
     elif phase == "buttons":
         html.context_button("Back", make_link([("mode", "folder")]))
-        pending = parse_audit_log("pending")
-        if len(pending) > 0:
+        if log_exists("pending"):
             html.context_button(_("Activate Changes!"), 
-                     html.makeuri([("_action", "activate"), ("_transid", html.current_transid())]), True)
+                html.makeuri([("_action", "activate"), ("_transid", html.current_transid())]), True)
+        if log_exists("audit"):
+            html.context_button(_("Clear Audit Log"),
+                html.makeuri([("_action", "clear"), ("_transid", html.current_transid())]))
 
     elif phase == "action":
-        if html.check_transaction():
-            try:
-	        check_mk_automation("restart")
-            except Exception, e:
-                raise MKUserError(None, str(e))
-            log_commit_pending() # flush logfile with pending actions
-	    log_audit(None, "activate-config", "Configuration activated, monitoring server restarted")
-	    return None, "The new configuration has been successfully activated."
+        if html.var("_action") == "clear":
+            return clear_audit_log_after_confirm()
+        elif html.check_transaction():
+                try:
+                    check_mk_automation("restart")
+                except Exception, e:
+                    raise MKUserError(None, str(e))
+                log_commit_pending() # flush logfile with pending actions
+                log_audit(None, "activate-config", "Configuration activated, monitoring server restarted")
+                return None, "The new configuration has been successfully activated."
+
 
     else:
         pending = parse_audit_log("pending")
@@ -1307,6 +1312,33 @@ def log_commit_pending():
     if os.path.exists(pending):
         os.remove(pending)
 
+def clear_audit_log():
+    path = conf_dir + "/audit.log"
+    if os.path.exists(path):
+        newpath = path + time.strftime(".%Y-%m-%d")
+        if os.path.exists(newpath):
+            n = 1
+            while True:
+                n += 1
+                with_num = newpath + "-%d" % n
+                if not os.path.exists(with_num):
+                    newpath = with_num
+                    break
+        os.rename(path, newpath)
+
+def clear_audit_log_after_confirm():
+    if not html.transaction_valid():
+        return None  # Browser reload
+    wato_html_head(_("Confirm deletion of audit logfile"))
+    c = html.confirm(_("Do you really want to clear audit logfile?"))
+    if c:
+        clear_audit_log()
+        return None, _("Cleared audit logfile.")
+    elif c == False: # not yet confirmed
+        return ""
+    else:
+        return None # browser reload 
+
 def parse_audit_log(what):
     path = conf_dir + "/" + what + ".log"
     if os.path.exists(path):
@@ -1317,6 +1349,11 @@ def parse_audit_log(what):
         entries.reverse()
         return entries
     return []
+
+def log_exists(what):
+    path = conf_dir + "/" + what + ".log"
+    return os.path.exists(path)
+
 
 
 def render_linkinfo(linkinfo):

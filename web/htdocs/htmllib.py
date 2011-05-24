@@ -410,32 +410,32 @@ class html:
 
     def html_head(self, title):
         if not self.req.header_sent:
-            self.req.write(
+            self.write(
                 u'''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
                 <html><head>
                 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
                 <title>''')
             # Ich versteh mit dem drecks UTF-8 bald garnix mehr...
             # self.req.write(title.encode("utf-8"))
-            self.req.write(title)
-            self.req.write('''</title>
+            self.write(title)
+            self.write('''</title>
                 <link rel="stylesheet" type="text/css" href="check_mk.css">''')
             if config.custom_style_sheet:
-               self.req.write('                <link rel="stylesheet" type="text/css" href="%s">' % config.custom_style_sheet)
-            self.req.write('''
+               self.write('                <link rel="stylesheet" type="text/css" href="%s">' % config.custom_style_sheet)
+            self.write('''
                 <script type='text/javascript' src='js/check_mk.js'></script>
                 <script type='text/javascript' src='js/hover.js'></script>
             ''')
 
             if self.browser_reload != 0:
                 if self.browser_redirect != '':
-                    self.req.write("<script type=\"text/javascript\">setReload(%s, '%s')</script>\n" %
+                    self.write("<script type=\"text/javascript\">setReload(%s, '%s')</script>\n" %
                                                                   (self.browser_reload, self.browser_redirect))
                 else:
-                    self.req.write("<script type=\"text/javascript\">setReload(%s)</script>\n" % self.browser_reload)
+                    self.write("<script type=\"text/javascript\">setReload(%s)</script>\n" % self.browser_reload)
 
 
-            self.req.write("</head>\n")
+            self.write("</head>\n")
             self.req.header_sent = True
 
     def html_foot(self):
@@ -475,7 +475,7 @@ class html:
         if self.focus_object:
             formname, varname = self.focus_object
             obj = formname + "." + varname
-            self.req.write("<script language=\"javascript\" type=\"text/javascript\">\n"
+            self.write("<script language=\"javascript\" type=\"text/javascript\">\n"
                            "<!--\n"
                            "document.%s.focus();\n"
                            "document.%s.select();\n"
@@ -489,7 +489,7 @@ class html:
             if self.browser_reload:
                 corner_text += "refresh: %d secs" % self.browser_reload
             si = self.render_status_icons()
-            self.req.write("<table class=footer><tr>"
+            self.write("<table class=footer><tr>"
                            "<td class=left>%s</td>"
                            "<td class=middle></td>"
                            "<td class=right>%s</td></tr></table>"

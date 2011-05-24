@@ -1876,7 +1876,7 @@ def host_move_combo(host = None):
         else:
             html.hidden_field("host", host)
             uri = html.makeuri([("host", host), ("_transid", html.current_transid() )])
-            html.select(None, selections, "", 
+            html.sorted_select(None, selections, "", 
                 "location.href='%s' + '&_move_host_to=' + this.value;" % uri);
 
 

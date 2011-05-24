@@ -1875,7 +1875,10 @@ def delete_file_after_confirm(del_file):
         hosts = read_configuration_file(g_folder, del_file)
         for delname in hosts:
             check_mk_automation("delete-host", [delname])
-        log_pending(del_file, "delete-file", "Deleted file %s" % del_file["title"])
+        if len(hosts) > 0:
+            log_pending(del_file, "delete-file", _("Deleted file %s") % del_file["title"])
+        else:
+            log_audit(del_file, "delete-file", _("Deleted empty file %s") % del_file["title"])
         del g_files[del_file["path"]]
         del g_folder["files"][del_file["name"]]
         delete_configuration_file(g_folder, del_file)

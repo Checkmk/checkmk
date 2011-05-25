@@ -14,6 +14,9 @@
     * Introduced basic infrastructure for multilanguage support in Multisite
     * FIX: make non-Ascii characters in services names work again
     * FIX: printer_supply perfometer: Using white font for black toners
+    * FIX: icmp: Skipping items with invalid data (0.000 val, "unspecified"
+      unit) in summary mode
+    * FIX: icmp: Improved output formating in summary mode
 
     WATO:
     * Configration files can now be administered via the WEB UI

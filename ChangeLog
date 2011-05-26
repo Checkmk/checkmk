@@ -25,6 +25,7 @@
       no scan will be done until new button "Full Scan" is pressed.
 
     MK Livestatus:
+    * FIX: fix compile problem on Debian unstable (Thanks to Sven Velt)
     * Column aggregation (Stats) now also works for perf_data
 
 1.1.11i1:

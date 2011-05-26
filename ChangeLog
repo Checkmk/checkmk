@@ -1,3 +1,7 @@
+1.1.10p4:
+    MK Livestatus:
+    * FIX: fix compile problem on Debian unstable (Thanks to Sven Velt)
+
 1.1.10p3:
     Core, Setup, etc.:
     * FIX: sort output of cmk --list-hosts alphabetically

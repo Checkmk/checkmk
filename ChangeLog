@@ -11,22 +11,30 @@
       default thresholds to 5/10 refclock offset
 
     Multisite:
-    * Introduced basic infrastructure for multilanguage support in Multisite
     * FIX: make non-Ascii characters in services names work again
+    * FIX: Avoid exceptions in sidebar on Nagios restart
     * FIX: printer_supply perfometer: Using white font for black toners
-    * FIX: icmp: Skipping items with invalid data (0.000 val, "unspecified"
+    * FIX: ipmi: Skipping items with invalid data (0.000 val, "unspecified"
       unit) in summary mode
-    * FIX: icmp: Improved output formating in summary mode
+    * FIX: ipmi: Improved output formating in summary mode
+    * Introduced basic infrastructure for multilanguage support in Multisite
+    * Make 'Views' snapin foldable
 
     WATO:
     * Configration files can now be administered via the WEB UI
       (config_files in multisite.mk is obsolete)
+    * Snapin is tree-based and foldable
     * Bulk operation on host lists (inventory, tags changed, etc)
+    * Easy search operation in host lists
+    * Dialog for global host search
+    * Services dialog now tries to use cached data. On SNMP hosts
+      no scan will be done until new button "Full Scan" is pressed.
 
     BI:
     * Fixed displaying of host states (after i18n introduction)h
 
     MK Livestatus:
+    * FIX: fix compile problem on Debian unstable (Thanks to Sven Velt)
     * Column aggregation (Stats) now also works for perf_data
 
 1.1.11i1:

@@ -28,40 +28,36 @@ import config
 import lib
 
 treestates = {}
+treestates_for_id = None
 
 def load_tree_states():
     global treestates
-    treestates = config.load_user_file("treestates", {})
+    global treestates_for_id
+    if html.id is not treestates_for_id:
+        treestates = config.load_user_file("treestates", {})
+        treestates_for_id = html.id
 
 def save_tree_states():
     config.save_user_file("treestates", treestates)
 
 def get_tree_states(tree):
-    if not treestates:
-        load_tree_states()
+    load_tree_states()
     return treestates.get(tree, {})
 
 def set_tree_state(tree, key, val):
-    global treestates
-
-    if not treestates:
-        load_tree_states()
+    load_tree_states()
 
     if tree not in treestates:
         treestates[tree] = {}
 
     treestates[tree][key] = val
 
-
 def set_tree_states(tree, val):
-    global treestates
-    if not treestates:
-        load_tree_states()
+    load_tree_states()
     treestates[tree] = val
 
 def ajax_tree_openclose(h):
-    global html
-    html = h
+    load_tree_states()
 
     tree = html.var("tree")
     name = html.var("name")
@@ -71,4 +67,3 @@ def ajax_tree_openclose(h):
 
     set_tree_state(tree, name, html.var("state"))
     save_tree_states()
-

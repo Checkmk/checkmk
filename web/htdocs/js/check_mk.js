@@ -43,7 +43,7 @@ function get_url(url, handler, data, errorHandler) {
     }
     
     // Dynamic part to prevent caching
-    var dyn = "_t="+Date.parse(new Date());
+    var dyn = "_ajaxid="+Date.parse(new Date());
     if (url.indexOf('\?') !== -1) {
         dyn = "&"+dyn;
     } else {
@@ -55,11 +55,13 @@ function get_url(url, handler, data, errorHandler) {
         if (typeof handler === 'function')
             AJAX.onreadystatechange = function() {
                 if (AJAX.readyState == 4)
-                    if(AJAX.status == 200)
+                    if (AJAX.status == 200) {
                         handler(data, AJAX.responseText);
-                    else
-                        if(typeof errorHandler !== 'undefined')
+                    }
+                    else {
+                        if (typeof errorHandler !== 'undefined')
                             errorHandler(data, AJAX.status);
+                    }
             }
         AJAX.send(null);
         return true;
@@ -496,7 +498,7 @@ var tree_anim_o = null;
 
 function toggle_folding(oImg, state) {
     tree_anim_o = oImg;
-    if(state === 1) {
+    if (state) {
         oImg.src = "images/tree_10.png";
         setTimeout("set_tree_animation_step('20');", 10);
         setTimeout("set_tree_animation_step('30');", 20);
@@ -507,7 +509,8 @@ function toggle_folding(oImg, state) {
         setTimeout("set_tree_animation_step('80');", 180);
         setTimeout("set_tree_animation_step('90');", 260);
 
-    } else {
+    } 
+    else {
         oImg.src = "images/tree_80.png";
         setTimeout("set_tree_animation_step('70');", 10);
         setTimeout("set_tree_animation_step('60');", 20);
@@ -557,6 +560,14 @@ function set_tree_animation_step(num)
     tree_anim_o.src = "images/tree_" + num + ".png";
 }
 
+function toggle_foldable_container(treename, id) {
+    var oImg = document.getElementById('treeimg.' + treename + '.' + id);
+    var oBox = document.getElementById('tree.' + treename + '.' + id);
+    toggle_tree_state(treename, id, oBox);
+    toggle_folding(oImg, oBox.style.display != "none");
+    oImg = null;
+    oBox = null;
+}
 
 function toggle_assumption(oImg, site, host, service)
 {

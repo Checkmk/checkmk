@@ -120,6 +120,11 @@ def automation_inventory(args):
 
 
 def automation_try_inventory(args):
+    if args[0] == '--cache':
+        global opt_use_cachefile
+        opt_use_cachefile = True
+        args = args[1:]
+
     hostname = args[0]
     try:
         ipaddress = lookup_ipaddress(hostname)
@@ -128,8 +133,16 @@ def automation_try_inventory(args):
 
     f = []
 
+    # if we are using cache files, then we restrict us to existing
+    # check types. SNMP scan is only done without the --cache option
     if is_snmp_host(hostname):
-        f = do_snmp_scan([hostname], True, True)
+        if opt_use_cachefile:
+            existing_checks = set([ cn for (cn, item) in get_check_table(hostname) ])
+            for cn in inventorable_checktypes("snmp"):
+                if cn in existing_checks:
+                    f += make_inventory(cn, [hostname], True, True)
+        else:
+            f = do_snmp_scan([hostname], True, True)
 
     if is_tcp_host(hostname):
         for cn in inventorable_checktypes("tcp"):

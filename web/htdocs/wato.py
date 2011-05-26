@@ -171,6 +171,7 @@ def mode_folder(phase):
         html.context_button("New folder", make_link([("mode", "newfolder")]))
         html.context_button("New host list", make_link([("mode", "newfile")]))
         changelog_button()
+        search_button()
     
     elif phase == "action":
         if html.var("_delete") and html.transaction_valid():
@@ -460,6 +461,7 @@ def mode_file(phase):
         html.context_button("Properties", make_link_to([("mode", "editfile")], g_folder["path"], g_file["name"]))
         html.context_button("New host", make_link([("mode", "newhost")]))
         changelog_button()
+        search_button()
     
     elif phase == "action":
         if html.var("_search"): # just commit to search form
@@ -503,8 +505,6 @@ def mode_file(phase):
 
         elif html.var("_bulk_edit"):
             return "bulkedit"
-
-
 
     elif len(g_hosts) == 0:
         html.write("There are no hosts in this file.")
@@ -744,11 +744,22 @@ def mode_inventory(phase, firsttime):
         raise MKGeneralException("You called this page for a non-existing host.")
 
     if phase == "title":
-        return "Services of host %s" % hostname
+        title = "Services of host %s" % hostname
+        if html.var("scan"):
+            title += " (live scan)"
+        else:
+            title += " (cached data)"
+        return title
+
+    elif phase == "buttons":
+        html.context_button(_("Host list"), make_link([("mode", "file")]))
+        html.context_button(_("Edit host"), make_link([("mode", "edithost"), ("host", hostname)]))
+        html.context_button(_("Full Scan"), html.makeuri([("scan", "yes")]))
 
     elif phase == "action":
         if html.check_transaction():
-            table = check_mk_automation("try-inventory", [hostname])
+            cache_options = not html.var("scan") and [ '--cache' ] or []
+            table = check_mk_automation("try-inventory", cache_options + [hostname])
             table.sort()
             active_checks = {}
             new_target = "file"
@@ -768,12 +779,164 @@ def mode_inventory(phase, firsttime):
             return new_target, message
         return "file"
 
-    elif phase == "buttons":
-        html.context_button("Host list", make_link([("mode", "file")]))
-        html.context_button("Edit host", make_link([("mode", "edithost"), ("host", hostname)]))
 
     else:
         show_service_table(hostname, firsttime)
+
+#   +----------------------------------------------------------------------+
+#   |                   ____                      _                        |
+#   |                  / ___|  ___  __ _ _ __ ___| |__                     |
+#   |                  \___ \ / _ \/ _` | '__/ __| '_ \                    |
+#   |                   ___) |  __/ (_| | | | (__| | | |                   |
+#   |                  |____/ \___|\__,_|_|  \___|_| |_|                   |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Dialog for searching for hosts - globally in all files               |
+#   +----------------------------------------------------------------------+
+
+def mode_search(phase):
+    if phase == "title":
+        return _("Search for hosts in %s and below" % (g_folder["title"]))
+
+    elif phase == "buttons":
+        html.context_button(_("Back"), make_link_to([("mode", "folder")], g_folder["path"]))
+
+    elif phase == "action":
+        pass
+
+    else:
+        html.write("<table><tr><td>\n")
+
+        ## # Show search form
+        html.begin_form("search")
+        html.hidden_fields()
+        html.write("<table class=form>")
+
+        # host name
+        html.write("<tr><td class=legend>Hostname</td><td class=content>")
+        html.text_input("host")
+        html.set_focus("host")
+        html.write("</td></tr>\n")
+
+        # alias
+        html.write("<tr><td class=legend>Alias</td><td class=content>")
+        html.text_input("alias")
+        html.write("</td></tr>\n")
+
+        # IP address
+        html.write("<tr><td class=legend>IP-Address (prefix)</td><td class=content>")
+        html.text_input("ipaddress")
+        html.write("</td></tr>\n")
+
+        # Host tags
+        configure_hosttags(None)
+
+        # Button
+        html.write('<tr><td class="buttons" colspan=2>')
+        html.button("save", _("Search"), "submit")
+        html.write("</td></tr>\n")
+        
+        html.write("</table>\n")
+        html.end_form()
+
+        # Show search results
+        if html.transaction_valid():
+            html.write("</td><td>")
+            # prepare tag settings
+            tags = []
+            for tagno, (tagname, taglist) in enumerate(config.host_tags):
+                value = html.var("_tag_%d" % tagno)
+                if value == "|": # skip this tag
+                    tags.append(False)
+                else:
+                    tags.append(value and value or None)
+
+            crit = {
+                "name"      : html.var("host"),
+                "alias"     : html.var("alias"),
+                "ipaddress" : html.var("ipaddress", "").strip(".").strip("*"),
+                "tags"      : tags,
+            }
+            html.write("<h3>Search results:</h3>")
+            if not search_hosts_in_folder(g_folder, crit):
+                html.message(_("No matching hosts found."))
+
+        html.write("</td></tr></table>")
+
+
+
+def search_hosts_in_folder(folder, crit):
+    num_found = 0
+    for f in folder["files"].values():
+        num_found += search_hosts_in_file(folder, f, crit)
+    for f in folder["folders"].values():
+        num_found += search_hosts_in_folder(f, crit)
+    return num_found
+
+
+def tuple_starts_with(t1, t2):
+    return t1[0:len(t2)] == t2
+
+def search_hosts_in_file(the_folder, the_file, crit):
+    found = []
+    hosts = read_configuration_file(the_folder, the_file)
+    for hostname, (alias, ipaddress, tags) in hosts.items():
+        if not ipaddress:
+            try:
+                ipaddress = socket.gethostbyname(hostname)
+            except:
+                ipaddress = _("(not in DNS)")
+        if not alias:
+            alias = ""
+        if crit["name"] and crit["name"].lower() not in hostname.lower():
+            continue
+        if crit["alias"] and crit["alias"].lower() not in alias.lower():
+            continue
+        if crit["ipaddress"]:
+            # Need to do a DNS-lookup. Yurks.
+            search_parts = tuple(crit["ipaddress"].split("."))
+            have_parts =   tuple(ipaddress.split("."))
+            if not tuple_starts_with(have_parts, search_parts):
+                continue
+
+        # Check tags
+        tags_ok = True
+        for search_val, (tagname, taglist) in zip(crit["tags"], config.host_tags):
+            if search_val == False: # tag not selected
+                continue
+            elif search_val != None: # explicit tag
+                if search_val not in tags:
+                    tags_ok = False
+                    break
+            else: # tag is None -> make sure that not other tag if this set is set
+                for ot, odescr in taglist:
+                    if ot in tags:
+                        tags_ok = False
+                        break
+
+        if not tags_ok:
+            continue
+
+        found.append((hostname, (alias, ipaddress, tags)))
+
+    if found:
+        render_folder_path(the_folder, 0, True)
+        file_url = make_link_to([("mode", "file")], the_folder["path"], the_file["name"]) 
+        html.write(' / <a href="%s">%s</a>' % (file_url, the_file["title"]))
+        html.write(":")
+        found.sort()
+        html.write("<table class=data><tr><th>%s</th><th>%s</th><th>%s</th></tr>" %
+                (_("Hostname"), _("Alias"), _("IP Address")))
+        even = "even"
+        for hostname, (alias, ipaddress, tags) in found:
+            even = even == "even" and "odd" or "even"
+            host_url =  make_link_to([("mode", "edithost"), ("host", hostname)], the_folder["path"], the_file["name"])
+            html.write('<tr class="data %s0"><td><a href="%s">%s</a></td><td>%s</td><td>%s</td></tr>\n' % 
+               (even, host_url, hostname, alias, ipaddress))
+        html.write("</table><br>\n")
+
+    return len(found)
+
 
 #   +----------------------------------------------------------------------+
 #   |  ____        _ _      ___                      _                     |
@@ -793,23 +956,20 @@ def mode_bulk_inventory(phase):
         return "Bulk service detection (inventory)"
 
     elif phase == "buttons":
-        if html.var("_start"):
-            html.context_button("Back", make_link([("mode", "file")]))
-        else:
-            html.context_button("Back", make_link([("mode", "file")]))
+        html.context_button("Back", make_link([("mode", "file")]))
         return
 
     elif phase == "action":
         if html.var("_item"):
             how = html.var("how")
-            hostname = html.var("_item").encode("utf-8")
+            hostname = html.var("_item")
             try:
                 counts = check_mk_automation("inventory", [how, hostname])
-                result = repr([ 'continue' ] + list(counts)) + "\n"
+                result = repr([ 'continue', 0 ] + list(counts)) + "\n"
                 result += "Inventorized %s<br>\n" % hostname
                 log_pending(hostname, "bulk-inventory", "Inventorized host: %d added, %d removed, %d kept, %d total services" % counts)
             except Exception, e:
-                result = repr([ 'pause', 0, 0, 0, 0, ]) + "\n"
+                result = repr([ 'failed', 1, 0, 0, 0, 0, ]) + "\n"
                 result += "Error during inventory of %s: %s<br>\n" % (hostname, e)
             html.write(result)
             return ""
@@ -824,7 +984,7 @@ def mode_bulk_inventory(phase):
         interactive_progress(
             hostnames,         # list of items
             "Bulk inventory",  # title
-            [ ("Services added", 0), ("Services removed", 0), ("Services kept", 0), ("Total services", 0) ], # stats table
+            [ ("Failed hosts", 0), ("Services added", 0), ("Services removed", 0), ("Services kept", 0), ("Total services", 0) ], # stats table
             [ ("mode", "file") ], # URL for "Stop/Finish" button
             50, # ms to sleep between two steps
         )
@@ -967,20 +1127,26 @@ def render_link_tree(h, format):
     load_folder_config()
 
     def render_folder(f):
-        path = f["path"]
-        if len(path) > 0:
-            filename = "/" + "/".join(path) + "/"
-            url = "wato.py?filename=" + htmllib.urlencode(filename)
-            html.write(format % (url, f["title"]))
-        else:
-            html.write('<a target=main href="wato.py">%s</a>' % f["title"])
 
         subfolders = f["folders"]
+        path = f["path"]
+        filename = "/" + "/".join(path) + "/"
+        if len(path) > 0:
+            url = "wato.py?filename=" + htmllib.urlencode(filename)
+            if len(subfolders) == 0:
+                title = format % (url, f["title"])
+            else:
+                title = '<a target=main href="%s">%s</a>' % (url, f["title"]) 
+        else:
+            title  = '<a target=main href="wato.py">%s</a>' % f["title"]
+
         if len(subfolders) > 0:
-            html.write('<ul>')
+            html.begin_foldable_container('wato', filename, False, title)
             for sf in sort_by_title(subfolders.values()):
                 render_folder(sf)
-            html.write('</ul>')
+            html.end_foldable_container()
+        else:
+            html.write(title)
 
     render_folder(g_root_folder)
 
@@ -1008,7 +1174,12 @@ def configure_hosttags(current_tags):
     for tagno, (tagname, taglist) in enumerate(config.host_tags):
         choices = [e[:2] for e in taglist]
         # get current value of tag
-        if type(current_tags) != dict:
+        if current_tags == None:
+            duplicate = False
+            tagvalue = None
+            choices = [("|", "")] + choices
+
+        elif type(current_tags) != dict:
             tagvalue = None
             duplicate = False
             for entry in taglist:
@@ -1039,7 +1210,7 @@ def get_selected_host_tags(current_tags = {}):
     tags = set([])
     for tagno, (tagname, taglist) in enumerate(config.host_tags):
         value = html.var("_tag_%d" % tagno)
-        if value == "|": # keep current setting of host (see current tags)
+        if value == "|": # keep current setting of host (see current tags), or don't use for search
             found = False
             for entry in taglist:
                 tag = entry[0]
@@ -1078,24 +1249,31 @@ def mode_changelog(phase):
 
     elif phase == "buttons":
         html.context_button("Back", make_link([("mode", "folder")]))
+        if log_exists("pending"):
+            html.context_button(_("Activate Changes!"), 
+                html.makeuri([("_action", "activate"), ("_transid", html.current_transid())]), True)
+        if log_exists("audit"):
+            html.context_button(_("Clear Audit Log"),
+                html.makeuri([("_action", "clear"), ("_transid", html.current_transid())]))
 
     elif phase == "action":
-        if html.check_transaction():
-            try:
-	        check_mk_automation("restart")
-            except Exception, e:
-                raise MKUserError(None, str(e))
-            log_commit_pending() # flush logfile with pending actions
-	    log_audit(None, "activate-config", "Configuration activated, monitoring server restarted")
-	    return None, "The new configuration has been successfully activated."
+        if html.var("_action") == "clear":
+            return clear_audit_log_after_confirm()
+        elif html.check_transaction():
+                try:
+                    check_mk_automation("restart")
+                except Exception, e:
+                    raise MKUserError(None, str(e))
+                log_commit_pending() # flush logfile with pending actions
+                log_audit(None, "activate-config", "Configuration activated, monitoring server restarted")
+                return None, "The new configuration has been successfully activated."
+
 
     else:
         pending = parse_audit_log("pending")
         if len(pending) > 0:
-            message = "<h1>Changes which are not yet activated:</h1>"
+            message = "<h1>" + _("Changes which are not yet activated:") + "</h1>"
             message += render_audit_log(pending, "pending")
-            message += '<a href="%s" class=button>Activate Changes!</a>' % \
-                html.makeuri([("_action", "activate"), ("_transid", html.current_transid())])
             html.show_warning(message)
         else:
             html.write("<p>No pending changes, monitoring server is up to date.</p>")
@@ -1142,6 +1320,33 @@ def log_commit_pending():
     if os.path.exists(pending):
         os.remove(pending)
 
+def clear_audit_log():
+    path = conf_dir + "/audit.log"
+    if os.path.exists(path):
+        newpath = path + time.strftime(".%Y-%m-%d")
+        if os.path.exists(newpath):
+            n = 1
+            while True:
+                n += 1
+                with_num = newpath + "-%d" % n
+                if not os.path.exists(with_num):
+                    newpath = with_num
+                    break
+        os.rename(path, newpath)
+
+def clear_audit_log_after_confirm():
+    if not html.transaction_valid():
+        return None  # Browser reload
+    wato_html_head(_("Confirm deletion of audit logfile"))
+    c = html.confirm(_("Do you really want to clear audit logfile?"))
+    if c:
+        clear_audit_log()
+        return None, _("Cleared audit logfile.")
+    elif c == False: # not yet confirmed
+        return ""
+    else:
+        return None # browser reload 
+
 def parse_audit_log(what):
     path = conf_dir + "/" + what + ".log"
     if os.path.exists(path):
@@ -1152,6 +1357,11 @@ def parse_audit_log(what):
         entries.reverse()
         return entries
     return []
+
+def log_exists(what):
+    path = conf_dir + "/" + what + ".log"
+    return os.path.exists(path)
+
 
 
 def render_linkinfo(linkinfo):
@@ -1227,15 +1437,15 @@ def check_mk_automation(command, args=[], indata=""):
     sudoline = None
     if defaults.check_mk_automation:
         commandargs = defaults.check_mk_automation.split()
-        cmd = commandargs + [ command ] + args
+        cmd = commandargs + [ command, '--' ] + args
     else:
         omd_mode, omd_site = html.omd_mode()
         if not omd_mode or omd_mode == 'own':
             commandargs = [ 'check_mk', '--automation' ]
-            cmd = commandargs  + [ command ] + args
+            cmd = commandargs  + [ command, '--' ] + args
         else: # OMD shared mode
             commandargs = [ 'sudo', '/bin/su', '-', omd_site, '-c', 'check_mk --automation' ]
-            cmd = commandargs[:-1] + [ commandargs[-1] + ' ' + ' '.join([ command ] + args) ]
+            cmd = commandargs[:-1] + [ commandargs[-1] + ' ' + ' '.join([ command, '--' ] + args) ]
             sudoline = "%s ALL = (root) NOPASSWD: /bin/su - %s -c check_mk\\ --automation\\ *" % (html.apache_user(), omd_site)
 
     sudo_msg = ''
@@ -1534,6 +1744,10 @@ def make_action_link(vars):
 def make_action_link_to(vars, folder_path, filename = None):
     return make_link_to(vars + [("_transid", html.current_transid())], folder_path, filename)
 
+def search_button():
+    if len(g_folder["files"]) > 0 or len(g_folder["folders"]) > 0:
+        html.context_button(_("Search"), make_link([("mode", "search")]))
+
 def changelog_button():
     pending = parse_audit_log("pending")
     buttontext = "ChangeLog"
@@ -1547,7 +1761,8 @@ def changelog_button():
 
 def show_service_table(hostname, firsttime):
     # Read current check configuration
-    table = check_mk_automation("try-inventory", [hostname])
+    cache_options = not html.var("scan") and [ '--cache' ] or []
+    table = check_mk_automation("try-inventory", cache_options + [hostname])
     table.sort()
 
     html.begin_form("checks", None, "POST")
@@ -1565,8 +1780,9 @@ def show_service_table(hostname, firsttime):
     if fixall == 2:
         html.button("_fixall", "Fix all missing/exceeding")
 
+    if len(table) > 0:
+        html.button("_save", _("Save manual check configuration"))
 
-    html.button("_save", "Save manual check configuration")
     html.hidden_fields()
     html.write("<table class=data>\n")
 
@@ -1669,7 +1885,10 @@ def delete_file_after_confirm(del_file):
         hosts = read_configuration_file(g_folder, del_file)
         for delname in hosts:
             check_mk_automation("delete-host", [delname])
-        log_pending(del_file, "delete-file", "Deleted file %s" % del_file["title"])
+        if len(hosts) > 0:
+            log_pending(del_file, "delete-file", _("Deleted file %s") % del_file["title"])
+        else:
+            log_audit(del_file, "delete-file", _("Deleted empty file %s") % del_file["title"])
         del g_files[del_file["path"]]
         del g_folder["files"][del_file["name"]]
         delete_configuration_file(g_folder, del_file)
@@ -1707,7 +1926,7 @@ def host_move_combo(host = None):
         else:
             html.hidden_field("host", host)
             uri = html.makeuri([("host", host), ("_transid", html.current_transid() )])
-            html.select(None, selections, "", 
+            html.sorted_select(None, selections, "", 
                 "location.href='%s' + '&_move_host_to=' + this.value;" % uri);
 
 
@@ -1757,21 +1976,34 @@ def move_hosts_to(hostnames, target_filename):
 def move_host_to(hostname, target_filename):
     move_hosts_to([hostname], target_filename)
 
-def render_folder_path():
+def render_folder_path(the_folder = 0, the_file = 0, link_to_last = False):
+    if the_folder == 0:
+        the_folder = g_folder
+        the_file = g_file
 
     def render_component(p, title):
-        html.write('<a href="%s">%s</a> / ' % (make_link_to([], path), title))
+        return '<a href="%s">%s</a>' % (make_link_to([], path), title)
 
     path = ()
-    for p in g_folder["path"]:
-        render_component(path, find_folder(path)["title"])
+    comps = []
+    
+    for p in the_folder["path"]:
+        comps.append(render_component(path, find_folder(path)["title"]))
         path += (p,)
 
-    if g_file:
-        render_component(g_folder["path"], g_folder["title"])
-        html.write(g_file["title"])
-    else:
-        html.write(g_folder["title"])
+    if the_file or link_to_last:
+        comps.append(render_component(the_folder["path"], the_folder["title"]))
+
+    if the_file:
+        if link_to_last:
+            comps.append(render_component(the_file["path"], the_file["title"]))
+        else:
+            comps.append(the_file["title"])
+
+    if not the_file and not link_to_last:
+        comps.append(the_folder["title"])
+
+    html.write(" / ".join(comps))
 
 #   +----------------------------------------------------------------------+
 #   |               ____                                                   |
@@ -1804,11 +2036,12 @@ def interactive_progress(items, title, stats, finishvars, timewait):
     html.write("  </table>")
     html.write("</td>")
     html.write("<td class=buttons>")
-    html.jsbutton('progress_pause',    'Pause',   'javascript:progress_pause()')
-    html.jsbutton('progress_proceed',  'Proceed', 'javascript:progress_proceed()',  'display:none')
-    html.jsbutton('progress_finished', 'Finish',  'javascript:progress_end()', 'display:none')
-    html.jsbutton('progress_restart',  'Restart', 'javascript:location.reload()')
-    html.jsbutton('progress_abort',    'Abort',   'javascript:progress_end()')
+    html.jsbutton('progress_pause',    _('Pause'),   'javascript:progress_pause()')
+    html.jsbutton('progress_proceed',  _('Proceed'), 'javascript:progress_proceed()',  'display:none')
+    html.jsbutton('progress_finished', _('Finish'),  'javascript:progress_end()', 'display:none')
+    html.jsbutton('progress_retry',    _('Retry Failed Hosts'), 'javascript:progress_retry()', 'display:none')
+    html.jsbutton('progress_restart',  _('Restart'), 'javascript:location.reload()')
+    html.jsbutton('progress_abort',    _('Abort'),   'javascript:progress_end()')
     html.write("</td></tr>")
     html.write("</table>")
     html.write("</center>")
@@ -1838,6 +2071,7 @@ mode_functions = {
    "edithost"       : lambda phase: mode_edithost(phase, False),
    "firstinventory" : lambda phase: mode_inventory(phase, True),
    "inventory"      : lambda phase: mode_inventory(phase, False),
+   "search"         : mode_search,
    "bulkinventory"  : mode_bulk_inventory,
    "bulkedit"       : mode_bulk_edit,
    "changelog"      : mode_changelog,
@@ -1850,9 +2084,10 @@ extra_buttons = [
 
 # Load all wato plugins
 plugins_path = defaults.web_dir + "/plugins/wato"
-for fn in os.listdir(plugins_path):
-    if fn.endswith(".py"):
-        execfile(plugins_path + "/" + fn)
+if os.path.exists(plugins_path):
+    for fn in os.listdir(plugins_path):
+        if fn.endswith(".py"):
+            execfile(plugins_path + "/" + fn)
 
 if defaults.omd_root:
     local_plugins_path = defaults.omd_root + "/local/share/check_mk/web/plugins/wato"

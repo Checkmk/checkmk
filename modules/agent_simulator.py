@@ -37,5 +37,5 @@ def agentsim_enum(values, period = 1): # period is in seconds
     return values[hit]
 
 def agentsim_sinus(base = 50, amplitude = 50, period = 300):
-    return math.sin(our_uptime() * 2.0 * math.pi / period) * amplitude + base
+    return int(math.sin(our_uptime() * 2.0 * math.pi / period) * amplitude + base)
 

@@ -1,0 +1,138 @@
+title: Monitor FibreChannel ports of Brocade FC switches
+agents: snmp
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This checks monitors a FibreChannel port of a Brocade FC switch
+ to very great detail. It obsoletes the older checks {fc_brocade_port} and 
+ {fc_brocade_port_detailed}. The check goes critical under the following conditions:
+
+ {[1]} The physical state, operational state or adminstrative state of the port is not
+ as expected.
+
+ {[2]} The current or averaged throughput exceeds certain absolute or
+ percentual levels.
+
+ {[3]} An error counter exceeds its  configured levels (CRC errors, Enc-OUT
+ frames, no Tx credits, C3 discards)
+
+ {Averaging}: This check supports averaging on all counters. Averaging is 
+ turned on but setting the check parameter {"average"} to a number of minutes.
+ In that case the check produces additional performance data for each parameter
+ and all warning/error levels are only applied on the averaged value, not on
+ the current one. This is especially helpful when using levels on the throughput.
+
+item:
+ The item is the port-number as two-digit or three-digit string (on switches
+ with 100 or more ports) as printed on the switch (note: the SNMP-index of
+ port {00} is {1}!). For ISL ports (inter-switch-links), an {ISL} is appended
+ to the item, e.g. {00 ISL}. That allows you to create rules that select
+ different check parameters for ISL and normal ports without specifying each
+ individual port. Also if you have configured port names, they will appear
+ in the check item (and thus the service description). This can be turned
+ off.
+
+examples:
+ # Generally turn on averaging with 15 Minutes on all ports:
+ brocade_fcport_default_levels["average"] = 15 
+
+ # Alternative: set all default parameters at once:
+ brocade_fcport_default_levels = {
+    "rxcrcs":           (3.0, 20.0),   # allowed percentage of CRC errors
+    "rxencoutframes":   (3.0, 20.0),   # allowed percentage of Enc-OUT Frames
+    "notxcredits":      (3.0, 20.0),   # allowed percentage of No Tx Credits
+    "c3discards":       (3.0, 20.0),   # allowed percentage of C3 discards
+    "assumed_speed":    2.0,           # used, if speed not available in SNMP data
+    "bw":               (80.0, 90.0),  # percentual levels for throughput
+    "average":          30,            # apply all levels on 30 minute average
+ }
+
+ # Set traffic levels to 80/90% on ISL ports
+ check_parameters += [
+   ( { "bw" : (80.0, 90.0) }, ALL_HOSTS, [ "Port .* ISL" ]),
+ ]  
+
+ # Ignore port states on non-ISL ports
+ check_parameters += [
+   ( { "phystate" : None, "opstate" : None }, ALL_HOSTS, [ "!Port .* ISL", "Port" ]),
+ ]  
+
+
+perfdata:
+  For each port there are sent {in}, {out}, {rxframes}, {txframes}, {rxcrcs}, 
+  {rxencoutframes}, {c3discards} and {notxcredits}. If averaging is turned on, then
+  each value comes twices: once normal and once with {_avg} appended as averaged
+  value. All rates are in Bytes/s or Frames/s. If you are using PNP4Nagios, then
+  you are strongly encouraged to set {RRD_STORAGE_TYPE = MULTIPLE} in 
+  {process_perfdata.cfg}. Please note, that you need to re-create or convert existing
+  RRD database if you change this setting.
+
+inventory:
+  The inventory creates checks for all operational ports. What this exactly means,
+  can be configured (see CONFIGURATION VARIABLES).
+
+[parameters]
+parameters (dict): This check works with dictionary based parameters. The
+ following keys are allowed:
+
+  {"bw"}: A pair of warn / crit levels on the throughput. Floating point 
+  numbers are interpreted as percentages of the maximum bandwidth of 
+  the port, e.g. {(80.0, 90.0)}. Integer numbers are interpreted as megabytes,
+  e.g. {(100, 150)}.
+
+  {"assumed_speed"}: On some older devices the automatic detection of the
+  link speed does not work. You can set the assumed link speed (in GBit/s)
+  here (example: {2.0})
+
+  {"rxcrcs"}: A pair of percentages of the maximum allowed CRC errors on
+  received frames. The default is set to {(3.0, 20.0)}, which will warn
+  at 3% and be critical at 20% of errors.
+
+  {"rxencoutframes"}: A pair of percentages for the Enc-Out frames rate. The
+  default is {(3.0, 20.0)}.
+
+  {"notxcredits"}: A pair of percentages for no-TxCredits errors. The default
+  is {(3.0, 20.0)}.
+
+  {"c3discards"}: A pair of percentages for the C3 discards. The default is
+  {(3.0, 20.0)}.
+
+  {"average"}: A number in minutes. If this parameter is set, then averaging
+  is turned on and all levels will be applied to the averaged values, not the
+  the current ones. Per default, averaging is turned off.
+
+  {"phystate"}: The expected physical state of the port or {None} if that should
+  not be checked.
+
+  {"opstate"}: The expected operational state of the port or {None} if that should
+  not be checked.
+
+  {"admstate"}: The expected adminstrative state of the port of {None} if that should
+  not be checked.
+
+
+[configuration]
+brocade_fcport_inventory_phystates(list): If list of physical states that ports
+ must have in order to be inventorized. The default value is {[ 3, 4, 5, 6, 7, 8, 9, ]}.
+ Possible are: {1}: noCard, {2}: noTransceiver, {3}: laserFault, {4}: noLight, 
+ {5}: noSync, {6}: inSync, {7}: portFault, {8}: diagFault and {9}: lockRef.
+
+brocade_fcport_inventory_opstates(list): The list of operational states inventorized
+ ports must have to be inventorized. The default is {[ 1, 2, 3, 4, ]}. Possible are: 
+ {0}: unknown, {1}: online, {2}: offline, {3}: testing, {4}: faulty.
+
+brocade_fcport_inventory_admstates(list): The list of adminstrative states inventorized
+ ports must have. The default is {[ 1, 3, 4, ]}. Possible are:
+ {1}: online, {2}: offline, {3}: testing, {4}: faulty.
+
+brocade_fcport_inventory_use_portname(boolean): If you set this to {True}, then
+ configured names of the ports appear in the service descripion (and thus can
+ also be used for check parameter rules). This uses the SNMP OID {swFCPortName}.
+ The default is {True}.
+
+brocade_fcport_inventory_show_isl(boolean): If you set this {True} (which is the default),
+ then {ISL} will be appended to the port name if that port is in inter-switch-link.
+
+brocade_fcport_default_levels(dict): The default check parameters for all ports.
+ These can be overridden (also partially) by {check_parameters}.

@@ -146,10 +146,16 @@ def check_ipmi_summarized(info):
     try:
         for name, val, unit, status, unrec_low, crit_low, \
             warn_low, warn_high, crit_high, unrec_high in info:
+            # Skip datasets which have no valid data (zero value, no unit and state nc)
+            if val == '0.000' and unit == 'unspecified' and status == 'nc':
+                continue
+
             if ipmi_ignore_entry(name, status):
                 continue
 
-            text = "%s is %s %s" % (name, val, unit)
+            text = "%s is %s" % (name, val)
+            if unit != 'unspecified':
+                text += ' %s' % unit
             count += 1
             if status == 'nc':
                 worst_status = max(worst_status, 1)
@@ -176,16 +182,15 @@ def check_ipmi_summarized(info):
 
     statname = { 0: "OK", 1:"WARN", 2:"CRIT" }[worst_status]
     if worst_status == 0:
-        infotext = "%d sensors OK" % count
+        infotext = [ "%d sensors OK" % count ]
     else:
-        infotext = ""
+        infotext = []
         if len(crit_texts) > 0:
-            infotext += "critical are: %s" % ", ".join(crit_texts)
+            infotext.append("CRIT are: %s" % ", ".join(crit_texts))
         if len(warn_texts) > 0:
-            if infotext != "":
-                infotext += ", "
-            infotext += "warning are: %s" % ", ".join(warn_texts)
-    return (worst_status, "%s - %s" % (statname, infotext), perfdata)
+            infotext.append("WARN are: %s" % ", ".join(warn_texts))
+    return (worst_status, "%s - %s" % (statname, ' - '.join(infotext)), perfdata)
+
 
 check_info['ipmi'] = (check_ipmi, "IPMI Sensor %s", 1,  inventory_ipmi)
 

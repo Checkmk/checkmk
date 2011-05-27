@@ -320,8 +320,10 @@ def perfometer_check_mk_printer_supply(row, check_command, perf_data):
 
     s = row['service_description'].lower()
 
+    fg_color = '#000000'
     if 'black' in s:
-        colors = [ '#000000', '#6E6F00', '#6F0000' ]
+        colors   = [ '#000000', '#6E6F00', '#6F0000' ]
+        fg_color = '#ffffff'
     elif 'magenta' in s:
         colors = [ '#fc00ff', '#FC7FFF', '#FEDFFF' ]
     elif 'yellow' in s:
@@ -338,7 +340,7 @@ def perfometer_check_mk_printer_supply(row, check_command, perf_data):
     else:
         color = colors[2]
 
-    return "%.0f%%" % left, perfometer_linear(left, color)
+    return "<font color=\"%s\">%.0f%%</font>" % (fg_color, left), perfometer_linear(left, color)
 
 perfometers["check_mk-printer_supply"] = perfometer_check_mk_printer_supply
 

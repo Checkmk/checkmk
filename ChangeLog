@@ -7,10 +7,16 @@
     * brocade_port: check for Brocade FC ports has been rewritten with
       lots of new features.
     * AIX agent now simulates <<<netctr>>> output (by Jörg Linge)
+    * mbg_lantime_state: Handling refclock offsets correctly now; Changed
+      default thresholds to 5/10 refclock offset
 
     Multisite:
     * FIX: make non-Ascii characters in services names work again
     * FIX: Avoid exceptions in sidebar on Nagios restart
+    * FIX: printer_supply perfometer: Using white font for black toners
+    * FIX: ipmi: Skipping items with invalid data (0.000 val, "unspecified"
+      unit) in summary mode
+    * FIX: ipmi: Improved output formating in summary mode
     * Introduced basic infrastructure for multilanguage support in Multisite
     * Make 'Views' snapin foldable
 
@@ -23,6 +29,9 @@
     * Dialog for global host search
     * Services dialog now tries to use cached data. On SNMP hosts
       no scan will be done until new button "Full Scan" is pressed.
+
+    BI:
+    * Fixed displaying of host states (after i18n introduction)h
 
     MK Livestatus:
     * FIX: fix compile problem on Debian unstable (Thanks to Sven Velt)

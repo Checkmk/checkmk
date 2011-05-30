@@ -809,8 +809,13 @@ def mode_search(phase):
 
         ## # Show search form
         html.begin_form("search")
-        html.hidden_fields()
         html.write("<table class=form>")
+
+        # Wether to search only in this folder
+        html.write("<tr><td class=legend></td><td class=content>")
+        html.checkbox("onlyhere", True)
+        html.write(" Search only in the folder <b>%s</b> and below" % g_folder["title"])
+        html.write("</td></tr>")
 
         # host name
         html.write("<tr><td class=legend>Hostname</td><td class=content>")
@@ -837,6 +842,7 @@ def mode_search(phase):
         html.write("</td></tr>\n")
         
         html.write("</table>\n")
+        html.hidden_fields()
         html.end_form()
 
         # Show search results
@@ -858,7 +864,11 @@ def mode_search(phase):
                 "tags"      : tags,
             }
             html.write("<h3>Search results:</h3>")
-            if not search_hosts_in_folder(g_folder, crit):
+            if html.var("onlyhere"):
+                folder = g_folder
+            else:
+                folder = g_root_folder
+            if not search_hosts_in_folder(folder, crit):
                 html.message(_("No matching hosts found."))
 
         html.write("</td></tr></table>")

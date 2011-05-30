@@ -251,7 +251,7 @@ def show_filefolder_list(thing, what, title):
             html.write("</tr>")
         html.write("</table>")
     else:
-        html.write("<h3>" + _("There are no %s in this folder.") + "</h3>" % title.lower())
+        html.write("<h3>" + _("There are no %s in this folder.") % title.lower() + "</h3>" )
     
 
 

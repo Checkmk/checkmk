@@ -686,7 +686,7 @@ class html:
                    'src="images/tree_%s.png" %s>' % 
                 (treename, id, img_num, onclick))
         if title[0] == '<': # custom HTML code
-            self.write(title)
+            self.write(title + "<br>")
         else:
             self.write('<b class="treeangle title" class=treeangle %s>%s</b><br>' % 
                      (onclick, title))

@@ -299,6 +299,7 @@ service_descriptions                 = {}
 donation_hosts                       = []
 donation_command                     = 'mail -r checkmk@yoursite.de  -s "Host donation %s" donatehosts@mathias-kettner.de' % check_mk_version
 scanparent_hosts                     = [ ( ALL_HOSTS ) ]
+host_attributes                      = {} # needed by WATO, ignored by Check_MK
 
 # global variables used to cache temporary values (not needed in check_mk_base)
 ip_to_hostname_cache = None

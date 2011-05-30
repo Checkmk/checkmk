@@ -63,11 +63,17 @@ class uriinfo:
                          for i in self.req.vars.items() \
                          if i[0] not in omit ])
 
+
+# Encode HTML attributes: replace " with &quot; This code
+# is slow. 
 def attrencode(value):
-    if type(value) in [str, unicode]:
-        return cgi.escape(value)
-    else:
-        return cgi.escape(str(value), True)
+    new = ""
+    for c in value:
+        if c == '"':
+            new += "&quot;"
+        else:
+            new += c
+    return new
 
 # This function returns a str object, never unicode!
 # Beware: this code is crucial for the performance of Multisite!
@@ -289,7 +295,8 @@ class html:
         html = ""
         if error:
             html = "<x class=inputerror>"
-        html += "<input type=text class=%s value=\"%s\" name=\"%s\"%s>" % (cssclass, attrencode(value), varname, addprops)
+        html += "<input type=text class=%s value=\"%s\" name=\"%s\"%s>" % \
+                     (cssclass, attrencode(value), varname, addprops)
         if error:
             html += "</x>"
             self.set_focus(varname)

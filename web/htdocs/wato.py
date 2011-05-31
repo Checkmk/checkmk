@@ -47,7 +47,7 @@ config.declare_permission("use_wato",
      "Please make sure, that they also have the permission for the WATO snapin."),
      [ "admin", "user" ])
 
-conf_dir = defaults.var_dir + "/web/wato"
+conf_dir = defaults.var_dir + "/wato"
 
 g_root_folder = None # pointer to root folder
 g_folder      = None # pointer to current folder
@@ -207,6 +207,11 @@ def show_filefolder_list(thing, what, title):
         html.write("<h3>%s</h3>" % title)
         html.write("<table class=data>\n")
         html.write("<tr><th>" + _("Actions") + "</th><th>" + _("Title") + "</th>")
+
+        for attr in host_attributes:
+            if attr.show_in_table() and attr.show_in_folder():
+                html.write("<th>%s</th>" % attr.title())
+
         if not config.wato_hide_filenames:
             html.write("<th>%s</th>" % what.title())
         html.write("<th>" + _("Hosts") + "</th></tr>\n")
@@ -240,6 +245,18 @@ def show_filefolder_list(thing, what, title):
             # Title and filename
             html.write('<td class=takeall><a href="%s">%s</a></td>' % 
                         (enter_url, entry["title"]))
+
+            # Attributes for Hosts
+            for attr in host_attributes:
+                if attr.show_in_table() and attr.show_in_folder():
+                    attrname = attr.name()
+                    if attrname in entry.get("attributes", {}):
+                        tdclass, content = attr.paint(entry["attributes"][attrname], "")
+                    else:
+                        tdclass, content = "", ""
+                    html.write('<td class"%s">%s</td>' % (tdclass, content))
+
+            # Internal filename
             if not config.wato_hide_filenames:
                 html.write("<td>%s</td>" % name)
 
@@ -314,14 +331,19 @@ def mode_editfolder(phase, what, new):
 
         # Roles and Permissions
         roles = [ role for role in config.roles if html.var("role_" + role) ]
+
+        # Attributes to inherit to hosts
+        attributes = collect_attributes()
+        # html.write("<pre>%s</pre>" % pprint.pformat(attributes))
         
         if new:
             newpath = g_folder["path"] + (name,)
             new_thing = { 
-                "name"  : name,
-                "path"  : newpath,
-                "title" : title, 
-                "roles" : roles,
+                "name"       : name,
+                "path"       : newpath,
+                "title"      : title, 
+                "roles"      : roles,
+                "attributes" : attributes,
             }
             if what == "folder":
                 new_thing.update({ 
@@ -336,13 +358,18 @@ def mode_editfolder(phase, what, new):
             log_audit(new_thing, "new-" + what, _("Created new %s %s") % (the_what, title))
 
         else:
-            the_thing["title"] = title
-            the_thing["roles"] = roles
+            the_thing["title"]      = title
+            the_thing["roles"]      = roles
+            the_thing["attributes"] = attributes
 
         if what == "folder":
            html.reload_sidebar() # refresh WATO snapin
 
         save_folder_config()
+        if what == "file":
+            rewrite_config_file(g_folder, the_thing)
+        else:
+            rewrite_config_files_below(the_thing) # due to inherited attributes
         return "folder"
 
 
@@ -351,7 +378,7 @@ def mode_editfolder(phase, what, new):
         html.write('<table class="form">\n')
         
         # title
-        html.write("<tr><td class=legend>Title</td><td class=content>")
+        html.write("<tr><td class=legend>Title</td><td class=content></td><td class=content>")
         html.text_input("title", title)
         html.set_focus("title")
         html.write("</td></tr>\n")
@@ -380,13 +407,26 @@ def mode_editfolder(phase, what, new):
                 html.write("</td></tr>\n")
 
         # permissions
-        html.write("<tr><td class=legend>" + _("Grant access to") + "</td><td class=content>")
+        html.write("<tr><td class=legend>" + _("Grant access to") + "</td><td class=content></td><td class=content>")
         for role in config.roles:
             html.checkbox("role_" + role, role in g_folder["roles"])
             html.write(" " + role + "<br>")
         html.write("</td></tr>")
 
-        html.write('<tr><td colspan=2 class="buttons">')
+        # Attributes inherited to hosts
+        html.write("<tr><td class=legend colspan=3>")
+        html.write(_("The following attributes will be inherited to all hosts "
+                     "in this %s") % the_what)
+        html.write("</td></tr>")
+        if new:
+            attributes = { None: g_folder }
+        else:
+            attributes = the_thing.get("attributes", {})
+            attributes[None] = g_folder.get("parent")
+
+        configure_attributes({what: attributes}, "folder")
+
+        html.write('<tr><td colspan=3 class="buttons">')
         html.button("save", _("Save &amp; Finish"), "submit")
         html.write("</td></tr>\n")
         html.write("</table>\n")
@@ -549,6 +589,7 @@ def mode_file(phase):
                 continue
 
             host = g_hosts[hostname]
+            effective = effective_attributes(host, g_file)
 
             # Rows with alternating odd/even styles
             html.write('<tr class="data %s0">' % odd)
@@ -578,8 +619,13 @@ def mode_file(phase):
 
             # Show attributes
             for attr in host_attributes:
+                attrname = attr.name()
                 if attr.show_in_table():
-                    tdclass, tdcontent = attr.paint(host.get(attr.name()), hostname)
+                    if attrname in host:
+                        tdclass, tdcontent = attr.paint(host.get(attrname), hostname)
+                    else:
+                        tdclass, tdcontent = attr.paint(effective.get(attrname), hostname)
+                        tdclass += " inherited"
                     html.write('<td class="%s">' % tdclass)
                     html.write(tdcontent)
                     html.write("</td>")
@@ -693,10 +739,10 @@ def mode_edithost(phase, new):
 
     else:
         html.begin_form("edithost")
-        html.write('<table class="form bg_brighten">\n')
+        html.write('<table class="form">\n')
 
         # host name
-        html.write("<tr><td class=legend>" + _("Hostname") + "</td><td class=content>")
+        html.write("<tr><td class=legend>" + _("Hostname") + "</td><td class=content></td><td class=content>")
         if hostname and mode == "edit":
             html.write(hostname)
         else:
@@ -704,9 +750,9 @@ def mode_edithost(phase, new):
             html.set_focus("host")
         html.write("</td></tr>\n")
 
-        configure_attributes(host, for_filter=False)
+        configure_attributes({hostname: host}, for_what = "host")
 
-        html.write('<tr><td class="buttons" colspan=2>')
+        html.write('<tr><td class="buttons" colspan=3>')
         html.button("save", _("Save &amp; Finish"), "submit")
         if not new:
             html.button("delete", _("Delete host!"), "submit")
@@ -791,22 +837,22 @@ def mode_search(phase):
         html.write("<table class=form>")
 
         # Wether to search only in this folder
-        html.write("<tr><td class=legend></td><td class=content>")
+        html.write("<tr><td class=legend></td><td colspan=2 class=content>")
         html.checkbox("onlyhere", True)
         html.write(_(" Search only in the folder <b>%s</b> and below") % g_folder["title"])
         html.write("</td></tr>")
 
         # host name
-        html.write("<tr><td class=legend>" + _("Hostname") + "</td><td class=content>")
+        html.write("<tr><td class=legend>" + _("Hostname") + "</td><td class=content></td><td class=content>")
         html.text_input("host")
         html.set_focus("host")
         html.write("</td></tr>\n")
 
         # Attributes
-        configure_attributes({}, for_filter = True)
+        configure_attributes({}, for_what = "search")
         
         # Button
-        html.write('<tr><td class="buttons" colspan=2>')
+        html.write('<tr><td class="buttons" colspan=3>')
         html.button("save", _("Search"), "submit")
         html.write("</td></tr>\n")
         
@@ -818,10 +864,9 @@ def mode_search(phase):
         if html.transaction_valid():
             html.write("</td><td>")
             crit = {
-                "name"      : html.var("host"),
+                "name" : html.var("host"),
             }
-            for attrname, attr in host_attribute.items():
-                crit[attrname] = attr.from_html_vars()
+            crit.update(collect_attributes(do_validate = False))
 
             html.write("<h3>" + _("Search results:") + "</h3>")
             if html.var("onlyhere"):
@@ -856,18 +901,21 @@ def search_hosts_in_file(the_folder, the_file, crit):
         if crit["name"] and crit["name"].lower() not in hostname.lower():
             continue
 
+        # Compute inheritance
+        effective = effective_attributes(host, the_file)
+
         # Check attributes
         dont_match = False
         for attr in host_attributes:
             attrname = attr.name()
             if attrname in crit and  \
-                not attr.filter_matches(crit[attrname], host.get(attrname), hostname):
+                not attr.filter_matches(crit[attrname], effective.get(attrname), hostname):
                 dont_match = True
                 break
         if dont_match: 
            continue
 
-        found.append((hostname, host))
+        found.append((hostname, host, effective))
 
     if found:
         render_folder_path(the_folder, 0, True)
@@ -882,14 +930,19 @@ def search_hosts_in_file(the_folder, the_file, crit):
         html.write("</tr>")
 
         even = "even"
-        for hostname, host in found:
+        for hostname, host, effective in found:
             even = even == "even" and "odd" or "even"
             host_url =  make_link_to([("mode", "edithost"), ("host", hostname)], the_folder["path"], the_file["name"])
             html.write('<tr class="data %s0"><td><a href="%s">%s</a></td>\n' % 
                (even, host_url, hostname))
             for attr in host_attributes:
+                attrname = attr.name()
                 if attr.show_in_table():
-                    tdclass, content = attr.paint(host.get(attr.name()), hostname)
+                    if attrname in host:
+                        tdclass, content = attr.paint(host[attrname], hostname)
+                    else:
+                        tdclass, content = attr.paint(effective[attrname], hostname)
+                        tdclass += " inherited"
                     html.write('<td class="%s">%s</td>' % (tdclass, content))
         html.write("</tr>\n")
         html.write("</table><br>\n")
@@ -999,7 +1052,7 @@ def mode_bulk_edit(phase):
 
     elif phase == "action":
         if html.check_transaction():
-            changed_attributes = collect_attributes(only_checked = True)
+            changed_attributes = collect_attributes()
             hostnames = get_hostnames_from_checkboxes()
             for hostname in hostnames:
                 host = g_hosts[hostname]
@@ -1020,7 +1073,7 @@ def mode_bulk_edit(phase):
 
     html.begin_form("bulkedit", None, "POST")
     html.write("<table class=form>")
-    bulk_configure_attributes(hosts)
+    configure_attributes(hosts, "bulk")
     html.write('<tr><td colspan=3 class="buttons">')
     html.button("_save", _("Save &amp; Finish"))
     html.write("</td></tr>")
@@ -1028,38 +1081,6 @@ def mode_bulk_edit(phase):
     html.hidden_fields()
     html.end_form()
 
-
-# Show HTML form for bulk editing attributes
-def bulk_configure_attributes(hosts):
-    for attr in host_attributes:
-        # Determine, if this attribute has the same setting for
-        # all hosts.
-        values = set([])
-        num_haveit = 0
-        for hostname, host in hosts.items():
-            attrname = attr.name()
-            if attrname in host:
-                num_haveit += 1
-                values.add(host[attrname]) 
-        active = len(values) == 1
-
-        html.write("<tr><td class=legend>%s" % attr.title())
-        if attr.help():
-            html.write("<br><i>%s</i>" % attr.help())
-        html.write("</td>")
-        html.write('<td class=content>')
-        html.checkbox("_change_%s" % attr.name(), active, 
-            onchange="wato_toggle_attribute(this, 'attr_entry_%s');" % attr.name() ) # Only select if value is unique
-        html.write("</td>")
-        html.write('<td class=content><div id="attr_entry_%s" style="%s">' 
-          % (attr.name(), not active and "display: none" or ""))
-        if len(values) == 1:
-            defvalue = values.pop()
-        else:
-            defvalue = attr.default_value()
-
-        attr.render_input(defvalue, for_filter = False)
-        html.write("</div></td></tr>\n")
 
 #   +----------------------------------------------------------------------+
 #   |                 ____  _     _      _                                 |
@@ -1102,87 +1123,6 @@ def render_link_tree(h, format):
 
     render_folder(g_root_folder)
 
-#   +----------------------------------------------------------------------+
-#   |              _   _           _     _____                             |
-#   |             | | | | ___  ___| |_  |_   _|_ _  __ _ ___               |
-#   |             | |_| |/ _ \/ __| __|   | |/ _` |/ _` / __|              |
-#   |             |  _  | (_) \__ \ |_    | | (_| | (_| \__ \              |
-#   |             |_| |_|\___/|___/\__|   |_|\__,_|\__, |___/              |
-#   |                                              |___/                   |
-#   +----------------------------------------------------------------------+
-#   | Helper functions dealing with host tags                              |
-#   +----------------------------------------------------------------------+
-
-# Add selection boxes for all host tags to a form. If current tags is a list
-# of strings, then this is interpreted as the current setting of tags to
-# display in the selection boxes. If it is a dictionary, then it is a mapping
-# from tag number to the setting to display. If there is no entry for a certain
-# number, then *no* tag is preselected. This is needed for bulk updates where
-# not all hosts agree in the tag settings. The box goes to "(don't change)" 
-# in that case.
-###def configure_hosttags(current_tags):
-###    # Host tags
-###    found_tags = []
-###    for tagno, (tagname, taglist) in enumerate(config.host_tags):
-###        choices = [e[:2] for e in taglist]
-###        # get current value of tag
-###        if current_tags == None:
-###            duplicate = False
-###            tagvalue = None
-###            choices = [("|", "")] + choices
-###
-###        elif type(current_tags) != dict:
-###            tagvalue = None
-###            duplicate = False
-###            for entry in taglist:
-###                tag = entry[0]
-###                descr = entry[1]
-###                if tag in current_tags:
-###                    if tagvalue:
-###                        duplicate = True
-###                    tagvalue = tag 
-###        else:
-###            duplicate = False
-###            if tagno in current_tags:
-###                tagvalue = current_tags[tagno]
-###            else:
-###                choices = [("|", _("(don't change)"))] + choices
-###                tagvalue = "|"
-###
-###        tagvar = "_tag_%d" % tagno
-###        html.write("<tr><td class=legend>%s</td>" % tagname)
-###        html.write("<td class=content>")
-###        html.select(tagvar, choices, tagvalue)
-###        if duplicate: # tag not unique before editing
-###            html.write("(!)")
-###        html.write("</td></tr>\n")
-
-
-###def get_selected_host_tags(current_tags = {}):
-###    tags = set([])
-###    for tagno, (tagname, taglist) in enumerate(config.host_tags):
-###        value = html.var("_tag_%d" % tagno)
-###        if value == "|": # keep current setting of host (see current tags), or don't use for search
-###            found = False
-###            for entry in taglist:
-###                tag = entry[0]
-###                if tag in current_tags:
-###                    tags.add(tag)
-###                    if len(entry) > 2: # add additional tags
-###                        tags.update(entry[2])
-###                    found = True
-###                    break
-###            if not found: # handle None-Tag
-###                for entry in taglist:
-###                    if entry[0] == None and len(entry) > 2:
-###                        tags.update(entry[2])
-###                    
-###        elif value:
-###            tags.add(value)
-###            for entry in taglist:
-###                if entry[0] == value and len(entry) > 2:
-###                    tags.update(entry[2]) # extra tags
-###    return tags
 
 #   +----------------------------------------------------------------------+
 #   |                    _                 __ _ _                          |
@@ -1470,12 +1410,16 @@ def load_folder_config():
     g_files = {}
     def add_path_info(path, folder):
         folder["path"] = path
+
         for name, subfolder in folder["folders"].items():
             subpath = path + (name,)
             add_path_info(subpath, subfolder)
+            subfolder["parent"] = folder
+
         for name, subfile in folder["files"].items():
             filepath = path + (name,)
             subfile["path"] = filepath
+            subfile["parent"] = folder
             g_files[filepath] = subfile
 
     add_path_info((), g_root_folder)
@@ -1488,6 +1432,8 @@ def save_folder_config():
     def clean_folder(folder):
         cleaned = dict(folder.items())
         del cleaned["path"]
+        if "parent" in cleaned:
+            del cleaned["parent"]
 
         cleaned["folders"] = {}
         for name, subfolder in folder["folders"].items():
@@ -1497,6 +1443,8 @@ def save_folder_config():
         for name, subfile in folder["files"].items():
             newfile = dict(subfile.items())
             del newfile["path"]
+            if "parent" in newfile:
+                del newfile["parent"]
             cleaned["files"][name] = newfile
 
         return cleaned
@@ -1562,27 +1510,28 @@ def read_configuration_file(folder, thefile):
             hostname = parts[0]
 
             # Get generic attributes of that host
-            host = variables["host_attributes"].get(hostname, {})
+            host = variables["host_attributes"].get(hostname)
+            if host == None: # Legacy file: reconstruct values
+                host = {}
+                # Some of the attributes are handled with special care. We do not 
+                # want them to be redundant in the configuration file. We 
+                # want to stay compatible with check_mk.
+                ipaddress = variables["ipaddresses"].get(hostname)
+                aliases = host_extra_conf(hostname, variables["extra_host_conf"]["alias"]) 
+                if len(aliases) > 0:
+                    alias = aliases[0]
+                else:
+                    alias = None
+                host["alias"]     = alias 
+                host["ipaddress"] = ipaddress
 
-            # Some of the attributes are handled with special care. We do not 
-            # want them to be redundant in the configuration file. We 
-            # want to stay compatible with check_mk.
+                # Retrieve setting for each individual host tag
+                tags = set([ tag for tag in parts[1:] if tag != 'wato' and not tag.endswith('.mk') ])
+                for attr in host_attributes:
+                    if isinstance(attr, HostTagAttribute):
+                        tagvalue = attr.get_tag_value(tags)
+                        host[attr.name()] = tagvalue
             hosts[hostname]   = host
-            ipaddress = variables["ipaddresses"].get(hostname)
-            aliases = host_extra_conf(hostname, variables["extra_host_conf"]["alias"]) 
-            if len(aliases) > 0:
-                alias = aliases[0]
-            else:
-                alias = None
-            host["alias"]     = alias 
-            host["ipaddress"] = ipaddress
-
-            # Retrieve setting for each individual host tag
-            tags = set([ tag for tag in parts[1:] if tag != 'wato' and not tag.endswith('.mk') ])
-            for attr in host_attributes:
-                if isinstance(attr, HostTagAttribute):
-                    tagvalue = attr.get_tag_value(tags)
-                    host[attr.name()] = tagvalue
 
 
     # html.write("<pre>%s</pre>" % pprint.pformat(hosts))
@@ -1594,6 +1543,17 @@ def write_the_configuration_file():
     save_folder_config()
 
 
+def rewrite_config_files_below(folder):
+    for fi in folder["files"].values():
+        rewrite_config_file(folder, fi)
+    for fo in folder["folders"].values():
+        rewrite_config_files_below(fo)
+
+def rewrite_config_file(folder, thefile):
+    hosts = read_configuration_file(folder, thefile)
+    write_configuration_file(folder, thefile, hosts)
+
+
 def write_configuration_file(folder, thefile, hosts):
     wato_filename = "/" + "/".join(thefile["path"])  # used as tag
     all_hosts = []
@@ -1603,17 +1563,19 @@ def write_configuration_file(folder, thefile, hosts):
     hostnames.sort()
     for hostname in hostnames:
         host = hosts[hostname]
+        effective = effective_attributes(host, thefile)
+
         # Make special handling of attributes configured in a special way 
         # in check_mk
-        alias     = host.get("alias")
-        ipaddress = host.get("ipaddress")
+        alias     = effective.get("alias")
+        ipaddress = effective.get("ipaddress")
 
         # Compute tags from settings of each individual tag. We've got
         # the current value for each individual tag.
         tags = set([])
         for attr in host_attributes:
             if isinstance(attr, HostTagAttribute):
-                value = host.get(attr.name())
+                value = effective.get(attr.name())
                 tags.update(attr.get_tag_list(value))
 
         if alias:
@@ -1650,24 +1612,13 @@ def write_configuration_file(folder, thefile, hosts):
               "  ('%s', [ 'wato', '%s' ], ALL_HOSTS, [ 'Check_MK inventory' ] ) ]\n" % 
               (wato_filename, wato_filename))
 
-    # Write information about all additional non-Nagios host attributes
-    # Remove the variables with special handling (alias, ipaddress)
-    without_special = {}
-    for hostname, host in hosts.items():
-        without = {}
-        for varname, value in host.items():
-            if not (varname in [ "alias", "ipaddress" ] or varname.startswith("tag_")):
-                without[varname] = value
-        without_special[hostname] = without
-    out.write("\nhost_attributes.update(%s)\n" % pprint.pformat(without_special))
-
     # Add custom macros for attributes that are to be present in Nagios
     custom_macros = {}
     for hostname, host in hosts.items():
         for attr in host_attributes:
             attrname = attr.name()
-            if attrname in host:
-                value = host.get(attrname)
+            if attrname in effective:
+                value = effective.get(attrname)
                 nagstring = attr.to_nagios(value)
                 if nagstring != None:
                     if attrname not in custom_macros:
@@ -1678,9 +1629,16 @@ def write_configuration_file(folder, thefile, hosts):
         for hostname, nagstring in entries.items():
             macrolist.append((nagstring, [hostname]))
         if len(macrolist) > 0:
-            out.write("\nif '_%s' not in extra_host_conf:\n" % attrname.upper())
+            out.write("\n# %s\n" % host_attribute[attrname].title())
+            out.write("if '_%s' not in extra_host_conf:\n" % attrname.upper())
             out.write("    extra_host_conf['_%s'] = []\n" % attrname.upper())
-            out.write("extra_host_conf['_%s'] += %s\n" % (attrname.upper(), pprint.pformat(macrolist)))
+            out.write("extra_host_conf['_%s'] += \\\n%s\n" % (attrname.upper(), pprint.pformat(macrolist)))
+
+    # Write information about all host attributes into special variable - even
+    # values stored for check_mk as well.
+    out.write("\n# Host attributes (needed for WATO)\n")
+    out.write("host_attributes.update(%s)\n" % pprint.pformat(hosts))
+
 
 
 def delete_configuration_file(folder, thefile):
@@ -2111,16 +2069,18 @@ class Attribute:
     # Wether or not to show this attribute in tables.
     # This value is set by declare_host_attribute
     def show_in_table(self):
-        try:
-            return self._show_in_table
-        except:
-            return False
+        return self._show_in_table
+        
+    # Wether or not to make this attribute configurable in
+    # files and folders (as defaule value for the hosts)
+    def show_in_folder(self):
+        return self._show_in_folder
 
     # Render HTML input fields displaying the value and 
     # make it editable. If filter == True, then the field
     # is to be displayed in filter mode (as part of the
     # search filter)
-    def render_input(self, value, for_filter):
+    def render_input(self, value):
         pass
 
     # Create value from HTML variables.     
@@ -2157,8 +2117,8 @@ class TextAttribute(Attribute):
         else:
             return "", value
 
-    def render_input(self, value, for_filter):
-        if for_filter:
+    def render_input(self, value):
+        if value == None: 
             value = ""
         html.text_input("attr_" + self.name(), value)
 
@@ -2255,11 +2215,8 @@ class HostTagAttribute(Attribute):
         return "", "" # Should never happen, at least one entry should match
                       # But case could occur if tags definitions have been changed.
 
-    def render_input(self, value, for_filter):
+    def render_input(self, value):
         choices = [e[:2] for e in self._taglist]
-        if for_filter:
-            choices = [("|", "")] + choices
-            value = "|"
         html.select("attr_" + self.name(), choices, value)
 
     def from_html_vars(self):
@@ -2314,7 +2271,7 @@ def declare_host_tag_attributes():
                 del host_attribute[attr.name()]
 
         for num, entry in enumerate(config.host_tags):
-            declare_host_attribute(HostTagAttribute(num + 1, entry), show_in_table = False)
+            declare_host_attribute(HostTagAttribute(num + 1, entry), show_in_table = False, show_in_folder = True)
 
         configured_host_tags = config.host_tags
 
@@ -2326,34 +2283,164 @@ host_attributes = []
 host_attribute = {}
 
 # Declare attributes with this method
-def declare_host_attribute(a, show_in_table = True):
+def declare_host_attribute(a, show_in_table = True, show_in_folder = True):
     host_attributes.append(a)
     host_attribute[a.name()] = a
     a._show_in_table = show_in_table
-
-
-# Show HTML form for editing attributes
-def configure_attributes(host, for_filter):
-    for attr in host_attributes:
-        html.write("<tr><td class=legend>%s" % attr.title())
-        if attr.help():
-            html.write("<br><i>%s</i>" % attr.help())
-        html.write("</td><td class=content>")
-        attr.render_input(host.get(attr.name(), attr.default_value()), for_filter)
-        html.write("</td></tr>\n")
-
+    a._show_in_folder = show_in_folder
 
 # Read attributes from HTML variables
-def collect_attributes(only_checked = False):
+def collect_attributes(do_validate = True):
     host = {}
     for attr in host_attributes:
         attrname = attr.name()
-        if only_checked and not html.var("_change_%s" % attrname, False):
+        if not html.var("_change_%s" % attrname, False):
             continue
 
-        attr.validate_input()
+        if do_validate:
+            attr.validate_input()
         host[attr.name()] = attr.from_html_vars()
     return host
+
+# Show HTML form for editing attributes. for_what can be:
+# "host"   -> normal host edit dialog
+# "folder" -> properies of folder or file
+# "search" -> search dialog
+# "bulk"   -> bulk change
+def configure_attributes(hosts, for_what):
+    # html.write("<pre>%s</pre>" % pprint.pformat(hosts))
+
+    for attr in host_attributes:
+
+        # In folder/file not all attributes are shown
+        if for_what == "folder" and not attr.show_in_folder():
+            continue
+
+        attrname = attr.name()
+        # Determine, if this attribute has the same setting for
+        # all hosts.
+        values = set([])
+        num_haveit = 0
+        for hostname, host in hosts.items():
+            if attrname in host:
+                num_haveit += 1
+                values.add(host[attrname]) 
+
+        # Collect inherited attributes (in case of folder and host)
+        inherited_from = None
+        if for_what in [ "host", "folder" ]:
+            value = hosts.values()[0]
+            if for_what == "host":
+                container = g_file
+                what = "file"
+                url = make_link_to([("mode", "editfile")], g_folder["path"], g_file["name"])
+            else:
+                container = value[None] # Hack. Get parent this way
+                what = "folder"
+
+            while container:
+                if attrname in container.get("attributes", {}):
+                    if what != "file":
+                        url = make_link_to([("mode", "editfolder")], container["path"])
+                    inherited_from = _("Inherited from ") + '<a href="%s">%s</a>' % (url, container["title"])
+                    inherited_value = container["attributes"][attrname]
+                    break
+                container = container.get("parent")
+                what = "folder"
+
+            if not container: # We are the root folder:
+                inherited_value = attr.default_value()
+
+        # Legend and Help
+        html.write("<tr><td class=legend>%s" % attr.title())
+        if attr.help():
+            html.write("<br><i>%s</i>" % attr.help())
+        html.write("</td>")
+
+        # Checkbox for activating this attribute
+        # Determine current state of visibility: If the form has already
+        # been submitted (i.e. search or input error), then we take the
+        # previous state of the box. In search mode we make those boxes
+        # active that have an empty string as default value (simple
+        # text boxed). In bulk mode we make those attributes active that
+        # have a value unique over all hosts.
+        checkbox_name = "_change_%s" % attr.name()
+        cb = html.get_checkbox(checkbox_name)
+        if cb != None:
+            active = cb # get previous state of checkbox
+        elif for_what == "search":
+            active  = attr.default_value() == "" # show empty text search fields always
+        elif for_what == "bulk":
+            active = len(values) == 1 # show common values
+        elif for_what == "host" and inherited_from == None: # nothing inherited: make active
+            active = True
+        else: # host, folder
+            active = attrname in value
+            # html.write("<pre>%s</pre>" % pprint.pformat(value))
+
+        # html.write("<pre>%s</pre>" % pprint.pformat(values))
+
+        html.write('<td class=checkbox>')
+        html.checkbox(checkbox_name, active, 
+            onchange="wato_toggle_attribute(this, '%s');" % attr.name() ) # Only select if value is unique
+        html.write("</td>")
+
+        html.write('<td class=content>')
+
+        # Input fields in case the checkbox is active
+        html.write('<div id="attr_entry_%s" style="%s">' 
+          % (attrname, (not active) and "display: none" or ""))
+        if len(values) == 1:
+            defvalue = values.pop()
+        else:
+            defvalue = attr.default_value()
+        attr.render_input(defvalue)
+        html.write("</div>")
+
+        # Show inherited / default value or emtpy field in 
+        # case of inactive checkbox
+        html.write('<div class="inherited" id="attr_default_%s" style="%s">' 
+          % (attrname, active and "display: none" or ""))
+        if inherited_from:
+            html.write("<h3>" + inherited_from + "</h3>")
+        elif for_what != "bulk":
+            html.write("<h3>" + _("Default value") + "</h3>")
+        else:
+            html.write(_("<i>Leave this value unchanged</i>"))
+
+        if for_what not in [ "bulk", "search" ]:
+            value = inherited_value
+            tdclass, content = attr.paint(value, "")
+            if not content:
+                content = "<i>" + _("(empty)") + "</i>"
+            html.write(content)
+
+        html.write("</div>")
+        
+        html.write("</td></tr>\n")
+
+
+# Compute effective (explicit and inherited) attributes
+# for a host. This returns a dictionary with a value for
+# each host attribute
+def effective_attributes(host, container):
+    chain = [ host ]
+    while container:
+        chain.append(container.get("attributes"))
+        container = container.get("parent")
+
+    eff = {}
+    for a in chain[::-1]:
+        eff.update(a)
+
+    # now add default values of attributes for all missing values
+    for attr in host_attributes:
+        attrname = attr.name()
+        if attrname not in eff:
+            eff.setdefault(attrname, attr.default_value())
+
+    return eff
+    
 
 #   +----------------------------------------------------------------------+
 #   |                   ____  _             _                              |

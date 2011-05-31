@@ -20,7 +20,7 @@ td, th {
     vertical-align: top;
 }
 
-button, input, td, select {
+button, input, td, th, select {
     font-size: 9pt;
 }
 
@@ -1080,7 +1080,7 @@ table.form img.toggleheader.hover {
 table.form td.legend { 
     color: #274750;
     border: 1px solid #fff;
-    border-right-style: none;
+    /* border-right-style: none; */
     height: 32px;
     padding-top: 10px;
 }
@@ -1623,6 +1623,21 @@ table.add_snapin i {
                               
 */
 
+.wato table.form {
+    /* width: 50%;
+    left: 25%;
+    position: relative;*/
+}
+
+.wato table.form td.checkbox {
+    width: 40px;
+    height: 40px;
+    vertical-align: middle;
+    text-align: center;
+    border: 1px solid white;
+    border-left-style: none;
+}
+
 .wato table.auditlog {
     background-image: url("images/form_background.png");
     background-repeat: repeat;
@@ -1658,6 +1673,19 @@ table.add_snapin i {
     width: 100%;
 }
 
+.wato div.inherited {
+    color: #000;
+    font-weight: bold;
+}
+.wato td.inherited {
+    color: #666;
+}
+.wato div.inherited h3 { 
+    margin: 0px;
+    padding: 0px;
+    font-size: 8pt;
+    color: #68a;
+}
 /* 
    ____                                    
    |  _ \ _ __ ___   __ _ _ __ ___  ___ ___ 

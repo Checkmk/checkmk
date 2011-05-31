@@ -359,6 +359,14 @@ class html:
         if error:
             html += "</x>"
 
+    # Get value of checkbox. Return True, False or None
+    def get_checkbox(self, varname):
+        if not self.var("filled_in") == self.form_name: # this form filled in
+            return None
+        else:
+            value = self.req.vars.get(varname, "")
+            return not not value
+
     def datetime_input(self, varname, default_value):
         try:
             t = self.get_datetime_input(varname)

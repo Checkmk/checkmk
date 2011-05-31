@@ -51,15 +51,19 @@ function wato_check_all(css_class) {
 }
 
 /* Make attributes visible or not when clicked on a checkbox */
-function wato_toggle_attribute(oCheckbox, divid) {
-    oDiv = document.getElementById(divid);
+function wato_toggle_attribute(oCheckbox, attrname) {
+    var oEntry =   document.getElementById("attr_entry_" + attrname);
+    var oDefault = document.getElementById("attr_default_" + attrname); 
     if (oCheckbox.checked) {
-        oDiv.style.display = "";
+        oEntry.style.display = "";
+        oDefault.style.display = "none";
     }
     else {
-        oDiv.style.display = "none";
+        oEntry.style.display = "none";
+        oDefault.style.display = "";
     }
-    odiv = null;
+    oEntry = null;
+    oDefault = null;
 }
 
 // ----------------------------------------------------------------------------

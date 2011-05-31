@@ -24,8 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-declare_host_attribute(TextAttribute("location", _("Location"), 
-                       _("A hint to where this host is located"),
-                       "Was weiss ich wo", True))
+declare_host_attribute(TextAttribute("alias", _("Alias"), 
+                       _("A comment or description of this host"),
+                       "", mandatory=False))
+
+declare_host_attribute(IPAddressAttribute("ipaddress", _("IP Address"), 
+                       _("IP Address of the host. Leave emtpy to use automatic "
+                         "hostname lookup. Enter a hostname to use dynamic resoluting "
+                         "during the actual monitoring.")))
 
 

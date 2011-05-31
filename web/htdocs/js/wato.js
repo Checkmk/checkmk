@@ -50,6 +50,18 @@ function wato_check_all(css_class) {
         items[i].checked = !all_checked;
 }
 
+/* Make attributes visible or not when clicked on a checkbox */
+function wato_toggle_attribute(oCheckbox, divid) {
+    oDiv = document.getElementById(divid);
+    if (oCheckbox.checked) {
+        oDiv.style.display = "";
+    }
+    else {
+        oDiv.style.display = "none";
+    }
+    odiv = null;
+}
+
 // ----------------------------------------------------------------------------
 // Interactive progress code
 // ----------------------------------------------------------------------------

@@ -592,7 +592,7 @@ table.data th {
 }
 
 table.data th.tablegap {
-    background-color: none;
+    background-color: transparent; /* none; */
 }
 
 /* Row coloring in case of the different states */
@@ -1397,7 +1397,6 @@ td.legend, td.content {
 td.legend {
     padding-top: 3px;
     color: #884;
-    white-space: nowrap; 
     width: 150px;
 }
 div.viewdescription {

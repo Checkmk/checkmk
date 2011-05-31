@@ -199,7 +199,7 @@ class html:
             enctype = ''
         self.write("<form name=%s class=%s action=\"%s\" method=%s%s>\n" %
                    (name, name, action, method, enctype))
-        self.hidden_field("filled_in", "on")
+        self.hidden_field("filled_in", name)
         self.hidden_field("_transid", str(self.current_transid()))
         self.hidden_fields(self.global_vars)
         self.form_name = name
@@ -333,7 +333,7 @@ class html:
                       (varname, value, checked_text, text))
         self.form_vars.append(varname)
 
-    def checkbox(self, varname, deflt="", cssclass = ''):
+    def checkbox(self, varname, deflt="", cssclass = '', onchange=None):
         error = self.user_errors.get(varname)
         if error:
             html = "<x class=inputerror>"
@@ -342,7 +342,7 @@ class html:
         # wether we should add the default value, we need to detect
         # if the form is printed for the first time. This is the
         # case if "filled_in" is not set.
-        if not self.has_var("filled_in"):
+        if not self.var("filled_in") == self.form_name: # this form filled in
             value = self.req.vars.get(varname, deflt)
         else:
             value = self.req.vars.get(varname, "")
@@ -353,7 +353,8 @@ class html:
             checked = ""
         if cssclass:
             cssclass = ' class="%s"' % cssclass
-        self.write("<input type=checkbox name=\"%s\"%s%s>" % (varname, checked, cssclass))
+        onchange_code = onchange and " onchange=\"%s\"" % (onchange) or ""
+        self.write("<input type=checkbox name=\"%s\"%s%s%s>" % (varname, checked, cssclass, onchange_code))
         self.form_vars.append(varname)
         if error:
             html += "</x>"
@@ -598,7 +599,11 @@ class html:
         return self.req.vars.get(varname, deflt)
 
     def var_utf8(self, varname, deflt = None):
-        return self.req.vars.get(varname, deflt).decode("utf-8")
+        val = self.req.vars.get(varname, deflt)
+        if val == None:
+            return val
+        else:
+            return val.decode("utf-8")
 
     def set_var(self, varname, value):
         self.req.vars[varname] = value

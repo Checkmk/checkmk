@@ -85,6 +85,7 @@ def page_handler(h):
     if not config.may("use_wato"):
         raise MKAuthException(_("You are not allowed to use WATO!"))
 
+    declare_host_tag_attributes()
     load_folder_config()
     get_folder_and_file() # sets g_root_folder and g_pathname
 
@@ -527,11 +528,18 @@ def mode_file(phase):
         hostnames.sort()
 
         # Show table of hosts in this file
+        colspan = 5
         html.begin_form("hosts", None, "POST")
         html.write("<table class=data>\n")
-        html.write("<tr><th></th><th></th><th>" + _("Hostname") + "</th>"
-                   "<th>" + _("IP&nbsp;Address") + "</th><th>" + _("Tags") + "</th><th>" 
-                   + _("Alias") + "</th><th>" + _("Move To") + "</th></tr>\n")
+        html.write("<tr><th></th><th></th><th>" + _("Hostname") + "</th>")
+        
+        for attr in host_attributes:
+            if attr.show_in_table():
+                html.write("<th>%s</th>" % attr.title())
+                colspan += 1
+
+        html.write("<th>" + _("Move To") + "</th>")
+        html.write("</tr>\n")
         odd = "odd"
 
         search_text = html.var("search")
@@ -568,23 +576,15 @@ def mode_file(phase):
             # Hostname with link to edit form
             html.write('<td><a href="%s">%s</a></td>' % (edit_url, hostname))
 
-            # IP address and DNS lookup
-            tdclass = ""
-            if not host.get("ipaddress"):
-                try:
-                    ip = socket.gethostbyname(hostname)
-                    ipaddress = "%s&nbsp;(DNS)" % ip
-                    tdclass = ' class="dns"'
-                except:
-                    ipaddress = _("(hostname not resolvable!)")
-                    tdclass = ' class="dnserror"'
-            else:
-                ipaddress = host["ipaddress"]
-            html.write("<td%s>%s</td>" % (tdclass, ipaddress))
+            # Show attributes
+            for attr in host_attributes:
+                if attr.show_in_table():
+                    tdclass, tdcontent = attr.paint(host.get(attr.name()), hostname)
+                    html.write('<td class="%s">' % tdclass)
+                    html.write(tdcontent)
+                    html.write("</td>")
 
-            # Further static information
-            html.write("<td>%s</td>" % ",&nbsp;".join(host["tags"]))
-            html.write("<td class=takeall>%s</td>" % (host.get("alias", "")))
+            # Move to
             html.write("<td>")
             host_move_combo(hostname)
             html.write("</td>")
@@ -593,7 +593,8 @@ def mode_file(phase):
         # bulk actions
         html.write('<tr class="data %s0"><td>' % odd)
         html.jsbutton('_markall', 'X', 'javascript:wato_check_all(\'wato_select\');')
-        html.write("</td><td colspan=6>" + _("On all selected hosts:\n"))
+        html.write("</td><td colspan=%d>" % colspan)
+        html.write(_("On all selected hosts:\n"))
         html.button("_bulk_delete", _("Delete"))
         html.button("_bulk_edit", _("Edit"))
         html.button("_bulk_inventory", _("Inventory"))
@@ -644,7 +645,7 @@ def mode_edithost(phase, new):
         mode = "edit"
     else:
         title = _("Create new host")
-        host = { "tags":[] }
+        host = {}
         mode = "new"
 
     if phase == "title":
@@ -662,26 +663,7 @@ def mode_edithost(phase, new):
             else:
                 return delete_host_after_confirm(hostname)
 
-        alias = html.var("alias")
-        if not alias:
-            alias = None # make sure no alias is set - not an empty one
-
-        ipaddress = html.var("ipaddress")
-        if not ipaddress: 
-            ipaddress = None # make sure no IP address is set
-            try:
-                ip = socket.gethostbyname(hostname)
-            except:
-                raise MKUserError("ipaddress", _("Hostname <b><tt>%s</tt></b> cannot be resolved into an IP address. "
-                            "Please check hostname or specify an explicit IP address.") % hostname)
-
         host = collect_attributes()
-        tags = get_selected_host_tags()
-        host["tags"] = tags
-        if ipaddress:
-            host["ipaddress"] = ipaddress
-        if alias:
-            host["alias"] = alias
 
         # handle clone & new
         if new:
@@ -722,20 +704,7 @@ def mode_edithost(phase, new):
             html.set_focus("host")
         html.write("</td></tr>\n")
 
-        # alias
-        html.write("<tr><td class=legend>" + _("Alias") + "<br><i>" + _("(optional)") + "</i></td><td class=content>")
-        html.text_input("alias", host.get("alias", ""))
-        html.write("</td></tr>\n")
-
-        # IP address
-        html.write("<tr><td class=legend>" + _("IP-Address") + "<br>"
-                + ("<i>Leave empty for automatic<br>"
-                "IP address lookup via DNS") + "</td><td class=content>")
-        html.text_input("ipaddress", host.get("ipaddress", ""))
-        html.write("</td></tr>\n")
-
-        configure_attributes(host)
-        configure_hosttags(host["tags"])
+        configure_attributes(host, for_filter=False)
 
         html.write('<tr><td class="buttons" colspan=2>')
         html.button("save", _("Save &amp; Finish"), "submit")
@@ -833,19 +802,9 @@ def mode_search(phase):
         html.set_focus("host")
         html.write("</td></tr>\n")
 
-        # alias
-        html.write("<tr><td class=legend>" + _("Alias") + "</td><td class=content>")
-        html.text_input("alias")
-        html.write("</td></tr>\n")
-
-        # IP address
-        html.write("<tr><td class=legend>" + _("IP-Address (prefix)") + "</td><td class=content>")
-        html.text_input("ipaddress")
-        html.write("</td></tr>\n")
-
-        # Host tags
-        configure_hosttags(None)
-
+        # Attributes
+        configure_attributes({}, for_filter = True)
+        
         # Button
         html.write('<tr><td class="buttons" colspan=2>')
         html.button("save", _("Search"), "submit")
@@ -858,26 +817,19 @@ def mode_search(phase):
         # Show search results
         if html.transaction_valid():
             html.write("</td><td>")
-            # prepare tag settings
-            tags = []
-            for tagno, (tagname, taglist) in enumerate(config.host_tags):
-                value = html.var("_tag_%d" % tagno)
-                if value == "|": # skip this tag
-                    tags.append(False)
-                else:
-                    tags.append(value and value or None)
-
             crit = {
                 "name"      : html.var("host"),
-                "alias"     : html.var("alias"),
-                "ipaddress" : html.var("ipaddress", "").strip(".").strip("*"),
-                "tags"      : tags,
             }
+            for attrname, attr in host_attribute.items():
+                crit[attrname] = attr.from_html_vars()
+
             html.write("<h3>" + _("Search results:") + "</h3>")
             if html.var("onlyhere"):
                 folder = g_folder
             else:
                 folder = g_root_folder
+
+            # html.write("<pre>%s</pre>" % pprint.pformat(crit))
             if not search_hosts_in_folder(folder, crit):
                 html.message(_("No matching hosts found."))
 
@@ -901,46 +853,21 @@ def search_hosts_in_file(the_folder, the_file, crit):
     found = []
     hosts = read_configuration_file(the_folder, the_file)
     for hostname, host in hosts.items():
-        host = host.get("alias")
-        ipaddress = host.get("ipaddress")
-        tags = host.get("tags")
-        if not ipaddress:
-            try:
-                ipaddress = socket.gethostbyname(hostname)
-            except:
-                ipaddress = _("(not in DNS)")
-        if not alias:
-            alias = ""
         if crit["name"] and crit["name"].lower() not in hostname.lower():
             continue
-        if crit["alias"] and crit["alias"].lower() not in alias.lower():
-            continue
-        if crit["ipaddress"]:
-            # Need to do a DNS-lookup. Yurks.
-            search_parts = tuple(crit["ipaddress"].split("."))
-            have_parts =   tuple(ipaddress.split("."))
-            if not tuple_starts_with(have_parts, search_parts):
-                continue
 
-        # Check tags
-        tags_ok = True
-        for search_val, (tagname, taglist) in zip(crit["tags"], config.host_tags):
-            if search_val == False: # tag not selected
-                continue
-            elif search_val != None: # explicit tag
-                if search_val not in tags:
-                    tags_ok = False
-                    break
-            else: # tag is None -> make sure that not other tag if this set is set
-                for ot, odescr in taglist:
-                    if ot in tags:
-                        tags_ok = False
-                        break
+        # Check attributes
+        dont_match = False
+        for attr in host_attributes:
+            attrname = attr.name()
+            if attrname in crit and  \
+                not attr.filter_matches(crit[attrname], host.get(attrname), hostname):
+                dont_match = True
+                break
+        if dont_match: 
+           continue
 
-        if not tags_ok:
-            continue
-
-        found.append((hostname, (alias, ipaddress, tags)))
+        found.append((hostname, host))
 
     if found:
         render_folder_path(the_folder, 0, True)
@@ -948,14 +875,23 @@ def search_hosts_in_file(the_folder, the_file, crit):
         html.write(' / <a href="%s">%s</a>' % (file_url, the_file["title"]))
         html.write(":")
         found.sort()
-        html.write("<table class=data><tr><th>%s</th><th>%s</th><th>%s</th></tr>" %
-                (_("Hostname"), _("Alias"), _("IP Address")))
+        html.write("<table class=data><tr><th>%s</th>" % (_("Hostname"), ))
+        for attr in host_attributes:
+            if attr.show_in_table():
+                html.write("<th>%s</th>" % attr.title())
+        html.write("</tr>")
+
         even = "even"
-        for hostname, (alias, ipaddress, tags) in found:
+        for hostname, host in found:
             even = even == "even" and "odd" or "even"
             host_url =  make_link_to([("mode", "edithost"), ("host", hostname)], the_folder["path"], the_file["name"])
-            html.write('<tr class="data %s0"><td><a href="%s">%s</a></td><td>%s</td><td>%s</td></tr>\n' % 
-               (even, host_url, hostname, alias, ipaddress))
+            html.write('<tr class="data %s0"><td><a href="%s">%s</a></td>\n' % 
+               (even, host_url, hostname))
+            for attr in host_attributes:
+                if attr.show_in_table():
+                    tdclass, content = attr.paint(host.get(attr.name()), hostname)
+                    html.write('<td class="%s">%s</td>' % (tdclass, content))
+        html.write("</tr>\n")
         html.write("</table><br>\n")
 
     return len(found)
@@ -1050,7 +986,7 @@ def mode_bulk_inventory(phase):
 #   |               |____/ \__,_|_|_|\_\ |_____\__,_|_|\__|                |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | Change the host tags of a number of selected host at once.           |
+#   | Change the attributes of a number of selected host at once.          |
 #   +----------------------------------------------------------------------+
 
 def mode_bulk_edit(phase):
@@ -1063,77 +999,67 @@ def mode_bulk_edit(phase):
 
     elif phase == "action":
         if html.check_transaction():
+            changed_attributes = collect_attributes(only_checked = True)
             hostnames = get_hostnames_from_checkboxes()
             for hostname in hostnames:
-                new_tags = get_selected_host_tags(g_hosts[hostname]["tags"])
-                g_hosts[hostname]["tags"] = new_tags
-                log_pending(hostname, "edit-host-tags", _("Changed tags of host %s to %s in bulk mode") %
-                           (hostname, ", ".join(new_tags)))
+                host = g_hosts[hostname]
+                host.update(changed_attributes)
+                log_pending(hostname, "bulk-edit", _("Changed attributes of host %s in bulk mode") % hostname)
             write_the_configuration_file()
             return "file"
         return
 
     hostnames = get_hostnames_from_checkboxes()
-
-    # Get the list of tags that are common of all selected hosts
-
-
-    preset_tags = {}
-    for tagno, (tagname, taglist) in enumerate(config.host_tags):
-        # check if all hosts have the same setting for this tag
-        host_counts = {}
-        for entry in taglist:
-            tag = entry[0]
-            count = 0
-            for hostname in hostnames:
-                host = g_hosts[hostname]
-                alias = host.get("alias")
-                ipaddress = host.get("ipaddress")
-                tags = host.get("tags")
-                # if the tag is "None" it means, that the host
-                # has selected this option, if none of the other
-                # tags of this selection is found at the host.
-                if tag == None:
-                    other_tags = [ e[0] for e in taglist if e[0] != None ]
-                    has_other = False
-                    for t in tags:
-                        if t in other_tags:
-                            has_other = True
-                            break
-                    if not has_other:
-                        count += 1
-                # otherwise simply check if the host has the tag
-                else:
-                    if tag in tags:
-                        count += 1
-            host_counts[tag] = count
-        
-        # now check, if all hosts have the same setting
-        non_zero = None
-        matches = 0
-        for tag, count in host_counts.items():
-            if count > 0:
-                matches += 1
-                non_zero = tag
-        if matches == 1:
-            preset_tags[tagno] = non_zero
+    hosts = dict([(hn, g_hosts[hn]) for hn in hostnames])
 
     html.write("<p>" + _("You have selected <b>%d</b> hosts for bulk edit. You can now change "
-               "host tags for all selected hosts at once. ") % len(hostnames))
+               "host attributes for all selected hosts at once. ") % len(hostnames))
     html.write(_("If a select is set to <i>don't change</i> then currenty not all selected "
-    "hosts share the same setting for this tag. If you leave that selection, all hosts "
+    "hosts share the same setting for this attribute. If you leave that selection, all hosts "
     "will keep their individual settings.") + "</p>")
 
     html.begin_form("bulkedit", None, "POST")
-    html.hidden_fields()
     html.write("<table class=form>")
-    configure_hosttags(preset_tags)
-    html.write('<tr><td colspan=2 class="buttons">')
+    bulk_configure_attributes(hosts)
+    html.write('<tr><td colspan=3 class="buttons">')
     html.button("_save", _("Save &amp; Finish"))
     html.write("</td></tr>")
     html.write("</table>")
+    html.hidden_fields()
     html.end_form()
 
+
+# Show HTML form for bulk editing attributes
+def bulk_configure_attributes(hosts):
+    for attr in host_attributes:
+        # Determine, if this attribute has the same setting for
+        # all hosts.
+        values = set([])
+        num_haveit = 0
+        for hostname, host in hosts.items():
+            attrname = attr.name()
+            if attrname in host:
+                num_haveit += 1
+                values.add(host[attrname]) 
+        active = len(values) == 1
+
+        html.write("<tr><td class=legend>%s" % attr.title())
+        if attr.help():
+            html.write("<br><i>%s</i>" % attr.help())
+        html.write("</td>")
+        html.write('<td class=content>')
+        html.checkbox("_change_%s" % attr.name(), active, 
+            onchange="wato_toggle_attribute(this, 'attr_entry_%s');" % attr.name() ) # Only select if value is unique
+        html.write("</td>")
+        html.write('<td class=content><div id="attr_entry_%s" style="%s">' 
+          % (attr.name(), not active and "display: none" or ""))
+        if len(values) == 1:
+            defvalue = values.pop()
+        else:
+            defvalue = attr.default_value()
+
+        attr.render_input(defvalue, for_filter = False)
+        html.write("</div></td></tr>\n")
 
 #   +----------------------------------------------------------------------+
 #   |                 ____  _     _      _                                 |
@@ -1194,69 +1120,69 @@ def render_link_tree(h, format):
 # number, then *no* tag is preselected. This is needed for bulk updates where
 # not all hosts agree in the tag settings. The box goes to "(don't change)" 
 # in that case.
-def configure_hosttags(current_tags):
-    # Host tags
-    found_tags = []
-    for tagno, (tagname, taglist) in enumerate(config.host_tags):
-        choices = [e[:2] for e in taglist]
-        # get current value of tag
-        if current_tags == None:
-            duplicate = False
-            tagvalue = None
-            choices = [("|", "")] + choices
+###def configure_hosttags(current_tags):
+###    # Host tags
+###    found_tags = []
+###    for tagno, (tagname, taglist) in enumerate(config.host_tags):
+###        choices = [e[:2] for e in taglist]
+###        # get current value of tag
+###        if current_tags == None:
+###            duplicate = False
+###            tagvalue = None
+###            choices = [("|", "")] + choices
+###
+###        elif type(current_tags) != dict:
+###            tagvalue = None
+###            duplicate = False
+###            for entry in taglist:
+###                tag = entry[0]
+###                descr = entry[1]
+###                if tag in current_tags:
+###                    if tagvalue:
+###                        duplicate = True
+###                    tagvalue = tag 
+###        else:
+###            duplicate = False
+###            if tagno in current_tags:
+###                tagvalue = current_tags[tagno]
+###            else:
+###                choices = [("|", _("(don't change)"))] + choices
+###                tagvalue = "|"
+###
+###        tagvar = "_tag_%d" % tagno
+###        html.write("<tr><td class=legend>%s</td>" % tagname)
+###        html.write("<td class=content>")
+###        html.select(tagvar, choices, tagvalue)
+###        if duplicate: # tag not unique before editing
+###            html.write("(!)")
+###        html.write("</td></tr>\n")
 
-        elif type(current_tags) != dict:
-            tagvalue = None
-            duplicate = False
-            for entry in taglist:
-                tag = entry[0]
-                descr = entry[1]
-                if tag in current_tags:
-                    if tagvalue:
-                        duplicate = True
-                    tagvalue = tag 
-        else:
-            duplicate = False
-            if tagno in current_tags:
-                tagvalue = current_tags[tagno]
-            else:
-                choices = [("|", _("(don't change)"))] + choices
-                tagvalue = "|"
 
-        tagvar = "_tag_%d" % tagno
-        html.write("<tr><td class=legend>%s</td>" % tagname)
-        html.write("<td class=content>")
-        html.select(tagvar, choices, tagvalue)
-        if duplicate: # tag not unique before editing
-            html.write("(!)")
-        html.write("</td></tr>\n")
-
-
-def get_selected_host_tags(current_tags = {}):
-    tags = set([])
-    for tagno, (tagname, taglist) in enumerate(config.host_tags):
-        value = html.var("_tag_%d" % tagno)
-        if value == "|": # keep current setting of host (see current tags), or don't use for search
-            found = False
-            for entry in taglist:
-                tag = entry[0]
-                if tag in current_tags:
-                    tags.add(tag)
-                    if len(entry) > 2: # add additional tags
-                        tags.update(entry[2])
-                    found = True
-                    break
-            if not found: # handle None-Tag
-                for entry in taglist:
-                    if entry[0] == None and len(entry) > 2:
-                        tags.update(entry[2])
-                    
-        elif value:
-            tags.add(value)
-            for entry in taglist:
-                if entry[0] == value and len(entry) > 2:
-                    tags.update(entry[2]) # extra tags
-    return tags
+###def get_selected_host_tags(current_tags = {}):
+###    tags = set([])
+###    for tagno, (tagname, taglist) in enumerate(config.host_tags):
+###        value = html.var("_tag_%d" % tagno)
+###        if value == "|": # keep current setting of host (see current tags), or don't use for search
+###            found = False
+###            for entry in taglist:
+###                tag = entry[0]
+###                if tag in current_tags:
+###                    tags.add(tag)
+###                    if len(entry) > 2: # add additional tags
+###                        tags.update(entry[2])
+###                    found = True
+###                    break
+###            if not found: # handle None-Tag
+###                for entry in taglist:
+###                    if entry[0] == None and len(entry) > 2:
+###                        tags.update(entry[2])
+###                    
+###        elif value:
+###            tags.add(value)
+###            for entry in taglist:
+###                if entry[0] == value and len(entry) > 2:
+###                    tags.update(entry[2]) # extra tags
+###    return tags
 
 #   +----------------------------------------------------------------------+
 #   |                    _                 __ _ _                          |
@@ -1631,20 +1557,33 @@ def read_configuration_file(folder, thefile):
         }
         execfile(path, variables, variables)
         for h in variables["all_hosts"]:
+
             parts = h.split('|')
             hostname = parts[0]
-            tags = set([ tag for tag in parts[1:] if tag != 'wato' and not tag.endswith('.mk') ])
+
+            # Get generic attributes of that host
+            host = variables["host_attributes"].get(hostname, {})
+
+            # Some of the attributes are handled with special care. We do not 
+            # want them to be redundant in the configuration file. We 
+            # want to stay compatible with check_mk.
+            hosts[hostname]   = host
             ipaddress = variables["ipaddresses"].get(hostname)
             aliases = host_extra_conf(hostname, variables["extra_host_conf"]["alias"]) 
             if len(aliases) > 0:
                 alias = aliases[0]
             else:
                 alias = None
-            host = variables["host_attributes"].get(hostname, {})
-            host["alias"] = alias                       # TODO: convert to attribute
-            host["ipaddress"] = ipaddress               # TODO: convert to attribute
-            host["tags"] = tags                         # TODO: convert to attribute
-            hosts[hostname] = host
+            host["alias"]     = alias 
+            host["ipaddress"] = ipaddress
+
+            # Retrieve setting for each individual host tag
+            tags = set([ tag for tag in parts[1:] if tag != 'wato' and not tag.endswith('.mk') ])
+            for attr in host_attributes:
+                if isinstance(attr, HostTagAttribute):
+                    tagvalue = attr.get_tag_value(tags)
+                    host[attr.name()] = tagvalue
+
 
     # html.write("<pre>%s</pre>" % pprint.pformat(hosts))
     return hosts
@@ -1664,9 +1603,19 @@ def write_configuration_file(folder, thefile, hosts):
     hostnames.sort()
     for hostname in hostnames:
         host = hosts[hostname]
-        alias = host.get("alias")
+        # Make special handling of attributes configured in a special way 
+        # in check_mk
+        alias     = host.get("alias")
         ipaddress = host.get("ipaddress")
-        tags = host.get("tags", [])
+
+        # Compute tags from settings of each individual tag. We've got
+        # the current value for each individual tag.
+        tags = set([])
+        for attr in host_attributes:
+            if isinstance(attr, HostTagAttribute):
+                value = host.get(attr.name())
+                tags.update(attr.get_tag_list(value))
+
         if alias:
             aliases.append((alias, [hostname]))
         all_hosts.append("|".join([hostname] + list(tags) + [ wato_filename, 'wato' ]))
@@ -1702,17 +1651,37 @@ def write_configuration_file(folder, thefile, hosts):
               (wato_filename, wato_filename))
 
     # Write information about all additional non-Nagios host attributes
+    # Remove the variables with special handling (alias, ipaddress)
     without_special = {}
     for hostname, host in hosts.items():
         without = {}
-        without.update(host)
-        if "alias" in host:
-            del without["alias"]
-        del without["tags"]
-        if "ipaddress" in host:
-            del without["ipaddress"]
+        for varname, value in host.items():
+            if not (varname in [ "alias", "ipaddress" ] or varname.startswith("tag_")):
+                without[varname] = value
         without_special[hostname] = without
     out.write("\nhost_attributes.update(%s)\n" % pprint.pformat(without_special))
+
+    # Add custom macros for attributes that are to be present in Nagios
+    custom_macros = {}
+    for hostname, host in hosts.items():
+        for attr in host_attributes:
+            attrname = attr.name()
+            if attrname in host:
+                value = host.get(attrname)
+                nagstring = attr.to_nagios(value)
+                if nagstring != None:
+                    if attrname not in custom_macros:
+                        custom_macros[attrname] = {}
+                    custom_macros[attrname][hostname] = nagstring
+    for attrname, entries in custom_macros.items():
+        macrolist = []
+        for hostname, nagstring in entries.items():
+            macrolist.append((nagstring, [hostname]))
+        if len(macrolist) > 0:
+            out.write("\nif '_%s' not in extra_host_conf:\n" % attrname.upper())
+            out.write("    extra_host_conf['_%s'] = []\n" % attrname.upper())
+            out.write("extra_host_conf['_%s'] += %s\n" % (attrname.upper(), pprint.pformat(macrolist)))
+
 
 def delete_configuration_file(folder, thefile):
     path = make_config_path(folder, thefile)
@@ -2118,7 +2087,6 @@ class Attribute:
         self._title = title
         self._help = help
         self._default_value = default_value
-        pass
 
     # Return the name (= identifier) of the attribute
     def name(self):
@@ -2137,20 +2105,32 @@ class Attribute:
         return self._default_value
 
     # Render HTML code displaying a value
-    def render_text(self, value):
-        pass
+    def paint(self, value, hostname):
+        return "", ""
+
+    # Wether or not to show this attribute in tables.
+    # This value is set by declare_host_attribute
+    def show_in_table(self):
+        try:
+            return self._show_in_table
+        except:
+            return False
 
     # Render HTML input fields displaying the value and 
     # make it editable. If filter == True, then the field
     # is to be displayed in filter mode (as part of the
     # search filter)
-    def render_input(self, value, filter = False):
+    def render_input(self, value, for_filter):
         pass
 
-    # Create value from HTML variables. This method may
-    # raise MKUserError in case of invalid user input.
+    # Create value from HTML variables.     
     def from_html_vars(self):
         return None
+    
+    # Check if the value entered by the user is valid.
+    # This method may raise MKUserError in case of invalid user input.
+    def validate_input(self):
+        pass
 
     # If this attribute should be present in Nagios as 
     # a host custom macro, then the value of that macro
@@ -2160,7 +2140,7 @@ class Attribute:
 
     # Checks if the give value matches the search attributes
     # that are represented by the current HTML variables.
-    def filter_matches(self, value):
+    def filter_matches(self, crit, value, hostname):
         return False
 
 
@@ -2171,23 +2151,172 @@ class TextAttribute(Attribute):
         Attribute.__init__(self, name, title, help, default_value)
         self._mandatory = mandatory
 
-    def render_text(self, value):
-        html.write(value)
+    def paint(self, value, hostname):
+        if not value:
+            return "", ""
+        else:
+            return "", value
 
-    def render_input(self, value):
+    def render_input(self, value, for_filter):
+        if for_filter:
+            value = ""
         html.text_input("attr_" + self.name(), value)
 
     def from_html_vars(self):
         value = html.var_utf8("attr_" + self.name())
+        if value == None:
+            value = ""
+        return value
+
+    def validate_input(self):
+        value = self.from_html_vars()
         if self._mandatory and not value:
             raise MKUserError("attr_" + self.name(), 
                   _("Please specify a value for %s") % self.title())
-        elif value == None:
-            value = self.default_value()
+
+    def filter_matches(self, crit, value, hostname):
+        if value == None:  # Host does not have this attribute
+            value = ""
+        return crit.lower() in value.lower() 
+
+
+class IPAddressAttribute(TextAttribute):
+    def __init__(self, name, title, help = None):
+        TextAttribute.__init__(self, name, title, help, "", mandatory = True)
+
+    def from_html_vars(self):
+        value = html.var_utf8("attr_" + self.name())
+        if not value:
+            value = None
         return value
 
-    def filter_matches(self, value):
-        return self.from_html_vars() in value.lower() 
+    def do_dns(self, hostname):
+        try:
+            ip = socket.gethostbyname(hostname)
+            text = "%s&nbsp;(DNS)" % ip
+            tdclass = 'dns'
+        except:
+            ip = None
+            text = _("(hostname not resolvable!)")
+            tdclass = 'dnserror'
+        return ip, tdclass, text
+
+    def paint(self, value, hostname):
+        if value == None:
+            ip, tdclass, text = self.do_dns(hostname)
+            return tdclass, text
+        else:
+            return "", value
+
+    def validate_input(self):
+        value = self.from_html_vars()
+        if not value: # empty -> use DNS
+            hostname = html.var("host")
+            ip, text, tdclass = self.do_dns(hostname)
+            if not ip:
+                raise MKUserError("attr_" + self.name(), _("Hostname <b><tt>%s</tt></b> cannot be resolved into an IP address. "
+                            "Please check hostname or specify an explicit IP address.") % hostname)
+
+    # On IP-Addresses we always do a prefix-match. We also remove any "*"
+    # that the user accidentally adds
+    def filter_matches(self, crit, value, hostname):
+        if not crit:
+            return True
+
+        if not value: # do DNS lookup
+            value, tdclass, text = self.do_dns(hostname)
+            if not value:
+                return False
+
+        return value.lower().startswith(crit.lower().strip("*"))
+
+
+# A text attribute that is stored in a Nagios custom macro
+class NagiosTextAttribute(TextAttribute):
+    def __init__(self, name, title, help = None, default_value="", mandatory = False):
+        TextAttribute.__init__(self, name, title, help, default_value)
+        self._mandatory = mandatory
+
+    def to_nagios(self, value):
+        return value.encode("utf-8")
+
+
+# A selection dropdown for a host tag
+class HostTagAttribute(Attribute):
+    def __init__(self, nr, tag_definition):
+        title, self._taglist = tag_definition
+        name = "tag_%d" % nr
+        Attribute.__init__(self, name, title, "", self._taglist[0][0])
+
+    def paint(self, value, hostname):
+        for entry in self._taglist:
+            if value == entry[0]:
+                return "", entry[1]
+        return "", "" # Should never happen, at least one entry should match
+                      # But case could occur if tags definitions have been changed.
+
+    def render_input(self, value, for_filter):
+        choices = [e[:2] for e in self._taglist]
+        if for_filter:
+            choices = [("|", "")] + choices
+            value = "|"
+        html.select("attr_" + self.name(), choices, value)
+
+    def from_html_vars(self):
+        value = html.var("attr_" + self.name())
+        if not value:
+            value = None
+        return value
+    
+    def filter_matches(self, crit, value, hostname):
+        if crit == "|": 
+            return True # no tag selected
+        else:
+            return crit == value 
+
+
+    # Special function for computing the setting of a specific
+    # tag group from the total list of tags of a host
+    def get_tag_value(self, tags):
+        for entry in self._taglist:
+            if entry[0] in tags:
+                return entry[0]
+        return None
+
+    # Return list of host tags to set (handles
+    # secondary tags)
+    def get_tag_list(self, value):
+        for entry in self._taglist:
+            if entry[0] == value:
+                if len(entry) >= 3:
+                    taglist = [ value ] + entry[2]
+                else:
+                    taglist =  [ value ]
+                if taglist[0] == None:
+                    taglist = taglist[1:]
+                return taglist
+        return [] # No matching tag
+
+
+# Declare an attribute for each host tag configured in multisite.mk
+# Also make sure that the tags are reconfigured as soon as the
+# configuration of the tags has changed.
+configured_host_tags = None
+def declare_host_tag_attributes():
+    global configured_host_tags
+    global host_attributes
+
+    if configured_host_tags != config.host_tags:
+        # Remove host tag attributes from list, if existing
+        host_attributes = [ attr for attr in host_attributes if not attr.name().startswith("tag_") ]
+        for attr in host_attribute.values():
+            if attr.name().startswith("tag_"):
+                del host_attribute[attr.name()]
+
+        for num, entry in enumerate(config.host_tags):
+            declare_host_attribute(HostTagAttribute(num + 1, entry), show_in_table = False)
+
+        configured_host_tags = config.host_tags
 
 
 # Global datastructure holding all attributes (in a defined order)
@@ -2197,26 +2326,32 @@ host_attributes = []
 host_attribute = {}
 
 # Declare attributes with this method
-def declare_host_attribute(a):
+def declare_host_attribute(a, show_in_table = True):
     host_attributes.append(a)
     host_attribute[a.name()] = a
+    a._show_in_table = show_in_table
 
 
 # Show HTML form for editing attributes
-def configure_attributes(host):
+def configure_attributes(host, for_filter):
     for attr in host_attributes:
         html.write("<tr><td class=legend>%s" % attr.title())
         if attr.help():
             html.write("<br><i>%s</i>" % attr.help())
         html.write("</td><td class=content>")
-        attr.render_input(host.get(attr.name(), attr.default_value()))
+        attr.render_input(host.get(attr.name(), attr.default_value()), for_filter)
         html.write("</td></tr>\n")
 
 
 # Read attributes from HTML variables
-def collect_attributes():
+def collect_attributes(only_checked = False):
     host = {}
     for attr in host_attributes:
+        attrname = attr.name()
+        if only_checked and not html.var("_change_%s" % attrname, False):
+            continue
+
+        attr.validate_input()
         host[attr.name()] = attr.from_html_vars()
     return host
 

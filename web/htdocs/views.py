@@ -842,7 +842,7 @@ def load_view_into_html_vars(view):
 
     # Make sure, checkboxes with default "on" do no set "on". Otherwise they
     # would always be on
-    html.set_var("filled_in", "on")
+    html.set_var("filled_in", "create_view")
 
 # Extract properties of view from HTML variables and construct
 # view object, to be used for saving or displaying

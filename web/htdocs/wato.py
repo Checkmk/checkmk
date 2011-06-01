@@ -366,10 +366,16 @@ def mode_editfolder(phase, what, new):
            html.reload_sidebar() # refresh WATO snapin
 
         save_folder_config()
-        if what == "file":
-            rewrite_config_file(g_folder, the_thing)
-        else:
-            rewrite_config_files_below(the_thing) # due to inherited attributes
+
+        # Due to changes in folder/file attributes, host files
+        # might need to be rewritten in order to reflect Changes
+        # in Nagios-relevant attributes.
+        if not new:
+            if what == "file":
+                rewrite_config_file(g_folder, the_thing)
+            else:
+                rewrite_config_files_below(the_thing) # due to inherited attributes
+
         return "folder"
 
 
@@ -378,7 +384,7 @@ def mode_editfolder(phase, what, new):
         html.write('<table class="form">\n')
         
         # title
-        html.write("<tr><td class=legend>Title</td><td class=content></td><td class=content>")
+        html.write("<tr><td class=legend colspan=2>Title</td><td class=content>")
         html.text_input("title", title)
         html.set_focus("title")
         html.write("</td></tr>\n")
@@ -387,12 +393,12 @@ def mode_editfolder(phase, what, new):
         if not (what == "folder" and not new and g_folder == g_root_folder):
             if not config.wato_hide_filenames:
                 if what == "folder":
-                    html.write("<tr><td class=legend>" + _("Internal directory name") + "<br><i>"
+                    html.write("<tr><td class=legend colspan=2>" + _("Internal directory name") + "<br><i>"
                         + _("This is the name of subdirectory where the files and<br> "
                         "other folders will be created. You cannot change this later") +
                         "</i></td><td class=content>")
                 else:
-                    html.write("<tr><td class=legend>" + _("Internal file name") + "<br><i>"
+                    html.write("<tr><td class=legend colspan=2>" + _("Internal file name") + "<br><i>"
                         + _("This is the name of Check_MK configuration file where<br>"
                         "the hosts will be created. It well automatically get the<br>"
                         "extension <tt>.mk</tt>. Do not specify this extension here.<br>"
@@ -407,25 +413,26 @@ def mode_editfolder(phase, what, new):
                 html.write("</td></tr>\n")
 
         # permissions
-        html.write("<tr><td class=legend>" + _("Grant access to") + "</td><td class=content></td><td class=content>")
+        html.write("<tr><td class=legend colspan=2>" + _("Grant access to") + "</td><td class=content>")
         for role in config.roles:
             html.checkbox("role_" + role, role in g_folder["roles"])
             html.write(" " + role + "<br>")
         html.write("</td></tr>")
 
         # Attributes inherited to hosts
-        html.write("<tr><td class=legend colspan=3>")
-        html.write(_("The following attributes will be inherited to all hosts "
-                     "in this %s") % the_what)
-        html.write("</td></tr>")
-        if new:
-            attributes = { }
-            parent = g_folder
-        else:
-            attributes = the_thing.get("attributes", {})
-            parent = g_folder.get("parent")
+        if have_folder_attributes():
+            html.write("<tr><td class=legend colspan=3>")
+            html.write(_("The following attributes will be inherited to all hosts "
+                         "in this %s") % the_what)
+            html.write("</td></tr>")
+            if new:
+                attributes = { }
+                parent = g_folder
+            else:
+                attributes = the_thing.get("attributes", {})
+                parent = g_folder.get("parent")
 
-        configure_attributes({what: attributes}, "folder", parent)
+            configure_attributes({what: attributes}, "folder", parent)
 
         html.write('<tr><td colspan=3 class="buttons">')
         html.button("save", _("Save &amp; Finish"), "submit")
@@ -2408,6 +2415,12 @@ def collect_attributes(do_validate = True):
             attr.validate_input()
         host[attr.name()] = attr.from_html_vars()
     return host
+
+def have_folder_attributes():
+    for attr in host_attributes:
+        if attr.show_in_folder():
+            return True
+    return False
 
 # Show HTML form for editing attributes. for_what can be:
 # "host"   -> normal host edit dialog

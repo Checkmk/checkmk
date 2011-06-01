@@ -1684,7 +1684,10 @@ table.add_snapin i {
     margin: 0px;
     padding: 0px;
     font-size: 8pt;
-    color: #68a;
+    color: #468;
+}
+.wato div.inherited h3 a { 
+    color: #468;
 }
 /* 
    ____                                    

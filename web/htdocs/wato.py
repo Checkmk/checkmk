@@ -419,12 +419,13 @@ def mode_editfolder(phase, what, new):
                      "in this %s") % the_what)
         html.write("</td></tr>")
         if new:
-            attributes = { None: g_folder }
+            attributes = { }
+            parent = g_folder
         else:
             attributes = the_thing.get("attributes", {})
-            attributes[None] = g_folder.get("parent")
+            parent = g_folder.get("parent")
 
-        configure_attributes({what: attributes}, "folder")
+        configure_attributes({what: attributes}, "folder", parent)
 
         html.write('<tr><td colspan=3 class="buttons">')
         html.button("save", _("Save &amp; Finish"), "submit")
@@ -538,7 +539,7 @@ def mode_file(phase):
             return delete_hosts_after_confirm(selected_hosts)
 
         # Move
-        if html.var("_bulk_move"):
+        elif html.var("_bulk_move"):
             target_file = html.var("bulk_moveto")
             if not target_file:
                 raise MKUserError("bulk_moveto", _("Please select the destination file"))
@@ -547,6 +548,9 @@ def mode_file(phase):
 
         elif html.var("_bulk_edit"):
             return "bulkedit"
+
+        elif html.var("_bulk_cleanup"):
+            return "bulkcleanup"
 
     elif len(g_hosts) == 0:
         html.write(_("There are no hosts in this file."))
@@ -643,6 +647,7 @@ def mode_file(phase):
         html.write(_("On all selected hosts:\n"))
         html.button("_bulk_delete", _("Delete"))
         html.button("_bulk_edit", _("Edit"))
+        html.button("_bulk_cleanup", _("Cleanup"))
         html.button("_bulk_inventory", _("Inventory"))
         host_move_combo(None)
         html.write("</td></tr>\n")
@@ -750,7 +755,7 @@ def mode_edithost(phase, new):
             html.set_focus("host")
         html.write("</td></tr>\n")
 
-        configure_attributes({hostname: host}, for_what = "host")
+        configure_attributes({hostname: host}, "host", g_folder)
 
         html.write('<tr><td class="buttons" colspan=3>')
         html.button("save", _("Save &amp; Finish"), "submit")
@@ -849,7 +854,7 @@ def mode_search(phase):
         html.write("</td></tr>\n")
 
         # Attributes
-        configure_attributes({}, for_what = "search")
+        configure_attributes({}, "search", None)
         
         # Button
         html.write('<tr><td class="buttons" colspan=3>')
@@ -1039,7 +1044,9 @@ def mode_bulk_inventory(phase):
 #   |               |____/ \__,_|_|_|\_\ |_____\__,_|_|\__|                |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | Change the attributes of a number of selected host at once.          |
+#   | Change the attributes of a number of selected host at once. Also the |
+#   | cleanup is implemented here: the bulk removal of explicit attribute  |
+#   | values.                                                              |
 #   +----------------------------------------------------------------------+
 
 def mode_bulk_edit(phase):
@@ -1073,13 +1080,104 @@ def mode_bulk_edit(phase):
 
     html.begin_form("bulkedit", None, "POST")
     html.write("<table class=form>")
-    configure_attributes(hosts, "bulk")
+    configure_attributes(hosts, "bulk", g_file)
     html.write('<tr><td colspan=3 class="buttons">')
     html.button("_save", _("Save &amp; Finish"))
     html.write("</td></tr>")
     html.write("</table>")
     html.hidden_fields()
     html.end_form()
+
+
+def mode_bulk_cleanup(phase):
+    if phase == "title":
+        return _("Bulk removal of explicit attributes")
+
+    elif phase == "buttons":
+        html.context_button(_("Back"), make_link([("mode", "file")]))
+        return
+
+    elif phase == "action":
+        if html.check_transaction():
+            to_clean = bulk_collect_cleaned_attributes()
+            hostnames = get_hostnames_from_checkboxes()
+            for hostname in hostnames:
+                host = g_hosts[hostname]
+                num_cleaned = 0
+                for attrname in to_clean:
+                    num_cleaned += 1
+                    if attrname in host:
+                        del host[attrname]
+                if num_cleaned > 0:
+                    log_pending(hostname, "bulk-cleanup", _("Cleaned %d attributes of host %s in bulk mode") % (
+                    num_cleaned, hostname))
+            write_the_configuration_file()
+            return "file"
+        return
+
+    hostnames = get_hostnames_from_checkboxes()
+    hosts = dict([(hn, g_hosts[hn]) for hn in hostnames])
+
+    html.write("<p>" + _("You have selected <b>%d</b> hosts for bulk cleanup. This means removing "
+    "explicit attribute values from hosts. The hosts will then inherit attributes "
+    "configured at the host list or folders or simply fall back to the builin "
+    "default values.") % len(hostnames))
+    html.write("</p>")
+
+    html.begin_form("bulkcleanup", None, "POST")
+    html.write("<table class=form>")
+    if not bulk_cleanup_attributes(hosts):
+        html.write("<tr><td class=buttons>")
+        html.write(_("The selected hosts have no explicit attributes"))
+        html.write("</td></tr>\n")
+    else:
+        html.write('<tr><td colspan=2 class="buttons">')
+        html.button("_save", _("Save &amp; Finish"))
+        html.write("</td></tr>")
+    html.write("</table>")
+    html.hidden_fields()
+    html.end_form()
+
+
+def bulk_collect_cleaned_attributes():
+    to_clean = []
+    for attr in host_attributes:
+        attrname = attr.name()
+        if html.get_checkbox("_clean_" + attrname) == True:
+            to_clean.append(attrname)
+    return to_clean
+
+
+def bulk_cleanup_attributes(hosts):
+    num_shown = 0
+    for attr in host_attributes:
+        attrname = attr.name()
+
+        # only show attributes that at least on host have set
+        num_haveit = 0
+        for hostname, host in hosts.items():
+            if attrname in host:
+                num_haveit += 1
+
+        if num_haveit == 0:
+            continue
+
+        num_shown += 1
+        # Legend and Help
+        html.write("<tr><td class=legend>%s" % attr.title())
+        if attr.help():
+            html.write("<br><i>%s</i>" % attr.help())
+        html.write("</td>")
+        html.write("<td class=content>")
+        html.checkbox("_clean_%s" % attrname, False)
+        html.write(" clean this attribute on <b>%s</b> hosts" % 
+            (num_haveit == len(hosts) and "all selected" or str(num_haveit)))
+        html.write("</td></tr>")
+
+    return num_shown > 0
+
+        
+
 
 
 #   +----------------------------------------------------------------------+
@@ -2204,8 +2302,17 @@ class NagiosTextAttribute(TextAttribute):
 # A selection dropdown for a host tag
 class HostTagAttribute(Attribute):
     def __init__(self, nr, tag_definition):
-        title, self._taglist = tag_definition
-        name = "tag_%d" % nr
+        # In newer days, the tag defitions contain a third
+        # element: the id of the tag group - written at the
+        # beginning of the tuple. If that is present, we use
+        # it as id, otherwise we use the number.
+        if len(tag_definition) >= 3:
+            name = "tag_" + tag_definition[0]
+            tag_definition = tag_definition[1:]
+        else:
+            name = "tag_%d" % nr
+
+        title, self._taglist = tag_definition 
         Attribute.__init__(self, name, title, "", self._taglist[0][0])
 
     def paint(self, value, hostname):
@@ -2307,18 +2414,17 @@ def collect_attributes(do_validate = True):
 # "folder" -> properies of folder or file
 # "search" -> search dialog
 # "bulk"   -> bulk change
-def configure_attributes(hosts, for_what):
+def configure_attributes(hosts, for_what, parent):
     # html.write("<pre>%s</pre>" % pprint.pformat(hosts))
 
     for attr in host_attributes:
+        attrname = attr.name()
 
         # In folder/file not all attributes are shown
         if for_what == "folder" and not attr.show_in_folder():
             continue
 
-        attrname = attr.name()
-        # Determine, if this attribute has the same setting for
-        # all hosts.
+        # "bulk": determine, if this attribute has the same setting for all hosts.
         values = set([])
         num_haveit = 0
         for hostname, host in hosts.items():
@@ -2326,30 +2432,40 @@ def configure_attributes(hosts, for_what):
                 num_haveit += 1
                 values.add(host[attrname]) 
 
-        # Collect inherited attributes (in case of folder and host)
-        inherited_from = None
+        # The value of this attribute is unique amongst all hosts if
+        # either no host has a value for this attribute, or all have
+        # one and have the same value
+        unique = num_haveit == 0 or (len(values) == 1 and num_haveit == len(hosts))
+
         if for_what in [ "host", "folder" ]:
-            value = hosts.values()[0]
-            if for_what == "host":
-                container = g_file
-                what = "file"
-                url = make_link_to([("mode", "editfile")], g_folder["path"], g_file["name"])
-            else:
-                container = value[None] # Hack. Get parent this way
-                what = "folder"
+            host = hosts.values()[0]
 
-            while container:
-                if attrname in container.get("attributes", {}):
-                    if what != "file":
-                        url = make_link_to([("mode", "editfolder")], container["path"])
-                    inherited_from = _("Inherited from ") + '<a href="%s">%s</a>' % (url, container["title"])
-                    inherited_value = container["attributes"][attrname]
-                    break
-                container = container.get("parent")
-                what = "folder"
+        # Collect information about attribute values inherited from file and folder.
+        # This information is just needed for informational display to the user.
+        # This does not apply in "search" mode. 
+        inherited_from = None
+        inherited_value = None
 
-            if not container: # We are the root folder:
-                inherited_value = attr.default_value()
+        if for_what == "host":
+            what = "file"
+            url = make_link_to([("mode", "editfile")], g_folder["path"], g_file["name"])
+        else:
+            what = "folder"
+
+        container = parent
+        while container:
+            if attrname in container.get("attributes", {}):
+                if what != "file":
+                    url = make_link_to([("mode", "editfolder")], container["path"])
+                inherited_from = _("Inherited from ") + '<a href="%s">%s</a>' % (url, container["title"])
+                inherited_value = container["attributes"][attrname]
+                break
+            container = container.get("parent")
+            what = "folder"
+
+        if not container: # We are the root folder - we inherit the default values
+            inherited_from = _("Default value")
+            inherited_value = attr.default_value()
 
         # Legend and Help
         html.write("<tr><td class=legend>%s" % attr.title())
@@ -2358,58 +2474,66 @@ def configure_attributes(hosts, for_what):
         html.write("</td>")
 
         # Checkbox for activating this attribute
+
         # Determine current state of visibility: If the form has already
         # been submitted (i.e. search or input error), then we take the
         # previous state of the box. In search mode we make those boxes
         # active that have an empty string as default value (simple
         # text boxed). In bulk mode we make those attributes active that
-        # have a value unique over all hosts.
-        checkbox_name = "_change_%s" % attr.name()
+        # have an explicitely set value over all hosts.
+        # In host and folder mode we make those
+        # attributes active that are currently set.
+
+        checkbox_name = "_change_%s" % attrname
         cb = html.get_checkbox(checkbox_name)
         if cb != None:
             active = cb # get previous state of checkbox
         elif for_what == "search":
-            active  = attr.default_value() == "" # show empty text search fields always
+            active = attr.default_value() == "" # show empty text search fields always
         elif for_what == "bulk":
-            active = len(values) == 1 # show common values
-        elif for_what == "host" and inherited_from == None: # nothing inherited: make active
-            active = True
+            active = unique and len(values) > 0
         else: # host, folder
-            active = attrname in value
-            # html.write("<pre>%s</pre>" % pprint.pformat(value))
-
-        # html.write("<pre>%s</pre>" % pprint.pformat(values))
+            active = attrname in host
 
         html.write('<td class=checkbox>')
         html.checkbox(checkbox_name, active, 
-            onchange="wato_toggle_attribute(this, '%s');" % attr.name() ) # Only select if value is unique
+            onchange="wato_toggle_attribute(this, '%s');" % attrname ) # Only select if value is unique
         html.write("</td>")
 
+
+        # Now comes the input fields and the inherited / default values
+        # as two DIV elements, one of which is visible at one time.
         html.write('<td class=content>')
 
-        # Input fields in case the checkbox is active
+        # DIV with the input elements
         html.write('<div id="attr_entry_%s" style="%s">' 
           % (attrname, (not active) and "display: none" or ""))
         if len(values) == 1:
-            defvalue = values.pop()
+            defvalue = list(values)[0]
         else:
             defvalue = attr.default_value()
         attr.render_input(defvalue)
         html.write("</div>")
 
-        # Show inherited / default value or emtpy field in 
-        # case of inactive checkbox
+        # DIV with actual / inherited / default value
         html.write('<div class="inherited" id="attr_default_%s" style="%s">' 
           % (attrname, active and "display: none" or ""))
-        if inherited_from:
-            html.write("<h3>" + inherited_from + "</h3>")
-        elif for_what != "bulk":
-            html.write("<h3>" + _("Default value") + "</h3>")
-        else:
-            html.write(_("<i>Leave this value unchanged</i>"))
 
-        if for_what not in [ "bulk", "search" ]:
+        # in bulk mode we show inheritance only if *all* hosts inherit
+        if for_what == "bulk":
+            if num_haveit == 0:
+                html.write("<h3>" + inherited_from + "</h3>")
+                value = inherited_value
+            elif not unique:
+                html.write(_("<i>This value differs between the selected hosts.</i>")) 
+            else:
+                value = list(values)[0]
+
+        elif for_what in [ "host", "folder" ]:
+            html.write("<h3>" + inherited_from + "</h3>")
             value = inherited_value
+
+        if for_what != "search" and not (for_what == "bulk" and not unique):
             tdclass, content = attr.paint(value, "")
             if not content:
                 content = "<i>" + _("(empty)") + "</i>"
@@ -2467,6 +2591,7 @@ mode_functions = {
    "search"         : mode_search,
    "bulkinventory"  : mode_bulk_inventory,
    "bulkedit"       : mode_bulk_edit,
+   "bulkcleanup"    : mode_bulk_cleanup,
    "changelog"      : mode_changelog,
    "file"           : mode_file,
 }

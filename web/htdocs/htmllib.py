@@ -361,11 +361,16 @@ class html:
 
     # Get value of checkbox. Return True, False or None
     def get_checkbox(self, varname):
-        if not self.var("filled_in") == self.form_name: # this form filled in
-            return None
-        else:
-            value = self.req.vars.get(varname, "")
-            return not not value
+        try:
+            if not self.var("filled_in") == self.form_name: # this form filled in
+                return None
+        except:
+            # self.form_name not set, we have no form
+            if not self.var("filled_in"):
+                return None
+
+        value = self.req.vars.get(varname, "")
+        return not not value
 
     def datetime_input(self, varname, default_value):
         try:

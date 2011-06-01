@@ -1629,11 +1629,15 @@ table.add_snapin i {
     position: relative;*/
 }
 
+.wato table.form td.legend { 
+    border-right-style: none;
+}
+
 .wato table.form td.checkbox {
     width: 40px;
     height: 40px;
-    vertical-align: middle;
-    text-align: center;
+    vertical-align: top;
+    text-align: right;
     border: 1px solid white;
     border-left-style: none;
 }

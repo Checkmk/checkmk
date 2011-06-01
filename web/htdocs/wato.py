@@ -849,12 +849,6 @@ def mode_search(phase):
         html.begin_form("search")
         html.write("<table class=form>")
 
-        # Wether to search only in this folder
-        html.write("<tr><td class=legend></td><td colspan=2 class=content>")
-        html.checkbox("onlyhere", True)
-        html.write(_(" Search only in the folder <b>%s</b> and below") % g_folder["title"])
-        html.write("</td></tr>")
-
         # host name
         html.write("<tr><td class=legend>" + _("Hostname") + "</td><td class=content></td><td class=content>")
         html.text_input("host")
@@ -866,8 +860,11 @@ def mode_search(phase):
         
         # Button
         html.write('<tr><td class="buttons" colspan=3>')
-        html.button("save", _("Search"), "submit")
+        html.button("_global", _("Search globally"), "submit")
+        html.button("_local", _("Search in %s") % g_folder["title"], "submit")
         html.write("</td></tr>\n")
+        
+
         
         html.write("</table>\n")
         html.hidden_fields()
@@ -882,7 +879,7 @@ def mode_search(phase):
             crit.update(collect_attributes(do_validate = False))
 
             html.write("<h3>" + _("Search results:") + "</h3>")
-            if html.var("onlyhere"):
+            if html.has_var("_local"):
                 folder = g_folder
             else:
                 folder = g_root_folder

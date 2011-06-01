@@ -254,7 +254,7 @@ def show_filefolder_list(thing, what, title):
                         tdclass, content = attr.paint(entry["attributes"][attrname], "")
                     else:
                         tdclass, content = "", ""
-                    html.write('<td class"%s">%s</td>' % (tdclass, content))
+                    html.write('<td class="%s">%s</td>' % (tdclass, content))
 
             # Internal filename
             if not config.wato_hide_filenames:
@@ -332,10 +332,9 @@ def mode_editfolder(phase, what, new):
         # Roles and Permissions
         roles = [ role for role in config.roles if html.var("role_" + role) ]
 
-        # Attributes to inherit to hosts
         attributes = collect_attributes()
-        # html.write("<pre>%s</pre>" % pprint.pformat(attributes))
-        
+        attributes_changed = not new and attributes != the_thing.get("attributes", {})
+
         if new:
             newpath = g_folder["path"] + (name,)
             new_thing = { 
@@ -370,11 +369,13 @@ def mode_editfolder(phase, what, new):
         # Due to changes in folder/file attributes, host files
         # might need to be rewritten in order to reflect Changes
         # in Nagios-relevant attributes.
-        if not new:
+        if attributes_changed:
             if what == "file":
                 rewrite_config_file(g_folder, the_thing)
             else:
                 rewrite_config_files_below(the_thing) # due to inherited attributes
+            log_pending(the_thing, "edit-" + what, _("Changed attributes of %s %s") % (the_what, title))
+            call_hook_host_changed(the_thing)
 
         return "folder"
 
@@ -762,7 +763,7 @@ def mode_edithost(phase, new):
             html.set_focus("host")
         html.write("</td></tr>\n")
 
-        configure_attributes({hostname: host}, "host", g_folder)
+        configure_attributes({hostname: host}, "host", g_file)
 
         html.write('<tr><td class="buttons" colspan=3>')
         html.button("save", _("Save &amp; Finish"), "submit")
@@ -2169,7 +2170,7 @@ class Attribute:
 
     # Render HTML code displaying a value
     def paint(self, value, hostname):
-        return "", ""
+        return "", value
 
     # Wether or not to show this attribute in tables.
     # This value is set by declare_host_attribute
@@ -2180,6 +2181,11 @@ class Attribute:
     # files and folders (as defaule value for the hosts)
     def show_in_folder(self):
         return self._show_in_folder
+
+    # Wether it is allowed that a host has no explicit
+    # value here (inherited or direct value)
+    def is_mandatory(self):
+        return False
 
     # Render HTML input fields displaying the value and 
     # make it editable. If filter == True, then the field
@@ -2206,7 +2212,7 @@ class Attribute:
     # Checks if the give value matches the search attributes
     # that are represented by the current HTML variables.
     def filter_matches(self, crit, value, hostname):
-        return False
+        return crit == value
 
 
 # A simple text attribute. It is stored in 
@@ -2221,6 +2227,9 @@ class TextAttribute(Attribute):
             return "", ""
         else:
             return "", value
+
+    def is_mandatory(self):
+        return self._mandatory
 
     def render_input(self, value):
         if value == None: 
@@ -2250,7 +2259,7 @@ class IPAddressAttribute(TextAttribute):
         TextAttribute.__init__(self, name, title, help, "", mandatory = True)
 
     def from_html_vars(self):
-        value = html.var_utf8("attr_" + self.name())
+        value = html.var("attr_" + self.name())
         if not value:
             value = None
         return value
@@ -2265,6 +2274,9 @@ class IPAddressAttribute(TextAttribute):
             text = _("(hostname not resolvable!)")
             tdclass = 'dnserror'
         return ip, tdclass, text
+    
+    def is_mandatory(self):
+       return True # empty value allowed, but missing not
 
     def paint(self, value, hostname):
         if value == None:
@@ -2339,12 +2351,6 @@ class HostTagAttribute(Attribute):
             value = None
         return value
     
-    def filter_matches(self, crit, value, hostname):
-        if crit == "|": 
-            return True # no tag selected
-        else:
-            return crit == value 
-
 
     # Special function for computing the setting of a specific
     # tag group from the total list of tags of a host
@@ -2458,6 +2464,7 @@ def configure_attributes(hosts, for_what, parent):
         # This does not apply in "search" mode. 
         inherited_from = None
         inherited_value = None
+        has_inherited = False
 
         if for_what == "host":
             what = "file"
@@ -2472,7 +2479,9 @@ def configure_attributes(hosts, for_what, parent):
                     url = make_link_to([("mode", "editfolder")], container["path"])
                 inherited_from = _("Inherited from ") + '<a href="%s">%s</a>' % (url, container["title"])
                 inherited_value = container["attributes"][attrname]
+                has_inherited = True
                 break
+
             container = container.get("parent")
             what = "folder"
 
@@ -2505,8 +2514,11 @@ def configure_attributes(hosts, for_what, parent):
             active = attr.default_value() == "" # show empty text search fields always
         elif for_what == "bulk":
             active = unique and len(values) > 0
-        else: # host, folder
+        elif for_what == "folder":
             active = attrname in host
+        else: # "host"
+            active = attrname in host or \
+              (not (has_inherited and attr.is_mandatory()))
 
         html.write('<td class=checkbox>')
         html.checkbox(checkbox_name, active, 
@@ -2563,7 +2575,7 @@ def configure_attributes(hosts, for_what, parent):
 def effective_attributes(host, container):
     chain = [ host ]
     while container:
-        chain.append(container.get("attributes"))
+        chain.append(container.get("attributes", {}))
         container = container.get("parent")
 
     eff = {}
@@ -2578,6 +2590,58 @@ def effective_attributes(host, container):
 
     return eff
     
+
+
+#   +----------------------------------------------------------------------+
+#   |                     _   _             _                              |
+#   |                    | | | | ___   ___ | | _____                       |
+#   |                    | |_| |/ _ \ / _ \| |/ / __|                      |
+#   |                    |  _  | (_) | (_) |   <\__ \                      |
+#   |                    |_| |_|\___/ \___/|_|\_\___/                      |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Hooks are a ways plugins can add own activities at certain points    |
+#   | of time, e.g. when a host as been edited of the changes have been    | 
+#   | activated.                                                           |
+#   +----------------------------------------------------------------------+ 
+
+# Inform plugins about changes of hosts. the_thing can be:
+# a folder, a file or a host
+
+hooks = {}
+
+def register_hook(name, func):
+    hooks.setdefault(name, []).append(func)
+
+def call_hooks(name, *args):
+    for hk in hooks.get(name, []):
+        hk(*args)
+
+def call_hook_host_changed(the_thing): # called for file or folder
+    if "hosts-changed" in hooks:
+        hosts = collect_hosts(the_thing)
+        call_hooks("hosts-changed", hosts)
+
+    # The same with all hosts!
+    if "all-hosts-changed" in hooks:
+        hosts = collect_hosts(g_root_folder)
+        call_hooks("all-hosts-changed", hosts)
+
+
+def collect_hosts(the_thing):
+    if "folders" in the_thing: # a folder
+        hosts = {}
+        for fi in the_thing.get("files", []).values():
+            hosts.update(collect_hosts(fi))
+        for fo in the_thing["folders"].values():
+            hosts.update(collect_hosts(fo))
+        return hosts
+    elif "num_hosts" in the_thing: # a file
+        hosts = read_configuration_file(the_thing["parent"], the_thing)
+        effective_hosts = dict([ (hn, effective_attributes(h, the_thing)) 
+                               for (hn, h) in hosts.items() ])
+        return effective_hosts
+
 
 #   +----------------------------------------------------------------------+
 #   |                   ____  _             _                              |

@@ -744,6 +744,7 @@ def mode_edithost(phase, new):
                 else:
                     log_pending(hostname, "edit-host", _("Edited properties of host [%s]") % hostname)
                 write_the_configuration_file()
+                call_hook_host_changed(g_file)
             if new:
                 return go_to_services and "firstinventory" or "file"
             else:
@@ -1071,6 +1072,7 @@ def mode_bulk_edit(phase):
                 host.update(changed_attributes)
                 log_pending(hostname, "bulk-edit", _("Changed attributes of host %s in bulk mode") % hostname)
             write_the_configuration_file()
+            call_hook_host_changed(g_file)
             return "file"
         return
 
@@ -1117,6 +1119,7 @@ def mode_bulk_cleanup(phase):
                     log_pending(hostname, "bulk-cleanup", _("Cleaned %d attributes of host %s in bulk mode") % (
                     num_cleaned, hostname))
             write_the_configuration_file()
+            call_hook_host_changed(g_file)
             return "file"
         return
 
@@ -1913,6 +1916,7 @@ def delete_host_after_confirm(delname):
         write_the_configuration_file()
         log_pending(delname, "delete-host", _("Deleted host %s") % delname)
         check_mk_automation("delete-host", [delname])
+        call_hook_host_changed(g_file)
         return "file"
     elif c == False: # not yet confirmed
         return ""
@@ -1929,6 +1933,7 @@ def delete_hosts_after_confirm(hosts):
             check_mk_automation("delete-host", [delname])
             log_pending(delname, "delete-host", _("Deleted host %s") % delname)
         write_the_configuration_file()
+        call_hook_host_changed(g_file)
         return "file", _("Successfully deleted %d hosts") % len(hosts)
     elif c == False: # not yet confirmed
         return ""
@@ -1972,6 +1977,7 @@ def delete_file_after_confirm(del_file):
         del g_folder["files"][del_file["name"]]
         delete_configuration_file(g_folder, del_file)
         save_folder_config()
+        call_hook_host_changed(g_folder)
         return "folder"
     elif c == False: # not yet confirmed
         return ""
@@ -2040,14 +2046,15 @@ def move_hosts_to(hostnames, target_filename):
         g_file["num_hosts"] -= 1
         del g_hosts[hostname]
         if len(hostnames) == 1:
-            log_audit(hostname, "move-host", _("Moved host from %s to %s") %
+            log_pending(hostname, "move-host", _("Moved host from %s to %s") %
                 (file_os_path(g_file), file_os_path(target_file)))
         num_moved += 1
 
     write_configuration_file(target_folder, target_file, target_hosts)
     write_the_configuration_file()
+    call_hook_host_changed(g_root_folder)
     if len(hostnames) > 1:
-        log_audit(target_file, "move-host", _("Moved %d hosts from %s to %s") %
+        log_pending(target_file, "move-host", _("Moved %d hosts from %s to %s") %
             (num_moved, file_os_path(g_file), file_os_path(target_file)))
     return num_moved 
         
@@ -2441,12 +2448,13 @@ def configure_attributes(hosts, for_what, parent):
             continue
 
         # "bulk": determine, if this attribute has the same setting for all hosts.
-        values = set([])
+        values = []
         num_haveit = 0
         for hostname, host in hosts.items():
             if attrname in host:
                 num_haveit += 1
-                values.add(host[attrname]) 
+                if host[attrname] not in values:
+                    values.append(host[attrname])
 
         # The value of this attribute is unique amongst all hosts if
         # either no host has a value for this attribute, or all have
@@ -2531,7 +2539,7 @@ def configure_attributes(hosts, for_what, parent):
         html.write('<div id="attr_entry_%s" style="%s">' 
           % (attrname, (not active) and "display: none" or ""))
         if len(values) == 1:
-            defvalue = list(values)[0]
+            defvalue = values[0]
         else:
             defvalue = attr.default_value()
         attr.render_input(defvalue)
@@ -2549,7 +2557,7 @@ def configure_attributes(hosts, for_what, parent):
             elif not unique:
                 html.write(_("<i>This value differs between the selected hosts.</i>")) 
             else:
-                value = list(values)[0]
+                value = values[0]
 
         elif for_what in [ "host", "folder" ]:
             html.write("<h3>" + inherited_from + "</h3>")

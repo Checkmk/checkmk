@@ -158,6 +158,21 @@ class html:
         self.output_format = "html"
         self.status_icons = {}
 
+    def plugin_stylesheets(self): 
+        global plugin_stylesheets
+        try:
+            return plugin_stylesheets
+        except:
+            plugins_paths = [ defaults.web_dir + "/htdocs/css" ]
+            if defaults.omd_root:
+                plugins_paths.append(defaults.omd_root + "/local/share/check_mk/web/htdocs/css") 
+            plugin_stylesheets = set([])
+            for dir in plugins_paths:
+                for fn in os.listdir(dir):
+                    if fn.endswith(".css"):
+                        plugin_stylesheets.add(fn) 
+            return plugin_stylesheets
+
     def set_output_format(self, f):
         self.output_format = f
 
@@ -455,8 +470,14 @@ class html:
             self.write(title)
             self.write('''</title>
                 <link rel="stylesheet" type="text/css" href="check_mk.css">''')
+
+            # Load all style sheets in htdocs/css
+            for css in self.plugin_stylesheets():
+               self.write('                <link rel="stylesheet" type="text/css" href="css/%s">' % css)
+
             if config.custom_style_sheet:
                self.write('                <link rel="stylesheet" type="text/css" href="%s">' % config.custom_style_sheet)
+
             self.write('''
                 <script type='text/javascript' src='js/check_mk.js'></script>
                 <script type='text/javascript' src='js/hover.js'></script>

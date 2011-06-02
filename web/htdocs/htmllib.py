@@ -215,6 +215,11 @@ class html:
         if value != None:
             self.write("<input type=hidden name=%s value=\"%s\">\n" % (var, attrencode(value)))
 
+    # Beware: call this method just before end_form(). It will
+    # add all current non-underscored HTML variables as hiddedn
+    # field to the form - *if* they are not used in any input
+    # field. (this is the reason why you must not add any further
+    # input fields after this method has been called).
     def hidden_fields(self, varlist = None, **args):
         add_action_vars = args.get("add_action_vars", False)
         if varlist != None:
@@ -325,7 +330,16 @@ class html:
         error = self.user_errors.get(varname)
         if error:
             html = "<x class=inputerror>"
-        value = self.req.vars.get(varname, deflt)
+        # Problem with checkboxes: The browser will add the variable
+        # only to the URL if the box is checked. So in order to detect
+        # wether we should add the default value, we need to detect
+        # if the form is printed for the first time. This is the
+        # case if "filled_in" is not set.
+        if not self.has_var("filled_in"):
+            value = self.req.vars.get(varname, deflt)
+        else:
+            value = self.req.vars.get(varname, "")
+
         if value != "" and value != False:
             checked = " CHECKED"
         else:
@@ -672,7 +686,7 @@ class html:
                    'src="images/tree_%s.png" %s>' % 
                 (treename, id, img_num, onclick))
         if title[0] == '<': # custom HTML code
-            self.write(title)
+            self.write(title + "<br>")
         else:
             self.write('<b class="treeangle title" class=treeangle %s>%s</b><br>' % 
                      (onclick, title))

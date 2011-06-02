@@ -32,6 +32,10 @@ class LocalizeException(Exception):
     def __str__(self):
         return self.reason
 
+def verbose_system(command):
+    if opt_verbose:
+        sys.stdout.write("Running %s...\n" % command)
+    return os.system(command)
 
 domain = 'multisite'
 
@@ -117,21 +121,23 @@ def get_languages():
 
 
 def init_files(lang):
-    global po_file, local_po_file, mo_file, local_mo_file
+    global po_file, mo_file
     po_file = locale_base + '/%s/LC_MESSAGES/%s.po' % (lang, domain)
     mo_file = locale_base + '/%s/LC_MESSAGES/%s.mo' % (lang, domain)
 
 
 def localize_update_po():
     # Merge the current .pot file with a given .po file
-    if os.system('msgmerge -U %s %s >/dev/null' % (po_file, pot_file)) != 0:
+    if opt_verbose:
+        sys.stdout.write("Merging translations...")
+    if verbose_system('msgmerge -U %s %s >/dev/null' % (po_file, pot_file)) != 0:
         sys.stderr.write('Failed!\n')
     else:
         sys.stdout.write('Success! Output: %s\n' % po_file)
 
 
 def localize_init_po(lang):
-    if os.system('msginit -i %s --no-translator -l %s -o %s >/dev/null' % \
+    if verbose_system('msginit -i %s --no-translator -l %s -o %s >/dev/null' % \
                                             (pot_file, lang, po_file)) != 0:
         sys.stderr.write('Failed!\n')
 
@@ -145,7 +151,7 @@ def localize_sniff():
     else:
         paths = web_dir
 
-    if os.system('xgettext --no-wrap --sort-output --force-po '
+    if verbose_system('xgettext --no-wrap --sort-output --force-po '
                  '-L Python --from-code=utf-8 --omit-header '
                  '-o %s $(find %s -type f -name \*.py | xargs) >/dev/null' % \
                    (pot_file, paths)) != 0:
@@ -201,7 +207,7 @@ def localize_edit(lang):
     if not os.path.exists(editor): 
         editor = 'vi' 
 
-    if 0 == os.system("%s '%s'" % (editor, po_file)):
+    if 0 == verbose_system("%s '%s'" % (editor, po_file)):
         localize_compile(lang)
     else:
         sys.stderr.write("Aborted.\n")
@@ -241,7 +247,7 @@ def localize_compile(lang):
     if not os.path.exists(po_file):
         raise LocalizeException('The .po file %s does not exist.' % po_file)
 
-    if os.system('msgfmt %s -o %s' % (po_file, mo_file)) != 0:
+    if verbose_system('msgfmt %s -o %s' % (po_file, mo_file)) != 0:
         sys.stderr.write('Failed!\n')
     else:
         sys.stdout.write('Success! Output: %s\n' % mo_file)

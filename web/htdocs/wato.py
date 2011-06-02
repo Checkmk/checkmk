@@ -42,9 +42,9 @@ from lib import *
 import htmllib
 
 config.declare_permission("use_wato",
-     "Use WATO",
-     "This permissions allows users to use WATO - Check_MK's Web Administration Tool.<br>"
-     "Please make sure, that they also have the permission for the WATO snapin.",
+     _("Use WATO"),
+     _("This permissions allows users to use WATO - Check_MK's Web Administration Tool.<br>"
+     "Please make sure, that they also have the permission for the WATO snapin."),
      [ "admin", "user" ])
 
 conf_dir = defaults.var_dir + "/web/wato"
@@ -83,7 +83,7 @@ def page_handler(h):
     html = h
 
     if not config.may("use_wato"):
-        raise MKAuthException("You are not allowed to use WATO!")
+        raise MKAuthException(_("You are not allowed to use WATO!"))
 
     load_folder_config()
     get_folder_and_file() # sets g_root_folder and g_pathname
@@ -164,12 +164,12 @@ def page_handler(h):
 
 def mode_folder(phase):
     if phase == "title":
-        return "Folder contents"
+        return _("Folder contents")
 
     elif phase == "buttons":
-        html.context_button("Properties", make_link_to([("mode", "editfolder")], g_folder["path"]))
-        html.context_button("New folder", make_link([("mode", "newfolder")]))
-        html.context_button("New host list", make_link([("mode", "newfile")]))
+        html.context_button(_("Properties"), make_link_to([("mode", "editfolder")], g_folder["path"]))
+        html.context_button(_("New folder"), make_link([("mode", "newfolder")]))
+        html.context_button(_("New host list"), make_link([("mode", "newfile")]))
         changelog_button()
         search_button()
     
@@ -179,25 +179,25 @@ def mode_folder(phase):
             if delname in g_folder["folders"]:
                 del_folder = g_folder["folders"][delname]
                 if len(del_folder["files"]) > 0:
-                    raise MKUserError(None, "The folder %s cannot be deleted, it still contains some files."
+                    raise MKUserError(None, _("The folder %s cannot be deleted, it still contains some files.")
                     % del_folder["title"])
                 if len(del_folder["folders"]) > 0:
-                    raise MKUserError(None, "The folder %s cannot be deleted, it still contains subfolders."
+                    raise MKUserError(None, _("The folder %s cannot be deleted, it still contains subfolders.")
                     % del_folder["title"])
                 return delete_folder_after_confirm(del_folder)
             elif delname in g_folder["files"]:
                 del_file = g_folder["files"][delname]
                 return delete_file_after_confirm(del_file)
             else:
-                raise MKGeneralException("You called this page with a non-existing folder/file %s" % delname)
+                raise MKGeneralException(_("You called this page with a non-existing folder/file %s") % delname)
 
     else:
-        html.write("Contents of folder ")
+        html.write(_("Contents of folder "))
         render_folder_path()
         html.write("<p>")
 
-        show_filefolder_list(g_folder, "folder", "Subfolders")
-        show_filefolder_list(g_folder, "file",   "Host lists")
+        show_filefolder_list(g_folder, "folder", _("Subfolders"))
+        show_filefolder_list(g_folder, "file",   _("Host lists"))
 
 
 def show_filefolder_list(thing, what, title):
@@ -205,10 +205,10 @@ def show_filefolder_list(thing, what, title):
     if len(thing[what + "s" ]) > 0:
         html.write("<h3>%s</h3>" % title)
         html.write("<table class=data>\n")
-        html.write("<tr><th>Actions</th><th>Title</th>")
+        html.write("<tr><th>" + _("Actions") + "</th><th>" + _("Title") + "</th>")
         if not config.wato_hide_filenames:
             html.write("<th>%s</th>" % what.title())
-        html.write("<th>Hosts</th></tr>\n")
+        html.write("<th>" + _("Hosts") + "</th></tr>\n")
 
         odd = "even"
 
@@ -229,10 +229,10 @@ def show_filefolder_list(thing, what, title):
             enter_url    = make_link_to([], folder_path, filename)
 
             html.write("<td>")
-            html.buttonlink(edit_url, "Properties")
-            html.buttonlink(delete_url, "Delete")
+            html.buttonlink(edit_url, _("Properties"))
+            html.buttonlink(delete_url, _("Delete"))
             if what == "file":
-                html.buttonlink(enter_url, "Hosts")
+                html.buttonlink(enter_url, _("Hosts"))
             html.write("</td>")
 
 
@@ -251,7 +251,7 @@ def show_filefolder_list(thing, what, title):
             html.write("</tr>")
         html.write("</table>")
     else:
-        html.write("<h3>There are no %s in this folder.</h3>" % title.lower())
+        html.write("<h3>" + _("There are no %s in this folder.") % title.lower() + "</h3>" )
     
 
 
@@ -261,19 +261,20 @@ def mode_editfolder(phase, what, new):
 
     if what == "folder":
         the_thing = g_folder
+        the_what = _("folder")
     else:
         the_thing = g_file
+        the_what = _("host list")
 
     # In editing mode, we always edit the *current* folder, i.e. that
     # one g_folder points to. In new mode the new folder is created
     # within g_folder
     if new:
-        page_title = "Create new " + what
+        page_title = _("Create new ") + the_what
         name, title, roles = None, None, []
         mode = "new"
     else:
-        page_title = "Edit %s %s" % (
-                      what == "file" and "host list" or "Folder", g_folder["name"])
+        page_title = _("Edit") + (" %s %s" % (the_what, g_folder["name"]))
         if what == "file":
             page_title += "/" + g_file["name"]
         name  = the_thing["name"]
@@ -289,16 +290,16 @@ def mode_editfolder(phase, what, new):
             target_folder = find_folder(g_folder["path"][:-1])
         else:
             target_folder = g_folder
-        html.context_button("Abort", make_link([("mode", "folder")]))
+        html.context_button(_("Abort"), make_link([("mode", "folder")]))
         if what == "file" and not new:
-            html.context_button("Hosts", make_link([("mode", "file")]))
+            html.context_button(_("Hosts"), make_link([("mode", "file")]))
             
 
     elif phase == "action":
         # Title
         title = html.var_utf8("title")
         if not title:
-            raise MKUserError("title", "Please supply a title.")
+            raise MKUserError("title", _("Please supply a title."))
 
         # OS filename
         if new:
@@ -331,7 +332,7 @@ def mode_editfolder(phase, what, new):
                 g_files[newpath] = new_thing
             
             g_folder[what + "s"][name] = new_thing
-            log_audit(new_thing, "new-" + what, u"Created new %s %s" % (what, title))
+            log_audit(new_thing, "new-" + what, _("Created new %s %s") % (the_what, title))
 
         else:
             the_thing["title"] = title
@@ -358,16 +359,16 @@ def mode_editfolder(phase, what, new):
         if not (what == "folder" and not new and g_folder == g_root_folder):
             if not config.wato_hide_filenames:
                 if what == "folder":
-                    html.write("<tr><td class=legend>Internal directory name<br>"
-                        "<i>This is the name of subdirectory where the files and<br> "
-                        "other folders will be created. You cannot change this later</i>"
-                        "</td><td class=content>")
+                    html.write("<tr><td class=legend>" + _("Internal directory name") + "<br><i>"
+                        + _("This is the name of subdirectory where the files and<br> "
+                        "other folders will be created. You cannot change this later") +
+                        "</i></td><td class=content>")
                 else:
-                    html.write("<tr><td class=legend>Internal file name<br>"
-                        "<i>This is the name of Check_MK configuration file where<br>"
+                    html.write("<tr><td class=legend>" + _("Internal file name") + "<br><i>"
+                        + _("This is the name of Check_MK configuration file where<br>"
                         "the hosts will be created. It well automatically get the<br>"
                         "extension <tt>.mk</tt>. Do not specify this extension here.<br>"
-                        "You cannot change the file name later.</i>"
+                        "You cannot change the file name later.") + "</i>"
                         "</td><td class=content>")
 
                 if new:
@@ -378,14 +379,14 @@ def mode_editfolder(phase, what, new):
                 html.write("</td></tr>\n")
 
         # permissions
-        html.write("<tr><td class=legend>Grant access to</td><td class=content>")
+        html.write("<tr><td class=legend>" + _("Grant access to") + "</td><td class=content>")
         for role in config.roles:
             html.checkbox("role_" + role, role in g_folder["roles"])
             html.write(" " + role + "<br>")
         html.write("</td></tr>")
 
         html.write('<tr><td colspan=2 class="buttons">')
-        html.button("save", "Save &amp; Finish", "submit")
+        html.button("save", _("Save &amp; Finish"), "submit")
         html.write("</td></tr>\n")
         html.write("</table>\n")
         html.hidden_fields()
@@ -395,16 +396,16 @@ def mode_editfolder(phase, what, new):
 def check_wato_filename(htmlvarname, name, what):
     if what == "file":
         if not name.endswith(".mk"):
-            raise MKUserError(htmlvarname, "The name of the file must end with .mk")
+            raise MKUserError(htmlvarname, _("The name of the file must end with .mk"))
         name = name[:-3]
     if what == "folder" and name in g_folder["folders"]:
-        raise MKUserError(htmlvarname, "A folder with that name already exists.")
+        raise MKUserError(htmlvarname, _("A folder with that name already exists."))
     elif what == "file" and name in g_folder["files"]:
-        raise MKUserError(htmlvarname, "A file with that name already exists.")
+        raise MKUserError(htmlvarname, _("A file with that name already exists."))
     if not name:
-        raise MKUserError(htmlvarname, "Please specify a name.")
+        raise MKUserError(htmlvarname, _("Please specify a name."))
     if not re.match("^[-a-z0-9A-Z_]*$", name):
-        raise MKUserError(htmlvarname, "Invalid %s name. Only the characters a-z, A-Z, 0-9, _ and - are allowed." % what)
+        raise MKUserError(htmlvarname, _("Invalid %s name. Only the characters a-z, A-Z, 0-9, _ and - are allowed.") % what)
 
 def create_wato_filename(title, what):
     basename = convert_title_to_filename(title)
@@ -457,9 +458,9 @@ def mode_file(phase):
         return "Hosts list"
 
     elif phase == "buttons":
-        html.context_button("Back", make_link_to([("mode", "folder")], g_folder["path"]))
-        html.context_button("Properties", make_link_to([("mode", "editfile")], g_folder["path"], g_file["name"]))
-        html.context_button("New host", make_link([("mode", "newhost")]))
+        html.context_button(_("Back"), make_link_to([("mode", "folder")], g_folder["path"]))
+        html.context_button(_("Properties"), make_link_to([("mode", "editfile")], g_folder["path"], g_file["name"]))
+        html.context_button(_("New host"), make_link([("mode", "newhost")]))
         changelog_button()
         search_button()
     
@@ -489,7 +490,7 @@ def mode_file(phase):
         selected_hosts = get_hostnames_from_checkboxes()
         if len(selected_hosts) == 0:
             raise MKUserError(None,
-            "Please select some hosts before doing bulk operations on hosts.")
+            _("Please select some hosts before doing bulk operations on hosts."))
 
         # Deletion
         if html.var("_bulk_delete"):
@@ -499,24 +500,24 @@ def mode_file(phase):
         if html.var("_bulk_move"):
             target_file = html.var("bulk_moveto")
             if not target_file:
-                raise MKUserError("bulk_moveto", "Please select the destination file")
+                raise MKUserError("bulk_moveto", _("Please select the destination file"))
             num_moved = move_hosts_to(selected_hosts, target_file)
-            return None, "Successfully moved %d hosts to %s" % (num_moved, target_file)
+            return None, _("Successfully moved %d hosts to %s") % (num_moved, target_file)
 
         elif html.var("_bulk_edit"):
             return "bulkedit"
 
     elif len(g_hosts) == 0:
-        html.write("There are no hosts in this file.")
+        html.write(_("There are no hosts in this file."))
 
     else:
-        html.write("Hosts in file ")
+        html.write(_("Hosts in file "))
         render_folder_path()
         html.write("<p>")
 
         html.begin_form("search")
         html.text_input("search")
-        html.button("_search", "Search")
+        html.button("_search", _("Search"))
         html.set_focus("search")
         html.hidden_fields()
         html.end_form()
@@ -528,8 +529,9 @@ def mode_file(phase):
         # Show table of hosts in this file
         html.begin_form("hosts", None, "POST")
         html.write("<table class=data>\n")
-        html.write("<tr><th></th><th></th><th>Hostname</th>"
-                   "<th>IP&nbsp;Address</th><th>Tags</th><th>Alias</th><th>Move To</th></tr>\n")
+        html.write("<tr><th></th><th></th><th>" + _("Hostname") + "</th>"
+                   "<th>" + _("IP&nbsp;Address") + "</th><th>" + _("Tags") + "</th><th>" 
+                   + _("Alias") + "</th><th>" + _("Move To") + "</th></tr>\n")
         odd = "odd"
 
         search_text = html.var("search")
@@ -558,10 +560,10 @@ def mode_file(phase):
 
 
             html.write("<td>")
-            html.buttonlink(edit_url, "Edit")
-            html.buttonlink(services_url, "Services")
-            html.buttonlink(clone_url, "Clone")
-            html.buttonlink(delete_url, "Delete")
+            html.buttonlink(edit_url, _("Edit"))
+            html.buttonlink(services_url, _("Services"))
+            html.buttonlink(clone_url, _("Clone"))
+            html.buttonlink(delete_url, _("Delete"))
             html.write("</td>")
 
             # Hostname with link to edit form
@@ -575,7 +577,7 @@ def mode_file(phase):
                     ipaddress = "%s&nbsp;(DNS)" % ip
                     tdclass = ' class="dns"'
                 except:
-                    ipaddress = "(hostname not resolvable!)"
+                    ipaddress = _("(hostname not resolvable!)")
                     tdclass = ' class="dnserror"'
             html.write("<td%s>%s</td>" % (tdclass, ipaddress))
 
@@ -590,10 +592,10 @@ def mode_file(phase):
         # bulk actions
         html.write('<tr class="data %s0"><td>' % odd)
         html.jsbutton('_markall', 'X', 'javascript:wato_check_all(\'wato_select\');')
-        html.write("</td><td colspan=6>On all selected hosts:\n")
-        html.button("_bulk_delete", "Delete")
-        html.button("_bulk_edit", "Edit")
-        html.button("_bulk_inventory", "Inventory")
+        html.write("</td><td colspan=6>" + _("On all selected hosts:\n"))
+        html.button("_bulk_delete", _("Delete"))
+        html.button("_bulk_edit", _("Edit"))
+        html.button("_bulk_inventory", _("Inventory"))
         host_move_combo(None)
         html.write("</td></tr>\n")
 
@@ -629,18 +631,18 @@ def mode_edithost(phase, new):
 
     clonename = html.var("clone")
     if clonename and clonename not in g_hosts:
-        raise MKGeneralException("You called this page with an invalid host name.")
+        raise MKGeneralException(_("You called this page with an invalid host name."))
     
     if clonename:
-        title = "Create clone of %s" % clonename
+        title = _("Create clone of %s") % clonename
         alias, ipaddress, tags = g_hosts[clonename]
         mode = "clone"
     elif not new and hostname in g_hosts:
-        title = "Edit host " + hostname
+        title = _("Edit host ") + hostname
         alias, ipaddress, tags = g_hosts[hostname]
         mode = "edit"
     else:
-        title = "Create new host"
+        title = _("Create new host")
         alias, ipaddress, tags = None, None, []
         mode = "new"
 
@@ -648,9 +650,9 @@ def mode_edithost(phase, new):
         return title
 
     elif phase == "buttons":
-        html.context_button("Abort", make_link([("mode", "file")]))
+        html.context_button(_("Abort"), make_link([("mode", "file")]))
         if not new:
-            html.context_button("Services", make_link([("mode", "inventory"), ("host", hostname)]))
+            html.context_button(_("Services"), make_link([("mode", "inventory"), ("host", hostname)]))
 
     elif phase == "action":
         if not new and html.var("delete"): # Delete this host
@@ -669,30 +671,30 @@ def mode_edithost(phase, new):
             try:
                 ip = socket.gethostbyname(hostname)
             except:
-                raise MKUserError("ipaddress", "Hostname <b><tt>%s</tt></b> cannot be resolved into an IP address. "
-                            "Please check hostname or specify an explicit IP address." % hostname)
+                raise MKUserError("ipaddress", _("Hostname <b><tt>%s</tt></b> cannot be resolved into an IP address. "
+                            "Please check hostname or specify an explicit IP address.") % hostname)
 
         tags = get_selected_host_tags()
 
         # handle clone & new
         if new:
             if not hostname:
-                raise MKUserError("host", "Please specify a host name")
+                raise MKUserError("host", _("Please specify a host name"))
             elif hostname in g_hosts:
-                raise MKUserError("host", "A host with this name already exists.")
+                raise MKUserError("host", _("A host with this name already exists."))
             elif not re.match("^[a-zA-Z0-9-_.]+$", hostname):
-                raise MKUserError("host", "Invalid host name: must contain only characters, digits, dash, underscore and dot.")
+                raise MKUserError("host", _("Invalid host name: must contain only characters, digits, dash, underscore and dot."))
 
         if hostname:
             go_to_services = html.var("services")
             if html.check_transaction():
                 g_hosts[hostname] = (alias, ipaddress, tags)
                 if new:
-                    message = "Created new host %s." % hostname
+                    message = _("Created new host %s.") % hostname
                     log_pending(hostname, "create-host", message) 
                     g_file["num_hosts"] += 1
                 else:
-                    log_pending(hostname, "edit-host", "Edited properties of host [%s]" % hostname)
+                    log_pending(hostname, "edit-host", _("Edited properties of host [%s]") % hostname)
                 write_the_configuration_file()
             if new:
                 return go_to_services and "firstinventory" or "file"
@@ -705,7 +707,7 @@ def mode_edithost(phase, new):
         html.write('<table class="form bg_brighten">\n')
 
         # host name
-        html.write("<tr><td class=legend>Hostname</td><td class=content>")
+        html.write("<tr><td class=legend>" + _("Hostname") + "</td><td class=content>")
         if hostname and mode == "edit":
             html.write(hostname)
         else:
@@ -714,24 +716,24 @@ def mode_edithost(phase, new):
         html.write("</td></tr>\n")
 
         # alias
-        html.write("<tr><td class=legend>Alias<br><i>(optional)</i></td><td class=content>")
+        html.write("<tr><td class=legend>" + _("Alias") + "<br><i>" + _("(optional)") + "</i></td><td class=content>")
         html.text_input("alias", alias)
         html.write("</td></tr>\n")
 
         # IP address
-        html.write("<tr><td class=legend>IP-Address<br>"
-                "<i>Leave empty for automatic<br>"
-                "IP address lookup via DNS</td><td class=content>")
+        html.write("<tr><td class=legend>" + _("IP-Address") + "<br>"
+                + ("<i>Leave empty for automatic<br>"
+                "IP address lookup via DNS") + "</td><td class=content>")
         html.text_input("ipaddress", ipaddress)
         html.write("</td></tr>\n")
 
         configure_hosttags(tags)
 
         html.write('<tr><td class="buttons" colspan=2>')
-        html.button("save", "Save &amp; Finish", "submit")
+        html.button("save", _("Save &amp; Finish"), "submit")
         if not new:
-            html.button("delete", "Delete host!", "submit")
-        html.button("services", "Save &amp; got to Services", "submit")
+            html.button("delete", _("Delete host!"), "submit")
+        html.button("services", _("Save &amp; got to Services"), "submit")
         html.write("</td></tr>\n")
         html.write("</table>\n")
         html.hidden_fields()
@@ -741,14 +743,14 @@ def mode_edithost(phase, new):
 def mode_inventory(phase, firsttime):
     hostname = html.var("host")
     if hostname not in g_hosts:
-        raise MKGeneralException("You called this page for a non-existing host.")
+        raise MKGeneralException(_("You called this page for a non-existing host."))
 
     if phase == "title":
-        title = "Services of host %s" % hostname
+        title = _("Services of host %s") % hostname
         if html.var("scan"):
-            title += " (live scan)"
+            title += _(" (live scan)")
         else:
-            title += " (cached data)"
+            title += _(" (cached data)")
         return title
 
     elif phase == "buttons":
@@ -774,7 +776,7 @@ def mode_inventory(phase, firsttime):
                         active_checks[(ct, item)] = paramstring
 
             check_mk_automation("set-autochecks", [hostname], active_checks)
-            message = "Saved check configuration of host [%s] with %d services" % (hostname, len(active_checks)) 
+            message = _("Saved check configuration of host [%s] with %d services") % (hostname, len(active_checks)) 
             log_pending(hostname, "set-autochecks", message) 
             return new_target, message
         return "file"
@@ -809,22 +811,27 @@ def mode_search(phase):
 
         ## # Show search form
         html.begin_form("search")
-        html.hidden_fields()
         html.write("<table class=form>")
 
+        # Wether to search only in this folder
+        html.write("<tr><td class=legend></td><td class=content>")
+        html.checkbox("onlyhere", True)
+        html.write(_(" Search only in the folder <b>%s</b> and below") % g_folder["title"])
+        html.write("</td></tr>")
+
         # host name
-        html.write("<tr><td class=legend>Hostname</td><td class=content>")
+        html.write("<tr><td class=legend>" + _("Hostname") + "</td><td class=content>")
         html.text_input("host")
         html.set_focus("host")
         html.write("</td></tr>\n")
 
         # alias
-        html.write("<tr><td class=legend>Alias</td><td class=content>")
+        html.write("<tr><td class=legend>" + _("Alias") + "</td><td class=content>")
         html.text_input("alias")
         html.write("</td></tr>\n")
 
         # IP address
-        html.write("<tr><td class=legend>IP-Address (prefix)</td><td class=content>")
+        html.write("<tr><td class=legend>" + _("IP-Address (prefix)") + "</td><td class=content>")
         html.text_input("ipaddress")
         html.write("</td></tr>\n")
 
@@ -837,6 +844,7 @@ def mode_search(phase):
         html.write("</td></tr>\n")
         
         html.write("</table>\n")
+        html.hidden_fields()
         html.end_form()
 
         # Show search results
@@ -857,8 +865,12 @@ def mode_search(phase):
                 "ipaddress" : html.var("ipaddress", "").strip(".").strip("*"),
                 "tags"      : tags,
             }
-            html.write("<h3>Search results:</h3>")
-            if not search_hosts_in_folder(g_folder, crit):
+            html.write("<h3>" + _("Search results:") + "</h3>")
+            if html.var("onlyhere"):
+                folder = g_folder
+            else:
+                folder = g_root_folder
+            if not search_hosts_in_folder(folder, crit):
                 html.message(_("No matching hosts found."))
 
         html.write("</td></tr></table>")
@@ -953,10 +965,10 @@ def search_hosts_in_file(the_folder, the_file, crit):
 
 def mode_bulk_inventory(phase):
     if phase == "title":
-        return "Bulk service detection (inventory)"
+        return _("Bulk service detection (inventory)")
 
     elif phase == "buttons":
-        html.context_button("Back", make_link([("mode", "file")]))
+        html.context_button(_("Back"), make_link([("mode", "file")]))
         return
 
     elif phase == "action":
@@ -966,11 +978,11 @@ def mode_bulk_inventory(phase):
             try:
                 counts = check_mk_automation("inventory", [how, hostname])
                 result = repr([ 'continue', 0 ] + list(counts)) + "\n"
-                result += "Inventorized %s<br>\n" % hostname
-                log_pending(hostname, "bulk-inventory", "Inventorized host: %d added, %d removed, %d kept, %d total services" % counts)
+                result += _("Inventorized %s<br>\n") % hostname
+                log_pending(hostname, "bulk-inventory", _("Inventorized host: %d added, %d removed, %d kept, %d total services") % counts)
             except Exception, e:
                 result = repr([ 'failed', 1, 0, 0, 0, 0, ]) + "\n"
-                result += "Error during inventory of %s: %s<br>\n" % (hostname, e)
+                result += _("Error during inventory of %s: %s<br>\n") % (hostname, e)
             html.write(result)
             return ""
         return
@@ -983,8 +995,9 @@ def mode_bulk_inventory(phase):
         # Start interactive progress
         interactive_progress(
             hostnames,         # list of items
-            "Bulk inventory",  # title
-            [ ("Failed hosts", 0), ("Services added", 0), ("Services removed", 0), ("Services kept", 0), ("Total services", 0) ], # stats table
+            _("Bulk inventory"),  # title
+            [ (_("Failed hosts"), 0), (_("Services added"), 0), (_("Services removed"), 0), 
+              (_("Services kept"), 0), (_("Total services"), 0) ], # stats table
             [ ("mode", "file") ], # URL for "Stop/Finish" button
             50, # ms to sleep between two steps
         )
@@ -994,15 +1007,15 @@ def mode_bulk_inventory(phase):
         html.hidden_fields()
 
         # Mode of action
-        html.write("<p>You have selected <b>%d</b> hosts for bulk inventory. "
+        html.write(_("<p>You have selected <b>%d</b> hosts for bulk inventory. "
                    "Check_MK inventory will automatically find and configure "
-                   "services to be checked on your hosts.</p>" % len(hostnames))
+                   "services to be checked on your hosts.</p>") % len(hostnames))
         html.write("<table class=form>")
-        html.write("<tr><td class=legend>Mode</td><td class=content>")
-        html.radiobutton("how", "new",     True,  "Find only new services<br>")
-        html.radiobutton("how", "remove",  False, "Remove obsolete services<br>")
-        html.radiobutton("how", "fixall",  False, "Find new &amp; remove obsolete<br>")
-        html.radiobutton("how", "refresh", False, "Refresh all services (tabula rasa)<br>")
+        html.write("<tr><td class=legend>" + _("Mode") + "</td><td class=content>")
+        html.radiobutton("how", "new",     True,  _("Find only new services") + "<br>")
+        html.radiobutton("how", "remove",  False, _("Remove obsolete services") + "<br>")
+        html.radiobutton("how", "fixall",  False, _("Find new &amp; remove obsolete") + "<br>")
+        html.radiobutton("how", "refresh", False, _("Refresh all services (tabula rasa)") + "<br>")
         html.write("</td></tr>")
 
         # Check type (first we need a Check_MK automation service for getting the list of checktype)
@@ -1013,7 +1026,7 @@ def mode_bulk_inventory(phase):
 
         # Start button 
         html.write('<tr><td colspan=2 class="buttons">')
-        html.button("_start", "Start!")
+        html.button("_start", _("Start!"))
         html.write("</tr>")
 
         html.write("</table>")
@@ -1031,10 +1044,10 @@ def mode_bulk_inventory(phase):
 
 def mode_bulk_edit(phase):
     if phase == "title":
-        return "Bulk edit hosts"
+        return _("Bulk edit hosts")
 
     elif phase == "buttons":
-        html.context_button("Back", make_link([("mode", "file")]))
+        html.context_button(_("Back"), make_link([("mode", "file")]))
         return
 
     elif phase == "action":
@@ -1044,7 +1057,7 @@ def mode_bulk_edit(phase):
                 alias, ipaddress, tags = g_hosts[host]
                 new_tags = get_selected_host_tags(tags)
                 g_hosts[host] = (alias, ipaddress, new_tags)
-                log_pending(host, "edit-host-tags", "Changed tags of host %s to %s in bulk mode" %
+                log_pending(host, "edit-host-tags", _("Changed tags of host %s to %s in bulk mode") %
                            (host, ", ".join(new_tags)))
             write_the_configuration_file()
             return "file"
@@ -1092,18 +1105,18 @@ def mode_bulk_edit(phase):
         if matches == 1:
             preset_tags[tagno] = non_zero
 
-    html.write("<p>You have selected <b>%d</b> hosts for bulk edit. You can now change "
-               "host tags for all selected hosts at once. " % len(hostnames))
-    html.write("If a select is set to <i>don't change</i> then currenty not all selected "
+    html.write("<p>" + _("You have selected <b>%d</b> hosts for bulk edit. You can now change "
+               "host tags for all selected hosts at once. ") % len(hostnames))
+    html.write(_("If a select is set to <i>don't change</i> then currenty not all selected "
     "hosts share the same setting for this tag. If you leave that selection, all hosts "
-    "will keep their individual settings.</p>")
+    "will keep their individual settings.") + "</p>")
 
     html.begin_form("bulkedit", None, "POST")
     html.hidden_fields()
     html.write("<table class=form>")
     configure_hosttags(preset_tags)
     html.write('<tr><td colspan=2 class="buttons">')
-    html.button("_save", "Save &amp; Finish")
+    html.button("_save", _("Save &amp; Finish"))
     html.write("</td></tr>")
     html.write("</table>")
     html.end_form()
@@ -1194,7 +1207,7 @@ def configure_hosttags(current_tags):
             if tagno in current_tags:
                 tagvalue = current_tags[tagno]
             else:
-                choices = [("|", "(don't change)")] + choices
+                choices = [("|", _("(don't change)"))] + choices
                 tagvalue = "|"
 
         tagvar = "_tag_%d" % tagno
@@ -1245,10 +1258,10 @@ def get_selected_host_tags(current_tags = {}):
 
 def mode_changelog(phase):
     if phase == "title":
-        return "Change log"
+        return _("Change log")
 
     elif phase == "buttons":
-        html.context_button("Back", make_link([("mode", "folder")]))
+        html.context_button(_("Back"), make_link([("mode", "folder")]))
         if log_exists("pending"):
             html.context_button(_("Activate Changes!"), 
                 html.makeuri([("_action", "activate"), ("_transid", html.current_transid())]), True)
@@ -1265,8 +1278,8 @@ def mode_changelog(phase):
                 except Exception, e:
                     raise MKUserError(None, str(e))
                 log_commit_pending() # flush logfile with pending actions
-                log_audit(None, "activate-config", "Configuration activated, monitoring server restarted")
-                return None, "The new configuration has been successfully activated."
+                log_audit(None, "activate-config", _("Configuration activated, monitoring server restarted"))
+                return None, _("The new configuration has been successfully activated.")
 
 
     else:
@@ -1276,14 +1289,14 @@ def mode_changelog(phase):
             message += render_audit_log(pending, "pending")
             html.show_warning(message)
         else:
-            html.write("<p>No pending changes, monitoring server is up to date.</p>")
+            html.write("<p>" + _("No pending changes, monitoring server is up to date.") + "</p>")
 
         audit = parse_audit_log("audit")
         if len(audit) > 0:
-            html.write("<b>All Changes</b>")
+            html.write("<b>" + _("All Changes") + "</b>")
             html.write(render_audit_log(audit, "audit"))
         else:
-            html.write("<p>Logfile is empty. No host has been created or changed yet.</p>")
+            html.write("<p>" + _("Logfile is empty. No host has been created or changed yet.") + "</p>")
         
 def log_entry(linkinfo, action, message, logfilename):
     if type(message) == unicode:
@@ -1686,7 +1699,7 @@ def get_folder_and_file():
     if not g_pathname:
         g_pathname = "/"
     if g_pathname[0] != '/' :
-        raise MKGeneralException("You called this page with an invalid WATO filename!")
+        raise MKGeneralException(_("You called this page with an invalid WATO filename!"))
 
     parts = g_pathname[1:].split("/")
     path = tuple(parts[:-1])
@@ -1694,16 +1707,16 @@ def get_folder_and_file():
 
     g_folder = find_folder(path)
     if not g_folder:
-        raise MKGeneralException('You called this page with a non-existing folder! '
-                                 'Go back to the <a href="wato.py">main index</a>.')
+        raise MKGeneralException(_('You called this page with a non-existing folder! '
+                                 'Go back to the <a href="wato.py">main index</a>.'))
     if filename:
         if filename not in g_folder["files"]:
-            raise MKGeneralException('You called this page with a non-existing file! '
-                                     'Go back to the <a href="wato.py">main index</a>.')
+            raise MKGeneralException(_('You called this page with a non-existing file! '
+                                     'Go back to the <a href="wato.py">main index</a>.'))
 
         g_file = g_folder["files"][filename]
         if config.role not in g_file["roles"]:
-            raise MKAuthException("You have no permissions on this configuration file!")
+            raise MKAuthException(_("You have no permissions on this configuration file!"))
 
     else:
         g_file = None
@@ -1750,7 +1763,7 @@ def search_button():
 
 def changelog_button():
     pending = parse_audit_log("pending")
-    buttontext = "ChangeLog"
+    buttontext = _("ChangeLog")
     if len(pending) > 0:
         buttontext = "<b>%s (%d)</b>" % (buttontext, len(pending))
         hot = True
@@ -1769,16 +1782,16 @@ def show_service_table(hostname, firsttime):
     fixall = 0
     for entry in table:
         if entry[0] == 'new' and not html.has_var("_activate_all") and not firsttime:
-            html.button("_activate_all", "Activate missing")
+            html.button("_activate_all", _("Activate missing"))
             fixall += 1
             break
     for entry in table:
         if entry[0] in [ 'obsolete', 'vanished', ]:
-            html.button("_cleanup", "Remove exceeding")
+            html.button("_cleanup", _("Remove exceeding"))
             fixall += 1
             break
     if fixall == 2:
-        html.button("_fixall", "Fix all missing/exceeding")
+        html.button("_fixall", _("Fix all missing/exceeding"))
 
     if len(table) > 0:
         html.button("_save", _("Save manual check configuration"))
@@ -1787,13 +1800,13 @@ def show_service_table(hostname, firsttime):
     html.write("<table class=data>\n")
 
     for state_name, state_type, checkbox in [ 
-        ( "Available (missing) services", "new", firsttime ),
-        ( "Already configured services", "old", True, ),
-        ( "Obsolete services (being checked, but should be ignored)", "obsolete", True ),
-        ( "Ignored services (configured away by admin)", "ignored", False ),
-        ( "Vanished services (checked, but no longer exist)", "vanished", True ),
-        ( "Manual services (defined in main.mk)", "manual", None ),
-        ( "Legacy services (defined in main.mk)", "legacy", None )
+        ( _("Available (missing) services"), "new", firsttime ),
+        ( _("Already configured services"), "old", True, ),
+        ( _("Obsolete services (being checked, but should be ignored)"), "obsolete", True ),
+        ( _("Ignored services (configured away by admin)"), "ignored", False ),
+        ( _("Vanished services (checked, but no longer exist)"), "vanished", True ),
+        ( _("Manual services (defined in main.mk)"), "manual", None ),
+        ( _("Legacy services (defined in main.mk)"), "legacy", None )
         ]:
         first = True
         trclass = "even"
@@ -1802,8 +1815,8 @@ def show_service_table(hostname, firsttime):
                 continue
             if first:
                 html.write('<tr class=groupheader><td colspan=7><br>%s</td></tr>\n' % state_name)
-                html.write("<tr><th>Status</th><th>Checktype</th><th>Item</th>"
-                           "<th>Service Description</th><th>Current check</th><th></th></tr>\n")
+                html.write("<tr><th>" + _("Status") + "</th><th>" + _("Checktype") + "</th><th>" + _("Item") + "</th>"
+                           "<th>" + _("Service Description") + "</th><th>" + _("Current check") + "</th><th></th></tr>\n")
                 first = False
             trclass = trclass == "even" and "odd" or "even"
             statename = nagios_short_state_names.get(state, "PEND")
@@ -1826,13 +1839,13 @@ def delete_host_after_confirm(delname):
     if not html.transaction_valid():
         return None  # Browser reload
 
-    wato_html_head("Confirm host deletion")
-    c = html.confirm("Do you really want to delete the host <tt>%s</tt>?" % delname)
+    wato_html_head(_("Confirm host deletion"))
+    c = html.confirm(_("Do you really want to delete the host <tt>%s</tt>?") % delname)
     if c:
         del g_hosts[delname]
         g_file["num_hosts"] -= 1
         write_the_configuration_file()
-        log_pending(delname, "delete-host", "Deleted host %s" % delname)
+        log_pending(delname, "delete-host", _("Deleted host %s") % delname)
         check_mk_automation("delete-host", [delname])
         return "file"
     elif c == False: # not yet confirmed
@@ -1841,24 +1854,24 @@ def delete_host_after_confirm(delname):
         return None # browser reload 
 
 def delete_hosts_after_confirm(hosts):
-    wato_html_head("Confirm deletion of %d hosts" % len(hosts))
-    c = html.confirm("Do you really want to delete the %d selected hosts?" % len(hosts))
+    wato_html_head(_("Confirm deletion of %d hosts") % len(hosts))
+    c = html.confirm(_("Do you really want to delete the %d selected hosts?") % len(hosts))
     if c:
         for delname in hosts:
             del g_hosts[delname]
             g_file["num_hosts"] -= 1
             check_mk_automation("delete-host", [delname])
-            log_pending(delname, "delete-host", "Deleted host %s" % delname)
+            log_pending(delname, "delete-host", _("Deleted host %s") % delname)
         write_the_configuration_file()
-        return "file", "Successfully deleted %d hosts" % len(hosts)
+        return "file", _("Successfully deleted %d hosts") % len(hosts)
     elif c == False: # not yet confirmed
         return ""
     else:
         return None # browser reload 
 
 def delete_folder_after_confirm(del_folder):
-    wato_html_head("Confirm folder deletion")
-    c = html.confirm("Do you really want to delete the folder <tt>%s</tt> (%s)?" 
+    wato_html_head(_("Confirm folder deletion"))
+    c = html.confirm(_("Do you really want to delete the folder <tt>%s</tt> (%s)?") 
         % (file_os_path(del_folder), del_folder["title"]))
     if c:
         del g_folder["folders"][del_folder["name"]]
@@ -1868,7 +1881,7 @@ def delete_folder_after_confirm(del_folder):
             pass
 
         save_folder_config()
-        log_audit(file_os_path(del_folder), "delete-folder", "Deleted empty folder %s"% file_os_path(del_folder))
+        log_audit(file_os_path(del_folder), "delete-folder", _("Deleted empty folder %s")% file_os_path(del_folder))
         html.reload_sidebar() # refresh WATO snapin
         return "folder"
     elif c == False: # not yet confirmed
@@ -1878,9 +1891,9 @@ def delete_folder_after_confirm(del_folder):
 
 
 def delete_file_after_confirm(del_file):
-    wato_html_head("Confirm file deletion")
-    c = html.confirm("Do you really want to delete the host list <b>%s</b>, "
-                    "which is containing %d hosts?" % (del_file["title"], del_file["num_hosts"]))
+    wato_html_head(_("Confirm file deletion"))
+    c = html.confirm(_("Do you really want to delete the host list <b>%s</b>, "
+                    "which is containing %d hosts?") % (del_file["title"], del_file["num_hosts"]))
     if c:
         hosts = read_configuration_file(g_folder, del_file)
         for delname in hosts:
@@ -1919,9 +1932,9 @@ def host_move_combo(host = None):
             other_files.append((os_path, "%s (%s)" % (afile["title"], os_path)))
 
     if len(other_files) > 0:
-        selections = [("", "(select file)")] + other_files 
+        selections = [("", _("(select file)"))] + other_files 
         if host == None:
-            html.button("_bulk_move", "Move To:")
+            html.button("_bulk_move", _("Move To:"))
             html.select("bulk_moveto", selections, "")
         else:
             html.hidden_field("host", host)
@@ -1946,7 +1959,7 @@ def move_hosts_to(hostnames, target_filename):
         return
 
     if config.role not in target_file["roles"]:
-        raise MKAuthException("You have no change permissions on the target file")
+        raise MKAuthException(_("You have no change permissions on the target file"))
 
     # read hosts currently in target file
     target_hosts = read_configuration_file(target_folder, target_file)
@@ -1961,14 +1974,14 @@ def move_hosts_to(hostnames, target_filename):
         g_file["num_hosts"] -= 1
         del g_hosts[hostname]
         if len(hostnames) == 1:
-            log_audit(hostname, "move-host", "Moved host from %s to %s" %
+            log_audit(hostname, "move-host", _("Moved host from %s to %s") %
                 (file_os_path(g_file), file_os_path(target_file)))
         num_moved += 1
 
     write_configuration_file(target_folder, target_file, target_hosts)
     write_the_configuration_file()
     if len(hostnames) > 1:
-        log_audit(target_file, "move-host", "Moved %d hosts from %s to %s" %
+        log_audit(target_file, "move-host", _("Moved %d hosts from %s to %s") %
             (num_moved, file_os_path(g_file), file_os_path(target_file)))
     return num_moved 
         
@@ -2046,7 +2059,7 @@ def interactive_progress(items, title, stats, finishvars, timewait):
     html.write("</table>")
     html.write("</center>")
     json_items = '[ %s ]' % ','.join([ "'" + h + "'" for h in items ])
-    html.javascript('progress_scheduler("%s", "%s", 50, %s, "%s", "FINISHED.");' %
+    html.javascript(('progress_scheduler("%s", "%s", 50, %s, "%s", "' + _("FINISHED.") + '");') %
                      (html.var('mode'), html.makeuri([]), json_items, html.makeuri(finishvars)))
 
 #   +----------------------------------------------------------------------+

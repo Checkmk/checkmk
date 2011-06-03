@@ -264,7 +264,7 @@ def show_filefolder_list(thing, what, title):
             if what == "file":
                 num_hosts = entry["num_hosts"]
             else:
-                num_hosts = count_files(entry)
+                num_hosts = count_hosts(entry)
             html.write("<td>%d</td>" % num_hosts)
             html.write("</tr>")
         html.write("</table>")
@@ -1571,12 +1571,13 @@ def find_folder(path, in_folder = None):
         else:
             return find_folder(rest, in_folder["folders"][name])
 
-def count_files(folder):
+def count_hosts(folder):
     num = 0
     for f in folder["files"].values():
         num += f["num_hosts"]
     for sf in folder["folders"].values():
-        num += count_files(sf)
+        num += count_hosts(sf)
+    folder["num_hosts"] = num
     return num
 
 # Load all hosts from all configuration files.
@@ -2602,14 +2603,16 @@ def effective_attributes(host, container):
 
 
 #   +----------------------------------------------------------------------+
-#   |                     _   _             _                              |
-#   |                    | | | | ___   ___ | | _____                       |
-#   |                    | |_| |/ _ \ / _ \| |/ / __|                      |
-#   |                    |  _  | (_) | (_) |   <\__ \                      |
-#   |                    |_| |_|\___/ \___/|_|\_\___/                      |
+#   |       _   _             _           ___        _    ____ ___         |
+#   |      | | | | ___   ___ | | _____   ( _ )      / \  |  _ \_ _|        |
+#   |      | |_| |/ _ \ / _ \| |/ / __|  / _ \/\   / _ \ | |_) | |         |
+#   |      |  _  | (_) | (_) |   <\__ \ | (_>  <  / ___ \|  __/| |         |
+#   |      |_| |_|\___/ \___/|_|\_\___/  \___/\/ /_/   \_\_|  |___|        |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | Hooks are a ways plugins can add own activities at certain points    |
+#   | The API allows addons to query information about configured hosts.   |
+#   |                                                                      |
+#   | Hooks are a way how addons can add own activities at certain points  |
 #   | of time, e.g. when a host as been edited of the changes have been    | 
 #   | activated.                                                           |
 #   +----------------------------------------------------------------------+ 
@@ -2619,8 +2622,104 @@ def effective_attributes(host, container):
 
 hooks = {}
 
-def register_hook(name, func):
-    hooks.setdefault(name, []).append(func)
+class API:
+    def register_hook(self, name, func):
+        hooks.setdefault(name, []).append(func)
+
+    # Get a (flat) dictionary containing all hosts with their *effective*
+    # attributes (containing all inherited and default values where appropriate).
+    def get_all_hosts(self):
+        load_folder_config()
+        return collect_hosts(g_root_folder)
+
+    def get_folder(self, path):
+        load_folder_config()
+        the_thing = g_root_folder
+        while len(path) > 0:
+             c = path[0]
+             if c in the_thing["folders"]:
+                 the_thing = the_thing["folders"][c]
+             else:
+                 return None
+             path = path[1:]
+
+        # add information about number of hosts
+        count_hosts(the_thing)
+        return the_thing
+
+    def get_file(self, path):
+        folder = self.get_folder(path[:-1])
+        if not folder or not path[-1] in folder["files"]:
+            return None
+        the_file = folder["files"][path[-1]]
+        if not the_file:
+            return None
+        hosts = read_configuration_file(folder, the_file)
+        new_file = {}
+        new_file.update(the_file)
+        new_file["hosts"] = hosts
+        return new_file
+
+
+    # Get all effective data of a host. The_file must be returned by get_file()
+    def get_host(self, the_file, hostname):
+        host = the_file["hosts"][hostname]
+        eff = effective_attributes(host, the_file)
+        eff["name"] = hostname
+        return eff
+
+    # Return displayable information about host
+    def get_host_painted(self, host): 
+        result = []
+        for attr in host_attributes:   
+            attrname = attr.name()
+            if attrname in host:
+                tdclass, content = attr.paint(host[attrname], host["name"])
+                result.append((attr.title(), content))
+        return result
+
+
+    def cleanup_directory(self, thing):
+        # drop 'parent' entry, recursively
+        def drop_internal(thing):
+            new_thing = {}
+            new_thing.update(thing)
+            if "parent" in new_thing:
+                del new_thing["parent"]
+            if "files" in new_thing:
+                new_thing["files"] = drop_internal_dict(new_thing["files"])
+            if "folders" in new_thing:
+                new_thing["folders"] = drop_internal_dict(new_thing["folders"])
+            return new_thing
+
+        def drop_internal_dict(self, thingdict): 
+            new_dict = {}
+            for name, thing in thingdict.items():
+                new_dict[name] = drop_internal(thing)
+            return new_dict
+
+        return drop_internal(thing)
+
+api = API()
+
+
+
+# internal helper functions for API
+def collect_hosts(the_thing):
+    if "folders" in the_thing: # a folder
+        hosts = {}
+        for fi in the_thing.get("files", []).values():
+            hosts.update(collect_hosts(fi))
+        for fo in the_thing["folders"].values():
+            hosts.update(collect_hosts(fo))
+        return hosts
+    elif "num_hosts" in the_thing: # a file
+        hosts = read_configuration_file(the_thing["parent"], the_thing)
+        effective_hosts = dict([ (hn, effective_attributes(h, the_thing)) 
+                               for (hn, h) in hosts.items() ])
+        for host in effective_hosts.values():
+            host["file"] = the_thing["path"]
+        return effective_hosts
 
 def call_hooks(name, *args):
     for hk in hooks.get(name, []):
@@ -2635,21 +2734,6 @@ def call_hook_host_changed(the_thing): # called for file or folder
     if "all-hosts-changed" in hooks:
         hosts = collect_hosts(g_root_folder)
         call_hooks("all-hosts-changed", hosts)
-
-
-def collect_hosts(the_thing):
-    if "folders" in the_thing: # a folder
-        hosts = {}
-        for fi in the_thing.get("files", []).values():
-            hosts.update(collect_hosts(fi))
-        for fo in the_thing["folders"].values():
-            hosts.update(collect_hosts(fo))
-        return hosts
-    elif "num_hosts" in the_thing: # a file
-        hosts = read_configuration_file(the_thing["parent"], the_thing)
-        effective_hosts = dict([ (hn, effective_attributes(h, the_thing)) 
-                               for (hn, h) in hosts.items() ])
-        return effective_hosts
 
 
 #   +----------------------------------------------------------------------+

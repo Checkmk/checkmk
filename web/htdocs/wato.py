@@ -1827,8 +1827,7 @@ def make_action_link_to(vars, folder_path, filename = None):
     return make_link_to(vars + [("_transid", html.current_transid())], folder_path, filename)
 
 def search_button():
-    if len(g_folder["files"]) > 0 or len(g_folder["folders"]) > 0:
-        html.context_button(_("Search"), make_link([("mode", "search")]))
+    html.context_button(_("Search"), make_link([("mode", "search")]))
 
 def changelog_button():
     pending = parse_audit_log("pending")
@@ -2261,6 +2260,11 @@ class TextAttribute(Attribute):
 class IPAddressAttribute(TextAttribute):
     def __init__(self, name, title, help = None):
         TextAttribute.__init__(self, name, title, help, "", mandatory = True)
+
+    def render_input(self, value):
+        if value == None:
+            value = ""
+        html.text_input("attr_" + self.name(), value, size=15)
 
     def from_html_vars(self):
         value = html.var("attr_" + self.name())

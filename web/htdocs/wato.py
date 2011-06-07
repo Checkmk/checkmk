@@ -1138,7 +1138,7 @@ def mode_bulk_cleanup(phase):
 
     html.begin_form("bulkcleanup", None, "POST")
     html.write("<table class=form>")
-    if not bulk_cleanup_attributes(hosts):
+    if not bulk_cleanup_attributes(g_file, hosts):
         html.write("<tr><td class=buttons>")
         html.write(_("The selected hosts have no explicit attributes"))
         html.write("</td></tr>\n")
@@ -1160,7 +1160,7 @@ def bulk_collect_cleaned_attributes():
     return to_clean
 
 
-def bulk_cleanup_attributes(hosts):
+def bulk_cleanup_attributes(the_file, hosts):
     num_shown = 0
     for attr in host_attributes:
         attrname = attr.name()
@@ -1174,16 +1174,34 @@ def bulk_cleanup_attributes(hosts):
         if num_haveit == 0:
             continue
 
+        # If the attribute is mandatory and no value is inherited
+        # by file or folder, the attribute cannot be cleaned.
+        container = the_file
+        is_inherited = False
+        while container:
+            if "attributes" in container and attrname in container["attributes"]:
+                is_inherited = True
+                inherited_value = container["attributes"][attrname]
+                break
+            container = container.get(".parent")
+
+
         num_shown += 1
+
         # Legend and Help
         html.write("<tr><td class=legend>%s" % attr.title())
         if attr.help():
             html.write("<br><i>%s</i>" % attr.help())
         html.write("</td>")
         html.write("<td class=content>")
-        html.checkbox("_clean_%s" % attrname, False)
-        html.write(" clean this attribute on <b>%s</b> hosts" % 
-            (num_haveit == len(hosts) and "all selected" or str(num_haveit)))
+
+        if attr.is_mandatory() and not is_inherited:
+            html.write(_("This attribute is mandatory and there is no value "
+                         "define in the host list or any parent folder."))
+        else:
+            html.checkbox("_clean_%s" % attrname, False)
+            html.write(" clean this attribute on <b>%s</b> hosts" % 
+                (num_haveit == len(hosts) and "all selected" or str(num_haveit)))
         html.write("</td></tr>")
 
     return num_shown > 0
@@ -2231,7 +2249,8 @@ class Attribute:
         return self._show_in_folder
 
     # Wether it is allowed that a host has no explicit
-    # value here (inherited or direct value)
+    # value here (inherited or direct value). An mandatory 
+    # has *no* default value.
     def is_mandatory(self):
         return False
 
@@ -2562,6 +2581,7 @@ def configure_attributes(hosts, for_what, parent):
 
         checkbox_name = "_change_%s" % attrname
         cb = html.get_checkbox(checkbox_name)
+        force_entry = False
         if cb != None:
             active = cb # get previous state of checkbox
         elif for_what == "search":
@@ -2571,12 +2591,18 @@ def configure_attributes(hosts, for_what, parent):
         elif for_what == "folder":
             active = attrname in host
         else: # "host"
-            active = attrname in host or \
-              (not (has_inherited and attr.is_mandatory()))
+            if attr.is_mandatory() and not has_inherited:
+                force_entry = True
+                active = True
+            else:
+                active = attrname in host
 
         html.write('<td class=checkbox>')
-        html.checkbox(checkbox_name, active, 
-            onchange="wato_toggle_attribute(this, '%s');" % attrname ) # Only select if value is unique
+        if force_entry:
+            html.write("<input type=checkbox name=\"%s\" CHECKED DISABLED></div>" % checkbox_name)
+        else:
+            html.checkbox(checkbox_name, active, 
+                onchange="wato_toggle_attribute(this, '%s');" % attrname ) # Only select if value is unique
         html.write("</td>")
 
 

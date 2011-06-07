@@ -168,7 +168,7 @@ def mode_folder(phase):
         return _("Folder contents")
 
     elif phase == "buttons":
-        html.context_button(_("Properties"), make_link_to([("mode", "editfolder")], g_folder["path"]))
+        html.context_button(_("Properties"), make_link_to([("mode", "editfolder")], g_folder[".path"]))
         html.context_button(_("New folder"), make_link([("mode", "newfolder")]))
         html.context_button(_("New host list"), make_link([("mode", "newfile")]))
         changelog_button()
@@ -224,10 +224,10 @@ def show_filefolder_list(thing, what, title):
 
             name = entry["name"]
             if what == "folder":
-                folder_path = entry["path"]
+                folder_path = entry[".path"]
                 filename = None
             else:
-                folder_path = thing["path"]
+                folder_path = thing[".path"]
                 filename = name
 
             edit_url     = make_link_to([("mode", "edit" + what)], folder_path, filename)
@@ -305,7 +305,7 @@ def mode_editfolder(phase, what, new):
 
     elif phase == "buttons":
         if what == "folder" and not new:
-            target_folder = find_folder(g_folder["path"][:-1])
+            target_folder = find_folder(g_folder[".path"][:-1])
         else:
             target_folder = g_folder
         html.context_button(_("Abort"), make_link([("mode", "folder")]))
@@ -336,10 +336,10 @@ def mode_editfolder(phase, what, new):
         attributes_changed = not new and attributes != the_thing.get("attributes", {})
 
         if new:
-            newpath = g_folder["path"] + (name,)
+            newpath = g_folder[".path"] + (name,)
             new_thing = { 
                 "name"       : name,
-                "path"       : newpath,
+                ".path"       : newpath,
                 "title"      : title, 
                 "roles"      : roles,
                 "attributes" : attributes,
@@ -431,7 +431,7 @@ def mode_editfolder(phase, what, new):
                 parent = g_folder
             else:
                 attributes = the_thing.get("attributes", {})
-                parent = g_folder.get("parent")
+                parent = g_folder.get(".parent")
 
             configure_attributes({what: attributes}, "folder", parent)
 
@@ -508,8 +508,8 @@ def mode_file(phase):
         return "Hosts list"
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link_to([("mode", "folder")], g_folder["path"]))
-        html.context_button(_("Properties"), make_link_to([("mode", "editfile")], g_folder["path"], g_file["name"]))
+        html.context_button(_("Back"), make_link_to([("mode", "folder")], g_folder[".path"]))
+        html.context_button(_("Properties"), make_link_to([("mode", "editfile")], g_folder[".path"], g_file["name"]))
         html.context_button(_("New host"), make_link([("mode", "newhost")]))
         changelog_button()
         search_button()
@@ -838,7 +838,7 @@ def mode_search(phase):
         return _("Search for hosts in %s and below" % (g_folder["title"]))
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link_to([("mode", "folder")], g_folder["path"]))
+        html.context_button(_("Back"), make_link_to([("mode", "folder")], g_folder[".path"]))
 
     elif phase == "action":
         pass
@@ -930,7 +930,7 @@ def search_hosts_in_file(the_folder, the_file, crit):
 
     if found:
         render_folder_path(the_folder, 0, True)
-        file_url = make_link_to([("mode", "file")], the_folder["path"], the_file["name"]) 
+        file_url = make_link_to([("mode", "file")], the_folder[".path"], the_file["name"]) 
         html.write(' / <a href="%s">%s</a>' % (file_url, the_file["title"]))
         html.write(":")
         found.sort()
@@ -943,7 +943,7 @@ def search_hosts_in_file(the_folder, the_file, crit):
         even = "even"
         for hostname, host, effective in found:
             even = even == "even" and "odd" or "even"
-            host_url =  make_link_to([("mode", "edithost"), ("host", hostname)], the_folder["path"], the_file["name"])
+            host_url =  make_link_to([("mode", "edithost"), ("host", hostname)], the_folder[".path"], the_file["name"])
             html.write('<tr class="data %s0"><td><a href="%s">%s</a></td>\n' % 
                (even, host_url, hostname))
             for attr in host_attributes:
@@ -1208,7 +1208,7 @@ def render_link_tree(h, format):
     def render_folder(f):
 
         subfolders = f["folders"]
-        path = f["path"]
+        path = f[".path"]
         filename = "/" + "/".join(path) + "/"
         if len(path) > 0:
             url = "wato.py?filename=" + htmllib.urlencode(filename)
@@ -1289,7 +1289,7 @@ def log_entry(linkinfo, action, message, logfilename):
     make_nagios_directory(conf_dir)
     if linkinfo in g_files.values():
         link = file_os_path(linkinfo)
-    elif type(linkinfo) == dict and find_folder(linkinfo["path"]):
+    elif type(linkinfo) == dict and find_folder(linkinfo[".path"]):
         link = file_os_path(linkinfo) + "/"
     elif linkinfo == None:
         link = "-"
@@ -1489,7 +1489,7 @@ def check_mk_automation(command, args=[], indata=""):
 
 
 def make_config_path(folder, file = None):
-    parts = folder["path"]
+    parts = folder[".path"]
     if type(file) == dict:
         parts += (file["name"],)
     elif file:
@@ -1515,31 +1515,31 @@ def load_folder_config():
     # make each folder and file know its own path
     g_files = {}
     def add_path_info(path, folder):
-        folder["path"] = path
+        folder[".path"] = path
 
         for name, subfolder in folder["folders"].items():
             subpath = path + (name,)
             add_path_info(subpath, subfolder)
-            subfolder["parent"] = folder
+            subfolder[".parent"] = folder
 
         for name, subfile in folder["files"].items():
             filepath = path + (name,)
-            subfile["path"] = filepath
-            subfile["parent"] = folder
+            subfile[".path"] = filepath
+            subfile[".parent"] = folder
             g_files[filepath] = subfile
 
     add_path_info((), g_root_folder)
 
+
+def clean_dict(d):
+    return dict([(k, v) for (k, v) in d.iteritems() if not k.startswith('.') ])
 
 def save_folder_config():
     # save, but remove redundancy before saving. Only save recursive ROOT folder,
     # omit explicit other folders. And remove redundant path information
 
     def clean_folder(folder):
-        cleaned = dict(folder.items())
-        del cleaned["path"]
-        if "parent" in cleaned:
-            del cleaned["parent"]
+        cleaned = clean_dict(folder)
 
         cleaned["folders"] = {}
         for name, subfolder in folder["folders"].items():
@@ -1547,11 +1547,7 @@ def save_folder_config():
 
         cleaned["files"] = {}
         for name, subfile in folder["files"].items():
-            newfile = dict(subfile.items())
-            del newfile["path"]
-            if "parent" in newfile:
-                del newfile["parent"]
-            cleaned["files"][name] = newfile
+            cleaned["files"][name] = clean_dict(subfile)
 
         return cleaned
 
@@ -1662,7 +1658,7 @@ def rewrite_config_file(folder, thefile):
 
 
 def write_configuration_file(folder, thefile, hosts):
-    wato_filename = "/" + "/".join(thefile["path"])  # used as tag
+    wato_filename = "/" + "/".join(thefile[".path"])  # used as tag
     all_hosts = []
     ipaddresses = {}
     aliases = []
@@ -1794,7 +1790,7 @@ def get_folder_and_file():
 
 # Create link keeping the context to the current folder / file
 def make_link(vars):
-    folder_path = g_folder["path"]
+    folder_path = g_folder[".path"]
 
     if len(folder_path) > 0:
         os_path = "/" + "/".join(folder_path) + "/"
@@ -1973,7 +1969,7 @@ def delete_file_after_confirm(del_file):
             log_pending(del_file, "delete-file", _("Deleted file %s") % del_file["title"])
         else:
             log_audit(del_file, "delete-file", _("Deleted empty file %s") % del_file["title"])
-        del g_files[del_file["path"]]
+        del g_files[del_file[".path"]]
         del g_folder["files"][del_file["name"]]
         delete_configuration_file(g_folder, del_file)
         save_folder_config()
@@ -1986,7 +1982,7 @@ def delete_file_after_confirm(del_file):
 
 
 def file_os_path(f):
-    return "/" + "/".join(f["path"]) 
+    return "/" + "/".join(f[".path"]) 
 
 g_html_head_open = False
 
@@ -2073,16 +2069,16 @@ def render_folder_path(the_folder = 0, the_file = 0, link_to_last = False):
     path = ()
     comps = []
     
-    for p in the_folder["path"]:
+    for p in the_folder[".path"]:
         comps.append(render_component(path, find_folder(path)["title"]))
         path += (p,)
 
     if the_file or link_to_last:
-        comps.append(render_component(the_folder["path"], the_folder["title"]))
+        comps.append(render_component(the_folder[".path"], the_folder["title"]))
 
     if the_file:
         if link_to_last:
-            comps.append(render_component(the_file["path"], the_file["title"]))
+            comps.append(render_component(the_file[".path"], the_file["title"]))
         else:
             comps.append(the_file["title"])
 
@@ -2478,7 +2474,7 @@ def configure_attributes(hosts, for_what, parent):
 
         if for_what == "host":
             what = "file"
-            url = make_link_to([("mode", "editfile")], g_folder["path"], g_file["name"])
+            url = make_link_to([("mode", "editfile")], g_folder[".path"], g_file["name"])
         else:
             what = "folder"
 
@@ -2486,13 +2482,13 @@ def configure_attributes(hosts, for_what, parent):
         while container:
             if attrname in container.get("attributes", {}):
                 if what != "file":
-                    url = make_link_to([("mode", "editfolder")], container["path"])
+                    url = make_link_to([("mode", "editfolder")], container[".path"])
                 inherited_from = _("Inherited from ") + '<a href="%s">%s</a>' % (url, container["title"])
                 inherited_value = container["attributes"][attrname]
                 has_inherited = True
                 break
 
-            container = container.get("parent")
+            container = container.get(".parent")
             what = "folder"
 
         if not container: # We are the root folder - we inherit the default values
@@ -2586,7 +2582,7 @@ def effective_attributes(host, container):
     chain = [ host ]
     while container:
         chain.append(container.get("attributes", {}))
-        container = container.get("parent")
+        container = container.get(".parent")
 
     eff = {}
     for a in chain[::-1]:
@@ -2679,13 +2675,13 @@ class API:
         return result
 
 
-    def cleanup_directory(self, thing):
+    def _cleanup_directory(self, thing):
         # drop 'parent' entry, recursively
         def drop_internal(thing):
             new_thing = {}
             new_thing.update(thing)
-            if "parent" in new_thing:
-                del new_thing["parent"]
+            if ".parent" in new_thing:
+                del new_thing[".parent"]
             if "files" in new_thing:
                 new_thing["files"] = drop_internal_dict(new_thing["files"])
             if "folders" in new_thing:
@@ -2714,11 +2710,11 @@ def collect_hosts(the_thing):
             hosts.update(collect_hosts(fo))
         return hosts
     elif "num_hosts" in the_thing: # a file
-        hosts = read_configuration_file(the_thing["parent"], the_thing)
+        hosts = read_configuration_file(the_thing[".parent"], the_thing)
         effective_hosts = dict([ (hn, effective_attributes(h, the_thing)) 
                                for (hn, h) in hosts.items() ])
         for host in effective_hosts.values():
-            host["file"] = the_thing["path"]
+            host["file"] = the_thing[".path"]
         return effective_hosts
 
 def call_hooks(name, *args):

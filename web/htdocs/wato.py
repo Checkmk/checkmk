@@ -312,9 +312,10 @@ def mode_editfolder(phase, what, new):
             target_folder = find_folder(g_folder[".path"][:-1])
         else:
             target_folder = g_folder
-        html.context_button(_("Abort"), make_link([("mode", "folder")]))
         if what == "file" and not new:
-            html.context_button(_("Hosts"), make_link([("mode", "file")]))
+            html.context_button(_("Abort"), make_link([("mode", "file")]))
+        else:
+            html.context_button(_("Abort"), make_link([("mode", "folder")]))
             
 
     elif phase == "action":
@@ -357,7 +358,7 @@ def mode_editfolder(phase, what, new):
                 new_thing["num_hosts"] = 0
                 g_files[newpath] = new_thing
             
-            g_folder[what + "s"][name] = new_thing
+            g_folder["." + what + "s"][name] = new_thing
             log_audit(new_thing, "new-" + what, _("Created new %s %s") % (the_what, title))
 
         else:
@@ -437,7 +438,7 @@ def mode_editfolder(phase, what, new):
                 attributes = the_thing.get("attributes", {})
                 parent = g_folder.get(".parent")
 
-            configure_attributes({what: attributes}, "folder", parent, g_folder)
+            configure_attributes({what: attributes}, "folder", parent, the_thing)
 
         html.write('<tr><td colspan=3 class="buttons">')
         html.button("save", _("Save &amp; Finish"), "submit")
@@ -1197,7 +1198,7 @@ def bulk_cleanup_attributes(the_file, hosts):
 
         if attr.is_mandatory() and not is_inherited:
             html.write(_("This attribute is mandatory and there is no value "
-                         "define in the host list or any parent folder."))
+                         "defined in the host list or any parent folder."))
         else:
             html.checkbox("_clean_%s" % attrname, False)
             html.write(" clean this attribute on <b>%s</b> hosts" % 
@@ -1809,11 +1810,12 @@ def write_configuration_file(folder, thefile, hosts):
     out.write("host_attributes.update(%s)\n" % pprint.pformat(hosts))
 
 
-
 def delete_configuration_file(folder, thefile):
     path = make_config_path(folder, thefile)
     if os.path.exists(path):
-        os.remove(path)
+        os.remove(path) # remove the actual configuration file
+    if os.path.exists(path + ".wato"):
+        os.remove(path + ".wato") # remove the .wato file
 
 
 # This is a dummy implementation which works without tags
@@ -2008,10 +2010,15 @@ def delete_folder_after_confirm(del_folder):
         % (file_os_path(del_folder), del_folder["title"]))
     if c:
         del g_folder[".folders"][del_folder[".name"]]
+        folder_path = make_config_path(del_folder)
         try:
-            os.rmdir(make_conig_path(del_folder))
+            os.remove(folder_path + "/.wato")
+            os.rmdir(folder_path)
         except:
             pass
+        if os.path.exists(folder_path):
+            raise MKGeneralException(_("Cannot remove the folder '%s': probably there are "
+                                       "still non-WATO files contained in this directory.") % folder_path)
 
         save_folder_config()
         log_audit(file_os_path(del_folder), "delete-folder", _("Deleted empty folder %s")% file_os_path(del_folder))
@@ -2491,7 +2498,7 @@ def collect_attributes(do_validate = True):
 
         if do_validate:
             attr.validate_input()
-        host[attr.name()] = attr.from_html_vars()
+        host[attrname] = attr.from_html_vars()
     return host
 
 def have_folder_attributes():
@@ -2589,7 +2596,17 @@ def configure_attributes(hosts, for_what, parent, myself=None):
         checkbox_name = "_change_%s" % attrname
         cb = html.get_checkbox(checkbox_name)
         force_entry = False
-        if cb != None:
+
+        # first handle mandatory cases
+        if for_what == "folder" and attr.is_mandatory() \
+            and some_host_hasnt_set(myself, attrname) \
+            and not has_inherited:
+            force_entry = True
+            active = True
+        elif for_what == "host" and attr.is_mandatory() and not has_inherited:
+                force_entry = True
+                active = True
+        elif cb != None:
             active = cb # get previous state of checkbox
         elif for_what == "search":
             active = attr.default_value() == "" # show empty text search fields always
@@ -2597,23 +2614,17 @@ def configure_attributes(hosts, for_what, parent, myself=None):
             active = unique and len(values) > 0
         elif for_what == "folder":
             active = attrname in host
-            if attr.is_mandatory() and some_host_hasnt_set(myself, attrname):
-                force_entry = True
         else: # "host"
-            if attr.is_mandatory() and not has_inherited:
-                force_entry = True
-                active = True
-            else:
-                active = attrname in host
+            active = attrname in host
 
         html.write('<td class=checkbox>')
         if force_entry:
-            html.write("<input type=checkbox name=\"%s\" CHECKED DISABLED></div>" % checkbox_name)
+            html.write("<input type=checkbox name=\"ignored_%s\" CHECKED DISABLED></div>" % checkbox_name)
+            html.hidden_field(checkbox_name, "on")
         else:
             html.checkbox(checkbox_name, active, 
                 onchange="wato_toggle_attribute(this, '%s');" % attrname ) # Only select if value is unique
         html.write("</td>")
-
 
         # Now comes the input fields and the inherited / default values
         # as two DIV elements, one of which is visible at one time.
@@ -2661,14 +2672,19 @@ def configure_attributes(hosts, for_what, parent, myself=None):
 def some_host_hasnt_set(container, attrname):
     if ".folders" in container: # we are a folder:
         for folder in container[".folders"].values():
-            if some_host_hasnt_set(folder, attrname):
+            if attrname in folder.get("attributes", {}):
+                return False
+            elif some_host_hasnt_set(folder, attrname):
                 return True
         for afile in container[".files"].values():
-            if some_host_hasnt_set(afile, attrname):
+            if attrname in afile.get("attributes", {}):
+                return False
+            elif some_host_hasnt_set(afile, attrname):
                 return True
+
     else: # we are a host list
         hosts = read_configuration_file(container[".parent"], container)
-        for host in hosts:
+        for host in hosts.values():
             if attrname not in host:
                 return True
     return False

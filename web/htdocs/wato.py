@@ -177,17 +177,17 @@ def mode_folder(phase):
     elif phase == "action":
         if html.var("_delete") and html.transaction_valid():
             delname = html.var("_delete")
-            if delname in g_folder["folders"]:
-                del_folder = g_folder["folders"][delname]
-                if len(del_folder["files"]) > 0:
+            if delname in g_folder[".folders"]:
+                del_folder = g_folder[".folders"][delname]
+                if len(del_folder[".files"]) > 0:
                     raise MKUserError(None, _("The folder %s cannot be deleted, it still contains some files.")
                     % del_folder["title"])
-                if len(del_folder["folders"]) > 0:
+                if len(del_folder[".folders"]) > 0:
                     raise MKUserError(None, _("The folder %s cannot be deleted, it still contains subfolders.")
                     % del_folder["title"])
                 return delete_folder_after_confirm(del_folder)
-            elif delname in g_folder["files"]:
-                del_file = g_folder["files"][delname]
+            elif delname in g_folder[".files"]:
+                del_file = g_folder[".files"][delname]
                 return delete_file_after_confirm(del_file)
             else:
                 raise MKGeneralException(_("You called this page with a non-existing folder/file %s") % delname)
@@ -203,7 +203,7 @@ def mode_folder(phase):
 
 def show_filefolder_list(thing, what, title):
     # Show list of files
-    if len(thing[what + "s" ]) > 0:
+    if len(thing["." + what + "s" ]) > 0:
         html.write("<h3>%s</h3>" % title)
         html.write("<table class=data>\n")
         html.write("<tr><th>" + _("Actions") + "</th><th>" + _("Title") + "</th>")
@@ -218,11 +218,11 @@ def show_filefolder_list(thing, what, title):
 
         odd = "even"
 
-        for entry in sort_by_title(thing[what + "s"].values()):
+        for entry in sort_by_title(thing["." + what + "s"].values()):
             odd = odd == "odd" and "even" or "odd" 
             html.write('<tr class="data %s0">' % odd)
 
-            name = entry["name"]
+            name = entry[".name"]
             if what == "folder":
                 folder_path = entry[".path"]
                 filename = None
@@ -231,7 +231,7 @@ def show_filefolder_list(thing, what, title):
                 filename = name
 
             edit_url     = make_link_to([("mode", "edit" + what)], folder_path, filename)
-            delete_url   = make_action_link([("mode", "folder"), ("_delete", entry["name"])])
+            delete_url   = make_action_link([("mode", "folder"), ("_delete", entry[".name"])])
             enter_url    = make_link_to([], folder_path, filename)
 
             html.write("<td>")
@@ -262,10 +262,14 @@ def show_filefolder_list(thing, what, title):
 
             # Number of hosts
             if what == "file":
-                num_hosts = entry["num_hosts"]
+                num_hosts = entry.get("num_hosts")
             else:
                 num_hosts = count_hosts(entry)
-            html.write("<td>%d</td>" % num_hosts)
+            if num_hosts != None:
+                html.write("<td>%d</td>" % num_hosts)
+            else:
+                html.write("<td>?</td>")
+
             html.write("</tr>")
         html.write("</table>")
     else:
@@ -292,10 +296,10 @@ def mode_editfolder(phase, what, new):
         name, title, roles = None, None, []
         mode = "new"
     else:
-        page_title = _("Edit") + (" %s %s" % (the_what, g_folder["name"]))
+        page_title = _("Edit") + (" %s %s" % (the_what, g_folder[".name"]))
         if what == "file":
-            page_title += "/" + g_file["name"]
-        name  = the_thing["name"]
+            page_title += "/" + g_file[".name"]
+        name  = the_thing[".name"]
         title = the_thing["title"]
         roles = the_thing["roles"]
         mode = "edit"
@@ -338,7 +342,7 @@ def mode_editfolder(phase, what, new):
         if new:
             newpath = g_folder[".path"] + (name,)
             new_thing = { 
-                "name"       : name,
+                ".name"       : name,
                 ".path"       : newpath,
                 "title"      : title, 
                 "roles"      : roles,
@@ -346,8 +350,8 @@ def mode_editfolder(phase, what, new):
             }
             if what == "folder":
                 new_thing.update({ 
-                    "folders" : {},
-                    "files" : {},
+                    ".folders" : {},
+                    ".files" : {},
                 })
             else:
                 new_thing["num_hosts"] = 0
@@ -448,9 +452,9 @@ def check_wato_filename(htmlvarname, name, what):
         if not name.endswith(".mk"):
             raise MKUserError(htmlvarname, _("The name of the file must end with .mk"))
         name = name[:-3]
-    if what == "folder" and name in g_folder["folders"]:
+    if what == "folder" and name in g_folder[".folders"]:
         raise MKUserError(htmlvarname, _("A folder with that name already exists."))
-    elif what == "file" and name in g_folder["files"]:
+    elif what == "file" and name in g_folder[".files"]:
         raise MKUserError(htmlvarname, _("A file with that name already exists."))
     if not name:
         raise MKUserError(htmlvarname, _("Please specify a name."))
@@ -462,9 +466,9 @@ def create_wato_filename(title, what):
     c = 1
     name = basename
     while True:
-        if what == "folder" and name not in g_folder["folders"]:
+        if what == "folder" and name not in g_folder[".folders"]:
             break
-        elif what == "file" and name + ".mk" not in g_folder["files"]:
+        elif what == "file" and name + ".mk" not in g_folder[".files"]:
             break
         c += 1
         name = "%s-%d" % (basename, c)
@@ -509,7 +513,7 @@ def mode_file(phase):
 
     elif phase == "buttons":
         html.context_button(_("Back"), make_link_to([("mode", "folder")], g_folder[".path"]))
-        html.context_button(_("Properties"), make_link_to([("mode", "editfile")], g_folder[".path"], g_file["name"]))
+        html.context_button(_("Properties"), make_link_to([("mode", "editfile")], g_folder[".path"], g_file[".name"]))
         html.context_button(_("New host"), make_link([("mode", "newhost")]))
         changelog_button()
         search_button()
@@ -875,7 +879,7 @@ def mode_search(phase):
         if html.transaction_valid():
             html.write("</td><td>")
             crit = {
-                "name" : html.var("host"),
+                ".name" : html.var("host"),
             }
             crit.update(collect_attributes(do_validate = False))
 
@@ -895,9 +899,9 @@ def mode_search(phase):
 
 def search_hosts_in_folder(folder, crit):
     num_found = 0
-    for f in folder["files"].values():
+    for f in folder[".files"].values():
         num_found += search_hosts_in_file(folder, f, crit)
-    for f in folder["folders"].values():
+    for f in folder[".folders"].values():
         num_found += search_hosts_in_folder(f, crit)
     return num_found
 
@@ -909,7 +913,7 @@ def search_hosts_in_file(the_folder, the_file, crit):
     found = []
     hosts = read_configuration_file(the_folder, the_file)
     for hostname, host in hosts.items():
-        if crit["name"] and crit["name"].lower() not in hostname.lower():
+        if crit[".name"] and crit[".name"].lower() not in hostname.lower():
             continue
 
         # Compute inheritance
@@ -930,7 +934,7 @@ def search_hosts_in_file(the_folder, the_file, crit):
 
     if found:
         render_folder_path(the_folder, 0, True)
-        file_url = make_link_to([("mode", "file")], the_folder[".path"], the_file["name"]) 
+        file_url = make_link_to([("mode", "file")], the_folder[".path"], the_file[".name"]) 
         html.write(' / <a href="%s">%s</a>' % (file_url, the_file["title"]))
         html.write(":")
         found.sort()
@@ -943,7 +947,7 @@ def search_hosts_in_file(the_folder, the_file, crit):
         even = "even"
         for hostname, host, effective in found:
             even = even == "even" and "odd" or "even"
-            host_url =  make_link_to([("mode", "edithost"), ("host", hostname)], the_folder[".path"], the_file["name"])
+            host_url =  make_link_to([("mode", "edithost"), ("host", hostname)], the_folder[".path"], the_file[".name"])
             html.write('<tr class="data %s0"><td><a href="%s">%s</a></td>\n' % 
                (even, host_url, hostname))
             for attr in host_attributes:
@@ -1207,7 +1211,7 @@ def render_link_tree(h, format):
 
     def render_folder(f):
 
-        subfolders = f["folders"]
+        subfolders = f[".folders"]
         path = f[".path"]
         filename = "/" + "/".join(path) + "/"
         if len(path) > 0:
@@ -1491,68 +1495,105 @@ def check_mk_automation(command, args=[], indata=""):
 def make_config_path(folder, file = None):
     parts = folder[".path"]
     if type(file) == dict:
-        parts += (file["name"],)
+        parts += (file[".name"],)
     elif file:
         parts += (file,)
 
     return defaults.check_mk_configdir + "/" + "/".join(parts)
 
-def load_folder_config():
-    global g_root_folder, g_files
-
-    path = conf_dir + "/folders.mk"
-    if os.path.exists(path):
-        g_root_folder = eval(file(path).read())
-    else:
-        g_root_folder = { 
-            "name" : "", 
-            "title" : "Main directory", 
-            "files" : {}, 
-            "folders" : {}, 
-            "roles" : [ "admin" ],
-        }
-
-    # make each folder and file know its own path
-    g_files = {}
-    def add_path_info(path, folder):
-        folder[".path"] = path
-
-        for name, subfolder in folder["folders"].items():
-            subpath = path + (name,)
-            add_path_info(subpath, subfolder)
-            subfolder[".parent"] = folder
-
-        for name, subfile in folder["files"].items():
-            filepath = path + (name,)
-            subfile[".path"] = filepath
-            subfile[".parent"] = folder
-            g_files[filepath] = subfile
-
-    add_path_info((), g_root_folder)
 
 
+# Remove all keys beginning with '.' in a folder. Those keys
+# keep temporary information (such as a link back to the parent)
+# which need not or cannot be persisted.
 def clean_dict(d):
     return dict([(k, v) for (k, v) in d.iteritems() if not k.startswith('.') ])
 
+def folder_dir(the_folder):
+    return defaults.check_mk_configdir + file_os_path(the_folder)
+
 def save_folder_config():
-    # save, but remove redundancy before saving. Only save recursive ROOT folder,
-    # omit explicit other folders. And remove redundant path information
+    # The folder configuration is saved directly in the filesystem. The 
+    # configuration for a folder is saved in /.wato, that of a file is saved
+    # in thefile.mk.wato.
+    save_folder_info(g_root_folder)
 
-    def clean_folder(folder):
-        cleaned = clean_dict(folder)
+def save_folder_info(the_folder):
+    dir = folder_dir(the_folder)
+    make_nagios_directory(dir)
+    fn = dir + "/.wato"
+    config.write_settings_file(fn, clean_dict(the_folder))
 
-        cleaned["folders"] = {}
-        for name, subfolder in folder["folders"].items():
-            cleaned["folders"][name] = clean_folder(subfolder)
+    for subfolder in the_folder[".folders"].values():
+        save_folder_info(subfolder)
 
-        cleaned["files"] = {}
-        for name, subfile in folder["files"].items():
-            cleaned["files"][name] = clean_dict(subfile)
+    for subfile in the_folder[".files"].values():
+        save_file_info(subfile)
 
-        return cleaned
+def save_file_info(the_file):
+    fn = folder_dir(the_file) + ".wato"
+    config.write_settings_file(fn, clean_dict(the_file))
 
-    make_nagios_directory(conf_dir)
-    config.write_settings_file(conf_dir + "/folders.mk", clean_folder(g_root_folder))
+# Load the information about all WATO-handles configuration files
+# in check_mk/conf.d and also the folder meta-data
+def load_folder_config():
+    dir = defaults.check_mk_configdir
+
+    global g_root_folder, g_files
+    g_files = {}
+    g_root_folder = load_folder_info(dir)
+
+def load_folder_info(dir, name = "", path=()):
+    fn = dir + "/.wato"
+    try:
+        the_folder = eval(file(fn).read())
+    except:
+        the_folder = { 
+            "roles" : [ "admin" ], 
+            "title" : name and name or _("Main directory")
+        }
+
+    the_folder[".name"]    = name
+    the_folder[".path"]    = path
+    the_folder[".folders"] = {}
+    the_folder[".files"]   = {}
+
+    # Now look for WATO files and subdirectories
+    for entry in os.listdir(dir):
+        if entry[0] == '.':
+            continue
+
+        p = dir + "/" + entry
+
+        if os.path.isdir(p):
+            f = load_folder_info(p, entry, path + (entry,))
+            f[".parent"] = the_folder
+            the_folder[".folders"][entry] = f
+
+        elif entry.endswith(".mk.wato"):
+            name = entry[:-5]
+            f = load_file_info(p, name, path + (name,))
+            f[".parent"] = the_folder
+            the_folder[".files"][name] = f
+    
+    return the_folder
+
+def load_file_info(fn, name, path):
+    try:
+        the_file = eval(file(fn).read())
+    except:
+        the_file = { 
+            "roles" : [ "admin" ], 
+            "title" : name,
+        }
+
+    the_file[".name"] = name
+    the_file[".path"] = path
+
+    global g_files
+    g_files[path] = the_file
+    return the_file
+
 
 def find_folder(path, in_folder = None):
     if in_folder == None:
@@ -1562,17 +1603,24 @@ def find_folder(path, in_folder = None):
         return in_folder
     else:
         name, rest = path[0], path[1:]
-        if name not in in_folder["folders"]:
+        if name not in in_folder[".folders"]:
             return None
         else:
-            return find_folder(rest, in_folder["folders"][name])
+            return find_folder(rest, in_folder[".folders"][name])
 
 def count_hosts(folder):
     num = 0
-    for f in folder["files"].values():
-        num += f["num_hosts"]
-    for sf in folder["folders"].values():
-        num += count_hosts(sf)
+    for f in folder[".files"].values():
+        if "num_hosts" in f:
+            num += f["num_hosts"]
+        else:
+            return None
+
+    for sf in folder[".folders"].values():
+        c = count_hosts(sf)
+        if c == None:
+            return None
+        num += c 
     folder["num_hosts"] = num
     return num
 
@@ -1581,9 +1629,9 @@ def load_all_hosts(base_folder = None):
     if base_folder == None:
         base_folder = g_root_folder
     hosts = {}
-    for f in base_folder["files"].values():
+    for f in base_folder[".files"].values():
         hosts.update(read_configuration_file(base_folder, f))
-    for f in base_folder["folders"].values():
+    for f in base_folder[".folders"].values():
         hosts.update(load_all_hosts(f))
     return hosts
 
@@ -1647,9 +1695,9 @@ def write_the_configuration_file():
 
 
 def rewrite_config_files_below(folder):
-    for fi in folder["files"].values():
+    for fi in folder[".files"].values():
         rewrite_config_file(folder, fi)
-    for fo in folder["folders"].values():
+    for fo in folder[".folders"].values():
         rewrite_config_files_below(fo)
 
 def rewrite_config_file(folder, thefile):
@@ -1776,11 +1824,11 @@ def get_folder_and_file():
         raise MKGeneralException(_('You called this page with a non-existing folder! '
                                  'Go back to the <a href="wato.py">main index</a>.'))
     if filename:
-        if filename not in g_folder["files"]:
+        if filename not in g_folder[".files"]:
             raise MKGeneralException(_('You called this page with a non-existing file! '
                                      'Go back to the <a href="wato.py">main index</a>.'))
 
-        g_file = g_folder["files"][filename]
+        g_file = g_folder[".files"][filename]
         if config.role not in g_file["roles"]:
             raise MKAuthException(_("You have no permissions on this configuration file!"))
 
@@ -1798,7 +1846,7 @@ def make_link(vars):
         os_path = "/"
 
     if g_file:
-        os_path += g_file["name"]
+        os_path += g_file[".name"]
 
     vars = vars + [ ("filename", os_path) ]
     return html.makeuri_contextless(vars)
@@ -1941,7 +1989,7 @@ def delete_folder_after_confirm(del_folder):
     c = html.confirm(_("Do you really want to delete the folder <tt>%s</tt> (%s)?") 
         % (file_os_path(del_folder), del_folder["title"]))
     if c:
-        del g_folder["folders"][del_folder["name"]]
+        del g_folder[".folders"][del_folder[".name"]]
         try:
             os.rmdir(make_conig_path(del_folder))
         except:
@@ -1970,7 +2018,7 @@ def delete_file_after_confirm(del_file):
         else:
             log_audit(del_file, "delete-file", _("Deleted empty file %s") % del_file["title"])
         del g_files[del_file[".path"]]
-        del g_folder["files"][del_file["name"]]
+        del g_folder[".files"][del_file[".name"]]
         delete_configuration_file(g_folder, del_file)
         save_folder_config()
         call_hook_host_changed(g_folder)
@@ -2474,7 +2522,7 @@ def configure_attributes(hosts, for_what, parent):
 
         if for_what == "host":
             what = "file"
-            url = make_link_to([("mode", "editfile")], g_folder[".path"], g_file["name"])
+            url = make_link_to([("mode", "editfile")], g_folder[".path"], g_file[".name"])
         else:
             what = "folder"
 
@@ -2633,8 +2681,8 @@ class API:
         the_thing = g_root_folder
         while len(path) > 0:
              c = path[0]
-             if c in the_thing["folders"]:
-                 the_thing = the_thing["folders"][c]
+             if c in the_thing[".folders"]:
+                 the_thing = the_thing[".folders"][c]
              else:
                  return None
              path = path[1:]
@@ -2645,9 +2693,9 @@ class API:
 
     def get_file(self, path):
         folder = self.get_folder(path[:-1])
-        if not folder or not path[-1] in folder["files"]:
+        if not folder or not path[-1] in folder[".files"]:
             return None
-        the_file = folder["files"][path[-1]]
+        the_file = folder[".files"][path[-1]]
         if not the_file:
             return None
         hosts = read_configuration_file(folder, the_file)
@@ -2682,10 +2730,10 @@ class API:
             new_thing.update(thing)
             if ".parent" in new_thing:
                 del new_thing[".parent"]
-            if "files" in new_thing:
-                new_thing["files"] = drop_internal_dict(new_thing["files"])
-            if "folders" in new_thing:
-                new_thing["folders"] = drop_internal_dict(new_thing["folders"])
+            if ".files" in new_thing:
+                new_thing[".files"] = drop_internal_dict(new_thing[".files"])
+            if ".folders" in new_thing:
+                new_thing[".folders"] = drop_internal_dict(new_thing[".folders"])
             return new_thing
 
         def drop_internal_dict(self, thingdict): 
@@ -2702,14 +2750,14 @@ api = API()
 
 # internal helper functions for API
 def collect_hosts(the_thing):
-    if "folders" in the_thing: # a folder
+    if ".folders" in the_thing: # a folder
         hosts = {}
-        for fi in the_thing.get("files", []).values():
+        for fi in the_thing.get(".files", []).values():
             hosts.update(collect_hosts(fi))
-        for fo in the_thing["folders"].values():
+        for fo in the_thing[".folders"].values():
             hosts.update(collect_hosts(fo))
         return hosts
-    elif "num_hosts" in the_thing: # a file
+    else: # file
         hosts = read_configuration_file(the_thing[".parent"], the_thing)
         effective_hosts = dict([ (hn, effective_attributes(h, the_thing)) 
                                for (hn, h) in hosts.items() ])

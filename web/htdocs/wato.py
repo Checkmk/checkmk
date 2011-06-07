@@ -437,7 +437,7 @@ def mode_editfolder(phase, what, new):
                 attributes = the_thing.get("attributes", {})
                 parent = g_folder.get(".parent")
 
-            configure_attributes({what: attributes}, "folder", parent)
+            configure_attributes({what: attributes}, "folder", parent, g_folder)
 
         html.write('<tr><td colspan=3 class="buttons">')
         html.button("save", _("Save &amp; Finish"), "submit")
@@ -2505,7 +2505,9 @@ def have_folder_attributes():
 # "folder" -> properies of folder or file
 # "search" -> search dialog
 # "bulk"   -> bulk change
-def configure_attributes(hosts, for_what, parent):
+# parent: The parent file/folder of the objects to configure
+# myself: For mode "folder" the folder/file itself
+def configure_attributes(hosts, for_what, parent, myself=None):
     # html.write("<pre>%s</pre>" % pprint.pformat(hosts))
 
     for attr in host_attributes:
@@ -2570,14 +2572,19 @@ def configure_attributes(hosts, for_what, parent):
 
         # Checkbox for activating this attribute
 
-        # Determine current state of visibility: If the form has already
-        # been submitted (i.e. search or input error), then we take the
-        # previous state of the box. In search mode we make those boxes
-        # active that have an empty string as default value (simple
-        # text boxed). In bulk mode we make those attributes active that
-        # have an explicitely set value over all hosts.
-        # In host and folder mode we make those
-        # attributes active that are currently set.
+        # Determine current state of visibility: If the form has already been submitted (i.e. search
+        # or input error), then we take the previous state of the box. In search mode we make those
+        # boxes active that have an empty string as default value (simple text boxed). In bulk
+        # mode we make those attributes active that have an explicitely set value over all hosts.
+        # In host and folder mode we make those attributes active that are currently set.
+
+        # Also determine, if the attribute can be switched off at all. Problematic here are
+        # mandatory attributes. We must make sure, that at least one folder/file/host in the
+        # chain defines an explicit value for that attribute. If we show a host and no folder/file
+        # inherits an attribute to that host, the checkbox will be always active and locked.
+        # The same is the case if we show a file/folder and at least one host below this
+        # has not set that attribute. In case of bulk edit we never lock: During bulk edit no
+        # attribute ca be removed anyway.
 
         checkbox_name = "_change_%s" % attrname
         cb = html.get_checkbox(checkbox_name)
@@ -2590,6 +2597,8 @@ def configure_attributes(hosts, for_what, parent):
             active = unique and len(values) > 0
         elif for_what == "folder":
             active = attrname in host
+            if attr.is_mandatory() and some_host_hasnt_set(myself, attrname):
+                force_entry = True
         else: # "host"
             if attr.is_mandatory() and not has_inherited:
                 force_entry = True
@@ -2648,6 +2657,21 @@ def configure_attributes(hosts, for_what, parent):
         
         html.write("</td></tr>\n")
 
+
+def some_host_hasnt_set(container, attrname):
+    if ".folders" in container: # we are a folder:
+        for folder in container[".folders"].values():
+            if some_host_hasnt_set(folder, attrname):
+                return True
+        for afile in container[".files"].values():
+            if some_host_hasnt_set(afile, attrname):
+                return True
+    else: # we are a host list
+        hosts = read_configuration_file(container[".parent"], container)
+        for host in hosts:
+            if attrname not in host:
+                return True
+    return False
 
 # Compute effective (explicit and inherited) attributes
 # for a host. This returns a dictionary with a value for

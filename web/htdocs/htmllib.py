@@ -67,6 +67,8 @@ class uriinfo:
 # Encode HTML attributes: replace " with &quot; This code
 # is slow. 
 def attrencode(value):
+    if type(value) == int:
+        return str(value)
     new = ""
     for c in value:
         if c == '"':
@@ -275,7 +277,10 @@ class html:
             obj_id = ' id=%s' % obj_id
         if style:
             style = ' style="%s"' % style
-        self.write("<a href=\"%s\" class=button%s%s>%s</a>" % (href, obj_id, style, text))
+
+        self.write('<input%s%s value="%s" class=buttonlink type=button onclick="location.href=\'%s\'">' % \
+                (obj_id, style, text, href))
+        # self.write("<a href=\"%s\" class=button%s%s>%s</a>" % (href, obj_id, style, text))
 
     def jsbutton(self, varname, text, onclick, style=''):
         if style:

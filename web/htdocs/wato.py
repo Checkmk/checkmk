@@ -85,19 +85,27 @@ def page_handler(h):
     if not config.may("use_wato"):
         raise MKAuthException(_("You are not allowed to use WATO!"))
 
-    declare_host_tag_attributes()
-    load_folder_config()
-    get_folder_and_file() # sets g_root_folder and g_pathname
+    try:
+        declare_host_tag_attributes()
+        load_folder_config()
+        get_folder_and_file() # sets g_root_folder and g_pathname
 
-    if g_file:
-        title = g_file["title"]
-        read_the_configuration_file()
-    else:
-        title = g_folder["title"]
+        if g_file:
+            title = g_file["title"]
+            read_the_configuration_file()
+        else:
+            title = g_folder["title"]
 
-    default_mode = g_file and "file" or "folder"
-    current_mode = html.var("mode", default_mode)
-    modefunc = mode_functions.get(current_mode)
+        default_mode = g_file and "file" or "folder"
+        current_mode = html.var("mode", default_mode)
+        modefunc = mode_functions.get(current_mode)
+
+    except Exception, e:
+        html.header("Error")
+        html.show_error(e)
+        html.footer()
+        return
+
 
     # Do actions (might switch mode)
     action_message = None
@@ -134,22 +142,26 @@ def page_handler(h):
     html.write("<script type='text/javascript' src='js/wato.js'></script>")
     html.write("<div class=wato>\n")
 
-    # Show contexts buttons
-    html.begin_context_buttons()
-    modefunc("buttons")
-    for inmode, buttontext, targetmode in extra_buttons:
-        if inmode == current_mode:
-            html.context_button(buttontext, make_link([("mode", targetmode)]))
-    html.end_context_buttons()
+    try:
+        # Show contexts buttons
+        html.begin_context_buttons()
+        modefunc("buttons")
+        for inmode, buttontext, targetmode in extra_buttons:
+            if inmode == current_mode:
+                html.context_button(buttontext, make_link([("mode", targetmode)]))
+        html.end_context_buttons()
 
-    # Show outcome of action
-    if html.has_users_errors():
-        html.show_error(action_message)
-    elif action_message:
-        html.message(action_message)
+        # Show outcome of action
+        if html.has_users_errors():
+            html.show_error(action_message)
+        elif action_message:
+            html.message(action_message)
 
-    # Show content
-    modefunc("content")
+        # Show content
+        modefunc("content")
+
+    except Exception, e:
+        html.show_error(e)
 
     html.write("</div>\n")
     html.footer()
@@ -197,8 +209,12 @@ def mode_folder(phase):
 
     else:
         render_folder_path()
-        show_filefolder_list(g_folder, "folder", _("Subfolders"))
-        show_filefolder_list(g_folder, "file",   _("Host lists"))
+        have_something = show_filefolder_list(g_folder, "folder", _("Subfolders"))
+        have_something = show_filefolder_list(g_folder, "file",   _("Host lists")) or have_something
+        if not have_something:
+            html.write("<div class=info>" + 
+            _("There are no folders and no host lists in this folder. "
+              "In order to add hosts you first need to <a href='%s'>create a new host list</a>. ") % make_link([("mode", "newfile")]))
 
 
 def show_filefolder_list(thing, what, title):
@@ -206,7 +222,7 @@ def show_filefolder_list(thing, what, title):
     if len(thing["." + what + "s" ]) > 0:
         html.write("<h3>%s</h3>" % title)
         html.write("<table class=data>\n")
-        html.write("<tr><th>" + _("Actions") + "</th><th>" + _("Title") + "</th>")
+        html.write("<tr><th class=left>" + _("Actions") + "</th><th>" + _("Title") + "</th>")
 
         for attr in host_attributes:
             if attr.show_in_table() and attr.show_in_folder():
@@ -214,7 +230,7 @@ def show_filefolder_list(thing, what, title):
 
         if not config.wato_hide_filenames:
             html.write("<th>%s</th>" % what.title())
-        html.write("<th>" + _("Hosts") + "</th></tr>\n")
+        html.write("<th class=right>" + _("Hosts") + "</th></tr>\n")
 
         odd = "even"
 
@@ -234,11 +250,9 @@ def show_filefolder_list(thing, what, title):
             delete_url   = make_action_link([("mode", "folder"), ("_delete", entry[".name"])])
             enter_url    = make_link_to([], folder_path, filename)
 
-            html.write("<td>")
+            html.write("<td class=buttons>")
             html.buttonlink(edit_url, _("Properties"))
             html.buttonlink(delete_url, _("Delete"))
-            if what == "file":
-                html.buttonlink(enter_url, _("Hosts"))
             html.write("</td>")
 
 
@@ -272,8 +286,9 @@ def show_filefolder_list(thing, what, title):
 
             html.write("</tr>")
         html.write("</table>")
+        return True
     else:
-        html.write("<h3>" + _("There are no %s in this folder.") % title.lower() + "</h3>" )
+        return False
     
 
 
@@ -508,7 +523,7 @@ def convert_title_to_filename(title):
 def mode_file(phase):
 
     if phase == "title":
-        return "Hosts list"
+        return None
 
     elif phase == "buttons":
         html.context_button(_("Back"), make_link_to([("mode", "folder")], g_folder[".path"]))
@@ -586,14 +601,14 @@ def mode_file(phase):
         colspan = 5
         html.begin_form("hosts", None, "POST")
         html.write("<table class=data>\n")
-        html.write("<tr><th></th><th></th><th>" + _("Hostname") + "</th>")
+        html.write("<tr><th class=left></th><th></th><th>" + _("Hostname") + "</th>")
         
         for attr in host_attributes:
             if attr.show_in_table():
                 html.write("<th>%s</th>" % attr.title())
                 colspan += 1
 
-        html.write("<th>" + _("Move To") + "</th>")
+        html.write("<th class=right>" + _("Move To") + "</th>")
         html.write("</tr>\n")
         odd = "odd"
 
@@ -612,7 +627,7 @@ def mode_file(phase):
 
             # Check box (if none is checked, then the default is to check all)
             def_value = selected_hosts == []
-            html.write("<td>")
+            html.write("<td class=select>")
             html.checkbox("sel_%s" % hostname, def_value, 'wato_select')
             html.write("</td>")
 
@@ -622,7 +637,7 @@ def mode_file(phase):
             clone_url    = make_link([("mode", "newhost"), ("clone", hostname)])
             delete_url   = make_action_link([("mode", "file"), ("_delete", hostname)])
 
-            html.write("<td>")
+            html.write("<td class=buttons>")
             html.buttonlink(edit_url, _("Edit"))
             html.buttonlink(services_url, _("Services"))
             html.buttonlink(clone_url, _("Clone"))
@@ -652,7 +667,7 @@ def mode_file(phase):
             html.write("</tr>\n")
 
         # bulk actions
-        html.write('<tr class="data %s0"><td>' % odd)
+        html.write('<tr class="data %s0"><td class=select>' % odd)
         html.jsbutton('_markall', 'X', 'javascript:wato_check_all(\'wato_select\');')
         html.write("</td><td colspan=%d>" % colspan)
         html.write(_("On all selected hosts:\n"))
@@ -1292,14 +1307,14 @@ def mode_changelog(phase):
             message += render_audit_log(pending, "pending")
             html.show_warning(message)
         else:
-            html.write("<p>" + _("No pending changes, monitoring server is up to date.") + "</p>")
+            html.write("<div class=info>" + _("No pending changes, monitoring server is up to date.") + "</div>")
 
         audit = parse_audit_log("audit")
         if len(audit) > 0:
             html.write("<b>" + _("All Changes") + "</b>")
             html.write(render_audit_log(audit, "audit"))
         else:
-            html.write("<p>" + _("Logfile is empty. No host has been created or changed yet.") + "</p>")
+            html.write("<div class=info>" + _("The logfile is empty. No host has been created or changed yet.") + "</div>")
         
 def log_entry(linkinfo, action, message, logfilename):
     if type(message) == unicode:
@@ -2136,8 +2151,11 @@ def render_folder_path(the_folder = 0, the_file = 0, link_to_last = False):
         the_file = g_file
 
     def render_component(p, title):
+        filename = "/" + "/".join(p)
+        if not filename.endswith("/") and not filename.endswith(".mk"):
+            filename += "/"
         return '<a href="%s">%s</a>' % (
-               html.makeuri_contextless([("filename", "/" + "/".join(p))]), title)
+               html.makeuri_contextless([("filename", filename)]), title)
 
     path = ()
     comps = []

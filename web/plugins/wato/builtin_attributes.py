@@ -31,6 +31,7 @@ declare_host_attribute(TextAttribute("alias", _("Alias"),
 declare_host_attribute(IPAddressAttribute("ipaddress", _("IP Address"), 
                        _("IP Address of the host. Leave emtpy to use automatic "
                          "hostname lookup. Enter a hostname to use dynamic resoluting "
-                         "during the actual monitoring.")), True, False)
+                         "during the actual monitoring."), mandatory=True, dnslookup=True),
+                         show_in_table=True, show_in_folder=True)
 
 

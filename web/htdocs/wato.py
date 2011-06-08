@@ -2329,8 +2329,9 @@ class TextAttribute(Attribute):
 
 
 class IPAddressAttribute(TextAttribute):
-    def __init__(self, name, title, help = None):
-        TextAttribute.__init__(self, name, title, help, "", mandatory = True)
+    def __init__(self, name, title, help = None, mandatory = False, dnslookup = False):
+        TextAttribute.__init__(self, name, title, help, "", mandatory = mandatory)
+        self._dnslookup = dnslookup
 
     def render_input(self, value):
         if value == None:
@@ -2354,9 +2355,6 @@ class IPAddressAttribute(TextAttribute):
             tdclass = 'dnserror'
         return ip, tdclass, text
     
-    def is_mandatory(self):
-       return True # empty value allowed, but missing not
-
     def paint(self, value, hostname):
         if value == None:
             ip, tdclass, text = self.do_dns(hostname)
@@ -2366,7 +2364,7 @@ class IPAddressAttribute(TextAttribute):
 
     def validate_input(self):
         value = self.from_html_vars()
-        if not value: # empty -> use DNS
+        if not value and self._dnslookup: # empty -> use DNS
             hostname = html.var("host")
             ip, text, tdclass = self.do_dns(hostname)
             if not ip:

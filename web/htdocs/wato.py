@@ -127,7 +127,10 @@ def page_handler(h):
             html.add_user_error(e.varname, e.message)
 
     # Title
-    html.header("%s - %s" % (title, modefunc("title")))
+    mode_title = modefunc("title")
+    if mode_title:
+        title += " - " + mode_title
+    html.header(title)
     html.write("<script type='text/javascript' src='js/wato.js'></script>")
     html.write("<div class=wato>\n")
 
@@ -165,7 +168,7 @@ def page_handler(h):
 
 def mode_folder(phase):
     if phase == "title":
-        return _("Folder contents")
+        return None
 
     elif phase == "buttons":
         html.context_button(_("Properties"), make_link_to([("mode", "editfolder")], g_folder[".path"]))
@@ -193,10 +196,6 @@ def mode_folder(phase):
                 raise MKGeneralException(_("You called this page with a non-existing folder/file %s") % delname)
 
     else:
-        html.write(_("Contents of folder "))
-        render_folder_path()
-        html.write("<p>")
-
         show_filefolder_list(g_folder, "folder", _("Subfolders"))
         show_filefolder_list(g_folder, "file",   _("Host lists"))
 
@@ -296,9 +295,7 @@ def mode_editfolder(phase, what, new):
         name, title, roles = None, None, []
         mode = "new"
     else:
-        page_title = _("Edit") + (" %s %s" % (the_what, g_folder[".name"]))
-        if what == "file":
-            page_title += "/" + g_file[".name"]
+        page_title = _("Edit Properties")
         name  = the_thing[".name"]
         title = the_thing["title"]
         roles = the_thing["roles"]
@@ -427,7 +424,7 @@ def mode_editfolder(phase, what, new):
 
         # Attributes inherited to hosts
         if have_folder_attributes():
-            html.write("<tr><td class=legend colspan=3>")
+            html.write("<tr><td class=title colspan=3>")
             html.write(_("The following attributes will be inherited to all hosts "
                          "in this %s") % the_what)
             html.write("</td></tr>")
@@ -1356,10 +1353,8 @@ def clear_audit_log():
         os.rename(path, newpath)
 
 def clear_audit_log_after_confirm():
-    if not html.transaction_valid():
-        return None  # Browser reload
-    wato_html_head(_("Confirm deletion of audit logfile"))
-    c = html.confirm(_("Do you really want to clear audit logfile?"))
+    c = wato_confirm(_("Confirm deletion of audit logfile"),
+                     _("Do you really want to clear audit logfile?"))
     if c:
         clear_audit_log()
         return None, _("Cleared audit logfile.")
@@ -1969,11 +1964,8 @@ def show_service_table(hostname, firsttime):
 
 
 def delete_host_after_confirm(delname):
-    if not html.transaction_valid():
-        return None  # Browser reload
-
-    wato_html_head(_("Confirm host deletion"))
-    c = html.confirm(_("Do you really want to delete the host <tt>%s</tt>?") % delname)
+    c = wato_confirm(_("Confirm host deletion"),
+                     _("Do you really want to delete the host <tt>%s</tt>?") % delname)
     if c:
         del g_hosts[delname]
         g_file["num_hosts"] -= 1
@@ -1988,8 +1980,8 @@ def delete_host_after_confirm(delname):
         return None # browser reload 
 
 def delete_hosts_after_confirm(hosts):
-    wato_html_head(_("Confirm deletion of %d hosts") % len(hosts))
-    c = html.confirm(_("Do you really want to delete the %d selected hosts?") % len(hosts))
+    c = wato_confirm(_("Confirm deletion of %d hosts") % len(hosts),
+                     _("Do you really want to delete the %d selected hosts?") % len(hosts))
     if c:
         for delname in hosts:
             del g_hosts[delname]
@@ -2005,9 +1997,9 @@ def delete_hosts_after_confirm(hosts):
         return None # browser reload 
 
 def delete_folder_after_confirm(del_folder):
-    wato_html_head(_("Confirm folder deletion"))
-    c = html.confirm(_("Do you really want to delete the folder <tt>%s</tt> (%s)?") 
-        % (file_os_path(del_folder), del_folder["title"]))
+    c = wato_confirm(_("Confirm folder deletion"),
+                     _("Do you really want to delete the folder <tt>%s</tt> (%s)?") 
+                % (file_os_path(del_folder), del_folder["title"]))
     if c:
         del g_folder[".folders"][del_folder[".name"]]
         folder_path = make_config_path(del_folder)
@@ -2031,9 +2023,10 @@ def delete_folder_after_confirm(del_folder):
 
 
 def delete_file_after_confirm(del_file):
-    wato_html_head(_("Confirm file deletion"))
-    c = html.confirm(_("Do you really want to delete the host list <b>%s</b>, "
-                    "which is containing %d hosts?") % (del_file["title"], del_file["num_hosts"]))
+    c = wato_confirm(_("Confirm file deletion"),
+                     _("Do you really want to delete the host list <b>%s</b>, "
+                       "which is containing %d hosts?") 
+                     % (del_file["title"], del_file["num_hosts"]))
     if c:
         hosts = read_configuration_file(g_folder, del_file)
         for delname in hosts:
@@ -2047,12 +2040,19 @@ def delete_file_after_confirm(del_file):
         delete_configuration_file(g_folder, del_file)
         save_folder_config()
         call_hook_host_changed(g_folder)
+        global g_file
+        g_file = None
         return "folder"
     elif c == False: # not yet confirmed
         return ""
     else:
         return None # browser reload 
 
+# Show confirmation dialog, send HTML-header if dialog is shown.
+def wato_confirm(html_title, message):
+    if not html.var("filled_in") == "confirm":
+        wato_html_head(html_title)
+    return html.confirm(message)
 
 def file_os_path(f):
     return "/" + "/".join(f[".path"]) 
@@ -2062,7 +2062,7 @@ g_html_head_open = False
 def wato_html_head(title):
     global g_html_head_open
     g_html_head_open = True
-    html.header("Check_MK WATO - " + title)
+    html.header(title)
     html.write("<div class=wato>\n")
 
 def host_move_combo(host = None):
@@ -2572,9 +2572,9 @@ def configure_attributes(hosts, for_what, parent, myself=None):
             inherited_value = attr.default_value()
 
         # Legend and Help
-        html.write("<tr><td class=legend>%s" % attr.title())
+        html.write("<tr><td class=legend><h3>%s</h3>" % attr.title())
         if attr.help():
-            html.write("<br><i>%s</i>" % attr.help())
+            html.write("<i>%s</i>" % attr.help())
         html.write("</td>")
 
         # Checkbox for activating this attribute
@@ -2599,6 +2599,7 @@ def configure_attributes(hosts, for_what, parent, myself=None):
 
         # first handle mandatory cases
         if for_what == "folder" and attr.is_mandatory() \
+            and myself \
             and some_host_hasnt_set(myself, attrname) \
             and not has_inherited:
             force_entry = True

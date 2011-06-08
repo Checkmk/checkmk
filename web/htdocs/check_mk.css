@@ -1721,6 +1721,41 @@ table.add_snapin i {
 .wato div.inherited h3 a { 
     color: #468;
 }
+
+/* Path to current folder at top of screen */
+.wato div.folderpath {
+    margin-bottom: 6px;
+}
+.wato div.folderpath a, 
+.wato div.folderpath b {
+    -moz-border-radius: 3px;
+    background-color: #eee;
+    padding: 1px 5px;
+    color: #468; 
+}
+.wato div.folderpath a {
+/*    color: #46c;  */
+    font-weight: bold;
+    text-decoration: none;
+}
+.wato div.folderpath a:hover {
+    color: black;
+    background-color: #fff;
+    /* text-decoration: underline; */
+}
+
+/* Information boxes displayed directly in the data area */
+.wato div.info {
+    margin-top: 10px;
+    marign-bottom: 10px;
+    padding: 5px 8px;
+    width: 800px;
+    -moz-border-radius: 3px;
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+}
+
+
 /* 
    ____                                    
    |  _ \ _ __ ___   __ _ _ __ ___  ___ ___ 

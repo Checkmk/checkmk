@@ -196,6 +196,7 @@ def mode_folder(phase):
                 raise MKGeneralException(_("You called this page with a non-existing folder/file %s") % delname)
 
     else:
+        render_folder_path()
         show_filefolder_list(g_folder, "folder", _("Subfolders"))
         show_filefolder_list(g_folder, "file",   _("Host lists"))
 
@@ -563,10 +564,10 @@ def mode_file(phase):
             return "bulkcleanup"
 
     elif len(g_hosts) == 0:
-        html.write(_("There are no hosts in this file."))
+        render_folder_path()
+        html.write("<div class=info>" + _("There are no hosts in this file.") + "</div>")
 
     else:
-        html.write(_("Hosts in file "))
         render_folder_path()
         html.write("<p>")
 
@@ -758,7 +759,7 @@ def mode_edithost(phase, new):
         html.write('<table class="form">\n')
 
         # host name
-        html.write("<tr><td class=legend>" + _("Hostname") + "</td><td class=content></td><td class=content>")
+        html.write("<tr><td class=legend colspan=2>" + _("Hostname") + "</td><td class=content>")
         if hostname and mode == "edit":
             html.write(hostname)
         else:
@@ -772,7 +773,7 @@ def mode_edithost(phase, new):
         html.button("save", _("Save &amp; Finish"), "submit")
         if not new:
             html.button("delete", _("Delete host!"), "submit")
-        html.button("services", _("Save &amp; got to Services"), "submit")
+        html.button("services", _("Save &amp; go to Services"), "submit")
         html.write("</td></tr>\n")
         html.write("</table>\n")
         html.hidden_fields()
@@ -853,7 +854,7 @@ def mode_search(phase):
         html.write("<table class=form>")
 
         # host name
-        html.write("<tr><td class=legend>" + _("Hostname") + "</td><td class=content></td><td class=content>")
+        html.write("<tr><td class=legend colspan=2>" + _("Hostname") + "</td><td class=content>")
         html.text_input("host")
         html.set_focus("host")
         html.write("</td></tr>\n")
@@ -931,10 +932,7 @@ def search_hosts_in_file(the_folder, the_file, crit):
         found.append((hostname, host, effective))
 
     if found:
-        render_folder_path(the_folder, 0, True)
-        file_url = make_link_to([("mode", "file")], the_folder[".path"], the_file[".name"]) 
-        html.write(' / <a href="%s">%s</a>' % (file_url, the_file["title"]))
-        html.write(":")
+        render_folder_path(the_folder, the_file, True)
         found.sort()
         html.write("<table class=data><tr><th>%s</th>" % (_("Hostname"), ))
         for attr in host_attributes:
@@ -2132,12 +2130,14 @@ def move_host_to(hostname, target_filename):
     move_hosts_to([hostname], target_filename)
 
 def render_folder_path(the_folder = 0, the_file = 0, link_to_last = False):
+
     if the_folder == 0:
         the_folder = g_folder
         the_file = g_file
 
     def render_component(p, title):
-        return '<a href="%s">%s</a>' % (make_link_to([], path), title)
+        return '<a href="%s">%s</a>' % (
+               html.makeuri_contextless([("filename", "/" + "/".join(p))]), title)
 
     path = ()
     comps = []
@@ -2153,12 +2153,12 @@ def render_folder_path(the_folder = 0, the_file = 0, link_to_last = False):
         if link_to_last:
             comps.append(render_component(the_file[".path"], the_file["title"]))
         else:
-            comps.append(the_file["title"])
+            comps.append("<b>" + the_file["title"] + "</b>")
 
     if not the_file and not link_to_last:
-        comps.append(the_folder["title"])
+        comps.append("<b>" + the_folder["title"] + "</b>")
 
-    html.write(" / ".join(comps))
+    html.write("<div class=folderpath>%s</div>\n" % " / ".join(comps))
 
 #   +----------------------------------------------------------------------+
 #   |               ____                                                   |

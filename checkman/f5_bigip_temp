@@ -18,4 +18,4 @@ inventory:
 
 
 perfdata: 
- the check does not (yet) generate performance data.
+ It generates performance data for the current, warning and critical temperaturs and graphs those.

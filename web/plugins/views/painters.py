@@ -262,7 +262,7 @@ def paint_icons(what, row): # what is "host" or "service"
         output += '<img class=icon title="%s" src="images/icon_outofnot.gif">' % _('Out of notification period')
 
     # Link to aggregations
-    if bi.is_part_of_aggregation(html, what, row["site"], row["host_name"], row.get("service_description")):
+    if bi.is_part_of_aggregation(what, row["site"], row["host_name"], row.get("service_description")):
          output += link_to_view('<img class=icon src="images/icon_aggr.gif" title="%s">' % _('Aggregations containing this %s') % what, row, 'aggr_' + what)
 
     # Link to WATO for hosts

@@ -42,14 +42,12 @@ def render_wato_files():
                     ajax_url = site["url_prefix"] + "check_mk/ajax_wato_files.py"
                     html.javascript("document.write(get_url_sync('%s'));" % ajax_url)
         else:
-            ajax_wato_files(html)
+            ajax_wato_files()
 
-def ajax_wato_files(h):
-    global html
-    html = h
+def ajax_wato_files():
     if config.may("use_wato"):
         format = ("<li>%s</li>" % link("XX", "XX")).replace("XX", "%s")
-        wato.render_link_tree(html, format)
+        wato.render_link_tree(format)
 
 
 sidebar_snapins["wato"] = {

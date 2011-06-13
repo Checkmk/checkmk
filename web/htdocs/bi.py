@@ -14,7 +14,6 @@ except NameError:
     from sets import Set as set
 
 
-
 config.declare_permission_section("bi", "BI - Check_MK Business Intelligence")
 config.declare_permission("bi.see_all",
         "See all hosts and services",
@@ -857,9 +856,7 @@ config.aggregation_functions['running_on'] = aggr_running_on
 #                 |___/           
 
 # Just for debugging
-def page_debug(h):
-    global html
-    html = h
+def page_debug():
     compile_forest(html.req.user)
     
     html.header("BI Debug")
@@ -868,9 +865,7 @@ def page_debug(h):
 
 
 # Just for debugging, as well
-def page_all(h):
-    global html
-    html = h
+def page_all():
     html.header("All")
     compile_forest(html.req.user)
     load_assumptions()
@@ -882,9 +877,7 @@ def page_all(h):
     html.footer()
 
 
-def ajax_set_assumption(h):
-    global html
-    html = h
+def ajax_set_assumption():
     site = html.var("site")
     host = html.var("host")
     service = html.var("service")
@@ -900,10 +893,7 @@ def ajax_set_assumption(h):
         g_assumptions[key] = int(state)
     save_assumptions()
 
-def ajax_save_treestate(h):
-    global html
-    html = h
-
+def ajax_save_treestate():
     path_id = html.var("path")
     current_ex_level, path = path_id.split(":", 1)
     current_ex_level = int(current_ex_level)
@@ -945,9 +935,7 @@ def create_aggregation_row(tree, status_info = None):
     }
 
 
-def table(h, columns, add_headers, only_sites, limit, filters):
-    global html
-    html = h
+def table(columns, add_headers, only_sites, limit, filters):
     compile_forest(html.req.user)
     load_assumptions() # user specific, always loaded
     # Hier müsste man jetzt die Filter kennen, damit man nicht sinnlos
@@ -996,9 +984,7 @@ def table(h, columns, add_headers, only_sites, limit, filters):
         
 
 # Table of all host aggregations, i.e. aggregations using data from exactly one host
-def host_table(h, columns, add_headers, only_sites, limit, filters):
-    global html
-    html = h
+def host_table(columns, add_headers, only_sites, limit, filters):
     compile_forest(html.req.user)
     load_assumptions() # user specific, always loaded
 
@@ -1068,9 +1054,7 @@ def status_tree_depth(tree):
             maxdepth = max(maxdepth, status_tree_depth(node))
         return maxdepth + 1
 
-def is_part_of_aggregation(h, what, site, host, service):
-    global html
-    html = h
+def is_part_of_aggregation(what, site, host, service):
     compile_forest(html.req.user)
     if what == "host":
         return (site, host) in g_user_cache["affected_hosts"]

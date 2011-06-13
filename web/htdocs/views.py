@@ -86,23 +86,7 @@ def load_plugins():
             "Schedule and remove downtimes on hosts and services",
             [ "user", "admin" ])
 
-    plugins_path = defaults.web_dir + "/plugins/views"
-
-    fns = os.listdir(plugins_path)
-    fns.sort()
-    for fn in fns:
-        if fn.endswith(".py"):
-            execfile(plugins_path + "/" + fn, globals())
-
-    if defaults.omd_root:
-        local_plugins_path = defaults.omd_root + "/local/share/check_mk/web/plugins/views"
-        if local_plugins_path != plugins_path: # honor ./setup.sh in site
-            if os.path.exists(local_plugins_path):
-                fns = os.listdir(local_plugins_path)
-                fns.sort()
-                for fn in fns:
-                    if fn.endswith(".py"):
-                        execfile(local_plugins_path + "/" + fn, globals())
+    load_web_plugins("views", globals())
 
     # Declare permissions for builtin views
     config.declare_permission_section("view", _("Builtin views"))
@@ -327,9 +311,7 @@ def save_views(us):
 #
 # ----------------------------------------------------------------------
 # Show list of all views with buttons for editing
-def page_edit_views(h, msg=None):
-    global html
-    html = h
+def page_edit_views(msg=None):
     if not config.may("edit_views"):
         raise MKAuthException("You are not allowed to edit views.")
 
@@ -433,9 +415,7 @@ def select_view(varname, only_with_hidden = False):
 #  |_____\__,_|_|\__|    \_/  |_|\___| \_/\_/
 #  Edit one view
 # -------------------------------------------------------------------------
-def page_edit_view(h):
-    global html
-    html = h
+def page_edit_view():
     if not config.may("edit_views"):
         raise MKAuthException("You are not allowed to edit views.")
 
@@ -493,7 +473,7 @@ def page_edit_view(h):
                     if oldname and oldname != view["name"] and (html.req.user, oldname) in html.multisite_views:
                         del html.multisite_views[(html.req.user, oldname)]
                     save_views(html.req.user)
-                return page_message_and_forward(h, "Your view has been saved.", "edit_views.py",
+                return page_message_and_forward("Your view has been saved.", "edit_views.py",
                         "<script type='text/javascript'>top.frames[0].location.reload();</script>\n")
 
         except MKUserError, e:
@@ -988,9 +968,7 @@ def create_view():
 #
 # ---------------------------------------------------------------------
 # Show one view filled with data
-def page_view(h):
-    global html
-    html = h
+def page_view():
     bi.reset_cache_status() # needed for status icon
 
     load_views()
@@ -1140,7 +1118,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         # tablename may be a function instead of a livestatus tablename
         # In that case that function is used to compute the result.
         if type(tablename) == type(lambda x:None):
-            rows = tablename(html, columns, query, only_sites, get_limit(), all_active_filters)
+            rows = tablename(columns, query, only_sites, get_limit(), all_active_filters)
         else:
             rows = query_data(datasource, columns, add_columns, query, only_sites, get_limit())
 
@@ -2016,9 +1994,7 @@ def ajax_export(h):
     html.write(pprint.pformat(html.available_views))
 
 
-def page_message_and_forward(h, message, default_url, addhtml=""):
-    global html
-    html = h
+def page_message_and_forward(message, default_url, addhtml=""):
     url = html.var("back")
     if not url:
         url = default_url

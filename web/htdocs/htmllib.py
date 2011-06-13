@@ -170,9 +170,10 @@ class html:
                 plugins_paths.append(defaults.omd_root + "/local/share/check_mk/web/htdocs/css") 
             plugin_stylesheets = set([])
             for dir in plugins_paths:
-                for fn in os.listdir(dir):
-                    if fn.endswith(".css"):
-                        plugin_stylesheets.add(fn) 
+                if os.path.exists(dir):
+                    for fn in os.listdir(dir):
+                        if fn.endswith(".css"):
+                            plugin_stylesheets.add(fn) 
             return plugin_stylesheets
 
     def set_output_format(self, f):
@@ -652,6 +653,9 @@ class html:
 
     def javascript(self, code):
         self.write("<script language=\"javascript\">\n%s\n</script>\n" % code)
+
+    def javascript_file(self, name):
+        self.write('<script type="text/javascript" src="js/%s.js"></script>\n' % name)
 
     def reload_sidebar(self):
         self.javascript("parent.frames[0].location.reload();");

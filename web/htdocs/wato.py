@@ -78,10 +78,7 @@ g_pathname    = ""   # textual path name of current folder
 #   | ausgeführt, welche aber keinen HTML-Code ausgeben darf.              |
 #   +----------------------------------------------------------------------+
 
-def page_handler(h):
-    global html
-    html = h
-
+def page_handler():
     if not config.may("use_wato"):
         raise MKAuthException(_("You are not allowed to use WATO!"))
 
@@ -1232,10 +1229,7 @@ def bulk_cleanup_attributes(the_file, hosts):
 #   | Functions called from the WATO sidebar snapin                        |
 #   +----------------------------------------------------------------------+
 
-def render_link_tree(h, format):
-    global html
-    html = h
-
+def render_link_tree(format):
     load_folder_config()
 
     def render_folder(f):
@@ -2896,18 +2890,4 @@ mode_functions = {
 extra_buttons = [
 ]
 
-
-# Load all wato plugins
-plugins_path = defaults.web_dir + "/plugins/wato"
-if os.path.exists(plugins_path):
-    for fn in os.listdir(plugins_path):
-        if fn.endswith(".py"):
-            execfile(plugins_path + "/" + fn)
-
-if defaults.omd_root:
-    local_plugins_path = defaults.omd_root + "/local/share/check_mk/web/plugins/wato"
-    if local_plugins_path != plugins_path and os.path.exists(local_plugins_path):
-        for fn in os.listdir(local_plugins_path):
-            if fn.endswith(".py"):
-                execfile(local_plugins_path + "/" + fn)
-
+load_web_plugins("wato", globals())

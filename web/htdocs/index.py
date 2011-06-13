@@ -186,12 +186,14 @@ def handler(req, profiling = True):
             __builtin__._ = lambda x: x
 
         # All plugins might have to be reloaded due to a language change
-        for module in [ views, sidebar, wato, bi]:
+        for module in [ views, sidebar, dashboard, wato, bi ]:
             try:
+                module.load_plugins # just check if this function exists
                 module.load_plugins()
-            except:
+            except AttributeError:
                 pass
-
+            except Exception:
+                raise
 
         # profiling can be enabled in multisite.mk
         if profiling and config.profile:
@@ -228,21 +230,19 @@ def handler(req, profiling = True):
         connect_to_livestatus(html)
 
         handler = pagehandlers.get(req.myfile, page_not_found)
-        handler(html)
+        handler()
 
     except MKUserError, e:
         if not fail_silently:
             html.header("Invalid User Input")
             html.show_error(str(e))
             html.footer()
-        response_code = apache.HTTP_BAD_REQUEST
 
     except MKAuthException, e:
         if not fail_silently:
             html.header(_("Permission denied"))
             html.show_error(str(e))
             html.footer()
-        response_code = apache.HTTP_FORBIDDEN
 
     except MKConfigError, e:
         if not fail_silently:
@@ -250,7 +250,6 @@ def handler(req, profiling = True):
             html.show_error(str(e))
             html.footer()
         apache.log_error(_("Configuration error: %s") % (e,), apache.APLOG_ERR)
-        response_code = apache.HTTP_INTERNAL_SERVER_ERROR
 
     except MKGeneralException, e:
         if not fail_silently:
@@ -258,7 +257,6 @@ def handler(req, profiling = True):
             html.show_error(str(e))
             html.footer()
         apache.log_error(_("Error: %s") % (e,), apache.APLOG_ERR)
-        response_code = apache.HTTP_INTERNAL_SERVER_ERROR
 
     except livestatus.MKLivestatusNotFoundError, e:
         if not fail_silently:
@@ -295,7 +293,7 @@ def handler(req, profiling = True):
     html.live = None
     return response_code
 
-def page_not_found(html):
+def page_not_found():
     html.header(_("Page not found"))
     html.show_error(_("This page was not found. Sorry."))
     html.footer()

@@ -866,9 +866,7 @@ def render_bookmarks():
 
     html.write("<div class=footnotelink><a href=\"#\" onclick=\"addBookmark()\">%s</a></div>\n" % _('Add Bookmark'))
 
-def page_edit_bookmark(h):
-    global html
-    html = h
+def page_edit_bookmark():
     html.header(_("Edit Bookmark"))
     n = int(html.var("num"))
     bookmarks = load_bookmarks()

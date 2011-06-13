@@ -42,16 +42,7 @@ def load_plugins():
     loaded_with_language = current_language
 
     # Load all snapins
-    snapins_dir = defaults.web_dir + "/plugins/sidebar"
-    for fn in os.listdir(snapins_dir):
-        if fn.endswith(".py"):
-            execfile(snapins_dir + "/" + fn, globals())
-    if defaults.omd_root:
-        local_snapins_dir = defaults.omd_root + "/local/share/check_mk/web/plugins/sidebar"
-        if os.path.exists(local_snapins_dir):
-            for fn in os.listdir(local_snapins_dir):
-                if fn.endswith(".py"):
-                    execfile(local_snapins_dir + "/" + fn, globals())
+    load_web_plugins("sidebar", globals())
 
     # Declare permissions: each snapin creates one permission
     config.declare_permission_section("sidesnap", "Sidebar snapins")
@@ -132,12 +123,9 @@ def sidebar_foot():
     html.write('</div>')
 
 # Standalone sidebar
-def page_side(h):
+def page_side():
     if not config.may("see_sidebar"):
         return
-
-    global html
-    html = h
     html.write("""<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 
 <html>
@@ -154,7 +142,6 @@ def page_side(h):
 <body class="side" onload="initScrollPos()" onunload="storeScrollPos()">
 <div id="check_mk_sidebar">""")
 
-    views.html = h
     views.load_views()
     sidebar_head()
     user_config = load_user_config()
@@ -236,10 +223,7 @@ def snapin_exception(e):
                 "<h2>Error</h2>\n"
                 "<p>%s</p></div>" % e)
 
-def ajax_openclose(h):
-    global html
-    html = h
-
+def ajax_openclose():
     config = load_user_config()
     new_config = []
     for name, usage in config:
@@ -249,9 +233,7 @@ def ajax_openclose(h):
             new_config.append((name, usage))
     save_user_config(new_config)
 
-def ajax_snapin(h):
-    global html
-    html = h
+def ajax_snapin():
     snapname = html.var("name")
     if not config.may("sidesnap." + snapname):
         return
@@ -261,12 +243,10 @@ def ajax_snapin(h):
     except Exception, e:
         snapin_exception(e)
 
-def move_snapin(h):
+def move_snapin():
     if not config.may("configure_sidebar"):
         return
 
-    global html
-    html      = h
     snapname_to_move = html.var("name")
     beforename = html.var("before")
 
@@ -293,12 +273,10 @@ def move_snapin(h):
         new_config.append(snap_to_move)
     save_user_config(new_config)
 
-def page_add_snapin(h):
+def page_add_snapin():
     if not config.may("configure_sidebar"):
         raise MKGeneralException("You are not allowed to change the sidebar.")
 
-    global html
-    html = h
     html.header("Available snapins")
     used_snapins = [name for (name, state) in load_user_config()]
 

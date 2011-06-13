@@ -83,6 +83,74 @@ function get_url_sync(url) {
 }
 
 
+// Updates the contents of a snapin container after get_url
+function updateContents(id, code) {
+  var obj = document.getElementById(id);
+  if (obj) {
+    obj.innerHTML = code;
+    executeJS(id);
+    obj = null;
+  }
+}
+
+// There may be some javascript code in the html code rendered by
+// sidebar.py. Execute it here. This is needed in some browsers.
+function executeJS(objId) {
+  // Before switching to asynchronous requests this worked in firefox
+  // out of the box. Now it seems not to work with ff too. So now
+  // executing the javascript manually.
+  // if (!isFirefox()) {
+  var obj = document.getElementById(objId);
+  var aScripts = obj.getElementsByTagName('script');
+  for(var i in aScripts) {
+    if (aScripts[i].src && aScripts[i].src !== '') {
+      var oScr = document.createElement('script');
+      oScr.src = aScripts[i].src;
+      document.getElementsByTagName("HEAD")[0].appendChild(oScr);
+      oScr = null;
+    } else {
+      try {
+    	  eval(aScripts[i].text);
+      } catch(e) {alert(aScripts[i].text + "\nError:" + e.message);}
+    }
+  }
+  aScripts = null;
+  obj = null;
+}
+
+function isFirefox() {
+  return navigator.userAgent.indexOf("Firefox") > -1;
+}
+function pageHeight() {
+  var h;
+  
+  if (window.innerHeight !== null && typeof window.innerHeight !== 'undefined' && window.innerHeight !== 0)
+    h = window.innerHeight;
+  else if (document.documentElement && document.documentElement.clientHeight)
+    h = document.documentElement.clientHeight;
+  else if (document.body !== null)
+    h = document.body.clientHeight;
+  else
+    h = null;
+  
+  return h;
+}
+
+function pageWidth() {
+  var w;
+  
+  if (window.innerWidth !== null && typeof window.innerWidth !== 'undefined' && window.innerWidth !== 0)
+    w = window.innerWidth;
+  else if (document.documentElement && document.documentElement.clientWidth)
+    w = document.documentElement.clientWidth;
+  else if (document.body !== null)
+    w = document.body.clientWidth;
+  else
+    w = null;
+  
+  return h;
+}
+
 // ----------------------------------------------------------------------------
 // GUI styling
 // ----------------------------------------------------------------------------

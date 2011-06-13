@@ -33,6 +33,7 @@ import sidebar
 import permissions
 import actions
 import weblib
+import dashboard
 
 # map URLs to page rendering functions
 
@@ -59,4 +60,7 @@ pagehandlers.update({
    "view_permissions"      : permissions.page_view_permissions,
    "edit_permissions"      : permissions.page_edit_permissions,
    "nagios_action"         : actions.ajax_action,
+   "dashboard"             : dashboard.page_dashboard,
+   "dashboard_resize"      : dashboard.ajax_resize,
 })
+

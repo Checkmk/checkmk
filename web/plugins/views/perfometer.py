@@ -101,18 +101,6 @@ def number_human_readable(n):
         return "%.1fB" % n
 
 
-perfometer_plugins_dir = defaults.web_dir + "/plugins/perfometer"
-for fn in os.listdir(perfometer_plugins_dir):
-    if fn.endswith(".py"):
-        execfile(perfometer_plugins_dir + "/" + fn)
-if defaults.omd_root:
-    local_perfometer_plugins_dir = defaults.omd_root + "/local/share/check_mk/web/plugins/perfometer"
-    if os.path.exists(local_perfometer_plugins_dir):
-        for fn in os.listdir(local_perfometer_plugins_dir):
-            if fn.endswith(".py"):
-                execfile(local_perfometer_plugins_dir + "/" + fn)
-
-
 def paint_perfometer(row):
     perfstring = unicode(row["service_perf_data"].strip())
     if not perfstring:
@@ -181,3 +169,5 @@ multisite_painters["perfometer"] = {
     "columns" : [ "service_perf_data", "service_state", "service_check_command" ],
     "paint" : paint_perfometer
 }
+
+load_web_plugins("perfometer", globals())

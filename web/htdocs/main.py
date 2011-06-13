@@ -26,7 +26,7 @@
 
 import config
 
-def page_index(html):
+def page_index():
     start_url = html.var("start_url", config.start_url)
     html.req.headers_out.add("Cache-Control", "max-age=7200, public");
     html.write("""
@@ -43,7 +43,7 @@ def page_index(html):
 </html>
 """ % start_url)
 
-def page_main(html):
+def page_main():
     html.header("Check_MK Multisite")
     html.write("""
 <p>Welcome to Check_MK Multisite - a new GUI for viewing status information
@@ -77,5 +77,5 @@ No network traffic is generated due to the monitoring.</p>
 # This function does nothing. The sites have already
 # been reconfigured according to the variable _site_switch,
 # because that variable is processed by connect_to_livestatus()
-def ajax_switch_site(html):
+def ajax_switch_site():
     pass

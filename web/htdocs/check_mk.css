@@ -1596,6 +1596,30 @@ a.button {
     margin: 2px;
 }
 
+/*
+   +----------------------------------------------------------------------+
+   |          ____            _     _                         _           |
+   |         |  _ \  __ _ ___| |__ | |__   ___   __ _ _ __ __| |          |
+   |         | | | |/ _` / __| '_ \| '_ \ / _ \ / _` | '__/ _` |          |
+   |         | |_| | (_| \__ \ | | | |_) | (_) | (_| | | | (_| |          |
+   |         |____/ \__,_|___/_| |_|_.__/ \___/ \__,_|_|  \__,_|          |
+   |                                                                      |
+   +----------------------------------------------------------------------+
+
+*/
+
+div.dashlet {
+    border: 1px solid #eee;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 0px;
+    height: 0px;
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+    padding: 5px;
+
+}
 
 /*
     _       _     _ ____                    _           
@@ -1776,7 +1800,6 @@ table.add_snapin i {
 .wato div.info {
     margin-top: 10px;
     margin-bottom: 10px;
-    marign-bottom: 10px;
     padding: 5px 8px;
     width: 800px;
     -moz-border-radius: 3px;

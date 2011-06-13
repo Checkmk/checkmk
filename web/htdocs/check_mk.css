@@ -20,7 +20,7 @@ td, th {
     vertical-align: top;
 }
 
-button, input, td, select {
+button, input, td, th, select {
     font-size: 9pt;
 }
 
@@ -66,6 +66,10 @@ ul.treeangle li {
     padding-left: 20px;
 }
 
+input.buttonlink {
+    padding: 0;
+    font-size: 8pt;
+}
 /*
    __  __       _        
   |  \/  | __ _(_)_ __   
@@ -404,6 +408,7 @@ div.snapin div.footnotelink a {
     font-size: 7pt;
     -moz-border-radius: 4px;
     padding: 1px 4px;
+    margin-left: 5px;
 }
 
 div.snapin div.footnotelink a:hover {
@@ -585,14 +590,14 @@ table.data th {
     font-weight: normal;
     border-left: 1px solid #ccc;
     border-right: 1px solid #ccc;
-    background-color: #abb;
+    background-color: #899;
     padding: 0 4px;
     text-align: center;
     color: #fff;
 }
 
 table.data th.tablegap {
-    background-color: none;
+    background-color: transparent; /* none; */
 }
 
 /* Row coloring in case of the different states */
@@ -704,6 +709,11 @@ td.badflag {
 
 td.goodflag {
     color: #080;
+}
+
+table.data td.buttons { 
+    white-space: nowrap;
+    width: 1px;
 }
 
 td.state {  
@@ -1077,13 +1087,15 @@ table.form img.toggleheader.hover {
     cursor: pointer;
 }
 
-table.form td.legend { 
+/* Left side where title and help is printed */
+table.form td.legend, table.form td.title { 
     color: #274750;
     border: 1px solid #fff;
-    border-right-style: none;
     height: 32px;
     padding-top: 10px;
 }
+
+/* Bottom row with action buttons, right justified */
 table.form td.buttons { 
     color: #274750;
     border: 1px solid #fff;
@@ -1091,6 +1103,13 @@ table.form td.buttons {
     padding-top: 10px;
     text-align: right;
 }
+
+/* Inter-heading row over complete width */
+table.form td.title {
+    border-right-style: solid;
+    font-weight: bold;
+}
+
 table.form td.legend.border { 
     border-right-style: solid;
 }
@@ -1397,7 +1416,6 @@ td.legend, td.content {
 td.legend {
     padding-top: 3px;
     color: #884;
-    white-space: nowrap; 
     width: 150px;
 }
 div.viewdescription {
@@ -1624,6 +1642,59 @@ table.add_snapin i {
                               
 */
 
+.wato th.left {
+    border-left-style: none;
+    -moz-border-radius: 4px 0px 0px 0px;
+}
+.wato table.data td.select {
+    text-align: center;
+    width: 1px;
+}
+
+.wato th.right {
+    border-right-style: none;
+    -moz-border-radius: 0px 4px 0px 0px;
+}
+.wato table.form {
+    width: 800px;
+    margin-left: 0px;
+}
+
+
+.wato table.form td.legend { 
+    border-right-style: none;
+    padding-bottom: 8px;
+}
+
+.wato table.form td.legend h3 { 
+    padding: 0px;
+    margin: 0px 0px 5px 0px;
+    font-size: 9pt;
+    font-weight: normal;
+}
+.wato table.form td.legend i { 
+    margin-top: 13px;
+    font-size: 9pt;
+    color: #eee;
+}
+
+.wato table.form td.content { 
+    border-left-style: solid;
+    width: 494px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+
+.wato table.form td.checkbox {
+    width: 40px;
+    height: 40px;
+    padding-top: 7px;
+    vertical-align: top;
+    text-align: right;
+    border: 1px solid white;
+    border-left-style: none;
+}
+
 .wato table.auditlog {
     background-image: url("images/form_background.png");
     background-repeat: repeat;
@@ -1658,6 +1729,61 @@ table.add_snapin i {
 .wato td.takeall {
     width: 100%;
 }
+
+.wato div.inherited {
+    color: #000;
+    font-weight: bold;
+}
+.wato td.inherited {
+    color: #666;
+}
+.wato div.inherited h3 { 
+    margin: 0px;
+    padding: 0px;
+    font-size: 8pt;
+    color: #468;
+}
+.wato div.inherited h3 a { 
+    color: #468;
+}
+.wato h3 {
+    margin-bottom: 2px;
+}
+
+/* Path to current folder at top of screen */
+.wato div.folderpath {
+    margin-bottom: 6px;
+}
+.wato div.folderpath a, 
+.wato div.folderpath b {
+    -moz-border-radius: 3px;
+    background-color: #8ab;
+    padding: 2px 9px;
+    color: white;
+    font-weight: normal;
+}
+.wato div.folderpath a {
+/*    color: #46c;  */
+    text-decoration: none;
+}
+.wato div.folderpath a:hover {
+    color: white;
+    background-color: #9bc;
+    /* text-decoration: underline; */
+}
+
+/* Information boxes displayed directly in the data area */
+.wato div.info {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    marign-bottom: 10px;
+    padding: 5px 8px;
+    width: 800px;
+    -moz-border-radius: 3px;
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+}
+
 
 /* 
    ____                                    

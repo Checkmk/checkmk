@@ -453,7 +453,7 @@ default_language = None
 
 config_files = []
 host_tags = []
-wato_hide_filenames = False
+wato_hide_filenames = True
 
 
 #     ____ ___ 

@@ -63,11 +63,19 @@ class uriinfo:
                          for i in self.req.vars.items() \
                          if i[0] not in omit ])
 
+
+# Encode HTML attributes: replace " with &quot; This code
+# is slow. 
 def attrencode(value):
-    if type(value) in [str, unicode]:
-        return cgi.escape(value)
-    else:
-        return cgi.escape(str(value), True)
+    if type(value) == int:
+        return str(value)
+    new = ""
+    for c in value:
+        if c == '"':
+            new += "&quot;"
+        else:
+            new += c
+    return new
 
 # This function returns a str object, never unicode!
 # Beware: this code is crucial for the performance of Multisite!
@@ -152,6 +160,21 @@ class html:
         self.output_format = "html"
         self.status_icons = {}
 
+    def plugin_stylesheets(self): 
+        global plugin_stylesheets
+        try:
+            return plugin_stylesheets
+        except:
+            plugins_paths = [ defaults.web_dir + "/htdocs/css" ]
+            if defaults.omd_root:
+                plugins_paths.append(defaults.omd_root + "/local/share/check_mk/web/htdocs/css") 
+            plugin_stylesheets = set([])
+            for dir in plugins_paths:
+                for fn in os.listdir(dir):
+                    if fn.endswith(".css"):
+                        plugin_stylesheets.add(fn) 
+            return plugin_stylesheets
+
     def set_output_format(self, f):
         self.output_format = f
 
@@ -193,7 +216,7 @@ class html:
             enctype = ''
         self.write("<form name=%s class=%s action=\"%s\" method=%s%s>\n" %
                    (name, name, action, method, enctype))
-        self.hidden_field("filled_in", "on")
+        self.hidden_field("filled_in", name)
         self.hidden_field("_transid", str(self.current_transid()))
         self.hidden_fields(self.global_vars)
         self.form_name = name
@@ -254,7 +277,10 @@ class html:
             obj_id = ' id=%s' % obj_id
         if style:
             style = ' style="%s"' % style
-        self.write("<a href=\"%s\" class=button%s%s>%s</a>" % (href, obj_id, style, text))
+
+        self.write('<input%s%s value="%s" class=buttonlink type=button onclick="location.href=\'%s\'">' % \
+                (obj_id, style, text, href))
+        # self.write("<a href=\"%s\" class=button%s%s>%s</a>" % (href, obj_id, style, text))
 
     def jsbutton(self, varname, text, onclick, style=''):
         if style:
@@ -289,7 +315,8 @@ class html:
         html = ""
         if error:
             html = "<x class=inputerror>"
-        html += "<input type=text class=%s value=\"%s\" name=\"%s\"%s>" % (cssclass, attrencode(value), varname, addprops)
+        html += "<input type=text class=%s value=\"%s\" name=\"%s\"%s>" % \
+                     (cssclass, attrencode(value), varname, addprops)
         if error:
             html += "</x>"
             self.set_focus(varname)
@@ -326,7 +353,7 @@ class html:
                       (varname, value, checked_text, text))
         self.form_vars.append(varname)
 
-    def checkbox(self, varname, deflt="", cssclass = ''):
+    def checkbox(self, varname, deflt="", cssclass = '', onchange=None):
         error = self.user_errors.get(varname)
         if error:
             html = "<x class=inputerror>"
@@ -335,7 +362,7 @@ class html:
         # wether we should add the default value, we need to detect
         # if the form is printed for the first time. This is the
         # case if "filled_in" is not set.
-        if not self.has_var("filled_in"):
+        if not self.var("filled_in") == self.form_name: # this form filled in
             value = self.req.vars.get(varname, deflt)
         else:
             value = self.req.vars.get(varname, "")
@@ -346,10 +373,24 @@ class html:
             checked = ""
         if cssclass:
             cssclass = ' class="%s"' % cssclass
-        self.write("<input type=checkbox name=\"%s\"%s%s>" % (varname, checked, cssclass))
+        onchange_code = onchange and " onchange=\"%s\"" % (onchange) or ""
+        self.write("<input type=checkbox name=\"%s\"%s%s%s>" % (varname, checked, cssclass, onchange_code))
         self.form_vars.append(varname)
         if error:
             html += "</x>"
+
+    # Get value of checkbox. Return True, False or None
+    def get_checkbox(self, varname):
+        try:
+            if not self.var("filled_in") == self.form_name: # this form filled in
+                return None
+        except:
+            # self.form_name not set, we have no form
+            if not self.var("filled_in"):
+                return None
+
+        value = self.req.vars.get(varname, "")
+        return not not value
 
     def datetime_input(self, varname, default_value):
         try:
@@ -434,8 +475,14 @@ class html:
             self.write(title)
             self.write('''</title>
                 <link rel="stylesheet" type="text/css" href="check_mk.css">''')
+
+            # Load all style sheets in htdocs/css
+            for css in self.plugin_stylesheets():
+               self.write('                <link rel="stylesheet" type="text/css" href="css/%s">' % css)
+
             if config.custom_style_sheet:
                self.write('                <link rel="stylesheet" type="text/css" href="%s">' % config.custom_style_sheet)
+
             self.write('''
                 <script type='text/javascript' src='js/check_mk.js'></script>
                 <script type='text/javascript' src='js/hover.js'></script>
@@ -591,7 +638,11 @@ class html:
         return self.req.vars.get(varname, deflt)
 
     def var_utf8(self, varname, deflt = None):
-        return self.req.vars.get(varname, deflt).decode("utf-8")
+        val = self.req.vars.get(varname, deflt)
+        if val == None:
+            return val
+        else:
+            return val.decode("utf-8")
 
     def set_var(self, varname, value):
         self.req.vars[varname] = value

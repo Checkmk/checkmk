@@ -11,6 +11,8 @@
     * AIX agent now simulates <<<netctr>>> output (by Jörg Linge)
     * mbg_lantime_state: Handling refclock offsets correctly now; Changed
       default thresholds to 5/10 refclock offset
+    * brocade_port: parameter for phystate, opstate and admstate can now
+      also be lists of allowed states.
 
     Multisite:
     * FIX: make non-Ascii characters in services names work again

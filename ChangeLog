@@ -1,4 +1,8 @@
 1.1.10p4:
+    Core, Setup, etc.:
+    * BACKPORT: Make Check_MK-API compatible with 'factory_settings': 
+      This enables us to run certain 1.1.11 based checks on 1.1.10p4.
+
     MK Livestatus:
     * FIX: fix compile problem on Debian unstable (Thanks to Sven Velt)
 

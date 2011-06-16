@@ -13,6 +13,8 @@
       default thresholds to 5/10 refclock offset
     * brocade_port: parameter for phystate, opstate and admstate can now
       also be lists of allowed states.
+    * lnx_if: treat interfaces without information from ethtool as
+      softwareLoopback interface. The will not be found by inventory now.
 
     Multisite:
     * FIX: make non-Ascii characters in services names work again

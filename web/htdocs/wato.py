@@ -2524,11 +2524,12 @@ def have_folder_attributes():
 # "bulk"   -> bulk change
 # parent: The parent file/folder of the objects to configure
 # myself: For mode "folder" the folder/file itself
-def configure_attributes(hosts, for_what, parent, myself=None):
-    # html.write("<pre>%s</pre>" % pprint.pformat(hosts))
+def configure_attributes(hosts, for_what, parent, myself=None, without_attributes = []):
 
     for attr in host_attributes:
         attrname = attr.name()
+        if attrname in without_attributes:
+            continue # e.g. needed to skip ipaddress in CSV-Import
 
         # In folder/file not all attributes are shown
         if for_what == "folder" and not attr.show_in_folder():

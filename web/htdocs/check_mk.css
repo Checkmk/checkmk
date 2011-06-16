@@ -1696,7 +1696,13 @@ table.add_snapin i {
     font-size: 9pt;
     font-weight: normal;
 }
-.wato table.form td.legend i { 
+.wato table.form td.title i {  
+    font-weight: normal;
+    padding-bottom: 8px;
+}
+
+
+.wato table.form td.legend i, .wato table.form td.title i { 
     margin-top: 13px;
     font-size: 9pt;
     color: #eee;

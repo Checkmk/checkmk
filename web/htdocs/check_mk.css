@@ -1626,13 +1626,20 @@ div.dashlet div.dashlet_inner {
     margin: 0px;
     vertical-align: middle;
     text-align: center;
-    background-color: #709aa5;
+    /* background-color: #709aa5; */
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+}
+
+div.dashlet iframe {
+    border-style: none;
 }
 
 /* special background for embedded views */
 body.main.dashlet {
-    background-image: none;
-    background-color: #709aa5;
+     background-image: none;
+    /* background-color: #709aa5; */
+    padding: 0px;
 }
 
 div.dashlet div.title {

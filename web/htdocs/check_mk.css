@@ -81,8 +81,8 @@ input.buttonlink {
 */
 
 body.main {
-    background-image: url("images/contentframe_background.jpg"); 
-    padding: 0 10px 0 10px;
+    background-image: url("images/contentframe_background.jpg");
+    padding: 10px 10px 0 10px;
 }
 
 div.main {
@@ -95,7 +95,7 @@ body.main table.header {
     width: 100%;
     margin-bottom: 10px;
     margin-left: 0px;
-    padding: 8px 0px 10px 0px;
+    padding: 0px 0px 10px 0px;
     border-spacing: 0px;
     color: #fff;
 } 
@@ -644,7 +644,7 @@ table.data td.singleicon {
 table.groupheader {
     margin: 0px;
     border: 0px;
-    padding: 4px 0px 0px 0px;
+    padding: 0px;
 }
 
 tr.groupheader td {
@@ -1608,6 +1608,7 @@ a.button {
 
 */
 
+
 div#dashboard {
     padding: 0px;
     margin: 0px;
@@ -1617,6 +1618,34 @@ div#dashboard {
 div.dashlet {
     padding: 0px;
     margin: 0px;
+}
+
+/* content area of dashlet, if no iframes are used */
+div.dashlet div.dashlet_inner {
+    padding: 0px;
+    margin: 0px;
+    vertical-align: middle;
+    text-align: center;
+    background-color: #709aa5;
+}
+
+/* special background for embedded views */
+body.main.dashlet {
+    background-image: none;
+    background-color: #709aa5;
+}
+
+div.dashlet div.title {
+    position: absolute;
+    left: 0px;
+    width: 150px; /* will be changed by javascript later */
+    color: white;
+    text-align: center;
+    padding: 0px;
+    margin: 0px;
+    padding-top: 5px;
+    font-size: 10pt;
+    font-weight: bold;
 }
 
 div.dashlet img.shadow {
@@ -1671,13 +1700,6 @@ div.dashlet img.shadow.se {
     right: 0px;
 }
 
-div.dashlet div.dashlet_inner {
-    /* border: 1px solid white; */
-    padding: 0px;
-    margin: 0px;
-    background-image: url("images/form_background.png");
-    background-repeat: repeat;
-}
 
 /*
     _       _     _ ____                    _           

@@ -484,9 +484,8 @@ class html:
             # If the variable _link_target is set, then all links in this page
             # should be targetted to the HTML frame named by _link_target. This
             # is e.g. useful in the dash-board
-            link_target = self.var("_link_target")
             if self.link_target:
-                self.write('<base target="%s">' % link_target)
+                self.write('<base target="%s">' % self.link_target)
 
             # Load all style sheets in htdocs/css
             for css in self.plugin_stylesheets():
@@ -525,7 +524,7 @@ class html:
         if self.output_format == "html":
             if not self.header_sent:
                 self.html_head(title)
-                self.write("<body class=main>")
+                self.write('<body class="main %s">' % self.var("_body_class", ""))
                 self.header_sent = True
                 self.top_heading(title)
 
@@ -542,7 +541,7 @@ class html:
 
     def body_start(self, title=''):
         self.html_head(title)
-        self.write("<body class=main>")
+        self.write('<body class="main %s">' % self.var("_body_class", ""))
 
     def bottom_focuscode(self):
         if self.focus_object:

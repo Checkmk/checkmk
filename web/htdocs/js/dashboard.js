@@ -29,6 +29,14 @@ function resize_dashlets(id, code)
     for (var i in resize_info) {
         var dashlet = resize_info[i];
 
+        // check if dashlet has title and resize its width
+        var oDash = document.getElementById("dashlet_title_" + dashlet[0]);
+        if (oDash) {
+            oDash.style.width  = dashlet[3] + "px";
+            oDash.style.top    = "-" + title_height + "px";
+            oDash.style.height = title_height + "px";
+        }
+
         // resize outer div
         var oDash = document.getElementById("dashlet_" + dashlet[0]);
         oDash.style.position = 'absolute';
@@ -79,12 +87,12 @@ function dashboard_scheduler() {
     var timestamp = Date.parse(new Date()) / 1000;
     var newcontent = "";
     for (var i in refresh_dashlets) { 
-        var id      = refresh_dashlets[i][0];
+        var nr      = refresh_dashlets[i][0];
         var refresh = refresh_dashlets[i][1];
         var url     = refresh_dashlets[i][2];
 
         if (timestamp % refresh == 0) {
-            get_url(url, updateContents, id);
+            get_url(url, updateContents, "dashlet_inner_" + nr);
         }
     }
     // Detect page changes and re-register the mousemove event handler

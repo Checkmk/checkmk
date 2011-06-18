@@ -43,6 +43,7 @@ builtin_dashboards = {}
 header_height   = 40     # Distance from top of the screen to the lower border of the heading
 screen_margin   = 5      # Distance from the left border of the main-frame to the dashboard area
 dashlet_padding = 8      # Margin between outer border of dashlet and its content
+title_height    = 20     # Height of dashlet title-box
 raster          = 32, 32 # Raster the dashlet choords are measured in
 
 # Load plugins in web/plugins/dashboard and declare permissions,
@@ -93,7 +94,7 @@ def render_dashboard(name):
         # dashlets using static content (such as an iframe) will not be
         # refreshed by us but need to do that themselves.
         if "url" in dashlet:
-            refresh_dashlets.append(["dashlet_%d" % nr, dashlet.get("refresh", 5), dashlet["url"]])
+            refresh_dashlets.append([nr, dashlet.get("refresh", 5), dashlet["url"]])
 
         # Paint the dashlet's HTML code
         render_dashlet(nr, dashlet)
@@ -107,13 +108,14 @@ def render_dashboard(name):
     html.javascript("""
 var header_height = %d;
 var screen_margin = %d;
+var title_height = %d;
 var dashlet_padding = %d;
-refresh_jashlets = %r;
-dashboard_name = '%s';
+var refresh_dashlets = %r;
+var dashboard_name = '%s';
 set_dashboard_size();
 window.onresize = function () { set_dashboard_size(); }
 dashboard_scheduler();
-    """ % (header_height, screen_margin, dashlet_padding, refresh_dashlets, name))
+    """ % (header_height, screen_margin, title_height, dashlet_padding, refresh_dashlets, name))
 
     html.footer()
 
@@ -129,12 +131,16 @@ def render_dashlet(nr, dashlet):
         html.write('<img id="dashadow_%s_%d" class="shadow %s" src="images/dashadow-%s.png">' % 
             (p, nr, p, p))
 
+    if dashlet.get("title"):
+        html.write('<div class="title" id="dashlet_title_%d">%s</div>' % (nr, dashlet["title"]))
     html.write('<div class="dashlet_inner" id="dashlet_inner_%d">' % nr)
     
     # The content is rendered only if it is fixed. In the
     # other cases the initial (re)-size will paint the content.
     if "content" in dashlet: # fixed content
         html.write(dashlet["content"])
+    elif "iframe" in dashlet: # fixed content containing iframe
+        html.write('<iframe width="100%%" height="100%%" src="%s"></iframe>' % dashlet["iframe"])
     html.write("</div></div>\n")
 
 # Here comes the brain stuff: An intelligent liquid layout algorithm.
@@ -291,11 +297,16 @@ def ajax_resize():
     for nr, left, top, right, bottom, grow_by in positions:
         # html.write(repr((nr, left, top, right, bottom, grow_by)))
         # html.write("<br>")
+        title = board["dashlets"][nr].get("title")
+        if title:
+            th = title_height
+        else:
+            th = 0
         resize_info.append([nr,
                             left * raster[0],
-                            top * raster[1],
+                            top * raster[1] + th,
                             (right - left) * raster[0],
-                            (bottom - top) * raster[1]])
+                            (bottom - top) * raster[1] - th])
 
     html.write(repr(resize_info))
 

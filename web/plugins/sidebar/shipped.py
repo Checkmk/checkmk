@@ -125,7 +125,8 @@ def render_views():
     rest = list(set([ t for (t, _t, _v) in s if t not in known_topics ]))
     rest.sort()
     for topic in rest:
-        render_topic(topic, s)
+        if topic:
+            render_topic(topic, s)
 
 
     links = []

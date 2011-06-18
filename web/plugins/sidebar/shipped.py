@@ -805,9 +805,7 @@ div#check_mk_sidebar table.master_control td.disabled a {
 """ % snapin_width
 }
 
-def ajax_switch_masterstate(h):
-    global html
-    html = h
+def ajax_switch_masterstate():
     site = html.var("site")
     column = html.var("switch")
     state = int(html.var("state"))
@@ -905,18 +903,14 @@ def page_edit_bookmark():
 
     html.footer()
 
-def ajax_del_bookmark(h):
-    global html
-    html = h
+def ajax_del_bookmark():
     num = int(html.var("num"))
     bookmarks = load_bookmarks()
     del bookmarks[num]
     save_bookmarks(bookmarks)
     render_bookmarks()
 
-def ajax_add_bookmark(h):
-    global html
-    html = h
+def ajax_add_bookmark():
     title = html.var("title")
     href = html.var("href")
     if title and href:

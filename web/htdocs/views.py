@@ -1006,7 +1006,7 @@ def get_needed_columns(painters):
 # Display view with real data. This is *the* function everying
 # is about.
 def show_view(view, show_heading = False, show_buttons = True, show_footer = True):
-    all_display_options = "HTBFCEOZRSIXD" 
+    all_display_options = "HTBFCEOZRSIXDM" 
 
     # Parse display options and
     if html.output_format == "html":
@@ -1022,6 +1022,13 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         if c.lower() not in display_options.lower():
             display_options += c
     html.display_options = display_options
+
+    # If display option 'M' is set, then all links are targetet to the 'main'
+    # frame. Also the display options are removed since the view in the main
+    # frame should be displayed in standard mode.
+    if 'M' not in display_options:
+        html.set_link_target("main")
+        html.del_var("display_options")
 
     # [1] Datasource
     datasource = multisite_datasources[view["datasource"]]

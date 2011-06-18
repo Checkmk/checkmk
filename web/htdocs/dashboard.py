@@ -41,7 +41,7 @@ builtin_dashboards = {}
 # in order to allow the user to customize this.
 
 header_height   = 40     # Distance from top of the screen to the lower border of the heading
-screen_margin   = 10     # Distance from the left border of the main-frame to the dashboard area
+screen_margin   = 5      # Distance from the left border of the main-frame to the dashboard area
 dashlet_padding = 8      # Margin between outer border of dashlet and its content
 raster          = 32, 32 # Raster the dashlet choords are measured in
 

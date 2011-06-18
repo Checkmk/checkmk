@@ -159,6 +159,7 @@ class html:
         self.header_sent = False
         self.output_format = "html"
         self.status_icons = {}
+        self.link_target = None
 
     def plugin_stylesheets(self): 
         global plugin_stylesheets
@@ -178,6 +179,9 @@ class html:
 
     def set_output_format(self, f):
         self.output_format = f
+
+    def set_link_target(self, framename):
+        self.link_target = framename
 
     def write(self, text):
         if type(text) == unicode:
@@ -476,6 +480,13 @@ class html:
             self.write(title)
             self.write('''</title>
                 <link rel="stylesheet" type="text/css" href="check_mk.css">''')
+    
+            # If the variable _link_target is set, then all links in this page
+            # should be targetted to the HTML frame named by _link_target. This
+            # is e.g. useful in the dash-board
+            link_target = self.var("_link_target")
+            if self.link_target:
+                self.write('<base target="%s">' % link_target)
 
             # Load all style sheets in htdocs/css
             for css in self.plugin_stylesheets():
@@ -649,7 +660,8 @@ class html:
         self.req.vars[varname] = value
 
     def del_var(self, varname):
-        del self.req.vars[varname]
+        if varname in self.req.vars:
+            del self.req.vars[varname]
 
     def javascript(self, code):
         self.write("<script language=\"javascript\">\n%s\n</script>\n" % code)

@@ -37,9 +37,13 @@ except NameError:
 loaded_with_language = False
 builtin_dashboards = {}
 
-screen_margin = 10
-header_height = 40
-raster        = 20, 20
+# These settings might go into the config module, sometime in future,
+# in order to allow the user to customize this.
+
+header_height   = 40     # Distance from top of the screen to the lower border of the heading
+screen_margin   = 10     # Distance from the left border of the main-frame to the dashboard area
+dashlet_padding = 8      # Margin between outer border of dashlet and its content
+raster          = 32, 32 # Raster the dashlet choords are measured in
 
 # Load plugins in web/plugins/dashboard and declare permissions,
 # note: these operations produce language-specific results and
@@ -65,47 +69,78 @@ def load_plugins():
     global dashboards
     dashboards = builtin_dashboards
 
+# HTML page handler for generating the (a) dashboard. The name
+# of the dashboard to render is given in the HTML variable 'name'.
+# This defaults to "main".
 def page_dashboard():
     name = html.var("name", "main")
     if name not in dashboards:
         raise MKGeneralException("No such dashboard: '<b>%s</b>'" % name)
 
-    # Currently 
     render_dashboard(name)
 
+# Actual rendering function
 def render_dashboard(name):
     board = dashboards[name]
 
     html.header(board["title"])
     html.javascript_file("dashboard")
-    html.write("<div id=dashboard>\n")
+    html.write("<div id=dashboard>\n") # Container of all dashlets
 
-    refresh_dashlets = []
+    refresh_dashlets = [] # Dashlets with automatic refresh, for Javascript
     for nr, dashlet in enumerate(board["dashlets"]):
+        # dashlets using the 'url' method will be refreshed by us. Those
+        # dashlets using static content (such as an iframe) will not be
+        # refreshed by us but need to do that themselves.
         if "url" in dashlet:
             refresh_dashlets.append(["dashlet_%d" % nr, dashlet.get("refresh", 5), dashlet["url"]])
+
+        # Paint the dashlet's HTML code
         render_dashlet(nr, dashlet)
 
     html.write("</div>\n")
+
+    # Put list of all autorefresh-dashlets into Javascript and also make sure,
+    # that the dashbaord is painted initially. The resize handler will make sure
+    # that every time the user resizes the browser window the layout will be re-computed
+    # and all dashlets resized to their new positions and sizes.
     html.javascript("""
-        refresh_dashlets = %r;
-        dashboard_name = '%s';
-        set_dashboard_size();
-        window.onresize = function () { set_dashboard_size(); }
-        dashboard_scheduler();
-    """ % (refresh_dashlets, name))
+var header_height = %d;
+var screen_margin = %d;
+var dashlet_padding = %d;
+refresh_jashlets = %r;
+dashboard_name = '%s';
+set_dashboard_size();
+window.onresize = function () { set_dashboard_size(); }
+dashboard_scheduler();
+    """ % (header_height, screen_margin, dashlet_padding, refresh_dashlets, name))
 
     html.footer()
 
+# Create the HTML code for one dashlet. Each dashlet has an id "dashlet_%d",
+# where %d is its index (in board["dashlets"]). Javascript uses that id
+# for the resizing. Within that div there is an inner div containing the
+# actual dashlet content. The margin between the inner and outer div is
+# used for stylish layout stuff (shadows, etc.)
 def render_dashlet(nr, dashlet):
     html.write('<div class=dashlet id="dashlet_%d">' % nr)
+    # render shadow
+    for p in [ "nw", "ne", "sw", "se", "n", "s", "w", "e" ]:
+        html.write('<img id="dashadow_%s_%d" class="shadow %s" src="images/dashadow-%s.png">' % 
+            (p, nr, p, p))
+
+    html.write('<div class="dashlet_inner" id="dashlet_inner_%d">' % nr)
+    
+    # The content is rendered only if it is fixed. In the
+    # other cases the initial (re)-size will paint the content.
     if "content" in dashlet: # fixed content
         html.write(dashlet["content"])
-        url = ""
-    else:
-        url = dashlet.get("url", "")
-    html.write("</div>\n")
+    html.write("</div></div>\n")
 
+# Here comes the brain stuff: An intelligent liquid layout algorithm.
+# It is called via ajax, mainly because I was not eager to code this
+# directly in Javascript (though this would be possible and probably
+# more lean.)
 # Compute position and size of all dashlets
 def ajax_resize():
     # computation with vectors
@@ -256,9 +291,9 @@ def ajax_resize():
     for nr, left, top, right, bottom, grow_by in positions:
         # html.write(repr((nr, left, top, right, bottom, grow_by)))
         # html.write("<br>")
-        resize_info.append(["dashlet_%d" % nr, 
-                            left * raster[0] + screen_margin,
-                            top * raster[1] + header_height + screen_margin,
+        resize_info.append([nr,
+                            left * raster[0],
+                            top * raster[1],
                             (right - left) * raster[0],
                             (bottom - top) * raster[1]])
 

@@ -433,7 +433,7 @@ hidden_views = None
 custom_style_sheet = None
 
 # URL for start page in main frame (welcome page)
-start_url = "main.py"
+start_url = "dashboard.py"
 
 # Timeout for rescheduling of host- and servicechecks
 reschedule_timeout = 10.0

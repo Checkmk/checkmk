@@ -1608,17 +1608,75 @@ a.button {
 
 */
 
+div#dashboard {
+    padding: 0px;
+    margin: 0px;
+}
+
+
 div.dashlet {
-    border: 1px solid #eee;
+    padding: 0px;
+    margin: 0px;
+}
+
+div.dashlet img.shadow {
     position: absolute;
+}
+div.dashlet img.shadow.n {
+    top: 0px;
+    left: 16px;
+    width: 40px;
+    height: 8px;
+}
+div.dashlet img.shadow.s {
+    bottom: 0px;
+    left: 16px;
+    width: 40px;
+    height: 8px;
+}
+div.dashlet img.shadow.w {
+    left: 0px;
+    top: 16px;
+    width: 8px;
+    height: 40px;
+}
+div.dashlet img.shadow.e {
+    right: 0px;
+    top: 16px;
+    width: 8px;
+    height: 40px;
+}
+div.dashlet img.shadow.nw {
+    width: 16px;
+    height: 16px;
     top: 0px;
     left: 0px;
-    width: 0px;
-    height: 0px;
+}
+div.dashlet img.shadow.sw {
+    width: 16px;
+    height: 16px;
+    bottom: 0px;
+    left: 0px;
+}
+div.dashlet img.shadow.ne {
+    width: 16px;
+    height: 16px;
+    top: 0px;
+    right: 0px;
+}
+div.dashlet img.shadow.se {
+    width: 16px;
+    height: 16px;
+    bottom: 0px;
+    right: 0px;
+}
+
+div.dashlet div.dashlet_inner {
+    /* border: 1px solid white; */
+    padding: 0px;
+    margin: 0px;
     background-image: url("images/form_background.png");
     background-repeat: repeat;
-    padding: 5px;
-
 }
 
 /*

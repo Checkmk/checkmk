@@ -28,12 +28,32 @@ function resize_dashlets(id, code)
 
     for (var i in resize_info) {
         var dashlet = resize_info[i];
-        var oDash = document.getElementById(dashlet[0]);
+
+        // resize outer div
+        var oDash = document.getElementById("dashlet_" + dashlet[0]);
         oDash.style.position = 'absolute';
-        oDash.style.left = dashlet[1] + "px";
-        oDash.style.top = dashlet[2] + "px";
-        oDash.style.width = dashlet[3] + "px";
+        oDash.style.left   = dashlet[1] + "px";
+        oDash.style.top    = dashlet[2] + "px";
+        oDash.style.width  = dashlet[3] + "px";
         oDash.style.height = dashlet[4] + "px";
+
+        // resize shadow images
+        var oDash = document.getElementById("dashadow_w_" + dashlet[0]);
+        oDash.style.height = (dashlet[4] - 32) + "px";
+        var oDash = document.getElementById("dashadow_e_" + dashlet[0]);
+        oDash.style.height = (dashlet[4] - 32) + "px";
+        var oDash = document.getElementById("dashadow_n_" + dashlet[0]);
+        oDash.style.width = (dashlet[3] - 32) + "px";
+        var oDash = document.getElementById("dashadow_s_" + dashlet[0]);
+        oDash.style.width = (dashlet[3] - 32) + "px";
+
+        // resize content div
+        var oDash = document.getElementById("dashlet_inner_" + dashlet[0]);
+        oDash.style.position = 'absolute';
+        oDash.style.left   = dashlet_padding + "px";
+        oDash.style.top    = dashlet_padding + "px";
+        oDash.style.width  = (dashlet[3] - 2*dashlet_padding) + "px";
+        oDash.style.height = (dashlet[4] - 2*dashlet_padding) + "px";
     }
     oDash = null; 
 }
@@ -42,6 +62,13 @@ function set_dashboard_size()
 {
   var width = pageWidth();
   var height = pageHeight();
+  oDash = document.getElementById("dashboard");
+  oDash.style.position = 'absolute';
+  oDash.style.left     = screen_margin + "px";
+  oDash.style.top      = header_height + screen_margin + "px";
+  oDash.style.width    = width - 2*screen_margin + "px";
+  oDash.style.height   = height - 2*screen_margin - header_height + "px";
+
   ajax_url = 'dashboard_resize.py?name=' + dashboard_name 
            + '&width=' + width
            + '&height=' + height;

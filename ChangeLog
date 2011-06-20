@@ -6,6 +6,8 @@
     * FIX: apc_symmetra: fix remaining runtime calculation (by factor 100)
     * FIX: Added PNP-template for winperf_phydisk
     * FIX: if64: fix UNKNOWN in case of non-unique ifAlias
+    * FIX: lnx_if/if/if64: ignore percentual traffic levels on NICs without
+           speed information.
     * brocade_port: check for Brocade FC ports has been rewritten with
       lots of new features.
     * AIX agent now simulates <<<netctr>>> output (by Jörg Linge)

@@ -1044,7 +1044,11 @@ def get_nic_speed_human_readable(speed):
             speed = "100MBit/s"
         elif speedi == 1000000000:
             speed = "1GBit/s"
-        elif speed < 1500000000:
+        elif speed < 1500:
+            speed = "%dBit/s" % speedi
+        elif speed < 1000000:
+            speed = "%.1fKBit/s" % (speedi / 1000.0)
+        elif speed < 1000000000:
             speed = "%.2fMBit/s" % (speedi / 1000000.0)
         else:
             speed = "%.2fGBit/s" % (speedi / 1000000000.0)

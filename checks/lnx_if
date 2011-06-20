@@ -85,7 +85,6 @@ def if_lnx_convert_to_if64(info):
         speed_text = attr.get("Speed")
         if speed_text == None:
             ifSpeed = ''
-            ifType = 24
         else:
             if speed_text == '65535Mb/s': # unknown
                 ifSpeed = ''
@@ -97,7 +96,6 @@ def if_lnx_convert_to_if64(info):
                 ifSpeed = int(speed_text[:-4]) * 1000000000
             else:
                 ifSpeed = ''
-                ifType = 24
 
         # Link state from ethtool. If ethtool has no information about
         # this NIC, we set the state to unknown.

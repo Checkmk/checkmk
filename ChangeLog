@@ -8,6 +8,8 @@
 
     Checks & Agents:
     * FIX: if64: fix UNKNOWN in case of non-unique ifAlias
+    * FIX: lnx_if/if/if64: ignore percentual traffic levels on NICs without
+           speed information.
 
 1.1.10p3:
     Core, Setup, etc.:

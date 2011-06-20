@@ -167,7 +167,7 @@ def ajax_resize():
             n = []
             for i in [0, 1]:
                 if self._data[i] < 0:
-                    n.append(size[i] - self._data[i] - 1)
+                    n.append(size[i] + self._data[i] + 1) # Here was a bug fixed by Markus Lengler
                 else:
                     n.append(self._data[i] - 1) # make begin from 0
             return vec(n)

@@ -1624,9 +1624,12 @@ div.dashlet {
 div.dashlet div.dashlet_inner {
     padding: 0px;
     margin: 0px;
-    vertical-align: middle;
-    text-align: center;
-    /* background-color: #709aa5; */
+    /* vertical-align: middle;
+    text-align: center; */
+}
+
+/* Dashlets with "background" set to True */
+div.dashlet div.dashlet_inner.background {
     background-image: url("images/form_background.png");
     background-repeat: repeat;
 }
@@ -1707,6 +1710,10 @@ div.dashlet img.shadow.se {
     right: 0px;
 }
 
+table.dashlet_overview h2 {
+    margin: 8px 0px 8px 0px;
+    font-size: 10pt;
+}
 
 /*
     _       _     _ ____                    _           

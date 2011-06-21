@@ -47,13 +47,17 @@ function resize_dashlets(id, code)
 
         // resize shadow images
         var oDash = document.getElementById("dashadow_w_" + dashlet[0]);
-        oDash.style.height = (dashlet[4] - 32) + "px";
+        if (oDash) 
+            oDash.style.height = (dashlet[4] - 32) + "px";
         var oDash = document.getElementById("dashadow_e_" + dashlet[0]);
-        oDash.style.height = (dashlet[4] - 32) + "px";
+        if (oDash) 
+            oDash.style.height = (dashlet[4] - 32) + "px";
         var oDash = document.getElementById("dashadow_n_" + dashlet[0]);
-        oDash.style.width = (dashlet[3] - 32) + "px";
+        if (oDash) 
+            oDash.style.width = (dashlet[3] - 32) + "px";
         var oDash = document.getElementById("dashadow_s_" + dashlet[0]);
-        oDash.style.width = (dashlet[3] - 32) + "px";
+        if (oDash) 
+            oDash.style.width = (dashlet[3] - 32) + "px";
 
         // resize content div
         var oDash = document.getElementById("dashlet_inner_" + dashlet[0]);
@@ -83,7 +87,7 @@ function set_dashboard_size()
   get_url(ajax_url, resize_dashlets);
 }
 
-function dashboard_scheduler() {
+function dashboard_scheduler(force) {
     var timestamp = Date.parse(new Date()) / 1000;
     var newcontent = "";
     for (var i in refresh_dashlets) { 
@@ -91,7 +95,7 @@ function dashboard_scheduler() {
         var refresh = refresh_dashlets[i][1];
         var url     = refresh_dashlets[i][2];
 
-        if (timestamp % refresh == 0) {
+        if (force || (refresh > 0 && timestamp % refresh == 0)) {
             get_url(url, updateContents, "dashlet_inner_" + nr);
         }
     }
@@ -102,7 +106,7 @@ function dashboard_scheduler() {
     //     registerEdgeListeners(parent.frames[1]);
     //     contentLocation = parent.frames[1].document.location;
     // }
-    setTimeout(function() { dashboard_scheduler(); }, 1000);
+    setTimeout(function() { dashboard_scheduler(0); }, 1000);
 }
 
 function update_dashlet(id, code) {

@@ -62,5 +62,6 @@ pagehandlers.update({
    "nagios_action"         : actions.ajax_action,
    "dashboard"             : dashboard.page_dashboard,
    "dashboard_resize"      : dashboard.ajax_resize,
+   "dashlet_overview"      : dashboard.dashlet_overview,
 })
 

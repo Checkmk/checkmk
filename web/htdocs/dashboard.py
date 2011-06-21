@@ -37,6 +37,10 @@ except NameError:
 loaded_with_language = False
 builtin_dashboards = {}
 
+# Declare constants to be used in the definitions of the dashboards
+GROW = 0
+MAX = -1
+
 # These settings might go into the config module, sometime in future,
 # in order to allow the user to customize this.
 
@@ -94,7 +98,7 @@ def render_dashboard(name):
         # dashlets using static content (such as an iframe) will not be
         # refreshed by us but need to do that themselves.
         if "url" in dashlet:
-            refresh_dashlets.append([nr, dashlet.get("refresh", 5), dashlet["url"]])
+            refresh_dashlets.append([nr, dashlet.get("refresh", 0), dashlet["url"]])
 
         # Paint the dashlet's HTML code
         render_dashlet(nr, dashlet)
@@ -114,7 +118,7 @@ var refresh_dashlets = %r;
 var dashboard_name = '%s';
 set_dashboard_size();
 window.onresize = function () { set_dashboard_size(); }
-dashboard_scheduler();
+dashboard_scheduler(1);
     """ % (header_height, screen_margin, title_height, dashlet_padding, refresh_dashlets, name))
 
     html.footer()
@@ -125,15 +129,21 @@ dashboard_scheduler();
 # actual dashlet content. The margin between the inner and outer div is
 # used for stylish layout stuff (shadows, etc.)
 def render_dashlet(nr, dashlet):
+
     html.write('<div class=dashlet id="dashlet_%d">' % nr)
     # render shadow
-    for p in [ "nw", "ne", "sw", "se", "n", "s", "w", "e" ]:
-        html.write('<img id="dashadow_%s_%d" class="shadow %s" src="images/dashadow-%s.png">' % 
-            (p, nr, p, p))
+    if dashlet.get("shadow", True):
+        for p in [ "nw", "ne", "sw", "se", "n", "s", "w", "e" ]:
+            html.write('<img id="dashadow_%s_%d" class="shadow %s" src="images/dashadow-%s.png">' % 
+                (p, nr, p, p))
 
     if dashlet.get("title"):
         html.write('<div class="title" id="dashlet_title_%d">%s</div>' % (nr, dashlet["title"]))
-    html.write('<div class="dashlet_inner" id="dashlet_inner_%d">' % nr)
+    if dashlet.get("background", True):
+        bg = " background"
+    else:
+        bg = ""
+    html.write('<div class="dashlet_inner%s" id="dashlet_inner_%d">' % (bg, nr))
     
     # The content is rendered only if it is fixed. In the
     # other cases the initial (re)-size will paint the content.
@@ -172,10 +182,24 @@ def ajax_resize():
                     n.append(self._data[i] - 1) # make begin from 0
             return vec(n)
 
+        # Compute the initial size of the dashlet. If MAX is used,
+        # then the dashlet consumes all space in its growing direction,
+        # regardless of any other dashlets.
+        def initial_size(self, position, rastersize):
+            n = []
+            for i in [0, 1]:
+                if self._data[i] == MAX:
+                    n.append(rastersize[i] - abs(position[i]) + 1)
+                elif self._data[i] == GROW:
+                    n.append(1)
+                else:
+                    n.append(self._data[i])
+            return n
+
         def compute_grow_by(self, size):
             n = []
             for i in [0, 1]:
-                if size[i] != 0: # absolute size, no growth
+                if size[i] != GROW: # absolute size, no growth
                     n.append(0)
                 elif self._data[i] < 0:
                     n.append(-1) # grow direction left, up
@@ -188,7 +212,8 @@ def ajax_resize():
 
     board = dashboards[html.var("name")]
 
-    screensize = vec((int(html.var("width")) - 2*screen_margin, int(html.var("height")) - 2*screen_margin - header_height))
+    screensize = vec((int(html.var("width")) - 2*screen_margin, 
+                      int(html.var("height")) - 2*screen_margin - header_height))
     rastersize = screensize / raster
     used_matrix = {} # keep track of used raster elements
 
@@ -206,7 +231,7 @@ def ajax_resize():
         size = vec(dashlet["size"])
 
         # Compute the minimum used size for the dashlet. For growth-dimensions we start with 1
-        used_size = ( max(1, size[0]), max(1, size[1]) )
+        used_size = size.initial_size(rel_position, rastersize)
 
         # Now compute the rectangle that is currently occupied. The choords
         # of bottomright are *not* included.
@@ -311,25 +336,19 @@ def ajax_resize():
     html.write(repr(resize_info))
 
 
-    # UND DANN NOCH DIE iFrames einbauen für den Fall, dass es sich
-    # um URLs handelt, und dann diese asynchron nachladen.
+def dashlet_overview():
+    html.write(
+        '<table class=dashlet_overview>'
+        '<tr><td valign=top>'
+        '<a href="http://mathias-kettner.de/check_mk.html"><img style="margin-right: 30px;" src="images/check_mk.trans.120.png"></a>'
+        '</td>'
+        '<td><h2>Check_MK Multisite</h2>'
+        'Welcome to Check_MK Multisite. If you want to learn more about Multsite, please visit '
+        'out <a href="http://mathias-kettner.de/checkmk_multisite.html">online documentation</a>. '
+        'Multisite is part of <a href="http://mathias-kettner.de/check_mk.html">Check_MK</a> - on Open Source '
+        'project by <a href="http://mathias-kettner.de">Mathias Kettner</a>.'
+        '</td>'
+    )
 
-    # Und den Refresh-Scheduler anwerfen.
-
-
-# Javascript:
-# 1. Refresh: Der Scheduler refresht alle Dashlets automatisch, die
-# eine URL haben und eine Refreshzeit > 0. Dazu wird dir URL vorab
-# in der dashlet_info gespeichert.
-# 
-# 2. Resize: Wenn per Javascript ein resize festgestellt wird, dann
-# müssen die Positionen und Größen von allen Dashlets berechnet werden.
-# Dazu wird eine Axax-Funktion aufgerufen, welche eine JSON-Tabelle
-# von allen Dashlets mit deren genauen Positionen liefert. Dieser
-# Ajaxaufruf muss auch beim ersten malen gleich gestartet werden.
-# Er heisst set_dashboard_size().
-# 
-
-
-
+    html.write('</tr></table>')
 

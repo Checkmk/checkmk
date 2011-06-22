@@ -123,10 +123,7 @@ class FilterGroupCombo(Filter):
         if current_value == None:
             return "" # no {what}group exists!
 
-        if self.what + "s" == infoname:
-            col = "groups"
-        else:
-            col = self.what + "_groups"
+        col = self.what + "_groups"
         if not self.enforce and html.var(self.htmlvars[1]):
             negate = "!"
         else:

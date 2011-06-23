@@ -291,6 +291,7 @@ fi
 echo '<<<vbox_guest>>>'
 if which VBoxControl > /dev/null 2>&1 ; then
     VBoxControl -nologo guestproperty enumerate | cut -d, -f1,2
+    [ ${PIPESTATUS[0]} = 0 ] || echo "ERROR"
 fi
 
 

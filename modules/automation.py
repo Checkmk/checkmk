@@ -52,6 +52,7 @@ def do_automation(cmd, args):
         sys.stderr.write("%s\n" % e)
         if opt_debug:
             raise
+        output_profile()
         sys.exit(1)
 
     except Exception, e:
@@ -59,6 +60,7 @@ def do_automation(cmd, args):
             raise
         else:
             sys.stderr.write("%s\n" % e)
+            output_profile()
             sys.exit(2)
 
     if opt_debug:
@@ -66,6 +68,7 @@ def do_automation(cmd, args):
         sys.stdout.write(pprint.pformat(result)+"\n")
     else:
         sys.stdout.write("%r\n" % (result,))
+    output_profile()
     sys.exit(0)
 
 # Does inventory for *one* host. Possible values for how:

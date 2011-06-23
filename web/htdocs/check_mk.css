@@ -1760,6 +1760,11 @@ table.add_snapin i {
                               
 */
 
+/* Tables in WATO are not size to 100% per default */
+.wato table.data {
+    width: auto;
+}
+
 .wato th.left {
     border-left-style: none;
     -moz-border-radius: 4px 0px 0px 0px;
@@ -1851,7 +1856,7 @@ table.add_snapin i {
 }
 
 .wato td.takeall {
-    width: 100%;
+    /* width: 100%; */
 }
 
 .wato div.inherited {

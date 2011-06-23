@@ -285,6 +285,15 @@ if which vcbVmName > /dev/null 2>&1 ; then
    vcbVmName -s any
 fi
 
+# VirtualBox Guests. Section must always been output. Otherwise the
+# check would not be executed in case no guest additions are installed.
+# And that is something the check wants to detect
+echo '<<<vbox_guest>>>'
+if which VBoxControl ; then
+    VBoxControl -nologo guestproperty enumerate | cut -d, -f1,2
+fi
+
+
 if which ntpq > /dev/null 2>&1 ; then
    echo '<<<ntp>>>'
    # remote heading, make first column space separated

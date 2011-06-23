@@ -1,0 +1,23 @@
+title: Check version of VirtualBox guest additions in Linux guests
+agents: linux
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check uses {VBoxControl} to query to version und revision of the
+ guest additions installed in a VirtualBox Linux guest. If no guest additions
+ are installed at all, the check will get critical. if the version and
+ revision of the guest additions do not match the version and revision
+ of the virtual box host, the check will warn.
+
+inventory:
+ One check will be created on each Linux VBox host having guest
+ additions installed(!). If you want to force the check on {all}
+ of your Linux guests, you need to configure explicit checks using
+ {checks=}.
+
+examples:
+ # Force this check on all hosts with the tags {vboxguest} and {linux}.
+ checks += [
+   ( ["vboxguest", "linux"], ALL_HOSTS, "vbox_guest", None, None ),
+ ]

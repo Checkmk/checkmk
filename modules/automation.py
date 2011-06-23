@@ -124,8 +124,10 @@ def automation_inventory(args):
 
 def automation_try_inventory(args):
     if args[0] == '--cache':
-        global opt_use_cachefile
+        global opt_use_cachefile, inventory_max_cachefile_age, check_max_cachefile_age
         opt_use_cachefile = True
+        check_max_cachefile_age = 1000000000
+        inventory_max_cachefile_age = 1000000000
         args = args[1:]
 
     hostname = args[0]

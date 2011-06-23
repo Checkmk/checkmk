@@ -799,7 +799,7 @@ def mode_inventory(phase, firsttime):
 
     if phase == "title":
         title = _("Services of host %s") % hostname
-        if html.var("scan"):
+        if html.var("_scan"):
             title += _(" (live scan)")
         else:
             title += _(" (cached data)")
@@ -808,11 +808,11 @@ def mode_inventory(phase, firsttime):
     elif phase == "buttons":
         html.context_button(_("Host list"), make_link([("mode", "file")]))
         html.context_button(_("Edit host"), make_link([("mode", "edithost"), ("host", hostname)]))
-        html.context_button(_("Full Scan"), html.makeuri([("scan", "yes")]))
+        html.context_button(_("Full Scan"), html.makeuri([("_scan", "yes")]))
 
     elif phase == "action":
         if html.check_transaction():
-            cache_options = not html.var("scan") and [ '--cache' ] or []
+            cache_options = not html.var("_scan") and [ '--cache' ] or []
             table = check_mk_automation("try-inventory", cache_options + [hostname])
             table.sort()
             active_checks = {}
@@ -1000,11 +1000,11 @@ def mode_bulk_inventory(phase):
             hostname = html.var("_item")
             try:
                 counts = check_mk_automation("inventory", [how, hostname])
-                result = repr([ 'continue', 0 ] + list(counts)) + "\n"
+                result = repr([ 'continue', 1, 0 ] + list(counts)) + "\n"
                 result += _("Inventorized %s<br>\n") % hostname
                 log_pending(hostname, "bulk-inventory", _("Inventorized host: %d added, %d removed, %d kept, %d total services") % counts)
             except Exception, e:
-                result = repr([ 'failed', 1, 0, 0, 0, 0, ]) + "\n"
+                result = repr([ 'failed', 1, 1, 0, 0, 0, 0, ]) + "\n"
                 result += _("Error during inventory of %s: %s<br>\n") % (hostname, e)
             html.write(result)
             return ""
@@ -1019,7 +1019,7 @@ def mode_bulk_inventory(phase):
         interactive_progress(
             hostnames,         # list of items
             _("Bulk inventory"),  # title
-            [ (_("Failed hosts"), 0), (_("Services added"), 0), (_("Services removed"), 0), 
+            [ (_("Total hosts"), 0), (_("Failed hosts"), 0), (_("Services added"), 0), (_("Services removed"), 0), 
               (_("Services kept"), 0), (_("Total services"), 0) ], # stats table
             [ ("mode", "file") ], # URL for "Stop/Finish" button
             50, # ms to sleep between two steps
@@ -1492,6 +1492,8 @@ def check_mk_automation(command, args=[], indata=""):
                     (html.apache_user(), sudoline))
 
     try:
+        if config.debug:
+            html.write("<div class=message>Running <tt>%s</tt></div>\n" % " ".join(cmd))
         p = subprocess.Popen(cmd,
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     except Exception, e:
@@ -1909,7 +1911,7 @@ def changelog_button():
 
 def show_service_table(hostname, firsttime):
     # Read current check configuration
-    cache_options = not html.var("scan") and [ '--cache' ] or []
+    cache_options = not html.var("_scan") and [ '--cache' ] or []
     table = check_mk_automation("try-inventory", cache_options + [hostname])
     table.sort()
 

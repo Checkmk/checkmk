@@ -1492,8 +1492,10 @@ def check_mk_automation(command, args=[], indata=""):
                     (html.apache_user(), sudoline))
 
     try:
-        if config.debug:
-            html.write("<div class=message>Running <tt>%s</tt></div>\n" % " ".join(cmd))
+        # This debug output makes problems when doing bulk inventory, because
+        # it garbles the non-HTML response output
+        # if config.debug:
+        #     html.write("<div class=message>Running <tt>%s</tt></div>\n" % " ".join(cmd))
         p = subprocess.Popen(cmd,
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     except Exception, e:

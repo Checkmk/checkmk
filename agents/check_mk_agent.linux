@@ -289,7 +289,7 @@ fi
 # check would not be executed in case no guest additions are installed.
 # And that is something the check wants to detect
 echo '<<<vbox_guest>>>'
-if which VBoxControl ; then
+if which VBoxControl > /dev/null 2>&1 ; then
     VBoxControl -nologo guestproperty enumerate | cut -d, -f1,2
 fi
 

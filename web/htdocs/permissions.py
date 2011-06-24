@@ -32,9 +32,7 @@ from lib import *
 # * Permissions for actions
 
 
-def page_view_permissions(h):
-    global html
-    html = h
+def page_view_permissions():
     html.header("My permissions")
     html.write("<p>You have the following permissions:</p>")
     html.write("<h2>General permissions</h2>\n<ul>")
@@ -53,9 +51,7 @@ def page_view_permissions(h):
     html.write("</ul>\n")
     html.footer()
 
-def page_edit_permissions(h):
-    global html
-    html = h
+def page_edit_permissions():
     if not config.may("edit_permissions"):
         raise MKAuthException("You are not allowed to edit permissions.")
 

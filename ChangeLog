@@ -46,6 +46,8 @@
     MK Livestatus:
     * FIX: fix compile problem on Debian unstable (Thanks to Sven Velt)
     * Column aggregation (Stats) now also works for perf_data
+    * hosts, services & contacts: new column custom_variables (this is
+      a dictionary of all custom variables)
 
 1.1.11i1:
     Core, Setup, etc.:

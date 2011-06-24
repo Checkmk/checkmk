@@ -250,6 +250,8 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 		"A list of the names of all custom variables", (char *)(&hst.custom_variables) - ref, indirect_offset, CVT_VARNAMES));
     table->addColumn(new CustomVarsColumn(prefix + "custom_variable_values", 
 		"A list of the values of the custom variables", (char *)(&hst.custom_variables) - ref, indirect_offset, CVT_VALUES));
+    table->addColumn(new CustomVarsColumn(prefix + "custom_variables", 
+		"A dictionary of the custom variables", (char *)(&hst.custom_variables) - ref, indirect_offset, CVT_DICT));
 
     table->addColumn(new HostlistColumn(prefix + "parents", 
 		"A list of all direct parents of the host", (char *)(&hst.parent_hosts) - ref, indirect_offset, false));

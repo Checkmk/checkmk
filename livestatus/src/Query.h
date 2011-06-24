@@ -120,6 +120,10 @@ public:
    void outputBeginSublist();
    void outputSublistSeparator();
    void outputEndSublist();
+   void outputBeginDict();
+   void outputDictSeparator();
+   void outputDictValueSeparator();
+   void outputEndDict();
    void *findIndexFilter(const char *columnname);
    void *findTimerangeFilter(const char *columnname, time_t *, time_t *);
    void findIntLimits(const char *columnname, int *lower, int *upper);

@@ -70,7 +70,7 @@ def check_f5_bigip_psu(item, _no_params, info):
 
 # Get ID and status from the SysChassisPowerSupplyTable
 snmp_info["f5_bigip_psu"] = \
-    [ ("1.3.6.1.4.1.3375.2.1.3.2.2.2.1", [ 1, 2 ]), ]
+    [ (".1.3.6.1.4.1.3375.2.1.3.2.2.2.1", [ 1, 2 ]), ]
 
 
 check_info["f5_bigip_psu"] = (check_f5_bigip_psu, "PSU %s", 1, inventory_f5_bigip_psu ) 

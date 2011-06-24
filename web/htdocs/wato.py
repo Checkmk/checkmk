@@ -2217,8 +2217,12 @@ def interactive_progress(items, title, stats, finishvars, timewait):
     html.write("</table>")
     html.write("</center>")
     json_items = '[ %s ]' % ','.join([ "'" + h + "'" for h in items ])
+    # Remove all sel_* variables. We do not need them for our ajax-calls.
+    # They are just needed for the Abort/Finish links. Those must be converted
+    # to POST.
+    base_url = html.makeuri([], remove_prefix = "sel_")
     html.javascript(('progress_scheduler("%s", "%s", 50, %s, "%s", "' + _("FINISHED.") + '");') %
-                     (html.var('mode'), html.makeuri([]), json_items, html.makeuri(finishvars)))
+                     (html.var('mode'), base_url, json_items, html.makeuri(finishvars)))
 
 #   +----------------------------------------------------------------------+
 #   |              _   _   _        _ _           _                        |

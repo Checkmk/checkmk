@@ -257,6 +257,7 @@ checks                               = []
 check_parameters                     = []
 legacy_checks                        = []
 all_hosts                            = []
+host_paths                           = {}
 snmp_hosts                           = [ (['snmp'], ALL_HOSTS) ]
 tcp_hosts                            = [ (['tcp'], ALL_HOSTS), (NEGATE, ['snmp'], ALL_HOSTS), (['!ping'], ALL_HOSTS) ]
 bulkwalk_hosts                       = []
@@ -1268,6 +1269,12 @@ def create_nagios_hostdefs(outfile, hostname):
     outfile.write("  address\t\t\t%s\n" % (ip and ip or "0.0.0.0"))
     outfile.write("  _TAGS\t\t\t\t%s\n" % " ".join(tags_of_host(hostname)))
 
+    # WATO folder path
+    path = host_paths.get(hostname)
+    if path:
+        outfile.write("  _PATH\t\t\t\t%s\n" % path)
+
+
     # Host groups: If the host has no hostgroups it gets the default
     # hostgroup (Nagios requires each host to be member of at least on
     # group.
@@ -1329,6 +1336,9 @@ def create_nagios_hostdefs(outfile, hostname):
         outfile.write("  _TAGS\t\t\t\t%s\n" % " ".join(tags_of_host(hostname)))
         outfile.write("  __REALNAME\t\t\t%s\n" % hostname)
         outfile.write("  parents\t\t\t%s\n" % hostname)
+
+        if path:
+            outfile.write("  _PATH\t\t\t\t%s\n" % path)
 
         hgs = summary_hostgroups_of(hostname)
         hostgroups = ",".join(hgs)
@@ -3564,7 +3574,15 @@ for varname in check_default_levels.values():
 def all_nonfunction_vars():
     return set([ name for name,value in globals().items() if name[0] != '_' and type(value) != type(lambda:0) ])
 
-
+def marks_hosts_with_path(old, all, filename):
+    if not filename.startswith(check_mk_configdir):
+        return
+    path = filename[len(check_mk_configdir):]
+    old = set([ o.split("|", 1)[0] for o in old ])
+    all = set([ a.split("|", 1)[0] for a in all ])
+    for host in all:
+        if host not in old:
+            host_paths[host] = path
 
 # Create list of all files to be included
 list_of_files = reduce(lambda a,b: a+b, 
@@ -3587,13 +3605,17 @@ for _f in list_of_files:
     try:
         if opt_debug:
             sys.stderr.write("Reading config file %s...\n" % _f)
+        _old_all_hosts = all_hosts[:]
         execfile(_f)
+        marks_hosts_with_path(_old_all_hosts, all_hosts, _f)
     except Exception, e:
         sys.stderr.write("Cannot read in configuration file %s:\n%s\n" % (_f, e))
         if __name__ == "__main__":
             sys.exit(3)
         else:
             raise
+
+import pprint ; pprint.pprint(host_paths) ; del pprint
 
 # Strip off host tags from the list of all_hosts.  Host tags can be
 # appended to the hostnames in all_hosts, separated by pipe symbols,

@@ -11,6 +11,8 @@ Baumartige Darstellung von Daten im Multisite:
     Beim Schreiben der Nagios-Konfig wird aus diesem Dictionary
     der _PATH gesetzt.
 
+    => ERLEDIGT
+
 [2] Im Livestatus brauchen wir jetzt einen Filter auf diesen
     _PATH. Der ist ja dummerweise in einer Custom-Variable ge-
     speichert. 
@@ -40,6 +42,8 @@ Baumartige Darstellung von Daten im Multisite:
     Dazu braucht man garkeine globale Anpassungen am Livestatus, 
     sondern nur die neue Spalte custom_variables, die ich eh
     schon programmieren wollte.
+
+    => ERLEDIGT.
 
 [3] Jetzt baut man einen neuen Filter, mit dem man den Ort
     In einem Folder eingeben kann. Dazu macht man ein großes

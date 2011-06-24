@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,12 +23,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+$opt[1] = "--vertical-label \"Celsius\"  -l 0 -u 70 --title \"Temperature $servicedesc\" ";
 
-def check_ironport_misc(item, params, info):
-    return (3, "UNKNOWN - Sorry. Check not implemented in this version.")
-
-check_info['ironport_misc'] = (
-    check_ironport_misc,
-    "%s",
-    0,
-    no_inventory_possible)
+$def[1] = "DEF:var1=$RRDFILE[1]:$DS[1]:MAX ";
+$def[1] .= "AREA:var1#2080ff:\"Temperature\:\" ";
+$def[1] .= "GPRINT:var1:LAST:\"%2.0lfC\" ";
+$def[1] .= "LINE1:var1#000080:\"\" ";
+$def[1] .= "GPRINT:var1:MAX:\"(Max\: %2.0lfC,\" ";
+$def[1] .= "GPRINT:var1:AVERAGE:\"Avg\: %2.0lfC)\" ";
+$def[1] .= "HRULE:$WARN[1]#FFFF00:\"Warning\: $WARN[1]C\" ";
+$def[1] .= "HRULE:$CRIT[1]#FF0000:\"Critical\: $CRIT[1]C\" ";
+?>

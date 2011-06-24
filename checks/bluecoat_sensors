@@ -48,3 +48,7 @@ check_info['bluecoat_sensors'] = (
 snmp_info['bluecoat_sensors'] =  (
     ".1.3.6.1.4.1.3417.2.1.1.1.1.1",
     [ 9, 5, 7, 4 ]) # BLUECOAT fan, voltage, temperatures, scale
+
+
+snmp_scan_functions["bluecoat_sensors"] = \
+    lambda oid: '1.3.6.1.4.1.3417.1.1' in oid(".1.3.6.1.2.1.1.2.0")

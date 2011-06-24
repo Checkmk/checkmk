@@ -28,7 +28,7 @@ mcdata_fcport_speedbits = { "2": '1000000000', "3": '2000000000' }
 mcdata_fcport_opstatus = { "1" : "1", "2": "2", "3": "testing", "4": "faulty" }
 
 def mcdata_bin_to_64(bin, mult = 1):
-    # McData encodes 64 bit counters as big endian HEX strings, 
+    # McData encodes 64 bit counters as big endian HEX strings,
     # e.g. Hex-STRING: 00 00 00 01 AC C2 8C EE. Check_MK converts
     # such strings into binary Python strings
     value = 0
@@ -70,7 +70,7 @@ def mcdata_fcport_convert_line_to_if64(line):
       '0',                            # ifOutQLen                17
       index,                          # ifAlias                  18
     ]
-        
+
 
 def inventory_mcdata_fcport(checkname, info):
     return inventory_if_common(mcdata_fcport_convert_to_if64(info))

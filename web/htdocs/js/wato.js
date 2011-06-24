@@ -212,11 +212,12 @@ function update_progress_bar(header) {
     var perc_done = num_done / progress_total_num * 100;
 
     var bar      = document.getElementById('progress_bar');
-    var leftCell = bar.firstChild.firstChild.firstChild;
-    leftCell.style.width = (bar.clientWidth * perc_done / 100) + 'px';
-    leftCell = null;
-    bar      = null;
-
+    var cell = bar.firstChild.firstChild.firstChild;
+    cell.style.width = perc_done + "%";
+    cell = bar.firstChild.firstChild.childNodes[1];
+    cell.style.width = (100 - perc_done) + "%";
+    cell = null;
+    bar  = null;
     return false;
 }
 

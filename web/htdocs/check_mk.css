@@ -1988,7 +1988,10 @@ table.add_snapin i {
 
 .wato table.progress td.bar td.left { 
     background-color: #4080ff;
-    width: 0px;
+    width: 0%;
+}
+.wato table.progress td.bar td.right { 
+    width: 100%;
 }
 
 .wato #progress_bar.finished td.left {
@@ -1996,7 +1999,7 @@ table.add_snapin i {
     padding: 0px;
 }
 .wato #progress_bar.finished td.right {
-    padding: 0px;
+    width: 0px;
 }
 
 /* Statistics table */

@@ -1,0 +1,83 @@
+Baumartige Darstellung von Daten im Multisite:
+
+[1] Check_MK erzeugt in der Konfiguration automatisch für jeden 
+    Host eine Nagios-Custom-Variable mit dem Pfad im Baum. Dazu
+    wird einfach beim Laden der Konfigurationsdateien sich gemerkt,
+    aus welcher Datei der Host kam, und der String dann in eine
+    Customvariable _PATH geschrieben. Dazu muss check_mk.py 
+    angepasst werden. Vor dem Einlesen einer Datei muss all_hosts
+    und clusters jeweils wegkopiert werden, dann gelesen werden
+    und dann für die neu eingelesenen Hosts ein Dictionary gepflegt.
+    Beim Schreiben der Nagios-Konfig wird aus diesem Dictionary
+    der _PATH gesetzt.
+
+[2] Im Livestatus brauchen wir jetzt einen Filter auf diesen
+    _PATH. Der ist ja dummerweise in einer Custom-Variable ge-
+    speichert. 
+
+    Filter: host_custom_variables[PATH] >= /bayern/munich.mk
+
+    Bei der Gelegenheit führen wir gleich noch die neue Spalte
+    custom_variables ein, die beim Ausgeben ein schönes Python/Json
+    dict erzeugt. In CSV nimmt man irgendeinen sinnfreien Trenner
+    her, z.B. den Balken |
+
+    Man könnte aber auch sagen, dass Livestatus von sich aus
+    Spalten anlegt, die custom_variablen entsprechen. Dann
+    könnte man sagen:
+
+    Filter: host_path ~ ^/wfewefew/
+
+    Die Frage ist, wo diese Spalten deklariert werden. Das
+    könnte über Module-Lade-Optione geschehen. Oder eine Konfigdatei.
+    Oder fest einkompiliert.
+
+    Dritte Variante: Man macht den Filter so:
+
+    Filter: host_custom_variables ~ PATH:/bayern/munich.mk.
+    Die Spalte schneidet vorne bis zum Doppelpunkt den Variablennamen
+    ab und berechnet dann den Operator mit dem Rest der Zeile.
+    Dazu braucht man garkeine globale Anpassungen am Livestatus, 
+    sondern nur die neue Spalte custom_variables, die ich eh
+    schon programmieren wollte.
+
+[3] Jetzt baut man einen neuen Filter, mit dem man den Ort
+    In einem Folder eingeben kann. Dazu macht man ein großes
+    Select mit allen Foldern. Diese werden aus WATO eingelesen.
+    Dazu muss views die Folderstruktur selbst laden. Frage
+    ist aber, ob das nicht zu sehr zu lasten der Performance
+    geht. Andererseits ist es nur die HTML-Darstellung. Wenn
+    wir in unseren eigenen Views den Filter als "hidden" de-
+    klarieren, wird der Filter ja nicht angezeigt. Wir müssten
+    uns außerdem eh mal eine Optimierung überlegen, dass wir
+    das Filter-Formular per Ajax nachladen, damit das holen
+    der Dropdown-Inhalte (z.B. Hostgruppen) per Livestatus
+    nicht bei jeder View-Anzeige gemacht wird. Jetzt kann man
+    dadurch einer View per URL-Variable einen Folder-Path-Filter
+    mitgeben. Dieser Filter sollte in jeder View verfügbar sein. 
+    Aber nur, wenn es überhaupt Folder gibt. Die Hosts in der
+    main.mk haben ja überhaupt keinen Folder-Ort.
+
+[4] Ein neues Sidebarsnapin, das analog zum WATO-Snapin
+    aufgebaut ist, modifiziert Views auf der Rechten Seite so,
+    dass der Filter hinzugefügt wird. Dazu holt man per Javascript
+    die URL von Rechts. Wenn das eine View ist, hängt man den
+    neuen Pfad dran. Im Snapin wird der aktuelle Ort farbig
+    gekennzeichnet.
+
+    Der Scheduler der Sidebar holt regelmäßig die URL und
+    schaut, ob das ein Hinweis auf einen Pfad ist und ob
+    es eine View ist. Wenn ja, wird der Pfad im Bau gehilitet
+    und das Snapin aktiviert. Wenn rechts keine View ist,
+    graut sich das Snapin aus. Alternativ verwendet man
+    Standardlinks auf "allhosts". 
+
+[5] In den Views wird im Titel zusätzlich der Ort im
+    Folder angezeigt. Wenn der Folder nicht / ist, wird
+    auch eine Navigationsleiste gezeigt wie im WATO. Diese
+    enthält dann immer den Link auf die gleiche View mit
+    angepasstem Filter.
+
+
+
+

@@ -28,10 +28,7 @@ from lib import *
 import time
 import config
 
-def ajax_action(h):
-    global html
-    html = h
-
+def ajax_action():
     try:
         action = html.var("action")
         if action == "reschedule":

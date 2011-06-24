@@ -29,9 +29,7 @@ from lib import *
 import views
 
 
-def page(h):
-    global html
-    html = h
+def page():
 
     host = html.var('host')
     filename = html.var('file')

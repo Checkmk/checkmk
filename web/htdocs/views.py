@@ -723,9 +723,7 @@ def view_edit_column(n, var_prefix, maxnum, allowed, joined = []):
     html.write("</td></tr></table>")
     html.write("</div>")
 
-def ajax_get_edit_column(h):
-    global html
-    html = h
+def ajax_get_edit_column():
     if not config.may("edit_views"):
         raise MKAuthException("You are not allowed to edit views.")
 
@@ -1991,9 +1989,7 @@ def get_context_link(user, viewname):
     else:
         return None
 
-def ajax_export(h):
-    global html
-    html = h
+def ajax_export():
     load_views()
     for name, view in html.available_views.items():
         view["owner"] = ''

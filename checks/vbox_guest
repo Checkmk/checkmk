@@ -32,4 +32,3 @@ def inventory_vbox_guest(checktype, info):
         return [(None, None)]
 
 check_info["vbox_guest"] = ( check_vbox_guest, "VBox Guest Additions", 0, inventory_vbox_guest)
-

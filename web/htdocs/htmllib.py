@@ -56,7 +56,6 @@ class uriinfo:
     def makeuri(self, addvars):
         return self.req.myfile + ".py?" + urlencode_vars(self.req.vars.items() + addvars)
 
-
     # Liste von Hidden-Felder erzeugen aus aktueller URI
     def hiddenfields(self, omit=[]):
         return ''.join([ '<input type=hidden name="%s" value="%s">\n' % i \
@@ -264,8 +263,10 @@ class html:
         self.global_vars += varnames
 
     # [('varname1', value1), ('varname2', value2) ]
-    def makeuri(self, addvars):
+    def makeuri(self, addvars, remove_prefix = None):
         vars = [ (v, self.var(v)) for v in self.req.vars if not v.startswith("_") ]
+        if remove_prefix != None:
+            vars = [ i for i in vars if not i[0].startswith(remove_prefix) ]
         return self.req.myfile + ".py?" + urlencode_vars(vars + addvars)
 
     def makeuri_contextless(self, vars):

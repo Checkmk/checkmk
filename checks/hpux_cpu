@@ -32,7 +32,7 @@ cpuload_default_levels = (5, 10)
 
 def inventory_hpux_cpu_load(checkname, info):
     if len(info) == 2 and 'load' in info[0]:
-	return [(None, "cpuload_default_levels")]
+        return [(None, "cpuload_default_levels")]
 
 def check_hpux_cpu_load(item, params, info):
     load = [ float(l.strip(',')) for l in info[0][-3:] ]

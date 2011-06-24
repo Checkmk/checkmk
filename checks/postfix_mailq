@@ -72,12 +72,12 @@ def check_postfix_mailq(item, params, info):
     for line in info:
         if " ".join(line[-2:]) == 'is empty':
             return (0, 'OK - The mailqueue is empty ', [ ('length', 0, params[0], params[1]),
-                                                         ('size', '0b') ])
+                                                         ('size', '0') ])
         elif line[0] == '--':
             size    = postfix_mailq_to_bytes(float(line[1]), line[2])
             len     = int(line[4])
             perfdata = [ ('length', len, params[0], params[1]),
-                         ('size', '%db' % size) ]
+                         ('size', '%d' % size) ]
 
             if len > params[1]:
                 return (2, 'CRITICAL - Mailqueue length is %d '

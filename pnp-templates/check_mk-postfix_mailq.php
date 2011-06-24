@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,30 +23,31 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# (length=22;10;20;; size=2048;;;;)
+$opt[1] = "--vertical-label Mails -l0  --title \"Mail Queue Length\" ";
+$def[1] =  "DEF:length=$RRDFILE[1]:$DS[1]:MAX " ;
+$def[1] .= "HRULE:$WARN[1]#FFFF00 ";
+$def[1] .= "HRULE:$CRIT[1]#FF0000 ";
+$def[1] .= "AREA:length#6890a0:\"Mails\" " ;
+$def[1] .= "LINE:length#2060a0 " ;
+$def[1] .= "GPRINT:length:LAST:\"%6.2lf last\" " ;
+$def[1] .= "GPRINT:length:AVERAGE:\"%6.2lf avg\" " ;
+$def[1] .= "GPRINT:length:MAX:\"%6.2lf max\\n\" ";
 
 
-def inventory_bluecoat_diskcpu(checkname, info):
-    return [ (line[0], "current value: " + line[1], '""') for line in info ]
+$opt[2] = "--vertical-label MBytes -b1024 -X6 -l0 --title \"Mail Queue Size\" ";
+$def[2] = "DEF:size=$RRDFILE[2]:$DS[2]:MAX " ;
+$def[2] .= "CDEF:queue_mb=size,1048576,/ ";
+$def[2] .= "AREA:queue_mb#65ab0e:\"Megabytes\" ";
+$def[2] .= "LINE:queue_mb#206a0e ";
+$def[2] .= "GPRINT:queue_mb:MAX:\"%6.2lf MB max\\n\" ";
 
-def check_bluecoat_diskcpu(item, params, info):
-    for line in info:
-        if line[0] == item:
-            perfdata = [("value", line[1]) ]
-            if line[2] == '1':
-                return (0, "OK - %s" % (line[1],), perfdata)
-            else:
-                return (2, "CRIT - %s" % (line[1], ), perfdata)
-    return (3, "UNKNOWN - item not found in SNMP data")
+# geht nicht.
+#$def[2] .= "DEF:size_avg=$RRDFILE[2]:$DS[2]:AVG " ;
+#$def[2] .= "DEF:size_last=$RRDFILE[2]:$DS[2]:LAST " ;
+#$def[2] .= "CDEF:queue_mb_avg=size_avg,1048576,/ ";
+#$def[2] .= "CDEF:queue_mb_last=size_last,1048576,/ ";
+#$def[2] .= "GPRINT:queue_mb:LAST:\"%6.2lf MB last\" ";
+#$def[2] .= "GPRINT:queue_mb:AVERAGE:\"%6.2lf MB avg\" ";
 
-check_info['bluecoat_diskcpu'] =  (
-        check_bluecoat_diskcpu,
-        "%s",
-        1,
-        inventory_bluecoat_diskcpu)
-
-snmp_info['bluecoat_diskcpu'] =  (
-    ".1.3.6.1.4.1.3417.2.4.1.1.1",
-    [ 3, 4, 6 ]) # BLUECOAT disk und CPU-Tabelle
-
-snmp_scan_functions["bluecoat_sensors"] = \
-    lambda oid: '1.3.6.1.4.1.3417.1.1' in oid(".1.3.6.1.2.1.1.2.0")
+?>

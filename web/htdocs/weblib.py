@@ -56,7 +56,7 @@ def set_tree_states(tree, val):
     load_tree_states()
     treestates[tree] = val
 
-def ajax_tree_openclose(h):
+def ajax_tree_openclose():
     load_tree_states()
 
     tree = html.var("tree")

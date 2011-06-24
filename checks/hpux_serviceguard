@@ -44,25 +44,25 @@
 def inventory_hpux_serviceguard(checkname, info):
     inventory = []
     for line in info:
-	if len(line) == 1:
-	    item = "Total Status"
+        if len(line) == 1:
+            item = "Total Status"
         else:
-	    item = line[0]
+            item = line[0]
         inventory.append((item, None))
     return inventory
 
 def check_hpux_serviceguard(item, params, info):
     for line in info:
-	if (item == "Total Status" and len(line) == 1) or \
+        if (item == "Total Status" and len(line) == 1) or \
             (item == line[0] and len(line) == 2):
-	        status = line[-1].split("=")[-1]
-		if status == "ok":
-		    code = 0
-                elif status == "degraded":
-		    code = 1
-                else:
-		    code = 2
-                return (code, nagios_state_names[code] + " - state is %s" % status)
+            status = line[-1].split("=")[-1]
+            if status == "ok":
+                code = 0
+            elif status == "degraded":
+                code = 1
+            else:
+                code = 2
+            return (code, nagios_state_names[code] + " - state is %s" % status)
 
     return (3, "UNKNOWN - No such item found")
 

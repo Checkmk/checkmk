@@ -26,7 +26,7 @@
 
 ## Name    Mtu    Network        Address        Ipkts   Ierrs  Opkts Oerrs Coll
 # <<<hpux_if>>>
-# 
+#
 # ***          lan0 64 bit MIB statistics:
 # Interface Name               = lan0
 # PPA Number                   = 0
@@ -54,7 +54,7 @@
 # Counter Discontinuity Time   = Tue Jul 13 10:36:24 2010
 # Physical Promiscuous Mode    = FALSE
 # Physical Connector Present   = TRUE
-# Interface Alias              = 
+# Interface Alias              =
 # Link Up/Down Trap Enable     = Enabled
 
 
@@ -62,25 +62,25 @@ def hpux_convert_to_if64(info):
     nics = []
     for line in info:
         if '***' in line:
-	    nicname = line[1]
+            nicname = line[1]
             nic = ['0'] * 19
-	    nics.append(nic)
+            nics.append(nic)
             nic[2] = '6' # fake port type Ethernet
         elif '=' in line:
-	    x = " ".join(line)
+            x = " ".join(line)
             left, right = x.split("=")
             left = left.strip()
             right = right.strip()
             if left == "PPA Number":
                 nic[0] = right
             elif left == "Speed":
-	        nic[3] = hpux_parse_speed(right)
+                nic[3] = hpux_parse_speed(right)
             elif left == "Inbound Octets":
-		nic[5] = right
+                nic[5] = right
             elif left == "Inbound Unicast Packets":
-		nic[6] = right
+                nic[6] = right
             elif left == "Inbound Multicast Packets":
-		nic[7] = right
+                nic[7] = right
             elif left == "Inbound Broadcast Packets":
                 nic[8] = right
             elif left == "Inbound Discards":
@@ -105,21 +105,21 @@ def hpux_convert_to_if64(info):
                 nic[1] = right
                 nic[18] = right
     return nics
-            
+
 
 def hpux_parse_speed(speed):
     parts = speed.split()
     if parts[1] == "Gbps":
-	mult = 1000 * 1000 * 1000
+        mult = 1000 * 1000 * 1000
     else:
-	mult = 1000 * 1000
+        mult = 1000 * 1000
     return int(parts[0]) * mult
 
 def hpux_parse_operstatus(txt):
     if txt.lower() == "up":
-	return '1'
+        return '1'
     else:
-	return '2'
+        return '2'
 
 def inventory_hpux_if(checkname, info):
     return inventory_if_common(hpux_convert_to_if64(info))
@@ -129,4 +129,3 @@ def check_hpux_if(item, params, info):
 
 check_includes['hpux_if'] = [ "if.include" ]
 check_info['hpux_if'] = (check_hpux_if, "NIC %s", 1,  inventory_hpux_if )
-

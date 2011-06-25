@@ -3615,8 +3615,6 @@ for _f in list_of_files:
         else:
             raise
 
-import pprint ; pprint.pprint(host_paths) ; del pprint
-
 # Strip off host tags from the list of all_hosts.  Host tags can be
 # appended to the hostnames in all_hosts, separated by pipe symbols,
 # e.g. "zbghlnx04|bgh|linux|test" and are stored in a separate

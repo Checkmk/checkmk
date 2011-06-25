@@ -1145,7 +1145,6 @@ input.tab#results, input.tabactive#results { background-color: #fe6; }
 /* input elements in forms */
 
 table.form input.text { 
-    width: 100%;
 }
 
 table.form input.number { 

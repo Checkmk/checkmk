@@ -511,23 +511,25 @@ def page_edit_view():
     html.hidden_field("old_name", viewname) # safe old name in case user changes it
     html.write("<table class=\"form\">\n")
 
-    html.write("<tr><td class=legend>Title</td><td class=content>")
-    html.text_input("view_title")
+    html.write("<tr><td class=legend>" + _("Title") + "</td><td class=content>")
+    html.text_input("view_title", size=50)
     html.write("</td></tr>\n")
 
-    html.write("<tr><td class=legend>Linkname</td><td class=content>")
-    html.text_input("view_name")
+    html.write("<tr><td class=legend>" + _("Linkname") + "</td><td class=content>")
+    html.text_input("view_name", size=12)
     html.write("</td></tr>\n")
 
-    html.write("<tr><td class=legend>Topic</td><td class=content>")
-    html.text_input("view_topic", "Other")
+    html.write("<tr><td class=legend>" + _("Topic") + "</td><td class=content>")
+    html.text_input("view_topic", "Other", size=50)
     html.write("</td></tr>\n")
 
-    html.write("<tr><td class=legend>Buttontext</td><td class=content>")
-    html.text_input("view_linktitle")
+    html.write("<tr><td class=legend>" + _("Buttontext") + "</td><td class=content>")
+    html.text_input("view_linktitle", size=26)
+    html.write("&nbsp; Icon: ")
+    html.text_input("view_icon", size=16)
     html.write("</td></tr>\n")
 
-    html.write("<tr><td class=legend>Description</td><td class=content>")
+    html.write("<tr><td class=legend>" + _("Description") + "</td><td class=content>")
     html.text_area("view_description", 4)
     html.write("</td></tr>\n")
 
@@ -768,6 +770,7 @@ def load_view_into_html_vars(view):
     html.set_var("view_title",       view["title"])
     html.set_var("view_topic",       view.get("topic", "Other"))
     html.set_var("view_linktitle",   view.get("linktitle", view["title"]))
+    html.set_var("view_icon",        view.get("icon", "")),
     html.set_var("view_description", view.get("description", ""))
     html.set_var("view_name",        view["name"])
     html.set_var("datasource",       view["datasource"])
@@ -856,6 +859,9 @@ def create_view():
     linktitle = html.var("view_linktitle").strip()
     if not linktitle:
         linktitle = title
+    icon = html.var("view_icon")
+    if not icon: 
+        icon = None
 
     topic = html.var("view_topic")
     if not topic:
@@ -956,6 +962,7 @@ def create_view():
         "title"           : title,
         "topic"           : topic,
         "linktitle"       : linktitle,
+        "icon"            : icon,
         "description"     : html.var("view_description", ""),
         "datasource"      : datasourcename,
         "public"          : public,
@@ -1501,7 +1508,7 @@ def show_context_links(thisview, active_filters):
                 first = False
                 html.begin_context_buttons()
             vars_values = [ (var, html.var(var)) for var in set(used_contextvars) ]
-            html.context_button(view_linktitle(view), html.makeuri_contextless(vars_values + [("view_name", name)]))
+            html.context_button(view_linktitle(view), html.makeuri_contextless(vars_values + [("view_name", name)]), view.get("icon"))
 
     if not first:
         html.end_context_buttons()
@@ -1788,14 +1795,14 @@ def show_host_service_actions(what):
         html.write("</td></tr>\n")
 
         html.write("<tr><td class=content><div class=textinputlegend>Comment:</div>")
-        html.text_input("_ack_comment")
+        html.text_input("_ack_comment", size=65)
         html.write("</td></tr>\n")
         
     if config.may("action.addcomment"):
         html.write("<tr><td rowspan=2 class=legend>Add comment</td>\n")
         html.write("<td class=content><input type=submit name=_add_comment value=\"Add comment\"></td></tr>\n"
                 "<tr><td class=content><div class=textinputlegend>Comment:</div>")
-        html.text_input("_comment")
+        html.text_input("_comment", size=65)
         html.write("</td></tr>\n")
 
     if config.may("action.downtimes"):
@@ -1821,7 +1828,7 @@ def show_host_service_actions(what):
         html.time_input("_down_duration", 2, 0)
         html.write(" (HH:MM)</td></tr>\n")
         html.write("<tr><td class=content><div class=textinputlegend>Comment:</div>\n")
-        html.text_input("_down_comment")
+        html.text_input("_down_comment", size=65)
 
 def nagios_action_command(what, row):
     if what in [ "host", "service" ]:

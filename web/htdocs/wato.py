@@ -182,7 +182,7 @@ def mode_folder(phase):
     elif phase == "buttons":
         folder_status_button()
         html.context_button(_("Properties"), make_link_to([("mode", "editfolder")], g_folder[".path"]), "properties")
-        html.context_button(_("New folder"), make_link([("mode", "newfolder")]), "new")
+        html.context_button(_("New folder"), make_link([("mode", "newfolder")]), "newfolder")
         html.context_button(_("New host list"), make_link([("mode", "newfile")]), "new")
         changelog_button()
         search_button()

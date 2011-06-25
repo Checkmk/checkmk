@@ -336,10 +336,9 @@ class html:
 
     def sorted_select(self, varname, options, deflt="", onchange=None):
         # Sort according to display texts, not keys
-        swapped = [ (disp, key) for key, disp in options ]
-        swapped.sort()
-        swapped = [ (key, disp) for disp, key in swapped ]
-        html.select(self, varname, swapped, deflt, onchange)
+        sorted = options[:]
+        sorted.sort(lambda a,b: cmp(a[1].lower(), b[1].lower()))
+        html.select(self, varname, sorted, deflt, onchange)
 
     def select(self, varname, options, deflt="", onchange=None):
         current = self.var(varname, deflt)

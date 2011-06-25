@@ -29,6 +29,7 @@
     * Introduced basic infrastructure for multilanguage support in Multisite
     * Make 'Views' snapin foldable
     * Replace old main view by dashboard.
+    * new filter for WATO folder of host
 
     WATO:
     * Configration files can now be administered via the WEB UI

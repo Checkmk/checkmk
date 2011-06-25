@@ -186,6 +186,22 @@ def declare_filter(sort_index, f, comment = None):
     f.sort_index = sort_index
 
 # Base class for all filters
+# name:          The unique id of that filter. This id is e.g. used in the
+#                persisted view configuration
+# title:         The title of the filter visible to the user. This text
+#                may be localized
+# info:          The datasource info this filter needs to work. If this 
+#                is "service", the filter will also be available in tables
+#                showing service information. "host" is available in all
+#                service and host views. The log datasource provides both
+#                "host" and "service". Look into datasource.py for which 
+#                datasource provides which information
+# htmlvars:      HTML variables this filter uses
+# link_columns:  If this filter is used for linking (state "hidden"), then
+#                these Livestatus columns are needed to fill the filter with
+#                the proper information. In most cases, this is just []. Only
+#                a few filters are useful for linking (such as the host_name and
+#                service_description filters with exact match)
 class Filter:
     def __init__(self, name, title, info, htmlvars, link_columns):
         self.name = name

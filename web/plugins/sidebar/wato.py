@@ -74,7 +74,7 @@ def render_linktree_folder(f):
 
 
 sidebar_snapins["wato"] = {
-    "title" : _("Tree of hosts"),
+    "title" : _("Hosts"),
     "description" : _("A foldable tree showing all your WATO folders and files - allowing you to navigate in the tree while using views or being in WATO"),
     "author" : "Mathias Kettner",
     "render" : render_wato_files,

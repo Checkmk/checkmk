@@ -180,11 +180,10 @@ def mode_folder(phase):
         return None
 
     elif phase == "buttons":
-        html.context_button(_("Status"), "view.py?view_name=allhosts&filename=%s" %
-                htmllib.urlencode(html.var("filename", "/")))
-        html.context_button(_("Properties"), make_link_to([("mode", "editfolder")], g_folder[".path"]))
-        html.context_button(_("New folder"), make_link([("mode", "newfolder")]))
-        html.context_button(_("New host list"), make_link([("mode", "newfile")]))
+        folder_status_button()
+        html.context_button(_("Properties"), make_link_to([("mode", "editfolder")], g_folder[".path"]), "properties")
+        html.context_button(_("New folder"), make_link([("mode", "newfolder")]), "new")
+        html.context_button(_("New host list"), make_link([("mode", "newfile")]), "new")
         changelog_button()
         search_button()
     
@@ -325,9 +324,9 @@ def mode_editfolder(phase, what, new):
         else:
             target_folder = g_folder
         if what == "file" and not new:
-            html.context_button(_("Abort"), make_link([("mode", "file")]))
+            html.context_button(_("Abort"), make_link([("mode", "file")]), "abort")
         else:
-            html.context_button(_("Abort"), make_link([("mode", "folder")]))
+            html.context_button(_("Abort"), make_link([("mode", "folder")]), "abort")
             
 
     elif phase == "action":
@@ -525,9 +524,10 @@ def mode_file(phase):
         return None
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link_to([("mode", "folder")], g_folder[".path"]))
-        html.context_button(_("Properties"), make_link_to([("mode", "editfile")], g_folder[".path"], g_file[".name"]))
-        html.context_button(_("New host"), make_link([("mode", "newhost")]))
+        folder_status_button()
+        html.context_button(_("Back"), make_link_to([("mode", "folder")], g_folder[".path"]), "back")
+        html.context_button(_("Properties"), make_link_to([("mode", "editfile")], g_folder[".path"], g_file[".name"]), "properties")
+        html.context_button(_("New host"), make_link([("mode", "newhost")]), "new")
         changelog_button()
         search_button()
     
@@ -730,7 +730,7 @@ def mode_edithost(phase, new):
     elif phase == "buttons":
         if not new:
             host_status_button(hostname, "hoststatus")
-        html.context_button(_("Abort"), make_link([("mode", "file")]))
+        html.context_button(_("Abort"), make_link([("mode", "file")]), "abort")
         if not new:
             html.context_button(_("Services"), make_link([("mode", "inventory"), ("host", hostname)]))
 
@@ -858,7 +858,7 @@ def mode_search(phase):
         return _("Search for hosts in %s and below" % (g_folder["title"]))
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link_to([("mode", "folder")], g_folder[".path"]))
+        html.context_button(_("Back"), make_link_to([("mode", "folder")], g_folder[".path"]), "back")
 
     elif phase == "action":
         pass
@@ -996,7 +996,7 @@ def mode_bulk_inventory(phase):
         return _("Bulk service detection (inventory)")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "file")]))
+        html.context_button(_("Back"), make_link([("mode", "file")]), "back")
         return
 
     elif phase == "action":
@@ -1077,7 +1077,7 @@ def mode_bulk_edit(phase):
         return _("Bulk edit hosts")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "file")]))
+        html.context_button(_("Back"), make_link([("mode", "file")]), "back")
         return
 
     elif phase == "action":
@@ -1118,7 +1118,7 @@ def mode_bulk_cleanup(phase):
         return _("Bulk removal of explicit attributes")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "file")]))
+        html.context_button(_("Back"), make_link([("mode", "file")]), "back")
         return
 
     elif phase == "action":
@@ -1237,13 +1237,13 @@ def mode_changelog(phase):
         return _("Change log")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "folder")]))
+        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
         if log_exists("pending"):
             html.context_button(_("Activate Changes!"), 
-                html.makeuri([("_action", "activate"), ("_transid", html.current_transid())]), True)
+                html.makeuri([("_action", "activate"), ("_transid", html.current_transid())]), "apply", True)
         if log_exists("audit"):
             html.context_button(_("Clear Audit Log"),
-                html.makeuri([("_action", "clear"), ("_transid", html.current_transid())]))
+                html.makeuri([("_action", "clear"), ("_transid", html.current_transid())]), "trash")
 
     elif phase == "action":
         if html.var("_action") == "clear":
@@ -1490,7 +1490,16 @@ def host_status_button(hostname, viewname):
            ("view_name", viewname), 
            ("filename", g_pathname),
            ("host",     hostname),
-           ("site",     "")]))  # TODO: support for distributed WATO
+           ("site",     "")]), 
+           "status")  # TODO: support for distributed WATO
+
+def folder_status_button(viewname = "allhosts"):
+    html.context_button(_("Status"), 
+       "view.py?" + htmllib.urlencode_vars([
+           ("view_name", viewname), 
+           ("filename", g_pathname)]), 
+           "status")  # TODO: support for distributed WATO
+
 
 
 # Remove all keys beginning with '.' in a folder. Those keys
@@ -1887,7 +1896,7 @@ def make_action_link_to(vars, folder_path, filename = None):
     return make_link_to(vars + [("_transid", html.current_transid())], folder_path, filename)
 
 def search_button():
-    html.context_button(_("Search"), make_link([("mode", "search")]))
+    html.context_button(_("Search"), make_link([("mode", "search")]), "search")
 
 def changelog_button():
     pending = parse_audit_log("pending")
@@ -1897,7 +1906,7 @@ def changelog_button():
         hot = True
     else:
         hot = False
-    html.context_button(buttontext, make_link([("mode", "changelog")]), hot)
+    html.context_button(buttontext, make_link([("mode", "changelog")]), "wato_changes", hot)
 
 
 def show_service_table(hostname, firsttime):

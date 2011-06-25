@@ -1452,7 +1452,7 @@ def show_context_links(thisview, active_filters):
             url = wato.api.link_to_host(host)
         else:
             url = wato.api.link_to_path(html.var("filename", "/"))
-        html.context_button('<img src="images/icon_wato.gif">WATO', url)
+        html.context_button(_("WATO") ,url, "wato")
 
     else:
         first = True

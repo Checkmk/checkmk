@@ -29,7 +29,7 @@ import wato
 
 class FilterWatoFile(Filter):
     def __init__(self):
-        Filter.__init__(self, "watofile", "WATO Folder/File", "host", ["watofile"], [])
+        Filter.__init__(self, "filename", "WATO Folder/File", "host", ["filename"], [])
         self.tree = wato.api.get_folder_tree()
         self.path_to_tree = {} # keep mapping from string-paths to folders/files
         self.selection = self.folder_selection(self.tree, "", 0)
@@ -53,7 +53,7 @@ class FilterWatoFile(Filter):
             title_prefix = "&nbsp;&nbsp;&nbsp;" * depth + "` " + "- " * depth
         else:
             title_prefix = ""
-        self.path_to_tree[my_path] = True
+        self.path_to_tree[my_path] = folder["title"]
         sel = [ (my_path , title_prefix + folder["title"]) ]
         sel += self.sublist(folder.get(".files", {}), my_path, depth)
         sel += self.sublist(folder.get(".folders", {}), my_path, depth)
@@ -67,7 +67,12 @@ class FilterWatoFile(Filter):
             sel += self.folder_selection(e, my_path, depth + 1)
         return sel
 
+    def heading_info(self, info):
+        current = html.var(self.name)
+        if current and current != "/":
+            return self.path_to_tree.get(current) 
+
 
 
 declare_filter(10, FilterWatoFile())
-
+ubiquitary_filters.append("filename") # show in all views

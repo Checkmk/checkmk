@@ -180,6 +180,8 @@ def mode_folder(phase):
         return None
 
     elif phase == "buttons":
+        html.context_button(_("Status"), "view.py?view_name=allhosts&filename=%s" %
+                htmllib.urlencode(html.var("filename", "/")))
         html.context_button(_("Properties"), make_link_to([("mode", "editfolder")], g_folder[".path"]))
         html.context_button(_("New folder"), make_link([("mode", "newfolder")]))
         html.context_button(_("New host list"), make_link([("mode", "newfile")]))
@@ -231,7 +233,7 @@ def show_filefolder_list(thing, what, title):
 
         odd = "even"
 
-        for entry in sort_by_title(thing["." + what + "s"].values()):
+        for entry in api.sort_by_title(thing["." + what + "s"].values()):
             odd = odd == "odd" and "even" or "odd" 
             html.write('<tr class="data %s0">' % odd)
 
@@ -726,6 +728,8 @@ def mode_edithost(phase, new):
         return title
 
     elif phase == "buttons":
+        if not new:
+            host_status_button(hostname, "hoststatus")
         html.context_button(_("Abort"), make_link([("mode", "file")]))
         if not new:
             html.context_button(_("Services"), make_link([("mode", "inventory"), ("host", hostname)]))
@@ -806,6 +810,7 @@ def mode_inventory(phase, firsttime):
         return title
 
     elif phase == "buttons":
+        host_status_button(hostname, "host")
         html.context_button(_("Host list"), make_link([("mode", "file")]))
         html.context_button(_("Edit host"), make_link([("mode", "edithost"), ("host", hostname)]))
         html.context_button(_("Full Scan"), html.makeuri([("_scan", "yes")]))
@@ -1403,12 +1408,6 @@ def render_audit_log(log, what, with_filename = False):
 #   | Functions needed at various places                                   |
 #   +----------------------------------------------------------------------+
 
-# sort list of folders or files by their title
-def sort_by_title(folders):
-    def folder_cmp(f1, f2):
-        return cmp(f1["title"].lower(), f2["title"].lower())
-    folders.sort(cmp = folder_cmp)
-    return folders
 
 def check_mk_automation(command, args=[], indata=""):
     # Gather the command to use for executing --automation calls to check_mk
@@ -1485,6 +1484,13 @@ def make_config_path(folder, file = None):
 
     return defaults.check_mk_configdir + "/" + "/".join(parts)
 
+def host_status_button(hostname, viewname):
+    html.context_button(_("Status"), 
+       "view.py?" + htmllib.urlencode_vars([
+           ("view_name", viewname), 
+           ("filename", g_pathname),
+           ("host",     hostname),
+           ("site",     "")]))  # TODO: support for distributed WATO
 
 
 # Remove all keys beginning with '.' in a folder. Those keys
@@ -1591,6 +1597,22 @@ def find_folder(path, in_folder = None):
             return None
         else:
             return find_folder(rest, in_folder[".folders"][name])
+
+
+def find_host(host):
+    return find_host_in(host, g_root_folder)
+
+def find_host_in(host, folder):
+    for f in folder.get(".files", {}).values():
+        hosts = read_configuration_file(folder, f)
+        if host in hosts:
+            return f[".path"]
+
+    for f in folder.get(".folders", {}).values():
+        p = find_host_in(host, f)
+        if p != None:
+            return p
+
 
 def count_hosts(folder):
     num = 0
@@ -1796,7 +1818,15 @@ def get_folder_and_file():
 
     g_pathname = html.var("filename")
     if not g_pathname:
-        g_pathname = "/"
+        host = html.var("host")
+        if host: # find host with full scan. Expensive operation
+            path = find_host(host)
+            if path:
+                g_pathname = "/" + "/".join(path) 
+            else:
+                raise MKGeneralException(_("The host <b>%s</b> is not managed by WATO.") % host)
+        if not g_pathname:
+            g_pathname = "/"
     if g_pathname[0] != '/' :
         raise MKGeneralException(_("You called this page with an invalid WATO filename!"))
 
@@ -2774,44 +2804,30 @@ class API:
         load_folder_config()
         return g_root_folder
 
+    # sort list of folders or files by their title
+    def sort_by_title(self, folders):
+        def folder_cmp(f1, f2):
+            return cmp(f1["title"].lower(), f2["title"].lower())
+        folders.sort(cmp = folder_cmp)
+        return folders
 
-    # Render clickable and foldable tree of all WATO folders 
-    # and files (e.g. used by sidebar snapins)
-    def render_link_tree(self, format):
-        self._render_linktree_folder(self.get_folder_tree(), format)
+    # Create an URL to a certain WATO path. Path is in string format
+    def link_to_path(self, filename):
+        return "wato.py?filename=" + htmllib.urlencode(filename)
+
+    # Create an URL to the edit-properties of a host.
+    def link_to_host(self, hostname):
+        return "wato.py?" + htmllib.urlencode_vars(
+        [("mode", "edithost"), ("host", hostname)])
+
+    # Same, but links to services of that host
+    def link_to_host_inventory(self, hostname):
+        return "wato.py?" + htmllib.urlencode_vars(
+        [("mode", "inventory"), ("host", hostname)])
 
 
     # BELOW ARE PRIVATE HELPER FUNCTIONS
 
-    def _render_linktree_folder(self, f, format):
-        subfolders = f.get(".folders", {})
-        subfiles = f.get(".files", {})
-        is_leaf = len(subfolders) == 0 and len(subfiles) == 0
-
-        path = f[".path"]
-        filename = "/" + "/".join(path)
-        if not filename.endswith(".mk"):
-            filename += "/"
-
-        if len(path) > 0:
-            url = "wato.py?filename=" + htmllib.urlencode(filename)
-            if is_leaf:
-                title = format % (url, f["title"])
-            else:
-                title = '<a target=main href="%s">%s</a>' % (url, f["title"]) 
-        else:
-            title  = '<a target=main href="wato.py">%s</a>' % f["title"]
-
-
-        if not is_leaf:
-            html.begin_foldable_container('wato', filename, False, title)
-            for sf in sort_by_title(subfolders.values()):
-                self._render_linktree_folder(sf, format)
-            for sf in sort_by_title(subfiles.values()):
-                self._render_linktree_folder(sf, format)
-            html.end_foldable_container()
-        else:
-            html.write(title)
 
 
     def _cleanup_directory(self, thing):

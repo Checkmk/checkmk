@@ -48,6 +48,7 @@ multisite_painters         = {}
 multisite_sorters          = {}
 multisite_builtin_views    = {}
 multisite_painter_options  = {}
+ubiquitary_filters         = [] # Always show this filters
 
 # Load all view plugins
 def load_plugins():
@@ -587,7 +588,9 @@ function toggle_section(nr, oImg) {
     html.write("</th><th>usage</th><th>hardcoded settings</th><th>HTML variables</th></tr>\n")
     allowed_filters = filters_allowed_for_datasource(datasourcename)
     # sort filters according to title
-    s = [(filt.sort_index, filt.title, fname, filt) for fname, filt in allowed_filters.items()]
+    s = [(filt.sort_index, filt.title, fname, filt) 
+          for fname, filt in allowed_filters.items()
+          if fname not in ubiquitary_filters ]
     s.sort()
     for sortindex, title, fname, filt in s:
         html.write("<tr>")
@@ -780,12 +783,13 @@ def load_view_into_html_vars(view):
 
     # [3] Filters
     for name, filt in multisite_filters.items():
-        if name in view["show_filters"]:
-            html.set_var("filter_%s" % name, "show")
-        elif name in view["hard_filters"]:
-            html.set_var("filter_%s" % name, "hard")
-        elif name in view["hide_filters"]:
-            html.set_var("filter_%s" % name, "hide")
+        if name not in ubiquitary_filters:
+            if name in view["show_filters"]:
+                html.set_var("filter_%s" % name, "show")
+            elif name in view["hard_filters"]:
+                html.set_var("filter_%s" % name, "hard")
+            elif name in view["hide_filters"]:
+                html.set_var("filter_%s" % name, "hide")
 
     for varname, value in view["hard_filtervars"]:
         if not html.has_var(varname):
@@ -1067,6 +1071,14 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
 
     # [3] Filters
     show_filters = [ multisite_filters[fn] for fn in view["show_filters"] ]
+
+    # add ubiquitary_filters that are possible for this datasource
+    for fn in ubiquitary_filters:
+        filter = multisite_filters[fn]
+        if not filter.info or filter.info in datasource["infos"]:
+            show_filters.append(filter)
+
+
     hide_filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
     hard_filters = [ multisite_filters[fn] for fn in view["hard_filters"] ]
     for varname, value in view["hard_filtervars"]:
@@ -1410,7 +1422,16 @@ def view_title(view):
         heading = filt.heading_info(tablename)
         if heading:
             extra_titles.append(heading)
-    return view["title"] + " " + ", ".join(extra_titles)
+
+    title = view["title"] + " " + ", ".join(extra_titles)
+
+    for fn in ubiquitary_filters:
+        filt = multisite_filters[fn]
+        heading = filt.heading_info(tablename)
+        if heading:
+            title = heading + " - " + title
+
+    return title
 
 # Return title for context link buttons
 def view_linktitle(view):
@@ -1422,6 +1443,20 @@ def view_linktitle(view):
 
 
 def show_context_links(thisview, active_filters):
+    # Show button to WATO, if permissions allow this
+    if config.may("use_wato"):
+        html.begin_context_buttons()
+        first = False
+        host = html.var("host")
+        if host:
+            url = wato.api.link_to_host(host)
+        else:
+            url = wato.api.link_to_path(html.var("filename", "/"))
+        html.context_button('<img src="images/icon_wato.gif">WATO', url)
+
+    else:
+        first = True
+
     # compute list of html variables used actively by hidden or shown
     # filters.
     active_filter_vars = set([])
@@ -1436,7 +1471,6 @@ def show_context_links(thisview, active_filters):
         sorted_views.append((view_linktitle(view), view))
     sorted_views.sort()
 
-    first = True
     for linktitle, view in sorted_views:
         name = view["name"]
         if view == thisview:

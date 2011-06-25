@@ -471,6 +471,16 @@ div.contextlink a {
     height: 25px;
 }
 
+/* Icon image in a context button */
+div.contextlink img {
+   width: 18px;
+   height: 18px;
+   vertical-align: middle;
+   position: relative;
+   top: -2px;
+   margin-right: 5px;
+}
+
 /* The navi table contains the tab navigation above the content tables
    containing the buttons "filter", "commands", "display" and so on. */
 table.navi {

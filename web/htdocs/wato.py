@@ -1214,47 +1214,6 @@ def bulk_cleanup_attributes(the_file, hosts):
 
     return num_shown > 0
 
-        
-
-
-
-#   +----------------------------------------------------------------------+
-#   |                 ____  _     _      _                                 |
-#   |                / ___|(_) __| | ___| |__   __ _ _ __                  |
-#   |                \___ \| |/ _` |/ _ \ '_ \ / _` | '__|                 |
-#   |                 ___) | | (_| |  __/ |_) | (_| | |                    |
-#   |                |____/|_|\__,_|\___|_.__/ \__,_|_|                    |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Functions called from the WATO sidebar snapin                        |
-#   +----------------------------------------------------------------------+
-
-def render_link_tree(format):
-    load_folder_config()
-
-    def render_folder(f):
-
-        subfolders = f[".folders"]
-        path = f[".path"]
-        filename = "/" + "/".join(path) + "/"
-        if len(path) > 0:
-            url = "wato.py?filename=" + htmllib.urlencode(filename)
-            if len(subfolders) == 0:
-                title = format % (url, f["title"])
-            else:
-                title = '<a target=main href="%s">%s</a>' % (url, f["title"]) 
-        else:
-            title  = '<a target=main href="wato.py">%s</a>' % f["title"]
-
-        if len(subfolders) > 0:
-            html.begin_foldable_container('wato', filename, False, title)
-            for sf in sort_by_title(subfolders.values()):
-                render_folder(sf)
-            html.end_foldable_container()
-        else:
-            html.write(title)
-
-    render_folder(g_root_folder)
 
 
 #   +----------------------------------------------------------------------+
@@ -2807,6 +2766,52 @@ class API:
                 tdclass, content = attr.paint(host[attrname], host["name"])
                 result.append((attr.title(), content))
         return result
+
+    # Get information about the folder and directory tree. 
+    # This is useful for components that display hosts in 
+    # the tree (e.g. the status GUI).
+    def get_folder_tree(self):
+        load_folder_config()
+        return g_root_folder
+
+
+    # Render clickable and foldable tree of all WATO folders 
+    # and files (e.g. used by sidebar snapins)
+    def render_link_tree(self, format):
+        self._render_linktree_folder(self.get_folder_tree(), format)
+
+
+    # BELOW ARE PRIVATE HELPER FUNCTIONS
+
+    def _render_linktree_folder(self, f, format):
+        subfolders = f.get(".folders", {})
+        subfiles = f.get(".files", {})
+        is_leaf = len(subfolders) == 0 and len(subfiles) == 0
+
+        path = f[".path"]
+        filename = "/" + "/".join(path)
+        if not filename.endswith(".mk"):
+            filename += "/"
+
+        if len(path) > 0:
+            url = "wato.py?filename=" + htmllib.urlencode(filename)
+            if is_leaf:
+                title = format % (url, f["title"])
+            else:
+                title = '<a target=main href="%s">%s</a>' % (url, f["title"]) 
+        else:
+            title  = '<a target=main href="wato.py">%s</a>' % f["title"]
+
+
+        if not is_leaf:
+            html.begin_foldable_container('wato', filename, False, title)
+            for sf in sort_by_title(subfolders.values()):
+                self._render_linktree_folder(sf, format)
+            for sf in sort_by_title(subfiles.values()):
+                self._render_linktree_folder(sf, format)
+            html.end_foldable_container()
+        else:
+            html.write(title)
 
 
     def _cleanup_directory(self, thing):

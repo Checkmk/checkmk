@@ -47,7 +47,7 @@ def render_wato_files():
 def ajax_wato_files():
     if config.may("use_wato"):
         format = ("<li>%s</li>" % link("XX", "XX")).replace("XX", "%s")
-        wato.render_link_tree(format)
+        wato.api.render_link_tree(format)
 
 
 sidebar_snapins["wato"] = {

@@ -37,6 +37,7 @@
 #include "HostContactsColumn.h"
 #include "DownCommColumn.h"
 #include "CustomVarsColumn.h"
+#include "CustomVarsExplicitColumn.h"
 #include "HostlistColumn.h"
 #include "ServicelistColumn.h"
 #include "ServicelistStateColumn.h"
@@ -252,6 +253,12 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 		"A list of the values of the custom variables", (char *)(&hst.custom_variables) - ref, indirect_offset, CVT_VALUES));
     table->addColumn(new CustomVarsColumn(prefix + "custom_variables", 
 		"A dictionary of the custom variables", (char *)(&hst.custom_variables) - ref, indirect_offset, CVT_DICT));
+
+    // Add direct access to the custom macro _FILENAME. In a future version of Livestatus
+    // this will probably be configurable so access to further custom variable can be
+    // added, such that those variables are presented like ordinary Nagios columns.
+    table->addColumn(new CustomVarsExplicitColumn(prefix + "filename", 
+		"The value of the custom variable FILENAME", (char *)(&hst.custom_variables) - ref, indirect_offset, "FILENAME"));
 
     table->addColumn(new HostlistColumn(prefix + "parents", 
 		"A list of all direct parents of the host", (char *)(&hst.parent_hosts) - ref, indirect_offset, false));

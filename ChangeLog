@@ -50,6 +50,7 @@
     * Column aggregation (Stats) now also works for perf_data
     * hosts, services & contacts: new column custom_variables (this is
       a dictionary of all custom variables)
+    * new column 'filename' in table host (value of variable _FILENAME)
     * Updated Python-API to most current version
 
 1.1.11i1:

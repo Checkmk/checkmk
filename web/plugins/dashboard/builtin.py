@@ -29,15 +29,40 @@ builtin_dashboards = {
         "title" : _("Main Overview"),
         "dashlets" : [
             { 
+                "url"        : "dashlet_overview.py", 
+                "position"   : (1, 1),
+                "size"       : (10, 5),
+                "shadow"     : False,
+                "background" : False,
+            },
+            {
+                "title"      : _("Host Statistics"),
+                "url"        : "dashlet_hoststats.py",
+                "position"   : (11, 1),
+                "size"       : (10, 6),
+                "shadow"     : True,
+                "background" : True,
+                "refresh"    : 60,
+            },
+            {
+                "title"      : _("Service Statistics"),
+                "url"        : "dashlet_servicestats.py",
+                "position"   : (21, 1),
+                "size"       : (10, 6),
+                "shadow"     : True,
+                "background" : True,
+                "refresh"    : 60,
+            },
+            { 
                 "title"      : _("Host Problems"),
                 "iframe"     : "view.py?view_name=hostproblems_dash&display_options=SIXHR&_body_class=dashlet",
                 "position"   : (-1, 1),
-                "size"       : (GROW, 8),
+                "size"       : (GROW, 6),
             },
             { 
                 "title"      : _("Service Problems"),
                 "iframe"     : "view.py?view_name=svcproblems_dash&display_options=SIXHR&_body_class=dashlet",
-                "position"   : (1, 4),
+                "position"   : (1, 7),
                 "size"       : (GROW, MAX),
             },
             { 
@@ -46,14 +71,6 @@ builtin_dashboards = {
                 "position"   : (-1, -1),
                 "size"       : (GROW, GROW),
             },
-            { 
-                "url"        : "dashlet_overview.py", 
-                "position"   : (1, 1),
-                "size"       : (GROW, 3),
-                "shadow"     : False,
-                "background" : False,
-            },
-
             # { 
             #     "title"    : "CPU load of Nagios",
             #     # "url"      : "http://localhost/dk/pnp4nagios/index.php/image?host=DerNagiosSelbst&srv=fs__var&view=0",

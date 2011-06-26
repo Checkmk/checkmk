@@ -155,7 +155,9 @@ def handler(req, profiling = True):
 
     response_code = apache.OK
     try:
-        read_get_vars(req)
+        # Do not parse variables again if profiling (and second run is done)
+        if profiling:
+            read_get_vars(req)
         
         # Ajax-Functions want no HTML output in case of an error but
         # just a plain server result code of 500
@@ -207,6 +209,7 @@ def handler(req, profiling = True):
             file(profilefile + ".py", "w").write("#!/usr/bin/python\nimport pstats\nstats = pstats.Stats(%r)\nstats.sort_stats('time').print_stats()\n" % profilefile)
             os.chmod(profilefile + ".py", 0755)
             return apache.OK
+
 
         # Prepare output format
         output_format = html.var("output_format", "html")

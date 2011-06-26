@@ -352,3 +352,123 @@ def dashlet_overview():
 
     html.write('</tr></table>')
 
+
+def dashlet_hoststats():
+    table = [
+       ( _("Up"), "#0b3",
+        "Stats: state = 0\n" \
+        "Stats: scheduled_downtime_depth = 0\n" \
+        "StatsAnd: 2\n"),
+
+       ( _("Down"), "#f00",
+        "Stats: state = 1\n" \
+        "Stats: scheduled_downtime_depth = 0\n" \
+        "StatsAnd: 2\n"),
+
+       ( _("Unreachable"), "#f80",
+        "Stats: state = 2\n" \
+        "Stats: scheduled_downtime_depth = 0\n" \
+        "StatsAnd: 2\n"),
+
+       ( _("In downtime"), "#0af",
+        "Stats: scheduled_downtime_depth > 0\n" \
+       )
+    ]
+    filter = "Filter: custom_variable_names < _REALNAME\n"
+
+    render_statistics("hosts", table, filter)
+
+def dashlet_servicestats():
+    table = [
+       ( _("Ok"), "#0b3",
+        "Stats: state = 0\n" \
+        "Stats: scheduled_downtime_depth = 0\n" \
+        "Stats: host_scheduled_downtime_depth = 0\n" \
+        "StatsAnd: 3\n"),
+
+       ( _("Warning"), "#ff0",
+        "Stats: state = 1\n" \
+        "Stats: scheduled_downtime_depth = 0\n" \
+        "Stats: host_scheduled_downtime_depth = 0\n" \
+        "StatsAnd: 3\n"),
+
+       ( _("Unknown"), "#f80",
+        "Stats: state = 3\n" \
+        "Stats: scheduled_downtime_depth = 0\n" \
+        "Stats: host_scheduled_downtime_depth = 0\n" \
+        "StatsAnd: 3\n"),
+
+       ( _("Critical"), "#f00",
+        "Stats: state = 2\n" \
+        "Stats: scheduled_downtime_depth = 0\n" \
+        "Stats: host_scheduled_downtime_depth = 0\n" \
+        "StatsAnd: 3\n"),
+
+       ( _("In downtime"), "#0af",
+        "Stats: scheduled_downtime_depth > 0\n" \
+        "Stats: host_scheduled_downtime_depth > 0\n" \
+        "StatsOr: 2\n" \
+       )
+    ]
+    filter = "Filter: host_custom_variable_names < _REALNAME\n"
+
+    render_statistics("services", table, filter)
+
+def render_statistics(what, table, filter):
+    query = "GET %s\n" % what
+    for entry in table:
+        query += entry[2]
+    query += filter
+
+    result = html.live.query_summed_stats(query)
+    pies = zip(table, result)
+    total = sum([x[1] for x in pies])
+    pie_diameter = 136
+
+    html.write('<canvas class=pie width=%d height=%d id=%s_stats style="float: left"></canvas>' % 
+            (pie_diameter, pie_diameter, what))
+    
+    html.write('<table class=hoststats style="float:left">')
+    for (name, color, query), count in pies + [ ((_("Total"), "", ""), total) ]:
+        html.write("<tr><th>%s</th><td>%d</td></tr>" % (name, count))
+
+    html.write("</table>")
+
+    html.javascript("""
+
+function chart_pie(from, to, color) {
+    context.beginPath();
+    context.moveTo(pie_x, pie_y);
+    context.arc(pie_x, pie_y, pie_d / 2 - 2, rad(from), rad(to), false);
+    context.closePath();
+    context.fillStyle = color;
+    context.shadowOffsetX = 5;
+    context.shadowOffsetY = 5;
+    context.shadowBlur = 10;
+    context.strokeStyle = "#ffffff";
+    context.fill();
+    context.stroke();
+}
+
+// convert percent to angle(rad)
+function rad(g) {
+    return (g * 360 / 100 * Math.PI) / 180;
+}
+
+pie_x = %(x)f;
+pie_y = %(y)f;
+pie_d = %(d)f;
+
+context = document.getElementById("%(what)s_stats").getContext('2d');
+
+""" % { "what" : what, "x" : pie_diameter / 2, 
+        "y": pie_diameter/2, "d" : pie_diameter })
+
+
+    r = 0.0;
+    for (name, color, q), value in pies:
+        perc = 100.0 * value / total
+        html.javascript('chart_pie(%f, %f, %r);' % (r, r + perc, color));
+        r += perc;
+
+

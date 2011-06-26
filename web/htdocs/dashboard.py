@@ -455,7 +455,7 @@ def render_statistics(what, table, filter):
     filename = html.var("filename")
     if filename and filename != "/":
         # filter += "Filter: host_state = 0"
-        filter += "Filter: host_custom_variables ~ FILENAME ^%s\n" % filename.replace("\n", "")
+        filter += "Filter: host_filename ~ ^%s\n" % filename.replace("\n", "")
     
     query = "GET %s\n" % what
     for entry in table:

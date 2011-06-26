@@ -1730,31 +1730,30 @@ canvas.pie {
     margin-left: 10px;
 }
 
-table.hoststats { 
+div.dashlet table.hoststats { 
     margin-top: 10px;
     margin-left: 5px;
-    width: 80px;
+    width: 143px;
     height: 136px;
     border-collapse: collapse;
     border-spacing: 0px;
 }
-table.hoststats td { 
+div.dashlet table.hoststats td { 
     text-align: right;
     padding-right: 6px;
     padding-left: 6px;
     background-image: url("images/form_background.png");
     background-repeat: repeat;
 }
-table.hoststats th { 
+div.dashlet table.hoststats th { 
     text-align: left;
     background-color: transparent;
-    padding-right: 3em;
     padding-left: 6px;
 }
-table.hoststats td.color {
+div.dashlet table.hoststats td.color {
     padding: 3px;
 }
-table.hoststats th, table.hoststats td { 
+div.dashlet table.hoststats th, table.hoststats td { 
     padding-top: 3px;
     padding-bottom: 3px;
     border-color: white;

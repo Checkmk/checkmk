@@ -24,12 +24,22 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import os
 import livestatus
+
+try:
+    omd_root = os.getenv("OMD_ROOT")
+    socket_path = "unix:" + omd_root + "/tmp/run/live"
+except:
+    sys.stderr.write("This example is indented to run in an OMD site\n")
+    sys.stderr.write("Please change socket_path in this example, if you are\n")
+    sys.stderr.write("not using OMD.\n")
+    sys.exit(1)
 
 
 sites = {
   "muc" : {
-	"socket"     : "unix:/var/run/nagios/rw/live",
+	"socket"     : socket_path,
 	"alias"      : "Munich",
   },
   "sitea" : {

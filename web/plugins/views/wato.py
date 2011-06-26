@@ -40,7 +40,7 @@ class FilterWatoFile(Filter):
     def filter(self, infoname):
         current = html.var(self.name)
         if current and current in self.path_to_tree:
-            return "Filter: host_custom_variables ~ PATH ^%s\n" % current
+            return "Filter: host_custom_variables ~ PATH ^%s\n" % current.replace("\n", "") # prevent insertions attack
         else:
             return ""
 

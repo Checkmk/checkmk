@@ -26,6 +26,7 @@
 
 import config, defaults, htmllib, pprint
 from lib import *
+import wato
 
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
@@ -84,11 +85,39 @@ def page_dashboard():
 
     render_dashboard(name)
 
+def add_filename_to_url(url, filename):
+    if not filename:
+        return url
+    elif '/' in url:
+        return url # do not append filename to non-Check_MK-urls
+    elif '?' in url:
+        return url + "&filename=" + htmllib.urlencode(filename)
+    else:
+        return url + "?filename=" + htmllib.urlencode(filename)
+
+
 # Actual rendering function
 def render_dashboard(name):
     board = dashboards[name]
 
-    html.header(board["title"])
+    # The dashboard may be called with "filename" set. In that case
+    # the dashboard is assumed to restrict the shown data to a specific
+    # WATO subfolder or file. This could be a configurable feature in
+    # future, but currently we assume, that *all* dashboards are filename
+    # sensitive.
+
+    filename = html.var("filename")
+    if not filename or filename == "/": # ignore filename in case of root folder
+        filename = None
+
+    # The title of the dashboard needs to be prefixed with the WATO path, 
+    # in order to make it clear to the user, that he is seeing only partial
+    # data.
+    title = board["title"]
+    if filename:
+        title = wato.api.get_folder_title(filename) + " - " + title
+    html.header(title)
+
     html.javascript_file("dashboard")
     html.write("<div id=dashboard>\n") # Container of all dashlets
 
@@ -98,10 +127,11 @@ def render_dashboard(name):
         # dashlets using static content (such as an iframe) will not be
         # refreshed by us but need to do that themselves.
         if "url" in dashlet:
-            refresh_dashlets.append([nr, dashlet.get("refresh", 0), dashlet["url"]])
+            refresh_dashlets.append([nr, dashlet.get("refresh", 0), 
+              add_filename_to_url(dashlet["url"], filename)])
 
         # Paint the dashlet's HTML code
-        render_dashlet(nr, dashlet)
+        render_dashlet(nr, dashlet, filename)
 
     html.write("</div>\n")
 
@@ -128,7 +158,7 @@ dashboard_scheduler(1);
 # for the resizing. Within that div there is an inner div containing the
 # actual dashlet content. The margin between the inner and outer div is
 # used for stylish layout stuff (shadows, etc.)
-def render_dashlet(nr, dashlet):
+def render_dashlet(nr, dashlet, filename):
 
     html.write('<div class=dashlet id="dashlet_%d">' % nr)
     # render shadow
@@ -144,13 +174,18 @@ def render_dashlet(nr, dashlet):
     else:
         bg = ""
     html.write('<div class="dashlet_inner%s" id="dashlet_inner_%d">' % (bg, nr))
+
+    # The method "view" is a shortcut for "iframe" with a certain url
+    if "view" in dashlet:
+        dashlet["iframe"] = "view.py?view_name=%s&display_options=SIXHR&_body_class=dashlet" % dashlet["view"] 
     
     # The content is rendered only if it is fixed. In the
     # other cases the initial (re)-size will paint the content.
     if "content" in dashlet: # fixed content
         html.write(dashlet["content"])
     elif "iframe" in dashlet: # fixed content containing iframe
-        html.write('<iframe width="100%%" height="100%%" src="%s"></iframe>' % dashlet["iframe"])
+        html.write('<iframe width="100%%" height="100%%" src="%s"></iframe>' % 
+           add_filename_to_url(dashlet["iframe"], filename))
     html.write("</div></div>\n")
 
 # Here comes the brain stuff: An intelligent liquid layout algorithm.
@@ -414,7 +449,14 @@ def dashlet_servicestats():
 
     render_statistics("services", table, filter)
 
+
 def render_statistics(what, table, filter):
+    # Is the query restricted to a certain WATO-path?
+    filename = html.var("filename")
+    if filename and filename != "/":
+        # filter += "Filter: host_state = 0"
+        filter += "Filter: host_custom_variables ~ PATH ^%s\n" % filename.replace("\n", "")
+    
     query = "GET %s\n" % what
     for entry in table:
         query += entry[2]
@@ -436,7 +478,6 @@ def render_statistics(what, table, filter):
     html.write("</table>")
 
     html.javascript("""
-
 function chart_pie(from, to, color) {
     context.beginPath();
     context.moveTo(pie_x, pie_y);
@@ -465,11 +506,10 @@ context = document.getElementById("%(what)s_stats").getContext('2d');
 """ % { "what" : what, "x" : pie_diameter / 2, 
         "y": pie_diameter/2, "d" : pie_diameter })
 
-
-    r = 0.0;
-    for (name, color, q), value in pies:
-        perc = 100.0 * value / total
-        html.javascript('chart_pie(%f, %f, %r);' % (r, r + perc, color));
-        r += perc;
-
+    r = 0.0
+    if total > 0:
+        for (name, color, q), value in pies:
+            perc = 100.0 * value / total
+            html.javascript('chart_pie(%f, %f, %r);' % (r, r + perc, color))
+            r += perc
 

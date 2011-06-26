@@ -1594,6 +1594,8 @@ def load_file_info(fn, name, path):
     return the_file
 
 
+# Find the folder by a path. Does not find files! The
+# path is a tuple path and must point to a folder.
 def find_folder(path, in_folder = None):
     if in_folder == None:
         in_folder = g_root_folder
@@ -1839,9 +1841,12 @@ def get_folder_and_file():
     if g_pathname[0] != '/' :
         raise MKGeneralException(_("You called this page with an invalid WATO filename!"))
 
-    parts = g_pathname[1:].split("/")
-    path = tuple(parts[:-1])
-    filename = parts[-1]
+    path = make_path(g_pathname)
+    if len(path) > 0 and path[-1].endswith(".mk"): # path to a file
+        filename = path[-1]
+        path = path[:-1]
+    else:
+        filename = None
 
     g_folder = find_folder(path)
     if not g_folder:
@@ -1859,6 +1864,11 @@ def get_folder_and_file():
     else:
         g_file = None
 
+def make_path(filename):
+    if not filename or filename == "/":
+        return ()
+    parts = filename[1:].rstrip("/").split("/")
+    return tuple(parts)
 
 # Create link keeping the context to the current folder / file
 def make_link(vars):
@@ -2760,6 +2770,7 @@ class API:
         load_folder_config()
         return collect_hosts(g_root_folder)
 
+    # Find a folder by its tuple-path
     def get_folder(self, path):
         load_folder_config()
         the_thing = g_root_folder
@@ -2775,6 +2786,8 @@ class API:
         count_hosts(the_thing)
         return the_thing
 
+    # Find a file by its tuple-path and return it
+    # including the hosts
     def get_file(self, path):
         folder = self.get_folder(path[:-1])
         if not folder or not path[-1] in folder[".files"]:
@@ -2788,6 +2801,16 @@ class API:
         new_file["hosts"] = hosts
         return new_file
 
+    # Find a file or folder by its tuple-path and return
+    # it without loading any hosts.
+    def get_filefolder(self, path):
+        if len(path) == 0:
+            return g_root_folder
+        elif path[-1].endswith(".mk"):
+            folder = self.get_folder(path[:-1])
+            return folder[".files"].get(path[-1])
+        else:
+            return self.get_folder(path)
 
     # Get all effective data of a host. The_file must be returned by get_file()
     def get_host(self, the_file, hostname):
@@ -2834,6 +2857,15 @@ class API:
         return "wato.py?" + htmllib.urlencode_vars(
         [("mode", "inventory"), ("host", hostname)])
 
+    # Return the title of a folder - which is given as a string path
+    def get_folder_title(self, filename):
+        load_folder_config() # TODO: use in-memory-cache
+        folder = self.get_filefolder(make_path(filename))
+        if folder:
+            return folder["title"]
+        else:
+            return filename
+        
 
     # BELOW ARE PRIVATE HELPER FUNCTIONS
 

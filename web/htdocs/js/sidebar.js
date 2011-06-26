@@ -694,13 +694,14 @@ function storeScrollPos() {
 
 /* Foldable Tree in snapin */
 function wato_tree_click(filename) {
-    // Get the URL in the main frame. If that is a view (view.py), then
-    // reload that view with an updated "filename" variable. If that is
+    // Get the URL in the main frame. If that is a view or a dashboard,
+    // then reload that view with an updated "filename" variable. If that is
     // a wato.py page, navigate to the according wato page. In all other
     // cases, select the view "allhosts" with the according path.
     var href = parent.frames[1].location + ""; // adding "" converts url from something magic to string
     if (href.indexOf("/view.py") >= 0) 
-   // new_href = add_html_var(href, "filename", filename);
+        href = add_html_var(href, "filename", filename);
+    else if (href.indexOf("/dashboard.py") >= 0) 
         href = add_html_var(href, "filename", filename);
     else if (href.indexOf("/wato.py") >= 0)
         href = "wato.py?filename=" + filename;

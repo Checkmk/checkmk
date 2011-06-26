@@ -430,7 +430,8 @@ def render_statistics(what, table, filter):
     
     html.write('<table class=hoststats style="float:left">')
     for (name, color, query), count in pies + [ ((_("Total"), "", ""), total) ]:
-        html.write("<tr><th>%s</th><td>%d</td></tr>" % (name, count))
+        html.write('<tr><th>%s</th><td class=color style="background-color: %s">'
+                   '</td><td>%d</td></tr>' % (name, color, count))
 
     html.write("</table>")
 

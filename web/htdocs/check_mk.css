@@ -1751,6 +1751,9 @@ table.hoststats th {
     padding-right: 3em;
     padding-left: 6px;
 }
+table.hoststats td.color {
+    padding: 3px;
+}
 table.hoststats th, table.hoststats td { 
     padding-top: 3px;
     padding-bottom: 3px;

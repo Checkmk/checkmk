@@ -704,9 +704,9 @@ function wato_tree_click(filename) {
     else if (href.indexOf("/dashboard.py") >= 0) 
         href = add_html_var(href, "filename", filename);
     else if (href.indexOf("/wato.py") >= 0)
-        href = "wato.py?filename=" + filename;
+        href = "wato.py?filename=" + escape(filename);
     else
-        href = "view.py?view_name=allhosts&filename=" + filename;
+        href = "view.py?view_name=allhosts&filename=" + escape(filename);
     parent.frames[1].location = href;
 }
 
@@ -719,9 +719,9 @@ function add_html_var(url, varname, value) {
     var re = new RegExp('&' + varname + '=[^&]*');
     var new_url = url.replace(re, "");
     if (new_url.indexOf('?') != '-1')
-        new_url += "&" + varname + "=" + value;
+        new_url += "&" + varname + "=" + escape(value);
     else
-        new_url += "?" + varname + "=" + value;
+        new_url += "?" + varname + "=" + escape(value);
     return new_url;
 }
 

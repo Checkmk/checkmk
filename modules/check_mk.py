@@ -1272,7 +1272,7 @@ def create_nagios_hostdefs(outfile, hostname):
     # WATO folder path
     path = host_paths.get(hostname)
     if path:
-        outfile.write("  _PATH\t\t\t\t%s\n" % path)
+        outfile.write("  _FILENAME\t\t\t%s\n" % path)
 
 
     # Host groups: If the host has no hostgroups it gets the default
@@ -1338,7 +1338,7 @@ def create_nagios_hostdefs(outfile, hostname):
         outfile.write("  parents\t\t\t%s\n" % hostname)
 
         if path:
-            outfile.write("  _PATH\t\t\t\t%s\n" % path)
+            outfile.write("  _FILENAME\t\t\t%s\n" % path)
 
         hgs = summary_hostgroups_of(hostname)
         hostgroups = ",".join(hgs)

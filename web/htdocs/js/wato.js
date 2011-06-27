@@ -272,3 +272,4 @@ function progress_scheduler(mode, url_prefix, timeout, items, end_url, finished_
 
     setTimeout(function() { progress_scheduler(mode, url_prefix, timeout, [], "", ""); }, timeout);
 }
+

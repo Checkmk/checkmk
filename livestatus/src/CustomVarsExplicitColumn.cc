@@ -22,82 +22,23 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "CustomVarsColumn.h"
-#include "nagios.h"
-#include "logger.h"
-#include "CustomVarsFilter.h"
-#include "Query.h"
+#include "CustomVarsExplicitColumn.h"
 
-void CustomVarsColumn::output(void *data, Query *query)
+char *CustomVarsExplicitColumn::getValue(void *data)
 {
-
-   if (_what == CVT_DICT)
-       query->outputBeginDict();
-   else
-       query->outputBeginList();
-
    customvariablesmember *cvm = getCVM(data);
-
-   bool first = true;
    while (cvm) {
-      if (first) 
-	 first = false;
-      else if (_what == CVT_DICT)
-	 query->outputDictSeparator();
-      else
-	 query->outputListSeparator();
-      if (_what == CVT_VARNAMES)
-	 query->outputString(cvm->variable_name);
-      else if (_what == CVT_VALUES)
-	 query->outputString(cvm->variable_value);
-      else {
-	 query->outputString(cvm->variable_name);
-	 query->outputDictValueSeparator();
-	 query->outputString(cvm->variable_value);
-      }
-      cvm = cvm->next;
+       if (cvm->variable_name == _varname)
+           return cvm->variable_value;
+        cvm = cvm->next;
    }
-
-   if (_what == CVT_DICT)
-       query->outputEndDict();
-   else
-       query->outputEndList();
+   return (char *)"";
 }
 
-Filter *CustomVarsColumn::createFilter(int opid, char *value)
-{
-   return new CustomVarsFilter(this, opid, value);
-}
-
-
-customvariablesmember *CustomVarsColumn::getCVM(void *data)
+customvariablesmember *CustomVarsExplicitColumn::getCVM(void *data)
 {
    if (!data) return 0;
    data = shiftPointer(data);
    if (!data) return 0;
    return *(customvariablesmember **)((char *)data + _offset);
-}
-
-
-bool CustomVarsColumn::contains(void *data, const char *value)
-{
-   customvariablesmember *cvm = getCVM(data);
-   while (cvm) {
-      char *ref = _what == CVT_VARNAMES ? cvm->variable_name : cvm->variable_value;
-      if (!strcmp(ref, value))
-	 return true;
-      cvm = cvm->next;
-   }
-   return false;
-}
-
-char *CustomVarsColumn::getVariable(void *data, const char *varname)
-{
-   customvariablesmember *cvm = getCVM(data);
-   while (cvm) {
-      if (!strcmp(cvm->variable_name, varname))
-           return cvm->variable_value;
-      cvm = cvm->next;
-    }
-    return 0;
 }

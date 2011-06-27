@@ -471,6 +471,16 @@ div.contextlink a {
     height: 25px;
 }
 
+/* Icon image in a context button */
+div.contextlink img {
+   width: 18px;
+   height: 18px;
+   vertical-align: middle;
+   position: relative;
+   top: -2px;
+   margin-right: 5px;
+}
+
 /* The navi table contains the tab navigation above the content tables
    containing the buttons "filter", "commands", "display" and so on. */
 table.navi {
@@ -1135,7 +1145,6 @@ input.tab#results, input.tabactive#results { background-color: #fe6; }
 /* input elements in forms */
 
 table.form input.text { 
-    width: 100%;
 }
 
 table.form input.number { 
@@ -1714,6 +1723,46 @@ table.dashlet_overview h2 {
     margin: 8px 0px 8px 0px;
     font-size: 10pt;
 }
+
+/* Styles for various builtin dashlets */
+canvas.pie {
+    margin-top: 10px;
+    margin-left: 10px;
+}
+
+div.dashlet table.hoststats { 
+    margin-top: 10px;
+    margin-left: 5px;
+    width: 143px;
+    height: 136px;
+    border-collapse: collapse;
+    border-spacing: 0px;
+}
+div.dashlet table.hoststats td { 
+    text-align: right;
+    padding-right: 6px;
+    padding-left: 6px;
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+}
+div.dashlet table.hoststats th { 
+    text-align: left;
+    background-color: transparent;
+    padding-left: 6px;
+}
+div.dashlet table.hoststats td.color {
+    padding: 3px;
+}
+div.dashlet table.hoststats th, table.hoststats td { 
+    padding-top: 3px;
+    padding-bottom: 3px;
+    border-color: white;
+    border-style: solid none;
+    border-width: 1px;
+    vertical-align: middle;
+}
+
+
 
 /*
     _       _     _ ____                    _           

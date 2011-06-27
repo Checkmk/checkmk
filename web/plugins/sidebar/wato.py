@@ -46,13 +46,36 @@ def render_wato_files():
 
 def ajax_wato_files():
     if config.may("use_wato"):
-        format = ("<li>%s</li>" % link("XX", "XX")).replace("XX", "%s")
-        wato.render_link_tree(format)
+        render_linktree_folder(wato.api.get_folder_tree())
+
+    
+def render_linktree_folder(f):
+    subfolders = f.get(".folders", {})
+    subfiles = f.get(".files", {})
+    is_leaf = len(subfolders) == 0 and len(subfiles) == 0
+
+    path = f[".path"]
+    filename = "/" + "/".join(path)
+    if not filename.endswith(".mk") and not filename.endswith("/"):
+        filename += "/"
+
+    title = '<a href="#" onclick="wato_tree_click(%r);">%s</a>' % (filename, f["title"]) 
+
+    if not is_leaf:
+        html.begin_foldable_container('wato', filename, False, title)
+        for sf in wato.api.sort_by_title(subfolders.values()):
+            render_linktree_folder(sf)
+        for sf in wato.api.sort_by_title(subfiles.values()):
+            render_linktree_folder(sf)
+        html.end_foldable_container()
+    else:
+        html.write("<li>" + title + "</li>")
+
 
 
 sidebar_snapins["wato"] = {
-    "title" : _("Check_MK Web Administration Tool"),
-    "description" : _("WATO - the Web Administration Tool of Check_MK - manage hosts to be monitored without access to the command line"),
+    "title" : _("Hosts"),
+    "description" : _("A foldable tree showing all your WATO folders and files - allowing you to navigate in the tree while using views or being in WATO"),
     "author" : "Mathias Kettner",
     "render" : render_wato_files,
     "allowed" : [ "admin", "user" ],

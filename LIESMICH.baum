@@ -11,6 +11,8 @@ Baumartige Darstellung von Daten im Multisite:
     Beim Schreiben der Nagios-Konfig wird aus diesem Dictionary
     der _PATH gesetzt.
 
+    => ERLEDIGT
+
 [2] Im Livestatus brauchen wir jetzt einen Filter auf diesen
     _PATH. Der ist ja dummerweise in einer Custom-Variable ge-
     speichert. 
@@ -41,6 +43,8 @@ Baumartige Darstellung von Daten im Multisite:
     sondern nur die neue Spalte custom_variables, die ich eh
     schon programmieren wollte.
 
+    => ERLEDIGT.
+
 [3] Jetzt baut man einen neuen Filter, mit dem man den Ort
     In einem Folder eingeben kann. Dazu macht man ein großes
     Select mit allen Foldern. Diese werden aus WATO eingelesen.
@@ -58,6 +62,8 @@ Baumartige Darstellung von Daten im Multisite:
     Aber nur, wenn es überhaupt Folder gibt. Die Hosts in der
     main.mk haben ja überhaupt keinen Folder-Ort.
 
+    => ERLEDIGT (bis auf Ajax)
+
 [4] Ein neues Sidebarsnapin, das analog zum WATO-Snapin
     aufgebaut ist, modifiziert Views auf der Rechten Seite so,
     dass der Filter hinzugefügt wird. Dazu holt man per Javascript
@@ -65,12 +71,8 @@ Baumartige Darstellung von Daten im Multisite:
     neuen Pfad dran. Im Snapin wird der aktuelle Ort farbig
     gekennzeichnet.
 
-    Der Scheduler der Sidebar holt regelmäßig die URL und
-    schaut, ob das ein Hinweis auf einen Pfad ist und ob
-    es eine View ist. Wenn ja, wird der Pfad im Bau gehilitet
-    und das Snapin aktiviert. Wenn rechts keine View ist,
-    graut sich das Snapin aus. Alternativ verwendet man
-    Standardlinks auf "allhosts". 
+    => ERLEDIGT
+
 
 [5] In den Views wird im Titel zusätzlich der Ort im
     Folder angezeigt. Wenn der Folder nicht / ist, wird
@@ -78,6 +80,29 @@ Baumartige Darstellung von Daten im Multisite:
     enthält dann immer den Link auf die gleiche View mit
     angepasstem Filter.
 
+    => ERLEDIGT
 
 
+[6] Der Folder-Filter soll implizit *immer* angezeigt werden.
+    Dazu kann man eine Liste der ubiquitären Filter machen.
+    Diese werden:
+    - Bei jeder View angezeigt, die die Daten für den Filter bereithält
+    - im View-Editor ausgeblendet
+    - nicht in den Views gespeichert
+    Dafür macht man neben der Tabelle der Filter nach eine Liste
+    ubiquitary_filters = [ "filename" ]. Diese kommen im Filterdialog
+    dann auch immer als erstes.
 
+    => ERLEDIGT
+
+[7] Wenn man einen Service oder einen einzelnen Host ansieht,
+    dann soll der WATO-Link direkt auf den betroffenen Host
+    gehen.
+
+    => ERLEDIGT
+
+[8] Im WATO soll auf der Seite, die einen Host anzeigt, immer
+    der Link in die Status-GUI gehen. Bei den Services auf die
+    View "servicesofhost", bei dem Host auf die Host-Details.
+
+    => ERLEDIGT

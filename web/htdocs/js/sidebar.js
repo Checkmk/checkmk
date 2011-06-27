@@ -691,3 +691,38 @@ function initScrollPos() {
 function storeScrollPos() {
     setCookie('sidebarScrollPos', document.getElementById('side_content').scrollTop, null);
 }
+
+/* Foldable Tree in snapin */
+function wato_tree_click(filename) {
+    // Get the URL in the main frame. If that is a view or a dashboard,
+    // then reload that view with an updated "filename" variable. If that is
+    // a wato.py page, navigate to the according wato page. In all other
+    // cases, select the view "allhosts" with the according path.
+    var href = parent.frames[1].location + ""; // adding "" converts url from something magic to string
+    if (href.indexOf("/view.py") >= 0) 
+        href = add_html_var(href, "filename", filename);
+    else if (href.indexOf("/dashboard.py") >= 0) 
+        href = add_html_var(href, "filename", filename);
+    else if (href.indexOf("/wato.py") >= 0)
+        href = "wato.py?filename=" + escape(filename);
+    else
+        href = "view.py?view_name=allhosts&filename=" + escape(filename);
+    parent.frames[1].location = href;
+}
+
+// adds a variable to a GET url, but tries to remove that
+// variable, if it is already existing in the URL. In order
+// to simplify the thing, we just look at the *end* of the
+// URL. This is not perfect but sufficient in order to avoid the URL
+// getting longer and longer.
+function add_html_var(url, varname, value) {
+    var re = new RegExp('&' + varname + '=[^&]*');
+    var new_url = url.replace(re, "");
+    if (new_url.indexOf('?') != '-1')
+        new_url += "&" + varname + "=" + escape(value);
+    else
+        new_url += "?" + varname + "=" + escape(value);
+    return new_url;
+}
+
+

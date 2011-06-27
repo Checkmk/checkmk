@@ -48,6 +48,7 @@ multisite_painters         = {}
 multisite_sorters          = {}
 multisite_builtin_views    = {}
 multisite_painter_options  = {}
+ubiquitary_filters         = [] # Always show this filters
 
 # Load all view plugins
 def load_plugins():
@@ -186,6 +187,22 @@ def declare_filter(sort_index, f, comment = None):
     f.sort_index = sort_index
 
 # Base class for all filters
+# name:          The unique id of that filter. This id is e.g. used in the
+#                persisted view configuration
+# title:         The title of the filter visible to the user. This text
+#                may be localized
+# info:          The datasource info this filter needs to work. If this 
+#                is "service", the filter will also be available in tables
+#                showing service information. "host" is available in all
+#                service and host views. The log datasource provides both
+#                "host" and "service". Look into datasource.py for which 
+#                datasource provides which information
+# htmlvars:      HTML variables this filter uses
+# link_columns:  If this filter is used for linking (state "hidden"), then
+#                these Livestatus columns are needed to fill the filter with
+#                the proper information. In most cases, this is just []. Only
+#                a few filters are useful for linking (such as the host_name and
+#                service_description filters with exact match)
 class Filter:
     def __init__(self, name, title, info, htmlvars, link_columns):
         self.name = name
@@ -494,23 +511,25 @@ def page_edit_view():
     html.hidden_field("old_name", viewname) # safe old name in case user changes it
     html.write("<table class=\"form\">\n")
 
-    html.write("<tr><td class=legend>Title</td><td class=content>")
-    html.text_input("view_title")
+    html.write("<tr><td class=legend>" + _("Title") + "</td><td class=content>")
+    html.text_input("view_title", size=50)
     html.write("</td></tr>\n")
 
-    html.write("<tr><td class=legend>Linkname</td><td class=content>")
-    html.text_input("view_name")
+    html.write("<tr><td class=legend>" + _("Linkname") + "</td><td class=content>")
+    html.text_input("view_name", size=12)
     html.write("</td></tr>\n")
 
-    html.write("<tr><td class=legend>Topic</td><td class=content>")
-    html.text_input("view_topic", "Other")
+    html.write("<tr><td class=legend>" + _("Topic") + "</td><td class=content>")
+    html.text_input("view_topic", "Other", size=50)
     html.write("</td></tr>\n")
 
-    html.write("<tr><td class=legend>Buttontext</td><td class=content>")
-    html.text_input("view_linktitle")
+    html.write("<tr><td class=legend>" + _("Buttontext") + "</td><td class=content>")
+    html.text_input("view_linktitle", size=26)
+    html.write("&nbsp; Icon: ")
+    html.text_input("view_icon", size=16)
     html.write("</td></tr>\n")
 
-    html.write("<tr><td class=legend>Description</td><td class=content>")
+    html.write("<tr><td class=legend>" + _("Description") + "</td><td class=content>")
     html.text_area("view_description", 4)
     html.write("</td></tr>\n")
 
@@ -571,7 +590,9 @@ function toggle_section(nr, oImg) {
     html.write("</th><th>usage</th><th>hardcoded settings</th><th>HTML variables</th></tr>\n")
     allowed_filters = filters_allowed_for_datasource(datasourcename)
     # sort filters according to title
-    s = [(filt.sort_index, filt.title, fname, filt) for fname, filt in allowed_filters.items()]
+    s = [(filt.sort_index, filt.title, fname, filt) 
+          for fname, filt in allowed_filters.items()
+          if fname not in ubiquitary_filters ]
     s.sort()
     for sortindex, title, fname, filt in s:
         html.write("<tr>")
@@ -749,6 +770,7 @@ def load_view_into_html_vars(view):
     html.set_var("view_title",       view["title"])
     html.set_var("view_topic",       view.get("topic", "Other"))
     html.set_var("view_linktitle",   view.get("linktitle", view["title"]))
+    html.set_var("view_icon",        view.get("icon", "")),
     html.set_var("view_description", view.get("description", ""))
     html.set_var("view_name",        view["name"])
     html.set_var("datasource",       view["datasource"])
@@ -764,12 +786,13 @@ def load_view_into_html_vars(view):
 
     # [3] Filters
     for name, filt in multisite_filters.items():
-        if name in view["show_filters"]:
-            html.set_var("filter_%s" % name, "show")
-        elif name in view["hard_filters"]:
-            html.set_var("filter_%s" % name, "hard")
-        elif name in view["hide_filters"]:
-            html.set_var("filter_%s" % name, "hide")
+        if name not in ubiquitary_filters:
+            if name in view["show_filters"]:
+                html.set_var("filter_%s" % name, "show")
+            elif name in view["hard_filters"]:
+                html.set_var("filter_%s" % name, "hard")
+            elif name in view["hide_filters"]:
+                html.set_var("filter_%s" % name, "hide")
 
     for varname, value in view["hard_filtervars"]:
         if not html.has_var(varname):
@@ -836,6 +859,9 @@ def create_view():
     linktitle = html.var("view_linktitle").strip()
     if not linktitle:
         linktitle = title
+    icon = html.var("view_icon")
+    if not icon: 
+        icon = None
 
     topic = html.var("view_topic")
     if not topic:
@@ -936,6 +962,7 @@ def create_view():
         "title"           : title,
         "topic"           : topic,
         "linktitle"       : linktitle,
+        "icon"            : icon,
         "description"     : html.var("view_description", ""),
         "datasource"      : datasourcename,
         "public"          : public,
@@ -1051,6 +1078,14 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
 
     # [3] Filters
     show_filters = [ multisite_filters[fn] for fn in view["show_filters"] ]
+
+    # add ubiquitary_filters that are possible for this datasource
+    for fn in ubiquitary_filters:
+        filter = multisite_filters[fn]
+        if not filter.info or filter.info in datasource["infos"]:
+            show_filters.append(filter)
+
+
     hide_filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
     hard_filters = [ multisite_filters[fn] for fn in view["hard_filters"] ]
     for varname, value in view["hard_filtervars"]:
@@ -1394,7 +1429,16 @@ def view_title(view):
         heading = filt.heading_info(tablename)
         if heading:
             extra_titles.append(heading)
-    return view["title"] + " " + ", ".join(extra_titles)
+
+    title = view["title"] + " " + ", ".join(extra_titles)
+
+    for fn in ubiquitary_filters:
+        filt = multisite_filters[fn]
+        heading = filt.heading_info(tablename)
+        if heading:
+            title = heading + " - " + title
+
+    return title
 
 # Return title for context link buttons
 def view_linktitle(view):
@@ -1406,6 +1450,20 @@ def view_linktitle(view):
 
 
 def show_context_links(thisview, active_filters):
+    # Show button to WATO, if permissions allow this
+    if config.may("use_wato"):
+        html.begin_context_buttons()
+        first = False
+        host = html.var("host")
+        if host:
+            url = wato.api.link_to_host(host)
+        else:
+            url = wato.api.link_to_path(html.var("filename", "/"))
+        html.context_button(_("WATO") ,url, "wato")
+
+    else:
+        first = True
+
     # compute list of html variables used actively by hidden or shown
     # filters.
     active_filter_vars = set([])
@@ -1420,7 +1478,6 @@ def show_context_links(thisview, active_filters):
         sorted_views.append((view_linktitle(view), view))
     sorted_views.sort()
 
-    first = True
     for linktitle, view in sorted_views:
         name = view["name"]
         if view == thisview:
@@ -1451,7 +1508,7 @@ def show_context_links(thisview, active_filters):
                 first = False
                 html.begin_context_buttons()
             vars_values = [ (var, html.var(var)) for var in set(used_contextvars) ]
-            html.context_button(view_linktitle(view), html.makeuri_contextless(vars_values + [("view_name", name)]))
+            html.context_button(view_linktitle(view), html.makeuri_contextless(vars_values + [("view_name", name)]), view.get("icon"))
 
     if not first:
         html.end_context_buttons()
@@ -1738,14 +1795,14 @@ def show_host_service_actions(what):
         html.write("</td></tr>\n")
 
         html.write("<tr><td class=content><div class=textinputlegend>Comment:</div>")
-        html.text_input("_ack_comment")
+        html.text_input("_ack_comment", size=65)
         html.write("</td></tr>\n")
         
     if config.may("action.addcomment"):
         html.write("<tr><td rowspan=2 class=legend>Add comment</td>\n")
         html.write("<td class=content><input type=submit name=_add_comment value=\"Add comment\"></td></tr>\n"
                 "<tr><td class=content><div class=textinputlegend>Comment:</div>")
-        html.text_input("_comment")
+        html.text_input("_comment", size=65)
         html.write("</td></tr>\n")
 
     if config.may("action.downtimes"):
@@ -1771,7 +1828,7 @@ def show_host_service_actions(what):
         html.time_input("_down_duration", 2, 0)
         html.write(" (HH:MM)</td></tr>\n")
         html.write("<tr><td class=content><div class=textinputlegend>Comment:</div>\n")
-        html.text_input("_down_comment")
+        html.text_input("_down_comment", size=65)
 
 def nagios_action_command(what, row):
     if what in [ "host", "service" ]:

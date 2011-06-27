@@ -1,0 +1,1 @@
+check_mk-ipmi_sensors.php

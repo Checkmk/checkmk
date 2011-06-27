@@ -180,9 +180,10 @@ def mode_folder(phase):
         return None
 
     elif phase == "buttons":
-        html.context_button(_("Properties"), make_link_to([("mode", "editfolder")], g_folder[".path"]))
-        html.context_button(_("New folder"), make_link([("mode", "newfolder")]))
-        html.context_button(_("New host list"), make_link([("mode", "newfile")]))
+        folder_status_button()
+        html.context_button(_("Properties"), make_link_to([("mode", "editfolder")], g_folder[".path"]), "properties")
+        html.context_button(_("New folder"), make_link([("mode", "newfolder")]), "newfolder")
+        html.context_button(_("New host list"), make_link([("mode", "newfile")]), "new")
         changelog_button()
         search_button()
     
@@ -231,7 +232,7 @@ def show_filefolder_list(thing, what, title):
 
         odd = "even"
 
-        for entry in sort_by_title(thing["." + what + "s"].values()):
+        for entry in api.sort_by_title(thing["." + what + "s"].values()):
             odd = odd == "odd" and "even" or "odd" 
             html.write('<tr class="data %s0">' % odd)
 
@@ -323,9 +324,9 @@ def mode_editfolder(phase, what, new):
         else:
             target_folder = g_folder
         if what == "file" and not new:
-            html.context_button(_("Abort"), make_link([("mode", "file")]))
+            html.context_button(_("Abort"), make_link([("mode", "file")]), "abort")
         else:
-            html.context_button(_("Abort"), make_link([("mode", "folder")]))
+            html.context_button(_("Abort"), make_link([("mode", "folder")]), "abort")
             
 
     elif phase == "action":
@@ -523,9 +524,10 @@ def mode_file(phase):
         return None
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link_to([("mode", "folder")], g_folder[".path"]))
-        html.context_button(_("Properties"), make_link_to([("mode", "editfile")], g_folder[".path"], g_file[".name"]))
-        html.context_button(_("New host"), make_link([("mode", "newhost")]))
+        folder_status_button()
+        html.context_button(_("Back"), make_link_to([("mode", "folder")], g_folder[".path"]), "back")
+        html.context_button(_("Properties"), make_link_to([("mode", "editfile")], g_folder[".path"], g_file[".name"]), "properties")
+        html.context_button(_("New host"), make_link([("mode", "newhost")]), "new")
         changelog_button()
         search_button()
     
@@ -726,7 +728,9 @@ def mode_edithost(phase, new):
         return title
 
     elif phase == "buttons":
-        html.context_button(_("Abort"), make_link([("mode", "file")]))
+        if not new:
+            host_status_button(hostname, "hoststatus")
+        html.context_button(_("Abort"), make_link([("mode", "file")]), "abort")
         if not new:
             html.context_button(_("Services"), make_link([("mode", "inventory"), ("host", hostname)]))
 
@@ -806,6 +810,7 @@ def mode_inventory(phase, firsttime):
         return title
 
     elif phase == "buttons":
+        host_status_button(hostname, "host")
         html.context_button(_("Host list"), make_link([("mode", "file")]))
         html.context_button(_("Edit host"), make_link([("mode", "edithost"), ("host", hostname)]))
         html.context_button(_("Full Scan"), html.makeuri([("_scan", "yes")]))
@@ -853,7 +858,7 @@ def mode_search(phase):
         return _("Search for hosts in %s and below" % (g_folder["title"]))
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link_to([("mode", "folder")], g_folder[".path"]))
+        html.context_button(_("Back"), make_link_to([("mode", "folder")], g_folder[".path"]), "back")
 
     elif phase == "action":
         pass
@@ -991,7 +996,7 @@ def mode_bulk_inventory(phase):
         return _("Bulk service detection (inventory)")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "file")]))
+        html.context_button(_("Back"), make_link([("mode", "file")]), "back")
         return
 
     elif phase == "action":
@@ -1072,7 +1077,7 @@ def mode_bulk_edit(phase):
         return _("Bulk edit hosts")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "file")]))
+        html.context_button(_("Back"), make_link([("mode", "file")]), "back")
         return
 
     elif phase == "action":
@@ -1113,7 +1118,7 @@ def mode_bulk_cleanup(phase):
         return _("Bulk removal of explicit attributes")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "file")]))
+        html.context_button(_("Back"), make_link([("mode", "file")]), "back")
         return
 
     elif phase == "action":
@@ -1214,47 +1219,6 @@ def bulk_cleanup_attributes(the_file, hosts):
 
     return num_shown > 0
 
-        
-
-
-
-#   +----------------------------------------------------------------------+
-#   |                 ____  _     _      _                                 |
-#   |                / ___|(_) __| | ___| |__   __ _ _ __                  |
-#   |                \___ \| |/ _` |/ _ \ '_ \ / _` | '__|                 |
-#   |                 ___) | | (_| |  __/ |_) | (_| | |                    |
-#   |                |____/|_|\__,_|\___|_.__/ \__,_|_|                    |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Functions called from the WATO sidebar snapin                        |
-#   +----------------------------------------------------------------------+
-
-def render_link_tree(format):
-    load_folder_config()
-
-    def render_folder(f):
-
-        subfolders = f[".folders"]
-        path = f[".path"]
-        filename = "/" + "/".join(path) + "/"
-        if len(path) > 0:
-            url = "wato.py?filename=" + htmllib.urlencode(filename)
-            if len(subfolders) == 0:
-                title = format % (url, f["title"])
-            else:
-                title = '<a target=main href="%s">%s</a>' % (url, f["title"]) 
-        else:
-            title  = '<a target=main href="wato.py">%s</a>' % f["title"]
-
-        if len(subfolders) > 0:
-            html.begin_foldable_container('wato', filename, False, title)
-            for sf in sort_by_title(subfolders.values()):
-                render_folder(sf)
-            html.end_foldable_container()
-        else:
-            html.write(title)
-
-    render_folder(g_root_folder)
 
 
 #   +----------------------------------------------------------------------+
@@ -1273,13 +1237,13 @@ def mode_changelog(phase):
         return _("Change log")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "folder")]))
+        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
         if log_exists("pending"):
             html.context_button(_("Activate Changes!"), 
-                html.makeuri([("_action", "activate"), ("_transid", html.current_transid())]), True)
+                html.makeuri([("_action", "activate"), ("_transid", html.current_transid())]), "apply", True)
         if log_exists("audit"):
             html.context_button(_("Clear Audit Log"),
-                html.makeuri([("_action", "clear"), ("_transid", html.current_transid())]))
+                html.makeuri([("_action", "clear"), ("_transid", html.current_transid())]), "trash")
 
     elif phase == "action":
         if html.var("_action") == "clear":
@@ -1444,12 +1408,6 @@ def render_audit_log(log, what, with_filename = False):
 #   | Functions needed at various places                                   |
 #   +----------------------------------------------------------------------+
 
-# sort list of folders or files by their title
-def sort_by_title(folders):
-    def folder_cmp(f1, f2):
-        return cmp(f1["title"].lower(), f2["title"].lower())
-    folders.sort(cmp = folder_cmp)
-    return folders
 
 def check_mk_automation(command, args=[], indata=""):
     # Gather the command to use for executing --automation calls to check_mk
@@ -1525,6 +1483,22 @@ def make_config_path(folder, file = None):
         parts += (file,)
 
     return defaults.check_mk_configdir + "/" + "/".join(parts)
+
+def host_status_button(hostname, viewname):
+    html.context_button(_("Status"), 
+       "view.py?" + htmllib.urlencode_vars([
+           ("view_name", viewname), 
+           ("filename", g_pathname),
+           ("host",     hostname),
+           ("site",     "")]), 
+           "status")  # TODO: support for distributed WATO
+
+def folder_status_button(viewname = "allhosts"):
+    html.context_button(_("Status"), 
+       "view.py?" + htmllib.urlencode_vars([
+           ("view_name", viewname), 
+           ("filename", g_pathname)]), 
+           "status")  # TODO: support for distributed WATO
 
 
 
@@ -1620,6 +1594,8 @@ def load_file_info(fn, name, path):
     return the_file
 
 
+# Find the folder by a path. Does not find files! The
+# path is a tuple path and must point to a folder.
 def find_folder(path, in_folder = None):
     if in_folder == None:
         in_folder = g_root_folder
@@ -1632,6 +1608,22 @@ def find_folder(path, in_folder = None):
             return None
         else:
             return find_folder(rest, in_folder[".folders"][name])
+
+
+def find_host(host):
+    return find_host_in(host, g_root_folder)
+
+def find_host_in(host, folder):
+    for f in folder.get(".files", {}).values():
+        hosts = read_configuration_file(folder, f)
+        if host in hosts:
+            return f[".path"]
+
+    for f in folder.get(".folders", {}).values():
+        p = find_host_in(host, f)
+        if p != None:
+            return p
+
 
 def count_hosts(folder):
     num = 0
@@ -1837,13 +1829,24 @@ def get_folder_and_file():
 
     g_pathname = html.var("filename")
     if not g_pathname:
-        g_pathname = "/"
+        host = html.var("host")
+        if host: # find host with full scan. Expensive operation
+            path = find_host(host)
+            if path:
+                g_pathname = "/" + "/".join(path) 
+            else:
+                raise MKGeneralException(_("The host <b>%s</b> is not managed by WATO.") % host)
+        if not g_pathname:
+            g_pathname = "/"
     if g_pathname[0] != '/' :
         raise MKGeneralException(_("You called this page with an invalid WATO filename!"))
 
-    parts = g_pathname[1:].split("/")
-    path = tuple(parts[:-1])
-    filename = parts[-1]
+    path = make_path(g_pathname)
+    if len(path) > 0 and path[-1].endswith(".mk"): # path to a file
+        filename = path[-1]
+        path = path[:-1]
+    else:
+        filename = None
 
     g_folder = find_folder(path)
     if not g_folder:
@@ -1861,6 +1864,11 @@ def get_folder_and_file():
     else:
         g_file = None
 
+def make_path(filename):
+    if not filename or filename == "/":
+        return ()
+    parts = filename[1:].rstrip("/").split("/")
+    return tuple(parts)
 
 # Create link keeping the context to the current folder / file
 def make_link(vars):
@@ -1898,7 +1906,7 @@ def make_action_link_to(vars, folder_path, filename = None):
     return make_link_to(vars + [("_transid", html.current_transid())], folder_path, filename)
 
 def search_button():
-    html.context_button(_("Search"), make_link([("mode", "search")]))
+    html.context_button(_("Search"), make_link([("mode", "search")]), "search")
 
 def changelog_button():
     pending = parse_audit_log("pending")
@@ -1908,7 +1916,7 @@ def changelog_button():
         hot = True
     else:
         hot = False
-    html.context_button(buttontext, make_link([("mode", "changelog")]), hot)
+    html.context_button(buttontext, make_link([("mode", "changelog")]), "wato_changes", hot)
 
 
 def show_service_table(hostname, firsttime):
@@ -2762,6 +2770,7 @@ class API:
         load_folder_config()
         return collect_hosts(g_root_folder)
 
+    # Find a folder by its tuple-path
     def get_folder(self, path):
         load_folder_config()
         the_thing = g_root_folder
@@ -2777,6 +2786,8 @@ class API:
         count_hosts(the_thing)
         return the_thing
 
+    # Find a file by its tuple-path and return it
+    # including the hosts
     def get_file(self, path):
         folder = self.get_folder(path[:-1])
         if not folder or not path[-1] in folder[".files"]:
@@ -2790,6 +2801,16 @@ class API:
         new_file["hosts"] = hosts
         return new_file
 
+    # Find a file or folder by its tuple-path and return
+    # it without loading any hosts.
+    def get_filefolder(self, path):
+        if len(path) == 0:
+            return g_root_folder
+        elif path[-1].endswith(".mk"):
+            folder = self.get_folder(path[:-1])
+            return folder[".files"].get(path[-1])
+        else:
+            return self.get_folder(path)
 
     # Get all effective data of a host. The_file must be returned by get_file()
     def get_host(self, the_file, hostname):
@@ -2807,6 +2828,47 @@ class API:
                 tdclass, content = attr.paint(host[attrname], host["name"])
                 result.append((attr.title(), content))
         return result
+
+    # Get information about the folder and directory tree. 
+    # This is useful for components that display hosts in 
+    # the tree (e.g. the status GUI).
+    def get_folder_tree(self):
+        load_folder_config()
+        return g_root_folder
+
+    # sort list of folders or files by their title
+    def sort_by_title(self, folders):
+        def folder_cmp(f1, f2):
+            return cmp(f1["title"].lower(), f2["title"].lower())
+        folders.sort(cmp = folder_cmp)
+        return folders
+
+    # Create an URL to a certain WATO path. Path is in string format
+    def link_to_path(self, filename):
+        return "wato.py?filename=" + htmllib.urlencode(filename)
+
+    # Create an URL to the edit-properties of a host.
+    def link_to_host(self, hostname):
+        return "wato.py?" + htmllib.urlencode_vars(
+        [("mode", "edithost"), ("host", hostname)])
+
+    # Same, but links to services of that host
+    def link_to_host_inventory(self, hostname):
+        return "wato.py?" + htmllib.urlencode_vars(
+        [("mode", "inventory"), ("host", hostname)])
+
+    # Return the title of a folder - which is given as a string path
+    def get_folder_title(self, filename):
+        load_folder_config() # TODO: use in-memory-cache
+        folder = self.get_filefolder(make_path(filename))
+        if folder:
+            return folder["title"]
+        else:
+            return filename
+        
+
+    # BELOW ARE PRIVATE HELPER FUNCTIONS
+
 
 
     def _cleanup_directory(self, thing):

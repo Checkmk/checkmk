@@ -952,6 +952,32 @@ void Query::outputEndSublist()
       _output->addChar(']');
 }
 
+void Query::outputBeginDict()
+{
+   if (_output_format != OUTPUT_FORMAT_CSV)
+      _output->addChar('{');
+}
+
+void Query::outputDictSeparator()
+{
+   outputListSeparator();
+}
+
+void Query::outputDictValueSeparator()
+{
+   if (_output_format == OUTPUT_FORMAT_CSV)
+      _output->addBuffer(_host_service_separator.c_str(), _host_service_separator.size());
+   else
+      _output->addChar(':');
+}
+
+void Query::outputEndDict()
+{
+   if (_output_format != OUTPUT_FORMAT_CSV)
+      _output->addChar('}');
+}
+
+
 Aggregator **Query::getStatsGroup(Query::_stats_group_spec_t &groupspec)
 {
    _stats_groups_t::iterator it = _stats_groups.find(groupspec);

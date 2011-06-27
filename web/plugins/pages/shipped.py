@@ -65,5 +65,6 @@ pagehandlers.update({
    "dashlet_overview"      : dashboard.dashlet_overview,
    "dashlet_hoststats"     : dashboard.dashlet_hoststats,
    "dashlet_servicestats"  : dashboard.dashlet_servicestats,
+   "dashlet_pnpgraph"      : dashboard.dashlet_pnpgraph,
 })
 

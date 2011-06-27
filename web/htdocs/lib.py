@@ -117,3 +117,9 @@ def load_web_plugins(forwhat, globalvars):
                     if fn.endswith(".py"):
                         execfile(local_plugins_path + "/" + fn, globalvars)
 
+def pnp_cleanup(s):
+    return s \
+        .replace(' ', '_') \
+        .replace(':', '_') \
+        .replace('/', '_') \
+        .replace('\\', '_')

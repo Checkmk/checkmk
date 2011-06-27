@@ -115,13 +115,6 @@ icon_columns = [ "acknowledged", "scheduled_downtime_depth", "downtimes_with_inf
 icon_service_columns = [ "service_description" ]
 
 # Intelligent Links to PNP4Nagios 0.6.X
-def pnp_cleanup(s):
-    return s \
-        .replace(' ', '_') \
-        .replace(':', '_') \
-        .replace('/', '_') \
-        .replace('\\', '_')
-
 def pnp_url(row, what, how = 'graph'):
     sitename = row["site"]
     host = pnp_cleanup(row["host_name"])

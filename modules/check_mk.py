@@ -1637,11 +1637,11 @@ def create_nagios_config_commands(outfile):
 #   +----------------------------------------------------------------------+
 
 
-def inventorable_checktypes(what): # tcp, all
+def inventorable_checktypes(what): # snmp, tcp, all
     checknames = [ k for k in check_info.keys()
                    if check_info[k][3] != no_inventory_possible
 #                   and (k not in ignored_checktypes)
-                   and (what == "all" or k.split('.')[0] not in snmp_info)
+                   and (what == "all" or ((k.split('.')[0] in snmp_info) == (what == "snmp")))
                  ]
     checknames.sort()
     return checknames

@@ -1944,6 +1944,9 @@ def show_service_table(hostname, firsttime):
         html.button("_save", _("Save manual check configuration"))
 
     html.hidden_fields()
+    if html.var("_scan"):
+        html.hidden_field("_scan", "on")
+
     html.write("<table class=data>\n")
 
     for state_name, state_type, checkbox in [ 

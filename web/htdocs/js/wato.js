@@ -101,12 +101,10 @@ function progress_handle_response(data, code) {
     var header = null;
     try {
         var header = eval(code.split("\n", 1)[0]);
+        if (header === null)
+	    alert('Header is null!');
     } catch(err) {
         alert('Invalid response: ' + code);    
-    }
-
-    if (header === null) {
-        alert('Header is null!');
     }
 
     // Extract the body from the response

@@ -1867,7 +1867,7 @@ def get_folder_and_file():
 def make_path(filename):
     if not filename or filename == "/":
         return ()
-    parts = filename[1:].rstrip("/").split("/")
+    parts = filename.strip("/").split("/")
     return tuple(parts)
 
 # Create link keeping the context to the current folder / file
@@ -2808,6 +2808,10 @@ class API:
             return g_root_folder
         elif path[-1].endswith(".mk"):
             folder = self.get_folder(path[:-1])
+            if not folder:
+                raise MKGeneralException("No WATO folder %s." % (path,))
+            if ".files" not in folder:
+                raise MKGeneralException("Path %s does not point to a WATO file." % (path,))
             return folder[".files"].get(path[-1])
         else:
             return self.get_folder(path)

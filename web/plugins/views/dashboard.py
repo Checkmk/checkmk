@@ -150,10 +150,10 @@ multisite_builtin_views.update({
             'owner': 'admin',
             'painters': [('log_icon', None),
                          ('log_time', None),
-                         ('log_type', None),
+                         # ('log_type', None),
                          ('host', 'hostsvcevents'),
                          ('service_description', 'svcevents'),
-                         ('log_state_type', None),
+                         # ('log_state_type', None),
                          ('log_plugin_output', None)],
 
 

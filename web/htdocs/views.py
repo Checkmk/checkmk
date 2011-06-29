@@ -652,7 +652,7 @@ function toggle_section(nr, oImg) {
         for n in range(1, maxnum):
             view_edit_column(n, var_prefix, maxnum, allowed, joined)
         html.write('</div>')
-        html.buttonlink("javascript:add_view_column(%d, '%s', '%s')" % (id, datasourcename, var_prefix), "Add Column")
+        html.jsbutton('add_column', _("Add Column"), "add_view_column(%d, '%s', '%s')" % (id, datasourcename, var_prefix))
         section_footer(id)
 
     # [4] Sorting
@@ -770,7 +770,7 @@ def load_view_into_html_vars(view):
     html.set_var("view_title",       view["title"])
     html.set_var("view_topic",       view.get("topic", "Other"))
     html.set_var("view_linktitle",   view.get("linktitle", view["title"]))
-    html.set_var("view_icon",        view.get("icon", "")),
+    html.set_var("view_icon",        view.get("icon")),
     html.set_var("view_description", view.get("description", ""))
     html.set_var("view_name",        view["name"])
     html.set_var("datasource",       view["datasource"])
@@ -1516,6 +1516,13 @@ def show_context_links(thisview, active_filters):
 
 # Retrieve data via livestatus, convert into list of dicts,
 # prepare row-function needed for painters
+# datasource: the datasource object as defined in plugins/views/datasources.py
+# columns: the list of livestatus columns to query
+# add_columns: list of columns the datasource is known to add itself
+#  (couldn't we get rid of this parameter by looking that up ourselves?)
+# add_headers: additional livestatus headers to add
+# only_sites: list of sites the query is limited to
+# limit: maximum number of data rows to query
 def query_data(datasource, columns, add_columns, add_headers, only_sites = [], limit = None):
     tablename = datasource["table"]
     add_headers += datasource.get("add_headers", "")

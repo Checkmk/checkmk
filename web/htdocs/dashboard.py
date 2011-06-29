@@ -123,6 +123,11 @@ def render_dashboard(name):
 
     refresh_dashlets = [] # Dashlets with automatic refresh, for Javascript
     for nr, dashlet in enumerate(board["dashlets"]):
+        # dashlets using the 'urlfunc' method will dynamically compute
+        # an url (using HTML context variables at their wish). 
+        if "urlfunc" in dashlet:
+            dashlet["url"] = dashlet["urlfunc"]()
+
         # dashlets using the 'url' method will be refreshed by us. Those
         # dashlets using static content (such as an iframe) will not be
         # refreshed by us but need to do that themselves.
@@ -512,4 +517,23 @@ context = document.getElementById("%(what)s_stats").getContext('2d');
             perc = 100.0 * value / total
             html.javascript('chart_pie(%f, %f, %r);' % (r, r + perc, color))
             r += perc
+
+def dashlet_pnpgraph():
+    render_pnpgraph(html.var("site"), html.var("host"), html.var("service"), int(html.var("source", 0)))
+
+def render_pnpgraph(site, host, service=None, source=0):
+    if not host:
+        html.message("Invalid URL to this dashlet. Missing <tt>host</tt>")
+        return;
+    if not service:
+        service = "_HOST_"
+
+    if not site:
+        base_url = defaults.url_prefix + "/pnp4nagios/index.php/"
+    else:
+        base_url = html.site_status[site]["site"]["url_prefix"]
+
+    img_url = base_url + "image?host=%s&srv=%s&view=0&source=%d&theme=multisite" % \
+            (pnp_cleanup(host), pnp_cleanup(service), source)
+    html.write('<img src="%s">' % img_url)
 

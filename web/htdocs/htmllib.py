@@ -105,6 +105,8 @@ def urlencode_vars(vars):
 def urlencode(value):
     if type(value) == unicode:
         value = value.encode("utf-8")
+    elif value == None:
+        return ""
     ret = ""
     for c in value:
         if c == " ":
@@ -658,7 +660,10 @@ class html:
             return val.decode("utf-8")
 
     def set_var(self, varname, value):
-        self.req.vars[varname] = value
+        if value == None:
+            self.del_var(varname)
+        else:
+            self.req.vars[varname] = value
 
     def del_var(self, varname):
         if varname in self.req.vars:

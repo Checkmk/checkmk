@@ -384,8 +384,8 @@ def dashlet_overview():
         '</td>'
         '<td><h2>Check_MK Multisite</h2>'
         'Welcome to Check_MK Multisite. If you want to learn more about Multsite, please visit '
-        'out <a href="http://mathias-kettner.de/checkmk_multisite.html">online documentation</a>. '
-        'Multisite is part of <a href="http://mathias-kettner.de/check_mk.html">Check_MK</a> - on Open Source '
+        'our <a href="http://mathias-kettner.de/checkmk_multisite.html">online documentation</a>. '
+        'Multisite is part of <a href="http://mathias-kettner.de/check_mk.html">Check_MK</a> - an Open Source '
         'project by <a href="http://mathias-kettner.de">Mathias Kettner</a>.'
         '</td>'
     )

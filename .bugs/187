@@ -1,0 +1,11 @@
+Title: Windows Agent Debug Modus funktiert nicht
+Component: core
+Benefit: 1
+State: open
+Cost: 3
+Date: 2011-06-30 11:46:51
+Class: bug
+
+Auf einem Windows 2000 SP4 System getestet:
+
+Der Debug-Modus liefert keine Ausgabe.

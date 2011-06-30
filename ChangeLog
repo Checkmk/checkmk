@@ -1,6 +1,7 @@
 1.1.11i2:
     Core, Setup, etc.:
     * FIX: sort output of cmk --list-hosts alphabetically
+    * FIX: Fixed .* in SNMP scan function when using stored SNMP walks
     
     Checks & Agents:
     * FIX: apc_symmetra: fix remaining runtime calculation (by factor 100)

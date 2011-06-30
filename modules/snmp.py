@@ -157,7 +157,10 @@ def snmpwalk_on_suboid(hostname, ip, oid):
     return rowinfo
 
 def extract_end_oid(prefix, complete):
-    return complete[len(prefix):].lstrip('.')
+    if prefix == complete:
+        return complete.split('.')[-1]
+    else:
+        return complete[len(prefix):].lstrip('.')
 
 # sort OID strings numerically
 def cmp_oids(o1, o2):
@@ -428,7 +431,8 @@ def get_stored_snmpwalk(hostname, oid):
                             value = agent_simulator_process(value)
                     else:
                         value = ""
-                    rows.append((o, strip_snmp_value(value)))
+                    # Fix for missing starting oids
+                    rows.append(('.'+o, strip_snmp_value(value)))
                     index += direction
                     if index < 0 or index >= len(lines):
                         break

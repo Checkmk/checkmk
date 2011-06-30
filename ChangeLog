@@ -2,6 +2,7 @@
     Core, Setup, etc.:
     * FIX: sort output of cmk --list-hosts alphabetically
     * FIX: Fixed .* in SNMP scan function when using stored SNMP walks
+    * FIX: Fixed OID_END handling in SNMP based checks (e.g. canon_pages)
     
     Checks & Agents:
     * FIX: apc_symmetra: fix remaining runtime calculation (by factor 100)

@@ -1,0 +1,33 @@
+title: Checks number of pending windows updates and needed reboot state
+agents: windows
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ The check uses WMI to fetch the number of pending important and optional updates
+ on a windows system. It also checks if a reboot is needed after installing updates.
+
+ By default the check only fetches the information and never raises WARNING/CRITICAL
+ states. But this can be configured.
+
+ The windows agent needs to be extended with the {windows_updates.vbs} provided
+ in {agents/windows/plugins}.
+
+inventory:
+ One service named {System Updates} is being created for each host.
+
+perfdata:
+ Two values important and optional which contain the number of pending updates.
+
+[parameters]
+imp_warn (int): Number of pending important updates to raise a WARNING state.
+                Can be set to None for disabling the level.
+imp_crit (int): Number of pending important updates to raise a CRITICAL state
+                Can be set to None for disabling the level.
+opt_warn (int): Number of pending optional updates to raise a WARNING state
+                Can be set to None for disabling the level.
+opt_crit (int): Number of pending optional updates to raise a CRITICAL state
+                Can be set to None for disabling the level.
+
+[configuration]
+windows_updates_default_params (tuple of four ints): Default value is set to {(None, None, None, None)}

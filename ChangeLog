@@ -19,6 +19,7 @@
     * lnx_if: treat interfaces without information from ethtool as
       softwareLoopback interface. The will not be found by inventory now.
     * vbox_guest: new check for checking guest additions of Linux virtual box hosts
+    * windows_updates: Added missing manpage
 
     Multisite:
     * FIX: make non-Ascii characters in services names work again

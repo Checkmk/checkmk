@@ -511,6 +511,7 @@ commands = {
   "show"    : main_show,
   "new"     : main_new,
   "resolve" : main_resolve,
+  "solve"   : main_resolve,
   "delete"  : main_delete,
   "grep"    : main_grep,
   "edit"    : main_edit,

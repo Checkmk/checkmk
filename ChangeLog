@@ -5,6 +5,7 @@
     * FIX: Fixed OID_END handling in SNMP based checks (e.g. canon_pages)
     
     Checks & Agents:
+    * FIX: Problems with { and } in manpage parsing has been fixed
     * FIX: apc_symmetra: fix remaining runtime calculation (by factor 100)
     * FIX: Added PNP-template for winperf_phydisk
     * FIX: if64: fix UNKNOWN in case of non-unique ifAlias

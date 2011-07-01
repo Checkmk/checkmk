@@ -2200,7 +2200,9 @@ def render_folder_path(the_folder = 0, the_file = 0, link_to_last = False):
 #   | buttons for aborting and pausing.                                    |
 #   +----------------------------------------------------------------------+
 
-def interactive_progress(items, title, stats, finishvars, timewait):
+def interactive_progress(items, title, stats, finishvars, timewait, success_stats = [], termvars = []):
+    if not termvars:
+        termvars = finishvars;
     html.write("<center>")
     html.write("<table class=progress>")
     html.write("<tr><th colspan=2>%s</th></tr>" % title)
@@ -2227,13 +2229,14 @@ def interactive_progress(items, title, stats, finishvars, timewait):
     html.write("</td></tr>")
     html.write("</table>")
     html.write("</center>")
-    json_items = '[ %s ]' % ','.join([ "'" + h + "'" for h in items ])
+    json_items    = '[ %s ]' % ','.join([ "'" + h + "'" for h in items ])
+    success_stats = '[ %s ]' % ','.join(success_stats)
     # Remove all sel_* variables. We do not need them for our ajax-calls.
     # They are just needed for the Abort/Finish links. Those must be converted
     # to POST.
     base_url = html.makeuri([], remove_prefix = "sel_")
-    html.javascript(('progress_scheduler("%s", "%s", 50, %s, "%s", "' + _("FINISHED.") + '");') %
-                     (html.var('mode'), base_url, json_items, html.makeuri(finishvars)))
+    html.javascript(('progress_scheduler("%s", "%s", 50, %s, "%s", %s, "%s", "' + _("FINISHED.") + '");') %
+                     (html.var('mode'), base_url, json_items, html.makeuri(finishvars), success_stats, html.makeuri(termvars),))
 
 #   +----------------------------------------------------------------------+
 #   |              _   _   _        _ _           _                        |

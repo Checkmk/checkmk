@@ -2328,7 +2328,8 @@ def show_check_manual(checkname):
         print "SA:checks"
 
         def markup(line, ignored=None):
-            return line.replace("{", "<b>").replace("}", "</b>")
+            # preserve the inner { and } in double braces and then replace the braces left
+            return line.replace('{{', '{&#123;').replace('}}', '&#125;}').replace("{", "<b>").replace("}", "</b>")
 
         def print_sectionheader(line, ignored):
             print "H1:" + line
@@ -2359,11 +2360,12 @@ def show_check_manual(checkname):
             else:
                 name = left
                 typ = ""
-            print "<tr><td class=tt>%s</td><td>%s</td><td>%s</td></tr>" % (name, typ, text)
+            print "<tr><td class=tt>%s</td><td>%s</td><td>%s</td></tr>" % (name, typ, markup(text))
 
     else:
         def markup(line, attr):
-            return line.replace("{", bold_color).replace("}", tty_normal + attr)
+            # Replaces braces in the line but preserves the inner braces
+            return re.sub('(?<!{){', bold_color, re.sub('(?<!})}', tty_normal + attr, line))
 
         def print_sectionheader(left, right):
             print_splitline(title_color_left, "%-19s" % left, title_color_right, right)
@@ -2399,7 +2401,8 @@ def show_check_manual(checkname):
             print_line("", tty(7,4))
 
         def print_len(word):
-            netto = word.replace("{", "").replace("}", "")
+            # In case of double braces remove only one brace for counting the length
+            netto = word.replace('{{', 'x').replace('}}', 'x').replace("{", "").replace("}", "")
             netto = re.sub("\033[^m]+m", "", netto)
             return len(netto)
 

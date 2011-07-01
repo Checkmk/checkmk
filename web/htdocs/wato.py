@@ -2230,7 +2230,7 @@ def interactive_progress(items, title, stats, finishvars, timewait, success_stat
     html.write("</table>")
     html.write("</center>")
     json_items    = '[ %s ]' % ','.join([ "'" + h + "'" for h in items ])
-    success_stats = '[ %s ]' % ','.join(success_stats)
+    success_stats = '[ %s ]' % ','.join(map(str, success_stats))
     # Remove all sel_* variables. We do not need them for our ajax-calls.
     # They are just needed for the Abort/Finish links. Those must be converted
     # to POST.

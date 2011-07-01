@@ -158,7 +158,8 @@ def page_handler():
         modefunc("content")
 
     except Exception, e:
-        html.show_error(e)
+        import traceback
+        html.show_error(traceback.format_exc().replace('\n', '<br />'))
 
     html.write("</div>\n")
     html.footer()

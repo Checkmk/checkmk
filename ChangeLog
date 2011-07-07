@@ -22,7 +22,6 @@
       softwareLoopback interface. The will not be found by inventory now.
     * vbox_guest: new check for checking guest additions of Linux virtual box hosts
     * windows_updates: Added missing manpage
-    * apc_symmetra: Calculating time left correctly now (Thanks to Mirko Witt)
 
     Multisite:
     * FIX: make non-Ascii characters in services names work again

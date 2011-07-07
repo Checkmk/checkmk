@@ -114,10 +114,9 @@ def check_apc(item, params, info):
 
     # 8. run time remaining
     # RunTimeRemaining == "0:0:26:00.00"
-    # RunTimeRemaining = 672000 ## 1:52:00
-    hrs = int(RunTimeRemaining) / 360000
-    mins, secs = divmod(int(RunTimeRemaining) % 360000, 6000)
-    single_states.append( (0, "run time remaining: %02d:%02d:%02d" % (hrs, mins,secs), None) )
+    hrs = int(RunTimeRemaining) / 3600
+    mins, secs = divmod(int(RunTimeRemaining) % 3600, 60)
+    single_states.append( (0, "run time remaining: %02d:%02d:%02d" % (hrs, mins, secs), None) )
 
     # create summary state
     worst_state = max([x[0] for x in single_states])

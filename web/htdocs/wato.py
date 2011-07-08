@@ -372,6 +372,7 @@ def mode_editfolder(phase, what, new):
             
             g_folder["." + what + "s"][name] = new_thing
             log_audit(new_thing, "new-" + what, _("Created new %s %s") % (the_what, title))
+            call_hook_file_or_folder_created(what, new_thing)
 
         else:
             the_thing["title"]      = title
@@ -2037,6 +2038,7 @@ def delete_folder_after_confirm(del_folder):
 
         save_folder_config()
         log_audit(file_os_path(del_folder), "delete-folder", _("Deleted empty folder %s")% file_os_path(del_folder))
+        call_hook_file_or_folder_deleted('folder', del_folder)
         html.reload_sidebar() # refresh WATO snapin
         return "folder"
     elif c == False: # not yet confirmed
@@ -2062,6 +2064,7 @@ def delete_file_after_confirm(del_file):
         del g_folder[".files"][del_file[".name"]]
         delete_configuration_file(g_folder, del_file)
         save_folder_config()
+        call_hook_file_or_folder_deleted('file', del_file)
         call_hook_host_changed(g_folder)
         global g_file
         g_file = None
@@ -2938,6 +2941,17 @@ def call_hook_host_changed(the_thing): # called for file or folder
         hosts = collect_hosts(g_root_folder)
         call_hooks("all-hosts-changed", hosts)
 
+def call_hook_file_or_folder_created(what, the_thing):
+    if what == 'file' and "file-created" in hooks:
+        call_hooks("file-created", the_thing)
+    elif what == 'folder' and 'folder-created' in hooks:
+        call_hooks("folder-created", the_thing)
+
+def call_hook_file_or_folder_deleted(what, the_thing):
+    if what == 'file' and "file-deleted" in hooks:
+        call_hooks("file-deleted", the_thing)
+    elif what == 'folder' and 'folder-deleted' in hooks:
+        call_hooks("folder-deleted", the_thing)
 
 #   +----------------------------------------------------------------------+
 #   |                   ____  _             _                              |

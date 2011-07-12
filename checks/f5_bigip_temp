@@ -41,7 +41,7 @@
 def f5_bigip_temp_genitem(info):
     sensors = []
     # parse all detected sensors and name them according to the mib section they came from.
-    # we will assign a base "nominal" temperature here based on sample MIB data
+    # we will assign a base "nominal" temperature here based on sample MIB data 
     for chassis_sensor in info[0]:
         id   = chassis_sensor[0]
         type = "Chassis"
@@ -54,14 +54,14 @@ def f5_bigip_temp_genitem(info):
         cur_temp  = int(cpu_sensor[1])
         nom_temp  = 55
         sensors.append([ ("%s %s" % (id, type)), cur_temp, nom_temp ])
-
+        
     return sensors
 
 
 def inventory_f5_bigip_temp(checkname, info):
     inventory = []
     for sensor in f5_bigip_temp_genitem(info):
-        inventory.append([sensor[0], sensor[2]])
+         inventory.append([sensor[0], nom_temp])
 
     return inventory
 
@@ -70,33 +70,28 @@ def check_f5_bigip_temp(item, params, info):
 
     for sensor in f5_bigip_temp_genitem(info):
         if item == sensor[0]:
-            cur_temp = sensor[1]
-            nom_temp = sensor[2]
-            # allow some increase in temperature to avoid false alarms
-            warn = nom_temp + 9
-            crit = nom_temp + 18
-            msgtxt = " - Temperature is %dC, Levels at %d/%d" % (cur_temp, warn, crit)
-            perfdata = [("temp", cur_temp, warn, crit)]
-            if   warn >= cur_temp:
-                return (0, "OK" + msgtxt, perfdata)
-            elif crit <= cur_temp:
-                return (2, "CRIT" + msgtxt + "!!", perfdata)
-            elif warn < cur_temp:
-                return (1, "WARN" + msgtxt + "!", perfdata)
+            tmpdiff = sensor[1] - sensor[2]
+            msgtxt = " - Temperature is %dC" % (sensor[1])
+            if 5 >= tmpdiff:
+                return (0, "OK" + msgtxt)
+            elif tmpdiff > 15:
+                return (2, "CRIT" + msgtxt + "!!")
+            elif tmpdiff > 10:
+                return (1, "WARN" + msgtxt + "!")
             else:
                 return (3, "UNKNOWN - unable to read Temperature")
+            
 
-
-
+ 
     return (3, "UNKNOWN - item not found in SNMP output")
-
+    
 
 snmp_info["f5_bigip_temp"] = \
     [ (".1.3.6.1.4.1.3375.2.1.3.2.3.2.1", [ 1, 2 ]),
       (  ".1.3.6.1.4.1.3375.2.1.3.1.2.1", [ 1, 2 ]), ]
 
 
-check_info["f5_bigip_temp"] = (check_f5_bigip_temp, "TEMP %s", 1, inventory_f5_bigip_temp)
+check_info["f5_bigip_temp"] = (check_f5_bigip_temp, "TEMP %s", 0, inventory_f5_bigip_temp ) 
 
 
 # Get ID and Speed from the CPU and chassis fan tables

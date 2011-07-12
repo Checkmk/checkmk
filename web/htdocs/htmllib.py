@@ -105,6 +105,8 @@ def urlencode_vars(vars):
 def urlencode(value):
     if type(value) == unicode:
         value = value.encode("utf-8")
+    elif value == None:
+        return ""
     ret = ""
     for c in value:
         if c == " ":
@@ -299,7 +301,9 @@ class html:
     def end_context_buttons(self):
         self.write("</td></tr></table>\n")
 
-    def context_button(self, title, url, hot=False):
+    def context_button(self, title, url, icon=None, hot=False):
+        if icon:
+            title = '<img src="images/icon_%s.png">%s' % (icon, title)
         self.write('<div class="contextlink%s" ' % (hot and " hot" or ""))
         self.write(r'''onmouseover='this.style.backgroundImage="url(\"images/contextlink%s_hi.png\")";' ''' % (hot and "_hot" or ""))
         self.write(r'''onmouseout='this.style.backgroundImage="url(\"images/contextlink%s.png\")";' ''' % (hot and "_hot" or ""))
@@ -336,10 +340,9 @@ class html:
 
     def sorted_select(self, varname, options, deflt="", onchange=None):
         # Sort according to display texts, not keys
-        swapped = [ (disp, key) for key, disp in options ]
-        swapped.sort()
-        swapped = [ (key, disp) for disp, key in swapped ]
-        html.select(self, varname, swapped, deflt, onchange)
+        sorted = options[:]
+        sorted.sort(lambda a,b: cmp(a[1].lower(), b[1].lower()))
+        html.select(self, varname, sorted, deflt, onchange)
 
     def select(self, varname, options, deflt="", onchange=None):
         current = self.var(varname, deflt)
@@ -657,7 +660,10 @@ class html:
             return val.decode("utf-8")
 
     def set_var(self, varname, value):
-        self.req.vars[varname] = value
+        if value == None:
+            self.del_var(varname)
+        else:
+            self.req.vars[varname] = value
 
     def del_var(self, varname):
         if varname in self.req.vars:

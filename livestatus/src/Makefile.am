@@ -28,7 +28,7 @@ unixcat_LDADD = -lpthread
 
 pkglib_LIBRARIES = livestatus.so
 livestatus_so_SOURCES = \
-	AndingFilter.cc ClientQueue.cc Column.cc ColumnsColumn.cc \
+	AndingFilter.cc ClientQueue.cc Column.cc ColumnsColumn.cc CustomVarsExplicitColumn.cc \
 	ContactsColumn.cc CustomVarsColumn.cc CustomVarsFilter.cc DoubleColumn.cc \
 	DoubleColumnFilter.cc DowntimeOrComment.cc DownCommColumn.cc EmptyColumn.cc \
 	Filter.cc GlobalCountersColumn.cc HostContactsColumn.cc HostgroupsColumn.cc \

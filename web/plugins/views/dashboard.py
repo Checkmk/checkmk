@@ -62,15 +62,15 @@ multisite_builtin_views.update({
                                ('host_icons', None),
                                ('host_plugin_output', None),
                                ('host_state_age', None),
-                               ('host_check_age', None),
-                               ('num_services_ok', 'host_ok'),
+                               # ('host_check_age', None),       # save space
+                               # ('num_services_ok', 'host_ok'), # save space
                                ('num_services_warn', 'host_warn'),
                                ('num_services_crit', 'host_crit'),
                                ('num_services_unknown', 'host_unknown'),
                                ('num_services_pending', 'host_pending')],
                   'public': True,
                   'show_filters': [],
-                  'sorters': [],
+                  'sorters': [('hoststate', True)],
                   'title': 'Host problems',
                   'topic': None,
                   },
@@ -150,10 +150,10 @@ multisite_builtin_views.update({
             'owner': 'admin',
             'painters': [('log_icon', None),
                          ('log_time', None),
-                         ('log_type', None),
+                         # ('log_type', None),
                          ('host', 'hostsvcevents'),
                          ('service_description', 'svcevents'),
-                         ('log_state_type', None),
+                         # ('log_state_type', None),
                          ('log_plugin_output', None)],
 
 

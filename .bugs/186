@@ -1,0 +1,9 @@
+Title: Windows Agent führt keine Plugins auf Windows 2000 aus
+Component: core
+Benefit: 1
+State: open
+Cost: 4
+Date: 2011-06-30 11:44:52
+Class: bug
+
+Beim aktuellen Windows Agenten werden auf einem Windows 2000 SP4 System die Plugins nicht ausgeführt.

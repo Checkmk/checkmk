@@ -1,8 +1,23 @@
-This directory contains a simple and yet complete API for accessing
-MK Livestatus from Python. Two positive aspects of this API:
+This directory contains a very efficient API to MK Livestatus 
+for Python. It is directly taken from the Multisite GUI and
+has the following features:
 
 * It supports keep alive
 * It returns typed values
+* It support transparent multi-site access
+* It supports persistent connection caching
+* It supports parallelized queries (though still single-threaded)
+* It supports detection of dead sites (via "status_host")
 
-You might want to look at example.py for examples of usage.
+Please look at the two examples:
 
+example.py:           Example for a single site
+example_multisite.py: Example querying several sites
+
+Both example are written to be run within an OMD instance
+and need no further configuration.
+
+If you are not using OMD, you need to modify the examples
+and enter the correct path to you livestatus socket.
+Or even better: give OMD a try --> omdistro.org. This will
+make you live *really* easier!

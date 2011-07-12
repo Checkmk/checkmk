@@ -83,8 +83,17 @@ var progress_items     = null;
 var failed_items       = null;
 // Number of total items to handle
 var progress_total_num = 0;
+// Contains the total number of items which have been successfully processed
+// This is e.g. used to decide if the dialog needs to redirect to end_url
+// or to the term_url
+var progress_found = 0;
+// The fields which signal that something has been successfully processed.
+// this is used together with progress_found to find out the correct redirect url
+var progress_success_stats = [];
 // The URL to redirect to after finish/abort button pressed
 var progress_end_url   = '';
+// The URL to redirect to after finish/abort button pressed when nothing found
+var progress_term_url   = '';
 // The text to show in the progress bar after finished processing
 var progress_fin_txt   = '';
 // Is set to true while one request is waiting for a response
@@ -101,12 +110,10 @@ function progress_handle_response(data, code) {
     var header = null;
     try {
         var header = eval(code.split("\n", 1)[0]);
+        if (header === null)
+	    alert('Header is null!');
     } catch(err) {
         alert('Invalid response: ' + code);    
-    }
-
-    if (header === null) {
-        alert('Header is null!');
     }
 
     // Extract the body from the response
@@ -182,10 +189,14 @@ function progress_finished() {
 function progress_end() {
     // Mark as ended to catch currently running requests
     progress_ended = true;
-    location.href = progress_end_url;
+    if(progress_found > 0)
+        location.href = progress_end_url;
+    else
+        location.href = progress_term_url;
 }
 
 function clear_progress_stats() {
+    progress_found = 0
     for(var i = 1; i < 100; i++) {
         var o = document.getElementById('progress_stat' + (i - 1));
         if (o) {
@@ -201,6 +212,8 @@ function update_progress_stats(header) {
     for(var i = 1; i < header.length; i++) {
         var o = document.getElementById('progress_stat' + (i - 1));
         if (o) {
+            if(progress_success_stats.indexOf(i) !== -1)
+                progress_found += parseInt(header[i]);
             o.innerHTML = parseInt(o.innerHTML) + parseInt(header[i]);
             o = null;
         }
@@ -239,17 +252,19 @@ function progress_clean_log() {
     log = null;
 }
 
-function progress_scheduler(mode, url_prefix, timeout, items, end_url, finished_txt) {
+function progress_scheduler(mode, url_prefix, timeout, items, end_url, success_stats, term_url, finished_txt) {
     // Initialize
     if (progress_items === null) {
-        progress_items     = items;
-        failed_items       = Array();
-        progress_total_num = items.length;
-        progress_end_url   = end_url;
-        progress_fin_txt   = finished_txt;
-        progress_mode      = mode;
-        progress_url       = url_prefix;
-        progress_timeout   = timeout;
+        progress_items         = items;
+        failed_items           = Array();
+        progress_total_num     = items.length;
+        progress_end_url       = end_url;
+        progress_term_url      = term_url;
+        progress_success_stats = success_stats;
+        progress_fin_txt       = finished_txt;
+        progress_mode          = mode;
+        progress_url           = url_prefix;
+        progress_timeout       = timeout;
     }
 
     // Escape the loop when ended
@@ -272,3 +287,4 @@ function progress_scheduler(mode, url_prefix, timeout, items, end_url, finished_
 
     setTimeout(function() { progress_scheduler(mode, url_prefix, timeout, [], "", ""); }, timeout);
 }
+

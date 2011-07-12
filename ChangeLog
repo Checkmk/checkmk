@@ -1,8 +1,11 @@
 1.1.11i2:
     Core, Setup, etc.:
     * FIX: sort output of cmk --list-hosts alphabetically
+    * FIX: Fixed .* in SNMP scan function when using stored SNMP walks
+    * FIX: Fixed OID_END handling in SNMP based checks (e.g. canon_pages)
     
     Checks & Agents:
+    * FIX: Problems with { and } in manpage parsing has been fixed
     * FIX: apc_symmetra: fix remaining runtime calculation (by factor 100)
     * FIX: Added PNP-template for winperf_phydisk
     * FIX: if64: fix UNKNOWN in case of non-unique ifAlias
@@ -20,6 +23,7 @@
     * vbox_guest: new check for checking guest additions of Linux virtual box hosts
     * if/if64: Fixed bug in operstate detection when using old tuple based params
     * if/if64: Fixed bug in operstate detection when using tuple of valid operstates
+    * windows_updates: Added missing manpage
 
     Multisite:
     * FIX: make non-Ascii characters in services names work again
@@ -31,6 +35,8 @@
     * Introduced basic infrastructure for multilanguage support in Multisite
     * Make 'Views' snapin foldable
     * Replace old main view by dashboard.
+    * new filter for WATO folder of host
+    * added icons to context buttons
 
     WATO:
     * Configration files can now be administered via the WEB UI
@@ -48,6 +54,10 @@
     MK Livestatus:
     * FIX: fix compile problem on Debian unstable (Thanks to Sven Velt)
     * Column aggregation (Stats) now also works for perf_data
+    * hosts, services & contacts: new column custom_variables (this is
+      a dictionary of all custom variables)
+    * new column 'filename' in table host (value of variable _FILENAME)
+    * Updated Python-API to most current version
 
 1.1.11i1:
     Core, Setup, etc.:

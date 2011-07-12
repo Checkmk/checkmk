@@ -35,6 +35,7 @@ using namespace std;
 
 #define CVT_VARNAMES 0
 #define CVT_VALUES   1
+#define CVT_DICT     2
 
 class CustomVarsColumn : public Column
 {
@@ -44,10 +45,11 @@ class CustomVarsColumn : public Column
 public:
    CustomVarsColumn(string name, string description, int offset, int indirect_offset, int what) 
       : Column(name, description, indirect_offset),  _offset(offset), _what(what) {}
-   int type() { return COLTYPE_LIST; }
+   int type() { return _what == CVT_DICT ? COLTYPE_DICT : COLTYPE_LIST; }
    void output(void *, Query *);
    Filter *createFilter(int opid, char *value);
    bool contains(void *data, const char *value);
+   char *getVariable(void *data, const char *varname);
 private:
    customvariablesmember *getCVM(void *data);
 };

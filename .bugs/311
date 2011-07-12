@@ -1,0 +1,11 @@
+Title: manual SNMP checks without scan function not visible in WATO
+Component: wato
+Benefit: 1
+State: open
+Cost: 3
+Date: 2011-06-29 12:56:31
+Class: bug
+
+When showing the services table of a host in WATO without
+Full Scan, then manually configured SNMP services with
+out a scan function will not be displayed (e.g. snmp_uptime)

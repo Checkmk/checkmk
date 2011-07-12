@@ -337,10 +337,11 @@ def read_site_config():
 
 sidebar = \
 [('tactical_overview', 'open'),
- ('search', 'open'),
- ('views', 'open'),
- ('bookmarks', 'open'),
- ('master_control', 'closed')]
+ ('search',            'open'),
+ ('wato',              'open'),
+ ('views',             'open'),
+ ('bookmarks',         'open'),
+ ('master_control',    'closed')]
 
 #    _     _           _ _
 #   | |   (_)_ __ ___ (_) |_ ___

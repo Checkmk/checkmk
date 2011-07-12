@@ -257,6 +257,7 @@ checks                               = []
 check_parameters                     = []
 legacy_checks                        = []
 all_hosts                            = []
+host_paths                           = {}
 snmp_hosts                           = [ (['snmp'], ALL_HOSTS) ]
 tcp_hosts                            = [ (['tcp'], ALL_HOSTS), (NEGATE, ['snmp'], ALL_HOSTS), (['!ping'], ALL_HOSTS) ]
 bulkwalk_hosts                       = []
@@ -1268,6 +1269,12 @@ def create_nagios_hostdefs(outfile, hostname):
     outfile.write("  address\t\t\t%s\n" % (ip and ip or "0.0.0.0"))
     outfile.write("  _TAGS\t\t\t\t%s\n" % " ".join(tags_of_host(hostname)))
 
+    # WATO folder path
+    path = host_paths.get(hostname)
+    if path:
+        outfile.write("  _FILENAME\t\t\t%s\n" % path)
+
+
     # Host groups: If the host has no hostgroups it gets the default
     # hostgroup (Nagios requires each host to be member of at least on
     # group.
@@ -1329,6 +1336,9 @@ def create_nagios_hostdefs(outfile, hostname):
         outfile.write("  _TAGS\t\t\t\t%s\n" % " ".join(tags_of_host(hostname)))
         outfile.write("  __REALNAME\t\t\t%s\n" % hostname)
         outfile.write("  parents\t\t\t%s\n" % hostname)
+
+        if path:
+            outfile.write("  _FILENAME\t\t\t%s\n" % path)
 
         hgs = summary_hostgroups_of(hostname)
         hostgroups = ",".join(hgs)
@@ -1627,11 +1637,11 @@ def create_nagios_config_commands(outfile):
 #   +----------------------------------------------------------------------+
 
 
-def inventorable_checktypes(what): # tcp, all
+def inventorable_checktypes(what): # snmp, tcp, all
     checknames = [ k for k in check_info.keys()
                    if check_info[k][3] != no_inventory_possible
 #                   and (k not in ignored_checktypes)
-                   and (what == "all" or k.split('.')[0] not in snmp_info)
+                   and (what == "all" or ((k.split('.')[0] in snmp_info) == (what == "snmp")))
                  ]
     checknames.sort()
     return checknames
@@ -2318,7 +2328,8 @@ def show_check_manual(checkname):
         print "SA:checks"
 
         def markup(line, ignored=None):
-            return line.replace("{", "<b>").replace("}", "</b>")
+            # preserve the inner { and } in double braces and then replace the braces left
+            return line.replace('{{', '{&#123;').replace('}}', '&#125;}').replace("{", "<b>").replace("}", "</b>")
 
         def print_sectionheader(line, ignored):
             print "H1:" + line
@@ -2349,11 +2360,12 @@ def show_check_manual(checkname):
             else:
                 name = left
                 typ = ""
-            print "<tr><td class=tt>%s</td><td>%s</td><td>%s</td></tr>" % (name, typ, text)
+            print "<tr><td class=tt>%s</td><td>%s</td><td>%s</td></tr>" % (name, typ, markup(text))
 
     else:
         def markup(line, attr):
-            return line.replace("{", bold_color).replace("}", tty_normal + attr)
+            # Replaces braces in the line but preserves the inner braces
+            return re.sub('(?<!{){', bold_color, re.sub('(?<!})}', tty_normal + attr, line))
 
         def print_sectionheader(left, right):
             print_splitline(title_color_left, "%-19s" % left, title_color_right, right)
@@ -2389,7 +2401,8 @@ def show_check_manual(checkname):
             print_line("", tty(7,4))
 
         def print_len(word):
-            netto = word.replace("{", "").replace("}", "")
+            # In case of double braces remove only one brace for counting the length
+            netto = word.replace('{{', 'x').replace('}}', 'x').replace("{", "").replace("}", "")
             netto = re.sub("\033[^m]+m", "", netto)
             return len(netto)
 
@@ -3564,7 +3577,15 @@ for varname in check_default_levels.values():
 def all_nonfunction_vars():
     return set([ name for name,value in globals().items() if name[0] != '_' and type(value) != type(lambda:0) ])
 
-
+def marks_hosts_with_path(old, all, filename):
+    if not filename.startswith(check_mk_configdir):
+        return
+    path = filename[len(check_mk_configdir):]
+    old = set([ o.split("|", 1)[0] for o in old ])
+    all = set([ a.split("|", 1)[0] for a in all ])
+    for host in all:
+        if host not in old:
+            host_paths[host] = path
 
 # Create list of all files to be included
 list_of_files = reduce(lambda a,b: a+b, 
@@ -3587,7 +3608,9 @@ for _f in list_of_files:
     try:
         if opt_debug:
             sys.stderr.write("Reading config file %s...\n" % _f)
+        _old_all_hosts = all_hosts[:]
         execfile(_f)
+        marks_hosts_with_path(_old_all_hosts, all_hosts, _f)
     except Exception, e:
         sys.stderr.write("Cannot read in configuration file %s:\n%s\n" % (_f, e))
         if __name__ == "__main__":

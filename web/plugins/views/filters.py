@@ -50,7 +50,6 @@ class FilterText(Filter):
         return [ (self.htmlvars[0], row[self.column]) ]
 
     def heading_info(self, infoname):
-        htmlvar = self.htmlvars[0]
         return html.var(self.htmlvars[0])
 
 #                               filter          title              info       column           htmlvar

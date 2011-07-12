@@ -157,7 +157,10 @@ def snmpwalk_on_suboid(hostname, ip, oid):
     return rowinfo
 
 def extract_end_oid(prefix, complete):
-    return complete[len(prefix):].lstrip('.')
+    if prefix == complete:
+        return complete.split('.')[-1]
+    else:
+        return complete[len(prefix):].lstrip('.')
 
 # sort OID strings numerically
 def cmp_oids(o1, o2):
@@ -229,9 +232,9 @@ def get_snmp_table(hostname, ip, oid_info):
             index_rows = []
             # Take end-oids of non-index columns as indices
             fetchoid, max_column  = columns[max_len_col]
-            for o, value in max_column: 
+            for o, value in max_column:
                 if index_format == OID_END:
-		    eo = extract_end_oid(columns[max_len_col][0], o)
+		    eo = extract_end_oid(fetchoid, o)
                     index_rows.append((o, eo))
                 elif index_format == OID_STRING:
                     index_rows.append((o, o))
@@ -428,7 +431,8 @@ def get_stored_snmpwalk(hostname, oid):
                             value = agent_simulator_process(value)
                     else:
                         value = ""
-                    rows.append((o, strip_snmp_value(value)))
+                    # Fix for missing starting oids
+                    rows.append(('.'+o, strip_snmp_value(value)))
                     index += direction
                     if index < 0 or index >= len(lines):
                         break
@@ -436,12 +440,16 @@ def get_stored_snmpwalk(hostname, oid):
                     break
             return rows
 
-        
+
         rowinfo = collect_until(current, -1)
         rowinfo.reverse()
         rowinfo += collect_until(current + 1, 1)
         # import pprint ; pprint.pprint(rowinfo)
-        return rowinfo
+
+        if dot_star:
+            return [ rowinfo[0] ]
+        else:
+            return rowinfo
 
 
 

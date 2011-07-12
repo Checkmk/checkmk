@@ -26,6 +26,7 @@
 
 import config, defaults, htmllib, pprint
 from lib import *
+import wato
 
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
@@ -84,24 +85,58 @@ def page_dashboard():
 
     render_dashboard(name)
 
+def add_filename_to_url(url, filename):
+    if not filename:
+        return url
+    elif '/' in url:
+        return url # do not append filename to non-Check_MK-urls
+    elif '?' in url:
+        return url + "&filename=" + htmllib.urlencode(filename)
+    else:
+        return url + "?filename=" + htmllib.urlencode(filename)
+
+
 # Actual rendering function
 def render_dashboard(name):
     board = dashboards[name]
 
-    html.header(board["title"])
+    # The dashboard may be called with "filename" set. In that case
+    # the dashboard is assumed to restrict the shown data to a specific
+    # WATO subfolder or file. This could be a configurable feature in
+    # future, but currently we assume, that *all* dashboards are filename
+    # sensitive.
+
+    filename = html.var("filename")
+    if not filename or filename == "/": # ignore filename in case of root folder
+        filename = None
+
+    # The title of the dashboard needs to be prefixed with the WATO path, 
+    # in order to make it clear to the user, that he is seeing only partial
+    # data.
+    title = board["title"]
+    if filename:
+        title = wato.api.get_folder_title(filename) + " - " + title
+    html.header(title)
+
     html.javascript_file("dashboard")
     html.write("<div id=dashboard>\n") # Container of all dashlets
 
     refresh_dashlets = [] # Dashlets with automatic refresh, for Javascript
     for nr, dashlet in enumerate(board["dashlets"]):
+        # dashlets using the 'urlfunc' method will dynamically compute
+        # an url (using HTML context variables at their wish). 
+        if "urlfunc" in dashlet:
+            dashlet["url"] = dashlet["urlfunc"]()
+
         # dashlets using the 'url' method will be refreshed by us. Those
         # dashlets using static content (such as an iframe) will not be
         # refreshed by us but need to do that themselves.
         if "url" in dashlet:
-            refresh_dashlets.append([nr, dashlet.get("refresh", 0), dashlet["url"]])
+            refresh_dashlets.append([nr, dashlet.get("refresh", 0), 
+              add_filename_to_url(dashlet["url"], filename)])
 
         # Paint the dashlet's HTML code
-        render_dashlet(nr, dashlet)
+        render_dashlet(nr, dashlet, filename)
 
     html.write("</div>\n")
 
@@ -128,7 +163,7 @@ dashboard_scheduler(1);
 # for the resizing. Within that div there is an inner div containing the
 # actual dashlet content. The margin between the inner and outer div is
 # used for stylish layout stuff (shadows, etc.)
-def render_dashlet(nr, dashlet):
+def render_dashlet(nr, dashlet, filename):
 
     html.write('<div class=dashlet id="dashlet_%d">' % nr)
     # render shadow
@@ -144,13 +179,18 @@ def render_dashlet(nr, dashlet):
     else:
         bg = ""
     html.write('<div class="dashlet_inner%s" id="dashlet_inner_%d">' % (bg, nr))
+
+    # The method "view" is a shortcut for "iframe" with a certain url
+    if "view" in dashlet:
+        dashlet["iframe"] = "view.py?view_name=%s&display_options=SIXHR&_body_class=dashlet" % dashlet["view"] 
     
     # The content is rendered only if it is fixed. In the
     # other cases the initial (re)-size will paint the content.
     if "content" in dashlet: # fixed content
         html.write(dashlet["content"])
     elif "iframe" in dashlet: # fixed content containing iframe
-        html.write('<iframe width="100%%" height="100%%" src="%s"></iframe>' % dashlet["iframe"])
+        html.write('<iframe width="100%%" height="100%%" src="%s"></iframe>' % 
+           add_filename_to_url(dashlet["iframe"], filename))
     html.write("</div></div>\n")
 
 # Here comes the brain stuff: An intelligent liquid layout algorithm.
@@ -344,11 +384,156 @@ def dashlet_overview():
         '</td>'
         '<td><h2>Check_MK Multisite</h2>'
         'Welcome to Check_MK Multisite. If you want to learn more about Multsite, please visit '
-        'out <a href="http://mathias-kettner.de/checkmk_multisite.html">online documentation</a>. '
-        'Multisite is part of <a href="http://mathias-kettner.de/check_mk.html">Check_MK</a> - on Open Source '
+        'our <a href="http://mathias-kettner.de/checkmk_multisite.html">online documentation</a>. '
+        'Multisite is part of <a href="http://mathias-kettner.de/check_mk.html">Check_MK</a> - an Open Source '
         'project by <a href="http://mathias-kettner.de">Mathias Kettner</a>.'
         '</td>'
     )
 
     html.write('</tr></table>')
+
+
+def dashlet_hoststats():
+    table = [
+       ( _("Up"), "#0b3",
+        "Stats: state = 0\n" \
+        "Stats: scheduled_downtime_depth = 0\n" \
+        "StatsAnd: 2\n"),
+
+       ( _("Down"), "#f00",
+        "Stats: state = 1\n" \
+        "Stats: scheduled_downtime_depth = 0\n" \
+        "StatsAnd: 2\n"),
+
+       ( _("Unreachable"), "#f80",
+        "Stats: state = 2\n" \
+        "Stats: scheduled_downtime_depth = 0\n" \
+        "StatsAnd: 2\n"),
+
+       ( _("In downtime"), "#0af",
+        "Stats: scheduled_downtime_depth > 0\n" \
+       )
+    ]
+    filter = "Filter: custom_variable_names < _REALNAME\n"
+
+    render_statistics("hosts", table, filter)
+
+def dashlet_servicestats():
+    table = [
+       ( _("Ok"), "#0b3",
+        "Stats: state = 0\n" \
+        "Stats: scheduled_downtime_depth = 0\n" \
+        "Stats: host_scheduled_downtime_depth = 0\n" \
+        "StatsAnd: 3\n"),
+
+       ( _("Warning"), "#ff0",
+        "Stats: state = 1\n" \
+        "Stats: scheduled_downtime_depth = 0\n" \
+        "Stats: host_scheduled_downtime_depth = 0\n" \
+        "StatsAnd: 3\n"),
+
+       ( _("Unknown"), "#f80",
+        "Stats: state = 3\n" \
+        "Stats: scheduled_downtime_depth = 0\n" \
+        "Stats: host_scheduled_downtime_depth = 0\n" \
+        "StatsAnd: 3\n"),
+
+       ( _("Critical"), "#f00",
+        "Stats: state = 2\n" \
+        "Stats: scheduled_downtime_depth = 0\n" \
+        "Stats: host_scheduled_downtime_depth = 0\n" \
+        "StatsAnd: 3\n"),
+
+       ( _("In downtime"), "#0af",
+        "Stats: scheduled_downtime_depth > 0\n" \
+        "Stats: host_scheduled_downtime_depth > 0\n" \
+        "StatsOr: 2\n" \
+       )
+    ]
+    filter = "Filter: host_custom_variable_names < _REALNAME\n"
+
+    render_statistics("services", table, filter)
+
+
+def render_statistics(what, table, filter):
+    # Is the query restricted to a certain WATO-path?
+    filename = html.var("filename")
+    if filename and filename != "/":
+        # filter += "Filter: host_state = 0"
+        filter += "Filter: host_filename ~ ^%s\n" % filename.replace("\n", "")
+    
+    query = "GET %s\n" % what
+    for entry in table:
+        query += entry[2]
+    query += filter
+
+    result = html.live.query_summed_stats(query)
+    pies = zip(table, result)
+    total = sum([x[1] for x in pies])
+    pie_diameter = 136
+
+    html.write('<canvas class=pie width=%d height=%d id=%s_stats style="float: left"></canvas>' % 
+            (pie_diameter, pie_diameter, what))
+    
+    html.write('<table class=hoststats style="float:left">')
+    for (name, color, query), count in pies + [ ((_("Total"), "", ""), total) ]:
+        html.write('<tr><th>%s</th><td class=color style="background-color: %s">'
+                   '</td><td>%d</td></tr>' % (name, color, count))
+
+    html.write("</table>")
+
+    html.javascript("""
+function chart_pie(from, to, color) {
+    context.beginPath();
+    context.moveTo(pie_x, pie_y);
+    context.arc(pie_x, pie_y, pie_d / 2 - 2, rad(from), rad(to), false);
+    context.closePath();
+    context.fillStyle = color;
+    context.shadowOffsetX = 5;
+    context.shadowOffsetY = 5;
+    context.shadowBlur = 10;
+    context.strokeStyle = "#ffffff";
+    context.fill();
+    context.stroke();
+}
+
+// convert percent to angle(rad)
+function rad(g) {
+    return (g * 360 / 100 * Math.PI) / 180;
+}
+
+pie_x = %(x)f;
+pie_y = %(y)f;
+pie_d = %(d)f;
+
+context = document.getElementById("%(what)s_stats").getContext('2d');
+
+""" % { "what" : what, "x" : pie_diameter / 2, 
+        "y": pie_diameter/2, "d" : pie_diameter })
+
+    r = 0.0
+    if total > 0:
+        for (name, color, q), value in pies:
+            perc = 100.0 * value / total
+            html.javascript('chart_pie(%f, %f, %r);' % (r, r + perc, color))
+            r += perc
+
+def dashlet_pnpgraph():
+    render_pnpgraph(html.var("site"), html.var("host"), html.var("service"), int(html.var("source", 0)))
+
+def render_pnpgraph(site, host, service=None, source=0):
+    if not host:
+        html.message("Invalid URL to this dashlet. Missing <tt>host</tt>")
+        return;
+    if not service:
+        service = "_HOST_"
+
+    if not site:
+        base_url = defaults.url_prefix + "/pnp4nagios/index.php/"
+    else:
+        base_url = html.site_status[site]["site"]["url_prefix"]
+
+    img_url = base_url + "image?host=%s&srv=%s&view=0&source=%d&theme=multisite" % \
+            (pnp_cleanup(host), pnp_cleanup(service), source)
+    html.write('<img src="%s">' % img_url)
 

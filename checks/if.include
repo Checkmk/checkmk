@@ -68,20 +68,29 @@ def inventory_if_common(info):
     if len(info) == 0 or len(info[0]) != 19:
         return []
     pre_inventory = []
+
+    seen_items = set([])
+    duplicate = set([])
  
     for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \
         ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen, ifAlias in info:
         ifDescr = cleanup_if_strings(ifDescr)
         ifAlias = cleanup_if_strings(ifAlias)
 
-        if ifType in if_inventory_porttypes and ifOperStatus in if_inventory_portstates:
-            if if_inventory_uses_description and ifDescr:
-                item = ifDescr
-            elif if_inventory_uses_alias and ifAlias:
-                item = ifAlias
-            else:
-                item = ifIndex
+        # compute item now - also for unmonitored ports - in order to see if it
+        # is uninque.
+        if if_inventory_uses_description and ifDescr:
+            item = ifDescr
+        elif if_inventory_uses_alias and ifAlias:
+            item = ifAlias
+        else:
+            item = ifIndex
 
+        if item in seen_items: # duplicate
+            duplicate.add(item)
+        seen_items.add(item)
+
+        if ifType in if_inventory_porttypes and ifOperStatus in if_inventory_portstates:
             paramstring = '{ "errors" : if_default_error_levels, ' \
                           '"traffic" : if_default_traffic_levels, ' \
                           '"average" : if_default_average '
@@ -95,13 +104,6 @@ def inventory_if_common(info):
             pre_inventory.append( (item, paramstring, int(ifIndex)) )
 
     # Check for duplicate items (e.g. when using Alias as item and the alias is not unique)
-    seen_items = set([])
-    duplicate = set([])
-    for item, params, index in pre_inventory:
-        if item in seen_items: # duplicate
-            duplicate.add(item)
-        seen_items.add(item)
-        
     inventory = []
     for item, params, index in pre_inventory:
         if item in duplicate:
@@ -109,6 +111,7 @@ def inventory_if_common(info):
         else:
             new_item = item
         inventory.append((new_item, params))
+    
     return inventory
 
 
@@ -133,21 +136,25 @@ def check_if_common(item, params, info):
     elif len(params) == 5:
         err_warn, err_crit, targetspeed, bw_warn, bw_crit = params
     elif len(params) == 6:
-        err_warn, err_crit, targetspeed, bw_warn, bw_crit, targetstate = params
+        err_warn, err_crit, targetspeed, bw_warn, bw_crit, allowed_operstates = params
 
-    for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \
-        ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen, ifAlias in info:
+    for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets,  \
+            inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
+            outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
+            ifOutQLen, ifAlias in info:
         ifDescr = cleanup_if_strings(ifDescr)
         ifAlias = cleanup_if_strings(ifAlias)
 
         if item == ifIndex \
             or item == ifAlias \
             or item == ifDescr \
-            or item == "%s %s" % (ifAlias, ifIndex):
+            or item == "%s %s" % (ifAlias, ifIndex) \
+            or item == "%s %s" % (ifDescr, ifIndex):
 
             # Display port number or alias in infotext if that is not part
             # of the service description anyway
-            if item == ifIndex and (item == ifAlias or ifAlias == '') and (item == ifDescr or ifDescr == ''): # description trivial
+            if item == ifIndex and (item == ifAlias or ifAlias == '') \
+                and (item == ifDescr or ifDescr == ''): # description trivial
                 infotext = ""
             elif item == "%s %s" % (ifAlias, ifIndex) and ifDescr != '': # non-unique Alias
                 infotext = "[%s/%s]" % (ifAlias, ifDescr)
@@ -158,23 +165,20 @@ def check_if_common(item, params, info):
             else:
                 infotext = "[%s] " % ifIndex
 
+            state = 0
+
             operstatus = if_statename(str(ifOperStatus))
             if targetstate and  \
                 (ifOperStatus != targetstate 
-                 and not (type(targetstate) in [ list, tuple ] and ifOperStatus in targetstate)):
-                return (2, "CRIT - %soperstatus: %s (CRIT)" % (infotext, operstatus))
-            infotext += "(%s) " % operstatus
+                and not (type(targetstate) == list and ifOperStatus in targetstate)):
+                state = 2
+                infotext += "(%s!!) " % operstatus
+            else:
+                infotext += "(%s) " % operstatus
 
-            state = 0
 
-            # Check speed
+            # prepare reference speed for computing relative bandwidth usage
             speed = saveint(ifSpeed)
-            infotext += get_nic_speed_human_readable(speed)
-            if not targetspeed is None and speed != targetspeed:
-                infotext += " (wrong speed! expected: %s)" % get_nic_speed_human_readable(targetspeed)
-                state = 1
-
-            # convert percentages to absolute values and vice verca - if possible
             if speed:
                 ref_speed = speed / 8.0
             elif targetspeed:
@@ -182,12 +186,33 @@ def check_if_common(item, params, info):
             else:
                 ref_speed = None
 
-            # convert percentages to absolute values if reference speed available
+            # Check speed settings of interface, but only if speed information
+            # is available. This is not always the case.
+            if speed:
+                infotext += get_nic_speed_human_readable(speed)
+                if not targetspeed is None and speed != targetspeed:
+                    infotext += " (wrong speed! expected: %s)" % get_nic_speed_human_readable(targetspeed)
+                    state = max(state, 1)
+            elif targetspeed:
+                infotext += "assuming %s" % get_nic_speed_human_readable(targetspeed)
+            else:
+                infotext += "speed unknown"
+
+            # convert percentages to absolute values if levels are float
+            # this is only possible if a reference speed is available.
             if ref_speed:
                 if bw_warn != None and type(bw_warn) == float:
                     bw_warn = bw_warn / 100.0 * ref_speed
                 if bw_crit != None and type(bw_crit) == float:
                     bw_crit = bw_crit / 100.0 * ref_speed
+
+            # Ignore percentual levels if no reference speed is available
+            else:
+                if bw_warn != None and type(bw_warn) == float:
+                    bw_warn = None
+
+                if bw_crit != None and type(bw_crit) == float:
+                    bw_crit = None
 
             # Performance counters
             this_time = time.time()

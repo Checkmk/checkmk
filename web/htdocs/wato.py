@@ -475,14 +475,17 @@ def check_wato_filename(htmlvarname, name, what):
     if not re.match("^[-a-z0-9A-Z_]*$", name):
         raise MKUserError(htmlvarname, _("Invalid %s name. Only the characters a-z, A-Z, 0-9, _ and - are allowed.") % what)
 
-def create_wato_filename(title, what):
+def create_wato_filename(title, what, in_folder = None):
+    if in_folder == None:
+        in_folder = g_folder
+
     basename = convert_title_to_filename(title)
     c = 1
     name = basename
     while True:
-        if what == "folder" and name not in g_folder[".folders"]:
+        if what == "folder" and name not in in_folder[".folders"]:
             break
-        elif what == "file" and name + ".mk" not in g_folder[".files"]:
+        elif what == "file" and name + ".mk" not in in_folder[".files"]:
             break
         c += 1
         name = "%s-%d" % (basename, c)
@@ -573,6 +576,10 @@ def mode_file(phase):
             num_moved = move_hosts_to(selected_hosts, target_file)
             return None, _("Successfully moved %d hosts to %s") % (num_moved, target_file)
 
+        # Move to target folder (from import)
+        elif html.var("_bulk_movetotarget"):
+            return move_to_imported_folders(selected_hosts)
+
         elif html.var("_bulk_edit"):
             return "bulkedit"
 
@@ -615,6 +622,7 @@ def mode_file(phase):
 
         search_text = html.var("search")
         selected_hosts = get_hostnames_from_checkboxes()
+        at_least_one_imported = False
         for hostname in hostnames:
             if search_text and (search_text.lower() not in hostname.lower()):
                 continue
@@ -667,6 +675,13 @@ def mode_file(phase):
             html.write("</td>")
             html.write("</tr>\n")
 
+            # Remember if that host has a target folder (i.e. was imported with
+            # a folder information but not yet moved to that folder). If at least
+            # one host has a target folder, then we show an additional bulk action.
+            if effective.get("imported_folder"):
+                at_least_one_imported = True
+
+
         # bulk actions
         html.write('<tr class="data %s0"><td class=select>' % odd)
         html.jsbutton('_markall', 'X', 'javascript:wato_check_all(\'wato_select\');')
@@ -677,6 +692,8 @@ def mode_file(phase):
         html.button("_bulk_cleanup", _("Cleanup"))
         html.button("_bulk_inventory", _("Inventory"))
         host_move_combo(None)
+        if at_least_one_imported:
+            html.button("_bulk_movetotarget", _("Move to Target Folders"))
         html.write("</td></tr>\n")
 
         html.write("</table>\n")
@@ -978,6 +995,107 @@ def search_hosts_in_file(the_folder, the_file, crit):
         html.write("</table><br>\n")
 
     return len(found)
+
+
+def move_to_imported_folders(hosts):
+    c = wato_confirm( 
+              _("Confirm moving hosts"),
+              _('You are going to move the selected hosts to folders ' 
+                'representing their original folder location in the system '
+                'you did the import from. Please make sure that you have '
+                'done an <b>inventory</b> before moving the hosts.'))
+    if c == False: # not yet confirmed
+        return ""
+    elif not c:
+        return None # browser reload 
+    
+    # Create groups of hosts with the same target folder
+    targets = {}
+    for hostname in hosts:
+        host = g_hosts[hostname]
+        effective = effective_attributes(host, g_file) 
+        imported_folder = effective.get('imported_folder')
+        if imported_folder == None:
+            continue
+        targets.setdefault(imported_folder, []).append(hostname)
+
+        # Remove target folder information, now that the hosts are
+        # at their target position.
+        del host['imported_folder']
+
+    # Now handle each target folder
+    num_moved = 0
+    for imported_folder, hosts in targets.items():
+        # Next problem: The folder path in imported_folder refers 
+        # to the Alias of the folders, not to the internal file
+        # name. And we need to create folders not yet existing.
+        target_file = create_target_file_from_aliaspath(imported_folder)
+        num_moved += move_hosts_to(hosts, target_file) 
+
+    save_folder_config()
+    html.reload_sidebar() # refresh WATO snapin
+    return None, _("Successfully moved %d hosts to their original folder destinations.") % num_moved
+
+
+def create_target_file_from_aliaspath(aliaspath):
+    # The alias path is a '/' separated path of folder titles.
+    # An empty path is interpreted as root path. The actual file
+    # name is the host list with the name "Hosts". 
+    if aliaspath == "":
+        folder = g_root_folder
+    else:
+        parts = aliaspath.split("/")
+        folder = g_root_folder
+        while len(parts) > 0: 
+            # Look in current folder for subfolder with the target name
+            for name, f in folder.get(".folders", {}).items(): 
+                if f["title"] == parts[0]:
+                    folder = f
+                    parts = parts[1:]
+                    break
+            else: # not found. Create this folder
+                name = create_wato_filename(parts[0], "folder", folder)
+                new_folder = {
+                    ".name" : name,
+                    ".path" : folder[".path"] + (name,),
+                    "title" : parts[0],
+                    "roles" : folder["roles"],
+                    "attributes" : {}, 
+                    ".folders" : {},
+                    ".files" : {},
+                }
+                folder[".folders"][name] = new_folder
+                folder = new_folder
+                parts = parts[1:]
+
+    # Now folder points to the folder the host needs to be created
+    # in. In that folder we put the host into the host list "hosts.mk". 
+    if "hosts" not in folder[".files"]:
+        new_file = {
+            ".name" : "hosts.mk",
+            ".path" : folder[".path"] + ("hosts.mk",),
+            "title" : _("Hosts"),
+            "roles" : folder["roles"],
+            "attributes" : {},
+            "num_hosts" : 0, 
+        }
+        folder[".files"]["hosts.mk"] = new_file 
+        g_files[new_file[".path"]] = new_file
+
+    the_file = folder[".files"]["hosts.mk"]
+    return "/" + "/".join(the_file[".path"])
+
+
+
+
+
+
+
+ 
+
+
+
+
 
 
 #   +----------------------------------------------------------------------+
@@ -2364,6 +2482,25 @@ class TextAttribute(Attribute):
         if value == None:  # Host does not have this attribute
             value = ""
         return crit.lower() in value.lower() 
+
+# A simple text attribute that is not editable by the user.
+# It can be used to store context information from other
+# systems (e.g. during an import of a host database from
+# another system).
+class FixedTextAttribute(TextAttribute): 
+    def __init__(self, name, title, help = None):
+        TextAttribute.__init__(self, name, title, help, None)
+        self._mandatory = False
+
+    def render_input(self, value):
+        if value != None:
+            html.hidden_field("attr_" + self.name(), value)
+            html.write(value)
+
+    def from_html_vars(self):
+        return html.var("attr_" + self.name())
+
+
 
 
 class IPAddressAttribute(TextAttribute):

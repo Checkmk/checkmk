@@ -136,7 +136,7 @@ def check_if_common(item, params, info):
     elif len(params) == 5:
         err_warn, err_crit, targetspeed, bw_warn, bw_crit = params
     elif len(params) == 6:
-        err_warn, err_crit, targetspeed, bw_warn, bw_crit, allowed_operstates = params
+        err_warn, err_crit, targetspeed, bw_warn, bw_crit, targetstate = params
 
     for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets,  \
             inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
@@ -170,7 +170,7 @@ def check_if_common(item, params, info):
             operstatus = if_statename(str(ifOperStatus))
             if targetstate and  \
                 (ifOperStatus != targetstate 
-                and not (type(targetstate) == list and ifOperStatus in targetstate)):
+                and not (type(targetstate) in [ list, tuple ] and ifOperStatus in targetstate)):
                 state = 2
                 infotext += "(%s!!) " % operstatus
             else:

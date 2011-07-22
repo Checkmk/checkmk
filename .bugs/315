@@ -1,0 +1,11 @@
+Title: embedded PNP-graphs broken if none are there
+Component: multisite
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-07-22 10:56:11
+Class: nastiness
+
+If you got to the service details of a service without performance
+data, then the embedded PNP-Graph area is not empty but shows
+seven broken images.

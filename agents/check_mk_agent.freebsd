@@ -69,13 +69,19 @@ echo '<<<check_mk>>>'
 echo Version: 1.1.11i2
 echo AgentOS: freebsd
 
+
+
+osver="$(uname -r)"
+
+
 # Partitionen (-P verhindert Zeilenumbruch bei langen Mountpunkten)
 # Achtung: NFS-Mounts werden grundsaetzlich ausgeblendet, um
 # Haenger zu vermeiden. Diese sollten ohnehin besser auf dem
 # Server, als auf dem Client ueberwacht werden.
 
 echo '<<<df>>>'
-# no special zfs handling so far, actually you won't even SEE zfs fs in this check. Need testers.
+# no special zfs handling so far, the ZFS.pools plugin has been tested to
+# work on FreeBSD
 df -kTP -t ufs | egrep -v '(Filesystem|devfs|procfs|fdescfs|basejail)'
 
 # Check NFS mounts by accessing them with stat -f (System
@@ -146,12 +152,19 @@ echo `date +%s` - `sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' | tr 
 #   cfggen 0 DISPLAY | egrep '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' | sed -e 's/ *//g' -e 's/:/ /'
 #fi
 
-# Multipathgeraete
-# remove, CAM doesn't speak multipath so far.
+
+# Multipathing is supported in FreeBSD by now
+# see "gmultipath" or 
+# http://www.mywushublog.com/2010/06/freebsd-and-multipath/
+# it's queried using "gmultipath status" and seems to the 2nd-most 
+# straightforward multipath implementation since AIX
+
+
 
 # Soft-RAID
 # need to replace with extra section for GEOM and ZFS because of larger /
 # different featuresets.
+
 
 # Performancecounter Platten
 #echo '<<<diskstat>>>'
@@ -164,10 +177,16 @@ echo `date +%s` - `sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' | tr 
 #cat /proc/vmstat /proc/stat
 
 # Network device statistics (Packets, Collisions, etc)
-# picking the interface dubbed "Link/Num" gives the phys. interface, otherwise we don't see error counters.
+# only the "Link/Num" interface has all counters.
 echo '<<<netctr>>>'
 date +%s
-netstat -inb | egrep -v '(^Name|lo|plip)' | grep Link | awk '{print $1" "$8" "$5" "$6" "$7" 0 0 0 0 "$11" "$9" "$10" 0 0 0 0 0"}'
+if [ "$(echo $osver | cut -f1 -d\. )" -gt "8" ]; then
+    netstat -inb | egrep -v '(^Name|lo|plip)' | grep Link | awk '{print $1" "$8" "$5" "$6" "$7" 0 0 0 0 "$11" "$9" "$10" 0 0 0 0 0"}'
+else 
+    # pad output for freebsd 7 and before
+    netstat -inb | egrep -v '(^Name|lo|plip)' | grep Link | awk '{print $1" "$7"
+"$5" "$6" 0 0 0 0 0 "$10" "$8" "$9" 0 0 "$11" 0 0"}'
+fi
 
 
 # IPMI-Data (Fans, CPU, temperature, etc)
@@ -181,44 +200,6 @@ if which ipmitool >/dev/null ; then
         | grep -v ' discrete '
 fi
 
-# IPMI data via ipmi-sensors (of freeipmi). Please make sure, that if you
-# have installed freeipmi that IPMI is really support by your hardware.
-# The agent tries to avoid hanging forever by setting a limit of 300 seconds
-# for the first run (where the cache is created). If ipmi-sensors runs into
-# that timeout, it leaves and empty cache file. We skip this check forever
-# if we find that empty cache file.
-#sdrcache=/var/cache/.freeipmi/sdr-cache/sdr-cache-$(hostname).127.0.0.1
-#if which ipmi-sensors >/dev/null && [ ! -e "$sdrcache" -o -s "$sdrcache" ]
-#then
-#    echo '<<<ipmi_sensors>>>'
-#    # No cache file existing? => Impose a high time limit. We do not suffice
-#    # in creating the cache we most probably run on a hardware where this tool
-#    # is hanging forever. We make sure that we never try again in that case!
-#    if [ ! -e "$sdrcache" ]
-#    then
-#        WAITMAX="waitmax 300"
-#    elif tail --bytes 2 < "$sdrcache" | od -t x2 | grep -q 0a0a
-#    then
-#        WAITMAX="waitmax 3"
-#    else
-#        # Cache file corrupt. Must end with two linefeeds.
-#        rm -f $sdrcache
-#  WAITMAX=
-#    fi
-#    # Newer ipmi-sensors version have new output format; Legacy format can be used
-#    if ipmi-sensors --help | grep -q legacy-output; then
-#        IPMI_FORMAT="--legacy-output"
-#    else
-#        IPMI_FORMAT=""
-#    fi
-#    for class in Temperature 'Power Unit' Fan
-#    do
-#        $WAITMAX ipmi-sensors $IPMI_FORMAT --sdr-cache-directory /var/cache -g "$class" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
-#        # In case of a timeout immediately leave loop. 
-#  if [ $? = 255 ] ; then break ; fi
-#        WAITMAX="waitmax 3"
-#    done
-#fi
 
 # State of LSI MegaRAID controller via MegaCli. You can download that tool from:
 # http://www.lsi.com/DistributionSystem/AssetDocument/support/downloads/megaraid/miscellaneous/linux/2.00.15_Linux_MegaCLI.zip

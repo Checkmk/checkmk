@@ -1,0 +1,18 @@
+Title: Change agent NTP check to skip reverse resolution of NTP clocks
+Component: checks
+Benefit: 5
+State: open
+Cost: 3
+Date: 2011-07-21 10:54:02
+Class: feature
+
+The ntpq -p call will do one reverse lookup per NTP clock.
+This is slowing down check_mk_agent by a moment for systems 
+with few clocks and fast DNS servers, or not slowing down at all when 
+just using files as hosts source.
+BUT if there is any rDNS issue (think windows admins doing the DNS) or if theres
+notable latency to the DNS servers (i.e. when using "pool pool.ntp.org") then this 
+will slow down the agent run by many seconds.
+
+We should discuss switching to ntpq -n -p to disable hostname lookups.
+(Suggestion from "Sonic" on the mailing list)

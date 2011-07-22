@@ -1,0 +1,10 @@
+Title: WARNING - Got only 15 out of 18 infos: which?
+Component: core
+Benefit: 1
+State: open
+Cost: 2
+Date: 2011-07-22 10:49:16
+Class: nastiness
+
+When this error occurs, we should output the list of
+missing agent sections (i.e. *which* information is missing).

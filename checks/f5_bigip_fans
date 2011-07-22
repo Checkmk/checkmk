@@ -32,6 +32,9 @@
 # sysCpuGroup
 
 
+f5_bigip_fans_default_levels = (2000,500)
+
+
 def f5_bigip_fans_genitem(fanid):
     fanid = int(fanid)
     if   fanid < 10:
@@ -47,7 +50,7 @@ def inventory_f5_bigip_fans(checkname, info):
     inventory = []
     for line in info:
         for fanentry in line:
-            inventory.append((f5_bigip_fans_genitem(fanentry[0]), None))
+            inventory.append((f5_bigip_fans_genitem(fanentry[0]), "f5_bigip_fans_default_levels"))
 
     return inventory
 
@@ -57,12 +60,7 @@ def check_f5_bigip_fans(item, _no_params, info):
         for fanentry in line:
             if f5_bigip_fans_genitem(fanentry[0]) == item:
                 speed = int(fanentry[1])
-                if "Chassis" in item:
-                # the "normal" speed is around 10K RPM
-                    warn, crit = (7500, 2000)
-                else:
-                # F5's CPU Fans run around 6K RPM
-                    warn, crit = (4000, 1200)
+                warn, crit = f5_bigip_fans_default_levels
                 msgtxt = " - speed is %d rpm" % speed
                 if speed > warn:
                     return (0, "OK" + msgtxt)

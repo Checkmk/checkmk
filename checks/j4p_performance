@@ -25,6 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 j4p_performance_mem_default_levels = ( 1000, 2000 ) # MB
+j4p_performance_threads_default_levels = ( 80, 100 ) # Number of threads
+
 
 def j4p_performance_parse(info):
     parsed = {}
@@ -34,9 +36,15 @@ def j4p_performance_parse(info):
 	entry[var] = value
     return parsed
 
-def inventory_j4p_performance_mem(checktype, info):
+
+def inventory_j4p_performance(checktype, info):
     parsed = j4p_performance_parse(info)
-    return [ (k, "j4p_performance_mem_default_levels") for k in parsed ]
+    if checktype == 'j4p_performance.mem':
+        levels = 'j4p_performance_mem_default_levels'
+    elif checktype == 'j4p_performance.threads':
+        levels = 'j4p_performance_threads_default_levels'
+    return [ (k, levels) for k in parsed ]
+
 
 def check_j4p_performance_mem(item, params, info):
     warn, crit = params
@@ -59,5 +67,44 @@ def check_j4p_performance_mem(item, params, info):
 	return (0, "OK - " + infotext, perfdata)
 
 
-check_info["j4p_performance.mem"] = ( check_j4p_performance_mem, "JMX %s Memory", 1, inventory_j4p_performance_mem )
+def check_j4p_performance_threads(item, params, info):
+    warn, crit = params
+    parsed = j4p_performance_parse(info)
+    if item not in parsed:
+        return (3, "UNKNOWN - data not found in agent output")
+    d = parsed[item]
 
+    perfdata = []
+    output   = []
+    status   = 0
+    for key in [ 'ThreadCount', 'DeamonThreadCount', 'PeakThreadCount', 'TotalStartedThreadCount' ]:
+        val = saveint(d[key])
+        if key == 'ThreadCount':
+            if val >= crit:
+                status = 2
+            elif val >= warn:
+                status = 1
+        perfdata.append((key, val))
+        output.append('%s: %d' % (key, val))
+    return (status, '%s - %s' % (nagios_state_names[status], ', '.join(output)), perfdata)
+
+
+def check_j4p_performance_uptime(item, _unused, info):
+    parsed = j4p_performance_parse(info)
+    if item not in parsed:
+        return (3, "UNKNOWN - data not found in agent output")
+    uptime = saveint(parsed[item]['Uptime']) / 1000
+
+    seconds = uptime % 60
+    rem = uptime / 60
+    minutes = rem % 60
+    hours = (rem % 1440) / 60
+    days = rem / 1440
+    now = int(time.time())
+    since = time.strftime("%c", time.localtime(now - uptime))
+    return (0, "OK - up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds), [ ("uptime", uptime) ])
+
+
+check_info["j4p_performance.mem"]     = (check_j4p_performance_mem,     "JMX %s Memory",  1, inventory_j4p_performance)
+check_info["j4p_performance.threads"] = (check_j4p_performance_threads, "JMX %s Threads", 1, inventory_j4p_performance)
+check_info["j4p_performance.uptime"]  = (check_j4p_performance_uptime,  "JMX %s Uptime",  1, inventory_j4p_performance)

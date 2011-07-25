@@ -26,7 +26,9 @@
     * mk_oracle: EXCLUDE_<sid>=ALL or EXCLUDE_<sid>=oracle_sessions can be
     used to exclude specific checks now
     * mk_oracle: Added optional configuration file to configure the new options
-    * j4p_performance: Supports basic/digest auth now
+    * j4p_performance agent plugin: Supports basic/digest auth now
+    * New checks j4p_performance.threads and j4p_performance.uptime which
+      track the number of threads and the uptime of a JMX process
 
     Multisite:
     * FIX: make non-Ascii characters in services names work again

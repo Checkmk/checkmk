@@ -20,6 +20,12 @@
     * vbox_guest: new check for checking guest additions of Linux virtual box hosts
     * if/if64: Fixed bug in operstate detection when using old tuple based params
     * if/if64: Fixed bug in operstate detection when using tuple of valid operstates
+    * mk_oracle: Added caching of results to prevent problems with long
+    running SQL queries. Cache is controlled by CACHE_MAXAGE var which is preset to
+    120 seconds 
+    * mk_oracle: EXCLUDE_<sid>=ALL or EXCLUDE_<sid>=oracle_sessions can be
+    used to exclude specific checks now
+    * mk_oracle: Added optional configuration file to configure the new options
 
     Multisite:
     * FIX: make non-Ascii characters in services names work again

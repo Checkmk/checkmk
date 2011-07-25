@@ -1,16 +1,19 @@
 #!/usr/bin/python
 
-import urllib, sys, os
+import urllib2, sys, os
 
-server = "localhost"
-port = 8080
+server   = "localhost"
+port     = 8080
+user     = "jmx4perl"
+password = "J4PisOK"
+mode     = "digest"
 instance = None
 
 vars = [
  ( "java.lang:type=Memory/NonHeapMemoryUsage/used",     "NonHeapMemoryUsage" ),
  ( "java.lang:type=Memory/HeapMemoryUsage/used",        "HeapMemoryUsage" ),
  ( "java.lang:type=Threading/ThreadCount",              "ThreadCount" ),
- ( "java.lang:type=Threading/DaemonhreadCount",         "DeamonThreadCount" ),
+ ( "java.lang:type=Threading/DaemonThreadCount",        "DeamonThreadCount" ),
  ( "java.lang:type=Threading/PeakThreadCount",          "PeakThreadCount" ),
  ( "java.lang:type=Threading/TotalStartedThreadCount",  "TotalStartedThreadCount" ),
  ( "java.lang:type=Runtime/Uptime",                     "Uptime" ),
@@ -31,11 +34,30 @@ if os.path.exists(conffile):
 import socket
 socket.setdefaulttimeout(1.0)
 
+
+def init_auth():
+    if user and password:
+        passwdmngr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+        passwdmngr.add_password(None, "http://%s:%d/" % (server, port), user, password)
+        if mode == 'digest':
+            authhandler = urllib2.HTTPDigestAuthHandler(passwdmngr)
+        else:
+            authhandler = urllib2.HTTPBasicAuthHandler(passwdmngr)
+        opener = urllib2.build_opener(authhandler)
+        urllib2.install_opener(opener)
+
+
 def fetch_var(server, port, path):
     url = "http://%s:%d/j4p/read/%s" % (server, port, path)
-    json = urllib.urlopen(url).read()
-    return eval(json)["value"]
+    json = urllib2.urlopen(url).read()
+    obj = eval(json)
+    if obj.get('status', 200) == 404:
+        sys.stderr.write('ERROR: Invalid response when fetching url %s\n' % url)
+        sys.stderr.write('       Response: %s\n' % json)
+    return obj.get('value', None)
 
+
+init_auth()
 
 first = True
 for path, title in vars:

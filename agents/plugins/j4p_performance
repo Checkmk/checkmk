@@ -19,6 +19,19 @@ vars = [
  ( "java.lang:type=Runtime/Uptime",                     "Uptime" ),
 ]
 
+app_vars = [
+ ('*:j2eeType=WebModule,name=/--/localhost/-/%(app)s,*/state', 'Running'),
+ ('*:path=/-/%(app)s,type=Manager,*/activeSessions',           'Sessions'),
+]
+
+servlet_vars = [
+ ('*:j2eeType=Servlet,WebModule=/--/localhost/-/%(app)s,name=%(servlet)s,*/requestCount', 'Requests')
+]
+
+# The servlets dictionary keys represent an application (webmodule) which holds a
+# list of servlets which are available within this application
+servlets = {}
+
 conffile = os.getenv("MK_CONFDIR", "/etc/check_mk") + "/j4p.conf"
 
 if instance == None:
@@ -33,6 +46,17 @@ if os.path.exists(conffile):
 # default socket timeout. We are local here so  set it to 1 second.
 import socket
 socket.setdefaulttimeout(1.0)
+
+# Convert servlet config definitions and append it to the vars definitions
+for app, servlets  in servlets.iteritems():
+    # Add application specific vars
+    for var in app_vars:
+        vars.append(((app, None), var[0] % {'app': app}, var[1]))
+
+    # Add servlet specific checks
+    for servlet in servlets:
+        for var in servlet_vars:
+            vars.append(((app, servlet), var[0] % {'app': app, 'servlet': servlet}, var[1]))
 
 
 def init_auth():
@@ -50,27 +74,60 @@ def init_auth():
 def fetch_var(server, port, path):
     url = "http://%s:%d/j4p/read/%s" % (server, port, path)
     json = urllib2.urlopen(url).read()
-    obj = eval(json)
+
+    try:
+        obj = eval(json)
+    except Exception, e:
+        sys.stderr.write('ERROR: Invalid json code (%s)\n' % e)
+        sys.stderr.write('       Response %s\n' % json)
+        return None
+
     if obj.get('status', 200) == 404:
         sys.stderr.write('ERROR: Invalid response when fetching url %s\n' % url)
         sys.stderr.write('       Response: %s\n' % json)
-    return obj.get('value', None)
+
+    # Only take the value of the object. If the value is an object
+    # take the first items first value.
+    # {'Catalina:host=localhost,path=\\/test,type=Manager': {'activeSessions': 0}}
+    val = obj.get('value', None)
+    if isinstance(val, dict):
+        item = val[val.keys()[0]]
+        return item[item.keys()[0]]
+    else:
+        return val
 
 
 init_auth()
 
+# Fetch the general information first
 first = True
-for path, title in vars:
+for var in vars:
+    app, servlet = None, None
+    if len(var) == 2:
+        path, title = var
+    else:
+        (app, servlet), path, title = var
+
+    if servlet:
+        item = [instance, app, servlet]
+    elif app:
+        item = [instance, app]
+    else:
+        item = [instance]
+
     try:
-	value = fetch_var(server, port, path)
-	if first:
-	    first = False
-	    sys.stdout.write("<<<j4p_performance>>>\n")
-        sys.stdout.write("%s %-30s %s\n" % (instance, title, value))
+        value = fetch_var(server, port, path)
     except IOError:
-	sys.exit(1)
+        sys.exit(1)
     except socket.timeout:
-	sys.exit(1)
+        sys.exit(1)
     except:
         # Simply ignore exceptions. Need to be removed for debugging
-	pass
+        continue
+
+    if first:
+        first = False
+        sys.stdout.write("<<<j4p_performance>>>\n")
+
+    sys.stdout.write("%s %s %s\n" % (','.join(item), title, value))
+sys.exit(0)

@@ -29,6 +29,9 @@
     * j4p_performance agent plugin: Supports basic/digest auth now
     * New checks j4p_performance.threads and j4p_performance.uptime which
       track the number of threads and the uptime of a JMX process
+    * j4p_performance can fetch app and servlet specific status data. Fetching
+      the running state, number of sessions and number of requests now. Can be
+      extended via agent configuration (j4p.cfg).
     * Added some preflight checks to --scan-parents code
 
     Multisite:

@@ -114,8 +114,15 @@ def page_handler():
             else:
                 newmode = result
 
+            # If newmode is False, then we shall immediately abort.
+            # This is e.g. the case, if the page outputted non-HTML
+            # data, such as a tarball (in the export function). We must
+            # be sure not to output *any* further data in that case.
+            if newmode == False:
+                return
+
             # if newmode is not None, then the mode has been changed
-            if newmode != None:
+            elif newmode != None:
                 if newmode == "": # no further information: configuration dialog, etc.
                     if action_message:
                         html.message(action_message)

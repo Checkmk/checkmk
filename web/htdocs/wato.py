@@ -2645,6 +2645,8 @@ def declare_host_tag_attributes():
     if configured_host_tags != config.host_tags:
         # Remove host tag attributes from list, if existing
         host_attributes = [ attr for attr in host_attributes if not attr.name().startswith("tag_") ]
+
+        # Also remove those attributes from the speed-up dictionary host_attribute
         for attr in host_attribute.values():
             if attr.name().startswith("tag_"):
                 del host_attribute[attr.name()]
@@ -2972,13 +2974,15 @@ class API:
 
     # Get all effective data of a host. The_file must be returned by get_file()
     def get_host(self, the_file, hostname):
+        declare_host_tag_attributes()
         host = the_file["hosts"][hostname]
         eff = effective_attributes(host, the_file)
         eff["name"] = hostname
         return eff
 
-    # Return displayable information about host
+    # Return displayable information about host (call with with result vom get_host())
     def get_host_painted(self, host): 
+        declare_host_tag_attributes()
         result = []
         for attr in host_attributes:   
             attrname = attr.name()

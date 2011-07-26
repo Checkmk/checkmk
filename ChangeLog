@@ -29,6 +29,7 @@
     * j4p_performance agent plugin: Supports basic/digest auth now
     * New checks j4p_performance.threads and j4p_performance.uptime which
       track the number of threads and the uptime of a JMX process
+    * Added some preflight checks to --scan-parents code
 
     Multisite:
     * FIX: make non-Ascii characters in services names work again

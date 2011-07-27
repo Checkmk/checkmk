@@ -1,0 +1,22 @@
+title: Check uptime of Java application server via JMX and j4p.war
+agents: linux
+author: Lars Michelsen <lm@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This checks uses the JSON HTTP service of j4p (from jmx4perl) to
+ monitor the uptime of a Java application server like
+ Tomcat or JBoss.
+
+ Take a look at the {j4p_performance.mem} manpage for instructions
+ on how to set up the needed agent plugin.
+
+item:
+ The instance name as configured in {j4p.conf} with the variable
+ {instance}.
+
+perfdata:
+ One variable {uptime} with the uptime in seconds since program start.
+
+inventory:
+ One check is created for each JMX instance sent by the agent.

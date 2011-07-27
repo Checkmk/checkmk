@@ -20,6 +20,19 @@
     * vbox_guest: new check for checking guest additions of Linux virtual box hosts
     * if/if64: Fixed bug in operstate detection when using old tuple based params
     * if/if64: Fixed bug in operstate detection when using tuple of valid operstates
+    * mk_oracle: Added caching of results to prevent problems with long
+    running SQL queries. Cache is controlled by CACHE_MAXAGE var which is preset to
+    120 seconds 
+    * mk_oracle: EXCLUDE_<sid>=ALL or EXCLUDE_<sid>=oracle_sessions can be
+    used to exclude specific checks now
+    * mk_oracle: Added optional configuration file to configure the new options
+    * j4p_performance agent plugin: Supports basic/digest auth now
+    * New checks j4p_performance.threads and j4p_performance.uptime which
+      track the number of threads and the uptime of a JMX process
+    * j4p_performance can fetch app and servlet specific status data. Fetching
+      the running state, number of sessions and number of requests now. Can be
+      extended via agent configuration (j4p.cfg).
+    * Added some preflight checks to --scan-parents code
 
     Multisite:
     * FIX: make non-Ascii characters in services names work again

@@ -262,7 +262,7 @@ def role_of_user(u):
 def may(permname):
     # handle case where declare_permission is done after login
     # and permname also not contained in save configuration
-    if permname not in permissions:
+    if permname not in user_permissions:
         perm = permissions_by_name.get(permname)
         if not perm: # Object does not exists, e.g. sidesnap.multisite if not is_multisite()
             return False

@@ -3139,8 +3139,17 @@ def collect_hosts(the_thing):
         return effective_hosts
 
 def call_hooks(name, *args):
+    n = 0
     for hk in hooks.get(name, []):
-        hk(*args)
+        n += 1
+        try:
+            hk(*args)
+        except Exception, e:
+            import traceback, StringIO
+            txt = StringIO.StringIO()
+            t, v, tb = sys.exc_info()
+            traceback.print_exception(t, v, tb, None, txt)
+            html.show_error("<h3>" + _("Error executing hook") + " %s #%d: %s</h3><pre>%s</pre>" % (name, n, e, txt.getvalue()))
 
 def call_hook_host_changed(the_thing): # called for file or folder
     if "hosts-changed" in hooks:

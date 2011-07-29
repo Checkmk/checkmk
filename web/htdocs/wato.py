@@ -2566,6 +2566,18 @@ class IPAddressAttribute(TextAttribute):
 
         return value.lower().startswith(crit.lower().strip("*"))
 
+# Helper function for checking if an ip address is valid
+def is_valid_ip_address(ip):
+    try:
+        parts = ip.split('.')
+        if len(parts) != 4:
+            raise Exception()
+        for x in parts:
+            if int(x) < 0 or int(x) > 255:
+                raise Exception()
+    except:
+        return False
+    return True
 
 # A text attribute that is stored in a Nagios custom macro
 class NagiosTextAttribute(TextAttribute):

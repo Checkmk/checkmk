@@ -33,6 +33,8 @@
       the running state, number of sessions and number of requests now. Can be
       extended via agent configuration (j4p.cfg).
     * Added some preflight checks to --scan-parents code
+    * New checks netapp_cluster, netapp_vfiler for checking NetAPP filer 
+      running as cluster or running vfilers.
 
     Multisite:
     * FIX: make non-Ascii characters in services names work again

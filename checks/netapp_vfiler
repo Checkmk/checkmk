@@ -1,0 +1,72 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+
+
+
+
+# netappFiler(1) vfiler(16) vfTable (3) vfEntry (1) vfName (2) 
+#                                                   vfState(9)
+
+
+def inventory_netapp_vfiler(checkname, info):
+
+    inventory = []
+    for line in info:
+        # If we find an entry consisting of name and status, add it to inventory.
+        # otherwise we dont inventorize anything.
+        if len(info) == 2:
+            inventory.append([line[0], None])
+
+    return inventory
+
+def check_netapp_vfiler(item, _no_params, info):
+
+    for vfEntry in info:
+        vfName, vfState = vfEntry
+        if vfName == item:
+            if vfState == "2":
+                return (0, "OK - vFiler is running")
+            elif vfState == "1":
+                return (2, "CRIT - vFiler is stopped!!")
+            else:
+                return (3, "UNKOWN - vFiler status unknown")
+    return (3, "UNKNOWN - vFiler not found in SNMP output")
+
+
+# get the vfName and vfState from the vfEntry table
+snmp_info["netapp_vfiler"] = \
+    ( ".1.3.6.1.4.1.789.1.16.3.1", [
+       "2", "9", ])
+
+
+check_info["netapp_vfiler"] = (check_netapp_vfiler, "vFiler Status %s", 0, inventory_netapp_vfiler)
+
+
+snmp_scan_functions["netapp_vfiler"] = \
+    lambda oid: "netapp release" in oid("1.3.6.1.2.1.1.1.0").lower()
+

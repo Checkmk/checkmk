@@ -1,0 +1,17 @@
+title: Check vFiler status on NetAPP Ontap filers
+agents: snmp
+author: Florian Heigl <fh@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the status of any vFiler instances on a NetAPP filer. 
+ It alerts the user if one of them is not in status "running" (will be in critical state)
+
+inventory: 
+ The check creates one service per vFiler found.
+
+item:
+ A string naming the vFiler as defined on the Filer.
+
+perfdata:
+ The check does not generate perfdata.

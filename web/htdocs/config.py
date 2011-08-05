@@ -24,6 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# The following debug code can be used to tackle a mod_python
+# problem when using the local hierarchy for plugins that refer
+# to the config module.
+# import time, os
+# fn = "/tmp/config.load.%d" % os.getpid()
+# if os.path.exists(fn):
+#     raise Exception("Mist: config zweimal geladen!!")
+# 
+# file(fn, "a").write("[%d] Geladen: %s\n" % (os.getpid(), time.time()))
+
 import os, pprint, glob
 from lib import *
 import defaults
@@ -252,7 +262,7 @@ def role_of_user(u):
 def may(permname):
     # handle case where declare_permission is done after login
     # and permname also not contained in save configuration
-    if permname not in permissions:
+    if permname not in user_permissions:
         perm = permissions_by_name.get(permname)
         if not perm: # Object does not exists, e.g. sidesnap.multisite if not is_multisite()
             return False

@@ -744,7 +744,7 @@ class html:
                 omd_mode = 'own'
         return (omd_mode, omd_site)
 
-    def begin_foldable_container(self, treename, id, isopen, title):
+    def begin_foldable_container(self, treename, id, isopen, title, indent = True):
         # try to get persistet state of tree
         tree_state = weblib.get_tree_states(treename)
         if id in tree_state:
@@ -763,8 +763,9 @@ class html:
         else:
             self.write('<b class="treeangle title" class=treeangle %s>%s</b><br>' % 
                      (onclick, title))
-        self.write('<ul class="treeangle" style="display: %s" id="tree.%s.%s">' % 
-             ((not isopen) and "none" or "",  treename, id))
+        indent_style = not indent and "padding-left: 0px; " or ""
+        self.write('<ul class="treeangle" style="%s display: %s" id="tree.%s.%s">' % 
+             (indent_style, (not isopen) and "none" or "",  treename, id))
     
     def end_foldable_container(self):
         self.write("</ul>")

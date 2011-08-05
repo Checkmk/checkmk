@@ -192,26 +192,6 @@ function mkSearchKeyDown(e, oField) {
                 }
                 return;
             break;
-            
-            // Up arrow
-            // case 38:
-            //     if(!mkSearchResultShown()) {
-            //         mkSearch(e, oField);
-            //     }
-            //     
-            //     mkSearchMoveElement(-1);
-            //     return false;
-            // break;
-            
-            // Down arrow
-            // case 40:
-            //     if(!mkSearchResultShown()) {
-            //         mkSearch(e, oField);
-            //     }
-            //     
-            //     mkSearchMoveElement(1);
-            //     return false;
-            // break;
     }
     oldValue = oField.value;
 }

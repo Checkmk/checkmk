@@ -47,6 +47,9 @@
     * Introduced basic infrastructure for multilanguage support in Multisite
     * Make 'Views' snapin foldable
     * Replace old main view by dashboard.
+    * Sidebar: Snapins can register for a triggered reload after a nagios
+      restart has been detected. Check interval is 30 seconds for now.
+    * Quicksearch snapin: Reloads host lists after a detected nagios restart.
 
     WATO:
     * Configration files can now be administered via the WEB UI

@@ -89,12 +89,13 @@ def render_searchform():
     html.write("</script>\n")
 
 sidebar_snapins["search"] = {
-    "title" : _("Quicksearch"),
-    "description" : _("Interactive search field for direct access to hosts"),
-    "author" : "Lars Michelsen",
-    "render" : render_searchform,
-    "allowed" : [ "user", "admin", "guest" ],
-    "styles" : """
+    "title":       _("Quicksearch"),
+    "description": _("Interactive search field for direct access to hosts"),
+    "author":      "Lars Michelsen",
+    "render":      render_searchform,
+    "restart":     True,
+    "allowed":     [ "user", "admin", "guest" ],
+    "styles":      """
 #mk_side_search {
     width: %dpx;
     padding: 0;

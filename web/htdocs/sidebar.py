@@ -147,6 +147,7 @@ def page_side():
     sidebar_head()
     user_config = load_user_config()
     refresh_snapins = []
+    restart_snapins = []
 
     html.write('<div id="side_content">')
     for name, state in user_config:
@@ -157,14 +158,21 @@ def page_side():
             refresh_time = sidebar_snapins.get(name).get("refresh", 0)
             if refresh_time > 0:
                 refresh_snapins.append([name, refresh_time, refresh_url])
+
+            restart = sidebar_snapins.get(name, {}).get('restart', False)
+            if restart:
+                restart_snapins.append(name)
     html.write('</div>')
     sidebar_foot()
     html.write('</div>')
 
     html.write("<script language=\"javascript\">\n")
+    if restart_snapins:
+        html.write("sidebar_restart_time = %s\n" % time.time())
     html.write("registerEdgeListeners();\n")
     html.write("setSidebarHeight();\n")
     html.write("refresh_snapins = %r;\n" % refresh_snapins)
+    html.write("restart_snapins = %r;\n" % restart_snapins)
     html.write("sidebar_scheduler();\n")
     html.write("window.onresize = function() { setSidebarHeight(); }\n")
     html.write("</script>\n")
@@ -223,6 +231,17 @@ def snapin_exception(e):
         html.write("<div class=snapinexception>\n"
                 "<h2>Error</h2>\n"
                 "<p>%s</p></div>" % e)
+
+def ajax_nagios_restarted():
+    # Tells the requestor the "since" time or the program start time
+    # of the newest running instance depending on which is newer
+    since = float(html.var('since', 0))
+    newest = since
+    for site in html.site_status.values():
+        prog_start = site.get("program_start", 0)
+        if prog_start > newest:
+            newest = prog_start
+    html.write(str(newest))
 
 def ajax_openclose():
     config = load_user_config()

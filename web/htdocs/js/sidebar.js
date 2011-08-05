@@ -532,7 +532,12 @@ function scrollWheel(event){
 // TODO: The sidebar cannot longer be embedded. We can use relative
 // links again and do not need to know the base url any longer :-)
 
+// The refresh snapins do reload after a defined amount of time
 refresh_snapins = null;
+// The restart snapins are notified about the restart of the nagios instance(s)
+restart_snapins = null;
+// Contains a timestamp which holds the time of the last nagios restart handling
+sidebar_restart_time = null;
 
 // Removes a snapin from the sidebar without reloading anything
 function removeSnapin(id, code) {
@@ -593,9 +598,34 @@ function switch_site(switchvar) {
        everything is affected by the switch */
 }
 
+/*
+ * Is called as response handler of the generic nagios process restarted
+ * check. If an instance start time is newer than the current stored time
+ * the function triggers a reload of all snapins which have been registered
+ * as restart snapins.
+ */
+function handle_nagios_restarted(_unused, response) {
+    var t = parseFloat(response);
+    if(sidebar_restart_time == t)
+        return;
+    // Some instance has been restarted. Trigger the snapins
+    for (var i in restart_snapins) {
+        var name = restart_snapins[i];
+        get_url("sidebar_snapin.py?name=" + name, updateContents, "snapin_" + name);
+    }
+    sidebar_restart_time = t;
+}
+
 function sidebar_scheduler() {
     var timestamp = Date.parse(new Date()) / 1000;
     var newcontent = "";
+
+    // One generic request to detect if nagios instance(s) have been restarted
+    // For testing hardcoded interval of 30 seconds
+    if(timestamp % 30 == 0 && sidebar_restart_time !== null)
+        get_url('nagios_restarted.py?since=' + escape(sidebar_restart_time),
+                                                       handle_nagios_restarted);
+
     for (var i in refresh_snapins) { 
         var name    = refresh_snapins[i][0];
         var refresh = refresh_snapins[i][1];

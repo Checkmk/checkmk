@@ -177,6 +177,7 @@ sidebar_snapins["hostgroups"] = {
     "description" : _("Directs links to all host groups"),
     "author" : "Mathias Kettner",
     "render" : lambda: render_groups("host"),
+    "restart":     True,
     "allowed" : [ "user", "admin", "guest" ]
 }
 sidebar_snapins["servicegroups"] = {
@@ -184,6 +185,7 @@ sidebar_snapins["servicegroups"] = {
     "description" : _("Direct links to all service groups"),
     "author" : "Mathias Kettner",
     "render" : lambda: render_groups("service"),
+    "restart":     True,
     "allowed" : [ "user", "admin", "guest" ]
 }
 
@@ -264,6 +266,7 @@ sidebar_snapins["hosts"] = {
     "render" : lambda: render_hosts("hosts"),
     "allowed" : [ "user", "admin", "guest" ],
     "refresh" : 60,
+    "restart":     True,
     "styles" : snapin_allhosts_styles,
 }
 
@@ -274,6 +277,7 @@ sidebar_snapins["summary_hosts"] = {
     "render" : lambda: render_hosts("summary"),
     "allowed" : [ "user", "admin", "guest" ],
     "refresh" : 60,
+    "restart":     True,
     "styles" : snapin_allhosts_styles,
 }
 
@@ -284,6 +288,7 @@ sidebar_snapins["problem_hosts"] = {
     "render" : lambda: render_hosts("problems"),
     "allowed" : [ "user", "admin", "guest" ],
     "refresh" : 60,
+    "restart":     True,
     "styles" : snapin_allhosts_styles,
 }
 

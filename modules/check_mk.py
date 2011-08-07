@@ -212,6 +212,7 @@ NEGATE         = '@negate'       # negation in boolean lists
 agent_port                         = 6556
 tcp_connect_timeout                = 5.0
 do_rrd_update                      = False
+delay_precompile                   = False  # delay Python compilation to Nagios execution
 check_submission                   = "pipe" # alternative: "file"
 aggr_summary_hostname              = "%s-s"
 agent_min_version                  = 0 # warn, if plugin has not at least version
@@ -2079,9 +2080,24 @@ def precompile_hostcheck(hostname):
 
     compiled_filename = precompiled_hostchecks_dir + "/" + hostname
     source_filename = compiled_filename + ".py"
-    output = file(source_filename, "w")
+
+    output = file(source_filename + ".new", "w")
     output.write("#!/usr/bin/python\n")
     output.write("# encoding: utf-8\n")
+
+    # Self-compile: replace symlink with precompiled python-code, if
+    # we are run for the first time
+    if delay_precompile:
+        output.write("""
+import os
+if os.path.islink(%(dst)r):
+    import py_compile
+    os.remove(%(dst)r)
+    py_compile.compile(%(src)r, %(dst)r, %(dst)r, True)
+    os.chmod(%(dst)r, 0755)
+
+""" % { "src" : source_filename, "dst" : compiled_filename })
+
     output.write(stripped_python_file(modules_dir + "/check_mk_base.py"))
 
     # initialize global variables
@@ -2236,9 +2252,26 @@ no_inventory_possible = None
     output.write("do_check(%r, %r)\n" % (hostname, ipaddress))
     output.close()
 
-    # compile python
-    py_compile.compile(source_filename, compiled_filename, compiled_filename, True)
-    os.chmod(compiled_filename, 0755)
+    # compile python (either now or delayed), but only if the source
+    # code has not changed. The Python compilation is the most costly
+    # operation here.
+    if os.path.exists(source_filename):
+        if file(source_filename).read() == file(source_filename + ".new").read():
+            if opt_verbose:
+                sys.stderr.write(" (%s is unchanged)\n" % source_filename)
+            os.remove(source_filename + ".new")
+            return
+        elif opt_verbose:
+            sys.stderr.write(" (new content)")
+    
+    os.rename(source_filename + ".new", source_filename)
+    if not delay_precompile:
+        py_compile.compile(source_filename, compiled_filename, compiled_filename, True)
+        os.chmod(compiled_filename, 0755)
+    else:
+        if os.path.exists(compiled_filename) or os.path.islink(compiled_filename):
+            os.remove(compiled_filename)
+        os.symlink(hostname + ".py", compiled_filename)
 
     if opt_verbose:
         sys.stderr.write(" ==> %s.\n" % compiled_filename)

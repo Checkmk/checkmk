@@ -3,6 +3,10 @@
     * FIX: sort output of cmk --list-hosts alphabetically
     * Great speed up of cmk -N/-C/-U/-R, especially when number of hosts is
       large.
+    * new main.mk option delay_precompile: if True, check_mk will skip Python 
+      precompilation during cmk -C or cmk -R, but will do this the first 
+      time the host is checked.  This speeds up restarts. Default is False.
+      Nagios user needs write access in precompiled directory!
     
     Checks & Agents:
     * FIX: apc_symmetra: fix remaining runtime calculation (by factor 100)

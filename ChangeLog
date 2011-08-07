@@ -1,7 +1,7 @@
 1.1.11i2:
     Core, Setup, etc.:
     * FIX: sort output of cmk --list-hosts alphabetically
-    * Great speed up of cmk -N, especially when number of hosts is
+    * Great speed up of cmk -N/-C/-U/-R, especially when number of hosts is
       large.
     
     Checks & Agents:

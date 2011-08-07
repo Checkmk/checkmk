@@ -2055,12 +2055,16 @@ def precompile_hostchecks():
             sys.exit(5)
 
 # read python file and strip comments
+g_stripped_file_cache = {}
 def stripped_python_file(filename):
+    if filename in g_stripped_file_cache:
+        return g_stripped_file_cache[filename]
     a = ""
     for line in file(filename):
         l = line.strip()
         if l == "" or l[0] != '#':
             a += line # not stripped line because of indentation!
+    g_stripped_file_cache[filename] = a
     return a
 
 def precompile_hostcheck(hostname):

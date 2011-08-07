@@ -1,6 +1,8 @@
 1.1.11i2:
     Core, Setup, etc.:
     * FIX: sort output of cmk --list-hosts alphabetically
+    * Great speed up of cmk -N, especially when number of hosts is
+      large.
     
     Checks & Agents:
     * FIX: apc_symmetra: fix remaining runtime calculation (by factor 100)

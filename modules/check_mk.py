@@ -794,14 +794,37 @@ def host_of_clustered_service(hostname, servicedesc):
 
 # Returns check table for a specific host
 # Format: ( checkname, item ) -> (params, description )
+
+# Keep a global cache of per-host-checktables, since this
+# operation is quiet lengty.
 g_check_table_cache = {}
+# A further cache splits up all checks into single-host-entries
+# and those possibly matching multiple hosts. The single host entries
+# are used in the autochecks and assumed be make up the vast majority.
+g_singlehost_checks = None
+g_multihost_checks = None
 def get_check_table(hostname):
+    global g_singlehost_checks
+    global g_multihost_checks
+
     # speed up multiple lookup of same host
     if hostname in g_check_table_cache:
         return g_check_table_cache[hostname]
 
     check_table = {}
-    for entry in checks:
+
+    # First time? Split up all checks in single and
+    # multi-host-checks
+    if g_singlehost_checks == None:
+        g_singlehost_checks = {}
+        g_multihost_checks = []
+        for entry in checks:
+            if len(entry) == 4 and type(entry[0]) == str:
+                g_singlehost_checks.setdefault(entry[0], []).append(entry)
+            else:
+                g_multihost_checks.append(entry)
+        
+    def handle_entry(entry):
         if len(entry) == 4:
             hostlist, checkname, item, params = entry
             tags = []
@@ -823,7 +846,7 @@ def get_check_table(hostname):
         # We optimize for that. But: hostlist might be tagged hostname!
         if type(hostlist) == str:
             if hostlist != hostname:
-                continue # optimize most common case: hostname mismatch
+                return # optimize most common case: hostname mismatch
             hostlist = [ strip_tags(hostlist) ]
         elif type(hostlist[0]) == str:
             hostlist = strip_tags(hostlist)
@@ -835,6 +858,14 @@ def get_check_table(hostname):
             descr = service_description(checkname, item)
             deps  = service_deps(hostname, descr)
             check_table[(checkname, item)] = (params, descr, deps)
+
+    # Now process all entries that are specific to the host
+    # in search (single host) or that might match the host.
+    for entry in g_singlehost_checks.get(hostname, []):
+        handle_entry(entry)
+
+    for entry in g_multihost_checks:
+        handle_entry(entry)
 
     # Remove dependencies to non-existing services
     all_descr = set([ descr for ((checkname, item), (params, descr, deps)) in check_table.items() ])

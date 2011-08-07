@@ -122,7 +122,7 @@ setversion:
 	cd agents/windows ; rm *.exe ; make
 
 headers:
-	./headrify
+	doc/helpers/headrify
 
 rpm $(DISTNAME)-1.noarch.rpm:
 	rm -rf $(RPM_TOPDIR)

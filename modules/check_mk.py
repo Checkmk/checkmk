@@ -368,12 +368,19 @@ def no_inventory_possible(checkname, info):
 
 if __name__ == "__main__":
     filelist = glob.glob(checks_dir + "/*")
-    if local_checks_dir:
-        filelist += glob.glob(local_checks_dir + "/*")
     filelist.sort()
-    # read include files first!
+
+    # read local checks *after* shipped ones!
+    if local_checks_dir:
+        local_files = glob.glob(local_checks_dir + "/*")
+        local_files.sort()
+        filelist += local_files
+
+    # read include files always first, but still in the sorted
+    # order with local ones last (possibly overriding variables)
     filelist = [ f for f in filelist if f.endswith(".include") ] + \
                [ f for f in filelist if not f.endswith(".include") ]
+
     for f in filelist: 
         if not f.endswith("~"): # ignore emacs-like backup files
             try:

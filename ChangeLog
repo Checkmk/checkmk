@@ -9,6 +9,8 @@
       Nagios user needs write access in precompiled directory!
     * new config variable agent_ports, allowing to specify the agent's
       TCP port (default is 6556) on a per-host basis.
+    * new config variable snmp_ports, allowing to specify the UDP port
+      to used with SNMP, on a per-host basis.
     
     Checks & Agents:
     * FIX: cisco_temp: skip non-present sensors at inventory

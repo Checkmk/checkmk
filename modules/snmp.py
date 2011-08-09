@@ -84,8 +84,9 @@ def get_snmp_explicit(hostname, ipaddress, mib, baseoid, suffixes):
             mibinfo = " -m %s" % mib
         else:
             mibinfo = ""
-        command = cmd + "%s -OQ -OU -Oe %s %s.%s 2>/dev/null" % \
-                  (mibinfo, ipaddress, baseoid, suffix)
+        portspec = snmp_port_spec(hostname)
+        command = cmd + "%s -OQ -OU -Oe %s%s %s.%s 2>/dev/null" % \
+                  (mibinfo, ipaddress, portspec, baseoid, suffix)
         if opt_debug:
             sys.stderr.write('   Running %s\n' % (command,))
         num_found = 0
@@ -112,8 +113,9 @@ def get_snmp_explicit(hostname, ipaddress, mib, baseoid, suffixes):
     return info
 
 def snmpwalk_on_suboid(hostname, ip, oid):
+    portspec = snmp_port_spec(hostname)
     command = snmp_walk_command(hostname) + \
-             " -OQ -OU -On -Ot %s %s 2>/dev/null" % (ip, oid)
+             " -OQ -OU -On -Ot %s%s %s 2>/dev/null" % (ip, portspec, oid)
     if opt_debug:
         sys.stderr.write('   Running %s\n' % (command,))
     snmp_process = os.popen(command, "r").xreadlines()

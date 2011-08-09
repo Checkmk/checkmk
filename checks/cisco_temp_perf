@@ -69,7 +69,7 @@ def check_cisco_temp_perf(item, params, info):
         if line[0] == item or line[4] == item:
             temp = saveint(line[1])
             if temp != 0:
-                perfdata = [("temp", temp)]
+                perfdata = [("temp", temp, None, saveint(line[2]) )]
                 temptext = ", %d degrees (critical at %d)" % (temp, saveint(line[2]))
             else:
                 perfdata = []

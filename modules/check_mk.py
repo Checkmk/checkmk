@@ -212,6 +212,7 @@ NEGATE         = '@negate'       # negation in boolean lists
 agent_port                         = 6556
 tcp_connect_timeout                = 5.0
 do_rrd_update                      = False
+delay_precompile                   = False  # delay Python compilation to Nagios execution
 check_submission                   = "pipe" # alternative: "file"
 aggr_summary_hostname              = "%s-s"
 agent_min_version                  = 0 # warn, if plugin has not at least version
@@ -367,12 +368,19 @@ def no_inventory_possible(checkname, info):
 
 if __name__ == "__main__":
     filelist = glob.glob(checks_dir + "/*")
-    if local_checks_dir:
-        filelist += glob.glob(local_checks_dir + "/*")
     filelist.sort()
-    # read include files first!
+
+    # read local checks *after* shipped ones!
+    if local_checks_dir:
+        local_files = glob.glob(local_checks_dir + "/*")
+        local_files.sort()
+        filelist += local_files
+
+    # read include files always first, but still in the sorted
+    # order with local ones last (possibly overriding variables)
     filelist = [ f for f in filelist if f.endswith(".include") ] + \
                [ f for f in filelist if not f.endswith(".include") ]
+
     for f in filelist: 
         if not f.endswith("~"): # ignore emacs-like backup files
             try:
@@ -794,14 +802,37 @@ def host_of_clustered_service(hostname, servicedesc):
 
 # Returns check table for a specific host
 # Format: ( checkname, item ) -> (params, description )
+
+# Keep a global cache of per-host-checktables, since this
+# operation is quiet lengty.
 g_check_table_cache = {}
+# A further cache splits up all checks into single-host-entries
+# and those possibly matching multiple hosts. The single host entries
+# are used in the autochecks and assumed be make up the vast majority.
+g_singlehost_checks = None
+g_multihost_checks = None
 def get_check_table(hostname):
+    global g_singlehost_checks
+    global g_multihost_checks
+
     # speed up multiple lookup of same host
     if hostname in g_check_table_cache:
         return g_check_table_cache[hostname]
 
     check_table = {}
-    for entry in checks:
+
+    # First time? Split up all checks in single and
+    # multi-host-checks
+    if g_singlehost_checks == None:
+        g_singlehost_checks = {}
+        g_multihost_checks = []
+        for entry in checks:
+            if len(entry) == 4 and type(entry[0]) == str:
+                g_singlehost_checks.setdefault(entry[0], []).append(entry)
+            else:
+                g_multihost_checks.append(entry)
+        
+    def handle_entry(entry):
         if len(entry) == 4:
             hostlist, checkname, item, params = entry
             tags = []
@@ -823,7 +854,7 @@ def get_check_table(hostname):
         # We optimize for that. But: hostlist might be tagged hostname!
         if type(hostlist) == str:
             if hostlist != hostname:
-                continue # optimize most common case: hostname mismatch
+                return # optimize most common case: hostname mismatch
             hostlist = [ strip_tags(hostlist) ]
         elif type(hostlist[0]) == str:
             hostlist = strip_tags(hostlist)
@@ -835,6 +866,14 @@ def get_check_table(hostname):
             descr = service_description(checkname, item)
             deps  = service_deps(hostname, descr)
             check_table[(checkname, item)] = (params, descr, deps)
+
+    # Now process all entries that are specific to the host
+    # in search (single host) or that might match the host.
+    for entry in g_singlehost_checks.get(hostname, []):
+        handle_entry(entry)
+
+    for entry in g_multihost_checks:
+        handle_entry(entry)
 
     # Remove dependencies to non-existing services
     all_descr = set([ descr for ((checkname, item), (params, descr, deps)) in check_table.items() ])
@@ -2024,12 +2063,16 @@ def precompile_hostchecks():
             sys.exit(5)
 
 # read python file and strip comments
+g_stripped_file_cache = {}
 def stripped_python_file(filename):
+    if filename in g_stripped_file_cache:
+        return g_stripped_file_cache[filename]
     a = ""
     for line in file(filename):
         l = line.strip()
         if l == "" or l[0] != '#':
             a += line # not stripped line because of indentation!
+    g_stripped_file_cache[filename] = a
     return a
 
 def precompile_hostcheck(hostname):
@@ -2044,9 +2087,24 @@ def precompile_hostcheck(hostname):
 
     compiled_filename = precompiled_hostchecks_dir + "/" + hostname
     source_filename = compiled_filename + ".py"
-    output = file(source_filename, "w")
+
+    output = file(source_filename + ".new", "w")
     output.write("#!/usr/bin/python\n")
     output.write("# encoding: utf-8\n")
+
+    # Self-compile: replace symlink with precompiled python-code, if
+    # we are run for the first time
+    if delay_precompile:
+        output.write("""
+import os
+if os.path.islink(%(dst)r):
+    import py_compile
+    os.remove(%(dst)r)
+    py_compile.compile(%(src)r, %(dst)r, %(dst)r, True)
+    os.chmod(%(dst)r, 0755)
+
+""" % { "src" : source_filename, "dst" : compiled_filename })
+
     output.write(stripped_python_file(modules_dir + "/check_mk_base.py"))
 
     # initialize global variables
@@ -2201,9 +2259,26 @@ no_inventory_possible = None
     output.write("do_check(%r, %r)\n" % (hostname, ipaddress))
     output.close()
 
-    # compile python
-    py_compile.compile(source_filename, compiled_filename, compiled_filename, True)
-    os.chmod(compiled_filename, 0755)
+    # compile python (either now or delayed), but only if the source
+    # code has not changed. The Python compilation is the most costly
+    # operation here.
+    if os.path.exists(source_filename):
+        if file(source_filename).read() == file(source_filename + ".new").read():
+            if opt_verbose:
+                sys.stderr.write(" (%s is unchanged)\n" % source_filename)
+            os.remove(source_filename + ".new")
+            return
+        elif opt_verbose:
+            sys.stderr.write(" (new content)")
+    
+    os.rename(source_filename + ".new", source_filename)
+    if not delay_precompile:
+        py_compile.compile(source_filename, compiled_filename, compiled_filename, True)
+        os.chmod(compiled_filename, 0755)
+    else:
+        if os.path.exists(compiled_filename) or os.path.islink(compiled_filename):
+            os.remove(compiled_filename)
+        os.symlink(hostname + ".py", compiled_filename)
 
     if opt_verbose:
         sys.stderr.write(" ==> %s.\n" % compiled_filename)

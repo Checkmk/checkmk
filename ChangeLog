@@ -1,13 +1,21 @@
 1.1.11i2:
     Core, Setup, etc.:
     * FIX: sort output of cmk --list-hosts alphabetically
+    * Great speed up of cmk -N/-C/-U/-R, especially when number of hosts is
+      large.
+    * new main.mk option delay_precompile: if True, check_mk will skip Python 
+      precompilation during cmk -C or cmk -R, but will do this the first 
+      time the host is checked.  This speeds up restarts. Default is False.
+      Nagios user needs write access in precompiled directory!
     
     Checks & Agents:
+    * FIX: cisco_temp: skip non-present sensors at inventory
     * FIX: apc_symmetra: fix remaining runtime calculation (by factor 100)
     * FIX: Added PNP-template for winperf_phydisk
     * FIX: if64: fix UNKNOWN in case of non-unique ifAlias
     * FIX: lnx_if/if/if64: ignore percentual traffic levels on NICs without
            speed information.
+    * FIX: cisco_temp_perf: add critical level to performance data
     * brocade_port: check for Brocade FC ports has been rewritten with
       lots of new features.
     * AIX agent now simulates <<<netctr>>> output (by Jörg Linge)
@@ -50,6 +58,10 @@
     * Sidebar: Snapins can register for a triggered reload after a nagios
       restart has been detected. Check interval is 30 seconds for now.
     * Quicksearch snapin: Reloads host lists after a detected nagios restart.
+    * New config directory multisite.d/ - similar to conf.d/
+    * great speed up of HTML rendering
+    * support for Python profiling (set profile = True in multisite.mk, profile
+      will be in var/check_mk/web)
     * WATO: Added new hook "active-changes" which calls the registered hosts
       with a dict of "dirty" hosts
 

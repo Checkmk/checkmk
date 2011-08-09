@@ -9,6 +9,7 @@
       Nagios user needs write access in precompiled directory!
     
     Checks & Agents:
+    * FIX: cisco_temp: skip non-present sensors at inventory
     * FIX: apc_symmetra: fix remaining runtime calculation (by factor 100)
     * FIX: Added PNP-template for winperf_phydisk
     * FIX: if64: fix UNKNOWN in case of non-unique ifAlias

@@ -51,12 +51,8 @@
 
 
 def inventory_cisco_temp(checktyp, info):
-    # inventory = []
-    # for name, state in info:
-    #     inventory.append( (name, None) )
-    # return inventory
-
-    return [ (name, None)  for (name, state) in info ]
+    # Skip sensors with state 5 (not present)
+    return [ (name, None)  for (name, state) in info if state != '5' ]
 
 def check_cisco_temp(item, params, info):
     for name, state in info:

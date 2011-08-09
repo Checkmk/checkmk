@@ -64,6 +64,8 @@
     * great speed up of HTML rendering
     * support for Python profiling (set profile = True in multisite.mk, profile
       will be in var/check_mk/web)
+    * WATO: Added new hook "active-changes" which calls the registered hosts
+      with a dict of "dirty" hosts
 
     WATO:
     * Configration files can now be administered via the WEB UI

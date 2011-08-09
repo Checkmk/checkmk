@@ -727,8 +727,6 @@ def get_hostnames_from_checkboxes():
             selected_hosts.append(name)
     return selected_hosts
 
-
-
 # Form for host details (new, clone, edit)
 def mode_edithost(phase, new):
     hostname = html.var("host") # may be empty in new/clone mode
@@ -782,6 +780,7 @@ def mode_edithost(phase, new):
             go_to_services = html.var("services")
             if html.check_transaction():
                 g_hosts[hostname] = host
+                mark_as_dirty(g_hosts[hostname])
                 if new:
                     message = _("Created new host %s.") % hostname
                     log_pending(hostname, "create-host", message) 
@@ -1213,6 +1212,7 @@ def mode_bulk_edit(phase):
             hostnames = get_hostnames_from_checkboxes()
             for hostname in hostnames:
                 host = g_hosts[hostname]
+                mark_as_dirty(host)
                 host.update(changed_attributes)
                 log_pending(hostname, "bulk-edit", _("Changed attributes of host %s in bulk mode") % hostname)
             write_the_configuration_file()
@@ -1254,6 +1254,7 @@ def mode_bulk_cleanup(phase):
             hostnames = get_hostnames_from_checkboxes()
             for hostname in hostnames:
                 host = g_hosts[hostname]
+                mark_as_dirty(host)
                 num_cleaned = 0
                 for attrname in to_clean:
                     num_cleaned += 1
@@ -1378,6 +1379,8 @@ def mode_changelog(phase):
         elif html.check_transaction():
                 try:
                     check_mk_automation("restart")
+                    call_hook_activate_changes()
+                    undirt_hosts()
                 except Exception, e:
                     raise MKUserError(None, str(e))
                 log_commit_pending() # flush logfile with pending actions
@@ -1535,6 +1538,30 @@ def render_audit_log(log, what, with_filename = False):
 #   | Functions needed at various places                                   |
 #   +----------------------------------------------------------------------+
 
+def get_dirty_hosts():
+    dirty_hosts = {}
+    load_folder_config()
+    for hostname, attributes in collect_hosts(g_root_folder).iteritems():
+        if attributes.get('dirty', 'no') == 'yes':
+            dirty_hosts[hostname] = attributes
+    return dirty_hosts
+
+def mark_as_dirty(host):
+    host['dirty'] = 'yes'
+
+def undirt_hosts():
+    # Seems very dirty with all the global things here. Clean this up!
+    global g_hosts, g_folder, g_file
+    old_file   = g_file
+    old_folder = g_folder
+    for hostname, attributes in get_dirty_hosts().iteritems():
+        g_file   = g_files[attributes['file']]
+        g_folder = find_folder(attributes['file'][:-1])
+        read_the_configuration_file()
+        del g_hosts[hostname]['dirty']
+        write_the_configuration_file()
+    g_file   = old_file
+    g_folder = old_folder
 
 def check_mk_automation(command, args=[], indata=""):
     # Gather the command to use for executing --automation calls to check_mk
@@ -2262,6 +2289,7 @@ def move_hosts_to(hostnames, target_filename):
             continue
 
         target_hosts[hostname] = g_hosts[hostname]
+        mark_as_dirty(target_hosts[hostname])
         target_file["num_hosts"] += 1
         g_file["num_hosts"] -= 1
         del g_hosts[hostname]
@@ -3138,6 +3166,7 @@ def collect_hosts(the_thing):
             host["file"] = the_thing[".path"]
         return effective_hosts
 
+
 def call_hooks(name, *args):
     n = 0
     for hk in hooks.get(name, []):
@@ -3172,6 +3201,16 @@ def call_hook_file_or_folder_deleted(what, the_thing):
         call_hooks("file-deleted", the_thing)
     elif what == 'folder' and 'folder-deleted' in hooks:
         call_hooks("folder-deleted", the_thing)
+
+def call_hook_activate_changes():
+    """
+    This hook is executed when one applies the pending configuration changes
+    from wato.
+
+    The registered hooks are called with a dictionary as parameter which
+    has the dirty hostnames as keys and the attributes of the hosts as values.
+    """
+    call_hooks("activate-changes", get_dirty_hosts())
 
 #   +----------------------------------------------------------------------+
 #   |                   ____  _             _                              |

@@ -210,6 +210,7 @@ NEGATE         = '@negate'       # negation in boolean lists
 
 # Basic Settings
 agent_port                         = 6556
+agent_ports                        = []
 tcp_connect_timeout                = 5.0
 do_rrd_update                      = False
 delay_precompile                   = False  # delay Python compilation to Nagios execution
@@ -936,6 +937,14 @@ def get_datasource_program(hostname, ipaddress):
         return None
     else:
         return programs[0].replace("<IP>", ipaddress).replace("<HOST>", hostname)
+
+
+def agent_port_of(hostname):
+    ports = host_extra_conf(hostname, agent_ports)
+    if len(ports) == 0:
+        return agent_port
+    else:
+        return ports[0]
 
 
 def service_description(checkname, item):
@@ -2119,7 +2128,7 @@ no_inventory_possible = None
 
     # Compile in all neccessary global variables
     output.write("\n# Global variables\n")
-    for var in [ 'check_mk_version', 'agent_port', 'tcp_connect_timeout', 'agent_min_version',
+    for var in [ 'check_mk_version', 'tcp_connect_timeout', 'agent_min_version',
                  'perfdata_format', 'aggregation_output_format',
                  'aggr_summary_hostname', 'nagios_command_pipe_path',
                  'check_result_path', 'check_submission',
@@ -2246,6 +2255,9 @@ no_inventory_possible = None
 
     # aggregation
     output.write("def host_is_aggregated(hostname):\n    return %r\n\n" % host_is_aggregated(hostname))
+
+    # TCP port of agent
+    output.write("def agent_port_of(hostname):\n    return %d\n\n" % agent_port_of(hostname))
 
     # Parameters for checks: Default values are defined in checks/*. The
     # variables might be overridden by the user in main.mk. We need
@@ -3044,7 +3056,7 @@ def dump_host(hostname):
         print tty_yellow + "Parents:                " + tty_normal + ", ".join(parents_list)
     print tty_yellow + "Host groups:            " + tty_normal + ", ".join(hostgroups_of(hostname))
     print tty_yellow + "Contact groups:         " + tty_normal + ", ".join(host_contactgroups_of([hostname]))
-    agenttype = "TCP (port: %d)" % agent_port
+    agenttype = "TCP (port: %d)" % agent_port_of(hostname)
     if is_snmp_host(hostname):
         credentials = snmp_credentials_of(hostname)
         if is_bulkwalk_host(hostname):

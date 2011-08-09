@@ -7,6 +7,8 @@
       precompilation during cmk -C or cmk -R, but will do this the first 
       time the host is checked.  This speeds up restarts. Default is False.
       Nagios user needs write access in precompiled directory!
+    * new config variable agent_ports, allowing to specify the agent's
+      TCP port (default is 6556) on a per-host basis.
     
     Checks & Agents:
     * FIX: cisco_temp: skip non-present sensors at inventory

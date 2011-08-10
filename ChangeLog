@@ -52,6 +52,7 @@
     * FIX: ipmi: Skipping items with invalid data (0.000 val, "unspecified"
       unit) in summary mode
     * FIX: ipmi: Improved output formating in summary mode
+    * FIX: BI - fixed wrong variable in running_on aggregation function
     * Introduced basic infrastructure for multilanguage support in Multisite
     * Make 'Views' snapin foldable
     * Replace old main view by dashboard.

@@ -854,7 +854,7 @@ def aggr_running_on(nodes, regex):
 
     # if not found, then do normal aggregation with 'worst'
     if not mo or len(mo.groups()) == 0:
-        state = aggregation_functions['worst'](nodes[1:])
+        state = config.aggregation_functions['worst'](nodes[1:])
         state["output"] += ", running nowhere"
         return state
 

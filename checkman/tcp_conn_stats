@@ -12,7 +12,7 @@ perfdata:
 
 inventory:
  If there is at least one TCP connection, then one check will be created.
- On agents supporting {tcp_conn_state} this should always be the case since at
+ On agents supporting {tcp_conn_stats} this should always be the case since at
  least the connection to the agent should be shown.
 
 examples:
@@ -24,4 +24,4 @@ levels(dict from string to (int, int)): A python dictionary from check state to 
 
 [configuration]
 tcp_conn_stats_default_levels (dict from string to (int, int)): default levels used for all
- inventorized checks. This might be renamed to tcp_conn_states_default_levels in the future.
+ inventorized checks.

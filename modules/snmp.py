@@ -199,7 +199,8 @@ def get_snmp_table(hostname, ip, oid_info):
             fetchoid = oid
             if suboid:
                 fetchoid += "." + str(suboid)
-            fetchoid += "." + str(column)
+            if column != "":
+                fetchoid += "." + str(column)
 
             # column may be integer or string like "1.5.4.2.3"
             colno += 1

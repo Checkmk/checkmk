@@ -379,7 +379,10 @@ def get_stored_snmpwalk(hostname, oid):
     if use_new:
         # New implementation: use binary search
         def to_bin_string(oid):
-            return tuple(map(int, oid.strip(".").split(".")))
+            try:
+                return tuple(map(int, oid.strip(".").split(".")))
+            except:
+                raise MKGeneralException("Invalid OID %s" % oid)
 
         def compare_oids(a, b):
             aa = to_bin_string(a)

@@ -420,6 +420,12 @@ def get_stored_snmpwalk(hostname, oid):
         
         def collect_until(index, direction):
             rows = []
+            # Handle case, where we run after the end of the lines list
+            if index >= len(lines):
+                if direction > 0:
+                    return []
+                else:
+                    index -= 1
             while True: 
                 line = lines[index]
                 parts = line.split(None, 1)

@@ -159,10 +159,7 @@ def snmpwalk_on_suboid(hostname, ip, oid):
     return rowinfo
 
 def extract_end_oid(prefix, complete):
-    if prefix == complete:
-        return complete.split('.')[-1]
-    else:
-        return complete[len(prefix):].lstrip('.')
+    return complete[len(prefix):].lstrip('.')
 
 # sort OID strings numerically
 def cmp_oids(o1, o2):

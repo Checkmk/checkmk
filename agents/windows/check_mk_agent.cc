@@ -308,6 +308,44 @@ void section_ps(SOCKET &out)
 }
 
 
+// Determine the start type of a service. Unbelievable how much
+// code is needed for that...
+const char *service_start_type(SC_HANDLE scm, LPCTSTR service_name)
+{
+    // Query the start type of the service
+    const char *start_type = "invalid1";
+    SC_HANDLE schService;
+    LPQUERY_SERVICE_CONFIG lpsc; 
+    schService = OpenService(scm, service_name, SERVICE_QUERY_CONFIG);
+    if (schService) {
+        start_type = "invalid2";
+        DWORD dwBytesNeeded, cbBufSize;
+        if (!QueryServiceConfig(schService, NULL, 0, &dwBytesNeeded)) {
+            start_type = "invalid3";
+            DWORD dwError = GetLastError();
+            if (dwError == ERROR_INSUFFICIENT_BUFFER) {
+                start_type = "invalid4";
+                cbBufSize = dwBytesNeeded;
+                lpsc = (LPQUERY_SERVICE_CONFIG) LocalAlloc(LMEM_FIXED, cbBufSize);
+                if (QueryServiceConfig(schService, lpsc, cbBufSize, &dwBytesNeeded)) {
+                    switch (lpsc->dwStartType) {
+                    case SERVICE_AUTO_START:    start_type = "auto"; break; 
+                    case SERVICE_BOOT_START:    start_type = "boot"; break;   
+                    case SERVICE_DEMAND_START:  start_type = "demand"; break;
+                    case SERVICE_DISABLED:      start_type = "disabled"; break;   
+                    case SERVICE_SYSTEM_START:  start_type = "system"; break;
+                    default:                    start_type = "other";
+                    }
+                }
+                LocalFree(lpsc);
+            }
+        }
+        CloseServiceHandle(schService); 
+    }
+    return start_type;
+}
+
+
 void section_services(SOCKET &out)
 {
     output(out, "<<<services>>>\n");
@@ -338,6 +376,8 @@ void section_services(SOCKET &out)
 			case SERVICE_STOP_PENDING:     state_name = "stopping"; break;
 			case SERVICE_STOPPED:          state_name = "stopped"; break;
 			}
+                        
+                        const char *start_type = service_start_type(scm, service->lpServiceName);
 
 			// The service name usually does not contain spaces. But
 			// in some cases it does. We replace them with _ in order
@@ -348,8 +388,8 @@ void section_services(SOCKET &out)
 				*w = '_';
 			}			
 			
-			output(out, "%-18s %-8s %s\n", 
-			       service->lpServiceName, state_name,
+			output(out, "%s %s/%s %s\n", 
+			       service->lpServiceName, state_name, start_type,
 			       service->lpDisplayName);
 			service ++;
 		    }

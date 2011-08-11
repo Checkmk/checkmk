@@ -25,7 +25,22 @@
 # Boston, MA 02110-1301 USA.
 
 
-# List all services to auto-detect here:
+# Output of old agent (< 1.1.10i2):
+# AeLookupSvc        running  Application Experience Lookup Service
+# Alerter            stopped  Alerter
+# ALG                stopped  Application Layer Gateway Service
+# AppMgmt            stopped  Application Management
+# appmgr             running  Remote Server Manager
+
+# Output of new agent (>= 1.1.10i2):
+# Alerter stopped/disabled Warndienst
+# ALG running/demand Gatewaydienst auf Anwendungsebene
+# Apple_Mobile_Device running/auto Apple Mobile Device
+# AppMgmt stopped/demand Anwendungsverwaltung
+# AudioSrv running/auto Windows Audio
+# BITS running/demand Intelligenter Hintergrund<FC>bertragungsdienst
+# Bonjour_Service running/auto Dienst "Bonjour"
+
 inventory_services = []
 
 def check_windows_services(item, params, info):
@@ -37,33 +52,36 @@ def check_windows_services(item, params, info):
     for line in info:
         name = line[0]
         if name == item:
-            state = line[1]
+            # newer agents also send start type as part of state,
+            # e.g. running/auto
+            if '/' in line[1]:
+                state, start_type = line[1].split('/')
+            else:
+                state = line[1]
+                start_type = "unknown"
+
             displayname = " ".join(line[2:])
             if state == 'running':
-                return (0, "OK - running: %s" % displayname)
+                return (0, "OK - running (start type is %s): %s" % (start_type, displayname))
             worststate = state
+            worst_start_type = start_type
     if worststate:
-        return (2, "CRITICAL - %s: %s" % (worststate, displayname))
+        return (2, "CRITICAL - %s (start type is %s): %s" % (worststate, worst_start_type, displayname))
     else:
         return (3, "UNKNOWN - service not found")
 
-# AeLookupSvc        running  Application Experience Lookup Service
-# Alerter            stopped  Alerter
-# ALG                stopped  Application Layer Gateway Service
-# AppMgmt            stopped  Application Management
-# appmgr             running  Remote Server Manager
-# aspnet_state       stopped  ASP.NET State Service
-# AudioSrv           running  Windows Audio
-# BITS               stopped  Background Intelligent Transfer Service
-# Browser            running  Computer Browser
-# cimlistener        running  IBM Director CIM Listener
+
 def inventory_windows_services(checkname, info):
     inventory = []
     for line in info:
         name = line[0]
-        state = line[1]
+        if '/' in line[1]:
+            state, start_type = line[1].split('/')
+        else:
+            state = line[1]
+            start_type = "unknown"
         if state == 'running' and name in inventory_services:
-            inventory.append((name, '""', None))
+            inventory.append((name, None))
     return inventory
 
 

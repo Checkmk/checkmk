@@ -48,6 +48,7 @@
     * New checks netapp_cluster, netapp_vfiler for checking NetAPP filer 
       running as cluster or running vfilers.
     * megaraid_pdisks: Better handling of MegaCli output (Thanks to Bastian Kuhn)
+    * Windows: agent now also sends start type (auto/demand/disabled/boot/system)
 
     Multisite:
     * FIX: make non-Ascii characters in services names work again

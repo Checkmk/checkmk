@@ -3076,15 +3076,18 @@ def dump_host(hostname):
     print tty_yellow + "Contact groups:         " + tty_normal + ", ".join(host_contactgroups_of([hostname]))
     agenttype = "TCP (port: %d)" % agent_port_of(hostname)
     if is_snmp_host(hostname):
-        credentials = snmp_credentials_of(hostname)
-        if is_bulkwalk_host(hostname):
-            bulk = "yes"
+        if is_usewalk_host(hostname):
+            agenttype = "SNMP (use stored walk)"
         else:
-            bulk = "no"
-        portinfo = snmp_port_of(hostname)
-        if portinfo == None:
-            portinfo = 'default'
-        agenttype = "SNMP (community: '%s', bulk walk: %s, port: %s)" % (credentials, bulk, portinfo)
+            credentials = snmp_credentials_of(hostname)
+            if is_bulkwalk_host(hostname):
+                bulk = "yes"
+            else:
+                bulk = "no"
+            portinfo = snmp_port_of(hostname)
+            if portinfo == None:
+                portinfo = 'default'
+            agenttype = "SNMP (community: '%s', bulk walk: %s, port: %s)" % (credentials, bulk, portinfo)
     print tty_yellow + "Type of agent:          " + tty_normal + agenttype
     is_aggregated = host_is_aggregated(hostname)
     if is_aggregated:

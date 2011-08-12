@@ -16,3 +16,10 @@ So kann man z.B. auch eine alternative Portnummer verwenden oder
 evtl. Dinge für die Sicherheitseinstellung einfacher konfigurieren.
 Die Parameter sollen immer am Ende kommen. Dann kann man darüber
 sogar die Community einstellen und Parameter für V3. 
+
+Achtung: Die Portnummer kann man nicht über Optionen angeben,
+sondern hinter dem Hostnamen mit Doppelpunkt, z.B.
+snmpwalk -c public -v1 localhost:555.
+
+Das ist daher separat über snmp_ports implementiert.
+

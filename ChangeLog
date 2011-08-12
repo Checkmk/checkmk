@@ -7,6 +7,10 @@
       precompilation during cmk -C or cmk -R, but will do this the first 
       time the host is checked.  This speeds up restarts. Default is False.
       Nagios user needs write access in precompiled directory!
+    * new config variable agent_ports, allowing to specify the agent's
+      TCP port (default is 6556) on a per-host basis.
+    * new config variable snmp_ports, allowing to specify the UDP port
+      to used with SNMP, on a per-host basis.
     
     Checks & Agents:
     * FIX: cisco_temp: skip non-present sensors at inventory
@@ -16,6 +20,7 @@
     * FIX: lnx_if/if/if64: ignore percentual traffic levels on NICs without
            speed information.
     * FIX: cisco_temp_perf: add critical level to performance data
+    * FIX: windows agent: hopefully fix case with quotes in directory name
     * brocade_port: check for Brocade FC ports has been rewritten with
       lots of new features.
     * AIX agent now simulates <<<netctr>>> output (by Jörg Linge)
@@ -44,6 +49,9 @@
     * New checks netapp_cluster, netapp_vfiler for checking NetAPP filer 
       running as cluster or running vfilers.
     * megaraid_pdisks: Better handling of MegaCli output (Thanks to Bastian Kuhn)
+    * Windows: agent now also sends start type (auto/demand/disabled/boot/system)
+    * Windows: inventory_services now allowes regexes, depends and state/start type
+      and also allows host tags.
 
     Multisite:
     * FIX: make non-Ascii characters in services names work again
@@ -65,6 +73,8 @@
       will be in var/check_mk/web)
     * WATO: Added new hook "active-changes" which calls the registered hosts
       with a dict of "dirty" hosts
+    * Added column painter for host contacts
+    * Detail views of host/service now show contacts
 
     WATO:
     * Configration files can now be administered via the WEB UI

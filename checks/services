@@ -25,8 +25,90 @@
 # Boston, MA 02110-1301 USA.
 
 
-# List all services to auto-detect here:
+# Output of old agent (< 1.1.10i2):
+# AeLookupSvc        running  Application Experience Lookup Service
+# Alerter            stopped  Alerter
+# ALG                stopped  Application Layer Gateway Service
+# AppMgmt            stopped  Application Management
+# appmgr             running  Remote Server Manager
+
+# Output of new agent (>= 1.1.10i2):
+# Alerter stopped/disabled Warndienst
+# ALG running/demand Gatewaydienst auf Anwendungsebene
+# Apple_Mobile_Device running/auto Apple Mobile Device
+# AppMgmt stopped/demand Anwendungsverwaltung
+# AudioSrv running/auto Windows Audio
+# BITS running/demand Intelligenter Hintergrund<FC>bertragungsdienst
+# Bonjour_Service running/auto Dienst "Bonjour"
+
 inventory_services = []
+
+# Examples for inventory_services:
+# inventory_services = [
+#   "HirnTest",               # add service, if currently running
+#   "TapiSrv running",        # the same
+#   "TermService auto",       # add service, if start type is auto (regardless if running)
+#   "BackupSrv auto/running", # add, if start type is auto and it's running
+#   "~Backup.* auto/running",  # same, but add all services matching a regex
+#   ( [ "termserver" ] , ALL_HOSTS, [ "HirnTest running", "Sppoller auto" ] ), # same with tags..
+#   ( ALL_HOSTS, [ "!Backup.*", "FooBar auto" ] ),
+# ]
+
+def inventory_windows_services(checkname, info):
+
+    # Handle single entries (type str)
+    def add_matching_services(name, state, start_type, entry):
+        if ' ' in entry:
+            svc, statespec = entry.split()
+        else:
+            svc = entry
+            statespec = "running"
+
+        # First match name
+        if svc.startswith("~"):
+            if not get_regex(svc[1:]).match(name):
+                return []
+        elif svc != name:
+            return []
+
+        for n in statespec.split("/"):
+            if n not in [ state, start_type ]:
+                return []
+
+        return [(name, None)]
+
+    # Handle entries like ( [ "term" ], ALL_HOSTS, [ "FooBar auto", ".*TEST running" ] )
+    def add_services_with_tags(name, state, start_type, entry):
+        matching = []
+        if len(entry) == 2:
+            entry = ( [], ) + entry
+        taglist, hostlist, svclist = entry
+        if hosttags_match_taglist(tags_of_host(g_hostname), taglist):
+            if in_extraconf_hostlist(hostlist, g_hostname):
+                for svc in svclist:
+                    matching += add_matching_services(name, state, start_type, svc)
+        return matching
+
+
+    inventory = []
+    for line in info:
+        name = line[0]
+        if '/' in line[1]:
+            state, start_type = line[1].split('/')
+        else:
+            state = line[1]
+            start_type = "unknown"
+    
+        for entry in inventory_services:
+            if type(entry) == str:
+                inventory += add_matching_services(name, state, start_type, entry)
+            elif type(entry) == tuple:
+                inventory += add_services_with_tags(name, state, start_type, entry)
+            else:
+                raise MKGeneralException("Invalid entry %r in inventory_services" % entry)
+
+    return inventory
+
 
 def check_windows_services(item, params, info):
     # make sure, that thing also works for clusters:
@@ -37,34 +119,23 @@ def check_windows_services(item, params, info):
     for line in info:
         name = line[0]
         if name == item:
-            state = line[1]
+            # newer agents also send start type as part of state,
+            # e.g. running/auto
+            if '/' in line[1]:
+                state, start_type = line[1].split('/')
+            else:
+                state = line[1]
+                start_type = "unknown"
+
             displayname = " ".join(line[2:])
             if state == 'running':
-                return (0, "OK - running: %s" % displayname)
+                return (0, "OK - running (start type is %s): %s" % (start_type, displayname))
             worststate = state
+            worst_start_type = start_type
     if worststate:
-        return (2, "CRITICAL - %s: %s" % (worststate, displayname))
+        return (2, "CRITICAL - %s (start type is %s): %s" % (worststate, worst_start_type, displayname))
     else:
         return (3, "UNKNOWN - service not found")
-
-# AeLookupSvc        running  Application Experience Lookup Service
-# Alerter            stopped  Alerter
-# ALG                stopped  Application Layer Gateway Service
-# AppMgmt            stopped  Application Management
-# appmgr             running  Remote Server Manager
-# aspnet_state       stopped  ASP.NET State Service
-# AudioSrv           running  Windows Audio
-# BITS               stopped  Background Intelligent Transfer Service
-# Browser            running  Computer Browser
-# cimlistener        running  IBM Director CIM Listener
-def inventory_windows_services(checkname, info):
-    inventory = []
-    for line in info:
-        name = line[0]
-        state = line[1]
-        if state == 'running' and name in inventory_services:
-            inventory.append((name, '""', None))
-    return inventory
 
 
 check_info['services'] = (check_windows_services, "service_%s", 0, inventory_windows_services)

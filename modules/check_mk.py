@@ -210,6 +210,8 @@ NEGATE         = '@negate'       # negation in boolean lists
 
 # Basic Settings
 agent_port                         = 6556
+agent_ports                        = []
+snmp_ports                         = [] # UDP ports used for SNMP
 tcp_connect_timeout                = 5.0
 do_rrd_update                      = False
 delay_precompile                   = False  # delay Python compilation to Nagios execution
@@ -654,8 +656,9 @@ def get_single_oid(hostname, ipaddress, oid):
         oid_prefix = oid
         commandtype = "get"
 
+    portspec = snmp_port_spec(hostname)
     command = snmp_base_command(commandtype, hostname) + \
-         " -On -OQ -Oe -Ot %s %s 2>/dev/null" % (ipaddress, oid_prefix)
+         " -On -OQ -Oe -Ot %s%s %s 2>/dev/null" % (ipaddress, portspec, oid_prefix)
     try:
         if opt_debug:
             sys.stdout.write("Running '%s'\n" % command)
@@ -936,6 +939,28 @@ def get_datasource_program(hostname, ipaddress):
         return None
     else:
         return programs[0].replace("<IP>", ipaddress).replace("<HOST>", hostname)
+
+
+def agent_port_of(hostname):
+    ports = host_extra_conf(hostname, agent_ports)
+    if len(ports) == 0:
+        return agent_port
+    else:
+        return ports[0]
+
+def snmp_port_of(hostname):
+    ports = host_extra_conf(hostname, snmp_ports)
+    if len(ports) == 0:
+        return None # do not specify a port, use default
+    else:
+        return ports[0]
+
+def snmp_port_spec(hostname):
+    port = snmp_port_of(hostname)
+    if port == None:
+        return ""
+    else:
+        return ":%d" % port
 
 
 def service_description(checkname, item):
@@ -2119,7 +2144,7 @@ no_inventory_possible = None
 
     # Compile in all neccessary global variables
     output.write("\n# Global variables\n")
-    for var in [ 'check_mk_version', 'agent_port', 'tcp_connect_timeout', 'agent_min_version',
+    for var in [ 'check_mk_version', 'tcp_connect_timeout', 'agent_min_version',
                  'perfdata_format', 'aggregation_output_format',
                  'aggr_summary_hostname', 'nagios_command_pipe_path',
                  'check_result_path', 'check_submission',
@@ -2246,6 +2271,10 @@ no_inventory_possible = None
 
     # aggregation
     output.write("def host_is_aggregated(hostname):\n    return %r\n\n" % host_is_aggregated(hostname))
+
+    # TCP and SNMP port of agent
+    output.write("def agent_port_of(hostname):\n    return %d\n\n" % agent_port_of(hostname))
+    output.write("def snmp_port_spec(hostname):\n    return %r\n\n" % snmp_port_spec(hostname))
 
     # Parameters for checks: Default values are defined in checks/*. The
     # variables might be overridden by the user in main.mk. We need
@@ -2557,7 +2586,7 @@ def show_check_manual(checkname):
         print_splitline(header_color_left, "License:           ", header_color_right, header['license'])
         distro = header['distribution']
         if distro == 'check_mk':
-            distro = "official part of check_mk"
+            distro = "official part of Check_MK"
         print_splitline(header_color_left, "Distribution:      ", header_color_right, distro)
         ags = []
         for agent in header['agents'].split(","):
@@ -2888,7 +2917,8 @@ def do_snmpwalk_on(hostname, filename):
     if opt_verbose:
         sys.stdout.write("%s:\n" % hostname)
     ip = lookup_ipaddress(hostname)
-    cmd = snmp_walk_command(hostname) + " -On -Ob -OQ -Ot %s " % ip
+    portspec = snmp_port_spec(hostname)
+    cmd = snmp_walk_command(hostname) + " -On -Ob -OQ -Ot %s%s " % (ip, portspec)
     if opt_debug:
         print 'Executing: %s' % cmd
     out = file(filename, "w")
@@ -3044,14 +3074,20 @@ def dump_host(hostname):
         print tty_yellow + "Parents:                " + tty_normal + ", ".join(parents_list)
     print tty_yellow + "Host groups:            " + tty_normal + ", ".join(hostgroups_of(hostname))
     print tty_yellow + "Contact groups:         " + tty_normal + ", ".join(host_contactgroups_of([hostname]))
-    agenttype = "TCP (port: %d)" % agent_port
+    agenttype = "TCP (port: %d)" % agent_port_of(hostname)
     if is_snmp_host(hostname):
-        credentials = snmp_credentials_of(hostname)
-        if is_bulkwalk_host(hostname):
-            bulk = "yes"
+        if is_usewalk_host(hostname):
+            agenttype = "SNMP (use stored walk)"
         else:
-            bulk = "no"
-        agenttype = "SNMP (community: '%s', bulk walk: %s)" % (credentials, bulk)
+            credentials = snmp_credentials_of(hostname)
+            if is_bulkwalk_host(hostname):
+                bulk = "yes"
+            else:
+                bulk = "no"
+            portinfo = snmp_port_of(hostname)
+            if portinfo == None:
+                portinfo = 'default'
+            agenttype = "SNMP (community: '%s', bulk walk: %s, port: %s)" % (credentials, bulk, portinfo)
     print tty_yellow + "Type of agent:          " + tty_normal + agenttype
     is_aggregated = host_is_aggregated(hostname)
     if is_aggregated:

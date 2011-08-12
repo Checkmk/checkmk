@@ -1160,6 +1160,13 @@ multisite_painters["host_group_memberlist"] = {
     "paint"   : paint_host_group_memberlist
 }
 
+multisite_painters["host_contacts"] = {
+    "title" : _("Host contacts"),
+    "short" : _("Contacts"),
+    "columns" : ["host_contacts"],
+    "paint" : lambda row: (None, ", ".join(row["host_contacts"]))
+}
+
 multisite_painters["host_custom_notes"] = {
     "title" : _("Custom host notes"), 
     "short" : _("Notes"),

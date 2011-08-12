@@ -84,8 +84,9 @@ def get_snmp_explicit(hostname, ipaddress, mib, baseoid, suffixes):
             mibinfo = " -m %s" % mib
         else:
             mibinfo = ""
-        command = cmd + "%s -OQ -OU -Oe %s %s.%s 2>/dev/null" % \
-                  (mibinfo, ipaddress, baseoid, suffix)
+        portspec = snmp_port_spec(hostname)
+        command = cmd + "%s -OQ -OU -Oe %s%s %s.%s 2>/dev/null" % \
+                  (mibinfo, ipaddress, portspec, baseoid, suffix)
         if opt_debug:
             sys.stderr.write('   Running %s\n' % (command,))
         num_found = 0
@@ -112,8 +113,9 @@ def get_snmp_explicit(hostname, ipaddress, mib, baseoid, suffixes):
     return info
 
 def snmpwalk_on_suboid(hostname, ip, oid):
+    portspec = snmp_port_spec(hostname)
     command = snmp_walk_command(hostname) + \
-             " -OQ -OU -On -Ot %s %s 2>/dev/null" % (ip, oid)
+             " -OQ -OU -On -Ot %s%s %s 2>/dev/null" % (ip, portspec, oid)
     if opt_debug:
         sys.stderr.write('   Running %s\n' % (command,))
     snmp_process = os.popen(command, "r").xreadlines()
@@ -157,10 +159,7 @@ def snmpwalk_on_suboid(hostname, ip, oid):
     return rowinfo
 
 def extract_end_oid(prefix, complete):
-    if prefix == complete:
-        return complete.split('.')[-1]
-    else:
-        return complete[len(prefix):].lstrip('.')
+    return complete[len(prefix):].lstrip('.')
 
 # sort OID strings numerically
 def cmp_oids(o1, o2):
@@ -200,7 +199,8 @@ def get_snmp_table(hostname, ip, oid_info):
             fetchoid = oid
             if suboid:
                 fetchoid += "." + str(suboid)
-            fetchoid += "." + str(column)
+            if column != "":
+                fetchoid += "." + str(column)
 
             # column may be integer or string like "1.5.4.2.3"
             colno += 1
@@ -380,7 +380,10 @@ def get_stored_snmpwalk(hostname, oid):
     if use_new:
         # New implementation: use binary search
         def to_bin_string(oid):
-            return tuple(map(int, oid.strip(".").split(".")))
+            try:
+                return tuple(map(int, oid.strip(".").split(".")))
+            except:
+                raise MKGeneralException("Invalid OID %s" % oid)
 
         def compare_oids(a, b):
             aa = to_bin_string(a)
@@ -418,6 +421,12 @@ def get_stored_snmpwalk(hostname, oid):
         
         def collect_until(index, direction):
             rows = []
+            # Handle case, where we run after the end of the lines list
+            if index >= len(lines):
+                if direction > 0:
+                    return []
+                else:
+                    index -= 1
             while True: 
                 line = lines[index]
                 parts = line.split(None, 1)

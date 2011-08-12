@@ -462,7 +462,7 @@ def get_agent_info_tcp(hostname, ipaddress):
             s.settimeout(tcp_connect_timeout)
         except:
             pass # some old Python versions lack settimeout(). Better ignore than fail
-        s.connect((ipaddress, agent_port))
+        s.connect((ipaddress, agent_port_of(hostname)))
         try:
             s.setblocking(1)
         except:
@@ -478,7 +478,7 @@ def get_agent_info_tcp(hostname, ipaddress):
         return output
     except Exception, e:
         raise MKAgentError("Cannot get data from TCP port %s:%d: %s" %
-                           (ipaddress, agent_port, e))
+                           (ipaddress, agent_port_of(hostname), e))
 
 
 # Gets all information about one host so far cached.

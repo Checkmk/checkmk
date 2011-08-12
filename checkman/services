@@ -4,47 +4,112 @@ author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
- Check the current state of an operating system or application
- service. Currently only the Windows agent provides this information.
- Each service is usually either {running} or {stopped}. Intermediate
- states are {starting} and {stopping} and are only transient. 
- This check gets critical if the service in question is not in 
- the state {running} or is missing on the system at all.
+ Check the current state of a Windows service.  Each service is either {running} or {stopped}
+ or in a transitional state like {starting} or {stopping}.  This check becomes critical if the
+ service in question is not in the state {running}. It is getting UNKNOWN if the service is missing
+ on the system at all.
+
+ If you have just a small number of Windows hosts to monitor, 
+ manual check configuration with {checks +=} will probably do.
+ With a larger number of hosts we propose using {inventory_services}.
+ This allows auto-detection of services according to their names, 
+ current states and start types. The auto-detection can also make use
+ of host tags in order to use different rules on different sets of
+ hosts (for example for monitoring certain services only on production
+ servers). Inventory and manual checks can be used in parallel.
 
 item:
  The name of the service as string. Please note, that the agent replaces
  spaces in the service names with underscores. If you are unsure
  about the correct spelling of the name then please look at the
- output of the agent. The service names are in the first column
- of the section {<<<services>>>}.
+ output of the agent (cmk -d HOSTNAME). The service names are in the first column
+ of the section {<<<services>>>}. Please do not mix up the service
+ names with the display names of the services. Those are just being displayed
+ as a further information.
 
 inventory:
- This check supports inventory. Because you surely won't want
- to monitor {all} running services, you have to define a list of
- potentially interesting services. This is done by listing them
- in the configuration variable
- {inventory_services}, which is a list of strings.
- All services found in state {running} on
- a target host during inventory will be added to your monitoring.
- You may combine this with additional manual checks of further 
- services.
+ The inventory function of this check helps you to auto-detect then services
+ that should be monitored on your hosts. Because Check_MK cannot know, which
+ services are important for you, you have to configure some rules.
+ 
+ As of version 1.1.10i2 it is very flexible, while still being compatible
+ with the old simple-style format.
+ In the variable {inventory_services} you specify a list of inventory
+ declarations. In the easiest form, such a declaration is simply 
+ a string: the name of a service. On every host that service is found
+ {running}, a check for that service will be created during inventory.
+
+ If you prefix the name with a tilde {~}, then the string is interpreted
+ as a regular expression matching the {beginning} of the service name.
+ So the declaration {"~Audio"} will mach {AudioSrv}, and {".*Mobile"}
+ will match all services containing the work {Mobile}. All patterns
+ are case sensitive. Please note: the check being created will
+ {not} contain the regular expression but the precise spelling of the
+ service. One rule with a regular expression can create several checks.
+
+ It is also possible to depend on the current state and/or the start
+ type of the service when deciding whether to create a check. States
+ and start types are appended and separated by a space. For example
+ {"LanmanServer auto"} will match all services with the name {LanmanServer}
+ which have the start type {auto}. Other possible start types are
+ {boot}, {demand}, {disabled} and {system}. Please look at the agent output
+ if you want to know, which kind of start types exist in your
+ environment. The declaration {"Browser running"} means the same as
+ just ommitting { running}, since that is the default. If you want
+ to combine a state and start type, do this like the agent does,
+ by using a slash: {"LmHosts running/auto"} will create a check for 
+ the service {LmHosts}, if that service if found running {and} has
+ the start type auto.
+
+ If you need your inventory rules to depend on properties of the host
+ or just apply on some selected hosts, you can use "tuple"-entries
+ instead of strings. Such an entries consist of an optional list of
+ host tags, the keyword {ALL_HOSTS} or an explicit list of hosts and
+ a {list} of service declarations like the one discussed above. Please
+ consult the examples for details.
 
 examples:
- # inventory should add monitoring of the following services
- # if found running on target machine:
- inventory_services = [ "MySQL_Server", "TSMMgR", "McEfieUpdater" ]
+ # inventory will add checks for the following services
+ # if found running on the target host:
 
- # check for further non-inventorized services
+ inventory_services = [ 
+   # Monitor "MySQL_Server" if found running on a host
+   "MySQL_Server", 
+   # Monitor "TSMMgR" if start type is auto (regardless if running)
+   "TSMMgR auto", 
+   # Monitor "LmHosts", if found running and start type is auto
+   "LmHosts running/auto",
+   # Monitor all services containing "OraLsnr", if start type auto
+   "~.*OraLsnr auto",
+   # Pick *all* services with start type auto (a lot!)
+   "~ auto",
+
+   # Rules based on host tags (service declarations are in a list!)
+   # On all hosts with the tag prod look for "Browser" and "CiSvc":
+   ( [ "prod" ], ALL_HOSTS, [ 
+       "Browser running", 
+       "CiSvc running/auto",
+     ]
+   ),
+
+   # On super mega important hosts, monitor all services
+   # with start type auto as separate checks!
+   ( [ "super", "mega" ], ALL_HOSTS, [ "~ auto" ] ),
+   ]
+
+ # Manual checks without inventory. Those checks will be created
+ # without calling cmk -I - regardless of whether those services
+ # exist and that hosts.
  checks += [
   # make sure, that service "cimlistener" is running on all hosts
   # with the tag "win"
-  ( ["win"], ALL_HOSTS, "services", "cimlistener", None ),
+  ( [ "win" ], ALL_HOSTS, "services", "cimlistener", None ),
   # The service "Apache" should is monitored only on two specific hosts
   ( ["websrv01", "websrv02"], "services", "Apache", None ),
  ]
 
 [configuration]
-inventory_services (list of strings): List of service names. If inventory
- finds one of those services running on a target machine it will add 
- it to your monitoring.
+inventory_services (list of entries): List of service declarations.
+ For each matching service found on the target host, one check will
+ be added to your monitoring.
 

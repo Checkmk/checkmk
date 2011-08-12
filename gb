@@ -40,7 +40,11 @@ else:
     def tty_colors(c):
         return ""
 
-grep_color = tty_bold + tty_green
+grep_colors = [ 
+   tty_bold + tty_magenta,
+   tty_bold + tty_cyan,
+   tty_bold + tty_green,
+] 
 
 def bail_out(text):
     sys.stderr.write(text + "\n")
@@ -156,7 +160,7 @@ where COMMAND is one of:
   show [# #..]           - show several bugs (or all open)
   resolve ID             - change a bugs state
   delete #..             - delete bug(s)
-  grep [-v] WHAT...      - grep in titles and descriptions (-v: verbose)
+  grep [-v] KW1 KW2...   - show bugs containing all of the given keywords (-v: verbose)
   edit [#]               - open bug # in editor (or newest bug)
   commit                 - commit all changed and new bugs
 
@@ -371,13 +375,14 @@ def main_delete(args):
         if 0 == os.system("git rm %s" % ids):
             sys.stdout.write("Delete bug %s (%s)\n" % (ids, g_bugs[int(ids)]["descriptions"]))
 
-def grep(line, kw):
+def grep(line, kw, n):
     lc = kw.lower()
     i = line.lower().find(lc)
     if i == -1:
         return None
     else:
-        return line[0:i] + grep_color + line[i:i+len(kw)] + tty_normal + line[i+len(kw):]
+        col = grep_colors[n % len(grep_colors)]
+        return line[0:i] + col + line[i:i+len(kw)] + tty_normal + line[i+len(kw):]
     
 
 def main_grep(args):
@@ -391,23 +396,43 @@ def main_grep(args):
         usage()
 
     for bug in g_bugs.values():
-        didmatch = False
+        one_kw_didnt_match = False
+        title = bug["title"]
+        lines = bug["description"].split("\n")
+        bodylines = set([])
+
+        # *all* of the keywords must match in order for the
+        # bug to be displayed
+        i = 0
         for kw in args:
-            match = grep(bug["title"], kw)
+            i += 1
+            this_kw_matched = False
+
+            # look for keyword in title
+            match = grep(title, kw, i)
             if match:
                 bug["title"] = match
-                didmatch = True
-            lines = bug["description"].split("\n")
-            bodylines = ""
-            for line in lines:
-                match = grep(line, kw)
+                title = match
+                this_kw_matched = True
+
+            # look for keyword in description
+            for j, line in enumerate(lines):
+                match = grep(line, kw, i)
                 if match:
-                    bodylines += "  " + match + "\n"
-                    didmatch = True
-        if didmatch:
+                    bodylines.add(j)
+                    lines[j] = match
+                    this_kw_matched = True
+
+            if not this_kw_matched:
+                one_kw_didnt_match = True
+
+
+        if not one_kw_didnt_match:
             list_bug(bug)
             if verbose:
-                sys.stdout.write(bodylines)
+                for x in sorted(list(bodylines)):
+                    sys.stdout.write("  %s\n" % lines[x])
+
 
 def main_edit(args):
     if len(args) == 0:

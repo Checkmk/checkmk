@@ -1139,8 +1139,14 @@ void get_agent_dir(char *buffer, int size)
             while (end > buffer && *end != '\\')
                 end--;
             *end = 0; // replace \ with string end => get directory of executable
+
+            // Handle case where name is quoted with double quotes. 
+            // This is reported to happen on some 64 Bit systems when spaces
+            // are in the directory name.
+            if (*buffer == '"') {
+                memmove(buffer, buffer + 1, strlen(buffer));
+            }
         }
-        size = dsize;
         RegCloseKey(key);
     }
     else {

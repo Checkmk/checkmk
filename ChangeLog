@@ -49,6 +49,8 @@
       running as cluster or running vfilers.
     * megaraid_pdisks: Better handling of MegaCli output (Thanks to Bastian Kuhn)
     * Windows: agent now also sends start type (auto/demand/disabled/boot/system)
+    * Windows: inventory_services now allowes regexes, depends and state/start type
+      and also allows host tags.
 
     Multisite:
     * FIX: make non-Ascii characters in services names work again

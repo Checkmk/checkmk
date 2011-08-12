@@ -2586,7 +2586,7 @@ def show_check_manual(checkname):
         print_splitline(header_color_left, "License:           ", header_color_right, header['license'])
         distro = header['distribution']
         if distro == 'check_mk':
-            distro = "official part of check_mk"
+            distro = "official part of Check_MK"
         print_splitline(header_color_left, "Distribution:      ", header_color_right, distro)
         ags = []
         for agent in header['agents'].split(","):

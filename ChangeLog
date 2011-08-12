@@ -71,6 +71,7 @@
       will be in var/check_mk/web)
     * WATO: Added new hook "active-changes" which calls the registered hosts
       with a dict of "dirty" hosts
+    * Added column painter for host contacts
 
     WATO:
     * Configration files can now be administered via the WEB UI

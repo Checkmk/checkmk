@@ -72,6 +72,7 @@
     * WATO: Added new hook "active-changes" which calls the registered hosts
       with a dict of "dirty" hosts
     * Added column painter for host contacts
+    * Detail views of host/service now show contacts
 
     WATO:
     * Configration files can now be administered via the WEB UI

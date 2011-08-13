@@ -78,6 +78,8 @@
       with a dict of "dirty" hosts
     * Added column painter for host contacts
     * Detail views of host/service now show contacts
+    * Fix playing of sounds: All problem views now have play_sounds activated,
+      all other deactivated.
 
     WATO:
     * Configration files can now be administered via the WEB UI

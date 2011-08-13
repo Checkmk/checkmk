@@ -722,11 +722,14 @@ class html:
         return name in self.events
 
     def play_sound(self, url):
-        self.write('<object type="audio/x-wav" data="%s" height="0" width="0">'
-                  '<param name="filename" value="%s">'
-                  '<param name="autostart" value="true"><param name="playcount" value="1"></object>' % (url, url))
+        self.write('<object type="audio/x-wav" data="%s" height="0" width="0">\n'
+                  '<param name="filename" value="%s">\n'
+                  '<param name="src" value="%s">\n'
+                  '<param name="autostart" value="true">\n'
+                  '<param name="playcount" value="1">\n'
+                  '</object>\n' % (url, url, url))
         if config.debug:
-            self.write("Booom (%s)" % url)
+            self.write("(playing sound %s)" % url)
 
     def apache_user(self):
         return pwd.getpwuid( os.getuid() )[ 0 ]

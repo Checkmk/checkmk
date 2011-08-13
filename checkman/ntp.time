@@ -15,6 +15,10 @@ description:
  is UNKNOWN if no system peer is present or the system peer is
  unreachable.
 
+ The check is CRIT, when there are NTP peers reachable but non
+ of those is used by the NTP daemon. That is the case if the time
+ provided by those peers is too bad.
+
  Note: If you want to check the health of the peers, you might
  want to use {ntp}, which creates one individual check per NTP peer.
 

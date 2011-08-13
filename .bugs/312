@@ -1,10 +1,14 @@
 Title: FreeBSD ifcounters broken
 Component: checks
-Benefit: 3
-State: open
-Cost: 1
-Date: 2011-07-21 10:52:51
+State: done
 Class: bug
+Date: 2011-07-21 10:52:51
+Benefit: 3
+Cost: 1
+Fun: 0
 
 The interface counters are outputting one field twice
 Reported by Scott & Mark McCorke
+
+2011-08-13 00:07:42: changed state open -> done
+changed and seems to work!

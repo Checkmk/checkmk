@@ -2441,6 +2441,11 @@ class Attribute:
     def show_in_table(self):
         return self._show_in_table
         
+    # Wether or not to show this attribute in the edit form.
+    # This value is set by declare_host_attribute
+    def show_in_form(self):
+        return self._show_in_form
+
     # Wether or not to make this attribute configurable in
     # files and folders (as defaule value for the hosts)
     def show_in_folder(self):
@@ -2729,11 +2734,12 @@ host_attributes = []
 host_attribute = {}
 
 # Declare attributes with this method
-def declare_host_attribute(a, show_in_table = True, show_in_folder = True, topic = None):
+def declare_host_attribute(a, show_in_table = True, show_in_folder = True, topic = None, show_in_form = True):
     host_attributes.append((a, topic))
     host_attribute[a.name()] = a
-    a._show_in_table = show_in_table
+    a._show_in_table  = show_in_table
     a._show_in_folder = show_in_folder
+    a._show_in_form   = show_in_form
 
 # Read attributes from HTML variables
 def collect_attributes(do_validate = True):
@@ -2766,7 +2772,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
     # appearance. If only one topic exists, do not show topics
     topics = []
     for attr, topic in host_attributes:
-        if topic not in topics:
+        if topic not in topics and attr.show_in_form():
             topics.append(topic)
 
     for topic in topics:
@@ -2787,6 +2793,10 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
             attrname = attr.name()
             if attrname in without_attributes:
                 continue # e.g. needed to skip ipaddress in CSV-Import
+
+            # Skip hidden attributes
+            if not attr.show_in_form():
+                continue
 
             # In folder/file not all attributes are shown
             if for_what == "folder" and not attr.show_in_folder():

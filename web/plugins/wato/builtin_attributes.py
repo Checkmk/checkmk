@@ -38,4 +38,4 @@ declare_host_attribute(IPAddressAttribute("ipaddress", _("IP Address"),
 declare_host_attribute(EnumAttribute("dirty", _("Dirty"),
                        _("Modified since last &quot;Active Changes&quot;?"),
                        "No", [ ('no', _('No')), ('yes', _('Yes'))]),
-                       show_in_table = False, show_in_folder = False)
+                       show_in_table = False, show_in_folder = False, show_in_form = False)

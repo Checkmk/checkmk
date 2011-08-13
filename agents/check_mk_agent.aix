@@ -115,7 +115,8 @@ then
     grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe.cfg" | \
     while read descr cmdline
     do
+        PLUGIN=${cmdline%% *}
         OUTPUT=$($cmdline)
-        echo "$descr $? $OUTPUT"
+        echo "(${PLUGIN##*/}) $descr $? $OUTPUT"
     done
 fi

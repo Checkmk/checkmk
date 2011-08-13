@@ -134,6 +134,10 @@ def check_ntp(item, params, info):
     return (3, "UNKNOWN - peer not found")
 
 def check_ntp_summary(item, params, info):
+    # No information at all? NTP daemon not running or timeout in ntpq -p
+    if len(info) == 0:
+        return (3, "UNKNOWN - no information from NTP: timeout in ntpq -p or NTP daemon not running")
+
     # We only are interested in our system peer or pulse per second source (pps)
     for line in info:
         if line[0] in [ "*", "o" ]:

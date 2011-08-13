@@ -265,6 +265,7 @@ snmp_hosts                           = [ (['snmp'], ALL_HOSTS) ]
 tcp_hosts                            = [ (['tcp'], ALL_HOSTS), (NEGATE, ['snmp'], ALL_HOSTS), (['!ping'], ALL_HOSTS) ]
 bulkwalk_hosts                       = []
 usewalk_hosts                        = []
+dyndns_hosts                         = [] # use host name as ip address for these hosts
 ignored_checktypes                   = [] # exclude from inventory
 ignored_services                     = [] # exclude from inventory
 ignored_checks                       = [] # exclude from inventory
@@ -940,6 +941,39 @@ def get_datasource_program(hostname, ipaddress):
     else:
         return programs[0].replace("<IP>", ipaddress).replace("<HOST>", hostname)
 
+# Determine the IP address of a host
+def lookup_ipaddress(hostname):
+    # Quick hack, where all IP addresses are faked (--fake-dns)
+    if fake_dns:
+        return fake_dns
+
+    # Honor simulation mode und usewalk hosts. Never contact the network.
+    elif simulation_mode or opt_use_snmp_walk or \
+         (is_usewalk_host(hostname) and is_snmp_host(hostname)):
+        return "127.0.0.1"
+
+    # Now check, if IP address is hard coded by the user
+    ipa = ipaddresses.get(hostname)
+    if ipa:
+        return ipa
+
+    # Hosts listed in dyndns hosts always use dynamic DNS lookup.
+    # The use their hostname as IP address at all places
+    if in_binary_hostlist(hostname, dyndns_hosts):
+        return hostname
+    
+    # Address has already been resolved in prior call to this function?
+    if hostname in g_dns_cache:
+        return g_dns_cache[hostname]
+
+    # No do the actual DNS lookup
+    try:
+        ipa = socket.gethostbyname(hostname)
+    except:
+        g_dns_cache[hostname] = None
+        raise
+    g_dns_cache[hostname] = ipa
+    return ipa
 
 def agent_port_of(hostname):
     ports = host_extra_conf(hostname, agent_ports)
@@ -2250,13 +2284,18 @@ no_inventory_possible = None
             ipa = lookup_ipaddress(node)
             needed_ipaddresses[node] = ipa
             nodes.append( (node, ipa) )
-        ipaddress = None
+        try:
+            ipaddress = lookup_ipaddress(hostname) # might throw exception
+            needed_ipaddresses[hostname] = ipaddress
+        except:
+            ipaddress = None
     else:
         ipaddress = lookup_ipaddress(hostname) # might throw exception
         needed_ipaddresses[hostname] = ipaddress
         nodes = [ (hostname, ipaddress) ]
 
     output.write("ipaddresses = %r\n\n" % needed_ipaddresses)
+    output.write("def lookup_ipaddress(hostname):\n   return ipaddresses.get(hostname)\n\n");
 
     # datasource programs. Is this host relevant?
     # ACHTUNG: HIER GIBT ES BEI CLUSTERN EIN PROBLEM!! WIR MUESSEN DIE NODES

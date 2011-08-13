@@ -11,6 +11,8 @@
       TCP port (default is 6556) on a per-host basis.
     * new config variable snmp_ports, allowing to specify the UDP port
       to used with SNMP, on a per-host basis.
+    * new config variable dyndns_hosts. Hosts listed in this configuration
+      list (compatible to bulkwalk_hosts) use their hostname as IP address.
     
     Checks & Agents:
     * FIX: cisco_temp: skip non-present sensors at inventory

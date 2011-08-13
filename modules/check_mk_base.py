@@ -541,28 +541,6 @@ def parse_info(lines):
     return info
 
 
-def lookup_ipaddress(hostname):
-    if fake_dns:
-        return fake_dns
-
-    elif simulation_mode or opt_use_snmp_walk or \
-         (is_usewalk_host(hostname) and is_snmp_host(hostname)):
-        return "127.0.0.1"
-    elif hostname in g_dns_cache:
-        return g_dns_cache[hostname]
-    else:
-        ipa = ipaddresses.get(hostname)
-        if ipa:
-            return ipa
-        else:
-            try:
-                ipa = socket.gethostbyname(hostname)
-            except:
-                g_dns_cache[hostname] = None
-                raise
-            g_dns_cache[hostname] = ipa
-            return ipa
-
 def cachefile_age(filename):
     try:
         return time.time() - os.stat(filename)[8]

@@ -1,9 +1,32 @@
-Title: Reinventory removes e.g. snmp_uptime check when not given via cmdline
+Title: Reinventory removes e.g. snmp_info check when not given via cmdline
 Component: core
-Benefit: 3
-State: open
-Cost: 2
-Date: 2011-03-03 09:56:23
+State: done
 Class: bug
+Date: 2011-03-03 09:56:23
+Benefit: 3
+Cost: 2
+Fun: 0
 
-When a service has been added with --checks snmp_uptime -I <hostname> and one executes a re-inventory for all checks the snmp_uptime check is lost and needs to be re-added with --checks snmp_uptime -I or --checks snmp_uptime -II.
+When a service has been added with --checks info -I <hostname> and one executes
+a re-inventory for all checks then snmp_info check is lost and needs to be re-added with
+--checks snmp_info -I or --checks snmp_info -II.
+
+What could be a solution? Possible are:
+
+- Do not remove checks without a a scan function on -II.
+  But how do we know that there is no scan function? Or just
+  remove checks with a positive result of the scan function?
+  Sound complicated to implement.
+  Maybe add an option -III which then removes all? Or depend
+  on --flush for removing all autochecks.
+
+  Problem is anyway: Check without a scan function do not
+  work well (at all) in WATO. 
+
+- Make a scan function for snmp_info and friends and
+  propose ignored_checktypes in the Migration notes.
+
+
+2011-08-13 17:49:57: changed state discuss -> done
+Added scan functions. Will add a note to the migration notes
+of how to disable the check.

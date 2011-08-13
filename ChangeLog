@@ -25,6 +25,8 @@
     * FIX: cisco_temp_perf: add critical level to performance data
     * FIX: windows agent: hopefully fix case with quotes in directory name
     * FIX: printer_supply: fixed logic of Perf-O-Meter (mixed up crit with ok)
+    * snmp_uptime, snmp_info: added scan functions. These checks will now
+      always be added. Please use ingored_checktypes to disable, if non needed.
     * brocade_port: check for Brocade FC ports has been rewritten with
       lots of new features.
     * AIX agent now simulates <<<netctr>>> output (by Jörg Linge)

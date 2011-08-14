@@ -1,6 +1,6 @@
 Title: View editor has layout problems in IE 8
 Component: multisite
-Benefit: 2
+Benefit: 1
 State: open
 Cost: 1
 Date: 2011-03-07 16:08:31
@@ -8,3 +8,5 @@ Class: bug
 
 For example the column editor: the input box is far too small.
 Also the input boxes of title, etc. are too long.
+
+Could someone try, if this is still the case?

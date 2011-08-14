@@ -100,6 +100,7 @@
     MK Livestatus:
     * FIX: fix compile problem on Debian unstable (Thanks to Sven Velt)
     * Column aggregation (Stats) now also works for perf_data
+    * New configuration variable data_encoding and full UTF-8 support.
 
 1.1.11i1:
     Core, Setup, etc.:

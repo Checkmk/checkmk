@@ -47,6 +47,7 @@
 #include "global_counters.h"
 #include "strutil.h"
 #include "auth.h"
+#include "data_encoding.h"
 #include "waittriggers.h"
 
 #ifndef AF_LOCAL
@@ -89,6 +90,7 @@ int g_thread_running = 0;
 int g_thread_pid = 0;
 int g_service_authorization = AUTH_LOOSE;
 int g_group_authorization = AUTH_STRICT;
+int g_data_encoding = ENCODING_UTF8;
 
 void* voidp;
 
@@ -601,6 +603,17 @@ void livestatus_parse_arguments(const char *args_orig)
                 if (right[strlen(right) - 1] != '/')
                     strncat(g_pnp_path, "/",  sizeof(g_pnp_path) - strlen(g_pnp_path) - 1 ); // make sure, that trailing slash is always there
                 check_pnp_path();
+            }
+            else if (!strcmp(left, "data_encoding")) {
+                if (!strcmp(right, "utf8"))
+                    g_data_encoding = ENCODING_UTF8;
+                else if (!strcmp(right, "latin1"))
+                    g_data_encoding = ENCODING_LATIN1;
+                else if (!strcmp(right, "mixed"))
+                    g_data_encoding = ENCODING_MIXED;
+                else {
+                    logger(LG_INFO, "Invalid data_encoding %s. Allowed are utf8, latin1 and mixed.", right);
+                }
             }
 	    else {
 		logger(LG_INFO, "Ignoring invalid option %s=%s", left, right);

@@ -42,9 +42,11 @@
 #include "Aggregator.h"
 #include "OringFilter.h"
 #include "waittriggers.h"
+#include "data_encoding.h"
 
 extern int g_debug_level;
 extern unsigned long g_max_response_size;
+extern int g_data_encoding;
 
 Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
    _output(output),
@@ -879,37 +881,90 @@ void Query::outputHostService(const char *host_name, const char *service_descrip
 
 void Query::outputString(const char *value)
 {
-   if (!value) {
-      if (_output_format != OUTPUT_FORMAT_CSV)
-	 _output->addBuffer("\"\"", 2);
-      return;
-   }
+    if (!value) {
+        if (_output_format != OUTPUT_FORMAT_CSV)
+            _output->addBuffer("\"\"", 2);
+        return;
+    }
 
-   else if (_output_format == OUTPUT_FORMAT_CSV)
-      _output->addString(value);
+    else if (_output_format == OUTPUT_FORMAT_CSV)
+        _output->addString(value);
 
-   else // JSON
-   {
-      if (_output_format == OUTPUT_FORMAT_PYTHON)
-          _output->addChar('u'); // mark strings as unicode
-      _output->addChar('"');
-      const char *r = value;
-      while (*r) {
-	 if (*r < 32 && *r >= 0) 
-	     outputUnicodeEscape((unsigned)*r);
-         else if ((*r & 0xE0) == 0xC0)
-             outputUnicodeEscape(((*r & 31) << 6) | (*++r & 0x3F)); // 2 byte encoding
-	 else if (*r < 0)
-	     outputUnicodeEscape((unsigned)((int)*r + 256)); // assume latin1 encoding
-	 else { 
-	     if (*r == '"' || *r == '\\')
-		_output->addChar('\\');
-	     _output->addChar(*r);
-	 }
-	 r++;
-      }
-      _output->addChar('"');
-   }
+    else // JSON
+    {
+        if (_output_format == OUTPUT_FORMAT_PYTHON)
+            _output->addChar('u'); // mark strings as unicode
+        _output->addChar('"');
+        const char *r = value;
+        int chars_left = strlen(r);
+        while (*r) {
+            // Always escape control characters (1..31) 
+            if (*r < 32 && *r >= 0) 
+                outputUnicodeEscape((unsigned)*r);
+
+            // Output ASCII characters unencoded
+            else if (*r >= 32) {
+                if (*r == '"' || *r == '\\')
+                    _output->addChar('\\');
+                _output->addChar(*r);
+            }
+
+            // interprete two-Byte UTF-8 sequences in mode 'utf8' and 'mixed'
+            else if ((g_data_encoding == ENCODING_UTF8 || g_data_encoding == ENCODING_MIXED)
+                    && ((*r & 0xE0) == 0xC0)) {
+                outputUnicodeEscape(((*r & 31) << 6) | (*(r+1) & 0x3F)); // 2 byte encoding
+                r++;
+                chars_left--;
+            }
+
+            // interprete 3/4-Byte UTF-8 sequences only in mode 'utf8'
+            else if (g_data_encoding == ENCODING_UTF8) {
+                // three-byte sequences (avoid buffer overflow!)
+                if ((*r & 0xF0) == 0xE0) {
+                    if (chars_left < 3) {
+                        logger(LG_INFO, "Ignoring invalid UTF-8 sequence in string '%s'", value);
+                        break; // end of string. No use in continuing
+                    }
+                    else {
+                        outputUnicodeEscape(
+                            ((*r     & 0x0F) << 12 |
+                             (*(r+1) & 0x3F) <<  6 |
+                             (*(r+2) & 0x3F)));
+                        r += 2;
+                        chars_left -= 2;
+                    }
+                }
+                // four-byte sequences
+                else if ((*r & 0xF8) == 0xF0) {
+                    if (chars_left < 4) {
+                        logger(LG_INFO, "Ignoring invalid UTF-8 sequence in string '%s'", value);
+                        break; // end of string. No use in continuing
+                    }
+                    else {
+                        outputUnicodeEscape(
+                            ((*r     & 0x07) << 18 |
+                             (*(r+1) & 0x3F) <<  6 |
+                             (*(r+2) & 0x3F) <<  6 |
+                             (*(r+3) & 0x3F)));
+                        r += 3;
+                        chars_left -= 3;
+                    }
+                }
+                else {
+                    logger(LG_INFO, "Ignoring invalid UTF-8 sequence in string '%s'", value);
+                }
+            }
+
+            // in latin1 and mixed mode interprete all other non-ASCII characters as latin1
+            else {
+                outputUnicodeEscape((unsigned)((int)*r + 256)); // assume latin1 encoding
+            }
+
+            r++;
+            chars_left--;
+        }
+        _output->addChar('"');
+    }
 }
 
 void Query::outputBeginList()

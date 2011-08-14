@@ -10,4 +10,8 @@ fi
 
 make -j 8
 
+
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
 sudo install src/livestatus.o /omd/versions/default/lib/mk-livestatus/livestatus.o
+echo "$C files copied"
+sudo omd restart $SITE nagios

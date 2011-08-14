@@ -11,3 +11,10 @@ kodierte Wert, z.B. Resttonerbehälter. Daraus baut Check_MK eine
 Servicedesription, die in nagios/conf.d/check_mk_objects.cfg ein
 Latin1-Zeichen enthält. Hier sollte unbedingt UTF-8 verwendet
 werden. Nur: woher kennen wir die Kodierung vom Drucker??
+
+Lösung könnte evtl sein, über eine snmp_character_encoding = []
+Liste den Hosts Encodings zuzuweisen. Dann werden die Daten, 
+im Falle vom Datentyp String, automatisch konvertiert. Oder
+man macht das explizit im Check, der weiß, dass die Daten
+evtl. kodiert daher kommen.
+

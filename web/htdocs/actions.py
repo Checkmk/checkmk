@@ -77,6 +77,12 @@ def action_reschedule():
             html.write("['TIMEOUT', 'Check not executed within %d seconds']\n" % (config.reschedule_timeout))
 
         else:
+            if service == "Check_MK":
+                # Passive services triggered by Check_MK often are updated
+                # a few ms later. We introduce a small wait time in order
+                # to increase the chance for the passive services already
+                # updated also when we return.
+                time.sleep(0.7);
             html.write("['OK', %d, %d, %r]\n" % (row[0], row[1], row[2].encode("utf-8")))
 
     except Exception, e:

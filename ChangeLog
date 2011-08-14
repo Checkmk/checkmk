@@ -83,6 +83,8 @@
     * Detail views of host/service now show contacts
     * Fix playing of sounds: All problem views now have play_sounds activated,
       all other deactivated.
+    * Rescheduling of Check_MK: introduce a short sleep of 0.7 sec. This increases
+      the chance of the passive services being updated before the repaint.
 
     WATO:
     * Configration files can now be administered via the WEB UI

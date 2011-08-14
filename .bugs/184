@@ -1,10 +1,11 @@
 Title: if/if64 problem when using description as item when having duplicate descr
 Component: checks
-Benefit: 2
-State: open
-Cost: 2
-Date: 2011-03-25 09:39:07
+State: done
 Class: bug
+Date: 2011-03-25 09:39:07
+Benefit: 2
+Cost: 2
+Fun: 0
 
 Der if/if64 Check unterschlägt doppelte Interfaces, wenn ein Host mehrere Interfaces
 mit dem gleichen Namen hat, sobald man die Description als Item benutzt.
@@ -16,3 +17,7 @@ später eine re-Inventur macht mit aktivierten Descriptions.
 Eventuell muss man das in der Inventur erkennen und dann die Interfaces selbs durchnummerieren.
 
 LM: Ich habe einen Dump von einem Beispiel-System.
+
+2011-08-14 16:07:42: changed state open -> done
+Das sollte inzwischen gehen. Wenn die Inventur gleiche Namen findet,
+hängt sich automatisch die SNMP End-OID hinten dran.

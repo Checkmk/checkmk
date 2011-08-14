@@ -97,7 +97,8 @@
       no scan will be done until new button "Full Scan" is pressed.
 
     BI:
-    * Fixed displaying of host states (after i18n introduction)h
+    * FIX: Fixed displaying of host states (after i18n introduction)h
+    * FiX: fixed filter for aggregation group
 
     MK Livestatus:
     * FIX: fix compile problem on Debian unstable (Thanks to Sven Velt)

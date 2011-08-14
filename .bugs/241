@@ -1,10 +1,14 @@
 Title: BI filter for aggregation group does not work
 Component: bi
-Benefit: 2
-State: open
-Cost: 2
-Date: 2011-04-07 17:12:11
+State: done
 Class: bug
+Date: 2011-04-07 17:12:11
+Benefit: 2
+Cost: 2
+Fun: 0
 
 In the table single host aggregations the filter for the 
 BI group is not effective. It is simply ignored.
+
+2011-08-14 16:05:22: changed state open -> done
+Done. The filter code was simply missing.

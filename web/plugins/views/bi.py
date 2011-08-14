@@ -396,10 +396,17 @@ class BIGroupFilter(Filter):
     def display(self):
         bi.compile_forest(html.req.user)
         htmlvar = self.htmlvars[0]
-        html.select(htmlvar, [(g,g) for g in bi.g_user_cache["forest"].keys()])
+        html.select(htmlvar, [ ("", "") ] + [(g,g) for g in bi.g_user_cache["forest"].keys()])
 
     def selected_group(self):
         return html.var(self.htmlvars[0])
+
+    def filter_table(self, rows):
+        group = self.selected_group()
+        if not group:
+            return rows
+        else:
+            return [ row for row in rows if row[self.column] == group ]
 
     def heading_info(self, infoname):
         return html.var(self.htmlvars[0])

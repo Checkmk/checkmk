@@ -1,10 +1,11 @@
 Title: Removal of brackets from regular expression is broken
 Component: bi
-Benefit: 1
-State: open
-Cost: 2
-Date: 2011-04-07 17:52:29
+State: wontfix
 Class: bug
+Date: 2011-04-07 17:52:29
+Benefit: 1
+Cost: 2
+Fun: 0
 
 Invalid regular expression '(zbghora12)):((zbghora13)$': unbalanced parenthesis.
 
@@ -33,3 +34,7 @@ aggregation_rules["database_cluster"] = (
 
 Problem here: from ((.*))((.*)) we must not remove the leftmost
 and rightmost brackets! 
+
+2011-08-13 18:02:07: changed state open -> wontfix
+This does not apply anymore. The whole regular expression
+matching has been removed from BI meanwhile.

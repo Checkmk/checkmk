@@ -1,10 +1,11 @@
 Title: Windows agent: handle quotes in directory names
 Component: checks
-Benefit: 2
-State: open
-Cost: 2
-Date: 2011-05-04 13:05:20
+State: done
 Class: bug
+Date: 2011-05-04 13:05:20
+Benefit: 2
+Cost: 2
+Fun: 0
 
 The Windows agent has Problems in W2008 64 Bit since there
 are appearing nasty quotes in the directory names. Here is 
@@ -90,3 +91,7 @@ die ich beim Programmierer abzwacken konnte…
 Ein Feature Request wäre die Übernahme der Änderungen in den nächsten
 Innovations build und die Anführungszeichen automatisch beim Installieren
 des Services.
+
+2011-08-13 18:01:06: changed state open -> done
+Das sollte jetzt funktionieren. Ein erfolgreicher
+Test steht noch aus.

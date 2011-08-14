@@ -1,10 +1,14 @@
 Title: Filter for only_service in BI aggregations needs error handling
 Component: bi
-Benefit: 2
-State: open
-Cost: 2
-Date: 2011-04-07 17:44:13
+State: done
 Class: bug
+Date: 2011-04-07 17:44:13
+Benefit: 2
+Cost: 2
+Fun: 0
 
-If the selected service does not exist, an exception occurs. Tis
+If the selected service does not exist, an exception occurs. This
 is already fixed by not tested.
+
+2011-08-14 15:49:17: changed state open -> done
+Should work. Not tested yet.

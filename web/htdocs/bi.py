@@ -227,6 +227,7 @@ def compile_forest(user):
     g_cache[user] = cache
 
 
+
 # Execute an aggregation rule, but prepare arguments 
 # and iterate FOREACH first
 def compile_rule_node(calllist, lvl):

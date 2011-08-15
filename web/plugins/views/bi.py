@@ -485,10 +485,10 @@ class BIServiceFilter(Filter):
         html.text_input("service")
 
     def heading_info(self, infoname):
-        return html.var("host") + " / " + html.var("service")
+        return html.var_utf8("host") + " / " + html.var_utf8("service")
 
     def service_spec(self):
-        return html.var("site"), html.var("host"), html.var("service")
+        return html.var_utf8("site"), html.var_utf8("host"), html.var_utf8("service")
 
     # Used for linking
     def variable_settings(self, row):

@@ -1,0 +1,11 @@
+Title: Service with Non-Ascii-Characters do not work
+Component: bi
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-08-14 16:17:13
+Class: bug
+
+Problems are (maybe not only)
+- Link to Service details
+- Assumption button not working

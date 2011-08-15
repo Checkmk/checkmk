@@ -901,9 +901,9 @@ def page_all():
 
 
 def ajax_set_assumption():
-    site = html.var("site")
-    host = html.var("host")
-    service = html.var("service")
+    site = html.var_utf8("site")
+    host = html.var_utf8("host")
+    service = html.var_utf8("service")
     if service:
         key = (site, host, service)
     else:

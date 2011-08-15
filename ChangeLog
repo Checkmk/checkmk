@@ -98,7 +98,8 @@
 
     BI:
     * FIX: Fixed displaying of host states (after i18n introduction)h
-    * FiX: fixed filter for aggregation group
+    * FiX: Fixed filter for aggregation group
+    * FIX: Fixed assumption button for services with non-Ascii-characters
 
     MK Livestatus:
     * FIX: fix compile problem on Debian unstable (Thanks to Sven Velt)

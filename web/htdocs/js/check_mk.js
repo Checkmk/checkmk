@@ -637,6 +637,7 @@ function toggle_foldable_container(treename, id) {
     oBox = null;
 }
 
+// TODO: Why is this not in a bi.js?
 function toggle_assumption(oImg, site, host, service)
 {
     // get current state
@@ -654,9 +655,11 @@ function toggle_assumption(oImg, site, host, service)
     else
         current = parseInt(current) + 1; 
 
-    var url = "bi_set_assumption.py?site=" + site + '&host=' + host;
+    // TODO: This needs to be URL-encoded. Also test for non-Ascii-Characters!
+    var url = "bi_set_assumption.py?site=" + encodeURIComponent(site)
+            + '&host=' + encodeURIComponent(host);
     if (service) {
-        url += '&service=' + service;
+        url += '&service=' + encodeURIComponent(service);
     }
     url += '&state=' + current; 
     oImg.src = "images/assume_" + current + ".png";

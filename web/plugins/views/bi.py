@@ -164,20 +164,23 @@ def render_assume_icon(site, host, service):
     else:
         key = (site, host)
     ass = bi.g_assumptions.get(key)
+    # TODO: Non-Ascii-Characters do not work yet!
     mousecode = \
-       'onmouseover="this.style.cursor=\'pointer\';" ' \
+       u'onmouseover="this.style.cursor=\'pointer\';" ' \
        'onmouseout="this.style.cursor=\'auto\';" ' \
        'title="%s" ' \
-       'onclick="toggle_assumption(this, %s, %s, %s);" ' % \
+       'onclick="toggle_assumption(this, \'%s\', \'%s\', \'%s\');" ' % \
          (_("Assume another state for this item (reload page to activate)"),
-          repr(site), repr(str(host)), service == None and 'null' or repr(str(service)))
+         # MIST: DAS HIER MUSS verfünftig für Javascript encodiert werden.
+         # Das Ausgangsmaterial sind UTF-8 kodierte str-Objekte.
+          site, host, service != None and service or '')
     current = str(ass).lower()
-    return '<img state="%s" class=assumption %s src="images/assume_%s.png">\n' % (current, mousecode, current)
+    return u'<img state="%s" class=assumption %s src="images/assume_%s.png">\n' % (current, mousecode, current)
 
 def aggr_render_leaf(tree, show_host):
     site, host = tree[2]["host"]
     service = tree[2].get("service")
-    content = render_assume_icon(site, host, service) 
+    content = u"" + render_assume_icon(site, host, service) 
 
     # Four cases:
     # (1) zbghora17 . Host status   (show_host == True, service == None)

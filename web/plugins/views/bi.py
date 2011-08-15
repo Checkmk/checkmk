@@ -476,7 +476,7 @@ declare_filter(130, BIHostFilter(), _("Filter for all aggregations that base on 
 
 class BIServiceFilter(Filter):
     def __init__(self):
-        Filter.__init__(self, "aggr_service", _("Affected by service"), "host", ["site", "host", "service"], [])
+        Filter.__init__(self, "aggr_service", _("Affected by service"), "aggr", ["site", "host", "service"], [])
 
     def display(self):
         html.write(_("Host") + ": ")

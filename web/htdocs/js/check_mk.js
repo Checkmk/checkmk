@@ -655,7 +655,6 @@ function toggle_assumption(oImg, site, host, service)
     else
         current = parseInt(current) + 1; 
 
-    // TODO: This needs to be URL-encoded. Also test for non-Ascii-Characters!
     var url = "bi_set_assumption.py?site=" + encodeURIComponent(site)
             + '&host=' + encodeURIComponent(host);
     if (service) {

@@ -158,6 +158,10 @@ function pageWidth() {
 function filter_activation(oid)
 {
     var selectobject = document.getElementById(oid);
+    if (!selectobject) {
+        alert("Could not find element " + oid + "!");
+        return;
+    }
     var usage = selectobject.value;
     var oTd = selectobject.parentNode.parentNode.childNodes[2];
     var pTd = selectobject.parentNode;

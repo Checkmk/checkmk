@@ -615,9 +615,11 @@ function toggle_section(nr, oImg) {
         html.write("</tt></td>")
         html.write("</tr>\n")
     html.write("</table>\n")
+    # Set all filters into the proper display state
     html.write("<script language=\"javascript\">\n")
     for fname, filt in allowed_filters.items():
-        html.write("filter_activation(\"filter_%s\");\n" % fname)
+        if fname not in ubiquitary_filters:
+            html.write("filter_activation(\"filter_%s\");\n" % fname)
     html.write("</script>\n")
     section_footer(sid)
 

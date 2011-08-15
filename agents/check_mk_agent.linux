@@ -187,10 +187,11 @@ if which ipmitool >/dev/null
 then
     echo '<<<ipmi>>>'
     IPMI_FILE=$MK_CONFDIR/ipmitool_sensors.cache
-    # Use cache file after 20 minutes
+
+    # Do not use cache file after 20 minutes
     IPMI_MAXAGE=1200
     
-    # Check if file exists and recent enough
+    # Check if file exists and is recent enough
     if [ -s $IPMI_FILE ]
     then
         NOW=$(date +%s)

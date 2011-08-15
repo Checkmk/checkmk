@@ -26,6 +26,7 @@
     * FIX: windows agent: hopefully fix case with quotes in directory name
     * FIX: printer_supply: fixed logic of Perf-O-Meter (mixed up crit with ok)
     * FIX: Solaris agent: reset localization to C, fixes problems with statgrab
+    * FIX: blade_*: fix SNMP scan function for newer firmwares (thanks to Carlos Peón)
     * snmp_uptime, snmp_info: added scan functions. These checks will now
       always be added. Please use ingored_checktypes to disable, if non needed.
     * brocade_port: check for Brocade FC ports has been rewritten with

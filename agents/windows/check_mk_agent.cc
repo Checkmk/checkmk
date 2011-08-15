@@ -1263,7 +1263,7 @@ void listen_tcp_loop()
 
     SOCKET connection;
     // Loop for ever.
-    debug("Die Schleife gestartet.");
+    debug("Starting main loop.");
     while (!should_terminate) 
     {
 	// Das Dreckswindows kann nicht vernuenftig gleichzeitig auf
@@ -1488,11 +1488,10 @@ void do_debug()
 {
     verbose_mode = true;
     do_tcp = false;
-    logwatch_send_initial_entries = true;
-    logwatch_suppress_info = false;
+    // logwatch_send_initial_entries = true;
+    // logwatch_suppress_info = false;
     SOCKET dummy;
-    find_eventlogs(dummy);
-    //section_eventlog(dummy);
+    output_data(dummy);
 }
 
 void do_adhoc()

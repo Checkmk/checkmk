@@ -72,14 +72,18 @@ function resize_dashlets(id, code)
 
 function set_dashboard_size()
 {
-  var width = pageWidth();
+  var body_padding = 10;
+  var width  = pageWidth();
   var height = pageHeight();
+  width  = width - 2*screen_margin - 2*body_padding;
+  height = height - 2*screen_margin - header_height - body_padding;
+
   oDash = document.getElementById("dashboard");
   oDash.style.position = 'absolute';
   oDash.style.left     = screen_margin + "px";
-  oDash.style.top      = header_height + screen_margin + "px";
-  oDash.style.width    = width - 2*screen_margin + "px";
-  oDash.style.height   = height - 2*screen_margin - header_height + "px";
+  oDash.style.top      = (header_height + screen_margin) + "px";
+  oDash.style.width    = width + "px";
+  oDash.style.height   = height + "px";
 
   ajax_url = 'dashboard_resize.py?name=' + dashboard_name 
            + '&width=' + width

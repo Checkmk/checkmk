@@ -252,8 +252,7 @@ def ajax_resize():
 
     board = dashboards[html.var("name")]
 
-    screensize = vec((int(html.var("width")) - 2*screen_margin, 
-                      int(html.var("height")) - 2*screen_margin - header_height))
+    screensize = vec((int(html.var("width")), int(html.var("height"))))
     rastersize = screensize / raster
     used_matrix = {} # keep track of used raster elements
 

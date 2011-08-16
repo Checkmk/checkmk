@@ -56,11 +56,13 @@ void TimeperiodsCache::update(time_t now)
         return;
     }
 
-    _cache_time = minutes;
-
     // Loop over all timeperiods and compute if we are
-    // currently in
+    // currently in. Detect the case where no time periods
+    // are known (yet!). This might be the case when a timed
+    // event broker message arrives *before* the start of the
+    // event loop.
     timeperiod *tp = timeperiod_list;
+    int num_periods = 0;
     while (tp) {
         bool is_in = 0 == check_time_against_period(now, tp);
 
@@ -76,7 +78,13 @@ void TimeperiodsCache::update(time_t now)
         }
 
 	tp = tp->next;
+        num_periods++;
     }
+    if (num_periods > 0)
+        _cache_time = minutes;
+    else
+        logger(LG_INFO, "Timeperiod cache not updated, there are no timeperiods (yet)");
+
     pthread_mutex_unlock(&_cache_lock);
 }
 

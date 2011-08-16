@@ -386,8 +386,8 @@ def mode_editfolder(phase, what, new):
             the_thing["roles"]      = roles
             the_thing["attributes"] = attributes
 
-        if what == "folder":
-           html.reload_sidebar() # refresh WATO snapin
+        # refresh WATO snapin
+        html.reload_sidebar()
 
         save_folder_config()
 
@@ -2218,6 +2218,8 @@ def delete_file_after_confirm(del_file):
         save_folder_config()
         call_hook_file_or_folder_deleted('file', del_file)
         call_hook_host_changed(g_folder)
+        # refresh WATO snapin
+        html.reload_sidebar()
         global g_file
         g_file = None
         return "folder"

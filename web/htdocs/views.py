@@ -1000,6 +1000,8 @@ def page_view():
 
     load_views()
     view_name = html.var("view_name")
+    if view_name == None:
+        raise MKGeneralException("Missing the variable view_name in the URL.")
     view = html.available_views.get(view_name)
     if not view:
         raise MKGeneralException("No view defined with the name '%s'." % view_name)

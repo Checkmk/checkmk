@@ -545,6 +545,14 @@ multisite_painters["svc_contacts"] = {
     "paint" : lambda row: (None, ", ".join(row["service_contacts"]))
 }
 
+multisite_painters["svc_contact_groups"] = {
+    "title" : _("Service contact groups"),
+    "short" : _("Contact groups"),
+    "columns" : ["service_contact_groups"],
+    "paint" : lambda row: (None, ", ".join(row["service_contact_groups"]))
+}
+
+
 multisite_painters["service_description"] = {
     "title" : _("Service description"),
     "short" : _("Service"),
@@ -1165,6 +1173,13 @@ multisite_painters["host_contacts"] = {
     "short" : _("Contacts"),
     "columns" : ["host_contacts"],
     "paint" : lambda row: (None, ", ".join(row["host_contacts"]))
+}
+
+multisite_painters["host_contact_groups"] = {
+    "title" : _("Host contact groups"),
+    "short" : _("Contact groups"),
+    "columns" : ["host_contact_groups"],
+    "paint" : lambda row: (None, ", ".join(row["host_contact_groups"]))
 }
 
 multisite_painters["host_custom_notes"] = {

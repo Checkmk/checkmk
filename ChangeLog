@@ -82,6 +82,7 @@
     * WATO: Added new hook "active-changes" which calls the registered hosts
       with a dict of "dirty" hosts
     * Added column painter for host contacts
+    * Added column painters for contact groups, added those to detail views
     * Detail views of host/service now show contacts
     * Fix playing of sounds: All problem views now have play_sounds activated,
       all other deactivated.

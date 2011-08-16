@@ -87,6 +87,7 @@
       all other deactivated.
     * Rescheduling of Check_MK: introduce a short sleep of 0.7 sec. This increases
       the chance of the passive services being updated before the repaint.
+    * Added missing i18n strings in filter section of view editor
 
     WATO:
     * Configration files can now be administered via the WEB UI

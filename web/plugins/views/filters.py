@@ -229,7 +229,7 @@ class FilterHostState(Filter):
             defval = ""
         else:
             defval = "on"
-        for var, text in [("hst0", "UP"), ("hst1", "DOWN"), ("hst2", "UNREACH"), ("hstp", "PENDING")]:
+        for var, text in [("hst0", _("UP")), ("hst1", _("DOWN")), ("hst2", _("UNREACH")), ("hstp", _("PENDING"))]:
             html.checkbox(var, defval)
             html.write(" %s " % text)
 
@@ -261,7 +261,7 @@ class FilterTristate(Filter):
 
     def display(self):
         current = html.var(self.varname)
-        for value, text in [("1", "yes"), ("0", "no"), ("-1", "(ignore)")]:
+        for value, text in [("1", _("yes")), ("0", _("no")), ("-1", _("(ignore)"))]:
             checked = current == value or (current in [ None, ""] and int(value) == self.deflt)
             html.radiobutton(self.varname, value, checked, text + " &nbsp; ")
 
@@ -299,34 +299,34 @@ class FilterNagiosExpression(FilterTristate):
     def filter_code(self, infoname, positive):
         return positive and self.pos or self.neg
 
-declare_filter(120, FilterNagiosExpression("host", "summary_host", "Is summary host",
+declare_filter(120, FilterNagiosExpression("host", "summary_host", _("Is summary host"),
             "Filter: host_custom_variable_names >= _REALNAME\n",
             "Filter: host_custom_variable_names < _REALNAME\n"))
 
-declare_filter(250, FilterNagiosFlag("service", "service_process_performance_data", "Processes performance data"))
-declare_filter(251, FilterNagiosExpression("service", "has_performance_data", "Has performance data",
+declare_filter(250, FilterNagiosFlag("service",       "service_process_performance_data", _("Processes performance data")))
+declare_filter(251, FilterNagiosExpression("service", "has_performance_data",             _("Has performance data"),
             "Filter: service_perf_data != \n",
             "Filter: service_perf_data = \n"))
 
-declare_filter(130, FilterNagiosFlag("host",    "host_in_notification_period",   "Host in notif. period"))
-declare_filter(131, FilterNagiosFlag("host",    "host_acknowledged",             "Host problem has been acknowledged"))
-declare_filter(132, FilterNagiosFlag("host",    "host_active_checks_enabled",     "Host active checks enabled"))
-declare_filter(133, FilterNagiosFlag("host",    "host_notifications_enabled",     "Host notifications enabled"))
-declare_filter(230, FilterNagiosFlag("service", "service_acknowledged",             "Problem acknowledged"))
-declare_filter(231, FilterNagiosFlag("service", "service_in_notification_period",   "Service in notif. per."))
-declare_filter(232, FilterNagiosFlag("service", "service_active_checks_enabled",    "Active checks enabled"))
-declare_filter(233, FilterNagiosFlag("service", "service_notifications_enabled",    "Notifications enabled"))
-declare_filter(236, FilterNagiosFlag("service", "service_is_flapping",              "Flapping"))
-declare_filter(231, FilterNagiosFlag("service", "service_scheduled_downtime_depth", "Service in downtime"))
-declare_filter(132, FilterNagiosFlag("host",    "host_scheduled_downtime_depth", "Host in downtime"))
-declare_filter(232, FilterNagiosExpression("service", "in_downtime", "Host/service in downtime",
+declare_filter(130, FilterNagiosFlag("host",    "host_in_notification_period",      _("Host in notif. period")))
+declare_filter(131, FilterNagiosFlag("host",    "host_acknowledged",                _("Host problem has been acknowledged")))
+declare_filter(132, FilterNagiosFlag("host",    "host_active_checks_enabled",       _("Host active checks enabled")))
+declare_filter(133, FilterNagiosFlag("host",    "host_notifications_enabled",       _("Host notifications enabled")))
+declare_filter(230, FilterNagiosFlag("service", "service_acknowledged",             _("Problem acknowledged")))
+declare_filter(231, FilterNagiosFlag("service", "service_in_notification_period",   _("Service in notif. per.")))
+declare_filter(232, FilterNagiosFlag("service", "service_active_checks_enabled",    _("Active checks enabled")))
+declare_filter(233, FilterNagiosFlag("service", "service_notifications_enabled",    _("Notifications enabled")))
+declare_filter(236, FilterNagiosFlag("service", "service_is_flapping",              _("Flapping")))
+declare_filter(231, FilterNagiosFlag("service", "service_scheduled_downtime_depth", _("Service in downtime")))
+declare_filter(132, FilterNagiosFlag("host",    "host_scheduled_downtime_depth",    _("Host in downtime")))
+declare_filter(232, FilterNagiosExpression("service", "in_downtime",                _("Host/service in downtime"),
             "Filter: service_scheduled_downtime_depth > 0\nFilter: host_scheduled_downtime_depth > 0\nOr: 2\n",
             "Filter: service_scheduled_downtime_depth = 0\nFilter: host_scheduled_downtime_depth = 0\nAnd: 2\n"))
 
 
 class FilterSite(Filter):
     def __init__(self, name, enforce):
-        Filter.__init__(self, name, "Site", None, ["site"], [])
+        Filter.__init__(self, name, _("Site"), None, ["site"], [])
         self.enforce = enforce
 
     def display(self):
@@ -336,11 +336,11 @@ class FilterSite(Filter):
         if config.is_multisite():
             site = html.var("site")
             if site:
-                return "Sites: %s\n" % html.var("site", "")
+                return "%s: %s\n" % (_('Sites'), html.var("site", ""))
             elif not self.enforce:
                 return ""
             else:
-                return "Sites:\n" # no site at all
+                return "%s:\n" % _('Sites') # no site at all
         else:
             return ""
 
@@ -367,7 +367,7 @@ class FilterTime(Filter):
     def __init__(self, info, name, title, column):
         self.column = column
         self.name = name
-        self.ranges = [ (1, "sec"), (60, "min"), (3600, "hours"), (86400, "days") ]
+        self.ranges = [ (1, _("sec")), (60, _("min")), (3600, _("hours")), (86400, _("days")) ]
         Filter.__init__(self, name, title, info, [ name ] + [ name + "_" + n for (s, n) in self.ranges], [column])
 
     def display(self):
@@ -457,7 +457,7 @@ class FilterLogClass(Filter):
             (3, _("Notifications")), (4, _("Passive checks")),
             (5, _("Commands")),      (6, _("States")) ]
 
-        Filter.__init__(self, "log_class", "Logentry class",
+        Filter.__init__(self, "log_class", _("Logentry class"),
                 "log", [ "logclass%d" % l for l, c in self.log_classes ], [])
 
     def display(self):

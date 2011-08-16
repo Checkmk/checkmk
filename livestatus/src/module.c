@@ -193,6 +193,7 @@ void *client_thread(void *data __attribute__ ((__unused__)))
 
 void start_threads()
 {
+    logger(LG_INFO, "Going to open socket and starting threads");
     if (!g_thread_running) {
 	/* start thread that listens on socket */
 	pthread_atfork(livestatus_count_fork, NULL, livestatus_cleanup_after_fork);

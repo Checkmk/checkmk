@@ -89,9 +89,13 @@ bool TimeperiodsCache::inTimeperiod(timeperiod *tp)
     if (it != _cache.end())
 	is_in = it->second;
     else {
-        logger(LG_INFO, "No timeperiod information available for %s.", tp->name);
-        time_t now = time(0);
-	is_in = 0 == check_time_against_period(now, tp);
+        logger(LG_INFO, "No timeperiod information available for %s. Assuming out of period.", tp->name);
+        is_in = false;
+        // Problem: The method check_time_against_period is to a high
+        // degree not thread safe. In the current situation Icinga is 
+        // very probable to hang up forever.
+        // time_t now = time(0);
+	// is_in = 0 == check_time_against_period(now, tp);
     }
     pthread_mutex_unlock(&_cache_lock);
     return is_in;

@@ -83,6 +83,7 @@
       with a dict of "dirty" hosts
     * Added column painter for host contacts
     * Added column painters for contact groups, added those to detail views
+    * Added filters for host and service contact groups
     * Detail views of host/service now show contacts
     * Fix playing of sounds: All problem views now have play_sounds activated,
       all other deactivated.

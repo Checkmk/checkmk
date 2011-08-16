@@ -108,6 +108,8 @@
     * FIX: fix compile problem on Debian unstable (Thanks to Sven Velt)
     * Column aggregation (Stats) now also works for perf_data
     * New configuration variable data_encoding and full UTF-8 support.
+    * New column contact_groups in table hosts and services (thanks to
+      Matthew Kent)
 
 1.1.11i1:
     Core, Setup, etc.:

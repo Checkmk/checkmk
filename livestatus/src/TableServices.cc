@@ -41,6 +41,7 @@
 #include "DownCommColumn.h"
 #include "CustomVarsColumn.h"
 #include "ServicegroupsColumn.h"
+#include "ContactgroupsColumn.h"
 #include "tables.h"
 #include "auth.h"
 #include "strutil.h"
@@ -366,6 +367,8 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
 
     table->addColumn(new ServicegroupsColumn(prefix + "groups", 
 		"A list of all service groups the service is in", (char *)(&svc.servicegroups_ptr) - ref, indirect_offset));
+    table->addColumn(new ContactgroupsColumn(prefix + "contact_groups",
+		"A list of all contact groups this service is in", (char *)(&svc.contact_groups) - ref, indirect_offset));
 }
 
 

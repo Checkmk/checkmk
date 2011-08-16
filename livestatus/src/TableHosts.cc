@@ -42,6 +42,7 @@
 #include "ServicelistColumn.h"
 #include "ServicelistStateColumn.h"
 #include "HostgroupsColumn.h"
+#include "ContactgroupsColumn.h"
 #include "HostSpecialIntColumn.h"
 #include "tables.h"
 
@@ -298,6 +299,8 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
 
     table->addColumn(new HostgroupsColumn(prefix + "groups",
 		"A list of all host groups this host is in", (char *)(&hst.hostgroups_ptr) - ref, indirect_offset));
+    table->addColumn(new ContactgroupsColumn(prefix + "contact_groups",
+		"A list of all contact groups this host is in", (char *)(&hst.contact_groups) - ref, indirect_offset));
 
     table->addColumn(new ServicelistColumn(prefix + "services", 
 	    "A list of all services of the host",    (char *)(&hst.services) - ref, indirect_offset, false, 0));

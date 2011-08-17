@@ -1012,18 +1012,23 @@ def service_description(checkname, item):
     if not descr_format:
         descr_format = check_info[checkname][1]
 
+    # Note: we strip the service description (remove spaces).
+    # One check defines "Pages %s" as a desription, but the item
+    # can by empty in some cases. Nagios silently drops leading
+    # and trailing spaces in the configuration file.
+
     if type(item) == str:
         # Remove characters from item name that are banned by Nagios
         item_safe = "".join([ c for c in item if c not in nagios_illegal_chars ])
         if "%s" not in descr_format:
             descr_format += " %s"
-        return descr_format % (item_safe,)
+        return (descr_format % (item_safe,)).strip()
     if type(item) == int or type(item) == long:
         if "%s" not in descr_format:
             descr_format += " %s"
-        return descr_format % (item,)
+        return (descr_format % (item,)).strip()
     else:
-        return descr_format
+        return descr_format.strip()
 
 #   +----------------------------------------------------------------------+
 #   |    ____             __ _                     _               _       |

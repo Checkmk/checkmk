@@ -223,7 +223,6 @@ def render_hosts(mode):
     else:
         num_columns = 2
 
-    views.html = html
     views.load_views()
     target = views.get_context_link(html.req.user, view)
     html.write("<table class=allhosts>\n")

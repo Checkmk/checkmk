@@ -69,6 +69,8 @@
       unit) in summary mode
     * FIX: ipmi: Improved output formating in summary mode
     * FIX: BI - fixed wrong variable in running_on aggregation function
+    * FIX: "view_name" variable missing error message when opening view.py
+      while using the "BI Aggregation Groups" and "Hosts" snapins in sidebar
     * Introduced basic infrastructure for multilanguage support in Multisite
     * Make 'Views' snapin foldable
     * Replace old main view by dashboard.

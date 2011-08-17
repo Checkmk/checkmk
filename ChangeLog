@@ -61,28 +61,32 @@
     * Windows: inventory_services now allowes regexes, depends and state/start type
       and also allows host tags.
 
-    Multisite: * FIX: make non-Ascii characters in services names work again * FIX: Avoid
-    exceptions in sidebar on Nagios restart * FIX: printer_supply perfometer: Using white font
-    for black toners * FIX: ipmi: Skipping items with invalid data (0.000 val, "unspecified"
-      unit) in summary mode
-    * FIX: ipmi: Improved output formating in summary mode * FIX: BI - fixed wrong variable
-    in running_on aggregation function * FIX: "view_name" variable missing error message when
-    opening view.py
+    Multisite:
+    * FIX: make non-Ascii characters in services names work again
+    * FIX: Avoid exceptions in sidebar on Nagios restart
+    * FIX: printer_supply perfometer: Using white font for black toners
+    * FIX: ipmi: Skipping items with invalid data (0.000 val, "unspecified" unit) in summary mode
+    * FIX: ipmi: Improved output formating in summary mode
+    * FIX: BI - fixed wrong variable in running_on aggregation function
+    * FIX: "view_name" variable missing error message when opening view.py
       while using the "BI Aggregation Groups" and "Hosts" snapins in sidebar
-    * Introduced basic infrastructure for multilanguage support in Multisite * Make 'Views'
-    snapin foldable * Replace old main view by dashboard.  * Sidebar: Snapins can register for
-    a triggered reload after a nagios
+    * Introduced basic infrastructure for multilanguage support in Multisite
+    * Make 'Views' snapin foldable
+    * Replace old main view by dashboard
+    * Sidebar: Snapins can register for a triggered reload after a nagios
       restart has been detected. Check interval is 30 seconds for now.
-    * Quicksearch snapin: Reloads host lists after a detected nagios restart.  * New config
-    directory multisite.d/ - similar to conf.d/ * great speed up of HTML rendering * support
-    for Python profiling (set profile = True in multisite.mk, profile
+    * Quicksearch snapin: Reloads host lists after a detected nagios restart.
+    * New config directory multisite.d/ - similar to conf.d/
+    * great speed up of HTML rendering
+    * support for Python profiling (set profile = True in multisite.mk, profile
       will be in var/check_mk/web)
     * WATO: Added new hook "active-changes" which calls the registered hosts
       with a dict of "dirty" hosts
-    * Added column painter for host contacts * Added column painters for contact groups, added
-    those to detail views * Added filters for host and service contact groups * Detail views
-    of host/service now show contacts * Fix playing of sounds: All problem views now have
-    play_sounds activated,
+    * Added column painter for host contacts
+    * Added column painters for contact groups, added those to detail views
+    * Added filters for host and service contact groups
+    * Detail views of host/service now show contacts
+    * Fix playing of sounds: All problem views now have play_sounds activated,
       all other deactivated.
     * Rescheduling of Check_MK: introduce a short sleep of 0.7 sec. This increases
       the chance of the passive services being updated before the repaint.

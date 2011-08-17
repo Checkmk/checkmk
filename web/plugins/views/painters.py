@@ -1598,6 +1598,12 @@ multisite_painters["log_type"] = {
     "columns" : ["log_type"],
     "paint" : lambda row: ("nowrap", row["log_type"])
 }
+multisite_painters["log_contact_name"] = {
+    "title" : _("Log: contact name"),
+    "short" : _("Contact"),
+    "columns" : ["log_contact_name"],
+    "paint" : lambda row: ("nowrap", row["log_contact_name"])
+}
 def paint_log_icon(row):
     img = None
     log_type = row["log_type"]

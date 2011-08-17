@@ -93,6 +93,8 @@
     * Rescheduling of Check_MK: introduce a short sleep of 0.7 sec. This increases
       the chance of the passive services being updated before the repaint.
     * Added missing i18n strings in filter section of view editor
+    * Added filter and painter for the contact_name in log table
+    * Added several views to display the notification logs of Nagios
 
     WATO:
     * Configration files can now be administered via the WEB UI

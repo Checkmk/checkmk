@@ -506,3 +506,5 @@ class FilterLogClass(Filter):
 
 declare_filter(255, FilterLogClass())
 declare_filter(202, FilterText("log_plugin_output",  _("Log: plugin output"), "log", "log_plugin_output", "log_plugin_output", "~~"))
+declare_filter(260, FilterText("log_contact_name",   _("Log: contact name"),  "log", "log_contact_name",  "log_contact_name",  "="),
+                                                                                                  _("Exact match, used for linking"))

@@ -24,6 +24,18 @@ button, input, td, th, select {
     font-size: 9pt;
 }
 
+input, select, textarea {
+    padding: 3px;
+    border: 1px #73767A solid;
+    outline: invert none medium;
+    -webkit-border-radius: 3px; -moz-border-radius: 3px; border-radius: 3px;
+    background-color: #fff;
+}
+
+input:hover, select:hover, textarea:hover {
+    background-color: #EDECEB;
+}
+
 img {
     border-style: none;
 }
@@ -67,7 +79,7 @@ ul.treeangle li {
 }
 
 input.buttonlink {
-    padding: 0;
+    padding: 1px;
     font-size: 8pt;
 }
 /*
@@ -1101,7 +1113,6 @@ table.form img.toggleheader.hover {
 table.form td.legend, table.form td.title { 
     color: #274750;
     border: 1px solid #fff;
-    height: 32px;
     padding-top: 10px;
 }
 
@@ -1109,7 +1120,6 @@ table.form td.legend, table.form td.title {
 table.form td.buttons { 
     color: #274750;
     border: 1px solid #fff;
-    height: 32px;
     padding-top: 10px;
     text-align: right;
 }

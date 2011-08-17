@@ -1,6 +1,8 @@
 1.1.11i2:
     Core, Setup, etc.:
     * FIX: sort output of cmk --list-hosts alphabetically
+    * FIX: automatically remove leading and trailing space from service names
+      (this fixes a problem with printer_pages and an empty item)
     * Great speed up of cmk -N/-C/-U/-R, especially when number of hosts is
       large.
     * new main.mk option delay_precompile: if True, check_mk will skip Python 

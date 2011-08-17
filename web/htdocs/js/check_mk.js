@@ -566,33 +566,37 @@ function handleReload(url) {
 // --------------------------------------------------------------------------
 // BI
 // --------------------------------------------------------------------------
-var tree_anim_o = null;
+//
+var fold_steps = [ 0, 10, 10, 15, 20, 30, 40, 55, 80 ];
 
 function toggle_folding(oImg, state) {
-    tree_anim_o = oImg;
-    if (state) {
-        oImg.src = "images/tree_10.png";
-        setTimeout("set_tree_animation_step('20');", 10);
-        setTimeout("set_tree_animation_step('30');", 20);
-        setTimeout("set_tree_animation_step('40');", 35);
-        setTimeout("set_tree_animation_step('50');", 55);
-        setTimeout("set_tree_animation_step('60');", 85);
-        setTimeout("set_tree_animation_step('70');", 125);
-        setTimeout("set_tree_animation_step('80');", 180);
-        setTimeout("set_tree_animation_step('90');", 260);
+    // state
+    // 0: is currently opened and should be closed now
+    // 1: is currently closed and should be opened now
+    setTimeout("folding_step('" + oImg.id + "', " + state + ");", 0);
+}
 
-    } 
-    else {
-        oImg.src = "images/tree_80.png";
-        setTimeout("set_tree_animation_step('70');", 10);
-        setTimeout("set_tree_animation_step('60');", 20);
-        setTimeout("set_tree_animation_step('50');", 35);
-        setTimeout("set_tree_animation_step('40');", 55);
-        setTimeout("set_tree_animation_step('30');", 85);
-        setTimeout("set_tree_animation_step('20');", 125);
-        setTimeout("set_tree_animation_step('10');", 180);
-        setTimeout("set_tree_animation_step('00');", 260);
+function folding_step(objId, state, step) {
+    // Initialize unset step
+    if(typeof step === 'undefined')
+        if(state == 1)
+            step = 1;
+        else
+            step = 8;
+    
+    document.getElementById(objId).src = "images/tree_" + step + "0.png";
+
+    if(state == 1) {
+        if(step == 9)
+            return;
+        step += 1;
+    } else {
+        if(step == 0)
+            return;
+        step -= 1;
     }
+
+    setTimeout("folding_step('" + objId + "', " + state + ", " + step + ");", fold_steps[step]);
 }
 
 function toggle_tree_state(tree, name, oContainer) {
@@ -625,11 +629,6 @@ function toggle_subtree(oImg)
     }
     oSubtree = null;
     get_url(url);
-}
-
-function set_tree_animation_step(num)
-{
-    tree_anim_o.src = "images/tree_" + num + ".png";
 }
 
 function toggle_foldable_container(treename, id) {

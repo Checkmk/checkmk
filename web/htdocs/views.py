@@ -539,9 +539,9 @@ function toggle_section(nr, oImg) {
   var oContent = document.getElementById("ed_"   + nr);
   toggle_tree_state('vieweditor', nr, oContent);
   if (oContent.style.display == "none")
-    toggle_folding(oImg, 1);
-  else
     toggle_folding(oImg, 0);
+  else
+    toggle_folding(oImg, 1);
   oContent = null;
 }
 """)
@@ -558,9 +558,10 @@ function toggle_section(nr, oImg) {
 
     def section_footer(sid):
         html.write("</div></td></tr>\n")
+        # Open the section when the user had it open last time
         states = weblib.get_tree_states('vieweditor')
         if states.get(str(sid), 'off') == 'on':
-            html.javascript('toggle_section("%d", this)' % sid)
+            html.javascript('toggle_section("%d", document.getElementById("img_%s"))' % (sid, sid))
 
     # Properties
     sid = 2

@@ -150,9 +150,12 @@ def page_handler():
         # Show contexts buttons
         html.begin_context_buttons()
         modefunc("buttons")
-        for inmode, buttontext, targetmode in extra_buttons:
+        for inmode, buttontext, target in extra_buttons:
             if inmode == current_mode:
-                html.context_button(buttontext, make_link([("mode", targetmode)]))
+                if '/' == target[0] or target.startswith('../') or '://' in target:
+                    html.context_button(buttontext, target)
+                else:
+                    html.context_button(buttontext, make_link([("mode", target)]))
         html.end_context_buttons()
 
         # Show outcome of action

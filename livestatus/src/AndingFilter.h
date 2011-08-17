@@ -36,8 +36,10 @@ protected:
     typedef deque<Filter *> _subfilters_t;
     _subfilters_t _subfilters;
 public:
+    AndingFilter() {}
     ~AndingFilter();
     void addSubfilter(Filter *);
+    Filter *stealLastSubfiler();
     bool accepts(void *data);
     void combineFilters(int count, int andor);
     unsigned numFilters() { return _subfilters.size(); }

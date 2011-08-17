@@ -41,6 +41,7 @@
 #include "StatsColumn.h"
 #include "Aggregator.h"
 #include "OringFilter.h"
+#include "NegatingFilter.h"
 #include "waittriggers.h"
 #include "data_encoding.h"
 
@@ -82,11 +83,17 @@ Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
       else if (!strncmp(buffer, "And:", 4))
 	 parseAndOrLine(lstrip(buffer + 4), ANDOR_AND, true);
 
+      else if (!strncmp(buffer, "Negate:", 7))
+	 parseNegateLine(lstrip(buffer + 7), true);
+
       else if (!strncmp(buffer, "StatsOr:", 8))
 	 parseStatsAndOrLine(lstrip(buffer + 8), ANDOR_OR);
 
       else if (!strncmp(buffer, "StatsAnd:", 9))
 	 parseStatsAndOrLine(lstrip(buffer + 9), ANDOR_AND);
+
+       else if (!strncmp(buffer, "StatsNegate:", 12))
+ 	 parseStatsNegateLine(lstrip(buffer + 12));
 
       else if (!strncmp(buffer, "Stats:", 6))
 	 parseStatsLine(lstrip(buffer + 6));
@@ -126,6 +133,9 @@ Query::Query(InputBuffer *input, OutputBuffer *output, Table *table) :
 
       else if (!strncmp(buffer, "WaitConditionOr:", 16))
 	 parseAndOrLine(lstrip(buffer + 16), ANDOR_OR, false);
+
+      else if (!strncmp(buffer, "WaitConditionNegate:", 20))
+	 parseNegateLine(lstrip(buffer + 20), false);
 
       else if (!strncmp(buffer, "WaitTrigger:", 12))
 	 parseWaitTriggerLine(lstrip(buffer + 12));
@@ -254,6 +264,38 @@ void Query::parseAndOrLine(char *line, int andor, bool filter)
        _wait_condition.combineFilters(number, andor);
 }
 
+void Query::parseNegateLine(char *line, bool filter)
+{
+    if (next_field(&line)) {
+        _output->setError(RESPONSE_CODE_INVALID_HEADER, 
+            filter ? "Negate: does not take any arguments"
+                   : "WaitConditionNegate: does not take any arguments");
+        return;
+    }
+
+    Filter *to_negate;
+    if (filter) {
+        to_negate = _filter.stealLastSubfiler();
+        if (!to_negate) {
+            _output->setError(RESPONSE_CODE_INVALID_HEADER, "Negate: no Filter: header to negate");
+            return;
+        }
+    }
+    else {
+        to_negate = _wait_condition.stealLastSubfiler();
+        if (!to_negate) {
+            _output->setError(RESPONSE_CODE_INVALID_HEADER, "Negate: no Wait:-condition negate");
+            return;
+        }
+    }
+    Filter *negated = new NegatingFilter(to_negate);
+    if (filter) 
+        _filter.addSubfilter(negated);
+    else
+        _wait_condition.addSubfilter(negated);
+}
+
+
 void Query::parseStatsAndOrLine(char *line, int andor)
 {
    char *value = next_field(&line);
@@ -287,6 +329,28 @@ void Query::parseStatsAndOrLine(char *line, int andor)
        number --;
    }
    _stats_columns.push_back(new StatsColumn(0, anding, STATS_OP_COUNT));
+}
+
+
+void Query::parseStatsNegateLine(char *line)
+{
+    if (next_field(&line)) {
+        _output->setError(RESPONSE_CODE_INVALID_HEADER, "StatsNegate: does not take any arguments");
+        return;
+    }
+    if (_stats_columns.size() == 0) {
+        _output->setError(RESPONSE_CODE_INVALID_HEADER, "StatsNegate: no Stats: headers available");
+        return;
+    }
+    StatsColumn *col = _stats_columns.back();
+    if (col->operation() != STATS_OP_COUNT) {
+        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Can use StatsNegate only on Stats: headers of filter type");
+        return;
+    }
+    NegatingFilter *negated = new NegatingFilter(col->stealFilter());
+    delete col;
+    _stats_columns.pop_back();
+    _stats_columns.push_back(new StatsColumn(0, negated, STATS_OP_COUNT));
 }
 
 void Query::parseStatsLine(char *line)

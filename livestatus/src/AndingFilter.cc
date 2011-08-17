@@ -43,6 +43,18 @@ void AndingFilter::addSubfilter(Filter *f)
 }
 
 
+Filter *AndingFilter::stealLastSubfiler()
+{
+    if (_subfilters.size() == 0) 
+       return 0;
+    else {
+        Filter *l = _subfilters.back();
+        _subfilters.pop_back();
+        return l;
+    }
+}
+
+
 bool AndingFilter::accepts(void *data)
 {
    for (_subfilters_t::iterator it = _subfilters.begin();

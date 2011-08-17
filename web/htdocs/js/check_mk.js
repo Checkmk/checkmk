@@ -573,10 +573,10 @@ function toggle_folding(oImg, state) {
     // state
     // 0: is currently opened and should be closed now
     // 1: is currently closed and should be opened now
-    setTimeout("folding_step('" + oImg.id + "', " + state + ");", 0);
+    setTimeout(function() { folding_step(oImg, state); }, 0);
 }
 
-function folding_step(objId, state, step) {
+function folding_step(oImg, state, step) {
     // Initialize unset step
     if(typeof step === 'undefined')
         if(state == 1)
@@ -584,19 +584,23 @@ function folding_step(objId, state, step) {
         else
             step = 8;
     
-    document.getElementById(objId).src = "images/tree_" + step + "0.png";
+    oImg.src = "images/tree_" + step + "0.png";
 
     if(state == 1) {
-        if(step == 9)
+        if(step == 9) {
+            oImg = null;
             return;
+        }
         step += 1;
     } else {
-        if(step == 0)
+        if(step == 0) {
+            oImg = null;
             return;
+        }
         step -= 1;
     }
 
-    setTimeout("folding_step('" + objId + "', " + state + ", " + step + ");", fold_steps[step]);
+    setTimeout(function() { folding_step(oImg, state, step); }, fold_steps[step]);
 }
 
 function toggle_tree_state(tree, name, oContainer) {

@@ -51,8 +51,9 @@ class Aggregator;
 #define RESPONSE_HEADER_FIXED16 1
 #define RESPONSE_HEADER_HTTP    2 // not yet implemented
 
-#define ANDOR_OR  0
-#define ANDOR_AND 1
+#define ANDOR_OR     0
+#define ANDOR_AND    1
+#define ANDOR_NEGATE 2
 
 #define UNKNOWN_AUTH_USER ((contact *)0xdeadbeaf)
 
@@ -140,7 +141,9 @@ private:
    void parseStatsLine(char *line);
    void parseStatsGroupLine(char *line);
    void parseAndOrLine(char *line, int andor, bool filter /* and not cond */);
+   void parseNegateLine(char *line, bool filter /* and not cond */);
    void parseStatsAndOrLine(char *line, int andor);
+   void parseStatsNegateLine(char *line);
    void parseColumnsLine(char *line);
    void parseColumnHeadersLine(char *line);
    void parseLimitLine(char *line);

@@ -22,34 +22,21 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef AndingFilter_h
-#define AndingFilter_h
+#ifndef NegatingFilter_h
+#define NegatingFilter_h
 
 #include "config.h"
-
 #include "Filter.h"
-#include <deque>
 
-class AndingFilter : public Filter
+class NegatingFilter : public Filter
 {
-protected:
-    typedef deque<Filter *> _subfilters_t;
-    _subfilters_t _subfilters;
+    Filter *_filter;
 public:
-    AndingFilter() {}
-    ~AndingFilter();
-    void addSubfilter(Filter *);
-    Filter *stealLastSubfiler();
-    bool accepts(void *data);
-    void combineFilters(int count, int andor);
-    unsigned numFilters() { return _subfilters.size(); }
-    _subfilters_t::iterator begin() { return _subfilters.begin(); }
-    _subfilters_t::iterator end() { return _subfilters.end(); }
-    void *findIndexFilter(const char *columnname);
-    void findIntLimits(const char *columnname, int *lower, int *upper);
-    bool optimizeBitmask(const char *columnname, uint32_t *mask);
+    NegatingFilter(Filter *filter) : _filter(filter) {}
+    ~NegatingFilter() { delete _filter; }
+    bool accepts(void *data) { return !_filter->accepts(data); }
 };
 
 
-#endif // AndingFilter_h
+#endif // NegatingFilter_h
 

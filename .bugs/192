@@ -1,10 +1,11 @@
 Title: Dashlets mit Reload bleiben bei Apache Fehler hängen
 Component: multisite
-Benefit: 2
-State: open
-Cost: 2
-Date: 2011-08-16 17:13:46
+State: wontfix
 Class: bug
+Date: 2011-08-16 17:13:46
+Benefit: 2
+Cost: 2
+Fun: 0
 
 Der Apache Fehler bleibt stehen. Der Reload passiert nicht mehr:
 
@@ -17,3 +18,6 @@ You need to start this site in order to access the web interface.
 
 Sobald wir das Refresh per AJAX realisiert haben, sollte das
 Problem damit dann auch gelöst sein.
+
+2011-08-18 22:25:38: changed state open -> wontfix
+Wird eh verschwinden.

@@ -1068,33 +1068,26 @@ void section_eventlog(SOCKET &out)
 
 char *add_interpreter(char *path, char *newpath)
 {
-    if (!strcmp(path + strlen(path) - 5, ".vbs\"")) {
+    if (!strcmp(path + strlen(path) - 4, ".vbs")) {
         // If this is a vbscript don't rely on the default handler for this
         // file extensions. This might be notepad or some other editor by
         // default on a lot of systems. So better add cscript as interpreter.
-        snprintf(newpath, 256, "cscript.exe //Nologo %s", path);
+        snprintf(newpath, 256, "cscript.exe //Nologo \"%s\"", path);
         return newpath;
     }
-    else if (!strcmp(path + strlen(path) - 5, ".ps1\"")) {
+    else if (!strcmp(path + strlen(path) - 4, ".ps1")) {
         // Same for the powershell scripts. Add the powershell interpreter.
         // To make this work properly two things are needed:
         //   1.) The powershell interpreter needs to be in PATH
         //   2.) The execution policy needs to allow the script execution
         //       -> Get-ExecutionPolicy / Set-ExecutionPolicy
-        // Another ugly thing: The commandline syntax of the interpreter.
-        //                     we need to replace the quotes round the path
-        //                     and put the path into single quotes oO.
-
-        // Strip the quotes round the string
-        char tmppath[256];
-        strcpy(tmppath, ++path);
-        tmppath[strlen(tmppath) - 1] = '\0';
-
-        snprintf(newpath, 256, "powershell.exe -NoLogo -ExecutionPolicy RemoteSigned \"& \'%s\'\"", tmppath);
+        snprintf(newpath, 256, "powershell.exe -NoLogo -ExecutionPolicy RemoteSigned \"& \'%s\'\"", path);
         return newpath;
     }
-    else
-        return path;
+    else {
+        snprintf(newpath, 256, "\"%s\"", path);
+        return newpath;
+    }
 }
 
 void run_plugin(SOCKET &out, char *path) 
@@ -1121,7 +1114,7 @@ void run_external_programs(SOCKET &out, char *dirname)
         while (0 != (de = readdir(dir))) {
             char *name = de->d_name;
             if (name[0] != '.') {
-                snprintf(path, sizeof(path), "\"%s\\%s\"", dirname, name);
+                snprintf(path, sizeof(path), "%s\\%s", dirname, name);
                 run_plugin(out, path);
             }
         }

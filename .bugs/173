@@ -1,10 +1,11 @@
 Title: Windows logfile event ID is wrong
 Component: checks
-Benefit: 1
-State: open
-Cost: 2
-Date: 2011-03-02 11:16:29
+State: done
 Class: bug
+Date: 2011-03-02 11:16:29
+Benefit: 1
+Cost: 2
+Fun: 0
 
 The event ID as output by the agent is wrong. Looks like we need to
 do a % 65536:
@@ -57,3 +58,6 @@ Or maybe we need %u instead of %lu.
 >     <Binary>03000000</Binary>
 >   </EventData>
 > </Event>
+
+2011-08-18 21:31:55: changed state open -> done
+Wird inzwischen richtig gemacht: divmod(3238133770, 65536) -> (49410, 10)

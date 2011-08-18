@@ -8,6 +8,10 @@
       new log messages per log file
     * Windows Agent: Now supports direct execution of powershell scripts
 
+    MK Livestatus:
+    * WaitObject: allow to separate host name and service with a semicolon.
+      That makes host names containing spaces possible.
+
 1.1.11i2:
     Core, Setup, etc.:
     * FIX: sort output of cmk --list-hosts alphabetically

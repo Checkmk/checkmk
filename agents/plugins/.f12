@@ -1,0 +1,3 @@
+#!/bin/bash
+sudo mkdir -p /usr/lib/check_mk_agent/plugins
+sudo install -m 755 * /usr/lib/check_mk_agent/plugins

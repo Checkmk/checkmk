@@ -26,7 +26,7 @@
 
 # Call with -d for debug mode: colored output, no saving of status
 
-import sys,os,re
+import sys, os, re, time
 
 if '-d' in sys.argv[1:]:
     tty_red     = '\033[1;31m'
@@ -179,7 +179,29 @@ def process_logfile(logfile, patterns):
     f = os.fdopen(fl)
     worst = 0
     outputtxt = ""
+    lines_parsed = 0
+    start_time = time.time()
+
     for line in f:
+        lines_parsed += 1
+        # Check if maximum number of new log messages is exceeded
+        if opt_maxlines != None and lines_parsed > opt_maxlines:
+            outputtxt += "%s Maximum number (%d) of new log messages exceeded.\n" % (
+               opt_overflow, opt_maxlines)
+            worst = max(worst, opt_overflow_level)
+            os.lseek(fl, 0, 2) # Seek to end of file, skip all other messages
+            break
+
+        # Check if maximum processing time (per file) is exceeded. Check only
+        # every 100'th line in order to save system calls
+        if opt_maxtime != None and lines_parsed % 100 == 10 \
+            and time.time() - start_time > opt_maxtime:
+            outputtxt += "%s Maximum parsing time (%.1f sec) of this log file exceeded.\n" % (
+               opt_overflow, opt_maxtime)
+            worst = max(worst, opt_overflow_level)
+            os.lseek(fl, 0, 2) # Seek to end of file, skip all other messages
+            break
+
         level = "."
         for lev, pattern in patterns:
             if pattern.search(line[:-1]):
@@ -189,6 +211,7 @@ def process_logfile(logfile, patterns):
                 break
         color = {'C': tty_red, 'W': tty_yellow, 'I': tty_blue, '.': ''}[level]
         outputtxt += "%s%s %s%s\n" % (color, level, line[:-1], tty_normal)
+
     new_offset = os.lseek(fl, 0, 1) # os.SEEK_CUR not available in Python 2.4
     status[logfile] = new_offset, inode
 
@@ -203,17 +226,44 @@ except Exception, e:
     print "CANNOT READ CONFIG FILE: %s" % e
     sys.exit(1)
 
+# Simply ignore errors in the status file.  In case of a corrupted status file we simply begin
+# with an empty status. That keeps the monitoring up and running - even if we might loose a
+# message in the extreme case of a corrupted status file.
 try:
     status = read_status()
-except IOError:
-    status = {}
 except Exception, e:
-    print "CANNOT PARSE STATUS FILE: %s" % e
-    sys.exit(1)
     status = {}
 
+
+# The filename line may contain options like 'maxlines=100' or 'maxtime=10'
 for filenames, patterns in config:
+    # Initialize options with default values
+    opt_maxlines = None
+    opt_maxtime = None
+    opt_overflow = 'C'
+    opt_overflow_level = 2
+    try:
+        options = [ o.split('=', 1) for o in filenames if '=' in o ]
+        for key, value in options:
+            if key == 'maxlines':
+                opt_maxlines = int(value)
+            elif key == 'maxtime':
+                opt_maxtime = float(value)
+            elif key == 'overflow':
+                if value not in [ 'C', 'I', 'W' ]:
+                    raise Exception("Invalid value %s for overflow. Allowed are C, I and W" % value)
+                opt_overflow = value
+                opt_overflow_level = {'C':2, 'W':1, 'I':0}[value]
+            else:
+                raise Exception("Invalid option %s" % key)
+    except Exception, e:
+        print "INVALID CONFIGURATION: %s" % e
+        sys.exit(1)
+
+
     for glob in filenames:
+        if '=' in glob:
+            continue
         logfiles = [ l.strip() for l in os.popen("ls %s 2>/dev/null" % glob).readlines() ]
         if len(logfiles) == 0:
             print '[[[%s:missing]]]' % glob

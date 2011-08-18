@@ -1075,6 +1075,24 @@ char *add_interpreter(char *path, char *newpath)
         snprintf(newpath, 256, "cscript.exe //Nologo %s", path);
         return newpath;
     }
+    else if (!strcmp(path + strlen(path) - 5, ".ps1\"")) {
+        // Same for the powershell scripts. Add the powershell interpreter.
+        // To make this work properly two things are needed:
+        //   1.) The powershell interpreter needs to be in PATH
+        //   2.) The execution policy needs to allow the script execution
+        //       -> Get-ExecutionPolicy / Set-ExecutionPolicy
+        // Another ugly thing: The commandline syntax of the interpreter.
+        //                     we need to replace the quotes round the path
+        //                     and put the path into single quotes oO.
+
+        // Strip the quotes round the string
+        char tmppath[256];
+        strcpy(tmppath, ++path);
+        tmppath[strlen(tmppath) - 1] = '\0';
+
+        snprintf(newpath, 256, "powershell.exe -NoLogo -ExecutionPolicy RemoteSigned \"& \'%s\'\"", tmppath);
+        return newpath;
+    }
     else
         return path;
 }

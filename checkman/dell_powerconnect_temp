@@ -1,0 +1,56 @@
+title: Checks the temperature in Dell PowerConnect Switches
+agents: snmp
+author: Chris Bowlby <cbowlby@tenthpowertech.com>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the temperature inside Dell PowerConnect Switches which support the
+ RADLAN-MIB/NetDiscover MIB. It will retreive the temperature (Celcius), and the state 
+ of the temperature sensor.
+
+ A single service will be created showing the internal temperature at the time the check 
+ occurred However, two charts are created that plot the state of the sensor, and the 
+ value returned for the temperature.
+
+ The state of the check will return an OK value if the sensor is working properly, otherwise
+ it will return a WARNING state if the sensor is no longer available, or a CRITICAL state
+ if the sensor becomes non-functional.
+
+ The temperature can also trigger a WARNING or CRITICAL nagios state if the temperature
+ exceeds the defined threshold values for each state.
+
+ By default, the temperature returned by the SNMP check is returned in Degrees Celcius.
+
+ The Dell PowerConnect manuals indicate the hardware can fail at any temperature over
+ 41 or 42 degrees Celcius, depending on the model.
+
+ Currently, testing has been completed with the Dell PowerConnect 5448 and 5424 models,
+ however the service check may work with other models.
+
+examples:
+ It is possible to over-ride the default WARNING and CRITICAL threshold values
+ defined above, by ensuring the following variable configuration is set in
+ your local main.mk file.
+
+ # Indicate warning at 30 degrees C, and indicate critical for 35 degrees C
+ dell_powerconnect_temp_default_values = (30, 35)
+
+perfdata: 
+ The temperature chart uses a single variable, the temperature (0..200) representing 
+ the switchs internal temperature in degrees Celcius.
+
+ The sensor chart uses a single variable to indicate the state (0..1), where a 1
+ represents the sensor is "ON". A 0 represents the switch is is "OFF" any any other
+ state where it is non-operational, or unavailable.
+
+inventory:
+ During the inventory phase of check_mk, it will identify one service {Temperature},
+ as long as the MIB defined above is supported on the switch.
+
+[parameters]
+warning (int): The temperature, in degrees Celcius, at which a warning state is triggered.
+critical (int): The temperature, in degrees Celcius, at which a critical state is triggered.
+
+[configuration]
+dell_powerconnect_cpu_default_levels(int, int): The Default percentage values used by the inventory checks.
+ These variables are pre-set to {(35, 40)}.

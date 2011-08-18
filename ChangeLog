@@ -1,3 +1,8 @@
+1.1.11i3:
+    Checks & Agents:
+    * mk_logwatch: allow to set limits in processing time and number of
+      new log messages per log file
+
 1.1.11i2:
     Core, Setup, etc.:
     * FIX: sort output of cmk --list-hosts alphabetically

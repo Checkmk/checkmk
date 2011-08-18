@@ -1,10 +1,11 @@
 Title: Make configurable limit on lines processed by mk_logwatch
 Component: checks
-Benefit: 1
-State: open
-Cost: 2
-Date: 2011-01-30 13:42:20
+State: done
 Class: feature
+Date: 2011-01-30 13:42:20
+Benefit: 1
+Cost: 2
+Fun: 0
 
 Logfile that grow fast make problems with mk_logwatch since
 the processing takes too long. We could make the following
@@ -19,3 +20,9 @@ or "W" if this limit is exceeded.
 
 Exceeding lines are not lost but processed in the next
 turn.
+
+We could also allow a time limit, e.g. maxtime=20s.
+
+
+2011-08-18 16:52:03: changed state open -> done
+Is implemented. Documentation is online.

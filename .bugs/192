@@ -1,8 +1,8 @@
 Title: Dashlets mit Reload bleiben bei Apache Fehler hängen
 Component: multisite
-Benefit: 3
+Benefit: 2
 State: open
-Cost: 3
+Cost: 2
 Date: 2011-08-16 17:13:46
 Class: bug
 
@@ -14,3 +14,6 @@ Der Apache Fehler bleibt stehen. Der Reload passiert nicht mehr:
 OMD: Site Not Started
 You need to start this site in order to access the web interface.
 ----
+
+Sobald wir das Refresh per AJAX realisiert haben, sollte das
+Problem damit dann auch gelöst sein.

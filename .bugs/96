@@ -12,3 +12,13 @@ the user has to enter his login again for each remote site. While
 this is not nice, it works nevertheless. 
 
 But: the PNP popups do *not* work, even after one is logged in.
+
+Das Verhalten ist bei Firefox und Chrome so.  Habe jetzt herausgefunden mittels Chrome:
+Dieser meldet als Fehler "Origin ... is not allowed by Access-Control-Allow-Origin.".
+Der Grund ist wohl also, dass eine Seite, die von localhost kommt, per AJAX was von
+einem anderen Server holen will. Das Cookie von PNP wird übrigens auch nicht mitgesendet.
+
+Was man hier machen kann, ist mir nicht klar. Kann man anstelle was mit Ajax zu
+holen, z.B. ein iframe reinhängen, das das Zeug selbst holt? Warum machen wir
+hier eigentlich einen Ajax-Call? Und warum können wir die Inline-Grafiken holen,
+die bei den Status-Details angezeigt werden?

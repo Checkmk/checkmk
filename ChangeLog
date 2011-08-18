@@ -1,5 +1,6 @@
 1.1.11i3:
     Core, Setup, etc.:
+    * FIX: allow host names to have spaces
     * --snmpwalk: fix missing space in case of HEX strings
 
     Checks & Agents:
@@ -11,6 +12,9 @@
     MK Livestatus:
     * WaitObject: allow to separate host name and service with a semicolon.
       That makes host names containing spaces possible.
+
+    Multisite:
+    * FIX: reschedule now works for host names containing spaces
 
 1.1.11i2:
     Core, Setup, etc.:

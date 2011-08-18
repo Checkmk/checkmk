@@ -64,7 +64,7 @@ def action_reschedule():
         html.live.set_only_sites([site])
         row = html.live.query_row(
                 "GET %ss\n"
-                "WaitObject: %s %s\n"
+                "WaitObject: %s;%s\n"
                 "WaitCondition: last_check >= %d\n"
                 "WaitTimeout: %d\n"
                 "WaitTrigger: check\n"

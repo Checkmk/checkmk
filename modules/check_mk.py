@@ -2785,7 +2785,18 @@ def do_restore(tarname):
             if os.path.exists(absdir):
                 if opt_verbose:
                     sys.stderr.write("  Deleting old contents of '%s'\n" % absdir)
-                shutil.rmtree(absdir)
+                # The path might point to a symbalic link. So it is no option
+                # to call shutil.rmtree(). We must delete just the contents
+                for f in os.listdir(absdir):
+                    if f not in [ '.', '..' ]:
+                        try:
+                            p = absdir + "/" + f
+                            if os.path.isdir(p):
+                                shutil.rmtree(p)
+                            else:
+                                os.remove(p)
+                        except Exception, e:
+                            sys.stderr.write("  Warning: cannot delete %s: %s\n" % (p, e))
         else:
             basedir = os.path.dirname(absdir)
             filename = os.path.basename(absdir)

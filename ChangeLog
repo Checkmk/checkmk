@@ -2,6 +2,7 @@
     Core, Setup, etc.:
     * FIX: allow host names to have spaces
     * --snmpwalk: fix missing space in case of HEX strings
+    * cmk --restore: be aware of counters and cache being symbolic links
 
     Checks & Agents:
     * FIX: printer_pages: workaround for trailing-zero bug in HP Jetdirect

@@ -45,34 +45,40 @@ foreach ($template_dirs as $template_dir) {
   }
 }
 
+# Use another color for each graph. After eight graphs colors wrap around.
+$area_colors = array( "beff5f", "5fffef", "5faaff", "cc5fff", "ff5fe2", "ff5f6c", "ff975f", "ffec5f");
+$line_colors = array( "5f7a2f", "2f8077", "2f5580", "662f80", "802f71", "802f36", "804b2f", "80762f");
+
 if (!$found) {
-  $def[1] = "DEF:cnt=$RRDFILE[1]:$DS[1]:MAX "; 
-  $def[1] .= "AREA:cnt#00ffc6:\"$servicedesc\" "; 
-  $def[1] .= "LINE1:cnt#226600: "; 
-
-  $upper = "";
-  $lower = " -l 0";
-  if ($WARN[1] != "") {
-    $def[1] .= "HRULE:$WARN[1]#ffff00:\"Warning\" ";
-  }
-  if ($CRIT[1] != "") {
-    $def[1] .= "HRULE:$CRIT[1]#ff0000:\"Critical\" ";
-  }
-  if ($MIN[1] != "") {
-    $lower = " -l " . $MIN[1];
-    $minimum = $MIN[1];
-  }
-  if ($MAX[1] != "") {
-    $upper = " -u" . $MAX[1];
-    $def[1] .= "HRULE:$MAX[1]#0000b0:\"Upper limit\" ";
-  }
-
-  $opt[1] = "$lower $upper --title '$hostname: $servicedesc' ";
-  $def[1] .= "GPRINT:cnt:LAST:\"current\: %6.2lf\" ";
-  $def[1] .= "GPRINT:cnt:MAX:\"max\: %6.2lf\" ";
-  $def[1] .= "GPRINT:cnt:AVERAGE:\"avg\: %6.2lf\" ";
+    foreach ($RRDFILE as $i => $RRD) {
+      $ii = $i % 8;
+      $name = $NAME[$i];
+      $def[$i] = "DEF:cnt=$RRDFILE[$i]:$DS[$i]:MAX "; 
+      $def[$i] .= "AREA:cnt#$area_colors[$ii]:\"$name\" "; 
+      $def[$i] .= "LINE1:cnt#$line_colors[$ii]: "; 
+    
+      $upper = "";
+      $lower = " -l 0";
+      if ($WARN[$i] != "") {
+        $def[$i] .= "HRULE:$WARN[$i]#ffff00:\"Warning\" ";
+      }
+      if ($CRIT[$i] != "") {
+        $def[$i] .= "HRULE:$CRIT[$i]#ff0000:\"Critical\" ";
+      }
+      if ($MIN[$i] != "") {
+        $lower = " -l " . $MIN[$i];
+        $minimum = $MIN[$i];
+      }
+      if ($MAX[$i] != "") {
+        $upper = " -u" . $MAX[$i];
+        $def[$i] .= "HRULE:$MAX[$i]#0000b0:\"Upper limit\" ";
+      }
+    
+      $opt[$i] = "$lower $upper --title '$hostname: $servicedesc - $name' ";
+      $def[$i] .= "GPRINT:cnt:LAST:\"current\: %6.2lf\" ";
+      $def[$i] .= "GPRINT:cnt:MAX:\"max\: %6.2lf\" ";
+      $def[$i] .= "GPRINT:cnt:AVERAGE:\"avg\: %6.2lf\" ";
+    }
 }
 
-
 ?>
-

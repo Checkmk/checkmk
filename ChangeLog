@@ -9,6 +9,7 @@
     * mk_logwatch: allow to set limits in processing time and number of
       new log messages per log file
     * Windows Agent: Now supports direct execution of powershell scripts
+    * local: PNP template now supports multiple performance values
 
     MK Livestatus:
     * WaitObject: allow to separate host name and service with a semicolon.

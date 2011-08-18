@@ -2,6 +2,7 @@
     Checks & Agents:
     * mk_logwatch: allow to set limits in processing time and number of
       new log messages per log file
+    * Windows Agent: Now supports direct execution of powershell scripts
 
 1.1.11i2:
     Core, Setup, etc.:

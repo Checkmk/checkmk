@@ -2978,13 +2978,14 @@ def do_snmpwalk_on(hostname, filename):
             line = f.readline()
             if not line:
                 break
-            parts = line.strip().split("=", 1)
+            parts = line.split("=", 1)
             if len(parts) != 2:
                 continue
             oid, value = parts
-            if value.strip().startswith('"'):
+            value = value.rstrip("\n")
+            if value.lstrip().startswith('"'):
                 while value[-1] != '"':
-                    value += f.readline().strip()
+                    value += f.readline().rstrip("\n")
 
             if not oid.startswith("."):
                 oid = "." + oid

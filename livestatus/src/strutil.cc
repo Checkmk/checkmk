@@ -27,11 +27,12 @@
 
 #include "strutil.h"
 
-void rstrip(char *c)
+char *rstrip(char *c)
 {
    char *w = c + strlen(c) - 1;
    while (w >= c && isspace(*w))
       *w-- = '\0';
+   return c;
 }
 
 char *lstrip(char *c)

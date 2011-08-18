@@ -374,7 +374,22 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
 
 void *TableServices::findObject(char *objectspec)
 {
-    char *host_name = next_field(&objectspec);
-    char *description = objectspec;
+    char *host_name;
+    char *description;
+
+    // The protocol proposes spaces as a separator between
+    // the host name and the service description. That introduces
+    // the problem that host name containing spaces will not work.
+    // For that reason we alternatively allow a semicolon as a separator.
+    char *semicolon = strchr(objectspec, ';');
+    if (semicolon) {
+        *semicolon = 0;
+        host_name = rstrip(objectspec);
+        description = rstrip(semicolon + 1);
+    }
+    else {
+        host_name = next_field(&objectspec);
+        description = objectspec;
+    }
     return find_service(host_name, description);
 }

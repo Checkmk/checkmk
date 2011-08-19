@@ -909,7 +909,7 @@ def submit_check_result(host, servicedesc, result, sa):
         for p in perfdata:
             perftexts.append(convert_perf_data(p))
 
-        if perftexts != [] and not direct_rrd_update(host, servicedesc, perfdata):
+        if perftexts != []:
             if check_command and perfdata_format == "pnp":
                 perftexts.append("[%s]" % check_command)
             perftext = "|" + (" ".join(perftexts))
@@ -924,22 +924,6 @@ def submit_check_result(host, servicedesc, result, sa):
             p = ''
         color = { 0: tty_green, 1: tty_yellow, 2: tty_red, 3: tty_magenta }[result[0]]
         print "%-20s %s%s%-56s%s%s" % (servicedesc, tty_bold, color, result[1], tty_normal, p)
-
-def direct_rrd_update(host, servicedesc, perfdata):
-    if do_rrd_update:
-        path = rrd_path + "/" + host.replace(":", "_") + "/" + servicedesc.replace("/", "_").replace(" ", "_")
-        # check existance and age of xml file
-        try:
-            xml_age = os.stat(path + ".xml").st_mtime
-            if time.time() - xml_age > (3600 + os.getpid() % 1800):
-                return False # XML file too old
-            numbers = [ str(p[1]).rstrip("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_ ") for p in perfdata ]
-            # sys.stderr.write("Schreibe rrdtool.update(" + path + ".rrd" + ", N:" + ":".join(numbers))
-            rrdtool.update(path + ".rrd", "N:" + ":".join(numbers))
-        except:
-            return False # Update not successfull or XML file missing or too old
-        return True
-    return False
 
 
 def submit_to_nagios(host, service, state, output):

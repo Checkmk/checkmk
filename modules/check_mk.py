@@ -100,7 +100,6 @@ snmpwalks_dir                      = var_dir + '/snmpwalks'
 precompiled_hostchecks_dir         = var_dir + '/precompiled'
 counters_directory                 = var_dir + '/counters'
 tcp_cache_dir                      = var_dir + '/cache'
-rrd_path                           = var_dir + '/rrd'
 logwatch_dir                       = var_dir + '/logwatch'
 nagios_objects_file                = var_dir + '/check_mk_objects.cfg'
 nagios_command_pipe_path           = '/usr/local/nagios/var/rw/nagios.cmd'
@@ -213,7 +212,6 @@ agent_port                         = 6556
 agent_ports                        = []
 snmp_ports                         = [] # UDP ports used for SNMP
 tcp_connect_timeout                = 5.0
-do_rrd_update                      = False
 delay_precompile                   = False  # delay Python compilation to Nagios execution
 check_submission                   = "pipe" # alternative: "file"
 aggr_summary_hostname              = "%s-s"
@@ -2259,14 +2257,6 @@ no_inventory_possible = None
         if opt_verbose:
             sys.stderr.write(" %s%s%s" % (tty_green, filename.split('/')[-1], tty_normal))
 
-    # direct update of RRD databases by check_mk
-    if do_rrd_update:
-        output.write("do_rrd_update = True\n" +
-                     "import rrdtool\n" +
-                     "rrd_path = %r\n" % rrd_path)
-    else:
-        output.write("do_rrd_update = False\n")
-
     # handling of clusters
     if is_cluster(hostname):
         output.write("clusters = { %r : %r }\n" %
@@ -3061,7 +3051,6 @@ def show_paths():
         ( tcp_cache_dir,               dir, data, "Cached output from agents"),
         ( logwatch_dir,                dir, data, "Unacknowledged logfiles of logwatch extension"),
         ( nagios_objects_file,         fil, data, "File into which Nagios configuration is written"),
-        ( rrd_path,                    dir, data, "Base directory of round robin databases"),
         ( nagios_status_file,          fil, data, "Path to Nagios status.dat"),
 
         ( nagios_command_pipe_path,    fil, pipe, "Nagios' command pipe"),
@@ -3820,16 +3809,6 @@ for hostname in strip_tags(all_hosts + clusters.keys()):
         sys.exit(4)
     seen_hostnames.add(hostname)
 
-# Load python-rrd if available and not switched off.
-if do_rrd_update:
-    try:
-        import rrdtool
-    except:
-        sys.stderr.write("ERROR: Cannot do direct rrd updates since the Python module\n"+
-                         "'rrdtool' could not be loaded. Please install python-rrdtool\n"+
-                         "or set do_rrd_update to False in main.mk.\n")
-        sys.exit(3)
-
 # Load agent simulator if enabled
 if agent_simulator:
     execfile(modules_dir + "/agent_simulator.py")
@@ -3901,8 +3880,8 @@ if __name__ == "__main__":
     checks = autochecks + checks
 
 vars_after_config = all_nonfunction_vars()
-ignored_variables = set(['vars_before_config', 'rrdtool', 'autochecks',
-                          'parts' ,'hosttags' ,'seen_hostnames' ,'all_hosts_untagged' ,'taggedhost' ,'hostname'])
+ignored_variables = set(['vars_before_config', 'autochecks', 'parts' ,'hosttags' ,'seen_hostnames',
+                         'all_hosts_untagged' ,'taggedhost' ,'hostname'])
 errors = 0
 for name in vars_after_config:
     if name not in ignored_variables and name not in vars_before_config:

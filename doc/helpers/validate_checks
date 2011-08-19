@@ -57,7 +57,8 @@ else:
 
 
 __name__ = 'asd'
-os.chdir('../../')
+if os.path.exists("validate_checks"):
+    os.chdir('../../')
 defaults_path = 'defaults'
 #autochecks = []
 execfile('check_mk')

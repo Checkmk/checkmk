@@ -9,3 +9,4 @@ rpm.topdir/
 *.deb
 var/
 .bugs/.my_ids
+.bugs/.last

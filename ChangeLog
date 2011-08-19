@@ -9,6 +9,7 @@
       Please use OMD instead.
     * Inventory functions now only take the single argument 'info'. The old
       style FUNC(checkname, info) is still supported but deprecated.
+    * Show datasource program on cmk -D
 
     Checks & Agents:
     * FIX: printer_pages: workaround for trailing-zero bug in HP Jetdirect

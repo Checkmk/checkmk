@@ -3114,9 +3114,11 @@ def dump_host(hostname):
     else:
         color = tty_bgblue
         try:
-            add_txt = " (%s)" % lookup_ipaddress(hostname)
+            ipaddress = lookup_ipaddress(hostname)
+            add_txt = " (%s)" % ipaddress
         except:
             add_txt = " (no DNS, no entry in ipaddresses)"
+            ipaddress = "X.X.X.X"
     print "%s%s%s%-78s %s" % (color, tty_bold, tty_white, hostname + add_txt, tty_normal)
 
     tags = tags_of_host(hostname)
@@ -3130,6 +3132,10 @@ def dump_host(hostname):
     print tty_yellow + "Host groups:            " + tty_normal + ", ".join(hostgroups_of(hostname))
     print tty_yellow + "Contact groups:         " + tty_normal + ", ".join(host_contactgroups_of([hostname]))
     agenttype = "TCP (port: %d)" % agent_port_of(hostname)
+    dapg = get_datasource_program(hostname, ipaddress)
+    if dapg:
+        agenttype = "Datasource program: %s" % dapg
+
     if is_snmp_host(hostname):
         if is_usewalk_host(hostname):
             agenttype = "SNMP (use stored walk)"

@@ -922,6 +922,16 @@ def ajax_add_bookmark():
     href = html.var("href")
     if title and href:
         bookmarks = load_bookmarks()
+        # We try to remove http://hostname/some/path/check_mk from the
+        # URI. That keeps the configuration files (bookmarks) portable.
+        # Problem here: We have not access to our own URL, only to the
+        # path part. The trick: we use the Referrer-field from our
+        # request. That points to the sidebar.
+        referer = html.req.headers_in.get("Referer")
+        if referer:
+            while '/' in referer and referer.split('/')[0] == href.split('/')[0]:
+                referer = referer.split('/', 1)[1]
+                href = href.split('/', 1)[1]
         bookmarks.append((title, href))
         save_bookmarks(bookmarks)
     render_bookmarks()

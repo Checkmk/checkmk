@@ -18,6 +18,7 @@
 
     Multisite:
     * FIX: reschedule now works for host names containing spaces
+    * Bookmarks snapin: save relative URLs whenever possible
 
 1.1.11i2:
     Core, Setup, etc.:

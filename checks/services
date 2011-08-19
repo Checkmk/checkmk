@@ -48,8 +48,8 @@ inventory_services = []
 #   "HirnTest",               # add service, if currently running
 #   "TapiSrv running",        # the same
 #   "TermService auto",       # add service, if start type is auto (regardless if running)
-#   "BackupSrv auto/running", # add, if start type is auto and it's running
-#   "~Backup.* auto/running",  # same, but add all services matching a regex
+#   "BackupSrv running/auto", # add, if start type is auto and it's running
+#   "~Backup.* running/auto",  # same, but add all services matching a regex
 #   ( [ "termserver" ] , ALL_HOSTS, [ "HirnTest running", "Sppoller auto" ] ), # same with tags..
 #   ( ALL_HOSTS, [ "!Backup.*", "FooBar auto" ] ),
 # ]

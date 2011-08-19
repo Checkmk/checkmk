@@ -481,8 +481,26 @@ def render_statistics(what, table, filter):
 
     html.write("</table>")
 
+    r = 0.0
+    pie_parts = []
+    if total > 0:
+        for (name, color, q), value in pies:
+            perc = 100.0 * value / total
+            pie_parts.append('chart_pie("%s", %f, %f, %r);' % (what, r, r + perc, color))
+            r += perc
+
     html.javascript("""
-function chart_pie(from, to, color) {
+function has_canvas_support() {
+    return document.createElement('canvas').getContext;
+}
+
+function chart_pie(what, from, to, color) {
+    var context = document.getElementById(what + "_stats").getContext('2d');
+    if(!context)
+        return;
+    var pie_x = %(x)f;
+    var pie_y = %(y)f;
+    var pie_d = %(d)f;
     context.beginPath();
     context.moveTo(pie_x, pie_y);
     context.arc(pie_x, pie_y, pie_d / 2 - 2, rad(from), rad(to), false);
@@ -494,6 +512,7 @@ function chart_pie(from, to, color) {
     context.strokeStyle = "#ffffff";
     context.fill();
     context.stroke();
+    context = null;
 }
 
 // convert percent to angle(rad)
@@ -501,21 +520,11 @@ function rad(g) {
     return (g * 360 / 100 * Math.PI) / 180;
 }
 
-pie_x = %(x)f;
-pie_y = %(y)f;
-pie_d = %(d)f;
-
-context = document.getElementById("%(what)s_stats").getContext('2d');
-
+if(has_canvas_support()) {
+    %(p)s
+}
 """ % { "what" : what, "x" : pie_diameter / 2, 
-        "y": pie_diameter/2, "d" : pie_diameter })
-
-    r = 0.0
-    if total > 0:
-        for (name, color, q), value in pies:
-            perc = 100.0 * value / total
-            html.javascript('chart_pie(%f, %f, %r);' % (r, r + perc, color))
-            r += perc
+        "y": pie_diameter/2, "d" : pie_diameter, 'p': '\n'.join(pie_parts) })
 
 def dashlet_pnpgraph():
     render_pnpgraph(html.var("site"), html.var("host"), html.var("service"), int(html.var("source", 0)))

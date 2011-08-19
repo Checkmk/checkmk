@@ -1372,10 +1372,16 @@ def mode_changelog(phase):
         if log_exists("audit"):
             html.context_button(_("Clear Audit Log"),
                 html.makeuri([("_action", "clear"), ("_transid", html.current_transid())]), "trash")
+            html.context_button(_("Download Audit Log"),
+                html.makeuri([("_action", "csv"), ("_transid", html.current_transid())]), "csv")
 
     elif phase == "action":
         if html.var("_action") == "clear":
             return clear_audit_log_after_confirm()
+
+        elif html.var("_action") == "csv":
+            return export_audit_log()
+
         elif html.check_transaction():
                 try:
                     check_mk_automation("restart")
@@ -1508,8 +1514,14 @@ def get_timerange(t):
     end   = start + 86399
     return start, end
 
-def format_timestamp(t):
+def fmt_datetime(t):
     return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(t))
+
+def fmt_date(t):
+    return time.strftime('%Y-%m-%d', time.localtime(t))
+
+def fmt_time(t):
+    return time.strftime('%H:%M:%S', time.localtime(t))
 
 def paged_log(log):
     start = html.var('start', None)
@@ -1550,12 +1562,12 @@ def paged_log(log):
 def display_paged((start_time, end_time, previous_log_time, next_log_time)):
     html.write('<div class=paged_controls>')
 
-    html.write(' <b>%s</b> ' % (_('%s to %s') % (format_timestamp(start_time),
-                                                 format_timestamp(end_time))))
+    html.write(' <b>%s</b> ' % (_('%s to %s') % (fmt_datetime(start_time),
+                                                 fmt_datetime(end_time))))
 
     if previous_log_time is not None:
         html.buttonlink(html.makeuri([('start', previous_log_time)]), _("<"),
-                        title = '%s: %s' % (_("Older events"), format_timestamp(previous_log_time)))
+                        title = '%s: %s' % (_("Older events"), fmt_datetime(previous_log_time)))
     else:
         html.buttonlink(html.makeuri([]), _("<"), disabled = True)
 
@@ -1564,7 +1576,7 @@ def display_paged((start_time, end_time, previous_log_time, next_log_time)):
 
     if next_log_time is not None:
         html.buttonlink(html.makeuri([('start', next_log_time)]), _(">"),
-                        title = '%s: %s' % (_("Newer events"), format_timestamp(next_log_time)))
+                        title = '%s: %s' % (_("Newer events"), fmt_datetime(next_log_time)))
     else:
         html.buttonlink(html.makeuri([]), _(">"), disabled = True)
     html.write('</div>')
@@ -1596,10 +1608,7 @@ def render_audit_log(log, what, with_filename = False):
         htmlcode += '<tr class="%s0">' % even
         htmlcode += '<td>%s</td>' % render_linkinfo(linkinfo)
         htmlcode += '<td>%s</td><td>%s</td><td>%s</td><td width="100%%">%s</td></tr>\n' % (
-                time.strftime("%Y-%m-%d", time.localtime(float(t))),
-                time.strftime("%H:%M:%S", time.localtime(float(t))),
-                user,
-                text)
+                                          fmt_date(float(t)), fmt_time(float(t)), user, text)
     htmlcode += "</table>"
 
     if what == 'audit':
@@ -1607,6 +1616,26 @@ def render_audit_log(log, what, with_filename = False):
         display_paged(times)
     else:
         html.show_warning(htmlcode)
+
+def export_audit_log():
+    html.req.content_type = "text/csv; charset=UTF-8"
+    filename = 'wato-auditlog-%s_%s.csv' % (fmt_date(time.time()), fmt_time(time.time()))
+    html.req.headers_out['Content-Disposition'] = 'attachment; filename=%s' % filename
+    titles = (
+        _('Date'),
+        _('Time'),
+        _('Linkinfo'),
+        _('User'),
+        _('Action'),
+        _('Text'),
+    )
+    html.write(','.join(titles) + '\n')
+    for t, linkinfo, user, action, text in parse_audit_log("audit"):
+        if linkinfo == '-':
+            linkinfo = ''
+        html.write(','.join((fmt_date(int(t)), fmt_time(int(t)), linkinfo,
+                             user, action, '"' + text + '"')) + '\n')
+    return False
 
 #   +----------------------------------------------------------------------+
 #   |                  _   _      _                                        |

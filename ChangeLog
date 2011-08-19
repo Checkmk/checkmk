@@ -20,6 +20,7 @@
 
     WATO:
     * Commited audit log entries are now pages based on days
+    * Added download link to download the WATO audit log in CSV format
 
 1.1.11i2:
     Core, Setup, etc.:

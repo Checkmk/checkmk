@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def inventory_blade_health(checkname, info):
+def inventory_blade_health(info):
     if len(info) == 1:
         return [(None, None, None)]
 

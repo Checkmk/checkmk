@@ -75,7 +75,7 @@ def j4p_performance_serv(info, (inst, app, serv)):
     return app['servlets'][serv]
 
 
-def inventory_j4p_performance(checktype, info):
+def inventory_j4p_performance(info):
     parsed = j4p_performance_parse(info)
     levels = None
     if checktype == 'j4p_performance.mem':
@@ -85,7 +85,7 @@ def inventory_j4p_performance(checktype, info):
     return [ (k, levels) for k in parsed ]
 
 
-def inventory_j4p_performance_apps(checktype, info):
+def inventory_j4p_performance_apps(info):
     inv = []
     parsed = j4p_performance_parse(info)
     levels = None
@@ -97,7 +97,7 @@ def inventory_j4p_performance_apps(checktype, info):
     return inv
 
 
-def inventory_j4p_performance_serv(checktype, info):
+def inventory_j4p_performance_serv(info):
     inv = []
     parsed = j4p_performance_parse(info)
     levels = None

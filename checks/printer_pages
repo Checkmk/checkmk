@@ -30,7 +30,7 @@
 # | Peter Lauk <lauk@stuttgart-airport.com>           Copyright 2010 |
 # +------------------------------------------------------------------+
 
-def inventory_printer_pages(checkname, info):
+def inventory_printer_pages(info):
     return [ (line[0], None ) for line in info ]
 
 def check_printer_pages(item, params, info):

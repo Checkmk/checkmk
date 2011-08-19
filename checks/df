@@ -33,7 +33,7 @@
 
 check_includes['df'] = [ "df.include" ]
 
-def inventory_df(checkname, info):
+def inventory_df(info):
     inventory = []
     for line in info:
         if line[1] in inventory_df_exclude_fs:

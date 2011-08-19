@@ -125,7 +125,7 @@ def check_apc(item, params, info):
 
     return (worst_state, "%s - %s" % (state_text, info_text), [x[2] for x in single_states if x[2] != None])
 
-def inventory_apc(checkname, info):
+def inventory_apc(info):
     if len(info) > 0:
         return [(None, "apc_default_levels")]
 

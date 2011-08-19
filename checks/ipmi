@@ -106,7 +106,7 @@ def ipmi_ignore_entry(name, state):
             return True
     return False
 
-def inventory_ipmi(checkname, info):
+def inventory_ipmi(info):
     if ipmi_summarize and len(info) > 0:
         return [ ( "Summary", None ) ]
     else:

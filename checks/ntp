@@ -54,7 +54,7 @@ ntp_state_codes = {
 ntp_inventory_mode = "summary"
 
 # We monitor all servers we have reached at least once
-def inventory_ntp(checktype, info):
+def inventory_ntp(info):
     if ntp_inventory_mode not in [ "detailed", "both" ]:
         return []
     inventory = []
@@ -63,7 +63,7 @@ def inventory_ntp(checktype, info):
             inventory.append((peer, "ntp_default_levels"))
     return inventory
 
-def inventory_ntp_summary(checktype, info):
+def inventory_ntp_summary(info):
     if ntp_inventory_mode not in [ "summary", "both" ]:
         return []
     if len(info) > 0:

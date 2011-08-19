@@ -27,7 +27,7 @@
 fjdarye60_hwstatus = { 1: 'normal',  2: 'alarm',       3: 'warning',
                        4: 'invalid', 5: 'maintenance', 6: 'undefined' }
 
-def inventory_fjdarye60(checkname, info):
+def inventory_fjdarye60(info):
     return [ (int(index), '', None) for index, status in info if int(status) != 4 ]
 
 

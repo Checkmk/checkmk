@@ -33,7 +33,7 @@
 
 akcp_sensor_temp_defaultlevels = (28, 32)
 
-def inventory_akcp_sensor_temp(checkname, info):
+def inventory_akcp_sensor_temp(info):
     inventory = []
     for desc, degree, status, online, degreetype, degreeraw in info:
         if online == "1":

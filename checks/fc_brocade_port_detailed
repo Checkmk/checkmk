@@ -36,7 +36,7 @@ brocade_opstate_names = [ 'unknown', 'online', 'offline', 'testing', 'faulty' ]
 
 fc_brocade_port_detailed_default_levels = ( (1, 0.1), (1, 0.1), (1, 0.1), (2, 160, None, []) )
 
-def inventory_brocade_port(checkname, info):
+def inventory_brocade_port(info):
     porttable, isltable = info
     inventory = []
     for index, phystate, opstate, txwords, rxwords, txframes, rxframes, crcerrors, encout, c3discards in porttable:

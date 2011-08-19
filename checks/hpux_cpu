@@ -30,7 +30,7 @@
 
 cpuload_default_levels = (5, 10)
 
-def inventory_hpux_cpu_load(checkname, info):
+def inventory_hpux_cpu_load(info):
     if len(info) == 2 and 'load' in info[0]:
         return [(None, "cpuload_default_levels")]
 

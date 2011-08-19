@@ -44,7 +44,7 @@ def strem1_sensors_parse_info(info):
     return parsed
 
 
-def inventory_strem1_sensors(checkname, info):
+def inventory_strem1_sensors(info):
     inventory = []
     for index, typ, val, intval in strem1_sensors_parse_info(info[1]):
         lvls = 'strem1_temp_defaultlevels'

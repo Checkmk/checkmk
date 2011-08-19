@@ -27,7 +27,7 @@
 
 oracle_asm_dg_default_levels       = (80, 90)
 
-def inventory_oracle_asm_dg(checkname, info):
+def inventory_oracle_asm_dg(info):
     return [ (line[0], "", "oracle_asm_dg_default_levels") for line in info ]
 
 def check_oracle_asm_dg(name, params, info):

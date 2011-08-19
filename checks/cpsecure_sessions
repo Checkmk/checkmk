@@ -34,7 +34,7 @@
 
 cpsecure_sessions_default_levels = ( 2500, 5000 )
 
-def inventory_cpsecure_sessions(checkname, info):
+def inventory_cpsecure_sessions(info):
     inventory = []
     for service, enabled, sessions in info:
         if enabled == '1':

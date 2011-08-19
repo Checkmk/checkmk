@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_blade_powermod(checkname, info):
+def inventory_blade_powermod(info):
     return [ (line[0], '', '""') for line in info if line[1] == '1' ]
 
 def check_blade_powermod(index, _no_param, info):

@@ -54,7 +54,7 @@ inventory_services = []
 #   ( ALL_HOSTS, [ "!Backup.*", "FooBar auto" ] ),
 # ]
 
-def inventory_windows_services(checkname, info):
+def inventory_windows_services(info):
 
     # Handle single entries (type str)
     def add_matching_services(name, state, start_type, entry):

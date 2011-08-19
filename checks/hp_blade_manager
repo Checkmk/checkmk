@@ -44,7 +44,7 @@ hp_blade_role_map    =       { 1: 'standby',  2: 'active' }
 
 hp_blade_status2nagios_map = { 'Other':       2, 'Ok':     0, 'Degraded': 1, 'Failed': 2, }
 
-def inventory_hp_blade_manager(checkname, info):
+def inventory_hp_blade_manager(info):
     # FIXME: Check if the implementation of the condition is correct or again a wrong implemented value
     # => if hp_blade_present_map[int(line[1])] == 'present'
     return [ (line[0], (line[3],)) for line in info ]

@@ -27,7 +27,7 @@
 cisco_fan_states = ('', 'normal', 'warning', 'critical',
                         'shutdown', 'notPresent', 'notFunctioning')
 
-def inventory_cisco_fan(checkname, info):
+def inventory_cisco_fan(info):
     return [ (line[0], None) for line in info if line[1] != '5' ]
 
 def check_cisco_fan(item, params, info):

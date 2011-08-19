@@ -33,7 +33,7 @@ brocade_opstate_names = [ 'unknown', 'online', 'offline', 'testing', 'faulty']
 brocade_perfdata_errors = False
 brocade_default_params = (0.1, 0.01)
 
-def inventory_brocade_port(checkname, info):
+def inventory_brocade_port(info):
     inventory = []
     for index, phystate, opstate, txwords, rxwords, crcerrors, c3discards in info:
         state = (int(phystate), int(opstate))

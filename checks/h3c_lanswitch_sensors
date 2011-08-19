@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def inventory_h3c_lanswitch_sensors(checkname, info):
+def inventory_h3c_lanswitch_sensors(info):
     return [ (h3c_lanswitch_genitem(line[0]), None) for line in info if line[1] in [ '1', '2']  ]
 
 

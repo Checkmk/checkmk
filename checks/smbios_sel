@@ -96,7 +96,7 @@ smbios_sel_msg_types = {
   23: [1, 0, 0, None, None],
 }
 
-def inventory_smbios_sel(checkname, info):
+def inventory_smbios_sel(info):
     if len(info) > 0:
         return [(None, "", "None")]
 

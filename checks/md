@@ -63,7 +63,7 @@
 # unused devices: <none>
 # ---------------------------------------------------------
 
-def inventory_md(checkname, info):
+def inventory_md(info):
     inventory = []
     for line in info:
         if len(line) < 3:

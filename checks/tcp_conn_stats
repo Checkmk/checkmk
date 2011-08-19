@@ -40,7 +40,7 @@ tcp_conn_stats_states = [
 
 tcp_conn_stats_default_levels = { }
 
-def inventory_tcp_conn_stats(checkname, info):
+def inventory_tcp_conn_stats(info):
     if len(info) > 0:
         return [ (None, 'tcp_conn_stats_default_levels') ]
 

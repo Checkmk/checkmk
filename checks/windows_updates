@@ -37,7 +37,7 @@
 
 windows_updates_default_params = (None, None, None, None)
 
-def inventory_windows_updates(checktype, info):
+def inventory_windows_updates(info):
     if info and len(info[0]) == 3:
         return [(None, "windows_updates_default_params")]
 

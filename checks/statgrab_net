@@ -37,7 +37,7 @@ statgrab_net_counternames = {
     "tx"         :  "tx_bytes",
 }
 
-def inventory_statgrab_net_link(checkname, info):
+def inventory_statgrab_net_link(info):
     items = []
     for var, value in info:
         if var.endswith(".up"):
@@ -64,7 +64,7 @@ def check_statgrab_net_link(item, targetstate, info):
     return (2, "CRIT - unknown network device")
 
 
-def inventory_statgrab_net_params(checkname, info):
+def inventory_statgrab_net_params(info):
     items = []
     for var, value in info:
         if var.endswith(".duplex"):
@@ -95,7 +95,7 @@ def check_statgrab_net_params(item, params, info):
 
 
 
-def inventory_statgrab_net_ctr(checkname, info):
+def inventory_statgrab_net_ctr(info):
     items = []
     for var, value in info:
         if var.endswith(".up"):

@@ -1882,11 +1882,21 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
             if info == None: # No data for this check type
                 continue
             try:
-                inventory = inventory_function(checkname, info) # inventory is a list of pairs (item, current_value)
+                # New preferred style since 1.1.11i3: only one argument: info
+                try:
+                    inventory = inventory_function(info)
+                except Exception, e:
+                    # failed? Lets try pre-1.1.11i3 style inventory function
+                    try:
+                        inventory = inventory_function(checkname, info) # inventory is a list of pairs (item, current_value)
+                    except Exception, ee:
+                        raise e # raise original exception
+
                 if inventory == None: # tolerate if function does no explicit return
                     inventory = []
             except Exception, e:
                 if opt_debug:
+                    sys.stderr.write("Exception in inventory function of check type %s\n" % checkname)
                     raise
                 if opt_verbose:
 		    sys.stderr.write("%s: Invalid output from agent or invalid configuration: %s\n" % (hostname, e))

@@ -52,7 +52,7 @@ def parse_ad_replication_info(info):
         lines.append(l.split(','))
     return lines
 
-def inventory_ad_replication(checktype, info):
+def inventory_ad_replication(info):
     inv = []
     for line in parse_ad_replication_info(info):
         item = ('%s/%s' % (line[4], line[5]), 'ad_replication_default_params')

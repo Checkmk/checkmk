@@ -27,7 +27,7 @@
 
 cpuload_default_levels = (5, 10)
 
-def inventory_ucd_cpu_load(checkname, info):
+def inventory_ucd_cpu_load(info):
     if len(info) == 3:
         return [(None, "cpuload_default_levels")]
 

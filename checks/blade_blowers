@@ -58,7 +58,7 @@ def number_of_blowers(info):
         n += 1
     return n
 
-def inventory_blade_blowers(checkname, info):
+def inventory_blade_blowers(info):
     inventory = []
     n = number_of_blowers(info)
     for i in range(0, n):

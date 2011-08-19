@@ -32,7 +32,7 @@
 
 akcp_sensor_humidity_defaultlevels = (35, 40, 60, 65)
 
-def inventory_akcp_sensor_humidity(checkname, info):
+def inventory_akcp_sensor_humidity(info):
     inventory = []
     for desc, humidity, status, online in info:
         if online == "1":

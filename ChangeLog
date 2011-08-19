@@ -7,6 +7,8 @@
       Please use rrdcached in case of performance problems.
     * install_nagios.sh has finally been removed (was not maintained anyway).
       Please use OMD instead.
+    * Inventory functions now only take the single argument 'info'. The old
+      style FUNC(checkname, info) is still supported but deprecated.
 
     Checks & Agents:
     * FIX: printer_pages: workaround for trailing-zero bug in HP Jetdirect

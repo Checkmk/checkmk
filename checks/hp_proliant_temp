@@ -44,7 +44,7 @@ hp_proliant_temp_locale = {
     13:  "bridgeCard",
 }
 
-def inventory_hp_proliant_temp(checkname, info):
+def inventory_hp_proliant_temp(info):
     if len(info) > 0:
         return [ ("%s (%s)" % (line[1], hp_proliant_temp_locale[int(line[2])]), None) for line in info ]
 

@@ -41,7 +41,7 @@
 # pv_name=/dev/disk/disk11_p2:pv_status=available:total_pe=4319:free_pe=175:autoswitch=On:proactive_polling=On
 # pv_name=/dev/disk/disk10:pv_status=available:total_pe=4375:free_pe=1559:autoswitch=On:proactive_polling=On
 
-def inventory_hpux_lvm(checkname, info):
+def inventory_hpux_lvm(info):
     inventory = []
     for line in info:
         if line[0].startswith("lv_name="):

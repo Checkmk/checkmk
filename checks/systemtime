@@ -26,7 +26,7 @@
 
 systemtime_default_values = (30, 60) # warn/crit sec. offset
 
-def inventory_systemtime(checkname, info):
+def inventory_systemtime(info):
     if len(info) >= 1:
         return [(None, "systemtime_default_values")]
 

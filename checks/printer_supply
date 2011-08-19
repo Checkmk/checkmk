@@ -72,7 +72,7 @@ def printer_supply_fix_infos(info):
             info[index][0] = '%s %s' % (color.title(), line[0])
     return info
 
-def inventory_printer_supply(checkname, info):
+def inventory_printer_supply(info):
     # Ignore devices which show -2 for current value and -2 for max value -> useless
     # Also fix trailing zero bytes (seen on HP Jetdirect 143)
     return [ (line[0].rstrip('\0'), "printer_supply_default_levels") 

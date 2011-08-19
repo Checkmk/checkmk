@@ -78,7 +78,7 @@ def check_oracle_tbs(item, params, info):
 
     return (2, "CRIT - table space missing")
 
-def inventory_oracle_tbs(checkname, info):
+def inventory_oracle_tbs(info):
     return [ ("%s_%s" % (line[0], line[1]), "%s of %s MB free" % (line[2], line[3]), 'oracle_tbs_default_levels') \
              for line in info if len(line) >= 5 ]
 

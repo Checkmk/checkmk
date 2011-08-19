@@ -37,7 +37,7 @@ mbg_lantime_state_statemap = {
 # stratum, refclock_offset
 mbg_lantime_state_default_levels = (0, 0, 5, 10)
 
-def inventory_mbg_lantime_state(checkname, info):
+def inventory_mbg_lantime_state(info):
     if len(info) > 0 and len(info[0]) == 5:
         return [(None, None, "mbg_lantime_state_default_levels")]
     

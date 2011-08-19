@@ -37,7 +37,7 @@
 
 lparstat_default_levels = (5, 10)
 
-def inventory_lparstat(checkname, info):
+def inventory_lparstat(info):
     if len(info) == 1 and len(info[0]) >= 5:
         return [(None, "", "lparstat_default_levels")]
 

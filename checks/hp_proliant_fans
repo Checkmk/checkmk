@@ -46,7 +46,7 @@ hp_proliant_fans_locale = {
     13:  "bridgeCard",
 }
 
-def inventory_hp_proliant_fans(checkname, info):
+def inventory_hp_proliant_fans(info):
     if len(info) > 0:
         items = []
         for line in [ line for line in info if line[3] == '3' ]:

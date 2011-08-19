@@ -33,7 +33,7 @@
 # F5 nodes need to be ntp synced otherwise status reports might be wrong.
 
 
-def inventory_f5_bigip_cluster(checkname, info):
+def inventory_f5_bigip_cluster(info):
     # run inventory unless we found a device in unconfigured state
     # don't need to loop over the input as there's only one status.
     if len(info) == 1 and not info[0][0].startswith("-1"):

@@ -47,7 +47,7 @@
 # On new inventory runs the enclosure number is used as
 # index and item part.
 
-def inventory_megaraid_pdisks(checkname, info):
+def inventory_megaraid_pdisks(info):
     inventory = []
     dev2enc = {}
     for line in info:

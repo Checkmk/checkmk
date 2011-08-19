@@ -26,7 +26,7 @@
 
 
 
-def inventory_bluecoat_diskcpu(checkname, info):
+def inventory_bluecoat_diskcpu(info):
     return [ (line[0], "current value: " + line[1], '""') for line in info ]
 
 def check_bluecoat_diskcpu(item, params, info):

@@ -86,7 +86,7 @@ netapp_volumes_owner = {
   '2': 'partner',
 }
 
-def inventory_netapp_volumes(checkname, info):
+def inventory_netapp_volumes(info):
     # Only inventorize local volumes
     return [ (line[0], None) for line in info if netapp_volumes_owner.get(line[2], '') == 'local' ]
 

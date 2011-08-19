@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def inventory_mounts(checktype, info):
+def inventory_mounts(info):
     inventory = []
     for dev, mp, fstype, options, dump, fsck in info:
         if fstype not in [ 'tmpfs' ]:

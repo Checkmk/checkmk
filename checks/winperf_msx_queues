@@ -56,7 +56,7 @@ winperf_msx_queues = {
    "Poison Queue Length"     :  "44", 
 }
 
-def inventory_winperf_msx_queues(checktype, info):
+def inventory_winperf_msx_queues(info):
     num_instances = int(info[1][0])
     if num_instances > 0:
         return [ (name, "msx_queues_default_levels") for name in winperf_msx_queues ]

@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_fsc_fans(checkname, info):
+def inventory_fsc_fans(info):
     return [ (line[0], line[1], (int(line[1]) * 0.9, int(line[1]) * 0.8)) for line in info if int(line[1]) > 0 ]
 
 def check_fsc_fans(item, params, info):

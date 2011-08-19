@@ -40,7 +40,7 @@
 
 
 
-def inventory_f5_bigip_psu(checkname, info):
+def inventory_f5_bigip_psu(info):
     inventory = []
     for line in info:
         psu, state = line[0]

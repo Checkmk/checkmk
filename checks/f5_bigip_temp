@@ -58,7 +58,7 @@ def f5_bigip_temp_genitem(info):
     return sensors
 
 
-def inventory_f5_bigip_temp(checkname, info):
+def inventory_f5_bigip_temp(info):
     inventory = []
     for sensor in f5_bigip_temp_genitem(info):
          inventory.append([sensor[0], nom_temp])

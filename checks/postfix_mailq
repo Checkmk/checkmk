@@ -55,7 +55,7 @@
 # WARN num, CRIT num
 postfix_mailq_default_levels = (10, 20)
 
-def inventory_postfix_mailq(checkname, info):
+def inventory_postfix_mailq(info):
     if len(info) > 0 and info[0] != '':
         return [(None, 'postfix_mailq_default_levels')]
 

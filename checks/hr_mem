@@ -29,7 +29,7 @@ memused_default_levels = (150.0, 200.0)
 # Memory information is - together with filesystems - in
 # hrStorage. We need the entries of the types hrStorageVirtualMemory
 # and hrStorageRam
-def inventory_hr_mem(checktype, info):
+def inventory_hr_mem(info):
     # Do we find at least one entry concerning memory?
     for hrtype, hrdescr, hrunits, hrsize, hrused in info:
         if hrtype in [ ".1.3.6.1.2.1.25.2.1.2",

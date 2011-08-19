@@ -34,7 +34,7 @@
 
 kernel_util_default_levels = None
 
-def inventory_ucd_cpu_util(checktype, info):
+def inventory_ucd_cpu_util(info):
     if len(info) == 1:
         return [(None, "kernel_util_default_levels")]
 

@@ -40,7 +40,7 @@
 # crontab 1
 # OVERALL 2
 
-def inventory_omd_status(checkname, info):
+def inventory_omd_status(info):
     return [ ( line[0][1:-1], None ) for line in info if line[0][0] == '[' ]
 
 def check_omd_status(item, _no_params, info):

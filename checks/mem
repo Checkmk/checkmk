@@ -31,7 +31,7 @@ mem_extended_perfdata = False
 def parse_proc_meminfo(info):
     return dict([ (i[0][:-1], int(i[1])) for i in info ])
 
-def inventory_mem_used(checkname, info):
+def inventory_mem_used(info):
     try:
         # simply try potential check. If it returns
         # valid data, assume that item can be checked
@@ -122,7 +122,7 @@ check_config_variables.append("mem_extended_perfdata")
 # warn, crit, warn_chunk, crit_chunk. Integers are in MB, floats are in percent
 mem_vmalloc_default_levels = ( 80.0, 90.0, 32, 64 )
 
-def inventory_mem_vmalloc(checktype, info):
+def inventory_mem_vmalloc(info):
     meminfo = parse_proc_meminfo(info)
     if "VmallocTotal" in meminfo:
         # Do not checks this on 64 Bit systems. They have almost

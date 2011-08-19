@@ -26,7 +26,7 @@
 
 
 
-def inventory_lsi(checkname, info):
+def inventory_lsi(check_type, info):
 
     # convert [ 0, 1, 2, 3, 4, 5, ...] into [ (0,1), (2,3), (4,5), ... ]
     entries = zip(info[::2], info[1::2])
@@ -41,10 +41,10 @@ def inventory_lsi(checkname, info):
         else:
             disks.append((id, state))
 
-    if checkname == 'lsi.array':
-        return [(id, state, "None") for (id, state) in arrays]
+    if check_type == 'lsi.array':
+        return [(id, "None") for (id, state) in arrays]
     else:
-        return [(id, state, '"%s"' % state) for (id, state) in disks]
+        return [(id, '"%s"' % state) for (id, state) in disks]
 
 def check_lsi_array(item, params, info):
     volumeid = -1
@@ -74,5 +74,5 @@ def check_lsi_disk(item, target_state, info):
     return (2, 'CRIT - disk not present')
 
 
-check_info['lsi.array'] = (check_lsi_array, "RAID array %s", 0,  inventory_lsi)
-check_info['lsi.disk'] = (check_lsi_disk, "RAID disk %s", 0,  inventory_lsi)
+check_info['lsi.array'] = (check_lsi_array, "RAID array %s", 0,  lambda info: inventory_lsi('lsi.array', info))
+check_info['lsi.disk'] = (check_lsi_disk, "RAID disk %s", 0,  lambda info: inventory_lsi('lsi.disk', info))

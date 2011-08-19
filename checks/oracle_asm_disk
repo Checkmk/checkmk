@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_oracle_asm_disk(checkname, info):
+def inventory_oracle_asm_disk(info):
     return [ (line[0], "", '""') for line in info if line[1] != "0" ]
 
 def check_oracle_asm_disk(diskname, params, info):

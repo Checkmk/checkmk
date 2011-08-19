@@ -28,7 +28,7 @@
 
 vms_memused_default_levels         = (150.0, 200.0)
 
-def inventory_vms_mem(checkname, info):
+def inventory_vms_mem(info):
     for line in info:
         if line[0] == "MEM":
             return [(None, "", "vms_memused_default_levels")]
@@ -84,7 +84,7 @@ check_info['vms_sys.mem'] =  (check_vms_mem, "Memory used", 1,  inventory_vms_me
 # GIO 18.56 284.52 0.10 12.64 0.00 1.15 1765.00
 # XQP 2.23 0.02 0.07 0.00 0.15 0.00 0.00 0.00
 # LCK 19624.00 22.16 37.58 22.18 6.66 0.40 0.00 0.00 0.00
-def inventory_vms_cpu_utilization(checkname, info):
+def inventory_vms_cpu_utilization(info):
     for line in info:
         if line[0].startswith("CPU"):
             return [(None, "", None)]

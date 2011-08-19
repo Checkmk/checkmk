@@ -30,7 +30,7 @@
 
 oracle_logswitches_default_levels = (-1, -1, 50, 100)
 
-def inventory_oracle_logswitches(checkname, info):
+def inventory_oracle_logswitches(info):
     return [ (line[0], "oracle_logswitches_default_levels") for line in info if len(line) >= 2 ]
 
 def check_oracle_logswitches(item, params, info):

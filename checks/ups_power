@@ -77,7 +77,7 @@
 
 ups_power_default_levels = (20, 1) # warning / critical *below* those levels (Watt)
 
-def inventory_ups_power(checkname, info):
+def inventory_ups_power(info):
     return [ (line[0], "", "ups_power_default_levels") for line in info ]
 
 def check_ups_power(item, params, info):

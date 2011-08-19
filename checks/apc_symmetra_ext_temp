@@ -26,7 +26,7 @@
 
 apc_symmetra_ext_temp_default_levels = (30, 35)
 
-def inventory_temp(checkname, info):
+def inventory_temp(info):
     return [ ( line[0], "", "apc_symmetra_ext_temp_default_levels" ) \
             for line in info if line[1] == "2" ]
 

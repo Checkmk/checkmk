@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_bluecoat_sensors(checkname, info):
+def inventory_bluecoat_sensors(info):
     return [ (line[0], "current value: " + line[1], '""') for line in info ]
 
 def check_bluecoat_sensors(item, params, info):

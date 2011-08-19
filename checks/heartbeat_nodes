@@ -33,7 +33,7 @@
 # swi04 ping swi04 up
 # swi03 ping swi03 up
 
-def inventory_heartbeat_nodes(checktype, info):
+def inventory_heartbeat_nodes(info):
     return [ (line[0], None) for line in info if line[0] != '' ]
 
 def check_heartbeat_nodes(item, params, info):

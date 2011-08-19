@@ -31,7 +31,7 @@ blade_bays_module_state = {
  255: 'notApplicable',
 }
 
-def inventory_blade_bays(checkname, info):
+def inventory_blade_bays(info):
     # find only modules that are present and switched on or standby
     return [ (line[0], '', line[1]) for line in info if line[1] in [ '0', '1' ] ]
 

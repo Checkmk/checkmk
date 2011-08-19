@@ -44,7 +44,7 @@
 # uuid:501e70b5-6aa3-25fa-1550-c1cf5f8a2025
 # ipaddr:
 
-def inventory_vmware_state(checkname, info):
+def inventory_vmware_state(info):
     inventory = []
     for line in info:
      #  print "LINE IS %s" % line[0]

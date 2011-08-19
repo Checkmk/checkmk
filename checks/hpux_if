@@ -121,7 +121,7 @@ def hpux_parse_operstatus(txt):
     else:
         return '2'
 
-def inventory_hpux_if(checkname, info):
+def inventory_hpux_if(info):
     return inventory_if_common(hpux_convert_to_if64(info))
 
 def check_hpux_if(item, params, info):

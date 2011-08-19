@@ -45,7 +45,7 @@
 
 
 
-def inventory_netapp_cluster(checkname, info):
+def inventory_netapp_cluster(info):
 
     inventory = []
 

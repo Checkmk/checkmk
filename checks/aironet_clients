@@ -27,7 +27,7 @@
 aironet_default_strength_levels = (-25, -20)
 aironet_default_quality_levels = (40, 35)
 
-def inventory_aironet_clients(checkname, info):
+def inventory_aironet_clients(info):
     if len(info) > 0:
         return [("strength", "", "aironet_default_strength_levels"),
                 ("quality", "", "aironet_default_quality_levels"),

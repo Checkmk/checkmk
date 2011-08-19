@@ -66,7 +66,7 @@ printer_alerts_state_map = {
   0: [ 4, 6, 7, 19, 20, 23, 24, 25, 27, 35, 36, 37, 38, 502, 503, 504, 505, 506, 507, 802, 803, 804, 805, 806, 807, 808, 809, 810, 1001, 1002, 1005, 1106, 1107, 1108, 1111, 1113, 1302, 1304, 1501, 1502, 1503, 1504, 1505, 1506, 1509 ],
 }
 
-def inventory_printer_alerts(checkname, info):
+def inventory_printer_alerts(info):
     return [ (None, None) ]
 
 def check_printer_alerts(_not_used, _not_used1, info):

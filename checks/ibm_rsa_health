@@ -36,7 +36,7 @@
 #   systemLevel(4),
 #   normal(255)
 
-def inventory_ibm_rsa_health(checkname, info):
+def inventory_ibm_rsa_health(info):
     if len(info) > 0:
         return [(None, None)]
 

@@ -28,7 +28,7 @@
 inventory_tsm_stgpool_check_params = 'tsm_stgpool_default_levels'
 tsm_stgpool_default_levels         = (90, 95)
 
-def inventory_tsm_stgpool(checkname, info):
+def inventory_tsm_stgpool(info):
     return [ (line[0], '%s perc used' % line[1], inventory_tsm_stgpool_check_params ) for line in info ]
 
 def check_tsm_stgpool(item, params, info):

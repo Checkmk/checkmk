@@ -36,7 +36,7 @@ canon_pages_map = {
     'scan'        :  '501', 
 }
 
-def inventory_canon_pages(checkname, info):
+def inventory_canon_pages(info):
     inventory = []
     for endoid, value in info:
 	for name, eo in canon_pages_map.items():

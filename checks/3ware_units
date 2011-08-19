@@ -39,7 +39,7 @@
 # u0    RAID-5    OK             -       -       64K     1396.95   ON     ON
 
 # inventory
-def inventory_3ware_units(checkname, info):
+def inventory_3ware_units(info):
     inventory = []
     for line in info:
         unit = line[0]

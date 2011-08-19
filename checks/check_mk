@@ -30,7 +30,7 @@
 # is not None, the inventory will create services
 check_mk_only_from_default = None
 
-def inventory_only_from(checkname, info):
+def inventory_only_from(info):
     if check_mk_only_from_default != None:
         for line in info:
             if line[0] == "OnlyFrom:":

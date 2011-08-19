@@ -62,7 +62,7 @@ def brocade_fcport_getitem(ports, index, portname, is_isl):
     return itemname
     
 
-def inventory_brocade_fcport(checkname, info):
+def inventory_brocade_fcport(info):
     # info[0] is port table, info[1] is ISL table
     if len(info) != 2:
         return

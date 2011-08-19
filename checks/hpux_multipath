@@ -76,7 +76,7 @@ def parse_hpux_multipath(info):
             paths[hpux_multipath_pathstates[state]] += 1
     return disks
 
-def inventory_hpux_multipath(checkname, info):
+def inventory_hpux_multipath(info):
     inventory = []
     disks = parse_hpux_multipath(info)
     for wwid, (disk, (active, standby, failed, unopen)) in disks.items():

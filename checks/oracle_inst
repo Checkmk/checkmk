@@ -27,7 +27,7 @@
 
 oracle_free_session_slots_levels   = (30, 20)
 
-def inventory_oracle_inst(checkname, info):
+def inventory_oracle_inst(info):
     return [ (line[0], "", 'oracle_free_session_slots_levels') for line in info ]
 
 # Example for output from plugin:

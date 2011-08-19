@@ -130,7 +130,7 @@ def if_lnx_convert_to_if64(info):
 
     return if_table
         
-def inventory_lnx_if(checkname, info):
+def inventory_lnx_if(info):
     if linux_nic_check == "legacy":
         return []
     return inventory_if_common(if_lnx_convert_to_if64(info))

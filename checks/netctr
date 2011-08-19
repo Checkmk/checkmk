@@ -55,7 +55,7 @@ netctr_counter_indices = {
   'tx_carrier'    : 14,
   'tx_compressed' : 15 }
 
-def inventory_netctr_combined(checkname, info):
+def inventory_netctr_combined(info):
     if linux_nic_check != "legacy":
         return []
     if len(info) == 0: 

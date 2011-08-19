@@ -45,7 +45,7 @@
 
 check_includes['lnx_if'] = [ "if.include" ]
 
-linux_nic_check = "legacy"
+linux_nic_check = "lnx_if"
 
 def if_lnx_convert_to_if64(info):
     nic_info = {}

@@ -10,6 +10,7 @@
       new log messages per log file
     * Windows Agent: Now supports direct execution of powershell scripts
     * local: PNP template now supports multiple performance values
+    * lnx_if: make lnx_if the default interface check for Linux
 
     MK Livestatus:
     * WaitObject: allow to separate host name and service with a semicolon.

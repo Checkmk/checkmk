@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-linux_nic_check = "legacy"
+linux_nic_check = "lnx_if"
 
 # levels for warning/critical on error rate - in percentage of total packets!
 netctr_default_params = (0.01, 0.1)

@@ -5,6 +5,8 @@
     * cmk --restore: be aware of counters and cache being symbolic links
     * do_rrd_update: direct RRD updates have completely been removed.
       Please use rrdcached in case of performance problems.
+    * install_nagios.sh has finally been removed (was not maintained anyway).
+      Please use OMD instead.
 
     Checks & Agents:
     * FIX: printer_pages: workaround for trailing-zero bug in HP Jetdirect

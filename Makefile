@@ -118,7 +118,6 @@ setversion:
 	sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$(NEW_VERSION)"'], [mk@mathias-kettner.de])/' livestatus/configure.ac ; \
 	sed -i 's/^VERSION=.*/VERSION='"$(NEW_VERSION)"'/' scripts/setup.sh ; \
 	echo 'check-mk_$(NEW_VERSION)-1_all.deb net optional' > debian/files ; \
-	sed -i 's/^CHECK_MK_VERSION=.*/CHECK_MK_VERSION='$(NEW_VERSION)/ scripts/install_nagios.sh ; \
 	cd agents/windows ; rm *.exe ; make
 
 headers:

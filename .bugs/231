@@ -1,10 +1,11 @@
 Title: remove do_rrd_update completely
 Component: core
-Benefit: 1
-State: open
-Cost: 3
-Date: 2011-04-11 16:37:13
+State: done
 Class: nastiness
+Date: 2011-04-11 16:37:13
+Benefit: 1
+Cost: 3
+Fun: 0
 
 ich hatte sehr lange gesucht, warum bei mir die perfdata fuer nagvis und perf-o-meter kaputt
 war. Es gab keine fehlermeldungen, an denen es nachvollziehbar war. ursache war do_rrd_update,
@@ -20,3 +21,6 @@ auch das Perf-O-Meter nicht.
 
 => Auch in den Migration-Notes vermerken und in der Doku anpassen.
 
+
+2011-08-19 21:09:14: changed state open -> done
+Ist erledigt.

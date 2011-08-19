@@ -63,7 +63,13 @@ def goto_bugsdir():
         sys.exit(1)
 
 def load_config():
+    global g_last_bug
     execfile("config", globals(), globals())
+    try:
+        g_last_bug = int(file(".last").read())
+    except:
+        g_last_bug = None
+
 
 def load_bugs():
     global g_bugs
@@ -78,6 +84,10 @@ def load_bugs():
                 sys.stderr.write("SKIPPING INVALID BUG %d\n" % bugid)
         except:
             continue
+
+def save_last_bugid(id):
+    file(".last", "w").write("%d\n" % int(id))
+
 
 def check_modified():
     global g_modified
@@ -130,6 +140,7 @@ def save_bug(bug):
     f.write(bug["description"])
     f.close()
     git_add(bug)
+    save_last_bugid(bug["id"])
 
 def git_add(bug):
     os.system("git add %d" % bug["id"])
@@ -157,7 +168,7 @@ where COMMAND is one of:
                            given as parameter the command will reserve new bug IDS.
   list [-g] [-r] [STATE] - list bugs (-g: sort after gain, -r: reverse)
   new                    - create a new bug
-  show [# #..]           - show several bugs (or all open)
+  show [# #..]           - show several bugs, or 'all' for all, of leave out for last
   resolve ID             - change a bugs state
   delete #..             - delete bug(s)
   grep [-v] KW1 KW2...   - show bugs containing all of the given keywords (-v: verbose)
@@ -276,11 +287,17 @@ def main_list(args):
 def main_show(args):
     ids = args
     if len(ids) == 0:
-        ids = [ id for (id, bug) in g_bugs.items() if bug["state"] == "open" ]
+        if g_last_bug == None:
+            bail_out("No last bug known. Please specify id.")
+        ids = [ g_last_bug ]
+    elif ids[0] == 'all':
+        ids = [ id for (id, bug) in g_bugs.items() ]
+        
     for id in ids:
         if id != ids[0]:
             sys.stdout.write("-------------------------------------------------------------------------------\n")
         show_bug(g_bugs[int(id)])
+    save_last_bugid(ids[-1])
 
 def get_input(what, default = ""):
     sys.stdout.write("%s: " % what)
@@ -355,14 +372,20 @@ def main_new(args):
     sys.stdout.write("Bug saved with id %d.\n" % bug["id"])
 
 def main_resolve(args):
-    if len(args) != 1:
-        usage()
-    id = int(args[0])
+    if len(args) == 0:
+        if g_last_bug == None:
+            bail_out("No last bug, please specify id.")
+        id = g_last_bug
+    else:
+        if len(args) != 1:
+            usage()
+        id = int(args[0])
+
     bug = g_bugs.get(id)
     if not bug:
         bail_out("No such bug.\n")
 
-    list_bug(bug)
+    show_bug(bug)
     state = input_choice("State", states.keys())
 
     comment = get_long_input("comment")
@@ -436,7 +459,10 @@ def main_grep(args):
 
 def main_edit(args):
     if len(args) == 0:
-        ids = str(max(g_bugs.keys()))
+        ids = str(g_last_bug)
+        if ids == None:
+            bail_out("No last bug. Please specify id.")
+
     else:
         ids = args[0] 
     if not os.path.exists(ids):
@@ -452,6 +478,8 @@ def main_edit(args):
 
     if 0 == os.system("%s %s" % (editor, ids)):
         git_add(g_bugs[int(ids)])
+
+    save_last_bugid(int(ids))
 
 
 def main_commit(args):

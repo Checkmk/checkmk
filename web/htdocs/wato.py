@@ -37,7 +37,7 @@
 
 import config
 
-import sys, pprint, socket, re, subprocess, time
+import sys, pprint, socket, re, subprocess, time, datetime
 from lib import *
 import htmllib
 
@@ -1389,20 +1389,12 @@ def mode_changelog(phase):
 
     else:
         pending = parse_audit_log("pending")
-        if len(pending) > 0:
-            message = "<h1>" + _("Changes which are not yet activated:") + "</h1>"
-            message += render_audit_log(pending, "pending")
-            html.show_warning(message)
-        else:
-            html.write("<div class=info>" + _("No pending changes, monitoring server is up to date.") + "</div>")
+        render_audit_log(pending, "pending")
 
         audit = parse_audit_log("audit")
-        if len(audit) > 0:
-            html.write("<b>" + _("All Changes") + "</b>")
-            html.write(render_audit_log(audit, "audit"))
-        else:
-            html.write("<div class=info>" + _("The logfile is empty. No host has been created or changed yet.") + "</div>")
-        
+        render_audit_log(audit, "audit")
+
+
 def log_entry(linkinfo, action, message, logfilename):
     if type(message) == unicode:
         message = message.encode("utf-8")
@@ -1510,9 +1502,94 @@ def render_linkinfo(linkinfo):
 
     return '<a href="%s">%s</a>' % (url, title)
 
+def get_timerange(t):
+    st    = time.localtime(int(t))
+    start = int(time.mktime(time.struct_time((st[0], st[1], st[2], 0, 0, 0, st[6], st[7], st[8]))))
+    end   = start + 86399
+    return start, end
+
+def format_timestamp(t):
+    return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(t))
+
+def paged_log(log):
+    start = html.var('start', None)
+    if not start:
+        start = time.time()
+    start_time, end_time = get_timerange(int(start))
+
+    previous_log_time = None
+    next_log_time     = None
+    first_log_index   = None
+    last_log_index    = None
+    for index, (t, linkinfo, user, action, text) in enumerate(log):
+        t = int(t)
+        if t >= end_time:
+            # This log is too new
+            continue
+        elif first_log_index is None and t < end_time and t >= start_time:
+            # This is a log for this day. Save the first index
+            if first_log_index is None:
+                first_log_index = index
+
+                # When possible save the timestamp of the previous log
+                if index > 0:
+                    next_log_time = int(log[index - 1][0])
+
+        elif t < start_time and last_log_index is None:
+            last_log_index = index - 1
+            # This is the next log after this day
+            previous_log_time = int(log[index][0])
+            # Finished!
+            break
+
+    if not last_log_index:
+        last_log_index = len(log) - 1
+
+    return log[first_log_index:last_log_index], (start_time, end_time, previous_log_time, next_log_time)
+
+def display_paged((start_time, end_time, previous_log_time, next_log_time)):
+    html.write('<div class=paged_controls>')
+
+    html.write(' <b>%s</b> ' % (_('%s to %s') % (format_timestamp(start_time),
+                                                 format_timestamp(end_time))))
+
+    if previous_log_time is not None:
+        html.buttonlink(html.makeuri([('start', previous_log_time)]), _("<"),
+                        title = '%s: %s' % (_("Older events"), format_timestamp(previous_log_time)))
+    else:
+        html.buttonlink(html.makeuri([]), _("<"), disabled = True)
+
+    html.buttonlink(html.makeuri([('start', get_timerange(int(time.time()))[0])]), _("o"),
+                    title = _("Todays events"))
+
+    if next_log_time is not None:
+        html.buttonlink(html.makeuri([('start', next_log_time)]), _(">"),
+                        title = '%s: %s' % (_("Newer events"), format_timestamp(next_log_time)))
+    else:
+        html.buttonlink(html.makeuri([]), _(">"), disabled = True)
+    html.write('</div>')
+
 
 def render_audit_log(log, what, with_filename = False):
-    htmlcode = '<table class="wato auditlog">'
+    htmlcode = ''
+    if what == 'audit':
+        log, times = paged_log(log)
+        empty_msg = _("The logfile is empty. No host has been created or changed yet.")
+    elif what == 'pending':
+        empty_msg = _("No pending changes, monitoring server is up to date.")
+
+    if len(log) == 0:
+        htmlcode += "<div class=info>%s</div>" % empty_msg
+        return
+    elif what == 'audit':
+        htmlcode += "<b>" + _("All Changes") + "</b>"
+    elif what == 'pending':
+        htmlcode += "<h1>" + _("Changes which are not yet activated:") + "</h1>"
+
+    if what == 'audit':
+        display_paged(times)
+
+    htmlcode += '<table class="wato auditlog">'
     even = "even"
     for t, linkinfo, user, action, text in log:
         even = even == "even" and "odd" or "even"
@@ -1524,7 +1601,12 @@ def render_audit_log(log, what, with_filename = False):
                 user,
                 text)
     htmlcode += "</table>"
-    return htmlcode
+
+    if what == 'audit':
+        html.write(htmlcode)
+        display_paged(times)
+    else:
+        html.show_warning(htmlcode)
 
 #   +----------------------------------------------------------------------+
 #   |                  _   _      _                                        |

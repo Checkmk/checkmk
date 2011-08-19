@@ -18,6 +18,9 @@
     Multisite:
     * FIX: reschedule now works for host names containing spaces
 
+    WATO:
+    * Commited audit log entries are now pages based on days
+
 1.1.11i2:
     Core, Setup, etc.:
     * FIX: sort output of cmk --list-hosts alphabetically

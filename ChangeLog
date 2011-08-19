@@ -28,6 +28,7 @@
     Multisite:
     * FIX: reschedule now works for host names containing spaces
     * Bookmarks snapin: save relative URLs whenever possible
+    * Man-Pages of Check_MK checks shown in Multisite honor OMD's local hierarchy
 
 1.1.11i2:
     Core, Setup, etc.:

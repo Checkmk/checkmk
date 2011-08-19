@@ -713,7 +713,14 @@ def paint_check_manpage(row):
     if not command.startswith("check_mk-"):
 	return "", ""
     checktype = command[9:]
-    p = defaults.check_manpages_dir + "/" + checktype
+    # Honor man-pages in OMD's local structure
+    p = None
+    if defaults.omd_root:
+        p = defaults.omd_root + "/local/share/check_mk/checkman/" + checktype
+        if not os.path.isfile(p):
+            p = None
+    if not p:
+        p = defaults.check_manpages_dir + "/" + checktype
     if os.path.isfile(p):
 	description = None
 	for line in file(p):

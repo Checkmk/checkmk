@@ -9,7 +9,12 @@ Class: bug
 Das Einrechnen in Swap ist Müll. Windows tickt anders. Hier muss
 ein eigener Check und eine eigene PNP-Schablone gemacht werden.
 
-TotalPage und UsedPage verwenden. Im Quellcode ist das schon
-drin, der Check muss angepasst werden und auch die Schablone. Evtl. macht
-man einen eigenen Check. Oder man löst es über das Check-Item.
+PageTotal und PateFree verwenden. Der Agent sendet das schon.
+Der Check muss irgendwie erkennen, dass es sich um Windows handelt 
+und dann automatisch eine andere Logik anwenden.
 
+Auch die PNP-Schablone muss das berücksichtigen. Die kann am 
+Namen der Variablen erkennen, dass es Windows ist ("page=...").
+
+Auch braucht man dann eigene Schwellwerte. Frage ist, ob man
+hier auf dict umstellen muss?

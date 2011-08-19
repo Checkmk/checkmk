@@ -37,7 +37,7 @@ def inventory_mem_used(checkname, info):
         # valid data, assume that item can be checked
         ci = check_mem_used(None, (0,0), info)
         if ci[0] <= 2:
-            return [(None, "", "memused_default_levels")]
+            return [(None, "memused_default_levels")]
         else: 
             return []
     except:

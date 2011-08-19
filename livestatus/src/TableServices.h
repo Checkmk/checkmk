@@ -44,7 +44,7 @@ class TableServices : public Table
 public:
     TableServices(bool by_group, bool by_hostgroup);
     const char *name() { return _by_group ? "servicesbygroup" : \
-	(_by_hostgroup ? "servicesbyhostgroup" : "services"); }
+        (_by_hostgroup ? "servicesbyhostgroup" : "services"); }
     const char *prefixname() { return "services"; }
     bool isAuthorized(contact *, void *);
     void *findObject(char *objectspec);

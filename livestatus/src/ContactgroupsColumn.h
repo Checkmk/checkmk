@@ -32,17 +32,17 @@
 
 class ContactgroupsColumn : public ListColumn
 {
-   int _offset;
+    int _offset;
 public:
-   ContactgroupsColumn(string name, string description, int offset, int indirect_offset)
-      : ListColumn(name, description, indirect_offset), _offset(offset) {}
-   int type() { return COLTYPE_LIST; }
-   void output(void *, Query *);
-   void *getNagiosObject(char *name); // return pointer to contact group
-   bool isNagiosMember(void *data, void *nagobject);
-   bool isEmpty(void *data);
+    ContactgroupsColumn(string name, string description, int offset, int indirect_offset)
+        : ListColumn(name, description, indirect_offset), _offset(offset) {}
+    int type() { return COLTYPE_LIST; }
+    void output(void *, Query *);
+    void *getNagiosObject(char *name); // return pointer to contact group
+    bool isNagiosMember(void *data, void *nagobject);
+    bool isEmpty(void *data);
 private:
-   contactgroupsmember *getData(void *);
+    contactgroupsmember *getData(void *);
 };
 
 

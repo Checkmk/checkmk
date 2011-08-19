@@ -36,35 +36,35 @@ void DownCommColumn::output(void *data, Query *query)
     data = shiftPointer(data); // points to host or service
     if (data) 
     {
-	bool first = true;
+        bool first = true;
 
-	for (map<unsigned long, DowntimeOrComment *>::iterator it = table->entriesIteratorBegin();
-		it != table->entriesIteratorEnd();
-		++it)
-	{
-	    unsigned long id = it->first;
-	    DowntimeOrComment *dt = it->second;
-	    if ((void *)dt->_service == data ||
-		    (dt->_service == 0 && dt->_host == data))
-	    {
-		if (first)
-		    first = false;
-		else
-		    query->outputListSeparator();
-		if (_with_info)
-		{
-		    query->outputBeginSublist();
-		    query->outputUnsignedLong(id);
-		    query->outputSublistSeparator();
-		    query->outputString(dt->_author_name);
-		    query->outputSublistSeparator();
-		    query->outputString(dt->_comment);
-		    query->outputEndSublist();
-		}
-		else
-		   query->outputUnsignedLong(id);
-	    }
-	}
+        for (map<unsigned long, DowntimeOrComment *>::iterator it = table->entriesIteratorBegin();
+                it != table->entriesIteratorEnd();
+                ++it)
+        {
+            unsigned long id = it->first;
+            DowntimeOrComment *dt = it->second;
+            if ((void *)dt->_service == data ||
+                    (dt->_service == 0 && dt->_host == data))
+            {
+                if (first)
+                    first = false;
+                else
+                    query->outputListSeparator();
+                if (_with_info)
+                {
+                    query->outputBeginSublist();
+                    query->outputUnsignedLong(id);
+                    query->outputSublistSeparator();
+                    query->outputString(dt->_author_name);
+                    query->outputSublistSeparator();
+                    query->outputString(dt->_comment);
+                    query->outputEndSublist();
+                }
+                else
+                    query->outputUnsignedLong(id);
+            }
+        }
     }
     query->outputEndList();
 }
@@ -83,8 +83,8 @@ bool DownCommColumn::isNagiosMember(void *data, void *member)
     int64_t id = (int64_t)member; // Hack. Convert it back.
     DowntimeOrComment *dt = table->findEntry(id);
     return dt != 0 && 
-	( dt->_service == (service *)data
-	  || (dt->_service == 0 && dt->_host == (host *)data));
+        ( dt->_service == (service *)data
+          || (dt->_service == 0 && dt->_host == (host *)data));
 }
 
 bool DownCommColumn::isEmpty(void *data)
@@ -93,15 +93,15 @@ bool DownCommColumn::isEmpty(void *data)
 
     TableDownComm *table = _is_downtime ? g_table_downtimes : g_table_comments;
     for (map<unsigned long, DowntimeOrComment *>::iterator it = table->entriesIteratorBegin();
-	    it != table->entriesIteratorEnd();
-	    ++it)
+            it != table->entriesIteratorEnd();
+            ++it)
     {
-	DowntimeOrComment *dt = it->second;
-	if ((void *)dt->_service == data ||
-		(dt->_service == 0 && dt->_host == data))
-	{
-	    return false;
-	}
+        DowntimeOrComment *dt = it->second;
+        if ((void *)dt->_service == data ||
+                (dt->_service == 0 && dt->_host == data))
+        {
+            return false;
+        }
     }
     return true; // empty
 }

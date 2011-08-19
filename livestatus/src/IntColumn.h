@@ -35,7 +35,7 @@ class IntColumn : public Column
 {
 public:
     IntColumn(string name, string description, int indirect_offset) 
-       : Column(name, description, indirect_offset) {}
+        : Column(name, description, indirect_offset) {}
     virtual int32_t getValue(void *data, Query *) = 0;
     void output(void *, Query *);
     int type() { return COLTYPE_INT; }

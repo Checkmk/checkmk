@@ -53,38 +53,38 @@ int32_t ServicelistStateColumn::getValue(int logictype, servicesmember *mem, Que
     int32_t result = 0;
 
     while (mem) {
-	service *svc = mem->service_ptr;
-	if (!auth_user || g_table_services->isAuthorized(auth_user, svc)) {
-	    int state;
-	    int has_been_checked;
-	    if (logictype >= 60) {
-		state = svc->last_hard_state;
-		logictype -= 64;
-	    }
-	    else
-		state = svc->current_state;
+        service *svc = mem->service_ptr;
+        if (!auth_user || g_table_services->isAuthorized(auth_user, svc)) {
+            int state;
+            int has_been_checked;
+            if (logictype >= 60) {
+                state = svc->last_hard_state;
+                logictype -= 64;
+            }
+            else
+                state = svc->current_state;
 
-	    has_been_checked = svc->has_been_checked;
+            has_been_checked = svc->has_been_checked;
 
-	    switch (logictype) {
-		case SLSC_WORST_STATE:
-		    if (svcStateIsWorse(state, result))
-			result = state;
-		    break;
-		case SLSC_NUM:
-		    result++;
-		    break;
-		case SLSC_NUM_PENDING:
-		    if (!has_been_checked)
-			result++;
-		    break;
-		default:
-		    if (has_been_checked && state == logictype)
-			result++;
-		    break;
-	    }
-	}
-	mem = mem->next;
+            switch (logictype) {
+                case SLSC_WORST_STATE:
+                    if (svcStateIsWorse(state, result))
+                        result = state;
+                    break;
+                case SLSC_NUM:
+                    result++;
+                    break;
+                case SLSC_NUM_PENDING:
+                    if (!has_been_checked)
+                        result++;
+                    break;
+                default:
+                    if (has_been_checked && state == logictype)
+                        result++;
+                    break;
+            }
+        }
+        mem = mem->next;
     }
     return result;
 }

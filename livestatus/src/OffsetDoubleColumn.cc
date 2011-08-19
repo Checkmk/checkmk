@@ -27,13 +27,13 @@
 
 double OffsetDoubleColumn::getValue(void *data)
 {
-   if (!data)
-      return 0;
+    if (!data)
+        return 0;
 
-   char *p = (char *)shiftPointer(data);
-   if (p)
-      return *(double *)(p + _offset);
-   else
-      return 0;
+    char *p = (char *)shiftPointer(data);
+    if (p)
+        return *(double *)(p + _offset);
+    else
+        return 0;
 }
 

@@ -33,41 +33,41 @@ extern contact *contact_list;
 
 void *ContactsColumn::getNagiosObject(char *name)
 {
-   return (void *)find_contact(name);
+    return (void *)find_contact(name);
 }
 
 void ContactsColumn::output(void *data, Query *query)
 {
-   query->outputBeginList();
-   data = shiftPointer(data);
+    query->outputBeginList();
+    data = shiftPointer(data);
 
-   if (data) {
-      bool first = true;
+    if (data) {
+        bool first = true;
 
-      contact *ctc = contact_list;
-      while (ctc) {
-	 if (isNagiosMember(data, ctc)) {
-	    if (first)
-	       first = false;
-	    else
-	       query->outputListSeparator();
-	    query->outputString(ctc->name);
-	 }
-	 ctc = ctc->next;
-      }
-   }
-   query->outputEndList();
+        contact *ctc = contact_list;
+        while (ctc) {
+            if (isNagiosMember(data, ctc)) {
+                if (first)
+                    first = false;
+                else
+                    query->outputListSeparator();
+                query->outputString(ctc->name);
+            }
+            ctc = ctc->next;
+        }
+    }
+    query->outputEndList();
 }
 
 
 bool ContactsColumn::isEmpty(void *svc)
 {
-   contact *ct = contact_list;
-   while (ct) {
-       if (isNagiosMember(svc, ct))
-	   return false;
-      ct = ct->next;
-   }
-   return true;
+    contact *ct = contact_list;
+    while (ct) {
+        if (isNagiosMember(svc, ct))
+            return false;
+        ct = ct->next;
+    }
+    return true;
 }
 

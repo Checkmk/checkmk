@@ -56,7 +56,7 @@ struct LogEntry
     int       _attempt;
     char      *_check_output;
     char      *_comment;
-    
+
     host      *_host;
     service   *_service;
     contact   *_contact;

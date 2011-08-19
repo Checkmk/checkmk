@@ -34,13 +34,13 @@
 class TableHostgroups : public Table
 {
 public:
-  TableHostgroups();
-  const char *name() { return "hostgroups"; }
-  void *findObject(char *objectspec);
-  bool isAuthorized(contact *, void *);
-  void addColumns(Table *, string prefix, int indirect_offset);
-  void add(hostgroup *ctc);
-  void answerQuery(Query *query);
+    TableHostgroups();
+    const char *name() { return "hostgroups"; }
+    void *findObject(char *objectspec);
+    bool isAuthorized(contact *, void *);
+    void addColumns(Table *, string prefix, int indirect_offset);
+    void add(hostgroup *ctc);
+    void answerQuery(Query *query);
 };
 
 #endif // TableHostgroups_h

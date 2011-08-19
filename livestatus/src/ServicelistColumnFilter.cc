@@ -30,8 +30,8 @@
 
 #define HOSTSERVICE_SEPARATOR '|'
 
-ServicelistColumnFilter::ServicelistColumnFilter(ServicelistColumn *column, int opid, char *refvalue)
-    : _servicelist_column(column), _opid(opid)
+    ServicelistColumnFilter::ServicelistColumnFilter(ServicelistColumn *column, int opid, char *refvalue)
+: _servicelist_column(column), _opid(opid)
 {
     if (abs(_opid) == OP_EQUAL && !refvalue[0])
         return; // test for emptiness is allowed

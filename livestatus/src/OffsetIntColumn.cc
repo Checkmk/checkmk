@@ -28,13 +28,13 @@
 
 int32_t OffsetIntColumn::getValue(void *data, Query *)
 {
-   if (!data)
-      return 0;
+    if (!data)
+        return 0;
 
-   char *p = (char *)shiftPointer(data);
-   if (p)
-      return *(int *)(p + _offset);
-   else
-      return 0;
+    char *p = (char *)shiftPointer(data);
+    if (p)
+        return *(int *)(p + _offset);
+    else
+        return 0;
 }
 

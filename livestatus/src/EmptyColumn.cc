@@ -27,5 +27,5 @@
 
 void EmptyColumn::output(void *data __attribute__ ((__unused__)), Query *query)
 {
-   query->outputString("");
+    query->outputString("");
 }

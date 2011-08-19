@@ -34,16 +34,16 @@ class TableDownComm;
 
 class DownCommColumn : public ListColumn
 {
-   bool _is_downtime;
-   bool _with_info;
+    bool _is_downtime;
+    bool _with_info;
 public:
-   DownCommColumn(string name, string description, int indirect_offset, bool is_downtime, bool with_info)
-      : ListColumn(name, description, indirect_offset), _is_downtime(is_downtime), _with_info(with_info) {}
-   int type() { return COLTYPE_LIST; }
-   void output(void *, Query *);
-   void *getNagiosObject(char *name);
-   bool isEmpty(void *data);
-   bool isNagiosMember(void *data, void *member);
+    DownCommColumn(string name, string description, int indirect_offset, bool is_downtime, bool with_info)
+        : ListColumn(name, description, indirect_offset), _is_downtime(is_downtime), _with_info(with_info) {}
+    int type() { return COLTYPE_LIST; }
+    void output(void *, Query *);
+    void *getNagiosObject(char *name);
+    bool isEmpty(void *data);
+    bool isNagiosMember(void *data, void *member);
 };
 
 

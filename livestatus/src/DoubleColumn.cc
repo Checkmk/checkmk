@@ -28,10 +28,10 @@
 
 void DoubleColumn::output(void *data, Query *query)
 {
-   query->outputDouble(getValue(data));
+    query->outputDouble(getValue(data));
 }
 
 Filter *DoubleColumn::createFilter(int operator_id, char *value)
 {
-   return new DoubleColumnFilter(this, operator_id, value);
+    return new DoubleColumnFilter(this, operator_id, value);
 }

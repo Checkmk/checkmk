@@ -32,12 +32,12 @@
 #include "logger.h"
 #include "OutputBuffer.h"
 
-StringColumnFilter::StringColumnFilter(StringColumn *column, int opid, char *value)
+    StringColumnFilter::StringColumnFilter(StringColumn *column, int opid, char *value)
     : _column(column)
     , _ref_string(value)
     , _opid(abs(opid))
     , _negate(opid < 0)
-    , _regex(0)
+      , _regex(0)
 {
     if (_opid == OP_REGEX || _opid == OP_REGEX_ICASE) {
         if (strchr(value, '{') || strchr(value, '}')) {
@@ -57,42 +57,42 @@ StringColumnFilter::StringColumnFilter(StringColumn *column, int opid, char *val
 
 StringColumnFilter::~StringColumnFilter()
 {
-   if (_regex) {
-      regfree(_regex);
-      delete _regex;
-   }
+    if (_regex) {
+        regfree(_regex);
+        delete _regex;
+    }
 }
 
 
 bool StringColumnFilter::accepts(void *data)
 {
-   bool pass = true;
-   char *act_string = _column->getValue(data);
-   switch (_opid) {
-      case OP_EQUAL:
-	 pass = _ref_string == act_string; break;
-      case OP_EQUAL_ICASE:
-	 pass = !strcasecmp(_ref_string.c_str(), act_string); break;
-      case OP_REGEX:
-      case OP_REGEX_ICASE:
-	 pass = _regex != 0 && 0 == regexec(_regex, act_string, 0, 0, 0);
-	 break;
-      case OP_GREATER:
-	 pass = 0 > strcmp(_ref_string.c_str(), act_string); break;
-      case OP_LESS:
-	 pass = 0 < strcmp(_ref_string.c_str(), act_string); break;
-      default:
-         // this should never be reached, all operators are handled
-	 logger(LG_INFO, "Sorry. Operator %d for strings not implemented.", _opid);
-	 break;
-   }
-   return pass != _negate;
+    bool pass = true;
+    char *act_string = _column->getValue(data);
+    switch (_opid) {
+        case OP_EQUAL:
+            pass = _ref_string == act_string; break;
+        case OP_EQUAL_ICASE:
+            pass = !strcasecmp(_ref_string.c_str(), act_string); break;
+        case OP_REGEX:
+        case OP_REGEX_ICASE:
+            pass = _regex != 0 && 0 == regexec(_regex, act_string, 0, 0, 0);
+            break;
+        case OP_GREATER:
+            pass = 0 > strcmp(_ref_string.c_str(), act_string); break;
+        case OP_LESS:
+            pass = 0 < strcmp(_ref_string.c_str(), act_string); break;
+        default:
+            // this should never be reached, all operators are handled
+            logger(LG_INFO, "Sorry. Operator %d for strings not implemented.", _opid);
+            break;
+    }
+    return pass != _negate;
 }
 
 void *StringColumnFilter::indexFilter(const char *column)
 {
-   if (_opid == OP_EQUAL && !strcmp(column, _column->name()))
-      return (void *)_ref_string.c_str();
-   else
-      return 0;
+    if (_opid == OP_EQUAL && !strcmp(column, _column->name()))
+        return (void *)_ref_string.c_str();
+    else
+        return 0;
 }

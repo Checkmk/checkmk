@@ -32,15 +32,15 @@
 
 class TableColumns : public Table
 {
-   typedef vector<Table *> _tables_t;
-   _tables_t _tables;
+    typedef vector<Table *> _tables_t;
+    _tables_t _tables;
 public:
-   TableColumns();
-   const char *name() { return "columns"; }
-   void addTable(Table *);
-   void answerQuery(Query *query);
-   const char *getValue(Column *column, int colcol);
-   const char *tableNameOf(Column *column);
+    TableColumns();
+    const char *name() { return "columns"; }
+    void addTable(Table *);
+    void answerQuery(Query *query);
+    const char *getValue(Column *column, int colcol);
+    const char *tableNameOf(Column *column);
 };
 
 

@@ -30,34 +30,34 @@
 
 bool HostlistColumnFilter::accepts(void *data)
 {
-   // data points to a primary data object. We need to extract
-   // a pointer to a host list
-   hostsmember *mem = _hostlist_column->getMembers(data);
+    // data points to a primary data object. We need to extract
+    // a pointer to a host list
+    hostsmember *mem = _hostlist_column->getMembers(data);
 
-   // test for empty list
-   if (abs(_opid) == OP_EQUAL && _ref_value == "")
-      return (mem == 0) == (_opid == OP_EQUAL);
+    // test for empty list
+    if (abs(_opid) == OP_EQUAL && _ref_value == "")
+        return (mem == 0) == (_opid == OP_EQUAL);
 
-   bool is_member = false;
-   while (mem) {
-      char *host_name = mem->host_name;
-      if (!host_name)
-	 host_name = mem->host_ptr->name;
-      
-      if (host_name == _ref_value) {
-	 return true;
-	 break;
-      }
-      mem = mem->next;
-   }
-   switch (_opid) {
-      case -OP_LESS: /* !< means >= means 'contains' */
-	 return is_member;
-      case OP_LESS:
-	 return !is_member;
-      default:
-	 logger(LG_INFO, "Sorry, Operator %d for host lists lists not implemented.", _opid);
-	 return true;
-   }
+    bool is_member = false;
+    while (mem) {
+        char *host_name = mem->host_name;
+        if (!host_name)
+            host_name = mem->host_ptr->name;
+
+        if (host_name == _ref_value) {
+            return true;
+            break;
+        }
+        mem = mem->next;
+    }
+    switch (_opid) {
+        case -OP_LESS: /* !< means >= means 'contains' */
+            return is_member;
+        case OP_LESS:
+            return !is_member;
+        default:
+            logger(LG_INFO, "Sorry, Operator %d for host lists lists not implemented.", _opid);
+            return true;
+    }
 }
 

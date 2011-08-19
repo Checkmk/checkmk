@@ -26,19 +26,19 @@
 
 char *CustomVarsExplicitColumn::getValue(void *data)
 {
-   customvariablesmember *cvm = getCVM(data);
-   while (cvm) {
-       if (cvm->variable_name == _varname)
-           return cvm->variable_value;
+    customvariablesmember *cvm = getCVM(data);
+    while (cvm) {
+        if (cvm->variable_name == _varname)
+            return cvm->variable_value;
         cvm = cvm->next;
-   }
-   return (char *)"";
+    }
+    return (char *)"";
 }
 
 customvariablesmember *CustomVarsExplicitColumn::getCVM(void *data)
 {
-   if (!data) return 0;
-   data = shiftPointer(data);
-   if (!data) return 0;
-   return *(customvariablesmember **)((char *)data + _offset);
+    if (!data) return 0;
+    data = shiftPointer(data);
+    if (!data) return 0;
+    return *(customvariablesmember **)((char *)data + _offset);
 }

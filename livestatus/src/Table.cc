@@ -34,10 +34,10 @@ void Table::addColumn(Column *col)
     // case. (For example needed for TableLog->TableHosts,
     // which both define host_name.
     if (column(col->name())) {
-	delete col;
+        delete col;
     }
     else
-	_columns.insert(make_pair(col->name(), col));
+        _columns.insert(make_pair(col->name(), col));
 }
 
 
@@ -45,10 +45,10 @@ void Table::addColumn(Column *col)
 Table::~Table()
 {
     for (_columns_t::iterator it = _columns.begin();
-	    it != _columns.end();
-	    ++it)
+            it != _columns.end();
+            ++it)
     {
-	delete it->second;
+        delete it->second;
     }
 }
 
@@ -56,10 +56,10 @@ Table::~Table()
 void Table::addAllColumnsToQuery(Query *q)
 {
     for (_columns_t::iterator it = _columns.begin();
-	    it != _columns.end();
-	    ++it)
+            it != _columns.end();
+            ++it)
     {
-	q->addColumn(it->second);
+        q->addColumn(it->second);
     }
 }
 
@@ -69,18 +69,18 @@ Column *Table::column(const char *colname)
     // First try exact match
     _columns_t::iterator it = _columns.find(string(colname));
     if (it != _columns.end())
-	return it->second;
+        return it->second;
 
     // Second allow column names to bear prefix like
     // the tablename (e.g. service_ for table services, or log_ for table log)
     int prefix_len = strlen(prefixname()); // replace 's' with '_'
     if (!strncmp(colname, prefixname(), prefix_len - 1) && \
-	    colname[prefix_len - 1] == '_')
+            colname[prefix_len - 1] == '_')
     {
-	return column(colname + prefix_len);
+        return column(colname + prefix_len);
     }
     else
-	return 0;
+        return 0;
 }
 
 
@@ -88,11 +88,11 @@ bool Table::hasColumn(Column *col)
 {
     // this is not very efficient but seldomly used 
     for (_columns_t::iterator it = _columns.begin();
-	    it != _columns.end();
-	    ++it)
+            it != _columns.end();
+            ++it)
     {
-	if (col == it->second)
-	    return true;
+        if (col == it->second)
+            return true;
     }
     return false;
 }

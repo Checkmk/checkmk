@@ -27,48 +27,48 @@
 
 ClientQueue::ClientQueue()
 {
-   pthread_mutex_init(&_lock, 0);
-   pthread_cond_init(&_signal, 0);
+    pthread_mutex_init(&_lock, 0);
+    pthread_cond_init(&_signal, 0);
 }
 
 ClientQueue::~ClientQueue()
 {
-   for (_queue_t::iterator it = _queue.begin();
-	 it != _queue.end();
-	 ++it)
-   {
-      close(*it);
-   }
-   pthread_mutex_destroy(&_lock);
-   pthread_cond_destroy(&_signal);
+    for (_queue_t::iterator it = _queue.begin();
+            it != _queue.end();
+            ++it)
+    {
+        close(*it);
+    }
+    pthread_mutex_destroy(&_lock);
+    pthread_cond_destroy(&_signal);
 }
 
 void ClientQueue::addConnection(int fd)
 {
-   pthread_mutex_lock(&_lock);
-   _queue.push_back(fd);
-   pthread_mutex_unlock(&_lock);
-   pthread_cond_signal(&_signal);
+    pthread_mutex_lock(&_lock);
+    _queue.push_back(fd);
+    pthread_mutex_unlock(&_lock);
+    pthread_cond_signal(&_signal);
 }
 
 
 int ClientQueue::popConnection()
 {
-   pthread_mutex_lock(&_lock);
-   if (_queue.size() == 0) {
-      pthread_cond_wait(&_signal, &_lock);
-   }
+    pthread_mutex_lock(&_lock);
+    if (_queue.size() == 0) {
+        pthread_cond_wait(&_signal, &_lock);
+    }
 
-   int fd = -1;
-   if (_queue.size() > 0) {
-      fd = _queue.front();
-      _queue.pop_front();
-   }
-   pthread_mutex_unlock(&_lock);
-   return fd;
+    int fd = -1;
+    if (_queue.size() > 0) {
+        fd = _queue.front();
+        _queue.pop_front();
+    }
+    pthread_mutex_unlock(&_lock);
+    return fd;
 }
 
 void ClientQueue::wakeupAll()
 {
-   pthread_cond_broadcast(&_signal);
+    pthread_cond_broadcast(&_signal);
 }

@@ -45,26 +45,26 @@ using namespace std;
 
 class InputBuffer
 {
-   int _fd;
-   int *_termination_flag;
-   typedef deque<string> _requestlines_t;
-   _requestlines_t _requestlines;
-   char _readahead_buffer[IB_BUFFER_SIZE];
-   char *_read_pointer;
-   char *_write_pointer;
-   char *_end_pointer;
+    int _fd;
+    int *_termination_flag;
+    typedef deque<string> _requestlines_t;
+    _requestlines_t _requestlines;
+    char _readahead_buffer[IB_BUFFER_SIZE];
+    char *_read_pointer;
+    char *_write_pointer;
+    char *_end_pointer;
 
-   // some buffer
+    // some buffer
 public:
-   InputBuffer(int *termination_flag);
-   void setFd(int fd);
-   int readRequest();
-   bool moreLines() { return !_requestlines.empty(); }
-   string nextLine();
+    InputBuffer(int *termination_flag);
+    void setFd(int fd);
+    int readRequest();
+    bool moreLines() { return !_requestlines.empty(); }
+    string nextLine();
 
 private:
-   void storeRequestLine(char *line, int length);
-   int readData();
+    void storeRequestLine(char *line, int length);
+    int readData();
 };
 
 

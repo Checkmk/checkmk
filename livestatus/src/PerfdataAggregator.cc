@@ -35,7 +35,7 @@ void PerfdataAggregator::consume(void *data, Query *query)
 {
     char *perf_data = strdup(_column->getValue(data));
     char *scan = perf_data;
-    
+
     char *entry;
     while (0 != (entry = next_field(&scan)))
     {
@@ -82,7 +82,7 @@ void PerfdataAggregator::consumeVariable(const char *varname, double value)
                 if (value < it->second._aggr)
                     it->second._aggr = value;
                 break;
-            
+
             case STATS_OP_MAX:
                 if (value > it->second._aggr)
                     it->second._aggr = value;
@@ -102,30 +102,30 @@ void PerfdataAggregator::output(Query *q)
     char format[64];
     string perf_data;
     for (_aggr_t::const_iterator it = _aggr.begin();
-         it != _aggr.end();
-         ++it)
+            it != _aggr.end();
+            ++it)
     {
         double value;
         switch (_operation) {
-        case STATS_OP_SUM:
-        case STATS_OP_MIN:
-        case STATS_OP_MAX:
-            value = it->second._aggr;
-            break;
+            case STATS_OP_SUM:
+            case STATS_OP_MIN:
+            case STATS_OP_MAX:
+                value = it->second._aggr;
+                break;
 
-        case STATS_OP_AVG:
-            if (it->second._count == 0)
-                value = 0.00;
-            else
-                value = it->second._aggr / it->second._count;
-            break;
-        
-        case STATS_OP_STD:
-            if (it->second._count <= 1)
-                value = 0.0;
-            else
-                value = sqrt((it->second._sumq - (it->second._aggr * it->second._aggr) / it->second._count)/(it->second._count - 1));
-            break;
+            case STATS_OP_AVG:
+                if (it->second._count == 0)
+                    value = 0.00;
+                else
+                    value = it->second._aggr / it->second._count;
+                break;
+
+            case STATS_OP_STD:
+                if (it->second._count <= 1)
+                    value = 0.0;
+                else
+                    value = sqrt((it->second._sumq - (it->second._aggr * it->second._aggr) / it->second._count)/(it->second._count - 1));
+                break;
         }
         snprintf(format, sizeof(format), "%s=%.8f", it->first.c_str(), value);
         if (it != _aggr.begin())

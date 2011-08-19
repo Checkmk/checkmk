@@ -41,7 +41,7 @@ extern "C" {
 
 
 
-   void logger(int priority, const char *loginfo, ...);
+    void logger(int priority, const char *loginfo, ...);
 
 #ifdef __cplusplus
 }

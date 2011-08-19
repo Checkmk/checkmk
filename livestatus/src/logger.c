@@ -30,23 +30,23 @@
 
 void logger(int priority, const char *loginfo, ...)
 {
-   char buffer[8192];
-   snprintf(buffer, 20, "livestatus: ");
+    char buffer[8192];
+    snprintf(buffer, 20, "livestatus: ");
 
-   va_list ap;
-   va_start(ap, loginfo);
-   vsnprintf(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), loginfo, ap);
-   va_end(ap);
-   write_to_all_logs(buffer, priority);
+    va_list ap;
+    va_start(ap, loginfo);
+    vsnprintf(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), loginfo, ap);
+    va_end(ap);
+    write_to_all_logs(buffer, priority);
 
-   /* DEBUGING
-      FILE *x = fopen("/tmp/hirn.log", "a+");
-      va_start(ap, loginfo);
-      vfprintf(x, loginfo, ap);
-      fputc('\n', x);
-      va_end(ap);
-      fclose(x);
-    */
+    /* DEBUGING
+       FILE *x = fopen("/tmp/hirn.log", "a+");
+       va_start(ap, loginfo);
+       vfprintf(x, loginfo, ap);
+       fputc('\n', x);
+       va_end(ap);
+       fclose(x);
+     */
 }
 
 

@@ -42,20 +42,20 @@ TableCommands::TableCommands()
 
 void TableCommands::addColumns(Table *table, string prefix, int indirect_offset)
 {
-   command cmd;
-   char *ref = (char *)&cmd;
-   table->addColumn(new OffsetStringColumn(prefix + "name", 
-	    "The name of the command", (char *)(&cmd.name) - ref, indirect_offset));
-   table->addColumn(new OffsetStringColumn(prefix + "line", 
-	    "The shell command line", (char *)(&cmd.command_line) - ref, indirect_offset));
+    command cmd;
+    char *ref = (char *)&cmd;
+    table->addColumn(new OffsetStringColumn(prefix + "name", 
+                "The name of the command", (char *)(&cmd.name) - ref, indirect_offset));
+    table->addColumn(new OffsetStringColumn(prefix + "line", 
+                "The shell command line", (char *)(&cmd.command_line) - ref, indirect_offset));
 }
 
 
 void TableCommands::answerQuery(Query *query)
 {
-   command *cmd = command_list;
-   while (cmd) {
-      if (!query->processDataset(cmd)) break;
-      cmd = cmd->next;
-   }
+    command *cmd = command_list;
+    while (cmd) {
+        if (!query->processDataset(cmd)) break;
+        cmd = cmd->next;
+    }
 }

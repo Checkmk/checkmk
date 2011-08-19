@@ -32,15 +32,15 @@ class ListColumn;
 
 class ListColumnFilter : public Filter
 {
-   ListColumn *_column;
-   void *_ref_member;
-   int _opid;
-   bool _empty_ref; // distinct from unknown ref
+    ListColumn *_column;
+    void *_ref_member;
+    int _opid;
+    bool _empty_ref; // distinct from unknown ref
 
 public:
-   ListColumnFilter(ListColumn *column, int opid, char *value);
-   bool accepts(void *data);
-   void *indexFilter(const char *columnname);
+    ListColumnFilter(ListColumn *column, int opid, char *value);
+    bool accepts(void *data);
+    void *indexFilter(const char *columnname);
 };
 
 

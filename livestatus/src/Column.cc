@@ -26,7 +26,7 @@
 #include "logger.h"
 
 
-Column::Column(string name, string description, int indirect_offset) 
+    Column::Column(string name, string description, int indirect_offset) 
     : _name(name)
     , _description(description)
       ,  _indirect_offset(indirect_offset) 
@@ -35,16 +35,16 @@ Column::Column(string name, string description, int indirect_offset)
 
 void *Column::shiftPointer(void *data)
 {
-   if (!data)
-      return 0;
+    if (!data)
+        return 0;
 
-   else if (_indirect_offset >= 0) {
-      // add one indirection level
-      // indirect_offset is place in structure, where
-      // pointer to real object is
-      return *((void **)((char *)data + _indirect_offset));
-   }
-   else // no indirection
-      return data;
+    else if (_indirect_offset >= 0) {
+        // add one indirection level
+        // indirect_offset is place in structure, where
+        // pointer to real object is
+        return *((void **)((char *)data + _indirect_offset));
+    }
+    else // no indirection
+        return data;
 }
 

@@ -33,12 +33,12 @@ class TableContacts;
 class ContactsColumn : public ListColumn
 {
 public:
-   ContactsColumn(string name, string description, int indirect_offset)
-      : ListColumn(name, description, indirect_offset)  {}
-   int type() { return COLTYPE_LIST; }
-   void *getNagiosObject(char *name);
-   bool isEmpty(void *data);
-   void output(void *, Query *);
+    ContactsColumn(string name, string description, int indirect_offset)
+        : ListColumn(name, description, indirect_offset)  {}
+    int type() { return COLTYPE_LIST; }
+    void *getNagiosObject(char *name);
+    bool isEmpty(void *data);
+    void output(void *, Query *);
 };
 
 #endif // ContactsColumn_h

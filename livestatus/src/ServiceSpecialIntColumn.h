@@ -32,12 +32,12 @@
 
 class ServiceSpecialIntColumn : public IntColumn
 {
-   int _type;
+    int _type;
 
 public:
-   ServiceSpecialIntColumn(string name, string description, int ssic_type, int indirect)
-      : IntColumn(name, description, indirect) , _type(ssic_type) {}
-   int32_t getValue(void *data, Query *);
+    ServiceSpecialIntColumn(string name, string description, int ssic_type, int indirect)
+        : IntColumn(name, description, indirect) , _type(ssic_type) {}
+    int32_t getValue(void *data, Query *);
 };
 
 #endif // ServiceSpecialIntColumn_h

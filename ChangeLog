@@ -18,6 +18,8 @@
     * Windows Agent: Now supports direct execution of powershell scripts
     * local: PNP template now supports multiple performance values
     * lnx_if: make lnx_if the default interface check for Linux
+    * printer_supply: support non-Ascii characters in items like
+      "Resttonerbehälter". You need to define snmp_character_encodings in main.mk
 
     MK Livestatus:
     * WaitObject: allow to separate host name and service with a semicolon.

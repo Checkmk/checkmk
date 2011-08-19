@@ -1,10 +1,11 @@
 Title: Umlaute in SNMP-Daten und Servicedescription
 Component: checks
-Benefit: 1
-State: open
-Cost: 4
-Date: 2010-12-21 12:12:02
+State: done
 Class: bug
+Date: 2010-12-21 12:12:02
+Benefit: 1
+Cost: 4
+Fun: 0
 
 Ein Drucker sendet per SNMP Latin1
 kodierte Wert, z.B. Resttonerbehälter. Daraus baut Check_MK eine
@@ -18,3 +19,11 @@ im Falle vom Datentyp String, automatisch konvertiert. Oder
 man macht das explizit im Check, der weiß, dass die Daten
 evtl. kodiert daher kommen.
 
+
+2011-08-19 22:34:40: changed state open -> done
+snmp_character_encodings muss definiert werden. Aktuell wird
+das nur in printer_supply verwendet. Ob andere Checks aktuell
+betroffen sind, ist nicht klar.
+Evtl. kann man einst auch Windows-Eventlogs auf diese
+Art machen. Obwohl ich eher finde, dass man das auf dem Agent
+lösen sollte.

@@ -61,16 +61,19 @@ printer_supply_some_remaining_status = 1
 # Add the color description to that item
 def printer_supply_fix_infos(info):
     colors = []
-    for index, line in enumerate(info):
-        if line[0].startswith('Toner Cartridge') \
-           or line[0].startswith('Image Drum Unit'):
+    new_info = []
+    for line in info:
+        line_0 = snmp_decode_string(line[0]) # give chance for latin1->utf8 decoding
+        if line_0.startswith('Toner Cartridge') \
+           or line_0.startswith('Image Drum Unit'):
             if line[3]:
                 colors += [ line[3] ]
                 color = line[3]
             elif line[3] == '':
                 color = colors[index - len(colors)]
-            info[index][0] = '%s %s' % (color.title(), line[0])
-    return info
+            line_0 = '%s %s' % (color.title(), line_0)
+        new_info.append([line_0] + line[1:])
+    return new_info
 
 def inventory_printer_supply(info):
     # Ignore devices which show -2 for current value and -2 for max value -> useless

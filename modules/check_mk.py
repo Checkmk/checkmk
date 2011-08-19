@@ -225,9 +225,10 @@ debug_log                          = None
 monitoring_host                    = "localhost" # your Nagios host
 max_num_processes                  = 50
 
-# SNMP communities
+# SNMP communities and encoding
 snmp_default_community             = 'public'
 snmp_communities                   = []
+snmp_character_encodings           = []
 
 # Inventory and inventory checks
 inventory_check_interval           = None # Nagios intervals (4h = 240)
@@ -603,6 +604,11 @@ def snmp_credentials_of(hostname):
 
     # nothing configured for this host -> use default
     return snmp_default_community
+
+def get_snmp_character_encoding(hostname):
+    entries = host_extra_conf(hostname, snmp_character_encodings)
+    if len(entries) > 0:
+        return entries[0]
 
 def check_uses_snmp(check_type):
     check_name = check_type.split(".")[0]
@@ -2319,6 +2325,10 @@ no_inventory_possible = None
     # TCP and SNMP port of agent
     output.write("def agent_port_of(hostname):\n    return %d\n\n" % agent_port_of(hostname))
     output.write("def snmp_port_spec(hostname):\n    return %r\n\n" % snmp_port_spec(hostname))
+
+    # SNMP character encoding
+    output.write("def get_snmp_character_encoding(hostname):\n    return %r\n\n" 
+      % get_snmp_character_encoding(hostname))
 
     # Parameters for checks: Default values are defined in checks/*. The
     # variables might be overridden by the user in main.mk. We need

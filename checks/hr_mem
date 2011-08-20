@@ -69,7 +69,7 @@ def check_hr_mem(item, params, info):
 
         warn, crit = params
         if type(warn) == float:
-            perfdata.append(('memused', str(totalused_mb)+'MB', int(warn/100.0 * totalmem_mb), 
+            perfdata.append(('memused', str(totalused_mb)+'MB', int(warn/100.0 * totalmem_mb),
                         int(crit/100.0 * totalmem_mb), 0, totalvirt_mb))
             if totalused_perc >= crit:
                 return (2, 'CRIT - %s, critical at %.1f%%' % (infotext, crit), perfdata)

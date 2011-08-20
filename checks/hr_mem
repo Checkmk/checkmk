@@ -45,18 +45,27 @@ def check_hr_mem(item, params, info):
             size = saveint(hrsize) * saveint(hrunits) / 1048576.0
             used = saveint(hrused) * saveint(hrunits) / 1048576.0
             usage[hrtype] = (size, used)
+
+    # Account for cached memory (this works at least for systems using
+    # the UCD snmpd (such as Linux based applicances)
+    cached_mb = 0
+    for hrtype, hrdescr, hrunits, hrsize, hrused in info:
+        if hrdescr in [ "Cached memory", "Memory buffers" ]:
+            cached_mb += saveint(hrused) * saveint(hrunits) / 1048576.0
+
     totalram_mb,  ramused_mb   = usage.get(".1.3.6.1.2.1.25.2.1.2", (0,0))
+    ramused_mb -= cached_mb
     totalvirt_mb, virtused_mb  = usage.get(".1.3.6.1.2.1.25.2.1.3", (0,0))
     totalmem_mb,  totalused_mb = totalram_mb + totalvirt_mb, ramused_mb + virtused_mb
     if totalmem_mb > 0:
-        totalused_perc = 100 * totalused_mb / totalmem_mb
+        totalused_perc = 100 * totalused_mb / totalram_mb
 
         perfdata = [
             ('ramused', str(ramused_mb) + 'MB', None, None, 0, totalram_mb),
             ('swapused', str(virtused_mb) + 'MB', None, None, 0, totalvirt_mb) ]
 
-        infotext = "%.2f GB RAM+SWAP used (this is %.1f%% of RAM size)" % \
-                                       (totalused_mb / 1024.0, totalused_perc)
+        infotext = "%.2f GB used (%.2f GB RAM + %.2f GB SWAP, this is %.1f%% of %.2f GB RAM)" % \
+               (totalused_mb / 1024.0, ramused_mb / 1024, virtused_mb / 1024, totalused_perc, totalram_mb / 1024.0)
 
         warn, crit = params
         if type(warn) == float:

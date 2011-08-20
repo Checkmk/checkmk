@@ -12,6 +12,7 @@
     * Show datasource program on cmk -D
 
     Checks & Agents:
+    * FIX: hr_mem: take into account cache and buffers
     * FIX: printer_pages: workaround for trailing-zero bug in HP Jetdirect
     * mk_logwatch: allow to set limits in processing time and number of
       new log messages per log file

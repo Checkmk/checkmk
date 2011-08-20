@@ -22,6 +22,7 @@
     * printer_supply: support non-Ascii characters in items like
       "Resttonerbehälter". You need to define snmp_character_encodings in main.mk
     * mem.win: new dedicated memory check for Windows (see Migration notes)
+    * hr_mem: added Perf-O-Meter
 
     MK Livestatus:
     * WaitObject: allow to separate host name and service with a semicolon.

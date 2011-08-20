@@ -204,10 +204,10 @@ def check_cisco_qos(item, params, info):
             infotext += ', %s: %s/s' % (what, get_bytes_human_readable(rate))
             if crit is not None and rate >= crit:
                 state = 2
-                infotext += ' (CRIT)'
+                infotext += '(!!)'
             elif warn is not None and rate >= warn:
                 state = 1
-                infotext += ' (WARN)'
+                infotext += '(!)'
 
     infotext += ', Policy-Name: %s, Int-Bandwidth: %sits/s' % (policy_name, get_bytes_human_readable(speed, 1000))
     return (state, "%s - %s" % (nagios_state_names[state], infotext.lstrip(', ')), perfdata)

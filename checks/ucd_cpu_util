@@ -72,9 +72,9 @@ def check_ucd_cpu_util(item, params, info):
     try:
         warn, crit = params
         if wait >= crit:
-            result = (2, "CRIT (wait too large)")
+            result = (2, "CRIT - (wait too large)")
         elif wait >= warn:
-            result = (1, "WARNING (wait too large)")
+            result = (1, "WARN - (wait too large)")
     except:
         pass
 

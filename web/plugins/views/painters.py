@@ -419,11 +419,20 @@ multisite_painters["site_icon"] = {
     "paint" : paint_site_icon
 }
 
+warn_marker    = '<b class="stmark state1">WARN</b>'
+crit_marker    = '<b class="stmark state2">CRIT</b>'
+unknown_marker = '<b class="stmark state3">UNKN</b>'
+
+def format_plugin_output(output):
+    return output.replace("(!)", warn_marker) \
+           .replace("(!!)", crit_marker) \
+           .replace("(?)", unknown_marker)
+
 multisite_painters["svc_plugin_output"] = {
     "title" : _("Output of check plugin"),
     "short" : _("Status detail"),
     "columns" : ["service_plugin_output"],
-    "paint" : lambda row: (None, row["service_plugin_output"])
+    "paint" : lambda row: ("", format_plugin_output(row["service_plugin_output"]))
 }
 multisite_painters["svc_long_plugin_output"] = {
     "title" : _("Long output of check plugin (multiline)"),

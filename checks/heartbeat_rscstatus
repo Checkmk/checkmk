@@ -40,7 +40,7 @@ def check_heartbeat_rscstatus(item, expected_state, info):
         if (type(expected_state) == list and info[0][0] in expected_state) or info[0][0] == expected_state:
             return (0, "OK - Current state: %s" % (info[0][0]))
         else:
-            return (2, "CRITICAL - Current state: %s (Expected: %s)" % (info[0][0], expected_state))
+            return (2, "CRIT - Current state: %s (Expected: %s)" % (info[0][0], expected_state))
     else:
         return (3, "UNKNOWN - Got no information from agent")
 

@@ -244,7 +244,7 @@ def check_drbd_general(item, params, info):
     parsed = drbd_get_block(item, info, 'drbd')
     if not parsed is None:
         if parsed['cs'] == 'Unconfigured':
-            return (2, 'CRITICAL - The device is "Unconfigured"')
+            return (2, 'CRIT - The device is "Unconfigured"')
         elif not parsed['cs'] in drbd_cs_map:
             return (3, 'UNKNOWN - Undefined "connection state" in drbd output')
 
@@ -285,7 +285,7 @@ def check_drbd_net(item, params, info):
     parsed = drbd_get_block(item, info, 'drbd.net')
     if not parsed is None:
         if parsed['cs'] == 'Unconfigured':
-            return (2, 'CRITICAL - The device is "Unconfigured"')
+            return (2, 'CRIT - The device is "Unconfigured"')
         output, perfdata = drbd_get_counters([ ('drbd.net', 'in',  item, int(parsed['nr']), 'kb'),
                                                ('drbd.net', 'out', item, int(parsed['ns']), 'kb') ])
         # FIXME: Maybe handle thresholds in the future
@@ -297,7 +297,7 @@ def check_drbd_disk(item, params, info):
     parsed = drbd_get_block(item, info, 'drbd.disk')
     if not parsed is None:
         if parsed['cs'] == 'Unconfigured':
-            return (2, 'CRITICAL - The device is "Unconfigured"')
+            return (2, 'CRIT - The device is "Unconfigured"')
         output, perfdata = drbd_get_counters([ ('drbd.disk', 'write',  item, int(parsed['dw']), 'kb'),
                                                ('drbd.disk', 'read',   item, int(parsed['dr']), 'kb') ])
         # FIXME: Maybe handle thresholds in the future
@@ -309,7 +309,7 @@ def check_drbd_stats(item, params, info):
     parsed = drbd_get_block(item, info, 'drbd.stats')
     if not parsed is None:
         if parsed['cs'] == 'Unconfigured':
-            return (2, 'CRITICAL - The device is "Unconfigured"')
+            return (2, 'CRIT - The device is "Unconfigured"')
         output = ''
         perfdata = []
         for key, label in [ ('al',  'activity log updates'),    ('bm', 'bit map updates'),

@@ -41,7 +41,7 @@ def check_tsm_stgpool(item, params, info):
             if current >= crit:
                 return (2, "CRIT - %s (critical at %.1f%%)" % (infotext, crit), perfdata)
             elif current >= warn:
-                return (1, "WARNING - %s (warning  at %.1f%%)" % (infotext, warn), perfdata)
+                return (1, "WARN - %s (warning  at %.1f%%)" % (infotext, warn), perfdata)
             else:
                 return (0, "OK - %s" % (infotext,), perfdata)
     return (3, "No such storage pool found")

@@ -38,7 +38,7 @@ def check_fsc_subsystems(item, params, info):
         if status == 1 or status == 5:
             return (0, "OK - %s - no problems" % statusname)
         elif status >= 2 and status <= 4:
-            return (2, "CRITICAL - %s" % statusname)
+            return (2, "CRIT - %s" % statusname)
         else:
             return (3, "UNKNOWN - unknown status %d" % status)
 

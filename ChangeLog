@@ -32,6 +32,7 @@
     * FIX: reschedule now works for host names containing spaces
     * Bookmarks snapin: save relative URLs whenever possible
     * Man-Pages of Check_MK checks shown in Multisite honor OMD's local hierarchy
+    * nicer output of substates, translate (!) and (!!) into HTML code
 
 1.1.11i2:
     Core, Setup, etc.:

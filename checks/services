@@ -133,7 +133,7 @@ def check_windows_services(item, params, info):
             worststate = state
             worst_start_type = start_type
     if worststate:
-        return (2, "CRITICAL - %s (start type is %s): %s" % (worststate, worst_start_type, displayname))
+        return (2, "CRIT - %s (start type is %s): %s" % (worststate, worst_start_type, displayname))
     else:
         return (3, "UNKNOWN - service not found")
 

@@ -63,9 +63,9 @@ def check_akcp_sensor_temp(item, params, info):
                     infotext = "%.1f " % temp + type + " (warn/crit at %.1f/%.1f " % (warn, crit) + type + ")"
                     perfdata = [ ( "temperature", temp, warn, crit ) ]
                     if temp >= crit:
-                        return (2, "CRITICAL - Temperature is: " + infotext, perfdata)
+                        return (2, "CRIT - Temperature is: " + infotext, perfdata)
                     elif temp >= warn:
-                        return (1, "WARNING - Temperature is: " + infotext, perfdata)
+                        return (1, "WARN - Temperature is: " + infotext, perfdata)
                     else:
                         return (0, "OK - Temperature is: " + infotext, perfdata )
                 else:

@@ -40,7 +40,7 @@ def check_fsc_temp(item, no_params, info):
         if current >= crit and crit > 0:
             return (2, "CRIT - %s" % infotext, perfdata)
         elif current >= warn and warn > 0:
-            return (1, "WARNING - %s" % infotext, perfdata)
+            return (1, "WARN - %s" % infotext, perfdata)
         else:
             return (0, "OK - %s" % infotext, perfdata)
 

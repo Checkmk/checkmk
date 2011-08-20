@@ -57,7 +57,7 @@ def check_hp_blade_blades(item, params, info):
         if line[0] == item:
             present_state = hp_blade_present_map[int(line[1])]
             if present_state != 'present':
-                return (2, 'CRITICAL - Blade was present but is not available anymore.'
+                return (2, 'CRIT - Blade was present but is not available anymore.'
                            ' (Present state: %s' % present_state)
 
             # Status field can be an empty string.

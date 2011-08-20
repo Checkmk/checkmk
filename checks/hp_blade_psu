@@ -71,7 +71,7 @@ def check_hp_blade_psu(item, params, info):
         if line[0] == item:
             present_state = hp_blade_present_map[int(line[1])]
             if present_state != 'present':
-                return (2, 'CRITICAL - PSU was present but is not available anymore.'
+                return (2, 'CRIT - PSU was present but is not available anymore.'
                            ' (Present state: %s' % present_state)
 
             snmp_state = hp_blade_status_map[int(line[2])]

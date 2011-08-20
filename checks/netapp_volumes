@@ -104,15 +104,15 @@ def check_netapp_volumes(item, _not_used, info):
     output += 'State: %s' % state
     if state == 'offline':
         ret_state = 1
-        output += ' (WARN)'
+        output += '(!)'
 
     output += ', Status: %s' % status
     if status == 'reconstructing':
         ret_state = 1
-        output += ' (WARN)'
+        output += '(!)'
     elif status.split(',')[0] not in [ 'normal', 'raid_dp', 'raid0', 'raid0, mirrored' ]:
         ret_state = 2
-        output += ' (CRIT)'
+        output += '(!!)'
 
     return (ret_state, "%s - %s" % (nagios_state_names[ret_state], output))
 

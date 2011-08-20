@@ -192,7 +192,7 @@ def check_j4p_performance_app_state(item, _unused, info):
     if app['Running'] == '1':
         return (0, 'OK - application is running')
     else:
-        return (2, 'CRITICAL - application is not running (Running: %s)')
+        return (2, 'CRIT - application is not running (Running: %s)')
 
 
 def check_j4p_performance_app_sess(item, params, info):

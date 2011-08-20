@@ -1668,6 +1668,12 @@ multisite_painters["log_time"] = {
     "options" : [ "ts_format", "ts_date" ],
     "paint" : lambda row: paint_age(row["log_time"], True, 3600 * 24)
 }
+multisite_painters["log_lineno"] = {
+    "title" : _("Log: line number in log file"),
+    "short" : _("Line"),
+    "columns" : ["log_lineno"],
+    "paint" : lambda row: ("number", str(row["log_lineno"]))
+}
 
 multisite_painters["log_date"] = {
     "title"   : _("Log: day of entry"),

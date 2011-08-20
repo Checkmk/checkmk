@@ -30,6 +30,8 @@
 
     Multisite:
     * FIX: reschedule now works for host names containing spaces
+    * FIX: correctly sort log views in case of multi site setups
+    * New sorters for time and line number of logfile entries
     * Bookmarks snapin: save relative URLs whenever possible
     * Man-Pages of Check_MK checks shown in Multisite honor OMD's local hierarchy
     * nicer output of substates, translate (!) and (!!) into HTML code

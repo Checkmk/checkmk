@@ -117,6 +117,10 @@ declare_simple_sorter("stateage",     _("Service state age"),     "service_last_
 declare_simple_sorter("servicegroup", _("Servicegroup"),          "servicegroup_alias",        cmp_simple_string)
 declare_simple_sorter("hostgroup",    _("Hostgroup"),             "hostgroup_alias",           cmp_simple_string)
 
+# Log
+declare_simple_sorter("log_time",     _("Time of log entry"),     "log_time",                  cmp_simple_number)
+declare_simple_sorter("log_lineno",   _("Number of line in logfile"), "log_lineno",            cmp_simple_number)
+
 # Comments
 declare_simple_sorter("comment_author", _("Comment author"),      "comment_author",            cmp_simple_string)
 declare_simple_sorter("comment_type",   _("Comment type"),        "comment_type",              cmp_simple_number)

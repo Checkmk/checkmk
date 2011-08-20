@@ -63,4 +63,3 @@ def check_omd_status(item, _no_params, info):
 
 check_info['omd_status'] = \
     (check_omd_status, "OMD %s status", 0, inventory_omd_status)
-

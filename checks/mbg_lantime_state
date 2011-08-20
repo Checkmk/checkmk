@@ -40,7 +40,7 @@ mbg_lantime_state_default_levels = (0, 0, 5, 10)
 def inventory_mbg_lantime_state(info):
     if len(info) > 0 and len(info[0]) == 5:
         return [(None, None, "mbg_lantime_state_default_levels")]
-    
+
 def check_mbg_lantime_state(item, params, info):
     if len(info) > 0 and len(info[0]) == 5:
         ntp_state, stratum, refclock_id, refclock_name, refclock_offset = info[0]
@@ -48,7 +48,7 @@ def check_mbg_lantime_state(item, params, info):
         state     = 0
         state_txt = []
 
-	# Handle the reported state
+        # Handle the reported state
         thr_txt = ''
         if ntp_state in [ '0', '1' ]:
             state   = max(state, 2)
@@ -68,7 +68,7 @@ def check_mbg_lantime_state(item, params, info):
         # Add refclock information
         state_txt.append('Refclock: %s (%s)' % (refclock_name, refclock_id))
 
- 	thr_txt = ''
+        thr_txt = ''
 
         if refclock_offset < 0:
             pos_refclock_offset = refclock_offset * -1
@@ -83,9 +83,9 @@ def check_mbg_lantime_state(item, params, info):
             thr_txt = ' (!)'
         state_txt.append('Refclock Offset: %sms%s' % (refclock_offset, thr_txt))
 
-	perfdata = [('offset', refclock_offset, params[2], params[3])]
+        perfdata = [('offset', refclock_offset, params[2], params[3])]
 
-	return (state, '%s - %s' % (nagios_state_names[state], ', '.join(state_txt)), perfdata)
+        return (state, '%s - %s' % (nagios_state_names[state], ', '.join(state_txt)), perfdata)
 
     return (3, 'UNKNOWN - Got no state information')
 

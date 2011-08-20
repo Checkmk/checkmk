@@ -110,8 +110,8 @@ def inventory_ipmi(info):
     if ipmi_summarize and len(info) > 0:
         return [ ( "Summary", None ) ]
     else:
-        return [ ( line[0], None ) 
-                 for line in info 
+        return [ ( line[0], None )
+                 for line in info
                  if not ipmi_ignore_entry(line[0], line[3]) ]
 
 def check_ipmi(item, params, info):

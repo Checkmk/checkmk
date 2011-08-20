@@ -39,7 +39,7 @@ def inventory_kernel(info):
     for counter in inventory_kernel_counters:
         hits = [ line[0] for line in info[1:] if line[0] == counter ]
         if len(hits) == 1:
-	    countername = kernel_counter_names.get(counter, counter)
+            countername = kernel_counter_names.get(counter, counter)
             inventory.append( (countername, "kernel_default_levels") )
     return inventory
 
@@ -58,7 +58,7 @@ def check_kernel(item, params, info):
     this_val = int(hits[0][1])
     timedif, per_sec = get_counter("kernel." + item, this_time, this_val)
     infotext = " - %.0f/s in last %d secs" % (per_sec, timedif)
- 
+
     if params == None:
         return (0, "OK" + infotext, [ (counter, per_sec) ])
 

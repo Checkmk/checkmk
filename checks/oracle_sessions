@@ -35,18 +35,17 @@ def inventory_oracle_sessions(info):
 
 def check_oracle_sessions(item, params, info):
     for line in info:
-	if line[0] == item:
-	    warn, crit = params
-	    sessions = int(line[1])
+        if line[0] == item:
+            warn, crit = params
+            sessions = int(line[1])
             infotext = " - %d active sessions (levels at %d/%d)" % (sessions, warn, crit)
             perfdata = [("sessions", sessions, warn, crit)]
             if sessions >= crit:
-		return (2, "CRIT" + infotext, perfdata)
+                return (2, "CRIT" + infotext, perfdata)
             elif sessions >= warn:
-		return (1, "WARN" + infotext, perfdata)
+                return (1, "WARN" + infotext, perfdata)
             else:
-		return (0, "OK" + infotext, perfdata)
+                return (0, "OK" + infotext, perfdata)
     return (2, "UNKNOWN - Database not existing or not running")
 
 check_info['oracle_sessions'] = (check_oracle_sessions, "ORA %s Sessions", 1,  inventory_oracle_sessions )
-

@@ -27,20 +27,20 @@
 # [['301', '28495']], [['112', '24']], [['113', '14880']], [['122', '146']], [['123', '15870']], [['501', '3761']], [['101', '30920']]
 
 canon_pages_map = {
-    'total'       :  '101', 
-    'b/w A3'      :  '112', 
-    'b/w A4'      :  '113', 
-    'color A3'    :  '122', 
-    'color A4'    :  '123', 
-    'print total' :  '301', 
-    'scan'        :  '501', 
+    'total'       :  '101',
+    'b/w A3'      :  '112',
+    'b/w A4'      :  '113',
+    'color A3'    :  '122',
+    'color A4'    :  '123',
+    'print total' :  '301',
+    'scan'        :  '501',
 }
 
 def inventory_canon_pages(info):
     inventory = []
     for endoid, value in info:
-	for name, eo in canon_pages_map.items():
-	    if eo == endoid:
+        for name, eo in canon_pages_map.items():
+            if eo == endoid:
                 inventory.append((name, None))
     return inventory
 
@@ -48,8 +48,8 @@ def check_canon_pages(item, _no_params, info):
     if item not in canon_pages_map:
         return (3, "UNKNOWN - unknown counter type %s" % item)
     for endoid, value in info:
-	if endoid == canon_pages_map[item]:
-	    return (0, 'OK - Current count: %s' % value, [('count', int(value))])
+        if endoid == canon_pages_map[item]:
+            return (0, 'OK - Current count: %s' % value, [('count', int(value))])
 
     return (3, 'UNKNOWN - Item not found in SNMP data')
 

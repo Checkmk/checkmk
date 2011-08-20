@@ -94,7 +94,7 @@ def check_mem_used(item, params, info):
     # levels may be given either in int -> MB or in float -> percentages
 
     infotext = ("%.2f GB used (%.2f GB RAM + %.2f GB SWAP, this is %.1f%% of %.2f GB RAM)" % \
-               (totalused_mb / 1024.0, (memused-caches) / 1024.0 / 1024, swapused / 1024.0 / 1024, 
+               (totalused_mb / 1024.0, (memused-caches) / 1024.0 / 1024, swapused / 1024.0 / 1024,
                totalused_perc, totalmem_mb / 1024.0)) \
                + extrainfo
 

@@ -79,7 +79,7 @@ snmp_info['akcp_sensor_temp'] = (
     ".1.3.6.1.4.1.3854.1.2.2.1.16.1", [
         1, #sensorProbeTempDescription
         3, #sensorProbeTempDegree
-        4, #sensorProbeTempStatus 
+        4, #sensorProbeTempStatus
         5, #sensorProbeTempOnline - online(1), offline(2)
         12, #sensorProbeTempDegreeType - The degrees are in fahrenheit(0) or in celsius(1)
         14, #sensorProbeTempDegreeRaw - SP Only: The raw degree data from the temperature sensor, slightly higher resolution
@@ -87,7 +87,7 @@ snmp_info['akcp_sensor_temp'] = (
 )
 
 # possible values for sensorProbeTempStatus:
-# noStatus(1), normal(2), highWarning(3), highCritical(4), 
+# noStatus(1), normal(2), highWarning(3), highCritical(4),
 # lowWarning(5), lowCritical(6), sensorError(7)
 
 

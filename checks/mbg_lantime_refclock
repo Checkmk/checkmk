@@ -47,7 +47,7 @@ mbg_lantime_refclock_default_levels = (3, 3)
 def inventory_mbg_lantime_refclock(info):
     if len(info) > 0 and len(info[0]) == 6:
         return [(None, None, "mbg_lantime_refclock_default_levels")]
-    
+
 def check_mbg_lantime_refclock(item, params, info):
     if len(info) > 0 and len(info[0]) == 6:
         ref_mode, gps_state, gps_pos, gps_sat_good, gps_sat_total, gps_mode = info[0]
@@ -55,7 +55,7 @@ def check_mbg_lantime_refclock(item, params, info):
         state     = 0
         state_txt = []
 
-	# Handle the reported refclock mode
+        # Handle the reported refclock mode
         thr_txt = ''
         if ref_mode in [ '0', '3', '6' ]:
             state   = max(state, 2)
@@ -76,7 +76,7 @@ def check_mbg_lantime_refclock(item, params, info):
         state_txt.append(gps_pos)
 
         # Handle number of satellites
- 	thr_txt = ''
+        thr_txt = ''
         if params[0] is not None and int(gps_sat_good) < params[1]:
             state   = max(state, 2)
             thr_txt = ' (!!)'
@@ -85,10 +85,10 @@ def check_mbg_lantime_refclock(item, params, info):
             thr_txt = ' (!)'
         state_txt.append('Satellites: %s/%s%s' % (gps_sat_good, gps_sat_total, thr_txt))
 
-	perfdata = [('sat_good',  gps_sat_good,  params[0], params[1]),
+        perfdata = [('sat_good',  gps_sat_good,  params[0], params[1]),
                     ('sat_total', gps_sat_total) ]
 
-	return (state, '%s - %s' % (nagios_state_names[state], ', '.join(state_txt)), perfdata)
+        return (state, '%s - %s' % (nagios_state_names[state], ', '.join(state_txt)), perfdata)
 
     return (3, 'UNKNOWN - Got no state information')
 

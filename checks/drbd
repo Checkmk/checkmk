@@ -60,7 +60,7 @@
 # The information from /proc/drbd are grouped as followed (Extracted from doc above)
 #
 # General:
-#   cs (connection state). Status of the network connection. See the section called 
+#   cs (connection state). Status of the network connection. See the section called
 #               “Connection states” for details about the various connection states.
 #    Available States:
 #      StandAlone. No network configuration available. The resource has not yet been connected,
@@ -77,7 +77,7 @@
 #      WFConnection. This node is waiting until the peer node becomes visible on the network.
 #      WFReportParams. TCP connection has been established, this node waits for the first network packet from the peer.
 #      Connected. A DRBD connection has been established, data mirroring is now active. This is the normal state.
-#      StartingSyncS. Full synchronization, initiated by the administrator, is just starting. 
+#      StartingSyncS. Full synchronization, initiated by the administrator, is just starting.
 #                     The next possible states are: SyncSource or PausedSyncS.
 #      StartingSyncT. Full synchronization, initiated by the administrator, is just starting. Next state: WFSyncUUID.
 #      WFBitMapS. Partial synchronization is just starting. Next possible states: SyncSource or PausedSyncS.
@@ -120,7 +120,7 @@
 #                    (the synchronization target) during synchronization.
 #      Outdated. Resource data is consistent, but outdated.
 #      DUnknown. This state is used for the peer disk if no network connection is available.
-#      Consistent. Consistent data of a node without connection. When the connection 
+#      Consistent. Consistent data of a node without connection. When the connection
 #                  is established, it is decided whether the data are UpToDate or Outdated.
 #      UpToDate. Consistent, up-to-date state of the data. This is the normal state.
 #
@@ -137,7 +137,7 @@
 #   pe (pending). Number of requests sent to the partner, but that have not yet been answered by the latter.
 #   ua (unacknowledged). Number of requests received by the partner via the network connection, but that have not yet been answered.
 #   ap (application pending). Number of block I/O requests forwarded to DRBD, but not yet answered by DRBD.
-#   ep (epochs). Number of epoch objects. Usually 1. Might increase under I/O load 
+#   ep (epochs). Number of epoch objects. Usually 1. Might increase under I/O load
 #                when using either the barrier or the none write ordering method. Since 8.2.7.
 #   wo (write order). Currently used write ordering method: b (barrier), f (flush), d (drain) or n (none). Since 8.2.7.
 #   oos (out of sync). Amount of storage currently out of sync; in Kibibytes. Since 8.2.6.
@@ -317,10 +317,10 @@ def check_drbd_stats(item, params, info):
                             ('ua',  'unacknowledged requests'), ('ap', 'application pending requests'),
                             ('ep',  'epoch objects'),           ('wo', 'write order'),
                             ('oos', 'kb out of sync') ]:
-	    if key in parsed:
+            if key in parsed:
                 output += '%s: %s, ' % (label, parsed[key])
             else:
-		parsed[key] = 0 # perfdata must always have same number of entries
+                parsed[key] = 0 # perfdata must always have same number of entries
             perfdata.append(('%s' % label.replace(" ", "_"), parsed[key]))
         return (0, 'OK - ' + output.rstrip(', '), perfdata)
 

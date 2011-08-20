@@ -98,7 +98,7 @@ def inventory_windows_services(info):
         else:
             state = line[1]
             start_type = "unknown"
-    
+
         for entry in inventory_services:
             if type(entry) == str:
                 inventory += add_matching_services(name, state, start_type, entry)

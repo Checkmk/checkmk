@@ -96,7 +96,7 @@ def check_md(item, params, info):
             disk_state_2 = line[-1]
             if disk_state_1 != '[%d/%d]' % (num_disks, num_disks) or \
                disk_state_2 != '[' + ("U"*num_disks) + ']':
-                return (2, 'CRIT - disk state is %s %s (expected %d disks to be up)' % 
+                return (2, 'CRIT - disk state is %s %s (expected %d disks to be up)' %
                         (disk_state_1, disk_state_2, num_disks))
             else:
                 return (0, 'OK - raid active, disk state is %s %s' % (disk_state_1, disk_state_2))

@@ -35,7 +35,7 @@ def if_convert_to_if64(info):
     for line in info:
         newinfo.append(line[0:8] + ['0'] + line[8:12] + ['0'] + line[12:16] + line[1:2])
     return newinfo
-        
+
 check_info['if'] = (check_if, "Interface %s", 1,  inventory_if)
 check_includes['if'] = [ "if.include" ]
 

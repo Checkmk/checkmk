@@ -56,7 +56,7 @@ def j4p_performance_parse(info):
             parsed[inst]['apps'].setdefault(app, {})
             parsed[inst]['apps'][app][var] = value
         else:
-	    parsed[inst][var] = value
+            parsed[inst][var] = value
     return parsed
 
 
@@ -114,28 +114,28 @@ def check_j4p_performance_mem(item, params, info):
     warn, crit = params
     parsed = j4p_performance_parse(info)
     if item not in parsed:
-	return (3, "UNKNOWN - data not found in agent output")
+        return (3, "UNKNOWN - data not found in agent output")
     d = parsed[item]
     mb = 1024 * 1024.0
     heap = saveint(d["HeapMemoryUsage"]) / mb
     non_heap = saveint(d["NonHeapMemoryUsage"]) / mb
     total = heap + non_heap
     perfdata = [ ("heap",    heap,     warn, crit),
-		 ("nonheap", non_heap, warn, crit) ]
+                 ("nonheap", non_heap, warn, crit) ]
     infotext = "%.0f MB total (%.0f heap, %.0f MB non-heap), levels at %.0f/%.0f" % (total, heap, non_heap, warn, crit)
     if total >= crit:
-	return (2, "CRIT - " + infotext, perfdata)
+        return (2, "CRIT - " + infotext, perfdata)
     elif total >= warn:
-	return (1, "WARN - " + infotext, perfdata)
+        return (1, "WARN - " + infotext, perfdata)
     else:
-	return (0, "OK - " + infotext, perfdata)
+        return (0, "OK - " + infotext, perfdata)
 
 
 def check_j4p_performance_threads(item, params, info):
     warn, crit = params
     parsed = j4p_performance_parse(info)
     if item not in parsed:
-	return (3, "UNKNOWN - data not found in agent output")
+        return (3, "UNKNOWN - data not found in agent output")
     d = parsed[item]
 
     this_time = time.time()
@@ -159,7 +159,7 @@ def check_j4p_performance_threads(item, params, info):
                 perfdata.append(('ThreadRate', rate))
             except MKCounterWrapped:
                 wrapped = True
- 
+
         perfdata.append((key, val))
         output.append('%s: %d' % (key, val))
     # Only process the perfdata when no wrap occured
@@ -171,7 +171,7 @@ def check_j4p_performance_threads(item, params, info):
 def check_j4p_performance_uptime(item, _unused, info):
     parsed = j4p_performance_parse(info)
     if item not in parsed:
-	return (3, "UNKNOWN - data not found in agent output")
+        return (3, "UNKNOWN - data not found in agent output")
     uptime = saveint(parsed[item]['Uptime']) / 1000
 
     seconds = uptime % 60
@@ -187,7 +187,7 @@ def check_j4p_performance_uptime(item, _unused, info):
 def check_j4p_performance_app_state(item, _unused, info):
     app = j4p_performance_app(info, item.split())
     if not app or not 'Running' in app:
-	return (3, "UNKNOWN - data not found in agent output")
+        return (3, "UNKNOWN - data not found in agent output")
 
     if app['Running'] == '1':
         return (0, 'OK - application is running')
@@ -219,7 +219,7 @@ def check_j4p_performance_app_sess(item, params, info):
 
     return (status, '%s - %d Sessions%s' % (nagios_state_names[status], sess, status_txt),
             [('sessions', sess, hi_warn, hi_crit)])
-    
+
 
 def check_j4p_performance_serv_req(item, params, info):
     lo_crit, lo_warn, hi_warn, hi_crit = params

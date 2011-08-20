@@ -78,7 +78,7 @@ def printer_supply_fix_infos(info):
 def inventory_printer_supply(info):
     # Ignore devices which show -2 for current value and -2 for max value -> useless
     # Also fix trailing zero bytes (seen on HP Jetdirect 143)
-    return [ (line[0].rstrip('\0'), "printer_supply_default_levels") 
+    return [ (line[0].rstrip('\0'), "printer_supply_default_levels")
              for line in printer_supply_fix_infos(info)
              if not (line[1] == '-2' and line[2] == '-2') ] # ignore useless devices
 
@@ -91,17 +91,17 @@ def check_printer_supply(item, params, info):
             perfdata = [ ("pages", current, warn / 100.0 * maxlevel, crit / 100.0 * maxlevel, 0, maxlevel ) ]
 
             # handle cases with partial data
-	    if maxlevel == -2 or current in [ -3, -2, -1 ]: # no percentage possible
+            if maxlevel == -2 or current in [ -3, -2, -1 ]: # no percentage possible
                 if current == -1 or maxlevel == -1:
                     return (0, "OK - there are no restrictions on this supply")
                 elif current == -3:
-                    return (printer_supply_some_remaining_status, "%s - Some remaining" % 
+                    return (printer_supply_some_remaining_status, "%s - Some remaining" %
                             (nagios_state_names[printer_supply_some_remaining_status]), perfdata)
                 elif current == -2:
                     return (3, "UNKNOWN - current level is unknown")
-		elif maxlevel == -2: 
-		    # no percentage possible. We compare directly against levels
-		    return (0, "OK - current level is %d" % current, [("pages", current)])
+                elif maxlevel == -2:
+                    # no percentage possible. We compare directly against levels
+                    return (0, "OK - current level is %d" % current, [("pages", current)])
 
             leftperc = 100.0 * current / maxlevel
             infotext = "%.0f%% (levels at %.0f%% / %.0f%%)" % (leftperc, warn, crit)

@@ -50,10 +50,10 @@ msx_queues_default_levels = (500, 2000)
 
 # Queues to be inventorized (number are relative to counter base)
 winperf_msx_queues = {
-   "Active Remote Delivery"  :  "2", 
-   "Retry Remote Delivery"   :  "4", 
-   "Active Mailbox Delivery" :  "6", 
-   "Poison Queue Length"     :  "44", 
+   "Active Remote Delivery"  :  "2",
+   "Retry Remote Delivery"   :  "4",
+   "Active Mailbox Delivery" :  "6",
+   "Poison Queue Length"     :  "44",
 }
 
 def inventory_winperf_msx_queues(info):
@@ -65,7 +65,7 @@ def check_winperf_msx_queues(item, params, info):
     num_instances = int(info[1][0])
     if num_instances < 1:
         return (3, "UNKNOWN - no counters available, transport service running?")
- 
+
     for line in info[2:]:
         if line[0] == winperf_msx_queues.get(item):
             length = int(line[1])

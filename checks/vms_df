@@ -45,7 +45,7 @@ def check_vms_df(item, params, info):
 
             free_mb = blocks_free / 2048
             size_mb = blocks_total / 2048
-            status, text, perfdata = df_check_filesystem(g_hostname, item, size_mb, free_mb, params) 
+            status, text, perfdata = df_check_filesystem(g_hostname, item, size_mb, free_mb, params)
 
             perfdata.append( ('iops', "%.2f" % io_ops_total_per_sec ) )
             return status, text, perfdata

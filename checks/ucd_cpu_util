@@ -62,7 +62,7 @@ def check_ucd_cpu_util(item, params, info):
     user = 100 * (parts[0] + parts[1])
     system = 100 * (parts[2] + parts[5] + parts[6])
     wait = 100 * (parts[4])
-        
+
     perfdata = [
           ( "user",   "%.3f" % user ),
           ( "system", "%.3f" % system ),

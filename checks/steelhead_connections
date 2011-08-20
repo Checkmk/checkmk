@@ -36,7 +36,7 @@ steelhead_counter_names = {
 
 def inventory_steelhead_connections(info):
     if len(info) >= 7:
-	return [(None, None)]
+        return [(None, None)]
 
 
 def check_steelhead_connections(item, params, info):

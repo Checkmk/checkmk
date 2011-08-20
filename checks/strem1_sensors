@@ -84,7 +84,7 @@ def check_strem1_sensors(item, params, info):
 
 check_info['strem1_sensors'] = ( check_strem1_sensors, "Sensor - %s", 1, inventory_strem1_sensors)
 
-#1,  # SENSATRONICS-EM1::group1Name  
+#1,  # SENSATRONICS-EM1::group1Name
 #2,  # SENSATRONICS-EM1::group1TempName
 #3,  # SENSATRONICS-EM1::group1TempDataStr
 #4,  # SENSATRONICS-EM1::group1TempDataInt

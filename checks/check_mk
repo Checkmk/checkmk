@@ -92,4 +92,3 @@ def check_only_from(item, param, info):
 
 
 check_info['check_mk.only_from'] = (check_only_from, "Check_MK Agent Access", 0, inventory_only_from)
-

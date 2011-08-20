@@ -68,13 +68,13 @@ snmp_info['akcp_sensor_humidity'] = (
     ".1.3.6.1.4.1.3854.1.2.2.1.17.1", [
         1, #sensorProbeHumidityDescription
         3, #sensorProbeHumidityPercent
-        4, #sensorProbeHumidityStatus - The current status of this Sensor 
+        4, #sensorProbeHumidityStatus - The current status of this Sensor
         5, #sensorProbeHumidityOnline - online(1), offline(2)
     ],
 )
 
 # possible values for sensorProbeHumidityStatus:
-# noStatus(1), normal(2), highWarning(3), highCritical(4), 
+# noStatus(1), normal(2), highWarning(3), highCritical(4),
 # lowWarning(5), lowCritical(6), sensorError(7)
 
 

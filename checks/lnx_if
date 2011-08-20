@@ -79,7 +79,7 @@ def if_lnx_convert_to_if64(info):
         if nic == "lo":
             ifType = 24
         else:
-            ifType = 6 
+            ifType = 6
 
         # Compute speed
         speed_text = attr.get("Speed")
@@ -129,7 +129,7 @@ def if_lnx_convert_to_if64(info):
           ifOutDiscards, ifOutErrors, ifOutQLen, ifAlias ]))
 
     return if_table
-        
+
 def inventory_lnx_if(info):
     if linux_nic_check == "legacy":
         return []
@@ -139,4 +139,3 @@ def check_lnx_if(item, params, info):
     return check_if_common(item, params, if_lnx_convert_to_if64(info))
 
 check_info['lnx_if'] = (check_lnx_if, "Interface %s", 1,  inventory_lnx_if)
-

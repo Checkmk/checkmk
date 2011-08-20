@@ -1594,7 +1594,7 @@ multisite_painters["log_plugin_output"] = {
     "title" : _("Log: output of check plugin"),
     "short" : _("Check output"),
     "columns" : ["log_plugin_output"],
-    "paint" : lambda row: ("", row["log_plugin_output"])
+    "paint" : lambda row: ("", format_plugin_output(row["log_plugin_output"]))
 }
 multisite_painters["log_attempt"] = {
     "title" : _("Log: number of check attempt"),

@@ -63,10 +63,10 @@ def check_tcp_conn_stats(item, params, info):
             perf.append(crit)
             if num >= crit:
                 worst_state = 2
-                infotext += "(critical at %d)(!!)" % crit
+                infotext += "(!!) (critical at %d)" % crit
             elif num >= warn:
                 worst_state = max(1, worst_state)
-                infotext += "(warning at %d)(!)" % warn
+                infotext += "(!) (warning at %d)" % warn
         perfdata.append(perf)
         if infotext:
             info.append(infotext)

@@ -4,7 +4,7 @@ Benefit: 2
 State: open
 Cost: 3
 Date: 2011-03-05 13:41:46
-Class: cleanup
+Class: feature
 
 Convert how checks declare themselves. This could be done
 like this:

@@ -95,7 +95,11 @@ def perfometer_check_mk_mem_used(row, check_command, perf_data):
 
     state = row["service_state"]
     # paint used ram and swap
-    ram_color, swap_color = { 0: ("#80ff40", "#008030"), 1: ("#ff2", "#dd0"), 2:("#f44", "#d00"), 3:("#fa2", "#d80") }[state]
+    ram_color, swap_color = { 
+        0:("#80ff40", "#008030"),
+        1:("#ff2", "#dd0"), 
+        2:("#f44", "#d00"), 
+        3:("#fa2", "#d80") }[state]
     h += perfometer_td(100 * ram_used / virt_total, ram_color)
     h += perfometer_td(100 * swap_used / virt_total, swap_color)
 
@@ -110,6 +114,18 @@ def perfometer_check_mk_mem_used(row, check_command, perf_data):
     return "%d%%" % (100 * (virt_used / ram_total)), h
 
 perfometers["check_mk-mem.used"] = perfometer_check_mk_mem_used
+
+def perfometer_check_mk_mem_win(row, check_command, perf_data):
+    # only show mem usage, do omit page file
+    base_colors = ("#20d060", "#3040d0")
+    state = row["service_state"]
+    color = { 0: "#20d060", 1: "#ff2", 2: "#f44", 3: "#fa2",}[state]
+    ram_total  = float(perf_data[0][6])
+    ram_used   = float(perf_data[0][1])
+    perc = ram_used / ram_total * 100.0
+    return "%d%%" % perc, perfometer_linear(perc, color)
+
+perfometers["check_mk-mem.win"] = perfometer_check_mk_mem_win
 
 def perfometer_check_mk_cpu_threads(row, check_command, perf_data):
     color = { 0: "#a4f", 1: "#ff2", 2: "#f22", 3: "#fa2" }[row["service_state"]]

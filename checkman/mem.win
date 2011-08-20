@@ -1,0 +1,50 @@
+title: Check main memory and page file usage on Windows
+agents: windows
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ This check measures the current usage of physical RAM and
+ of the Windows page file.
+
+item:
+ {None}
+
+inventory:
+ {mem.win} creates one check for each host that provides
+ data about the page file. If that information is missing,
+ a Unix-like system is assumed and the check {mem.used} is
+ being used instead.
+
+examples:
+ # Set the default levels
+ memory_win_default_levels = {
+    "memory"   : (80.0, 90.0), # alert at 80%/90% usage
+    "pagefile" : (2048, 1024), # alert, if less then 2/1 GB free
+ }
+
+ # Disable memory levels for all hosts with the tag "test"
+ check_parameters += [
+    ( { "memory" : ("101.0", "101.0") }, 
+      [ "test" ], ALL_HOSTS, [ "Memory and Pagefile" ] ),
+ ]
+
+perfdata:
+ Two variables: {memory}: the current memory usage in MB, {pagefile}: the
+ current page file usage in MB.
+
+[parameters]
+parameters (dict): This check uses a dictionary as parameter. The following
+ keys are defined:
+
+ {"memory"}: Warning and critical levels of memory usage. Floating point values
+ (e.g. {80.0}) are interpreted as percentages of {used} space. Integer values 
+ (e.g. {2048}) are interpreted as MB of {free} space. 
+
+ {"pagefile"} Warning and critical levels for page file usage. The same
+ rules apply as for {memory}.
+
+
+[configuration]
+memory_win_default_levels (dict): Levels used by
+ all checks that are created by inventory.

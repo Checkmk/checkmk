@@ -20,6 +20,7 @@
     * lnx_if: make lnx_if the default interface check for Linux
     * printer_supply: support non-Ascii characters in items like
       "Resttonerbehälter". You need to define snmp_character_encodings in main.mk
+    * mem.win: new dedicated memory check for Windows (see Migration notes)
 
     MK Livestatus:
     * WaitObject: allow to separate host name and service with a semicolon.

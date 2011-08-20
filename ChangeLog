@@ -27,6 +27,7 @@
     MK Livestatus:
     * WaitObject: allow to separate host name and service with a semicolon.
       That makes host names containing spaces possible.
+    * Better error messages in case of unimplemented operators
 
     Multisite:
     * FIX: reschedule now works for host names containing spaces

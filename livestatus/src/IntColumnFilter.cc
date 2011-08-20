@@ -57,7 +57,7 @@ bool IntColumnFilter::accepts(void *data)
         case OP_LESS:
             pass = act_value < ref_value; break;
         default:
-            logger(LG_INFO, "Sorry. Operator %d for integers not implemented.", _opid);
+            logger(LG_INFO, "Sorry. Operator %s for integers not implemented.", op_names_plus_8[_opid]);
             break;
     }
     return pass != _negate;

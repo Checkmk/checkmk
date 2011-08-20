@@ -115,7 +115,7 @@ bool CustomVarsFilter::accepts(void *data)
             case OP_LESS:
                 return (!is_member) == (!_negate);
             default:
-                logger(LG_INFO, "Sorry, Operator %d for custom variable lists not implemented.", _opid);
+                logger(LG_INFO, "Sorry, Operator %s for custom variable lists not implemented.", op_names_plus_8[_opid]);
                 return true;
         }
     }

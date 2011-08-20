@@ -83,7 +83,7 @@ bool StringColumnFilter::accepts(void *data)
             pass = 0 < strcmp(_ref_string.c_str(), act_string); break;
         default:
             // this should never be reached, all operators are handled
-            logger(LG_INFO, "Sorry. Operator %d for strings not implemented.", _opid);
+            logger(LG_INFO, "Sorry. Operator %s for strings not implemented.", op_names_plus_8[_opid]);
             break;
     }
     return pass != _negate;

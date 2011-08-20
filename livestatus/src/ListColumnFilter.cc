@@ -29,10 +29,10 @@
 #include "ListColumnFilter.h"
 #include "ListColumn.h"
 
-    ListColumnFilter::ListColumnFilter(ListColumn *column, int opid, char *value)
+ListColumnFilter::ListColumnFilter(ListColumn *column, int opid, char *value)
     : _column(column)
     , _opid(opid)
-      , _empty_ref(!value[0])
+    , _empty_ref(!value[0])
 {
     _ref_member = _column->getNagiosObject(value);
 }
@@ -52,11 +52,11 @@ bool ListColumnFilter::accepts(void *data)
         case -OP_EQUAL:
             if (_empty_ref)
                 return _column->isEmpty(data) == (_opid == OP_EQUAL);
-            logger(LG_INFO, "Sorry, Equality for lists implemented only for emptyness");
+            logger(LG_INFO, "Sorry, equality for lists implemented only for emptyness");
             return false;
 
         default:
-            logger(LG_INFO, "Sorry, Operator %d for lists not implemented.", _opid);
+            logger(LG_INFO, "Sorry, Operator %s for lists not implemented.", op_names_plus_8[_opid]);
             return true;
     }
 }

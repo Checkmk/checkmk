@@ -86,8 +86,10 @@ def load_bugs():
             continue
 
 def save_last_bugid(id):
-    file(".last", "w").write("%d\n" % int(id))
-
+    try:
+        file(".last", "w").write("%d\n" % int(id))
+    except:
+        pass
 
 def check_modified():
     global g_modified
@@ -296,7 +298,10 @@ def main_show(args):
     for id in ids:
         if id != ids[0]:
             sys.stdout.write("-------------------------------------------------------------------------------\n")
-        show_bug(g_bugs[int(id)])
+        try:
+            show_bug(g_bugs[int(id)])
+        except:
+            sys.stderr.write("Skipping invalid bug id '%s'\n" % id)
     save_last_bugid(ids[-1])
 
 def get_input(what, default = ""):

@@ -475,7 +475,12 @@ def get_agent_info_tcp(hostname, ipaddress):
             else:
                 break
         s.close()
+        if len(output) == 0: # may be caused by xinetd not allowing our address
+            raise MKAgentError("Empty output from agent at TCP port %d" % 
+                  agent_port_of(hostname))
         return output
+    except MKAgentError, e:
+        raise
     except Exception, e:
         raise MKAgentError("Cannot get data from TCP port %s:%d: %s" %
                            (ipaddress, agent_port_of(hostname), e))

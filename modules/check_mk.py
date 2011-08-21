@@ -1870,6 +1870,8 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
                     raise
 		elif not include_state and str(e):
 		    sys.stderr.write("Host '%s': %s\n" % (hostname, str(e)))
+                elif include_state and str(e): # WATO automation. Abort
+                    raise
                 continue
             except MKSNMPError, e:
                 # This special handling is needed for the inventory check. It needs special
@@ -1965,6 +1967,7 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
 
     except KeyboardInterrupt:
         sys.stderr.write('<Interrupted>\n')
+
 
     if not check_only:
         if newchecks != []:

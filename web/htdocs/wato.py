@@ -37,7 +37,7 @@
 
 import config
 
-import sys, pprint, socket, re, subprocess, time
+import sys, pprint, socket, re, subprocess, time, datetime
 from lib import *
 import htmllib
 
@@ -1372,10 +1372,16 @@ def mode_changelog(phase):
         if log_exists("audit"):
             html.context_button(_("Clear Audit Log"),
                 html.makeuri([("_action", "clear"), ("_transid", html.current_transid())]), "trash")
+            html.context_button(_("Download Audit Log"),
+                html.makeuri([("_action", "csv"), ("_transid", html.current_transid())]), "csv")
 
     elif phase == "action":
         if html.var("_action") == "clear":
             return clear_audit_log_after_confirm()
+
+        elif html.var("_action") == "csv":
+            return export_audit_log()
+
         elif html.check_transaction():
                 try:
                     check_mk_automation("restart")
@@ -1389,20 +1395,12 @@ def mode_changelog(phase):
 
     else:
         pending = parse_audit_log("pending")
-        if len(pending) > 0:
-            message = "<h1>" + _("Changes which are not yet activated:") + "</h1>"
-            message += render_audit_log(pending, "pending")
-            html.show_warning(message)
-        else:
-            html.write("<div class=info>" + _("No pending changes, monitoring server is up to date.") + "</div>")
+        render_audit_log(pending, "pending")
 
         audit = parse_audit_log("audit")
-        if len(audit) > 0:
-            html.write("<b>" + _("All Changes") + "</b>")
-            html.write(render_audit_log(audit, "audit"))
-        else:
-            html.write("<div class=info>" + _("The logfile is empty. No host has been created or changed yet.") + "</div>")
-        
+        render_audit_log(audit, "audit")
+
+
 def log_entry(linkinfo, action, message, logfilename):
     if type(message) == unicode:
         message = message.encode("utf-8")
@@ -1510,21 +1508,134 @@ def render_linkinfo(linkinfo):
 
     return '<a href="%s">%s</a>' % (url, title)
 
+def get_timerange(t):
+    st    = time.localtime(int(t))
+    start = int(time.mktime(time.struct_time((st[0], st[1], st[2], 0, 0, 0, st[6], st[7], st[8]))))
+    end   = start + 86399
+    return start, end
+
+def fmt_datetime(t):
+    return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(t))
+
+def fmt_date(t):
+    return time.strftime('%Y-%m-%d', time.localtime(t))
+
+def fmt_time(t):
+    return time.strftime('%H:%M:%S', time.localtime(t))
+
+def paged_log(log):
+    start = html.var('start', None)
+    if not start:
+        start = time.time()
+    start_time, end_time = get_timerange(int(start))
+
+    previous_log_time = None
+    next_log_time     = None
+    first_log_index   = None
+    last_log_index    = None
+    for index, (t, linkinfo, user, action, text) in enumerate(log):
+        t = int(t)
+        if t >= end_time:
+            # This log is too new
+            continue
+        elif first_log_index is None and t < end_time and t >= start_time:
+            # This is a log for this day. Save the first index
+            if first_log_index is None:
+                first_log_index = index
+
+                # When possible save the timestamp of the previous log
+                if index > 0:
+                    next_log_time = int(log[index - 1][0])
+
+        elif t < start_time and last_log_index is None:
+            last_log_index = index - 1
+            # This is the next log after this day
+            previous_log_time = int(log[index][0])
+            # Finished!
+            break
+
+    if not last_log_index:
+        last_log_index = len(log) - 1
+
+    return log[first_log_index:last_log_index], (start_time, end_time, previous_log_time, next_log_time)
+
+def display_paged((start_time, end_time, previous_log_time, next_log_time)):
+    html.write('<div class=paged_controls>')
+
+    html.write(' <b>%s</b> ' % (_('%s to %s') % (fmt_datetime(start_time),
+                                                 fmt_datetime(end_time))))
+
+    if previous_log_time is not None:
+        html.buttonlink(html.makeuri([('start', previous_log_time)]), _("<"),
+                        title = '%s: %s' % (_("Older events"), fmt_datetime(previous_log_time)))
+    else:
+        html.buttonlink(html.makeuri([]), _("<"), disabled = True)
+
+    html.buttonlink(html.makeuri([('start', get_timerange(int(time.time()))[0])]), _("o"),
+                    title = _("Todays events"))
+
+    if next_log_time is not None:
+        html.buttonlink(html.makeuri([('start', next_log_time)]), _(">"),
+                        title = '%s: %s' % (_("Newer events"), fmt_datetime(next_log_time)))
+    else:
+        html.buttonlink(html.makeuri([]), _(">"), disabled = True)
+    html.write('</div>')
+
 
 def render_audit_log(log, what, with_filename = False):
-    htmlcode = '<table class="wato auditlog">'
+    htmlcode = ''
+    if what == 'audit':
+        log, times = paged_log(log)
+        empty_msg = _("The logfile is empty. No host has been created or changed yet.")
+    elif what == 'pending':
+        empty_msg = _("No pending changes, monitoring server is up to date.")
+
+    if len(log) == 0:
+        htmlcode += "<div class=info>%s</div>" % empty_msg
+        return
+    elif what == 'audit':
+        htmlcode += "<b>" + _("All Changes") + "</b>"
+    elif what == 'pending':
+        htmlcode += "<h1>" + _("Changes which are not yet activated:") + "</h1>"
+
+    if what == 'audit':
+        display_paged(times)
+
+    htmlcode += '<table class="wato auditlog">'
     even = "even"
     for t, linkinfo, user, action, text in log:
         even = even == "even" and "odd" or "even"
         htmlcode += '<tr class="%s0">' % even
         htmlcode += '<td>%s</td>' % render_linkinfo(linkinfo)
         htmlcode += '<td>%s</td><td>%s</td><td>%s</td><td width="100%%">%s</td></tr>\n' % (
-                time.strftime("%Y-%m-%d", time.localtime(float(t))),
-                time.strftime("%H:%M:%S", time.localtime(float(t))),
-                user,
-                text)
+                                          fmt_date(float(t)), fmt_time(float(t)), user, text)
     htmlcode += "</table>"
-    return htmlcode
+
+    if what == 'audit':
+        html.write(htmlcode)
+        display_paged(times)
+    else:
+        html.show_warning(htmlcode)
+
+def export_audit_log():
+    html.req.content_type = "text/csv; charset=UTF-8"
+    filename = 'wato-auditlog-%s_%s.csv' % (fmt_date(time.time()), fmt_time(time.time()))
+    html.req.headers_out['Content-Disposition'] = 'attachment; filename=%s' % filename
+    titles = (
+        _('Date'),
+        _('Time'),
+        _('Linkinfo'),
+        _('User'),
+        _('Action'),
+        _('Text'),
+    )
+    html.write(','.join(titles) + '\n')
+    for t, linkinfo, user, action, text in parse_audit_log("audit"):
+        if linkinfo == '-':
+            linkinfo = ''
+        html.write(','.join((fmt_date(int(t)), fmt_time(int(t)), linkinfo,
+                             user, action, '"' + text + '"')) + '\n')
+    return False
 
 #   +----------------------------------------------------------------------+
 #   |                  _   _      _                                        |

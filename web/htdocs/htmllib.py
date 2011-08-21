@@ -278,16 +278,20 @@ class html:
         self.write("<input type=submit name=\"%s\" id=\"%s\" value=\"%s\" class=\"%s\">\n" % \
                    ( varname, varname, title, cssclass))
 
-    def buttonlink(self, href, text, add_transid=False, obj_id='', style=''):
+    def buttonlink(self, href, text, add_transid=False, obj_id='', style='', title='', disabled=''):
         if add_transid:
             href += "&_transid=%d" % self.current_transid()
         if obj_id:
             obj_id = ' id=%s' % obj_id
         if style:
             style = ' style="%s"' % style
+        if title:
+            title = ' title="%s"' % title
+        if disabled:
+            title = ' disabled="%s"' % disabled
 
-        self.write('<input%s%s value="%s" class=buttonlink type=button onclick="location.href=\'%s\'">' % \
-                (obj_id, style, text, href))
+        self.write('<input%s%s%s%s value="%s" class=buttonlink type=button onclick="location.href=\'%s\'">' % \
+                (obj_id, style, title, disabled, text, href))
         # self.write("<a href=\"%s\" class=button%s%s>%s</a>" % (href, obj_id, style, text))
 
     def jsbutton(self, varname, text, onclick, style=''):

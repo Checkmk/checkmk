@@ -1980,6 +1980,10 @@ table.add_snapin i {
     background-repeat: repeat;
 }
 
+/* Controls for the audit log paged mechanism */
+.wato div.paged_controls {
+    float: right;
+}
 
 /* 
    ____                                    

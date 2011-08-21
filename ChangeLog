@@ -37,6 +37,7 @@
     * Bookmarks snapin: save relative URLs whenever possible
     * Man-Pages of Check_MK checks shown in Multisite honor OMD's local hierarchy
     * nicer output of substates, translate (!) and (!!) into HTML code
+    * new command for clearing modified attributes (red cross, green checkmark)
 
     WATO:
     * Show error message in case of empty inventory due to agent error

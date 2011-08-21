@@ -57,34 +57,38 @@ def load_plugins():
         return
     loaded_with_language = current_language
 
-    config.declare_permission_section("action", "Commands on Objects")
+    config.declare_permission_section("action", _("Commands on Objects"))
     config.declare_permission("action.notifications",
-            "Enable/disable notifications",
-            "Enable and disable notifications on hosts and services",
+            _("Enable/disable notifications"),
+            _("Enable and disable notifications on hosts and services"),
             [ "admin" ])
     config.declare_permission("action.enablechecks",
-            "Enable/disable checks",
-            "Enable and disable active or passive checks on hosts and services",
+            _("Enable/disable checks"),
+            _("Enable and disable active or passive checks on hosts and services"),
+            [ "admin" ])
+    config.declare_permission("action.clearmodattr",
+            _("Clear modified attributes"),
+            _("Remove the information that an attribute (like check enabling) has been changed"),
             [ "admin" ])
     config.declare_permission("action.reschedule",
-            "Reschedule checks",
-            "Reschedule host and service checks",
+            _("Reschedule checks"),
+            _("Reschedule host and service checks"),
             [ "user", "admin" ])
     config.declare_permission("action.fakechecks",
-            "Fake check results",
-            "Manually submit check results for host and service checks",
+            _("Fake check results"),
+            _("Manually submit check results for host and service checks"),
             [ "admin" ])
     config.declare_permission("action.acknowledge",
-            "Acknowledge",
-            "Acknowledge host and service problems and remove acknowledgements",
+            _("Acknowledge"),
+            _("Acknowledge host and service problems and remove acknowledgements"),
             [ "user", "admin" ])
     config.declare_permission("action.addcomment",
-            "Add comments",
-            "Add comments to hosts or services, and remove comments",
+            _("Add comments"),
+            _("Add comments to hosts or services, and remove comments"),
             [ "user", "admin" ])
     config.declare_permission("action.downtimes",
-            "Set/Remove Downtimes",
-            "Schedule and remove downtimes on hosts and services",
+            _("Set/Remove Downtimes"),
+            _("Schedule and remove downtimes on hosts and services"),
             [ "user", "admin" ])
 
     load_web_plugins("views", globals())
@@ -1781,6 +1785,12 @@ def show_host_service_actions(what):
                "<input type=submit name=_disable_passive_checks value=\"Disable\"> &nbsp; "
                "</td></tr>\n")
 
+    if config.may("action.clearmodattr"):
+        html.write("<tr><td class=legend>Modified attributes</td>\n"
+                   "<td class=content>\n"
+                   "<input type=submit name=_clear_modattr value=\"Clear information about modified attributes\">"
+                   "</td></tr>\n")
+
     if config.may("action.fakechecks"):
         if what == "service":
             states = ["Ok", "Warning", "Critical", "Unknown"]
@@ -1910,6 +1920,10 @@ def nagios_host_service_action_command(what, dataset):
     elif html.var("_disable_passive_checks") and config.may("action.enablechecks"):
         command = "DISABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec
         title = "<b>disable passive checks</b> of"
+
+    elif html.var("_clear_modattr") and config.may("action.clearmodattr"):
+        command = "CHANGE_" + cmdtag + "_MODATTR;%s;0" % spec
+        title = "<b>clear the information about modified attributes</b> of"
 
     elif html.var("_resched_checks") and config.may("action.reschedule"):
         command = "SCHEDULE_FORCED_" + cmdtag + "_CHECK;%s;%d" % (spec, int(time.time()))

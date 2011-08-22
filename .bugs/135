@@ -7,4 +7,10 @@ Date: 2011-02-15 10:02:09
 Class: cleanup
 
 When calling check_mk --help the config check should
-be skipped.
+be skipped. Same holds for --version (and maybe others
+like --packager).
+
+We also could restrict the config check positively
+to -C, -U, -R, -O (all code that actually influences
+the productive Nagios daemon).
+

@@ -82,7 +82,7 @@ def get_all_checks():
     return k
 
 def is_snmp_check(check):
-    return check in snmp_info or check in snmp_info_single
+    return check in snmp_info
 
 def all_nonfunction_vars():
     return set([ name for name,value in globals().items() if name[0] != '_' and type(value) != type(lambda:0) ])

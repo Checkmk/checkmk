@@ -12,6 +12,7 @@
     * Show datasource program on cmk -D
     * Remove .f12 compile helper files from agents directory
     * Output missing sections in case of "WARNING - Only __ output of __..."
+    * Remove obsolete code of snmp_info_single
 
     Checks & Agents:
     * FIX: hr_mem: take into account cache and buffers

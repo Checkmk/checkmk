@@ -317,7 +317,6 @@ check_default_levels               = {} # dictionary-configured checks declare t
 factory_settings                   = {} # factory settings for dictionary-configured checks
 check_config_variables             = [] # variables (names) in checks/* needed for check itself
 snmp_info                          = {} # whichs OIDs to fetch for which check (for tabular information)
-snmp_info_single                   = {} # similar, but for single SNMP variables (MIB-Name BASE-OID List-of-Suffixes)
 snmp_scan_functions                = {} # SNMP autodetection
 
 
@@ -612,7 +611,7 @@ def get_snmp_character_encoding(hostname):
 
 def check_uses_snmp(check_type):
     check_name = check_type.split(".")[0]
-    return snmp_info.has_key(check_name) or snmp_info_single.has_key(check_name)
+    return snmp_info.has_key(check_name)
 
 def is_snmp_host(hostname):
     return in_binary_hostlist(hostname, snmp_hosts)
@@ -2266,7 +2265,6 @@ no_inventory_possible = None
                  "check_config_variables = []\n" +
                  "check_default_levels = {}\n" +
                  "snmp_info = {}\n" +
-                 "snmp_info_single = {}\n" +
                  "snmp_scan_functions = {}\n")
 
     for filename in filenames:
@@ -2650,8 +2648,6 @@ def show_check_manual(checkname):
             agent = agent.strip()
             ags.append({ "vms" : "VMS", "linux":"Linux", "aix": "AIX", "solaris":"Solaris", "windows":"Windows", "snmp":"SNMP"}.get(agent, agent.upper()))
         print_splitline(header_color_left, "Supported Agents:  ", header_color_right, ", ".join(ags))
-        if checkname in snmp_info_single:
-            print_splitline(header_color_left, "Required MIB:      ", header_color_right, snmp_info_single[checkname][0])
 
         empty_line()
         print_textbody(header['description'])

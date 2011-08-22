@@ -329,20 +329,6 @@ def get_realhost_info(hostname, ipaddress, checkname, max_cache_age):
         write_cache_file(cache_relpath, repr(table) + "\n")
         return table
 
-    # now try SNMP explicity values
-    try:
-        mib, baseoid, suffixes = snmp_info_single[checkname]
-    except:
-        baseoid = None
-    if baseoid:
-        content = read_cache_file(cache_relpath, max_cache_age)
-        if content:
-            return eval(content)
-        table = get_snmp_explicit(hostname, ipaddress, mib, baseoid, suffixes)
-        store_cached_checkinfo(hostname, checkname, table)
-        write_cache_file(cache_relpath, repr(table) + "\n")
-        return table
-
     # No SNMP check. Then we must contact the check_mk_agent. Have we already
     # to get data from the agent? If yes we must not do that again! Even if
     # no cache file is present

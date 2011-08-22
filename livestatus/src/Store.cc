@@ -38,7 +38,7 @@
 extern int g_debug_level;
 extern unsigned long g_max_cached_messages;
 
-Store::Store()
+    Store::Store()
     :_table_hosts(false)
     , _table_hostsbygroup(true)
     , _table_services(false, false)
@@ -46,7 +46,7 @@ Store::Store()
     , _table_servicesbyhostgroup(false, true)
     , _table_downtimes(true)
     , _table_comments(false)
-    , _table_log(g_max_cached_messages)
+     , _table_log(g_max_cached_messages)
 {
     _tables.insert(make_pair("hosts", &_table_hosts));
     _tables.insert(make_pair("hostsbygroup", &_table_hostsbygroup));
@@ -82,10 +82,10 @@ Store::Store()
     g_table_columns = &_table_columns;
 
     for (_tables_t::iterator it = _tables.begin();
-	    it != _tables.end();
-	    ++it)
+            it != _tables.end();
+            ++it)
     {
-	_table_columns.addTable(it->second);
+        _table_columns.addTable(it->second);
     }
 }
 
@@ -93,9 +93,9 @@ Table *Store::findTable(string name)
 {
     _tables_t::iterator it = _tables.find(name);
     if (it == _tables.end())
-	return 0;
+        return 0;
     else
-	return it->second;
+        return it->second;
 }
 
 
@@ -114,29 +114,29 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
     output->reset();
     int r = input->readRequest();
     if (r != IB_REQUEST_READ) {
-	if (r != IB_END_OF_FILE)
-	    output->setError(RESPONSE_CODE_INCOMPLETE_REQUEST, "Client connection terminated while request still incomplete");
-	return false;
+        if (r != IB_END_OF_FILE)
+            output->setError(RESPONSE_CODE_INCOMPLETE_REQUEST, "Client connection terminated while request still incomplete");
+        return false;
     }
     string l = input->nextLine();
     const char *line = l.c_str();
     if (g_debug_level > 0)
-	logger(LG_INFO, "Query: %s", line);
+        logger(LG_INFO, "Query: %s", line);
     if (!strncmp(line, "GET ", 4))
-	answerGetRequest(input, output, lstrip((char *)line + 4));
+        answerGetRequest(input, output, lstrip((char *)line + 4));
     else if (!strcmp(line, "GET"))
-	answerGetRequest(input, output, ""); // only to get error message
+        answerGetRequest(input, output, ""); // only to get error message
     else if (!strncmp(line, "COMMAND ", 8)) {
-	answerCommandRequest(lstrip((char *)line + 8));
-	output->setDoKeepalive(true);
+        answerCommandRequest(lstrip((char *)line + 8));
+        output->setDoKeepalive(true);
     }
     else if (!strncmp(line, "LOGROTATE", 9)) {
-	logger(LG_INFO, "Forcing logfile rotation");
-	rotate_log_file(time(0));
+        logger(LG_INFO, "Forcing logfile rotation");
+        rotate_log_file(time(0));
     }
     else {
-	logger(LG_INFO, "Invalid request '%s'", line);
-	output->setError(RESPONSE_CODE_INVALID_REQUEST, "Invalid request method");
+        logger(LG_INFO, "Invalid request '%s'", line);
+        output->setError(RESPONSE_CODE_INVALID_REQUEST, "Invalid request method");
     }
     return output->doKeepalive();
 }
@@ -154,28 +154,28 @@ void Store::answerGetRequest(InputBuffer *input, OutputBuffer *output, const cha
     output->reset();
 
     if (!tablename[0]) {
-	output->setError(RESPONSE_CODE_INVALID_REQUEST, "Invalid GET request, missing tablename");
+        output->setError(RESPONSE_CODE_INVALID_REQUEST, "Invalid GET request, missing tablename");
     }
     Table *table = findTable(tablename);
     if (!table) {
-	output->setError(RESPONSE_CODE_NOT_FOUND, "Invalid GET request, no such table '%s'", tablename);
+        output->setError(RESPONSE_CODE_NOT_FOUND, "Invalid GET request, no such table '%s'", tablename);
     }
     Query query(input, output, table);
 
     if (table && !output->hasError()) {
-	if (query.hasNoColumns()) {
-	    table->addAllColumnsToQuery(&query);
-	    query.setShowColumnHeaders(true);
-	}
-	struct timeval before, after;
-	gettimeofday(&before, 0);
-	query.start();
-	table->answerQuery(&query);
-	query.finish();
-	gettimeofday(&after, 0);
-	unsigned long ustime = (after.tv_sec - before.tv_sec) * 1000000 + (after.tv_usec - before.tv_usec);
-	if (g_debug_level > 0)
-	    logger(LG_INFO, "Time to process request: %lu us. Size of answer: %d bytes", ustime, output->size());
+        if (query.hasNoColumns()) {
+            table->addAllColumnsToQuery(&query);
+            query.setShowColumnHeaders(true);
+        }
+        struct timeval before, after;
+        gettimeofday(&before, 0);
+        query.start();
+        table->answerQuery(&query);
+        query.finish();
+        gettimeofday(&after, 0);
+        unsigned long ustime = (after.tv_sec - before.tv_sec) * 1000000 + (after.tv_usec - before.tv_usec);
+        if (g_debug_level > 0)
+            logger(LG_INFO, "Time to process request: %lu us. Size of answer: %d bytes", ustime, output->size());
     }
 }
 

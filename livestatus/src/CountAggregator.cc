@@ -30,7 +30,7 @@ void CountAggregator::consume(void *data, Query *)
 {
     // _filter is 0 --> no filter, accept all data
     if (!_filter || _filter->accepts(data))
-	_count++;
+        _count++;
 }
 
 void CountAggregator::output(Query *q)

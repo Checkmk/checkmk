@@ -53,115 +53,115 @@ void *voidp;
 
 struct thread_info
 {
-   int from;
-   int to;
-   int should_shutdown;
-   int terminate_on_read_eof;
+    int from;
+    int to;
+    int should_shutdown;
+    int terminate_on_read_eof;
 };
 
 
 int read_with_timeout(int from, char *buffer, int size, int us)
 {
-   fd_set fds;
-   FD_ZERO(&fds);
-   FD_SET(from, &fds);
-   struct timeval tv;
-   tv.tv_sec  = us / 1000000;
-   tv.tv_usec = us % 1000000;
-   int retval = select(from + 1, &fds, 0, 0, &tv);
-   if (retval > 0)
-      return read(from, buffer, size);
-   else 
-      return -2;
+    fd_set fds;
+    FD_ZERO(&fds);
+    FD_SET(from, &fds);
+    struct timeval tv;
+    tv.tv_sec  = us / 1000000;
+    tv.tv_usec = us % 1000000;
+    int retval = select(from + 1, &fds, 0, 0, &tv);
+    if (retval > 0)
+        return read(from, buffer, size);
+    else 
+        return -2;
 }
 
 
 void *copy_thread(void *info)
 {
-   signal(SIGWINCH, SIG_IGN);
-   
-   struct thread_info *ti = (struct thread_info *)info;
-   int from = ti->from;
-   int to = ti->to;
+    signal(SIGWINCH, SIG_IGN);
 
-   char buffer[65536];
-   while (1) 
-   {
-      ssize_t r = read_with_timeout(from, buffer, sizeof(buffer), 1000000);
-      if (r == -1) {
-	 fprintf(stderr, "Error reading from %d: %s\n", from, strerror(errno));
-	 break;
-      }
-      else if (r == 0) {
-	 if (ti->should_shutdown)
-	    shutdown(to, SHUT_WR);
-	 if (ti->terminate_on_read_eof) {
-	    exit(0);
-	    return voidp;
-	 }
-	 break;
-      }
-      else if (r == -2) {
-	 r = 0;
-      }
-      char *write_pos = buffer;
-      while (r) {
-	 int w = write(to, write_pos, r);
-	 if (w > 0)
-	    r -= w;
-	 else if (w == 0 && r > 0) {
-	    fprintf(stderr, "Error: Cannot write %d bytes to %d: %s\n", w, to, strerror(errno));
-	    break;
-	 }
-      }
-   }
-   return voidp;
+    struct thread_info *ti = (struct thread_info *)info;
+    int from = ti->from;
+    int to = ti->to;
+
+    char buffer[65536];
+    while (1) 
+    {
+        ssize_t r = read_with_timeout(from, buffer, sizeof(buffer), 1000000);
+        if (r == -1) {
+            fprintf(stderr, "Error reading from %d: %s\n", from, strerror(errno));
+            break;
+        }
+        else if (r == 0) {
+            if (ti->should_shutdown)
+                shutdown(to, SHUT_WR);
+            if (ti->terminate_on_read_eof) {
+                exit(0);
+                return voidp;
+            }
+            break;
+        }
+        else if (r == -2) {
+            r = 0;
+        }
+        char *write_pos = buffer;
+        while (r) {
+            int w = write(to, write_pos, r);
+            if (w > 0)
+                r -= w;
+            else if (w == 0 && r > 0) {
+                fprintf(stderr, "Error: Cannot write %d bytes to %d: %s\n", w, to, strerror(errno));
+                break;
+            }
+        }
+    }
+    return voidp;
 }
 
 int main(int argc, char **argv)
 {
-   if (argc != 2) {
-      fprintf(stderr, "Usage: %s UNIX-socket\n", argv[0]);
-      exit(1);
-   }
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s UNIX-socket\n", argv[0]);
+        exit(1);
+    }
 
-   signal(SIGWINCH, SIG_IGN);
+    signal(SIGWINCH, SIG_IGN);
 
-   const char *unixpath = argv[1];
-   struct stat st;
+    const char *unixpath = argv[1];
+    struct stat st;
 
-   if (0 != stat(unixpath, &st))
-   {
-      fprintf(stderr, "No UNIX socket %s existing\n", unixpath);
-      exit(2);
-   }
+    if (0 != stat(unixpath, &st))
+    {
+        fprintf(stderr, "No UNIX socket %s existing\n", unixpath);
+        exit(2);
+    }
 
-   int sock = socket(PF_LOCAL, SOCK_STREAM, 0);
-   if (sock < 0) {
-      fprintf(stderr, "Cannot create client socket: %s\n", strerror(errno));
-      exit(3);
-   }
+    int sock = socket(PF_LOCAL, SOCK_STREAM, 0);
+    if (sock < 0) {
+        fprintf(stderr, "Cannot create client socket: %s\n", strerror(errno));
+        exit(3);
+    }
 
-   /* Connect */
-   struct sockaddr_un sockaddr;
-   sockaddr.sun_family = AF_LOCAL;
-   strncpy(sockaddr.sun_path, unixpath, sizeof(sockaddr.sun_path));
-   if (connect(sock, (struct sockaddr *) &sockaddr, SUN_LEN(&sockaddr)))
-   {
-      fprintf(stderr, "Couldn't connect to UNIX-socket at %s: %s.\n", unixpath, strerror(errno));
-      close(sock);
-      exit(4);
-   }
+    /* Connect */
+    struct sockaddr_un sockaddr;
+    sockaddr.sun_family = AF_LOCAL;
+    strncpy(sockaddr.sun_path, unixpath, sizeof(sockaddr.sun_path));
+    if (connect(sock, (struct sockaddr *) &sockaddr, SUN_LEN(&sockaddr)))
+    {
+        fprintf(stderr, "Couldn't connect to UNIX-socket at %s: %s.\n", unixpath, strerror(errno));
+        close(sock);
+        exit(4);
+    }
 
-   struct thread_info toleft_info = { sock, 1, 0,  1 };
-   struct thread_info toright_info = { 0, sock, 1, 0 };
-   pthread_t toright_thread, toleft_thread;
-   pthread_create(&toright_thread, 0, copy_thread, (void *)&toright_info);
-   pthread_create(&toleft_thread, 0, copy_thread, (void *)&toleft_info);
-   pthread_join(toleft_thread, NULL);
-   pthread_join(toright_thread, NULL); 
+    struct thread_info toleft_info = { sock, 1, 0,  1 };
+    struct thread_info toright_info = { 0, sock, 1, 0 };
+    pthread_t toright_thread, toleft_thread;
+    pthread_create(&toright_thread, 0, copy_thread, (void *)&toright_info);
+    pthread_create(&toleft_thread, 0, copy_thread, (void *)&toleft_info);
+    pthread_join(toleft_thread, NULL);
+    pthread_join(toright_thread, NULL); 
 
-   close(sock);
-   return 0;
+    close(sock);
+    return 0;
 }
 

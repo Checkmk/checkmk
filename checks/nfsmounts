@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_nfsmounts(checkname, info):
+def inventory_nfsmounts(info):
     return [ (line[0], None, None) for line in info ]
 
 def check_nfsmounts(item, params, info):
@@ -37,7 +37,7 @@ def check_nfsmounts(item, params, info):
             blocksize = int(line[5])
 
             if size_blocks < 0 or free_blocks < 0 or blocksize > 1024*1024:
-                return (1, "WARNING - Stale NFS handle")
+                return (1, "WARN - Stale NFS handle")
 
             if line[1] == 'ok':
                 gb = 1024 * 1024 * 1024.0
@@ -47,7 +47,7 @@ def check_nfsmounts(item, params, info):
                 used_perc = 100.0 * used_gb / size_gb
                 return (0, "OK - %.1f%% used (%.1f of %.1f GB)" % (used_perc, used_gb, size_gb))
             else:
-                return (2, "CRITICAL - server not responding")
+                return (2, "CRIT - server not responding")
     return (3, "UNKNOWN - not mounted")
 
 check_info['nfsmounts'] = (check_nfsmounts, "NFS mount %s", 0, inventory_nfsmounts)

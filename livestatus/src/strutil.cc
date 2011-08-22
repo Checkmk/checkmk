@@ -29,16 +29,16 @@
 
 char *rstrip(char *c)
 {
-   char *w = c + strlen(c) - 1;
-   while (w >= c && isspace(*w))
-      *w-- = '\0';
-   return c;
+    char *w = c + strlen(c) - 1;
+    while (w >= c && isspace(*w))
+        *w-- = '\0';
+    return c;
 }
 
 char *lstrip(char *c)
 {
-   while (isspace(*c)) c++;
-   return c;
+    while (isspace(*c)) c++;
+    return c;
 }
 
 /* *c points to a string containing
@@ -49,22 +49,22 @@ char *lstrip(char *c)
    next field. */
 char *next_field(char **c)
 {
-   /* *c points to first character of field */
-   char *begin = lstrip(*c); // skip leading spaces
-   if (!*begin) {
-      *c = begin;
-      return 0; // found end of string -> no more field
-   }
+    /* *c points to first character of field */
+    char *begin = lstrip(*c); // skip leading spaces
+    if (!*begin) {
+        *c = begin;
+        return 0; // found end of string -> no more field
+    }
 
-   char *end = begin; // copy pointer, search end of field
-   while (*end && !isspace(*end)) end++;  // search for \0 or white space
-   if (*end) { // string continues -> terminate field with '\0'
-      *end = '\0';
-      *c = end + 1; // skip to character right *after* '\0'
-   }
-   else
-      *c = end; // no more field, point to '\0'
-   return begin;
+    char *end = begin; // copy pointer, search end of field
+    while (*end && !isspace(*end)) end++;  // search for \0 or white space
+    if (*end) { // string continues -> terminate field with '\0'
+        *end = '\0';
+        *c = end + 1; // skip to character right *after* '\0'
+    }
+    else
+        *c = end; // no more field, point to '\0'
+    return begin;
 }
 
 /* similar to next_field() but takes one character as delimiter */
@@ -72,18 +72,18 @@ char *next_token(char **c, char delim)
 {
     char *begin = *c;
     if (!*begin) {
-	*c = begin;
-	return 0;
+        *c = begin;
+        return 0;
     }
 
     char *end = begin;
     while (*end && *end != delim) end++;
     if (*end) {
-	*end = 0;
-	*c = end + 1;
+        *end = 0;
+        *c = end + 1;
     }
     else
-	*c = end;
+        *c = end;
     return begin;
 }
 

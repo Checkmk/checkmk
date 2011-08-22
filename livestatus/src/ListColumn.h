@@ -32,13 +32,13 @@
 class ListColumn : public Column
 {
 public:
-   ListColumn(string name, string description, int indirect_offset) :
-      Column(name, description, indirect_offset) {}
-   int type() { return COLTYPE_LIST; }
-   virtual void *getNagiosObject(char *name) = 0;
-   virtual bool isNagiosMember(void *data, void *member) = 0;
-   virtual bool isEmpty(void *data) = 0;
-   Filter *createFilter(int opid, char *value);
+    ListColumn(string name, string description, int indirect_offset) :
+        Column(name, description, indirect_offset) {}
+    int type() { return COLTYPE_LIST; }
+    virtual void *getNagiosObject(char *name) = 0;
+    virtual bool isNagiosMember(void *data, void *member) = 0;
+    virtual bool isEmpty(void *data) = 0;
+    Filter *createFilter(int opid, char *value);
 };
 
 #endif // ListColumn_h

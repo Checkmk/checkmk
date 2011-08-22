@@ -34,7 +34,7 @@
 
 kernel_util_default_levels = None
 
-def inventory_ucd_cpu_util(checktype, info):
+def inventory_ucd_cpu_util(info):
     if len(info) == 1:
         return [(None, "kernel_util_default_levels")]
 
@@ -62,7 +62,7 @@ def check_ucd_cpu_util(item, params, info):
     user = 100 * (parts[0] + parts[1])
     system = 100 * (parts[2] + parts[5] + parts[6])
     wait = 100 * (parts[4])
-        
+
     perfdata = [
           ( "user",   "%.3f" % user ),
           ( "system", "%.3f" % system ),
@@ -72,9 +72,9 @@ def check_ucd_cpu_util(item, params, info):
     try:
         warn, crit = params
         if wait >= crit:
-            result = (2, "CRIT (wait too large)")
+            result = (2, "CRIT - (wait too large)")
         elif wait >= warn:
-            result = (1, "WARNING (wait too large)")
+            result = (1, "WARN - (wait too large)")
     except:
         pass
 

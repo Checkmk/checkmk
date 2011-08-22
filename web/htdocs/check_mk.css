@@ -632,7 +632,7 @@ tr.even1 { background-color: #ffa; }
 tr.odd2  { background-color: #fcc; } 
 tr.even2 { background-color: #faa; }
 
-tr.odd3  { background-color: #fdc; } 
+tr.odd3  { background-color: #fda; } 
 tr.even3 { background-color: #fea; }
 
 /* HACK */
@@ -863,6 +863,15 @@ td.statex {  /* zero count */
     background-color: #0af; color: #fff;
 }
 
+/* inline state markers in check output */
+b.stmark {
+    margin-left: 4px;
+    padding: 1px 3px;
+    -moz-border-radius: 4px;
+    font-size: 7pt;
+    border: 1px solid #666;
+}
+
 /* *some* problem */
 .states, .hstates { 
     background-image: url("images/someproblem.png");
@@ -961,7 +970,7 @@ table.boxlayout td.boxcolumn {
 }
 
 
-.inputerror input { 
+.inputerror input, .inputerror textarea {
     background-color: #f84;
 }
 

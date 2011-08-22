@@ -26,7 +26,7 @@
 
 # Author: Michael Nieporte <micha.nieporte@gmail.com> - Based on rsa_health by Mathias Kettner
 
-def inventory_ibm_imm_health(checkname, info):
+def inventory_ibm_imm_health(info):
     if len(info) > 0:
         return [(None, None)]
 

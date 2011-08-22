@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def inventory_mrpe(checkname, info):
+def inventory_mrpe(info):
     items = []
     for line in info:
         # New Linux agent sends (check_name) in first column. Stay

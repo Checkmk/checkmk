@@ -70,7 +70,7 @@ def heartbeat_crm_parse_general(info, dc = '', numNodes = -1, numResources = -1)
             numResources = int(line[0])
     return (lastUpdated, dc, numNodes, numResources)
 
-def inventory_heartbeat_crm(checktype, info):
+def inventory_heartbeat_crm(info):
     # Use these lines to gather the inventory and perform this check:
     # ============
     # Last updated: Thu Jul  1 07:48:19 2010
@@ -99,7 +99,7 @@ def check_heartbeat_crm(item, params, info):
         now = time.time()
         delta = now - dt
         if delta > param_max_age:
-            return (2, 'CRITICAL - Status output too old: %d secs' % delta)
+            return (2, 'CRIT - Status output too old: %d secs' % delta)
 
         output = ''
         status = 0
@@ -153,7 +153,7 @@ def heartbeat_crm_parse_resources(info):
 
     return resources
 
-def inventory_heartbeat_crm_resources(checkname, info):
+def inventory_heartbeat_crm_resources(info):
     # Full list of resources:
     # Resource Group: group_slapmaster
     #     resource_virtip1  (ocf::heartbeat:IPaddr):  Started mwp

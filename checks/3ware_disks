@@ -51,7 +51,7 @@
 # p7     NOT-PRESENT      -      -           -             -
 
 
-def inventory_3ware_disks(checkname, info):
+def inventory_3ware_disks(info):
     inventory = []
     for line in info:
         if len(line) > 0:
@@ -75,7 +75,7 @@ def check_3ware_disks(item, params, info):
             if status == "OK":
                 return (0, "OK - disk status is " + infotext)
             else:
-                return (2, "CRITICAL - disk status is " + infotext)
+                return (2, "CRIT - disk status is " + infotext)
     return (3, "UNKNOWN - disk %s not found in agent output" % item)
 
 # declare the check to Check_MK

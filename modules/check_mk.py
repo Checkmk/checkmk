@@ -100,7 +100,6 @@ snmpwalks_dir                      = var_dir + '/snmpwalks'
 precompiled_hostchecks_dir         = var_dir + '/precompiled'
 counters_directory                 = var_dir + '/counters'
 tcp_cache_dir                      = var_dir + '/cache'
-rrd_path                           = var_dir + '/rrd'
 logwatch_dir                       = var_dir + '/logwatch'
 nagios_objects_file                = var_dir + '/check_mk_objects.cfg'
 nagios_command_pipe_path           = '/usr/local/nagios/var/rw/nagios.cmd'
@@ -213,7 +212,6 @@ agent_port                         = 6556
 agent_ports                        = []
 snmp_ports                         = [] # UDP ports used for SNMP
 tcp_connect_timeout                = 5.0
-do_rrd_update                      = False
 delay_precompile                   = False  # delay Python compilation to Nagios execution
 check_submission                   = "pipe" # alternative: "file"
 aggr_summary_hostname              = "%s-s"
@@ -227,9 +225,10 @@ debug_log                          = None
 monitoring_host                    = "localhost" # your Nagios host
 max_num_processes                  = 50
 
-# SNMP communities
+# SNMP communities and encoding
 snmp_default_community             = 'public'
 snmp_communities                   = []
+snmp_character_encodings           = []
 
 # Inventory and inventory checks
 inventory_check_interval           = None # Nagios intervals (4h = 240)
@@ -318,7 +317,6 @@ check_default_levels               = {} # dictionary-configured checks declare t
 factory_settings                   = {} # factory settings for dictionary-configured checks
 check_config_variables             = [] # variables (names) in checks/* needed for check itself
 snmp_info                          = {} # whichs OIDs to fetch for which check (for tabular information)
-snmp_info_single                   = {} # similar, but for single SNMP variables (MIB-Name BASE-OID List-of-Suffixes)
 snmp_scan_functions                = {} # SNMP autodetection
 
 
@@ -606,9 +604,14 @@ def snmp_credentials_of(hostname):
     # nothing configured for this host -> use default
     return snmp_default_community
 
+def get_snmp_character_encoding(hostname):
+    entries = host_extra_conf(hostname, snmp_character_encodings)
+    if len(entries) > 0:
+        return entries[0]
+
 def check_uses_snmp(check_type):
     check_name = check_type.split(".")[0]
-    return snmp_info.has_key(check_name) or snmp_info_single.has_key(check_name)
+    return snmp_info.has_key(check_name)
 
 def is_snmp_host(hostname):
     return in_binary_hostlist(hostname, snmp_hosts)
@@ -1866,6 +1869,8 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
                     raise
 		elif not include_state and str(e):
 		    sys.stderr.write("Host '%s': %s\n" % (hostname, str(e)))
+                elif include_state and str(e): # WATO automation. Abort
+                    raise
                 continue
             except MKSNMPError, e:
                 # This special handling is needed for the inventory check. It needs special
@@ -1884,11 +1889,21 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
             if info == None: # No data for this check type
                 continue
             try:
-                inventory = inventory_function(checkname, info) # inventory is a list of pairs (item, current_value)
+                # New preferred style since 1.1.11i3: only one argument: info
+                try:
+                    inventory = inventory_function(info)
+                except Exception, e:
+                    # failed? Lets try pre-1.1.11i3 style inventory function
+                    try:
+                        inventory = inventory_function(checkname, info) # inventory is a list of pairs (item, current_value)
+                    except Exception, ee:
+                        raise e # raise original exception
+
                 if inventory == None: # tolerate if function does no explicit return
                     inventory = []
             except Exception, e:
                 if opt_debug:
+                    sys.stderr.write("Exception in inventory function of check type %s\n" % checkname)
                     raise
                 if opt_verbose:
 		    sys.stderr.write("%s: Invalid output from agent or invalid configuration: %s\n" % (hostname, e))
@@ -1951,6 +1966,7 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
 
     except KeyboardInterrupt:
         sys.stderr.write('<Interrupted>\n')
+
 
     if not check_only:
         if newchecks != []:
@@ -2249,7 +2265,6 @@ no_inventory_possible = None
                  "check_config_variables = []\n" +
                  "check_default_levels = {}\n" +
                  "snmp_info = {}\n" +
-                 "snmp_info_single = {}\n" +
                  "snmp_scan_functions = {}\n")
 
     for filename in filenames:
@@ -2258,14 +2273,6 @@ no_inventory_possible = None
         output.write("\n\n")
         if opt_verbose:
             sys.stderr.write(" %s%s%s" % (tty_green, filename.split('/')[-1], tty_normal))
-
-    # direct update of RRD databases by check_mk
-    if do_rrd_update:
-        output.write("do_rrd_update = True\n" +
-                     "import rrdtool\n" +
-                     "rrd_path = %r\n" % rrd_path)
-    else:
-        output.write("do_rrd_update = False\n")
 
     # handling of clusters
     if is_cluster(hostname):
@@ -2319,6 +2326,10 @@ no_inventory_possible = None
     # TCP and SNMP port of agent
     output.write("def agent_port_of(hostname):\n    return %d\n\n" % agent_port_of(hostname))
     output.write("def snmp_port_spec(hostname):\n    return %r\n\n" % snmp_port_spec(hostname))
+
+    # SNMP character encoding
+    output.write("def get_snmp_character_encoding(hostname):\n    return %r\n\n" 
+      % get_snmp_character_encoding(hostname))
 
     # Parameters for checks: Default values are defined in checks/*. The
     # variables might be overridden by the user in main.mk. We need
@@ -2637,8 +2648,6 @@ def show_check_manual(checkname):
             agent = agent.strip()
             ags.append({ "vms" : "VMS", "linux":"Linux", "aix": "AIX", "solaris":"Solaris", "windows":"Windows", "snmp":"SNMP"}.get(agent, agent.upper()))
         print_splitline(header_color_left, "Supported Agents:  ", header_color_right, ", ".join(ags))
-        if checkname in snmp_info_single:
-            print_splitline(header_color_left, "Required MIB:      ", header_color_right, snmp_info_single[checkname][0])
 
         empty_line()
         print_textbody(header['description'])
@@ -3061,7 +3070,6 @@ def show_paths():
         ( tcp_cache_dir,               dir, data, "Cached output from agents"),
         ( logwatch_dir,                dir, data, "Unacknowledged logfiles of logwatch extension"),
         ( nagios_objects_file,         fil, data, "File into which Nagios configuration is written"),
-        ( rrd_path,                    dir, data, "Base directory of round robin databases"),
         ( nagios_status_file,          fil, data, "Path to Nagios status.dat"),
 
         ( nagios_command_pipe_path,    fil, pipe, "Nagios' command pipe"),
@@ -3115,9 +3123,11 @@ def dump_host(hostname):
     else:
         color = tty_bgblue
         try:
-            add_txt = " (%s)" % lookup_ipaddress(hostname)
+            ipaddress = lookup_ipaddress(hostname)
+            add_txt = " (%s)" % ipaddress
         except:
             add_txt = " (no DNS, no entry in ipaddresses)"
+            ipaddress = "X.X.X.X"
     print "%s%s%s%-78s %s" % (color, tty_bold, tty_white, hostname + add_txt, tty_normal)
 
     tags = tags_of_host(hostname)
@@ -3131,6 +3141,10 @@ def dump_host(hostname):
     print tty_yellow + "Host groups:            " + tty_normal + ", ".join(hostgroups_of(hostname))
     print tty_yellow + "Contact groups:         " + tty_normal + ", ".join(host_contactgroups_of([hostname]))
     agenttype = "TCP (port: %d)" % agent_port_of(hostname)
+    dapg = get_datasource_program(hostname, ipaddress)
+    if dapg:
+        agenttype = "Datasource program: %s" % dapg
+
     if is_snmp_host(hostname):
         if is_usewalk_host(hostname):
             agenttype = "SNMP (use stored walk)"
@@ -3820,16 +3834,6 @@ for hostname in strip_tags(all_hosts + clusters.keys()):
         sys.exit(4)
     seen_hostnames.add(hostname)
 
-# Load python-rrd if available and not switched off.
-if do_rrd_update:
-    try:
-        import rrdtool
-    except:
-        sys.stderr.write("ERROR: Cannot do direct rrd updates since the Python module\n"+
-                         "'rrdtool' could not be loaded. Please install python-rrdtool\n"+
-                         "or set do_rrd_update to False in main.mk.\n")
-        sys.exit(3)
-
 # Load agent simulator if enabled
 if agent_simulator:
     execfile(modules_dir + "/agent_simulator.py")
@@ -3901,8 +3905,8 @@ if __name__ == "__main__":
     checks = autochecks + checks
 
 vars_after_config = all_nonfunction_vars()
-ignored_variables = set(['vars_before_config', 'rrdtool', 'autochecks',
-                          'parts' ,'hosttags' ,'seen_hostnames' ,'all_hosts_untagged' ,'taggedhost' ,'hostname'])
+ignored_variables = set(['vars_before_config', 'autochecks', 'parts' ,'hosttags' ,'seen_hostnames',
+                         'all_hosts_untagged' ,'taggedhost' ,'hostname'])
 errors = 0
 for name in vars_after_config:
     if name not in ignored_variables and name not in vars_before_config:

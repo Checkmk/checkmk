@@ -35,14 +35,14 @@ class HostlistColumn;
 
 class HostlistColumnFilter : public Filter
 {
-   HostlistColumn *_hostlist_column;
-   int _opid;
-   string _ref_value;
+    HostlistColumn *_hostlist_column;
+    int _opid;
+    string _ref_value;
 
 public:
-   HostlistColumnFilter(HostlistColumn *column, int opid, char *refvalue)
-      : _hostlist_column(column), _opid(opid), _ref_value(refvalue) {}
-   bool accepts(void *data);
+    HostlistColumnFilter(HostlistColumn *column, int opid, char *refvalue)
+        : _hostlist_column(column), _opid(opid), _ref_value(refvalue) {}
+    bool accepts(void *data);
 };
 
 

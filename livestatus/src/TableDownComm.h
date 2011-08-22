@@ -40,22 +40,22 @@ using namespace std;
 
 class TableDownComm : public Table
 {
-   const char *_name;
-   typedef map<unsigned long, DowntimeOrComment *> _entries_t;
-   _entries_t _entries;
+    const char *_name;
+    typedef map<unsigned long, DowntimeOrComment *> _entries_t;
+    _entries_t _entries;
 
 public:
-   TableDownComm(bool is_downtime);
-   const char *name() { return _name; }
-   ~TableDownComm();
-   DowntimeOrComment *findEntry(unsigned long id);
-   void addDowntime(nebstruct_downtime_data *);
-   void addComment(nebstruct_comment_data *);
-   void add(DowntimeOrComment *data);
-   void remove(unsigned id);
-   void answerQuery(Query *);
-   _entries_t::iterator entriesIteratorBegin() { return _entries.begin(); }
-   _entries_t::iterator entriesIteratorEnd() { return _entries.end(); }
+    TableDownComm(bool is_downtime);
+    const char *name() { return _name; }
+    ~TableDownComm();
+    DowntimeOrComment *findEntry(unsigned long id);
+    void addDowntime(nebstruct_downtime_data *);
+    void addComment(nebstruct_comment_data *);
+    void add(DowntimeOrComment *data);
+    void remove(unsigned id);
+    void answerQuery(Query *);
+    _entries_t::iterator entriesIteratorBegin() { return _entries.begin(); }
+    _entries_t::iterator entriesIteratorEnd() { return _entries.end(); }
 };
 
 

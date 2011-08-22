@@ -38,7 +38,7 @@
 hp_blade_status_map =        { 1: 'Other',    2: 'Ok',     3: 'Degraded', 4: 'Failed' }
 hp_blade_status2nagios_map = { 'Other':       2, 'Ok':     0, 'Degraded': 1, 'Failed': 2, }
 
-def inventory_hp_blade_general(checkname, info):
+def inventory_hp_blade_general(info):
     if len(info) > 0 and len(info[0]) > 1:
         return [ (None, None) ]
 

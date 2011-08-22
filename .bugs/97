@@ -2,10 +2,19 @@ Title: Restart nagios on OMD - use OMD method
 Component: core
 Benefit: 1
 State: open
-Cost: 1
+Cost: 2
 Date: 2011-01-22 13:53:40
 Class: cleanup
 
 When doing a restart of Nagios or a config check while running
 under OMD, then better not call the start scripts directly, but
 use omd to do this 'omd restart nagios'.
+
+Solution: if we detect OMD then do not use the value from defaults,
+but directly call 'omd re{start,load} core'.
+
+Problem is: I've just fixed a problem in OMD (2011-08-22), that
+makes 'omd restart core' work in the first place.
+
+--> better wait a time until all Check_MK users surely use 
+    OMD versions that have that fix.

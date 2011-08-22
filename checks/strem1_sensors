@@ -44,7 +44,7 @@ def strem1_sensors_parse_info(info):
     return parsed
 
 
-def inventory_strem1_sensors(checkname, info):
+def inventory_strem1_sensors(info):
     inventory = []
     for index, typ, val, intval in strem1_sensors_parse_info(info[1]):
         lvls = 'strem1_temp_defaultlevels'
@@ -74,9 +74,9 @@ def check_strem1_sensors(item, params, info):
                 infotext += ' (%s)' % ', '.join(thrtext)
 
             if crit and val >= crit:
-                return (2, "CRITICAL - %s is: " % typ + infotext, perfdata)
+                return (2, "CRIT - %s is: " % typ + infotext, perfdata)
             elif warn and val >= warn:
-                return (1, "WARNING - %s is: " % typ + infotext, perfdata)
+                return (1, "WARN - %s is: " % typ + infotext, perfdata)
             else:
                 return (0, "OK - %s is: " % typ + infotext, perfdata )
     return (3, "UNKNOWN - Sensor not found")
@@ -84,7 +84,7 @@ def check_strem1_sensors(item, params, info):
 
 check_info['strem1_sensors'] = ( check_strem1_sensors, "Sensor - %s", 1, inventory_strem1_sensors)
 
-#1,  # SENSATRONICS-EM1::group1Name  
+#1,  # SENSATRONICS-EM1::group1Name
 #2,  # SENSATRONICS-EM1::group1TempName
 #3,  # SENSATRONICS-EM1::group1TempDataStr
 #4,  # SENSATRONICS-EM1::group1TempDataInt

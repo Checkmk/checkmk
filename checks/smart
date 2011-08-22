@@ -59,13 +59,13 @@ smart_stats_default_levels = {
 }
 
 
-def inventory_smart(checktype, info):
+def inventory_smart(check_type, info):
     inventory = []
     for line in info:
         if len(line) < 13:
             continue
 
-        if checktype == 'smart.stats' \
+        if check_type == 'smart.stats' \
            and line[4] in [ 'Power_On_Hours',          'Power_Cycle_Count',
                             'Reallocated_Sector_Ct',   'Spin_Retry_Count',
                             'Reallocated_Event_Count', 'Current_Pending_Sector',
@@ -73,7 +73,7 @@ def inventory_smart(checktype, info):
                             'Reported_Uncorrect',      'UDMA_CRC_Error_Count', ] \
            and not (line[0], None) in inventory:
             inventory.append((line[0], None, 'smart_stats_default_levels'))
-        elif checktype == 'smart.temp' and line[4] == 'Temperature_Celsius':
+        elif check_type == 'smart.temp' and line[4] == 'Temperature_Celsius':
             inventory.append((line[0], None, 'smart_temp_default_levels'))
     return inventory
 
@@ -104,10 +104,10 @@ def check_smart_stats(item, params, info):
                 warn, crit, cur_status, thresh_out = None, None, 0, ''
                 if thresh and thresh + '_crit' in params and value >= params[thresh][1]:
                     cur_status = 2
-                    thresh_out = ' (CRIT)'
+                    thresh_out = '(!!)'
                 elif thresh and thresh + '_warn' in params and value >= params[thresh][0]:
                     cur_status = 1
-                    thresh_out = ' (WARN)'
+                    thresh_out = '(!)'
 
                 perfdata.append((lab, val, thresh and params[thresh][0] or None, thresh and params[thresh][1] or None))
                 output.append('%s: %d%s%s' % (txt, val, uom, thresh_out))
@@ -122,21 +122,20 @@ def check_smart_stats(item, params, info):
 # Written by Benjamin Odenthal
 # http://exchange.check-mk.org/index.php?option=com_remository&Itemid=53&func=fileinfo&id=1
 def check_smart_temp(item, params, info):
-   warn, crit = params
+    warn, crit = params
 
-   for line in info:
-      if len(line) >= 13 and line[0] == item and line[4] == "Temperature_Celsius":
-         celsius = int(line[12])
-         perfdata = [ ( "temp", celsius, warn, crit ) ]
-         if celsius > crit:
-            return (2, "CRITICAL - Temperature is %dC" % celsius, perfdata)
-         elif celsius > warn:
-            return (1, "WARNING - Temperature is %dC" % celsius, perfdata)
-         else:
-            return (0, "OK - Temperature is %dC" % celsius, perfdata)
-   return (3, "UNKNOWN - Temperature_Celsius not found in agent output for disk %s" % item)
+    for line in info:
+        if len(line) >= 13 and line[0] == item and line[4] == "Temperature_Celsius":
+            celsius = int(line[12])
+            perfdata = [ ( "temp", celsius, warn, crit ) ]
+            if celsius > crit:
+                return (2, "CRIT - Temperature is %dC" % celsius, perfdata)
+            elif celsius > warn:
+                return (1, "WARN - Temperature is %dC" % celsius, perfdata)
+            else:
+                return (0, "OK - Temperature is %dC" % celsius, perfdata)
+    return (3, "UNKNOWN - Temperature_Celsius not found in agent output for disk %s" % item)
 
 
-check_info['smart.stats'] = (check_smart_stats, "SMART %s Stats",       1, inventory_smart)
-check_info['smart.temp']  = (check_smart_temp,  "SMART %s Temperature", 1, inventory_smart)
-
+check_info['smart.stats'] = (check_smart_stats, "SMART %s Stats",       1, lambda info: inventory_smart("smart.stats", info))
+check_info['smart.temp']  = (check_smart_temp,  "SMART %s Temperature", 1, lambda info: inventory_smart("smart.temp", info))

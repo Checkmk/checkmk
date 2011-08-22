@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 hr_cpu_default_levels = (80, 90)
-def inventory_hr_cpu(checktype, info):
+def inventory_hr_cpu(info):
     if len(info) >= 1:
         return [(None, "hr_cpu_default_levels")]
 
@@ -54,5 +54,5 @@ snmp_info["hr_cpu"] = ( ".1.3.6.1.2.1.25.3.3.1", [ 2 ] )
 # HOST-RESOURCES-MIB::hrSystemUptime.0
 snmp_scan_functions["hr_cpu"] = lambda oid: \
         not not oid('.1.3.6.1.2.1.25.1.1.0') and not \
-            ("linux" in oid(".1.3.6.1.2.1.1.1.0").lower() 
+            ("linux" in oid(".1.3.6.1.2.1.1.1.0").lower()
              and oid(".1.3.6.1.4.1.2021.10.1.6.1"))

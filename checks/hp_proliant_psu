@@ -31,7 +31,7 @@ hp_proliant_status2nagios_map = { 'other': 3, 'ok': 0, 'degraded': 2, 'failed': 
 hp_proliant_present_map = { 1: 'other', 2: 'absent', 3: 'present' }
 hp_proliant_redundant_map = { 1: 'other', 2: 'notRedundant', 3: 'redundant' }
 
-def inventory_hp_proliant_psu(checkname, info):
+def inventory_hp_proliant_psu(info):
     if len(info) > 0:
         return [ (line[0] + '/' + line[1], None) for line in info if line[2] == '3' ]
 

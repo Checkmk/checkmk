@@ -34,17 +34,17 @@ using namespace std;
 
 class ClientQueue
 {
-   typedef deque<int> _queue_t;
-   _queue_t _queue;
+    typedef deque<int> _queue_t;
+    _queue_t _queue;
 public:
-   ClientQueue();
-   ~ClientQueue();
-   void addConnection(int);
-   int popConnection();
-   void wakeupAll();
+    ClientQueue();
+    ~ClientQueue();
+    void addConnection(int);
+    int popConnection();
+    void wakeupAll();
 
-   pthread_mutex_t _lock;
-   pthread_cond_t _signal;
+    pthread_mutex_t _lock;
+    pthread_cond_t _signal;
 };
 
 

@@ -73,7 +73,7 @@ def check_diskstat_line(this_time, item, params, line):
         if levels != None:
             mb_per_sec = bytes_per_sec / 1048576
             if mb_per_sec >= crit:
-                status = 2 
+                status = 2
                 infos[-1] += "!!"
             elif mb_per_sec >= warn:
                 status = max(status, 1)
@@ -101,11 +101,11 @@ def check_diskstat_generic(item, params, this_time, info):
     for line in info:
         if line[0] == item:
             return check_diskstat_line(this_time, item, params, line)
-    
+
     return (3, "UNKNOWN - device missing")
 
 
-# This is the legacy version of diskstat as used in <= 1.1.10. 
+# This is the legacy version of diskstat as used in <= 1.1.10.
 # We keep it here for a while in order to be compatible with
 # old installations.
 def check_diskstat_old(item, params, this_time, info):
@@ -123,5 +123,3 @@ def check_diskstat_old(item, params, this_time, info):
     mb_per_s = per_sec / 2048.0    # Diskstat output is in sectors a 512 Byte
     perfdata = [ (item, "%dc" % this_val ) ]
     return (0, "OK - %.1fMB/s (in last %d secs)" % (mb_per_s, timedif), perfdata)
-
-

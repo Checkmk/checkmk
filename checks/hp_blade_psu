@@ -63,7 +63,7 @@ hp_blade_psu_inputline_status = {
   5: 'brownOut',         6: 'linePowerLoss',
 }
 
-def inventory_hp_blade_psu(checkname, info):
+def inventory_hp_blade_psu(info):
     return [ (line[0], None) for line in info if hp_blade_present_map[int(line[1])] == 'present' ]
 
 def check_hp_blade_psu(item, params, info):
@@ -71,7 +71,7 @@ def check_hp_blade_psu(item, params, info):
         if line[0] == item:
             present_state = hp_blade_present_map[int(line[1])]
             if present_state != 'present':
-                return (2, 'CRITICAL - PSU was present but is not available anymore.'
+                return (2, 'CRIT - PSU was present but is not available anymore.'
                            ' (Present state: %s' % present_state)
 
             snmp_state = hp_blade_status_map[int(line[2])]

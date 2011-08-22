@@ -280,11 +280,20 @@ multisite_painters["site_icon"] = {
     "paint" : paint_site_icon
 }
 
+warn_marker    = '<b class="stmark state1">WARN</b>'
+crit_marker    = '<b class="stmark state2">CRIT</b>'
+unknown_marker = '<b class="stmark state3">UNKN</b>'
+
+def format_plugin_output(output):
+    return output.replace("(!)", warn_marker) \
+           .replace("(!!)", crit_marker) \
+           .replace("(?)", unknown_marker)
+
 multisite_painters["svc_plugin_output"] = {
     "title" : _("Output of check plugin"),
     "short" : _("Status detail"),
     "columns" : ["service_plugin_output"],
-    "paint" : lambda row: (None, row["service_plugin_output"])
+    "paint" : lambda row: ("", format_plugin_output(row["service_plugin_output"]))
 }
 multisite_painters["svc_long_plugin_output"] = {
     "title" : _("Long output of check plugin (multiline)"),
@@ -574,7 +583,14 @@ def paint_check_manpage(row):
     if not command.startswith("check_mk-"):
 	return "", ""
     checktype = command[9:]
-    p = defaults.check_manpages_dir + "/" + checktype
+    # Honor man-pages in OMD's local structure
+    p = None
+    if defaults.omd_root:
+        p = defaults.omd_root + "/local/share/check_mk/checkman/" + checktype
+        if not os.path.isfile(p):
+            p = None
+    if not p:
+        p = defaults.check_manpages_dir + "/" + checktype
     if os.path.isfile(p):
 	description = None
 	for line in file(p):
@@ -1439,7 +1455,7 @@ multisite_painters["log_plugin_output"] = {
     "title" : _("Log: output of check plugin"),
     "short" : _("Check output"),
     "columns" : ["log_plugin_output"],
-    "paint" : lambda row: ("", row["log_plugin_output"])
+    "paint" : lambda row: ("", format_plugin_output(row["log_plugin_output"]))
 }
 multisite_painters["log_attempt"] = {
     "title" : _("Log: number of check attempt"),
@@ -1512,6 +1528,12 @@ multisite_painters["log_time"] = {
     "columns" : ["log_time"],
     "options" : [ "ts_format", "ts_date" ],
     "paint" : lambda row: paint_age(row["log_time"], True, 3600 * 24)
+}
+multisite_painters["log_lineno"] = {
+    "title" : _("Log: line number in log file"),
+    "short" : _("Line"),
+    "columns" : ["log_lineno"],
+    "paint" : lambda row: ("number", str(row["log_lineno"]))
 }
 
 multisite_painters["log_date"] = {

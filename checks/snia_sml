@@ -33,4 +33,3 @@ check_info['snia_sml'] = (
     "%s",
     0,
     no_inventory_possible)
-

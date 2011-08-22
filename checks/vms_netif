@@ -26,7 +26,7 @@
 
 # <<<vms_netif>>>
 # WE0 661236727 169337595
-def inventory_vms_netif(checkname, info):
+def inventory_vms_netif(info):
     return [ (line[0], '""', None) for line in info ]
 
 def check_vms_netif(item, params, info):

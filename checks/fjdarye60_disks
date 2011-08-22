@@ -43,7 +43,7 @@ def fjdary60_disks_summary(info):
             states[statename] = states.get(statename, 0) + 1
     return states
 
-def inventory_fjdarye60_disks_summary(checkname, info):
+def inventory_fjdarye60_disks_summary(info):
     current_state = fjdary60_disks_summary(info)
     if len(current_state) > 0:
         return [ (None, '', current_state) ]
@@ -74,7 +74,7 @@ snmp_scan_functions['fjdarye60_disks.summary'] \
 # --------------------------------------------------------------------------------
 # 2. Single disk version of check -> one check for each disk
 
-def inventory_fjdarye60_disks(checkname, info):
+def inventory_fjdarye60_disks(info):
     return [ (int(index), '', repr(fjdarye60_disks_status[int(status)])) for index, status in info if int(status) != 3 ]
 
 def check_fjdarye60_disks(index, expected_status, info):

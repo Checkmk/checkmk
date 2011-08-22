@@ -27,10 +27,10 @@
 
 void GlobalCountersColumn::output(void *, Query *query)
 {
-   if (_do_average)
-      query->outputDouble(g_counter_rate[_counter_index]);
-   else
-      query->outputCounter(g_counters[_counter_index]);
+    if (_do_average)
+        query->outputDouble(g_counter_rate[_counter_index]);
+    else
+        query->outputCounter(g_counters[_counter_index]);
 }
 
 

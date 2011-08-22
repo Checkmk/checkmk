@@ -51,7 +51,7 @@ hp_proliant_da_phydrv_smart_status = {
                 3: 'replaceDrive',
 }
 
-def inventory_hp_proliant_da_phydrv(checkname, info):
+def inventory_hp_proliant_da_phydrv(info):
     if len(info) > 0:
         return [ (line[1], None) for line in info ]
 

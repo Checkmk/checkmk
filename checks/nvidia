@@ -26,7 +26,7 @@
 
 nvidia_temp_default_levels = (60, 65, 90, 95)
 
-def inventory_nvidia_temp(checktype, info):
+def inventory_nvidia_temp(info):
     return [ (l[0].strip(":"), "nvidia_temp_default_levels")
             for l in info
             if l[0].strip(":").lower().endswith("temp") ]
@@ -53,7 +53,7 @@ check_info['nvidia.temp'] =   ( check_nvidia_temp, "NVIDIA Temperature %s", 1, i
 
 
 
-def inventory_nvidia_errors(checktype, info):
+def inventory_nvidia_errors(info):
     for line in info:
         if line[0] == 'GPUErrors:':
             return [(None, None)]

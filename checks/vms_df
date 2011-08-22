@@ -30,7 +30,7 @@ check_includes['vms_df'] = [ "df.include" ]
 # DSA102  0.00 400.00 0.00 0.00 86651840.00 106669167
 # DSA103  0.00 400.00 0.00 0.00 97962784.00 106669167
 # DSA104  0.30 400.00 0.00 0.00 75934488.00 106669167
-def inventory_vms_df(checkname, info):
+def inventory_vms_df(info):
     return [ ( line[0], {} ) for line in info ]
 
 def check_vms_df(item, params, info):
@@ -45,7 +45,7 @@ def check_vms_df(item, params, info):
 
             free_mb = blocks_free / 2048
             size_mb = blocks_total / 2048
-            status, text, perfdata = df_check_filesystem(g_hostname, item, size_mb, free_mb, params) 
+            status, text, perfdata = df_check_filesystem(g_hostname, item, size_mb, free_mb, params)
 
             perfdata.append( ('iops', "%.2f" % io_ops_total_per_sec ) )
             return status, text, perfdata

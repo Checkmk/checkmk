@@ -63,7 +63,7 @@ def h3c_lanswitch_cpu_genitem(item):
     return ("Switch %d %s %d" % (switchid, cputype, cpunum))
 
 
-def inventory_h3c_lanswitch_cpu(checkname, info):
+def inventory_h3c_lanswitch_cpu(info):
     return [ (h3c_lanswitch_cpu_genitem(line[0]), "switch_cpu_default_levels") for line in info ]
 
 

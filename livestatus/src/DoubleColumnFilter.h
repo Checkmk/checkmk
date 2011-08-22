@@ -35,14 +35,14 @@ class DoubleColumn;
 
 class DoubleColumnFilter : public Filter
 {
-   DoubleColumn *_column;
-   double _ref_value;
-   int _opid;
-   bool _negate;
+    DoubleColumn *_column;
+    double _ref_value;
+    int _opid;
+    bool _negate;
 
 public:
-   DoubleColumnFilter(DoubleColumn *_column, int opid, char *value);
-   bool accepts(void *data);
+    DoubleColumnFilter(DoubleColumn *_column, int opid, char *value);
+    bool accepts(void *data);
 };
 
 

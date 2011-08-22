@@ -24,16 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def inventory_steelhead_status(checkname, info):
+def inventory_steelhead_status(info):
     if len(info) == 1:
-	return [(None, None)]
+        return [(None, None)]
 
 def check_steelhead_status(item, params, info):
     health, status = info[0]
     if health == "Healthy" and status == "running":
-	return (0, "OK - Healthy and running")
+        return (0, "OK - Healthy and running")
     else:
-	return (2, "CRIT - Status is %s and %s" % (health, status))
+        return (2, "CRIT - Status is %s and %s" % (health, status))
 
 
 check_info['steelhead_status'] = (check_steelhead_status, "Status", 0, inventory_steelhead_status)

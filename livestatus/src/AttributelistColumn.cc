@@ -56,33 +56,33 @@ struct al_entry al_entries[] = {
 
 unsigned long AttributelistColumn::getValue(void *data)
 {
-   data = shiftPointer(data);
-   if (!data) return 0;
+    data = shiftPointer(data);
+    if (!data) return 0;
 
-   return *(unsigned long *)((char *)data + _offset);
+    return *(unsigned long *)((char *)data + _offset);
 }
 
 void AttributelistColumn::output(void *data, Query *query)
 {
     unsigned long mask = getValue(data);
     if (_show_list) {
-	unsigned i = 0;
-	bool first = true;
-	query->outputBeginSublist();
-	while (al_entries[i].name) {
-	    if (mask & al_entries[i].bitvalue) {
-		if (!first)
-		    query->outputSublistSeparator();
-		else
-		    first = false;
-		query->outputString(al_entries[i].name);
-	    }
-	    i++;
-	}
-	query->outputEndSublist();
+        unsigned i = 0;
+        bool first = true;
+        query->outputBeginSublist();
+        while (al_entries[i].name) {
+            if (mask & al_entries[i].bitvalue) {
+                if (!first)
+                    query->outputSublistSeparator();
+                else
+                    first = false;
+                query->outputString(al_entries[i].name);
+            }
+            i++;
+        }
+        query->outputEndSublist();
     }
     else {
-	query->outputUnsignedLong(mask);
+        query->outputUnsignedLong(mask);
     }
 }
 
@@ -98,23 +98,23 @@ Filter *AttributelistColumn::createFilter(int opid, char *value)
 {
     unsigned long ref = 0;
     if (isdigit(value[0]))
-	ref = strtoul(value, 0, 10);
+        ref = strtoul(value, 0, 10);
     else {
-	char *scan = value;
-	char *t;
-	while ((t = next_token(&scan))) {
-	    unsigned i = 0;
-	    while (al_entries[i].name) {
-		if (!strcmp(t, al_entries[i].name)) {
-		    ref |= al_entries[i].bitvalue;
-		    break;
-		}
-		i ++;
-	    }
-	    if (!al_entries[i].name) {
-		logger(LG_INFO, "Ignoring invalid value '%s' for attribute list", t);
-	    }
-	}
+        char *scan = value;
+        char *t;
+        while ((t = next_token(&scan))) {
+            unsigned i = 0;
+            while (al_entries[i].name) {
+                if (!strcmp(t, al_entries[i].name)) {
+                    ref |= al_entries[i].bitvalue;
+                    break;
+                }
+                i ++;
+            }
+            if (!al_entries[i].name) {
+                logger(LG_INFO, "Ignoring invalid value '%s' for attribute list", t);
+            }
+        }
     }
     return new AttributelistFilter(this, opid, ref);
 }

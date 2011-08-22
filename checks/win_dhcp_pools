@@ -80,7 +80,7 @@ win_dhcp_pools_stats_translate = {
 def parse_win_dhcp_pools(info):
     return [ ' '.join(line).rstrip('.').split(' = ') for line in info ]
 
-def inventory_win_dhcp_pools(checktype, info):
+def inventory_win_dhcp_pools(info):
     inventory = []
     for line in parse_win_dhcp_pools(info):
         if win_dhcp_pools_stats_translate.get(line[0], line[0]) == 'Subnet':
@@ -123,7 +123,7 @@ def check_win_dhcp_pools(item, params, info):
     else:
         return (3, 'UNKNOWN - Pool information not found')
 
-def inventory_win_dhcp_pools_stats(checktype, info):
+def inventory_win_dhcp_pools_stats(info):
     return [ (None, None) for line in info if line[0] != '' ]
 
 def check_win_dhcp_pools_stats(item, params, info):

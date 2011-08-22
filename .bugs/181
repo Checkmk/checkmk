@@ -1,9 +1,15 @@
 Title: Check_MK Dienst zeigt "Agent version (unknown)" bei nur SNMP hosts
 Component: core
-Benefit: 1
-State: open
-Cost: 2
-Date: 2011-03-17 11:55:38
+State: done
 Class: cleanup
+Date: 2011-03-17 11:55:38
+Benefit: 1
+Cost: 2
+Fun: 0
 
-Das ist letztlich nur ein Schönheitsfehler. Man sollte den String bei reinen SNMP Checks einfach komplett rausnehmen. Oder vielleicht die SNMP Version dort anzeigen - das (unknown) ist eher verwirrend.
+Das ist letztlich nur ein Schönheitsfehler. Man sollte den String bei reinen SNMP Checks
+einfach komplett rausnehmen. Oder vielleicht die SNMP Version dort anzeigen - das (unknown)
+ist eher verwirrend.
+
+2011-08-22 15:54:42: changed state open -> done
+Der Text wird jetzt einfach weggelassen, wenn es ein SNMP host ist.

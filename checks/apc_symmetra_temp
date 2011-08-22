@@ -48,7 +48,7 @@
 
 apc_temp_default_levels = (25, 30)
 
-def inventory_apc_temp(checkname, info):
+def inventory_apc_temp(info):
     return [(line[0], "apc_temp_default_levels") for line in info]
 
 def check_apc_temp(item, params, info):

@@ -211,7 +211,7 @@ def parse_multipath_output(info, only_uuid = None):
 
 # Get list of UUIDs of all multipath devices
 # Length of UUID is 360a9800043346937686f456f59386741
-def inventory_multipath(checkname, info):
+def inventory_multipath(info):
     inventory = []
     parsed = parse_multipath_output(info)
     for uuid, info in parsed.items():

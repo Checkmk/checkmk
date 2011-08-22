@@ -28,5 +28,5 @@
 
 Filter *ListColumn::createFilter(int opid, char *value)
 {
-   return new ListColumnFilter(this, opid, value);
+    return new ListColumnFilter(this, opid, value);
 }

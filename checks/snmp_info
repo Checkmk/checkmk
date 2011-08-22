@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def inventory_snmp_info(checktype, info):
+def inventory_snmp_info(info):
     if len(info[0]) >= 4:
         return [ (None, None) ]
 

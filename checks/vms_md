@@ -34,7 +34,7 @@
 # Bei der Inventur holen wir die Liste aller Shadowsets und monitoren
 # in Zukunft, ob alle noch vorhanden sind, keine zuviel ist (Warning)
 # alle die richtige Anzahl von Platten aktiv haben.
-def inventory_vms_md(checkname, info):
+def inventory_vms_md(info):
     shadowsets = []
     for line in info:
         shadowsets.append(line[1])

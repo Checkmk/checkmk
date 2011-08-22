@@ -40,7 +40,7 @@ class AttributelistFilter : public Filter
 
 public:
     AttributelistFilter(AttributelistColumn *column, int opid, unsigned long ref) :
-	_column(column), _opid(abs(opid)), _negate(opid < 0), _ref(ref) {}
+        _column(column), _opid(abs(opid)), _negate(opid < 0), _ref(ref) {}
     bool accepts(void *data);
 };
 

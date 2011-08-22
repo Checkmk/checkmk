@@ -27,7 +27,7 @@
 
 winperf_cpu_default_levels = ( 101, 101 )
 
-def inventory_winperf_util(checkname, info):
+def inventory_winperf_util(info):
     if len(info) <= 1:
         return None
 

@@ -26,7 +26,7 @@
 
 aironet_default_error_levels = ( 1.0, 10.0 ) # per second
 
-def inventory_aironet_errors(checkname, info):
+def inventory_aironet_errors(info):
     return [ (int(line[0]), "", 'aironet_default_error_levels') for line in info ]
 
 def check_aironet_errors(item, params, info):

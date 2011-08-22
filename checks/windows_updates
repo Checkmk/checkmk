@@ -28,7 +28,7 @@
 
 # <<<windows_updates>>>
 # 0 2 5
-# Windows XP Service Pack 3 (KB936929); Windows-Tool zum Entfernen sch�dlicher Software - M�rz 2011 (KB890830) 
+# Windows XP Service Pack 3 (KB936929); Windows-Tool zum Entfernen sch�dlicher Software - M�rz 2011 (KB890830)
 # Update f�r WMDRM-f�hige Medienplayer (KB891122); Windows Media Player 11; Windows Search 4.0 f�r Windows XP (KB940157); Microsoft Base Smartcard-Kryptografiedienstanbieter-Paket: x86 (KB909520); Update f�r die Microsoft .NET Framework 3.5 Service Pack 1- und .NET Framework 3.5-Produktfamilie (KB951847) x86
 
 # First row:  Reboot_required, num_important, num_optional
@@ -37,7 +37,7 @@
 
 windows_updates_default_params = (None, None, None, None)
 
-def inventory_windows_updates(checktype, info):
+def inventory_windows_updates(info):
     if info and len(info[0]) == 3:
         return [(None, "windows_updates_default_params")]
 
@@ -60,11 +60,11 @@ def check_windows_updates(_unused, params, info):
             this_txt = '%d %s' % (cur, label)
             if label == 'important' and cur > 0:
                 this_txt += ' (%s)' % updates
-	    if crit and cur >= crit:
+            if crit and cur >= crit:
                 this_txt += ' (CRIT: >=%d)' % crit
                 if status < 2:
                     status = 2
-	    elif warn and cur >= warn:
+            elif warn and cur >= warn:
                 this_txt += ' (WARN: >=%d)' % warn
                 if status < 1:
                     status = 1

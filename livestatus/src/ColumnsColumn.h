@@ -38,13 +38,13 @@ class TableColumns;
 
 class ColumnsColumn : public StringColumn
 {
-   int _colcol;
-   TableColumns *_table_columns;
+    int _colcol;
+    TableColumns *_table_columns;
 
 public:
-   ColumnsColumn(string name, string description, int colcol, TableColumns *tablecols) : 
-      StringColumn(name, description, -1), _colcol(colcol), _table_columns(tablecols) {}
-   char *getValue(void *data);
+    ColumnsColumn(string name, string description, int colcol, TableColumns *tablecols) : 
+        StringColumn(name, description, -1), _colcol(colcol), _table_columns(tablecols) {}
+    char *getValue(void *data);
 };
 
 

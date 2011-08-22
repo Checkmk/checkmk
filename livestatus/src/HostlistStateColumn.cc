@@ -56,47 +56,47 @@ int32_t HostlistStateColumn::getValue(void *data, Query *query)
     int state;
 
     while (mem) {
-	host *hst = mem->host_ptr;
-	if (!auth_user || g_table_hosts->isAuthorized(auth_user, hst)) {
-	    switch (_logictype) {
-		case HLSC_NUM_SVC_PENDING:
-		case HLSC_NUM_SVC_OK:
-		case HLSC_NUM_SVC_WARN:
-		case HLSC_NUM_SVC_CRIT:
-		case HLSC_NUM_SVC_UNKNOWN:
-		case HLSC_NUM_SVC:
-		    result += ServicelistStateColumn::getValue(_logictype, hst->services, query);
-		    break;
+        host *hst = mem->host_ptr;
+        if (!auth_user || g_table_hosts->isAuthorized(auth_user, hst)) {
+            switch (_logictype) {
+                case HLSC_NUM_SVC_PENDING:
+                case HLSC_NUM_SVC_OK:
+                case HLSC_NUM_SVC_WARN:
+                case HLSC_NUM_SVC_CRIT:
+                case HLSC_NUM_SVC_UNKNOWN:
+                case HLSC_NUM_SVC:
+                    result += ServicelistStateColumn::getValue(_logictype, hst->services, query);
+                    break;
 
-		case HLSC_WORST_SVC_STATE:
-		    state = ServicelistStateColumn::getValue(_logictype, hst->services, query);
-		    if (ServicelistStateColumn::svcStateIsWorse(state, result))
-			result = state;
-		    break;
+                case HLSC_WORST_SVC_STATE:
+                    state = ServicelistStateColumn::getValue(_logictype, hst->services, query);
+                    if (ServicelistStateColumn::svcStateIsWorse(state, result))
+                        result = state;
+                    break;
 
-		case HLSC_NUM_HST_UP:
-		case HLSC_NUM_HST_DOWN:
-		case HLSC_NUM_HST_UNREACH:
-		    if (hst->has_been_checked && hst->current_state == _logictype - HLSC_NUM_HST_UP)
-			result ++;
-		    break;
+                case HLSC_NUM_HST_UP:
+                case HLSC_NUM_HST_DOWN:
+                case HLSC_NUM_HST_UNREACH:
+                    if (hst->has_been_checked && hst->current_state == _logictype - HLSC_NUM_HST_UP)
+                        result ++;
+                    break;
 
-		case HLSC_NUM_HST_PENDING:
-		    if (!hst->has_been_checked)
-			result ++;
-		    break;
+                case HLSC_NUM_HST_PENDING:
+                    if (!hst->has_been_checked)
+                        result ++;
+                    break;
 
-		case HLSC_NUM_HST:
-		    result ++;
-		    break;
+                case HLSC_NUM_HST:
+                    result ++;
+                    break;
 
-		case HLSC_WORST_HST_STATE:
-		    if (hst_state_is_worse(hst->current_state, result))
-			result = hst->current_state;
-		    break;
-	    }
-	}
-	mem = mem->next;
+                case HLSC_WORST_HST_STATE:
+                    if (hst_state_is_worse(hst->current_state, result))
+                        result = hst->current_state;
+                    break;
+            }
+        }
+        mem = mem->next;
     }
     return result;
 }

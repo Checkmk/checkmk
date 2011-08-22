@@ -86,7 +86,7 @@ netapp_volumes_owner = {
   '2': 'partner',
 }
 
-def inventory_netapp_volumes(checkname, info):
+def inventory_netapp_volumes(info):
     # Only inventorize local volumes
     return [ (line[0], None) for line in info if netapp_volumes_owner.get(line[2], '') == 'local' ]
 
@@ -104,15 +104,15 @@ def check_netapp_volumes(item, _not_used, info):
     output += 'State: %s' % state
     if state == 'offline':
         ret_state = 1
-        output += ' (WARN)'
+        output += '(!)'
 
     output += ', Status: %s' % status
     if status == 'reconstructing':
         ret_state = 1
-        output += ' (WARN)'
+        output += '(!)'
     elif status.split(',')[0] not in [ 'normal', 'raid_dp', 'raid0', 'raid0, mirrored' ]:
         ret_state = 2
-        output += ' (CRIT)'
+        output += '(!!)'
 
     return (ret_state, "%s - %s" % (nagios_state_names[ret_state], output))
 

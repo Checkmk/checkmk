@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_fsc_subsystems(checkname, info):
+def inventory_fsc_subsystems(info):
     return [ (line[0], line[1], (int(line[1]) * 0.9, int(line[1]) * 0.8)) for line in info if int(line[1]) > 0 ]
 
 def check_fsc_subsystems(item, params, info):
@@ -38,7 +38,7 @@ def check_fsc_subsystems(item, params, info):
         if status == 1 or status == 5:
             return (0, "OK - %s - no problems" % statusname)
         elif status >= 2 and status <= 4:
-            return (2, "CRITICAL - %s" % statusname)
+            return (2, "CRIT - %s" % statusname)
         else:
             return (3, "UNKNOWN - unknown status %d" % status)
 

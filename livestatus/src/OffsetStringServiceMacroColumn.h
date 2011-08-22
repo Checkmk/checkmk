@@ -32,7 +32,7 @@ class OffsetStringServiceMacroColumn : public OffsetStringMacroColumn
 {
 public:
     OffsetStringServiceMacroColumn(string name, string description, int offset, int indirect_offset = -1) :
-	OffsetStringMacroColumn(name, description, offset, indirect_offset) {}
+        OffsetStringMacroColumn(name, description, offset, indirect_offset) {}
     host *getHost(void *data);
     service *getService(void *data);
 };

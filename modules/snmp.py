@@ -66,51 +66,10 @@ def convert_from_hex(value):
         r += chr(int(hx, 16))
     return r
 
+
 def oid_to_bin(oid):
     return u"".join([ unichr(int(p)) for p in oid.strip(".").split(".") ])
 
-# Fetch single values via SNMP. This function is only used by snmp_info_single,
-# which is only rarely used. Most checks use snmp_info, which is handled by
-# get_snmp_table.
-def get_snmp_explicit(hostname, ipaddress, mib, baseoid, suffixes):
-    if opt_debug:
-        sys.stderr.write('Fetching misc values from OID %s%s%s%s from IP %s\n' % \
-                         (tty_bold, tty_green, baseoid, tty_normal, ipaddress))
-
-    info = []
-    cmd = snmp_walk_command(hostname)
-    for suffix in suffixes:
-        if mib:
-            mibinfo = " -m %s" % mib
-        else:
-            mibinfo = ""
-        portspec = snmp_port_spec(hostname)
-        command = cmd + "%s -OQ -OU -Oe %s%s %s.%s 2>/dev/null" % \
-                  (mibinfo, ipaddress, portspec, baseoid, suffix)
-        if opt_debug:
-            sys.stderr.write('   Running %s\n' % (command,))
-        num_found = 0
-        snmp_process = os.popen(command, "r")
-        for line in snmp_process.readlines():
-            if not '=' in line: # TODO: join onto previous line
-                continue
-            item, value = line.split("=")
-            value_text = strip_snmp_value(value)
-            # try to remove text, only keep number
-            value_num = value_text.split(" ")[0]
-            value_num = value_num.lstrip("+")
-            value_num = value_num.rstrip("%")
-            item = strip_snmp_value(item.split(":")[-1])
-            if item.endswith(".0"):
-                item = item[:-2]
-            info.append( [ item, value_num, value_text ] )
-            num_found += 1
-        exitstatus = snmp_process.close()
-        if exitstatus:
-            if opt_verbose:
-                sys.stderr.write(tty_red + tty_bold + "ERROR: " + tty_normal + "SNMP error\n")
-	    raise MKSNMPError("SNMP Error on %s" % ipaddress)
-    return info
 
 def snmpwalk_on_suboid(hostname, ip, oid):
     portspec = snmp_port_spec(hostname)
@@ -484,3 +443,13 @@ def get_stored_snmpwalk(hostname, oid):
             break
     # import pprint ; pprint.pprint(rowinfo)
     return rowinfo
+
+# Helper function to be used in checks.  It applies a user-specified
+# character encoding in order to tranlate e.g. latin1 to utf8
+def snmp_decode_string(text):
+    encoding = get_snmp_character_encoding(g_hostname)
+    if encoding:
+        return text.decode(encoding).encode("utf-8")
+    else:
+        return text
+

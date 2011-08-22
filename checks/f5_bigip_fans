@@ -46,7 +46,7 @@ def f5_bigip_fans_genitem(fanid):
     return ("%s %d" % (fantype, fanid))
 
 
-def inventory_f5_bigip_fans(checkname, info):
+def inventory_f5_bigip_fans(info):
     inventory = []
     for line in info:
         for fanentry in line:

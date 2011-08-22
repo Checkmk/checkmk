@@ -26,7 +26,7 @@
 
 check_includes['hr_fs'] = [ "df.include" ]
 
-def inventory_hr_fs(checktype, info):
+def inventory_hr_fs(info):
     inventory = []
     for hrtype, hrdescr, hrunits, hrsize, hrused in info:
         if hrtype in [ ".1.3.6.1.2.1.25.2.1.4" ] and \
@@ -47,7 +47,7 @@ def check_hr_fs(item, params, info):
             used_mb   = used / 1048576.0
             avail_mb  = size_mb - used_mb
 
-            return df_check_filesystem(g_hostname, item, size_mb, avail_mb, params) 
+            return df_check_filesystem(g_hostname, item, size_mb, avail_mb, params)
     return (3, "UNKNOWN - Filesystem not found")
 
 

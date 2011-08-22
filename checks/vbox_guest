@@ -51,7 +51,7 @@ def check_vbox_guest(item, _no_params, info):
     else:
         return (0, "OK" + infotext)
 
-def inventory_vbox_guest(checktype, info):
+def inventory_vbox_guest(info):
     if len(info) > 0:
         return [(None, None)]
 

@@ -29,7 +29,7 @@
 
 hp_procurve_cpu_default_levels = (80, 90)
 
-def inventory_hp_procurve_cpu(checkname, info):
+def inventory_hp_procurve_cpu(info):
     if len(info) == 1 and int(info[0][0]) >= 0 <= 100:
         return [ (None, 'hp_procurve_cpu_default_levels') ]
 

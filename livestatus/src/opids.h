@@ -35,6 +35,8 @@
 #define OP_GREATER       5 // >
 #define OP_LESS          6 // <
 
+extern const char *op_names_plus_8[];
+
 // Note: The operators !=, <= and >= are parsed into ! =, ! > and ! <.
 // The negation is represented by negating the value of the operator.
 // Example >= is represented as -6 (- OP_LESS)

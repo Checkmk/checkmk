@@ -1,10 +1,11 @@
 Title: Windows inventory - make service inventory more flexible
 Component: checks
-Benefit: 2
-State: open
-Cost: 2
-Date: 2011-02-18 10:52:33
+State: done
 Class: feature
+Date: 2011-02-18 10:52:33
+Benefit: 2
+Cost: 2
+Fun: 0
 
 Example for possible configuration:
 
@@ -18,3 +19,6 @@ inventory_services = [
   ( [ "backup" ], ALL_HOSTS, [ "Backup.*" ] ),
 ]
 
+
+2011-08-19 21:38:46: changed state open -> done
+Implemented and documented. Very similar to this bug description.

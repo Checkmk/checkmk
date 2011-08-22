@@ -1,10 +1,11 @@
 Title: Keine Fehlermeldung bei Connection closed
 Component: wato
-Benefit: 2
-State: open
-Cost: 3
-Date: 2010-12-21 12:09:13
+State: done
 Class: nastiness
+Date: 2010-12-21 12:09:13
+Benefit: 2
+Cost: 3
+Fun: 0
 
 Wenn der Check_MK Agent einen nicht reinlässt (only_from gesetzt),
 dann bekommen man nicht Connection refused, sondern eine
@@ -13,3 +14,6 @@ Fehler. WATO zeigt bei der Inventur einfach keine Dienste an.
 Der try-inventory sollte das aber als Fehler behandeln und
 irgendwie anzeigen. Schließlich ist über die Tags ja festgelegt,
 dass vom Agenten Daten kommen sollen.
+
+2011-08-21 14:51:12: changed state open -> done
+Jetzt kommt eine sinnvolle Fehlermeldung.

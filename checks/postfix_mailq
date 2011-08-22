@@ -55,7 +55,7 @@
 # WARN num, CRIT num
 postfix_mailq_default_levels = (10, 20)
 
-def inventory_postfix_mailq(checkname, info):
+def inventory_postfix_mailq(info):
     if len(info) > 0 and info[0] != '':
         return [(None, 'postfix_mailq_default_levels')]
 
@@ -80,10 +80,10 @@ def check_postfix_mailq(item, params, info):
                          ('size', '%d' % size) ]
 
             if len > params[1]:
-                return (2, 'CRITICAL - Mailqueue length is %d '
+                return (2, 'CRIT - Mailqueue length is %d '
                            '(More than threshold: %d)' % (len, params[0]), perfdata)
             elif len > params[0]:
-                return (1, 'WARNING - Mailqueue length is %d '
+                return (1, 'WARN - Mailqueue length is %d '
                            '(More than threshold: %d)' % (len, params[0]), perfdata)
             else:
                 return (0, 'OK - Mailqueue length is %d ' % len, perfdata)

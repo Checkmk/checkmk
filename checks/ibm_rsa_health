@@ -27,7 +27,7 @@
 # Example for info:
 
 # [['0'], ['1'], ['2'], ['3'], ['4'], ['5'], ['Critical'], ['Critical'],
-# ['Warning'], ['Warning'], ['Warning'], ['Multiple fan failures'], 
+# ['Warning'], ['Warning'], ['Warning'], ['Multiple fan failures'],
 # ['Power Supply 1 AC Power Removed'], ['System Running Nonredundant Power'],
 # ['Fan 7 Failure'], ['Fan 8 Failure']]
 
@@ -36,7 +36,7 @@
 #   systemLevel(4),
 #   normal(255)
 
-def inventory_ibm_rsa_health(checkname, info):
+def inventory_ibm_rsa_health(info):
     if len(info) > 0:
         return [(None, None)]
 

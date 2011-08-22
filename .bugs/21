@@ -1,10 +1,11 @@
 Title: Windows-Speichercheck: Page-File separat berechnen
 Component: checks
-Benefit: 2
-State: open
-Cost: 2
-Date: 2010-12-21 16:23:51
+State: done
 Class: bug
+Date: 2010-12-21 16:23:51
+Benefit: 2
+Cost: 2
+Fun: 0
 
 Das Einrechnen in Swap ist Müll. Windows tickt anders. Hier muss
 ein eigener Check und eine eigene PNP-Schablone gemacht werden.
@@ -18,3 +19,6 @@ Namen der Variablen erkennen, dass es Windows ist ("page=...").
 
 Auch braucht man dann eigene Schwellwerte. Frage ist, ob man
 hier auf dict umstellen muss?
+
+2011-08-20 17:11:13: changed state open -> done
+Es gibt jetzt einen neuen Check mem.win.

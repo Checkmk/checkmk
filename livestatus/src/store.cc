@@ -50,91 +50,91 @@ TimeperiodsCache *g_timeperiods_cache = 0;
 
 void store_init()
 {
-  g_store = new Store();
-  g_client_queue = new ClientQueue();
-  g_timeperiods_cache = new TimeperiodsCache();
+    g_store = new Store();
+    g_client_queue = new ClientQueue();
+    g_timeperiods_cache = new TimeperiodsCache();
 }
 
 
 void store_deinit()
 {
-   if (g_store) {
-      delete g_store;
-      g_store = 0;
-   }
-   if (g_client_queue) {
-      delete g_client_queue;
-      g_client_queue = 0;
-   }
-   if (g_timeperiods_cache) {
-       delete g_timeperiods_cache;
-       g_timeperiods_cache = 0;
-   }
+    if (g_store) {
+        delete g_store;
+        g_store = 0;
+    }
+    if (g_client_queue) {
+        delete g_client_queue;
+        g_client_queue = 0;
+    }
+    if (g_timeperiods_cache) {
+        delete g_timeperiods_cache;
+        g_timeperiods_cache = 0;
+    }
 }
 
 void queue_add_connection(int cc)
 {
-   g_client_queue->addConnection(cc);
+    g_client_queue->addConnection(cc);
 }
 
 int queue_pop_connection()
 {
-   return g_client_queue->popConnection();
+    return g_client_queue->popConnection();
 }
 
 void queue_wakeup_all()
 {
-   return g_client_queue->wakeupAll();
+    return g_client_queue->wakeupAll();
 }
 
 
 void store_register_comment(nebstruct_comment_data *d)
 {
-   g_store->registerComment(d);
+    g_store->registerComment(d);
 }
 
 void store_register_downtime(nebstruct_downtime_data *d)
 {
-   g_store->registerDowntime(d);
+    g_store->registerDowntime(d);
 }
 
 int store_answer_request(void *ib, void *ob)
 {
-   return g_store->answerRequest((InputBuffer *)ib, (OutputBuffer *)ob);
+    return g_store->answerRequest((InputBuffer *)ib, (OutputBuffer *)ob);
 }
 
 void *create_outputbuffer()
 {
-   return new OutputBuffer();
+    return new OutputBuffer();
 }
 
 void flush_output_buffer(void *ob, int fd, int *termination_flag)
 {
-   ((OutputBuffer *)ob)->flush(fd, termination_flag);
+    ((OutputBuffer *)ob)->flush(fd, termination_flag);
 }
 
 void delete_outputbuffer(void *ob)
 {
-   delete (OutputBuffer *)ob;
+    delete (OutputBuffer *)ob;
 }
 
 void *create_inputbuffer(int *termination_flag)
 {
-   return new InputBuffer(termination_flag);
+    return new InputBuffer(termination_flag);
 }
 
 void set_inputbuffer_fd(void *ib, int fd)
 {
-   ((InputBuffer *)ib)->setFd(fd);
+    ((InputBuffer *)ib)->setFd(fd);
 }
 
 void delete_inputbuffer(void *ib)
 {
-   delete (InputBuffer *)ib;
+    delete (InputBuffer *)ib;
 }
 
 void update_timeperiods_cache(time_t now)
 {
-   g_timeperiods_cache->update(now);
+    g_timeperiods_cache->update(now);
 }
 

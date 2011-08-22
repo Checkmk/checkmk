@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def inventory_superstack3_sensors(checkname, info):
+def inventory_superstack3_sensors(info):
     return [ (line[0], None) for line in info if line[1] != 'not present' ]
 
 def check_superstack3_sensors(item, params, info):

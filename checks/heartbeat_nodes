@@ -33,7 +33,7 @@
 # swi04 ping swi04 up
 # swi03 ping swi03 up
 
-def inventory_heartbeat_nodes(checktype, info):
+def inventory_heartbeat_nodes(info):
     return [ (line[0], None) for line in info if line[0] != '' ]
 
 def check_heartbeat_nodes(item, params, info):
@@ -56,7 +56,7 @@ def check_heartbeat_nodes(item, params, info):
                 status = 0
             elif nodeStatus == 'dead' and status <= 2:
                 status = 2
-            
+
             if not nodeStatus in [ 'active', 'up', 'ping', 'dead' ]:
                 return (3, "UNKNOWN - Node %s has an unhandled state: %s" % (line[0], nodeStatus))
 

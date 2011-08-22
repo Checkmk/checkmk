@@ -1,4 +1,4 @@
-#!/bin/bash
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -23,47 +23,40 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-set -e
+$maxmem = $MAX[1] / 1024.0;
+$maxmemprint  = sprintf("%5.2f", $maxmem);
+$maxpage = $MAX[2] / 1024.0;
+$maxpageprint = sprintf("%5.2f", $maxpage);
 
-killall nagios
+$opt[1] = " --vertical-label 'Gigabytes' -X0 "
+        . " -u " . ($maxmem * 120 / 100)
+        . " -l " . ($maxpage * -120 / 100)
+        . " --title \"Memory and page file usage $hostname\" ";
 
-if [ -n "$DESTDIR" ]; then
-    cd $DESTDIR
-else
-    cd /
-fi
 
-rm -vrf \
-  etc/nagios \
-  usr/local/nagios \
-  usr/local/bin/nagios* \
-  usr/local/share/nagios \
-  usr/local/lib/nagios \
-  usr/local/share/nagios \
-  var/lib/nagios \
-  var/log/nagios \
-  var/cache/nagios \
-  var/spool/nagios \
-  var/run/nagios* \
-  etc/init.d/nagios \
-  etc/apache2/conf.d/nagios.* \
-  etc/apache2/conf.d/pnp4nagios.* \
-  etc/apache2/conf.d/multisite.* \
-  etc/apache2/conf.d/zzz_check_mk.* \
-  usr/local/share/pnp4nagios \
-  usr/local/bin/npcd* \
-  usr/local/share/nagvis \
-  etc/check_mk \
-  usr/share/check_mk \
-  var/lib/check_mk \
-  etc/xinetd.d/check_mk \
-  usr/bin/check_mk* \
-  usr/share/doc/check_mk \
-  usr/lib/check_mk_agent
+$def[1] = "DEF:mem=$RRDFILE[1]:$DS[1]:MAX " 
+        . "CDEF:memgb=mem,1024,/ "
+        . "DEF:page=$RRDFILE[2]:$DS[2]:MAX " 
+        . "CDEF:pagegb=page,1024,/ "
+        . "CDEF:mpagegb=pagegb,-1,* "
+        
+        . "AREA:$maxmem#a0f8c0:\"$maxmemprint GB RAM      \" " 
+        . "AREA:memgb#20d060 " 
+        . "GPRINT:memgb:LAST:\"%5.2lf GB last\" " 
+        . "GPRINT:memgb:AVERAGE:\"%5.2lf GB avg\" " 
+        . "GPRINT:memgb:MAX:\"%5.2lf GB max\" " 
+        . "HRULE:".($WARN[1]/1024)."#FFFF00:\"Warn\" "
+        . "HRULE:".($CRIT[1]/1024)."#FF0000:\"Crit\\n\" "
 
-if [ -n "$DESTDIR" ] ; then
-  find "$DESTDIR" -type d | sort -r | xargs rmdir -v
-fi
+        . "AREA:\"-$maxpage\"#a0d0e8:\"$maxpageprint GB page file\" " 
+        . "AREA:mpagegb#3040d0 " 
+        . "GPRINT:pagegb:LAST:\"%5.2lf GB last\" " 
+        . "GPRINT:pagegb:AVERAGE:\"%5.2lf GB avg\" " 
+        . "GPRINT:pagegb:MAX:\"%5.2lf GB max\" " 
+        . "HRULE:".(-$WARN[2]/1024)."#FFFF00:\"Warn\" "
+        . "HRULE:".(-$CRIT[2]/1024)."#FF0000:\"Crit\\n\" "
+        
 
-userdel nagios || true
-groupdel nagios || true
+        ;
+
+?>

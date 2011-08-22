@@ -24,9 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-linux_nic_check = "legacy"
+linux_nic_check = "lnx_if"
 
-def inventory_netif_link(checkname, info):
+def inventory_netif_link(info):
     if linux_nic_check != "legacy":
         return []
     return [ (i[0], i[4] == 'yes', i[4] == 'yes') for i in info if len(i) == 5 ]
@@ -56,7 +56,7 @@ def check_netif_link(item, targetstate, info):
             return (2, "CRIT - no link")
 
 
-def inventory_netif_params(checkname, info):
+def inventory_netif_params(info):
     if linux_nic_check != "legacy":
         return []
     return [ (i[0], '', tuple(i[1:4])) for i in info if len(i) == 5 ]

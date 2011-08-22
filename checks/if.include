@@ -71,7 +71,7 @@ def inventory_if_common(info):
 
     seen_items = set([])
     duplicate = set([])
- 
+
     for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast, inmcast, inbcast, ifInDiscards, \
         ifInErrors, ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen, ifAlias in info:
         ifDescr = cleanup_if_strings(ifDescr)
@@ -111,17 +111,17 @@ def inventory_if_common(info):
         else:
             new_item = item
         inventory.append((new_item, params))
-    
+
     return inventory
 
 
 def check_if_common(item, params, info):
     err_warn, err_crit = 0, 0
     targetspeed        = None
-    targetstate        = None 
+    targetstate        = None
     bw_warn, bw_crit   = None, None
-    average            = None 
-    
+    average            = None
+
     # new style of check parameters since 1.1.9i1
     if type(params) == dict:
         err_warn, err_crit = params.get("errors", if_default_error_levels)
@@ -169,10 +169,10 @@ def check_if_common(item, params, info):
 
             operstatus = if_statename(str(ifOperStatus))
             if targetstate and  \
-                (ifOperStatus != targetstate 
+                (ifOperStatus != targetstate
                 and not (type(targetstate) in [ list, tuple ] and ifOperStatus in targetstate)):
                 state = 2
-                infotext += "(%s!!) " % operstatus
+                infotext += "(%s)(!!) " % operstatus
             else:
                 infotext += "(%s) " % operstatus
 
@@ -191,7 +191,7 @@ def check_if_common(item, params, info):
             if speed:
                 infotext += get_nic_speed_human_readable(speed)
                 if not targetspeed is None and speed != targetspeed:
-                    infotext += " (wrong speed! expected: %s)" % get_nic_speed_human_readable(targetspeed)
+                    infotext += " (wrong speed, expected: %s)(!)" % get_nic_speed_human_readable(targetspeed)
                     state = max(state, 1)
             elif targetspeed:
                 infotext += "assuming %s" % get_nic_speed_human_readable(targetspeed)
@@ -259,17 +259,17 @@ def check_if_common(item, params, info):
                     # handle computation of average
                     if average:
                         timedif, traffic_avg = get_average("if.%s.%s.avg" % (what, item), this_time, traffic, average)
-                        infotext += ", %dmin avg: %s/s" % (average, get_bytes_human_readable(traffic_avg)) 
+                        infotext += ", %dmin avg: %s/s" % (average, get_bytes_human_readable(traffic_avg))
                         perfdata.append( ("%s_avg_%d" % (what, average), traffic_avg, bw_warn, bw_crit, 0, ref_speed) )
                         traffic = traffic_avg # apply levels to average traffic
 
                     # Check bandwidth thresholds
                     if not bw_crit is None and traffic >= bw_crit:
                         state = 2
-                        infotext += ' (CRIT) >= ' + get_bytes_human_readable(bw_crit) + "/s"
+                        infotext += ' (!!) >= ' + get_bytes_human_readable(bw_crit) + "/s"
                     elif not bw_warn is None and traffic >= bw_warn:
                         state = max(state, 1)
-                        infotext += ' (WARN) >= ' + get_bytes_human_readable(bw_warn) + "/s"
+                        infotext += ' (!) >= ' + get_bytes_human_readable(bw_warn) + "/s"
 
                     pacrate = okrate + errorrate
                     if pacrate > 0.0: # any packets transmitted?
@@ -280,10 +280,10 @@ def check_if_common(item, params, info):
 
                         if errperc >= err_crit:
                             state = 2
-                            infotext += "(CRIT) >= " + str(err_crit)
+                            infotext += "(!!) >= " + str(err_crit)
                         elif errperc >= err_warn:
                             state = max(state, 1)
-                            infotext += "(WARN) >= " + str(err_warn)
+                            infotext += "(!) >= " + str(err_warn)
 
             return (state, "%s - %s" % (nagios_state_names[state], infotext), perfdata)
 

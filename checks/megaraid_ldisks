@@ -32,7 +32,7 @@
 # Stripe Size: 64kB
 # Number Of Drives:2
 
-def inventory_megaraid_ldisks(checkname, info):
+def inventory_megaraid_ldisks(info):
     inventory = []
     adapter = None
     for line in info:

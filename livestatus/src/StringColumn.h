@@ -33,7 +33,7 @@ class StringColumn : public Column
 {
 public:
     StringColumn(string name, string description, int indirect_offset) : 
-       Column(name, description, indirect_offset) {}
+        Column(name, description, indirect_offset) {}
     virtual char *getValue(void *data) = 0;
     string valueAsString(void *data, Query *) { return getValue(data); }
     void output(void *, Query *);

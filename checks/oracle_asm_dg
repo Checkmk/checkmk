@@ -27,7 +27,7 @@
 
 oracle_asm_dg_default_levels       = (80, 90)
 
-def inventory_oracle_asm_dg(checkname, info):
+def inventory_oracle_asm_dg(info):
     return [ (line[0], "", "oracle_asm_dg_default_levels") for line in info ]
 
 def check_oracle_asm_dg(name, params, info):
@@ -46,7 +46,7 @@ def check_oracle_asm_dg(name, params, info):
             if used_perc >= crit:
                 return (2, "CRIT - %.1f%% used (critical at %d%%)" % (used_perc, crit), perfdata)
             elif used_perc >= warn:
-                return (1, "WARNING - %.1f%% used (warning at %d%%)" % (used_perc, warn), perfdata)
+                return (1, "WARN - %.1f%% used (warning at %d%%)" % (used_perc, warn), perfdata)
             else:
                 return (0, "OK - %.1f%% used" % used_perc, perfdata)
     return (3, "UNKNOWN - disk group not found")

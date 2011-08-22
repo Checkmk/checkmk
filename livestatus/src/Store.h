@@ -44,37 +44,37 @@
 
 class Store
 {
-  TableContacts      _table_contacts;
-  TableCommands      _table_commands;
-  TableHostgroups    _table_hostgroups;
-  TableHosts         _table_hosts;
-  TableHosts         _table_hostsbygroup;
-  TableServicegroups _table_servicegroups;
-  TableServices      _table_services;
-  TableServices      _table_servicesbygroup;
-  TableServices      _table_servicesbyhostgroup;
-  TableTimeperiods   _table_timeperiods;
-  TableContactgroups _table_contactgroups;
-  TableDownComm      _table_downtimes;
-  TableDownComm      _table_comments;
-  TableStatus        _table_status;
-  TableLog           _table_log;
-  TableColumns       _table_columns;
+    TableContacts      _table_contacts;
+    TableCommands      _table_commands;
+    TableHostgroups    _table_hostgroups;
+    TableHosts         _table_hosts;
+    TableHosts         _table_hostsbygroup;
+    TableServicegroups _table_servicegroups;
+    TableServices      _table_services;
+    TableServices      _table_servicesbygroup;
+    TableServices      _table_servicesbyhostgroup;
+    TableTimeperiods   _table_timeperiods;
+    TableContactgroups _table_contactgroups;
+    TableDownComm      _table_downtimes;
+    TableDownComm      _table_comments;
+    TableStatus        _table_status;
+    TableLog           _table_log;
+    TableColumns       _table_columns;
 
-  typedef map<string, Table *> _tables_t;
-  _tables_t _tables;
+    typedef map<string, Table *> _tables_t;
+    _tables_t _tables;
 
 public:
-  Store();
-  void registerHostgroup(hostgroup *);
-  void registerComment(nebstruct_comment_data *);
-  void registerDowntime(nebstruct_downtime_data *);
-  bool answerRequest(InputBuffer *, OutputBuffer *);
+    Store();
+    void registerHostgroup(hostgroup *);
+    void registerComment(nebstruct_comment_data *);
+    void registerDowntime(nebstruct_downtime_data *);
+    bool answerRequest(InputBuffer *, OutputBuffer *);
 
 private:
-  Table *findTable(string name);
-  void answerGetRequest(InputBuffer *, OutputBuffer *, const char *);
-  void answerCommandRequest(const char *);
+    Table *findTable(string name);
+    void answerGetRequest(InputBuffer *, OutputBuffer *, const char *);
+    void answerCommandRequest(const char *);
 };
 
 #endif // Store_h

@@ -28,7 +28,7 @@
 cpuload_default_levels = (5, 10)
 threads_default_levels = (2000.0, 4000.0)
 
-def inventory_cpu_load(checkname, info):
+def inventory_cpu_load(info):
     if len(info) == 1 and len(info[0]) >= 5:
         return [(None, "", "cpuload_default_levels")]
 
@@ -56,7 +56,7 @@ def check_cpu_load(item, params, info):
     else:
         return (0, "OK - 15min Load %.2f at %s CPUs" % (load[2], num_cpus), perfdata)
 
-def inventory_cpu_threads(checkname, info):
+def inventory_cpu_threads(info):
     if len(info) == 1 and len(info[0]) >= 5:
         return [(None, "", "threads_default_levels")]
 

@@ -28,17 +28,17 @@
 char *OffsetStringColumn::getValue(void *data)
 {
     if (!data)
-	return (char *)"";
+        return (char *)"";
 
     char *p = (char *)shiftPointer(data);
     if (p) {
-	const char *s = *(char **)(p + _offset);
-	if (s)
-	    return (char *)s;
-	else
-	    return (char *)"";
+        const char *s = *(char **)(p + _offset);
+        if (s)
+            return (char *)s;
+        else
+            return (char *)"";
     }
     else
-	return (char *)"";
+        return (char *)"";
 }
 

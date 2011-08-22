@@ -43,7 +43,7 @@
 
 # This version of the check currently only handles output of the first type
 
-def inventory_3ware_info(checkname, info):
+def inventory_3ware_info(info):
     inventory = []
     for line in info:
         if len(line) == 8:

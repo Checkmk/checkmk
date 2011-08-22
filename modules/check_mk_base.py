@@ -329,20 +329,6 @@ def get_realhost_info(hostname, ipaddress, checkname, max_cache_age):
         write_cache_file(cache_relpath, repr(table) + "\n")
         return table
 
-    # now try SNMP explicity values
-    try:
-        mib, baseoid, suffixes = snmp_info_single[checkname]
-    except:
-        baseoid = None
-    if baseoid:
-        content = read_cache_file(cache_relpath, max_cache_age)
-        if content:
-            return eval(content)
-        table = get_snmp_explicit(hostname, ipaddress, mib, baseoid, suffixes)
-        store_cached_checkinfo(hostname, checkname, table)
-        write_cache_file(cache_relpath, repr(table) + "\n")
-        return table
-
     # No SNMP check. Then we must contact the check_mk_agent. Have we already
     # to get data from the agent? If yes we must not do that again! Even if
     # no cache file is present
@@ -475,7 +461,12 @@ def get_agent_info_tcp(hostname, ipaddress):
             else:
                 break
         s.close()
+        if len(output) == 0: # may be caused by xinetd not allowing our address
+            raise MKAgentError("Empty output from agent at TCP port %d" % 
+                  agent_port_of(hostname))
         return output
+    except MKAgentError, e:
+        raise
     except Exception, e:
         raise MKAgentError("Cannot get data from TCP port %s:%d: %s" %
                            (ipaddress, agent_port_of(hostname), e))
@@ -684,28 +675,31 @@ def do_check(hostname, ipaddress):
 
     try:
         load_counters(hostname)
-        agent_version, num_success, num_errors, problems = do_all_checks_on_host(hostname, ipaddress)
+        agent_version, num_success, error_sections, problems = do_all_checks_on_host(hostname, ipaddress)
+        num_errors = len(error_sections)
         save_counters(hostname)
         if problems:
-	    output = "CRIT - %s" % problems
+	    output = "CRIT - %s, " % problems
             status = 2
         elif num_errors > 0 and num_success > 0:
-            output = "WARNING - Got only %d out of %d infos" % (num_success, num_success + num_errors)
+            output = "WARN - Missing agent sections: %s - " % ", ".join(error_sections)
             status = 1
         elif num_errors > 0:
-            output = "CRIT - Got no information from host"
+            output = "CRIT - Got no information from host, "
             status = 2
         elif agent_min_version and agent_version < agent_min_version:
-            output = "WARNING - old plugin version %s (should be at least %s)" % (agent_version, agent_min_version)
+            output = "WARN - old plugin version %s (should be at least %s), " % (agent_version, agent_min_version)
             status = 1
         else:
-            output = "OK - Agent version %s" % agent_version
+            output = "OK - "
+            if agent_version != None:
+                output += "Agent version %s, " % agent_version
             status = 0
 
     except MKGeneralException, e:
         if opt_debug:
             raise
-        output = "UNKNOWN - %s" % e
+        output = "UNKNOWN - %s, " % e
         status = 3
 
     if aggregate_check_mk:
@@ -716,7 +710,7 @@ def do_check(hostname, ipaddress):
                 raise
 
     run_time = time.time() - start_time
-    output += ", execution time %.1f sec|execution_time=%.3f\n" % (run_time, run_time)
+    output += "execution time %.1f sec|execution_time=%.3f\n" % (run_time, run_time)
     sys.stdout.write(output)
     sys.exit(status)
 
@@ -731,7 +725,7 @@ def do_all_checks_on_host(hostname, ipaddress):
     global g_hostname
     g_hostname = hostname
     num_success = 0
-    num_errors = 0
+    error_sections = set([])
     check_table = get_sorted_check_table(hostname)
     problems = []
 
@@ -749,14 +743,14 @@ def do_all_checks_on_host(hostname, ipaddress):
         except MKSNMPError, e:
 	    if str(e):
 	        problems.append(str(e))
-            num_errors += 1
+            error_sections.add(infotype)
 	    g_broken_snmp_hosts.add(hostname)
 	    continue
 
         except MKAgentError, e:
 	    if str(e):
                 problems.append(str(e))
-            num_errors += 1
+            error_sections.add(infotype)
 	    g_broken_agent_hosts.add(hostname)
 	    continue
 
@@ -806,7 +800,7 @@ def do_all_checks_on_host(hostname, ipaddress):
             if not dont_submit:
                 submit_check_result(hostname, description, result, aggrname)
         else:
-            num_errors += 1
+            error_sections.add(infotype)
 
     submit_aggregated_results(hostname)
     if checkresult_file_fd != None:
@@ -817,13 +811,16 @@ def do_all_checks_on_host(hostname, ipaddress):
             version_info = get_host_info(hostname, ipaddress, 'check_mk')
             agent_version = version_info[0][1]
         else:
-            agent_version = "(unknown)"
+            agent_version = None
     except MKAgentError, e:
 	g_broken_agent_hosts.add(hostname)
         agent_version = "(unknown)"
     except:
         agent_version = "(unknown)"
-    return agent_version, num_success, num_errors, ", ".join(problems)
+    error_sections = list(error_sections)
+    error_sections.sort()
+    return agent_version, num_success, error_sections, ", ".join(problems)
+
 
 
 def open_checkresult_file():
@@ -909,7 +906,7 @@ def submit_check_result(host, servicedesc, result, sa):
         for p in perfdata:
             perftexts.append(convert_perf_data(p))
 
-        if perftexts != [] and not direct_rrd_update(host, servicedesc, perfdata):
+        if perftexts != []:
             if check_command and perfdata_format == "pnp":
                 perftexts.append("[%s]" % check_command)
             perftext = "|" + (" ".join(perftexts))
@@ -924,22 +921,6 @@ def submit_check_result(host, servicedesc, result, sa):
             p = ''
         color = { 0: tty_green, 1: tty_yellow, 2: tty_red, 3: tty_magenta }[result[0]]
         print "%-20s %s%s%-56s%s%s" % (servicedesc, tty_bold, color, result[1], tty_normal, p)
-
-def direct_rrd_update(host, servicedesc, perfdata):
-    if do_rrd_update:
-        path = rrd_path + "/" + host.replace(":", "_") + "/" + servicedesc.replace("/", "_").replace(" ", "_")
-        # check existance and age of xml file
-        try:
-            xml_age = os.stat(path + ".xml").st_mtime
-            if time.time() - xml_age > (3600 + os.getpid() % 1800):
-                return False # XML file too old
-            numbers = [ str(p[1]).rstrip("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_ ") for p in perfdata ]
-            # sys.stderr.write("Schreibe rrdtool.update(" + path + ".rrd" + ", N:" + ":".join(numbers))
-            rrdtool.update(path + ".rrd", "N:" + ":".join(numbers))
-        except:
-            return False # Update not successfull or XML file missing or too old
-        return True
-    return False
 
 
 def submit_to_nagios(host, service, state, output):

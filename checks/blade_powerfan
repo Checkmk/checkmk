@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_blade_powerfan(checkname, info):
+def inventory_blade_powerfan(info):
     return [ (line[0], '(40, 50)') for line in info if line[0] != '' and line[1] == '1' ]
 
 def check_blade_powerfan(item, params, info):
@@ -44,7 +44,7 @@ def check_blade_powerfan(item, params, info):
         elif speedperc_int <= crit_perc:
             return (2, "CRIT - Speed at %d%% of max (crit at %d%%)" % (speedperc_int, crit_perc), perfdata)
         elif speedperc_int <= warn_perc:
-            return (1, "WARNING - Speed at %d%% of max (warning at %d%%)" % (speedperc_int, warn_perc), perfdata)
+            return (1, "WARN - Speed at %d%% of max (warning at %d%%)" % (speedperc_int, warn_perc), perfdata)
         else:
             return (0, "OK - Speed at %s RPM (%d%% of max)" % (rpm, speedperc_int), perfdata)
 

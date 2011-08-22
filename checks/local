@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_local(checkname, info):
+def inventory_local(info):
     return [ (line[1], '', '""') for line in info ]
 
 def check_local(item, params, info):

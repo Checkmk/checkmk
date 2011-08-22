@@ -39,7 +39,7 @@
 # u0    RAID-5    OK             -       -       64K     1396.95   ON     ON
 
 # inventory
-def inventory_3ware_units(checkname, info):
+def inventory_3ware_units(info):
     inventory = []
     for line in info:
         unit = line[0]
@@ -69,9 +69,9 @@ def check_3ware_units(item, param, info):
             if status == "OK":
                 return (0, "OK - unit status is " + infotext)
             elif status == "INITIALIZING":
-                return (1, "WARNING - unit status is " + infotext)
+                return (1, "WARN - unit status is " + infotext)
             else:
-                return (2, "CRITICAL - unit status is " + infotext)
+                return (2, "CRIT - unit status is " + infotext)
     return (3, "UNKNOWN - unit %s not found in agent output" % item)
 
 # declare the check to Check_MK

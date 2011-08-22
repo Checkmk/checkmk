@@ -388,11 +388,6 @@ have to log in twice"
 ask_title "Integration with PNP4Nagios 0.6"
 # -------------------------------------------------------------------
 
-ask_dir rrddir $vardir/rrd $vardir/rrd $OMD_ROOT/var/pnp4nagios/perfdata "round robin databases" \
-  "Base directory for round robin databases. If you use PNP4Nagios as
-graphing tool check_mk can directly write into the exsting databases.
-This saves CPU and disk IO"
-
 ask_dir pnptemplates /usr/share/$NAME/pnp-templates $HOMEBASEDIR/pnp-templates $OMD_ROOT/local/share/check_mk/pnp-templates "PNP4Nagios templates" \
   "Check_MK ships templates for PNP4Nagios for most of its checks.
 Those templates make the history graphs look nice. PNP4Nagios
@@ -481,7 +476,6 @@ counters_directory          = '$vardir/counters'
 tcp_cache_dir		    = '$vardir/cache'
 logwatch_dir                = '$vardir/logwatch'
 nagios_objects_file         = '$nagconfdir/check_mk_objects.cfg'
-rrd_path                    = '$rrddir'
 nagios_command_pipe_path    = '$nagpipe'
 check_result_path           = '$check_result_path'
 nagios_status_file          = '$nagios_status_file'
@@ -689,12 +683,6 @@ do
            mkdir -p $DESTDIR$confdir/multisite.d &&
 	   mkdir -p $DESTDIR$confdir/conf.d &&
 	   echo 'All files in this directory that end with .mk will be read in after main.mk' > $DESTDIR$confdir/conf.d/README &&
-	   if [ ! -d $DESTDIR$rrddir ] ; then
-	       mkdir -p $DESTDIR$rrddir && 
-	       if [ -z "$DESTDIR" ] && id "$nagiosuser" > /dev/null 2>&1 && [ $UID = 0 ] ; then
-		   chown $nagiosuser $DESTDIR$rrddir
-               fi
-	   fi &&
 	   mkdir -p $DESTDIR$bindir &&
 	   rm -f $DESTDIR$bindir/check_mk &&
 	   echo -e "#!/bin/sh\nexec python $modulesdir/check_mk.py "'"$@"' > $DESTDIR$bindir/check_mk &&

@@ -32,17 +32,17 @@
 
 class ServicegroupsColumn : public ListColumn
 {
-   int _offset;
+    int _offset;
 public:
-   ServicegroupsColumn(string name, string description, int offset, int indirect_offset)
-      : ListColumn(name, description, indirect_offset), _offset(offset) {}
-   int type() { return COLTYPE_LIST; }
-   void output(void *, Query *);
-   void *getNagiosObject(char *name); // return pointer to service group
-   bool isEmpty(void *data);
-   bool isNagiosMember(void *data, void *nagobject);
+    ServicegroupsColumn(string name, string description, int offset, int indirect_offset)
+        : ListColumn(name, description, indirect_offset), _offset(offset) {}
+    int type() { return COLTYPE_LIST; }
+    void output(void *, Query *);
+    void *getNagiosObject(char *name); // return pointer to service group
+    bool isEmpty(void *data);
+    bool isNagiosMember(void *data, void *nagobject);
 private:
-   objectlist *getData(void *);
+    objectlist *getData(void *);
 };
 
 

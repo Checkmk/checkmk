@@ -51,7 +51,7 @@ import time, datetime
 # ("<Warning max entries>", "<Critical num entries>", "<Warning entry age in seconds>", "<Critical entry age>")
 cups_queues_default_levels = (5, 10, 360, 720)
 
-def inventory_cups_queues(checkname, info):
+def inventory_cups_queues(info):
     return [ ('%s' % line[1], '', "cups_queues_default_levels") for line in info if line[0] == 'printer' ]
 
 def check_cups_queues(item, params, info):

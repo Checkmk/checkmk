@@ -39,19 +39,19 @@ using namespace std;
 
 class CustomVarsColumn : public Column
 {
-   int _offset; // within data structure (differs from host/service)
-   int _what;
+    int _offset; // within data structure (differs from host/service)
+    int _what;
 
 public:
-   CustomVarsColumn(string name, string description, int offset, int indirect_offset, int what) 
-      : Column(name, description, indirect_offset),  _offset(offset), _what(what) {}
-   int type() { return _what == CVT_DICT ? COLTYPE_DICT : COLTYPE_LIST; }
-   void output(void *, Query *);
-   Filter *createFilter(int opid, char *value);
-   bool contains(void *data, const char *value);
-   char *getVariable(void *data, const char *varname);
+    CustomVarsColumn(string name, string description, int offset, int indirect_offset, int what) 
+        : Column(name, description, indirect_offset),  _offset(offset), _what(what) {}
+    int type() { return _what == CVT_DICT ? COLTYPE_DICT : COLTYPE_LIST; }
+    void output(void *, Query *);
+    Filter *createFilter(int opid, char *value);
+    bool contains(void *data, const char *value);
+    char *getVariable(void *data, const char *varname);
 private:
-   customvariablesmember *getCVM(void *data);
+    customvariablesmember *getCVM(void *data);
 };
 
 

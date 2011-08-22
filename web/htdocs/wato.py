@@ -2161,7 +2161,12 @@ def changelog_button():
 def show_service_table(hostname, firsttime):
     # Read current check configuration
     cache_options = not html.var("_scan") and [ '--cache' ] or []
-    table = check_mk_automation("try-inventory", cache_options + [hostname])
+    try:
+        table = check_mk_automation("try-inventory", cache_options + [hostname])
+    except Exception, e:
+        html.show_error("Inventory failed for this host: %s" % e)
+        return
+
     table.sort()
 
     html.begin_form("checks", None, "POST")

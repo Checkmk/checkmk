@@ -1,13 +1,17 @@
 Title: Perf-O-Meter should not honor command arguments
 Component: multisite
-Benefit: 1
-State: open
-Cost: 1
-Date: 2011-05-04 12:41:53
+State: done
 Class: cleanup
+Date: 2011-05-04 12:41:53
+Benefit: 1
+Cost: 1
+Fun: 0
 
 When creating perfometers for custom commands (such as legacy
 checks) it would be better, if the Perf-O-Meter would not
 honor the complete check command but drop everything after the
 first !. check_http!www.hirni.de!123 should display the Perf-O-Meter
 of check_http, without the !...
+
+2011-08-22 15:08:11: changed state open -> done
+Done. We strip everything after !

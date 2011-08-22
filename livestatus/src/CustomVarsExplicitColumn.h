@@ -33,15 +33,15 @@ using namespace std;
 
 class CustomVarsExplicitColumn : public StringColumn
 {
-   int _offset; // within data structure (differs from host/service)
-   std::string _varname;
+    int _offset; // within data structure (differs from host/service)
+    std::string _varname;
 
 public:
-   CustomVarsExplicitColumn(string name, string description, int offset, int indirect_offset, const char *varname) 
-      : StringColumn(name, description, indirect_offset),  _offset(offset), _varname(varname) {}
+    CustomVarsExplicitColumn(string name, string description, int offset, int indirect_offset, const char *varname) 
+        : StringColumn(name, description, indirect_offset),  _offset(offset), _varname(varname) {}
     char *getValue(void *data);
 private:
-   customvariablesmember *getCVM(void *data);
+    customvariablesmember *getCVM(void *data);
 };
 
 

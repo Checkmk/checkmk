@@ -72,7 +72,7 @@ def mcdata_fcport_convert_line_to_if64(line):
     ]
 
 
-def inventory_mcdata_fcport(checkname, info):
+def inventory_mcdata_fcport(info):
     return inventory_if_common(mcdata_fcport_convert_to_if64(info))
 
 def check_mcdata_fcport(item, params, info):

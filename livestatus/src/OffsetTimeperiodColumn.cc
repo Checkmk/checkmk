@@ -32,8 +32,8 @@
 extern TimeperiodsCache *g_timeperiods_cache;
 
 
-OffsetTimeperiodColumn::OffsetTimeperiodColumn(string name, string description, int offset, int indirect_offset) 
-    : OffsetIntColumn(name, description, offset, indirect_offset)
+    OffsetTimeperiodColumn::OffsetTimeperiodColumn(string name, string description, int offset, int indirect_offset) 
+: OffsetIntColumn(name, description, offset, indirect_offset)
 {
 }
 
@@ -42,7 +42,7 @@ int32_t OffsetTimeperiodColumn::getValue(void *data, Query *)
 {
     data = shiftPointer(data);
     if (!data)
-	return 0;
+        return 0;
 
     timeperiod *tp;
     if (offset() == -1) 
@@ -52,10 +52,10 @@ int32_t OffsetTimeperiodColumn::getValue(void *data, Query *)
 
 
     if (!tp)
-	return 1; // no timeperiod set -> Nagios assumes 7x24
+        return 1; // no timeperiod set -> Nagios assumes 7x24
     else if (g_timeperiods_cache->inTimeperiod(tp))
-	return 1;
+        return 1;
     else
-	return 0;
+        return 0;
 }
 

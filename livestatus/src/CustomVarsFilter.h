@@ -33,19 +33,19 @@
 
 class CustomVarsFilter : public Filter
 {
-   CustomVarsColumn *_column;
-   int _opid;
-   bool _negate;
-   string _ref_text;
-   regex_t *_regex;
-   // needed in case of COLTYPE_DICT
-   string _ref_string;
-   string _ref_varname;
+    CustomVarsColumn *_column;
+    int _opid;
+    bool _negate;
+    string _ref_text;
+    regex_t *_regex;
+    // needed in case of COLTYPE_DICT
+    string _ref_string;
+    string _ref_varname;
 
 public:
-   CustomVarsFilter(CustomVarsColumn *column, int opid, char *value);
-   ~CustomVarsFilter();
-   bool accepts(void *data);
+    CustomVarsFilter(CustomVarsColumn *column, int opid, char *value);
+    ~CustomVarsFilter();
+    bool accepts(void *data);
 };
 
 #endif // CustomVarsFilter_h

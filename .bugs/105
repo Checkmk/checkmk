@@ -8,3 +8,12 @@ Class: cleanup
 
 All SNMP checks must define scan functions. Otherwise the scan
 can take a long time on some slow devices.
+
+Currently these are:
+
+$ doc/helpers/validate_checks  -a | grep scan
+bluecoat_diskcpu         snmp_scan manpage pnp_rra pnp_tmpl perfometer 
+fsc_fans                 snmp_scan pnp_rra pnp_tmpl perfometer 
+fsc_temp                 snmp_scan pnp_rra pnp_tmpl perfometer 
+ibm_imm_health           snmp_scan manpage 
+fsc_subsystems           snmp_scan 

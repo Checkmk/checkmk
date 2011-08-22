@@ -3,23 +3,53 @@
     * FIX: allow host names to have spaces
     * --snmpwalk: fix missing space in case of HEX strings
     * cmk --restore: be aware of counters and cache being symbolic links
+    * do_rrd_update: direct RRD updates have completely been removed.
+      Please use rrdcached in case of performance problems.
+    * install_nagios.sh has finally been removed (was not maintained anyway).
+      Please use OMD instead.
+    * Inventory functions now only take the single argument 'info'. The old
+      style FUNC(checkname, info) is still supported but deprecated.
+    * Show datasource program on cmk -D
+    * Remove .f12 compile helper files from agents directory
+    * Output missing sections in case of "WARNING - Only __ output of __..."
+    * Remove obsolete code of snmp_info_single
+    * Remove 'Agent version (unknown)' for SNMP-only hosts
 
     Checks & Agents:
+    * FIX: hr_mem: take into account cache and buffers
     * FIX: printer_pages: workaround for trailing-zero bug in HP Jetdirect
     * mk_logwatch: allow to set limits in processing time and number of
       new log messages per log file
     * Windows Agent: Now supports direct execution of powershell scripts
     * local: PNP template now supports multiple performance values
+    * lnx_if: make lnx_if the default interface check for Linux
+    * printer_supply: support non-Ascii characters in items like
+      "Resttonerbehälter". You need to define snmp_character_encodings in main.mk
+    * mem.win: new dedicated memory check for Windows (see Migration notes)
+    * hr_mem: added Perf-O-Meter
 
     MK Livestatus:
     * WaitObject: allow to separate host name and service with a semicolon.
       That makes host names containing spaces possible.
+    * Better error messages in case of unimplemented operators
 
     Multisite:
     * FIX: reschedule now works for host names containing spaces
+    * FIX: correctly sort log views in case of multi site setups
+    * FIX: avoid seven broken images in case of missing PNP graphs
     * FIX: Fixed javascript errors when opening dashboard in IE below 9
     * Host/Service Icon column is now modularized and can be extended using
       the multisite_icons list.
+    * New sorters for time and line number of logfile entries
+    * Bookmarks snapin: save relative URLs whenever possible
+    * Man-Pages of Check_MK checks shown in Multisite honor OMD's local hierarchy
+    * nicer output of substates, translate (!) and (!!) into HTML code
+    * new command for clearing modified attributes (red cross, green checkmark)
+    * Perf-O-Meters: strip away arguments from check_command (e.g.
+      "check-foo!17!31" -> "check-foo").
+
+    WATO:
+    * Show error message in case of empty inventory due to agent error
 
     WATO:
     * Commited audit log entries are now pages based on days

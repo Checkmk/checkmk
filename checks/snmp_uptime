@@ -26,7 +26,7 @@
 
 # Author: Lars Michelsen <lm@mathias-kettner.de>
 
-def inventory_snmp_uptime(checktype, info):
+def inventory_snmp_uptime(info):
     if len(info[0]) >= 1:
         return [ (None, None) ]
 

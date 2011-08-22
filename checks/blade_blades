@@ -36,7 +36,7 @@ blade_blades_exists_labels = ('no', 'yes')
 blade_blades_power_labels  = ('off', 'on')
 blade_blades_health_labels = ('unknown', 'good', 'warning', 'bad')
 
-def inventory_blade_blades(checkname, info):
+def inventory_blade_blades(info):
     # find only blades that are present
     return [ (line[0], '', line[1]) for line in info if line[1] == '1' ]
 

@@ -1,10 +1,11 @@
 Title: if-Check: Bandbreite manuell festlegbar machen
 Component: checks
-Benefit: 1
-State: open
-Cost: 2
-Date: 2010-12-22 11:23:13
+State: done
 Class: feature
+Date: 2010-12-22 11:23:13
+Benefit: 1
+Cost: 2
+Fun: 0
 
 Der if-Check kann manchmal die Bandbreite nicht korrekt erkennen
 (z.B. Linux-SNMP-Agent, oder bei Drosselung durch den Provider).
@@ -13,3 +14,6 @@ Fall selbst konfigurieren.
 
 Wenn man dann den Interface-Check von Linux kompatibel gemacht hat,
 könnte man das gleiche Spiel auch bei Linux machen.
+
+2011-08-19 22:14:15: changed state open -> done
+Ist mittlerweile möglich.

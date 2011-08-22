@@ -225,7 +225,12 @@ function unhover_tab(linkobject)
 // ----------------------------------------------------------------------------
 
 function pnp_error_response_handler(data, statusCode) {
-    fallback_graphs(data);
+    // PNP versions that do not have the JSON webservice respond with
+    // 404. Current version with the webservice answer 500 if the service
+    // in question does not have any PNP graphs. So we paint the fallback
+    // graphs only if the respone code is 404 (not found).
+    if (parseInt(statusCode) == 404) 
+        fallback_graphs(data);
 }
 
 function pnp_response_handler(data, code) {

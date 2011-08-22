@@ -66,7 +66,7 @@
 # ---------------------------------
 
 # inventory function
-def inventory_zpool_status(checkname, info):
+def inventory_zpool_status(info):
     if len(info) == 0:
         return []
     for line in info:

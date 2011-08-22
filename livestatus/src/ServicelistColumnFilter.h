@@ -35,14 +35,14 @@ class ServicelistColumn;
 
 class ServicelistColumnFilter : public Filter
 {
-   ServicelistColumn *_servicelist_column;
-   int _opid;
-   string _ref_host;
-   string _ref_service;
+    ServicelistColumn *_servicelist_column;
+    int _opid;
+    string _ref_host;
+    string _ref_service;
 
 public:
-   ServicelistColumnFilter(ServicelistColumn *column, int opid, char *refvalue);
-   bool accepts(void *data);
+    ServicelistColumnFilter(ServicelistColumn *column, int opid, char *refvalue);
+    bool accepts(void *data);
 };
 
 

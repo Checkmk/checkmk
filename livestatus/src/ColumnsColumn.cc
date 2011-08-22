@@ -28,6 +28,6 @@
 
 char *ColumnsColumn::getValue(void *data)
 {
-   Column *column = (Column *)data;
-   return (char *)_table_columns->getValue(column, _colcol);
+    Column *column = (Column *)data;
+    return (char *)_table_columns->getValue(column, _colcol);
 }

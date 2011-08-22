@@ -70,14 +70,14 @@ void TimeperiodsCache::update(time_t now)
         _cache_t::iterator it = _cache.find(tp);
         if (it == _cache.end()) { // first entry
             logTransition(tp->name, -1, is_in ? 1 : 0);
-	    _cache.insert(std::make_pair(tp, is_in));
+            _cache.insert(std::make_pair(tp, is_in));
         }
         else if (it->second != is_in) {
             logTransition(tp->name, it->second ? 1 : 0, is_in ? 1 : 0);
             it->second = is_in;
         }
 
-	tp = tp->next;
+        tp = tp->next;
         num_periods++;
     }
     if (num_periods > 0)
@@ -95,7 +95,7 @@ bool TimeperiodsCache::inTimeperiod(timeperiod *tp)
     pthread_mutex_lock(&_cache_lock);
     _cache_t::iterator it = _cache.find(tp);
     if (it != _cache.end())
-	is_in = it->second;
+        is_in = it->second;
     else {
         logger(LG_INFO, "No timeperiod information available for %s. Assuming out of period.", tp->name);
         is_in = false;
@@ -103,7 +103,7 @@ bool TimeperiodsCache::inTimeperiod(timeperiod *tp)
         // degree not thread safe. In the current situation Icinga is 
         // very probable to hang up forever.
         // time_t now = time(0);
-	// is_in = 0 == check_time_against_period(now, tp);
+        // is_in = 0 == check_time_against_period(now, tp);
     }
     pthread_mutex_unlock(&_cache_lock);
     return is_in;

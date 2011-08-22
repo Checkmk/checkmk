@@ -119,7 +119,7 @@ cisco_qos_default_levels = (None, None, 0.01, 0.01)
 def cisco_qos_get_ifs_by_class_id(config, class_id):
     return [ if_index.split('.') for if_index, value in config.iteritems() if value == class_id ]
 
-def inventory_cisco_qos(checkname, info):
+def inventory_cisco_qos(info):
     if len(info) == 8:
         ifs = dict(info[0])
         config = dict([ ('.'.join(oid.split('.')[-2:]), value) for oid, value in info[3] ])
@@ -204,10 +204,10 @@ def check_cisco_qos(item, params, info):
             infotext += ', %s: %s/s' % (what, get_bytes_human_readable(rate))
             if crit is not None and rate >= crit:
                 state = 2
-                infotext += ' (CRIT)'
+                infotext += '(!!)'
             elif warn is not None and rate >= warn:
                 state = 1
-                infotext += ' (WARN)'
+                infotext += '(!)'
 
     infotext += ', Policy-Name: %s, Int-Bandwidth: %sits/s' % (policy_name, get_bytes_human_readable(speed, 1000))
     return (state, "%s - %s" % (nagios_state_names[state], infotext.lstrip(', ')), perfdata)

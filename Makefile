@@ -75,7 +75,7 @@ dist: mk-livestatus
 	cp multisite.mk multisite.mk-$(VERSION)
 	tar  czf $(DISTNAME)/conf.tar.gz $(TAROPTS) main.mk-$(VERSION) multisite.mk-$(VERSION)
 	rm -f main.mk-$(VERSION) multisite.mk-$(VERSION)
-	tar  czf $(DISTNAME)/agents.tar.gz $(TAROPTS) -C agents --exclude "*~" $$(cd agents ; ls)
+	tar  czf $(DISTNAME)/agents.tar.gz $(TAROPTS) -C agents --exclude "*~" --exclude .f12 $$(cd agents ; ls)
 	cd $(DISTNAME) ; ../make_package_info $(VERSION) > package_info
 	install -m 755 scripts/*.{sh,py} $(DISTNAME)
 	install -m 644 COPYING AUTHORS ChangeLog $(DISTNAME)
@@ -118,7 +118,6 @@ setversion:
 	sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$(NEW_VERSION)"'], [mk@mathias-kettner.de])/' livestatus/configure.ac ; \
 	sed -i 's/^VERSION=.*/VERSION='"$(NEW_VERSION)"'/' scripts/setup.sh ; \
 	echo 'check-mk_$(NEW_VERSION)-1_all.deb net optional' > debian/files ; \
-	sed -i 's/^CHECK_MK_VERSION=.*/CHECK_MK_VERSION='$(NEW_VERSION)/ scripts/install_nagios.sh ; \
 	cd agents/windows ; rm *.exe ; make
 
 headers:

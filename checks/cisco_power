@@ -35,7 +35,7 @@ cisco_power_states = ('', 'normal', 'warning', 'critical',
                         'shutdown', 'notPresent', 'notFunctioning')
 cisco_power_source = ( '', 'unknown', 'ac', 'dc', 'externalPowerSupply', 'internalRedundant')
 
-def inventory_cisco_power(checkname, info):
+def inventory_cisco_power(info):
     # 5 in line[1] means cisco_power_states = notPresent
     return [ (line[0], '', '""') for line in info if 'RPS NotExist' not in line[0] and line[1] != '5' ]
 

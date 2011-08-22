@@ -1,6 +1,6 @@
 Title: IPMI cache initialization race condition
 Component: checks
-Benefit: 6
+Benefit: 1
 State: open
 Cost: 4
 Date: 2011-07-18 15:42:34

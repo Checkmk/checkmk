@@ -55,7 +55,7 @@ cisco_temp_perf_envmon_states = {
   6: "notFunctioning"
 }
 
-def inventory_cisco_temp_perf(checkname, info):
+def inventory_cisco_temp_perf(info):
     inventory = []
     for line in info:
         name = line[0]
@@ -74,7 +74,7 @@ def check_cisco_temp_perf(item, params, info):
             else:
                 perfdata = []
                 temptext = ""
-                
+
             state = int(line[3])
             statename = cisco_temp_perf_envmon_states.get(state, "(invalid)")
             if state == 1:

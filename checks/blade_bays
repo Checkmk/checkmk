@@ -31,7 +31,7 @@ blade_bays_module_state = {
  255: 'notApplicable',
 }
 
-def inventory_blade_bays(checkname, info):
+def inventory_blade_bays(info):
     # find only modules that are present and switched on or standby
     return [ (line[0], '', line[1]) for line in info if line[1] in [ '0', '1' ] ]
 
@@ -44,9 +44,9 @@ def check_blade_bays(item, params, info):
                 return (0, "OK - State %s (Type: %s, ID: %s)" %
                     (blade_bays_module_state.get(state, 'Unhandled'), type, line[3]))
             elif state == 2:
-                return (1, "WARNING - Not present")
+                return (1, "WARN - Not present")
             elif state == 0:
-                return (1, "WARNING - Device is in standby")
+                return (1, "WARN - Device is in standby")
             else:
                 return (2, "CRIT - invalid state %d" % state)
     return (3, "UNKNOWN - no data for '%s' in SNMP info" % item)

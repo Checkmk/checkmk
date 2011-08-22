@@ -1,5 +1,5 @@
 title: Check usage of physical and virtual RAM
-agents: linux, windows
+agents: linux
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
@@ -15,8 +15,7 @@ description:
  and what parts are swapped out is not related in a 
  direct way with the current memory usage. 
 
- Linux
- (and probably Windows as well) tends to swap out
+ Linux tends to swap out
  parts of processes even if RAM is available. It does
  this in situations where disk buffers (are assumed to)
  speed up the overall performance more than keeping
@@ -48,8 +47,10 @@ item:
  {None}
 
 inventory:
- {mem.used} supports inventory. One service per host will be 
- created if the agent outputs the section {<<<mem>>>}.
+ {mem.used} creates one check on each host that provides
+ the section {<<<mem>>>}. If that section also outputs
+ information about the Windows page file, then the check
+ {<<<mem.win>>>} is being used instead.
 
 examples:
  # Change default levels from 150%/200% to 100%/150%:
@@ -63,8 +64,7 @@ examples:
 
 perfdata:
  Three variables are stored: the physical RAM, 
- the used swap space (Windows: usage of swap file) and the
- sum of both. Maximum
+ the used swap space and the sum of both. Maximum
  values for both variables are also transmitted, so that
  they can be visualized. All values are in Megabytes (1024 * 1024 bytes).
 

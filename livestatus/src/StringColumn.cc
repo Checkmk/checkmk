@@ -28,15 +28,15 @@
 
 void StringColumn::output(void *data, Query *query)
 {
-   if (data)
-      query->outputString(getValue(data));
-   else
-      query->outputString(0);   
+    if (data)
+        query->outputString(getValue(data));
+    else
+        query->outputString(0);   
 }
 
 Filter *StringColumn::createFilter(int operator_id, char *value)
 {
-   return new StringColumnFilter(this, operator_id, value);
+    return new StringColumnFilter(this, operator_id, value);
 }
 
 

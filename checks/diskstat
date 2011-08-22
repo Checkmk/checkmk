@@ -55,7 +55,7 @@ check_includes['diskstat'] = [ "diskstat.include" ]
 def linux_diskstat_convert(info):
     return [ ( l[2], int(l[5]), int(l[9])) for l in info[1:] ]
 
-def inventory_diskstat(checktype, info):
+def inventory_diskstat(info):
     return inventory_diskstat_generic(linux_diskstat_convert(info))
 
 def check_diskstat(item, params, info):

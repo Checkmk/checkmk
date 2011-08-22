@@ -38,17 +38,17 @@ class StringColumn;
 
 class StringColumnFilter : public Filter
 {
-   StringColumn *_column;
-   string _ref_string;
-   int _opid;
-   bool _negate;
-   regex_t *_regex;
+    StringColumn *_column;
+    string _ref_string;
+    int _opid;
+    bool _negate;
+    regex_t *_regex;
 
 public:
-   StringColumnFilter(StringColumn *_column, int opid, char *value);
-   ~StringColumnFilter();
-   bool accepts(void *data);
-   void *indexFilter(const char *column);
+    StringColumnFilter(StringColumn *_column, int opid, char *value);
+    ~StringColumnFilter();
+    bool accepts(void *data);
+    void *indexFilter(const char *column);
 };
 
 

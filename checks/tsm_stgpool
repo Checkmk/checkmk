@@ -28,7 +28,7 @@
 inventory_tsm_stgpool_check_params = 'tsm_stgpool_default_levels'
 tsm_stgpool_default_levels         = (90, 95)
 
-def inventory_tsm_stgpool(checkname, info):
+def inventory_tsm_stgpool(info):
     return [ (line[0], '%s perc used' % line[1], inventory_tsm_stgpool_check_params ) for line in info ]
 
 def check_tsm_stgpool(item, params, info):
@@ -41,7 +41,7 @@ def check_tsm_stgpool(item, params, info):
             if current >= crit:
                 return (2, "CRIT - %s (critical at %.1f%%)" % (infotext, crit), perfdata)
             elif current >= warn:
-                return (1, "WARNING - %s (warning  at %.1f%%)" % (infotext, warn), perfdata)
+                return (1, "WARN - %s (warning  at %.1f%%)" % (infotext, warn), perfdata)
             else:
                 return (0, "OK - %s" % (infotext,), perfdata)
     return (3, "No such storage pool found")

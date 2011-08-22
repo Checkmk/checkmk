@@ -30,8 +30,8 @@
 
 #define HOSTSERVICE_SEPARATOR '|'
 
-ServicelistColumnFilter::ServicelistColumnFilter(ServicelistColumn *column, int opid, char *refvalue)
-    : _servicelist_column(column), _opid(opid)
+    ServicelistColumnFilter::ServicelistColumnFilter(ServicelistColumn *column, int opid, char *refvalue)
+: _servicelist_column(column), _opid(opid)
 {
     if (abs(_opid) == OP_EQUAL && !refvalue[0])
         return; // test for emptiness is allowed
@@ -75,7 +75,7 @@ bool ServicelistColumnFilter::accepts(void *data)
         case OP_LESS:
             return !is_member;
         default:
-            logger(LG_INFO, "Sorry, Operator %d for service lists lists not implemented.", _opid);
+            logger(LG_INFO, "Sorry, Operator %s for service lists lists not implemented.", op_names_plus_8[_opid]);
             return true;
     }
 }

@@ -63,8 +63,8 @@ class uriinfo:
                          if i[0] not in omit ])
 
 
-# Encode HTML attributes: replace " with &quot; This code
-# is slow. 
+# Encode HTML attributes: replace " with &quot;, also replace
+# < and >. This code is slow. 
 def attrencode(value):
     if type(value) == int:
         return str(value)
@@ -72,6 +72,10 @@ def attrencode(value):
     for c in value:
         if c == '"':
             new += "&quot;"
+        elif c == '<':
+            new += "&lt;"
+        elif c == '>':
+            new += "&gt;"
         else:
             new += c
     return new
@@ -337,9 +341,15 @@ class html:
         self.write(html)
         self.form_vars.append(varname)
 
-    def text_area(self, varname, rows):
-        value = self.req.vars.get(varname, "")
-        self.write("<textarea name=\"%s\">%s</textarea>\n" % (varname, value))
+    def text_area(self, varname, deflt="", rows=8):
+        value = self.req.vars.get(varname, deflt)
+        error = self.user_errors.get(varname)
+        if error:
+            self.write("<x class=inputerror>")
+        self.write("<textarea name=\"%s\">%s</textarea>\n" % (varname, attrencode(value)))
+        if error:
+            self.write("</x>")
+            self.set_focus(varname)
         self.form_vars.append(varname)
 
     def sorted_select(self, varname, options, deflt="", onchange=None):

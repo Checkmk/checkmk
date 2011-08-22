@@ -34,7 +34,7 @@
 # 6: warn level
 # 7: description
 
-def inventory_cmctc_temp(checkname, info):
+def inventory_cmctc_temp(info):
     return [ (line[0], None) for line in info if saveint(line[1]) == 10 ]
 
 def check_cmctc_temp(item, no_params, info):

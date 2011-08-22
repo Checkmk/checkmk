@@ -41,30 +41,30 @@ bool ListColumnFilter::accepts(void *data)
 {
     data = _column->shiftPointer(data);
     if (!data)
-	return false;
+        return false;
     bool is_member = _column->isNagiosMember(data, _ref_member);
     switch (_opid) {
-	case -OP_LESS: /* !< means >= means 'contains' */
-	    return is_member;
-	case OP_LESS:
-	    return !is_member;
-	case OP_EQUAL:
-	case -OP_EQUAL:
-	    if (_empty_ref)
-		return _column->isEmpty(data) == (_opid == OP_EQUAL);
-	    logger(LG_INFO, "Sorry, Equality for lists implemented only for emptyness");
-	    return false;
+        case -OP_LESS: /* !< means >= means 'contains' */
+            return is_member;
+        case OP_LESS:
+            return !is_member;
+        case OP_EQUAL:
+        case -OP_EQUAL:
+            if (_empty_ref)
+                return _column->isEmpty(data) == (_opid == OP_EQUAL);
+            logger(LG_INFO, "Sorry, equality for lists implemented only for emptyness");
+            return false;
 
-	default:
-	    logger(LG_INFO, "Sorry, Operator %d for lists not implemented.", _opid);
-	    return true;
+        default:
+            logger(LG_INFO, "Sorry, Operator %s for lists not implemented.", op_names_plus_8[_opid]);
+            return true;
     }
 }
 
 void *ListColumnFilter::indexFilter(const char *columnname)
 {
     if (_opid == -OP_LESS && !strcmp(columnname, _column->name()))
-	return _ref_member;
+        return _ref_member;
     else
-	return 0;
+        return 0;
 }

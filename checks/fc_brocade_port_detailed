@@ -27,8 +27,8 @@
 
 # targetstate is 1 (used) or 0 (unused)
 # info columns: INDEX PHYSTATE OPSTATE TXWORDS RXWORDS
-#                          0     1             2             3            4      
-brocade_phystate_names = [ '', 'noCard', 'noTransceiver', 'laserFault', 'noLight', 
+#                          0     1             2             3            4
+brocade_phystate_names = [ '', 'noCard', 'noTransceiver', 'laserFault', 'noLight',
 #                            5         6          7            8          9         10
                           'noSync', 'inSync', 'portFault', 'diagFault', 'lockRef', 'noSystemControlAccessToSlot' ]
 #                            0          1         2          3           4
@@ -36,7 +36,7 @@ brocade_opstate_names = [ 'unknown', 'online', 'offline', 'testing', 'faulty' ]
 
 fc_brocade_port_detailed_default_levels = ( (1, 0.1), (1, 0.1), (1, 0.1), (2, 160, None, []) )
 
-def inventory_brocade_port(checkname, info):
+def inventory_brocade_port(info):
     porttable, isltable = info
     inventory = []
     for index, phystate, opstate, txwords, rxwords, txframes, rxframes, crcerrors, encout, c3discards in porttable:
@@ -119,7 +119,7 @@ def check_brocade_port(portno, params, info):
                 nagioscode = ncode
                 break
         return (nagioscode, "%s - physical state %s(%d), opstate %s(%d)" % (
-                nagios_state_names[nagioscode], 
+                nagios_state_names[nagioscode],
                 (len(brocade_phystate_names) > phystate and brocade_phystate_names[phystate] or 'UNHANDLED'),
                 phystate, brocade_opstate_names[opstate], opstate), perfdata)
 
@@ -225,4 +225,3 @@ snmp_info['fc_brocade_port_detailed'] = [
 snmp_scan_functions['fc_brocade_port_detailed'] = \
     lambda oid: False # prefer new brocade_fcport
     #   lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1588.2.1.1.")
-

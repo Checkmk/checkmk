@@ -115,6 +115,9 @@ def paint_perfometer(row):
     else:
         check_command = row["service_check_command"]
 
+    # Strip away arguments like in "check_http!-H mathias-kettner.de"
+    check_command = check_command.split("!")[0]
+
     # Find matching perf-o-meter function
     perf_painter = perfometers.get(check_command)
     if not perf_painter:

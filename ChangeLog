@@ -40,6 +40,8 @@
     * Man-Pages of Check_MK checks shown in Multisite honor OMD's local hierarchy
     * nicer output of substates, translate (!) and (!!) into HTML code
     * new command for clearing modified attributes (red cross, green checkmark)
+    * Perf-O-Meters: strip away arguments from check_command (e.g.
+      "check-foo!17!31" -> "check-foo").
 
     WATO:
     * Show error message in case of empty inventory due to agent error

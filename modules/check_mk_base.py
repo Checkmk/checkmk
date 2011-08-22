@@ -679,25 +679,27 @@ def do_check(hostname, ipaddress):
         num_errors = len(error_sections)
         save_counters(hostname)
         if problems:
-	    output = "CRIT - %s" % problems
+	    output = "CRIT - %s, " % problems
             status = 2
         elif num_errors > 0 and num_success > 0:
-            output = "WARN - Missing agent sections: %s" % ", ".join(error_sections)
+            output = "WARN - Missing agent sections: %s - " % ", ".join(error_sections)
             status = 1
         elif num_errors > 0:
-            output = "CRIT - Got no information from host"
+            output = "CRIT - Got no information from host, "
             status = 2
         elif agent_min_version and agent_version < agent_min_version:
-            output = "WARN - old plugin version %s (should be at least %s)" % (agent_version, agent_min_version)
+            output = "WARN - old plugin version %s (should be at least %s), " % (agent_version, agent_min_version)
             status = 1
         else:
-            output = "OK - Agent version %s" % agent_version
+            output = "OK - "
+            if agent_version != None:
+                output += "Agent version %s, " % agent_version
             status = 0
 
     except MKGeneralException, e:
         if opt_debug:
             raise
-        output = "UNKNOWN - %s" % e
+        output = "UNKNOWN - %s, " % e
         status = 3
 
     if aggregate_check_mk:
@@ -708,7 +710,7 @@ def do_check(hostname, ipaddress):
                 raise
 
     run_time = time.time() - start_time
-    output += ", execution time %.1f sec|execution_time=%.3f\n" % (run_time, run_time)
+    output += "execution time %.1f sec|execution_time=%.3f\n" % (run_time, run_time)
     sys.stdout.write(output)
     sys.exit(status)
 
@@ -809,7 +811,7 @@ def do_all_checks_on_host(hostname, ipaddress):
             version_info = get_host_info(hostname, ipaddress, 'check_mk')
             agent_version = version_info[0][1]
         else:
-            agent_version = "(unknown)"
+            agent_version = None
     except MKAgentError, e:
 	g_broken_agent_hosts.add(hostname)
         agent_version = "(unknown)"

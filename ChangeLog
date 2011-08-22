@@ -13,6 +13,7 @@
     * Remove .f12 compile helper files from agents directory
     * Output missing sections in case of "WARNING - Only __ output of __..."
     * Remove obsolete code of snmp_info_single
+    * Remove 'Agent version (unknown)' for SNMP-only hosts
 
     Checks & Agents:
     * FIX: hr_mem: take into account cache and buffers

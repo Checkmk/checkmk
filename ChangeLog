@@ -37,6 +37,9 @@
     * FIX: reschedule now works for host names containing spaces
     * FIX: correctly sort log views in case of multi site setups
     * FIX: avoid seven broken images in case of missing PNP graphs
+    * FIX: Fixed javascript errors when opening dashboard in IE below 9
+    * Host/Service Icon column is now modularized and can be extended using
+      the multisite_icons list.
     * New sorters for time and line number of logfile entries
     * Bookmarks snapin: save relative URLs whenever possible
     * Man-Pages of Check_MK checks shown in Multisite honor OMD's local hierarchy

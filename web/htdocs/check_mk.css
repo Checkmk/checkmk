@@ -970,7 +970,7 @@ table.boxlayout td.boxcolumn {
 }
 
 
-.inputerror input { 
+.inputerror input, .inputerror textarea {
     background-color: #f84;
 }
 

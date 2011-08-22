@@ -384,7 +384,9 @@ def page_edit_views(msg=None):
         view = html.multisite_views[(owner, viewname)]
         if owner == html.req.user or (view["public"] and (owner == "" or config.user_may(owner, "publish_views"))):
             if first:
-                html.write("<tr><th>Name</th><th>Title / Description</th><th>Owner</th><th>Public</th><th>linked</th><th>Datasource</th><th></th></tr>\n")
+                html.write("<tr><th>Name</th><th>Title / Description</th>"
+                           "<th>Owner</th><th>Public</th><th>linked</th>"
+                           "<th>Datasource</th><th></th></tr>\n")
                 first = False
             html.write("<tr><td class=legend>%s</td>" % viewname)
             html.write("<td class=content>")
@@ -394,7 +396,7 @@ def page_edit_views(msg=None):
                 html.write(view["title"])
             description = view.get("description")
             if description:
-                html.write("<br><div class=viewdescription>%s</div>" % description)
+                html.write("<br><div class=viewdescription>%s</div>" % htmllib.attrencode(description))
             html.write("</td>")
             if owner == "":
                 ownertxt = "<i>builtin</i>"
@@ -534,7 +536,7 @@ def page_edit_view():
     html.write("</td></tr>\n")
 
     html.write("<tr><td class=legend>" + _("Description") + "</td><td class=content>")
-    html.text_area("view_description", 4)
+    html.text_area("view_description", "", 4)
     html.write("</td></tr>\n")
 
     # Larger sections are foldable and closed by default

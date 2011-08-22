@@ -11,3 +11,11 @@ uses a different scheme for the service description. Make
 all checks use "Temperature %s". Also use a common PNP-template
 that handles a missing WARN/CRIT. Maybe use a common code base,
 if this makes sense.
+
+We also need a tool for renaming service descriptions later on
+without loosing history data. That way we have a migration
+path - at least for OMD. This includes:
+
+- Events in Nagios log files
+- RRDs
+- ???

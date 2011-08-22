@@ -19,3 +19,16 @@ Visualisierung machen.
 Kernel (Context switches) und diskstat ist bereits umgestellt.
 Unklar, was noch fehlt. Aktuell fällt mir z.B. die Linux-NICS
 ein. Winperf auch?
+
+winperf                   --> Macht nix: wird durch winperf_* ersetzt
+diskstat.include          --> Macht nix: nur noch für den legacy modus
+fc_brocade_port           --> Macht nix: wird durch brocade_fcport ersetzt
+fc_brocade_port_detailed  --> Macht nix: wird durch brocade_fcport ersetzt
+netctr                    --> Macht nix: wird durch lnx_if abgelöst
+vms_netif                 --> Macht nix: verwendet eh kaum jemand
+
+Bleiben drei Checks:
+
+aironet_errors
+statgrab_disk
+statgrab_net

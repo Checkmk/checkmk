@@ -689,19 +689,20 @@ def do_check(hostname, ipaddress):
 
     try:
         load_counters(hostname)
-        agent_version, num_success, num_errors, problems = do_all_checks_on_host(hostname, ipaddress)
+        agent_version, num_success, error_sections, problems = do_all_checks_on_host(hostname, ipaddress)
+        num_errors = len(error_sections)
         save_counters(hostname)
         if problems:
 	    output = "CRIT - %s" % problems
             status = 2
         elif num_errors > 0 and num_success > 0:
-            output = "WARNING - Got only %d out of %d infos" % (num_success, num_success + num_errors)
+            output = "WARN - Missing agent sections: %s" % ", ".join(error_sections)
             status = 1
         elif num_errors > 0:
             output = "CRIT - Got no information from host"
             status = 2
         elif agent_min_version and agent_version < agent_min_version:
-            output = "WARNING - old plugin version %s (should be at least %s)" % (agent_version, agent_min_version)
+            output = "WARN - old plugin version %s (should be at least %s)" % (agent_version, agent_min_version)
             status = 1
         else:
             output = "OK - Agent version %s" % agent_version
@@ -736,7 +737,7 @@ def do_all_checks_on_host(hostname, ipaddress):
     global g_hostname
     g_hostname = hostname
     num_success = 0
-    num_errors = 0
+    error_sections = set([])
     check_table = get_sorted_check_table(hostname)
     problems = []
 
@@ -754,14 +755,14 @@ def do_all_checks_on_host(hostname, ipaddress):
         except MKSNMPError, e:
 	    if str(e):
 	        problems.append(str(e))
-            num_errors += 1
+            error_sections.add(infotype)
 	    g_broken_snmp_hosts.add(hostname)
 	    continue
 
         except MKAgentError, e:
 	    if str(e):
                 problems.append(str(e))
-            num_errors += 1
+            error_sections.add(infotype)
 	    g_broken_agent_hosts.add(hostname)
 	    continue
 
@@ -811,7 +812,7 @@ def do_all_checks_on_host(hostname, ipaddress):
             if not dont_submit:
                 submit_check_result(hostname, description, result, aggrname)
         else:
-            num_errors += 1
+            error_sections.add(infotype)
 
     submit_aggregated_results(hostname)
     if checkresult_file_fd != None:
@@ -828,7 +829,10 @@ def do_all_checks_on_host(hostname, ipaddress):
         agent_version = "(unknown)"
     except:
         agent_version = "(unknown)"
-    return agent_version, num_success, num_errors, ", ".join(problems)
+    error_sections = list(error_sections)
+    error_sections.sort()
+    return agent_version, num_success, error_sections, ", ".join(problems)
+
 
 
 def open_checkresult_file():

@@ -11,6 +11,7 @@
       style FUNC(checkname, info) is still supported but deprecated.
     * Show datasource program on cmk -D
     * Remove .f12 compile helper files from agents directory
+    * Output missing sections in case of "WARNING - Only __ output of __..."
 
     Checks & Agents:
     * FIX: hr_mem: take into account cache and buffers

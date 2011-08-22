@@ -188,6 +188,7 @@ def handler(req, profiling = True):
             __builtin__._ = lambda x: x
 
         # All plugins might have to be reloaded due to a language change
+        # FIXME: Hier werden alle Module geladen, obwohl diese gar nicht immer alle benötigt würden
         for module in [ views, sidebar, dashboard, wato, bi ]:
             try:
                 module.load_plugins # just check if this function exists

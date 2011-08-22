@@ -17,6 +17,9 @@
 
     Multisite:
     * FIX: reschedule now works for host names containing spaces
+    * FIX: Fixed javascript errors when opening dashboard in IE below 9
+    * Host/Service Icon column is now modularized and can be extended using
+      the multisite_icons list.
 
     WATO:
     * Commited audit log entries are now pages based on days

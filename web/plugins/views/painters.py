@@ -103,83 +103,19 @@ multisite_painter_options["ts_date"] = {
 #   |___\___\___/|_| |_|___/
 #
 
+import traceback
 
+multisite_icons = []
 
-# Columns to fetch from hosts or services for displaying the icons
-icon_columns = [ "acknowledged", "scheduled_downtime_depth", "downtimes_with_info", "comments_with_info",
-                 "notifications_enabled", "is_flapping", "modified_attributes_list", "active_checks_enabled",
-                 "accept_passive_checks", "action_url_expanded", "notes_url_expanded", "in_notification_period",
-                 "custom_variable_names", "custom_variable_values", "icon_image", "pnpgraph_present", "check_command" ]
+load_web_plugins('icons', globals())
 
-# Additional columns only to fetch for services
-icon_service_columns = [ "service_description" ]
-
-# Intelligent Links to PNP4Nagios 0.6.X
-def pnp_url(row, what, how = 'graph'):
-    sitename = row["site"]
-    host = pnp_cleanup(row["host_name"])
-    if what == "host":
-        svc = "_HOST_"
-    else:
-        svc = pnp_cleanup(row["service_description"])
-    site = html.site_status[sitename]["site"]
-    url = site["url_prefix"] + ("pnp4nagios/index.php/%s?host=%s&srv=%s" % \
-            (how, htmllib.urlencode(host), htmllib.urlencode(svc)))
-    if how == 'graph':
-        url += "&theme=multisite&baseurl=%scheck_mk/" % htmllib.urlencode(site["url_prefix"])
-    return url
-
-def pnp_popup_url(row, what):
-    return pnp_url(row, what, 'popup')
-
-def pnp_icon(row, what):
-    if 'X' in html.display_options:
-        url = pnp_url(row, what)
-    else:
-        url = ""
-    return '<a href="%s" onmouseover="displayHoverMenu(event, get_url_sync(\'%s\'))" onmouseout="hoverHide()">' \
-              '<img class=icon src="images/icon_pnp.png"></a>' % (url, pnp_popup_url(row, what))
-
-def logwatch_url(sitename, notes_url):
-    i = notes_url.index("/check_mk/logwatch.py")
-    site = html.site_status[sitename]["site"]
-    return site["url_prefix"] + notes_url[i:]
-
-
-def wato_link(filename, site, hostname, where):
-    if 'X' in html.display_options:
-        prefix = config.site(site)["url_prefix"] + "check_mk/"
-        url = prefix + "wato.py?filename=%s&host=%s" % (htmllib.urlencode(filename), htmllib.urlencode(hostname))
-        if where == "inventory":
-            url += "&mode=inventory"
-            help = _("Edit services in WATO - the Check_MK Web Administration Tool")
-        else:
-            url += "&mode=edithost"
-            help = _("Open this host in WATO - the Check_MK Web Administration Tool")
-        return '<a href="%s"><img class=icon src="images/icon_wato.gif" ' \
-               'title="%s"></a>' % (url, help)
-    else:
-        return ""
-
-def paint_icons(what, row): # what is "host" or "service"
-    output = ""
-    if what == "host":
-        prefix = "host_"
-    else:
-        prefix = "service_"
-    custom_vars = dict(zip(row[prefix + "custom_variable_names"], row[prefix + "custom_variable_values"]))
-
-    # Icons configured in Nagios via icon_image
-    if row[prefix + "icon_image"]:
-        image = row[prefix + "icon_image"]
-        output += '<img class=icon src="images/icons/%s">' % image
-
-    # Link to detail host if this is a summary host
-    if "_REALNAME" in custom_vars:
-        newrow = row.copy()
-        newrow["host_name"] = custom_vars["_REALNAME"]
-        output += link_to_view("<img class=icon title='"+_("Detailed host infos")+"' src='images/icon_detail.gif'>",
-            newrow, 'host')
+def paint_icons(what, row):
+    """
+    what: "host" or "service"
+    row:  The livestatus row of the current object
+    """
+    custom_vars = dict(zip(row[what + "_custom_variable_names"],
+                           row[what + "_custom_variable_values"]))
 
     # Extract host tags
     if "TAGS" in custom_vars:
@@ -187,122 +123,47 @@ def paint_icons(what, row): # what is "host" or "service"
     else:
         tags = []
 
-    # PNP Graph
-    pnpgraph_present = row[prefix + "pnpgraph_present"]
-    if pnpgraph_present == 1:
-        output += pnp_icon(row, what)
-
-    if 'X' in html.display_options:
-        # action_url (only, if not a PNP-URL and pnp_graph is working!)
-        action_url = row[prefix + "action_url_expanded"]
-        if action_url and not ('/pnp4nagios/' in action_url and pnpgraph_present >= 0): 
-            output += "<a href='%s'><img class=icon src=\"images/icon_action.gif\"></a>" % row[prefix + "action_url_expanded"]
-
-        # notes_url (only, if not a Check_MK logwatch check pointing to logwatch.py. These is done by a special icon)
-        notes_url = row[prefix + "notes_url_expanded"] 
-        check_command = row[prefix + "check_command"]
-        if notes_url:
-            # unmodified original logwatch link -> translate into more intelligent icon
-            if check_command == 'check_mk-logwatch' and "/check_mk/logwatch.py" in notes_url:
-                output += '<a href="%s"><img class=icon src="images/icon_logwatch.png\"></a>' % logwatch_url(row["site"], notes_url)
-            else:
-                output += "<a href='%s'><img class=icon src=\"images/icon_notes.gif\"></a>" % notes_url
-
-
-    # Problem has been acknowledged
-    if row[prefix + "acknowledged"]:
-        output += '<img class=icon title="'+_('This problem has been acknowledged')+'" src="images/icon_ack.gif">'
-
-    # Currently we are in a downtime + link to list of downtimes for this host / service
-    if row[prefix + "scheduled_downtime_depth"] > 0:
-        output += link_to_view('<img class=icon src="images/icon_downtime.gif">', row, 'downtimes_of_' + what)
-
-    # Comments
-    comments = row[prefix + "comments_with_info"]
-    if len(comments) > 0:
-        text = ""
-        for id, author, comment in comments:
-            text += "%s: \"%s\" \n" % (author, comment)
-        output += link_to_view('<img class=icon title=\'%s\' src="images/icon_comment.gif">' % text, row, 'comments_of_' + what)
-
-    # Notifications disabled
-    if not row[prefix + "notifications_enabled"]:
-        output += '<img class=icon title="%s" src="images/icon_ndisabled.gif">' % \
-                                              _('Notifications are disabled for this %s') % what
-
-    # Flapping
-    if row[prefix + "is_flapping"]:
-        output += '<img class=icon title="%s" src="images/icon_flapping.gif">' % \
-                                                                   _('This %s is flapping') % what
-
-    # Setting of active checks modified by user
-    if "active_checks_enabled" in row[prefix + "modified_attributes_list"]:
-        if row[prefix + "active_checks_enabled"] == 0:
-            output += '<img class=icon title="%s" src="images/icon_disabled.gif">' % \
-                              _('Active checks have been manually disabled for this %s!') % what
-        else:
-            output += '<img class=icon title="%s" src="images/icon_enabled.gif">' % \
-                               _('Active checks have been manually enabled for this %s!') % what
-
-    # Passive checks disabled manually?
-    if "passive_checks_enabled" in row[prefix + "modified_attributes_list"]:
-        if row[prefix + "accept_passive_checks"] == 0:
-            output += '<img class=icon title="%s" src="images/icon_npassive.gif">' % \
-                             _('Passive checks have been manually disabled for this %s!') % what
-
-
-    if not row[prefix + "in_notification_period"]:
-        output += '<img class=icon title="%s" src="images/icon_outofnot.gif">' % _('Out of notification period')
-
-    # Link to aggregations
-    if bi.is_part_of_aggregation(what, row["site"], row["host_name"], row.get("service_description")):
-         output += link_to_view('<img class=icon src="images/icon_aggr.gif" title="%s">' % _('Aggregations containing this %s') % what, row, 'aggr_' + what)
-
-    # Link to WATO for hosts
-    if "wato" in tags and what == "host":
-        for tag in tags:
-            if tag.endswith(".mk"):
-                wato_filename = tag
-                output += wato_link(wato_filename, row["site"], row["host_name"], "edithost")
-
-
-    # Link to WATO for Check_MK Inventory service
-    if what == "service":
-        wato_filename = custom_vars.get("WATO")
-        if wato_filename:
-            output += wato_link(wato_filename, row["site"], row["host_name"], "inventory")
-
-    # Reschedule button
-    if 'C' in html.display_options and row[prefix + "active_checks_enabled"] == 1 and config.may('action.reschedule'):
-        name2 = ''
-        if what == 'service':
-            name2 = row['service_description']
-        output += '<a href=\"#\" onclick="performAction(this, \'reschedule\', \'%s\', \'%s\', \'%s\', \'%s\');">' \
-                  '<img class=icon title="%s" src="images/icon_reload.gif" /></a>' % \
-                        (_('Reschedule an immediate check of this %s') % what, row["site"], row["host_name"], name2, what)
+    output = ""
+    for icon in multisite_icons:
+        try:
+            icon_output = icon['paint'](what, row, tags, custom_vars)
+            if icon_output is not None:
+                output += icon_output
+        except Exception, e:
+            output += 'Exception in icon plugin!<br />' + traceback.format_exc()
 
     return "icons", output
 
 
 def iconpainter_columns(what):
-    cols = [ what + "_" + c for c in icon_columns ]
-    cols += [ "host_name" ]
-    if what == "service":
-        cols += icon_service_columns
+    cols = set(['site',
+                'host_name',
+                what + '_custom_variable_names',
+                what + '_custom_variable_values' ])
+
+    if what == 'service':
+        cols.add('description')
+
+    for icon in multisite_icons:
+        if 'columns' in icon:
+            cols.update([ what + '_' + i for i in icon['columns'] ])
+        if what + '_columns' in icon:
+            cols.update(icon[what + '_columns'])
+
     return cols
 
 multisite_painters["service_icons"] = {
-    "title" : _("Service icons"),
-    "short" : _("Icons"),
-    "columns" : iconpainter_columns("service"),
-    "paint" : lambda row: paint_icons("service", row)
+    "title":   _("Service icons"),
+    "short":   _("Icons"),
+    "columns": iconpainter_columns("service"),
+    "paint":   lambda row: paint_icons("service", row)
 }
 
 multisite_painters["host_icons"] = {
-    "title" : _("Host icons"),
-    "short" : _("Icons"),
-    "columns" : iconpainter_columns("host"),
-    "paint" : lambda row: paint_icons("host", row)
+    "title":   _("Host icons"),
+    "short":   _("Icons"),
+    "columns": iconpainter_columns("host"),
+    "paint":   lambda row: paint_icons("host", row)
 }
 
 # -----------------------------------------------------------------------

@@ -10,3 +10,10 @@ This is an incompatible change. Make sure that the old variable is
 still defined for some time. Also look for further checks using
 that variable or doing an utilization check (windows) and bring
 these checks together (maybe with an include)?
+
+In order to make migration easier, we could catch configurations
+still using the old variable, automatically set the new, and 
+output a Warning.
+
+Then write a README in doc/ that describes how to rename
+configuration variables (for us developers).

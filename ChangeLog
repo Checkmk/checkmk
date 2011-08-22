@@ -10,6 +10,7 @@
     * Inventory functions now only take the single argument 'info'. The old
       style FUNC(checkname, info) is still supported but deprecated.
     * Show datasource program on cmk -D
+    * Remove .f12 compile helper files from agents directory
 
     Checks & Agents:
     * FIX: hr_mem: take into account cache and buffers

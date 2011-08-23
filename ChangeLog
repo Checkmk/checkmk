@@ -14,6 +14,8 @@
     * Output missing sections in case of "WARNING - Only __ output of __..."
     * Remove obsolete code of snmp_info_single
     * Remove 'Agent version (unknown)' for SNMP-only hosts
+    * Options --version, --help, --man, --list-checks and --packager now
+      work even with errors in the configuration files
 
     Checks & Agents:
     * FIX: hr_mem: take into account cache and buffers

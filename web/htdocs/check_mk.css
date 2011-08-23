@@ -618,6 +618,25 @@ table.data th {
     color: #fff;
 }
 
+/* Table header links (For sorting) */
+table.data th a {
+    color: #fff;
+    text-decoration: underline;
+}
+
+table.data th a:hover {
+    color: #fff;
+    text-decoration: none;
+}
+
+table.data th a.asc {
+    color: #CBDCF2;
+}
+
+table.data th a.desc {
+    color: #155CB2;
+}
+
 table.data th.tablegap {
     background-color: transparent; /* none; */
 }

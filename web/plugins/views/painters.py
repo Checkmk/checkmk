@@ -221,16 +221,17 @@ def paint_site_icon(row):
         return None, ""
 
 multisite_painters["sitename_plain"] = {
-    "title" : _("Site id"),
-    "short" : _("Site"),
+    "title"   : _("Site id"),
+    "short"   : _("Site"),
     "columns" : ["site"],
-    "paint" : lambda row: (None, row["site"])
+    "paint"   : lambda row: (None, row["site"]),
+    "sorter"  : 'site',
 }
 
 multisite_painters["sitealias"] = {
-    "title" : _("Site alias"),
+    "title"   : _("Site alias"),
     "columns" : ["site"],
-    "paint" : lambda row: (None, config.site(row["site"])["alias"])
+    "paint"   : lambda row: (None, config.site(row["site"])["alias"]),
 }
 
 #    ____                  _
@@ -260,24 +261,26 @@ def paint_host_state_short(row):
     return "state hstate hstate%s" % state, name
 
 multisite_painters["service_nagios_link"] = {
-    "title" : _("Icon with link to service in Nagios GUI"),
-    "short" : "",
+    "title"   : _("Icon with link to service in Nagios GUI"),
+    "short"   : "",
     "columns" : [ "site", "host_name", "service_description" ],
-    "paint" : paint_nagios_link
+    "paint"   : paint_nagios_link
 }
 
 multisite_painters["service_state"] = {
-    "title" : _("Service state"),
-    "short" : _("State"),
+    "title"   : _("Service state"),
+    "short"   : _("State"),
     "columns" : ["service_has_been_checked","service_state"],
-    "paint" : paint_service_state_short
+    "paint"   : paint_service_state_short,
+    "sorter"  : 'svcstate',
 }
 
 multisite_painters["site_icon"] = {
-    "title" : _("Icon showing the site"),
-    "short" : "",
+    "title"   : _("Icon showing the site"),
+    "short"   : "",
     "columns" : ["site"],
-    "paint" : paint_site_icon
+    "paint"   : paint_site_icon,
+    "sorter"  : 'site',
 }
 
 warn_marker    = '<b class="stmark state1">WARN</b>'
@@ -290,16 +293,17 @@ def format_plugin_output(output):
            .replace("(?)", unknown_marker)
 
 multisite_painters["svc_plugin_output"] = {
-    "title" : _("Output of check plugin"),
-    "short" : _("Status detail"),
+    "title"   : _("Output of check plugin"),
+    "short"   : _("Status detail"),
     "columns" : ["service_plugin_output"],
-    "paint" : lambda row: ("", format_plugin_output(row["service_plugin_output"]))
+    "paint"   : lambda row: ("", format_plugin_output(row["service_plugin_output"])),
+    "sorter"  : 'svcoutput',
 }
 multisite_painters["svc_long_plugin_output"] = {
-    "title" : _("Long output of check plugin (multiline)"),
-    "short" : _("Status detail"),
+    "title"   : _("Long output of check plugin (multiline)"),
+    "short"   : _("Status detail"),
     "columns" : ["service_long_plugin_output"],
-    "paint" : lambda row: (None, row["service_long_plugin_output"].replace('\\n', '<br>'))
+    "paint"   : lambda row: (None, row["service_long_plugin_output"].replace('\\n', '<br>')),
 }
 multisite_painters["svc_perf_data"] = {
     "title" : _("Service performance data"),
@@ -402,98 +406,101 @@ multisite_painters["svc_perf_firstval"] = {
 }
 
 multisite_painters["svc_check_command"] = {
-    "title" : _("Service check command"),
-    "short" : _("Check command"),
+    "title"   : _("Service check command"),
+    "short"   : _("Check command"),
     "columns" : ["service_check_command"],
-    "paint" : lambda row: (None, row["service_check_command"])
+    "paint"   : lambda row: (None, row["service_check_command"]),
 }
 
 multisite_painters["svc_contacts"] = {
-    "title" : _("Service contacts"),
-    "short" : _("Contacts"),
+    "title"   : _("Service contacts"),
+    "short"   : _("Contacts"),
     "columns" : ["service_contacts"],
-    "paint" : lambda row: (None, ", ".join(row["service_contacts"]))
+    "paint"   : lambda row: (None, ", ".join(row["service_contacts"])),
 }
 
 multisite_painters["svc_contact_groups"] = {
-    "title" : _("Service contact groups"),
-    "short" : _("Contact groups"),
+    "title"   : _("Service contact groups"),
+    "short"   : _("Contact groups"),
     "columns" : ["service_contact_groups"],
-    "paint" : lambda row: (None, ", ".join(row["service_contact_groups"]))
+    "paint"   : lambda row: (None, ", ".join(row["service_contact_groups"])),
 }
 
 
 multisite_painters["service_description"] = {
-    "title" : _("Service description"),
-    "short" : _("Service"),
+    "title"   : _("Service description"),
+    "short"   : _("Service"),
     "columns" : ["service_description"],
-    "paint" : lambda row: (None, row["service_description"])
+    "paint"   : lambda row: (None, row["service_description"]),
+    "sorter"  : 'svcdescr',
 }
 
 multisite_painters["svc_state_age"] = {
-    "title" : _("The age of the current service state"),
-    "short" : _("Age"),
+    "title"   : _("The age of the current service state"),
+    "short"   : _("Age"),
     "columns" : [ "service_has_been_checked", "service_last_state_change" ],
     "options" : [ "ts_format", "ts_date" ],
-    "paint" : lambda row: paint_age(row["service_last_state_change"], row["service_has_been_checked"] == 1, 60 * 10)
+    "paint"   : lambda row: paint_age(row["service_last_state_change"], row["service_has_been_checked"] == 1, 60 * 10),
+    "sorter"  : "stateage",
 }
 multisite_painters["svc_check_age"] = {
-    "title" : _("The time since the last check of the service"),
-    "short" : _("Checked"),
+    "title"   : _("The time since the last check of the service"),
+    "short"   : _("Checked"),
     "columns" : [ "service_has_been_checked", "service_last_check" ],
     "options" : [ "ts_format", "ts_date" ],
-    "paint" : lambda row: paint_age(row["service_last_check"], row["service_has_been_checked"] == 1, 0)
+    "paint"   : lambda row: paint_age(row["service_last_check"], row["service_has_been_checked"] == 1, 0),
 }
 
 multisite_painters["svc_next_check"] = {
-    "title" : _("The time of the next scheduled service check"),
-    "short" : _("Next check"),
+    "title"   : _("The time of the next scheduled service check"),
+    "short"   : _("Next check"),
     "columns" : [ "service_next_check" ],
-    "paint" : lambda row: paint_future_time(row["service_next_check"])
+    "paint"   : lambda row: paint_future_time(row["service_next_check"]),
 }
 
 multisite_painters["svc_next_notification"] = {
-    "title" : _("The time of the next service notification"),
-    "short" : _("Next notification"),
+    "title"   : _("The time of the next service notification"),
+    "short"   : _("Next notification"),
     "columns" : [ "service_next_notification" ],
-    "paint" : lambda row: paint_future_time(row["service_next_notification"])
+    "paint"   : lambda row: paint_future_time(row["service_next_notification"]),
 }
 
 multisite_painters["svc_last_notification"] = {
-    "title" : _("The time of the last service notification"),
-    "short" : _("last notification"),
+    "title"   : _("The time of the last service notification"),
+    "short"   : _("last notification"),
     "columns" : [ "service_last_notification" ],
     "options" : [ "ts_format", "ts_date" ],
-    "paint" : lambda row: paint_age(row["service_last_notification"], row["service_last_notification"], 0)
+    "paint"   : lambda row: paint_age(row["service_last_notification"], row["service_last_notification"], 0),
 }
 
-
 multisite_painters["svc_check_latency"] = {
-    "title" : _("Service check latency"),
-    "short" : _("Latency"),
+    "title"   : _("Service check latency"),
+    "short"   : _("Latency"),
     "columns" : [ "service_latency" ],
-    "paint" : lambda row: ("", "%.3f sec" % row["service_latency"])
+    "paint"   : lambda row: ("", "%.3f sec" % row["service_latency"]),
 }
 
 multisite_painters["svc_check_duration"] = {
-    "title" : _("Service check duration"),
-    "short" : _("Duration"),
+    "title"   : _("Service check duration"),
+    "short"   : _("Duration"),
     "columns" : [ "service_execution_time" ],
-    "paint" : lambda row: ("", "%.3f sec" % row["service_execution_time"])
+    "paint"   : lambda row: ("", "%.3f sec" % row["service_execution_time"]),
 }
+
 multisite_painters["svc_attempt"] = {
-    "title" : _("Current check attempt"),
-    "short" : _("Att."),
+    "title"   : _("Current check attempt"),
+    "short"   : _("Att."),
     "columns" : [ "service_current_attempt", "service_max_check_attempts" ],
-    "paint" : lambda row: (None, "%d/%d" % (row["service_current_attempt"], row["service_max_check_attempts"]))
+    "paint"   : lambda row: (None, "%d/%d" % (row["service_current_attempt"], row["service_max_check_attempts"])),
 }
 
 multisite_painters["svc_check_type"] = {
-    "title" : _("Service check type"),
-    "short" : _("Type"),
+    "title"   : _("Service check type"),
+    "short"   : _("Type"),
     "columns" : [ "service_check_type" ],
-    "paint" : lambda row: (None, row["service_check_type"] == 0 and "ACTIVE" or "PASSIVE")
+    "paint"   : lambda row: (None, row["service_check_type"] == 0 and "ACTIVE" or "PASSIVE"),
 }
+
 def paint_nagiosflag(row, field, bold_if_nonzero):
     value = row[field]
     yesno = {True:"yes", False:"no"}[value != 0]
@@ -503,43 +510,45 @@ def paint_nagiosflag(row, field, bold_if_nonzero):
         return "goodflag", yesno
 
 multisite_painters["svc_in_downtime"] = {
-    "title" : _("Currently in downtime"),
-    "short" : _("Dt."),
+    "title"   : _("Currently in downtime"),
+    "short"   : _("Dt."),
     "columns" : [ "service_scheduled_downtime_depth" ],
-    "paint" : lambda row: paint_nagiosflag(row, "service_scheduled_downtime_depth", True)
+    "paint"   : lambda row: paint_nagiosflag(row, "service_scheduled_downtime_depth", True),
 }
+
 multisite_painters["svc_in_notifper"] = {
-    "title" : _("In notification period"),
-    "short" : _("in notif. p."),
+    "title"   : _("In notification period"),
+    "short"   : _("in notif. p."),
     "columns" : [ "service_in_notification_period" ],
-    "paint" : lambda row: paint_nagiosflag(row, "service_in_notification_period", False)
+    "paint"   : lambda row: paint_nagiosflag(row, "service_in_notification_period", False),
 }
+
 multisite_painters["svc_notifper"] = {
-   "title" : _("Service notification period"),
-   "short" : _("notif."),
-   "columns" : [ "service_notification_period" ],
-   "paint" : lambda row: (None, row["service_notification_period"])
+    "title"   : _("Service notification period"),
+    "short"   : _("notif."),
+    "columns" : [ "service_notification_period" ],
+    "paint"   : lambda row: (None, row["service_notification_period"]),
 }
 
 multisite_painters["svc_flapping"] = {
-    "title" : _("Service is flapping"),
-    "short" : _("Flap"),
+    "title"   : _("Service is flapping"),
+    "short"   : _("Flap"),
     "columns" : [ "service_is_flapping" ],
-    "paint" : lambda row: paint_nagiosflag(row, "service_is_flapping", True)
+    "paint"   : lambda row: paint_nagiosflag(row, "service_is_flapping", True),
 }
 
 multisite_painters["svc_notifications_enabled"] = {
-    "title" : _("Service notifications enabled"),
-    "short" : _("Notif."),
+    "title"   : _("Service notifications enabled"),
+    "short"   : _("Notif."),
     "columns" : [ "service_notifications_enabled" ],
-    "paint" : lambda row: paint_nagiosflag(row, "service_notifications_enabled", False)
+    "paint"   : lambda row: paint_nagiosflag(row, "service_notifications_enabled", False),
 }
 
 multisite_painters["svc_is_active"] = {
-    "title" : _("Service is active"),
-    "short" : _("Active"),
+    "title"   : _("Service is active"),
+    "short"   : _("Active"),
     "columns" : [ "service_active_checks_enabled" ],
-    "paint" : lambda row: paint_nagiosflag(row, "service_active_checks_enabled", None)
+    "paint"   : lambda row: paint_nagiosflag(row, "service_active_checks_enabled", None),
 }
 
 def paint_service_group_memberlist(row):
@@ -553,7 +562,7 @@ multisite_painters["svc_group_memberlist"] = {
     "title"   : _("Servicegroups the service is member of"),
     "short"   : _("Groups"),
     "columns" : [ "service_groups" ],
-    "paint"   : paint_service_group_memberlist
+    "paint"   : paint_service_group_memberlist,
 }
 
 # PNP Graphs
@@ -575,7 +584,7 @@ multisite_painters["svc_pnpgraph" ] = {
     "short"   : _("PNP graph"),
     "columns" : [ "host_name", "service_description" ],
     "options" : [ "pnpview" ],
-    "paint"   : lambda row: paint_pnpgraph(row["site"], row["host_name"], row["service_description"])
+    "paint"   : lambda row: paint_pnpgraph(row["site"], row["host_name"], row["service_description"]),
 }
 
 def paint_check_manpage(row):
@@ -611,10 +620,10 @@ def paint_check_manpage(row):
 	return "", _("Man-Page: %s not found.") % p
 
 multisite_painters["check_manpage"] = {
-    "title" : _("Check manual (for Check_MK based checks)"),
-    "short" : _("Manual"),
+    "title"   : _("Check manual (for Check_MK based checks)"),
+    "short"   : _("Manual"),
     "columns" : [ "service_check_command" ],
-    "paint" : paint_check_manpage
+    "paint"   : paint_check_manpage,
 }
 
 def paint_comments(prefix, row):
@@ -623,19 +632,18 @@ def paint_comments(prefix, row):
     return "", text
 
 multisite_painters["svc_comments"] = {
-    "title" : _("Service Comments"),
-    "short" : _("Comments"),
+    "title"   : _("Service Comments"),
+    "short"   : _("Comments"),
     "columns" : [ "service_comments_with_info" ],
-    "paint" : lambda row: paint_comments("service_", row)
+    "paint"   : lambda row: paint_comments("service_", row)
 }
 
 multisite_painters["svc_acknowledged"] = {
-    "title" : _("Service problem acknowledged"),
-    "short" : _("Ack"),
+    "title"   : _("Service problem acknowledged"),
+    "short"   : _("Ack"),
     "columns" : ["service_acknowledged"],
-    "paint" : lambda row: paint_nagiosflag(row, "service_acknowledged", False)
+    "paint"   : lambda row: paint_nagiosflag(row, "service_acknowledged", False),
 }
-
 
 def notes_matching_pattern_entries(dirs, item):
     from fnmatch import fnmatch
@@ -684,10 +692,10 @@ def paint_custom_notes(row):
     return "", "<hr>".join(contents)
 
 multisite_painters["svc_custom_notes"] = {
-    "title" : _("Custom services notes"),
-    "short" : _("Notes"),
+    "title"   : _("Custom services notes"),
+    "short"   : _("Notes"),
     "columns" : [ "host_name", "host_address", "service_description" ],
-    "paint" : paint_custom_notes
+    "paint"   : paint_custom_notes,
 }
 
 #   _   _           _
@@ -698,130 +706,126 @@ multisite_painters["svc_custom_notes"] = {
 #
 
 multisite_painters["host_state"] = {
-    "title" : _("Host state"),
-    "short" : _("state"),
+    "title"   : _("Host state"),
+    "short"   : _("state"),
     "columns" : ["host_has_been_checked","host_state"],
-    "paint" : paint_host_state_short
+    "paint"   : paint_host_state_short,
+    "sorter"  : 'hoststate',
 }
 
 multisite_painters["host_plugin_output"] = {
-    "title" : _("Output of host check plugin"),
-    "short" : _("Status detail"),
+    "title"   : _("Output of host check plugin"),
+    "short"   : _("Status detail"),
     "columns" : ["host_plugin_output"],
-    "paint" : lambda row: (None, row["host_plugin_output"])
+    "paint"   : lambda row: (None, row["host_plugin_output"]),
 }
 
 multisite_painters["host_perf_data"] = {
-    "title" : _("Host performance data"),
-    "short" : _("Performance data"),
+    "title"   : _("Host performance data"),
+    "short"   : _("Performance data"),
     "columns" : ["host_perf_data"],
-    "paint" : lambda row: (None, row["host_perf_data"])
+    "paint"   : lambda row: (None, row["host_perf_data"]),
 }
 
 multisite_painters["host_check_command"] = {
-    "title" : _("Host check command"),
-    "short" : _("Check command"),
+    "title"   : _("Host check command"),
+    "short"   : _("Check command"),
     "columns" : ["host_check_command"],
-    "paint" : lambda row: (None, row["host_check_command"])
+    "paint"   : lambda row: (None, row["host_check_command"]),
 }
 
 multisite_painters["host_state_age"] = {
-    "title" : _("The age of the current host state"),
-    "short" : _("Age"),
+    "title"   : _("The age of the current host state"),
+    "short"   : _("Age"),
     "columns" : [ "host_has_been_checked", "host_last_state_change" ],
     "options" : [ "ts_format", "ts_date" ],
-    "paint" : lambda row: paint_age(row["host_last_state_change"], row["host_has_been_checked"] == 1, 60 * 10)
+    "paint"   : lambda row: paint_age(row["host_last_state_change"], row["host_has_been_checked"] == 1, 60 * 10),
 }
 
 multisite_painters["host_check_age"] = {
-    "title" : _("The time since the last check of the host"),
-    "short" : _("Checked"),
+    "title"   : _("The time since the last check of the host"),
+    "short"   : _("Checked"),
     "columns" : [ "host_has_been_checked", "host_last_check" ],
     "options" : [ "ts_format", "ts_date" ],
-    "paint" : lambda row: paint_age(row["host_last_check"], row["host_has_been_checked"] == 1, 0)
+    "paint"   : lambda row: paint_age(row["host_last_check"], row["host_has_been_checked"] == 1, 0),
 }
 
 multisite_painters["host_next_check"] = {
-    "title" : _("The time of the next scheduled host check"),
-    "short" : _("Next check"),
+    "title"   : _("The time of the next scheduled host check"),
+    "short"   : _("Next check"),
     "columns" : [ "host_next_check" ],
-    "paint" : lambda row: paint_future_time(row["host_next_check"])
+    "paint"   : lambda row: paint_future_time(row["host_next_check"]),
 }
 
 multisite_painters["host_next_notification"] = {
-    "title" : _("The time of the next host notification"),
-    "short" : _("Next notification"),
+    "title"   : _("The time of the next host notification"),
+    "short"   : _("Next notification"),
     "columns" : [ "host_next_notification" ],
-    "paint" : lambda row: paint_future_time(row["host_next_notification"])
+    "paint"   : lambda row: paint_future_time(row["host_next_notification"]),
 }
 
 multisite_painters["host_last_notification"] = {
-    "title" : _("The time of the last host notification"),
-    "short" : _("last notification"),
+    "title"   : _("The time of the last host notification"),
+    "short"   : _("last notification"),
     "columns" : [ "host_last_notification" ],
     "options" : [ "ts_format", "ts_date" ],
-    "paint" : lambda row: paint_age(row["host_last_notification"], row["host_last_notification"], 0)
+    "paint"   : lambda row: paint_age(row["host_last_notification"], row["host_last_notification"], 0),
 }
 
 multisite_painters["host_check_latency"] = {
-    "title" : _("Host check latency"),
-    "short" : _("Latency"),
+    "title"   : _("Host check latency"),
+    "short"   : _("Latency"),
     "columns" : [ "host_latency" ],
-    "paint" : lambda row: ("", "%.3f sec" % row["host_latency"])
+    "paint"   : lambda row: ("", "%.3f sec" % row["host_latency"]),
 }
 
 multisite_painters["host_check_duration"] = {
-    "title" : _("Host check duration"),
-    "short" : _("Duration"),
+    "title"   : _("Host check duration"),
+    "short"   : _("Duration"),
     "columns" : [ "host_execution_time" ],
-    "paint" : lambda row: ("", "%.3f sec" % row["host_execution_time"])
+    "paint"   : lambda row: ("", "%.3f sec" % row["host_execution_time"]),
 }
 
 multisite_painters["host_attempt"] = {
-    "title" : _("Current host check attempt"),
-    "short" : _("Att."),
+    "title"   : _("Current host check attempt"),
+    "short"   : _("Att."),
     "columns" : [ "host_current_attempt", "host_max_check_attempts" ],
-    "paint" : lambda row: (None, "%d/%d" % (row["host_current_attempt"], row["host_max_check_attempts"]))
+    "paint"   : lambda row: (None, "%d/%d" % (row["host_current_attempt"], row["host_max_check_attempts"])),
 }
 
 multisite_painters["host_check_type"] = {
-    "title" : _("Host check type"),
-    "short" : _("Type"),
+    "title"   : _("Host check type"),
+    "short"   : _("Type"),
     "columns" : [ "host_check_type" ],
-    "paint" : lambda row: (None, row["host_check_type"] == 0 and "ACTIVE" or "PASSIVE")
+    "paint"   : lambda row: (None, row["host_check_type"] == 0 and "ACTIVE" or "PASSIVE"),
 }
 
-multisite_painters["host_in_downtime"] = {
-    "title" : _("Host currently in downtime"),
-    "short" : _("Dt."),
-    "columns" : [ "host_scheduled_downtime_depth" ],
-    "paint" : lambda row: paint_nagiosflag(row, "host_scheduled_downtime_depth", True)
-}
 multisite_painters["host_in_notifper"] = {
-    "title" : _("Host in notification period"),
-    "short" : _("in notif. p."),
+    "title"   : _("Host in notification period"),
+    "short"   : _("in notif. p."),
     "columns" : [ "host_in_notification_period" ],
-    "paint" : lambda row: paint_nagiosflag(row, "host_in_notification_period", False)
+    "paint"   : lambda row: paint_nagiosflag(row, "host_in_notification_period", False),
 }
+
 multisite_painters["host_notifper"] = {
-   "title" : _("Host notification period"),
-   "short" : _("notif."),
-   "columns" : [ "host_notification_period" ],
-   "paint" : lambda row: (None, row["host_notification_period"])
+    "title"   : _("Host notification period"),
+    "short"   : _("notif."),
+    "columns" : [ "host_notification_period" ],
+    "paint"   : lambda row: (None, row["host_notification_period"]),
 }
 
 multisite_painters["host_flapping"] = {
-    "title" : _("Host is flapping"),
-    "short" : _("Flap"),
+    "title"   : _("Host is flapping"),
+    "short"   : _("Flap"),
     "columns" : [ "host_is_flapping" ],
-    "paint" : lambda row: paint_nagiosflag(row, "host_is_flapping", True)
+    "paint"   : lambda row: paint_nagiosflag(row, "host_is_flapping", True),
 }
 
 multisite_painters["host_is_active"] = {
-    "title" : _("Host is active"),
-    "short" : _("Active"),
+    "title"   : _("Host is active"),
+    "short"   : _("Active"),
     "columns" : [ "host_active_checks_enabled" ],
-    "paint" : lambda row: paint_nagiosflag(row, "host_active_checks_enabled", None)
+    "paint"   : lambda row: paint_nagiosflag(row, "host_active_checks_enabled", None),
 }
 
 multisite_painters["host_pnpgraph" ] = {
@@ -840,10 +844,11 @@ def paint_host_black(row):
         return None, row["host_name"]
 
 multisite_painters["host_black"] = {
-    "title" : _("Hostname, red background if down or unreachable"),
-    "short" : _("Host"),
+    "title"   : _("Hostname, red background if down or unreachable"),
+    "short"   : _("Host"),
     "columns" : ["site", "host_name", "host_state"],
-    "paint" : paint_host_black,
+    "paint"   : paint_host_black,
+    "sorter"  : 'site_host',
 }
 
 def paint_host_black_with_link_to_old_nagios_services(row):
@@ -858,18 +863,19 @@ def paint_host_black_with_link_to_old_nagios_services(row):
 
 
 multisite_painters["host_black_nagios"] = {
-    "title" : _("Hostname, red background if down, link to Nagios services"),
-    "short" : _("Host"),
+    "title"   : _("Hostname, red background if down, link to Nagios services"),
+    "short"   : _("Host"),
     "columns" : ["site", "host_name", "host_state"],
-    "paint" : paint_host_black_with_link_to_old_nagios_services,
+    "paint"   : paint_host_black_with_link_to_old_nagios_services,
+    "sorter"  : 'site_host',
 }
 
 
 multisite_painters["host_nagios_link"] = {
-    "title" : _("Icon with link to host to Nagios GUI"),
-    "short" : "",
+    "title"   : _("Icon with link to host to Nagios GUI"),
+    "short"   : "",
     "columns" : [ "site", "host_name" ],
-    "paint" : paint_nagios_link
+    "paint"   : paint_nagios_link,
 }
 
 def paint_host_with_state(row):
@@ -880,31 +886,33 @@ def paint_host_with_state(row):
     return "state hstate hstate%s" % state, row["host_name"]
 
 multisite_painters["host_with_state"] = {
-    "title" : _("Hostname colored with state"),
-    "short" : _("Host"),
+    "title"   : _("Hostname colored with state"),
+    "short"   : _("Host"),
     "columns" : ["site", "host_name", "host_state", "host_has_been_checked" ],
-    "paint" : paint_host_with_state,
+    "paint"   : paint_host_with_state,
+    "sorter"  : 'site_host',
 }
 
 multisite_painters["host"] = {
-    "title" : _("Hostname"),
-    "short" : _("Host"),
+    "title"   : _("Hostname"),
+    "short"   : _("Host"),
     "columns" : ["host_name"],
-    "paint" : lambda row: ("", row["host_name"])
+    "paint"   : lambda row: ("", row["host_name"]),
+    "sorter"  : 'site_host',
 }
 
 multisite_painters["alias"] = {
-    "title" : _("Host alias"),
-    "short" : _("Alias"),
+    "title"   : _("Host alias"),
+    "short"   : _("Alias"),
     "columns" : ["host_alias"],
-    "paint" : lambda row: ("", row["host_alias"])
+    "paint"   : lambda row: ("", row["host_alias"]),
 }
 
 multisite_painters["host_address"] = {
-    "title" : _("Host IP address"),
-    "short" : _("IP address"),
+    "title"   : _("Host IP address"),
+    "short"   : _("IP address"),
     "columns" : ["host_address"],
-    "paint" : lambda row: ("", row["host_address"])
+    "paint"   : lambda row: ("", row["host_address"]),
 }
 
 def paint_svc_count(id, count):
@@ -934,7 +942,7 @@ multisite_painters["num_services_ok"] = {
     "title"   : _("Number of services in state OK"),
     "short"   : _("OK"),
     "columns" : [ "host_num_services_ok" ],
-    "paint"   : lambda row: paint_svc_count(0, row["host_num_services_ok"])
+    "paint"   : lambda row: paint_svc_count(0, row["host_num_services_ok"]),
 }
 
 multisite_painters["num_problems"] = {
@@ -948,28 +956,28 @@ multisite_painters["num_services_warn"] = {
     "title"   : _("Number of services in state WARN"),
     "short"   : _("Wa"),
     "columns" : [ "host_num_services_warn" ],
-    "paint"   : lambda row: paint_svc_count(1, row["host_num_services_warn"])
+    "paint"   : lambda row: paint_svc_count(1, row["host_num_services_warn"]),
 }
 
 multisite_painters["num_services_crit"] = {
     "title"   : _("Number of services in state CRIT"),
     "short"   : _("Cr"),
     "columns" : [ "host_num_services_crit" ],
-    "paint"   : lambda row: paint_svc_count(2, row["host_num_services_crit"])
+    "paint"   : lambda row: paint_svc_count(2, row["host_num_services_crit"]),
 }
 
 multisite_painters["num_services_unknown"] = {
     "title"   : _("Number of services in state UNKNOWN"),
     "short"   : _("Un"),
     "columns" : [ "host_num_services_unknown" ],
-    "paint"   : lambda row: paint_svc_count(3, row["host_num_services_unknown"])
+    "paint"   : lambda row: paint_svc_count(3, row["host_num_services_unknown"]),
 }
 
 multisite_painters["num_services_pending"] = {
     "title"   : _("Number of services in state PENDING"),
     "short"   : _("Pd"),
     "columns" : [ "host_num_services_pending" ],
-    "paint"   : lambda row: paint_svc_count("p", row["host_num_services_pending"])
+    "paint"   : lambda row: paint_svc_count("p", row["host_num_services_pending"]),
 }
 
 def paint_service_list(row, columnname):
@@ -998,7 +1006,7 @@ multisite_painters["host_services"] = {
     "title"   : _("Services colored according to state"),
     "short"   : _("Services"),
     "columns" : [ "host_name", "host_services_with_state" ],
-    "paint"   : lambda row: paint_service_list(row, "host_services_with_state")
+    "paint"   : lambda row: paint_service_list(row, "host_services_with_state"),
 }
 
 def paint_host_list(site, hosts):
@@ -1019,14 +1027,14 @@ multisite_painters["host_parents"] = {
     "title"   : _("Host's parents"),
     "short"   : _("Parents"),
     "columns" : [ "host_parents" ],
-    "paint"   : lambda row: paint_host_list(row["site"], row["host_parents"])
+    "paint"   : lambda row: paint_host_list(row["site"], row["host_parents"]),
 }
 
 multisite_painters["host_childs"] = {
     "title"   : _("Host's childs"),
     "short"   : _("childs"),
     "columns" : [ "host_childs" ],
-    "paint"   : lambda row: paint_host_list(row["site"], row["host_childs"])
+    "paint"   : lambda row: paint_host_list(row["site"], row["host_childs"]),
 }
 
 def paint_host_group_memberlist(row):
@@ -1042,63 +1050,59 @@ multisite_painters["host_group_memberlist"] = {
     "title"   : _("Hostgroups the host is member of"),
     "short"   : _("Groups"),
     "columns" : [ "host_groups" ],
-    "paint"   : paint_host_group_memberlist
+    "paint"   : paint_host_group_memberlist,
 }
 
 multisite_painters["host_contacts"] = {
-    "title" : _("Host contacts"),
-    "short" : _("Contacts"),
+    "title"   : _("Host contacts"),
+    "short"   : _("Contacts"),
     "columns" : ["host_contacts"],
-    "paint" : lambda row: (None, ", ".join(row["host_contacts"]))
+    "paint"   : lambda row: (None, ", ".join(row["host_contacts"])),
 }
 
 multisite_painters["host_contact_groups"] = {
-    "title" : _("Host contact groups"),
-    "short" : _("Contact groups"),
+    "title"   : _("Host contact groups"),
+    "short"   : _("Contact groups"),
     "columns" : ["host_contact_groups"],
-    "paint" : lambda row: (None, ", ".join(row["host_contact_groups"]))
+    "paint"   : lambda row: (None, ", ".join(row["host_contact_groups"])),
 }
 
 multisite_painters["host_custom_notes"] = {
-    "title" : _("Custom host notes"), 
-    "short" : _("Notes"),
+    "title"   : _("Custom host notes"), 
+    "short"   : _("Notes"),
     "columns" : [ "host_name", "host_address" ],
-    "paint" : paint_custom_notes
+    "paint"   : paint_custom_notes,
 }
 
 def paint_host_tags(row):
-    for name, val in zip(row["host_custom_variable_names"], 
-            row["host_custom_variable_values"]):
-        if name == "TAGS":
-            return "", val
-    return "",""
+    return "", get_host_tags(row)
 
 multisite_painters["host_tags"] = {
-    "title" : _("Host Tags (Check_MK)"),
-    "short" : _("Tags"),
+    "title"   : _("Host Tags (Check_MK)"),
+    "short"   : _("Tags"),
     "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
-    "paint" : paint_host_tags
+    "paint"   : paint_host_tags,
 }
 
 multisite_painters["host_comments"] = {
-    "title" : _("Host Comments"),
-    "short" : _("Comments"),
+    "title"   : _("Host Comments"),
+    "short"   : _("Comments"),
     "columns" : [ "host_comments_with_info" ],
-    "paint" : lambda row: paint_comments("host_", row)
+    "paint"   : lambda row: paint_comments("host_", row),
 }
 
 multisite_painters["host_in_downtime"] = {
-    "title" : _("Host in downtime"),
-    "short" : _("Downtime"),
+    "title"   : _("Host in downtime"),
+    "short"   : _("Downtime"),
     "columns" : ["host_scheduled_downtime_depth"],
-    "paint" : lambda row: paint_nagiosflag(row, "host_scheduled_downtime_depth", True)
+    "paint"   : lambda row: paint_nagiosflag(row, "host_scheduled_downtime_depth", True),
 }
 
 multisite_painters["host_acknowledged"] = {
-    "title" : _("Host problem acknowledged"),
-    "short" : _("Ack"),
+    "title"   : _("Host problem acknowledged"),
+    "short"   : _("Ack"),
     "columns" : ["host_acknowledged"],
-    "paint" : lambda row: paint_nagiosflag(row, "host_acknowledged", False)
+    "paint"   : lambda row: paint_nagiosflag(row, "host_acknowledged", False),
 }
 
 
@@ -1141,71 +1145,77 @@ multisite_painters["hg_num_services_ok"] = {
     "title"   : _("Number of services in state OK"),
     "short"   : _("O"),
     "columns" : [ "hostgroup_num_services_ok" ],
-    "paint"   : lambda row: paint_svc_count(0, row["hostgroup_num_services_ok"])
+    "paint"   : lambda row: paint_svc_count(0, row["hostgroup_num_services_ok"]),
 }
 
 multisite_painters["hg_num_services_warn"] = {
     "title"   : _("Number of services in state WARN"),
     "short"   : _("W"),
     "columns" : [ "hostgroup_num_services_warn" ],
-    "paint"   : lambda row: paint_svc_count(1, row["hostgroup_num_services_warn"])
+    "paint"   : lambda row: paint_svc_count(1, row["hostgroup_num_services_warn"]),
 }
 
 multisite_painters["hg_num_services_crit"] = {
     "title"   : _("Number of services in state CRIT"),
     "short"   : _("C"),
     "columns" : [ "hostgroup_num_services_crit" ],
-    "paint"   : lambda row: paint_svc_count(2, row["hostgroup_num_services_crit"])
+    "paint"   : lambda row: paint_svc_count(2, row["hostgroup_num_services_crit"]),
 }
 
 multisite_painters["hg_num_services_unknown"] = {
     "title"   : _("Number of services in state UNKNOWN"),
     "short"   : _("U"),
     "columns" : [ "hostgroup_num_services_unknown" ],
-    "paint"   : lambda row: paint_svc_count(3, row["hostgroup_num_services_unknown"])
+    "paint"   : lambda row: paint_svc_count(3, row["hostgroup_num_services_unknown"]),
 }
 
 multisite_painters["hg_num_services_pending"] = {
     "title"   : _("Number of services in state PENDING"),
     "short"   : _("P"),
     "columns" : [ "hostgroup_num_services_pending" ],
-    "paint"   : lambda row: paint_svc_count("p", row["hostgroup_num_services_pending"])
+    "paint"   : lambda row: paint_svc_count("p", row["hostgroup_num_services_pending"]),
 }
+
 multisite_painters["hg_num_hosts_up"] = {
     "title"   : _("Number of hosts in state UP"),
     "short"   : _("Up"),
     "columns" : [ "hostgroup_num_hosts_up" ],
-    "paint"   : lambda row: paint_host_count(0, row["hostgroup_num_hosts_up"])
+    "paint"   : lambda row: paint_host_count(0, row["hostgroup_num_hosts_up"]),
 }
+
 multisite_painters["hg_num_hosts_down"] = {
     "title"   : _("Number of hosts in state DOWN"),
     "short"   : _("Dw"),
     "columns" : [ "hostgroup_num_hosts_down" ],
-    "paint"   : lambda row: paint_host_count(1, row["hostgroup_num_hosts_down"])
+    "paint"   : lambda row: paint_host_count(1, row["hostgroup_num_hosts_down"]),
 }
+
 multisite_painters["hg_num_hosts_unreach"] = {
     "title"   : _("Number of hosts in state UNREACH"),
     "short"   : _("Un"),
     "columns" : [ "hostgroup_num_hosts_unreach" ],
-    "paint"   : lambda row: paint_host_count(2, row["hostgroup_num_hosts_unreach"])
+    "paint"   : lambda row: paint_host_count(2, row["hostgroup_num_hosts_unreach"]),
 }
+
 multisite_painters["hg_num_hosts_pending"] = {
     "title"   : _("Number of hosts in state PENDING"),
     "short"   : _("Pd"),
     "columns" : [ "hostgroup_num_hosts_pending" ],
-    "paint"   : lambda row: paint_host_count(None, row["hostgroup_num_hosts_pending"])
+    "paint"   : lambda row: paint_host_count(None, row["hostgroup_num_hosts_pending"]),
 }
+
 multisite_painters["hg_name"] = {
-    "title" : _("Hostgroup name"),
-    "short" : _("Name"),
+    "title"   : _("Hostgroup name"),
+    "short"   : _("Name"),
     "columns" : ["hostgroup_name"],
-    "paint" : lambda row: (None, row["hostgroup_name"])
+    "paint"   : lambda row: (None, row["hostgroup_name"]),
 }
+
 multisite_painters["hg_alias"] = {
-    "title" : _("Hostgroup alias"),
-    "short" : _("Alias"),
+    "title"   : _("Hostgroup alias"),
+    "short"   : _("Alias"),
     "columns" : ["hostgroup_alias"],
-    "paint" : lambda row: (None, row["hostgroup_alias"])
+    "paint"   : lambda row: (None, row["hostgroup_alias"]),
 }
 
 #    ____                  _
@@ -1219,7 +1229,7 @@ multisite_painters["sg_services"] = {
     "title"   : _("Services colored according to state"),
     "short"   : _("Services"),
     "columns" : [ "servicegroup_members_with_state" ],
-    "paint"   : lambda row: paint_service_list(row, "servicegroup_members_with_state")
+    "paint"   : lambda row: paint_service_list(row, "servicegroup_members_with_state"),
 }
 
 multisite_painters["sg_num_services"] = {
@@ -1292,43 +1302,45 @@ multisite_painters["link_to_pnp_service"] = {
 #
 
 multisite_painters["comment_id"] = {
-    "title" : _("Comment id"),
-    "short" : _("ID"),
+    "title"   : _("Comment id"),
+    "short"   : _("ID"),
     "columns" : ["comment_id"],
-    "paint" : lambda row: (None, row["comment_id"])
+    "paint"   : lambda row: (None, row["comment_id"]),
 }
 multisite_painters["comment_author"] = {
-    "title" : _("Comment author"),
-    "short" : _("Author"),
+    "title"   : _("Comment author"),
+    "short"   : _("Author"),
     "columns" : ["comment_author"],
-    "paint" : lambda row: (None, row["comment_author"])
+    "paint"   : lambda row: (None, row["comment_author"]),
 }
 
 multisite_painters["comment_comment"] = {
-    "title" : _("Comment text"),
+    "title"   : _("Comment text"),
     "columns" : ["comment_comment"],
-    "paint" : lambda row: (None, row["comment_comment"])
+    "paint"   : lambda row: (None, row["comment_comment"]),
 }
 
 multisite_painters["comment_what"] = {
-    "title" : _("Comment type (host/service)"),
-    "short" : _("Type"),
+    "title"   : _("Comment type (host/service)"),
+    "short"   : _("Type"),
     "columns" : ["comment_type"],
-    "paint" : lambda row: (None, row["comment_type"] == 1 and _("Host") or _("Service"))
+    "paint"   : lambda row: (None, row["comment_type"] == 1 and _("Host") or _("Service")),
 }
+
 multisite_painters["comment_time"] = {
-    "title" : _("Comment entry time"),
-    "short" : _("Time"),
+    "title"   : _("Comment entry time"),
+    "short"   : _("Time"),
     "columns" : ["comment_entry_time"],
     "options" : [ "ts_format", "ts_date" ],
-    "paint" : lambda row: paint_age(row["comment_entry_time"], True, 3600)
+    "paint"   : lambda row: paint_age(row["comment_entry_time"], True, 3600),
 }
+
 multisite_painters["comment_expires"] = {
-    "title" : _("Comment expiry time"),
-    "short" : _("Expires"),
+    "title"   : _("Comment expiry time"),
+    "short"   : _("Expires"),
     "columns" : ["comment_expire_time"],
     "options" : [ "ts_format", "ts_date" ],
-    "paint" : lambda row: paint_age(row["comment_expire_time"], row["comment_expire_time"] != 0, 3600)
+    "paint"   : lambda row: paint_age(row["comment_expire_time"], row["comment_expire_time"] != 0, 3600),
 }
 
 def paint_comment_entry_type(row):
@@ -1352,10 +1364,10 @@ def paint_comment_entry_type(row):
     return "icons", code
 
 multisite_painters["comment_entry_type"] = {
-    "title" : _("Comment entry type (user/downtime/flapping/ack)"),
-    "short" : _("E.Type"),
+    "title"   : _("Comment entry type (user/downtime/flapping/ack)"),
+    "short"   : _("E.Type"),
     "columns" : ["comment_entry_type", "host_name", "service_description" ],
-    "paint" : paint_comment_entry_type
+    "paint"   : paint_comment_entry_type,
 }
 
 #    ____                      _   _
@@ -1367,64 +1379,71 @@ multisite_painters["comment_entry_type"] = {
 
 
 multisite_painters["downtime_id"] = {
-    "title" : _("Downtime id"),
-    "short" : _("ID"),
+    "title"   : _("Downtime id"),
+    "short"   : _("ID"),
     "columns" : ["downtime_id"],
-    "paint" : lambda row: (None, row["downtime_id"])
+    "paint"   : lambda row: (None, row["downtime_id"]),
 }
+
 multisite_painters["downtime_author"] = {
-    "title" : _("Downtime author"),
-    "short" : _("Author"),
+    "title"   : _("Downtime author"),
+    "short"   : _("Author"),
     "columns" : ["downtime_author"],
-    "paint" : lambda row: (None, row["downtime_author"])
+    "paint"   : lambda row: (None, row["downtime_author"]),
 }
+
 multisite_painters["downtime_comment"] = {
-    "title" : _("Downtime comment"),
-    "short" : _("Comment"),
+    "title"   : _("Downtime comment"),
+    "short"   : _("Comment"),
     "columns" : ["downtime_comment"],
-    "paint" : lambda row: (None, row["downtime_comment"])
+    "paint"   : lambda row: (None, row["downtime_comment"]),
 }
 
 multisite_painters["downtime_fixed"] = {
-    "title" : _("Downtime is fixed"),
-    "short" : _("Fixed"),
+    "title"   : _("Downtime is fixed"),
+    "short"   : _("Fixed"),
     "columns" : ["downtime_fixed"],
-    "paint" : lambda row: (None, row["downtime_fixed"] == 0 and "flexible" or "fixed")
+    "paint"   : lambda row: (None, row["downtime_fixed"] == 0 and "flexible" or "fixed"),
 }
+
 multisite_painters["downtime_what"] = {
-    "title" : _("Downtime type (host/service)"),
-    "short" : _("Type"),
+    "title"   : _("Downtime type (host/service)"),
+    "short"   : _("Type"),
     "columns" : ["is_service"],
-    "paint" : lambda row: (None, row["is_service"] and "Service" or "Host")
+    "paint"   : lambda row: (None, row["is_service"] and "Service" or "Host"),
 }
+
 multisite_painters["downtime_type"] = {
-    "title" : _("Downtime active or pending"),
-    "short" : _("act/pend"),
+    "title"   : _("Downtime active or pending"),
+    "short"   : _("act/pend"),
     "columns" : ["downtime_type"],
-    "paint" : lambda row: (None, row["downtime_type"] == 0 and "active" or "pending")
+    "paint"   : lambda row: (None, row["downtime_type"] == 0 and "active" or "pending"),
 }
+
 multisite_painters["downtime_entry_time"] = {
-    "title" : _("Downtime entry time"),
-    "short" : _("Entry"),
+    "title"   : _("Downtime entry time"),
+    "short"   : _("Entry"),
     "columns" : ["downtime_entry_time"],
     "options" : [ "ts_format", "ts_date" ],
-    "paint" : lambda row: paint_age(row["downtime_entry_time"], True, 3600)
+    "paint"   : lambda row: paint_age(row["downtime_entry_time"], True, 3600),
 }
 
 multisite_painters["downtime_start_time"] = {
-    "title" : _("Downtime start time"),
-    "short" : _("Start"),
+    "title"   : _("Downtime start time"),
+    "short"   : _("Start"),
     "columns" : ["downtime_start_time"],
     "options" : [ "ts_format", "ts_date" ],
-    "paint" : lambda row: paint_age(row["downtime_start_time"], True, 3600)
+    "paint"   : lambda row: paint_age(row["downtime_start_time"], True, 3600),
 }
+
 multisite_painters["downtime_end_time"] = {
-    "title" : _("Downtime end time"),
-    "short" : _("End"),
+    "title"   : _("Downtime end time"),
+    "short"   : _("End"),
     "columns" : ["downtime_end_time"],
     "options" : [ "ts_format", "ts_date" ],
-    "paint" : lambda row: paint_age(row["downtime_end_time"], True, 3600)
+    "paint"   : lambda row: paint_age(row["downtime_end_time"], True, 3600),
 }
+
 def paint_downtime_duration(row):
     if row["downtime_fixed"] == 1:
         return None, ""
@@ -1432,10 +1451,10 @@ def paint_downtime_duration(row):
         return None, "%02d:%02d" % divmod(row["downtime_duration"] / 60, 60)
 
 multisite_painters["downtime_duration"] = {
-    "title" : _("Downtime duration (if flexible)"),
-    "short" : _("Duration"),
+    "title"   : _("Downtime duration (if flexible)"),
+    "short"   : _("Duration"),
     "columns" : ["downtime_duration", "downtime_fixed"],
-    "paint" : paint_downtime_duration
+    "paint"   : paint_downtime_duration,
 }
 
 #    _
@@ -1446,40 +1465,42 @@ multisite_painters["downtime_duration"] = {
 #               |___/
 
 multisite_painters["log_message"] = {
-    "title" : _("Log: complete message"),
-    "short" : _("Message"),
+    "title"   : _("Log: complete message"),
+    "short"   : _("Message"),
     "columns" : ["log_message"],
-    "paint" : lambda row: ("", row["log_message"])
+    "paint"   : lambda row: ("", row["log_message"]),
 }
+
 multisite_painters["log_plugin_output"] = {
-    "title" : _("Log: output of check plugin"),
-    "short" : _("Check output"),
+    "title"   : _("Log: output of check plugin"),
+    "short"   : _("Check output"),
     "columns" : ["log_plugin_output"],
-    "paint" : lambda row: ("", format_plugin_output(row["log_plugin_output"]))
+    "paint"   : lambda row: ("", format_plugin_output(row["log_plugin_output"])),
 }
+
 multisite_painters["log_attempt"] = {
-    "title" : _("Log: number of check attempt"),
-    "short" : _("Att."),
+    "title"   : _("Log: number of check attempt"),
+    "short"   : _("Att."),
     "columns" : ["log_attempt"],
-    "paint" : lambda row: ("", row["log_attempt"])
+    "paint"   : lambda row: ("", row["log_attempt"]),
 }
 multisite_painters["log_state_type"] = {
-    "title" : _("Log: type of state (hard/soft/stopped/started)"),
-    "short" : _("Type"),
+    "title"   : _("Log: type of state (hard/soft/stopped/started)"),
+    "short"   : _("Type"),
     "columns" : ["log_state_type"],
-    "paint" : lambda row: ("", row["log_state_type"])
+    "paint"   : lambda row: ("", row["log_state_type"]),
 }
 multisite_painters["log_type"] = {
-    "title" : _("Log: event"),
-    "short" : _("Event"),
+    "title"   : _("Log: event"),
+    "short"   : _("Event"),
     "columns" : ["log_type"],
-    "paint" : lambda row: ("nowrap", row["log_type"])
+    "paint"   : lambda row: ("nowrap", row["log_type"]),
 }
 multisite_painters["log_contact_name"] = {
-    "title" : _("Log: contact name"),
-    "short" : _("Contact"),
+    "title"   : _("Log: contact name"),
+    "short"   : _("Contact"),
     "columns" : ["log_contact_name"],
-    "paint" : lambda row: ("nowrap", row["log_contact_name"])
+    "paint"   : lambda row: ("nowrap", row["log_contact_name"]),
 }
 def paint_log_icon(row):
     img = None
@@ -1510,30 +1531,32 @@ def paint_log_icon(row):
         return "icon", ""
 
 multisite_painters["log_icon"] = {
-    "title" : _("Log: event icon"),
-    "short" : "",
+    "title"   : _("Log: event icon"),
+    "short"   : "",
     "columns" : ["log_type", "log_state", "log_state_type"],
-    "paint" : paint_log_icon,
+    "paint"   : paint_log_icon,
 }
+
 multisite_painters["log_options"] = {
-    "title" : _("Log: informational part of message"),
-    "short" : _("Info"),
+    "title"   : _("Log: informational part of message"),
+    "short"   : _("Info"),
     "columns" : ["log_options"],
-    "paint" : lambda row: ("", row["log_options"])
+    "paint"   : lambda row: ("", row["log_options"]),
 }
 
 multisite_painters["log_time"] = {
-    "title" : _("Log: entry time"),
-    "short" : _("Time"),
+    "title"   : _("Log: entry time"),
+    "short"   : _("Time"),
     "columns" : ["log_time"],
     "options" : [ "ts_format", "ts_date" ],
-    "paint" : lambda row: paint_age(row["log_time"], True, 3600 * 24)
+    "paint"   : lambda row: paint_age(row["log_time"], True, 3600 * 24),
 }
+
 multisite_painters["log_lineno"] = {
-    "title" : _("Log: line number in log file"),
-    "short" : _("Line"),
+    "title"   : _("Log: line number in log file"),
+    "short"   : _("Line"),
     "columns" : ["log_lineno"],
-    "paint" : lambda row: ("number", str(row["log_lineno"]))
+    "paint"   : lambda row: ("number", str(row["log_lineno"])),
 }
 
 multisite_painters["log_date"] = {
@@ -1541,7 +1564,7 @@ multisite_painters["log_date"] = {
     "short"   : _("Date"),
     "columns" : ["log_time"],
     "groupby" : lambda row: paint_day(row["log_time"])[1],
-    "paint"   : lambda row: paint_day(row["log_time"])
+    "paint"   : lambda row: paint_day(row["log_time"]),
 }
 
 def paint_log_state(row):
@@ -1552,24 +1575,26 @@ def paint_log_state(row):
         return paint_host_state_short({"host_has_been_checked":1, "host_state" : state})
 
 multisite_painters["log_state"] = {
-    "title" : _("Log: state of host/service at log time"),
-    "short" : _("State"),
+    "title"   : _("Log: state of host/service at log time"),
+    "short"   : _("State"),
     "columns" : ["log_state", "log_service_description"],
-    "paint" : paint_log_state
+    "paint"   : paint_log_state,
 }
 
+# Alert statistics
+
 multisite_painters["alert_stats_ok"] = {
-    "title" : _("Alert Statistics: Number of recoveries"),
-    "short" : _("OK"),
+    "title"   : _("Alert Statistics: Number of recoveries"),
+    "short"   : _("OK"),
     "columns" : [ "alerts_ok" ],
-    "paint" : lambda row: ("", str(row["alerts_ok"]))
+    "paint"   : lambda row: ("", str(row["alerts_ok"])),
 }
 
 multisite_painters["alert_stats_warn"] = {
-    "title" : _("Alert Statistics: Number of warnings"),
-    "short" : _("WARN"),
+    "title"   : _("Alert Statistics: Number of warnings"),
+    "short"   : _("WARN"),
     "columns" : [ "alerts_warn" ],
-    "paint" : lambda row: paint_svc_count(1, row["alerts_warn"])
+    "paint"   : lambda row: paint_svc_count(1, row["alerts_warn"]),
 }
 
 multisite_painters["alert_stats_crit"] = {

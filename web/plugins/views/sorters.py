@@ -108,28 +108,140 @@ multisite_sorters["site_host"] = {
     "cmp"     : cmp_site_host
 }
 
+def cmp_site_alias(r1, r2):
+    return cmp(config.site(r1["site"])["alias"], config.site(r2["site"])["alias"])
+
+multisite_sorters["sitealias"] = {
+    "title"   : _("Site Alias"),
+    "columns" : ["site" ],
+    "cmp"     : cmp_site_alias
+}
+
+def cmp_host_tags(r1, r2):
+    return cmp(get_host_tags(r1), get_host_tags(r2))
+
+multisite_sorters["host"] = {
+    "title"   : _("Host Tags (Check_MK)"),
+    "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
+    "cmp"     : cmp_host_tags,
+}
 
 #                      name           title                    column                       sortfunction
-declare_simple_sorter("svcdescr",     _("Service description"),   "service_description",       cmp_simple_string)
-declare_simple_sorter("svcoutput",    _("Service plugin output"), "service_plugin_output",     cmp_simple_string)
-declare_simple_sorter("site",         _("Site"),                  "site",                      cmp_simple_string)
-declare_simple_sorter("stateage",     _("Service state age"),     "service_last_state_change", cmp_simple_number)
-declare_simple_sorter("servicegroup", _("Servicegroup"),          "servicegroup_alias",        cmp_simple_string)
-declare_simple_sorter("hostgroup",    _("Hostgroup"),             "hostgroup_alias",           cmp_simple_string)
+declare_simple_sorter("svcdescr",                _("Service description"),         "service_description",        cmp_simple_string)
+declare_simple_sorter("svcoutput",               _("Service plugin output"),       "service_plugin_output",      cmp_simple_string)
+declare_simple_sorter("svc_long_plugin_output",  _("Long output of check plugin"), "service_long_plugin_output", cmp_simple_string)
+declare_simple_sorter("site",                    _("Site"),                        "site",                       cmp_simple_string)
+declare_simple_sorter("stateage",                _("Service state age"),           "service_last_state_change",  cmp_simple_number)
+declare_simple_sorter("servicegroup",            _("Servicegroup"),                "servicegroup_alias",         cmp_simple_string)
+declare_simple_sorter("hostgroup",               _("Hostgroup"),                   "hostgroup_alias",            cmp_simple_string)
 
-# Log
-declare_simple_sorter("log_time",     _("Time of log entry"),     "log_time",                  cmp_simple_number)
-declare_simple_sorter("log_lineno",   _("Number of line in logfile"), "log_lineno",            cmp_simple_number)
+# Service
+declare_1to1_sorter("svc_check_command",          cmp_simple_string)
+declare_1to1_sorter("svc_contacts",               cmp_string_list)
+declare_1to1_sorter("svc_contact_groups",         cmp_string_list)
+declare_1to1_sorter("svc_check_age",              cmp_simple_number, col_num = 1)
+declare_1to1_sorter("svc_next_check",             cmp_simple_number, reverse = True)
+declare_1to1_sorter("svc_next_notification",      cmp_simple_number, reverse = True)
+declare_1to1_sorter("svc_last_notification",      cmp_simple_number)
+declare_1to1_sorter("svc_check_latency",          cmp_simple_number)
+declare_1to1_sorter("svc_check_duration",         cmp_simple_number)
+declare_1to1_sorter("svc_attempt",                cmp_simple_number)
+declare_1to1_sorter("svc_check_type",             cmp_simple_number)
+declare_1to1_sorter("svc_in_downtime",            cmp_simple_number)
+declare_1to1_sorter("svc_in_notifper",            cmp_simple_number)
+declare_1to1_sorter("svc_notifper",               cmp_simple_string)
+declare_1to1_sorter("svc_flapping",               cmp_simple_number)
+declare_1to1_sorter("svc_notifications_enabled",  cmp_simple_number)
+declare_1to1_sorter("svc_is_active",              cmp_simple_number)
+declare_1to1_sorter("svc_group_memberlist",       cmp_string_list)
+declare_1to1_sorter("svc_acknowledged",           cmp_simple_number)
+
+# Host
+declare_1to1_sorter("alias",                  cmp_simple_string)
+declare_1to1_sorter("host_address",           cmp_simple_string)
+declare_1to1_sorter("host_plugin_output",     cmp_simple_string)
+declare_1to1_sorter("host_perf_data",         cmp_simple_string)
+declare_1to1_sorter("host_check_command",     cmp_simple_string)
+declare_1to1_sorter("host_state_age",         cmp_simple_number, col_num = 1)
+declare_1to1_sorter("host_check_age",         cmp_simple_number, col_num = 1)
+declare_1to1_sorter("host_next_check",        cmp_simple_number, reverse = True)
+declare_1to1_sorter("host_next_notification", cmp_simple_number, reverse = True)
+declare_1to1_sorter("host_last_notification", cmp_simple_number)
+declare_1to1_sorter("host_check_latency",     cmp_simple_number)
+declare_1to1_sorter("host_check_duration",    cmp_simple_number)
+declare_1to1_sorter("host_attempt",           cmp_simple_number)
+declare_1to1_sorter("host_check_type",        cmp_simple_number)
+declare_1to1_sorter("host_in_notifper",       cmp_simple_number)
+declare_1to1_sorter("host_notifper",          cmp_simple_string)
+declare_1to1_sorter("host_flapping",          cmp_simple_number)
+declare_1to1_sorter("host_is_active",         cmp_simple_number)
+declare_1to1_sorter("host_in_downtime",       cmp_simple_number)
+declare_1to1_sorter("host_acknowledged",      cmp_simple_number)
+declare_1to1_sorter("num_problems",           cmp_simple_number)
+declare_1to1_sorter("num_services",           cmp_simple_number)
+declare_1to1_sorter("num_services_ok",        cmp_simple_number)
+declare_1to1_sorter("num_services_warn",      cmp_simple_number)
+declare_1to1_sorter("num_services_crit",      cmp_simple_number)
+declare_1to1_sorter("num_services_unknown",   cmp_simple_number)
+declare_1to1_sorter("num_services_pending",   cmp_simple_number)
+declare_1to1_sorter("host_parents",           cmp_string_list)
+declare_1to1_sorter("host_childs",            cmp_string_list)
+declare_1to1_sorter("host_group_memberlist",  cmp_string_list)
+declare_1to1_sorter("host_contacts",          cmp_string_list)
+declare_1to1_sorter("host_contact_groups",    cmp_string_list)
+
+# Hostgroup
+declare_1to1_sorter("hg_num_services",         cmp_simple_number)
+declare_1to1_sorter("hg_num_services_ok",      cmp_simple_number)
+declare_1to1_sorter("hg_num_services_warn",    cmp_simple_number)
+declare_1to1_sorter("hg_num_services_crit",    cmp_simple_number)
+declare_1to1_sorter("hg_num_services_unknown", cmp_simple_number)
+declare_1to1_sorter("hg_num_services_pending", cmp_simple_number)
+declare_1to1_sorter("hg_num_hosts_up",         cmp_simple_number)
+declare_1to1_sorter("hg_num_hosts_down",       cmp_simple_number)
+declare_1to1_sorter("hg_num_hosts_unreach",    cmp_simple_number)
+declare_1to1_sorter("hg_num_hosts_pending",    cmp_simple_number)
+declare_1to1_sorter("hg_name",                 cmp_simple_string)
+declare_1to1_sorter("hg_alias",                cmp_simple_string)
+
+# Servicegroup
+declare_1to1_sorter("sg_num_services",         cmp_simple_number)
+declare_1to1_sorter("sg_num_services_ok",      cmp_simple_number)
+declare_1to1_sorter("sg_num_services_warn",    cmp_simple_number)
+declare_1to1_sorter("sg_num_services_crit",    cmp_simple_number)
+declare_1to1_sorter("sg_num_services_unknown", cmp_simple_number)
+declare_1to1_sorter("sg_num_services_pending", cmp_simple_number)
+declare_1to1_sorter("sg_name",                 cmp_simple_string)
+declare_1to1_sorter("sg_alias",                cmp_simple_string)
 
 # Comments
-declare_simple_sorter("comment_author", _("Comment author"),      "comment_author",            cmp_simple_string)
+declare_1to1_sorter("comment_id",              cmp_simple_number)
+declare_1to1_sorter("comment_author",          cmp_simple_string)
+declare_1to1_sorter("comment_comment",         cmp_simple_string)
+declare_1to1_sorter("comment_time",            cmp_simple_number)
+declare_1to1_sorter("comment_expires",         cmp_simple_number, reverse = True)
 declare_simple_sorter("comment_type",   _("Comment type"),        "comment_type",              cmp_simple_number)
 
 # Downtimes
+declare_1to1_sorter("downtime_id",             cmp_simple_number)
+declare_1to1_sorter("downtime_author",         cmp_simple_string)
+declare_1to1_sorter("downtime_comment",        cmp_simple_string)
+declare_1to1_sorter("downtime_fixed",          cmp_simple_number)
+declare_1to1_sorter("downtime_type",           cmp_simple_number)
 declare_simple_sorter("downtime_what",         _("Downtime type (host/service)"),  "is_service",            cmp_simple_number)
 declare_simple_sorter("downtime_start_time",   _("Downtime start"),                "downtime_start_time",   cmp_simple_number)
 declare_simple_sorter("downtime_end_time",     _("Downtime end"),                  "downtime_end_time",     cmp_simple_number)
 declare_simple_sorter("downtime_entry_time",   _("Downtime entry time"),           "downtime_entry_time",   cmp_simple_number)
+
+# Log
+declare_1to1_sorter("log_plugin_output",       cmp_simple_string)
+declare_1to1_sorter("log_attempt",             cmp_simple_string)
+declare_1to1_sorter("log_state_type",          cmp_simple_string)
+declare_1to1_sorter("log_type",                cmp_simple_string)
+declare_1to1_sorter("log_contact_name",        cmp_simple_string)
+declare_1to1_sorter("log_time",                cmp_simple_number)
+declare_1to1_sorter("log_lineno",              cmp_simple_number)
+declare_1to1_sorter("log_date",                cmp_simple_number)
 
 # Alert statistics
 declare_simple_sorter("alerts_ok",       _("Number of recoveries"),      "alerts_ok",      cmp_simple_number)

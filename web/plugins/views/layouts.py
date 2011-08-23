@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # -------------------------------------------------------------------------
 #    ____  _             _
 #   / ___|(_)_ __   __ _| | ___
@@ -49,6 +48,7 @@ def render_single_dataset(rows, view, group_painters, painters, num_columns):
                 title = p[4] # Use custom title
             else:
                 title = painter["title"]
+
             html.write("<tr class=data><td class=left>%s</td>" % title)
             for row in thispart:
                 paint(p, row)
@@ -137,7 +137,7 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns):
         if paintheader:
             html.write("<tr>")
             for p in painters:
-                paint_header(p)
+                paint_header(view, p)
                 html.write("\n")
             html.write("</tr>\n")
 
@@ -288,7 +288,7 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns):
         html.write("<tr>")
         for n in range(1, num_columns + 1):
             for p in painters:
-                paint_header(p)
+                paint_header(view, p)
         html.write("</tr>\n")
 
     if len(group_painters) == 0 and view.get("column_headers") != "off":

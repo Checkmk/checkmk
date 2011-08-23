@@ -440,7 +440,7 @@ def select_view(varname, only_with_hidden = False):
 # -------------------------------------------------------------------------
 def page_edit_view():
     if not config.may("edit_views"):
-        raise MKAuthException("You are not allowed to edit views.")
+        raise MKAuthException(_("You are not allowed to edit views."))
 
     load_views()
     view = None
@@ -480,7 +480,7 @@ def page_edit_view():
     elif html.var("datasource"):
         datasourcename = html.var("datasource")
     else:
-        raise MKInternalError("No view name and not datasource defined.")
+        raise MKInternalError(_("No view name and not datasource defined."))
 
 
     # handle case of save or try or press on search button
@@ -496,19 +496,19 @@ def page_edit_view():
                     if oldname and oldname != view["name"] and (html.req.user, oldname) in html.multisite_views:
                         del html.multisite_views[(html.req.user, oldname)]
                     save_views(html.req.user)
-                return page_message_and_forward("Your view has been saved.", "edit_views.py",
+                return page_message_and_forward(_("Your view has been saved."), "edit_views.py",
                         "<script type='text/javascript'>top.frames[0].location.reload();</script>\n")
 
         except MKUserError, e:
             html.write("<div class=error>%s</div>\n" % e.message)
             html.add_user_error(e.varname, e.message)
 
-    html.header("Edit view")
+    html.header(_("Edit view"))
     html.write("<table class=navi><tr>\n")
-    html.write('<td class="left open">Edit</td>\n')
+    html.write('<td class="left open">%s</td>\n' % _('Edit'))
     html.write("<td class=gap></td>\n")
     html.write('<td class="right" onmouseover="hover_tab(this);" onmouseout="unhover_tab(this);">')
-    html.write('<a href="edit_views.py">All views</a>\n')
+    html.write('<a href="edit_views.py">%s</a>\n' % _('All views'))
     html.write('</td>\n')
     html.write("</tr><tr class=form><td class=form colspan=3><div class=whiteborder>\n")
 
@@ -571,30 +571,30 @@ function toggle_section(nr, oImg) {
 
     # Properties
     sid = 2
-    section_header(sid, "Properties")
+    section_header(sid, _("Properties"))
     datasource_title = multisite_datasources[datasourcename]["title"]
-    html.write("Datasource: <b>%s</b><br>\n" % datasource_title)
+    html.write("%s: <b>%s</b><br>\n" % (_('Datasource'), datasource_title))
     html.hidden_field("datasource", datasourcename)
     if config.may("publish_views"):
         html.checkbox("public")
-        html.write(" make this view available for all users")
+        html.write(" " + _('make this view available for all users'))
         html.write("<br />\n")
     html.checkbox("hidden")
-    html.write(" hide this view from the sidebar")
+    html.write(" " + _('hide this view from the sidebar'))
     html.write("<br />\n")
     html.checkbox("mustsearch")
-    html.write(" show data only on search<br>")
+    html.write(" " + _('show data only on search') + "<br>")
     html.checkbox("hidebutton")
-    html.write(" do not show a context button to this view")
+    html.write(" " + _('do not show a context button to this view'))
     section_footer(sid)
 
     # [3] Filters
     sid = 3
-    section_header(sid, "Filters")
+    section_header(sid, _("Filters"))
     html.write("<table class=filters>")
     html.write("<tr><th>")
     html.write(_("Filter"))
-    html.write("</th><th>usage</th><th>hardcoded settings</th><th>HTML variables</th></tr>\n")
+    html.write("</th><th>"+_('usage')+"</th><th>"+_('hardcoded settings')+"</th><th>"+_('HTML variables')+"</th></tr>\n")
     allowed_filters = filters_allowed_for_datasource(datasourcename)
     # sort filters according to title
     s = [(filt.sort_index, filt.title, fname, filt) 
@@ -609,10 +609,10 @@ function toggle_section(nr, oImg) {
         html.write("</td>")
         html.write("<td class=usage>")
         html.sorted_select("filter_%s" % fname,
-                [("off", "Don't use"),
-                ("show", "Show to user"),
-                ("hide", "Use for linking"),
-                ("hard", "Hardcode")],
+                [("off", _("Don't use")),
+                ("show", _("Show to user")),
+                ("hide", _("Use for linking")),
+                ("hard", _("Hardcode"))],
                 "", "filter_activation(this.id)")
         html.write("</td><td class=widget>")
         filt.display()
@@ -641,7 +641,7 @@ function toggle_section(nr, oImg) {
             html.write("%02d " % n)
             html.sorted_select("%s%d" % (var_prefix, n), collist)
             html.write(" ")
-            html.select("%sorder_%d" % (var_prefix, n), [("asc", "Ascending"), ("dsc", "Descending")])
+            html.select("%sorder_%d" % (var_prefix, n), [("asc", _("Ascending")), ("dsc", _("Descending"))])
             html.write("<br>")
         section_footer(id)
 
@@ -665,41 +665,50 @@ function toggle_section(nr, oImg) {
         section_footer(id)
 
     # [4] Sorting
-    sorter_selection(4, "Sorting", "sort_", max_sort_columns, multisite_sorters)
+    sorter_selection(4, _("Sorting"), "sort_", max_sort_columns, multisite_sorters)
 
     # [5] Grouping
-    column_selection(5, "Group by", "group_", multisite_painters)
+    column_selection(5, _("Group by"), "group_", multisite_painters)
 
     # [6] Columns (painters)
-    column_selection(6, "Columns", "col_", multisite_painters)
+    column_selection(6, _("Columns"), "col_", multisite_painters)
 
     # [7] Layout
     sid = 7
-    section_header(sid, "Layout")
+    section_header(sid, _("Layout"))
     html.write("<table border=0>")
-    html.write("<tr><td>Basic Layout:</td><td>")
+    html.write("<tr><td>%s:</td><td>" % _('Basic Layout'))
     html.sorted_select("layout", [ (k, v["title"]) for k,v in multisite_layouts.items() if not v.get("hide")])
     html.write("</td></tr>\n")
-    html.write("<tr><td>Number of columns:</td><td>")
+    html.write("<tr><td>%s:</td><td>" % _('Number of columns'))
     html.number_input("num_columns", 1)
     html.write("</td></tr>\n")
-    html.write("<tr><td>Automatic reload (0 or empty for none):</td><td>")
+    html.write("<tr><td>%s:</td><td>" % _('Automatic reload (0 or empty for none)'))
     html.number_input("browser_reload", 0)
     html.write("</td></tr>\n")
-    html.write("<tr><td>Play %s:</td><td>" % docu_link("multisite_sounds", "alarm sounds"))
+    html.write("<tr><td>%s %s:</td><td>" % (_('Play'), docu_link("multisite_sounds", _("alarm sounds"))))
     html.checkbox("play_sounds", False)
     html.write("</td></tr>\n")
-    html.write("<tr><td>Column headers:</td><td>")
-    html.select("column_headers", [ ("off", "off"), ("pergroup", "once per group") ])
+    html.write("<tr><td>%s:</td><td>" % _('Column headers'))
+
+    # 1.1.11i3: Fix deprecated column_header option: perpage -> pergroup
+    # This should be cleaned up someday
+    if html.var("column_headers") == 'perpage':
+        html.set_var("column_headers", 'pergroup')
+
+    html.select("column_headers", [ ("off", _("off")), ("pergroup", _("once per group")) ])
+    html.write("</td><tr>\n")
+    html.write("<tr><td>%s:</td><td>" % _('Sortable by user'))
+    html.checkbox('user_sortable', True)
     html.write("</td><tr>\n")
     html.write("</table>\n")
     section_footer(sid)
 
 
     html.write('<tr><td class="legend button" colspan=2>')
-    html.button("try", "Try out")
+    html.button("try", _("Try out"))
     html.write(" ")
-    html.button("save", "Save")
+    html.button("save", _("Save"))
     html.write("</table>\n")
     html.end_form()
 
@@ -737,28 +746,30 @@ def view_edit_column(n, var_prefix, maxnum, allowed, joined = []):
             'onmouseout=\"hilite_icon(this, 0)\" '
             'src="images/button_movedown_lo.png"%s>' % (var_prefix, n, display))
     html.write('</td>')
-    html.write('<td id="%slabel_%d" class=celeft>Column %d:</td><td>' % (var_prefix, n, n))
+    html.write('<td id="%slabel_%d" class=celeft>%s %d:</td><td>' % (var_prefix, n, _('Column'), n))
     html.select("%s%d" % (var_prefix, n), collist, "", "toggle_join_fields('%s', %d, this)" % (var_prefix, n))
     display = 'none'
     if joined and is_joined_value(collist, "%s%d" % (var_prefix, n)):
         display = ''
-    html.write("</td></tr><tr id='%sjoin_index_row%d' style='display:%s'><td class=celeft>of Service:</td><td>" % (var_prefix, n, display))
+    html.write("</td></tr><tr id='%sjoin_index_row%d' style='display:%s'><td class=celeft>%s:</td><td>" %
+                                                                    (var_prefix, n, display, _('of Service')))
     html.text_input("%sjoin_index_%d" % (var_prefix, n))
-    html.write("</td></tr><tr><td class=celeft>Link:</td><td>")
+    html.write("</td></tr><tr><td class=celeft>%s:</td><td>" % _('Link'))
     select_view("%slink_%d" % (var_prefix, n))
-    html.write("</td></tr><tr><td class=celeft>Tooltip:</td><td>")
+    html.write("</td></tr><tr><td class=celeft>%s:</td><td>" % _('Tooltip'))
     html.select("%stooltip_%d" % (var_prefix, n), collist)
-    html.write("</td></tr><tr id='%stitle_row%d' style='display:%s'><td class=celeft>Title:</td><td>" % (var_prefix, n, display))
+    html.write("</td></tr><tr id='%stitle_row%d' style='display:%s'><td class=celeft>%s:</td><td>" %
+                                                                       (var_prefix, n, display, _('Title')))
     html.text_input("%stitle_%d" % (var_prefix, n))
     html.write("</td></tr></table>")
     html.write("</div>")
 
 def ajax_get_edit_column():
     if not config.may("edit_views"):
-        raise MKAuthException("You are not allowed to edit views.")
+        raise MKAuthException(_("You are not allowed to edit views."))
 
     if not html.has_var('ds') or not html.has_var('num') or not html.has_var('pre'):
-        raise MKInternalError("Missing attributes")
+        raise MKInternalError(_("Missing attributes"))
 
     load_views()
 
@@ -792,6 +803,7 @@ def load_view_into_html_vars(view):
     html.set_var("hidden",           view["hidden"] and "on" or "")
     html.set_var("mustsearch",       view["mustsearch"] and "on" or "")
     html.set_var("hidebutton",       view.get("hidebutton",  False) and "on" or "")
+    html.set_var("user_sortable",    view.get("user_sortable", True) and "on" or "")
 
     # [3] Filters
     for name, filt in multisite_filters.items():
@@ -859,12 +871,12 @@ def load_view_into_html_vars(view):
 def create_view():
     name = html.var("view_name").strip()
     if name == "":
-        raise MKUserError("view_name", "Please supply a unique name for the view, this will be used to specify that view in HTTP links.")
+        raise MKUserError("view_name", _("Please supply a unique name for the view, this will be used to specify that view in HTTP links."))
     if not re.match("^[a-zA-Z0-9_]+$", name):
-        raise MKUserError("view_name", "The name of the view may only contain letters, digits and underscores.")
+        raise MKUserError("view_name", _("The name of the view may only contain letters, digits and underscores."))
     title = html.var("view_title").strip()
     if title == "":
-        raise MKUserError("view_title", "Please specify a title for your view")
+        raise MKUserError("view_title", _("Please specify a title for your view"))
     linktitle = html.var("view_linktitle").strip()
     if not linktitle:
         linktitle = title
@@ -874,7 +886,7 @@ def create_view():
 
     topic = html.var("view_topic")
     if not topic:
-        topic = "Other"
+        topic = _("Other")
     datasourcename = html.var("datasource")
     datasource = multisite_datasources[datasourcename]
     tablename = datasource["table"]
@@ -898,6 +910,7 @@ def create_view():
     mustsearch     = html.var("mustsearch", "") != ""
     hidebutton     = html.var("hidebutton", "") != ""
     column_headers = html.var("column_headers")
+    user_sortable  = html.var("user_sortable")
     show_filternames = []
     hide_filternames = []
     hard_filternames = []
@@ -983,6 +996,7 @@ def create_view():
         "browser_reload"  : browser_reload,
         "play_sounds"     : play_sounds,
         "column_headers"  : column_headers,
+        "user_sortable"   : user_sortable,
         "show_filters"    : show_filternames,
         "hide_filters"    : hide_filternames,
         "hard_filters"    : hard_filternames,
@@ -1042,7 +1056,7 @@ def get_needed_columns(painters):
 # Display view with real data. This is *the* function everying
 # is about.
 def show_view(view, show_heading = False, show_buttons = True, show_footer = True):
-    all_display_options = "HTBFCEOZRSIXDM" 
+    all_display_options = "HTBFCEOZRSIXDM"
 
     # Parse display options and
     if html.output_format == "html":
@@ -1117,8 +1131,9 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
 
     query = filterheaders + view.get("add_headers", "")
 
-    # [4] Sorting
-    sorters = [ (multisite_sorters[sn], reverse) for sn, reverse in view["sorters"] ]
+    # [4] Sorting - use view sorters or url supplied sorters
+    sorter_list = parse_url_sorters(html.var('sort')) if html.has_var('sort') else view["sorters"]
+    sorters = [ (multisite_sorters[sn], reverse) for sn, reverse in sorter_list ]
 
     # [5] Grouping
     group_painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["group_painters"] ]
@@ -2156,7 +2171,82 @@ def paint(p, row):
         html.write("<td>%s</td>" % content)
     return content != ""
 
-def paint_header(p):
+def substract_sorters(base, remove):
+    for s in remove:
+        if s in base:
+            base.remove(s)
+        elif (s[0], not s[1]) in base:
+            base.remove((s[0], not s[1]))
+
+def parse_url_sorters(sort):
+    if not sort:
+        return []
+    return [ (s.replace('-', ''), s.startswith('-')) for s in sort.split(',') ]
+
+def get_sorter_name_of_painter(painter):
+    if 'sorter' in painter:
+        return painter['sorter']
+    elif painter['name'] in multisite_sorters:
+        return painter['name']
+
+def sorted_by_painter(painter):
+    sorter_name = get_sorter_name_of_painter(painter)
+    this_asc_sorter  = (sorter_name, False)
+    this_desc_sorter = (sorter_name, True)
+    user_sort = parse_url_sorters(html.var('sort'))
+    if this_asc_sorter in user_sort:
+        return 'asc'
+    elif this_desc_sorter in user_sort:
+        return 'desc'
+    else:
+        return ''
+
+def sort_url(view_sorters, group_painters, painter):
+    """
+    The following sorters need to be handled in this order:
+
+    1. group by sorter (needed in grouped views)
+    2. user defined sorters (url sorter)
+    3. configured view sorters
+    """
+    sort = html.var('sort', None)
+    sorter = []
+
+    group_sort = [ (multisite_painters[p[0]]['sorter'], False) for p in group_painters
+                   if p[0] in multisite_painters and 'sorter' in multisite_painters[p[0]] ]
+    view_sort  = [ s for s in view_sorters if not s[0] in group_sort ]
+
+    # Get current url individual sorters. Parse the "sort" url parameter,
+    # then remove the group sorters. The left sorters must be the user
+    # individual sorters for this view.
+    # Then remove the user sorters from the view sorters
+    user_sort = parse_url_sorters(sort)
+
+    substract_sorters(user_sort, group_sort)
+    substract_sorters(view_sort, user_sort)
+
+    sorter = group_sort + user_sort + view_sort
+
+    # Now apply the sorter of the current column:
+    # - Negate when already in sorters
+    # - Append to user sorters when not set yet
+    sorter_name = get_sorter_name_of_painter(painter)
+    this_asc_sorter  = (sorter_name, False)
+    this_desc_sorter = (sorter_name, True)
+
+    if this_asc_sorter in sorter:
+        # Second click: Change from asc to desc order
+        sorter[sorter.index(this_asc_sorter)] = this_desc_sorter
+    elif this_desc_sorter in sorter:
+        # Third click: Remove this sorter
+        sorter.remove(this_desc_sorter)
+    else:
+        # First click: add this sorter
+        sorter = group_sort + user_sort + [this_asc_sorter] + view_sort
+
+    return ','.join([ ('-' if s[1] else '') + s[0] for s in sorter ])
+
+def paint_header(view, p):
     painter = p[0]
     if len(p) >= 4: # join column
         if len(p) >= 5 and p[4]:
@@ -2165,6 +2255,23 @@ def paint_header(p):
             t = p[3]
     else:
         t = painter.get("short", painter["title"])
+
+    # Optional: Sort link in title cell
+    # Use explicit defined sorter or implicit the sorter with the painter name
+    # Important for links:
+    # - Add the display options (Keeping the same display options as current)
+    # - Link to _self (Always link to the current frame)
+    # - Keep the _body_class variable (e.g. for dashlets)
+    if view.get('user_sortable', True) and get_sorter_name_of_painter(painter) is not None:
+        t = "<a class=\"%s\" href=\"%s\" title=\"%s\" target=\"_self\">%s</a>" % \
+            (sorted_by_painter(painter),
+             html.makeuri([
+                 ('sort', sort_url(view['sorters'], view['group_painters'], painter)),
+                 ('display_options', html.display_options),
+                 ('_body_class',     html.var('_body_class')),
+             ], 'sort'),
+             _('Sort by %s') % t, t)
+
     html.write("<th>%s</th>" % t)
 
 def register_events(row):
@@ -2195,10 +2302,14 @@ def get_painter_option(name):
         return opt["default"]
     return opt.get("value", opt["default"])
 
+def get_host_tags(row):
+    for name, val in zip(row["host_custom_variable_names"],
+                         row["host_custom_variable_values"]):
+        if name == "TAGS":
+            return  val
+    return ""
 
-# Sorting
-def cmp_simple_string(column, r1, r2):
-    v1, v2 = r1[column], r2[column]
+def cmp_insensitive_string(v1, v2):
     c = cmp(v1.lower(), v2.lower())
     # force a strict order in case of equal spelling but different
     # case!
@@ -2206,6 +2317,16 @@ def cmp_simple_string(column, r1, r2):
         return cmp(v1, v2)
     else:
         return c
+
+# Sorting
+def cmp_simple_string(column, r1, r2):
+    v1, v2 = r1[column], r2[column]
+    return cmp_insensitive_string(v1, v2)
+
+def cmp_string_list(column, r1, r2):
+    v1 = ''.join(r1[column])
+    v2 = ''.join(r2[column])
+    return cmp_insensitive_string(v1, v2)
 
 def cmp_simple_number(column, r1, r2):
     return cmp(r1[column], r2[column])
@@ -2216,6 +2337,16 @@ def declare_simple_sorter(name, title, column, func):
         "columns" : [ column ],
         "cmp"     : lambda r1, r2: func(column, r1, r2)
     }
+
+def declare_1to1_sorter(painter_name, func, col_num = 0, reverse = False):
+    multisite_sorters[painter_name] = {
+        "title"   : multisite_painters[painter_name]['title'],
+        "columns" : multisite_painters[painter_name]['columns'],
+        "cmp"     : lambda r1, r2: func(multisite_painters[painter_name]['columns'][col_num],
+                                        r1 if reverse else r2,
+                                        r2 if reverse else r1)
+    }
+    return painter_name
 
 
 load_plugins()

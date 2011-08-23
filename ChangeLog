@@ -38,6 +38,8 @@
     * FIX: correctly sort log views in case of multi site setups
     * FIX: avoid seven broken images in case of missing PNP graphs
     * FIX: Fixed javascript errors when opening dashboard in IE below 9
+    * FIX: Views: Handling deprecated value "perpage" for option
+      column_headers correctly
     * Host/Service Icon column is now modularized and can be extended using
       the multisite_icons list.
     * New sorters for time and line number of logfile entries
@@ -47,6 +49,9 @@
     * new command for clearing modified attributes (red cross, green checkmark)
     * Perf-O-Meters: strip away arguments from check_command (e.g.
       "check-foo!17!31" -> "check-foo").
+    * Added several missing i18n strings in view editor
+    * Views can now be sorted by the users by clicking on the table headers.
+      The user sort options are not persisted.
 
     WATO:
     * Show error message in case of empty inventory due to agent error

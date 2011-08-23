@@ -496,7 +496,7 @@ def page_edit_view():
                     if oldname and oldname != view["name"] and (html.req.user, oldname) in html.multisite_views:
                         del html.multisite_views[(html.req.user, oldname)]
                     save_views(html.req.user)
-                return page_message_and_forward("Your view has been saved.", "edit_views.py",
+                return page_message_and_forward(_("Your view has been saved."), "edit_views.py",
                         "<script type='text/javascript'>top.frames[0].location.reload();</script>\n")
 
         except MKUserError, e:
@@ -964,6 +964,9 @@ def create_view():
                 painternames.append((pname, viewname, tooltip, join_index))
             else:
                 painternames.append((pname, viewname, tooltip))
+
+    if len(painternames) == 0:
+        raise MKUserError("col_1", _("Please add at least one column to your view."))
 
     return {
         "name"            : name,

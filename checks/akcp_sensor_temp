@@ -73,7 +73,7 @@ def check_akcp_sensor_temp(item, params, info):
     return (3, "UNKNOWN - Sensor not found")
 
 
-check_info['akcp_sensor_temp'] = ( check_akcp_sensor_temp, "Temperature Sensor - %s", 1, inventory_akcp_sensor_temp)
+check_info['akcp_sensor_temp'] = ( check_akcp_sensor_temp, "Temperature %s", 1, inventory_akcp_sensor_temp)
 
 snmp_info['akcp_sensor_temp'] = (
     ".1.3.6.1.4.1.3854.1.2.2.1.16.1", [

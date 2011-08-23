@@ -49,7 +49,7 @@ def check_nvidia_temp(item, params, info):
                 return (0, "OK" + infotext, perfdata)
     return (3, 'UNKNOWN - sensor not found in agent output')
 
-check_info['nvidia.temp'] =   ( check_nvidia_temp, "NVIDIA Temperature %s", 1, inventory_nvidia_temp )
+check_info['nvidia.temp'] =   ( check_nvidia_temp, "Temperature NVIDIA %s", 1, inventory_nvidia_temp )
 
 
 

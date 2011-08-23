@@ -1,5 +1,5 @@
 #!/bin/bash
-SITE=${SITE:-dk}
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
 C=$(sudo cp -rv * /omd/versions/default/share/check_mk/web/ | wc -l)
 echo "$C files copied"
 sudo omd restart $SITE apache

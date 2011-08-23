@@ -1,10 +1,11 @@
 Title: PNP-Links in Perf-O-Meter should be intelligent
 Component: multisite
-Benefit: 1
 State: open
-Cost: 1
-Date: 2011-01-28 09:34:33
 Class: cleanup
+Date: 2011-01-28 09:34:33
+Benefit: 1
+Cost: 1
+Fun: 0
 
 If there is no PNP database the perfometer should not contain a hlink
 to PNP. We can use the same logic as in the intelligent PNP icon.

@@ -187,7 +187,6 @@ else:
     check_mk_configfile = default_config_dir + "/main.mk"
 
 
-
 #   +----------------------------------------------------------------------+
 #   |        ____       _     ____        __             _ _               |
 #   |       / ___|  ___| |_  |  _ \  ___ / _| __ _ _   _| | |_ ___         |
@@ -3324,7 +3323,7 @@ NOTES:
   --list-tag prints all hosts that have all of the specified tags
   at once.
 
-  -M, --manpage shows documentation about a check type. If
+  -M, --man shows documentation about a check type. If
   /usr/bin/less is available it is used as pager. Exit by pressing
   Q. Use -M without an argument to show a list of all manual pages.
 
@@ -3767,10 +3766,6 @@ def ip_to_hostname(ip):
 #   |                                                       |___/          |
 #   +----------------------------------------------------------------------+
 
-# Initialize dictionary-type default levels variables
-for varname in check_default_levels.values():
-    globals()[varname] = {}
-
 # Now - at last - we can read in the user's configuration files
 def all_nonfunction_vars():
     return set([ name for name,value in globals().items() if name[0] != '_' and type(value) != type(lambda:0) ])
@@ -3785,58 +3780,116 @@ def marks_hosts_with_path(old, all, filename):
         if host not in old:
             host_paths[host] = path
 
-# Create list of all files to be included
-list_of_files = reduce(lambda a,b: a+b, 
-   [ [ "%s/%s" % (d, f) for f in fs if f.endswith(".mk")] 
-     for d, sb, fs in os.walk(check_mk_configdir) ], [])
-list_of_files.sort()
-list_of_files = [ check_mk_configfile ] + list_of_files
-final_mk = check_mk_basedir + "/final.mk"
-if os.path.exists(final_mk):
-    list_of_files.append(final_mk)
-local_mk = check_mk_basedir + "/local.mk"
-if os.path.exists(local_mk):
-    list_of_files.append(local_mk)
+def read_config_files():
+    global vars_before_config, final_mk, local_mk, checks
 
-vars_before_config = all_nonfunction_vars()
-for _f in list_of_files:
-    # Hack: during parent scan mode we must not read in old version of parents.mk!
-    if '--scan-parents' in sys.argv and _f.endswith("/parents.mk"):
-        continue
-    try:
-        if opt_debug:
-            sys.stderr.write("Reading config file %s...\n" % _f)
-        _old_all_hosts = all_hosts[:]
-        execfile(_f)
-        marks_hosts_with_path(_old_all_hosts, all_hosts, _f)
-    except Exception, e:
-        sys.stderr.write("Cannot read in configuration file %s:\n%s\n" % (_f, e))
-        if __name__ == "__main__":
+    # Initialize dictionary-type default levels variables
+    for varname in check_default_levels.values():
+        globals()[varname] = {}
+
+    # Create list of all files to be included
+    list_of_files = reduce(lambda a,b: a+b, 
+       [ [ "%s/%s" % (d, f) for f in fs if f.endswith(".mk")] 
+         for d, sb, fs in os.walk(check_mk_configdir) ], [])
+    list_of_files.sort()
+    list_of_files = [ check_mk_configfile ] + list_of_files
+    final_mk = check_mk_basedir + "/final.mk"
+    if os.path.exists(final_mk):
+        list_of_files.append(final_mk)
+    local_mk = check_mk_basedir + "/local.mk"
+    if os.path.exists(local_mk):
+        list_of_files.append(local_mk)
+
+    vars_before_config = all_nonfunction_vars()
+    for _f in list_of_files:
+        # Hack: during parent scan mode we must not read in old version of parents.mk!
+        if '--scan-parents' in sys.argv and _f.endswith("/parents.mk"):
+            continue
+        try:
+            if opt_debug:
+                sys.stderr.write("Reading config file %s...\n" % _f)
+            _old_all_hosts = all_hosts[:]
+            execfile(_f, globals(), globals())
+            marks_hosts_with_path(_old_all_hosts, all_hosts, _f)
+        except Exception, e:
+            sys.stderr.write("Cannot read in configuration file %s:\n%s\n" % (_f, e))
+            if __name__ == "__main__":
+                sys.exit(3)
+            else:
+                raise
+
+    # Strip off host tags from the list of all_hosts.  Host tags can be
+    # appended to the hostnames in all_hosts, separated by pipe symbols,
+    # e.g. "zbghlnx04|bgh|linux|test" and are stored in a separate
+    # dictionary called 'hosttags'
+    global hosttags, all_hosts_untagged
+    hosttags = {}
+    for taggedhost in all_hosts + clusters.keys():
+        parts = taggedhost.split("|")
+        hosttags[parts[0]] = parts[1:]
+    all_hosts_untagged = all_active_hosts()
+    
+    # Sanity check for duplicate hostnames
+    seen_hostnames = set([])
+    for hostname in strip_tags(all_hosts + clusters.keys()):
+        if hostname in seen_hostnames:
+            sys.stderr.write("Error in configuration: duplicate host '%s'\n" % hostname)
+            sys.exit(4)
+        seen_hostnames.add(hostname)
+
+    # Read autochecks and append them to explicit checks
+    read_all_autochecks()
+    checks = autochecks + checks
+
+    # Check for invalid configuration variables
+    vars_after_config = all_nonfunction_vars()
+    ignored_variables = set(['vars_before_config', 'autochecks', 'parts',
+                             'hosttags' ,'seen_hostnames',
+                             'all_hosts_untagged' ,'taggedhost' ,'hostname'])
+    errors = 0
+    for name in vars_after_config:
+        if name not in ignored_variables and name not in vars_before_config:
+            sys.stderr.write("Invalid configuration variable '%s'\n" % name)
+            errors += 1
+
+    # Special handling for certain deprecated variables
+    if type(snmp_communities) == dict:
+        sys.stderr.write("ERROR: snmp_communities cannot be a dict any more.\n")
+        errors += 1
+
+    if errors > 0:
+        sys.stderr.write("--> Found %d invalid variables\n" % errors)
+        sys.stderr.write("If you use own helper variables, please prefix them with _.\n")
+        sys.exit(1)
+
+    # Convert www_group into numeric id
+    global www_group
+    if type(www_group) == str:
+        try:
+            import grp
+            www_group = grp.getgrnam(www_group)[2]
+        except Exception, e:
+            sys.stderr.write("Cannot convert group '%s' into group id: %s\n" % (www_group, e))
+            sys.stderr.write("Please set www_group to an existing group in main.mk.\n")
             sys.exit(3)
-        else:
-            raise
 
-# Strip off host tags from the list of all_hosts.  Host tags can be
-# appended to the hostnames in all_hosts, separated by pipe symbols,
-# e.g. "zbghlnx04|bgh|linux|test" and are stored in a separate
-# dictionary called 'hosttags'
-hosttags = {}
-for taggedhost in all_hosts + clusters.keys():
-    parts = taggedhost.split("|")
-    hosttags[parts[0]] = parts[1:]
-all_hosts_untagged = all_active_hosts()
+    # Prepare information for --backup and --restore
+    global backup_paths
+    backup_paths = [
+        # tarname               path                 canonical name   description                is_dir owned_by_nagios www_group
+        ('check_mk_configfile', check_mk_configfile, "main.mk",       "Main configuration file",           False, False, False ),
+        ('final_mk',            final_mk,            "final.mk",      "Final configuration file final.mk", False, False, False ),
+        ('check_mk_configdir',  check_mk_configdir,  "",              "Configuration sub files",           True,  False, False ),
+        ('autochecksdir',       autochecksdir,       "",              "Automatically inventorized checks", True,  False, False ),
+        ('counters_directory',  counters_directory,  "",              "Performance counters",              True,  True,  False ),
+        ('tcp_cache_dir',       tcp_cache_dir,       "",              "Agent cache",                       True,  True,  False ),
+        ('logwatch_dir',        logwatch_dir,        "",              "Logwatch",                          True,  True,  True  ),
+        ]
 
-# Sanity check for duplicate hostnames
-seen_hostnames = set([])
-for hostname in strip_tags(all_hosts + clusters.keys()):
-    if hostname in seen_hostnames:
-        sys.stderr.write("Error in configuration: duplicate host '%s'\n" % hostname)
-        sys.exit(4)
-    seen_hostnames.add(hostname)
+    # Load agent simulator if enabled in configuration
+    if agent_simulator:
+        execfile(modules_dir + "/agent_simulator.py", globals(), globals())
 
-# Load agent simulator if enabled
-if agent_simulator:
-    execfile(modules_dir + "/agent_simulator.py")
 
 # Compute parameters for a check honoring factory settings,
 # default settings of user in main.mk, check_parameters[] and
@@ -3898,61 +3951,6 @@ def read_all_autochecks():
                    for (host, ct, it, par) in autochecks ]
 
 
-
-
-if __name__ == "__main__":
-    read_all_autochecks()
-    checks = autochecks + checks
-
-vars_after_config = all_nonfunction_vars()
-ignored_variables = set(['vars_before_config', 'autochecks', 'parts' ,'hosttags' ,'seen_hostnames',
-                         'all_hosts_untagged' ,'taggedhost' ,'hostname'])
-errors = 0
-for name in vars_after_config:
-    if name not in ignored_variables and name not in vars_before_config:
-        sys.stderr.write("Invalid configuration variable '%s'\n" % name)
-        errors += 1
-
-# Special handling for certain deprecated variables
-if type(snmp_communities) == dict:
-    sys.stderr.write("ERROR: snmp_communities cannot be a dict any more.\n")
-    errors += 1
-
-if errors > 0:
-    sys.stderr.write("--> Found %d invalid variables\n" % errors)
-    sys.stderr.write("If you use own helper variables, please prefix them with _.\n")
-    sys.exit(1)
-
-
-# Convert www_group into numeric id
-if type(www_group) == str:
-    try:
-        import grp
-        www_group = grp.getgrnam(www_group)[2]
-    except Exception, e:
-        sys.stderr.write("Cannot convert group '%s' into group id: %s\n" % (www_group, e))
-        sys.stderr.write("Please set www_group to an existing group in main.mk.\n")
-        sys.exit(3)
-
-# --------------------------------------------------------------------------
-# FINISHED WITH READING IN USER DATA
-# Now we are finished with reading in user data and can safely define
-# further functions and variables without fear of name clashes with user
-# defined variables.
-# --------------------------------------------------------------------------
-
-backup_paths = [
-    # tarname               path                 canonical name   description                is_dir owned_by_nagios www_group
-    ('check_mk_configfile', check_mk_configfile, "main.mk",       "Main configuration file",           False, False, False ),
-    ('final_mk',            final_mk,            "final.mk",      "Final configuration file final.mk", False, False, False ),
-    ('check_mk_configdir',  check_mk_configdir,  "",              "Configuration sub files",           True,  False, False ),
-    ('autochecksdir',       autochecksdir,       "",              "Automatically inventorized checks", True,  False, False ),
-    ('counters_directory',  counters_directory,  "",              "Performance counters",              True,  True,  False ),
-    ('tcp_cache_dir',       tcp_cache_dir,       "",              "Agent cache",                       True,  True,  False ),
-    ('logwatch_dir',        logwatch_dir,        "",              "Logwatch",                          True,  True,  True  ),
-    ]
-
-
 def output_profile():
     if g_profile:
         g_profile.dump_stats("profile.out")
@@ -3974,6 +3972,8 @@ def output_profile():
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
+
+
 # Do option parsing and execute main function -
 # if check_mk is not called as module
 if __name__ == "__main__":
@@ -3987,11 +3987,20 @@ if __name__ == "__main__":
                      "man", "nowiki", "config-check", "backup=", "restore=",
                      "check-inventory=", "paths", "cleanup-autochecks", "checks=" ]
 
+    non_config_options = ['-L', '--list-checks', '-P', '--package', '-M', 
+                          '--man', '-V', '--version' ,'-h', '--help']
+
     try:
         opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
     except getopt.GetoptError, err:
         print str(err)
         sys.exit(1)
+
+    # Read the configuration files (main.mk, autochecks, etc.), but not for
+    # certain operation modes that does not need them and should not be harmed
+    # by a broken configuration
+    if len(set.intersection(set(non_config_options), [o[0] for o in opts])) == 0:
+        read_config_files()
 
     done = False
     seen_I = 0
@@ -4033,7 +4042,7 @@ if __name__ == "__main__":
 
     # Perform actions (major modes)
     try:
-        for o,a in opts:
+        for o, a in opts:
             if o in [ '-h', '--help' ]:
                 usage()
                 done = True

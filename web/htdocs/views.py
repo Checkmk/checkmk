@@ -978,6 +978,9 @@ def create_view():
             else:
                 painternames.append((pname, viewname, tooltip))
 
+    if len(painternames) == 0:
+        raise MKUserError("col_1", _("Please add at least one column to your view."))
+
     return {
         "name"            : name,
         "owner"           : html.req.user,

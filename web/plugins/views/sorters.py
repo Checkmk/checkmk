@@ -177,7 +177,6 @@ declare_1to1_sorter("host_flapping",          cmp_simple_number)
 declare_1to1_sorter("host_is_active",         cmp_simple_number)
 declare_1to1_sorter("host_in_downtime",       cmp_simple_number)
 declare_1to1_sorter("host_acknowledged",      cmp_simple_number)
-declare_1to1_sorter("num_problems",           cmp_simple_number)
 declare_1to1_sorter("num_services",           cmp_simple_number)
 declare_1to1_sorter("num_services_ok",        cmp_simple_number)
 declare_1to1_sorter("num_services_warn",      cmp_simple_number)
@@ -189,6 +188,16 @@ declare_1to1_sorter("host_childs",            cmp_string_list)
 declare_1to1_sorter("host_group_memberlist",  cmp_string_list)
 declare_1to1_sorter("host_contacts",          cmp_string_list)
 declare_1to1_sorter("host_contact_groups",    cmp_string_list)
+
+def cmp_host_problems(r1, r2):
+    return cmp(r1["host_num_services"] - r1["host_num_services_ok"] - r1["host_num_services_pending"],
+               r2["host_num_services"] - r2["host_num_services_ok"] - r2["host_num_services_pending"])
+
+multisite_sorters["num_problems"] = {
+    "title"   : _("Number of problems"),
+    "columns" : [ "host_num_services", "host_num_services_ok", "host_num_services_pending" ],
+    "cmp"     : cmp_host_problems,
+}
 
 # Hostgroup
 declare_1to1_sorter("hg_num_services",         cmp_simple_number)

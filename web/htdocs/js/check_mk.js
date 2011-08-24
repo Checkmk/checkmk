@@ -636,8 +636,12 @@ function handleReload(url) {
         }
         opts = null;
 
-        var url = makeuri({'_display_options': display_options,
-                           'display_options':  getUrlParam('display_options')});
+        var params = {'_display_options': display_options};
+        var real_display_options = getUrlParam('display_options');
+        if(real_display_options !== '')
+            params['display_options'] = real_display_options;
+
+        var url = makeuri(params);
         display_options = null;
         get_url(url, handleContentReload, '');
         url = null;

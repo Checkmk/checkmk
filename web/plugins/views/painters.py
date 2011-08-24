@@ -142,7 +142,7 @@ def iconpainter_columns(what):
                 what + '_custom_variable_values' ])
 
     if what == 'service':
-        cols.add('description')
+        cols.add('service_description')
 
     for icon in multisite_icons:
         if 'columns' in icon:

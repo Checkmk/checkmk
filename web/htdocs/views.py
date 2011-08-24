@@ -1070,11 +1070,30 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     # If all display_options are upper case assume all not given values default
     # to lower-case. Vice versa when all display_options are lower case.
     # When the display_options are mixed case assume all unset options to be enabled
-    do_defaults =  display_options.isupper() and all_display_options.lower() or all_display_options
-    for c in do_defaults:
-        if c.lower() not in display_options.lower():
-            display_options += c
+    def apply_display_option_defaults(opts):
+        do_defaults = opts.isupper() and all_display_options.lower() or all_display_options
+        for c in do_defaults:
+            if c.lower() not in opts.lower():
+                opts += c
+        return opts
+
+    display_options = apply_display_option_defaults(display_options)
+    # Add the display_options to the html object for later linking etc.
     html.display_options = display_options
+
+    # This is needed for letting only the data table reload. The problem is that
+    # the data table is re-fetched via javascript call using special display_options
+    # but these special display_options must not be used in links etc. So we use
+    # a special var _display_options for defining the display_options for rendering
+    # the data table to be reloaded. The contents of "display_options" are used for
+    # linking to other views.
+    if html.has_var('_display_options'):
+        display_options = html.var("_display_options", "")
+        display_options = apply_display_option_defaults(display_options)
+
+    # Below we have the following display_options vars:
+    # htmk.display_options        - Use this when rendering the current view
+    # html.var("display_options") - Use this for linking to other views
 
     # If display option 'M' is set, then all links are targetet to the 'main'
     # frame. Also the display options are removed since the view in the main
@@ -1208,7 +1227,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     # Show heading (change between "preview" mode and full page mode)
     if show_heading:
         # Show/Hide the header with page title, MK logo, etc.
-        if 'H' in display_options: 
+        if 'H' in display_options:
             html.body_start(view_title(view))
         if 'T' in display_options:
             html.top_heading(view_title(view))
@@ -1219,10 +1238,10 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         show_context_links(view, hide_filters)
 
     need_navi = show_buttons and (
-        'D' in display_options or 
-        'F' in display_options or 
-        'C' in display_options or 
-        'O' in display_options or 
+        'D' in display_options or
+        'F' in display_options or
+        'C' in display_options or
+        'O' in display_options or
         'E' in display_options)
     if need_navi:
         html.write("<table class=navi><tr>\n")
@@ -1318,6 +1337,9 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         # Ende des Bereichs mit den Tabs
         html.write("</table>\n") # class=navi
 
+    # The refreshing content container
+    if 'R' in display_options:
+        html.write("<div id=data_container>\n")
 
     if not has_done_actions:
         # Limit exceeded? Show warning
@@ -1335,6 +1357,10 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         for sitename, info in html.live.deadsites.items():
             html.show_error("<b>%s - Livestatus error</b><br>%s" % (info["site"]["alias"], info["exception"]))
 
+    # FIXME: Sauberer wäre noch die Status Icons hier mit aufzunehmen
+    if 'R' in display_options:
+        html.write("</div>\n")
+
     if show_footer:
         pid = os.getpid()
         if html.live.successfully_persisted():
@@ -1345,6 +1371,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         html.bottom_focuscode()
         if 'Z' in display_options:
             html.bottom_footer()
+
         if 'H' in display_options:
             html.body_end()
 

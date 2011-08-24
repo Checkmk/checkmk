@@ -16,6 +16,7 @@
     * Remove 'Agent version (unknown)' for SNMP-only hosts
     * Options --version, --help, --man, --list-checks and --packager now
       work even with errors in the configuration files
+    * Minor layout fix in check man-pages
 
     Checks & Agents:
     * FIX: hr_mem: take into account cache and buffers

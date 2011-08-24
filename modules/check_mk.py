@@ -2394,7 +2394,8 @@ def get_tty_size():
 def all_manuals():
     entries = dict([(fn, check_manpages_dir + "/" + fn) for fn in os.listdir(check_manpages_dir)])
     if local_check_manpages_dir and os.path.exists(local_check_manpages_dir):
-        entries.update(dict([(fn, local_check_manpages_dir + "/" + fn) for fn in os.listdir(local_check_manpages_dir)]))
+        entries.update(dict([(fn, local_check_manpages_dir + "/" + fn) 
+                for fn in os.listdir(local_check_manpages_dir)]))
     return entries
 
 def list_all_manuals():
@@ -2564,6 +2565,21 @@ def show_check_manual(checkname):
             netto = re.sub("\033[^m]+m", "", netto)
             return len(netto)
 
+        # only used for debugging
+        def remove_ansi(line):
+            newline = ""
+            ci = 0
+            while ci < len(line):
+                c = line[ci]
+                if c == '\033':
+                    while line[ci] != 'm' and ci < len(line):
+                        ci += 1
+                else:
+                    newline += c
+                ci += 1
+
+            return newline
+
         def justify(line, width):
             need_spaces = float(width - print_len(line))
             spaces = float(line.count(' '))
@@ -2575,7 +2591,7 @@ def show_check_manual(checkname):
             for word in words[1:]:
                 newline += ' '
                 x += 1.0
-                if s/x < need_spaces / spaces:
+                while s/x < need_spaces / spaces:
                     newline += ' '
                     s += 1
                 newline += word
@@ -2595,7 +2611,7 @@ def show_check_manual(checkname):
                 if word == '<br>':
                     if line != "":
                         wrapped.append(fillup(line, width))
-                        wrapped.append("")
+                        wrapped.append(fillup("", width))
                         line = ""
                         col = 0
                 else:
@@ -2645,7 +2661,9 @@ def show_check_manual(checkname):
         ags = []
         for agent in header['agents'].split(","):
             agent = agent.strip()
-            ags.append({ "vms" : "VMS", "linux":"Linux", "aix": "AIX", "solaris":"Solaris", "windows":"Windows", "snmp":"SNMP"}.get(agent, agent.upper()))
+            ags.append({ "vms" : "VMS", "linux":"Linux", "aix": "AIX", 
+                         "solaris":"Solaris", "windows":"Windows", "snmp":"SNMP"}
+                         .get(agent, agent.upper()))
         print_splitline(header_color_left, "Supported Agents:  ", header_color_right, ", ".join(ags))
 
         empty_line()

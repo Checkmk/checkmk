@@ -605,14 +605,19 @@ def get_counter(countername, this_time, this_val, allow_negative=False):
     return timedif, per_sec
 
 
+# Compute average by gliding exponential algorithm
+# itemname: unique id for storing this average until the next check
+# this_time: timestamp of new value
+# backlog: averaging horizon in minutes
+# initialize_zero: assume average of 0.0 when now previous average is stored
 def get_average(itemname, this_time, this_val, backlog, initialize_zero = True):
 
-    # first call: take current value as average
+    # first call: take current value as average or assume 0.0
     if not itemname in g_counters:
         if initialize_zero:
             this_val = 0
         g_counters[itemname] = (this_time, this_val)
-        return 1.0, this_val
+        return 1.0, this_val # avoid time diff of 0.0 -> avoid division by zero
 
     # Get previous value and time difference
     last_time, last_val = g_counters.get(itemname)

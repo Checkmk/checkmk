@@ -54,8 +54,8 @@ examples:
  # alternative[2]: Just change the default partially
  filesystem_default_levels["magic"] = 0.8
 
- # Make df output trend performance data (beware of exsting RRDs)
- filesystem_default_levels["trend_perfdata"] = True
+ # Disable trend performance data (beware of exsting RRDs)
+ filesystem_default_levels["trend_perfdata"] = False
 
 
  # Override warning/critical levels for all checks where
@@ -88,7 +88,9 @@ perfdata:
  levels in MB are provided. If you set the parameter {"trend_perfdata" : True}, then
  two additional values are output: the change of the usage in MB per range 
  since the last check (e.g. in MB per 24 hours) and the averaged change (so called trend),
- also in MB per range. This can done globally in {main.mk} by {filesystem_default_levels["trend_perfdata"] = True}.
+ also in MB per range. Please note, that as of version 1.1.11i3, performance data for
+ trends is enabled per default. You can globally disable that in {main.mk} 
+ with {filesystem_default_levels["trend_perfdata"] = False}.
 
  Please note, that - until you use the storage type {MULTIPLE} in PNP4Nagios - 
  changing the parameter {"trend_perfdata"} will stop all updates to

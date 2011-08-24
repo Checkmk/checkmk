@@ -2253,11 +2253,12 @@ def sort_url(view, painter):
         sorter.remove(this_desc_sorter)
     else:
         # First click: add this sorter as primary user sorter
-        # Maybe the sorter is already in the user sorters, remove it
-        if this_asc_sorter in user_sort:
-            user_sort.remove(this_asc_sorter)
-        if this_desc_sorter in user_sort:
-            user_sort.remove(this_desc_sorter)
+        # Maybe the sorter is already in the user sorters or view sorters, remove it
+        for s in [ user_sort, view_sort ]:
+            if this_asc_sorter in s:
+                s.remove(this_asc_sorter)
+            if this_desc_sorter in s:
+                s.remove(this_desc_sorter)
         # Now add the sorter as primary user sorter
         sorter = group_sort + [this_asc_sorter] + user_sort + view_sort
 

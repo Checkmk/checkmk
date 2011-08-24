@@ -2238,20 +2238,27 @@ def sort_url(view, painter):
     sorter = group_sort + user_sort + view_sort
 
     # Now apply the sorter of the current column:
-    # - Negate when already in sorters
+    # - Negate/Disable when at first position
+    # - Move to the first position when already in sorters
     # - Add in the front of the user sorters when not set
     sorter_name = get_sorter_name_of_painter(painter)
     this_asc_sorter  = (sorter_name, False)
     this_desc_sorter = (sorter_name, True)
 
-    if this_asc_sorter in sorter:
+    if sorter and this_asc_sorter == sorter[0]:
         # Second click: Change from asc to desc order
         sorter[sorter.index(this_asc_sorter)] = this_desc_sorter
-    elif this_desc_sorter in sorter:
+    elif sorter and this_desc_sorter == sorter[0]:
         # Third click: Remove this sorter
         sorter.remove(this_desc_sorter)
     else:
-        # First click: add this sorter
+        # First click: add this sorter as primary user sorter
+        # Maybe the sorter is already in the user sorters, remove it
+        if this_asc_sorter in sorter:
+            sorter.remove(this_asc_sorter)
+        if this_desc_sorter in sorter:
+            sorter.remove(this_desc_sorter)
+        # Now add the sorter as primary user sorter
         sorter = group_sort + [this_asc_sorter] + user_sort + view_sort
 
     return ','.join([ ('-' if s[1] else '') + s[0] for s in sorter ])

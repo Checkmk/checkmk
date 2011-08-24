@@ -1,8 +1,8 @@
 Title: SNMP scan: implement missing scan functions for all checks
 Component: core
-Benefit: 2
+Benefit: 3
 State: open
-Cost: 2
+Cost: 5
 Date: 2011-01-24 16:22:26
 Class: cleanup
 

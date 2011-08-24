@@ -159,7 +159,7 @@ def paint_pnp_graph(what, row, tags, custom_vars):
 
 multisite_icons.append({
     'columns':         [ 'pnpgraph_present' ],
-    'paint':           paint_realhost_link_image,
+    'paint':           paint_pnp_graph,
 })
 
 #   +----------------------------------------------------------------------+

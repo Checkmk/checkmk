@@ -31,6 +31,8 @@
     * hr_mem: added Perf-O-Meter
     * Renamed all temperature checks to "Temperature %s". Please
       read the migration notes!
+    * df and friends: enabled trend performance data per default. Please
+      carefully read the migration notes!
 
     MK Livestatus:
     * WaitObject: allow to separate host name and service with a semicolon.

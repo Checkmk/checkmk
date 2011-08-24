@@ -50,7 +50,7 @@ factory_settings["filesystem_default_levels"] = {
     "magic_normsize"  : 20,       # Standard size if 20 GB
     "levels_low"      : (50, 60), # Never move warn level below 50% due to magic factor
     "trend_range"     : 24,
-    "trend_perfdata"  : False,    # do not send performance data for trends
+    "trend_perfdata"  : True,    # do send performance data for trends
 }
 
 # Users might have set filesystem_default_levels to old format like (80, 90)

@@ -45,6 +45,7 @@
     * FIX: Views: Handling deprecated value "perpage" for option
       column_headers correctly
     * FIX: Fixed javascript error when saving edited views without sidebar
+    * FIX: Showing up PNP hover menus above perfometers
     * Host/Service Icon column is now modularized and can be extended using
       the multisite_icons list.
     * New sorters for time and line number of logfile entries

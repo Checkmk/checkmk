@@ -78,6 +78,11 @@ function hoverShow(x, y, code) {
         _hoverMenu = document.createElement('div');
         _hoverMenu.style.position = 'absolute';
         _hoverMenu.style.width = 'auto';
+
+        // The hover menu needs to have a higher z-index than the highest element
+        // on the pages. In this case it was the perfometer which had 30.
+        _hoverMenu.style.zIndex = 40;
+
         document.body.appendChild(_hoverMenu);
     }
     _hoverMenu.innerHTML = code;

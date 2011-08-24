@@ -2245,19 +2245,19 @@ def sort_url(view, painter):
     this_asc_sorter  = (sorter_name, False)
     this_desc_sorter = (sorter_name, True)
 
-    if sorter and this_asc_sorter == sorter[0]:
+    if user_sort and this_asc_sorter == user_sort[0]:
         # Second click: Change from asc to desc order
         sorter[sorter.index(this_asc_sorter)] = this_desc_sorter
-    elif sorter and this_desc_sorter == sorter[0]:
+    elif user_sort and this_desc_sorter == user_sort[0]:
         # Third click: Remove this sorter
         sorter.remove(this_desc_sorter)
     else:
         # First click: add this sorter as primary user sorter
         # Maybe the sorter is already in the user sorters, remove it
-        if this_asc_sorter in sorter:
-            sorter.remove(this_asc_sorter)
-        if this_desc_sorter in sorter:
-            sorter.remove(this_desc_sorter)
+        if this_asc_sorter in user_sort:
+            user_sort.remove(this_asc_sorter)
+        if this_desc_sorter in user_sort:
+            user_sort.remove(this_desc_sorter)
         # Now add the sorter as primary user sorter
         sorter = group_sort + [this_asc_sorter] + user_sort + view_sort
 

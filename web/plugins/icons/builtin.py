@@ -450,7 +450,7 @@ multisite_icons.append({
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def paint_wato(what, row, tags, custom_vars):
+def paint_reschedule(what, row, tags, custom_vars):
     # Reschedule button
     if row[what + "_active_checks_enabled"] == 1 \
        and config.may('action.reschedule'):
@@ -465,5 +465,5 @@ def paint_wato(what, row, tags, custom_vars):
 
 multisite_icons.append({
     'columns':         [ 'active_checks_enabled' ],
-    'paint':           paint_wato,
+    'paint':           paint_reschedule,
 })

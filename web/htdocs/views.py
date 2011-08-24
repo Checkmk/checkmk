@@ -2232,7 +2232,7 @@ def sort_url(view_sorters, group_painters, painter):
 
     # Now apply the sorter of the current column:
     # - Negate when already in sorters
-    # - Append to user sorters when not set yet
+    # - Add in the front of the user sorters when not set
     sorter_name = get_sorter_name_of_painter(painter)
     this_asc_sorter  = (sorter_name, False)
     this_desc_sorter = (sorter_name, True)
@@ -2245,7 +2245,7 @@ def sort_url(view_sorters, group_painters, painter):
         sorter.remove(this_desc_sorter)
     else:
         # First click: add this sorter
-        sorter = group_sort + user_sort + [this_asc_sorter] + view_sort
+        sorter = group_sort + [this_asc_sorter] + user_sort + view_sort
 
     return ','.join([ ('-' if s[1] else '') + s[0] for s in sorter ])
 

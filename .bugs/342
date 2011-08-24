@@ -1,0 +1,11 @@
+Title: Enable sounds per default
+Component: multisite
+Benefit: 1
+State: open
+Cost: 2
+Date: 2011-08-24 16:32:16
+Class: cleanup
+
+Enable the sound configuration in config.py per default. Change
+the comments in the example multisite.mk or remove that part
+completely. Update the documentation.

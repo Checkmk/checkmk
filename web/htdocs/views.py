@@ -2192,11 +2192,11 @@ def get_sorter_name_of_painter(painter):
     elif painter['name'] in multisite_sorters:
         return painter['name']
 
-def get_primary_sorter_order(painter):
+def get_primary_sorter_order(view, painter):
     sorter_name = get_sorter_name_of_painter(painter)
     this_asc_sorter  = (sorter_name, False)
     this_desc_sorter = (sorter_name, True)
-    user_sort = parse_url_sorters(html.var('sort'))
+    group_sort, user_sort, view_sort = get_separated_sorters(view)
     if user_sort and this_asc_sorter == user_sort[0]:
         return 'asc'
     elif user_sort and this_desc_sorter == user_sort[0]:
@@ -2204,7 +2204,25 @@ def get_primary_sorter_order(painter):
     else:
         return ''
 
-def sort_url(view_sorters, group_painters, painter):
+def get_separated_sorters(view):
+    group_sort = [ (get_sorter_name_of_painter(multisite_painters[p[0]]), False)
+                   for p in view['group_painters']
+                   if p[0] in multisite_painters ]
+    view_sort  = [ s for s in view['sorters'] if not s[0] in group_sort ]
+
+    # Get current url individual sorters. Parse the "sort" url parameter,
+    # then remove the group sorters. The left sorters must be the user
+    # individual sorters for this view.
+    # Then remove the user sorters from the view sorters
+    user_sort = parse_url_sorters(html.var('sort'))
+
+    substract_sorters(user_sort, group_sort)
+    substract_sorters(view_sort, user_sort)
+
+    return group_sort, user_sort, view_sort
+
+
+def sort_url(view, painter):
     """
     The following sorters need to be handled in this order:
 
@@ -2215,19 +2233,7 @@ def sort_url(view_sorters, group_painters, painter):
     sort = html.var('sort', None)
     sorter = []
 
-    group_sort = [ (get_sorter_name_of_painter(multisite_painters[p[0]]), False)
-                   for p in group_painters
-                   if p[0] in multisite_painters ]
-    view_sort  = [ s for s in view_sorters if not s[0] in group_sort ]
-
-    # Get current url individual sorters. Parse the "sort" url parameter,
-    # then remove the group sorters. The left sorters must be the user
-    # individual sorters for this view.
-    # Then remove the user sorters from the view sorters
-    user_sort = parse_url_sorters(sort)
-
-    substract_sorters(user_sort, group_sort)
-    substract_sorters(view_sort, user_sort)
+    group_sort, user_sort, view_sort = get_separated_sorters(view)
 
     sorter = group_sort + user_sort + view_sort
 
@@ -2268,7 +2274,7 @@ def paint_header(view, p):
     # - Keep the _body_class variable (e.g. for dashlets)
     if view.get('user_sortable', True) and get_sorter_name_of_painter(painter) is not None:
         params = [
-            ('sort', sort_url(view['sorters'], view['group_painters'], painter)),
+            ('sort', sort_url(view, painter)),
         ]
         if html.has_var('_body_class'):
             params.append(('_body_class',     html.var('_body_class')))
@@ -2276,7 +2282,7 @@ def paint_header(view, p):
             params.append(('display_options', html.var('display_options')))
 
         t = "<a class=\"%s\" href=\"%s\" title=\"%s\" target=\"_self\">%s</a>" % \
-            (get_primary_sorter_order(painter),
+            (get_primary_sorter_order(view, painter),
              html.makeuri(params, 'sort'),
              _('Sort by %s') % t, t)
 

@@ -151,7 +151,6 @@ rm -rf $RPM_BUILD_ROOT
 %dir %attr(-,nagios,root) /var/lib/check_mk/counters
 %dir %attr(-,nagios,root) /var/lib/check_mk/cache
 %dir %attr(-,nagios,root) /var/lib/check_mk/logwatch
-%dir %attr(-,nagios,root) /var/lib/check_mk/rrd
 %dir /var/lib/check_mk/autochecks
 %dir /var/lib/check_mk/precompiled
 %dir /var/lib/check_mk/packages

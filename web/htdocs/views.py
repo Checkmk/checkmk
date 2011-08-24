@@ -1098,6 +1098,14 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     # If display option 'M' is set, then all links are targetet to the 'main'
     # frame. Also the display options are removed since the view in the main
     # frame should be displayed in standard mode.
+    #
+    # But there is one special case: The sorter links! These links need to know
+    # about the provided display_option parameter. The links could use
+    # "html.display_options" but this contains the implicit options which should
+    # not be added to the URLs. So the real parameters need to be preserved for
+    # this case. It is stored in the var "html.display_options"
+    if html.var('display_options'):
+        html.title_display_options = html.var("display_options")
     if 'M' not in display_options:
         html.set_link_target("main")
         html.del_var("display_options")
@@ -2313,8 +2321,8 @@ def paint_header(view, p):
         ]
         if html.has_var('_body_class'):
             params.append(('_body_class',     html.var('_body_class')))
-        if html.has_var('display_options'):
-            params.append(('display_options', html.var('display_options')))
+        if hasattr(html, 'title_display_options'):
+            params.append(('display_options', html.title_display_options))
 
         t = "<a class=\"%s\" href=\"%s\" title=\"%s\" target=\"_self\">%s</a>" % \
             (get_primary_sorter_order(view, painter),

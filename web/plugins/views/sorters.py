@@ -250,7 +250,22 @@ declare_1to1_sorter("log_type",                cmp_simple_string)
 declare_1to1_sorter("log_contact_name",        cmp_simple_string)
 declare_1to1_sorter("log_time",                cmp_simple_number)
 declare_1to1_sorter("log_lineno",              cmp_simple_number)
-declare_1to1_sorter("log_date",                cmp_simple_number)
+
+import time
+def get_day_start_timestamp(t):
+    st    = time.localtime(int(t))
+    start = int(time.mktime(time.struct_time((st[0], st[1], st[2], 0, 0, 0, st[6], st[7], st[8]))))
+    end   = start + 86399
+    return start, end
+
+def cmp_date(column, r1, r2):
+    # need to calculate with the timestamp of the day. Using 00:00:00 at the given day.
+    # simply calculating with 86400 does not work because of timezone problems
+    r1_date = get_day_start_timestamp(r1[column])
+    r2_date = get_day_start_timestamp(r2[column])
+    return cmp(r2_date, r1_date)
+
+declare_1to1_sorter("log_date",                cmp_date)
 
 # Alert statistics
 declare_simple_sorter("alerts_ok",       _("Number of recoveries"),      "alerts_ok",      cmp_simple_number)

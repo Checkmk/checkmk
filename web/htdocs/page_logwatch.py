@@ -155,7 +155,7 @@ def do_log_ack(host, filename):
     html.header("Acknowledge logfile %s" % file_display)
     html.write("<a class=navi href=\"logwatch.py?host=%s\">All logfiles of %s</a>\n" % tuple([htmllib.urlencode(host)] * 2))
     ack  = html.var('ack')
-    if not html.confirm("Please confirm the deletion of the message from <tt>%s</tt>" % filename):
+    if not html.confirm(_("Do you really want to acknowledge the log file <tt>%s</tt> by <b>deleting</b> all stored messages?") % filename):
         html.footer()
         return
 

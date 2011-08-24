@@ -1548,13 +1548,13 @@ def paged_log(log):
                     next_log_time = int(log[index - 1][0])
 
         elif t < start_time and last_log_index is None:
-            last_log_index = index - 1
+            last_log_index = index
             # This is the next log after this day
             previous_log_time = int(log[index][0])
             # Finished!
             break
 
-    if not last_log_index:
+    if last_log_index is None:
         last_log_index = len(log) - 1
 
     return log[first_log_index:last_log_index], (start_time, end_time, previous_log_time, next_log_time)

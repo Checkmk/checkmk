@@ -155,7 +155,9 @@ def paint_perfometer(row):
         content += '<div class=title>%s</div>' % title
         content += '<img class=glass src="images/perfometer-bg.png">'
 
-        if 'X' in html.display_options:
+        # pnpgraph_present: -1 means unknown (path not configured), 0: no, 1: yes
+        if 'X' in html.display_options and \
+           row["service_pnpgraph_present"] != 0:
             return "perfometer", ('<a href="%s">%s</a>' % (pnp_url(row, "service"), content))
         else:
             return "perfometer", content
@@ -169,7 +171,8 @@ def paint_perfometer(row):
 multisite_painters["perfometer"] = {
     "title" : _("Service Perf-O-Meter"),
     "short" : _("Perf-O-Meter"),
-    "columns" : [ "service_perf_data", "service_state", "service_check_command" ],
+    "columns" : [ "service_perf_data", "service_state", 
+                  "service_check_command", "service_pnpgraph_present" ],
     "paint" : paint_perfometer
 }
 

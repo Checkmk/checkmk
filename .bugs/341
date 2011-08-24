@@ -1,0 +1,9 @@
+Title: Enable performance data for fs trends per default
+Component: checks
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-08-23 17:49:06
+Class: cleanup
+
+Also describe this in the migration notes.

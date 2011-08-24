@@ -2192,14 +2192,14 @@ def get_sorter_name_of_painter(painter):
     elif painter['name'] in multisite_sorters:
         return painter['name']
 
-def sorted_by_painter(painter):
+def get_primary_sorter_order(painter):
     sorter_name = get_sorter_name_of_painter(painter)
     this_asc_sorter  = (sorter_name, False)
     this_desc_sorter = (sorter_name, True)
     user_sort = parse_url_sorters(html.var('sort'))
-    if this_asc_sorter in user_sort:
+    if user_sort and this_asc_sorter == user_sort[0]:
         return 'asc'
-    elif this_desc_sorter in user_sort:
+    elif user_sort and this_desc_sorter == user_sort[0]:
         return 'desc'
     else:
         return ''
@@ -2267,7 +2267,7 @@ def paint_header(view, p):
     # - Keep the _body_class variable (e.g. for dashlets)
     if view.get('user_sortable', True) and get_sorter_name_of_painter(painter) is not None:
         t = "<a class=\"%s\" href=\"%s\" title=\"%s\" target=\"_self\">%s</a>" % \
-            (sorted_by_painter(painter),
+            (get_primary_sorter_order(painter),
              html.makeuri([
                  ('sort', sort_url(view['sorters'], view['group_painters'], painter)),
                  ('display_options', html.display_options),

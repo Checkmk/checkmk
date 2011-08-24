@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-diskstat_inventory_mode = "single" # also possible: "summary", "legacy"
+diskstat_inventory_mode = "summary" # also possible: "single", "legacy"
 
 diskstat_default_levels = {
 #    "read" :    (10, 20),   # MB/sec

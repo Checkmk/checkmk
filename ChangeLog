@@ -34,6 +34,7 @@
       read the migration notes!
     * df and friends: enabled trend performance data per default. Please
       carefully read the migration notes!
+    * diskstat: make summary mode the default behavious (one check per host)
 
     MK Livestatus:
     * WaitObject: allow to separate host name and service with a semicolon.

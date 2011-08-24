@@ -2215,8 +2215,9 @@ def sort_url(view_sorters, group_painters, painter):
     sort = html.var('sort', None)
     sorter = []
 
-    group_sort = [ (multisite_painters[p[0]]['sorter'], False) for p in group_painters
-                   if p[0] in multisite_painters and 'sorter' in multisite_painters[p[0]] ]
+    group_sort = [ (get_sorter_name_of_painter(multisite_painters[p[0]]), False)
+                   for p in group_painters
+                   if p[0] in multisite_painters ]
     view_sort  = [ s for s in view_sorters if not s[0] in group_sort ]
 
     # Get current url individual sorters. Parse the "sort" url parameter,
@@ -2266,13 +2267,17 @@ def paint_header(view, p):
     # - Link to _self (Always link to the current frame)
     # - Keep the _body_class variable (e.g. for dashlets)
     if view.get('user_sortable', True) and get_sorter_name_of_painter(painter) is not None:
+        params = [
+            ('sort', sort_url(view['sorters'], view['group_painters'], painter)),
+        ]
+        if html.has_var('_body_class'):
+            params.append(('_body_class',     html.var('_body_class')))
+        if html.has_var('display_options'):
+            params.append(('display_options', html.var('display_options')))
+
         t = "<a class=\"%s\" href=\"%s\" title=\"%s\" target=\"_self\">%s</a>" % \
             (get_primary_sorter_order(painter),
-             html.makeuri([
-                 ('sort', sort_url(view['sorters'], view['group_painters'], painter)),
-                 ('display_options', html.display_options),
-                 ('_body_class',     html.var('_body_class')),
-             ], 'sort'),
+             html.makeuri(params, 'sort'),
              _('Sort by %s') % t, t)
 
     html.write("<th>%s</th>" % t)

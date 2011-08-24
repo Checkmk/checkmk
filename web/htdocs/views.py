@@ -497,7 +497,7 @@ def page_edit_view():
                         del html.multisite_views[(html.req.user, oldname)]
                     save_views(html.req.user)
                 return page_message_and_forward(_("Your view has been saved."), "edit_views.py",
-                        "<script type='text/javascript'>top.frames[0].location.reload();</script>\n")
+                        "<script type='text/javascript'>if(top.frames[0]) top.frames[0].location.reload();</script>\n")
 
         except MKUserError, e:
             html.write("<div class=error>%s</div>\n" % e.message)

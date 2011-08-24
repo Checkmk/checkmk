@@ -61,8 +61,6 @@
 
     WATO:
     * Show error message in case of empty inventory due to agent error
-
-    WATO:
     * Commited audit log entries are now pages based on days
     * Added download link to download the WATO audit log in CSV format
 

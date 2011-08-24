@@ -611,6 +611,25 @@ function startReloadTimer(url) {
 function handleContentReload(_unused, code) {
     var o = document.getElementById('data_container');
     o.innerHTML = code;
+
+    // Need to fix javascript execution in innerHTML
+    var aScripts = o.getElementsByTagName('script');
+    for(var i in aScripts) {
+        if(aScripts[i].src && aScripts[i].src !== '') {
+            var oScr = document.createElement('script');
+            oScr.src = aScripts[i].src;
+            document.body.appendChild(oScr);
+            oScr = null;
+        } else {
+            try {
+                eval(aScripts[i].text);
+            } catch(e) {
+                alert(" Script error: " + aScripts[i].text);
+            }
+        }
+    }
+
+    aScripts = null;
     o = null;
     startReloadTimer('');
 }

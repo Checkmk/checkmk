@@ -597,13 +597,6 @@ function startReloadTimer(url) {
     gReloadTimer = setTimeout("handleReload('" + url + "')", Math.ceil(parseFloat(gReloadTime) * 1000));
 }
 
-function handleContentReloadError(data, statusCode) {
-    var o = document.getElementById('data_container');
-    o.innerHTML = '<div class=error>Update failed (' + statusCode
-                  + '). The shown data might be outdated</div>' + o.innerHTML;
-    o = null;
-}
-
 function updateHeaderTime() {
     var oTime = document.getElementById('headertime');
     if(!oTime)
@@ -637,6 +630,16 @@ function handleContentReload(_unused, code) {
 
     aScripts = null;
     o = null;
+    startReloadTimer('');
+}
+
+function handleContentReloadError(data, statusCode) {
+    var o = document.getElementById('data_container');
+    o.innerHTML = '<div class=error>Update failed (' + statusCode
+                  + '). The shown data might be outdated</div>' + o.innerHTML;
+    o = null;
+
+    // Continue update after the error
     startReloadTimer('');
 }
 

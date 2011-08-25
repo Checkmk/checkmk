@@ -608,26 +608,17 @@ function startReloadTimer(url) {
     gReloadTimer = setTimeout("handleReload('" + url + "')", Math.ceil(parseFloat(gReloadTime) * 1000));
 }
 
+function handleContentReloadError(data, statusCode) {
+    var o = document.getElementById('data_container');
+    o.innerHTML = '<div class=error>Update failed (' + statusCode
+                  + '). The shown data might be outdated</div>' + o.innerHTML;
+    o = null;
+}
+
 function handleContentReload(_unused, code) {
     var o = document.getElementById('data_container');
     o.innerHTML = code;
-
-    // Need to fix javascript execution in innerHTML
-    var aScripts = o.getElementsByTagName('script');
-    for(var i in aScripts) {
-        if(aScripts[i].src && aScripts[i].src !== '') {
-            var oScr = document.createElement('script');
-            oScr.src = aScripts[i].src;
-            document.body.appendChild(oScr);
-            oScr = null;
-        } else {
-            try {
-                eval(aScripts[i].text);
-            } catch(e) {
-                alert(" Script error: " + aScripts[i].text);
-            }
-        }
-    }
+    executeJS('data_container');
 
     aScripts = null;
     o = null;
@@ -662,7 +653,7 @@ function handleReload(url) {
 
         var url = makeuri(params);
         display_options = null;
-        get_url(url, handleContentReload, '');
+        get_url(url, handleContentReload, '', handleContentReloadError);
         url = null;
     }
 }

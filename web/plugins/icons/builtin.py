@@ -452,8 +452,7 @@ multisite_icons.append({
 
 def paint_reschedule(what, row, tags, custom_vars):
     # Reschedule button
-    if 'C' in html.display_options \
-       and row[what + "_active_checks_enabled"] == 1 \
+    if row[what + "_active_checks_enabled"] == 1 \
        and config.may('action.reschedule'):
         name2 = ''
         if what == 'service':

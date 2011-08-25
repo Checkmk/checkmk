@@ -30,6 +30,9 @@ import wato
 class FilterWatoFile(Filter):
     def __init__(self):
         Filter.__init__(self, "filename", "WATO Folder/File", "host", ["filename"], [])
+        self.load_wato_data()
+
+    def load_wato_data(self):
         self.tree = wato.api.get_folder_tree()
         self.path_to_tree = {} # keep mapping from string-paths to folders/files
         self.selection = self.folder_selection(self.tree, "", 0)
@@ -68,6 +71,14 @@ class FilterWatoFile(Filter):
         return sel
 
     def heading_info(self, info):
+        # FIXME: There is a problem with caching data and changing titles of WATO files
+        # Everything is changed correctly but the filter object is stored in the
+        # global multisite_filters var and self.path_to_tree is not refreshed when
+        # rendering this title. Thus the threads might have old information about the
+        # file titles and so on.
+        # The call below needs to use some sort of indicator wether the cache needs
+        # to be renewed or not.
+        self.load_wato_data()
         current = html.var(self.name)
         if current and current != "/":
             return self.path_to_tree.get(current) 

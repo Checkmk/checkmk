@@ -1,6 +1,8 @@
 1.1.11i4:
     Multisite:
-    * FIX: avoid if/then construct that is not working on RedHat 5.6
+    * FIX: WATO filtered status GUIs did not update the title after changing
+      the title of the file/folder in WATO
+    * FIX: Removed new python syntax which is incompatible with old python versions
 
 1.1.11i3:
     Core, Setup, etc.:
@@ -66,6 +68,8 @@
     * Added several missing i18n strings in view editor
     * Views can now be sorted by the users by clicking on the table headers.
       The user sort options are not persisted.
+    * Views are not reloaded completely anymore. The data tables are reloaded
+      on their own.
     * Perf-O-Meters are now aware if there really is a PNP graph
 
     WATO:

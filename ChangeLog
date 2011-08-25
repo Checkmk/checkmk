@@ -1,3 +1,8 @@
+1.1.11i4:
+    Multisite:
+    * FIX: WATO filtered status GUIs did not update the title after changing
+      the title of the file/folder in WATO
+
 1.1.11i3:
     Core, Setup, etc.:
     * FIX: allow host names to have spaces

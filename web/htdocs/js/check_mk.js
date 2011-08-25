@@ -151,6 +151,49 @@ function pageWidth() {
   return h;
 }
 
+/**
+ * Function gets the value of the given url parameter
+ */
+function getUrlParam(name) {
+    var name = name.replace('[', '\\[').replace(']', '\\]');
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
+    var results = regex.exec(window.location);
+    if(results === null)
+        return '';
+    else
+        return results[1];
+}
+
+/**
+ * Function creates a new cleaned up URL
+ * - Can add/overwrite parameters
+ * - Removes _* parameters
+ */
+function makeuri(addvars) {
+    var tmp = window.location.href.split('?');
+    var base = tmp[0];
+    tmp = tmp[1].split('#');
+    tmp = tmp[0].split('&');
+    var len = tmp.length;
+    var params = [];
+    var pair = null;
+
+    // Skip unwanted parmas
+    for(var i = 0; i < tmp.length; i++) {
+        pair = tmp[i].split('=');
+        if(pair[0][0] == '_')
+            continue;
+        params.push(tmp[i]);
+    }
+
+    // Add new params
+    for (var key in addvars) {
+        params.push(key + '=' + addvars[key]);
+    }
+    
+    return base + '?' + params.join('&')
+}
+
 // ----------------------------------------------------------------------------
 // GUI styling
 // ----------------------------------------------------------------------------
@@ -557,15 +600,71 @@ function setReload(secs, url) {
 
     if (secs !== 0) {
         gReloadTime  = secs;
-        gReloadTimer = setTimeout("handleReload('" + url + "')", Math.ceil(parseFloat(secs) * 1000));
+        startReloadTimer(url);
     }
 }
 
+function startReloadTimer(url) {
+    gReloadTimer = setTimeout("handleReload('" + url + "')", Math.ceil(parseFloat(gReloadTime) * 1000));
+}
+
+function handleContentReload(_unused, code) {
+    var o = document.getElementById('data_container');
+    o.innerHTML = code;
+
+    // Need to fix javascript execution in innerHTML
+    var aScripts = o.getElementsByTagName('script');
+    for(var i in aScripts) {
+        if(aScripts[i].src && aScripts[i].src !== '') {
+            var oScr = document.createElement('script');
+            oScr.src = aScripts[i].src;
+            document.body.appendChild(oScr);
+            oScr = null;
+        } else {
+            try {
+                eval(aScripts[i].text);
+            } catch(e) {
+                alert(" Script error: " + aScripts[i].text);
+            }
+        }
+    }
+
+    aScripts = null;
+    o = null;
+    startReloadTimer('');
+}
+
 function handleReload(url) {
-    if (url === '')
-        window.location.reload(false);
-    else
-        window.location.href = url;
+    // FiXME: Nicht mehr die ganze Seite neu laden, wenn es ein DIV "data_container" gibt.
+    // In dem Fall wird die aktuelle URL aus "window.location.href" geholt, für den Refresh
+    // modifiziert, der Inhalt neu geholt und in das DIV geschrieben.
+    if(!document.getElementById('data_container') || url !== '') {
+        if (url === '')
+            window.location.reload(false);
+        else
+            window.location.href = url;
+    } else {
+        // Enforce specific display_options to get only the content data
+        var display_options = getUrlParam('display_options');
+        var opts = [ 'h', 't', 'b', 'f', 'c', 'o', 'd', 'e', 'r' ];
+        for(var i = 0; i < opts.length; i++) {
+            if(display_options.indexOf(opts[i].toUpperCase()) > -1)
+                display_options = display_options.replace(opts[i].toUpperCase(), opts[i]);
+            else
+                display_options += opts[i];
+        }
+        opts = null;
+
+        var params = {'_display_options': display_options};
+        var real_display_options = getUrlParam('display_options');
+        if(real_display_options !== '')
+            params['display_options'] = real_display_options;
+
+        var url = makeuri(params);
+        display_options = null;
+        get_url(url, handleContentReload, '');
+        url = null;
+    }
 }
 
 // --------------------------------------------------------------------------

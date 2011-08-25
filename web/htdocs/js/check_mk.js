@@ -597,6 +597,29 @@ function startReloadTimer(url) {
     gReloadTimer = setTimeout("handleReload('" + url + "')", Math.ceil(parseFloat(gReloadTime) * 1000));
 }
 
+function updateHeaderTime() {
+    var oTime = document.getElementById('headertime');
+    if(!oTime)
+        return;
+
+    var t = new Date();
+
+    var hours = t.getHours();
+    if(hours < 10)
+        hours = "0" + hours;
+
+    var min = t.getMinutes();
+    if(min < 10)
+        min = "0" + min;
+
+    oTime.innerHTML = hours + ':' + min
+
+    min   = null;
+    hours = null;
+    t     = null;
+    oTime = null;
+}
+
 function handleContentReload(_unused, code) {
     var o = document.getElementById('data_container');
     o.innerHTML = code;
@@ -617,6 +640,9 @@ function handleContentReload(_unused, code) {
             }
         }
     }
+
+    // Update the header time
+    updateHeaderTime();
 
     aScripts = null;
     o = null;

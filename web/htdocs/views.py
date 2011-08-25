@@ -2297,7 +2297,7 @@ def sort_url(view, painter):
         # Now add the sorter as primary user sorter
         sorter = group_sort + [this_asc_sorter] + user_sort + view_sort
 
-    return ','.join([ ('-' if s[1] else '') + s[0] for s in sorter ])
+    return ','.join([ (s[1] and '-' or '') + s[0] for s in sorter ])
 
 def paint_header(view, p):
     painter = p[0]
@@ -2402,8 +2402,8 @@ def declare_1to1_sorter(painter_name, func, col_num = 0, reverse = False):
         "title"   : multisite_painters[painter_name]['title'],
         "columns" : multisite_painters[painter_name]['columns'],
         "cmp"     : lambda r1, r2: func(multisite_painters[painter_name]['columns'][col_num],
-                                        r1 if reverse else r2,
-                                        r2 if reverse else r1)
+                                        reverse and r1 or r2,
+                                        reverse and r2 or r1)
     }
     return painter_name
 

@@ -1059,7 +1059,7 @@ def get_needed_columns(painters):
 # Display view with real data. This is *the* function everying
 # is about.
 def show_view(view, show_heading = False, show_buttons = True, show_footer = True):
-    all_display_options = "HTBFCEOZRSIXDM"
+    all_display_options = "HTBFCEOZRSIXDML"
 
     # Parse display options and
     if html.output_format == "html":
@@ -2315,7 +2315,9 @@ def paint_header(view, p):
     # - Add the display options (Keeping the same display options as current)
     # - Link to _self (Always link to the current frame)
     # - Keep the _body_class variable (e.g. for dashlets)
-    if view.get('user_sortable', True) and get_sorter_name_of_painter(painter) is not None:
+    if 'L' in html.display_options \
+       and view.get('user_sortable', True) \
+       and get_sorter_name_of_painter(painter) is not None:
         params = [
             ('sort', sort_url(view, painter)),
         ]

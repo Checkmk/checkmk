@@ -226,8 +226,6 @@ function filter_activation(oid)
     selectobject = null;
 }
 
-var gNumOpenTabs = 0;
-
 function toggle_tab(linkobject, oid)
 {
     var table = document.getElementById(oid);
@@ -235,20 +233,11 @@ function toggle_tab(linkobject, oid)
         table.style.display = "";
         linkobject.setAttribute("className", "left open");
         linkobject.setAttribute("class", "left open");
-
-        // Stop the refresh while at least one tab is open
-        gNumOpenTabs += 1;
-        setReload(0);
     }
     else {
         table.style.display = "none";
         linkobject.setAttribute("className", "left closed");
         linkobject.setAttribute("class", "left closed");
-
-        // Re-Enable the reload
-        gNumOpenTabs -= 1;
-        if(gNumOpenTabs == 0)
-            setReload(gReloadTime);
     }
     table = null;
 }

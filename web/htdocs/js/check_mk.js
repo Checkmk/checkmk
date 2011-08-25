@@ -226,8 +226,6 @@ function filter_activation(oid)
     selectobject = null;
 }
 
-var gNumOpenTabs = 0;
-
 function toggle_tab(linkobject, oid)
 {
     var table = document.getElementById(oid);
@@ -235,20 +233,11 @@ function toggle_tab(linkobject, oid)
         table.style.display = "";
         linkobject.setAttribute("className", "left open");
         linkobject.setAttribute("class", "left open");
-
-        // Stop the refresh while at least one tab is open
-        gNumOpenTabs += 1;
-        setReload(0);
     }
     else {
         table.style.display = "none";
         linkobject.setAttribute("className", "left closed");
         linkobject.setAttribute("class", "left closed");
-
-        // Re-Enable the reload
-        gNumOpenTabs -= 1;
-        if(gNumOpenTabs == 0)
-            setReload(gReloadTime);
     }
     table = null;
 }
@@ -615,10 +604,36 @@ function handleContentReloadError(data, statusCode) {
     o = null;
 }
 
+function updateHeaderTime() {
+    var oTime = document.getElementById('headertime');
+    if(!oTime)
+        return;
+
+    var t = new Date();
+
+    var hours = t.getHours();
+    if(hours < 10)
+        hours = "0" + hours;
+
+    var min = t.getMinutes();
+    if(min < 10)
+        min = "0" + min;
+
+    oTime.innerHTML = hours + ':' + min
+
+    min   = null;
+    hours = null;
+    t     = null;
+    oTime = null;
+}
+
 function handleContentReload(_unused, code) {
     var o = document.getElementById('data_container');
     o.innerHTML = code;
     executeJS('data_container');
+
+    // Update the header time
+    updateHeaderTime();
 
     aScripts = null;
     o = null;

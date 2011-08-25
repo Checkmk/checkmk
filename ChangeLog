@@ -1,3 +1,7 @@
+1.1.11i4:
+    Multisite:
+    * FIX: avoid if/then construct that is not working on RedHat 5.6
+
 1.1.11i3:
     Core, Setup, etc.:
     * FIX: allow host names to have spaces

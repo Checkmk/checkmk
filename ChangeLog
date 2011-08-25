@@ -2,6 +2,7 @@
     Multisite:
     * FIX: WATO filtered status GUIs did not update the title after changing
       the title of the file/folder in WATO
+    * FIX: Removed new python syntax which is incompatible with old python versions
 
 1.1.11i3:
     Core, Setup, etc.:

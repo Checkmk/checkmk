@@ -1162,7 +1162,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     query = filterheaders + view.get("add_headers", "")
 
     # [4] Sorting - use view sorters or url supplied sorters
-    sorter_list = parse_url_sorters(html.var('sort')) if html.has_var('sort') else view["sorters"]
+    sorter_list = html.has_var('sort') and parse_url_sorters(html.var('sort')) or view["sorters"]
     sorters = [ (multisite_sorters[sn], reverse) for sn, reverse in sorter_list ]
 
     # [5] Grouping

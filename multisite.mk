@@ -64,7 +64,7 @@ nagvis_base_url = '/nagvis'
 #  ( "critical", "critical.wav" ),
 #  ( "unknown", "unknown.wav" ),
 #  ( "warning", "warning.wav" ),
-#  ( None,      "ok", ), 
+#  ( None,      "ok.wav" ), 
 # ]
 # Note: this example has not sound for unreachable hosts. 
 # set sound_url to another url, if you place your sound

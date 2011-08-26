@@ -4,6 +4,7 @@
       the title of the file/folder in WATO
     * FIX: Removed new python syntax which is incompatible with old python versions
     * FIX: Made bulk inventory work in IE
+    * FIX: Fixed js errors in IE when having not enough space on dashboard 
     * Views are not reloaded completely anymore. The data tables are reloaded
       on their own.
     * Open tabs in views do not prevent reloading the displayed data anymore

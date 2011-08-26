@@ -1163,7 +1163,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
 
     # [4] Sorting - use view sorters or url supplied sorters
     sorter_list = html.has_var('sort') and parse_url_sorters(html.var('sort')) or view["sorters"]
-    sorters = [ (multisite_sorters[sn], reverse) for sn, reverse in sorter_list ]
+    sorters = [ (multisite_sorters[s[0]],) + s[1:] for s in sorter_list ]
 
     # [5] Grouping
     group_painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["group_painters"] ]
@@ -1183,10 +1183,13 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     master_painters = [ p for p in all_painters if len(p) < 4 ]
     columns      = get_needed_columns(master_painters)
     join_columns = get_needed_columns(join_painters)
-    
-    # Columns needed for sorters (what shall we do with the join columns?)
-    for s, r in sorters:
-        columns += s["columns"]
+
+    # Columns needed for sorters
+    for s in sorters:
+        if len(s) == 2:
+            columns += s[0]["columns"]
+        else:
+            join_columns += s[0]["columns"]
 
     # Add key columns, needed for executing commands
     columns += datasource["keys"]
@@ -1218,11 +1221,11 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         else:
             rows = query_data(datasource, columns, add_columns, query, only_sites, get_limit())
 
-        sort_data(rows, sorters)
-
         # Now add join information, if there are join columns
         if len(join_painters) > 0:
             do_table_join(datasource, rows, filterheaders, join_painters, join_columns, only_sites)
+
+        sort_data(rows, sorters)
     else:
         rows = []
 
@@ -1690,13 +1693,23 @@ def merge_data(data, columns):
 # for same objects (e.g. host_name in table services and
 # simply name in table hosts)
 def sort_data(data, sorters):
+
     if len(sorters) == 0:
         return
-    elif len(sorters) == 1:
+
+    # Join the data in case of sorting with joined data
+    # FIXME: Problem: What to do in case of several joined
+    # columns of different services which use the same cols?
+    for row in data:
+        for s in sorters:
+            if len(s) > 2:
+                row.update(row.get("JOIN", {}).get(s[2], {}))
+
+    if len(sorters) == 1:
         data.sort(sorters[0][0]["cmp"], None, sorters[0][1])
         return
 
-    sort_cmps = [(s["cmp"], (reverse and -1 or 1)) for s, reverse in sorters]
+    sort_cmps = [(s[0]["cmp"], (s[1] and -1 or 1)) for s in sorters]
 
     def multisort(e1, e2):
         for func, neg in sort_cmps:
@@ -2217,9 +2230,16 @@ def substract_sorters(base, remove):
             base.remove((s[0], not s[1]))
 
 def parse_url_sorters(sort):
+    sorters = []
     if not sort:
-        return []
-    return [ (s.replace('-', ''), s.startswith('-')) for s in sort.split(',') ]
+        return sorters
+    for s in sort.split(','):
+        if not '~' in s:
+            sorters.append((s.replace('-', ''), s.startswith('-')))
+        else:
+            sorter, join_index = s.split('~', 1)
+            sorters.append((sorter.replace('-', ''), sorter.startswith('-'), join_index))
+    return sorters
 
 def get_sorter_name_of_painter(painter):
     if 'sorter' in painter:
@@ -2256,6 +2276,10 @@ def get_separated_sorters(view):
 
     return group_sort, user_sort, view_sort
 
+def get_painter_join_index(view, painter):
+    for e in view["painters"]:
+        if e[0] == painter['name'] and len(e) >= 5:
+            return e[3]
 
 def sort_url(view, painter):
     """
@@ -2272,13 +2296,20 @@ def sort_url(view, painter):
 
     sorter = group_sort + user_sort + view_sort
 
+    # When painter is joined, then add the join index as 3rd attribute to tuple
+    join_index = get_painter_join_index(view, painter)
+
     # Now apply the sorter of the current column:
     # - Negate/Disable when at first position
     # - Move to the first position when already in sorters
     # - Add in the front of the user sorters when not set
     sorter_name = get_sorter_name_of_painter(painter)
-    this_asc_sorter  = (sorter_name, False)
-    this_desc_sorter = (sorter_name, True)
+    if join_index:
+        this_asc_sorter  = (sorter_name, False, join_index)
+        this_desc_sorter = (sorter_name, True, join_index)
+    else:
+        this_asc_sorter  = (sorter_name, False)
+        this_desc_sorter = (sorter_name, True)
 
     if user_sort and this_asc_sorter == user_sort[0]:
         # Second click: Change from asc to desc order
@@ -2297,7 +2328,14 @@ def sort_url(view, painter):
         # Now add the sorter as primary user sorter
         sorter = group_sort + [this_asc_sorter] + user_sort + view_sort
 
-    return ','.join([ (s[1] and '-' or '') + s[0] for s in sorter ])
+    p = []
+    for s in sorter:
+        if len(s) == 2:
+            p.append((s[1] and '-' or '') + s[0])
+        else:
+            p.append((s[1] and '-' or '') + s[0] + '~' + s[2])
+
+    return ','.join(p)
 
 def paint_header(view, p):
     painter = p[0]
@@ -2379,16 +2417,16 @@ def cmp_insensitive_string(v1, v2):
 
 # Sorting
 def cmp_simple_string(column, r1, r2):
-    v1, v2 = r1[column], r2[column]
+    v1, v2 = r1.get(column, ''), r2.get(column, '')
     return cmp_insensitive_string(v1, v2)
 
 def cmp_string_list(column, r1, r2):
-    v1 = ''.join(r1[column])
-    v2 = ''.join(r2[column])
+    v1 = ''.join(r1.get(column, []))
+    v2 = ''.join(r2.get(column, []))
     return cmp_insensitive_string(v1, v2)
 
 def cmp_simple_number(column, r1, r2):
-    return cmp(r1[column], r2[column])
+    return cmp(r1.get(column), r2.get(column))
 
 def declare_simple_sorter(name, title, column, func):
     multisite_sorters[name] = {

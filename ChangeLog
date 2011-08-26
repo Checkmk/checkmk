@@ -7,6 +7,7 @@
       on their own.
     * Open tabs in views do not prevent reloading the displayed data anymore
     * Added display_option "L" to enable/disable column title sortings
+    * Sorting by joined columns is now possible
 
 1.1.11i3:
     Core, Setup, etc.:

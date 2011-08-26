@@ -2034,6 +2034,7 @@ table.add_snapin i {
     padding: 5px;
     height: 250px;
     overflow: auto;
+    text-align: left;
 }
 
 .wato table.progress td.log { 

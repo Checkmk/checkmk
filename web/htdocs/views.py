@@ -874,7 +874,7 @@ def create_view():
         raise MKUserError("view_name", _("Please supply a unique name for the view, this will be used to specify that view in HTTP links."))
     if not re.match("^[a-zA-Z0-9_]+$", name):
         raise MKUserError("view_name", _("The name of the view may only contain letters, digits and underscores."))
-    title = html.var("view_title").strip()
+    title = html.var_utf8("view_title").strip()
     if title == "":
         raise MKUserError("view_title", _("Please specify a title for your view"))
     linktitle = html.var("view_linktitle").strip()
@@ -884,7 +884,7 @@ def create_view():
     if not icon: 
         icon = None
 
-    topic = html.var("view_topic")
+    topic = html.var_utf8("view_topic")
     if not topic:
         topic = _("Other")
     datasourcename = html.var("datasource")
@@ -988,7 +988,7 @@ def create_view():
         "topic"           : topic,
         "linktitle"       : linktitle,
         "icon"            : icon,
-        "description"     : html.var("view_description", ""),
+        "description"     : html.var_utf8("view_description", ""),
         "datasource"      : datasourcename,
         "public"          : public,
         "hidden"          : hidden,

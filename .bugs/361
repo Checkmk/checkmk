@@ -1,0 +1,11 @@
+Title: setup.sh does not setup permissions for WATO correctly
+Component: core
+Benefit: 1
+State: open
+Cost: 2
+Date: 2011-08-27 14:04:23
+Class: cleanup
+
+The setup.sh should try to setup permissions for WATO. We might
+need a SGID bit and 775 permissions for the Webserver.
+Also check if OMD share mode is working correctly.

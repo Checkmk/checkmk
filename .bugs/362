@@ -1,0 +1,12 @@
+Title: WATO-Path context gets lost when clicking view in snapin
+Component: multisite
+Benefit: 1
+State: open
+Cost: 2
+Date: 2011-08-27 14:21:47
+Class: bug
+
+When one has a WATO path context (by clicking on the Hosts-Snapin with
+the WATO tree) and then clicks on a new view in the Views-Snapin, then
+that context gets lost. I think it would be better if that context
+would be preserved.

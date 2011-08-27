@@ -3219,7 +3219,10 @@ class API:
             return folder["title"]
         else:
             return filename
-        
+
+    # Creates a path tuple from string path
+    def make_path(self, pathname):
+        return make_path(pathname)
 
     # BELOW ARE PRIVATE HELPER FUNCTIONS
 

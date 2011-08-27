@@ -226,8 +226,6 @@ function filter_activation(oid)
     selectobject = null;
 }
 
-var gNumOpenTabs = 0;
-
 function toggle_tab(linkobject, oid)
 {
     var table = document.getElementById(oid);
@@ -235,20 +233,11 @@ function toggle_tab(linkobject, oid)
         table.style.display = "";
         linkobject.setAttribute("className", "left open");
         linkobject.setAttribute("class", "left open");
-
-        // Stop the refresh while at least one tab is open
-        gNumOpenTabs += 1;
-        setReload(0);
     }
     else {
         table.style.display = "none";
         linkobject.setAttribute("className", "left closed");
         linkobject.setAttribute("class", "left closed");
-
-        // Re-Enable the reload
-        gNumOpenTabs -= 1;
-        if(gNumOpenTabs == 0)
-            setReload(gReloadTime);
     }
     table = null;
 }
@@ -608,29 +597,54 @@ function startReloadTimer(url) {
     gReloadTimer = setTimeout("handleReload('" + url + "')", Math.ceil(parseFloat(gReloadTime) * 1000));
 }
 
+function updateHeaderTime() {
+    var oTime = document.getElementById('headertime');
+    if(!oTime)
+        return;
+
+    var t = new Date();
+
+    var hours = t.getHours();
+    if(hours < 10)
+        hours = "0" + hours;
+
+    var min = t.getMinutes();
+    if(min < 10)
+        min = "0" + min;
+
+    oTime.innerHTML = hours + ':' + min
+
+    min   = null;
+    hours = null;
+    t     = null;
+    oTime = null;
+}
+
+var g_reload_error = false;
 function handleContentReload(_unused, code) {
+    g_reload_error = false;
     var o = document.getElementById('data_container');
     o.innerHTML = code;
+    executeJS('data_container');
 
-    // Need to fix javascript execution in innerHTML
-    var aScripts = o.getElementsByTagName('script');
-    for(var i in aScripts) {
-        if(aScripts[i].src && aScripts[i].src !== '') {
-            var oScr = document.createElement('script');
-            oScr.src = aScripts[i].src;
-            document.body.appendChild(oScr);
-            oScr = null;
-        } else {
-            try {
-                eval(aScripts[i].text);
-            } catch(e) {
-                alert(" Script error: " + aScripts[i].text);
-            }
-        }
-    }
+    // Update the header time
+    updateHeaderTime();
 
     aScripts = null;
     o = null;
+    startReloadTimer('');
+}
+
+function handleContentReloadError(data, statusCode) {
+    if(!g_reload_error) {
+        var o = document.getElementById('data_container');
+        o.innerHTML = '<div class=error>Update failed (' + statusCode
+                      + '). The shown data might be outdated</div>' + o.innerHTML;
+        o = null;
+        g_reload_error = true;
+    }
+
+    // Continue update after the error
     startReloadTimer('');
 }
 
@@ -662,7 +676,7 @@ function handleReload(url) {
 
         var url = makeuri(params);
         display_options = null;
-        get_url(url, handleContentReload, '');
+        get_url(url, handleContentReload, '', handleContentReloadError);
         url = null;
     }
 }

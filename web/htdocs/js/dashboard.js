@@ -26,11 +26,12 @@ function resize_dashlets(id, code)
 {
     var resize_info = eval(code);
 
+    var oDash = null;
     for (var i in resize_info) {
         var dashlet = resize_info[i];
 
         // check if dashlet has title and resize its width
-        var oDash = document.getElementById("dashlet_title_" + dashlet[0]);
+        oDash = document.getElementById("dashlet_title_" + dashlet[0]);
         if (oDash) {
             oDash.style.width  = dashlet[3] + "px";
             oDash.style.top    = "-" + title_height + "px";
@@ -38,7 +39,7 @@ function resize_dashlets(id, code)
         }
 
         // resize outer div
-        var oDash = document.getElementById("dashlet_" + dashlet[0]);
+        oDash = document.getElementById("dashlet_" + dashlet[0]);
         oDash.style.position = 'absolute';
         oDash.style.left   = dashlet[1] + "px";
         oDash.style.top    = dashlet[2] + "px";
@@ -46,26 +47,30 @@ function resize_dashlets(id, code)
         oDash.style.height = dashlet[4] + "px";
 
         // resize shadow images
-        var oDash = document.getElementById("dashadow_w_" + dashlet[0]);
-        if (oDash) 
+        oDash = document.getElementById("dashadow_w_" + dashlet[0]);
+        if(oDash && dashlet[4] - 32 > 0)
             oDash.style.height = (dashlet[4] - 32) + "px";
-        var oDash = document.getElementById("dashadow_e_" + dashlet[0]);
-        if (oDash) 
+        oDash = document.getElementById("dashadow_e_" + dashlet[0]);
+        if (oDash && dashlet[4] - 32 > 0)
             oDash.style.height = (dashlet[4] - 32) + "px";
-        var oDash = document.getElementById("dashadow_n_" + dashlet[0]);
-        if (oDash) 
+        oDash = document.getElementById("dashadow_n_" + dashlet[0]);
+        if (oDash && dashlet[3] - 32 > 0)
             oDash.style.width = (dashlet[3] - 32) + "px";
-        var oDash = document.getElementById("dashadow_s_" + dashlet[0]);
-        if (oDash) 
+        oDash = document.getElementById("dashadow_s_" + dashlet[0]);
+        if (oDash && dashlet[3] - 32 > 0)
             oDash.style.width = (dashlet[3] - 32) + "px";
 
         // resize content div
-        var oDash = document.getElementById("dashlet_inner_" + dashlet[0]);
-        oDash.style.position = 'absolute';
-        oDash.style.left   = dashlet_padding + "px";
-        oDash.style.top    = dashlet_padding + "px";
-        oDash.style.width  = (dashlet[3] - 2*dashlet_padding) + "px";
-        oDash.style.height = (dashlet[4] - 2*dashlet_padding) + "px";
+        oDash = document.getElementById("dashlet_inner_" + dashlet[0]);
+        if(oDash) {
+            oDash.style.position = 'absolute';
+            oDash.style.left   = dashlet_padding + "px";
+            oDash.style.top    = dashlet_padding + "px";
+            if((dashlet[3] - 2*dashlet_padding) > 0)
+                oDash.style.width  = (dashlet[3] - 2*dashlet_padding) + "px";
+            if((dashlet[4] - 2*dashlet_padding) > 0)
+                oDash.style.height = (dashlet[4] - 2*dashlet_padding) + "px";
+        }
     }
     oDash = null; 
 }

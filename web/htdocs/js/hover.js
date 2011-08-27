@@ -56,14 +56,15 @@ function hoverOpen() {
 }
 
 function hoverHide() {
-    _hoverMenu.style.display = 'none';
-    document.body.style.cursor = 'auto';
+    if(hoverOpen()) {
+        _hoverMenu.style.display = 'none';
+        document.body.style.cursor = 'auto';
+    }
 }
 
 function hoverShow(x, y, code) {
     // Hide all other hover menus
-    if(hoverOpen())
-        hoverHide();
+    hoverHide();
 
     var hoverSpacer = 5;
     var minWidth = 400;

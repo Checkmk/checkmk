@@ -212,8 +212,10 @@ function update_progress_stats(header) {
     for(var i = 1; i < header.length; i++) {
         var o = document.getElementById('progress_stat' + (i - 1));
         if (o) {
-            if(progress_success_stats.indexOf(i) !== -1)
-                progress_found += parseInt(header[i]);
+            for(var a = 0; a < progress_success_stats.length; a++)
+                if(progress_success_stats[a] == i)
+                    progress_found += parseInt(header[i]);
+
             o.innerHTML = parseInt(o.innerHTML) + parseInt(header[i]);
             o = null;
         }

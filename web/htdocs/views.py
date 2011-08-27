@@ -1059,7 +1059,7 @@ def get_needed_columns(painters):
 # Display view with real data. This is *the* function everying
 # is about.
 def show_view(view, show_heading = False, show_buttons = True, show_footer = True):
-    all_display_options = "HTBFCEOZRSIXDM"
+    all_display_options = "HTBFCEOZRSIXDML"
 
     # Parse display options and
     if html.output_format == "html":
@@ -1070,11 +1070,30 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     # If all display_options are upper case assume all not given values default
     # to lower-case. Vice versa when all display_options are lower case.
     # When the display_options are mixed case assume all unset options to be enabled
-    do_defaults =  display_options.isupper() and all_display_options.lower() or all_display_options
-    for c in do_defaults:
-        if c.lower() not in display_options.lower():
-            display_options += c
+    def apply_display_option_defaults(opts):
+        do_defaults = opts.isupper() and all_display_options.lower() or all_display_options
+        for c in do_defaults:
+            if c.lower() not in opts.lower():
+                opts += c
+        return opts
+
+    display_options = apply_display_option_defaults(display_options)
+    # Add the display_options to the html object for later linking etc.
     html.display_options = display_options
+
+    # This is needed for letting only the data table reload. The problem is that
+    # the data table is re-fetched via javascript call using special display_options
+    # but these special display_options must not be used in links etc. So we use
+    # a special var _display_options for defining the display_options for rendering
+    # the data table to be reloaded. The contents of "display_options" are used for
+    # linking to other views.
+    if html.has_var('_display_options'):
+        display_options = html.var("_display_options", "")
+        display_options = apply_display_option_defaults(display_options)
+
+    # Below we have the following display_options vars:
+    # htmk.display_options        - Use this when rendering the current view
+    # html.var("display_options") - Use this for linking to other views
 
     # If display option 'M' is set, then all links are targetet to the 'main'
     # frame. Also the display options are removed since the view in the main
@@ -1143,8 +1162,8 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     query = filterheaders + view.get("add_headers", "")
 
     # [4] Sorting - use view sorters or url supplied sorters
-    sorter_list = parse_url_sorters(html.var('sort')) if html.has_var('sort') else view["sorters"]
-    sorters = [ (multisite_sorters[sn], reverse) for sn, reverse in sorter_list ]
+    sorter_list = html.has_var('sort') and parse_url_sorters(html.var('sort')) or view["sorters"]
+    sorters = [ (multisite_sorters[s[0]],) + s[1:] for s in sorter_list ]
 
     # [5] Grouping
     group_painters = [ (multisite_painters[e[0]],) + e[1:] for e in view["group_painters"] ]
@@ -1164,10 +1183,13 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     master_painters = [ p for p in all_painters if len(p) < 4 ]
     columns      = get_needed_columns(master_painters)
     join_columns = get_needed_columns(join_painters)
-    
-    # Columns needed for sorters (what shall we do with the join columns?)
-    for s, r in sorters:
-        columns += s["columns"]
+
+    # Columns needed for sorters
+    for s in sorters:
+        if len(s) == 2:
+            columns += s[0]["columns"]
+        else:
+            join_columns += s[0]["columns"]
 
     # Add key columns, needed for executing commands
     columns += datasource["keys"]
@@ -1199,11 +1221,11 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         else:
             rows = query_data(datasource, columns, add_columns, query, only_sites, get_limit())
 
-        sort_data(rows, sorters)
-
         # Now add join information, if there are join columns
         if len(join_painters) > 0:
             do_table_join(datasource, rows, filterheaders, join_painters, join_columns, only_sites)
+
+        sort_data(rows, sorters)
     else:
         rows = []
 
@@ -1216,7 +1238,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     # Show heading (change between "preview" mode and full page mode)
     if show_heading:
         # Show/Hide the header with page title, MK logo, etc.
-        if 'H' in display_options: 
+        if 'H' in display_options:
             html.body_start(view_title(view))
         if 'T' in display_options:
             html.top_heading(view_title(view))
@@ -1227,10 +1249,10 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         show_context_links(view, hide_filters)
 
     need_navi = show_buttons and (
-        'D' in display_options or 
-        'F' in display_options or 
-        'C' in display_options or 
-        'O' in display_options or 
+        'D' in display_options or
+        'F' in display_options or
+        'C' in display_options or
+        'O' in display_options or
         'E' in display_options)
     if need_navi:
         html.write("<table class=navi><tr>\n")
@@ -1326,6 +1348,9 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         # Ende des Bereichs mit den Tabs
         html.write("</table>\n") # class=navi
 
+    # The refreshing content container
+    if 'R' in display_options:
+        html.write("<div id=data_container>\n")
 
     if not has_done_actions:
         # Limit exceeded? Show warning
@@ -1343,6 +1368,10 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         for sitename, info in html.live.deadsites.items():
             html.show_error("<b>%s - Livestatus error</b><br>%s" % (info["site"]["alias"], info["exception"]))
 
+    # FIXME: Sauberer wäre noch die Status Icons hier mit aufzunehmen
+    if 'R' in display_options:
+        html.write("</div>\n")
+
     if show_footer:
         pid = os.getpid()
         if html.live.successfully_persisted():
@@ -1353,6 +1382,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         html.bottom_focuscode()
         if 'Z' in display_options:
             html.bottom_footer()
+
         if 'H' in display_options:
             html.body_end()
 
@@ -1663,13 +1693,23 @@ def merge_data(data, columns):
 # for same objects (e.g. host_name in table services and
 # simply name in table hosts)
 def sort_data(data, sorters):
+
     if len(sorters) == 0:
         return
-    elif len(sorters) == 1:
+
+    # Join the data in case of sorting with joined data
+    # FIXME: Problem: What to do in case of several joined
+    # columns of different services which use the same cols?
+    for row in data:
+        for s in sorters:
+            if len(s) > 2:
+                row.update(row.get("JOIN", {}).get(s[2], {}))
+
+    if len(sorters) == 1:
         data.sort(sorters[0][0]["cmp"], None, sorters[0][1])
         return
 
-    sort_cmps = [(s["cmp"], (reverse and -1 or 1)) for s, reverse in sorters]
+    sort_cmps = [(s[0]["cmp"], (s[1] and -1 or 1)) for s in sorters]
 
     def multisort(e1, e2):
         for func, neg in sort_cmps:
@@ -2190,9 +2230,16 @@ def substract_sorters(base, remove):
             base.remove((s[0], not s[1]))
 
 def parse_url_sorters(sort):
+    sorters = []
     if not sort:
-        return []
-    return [ (s.replace('-', ''), s.startswith('-')) for s in sort.split(',') ]
+        return sorters
+    for s in sort.split(','):
+        if not '~' in s:
+            sorters.append((s.replace('-', ''), s.startswith('-')))
+        else:
+            sorter, join_index = s.split('~', 1)
+            sorters.append((sorter.replace('-', ''), sorter.startswith('-'), join_index))
+    return sorters
 
 def get_sorter_name_of_painter(painter):
     if 'sorter' in painter:
@@ -2229,6 +2276,10 @@ def get_separated_sorters(view):
 
     return group_sort, user_sort, view_sort
 
+def get_painter_join_index(view, painter):
+    for e in view["painters"]:
+        if e[0] == painter['name'] and len(e) >= 5:
+            return e[3]
 
 def sort_url(view, painter):
     """
@@ -2245,13 +2296,20 @@ def sort_url(view, painter):
 
     sorter = group_sort + user_sort + view_sort
 
+    # When painter is joined, then add the join index as 3rd attribute to tuple
+    join_index = get_painter_join_index(view, painter)
+
     # Now apply the sorter of the current column:
     # - Negate/Disable when at first position
     # - Move to the first position when already in sorters
     # - Add in the front of the user sorters when not set
     sorter_name = get_sorter_name_of_painter(painter)
-    this_asc_sorter  = (sorter_name, False)
-    this_desc_sorter = (sorter_name, True)
+    if join_index:
+        this_asc_sorter  = (sorter_name, False, join_index)
+        this_desc_sorter = (sorter_name, True, join_index)
+    else:
+        this_asc_sorter  = (sorter_name, False)
+        this_desc_sorter = (sorter_name, True)
 
     if user_sort and this_asc_sorter == user_sort[0]:
         # Second click: Change from asc to desc order
@@ -2270,7 +2328,14 @@ def sort_url(view, painter):
         # Now add the sorter as primary user sorter
         sorter = group_sort + [this_asc_sorter] + user_sort + view_sort
 
-    return ','.join([ ('-' if s[1] else '') + s[0] for s in sorter ])
+    p = []
+    for s in sorter:
+        if len(s) == 2:
+            p.append((s[1] and '-' or '') + s[0])
+        else:
+            p.append((s[1] and '-' or '') + s[0] + '~' + s[2])
+
+    return ','.join(p)
 
 def paint_header(view, p):
     painter = p[0]
@@ -2288,7 +2353,9 @@ def paint_header(view, p):
     # - Add the display options (Keeping the same display options as current)
     # - Link to _self (Always link to the current frame)
     # - Keep the _body_class variable (e.g. for dashlets)
-    if view.get('user_sortable', True) and get_sorter_name_of_painter(painter) is not None:
+    if 'L' in html.display_options \
+       and view.get('user_sortable', True) \
+       and get_sorter_name_of_painter(painter) is not None:
         params = [
             ('sort', sort_url(view, painter)),
         ]
@@ -2350,16 +2417,16 @@ def cmp_insensitive_string(v1, v2):
 
 # Sorting
 def cmp_simple_string(column, r1, r2):
-    v1, v2 = r1[column], r2[column]
+    v1, v2 = r1.get(column, ''), r2.get(column, '')
     return cmp_insensitive_string(v1, v2)
 
 def cmp_string_list(column, r1, r2):
-    v1 = ''.join(r1[column])
-    v2 = ''.join(r2[column])
+    v1 = ''.join(r1.get(column, []))
+    v2 = ''.join(r2.get(column, []))
     return cmp_insensitive_string(v1, v2)
 
 def cmp_simple_number(column, r1, r2):
-    return cmp(r1[column], r2[column])
+    return cmp(r1.get(column), r2.get(column))
 
 def declare_simple_sorter(name, title, column, func):
     multisite_sorters[name] = {
@@ -2373,8 +2440,8 @@ def declare_1to1_sorter(painter_name, func, col_num = 0, reverse = False):
         "title"   : multisite_painters[painter_name]['title'],
         "columns" : multisite_painters[painter_name]['columns'],
         "cmp"     : lambda r1, r2: func(multisite_painters[painter_name]['columns'][col_num],
-                                        r1 if reverse else r2,
-                                        r2 if reverse else r1)
+                                        reverse and r1 or r2,
+                                        reverse and r2 or r1)
     }
     return painter_name
 

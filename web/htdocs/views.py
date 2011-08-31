@@ -2262,7 +2262,8 @@ def get_primary_sorter_order(view, painter):
 def get_separated_sorters(view):
     group_sort = [ (get_sorter_name_of_painter(multisite_painters[p[0]]), False)
                    for p in view['group_painters']
-                   if p[0] in multisite_painters ]
+                   if p[0] in multisite_painters
+                      and get_sorter_name_of_painter(multisite_painters[p[0]]) is not None ]
     view_sort  = [ s for s in view['sorters'] if not s[0] in group_sort ]
 
     # Get current url individual sorters. Parse the "sort" url parameter,

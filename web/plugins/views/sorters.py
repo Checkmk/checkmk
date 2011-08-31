@@ -229,6 +229,7 @@ declare_1to1_sorter("comment_author",          cmp_simple_string)
 declare_1to1_sorter("comment_comment",         cmp_simple_string)
 declare_1to1_sorter("comment_time",            cmp_simple_number)
 declare_1to1_sorter("comment_expires",         cmp_simple_number, reverse = True)
+declare_1to1_sorter("comment_what",            cmp_simple_number)
 declare_simple_sorter("comment_type",   _("Comment type"),        "comment_type",              cmp_simple_number)
 
 # Downtimes

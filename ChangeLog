@@ -6,6 +6,7 @@
     * FIX: Made bulk inventory work in IE
     * FIX: Fixed js errors in IE when having not enough space on dashboard 
     * FIX: fix error when using non-Ascii characters in view title
+    * FIX: fix error on comment page caused by missing sorter
     * Views are not reloaded completely anymore. The data tables are reloaded
       on their own.
     * Open tabs in views do not prevent reloading the displayed data anymore

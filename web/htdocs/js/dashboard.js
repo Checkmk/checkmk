@@ -108,13 +108,6 @@ function dashboard_scheduler(force) {
             get_url(url, updateContents, "dashlet_inner_" + nr);
         }
     }
-    // Detect page changes and re-register the mousemove event handler
-    // in the content frame. another bad hack ... narf
-    // LARS: Braucht man das Zeug hier auch?
-    // if (contentFrameAccessible() && contentLocation != parent.frames[1].document.location) {
-    //     registerEdgeListeners(parent.frames[1]);
-    //     contentLocation = parent.frames[1].document.location;
-    // }
     setTimeout(function() { dashboard_scheduler(0); }, 1000);
 }
 

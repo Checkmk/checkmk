@@ -1,0 +1,11 @@
+Title: <ENTER> im view editor sollte Formular abschicken
+Component: multisite
+Benefit: 4
+State: open
+Cost: 1
+Date: 2011-08-31 12:56:00
+Class: cleanup
+
+Wenn man viel mit Tastaturkürzeln arbeitet, nervt es, dass man im View Editor
+beim Druck auf <ENTER> immer das Formular nur im "Try" Modus abschickt. Man
+sollte da das Formular eher ganz abschicken.

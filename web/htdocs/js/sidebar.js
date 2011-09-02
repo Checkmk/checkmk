@@ -117,10 +117,6 @@ function getButton(event) {
     return (event.which < 2) ? "LEFT" : ((event.which == 2) ? "MIDDLE" : "RIGHT");
 }
 
-function getTarget(event) {
-  return event.target ? event.target : event.srcElement;
-}
-
 function snapinStartDrag(event) {
   if (!event)
     event = window.event;

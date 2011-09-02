@@ -24,6 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+def init_rowselect():
+    row_nums = []
+    if html.has_var('selected_rows'):
+        selected_rows = html.var('selected_rows', '')
+        if selected_rows or ',' in selected_rows:
+            row_nums = map(int, selected_rows.split(','))
+
+    html.javascript('g_selected_rows = %s;\n'
+                    'init_rowselect();' % repr(row_nums))
+
 # -------------------------------------------------------------------------
 #    ____  _             _
 #   / ___|(_)_ __   __ _| | ___
@@ -76,14 +86,14 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns):
     # N columns. Each should contain approx the same number of entries
     groups = []
     last_group = None
-    for row in rows:
+    for index, row in enumerate(rows):
         register_events(row) # needed for playing sounds
         this_group = group_value(row, group_painters)
         if this_group != last_group:
             last_group = this_group
             current_group = []
             groups.append((this_group, current_group))
-        current_group.append(row)
+        current_group.append((index, row))
 
     def height_of(groups):
         # compute total space needed. I count the group header like two rows.
@@ -127,7 +137,7 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns):
         for p in group_painters:
             if painted:
                 html.write("<td>,</td>")
-            painted = paint(p, rows[0])
+            painted = paint(p, rows[0][1])
         html.write("</tr></table>\n")
 
         html.write("<div class=tableshadow><table class=data>")
@@ -141,7 +151,7 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns):
                 html.write("\n")
             html.write("</tr>\n")
 
-        for row in rows:
+        for index, row in rows:
             register_events(row) # needed for playing sounds
             if trclass == "odd":
                 trclass = "even"
@@ -154,10 +164,11 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns):
                 if state > 0: state +=1 # 1 is critical for hosts
             html.write('<tr class="data %s%d">' % (trclass, state))
             for p in painters:
-                paint(p, row)
+                paint(p, row, index)
             html.write("</tr>\n")
 
         html.write("</table></div>\n")
+        init_rowselect()
 
     # render table
     if view.get("column_headers") != "off":
@@ -197,7 +208,7 @@ def render_tiled(rows, view, group_painters, painters, _ignore_num_columns):
 
     last_group = None
     group_open = False
-    for row in rows:
+    for index, row in enumerate(rows):
         # Show group header
         if len(group_painters) > 0:
             this_group = group_value(row, group_painters)
@@ -238,7 +249,7 @@ def render_tiled(rows, view, group_painters, painters, _ignore_num_columns):
         if not group_open:
             html.write("<tr><td class=tiles>")
             group_open = True
-        html.write('<div class="tile %s"><table>' % sclass)
+        html.write('<div class="dr_%d dr tile %s"><table>' % (index, sclass))
 
         # We need at least five painters.
         empty_painter = { "paint" : (lambda row: ("", "")) }
@@ -261,6 +272,7 @@ def render_tiled(rows, view, group_painters, painters, _ignore_num_columns):
     if group_open:
         html.write("</td></tr>\n")
     html.write("</table>\n")
+    init_rowselect()
 
 
 multisite_layouts["tiled"] = {
@@ -379,7 +391,7 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns):
             html.write('<tr class="data %s%d">' % (trclass, state))
 
         for p in painters:
-            paint(p, row)
+            paint(p, row, index)
         column += 1
         index += 1
 
@@ -392,6 +404,7 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns):
             html.write("<td colspan=%d class=shadowbottom></td>\n" % num_painters)
         html.write("</tr>\n")
     html.write("</table>\n")
+    init_rowselect()
 
 multisite_layouts["table"] = {
     "title"  : _("Table"),

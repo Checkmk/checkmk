@@ -13,6 +13,8 @@
     * Added display_option "L" to enable/disable column title sortings
     * Sorting by joined columns is now possible
     * Added missing sorters for "service nth service perfdata" painters
+    * Implemented row selection in views to select only a subset of shown data
+      for actions
 
 1.1.11i3:
     Core, Setup, etc.:

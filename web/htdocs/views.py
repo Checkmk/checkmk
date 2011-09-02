@@ -1793,7 +1793,7 @@ def show_action_form(is_open, datasource):
     # Table muss einen anderen Namen, als das Formular
 
     html.write("<tr class=form id=table_actions %s><td>" % (not is_open and 'style="display: none"' or '') )
-    html.begin_form("actions")
+    html.begin_form("actions", onsubmit = 'add_row_selections(this);')
     html.hidden_field("_do_actions", "yes")
     html.hidden_field("actions", "yes")
     html.hidden_fields() # set all current variables, exception action vars
@@ -2109,13 +2109,25 @@ def do_actions(what, rows, backurl):
               "please ask your administrator grant you the permission to do so.")
         return False # no actions done
 
+    # Handle optional row filter based on row selections
+    if html.has_var('selected_rows'):
+        selected_rows = html.var('selected_rows', '')
+        if selected_rows or ',' in selected_rows:
+            action_rows = []
+            for row_num in selected_rows.split(','):
+                action_rows.append(rows[int(row_num)])
+        else:
+            action_rows = rows
+    else:
+        action_rows = rows
+
     command = None
-    title = nagios_action_command(what, rows[0])[0] # just get the title
-    if not html.confirm("Do you really want to %s the following %d %ss?" % (title, len(rows), what)):
+    title = nagios_action_command(what, action_rows[0])[0] # just get the title
+    if not html.confirm("Do you really want to %s the following %d %ss?" % (title, len(action_rows), what)):
         return False # no actions done
 
     count = 0
-    for row in rows:
+    for row in action_rows:
         title, nagios_commands = nagios_action_command(what, row)
         for command in nagios_commands:
             if type(command) == unicode:
@@ -2214,10 +2226,11 @@ def link_to_view(content, row, linkview):
 def docu_link(topic, text):
     return '<a href="%s" target="_blank">%s</a>' % (config.doculink_urlformat % topic, text)
 
-def paint(p, row):
+def paint(p, row, row_id = None):
     tdclass, content = prepare_paint(p, row)
-    if tdclass:
-        html.write("<td class=\"%s\">%s</td>\n" % (tdclass, content))
+    row_classes = row_id is not None and 'dr_%d dr ' % row_id or ''
+    if tdclass or row_classes:
+        html.write("<td class=\"%s%s\">%s</td>\n" % (row_classes or '', tdclass or '', content))
     else:
         html.write("<td>%s</td>" % content)
     return content != ""

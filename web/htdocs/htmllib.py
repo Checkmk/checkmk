@@ -215,7 +215,7 @@ class html:
         days = hours / 24
         return "%d days" % days
 
-    def begin_form(self, name, action = None, method = "GET"):
+    def begin_form(self, name, action = None, method = "GET", onsubmit = None):
         self.form_vars = []
         if action == None:
             action = self.req.myfile + ".py"
@@ -224,8 +224,12 @@ class html:
             enctype = ' enctype="multipart/form-data"'
         else:
             enctype = ''
-        self.write("<form name=%s class=%s action=\"%s\" method=%s%s>\n" %
-                   (name, name, action, method, enctype))
+        if onsubmit:
+            onsubmit = ' onsubmit="%s"' % onsubmit
+        else:
+            onsubmit = ''
+        self.write("<form name=%s class=%s action=\"%s\" method=%s%s%s>\n" %
+                   (name, name, action, method, enctype, onsubmit))
         self.hidden_field("filled_in", name)
         self.hidden_field("_transid", str(self.current_transid()))
         self.hidden_fields(self.global_vars)

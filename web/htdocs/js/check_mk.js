@@ -26,6 +26,58 @@
 // general function
 // ----------------------------------------------------------------------------
 
+// Some browsers don't support indexOf on arrays. This implements the
+// missing method
+if (!Array.prototype.indexOf)
+{
+  Array.prototype.indexOf = function(elt /*, from*/)
+  {
+    var len = this.length;
+
+    var from = Number(arguments[1]) || 0;
+    from = (from < 0)
+         ? Math.ceil(from)
+         : Math.floor(from);
+    if (from < 0)
+      from += len;
+
+    for (; from < len; from++)
+    {
+      if (from in this &&
+          this[from] === elt)
+        return from;
+    }
+    return -1;
+  };
+}
+
+// This implements getElementsByClassName() for IE<9
+if (!document.getElementsByClassName) {
+  document.getElementsByClassName = function(className, root, tagName) {
+    root = root || document.body;
+ 
+    // at least try with querySelector (IE8 standards mode)
+    // about 5x quicker than below
+    if (root.querySelectorAll) {
+        tagName = tagName || '';
+        return root.querySelectorAll(tagName + '.' + className);
+    }
+ 
+    // and for others... IE7-, IE8 (quirks mode), Firefox 2-, Safari 3.1-, Opera 9-
+    var tagName = tagName || '*', _tags = root.getElementsByTagName(tagName), _nodeList = [];
+    for (var i = 0, _tag; _tag = _tags[i++];) {
+        if (this.hasClass(_tag, className)) {
+            _nodeList.push(_tag);
+        }
+    }
+    return _nodeList;
+}
+}
+
+function getTarget(event) {
+  return event.target ? event.target : event.srcElement;
+}
+
 function hilite_icon(oImg, onoff) {
     src = oImg.src;
     if (onoff == 0)
@@ -674,6 +726,11 @@ function handleReload(url) {
         if(real_display_options !== '')
             params['display_options'] = real_display_options;
 
+        // Handle user selections. If g_selected_rows has elements replace/set the
+        // parameter selected_rows with the current selected rows as value.
+        // otherwhise clear the parameter
+        params['selected_rows'] = g_selected_rows.join(',');
+
         var url = makeuri(params);
         display_options = null;
         get_url(url, handleContentReload, '', handleContentReloadError);
@@ -788,4 +845,255 @@ function toggle_assumption(oImg, site, host, service)
     url += '&state=' + current; 
     oImg.src = "images/assume_" + current + ".png";
     get_url(url);
+}
+
+/*
+ * +----------------------------------------------------------------------+
+ * |       ____                          _           _                    |
+ * |      |  _ \ _____      __  ___  ___| | ___  ___| |_ ___  _ __        |
+ * |      | |_) / _ \ \ /\ / / / __|/ _ \ |/ _ \/ __| __/ _ \| '__|       |
+ * |      |  _ < (_) \ V  V /  \__ \  __/ |  __/ (__| || (_) | |          |
+ * |      |_| \_\___/ \_/\_/   |___/\___|_|\___|\___|\__\___/|_|          |
+ * |                                                                      |
+ * +----------------------------------------------------------------------+
+ */
+
+// Holds the row numbers of all selected rows
+var g_selected_rows = [];
+
+function lightenColor(color, rD, gD, bD) {
+    if(color == 'transparent' || color == 'rgba(0, 0, 0, 0)')
+        return color;
+
+    if(color.charAt(0) === 'r') {
+        var parts = color.substring(color.indexOf('(')+1, color.indexOf(')')).split(',', 3);
+        var r = parseInt(parts[0]);
+        var g = parseInt(parts[1]);
+        var b = parseInt(parts[2]);
+    } else if(color.charAt(0) === '#' && color.length == 7) {
+        var r = parseInt(color.substring(1, 3), 16);
+        var g = parseInt(color.substring(3, 5), 16);
+        var b = parseInt(color.substring(5, 7), 16);
+    } else if(color.charAt(0) === '#' && color.length == 4) {
+        var r = parseInt(color.substring(1, 2) + color.substring(1, 2), 16);
+        var g = parseInt(color.substring(2, 3) + color.substring(2, 3), 16);
+        var b = parseInt(color.substring(3, 4) + color.substring(3, 4), 16);
+    }
+
+    var brightness = (r*299 + g*587 + b*114) / 1000;
+    if (brightness > 125) {
+        rD *= -1;
+        gD *= -1;
+        bD *= -1;
+    }
+
+    r += rD;  if (r > 255) r = 255;  if (r < 0) r = 0;
+    g += gD;  if (g > 255) g = 255;  if (g < 0) g = 0;
+    b += bD;  if (b > 255) b = 255;  if (b < 0) b = 0;
+
+    code  = r < 16 ? "0"+r.toString(16) : r.toString(16);
+    code += g < 16 ? "0"+g.toString(16) : g.toString(16);
+    code += b < 16 ? "0"+b.toString(16) : b.toString(16);
+
+    return "#" + code.toUpperCase();
+}
+
+function real_style(obj, attr) {
+    var st;
+    if(document.defaultView && document.defaultView.getComputedStyle)
+        st = document.defaultView.getComputedStyle(obj, null).getPropertyValue(attr);
+    else
+        st = obj.currentStyle[attr];
+
+    if(typeof(st) == 'undefined') { 
+        st = 'transparent';
+    }
+
+    // If elem is a TD and has no background find the backround of the parent
+    // e.g. the TR and then set this color as background for the TD
+    if(obj.tagName == 'TD' && (st == 'transparent' || st == 'rgba(0, 0, 0, 0)'))
+        st = real_style(obj.parentNode, attr);
+
+    return st;
+}
+
+function highlight_row(row_num, on, ty) {
+    var elems = document.getElementsByClassName('dr_' + row_num);
+    for(var i = 0; i < elems.length; i++)
+        highlight_elem(elems[i], on, ty);
+}
+
+function highlight_elem(elem, on, ty) {
+    // Find all elements below "elem" with a defined background-color and change it
+    var bg_color = real_style(elem, 'background-color');
+    if(on) {
+        if(ty == 'hover' && typeof(elem['click_orig_bg']) === 'undefined') {
+            elem[ty + '_orig_bg'] = bg_color;
+            var x = lightenColor(elem['hover_orig_bg'], 40, 40, -20);
+            elem.style.backgroundColor = lightenColor(elem['hover_orig_bg'], 40, 40, -20);
+        } else if(ty == 'click') {
+            elem[ty + '_orig_bg'] = bg_color;
+            if(typeof(elem['hover_orig_bg']) !== 'undefined')
+                var calc_bg_color = elem['hover_orig_bg'];
+            else
+                var calc_bg_color = bg_color;
+            var x = lightenColor(calc_bg_color, 40, 40, -40);
+            elem.style.backgroundColor = lightenColor(calc_bg_color, 40, 40, -40);
+        }
+    } else {
+        // Restore selection color when hovering over selected objects
+        if(ty == 'hover' && typeof(elem['click_orig_bg']) !== 'undefined') {
+        } else if(ty == 'hover') {
+            elem.style.backgroundColor = elem[ty + '_orig_bg'];
+            elem[ty + '_orig_bg'] = undefined;
+        } else {
+            elem.style.backgroundColor = elem[ty + '_orig_bg'];
+            elem[ty + '_orig_bg'] = undefined;
+        }
+    }
+
+    var childs = elem.childNodes;
+    for(var i = 0; i < childs.length; i++)
+        if(childs[i].nodeName !== '#text')
+            highlight_elem(childs[i], on, ty);
+}
+
+function remove_selected_rows(row_num) {
+    for(var i = g_selected_rows.length - 1; i >= 0; i--) {
+        if(g_selected_rows[i] != row_num) {
+            highlight_row(g_selected_rows[i], false, 'click');
+            highlight_row(g_selected_rows[i], false, 'hover');
+            g_selected_rows.splice(i, 1);
+        }
+    }
+}
+
+function toggle_row(e, row) {
+    if(!e)
+        e = window.event;
+
+    // Skip handling clicks on links/images/...
+    var target = getTarget(e);
+    if(target.tagName != 'TD')
+        return true;
+
+    var row_num = parseInt(row.row_num);
+
+    // When CTRL is not pressed, remove the selection
+    if(!e.ctrlKey)
+        remove_selected_rows(row_num);
+
+    // Is SHIFT pressed?
+    // Yes:
+    //   Select all from the last selection
+
+    // Is the current row already selected?
+    var row_pos = g_selected_rows.indexOf(row_num);
+    if(row_pos > -1) {
+        // Yes: Unselect it
+        highlight_row(row_num, false, 'click');
+        g_selected_rows.splice(row_pos, 1);
+    } else {
+        // No:  Select it
+        highlight_row(row_num, true, 'click');
+        g_selected_rows.push(row_num);
+    }
+
+    if(e.stopPropagation)
+        e.stopPropagation();
+    e.cancelBubble = true;
+
+    // Disable the default events for all the different browsers
+    if(e.preventDefault)
+        e.preventDefault();
+    else
+        e.returnValue = false;
+    return false;
+}
+
+function disable_selection(e) {
+    if(!e)
+        e = window.event;
+
+    // Skip handling clicks on links/images/...
+    var target = getTarget(e);
+    if(target.tagName != 'TD')
+        return true;
+
+    // Firefox handling
+    if(typeof target.style.MozUserSelect != 'undefined')
+        target.style.MozUserSelect = 'none';
+
+    // All others
+    return false;
+}
+
+function get_row_num(elem) {
+    // FIXME: Maybe performance problem. Would be better to have a
+    // dedicated attribute for the data row number
+    var classes = elem.className.split(' ');
+    for(var i = 0; i < classes.length; i++)
+        if(classes[i].indexOf('dr_') > -1)
+            return parseInt(classes[i].split('_', 2)[1]);
+}
+
+function table_init_rowselect(oTable) {
+    // Get all "data row" elements
+    var childs = document.getElementsByClassName('dr');
+
+    for(var i = 0; i < childs.length; i++) {
+        if(childs[i].tagName != 'TD' && childs[i].tagName != 'DIV')
+            continue;
+
+        var elem = childs[i];
+        var row_num = get_row_num(elem);
+        elem.row_num = row_num;
+
+        // Handle the initial selections
+        if(g_selected_rows.indexOf(row_num) > -1) {
+            highlight_elem(elem, true, 'hover');
+            highlight_elem(elem, true, 'click');
+        }
+
+        elem.onmouseover = function() {
+            highlight_row(this.row_num, true, 'hover');
+        };
+        elem.onmouseout = function() {
+            highlight_row(this.row_num, false, 'hover');
+        };
+        elem.onclick = function(e) {
+            toggle_row(e, this);
+        }
+        // Disable selections in IE and then in mozilla
+        elem.onselectstart = function(e) {disable_selection(e);}
+        elem.onmousedown = function(e) {disable_selection(e);}
+        row_num = null;
+        elem = null;
+    }
+    childs = null;
+}
+
+function init_rowselect() {
+    var tables = document.getElementsByClassName('data');
+    for(var i = 0; i < tables.length; i++)
+        if(tables[i].tagName === 'TABLE')
+            table_init_rowselect(tables[i]);
+    tables = null;
+}
+
+// Adds a hidden field with the selected rows to the form if
+// some are selected
+function add_row_selections(form) {
+    var num_selected = g_selected_rows.length;
+    // Skip when none selected
+    if(num_selected == 0)
+        return true;
+
+    var field = document.createElement('input');
+    field.name = 'selected_rows';
+    field.type = 'hidden';
+    field.value = g_selected_rows.join(',');
+
+    form.appendChild(field);
+    field = null;
 }

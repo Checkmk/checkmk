@@ -77,7 +77,7 @@ function registerEdgeListeners(obj) {
     else
         edges = [ obj ];
 
-    for(var i in edges) {
+    for(var i = 0; i < edges.length; i++) {
         // It is possible to open other domains in the content frame - don't register
         // the event in that case. It is not permitted by most browsers!
         if(!contentFrameAccessible())
@@ -265,9 +265,11 @@ function snapinStopDrag(event) {
 
 function getDivChildNodes(node) {
   var children = [];
-  for(var i in node.childNodes)
-    if(node.childNodes[i].tagName === 'DIV')
-      children.push(node.childNodes[i]);
+  var childNodes = node.childNodes;
+  for(var i = 0; i < childNodes.length; i++)
+    if(childNodes[i].tagName === 'DIV')
+      children.push(childNodes[i]);
+  childNodes = null;
   return children;
 }
 
@@ -277,7 +279,7 @@ function getSnapinList() {
   
   var l = [];
   var childs = getDivChildNodes(snapinDragging.parentNode);
-  for(var i in childs) {
+  for(var i = 0; i < childs.length; i++) { 
     var child = childs[i];
     // Skip
     // - non snapin objects
@@ -318,7 +320,7 @@ function getSnapinTargetPos() {
 
   // Find the nearest snapin to current left/top corner of
   // the currently dragged snapin
-  for(var i in childs) {
+  for(var i = 0; i < childs.length; i++) { 
     var child = childs[i];
 
     if (!child.id || child.id.substr(0, 7) != 'snapin_' || child.id == snapinDragging.id)

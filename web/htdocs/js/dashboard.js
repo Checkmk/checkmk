@@ -40,11 +40,13 @@ function resize_dashlets(id, code)
 
         // resize outer div
         oDash = document.getElementById("dashlet_" + dashlet[0]);
-        oDash.style.position = 'absolute';
-        oDash.style.left   = dashlet[1] + "px";
-        oDash.style.top    = dashlet[2] + "px";
-        oDash.style.width  = dashlet[3] + "px";
-        oDash.style.height = dashlet[4] + "px";
+        if(oDash) {
+            oDash.style.position = 'absolute';
+            oDash.style.left   = dashlet[1] + "px";
+            oDash.style.top    = dashlet[2] + "px";
+            oDash.style.width  = dashlet[3] + "px";
+            oDash.style.height = dashlet[4] + "px";
+        }
 
         // resize shadow images
         oDash = document.getElementById("dashadow_w_" + dashlet[0]);
@@ -99,7 +101,7 @@ function set_dashboard_size()
 function dashboard_scheduler(force) {
     var timestamp = Date.parse(new Date()) / 1000;
     var newcontent = "";
-    for (var i in refresh_dashlets) { 
+    for(var i = 0; i < refresh_dashlets.length; i++) { 
         var nr      = refresh_dashlets[i][0];
         var refresh = refresh_dashlets[i][1];
         var url     = refresh_dashlets[i][2];

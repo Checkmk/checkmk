@@ -222,7 +222,7 @@ function mkSearchMoveElement(step) {
     oResults = oResults.childNodes;
 
     var a = 0;
-    for(var i in oResults) {
+    for(var i = 0; i < oResults.length; i++) {
         if(oResults[i].nodeName == 'A') {
             if(a == iCurrent) {
                 oResults[i].setAttribute('class', 'active');
@@ -345,7 +345,7 @@ function mkSearchAddSearchResults(aSearchObjects, objType, val) {
     var objName, objSite;
     aSearchContents = '';
     var numHits = 0;
-    for(var i in aSearchObjects){
+    for(var i = 0; i < aSearchObjects.length; i++) {
         objSite  = aSearchObjects[i][0];
         objName  = aSearchObjects[i][1];
 

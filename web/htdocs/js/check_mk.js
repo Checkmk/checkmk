@@ -154,7 +154,7 @@ function executeJS(objId) {
   // if (!isFirefox()) {
   var obj = document.getElementById(objId);
   var aScripts = obj.getElementsByTagName('script');
-  for(var i in aScripts) {
+  for(var i = 0; i < aScripts.length; i++) {
     if (aScripts[i].src && aScripts[i].src !== '') {
       var oScr = document.createElement('script');
       oScr.src = aScripts[i].src;
@@ -322,7 +322,7 @@ function pnp_response_handler(data, code) {
     var response = null;
     try {
         response = eval(code);
-        for(var i in response) {
+        for(var i = 0; i < response.length; i++) {
             var graph = response[i];
             var view = data['view'] == '' ? '0' : data['view'];
             create_graph(data, '&' + graph['image_url'].replace('&view='+view, ''));
@@ -338,7 +338,7 @@ function pnp_response_handler(data, code) {
 
 // Fallback bei doofer/keiner Antwort
 function fallback_graphs(data) {
-   for(var i in [0, 1, 2, 3, 4, 5, 6, 7]) {
+    for(var i = 0; i < 8; i++) {
        create_graph(data, '&host=' + data['host'] + '&srv=' + data['service'] + '&source=' + i);
    }
 }
@@ -878,6 +878,9 @@ function lightenColor(color, rD, gD, bD) {
         var r = parseInt(color.substring(1, 2) + color.substring(1, 2), 16);
         var g = parseInt(color.substring(2, 3) + color.substring(2, 3), 16);
         var b = parseInt(color.substring(3, 4) + color.substring(3, 4), 16);
+    } else {
+        alert('Invalid color definition: ' + color);
+        return color;
     }
 
     var brightness = (r*299 + g*587 + b*114) / 1000;

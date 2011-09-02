@@ -1696,7 +1696,7 @@ div.dashlet div.title {
     position: absolute;
     left: 0px;
     width: 150px; /* will be changed by javascript later */
-    color: white;
+    color: #fff;
     text-align: center;
     padding: 0px;
     margin: 0px;
@@ -1794,7 +1794,7 @@ div.dashlet table.hoststats td.color {
 div.dashlet table.hoststats th, table.hoststats td { 
     padding-top: 3px;
     padding-bottom: 3px;
-    border-color: white;
+    border-color: #fff;
     border-style: solid none;
     border-width: 1px;
     vertical-align: middle;
@@ -1907,7 +1907,7 @@ table.add_snapin i {
     padding-top: 7px;
     vertical-align: top;
     text-align: right;
-    border: 1px solid white;
+    border: 1px solid #fff;
     border-left-style: none;
 }
 
@@ -1975,7 +1975,7 @@ table.add_snapin i {
     -moz-border-radius: 3px;
     background-color: #8ab;
     padding: 2px 9px;
-    color: white;
+    color: #fff;
     font-weight: normal;
 }
 .wato div.folderpath a {
@@ -1983,7 +1983,7 @@ table.add_snapin i {
     text-decoration: none;
 }
 .wato div.folderpath a:hover {
-    color: white;
+    color: #fff;
     background-color: #9bc;
     /* text-decoration: underline; */
 }
@@ -2018,11 +2018,11 @@ table.add_snapin i {
     background-image: url("images/form_background.png");
     background-repeat: repeat;
     width: 50%;
-    border: 1px solid black;
+    border: 1px solid #000;
 }
 
 .wato table.progress th {
-    background-color: white;
+    background-color: #fff;
     padding: 3px 0px;
 }
 
@@ -2030,7 +2030,7 @@ table.add_snapin i {
 .wato table.progress td.log div { 
     background-image: url("images/form_background.png");
     background-repeat: repeat;
-    border: 1px solid white;
+    border: 1px solid #fff;
     padding: 5px;
     height: 250px;
     overflow: auto;
@@ -2101,7 +2101,7 @@ table.add_snapin i {
 .wato table.progress td.stats table { 
     border-collapse: collapse;
     border-spacing: 0px;
-    border: 1px solid white;
+    border: 1px solid #fff;
 }
 .wato table.progress td.stats th { 
     text-align: left;
@@ -2110,7 +2110,7 @@ table.add_snapin i {
     padding-left: 6px;
 }
 .wato table.progress td.stats th, .wato table.progress td.stats td { 
-    border-bottom: 1px solid white;
+    border-bottom: 1px solid #fff;
     padding-top: 3px;
     padding-bottom: 3px;
 }

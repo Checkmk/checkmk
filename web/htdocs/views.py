@@ -149,7 +149,7 @@ def show_filter_form(is_open, filters):
     if col == 1:
         html.write("<td class=legend></td>\n<td class=content></td></tr>\n")
     html.write('<tr><td class="legend button" colspan=%d>' % (config.filter_columns * 2))
-    html.button("search", "Search", "submit")
+    html.button("search", _("Search"), "submit")
     html.write("</td></tr>\n")
     html.write("</table>\n")
 
@@ -334,12 +334,12 @@ def save_views(us):
 # Show list of all views with buttons for editing
 def page_edit_views(msg=None):
     if not config.may("edit_views"):
-        raise MKAuthException("You are not allowed to edit views.")
+        raise MKAuthException(_("You are not allowed to edit views."))
 
-    html.header("Edit views")
-    html.write("<p>Here you can create and edit customizable <b>views</b>. A view "
+    html.header(_("Edit views"))
+    html.write(_("<p>Here you can create and edit customizable <b>views</b>. A view "
             "displays monitoring status or log data by combining filters, sortings, "
-            "groupings and other aspects.</p>")
+            "groupings and other aspects.</p>"))
 
     if msg: # called from page_edit_view() after saving
         html.message(msg)
@@ -348,7 +348,7 @@ def page_edit_views(msg=None):
 
     # Deletion of views
     delname = html.var("_delete")
-    if delname and html.confirm("Please confirm the deletion of the view <tt>%s</tt>" % delname):
+    if delname and html.confirm(_("Please confirm the deletion of the view <tt>%s</tt>") % delname):
         del html.multisite_views[(html.req.user, delname)]
         save_views(html.req.user)
         html.reload_sidebar();
@@ -357,8 +357,8 @@ def page_edit_views(msg=None):
     html.write("<table class=views>\n")
 
     html.write("<tr><td class=legend colspan=7>")
-    html.button("create", "Create new view")
-    html.write(" for datasource: ")
+    html.button("create", _("Create new view"))
+    html.write(_(" for datasource: "))
     html.sorted_select("datasource", [ (k, v["title"]) for k, v in multisite_datasources.items() ])
 
     keys_sorted = html.multisite_views.keys()
@@ -384,9 +384,9 @@ def page_edit_views(msg=None):
         view = html.multisite_views[(owner, viewname)]
         if owner == html.req.user or (view["public"] and (owner == "" or config.user_may(owner, "publish_views"))):
             if first:
-                html.write("<tr><th>Name</th><th>Title / Description</th>"
-                           "<th>Owner</th><th>Public</th><th>linked</th>"
-                           "<th>Datasource</th><th></th></tr>\n")
+                html.write("<tr><th>"+_('Name')+"</th><th>"+_('Title / Description')+"</th>"
+                           "<th>"+_('Owner')+"</th><th>"+_('Public')+"</th><th>"+_('linked')+"</th>"
+                           "<th>"+_('Datasource')+"</th><th></th></tr>\n")
                 first = False
             html.write("<tr><td class=legend>%s</td>" % viewname)
             html.write("<td class=content>")
@@ -407,15 +407,15 @@ def page_edit_views(msg=None):
             html.write("<td class=content>%s</td>" % (view["hidden"] and "yes" or "no"))
             html.write("<td class=content>%s</td><td class=buttons>\n" % view["datasource"])
             if owner == "":
-                buttontext = "Customize"
+                buttontext = _("Customize")
             else:
-                buttontext = "Clone"
+                buttontext = _("Clone")
             backurl = htmllib.urlencode(html.makeuri([]))
             url = "edit_view.py?clonefrom=%s&load_view=%s&back=%s" % (owner, viewname, backurl)
             html.buttonlink(url, buttontext, True)
             if owner == html.req.user:
-                html.buttonlink("edit_view.py?load_view=%s" % viewname, "Edit")
-                html.buttonlink("edit_views.py?_delete=%s" % viewname, "Delete!", True)
+                html.buttonlink("edit_view.py?load_view=%s" % viewname, _("Edit"))
+                html.buttonlink("edit_views.py?_delete=%s" % viewname, _("Delete!"), True)
             html.write("</td></tr>\n")
 
     html.write("</table>\n")
@@ -466,7 +466,7 @@ def page_edit_view():
             viewname = newname
             oldname = None # Prevent renaming
             if cloneuser == html.req.user:
-                view["title"] += " (Copy)"
+                view["title"] += _(" (Copy)")
         else:
             view = html.multisite_views.get((html.req.user, viewname))
             if not view:
@@ -1307,9 +1307,11 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
             backurl = htmllib.urlencode(html.makeuri([]))
             html.write('<td class="right" onmouseover="hover_tab(this);" onmouseout="unhover_tab(this);">')
             if view["owner"] == html.req.user:
-                html.write('<a href="edit_view.py?load_view=%s&back=%s">Edit</a>\n' % (view["name"], backurl))
+                html.write('<a href="edit_view.py?load_view=%s&back=%s">%s</a>\n' %
+                                                     (view["name"], backurl, _('Edit')))
             else:
-                html.write('<a href="edit_view.py?clonefrom=%s&load_view=%s&back=%s">Edit</a>\n' % (view["owner"], view["name"], backurl))
+                html.write('<a href="edit_view.py?clonefrom=%s&load_view=%s&back=%s">%s</a>\n' %
+                                                  (view["owner"], view["name"], backurl, _('Edit')))
             html.write('</td>')
 
         html.write("</tr>")
@@ -1807,7 +1809,7 @@ def show_action_form(is_open, datasource):
     elif what == "comment":
         show_comment_actions()
     else:
-        html.write("<tr><td>No commands possible for %ss</td></tr>" % what)
+        html.write("<tr><td>"+_('No commands possible for %ss')+"</td></tr>" % what)
 
     html.write("</table></div>\n")
     html.end_form()
@@ -1815,48 +1817,48 @@ def show_action_form(is_open, datasource):
 
 def show_downtime_actions():
     if config.may("action.downtimes"):
-        html.write("<tr><td class=legend>Downtimes</td>\n"
+        html.write("<tr><td class=legend>"+_('Downtimes')+"</td>\n"
                 "<td class=content>\n"
-                   "<input type=submit name=_remove_downtimes value=\"Remove\"> &nbsp; "
+                   "<input type=submit name=_remove_downtimes value=\""+_('Remove')+"\"> &nbsp; "
                    "</td></tr>\n")
 
 def show_comment_actions():
     if config.may("action.addcomment"):
-        html.write("<tr><td class=legend>Comments</td>\n"
+        html.write("<tr><td class=legend>"+_('Comments')+"</td>\n"
                 "<td class=content>\n"
-                   "<input type=submit name=_remove_comments value=\"Remove\"> &nbsp; "
+                   "<input type=submit name=_remove_comments value=\""+_('Remove')+"\"> &nbsp; "
                    "</td></tr>\n")
 
 
 def show_host_service_actions(what):
     if config.may("action.notifications"):
-        html.write("<tr><td class=legend>Notifications</td>\n"
+        html.write("<tr><td class=legend>"+_('Notifications')+"</td>\n"
                    "<td class=content>\n"
-                   "<input type=submit name=_enable_notifications value=\"Enable\"> &nbsp; "
-                   "<input type=submit name=_disable_notifications value=\"Disable\"> &nbsp; "
+                   "<input type=submit name=_enable_notifications value=\""+_('Enable')+"\"> &nbsp; "
+                   "<input type=submit name=_disable_notifications value=\""+_('Disable')+"\"> &nbsp; "
                    "</td></tr>\n")
 
     if config.may("action.enablechecks") or config.may("action.reschedule"):
-        html.write("<tr><td class=legend>Active checks</td>\n"
+        html.write("<tr><td class=legend>"+_('Active checks')+"</td>\n"
                    "<td class=content>\n")
         if config.may("action.enablechecks"):
-            html.write("<input type=submit name=_enable_checks value=\"Enable\"> &nbsp; "
-                   "<input type=submit name=_disable_checks value=\"Disable\"> &nbsp; ")
+            html.write("<input type=submit name=_enable_checks value=\""+_('Enable')+"\"> &nbsp; "
+                   "<input type=submit name=_disable_checks value=\""+_('Disable')+"\"> &nbsp; ")
         if config.may("action.reschedule"):
-            html.write("<input type=submit name=_resched_checks value=\"Reschedule next check now\">\n"
+            html.write("<input type=submit name=_resched_checks value=\""+_('Reschedule next check now')+"\">\n"
                    "</td></tr>\n")
 
     if config.may("action.enablechecks"):
-        html.write("<tr><td class=legend>Passive checks</td>\n"
+        html.write("<tr><td class=legend>"+_('Passive checks')+"</td>\n"
                    "<td class=content>\n")
-        html.write("<input type=submit name=_enable_passive_checks value=\"Enable\"> &nbsp; "
-               "<input type=submit name=_disable_passive_checks value=\"Disable\"> &nbsp; "
+        html.write("<input type=submit name=_enable_passive_checks value=\""+_('Enable')+"\"> &nbsp; "
+               "<input type=submit name=_disable_passive_checks value=\""+_('Disable')+"\"> &nbsp; "
                "</td></tr>\n")
 
     if config.may("action.clearmodattr"):
-        html.write("<tr><td class=legend>Modified attributes</td>\n"
+        html.write("<tr><td class=legend>"+_('Modified attributes')+"</td>\n"
                    "<td class=content>\n"
-                   "<input type=submit name=_clear_modattr value=\"Clear information about modified attributes\">"
+                   "<input type=submit name=_clear_modattr value=\""+_('Clear information about modified attributes')+"\">"
                    "</td></tr>\n")
 
     if config.may("action.fakechecks"):
@@ -1864,60 +1866,60 @@ def show_host_service_actions(what):
             states = ["Ok", "Warning", "Critical", "Unknown"]
         else:
             states = ["Up", "Down", "Unreachable"]
-        html.write("<tr><td class=legend>Fake check results</td><td class=content>\n")
+        html.write("<tr><td class=legend>"+_('Fake check results')+"</td><td class=content>\n")
         for state in states:
             html.button("_fake", state)
             html.write(" ")
         html.write("</td></tr>\n")
 
     if config.may("action.acknowledge"):
-        html.write("<tr><td rowspan=3 class=legend>Acknowledge</td>\n")
-        html.write("<td class=content><input type=submit name=_acknowledge value=\"Acknowledge\"> &nbsp; "
-                   "<input type=submit name=_remove_ack value=\"Remove Acknowledgement\"></td></tr>\n")
+        html.write("<tr><td rowspan=3 class=legend>"+_('Acknowledge')+"</td>\n")
+        html.write("<td class=content><input type=submit name=_acknowledge value=\""+_('Acknowledge')+"\"> &nbsp; "
+                   "<input type=submit name=_remove_ack value=\""+_('Remove Acknowledgement')+"\"></td></tr>\n")
 
         html.write("<tr><td class=content>")
         html.checkbox("_ack_sticky", True)
-        html.write(" sticky &nbsp; ")
+        html.write(" "+_('sticky')+" &nbsp; ")
         html.checkbox("_ack_notify", True)
-        html.write(" send notification &nbsp; ")
+        html.write(" "+_('send notification')+" &nbsp; ")
         html.checkbox("_ack_persistent", False)
-        html.write(" persistent comment")
+        html.write(" "+_('persistent comment'))
         html.write("</td></tr>\n")
 
-        html.write("<tr><td class=content><div class=textinputlegend>Comment:</div>")
+        html.write("<tr><td class=content><div class=textinputlegend>"+_('Comment:')+"</div>")
         html.text_input("_ack_comment", size=65)
         html.write("</td></tr>\n")
         
     if config.may("action.addcomment"):
-        html.write("<tr><td rowspan=2 class=legend>Add comment</td>\n")
-        html.write("<td class=content><input type=submit name=_add_comment value=\"Add comment\"></td></tr>\n"
-                "<tr><td class=content><div class=textinputlegend>Comment:</div>")
+        html.write("<tr><td rowspan=2 class=legend>"+_('Add comment')+"</td>\n")
+        html.write("<td class=content><input type=submit name=_add_comment value=\""+_('Add comment')+"\"></td></tr>\n"
+                "<tr><td class=content><div class=textinputlegend>"+_('Comment')+":</div>")
         html.text_input("_comment", size=65)
         html.write("</td></tr>\n")
 
     if config.may("action.downtimes"):
-        html.write("<tr><td class=legend rowspan=4>Schedule Downtimes</td>\n"
+        html.write("<tr><td class=legend rowspan=4>"+_('Schedule Downtimes')+"</td>\n"
                    "<td class=content>\n"
-                   "<input type=submit name=_down_2h value=\"2 hours\"> "
-                   "<input type=submit name=_down_today value=\"Today\"> "
-                   "<input type=submit name=_down_week value=\"This week\"> "
-                   "<input type=submit name=_down_month value=\"This month\"> "
-                   "<input type=submit name=_down_year value=\"This year\"> "
+                   "<input type=submit name=_down_2h value=\""+_('2 hours')+"\"> "
+                   "<input type=submit name=_down_today value=\""+_('Today')+"\"> "
+                   "<input type=submit name=_down_week value=\""+_('This week')+"\"> "
+                   "<input type=submit name=_down_month value=\""+_('This month')+"\"> "
+                   "<input type=submit name=_down_year value=\""+_('This year')+"\"> "
                    " &nbsp; - &nbsp;"
-                   "<input type=submit name=_down_remove value=\"Remove all\"> "
+                   "<input type=submit name=_down_remove value=\""+_('Remove all')+"\"> "
                    "</tr><tr>"
                    "<td class=content>"
-                   "<input type=submit name=_down_custom value=\"Custom time range\"> &nbsp; ")
+                   "<input type=submit name=_down_custom value=\""+_('Custom time range')+"\"> &nbsp; ")
         html.datetime_input("_down_from", time.time())
-        html.write("&nbsp; to &nbsp;")
+        html.write("&nbsp; "+_('to')+" &nbsp;")
         html.datetime_input("_down_to", time.time() + 7200)
         html.write("</td></tr>")
         html.write("<tr><td class=content>")
         html.checkbox("_down_flexible", False)
-        html.write(" flexible with max. duration ")
+        html.write(" "+_('flexible with max. duration')+" ")
         html.time_input("_down_duration", 2, 0)
-        html.write(" (HH:MM)</td></tr>\n")
-        html.write("<tr><td class=content><div class=textinputlegend>Comment:</div>\n")
+        html.write(" "+_('(HH:MM)')+"</td></tr>\n")
+        html.write("<tr><td class=content><div class=textinputlegend>"+_('Comment')+":</div>\n")
         html.text_input("_down_comment", size=65)
 
 def nagios_action_command(what, row):

@@ -77,13 +77,15 @@ import bi # needed for aggregation icon
 multisite_painter_options["pnpview"] = {
  "title"   : _("PNP Timerange"),
  "default" : "1",
- "values"  : [ ("0", "4 Hours"), ("1", "25 Hours"), ("2", "One week"), ("3", "One Month"), ("4", "One Year"), ("", "All") ]
+ "values"  : [ ("0", _("4 Hours")),  ("1", _("25 Hours")),
+               ("2", _("One week")), ("3", _("One Month")),
+               ("4", _("One Year")), ("", _("All")) ]
 }
 
 multisite_painter_options["ts_format"] = {
  "title"   : _("Time stamp format"),
  "default" : "mixed",
- "values"  : [ ("mixed", "Mixed"), ("abs", "Absolute"), ("rel", "Relative") ]
+ "values"  : [ ("mixed", _("Mixed")), ("abs", _("Absolute")), ("rel", _("Relative")) ]
 }
 
 multisite_painter_options["ts_date"] = {

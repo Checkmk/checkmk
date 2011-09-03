@@ -1270,7 +1270,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
 
         # Painter-Options
         if 'D' in display_options and len(painter_options) > 0 and config.may("painter_options"):
-            toggle_button("painter_options", False, "Display")
+            toggle_button("painter_options", False, _("Display"))
             html.write("<td class=minigap></td>\n")
 
         # Buttons for view options

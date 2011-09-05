@@ -1616,7 +1616,7 @@ def query_data(datasource, columns, add_columns, add_headers, only_sites = [], l
         state_columns = []
         if "service" in datasource["infos"]:
             state_columns += [ "service_has_been_checked", "service_state" ]
-        elif "host" in datasource["infos"]:
+        if "host" in datasource["infos"]:
             state_columns += [ "host_has_been_checked", "host_state" ]
         for c in state_columns:
             if c not in columns:

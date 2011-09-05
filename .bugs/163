@@ -1,10 +1,11 @@
 Title: backgrounds in downtime view not shown for host downtimes
 Component: multisite
-Benefit: 2
-State: open
-Cost: 4
-Date: 2011-03-01 14:42:34
+State: done
 Class: nastiness
+Date: 2011-03-01 14:42:34
+Benefit: 2
+Cost: 4
+Fun: 0
 
 The problem is that the host_state is not fetched via livestatus. These code parts were written by sir hack-a-lot ;-).
 This would workaround the problem and bring the color to the host columns . And the host_state and host_has_been_checked columns are fetched from much more views (maybe useless in most cases).
@@ -75,3 +76,7 @@ index 135b1ed..6a870d1 100644
              html.write('<tr class="data %s%d">' % (trclass, state))
  
          for p in painters:
+
+2011-09-05 15:21:28: changed state open -> done
+Background color is correctly shown for host rows e.g. in "Comments" view
+for example when a host is DOWN the row has lightred background

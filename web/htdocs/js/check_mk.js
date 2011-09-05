@@ -961,9 +961,17 @@ function highlight_elem(elem, on, ty) {
             highlight_elem(childs[i], on, ty);
 }
 
+function select_all_rows(elems) {
+    for(var i = 0; i < elems.length; i++) {
+        highlight_elem(elems[i], true, 'click');
+        if(g_selected_rows.indexOf(elems[i].row_num) === -1)
+            g_selected_rows.push(elems[i].row_num);
+    }
+}
+
 function remove_selected_rows(row_num) {
     for(var i = g_selected_rows.length - 1; i >= 0; i--) {
-        if(g_selected_rows[i] != row_num) {
+        if(g_selected_rows[i] !== row_num) {
             highlight_row(g_selected_rows[i], false, 'click');
             highlight_row(g_selected_rows[i], false, 'hover');
             g_selected_rows.splice(i, 1);
@@ -1029,6 +1037,27 @@ function disable_selection(e) {
 
     // All others
     return false;
+}
+
+// Is used to select/deselect all rows in the current view
+function toggle_all_rows() {
+    var elems = document.getElementsByClassName('dr');
+
+    var all_selected = true;
+    for(var i = 0; i < elems.length && all_selected == true; i++) {
+        if(elems[i].tagName != 'TD' && elems[i].tagName != 'DIV')
+            continue;
+
+        if(g_selected_rows.indexOf(elems[i].row_num) === -1)
+            all_selected = false;
+    }
+
+    // Now set the new state
+    if(all_selected) {
+        remove_selected_rows('');
+    } else {
+        select_all_rows(elems);
+    }
 }
 
 function get_row_num(elem) {

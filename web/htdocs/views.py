@@ -1275,6 +1275,12 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
 
         # Buttons for view options
         if 'O' in display_options:
+            # Link for selecting/deselecting all rows
+            if 'C' in display_options and len(rows) > 0 and config.may("act") and not html.do_actions():
+                html.write('<td class="left w30"><a href="javascript:toggle_all_rows()" '
+                           'title="%s">%s</a></td>\n' % (_('Toggle all row selections'), _('x')))
+                html.write("<td class=minigap></td>\n")
+
             if config.user_may(config.user, "view_option_columns"):
                 for col in config.view_option_columns:
                     uri = html.makeuri([("num_columns", col)])
@@ -1282,7 +1288,8 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
                         addclass = " selected"
                     else:
                         addclass = ""
-                    html.write('<td class="left w30%s"><a href="%s">%s</a></td>\n' % (addclass, uri, col))
+                    html.write('<td class="left w30%s"><a href="%s" title="%s">%s</a></td>\n' %
+                                          (addclass, uri, _('%d column layout') % col, col))
                     html.write("<td class=minigap></td>\n")
 
             if 'R' in display_options and config.user_may(config.user, "view_option_refresh"):
@@ -1296,8 +1303,9 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
                         reftext = "%d s" % ref
                     else:
                         reftext = "&#8734;"
-                    html.write('<td class="left w40%s" id="button-refresh-%s"><a href="%s">%s</a></td>\n' %
-                                                                               (addclass, ref, uri, reftext))
+                    html.write('<td class="left w40%s" id="button-refresh-%s">'
+                               '<a href="%s" title="%s">%s</a></td>\n' %
+                               (addclass, ref, uri, _('refresh every %d seconds') % ref, reftext))
                     html.write("<td class=minigap></td>\n")
 
         html.write("<td class=gap>&nbsp;</td>\n")

@@ -1946,7 +1946,7 @@ def nagios_downtime_command(row):
             command = prefix + "DEL_SVC_DOWNTIME;%d" % id
         else:
             command = prefix + "DEL_HOST_DOWNTIME;%d" % id
-        return "remove the following", [command]
+        return _("remove the following"), [command]
 
 def nagios_comment_command(row):
     id = row.get("comment_id")
@@ -1956,7 +1956,7 @@ def nagios_comment_command(row):
             command = prefix + "DEL_HOST_COMMENT;%d" % id
         else:
             command = prefix + "DEL_SVC_COMMENT;%d" % id
-        return "remove the following", [command]
+        return _("remove the following"), [command]
 
 def nagios_host_service_action_command(what, dataset):
     host = dataset.get("host_name")
@@ -1973,43 +1973,43 @@ def nagios_host_service_action_command(what, dataset):
         cmdtag = "SVC"
         prefix = "service_"
     else:
-        raise MKInternalError("Sorry, no actions possible on table %s" % tablename)
+        raise MKInternalError(_("Sorry, no actions possible on table %s") % tablename)
 
     if html.var("_enable_notifications") and config.may("action.notifications"):
         command = "ENABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec
-        title = "<b>enable notifications</b> for"
+        title = _("<b>enable notifications</b> for")
 
     elif html.var("_disable_notifications") and config.may("action.notifications"):
         command = "DISABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec
-        title = "<b>disable notifications</b> for"
+        title = _("<b>disable notifications</b> for")
 
     elif html.var("_enable_checks") and config.may("action.enablechecks"):
         command = "ENABLE_" + cmdtag + "_CHECK;%s" % spec
-        title = "<b>enable active checks</b> of"
+        title = _("<b>enable active checks</b> of")
 
     elif html.var("_disable_checks") and config.may("action.enablechecks"):
         command = "DISABLE_" + cmdtag + "_CHECK;%s" % spec
-        title = "<b>disable active checks</b> of"
+        title = _("<b>disable active checks</b> of")
 
     elif html.var("_enable_passive_checks") and config.may("action.enablechecks"):
         command = "ENABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec
-        title = "<b>enable passive checks</b> of"
+        title = _("<b>enable passive checks</b> of")
 
     elif html.var("_disable_passive_checks") and config.may("action.enablechecks"):
         command = "DISABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec
-        title = "<b>disable passive checks</b> of"
+        title = _("<b>disable passive checks</b> of")
 
     elif html.var("_clear_modattr") and config.may("action.clearmodattr"):
         command = "CHANGE_" + cmdtag + "_MODATTR;%s;0" % spec
-        title = "<b>clear the information about modified attributes</b> of"
+        title = _("<b>clear the information about modified attributes</b> of")
 
     elif html.var("_resched_checks") and config.may("action.reschedule"):
         command = "SCHEDULE_FORCED_" + cmdtag + "_CHECK;%s;%d" % (spec, int(time.time()))
-        title = "<b>reschedule an immediate check</b> of"
+        title = _("<b>reschedule an immediate check</b> of")
 
     elif html.var("_fake") and config.may("action.fakechecks"):
         statename = html.var("_fake")
-        pluginoutput =  "Manually set to %s by %s" % (statename, html.req.user)
+        pluginoutput = _("Manually set to %s by %s") % (statename, html.req.user)
         svcstate = {"Ok":0, "Warning":1, "Critical":2, "Unknown":3}.get(statename)
         if svcstate != None:
             command = "PROCESS_SERVICE_CHECK_RESULT;%s;%s;%s" % (spec, svcstate, pluginoutput)
@@ -2017,39 +2017,39 @@ def nagios_host_service_action_command(what, dataset):
             hoststate = {"Up":0, "Down":1, "Unreachable":2}.get(statename)
             if hoststate != None:
                 command = "PROCESS_HOST_CHECK_RESULT;%s;%s;%s" % (spec, hoststate, pluginoutput)
-        title = "<b>manually set check results to %s</b> for" % statename
+        title = _("<b>manually set check results to %s</b> for") % statename
 
     elif html.var("_acknowledge") and config.may("action.acknowledge"):
         comment = html.var_utf8("_ack_comment")
         if not comment:
-            raise MKUserError("_ack_comment", "You need to supply a comment.")
+            raise MKUserError("_ack_comment", _("You need to supply a comment."))
         sticky = html.var("_ack_sticky") and 2 or 0
         sendnot = html.var("_ack_notify") and 1 or 0
         perscomm = html.var("_ack_persistent") and 1 or 0
         command = "ACKNOWLEDGE_" + cmdtag + "_PROBLEM;%s;%d;%d;%d;%s" % \
                       (spec, sticky, sendnot, perscomm, html.req.user) + (";%s" % comment)
-        title = "<b>acknowledge the problems</b> of"
+        title = _("<b>acknowledge the problems</b> of")
 
     elif html.var("_add_comment") and config.may("action.addcomment"):
         comment = html.var_utf8("_comment")
         if not comment:
-            raise MKUserError("_comment", "You need to supply a comment.")
+            raise MKUserError("_comment", _("You need to supply a comment."))
         command = "ADD_" + cmdtag + "_COMMENT;%s;1;%s" % \
                   (spec, html.req.user) + (";%s" % comment)
-        title = "<b>add a comment to</b>"
+        title = _("<b>add a comment to</b>")
 
     elif html.var("_remove_ack") and config.may("action.acknowledge"):
         command = "REMOVE_" + cmdtag + "_ACKNOWLEDGEMENT;%s" % spec
-        title = "<b>remove acknowledgements</b> from"
+        title = _("<b>remove acknowledgements</b> from")
 
     elif html.var("_down_2h") and config.may("action.downtimes"):
         down_to = down_from + 7200
-        title = "<b>schedule an immediate 2-hour downtime</b> on"
+        title = _("<b>schedule an immediate 2-hour downtime</b> on")
 
     elif html.var("_down_today") and config.may("action.downtimes"):
         br = time.localtime(down_from)
         down_to = time.mktime((br.tm_year, br.tm_mon, br.tm_mday, 23, 59, 59, 0, 0, br.tm_isdst)) + 1
-        title = "<b>schedule an immediate downtime until 24:00:00</b> on"
+        title = _("<b>schedule an immediate downtime until 24:00:00</b> on")
 
     elif html.var("_down_week") and config.may("action.downtimes"):
         br = time.localtime(down_from)
@@ -2057,7 +2057,7 @@ def nagios_host_service_action_command(what, dataset):
         days_plus = 6 - wday
         down_to = time.mktime((br.tm_year, br.tm_mon, br.tm_mday, 23, 59, 59, 0, 0, br.tm_isdst)) + 1
         down_to += days_plus * 24 * 3600
-        title = "<b>schedule an immediate downtime until sunday night</b> on"
+        title = _("<b>schedule an immediate downtime until sunday night</b> on")
 
     elif html.var("_down_month") and config.may("action.downtimes"):
         br = time.localtime(down_from)
@@ -2068,17 +2068,17 @@ def nagios_host_service_action_command(what, dataset):
         else:
             new_year = br.tm_year
         down_to = time.mktime((new_year, new_month, 1, 0, 0, 0, 0, 0, br.tm_isdst))
-        title = "<b>schedule an immediate downtime until end of month</b> on"
+        title = _("<b>schedule an immediate downtime until end of month</b> on")
 
     elif html.var("_down_year") and config.may("action.downtimes"):
         br = time.localtime(down_from)
         down_to = time.mktime((br.tm_year, 12, 31, 23, 59, 59, 0, 0, br.tm_isdst)) + 1
-        title = "<b>schedule an immediate downtime until end of %d</b> on" % br.tm_year
+        title = _("<b>schedule an immediate downtime until end of %d</b> on") % br.tm_year
 
     elif html.var("_down_custom") and config.may("action.downtimes"):
         down_from = html.get_datetime_input("_down_from")
         down_to   = html.get_datetime_input("_down_to")
-        title = "<b>schedule a downtime from %s to %s</b> on " % (
+        title = _("<b>schedule a downtime from %s to %s</b> on ") % (
             time.asctime(time.localtime(down_from)),
             time.asctime(time.localtime(down_to)))
 
@@ -2090,19 +2090,19 @@ def nagios_host_service_action_command(what, dataset):
         commands = []
         for dtid in downtime_ids:
             commands.append("[%d] DEL_%s_DOWNTIME;%d\n" % (int(time.time()), cmdtag, dtid))
-        title = "<b>remove all scheduled downtimes</b> of "
+        title = _("<b>remove all scheduled downtimes</b> of ")
         return title, commands
 
     else:
-        raise MKUserError(None, "Sorry. This command is not implemented.")
+        raise MKUserError(None, _("Sorry. This command is not implemented."))
 
     if down_to:
         comment = html.var_utf8("_down_comment")
         if not comment:
-            raise MKUserError("_down_comment", "You need to supply a comment for your downtime.")
+            raise MKUserError("_down_comment", _("You need to supply a comment for your downtime."))
         if html.var("_down_flexible"):
             fixed = 0
-            duration = html.get_time_input("_down_duration", "the duration")
+            duration = html.get_time_input("_down_duration", _("the duration"))
         else:
             fixed = 1
             duration = 0
@@ -2115,8 +2115,8 @@ def nagios_host_service_action_command(what, dataset):
 
 def do_actions(view, what, rows, backurl):
     if not config.may("act"):
-        html.show_error("You are not allowed to perform actions. If you think this is an error, "
-              "please ask your administrator grant you the permission to do so.")
+        html.show_error(_("You are not allowed to perform actions. If you think this is an error, "
+              "please ask your administrator grant you the permission to do so."))
         return False # no actions done
 
     # Handle optional row filter based on row selections
@@ -2130,12 +2130,13 @@ def do_actions(view, what, rows, backurl):
         action_rows = rows
 
     if not action_rows:
-        html.show_error("No rows selected to perform actions for.")
+        html.show_error(_("No rows selected to perform actions for."))
         return False # no actions done
 
     command = None
     title = nagios_action_command(what, action_rows[0])[0] # just get the title
-    if not html.confirm("Do you really want to %s the following %d %ss?" % (title, len(action_rows), what)):
+    if not html.confirm(_("Do you really want to %s the following %d %ss?") %
+                                               (title, len(action_rows), what)):
         return False # no actions done
 
     count = 0
@@ -2148,14 +2149,14 @@ def do_actions(view, what, rows, backurl):
             count += 1
 
     if command:
-        message = "Successfully sent %d commands to Nagios." % count
+        message = _("Successfully sent %d commands to Nagios.") % count
         if config.debug:
-            message += "The last one was: <pre>%s</pre>" % command
+            message += _("The last one was: <pre>%s</pre>") % command
         if html.output_format == "html": # sorry for this hack
-            message += '<br><a href="%s">Back to view</a>' % backurl
+            message += '<br><a href="%s">%s</a>' % (backurl, _('Back to view'))
         html.message(message)
     elif count == 0:
-        html.message("No matching service. No command sent.")
+        html.message(_("No matching service. No command sent."))
     return True
 
 def get_context_link(user, viewname):

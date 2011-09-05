@@ -17,6 +17,7 @@
     * Added missing sorters for "service nth service perfdata" painters
     * Implemented row selection in views to select only a subset of shown data
       for actions
+    * Sort titles in views can be enabled by clicking on the whole cells now
 
     WATO:
     * Changed row selection in WATO to new row selection mechanism

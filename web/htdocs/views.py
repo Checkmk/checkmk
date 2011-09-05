@@ -2390,6 +2390,9 @@ def paint_header(view, p):
     # - Add the display options (Keeping the same display options as current)
     # - Link to _self (Always link to the current frame)
     # - Keep the _body_class variable (e.g. for dashlets)
+    thclass = ''
+    onclick = ''
+    title = ''
     if 'L' in html.display_options \
        and view.get('user_sortable', True) \
        and get_sorter_name_of_painter(painter) is not None:
@@ -2401,12 +2404,11 @@ def paint_header(view, p):
         if hasattr(html, 'title_display_options'):
             params.append(('display_options', html.title_display_options))
 
-        t = "<a class=\"%s\" href=\"%s\" title=\"%s\" target=\"_self\">%s</a>" % \
-            (get_primary_sorter_order(view, painter),
-             html.makeuri(params, 'sort'),
-             _('Sort by %s') % t, t)
+        thclass = ' class="sort %s"' % get_primary_sorter_order(view, painter)
+        onclick = ' onclick="location.href=\'%s\'"' % html.makeuri(params, 'sort')
+        title   = ' title="%s"' % (_('Sort by %s') % t)
 
-    html.write("<th>%s</th>" % t)
+    html.write("<th%s%s%s>%s</th>" % (thclass, onclick, title, t))
 
 def register_events(row):
     if config.sounds != []:

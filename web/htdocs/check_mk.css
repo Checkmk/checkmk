@@ -619,21 +619,25 @@ table.data th {
 }
 
 /* Table header links (For sorting) */
-table.data th a {
-    color: #fff;
+
+table.data th.sort {
     text-decoration: underline;
 }
 
-table.data th a:hover {
-    color: #fff;
-    text-decoration: none;
+table.data th.sort:hover {
+    background-color: #A4B2B2;
+    cursor: pointer;
 }
 
-table.data th a.asc {
+table.data th.sort:hover {
+    color: #000;
+}
+
+table.data th.asc {
     color: #CBDCF2;
 }
 
-table.data th a.desc {
+table.data th.desc {
     color: #CBDCF2;
 }
 

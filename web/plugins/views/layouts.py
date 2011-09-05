@@ -25,6 +25,10 @@
 # Boston, MA 02110-1301 USA.
 
 def init_rowselect():
+    # Don't make rows selectable when no commands can be fired
+    if not 'C' in html.display_options or not config.may("act"):
+        return
+
     row_nums = []
     if html.has_var('selected_rows'):
         selected_rows = html.var('selected_rows', '')

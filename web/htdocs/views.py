@@ -1337,7 +1337,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
                     html.write("<tr class=form><td class=whiteborder>")
                 # Create URI with all actions variables removed
                 backurl = html.makeuri([])
-                has_done_actions = do_actions(datasource["infos"][0], rows, backurl)
+                has_done_actions = do_actions(view, datasource["infos"][0], rows, backurl)
                 if 'C' in display_options:
                     html.write("</td></tr>")
             except MKUserError, e:
@@ -2113,23 +2113,25 @@ def nagios_host_service_action_command(what, dataset):
     nagios_command = ("[%d] " % int(time.time())) + command + "\n"
     return title, [nagios_command]
 
-def do_actions(what, rows, backurl):
+def do_actions(view, what, rows, backurl):
     if not config.may("act"):
         html.show_error("You are not allowed to perform actions. If you think this is an error, "
               "please ask your administrator grant you the permission to do so.")
         return False # no actions done
 
     # Handle optional row filter based on row selections
-    if html.has_var('selected_rows'):
-        selected_rows = html.var('selected_rows', '')
-        if selected_rows or ',' in selected_rows:
-            action_rows = []
-            for row_num in selected_rows.split(','):
-                action_rows.append(rows[int(row_num)])
-        else:
-            action_rows = rows
+    if html.var('selected_rows', '') != '':
+        selected_rows = html.var('selected_rows')
+        action_rows = []
+        for row in rows:
+            if row_id(view, row) in selected_rows.split(','):
+                action_rows.append(row)
     else:
         action_rows = rows
+
+    if not action_rows:
+        html.show_error("No rows selected to perform actions for.")
+        return False # no actions done
 
     command = None
     title = nagios_action_command(what, action_rows[0])[0] # just get the title
@@ -2236,9 +2238,19 @@ def link_to_view(content, row, linkview):
 def docu_link(topic, text):
     return '<a href="%s" target="_blank">%s</a>' % (config.doculink_urlformat % topic, text)
 
-def paint(p, row, row_id = None):
+def row_id(view, row):
+    '''
+    Calculates a uniq id for each data row which identifies the current
+    row accross different page loadings.
+    '''
+    key = ''
+    for col in multisite_datasources[view['datasource']]['idkeys']:
+        key += '~%s' % row[col]
+    return str(hash(key))
+
+def paint(p, row, rid = None):
     tdclass, content = prepare_paint(p, row)
-    row_classes = row_id is not None and 'dr_%d dr ' % row_id or ''
+    row_classes = rid is not None and 'dr_%s dr ' % rid or ''
     if tdclass or row_classes:
         html.write("<td class=\"%s%s\">%s</td>\n" % (row_classes or '', tdclass or '', content))
     else:

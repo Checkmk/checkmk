@@ -33,7 +33,7 @@ def init_rowselect():
     if html.has_var('selected_rows'):
         selected_rows = html.var('selected_rows', '')
         if selected_rows or ',' in selected_rows:
-            row_nums = map(int, selected_rows.split(','))
+            row_nums = selected_rows.split(',')
 
     html.javascript('g_selected_rows = %s;\n'
                     'init_rowselect();' % repr(row_nums))
@@ -90,14 +90,14 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns):
     # N columns. Each should contain approx the same number of entries
     groups = []
     last_group = None
-    for index, row in enumerate(rows):
+    for row in rows:
         register_events(row) # needed for playing sounds
         this_group = group_value(row, group_painters)
         if this_group != last_group:
             last_group = this_group
             current_group = []
             groups.append((this_group, current_group))
-        current_group.append((index, row))
+        current_group.append((row_id(view, row), row))
 
     def height_of(groups):
         # compute total space needed. I count the group header like two rows.
@@ -212,7 +212,7 @@ def render_tiled(rows, view, group_painters, painters, _ignore_num_columns):
 
     last_group = None
     group_open = False
-    for index, row in enumerate(rows):
+    for row in rows:
         # Show group header
         if len(group_painters) > 0:
             this_group = group_value(row, group_painters)
@@ -253,7 +253,7 @@ def render_tiled(rows, view, group_painters, painters, _ignore_num_columns):
         if not group_open:
             html.write("<tr><td class=tiles>")
             group_open = True
-        html.write('<div class="dr_%d dr tile %s"><table>' % (index, sclass))
+        html.write('<div class="dr_%d dr tile %s"><table>' % (row_id(view, row), sclass))
 
         # We need at least five painters.
         empty_painter = { "paint" : (lambda row: ("", "")) }
@@ -395,7 +395,7 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns):
             html.write('<tr class="data %s%d">' % (trclass, state))
 
         for p in painters:
-            paint(p, row, index)
+            paint(p, row, row_id(view, row))
         column += 1
         index += 1
 

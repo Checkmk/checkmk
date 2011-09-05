@@ -331,6 +331,7 @@ function pnp_response_handler(data, code) {
     } catch(e) {
         valid_response = false;
     }
+    response = null;
 
     if(!valid_response)
         fallback_graphs(data);
@@ -988,7 +989,7 @@ function toggle_row(e, row) {
     if(target.tagName != 'TD')
         return true;
 
-    var row_num = parseInt(row.row_num);
+    var row_num = row.row_num;
 
     // When CTRL is not pressed, remove the selection
     if(!e.ctrlKey)
@@ -1066,7 +1067,7 @@ function get_row_num(elem) {
     var classes = elem.className.split(' ');
     for(var i = 0; i < classes.length; i++)
         if(classes[i].indexOf('dr_') > -1)
-            return parseInt(classes[i].split('_', 2)[1]);
+            return classes[i].split('_', 2)[1];
 }
 
 function table_init_rowselect(oTable) {

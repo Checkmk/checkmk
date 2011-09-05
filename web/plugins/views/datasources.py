@@ -32,6 +32,7 @@
 # the items (= in order to identify the items and gather all information
 # needed for constructing Nagios commands)
 
+# idkeys: these are used to generate a key which is uniq for each data row
 
 multisite_datasources["hosts"] = {
     "title"   : _("All hosts"),
@@ -39,6 +40,7 @@ multisite_datasources["hosts"] = {
     "infos"   : [ "host" ],
     "keys"    : [ "host_name", "host_downtimes" ],
     "join"    : ( "services", "host_name" ),
+    "idkeys"  : [ "site", "host_name" ],
 }
 
 multisite_datasources["hostsbygroup"] = {
@@ -47,6 +49,7 @@ multisite_datasources["hostsbygroup"] = {
     "infos"   : [ "host", "hostgroup" ],
     "keys"    : [ "host_name", "host_downtimes" ],
     "join"    : ( "services", "host_name" ),
+    "idkeys"  : [ "site", "hostgroup_name", "host_name" ],
 }
 
 multisite_datasources["services"] = {
@@ -55,6 +58,7 @@ multisite_datasources["services"] = {
     "infos"   : [ "service", "host" ],
     "keys"    : [ "host_name", "service_description", "service_downtimes" ],
     "joinkey" : "service_description",
+    "idkeys"  : [ "site", "host_name", "service_description" ],
 }
 
 multisite_datasources["servicesbygroup"] = {
@@ -62,6 +66,7 @@ multisite_datasources["servicesbygroup"] = {
     "table"   : "servicesbygroup",
     "infos"   : [ "service", "host", "servicegroup" ],
     "keys"    : [ "host_name", "service_description", "service_downtimes" ],
+    "idkeys"  : [ "site", "servicegroup_name", "host_name", "service_description" ],
 }
 
 multisite_datasources["servicesbyhostgroup"] = {
@@ -69,13 +74,15 @@ multisite_datasources["servicesbyhostgroup"] = {
     "table"   : "servicesbyhostgroup",
     "infos"   : [ "service", "host", "hostgroup" ],
     "keys"    : [ "host_name", "service_description", "service_downtimes" ],
+    "idkeys"  : [ "site", "hostgroup_name", "host_name", "service_description" ],
 }
 
 multisite_datasources["hostgroups"] = {
-    "title" : _("Hostgroups"),
-    "table" : "hostgroups",
-    "infos" : [ "hostgroup" ],
+    "title"   : _("Hostgroups"),
+    "table"   : "hostgroups",
+    "infos"   : [ "hostgroup" ],
     "keys"    : [ "hostgroup_name" ],
+    "idkeys"  : [ "site", "hostgroup_name" ],
 }
 
 multisite_datasources["merged_hostgroups"] = {
@@ -83,14 +90,16 @@ multisite_datasources["merged_hostgroups"] = {
     "table"    : "hostgroups",
     "merge_by" : "hostgroup_name",
     "infos"    : [ "hostgroup" ],
-    "keys"    : [ "hostgroup_name" ],
+    "keys"     : [ "hostgroup_name" ],
+    "idkeys"   : [ "hostgroup_name" ],
 }
 
 multisite_datasources["servicegroups"] = {
     "title"    : _("Servicegroups"),
     "table"    : "servicegroups",
     "infos"    : [ "servicegroup" ],
-    "keys"    : [ "servicegroup_name" ],
+    "keys"     : [ "servicegroup_name" ],
+    "idkeys"   : [ "site", "servicegroup_name" ],
 }
 
 multisite_datasources["merged_servicegroups"] = {
@@ -98,21 +107,24 @@ multisite_datasources["merged_servicegroups"] = {
     "table"    : "servicegroups",
     "merge_by" : "servicegroup_name",
     "infos"    : [ "servicegroup" ],
-    "keys"    : [ "servicegroup_name" ],
+    "keys"     : [ "servicegroup_name" ],
+    "idkeys"   : [ "servicegroup_name" ],
 }
 
 multisite_datasources["comments"] = {
     "title"    : _("Host- und Servicecomments"),
     "table"    : "comments",
     "infos"    : [ "comment", "host", "service" ],
-    "keys"    : [ "comment_id", "comment_type" ],
+    "keys"     : [ "comment_id", "comment_type" ],
+    "idkeys"   : [ "comment_id" ],
 }
 
 multisite_datasources["downtimes"] = {
     "title"    : _("Schedules Downtimes"),
     "table"    : "downtimes",
     "infos"    : [ "downtime", "host", "service" ],
-    "keys"    : [ "downtime_id", "service_description" ],
+    "keys"     : [ "downtime_id", "service_description" ],
+    "idkeys"   : [ "downtime_id" ],
 }
 
 multisite_datasources["log"] = {
@@ -120,6 +132,7 @@ multisite_datasources["log"] = {
     "table"    : "log",
     "infos"    : [ "log", "host", "service", "contact", "command" ],
     "keys"     : [],
+    "idkeys"   : [ "log_lineno" ],
 }
 
 multisite_datasources["log_events"] = {
@@ -128,6 +141,7 @@ multisite_datasources["log_events"] = {
     "add_headers" : "Filter: class = 1\n",
     "infos"       : [ "log", "host", "service" ],
     "keys"        : [],
+    "idkeys"      : [ "log_lineno" ],
 }
 
 multisite_datasources["log_host_events"] = {
@@ -136,6 +150,7 @@ multisite_datasources["log_host_events"] = {
     "add_headers" : "Filter: class = 1\nFilter: service_description = \n",
     "infos"       : [ "log", "host" ],
     "keys"        : [],
+    "idkeys"      : [ "log_lineno" ],
 }
 
 multisite_datasources["alert_stats"] = {
@@ -145,4 +160,5 @@ multisite_datasources["alert_stats"] = {
     "add_columns" : [ "alerts_ok", "alerts_warn", "alerts_crit", "alerts_unknown", "alerts_problem" ],
     "infos"       : [ "log", "host", "service", "contact", "command" ],
     "keys"        : [],
+    "idkeys"      : [ "log_lineno" ],
 }

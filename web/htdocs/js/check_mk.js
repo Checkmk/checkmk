@@ -319,15 +319,15 @@ function pnp_error_response_handler(data, statusCode) {
 
 function pnp_response_handler(data, code) {
     var valid_response = true;
-    var response = null;
+    var response = [];
     try {
         response = eval(code);
         for(var i = 0; i < response.length; i++) {
-            var graph = response[i];
             var view = data['view'] == '' ? '0' : data['view'];
-            create_graph(data, '&' + graph['image_url'].replace('&view='+view, ''));
-            i = null;
+            create_graph(data, '&' + response[i]['image_url'].replace('&view='+view, ''));
         }
+        view = null;
+        i = null;
     } catch(e) {
         valid_response = false;
     }
@@ -339,9 +339,9 @@ function pnp_response_handler(data, code) {
 
 // Fallback bei doofer/keiner Antwort
 function fallback_graphs(data) {
-    for(var i = 0; i < 8; i++) {
-       create_graph(data, '&host=' + data['host'] + '&srv=' + data['service'] + '&source=' + i);
-   }
+    for(var s = 0; s < 8; s++) {
+        create_graph(data, '&host=' + data['host'] + '&srv=' + data['service'] + '&source=' + s);
+    }
 }
 
 function create_graph(data, params) {

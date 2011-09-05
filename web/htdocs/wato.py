@@ -655,7 +655,8 @@ def mode_file(phase):
         # a folder information but not yet moved to that folder). If at least
         # one host has a target folder, then we show an additional bulk action.
         at_least_one_imported = False
-        for hostname in hostnames:
+        more_than_ten_items = False
+        for num, hostname in enumerate(hostnames):
             if search_text and (search_text.lower() not in hostname.lower()):
                 continue
 
@@ -665,9 +666,12 @@ def mode_file(phase):
             if effective.get("imported_folder"):
                 at_least_one_imported = True
 
+            if num == 11:
+                more_than_ten_items = True
+
         # Add the bulk action buttons also to the top of the table when this
         # list shows more than 10 rows
-        if len(hostnames) > 10:
+        if more_than_ten_items:
             bulk_actions(at_least_one_imported)
 
         for hostname in hostnames:

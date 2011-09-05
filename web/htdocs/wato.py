@@ -379,12 +379,16 @@ def mode_editfolder(phase, what, new):
             else:
                 new_thing["num_hosts"] = 0
                 g_files[newpath] = new_thing
-            
+
             g_folder["." + what + "s"][name] = new_thing
             log_audit(new_thing, "new-" + what, _("Created new %s %s") % (the_what, title))
             call_hook_file_or_folder_created(what, new_thing)
 
         else:
+            if the_thing["title"] != title:
+                log_pending(the_thing, "edit-" + what, _("Changed title of %s from \"%s\" to \"%s\"") %
+                                                    (the_what, the_thing["title"], title))
+
             the_thing["title"]      = title
             the_thing["roles"]      = roles
             the_thing["attributes"] = attributes

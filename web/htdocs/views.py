@@ -706,10 +706,10 @@ function toggle_section(nr, oImg) {
 
 
     html.write('<tr><td class="legend button" colspan=2>')
-    html.button("try", _("Try out"))
-    html.write(" ")
     html.button("save", _("Save"))
-    html.write("</table>\n")
+    html.write(" ")
+    html.button("try", _("Try out"))
+    html.write("</td></tr></table>\n")
     html.end_form()
 
     html.write("</div></td></tr></table>\n")

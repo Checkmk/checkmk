@@ -1581,6 +1581,11 @@ div.columneditor td, div.columneditor select {
     font-size: 0.9em;
 }
 
+input#try{
+    float:left;
+}
+
+
 /*
  __     ___               _     _     _   
  \ \   / (_) _____      _| |   (_)___| |_ 

@@ -19,6 +19,7 @@
     * Implemented row selection in views to select only a subset of shown data
       for actions
     * Sort titles in views can be enabled by clicking on the whole cells now
+    * Submitting the view editor via ENTER key saves the view now instead of try mode
 
     WATO:
     * Changed row selection in WATO to new row selection mechanism

@@ -621,10 +621,10 @@ def mode_file(phase):
 
         # Show table of hosts in this file
         colspan = 5
-        html.begin_form("hosts", None, "POST")
+        html.begin_form("hosts", None, "POST", onsubmit = 'add_row_selections(this);')
         html.write("<table class=data>\n")
-        html.write("<tr><th class=left></th><th></th><th>" + _("Hostname") + "</th>")
-        
+        html.write("<tr><th class=left></th><th>" + _("Hostname") + "</th>")
+
         for attr, topic in host_attributes:
             if attr.show_in_table():
                 html.write("<th>%s</th>" % attr.title())
@@ -635,7 +635,6 @@ def mode_file(phase):
         odd = "odd"
 
         search_text = html.var("search")
-        selected_hosts = get_hostnames_from_checkboxes()
         at_least_one_imported = False
         for hostname in hostnames:
             if search_text and (search_text.lower() not in hostname.lower()):
@@ -645,14 +644,8 @@ def mode_file(phase):
             effective = effective_attributes(host, g_file)
 
             # Rows with alternating odd/even styles
-            html.write('<tr class="data %s0">' % odd)
+            html.write('<tr class="dr_%s dr data %s0">' % (hostname, odd))
             odd = odd == "odd" and "even" or "odd" 
-
-            # Check box (if none is checked, then the default is to check all)
-            def_value = selected_hosts == []
-            html.write("<td class=select>")
-            html.checkbox("sel_%s" % hostname, def_value, 'wato_select')
-            html.write("</td>")
 
             # Column with actions (buttons)
             edit_url     = make_link([("mode", "edithost"), ("host", hostname)])
@@ -697,9 +690,9 @@ def mode_file(phase):
 
 
         # bulk actions
-        html.write('<tr class="data %s0"><td class=select>' % odd)
-        html.jsbutton('_markall', 'X', 'javascript:wato_check_all(\'wato_select\');')
-        html.write("</td><td colspan=%d>" % colspan)
+        html.write('<tr class="data %s0">' % odd)
+        html.write("<td colspan=%d>" % colspan)
+        html.jsbutton('_markall', 'X', 'javascript:toggle_all_rows();')
         html.write(_("On all selected hosts:\n"))
         html.button("_bulk_delete", _("Delete"))
         html.button("_bulk_edit", _("Edit"))
@@ -721,16 +714,22 @@ def mode_file(phase):
         html.hidden_fields()
 
         html.end_form()
+        html.init_rowselect()
 
 # Create list of all hosts that are select with checkboxes in the current file
 def get_hostnames_from_checkboxes():
     hostnames = g_hosts.keys()
     hostnames.sort()
+
+    selected = []
+    if html.var('selected_rows', '') != '':
+        selected = html.var('selected_rows', '').split(',')
+
     selected_hosts = []
     search_text = html.var("search")
     for name in hostnames:
         if (not search_text or (search_text.lower() in name.lower())) \
-            and html.var("sel_" + name):
+            and name in selected:
             selected_hosts.append(name)
     return selected_hosts
 

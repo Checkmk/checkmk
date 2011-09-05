@@ -915,7 +915,10 @@ function real_style(obj, attr) {
 
     // If elem is a TD and has no background find the backround of the parent
     // e.g. the TR and then set this color as background for the TD
-    if(obj.tagName == 'TD' && (st == 'transparent' || st == 'rgba(0, 0, 0, 0)'))
+    // But only do this when the TR is not in the highlight scope
+    if(obj.tagName == 'TD'
+       && obj.parentNode.row_num === undefined
+       && (st == 'transparent' || st == 'rgba(0, 0, 0, 0)'))
         st = real_style(obj.parentNode, attr);
 
     return st;
@@ -1046,7 +1049,9 @@ function toggle_all_rows() {
 
     var all_selected = true;
     for(var i = 0; i < elems.length && all_selected == true; i++) {
-        if(elems[i].tagName != 'TD' && elems[i].tagName != 'DIV')
+        if(elems[i].tagName != 'TD'
+           && elems[i].tagName != 'TR'
+           && elems[i].tagName != 'DIV')
             continue;
 
         if(g_selected_rows.indexOf(elems[i].row_num) === -1)
@@ -1075,7 +1080,9 @@ function table_init_rowselect(oTable) {
     var childs = document.getElementsByClassName('dr');
 
     for(var i = 0; i < childs.length; i++) {
-        if(childs[i].tagName != 'TD' && childs[i].tagName != 'DIV')
+        if(childs[i].tagName != 'TD'
+           && childs[i].tagName != 'TR'
+           && childs[i].tagName != 'DIV')
             continue;
 
         var elem = childs[i];

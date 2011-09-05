@@ -790,3 +790,13 @@ class html:
     
     def end_foldable_container(self):
         self.write("</ul>")
+
+    def init_rowselect(self):
+        selected = []
+        if self.has_var('selected_rows'):
+            selected_rows = self.var('selected_rows', '')
+            if selected_rows or ',' in selected_rows:
+                selected = selected_rows.split(',')
+
+        self.javascript('g_selected_rows = %s;\n'
+                        'init_rowselect();' % repr(selected))

@@ -28,15 +28,7 @@ def init_rowselect():
     # Don't make rows selectable when no commands can be fired
     if not 'C' in html.display_options or not config.may("act"):
         return
-
-    row_nums = []
-    if html.has_var('selected_rows'):
-        selected_rows = html.var('selected_rows', '')
-        if selected_rows or ',' in selected_rows:
-            row_nums = selected_rows.split(',')
-
-    html.javascript('g_selected_rows = %s;\n'
-                    'init_rowselect();' % repr(row_nums))
+    html.init_rowselect()
 
 # -------------------------------------------------------------------------
 #    ____  _             _
@@ -253,7 +245,7 @@ def render_tiled(rows, view, group_painters, painters, _ignore_num_columns):
         if not group_open:
             html.write("<tr><td class=tiles>")
             group_open = True
-        html.write('<div class="dr_%d dr tile %s"><table>' % (row_id(view, row), sclass))
+        html.write('<div class="dr_%s dr tile %s"><table>' % (row_id(view, row), sclass))
 
         # We need at least five painters.
         empty_painter = { "paint" : (lambda row: ("", "")) }

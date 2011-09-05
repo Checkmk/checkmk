@@ -634,8 +634,42 @@ def mode_file(phase):
         html.write("</tr>\n")
         odd = "odd"
 
+        def bulk_actions(at_least_one_imported):
+            # bulk actions
+            html.write('<tr class="data %s0">' % odd)
+            html.write("<td colspan=%d>" % colspan)
+            html.jsbutton('_markall', 'X', 'javascript:toggle_all_rows();')
+            html.write(' ' + _("On all selected hosts:\n"))
+            html.button("_bulk_delete", _("Delete"))
+            html.button("_bulk_edit", _("Edit"))
+            html.button("_bulk_cleanup", _("Cleanup"))
+            html.button("_bulk_inventory", _("Inventory"))
+            host_move_combo(None)
+            if at_least_one_imported:
+                html.button("_bulk_movetotarget", _("Move to Target Folders"))
+            html.write("</td></tr>\n")
+
         search_text = html.var("search")
+
+        # Remember if that host has a target folder (i.e. was imported with
+        # a folder information but not yet moved to that folder). If at least
+        # one host has a target folder, then we show an additional bulk action.
         at_least_one_imported = False
+        for hostname in hostnames:
+            if search_text and (search_text.lower() not in hostname.lower()):
+                continue
+
+            host = g_hosts[hostname]
+            effective = effective_attributes(host, g_file)
+
+            if effective.get("imported_folder"):
+                at_least_one_imported = True
+
+        # Add the bulk action buttons also to the top of the table when this
+        # list shows more than 10 rows
+        if len(hostnames) > 10:
+            bulk_actions(at_least_one_imported)
+
         for hostname in hostnames:
             if search_text and (search_text.lower() not in hostname.lower()):
                 continue
@@ -682,27 +716,7 @@ def mode_file(phase):
             html.write("</td>")
             html.write("</tr>\n")
 
-            # Remember if that host has a target folder (i.e. was imported with
-            # a folder information but not yet moved to that folder). If at least
-            # one host has a target folder, then we show an additional bulk action.
-            if effective.get("imported_folder"):
-                at_least_one_imported = True
-
-
-        # bulk actions
-        html.write('<tr class="data %s0">' % odd)
-        html.write("<td colspan=%d>" % colspan)
-        html.jsbutton('_markall', 'X', 'javascript:toggle_all_rows();')
-        html.write(_("On all selected hosts:\n"))
-        html.button("_bulk_delete", _("Delete"))
-        html.button("_bulk_edit", _("Edit"))
-        html.button("_bulk_cleanup", _("Cleanup"))
-        html.button("_bulk_inventory", _("Inventory"))
-        host_move_combo(None)
-        if at_least_one_imported:
-            html.button("_bulk_movetotarget", _("Move to Target Folders"))
-        html.write("</td></tr>\n")
-
+        bulk_actions(at_least_one_imported)
         html.write("</table>\n")
 
         # Important: remove selected hosts from the hidden fields. Otherwise

@@ -1793,6 +1793,8 @@ def collist_of_collection(collection, join_target = []):
 def show_action_form(is_open, datasource):
     if not config.may("act"):
         return
+    if html.has_var("try"):
+        return
 
     # We take the first info to be the native data type of this table
     # and show actions useful for that

@@ -49,6 +49,7 @@ multisite_sorters          = {}
 multisite_builtin_views    = {}
 multisite_painter_options  = {}
 ubiquitary_filters         = [] # Always show this filters
+extra_context_links        = []
 
 # Load all view plugins
 def load_plugins():
@@ -1586,6 +1587,30 @@ def show_context_links(thisview, active_filters):
                 html.begin_context_buttons()
             vars_values = [ (var, html.var(var)) for var in set(used_contextvars) ]
             html.context_button(view_linktitle(view), html.makeuri_contextless(vars_values + [("view_name", name)]), view.get("icon"))
+
+    # Add the plugin registered context links when the var requirements can be met
+    # custom context links can be registered in view plugins like this:
+    #
+    # def get_my_link_url(view):
+    #     (...)
+    #     return '/url/to/link/to'
+    #
+    # extra_context_links = [
+    #     ([], 'The Title', get_my_link_url, 'map'),
+    # ]
+    #
+    # The first element is a list of required var names to show this button
+    # The fourth element it the name of the icon (icon_<name>.png)
+    #
+    # The url render function needs to return the target URL as string but can
+    # also return None to disable this link for the current view
+    for needed_vars, title, url_func, icon in extra_context_links:
+        miss = [ v for v in needed_vars if v not in active_filter_vars ]
+        if miss:
+            break
+        url = url_func(view)
+        if url is not None:
+            html.context_button(title, url, icon)
 
     if not first:
         html.end_context_buttons()

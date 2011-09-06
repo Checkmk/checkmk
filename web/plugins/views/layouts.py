@@ -397,10 +397,12 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
 
         if show_checkboxes:
             html.write("<td class=checkbox>")
-            html.write("<input type=checkbox name=\"172377356\" title=lars hirnibaldi=77 width=88>")
+            # value contains the number of columns of this datarow
+            html.write("<input type=checkbox name=\"%s\" value=%d />" %
+                                       (row_id(view, row), num_painters - 1))
             html.write("</td>")
         for p in painters:
-            paint(p, row, row_id(view, row))
+            paint(p, row)
         column += 1
         index += 1
 

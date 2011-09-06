@@ -2280,11 +2280,10 @@ def row_id(view, row):
         key += '~%s' % row[col]
     return str(hash(key))
 
-def paint(p, row, rid = None):
+def paint(p, row):
     tdclass, content = prepare_paint(p, row)
-    row_classes = rid is not None and 'dr_%s dr ' % rid or ''
-    if tdclass or row_classes:
-        html.write("<td class=\"%s%s\">%s</td>\n" % (row_classes or '', tdclass or '', content))
+    if tdclass:
+        html.write("<td class=\"%s\">%s</td>\n" % (tdclass, content))
     else:
         html.write("<td>%s</td>" % content)
     return content != ""

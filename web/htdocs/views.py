@@ -702,6 +702,9 @@ function toggle_section(nr, oImg) {
     html.write("<tr><td>%s:</td><td>" % _('Sortable by user'))
     html.checkbox('user_sortable', True)
     html.write("</td><tr>\n")
+    html.write("<tr><td>%s:</td><td>" % _('Show check boxes'))
+    html.checkbox('show_checkboxes', False)
+    html.write("</td><tr>\n")
     html.write("</table>\n")
     section_footer(sid)
 
@@ -805,6 +808,7 @@ def load_view_into_html_vars(view):
     html.set_var("mustsearch",       view["mustsearch"] and "on" or "")
     html.set_var("hidebutton",       view.get("hidebutton",  False) and "on" or "")
     html.set_var("user_sortable",    view.get("user_sortable", True) and "on" or "")
+    html.set_var("show_checkboxes",  view.get("show_checkboxes", False) and "on" or "")
 
     # [3] Filters
     for name, filt in multisite_filters.items():
@@ -905,17 +909,19 @@ def create_view():
     except:
         browser_reload = 0
 
-    play_sounds    = html.var("play_sounds", "") != ""
-    public         = html.var("public", "") != "" and config.may("publish_views")
-    hidden         = html.var("hidden", "") != ""
-    mustsearch     = html.var("mustsearch", "") != ""
-    hidebutton     = html.var("hidebutton", "") != ""
-    column_headers = html.var("column_headers")
-    user_sortable  = html.var("user_sortable")
+    play_sounds      = html.var("play_sounds", "") != ""
+    public           = html.var("public", "") != "" and config.may("publish_views")
+    hidden           = html.var("hidden", "") != ""
+    mustsearch       = html.var("mustsearch", "") != ""
+    hidebutton       = html.var("hidebutton", "") != ""
+    column_headers   = html.var("column_headers")
+    user_sortable    = html.var("user_sortable")
+    show_checkboxes  = html.var("show_checkboxes")
+
     show_filternames = []
     hide_filternames = []
     hard_filternames = []
-    hard_filtervars = []
+    hard_filtervars  = []
 
     for fname, filt in multisite_filters.items():
         usage = html.var("filter_%s" % fname)
@@ -1001,6 +1007,7 @@ def create_view():
         "play_sounds"     : play_sounds,
         "column_headers"  : column_headers,
         "user_sortable"   : user_sortable,
+        "show_checkboxes" : show_checkboxes,
         "show_filters"    : show_filternames,
         "hide_filters"    : hide_filternames,
         "hard_filters"    : hard_filternames,
@@ -1126,8 +1133,9 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     # User can override the layout settings via HTML variables (buttons)
     # which are safed persistently. This is known as "view options"
     vo = view_options(view["name"])
-    num_columns    = vo.get("num_columns",   view.get("num_columns",    1))
-    browser_reload = vo.get("refresh",       view.get("browser_reload", None))
+    num_columns     = vo.get("num_columns",   view.get("num_columns",    1))
+    browser_reload  = vo.get("refresh",       view.get("browser_reload", None))
+    show_checkboxes = vo.get("show_checkboxes", view.get("show_checkboxes", False))
 
     if browser_reload and 'R' in display_options:
         html.set_browser_reload(browser_reload)
@@ -1280,12 +1288,20 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         # Buttons for view options
         if 'O' in display_options:
             # Link for selecting/deselecting all rows
-            if 'C' in display_options and len(rows) > 0 and config.may("act") and not html.do_actions():
-                html.write('<td class="left w30"><a href="javascript:toggle_all_rows()" '
-                           'title="%s">%s</a></td>\n' % (_('Toggle all row selections'), _('x')))
+            if 'C' in display_options and config.may("act") and not html.do_actions():
+                if show_checkboxes:
+                    addclass = " selected" 
+                    title = _("Hide check boxes")
+                    uri = html.makeuri([("show_checkboxes", "")])
+                else:
+                    addclass = ""
+                    title = _("Show check boxes for selecting specific items for the commands")
+                    uri = html.makeuri([("show_checkboxes", "on")])
+                html.write('<td class="left w30%s"><a href="%s" title="%s">%s</a></td>\n' %
+                           (addclass, uri, title, _('X')))
                 html.write("<td class=minigap></td>\n")
 
-            if config.user_may(config.user, "view_option_columns"):
+            if config.may("view_option_columns"):
                 for col in config.view_option_columns:
                     uri = html.makeuri([("num_columns", col)])
                     if col == num_columns:
@@ -1296,7 +1312,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
                                           (addclass, uri, _('%d column layout') % col, col))
                     html.write("<td class=minigap></td>\n")
 
-            if 'R' in display_options and config.user_may(config.user, "view_option_refresh"):
+            if 'R' in display_options and config.may("view_option_refresh"):
                 for ref in config.view_option_refreshes:
                     uri = html.makeuri([("refresh", ref)])
                     if ref == browser_reload or (not ref and not browser_reload):
@@ -1369,7 +1385,6 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     if not has_done_actions:
         # Limit exceeded? Show warning
         html.check_limit(rows, get_limit())
-        show_checkboxes = html.var("show_checkboxes", "") != ""
         layout["render"](rows, view, group_painters, painters, num_columns, show_checkboxes)
 
         # Play alarm sounds, if critical events have been displayed
@@ -1408,7 +1423,8 @@ def view_options(viewname):
     v = vo.get(viewname, {}) 
     must_save = False
 
-    if config.user_may(config.user, "view_option_refresh"):
+    # Refresh rate
+    if config.may("view_option_refresh"):
         if html.has_var("refresh"):
             try:
                 v["refresh"] = int(html.var("refresh"))
@@ -1418,7 +1434,8 @@ def view_options(viewname):
     elif "refresh" in v:
         del v["refresh"]
 
-    if config.user_may(config.user, "view_option_columns"):
+    # Number of columns in layout
+    if config.may("view_option_columns"):
         if html.has_var("num_columns"):
             try:
                 v["num_columns"] = max(1, int(html.var("num_columns")))
@@ -1428,7 +1445,15 @@ def view_options(viewname):
     elif "num_columns" in v:
         del v["num_columns"]
 
-    if config.user_may(config.user, "painter_options"):
+    # Show checkboxes for commands
+    if config.may("act"):
+        if html.has_var("show_checkboxes"):
+            v["show_checkboxes"] = html.var("show_checkboxes", "") != ""
+            must_save = True
+    elif "show_checkboxes" in v:
+        del v["show_checkboxes"]
+
+    if config.may("painter_options"):
         for on, opt in multisite_painter_options.items():
             if html.has_var(on):
                 must_save = True

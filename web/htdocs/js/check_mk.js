@@ -1061,6 +1061,15 @@ function remove_selected_rows(row_num) {
     }
 }
 
+function toggle_box(e, elem) {
+    var row_pos = g_selected_rows.indexOf(elem.name);
+    if(row_pos > -1) {
+        g_selected_rows.splice(row_pos, 1);
+    } else {
+        g_selected_rows.push(elem.name);
+    }
+}
+
 function toggle_row(e, elem) {
     if(!e)
         e = window.event;
@@ -1089,12 +1098,10 @@ function toggle_row(e, elem) {
         // Yes: Unselect it
         checkbox.checked = false;
         g_selected_rows.splice(row_pos, 1);
-        alert('x');
     } else {
         // No:  Select it
         checkbox.checked = true;
         g_selected_rows.push(checkbox.name);
-        alert('x');
     }
 
     if(e.stopPropagation)
@@ -1186,8 +1193,8 @@ function table_init_rowselect(oTable) {
         else
             childs[i].checked = false;
 
-        childs[i].onclick = function(e) {
-            return toggle_row(e, this);
+        childs[i].onchange = function(e) {
+            toggle_box(e, this);
         };
 
         iter_cells(childs[i], function(elem) {

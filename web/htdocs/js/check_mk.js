@@ -862,7 +862,71 @@ function toggle_assumption(oImg, site, host, service)
 // Holds the row numbers of all selected rows
 var g_selected_rows = [];
 
-function lightenColor(color, rD, gD, bD) {
+// 
+function rgbToHsv(r, g, b) {  
+    var r = (r / 255),
+        g = (g / 255),
+        b = (b / 255);
+
+    var min = Math.min(Math.min(r, g), b),
+        max = Math.max(Math.max(r, g), b),
+        delta = max - min;
+
+    var value = max, saturation, hue;
+
+    // Hue
+    if (max == min) {
+        hue = 0;  
+    } else if (max == r) {
+        hue = (60 * ((g-b) / (max-min))) % 360;
+    } else if (max == g) {
+        hue = 60 * ((b-r) / (max-min)) + 120;
+    } else if (max == b) {
+        hue = 60 * ((r-g) / (max-min)) + 240;
+    }
+
+    if (hue < 0)
+        hue += 360;
+
+    // Saturation
+    if (max == 0) {
+        saturation = 0;
+    } else {
+        saturation = 1 - (min/max);
+    }
+    return [Math.round(hue), Math.round(saturation * 100), Math.round(value * 100)];
+}
+
+function hsvToRgb(h,s,v) {
+
+    var s = s / 100,
+        v = v / 100;
+
+    var hi = Math.floor((h/60) % 6);
+    var f = (h / 60) - hi;
+    var p = v * (1 - s);
+    var q = v * (1 - f * s);
+    var t = v * (1 - (1 - f) * s);
+
+    var rgb = [];
+
+    switch (hi) {
+        case 0: rgb = [v,t,p];break;
+        case 1: rgb = [q,v,p];break;
+        case 2: rgb = [p,v,t];break;
+        case 3: rgb = [p,q,v];break;
+        case 4: rgb = [t,p,v];break;
+        case 5: rgb = [v,p,q];break;
+    }
+
+    var r = Math.min(255, Math.round(rgb[0]*256)),
+        g = Math.min(255, Math.round(rgb[1]*256)),
+        b = Math.min(255, Math.round(rgb[2]*256));
+
+    return [r,g,b];  
+}
+
+function lightenColor(color, val) {
     if(color == 'transparent' || color == 'rgba(0, 0, 0, 0)')
         return color;
 
@@ -884,16 +948,13 @@ function lightenColor(color, rD, gD, bD) {
         return color;
     }
 
-    var brightness = (r*299 + g*587 + b*114) / 1000;
-    if (brightness > 125) {
-        rD *= -1;
-        gD *= -1;
-        bD *= -1;
-    }
+    var hsv = rgbToHsv(r, g, b);
+    hsv[2] -= val;
+    var rgb = hsvToRgb(hsv[0], hsv[1], hsv[2]);
 
-    r += rD;  if (r > 255) r = 255;  if (r < 0) r = 0;
-    g += gD;  if (g > 255) g = 255;  if (g < 0) g = 0;
-    b += bD;  if (b > 255) b = 255;  if (b < 0) b = 0;
+    r = rgb[0];
+    g = rgb[1];
+    b = rgb[2];
 
     code  = r < 16 ? "0"+r.toString(16) : r.toString(16);
     code += g < 16 ? "0"+g.toString(16) : g.toString(16);
@@ -924,50 +985,67 @@ function real_style(obj, attr) {
     return st;
 }
 
-function highlight_row(row_num, on, ty) {
-    var elems = document.getElementsByClassName('dr_' + row_num);
-    for(var i = 0; i < elems.length; i++)
-        highlight_elem(elems[i], on, ty);
+function find_checkbox(elem) {
+    // Find the checkbox of this element to gather the number of cells 
+    // to highlight after the checkbox
+    // 1. Go up to the row
+    // 2. search backwards for the next checkbox
+    // 3. loop the number of columns to highlight
+    var childs = elem.parentNode.childNodes;
+    var found = false;
+    var checkbox = null;
+    for(var a = childs.length - 1; a >= 0 && checkbox === null; a--) {
+        if(found === false) {
+            if(childs[a] == elem) {
+                found = true;
+            }
+            continue;
+        }
+        
+        // Found the clicked column, now walking the cells backward from the
+        // current cell searching for the next checkbox
+        var elems = childs[a].childNodes;
+        for(var x = 0; x < elems.length; x++) {
+            if(elems[x].tagName === 'INPUT' && elems[x].type == 'checkbox') {
+                checkbox = elems[x];
+                break;
+            }
+        }
+        elems = null;
+    }
+    return checkbox;
 }
 
-function highlight_elem(elem, on, ty) {
+function highlight_row(elem, on) {
+    var checkbox = find_checkbox(elem);
+    if(checkbox !== null) {
+        iter_cells(checkbox, function(elem) {
+            highlight_elem(elem, on);
+        });
+        checkbox = null;
+    }
+}
+
+function highlight_elem(elem, on) {
     // Find all elements below "elem" with a defined background-color and change it
     var bg_color = real_style(elem, 'background-color');
     if(on) {
-        if(ty == 'hover' && typeof(elem['click_orig_bg']) === 'undefined') {
-            elem[ty + '_orig_bg'] = bg_color;
-            var x = lightenColor(elem['hover_orig_bg'], 40, 40, -20);
-            elem.style.backgroundColor = lightenColor(elem['hover_orig_bg'], 40, 40, -20);
-        } else if(ty == 'click') {
-            elem[ty + '_orig_bg'] = bg_color;
-            if(typeof(elem['hover_orig_bg']) !== 'undefined')
-                var calc_bg_color = elem['hover_orig_bg'];
-            else
-                var calc_bg_color = bg_color;
-            var x = lightenColor(calc_bg_color, 40, 40, -40);
-            elem.style.backgroundColor = lightenColor(calc_bg_color, 40, 40, -40);
-        }
+        elem['hover_orig_bg'] = bg_color;
+        elem.style.backgroundColor = lightenColor(elem['hover_orig_bg'], -20);
     } else {
-        // Restore selection color when hovering over selected objects
-        if(ty == 'hover' && typeof(elem['click_orig_bg']) !== 'undefined') {
-        } else if(ty == 'hover') {
-            elem.style.backgroundColor = elem[ty + '_orig_bg'];
-            elem[ty + '_orig_bg'] = undefined;
-        } else {
-            elem.style.backgroundColor = elem[ty + '_orig_bg'];
-            elem[ty + '_orig_bg'] = undefined;
-        }
+        elem.style.backgroundColor = elem['hover_orig_bg'];
+        elem['hover_orig_bg'] = undefined;
     }
 
     var childs = elem.childNodes;
     for(var i = 0; i < childs.length; i++)
         if(childs[i].nodeName !== '#text')
-            highlight_elem(childs[i], on, ty);
+            highlight_elem(childs[i], on);
 }
 
 function select_all_rows(elems) {
     for(var i = 0; i < elems.length; i++) {
-        highlight_elem(elems[i], true, 'click');
+        highlight_elem(elems[i], true);
         if(g_selected_rows.indexOf(elems[i].row_num) === -1)
             g_selected_rows.push(elems[i].row_num);
     }
@@ -976,14 +1054,14 @@ function select_all_rows(elems) {
 function remove_selected_rows(row_num) {
     for(var i = g_selected_rows.length - 1; i >= 0; i--) {
         if(g_selected_rows[i] !== row_num) {
-            highlight_row(g_selected_rows[i], false, 'click');
-            highlight_row(g_selected_rows[i], false, 'hover');
+            highlight_row(g_selected_rows[i], false);
+            highlight_row(g_selected_rows[i], false);
             g_selected_rows.splice(i, 1);
         }
     }
 }
 
-function toggle_row(e, row) {
+function toggle_row(e, elem) {
     if(!e)
         e = window.event;
 
@@ -992,26 +1070,29 @@ function toggle_row(e, row) {
     if(target.tagName != 'TD')
         return true;
 
-    var row_num = row.row_num;
+    // Find the checkbox for this element
+    var checkbox = find_checkbox(elem);
+    if(checkbox === null)
+        return;
 
     // When CTRL is not pressed, remove the selection
-    if(!e.ctrlKey)
-        remove_selected_rows(row_num);
+    //if(!e.ctrlKey)
+    //    remove_selected_rows(row_num);
 
     // Is SHIFT pressed?
     // Yes:
     //   Select all from the last selection
 
     // Is the current row already selected?
-    var row_pos = g_selected_rows.indexOf(row_num);
+    var row_pos = g_selected_rows.indexOf(checkbox.name);
     if(row_pos > -1) {
         // Yes: Unselect it
-        highlight_row(row_num, false, 'click');
+        checkbox.checked = false;
         g_selected_rows.splice(row_pos, 1);
     } else {
         // No:  Select it
-        highlight_row(row_num, true, 'click');
-        g_selected_rows.push(row_num);
+        checkbox.checked = true;
+        g_selected_rows.push(checkbox.name);
     }
 
     if(e.stopPropagation)
@@ -1075,40 +1156,43 @@ function get_row_num(elem) {
             return classes[i].split('_', 2)[1];
 }
 
-function table_init_rowselect(oTable) {
-    // Get all "data row" elements
-    var childs = document.getElementsByClassName('dr');
+function iter_cells(checkbox, func) {
+    var num_columns = parseInt(checkbox.value);
+    // Now loop the next N cells to call the func for each cell
+    // 1. Get row element
+    // 2. Find the current td
+    // 3. find the next N tds
+    var row_childs = checkbox.parentNode.parentNode.childNodes;
+    for(var c = 0; c < row_childs.length && num_columns > 0; c++) {
+        if(row_childs[c].tagName == 'TD') {
+            func(row_childs[c]);
+            num_columns--;
+        }
+    }
+}
 
+function table_init_rowselect(oTable) {
+    // Get and loop all checkbox elements
+    var childs = oTable.getElementsByTagName('input');
     for(var i = 0; i < childs.length; i++) {
-        if(childs[i].tagName != 'TD'
-           && childs[i].tagName != 'TR'
-           && childs[i].tagName != 'DIV')
+        if(childs[i].type != 'checkbox')
             continue;
 
-        var elem = childs[i];
-        var row_num = get_row_num(elem);
-        elem.row_num = row_num;
-
-        // Handle the initial selections
-        if(g_selected_rows.indexOf(row_num) > -1) {
-            highlight_elem(elem, true, 'hover');
-            highlight_elem(elem, true, 'click');
-        }
-
-        elem.onmouseover = function() {
-            highlight_row(this.row_num, true, 'hover');
-        };
-        elem.onmouseout = function() {
-            highlight_row(this.row_num, false, 'hover');
-        };
-        elem.onclick = function(e) {
-            toggle_row(e, this);
-        }
-        // Disable selections in IE and then in mozilla
-        elem.onselectstart = function(e) {disable_selection(e);}
-        elem.onmousedown = function(e) {disable_selection(e);}
-        row_num = null;
-        elem = null;
+        iter_cells(childs[i], function(elem) {
+            elem.onmouseover = function() {
+                highlight_row(this, true);
+            };
+            elem.onmouseout = function() {
+                highlight_row(this, false);
+            };
+            elem.onclick = function(e) {
+                toggle_row(e, this);
+            };
+            // Disable selections in IE and then in mozilla
+            elem.onselectstart = function(e) {disable_selection(e);}
+            elem.onmousedown = function(e) {disable_selection(e);}
+            elem = null;
+        });
     }
     childs = null;
 }

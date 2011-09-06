@@ -9,6 +9,7 @@
     * FIX: fix error on comment page caused by missing sorter
     * FIX: endless javascript when fetching pnp graphs on host/service detail pages
     * FIX: Not showing the action form in "try" mode of the view editor
+    * FIX: Preventing up-then-over effect while loading the dashboard in firefox
     * Added missing i18n strings in command form and list of views
     * Views are not reloaded completely anymore. The data tables are reloaded
       on their own.

@@ -42,10 +42,11 @@ function resize_dashlets(id, code)
         oDash = document.getElementById("dashlet_" + dashlet[0]);
         if(oDash) {
             oDash.style.position = 'absolute';
-            oDash.style.left   = dashlet[1] + "px";
-            oDash.style.top    = dashlet[2] + "px";
-            oDash.style.width  = dashlet[3] + "px";
-            oDash.style.height = dashlet[4] + "px";
+            oDash.style.display  = 'block';
+            oDash.style.left     = dashlet[1] + "px";
+            oDash.style.top      = dashlet[2] + "px";
+            oDash.style.width    = dashlet[3] + "px";
+            oDash.style.height   = dashlet[4] + "px";
         }
 
         // resize shadow images

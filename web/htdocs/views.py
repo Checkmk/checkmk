@@ -1195,6 +1195,9 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     # Add key columns, needed for executing commands
     columns += datasource["keys"]
 
+    # Add idkey columns, needed for identifying the row
+    columns += datasource["idkeys"]
+
     # Make column list unique and remove (implicit) site column
     colset = set(columns)
     if "site" in colset:

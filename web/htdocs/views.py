@@ -1359,6 +1359,9 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
                 # Create URI with all actions variables removed
                 backurl = html.makeuri([])
                 has_done_actions = do_actions(view, datasource["infos"][0], rows, backurl)
+                if type(has_done_actions) == list:
+                    rows = has_done_actions
+                    has_done_actions = False
                 if 'C' in display_options:
                     html.write("</td></tr>")
             except MKUserError, e:
@@ -2170,6 +2173,11 @@ def nagios_host_service_action_command(what, dataset):
     nagios_command = ("[%d] " % int(time.time())) + command + "\n"
     return title, [nagios_command]
 
+
+# Returns:
+# True -> Actions have been done
+# False -> No actions done because now rows selected
+# [...] new rows -> Rows actions (shall/have) be performed on
 def do_actions(view, what, rows, backurl):
     if not config.may("act"):
         html.show_error(_("You are not allowed to perform actions. If you think this is an error, "
@@ -2194,7 +2202,7 @@ def do_actions(view, what, rows, backurl):
     title = nagios_action_command(what, action_rows[0])[0] # just get the title
     if not html.confirm(_("Do you really want to %s the following %d %ss?") %
                                                (title, len(action_rows), what)):
-        return False # no actions done
+        return action_rows # no actions done, but show only selected rows
 
     count = 0
     for row in action_rows:

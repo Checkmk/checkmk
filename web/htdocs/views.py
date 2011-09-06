@@ -1847,7 +1847,7 @@ def show_action_form(is_open, datasource):
     elif what == "comment":
         show_comment_actions()
     else:
-        html.write("<tr><td>"+_('No commands possible for %ss')+"</td></tr>" % what)
+        html.write("<tr><td>"+ _('No commands possible for %ss') % what +"</td></tr>")
 
     html.write("</table></div>\n")
     html.end_form()

@@ -33,7 +33,8 @@ def init_rowselect():
 def render_checkbox(view, row, num_tds):
     # value contains the number of columns of this datarow. This is
     # needed for hiliting the correct number of TDs
-    html.write("<input type=checkbox name=\"%s\" value=%d />" % (row_id(view, row), num_tds))
+    html.write("<input type=checkbox name=\"%s\" value=%d />" %
+                                                  (row_id(view, row), num_tds + 1))
 
 def render_checkbox_td(view, row, num_tds):
     html.write("<td class=checkbox>")

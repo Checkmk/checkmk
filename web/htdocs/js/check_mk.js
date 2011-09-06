@@ -1089,10 +1089,12 @@ function toggle_row(e, elem) {
         // Yes: Unselect it
         checkbox.checked = false;
         g_selected_rows.splice(row_pos, 1);
+        alert('x');
     } else {
         // No:  Select it
         checkbox.checked = true;
         g_selected_rows.push(checkbox.name);
+        alert('x');
     }
 
     if(e.stopPropagation)
@@ -1178,19 +1180,33 @@ function table_init_rowselect(oTable) {
         if(childs[i].type != 'checkbox')
             continue;
 
+        // Perform initial selections
+        if(g_selected_rows.indexOf(childs[i].name) > -1)
+            childs[i].checked = true;
+        else
+            childs[i].checked = false;
+
+        childs[i].onclick = function(e) {
+            return toggle_row(e, this);
+        };
+
         iter_cells(childs[i], function(elem) {
             elem.onmouseover = function() {
-                highlight_row(this, true);
+                return highlight_row(this, true);
             };
             elem.onmouseout = function() {
-                highlight_row(this, false);
+                return highlight_row(this, false);
             };
             elem.onclick = function(e) {
-                toggle_row(e, this);
+                return toggle_row(e, this);
             };
             // Disable selections in IE and then in mozilla
-            elem.onselectstart = function(e) {disable_selection(e);}
-            elem.onmousedown = function(e) {disable_selection(e);}
+            elem.onselectstart = function(e) {
+                return disable_selection(e);
+            };
+            elem.onmousedown = function(e) {
+                return disable_selection(e);
+            };
             elem = null;
         });
     }

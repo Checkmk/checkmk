@@ -39,6 +39,7 @@ multisite_datasources["bi_aggregations"] = {
     "table"       : bi.table, 
     "infos"       : [ "aggr" ],
     "keys"        : [],
+    "idkeys"      : [ 'aggr_name' ],
 }
 
 multisite_datasources["bi_host_aggregations"] = {
@@ -46,6 +47,7 @@ multisite_datasources["bi_host_aggregations"] = {
     "table"       : bi.host_table, 
     "infos"       : [ "host", "aggr" ],
     "keys"        : [],
+    "idkeys"      : [ 'aggr_name' ],
 }
 
 #     ____       _       _                

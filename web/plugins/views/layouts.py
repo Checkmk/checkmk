@@ -38,7 +38,7 @@ def init_rowselect():
 #   |____/|_|_| |_|\__, |_|\___|
 #                  |___/
 # -------------------------------------------------------------------------
-def render_single_dataset(rows, view, group_painters, painters, num_columns):
+def render_single_dataset(rows, view, group_painters, painters, num_columns, _ignore_show_checkboxes):
     for row in rows:
         register_events(row) # needed for playing sounds
 
@@ -78,7 +78,7 @@ multisite_layouts["dataset"] = {
 #   |____/ \___/_/\_\___|\__,_|
 #
 # -------------------------------------------------------------------------
-def render_grouped_boxes(rows, view, group_painters, painters, num_columns):
+def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show_checkboxes):
     # N columns. Each should contain approx the same number of entries
     groups = []
     last_group = None
@@ -199,7 +199,7 @@ multisite_layouts["boxed"] = {
 #     |_| |_|_|\___|\__,_|
 #
 # -------------------------------------------------------------------------
-def render_tiled(rows, view, group_painters, painters, _ignore_num_columns):
+def render_tiled(rows, view, group_painters, painters, _ignore_num_columns, _ignore_show_checkboxes):
     html.write("<table class=\"data tiled\">\n")
 
     last_group = None
@@ -284,17 +284,21 @@ multisite_layouts["tiled"] = {
 #     |_|\__,_|_.__/|_|\___|
 #
 # ------------------------------------------------------------------------
-def render_grouped_list(rows, view, group_painters, painters, num_columns):
+def render_grouped_list(rows, view, group_painters, painters, num_columns, show_checkboxes):
     html.write("<table class=data>\n")
     last_group = None
     trclass = None
     column = 1
     group_open = False
     num_painters = len(painters)
+    if show_checkboxes:
+        num_painters += 1
 
     def show_header_line():
         html.write("<tr>")
         for n in range(1, num_columns + 1):
+            if show_checkboxes:
+                html.write("<th></th>")
             for p in painters:
                 paint_header(view, p)
         html.write("</tr>\n")
@@ -337,7 +341,8 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns):
                 # paint group header
                 group_open = True
                 html.write("<tr class=groupheader>")
-                html.write("<td class=groupheader colspan=%d><table class=groupheader><tr>" % (num_painters * (num_columns + 2) + (num_columns - 1)))
+                html.write("<td class=groupheader colspan=%d><table class=groupheader><tr>" % 
+                     (num_painters * (num_columns + 2) + (num_columns - 1)))
                 painted = False
                 for p in group_painters:
                     if painted:
@@ -390,6 +395,10 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns):
                 trclass = "odd"
             html.write('<tr class="data %s%d">' % (trclass, state))
 
+        if show_checkboxes:
+            html.write("<td class=checkbox>")
+            html.write("<input type=checkbox name=\"172377356\" title=lars hirnibaldi=77 width=88>")
+            html.write("</td>")
         for p in painters:
             paint(p, row, row_id(view, row))
         column += 1

@@ -1369,7 +1369,8 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     if not has_done_actions:
         # Limit exceeded? Show warning
         html.check_limit(rows, get_limit())
-        layout["render"](rows, view, group_painters, painters, num_columns)
+        show_checkboxes = html.var("show_checkboxes", "") != ""
+        layout["render"](rows, view, group_painters, painters, num_columns, show_checkboxes)
 
         # Play alarm sounds, if critical events have been displayed
         if 'S' in display_options and view.get("play_sounds"):
@@ -1550,7 +1551,7 @@ def show_context_links(thisview, active_filters):
     active_filter_vars = set([])
     for filt in active_filters:
         for var in filt.htmlvars:
-            if html.has_var(var) and var not in active_filter_vars:
+            if html.has_var(var):
                 active_filter_vars.add(var)
 
     # sort views after text of possible button (sort buttons after their text)
@@ -1584,7 +1585,7 @@ def show_context_links(thisview, active_filters):
             continue
 
         # add context link to this view
-        if len(used_contextvars) > 0:
+        if len(used_contextvars):
             if first:
                 first = False
                 html.begin_context_buttons()

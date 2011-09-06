@@ -109,11 +109,11 @@ def save_user_config(user_config):
         config.save_user_file("sidebar", user_config)
 
 def sidebar_head():
-    html.write('<a title="%s" target="main" href="%s">'
-               '<div id="side_header">'
-               '</div></a>\n' % (_("Go to main overview"), config.start_url))
-    html.write('<a target="main" href="%s">' % config.start_url)
-    html.write('<div id="side_version">%s</div></a>\n' % defaults.check_mk_version)
+    html.write('<div id="side_header">'
+               '<a title="%s" target="main" href="%s">'
+               '<div id="side_version">%s</div>'
+               '</a>'
+               '</div>\n' % (_("Go to main overview"), config.start_url, defaults.check_mk_version))
 
 def sidebar_foot():
     html.write('<div id="side_footer">')

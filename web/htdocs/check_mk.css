@@ -191,10 +191,11 @@ body.side {
     background-image: url("images/sidebar_top.png");
 }
 
-#side_header a.logo {
+#side_header a {
     display: block;
+    width: 100%;
     height: 55px;
-    width: 270px;
+    text-decoration: none;
 }
 
 #side_version {
@@ -205,16 +206,6 @@ body.side {
     color: #fff;
     text-align: right;
     width: 200px;
-}
-
-#side_version a {
-    text-decoration: none;
-    color: #e8e8e8;
-}
-
-#side_version a:hover {
-    text-decoration: underline;
-    color: #fff;
 }
 
 /* Scrolling part with snapins */

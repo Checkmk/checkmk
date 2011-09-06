@@ -77,7 +77,8 @@ def render_single_dataset(rows, view, group_painters, painters, num_columns, _ig
 multisite_layouts["dataset"] = {
     "title"  : _("Single dataset"),
     "render" : render_single_dataset,
-    "group"  : False
+    "group"  : False,
+    "checkboxes" : False,
 }
 
 # -------------------------------------------------------------------------
@@ -202,7 +203,8 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
 multisite_layouts["boxed"] = {
     "title"  : _("Balanced boxes"),
     "render" : render_grouped_boxes,
-    "group"  : True
+    "group"  : True,
+    "checkboxes" : True,
 }
 
 # -------------------------------------------------------------------------
@@ -292,7 +294,9 @@ multisite_layouts["tiled"] = {
     "title"  : _("Tiles"),
     "render" : render_tiled,
     "group"  : True,
+    "checkboxes" : True,
 }
+
 # -------------------------------------------------------------------------
 #    _____     _     _
 #   |_   _|_ _| |__ | | ___
@@ -434,4 +438,5 @@ multisite_layouts["table"] = {
     "title"  : _("Table"),
     "render" : render_grouped_list,
     "group"  : True,
+    "checkboxes" : True,
 }

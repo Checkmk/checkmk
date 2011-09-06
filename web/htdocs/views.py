@@ -1288,7 +1288,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         # Buttons for view options
         if 'O' in display_options:
             # Link for selecting/deselecting all rows
-            if 'C' in display_options and config.may("act") and not html.do_actions():
+            if 'C' in display_options and config.may("act") and not html.do_actions() and layout["checkboxes"]:
                 if show_checkboxes:
                     addclass = " selected" 
                     title = _("Hide check boxes")

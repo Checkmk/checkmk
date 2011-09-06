@@ -1260,7 +1260,8 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     if show_buttons and 'B' in display_options:
         show_context_links(view, hide_filters)
 
-    need_navi = show_buttons and (
+    need_navi = show_buttons and \
+                not html.do_actions() and (
         'D' in display_options or
         'F' in display_options or
         'C' in display_options or
@@ -1269,26 +1270,26 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     if need_navi:
         html.write("<table class=navi><tr>\n")
 
-        # Filter-button
-        if 'F' in display_options and len(show_filters) > 0 and not html.do_actions():
-            filter_isopen = html.var("search", "") == "" and view["mustsearch"]
-            toggle_button("table_filter", filter_isopen, _("Filter"), ["filter"])
-            html.write("<td class=minigap></td>\n")
-
-        # Command-button
-        if 'C' in display_options and len(rows) > 0 and config.may("act") and not html.do_actions():
-            toggle_button("table_actions", False, _("Commands"))
-            html.write("<td class=minigap></td>\n")
-
         # Painter-Options
         if 'D' in display_options and len(painter_options) > 0 and config.may("painter_options"):
             toggle_button("painter_options", False, _("Display"))
             html.write("<td class=minigap></td>\n")
 
+        # Filter-button
+        if 'F' in display_options and len(show_filters) > 0:
+            filter_isopen = html.var("search", "") == "" and view["mustsearch"]
+            toggle_button("table_filter", filter_isopen, _("Filter"), ["filter"])
+            html.write("<td class=minigap></td>\n")
+
+        # Command-button, open command form if checkboxes are currently shown
+        if 'C' in display_options and len(rows) > 0 and config.may("act"):
+            toggle_button("table_actions", show_checkboxes, _("Commands"))
+            html.write("<td class=minigap></td>\n")
+
         # Buttons for view options
         if 'O' in display_options:
             # Link for selecting/deselecting all rows
-            if 'C' in display_options and config.may("act") and not html.do_actions():
+            if 'C' in display_options and config.may("act") and layout["checkboxes"]:
                 if show_checkboxes:
                     addclass = " selected" 
                     title = _("Hide check boxes")
@@ -1346,7 +1347,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         html.write("</table><table class=navi><tr>\n")
 
         # Filter form
-        if 'F' in display_options and len(show_filters) > 0 and not html.do_actions():
+        if 'F' in display_options and len(show_filters) > 0:
             show_filter_form(filter_isopen, show_filters)
 
     # Actions
@@ -1368,8 +1369,8 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
                 if 'C' in display_options:
                     show_action_form(True, datasource)
 
-        elif 'C' in display_options:
-            show_action_form(False, datasource)
+        elif 'C' in display_options: # (display open, if checkboxes are currently shown)
+            show_action_form(show_checkboxes, datasource)
 
     if need_navi:
         if 'O' in display_options and len(painter_options) > 0 and config.may("painter_options"):
@@ -2176,7 +2177,7 @@ def do_actions(view, what, rows, backurl):
         return False # no actions done
 
     # Handle optional row filter based on row selections
-    if html.var('selected_rows', '') != '':
+    if html.has_var('selected_rows'):
         selected_rows = html.var('selected_rows')
         action_rows = []
         for row in rows:

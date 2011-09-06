@@ -30,6 +30,16 @@ def init_rowselect():
         return
     html.init_rowselect()
 
+def render_checkbox(view, row, num_tds):
+    # value contains the number of columns of this datarow. This is
+    # needed for hiliting the correct number of TDs
+    html.write("<input type=checkbox name=\"%s\" value=%d />" % (row_id(view, row), num_tds))
+
+def render_checkbox_td(view, row, num_tds):
+    html.write("<td class=checkbox>")
+    render_checkbox(view, row, num_tds)
+    html.write("</td>")
+
 # -------------------------------------------------------------------------
 #    ____  _             _
 #   / ___|(_)_ __   __ _| | ___
@@ -67,7 +77,8 @@ def render_single_dataset(rows, view, group_painters, painters, num_columns, _ig
 multisite_layouts["dataset"] = {
     "title"  : _("Single dataset"),
     "render" : render_single_dataset,
-    "group"  : False
+    "group"  : False,
+    "checkboxes" : False,
 }
 
 # -------------------------------------------------------------------------
@@ -142,6 +153,8 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
         # paint table headers, if configured
         if paintheader:
             html.write("<tr>")
+            if show_checkboxes:
+                html.write("<th></th>")
             for p in painters:
                 paint_header(view, p)
                 html.write("\n")
@@ -159,8 +172,10 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
                 state = row.get("host_state", 0)
                 if state > 0: state +=1 # 1 is critical for hosts
             html.write('<tr class="data %s%d">' % (trclass, state))
+            if show_checkboxes:
+                render_checkbox_td(view, row, len(painters))
             for p in painters:
-                paint(p, row, index)
+                paint(p, row)
             html.write("</tr>\n")
 
         html.write("</table></div>\n")
@@ -188,7 +203,8 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
 multisite_layouts["boxed"] = {
     "title"  : _("Balanced boxes"),
     "render" : render_grouped_boxes,
-    "group"  : True
+    "group"  : True,
+    "checkboxes" : True,
 }
 
 # -------------------------------------------------------------------------
@@ -199,7 +215,7 @@ multisite_layouts["boxed"] = {
 #     |_| |_|_|\___|\__,_|
 #
 # -------------------------------------------------------------------------
-def render_tiled(rows, view, group_painters, painters, _ignore_num_columns, _ignore_show_checkboxes):
+def render_tiled(rows, view, group_painters, painters, _ignore_num_columns, show_checkboxes):
     html.write("<table class=\"data tiled\">\n")
 
     last_group = None
@@ -255,8 +271,11 @@ def render_tiled(rows, view, group_painters, painters, _ignore_num_columns, _ign
 
         rendered = [ ("", prepare_paint(p, row)[1]) for p in painters ]
 
-        html.write("<tr><td class=\"tl %s\">%s</td><td class=\"tr %s\">%s</td></tr>\n" % \
-                    (rendered[1][0], rendered[1][1], rendered[2][0], rendered[2][1]))
+        html.write("<tr><td class=\"tl %s\">" % (rendered[1][0],))
+        if show_checkboxes:
+            render_checkbox(view, row, len(painters) - 1)
+        html.write("%s</td><td class=\"tr %s\">%s</td></tr>\n" % \
+                    (rendered[1][1], rendered[2][0], rendered[2][1]))
         html.write("<tr><td colspan=2 class=\"center %s\">%s</td></tr>\n" % \
                     (rendered[0][0], rendered[0][1]))
         for css, cont in rendered[5:]:
@@ -275,7 +294,9 @@ multisite_layouts["tiled"] = {
     "title"  : _("Tiles"),
     "render" : render_tiled,
     "group"  : True,
+    "checkboxes" : True,
 }
+
 # -------------------------------------------------------------------------
 #    _____     _     _
 #   |_   _|_ _| |__ | | ___
@@ -396,11 +417,7 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
             html.write('<tr class="data %s%d">' % (trclass, state))
 
         if show_checkboxes:
-            html.write("<td class=checkbox>")
-            # value contains the number of columns of this datarow
-            html.write("<input type=checkbox name=\"%s\" value=%d />" %
-                                       (row_id(view, row), num_painters))
-            html.write("</td>")
+            render_checkbox_td(view, row, num_painters - 1)
         for p in painters:
             paint(p, row)
         column += 1
@@ -421,4 +438,5 @@ multisite_layouts["table"] = {
     "title"  : _("Table"),
     "render" : render_grouped_list,
     "group"  : True,
+    "checkboxes" : True,
 }

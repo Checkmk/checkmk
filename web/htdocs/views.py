@@ -1270,20 +1270,20 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     if need_navi:
         html.write("<table class=navi><tr>\n")
 
+        # Painter-Options
+        if 'D' in display_options and len(painter_options) > 0 and config.may("painter_options"):
+            toggle_button("painter_options", False, _("Display"))
+            html.write("<td class=minigap></td>\n")
+
         # Filter-button
         if 'F' in display_options and len(show_filters) > 0:
             filter_isopen = html.var("search", "") == "" and view["mustsearch"]
             toggle_button("table_filter", filter_isopen, _("Filter"), ["filter"])
             html.write("<td class=minigap></td>\n")
 
-        # Command-button
+        # Command-button, open command form if checkboxes are currently shown
         if 'C' in display_options and len(rows) > 0 and config.may("act"):
-            toggle_button("table_actions", False, _("Commands"))
-            html.write("<td class=minigap></td>\n")
-
-        # Painter-Options
-        if 'D' in display_options and len(painter_options) > 0 and config.may("painter_options"):
-            toggle_button("painter_options", False, _("Display"))
+            toggle_button("table_actions", show_checkboxes, _("Commands"))
             html.write("<td class=minigap></td>\n")
 
         # Buttons for view options
@@ -1369,8 +1369,8 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
                 if 'C' in display_options:
                     show_action_form(True, datasource)
 
-        elif 'C' in display_options:
-            show_action_form(False, datasource)
+        elif 'C' in display_options: # (display open, if checkboxes are currently shown)
+            show_action_form(show_checkboxes, datasource)
 
     if need_navi:
         if 'O' in display_options and len(painter_options) > 0 and config.may("painter_options"):

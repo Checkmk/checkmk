@@ -66,7 +66,7 @@ def check_dell_powerconnect_cpu(item, params, info):
                    [('load', '%d%%' % cpu_load, params[0], params[1], 0, 100),
                     ('loadavg 60s', '%d%%' % int(oneminuteperc), params[0], params[1], 0, 100),
                     ('loadavg 5m', '%d%%' % int(fiveminutesperc), params[0], params[1], 0, 100),
-		   ])
+                   ])
 
     return (3, "UNKNOWN - Invalid  information in snmp data")
 

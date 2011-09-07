@@ -42,7 +42,7 @@
 # Status codes:
 # 1 => normal,
 # 2 => warning,
-# 3 => critical, 
+# 3 => critical,
 # 4 => shutdown,
 # 5 => notPresent,
 # 6 => notFunctioning
@@ -56,21 +56,21 @@ dell_powerconnect_fans_state_performance_map = { '1': 1, '2': 0, '3': 0, '4': 0,
 def inventory_dell_powerconnect_fans(checkname, info):
     inventory = []
     for device_id, name, state in info:
-	if dell_powerconnect_fans_status_map[state] != 'notPresent':
-	   inventory.append((name, None))
+        if dell_powerconnect_fans_status_map[state] != 'notPresent':
+            inventory.append((name, None))
     return inventory
 
 # The check for the states and details of each fan
 def check_dell_powerconnect_fans(item, _not_used, info):
     for device_id, name, state in info:
-	if name == item:
+        if name == item:
             dell_powerconnect_status = dell_powerconnect_fans_status_map[state]
             status = dell_powerconnect_fans_status2nagios_map[dell_powerconnect_status]
 
             return (status, '%s - Condition of FAN "%s" is %s' %
                             (nagios_state_names[status], name, dell_powerconnect_status), [
-		    ("state", dell_powerconnect_fans_state_performance_map[state], "", 0, 0, 1),
-	    ])
+                    ("state", dell_powerconnect_fans_state_performance_map[state], "", 0, 0, 1),
+            ])
     return (3, "UNKNOWN - item not found in snmp data")
 
 

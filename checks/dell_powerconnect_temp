@@ -37,7 +37,7 @@
 # Status codes:
 # 1 => ok,
 # 2 => unavailable,
-# 3 => nonoperational, 
+# 3 => nonoperational,
 
 # GENERAL MAPS:
 dell_powerconnect_temp_status_map = { '1': 'ok', '2': 'unavailable', '3': 'nonoperational' }
@@ -51,30 +51,30 @@ dell_powerconnect_temp_default_values = (35, 40)
 def inventory_dell_powerconnect_temp(checkname, info):
     inventory = []
     for temp, state in info:
-	# use default variable as parameter. Note the quotes!
-	inventory.append((None, "dell_powerconnect_temp_default_values"))
+        # use default variable as parameter. Note the quotes!
+        inventory.append((None, "dell_powerconnect_temp_default_values"))
     return inventory
 
 # Execute a check against each sensor.
 def check_dell_powerconnect_temp(item, params, info):
     warn, crit = params
     for temp, state in info:
-	    status = 0
-            dell_powerconnect_status = dell_powerconnect_temp_status_map[state]
+        status = 0
+        dell_powerconnect_status = dell_powerconnect_temp_status_map[state]
 
-	    if int(temp) >= crit:
-    		import pprint; pprint.pprint(temp)
-		status = 2
-	    elif int(temp) >= warn:
-		status = 1
-	    else:
-		status = dell_powerconnect_temp_status2nagios_map[dell_powerconnect_status]
-	
-	    return (status, '%s - The temperature sensor is currently (%s), and the current temperature is %sC' %
-                            (nagios_state_names[status], dell_powerconnect_temp_status_map[state], temp), [
-	           ("state", dell_powerconnect_temp_sensor_state_performance_map[state], "", 0, 0, 1),
-	           ("temperature", int(temp), warn, crit, 0, 200),
-	           ])
+        if int(temp) >= crit:
+            import pprint; pprint.pprint(temp)
+            status = 2
+        elif int(temp) >= warn:
+            status = 1
+        else:
+            status = dell_powerconnect_temp_status2nagios_map[dell_powerconnect_status]
+
+        return (status, '%s - The temperature sensor is currently (%s), and the current temperature is %sC' %
+                        (nagios_state_names[status], dell_powerconnect_temp_status_map[state], temp), [
+               ("state", dell_powerconnect_temp_sensor_state_performance_map[state], "", 0, 0, 1),
+               ("temperature", int(temp), warn, crit, 0, 200),
+               ])
     return (3, "UNKNOWN - item not found in snmp data")
 
 

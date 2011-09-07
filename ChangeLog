@@ -1,4 +1,7 @@
 1.1.11i4
+    Checks & Agents:
+    * Added 4 new checks dell_powerconnect_* by Chris Bowlby
+
     Multisite:
     * FIX: WATO filtered status GUIs did not update the title after changing
       the title of the file/folder in WATO

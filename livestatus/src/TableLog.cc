@@ -26,6 +26,8 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <stddef.h>
+
 #include "nagios.h"
 #include "logger.h"
 #include "TableLog.h"

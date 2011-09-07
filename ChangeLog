@@ -32,6 +32,9 @@
     * Bulk action buttons are shown at the top of hostlists too when the lists
       have more than 10 list items
 
+    Livestatus:
+    * FIX: fix compile error in TableLog.cc by including stddef.h
+
 1.1.11i3:
     Core, Setup, etc.:
     * FIX: allow host names to have spaces

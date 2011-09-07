@@ -2,6 +2,8 @@
     Core, Setup, etc.:
     * FIX: use hostgroups instead of host_groups in Nagios configuration.
       This fixes a problem with Shinken
+    * --scan-parents: detected parent hosts are now tagged with 'ping', so
+      that no agent will be contacted on those hosts
 
     Checks & Agents:
     * Added 4 new checks dell_powerconnect_* by Chris Bowlby

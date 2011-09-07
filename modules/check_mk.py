@@ -3624,7 +3624,7 @@ def do_scan_parents(hosts):
                     gateway = "gw-%s" % (gateway_ip.replace(".", "-"))
                     if gateway not in gateway_hosts:
                         gateway_hosts.add(gateway)
-                        parent_hosts.append("%s|parent" % gateway)
+                        parent_hosts.append("%s|parent|ping" % gateway)
                         parent_ips[gateway] = gateway_ip
                         parent_rules.append( (monitoring_host, [gateway]) ) # make Nagios a parent of gw
                 parent_rules.append( (gateway, [host]) )

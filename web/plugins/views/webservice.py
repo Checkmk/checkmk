@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def render_python_raw(data, view, group_painters, painters, num_columns):
+def render_python_raw(data, view, group_painters, painters, num_columns, show_checkboxes):
     html.write(repr(data))
 
 multisite_layouts["python-raw"] = {
@@ -34,7 +34,7 @@ multisite_layouts["python-raw"] = {
     "hide"   : True,
 }
 
-def render_python(rows, view, group_painters, painters, num_columns):
+def render_python(rows, view, group_painters, painters, num_columns, show_checkboxes):
     html.write("[\n")
     html.write(repr([p[0]["name"] for p in painters]))
     html.write(",\n")
@@ -63,7 +63,7 @@ def encode_string_json(s):
     return '"' + json_escape.sub(lambda m: json_encoding_table[m.group(0)], s) + '"'
 
 
-def render_json(rows, view, group_painters, painters, num_columns):
+def render_json(rows, view, group_painters, painters, num_columns, show_checkboxes):
     html.write("[\n")
     html.write(repr([p[0]["name"] for p in painters]))
     for row in rows:

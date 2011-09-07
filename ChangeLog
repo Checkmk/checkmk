@@ -5,6 +5,8 @@
 
     Checks & Agents:
     * Added 4 new checks dell_powerconnect_* by Chris Bowlby
+    * ipmi_sensors: correctly handle further positive status texts
+      (thanks to Sebastian Talmon)
 
     Multisite:
     * FIX: WATO filtered status GUIs did not update the title after changing

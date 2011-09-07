@@ -108,8 +108,12 @@ def check_freeipmi(item, _no_params, info):
                         perfdata = []
                     else:
                         perfdata = [ ("value", current, None, crit) ]
-                    infotext = "Current value %.1f%s%s" % (current, unit, levelstext)
-            if status == "OK" or status.startswith("Fully_Redundant"):
+                    infotext = "Current value %.1f%s%s" % (current, unit, levelstext) 
+            if status == "OK" \
+                    or status == "Entity_Present" \
+                    or status.endswith("is_connected") \
+                    or status.endswith("Presence_detected") \
+                    or status.startswith("Fully_Redundant"):
                 return (0, "OK - " + infotext, perfdata)
             else:
                 return (2, "CRIT - " + infotext, perfdata)

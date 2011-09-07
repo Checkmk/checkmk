@@ -1390,7 +1390,7 @@ def create_nagios_hostdefs(outfile, hostname):
         hostgroups_to_define.add(default_host_group)
     elif define_hostgroups:
         hostgroups_to_define.update(hgs)
-    outfile.write("  host_groups\t\t\t+%s\n" % hostgroups)
+    outfile.write("  hostgroups\t\t\t+%s\n" % hostgroups)
 
     # Contact groups
     cgrs = host_contactgroups_of([hostname])
@@ -1452,7 +1452,7 @@ def create_nagios_hostdefs(outfile, hostname):
             hostgroups_to_define.add(default_host_group)
         elif define_hostgroups:
             hostgroups_to_define.update(hgs)
-        outfile.write("  host_groups\t\t\t+%s\n" % hostgroups)
+        outfile.write("  hostgroups\t\t\t+%s\n" % hostgroups)
 
         # host gets same contactgroups as real host
         if len(cgrs) > 0:

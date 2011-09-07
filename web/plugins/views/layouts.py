@@ -42,8 +42,8 @@ def render_checkbox_td(view, row, num_tds):
     html.write("</td>")
 
 def render_group_checkbox_th():
-    html.write("<th><input type=button class=group name=_toggle_group"
-               " onclick=\"toggle_group_rows(this);\" value=\"%s\" /></th>" % _('x'))
+    html.write("<th><input type=button class=checkgroup name=_toggle_group"
+               " onclick=\"toggle_group_rows(this);\" value=\"%s\" /></th>" % _('X'))
 
 # -------------------------------------------------------------------------
 #    ____  _             _

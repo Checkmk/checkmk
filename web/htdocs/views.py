@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config, defaults, livestatus, htmllib, time, os, re, pprint, time, copy
-import weblib
+import weblib, traceback
 from lib import *
 from pagefunctions import *
 
@@ -49,7 +49,7 @@ multisite_sorters          = {}
 multisite_builtin_views    = {}
 multisite_painter_options  = {}
 ubiquitary_filters         = [] # Always show this filters
-extra_context_links        = []
+view_hooks                 = {}
 
 # Load all view plugins
 def load_plugins():
@@ -1567,6 +1567,7 @@ def show_context_links(thisview, active_filters):
     # Show button to WATO, if permissions allow this
     if config.may("use_wato"):
         html.begin_context_buttons()
+        execute_hooks('buttons-begin')
         first = False
         host = html.var("host")
         if host:
@@ -1621,32 +1622,11 @@ def show_context_links(thisview, active_filters):
             if first:
                 first = False
                 html.begin_context_buttons()
+                execute_hooks('buttons-begin')
             vars_values = [ (var, html.var(var)) for var in set(used_contextvars) ]
             html.context_button(view_linktitle(view), html.makeuri_contextless(vars_values + [("view_name", name)]), view.get("icon"))
 
-    # Add the plugin registered context links when the var requirements can be met
-    # custom context links can be registered in view plugins like this:
-    #
-    # def get_my_link_url(view):
-    #     (...)
-    #     return '/url/to/link/to'
-    #
-    # extra_context_links = [
-    #     ([], 'The Title', get_my_link_url, 'map'),
-    # ]
-    #
-    # The first element is a list of required var names to show this button
-    # The fourth element it the name of the icon (icon_<name>.png)
-    #
-    # The url render function needs to return the target URL as string but can
-    # also return None to disable this link for the current view
-    for needed_vars, title, url_func, icon in extra_context_links:
-        miss = [ v for v in needed_vars if v not in active_filter_vars ]
-        if miss:
-            break
-        url = url_func(view)
-        if url is not None:
-            html.context_button(title, url, icon)
+    execute_hooks('buttons-end')
 
     if not first:
         html.end_context_buttons()
@@ -2256,6 +2236,23 @@ def page_message_and_forward(message, default_url, addhtml=""):
 #  |  __/| | |_| | (_| | | | | |_____|  _  |  __/ | |_) |  __/ |  \__ \
 #  |_|   |_|\__,_|\__, |_|_| |_|     |_| |_|\___|_| .__/ \___|_|  |___/
 #                 |___/                           |_|
+
+def register_hook(hook, func):
+    if not hook in view_hooks:
+        view_hooks[hook] = [func]
+    else:
+        view_hooks[hook].append(func)
+
+def execute_hooks(hook):
+    for hook_func in view_hooks[hook]:
+        try:
+            hook_func()
+        except:
+            if config.debug:
+                raise MKGeneralException(_('Problem while executing hook function %s in hook %s: %s')
+                                           % (hook_func.__name__, hook, traceback.format_exc()))
+            else:
+                pass
 
 def prepare_paint(p, row):
     painter = p[0]

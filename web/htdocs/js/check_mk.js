@@ -1169,7 +1169,7 @@ function toggle_group_rows(checkbox) {
     }
 
     if(group_start === null)
-        return;
+        group_start = 0;
     if(group_end === null)
         group_end = rows.length - 1;
 
@@ -1190,7 +1190,7 @@ function toggle_group_rows(checkbox) {
 // container are highlighted.
 // It is also possible to give an array of DOM elements as parameter to toggle
 // all checkboxes below these objects.
-function toggle_all_rows(obj, force_status) {
+function toggle_all_rows(obj) {
     var checkboxes = get_all_checkboxes(obj || document);
 
     var all_selected = true;
@@ -1199,7 +1199,7 @@ function toggle_all_rows(obj, force_status) {
             all_selected = false;
 
     // Toggle the state
-    if((typeof(force_status) !== 'undefined' && force_status) || all_selected) {
+    if(all_selected) {
         remove_selected_rows(checkboxes);
     } else {
         select_all_rows(checkboxes);

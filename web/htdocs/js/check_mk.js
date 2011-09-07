@@ -1054,7 +1054,10 @@ function select_all_rows(elems) {
 function remove_selected_rows(elems) {
     for(var i = 0; i < elems.length; i++) {
         elems[i].checked = false;
-        g_selected_rows.splice(i, 1);
+        var row_pos = g_selected_rows.indexOf(elems[i].name);
+        if(row_pos > -1)
+            g_selected_rows.splice(row_pos, 1);
+        row_pos = null;
     }
 }
 
@@ -1174,7 +1177,7 @@ function toggle_group_rows(checkbox) {
     for(var a = group_start; a < group_end; a++)
         if(rows[a].tagName === 'TR')
             group_rows.push(rows[a]);
-    toggle_all_rows(group_rows);
+    toggle_all_rows(group_rows, !checkbox.checked);
     group_rows = null;
 
     tbody   = null;
@@ -1186,7 +1189,7 @@ function toggle_group_rows(checkbox) {
 // container are highlighted.
 // It is also possible to give an array of DOM elements as parameter to toggle
 // all checkboxes below these objects.
-function toggle_all_rows(obj) {
+function toggle_all_rows(obj, force_status) {
     var checkboxes = get_all_checkboxes(obj || document);
 
     var all_selected = true;
@@ -1197,8 +1200,8 @@ function toggle_all_rows(obj) {
             all_selected = false;
     }
 
-    // Now set the new state
-    if(all_selected) {
+    // Toggle the state
+    if((typeof(force_status) !== 'undefined' && force_status) || all_selected) {
         remove_selected_rows(checkboxes);
     } else {
         select_all_rows(checkboxes);

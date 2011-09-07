@@ -489,13 +489,13 @@ function add_view_column_handler(id, code) {
     // container. So first creating a temporary container and fetch the
     // just created DOM node of the editor fields to add it to the real
     // container afterwards.
-		var tmpContainer = document.createElement('div');
-		tmpContainer.innerHTML = code;
-		var oNewEditor = tmpContainer.lastChild;
+    var tmpContainer = document.createElement('div');
+    tmpContainer.innerHTML = code;
+    var oNewEditor = tmpContainer.lastChild;
 
     var oContainer = document.getElementById('ed_'+id).firstChild;
     oContainer.appendChild(oNewEditor);
-		tmpContainer = null;
+    tmpContainer = null;
 
     if (oContainer.lastChild.previousSibling)
         fix_buttons(oContainer, oContainer.lastChild.previousSibling);
@@ -1045,19 +1045,16 @@ function highlight_elem(elem, on) {
 
 function select_all_rows(elems) {
     for(var i = 0; i < elems.length; i++) {
-        highlight_elem(elems[i], true);
-        if(g_selected_rows.indexOf(elems[i].row_num) === -1)
-            g_selected_rows.push(elems[i].row_num);
+        elems[i].checked = true;
+        if(g_selected_rows.indexOf(elems[i].name) === -1)
+            g_selected_rows.push(elems[i].name);
     }
 }
 
-function remove_selected_rows(row_num) {
-    for(var i = g_selected_rows.length - 1; i >= 0; i--) {
-        if(g_selected_rows[i] !== row_num) {
-            highlight_row(g_selected_rows[i], false);
-            highlight_row(g_selected_rows[i], false);
-            g_selected_rows.splice(i, 1);
-        }
+function remove_selected_rows(elems) {
+    for(var i = 0; i < elems.length; i++) {
+        elems[i].checked = false;
+        g_selected_rows.splice(i, 1);
     }
 }
 
@@ -1133,60 +1130,146 @@ function disable_selection(e) {
     return false;
 }
 
-// Is used to select/deselect all rows in the current view
-function toggle_all_rows() {
-    var elems = document.getElementsByClassName('dr');
+// Toggles the datarows of the group which the given checkbox is part of.
+function toggle_group_rows(checkbox) {
+    // 1. Find the first tbody parent
+    // 2. iterate over the childNodes and search for the group header of the checkbox
+    //    - Save the TR with class groupheader
+    //    - End this search once found the checkbox element
+    var this_row = checkbox.parentNode.parentNode;
+    var rows     = this_row.parentNode.childNodes;
 
-    var all_selected = true;
-    for(var i = 0; i < elems.length && all_selected == true; i++) {
-        if(elems[i].tagName != 'TD'
-           && elems[i].tagName != 'TR'
-           && elems[i].tagName != 'DIV')
+    var in_this_group = false;
+    var group_start   = null;
+    var group_end     = null;
+    for(var i = 0; i < rows.length; i++) {
+        if(rows[i].tagName !== 'TR')
             continue;
 
-        if(g_selected_rows.indexOf(elems[i].row_num) === -1)
+        if(!in_this_group) {
+            // Search for the start of our group
+            // Save the current group row element
+            if(rows[i].className === 'groupheader')
+                group_start = i + 1;
+
+            // Found the row of the checkbox? Then finished with this loop
+            if(rows[i] === this_row)
+                in_this_group = true;
+        } else {
+            // Found the start of our group. Now search for the end
+            if(rows[i].className === 'groupheader') {
+                group_end = i - 1;
+                break;
+            }
+        }
+    }
+
+    if(group_start === null)
+        return;
+    if(group_end === null)
+        group_end = rows.length - 1;
+
+    // Found the group start and end row of the checkbox!
+    var group_rows = [];
+    for(var a = group_start; a < group_end; a++)
+        if(rows[a].tagName === 'TR')
+            group_rows.push(rows[a]);
+    toggle_all_rows(group_rows);
+    group_rows = null;
+
+    tbody   = null;
+    this_tr = null;
+}
+
+// Is used to select/deselect all rows in the current view. This can optionally
+// be called with a container element. If given only the elements within this
+// container are highlighted.
+// It is also possible to give an array of DOM elements as parameter to toggle
+// all checkboxes below these objects.
+function toggle_all_rows(obj) {
+    var checkboxes = get_all_checkboxes(obj || document);
+
+    var all_selected = true;
+    for(var i = 0; i < checkboxes.length && all_selected == true; i++) {
+        checkboxes[i].parentNode.backgroundColor = '#000000';
+        checkboxes[i].parentNode.parentNode.backgroundColor = '#000000';
+        if(g_selected_rows.indexOf(checkboxes[i].name) === -1)
             all_selected = false;
     }
 
     // Now set the new state
     if(all_selected) {
-        remove_selected_rows('');
+        remove_selected_rows(checkboxes);
     } else {
-        select_all_rows(elems);
+        select_all_rows(checkboxes);
     }
 }
 
-function get_row_num(elem) {
-    // FIXME: Maybe performance problem. Would be better to have a
-    // dedicated attribute for the data row number
-    var classes = elem.className.split(' ');
-    for(var i = 0; i < classes.length; i++)
-        if(classes[i].indexOf('dr_') > -1)
-            return classes[i].split('_', 2)[1];
-}
-
+// Iterates over all the cells of the given checkbox and executes the given
+// function for each cell
 function iter_cells(checkbox, func) {
     var num_columns = parseInt(checkbox.value);
     // Now loop the next N cells to call the func for each cell
     // 1. Get row element
     // 2. Find the current td
     // 3. find the next N tds
-    var row_childs = checkbox.parentNode.parentNode.childNodes;
+    var cell = checkbox.parentNode;
+    var row_childs = cell.parentNode.childNodes;
+    var found = false;
     for(var c = 0; c < row_childs.length && num_columns > 0; c++) {
+        if(found === false) {
+            if(row_childs[c] == cell) {
+                found = true;
+            } else {
+                continue;
+            }
+        }
+        
         if(row_childs[c].tagName == 'TD') {
             func(row_childs[c]);
             num_columns--;
         }
     }
+    cell = null;
+    row_childs = null;
+}
+
+// Container is an DOM element to search below or a list of DOM elements
+// to search below
+function get_all_checkboxes(container) {
+    var checkboxes = [];
+
+    if(typeof(container) === 'object' && container.length) {
+        // Array given - at the moment this is a list of TR objects
+        // Skip the header checkboxes
+        for(var i = 0; i < container.length; i++) {
+            var childs = container[i].getElementsByTagName('input');
+
+            for(var a = 0; a < childs.length; a++) {
+                if(childs[a].type == 'checkbox' && childs[a].className != 'group') {
+                    checkboxes.push(childs[a]);
+                }
+            }
+
+            childs = null;
+        }
+    } else {
+        // One DOM node given
+        var childs = container.getElementsByTagName('input');
+
+        for(var i = 0; i < childs.length; i++)
+            if(childs[i].type == 'checkbox')
+                checkboxes.push(childs[i]);
+
+        childs = null;
+    }
+
+    return checkboxes;
 }
 
 function table_init_rowselect(oTable) {
-    // Get and loop all checkbox elements
-    var childs = oTable.getElementsByTagName('input');
+    var childs = get_all_checkboxes(oTable);
     for(var i = 0; i < childs.length; i++) {
-        if(childs[i].type != 'checkbox')
-            continue;
-
         // Perform initial selections
         if(g_selected_rows.indexOf(childs[i].name) > -1)
             childs[i].checked = true;

@@ -41,6 +41,10 @@ def render_checkbox_td(view, row, num_tds):
     render_checkbox(view, row, num_tds)
     html.write("</td>")
 
+def render_group_checkbox_th():
+    html.write("<th><input type=checkbox class=group name=_toggle_group"
+               " onclick=\"toggle_group_rows(this);\" /></th>")
+
 # -------------------------------------------------------------------------
 #    ____  _             _
 #   / ___|(_)_ __   __ _| | ___
@@ -155,7 +159,7 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
         if paintheader:
             html.write("<tr>")
             if show_checkboxes:
-                html.write("<th></th>")
+                render_group_checkbox_th()
             for p in painters:
                 paint_header(view, p)
                 html.write("\n")
@@ -262,7 +266,7 @@ def render_tiled(rows, view, group_painters, painters, _ignore_num_columns, show
         if not group_open:
             html.write("<tr><td class=tiles>")
             group_open = True
-        html.write('<div class="dr_%s dr tile %s"><table>' % (row_id(view, row), sclass))
+        html.write('<div class="tile %s"><table>' % sclass)
 
         # We need at least five painters.
         empty_painter = { "paint" : (lambda row: ("", "")) }
@@ -320,7 +324,11 @@ def render_grouped_list(rows, view, group_painters, painters, num_columns, show_
         html.write("<tr>")
         for n in range(1, num_columns + 1):
             if show_checkboxes:
-                html.write("<th></th>")
+                if n == 1:
+                    render_group_checkbox_th()
+                else:
+                    html.write('<th></th>')
+
             for p in painters:
                 paint_header(view, p)
         html.write("</tr>\n")

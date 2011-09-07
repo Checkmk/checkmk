@@ -620,10 +620,10 @@ def mode_file(phase):
         hostnames.sort()
 
         # Show table of hosts in this file
-        colspan = 5
+        colspan = 6
         html.begin_form("hosts", None, "POST", onsubmit = 'add_row_selections(this);')
         html.write("<table class=data>\n")
-        html.write("<tr><th class=left></th><th>" + _("Hostname") + "</th>")
+        html.write("<tr><th class=left></th><th></th><th>" + _("Hostname") + "</th>")
 
         for attr, topic in host_attributes:
             if attr.show_in_table():
@@ -638,7 +638,7 @@ def mode_file(phase):
             # bulk actions
             html.write('<tr class="data %s0">' % odd)
             html.write("<td colspan=%d>" % colspan)
-            html.jsbutton('_markall', 'X', 'javascript:toggle_all_rows();')
+            html.jsbutton('_markall', _('X'), 'javascript:toggle_all_rows();')
             html.write(' ' + _("On all selected hosts:\n"))
             html.button("_bulk_delete", _("Delete"))
             html.button("_bulk_edit", _("Edit"))
@@ -682,7 +682,7 @@ def mode_file(phase):
             effective = effective_attributes(host, g_file)
 
             # Rows with alternating odd/even styles
-            html.write('<tr class="dr_%s dr data %s0">' % (hostname, odd))
+            html.write('<tr class="data %s0">' % odd)
             odd = odd == "odd" and "even" or "odd" 
 
             # Column with actions (buttons)
@@ -690,6 +690,11 @@ def mode_file(phase):
             services_url = make_link([("mode", "inventory"), ("host", hostname)])
             clone_url    = make_link([("mode", "newhost"), ("clone", hostname)])
             delete_url   = make_action_link([("mode", "file"), ("_delete", hostname)])
+
+            html.write('<td class=checkbox>')
+            html.write("<input type=checkbox name=\"%s\" value=%d />" %
+                                                 (hostname, colspan))
+            html.write('</td>')
 
             html.write("<td class=buttons>")
             html.buttonlink(edit_url, _("Edit"))

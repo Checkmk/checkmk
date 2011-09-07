@@ -607,6 +607,7 @@ table.data th {
     padding: 0 4px;
     text-align: center;
     color: #fff;
+    vertical-align: middle;
 }
 
 /* Table header links (For sorting) */

@@ -2244,7 +2244,7 @@ def register_hook(hook, func):
         view_hooks[hook].append(func)
 
 def execute_hooks(hook):
-    for hook_func in view_hooks[hook]:
+    for hook_func in view_hooks.get(hook, []):
         try:
             hook_func()
         except:

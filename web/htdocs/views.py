@@ -1352,6 +1352,11 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
 
     # Actions
     if len(rows) > 0:
+        # If we are currently within an action (confirming or executing), then
+        # we display only the selected rows (if checkbox mode is active)
+        if html.var("selected_rows", "") and html.do_actions():
+            rows = get_selected_rows(view, rows, html.var("selected_rows"))
+
         if html.do_actions() and html.transaction_valid(): # submit button pressed, no reload
             try:
                 if 'C' in display_options:
@@ -1359,9 +1364,6 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
                 # Create URI with all actions variables removed
                 backurl = html.makeuri([])
                 has_done_actions = do_actions(view, datasource["infos"][0], rows, backurl)
-                if type(has_done_actions) == list:
-                    rows = has_done_actions
-                    has_done_actions = False
                 if 'C' in display_options:
                     html.write("</td></tr>")
             except MKUserError, e:
@@ -1389,7 +1391,8 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     if not has_done_actions:
         # Limit exceeded? Show warning
         html.check_limit(rows, get_limit())
-        layout["render"](rows, view, group_painters, painters, num_columns, show_checkboxes)
+        layout["render"](rows, view, group_painters, painters, num_columns, 
+                         show_checkboxes and not html.do_actions())
 
         # Play alarm sounds, if critical events have been displayed
         if 'S' in display_options and view.get("play_sounds"):
@@ -2174,25 +2177,23 @@ def nagios_host_service_action_command(what, dataset):
     return title, [nagios_command]
 
 
+def get_selected_rows(view, rows, sel_var):
+    action_rows = []
+    selected_rows = sel_var.split(',')
+    for row in rows:
+        if row_id(view, row) in selected_rows:
+            action_rows.append(row)
+    return action_rows
+
 # Returns:
 # True -> Actions have been done
 # False -> No actions done because now rows selected
 # [...] new rows -> Rows actions (shall/have) be performed on
-def do_actions(view, what, rows, backurl):
+def do_actions(view, what, action_rows, backurl):
     if not config.may("act"):
         html.show_error(_("You are not allowed to perform actions. If you think this is an error, "
               "please ask your administrator grant you the permission to do so."))
         return False # no actions done
-
-    # Handle optional row filter based on row selections
-    if html.has_var('selected_rows'):
-        selected_rows = html.var('selected_rows')
-        action_rows = []
-        for row in rows:
-            if row_id(view, row) in selected_rows.split(','):
-                action_rows.append(row)
-    else:
-        action_rows = rows
 
     if not action_rows:
         html.show_error(_("No rows selected to perform actions for."))
@@ -2202,7 +2203,7 @@ def do_actions(view, what, rows, backurl):
     title = nagios_action_command(what, action_rows[0])[0] # just get the title
     if not html.confirm(_("Do you really want to %s the following %d %ss?") %
                                                (title, len(action_rows), what)):
-        return action_rows # no actions done, but show only selected rows
+        return False
 
     count = 0
     for row in action_rows:

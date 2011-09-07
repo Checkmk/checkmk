@@ -731,6 +731,7 @@ function handleReload(url) {
         // parameter selected_rows with the current selected rows as value.
         // otherwhise clear the parameter
         params['selected_rows'] = g_selected_rows.join(',');
+        params['_do_actions'] = getUrlParam('_do_actions')
 
         var url = makeuri(params);
         display_options = null;

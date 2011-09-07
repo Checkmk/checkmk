@@ -1178,7 +1178,7 @@ function toggle_group_rows(checkbox) {
     for(var a = group_start; a < group_end; a++)
         if(rows[a].tagName === 'TR')
             group_rows.push(rows[a]);
-    toggle_all_rows(group_rows, !checkbox.checked);
+    toggle_all_rows(group_rows);
     group_rows = null;
 
     tbody   = null;
@@ -1194,12 +1194,9 @@ function toggle_all_rows(obj, force_status) {
     var checkboxes = get_all_checkboxes(obj || document);
 
     var all_selected = true;
-    for(var i = 0; i < checkboxes.length && all_selected == true; i++) {
-        checkboxes[i].parentNode.backgroundColor = '#000000';
-        checkboxes[i].parentNode.parentNode.backgroundColor = '#000000';
+    for(var i = 0; i < checkboxes.length && all_selected == true; i++)
         if(g_selected_rows.indexOf(checkboxes[i].name) === -1)
             all_selected = false;
-    }
 
     // Toggle the state
     if((typeof(force_status) !== 'undefined' && force_status) || all_selected) {
@@ -1249,11 +1246,9 @@ function get_all_checkboxes(container) {
         for(var i = 0; i < container.length; i++) {
             var childs = container[i].getElementsByTagName('input');
 
-            for(var a = 0; a < childs.length; a++) {
-                if(childs[a].type == 'checkbox' && childs[a].className != 'group') {
+            for(var a = 0; a < childs.length; a++)
+                if(childs[a].type == 'checkbox')
                     checkboxes.push(childs[a]);
-                }
-            }
 
             childs = null;
         }

@@ -1,4 +1,8 @@
 1.1.11i4
+    Core, Setup, etc.:
+    * FIX: use hostgroups instead of host_groups in Nagios configuration.
+      This fixes a problem with Shinken
+
     Checks & Agents:
     * Added 4 new checks dell_powerconnect_* by Chris Bowlby
 

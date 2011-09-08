@@ -1270,7 +1270,7 @@ def create_target_file_from_aliaspath(aliaspath):
 
     # Now folder points to the folder the host needs to be created
     # in. In that folder we put the host into the host list "hosts.mk". 
-    if "hosts" not in folder[".files"]:
+    if "hosts.mk" not in folder[".files"]:
         new_file = {
             ".name" : "hosts.mk",
             ".path" : folder[".path"] + ("hosts.mk",),

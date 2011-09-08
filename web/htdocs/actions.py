@@ -64,13 +64,13 @@ def action_reschedule():
         html.live.set_only_sites([site])
         row = html.live.query_row(
                 "GET %ss\n"
-                "WaitObject: %s;%s\n"
+                "WaitObject: %s\n"
                 "WaitCondition: last_check >= %d\n"
                 "WaitTimeout: %d\n"
                 "WaitTrigger: check\n"
                 "Columns: last_check state plugin_output\n"
                 "Filter: host_name = %s\n%s"
-                % (what, host, service, now, config.reschedule_timeout * 1000, host, add_filter))
+                % (what, spec, now, config.reschedule_timeout * 1000, host, add_filter))
         html.live.set_only_sites()
         last_check = row[0]
         if last_check < now:

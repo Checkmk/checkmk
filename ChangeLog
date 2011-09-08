@@ -45,6 +45,7 @@
     * FIX: tables comments and downtimes now honor AuthUser
     * Table log honors AuthUser for entries that belong to hosts
       (not for external commands, though. Sorry...)
+    * FIX: fix Stats: sum/min/max/avg for columns of type time
 
 1.1.11i3:
     Core, Setup, etc.:

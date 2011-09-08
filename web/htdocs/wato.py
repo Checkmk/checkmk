@@ -463,9 +463,12 @@ def mode_editfolder(phase, what, new):
             if new:
                 attributes = { }
                 parent = g_folder
-            else:
+            elif the_what == "folder":
                 attributes = the_thing.get("attributes", {})
                 parent = g_folder.get(".parent")
+            else: # host list from current folder
+                attributes = the_thing.get("attributes", {})
+                parent = g_folder
 
             configure_attributes({what: attributes}, "folder", parent, the_thing)
 
@@ -979,13 +982,6 @@ def mode_snapshot(phase):
                 snapshots.append(f)
         snapshots.sort(reverse=True)
 
-        html.write("<br>")
-        html.begin_form("upload_form", None, "POST")
-        html.upload_file("_upload_file")
-        html.button("upload_button", _("Restore from file"), "submit")
-        html.hidden_fields()
-        html.end_form()
-
         if len(snapshots) == 0:
             html.write("<div class=info>" + _("There are no snapshots available.") + "</div>")
         else:
@@ -1002,6 +998,14 @@ def mode_snapshot(phase):
                 html.write('<a href="%s">%s</a>' % (make_action_link([("mode","snapshot"),("_download_file", name)]), name))
             html.write('</table>')
 
+        html.write("<h3>" + _("Restore from uploaded file") + "</h3>")
+        html.begin_form("upload_form", None, "POST")
+        html.upload_file("_upload_file")
+        html.button("upload_button", _("Restore from file"), "submit")
+        html.hidden_fields()
+        html.end_form()
+
+
 def create_snapshot():
     if not os.path.exists(snapshot_dir):
        os.mkdir(snapshot_dir)
@@ -1015,7 +1019,7 @@ def create_snapshot():
             tar.add(os.path.join(root,filename), os.path.join(root[len_abs:], filename))
     tar.close()
 
-    log_pending(None, "snapshot-created", _("Created snapshot %s") % snapshot_name)
+    log_audit(None, "snapshot-created", _("Created snapshot %s") % snapshot_name)
 
     # Maintenance, remove old snapshots
     snapshots = []

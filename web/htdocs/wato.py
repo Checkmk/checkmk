@@ -48,6 +48,7 @@ config.declare_permission("use_wato",
      [ "admin", "user" ])
 
 conf_dir = defaults.var_dir + "/wato"
+snapshot_dir = conf_dir + "/snapshots"
 
 g_root_folder = None # pointer to root folder
 g_folder      = None # pointer to current folder
@@ -195,6 +196,7 @@ def mode_folder(phase):
         html.context_button(_("Properties"), make_link_to([("mode", "editfolder")], g_folder[".path"]), "properties")
         html.context_button(_("New folder"), make_link([("mode", "newfolder")]), "newfolder")
         html.context_button(_("New host list"), make_link([("mode", "newfile")]), "new")
+        html.context_button(_("Backup/Restore"), make_link([("mode", "snapshot")]))
         changelog_button()
         search_button()
     
@@ -547,6 +549,7 @@ def mode_file(phase):
         html.context_button(_("Back"), make_link_to([("mode", "folder")], g_folder[".path"]), "back")
         html.context_button(_("Properties"), make_link_to([("mode", "editfile")], g_folder[".path"], g_file[".name"]), "properties")
         html.context_button(_("New host"), make_link([("mode", "newhost")]), "new")
+        html.context_button(_("Backup/Restore"), make_link([("mode", "snapshot")]))
         changelog_button()
         search_button()
     
@@ -889,6 +892,161 @@ def mode_inventory(phase, firsttime):
 
     else:
         show_service_table(hostname, firsttime)
+
+#   +----------------------------------------------------------------------+
+#   |             ____                        _           _                |
+#   |            / ___| _ __   __ _ _ __  ___| |__   ___ | |_              |
+#   |            \___ \| '_ \ / _` | '_ \/ __| '_ \ / _ \| __|             |
+#   |             ___) | | | | (_| | |_) \__ \ | | | (_) | |_              |
+#   |            |____/|_| |_|\__,_| .__/|___/_| |_|\___/ \__|             |
+#   |                              |_|                                     |
+#   +----------------------------------------------------------------------+
+#   | Dialog for backup/restore/creation of snapshotsp                     |
+#   +----------------------------------------------------------------------+
+
+
+def mode_snapshot(phase):
+    if phase == "title":
+        return _("Backup/Restore")
+    elif phase == "buttons":
+        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
+        html.context_button(_("Create Snapshot"), make_action_link([("mode", "snapshot"),("create_snapshot","Yes")]))
+        return
+    elif phase == "action":
+        if html.has_var("download_file"):
+            download_file = os.path.join(snapshot_dir, html.var("download_file"))
+            if os.path.exists(download_file):
+                html.req.headers_out['Content-Disposition'] = 'Attachment; filename=' + html.var("download_file")
+                html.req.headers_out['content_type'] = 'application/x-tar'
+                html.write(open(download_file).read())
+                return False
+        # create snapshot
+        elif html.has_var("create_snapshot"):
+            if html.check_transaction():
+                create_snapshot()
+                return None, _("Snapshot created.")
+            else:
+                return None
+        # upload snapshot
+        elif html.has_var("upload_file"):
+            if html.check_transaction():
+                restore_snapshot(None, html.var('upload_file'))
+                return None, _("Successfully uploaded configuration.")
+            else:
+                return None
+        # delete file
+        elif html.has_var("delete_file"):
+            delete_file = html.var("delete_file")
+            c = wato_confirm(_("Confirm delete snapshot"),
+                             _("Are you sure you want to delete the snapshot <br><br>%s?") %
+                                delete_file
+                            )
+            if c:
+                os.remove(os.path.join(snapshot_dir, delete_file))
+                return None, _("Snapshot deleted.")
+            elif c == False: # not yet confirmed
+                return ""
+            else:
+                return None  # browser reload
+        # restore snapshot
+        elif html.has_var("restore_snapshot"):
+            snapshot_file = html.var("restore_snapshot")
+            c = wato_confirm(_("Confirm restore snapshot"),
+                             _("Are you sure you want to restore the snapshot <br><br>%s ?") %
+                                snapshot_file
+                            )
+            if c:
+                restore_snapshot(snapshot_file)
+                return None, _("Snapshot restored.")
+            elif c == False: # not yet confirmed
+                return ""
+            else:
+                return None  # browser reload
+        return False
+    else:
+        snapshots = []
+        if os.path.exists(snapshot_dir):
+            for f in os.listdir(snapshot_dir):
+                snapshots.append(f)
+        snapshots.sort(reverse=True)
+
+        html.begin_form("upload_form", None, "POST")
+        html.upload_file("upload_file")
+        html.button("upload_button", _("Restore from file"), "submit")
+        html.hidden_fields()
+        html.end_form()
+        html.write("<br><br>")
+
+        if len(snapshots) == 0:
+            html.write("<div class=info>" + _("There are no snapshots available.") + "</div>")
+        else:
+            html.write('<table class=data>')
+            html.write('<h3>' + _("Snapshots") + '</h3>')
+
+            odd = "odd"
+            for name in snapshots:
+                odd = odd == "odd" and "even" or "odd"
+                html.write('<tr class="data %s0"><td>' % odd)
+                html.buttonlink(make_action_link([("mode","snapshot"),("restore_snapshot", name)]), _("Restore"))
+                html.buttonlink(make_action_link([("mode","snapshot"),("delete_file", name)]), _("Delete"))
+                html.write("<td>")
+                html.write('<a href="%s">%s</a>' % (make_action_link([("mode","snapshot"),("download_file", name)]), name))
+            html.write('</table>')
+
+def create_snapshot():
+    if not os.path.exists(snapshot_dir):
+       os.mkdir(snapshot_dir)
+
+    snapshot_name = "wato-snapshot-%s.tar.gz" % time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(time.time()))
+    tar = tarfile.open(os.path.join(snapshot_dir, snapshot_name),"w:gz")
+
+    len_abs = len(defaults.check_mk_configdir)
+    for root, dirs, files in os.walk(defaults.check_mk_configdir):
+        for filename in files:
+            tar.add(os.path.join(root,filename), os.path.join(root[len_abs:], filename))
+    tar.close()
+
+    log_pending(None, "snapshot-created", _("Created snapshot %s") % snapshot_name)
+
+    # Maintenance, remove old snapshots
+    snapshots = []
+    for f in os.listdir(snapshot_dir):
+        snapshots.append(f)
+    snapshots.sort(reverse=True)
+    while len(snapshots) > config.max_snapshots:
+        log_pending(None, "snapshot-removed", _("Removed snapshot %s") % snapshots[-1])
+        os.remove(os.path.join(snapshot_dir,snapshots.pop()))
+
+def restore_snapshot( filename, tarstream = None ):
+    if not os.path.exists(snapshot_dir):
+       os.mkdir(snapshot_dir)
+
+    del_config_dir()
+    if filename:
+        if not os.path.exists(os.path.join(snapshot_dir, filename)):
+            raise MKGeneralException("Snapshot does not exist %s" % filename)
+        snapshot = tarfile.open(os.path.join(snapshot_dir, filename), "r:gz")
+    elif tarstream:
+        stream = StringIO.StringIO()
+        stream.write(tarstream)
+        stream.seek(0)
+        snapshot = tarfile.open(None, "r:gz", stream)
+    else:
+        return
+
+    snapshot.extractall(defaults.omd_root)
+    snapshot.close()
+    log_pending(None, "snapshot-restored", _("Restored snapshot %s") % (filename or _('from uploaded file')))
+
+def del_config_dir():
+    if not defaults.check_mk_configdir.endswith("conf.d"):
+        raise MKGeneralException("ERROR: config directory seems incorrect. check_mk_configdir %s" % defaults.check_mk_configdir)
+    # Clear directories, DANGER
+    for root, dirs, files in os.walk(defaults.check_mk_configdir):
+        for f in files:
+            if (f.endswith('.mk') and not '.' in f[:-3]) or (f.endswith('.mk.wato') and not '.' in f[:-8]) or f == '.wato':
+                os.remove(os.path.join(root, f))
+
 
 #   +----------------------------------------------------------------------+
 #   |                   ____                      _                        |
@@ -1404,6 +1562,7 @@ def mode_changelog(phase):
             return export_audit_log()
 
         elif html.check_transaction():
+                create_snapshot()
                 try:
                     check_mk_automation("restart")
                     call_hook_activate_changes()
@@ -3372,6 +3531,7 @@ mode_functions = {
    "bulkedit"       : mode_bulk_edit,
    "bulkcleanup"    : mode_bulk_cleanup,
    "changelog"      : mode_changelog,
+   "snapshot"       : mode_snapshot,
    "file"           : mode_file,
 }
 

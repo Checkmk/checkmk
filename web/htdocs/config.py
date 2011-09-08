@@ -455,6 +455,9 @@ filter_columns = 2
 # Default language for l10n
 default_language = None
 
+# Default preserved snapshots
+max_snapshots = 50
+
 #    __        ___  _____ ___  
 #    \ \      / / \|_   _/ _ \ 
 #     \ \ /\ / / _ \ | || | | |

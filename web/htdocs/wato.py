@@ -1703,9 +1703,6 @@ def get_timerange(t):
     end   = start + 86399
     return start, end
 
-def fmt_datetime(t):
-    return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(t))
-
 def fmt_date(t):
     return time.strftime('%Y-%m-%d', time.localtime(t))
 
@@ -1751,12 +1748,12 @@ def paged_log(log):
 def display_paged((start_time, end_time, previous_log_time, next_log_time)):
     html.write('<div class=paged_controls>')
 
-    html.write(' <b>%s</b> ' % (_('%s to %s') % (fmt_datetime(start_time),
-                                                 fmt_datetime(end_time))))
+    html.write(' <b>%s</b> ' % (_('%s to %s') % (fmt_date(start_time),
+                                                 fmt_date(end_time))))
 
     if previous_log_time is not None:
         html.buttonlink(html.makeuri([('start', previous_log_time)]), _("<"),
-                        title = '%s: %s' % (_("Older events"), fmt_datetime(previous_log_time)))
+                        title = '%s: %s' % (_("Older events"), fmt_date(previous_log_time)))
     else:
         html.buttonlink(html.makeuri([]), _("<"), disabled = True)
 
@@ -1765,7 +1762,7 @@ def display_paged((start_time, end_time, previous_log_time, next_log_time)):
 
     if next_log_time is not None:
         html.buttonlink(html.makeuri([('start', next_log_time)]), _(">"),
-                        title = '%s: %s' % (_("Newer events"), fmt_datetime(next_log_time)))
+                        title = '%s: %s' % (_("Newer events"), fmt_date(next_log_time)))
     else:
         html.buttonlink(html.makeuri([]), _(">"), disabled = True)
     html.write('</div>')

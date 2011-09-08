@@ -28,7 +28,15 @@ def init_rowselect():
     # Don't make rows selectable when no commands can be fired
     if not 'C' in html.display_options or not config.may("act"):
         return
-    html.init_rowselect()
+
+    selected = []
+    if html.has_var('selected_rows'):
+        selected_rows = html.var('selected_rows', '')
+        if selected_rows or ',' in selected_rows:
+            selected = selected_rows.split(',')
+
+    html.javascript('g_selected_rows = %s;\n'
+                    'init_rowselect();' % repr(selected))
 
 def render_checkbox(view, row, num_tds):
     # value contains the number of columns of this datarow. This is

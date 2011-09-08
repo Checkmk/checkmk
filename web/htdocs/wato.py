@@ -743,7 +743,9 @@ def mode_file(phase):
         html.hidden_fields()
 
         html.end_form()
-        html.init_rowselect()
+
+        html.javascript('g_selected_rows = %s;\n'
+                        'init_rowselect();' % repr(hostnames))
 
 # Create list of all hosts that are select with checkboxes in the current file
 def get_hostnames_from_checkboxes():

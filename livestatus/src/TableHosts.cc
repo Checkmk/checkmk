@@ -45,6 +45,7 @@
 #include "ContactgroupsColumn.h"
 #include "HostSpecialIntColumn.h"
 #include "tables.h"
+#include "auth.h"
 
 extern host *host_list;
 extern hostgroup *hostgroup_list;
@@ -57,12 +58,8 @@ struct hostbygroup {
 
 bool TableHosts::isAuthorized(contact *ctc, void *data)
 {
-    if (ctc == UNKNOWN_AUTH_USER)
-        return false;
-
     host *hst = (host *)data;
-    return is_contact_for_host(hst, ctc)
-        || is_escalated_contact_for_host(hst, ctc);
+    return is_authorized_for(ctc, hst, 0);
 }
 
 

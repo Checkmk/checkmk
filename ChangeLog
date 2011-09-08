@@ -42,6 +42,9 @@
 
     Livestatus:
     * FIX: fix compile error in TableLog.cc by including stddef.h
+    * FIX: tables comments and downtimes now honor AuthUser
+    * Table log honors AuthUser for entries that belong to hosts
+      (not for external commands, though. Sorry...)
 
 1.1.11i3:
     Core, Setup, etc.:

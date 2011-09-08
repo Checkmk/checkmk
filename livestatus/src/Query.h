@@ -55,7 +55,6 @@ class Aggregator;
 #define ANDOR_AND    1
 #define ANDOR_NEGATE 2
 
-#define UNKNOWN_AUTH_USER ((contact *)0xdeadbeaf)
 
 class Query
 { 

@@ -31,6 +31,7 @@
 #include "OffsetStringColumn.h"
 #include "OffsetIntColumn.h"
 #include "OffsetTimeColumn.h"
+#include "auth.h"
 #include "tables.h"
 
 // Todo: the dynamic data in this table must be
@@ -156,6 +157,12 @@ void TableDownComm::answerQuery(Query *query)
         if (!query->processDataset(it->second))
             break;
     }
+}
+
+bool TableDownComm::isAuthorized(contact *ctc, void *data)
+{
+    DowntimeOrComment *dtc = (DowntimeOrComment *)data; 
+    return is_authorized_for(ctc, dtc->_host, dtc->_service);
 }
 
 DowntimeOrComment *TableDownComm::findEntry(unsigned long id)

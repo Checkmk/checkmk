@@ -44,6 +44,7 @@
 #include "NegatingFilter.h"
 #include "waittriggers.h"
 #include "data_encoding.h"
+#include "auth.h"
 
 extern int g_debug_level;
 extern unsigned long g_max_response_size;

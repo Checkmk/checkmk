@@ -182,8 +182,8 @@ def render_dashlet(nr, dashlet, filename):
 
     # The method "view" is a shortcut for "iframe" with a certain url
     if "view" in dashlet:
-        dashlet["iframe"] = "view.py?view_name=%s&display_options=SIXHRL&_body_class=dashlet" % dashlet["view"] 
-    
+        dashlet["iframe"] = "view.py?view_name=%s&display_options=SIXHRLw&_body_class=dashlet" % dashlet["view"]
+
     # The content is rendered only if it is fixed. In the
     # other cases the initial (re)-size will paint the content.
     if "content" in dashlet: # fixed content

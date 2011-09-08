@@ -1067,7 +1067,7 @@ def get_needed_columns(painters):
 # Display view with real data. This is *the* function everying
 # is about.
 def show_view(view, show_heading = False, show_buttons = True, show_footer = True):
-    all_display_options = "HTBFCEOZRSIXDML"
+    all_display_options = "HTBFCEOZRSIXDMLW"
 
     # Parse display options and
     if html.output_format == "html":
@@ -1390,8 +1390,9 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
 
     if not has_done_actions:
         # Limit exceeded? Show warning
-        html.check_limit(rows, get_limit())
-        layout["render"](rows, view, group_painters, painters, num_columns, 
+        if 'W' in display_options:
+            html.check_limit(rows, get_limit())
+        layout["render"](rows, view, group_painters, painters, num_columns,
                          show_checkboxes and not html.do_actions())
 
         # Play alarm sounds, if critical events have been displayed
@@ -1401,7 +1402,9 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     # In multi site setups error messages of single sites do not block the
     # output and raise now exception. We simply print error messages here.
     # In case of the web service we show errors only on single site installations.
-    if config.show_livestatus_errors and (html.output_format == "html" or not config.is_multisite()):
+    if config.show_livestatus_errors \
+       and 'W' in display_options \
+       and (html.output_format == "html" or not config.is_multisite()):
         for sitename, info in html.live.deadsites.items():
             html.show_error("<b>%s - Livestatus error</b><br>%s" % (info["site"]["alias"], info["exception"]))
 

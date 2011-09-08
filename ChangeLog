@@ -2,6 +2,7 @@
     Multisite:
     * FIX: fix rescheduling of host check
     * Added some missing i18n strings in general HTML functions
+    * Added display_option "w" to disable limit messages and livestatus errors in views
 
 1.1.11i4:
     Core, Setup, etc.:

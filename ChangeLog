@@ -41,6 +41,7 @@
     * Changed row selection in WATO to new row selection mechanism
     * Bulk action buttons are shown at the top of hostlists too when the lists
       have more than 10 list items
+    * New function for backup and restore of the configuration
 
     Livestatus:
     * FIX: fix compile error in TableLog.cc by including stddef.h

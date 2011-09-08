@@ -1745,7 +1745,7 @@ def paged_log(log):
             break
 
     if last_log_index is None:
-        last_log_index = len(log) - 1
+        last_log_index = len(log)
 
     return log[first_log_index:last_log_index], (start_time, end_time, previous_log_time, next_log_time)
 

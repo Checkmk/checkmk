@@ -1,3 +1,7 @@
+1.1.12b1:
+    Multisite:
+    * FIX: fix rescheduling of host check
+
 1.1.11i4:
     Core, Setup, etc.:
     * FIX: use hostgroups instead of host_groups in Nagios configuration.

@@ -1,6 +1,7 @@
 1.1.12b1:
     Multisite:
     * FIX: fix rescheduling of host check
+    * Added some missing i18n strings in general HTML functions
 
 1.1.11i4:
     Core, Setup, etc.:

@@ -314,21 +314,26 @@ multisite_painters["svc_perf_data"] = {
     "paint" : lambda row: (None, row["service_perf_data"])
 }
 
-def paint_perfdata_nth_value(row, n):
-    perfdata = row["service_perf_data"]
+def get_perfdata_nth_value(row, n, remove_unit = False):
+    perfdata = row.get("service_perf_data")
+    if not perfdata:
+        return ''
     try:
         parts = perfdata.split()
         if len(parts) <= n:
-            return "", "" # too few values in perfdata
+            return "" # too few values in perfdata
         varname, rest = parts[n].split("=")
         number = rest.split(';')[0]
-        # Remove unit. Why should we?
-        # while len(number) > 0 and not number[-1].isdigit():
-        #    number = number[:-1]
-        return "", number
+        # Remove unit. Why should we? In case of sorter (numeric)
+        if remove_unit:
+            while len(number) > 0 and not number[-1].isdigit():
+                number = number[:-1]
+        return number
     except Exception, e:
-        return "", str(e)
+        return str(e)
 
+def paint_perfdata_nth_value(row, n):
+    return "", get_perfdata_nth_value(row, n)
 
 multisite_painters["svc_perf_val01"] = {
     "title" : _("Service performance data - value number  1"),

@@ -10,6 +10,7 @@
     * ipmi_sensors: correctly handle further positive status texts
       (thanks to Sebastian Talmon)
     * FIX: nfsmounts handles zero-sized volumes correctly
+    * AIX agent now outputs the user and performance data in <<<ps>>>
 
     Multisite:
     * FIX: WATO filtered status GUIs did not update the title after changing

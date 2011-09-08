@@ -45,7 +45,7 @@ echo '<<<df>>>'
 df -kP | sed 's/ / - /' | grep -v ^/proc | grep -v ^Filesystem | grep -v :
 
 echo '<<<ps>>>'
-ps -ef -F args | sed 1d
+ps -ef -F user,vszsize,rssize,pcpu,args | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
 
 if type lparstat >/dev/null 2>&1
 then

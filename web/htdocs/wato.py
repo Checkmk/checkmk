@@ -37,7 +37,7 @@
 
 import config
 
-import sys, pprint, socket, re, subprocess, time, datetime
+import sys, pprint, socket, re, subprocess, time, datetime, tarfile, StringIO
 from lib import *
 import htmllib
 
@@ -196,7 +196,7 @@ def mode_folder(phase):
         html.context_button(_("Properties"), make_link_to([("mode", "editfolder")], g_folder[".path"]), "properties")
         html.context_button(_("New folder"), make_link([("mode", "newfolder")]), "newfolder")
         html.context_button(_("New host list"), make_link([("mode", "newfile")]), "new")
-        html.context_button(_("Backup/Restore"), make_link([("mode", "snapshot")]))
+        html.context_button(_("Backup / Restore"), make_link([("mode", "snapshot")]))
         changelog_button()
         search_button()
     
@@ -549,7 +549,7 @@ def mode_file(phase):
         html.context_button(_("Back"), make_link_to([("mode", "folder")], g_folder[".path"]), "back")
         html.context_button(_("Properties"), make_link_to([("mode", "editfile")], g_folder[".path"], g_file[".name"]), "properties")
         html.context_button(_("New host"), make_link([("mode", "newhost")]), "new")
-        html.context_button(_("Backup/Restore"), make_link([("mode", "snapshot")]))
+        html.context_button(_("Backup / Restore"), make_link([("mode", "snapshot")]))
         changelog_button()
         search_button()
     
@@ -910,33 +910,37 @@ def mode_snapshot(phase):
         return _("Backup/Restore")
     elif phase == "buttons":
         html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
-        html.context_button(_("Create Snapshot"), make_action_link([("mode", "snapshot"),("create_snapshot","Yes")]))
+        html.context_button(_("Create Snapshot"), make_action_link([("mode", "snapshot"),("_create_snapshot","Yes")]))
         return
     elif phase == "action":
-        if html.has_var("download_file"):
-            download_file = os.path.join(snapshot_dir, html.var("download_file"))
+        if html.has_var("_download_file"):
+            download_file = os.path.join(snapshot_dir, html.var("_download_file"))
             if os.path.exists(download_file):
-                html.req.headers_out['Content-Disposition'] = 'Attachment; filename=' + html.var("download_file")
+                html.req.headers_out['Content-Disposition'] = 'Attachment; filename=' + html.var("_download_file")
                 html.req.headers_out['content_type'] = 'application/x-tar'
                 html.write(open(download_file).read())
                 return False
         # create snapshot
-        elif html.has_var("create_snapshot"):
+        elif html.has_var("_create_snapshot"):
             if html.check_transaction():
                 create_snapshot()
                 return None, _("Snapshot created.")
             else:
                 return None
         # upload snapshot
-        elif html.has_var("upload_file"):
+        elif html.has_var("_upload_file"):
+            if html.var("_upload_file") == "":
+                raise MKUserError(None, _("You need to select a file for upload"))
+
+                return None
             if html.check_transaction():
-                restore_snapshot(None, html.var('upload_file'))
+                restore_snapshot(None, html.var('_upload_file'))
                 return None, _("Successfully uploaded configuration.")
             else:
                 return None
         # delete file
-        elif html.has_var("delete_file"):
-            delete_file = html.var("delete_file")
+        elif html.has_var("_delete_file"):
+            delete_file = html.var("_delete_file")
             c = wato_confirm(_("Confirm delete snapshot"),
                              _("Are you sure you want to delete the snapshot <br><br>%s?") %
                                 delete_file
@@ -949,8 +953,8 @@ def mode_snapshot(phase):
             else:
                 return None  # browser reload
         # restore snapshot
-        elif html.has_var("restore_snapshot"):
-            snapshot_file = html.var("restore_snapshot")
+        elif html.has_var("_restore_snapshot"):
+            snapshot_file = html.var("_restore_snapshot")
             c = wato_confirm(_("Confirm restore snapshot"),
                              _("Are you sure you want to restore the snapshot <br><br>%s ?") %
                                 snapshot_file
@@ -970,12 +974,12 @@ def mode_snapshot(phase):
                 snapshots.append(f)
         snapshots.sort(reverse=True)
 
+        html.write("<br>")
         html.begin_form("upload_form", None, "POST")
-        html.upload_file("upload_file")
+        html.upload_file("_upload_file")
         html.button("upload_button", _("Restore from file"), "submit")
         html.hidden_fields()
         html.end_form()
-        html.write("<br><br>")
 
         if len(snapshots) == 0:
             html.write("<div class=info>" + _("There are no snapshots available.") + "</div>")
@@ -987,10 +991,10 @@ def mode_snapshot(phase):
             for name in snapshots:
                 odd = odd == "odd" and "even" or "odd"
                 html.write('<tr class="data %s0"><td>' % odd)
-                html.buttonlink(make_action_link([("mode","snapshot"),("restore_snapshot", name)]), _("Restore"))
-                html.buttonlink(make_action_link([("mode","snapshot"),("delete_file", name)]), _("Delete"))
+                html.buttonlink(make_action_link([("mode","snapshot"),("_restore_snapshot", name)]), _("Restore"))
+                html.buttonlink(make_action_link([("mode","snapshot"),("_delete_file", name)]), _("Delete"))
                 html.write("<td>")
-                html.write('<a href="%s">%s</a>' % (make_action_link([("mode","snapshot"),("download_file", name)]), name))
+                html.write('<a href="%s">%s</a>' % (make_action_link([("mode","snapshot"),("_download_file", name)]), name))
             html.write('</table>')
 
 def create_snapshot():
@@ -1024,7 +1028,7 @@ def restore_snapshot( filename, tarstream = None ):
     del_config_dir()
     if filename:
         if not os.path.exists(os.path.join(snapshot_dir, filename)):
-            raise MKGeneralException("Snapshot does not exist %s" % filename)
+            raise MKGeneralException(_("Snapshot does not exist %s" % filename))
         snapshot = tarfile.open(os.path.join(snapshot_dir, filename), "r:gz")
     elif tarstream:
         stream = StringIO.StringIO()
@@ -1034,7 +1038,7 @@ def restore_snapshot( filename, tarstream = None ):
     else:
         return
 
-    snapshot.extractall(defaults.omd_root)
+    snapshot.extractall(defaults.check_mk_configdir)
     snapshot.close()
     log_pending(None, "snapshot-restored", _("Restored snapshot %s") % (filename or _('from uploaded file')))
 

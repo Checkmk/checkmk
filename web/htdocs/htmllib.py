@@ -457,19 +457,19 @@ class html:
         d = self.var(varname + "_date")
         if not t or not d:
             raise MKUserError([varname + "_date", varname + "_time"],
-                              "Please specify a date and time")
+                              _("Please specify a date and time"))
 
         try:
             br = time.strptime(d + " " + t, "%Y-%m-%d %H:%M")
         except:
             raise MKUserError([varname + "_date", varname + "_time"],
-                              "Please enter the date/time in the format YYYY-MM-DD HH:MM")
+                              _("Please enter the date/time in the format YYYY-MM-DD HH:MM"))
         return int(time.mktime(br))
 
     def get_time_input(self, varname, what):
         t = self.var(varname)
         if not t:
-            raise MKUserError(varname, "Please specify %s" % what)
+            raise MKUserError(varname, _("Please specify %s") % what)
 
         try:
             h, m = t.split(":")
@@ -478,7 +478,7 @@ class html:
             if m < 0 or m > 59 or h < 0:
                 raise Exception()
         except:
-            raise MKUserError(varname, "Please enter the time in the format HH:MM")
+            raise MKUserError(varname, _("Please enter the time in the format HH:MM"))
         return m * 60 + h * 3600
 
     def upload_file(self, varname):
@@ -554,7 +554,7 @@ class html:
         if type(self.req.user) == str:
             login_text = "<b>%s</b> (%s)" % (config.user, config.role)
         else:
-            login_text = "not logged in"
+            login_text = _("not logged in")
         self.write("<table class=header><tr><td class=left>%s</td><td class=right>"
                    "%s &nbsp; &nbsp; <b id=headertime>%s</b> <a href=\"http://mathias-kettner.de\"><img src=\"images/mk_logo_small.gif\"/></a></td></tr></table>" %
                    (title, login_text, time.strftime("%H:%M")))
@@ -581,7 +581,7 @@ class html:
             self.bottom_focuscode()
             corner_text = ""
             if self.browser_reload:
-                corner_text += "refresh: %d secs" % self.browser_reload
+                corner_text += _("refresh: %d secs") % self.browser_reload
             si = self.render_status_icons()
             self.write("<table class=footer><tr>"
                            "<td class=left>%s</td>"
@@ -610,7 +610,7 @@ class html:
         if self.output_format == "html":
             self.write("<div class=error>%s</div>\n" % msg)
         else:
-            self.write("ERROR: ")
+            self.write(_("ERROR: "))
             self.write(strip_tags(msg))
             self.write("\n")
 
@@ -618,7 +618,7 @@ class html:
         if self.output_format == "html":
             self.write("<div class=warning>%s</div>\n" % msg)
         else:
-            self.write("WARNING: ")
+            self.write(_("WARNING: "))
             self.write(strip_tags(msg))
             self.write("\n")
 
@@ -626,18 +626,20 @@ class html:
         if self.output_format == "html":
             self.write("<div class=success>%s</div>\n" % msg)
         else:
-            self.write("MESSAGE: ")
+            self.write(_("MESSAGE: "))
             self.write(strip_tags(msg))
             self.write("\n")
 
     def check_limit(self, rows, limit):
         count = len(rows)
         if limit != None and count >= limit + 1:
-            text = "Your query produced more then %d results. " % limit
+            text = _("Your query produced more than %d results. ") % limit
             if self.var("limit", "soft") == "soft" and config.may("ignore_soft_limit"):
-                text += '<a href="%s">Repeat query and allow more results.</a>' % self.makeuri([("limit", "hard")])
+                text += '<a href="%s">%s</a>' % \
+                             (self.makeuri([("limit", "hard")]), _('Repeat query and allow more results.'))
             elif self.var("limit") == "hard" and config.may("ignore_hard_limit"):
-                text += '<a href="%s">Repeat query without limit.</a>' % self.makeuri([("limit", "none")])
+                text += '<a href="%s">%s</a>' % \
+                             (self.makeuri([("limit", "none")]), _('Repeat query without limit.'))
             self.show_warning(text)
             del rows[limit:]
             return False
@@ -650,8 +652,8 @@ class html:
             self.write("<div class=really>%s" % msg)
             self.begin_form("confirm", None, "POST")
             self.hidden_fields(add_action_vars = True)
-            self.button("_do_confirm", "Yes!", "really")
-            self.button("_do_actions", "No", "")
+            self.button("_do_confirm", _("Yes!"), "really")
+            self.button("_do_actions", _("No"), "")
             self.end_form()
             self.write("</div>")
             return False

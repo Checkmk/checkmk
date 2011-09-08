@@ -1,4 +1,17 @@
 1.1.11i4
+    Core, Setup, etc.:
+    * FIX: use hostgroups instead of host_groups in Nagios configuration.
+      This fixes a problem with Shinken
+    * --scan-parents: detected parent hosts are now tagged with 'ping', so
+      that no agent will be contacted on those hosts
+
+    Checks & Agents:
+    * Added 4 new checks dell_powerconnect_* by Chris Bowlby
+    * ipmi_sensors: correctly handle further positive status texts
+      (thanks to Sebastian Talmon)
+    * FIX: nfsmounts handles zero-sized volumes correctly
+    * AIX agent now outputs the user and performance data in <<<ps>>>
+
     Multisite:
     * FIX: WATO filtered status GUIs did not update the title after changing
       the title of the file/folder in WATO
@@ -22,12 +35,19 @@
     * Sort titles in views can be enabled by clicking on the whole cells now
     * Submitting the view editor via ENTER key saves the view now instead of try mode
     * Host comments have red backgrounded rows when host is down
-    * Implemented extra_custom_links to be used in views to register custom context links
+    * Implemented hook api to draw custom link buttons in views
 
     WATO:
     * Changed row selection in WATO to new row selection mechanism
     * Bulk action buttons are shown at the top of hostlists too when the lists
       have more than 10 list items
+
+    Livestatus:
+    * FIX: fix compile error in TableLog.cc by including stddef.h
+    * FIX: tables comments and downtimes now honor AuthUser
+    * Table log honors AuthUser for entries that belong to hosts
+      (not for external commands, though. Sorry...)
+    * FIX: fix Stats: sum/min/max/avg for columns of type time
 
 1.1.11i3:
     Core, Setup, etc.:

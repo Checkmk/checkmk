@@ -54,6 +54,7 @@ public:
     void add(DowntimeOrComment *data);
     void remove(unsigned id);
     void answerQuery(Query *);
+    bool isAuthorized(contact *ctc, void *data);
     _entries_t::iterator entriesIteratorBegin() { return _entries.begin(); }
     _entries_t::iterator entriesIteratorEnd() { return _entries.end(); }
 };

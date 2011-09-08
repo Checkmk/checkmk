@@ -44,6 +44,7 @@
 #include "NegatingFilter.h"
 #include "waittriggers.h"
 #include "data_encoding.h"
+#include "auth.h"
 
 extern int g_debug_level;
 extern unsigned long g_max_response_size;
@@ -378,7 +379,7 @@ void Query::parseStatsLine(char *line)
         operation = STATS_OP_STD;
 
     char *column_name;
-    if (operation == STATS_OP_COUNT) 
+    if (operation == STATS_OP_COUNT)  
         column_name = col_or_op;
     else {
         // aggregation operator is followed by column name

@@ -26,6 +26,8 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <stddef.h>
+
 #include "nagios.h"
 #include "logger.h"
 #include "TableLog.h"
@@ -40,6 +42,7 @@
 #include "TableHosts.h"
 #include "TableCommands.h"
 #include "TableContacts.h"
+#include "auth.h"
 
 #define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
 
@@ -397,10 +400,15 @@ bool TableLog::isAuthorized(contact *ctc, void *data)
     service *svc = entry->_service;
     host *hst = entry->_host;
 
-    if (svc)
-        return g_table_services->isAuthorized(ctc, svc);
-    else if (hst)
-        return g_table_hosts->isAuthorized(ctc, hst);
+    if (hst || svc)
+        return is_authorized_for(ctc, hst, svc);
+    // suppress entries for messages that belong to 
+    // hosts that do not exist anymore.
+    else if (entry->_logclass == LOGCLASS_ALERT
+        || entry->_logclass == LOGCLASS_NOTIFICATION
+        || entry->_logclass == LOGCLASS_PASSIVECHECK
+        || entry->_logclass == LOGCLASS_STATE)
+        return false;
     else
         return true;
 }

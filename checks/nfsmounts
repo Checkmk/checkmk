@@ -42,6 +42,9 @@ def check_nfsmounts(item, params, info):
             if line[1] == 'ok':
                 gb = 1024 * 1024 * 1024.0
                 size_gb = (size_blocks * blocksize) / gb
+                if size_gb == 0:
+                    return (0, "OK - server is responding")
+
                 free_gb = (free_blocks * blocksize) / gb
                 used_gb = size_gb - free_gb
                 used_perc = 100.0 * used_gb / size_gb

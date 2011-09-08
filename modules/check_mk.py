@@ -1390,7 +1390,7 @@ def create_nagios_hostdefs(outfile, hostname):
         hostgroups_to_define.add(default_host_group)
     elif define_hostgroups:
         hostgroups_to_define.update(hgs)
-    outfile.write("  host_groups\t\t\t+%s\n" % hostgroups)
+    outfile.write("  hostgroups\t\t\t+%s\n" % hostgroups)
 
     # Contact groups
     cgrs = host_contactgroups_of([hostname])
@@ -1452,7 +1452,7 @@ def create_nagios_hostdefs(outfile, hostname):
             hostgroups_to_define.add(default_host_group)
         elif define_hostgroups:
             hostgroups_to_define.update(hgs)
-        outfile.write("  host_groups\t\t\t+%s\n" % hostgroups)
+        outfile.write("  hostgroups\t\t\t+%s\n" % hostgroups)
 
         # host gets same contactgroups as real host
         if len(cgrs) > 0:
@@ -3624,7 +3624,7 @@ def do_scan_parents(hosts):
                     gateway = "gw-%s" % (gateway_ip.replace(".", "-"))
                     if gateway not in gateway_hosts:
                         gateway_hosts.add(gateway)
-                        parent_hosts.append("%s|parent" % gateway)
+                        parent_hosts.append("%s|parent|ping" % gateway)
                         parent_ips[gateway] = gateway_ip
                         parent_rules.append( (monitoring_host, [gateway]) ) # make Nagios a parent of gw
                 parent_rules.append( (gateway, [host]) )

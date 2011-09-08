@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config, defaults, livestatus, htmllib, time, os, re, pprint, time, copy
-import weblib
+import weblib, traceback
 from lib import *
 from pagefunctions import *
 
@@ -49,7 +49,7 @@ multisite_sorters          = {}
 multisite_builtin_views    = {}
 multisite_painter_options  = {}
 ubiquitary_filters         = [] # Always show this filters
-extra_context_links        = []
+view_hooks                 = {}
 
 # Load all view plugins
 def load_plugins():
@@ -1352,6 +1352,11 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
 
     # Actions
     if len(rows) > 0:
+        # If we are currently within an action (confirming or executing), then
+        # we display only the selected rows (if checkbox mode is active)
+        if html.var("selected_rows", "") and html.do_actions():
+            rows = get_selected_rows(view, rows, html.var("selected_rows"))
+
         if html.do_actions() and html.transaction_valid(): # submit button pressed, no reload
             try:
                 if 'C' in display_options:
@@ -1359,9 +1364,6 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
                 # Create URI with all actions variables removed
                 backurl = html.makeuri([])
                 has_done_actions = do_actions(view, datasource["infos"][0], rows, backurl)
-                if type(has_done_actions) == list:
-                    rows = has_done_actions
-                    has_done_actions = False
                 if 'C' in display_options:
                     html.write("</td></tr>")
             except MKUserError, e:
@@ -1389,7 +1391,8 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     if not has_done_actions:
         # Limit exceeded? Show warning
         html.check_limit(rows, get_limit())
-        layout["render"](rows, view, group_painters, painters, num_columns, show_checkboxes)
+        layout["render"](rows, view, group_painters, painters, num_columns, 
+                         show_checkboxes and not html.do_actions())
 
         # Play alarm sounds, if critical events have been displayed
         if 'S' in display_options and view.get("play_sounds"):
@@ -1564,6 +1567,7 @@ def show_context_links(thisview, active_filters):
     # Show button to WATO, if permissions allow this
     if config.may("use_wato"):
         html.begin_context_buttons()
+        execute_hooks('buttons-begin')
         first = False
         host = html.var("host")
         if host:
@@ -1618,32 +1622,11 @@ def show_context_links(thisview, active_filters):
             if first:
                 first = False
                 html.begin_context_buttons()
+                execute_hooks('buttons-begin')
             vars_values = [ (var, html.var(var)) for var in set(used_contextvars) ]
             html.context_button(view_linktitle(view), html.makeuri_contextless(vars_values + [("view_name", name)]), view.get("icon"))
 
-    # Add the plugin registered context links when the var requirements can be met
-    # custom context links can be registered in view plugins like this:
-    #
-    # def get_my_link_url(view):
-    #     (...)
-    #     return '/url/to/link/to'
-    #
-    # extra_context_links = [
-    #     ([], 'The Title', get_my_link_url, 'map'),
-    # ]
-    #
-    # The first element is a list of required var names to show this button
-    # The fourth element it the name of the icon (icon_<name>.png)
-    #
-    # The url render function needs to return the target URL as string but can
-    # also return None to disable this link for the current view
-    for needed_vars, title, url_func, icon in extra_context_links:
-        miss = [ v for v in needed_vars if v not in active_filter_vars ]
-        if miss:
-            break
-        url = url_func(view)
-        if url is not None:
-            html.context_button(title, url, icon)
+    execute_hooks('buttons-end')
 
     if not first:
         html.end_context_buttons()
@@ -2174,25 +2157,23 @@ def nagios_host_service_action_command(what, dataset):
     return title, [nagios_command]
 
 
+def get_selected_rows(view, rows, sel_var):
+    action_rows = []
+    selected_rows = sel_var.split(',')
+    for row in rows:
+        if row_id(view, row) in selected_rows:
+            action_rows.append(row)
+    return action_rows
+
 # Returns:
 # True -> Actions have been done
 # False -> No actions done because now rows selected
 # [...] new rows -> Rows actions (shall/have) be performed on
-def do_actions(view, what, rows, backurl):
+def do_actions(view, what, action_rows, backurl):
     if not config.may("act"):
         html.show_error(_("You are not allowed to perform actions. If you think this is an error, "
               "please ask your administrator grant you the permission to do so."))
         return False # no actions done
-
-    # Handle optional row filter based on row selections
-    if html.has_var('selected_rows'):
-        selected_rows = html.var('selected_rows')
-        action_rows = []
-        for row in rows:
-            if row_id(view, row) in selected_rows.split(','):
-                action_rows.append(row)
-    else:
-        action_rows = rows
 
     if not action_rows:
         html.show_error(_("No rows selected to perform actions for."))
@@ -2202,7 +2183,7 @@ def do_actions(view, what, rows, backurl):
     title = nagios_action_command(what, action_rows[0])[0] # just get the title
     if not html.confirm(_("Do you really want to %s the following %d %ss?") %
                                                (title, len(action_rows), what)):
-        return action_rows # no actions done, but show only selected rows
+        return False
 
     count = 0
     for row in action_rows:
@@ -2255,6 +2236,23 @@ def page_message_and_forward(message, default_url, addhtml=""):
 #  |  __/| | |_| | (_| | | | | |_____|  _  |  __/ | |_) |  __/ |  \__ \
 #  |_|   |_|\__,_|\__, |_|_| |_|     |_| |_|\___|_| .__/ \___|_|  |___/
 #                 |___/                           |_|
+
+def register_hook(hook, func):
+    if not hook in view_hooks:
+        view_hooks[hook] = [func]
+    else:
+        view_hooks[hook].append(func)
+
+def execute_hooks(hook):
+    for hook_func in view_hooks.get(hook, []):
+        try:
+            hook_func()
+        except:
+            if config.debug:
+                raise MKGeneralException(_('Problem while executing hook function %s in hook %s: %s')
+                                           % (hook_func.__name__, hook, traceback.format_exc()))
+            else:
+                pass
 
 def prepare_paint(p, row):
     painter = p[0]

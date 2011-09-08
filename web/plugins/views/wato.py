@@ -78,9 +78,9 @@ class FilterWatoFile(Filter):
         # file titles and so on.
         # The call below needs to use some sort of indicator wether the cache needs
         # to be renewed or not.
-        self.load_wato_data()
         current = html.var(self.name)
         if current and current != "/":
+            self.load_wato_data()
             return self.path_to_tree.get(current) 
 
 

@@ -362,10 +362,14 @@ class html:
         sorted.sort(lambda a,b: cmp(a[1].lower(), b[1].lower()))
         html.select(self, varname, sorted, deflt, onchange)
 
-    def select(self, varname, options, deflt="", onchange=None):
+    def select(self, varname, options, deflt="", onchange=None, attrs = {}):
         current = self.var(varname, deflt)
         onchange_code = onchange and " onchange=\"%s\"" % (onchange) or ""
-        self.write("<select%s name=\"%s\" id=\"%s\" size=\"1\">\n" % (onchange_code, varname, varname))
+
+        attributes = ' ' + ' '.join([ '%s="%s"' % (k, v) for k, v in attrs.iteritems() ])
+
+        self.write("<select%s name=\"%s\" id=\"%s\" size=\"1\"%s>\n" %
+                             (onchange_code, varname, varname, attributes))
         for value, text in options:
             if value == None: value = ""
             sel = value == current and " selected" or ""

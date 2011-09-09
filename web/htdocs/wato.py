@@ -640,7 +640,7 @@ def mode_file(phase):
         html.write("</tr>\n")
         odd = "odd"
 
-        def bulk_actions(at_least_one_imported):
+        def bulk_actions(at_least_one_imported, top = False):
             # bulk actions
             html.write('<tr class="data %s0">' % odd)
             html.write("<td colspan=%d>" % colspan)
@@ -650,7 +650,7 @@ def mode_file(phase):
             html.button("_bulk_edit", _("Edit"))
             html.button("_bulk_cleanup", _("Cleanup"))
             html.button("_bulk_inventory", _("Inventory"))
-            host_move_combo(None)
+            host_move_combo(None, top)
             if at_least_one_imported:
                 html.button("_bulk_movetotarget", _("Move to Target Folders"))
             html.write("</td></tr>\n")
@@ -678,7 +678,7 @@ def mode_file(phase):
         # Add the bulk action buttons also to the top of the table when this
         # list shows more than 10 rows
         if more_than_ten_items:
-            bulk_actions(at_least_one_imported)
+            bulk_actions(at_least_one_imported, top = True)
 
         for hostname in hostnames:
             if search_text and (search_text.lower() not in hostname.lower()):
@@ -2527,7 +2527,7 @@ def wato_html_head(title):
     html.header(title)
     html.write("<div class=wato>\n")
 
-def host_move_combo(host = None):
+def host_move_combo(host = None, top = False):
     other_files = []
     for path, afile in g_files.items():
         if config.role in afile["roles"] and afile != g_file:
@@ -2535,10 +2535,17 @@ def host_move_combo(host = None):
             other_files.append((os_path, "%s (%s)" % (afile["title"], os_path)))
 
     if len(other_files) > 0:
-        selections = [("", _("(select file)"))] + other_files 
+        selections = [("", _("(select file)"))] + other_files
         if host == None:
             html.button("_bulk_move", _("Move To:"))
-            html.select("bulk_moveto", selections, "")
+            field_name = 'bulk_moveto'
+            if top:
+                field_name = '_top_bulk_moveto'
+                if html.has_var('bulk_moveto'):
+                    html.javascript('update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
+            html.select(field_name, selections, "",
+                        onchange = "update_bulk_moveto(this.value)",
+                        attrs = {'class': 'bulk_moveto'})
         else:
             html.hidden_field("host", host)
             uri = html.makeuri([("host", host), ("_transid", html.current_transid() )])
@@ -3185,7 +3192,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 html.hidden_field(checkbox_name, "on")
             else:
                 html.checkbox(checkbox_name, active, 
-                    onchange="wato_toggle_attribute(this, '%s');" % attrname ) # Only select if value is unique
+                    onclick = "wato_toggle_attribute(this, '%s');" % attrname ) # Only select if value is unique
             html.write("</td>")
 
             # Now comes the input fields and the inherited / default values

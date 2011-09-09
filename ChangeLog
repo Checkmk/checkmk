@@ -8,6 +8,10 @@
     Livestatus:
     * Write messages after initialization into an own livestatus.log
 
+    WATO:
+    * FIX: "bulk move to" at the top of wato hostlists works again
+    * FIX: IE<9: Fixed problem with checkbox events when editing a host
+
 1.1.11i4:
     Core, Setup, etc.:
     * FIX: use hostgroups instead of host_groups in Nagios configuration.

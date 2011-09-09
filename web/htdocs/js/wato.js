@@ -290,3 +290,11 @@ function progress_scheduler(mode, url_prefix, timeout, items, end_url, success_s
     setTimeout(function() { progress_scheduler(mode, url_prefix, timeout, [], "", ""); }, timeout);
 }
 
+function update_bulk_moveto(val) {
+    var fields = getElementsByClass('bulk_moveto');
+    for(var i = 0; i < fields.length; i++)
+        for(var a = 0; a < fields[i].options.length; a++)
+            if(fields[i].options[a].value == val)
+                fields[i].options[a].selected = true;
+    fields = null;
+}

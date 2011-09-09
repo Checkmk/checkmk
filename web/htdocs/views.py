@@ -1098,9 +1098,10 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     if html.has_var('_display_options'):
         display_options = html.var("_display_options", "")
         display_options = apply_display_option_defaults(display_options)
+        html.display_options = display_options
 
     # Below we have the following display_options vars:
-    # htmk.display_options        - Use this when rendering the current view
+    # html.display_options        - Use this when rendering the current view
     # html.var("display_options") - Use this for linking to other views
 
     # If display option 'M' is set, then all links are targetet to the 'main'
@@ -1675,7 +1676,7 @@ def query_data(datasource, columns, add_columns, add_headers, only_sites = [], l
     html.live.set_prepend_site(True)
     if limit != None:
         html.live.set_limit(limit + 1) # + 1: We need to know, if limit is exceeded
-    if config.debug and html.output_format == "html":
+    if config.debug and html.output_format == "html" and 'W' in html.display_options:
         html.write("<div class=message><tt>%s</tt></div>\n" % (query.replace('\n', '<br>\n')))
 
     if only_sites:

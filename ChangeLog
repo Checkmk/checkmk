@@ -7,6 +7,7 @@
 
     WATO:
     * FIX: "bulk move to" at the top of wato hostlists works again
+    * FIX: IE<9: Fixed problem with checkbox events when editing a host
 
 1.1.11i4:
     Core, Setup, etc.:

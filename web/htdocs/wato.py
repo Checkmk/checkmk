@@ -3192,7 +3192,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 html.hidden_field(checkbox_name, "on")
             else:
                 html.checkbox(checkbox_name, active, 
-                    onchange="wato_toggle_attribute(this, '%s');" % attrname ) # Only select if value is unique
+                    onclick = "wato_toggle_attribute(this, '%s');" % attrname ) # Only select if value is unique
             html.write("</td>")
 
             # Now comes the input fields and the inherited / default values

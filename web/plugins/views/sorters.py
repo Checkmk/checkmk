@@ -155,16 +155,16 @@ declare_1to1_sorter("svc_notifications_enabled",  cmp_simple_number)
 declare_1to1_sorter("svc_is_active",              cmp_simple_number)
 declare_1to1_sorter("svc_group_memberlist",       cmp_string_list)
 declare_1to1_sorter("svc_acknowledged",           cmp_simple_number)
-declare_1to1_sorter("svc_perf_val01",             cmp_simple_number)
-declare_1to1_sorter("svc_perf_val02",             cmp_simple_number)
-declare_1to1_sorter("svc_perf_val03",             cmp_simple_number)
-declare_1to1_sorter("svc_perf_val04",             cmp_simple_number)
-declare_1to1_sorter("svc_perf_val05",             cmp_simple_number)
-declare_1to1_sorter("svc_perf_val06",             cmp_simple_number)
-declare_1to1_sorter("svc_perf_val07",             cmp_simple_number)
-declare_1to1_sorter("svc_perf_val08",             cmp_simple_number)
-declare_1to1_sorter("svc_perf_val09",             cmp_simple_number)
-declare_1to1_sorter("svc_perf_val10",             cmp_simple_number)
+
+def cmp_perfdata_nth_value(r1, r2, n):
+    return cmp(get_perfdata_nth_value(r1, n), get_perfdata_nth_value(r2, n))
+
+for n in range(1, 10):
+    multisite_sorters['svc_perf_val%02d' % n] = {
+        "title"   : _("Service performance data - value number %02d" % n),
+        "columns" : [ 'service_perf_data' ],
+        "cmp"     : lambda r1, r2: cmp(get_perfdata_nth_value(r1, n - 1), get_perfdata_nth_value(r2, n - 1))
+    }
 
 # Host
 declare_1to1_sorter("alias",                  cmp_simple_string)

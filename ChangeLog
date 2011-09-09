@@ -4,6 +4,7 @@
     * Added some missing i18n strings in general HTML functions
     * Added display_option "w" to disable limit messages and livestatus errors in views
     * Service Perfdata Sorters are sorting correctly now
+    * Added "Administration" snapin to default sidebar
 
     WATO:
     * FIX: "bulk move to" at the top of wato hostlists works again

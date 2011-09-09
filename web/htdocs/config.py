@@ -351,6 +351,7 @@ sidebar = \
  ('wato',              'open'),
  ('views',             'open'),
  ('bookmarks',         'open'),
+ ('admin',             'open'),
  ('master_control',    'closed')]
 
 #    _     _           _ _

@@ -1675,7 +1675,7 @@ def query_data(datasource, columns, add_columns, add_headers, only_sites = [], l
     html.live.set_prepend_site(True)
     if limit != None:
         html.live.set_limit(limit + 1) # + 1: We need to know, if limit is exceeded
-    if config.debug and html.output_format == "html":
+    if config.debug and html.output_format == "html" and 'W' in html.display_options:
         html.write("<div class=message><tt>%s</tt></div>\n" % (query.replace('\n', '<br>\n')))
 
     if only_sites:

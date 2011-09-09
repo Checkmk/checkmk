@@ -63,36 +63,38 @@
 #endif 
 
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
-    extern int event_broker_options;
+extern int event_broker_options;
+extern char *log_file;
 
-    int g_idle_timeout_msec = 300 * 1000; /* maximum idle time for connection in keep alive state */
-    int g_query_timeout_msec = 10 * 1000;      /* maximum time for reading a query */
+int g_idle_timeout_msec = 300 * 1000; /* maximum idle time for connection in keep alive state */
+int g_query_timeout_msec = 10 * 1000;      /* maximum time for reading a query */
 
-    unsigned g_num_clientthreads = 10;     /* allow 10 concurrent connections per default */
-    size_t g_thread_stack_size = 65536; /* stack size of threads */
+unsigned g_num_clientthreads = 10;     /* allow 10 concurrent connections per default */
+size_t g_thread_stack_size = 65536; /* stack size of threads */
 
 #define false 0
 #define true 1
 
 
-    void *g_nagios_handle;
-    int g_unix_socket = -1;
-    int g_max_fd_ever = 0;
-    char g_socket_path[4096];
-    char g_pnp_path[4096];
-    int g_debug_level = 0;
-    int g_should_terminate = false;
-    pthread_t g_mainthread_id;
-    pthread_t *g_clientthread_id;
-    unsigned long g_max_cached_messages = 500000;
-    unsigned long g_max_response_size = 100 * 1024 * 1024; // limit answer to 10 MB
-    int g_thread_running = 0;
-    int g_thread_pid = 0;
-    int g_service_authorization = AUTH_LOOSE;
-    int g_group_authorization = AUTH_STRICT;
-    int g_data_encoding = ENCODING_UTF8;
+void *g_nagios_handle;
+int g_unix_socket = -1;
+int g_max_fd_ever = 0;
+char g_socket_path[4096];
+char g_pnp_path[4096];
+char g_logfile_path[4096];
+int g_debug_level = 0;
+int g_should_terminate = false;
+pthread_t g_mainthread_id;
+pthread_t *g_clientthread_id;
+unsigned long g_max_cached_messages = 500000;
+unsigned long g_max_response_size = 100 * 1024 * 1024; // limit answer to 10 MB
+int g_thread_running = 0;
+int g_thread_pid = 0;
+int g_service_authorization = AUTH_LOOSE;
+int g_group_authorization = AUTH_STRICT;
+int g_data_encoding = ENCODING_UTF8;
 
-    void* voidp;
+void* voidp;
 
 void livestatus_count_fork()
 {
@@ -193,7 +195,6 @@ void *client_thread(void *data __attribute__ ((__unused__)))
 
 void start_threads()
 {
-    logger(LG_INFO, "Going to open socket and starting threads");
     if (!g_thread_running) {
         /* start thread that listens on socket */
         pthread_atfork(livestatus_count_fork, NULL, livestatus_cleanup_after_fork);
@@ -511,7 +512,15 @@ void check_pnp_path()
 void livestatus_parse_arguments(const char *args_orig)
 {
     /* set default socket path */
-    strncpy(g_socket_path, DEFAULT_SOCKET_PATH, sizeof(g_socket_path) - 1);
+    strncpy(g_socket_path, DEFAULT_SOCKET_PATH, sizeof(g_socket_path));
+
+    /* set default path to our logfile to be in the same path as nagios.log */
+    strncpy(g_logfile_path, log_file, sizeof(g_logfile_path) - 16 /* len of "livestatus.log" */); 
+    char *slash = strrchr(g_logfile_path, '/');
+    if (!slash)
+        strcpy(g_logfile_path, "/tmp/livestatus.log");
+    else 
+        strcpy(slash + 1, "livestatus.log");
 
     /* there is no default PNP path */
     g_pnp_path[0] = 0;
@@ -528,12 +537,15 @@ void livestatus_parse_arguments(const char *args_orig)
         char *left = next_token(&part, '=');
         char *right = next_token(&part, 0);
         if (!right) {
-            strncpy(g_socket_path, left, sizeof(g_socket_path) - 1);
+            strncpy(g_socket_path, left, sizeof(g_socket_path));
         }
         else {
             if (!strcmp(left, "debug")) {
                 g_debug_level = atoi(right);
                 logger(LG_INFO, "Setting debug level to %d", g_debug_level);
+            }
+            else if (!strcmp(left, "log_file")) {
+                strncpy(g_logfile_path, right, sizeof(g_logfile_path));
             }
             else if (!strcmp(left, "max_cached_messages")) {
                 g_max_cached_messages = strtoul(right, 0, 10);
@@ -643,6 +655,7 @@ int nebmodule_init(int flags __attribute__ ((__unused__)), char *args, void *han
 {
     g_nagios_handle = handle;
     livestatus_parse_arguments(args);
+    open_logfile();
 
     logger(LG_INFO, "Livestatus %s by Mathias Kettner. Socket: '%s'", VERSION, g_socket_path);
     logger(LG_INFO, "Please visit us at http://mathias-kettner.de/");
@@ -669,8 +682,7 @@ int nebmodule_init(int flags __attribute__ ((__unused__)), char *args, void *han
        thread the first time one of our callbacks is called. Before
        that happens, we haven't got any data anyway... */
 
-    if (g_debug_level > 0)
-        logger(LG_INFO, "successfully finished initialization");
+    logger(LG_INFO, "Finished initialization. Further log messages go to %s", g_logfile_path);
     return 0;
 }
 
@@ -682,6 +694,7 @@ int nebmodule_deinit(int flags __attribute__ ((__unused__)), int reason __attrib
     close_unix_socket();
     store_deinit();
     deregister_callbacks();
+    close_logfile();
     return 0;
 }
 

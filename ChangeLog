@@ -5,6 +5,9 @@
     * Added display_option "w" to disable limit messages and livestatus errors in views
     * Service Perfdata Sorters are sorting correctly now
 
+    Livestatus:
+    * Write messages after initialization into an own livestatus.log
+
 1.1.11i4:
     Core, Setup, etc.:
     * FIX: use hostgroups instead of host_groups in Nagios configuration.

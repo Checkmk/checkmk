@@ -39,9 +39,9 @@
 extern "C" {
 #endif 
 
-
-
-    void logger(int priority, const char *loginfo, ...);
+void logger(int priority, const char *loginfo, ...);
+void open_logfile();
+void close_logfile();
 
 #ifdef __cplusplus
 }

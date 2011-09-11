@@ -255,7 +255,7 @@ def handler(req, profiling = True):
             html.footer()
         apache.log_error(_("Configuration error: %s") % (e,), apache.APLOG_ERR)
 
-    except MKGeneralException, e:
+    except 1: # MKGeneralException, e:
         if not fail_silently:
             html.header(_("Error"))
             html.show_error(str(e))

@@ -74,6 +74,11 @@
 #             currently operating in. 
 #
 # g_root_folder -> The folder object representing the root folder
+#
+# At the beginning of each page, those three global variables are
+# set. All folders are loaded, but only their meta-data, not the
+# actual Check_MK files (hosts.mk). WATO is designed for managing
+# 100.000 hosts. So operations on all hosts might last a while...
 
 #   +----------------------------------------------------------------------+
 #   |                           ___       _ _                              |
@@ -86,24 +91,18 @@
 #   | Importing, Permissions, global variables                             |
 #   +----------------------------------------------------------------------+
 
-import config
-
-import sys, pprint, socket, re, subprocess, time, datetime, tarfile, StringIO
+import sys, pprint, socket, re, subprocess, time, datetime, shutil, tarfile, StringIO
+import config, htmllib
 from lib import *
-import htmllib
 
 config.declare_permission("use_wato",
      _("Use WATO"),
-     _("This permissions allows users to use WATO - Check_MK's Web Administration Tool.<br>"
-     "Please make sure, that they also have the permission for the WATO snapin."),
+     _("This permissions allows users to use WATO - Check_MK's Web Administration Tool."),
      [ "admin", "user" ])
 
 root_dir     = defaults.check_mk_configdir + "/wato/"
 var_dir      = defaults.var_dir + "/wato/"
 snapshot_dir = var_dir + "/snapshots/"
-
-g_root_folder = None # pointer to root folder
-g_folder      = None # pointer to current folder
 
 #   +----------------------------------------------------------------------+
 #   |                        __  __       _                                |
@@ -136,17 +135,10 @@ def page_handler():
     load_all_folders()            # load information about all folders
     set_current_folder()          # set g_folder from HTML variable
     load_hosts(g_folder)          # load information about hosts
-    title = g_folder["title"]
+    title = g_folder["title"]     # title might be changed by actions
 
     current_mode = html.var("mode", "folder")
     modefunc = mode_functions.get(current_mode)
-
-    # except Exception, e:
-    #     html.header("Error")
-    #     html.show_error(e)
-    #     html.footer()
-    #     return
-
 
     # Do actions (might switch mode)
     action_message = None
@@ -219,15 +211,305 @@ def page_handler():
     html.footer()
 
 
+def set_current_folder():
+    global g_folder
+
+    if html.has_var("folder"):
+        path = html.var("folder")
+    else:
+        host = html.var("host")
+        if host: # find host with full scan. Expensive operation
+            path = find_host(host)
+            if not path:
+                raise MKGeneralException(_("The host <b>%s</b> is not managed by WATO.") % host)
+        else: # fall back to root folder
+            path = ""
+
+    g_folder = g_folders.get(path)
+    html.set_var("folder", path) # in case of implizit folder selection
+    if not g_folder:
+        raise MKGeneralException(_('You called this page with a non-existing folder! '
+                                 'Go back to the <a href="wato.py">main index</a>.'))
+
 #   +----------------------------------------------------------------------+
-#   |   ____                           _____     _     _                   |
-#   |  |  _ \ __ _  __ _  ___  ___ _  |  ___|__ | | __| | ___ _ __ ___     |
-#   |  | |_) / _` |/ _` |/ _ \/ __(_) | |_ / _ \| |/ _` |/ _ \ '__/ __|    |
-#   |  |  __/ (_| | (_| |  __/\__ \_  |  _| (_) | | (_| |  __/ |  \__ \    |
-#   |  |_|   \__,_|\__, |\___||___(_) |_|  \___/|_|\__,_|\___|_|  |___/    |
-#   |              |___/                                                   |
+#   |          _                    _    ______                            |
+#   |         | |    ___   __ _  __| |  / / ___|  __ ___   _____           |
+#   |         | |   / _ \ / _` |/ _` | / /\___ \ / _` \ \ / / _ \          |
+#   |         | |__| (_) | (_| | (_| |/ /  ___) | (_| |\ V /  __/          |
+#   |         |_____\___/ \__,_|\__,_/_/  |____/ \__,_| \_/ \___|          |
+#   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | Code creating the actual web pages: handling of folders              |
+#   | Helper functions for loading and saving folder and hosts data.       |
+#   | Hosts are loaded separately from the folders. This is for perfor-    |
+#   | mance reasons. In most cases information about the hosts is needed   |
+#   | only for the current folder. Keep in mind: WATO is designed for      |
+#   | handling 100k hosts.                                                 |
+#   +----------------------------------------------------------------------+
+
+def folder_dir(the_folder):
+    return root_dir + the_folder[".path"]
+
+# Save one folder (i.e. make sure the directory exist and write its .wato file)
+def save_folder(folder):
+    # Remove temporary entries from the dictionary
+    cleaned = dict([(k, v) for (k, v) in folder.iteritems() if not k.startswith('.') ])
+
+    # Create the directory with the correct permissions (in case it doesn't exist)
+    dir = folder_dir(folder)
+    make_nagios_directory(dir)
+
+    wato_filename = dir + "/.wato"
+    config.write_settings_file(wato_filename, cleaned)
+
+def save_folder_and_hosts(folder):
+    save_folder(folder)
+    save_hosts(folder)
+
+
+# Save a folder and all of its subfolders (recursively)
+def save_folders(folder):
+    save_folder(folder)
+    for subfolder in folder[".folders"].values():
+        save_folders(subfolder)
+
+
+def save_all_folders():
+    save_folders(g_root_folder)
+
+# Load the meta-data of a folder (it's .wato file), register
+# it in g_folders, load recursively all subfolders and then
+# return the folder object. The case the .wato file is missing 
+# it will be assume to contain default values.
+def load_folder(dir, name="", path=""):
+    fn = dir + "/.wato"
+    try:
+        folder = eval(file(fn).read())
+    except:
+        # .wato missing or invalid
+        folder = { 
+            "roles"     : [ "admin" ], 
+            "title"     : name and name or _("Main directory"),
+            "num_hosts" : 0,
+        }
+
+    folder[".name"]    = name
+    folder[".path"]    = path
+    folder[".folders"] = {}
+
+    # Now look subdirectories
+    for entry in os.listdir(dir):
+        if entry[0] == '.': # entries '.' and '..'
+            continue
+
+        p = dir + "/" + entry
+
+        if os.path.isdir(p):
+            if path == "":
+                subpath = entry
+            else:
+                subpath = path + "/" + entry
+            f = load_folder(p, entry, subpath)
+            f[".parent"] = folder
+            folder[".folders"][entry] = f
+    
+    g_folders[path] = folder
+    return folder
+
+# Load the information about all folders - except the hosts
+def load_all_folders():
+    if not os.path.exists(root_dir):
+        os.makedirs(root_dir)
+
+    global g_root_folder, g_folders
+    g_folders = {}
+    g_root_folder = load_folder(root_dir)
+
+
+# Load all hosts from all configuration files.
+def load_all_hosts(base_folder = None):
+    if base_folder == None:
+        base_folder = g_root_folder
+    hosts = {}
+    for f in base_folder[".files"].values():
+        hosts.update(load_hosts_file(base_folder, f))
+    for f in base_folder[".folders"].values():
+        hosts.update(load_all_hosts(f))
+    return hosts
+
+def load_hosts(folder):
+    if ".hosts" not in folder:
+        folder[".hosts"] = load_hosts_file(folder)
+        folder["num_hosts"] = len(folder[".hosts"])
+    return folder[".hosts"]
+
+
+def load_hosts_file(folder):
+    hosts = {}
+
+    filename = root_dir + folder[".path"] + "/hosts.mk"
+    if os.path.exists(filename):
+        variables = {
+            "ALL_HOSTS"          : ['@all'],
+            "all_hosts"          : [],
+            "ipaddresses"        : {},
+            "extra_host_conf"    : { "alias" : [] },
+            "extra_service_conf" : { "_WATO" : [] },
+            "host_attributes"    : {},
+        }
+        execfile(filename, variables, variables)
+        for h in variables["all_hosts"]:
+
+            parts = h.split('|')
+            hostname = parts[0]
+
+            # Get generic attributes of that host
+            host = variables["host_attributes"].get(hostname)
+            if host == None: # Legacy file: reconstruct values
+                host = {}
+                # Some of the attributes are handled with special care. We do not 
+                # want them to be redundant in the configuration file. We 
+                # want to stay compatible with check_mk.
+                ipaddress = variables["ipaddresses"].get(hostname)
+                aliases = host_extra_conf(hostname, variables["extra_host_conf"]["alias"]) 
+                if len(aliases) > 0:
+                    alias = aliases[0]
+                else:
+                    alias = None
+                host["alias"]     = alias 
+                host["ipaddress"] = ipaddress
+
+                # Retrieve setting for each individual host tag
+                tags = set([ tag for tag in parts[1:] if tag != 'wato' and not tag.endswith('.mk') ])
+                for attr, topic in host_attributes:
+                    if isinstance(attr, HostTagAttribute):
+                        tagvalue = attr.get_tag_value(tags)
+                        host[attr.name()] = tagvalue
+            hosts[hostname]   = host
+
+
+    # html.write("<pre>%s</pre>" % pprint.pformat(hosts))
+    return hosts
+
+
+def rewrite_config_files_below(folder):
+    for fo in folder[".folders"].values():
+        rewrite_config_files_below(fo)
+    rewrite_config_file(folder)
+
+def rewrite_config_file(folder):
+    load_hosts(folder)
+    save_hosts(folder)
+
+
+def save_hosts(folder):
+    folder_path = folder[".path"]
+    dirname = root_dir + folder_path
+    filename = dirname + "/hosts.mk"
+    hosts = folder.get(".hosts", [])
+    if len(hosts) == 0:
+        if os.path.exists(filename):
+            os.remove(filename)
+        return
+
+    all_hosts = []
+    ipaddresses = {}
+    aliases = []
+    hostnames = hosts.keys()
+    hostnames.sort()
+    for hostname in hostnames:
+        host = hosts[hostname]
+        effective = effective_attributes(host, folder)
+
+        # Make special handling of attributes configured in a special way 
+        # in check_mk
+        alias     = effective.get("alias")
+        ipaddress = effective.get("ipaddress")
+
+        # Compute tags from settings of each individual tag. We've got
+        # the current value for each individual tag.
+        tags = set([])
+        for attr, topic in host_attributes:
+            if isinstance(attr, HostTagAttribute):
+                value = effective.get(attr.name())
+                tags.update(attr.get_tag_list(value))
+
+        if alias:
+            aliases.append((alias, [hostname]))
+        all_hosts.append("|".join([hostname] + list(tags) + [ folder_path, 'wato' ]))
+        if ipaddress:
+            ipaddresses[hostname] = ipaddress
+
+    if not os.path.isdir(dirname):
+        os.makedirs(dirname)
+
+    out = file(filename, "w")
+    out.write("# Written by Check_MK Webconf\n# encoding: utf-8\n\n")
+    if len(all_hosts) > 0:
+        out.write("all_hosts += ")
+        out.write(pprint.pformat(all_hosts))
+        if len(aliases) > 0:
+            out.write("\n\nif 'alias' not in extra_host_conf:\n"
+                    "    extra_host_conf['alias'] = []\n")
+            out.write("\nextra_host_conf['alias'] += ")
+            out.write(pprint.pformat(aliases))
+        if len(ipaddresses) > 0:
+            out.write("\n\nipaddresses.update(")
+            out.write(pprint.pformat(ipaddresses))
+            out.write(")")
+        out.write("\n")
+
+    # all WATO information to Check_MK's inventory checks (needed for link in Multisite)
+    out.write("\n\nif '_WATO' not in extra_service_conf:\n"
+            "    extra_service_conf['_WATO'] = []\n")
+    out.write("\nextra_service_conf['_WATO'] += [ \n"
+              "  ('%s', [ 'wato', '%s' ], ALL_HOSTS, [ 'Check_MK inventory' ] ) ]\n" % 
+              (folder_path, folder_path))
+
+    # Add custom macros for attributes that are to be present in Nagios
+    custom_macros = {}
+    for hostname, host in hosts.items():
+        for attr, topic in host_attributes:
+            attrname = attr.name()
+            if attrname in effective:
+                value = effective.get(attrname)
+                nagstring = attr.to_nagios(value)
+                if nagstring != None:
+                    if attrname not in custom_macros:
+                        custom_macros[attrname] = {}
+                    custom_macros[attrname][hostname] = nagstring
+    for attrname, entries in custom_macros.items():
+        macrolist = []
+        for hostname, nagstring in entries.items():
+            macrolist.append((nagstring, [hostname]))
+        if len(macrolist) > 0:
+            out.write("\n# %s\n" % host_attribute[attrname].title())
+            out.write("if '_%s' not in extra_host_conf:\n" % attrname.upper())
+            out.write("    extra_host_conf['_%s'] = []\n" % attrname.upper())
+            out.write("extra_host_conf['_%s'] += \\\n%s\n" % (attrname.upper(), pprint.pformat(macrolist)))
+
+    # Write information about all host attributes into special variable - even
+    # values stored for check_mk as well.
+    out.write("\n# Host attributes (needed for WATO)\n")
+    out.write("host_attributes.update(%s)\n" % pprint.pformat(hosts))
+
+
+def delete_configuration_file(folder, thefile):
+    path = folder_dir(folder, thefile)
+    if os.path.exists(path):
+        os.remove(path) # remove the actual configuration file
+    if os.path.exists(path + ".wato"):
+        os.remove(path + ".wato") # remove the .wato file
+
+
+#   +----------------------------------------------------------------------+
+#   |                   _____     _     _                                  |
+#   |                  |  ___|__ | | __| | ___ _ __ ___                    |
+#   |                  | |_ / _ \| |/ _` |/ _ \ '__/ __|                   |
+#   |                  |  _| (_) | | (_| |  __/ |  \__ \                   |
+#   |                  |_|  \___/|_|\__,_|\___|_|  |___/                   |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Mode for showing a folder, bulk actions on hosts.                    |
 #   +----------------------------------------------------------------------+
 
 def mode_folder(phase):
@@ -268,11 +550,11 @@ def mode_folder(phase):
             return delete_host_after_confirm(delname)
 
         # Move single hosts to other files
-        move_to = html.var("_move_host_to")
-        hostname = html.var("host")
-        if move_to and hostname:
-            move_host_to(hostname, move_to)
-            return
+        if html.has_var("_move_host_to"):
+            hostname = html.var("host")
+            if hostname:
+                move_host_to(hostname, html.var("_move_host_to"))
+                return
 
         # bulk operation on hosts
         if not html.transaction_valid():
@@ -332,7 +614,8 @@ def show_subfolders(folder):
 
     if not config.wato_hide_filenames:
         html.write("<th>%s</th>" % _("Directory"))
-    html.write("<th class=right>" + _("Hosts") + "</th></tr>\n")
+    html.write("<th class=right>" + _("Hosts") + "</th>")
+    html.write("<th class=right>" + _("Subfolders") + "</th></tr>\n")
 
     odd = "even"
 
@@ -344,7 +627,8 @@ def show_subfolders(folder):
         folder_path = entry[".path"]
 
         edit_url     = make_link_to([("mode", "editfolder")], entry)
-        delete_url   = make_action_link([("mode", "folder"), ("_delete_folder", entry[".name"])])
+        delete_url   = make_action_link([("mode", "folder"), 
+                       ("_delete_folder", entry[".name"])])
         enter_url    = make_link_to([], entry)
 
         html.write("<td class=buttons>")
@@ -372,13 +656,177 @@ def show_subfolders(folder):
             html.write("<td>%s</td>" % name)
 
         # Number of hosts
-        html.write("<td>%s</td>" % num_hosts_in(entry, recurse=True))
+        html.write("<td class=number>%d</td>" % num_hosts_in(entry, recurse=True))
+
+        # Number of subfolders
+        html.write("<td class=number>%d</td>" % len(entry[".folders"]))
 
         html.write("</tr>")
     html.write("</table>")
     return True
     
+def show_hosts(folder):
+    # We assume that the hosts of the folder already have been loaded
+    if len(folder[".hosts"]) == 0:
+        return False
 
+    html.write("<h3>" + _("Hosts") + "</h3>")
+    html.begin_form("search")
+    html.text_input("search")
+    html.button("_search", _("Search"))
+    html.set_focus("search")
+    html.hidden_fields()
+    html.end_form()
+    html.write("<p>")
+
+    hostnames = g_folder[".hosts"].keys()
+    hostnames.sort()
+
+    # Show table of hosts in this folder
+    colspan = 6
+    html.begin_form("hosts", None, "POST", onsubmit = 'add_row_selections(this);')
+    html.write("<table class=data>\n")
+    html.write("<tr><th class=left></th><th></th><th>" + _("Hostname") + "</th>")
+
+    for attr, topic in host_attributes:
+        if attr.show_in_table():
+            html.write("<th>%s</th>" % attr.title())
+            colspan += 1
+
+    html.write("<th class=right>" + _("Move To") + "</th>")
+    html.write("</tr>\n")
+    odd = "odd"
+
+    def bulk_actions(at_least_one_imported, top = False):
+        # bulk actions
+        html.write('<tr class="data %s0">' % odd)
+        html.write("<td colspan=%d>" % colspan)
+        html.jsbutton('_markall', _('X'), 'javascript:toggle_all_rows();')
+        html.write(' ' + _("On all selected hosts:\n"))
+        html.button("_bulk_delete", _("Delete"))
+        html.button("_bulk_edit", _("Edit"))
+        html.button("_bulk_cleanup", _("Cleanup"))
+        html.button("_bulk_inventory", _("Inventory"))
+        host_move_combo(None, top)
+        if at_least_one_imported:
+            html.button("_bulk_movetotarget", _("Move to Target Folders"))
+        html.write("</td></tr>\n")
+
+    search_text = html.var("search")
+
+    # Remember if that host has a target folder (i.e. was imported with
+    # a folder information but not yet moved to that folder). If at least
+    # one host has a target folder, then we show an additional bulk action.
+    at_least_one_imported = False
+    more_than_ten_items = False
+    for num, hostname in enumerate(hostnames):
+        if search_text and (search_text.lower() not in hostname.lower()):
+            continue
+
+        host = g_folder[".hosts"][hostname]
+        effective = effective_attributes(host, g_folder)
+
+        if effective.get("imported_folder"):
+            at_least_one_imported = True
+
+        if num == 11:
+            more_than_ten_items = True
+
+    # Add the bulk action buttons also to the top of the table when this
+    # list shows more than 10 rows
+    if more_than_ten_items:
+        bulk_actions(at_least_one_imported, top = True)
+
+    # Now loop again over all hosts and display them
+    for hostname in hostnames:
+        if search_text and (search_text.lower() not in hostname.lower()):
+            continue
+
+        host = g_folder[".hosts"][hostname]
+        effective = effective_attributes(host, g_folder)
+
+        # Rows with alternating odd/even styles
+        html.write('<tr class="data %s0">' % odd)
+        odd = odd == "odd" and "even" or "odd" 
+
+        # Column with actions (buttons)
+        edit_url     = make_link([("mode", "edithost"), ("host", hostname)])
+        services_url = make_link([("mode", "inventory"), ("host", hostname)])
+        clone_url    = make_link([("mode", "newhost"), ("clone", hostname)])
+        delete_url   = make_action_link([("mode", "folder"), ("_delete_host", hostname)])
+
+        html.write('<td class=checkbox>')
+        html.write("<input type=checkbox name=\"%s\" value=%d />" % (hostname, colspan))
+        html.write('</td>\n')
+
+        html.write("<td class=buttons>")
+        html.buttonlink(edit_url,     _("Edit"))
+        html.buttonlink(services_url, _("Services"))
+        html.buttonlink(clone_url,    _("Clone"))
+        html.buttonlink(delete_url,   _("Delete"))
+        html.write("</td>\n")
+
+        # Hostname with link to details page (edit host)
+        html.write('<td><a href="%s">%s</a></td>\n' % (edit_url, hostname))
+
+        # Show attributes
+        for attr, topic in host_attributes:
+            attrname = attr.name()
+            if attr.show_in_table():
+                if attrname in host:
+                    tdclass, tdcontent = attr.paint(host.get(attrname), hostname)
+                else:
+                    tdclass, tdcontent = attr.paint(effective.get(attrname), hostname)
+                    tdclass += " inherited"
+                html.write('<td class="%s">' % tdclass)
+                html.write(tdcontent)
+                html.write("</td>\n")
+
+        # Move to
+        html.write("<td>")
+        host_move_combo(hostname)
+        html.write("</td>\n")
+        html.write("</tr>\n")
+
+    bulk_actions(at_least_one_imported)
+    html.write("</table>\n")
+
+    html.hidden_fields()
+    html.end_form()
+
+    html.javascript('g_selected_rows = %s;\n'
+                    'init_rowselect();' % repr(hostnames))
+    return True
+
+
+# Create list of all hosts that are select with checkboxes in the current file
+def get_hostnames_from_checkboxes():
+    hostnames = g_folder[".hosts"].keys()
+    hostnames.sort()
+
+    selected = []
+    if html.var('selected_rows', '') != '':
+        selected = html.var('selected_rows', '').split(',')
+
+    selected_hosts = []
+    search_text = html.var("search")
+    for name in hostnames:
+        if (not search_text or (search_text.lower() in name.lower())) \
+            and name in selected:
+            selected_hosts.append(name)
+    return selected_hosts
+
+#   +----------------------------------------------------------------------+
+#   |           _____    _ _ _     _____     _     _                       |
+#   |          | ____|__| (_) |_  |  ___|__ | | __| | ___ _ __             |
+#   |          |  _| / _` | | __| | |_ / _ \| |/ _` |/ _ \ '__|            |
+#   |          | |__| (_| | | |_  |  _| (_) | | (_| |  __/ |               |
+#   |          |_____\__,_|_|\__| |_|  \___/|_|\__,_|\___|_|               |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Mode for editing the properties of a folder. This includes the       |
+#   | creation of new folders.                                             |
+#   +----------------------------------------------------------------------+
 
 def mode_editfolder(phase, new):
     global g_folder
@@ -404,11 +852,14 @@ def mode_editfolder(phase, new):
         if new:
             target_folder = g_folder
         else:
-            target_folder = find_folder(g_folder[".path"][:-1])
+            target_folder = g_folder[".parent"]
 
         html.context_button(_("Abort"), make_link([("mode", "folder")]), "abort")
             
     elif phase == "action":
+        if not html.check_transaction():
+            return "folder"
+
         # Title
         title = html.var_utf8("title")
         if not title:
@@ -442,6 +893,7 @@ def mode_editfolder(phase, new):
             }
             g_folders[newpath] = new_folder
             g_folder[".folders"][name] = new_folder
+            save_folder(new_folder)
             call_hook_folder_created(new_folder)
 
             log_audit(new_folder, "new-folder", _("Created new folder %s") % title)
@@ -567,158 +1019,17 @@ def convert_title_to_filename(title):
     return str(converted)
 
 
-def show_hosts(folder):
-    # We assume that the hosts of the folder already have been loaded
-    if len(folder[".hosts"]) == 0:
-        return False
+#   +----------------------------------------------------------------------+
+#   |               _____    _ _ _     _   _           _                   |
+#   |              | ____|__| (_) |_  | | | | ___  ___| |_                 |
+#   |              |  _| / _` | | __| | |_| |/ _ \/ __| __|                |
+#   |              | |__| (_| | | |_  |  _  | (_) \__ \ |_                 |
+#   |              |_____\__,_|_|\__| |_| |_|\___/|___/\__|                |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Mode for host details (new, clone, edit)                             |
+#   +----------------------------------------------------------------------+
 
-    html.write("<h3>" + _("Hosts") + "</h3>")
-    html.begin_form("search")
-    html.text_input("search")
-    html.button("_search", _("Search"))
-    html.set_focus("search")
-    html.hidden_fields()
-    html.end_form()
-    html.write("<p>")
-
-    hostnames = g_folder[".hosts"].keys()
-    hostnames.sort()
-
-    # Show table of hosts in this folder
-    colspan = 6
-    html.begin_form("hosts", None, "POST", onsubmit = 'add_row_selections(this);')
-    html.write("<table class=data>\n")
-    html.write("<tr><th class=left></th><th></th><th>" + _("Hostname") + "</th>")
-
-    for attr, topic in host_attributes:
-        if attr.show_in_table():
-            html.write("<th>%s</th>" % attr.title())
-            colspan += 1
-
-    html.write("<th class=right>" + _("Move To") + "</th>")
-    html.write("</tr>\n")
-    odd = "odd"
-
-    def bulk_actions(at_least_one_imported, top = False):
-        # bulk actions
-        html.write('<tr class="data %s0">' % odd)
-        html.write("<td colspan=%d>" % colspan)
-        html.jsbutton('_markall', _('X'), 'javascript:toggle_all_rows();')
-        html.write(' ' + _("On all selected hosts:\n"))
-        html.button("_bulk_delete", _("Delete"))
-        html.button("_bulk_edit", _("Edit"))
-        html.button("_bulk_cleanup", _("Cleanup"))
-        html.button("_bulk_inventory", _("Inventory"))
-        host_move_combo(None, top)
-        if at_least_one_imported:
-            html.button("_bulk_movetotarget", _("Move to Target Folders"))
-        html.write("</td></tr>\n")
-
-    search_text = html.var("search")
-
-    # Remember if that host has a target folder (i.e. was imported with
-    # a folder information but not yet moved to that folder). If at least
-    # one host has a target folder, then we show an additional bulk action.
-    at_least_one_imported = False
-    more_than_ten_items = False
-    for num, hostname in enumerate(hostnames):
-        if search_text and (search_text.lower() not in hostname.lower()):
-            continue
-
-        host = g_folder[".hosts"][hostname]
-        effective = effective_attributes(host, g_folder)
-
-        if effective.get("imported_folder"):
-            at_least_one_imported = True
-
-        if num == 11:
-            more_than_ten_items = True
-
-    # Add the bulk action buttons also to the top of the table when this
-    # list shows more than 10 rows
-    if more_than_ten_items:
-        bulk_actions(at_least_one_imported, top = True)
-
-    # Now loop again over all hosts and display them
-    for hostname in hostnames:
-        if search_text and (search_text.lower() not in hostname.lower()):
-            continue
-
-        host = g_folder[".hosts"][hostname]
-        effective = effective_attributes(host, g_folder)
-
-        # Rows with alternating odd/even styles
-        html.write('<tr class="data %s0">' % odd)
-        odd = odd == "odd" and "even" or "odd" 
-
-        # Column with actions (buttons)
-        edit_url     = make_link([("mode", "edithost"), ("host", hostname)])
-        services_url = make_link([("mode", "inventory"), ("host", hostname)])
-        clone_url    = make_link([("mode", "newhost"), ("clone", hostname)])
-        delete_url   = make_action_link([("mode", "folder"), ("_delete", hostname)])
-
-        html.write('<td class=checkbox>')
-        html.write("<input type=checkbox name=\"%s\" value=%d />" % (hostname, colspan))
-        html.write('</td>\n')
-
-        html.write("<td class=buttons>")
-        html.buttonlink(edit_url,     _("Edit"))
-        html.buttonlink(services_url, _("Services"))
-        html.buttonlink(clone_url,    _("Clone"))
-        html.buttonlink(delete_url,   _("Delete"))
-        html.write("</td>\n")
-
-        # Hostname with link to details page (edit host)
-        html.write('<td><a href="%s">%s</a></td>\n' % (edit_url, hostname))
-
-        # Show attributes
-        for attr, topic in host_attributes:
-            attrname = attr.name()
-            if attr.show_in_table():
-                if attrname in host:
-                    tdclass, tdcontent = attr.paint(host.get(attrname), hostname)
-                else:
-                    tdclass, tdcontent = attr.paint(effective.get(attrname), hostname)
-                    tdclass += " inherited"
-                html.write('<td class="%s">' % tdclass)
-                html.write(tdcontent)
-                html.write("</td>\n")
-
-        # Move to
-        html.write("<td>")
-        host_move_combo(hostname)
-        html.write("</td>\n")
-        html.write("</tr>\n")
-
-    bulk_actions(at_least_one_imported)
-    html.write("</table>\n")
-
-    html.hidden_fields()
-    html.end_form()
-
-    html.javascript('g_selected_rows = %s;\n'
-                    'init_rowselect();' % repr(hostnames))
-    return True
-
-
-# Create list of all hosts that are select with checkboxes in the current file
-def get_hostnames_from_checkboxes():
-    hostnames = g_folder[".hosts"].keys()
-    hostnames.sort()
-
-    selected = []
-    if html.var('selected_rows', '') != '':
-        selected = html.var('selected_rows', '').split(',')
-
-    selected_hosts = []
-    search_text = html.var("search")
-    for name in hostnames:
-        if (not search_text or (search_text.lower() in name.lower())) \
-            and name in selected:
-            selected_hosts.append(name)
-    return selected_hosts
-
-# Form for host details (new, clone, edit)
 def mode_edithost(phase, new):
     hostname = html.var("host") # may be empty in new/clone mode
 
@@ -747,7 +1058,8 @@ def mode_edithost(phase, new):
             host_status_button(hostname, "hoststatus")
         html.context_button(_("Abort"), make_link([("mode", "folder")]), "abort")
         if not new:
-            html.context_button(_("Services"), make_link([("mode", "inventory"), ("host", hostname)]))
+            html.context_button(_("Services"), 
+                  make_link([("mode", "inventory"), ("host", hostname)]))
 
     elif phase == "action":
         if not new and html.var("delete"): # Delete this host
@@ -811,6 +1123,34 @@ def mode_edithost(phase, new):
         html.end_form()
 
 
+def delete_host_after_confirm(delname):
+    c = wato_confirm(_("Confirm host deletion"),
+                     _("Do you really want to delete the host <tt>%s</tt>?") % delname)
+    if c:
+        del g_folder[".hosts"][delname]
+        g_folder["num_hosts"] -= 1
+        save_folder_and_hosts(g_folder)
+        log_pending(delname, "delete-host", _("Deleted host %s") % delname)
+        check_mk_automation("delete-host", [delname])
+        call_hook_hosts_changed(g_folder)
+        return "folder"
+    elif c == False: # not yet confirmed
+        return ""
+    else:
+        return None # browser reload 
+
+#   +----------------------------------------------------------------------+
+#   |                ____                  _                               |
+#   |               / ___|  ___ _ ____   _(_) ___ ___  ___                 |
+#   |               \___ \ / _ \ '__\ \ / / |/ __/ _ \/ __|                |
+#   |                ___) |  __/ |   \ V /| | (_|  __/\__ \                |
+#   |               |____/ \___|_|    \_/ |_|\___\___||___/                |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Mode for doing the inventory on a single host and/or showing and     |
+#   | editing the current services of a host.                              |
+#   +----------------------------------------------------------------------+
+
 def mode_inventory(phase, firsttime):
     hostname = html.var("host")
     if hostname not in g_folder[".hosts"]:
@@ -827,7 +1167,8 @@ def mode_inventory(phase, firsttime):
     elif phase == "buttons":
         host_status_button(hostname, "host")
         html.context_button(_("Folder"), make_link([("mode", "folder")]))
-        html.context_button(_("Edit host"), make_link([("mode", "edithost"), ("host", hostname)]))
+        html.context_button(_("Edit host"), 
+                            make_link([("mode", "edithost"), ("host", hostname)]))
         html.context_button(_("Full Scan"), html.makeuri([("_scan", "yes")]))
 
     elif phase == "action":
@@ -838,9 +1179,11 @@ def mode_inventory(phase, firsttime):
             active_checks = {}
             new_target = "folder"
             for st, ct, item, paramstring, params, descr, state, output, perfdata in table:
-                if (html.has_var("_cleanup") or html.has_var("_fixall")) and st in [ "vanished", "obsolete" ]:
+                if (html.has_var("_cleanup") or html.has_var("_fixall")) \
+                    and st in [ "vanished", "obsolete" ]:
                     pass
-                elif (html.has_var("_activate_all") or html.has_var("_fixall")) and st == "new":
+                elif (html.has_var("_activate_all") or html.has_var("_fixall")) \
+                    and st == "new":
                     active_checks[(ct, item)] = paramstring
                 else:
                     varname = "_%s_%s" % (ct, item)
@@ -853,173 +1196,79 @@ def mode_inventory(phase, firsttime):
             return new_target, message
         return "folder"
 
-
     else:
         show_service_table(hostname, firsttime)
 
-#   +----------------------------------------------------------------------+
-#   |             ____                        _           _                |
-#   |            / ___| _ __   __ _ _ __  ___| |__   ___ | |_              |
-#   |            \___ \| '_ \ / _` | '_ \/ __| '_ \ / _ \| __|             |
-#   |             ___) | | | | (_| | |_) \__ \ | | | (_) | |_              |
-#   |            |____/|_| |_|\__,_| .__/|___/_| |_|\___/ \__|             |
-#   |                              |_|                                     |
-#   +----------------------------------------------------------------------+
-#   | Dialog for backup/restore/creation of snapshotsp                     |
-#   +----------------------------------------------------------------------+
 
-
-def mode_snapshot(phase):
-    if phase == "title":
-        return _("Backup/Restore")
-    elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
-        html.context_button(_("Create Snapshot"), make_action_link([("mode", "snapshot"),("_create_snapshot","Yes")]))
-        return
-    elif phase == "action":
-        if html.has_var("_download_file"):
-            # FIXME: HTML Variable pruefen, kein join verwenden
-            download_file = os.path.join(snapshot_dir, html.var("_download_file"))
-            if os.path.exists(download_file):
-                html.req.headers_out['Content-Disposition'] = 'Attachment; filename=' + html.var("_download_file")
-                html.req.headers_out['content_type'] = 'application/x-tar'
-                html.write(open(download_file).read())
-                return False
-        # create snapshot
-        elif html.has_var("_create_snapshot"):
-            if html.check_transaction():
-                create_snapshot()
-                return None, _("Snapshot created.")
-            else:
-                return None
-        # upload snapshot
-        elif html.has_var("_upload_file"):
-            if html.var("_upload_file") == "":
-                raise MKUserError(None, _("You need to select a file for upload"))
-
-                return None
-            if html.check_transaction():
-                restore_snapshot(None, html.var('_upload_file'))
-                return None, _("Successfully uploaded configuration.")
-            else:
-                return None
-        # delete file
-        elif html.has_var("_delete_file"):
-            delete_file = html.var("_delete_file")
-            c = wato_confirm(_("Confirm delete snapshot"),
-                             _("Are you sure you want to delete the snapshot <br><br>%s?") %
-                                delete_file
-                            )
-            if c:
-                # FIXME: kein join verwenden
-                os.remove(os.path.join(snapshot_dir, delete_file))
-                return None, _("Snapshot deleted.")
-            elif c == False: # not yet confirmed
-                return ""
-            else:
-                return None  # browser reload
-        # restore snapshot
-        elif html.has_var("_restore_snapshot"):
-            snapshot_file = html.var("_restore_snapshot")
-            c = wato_confirm(_("Confirm restore snapshot"),
-                             _("Are you sure you want to restore the snapshot <br><br>%s ?") %
-                                snapshot_file
-                            )
-            if c:
-                restore_snapshot(snapshot_file)
-                return None, _("Snapshot restored.")
-            elif c == False: # not yet confirmed
-                return ""
-            else:
-                return None  # browser reload
-        return False
-    else:
-        snapshots = []
-        if os.path.exists(snapshot_dir):
-            for f in os.listdir(snapshot_dir):
-                snapshots.append(f)
-        snapshots.sort(reverse=True)
-
-        if len(snapshots) == 0:
-            html.write("<div class=info>" + _("There are no snapshots available.") + "</div>")
-        else:
-            html.write('<table class=data>')
-            html.write('<h3>' + _("Snapshots") + '</h3>')
-
-            odd = "odd"
-            for name in snapshots:
-                odd = odd == "odd" and "even" or "odd"
-                html.write('<tr class="data %s0"><td>' % odd)
-                html.buttonlink(make_action_link([("mode","snapshot"),("_restore_snapshot", name)]), _("Restore"))
-                html.buttonlink(make_action_link([("mode","snapshot"),("_delete_file", name)]), _("Delete"))
-                html.write("<td>")
-                html.write('<a href="%s">%s</a>' % (make_action_link([("mode","snapshot"),("_download_file", name)]), name))
-            html.write('</table>')
-
-        html.write("<h3>" + _("Restore from uploaded file") + "</h3>")
-        html.begin_form("upload_form", None, "POST")
-        html.upload_file("_upload_file")
-        html.button("upload_button", _("Restore from file"), "submit")
-        html.hidden_fields()
-        html.end_form()
-
-
-def create_snapshot():
-    if not os.path.exists(snapshot_dir):
-       os.mkdir(snapshot_dir)
-
-    snapshot_name = "wato-snapshot-%s.tar.gz" % time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(time.time()))
-    # FIXME: kein join verwenden
-    tar = tarfile.open(os.path.join(snapshot_dir, snapshot_name),"w:gz")
-
-    len_abs = len(defaults.check_mk_configdir)
-    for root, dirs, files in os.walk(defaults.check_mk_configdir):
-        for filename in files:
-            tar.add(os.path.join(root,filename), os.path.join(root[len_abs:], filename))
-    tar.close()
-
-    log_audit(None, "snapshot-created", _("Created snapshot %s") % snapshot_name)
-
-    # Maintenance, remove old snapshots
-    snapshots = []
-    for f in os.listdir(snapshot_dir):
-        snapshots.append(f)
-    snapshots.sort(reverse=True)
-    while len(snapshots) > config.max_snapshots:
-        log_pending(None, "snapshot-removed", _("Removed snapshot %s") % snapshots[-1])
-        # FIXME: kein join verwenden
-        os.remove(os.path.join(snapshot_dir,snapshots.pop()))
-
-def restore_snapshot( filename, tarstream = None ):
-    if not os.path.exists(snapshot_dir):
-       os.mkdir(snapshot_dir)
-
-    del_config_dir()
-    if filename:
-        # FIXME: kein join verwenden
-        if not os.path.exists(os.path.join(snapshot_dir, filename)):
-            raise MKGeneralException(_("Snapshot does not exist %s" % filename))
-        snapshot = tarfile.open(os.path.join(snapshot_dir, filename), "r:gz")
-    elif tarstream:
-        stream = StringIO.StringIO()
-        stream.write(tarstream)
-        stream.seek(0)
-        snapshot = tarfile.open(None, "r:gz", stream)
-    else:
+def show_service_table(hostname, firsttime):
+    # Read current check configuration
+    cache_options = not html.var("_scan") and [ '--cache' ] or []
+    try:
+        table = check_mk_automation("try-inventory", cache_options + [hostname])
+    except Exception, e:
+        html.show_error("Inventory failed for this host: %s" % e)
         return
 
-    snapshot.extractall(defaults.check_mk_configdir)
-    snapshot.close()
-    log_pending(None, "snapshot-restored", _("Restored snapshot %s") % (filename or _('from uploaded file')))
+    table.sort()
 
-def del_config_dir():
-    if not defaults.check_mk_configdir.endswith("conf.d"):
-        raise MKGeneralException("ERROR: config directory seems incorrect. check_mk_configdir %s" % defaults.check_mk_configdir)
-    # Clear directories, DANGER
-    for root, dirs, files in os.walk(defaults.check_mk_configdir):
-        for f in files:
-            if (f.endswith('.mk') and not '.' in f[:-3]) or (f.endswith('.mk.wato') and not '.' in f[:-8]) or f == '.wato':
-                os.remove(os.path.join(root, f))
+    html.begin_form("checks", None, "POST")
+    fixall = 0
+    for entry in table:
+        if entry[0] == 'new' and not html.has_var("_activate_all") and not firsttime:
+            html.button("_activate_all", _("Activate missing"))
+            fixall += 1
+            break
+    for entry in table:
+        if entry[0] in [ 'obsolete', 'vanished', ]:
+            html.button("_cleanup", _("Remove exceeding"))
+            fixall += 1
+            break
+    if fixall == 2:
+        html.button("_fixall", _("Fix all missing/exceeding"))
+
+    if len(table) > 0:
+        html.button("_save", _("Save manual check configuration"))
+
+    html.hidden_fields()
+    if html.var("_scan"):
+        html.hidden_field("_scan", "on")
+
+    html.write("<table class=data>\n")
+
+    for state_name, state_type, checkbox in [ 
+        ( _("Available (missing) services"), "new", firsttime ),
+        ( _("Already configured services"), "old", True, ),
+        ( _("Obsolete services (being checked, but should be ignored)"), "obsolete", True ),
+        ( _("Ignored services (configured away by admin)"), "ignored", False ),
+        ( _("Vanished services (checked, but no longer exist)"), "vanished", True ),
+        ( _("Manual services (defined in main.mk)"), "manual", None ),
+        ( _("Legacy services (defined in main.mk)"), "legacy", None )
+        ]:
+        first = True
+        trclass = "even"
+        for st, ct, item, paramstring, params, descr, state, output, perfdata in table:
+            if state_type != st:
+                continue
+            if first:
+                html.write('<tr class=groupheader><td colspan=7><br>%s</td></tr>\n' % state_name)
+                html.write("<tr><th>" + _("Status") + "</th><th>" + _("Checktype") + "</th><th>" + _("Item") + "</th>"
+                           "<th>" + _("Service Description") + "</th><th>" + _("Current check") + "</th><th></th></tr>\n")
+                first = False
+            trclass = trclass == "even" and "odd" or "even"
+            statename = nagios_short_state_names.get(state, "PEND")
+            if statename == "PEND":
+                stateclass = "state svcstate statep"
+                state = 0 # for tr class
+            else:
+                stateclass = "state svcstate state%s" % state
+            html.write("<tr class=\"data %s%d\"><td class=\"%s\">%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>" %
+                    (trclass, state, stateclass, statename, ct, item, descr, output))
+            if checkbox != None:
+                varname = "_%s_%s" % (ct, item)
+                html.checkbox(varname, checkbox)
+            html.write("</td></tr>\n")
+    html.write("</table>\n")
+    html.end_form()
 
 
 #   +----------------------------------------------------------------------+
@@ -1086,34 +1335,32 @@ def mode_search(phase):
                 folder = g_root_folder
 
             # html.write("<pre>%s</pre>" % pprint.pformat(crit))
-            if not search_hosts_in_folder(folder, crit):
+            if not search_hosts_in_folders(folder, crit):
                 html.message(_("No matching hosts found."))
 
         html.write("</td></tr></table>")
 
 
 
-def search_hosts_in_folder(folder, crit):
+def search_hosts_in_folders(folder, crit):
     num_found = 0
-    for f in folder[".files"].values():
-        num_found += search_hosts_in_file(folder, f, crit)
+
+    num_found = search_hosts_in_folder(folder, crit)
     for f in folder[".folders"].values():
-        num_found += search_hosts_in_folder(f, crit)
+        num_found += search_hosts_in_folders(f, crit)
+
     return num_found
 
 
-def tuple_starts_with(t1, t2):
-    return t1[0:len(t2)] == t2
-
-def search_hosts_in_file(the_folder, the_file, crit):
+def search_hosts_in_folder(folder, crit):
     found = []
-    hosts = load_hosts_file(the_folder, the_file)
+    hosts = load_hosts(folder)
     for hostname, host in hosts.items():
         if crit[".name"] and crit[".name"].lower() not in hostname.lower():
             continue
 
         # Compute inheritance
-        effective = effective_attributes(host, the_file)
+        effective = effective_attributes(host, folder)
 
         # Check attributes
         dont_match = False
@@ -1129,7 +1376,7 @@ def search_hosts_in_file(the_folder, the_file, crit):
         found.append((hostname, host, effective))
 
     if found:
-        render_folder_path(the_folder, the_file, True)
+        render_folder_path(folder, True)
         found.sort()
         html.write("<table class=data><tr><th>%s</th>" % (_("Hostname"), ))
         for attr, topic in host_attributes:
@@ -1140,7 +1387,7 @@ def search_hosts_in_file(the_folder, the_file, crit):
         even = "even"
         for hostname, host, effective in found:
             even = even == "even" and "odd" or "even"
-            host_url =  make_link_to([("mode", "edithost"), ("host", hostname)], the_folder, the_file[".name"])
+            host_url =  make_link_to([("mode", "edithost"), ("host", hostname)], folder)
             html.write('<tr class="data %s0"><td><a href="%s">%s</a></td>\n' % 
                (even, host_url, hostname))
             for attr, topic in host_attributes:
@@ -1417,7 +1664,6 @@ def mode_bulk_cleanup(phase):
                     log_pending(hostname, "bulk-cleanup", _("Cleaned %d attributes of host %s in bulk mode") % (
                     num_cleaned, hostname))
             save_hosts(g_folder)
-            call_hook_hosts_changed(g_file)
             return "folder"
         return
 
@@ -1626,33 +1872,24 @@ def log_exists(what):
     path = var_dir + what + ".log"
     return os.path.exists(path)
 
-
-
 def render_linkinfo(linkinfo):
-    if ':' in linkinfo:
-        pathname, hostname = linkinfo.split(':', 1)
-        path = tuple(pathname[1:].split("/"))
-        if path in g_files:
-            the_file = g_files[path]
-            the_folder = find_folder(path[:-1])
-            hosts = load_hosts_file(the_folder, the_file)
+    if ':' in linkinfo: # folder:host
+        path, hostname = linkinfo.split(':', 1)
+        if path in g_folders:
+            folder = g_folders[path]
+            hosts = load_hosts(folder)
             if hostname in hosts:
-                url = html.makeuri_contextless([("mode", "edithost"), ("folder", pathname), ("host", hostname)])
+                url = html.makeuri_contextless([("mode", "edithost"), 
+                          ("folder", pathname), ("host", hostname)])
                 title = hostname
             else:
                 return hostname
         else:
             return hostname
-    elif linkinfo[0] == '/':
-        path = tuple(linkinfo[1:].strip("/").split("/"))
-        if path in g_files:
-            url = html.makeuri_contextless([("mode", "folder"), ("filename", linkinfo)])
-            title = g_files[path]["title"]
-        elif find_folder(path):
-            url = html.makeuri_contextless([("mode", "folder"), ("filename", linkinfo)])
-            title = find_folder(path)["title"]
-        else:
-            return linkinfo
+
+    elif linkinfo in g_folders:
+        url = html.makeuri_contextless([("mode", "folder"), ("folder", linkinfo)])
+        title = g_folders[linkinfo]["title"]
     else:
         return ""
 
@@ -1785,14 +2022,16 @@ def export_audit_log():
     return False
 
 #   +----------------------------------------------------------------------+
-#   |                  _   _      _                                        |
-#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
-#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
-#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
-#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
-#   |                              |_|                                     |
+#   |          _         _                        _   _                    |
+#   |         / \  _   _| |_ ___  _ __ ___   __ _| |_(_) ___  _ __         |
+#   |        / _ \| | | | __/ _ \| '_ ` _ \ / _` | __| |/ _ \| '_ \        |
+#   |       / ___ \ |_| | || (_) | | | | | | (_| | |_| | (_) | | | |       |
+#   |      /_/   \_\__,_|\__\___/|_| |_| |_|\__,_|\__|_|\___/|_| |_|       |
+#   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | Functions needed at various places                                   |
+#   | This code section deals with the interaction of Check_MK. It is used |
+#   | for doing inventory, showing the services of a host, deletion of a   |
+#   | host and similar things.                                             |
 #   +----------------------------------------------------------------------+
 
 def check_mk_automation(command, args=[], indata=""):
@@ -1862,6 +2101,17 @@ def check_mk_automation(command, args=[], indata=""):
 
 
 
+#   +----------------------------------------------------------------------+
+#   |                  _   _      _                                        |
+#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
+#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
+#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
+#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
+#   |                              |_|                                     |
+#   +----------------------------------------------------------------------+
+#   | Functions needed at various places                                   |
+#   +----------------------------------------------------------------------+
+
 def host_status_button(hostname, viewname):
     html.context_button(_("Status"), 
        "view.py?" + htmllib.urlencode_vars([
@@ -1878,123 +2128,6 @@ def folder_status_button(viewname = "allhosts"):
            ("folder", g_folder[".path"])]), 
            "status")  # TODO: support for distributed WATO
 
-
-
-
-def folder_dir(the_folder):
-    return root_dir + the_folder[".path"]
-
-#   +----------------------------------------------------------------------+
-#   |          _                    _    ______                            |
-#   |         | |    ___   __ _  __| |  / / ___|  __ ___   _____           |
-#   |         | |   / _ \ / _` |/ _` | / /\___ \ / _` \ \ / / _ \          |
-#   |         | |__| (_) | (_| | (_| |/ /  ___) | (_| |\ V /  __/          |
-#   |         |_____\___/ \__,_|\__,_/_/  |____/ \__,_| \_/ \___|          |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Helper functions for loading and saving folder and hosts data.       |
-#   | Hosts are loaded separately from the folders. This is for perfor-    |
-#   | mance reasons. In most cases information about the hosts is needed   |
-#   | only for the current folder. Keep in mind: WATO is designed for      |
-#   | handling 100k hosts.                                                 |
-#   +----------------------------------------------------------------------+
-
-# Save one folder (i.e. make sure the directory exist and write its .wato file)
-def save_folder(folder):
-    # Remove temporary entries from the dictionary
-    cleaned = dict([(k, v) for (k, v) in folder.iteritems() if not k.startswith('.') ])
-
-    # Create the directory with the correct permissions (in case it doesn't exist)
-    dir = folder_dir(folder)
-    make_nagios_directory(dir)
-
-    wato_filename = dir + "/.wato"
-    config.write_settings_file(wato_filename, cleaned)
-
-def save_folder_and_hosts(folder):
-    save_folder(folder)
-    save_hosts(folder)
-
-
-# Save a folder and all of its subfolders (recursively)
-def save_folders(folder):
-    save_folder(folder)
-    for subfolder in folder[".folders"].values():
-        save_folders(subfolder)
-
-
-def save_all_folders():
-    save_folders(g_root_folder)
-
-# Load the meta-data of a folder (it's .wato file), register
-# it in g_folders, load recursively all subfolders and then
-# return the folder object. The case the .wato file is missing 
-# it will be assume to contain default values.
-def load_folder(dir, name="", path=""):
-    fn = dir + "/.wato"
-    try:
-        folder = eval(file(fn).read())
-    except:
-        # .wato missing or invalid
-        folder = { 
-            "roles"     : [ "admin" ], 
-            "title"     : name and name or _("Main directory"),
-            "num_hosts" : 0,
-        }
-
-    folder[".name"]    = name
-    folder[".path"]    = path
-    folder[".folders"] = {}
-
-    # Now look subdirectories
-    for entry in os.listdir(dir):
-        if entry[0] == '.': # entries '.' and '..'
-            continue
-
-        p = dir + "/" + entry
-
-        if os.path.isdir(p):
-            if path == "":
-                subpath = entry
-            else:
-                subpath = path + "/" + entry
-            f = load_folder(p, entry, subpath)
-            f[".parent"] = folder
-            folder[".folders"][entry] = f
-    
-    g_folders[path] = folder
-    return folder
-
-# Load the information about all folders - except the hosts
-def load_all_folders():
-    if not os.path.exists(root_dir):
-        os.makedirs(root_dir)
-
-    global g_root_folder, g_folders
-    g_folders = {}
-    g_root_folder = load_folder(root_dir)
-
-
-# ----------------------------------
-
-
-# Find the folder by its path. 
-def find_folder(path, in_folder = None):
-    if in_folder == None:
-        in_folder = g_root_folder
-
-    if len(path) == 0:
-        return in_folder
-    else:
-        parts = path.split("/", 1)
-        name = parts[0]
-        if name in in_folder[".folders"]:
-            if len(parts) == 1:
-                return in_folder[".folders"][name]
-            else:
-                return find_folder(parts[1], in_folder[".folders"][name])
-        else:
-            return None
 
 
 def find_host(host):
@@ -2014,191 +2147,16 @@ def find_host_in(host, folder):
 def num_hosts_in(folder, recurse):
     if not "num_hosts" in folder:
         load_hosts(folder)
-        save_folder_info(folder)
+        save_folder(folder)
 
     if not recurse:
         return folder["num_hosts"]
 
     num = 0
-    for subfolder in folder[".folders"]:
+    for subfolder in folder[".folders"].values():
         num += num_hosts_in(subfolder, True)
     num += folder["num_hosts"]
     return num
-
-
-# Load all hosts from all configuration files.
-def load_all_hosts(base_folder = None):
-    if base_folder == None:
-        base_folder = g_root_folder
-    hosts = {}
-    for f in base_folder[".files"].values():
-        hosts.update(load_hosts_file(base_folder, f))
-    for f in base_folder[".folders"].values():
-        hosts.update(load_all_hosts(f))
-    return hosts
-
-def load_hosts(folder):
-    if ".hosts" not in folder:
-        folder[".hosts"] = load_hosts_file(folder)
-        folder["num_hosts"] = len(folder[".hosts"])
-
-
-def load_hosts_file(folder):
-    hosts = {}
-
-    filename = root_dir + folder[".path"] + "/hosts.mk"
-    if os.path.exists(filename):
-        variables = {
-            "ALL_HOSTS"          : ['@all'],
-            "all_hosts"          : [],
-            "ipaddresses"        : {},
-            "extra_host_conf"    : { "alias" : [] },
-            "extra_service_conf" : { "_WATO" : [] },
-            "host_attributes"    : {},
-        }
-        execfile(filename, variables, variables)
-        for h in variables["all_hosts"]:
-
-            parts = h.split('|')
-            hostname = parts[0]
-
-            # Get generic attributes of that host
-            host = variables["host_attributes"].get(hostname)
-            if host == None: # Legacy file: reconstruct values
-                host = {}
-                # Some of the attributes are handled with special care. We do not 
-                # want them to be redundant in the configuration file. We 
-                # want to stay compatible with check_mk.
-                ipaddress = variables["ipaddresses"].get(hostname)
-                aliases = host_extra_conf(hostname, variables["extra_host_conf"]["alias"]) 
-                if len(aliases) > 0:
-                    alias = aliases[0]
-                else:
-                    alias = None
-                host["alias"]     = alias 
-                host["ipaddress"] = ipaddress
-
-                # Retrieve setting for each individual host tag
-                tags = set([ tag for tag in parts[1:] if tag != 'wato' and not tag.endswith('.mk') ])
-                for attr, topic in host_attributes:
-                    if isinstance(attr, HostTagAttribute):
-                        tagvalue = attr.get_tag_value(tags)
-                        host[attr.name()] = tagvalue
-            hosts[hostname]   = host
-
-
-    # html.write("<pre>%s</pre>" % pprint.pformat(hosts))
-    return hosts
-
-
-def rewrite_config_files_below(folder):
-    for fo in folder[".folders"].values():
-        rewrite_config_files_below(fo)
-    rewrite_config_file(folder)
-
-def rewrite_config_file(folder):
-    load_hosts(folder)
-    save_hosts(folder)
-
-
-def save_hosts(folder):
-    folder_path = folder[".path"]
-    dirname = root_dir + folder_path
-    filename = dirname + "/hosts.mk"
-    hosts = folder.get(".hosts", [])
-    if len(hosts) == 0:
-        if os.path.exists(filename):
-            os.remove(filename)
-        return
-
-    all_hosts = []
-    ipaddresses = {}
-    aliases = []
-    hostnames = hosts.keys()
-    hostnames.sort()
-    for hostname in hostnames:
-        host = hosts[hostname]
-        effective = effective_attributes(host, folder)
-
-        # Make special handling of attributes configured in a special way 
-        # in check_mk
-        alias     = effective.get("alias")
-        ipaddress = effective.get("ipaddress")
-
-        # Compute tags from settings of each individual tag. We've got
-        # the current value for each individual tag.
-        tags = set([])
-        for attr, topic in host_attributes:
-            if isinstance(attr, HostTagAttribute):
-                value = effective.get(attr.name())
-                tags.update(attr.get_tag_list(value))
-
-        if alias:
-            aliases.append((alias, [hostname]))
-        all_hosts.append("|".join([hostname] + list(tags) + [ folder_path, 'wato' ]))
-        if ipaddress:
-            ipaddresses[hostname] = ipaddress
-
-    if not os.path.isdir(dirname):
-        os.makedirs(dirname)
-
-    out = file(filename, "w")
-    out.write("# Written by Check_MK Webconf\n# encoding: utf-8\n\n")
-    if len(all_hosts) > 0:
-        out.write("all_hosts += ")
-        out.write(pprint.pformat(all_hosts))
-        if len(aliases) > 0:
-            out.write("\n\nif 'alias' not in extra_host_conf:\n"
-                    "    extra_host_conf['alias'] = []\n")
-            out.write("\nextra_host_conf['alias'] += ")
-            out.write(pprint.pformat(aliases))
-        if len(ipaddresses) > 0:
-            out.write("\n\nipaddresses.update(")
-            out.write(pprint.pformat(ipaddresses))
-            out.write(")")
-        out.write("\n")
-
-    # all WATO information to Check_MK's inventory checks (needed for link in Multisite)
-    out.write("\n\nif '_WATO' not in extra_service_conf:\n"
-            "    extra_service_conf['_WATO'] = []\n")
-    out.write("\nextra_service_conf['_WATO'] += [ \n"
-              "  ('%s', [ 'wato', '%s' ], ALL_HOSTS, [ 'Check_MK inventory' ] ) ]\n" % 
-              (folder_path, folder_path))
-
-    # Add custom macros for attributes that are to be present in Nagios
-    custom_macros = {}
-    for hostname, host in hosts.items():
-        for attr, topic in host_attributes:
-            attrname = attr.name()
-            if attrname in effective:
-                value = effective.get(attrname)
-                nagstring = attr.to_nagios(value)
-                if nagstring != None:
-                    if attrname not in custom_macros:
-                        custom_macros[attrname] = {}
-                    custom_macros[attrname][hostname] = nagstring
-    for attrname, entries in custom_macros.items():
-        macrolist = []
-        for hostname, nagstring in entries.items():
-            macrolist.append((nagstring, [hostname]))
-        if len(macrolist) > 0:
-            out.write("\n# %s\n" % host_attribute[attrname].title())
-            out.write("if '_%s' not in extra_host_conf:\n" % attrname.upper())
-            out.write("    extra_host_conf['_%s'] = []\n" % attrname.upper())
-            out.write("extra_host_conf['_%s'] += \\\n%s\n" % (attrname.upper(), pprint.pformat(macrolist)))
-
-    # Write information about all host attributes into special variable - even
-    # values stored for check_mk as well.
-    out.write("\n# Host attributes (needed for WATO)\n")
-    out.write("host_attributes.update(%s)\n" % pprint.pformat(hosts))
-
-
-def delete_configuration_file(folder, thefile):
-    path = folder_dir(folder, thefile)
-    if os.path.exists(path):
-        os.remove(path) # remove the actual configuration file
-    if os.path.exists(path + ".wato"):
-        os.remove(path + ".wato") # remove the .wato file
 
 
 # This is a dummy implementation which works without tags
@@ -2209,32 +2167,6 @@ def host_extra_conf(hostname, conflist):
             return [value]
     return []
 
-def set_current_folder():
-    global g_folder
-
-    if html.has_var("folder"):
-        path = html.var("folder")
-    else:
-        host = html.var("host")
-        if host: # find host with full scan. Expensive operation
-            path = find_host(host)
-            if not path:
-                raise MKGeneralException(_("The host <b>%s</b> is not managed by WATO.") % host)
-        else: # fall back to root folder
-            path = ""
-
-    g_folder = find_folder(path)
-    html.set_var("folder", path) # in case of implizit folder selection
-    if not g_folder:
-        raise MKGeneralException(_('You called this page with a non-existing folder! '
-                                 'Go back to the <a href="wato.py">main index</a>.'))
-
-
-def make_path(filename):
-    if not filename or filename == "/":
-        return ()
-    parts = filename.strip("/").split("/")
-    return tuple(parts)
 
 # Create link keeping the context to the current folder / file
 def make_link(vars):
@@ -2263,92 +2195,6 @@ def changelog_button():
     html.context_button(buttontext, make_link([("mode", "changelog")]), "wato_changes", hot)
 
 
-def show_service_table(hostname, firsttime):
-    # Read current check configuration
-    cache_options = not html.var("_scan") and [ '--cache' ] or []
-    try:
-        table = check_mk_automation("try-inventory", cache_options + [hostname])
-    except Exception, e:
-        html.show_error("Inventory failed for this host: %s" % e)
-        return
-
-    table.sort()
-
-    html.begin_form("checks", None, "POST")
-    fixall = 0
-    for entry in table:
-        if entry[0] == 'new' and not html.has_var("_activate_all") and not firsttime:
-            html.button("_activate_all", _("Activate missing"))
-            fixall += 1
-            break
-    for entry in table:
-        if entry[0] in [ 'obsolete', 'vanished', ]:
-            html.button("_cleanup", _("Remove exceeding"))
-            fixall += 1
-            break
-    if fixall == 2:
-        html.button("_fixall", _("Fix all missing/exceeding"))
-
-    if len(table) > 0:
-        html.button("_save", _("Save manual check configuration"))
-
-    html.hidden_fields()
-    if html.var("_scan"):
-        html.hidden_field("_scan", "on")
-
-    html.write("<table class=data>\n")
-
-    for state_name, state_type, checkbox in [ 
-        ( _("Available (missing) services"), "new", firsttime ),
-        ( _("Already configured services"), "old", True, ),
-        ( _("Obsolete services (being checked, but should be ignored)"), "obsolete", True ),
-        ( _("Ignored services (configured away by admin)"), "ignored", False ),
-        ( _("Vanished services (checked, but no longer exist)"), "vanished", True ),
-        ( _("Manual services (defined in main.mk)"), "manual", None ),
-        ( _("Legacy services (defined in main.mk)"), "legacy", None )
-        ]:
-        first = True
-        trclass = "even"
-        for st, ct, item, paramstring, params, descr, state, output, perfdata in table:
-            if state_type != st:
-                continue
-            if first:
-                html.write('<tr class=groupheader><td colspan=7><br>%s</td></tr>\n' % state_name)
-                html.write("<tr><th>" + _("Status") + "</th><th>" + _("Checktype") + "</th><th>" + _("Item") + "</th>"
-                           "<th>" + _("Service Description") + "</th><th>" + _("Current check") + "</th><th></th></tr>\n")
-                first = False
-            trclass = trclass == "even" and "odd" or "even"
-            statename = nagios_short_state_names.get(state, "PEND")
-            if statename == "PEND":
-                stateclass = "state svcstate statep"
-                state = 0 # for tr class
-            else:
-                stateclass = "state svcstate state%s" % state
-            html.write("<tr class=\"data %s%d\"><td class=\"%s\">%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>" %
-                    (trclass, state, stateclass, statename, ct, item, descr, output))
-            if checkbox != None:
-                varname = "_%s_%s" % (ct, item)
-                html.checkbox(varname, checkbox)
-            html.write("</td></tr>\n")
-    html.write("</table>\n")
-    html.end_form()
-
-
-def delete_host_after_confirm(delname):
-    c = wato_confirm(_("Confirm host deletion"),
-                     _("Do you really want to delete the host <tt>%s</tt>?") % delname)
-    if c:
-        del g_folder[".hosts"][delname]
-        g_file["num_hosts"] -= 1
-        save_current_folder()
-        log_pending(delname, "delete-host", _("Deleted host %s") % delname)
-        check_mk_automation("delete-host", [delname])
-        call_hook_hosts_changed(g_file)
-        return "folder"
-    elif c == False: # not yet confirmed
-        return ""
-    else:
-        return None # browser reload 
 
 def delete_hosts_after_confirm(hosts):
     c = wato_confirm(_("Confirm deletion of %d hosts") % len(hosts),
@@ -2356,11 +2202,11 @@ def delete_hosts_after_confirm(hosts):
     if c:
         for delname in hosts:
             del g_folder[".hosts"][delname]
-            g_file["num_hosts"] -= 1
+            g_folder["num_hosts"] -= 1
             check_mk_automation("delete-host", [delname])
             log_pending(delname, "delete-host", _("Deleted host %s") % delname)
-        save_current_folder()
-        call_hook_hosts_changed(g_file)
+        save_folder_and_hosts(g_folder)
+        call_hook_hosts_changed(g_folder)
         return "folder", _("Successfully deleted %d hosts") % len(hosts)
     elif c == False: # not yet confirmed
         return ""
@@ -2385,7 +2231,6 @@ def delete_folder_after_confirm(del_folder):
             raise MKGeneralException(_("Cannot remove the folder '%s': probably there are "
                                        "still non-WATO files contained in this directory.") % folder_path)
 
-        save_folder_config()
         log_audit(folder_dir(del_folder), "delete-folder", _("Deleted empty folder %s")% folder_dir(del_folder))
         call_hook_folder_deleted(del_folder)
         html.reload_sidebar() # refresh WATO snapin
@@ -2529,7 +2374,7 @@ def render_folder_path(the_folder = 0, link_to_last = False):
 
     path = ""
     for p in parts[:-1]:
-        comps.append(render_component(path, find_folder(path)["title"]))
+        comps.append(render_component(path, g_folders[path]["title"]))
         if path == "":
             path = p
         else:
@@ -3187,6 +3032,164 @@ def effective_attributes(host, folder):
 
     return eff
     
+
+#   +----------------------------------------------------------------------+
+#   |           ____                        _           _                  |
+#   |          / ___| _ __   __ _ _ __  ___| |__   ___ | |_ ___            |
+#   |          \___ \| '_ \ / _` | '_ \/ __| '_ \ / _ \| __/ __|           |
+#   |           ___) | | | | (_| | |_) \__ \ | | | (_) | |_\__ \           |
+#   |          |____/|_| |_|\__,_| .__/|___/_| |_|\___/ \__|___/           |
+#   |                            |_|                                       |
+#   +----------------------------------------------------------------------+
+#   | Mode for backup/restore/creation of snapshots                        |
+#   +----------------------------------------------------------------------+
+
+def mode_snapshot(phase):
+    if phase == "title":
+        return _("Backup/Restore")
+    elif phase == "buttons":
+        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
+        html.context_button(_("Create Snapshot"), make_action_link([("mode", "snapshot"),("_create_snapshot","Yes")]))
+        return
+    elif phase == "action":
+        if html.has_var("_download_file"):
+            # FIXME: HTML Variable pruefen, kein join verwenden
+            download_file = os.path.join(snapshot_dir, html.var("_download_file"))
+            if os.path.exists(download_file):
+                html.req.headers_out['Content-Disposition'] = 'Attachment; filename=' + html.var("_download_file")
+                html.req.headers_out['content_type'] = 'application/x-tar'
+                html.write(open(download_file).read())
+                return False
+        # create snapshot
+        elif html.has_var("_create_snapshot"):
+            if html.check_transaction():
+                create_snapshot()
+                return None, _("Snapshot created.")
+            else:
+                return None
+        # upload snapshot
+        elif html.has_var("_upload_file"):
+            if html.var("_upload_file") == "":
+                raise MKUserError(None, _("You need to select a file for upload"))
+
+                return None
+            if html.check_transaction():
+                restore_snapshot(None, html.var('_upload_file'))
+                return None, _("Successfully uploaded configuration.")
+            else:
+                return None
+        # delete file
+        elif html.has_var("_delete_file"):
+            delete_file = html.var("_delete_file")
+            c = wato_confirm(_("Confirm delete snapshot"),
+                             _("Are you sure you want to delete the snapshot <br><br>%s?") %
+                                delete_file
+                            )
+            if c:
+                # FIXME: kein join verwenden
+                os.remove(os.path.join(snapshot_dir, delete_file))
+                return None, _("Snapshot deleted.")
+            elif c == False: # not yet confirmed
+                return ""
+            else:
+                return None  # browser reload
+        # restore snapshot
+        elif html.has_var("_restore_snapshot"):
+            snapshot_file = html.var("_restore_snapshot")
+            c = wato_confirm(_("Confirm restore snapshot"),
+                             _("Are you sure you want to restore the snapshot <br><br>%s ?") %
+                                snapshot_file
+                            )
+            if c:
+                restore_snapshot(snapshot_file)
+                return None, _("Snapshot restored.")
+            elif c == False: # not yet confirmed
+                return ""
+            else:
+                return None  # browser reload
+        return False
+    else:
+        snapshots = []
+        if os.path.exists(snapshot_dir):
+            for f in os.listdir(snapshot_dir):
+                snapshots.append(f)
+        snapshots.sort(reverse=True)
+
+        if len(snapshots) == 0:
+            html.write("<div class=info>" + _("There are no snapshots available.") + "</div>")
+        else:
+            html.write('<table class=data>')
+            html.write('<h3>' + _("Snapshots") + '</h3>')
+
+            odd = "odd"
+            for name in snapshots:
+                odd = odd == "odd" and "even" or "odd"
+                html.write('<tr class="data %s0"><td>' % odd)
+                html.buttonlink(make_action_link([("mode","snapshot"),("_restore_snapshot", name)]), _("Restore"))
+                html.buttonlink(make_action_link([("mode","snapshot"),("_delete_file", name)]), _("Delete"))
+                html.write("<td>")
+                html.write('<a href="%s">%s</a>' % (make_action_link([("mode","snapshot"),("_download_file", name)]), name))
+            html.write('</table>')
+
+        html.write("<h3>" + _("Restore from uploaded file") + "</h3>")
+        html.begin_form("upload_form", None, "POST")
+        html.upload_file("_upload_file")
+        html.button("upload_button", _("Restore from file"), "submit")
+        html.hidden_fields()
+        html.end_form()
+
+
+def create_snapshot():
+    if not os.path.exists(snapshot_dir):
+       os.mkdir(snapshot_dir)
+
+    snapshot_name = "wato-snapshot-%s.tar.gz" %  \
+                    time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(time.time()))
+    tar = tarfile.open(snapshot_dir + snapshot_name,"w:gz")
+
+    len_abs = len(root_dir)
+    for root, dirs, files in os.walk(defaults.check_mk_configdir):
+        for filename in files:
+            tar.add(root + "/" + filename, root[len_abs:] + "/" + filename)
+    tar.close()
+
+    log_audit(None, "snapshot-created", _("Created snapshot %s") % snapshot_name)
+
+    # Maintenance, remove old snapshots
+    snapshots = []
+    for f in os.listdir(snapshot_dir):
+        snapshots.append(f)
+    snapshots.sort(reverse=True)
+    while len(snapshots) > config.max_snapshots:
+        log_pending(None, "snapshot-removed", _("Removed snapshot %s") % snapshots[-1])
+        os.remove(snapshot_dir + snapshots.pop())
+
+def restore_snapshot( filename, tarstream = None ):
+    if not os.path.exists(snapshot_dir):
+       os.mkdir(snapshot_dir)
+
+    delete_root_dir()
+    if filename:
+        if not os.path.exists(snapshot_dir + filename):
+            raise MKGeneralException(_("Snapshot does not exist %s" % filename))
+        snapshot = tarfile.open(snapshot_dir + filename, "r:gz")
+    elif tarstream:
+        stream = StringIO.StringIO()
+        stream.write(tarstream)
+        stream.seek(0)
+        snapshot = tarfile.open(None, "r:gz", stream)
+    else:
+        return
+
+    snapshot.extractall(root_dir)
+    snapshot.close()
+    log_pending(None, "snapshot-restored", _("Restored snapshot %s") % (filename or _('from uploaded file')))
+
+def delete_root_dir():
+    if not "/conf.d/" in root_dir:
+        raise MKGeneralException("ERROR: config directory seems incorrect. check_mk_configdir %s" % defaults.check_mk_configdir)
+    shutil.rmtree(root_dir)
+
 
 
 #   +----------------------------------------------------------------------+

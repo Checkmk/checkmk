@@ -134,7 +134,7 @@ def show_filter_form(is_open, filters):
     html.write("<table class=\"form\">\n")
 
     # sort filters according to title
-    s = [(f.sort_index, f.title, f) for f in filters]
+    s = [(f.sort_index, f.title, f) for f in filters if f.available()]
     s.sort()
     col = 0
     for sort_index, title, f in s:
@@ -215,6 +215,11 @@ class Filter:
         self.title = title
         self.htmlvars = htmlvars
         self.link_columns = link_columns
+
+    # Some filters can be unavailable due to the configuration (e.g.
+    # the WATO Folder filter is only available if WATO is enabled.
+    def available(self):
+        return True
 
     def display(self):
         raise MKInternalError("Incomplete implementation of filter %s '%s': missing display()" % \
@@ -1150,7 +1155,6 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         if not filter.info or filter.info in datasource["infos"]:
             show_filters.append(filter)
 
-
     hide_filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
     hard_filters = [ multisite_filters[fn] for fn in view["hard_filters"] ]
     for varname, value in view["hard_filtervars"]:
@@ -1161,7 +1165,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     # Prepare Filter headers for Livestatus
     filterheaders = ""
     only_sites = None
-    all_active_filters = show_filters + hide_filters + hard_filters
+    all_active_filters = [ f for f in show_filters + hide_filters + hard_filters if f.available() ]
     for filt in all_active_filters: 
         header = filt.filter(tablename)
         if header.startswith("Sites:"):
@@ -1284,7 +1288,8 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
 
         # Command-button, open command form if checkboxes are currently shown
         if 'C' in display_options and len(rows) > 0 and config.may("act"):
-            toggle_button("table_actions", show_checkboxes, _("Commands"))
+            toggle_button("table_actions", False, _("Commands"))
+            # toggle_button("table_actions", show_checkboxes, _("Commands"))
             html.write("<td class=minigap></td>\n")
 
         # Buttons for view options
@@ -1375,8 +1380,9 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
                 if 'C' in display_options:
                     show_action_form(True, datasource)
 
-        elif 'C' in display_options: # (display open, if checkboxes are currently shown)
-            show_action_form(show_checkboxes, datasource)
+        elif 'C' in display_options: # (*not* display open, if checkboxes are currently shown)
+            # show_action_form(show_checkboxes, datasource)
+            show_action_form(False, datasource)
 
     if need_navi:
         if 'O' in display_options and len(painter_options) > 0 and config.may("painter_options"):
@@ -1569,7 +1575,7 @@ def view_linktitle(view):
 
 def show_context_links(thisview, active_filters):
     # Show button to WATO, if permissions allow this
-    if config.may("use_wato"):
+    if config.wato_enabled and config.may("use_wato"):
         html.begin_context_buttons()
         execute_hooks('buttons-begin')
         first = False
@@ -1577,7 +1583,7 @@ def show_context_links(thisview, active_filters):
         if host:
             url = wato.api.link_to_host(host)
         else:
-            url = wato.api.link_to_path(html.var("filename", "/"))
+            url = wato.api.link_to_path(html.var("filename", ""))
         html.context_button(_("WATO") ,url, "wato")
 
     else:

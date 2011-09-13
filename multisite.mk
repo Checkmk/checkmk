@@ -150,30 +150,22 @@ show_livestatus_errors = True
 #                             
 # Check_MK's Web Administration Tool
 
-# Declare files in conf.d/ to be editable with WATO. Please make
-# sure, that those files exist and are writable by Apache, e.g.:
-# touch /etc/check_mk/conf.d/network.mk
-# chgrp www /etc/check_mk/conf.d/network.mk
-# chmod 664 /etc/check_mk/conf.d/network.mk
-# 
-# config_files = [
-#   ("network.mk",    "Network, Infrastructure", [ "admin", "user" ] ),
-#   ("datacenter.mk", "Servers in Datacenter",   [ "admin" ]),
-# ]
+# If you do not like WATO, you can disable it:
+# wato_enabled = False
 
 # Host tags to be used in WATO
-# host_tags = [
-#  ( "Operating System", [
+# wato_host_tags = [
+#  ( "os_type", "Operating System", [
 #       ( "lnx", "Linux", [ 'tcp' ]),
 #       ( "win", "Windows", [ 'tcp', 'snmp' ]),
 #       ( "net", "Network device", [ 'snmp' ]),
 #       ( "ping", "Other PING-only device", ),
 #    ]),
-#  ( "Productivity", [
+#  ( "prod", "Productivity", [
 #       ( "prod", "Production System" ),
 #       ( "test", "Test System" ),
 #    ]),
-#  ( "Bulkwalk (SNMP v2c)", [
+#  ( "bulkwalk", "Bulkwalk (SNMP v2c)", [
 #       ( None,   "simple walk (SNMP v1)"),
 #       ( "bulk", "Bulkwalk (SNMP v2c)" ),
 #    ]),

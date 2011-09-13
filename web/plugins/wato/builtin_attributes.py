@@ -24,12 +24,20 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-declare_host_attribute(TextAttribute("alias", _("Alias"),
+declare_host_attribute(NagiosTextAttribute("alias", "alias", _("Alias"),
                        _("A comment or description of this host"),
-                       "", mandatory=False), show_in_table = True, show_in_folder = False)
+                       "", mandatory=False), 
+                       show_in_table = True, 
+                       show_in_folder = False)
 
-declare_host_attribute(IPAddressAttribute("ipaddress", _("IP Address"),
-                       _("IP Address of the host. Leave emtpy to use automatic "
-                         "hostname lookup. Enter a hostname to use dynamic resoluting "
-                         "during the actual monitoring."), mandatory=True, dnslookup=True),
-                         show_in_table=True, show_in_folder=True)
+declare_host_attribute(NagiosTextAttribute("ipaddress", "address", _("IP Address / DNS Name"),
+                       _("In case the name of the host is not resolvable via <tt>/etc/hosts</tt> "
+                         "or DNS by your monitoring server, you can specify an explicit IP "
+                         "address or a resolvable DNS name of the host here. <b>Note</b>: If you leave "
+                         "this attribute empty, then DNS resolution will be done when you activate "
+                         "the configuration. When you enter a DNS name here, the DNS resolution will "
+                         "be done each time the host is checked. Use this only for hosts with "
+                         "dynamic IP addresses."),
+                         allow_empty = False), 
+                         show_in_table = True, 
+                         show_in_folder = True)

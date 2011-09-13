@@ -27,7 +27,10 @@
 import config, wato
 
 def render_wato_files():
-    if not config.may("use_wato"):
+    if not config.wato_enabled:
+        html.write(_("WATO is disabled. Please set <tt>wato_enabled = True</tt> in your <tt>multisite.mk</tt> if you want to use WATO."))
+
+    elif not config.may("use_wato"):
         html.write(_("You are not allowed to use Check_MK's web configuration GUI."))
 
     else:
@@ -51,21 +54,14 @@ def ajax_wato_files():
     
 def render_linktree_folder(f):
     subfolders = f.get(".folders", {})
-    subfiles = f.get(".files", {})
-    is_leaf = len(subfolders) == 0 and len(subfiles) == 0
+    is_leaf = len(subfolders) == 0 
 
-    path = f[".path"]
-    filename = "/" + "/".join(path)
-    if not filename.endswith(".mk") and not filename.endswith("/"):
-        filename += "/"
-
-    title = '<a href="#" onclick="wato_tree_click(%r);">%s</a>' % (filename, f["title"]) 
+    path = '/wato/' + f[".path"]
+    title = '<a href="#" onclick="wato_tree_click(%r);">%s</a>' % (path, f["title"]) 
 
     if not is_leaf:
-        html.begin_foldable_container('wato', filename, False, title)
+        html.begin_foldable_container('wato', path, False, title)
         for sf in wato.api.sort_by_title(subfolders.values()):
-            render_linktree_folder(sf)
-        for sf in wato.api.sort_by_title(subfiles.values()):
             render_linktree_folder(sf)
         html.end_foldable_container()
     else:

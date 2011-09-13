@@ -456,8 +456,6 @@ filter_columns = 2
 # Default language for l10n
 default_language = None
 
-# Default preserved snapshots
-max_snapshots = 50
 
 #    __        ___  _____ ___  
 #    \ \      / / \|_   _/ _ \ 
@@ -466,9 +464,10 @@ max_snapshots = 50
 #       \_/\_/_/   \_\_| \___/ 
 #                              
 
-config_files = []
-host_tags = []
+wato_enabled = True
+wato_host_tags = []
 wato_hide_filenames = True
+wato_max_snapshots = 50
 
 
 #     ____ ___ 

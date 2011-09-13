@@ -128,6 +128,8 @@ snapshot_dir = var_dir + "/snapshots/"
 #   +----------------------------------------------------------------------+
 
 def page_handler():
+    if not config.wato_enabled:
+        raise MKGeneralException(_("WATO is disabled. Please set <tt>wato_enabled = True</tt> in your <tt>multisite.mk</tt> if you want to use WATO."))
     if not config.may("use_wato"):
         raise MKAuthException(_("You are not allowed to use WATO."))
 
@@ -390,17 +392,6 @@ def load_hosts_file(folder):
     # html.write("<pre>%s</pre>" % pprint.pformat(hosts))
     return hosts
 
-
-def rewrite_config_files_below(folder):
-    for fo in folder[".folders"].values():
-        rewrite_config_files_below(fo)
-    rewrite_config_file(folder)
-
-def rewrite_config_file(folder):
-    load_hosts(folder)
-    save_hosts(folder)
-
-
 def save_hosts(folder):
     folder_path = folder[".path"]
     dirname = root_dir + folder_path
@@ -413,16 +404,12 @@ def save_hosts(folder):
 
     all_hosts = []
     ipaddresses = {}
-    aliases = []
     hostnames = hosts.keys()
     hostnames.sort()
     for hostname in hostnames:
         host = hosts[hostname]
         effective = effective_attributes(host, folder)
 
-        # Make special handling of attributes configured in a special way 
-        # in check_mk
-        alias     = effective.get("alias")
         ipaddress = effective.get("ipaddress")
 
         # Compute tags from settings of each individual tag. We've got
@@ -433,8 +420,6 @@ def save_hosts(folder):
                 value = effective.get(attr.name())
                 tags.update(attr.get_tag_list(value))
 
-        if alias:
-            aliases.append((alias, [hostname]))
         all_hosts.append("|".join([hostname] + list(tags) + [ folder_path, 'wato' ]))
         if ipaddress:
             ipaddresses[hostname] = ipaddress
@@ -447,23 +432,11 @@ def save_hosts(folder):
     if len(all_hosts) > 0:
         out.write("all_hosts += ")
         out.write(pprint.pformat(all_hosts))
-        if len(aliases) > 0:
-            out.write("\n\nif 'alias' not in extra_host_conf:\n"
-                    "    extra_host_conf['alias'] = []\n")
-            out.write("\nextra_host_conf['alias'] += ")
-            out.write(pprint.pformat(aliases))
         if len(ipaddresses) > 0:
             out.write("\n\nipaddresses.update(")
             out.write(pprint.pformat(ipaddresses))
             out.write(")")
         out.write("\n")
-
-    # all WATO information to Check_MK's inventory checks (needed for link in Multisite)
-    out.write("\n\nif '_WATO' not in extra_service_conf:\n"
-            "    extra_service_conf['_WATO'] = []\n")
-    out.write("\nextra_service_conf['_WATO'] += [ \n"
-              "  ('%s', [ 'wato', '%s' ], ALL_HOSTS, [ 'Check_MK inventory' ] ) ]\n" % 
-              (folder_path, folder_path))
 
     # Add custom macros for attributes that are to be present in Nagios
     custom_macros = {}
@@ -471,21 +444,21 @@ def save_hosts(folder):
         for attr, topic in host_attributes:
             attrname = attr.name()
             if attrname in effective:
-                value = effective.get(attrname)
-                nagstring = attr.to_nagios(value)
-                if nagstring != None:
-                    if attrname not in custom_macros:
-                        custom_macros[attrname] = {}
-                    custom_macros[attrname][hostname] = nagstring
-    for attrname, entries in custom_macros.items():
+                nag_varname = attr.nagios_name()
+                if nag_varname:
+                    value = effective.get(attrname)
+                    nagstring = attr.to_nagios(value)
+                    if nag_varname not in custom_macros:
+                        custom_macros[nag_varname] = {}
+                    custom_macros.setdefault(nag_varname, {})[hostname] = nagstring
+    for nag_varname, entries in custom_macros.items():
         macrolist = []
         for hostname, nagstring in entries.items():
             macrolist.append((nagstring, [hostname]))
         if len(macrolist) > 0:
             out.write("\n# %s\n" % host_attribute[attrname].title())
-            out.write("if '_%s' not in extra_host_conf:\n" % attrname.upper())
-            out.write("    extra_host_conf['_%s'] = []\n" % attrname.upper())
-            out.write("extra_host_conf['_%s'] += \\\n%s\n" % (attrname.upper(), pprint.pformat(macrolist)))
+            out.write("extra_host_conf.setdefault(%r, []).extend(\n" % nag_varname)
+            out.write("  %s)\n" % pprint.pformat(macrolist))
 
     # Write information about all host attributes into special variable - even
     # values stored for check_mk as well.
@@ -499,6 +472,20 @@ def delete_configuration_file(folder, thefile):
         os.remove(path) # remove the actual configuration file
     if os.path.exists(path + ".wato"):
         os.remove(path + ".wato") # remove the .wato file
+
+
+# If folder attributes change, configuration files below
+# need to be re-written, as they contain the gross product
+# all all folder-attributes (due to inheritance). Check_MK
+# is presented with the result of the inheritance.
+def rewrite_config_files_below(folder):
+    for fo in folder[".folders"].values():
+        rewrite_config_files_below(fo)
+    rewrite_config_file(folder)
+
+def rewrite_config_file(folder):
+    load_hosts(folder)
+    save_hosts(folder)
 
 
 #   +----------------------------------------------------------------------+
@@ -799,7 +786,8 @@ def show_hosts(folder):
     return True
 
 
-# Create list of all hosts that are select with checkboxes in the current file
+# Create list of all hosts that are select with checkboxes in the current file.
+# This is needed for bulk operations.
 def get_hostnames_from_checkboxes():
     hostnames = g_folder[".hosts"].keys()
     hostnames.sort()
@@ -2116,7 +2104,7 @@ def host_status_button(hostname, viewname):
     html.context_button(_("Status"), 
        "view.py?" + htmllib.urlencode_vars([
            ("view_name", viewname), 
-           ("folder", g_folder[".path"]),
+           ("filename", g_folder[".path"] + "/hosts.mk"),
            ("host",     hostname),
            ("site",     "")]), 
            "status")  # TODO: support for distributed WATO
@@ -2463,6 +2451,11 @@ class Attribute:
     def name(self):
         return self._name
 
+    # Return the name of the Nagios configuration variable
+    # if this is a Nagios-bound attribute (e.g. "alias" or "_SERIAL")
+    def nagios_name(self):
+        return None
+
     # Return the title to be displayed to the user
     def title(self):
         return self._title
@@ -2531,9 +2524,10 @@ class Attribute:
 # A simple text attribute. It is stored in 
 # a Python unicode string
 class TextAttribute(Attribute):
-    def __init__(self, name, title, help = None, default_value="", mandatory = False):
+    def __init__(self, name, title, help = None, default_value="", mandatory=False, allow_empty=True):
         Attribute.__init__(self, name, title, help, default_value)
         self._mandatory = mandatory
+        self._allow_empty = allow_empty
 
     def paint(self, value, hostname):
         if not value:
@@ -2553,13 +2547,17 @@ class TextAttribute(Attribute):
         value = html.var_utf8("attr_" + self.name())
         if value == None:
             value = ""
-        return value
+        return value.strip()
 
     def validate_input(self):
         value = self.from_html_vars()
         if self._mandatory and not value:
             raise MKUserError("attr_" + self.name(), 
                   _("Please specify a value for %s") % self.title())
+        if value.strip() == "" and not self._allow_empty:
+            raise MKUserError("attr_" + self.name(),
+                  _("%s may be missing, if must not be empty if it is set.") % self.title())
+                  
 
     def filter_matches(self, crit, value, hostname):
         if value == None:  # Host does not have this attribute
@@ -2584,82 +2582,14 @@ class FixedTextAttribute(TextAttribute):
         return html.var("attr_" + self.name())
 
 
-
-
-class IPAddressAttribute(TextAttribute):
-    def __init__(self, name, title, help = None, mandatory = False, dnslookup = False):
-        TextAttribute.__init__(self, name, title, help, "", mandatory = mandatory)
-        self._dnslookup = dnslookup
-
-    def render_input(self, value):
-        if value == None:
-            value = ""
-        html.text_input("attr_" + self.name(), value, size=15)
-
-    def from_html_vars(self):
-        value = html.var("attr_" + self.name())
-        if not value:
-            value = None
-        return value
-
-    def do_dns(self, hostname):
-        try:
-            ip = socket.gethostbyname(hostname)
-            text = "%s&nbsp;(DNS)" % ip
-            tdclass = 'dns'
-        except:
-            ip = None
-            text = _("(hostname not resolvable!)")
-            tdclass = 'dnserror'
-        return ip, tdclass, text
-    
-    def paint(self, value, hostname):
-        if value == None:
-            ip, tdclass, text = self.do_dns(hostname)
-            return tdclass, text
-        else:
-            return "", value
-
-    def validate_input(self):
-        value = self.from_html_vars()
-        if not value and self._dnslookup: # empty -> use DNS
-            hostname = html.var("host")
-            ip, text, tdclass = self.do_dns(hostname)
-            if not ip:
-                raise MKUserError("attr_" + self.name(), _("Hostname <b><tt>%s</tt></b> cannot be resolved into an IP address. "
-                            "Please check hostname or specify an explicit IP address.") % hostname)
-
-    # On IP-Addresses we always do a prefix-match. We also remove any "*"
-    # that the user accidentally adds
-    def filter_matches(self, crit, value, hostname):
-        if not crit:
-            return True
-
-        if not value: # do DNS lookup
-            value, tdclass, text = self.do_dns(hostname)
-            if not value:
-                return False
-
-        return value.lower().startswith(crit.lower().strip("*"))
-
-# Helper function for checking if an ip address is valid
-def is_valid_ip_address(ip):
-    try:
-        parts = ip.split('.')
-        if len(parts) != 4:
-            raise Exception()
-        for x in parts:
-            if int(x) < 0 or int(x) > 255:
-                raise Exception()
-    except:
-        return False
-    return True
-
 # A text attribute that is stored in a Nagios custom macro
 class NagiosTextAttribute(TextAttribute):
-    def __init__(self, name, title, help = None, default_value="", mandatory = False):
-        TextAttribute.__init__(self, name, title, help, default_value)
-        self._mandatory = mandatory
+    def __init__(self, name, nag_name, title, help = None, default_value="", mandatory = False, allow_empty=True):
+        TextAttribute.__init__(self, name, title, help, default_value, mandatory, allow_empty)
+        self.nag_name = nag_name
+
+    def nagios_name(self):
+        return self.nag_name
 
     def to_nagios(self, value):
         return value.encode("utf-8")
@@ -2750,7 +2680,7 @@ def declare_host_tag_attributes():
     global configured_host_tags
     global host_attributes
 
-    if configured_host_tags != config.host_tags:
+    if configured_host_tags != config.wato_host_tags:
         # Remove host tag attributes from list, if existing
         host_attributes = [ (attr, topic) for (attr, topic) in host_attributes if not attr.name().startswith("tag_") ]
 
@@ -2759,10 +2689,10 @@ def declare_host_tag_attributes():
             if attr.name().startswith("tag_"):
                 del host_attribute[attr.name()]
 
-        for num, entry in enumerate(config.host_tags):
+        for num, entry in enumerate(config.wato_host_tags):
             declare_host_attribute(HostTagAttribute(num + 1, entry), show_in_table = False, show_in_folder = True, topic = _("Host tags"))
 
-        configured_host_tags = config.host_tags
+        configured_host_tags = config.wato_host_tags
 
 
 # Global datastructure holding all attributes (in a defined order)
@@ -3160,7 +3090,7 @@ def create_snapshot():
     for f in os.listdir(snapshot_dir):
         snapshots.append(f)
     snapshots.sort(reverse=True)
-    while len(snapshots) > config.max_snapshots:
+    while len(snapshots) > config.wato_max_snapshots:
         log_pending(None, "snapshot-removed", _("Removed snapshot %s") % snapshots[-1])
         os.remove(snapshot_dir + snapshots.pop())
 
@@ -3219,60 +3149,26 @@ class API:
     # Get a (flat) dictionary containing all hosts with their *effective*
     # attributes (containing all inherited and default values where appropriate).
     def get_all_hosts(self):
-        load_folders()
+        load_all_folders()
         return collect_hosts(g_root_folder)
 
-    # Find a folder by its tuple-path
+    # Find a folder by its path. Raise an exception if it does
+    # not exist.
     def get_folder(self, path):
-        load_folders()
-        the_thing = g_root_folder
-        while len(path) > 0:
-             c = path[0]
-             if c in the_thing[".folders"]:
-                 the_thing = the_thing[".folders"][c]
-             else:
-                 return None
-             path = path[1:]
-
-        # add information about hosts and their number
-        load_hosts(the_thing)
-        return the_thing
-
-    # Find a file by its tuple-path and return it
-    # including the hosts
-    def get_file(self, path):
-        folder = self.get_folder(path[:-1])
-        if not folder or not path[-1] in folder[".files"]:
-            return None
-        the_file = folder[".files"][path[-1]]
-        if not the_file:
-            return None
-        hosts = load_hosts_file(folder, the_file)
-        new_file = {}
-        new_file.update(the_file)
-        new_file[".hosts"] = hosts
-        return new_file
-
-    # Find a file or folder by its tuple-path and return
-    # it without loading any hosts.
-    def get_filefolder(self, path):
-        if len(path) == 0:
-            return g_root_folder
-        elif path[-1].endswith(".mk"):
-            folder = self.get_folder(path[:-1])
-            if not folder:
-                raise MKGeneralException("No WATO folder %s." % (path,))
-            if ".files" not in folder:
-                raise MKGeneralException("Path %s does not point to a WATO file." % (path,))
-            return folder[".files"].get(path[-1])
+        load_all_folders()
+        folder = g_folders.get(path)
+        if folder:
+            load_hosts(folder)
+            return folder
         else:
-            return self.get_folder(path)
+            raise MKGeneralException("No WATO folder %s." % path)
 
-    # Get all effective data of a host. The_file must be returned by get_file()
-    def get_host(self, the_file, hostname):
+
+    # Get all effective data of a host. Folder must be returned by get_folder()
+    def get_host(self, folder, hostname):
         declare_host_tag_attributes()
-        host = the_file[".hosts"][hostname]
-        eff = effective_attributes(host, the_file)
+        host = folder[".hosts"][hostname]
+        eff = effective_attributes(host, folder)
         eff["name"] = hostname
         return eff
 
@@ -3301,9 +3197,9 @@ class API:
         folders.sort(cmp = folder_cmp)
         return folders
 
-    # Create an URL to a certain WATO path. Path is in string format
-    def link_to_path(self, filename):
-        return "wato.py?filename=" + htmllib.urlencode(filename)
+    # Create an URL to a certain WATO folder.
+    def link_to_path(self, path):
+        return "wato.py?folder=" + htmllib.urlencode(path)
 
     # Create an URL to the edit-properties of a host.
     def link_to_host(self, hostname):
@@ -3316,34 +3212,30 @@ class API:
         [("mode", "inventory"), ("host", hostname)])
 
     # Return the title of a folder - which is given as a string path
-    def get_folder_title(self, filename):
-        load_folders() # TODO: use in-memory-cache
-        folder = self.get_filefolder(make_path(filename))
+    def get_folder_title(self, path):
+        load_all_folders() # TODO: use in-memory-cache
+        folder = g_folders.get(path)
         if folder:
             return folder["title"]
         else:
-            return filename
+            return path
 
     # BELOW ARE PRIVATE HELPER FUNCTIONS
 
-
-
     def _cleanup_directory(self, thing):
         # drop 'parent' entry, recursively
-        def drop_internal(thing):
-            new_thing = {}
-            new_thing.update(thing)
-            if ".parent" in new_thing:
-                del new_thing[".parent"]
-            if ".files" in new_thing:
-                new_thing[".files"] = drop_internal_dict(new_thing[".files"])
-            if ".folders" in new_thing:
-                new_thing[".folders"] = drop_internal_dict(new_thing[".folders"])
-            return new_thing
+        def drop_internal(folder):
+            new_folder = {}
+            new_folder.update(folder)
+            if ".parent" in new_folder:
+                del new_folder[".parent"]
+            if ".folders" in new_folder:
+                new_folder[".folders"] = drop_internal_dict(new_folder[".folders"])
+            return new_folder
 
-        def drop_internal_dict(self, thingdict): 
+        def drop_internal_dict(self, folderdict): 
             new_dict = {}
-            for name, thing in thingdict.items():
+            for name, thing in folderdict.items():
                 new_dict[name] = drop_internal(thing)
             return new_dict
 
@@ -3354,21 +3246,20 @@ api = API()
 
 
 # internal helper functions for API
-def collect_hosts(the_thing):
-    if ".folders" in the_thing: # a folder
-        hosts = {}
-        for fi in the_thing.get(".files", []).values():
-            hosts.update(collect_hosts(fi))
-        for fo in the_thing[".folders"].values():
-            hosts.update(collect_hosts(fo))
-        return hosts
-    else: # file
-        hosts = load_hosts_file(the_thing[".parent"], the_thing)
-        effective_hosts = dict([ (hn, effective_attributes(h, the_thing)) 
-                               for (hn, h) in hosts.items() ])
-        for host in effective_hosts.values():
-            host["file"] = the_thing[".path"]
-        return effective_hosts
+def collect_hosts(folder):
+    load_hosts(folder)
+    hosts = {}
+
+    # Collect hosts in this folder
+    for hostname, host in folder[".hosts"]:
+        hosts[hostname] = effective_attributes(host, folder)
+        host["file"] = folder[".path"]
+
+    # Collect hosts from subfolders
+    for subfolder in folder[".folders"].values():
+        hosts.update(collect_hosts(subfolder))
+
+    return hosts
 
 def hook_registered(name):
     """ Returns True if at least one function is registered for the given hook """

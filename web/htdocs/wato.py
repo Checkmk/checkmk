@@ -2343,37 +2343,28 @@ def move_host_to(hostname, target_filename):
     move_hosts_to([hostname], target_filename)
 
 def render_folder_path(the_folder = 0, link_to_last = False):
-
     if the_folder == 0:
         the_folder = g_folder
 
-    def render_component(path, title):
+    def render_component(folder):
         return '<a href="%s">%s</a>' % (
-               html.makeuri_contextless([("folder", path)]), title)
+               html.makeuri_contextless([("folder", folder[".path"])]), folder["title"])
 
-    comps = []
-    folder_path = the_folder[".path"]
-    if folder_path == "": # root folder
-        parts = [ "" ]
-    elif '/' not in folder_path:
-        parts = [ "", folder_path ] # first directory level
-    else:
-        parts = [ "" ] + folder_path.split("/")
+    folders = []
+    folder = the_folder.get(".parent")
+    while folder:
+        folders.append(folder)
+        folder = folder.get(".parent")
 
-    path = ""
-    for p in parts[:-1]:
-        comps.append(render_component(path, g_folders[path]["title"]))
-        if path == "":
-            path = p
-        else:
-            path = path + "/" + p
-
+    parts = []
+    for folder in folders[::-1]:
+        parts.append(render_component(folder))
     if link_to_last:
-        comps.append(render_component(the_folder[".path"], the_folder["title"]))
+        parts.append(render_component(the_folder))
     else:
-        comps.append("<b>" + the_folder["title"] + "</b>")
+        parts.append("<b>" + the_folder["title"] + "</b>")
 
-    html.write("<div class=folderpath>%s</div>\n" % " / ".join(comps))
+    html.write("<div class=folderpath>%s</div>\n" % " / ".join(parts))
 
 #   +----------------------------------------------------------------------+
 #   |               ____                                                   |

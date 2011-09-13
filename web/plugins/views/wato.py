@@ -33,7 +33,7 @@ class FilterWatoFile(Filter):
         self.load_wato_data()
 
     def available(self):
-        return False ## config.wato_enabled
+        return config.wato_enabled
 
     def load_wato_data(self):
         self.tree = wato.api.get_folder_tree()

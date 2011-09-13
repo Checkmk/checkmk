@@ -85,37 +85,37 @@ def page_dashboard():
 
     render_dashboard(name)
 
-def add_filename_to_url(url, filename):
-    if not filename:
+def add_wato_folder_to_url(url, wato_folder):
+    if not wato_folder:
         return url
     elif '/' in url:
-        return url # do not append filename to non-Check_MK-urls
+        return url # do not append wato_folder to non-Check_MK-urls
     elif '?' in url:
-        return url + "&filename=" + htmllib.urlencode(filename)
+        return url + "&wato_folder=" + htmllib.urlencode(wato_folder)
     else:
-        return url + "?filename=" + htmllib.urlencode(filename)
+        return url + "?wato_folder=" + htmllib.urlencode(wato_folder)
 
 
 # Actual rendering function
 def render_dashboard(name):
     board = dashboards[name]
 
-    # The dashboard may be called with "filename" set. In that case
+    # The dashboard may be called with "wato_folder" set. In that case
     # the dashboard is assumed to restrict the shown data to a specific
     # WATO subfolder or file. This could be a configurable feature in
     # future, but currently we assume, that *all* dashboards are filename
     # sensitive.
 
-    filename = html.var("filename")
-    if not filename or filename == "/": # ignore filename in case of root folder
-        filename = None
+    wato_folder = html.var("wato_folder")
+    if not wato_folder: # ignore wato folder in case of root folder
+        wato_folder = None
 
     # The title of the dashboard needs to be prefixed with the WATO path, 
     # in order to make it clear to the user, that he is seeing only partial
     # data.
     title = board["title"]
-    if filename:
-        title = wato.api.get_folder_title(filename) + " - " + title
+    if wato_folder:
+        title = wato.api.get_folder_title(wato_folder) + " - " + title
     html.header(title)
 
     html.javascript_file("dashboard")
@@ -133,10 +133,10 @@ def render_dashboard(name):
         # refreshed by us but need to do that themselves.
         if "url" in dashlet:
             refresh_dashlets.append([nr, dashlet.get("refresh", 0), 
-              add_filename_to_url(dashlet["url"], filename)])
+              add_wato_folder_to_url(dashlet["url"], wato_folder)])
 
         # Paint the dashlet's HTML code
-        render_dashlet(nr, dashlet, filename)
+        render_dashlet(nr, dashlet, wato_folder)
 
     html.write("</div>\n")
 
@@ -163,7 +163,7 @@ dashboard_scheduler(1);
 # for the resizing. Within that div there is an inner div containing the
 # actual dashlet content. The margin between the inner and outer div is
 # used for stylish layout stuff (shadows, etc.)
-def render_dashlet(nr, dashlet, filename):
+def render_dashlet(nr, dashlet, wato_folder):
 
     html.write('<div class=dashlet id="dashlet_%d">' % nr)
     # render shadow
@@ -190,7 +190,7 @@ def render_dashlet(nr, dashlet, filename):
         html.write(dashlet["content"])
     elif "iframe" in dashlet: # fixed content containing iframe
         html.write('<iframe width="100%%" height="100%%" src="%s"></iframe>' % 
-           add_filename_to_url(dashlet["iframe"], filename))
+           add_wato_folder_to_url(dashlet["iframe"], wato_folder))
     html.write("</div></div>\n")
 
 # Here comes the brain stuff: An intelligent liquid layout algorithm.
@@ -456,10 +456,10 @@ def dashlet_servicestats():
 
 def render_statistics(what, table, filter):
     # Is the query restricted to a certain WATO-path?
-    filename = html.var("filename")
-    if filename and filename != "/":
+    wato_folder = html.var("wato_folder")
+    if wato_folder:
         # filter += "Filter: host_state = 0"
-        filter += "Filter: host_filename ~ ^%s\n" % filename.replace("\n", "")
+        filter += "Filter: host_filename ~ ^/wato/%s/\n" % wato_folder.replace("\n", "")
     
     query = "GET %s\n" % what
     for entry in table:

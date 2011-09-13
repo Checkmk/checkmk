@@ -1,0 +1,57 @@
+
+
+Setup of check_MK agent on FreeBSD:
+-----------------------------------
+
+The check_mk agent is not available as a port so far.
+This means you have to manually downloadf and install it.
+
+
+First we'll be installing a few small ports that allow us to access more
+monitoring data:
+
+sysutils/muse
+sysutils/ipmitool
+devel/libstatgrab
+
+
+Then we'll enable inetd in rc.conf:
+
+inetd_enable=yes
+inetd_flags=-wW
+
+
+We download the most current agent:
+
+cd /usr/local/bin
+fetch 'http://git.mathias-kettner.de/git/?p=check_mk.git;a=blob_plain;f=agents/check_mk_agent.freebsd;hb=HEAD'
+
+-rwx------  1 root  wheel  11599 Mar 15 15:59 /usr/local/bin/check_mk
+
+
+We make it resolveable by adding it to the service names list in /etc/services:
+
+check_mk	6556/tcp   #check_mk agent
+
+
+We add an entry to the inetd configuration that ensures it will be run if someone connects to the port.
+
+check_mk	stream	tcp	nowait		root	/usr/local/bin/check_mk check_mk
+
+
+And we set up minimum security in /etc/hosts.allow
+
+# Allow nagios server to access us
+check_mk : ip_of_nagios_server : allow
+
+
+# At last,we restart inetd to read in the new config and bring it up
+/etc/rc.d/inetd start
+
+
+
+If access doesn't work right away you can test the tcp wrapper settings using
+tcpdchk.
+Alternatively you can of course also use key-based ssh or any other more secure
+means of transportation.
+

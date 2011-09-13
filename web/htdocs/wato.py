@@ -102,6 +102,7 @@ config.declare_permission("use_wato",
 
 root_dir     = defaults.check_mk_configdir + "/wato/"
 var_dir      = defaults.var_dir + "/wato/"
+log_dir      = var_dir + "log/"
 snapshot_dir = var_dir + "/snapshots/"
 
 #   +----------------------------------------------------------------------+
@@ -786,6 +787,119 @@ def show_hosts(folder):
     return True
 
 
+def host_move_combo(host = None, top = False):
+    other_folders = []
+    for path, afolder in g_folders.items():
+        if config.role in afolder["roles"] and afolder != g_folder:
+            os_path = afolder[".path"]
+            msg = afolder["title"]
+            if os_path:
+                msg += " (%s)" % os_path
+            other_folders.append((os_path, msg))
+
+    if len(other_folders) > 0:
+        selections = [("@", _("(select folder)"))] + other_folders
+        if host == None:
+            html.button("_bulk_move", _("Move To:"))
+            field_name = 'bulk_moveto'
+            if top:
+                field_name = '_top_bulk_moveto'
+                if html.has_var('bulk_moveto'):
+                    html.javascript('update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
+            html.select(field_name, selections, "",
+                        onchange = "update_bulk_moveto(this.value)",
+                        attrs = {'class': 'bulk_moveto'})
+        else:
+            html.hidden_field("host", host)
+            uri = html.makeuri([("host", host), ("_transid", html.current_transid() )])
+            html.sorted_select("host_move_%s" % host, selections, "@", 
+                "location.href='%s' + '&_move_host_to=' + this.value;" % uri);
+
+
+def move_hosts_to(hostnames, path):
+    if path not in g_folders: # non-existing folder
+        return
+
+    target_folder = g_folders[path]
+    if target_folder == g_folder:
+        return # target and source are the same
+
+    if config.role not in target_folder["roles"]:
+        raise MKAuthException(_("You have no change permissions on the target folder"))
+
+    # read hosts currently in target file
+    load_hosts(target_folder)
+    target_hosts = target_folder[".hosts"]
+
+    num_moved = 0
+    for hostname in hostnames:
+        if hostname not in g_folder[".hosts"]: # non-existant host
+            continue
+
+        target_hosts[hostname] = g_folder[".hosts"][hostname]
+        target_folder["num_hosts"] += 1
+        g_folder["num_hosts"] -= 1
+        del g_folder[".hosts"][hostname]
+        if len(hostnames) == 1:
+            log_pending(hostname, "move-host", _("Moved host from %s to %s") %
+                (g_folder[".path"], target_folder[".path"]))
+        num_moved += 1
+
+    save_folder_and_hosts(target_folder)
+    save_folder_and_hosts(g_folder)
+    call_hook_hosts_changed(g_root_folder)
+    if len(hostnames) > 1:
+        log_pending(target_file, "move-host", _("Moved %d hosts from %s to %s") %
+            (num_moved, g_folder[".path"], target_folder[".path"]))
+    return num_moved 
+        
+
+def move_host_to(hostname, target_filename):
+    move_hosts_to([hostname], target_filename)
+def delete_hosts_after_confirm(hosts):
+    c = wato_confirm(_("Confirm deletion of %d hosts") % len(hosts),
+                     _("Do you really want to delete the %d selected hosts?") % len(hosts))
+    if c:
+        for delname in hosts:
+            del g_folder[".hosts"][delname]
+            g_folder["num_hosts"] -= 1
+            check_mk_automation("delete-host", [delname])
+            log_pending(delname, "delete-host", _("Deleted host %s") % delname)
+        save_folder_and_hosts(g_folder)
+        call_hook_hosts_changed(g_folder)
+        return "folder", _("Successfully deleted %d hosts") % len(hosts)
+    elif c == False: # not yet confirmed
+        return ""
+    else:
+        return None # browser reload 
+        
+def delete_folder_after_confirm(del_folder):
+    msg = _("Do you really want to delete the folder %s?") % del_folder["title"]
+    if not config.wato_hide_filenames:
+        msg += "<br>" + _("(The directory <tt>%s</tt>)") % folder_dir(del_folder)
+    c = wato_confirm(_("Confirm folder deletion"), msg)
+                     
+    if c:
+        del g_folder[".folders"][del_folder[".name"]]
+        folder_path = folder_dir(del_folder)
+        try:
+            os.remove(folder_path + "/.wato")
+            os.rmdir(folder_path)
+        except:
+            pass
+        if os.path.exists(folder_path):
+            raise MKGeneralException(_("Cannot remove the folder '%s': probably there are "
+                                       "still non-WATO files contained in this directory.") % folder_path)
+
+        log_audit(folder_dir(del_folder), "delete-folder", _("Deleted empty folder %s")% folder_dir(del_folder))
+        call_hook_folder_deleted(del_folder)
+        html.reload_sidebar() # refresh WATO snapin
+        return "folder"
+    elif c == False: # not yet confirmed
+        return ""
+    else:
+        return None # browser reload 
+
 # Create list of all hosts that are select with checkboxes in the current file.
 # This is needed for bulk operations.
 def get_hostnames_from_checkboxes():
@@ -1302,8 +1416,6 @@ def mode_search(phase):
         html.button("_local", _("Search in %s") % g_folder["title"], "submit")
         html.write("</td></tr>\n")
         
-
-        
         html.write("</table>\n")
         html.hidden_fields()
         html.end_form()
@@ -1392,6 +1504,18 @@ def search_hosts_in_folder(folder, crit):
 
     return len(found)
 
+#   +----------------------------------------------------------------------+
+#   |       ____ ______     __   ___                            _          |
+#   |      / ___/ ___\ \   / /  |_ _|_ __ ___  _ __   ___  _ __| |_        |
+#   |     | |   \___ \\ \ / /____| || '_ ` _ \| '_ \ / _ \| '__| __|       |
+#   |     | |___ ___) |\ V /_____| || | | | | | |_) | (_) | |  | |_        |
+#   |      \____|____/  \_/     |___|_| |_| |_| .__/ \___/|_|   \__|       |
+#   |                                         |_|                          |
+#   +----------------------------------------------------------------------+
+#   | The following functions help implementing an import of hosts from    |
+#   | third party applications, such as from CVS files. The import itsself |
+#   | is not yet coded, but functions for dealing with the imported hosts. |
+#   +----------------------------------------------------------------------+
 
 def move_to_imported_folders(hosts):
     c = wato_confirm( 
@@ -1409,7 +1533,7 @@ def move_to_imported_folders(hosts):
     targets = {}
     for hostname in hosts:
         host = g_folder[".hosts"][hostname]
-        effective = effective_attributes(host, g_file) 
+        effective = effective_attributes(host, g_folder) 
         imported_folder = effective.get('imported_folder')
         if imported_folder == None:
             continue
@@ -1483,17 +1607,6 @@ def create_target_file_from_aliaspath(aliaspath):
 
 
 
-
-
-
-
- 
-
-
-
-
-
-
 #   +----------------------------------------------------------------------+
 #   |  ____        _ _      ___                      _                     |
 #   | | __ ) _   _| | | __ |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _   |
@@ -1523,7 +1636,8 @@ def mode_bulk_inventory(phase):
                 counts = check_mk_automation("inventory", [how, hostname])
                 result = repr([ 'continue', 1, 0 ] + list(counts)) + "\n"
                 result += _("Inventorized %s<br>\n") % hostname
-                log_pending(hostname, "bulk-inventory", _("Inventorized host: %d added, %d removed, %d kept, %d total services") % counts)
+                log_pending(hostname, "bulk-inventory", 
+                    _("Inventorized host: %d added, %d removed, %d kept, %d total services") % counts)
             except Exception, e:
                 result = repr([ 'failed', 1, 1, 0, 0, 0, 0, ]) + "\n"
                 result += _("Error during inventory of %s: %s<br>\n") % (hostname, e)
@@ -1540,8 +1654,12 @@ def mode_bulk_inventory(phase):
         interactive_progress(
             hostnames,         # list of items
             _("Bulk inventory"),  # title
-            [ (_("Total hosts"), 0), (_("Failed hosts"), 0), (_("Services added"), 0), (_("Services removed"), 0), 
-              (_("Services kept"), 0), (_("Total services"), 0) ], # stats table
+            [ (_("Total hosts"),      0),
+              (_("Failed hosts"),     0), 
+              (_("Services added"),   0), 
+              (_("Services removed"), 0), 
+              (_("Services kept"),    0), 
+              (_("Total services"),   0) ], # stats table
             [ ("mode", "folder") ], # URL for "Stop/Finish" button
             50, # ms to sleep between two steps
         )
@@ -1628,6 +1746,17 @@ def mode_bulk_edit(phase):
     html.hidden_fields()
     html.end_form()
 
+
+#   +----------------------------------------------------------------------+
+#   |      ____        _ _       ____ _                                    |
+#   |     | __ ) _   _| | | __  / ___| | ___  __ _ _ __  _   _ _ __        |
+#   |     |  _ \| | | | | |/ / | |   | |/ _ \/ _` | '_ \| | | | '_ \       |
+#   |     | |_) | |_| | |   <  | |___| |  __/ (_| | | | | |_| | |_) |      |
+#   |     |____/ \__,_|_|_|\_\  \____|_|\___|\__,_|_| |_|\__,_| .__/       |
+#   |                                                         |_|          |
+#   +----------------------------------------------------------------------+
+#   | Mode for removing attributes from host in bulk mode.                 |
+#   +----------------------------------------------------------------------+
 
 def mode_bulk_cleanup(phase):
     if phase == "title":
@@ -1792,15 +1921,19 @@ def mode_changelog(phase):
 def log_entry(linkinfo, action, message, logfilename):
     if type(message) == unicode:
         message = message.encode("utf-8")
-    make_nagios_directory(var_dir)
+
+    # linkinfo is either a folder, or a hostname or None
     if type(linkinfo) == dict and linkinfo[".path"] in g_folders:
-        link = linkinfo[".path"]
+        link = linkinfo[".path"] + ":"
     elif linkinfo == None:
         link = "-"
+    elif linkinfo and ".hosts" in g_folder and linkinfo in g_folder[".hosts"]: # hostname in current folder
+        link = g_folder[".path"] + ":" + linkinfo
     else:
-        link = linkinfo
+        link = ":" + linkinfo
 
-    log_file = var_dir + logfilename
+    log_file = log_dir + logfilename
+    make_nagios_directory(log_dir)
     f = create_user_file(log_file, "ab")
     f.write("%d %s %s %s " % (int(time.time()), link, html.req.user, action))
     f.write(message)
@@ -1816,12 +1949,12 @@ def log_pending(linkinfo, what, message):
     log_entry(linkinfo, what, message, "audit.log")
 
 def log_commit_pending():
-    pending = var_dir + "pending.log"
+    pending = log_dir + "pending.log"
     if os.path.exists(pending):
         os.remove(pending)
 
 def clear_audit_log():
-    path = var_dir + "audit.log"
+    path = log_dir + "audit.log"
     if os.path.exists(path):
         newpath = path + time.strftime(".%Y-%m-%d")
         if os.path.exists(newpath):
@@ -1846,7 +1979,7 @@ def clear_audit_log_after_confirm():
         return None # browser reload 
 
 def parse_audit_log(what):
-    path = var_dir + what + ".log"
+    path = log_dir + what + ".log"
     if os.path.exists(path):
         entries = []
         for line in file(path):
@@ -1857,7 +1990,7 @@ def parse_audit_log(what):
     return []
 
 def log_exists(what):
-    path = var_dir + what + ".log"
+    path = log_dir + what + ".log"
     return os.path.exists(path)
 
 def render_linkinfo(linkinfo):
@@ -1865,19 +1998,19 @@ def render_linkinfo(linkinfo):
         path, hostname = linkinfo.split(':', 1)
         if path in g_folders:
             folder = g_folders[path]
-            hosts = load_hosts(folder)
-            if hostname in hosts:
-                url = html.makeuri_contextless([("mode", "edithost"), 
-                          ("folder", pathname), ("host", hostname)])
-                title = hostname
-            else:
-                return hostname
+            if hostname:
+                hosts = load_hosts(folder)
+                if hostname in hosts:
+                    url = html.makeuri_contextless([("mode", "edithost"), 
+                              ("folder", path), ("host", hostname)])
+                    title = hostname
+                else:
+                    return hostname
+            else: # only folder
+                url = html.makeuri_contextless([("mode", "folder"), ("folder", path)])
+                title = g_folders[path]["title"]
         else:
-            return hostname
-
-    elif linkinfo in g_folders:
-        url = html.makeuri_contextless([("mode", "folder"), ("folder", linkinfo)])
-        title = g_folders[linkinfo]["title"]
+            return linkinfo
     else:
         return ""
 
@@ -2009,6 +2142,7 @@ def export_audit_log():
                              user, action, '"' + text + '"')) + '\n')
     return False
 
+
 #   +----------------------------------------------------------------------+
 #   |          _         _                        _   _                    |
 #   |         / \  _   _| |_ ___  _ __ ___   __ _| |_(_) ___  _ __         |
@@ -2116,7 +2250,18 @@ def folder_status_button(viewname = "allhosts"):
            ("folder", g_folder[".path"])]), 
            "status")  # TODO: support for distributed WATO
 
+def search_button():
+    html.context_button(_("Search"), make_link([("mode", "search")]), "search")
 
+def changelog_button():
+    pending = parse_audit_log("pending")
+    buttontext = _("ChangeLog")
+    if len(pending) > 0:
+        buttontext = "<b>%s (%d)</b>" % (buttontext, len(pending))
+        hot = True
+    else:
+        hot = False
+    html.context_button(buttontext, make_link([("mode", "changelog")]), "wato_changes", hot)
 
 def find_host(host):
     return find_host_in(host, g_root_folder)
@@ -2146,7 +2291,6 @@ def num_hosts_in(folder, recurse):
     num += folder["num_hosts"]
     return num
 
-
 # This is a dummy implementation which works without tags
 # and implements only a special case of Check_MK's real logic.
 def host_extra_conf(hostname, conflist):
@@ -2154,7 +2298,6 @@ def host_extra_conf(hostname, conflist):
         if hostname in hostlist:
             return [value]
     return []
-
 
 # Create link keeping the context to the current folder / file
 def make_link(vars):
@@ -2169,94 +2312,6 @@ def make_link_to(vars, folder):
 def make_action_link(vars):
     return make_link(vars + [("_transid", html.current_transid())])
 
-def search_button():
-    html.context_button(_("Search"), make_link([("mode", "search")]), "search")
-
-def changelog_button():
-    pending = parse_audit_log("pending")
-    buttontext = _("ChangeLog")
-    if len(pending) > 0:
-        buttontext = "<b>%s (%d)</b>" % (buttontext, len(pending))
-        hot = True
-    else:
-        hot = False
-    html.context_button(buttontext, make_link([("mode", "changelog")]), "wato_changes", hot)
-
-
-
-def delete_hosts_after_confirm(hosts):
-    c = wato_confirm(_("Confirm deletion of %d hosts") % len(hosts),
-                     _("Do you really want to delete the %d selected hosts?") % len(hosts))
-    if c:
-        for delname in hosts:
-            del g_folder[".hosts"][delname]
-            g_folder["num_hosts"] -= 1
-            check_mk_automation("delete-host", [delname])
-            log_pending(delname, "delete-host", _("Deleted host %s") % delname)
-        save_folder_and_hosts(g_folder)
-        call_hook_hosts_changed(g_folder)
-        return "folder", _("Successfully deleted %d hosts") % len(hosts)
-    elif c == False: # not yet confirmed
-        return ""
-    else:
-        return None # browser reload 
-
-def delete_folder_after_confirm(del_folder):
-    msg = _("Do you really want to delete the folder %s?") % del_folder["title"]
-    if not config.wato_hide_filenames:
-        msg += "<br>" + _("(The directory <tt>%s</tt>)") % folder_dir(del_folder)
-    c = wato_confirm(_("Confirm folder deletion"), msg)
-                     
-    if c:
-        del g_folder[".folders"][del_folder[".name"]]
-        folder_path = folder_dir(del_folder)
-        try:
-            os.remove(folder_path + "/.wato")
-            os.rmdir(folder_path)
-        except:
-            pass
-        if os.path.exists(folder_path):
-            raise MKGeneralException(_("Cannot remove the folder '%s': probably there are "
-                                       "still non-WATO files contained in this directory.") % folder_path)
-
-        log_audit(folder_dir(del_folder), "delete-folder", _("Deleted empty folder %s")% folder_dir(del_folder))
-        call_hook_folder_deleted(del_folder)
-        html.reload_sidebar() # refresh WATO snapin
-        return "folder"
-    elif c == False: # not yet confirmed
-        return ""
-    else:
-        return None # browser reload 
-
-
-def delete_file_after_confirm(del_file):
-    c = wato_confirm(_("Confirm file deletion"),
-                     _("Do you really want to delete the host list <b>%s</b>, "
-                       "which is containing %d hosts?") 
-                     % (del_file["title"], del_file["num_hosts"]))
-    if c:
-        hosts = load_hosts_file(g_folder, del_file)
-        for delname in hosts:
-            check_mk_automation("delete-host", [delname])
-        if len(hosts) > 0:
-            log_pending(del_file, "delete-file", _("Deleted file %s") % del_file["title"])
-        else:
-            log_audit(del_file, "delete-file", _("Deleted empty file %s") % del_file["title"])
-        del g_files[del_file[".path"]]
-        del g_folder[".files"][del_file[".name"]]
-        delete_configuration_file(g_folder, del_file)
-        save_folder_config()
-        call_hook_file_or_folder_deleted('file', del_file)
-        call_hook_hosts_changed(g_folder)
-        # refresh WATO snapin
-        html.reload_sidebar()
-        global g_file
-        g_file = None
-        return "folder"
-    elif c == False: # not yet confirmed
-        return ""
-    else:
-        return None # browser reload 
 
 # Show confirmation dialog, send HTML-header if dialog is shown.
 def wato_confirm(html_title, message):
@@ -2271,76 +2326,6 @@ def wato_html_head(title):
     g_html_head_open = True
     html.header(title)
     html.write("<div class=wato>\n")
-
-def host_move_combo(host = None, top = False):
-    other_folders = []
-    for path, afolder in g_folders.items():
-        if config.role in afolder["roles"] and afolder != g_folder:
-            os_path = afolder[".path"]
-            msg = afolder["title"]
-            if os_path:
-                msg += " (%s)" % os_path
-            other_folders.append((os_path, msg))
-
-    if len(other_folders) > 0:
-        selections = [("@", _("(select folder)"))] + other_folders
-        if host == None:
-            html.button("_bulk_move", _("Move To:"))
-            field_name = 'bulk_moveto'
-            if top:
-                field_name = '_top_bulk_moveto'
-                if html.has_var('bulk_moveto'):
-                    html.javascript('update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
-            html.select(field_name, selections, "",
-                        onchange = "update_bulk_moveto(this.value)",
-                        attrs = {'class': 'bulk_moveto'})
-        else:
-            html.hidden_field("host", host)
-            uri = html.makeuri([("host", host), ("_transid", html.current_transid() )])
-            html.sorted_select("host_move_%s" % host, selections, "@", 
-                "location.href='%s' + '&_move_host_to=' + this.value;" % uri);
-
-
-def move_hosts_to(hostnames, path):
-    if path not in g_folders: # non-existing folder
-        return
-
-    target_folder = g_folders[path]
-    if target_folder == g_folder:
-        return # target and source are the same
-
-    if config.role not in target_folder["roles"]:
-        raise MKAuthException(_("You have no change permissions on the target folder"))
-
-    # read hosts currently in target file
-    load_hosts(target_folder)
-    target_hosts = target_folder[".hosts"]
-
-    num_moved = 0
-    for hostname in hostnames:
-        if hostname not in g_folder[".hosts"]: # non-existant host
-            continue
-
-        target_hosts[hostname] = g_folder[".hosts"][hostname]
-        target_folder["num_hosts"] += 1
-        g_folder["num_hosts"] -= 1
-        del g_folder[".hosts"][hostname]
-        if len(hostnames) == 1:
-            log_pending(hostname, "move-host", _("Moved host from %s to %s") %
-                (g_folder[".path"], target_folder[".path"]))
-        num_moved += 1
-
-    save_folder_and_hosts(target_folder)
-    save_folder_and_hosts(g_folder)
-    call_hook_hosts_changed(g_root_folder)
-    if len(hostnames) > 1:
-        log_pending(target_file, "move-host", _("Moved %d hosts from %s to %s") %
-            (num_moved, g_folder[".path"], target_folder[".path"]))
-    return num_moved 
-        
-
-def move_host_to(hostname, target_filename):
-    move_hosts_to([hostname], target_filename)
 
 def render_folder_path(the_folder = 0, link_to_last = False):
     if the_folder == 0:

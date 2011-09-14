@@ -9,6 +9,7 @@
     * Added display_option "w" to disable limit messages and livestatus errors in views
     * Service Perfdata Sorters are sorting correctly now
     * Added "Administration" snapin to default sidebar
+    * Tactical Overview: make link clickable even if count is zero
 
     Livestatus:
     * Write messages after initialization into an own livestatus.log

@@ -531,14 +531,10 @@ def render_tactical_overview():
         html.write('<td class=total><a target="main" href="view.py?view_name=all%ss">%d</a></td>' % (what, data[0]))
         unhandled = False
         for value in data[1:]:
-            if value > 0:
-                href = "view.py?view_name=" + view
-                if unhandled:
-
-                    href += "&is_%s_acknowledged=0" % what
-                text = link(str(value), href)
-            else:
-                text = str(value)
+            href = "view.py?view_name=" + view
+            if unhandled:
+                href += "&is_%s_acknowledged=0" % what
+            text = link(str(value), href)
             html.write('<td class="%s">%s</td>' % (value == 0 and " " or "states prob", text))
             unhandled = True
         html.write("</tr>\n")

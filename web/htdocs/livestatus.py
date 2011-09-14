@@ -392,9 +392,9 @@ class MultiSiteConnection(Helpers):
             i = 0
             for name, site, connection in self.connections:
                 if name == sitename:
-                    break
+                    del self.connections[i]
+		    return
                 i += 1
-            del self.connections[i]
 
 
         # Status host: A status host helps to prevent trying to connect

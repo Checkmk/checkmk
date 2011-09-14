@@ -1,4 +1,7 @@
 1.1.12b1:
+    Checks & Agents:
+    * FIX: j4p_performance: fix inventory functions
+
     Multisite:
     * FIX: fix rescheduling of host check
     * FIX: fix exception when using status_host while local site is offline

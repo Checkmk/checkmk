@@ -75,21 +75,21 @@ def j4p_performance_serv(info, (inst, app, serv)):
     return app['servlets'][serv]
 
 
-def inventory_j4p_performance(info):
+def inventory_j4p_performance(info, what):
     parsed = j4p_performance_parse(info)
     levels = None
-    if checktype == 'j4p_performance.mem':
+    if what == 'mem':
         levels = 'j4p_performance_mem_default_levels'
-    elif checktype == 'j4p_performance.threads':
+    elif what == 'threads':
         levels = 'j4p_performance_threads_default_levels'
     return [ (k, levels) for k in parsed ]
 
 
-def inventory_j4p_performance_apps(info):
+def inventory_j4p_performance_apps(info, what):
     inv = []
     parsed = j4p_performance_parse(info)
     levels = None
-    if checktype == 'j4p_performance.app_sess':
+    if what == 'app_sess':
         levels = 'j4p_performance_app_sess_default_levels'
     for inst, vals in parsed.iteritems():
         for app in vals.get('apps', {}).keys():
@@ -97,11 +97,11 @@ def inventory_j4p_performance_apps(info):
     return inv
 
 
-def inventory_j4p_performance_serv(info):
+def inventory_j4p_performance_serv(info, what):
     inv = []
     parsed = j4p_performance_parse(info)
     levels = None
-    if checktype == 'j4p_performance.serv_req':
+    if what == 'serv_req':
         levels = 'j4p_performance_serv_req_default_levels'
     for inst, vals in parsed.iteritems():
         for app, val in vals.get('apps', {}).iteritems():
@@ -261,11 +261,11 @@ def check_j4p_performance_serv_req(item, params, info):
 
 
 # General JVM checks
-check_info["j4p_performance.mem"]       = ( check_j4p_performance_mem,       "JMX %s Memory",   1, inventory_j4p_performance)
-check_info["j4p_performance.threads"]   = ( check_j4p_performance_threads,   "JMX %s Threads",  1, inventory_j4p_performance)
-check_info["j4p_performance.uptime"]    = ( check_j4p_performance_uptime,    "JMX %s Uptime",   1, inventory_j4p_performance)
+check_info["j4p_performance.mem"]       = ( check_j4p_performance_mem,       "JMX %s Memory",   1, lambda i: inventory_j4p_performance(i, "mem"))
+check_info["j4p_performance.threads"]   = ( check_j4p_performance_threads,   "JMX %s Threads",  1, lambda i: inventory_j4p_performance(i, "threads"))
+check_info["j4p_performance.uptime"]    = ( check_j4p_performance_uptime,    "JMX %s Uptime",   1, lambda i: inventory_j4p_performance(i, "uptime"))
 # App specific checks
-check_info["j4p_performance.app_state"] = ( check_j4p_performance_app_state, "JMX %s State",    0, inventory_j4p_performance_apps)
-check_info["j4p_performance.app_sess"]  = ( check_j4p_performance_app_sess,  "JMX %s Sessions", 1, inventory_j4p_performance_apps)
+check_info["j4p_performance.app_state"] = ( check_j4p_performance_app_state, "JMX %s State",    0, lambda i: inventory_j4p_performance_apps(i, "app_state"))
+check_info["j4p_performance.app_sess"]  = ( check_j4p_performance_app_sess,  "JMX %s Sessions", 1, lambda i: inventory_j4p_performance_apps(i, "app_sess"))
 # Servlet specific checks
-check_info["j4p_performance.serv_req"]  = ( check_j4p_performance_serv_req,  "JMX %s Requests", 1, inventory_j4p_performance_serv)
+check_info["j4p_performance.serv_req"]  = ( check_j4p_performance_serv_req,  "JMX %s Requests", 1, lambda i: inventory_j4p_performance_serv(i, "serv_req"))

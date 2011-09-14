@@ -1,0 +1,9 @@
+Title: check_mk_templates.cfg for OMD: use $USER3$ instead of path
+Component: core
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-09-14 14:01:24
+Class: cleanup
+
+that makes the templates file portable between sites.

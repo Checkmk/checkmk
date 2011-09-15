@@ -1,0 +1,11 @@
+Title: WATO: Bulk does only works with dropdown at end of list
+Component: wato
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-09-15 10:34:11
+Class: bug
+
+If you select several hosts and use the bulk move dropdown from the
+top of the list, it is like you have not selected a target folder.
+Only the lower dropdown works.

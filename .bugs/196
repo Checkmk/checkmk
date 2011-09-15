@@ -1,12 +1,12 @@
 Title: Gejointe Columns sortieren ist noch ein Hack
 Component: multisite
-Benefit: 5
+Benefit: 1
 State: open
-Cost: 3
+Cost: 2
 Date: 2011-08-26 10:49:22
 Class: nastiness
 
-Ich musste das sortieren der joined colums umsetzen. Das war gar nicht so trivial.
+Ich musste das Sortieren der joined colums umsetzen. Das war gar nicht so trivial.
 Als Hack habe ich es nun geschaft. Das offene Problem, welches noch existiert:
 
 Das Joinen der Columnns passiert für die gesamte Row. Das führt dazu, dass wenn man

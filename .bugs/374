@@ -1,0 +1,11 @@
+Title: Describe bulkwalk_hosts in SNMP article
+Component: doku
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-09-15 15:22:36
+Class: cleanup
+
+The documentation article about SNMP does not explain how
+to setup SNMPv2C (bulkwalk_hosts). This is important!
+Refer also to if64 and netapp(without 32).

@@ -1057,11 +1057,13 @@ def mode_editfolder(phase, new):
             if new:
                 attributes = {}
                 parent = g_folder
+                myself = None
             else:
                 attributes = g_folder.get("attributes", {})
                 parent = g_folder.get(".parent")
+                myself = g_folder
 
-            configure_attributes({"folder": attributes}, "folder", parent, g_folder)
+            configure_attributes({"folder": attributes}, "folder", parent, myself)
 
         html.write('<tr><td colspan=3 class="buttons">')
         html.button("save", _("Save &amp; Finish"), "submit")
@@ -2707,7 +2709,8 @@ def have_folder_attributes():
 # "search" -> search dialog
 # "bulk"   -> bulk change
 # parent: The parent folder of the objects to configure
-# myself: For mode "folder" the folder itself
+# myself: For mode "folder" the folder itself or None, if we edit a new folder
+#         This is needed for handling mandatory attributes.
 def configure_attributes(hosts, for_what, parent, myself=None, without_attributes = []):
     # show attributes grouped by topics, in order of their
     # appearance. If only one topic exists, do not show topics
@@ -2898,7 +2901,10 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
 def some_host_hasnt_set(folder, attrname):
     # Check subfolders
     for subfolder in folder[".folders"].values():
-        if some_host_hasnt_set(subfolder, attrname):
+        # If the attribute is not set in the subfolder, we need
+        # to check all hosts and that folder.
+        if attrname not in subfolder["attributes"] \
+            and some_host_hasnt_set(subfolder, attrname):
             return True
 
     # Check hosts in this folder

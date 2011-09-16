@@ -948,14 +948,6 @@ def mode_editfolder(phase, new):
         return page_title
 
     elif phase == "buttons":
-        # In editing mode, we always edit the *current* folder, i.e. that
-        # one g_folder points to. In new mode the new folder is created
-        # as a subfolder of g_folder
-        if new:
-            target_folder = g_folder
-        else:
-            target_folder = g_folder[".parent"]
-
         html.context_button(_("Abort"), make_link([("mode", "folder")]), "abort")
             
     elif phase == "action":
@@ -1015,9 +1007,9 @@ def mode_editfolder(phase, new):
         # might need to be rewritten in order to reflect Changes
         # in Nagios-relevant attributes.
         if attributes_changed:
-            rewrite_config_files_below(the_folder) # due to inherited attributes
-            log_pending(the_folder, "edit-folder", _("Changed attributes of folder %s") % title)
-            call_hook_hosts_changed(the_folder)
+            rewrite_config_files_below(g_folder) # due to inherited attributes
+            log_pending(g_folder, "edit-folder", _("Changed attributes of folder %s") % title)
+            call_hook_hosts_changed(g_folder)
 
         return "folder"
 

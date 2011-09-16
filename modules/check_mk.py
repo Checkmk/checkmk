@@ -3137,6 +3137,10 @@ def dump_host(hostname):
     if is_cluster(hostname):
         color = tty_bgmagenta
         add_txt = " (cluster of " + (",".join(nodes_of(hostname))) + ")"
+        try:
+            ipaddress = lookup_ipaddress(hostname)
+	except:
+	    ipaddress = "0.0.0.0"
     else:
         color = tty_bgblue
         try:

@@ -1,4 +1,7 @@
 1.1.12b1:
+    Core, Setup, etc.:
+    * FIX: fix cmk -D on cluster hosts
+
     Checks & Agents:
     * FIX: j4p_performance: fix inventory functions
     * mrpe: make check cluster-aware and work as clustered_service

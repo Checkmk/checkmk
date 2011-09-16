@@ -38,6 +38,12 @@ def inventory_mrpe(info):
 
 
 def check_mrpe(item, params, info):
+    # This check is cluster-aware. An item might be found
+    # more than once. In that case we use the best of the
+    # multiple statuses.
+ 
+    best_state = None
+
     for line in info:
         if line[0].startswith("("):
             check_name = line[0][1:-1]
@@ -65,8 +71,16 @@ def check_mrpe(item, params, info):
             # name of check command needed for PNP to choose the correct template
             if check_name:
                 perfdata.append(check_name)
-            return (state, output, perfdata)
-    return (3, "Check output not found in local checks")
+
+            if best_state in [ None, 2 ] \
+               or (state < best_state and state != 2):
+	    	best_result = state, output, perfdata
+		best_state = state
+
+    if best_state == None:
+	return (3, "Check output not found in local checks")
+    else:
+	return best_result
 
 
 check_info['mrpe'] = (

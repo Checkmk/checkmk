@@ -1,6 +1,7 @@
 1.1.12b1:
     Checks & Agents:
     * FIX: j4p_performance: fix inventory functions
+    * mrpe: make check cluster-aware and work as clustered_service
 
     Multisite:
     * FIX: fix rescheduling of host check

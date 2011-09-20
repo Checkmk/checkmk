@@ -5,6 +5,8 @@
     Checks & Agents:
     * FIX: j4p_performance: fix inventory functions
     * mrpe: make check cluster-aware and work as clustered_service
+    * cups_queues: Run agent part only on directly on CUPS servers,
+      not on clients
 
     Multisite:
     * FIX: fix rescheduling of host check

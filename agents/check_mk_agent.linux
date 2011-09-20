@@ -316,14 +316,14 @@ if [ -e /proc/drbd ]; then
   cat /proc/drbd
 fi
 
-# Checks for cups monitoring
+# Status of CUPS printer queues
 if which lpstat > /dev/null 2>&1; then
-    echo '<<<cups_queues>>>'
-    waitmax 3 lpstat -p
-    echo '---'
-    for i in $(waitmax 3 lpstat -p | grep -E "^(printer|Drucker)" | awk '{print $2}' | grep -v "@"); do
-        waitmax 3 lpstat -o "$i"
-    done
+   if pgrep cups > /dev/null 2>&1; then
+       echo '<<<cups_queues>>>'
+       waitmax 3 lpstat -p
+       echo '---'
+       waitmax 3 lpstat -o|sort
+   fi
 fi
 
 # Heartbeat monitoring

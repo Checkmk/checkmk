@@ -80,7 +80,11 @@ for SID in $SIDS; do
         fi
     fi
 
-    # Outputs the contents of the cache file when it exists and is recent enough.
+    # If the cache file exists, output it, regardless of its age. If it's outdated
+    # then it will be recreated *asynchronously*, we the new contents will not 
+    # be available here anyway.
+    if [ -s "$CACHE_FILE" ] ; then cat "$CACHE_FILE" ; fi
+
     # When not it checks if there is another task to update the cache is running
     # at the moment (*.new) file present.
     # When the cache is old and there is no *new file present, then start a query
@@ -117,7 +121,5 @@ EOF
                 fi
              } > $CACHE_FILE.new && mv $CACHE_FILE.new $CACHE_FILE || rm -f $CACHE_FILE*
         "
-    else
-        cat "$CACHE_FILE"
     fi
 done

@@ -3,10 +3,13 @@
     * FIX: fix cmk -D on cluster hosts
 
     Checks & Agents:
-    * FIX: j4p_performance: fix inventory functions
+    * FIX: j4p_performance: fix inventory functions 
+    * FIX: mk_oracle: fix race condition in cache file handling (agent data
+      was missing sections in certain situations)
     * mrpe: make check cluster-aware and work as clustered_service
     * cups_queues: Run agent part only on directly on CUPS servers,
       not on clients
+
 
     Multisite:
     * FIX: fix rescheduling of host check

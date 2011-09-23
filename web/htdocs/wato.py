@@ -79,6 +79,13 @@
 # set. All folders are loaded, but only their meta-data, not the
 # actual Check_MK files (hosts.mk). WATO is designed for managing
 # 100.000 hosts. So operations on all hosts might last a while...
+#
+# g_hook -> dictionary of hooks (i.e. user supplied functions) to
+#           be called in various situations.
+#
+# g_configvars -> dictionary of variables in main.mk that can be configured 
+#           via WATO.
+
 
 #   +----------------------------------------------------------------------+
 #   |                           ___       _ _                              |
@@ -205,6 +212,12 @@ def page_handler():
 
         # Show content
         modefunc("content")
+
+    except MKGeneralException:
+        raise
+
+    except MKInternalError:
+        raise
 
     except Exception, e:
         import traceback
@@ -429,7 +442,7 @@ def save_hosts(folder):
         os.makedirs(dirname)
 
     out = file(filename, "w")
-    out.write("# Written by Check_MK Webconf\n# encoding: utf-8\n\n")
+    out.write("# Written by WATO\n# encoding: utf-8\n\n")
     if len(all_hosts) > 0:
         out.write("all_hosts += ")
         out.write(pprint.pformat(all_hosts))
@@ -506,10 +519,12 @@ def mode_folder(phase):
 
     elif phase == "buttons":
         folder_status_button()
+        html.context_button(_("Configuration"), make_link([("mode", "configuration")]), "configuration")
+        html.context_button(_("Rules"), make_link_to([("mode", "rules")], g_folder), "rules")
         html.context_button(_("Properties"), make_link_to([("mode", "editfolder")], g_folder), "properties")
         html.context_button(_("New folder"), make_link([("mode", "newfolder")]), "newfolder")
         html.context_button(_("New host"), make_link([("mode", "newhost")]), "new")
-        html.context_button(_("Backup / Restore"), make_link([("mode", "snapshot")]))
+        html.context_button(_("Backup / Restore"), make_link([("mode", "snapshot")]), "backup")
         changelog_button()
         search_button()
     
@@ -3095,6 +3110,380 @@ def delete_root_dir():
     shutil.rmtree(root_dir)
 
 
+#   +----------------------------------------------------------------------+
+#   |       __     __    _              _____    _ _ _                     |
+#   |       \ \   / /_ _| |_   _  ___  | ____|__| (_) |_ ___  _ __         |
+#   |        \ \ / / _` | | | | |/ _ \ |  _| / _` | | __/ _ \| '__|        |
+#   |         \ V / (_| | | |_| |  __/ | |__| (_| | | || (_) | |           |
+#   |          \_/ \__,_|_|\__,_|\___| |_____\__,_|_|\__\___/|_|           |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | The value editor is used in the configuration and rules module for   |
+#   | editing single values (e.g. configuration parameter for main.mk or   |
+#   | check parameters).                                                   |
+#   +----------------------------------------------------------------------+
+
+# Abstract base class of all value declaration classes.
+class ValueSpec:
+    def __init__(self, **kwargs):
+        self._title = kwargs.get("title")
+        self._help  = kwargs.get("help")
+
+    def title(self): 
+        return self._title
+
+    def help(self):
+        return self._help
+
+    # Create HTML-form elements that represent a given
+    # value and let the user edit that value. The varprefix
+    # is prepended to the HTML variable names and is needed
+    # in order to make the variable unique in case that another
+    # Value of the same type is being used as well.
+    def render_input(self, varprefix, value):
+        pass
+
+    # Creates a text-representation of the value that can be
+    # used in tables and other contextes. It is to be read 
+    # by the user and need not to be parsable.
+    def value_to_text(self, value):
+        return repr(value)
+
+    # Create a value from the current settings of the
+    # HTML variables. This function must also check the validity
+    # and may raise a MKUserError in case of invalid set variables.
+    def from_html_vars(self, varprefix):
+        return None
+
+    # Check if a given value matches the
+    # datatype of described by this class. This method will
+    # be used by cmk -X on the command line in order to
+    # validate main.mk (some happy day in future)
+    def validate_datatype(self, value):
+        pass
+
+    # Check if a given value is within the ranges that are
+    # allowed for this type of value. This function should
+    # assume that the data type is valid (either because it
+    # has been returned by from_html_vars() or because it has
+    # been checked with validate_datatype()).
+    def validate_value(self, value, varprefix):
+        pass
+
+
+# Editor for a single integer
+class Integer(ValueSpec):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._size     = kwargs.get("size", 5)
+        self._minvalue = kwargs.get("minvalue") 
+        self._maxvalue = kwargs.get("maxvalue")
+
+    def render_input(self, varprefix, value):
+        html.number_input(varprefix, str(value), self._size)
+
+    def from_html_vars(self, varprefix):
+        try:
+            return int(html.var(varprefix))
+        except:
+            raise MKUserError(varprefix, 
+                  _("The text <b><tt>%s</tt></b> is not a valid integer number." % html.var(varprefix)))
+
+    def validate_datatype(self, value, varprefix): 
+        if type(value) != int:
+            raise MKUserError(varprefix, "The value has type %s, but must be of type int" % (type(value)))
+ 
+    def validate_value(self, value, varprefix=None):
+        if self._minvalue != None and value < self._minvalue:
+            raise MKUserError(varprefix, _("The minimum allowed value is %d." % self._minvalue))
+        if self._maxvalue != None and value > self._maxvalue:
+            raise MKUserError(varprefix, _("The maximum allowed value is %d." % self._maxvalue))
+
+
+# Same but for floating point values
+class Float(Integer):
+    def __init__(self, **kwargs):
+        Integer.__init__(self, **kwargs)
+    
+    def from_html_vars(self, varprefix):
+        try:
+            return float(html.var(varprefix))
+        except:
+            raise MKUserError(varprefix, 
+            _("The text <b><tt>%s</tt></b> is not a valid floating point number." % html.var(varprefix)))
+
+    def validate_datatype(self, value, varprefix): 
+        if type(value) != float:
+            raise MKUserError(varprefix, "The value has type %s, but must be of type float" % (type(value)))
+
+
+class Checkbox(ValueSpec):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+
+    def render_input(self, varprefix, value):
+        html.checkbox(varprefix, value)
+
+    def from_html_vars(self, varprefix):
+        if html.var(varprefix):
+            return True
+        else:
+            return False
+
+    def validate_datatype(self, value, varprefix): 
+        if type(value) != bool:
+            raise MKUserError(varprefix, "The value has type %s, but must be either True or False" % (type(value)))
+
+
+
+
+# Edit a n-tuple (with fixed size) of values
+class Tuple(ValueSpec):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._elements = kwargs["elements"]
+
+    def render_input(self, varprefix, value):
+        html.write("<table>")
+        for no, (element, val) in enumerate(zip(self._elements, value)):
+            vp = varprefix + "_" + str(no)
+            html.write("<tr><td>%s<br>%s</td>" % (element.title(), element.help()))
+            html.write("<td>")
+            element.render_input(vp, val)
+            html.write("</td></tr>")
+        html.write("</table>")
+
+    def value_to_text(self, value): 
+        return "(" + ",".join([ element.value_to_text(val) 
+                         for (element, val)
+                         in zip(self._elements, value)]) + ")"
+
+    def from_html_vars(self, varprefix):
+        value = []
+        for no, element in enumerate(self._elements):
+            vp = varprefix + "_" + str(no)
+            value.append(element.from_html_vars(vp))
+        return tuple(value)
+
+    def validate_value(self, value, varprefix):
+        for no, (element, val) in enumerate(zip(self._elements, value)):
+            vp = varprefix + "_" + str(no)
+            element.validate_value(vp, val)
+
+    def validate_datatype(self, value, varprefix):
+        if len(value) != len(self._elements):
+            raise MKUserError(varprefix, 
+            _("The number of elements in the tuple must be exactly %d." % len(self._elements)))
+
+        for no, (element, val) in enumerate(zip(self._elements, value)):
+            vp = varprefix + "_" + str(no)
+            element.validate_datatype(val, vp)
+            
+
+def edit_value(valuespec, value):
+    html.begin_form("value_editor")
+    html.write("<h3>%s</h3>" % valuespec.title())
+    if valuespec.help() != None:
+        html.write('<div>%s</div>' % valuespec.help())
+    valuespec.render_input("ve", value) 
+    html.hidden_fields()
+    html.button("save", _("Save"))
+    html.end_form()
+
+def get_edited_value(valuespec):
+    value = valuespec.from_html_vars("ve")
+    valuespec.validate_value(value, "ve")
+    return value
+
+g_configvars = {}
+g_configvar_groups = {}
+def register_configvar(group, name, valuespec):
+    g_configvar_groups.setdefault(group, []).append((name, valuespec))
+    g_configvars[name] = valuespec
+ 
+#   +----------------------------------------------------------------------+
+#   |    ____             __ _                       _   _                 |
+#   |   / ___|___  _ __  / _(_) __ _ _   _ _ __ __ _| |_(_) ___  _ __      |
+#   |  | |   / _ \| '_ \| |_| |/ _` | | | | '__/ _` | __| |/ _ \| '_ \     |
+#   |  | |__| (_) | | | |  _| | (_| | |_| | | | (_| | |_| | (_) | | | |    |
+#   |   \____\___/|_| |_|_| |_|\__, |\__,_|_|  \__,_|\__|_|\___/|_| |_|    |
+#   |                          |___/                                       |
+#   +----------------------------------------------------------------------+
+#   | WATO's new editor for configuration variables in main.mk (except     |
+#   | rule based parameters. Those are handled separately).                |
+#   +----------------------------------------------------------------------+
+def mode_configuration(phase):
+    valuespec = Integer(title="TCP Port used by Check_MK Agent", size=5, minvalue=1, maxvalue=65535)
+
+    valuespec = Tuple(
+       title="Default filesystem levels",
+       elements = [
+           Integer(title = "Warning (MB)"),
+           Integer(title = "Critical (MB)")]
+    )
+
+    if phase == "title":
+        return "Global configuration settings for Check_MK"
+
+    elif phase == "buttons":
+        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
+        return
+    
+    # Get default settings of all configuration variables of interest (this
+    # also reflects the settings done in main.mk)
+    default_values = check_mk_automation("get-configuration", [], g_configvars.keys())
+    current_settings = load_configuration_settings()
+
+    if phase == "action":
+        varname = html.var("_reset")
+        if varname:
+            valuespec = g_configvars[varname]
+            def_value = default_values[varname]
+
+            c = wato_confirm(
+                _("Resetting configuration variable"),
+                _("Do you really want to reset the configuration variable <b>%s</b> "
+                  "from its current value of <b><tt>%s</tt></b> back to the default value "
+                  "of <b><tt>%s</tt></b>") % (varname, "4711", valuespec.value_to_text(def_value)))
+            if c:
+                del current_settings[varname]
+                save_configuration_settings(current_settings)
+                msg = _("Resetted configuration variable %s to its default.") % varname
+                log_pending(None, "edit-configvar", msg)
+                return "configuration", msg 
+            elif c == False:
+                return ""
+            else:
+                return None
+
+    groupnames = g_configvar_groups.keys()
+    groupnames.sort()
+    html.write("<table class=data>")
+    for groupname in groupnames:
+        html.write("<tr><td colspan=4><h3>%s</h3></td></tr>\n" % groupname) 
+        html.write("<tr><th></th><th>" + _("Configuration variable") + 
+                   "</th><th>" + _("Default") + "</th><th>" + _("Your setting") + "</th></tr>\n")
+        odd = "even"
+            
+        for varname, valuespec in g_configvar_groups[groupname]: 
+            odd = odd == "odd" and "even" or "odd" 
+            html.write('<tr class="data %s0">' % odd)
+            if varname not in default_values:
+                if config.debug:
+                    raise MKGeneralException("The configuration variable <tt>%s</tt> is unknown to "
+                                          "your local Check_MK installation" % varname)
+                else:
+                    continue
+                
+            defaultvalue = default_values[varname]
+            edit_url = make_link([("mode", "edit_configvar"), ("varname", varname)])
+
+            html.write("<td class=buttons>")
+            html.buttonlink(edit_url, _("Edit"))
+            if varname in current_settings: 
+                reset_url = make_action_link([("mode", "configuration"), ("_reset", varname)])
+                html.buttonlink(reset_url, _("Reset"))
+            html.write("</td>")
+
+            html.write('<td>%s</td>' % valuespec.title())
+            if varname in current_settings: 
+                html.write('<td class=inherited>%s</td>' % valuespec.value_to_text(defaultvalue))
+                html.write('<td><b>%s</b></td>'          % valuespec.value_to_text(current_settings[varname]))
+            else:
+                html.write('<td>%s</td>'                 % valuespec.value_to_text(defaultvalue))
+                html.write('<td></td>')
+            html.write('</tr>')
+    html.write("</table>")
+
+
+def mode_edit_configvar(phase):
+    if phase == "title":
+        return "Global configuration settings for Check_MK"
+
+    elif phase == "buttons":
+        html.context_button(_("Abort"), make_link([("mode", "configuration")]), "abort")
+        return
+
+    varname = html.var("varname")
+    valuespec = g_configvars[varname]
+    current_settings = load_configuration_settings() 
+
+    if phase == "action":
+        new_value = get_edited_value(valuespec)
+        current_settings[varname] = new_value
+        save_configuration_settings(current_settings)
+        msg = _("Changed global configuration variable %s from to %s.") % (varname, new_value) 
+        log_pending(None, "edit-configvar", msg)
+        return "configuration", msg
+    
+    if varname in current_settings:
+        value = current_settings[varname]
+    else:
+        value = check_mk_automation("get-configuration", [], [varname])[varname]
+
+    edit_value(valuespec, value)
+
+
+
+
+# Persistenz: Speicherung der Werte
+# - WATO speichert seine Variablen für main.mk in conf.d/wato/global.mk
+# - Daten, die der User in main.mk einträgt, müssen WATO auch bekannt sein.
+#   Sie werden als Defaultwerte verwendet.
+# - Daten, die der User in final.mk oder local.mk einträgt, werden von WATO
+#   völlig ignoriert. Der Admin kann hier Werte überschreiben, die man mit
+#   WATO dann nicht ändern kann. Und man sieht auch nicht, dass der Wert
+#   nicht änderbar ist.
+# - WATO muss irgendwie von Check_MK herausbekommen, welche Defaultwerte
+#   Variablen haben bzw. welche Einstellungen diese Variablen nach main.mk
+#   haben.
+# - WATO kann main.mk nicht selbst einlesen, weil dann der Kontext fehlt
+#   (Default-Werte der Variablen aus Check_MK und aus den Checks)
+# - --> Wir machen eine automation, die alle Konfigurationsvariablen
+#   ausgibt.
+
+def load_configuration_settings():
+    try:
+        settings = {}
+        execfile(root_dir + "global.mk", settings, settings)
+        for varname in settings.keys():
+            if varname not in g_configvars:
+                del settings[varname]
+        return settings
+    except:
+        return {}
+
+def save_configuration_settings(vars):
+    make_nagios_directory(root_dir)
+    out = file(root_dir + "global.mk", "w")
+    out.write("# Written by WATO\n# encoding: utf-8\n\n")
+    for varname, value in vars.items():
+        out.write("%s = %r\n" % (varname, value))
+    
+
+#   +----------------------------------------------------------------------+
+#   |           ____        _        _____    _ _ _                        |
+#   |          |  _ \ _   _| | ___  | ____|__| (_) |_ ___  _ __            |
+#   |          | |_) | | | | |/ _ \ |  _| / _` | | __/ _ \| '__|           |
+#   |          |  _ <| |_| | |  __/ | |__| (_| | | || (_) | |              |
+#   |          |_| \_\\__,_|_|\___| |_____\__,_|_|\__\___/|_|              |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | WATO's awesome rule editor: Let's user edit rule based parameters    |
+#   | from main.mk.                                                        |
+#   +----------------------------------------------------------------------+
+def mode_rules(phase):
+    if phase == "title":
+        return "Rules for hosts and services"
+
+    elif phase == "buttons":
+        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
+    
+    elif phase == "action":
+        return
+
+    else:
+        html.write(_("Sorry. The rule editor is not yet available but is excepted to be within this year."))
 
 #   +----------------------------------------------------------------------+
 #   |       _   _             _           ___        _    ____ ___         |
@@ -3114,11 +3503,11 @@ def delete_root_dir():
 # Inform plugins about changes of hosts. the_thing can be:
 # a folder, a file or a host
 
-hooks = {}
+g_hooks = {}
 
 class API:
     def register_hook(self, name, func):
-        hooks.setdefault(name, []).append(func)
+        g_hooks.setdefault(name, []).append(func)
 
     # Get a (flat) dictionary containing all hosts with their *effective*
     # attributes (containing all inherited and default values where appropriate).
@@ -3237,11 +3626,11 @@ def collect_hosts(folder):
 
 def hook_registered(name):
     """ Returns True if at least one function is registered for the given hook """
-    return hooks.get(name, []) != []
+    return g_hooks.get(name, []) != []
 
 def call_hooks(name, *args):
     n = 0
-    for hk in hooks.get(name, []):
+    for hk in g_hooks.get(name, []):
         n += 1
         try:
             hk(*args)
@@ -3253,21 +3642,21 @@ def call_hooks(name, *args):
             html.show_error("<h3>" + _("Error executing hook") + " %s #%d: %s</h3><pre>%s</pre>" % (name, n, e, txt.getvalue()))
 
 def call_hook_hosts_changed(folder):
-    if "hosts-changed" in hooks:
+    if "hosts-changed" in g_hooks:
         hosts = collect_hosts(folder)
         call_hooks("hosts-changed", hosts)
 
     # The same with all hosts!
-    if "all-hosts-changed" in hooks:
+    if "all-hosts-changed" in g_hooks:
         hosts = collect_hosts(g_root_folder)
         call_hooks("all-hosts-changed", hosts)
 
 def call_hook_folder_created(folder):
-    if 'folder-created' in hooks:
+    if 'folder-created' in g_hooks:
         call_hooks("folder-created", folder)
 
 def call_hook_folder_deleted(folder):
-    if 'folder-deleted' in hooks:
+    if 'folder-deleted' in g_hooks:
         call_hooks("folder-deleted", folder)
 
 def call_hook_activate_changes():
@@ -3311,6 +3700,9 @@ mode_functions = {
    "bulkcleanup"    : mode_bulk_cleanup,
    "changelog"      : mode_changelog,
    "snapshot"       : mode_snapshot,
+   "configuration"  : mode_configuration,
+   "edit_configvar" : mode_edit_configvar,
+   "rules"          : mode_rules,
 }
 
 extra_buttons = [

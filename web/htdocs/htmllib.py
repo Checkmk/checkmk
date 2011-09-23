@@ -330,7 +330,7 @@ class html:
             default_value = ""
         addprops = ""
         if "size" in args:
-            addprops += " size=%d" % args["size"]
+            addprops += " size=%d" % (args["size"] + 2)
 
         value = self.req.vars.get(varname, default_value)
         error = self.user_errors.get(varname)

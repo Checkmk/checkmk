@@ -3802,7 +3802,7 @@ def marks_hosts_with_path(old, all, filename):
         if host not in old:
             host_paths[host] = path
 
-def read_config_files():
+def read_config_files(with_autochecks=True):
     global vars_before_config, final_mk, local_mk, checks
 
     # Initialize dictionary-type default levels variables
@@ -3860,8 +3860,9 @@ def read_config_files():
         seen_hostnames.add(hostname)
 
     # Read autochecks and append them to explicit checks
-    read_all_autochecks()
-    checks = autochecks + checks
+    if with_autochecks:
+        read_all_autochecks()
+        checks = autochecks + checks
 
     # Check for invalid configuration variables
     vars_after_config = all_nonfunction_vars()
@@ -4010,7 +4011,7 @@ if __name__ == "__main__":
                      "check-inventory=", "paths", "cleanup-autochecks", "checks=" ]
 
     non_config_options = ['-L', '--list-checks', '-P', '--package', '-M', 
-                          '--man', '-V', '--version' ,'-h', '--help']
+                          '--man', '-V', '--version' ,'-h', '--help', '--automation']
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)

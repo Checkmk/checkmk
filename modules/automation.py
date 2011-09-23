@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/USr/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -33,20 +33,26 @@ class MKAutomationError(Exception):
 
 def do_automation(cmd, args):
     try:
-        if cmd == "try-inventory":
-            result = automation_try_inventory(args)
-        elif cmd == "inventory":
-            result = automation_inventory(args)
-        elif cmd == "get-autochecks":
-            result = automation_get_autochecks(args)
-        elif cmd == "set-autochecks":
-            result = automation_set_autochecks(args)
+        if cmd == "get-configuration":
+            read_config_files(with_autochecks=False)
+            result = automation_get_configuration()
         elif cmd == "delete-host":
+            read_config_files(with_autochecks=False)
             result = automation_delete_host(args)
-        elif cmd == "restart":
-	    result = automation_restart()
         else:
-            raise MKAutomationError("Automation command '%s' is not implemented." % cmd)
+            read_config_files()
+            if cmd == "try-inventory":
+                result = automation_try_inventory(args)
+            elif cmd == "inventory":
+                result = automation_inventory(args)
+            elif cmd == "get-autochecks":
+                result = automation_get_autochecks(args)
+            elif cmd == "set-autochecks":
+                result = automation_set_autochecks(args)
+            elif cmd == "restart":
+                result = automation_restart()
+            else:
+                raise MKAutomationError("Automation command '%s' is not implemented." % cmd)
 
     except MKAutomationError, e:
         sys.stderr.write("%s\n" % e)
@@ -398,4 +404,12 @@ def automation_restart():
 
     sys.stdout = old_stdout
 
-
+def automation_get_configuration(): 
+    # We read the list of variable names from stdin since
+    # that could be too much for the command line
+    variable_names = eval(sys.stdin.read())
+    result = {}
+    for varname in variable_names:
+        if varname in globals():
+            result[varname] = globals()[varname]
+    return result

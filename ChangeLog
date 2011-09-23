@@ -1,3 +1,10 @@
+1.1.13i1:
+    WATO:
+    * Major internal code cleanup
+    * Hosts can now be created directly in folders. The concept of host lists
+      has been dropped (see migration notes!)
+    * Configuration of global configuration variables of Check_MK via WATO
+
 1.1.12b1:
     Core, Setup, etc.:
     * FIX: fix cmk -D on cluster hosts

@@ -3802,7 +3802,7 @@ def marks_hosts_with_path(old, all, filename):
         if host not in old:
             host_paths[host] = path
 
-def read_config_files(with_autochecks=True):
+def read_config_files(with_autochecks=True, with_conf_d=True):
     global vars_before_config, final_mk, local_mk, checks
 
     # Initialize dictionary-type default levels variables
@@ -3810,11 +3810,15 @@ def read_config_files(with_autochecks=True):
         globals()[varname] = {}
 
     # Create list of all files to be included
-    list_of_files = reduce(lambda a,b: a+b, 
-       [ [ "%s/%s" % (d, f) for f in fs if f.endswith(".mk")] 
-         for d, sb, fs in os.walk(check_mk_configdir) ], [])
-    list_of_files.sort()
-    list_of_files = [ check_mk_configfile ] + list_of_files
+    if with_conf_d:
+        list_of_files = reduce(lambda a,b: a+b, 
+           [ [ "%s/%s" % (d, f) for f in fs if f.endswith(".mk")] 
+             for d, sb, fs in os.walk(check_mk_configdir) ], [])
+        list_of_files.sort()
+        list_of_files = [ check_mk_configfile ] + list_of_files
+    else:
+        list_of_files = [ check_mk_configfile ]
+
     final_mk = check_mk_basedir + "/final.mk"
     if os.path.exists(final_mk):
         list_of_files.append(final_mk)

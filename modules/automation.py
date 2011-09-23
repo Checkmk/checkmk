@@ -34,7 +34,7 @@ class MKAutomationError(Exception):
 def do_automation(cmd, args):
     try:
         if cmd == "get-configuration":
-            read_config_files(with_autochecks=False)
+            read_config_files(with_autochecks=False, with_conf_d=False)
             result = automation_get_configuration()
         elif cmd == "delete-host":
             read_config_files(with_autochecks=False)

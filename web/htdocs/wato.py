@@ -3159,7 +3159,7 @@ class ValueSpec:
     # datatype of described by this class. This method will
     # be used by cmk -X on the command line in order to
     # validate main.mk (some happy day in future)
-    def validate_datatype(self, value):
+    def validate_datatype(self, value, varprefix):
         pass
 
     # Check if a given value is within the ranges that are
@@ -3191,13 +3191,56 @@ class Integer(ValueSpec):
 
     def validate_datatype(self, value, varprefix): 
         if type(value) != int:
-            raise MKUserError(varprefix, "The value has type %s, but must be of type int" % (type(value)))
+            raise MKUserError(varprefix, _("The value has type %s, but must be of type int") % (type(value)))
  
-    def validate_value(self, value, varprefix=None):
+    def validate_value(self, value, varprefix):
         if self._minvalue != None and value < self._minvalue:
             raise MKUserError(varprefix, _("The minimum allowed value is %d." % self._minvalue))
         if self._maxvalue != None and value > self._maxvalue:
             raise MKUserError(varprefix, _("The maximum allowed value is %d." % self._maxvalue))
+
+# Editor for a line of text
+class TextAscii(ValueSpec):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._size     = kwargs.get("size", 30)
+
+    def render_input(self, varprefix, value):
+        html.text_input(varprefix, str(value), self._size)
+
+    def from_html_vars(self, varprefix):
+        return html.var(varprefix, "")
+
+    def validate_datatype(self, value, varprefix): 
+        if type(value) != str:
+            raise MKUserError(varprefix, _("The value must be of type str, but it has type %s") % type(value)) 
+
+    #def validate_value(self, value, varprefix):
+    #    pass
+
+# A variant of TextAscii() that validates a path to a filename that 
+# lies in an existing directory.
+class Filename(TextAscii):
+    def __init__(self, **kwargs):
+        TextAscii.__init__(self, **kwargs)
+
+    def validate_value(self, value, varprefix):
+        if len(value) == 0:
+            raise MKUserError(varprefix, _("Please enter a filename."))
+        
+        if value[0] != "/":
+            raise MKUserError(varprefix, _("Sorry, only absolute filenames are allowed. "
+                                           "Your filename must begin with a slash."))
+        if value[-1] == "/":
+            raise MKUserError(varprefix, _("Your filename must not end with a slash.")) 
+
+        dir = value.rsplit("/", 1)[0]
+        if not os.path.isdir(dir):
+            raise MKUserError(varprefix, _("The directory %s does not exist or is not a directory." % dir))
+
+        # Write permissions to the file cannot be checked here since we run with Apache
+        # permissions and the file might be created with Nagios permissions (on OMD this
+        # is the same, but for others not)
 
 
 # Same but for floating point values
@@ -3214,7 +3257,7 @@ class Float(Integer):
 
     def validate_datatype(self, value, varprefix): 
         if type(value) != float:
-            raise MKUserError(varprefix, "The value has type %s, but must be of type float" % (type(value)))
+            raise MKUserError(varprefix, _("The value has type %s, but must be of type float") % (type(value)))
 
 
 class Checkbox(ValueSpec):
@@ -3232,10 +3275,86 @@ class Checkbox(ValueSpec):
 
     def validate_datatype(self, value, varprefix): 
         if type(value) != bool:
-            raise MKUserError(varprefix, "The value has type %s, but must be either True or False" % (type(value)))
+            raise MKUserError(varprefix, _("The value has type %s, but must be either True or False") % (type(value))) 
+
+class DropdownChoice(ValueSpec):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._choices = kwargs["choices"]
+
+    def render_input(self, varprefix, value):
+        # Convert values from choices to keys 
+        defval = "0"
+        options = []
+        for n, (val, title) in enumerate(self._choices):
+            options.append((str(n), title))
+            if val == value:
+                defval = str(n)
+        html.select(varprefix, options, defval)
+
+    def value_to_text(self, value):
+        for val, title in self._choices:
+            if value == val:
+                return title
+
+    def from_html_vars(self, varprefix):
+        sel = html.var(varprefix)
+        for n, (val, title) in enumerate(self._choices):
+            if sel == str(n):
+                return val
+        return self._choices[0][0] # can only happen if user garbled URL
+
+    def validate_datatype(self, value, varprefix): 
+        for val, title in self._choices:
+            if val == value: 
+                return
+        raise MKUserError(varprefix, _("Invalid value %s, must be in %s") % 
+            ", ".join([v for (v,t) in self._choices]))
 
 
+# Make a configuration value optional, i.e. it may be None.
+# The user has a checkbox for activating the option. Example:
+# debug_log: it is either None or set to a filename.
+class Optional(ValueSpec):
+    def __init__(self, valuespec, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._valuespec = valuespec
 
+    def render_input(self, varprefix, value): 
+        div_id = "option_" + varprefix
+        if html.has_var(varprefix + "_use"):
+            checked = html.get_checkbox(varprefix + "_use")
+        else:
+            checked = value != None
+        html.checkbox(varprefix + "_use" , checked,
+                      onclick="wato_toggle_option(this, %r)" % div_id)
+        html.write(_(" Activate this option") + "<br>")
+        html.write('<div id="%s" style="display: %s">' % (
+                div_id, not checked and "none" or ""))
+        if value == None:
+            value = ""
+        self._valuespec.render_input(varprefix + "_value", value)
+        html.write('</div>')
+
+    def value_to_text(self, value):
+        if value == None:
+            return _("(unset)")
+        else:
+            return value
+
+    def from_html_vars(self, varprefix): 
+        if html.get_checkbox(varprefix + "_use"):
+            return self._valuespec.from_html_vars(varprefix + "_value")
+        else:
+            return None
+
+    def validate_datatype(self, value, varprefix): 
+        if value != None:
+            self._valuespec.validate_datatype(value, varprefix + "_value")
+
+    def validate_value(self, value, varprefix):
+        if value != None:
+            self._valuespec.validate_value(value, varprefix + "_value")
 
 # Edit a n-tuple (with fixed size) of values
 class Tuple(ValueSpec):
@@ -3390,7 +3509,7 @@ def mode_configuration(phase):
                 html.write('<td class=inherited>%s</td>' % valuespec.value_to_text(defaultvalue))
                 html.write('<td><b>%s</b></td>'          % valuespec.value_to_text(current_settings[varname]))
             else:
-                html.write('<td>%s</td>'                 % valuespec.value_to_text(defaultvalue))
+                html.write('<td><b>%s</b></td>'                 % valuespec.value_to_text(defaultvalue))
                 html.write('<td></td>')
             html.write('</tr>')
     html.write("</table>")
@@ -3412,7 +3531,8 @@ def mode_edit_configvar(phase):
         new_value = get_edited_value(valuespec)
         current_settings[varname] = new_value
         save_configuration_settings(current_settings)
-        msg = _("Changed global configuration variable %s from to %s.") % (varname, new_value) 
+        msg = _("Changed global configuration variable %s to %s.") \
+              % (varname, valuespec.value_to_text(new_value)) 
         log_pending(None, "edit-configvar", msg)
         return "configuration", msg
     

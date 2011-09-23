@@ -66,6 +66,16 @@ function wato_toggle_attribute(oCheckbox, attrname) {
     oDefault = null;
 }
 
+function wato_toggle_option(oCheckbox, divid) {
+    var oDiv = document.getElementById(divid);
+    if (oCheckbox.checked)
+        oDiv.style.display = ""; 
+    else
+        oDiv.style.display = "none";  
+    oDiv = null;
+}
+
+    
 // ----------------------------------------------------------------------------
 // Interactive progress code
 // ----------------------------------------------------------------------------

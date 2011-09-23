@@ -1,7 +1,18 @@
 #!/usr/bin/python
 # encoding: utf-8
 
-group = _("Networking")
+#   +----------------------------------------------------------------------+
+#   |           ____             __ _                                      |
+#   |          / ___|___  _ __  / _(_) __ ___   ____ _ _ __ ___            |
+#   |         | |   / _ \| '_ \| |_| |/ _` \ \ / / _` | '__/ __|           |
+#   |         | |__| (_) | | | |  _| | (_| |\ V / (_| | |  \__ \           |
+#   |          \____\___/|_| |_|_| |_|\__, | \_/ \__,_|_|  |___/           |
+#   |                                 |___/                                |
+#   +----------------------------------------------------------------------+
+#   | Configuration variables for main.mk                                  |
+#   +----------------------------------------------------------------------+
+
+group = _("Operation mode of Check_MK") 
 
 register_configvar(group,
                    "tcp_connect_timeout", 
@@ -13,12 +24,33 @@ register_configvar(group,
                         minvalue = 1.0))
 
 
-group = _("Internal Settings") 
+register_configvar(group,
+                   "simulation_mode",
+                   Checkbox(title = _("Simulation mode"),
+                            label = _("Run in simulation mode"),
+                            help = _("This boolean variable allows you to bring check_mk into a dry run mode. "
+                                     "No hosts will be contacted, no DNS lookups will take place and data is read "
+                                     "from cache files that have been created during normal operation or have "
+                                     "been copied here from another monitoring site.")))
+
+
+register_configvar(group,
+                   "delay_precompile",
+                   Checkbox(title = _("Delay precompiling of host checks"),
+                            label = _("delay precompiling"),
+                            help = _("If you enable this option, then Check_MK will not directly Python-bytecompile "
+                                     "all host checks when activating the configuration and restarting Nagios. "
+                                     "Instead it will delay this to the first "
+                                     "time the host is actually checked being by Nagios.<p>This reduces the time needed "
+                                     "for the operation, but on the other hand will lead to a slightly higher load "
+                                     "of Nagios for the first couple of minutes after the restart. ")))
+
 
 register_configvar(group,
                    "debug_log",
                    Optional(Filename(),
                          title = _("Logfile for debugging errors in checks"),
+                         label = _("Activate logging errors into a logfile"),
                          help = _("If this option is used and set to a filename, Check_MK will create a debug logfile " 
                                   "containing details about failed checks (those which have state UNKNOWN " 
                                   "and the output UNKNOWN - invalid output from plugin.... Per default no "
@@ -27,6 +59,7 @@ register_configvar(group,
 register_configvar(group,
                    "cluster_max_cachefile_age",
                    Integer(title = _("Maximum cache file age for clusters"),
+                           label = _("seconds"),
                            help = _("The number of seconds a cache file may be old if check_mk should " 
                                     "use it instead of getting information from the target hosts while " 
                                     "checking a cluster. Per default this is enabled and set to 90 seconds. " 
@@ -52,3 +85,38 @@ register_configvar(group,
                                  "cores."),
                         choices = [ ("pipe", _("Nagios command pipe")),
                                     ("file", _("Create check files")) ]))
+
+#   +----------------------------------------------------------------------+
+#   |                         ____        _                                |
+#   |                        |  _ \ _   _| | ___                           |
+#   |                        | |_) | | | | |/ _ \                          |
+#   |                        |  _ <| |_| | |  __/                          |
+#   |                        |_| \_\\__,_|_|\___|                          |
+#   |                                                                      |
+#   |       ____            _                 _   _                        |
+#   |      |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___        |
+#   |      | | | |/ _ \/ __| |/ _` | '__/ _` | __| |/ _ \| '_ \/ __|       |
+#   |      | |_| |  __/ (__| | (_| | | | (_| | |_| | (_) | | | \__ \       |
+#   |      |____/ \___|\___|_|\__,_|_|  \__,_|\__|_|\___/|_| |_|___/       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Declaration of rules to be defined in main.mk or in folders          |
+#   +----------------------------------------------------------------------+
+
+group = _("Monitoring Configuration") 
+
+register_rule(group, 
+              "extra_host_conf:max_check_attempts",
+              Integer(title = _("Maximum number of check attempts for host"), 
+                      help = _("The maximum number of failed host checks until the host will be considered "
+                               "in a hard down state"),
+                      minvalue = 1))
+
+group = _("SNMP")
+register_rule(group,
+              "snmp_communities",
+              TextAscii(title = _("SNMP communities of monitored hosts"),
+                        help = _("Check_MK needs an SNMP <i>community</i> - a kind of password - for each "
+                                 "host to be monitored via SNMP. Please check the settings of your monitored "
+                                 "devices if you are unsure about the community."),
+                        allow_empty = False))

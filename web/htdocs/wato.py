@@ -112,6 +112,9 @@ var_dir      = defaults.var_dir + "/wato/"
 log_dir      = var_dir + "log/"
 snapshot_dir = var_dir + "/snapshots/"
 
+ALL_HOSTS = [ '@all' ]
+
+
 #   +----------------------------------------------------------------------+
 #   |                        __  __       _                                |
 #   |                       |  \/  | __ _(_)_ __                           |
@@ -365,7 +368,7 @@ def load_hosts_file(folder):
     filename = root_dir + folder[".path"] + "/hosts.mk"
     if os.path.exists(filename):
         variables = {
-            "ALL_HOSTS"          : ['@all'],
+            "ALL_HOSTS"          : ALL_HOSTS,
             "all_hosts"          : [],
             "ipaddresses"        : {},
             "extra_host_conf"    : { "alias" : [] },
@@ -519,11 +522,11 @@ def mode_folder(phase):
 
     elif phase == "buttons":
         folder_status_button()
-        html.context_button(_("Configuration"), make_link([("mode", "configuration")]), "configuration")
-        html.context_button(_("Rules"), make_link_to([("mode", "rules")], g_folder), "rules")
-        html.context_button(_("Properties"), make_link_to([("mode", "editfolder")], g_folder), "properties")
-        html.context_button(_("New folder"), make_link([("mode", "newfolder")]), "newfolder")
-        html.context_button(_("New host"), make_link([("mode", "newhost")]), "new")
+        html.context_button(_("Configuration"),    make_link([("mode", "configuration")]), "configuration")
+        html.context_button(_("Rulesets"),         make_link_to([("mode", "rulesets")], g_folder), "rulesets")
+        html.context_button(_("Properties"),       make_link_to([("mode", "editfolder")], g_folder), "properties")
+        html.context_button(_("New folder"),       make_link([("mode", "newfolder")]), "newfolder")
+        html.context_button(_("New host"),         make_link([("mode", "newhost")]), "new")
         html.context_button(_("Backup / Restore"), make_link([("mode", "snapshot")]), "backup")
         changelog_button()
         search_button()
@@ -3178,9 +3181,13 @@ class Integer(ValueSpec):
         self._size     = kwargs.get("size", 5)
         self._minvalue = kwargs.get("minvalue") 
         self._maxvalue = kwargs.get("maxvalue")
+        self._label    = kwargs.get("label")
 
     def render_input(self, varprefix, value):
         html.number_input(varprefix, str(value), self._size)
+        if self._label:
+            html.write(" ")
+            html.write(self._label)
 
     def from_html_vars(self, varprefix):
         try:
@@ -3207,6 +3214,9 @@ class TextAscii(ValueSpec):
 
     def render_input(self, varprefix, value):
         html.text_input(varprefix, str(value), self._size)
+
+    def value_to_text(self, value):
+        return value
 
     def from_html_vars(self, varprefix):
         return html.var(varprefix, "")
@@ -3262,10 +3272,16 @@ class Float(Integer):
 
 class Checkbox(ValueSpec):
     def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        ValueSpec.__init__(self, **kwargs) 
+        self._label = kwargs.get("label")
 
     def render_input(self, varprefix, value):
         html.checkbox(varprefix, value)
+        if self._label:
+            html.write(" %s" % self._label)
+
+    def value_to_text(self, value):
+        return value and _("on") or _("off")
 
     def from_html_vars(self, varprefix):
         if html.var(varprefix):
@@ -3319,6 +3335,7 @@ class Optional(ValueSpec):
     def __init__(self, valuespec, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._valuespec = valuespec
+        self._label = kwargs.get("label")
 
     def render_input(self, varprefix, value): 
         div_id = "option_" + varprefix
@@ -3328,7 +3345,11 @@ class Optional(ValueSpec):
             checked = value != None
         html.checkbox(varprefix + "_use" , checked,
                       onclick="wato_toggle_option(this, %r)" % div_id)
-        html.write(_(" Activate this option") + "<br>")
+        if self._label:
+            html.write(self._label)
+        else:
+            html.write(_(" Activate this option"))
+        html.write("<br><br>")
         html.write('<div id="%s" style="display: %s">' % (
                 div_id, not checked and "none" or ""))
         if value == None:
@@ -3402,11 +3423,16 @@ class Tuple(ValueSpec):
 def edit_value(valuespec, value):
     html.begin_form("value_editor")
     html.write("<h3>%s</h3>" % valuespec.title())
+    html.write("<table class=form><tr>")
     if valuespec.help() != None:
-        html.write('<div>%s</div>' % valuespec.help())
+        html.write('<td class=legend>%s</td>' % valuespec.help()) 
+    html.write("<td class=content>")
     valuespec.render_input("ve", value) 
-    html.hidden_fields()
+    html.write("</td></tr>")
+    html.write("<tr><td class=buttons colspan=2>")
     html.button("save", _("Save"))
+    html.write("</td></tr></table>")
+    html.hidden_fields()
     html.end_form()
 
 def get_edited_value(valuespec):
@@ -3414,12 +3440,6 @@ def get_edited_value(valuespec):
     valuespec.validate_value(value, "ve")
     return value
 
-g_configvars = {}
-g_configvar_groups = {}
-def register_configvar(group, name, valuespec):
-    g_configvar_groups.setdefault(group, []).append((name, valuespec))
-    g_configvars[name] = valuespec
- 
 #   +----------------------------------------------------------------------+
 #   |    ____             __ _                       _   _                 |
 #   |   / ___|___  _ __  / _(_) __ _ _   _ _ __ __ _| |_(_) ___  _ __      |
@@ -3534,7 +3554,7 @@ def mode_edit_configvar(phase):
         msg = _("Changed global configuration variable %s to %s.") \
               % (varname, valuespec.value_to_text(new_value)) 
         log_pending(None, "edit-configvar", msg)
-        return "configuration", msg
+        return "configuration"
     
     if varname in current_settings:
         value = current_settings[varname]
@@ -3543,8 +3563,12 @@ def mode_edit_configvar(phase):
 
     edit_value(valuespec, value)
 
-
-
+g_configvars = {}
+g_configvar_groups = {}
+def register_configvar(group, name, valuespec):
+    g_configvar_groups.setdefault(group, []).append((name, valuespec))
+    g_configvars[name] = valuespec
+ 
 
 # Persistenz: Speicherung der Werte
 # - WATO speichert seine Variablen für main.mk in conf.d/wato/global.mk
@@ -3592,19 +3616,216 @@ def save_configuration_settings(vars):
 #   | WATO's awesome rule editor: Let's user edit rule based parameters    |
 #   | from main.mk.                                                        |
 #   +----------------------------------------------------------------------+
-def mode_rules(phase):
+def mode_rulesets(phase):
     if phase == "title":
-        return "Rules for hosts and services"
+        return "Rule sets for hosts and services"
 
     elif phase == "buttons":
         html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
+        return
     
     elif phase == "action":
         return
 
-    else:
-        html.write(_("Sorry. The rule editor is not yet available but is excepted to be within this year."))
+    rulesets = load_rulesets(g_folder)
+    groupnames = g_ruleset_groups.keys()
+    groupnames.sort()
+    html.write("<table class=data>")
+    for groupname in groupnames:
+        html.write("<tr><td colspan=4><h3>%s</h3></td></tr>\n" % groupname) 
+        html.write("<tr><th></th><th>" + _("Rule set") + 
+                   "</th><th>" + _("Rules") + "</th></tr>\n")
+        odd = "even"
+            
+        for ruleset in g_ruleset_groups[groupname]: 
+            varname = ruleset["varname"]
+            valuespec = ruleset["valuespec"]
+            num_rules = len(rulesets.get(varname, []))
 
+            odd = odd == "odd" and "even" or "odd" 
+            html.write('<tr class="data %s0">' % odd)
+            edit_url = make_link([("mode", "edit_ruleset"), ("varname", varname)])
+
+            html.write("<td class=buttons>")
+            html.buttonlink(edit_url, _("Edit"))
+            html.write("</td>")
+            html.write('<td>%s</td>' % valuespec.title())
+            html.write('<td class=number>%d</td>' % num_rules)
+            html.write('</tr>')
+    html.write("</table>")
+    
+
+def mode_edit_ruleset(phase): 
+    varname = html.var("varname")
+    ruleset = g_rulesets[varname]
+
+    if phase == "title":
+        return _("Rule set") + " " + ruleset["title"]
+
+    elif phase == "buttons":
+        html.context_button(_("Back"), make_link([("mode", "rulesets")]), "back")
+        return
+
+    elif phase == "action":
+        return
+
+    html.write("<p>%s</p>\n" % ruleset["help"])
+    all_configured_rulesets = load_rulesets(g_folder) 
+    rules = all_configured_rulesets.get(varname, [])
+    for n, rule in enumerate(rules):
+        render_rule(ruleset, rule, n + 1)
+
+def render_rule(ruleset, rule, rulenr):
+    varname = ruleset["varname"]
+    html.write('<div class="rule">')
+    html.write('<div class="nr"><b>%d</b></div>' % rulenr)
+    value = rule[0]
+    if len(rule) == 2:
+        tag_specs = []
+        host_list = rule[1]
+    else:
+        tag_specs = rule[1]
+        host_list = rule[2]
+    html.write('<div class="cond_title">%s</div>'  % _("Preconditions"))
+    html.write('<div class="value_title">%s</div>' % _("Value"))
+
+    render_conditions(tag_specs, host_list, varname, rulenr)
+    html.write('<div class="value" %s>%s</div>' % 
+          (ruleeditor_hover_code(varname, rulenr, "edit_rulevalue"), 
+           ruleset["valuespec"].value_to_text(value)))
+
+    html.write('</div>')
+
+def render_conditions(tagspecs, host_list, varname, rulenr):
+    html.write('<div class="conditions" %s><ul>' % 
+      ruleeditor_hover_code(varname, rulenr, "edit_ruleconds"))
+    for tagspec in tagspecs:
+        html.write('<li class="condition">')
+        if tagspec[0] == '!':
+            html.write(_("NOT ") + tagspec[1])
+        else:
+            html.write(tagspec)
+        html.write('</li>')
+
+    if host_list != ALL_HOSTS:
+        html.write('<li class="condition">')
+        html.write(_("Host is one of ") + ", ".join(host_list))
+        html.write('</li>')
+
+    html.write('</ul></div>')
+
+def ruleeditor_hover_code(varname, rulenr, mode):
+    return \
+       ' onmouseover="this.style.cursor=\'pointer\'; this.style.backgroundColor=\'#b7ced3\';" ' \
+       ' onmouseout="this.style.cursor=\'auto\'; this.style.backgroundColor=\'#a7bec3\';" ' \
+       ' onclick="location.href=\'%s\'"' \
+       % make_link([("mode", mode), ("varname", varname), ("rulenr", rulenr) ])
+
+def mode_edit_ruleconds(phase):
+    pass
+
+def mode_edit_rulevalue(phase):
+    rulenr = int(html.var("rulenr"))
+
+    if phase == "title":
+        return _("Edit value of rule %d") % rulenr
+
+    elif phase == "buttons":
+        html.context_button(_("Back"), make_link([("mode", "edit_ruleset")]), "back")
+        return
+
+    varname = html.var("varname")
+    ruleset = g_rulesets[varname]
+    configured_rulesets = load_rulesets(g_folder)
+    configured_ruleset = configured_rulesets[varname]
+    rule = configured_ruleset[rulenr - 1]
+
+    if phase == "action":
+        if html.check_transaction():
+            value = get_edited_value(ruleset["valuespec"])
+            configured_ruleset[rulenr - 1] = (value,) + rule[1:]
+            save_rulesets(g_folder, configured_rulesets)
+            return "edit_ruleset"
+        else:
+            return
+
+    value = rule[0]
+    edit_value(ruleset["valuespec"], value)
+
+
+def save_rulesets(folder, configured_rulesets):
+    # TODO: folder berücksichtigen
+    path = root_dir + "rules.mk" 
+    out = file(path, "w") 
+    out.write("# Written by WATO\n# encoding: utf-8\n\n")
+
+    for varname, ruleset in g_rulesets.items():
+        if ':' in varname:
+            dictname, subkey = varname.split(':')
+            out.write("\n%s.setdefault(%r, [])\n" % (dictname, subkey))
+            out.write("%s[%r] += " % (dictname, subkey))
+        else:
+            out.write("\n%s += " % varname)
+        out.write("%s\n" % pprint.pformat(configured_rulesets[varname]))
+
+
+def load_rulesets(folder):
+    # TODO: folder berücksichtigen
+    path = root_dir + "rules.mk" 
+    try:
+        # Prepare empty rulesets so that rules.mk has something to 
+        # append to
+        vars = {
+            "ALL_HOSTS"      : ALL_HOSTS,
+            "ALL_SERVICES"   : [ "" ],
+            "NEGATE"         : '@negate'
+        }
+
+        for varname, ruleset in g_rulesets.items():
+            if ':' in varname:
+                dictname, subkey = varname.split(":")
+                vars[dictname] = {}
+            else:
+                vars[varname] = []
+
+        execfile(path, vars, vars)
+        
+        # Extract only specified rule variables
+        rulevars = {} 
+        for ruleset in g_rulesets.values():
+            varname = ruleset["varname"]
+            # handle extra_host_conf:max_check_attempts
+            if ':' in varname:
+                dictname, subkey = varname.split(":")
+                if dictname in vars:
+                    dictionary = vars[dictname]
+                    if subkey in dictionary:
+                        rulevars[varname] = dictionary[subkey]
+
+            else:
+                if varname in vars:
+                    rulevars[varname] = vars[varname]
+        return rulevars
+    except:
+        return {}
+
+
+
+g_rulesets = {}
+g_ruleset_groups = {}
+def register_rule(group, varname, valuespec, title = None, help = None, itemtype = None, match = "first"):
+    ruleset = {
+        "group"     : group, 
+        "varname"   : varname, 
+        "valuespec" : valuespec, 
+        "itemtype"  : itemtype, 
+        "match"     : match,
+        "title"     : title or valuespec.title(),
+        "help"      : help or valuespec.help(),
+        }
+    g_ruleset_groups.setdefault(group, []).append(ruleset)
+    g_rulesets[varname] = ruleset
+ 
 #   +----------------------------------------------------------------------+
 #   |       _   _             _           ___        _    ____ ___         |
 #   |      | | | | ___   ___ | | _____   ( _ )      / \  |  _ \_ _|        |
@@ -3822,7 +4043,10 @@ mode_functions = {
    "snapshot"       : mode_snapshot,
    "configuration"  : mode_configuration,
    "edit_configvar" : mode_edit_configvar,
-   "rules"          : mode_rules,
+   "rulesets"       : mode_rulesets,
+   "edit_ruleset"   : mode_edit_ruleset,
+   "edit_rulevalue" : mode_edit_rulevalue,
+   "edit_ruleconds" : mode_edit_ruleconds,
 }
 
 extra_buttons = [

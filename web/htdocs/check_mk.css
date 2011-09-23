@@ -2020,6 +2020,85 @@ table.add_snapin i {
     float: right;
 }
 
+/* Special styles for configuration and rule editor */
+.wato div.rule {
+    width: 500px;
+    height: 140px;
+    border: 1px solid white;
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+    margin-top: 10px;
+    -moz-border-radius: 4px;
+    position: relative;
+    top: 0px;
+    left: 0px;
+}
+
+.wato div.rule div.nr {
+    -moz-border-radius: 10px;
+    border: 1px solid white;
+    background-color: #fcd340;
+    color: black;
+    text-align: center;
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    left: 7px;
+    top: 7px;
+}
+.wato div.rule div.nr b {
+    position: relative;
+    top: 3px;
+}
+
+.wato div.rule div.cond_title {
+    position: absolute;
+    top: 10px;
+    left: 40px;
+    color: white;
+}
+
+.wato div.rule div.conditions {
+    position: absolute;
+    top: 28px;
+    left: 40px;
+    width: 330px;
+    height: 90px;
+    border: 1px solid white;
+    background-color: #a7bec3;
+    padding: 5px;
+    -moz-border-radius: 4px;
+}
+
+.wato div.rule div.conditions ul {
+    padding: 0;
+    margin-left: 15px;
+    margin-top: 0;
+}
+
+.wato div.rule div.condition {
+    float: none;
+}
+
+.wato div.rule div.value_title {
+    position: absolute;
+    top: 10px;
+    left: 390px;
+    color: white;
+}
+
+.wato div.rule div.value {
+    position: absolute;
+    top: 28px;
+    left: 390px;
+    width: 90px;
+    height: 90px;
+    border: 1px solid white;
+    background-color: #a7bec3;
+    padding: 5px;
+    -moz-border-radius: 4px;
+}
+
 /* 
    ____                                    
    |  _ \ _ __ ___   __ _ _ __ ___  ___ ___ 

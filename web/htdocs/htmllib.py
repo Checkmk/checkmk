@@ -279,6 +279,9 @@ class html:
             vars = [ i for i in vars if not i[0].startswith(remove_prefix) ]
         return self.req.myfile + ".py?" + urlencode_vars(vars + addvars)
 
+    def makeactionuri(self, addvars):
+        return self.makeuri(addvars + [("_transid", self.current_transid())])
+
     def makeuri_contextless(self, vars):
         return self.req.myfile + ".py?" + urlencode_vars(vars)
 

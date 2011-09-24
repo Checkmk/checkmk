@@ -2043,34 +2043,65 @@ table.add_snapin i {
     width: 20px;
     height: 20px;
     position: absolute;
-    left: 7px;
-    top: 7px;
+    left: 9px;
+    top: 9px;
 }
 .wato div.rule div.nr b {
     position: relative;
     top: 3px;
 }
 
-.wato div.rule div.cond_title {
+.wato div.rule div.button {
     position: absolute;
-    top: 10px;
-    left: 40px;
-    color: white;
+    left: 7px;
+}
+.wato div.rule div.button.delete {
+    top: 40px;
+}
+.wato div.rule div.button.up {
+    top: 70px;
+}
+.wato div.rule div.button.down {
+    top: 100px;
 }
 
-.wato div.rule div.conditions {
+.wato div.rule div img {
+    width: 24px;
+    height: 24px;
+}
+
+.wato div.rule div.title {
     position: absolute;
-    top: 28px;
+    top: 12px;
+    color: white;
+    font-size: 10pt;
+    font-weight: bold;
+}
+
+.wato div.rule div.conditions.title {
     left: 40px;
-    width: 330px;
-    height: 90px;
+}
+.wato div.rule div.value.title {
+    left: 390px;
+}
+
+
+.wato div.rule div.box {
+    position: absolute;
+    top: 30px;
     border: 1px solid white;
     background-color: #a7bec3;
     padding: 5px;
     -moz-border-radius: 4px;
+    height: 90px;
 }
 
-.wato div.rule div.conditions ul {
+.wato div.rule div.conditions.box {
+    left: 40px;
+    width: 330px;
+}
+
+.wato div.rule div.conditions.box ul {
     padding: 0;
     margin-left: 15px;
     margin-top: 0;
@@ -2080,23 +2111,9 @@ table.add_snapin i {
     float: none;
 }
 
-.wato div.rule div.value_title {
-    position: absolute;
-    top: 10px;
-    left: 390px;
-    color: white;
-}
-
-.wato div.rule div.value {
-    position: absolute;
-    top: 28px;
+.wato div.rule div.value.box {
     left: 390px;
     width: 90px;
-    height: 90px;
-    border: 1px solid white;
-    background-color: #a7bec3;
-    padding: 5px;
-    -moz-border-radius: 4px;
 }
 
 /* 

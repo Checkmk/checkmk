@@ -3667,18 +3667,63 @@ def mode_edit_ruleset(phase):
         return
 
     elif phase == "action":
-        return
+        rulenr = int(html.var("_rulenr"))
+        action = html.var("_action")
+        configured_rulesets = load_rulesets(g_folder) 
+        rules = configured_rulesets.get(varname, [])
+
+        if action == "delete":
+            c = wato_confirm(_("Confirm"), _("Delete rule number %d?") % rulenr)
+            if c:
+                del rules[rulenr - 1]
+                save_rulesets(g_folder, configured_rulesets)
+                log_pending(None, "edit-ruleset", 
+                      _("Changed order of rules in ruleset %s") % ruleset["title"])
+                return
+            elif c == False: # not yet confirmed
+                return ""
+            else:
+                return None # browser reload 
+        else:
+            rule = rules[rulenr - 1]
+            del rules[rulenr - 1]
+            if action == "up":
+                rules[rulenr-2:rulenr-2] = [ rule ]
+            else:
+                rules[rulenr:rulenr] = [ rule ]
+            save_rulesets(g_folder, configured_rulesets)
+            log_pending(None, "edit-ruleset", 
+                     _("Changed order of rules in ruleset %s") % ruleset["title"])
+            return
+
 
     html.write("<p>%s</p>\n" % ruleset["help"])
     all_configured_rulesets = load_rulesets(g_folder) 
     rules = all_configured_rulesets.get(varname, [])
     for n, rule in enumerate(rules):
-        render_rule(ruleset, rule, n + 1)
+        render_rule(ruleset, rule, n + 1, n == len(rules) - 1)
 
-def render_rule(ruleset, rule, rulenr):
+def rule_button(action, rulenr):
+    url = html.makeactionuri([("_rulenr", str(rulenr)), ("_action", action)])
+    html.write('<div class="button %s">'
+               '<a href="%s">'
+               '<img src="images/button_%s_lo.png" ' 
+               'onmouseover=\"hilite_icon(this, 1)\" '
+               'onmouseout=\"hilite_icon(this, 0)\">'
+               '</a></div>\n' % (action, url, action))
+
+
+def render_rule(ruleset, rule, rulenr, islast):
     varname = ruleset["varname"]
     html.write('<div class="rule">')
     html.write('<div class="nr"><b>%d</b></div>' % rulenr)
+    rule_button("delete", rulenr)
+    if rulenr != 1:
+        rule_button("up", rulenr)
+    if not islast:
+        rule_button("down", rulenr)
+
+
     value = rule[0]
     if len(rule) == 2:
         tag_specs = []
@@ -3686,18 +3731,18 @@ def render_rule(ruleset, rule, rulenr):
     else:
         tag_specs = rule[1]
         host_list = rule[2]
-    html.write('<div class="cond_title">%s</div>'  % _("Preconditions"))
-    html.write('<div class="value_title">%s</div>' % _("Value"))
+    html.write('<div class="conditions title">%s</div>'  % _("Preconditions"))
+    html.write('<div class="value title">%s</div>' % _("Value"))
 
     render_conditions(tag_specs, host_list, varname, rulenr)
-    html.write('<div class="value" %s>%s</div>' % 
+    html.write('<div class="value box" %s>%s</div>' % 
           (ruleeditor_hover_code(varname, rulenr, "edit_rulevalue"), 
            ruleset["valuespec"].value_to_text(value)))
 
     html.write('</div>')
 
 def render_conditions(tagspecs, host_list, varname, rulenr):
-    html.write('<div class="conditions" %s><ul>' % 
+    html.write('<div class="conditions box" %s><ul>' % 
       ruleeditor_hover_code(varname, rulenr, "edit_ruleconds"))
     for tagspec in tagspecs:
         html.write('<li class="condition">')

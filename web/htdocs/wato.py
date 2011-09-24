@@ -3146,6 +3146,12 @@ class ValueSpec:
     def render_input(self, varprefix, value):
         pass
 
+    # Create a canonical, minimal, default value that 
+    # matches the datatype of the value specification and
+    # fullfills also data validation.
+    def default_value(self):
+        return None
+
     # Creates a text-representation of the value that can be
     # used in tables and other contextes. It is to be read 
     # by the user and need not to be parsable.
@@ -3183,6 +3189,12 @@ class Integer(ValueSpec):
         self._maxvalue = kwargs.get("maxvalue")
         self._label    = kwargs.get("label")
 
+    def default_value(self):
+        if self._minvalue:
+            return self._minvalue
+        else:
+            return 0
+
     def render_input(self, varprefix, value):
         html.number_input(varprefix, str(value), self._size)
         if self._label:
@@ -3212,6 +3224,9 @@ class TextAscii(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._size     = kwargs.get("size", 30)
 
+    def default_value(self):
+        return ""
+
     def render_input(self, varprefix, value):
         html.text_input(varprefix, str(value), self._size)
 
@@ -3233,6 +3248,13 @@ class TextAscii(ValueSpec):
 class Filename(TextAscii):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
+        if "default" in kwargs:
+            self._default_path = kwargs["default"]
+        else:
+            self._default_path = "/tmp/foo"
+
+    def default_value(self):
+        return self._default_path
 
     def validate_value(self, value, varprefix):
         if len(value) == 0:
@@ -3258,6 +3280,9 @@ class Float(Integer):
     def __init__(self, **kwargs):
         Integer.__init__(self, **kwargs)
     
+    def default_value(self):
+        return float(Integer.default_value(self))
+
     def from_html_vars(self, varprefix):
         try:
             return float(html.var(varprefix))
@@ -3274,6 +3299,9 @@ class Checkbox(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs) 
         self._label = kwargs.get("label")
+
+    def default_value(self):
+        return False
 
     def render_input(self, varprefix, value):
         html.checkbox(varprefix, value)
@@ -3297,6 +3325,9 @@ class DropdownChoice(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._choices = kwargs["choices"]
+
+    def default_value(self):
+        return self._choices[0][0]
 
     def render_input(self, varprefix, value):
         # Convert values from choices to keys 
@@ -3336,6 +3367,9 @@ class Optional(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._valuespec = valuespec
         self._label = kwargs.get("label")
+
+    def default_value(self):
+        return None
 
     def render_input(self, varprefix, value): 
         div_id = "option_" + varprefix
@@ -3382,6 +3416,9 @@ class Tuple(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._elements = kwargs["elements"]
+
+    def default_value(self):
+        return tuple([x.default_value() for x in self._elements])
 
     def render_input(self, varprefix, value):
         html.write("<table>")
@@ -3664,9 +3701,35 @@ def mode_edit_ruleset(phase):
 
     elif phase == "buttons":
         html.context_button(_("Back"), make_link([("mode", "rulesets")]), "back")
+        html.context_button(_("New rule (top)"),    html.makeactionuri([("_new", "top")]), "new")
+        html.context_button(_("New rule (bottom)"), html.makeactionuri([("_new", "bottom")]), "new")
         return
 
     elif phase == "action":
+        if html.var("_new"):
+            if not html.check_transaction():
+                return
+
+            configured_rulesets = load_rulesets(g_folder) 
+            rules = configured_rulesets.get(varname, [])
+            new_rule = []
+            valuespec = ruleset["valuespec"]
+            if valuespec:
+                new_rule.append(valuespec.default_value())
+            new_rule.append([]) # means "no hosts"
+            if ruleset["itemtype"]:
+                new_rule.append([])
+            new_rule = tuple(new_rule)
+            if html.var("_new") == "top":
+                rules[0:0] = [new_rule]
+            else:
+                rules.append(new_rule)
+            save_rulesets(g_folder, configured_rulesets)
+            log_pending(None, "edit-ruleset", 
+                        _("Created new rule in ruleset %s") % ruleset["title"])
+            return
+
+
         rulenr = int(html.var("_rulenr"))
         action = html.var("_action")
         configured_rulesets = load_rulesets(g_folder) 
@@ -3699,6 +3762,7 @@ def mode_edit_ruleset(phase):
 
     html.write("<p>%s</p>\n" % ruleset["help"])
     all_configured_rulesets = load_rulesets(g_folder) 
+    
     rules = all_configured_rulesets.get(varname, [])
     for n, rule in enumerate(rules):
         render_rule(ruleset, rule, n + 1, n == len(rules) - 1)

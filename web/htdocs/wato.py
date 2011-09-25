@@ -113,6 +113,7 @@ log_dir      = var_dir + "log/"
 snapshot_dir = var_dir + "/snapshots/"
 
 ALL_HOSTS = [ '@all' ]
+NEGATE    = '@negate'
 
 
 #   +----------------------------------------------------------------------+
@@ -3687,7 +3688,7 @@ def mode_rulesets(phase):
             html.write("<td class=buttons>")
             html.buttonlink(edit_url, _("Edit"))
             html.write("</td>")
-            html.write('<td>%s</td>' % valuespec.title())
+            html.write('<td>%s</td>' % ruleset["title"])
             html.write('<td class=number>%d</td>' % num_rules)
             html.write('</tr>')
     html.write("</table>")
@@ -3751,6 +3752,21 @@ def mode_edit_ruleset(phase):
                 return ""
             else:
                 return None # browser reload 
+        elif action == "toggle":
+            if html.check_transaction():
+                rule = list(rules[rulenr - 1])
+                if rule[0] == NEGATE:
+                    del rule[0]
+                else:
+                    rule[0:0] = [NEGATE]
+                rules[rulenr - 1] = tuple(rule)
+                save_rulesets(g_folder, configured_rulesets)
+                log_pending(None, "edit-ruleset", 
+                      _("Negated result of rule %d in ruleset %s") % (rulenr, ruleset["title"]))
+
+            return
+
+
         else:
             rule = rules[rulenr - 1]
             del rules[rulenr - 1]
@@ -3764,6 +3780,7 @@ def mode_edit_ruleset(phase):
             return
 
 
+    html.write("<h3>%s</h3>\n" % ruleset["title"])
     html.write("<p>%s</p>\n" % ruleset["help"])
     all_configured_rulesets = load_rulesets(g_folder) 
     
@@ -3782,17 +3799,31 @@ def rule_button(action, rulenr):
 
 
 def parse_rule(ruleset, rule):
-    value = rule[0]
-    if len(rule) == 2:
-        tag_specs = []
-        host_list = rule[1]
+    if ruleset["valuespec"]:
+        value = rule[0]
+        rule = rule[1:]
     else:
-        tag_specs = rule[1]
-        host_list = rule[2]
+        if rule[0] == NEGATE:
+            value = False
+            rule = rule[1:]
+        else:
+            value = True
+
+    if len(rule) == 1:
+        tag_specs = []
+        host_list = rule[0]
+    else:
+        tag_specs = rule[0]
+        host_list = rule[1]
     return value, tag_specs, host_list, None # (item_list currently not supported)
 
-def construct_rule(rule_set, value, tag_specs, host_list, item_list):
-    rule = [ value ]
+def construct_rule(ruleset, value, tag_specs, host_list, item_list):
+    if ruleset["valuespec"]:
+        rule = [ value ]
+    elif not value:
+        rule = [ NEGATE ]
+    else:
+        rule = []
     if tag_specs != []:
         rule.append(tag_specs)
     rule.append(host_list)
@@ -3817,9 +3848,20 @@ def render_rule(ruleset, rule, rulenr, islast):
     html.write('<div class="value title">%s</div>' % _("Value"))
 
     render_conditions(tag_specs, host_list, varname, rulenr)
+    if ruleset["valuespec"]:
+        value_html = ruleset["valuespec"].value_to_text(value)
+        boolval = None # no boolean ruleset
+    else:
+        boolval = value # boolean ruleset
+        img = value and "yes" or "no"
+        title = value and _("This rule results in a positive outcome.") \
+                      or  _("this rule results in a negative outcome.")
+        title += " " + _("Click to toggle outcome of this rule.")
+        value_html = '<img title="%s" src="images/rule_%s.png">' % (title, img)
+        
     html.write('<div class="value box" %s>%s</div>' % 
-          (ruleeditor_hover_code(varname, rulenr, "edit_rulevalue"), 
-           ruleset["valuespec"].value_to_text(value)))
+          (ruleeditor_hover_code(varname, rulenr, "edit_rulevalue", boolval), value_html))
+           
 
     html.write('</div>')
 
@@ -3831,7 +3873,7 @@ def tag_alias(tag):
 
 def render_conditions(tagspecs, host_list, varname, rulenr):
     html.write('<div class="conditions box" %s><ul>' % 
-      ruleeditor_hover_code(varname, rulenr, "edit_ruleconds"))
+      ruleeditor_hover_code(varname, rulenr, "edit_ruleconds", None))
 
     # Host tags
     for tagspec in tagspecs:
@@ -3877,12 +3919,15 @@ def render_conditions(tagspecs, host_list, varname, rulenr):
 
     html.write('</ul></div>')
 
-def ruleeditor_hover_code(varname, rulenr, mode):
+def ruleeditor_hover_code(varname, rulenr, mode, boolval):
+    if boolval in [ True, False ]:
+        url = html.makeactionuri([("_rulenr", rulenr), ("_action", "toggle")])
+    else:
+        url = make_link([("mode", mode), ("varname", varname), ("rulenr", rulenr) ])
     return \
        ' onmouseover="this.style.cursor=\'pointer\'; this.style.backgroundColor=\'#b7ced3\';" ' \
        ' onmouseout="this.style.cursor=\'auto\'; this.style.backgroundColor=\'#a7bec3\';" ' \
-       ' onclick="location.href=\'%s\'"' \
-       % make_link([("mode", mode), ("varname", varname), ("rulenr", rulenr) ])
+       ' onclick="location.href=\'%s\'"' % url
 
 
 def mode_edit_ruleconds(phase):
@@ -4117,7 +4162,8 @@ def load_rulesets(folder):
 
 g_rulesets = {}
 g_ruleset_groups = {}
-def register_rule(group, varname, valuespec, title = None, help = None, itemtype = None, match = "first"):
+def register_rule(group, varname, valuespec = None, title = None, 
+                  help = None, itemtype = None, match = "first"):
     ruleset = {
         "group"     : group, 
         "varname"   : varname, 

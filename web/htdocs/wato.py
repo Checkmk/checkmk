@@ -3470,6 +3470,7 @@ def edit_value(valuespec, value):
     html.button("save", _("Save"))
     html.write("</td></tr></table>")
     html.hidden_fields()
+    html.set_focus("ve")
     html.end_form()
 
 def get_edited_value(valuespec):
@@ -3716,7 +3717,10 @@ def mode_edit_ruleset(phase):
             valuespec = ruleset["valuespec"]
             if valuespec:
                 new_rule.append(valuespec.default_value())
-            new_rule.append([]) # means "no hosts"
+            if html.var("_new") == "top":
+                new_rule.append([]) # better not match if new rule has precedence
+            else:
+                new_rule.append(ALL_HOSTS) # bottom: default to catch-all rule
             if ruleset["itemtype"]:
                 new_rule.append([])
             new_rule = tuple(new_rule)
@@ -3777,6 +3781,26 @@ def rule_button(action, rulenr):
                '</a></div>\n' % (action, url, action))
 
 
+def parse_rule(ruleset, rule):
+    value = rule[0]
+    if len(rule) == 2:
+        tag_specs = []
+        host_list = rule[1]
+    else:
+        tag_specs = rule[1]
+        host_list = rule[2]
+    return value, tag_specs, host_list, None # (item_list currently not supported)
+
+def construct_rule(rule_set, value, tag_specs, host_list, item_list):
+    rule = [ value ]
+    if tag_specs != []:
+        rule.append(tag_specs)
+    rule.append(host_list)
+    if item_list != None:
+        rule.append(item_list)
+    return tuple(rule)
+
+
 def render_rule(ruleset, rule, rulenr, islast):
     varname = ruleset["varname"]
     html.write('<div class="rule">')
@@ -3787,14 +3811,8 @@ def render_rule(ruleset, rule, rulenr, islast):
     if not islast:
         rule_button("down", rulenr)
 
+    value, tag_specs, host_list, item_list = parse_rule(ruleset, rule)
 
-    value = rule[0]
-    if len(rule) == 2:
-        tag_specs = []
-        host_list = rule[1]
-    else:
-        tag_specs = rule[1]
-        host_list = rule[2]
     html.write('<div class="conditions title">%s</div>'  % _("Preconditions"))
     html.write('<div class="value title">%s</div>' % _("Value"))
 
@@ -3805,21 +3823,57 @@ def render_rule(ruleset, rule, rulenr, islast):
 
     html.write('</div>')
 
+def tag_alias(tag):
+    for id, title, tags in config.wato_host_tags:
+        for t in tags:
+            if t[0] == tag:
+                return t[1]
+
 def render_conditions(tagspecs, host_list, varname, rulenr):
     html.write('<div class="conditions box" %s><ul>' % 
       ruleeditor_hover_code(varname, rulenr, "edit_ruleconds"))
+
+    # Host tags
     for tagspec in tagspecs:
-        html.write('<li class="condition">')
         if tagspec[0] == '!':
-            html.write(_("NOT ") + tagspec[1])
+            negate = True
+            tag = tagspec[1:]
         else:
-            html.write(tagspec)
+            negate = False
+            tag = tagspec
+
+
+        html.write('<li class="condition">')
+        alias = tag_alias(tag)
+        if alias:
+            html.write(_("Host is "))
+            if negate:
+                html.write("<b>" + _("not") + "</b> ")
+            html.write(alias)
+        else:
+            if negate:
+                html.write(_("Host has <b>not</b> the tag ") + "<tt>" + tag + "</tt>")
+            else:
+                html.write(_("Host has the tag ") + "<tt>" + tag + "</tt>")
         html.write('</li>')
 
+    # Explicit list of hosts
     if host_list != ALL_HOSTS:
-        html.write('<li class="condition">')
-        html.write(_("Host is one of ") + ", ".join(host_list))
-        html.write('</li>')
+        condition = None
+        if host_list == []:
+            condition = _("This rule does <b>never</b> apply!")
+        elif host_list[-1] != ALL_HOSTS[0]:
+            if len(host_list) == 1:
+                condition = _("Host name is %s") % host_list[0]
+            else:
+                condition = _("Host is one of ") + ", ".join(host_list)
+        elif host_list[0][0] == '!':
+            hosts = [ h[1:] for h in host_list[:-1] ]
+            condition = _("Host is <b>not</b> one of ") + ", ".join(hosts)
+        # other cases should not occur, e.g. list of explicit hosts
+        # plus ALL_HOSTS.
+        if condition:
+            html.write('<li class="condition">%s</li>' % condition)
 
     html.write('</ul></div>')
 
@@ -3830,20 +3884,159 @@ def ruleeditor_hover_code(varname, rulenr, mode):
        ' onclick="location.href=\'%s\'"' \
        % make_link([("mode", mode), ("varname", varname), ("rulenr", rulenr) ])
 
+
 def mode_edit_ruleconds(phase):
-    pass
+    rulenr = int(html.var("rulenr"))
+    varname = html.var("varname")
+    
+    if phase == "title":
+        return _("Edit condition of rule %d") % rulenr
+
+    elif phase == "buttons":
+        html.context_button(_("Back"), 
+                         make_link([("mode", "edit_ruleset"), ("varname", varname)]), "back")
+        return
+
+    ruleset = g_rulesets[varname]
+    configured_rulesets = load_rulesets(g_folder)
+    configured_ruleset = configured_rulesets[varname]
+    rule = configured_ruleset[rulenr - 1]
+    value, tag_specs, host_list, item_list = parse_rule(ruleset, rule)
+
+    if phase == "action":
+        if html.check_transaction():
+            # re-construct rule from HTML variables
+            value, tag_specs, host_list, item_list = parse_rule(ruleset, rule)
+            tag_specs, host_list = get_rule_conditions()
+            rule = construct_rule(ruleset, value, tag_specs, host_list, item_list)
+            configured_ruleset[rulenr - 1] = rule
+            save_rulesets(g_folder, configured_rulesets)
+            log_pending(None, "edit-rule", "Changed conditions of rule %d of %s" % 
+                    (rulenr, varname))
+        return "edit_ruleset"
+
+    # There are several types of conditions:
+    # - List of host tags. That list can be missing.
+    # - List of host names. That list can also be ALL_HOSTS.
+    # - List of items (service descriptions, etc.). This list
+    #   is not present for all rules.
+
+    html.begin_form("condition")
+    html.write("<table class=form>")
+    html.write("<tr><td class=legend>" + _("Host tags") + "<br><i>")
+    html.write(_("The rule will only be applied to hosts fullfulling all of "
+                 "of the host tag conditions listed here, even if they appear "
+                 "in the list of explicit host names."))
+    
+    html.write("</i></td>")
+    html.write("<td class=content>")
+    for id, title, tags in config.wato_host_tags:
+        default_tag = None
+        ignore = True
+        for t in tag_specs:
+            if t[0] == '!':
+                n = True
+                t = t[1:]
+            else:
+                n = False
+            if t in [ x[0] for x in tags]:
+                ignore = False
+                negate = n
+
+        html.radiobutton("tag_" + id, "ignore", ignore, _("ignore"))
+        html.write("&nbsp;")
+        html.radiobutton("tag_" + id, "is",     not ignore and not negate, _("is"))
+        html.write("&nbsp;")
+        html.radiobutton("tag_" + id, "isnot",  not ignore and negate, _("is not"))
+        html.write("&nbsp;")
+        html.select("tagvalue_" + id, [t[0:2] for t in tags if t[0] != None], deflt=default_tag)
+        html.write("<br>")
+    html.write("</td></tr>")
+
+    html.write("<tr><td class=legend>")
+    html.write(_("Explicit hosts"))
+    html.write("<br><i>")
+    html.write(_("You can enter a number of explicit host names that rule should or should "
+                 "not apply to here. Leave this option disabled if you want the rule to "
+                 "apply for all hosts specified by the given tags."))
+    html.write("</i></td><td class=content>")
+    div_id = "div_all_hosts"
+
+    checked = host_list != ALL_HOSTS
+    html.checkbox("explicit_hosts", checked, onclick="wato_toggle_option(this, %r)" % div_id)
+    html.write(" " + _("Specify explicit host names") + "<br>")
+    html.write('<div id="%s" style="display: %s"><br>' % (
+            div_id, not checked and "none" or ""))
+    negate_hosts = len(host_list) > 0 and host_list[0].startswith("!")
+
+    num_hosts = 10
+    for nr in range(0, num_hosts):
+        if nr < len(host_list) and host_list[nr] != ALL_HOSTS[0]:
+            host_name = host_list[nr].strip("!")
+        else:
+            host_name = ""
+        html.text_input("host_%d" % nr, host_name)
+        html.write(" &nbsp; ")
+        html.write("<br>")
+    html.write("<br>")
+    html.checkbox("negate_hosts", negate_hosts)
+    html.write(" " + _("<b>Negate:</b> make Rule apply for <b>all but</b> the above hosts") + "<br><br>\n")
+    html.write("</div></td></tr>")
+    html.write("<tr><td class=buttons colspan=2>")
+    html.button("_save", _("Save"))
+    html.write("</td></tr>")
+    html.write("</table>")
+    html.hidden_fields()
+    html.end_form()
+
+def get_rule_conditions():
+    # Tag list
+    tag_list = []
+    for id, title, tags in config.wato_host_tags:
+        mode = html.var("tag_" + id)
+        tagvalue = html.var("tagvalue_" + id)
+        if mode == "is":
+            tag_list.append(tagvalue)
+        elif mode == "isnot":
+            tag_list.append("!" + tagvalue)
+
+    # Host list
+    if not html.get_checkbox("explicit_hosts"):
+        host_list = ALL_HOSTS
+    else:
+        negate = html.get_checkbox("negate_hosts")
+        nr = 0
+        host_list = []
+        while True:
+            var = "host_%d" % nr
+            host = html.var(var)
+            if nr > 10 and not host:
+                break
+            if host:
+                if negate:
+                    host = "!" + host
+                host_list.append(host)
+            nr += 1
+        # append ALL_HOSTS to negated host lists
+        if len(host_list) > 0 and host_list[0][0] == '!':
+            host_list += ALL_HOSTS
+        elif len(host_list) == 0 and negate:
+            host_list = ALL_HOSTS # equivalent
+
+    return tag_list, host_list
 
 def mode_edit_rulevalue(phase):
     rulenr = int(html.var("rulenr"))
+    varname = html.var("varname")
 
     if phase == "title":
         return _("Edit value of rule %d") % rulenr
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "edit_ruleset")]), "back")
+        html.context_button(_("Back"), 
+                         make_link([("mode", "edit_ruleset"), ("varname", varname)]), "back")
         return
 
-    varname = html.var("varname")
     ruleset = g_rulesets[varname]
     configured_rulesets = load_rulesets(g_folder)
     configured_ruleset = configured_rulesets[varname]
@@ -3854,6 +4047,8 @@ def mode_edit_rulevalue(phase):
             value = get_edited_value(ruleset["valuespec"])
             configured_ruleset[rulenr - 1] = (value,) + rule[1:]
             save_rulesets(g_folder, configured_rulesets)
+            log_pending(None, "edit-rule", "Changed value of rule %d of %s to %s" % 
+                    (rulenr, varname, ruleset["valuespec"].value_to_text(value)))
             return "edit_ruleset"
         else:
             return

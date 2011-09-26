@@ -107,6 +107,21 @@ register_configvar(group,
 #   | Declaration of rules to be defined in main.mk or in folders          |
 #   +----------------------------------------------------------------------+
 
+group = _("Check Parameters")
+register_rule(group, 
+    "checkgroup_parameters:cpu_load",
+    Tuple(title = _("Levels for CPU load (not utilization!)"), 
+          help = _("The CPU load of a system is the number of processes currently being "
+                   "in the state <u>running</u>, i.e. either they occupy a CPU or wait "
+                   "for one. The <u>load average</u> is the averaged CPU load over the last 1, "
+                   "5 or 15 minutes. The following levels will be applied on the average "
+                   "load. On Linux system the 15-minute average load is used when applying "
+                   "those levels."),
+          elements = [
+              Integer(title = _("Warning at a load of")),
+              Integer(title = _("Critical at a load of"))]),
+    )
+
 group = _("Monitoring Configuration") 
 
 register_rule(group, 

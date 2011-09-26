@@ -256,6 +256,7 @@ nagios_illegal_chars               = '`~!$%^&*|\'"<>?,()='
 # Data to be defined in main.mk
 checks                               = []
 check_parameters                     = []
+checkgroup_parameters                = {}
 legacy_checks                        = []
 all_hosts                            = []
 host_paths                           = {}
@@ -310,6 +311,7 @@ ip_to_hostname_cache = None
 # The following data structures will be filled by the various checks
 # found in the checks/ directory.
 check_info                         = {} # all known checks
+checkgroup_of                      = {} # groups of checks with compatible parametration
 check_includes                     = {} # library files needed by checks
 precompile_params                  = {} # optional functions for parameter precompilation, look at df for an example
 check_default_levels               = {} # dictionary-configured checks declare their default level variables here
@@ -3956,7 +3958,14 @@ def compute_check_parameters(host, checktype, item, params):
         params = new_params
 
     descr = service_description(checktype, item)
-    entries = service_extra_conf(host, descr, check_parameters)
+
+    # Get parameters configured via checkgroup_parameters
+    entries = get_checkgroup_parameters(host, checktype, item)
+
+    # Get parameters configured via check_parameters
+    entries += service_extra_conf(host, descr, check_parameters)
+
+
     if len(entries) > 0:
         # loop from last to first (first must have precedence)
         for entry in entries[::-1]:
@@ -3965,6 +3974,20 @@ def compute_check_parameters(host, checktype, item, params):
             else:
                 params = entry
     return params
+
+def get_checkgroup_parameters(host, checktype, item):
+    checkgroup = checkgroup_of.get(checktype)
+    if not checkgroup: 
+        return []
+    rules = checkgroup_parameters.get(checkgroup)
+    if rules == None:
+        return []
+
+    if item == None: # checks without an item
+        return host_extra_conf(host, rules)
+    else: # checks with an item need service-specific rules
+        return service_extra_conf(host, str(item), rules)
+
 
 # read automatically generated checks. They are prepended to the check
 # table: explicit user defined checks override automatically generated

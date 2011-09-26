@@ -3156,6 +3156,11 @@ class ValueSpec:
     def render_input(self, varprefix, value):
         pass
 
+    # Sets the input focus (cursor) into the most promiment
+    # field of the HTML code previously rendered with render_input()
+    def set_focus(self, varprefix):
+        html.set_focus(varprefix)
+
     # Create a canonical, minimal, default value that 
     # matches the datatype of the value specification and
     # fullfills also data validation.
@@ -3434,14 +3439,21 @@ class Tuple(ValueSpec):
         html.write("<table>")
         for no, (element, val) in enumerate(zip(self._elements, value)):
             vp = varprefix + "_" + str(no)
-            html.write("<tr><td>%s<br>%s</td>" % (element.title(), element.help()))
+            if element.help():
+                help = "<br><i>%s</i>" % element.help()
+            else:
+                help = ""
+            html.write("<tr><td>%s:%s</td>" % (element.title(), help))
             html.write("<td>")
             element.render_input(vp, val)
             html.write("</td></tr>")
         html.write("</table>")
 
+    def set_focus(self, varprefix):
+        self._elements[0].set_focus(varprefix + "_0")
+
     def value_to_text(self, value): 
-        return "(" + ",".join([ element.value_to_text(val) 
+        return "(" + ", ".join([ element.value_to_text(val) 
                          for (element, val)
                          in zip(self._elements, value)]) + ")"
 
@@ -3474,8 +3486,9 @@ def edit_value(valuespec, value):
     html.begin_form("value_editor")
     html.write("<h3>%s</h3>" % valuespec.title())
     html.write("<table class=form><tr>")
-    if valuespec.help() != None:
-        html.write('<td class=legend>%s</td>' % valuespec.help()) 
+    help = valuespec.help() or ""
+    html.write('<td class=legend>%s</td>' % help)
+
     html.write("<td class=content>")
     valuespec.render_input("ve", value) 
     html.write("</td></tr>")
@@ -3483,7 +3496,7 @@ def edit_value(valuespec, value):
     html.button("save", _("Save"))
     html.write("</td></tr></table>")
     html.hidden_fields()
-    html.set_focus("ve")
+    valuespec.set_focus("ve")
     html.end_form()
 
 def get_edited_value(valuespec):
@@ -3504,13 +3517,6 @@ def get_edited_value(valuespec):
 #   +----------------------------------------------------------------------+
 def mode_configuration(phase):
     valuespec = Integer(title="TCP Port used by Check_MK Agent", size=5, minvalue=1, maxvalue=65535)
-
-    valuespec = Tuple(
-       title="Default filesystem levels",
-       elements = [
-           Integer(title = "Warning (MB)"),
-           Integer(title = "Critical (MB)")]
-    )
 
     if phase == "title":
         return "Global configuration settings for Check_MK"
@@ -4107,7 +4113,7 @@ def mode_edit_ruleconds(phase):
 
     html.write("<table class=itemlist>")
     num_cols = 3
-    for nr in range(config.wato_num_hostspecs):
+    for nr in range(config.wato_num_itemspecs):
         x = nr % num_cols
         if x == 0:
             html.write("<tr>")
@@ -4204,7 +4210,7 @@ def get_rule_conditions(ruleset):
         while True:
             var = "host_%d" % nr
             host = html.var(var)
-            if nr > config.wato_num_hostspecs and not host:
+            if nr > config.wato_num_itemspecs and not host:
                 break
             if host:
                 if negate:

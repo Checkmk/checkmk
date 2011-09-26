@@ -4105,7 +4105,7 @@ def mode_edit_ruleconds(phase):
 
     html.write("<table class=itemlist>")
     num_cols = 3
-    for nr in range(config.wato_num_hostspecs):
+    for nr in range(config.wato_num_itemspecs):
         x = nr % num_cols
         if x == 0:
             html.write("<tr>")
@@ -4202,7 +4202,7 @@ def get_rule_conditions(ruleset):
         while True:
             var = "host_%d" % nr
             host = html.var(var)
-            if nr > config.wato_num_hostspecs and not host:
+            if nr > config.wato_num_itemspecs and not host:
                 break
             if host:
                 if negate:

@@ -1248,7 +1248,7 @@ def in_extraconf_hostlist(hostlist, hostname):
 
     # Migration help: print error if old format appears in config file
     if len(hostlist) == 1 and hostlist[0] == "":
-        raise MKGeneralException('Invalid emtpy entry [ "" ] in configuration')
+        raise MKGeneralException('Invalid empty entry [ "" ] in configuration')
 
     for hostentry in hostlist:
         if len(hostentry) == 0:

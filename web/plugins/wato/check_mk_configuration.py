@@ -12,6 +12,10 @@
 #   | Configuration variables for main.mk                                  |
 #   +----------------------------------------------------------------------+
 
+group = _("Configuration of Checks")
+
+# ignored_checktypes --> Hier brauchen wir noch einen neuen Value-Typ
+
 group = _("Operation mode of Check_MK") 
 
 register_configvar(group,
@@ -21,7 +25,7 @@ register_configvar(group,
                    "not respond within this time, it is considered to be unreachable. "
                    "Note: This does <b>not</b> limit the time the agent needs to "
                    "generate its output."),
-         minvalue = 1.0))
+          minvalue = 1.0))
 
 
 register_configvar(group,
@@ -48,7 +52,7 @@ register_configvar(group,
 
 register_configvar(group,
     "debug_log",
-    Optional(Filename(),
+    Optional(Filename(label = _("Absolute path to log file")),
           title = _("Logfile for debugging errors in checks"),
           label = _("Activate logging errors into a logfile"),
           help = _("If this option is used and set to a filename, Check_MK will create a debug logfile " 
@@ -122,7 +126,16 @@ register_rule(group,
                        "devices if you are unsure about the community."),
               allow_empty = False))
 
-group = _("Check_MK Operation") 
+group = _("Operation mode of Check_MK") 
+
+register_rule(group,
+    "agent_ports",
+    Integer(title = _("TCP port for connection to Check_MK agent"),
+            help = _("This variable allows to specify the TCP port to " 
+                     "be used to connect to the agent on a per-host-basis. "),
+            min_value = 1,
+            max_value = 65535))
+
 
 register_rule(group,
     "dyndns_hosts",

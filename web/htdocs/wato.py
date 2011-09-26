@@ -3449,9 +3449,12 @@ class Tuple(ValueSpec):
             element.validate_value(vp, val)
 
     def validate_datatype(self, value, varprefix):
+        if type(value) != tuple:
+            raise MKUserError(varprefix, 
+            _("The datatype must be a tuple, but is %s") % type(value))
         if len(value) != len(self._elements):
             raise MKUserError(varprefix, 
-            _("The number of elements in the tuple must be exactly %d." % len(self._elements)))
+            _("The number of elements in the tuple must be exactly %d.") % len(self._elements))
 
         for no, (element, val) in enumerate(zip(self._elements, value)):
             vp = varprefix + "_" + str(no)
@@ -3672,8 +3675,8 @@ def mode_rulesets(phase):
     html.write("<table class=data>")
     for groupname in groupnames:
         html.write("<tr><td colspan=4><h3>%s</h3></td></tr>\n" % groupname) 
-        html.write("<tr><th></th><th>" + _("Rule set") + 
-                   "</th><th>" + _("Rules") + "</th></tr>\n")
+        html.write("<tr><th></th><th>" + _("Rule set") + "</th>"
+                   "<th>" + _("Check_MK Variable") + "</th><th>" + _("Rules") + "</th></tr>\n")
         odd = "even"
             
         for ruleset in g_ruleset_groups[groupname]: 
@@ -3689,6 +3692,10 @@ def mode_rulesets(phase):
             html.buttonlink(edit_url, _("Edit"))
             html.write("</td>")
             html.write('<td>%s</td>' % ruleset["title"])
+            varname = ruleset["varname"]
+            if ':' in varname:
+                varname = '%s["%s"]' % tuple(varname.split(":"))
+            html.write('<td><tt>%s</tt></td>' % varname)
             html.write('<td class=number>%d</td>' % num_rules)
             html.write('</tr>')
     html.write("</table>")
@@ -4121,43 +4128,45 @@ def save_rulesets(folder, configured_rulesets):
 def load_rulesets(folder):
     # TODO: folder berücksichtigen
     path = root_dir + "rules.mk" 
+    vars = {
+        "ALL_HOSTS"      : ALL_HOSTS,
+        "ALL_SERVICES"   : [ "" ],
+        "NEGATE"         : NEGATE,
+    }
+    # Prepare empty rulesets so that rules.mk has something to 
+    # append to
+
+    for varname, ruleset in g_rulesets.items():
+        if ':' in varname:
+            dictname, subkey = varname.split(":")
+            vars[dictname] = {}
+        else:
+            vars[varname] = []
+
     try:
-        # Prepare empty rulesets so that rules.mk has something to 
-        # append to
-        vars = {
-            "ALL_HOSTS"      : ALL_HOSTS,
-            "ALL_SERVICES"   : [ "" ],
-            "NEGATE"         : '@negate'
-        }
-
-        for varname, ruleset in g_rulesets.items():
-            if ':' in varname:
-                dictname, subkey = varname.split(":")
-                vars[dictname] = {}
-            else:
-                vars[varname] = []
-
         execfile(path, vars, vars)
-        
-        # Extract only specified rule variables
-        rulevars = {} 
-        for ruleset in g_rulesets.values():
-            varname = ruleset["varname"]
-            # handle extra_host_conf:max_check_attempts
-            if ':' in varname:
-                dictname, subkey = varname.split(":")
-                if dictname in vars:
-                    dictionary = vars[dictname]
-                    if subkey in dictionary:
-                        rulevars[varname] = dictionary[subkey]
-
-            else:
-                if varname in vars:
-                    rulevars[varname] = vars[varname]
-        return rulevars
     except:
-        return {}
+        pass
 
+    # Extract only specified rule variables
+    rulevars = {} 
+    for ruleset in g_rulesets.values():
+        varname = ruleset["varname"]
+        # handle extra_host_conf:max_check_attempts
+        if ':' in varname:
+            dictname, subkey = varname.split(":")
+            if dictname in vars:
+                dictionary = vars[dictname]
+                if subkey in dictionary:
+                    rulevars[varname] = dictionary[subkey]
+            # If this ruleset is not defined in rules.mk use empty list.
+            if varname not in rulevars:
+                rulevars[varname] = []
+
+        else:
+            if varname in vars:
+                rulevars[varname] = vars[varname]
+    return rulevars
 
 
 g_rulesets = {}

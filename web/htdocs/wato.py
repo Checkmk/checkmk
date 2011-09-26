@@ -3647,6 +3647,7 @@ def save_configuration_settings(vars):
         out.write("%s = %r\n" % (varname, value))
     
 
+
 #   +----------------------------------------------------------------------+
 #   |           ____        _        _____    _ _ _                        |
 #   |          |  _ \ _   _| | ___  | ____|__| (_) |_ ___  _ __            |
@@ -3686,10 +3687,12 @@ def mode_rulesets(phase):
 
             odd = odd == "odd" and "even" or "odd" 
             html.write('<tr class="data %s0">' % odd)
+            view_url = make_link([("mode", "view_ruleset"), ("varname", varname)])
             edit_url = make_link([("mode", "edit_ruleset"), ("varname", varname)])
 
             html.write("<td class=buttons>")
             html.buttonlink(edit_url, _("Edit"))
+            html.buttonlink(view_url, _("View"))
             html.write("</td>")
             html.write('<td>%s</td>' % ruleset["title"])
             varname = ruleset["varname"]
@@ -3700,6 +3703,55 @@ def mode_rulesets(phase):
             html.write('</tr>')
     html.write("</table>")
     
+def mode_view_ruleset(phase):
+    varname = html.var("varname")
+    ruleset = g_rulesets[varname]
+
+    if phase == "title":
+        return _("Rule set") + " " + ruleset["title"]
+
+    elif phase == "buttons":
+        html.context_button(_("Back"), make_link([("mode", "rulesets")]), "back")
+        return
+
+    elif phase == "action":
+        return 
+        if html.var("_new"):
+            if not html.check_transaction():
+                return
+
+    # Collect all rulesets
+    inherited_rules = [(g_folder['.path'], load_rulesets(g_folder).get(varname,[]))]
+    pathname = g_folder[".path"]
+    while pathname != "":
+        pathname = os.path.dirname(pathname)
+        inherited_rules.append((pathname, load_rulesets(g_folders[pathname]).get(varname,[])))
+
+    # TODO: childs noch sammeln
+    child_rules = []
+    
+
+    odd = "odd"
+    html.write('<table class=data>')
+    html.write("<tr><th>" + _("Folder") + "</th><th>" + _("Conditions") + "</th><th>" + _("Value") + "</th><th></th></tr>\n")
+    for folder_path, rules in inherited_rules:
+        edit_rowspan = len(rules)
+        for n, rule in enumerate(rules):
+            odd = odd == "odd" and "even" or "odd"
+            value, tag_specs, host_list, item_list = parse_rule(g_rulesets[varname], rule)
+            html.write('<tr class="data %s0">' % odd)
+            html.write('<td>%s</td><td>' % folder_path)
+            render_conditions(tag_specs, host_list, varname, n+1, g_folders[folder_path])
+            
+            edit_value_url = make_link_to([("mode", "edit_rulevalue"), ("varname", varname), ("rulenr", n+1)], g_folders[folder_path])
+            html.write('<td><a href="%s">%s</a></td>\n' % (edit_value_url, g_rulesets[varname]["valuespec"].value_to_text(value)))
+            if n==0:
+                edit_rule_url = make_link_to([("mode", "edit_ruleset"), ("varname", varname)], g_folders[folder_path])
+                html.write("<td class=buttons rowspan=%d>" %  edit_rowspan)
+                html.buttonlink(edit_rule_url, _("Edit"))
+                html.write("</td>")
+            html.write('</tr>')
+    html.write('</table>')
 
 def mode_edit_ruleset(phase): 
     varname = html.var("varname")
@@ -3878,9 +3930,9 @@ def tag_alias(tag):
             if t[0] == tag:
                 return t[1]
 
-def render_conditions(tagspecs, host_list, varname, rulenr):
+def render_conditions(tagspecs, host_list, varname, rulenr, folder=None):
     html.write('<div class="conditions box" %s><ul>' % 
-      ruleeditor_hover_code(varname, rulenr, "edit_ruleconds", None))
+      ruleeditor_hover_code(varname, rulenr, "edit_ruleconds", None, folder))
 
     # Host tags
     for tagspec in tagspecs:
@@ -3926,11 +3978,11 @@ def render_conditions(tagspecs, host_list, varname, rulenr):
 
     html.write('</ul></div>')
 
-def ruleeditor_hover_code(varname, rulenr, mode, boolval):
+def ruleeditor_hover_code(varname, rulenr, mode, boolval, folder=None):
     if boolval in [ True, False ]:
         url = html.makeactionuri([("_rulenr", rulenr), ("_action", "toggle")])
     else:
-        url = make_link([("mode", mode), ("varname", varname), ("rulenr", rulenr) ])
+        url = make_link_to([("mode", mode), ("varname", varname), ("rulenr", rulenr)], folder or g_folder)
     return \
        ' onmouseover="this.style.cursor=\'pointer\'; this.style.backgroundColor=\'#b7ced3\';" ' \
        ' onmouseout="this.style.cursor=\'auto\'; this.style.backgroundColor=\'#a7bec3\';" ' \
@@ -4127,7 +4179,7 @@ def save_rulesets(folder, configured_rulesets):
 
 def load_rulesets(folder):
     # TODO: folder berücksichtigen
-    path = root_dir + "rules.mk" 
+    path = root_dir + "/" + folder[".path"] + "/" + "rules.mk"
     vars = {
         "ALL_HOSTS"      : ALL_HOSTS,
         "ALL_SERVICES"   : [ "" ],
@@ -4374,6 +4426,10 @@ def call_hook_activate_changes():
     if hook_registered('activate-changes'):
         call_hooks("activate-changes", collect_hosts(g_root_folder))
 
+# DEBUG utility
+def debug(info):
+    html.write("<pre>" + pprint.pformat(info) + "</pre><br>")
+
 #   +----------------------------------------------------------------------+
 #   |                   ____  _             _                              |
 #   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
@@ -4403,6 +4459,7 @@ mode_functions = {
    "configuration"  : mode_configuration,
    "edit_configvar" : mode_edit_configvar,
    "rulesets"       : mode_rulesets,
+   "view_ruleset"   : mode_view_ruleset,
    "edit_ruleset"   : mode_edit_ruleset,
    "edit_rulevalue" : mode_edit_rulevalue,
    "edit_ruleconds" : mode_edit_ruleconds,

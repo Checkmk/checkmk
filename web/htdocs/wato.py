@@ -3731,7 +3731,7 @@ def mode_edit_ruleset(phase):
             else:
                 new_rule.append(ALL_HOSTS) # bottom: default to catch-all rule
             if ruleset["itemtype"]:
-                new_rule.append([])
+                new_rule.append([""])
             new_rule = tuple(new_rule)
             if html.var("_new") == "top":
                 rules[0:0] = [new_rule]

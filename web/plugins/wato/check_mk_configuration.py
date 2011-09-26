@@ -124,6 +124,15 @@ register_rule(group,
             minvalue = 1),
     itemtype = "service")
 
+register_rule(group,
+    "ignored_services",
+    title = _("Ignored services"),
+    help = _("Services that are declared as <u>ignored</u> by this rule set will not be added "
+             "to a host during inventory (automatic service detection). Services that already "
+             "exist will continued to be monitored but be marked as obsolete in the service "
+             "list of a host."),
+    itemtype = "service")
+
 group = _("SNMP")
 
 register_rule(group,

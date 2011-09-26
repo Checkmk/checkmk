@@ -116,6 +116,23 @@ register_rule(group,
                      "in a hard down state"),
             minvalue = 1))
 
+register_rule(group, 
+    "extra_service_conf:max_check_attempts",
+    Integer(title = _("Maximum number of check attempts for service"), 
+            help = _("The maximum number of failed checks until a service problem state will "
+                     "be considered as <u>hard</u>. Only hard state trigger notifications. "),
+            minvalue = 1),
+    itemtype = "service")
+
+register_rule(group,
+    "ignored_services",
+    title = _("Ignored services"),
+    help = _("Services that are declared as <u>ignored</u> by this rule set will not be added "
+             "to a host during inventory (automatic service detection). Services that already "
+             "exist will continued to be monitored but be marked as obsolete in the service "
+             "list of a host."),
+    itemtype = "service")
+
 group = _("SNMP")
 
 register_rule(group,

@@ -3790,7 +3790,8 @@ def ip_to_hostname(ip):
 
 # Now - at last - we can read in the user's configuration files
 def all_nonfunction_vars():
-    return set([ name for name,value in globals().items() if name[0] != '_' and type(value) != type(lambda:0) ])
+    return set([ name for name,value in globals().items() 
+                if name[0] != '_' and type(value) != type(lambda:0) ])
 
 def marks_hosts_with_path(old, all, filename):
     if not filename.startswith(check_mk_configdir):
@@ -3826,6 +3827,10 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
     if os.path.exists(local_mk):
         list_of_files.append(local_mk)
 
+    global FILE_PATH, FOLDER_PATH
+    FILE_PATH = None
+    FOLDER_PATH = None
+
     vars_before_config = all_nonfunction_vars()
     for _f in list_of_files:
         # Hack: during parent scan mode we must not read in old version of parents.mk!
@@ -3835,6 +3840,15 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
             if opt_debug:
                 sys.stderr.write("Reading config file %s...\n" % _f)
             _old_all_hosts = all_hosts[:]
+            # Make the config path available as a global variable to
+            # be used within the configuration file
+            if _f.startswith( check_mk_configdir + "/"):
+                FILE_PATH = _f[len(check_mk_configdir) + 1:]
+                FOLDER_PATH = os.path.dirname(FILE_PATH)
+            else:
+                FILE_PATH = None
+                FOLDER_PATH = None
+                
             execfile(_f, globals(), globals())
             marks_hosts_with_path(_old_all_hosts, all_hosts, _f)
         except Exception, e:

@@ -2116,6 +2116,11 @@ table.add_snapin i {
     width: 90px;
 }
 
+.wato table.itemlist td {
+    margin: 0;
+    padding: 0;
+}
+
 /* 
    ____                                    
    |  _ \ _ __ ___   __ _ _ __ ___  ___ ___ 

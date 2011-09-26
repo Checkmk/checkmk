@@ -3229,9 +3229,23 @@ class Integer(ValueSpec):
  
     def validate_value(self, value, varprefix):
         if self._minvalue != None and value < self._minvalue:
-            raise MKUserError(varprefix, _("The minimum allowed value is %d." % self._minvalue))
+            raise MKUserError(varprefix, _("%s is too low. The minimum allowed value is %s." % (
+                                     value, self._minvalue)))
         if self._maxvalue != None and value > self._maxvalue:
-            raise MKUserError(varprefix, _("The maximum allowed value is %d." % self._maxvalue))
+            raise MKUserError(varprefix, _("%s is too high. The maximum allowed value is %s." % (
+                                     value, self._maxvalue)))
+
+class Percentage(Integer):
+    def __init__(self, **kwargs):
+        Integer.__init__(self, **kwargs)
+        if "min_value" not in kwargs:
+            self._minvalue = 0
+        if "max_value" not in kwargs:
+            self._maxvalue = 101
+
+    def value_to_text(self, value):
+        return "%d%%" % value
+
 
 # Editor for a line of text
 class TextAscii(ValueSpec):
@@ -3467,7 +3481,7 @@ class Tuple(ValueSpec):
     def validate_value(self, value, varprefix):
         for no, (element, val) in enumerate(zip(self._elements, value)):
             vp = varprefix + "_" + str(no)
-            element.validate_value(vp, val)
+            element.validate_value(val, vp)
 
     def validate_datatype(self, value, varprefix):
         if type(value) != tuple:
@@ -3480,6 +3494,66 @@ class Tuple(ValueSpec):
         for no, (element, val) in enumerate(zip(self._elements, value)):
             vp = varprefix + "_" + str(no)
             element.validate_datatype(val, vp)
+
+class Dictionary(ValueSpec):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._elements = kwargs["elements"]
+
+    def render_input(self, varprefix, value):
+        for param, vs in self._elements:
+            vp = varprefix + "_" + param
+            div_id = vp
+            html.checkbox(vp + "_USE", param in value,
+                          onclick="wato_toggle_option(this, %r)" % div_id)
+            html.write(" %s<br>" % vs.title())
+            html.write('<ul><div id="%s" style="display: %s">' % ( 
+                div_id, param not in value and "none" or ""))
+            vs.render_input(vp, value.get(param, vs.default_value()))
+            html.write("</div></ul>")
+
+    def set_focus(self, varprefix):
+        self._elements[0][1].set_focus(varprefix + self._elements[0][0])
+
+    def default_value(self):
+        return {}
+
+    def value_to_text(self, value):
+        parts = []
+        for param, vs in self._elements:
+            if param in value:
+                parts.append("%s: %s" % (vs.title(), vs.value_to_text(value[param])))
+        return ", ".join(parts)
+
+    def from_html_vars(self, varprefix):
+        value = {}
+        for param, vs in self._elements:
+            vp = varprefix + "_" + param
+            if html.get_checkbox(vp + "_USE"):
+                value[param] = vs.from_html_vars(vp)
+        return value
+
+    def validate_datatype(self, value, varprefix):
+        if type(value) != dict:
+            raise MKUserError(varprefix, _("The type must be a dictionary, but it is a %s") % type(value))
+
+        for param, vs in self._elements:
+            if param in value:
+                vp = varprefix + "_" + param
+                vs.validate_datatype(value[param], vp)
+
+        # Check for exceeding keys
+        allowed_keys = [ p for (p,v) in self._elements ]
+        for param in value.keys():
+            if param not in allowed_keys:
+                raise MKUserError(varprefix, _("Undefined key '%s' in the dictionary. Allowed are %s.") %
+                        ", ".join(allowed_keys))
+
+    def validate_value(self, value, varprefix):
+        for param, vs in self._elements:
+            if param in value:
+                vp = varprefix + "_" + param
+                vs.validate_value(value[param], vp)
             
 
 def edit_value(valuespec, value):

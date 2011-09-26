@@ -107,21 +107,6 @@ register_configvar(group,
 #   | Declaration of rules to be defined in main.mk or in folders          |
 #   +----------------------------------------------------------------------+
 
-group = _("Check Parameters")
-register_rule(group, 
-    "checkgroup_parameters:cpu_load",
-    Tuple(title = _("Levels for CPU load (not utilization!)"), 
-          help = _("The CPU load of a system is the number of processes currently being "
-                   "in the state <u>running</u>, i.e. either they occupy a CPU or wait "
-                   "for one. The <u>load average</u> is the averaged CPU load over the last 1, "
-                   "5 or 15 minutes. The following levels will be applied on the average "
-                   "load. On Linux system the 15-minute average load is used when applying "
-                   "those levels."),
-          elements = [
-              Integer(title = _("Warning at a load of")),
-              Integer(title = _("Critical at a load of"))]),
-    )
-
 group = _("Monitoring Configuration") 
 
 register_rule(group, 
@@ -165,8 +150,8 @@ register_rule(group,
     Integer(title = _("TCP port for connection to Check_MK agent"),
             help = _("This variable allows to specify the TCP port to " 
                      "be used to connect to the agent on a per-host-basis. "),
-            min_value = 1,
-            max_value = 65535))
+            minvalue = 1,
+            maxvalue = 65535))
 
 
 register_rule(group,
@@ -177,3 +162,55 @@ register_rule(group,
              "activate the changes. In some rare cases DNS lookups must be done each time "
              "a host is connected to, e.g. when the IP address of the host is dynamic "
              "and can change."))
+
+#   +----------------------------------------------------------------------+
+#   |                      ____ _               _                          |
+#   |                     / ___| |__   ___  ___| | __                      |
+#   |                    | |   | '_ \ / _ \/ __| |/ /                      |
+#   |                    | |___| | | |  __/ (__|   <                       |
+#   |                     \____|_| |_|\___|\___|_|\_\                      |
+#   |                                                                      |
+#   |        ____                                _                         |
+#   |       |  _ \ __ _ _ __ __ _ _ __ ___   ___| |_ ___ _ __ ___          |
+#   |       | |_) / _` | '__/ _` | '_ ` _ \ / _ \ __/ _ \ '__/ __|         |
+#   |       |  __/ (_| | | | (_| | | | | | |  __/ ||  __/ |  \__ \         |
+#   |       |_|   \__,_|_|  \__,_|_| |_| |_|\___|\__\___|_|  |___/         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Rules for configuring parameters of checks (services)                |
+#   +----------------------------------------------------------------------+
+
+group = _("Check Parameters")
+register_rule(group, 
+    "checkgroup_parameters:filesystem",
+    Dictionary(title = _("Levels and parameters for filesystem monitoring"),
+        elements = [
+            ( "levels", 
+              Tuple(
+                  title = _("Levels for the used space"),
+                  elements = [
+                      Percentage(title = _("Warning at"),  label = _("% usage")),  
+                      Percentage(title = _("Critical at"), label = _("% usage"))])),
+            (  "magic", 
+               Float(
+                  title = _("Magic factor"),
+                  minvalue = 0.1,
+                  maxvalue = 1.0)),
+        ])
+    )
+
+register_rule(group, 
+    "checkgroup_parameters:cpu_load",
+    Tuple(title = _("Levels for CPU load (not utilization!)"), 
+          help = _("The CPU load of a system is the number of processes currently being "
+                   "in the state <u>running</u>, i.e. either they occupy a CPU or wait "
+                   "for one. The <u>load average</u> is the averaged CPU load over the last 1, "
+                   "5 or 15 minutes. The following levels will be applied on the average "
+                   "load. On Linux system the 15-minute average load is used when applying "
+                   "those levels."),
+          elements = [
+              Integer(title = _("Warning at a load of")),
+              Integer(title = _("Critical at a load of"))]),
+    )
+
+

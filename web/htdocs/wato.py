@@ -3630,9 +3630,10 @@ def mode_configuration(phase):
     groupnames.sort()
     html.write("<table class=data>")
     for groupname in groupnames:
-        html.write("<tr><td colspan=4><h3>%s</h3></td></tr>\n" % groupname) 
+        html.write("<tr><td colspan=5><h3>%s</h3></td></tr>\n" % groupname) 
         html.write("<tr><th></th><th>" + _("Configuration variable") + 
-                   "</th><th>" + _("Default") + "</th><th>" + _("Your setting") + "</th></tr>\n")
+                   "</th><th>" +_("Check_MK variable") + "</th><th>" + 
+                   _("Default") + "</th><th>" + _("Your setting") + "</th></tr>\n")
         odd = "even"
             
         for varname, valuespec in g_configvar_groups[groupname]: 
@@ -3656,11 +3657,12 @@ def mode_configuration(phase):
             html.write("</td>")
 
             html.write('<td>%s</td>' % valuespec.title())
+            html.write('<td><tt>%s</tt></td>' % varname)
             if varname in current_settings: 
                 html.write('<td class=inherited>%s</td>' % valuespec.value_to_text(defaultvalue))
                 html.write('<td><b>%s</b></td>'          % valuespec.value_to_text(current_settings[varname]))
             else:
-                html.write('<td><b>%s</b></td>'                 % valuespec.value_to_text(defaultvalue))
+                html.write('<td><b>%s</b></td>'          % valuespec.value_to_text(defaultvalue))
                 html.write('<td></td>')
             html.write('</tr>')
     html.write("</table>")
@@ -3929,7 +3931,8 @@ def mode_edit_ruleset(phase):
 
 
     html.write("<h3>%s</h3>\n" % ruleset["title"])
-    html.write("<p>%s</p>\n" % ruleset["help"])
+    if ruleset["help"]:
+        html.write("<p>%s</p>\n" % ruleset["help"])
     all_configured_rulesets = load_rulesets(g_folder) 
     
     rules = all_configured_rulesets.get(varname, [])

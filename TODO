@@ -1,0 +1,12 @@
+Zu tun bei wato-ng:
+
+[modules]
+* checkgroup ausgeben bei cmk -L, cmk -M.
+* cmk -M soll Check-Parameterbeschreibungen automatisch auslesen
+
+[web]
+* Editieren von Regeln direkt bei einem Host (Ausnahmen)
+* Diagnosefunktion: wenn man eine Regelkette sieht kann man diese
+  per Knopfdruck durchrechnen lassen und sieht dann, welche
+  hosts von welcher Regel erfasst werden.
+

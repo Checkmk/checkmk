@@ -5,4 +5,7 @@ Migration notes for wato-ng:
 3. wato_host_tags anstelle von host_tags. Das id-Feld ist
    jetzt zwingend vorgeschrieben.
 
+Dokumentation:
 
+checkgroup_parameters erklären. Evtl. noch erklären, wie man die Checkgroup
+herausbekommt. cmk -L soll diese ausgeben. cmk -M soll die auch ausgeben.

@@ -507,6 +507,14 @@ def rewrite_config_file(folder):
     save_hosts(folder)
 
 
+# returns the aliaspath of the given folder
+def get_folder_aliaspath(folder):
+    aliaspath = [folder['title']]
+    while '.parent' in folder:
+        folder = folder['.parent']
+        aliaspath.insert(0,folder['title'])
+    return '/'.join(aliaspath)
+
 #   +----------------------------------------------------------------------+
 #   |                   _____     _     _                                  |
 #   |                  |  ___|__ | | __| | ___ _ __ ___                    |
@@ -3722,27 +3730,27 @@ def mode_view_ruleset(phase):
                 return
 
     # Collect all rulesets
-    inherited_rules = [(g_folder['.path'], load_rulesets(g_folder).get(varname,[]))]
-    pathname = g_folder[".path"]
-    while pathname != "":
-        pathname = os.path.dirname(pathname)
-        inherited_rules.append((pathname, load_rulesets(g_folders[pathname]).get(varname,[])))
-
+    inherited_rules = [(g_folder['.path'], get_folder_aliaspath(g_folder), load_rulesets(g_folder).get(varname,[]))]
+    tmp_folder = g_folder
+    while '.parent' in tmp_folder:
+        tmp_folder = tmp_folder['.parent']
+        inherited_rules.append((tmp_folder['.path'], get_folder_aliaspath(tmp_folder), load_rulesets(tmp_folder).get(varname,[])))
+         
     # TODO: childs noch sammeln
     child_rules = []
-    
 
     odd = "odd"
     html.write('<table class=data>')
     html.write("<tr><th>" + _("Folder") + "</th><th>" + _("Conditions") + "</th><th>" + _("Value") + "</th><th></th></tr>\n")
-    for folder_path, rules in inherited_rules:
+    for folder_path, alias_path, rules in inherited_rules:
         edit_rowspan = len(rules)
         for n, rule in enumerate(rules):
             odd = odd == "odd" and "even" or "odd"
             value, tag_specs, host_list, item_list = parse_rule(g_rulesets[varname], rule)
             html.write('<tr class="data %s0">' % odd)
-            html.write('<td>%s</td><td>' % folder_path)
-            render_conditions(tag_specs, host_list, varname, n+1, g_folders[folder_path])
+
+            html.write('<td>%s</td><td>' % alias_path)
+            render_conditions(g_rulesets[varname], tag_specs, host_list, item_list, varname, n+1, g_folders[folder_path])
             
             edit_value_url = make_link_to([("mode", "edit_rulevalue"), ("varname", varname), ("rulenr", n+1)], g_folders[folder_path])
             html.write('<td><a href="%s">%s</a></td>\n' % (edit_value_url, g_rulesets[varname]["valuespec"].value_to_text(value)))

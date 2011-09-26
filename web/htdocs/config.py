@@ -468,6 +468,8 @@ wato_enabled = True
 wato_host_tags = []
 wato_hide_filenames = True
 wato_max_snapshots = 50
+wato_num_hostspecs = 12
+wato_num_itemspecs = 15
 
 
 #     ____ ___ 

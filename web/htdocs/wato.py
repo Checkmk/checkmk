@@ -112,8 +112,9 @@ var_dir      = defaults.var_dir + "/wato/"
 log_dir      = var_dir + "log/"
 snapshot_dir = var_dir + "/snapshots/"
 
-ALL_HOSTS = [ '@all' ]
-NEGATE    = '@negate'
+ALL_HOSTS    = [ '@all' ]
+ALL_SERVICES = [ "" ]
+NEGATE       = '@negate'
 
 
 #   +----------------------------------------------------------------------+
@@ -3806,6 +3807,7 @@ def rule_button(action, rulenr):
 
 
 def parse_rule(ruleset, rule):
+    # Extract value from front, if rule has a value
     if ruleset["valuespec"]:
         value = rule[0]
         rule = rule[1:]
@@ -3816,13 +3818,22 @@ def parse_rule(ruleset, rule):
         else:
             value = True
 
+    # Extract liste of items from back, if rule has items
+    if ruleset["itemtype"]:
+        item_list = rule[-1]
+        rule = rule[:-1]
+    else:
+        item_list = None
+
+    # Rest is host list or tag list + host list
     if len(rule) == 1:
         tag_specs = []
         host_list = rule[0]
     else:
         tag_specs = rule[0]
         host_list = rule[1]
-    return value, tag_specs, host_list, None # (item_list currently not supported)
+
+    return value, tag_specs, host_list, item_list # (item_list currently not supported)
 
 def construct_rule(ruleset, value, tag_specs, host_list, item_list):
     if ruleset["valuespec"]:
@@ -3854,7 +3865,7 @@ def render_rule(ruleset, rule, rulenr, islast):
     html.write('<div class="conditions title">%s</div>'  % _("Preconditions"))
     html.write('<div class="value title">%s</div>' % _("Value"))
 
-    render_conditions(tag_specs, host_list, varname, rulenr)
+    render_conditions(ruleset, tag_specs, host_list, item_list, varname, rulenr)
     if ruleset["valuespec"]:
         value_html = ruleset["valuespec"].value_to_text(value)
         boolval = None # no boolean ruleset
@@ -3878,7 +3889,7 @@ def tag_alias(tag):
             if t[0] == tag:
                 return t[1]
 
-def render_conditions(tagspecs, host_list, varname, rulenr):
+def render_conditions(ruleset, tagspecs, host_list, item_list, varname, rulenr):
     html.write('<div class="conditions box" %s><ul>' % 
       ruleeditor_hover_code(varname, rulenr, "edit_ruleconds", None))
 
@@ -3895,10 +3906,10 @@ def render_conditions(tagspecs, host_list, varname, rulenr):
         html.write('<li class="condition">')
         alias = tag_alias(tag)
         if alias:
-            html.write(_("Host is "))
+            html.write(_("Host is of type "))
             if negate:
                 html.write("<b>" + _("not") + "</b> ")
-            html.write(alias)
+            html.write("<b>" + alias + "</b>")
         else:
             if negate:
                 html.write(_("Host has <b>not</b> the tag ") + "<tt>" + tag + "</tt>")
@@ -3912,10 +3923,12 @@ def render_conditions(tagspecs, host_list, varname, rulenr):
         if host_list == []:
             condition = _("This rule does <b>never</b> apply!")
         elif host_list[-1] != ALL_HOSTS[0]:
+            tt_list = [ "<tt><b>%s</b></tt>" % t for t in host_list ]
             if len(host_list) == 1:
-                condition = _("Host name is %s") % host_list[0]
+                condition = _("Host name is %s") % tt_list[0]
             else:
-                condition = _("Host is one of ") + ", ".join(host_list)
+                condition = _("Host name is ") + ", ".join(tt_list[:-1])
+                condition += _(" or ") + tt_list[-1]
         elif host_list[0][0] == '!':
             hosts = [ h[1:] for h in host_list[:-1] ]
             condition = _("Host is <b>not</b> one of ") + ", ".join(hosts)
@@ -3923,6 +3936,14 @@ def render_conditions(tagspecs, host_list, varname, rulenr):
         # plus ALL_HOSTS.
         if condition:
             html.write('<li class="condition">%s</li>' % condition)
+
+    # Item list
+    if ruleset["itemtype"] == "service":
+        if item_list != ALL_SERVICES:
+            tt_list = [ "<tt><b>%s</b></tt>" % t for t in item_list ]
+            condition = _("Service name begins with ") + " or with ".join(tt_list)
+            html.write('<li class="condition">%s</li>' % condition)
+
 
     html.write('</ul></div>')
 
@@ -3959,7 +3980,7 @@ def mode_edit_ruleconds(phase):
         if html.check_transaction():
             # re-construct rule from HTML variables
             value, tag_specs, host_list, item_list = parse_rule(ruleset, rule)
-            tag_specs, host_list = get_rule_conditions()
+            tag_specs, host_list, item_list = get_rule_conditions(ruleset)
             rule = construct_rule(ruleset, value, tag_specs, host_list, item_list)
             configured_ruleset[rulenr - 1] = rule
             save_rulesets(g_folder, configured_rulesets)
@@ -3975,6 +3996,8 @@ def mode_edit_ruleconds(phase):
 
     html.begin_form("condition")
     html.write("<table class=form>")
+
+    # Host tags
     html.write("<tr><td class=legend>" + _("Host tags") + "<br><i>")
     html.write(_("The rule will only be applied to hosts fullfulling all of "
                  "of the host tag conditions listed here, even if they appear "
@@ -4005,6 +4028,7 @@ def mode_edit_ruleconds(phase):
         html.write("<br>")
     html.write("</td></tr>")
 
+    # Explicit hosts / ALL_HOSTS
     html.write("<tr><td class=legend>")
     html.write(_("Explicit hosts"))
     html.write("<br><i>")
@@ -4016,32 +4040,90 @@ def mode_edit_ruleconds(phase):
 
     checked = host_list != ALL_HOSTS
     html.checkbox("explicit_hosts", checked, onclick="wato_toggle_option(this, %r)" % div_id)
-    html.write(" " + _("Specify explicit host names") + "<br>")
-    html.write('<div id="%s" style="display: %s"><br>' % (
+    html.write(" " + _("Specify explicit host names"))
+    html.write('<div id="%s" style="display: %s">' % (
             div_id, not checked and "none" or ""))
     negate_hosts = len(host_list) > 0 and host_list[0].startswith("!")
 
-    num_hosts = 10
-    for nr in range(0, num_hosts):
+    html.write("<table class=itemlist>")
+    num_cols = 3
+    for nr in range(config.wato_num_hostspecs):
+        x = nr % num_cols
+        if x == 0:
+            html.write("<tr>")
         if nr < len(host_list) and host_list[nr] != ALL_HOSTS[0]:
             host_name = host_list[nr].strip("!")
         else:
             host_name = ""
+        html.write("<td>")
         html.text_input("host_%d" % nr, host_name)
-        html.write(" &nbsp; ")
-        html.write("<br>")
-    html.write("<br>")
+        html.write("</td>")
+        if x == num_cols - 1:
+            html.write("</tr>")
+    while x < num_cols - 1:
+        html.write("<td></td>")
+        if x == num_cols - 1:
+            html.write("</tr>")
+        x += 1
+    html.write("</table>")
     html.checkbox("negate_hosts", negate_hosts)
-    html.write(" " + _("<b>Negate:</b> make Rule apply for <b>all but</b> the above hosts") + "<br><br>\n")
+    html.write(" " + _("<b>Negate:</b> make Rule apply for <b>all but</b> the above hosts") + "\n")
     html.write("</div></td></tr>")
+
+    # Itemlist
+    itemtype = ruleset["itemtype"]
+    if itemtype:
+        html.write("<tr><td class=legend>")
+        if itemtype == "service":
+            html.write(_("Services") + "<br><i>" + 
+                       _("Specify a list of service patterns this rule shall apply to. " 
+                         "The patterns must match the <b>beginning</b> of the service "
+                         "in question. Adding a <tt>$</tt> to the end forces an excact "
+                         "match. Pattern use <b>regular expressions</b>. A <tt>.*</tt> will "
+                         "match an arbitrary text.") + "</i>")
+        elif itemtype == "checktype":
+            html.write(_("Check types"))
+        elif itemtype == "checkitem":
+            html.write(_("Check items"))
+        else:
+            raise MKGeneralException("Invalid item type '%s'" % itemtype)
+        html.write("</td><td class=content>")
+        if itemtype == "service":
+            checked = len(item_list) > 0 and item_list[0] != '""'
+            div_id = "itemlist"
+            html.checkbox("explicit_services", checked, onclick="wato_toggle_option(this, %r)" % div_id)
+            html.write(" " + _("Specify explicit services"))
+            html.write('<div id="%s" style="display: %s">' % (
+                div_id, not checked and "none" or ""))
+            html.write("<table class=itemlist>")
+            num_cols = 3
+            for nr in range(config.wato_num_itemspecs):
+                x = nr % num_cols
+                if x == 0:
+                    html.write("<tr>")
+                html.write("<td>")
+                item = nr < len(item_list) and item_list[nr] or ""
+                html.text_input("item_%d" % nr, item)
+                html.write("</td>")
+                if x == num_cols - 1:
+                    html.write("</tr>")
+            while x < num_cols - 1:
+                html.write("<td></td>")
+                if x == num_cols - 1:
+                    html.write("</tr>")
+                x += 1
+            html.write("</table></div>")
+                
+    # SAVE
     html.write("<tr><td class=buttons colspan=2>")
     html.button("_save", _("Save"))
     html.write("</td></tr>")
+
     html.write("</table>")
     html.hidden_fields()
     html.end_form()
 
-def get_rule_conditions():
+def get_rule_conditions(ruleset):
     # Tag list
     tag_list = []
     for id, title, tags in config.wato_host_tags:
@@ -4062,7 +4144,7 @@ def get_rule_conditions():
         while True:
             var = "host_%d" % nr
             host = html.var(var)
-            if nr > 10 and not host:
+            if nr > config.wato_num_hostspecs and not host:
                 break
             if host:
                 if negate:
@@ -4075,7 +4157,27 @@ def get_rule_conditions():
         elif len(host_list) == 0 and negate:
             host_list = ALL_HOSTS # equivalent
 
-    return tag_list, host_list
+    # Item list
+    itemtype = ruleset["itemtype"]
+    if itemtype == "service":
+        explicit = html.get_checkbox("explicit_services")
+        if not explicit:
+            item_list = [ "" ]
+        else:
+            nr = 0
+            item_list = []
+            while True:
+                var = "item_%d" % nr
+                item = html.var(var)
+                if nr > config.wato_num_itemspecs and not item:
+                    break
+                if item:
+                    item_list.append(item)
+                nr += 1
+    else:
+        item_list = None
+
+    return tag_list, host_list, item_list
 
 def mode_edit_rulevalue(phase):
     rulenr = int(html.var("rulenr"))
@@ -4177,7 +4279,7 @@ def register_rule(group, varname, valuespec = None, title = None,
         "group"     : group, 
         "varname"   : varname, 
         "valuespec" : valuespec, 
-        "itemtype"  : itemtype, 
+        "itemtype"  : itemtype, # None, "service", "checktype" or "checkitem"
         "match"     : match,
         "title"     : title or valuespec.title(),
         "help"      : help or valuespec.help(),

@@ -116,6 +116,14 @@ register_rule(group,
                      "in a hard down state"),
             minvalue = 1))
 
+register_rule(group, 
+    "extra_service_conf:max_check_attempts",
+    Integer(title = _("Maximum number of check attempts for service"), 
+            help = _("The maximum number of failed checks until a service problem state will "
+                     "be considered as <u>hard</u>. Only hard state trigger notifications. "),
+            minvalue = 1),
+    itemtype = "service")
+
 group = _("SNMP")
 
 register_rule(group,

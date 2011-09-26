@@ -513,7 +513,7 @@ def get_folder_aliaspath(folder):
     while '.parent' in folder:
         folder = folder['.parent']
         aliaspath.insert(0,folder['title'])
-    return '/'.join(aliaspath)
+    return ' / '.join(aliaspath)
 
 #   +----------------------------------------------------------------------+
 #   |                   _____     _     _                                  |
@@ -2349,13 +2349,13 @@ def wato_html_head(title):
     html.header(title)
     html.write("<div class=wato>\n")
 
-def render_folder_path(the_folder = 0, link_to_last = False):
+def render_folder_path(the_folder = 0, link_to_last = False, urlvars = []):
     if the_folder == 0:
         the_folder = g_folder
 
     def render_component(folder):
         return '<a href="%s">%s</a>' % (
-               html.makeuri_contextless([("folder", folder[".path"])]), folder["title"])
+               html.makeuri_contextless([("folder", folder[".path"])] + urlvars), folder["title"])
 
     folders = []
     folder = the_folder.get(".parent")
@@ -3689,6 +3689,16 @@ def mode_rulesets(phase):
     groupnames = g_ruleset_groups.keys()
     groupnames.sort()
     html.write("<table class=data>")
+
+    # dict of varname: rule_numbers
+    inherited_rules = {}
+    tmp_folder = g_folder
+    while '.parent' in tmp_folder:
+        tmp_folder = tmp_folder['.parent']
+        tmp_rulesets = load_rulesets(tmp_folder)
+        for var, items in tmp_rulesets.items():
+            inherited_rules[var] = inherited_rules.get(var,0) + len(items)
+
     for groupname in groupnames:
         html.write("<tr><td colspan=4><h3>%s</h3></td></tr>\n" % groupname) 
         html.write("<tr><th></th><th>" + _("Rule set") + "</th>"
@@ -3702,19 +3712,20 @@ def mode_rulesets(phase):
 
             odd = odd == "odd" and "even" or "odd" 
             html.write('<tr class="data %s0">' % odd)
-            view_url = make_link([("mode", "view_ruleset"), ("varname", varname)])
-            edit_url = make_link([("mode", "edit_ruleset"), ("varname", varname)])
 
             html.write("<td class=buttons>")
+            edit_url = make_link([("mode", "edit_ruleset"), ("varname", varname)])
             html.buttonlink(edit_url, _("Edit"))
-            html.buttonlink(view_url, _("View"))
+            if num_rules > 0 or inherited_rules.get(varname, 0) > 0:
+                view_url = make_link([("mode", "view_ruleset"), ("varname", varname)])
+                html.buttonlink(view_url, _("View"))
             html.write("</td>")
             html.write('<td>%s</td>' % ruleset["title"])
             varname = ruleset["varname"]
-            if ':' in varname:
-                varname = '%s["%s"]' % tuple(varname.split(":"))
-            html.write('<td><tt>%s</tt></td>' % varname)
-            html.write('<td class=number>%d</td>' % num_rules)
+            
+            display_varname = ':' in varname and '%s["%s"]' % tuple(varname.split(":")) or varname
+            html.write('<td><tt>%s</tt></td>' % display_varname)
+            html.write('<td class=number>%d / %d</td>' % (num_rules, inherited_rules.get(varname,0)))
             html.write('</tr>')
     html.write("</table>")
     
@@ -3735,6 +3746,8 @@ def mode_view_ruleset(phase):
             if not html.check_transaction():
                 return
 
+    
+    render_folder_path(0, False, [('mode','view_ruleset'),('varname',varname)])
     # Collect all rulesets
     inherited_rules = [(g_folder['.path'], get_folder_aliaspath(g_folder), load_rulesets(g_folder).get(varname,[]))]
     tmp_folder = g_folder
@@ -3744,6 +3757,16 @@ def mode_view_ruleset(phase):
          
     # TODO: childs noch sammeln
     child_rules = []
+
+    one_rule_set = False
+    for folder_path, alias_path, rules in inherited_rules:
+        if len(rules) > 0:
+            one_rule_set = True
+            break
+
+    if not one_rule_set:
+        html.write("<div class=info>" + _("There are no rules configured in this folder.") + "</div>")
+        return
 
     odd = "odd"
     html.write('<table class=data>')
@@ -4279,7 +4302,7 @@ def mode_edit_rulevalue(phase):
 
 def save_rulesets(folder, configured_rulesets):
     # TODO: folder berücksichtigen
-    path = root_dir + "rules.mk" 
+    path = root_dir + '/' + folder['.path'] + '/' + "rules.mk" 
     out = file(path, "w") 
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
 

@@ -82,5 +82,6 @@ def check_df(mountpoint, params, info):
     return df_check_filesystem(g_hostname, mountpoint, size_mb, avail_mb, params)
 
 
-check_info['df']        = (check_df, "fs_%s", 1, inventory_df)
+check_info['df']           = (check_df, "fs_%s", 1, inventory_df)
 check_default_levels['df'] = "filesystem_default_levels"
+checkgroup_of['df']        = "filesystem"

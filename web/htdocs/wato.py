@@ -1188,6 +1188,8 @@ def mode_edithost(phase, new):
         if not new:
             html.context_button(_("Services"), 
                   make_link([("mode", "inventory"), ("host", hostname)]))
+            html.context_button(_("Rulesets"),  
+                  make_link([("mode", "rulesets"), ("host", hostname), ("local", "on")]), "rulesets")
 
     elif phase == "action":
         if not new and html.var("delete"): # Delete this host
@@ -3774,30 +3776,45 @@ def save_configuration_settings(vars):
 #   | from main.mk.                                                        |
 #   +----------------------------------------------------------------------+
 def mode_rulesets(phase):
+    only_host = html.var("host", "")
+    only_local = html.var("local")
+
     if phase == "title":
-        return _("Rule sets for hosts and services")
+        if only_host:
+            return _("Rule sets for for hosts %s") % only_host
+        else:
+            return _("Rule sets for hosts and services")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
+        if only_host:
+            html.context_button(_("Back"), 
+                 make_link([("mode", "edithost"), ("host", only_host)]), "back")
+        else:
+            html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
         return
     
     elif phase == "action":
         return
 
-    render_folder_path(keepvarnames = ["mode", "local"])
-
+    if not only_host:
+        render_folder_path(keepvarnames = ["mode", "local"])
+    
     html.begin_form("local")
     html.checkbox("local", False, onclick="form.submit();")
-    html.write(" " + _("Show only rulesets that contain rules in the current folder"))
-    html.write('<img align=absbottom class=icon src="images/icon_localrule.png"> ')
+    if only_host:
+        html.write(" " + _("show only rulesets that contain rules explicitely listing the host <b>%s</b>." %
+            only_host))
+    else:
+        html.write(" " + _("Show only rulesets that contain rules in the current folder."))
+    html.write(' <img align=absbottom class=icon src="images/icon_localrule.png"> ')
     html.hidden_fields()
     html.end_form()
 
     # Load all rules from all folders. Hope this doesn't take too much time.
     # We need this information only for displaying the number of rules in 
     # each set.
-    only_local = html.var("local")
-    if only_local:
+
+    if only_local and not only_host:
         all_rulesets = {}
         rs = load_rulesets(g_folder)
         for varname, rules in rs.items():
@@ -3824,7 +3841,21 @@ def mode_rulesets(phase):
             if num_rules == 0 and only_local:
                 continue
 
-            local_rules = [ f for (f,r) in rules if f == g_folder ]
+            # Handle case where a host is specified
+            rulespec = g_rulespecs[varname]
+            this_host = False
+            if only_host:
+                num_local_rules = 0
+                for f, rule in rules:
+                    value, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
+                    if only_host and only_host in host_list:
+                        num_local_rules += 1
+            else:
+                num_local_rules = len([ f for (f,r) in rules if f == g_folder ])
+
+            if only_local and num_local_rules == 0:
+                continue
+
 
             if not title_shown:
                 html.write("<tr><td colspan=3><h3>%s</h3></td></tr>\n" % groupname) 
@@ -3837,32 +3868,47 @@ def mode_rulesets(phase):
             odd = odd == "odd" and "even" or "odd" 
             html.write('<tr class="data %s0">' % odd)
 
-            view_url = make_link([("mode", "view_ruleset"), ("varname", varname)])
+            url_vars = [("mode", "view_ruleset"), ("varname", varname)]
+            if only_host:
+                url_vars.append(("host", only_host))
+            view_url = make_link(url_vars)
 
             html.write('<td><a href="%s">%s</a></td>' % (view_url, rulespec["title"]))
             display_varname = ':' in varname and '%s["%s"]' % tuple(varname.split(":")) or varname
             html.write('<td><tt>%s</tt></td>' % display_varname)
             html.write('<td class=number>')
-            if local_rules:
+            if num_local_rules:
+                if only_host:
+                    title = _("There are %d rules explicitely listing this host." % num_local_rules)
+                else:
+                    title = _("There are %d rules defined in the current folder." % num_local_rules) 
                 html.write('<img title="%s" align=absmiddle class=icon src="images/icon_localrule.png"> ' %
-                       _("There are %d rules defined in the current folder." % len(local_rules)))
+                    title)
             html.write("%d</td>" % num_rules)
             html.write('</tr>')
     html.write("</table>")
 
     if not something_shown:
-        html.write("<div class=info>" + _("There are no rules defined in this folder.") + "</div>")
+        if only_host:
+            html.write("<div class=info>" + _("There are no rules with an exception for the host <b>%s</b>.") % only_host + "</div>")
+        else:
+            html.write("<div class=info>" + _("There are no rules defined in this folder.") + "</div>")
 
     
 def mode_view_ruleset(phase):
     varname = html.var("varname")
     rulespec = g_rulespecs[varname]
+    hostname = html.var("host", "")
 
     if phase == "title":
-        return rulespec["title"]
+        title = rulespec["title"]
+        if hostname:
+            title += _(" for host %s") % hostname
+        return title
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "rulesets")]), "back")
+        html.context_button(_("Back"), 
+              make_link([("mode", "rulesets"), ("host", hostname)]), "back")
         return
 
     elif phase == "action":
@@ -3871,16 +3917,18 @@ def mode_view_ruleset(phase):
 
         if html.var("_new_rule"):
             if html.check_transaction():
-                rules.append(create_rule(rulespec))
+                new_rule = create_rule(rulespec, hostname)
+                if hostname:
+                    rules[0:0] = [new_rule]
+                else:
+                    rules.append(new_rule)
                 save_rulesets(g_folder, rulesets)
                 log_pending(None, "edit-ruleset", 
                       _("Created new rule in ruleset %s in folder %s") % (rulespec["title"], g_folder["title"]))
             return
 
-
         rulenr = int(html.var("_rulenr"))
         action = html.var("_action")
-
 
         if action == "delete":
             c = wato_confirm(_("Confirm"), _("Delete rule number %d?") % rulenr)
@@ -3918,7 +3966,9 @@ def mode_view_ruleset(phase):
                      _("Changed order of rules in ruleset %s") % rulespec["title"])
             return
 
-    render_folder_path(keepvarnames = ["mode", "varname"])
+    if not hostname:
+        render_folder_path(keepvarnames = ["mode", "varname"])
+
     html.write("<h3>" + rulespec["title"] + "</h3>")
     if rulespec["help"]:
         html.write("<div class=info>%s</div>" % rulespec["help"])
@@ -4000,14 +4050,17 @@ def mode_view_ruleset(phase):
             # Edit
             html.write("<td class=buttons>")
             url = make_link_to([
-                ("mode", "edit_rule"), ("varname", varname), ("rulenr", rel_rulenr)], folder)
+                ("mode", "edit_rule"), ("varname", varname), ("rulenr", rel_rulenr), ("host", hostname)], folder)
             html.buttonlink(url, _("Edit"))
             html.write("</td>")
 
             # This-Folder-Icon
             html.write("<td>")
-            if folder == g_folder:
+            if not hostname and folder == g_folder:
                 title = _("This rule is defined in the current folder.")
+                html.write('<img title="%s" align=absbottom class=icon src="images/icon_localrule.png"> ' % title)
+            elif hostname and hostname in host_list:
+                title = _("This rule contains an exception for the host %s." % hostname)
                 html.write('<img title="%s" align=absbottom class=icon src="images/icon_localrule.png"> ' % title)
             else:
                 html.write('<img src="images/trans.png" class=icon>')
@@ -4019,8 +4072,11 @@ def mode_view_ruleset(phase):
 
     html.write("<p>" + _("Create a new rule in the folder: "))
     html.begin_form("new_rule")
-    html.select("folder", folder_selection(g_root_folder))
-    html.button("_new_rule", _("Create rule"))
+    if hostname:
+        html.button("_new_rule", _("Create exception rule for host %s" % hostname))
+    else:
+        html.select("folder", folder_selection(g_root_folder))
+        html.button("_new_rule", _("Create rule"))
     html.hidden_fields()
     html.end_form()
 
@@ -4046,12 +4102,15 @@ def folder_selection(folder, depth=0):
     for n, rule in enumerate(rules):
         render_rule(ruleset, rule, n + 1, n == len(rules) - 1)
 
-def create_rule(rulespec):
+def create_rule(rulespec, hostname=None):
     new_rule = []
     valuespec = rulespec["valuespec"]
     if valuespec:
         new_rule.append(valuespec.default_value())
-    new_rule.append(ALL_HOSTS) # bottom: default to catch-all rule
+    if hostname:
+        new_rule.append([hostname])
+    else:
+        new_rule.append(ALL_HOSTS) # bottom: default to catch-all rule
     if rulespec["itemtype"]:
         new_rule.append([""])
     return tuple(new_rule)
@@ -4312,7 +4371,7 @@ def mode_edit_rule(phase):
 
     elif phase == "buttons":
         html.context_button(_("Back"), 
-                         make_link([("mode", "view_ruleset"), ("varname", varname)]), "back")
+             make_link([("mode", "view_ruleset"), ("varname", varname), ("hostname", html.var("hostname", ""))]), "back")
         return
 
     rulesets = load_rulesets(g_folder)
@@ -4851,9 +4910,6 @@ mode_functions = {
    "edit_configvar" : mode_edit_configvar,
    "rulesets"       : mode_rulesets,
    "view_ruleset"   : mode_view_ruleset,
-###   "edit_ruleset"   : mode_edit_ruleset,
-###   "edit_rulevalue" : mode_edit_rulevalue,
-###   "edit_ruleconds" : mode_edit_ruleconds,
    "edit_rule"      : mode_edit_rule,
 }
 

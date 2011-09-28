@@ -534,10 +534,9 @@ def mode_folder(phase):
 
     elif phase == "buttons":
         folder_status_button()
-        if g_folder == g_root_folder:
-            changelog_button()
-            html.context_button(_("Backup / Restore"), make_link([("mode", "snapshot")]), "backup")
-            html.context_button(_("Configuration"),    make_link([("mode", "configuration")]), "configuration")
+        changelog_button()
+        html.context_button(_("Backup / Restore"), make_link([("mode", "snapshot")]), "backup")
+        html.context_button(_("Configuration"),    make_link([("mode", "configuration")]), "configuration")
         html.context_button(_("Rulesets"),  make_link_to([("mode", "rulesets")], g_folder), "rulesets")
         html.context_button(_("Properties"),make_link_to([("mode", "editfolder")], g_folder), "properties")
         html.context_button(_("New folder"),make_link([("mode", "newfolder")]), "newfolder")
@@ -1046,6 +1045,8 @@ def mode_editfolder(phase, new):
 
 
     else:
+        render_folder_path()
+
         html.begin_form("editfolder")
         html.write('<table class="form">\n')
         
@@ -1225,6 +1226,9 @@ def mode_edithost(phase, new):
 
 
     else:
+        if new:
+            render_folder_path()
+
         html.begin_form("edithost")
         html.write('<table class="form">\n')
 
@@ -1420,7 +1424,7 @@ def mode_search(phase):
         pass
 
     else:
-        render_folder_path(keepvarnames = ["mode"])
+        render_folder_path()
         html.write("<table><tr><td>\n")
 
         ## # Show search form
@@ -2353,7 +2357,7 @@ def wato_html_head(title):
     html.header(title)
     html.write("<div class=wato>\n")
 
-def render_folder_path(the_folder = 0, link_to_last = False, keepvarnames = []):
+def render_folder_path(the_folder = 0, link_to_last = False, keepvarnames = ["mode"]):
     if the_folder == 0:
         the_folder = g_folder
 
@@ -3780,7 +3784,7 @@ def mode_rulesets(phase):
     elif phase == "action":
         return
 
-    render_folder_path(keepvarnames = ["mode"])
+    render_folder_path()
 
     # Load all rules from all folders. Hope this doesn't take too much time.
     # We need this information only for displaying the number of rules in 
@@ -3881,7 +3885,7 @@ def mode_view_ruleset(phase):
                      _("Changed order of rules in ruleset %s") % rulespec["title"])
             return
 
-    render_folder_path(keepvarnames=["mode", "varname"])
+    render_folder_path(keepvarnames = ["mode", "varname"])
     html.write("<h3>" + rulespec["title"] + "</h3>")
 
     # Collect all rulesets
@@ -3889,85 +3893,84 @@ def mode_view_ruleset(phase):
     ruleset = all_rulesets.get(varname)
     if not ruleset:
         html.write("<div class=info>" + _("There are no rules defined in this set.") + "</div>")
-        return
+
+    else:
+        html.write('<table class="data ruleset">')
+        html.write("<tr>"
+                   "<th>" + _("#") + "</th>" 
+                   "<th>" + _("Actions") + "</th>"
+                   "<th>" + _("Folder") + "</th>"
+                   "<th>" + _("Conditions") + "</th>"
+                   "<th>" + _("Value") + "</th>"
+                   "<th></th>" # Edit
+                   "</tr>\n")
+
+        odd = "odd"
+        for rulenr in range(0, len(ruleset)):
+            folder, rule = ruleset[rulenr]
+            first_in_group = rulenr == 0 or ruleset[rulenr-1][0] != folder
+            last_in_group = rulenr == len(ruleset) - 1 or ruleset[rulenr+1][0] != folder
+                
+            if first_in_group:
+                rel_rulenr = 0
+                # Count how many of the following rules are located in the same
+                # folder
+                row_span = 1
+                while rulenr + row_span < len(ruleset) and ruleset[rulenr + row_span][0] == folder:
+                    row_span += 1
+                
+            odd = odd == "odd" and "even" or "odd"
+            value, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
+            html.write('<tr class="data %s0">' % odd)
+
+            # Rule number
+            html.write("<td class=number>%d</td>" % (rulenr + 1))
+
+            # Actions
+            html.write("<td class=rulebuttons>")
+            if not first_in_group:
+                rule_button("up", _("Move this rule one position up"), folder, rel_rulenr)
+            else:
+                rule_button(None)
+            if not last_in_group:
+                rule_button("down", _("Move this rule one position down"), folder, rel_rulenr)
+            else:
+                rule_button(None)
+            rule_button("insert", _("Insert a copy of this rule"), folder, rel_rulenr)
+            rule_button("delete", _("Delete this rule"), folder, rel_rulenr)
+            html.write("</td>")
 
 
-    html.write('<table class="data ruleset">')
-    html.write("<tr>"
-               "<th>" + _("#") + "</th>" 
-               "<th>" + _("Actions") + "</th>"
-               "<th>" + _("Folder") + "</th>"
-               "<th>" + _("Conditions") + "</th>"
-               "<th>" + _("Value") + "</th>"
-               "<th></th>" # Edit
-               "</tr>\n")
+            # Folder
+            if first_in_group:
+                alias_path = get_folder_aliaspath(folder, show_main = False)
+                html.write('<td rowspan=%d>%s</td>' % (row_span, alias_path))
 
-    odd = "odd"
-    for rulenr in range(0, len(ruleset)):
-        folder, rule = ruleset[rulenr]
-        first_in_group = rulenr == 0 or ruleset[rulenr-1][0] != folder
-        last_in_group = rulenr == len(ruleset) - 1 or ruleset[rulenr+1][0] != folder
+            # Conditions
+            html.write("<td>")
+            render_conditions(rulespec, tag_specs, host_list, item_list, varname, folder)
+            html.write("</td>")
             
-        if first_in_group:
-            rel_rulenr = 0
-            # Count how many of the following rules are located in the same
-            # folder
-            row_span = 1
-            while rulenr + row_span < len(ruleset) and ruleset[rulenr + row_span][0] == folder:
-                row_span += 1
+            # Value
+            if rulespec["valuespec"]:
+                value_html = rulespec["valuespec"].value_to_text(value)
+            else:
+                img = value and "yes" or "no"
+                title = value and _("This rule results in a positive outcome.") \
+                              or  _("this rule results in a negative outcome.")
+                value_html = '<img title="%s" src="images/rule_%s.png">' % (title, img)
+            html.write('<td class=value>%s</td>\n' % value_html)
+
+            # Edit
+            html.write("<td class=buttons>")
+            url = make_link_to([
+                ("mode", "edit_rule"), ("varname", varname), ("rulenr", rel_rulenr)], folder)
+            html.buttonlink(url, _("Edit"))
+            html.write("</td>")
+
             
-        odd = odd == "odd" and "even" or "odd"
-        value, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
-        html.write('<tr class="data %s0">' % odd)
-
-        # Rule number
-        html.write("<td class=number>%d</td>" % (rulenr + 1))
-
-        # Actions
-        html.write("<td class=rulebuttons>")
-        if not first_in_group:
-            rule_button("up", _("Move this rule one position up"), folder, rel_rulenr)
-        else:
-            rule_button(None)
-        if not last_in_group:
-            rule_button("down", _("Move this rule one position down"), folder, rel_rulenr)
-        else:
-            rule_button(None)
-        rule_button("insert", _("Insert a copy of this rule"), folder, rel_rulenr)
-        rule_button("delete", _("Delete this rule"), folder, rel_rulenr)
-        html.write("</td>")
-
-
-        # Folder
-        if first_in_group:
-            alias_path = get_folder_aliaspath(folder, show_main = False)
-            html.write('<td rowspan=%d>%s</td>' % (row_span, alias_path))
-
-        # Conditions
-        html.write("<td>")
-        render_conditions(rulespec, tag_specs, host_list, item_list, varname, folder)
-        html.write("</td>")
-        
-        # Value
-        if rulespec["valuespec"]:
-            value_html = rulespec["valuespec"].value_to_text(value)
-        else:
-            img = value and "yes" or "no"
-            title = value and _("This rule results in a positive outcome.") \
-                          or  _("this rule results in a negative outcome.")
-            value_html = '<img title="%s" src="images/rule_%s.png">' % (title, img)
-        html.write('<td class=value>%s</td>\n' % value_html)
-
-        # Edit
-        html.write("<td class=buttons>")
-        url = make_link_to([
-            ("mode", "edit_rule"), ("varname", varname), ("rulenr", rel_rulenr)], folder)
-        html.buttonlink(url, _("Edit"))
-        html.write("</td>")
-
-        
-        rel_rulenr += 1
-    html.write('</table>')
+            rel_rulenr += 1
+        html.write('</table>')
 
     html.write("<p>" + _("Create a new rule in the folder: "))
     html.begin_form("new_rule")
@@ -3988,84 +3991,6 @@ def folder_selection(folder, depth=0):
     for subfolder in folder[".folders"].values():
         sel += folder_selection(subfolder, depth + 1)
     return sel
-
-
-
-### def mode_edit_ruleset(phase): 
-###     varname = html.var("varname")
-###     ruleset = g_rulespecs[varname]
-### 
-###     if phase == "title":
-###         return ruleset["title"]
-### 
-###     elif phase == "buttons":
-###         html.context_button(_("Back"), make_link([("mode", "rulesets")]), "back")
-###         html.context_button(_("New rule (top)"),    html.makeactionuri([("_new", "top")]), "new")
-###         html.context_button(_("New rule (bottom)"), html.makeactionuri([("_new", "bottom")]), "new")
-###         return
-### 
-###     elif phase == "action":
-###         if html.var("_new"):
-###             if not html.check_transaction():
-###                 return
-### 
-###             configured_rulesets = load_rulesets(g_folder) 
-###             rules = configured_rulesets.get(varname, [])
-###             new_rule = create_rule(ruleset)
-###             if html.var("_new") == "top":
-###                 rules[0:0] = [new_rule]
-###             else:
-###                 rules.append(new_rule)
-###             save_rulesets(g_folder, configured_rulesets)
-###             log_pending(None, "edit-ruleset", 
-###                         _("Created new rule in ruleset %s") % ruleset["title"])
-###             return
-### 
-### 
-###         rulenr = int(html.var("_rulenr"))
-###         action = html.var("_action")
-###         configured_rulesets = load_rulesets(g_folder) 
-###         rules = configured_rulesets.get(varname, [])
-### 
-###         if action == "delete":
-###             c = wato_confirm(_("Confirm"), _("Delete rule number %d?") % rulenr)
-###             if c:
-###                 del rules[rulenr - 1]
-###                 save_rulesets(g_folder, configured_rulesets)
-###                 log_pending(None, "edit-ruleset", 
-###                       _("Changed order of rules in ruleset %s") % ruleset["title"])
-###                 return
-###             elif c == False: # not yet confirmed
-###                 return ""
-###             else:
-###                 return None # browser reload 
-###         elif action == "toggle":
-###             if html.check_transaction():
-###                 rule = list(rules[rulenr - 1])
-###                 if rule[0] == NEGATE:
-###                     del rule[0]
-###                 else:
-###                     rule[0:0] = [NEGATE]
-###                 rules[rulenr - 1] = tuple(rule)
-###                 save_rulesets(g_folder, configured_rulesets)
-###                 log_pending(None, "edit-ruleset", 
-###                       _("Negated result of rule %d in ruleset %s") % (rulenr, ruleset["title"]))
-### 
-###             return
-### 
-### 
-###         else:
-###             rule = rules[rulenr - 1]
-###             del rules[rulenr - 1]
-###             if action == "up":
-###                 rules[rulenr-2:rulenr-2] = [ rule ]
-###             else:
-###                 rules[rulenr:rulenr] = [ rule ]
-###             save_rulesets(g_folder, configured_rulesets)
-###             log_pending(None, "edit-ruleset", 
-###                      _("Changed order of rules in ruleset %s") % ruleset["title"])
-###             return
-
 
     html.write("<h3>%s</h3>\n" % ruleset["title"])
     if ruleset["help"]:
@@ -4135,6 +4060,9 @@ def parse_rule(ruleset, orig_rule):
         else:
             tag_specs = rule[0]
             host_list = rule[1]
+
+        # Remove folder tag from tag list
+        tag_specs = filter(lambda t: not t.startswith("/"), tag_specs)
 
         return value, tag_specs, host_list, item_list # (item_list currently not supported)
 
@@ -4216,9 +4144,10 @@ def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
         html.write('<li class="condition">')
         alias = tag_alias(tag)
         if alias:
-            html.write(_("Host is of type "))
             if negate:
-                html.write("<b>" + _("not") + "</b> ")
+                html.write(_("Host is <b>" + _("not") + "</b> of type "))
+            else:
+                html.write(_("Host is of type "))
             html.write("<b>" + alias + "</b>")
         else:
             if negate:
@@ -4498,36 +4427,6 @@ def get_rule_conditions(ruleset):
 
     return tag_list, host_list, item_list
 
-### def mode_edit_rulevalue(phase):
-###     rulenr = int(html.var("rulenr"))
-###     varname = html.var("varname")
-### 
-###     if phase == "title":
-###         return _("Edit value of rule %d") % rulenr
-### 
-###     elif phase == "buttons":
-###         html.context_button(_("Back"), 
-###                          make_link([("mode", "edit_ruleset"), ("varname", varname)]), "back")
-###         return
-### 
-###     ruleset = g_rulespecs[varname]
-###     configured_rulesets = load_rulesets(g_folder)
-###     configured_ruleset = configured_rulesets[varname]
-###     rule = configured_ruleset[rulenr - 1]
-### 
-###     if phase == "action":
-###         if html.check_transaction():
-###             value = get_edited_value(ruleset["valuespec"])
-###             configured_ruleset[rulenr - 1] = (value,) + rule[1:]
-###             save_rulesets(g_folder, configured_rulesets)
-###             log_pending(None, "edit-rule", "Changed value of rule %d of %s to %s" % 
-###                     (rulenr, varname, ruleset["valuespec"].value_to_text(value)))
-###             return "edit_ruleset"
-###         else:
-###             return
-### 
-###     value = rule[0]
-###     edit_value(ruleset["valuespec"], value)
 
 def mode_edit_rule(phase):
     rulenr = int(html.var("rulenr"))
@@ -4716,20 +4615,60 @@ def mode_edit_rule(phase):
     html.end_form()
 
 
-def save_rulesets(folder, configured_rulesets):
-    # TODO: folder berücksichtigen
+def save_rulesets(folder, rulesets):
     path = root_dir + '/' + folder['.path'] + '/' + "rules.mk" 
     out = file(path, "w") 
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
 
-    for varname, ruleset in g_rulespecs.items():
+    for varname, rulespec in g_rulespecs.items():
+        ruleset = rulesets.get(varname)
+        if not ruleset:
+            continue # don't save empty rule sets
+
         if ':' in varname:
             dictname, subkey = varname.split(':')
             out.write("\n%s.setdefault(%r, [])\n" % (dictname, subkey))
-            out.write("%s[%r] += " % (dictname, subkey))
+            out.write("%s[%r] += [\n" % (dictname, subkey))
         else:
-            out.write("\n%s += " % varname)
-        out.write("%s\n" % pprint.pformat(configured_rulesets[varname]))
+            out.write("\n%s += [\n" % varname)
+        for rule in ruleset:
+            save_rule(out, folder, rulespec, rule)
+        out.write("]\n\n")
+
+def save_rule(out, folder, rulespec, rule):
+    out.write("  ( ")
+    value, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
+    if rulespec["valuespec"]:
+        out.write("%r" % rule[0])
+    elif not value:
+        out.write("NEGATE")
+
+    out.write(", [")
+    for tag in tag_specs:
+        out.write(repr(tag))
+        out.write(", ")
+    if folder != g_root_folder:
+        out.write("'/' + FOLDER_PATH + '/'")
+    out.write("], ")
+    if len(host_list) > 0 and host_list[-1] == ALL_HOSTS[0]:
+        if len(host_list) > 1:
+            out.write(repr(host_list[:-1]))
+            out.write(" + ALL_HOSTS")
+        else:
+            out.write("ALL_HOSTS")
+    else:
+        out.write(repr(host_list))
+
+    if rulespec["itemtype"]:
+        out.write(", ")
+        if item_list == ALL_SERVICES:
+            out.write("ALL_SERVICES")
+        else:
+            out.write(repr(item_list))
+
+    out.write(" ),\n")
+
+
 
 
 def load_rulesets(folder):
@@ -4739,6 +4678,8 @@ def load_rulesets(folder):
         "ALL_HOSTS"      : ALL_HOSTS,
         "ALL_SERVICES"   : [ "" ],
         "NEGATE"         : NEGATE,
+        "FOLDER_PATH"    : folder[".path"],
+        "FILE_PATH"      : folder[".path"] + "/hosts.mk",
     }
     # Prepare empty rulesets so that rules.mk has something to 
     # append to

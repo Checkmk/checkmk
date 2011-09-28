@@ -3579,7 +3579,7 @@ class Dictionary(ValueSpec):
 
 def edit_value(valuespec, value):
     help = valuespec.help() or ""
-    html.write('<tr><td class=legend>%s</td>' % help)
+    html.write('<tr><td class=legend><i>%s</i></td>' % help)
 
     html.write("<td class=content>")
     valuespec.render_input("ve", value) 
@@ -3784,30 +3784,56 @@ def mode_rulesets(phase):
     elif phase == "action":
         return
 
-    render_folder_path()
+    render_folder_path(keepvarnames = ["mode", "local"])
+
+    html.begin_form("local")
+    html.checkbox("local", False, onclick="form.submit();")
+    html.write(" " + _("Show only rulesets that contain rules in the current folder"))
+    html.write('<img align=absbottom class=icon src="images/icon_localrule.png"> ')
+    html.hidden_fields()
+    html.end_form()
 
     # Load all rules from all folders. Hope this doesn't take too much time.
     # We need this information only for displaying the number of rules in 
     # each set.
-    all_rulesets = load_all_rulesets()
+    only_local = html.var("local")
+    if only_local:
+        all_rulesets = {}
+        rs = load_rulesets(g_folder)
+        for varname, rules in rs.items():
+            all_rulesets.setdefault(varname, [])
+            all_rulesets[varname] += [ (g_folder, rule) for rule in rules ]
+    else:
+        all_rulesets = load_all_rulesets()
 
     groupnames = g_rulespec_groups.keys()
     groupnames.sort()
     html.write("<table class=data>")
 
+    something_shown = False
     # Loop over all ruleset groups
     for groupname in groupnames:
-        html.write("<tr><td colspan=3><h3>%s</h3></td></tr>\n" % groupname) 
-        html.write("<tr><th>" + _("Rule set") + "</th>"
-                   "<th>" + _("Check_MK Variable") + "</th><th>" + _("Rules") + "</th></tr>\n")
-        odd = "even"
-            
         # Show information about a ruleset
+        title_shown = False
         for rulespec in g_rulespec_groups[groupname]: 
+            
             varname = rulespec["varname"]
             valuespec = rulespec["valuespec"]
-            num_rules = len(all_rulesets.get(varname, []))
+            rules = all_rulesets.get(varname, [])
+            num_rules = len(rules)
+            if num_rules == 0 and only_local:
+                continue
 
+            local_rules = [ f for (f,r) in rules if f == g_folder ]
+
+            if not title_shown:
+                html.write("<tr><td colspan=3><h3>%s</h3></td></tr>\n" % groupname) 
+                html.write("<tr><th>" + _("Rule set") + "</th>"
+                           "<th>" + _("Check_MK Variable") + "</th><th>" + _("Rules") + "</th></tr>\n")
+                odd = "even"
+                title_shown = True
+
+            something_shown = True
             odd = odd == "odd" and "even" or "odd" 
             html.write('<tr class="data %s0">' % odd)
 
@@ -3816,9 +3842,16 @@ def mode_rulesets(phase):
             html.write('<td><a href="%s">%s</a></td>' % (view_url, rulespec["title"]))
             display_varname = ':' in varname and '%s["%s"]' % tuple(varname.split(":")) or varname
             html.write('<td><tt>%s</tt></td>' % display_varname)
-            html.write('<td class=number>%d</td>' % num_rules)
+            html.write('<td class=number>')
+            if local_rules:
+                html.write('<img title="%s" align=absmiddle class=icon src="images/icon_localrule.png"> ' %
+                       _("There are %d rules defined in the current folder." % len(local_rules)))
+            html.write("%d</td>" % num_rules)
             html.write('</tr>')
     html.write("</table>")
+
+    if not something_shown:
+        html.write("<div class=info>" + _("There are no rules defined in this folder.") + "</div>")
 
     
 def mode_view_ruleset(phase):
@@ -3887,6 +3920,8 @@ def mode_view_ruleset(phase):
 
     render_folder_path(keepvarnames = ["mode", "varname"])
     html.write("<h3>" + rulespec["title"] + "</h3>")
+    if rulespec["help"]:
+        html.write("<div class=info>%s</div>" % rulespec["help"])
 
     # Collect all rulesets
     all_rulesets = load_all_rulesets()
@@ -3900,9 +3935,10 @@ def mode_view_ruleset(phase):
                    "<th>" + _("#") + "</th>" 
                    "<th>" + _("Actions") + "</th>"
                    "<th>" + _("Folder") + "</th>"
-                   "<th>" + _("Conditions") + "</th>"
                    "<th>" + _("Value") + "</th>"
+                   "<th>" + _("Conditions") + "</th>"
                    "<th></th>" # Edit
+                   "<th></th>" # "This folder" icon
                    "</tr>\n")
 
         odd = "odd"
@@ -3946,11 +3982,6 @@ def mode_view_ruleset(phase):
                 alias_path = get_folder_aliaspath(folder, show_main = False)
                 html.write('<td rowspan=%d>%s</td>' % (row_span, alias_path))
 
-            # Conditions
-            html.write("<td>")
-            render_conditions(rulespec, tag_specs, host_list, item_list, varname, folder)
-            html.write("</td>")
-            
             # Value
             if rulespec["valuespec"]:
                 value_html = rulespec["valuespec"].value_to_text(value)
@@ -3961,11 +3992,25 @@ def mode_view_ruleset(phase):
                 value_html = '<img title="%s" src="images/rule_%s.png">' % (title, img)
             html.write('<td class=value>%s</td>\n' % value_html)
 
+            # Conditions
+            html.write("<td>")
+            render_conditions(rulespec, tag_specs, host_list, item_list, varname, folder)
+            html.write("</td>")
+            
             # Edit
             html.write("<td class=buttons>")
             url = make_link_to([
                 ("mode", "edit_rule"), ("varname", varname), ("rulenr", rel_rulenr)], folder)
             html.buttonlink(url, _("Edit"))
+            html.write("</td>")
+
+            # This-Folder-Icon
+            html.write("<td>")
+            if folder == g_folder:
+                title = _("This rule is defined in the current folder.")
+                html.write('<img title="%s" align=absbottom class=icon src="images/icon_localrule.png"> ' % title)
+            else:
+                html.write('<img src="images/trans.png" class=icon>')
             html.write("</td>")
 
             
@@ -4199,177 +4244,6 @@ def ruleeditor_hover_code(varname, rulenr, mode, boolval, folder=None):
        ' onclick="location.href=\'%s\'"' % url
 
 
-### def mode_edit_ruleconds(phase):
-###     rulenr = int(html.var("rulenr"))
-###     varname = html.var("varname")
-###     
-###     if phase == "title":
-###         return _("Edit condition of rule %d") % rulenr
-### 
-###     elif phase == "buttons":
-###         html.context_button(_("Back"), 
-###                          make_link([("mode", "edit_ruleset"), ("varname", varname)]), "back")
-###         return
-### 
-###     ruleset = g_rulespecs[varname]
-###     configured_rulesets = load_rulesets(g_folder)
-###     configured_ruleset = configured_rulesets[varname]
-###     rule = configured_ruleset[rulenr - 1]
-###     value, tag_specs, host_list, item_list = parse_rule(ruleset, rule)
-### 
-###     if phase == "action":
-###         if html.check_transaction():
-###             # re-construct rule from HTML variables
-###             value, tag_specs, host_list, item_list = parse_rule(ruleset, rule)
-###             tag_specs, host_list, item_list = get_rule_conditions(ruleset)
-###             rule = construct_rule(ruleset, value, tag_specs, host_list, item_list)
-###             configured_ruleset[rulenr - 1] = rule
-###             save_rulesets(g_folder, configured_rulesets)
-###             log_pending(None, "edit-rule", "Changed conditions of rule %d of %s" % 
-###                     (rulenr, varname))
-###         return "edit_ruleset"
-### 
-###     # There are several types of conditions:
-###     # - List of host tags. That list can be missing.
-###     # - List of host names. That list can also be ALL_HOSTS.
-###     # - List of items (service descriptions, etc.). This list
-###     #   is not present for all rules.
-### 
-###     html.begin_form("condition")
-###     html.write("<table class=form>")
-### 
-###     # Host tags
-###     html.write("<tr><td class=legend>" + _("Host tags") + "<br><i>")
-###     html.write(_("The rule will only be applied to hosts fullfulling all of "
-###                  "of the host tag conditions listed here, even if they appear "
-###                  "in the list of explicit host names."))
-###     
-###     html.write("</i></td>")
-###     html.write("<td class=content>")
-###     for id, title, tags in config.wato_host_tags:
-###         default_tag = None
-###         ignore = True
-###         for t in tag_specs:
-###             if t[0] == '!':
-###                 n = True
-###                 t = t[1:]
-###             else:
-###                 n = False
-###             if t in [ x[0] for x in tags]:
-###                 ignore = False
-###                 negate = n
-### 
-###         html.radiobutton("tag_" + id, "ignore", ignore, _("ignore"))
-###         html.write("&nbsp;")
-###         html.radiobutton("tag_" + id, "is",     not ignore and not negate, _("is"))
-###         html.write("&nbsp;")
-###         html.radiobutton("tag_" + id, "isnot",  not ignore and negate, _("is not"))
-###         html.write("&nbsp;")
-###         html.select("tagvalue_" + id, [t[0:2] for t in tags if t[0] != None], deflt=default_tag)
-###         html.write("<br>")
-###     html.write("</td></tr>")
-### 
-###     # Explicit hosts / ALL_HOSTS
-###     html.write("<tr><td class=legend>")
-###     html.write(_("Explicit hosts"))
-###     html.write("<br><i>")
-###     html.write(_("You can enter a number of explicit host names that rule should or should "
-###                  "not apply to here. Leave this option disabled if you want the rule to "
-###                  "apply for all hosts specified by the given tags."))
-###     html.write("</i></td><td class=content>")
-###     div_id = "div_all_hosts"
-### 
-###     checked = host_list != ALL_HOSTS
-###     html.checkbox("explicit_hosts", checked, onclick="wato_toggle_option(this, %r)" % div_id)
-###     html.write(" " + _("Specify explicit host names"))
-###     html.write('<div id="%s" style="display: %s">' % (
-###             div_id, not checked and "none" or ""))
-###     negate_hosts = len(host_list) > 0 and host_list[0].startswith("!")
-### 
-###     html.write("<table class=itemlist>")
-###     num_cols = 3
-###     for nr in range(config.wato_num_itemspecs):
-###         x = nr % num_cols
-###         if x == 0:
-###             html.write("<tr>")
-###         if nr < len(host_list) and host_list[nr] != ALL_HOSTS[0]:
-###             host_name = host_list[nr].strip("!")
-###         else:
-###             host_name = ""
-###         html.write("<td>")
-###         html.text_input("host_%d" % nr, host_name)
-###         html.write("</td>")
-###         if x == num_cols - 1:
-###             html.write("</tr>")
-###     while x < num_cols - 1:
-###         html.write("<td></td>")
-###         if x == num_cols - 1:
-###             html.write("</tr>")
-###         x += 1
-###     html.write("</table>")
-###     html.checkbox("negate_hosts", negate_hosts)
-###     html.write(" " + _("<b>Negate:</b> make Rule apply for <b>all but</b> the above hosts") + "\n")
-###     html.write("</div></td></tr>")
-### 
-###     # Itemlist
-###     itemtype = ruleset["itemtype"]
-###     if itemtype:
-###         html.write("<tr><td class=legend>")
-###         if itemtype == "service":
-###             html.write(_("Services") + "<br><i>" + 
-###                        _("Specify a list of service patterns this rule shall apply to. " 
-###                          "The patterns must match the <b>beginning</b> of the service "
-###                          "in question. Adding a <tt>$</tt> to the end forces an excact "
-###                          "match. Pattern use <b>regular expressions</b>. A <tt>.*</tt> will "
-###                          "match an arbitrary text.") + "</i>")
-###         elif itemtype == "checktype":
-###             html.write(_("Check types"))
-###         elif itemtype == "item":
-###             html.write(ruleset["itemname"].title())
-###             html.write("<br><i>")
-###             html.write(_("You can make the rule apply only on certain services of the "
-###                          "specified hosts. Do this by specifying explicit items to mach "
-###                          "here. <b>Note:</b> the match is done on the <u>beginning</u> "
-###                          "of the item in question. Regular expressions are interpreted, "
-###                          "so appending a <tt>$</tt> will force an exact match."))
-###         else:
-###             raise MKGeneralException("Invalid item type '%s'" % itemtype)
-### 
-###         html.write("</td><td class=content>")
-###         if itemtype:
-###             checked = len(item_list) > 0 and item_list[0] != '""'
-###             div_id = "itemlist"
-###             html.checkbox("explicit_services", checked, onclick="wato_toggle_option(this, %r)" % div_id)
-###             html.write(" " + _("Specify explicit values"))
-###             html.write('<div id="%s" style="display: %s">' % (
-###                 div_id, not checked and "none" or ""))
-###             html.write("<table class=itemlist>")
-###             num_cols = 3
-###             for nr in range(config.wato_num_itemspecs):
-###                 x = nr % num_cols
-###                 if x == 0:
-###                     html.write("<tr>")
-###                 html.write("<td>")
-###                 item = nr < len(item_list) and item_list[nr] or ""
-###                 html.text_input("item_%d" % nr, item)
-###                 html.write("</td>")
-###                 if x == num_cols - 1:
-###                     html.write("</tr>")
-###             while x < num_cols - 1:
-###                 html.write("<td></td>")
-###                 if x == num_cols - 1:
-###                     html.write("</tr>")
-###                 x += 1
-###             html.write("</table></div>")
-###                 
-###     # SAVE
-###     html.write("<tr><td class=buttons colspan=2>")
-###     html.button("_save", _("Save"))
-###     html.write("</td></tr>")
-### 
-###     html.write("</table>")
-###     html.hidden_fields()
-###     html.end_form()
 
 def get_rule_conditions(ruleset):
     # Tag list
@@ -4465,6 +4339,24 @@ def mode_edit_rule(phase):
 
     html.begin_form("rule_editor")
     html.write('<table class="form ruleditor">')
+
+    # Value
+    html.write("<tr><td class=title colspan=2><h3>%s</h3></td></tr>" % 
+                _("Value"))
+    if valuespec:
+        value = rule[0]
+        edit_value(valuespec, value)
+        valuespec.set_focus("ve")
+    else:
+        html.write("<tr><td class=legend></td>")
+        html.write("<td class=content>")
+        for posneg, img in [ ("positive", "yes"), ("negative", "no")]:
+            val = img == "yes"
+            html.write('<img align=top src="images/rule_%s.png"> ' % img)
+            html.radiobutton("value", img, value == val, _("Make the outcome of the ruleset <b>%s</b><br>") % posneg)
+        html.write("</td></tr>")
+
+    # Conditions
     html.write("<tr><td class=title colspan=2><h3>%s</h3></td></tr>" % 
                 _("Conditions"))
 
@@ -4592,21 +4484,6 @@ def mode_edit_rule(phase):
                 x += 1
             html.write("</table></div>")
                 
-    html.write("<tr><td class=title colspan=2><h3>%s</h3></td></tr>" % 
-                _("Value"))
-    if valuespec:
-        value = rule[0]
-        edit_value(valuespec, value)
-        valuespec.set_focus("ve")
-    else:
-        html.write("<tr><td class=legend></td>")
-        html.write("<td class=content>")
-        for posneg, img in [ ("positive", "yes"), ("negative", "no")]:
-            val = img == "yes"
-            html.write('<img align=top src="images/rule_%s.png"> ' % img)
-            html.radiobutton("value", img, value == val, _("Make the outcome of the ruleset <b>%s</b><br>") % posneg)
-        html.write("</td></tr>")
-
     html.write("<tr><td class=buttons colspan=2>")
     html.button("save", _("Save"))
     html.write("</td></tr>")
@@ -4639,7 +4516,7 @@ def save_rule(out, folder, rulespec, rule):
     out.write("  ( ")
     value, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
     if rulespec["valuespec"]:
-        out.write("%r" % rule[0])
+        out.write(repr(value))
     elif not value:
         out.write("NEGATE")
 

@@ -3835,9 +3835,9 @@ def mode_view_ruleset(phase):
         if html.var("_new_rule"):
             if html.check_transaction():
                 rules.append(create_rule(rulespec))
-                save_rulesets(folder, rulesets)
+                save_rulesets(g_folder, rulesets)
                 log_pending(None, "edit-ruleset", 
-                      _("Created new rule in ruleset %s in folder %s") % (rulespec["title"], folder["title"]))
+                      _("Created new rule in ruleset %s in folder %s") % (rulespec["title"], g_folder["title"]))
             return
 
 
@@ -3849,7 +3849,7 @@ def mode_view_ruleset(phase):
             c = wato_confirm(_("Confirm"), _("Delete rule number %d?") % rulenr)
             if c:
                 del rules[rulenr - 1]
-                save_rulesets(folder, rulesets)
+                save_rulesets(g_folder, rulesets)
                 log_pending(None, "edit-ruleset", 
                       _("Delete rule in ruleset %s") % rulespec["title"])
                 return
@@ -3862,7 +3862,7 @@ def mode_view_ruleset(phase):
             if not html.check_transaction():
                 return None # browser reload
             rules[rulenr:rulenr] = [rules[rulenr]]
-            save_rulesets(folder, rulesets)
+            save_rulesets(g_folder, rulesets)
             log_pending(None, "edit-ruleset", 
                   _("Inserted new rule in ruleset %s") % rulespec["title"])
             return
@@ -3876,7 +3876,7 @@ def mode_view_ruleset(phase):
                 rules[rulenr-1:rulenr-1] = [ rule ]
             else:
                 rules[rulenr+1:rulenr+1] = [ rule ]
-            save_rulesets(folder, rulesets)
+            save_rulesets(g_folder, rulesets)
             log_pending(None, "edit-ruleset", 
                      _("Changed order of rules in ruleset %s") % rulespec["title"])
             return

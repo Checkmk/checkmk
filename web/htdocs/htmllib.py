@@ -165,6 +165,7 @@ class html:
         self.output_format = "html"
         self.status_icons = {}
         self.link_target = None
+        self.form_vars = []
 
     def plugin_stylesheets(self): 
         global plugin_stylesheets
@@ -359,11 +360,11 @@ class html:
             self.set_focus(varname)
         self.form_vars.append(varname)
 
-    def sorted_select(self, varname, options, deflt="", onchange=None):
+    def sorted_select(self, varname, options, deflt="", onchange=None, attrs = {}):
         # Sort according to display texts, not keys
         sorted = options[:]
         sorted.sort(lambda a,b: cmp(a[1].lower(), b[1].lower()))
-        html.select(self, varname, sorted, deflt, onchange)
+        html.select(self, varname, sorted, deflt, onchange, attrs)
 
     def select(self, varname, options, deflt="", onchange=None, attrs = {}):
         current = self.var(varname, deflt)

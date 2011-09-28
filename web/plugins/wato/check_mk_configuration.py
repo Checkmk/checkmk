@@ -196,7 +196,9 @@ register_rule(group,
                   title = _("Magic factor"),
                   minvalue = 0.1,
                   maxvalue = 1.0)),
-        ])
+        ]),
+    itemtype = "item",
+    itemname = _("mount point"),
     )
 
 register_rule(group, 

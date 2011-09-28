@@ -37,7 +37,7 @@ class FilterWatoFile(Filter):
 
     def load_wato_data(self):
         self.tree = wato.api.get_folder_tree()
-        self.path_to_tree = {} # keep mapping from string-paths to folders/files
+        self.path_to_tree = {} # will be filled by self.folder_selection
         self.selection = self.folder_selection(self.tree, "", 0)
 
     def display(self):
@@ -51,7 +51,7 @@ class FilterWatoFile(Filter):
             return ""
 
     def folder_selection(self, folder, prefix, depth):
-        my_path = prefix + folder[".name"] + "/"
+        my_path = folder[".path"]
 
         if depth:
             title_prefix = "&nbsp;&nbsp;&nbsp;" * depth + "` " + "- " * depth

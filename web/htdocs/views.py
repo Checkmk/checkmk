@@ -1583,8 +1583,8 @@ def show_context_links(thisview, active_filters):
         if host:
             url = wato.api.link_to_host(host)
         else:
-            url = wato.api.link_to_path(html.var("filename", ""))
-        html.context_button(_("WATO") ,url, "wato")
+            url = wato.api.link_to_path(html.var("wato_folder", ""))
+        html.context_button(_("WATO"), url, "wato")
 
     else:
         first = True

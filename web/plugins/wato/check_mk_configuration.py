@@ -199,6 +199,7 @@ register_rule(group,
         ]),
     itemtype = "item",
     itemname = _("mount point"),
+    match = "dict",
     )
 
 register_rule(group, 

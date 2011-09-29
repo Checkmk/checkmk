@@ -58,7 +58,7 @@
 #              with a period are not persisted. Important keys are:
 #
 #   ".folders"        -> List of subfolders. This key is present even for leaf folders.
-#   ".parent"         -> parent folder (not name, but Python reference!)
+#   ".parent"         -> parent folder (not name, but Python reference!). Missing for the root folder
 #   ".name"           -> OS name of the folder
 #   ".path"           -> absolute path of folder
 #   ".hosts"          -> Hosts in that folder. This key is present even if there are no hosts.
@@ -406,6 +406,8 @@ def load_hosts_file(folder):
                     if isinstance(attr, HostTagAttribute):
                         tagvalue = attr.get_tag_value(tags)
                         host[attr.name()] = tagvalue
+
+            host[".tags"] = parts[1:] # access to "raw" tags, needed for rule engine
             hosts[hostname]   = host
 
 
@@ -3899,6 +3901,11 @@ def mode_view_ruleset(phase):
     varname = html.var("varname")
     rulespec = g_rulespecs[varname]
     hostname = html.var("host", "")
+    if hostname:
+        hosts = load_hosts(g_folder)
+        host = hosts.get(hostname)
+        if not host: 
+            hostname = None # host not found. Should not happen
 
     if phase == "title":
         title = rulespec["title"]
@@ -3912,7 +3919,9 @@ def mode_view_ruleset(phase):
         return
 
     elif phase == "action":
-        rulesets = load_rulesets(g_folder) 
+        # Folder for the rule actions is defined by _folder
+        rule_folder = g_folders[html.var("_folder")]
+        rulesets = load_rulesets(rule_folder) 
         rules = rulesets.get(varname, [])
 
         if html.var("_new_rule"):
@@ -3922,9 +3931,9 @@ def mode_view_ruleset(phase):
                     rules[0:0] = [new_rule]
                 else:
                     rules.append(new_rule)
-                save_rulesets(g_folder, rulesets)
+                save_rulesets(rule_folder, rulesets)
                 log_pending(None, "edit-ruleset", 
-                      _("Created new rule in ruleset %s in folder %s") % (rulespec["title"], g_folder["title"]))
+                      _("Created new rule in ruleset %s in folder %s") % (rulespec["title"], rule_folder["title"]))
             return
 
         rulenr = int(html.var("_rulenr"))
@@ -3934,7 +3943,7 @@ def mode_view_ruleset(phase):
             c = wato_confirm(_("Confirm"), _("Delete rule number %d?") % rulenr)
             if c:
                 del rules[rulenr - 1]
-                save_rulesets(g_folder, rulesets)
+                save_rulesets(rule_folder, rulesets)
                 log_pending(None, "edit-ruleset", 
                       _("Delete rule in ruleset %s") % rulespec["title"])
                 return
@@ -3947,7 +3956,7 @@ def mode_view_ruleset(phase):
             if not html.check_transaction():
                 return None # browser reload
             rules[rulenr:rulenr] = [rules[rulenr]]
-            save_rulesets(g_folder, rulesets)
+            save_rulesets(rule_folder, rulesets)
             log_pending(None, "edit-ruleset", 
                   _("Inserted new rule in ruleset %s") % rulespec["title"])
             return
@@ -3961,7 +3970,7 @@ def mode_view_ruleset(phase):
                 rules[rulenr-1:rulenr-1] = [ rule ]
             else:
                 rules[rulenr+1:rulenr+1] = [ rule ]
-            save_rulesets(g_folder, rulesets)
+            save_rulesets(rule_folder, rulesets)
             log_pending(None, "edit-ruleset", 
                      _("Changed order of rules in ruleset %s") % rulespec["title"])
             return
@@ -3988,10 +3997,12 @@ def mode_view_ruleset(phase):
                    "<th>" + _("Value") + "</th>"
                    "<th>" + _("Conditions") + "</th>"
                    "<th></th>" # Edit
-                   "<th></th>" # "This folder" icon
+                   "<th></th>" # Several icons
                    "</tr>\n")
 
         odd = "odd"
+        alread_matched = False
+        match_keys = set([]) # in case if match = "dict"
         for rulenr in range(0, len(ruleset)):
             folder, rule = ruleset[rulenr]
             first_in_group = rulenr == 0 or ruleset[rulenr-1][0] != folder
@@ -4033,6 +4044,39 @@ def mode_view_ruleset(phase):
                 html.write('<td rowspan=%d>%s</td>' % (row_span, alias_path))
 
             # Value
+            html.write('<td class=value>\n')
+            if hostname:
+                reason = rule_matches_host(rulespec, tag_specs, host_list, folder, g_folder, hostname)
+                # Handle case where dict is constructed from rules
+                if reason == True and rulespec["match"] == "dict": 
+                    if len(value) == 0:
+                        title = _("This rule matches, but does not define any parameters.")
+                        img = 'imatch'
+                    else:
+                        new_keys = set(value.keys())
+                        if match_keys.isdisjoint(new_keys):
+                            title = _("This rule matches and defines new parameters.")
+                            img = 'match'
+                        elif new_keys.issubset(match_keys):
+                            title = _("This rule matches, but all of its parameters are overridden by previous rules.")
+                            img = 'imatch'
+                        else:
+                            title = _("This rule matches, but some of its parameters are overridden by previous rules.")
+                            img = 'pmatch'
+                        match_keys.update(new_keys)
+
+                elif reason == True and not alread_matched:
+                    title = _("This rule matches for the host '%s'.") % hostname
+                    img = 'match'
+                    alread_matched = True
+                elif reason == True:
+                    title = _("This rule matches, but is overridden by a previous rule.")
+                    img = 'imatch'
+                    alread_matched = True
+                else:
+                    title = _("This rule does not: %s") % reason
+                    img = 'nmatch'
+                html.write('<img align=absbottom title="%s" class=icon src="images/icon_rule%s.png"> ' % (title, img))
             if rulespec["valuespec"]:
                 value_html = rulespec["valuespec"].value_to_text(value)
             else:
@@ -4040,7 +4084,7 @@ def mode_view_ruleset(phase):
                 title = value and _("This rule results in a positive outcome.") \
                               or  _("this rule results in a negative outcome.")
                 value_html = '<img title="%s" src="images/rule_%s.png">' % (title, img)
-            html.write('<td class=value>%s</td>\n' % value_html)
+            html.write('%s</td>\n' % value_html)
 
             # Conditions
             html.write("<td>")
@@ -4049,21 +4093,28 @@ def mode_view_ruleset(phase):
             
             # Edit
             html.write("<td class=buttons>")
-            url = make_link_to([
-                ("mode", "edit_rule"), ("varname", varname), ("rulenr", rel_rulenr), ("host", hostname)], folder)
+            url = make_link([
+                ("mode", "edit_rule"), 
+                ("varname", varname), 
+                ("rulenr", rel_rulenr), 
+                ("host", hostname),
+                ("rule_folder", folder[".path"])])
             html.buttonlink(url, _("Edit"))
             html.write("</td>")
 
-            # This-Folder-Icon
+            # Icons
             html.write("<td>")
+            # "this folder"
             if not hostname and folder == g_folder:
                 title = _("This rule is defined in the current folder.")
-                html.write('<img title="%s" align=absbottom class=icon src="images/icon_localrule.png"> ' % title)
+                html.write('<img title="%s" class=icon src="images/icon_localrule.png">' % title)
             elif hostname and hostname in host_list:
                 title = _("This rule contains an exception for the host %s." % hostname)
-                html.write('<img title="%s" align=absbottom class=icon src="images/icon_localrule.png"> ' % title)
+                html.write('<img title="%s" class=icon src="images/icon_localrule.png">' % title)
             else:
-                html.write('<img src="images/trans.png" class=icon>')
+                html.write('<img src="images/icon_trans.png" class=icon>')
+
+            # "rule matches"
             html.write("</td>")
 
             
@@ -4119,21 +4170,17 @@ def rule_button(action, help=None, folder=None, rulenr=0):
     if action == None:
         html.write('<img class=trans src="images/trans.png">')
     else:
-        url = html.makeactionuri(
-         [("folder", folder[".path"]), 
+        vars = [("_folder", folder[".path"]), 
           ("_rulenr", str(rulenr)), 
-          ("_action", action)])
+          ("_action", action)]
+        if html.var("host"):
+            vars.append(("host", html.var("host")))
+        url = html.makeactionuri(vars)
         html.write('<a href="%s">'
                    '<img title="%s" src="images/button_%s_lo.png" ' 
                    'onmouseover=\"hilite_icon(this, 1)\" '
                    'onmouseout=\"hilite_icon(this, 0)\">'
                    '</a>\n' % (url, help, action))
-#    html.write('<div class="button %s">'
-#               '<a href="%s">'
-#               '<img src="images/button_%s_lo.png" ' 
-#               'onmouseover=\"hilite_icon(this, 1)\" '
-#               'onmouseout=\"hilite_icon(this, 0)\">'
-#               '</a></div>\n' % (action, url, action))
 
 
 def parse_rule(ruleset, orig_rule):
@@ -4173,6 +4220,37 @@ def parse_rule(ruleset, orig_rule):
     except Exception, e:
         raise MKGeneralException(_("Invalid rule <tt>%s</tt>") % (orig_rule,))
 
+def rule_matches_host(rulespec, tag_specs, host_list, rule_folder, host_folder, hostname):
+    reasons = []
+    host = host_folder[".hosts"][hostname]
+    if not (
+        (hostname in host_list) 
+        or 
+        (("!"+hostname) not in host_list 
+         and len(host_list) > 0 
+         and host_list[-1] == ALL_HOSTS[0])):
+         reasons.append(_("The host name does not match."))
+
+    tags_match = True
+    for tag in tag_specs:
+        if tag[0] != '/' and tag[0] != '!' and tag not in host[".tags"]:
+            reasons.append(_("The host is missing the tag %s" % tag))
+        elif tag[0] == '!' and tag[1:] in host[".tags"]:
+            reasons.append(_("The host has the tag %s" % tag))
+
+    if not is_indirect_parent_of(host_folder, rule_folder):
+        reasons.append(_("The rule does not apply to the folder of the host."))
+
+    if len(reasons) == 0:
+        return True
+    else:
+        return " ".join(reasons)
+
+def is_indirect_parent_of(pfolder, sfolder):
+    return pfolder == sfolder or \
+      ('.parent' in pfolder and 
+      is_indirect_parent_of(pfolder[".parent"], sfolder))
+
 
 def construct_rule(ruleset, value, tag_specs, host_list, item_list):
     if ruleset["valuespec"]:
@@ -4188,43 +4266,6 @@ def construct_rule(ruleset, value, tag_specs, host_list, item_list):
         rule.append(item_list)
     return tuple(rule)
 
-
-### def render_rule(ruleset, rule, rulenr, islast):
-###     varname = ruleset["varname"]
-###     html.write('<div class="rule">')
-###     html.write('<div class="nr"><b>%d</b></div>' % rulenr)
-###     rule_button("delete", rulenr)
-###     if rulenr != 1:
-###         rule_button("up", rulenr)
-###     if not islast:
-###         rule_button("down", rulenr)
-### 
-###     value, tag_specs, host_list, item_list = parse_rule(ruleset, rule)
-### 
-###     html.write('<div class="conditions title">%s</div>'  % _("Preconditions"))
-###     html.write('<div class="value title">%s</div>' % _("Value"))
-### 
-###     html.write('<div class="conditions box" %s>' % 
-###           ruleeditor_hover_code(varname, rulenr, "edit_ruleconds", None, None))
-###     render_conditions(ruleset, tag_specs, host_list, item_list, varname, folder=None)
-###     html.write("</div>")
-### 
-###     if ruleset["valuespec"]:
-###         value_html = ruleset["valuespec"].value_to_text(value)
-###         boolval = None # no boolean ruleset
-###     else:
-###         boolval = value # boolean ruleset
-###         img = value and "yes" or "no"
-###         title = value and _("This rule results in a positive outcome.") \
-###                       or  _("this rule results in a negative outcome.")
-###         title += " " + _("Click to toggle outcome of this rule.")
-###         value_html = '<img title="%s" src="images/rule_%s.png">' % (title, img)
-###         
-###     html.write('<div class="value box" %s>%s</div>' % 
-###           (ruleeditor_hover_code(varname, rulenr, "edit_rulevalue", boolval), value_html))
-###            
-### 
-###     html.write('</div>')
 
 def tag_alias(tag):
     for id, title, tags in config.wato_host_tags:
@@ -4371,10 +4412,11 @@ def mode_edit_rule(phase):
 
     elif phase == "buttons":
         html.context_button(_("Back"), 
-             make_link([("mode", "view_ruleset"), ("varname", varname), ("hostname", html.var("hostname", ""))]), "back")
+             make_link([("mode", "view_ruleset"), ("varname", varname), ("host", html.var("host", ""))]), "back")
         return
 
-    rulesets = load_rulesets(g_folder)
+    folder = g_folders[html.var("rule_folder")]
+    rulesets = load_rulesets(folder)
     rules = rulesets[varname]
     rule = rules[rulenr]
     valuespec = rulespec.get("valuespec")
@@ -4391,9 +4433,9 @@ def mode_edit_rule(phase):
                 value = html.var("value") == "yes"
             rule = construct_rule(rulespec, value, tag_specs, host_list, item_list)
             rules[rulenr] = rule
-            save_rulesets(g_folder, rulesets)
+            save_rulesets(folder, rulesets)
             log_pending(None, "edit-rule", "Changed properties of rule %s in folder %s" % 
-                    (rulespec["title"], g_folder["title"]))
+                    (rulespec["title"], folder["title"]))
         return "view_ruleset"
 
     html.begin_form("rule_editor")

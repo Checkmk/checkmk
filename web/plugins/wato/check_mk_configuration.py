@@ -265,9 +265,46 @@ register_rule(group,
                       Percentage(title = _("Critical at"), label = _("% usage"))])),
             (  "magic", 
                Float(
-                  title = _("Magic factor"),
+                  title = _("Magic factor (automatic level adaptation for large filesystems)"),
                   minvalue = 0.1,
                   maxvalue = 1.0)),
+            (  "magic_normsize",
+               Integer(
+                   title = _("Reference size for magic factor"),
+                   minvalue = 1,
+                   label = _("GB"))),
+            (  "trend_range",
+               Integer(
+                   title = _("Range for filesystem trend computation"),
+                   minvalue = 1,
+                   label= _("hours"))),
+            (  "trend_mb",
+               Tuple(
+                   title = _("Levels on trends in MB per range"),
+                   elements = [
+                       Integer(title = _("Warning at"), label = _("MB / range")),
+                       Integer(title = _("Critical at"), label = _("MB / range"))
+                   ])),
+            (  "trend_perc",
+               Tuple(
+                   title = _("Levels for the percentual growth"),
+                   elements = [
+                       Percentage(title = _("Warning at"), label = _("% / range")),
+                       Percentage(title = _("Critical at"), label = _("% / range"))
+                   ])),
+            (  "trend_timeleft",
+               Tuple(
+                   title = _("Levels on the time left until the filesystem gets full"),
+                   elements = [
+                       Integer(title = _("Warning at"), label = _("days left")),
+                       Integer(title = _("Critical at"), label = _("days left"))
+                   ])),
+            ( "trend_perfdata",
+              Checkbox(
+                  title = _("Trend performance data"),
+                  label = _("Enable performance data from trends"))),
+
+            
         ]),
     itemtype = "item",
     itemname = _("mount point"),

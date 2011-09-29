@@ -5,8 +5,27 @@ Zu tun bei wato-ng:
 * cmk -M soll Check-Parameterbeschreibungen automatisch auslesen
 
 [web]
-* Editieren von Regeln direkt bei einem Host (Ausnahmen)
 * Diagnosefunktion: wenn man eine Regelkette sieht kann man diese
   per Knopfdruck durchrechnen lassen und sieht dann, welche
   hosts von welcher Regel erfasst werden.
+* Verlinkung von Service zu Regelkette, Knopf für "Ausnahme für diesen
+  Service erstellen"
+* class Alternative: Die Radiobuttons sollen <div>s unsichtbar werden
+  lassen von den nicht genutzten Alternativen.
+* Konfiguration von Timeperiods
+* Value-Editor für die Auswahl einer Timeperiod. 
+* Wie bekomme ich es hin, dass man keine TP löschen kann, die noch in
+  einer Regel benannt wird?
 
+[decl]
+* Alle Checkgruppen deklarieren, die für LC-Checks gebraucht werden.
+
+[optional]
+* Auch multisite.mk-Variablen steuerbar machen
+* (nur OMD): auch ausgewählte Nagios-Variablen configurierbar machen
+
+Ganz ferne Zukunft (Brauch LC und DK nicht):
+===================
+- Explizite Checks  (checks += )
+- Cluster
+- Host Tags 

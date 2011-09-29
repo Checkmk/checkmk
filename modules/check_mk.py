@@ -292,7 +292,7 @@ summary_service_groups               = [] # service groups for aggregated servic
 summary_service_contactgroups        = [] # service contact groups for aggregated services
 summary_host_notification_periods    = []
 summary_service_notification_periods = []
-ipaddresses                          = {} # mapping from hostname to ipadress
+ipaddresses                          = {} # mapping from hostname to ipaddress
 only_hosts                           = None
 extra_host_conf                      = {}
 extra_summary_host_conf              = {}
@@ -463,6 +463,7 @@ def tags_of_host(hostname):
 # Check if a host fullfills the requirements of a tags
 # list. The host must have all tags in the list, except
 # for those negated with '!'. Those the host must *not* have!
+# New in 1.1.13: a trailing + means a prefix match
 def hosttags_match_taglist(hosttags, required_tags):
     for tag in required_tags:
         if len(tag) > 0 and tag[0] == '!':
@@ -470,6 +471,20 @@ def hosttags_match_taglist(hosttags, required_tags):
             tag = tag[1:]
         else:
             negate = False
+
+        if tag[-1] == '+':
+            tag = tag[:-1]
+            matches = False
+            for t in hosttags:
+                if t.startswith(tag):
+                    matches = True
+            if not matches:
+                return False
+
+        else:
+            if (tag in hosttags) == negate:
+                return False
+
         if (tag in hosttags) == negate:
             return False
     return True
@@ -2263,6 +2278,7 @@ no_inventory_possible = None
                  "check_includes = {}\n" +
                  "precompile_params = {}\n" +
                  "factory_settings = {}\n" + 
+                 "checkgroup_of = {}\n" +
                  "check_config_variables = []\n" +
                  "check_default_levels = {}\n" +
                  "snmp_info = {}\n" +

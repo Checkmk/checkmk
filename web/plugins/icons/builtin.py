@@ -406,8 +406,10 @@ multisite_icons.append({
 
 def wato_link(filename, site, hostname, where):
     # filename is /wato/north/hosts.mk, folder is just "north"
-    folder = filename[6:].rsplit("/", 1)[0]
-    if 'X' in html.display_options:
+    if filename.startswith("/wato/") \
+      and filename.endswith("/hosts.mk") \
+      and 'X' in html.display_options:
+        folder = filename[6:-9]
         prefix = config.site(site)["url_prefix"] + "check_mk/"
         url = prefix + "wato.py?folder=%s&host=%s" % (htmllib.urlencode(folder),
                                                         htmllib.urlencode(hostname))

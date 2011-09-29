@@ -152,7 +152,7 @@ def page_handler():
     load_hosts(g_folder)          # load information about hosts
     title = g_folder["title"]     # title might be changed by actions
 
-    current_mode = html.var("mode", "folder")
+    current_mode = html.var("mode") or "folder"
     modefunc = mode_functions.get(current_mode)
 
     # Do actions (might switch mode)
@@ -238,17 +238,18 @@ def set_current_folder():
 
     if html.has_var("folder"):
         path = html.var("folder")
+        g_folder = g_folders.get(path)
     else:
         host = html.var("host")
         if host: # find host with full scan. Expensive operation
-            path = find_host(host)
-            if not path:
+            g_folder = find_host(host)
+            if not g_folder:
                 raise MKGeneralException(_("The host <b>%s</b> is not managed by WATO.") % host)
         else: # fall back to root folder
-            path = ""
+            g_folder = g_root_folder
 
-    g_folder = g_folders.get(path)
-    html.set_var("folder", path) # in case of implizit folder selection
+    html.set_var("folder", g_folder['.path']) # in case of implizit folder selection
+
     if not g_folder:
         raise MKGeneralException(_('You called this page with a non-existing folder! '
                                  'Go back to the <a href="wato.py">main index</a>.'))
@@ -473,6 +474,7 @@ def save_hosts(folder):
                     if nag_varname not in custom_macros:
                         custom_macros[nag_varname] = {}
                     custom_macros.setdefault(nag_varname, {})[hostname] = nagstring
+
     for nag_varname, entries in custom_macros.items():
         macrolist = []
         for hostname, nagstring in entries.items():
@@ -980,7 +982,7 @@ def mode_editfolder(phase, new):
         return page_title
 
     elif phase == "buttons":
-        html.context_button(_("Abort"), make_link([("mode", "folder")]), "abort")
+        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
             
     elif phase == "action":
         if not html.check_transaction():
@@ -1186,7 +1188,7 @@ def mode_edithost(phase, new):
     elif phase == "buttons":
         if not new:
             host_status_button(hostname, "hoststatus")
-        html.context_button(_("Abort"), make_link([("mode", "folder")]), "abort")
+        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
         if not new:
             html.context_button(_("Services"), 
                   make_link([("mode", "inventory"), ("host", hostname)]))
@@ -1301,9 +1303,8 @@ def mode_inventory(phase, firsttime):
 
     elif phase == "buttons":
         host_status_button(hostname, "host")
-        html.context_button(_("Folder"), make_link([("mode", "folder")]))
-        html.context_button(_("Edit host"), 
-                            make_link([("mode", "edithost"), ("host", hostname)]))
+        html.context_button(_("Back"), 
+                            make_link([("mode", "edithost"), ("host", hostname)]), "back")
         html.context_button(_("Full Scan"), html.makeuri([("_scan", "yes")]))
 
     elif phase == "action":
@@ -1326,7 +1327,8 @@ def mode_inventory(phase, firsttime):
                         active_checks[(ct, item)] = paramstring
 
             check_mk_automation("set-autochecks", [hostname], active_checks)
-            message = _("Saved check configuration of host [%s] with %d services") % (hostname, len(active_checks)) 
+            message = _("Saved check configuration of host [%s] with %d services") % \
+                        (hostname, len(active_checks)) 
             log_pending(hostname, "set-autochecks", message) 
             return new_target, message
         return "folder"
@@ -1951,6 +1953,9 @@ def mode_changelog(phase):
         audit = parse_audit_log("audit")
         render_audit_log(audit, "audit")
 
+        if len(pending) + len(audit) == 0:
+            html.write("<div class=info>" + _("There are now pending or old changes yes.") + "</div>")
+
 
 def log_entry(linkinfo, action, message, logfilename):
     if type(message) == unicode:
@@ -2301,12 +2306,11 @@ def find_host(host):
     return find_host_in(host, g_root_folder)
 
 def find_host_in(host, folder):
-    for f in folder.get(".files", {}).values():
-        hosts = load_hosts_file(folder, f)
-        if host in hosts:
-            return f[".path"]
+    hosts = load_hosts(folder)
+    if host in hosts:
+        return folder
 
-    for f in folder.get(".folders", {}).values():
+    for f in folder.get(".folders").values():
         p = find_host_in(host, f)
         if p != None:
             return p
@@ -3277,6 +3281,7 @@ class TextAscii(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._size     = kwargs.get("size", 30)
+        self._allow_empty = kwargs.get("allow_empty", True)
 
     def default_value(self):
         return ""
@@ -3288,14 +3293,16 @@ class TextAscii(ValueSpec):
         return value
 
     def from_html_vars(self, varprefix):
-        return html.var(varprefix, "")
+        return html.var(varprefix, "").strip()
 
     def validate_datatype(self, value, varprefix): 
         if type(value) != str:
             raise MKUserError(varprefix, _("The value must be of type str, but it has type %s") % type(value)) 
 
-    #def validate_value(self, value, varprefix):
-    #    pass
+    def validate_value(self, value, varprefix):
+        if not self._allow_empty and value == "":
+            raise MKUserError(varprefix, _("An empty value is not allowed here."))
+
 
 # A variant of TextAscii() that validates a path to a filename that 
 # lies in an existing directory.
@@ -3413,6 +3420,7 @@ class DropdownChoice(ValueSpec):
             ", ".join([v for (v,t) in self._choices]))
 
 
+
 # Make a configuration value optional, i.e. it may be None.
 # The user has a checkbox for activating the option. Example:
 # debug_log: it is either None or set to a filename.
@@ -3435,6 +3443,8 @@ class Optional(ValueSpec):
                       onclick="wato_toggle_option(this, %r)" % div_id)
         if self._label:
             html.write(self._label)
+        elif self.title():
+            html.write(_(self.title()))
         else:
             html.write(_(" Activate this option"))
         html.write("<br><br>")
@@ -3442,6 +3452,8 @@ class Optional(ValueSpec):
                 div_id, not checked and "none" or ""))
         if value == None:
             value = ""
+        if self._valuespec.title():
+            html.write(self._valuespec.title() + " ")
         self._valuespec.render_input(varprefix + "_value", value)
         html.write('</div>')
 
@@ -3464,6 +3476,72 @@ class Optional(ValueSpec):
     def validate_value(self, value, varprefix):
         if value != None:
             self._valuespec.validate_value(value, varprefix + "_value")
+
+# Handle case when there are several possible allowed formats
+# for the value (e.g. strings, 4-tuple or 6-tuple like in SNMP-Communities)
+# The different alternatives must have different data types that can
+# be distinguished with validate_datatype.
+class Alternative(ValueSpec):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._elements = kwargs["elements"]
+
+    # Return the alternative (i.e. valuespec)
+    # that matches the datatype of a given value. We assume
+    # that always one matches. No error handling here.
+    def matching_alternative(self, value):
+        for vs in self._elements:
+            try:
+                vs.validate_datatype(value, "")
+                return vs
+            except:
+                pass
+
+    def render_input(self, varprefix, value):
+        mvs = self.matching_alternative(value)
+        for nr, vs in enumerate(self._elements):
+            html.radiobutton(varprefix + "_use", str(nr), vs == mvs, vs.title())
+            html.write("<ul>")
+            if vs == mvs:
+                val = value
+            else:
+                val = vs.default_value()
+            vs.render_input(varprefix + "_%d" % nr, val)
+            html.write("</ul>")
+
+    def set_focus(self, varprefix):
+        # TODO: Set focus to currently active option
+        pass
+
+    def default_value(self):
+        return self._elements[0].default_value()
+
+    def value_to_text(self, value):
+        vs = self.matching_alternative(value)
+        return vs.value_to_text(value)
+
+    def from_html_vars(self, varprefix):
+        nr = int(html.var(varprefix + "_use"))
+        vs = self._elements[nr] 
+        return vs.from_html_vars(varprefix + "_%d" % nr)
+
+    def validate_datatype(self, value, varprefix):
+        for vs in self._elements:
+            try:
+                vs.validate_datatype(value, "")
+                return
+            except:
+                pass
+        raise MKUserError(varprefix, 
+            _("The data type of the value does not match any of the "
+              "allowed alternatives."))
+
+    def validate_value(self, value, varprefix):
+        vs = self.matching_alternative(value)
+        for nr, v in enumerate(self._elements):
+            if vs == v:
+                vs.validate_value(value, varprefix + "_%d" % nr)
+    
 
 # Edit a n-tuple (with fixed size) of values
 class Tuple(ValueSpec):
@@ -3920,7 +3998,7 @@ def mode_view_ruleset(phase):
 
     elif phase == "action":
         # Folder for the rule actions is defined by _folder
-        rule_folder = g_folders[html.var("_folder")]
+        rule_folder = g_folders[html.var("_folder", html.var("folder"))]
         rulesets = load_rulesets(rule_folder) 
         rules = rulesets.get(varname, [])
 
@@ -4083,7 +4161,7 @@ def mode_view_ruleset(phase):
                 img = value and "yes" or "no"
                 title = value and _("This rule results in a positive outcome.") \
                               or  _("this rule results in a negative outcome.")
-                value_html = '<img title="%s" src="images/rule_%s.png">' % (title, img)
+                value_html = '<img align=absbottom title="%s" src="images/rule_%s.png">' % (title, img)
             html.write('%s</td>\n' % value_html)
 
             # Conditions
@@ -4608,6 +4686,8 @@ def save_rulesets(folder, rulesets):
             out.write("\n%s.setdefault(%r, [])\n" % (dictname, subkey))
             out.write("%s[%r] += [\n" % (dictname, subkey))
         else:
+            if rulespec["optional"]:
+                out.write("\nif %s == None:\n    %s = []\n" % (varname, varname))
             out.write("\n%s += [\n" % varname)
         for rule in ruleset:
             save_rule(out, folder, rulespec, rule)
@@ -4617,16 +4697,16 @@ def save_rule(out, folder, rulespec, rule):
     out.write("  ( ")
     value, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
     if rulespec["valuespec"]:
-        out.write(repr(value))
+        out.write(repr(value) + ", ")
     elif not value:
-        out.write("NEGATE")
+        out.write("NEGATE, ")
 
-    out.write(", [")
+    out.write("[")
     for tag in tag_specs:
         out.write(repr(tag))
         out.write(", ")
     if folder != g_root_folder:
-        out.write("'/' + FOLDER_PATH + '/'")
+        out.write("'/' + FOLDER_PATH + '/+'")
     out.write("], ")
     if len(host_list) > 0 and host_list[-1] == ALL_HOSTS[0]:
         if len(host_list) > 1:
@@ -4715,7 +4795,8 @@ def load_all_rulesets():
 g_rulespecs = {}
 g_rulespec_groups = {}
 def register_rule(group, varname, valuespec = None, title = None, 
-                  help = None, itemtype = None, itemname = None, match = "first"):
+                  help = None, itemtype = None, itemname = None, 
+                  match = "first", optional = False):
     ruleset = {
         "group"     : group, 
         "varname"   : varname, 
@@ -4725,7 +4806,9 @@ def register_rule(group, varname, valuespec = None, title = None,
         "match"     : match,
         "title"     : title or valuespec.title(),
         "help"      : help or valuespec.help(),
+        "optional"  : optional, # rule may be None (like only_hosts)
         }
+
     g_rulespec_groups.setdefault(group, []).append(ruleset)
     g_rulespecs[varname] = ruleset
  

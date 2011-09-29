@@ -30,7 +30,7 @@ declare_host_attribute(NagiosTextAttribute("alias", "alias", _("Alias"),
                        show_in_table = True, 
                        show_in_folder = False)
 
-declare_host_attribute(NagiosTextAttribute("ipaddress", "address", _("IP Address / DNS Name"),
+declare_host_attribute(TextAttribute("ipaddress", _("IP Address / DNS Name"),
                        _("In case the name of the host is not resolvable via <tt>/etc/hosts</tt> "
                          "or DNS by your monitoring server, you can specify an explicit IP "
                          "address or a resolvable DNS name of the host here. <b>Note</b>: If you leave "

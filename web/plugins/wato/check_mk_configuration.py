@@ -71,14 +71,6 @@ register_configvar(group,
                      "you should increase this accordingly.")))
 
 register_configvar(group,
-    "always_cleanup_autochecks",
-    Checkbox(title = _("Always cleanup autochecks"),
-             help = _("When switched on, Check_MK will always cleanup the autochecks files "
-                      "after each inventory, i.e. create one file per host. This is the same "
-                      "as adding the option <tt>-u</tt> to each call of <tt>-I</tt> on the "
-                      "command line.")))
-
-register_configvar(group,
     "check_submission",
     DropdownChoice(title = _("Check submission method"),
          help = _("If you set this to <b>Nagios command pipe</b>, then Check_MK will write its "
@@ -89,6 +81,43 @@ register_configvar(group,
                   "cores."),
          choices = [ ("pipe", _("Nagios command pipe")),
                      ("file", _("Create check files")) ]))
+
+group = _("Inventory - automatic service detection")
+
+register_configvar(group,
+    "inventory_check_interval",
+    Optional(
+        Integer(title = _("Do inventory check every"),
+                label = _("minutes"),
+                min_value = 1),
+        title = _("Enable regular inventory checks"),
+        help = _("If enabled, Check_MK will create one additional check per host "
+                 "that does a regular check, if the inventory would find new services "
+                 "currently un-monitored.")))
+
+register_configvar(group,
+    "inventory_check_severity",
+    DropdownChoice(
+        title = _("Severity of failed inventory check"),
+        help = _("Please select which alarm state the inventory check services "
+                 "shall assume in case that un-monitored services are found."),
+        choices = [
+            (0, _("OK - do not alert, just display")),
+            (1, _("Warning") ),
+            (2, _("Critical") ),
+            (3, _("Unknown") ),
+            ]))
+        
+
+
+
+register_configvar(group,
+    "always_cleanup_autochecks",
+    Checkbox(title = _("Always cleanup autochecks"),
+             help = _("When switched on, Check_MK will always cleanup the autochecks files "
+                      "after each inventory, i.e. create one file per host. This is the same "
+                      "as adding the option <tt>-u</tt> to each call of <tt>-I</tt> on the "
+                      "command line.")))
 
 #   +----------------------------------------------------------------------+
 #   |                         ____        _                                |
@@ -125,6 +154,16 @@ register_rule(group,
     itemtype = "service")
 
 register_rule(group,
+    "only_hosts",
+    title = _("Hosts to be monitored"),
+    help = _("By adding rules to this ruleset you can define a subset of your hosts "
+             "to be actually monitored. As long as the rule set is empty "
+             "all configured hosts will be monitored. As soon as you add at least one "
+             "rule, only hosts with a matching rule will be monitored."),
+    optional = True, # only_hosts is None per default
+    )
+
+register_rule(group,
     "ignored_services",
     title = _("Ignored services"),
     help = _("Services that are declared as <u>ignored</u> by this rule set will not be added "
@@ -135,13 +174,46 @@ register_rule(group,
 
 group = _("SNMP")
 
+_snmpv3_basic_elements = [
+     DropdownChoice(
+         choices = [ 
+             ( "authPriv",     _("authPriv")),   
+             ( "authNoPriv",   _("authNoPriv")), 
+             ( "noAuthNoPriv", _("noAuthNoPriv")), 
+             ],
+         title = _("Security level")),
+      DropdownChoice(
+          choices = [
+             ( "md5", _("MD5") ),
+             ( "sha", _("SHA1") ),
+          ],
+          title = _("Authentication protocol")),
+     TextAscii(title = _("Security name")),
+     TextAscii(title = _("Authentication password"))]
+
 register_rule(group,
     "snmp_communities",
-    TextAscii(title = _("SNMP communities of monitored hosts"),
-              help = _("Check_MK needs an SNMP <i>community</i> - a kind of password - for each "
-                       "host to be monitored via SNMP. Please check the settings of your monitored "
-                       "devices if you are unsure about the community."),
-              allow_empty = False))
+    Alternative(
+       elements = [
+           TextAscii(
+               title = _("SNMP community (SNMP Versions 1 and 2c)"),
+               allow_empty = False),
+           Tuple(
+               title = _("Credentials for SNMPv3"),
+               elements = _snmpv3_basic_elements),
+           Tuple(
+               title = _("Credentials for SNMPv3 including privacy options"),
+               elements = _snmpv3_basic_elements + [
+                  DropdownChoice(
+                      choices = [
+                         ( "DES", _("DES") ),
+                         ( "AES", _("AES") ),
+                      ],
+                      title = _("Privacy protocol")),
+                 TextAscii(title = _("Privacy pass phrase")),
+                   ])],
+        title = _("SNMP communities of monitored hosts")))
+
 
 group = _("Operation mode of Check_MK") 
 

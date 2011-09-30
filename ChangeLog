@@ -14,6 +14,7 @@
     Multisite:
     * FIX: fix rescheduling of host check
     * FIX: fix exception when using status_host while local site is offline
+    * FIX: Fixed not updating pnp graphs on dashboard in some browsers (like chrome)
     * Added some missing i18n strings in general HTML functions
     * Added display_option "w" to disable limit messages and livestatus errors in views
     * Service Perfdata Sorters are sorting correctly now

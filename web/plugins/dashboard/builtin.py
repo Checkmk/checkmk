@@ -29,16 +29,16 @@ builtin_dashboards = {
         "title" : _("Main Overview"),
         "dashlets" : [
             { 
-                "url"        : "dashlet_overview.py", 
+                "url"        : "dashlet_mk_logo.py", 
                 "position"   : (1, 1),
-                "size"       : (10, 5),
+                "size"       : (4, 5),
                 "shadow"     : False,
                 "background" : False,
             },
             {
                 "title"      : _("Host Statistics"),
                 "url"        : "dashlet_hoststats.py",
-                "position"   : (11, 1),
+                "position"   : (6, 1),
                 "size"       : (10, 6),
                 "shadow"     : True,
                 "background" : True,
@@ -47,7 +47,7 @@ builtin_dashboards = {
             {
                 "title"      : _("Service Statistics"),
                 "url"        : "dashlet_servicestats.py",
-                "position"   : (21, 1),
+                "position"   : (16, 1),
                 "size"       : (10, 6),
                 "shadow"     : True,
                 "background" : True,

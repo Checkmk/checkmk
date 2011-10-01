@@ -64,6 +64,7 @@ pagehandlers.update({
    "dashboard"             : dashboard.page_dashboard,
    "dashboard_resize"      : dashboard.ajax_resize,
    "dashlet_overview"      : dashboard.dashlet_overview,
+   "dashlet_mk_logo"       : dashboard.dashlet_mk_logo,
    "dashlet_hoststats"     : dashboard.dashlet_hoststats,
    "dashlet_servicestats"  : dashboard.dashlet_servicestats,
    "dashlet_pnpgraph"      : dashboard.dashlet_pnpgraph,

@@ -391,6 +391,11 @@ def dashlet_overview():
 
     html.write('</tr></table>')
 
+def dashlet_mk_logo():
+    html.write('<a href="http://mathias-kettner.de/check_mk.html">'
+     '<img style="margin-right: 30px;" src="images/check_mk.trans.120.png"></a>')
+
+
 
 def dashlet_hoststats():
     table = [

@@ -78,7 +78,7 @@ def check_mrpe(item, params, info):
 		best_state = state
 
     if best_state == None:
-	return (3, "Check output not found in local checks")
+	return (3, "Check output not found in output of MRPE")
     else:
 	return best_result
 

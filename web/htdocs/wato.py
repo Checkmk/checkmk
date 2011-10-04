@@ -542,6 +542,9 @@ def mode_folder(phase):
         changelog_button()
         html.context_button(_("Backup / Restore"), make_link([("mode", "snapshot")]), "backup")
         html.context_button(_("Configuration"),    make_link([("mode", "configuration")]), "configuration")
+        html.context_button(_("Host groups"),    make_link([("mode", "host_groups")])),
+        html.context_button(_("Service groups"),    make_link([("mode", "service_groups")])),
+        html.context_button(_("Contact groups"),    make_link([("mode", "contact_groups")])),
         html.context_button(_("Rulesets"),  make_link_to([("mode", "rulesets")], g_folder), "rulesets")
         html.context_button(_("Properties"),make_link_to([("mode", "editfolder")], g_folder), "properties")
         html.context_button(_("New folder"),make_link([("mode", "newfolder")]), "newfolder")
@@ -891,6 +894,7 @@ def move_hosts_to(hostnames, path):
 
 def move_host_to(hostname, target_filename):
     move_hosts_to([hostname], target_filename)
+
 def delete_hosts_after_confirm(hosts):
     c = wato_confirm(_("Confirm deletion of %d hosts") % len(hosts),
                      _("Do you really want to delete the %d selected hosts?") % len(hosts))
@@ -3883,6 +3887,184 @@ def save_configuration_vars(vars, filename):
         out.write("%s = %r\n" % (varname, value))
     
 
+#   +----------------------------------------------------------------------+
+#   |                    ____                                              |
+#   |                   / ___|_ __ ___  _   _ _ __  ___                    |
+#   |                  | |  _| '__/ _ \| | | | '_ \/ __|                   |
+#   |                  | |_| | | | (_) | |_| | |_) \__ \                   |
+#   |                   \____|_|  \___/ \__,_| .__/|___/                   |
+#   |                                        |_|                           |
+#   +----------------------------------------------------------------------+
+#   | Mode for editing host-, service- and contact groups                  |
+#   +----------------------------------------------------------------------+
+def mode_groups(phase, what):
+    if what == "host":
+        what_name = _("host groups")
+    elif what == "service":
+        what_name = _("service groups")
+    elif what == "contact":
+        what_name = _("contact groups")
+
+    if phase == "title":
+        return what_name.title()
+
+    elif phase == "buttons":
+        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
+        html.context_button(_("New group"), make_link([("mode", "edit_group"), ("what", what)]), "new")
+        return
+
+    all_groups = load_group_information()
+    groups = all_groups.get(what, {})
+
+    if phase == "action":
+        delname = html.var("_delete")
+        c = wato_confirm(_("Confirm deletion of group %s" % delname),
+                         _("Do you really want to delete the group %s? If there are still objects "
+                           "assigned to that group, the group will kept up (but without an alias). "
+                           "Removing all objects from the will make the group disappear completely. " % what))
+        if c: 
+            del groups[delname]
+            save_group_information(all_groups)
+            log_pending(None, "edit-%sgroups", _("Delete %s group %s" % (what, delname)))
+            return None
+        elif c == False:
+            return ""
+        else:
+            return None
+
+    sorted = groups.items()
+    sorted.sort()
+    html.write("<h3>%s</h3>" % what_name.title())
+    if len(sorted) == 0:
+        html.write("<div class=info>" + _("There are not defined any groups yet.") + "</div>")
+        return
+
+    html.write("<table class=data>")
+    html.write("<tr><th>" + _("Actions") 
+                + "</th><th>" + _("Name") 
+                + "</th><th>" + _("Alias") 
+                + "</th></tr>\n")
+
+    odd = "even"
+    for name, alias in sorted:
+        odd = odd == "odd" and "even" or "odd" 
+        html.write('<tr class="data %s0">' % odd)
+        edit_url = make_link([("mode", "edit_group"), ("what", what), ("edit", name)])
+        delete_url = html.makeactionuri([("_delete", name)])
+        html.write("<td class=buttons>")
+        html.buttonlink(edit_url, _("Properties"))
+        html.buttonlink(delete_url, _("Delete"))
+        html.write("</td><td>%s</td><td>%s</td></tr>" % (name, alias))
+    html.write("</table>")
+
+
+def mode_edit_group(phase):
+    what = html.var("what")
+    name = html.var("edit") # missing -> new group
+    new = name == None
+
+    if phase == "title":
+        if new:
+            if what == "host":
+                return _("Create new host group")
+            elif what == "service":
+                return _("Create new service group")
+            elif what == "contact":
+                return _("Create new contact group")
+        else:
+            if what == "host":
+                return _("Edit host group")
+            elif what == "service":
+                return _("Edit service group")
+            elif what == "contact":
+                return _("Edit contact group")
+
+    elif phase == "buttons":
+        html.context_button(_("Back"), make_link([("mode", "%s_groups" % what)]), "back")
+        return
+
+    all_groups = load_group_information()
+    groups = all_groups.setdefault(what, {})
+
+    if phase == "action":
+        if html.check_transaction():
+            alias = html.var("alias").strip()
+            if new:
+                name = html.var("name").strip()
+                if len(name) == 0:
+                    raise MKUserError("name", _("Please specify a name of the new group."))
+                if not re.match("^[-a-z0-9A-Z_]*$", name):
+                    raise MKUserError(htmlvarname, _("Invalid group name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
+                groups[name] = alias
+                log_pending(None, "edit-%sgroups" % what, _("Create new %s group %s" % (what, name)))
+            else:
+                groups[name] = alias
+                log_pending(None, "edit-%sgroups" % what, _("Changed alias of %s group %s" % (what, name)))
+            save_group_information(all_groups)
+
+        return what + "_groups"
+
+
+    html.begin_form("group")
+    html.write("<table class=form>")
+    html.write("<tr><td class=legend>") 
+    html.write(_("Name<br><i>The name of the group is used as an internal key. It cannot be "
+                 "changed later. It is also visible in the status GUI.</i>"))
+    html.write("</td><td class=content>") 
+    if new:
+        html.text_input("name")
+        html.set_focus("name")
+    else:
+        html.write(name)
+        html.set_focus("alias")
+    html.write("</td></tr>")
+
+    html.write("<tr><td class=legend>")
+    html.write(_("Alias<br><i>A description of this group.</i>"))  
+    html.write("</td><td class=content>")
+    html.text_input("alias")
+    html.write("</td></tr>") 
+    html.write("<tr><td class=buttons colspan=2>")
+    html.button("save", _("Save"))
+    html.write("</td></tr></table>")
+    html.hidden_fields()
+    html.end_form()
+
+
+
+    # Formular malen für neue / bestehende Gruppe 
+
+def load_group_information():
+    try:
+        filename = root_dir + "groups.mk"
+        if not os.path.exists(filename):
+            return {}
+
+        vars = {}
+        for what in ["host", "service", "contact" ]:
+            vars["define_%sgroups" % what] = {}
+        
+        execfile(filename, vars, vars)
+        groups = {}
+        for what in ["host", "service", "contact" ]:
+            groups[what] = vars.get("define_%sgroups" % what, {})
+        return groups
+
+    except Exception, e:
+        if config.debug:
+            raise MKGeneralException(_("Cannot read configuration file %s: %s" %  
+                          (filename, e)))
+        return {}
+
+def save_group_information(groups):
+    make_nagios_directory(root_dir)
+    out = file(root_dir + "groups.mk", "w")
+    out.write("# Written by WATO\n# encoding: utf-8\n\n")
+    for what in [ "host", "service", "contact" ]:
+        if what in groups and len(groups[what]) > 0:
+            out.write("if not define_%sgroups:\n    define_%sgroups = {}\n" % (what, what))
+            out.write("define_%sgroups.update(%s)\n\n" % (what, pprint.pformat(groups[what])))
+
 
 #   +----------------------------------------------------------------------+
 #   |           ____        _        _____    _ _ _                        |
@@ -5077,6 +5259,10 @@ mode_functions = {
    "rulesets"       : mode_rulesets,
    "view_ruleset"   : mode_view_ruleset,
    "edit_rule"      : mode_edit_rule,
+   "host_groups"    : lambda phase: mode_groups(phase, "host"),
+   "service_groups" : lambda phase: mode_groups(phase, "service"),
+   "contact_groups" : lambda phase: mode_groups(phase, "contact"),
+   "edit_group"     : mode_edit_group,
 }
 
 extra_buttons = [

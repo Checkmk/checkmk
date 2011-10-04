@@ -2139,6 +2139,16 @@ table.add_snapin i {
 /*    vertical-align: top; */
 }
 
+.wato table.timeperiod td.name { 
+    width: 200px;
+}
+.wato table.timeperiod td { 
+    white-space: nowrap;
+}
+.wato input.timeperioddate {
+    width: 7ex;
+    font-family: monospace;
+}
 
 /* 
     ____                                    

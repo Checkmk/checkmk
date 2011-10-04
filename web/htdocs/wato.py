@@ -540,15 +540,16 @@ def mode_folder(phase):
     elif phase == "buttons":
         folder_status_button()
         changelog_button()
-        html.context_button(_("Backup / Restore"), make_link([("mode", "snapshot")]), "backup")
-        html.context_button(_("Configuration"),    make_link([("mode", "configuration")]), "configuration")
-        html.context_button(_("Host groups"),    make_link([("mode", "host_groups")]), "hostgroups"),
+        html.context_button(_("Backup / Restore"),  make_link([("mode", "snapshot")]), "backup")
+        html.context_button(_("Configuration"),     make_link([("mode", "configuration")]), "configuration")
+        html.context_button(_("Host groups"),       make_link([("mode", "host_groups")]), "hostgroups"),
         html.context_button(_("Service groups"),    make_link([("mode", "service_groups")]), "servicegroups"),
         html.context_button(_("Contact groups"),    make_link([("mode", "contact_groups")]), "contactgroups"),
-        html.context_button(_("Rulesets"),  make_link_to([("mode", "rulesets")], g_folder), "rulesets")
-        html.context_button(_("Properties"),make_link_to([("mode", "editfolder")], g_folder), "properties")
-        html.context_button(_("New folder"),make_link([("mode", "newfolder")]), "newfolder")
-        html.context_button(_("New host"),  make_link([("mode", "newhost")]), "new")
+        html.context_button(_("Timeperiods"),       make_link([("mode", "timeperiods")]), "timeperiods"),
+        html.context_button(_("Rulesets"),          make_link_to([("mode", "rulesets")], g_folder), "rulesets")
+        html.context_button(_("Properties"),        make_link_to([("mode", "editfolder")], g_folder), "properties")
+        html.context_button(_("New folder"),        make_link([("mode", "newfolder")]), "newfolder")
+        html.context_button(_("New host"),          make_link([("mode", "newhost")]), "new")
         search_button()
     
     elif phase == "action":
@@ -4117,6 +4118,283 @@ class GroupSelection(ValueSpec):
             raise MKUserError(varprefix, _("The datatype must be str (string), but is %s") % type(value))
 
 
+
+#   +----------------------------------------------------------------------+
+#   |      _____ _                                _           _            |
+#   |     |_   _(_)_ __ ___   ___ _ __   ___ _ __(_) ___   __| |___        |
+#   |       | | | | '_ ` _ \ / _ \ '_ \ / _ \ '__| |/ _ \ / _` / __|       |
+#   |       | | | | | | | | |  __/ |_) |  __/ |  | | (_) | (_| \__ \       |
+#   |       |_| |_|_| |_| |_|\___| .__/ \___|_|  |_|\___/ \__,_|___/       |
+#   |                            |_|                                       |
+#   +----------------------------------------------------------------------+
+#   | Modes for managing Nagios' timeperiod definitions.                   |
+#   +----------------------------------------------------------------------+
+def mode_timeperiods(phase):
+    if phase == "title":
+        return _("Timeperiod definitions")
+
+    elif phase == "buttons":
+        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
+        html.context_button(_("New Timeperiod"), make_link([("mode", "edit_timeperiod")]), "new")
+        return
+
+    timeperiods = load_timeperiods()
+
+    if phase == "action":
+        return
+
+    html.write("<h3>" + _("Timeperiod definitions") + "</h3>")
+
+    if len(timeperiods) == 0: 
+        html.write("<div class=info>" + _("There are no timeperiods defined yet.") + "</div>") 
+        return
+
+    html.write("<table class=data>")
+    html.write("<tr><th>" 
+               + _("Actions") + "</th><th>"
+               + _("Name") + "</th><th>"
+               + _("Alias") + "</th></tr>")
+
+    odd = "even" 
+    names = timeperiods.keys()
+    names.sort()
+    for name in names: 
+        odd = odd == "odd" and "even" or "odd" 
+        html.write('<tr class="data %s0">' % odd)
+
+        timeperiod = timeperiods[name]
+        edit_url     = make_link([("mode", "edit_timeperiod"), ("edit", name)])
+        delete_url   = html.makeactionuri([("_delete", name)])
+
+        html.write("<td class=buttons>")
+        html.buttonlink(edit_url, _("Properties"))
+        html.buttonlink(delete_url, _("Delete"))
+        html.write("</td>")
+
+        html.write("<td>%s</td>" % name)
+        html.write("<td>%s</td>" % timeperiod.get("alias", ""))
+        html.write("</tr>")
+
+    html.write("</table>")
+
+
+def load_timeperiods():
+    filename = root_dir + "timeperiods.mk"
+    if not os.path.exists(filename):
+        return {}
+    try:
+        vars = { "timeperiods" : {} }
+        execfile(filename, vars, vars)
+        return vars["timeperiods"]
+    
+    except Exception, e:
+        if config.debug:
+            raise MKGeneralException(_("Cannot read configuration file %s: %s" %  
+                          (filename, e)))
+        return {}
+
+
+def save_timeperiods(timeperiods):
+    make_nagios_directory(root_dir)
+    out = file(root_dir + "timeperiods.mk", "w")
+    out.write("# Written by WATO\n# encoding: utf-8\n\n")
+    out.write("timeperiods.update(%s)\n" % pprint.pformat(timeperiods))
+
+
+def mode_edit_timeperiod(phase):
+    num_columns = 3
+    num_exceptions = 10
+
+    def timeperiod_ranges(keyname):
+        ranges = timeperiod.get(keyname, [])
+        for c in range(num_columns): 
+            if c < len(ranges):
+                fromto = ranges[c]
+            elif new and c == 0:
+                fromto = "00:00", "24:00"
+            else:
+                fromto = "", ""
+            html.write("<td>")
+            var_prefix = keyname + "_%d_" % c
+            html.text_input(var_prefix + "from", fromto[0], cssclass = "timeperioddate")
+            html.write(" - ")
+            val = c == 0 and "24:00" or ""
+            html.text_input(var_prefix + "to", fromto[1], cssclass = "timeperioddate")
+            if c != num_columns - 1:
+                html.write("&nbsp; &nbsp; &nbsp;")
+            html.write("</td>")
+
+    def get_ranges(varprefix):
+        ranges = []
+        for c in range(num_columns):
+            vp = "%s_%d_" % (varprefix, c)
+            begin = html.var(vp + "from", "").strip()
+            end  = html.var(vp + "to", "").strip()
+            if not begin and not end:
+                continue
+            if not begin:
+                begin = "00:00"
+            if not end:
+                end = "24:00"
+            for what, bound in [ ("from", begin), ("to", end) ]:
+                if not valid_bound(bound):
+                    raise MKUserError(vp + what,
+                           _("Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format.") % bound)
+            ranges.append((begin, end))
+        return ranges
+
+
+    def valid_bound(bound):
+        return re.match("^(24|[0-1][0-9]|2[0-3]):[0-5][0-9]$", bound)
+
+    name = html.var("edit") # missing -> new group
+    new = name == None
+
+    if phase == "title":
+        if new:
+            return _("Create new time period")
+        else:
+            return _("Edit time period")
+
+    elif phase == "buttons":
+        html.context_button(_("Back"), make_link([("mode", "timeperiods")]), "back")
+        return
+
+    timeperiods = load_timeperiods() 
+    if new:
+        timeperiod = {}
+    else:
+        timeperiod = timeperiods.get(name, {})
+
+    weekdays = [
+      ( "monday",    _("Monday") ),
+      ( "tuesday",   _("Tuesday") ),
+      ( "wednesday", _("Wednesday") ),
+      ( "thursday",  _("Thursday") ),
+      ( "friday",    _("Friday") ),
+      ( "saturday",  _("Saturday") ),
+      ( "sunday",    _("Sunday") ),
+    ]
+
+    if phase == "action":
+        if html.check_transaction():
+            alias = html.var_utf8("alias")
+        
+            # extract time ranges of weekdays
+            for weekday, weekday_name in weekdays:
+                ranges = get_ranges(weekday)
+                if ranges:
+                    timeperiod[weekday] = ranges
+
+            # extract ranges for custom days
+            for e in range(0, num_exceptions): 
+                varprefix = "ex%d" % e
+                exname = html.var(varprefix + "_name", "").strip() 
+                if exname in [ w[0] for w in weekdays ]:
+                    raise MKUserError(varprefix + "_name", 
+                           _("You may not specify a weekday's name as an exception."))
+                if exname and exname not in [ "alias", "timeperiod_name" ]:
+                    if not re.match("^[-a-z0-9A-Z /]*$", exname):
+                        raise MKUserError(varprefix + "_name", 
+                            _("'%s' is not a valid Nagios timeperiod day specification.") % exname)
+                    ranges = get_ranges(varprefix)
+                    if ranges:
+                        timeperiod[exname] = ranges
+
+            if new:
+                name = html.var("name")
+                if len(name) == 0:
+                    raise MKUserError("name", _("Please specify a name of the new timeperiod."))
+                if not re.match("^[-a-z0-9A-Z_]*$", name):
+                    raise MKUserError(htmlvarname, _("Invalid timeperiod name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
+                timeperiods[name] = timeperiod
+                log_pending(None, "edit-timeperiods", _("Created new time period %s" % name))
+            else:
+                log_pending(None, "edit-timeperiods", _("Modified time period %s" % name))
+            timeperiod["alias"] = alias 
+            save_timeperiods(timeperiods)
+            return "timeperiods"
+        return
+
+    html.begin_form("timeperiod", method="POST")
+    html.write("<table class=form>")
+
+
+    # Name
+    html.write("<tr><td class=legend>")
+    html.write(_("Internal name"))
+    html.write("</td><td class=content>")
+    if new:
+        html.text_input("name")
+    else:
+        html.write(name) 
+    html.write("</td></tr>")
+
+    # Alias
+    if not new:
+        alias = timeperiods[name].get("alias", "")
+    else:
+        alias = ""
+    html.write("<tr><td class=legend>")
+    html.write(_("Alias") + "<br><i>" + _("An optional description of the timeperiod</i>"))
+    html.write("</td><td class=content>")
+    html.text_input("alias", alias, size = 50)
+    html.write("</td></tr>")
+
+    # Week days
+    html.write("<tr><td class=legend>")
+    html.write(_("Weekdays<br><i>For each weekday you can setup no, one or several "
+                 "time ranges in the format <tt>23:39</tt>, in which the time period "
+                 "should be active."))
+    html.write("</td><td class=content>")
+    html.write("<table class=timeperiod>")
+
+    for weekday, weekday_alias in weekdays:
+        ranges = timeperiod.get(weekday)
+        html.write("<tr><td class=name>%s</td>" % weekday_alias)
+        timeperiod_ranges(weekday)
+        html.write("</tr>")
+    html.write("</table></td></tr>")
+
+    # Exceptions
+    html.write("<tr><td class=legend>")
+    nagurl = "../nagios/docs/objectdefinitions.html#timeperiod"
+    html.write(_("Exceptions<br><i>Here you can specify exceptional time ranges for certain "
+                 "relative or absolute dates. Please consult the <a target='_blank' href='%s'>Nagios documentation about "
+                 "timeperiods</a> for examples." % nagurl))
+    html.write("</td><td class=content>") 
+    html.write("<table class=timeperiod>")
+
+    exnames =  []
+    for k in timeperiod:
+        if k not in [ w[0] for w in weekdays ] and k != "alias":
+            exnames.append(k)
+    exnames.sort()
+            
+    for e in range(num_exceptions): 
+        if e < len(exnames):
+            exname = exnames[e]
+            ranges = timeperiod[exname]
+        else:
+            exname = ""
+            ranges = []
+        varprefix = "ex%d" % e
+        html.write("<tr><td class=name>")
+        html.text_input(varprefix + "_name", exname)
+        html.write("</td>")
+        timeperiod_ranges(exname)
+        html.write("</tr>")
+    html.write("</table></td></tr>")
+
+    html.write("<tr><td colspan=2 class=buttons>")
+    html.button("save", _("Save"))
+    html.write("</td></tr>")
+    html.write("</table>")
+    html.hidden_fields()
+    html.end_form()
+
+
+
 #   +----------------------------------------------------------------------+
 #   |           ____        _        _____    _ _ _                        |
 #   |          |  _ \ _   _| | ___  | ____|__| (_) |_ ___  _ __            |
@@ -5292,28 +5570,30 @@ def debug(info):
 
 
 mode_functions = {
-   "folder"         : mode_folder,
-   "newfolder"      : lambda phase: mode_editfolder(phase, True),
-   "editfolder"     : lambda phase: mode_editfolder(phase, False),
-   "newhost"        : lambda phase: mode_edithost(phase, True),
-   "edithost"       : lambda phase: mode_edithost(phase, False),
-   "firstinventory" : lambda phase: mode_inventory(phase, True),
-   "inventory"      : lambda phase: mode_inventory(phase, False),
-   "search"         : mode_search,
-   "bulkinventory"  : mode_bulk_inventory,
-   "bulkedit"       : mode_bulk_edit,
-   "bulkcleanup"    : mode_bulk_cleanup,
-   "changelog"      : mode_changelog,
-   "snapshot"       : mode_snapshot,
-   "configuration"  : mode_configuration,
-   "edit_configvar" : mode_edit_configvar,
-   "rulesets"       : mode_rulesets,
-   "view_ruleset"   : mode_view_ruleset,
-   "edit_rule"      : mode_edit_rule,
-   "host_groups"    : lambda phase: mode_groups(phase, "host"),
-   "service_groups" : lambda phase: mode_groups(phase, "service"),
-   "contact_groups" : lambda phase: mode_groups(phase, "contact"),
-   "edit_group"     : mode_edit_group,
+   "folder"          : mode_folder,
+   "newfolder"       : lambda phase: mode_editfolder(phase, True),
+   "editfolder"      : lambda phase: mode_editfolder(phase, False),
+   "newhost"         : lambda phase: mode_edithost(phase, True),
+   "edithost"        : lambda phase: mode_edithost(phase, False),
+   "firstinventory"  : lambda phase: mode_inventory(phase, True),
+   "inventory"       : lambda phase: mode_inventory(phase, False),
+   "search"          : mode_search,
+   "bulkinventory"   : mode_bulk_inventory,
+   "bulkedit"        : mode_bulk_edit,
+   "bulkcleanup"     : mode_bulk_cleanup,
+   "changelog"       : mode_changelog,
+   "snapshot"        : mode_snapshot,
+   "configuration"   : mode_configuration,
+   "edit_configvar"  : mode_edit_configvar,
+   "rulesets"        : mode_rulesets,
+   "view_ruleset"    : mode_view_ruleset,
+   "edit_rule"       : mode_edit_rule,
+   "host_groups"     : lambda phase: mode_groups(phase, "host"),
+   "service_groups"  : lambda phase: mode_groups(phase, "service"),
+   "contact_groups"  : lambda phase: mode_groups(phase, "contact"),
+   "edit_group"      : mode_edit_group,
+   "timeperiods"     : mode_timeperiods,
+   "edit_timeperiod" : mode_edit_timeperiod,
 }
 
 extra_buttons = [

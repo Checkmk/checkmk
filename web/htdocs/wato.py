@@ -107,10 +107,11 @@ config.declare_permission("use_wato",
      _("This permissions allows users to use WATO - Check_MK's Web Administration Tool."),
      [ "admin", "user" ])
 
-root_dir     = defaults.check_mk_configdir + "/wato/"
-var_dir      = defaults.var_dir + "/wato/"
-log_dir      = var_dir + "log/"
-snapshot_dir = var_dir + "/snapshots/"
+root_dir      = defaults.check_mk_configdir + "/wato/"
+multisite_dir = defaults.default_config_dir + "/multisite.d/"
+var_dir       = defaults.var_dir + "/wato/"
+log_dir       = var_dir + "log/"
+snapshot_dir  = var_dir + "/snapshots/"
 
 ALL_HOSTS    = [ '@all' ]
 ALL_SERVICES = [ "" ]
@@ -3168,8 +3169,9 @@ def delete_root_dir():
 # Abstract base class of all value declaration classes.
 class ValueSpec:
     def __init__(self, **kwargs):
-        self._title = kwargs.get("title")
-        self._help  = kwargs.get("help")
+        self._title         = kwargs.get("title")
+        self._help          = kwargs.get("help")
+        self._default_value = kwargs.get("default_value")
 
     def title(self): 
         return self._title
@@ -3194,7 +3196,7 @@ class ValueSpec:
     # matches the datatype of the value specification and
     # fullfills also data validation.
     def default_value(self):
-        return None
+        return self._default_value
 
     # Creates a text-representation of the value that can be
     # used in tables and other contextes. It is to be read 
@@ -3693,16 +3695,17 @@ def mode_configuration(phase):
         html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
         return
     
-    # Get default settings of all configuration variables of interest (this
-    # also reflects the settings done in main.mk)
-    default_values = check_mk_automation("get-configuration", [], g_configvars.keys())
+    # Get default settings of all configuration variables of interest in the domain
+    # "check_mk". (this also reflects the settings done in main.mk)
+    check_mk_vars = [ varname for (varname, var) in g_configvars.items() if var[0] == "check_mk" ]
+    default_values = check_mk_automation("get-configuration", [], check_mk_vars)
     current_settings = load_configuration_settings()
 
     if phase == "action":
         varname = html.var("_reset")
         if varname:
-            valuespec = g_configvars[varname]
-            def_value = default_values[varname]
+            domain, valuespec = g_configvars[varname]
+            def_value = default_values.get(varname, valuespec.default_value())
 
             c = wato_confirm(
                 _("Resetting configuration variable"),
@@ -3730,17 +3733,18 @@ def mode_configuration(phase):
                    _("Default") + "</th><th>" + _("Your setting") + "</th><th></th></tr>\n")
         odd = "even"
             
-        for varname, valuespec in g_configvar_groups[groupname]: 
+        for domain, varname, valuespec in g_configvar_groups[groupname]: 
             odd = odd == "odd" and "even" or "odd" 
             html.write('<tr class="data %s0">' % odd)
-            if varname not in default_values:
+            if domain == "check_mk" and varname not in default_values:
                 if config.debug:
                     raise MKGeneralException("The configuration variable <tt>%s</tt> is unknown to "
                                           "your local Check_MK installation" % varname)
                 else:
                     continue
                 
-            defaultvalue = default_values[varname]
+            defaultvalue = default_values.get(varname, valuespec.default_value())
+
             edit_url = make_link([("mode", "edit_configvar"), ("varname", varname)])
 
             html.write('<td><a href="%s">%s</a></td>' % (edit_url, valuespec.title()))
@@ -3772,7 +3776,7 @@ def mode_edit_configvar(phase):
         return
 
     varname = html.var("varname")
-    valuespec = g_configvars[varname]
+    domain, valuespec = g_configvars[varname]
     current_settings = load_configuration_settings() 
 
     if phase == "action":
@@ -3787,7 +3791,8 @@ def mode_edit_configvar(phase):
     if varname in current_settings:
         value = current_settings[varname]
     else:
-        value = check_mk_automation("get-configuration", [], [varname])[varname]
+        check_mk_vars = check_mk_automation("get-configuration", [], [varname])
+        value = check_mk_vars.get(varname, valuespec.default_value())
 
     html.begin_form("value_editor")
     html.write("<h3>%s</h3>" % valuespec.title())
@@ -3803,9 +3808,11 @@ def mode_edit_configvar(phase):
 
 g_configvars = {}
 g_configvar_groups = {}
-def register_configvar(group, name, valuespec):
-    g_configvar_groups.setdefault(group, []).append((name, valuespec))
-    g_configvars[name] = valuespec
+
+# domain is one of "check_mk", "multisite" or "nagios"
+def register_configvar(group, varname, valuespec, domain="check_mk"):
+    g_configvar_groups.setdefault(group, []).append((domain, varname, valuespec))
+    g_configvars[varname] = domain, valuespec
  
 
 # Persistenz: Speicherung der Werte
@@ -3825,19 +3832,42 @@ def register_configvar(group, name, valuespec):
 #   ausgibt.
 
 def load_configuration_settings():
+    settings = {}
+    load_configuration_vars(multisite_dir + "wato.mk",   settings)
+    load_configuration_vars(root_dir      + "global.mk", settings)
+    return settings
+
+
+def load_configuration_vars(filename, settings):
+    if not os.path.exists(filename):
+        return {}
     try:
-        settings = {}
-        execfile(root_dir + "global.mk", settings, settings)
+        execfile(filename, settings, settings)
         for varname in settings.keys():
             if varname not in g_configvars:
                 del settings[varname]
         return settings
-    except:
+    except Exception, e: 
+        if config.debug:
+            raise MKGeneralException(_("Cannot read configuration file %s: %s" %  
+                          (filename, e)))
         return {}
 
+
 def save_configuration_settings(vars):
+    per_domain = {}
+    for varname, (domain, valuespec) in g_configvars.items():
+        if varname not in vars:
+            continue
+        per_domain.setdefault(domain, {})[varname] = vars[varname]
+
     make_nagios_directory(root_dir)
-    out = file(root_dir + "global.mk", "w")
+    save_configuration_vars(per_domain.get("check_mk", {}), root_dir + "global.mk")
+    make_nagios_directory(multisite_dir)
+    save_configuration_vars(per_domain.get("multisite", {}), multisite_dir + "wato.mk")
+
+def save_configuration_vars(vars, filename):
+    out = file(filename, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     for varname, value in vars.items():
         out.write("%s = %r\n" % (varname, value))

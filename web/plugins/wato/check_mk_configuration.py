@@ -16,6 +16,19 @@ group = _("Configuration of Checks")
 
 # ignored_checktypes --> Hier brauchen wir noch einen neuen Value-Typ
 
+group = _("Multisite & WATO")
+
+register_configvar(group,
+    "debug",
+    Checkbox(title = _("Debug mode"),
+             label = _("enable debug mode"),
+             help = _("When Multisite is running in debug mode, all Livestatus queries done in " 
+                      "views are output. Also when errors occur a complete Python stack trace "
+                      "is being output."),
+            default_value = False),
+    domain = "multisite")
+                       
+
 group = _("Operation mode of Check_MK") 
 
 register_configvar(group,

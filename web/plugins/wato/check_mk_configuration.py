@@ -181,6 +181,39 @@ register_configvar(group,
 #   | Declaration of rules to be defined in main.mk or in folders          |
 #   +----------------------------------------------------------------------+
 
+group = _("Grouping")
+
+register_rule(group, 
+    "host_groups",
+    GroupSelection(
+        "host",
+        title = _("Assignment of hosts to host groups")),
+    match = "all")
+
+register_rule(group, 
+    "service_groups",
+    GroupSelection(
+        "service",
+        title = _("Assignment of services to service groups")),
+    match = "all",
+    itemtype = "service")
+
+register_rule(group, 
+    "host_contactgroups",
+    GroupSelection(
+        "contact",
+        title = _("Assignment of hosts to contact groups")),
+    match = "all")
+
+register_rule(group, 
+    "service_contactgroups",
+    GroupSelection(
+        "contact",
+        title = _("Assignment of services to contact groups")),
+    match = "all",
+    itemtype = "service")
+
+
 group = _("Monitoring Configuration") 
 
 register_rule(group, 

@@ -542,9 +542,9 @@ def mode_folder(phase):
         changelog_button()
         html.context_button(_("Backup / Restore"), make_link([("mode", "snapshot")]), "backup")
         html.context_button(_("Configuration"),    make_link([("mode", "configuration")]), "configuration")
-        html.context_button(_("Host groups"),    make_link([("mode", "host_groups")])),
-        html.context_button(_("Service groups"),    make_link([("mode", "service_groups")])),
-        html.context_button(_("Contact groups"),    make_link([("mode", "contact_groups")])),
+        html.context_button(_("Host groups"),    make_link([("mode", "host_groups")]), "hostgroups"),
+        html.context_button(_("Service groups"),    make_link([("mode", "service_groups")]), "servicegroups"),
+        html.context_button(_("Contact groups"),    make_link([("mode", "contact_groups")]), "contactgroups"),
         html.context_button(_("Rulesets"),  make_link_to([("mode", "rulesets")], g_folder), "rulesets")
         html.context_button(_("Properties"),make_link_to([("mode", "editfolder")], g_folder), "properties")
         html.context_button(_("New folder"),make_link([("mode", "newfolder")]), "newfolder")
@@ -3911,6 +3911,11 @@ def mode_groups(phase, what):
     elif phase == "buttons":
         html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
         html.context_button(_("New group"), make_link([("mode", "edit_group"), ("what", what)]), "new")
+        if what == "contact":
+            pass
+        else:
+            varname = what + "_groups"
+            html.context_button(_("Rules"), make_link([("mode", "view_ruleset"), ("varname", varname)]), "rulesets")
         return
 
     all_groups = load_group_information()
@@ -3988,7 +3993,7 @@ def mode_edit_group(phase):
 
     if phase == "action":
         if html.check_transaction():
-            alias = html.var("alias").strip()
+            alias = html.var_utf8("alias").strip()
             if new:
                 name = html.var("name").strip()
                 if len(name) == 0:
@@ -4064,6 +4069,52 @@ def save_group_information(groups):
         if what in groups and len(groups[what]) > 0:
             out.write("if not define_%sgroups:\n    define_%sgroups = {}\n" % (what, what))
             out.write("define_%sgroups.update(%s)\n\n" % (what, pprint.pformat(groups[what])))
+
+
+class GroupSelection(ValueSpec):
+    def __init__(self, what, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._what = what
+        self._loaded_at = None
+
+    def load_groups(self):
+        if self._loaded_at != html:
+            all_groups = load_group_information()
+            self._groups = all_groups.get(self._what, {})
+            self._loaded_at = html # unique for each query!
+
+    def canonical_value(self):
+        self.load_groups()
+        if len(self._groups) > 0:
+            return self._groups.keys()[0]
+        else:
+            return ""
+
+    def render_input(self, varprefix, value):
+        self.load_groups()
+        if len(self._groups) == 0:
+            html.write(_("There are not defined any %s groups yet." % self._what))
+        else:
+            html.sorted_select(varprefix, self._groups.items(), value) 
+
+    def value_to_text(self, value):
+        self.load_groups()
+        return self._groups.get(value, value)
+
+    def from_html_vars(self, varprefix):
+        return html.var(varprefix)
+
+    def validate_value(self, value, varprefix):
+        self.load_groups()
+        if len(self._groups) == 0:
+            raise MKUserError(varprefix, 
+              _("You cannot save this rule. There are not defined any %s groups yet." % self._what))
+        if value not in self._groups:
+            raise MKUserError(varprefix, _("%s is not an existing %s group") % (value, self._what))
+
+    def validate_datatype(self, value, varprefix):
+        if type(value) != str:
+            raise MKUserError(varprefix, _("The datatype must be str (string), but is %s") % type(value))
 
 
 #   +----------------------------------------------------------------------+
@@ -4365,7 +4416,7 @@ def mode_view_ruleset(phase):
                             img = 'pmatch'
                         match_keys.update(new_keys)
 
-                elif reason == True and not alread_matched:
+                elif reason == True and (not alread_matched or rulespec["match"] == "all"):
                     title = _("This rule matches for the host '%s'.") % hostname
                     img = 'match'
                     alread_matched = True
@@ -4629,7 +4680,7 @@ def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
             condition = _("Service name begins with ") + " or with ".join(tt_list)
         elif ruleset["itemtype"] == "item":
             condition = (_("%s begins with ") % ruleset["itemname"]) + " or with ".join(tt_list)
-            html.write('<li class="condition">%s</li>' % condition)
+        html.write('<li class="condition">%s</li>' % condition)
 
     html.write("</ul>")
 

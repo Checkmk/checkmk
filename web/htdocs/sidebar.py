@@ -45,11 +45,11 @@ def load_plugins():
     load_web_plugins("sidebar", globals())
 
     # Declare permissions: each snapin creates one permission
-    config.declare_permission_section("sidesnap", "Sidebar snapins")
+    config.declare_permission_section("sidesnap", _("Sidebar snapins"))
     for name, snapin in sidebar_snapins.items():
         config.declare_permission("sidesnap.%s" % name,
             snapin["title"],
-            "",
+            snapin["description"],
             snapin["allowed"])
 
 # Helper functions to be used by snapins

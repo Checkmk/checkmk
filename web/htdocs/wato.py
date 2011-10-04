@@ -598,7 +598,7 @@ def mode_folder(phase):
         # Move
         elif html.var("_bulk_move"):
             target_file = html.var("bulk_moveto")
-            if not target_file:
+            if target_file == "@":
                 raise MKUserError("bulk_moveto", _("Please select the destination file"))
             num_moved = move_hosts_to(selected_hosts, target_file)
             return None, _("Successfully moved %d hosts to %s") % (num_moved, target_file)
@@ -841,7 +841,7 @@ def host_move_combo(host = None, top = False):
                 field_name = '_top_bulk_moveto'
                 if html.has_var('bulk_moveto'):
                     html.javascript('update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
-            html.select(field_name, selections, "",
+            html.select(field_name, selections, "@",
                         onchange = "update_bulk_moveto(this.value)",
                         attrs = {'class': 'bulk_moveto'})
         else:
@@ -884,7 +884,7 @@ def move_hosts_to(hostnames, path):
     save_folder_and_hosts(g_folder)
     call_hook_hosts_changed(g_root_folder)
     if len(hostnames) > 1:
-        log_pending(target_file, "move-host", _("Moved %d hosts from %s to %s") %
+        log_pending(target_folder, "move-host", _("Moved %d hosts from %s to %s") %
             (num_moved, g_folder[".path"], target_folder[".path"]))
     return num_moved 
         

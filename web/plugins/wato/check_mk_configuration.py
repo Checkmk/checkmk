@@ -27,6 +27,38 @@ register_configvar(group,
                       "is being output."),
             default_value = False),
     domain = "multisite")
+
+register_configvar(group, 
+    "soft_query_limit",
+    Integer(title = _("Soft query limit"),
+            help = _("Whenever the number of returned datasets of a view would exceed this "
+                     "limit, a warning is being displayed and no further data is being shown. "
+                     "A normal user can override this limit with one mouse click."),
+            minvalue = 1,
+            default_value = 1000),
+    domain = "multisite")
+
+register_configvar(group, 
+    "hard_query_limit",
+    Integer(title = _("Hard query limit"),
+            help = _("Whenever the number of returned datasets of a view would exceed this "
+                     "limit, an error message is shown. The normal user cannot override "
+                     "the hard limit. The purpose of the hard limit is to secure the server "
+                     "against useless queries with huge result sets."),
+            minvalue = 1,
+            default_value = 5000),
+    domain = "multisite")
+
+register_configvar(group,
+    "wato_hide_filenames",
+    Checkbox(title = _("Hide internal folder names in WATO"),
+             label = _("hide folder names"),
+             help = _("When enabled, then the internal names of WATO folder in the filesystem "
+                      "are not shown. They will automatically be derived from the name of the folder "
+                      "when a new folder is being created. Disable this option if you want to see and "
+                      "set the filenames manually."),
+             default_value = True),
+    domain = "multisite")
                        
 
 group = _("Operation mode of Check_MK") 

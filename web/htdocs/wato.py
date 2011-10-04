@@ -1066,8 +1066,8 @@ def mode_editfolder(phase, new):
             if not config.wato_hide_filenames:
                 html.write("<tr><td class=legend colspan=2>" 
                     + _("Internal directory name") + "<br><i>"
-                    + _("This is the name of subdirectory where the files and<br> "
-                    "other folders will be created. You cannot change this later") +
+                    + _("This is the name of subdirectory where the files and "
+                    "other folders will be created. You cannot change this later.") +
                     "</i></td><td class=content>")
 
                 if new:
@@ -3171,7 +3171,8 @@ class ValueSpec:
     def __init__(self, **kwargs):
         self._title         = kwargs.get("title")
         self._help          = kwargs.get("help")
-        self._default_value = kwargs.get("default_value")
+        if "default_value" in kwargs:
+            self._default_value = kwargs.get("default_value")
 
     def title(self): 
         return self._title
@@ -3195,8 +3196,17 @@ class ValueSpec:
     # Create a canonical, minimal, default value that 
     # matches the datatype of the value specification and
     # fullfills also data validation.
+    def canonical_value(self):
+        return None
+
+    # Return a default value for this variable. This
+    # is optional and only used in the value editor
+    # for same cases where the default value is known.
     def default_value(self):
-        return self._default_value
+        try:
+            return self._default_value
+        except:
+            return self.canonical_value()
 
     # Creates a text-representation of the value that can be
     # used in tables and other contextes. It is to be read 
@@ -3235,7 +3245,7 @@ class Integer(ValueSpec):
         self._maxvalue = kwargs.get("maxvalue")
         self._label    = kwargs.get("label")
 
-    def default_value(self):
+    def canonical_value(self):
         if self._minvalue:
             return self._minvalue
         else:
@@ -3285,7 +3295,7 @@ class TextAscii(ValueSpec):
         self._size     = kwargs.get("size", 30)
         self._allow_empty = kwargs.get("allow_empty", True)
 
-    def default_value(self):
+    def canonical_value(self):
         return ""
 
     def render_input(self, varprefix, value):
@@ -3316,7 +3326,7 @@ class Filename(TextAscii):
         else:
             self._default_path = "/tmp/foo"
 
-    def default_value(self):
+    def canonical_value(self):
         return self._default_path
 
     def validate_value(self, value, varprefix):
@@ -3343,8 +3353,8 @@ class Float(Integer):
     def __init__(self, **kwargs):
         Integer.__init__(self, **kwargs)
     
-    def default_value(self):
-        return float(Integer.default_value(self))
+    def canonical_value(self):
+        return float(Integer.canonical_value(self))
 
     def from_html_vars(self, varprefix):
         try:
@@ -3363,7 +3373,7 @@ class Checkbox(ValueSpec):
         ValueSpec.__init__(self, **kwargs) 
         self._label = kwargs.get("label")
 
-    def default_value(self):
+    def canonical_value(self):
         return False
 
     def render_input(self, varprefix, value):
@@ -3389,7 +3399,7 @@ class DropdownChoice(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._choices = kwargs["choices"]
 
-    def default_value(self):
+    def canonical_value(self):
         return self._choices[0][0]
 
     def render_input(self, varprefix, value):
@@ -3432,7 +3442,7 @@ class Optional(ValueSpec):
         self._valuespec = valuespec
         self._label = kwargs.get("label")
 
-    def default_value(self):
+    def canonical_value(self):
         return None
 
     def render_input(self, varprefix, value): 
@@ -3507,7 +3517,7 @@ class Alternative(ValueSpec):
             if vs == mvs:
                 val = value
             else:
-                val = vs.default_value()
+                val = vs.canonical_value()
             vs.render_input(varprefix + "_%d" % nr, val)
             html.write("</ul>")
 
@@ -3515,8 +3525,8 @@ class Alternative(ValueSpec):
         # TODO: Set focus to currently active option
         pass
 
-    def default_value(self):
-        return self._elements[0].default_value()
+    def canonical_value(self):
+        return self._elements[0].canonical_value()
 
     def value_to_text(self, value):
         vs = self.matching_alternative(value)
@@ -3551,8 +3561,8 @@ class Tuple(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._elements = kwargs["elements"]
 
-    def default_value(self):
-        return tuple([x.default_value() for x in self._elements])
+    def canonical_value(self):
+        return tuple([x.canonical_value() for x in self._elements])
 
     def render_input(self, varprefix, value):
         html.write("<table>")
@@ -3614,13 +3624,13 @@ class Dictionary(ValueSpec):
             html.write(" %s<br>" % vs.title())
             html.write('<ul><div id="%s" style="display: %s">' % ( 
                 div_id, param not in value and "none" or ""))
-            vs.render_input(vp, value.get(param, vs.default_value()))
+            vs.render_input(vp, value.get(param, vs.canonical_value()))
             html.write("</div></ul>")
 
     def set_focus(self, varprefix):
         self._elements[0][1].set_focus(varprefix + self._elements[0][0])
 
-    def default_value(self):
+    def canonical_value(self):
         return {}
 
     def value_to_text(self, value):
@@ -3705,7 +3715,7 @@ def mode_configuration(phase):
         varname = html.var("_reset")
         if varname:
             domain, valuespec = g_configvars[varname]
-            def_value = default_values.get(varname, valuespec.default_value())
+            def_value = default_values.get(varname, valuespec.canonical_value())
 
             c = wato_confirm(
                 _("Resetting configuration variable"),
@@ -4240,7 +4250,6 @@ def mode_view_ruleset(phase):
     html.end_form()
 
 
-
 def folder_selection(folder, depth=0):
     if depth:
         title_prefix = "&nbsp;&nbsp;&nbsp;" * depth + "` " + "- " * depth
@@ -4261,11 +4270,12 @@ def folder_selection(folder, depth=0):
     for n, rule in enumerate(rules):
         render_rule(ruleset, rule, n + 1, n == len(rules) - 1)
 
+
 def create_rule(rulespec, hostname=None):
     new_rule = []
     valuespec = rulespec["valuespec"]
     if valuespec:
-        new_rule.append(valuespec.default_value())
+        new_rule.append(valuespec.canonical_value())
     if hostname:
         new_rule.append([hostname])
     else:
@@ -4273,6 +4283,7 @@ def create_rule(rulespec, hostname=None):
     if rulespec["itemtype"]:
         new_rule.append([""])
     return tuple(new_rule)
+
 
 def rule_button(action, help=None, folder=None, rulenr=0):
     if action == None:

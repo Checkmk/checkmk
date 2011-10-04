@@ -1407,48 +1407,8 @@ img.siteicon {
 
  These styles are used on the "Edit Permissions" page
 */
-table.permissions {
-    border-collapse: collapse;
-    empty-cells: show;
-    border-spacing: 0px;
-}
-
-table.permissions td, table.permissions th {
-    border: 1px solid #fff;
-    padding: 3px 0.5ex;
-}
-table.permissions th {
-    text-align: left;
-    background-color: #98a;
-    color: #fff;
-}
-
-table.permissions td.legend {
-    background-color: #769;
-    color: #fff;
-}
-table.permissions td.legend.sub {
-    border-top-style: none;
-    border-bottom-style: none;
-    background-color: #87a;
-    padding-left: 1em;
-    padding-top: 2px;
-    padding-bottom: 0px;
-}
-table.permissions td.content {
-    text-align: center;
-    width: 6ex;
-    vertical-align: middle;
-}
-
-table.permissions td.content.user {
-    background-color: #b84;
-}
-table.permissions td.content.admin {
-    background-color: #c85;
-}
-table.permissions td.content.guest {
-    background-color: #d86;
+table.permissions td.legend { 
+    width: 500px;
 }
 
 /*

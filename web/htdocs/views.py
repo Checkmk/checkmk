@@ -99,7 +99,7 @@ def load_plugins():
     for name, view in multisite_builtin_views.items():
         config.declare_permission("view.%s" % name,
                 view["title"],
-                "",
+                view["description"],
                 config.roles)
 
     # Add painter names to painter objects (e.g. for JSON web service)

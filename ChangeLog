@@ -14,6 +14,8 @@
     Multisite:
     * FIX: fix rescheduling of host check
     * FIX: fix exception when using status_host while local site is offline
+    * FIX: fix URL-too-long in permissions page
+    * Cleanup permissions page optically, add comments for views and snapins
     * Added some missing i18n strings in general HTML functions
     * Added display_option "w" to disable limit messages and livestatus errors in views
     * Service Perfdata Sorters are sorting correctly now

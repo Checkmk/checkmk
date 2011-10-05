@@ -2276,6 +2276,14 @@ table.add_snapin i {
     vertical-align: bottom;
 }
 
+.wato div.error pre div.err {
+    background-color: yellow;
+    font-weight: bold;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    float: left;
+}
 /* 
       _                                    _   _             
      / \   __ _  __ _ _ __ ___  __ _  __ _| |_(_) ___  _ __  

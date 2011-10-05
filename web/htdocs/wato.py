@@ -2266,12 +2266,15 @@ def check_mk_automation(command, args=[], indata=""):
     exitcode = p.wait()
     if exitcode != 0:
         raise MKGeneralException("Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>%s" %
-              (" ".join(cmd), exitcode, outdata, sudo_msg))
+              (" ".join(cmd), exitcode, hilite_errors(outdata), sudo_msg))
     try:
         return eval(outdata)
     except Exception, e:
         raise MKGeneralException("Error running <tt>%s</tt>. Invalid output from webservice (%s): <pre>%s</pre>" %
                       (" ".join(cmd), e, outdata))
+
+def hilite_errors(outdata):
+    return re.sub("\nError: *([^\n]*)", "\n<div class=err>Error: \\1</div>", outdata)
 
 
 

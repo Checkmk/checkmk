@@ -3449,16 +3449,23 @@ class DropdownChoice(ValueSpec):
 class ListChoice(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
-        self._choices = kwargs["choices"]
+        self._choices = kwargs["choices"] 
+        self._columns = kwargs.get("columns", 1)
 
     def canonical_value(self):
         return []
 
     def render_input(self, varprefix, value):
-        html.write("<br>\n")
+        html.write("<table>")
         for nr, (key, title) in enumerate(self._choices):
+            if nr % self._columns == 0:
+                if nr > 0:
+                    html.write("</tr>")
+                html.write("<tr>")
+            html.write("<td>")
             html.checkbox("%s_%d" % (varprefix, nr), key in value)
-            html.write("&nbsp;%s<br>\n" % title)
+            html.write("&nbsp;%s</td>\n" % title)
+        html.write("</tr></table>")
 
     def value_to_text(self, value): 
         d = dict(self._choices)
@@ -3466,6 +3473,7 @@ class ListChoice(ValueSpec):
 
     def from_html_vars(self, varprefix):
         value = []
+
         for nr, (key, title) in enumerate(self._choices):
             if html.get_checkbox("%s_%d" % (varprefix, nr)):
                 value.append(key)
@@ -3897,8 +3905,8 @@ def mode_configuration(phase):
             c = wato_confirm(
                 _("Resetting configuration variable"),
                 _("Do you really want to reset the configuration variable <b>%s</b> "
-                  "from its current value of <b><tt>%s</tt></b> back to the default value "
-                  "of <b><tt>%s</tt></b>") % (varname, "4711", valuespec.value_to_text(def_value)))
+                  "back to the default value of <b><tt>%s</tt></b>?") % 
+                   (varname, valuespec.value_to_text(def_value)))
             if c:
                 del current_settings[varname]
                 save_configuration_settings(current_settings)

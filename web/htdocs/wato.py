@@ -451,7 +451,7 @@ def save_hosts(folder):
                 value = effective.get(attr.name())
                 tags.update(attr.get_tag_list(value))
 
-        all_hosts.append("|".join([hostname] + list(tags) + [ folder_path, 'wato' ]))
+        all_hosts.append("|".join([hostname] + list(tags) + [ "/wato/" + folder_path + "/", 'wato' ]))
         if ipaddress:
             ipaddresses[hostname] = ipaddress
 
@@ -930,7 +930,9 @@ def delete_folder_after_confirm(del_folder):
         del g_folder[".folders"][del_folder[".name"]]
         folder_path = folder_dir(del_folder)
         try:
-            os.remove(folder_path + "/.wato")
+            for ext in [ ".wato", "hosts.mk", "rules.mk" ]:
+                if os.path.exists(folder_path + "/" + ext):
+                    os.remove(folder_path + "/" + ext)
             os.rmdir(folder_path)
         except:
             pass
@@ -4867,7 +4869,7 @@ def mode_view_ruleset(phase):
                     img = 'imatch'
                     alread_matched = True
                 else:
-                    title = _("This rule does not: %s") % reason
+                    title = _("This rule does not match: %s") % reason
                     img = 'nmatch'
                 html.write('<img align=absbottom title="%s" class=icon src="images/icon_rule%s.png"> ' % (title, img))
             if rulespec["valuespec"]:

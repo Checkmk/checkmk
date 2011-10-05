@@ -85,6 +85,8 @@
 #
 # g_configvars -> dictionary of variables in main.mk that can be configured 
 #           via WATO.
+#
+# g_html_head_open -> True, if the HTML head has already been rendered.
 
 
 #   +----------------------------------------------------------------------+
@@ -117,6 +119,8 @@ ALL_HOSTS    = [ '@all' ]
 ALL_SERVICES = [ "" ]
 NEGATE       = '@negate'
 
+g_html_head_open = False
+
 
 #   +----------------------------------------------------------------------+
 #   |                        __  __       _                                |
@@ -142,6 +146,9 @@ NEGATE       = '@negate'
 #   +----------------------------------------------------------------------+
 
 def page_handler():
+    global g_html_head_open
+    g_html_head_open = False
+
     if not config.wato_enabled:
         raise MKGeneralException(_("WATO is disabled. Please set <tt>wato_enabled = True</tt> in your <tt>multisite.mk</tt> if you want to use WATO."))
     if not config.may("use_wato"):
@@ -2359,17 +2366,15 @@ def make_action_link(vars):
 
 # Show confirmation dialog, send HTML-header if dialog is shown.
 def wato_confirm(html_title, message):
-    if not html.var("filled_in") == "confirm":
-        wato_html_head(html_title)
+    wato_html_head(html_title)
     return html.confirm(message)
-
-g_html_head_open = False
 
 def wato_html_head(title):
     global g_html_head_open
-    g_html_head_open = True
-    html.header(title)
-    html.write("<div class=wato>\n")
+    if not g_html_head_open:
+        g_html_head_open = True
+        html.header(title)
+        html.write("<div class=wato>\n")
 
 def render_folder_path(the_folder = 0, link_to_last = False, keepvarnames = ["mode"]):
     if the_folder == 0:
@@ -3931,7 +3936,7 @@ def mode_groups(phase, what):
         if c: 
             del groups[delname]
             save_group_information(all_groups)
-            log_pending(None, "edit-%sgroups", _("Delete %s group %s" % (what, delname)))
+            log_pending(None, "edit-%sgroups", _("Deleted %s group %s" % (what, delname)))
             return None
         elif c == False:
             return ""
@@ -4141,7 +4146,20 @@ def mode_timeperiods(phase):
     timeperiods = load_timeperiods()
 
     if phase == "action":
-        return
+        delname = html.var("_delete")
+        c = wato_confirm(_("Confirm deletion of time period %s") % delname,
+              _("Do you really want to delete the time period '%s'? If it "
+                "is still in use by an object, you will not be able to "
+                "activate your changed configuration?") % delname)
+        if c:
+            del timeperiods[delname]
+            save_timeperiods(timeperiods)
+            log_pending(None, "edit-timeperiods", _("Deleted timeperiod %s") % delname)
+            return None
+        elif c == False:
+            return ""
+        else:
+            return None
 
     html.write("<h3>" + _("Timeperiod definitions") + "</h3>")
 

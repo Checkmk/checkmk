@@ -3289,18 +3289,6 @@ class Integer(ValueSpec):
             raise MKUserError(varprefix, _("%s is too high. The maximum allowed value is %s." % (
                                      value, self._maxvalue)))
 
-class Percentage(Integer):
-    def __init__(self, **kwargs):
-        Integer.__init__(self, **kwargs)
-        if "min_value" not in kwargs:
-            self._minvalue = 0
-        if "max_value" not in kwargs:
-            self._maxvalue = 101
-
-    def value_to_text(self, value):
-        return "%d%%" % value
-
-
 # Editor for a line of text
 class TextAscii(ValueSpec):
     def __init__(self, **kwargs):
@@ -3381,6 +3369,18 @@ class Float(Integer):
             raise MKUserError(varprefix, _("The value has type %s, but must be of type float") % (type(value)))
 
 
+class Percentage(Float):
+    def __init__(self, **kwargs):
+        Integer.__init__(self, **kwargs)
+        if "min_value" not in kwargs:
+            self._minvalue = 0.0
+        if "max_value" not in kwargs:
+            self._maxvalue = 101.0
+
+    def value_to_text(self, value):
+        return "%.1f%%" % value
+
+
 class Checkbox(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs) 
@@ -3407,6 +3407,7 @@ class Checkbox(ValueSpec):
         if type(value) != bool:
             raise MKUserError(varprefix, _("The value has type %s, but must be either True or False") % (type(value))) 
 
+# A type-save dropdown choice
 class DropdownChoice(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
@@ -3444,6 +3445,104 @@ class DropdownChoice(ValueSpec):
         raise MKUserError(varprefix, _("Invalid value %s, must be in %s") % 
             ", ".join([v for (v,t) in self._choices]))
 
+# A list of checkboxes representing a list of values
+class ListChoice(ValueSpec):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._choices = kwargs["choices"]
+
+    def canonical_value(self):
+        return []
+
+    def render_input(self, varprefix, value):
+        html.write("<br>\n")
+        for nr, (key, title) in enumerate(self._choices):
+            html.checkbox("%s_%d" % (varprefix, nr), key in value)
+            html.write("&nbsp;%s<br>\n" % title)
+
+    def value_to_text(self, value): 
+        d = dict(self._choices)
+        return ", ".join([ str(d.get(v,v)) for v in value ])
+
+    def from_html_vars(self, varprefix):
+        value = []
+        for nr, (key, title) in enumerate(self._choices):
+            if html.get_checkbox("%s_%d" % (varprefix, nr)):
+                value.append(key)
+        return value
+
+    def validate_datatype(self, value, varprefix):
+        if type(value) != list:
+            raise MKUserError(varprefix, _("The datatype must be list, but is %s") % type(value)) 
+        d = dict(self._choices)
+        for v in value:
+            if v not in d:
+                raise MKUserError(varprefix, _("%s is not an allowed value") % v)
+
+
+
+# A type-save dropdown choice with one extra field that
+# opens a further value spec for entering an alternative
+# Value.
+class OptionalDropdownChoice(ValueSpec):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._choices = kwargs["choices"]
+        self._explicit = kwargs["explicit"] 
+        self._otherlabel = kwargs.get("otherlabel", _("Other"))
+
+    def canonical_value(self):
+        return self._explicit.canonical_value()
+
+    def value_is_explicit(self, value):
+        return value not in [ c[0] for c in self._choices ]
+
+    def render_input(self, varprefix, value):
+        defval = "other"
+        options = []
+        for n, (val, title) in enumerate(self._choices):
+            options.append((str(n), title))
+            if val == value:
+                defval = str(n)
+        options.append(("other", self._otherlabel))
+        html.select(varprefix, options, defval, attrs={"style":"float:left;"}, 
+                    onchange="wato_toggle_dropdown(this, '%s_ex');" % varprefix )
+
+        if html.form_submitted():
+            div_is_open = html.var(varprefix) == "other"
+        else:
+            div_is_open = self.value_is_explicit(value)
+
+        html.write('<div id="%s_ex" style="white-space: nowrap; %s">' % (
+            varprefix, not div_is_open and "display: none;" or ""))
+        html.write("&nbsp;&nbsp;&nbsp;") 
+        self._explicit.render_input(varprefix + "_ex", value)
+        html.write("</div>")
+
+    def value_to_text(self, value):
+        return self._explicit.value_to_text(value)
+
+    def from_html_vars(self, varprefix):
+        sel = html.var(varprefix)
+        if sel == "other":
+            return self._explicit.from_html_vars(varprefix + "_ex")
+
+        for n, (val, title) in enumerate(self._choices):
+            if sel == str(n):
+                return val
+        return self._choices[0][0] # can only happen if user garbled URL
+
+    def validate_value(self, value, varprefix):
+        if self.value_is_explicit(value):
+            self._explicit.validate_value(value, varprefix)
+        # else valid_datatype already has made the job
+
+    def validate_datatype(self, value, varprefix): 
+        for val, title in self._choices:
+            if val == value: 
+                return
+        self._explicit.validate_datatype(self, value, varprefix + "_ex")
+
 
 
 # Make a configuration value optional, i.e. it may be None.
@@ -3454,6 +3553,8 @@ class Optional(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._valuespec = valuespec
         self._label = kwargs.get("label")
+        self._negate = kwargs.get("negate", False)
+        self._none_label = kwargs.get("none_label", _("(unset)"))
 
     def canonical_value(self):
         return None
@@ -3463,18 +3564,21 @@ class Optional(ValueSpec):
         if html.has_var(varprefix + "_use"):
             checked = html.get_checkbox(varprefix + "_use")
         else:
-            checked = value != None
+            checked = self._negate != (value != None)
         html.checkbox(varprefix + "_use" , checked,
-                      onclick="wato_toggle_option(this, %r)" % div_id)
+                      onclick="wato_toggle_option(this, %r, %r)" % 
+                         (div_id, self._negate and 1 or 0))
         if self._label:
             html.write(self._label)
         elif self.title():
             html.write(_(self.title()))
+        elif self._negate:
+            html.write(_(" Ignore this option"))
         else:
             html.write(_(" Activate this option"))
         html.write("<br><br>")
         html.write('<div id="%s" style="display: %s">' % (
-                div_id, not checked and "none" or ""))
+                div_id, checked == self._negate and "none" or ""))
         if value == None:
             value = ""
         if self._valuespec.title():
@@ -3484,12 +3588,12 @@ class Optional(ValueSpec):
 
     def value_to_text(self, value):
         if value == None:
-            return _("(unset)")
+            return self._none_label
         else:
-            return value
+            return self._valuespec.value_to_text(value)
 
     def from_html_vars(self, varprefix): 
-        if html.get_checkbox(varprefix + "_use"):
+        if html.get_checkbox(varprefix + "_use") != self._negate:
             return self._valuespec.from_html_vars(varprefix + "_value")
         else:
             return None
@@ -3525,14 +3629,19 @@ class Alternative(ValueSpec):
     def render_input(self, varprefix, value):
         mvs = self.matching_alternative(value)
         for nr, vs in enumerate(self._elements):
-            html.radiobutton(varprefix + "_use", str(nr), vs == mvs, vs.title())
+            if html.has_var(varprefix + "_use"):
+                checked = html.var(varprefix + "_use") == str(nr)
+            else:
+                checked = vs == mvs
+
+            html.radiobutton(varprefix + "_use", str(nr), checked, vs.title())
             html.write("<ul>")
             if vs == mvs:
                 val = value
             else:
                 val = vs.canonical_value()
             vs.render_input(varprefix + "_%d" % nr, val)
-            html.write("</ul>")
+            html.write("</ul>\n")
 
     def set_focus(self, varprefix):
         # TODO: Set focus to currently active option
@@ -3627,6 +3736,14 @@ class Dictionary(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._elements = kwargs["elements"]
+
+    def help(self):
+        h = []
+        for key, vs in self._elements:
+            hh = vs.help()
+            if hh:
+              h.append("</i>%s<br><i>%s" % (vs.title(), hh))
+        return "<br><br>".join(h)
 
     def render_input(self, varprefix, value):
         for param, vs in self._elements:

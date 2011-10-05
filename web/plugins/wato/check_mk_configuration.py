@@ -358,7 +358,7 @@ register_rule(group,
 group = _("Check Parameters")
 register_rule(group, 
     "checkgroup_parameters:filesystem",
-    Dictionary(title = _("Levels and parameters for filesystem monitoring"),
+    Dictionary(title = _("Filesystems (used space and growth)"),
         elements = [
             ( "levels", 
               Tuple(
@@ -414,9 +414,105 @@ register_rule(group,
     match = "dict",
     )
 
+register_rule(group,
+    "checkgroup_parameters:if",
+    Dictionary(title = _("Network interfaces and switch ports"),
+        elements = [
+            ( "errors", 
+              Tuple(
+                  title = _("Levels for error rates"),
+                  help = _("This levels make the check go warning or critical whenever the "
+                           "<b>percentual error rate</b> of the monitored interface exceeds "
+                           "the given bounds. The error rate is computed by dividing number of "
+                           "errors by the total number of packets (successful plus errors)."),
+                  elements = [
+                      Percentage(title = _("Warning at"), label = _("% errors")),
+                      Percentage(title = _("Critical at"), label = _("% errors"))
+                  ])), 
+
+             ( "speed",
+               OptionalDropdownChoice(
+                   title = _("Operating speed"),
+                   help = _("If you use this parameter then the check goes warning if the "
+                            "interface is not operating at the expected speed (e.g. it "
+                            "is working with 100MBit/s instead of 1GBit/s."),
+                  choices = [ 
+                     ( None,       "ignore speed" ),
+                     ( 10000000,   "10 MBit/s" ),
+                     ( 100000000,  "100 MBit/s" ),
+                     ( 1000000000, "1 GBit/s" ) ],
+                  otherlabel = _("specify manually ->"),
+                  explicit = \
+                      Integer(title = _("Other speed in bits per second"),
+                              label = _("Bits per second")))
+             ),
+             ( "state",
+                Optional(
+                    ListChoice(
+                        title = _("Allowed states:"),
+                        choices = [ 
+                        ( '1', 'up(1)'),
+                        ( '2', 'down(2)'),
+                        ( '3', 'testing(3)'),
+                        ( '4', 'unknown(4)'),
+                        ( '5', 'dormant(5)') ,
+                        ( '6', 'notPresent(6)'),
+                        ( '7', 'lowerLayerDown(7)'),
+                        ]),  
+                    title = _("Operational State"),
+                    help = _("Activating the monitoring of the operational state (opstate), "
+                             "the check will get warning or critical of the current state "
+                             "of the interface does not match the expected state or states."), 
+                    label = _("Ignore the operational state"),
+                    none_label = _("ignore"),
+                    negate = True)  
+             ),
+             ( "traffic",
+               Alternative(
+                   title = _("Used bandwidth (traffic)"),
+                   help = _("Settings levels on the used bandwidth is optional. If you do set "
+                            "levels you might also consider using an averaging."),
+                   elements = [
+                       Tuple(
+                           title = _("Percentual levels (in relation to port speed)"),
+                           elements = [
+                               Percentage(title = _("Warning at"), label = _("% of port speed")),
+                               Percentage(title = _("Critical at"), label = _("% of port speed")),
+                           ]
+                       ),
+                       Tuple(
+                           title = _("Absolute levels in <b>bytes</b> per second"),
+                           elements = [
+                               Integer(title = _("Warning at"), label = _("bytes per second")),
+                               Integer(title = _("Critical at"), label = _("% of port speed")),
+                           ]
+                        )
+                   ])
+               ),
+
+               ( "average",
+                 Integer(
+                     title = _("Average values"),
+                     help = _("By activating the computation of averages, the levels on "
+                              "errors and traffic are applied to the averaged value. That "
+                              "way you can make the check react only on long-time changes, "
+                              "not on one-minute events."),
+                     label = _("minutes"),
+                     minvalue = 1,
+                 )
+               ),
+
+           ] 
+    ))
+
+            
+            
+
+
+
 register_rule(group, 
     "checkgroup_parameters:cpu_load",
-    Tuple(title = _("Levels for CPU load (not utilization!)"), 
+    Tuple(title = _("CPU load (not utilization!)"), 
           help = _("The CPU load of a system is the number of processes currently being "
                    "in the state <u>running</u>, i.e. either they occupy a CPU or wait "
                    "for one. The <u>load average</u> is the averaged CPU load over the last 1, "

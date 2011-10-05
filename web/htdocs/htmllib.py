@@ -239,6 +239,9 @@ class html:
     def end_form(self):
         self.write("</form>\n")
 
+    def form_submitted(self):
+        return self.has_var("filled_in")
+
     def add_user_error(self, varname, message):
         if type(varname) == list:
             for v in varname:

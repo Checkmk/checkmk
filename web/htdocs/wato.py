@@ -3681,6 +3681,53 @@ class Dictionary(ValueSpec):
                 vs.validate_value(value[param], vp)
             
 
+# Base class for selection of a Nagios element out
+# of a given list that must be loaded from a file.
+# Examples: GroupSelection, TimeperiodSelection
+class ElementSelection(ValueSpec):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._loaded_at = None
+
+    def load_elements(self):
+        if self._loaded_at != html:
+            self._elements = self.get_elements()
+            self._loaded_at = html # unique for each query!
+
+    def canonical_value(self):
+        self.load_elements()
+        if len(self._elements) > 0:
+            return self._elements.keys()[0]
+        else:
+            return ""
+
+    def render_input(self, varprefix, value):
+        self.load_elements()
+        if len(self._elements) == 0:
+            html.write(_("There are not defined any elements for this selection yet."))
+        else:
+            html.sorted_select(varprefix, self._elements.items(), value) 
+
+    def value_to_text(self, value):
+        self.load_elements()
+        return self._elements.get(value, value)
+
+    def from_html_vars(self, varprefix):
+        return html.var(varprefix)
+
+    def validate_value(self, value, varprefix):
+        self.load_elements()
+        if len(self._elements) == 0:
+            raise MKUserError(varprefix, 
+              _("You cannot save this rule. There are not defined any elements for this selection yet." % self._what))
+        if value not in self._elements:
+            raise MKUserError(varprefix, _("%s is not an existing element in this selection.") % (value, self._what))
+
+    def validate_datatype(self, value, varprefix):
+        if type(value) != str:
+            raise MKUserError(varprefix, _("The datatype must be str (string), but is %s") % type(value))
+
+
 def edit_value(valuespec, value):
     help = valuespec.help() or ""
     html.write('<tr><td class=legend><i>%s</i></td>' % help)
@@ -4077,51 +4124,14 @@ def save_group_information(groups):
             out.write("define_%sgroups.update(%s)\n\n" % (what, pprint.pformat(groups[what])))
 
 
-class GroupSelection(ValueSpec):
+class GroupSelection(ElementSelection):
     def __init__(self, what, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        ElementSelection.__init__(self, **kwargs)
         self._what = what
-        self._loaded_at = None
 
-    def load_groups(self):
-        if self._loaded_at != html:
-            all_groups = load_group_information()
-            self._groups = all_groups.get(self._what, {})
-            self._loaded_at = html # unique for each query!
-
-    def canonical_value(self):
-        self.load_groups()
-        if len(self._groups) > 0:
-            return self._groups.keys()[0]
-        else:
-            return ""
-
-    def render_input(self, varprefix, value):
-        self.load_groups()
-        if len(self._groups) == 0:
-            html.write(_("There are not defined any %s groups yet." % self._what))
-        else:
-            html.sorted_select(varprefix, self._groups.items(), value) 
-
-    def value_to_text(self, value):
-        self.load_groups()
-        return self._groups.get(value, value)
-
-    def from_html_vars(self, varprefix):
-        return html.var(varprefix)
-
-    def validate_value(self, value, varprefix):
-        self.load_groups()
-        if len(self._groups) == 0:
-            raise MKUserError(varprefix, 
-              _("You cannot save this rule. There are not defined any %s groups yet." % self._what))
-        if value not in self._groups:
-            raise MKUserError(varprefix, _("%s is not an existing %s group") % (value, self._what))
-
-    def validate_datatype(self, value, varprefix):
-        if type(value) != str:
-            raise MKUserError(varprefix, _("The datatype must be str (string), but is %s") % type(value))
-
+    def get_elements(self):
+        all_groups = load_group_information()
+        return all_groups.get(self._what, {})
 
 
 #   +----------------------------------------------------------------------+
@@ -4412,6 +4422,14 @@ def mode_edit_timeperiod(phase):
     html.end_form()
 
 
+class TimeperiodSelection(ElementSelection):
+    def __init__(self, **kwargs):
+        ElementSelection.__init__(self, **kwargs)
+
+    def get_elements(self):
+        timeperiods = load_timeperiods()
+        elements = dict([ (name, tp.get("alias", name)) for (name, tp) in timeperiods.items() ])
+        return elements
 
 #   +----------------------------------------------------------------------+
 #   |           ____        _        _____    _ _ _                        |

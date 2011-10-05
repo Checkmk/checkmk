@@ -231,6 +231,31 @@ register_rule(group,
             minvalue = 1),
     itemtype = "service")
 
+
+register_rule(group,
+    "extra_host_conf:notification_period",
+    TimeperiodSelection(
+        title = _("Notification period for hosts"),
+        help = _("If you specify a notification period for a host then notifications "
+                 "about problems of that host (not of its services!) will only be sent "
+                 "if those problems occur within the notification period. Also you can "
+                 "filter out problems in the problems views for objects not being in "
+                 "their notification period (you can think of the notification period "
+                 "as the 'service time'.")),
+    )
+
+register_rule(group,
+    "extra_service_conf:notification_period",
+    TimeperiodSelection(
+        title = _("Notification period for services"),
+        help = _("If you specify a notification period for a service then notifications "
+                 "about that service will only be sent "
+                 "if those problems occur within the notification period. Also you can "
+                 "filter out problems in the problems views for objects not being in "
+                 "their notification period (you can think of the notification period "
+                 "as the 'service time'.")),
+    itemtype = "service")
+
 register_rule(group,
     "only_hosts",
     title = _("Hosts to be monitored"),

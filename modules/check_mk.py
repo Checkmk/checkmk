@@ -34,7 +34,8 @@ check_mk_version  = '(inofficial)'
 
 # Some things have to be done before option parsing and might
 # want to output some verbose messages.
-g_profile = None
+g_profile      = None
+g_profile_path = 'profile.out'
 
 if __name__ == "__main__":
     opt_debug        = '--debug' in sys.argv[1:]
@@ -3975,15 +3976,16 @@ def read_all_autochecks():
 
 def output_profile():
     if g_profile:
-        g_profile.dump_stats("profile.out")
-        file("show_profile.py", "w")\
+        g_profile.dump_stats(g_profile_path)
+        show_profile = os.path.join(os.path.dirname(g_profile_path), 'show_profile.py')
+        file(show_profile, "w")\
             .write("#!/usr/bin/python\n"
                    "import pstats\n"
-                   "stats = pstats.Stats('profile.out')\n"
-                   "stats.sort_stats('time').print_stats()\n")
-        os.chmod("show_profile.py", 0755)
+                   "stats = pstats.Stats('%s')\n"
+                   "stats.sort_stats('time').print_stats()\n" % g_profile_path)
+        os.chmod(show_profile, 0755)
 
-        sys.stderr.write("Profile 'profile.out' written. Please run ./show_profile.py.\n")
+        sys.stderr.write("Profile '%s' written. Please run %s.\n" % (g_profile_path, show_profile))
 
 #   +----------------------------------------------------------------------+
 #   |                        __  __       _                                |

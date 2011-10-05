@@ -1,6 +1,7 @@
 1.1.12b1:
     Core, Setup, etc.:
     * FIX: fix cmk -D on cluster hosts
+    * Made profile output file configurable (Variable: g_profile_path)
 
     Checks & Agents:
     * FIX: j4p_performance: fix inventory functions 

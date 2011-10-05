@@ -271,8 +271,9 @@ ignored_checks                       = [] # exclude from inventory
 host_groups                          = []
 service_groups                       = []
 service_contactgroups                = []
-service_notification_periods         = []
-host_notification_periods            = []
+service_notification_periods         = [] # deprecated, will be removed soon.
+host_notification_periods            = [] # deprecated, will be removed soon.
+timeperiods                          = {} # needed for WATO
 host_contactgroups                   = []
 parents                              = []
 define_hostgroups                    = None
@@ -1351,6 +1352,7 @@ def create_nagios_config(outfile = sys.stdout, hostnames = None):
     create_nagios_config_servicegroups(outfile)
     create_nagios_config_contactgroups(outfile)
     create_nagios_config_commands(outfile)
+    create_nagios_config_timeperiods(outfile)
 
     if extra_nagios_conf:
         outfile.write("\n# extra_nagios_conf\n\n")
@@ -1748,6 +1750,24 @@ def create_nagios_config_commands(outfile):
 }
 
 """ % ( checkname, dummy_check_commandline ))
+
+def create_nagios_config_timeperiods(outfile):
+    if len(timeperiods) > 0:
+        tpnames = timeperiods.keys()
+        tpnames.sort()
+        outfile.write("\n# ------------------------------------------------------------\n")
+        outfile.write("# Timeperiod definitions (controlled by timeperiods)\n")
+        outfile.write("# ------------------------------------------------------------\n\n")
+        for name in tpnames:
+            tp = timeperiods[name]
+            outfile.write("define timeperiod {\n  timeperiod_name\t\t%s\n" % name) 
+            if "alias" in tp: 
+                outfile.write("  alias\t\t\t%s\n" % tp["alias"].encode("utf-8"))
+            for key, value in tp.items():
+                if key != "alias":
+                    outfile.write("  %-20s\t%s\n" % (key, value))
+            outfile.write("\n}\n\n")
+
 
 #   +----------------------------------------------------------------------+
 #   |            ___                      _                                |

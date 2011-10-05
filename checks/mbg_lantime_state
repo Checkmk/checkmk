@@ -77,7 +77,7 @@ def check_mbg_lantime_state(item, params, info):
         elif params[3] is not None and pos_refclock_offset > params[2]:
             state   = max(state, 1)
             thr_txt = ' (!)'
-        state_txt.append('Refclock Offset: %0.4fms%s' % (pos_refclock_offset / 1000, thr_txt))
+        state_txt.append('Refclock Offset: %0.4fms%s' % (savefloat(refclock_offset) / 1000, thr_txt))
 
         perfdata = [('offset', refclock_offset, params[2], params[3])]
 

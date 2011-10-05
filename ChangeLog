@@ -9,6 +9,7 @@
     * mrpe: make check cluster-aware and work as clustered_service
     * cups_queues: Run agent part only on directly on CUPS servers,
       not on clients
+    * FIX: mbg_lantime_state: Fixed output UOM to really be miliseconds
 
 
     Multisite:

@@ -53,9 +53,9 @@ def page_view_permissions():
 
 def page_edit_permissions():
     if not config.may("edit_permissions"):
-        raise MKAuthException("You are not allowed to edit permissions.")
+        raise MKAuthException(_("You are not allowed to edit permissions."))
 
-    html.header("Edit permissions")
+    html.header(_("Edit permissions"))
 
     permissions = {}
     if html.var("save"):
@@ -65,15 +65,23 @@ def page_edit_permissions():
 
         config.save_permissions(permissions)
         config.load_permissions()
-        html.message("Permissions have been saved.")
+        html.message(_("Permissions have been saved."))
+
+    def section_header(section_title, is_open=False):
+        html.begin_foldable_container('permissions', section_title, is_open, section_title, indent=False) 
+        html.write('<table class="form permissions">\n')
+        html.write("<th>Permission</th>\n")
+        for role in config.roles:
+            html.write("<th>%s</th>" % role)
+        html.write("</tr>\n")
+
+    def section_footer():
+        html.write("</table>")
+        html.end_foldable_container()
 
 
-    html.begin_form("permissions")
-    html.write('<table class="form">\n')
-    html.write("<th>Permission</th>\n")
-    for role in config.roles:
-        html.write("<th>%s</th>" % role)
-    html.write("</tr>\n")
+    html.begin_form("permissions", method="POST")
+    section_header(_("General permissions"), True)
 
     current_section = None
     for perm in config.permissions_by_order:
@@ -82,15 +90,12 @@ def page_edit_permissions():
             section = pname.split(".")[0]
             section_title = config.permission_sections[section]
             if section != current_section:
+                section_footer()
+                section_header(section_title)
                 current_section = section
-                html.write('<tr><td class="legend border hilite" colspan=%d><b>%s</b></td></tr>\n' % (len(config.roles) + 1, section_title))
 
-        if current_section == None:
-            title = "<b>%s</b><br><i>%s</i>" % (perm["title"], perm["description"])
-            classes="legend border"
-        else:
-            title = perm["title"]
-            classes="legend border sub"
+        title = "<b>%s</b><br><i>%s</i>" % (perm["title"], perm["description"])
+        classes="legend border"
 
         html.write("<tr><td class=\"%s\">%s</td>" % (classes, title))
         for role in config.roles:
@@ -100,9 +105,10 @@ def page_edit_permissions():
             html.write("</td>")
         html.write("</tr>\n")
 
-    html.write('<tr><td class="legend border button" colspan=%d>' % (1 + len(config.roles)))
-    html.button("save", "Save")
-    html.write("</td></tr>\n")
-    html.write("</table>\n")
+    section_footer()
+
+
+    html.write("<br>")
+    html.button("save", _("Save"))
     html.end_form()
     html.footer()

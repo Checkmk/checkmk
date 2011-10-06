@@ -224,9 +224,9 @@ def login(u):
     if users != None:
         all += users
     if all.count(user) > 1:
-        raise MKConfigError("Your username (<b>%s</b>) is listed more than once "
+        raise MKConfigError(_("Your username (<b>%s</b>) is listed more than once "
                 "in multisite.mk. This is not allowed. "
-                "Please check your config." % user)
+                "Please check your config.") % user)
 
     role = role_of_user(user)
 
@@ -262,7 +262,7 @@ def role_of_user(u):
 def may(permname):
     # handle case where declare_permission is done after login
     # and permname also not contained in save configuration
-    if permname not in user_permissions:
+    if permname not in permissions:
         perm = permissions_by_name.get(permname)
         if not perm: # Object does not exists, e.g. sidesnap.multisite if not is_multisite()
             return False

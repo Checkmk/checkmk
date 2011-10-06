@@ -549,11 +549,11 @@ def mode_folder(phase):
         changelog_button()
         html.context_button(_("Backup / Restore"),  make_link([("mode", "snapshot")]), "backup")
         html.context_button(_("Configuration"),     make_link([("mode", "configuration")]), "configuration")
-        html.context_button(_("Host groups"),       make_link([("mode", "host_groups")]), "hostgroups"),
-        html.context_button(_("Service groups"),    make_link([("mode", "service_groups")]), "servicegroups"),
-        html.context_button(_("Contact groups"),    make_link([("mode", "contact_groups")]), "contactgroups"),
-        html.context_button(_("Timeperiods"),       make_link([("mode", "timeperiods")]), "timeperiods"),
-        html.context_button(_("Rulesets"),          make_link_to([("mode", "rulesets")], g_folder), "rulesets")
+        # html.context_button(_("Host groups"),       make_link([("mode", "host_groups")]), "hostgroups"),
+        # html.context_button(_("Service groups"),    make_link([("mode", "service_groups")]), "servicegroups"),
+        # html.context_button(_("Contact groups"),    make_link([("mode", "contact_groups")]), "contactgroups"),
+        # html.context_button(_("Timeperiods"),       make_link([("mode", "timeperiods")]), "timeperiods"),
+        # html.context_button(_("Rulesets"),          make_link_to([("mode", "rulesets")], g_folder), "rulesets")
         html.context_button(_("Properties"),        make_link_to([("mode", "editfolder")], g_folder), "properties")
         html.context_button(_("New folder"),        make_link([("mode", "newfolder")]), "newfolder")
         html.context_button(_("New host"),          make_link([("mode", "newhost")]), "new")
@@ -3879,17 +3879,75 @@ def get_edited_value(valuespec):
 #   |   \____\___/|_| |_|_| |_|\__, |\__,_|_|  \__,_|\__|_|\___/|_| |_|    |
 #   |                          |___/                                       |
 #   +----------------------------------------------------------------------+
-#   | WATO's new editor for configuration variables in main.mk (except     |
-#   | rule based parameters. Those are handled separately).                |
+#   | Main entry page for configuration of global variables, rules, groups,| 
+#   | timeperiods, users, etc.                                             |
 #   +----------------------------------------------------------------------+
 def mode_configuration(phase):
-    valuespec = Integer(title="TCP Port used by Check_MK Agent", size=5, minvalue=1, maxvalue=65535)
+    submodules = [
+      ( "globalvars",        _("Global settings"),    "configuration", 
+      _("Manage global configuration settings for Check_MK, Multisite and the "
+        "monitoring core here.")),
+      ( "rulesets",          _("Rulesets"),           "rulesets", 
+      _("Check parameters and other variables that can be set on a per-host "
+        "and per-service basis are managed via rules.") ),
+      ( "host_groups",       _("Host Groups"),        "hostgroups", 
+      _("Manage groups of hosts.") ),
+      ( "service_groups",    _("Service Groups"),     "servicegroups", 
+      _("Manage groups of services.") ),
+      ( "contact_groups",    _("Contact Groups"),     "contactgroups", 
+      _("Manage groups of contacts.") ),
+      ( "timeperiods",       _("Time Periods"),       "timeperiods", 
+      _("Timeperiods define a set of days and hours of a regular week and "
+        "can be used to restrict alert notifications.") ),
+    ]
+    columns = 2
 
     if phase == "title":
-        return "Global configuration settings for Check_MK"
+        return _("Configuration")
 
     elif phase == "buttons":
         html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
+        for mode, title, icon, help in submodules:
+            html.context_button(title, make_link([("mode", mode)]), icon)
+        return
+
+    elif phase == "action":
+        return
+
+    html.write("<table class=configmodules>")
+    for nr, (mode, title, icon, help) in enumerate(submodules):
+        if nr % columns == 0:
+            html.write("<tr>")
+        url = make_link([("mode", mode)])
+        html.write('<td class=icon><a href="%s"><img src="images/icon_%s.png"></a></td>' % 
+              (url, icon))
+        html.write('</td><td class=text><a href="%s">%s</a><br><i>%s</i></td>' % 
+           (url, title, help))
+        if nr % columns == columns - 1:
+            html.write("</tr>")
+    html.write("</table>")
+        
+
+
+
+
+#   +----------------------------------------------------------------------+
+#   |          ____ _       _           _  __     __                       |
+#   |         / ___| | ___ | |__   __ _| | \ \   / /_ _ _ __ ___           |
+#   |        | |  _| |/ _ \| '_ \ / _` | |  \ \ / / _` | '__/ __|          |
+#   |        | |_| | | (_) | |_) | (_| | |   \ V / (_| | |  \__ \          |
+#   |         \____|_|\___/|_.__/ \__,_|_|    \_/ \__,_|_|  |___/          |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Editor for global settings in main.mk                                |
+#   +----------------------------------------------------------------------+
+
+def mode_globalvars(phase):
+    if phase == "title":
+        return _("Global configuration settings for Check_MK")
+
+    elif phase == "buttons":
+        html.context_button(_("Back"), make_link([("mode", "configuration")]), "back")
         return
     
     # Get default settings of all configuration variables of interest in the domain
@@ -4092,7 +4150,7 @@ def mode_groups(phase, what):
         return what_name.title()
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
+        html.context_button(_("Back"), make_link([("mode", "configuration")]), "back")
         html.context_button(_("New group"), make_link([("mode", "edit_group"), ("what", what)]), "new")
         if what == "contact":
             pass
@@ -4279,7 +4337,7 @@ def mode_timeperiods(phase):
         return _("Timeperiod definitions")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
+        html.context_button(_("Back"), make_link([("mode", "configuration")]), "back")
         html.context_button(_("New Timeperiod"), make_link([("mode", "edit_timeperiod")]), "new")
         return
 
@@ -4587,7 +4645,7 @@ def mode_rulesets(phase):
             html.context_button(_("Back"), 
                  make_link([("mode", "edithost"), ("host", only_host)]), "back")
         else:
-            html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
+            html.context_button(_("Back"), make_link([("mode", "configuration")]), "back")
         return
     
     elif phase == "action":
@@ -5750,6 +5808,7 @@ mode_functions = {
    "changelog"       : mode_changelog,
    "snapshot"        : mode_snapshot,
    "configuration"   : mode_configuration,
+   "globalvars"      : mode_globalvars,
    "edit_configvar"  : mode_edit_configvar,
    "rulesets"        : mode_rulesets,
    "view_ruleset"    : mode_view_ruleset,

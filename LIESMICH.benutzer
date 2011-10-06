@@ -1,0 +1,45 @@
+Konzept für Verwaltung von Benutzern und Rollen
+-----------------------------------------------
+
+User: HTTP-Login. Ein User *kann* gleichzeitig ein Nagios-Kontakt sein.
+Rolle: Eine Ansammlung von Berechtigungen ohne Objektbezug.
+Kontaktgruppe: Eine Nagios contactgroup: Liste von Usern, Zugeordnet zu 
+  Hosts und Services.
+
+Ob ein Benutzer mehrere Rollen haben kann, ist noch nicht geklärt. Falls
+ja, wären seine Rechte einfach die Summe der Rollenrechte. Normalerweise
+sind die Rollen aber sowieso nach dem Zwiebelprinzip gebaut (root ->
+admin -> user -> gast).
+
+Attribute eines Benutzers:
+
+  Login                          Nagios 'contact_name'
+  Password (verschlüsselt?)
+  Voller Name "Harri Hirsch" --> Nagios 'alias'
+  Rolle / Rollen
+  -------
+  Falls es ein Nagios-Kontakt ist, gibt es noch weitere Attribute:
+
+  Kontaktgruppen
+  Email-Adresse
+  ... weitere Felder evtl. analog zu den Hostattributen per Plugin
+      nachpflegbar. Man könnte evtl. sogar direkt auf die Hostattribute
+      zugreifen.
+
+  ... Einstellungen, die der Benutzer evtl. sogar selbst ändern kann:
+  Notifikation-Options für Hosts und Services getrennt
+  Notifikation-Period
+  Notifikations-enabled
+
+  Die Benachrichtungen selbst sollten über ein Standardskript laufen,
+  das wir mit ausliefern. Wenn alternative Wege als Email eingesetzt
+  werden, kann man das in dem eigenen System regeln und braucht dazu
+  nicht die Nagios-Konfiguration zu bemühen. Wichtig ist aber, dass
+  wenn Nagios eine Notifikation tatsächlich versendet (Nagios-Log),
+  dass dann auc heine Rauskommt. Deswegen müssen die obigen drei
+  Einstellungen über Nagios verwaltet werden. Wenn der Benutzer diese
+  selbst ändern können soll, muss man dafür Nagios durchstarten.
+  Irgendwie doof. Oder wir schaffen es durch das "adaptive monitoring"
+  von Nagios zur Laufzeit diese Werte zu ändern.
+
+

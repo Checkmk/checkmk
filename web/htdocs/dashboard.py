@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, defaults, htmllib, pprint
+import config, defaults, htmllib, pprint, time
 from lib import *
 import wato
 
@@ -551,7 +551,7 @@ def render_pnpgraph(site, host, service=None, source=0):
     else:
         base_url = html.site_status[site]["site"]["url_prefix"]
 
-    img_url = base_url + "image?host=%s&srv=%s&view=0&source=%d&theme=multisite" % \
-            (pnp_cleanup(host), pnp_cleanup(service), source)
+    img_url = base_url + "image?host=%s&srv=%s&view=0&source=%d&theme=multisite&_t=%d" % \
+            (pnp_cleanup(host), pnp_cleanup(service), source, int(time.time()))
     html.write('<img src="%s">' % img_url)
 

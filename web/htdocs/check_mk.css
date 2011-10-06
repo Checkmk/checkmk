@@ -1790,7 +1790,15 @@ div.dashlet table.hoststats th, table.hoststats td {
     vertical-align: middle;
 }
 
+div.dashlet div.nograph {
+    background-color: white;
+    width: 100%;
+    height: 100%;
+}
 
+div.dashlet div.nograph div.msg {
+    padding: 10px;
+}
 
 /*
     _       _     _ ____                    _           

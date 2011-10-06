@@ -548,6 +548,11 @@ if(has_canvas_support()) {
 def dashlet_pnpgraph():
     render_pnpgraph(html.var("site"), html.var("host"), html.var("service"), int(html.var("source", 0)))
 
+def dashlet_nodata(): 
+    html.write("<div class=nograph><div class=msg>")
+    html.write(html.var("message", _("No data available.")))
+    html.write("</div></div>")
+
 def render_pnpgraph(site, host, service=None, source=0):
     if not host:
         html.message("Invalid URL to this dashlet. Missing <tt>host</tt>")

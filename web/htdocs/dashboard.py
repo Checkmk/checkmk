@@ -173,7 +173,12 @@ def render_dashlet(nr, dashlet, filename):
                 (p, nr, p, p))
 
     if dashlet.get("title"):
-        html.write('<div class="title" id="dashlet_title_%d">%s</div>' % (nr, dashlet["title"]))
+        url = dashlet.get("title_url", None)
+        if url:
+            title = '<a href="%s">%s</a>' % (url, dashlet["title"])
+        else:
+            title = dashlet["title"]
+        html.write('<div class="title" id="dashlet_title_%d">%s</div>' % (nr, title))
     if dashlet.get("background", True):
         bg = " background"
     else:

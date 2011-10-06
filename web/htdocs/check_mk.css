@@ -1680,6 +1680,14 @@ div.dashlet div.title {
     font-size: 10pt;
     font-weight: bold;
 }
+div.dashlet div.title a {
+    text-decoration: none;
+    border-bottom: 1px dotted white;
+    color: white;
+}
+div.dashlet div.title a:hover { 
+    color: #00f;
+}
 
 div.dashlet img.shadow {
     position: absolute;

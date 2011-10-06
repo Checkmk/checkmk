@@ -173,7 +173,12 @@ def render_dashlet(nr, dashlet, filename):
                 (p, nr, p, p))
 
     if dashlet.get("title"):
-        html.write('<div class="title" id="dashlet_title_%d">%s</div>' % (nr, dashlet["title"]))
+        url = dashlet.get("title_url", None)
+        if url:
+            title = '<a href="%s">%s</a>' % (url, dashlet["title"])
+        else:
+            title = dashlet["title"]
+        html.write('<div class="title" id="dashlet_title_%d">%s</div>' % (nr, title))
     if dashlet.get("background", True):
         bg = " background"
     else:
@@ -399,22 +404,22 @@ def dashlet_mk_logo():
 
 def dashlet_hoststats():
     table = [
-       ( _("Up"), "#0b3",
+       ( _("up"), "#0b3",
         "Stats: state = 0\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "StatsAnd: 2\n"),
 
-       ( _("Down"), "#f00",
+       ( _("down"), "#f00",
         "Stats: state = 1\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "StatsAnd: 2\n"),
 
-       ( _("Unreachable"), "#f80",
+       ( _("unreachable"), "#f80",
         "Stats: state = 2\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "StatsAnd: 2\n"),
 
-       ( _("In downtime"), "#0af",
+       ( _("in downtime"), "#0af",
         "Stats: scheduled_downtime_depth > 0\n" \
        )
     ]
@@ -424,35 +429,44 @@ def dashlet_hoststats():
 
 def dashlet_servicestats():
     table = [
-       ( _("Ok"), "#0b3",
+       ( _("OK"), "#0b3",
         "Stats: state = 0\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
-        "StatsAnd: 3\n"),
+        "Stats: host_state = 0\n" \
+        "StatsAnd: 4\n"),
 
-       ( _("Warning"), "#ff0",
+       ( _("warning"), "#ff0",
         "Stats: state = 1\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
-        "StatsAnd: 3\n"),
+        "Stats: host_state = 0\n" \
+        "StatsAnd: 4\n"),
 
-       ( _("Unknown"), "#f80",
+       ( _("unknown"), "#f80",
         "Stats: state = 3\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
-        "StatsAnd: 3\n"),
+        "Stats: host_state = 0\n" \
+        "StatsAnd: 4\n"),
 
-       ( _("Critical"), "#f00",
+       ( _("critical"), "#f00",
         "Stats: state = 2\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
-        "StatsAnd: 3\n"),
+        "Stats: host_state = 0\n" \
+        "StatsAnd: 4\n"),
 
-       ( _("In downtime"), "#0af",
+       ( _("in downtime"), "#0af",
         "Stats: scheduled_downtime_depth > 0\n" \
         "Stats: host_scheduled_downtime_depth > 0\n" \
-        "StatsOr: 2\n" \
-       )
+        "StatsOr: 2\n"),
+
+       ( _("on down host"), "#048",
+        "Stats: scheduled_downtime_depth = 0\n" \
+        "Stats: host_scheduled_downtime_depth = 0\n" \
+        "Stats: host_state != 0\n" \
+        "StatsAnd: 3\n"),
     ]
     filter = "Filter: host_custom_variable_names < _REALNAME\n"
 
@@ -479,7 +493,7 @@ def render_statistics(what, table, filter):
     html.write('<canvas class=pie width=%d height=%d id=%s_stats style="float: left"></canvas>' % 
             (pie_diameter, pie_diameter, what))
     
-    html.write('<table class=hoststats style="float:left">')
+    html.write('<table class="hoststats narrow" style="float:left">')
     for (name, color, query), count in pies + [ ((_("Total"), "", ""), total) ]:
         html.write('<tr><th>%s</th><td class=color style="background-color: %s">'
                    '</td><td>%d</td></tr>' % (name, color, count))
@@ -533,6 +547,11 @@ if(has_canvas_support()) {
 
 def dashlet_pnpgraph():
     render_pnpgraph(html.var("site"), html.var("host"), html.var("service"), int(html.var("source", 0)))
+
+def dashlet_nodata(): 
+    html.write("<div class=nograph><div class=msg>")
+    html.write(html.var("message", _("No data available.")))
+    html.write("</div></div>")
 
 def render_pnpgraph(site, host, service=None, source=0):
     if not host:

@@ -55,18 +55,21 @@ builtin_dashboards = {
             },
             { 
                 "title"      : _("Host Problems"),
+                "title_url"  : "view.py?view_name=hostproblems",
                 "view"       : "hostproblems_dash", # "view.py?view_name=hostproblems_dash&display_options=SIXHR&_body_class=dashlet",
                 "position"   : (-1, 1),
                 "size"       : (GROW, 6),
             },
             { 
                 "title"      : _("Service Problems"),
+                "title_url"  : "view.py?view_name=svcproblems",
                 "view"       : "svcproblems_dash", # "view.py?view_name=svcproblems_dash&display_options=SIXHR&_body_class=dashlet",
                 "position"   : (1, 7),
                 "size"       : (GROW, MAX),
             },
             { 
                 "title"      : _("Events of recent 4 hours"),
+                "title_url"  : "view.py?view_name=events_dash",
                 "view"       : "events_dash", # "view.py?view_name=events_dash&display_options=SIXHR&_body_class=dashlet",
                 "position"   : (-1, -1),
                 "size"       : (GROW, GROW),

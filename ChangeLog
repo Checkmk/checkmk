@@ -25,6 +25,8 @@
     * Added "Administration" snapin to default sidebar
     * Tactical Overview: make link clickable even if count is zero
     * Minor cleanup in default dashboard
+    * Dashboard: new dashlet attribute title_url lets you make a title into a link
+    * Dashboard: make numbers match "Tactical Overview" snapin
 
     Livestatus:
     * Write messages after initialization into an own livestatus.log

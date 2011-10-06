@@ -162,6 +162,14 @@ def page_handler():
 
     current_mode = html.var("mode") or "folder"
     modefunc = mode_functions.get(current_mode)
+    if modefunc == None:
+        html.header(_("Sorry"))
+        html.begin_context_buttons()
+        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
+        html.end_context_buttons()
+        html.message(_("This module has not yet been implemented."))
+        html.footer()
+        return
 
     # Do actions (might switch mode)
     action_message = None
@@ -546,17 +554,12 @@ def mode_folder(phase):
 
     elif phase == "buttons":
         folder_status_button()
-        changelog_button()
-        html.context_button(_("Backup / Restore"),  make_link([("mode", "snapshot")]), "backup")
-        html.context_button(_("Configuration"),     make_link([("mode", "configuration")]), "configuration")
-        # html.context_button(_("Host groups"),       make_link([("mode", "host_groups")]), "hostgroups"),
-        # html.context_button(_("Service groups"),    make_link([("mode", "service_groups")]), "servicegroups"),
-        # html.context_button(_("Contact groups"),    make_link([("mode", "contact_groups")]), "contactgroups"),
-        # html.context_button(_("Timeperiods"),       make_link([("mode", "timeperiods")]), "timeperiods"),
-        # html.context_button(_("Rulesets"),          make_link_to([("mode", "rulesets")], g_folder), "rulesets")
-        html.context_button(_("Properties"),        make_link_to([("mode", "editfolder")], g_folder), "properties")
+        html.context_button(_("Folder Properties"),        make_link_to([("mode", "editfolder")], g_folder), "properties")
         html.context_button(_("New folder"),        make_link([("mode", "newfolder")]), "newfolder")
         html.context_button(_("New host"),          make_link([("mode", "newhost")]), "new")
+        html.context_button(_("Configuration"),     make_link([("mode", "configuration")]), "configuration")
+        html.context_button(_("Backup / Restore"),  make_link([("mode", "snapshot")]), "backup")
+        changelog_button()
         search_button()
     
     elif phase == "action":
@@ -3891,12 +3894,16 @@ def mode_configuration(phase):
       _("Check parameters and other variables that can be set on a per-host "
         "and per-service basis are managed via rules.") ),
       ( "host_groups",       _("Host Groups"),        "hostgroups", 
-      _("Manage groups of hosts.") ),
+      _("Organize your hosts in groups independent of the tree structure.") ),
       ( "service_groups",    _("Service Groups"),     "servicegroups", 
-      _("Manage groups of services.") ),
-      ( "contact_groups",    _("Contact Groups"),     "contactgroups", 
+      _("Organize services in groups for a better overview in the status display.") ),
+      ( "contacts",          _("Users & Contacts"),     "contacts", 
+      _("Manage users of Multisite and contacts of the monitoring system.") ),
+      ( "roles",            _("Roles"),     "roles", 
+      _("Manage user roles and permissions.") ),
+      ( "contact_groups",   _("Contact Groups"),     "contactgroups", 
       _("Manage groups of contacts.") ),
-      ( "timeperiods",       _("Time Periods"),       "timeperiods", 
+      ( "timeperiods",      _("Time Periods"),       "timeperiods", 
       _("Timeperiods define a set of days and hours of a regular week and "
         "can be used to restrict alert notifications.") ),
     ]

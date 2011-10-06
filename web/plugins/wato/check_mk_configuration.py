@@ -637,8 +637,11 @@ register_rule(group,
                  )
                ),
 
-           ] 
-    ))
+           ]),
+    match = "dict",
+    itemtype = "item",
+    itemname = _("port specification"),
+    )
 
             
             

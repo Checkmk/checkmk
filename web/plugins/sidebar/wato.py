@@ -26,13 +26,58 @@
 
 import config, wato
 
-def render_wato_files():
+def wato_snapins_allowed():
     if not config.wato_enabled:
         html.write(_("WATO is disabled. Please set <tt>wato_enabled = True</tt> in your <tt>multisite.mk</tt> if you want to use WATO."))
+        return False
 
     elif not config.may("use_wato"):
         html.write(_("You are not allowed to use Check_MK's web configuration GUI."))
+        return False
+    else:
+        return True
 
+
+
+#   +----------------------------------------------------------------------+
+#   |                     __        ___  _____ ___                         |
+#   |                     \ \      / / \|_   _/ _ \                        |
+#   |                      \ \ /\ / / _ \ | || | | |                       |
+#   |                       \ V  V / ___ \| || |_| |                       |
+#   |                        \_/\_/_/   \_\_| \___/                        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+def render_wato():
+    if not wato_snapins_allowed():
+        return
+
+    iconlink(_("Host management"),        "wato.py?mode=folder", "folder")
+    iconlink(_("Host search"),            "wato.py?mode=search", "search")
+    iconlink(_("Configuration"),          "wato.py?mode=configuration", "configuration")
+    iconlink(_("Backup & Restore"),       "wato.py?mode=snapshot", "backup")
+    iconlink(_("Changelog & Activation"), "wato.py?mode=changelog", "wato_changes")
+
+sidebar_snapins["admin"] = {
+    "title" : _("WATO: Check_MK Administration"),
+    "description" : _("Direct access to WATO - the web administration GUI of Check_MK"),
+    "author" : "Mathias Kettner",
+    "render" : render_wato,
+    "allowed" : [ "admin" ],
+}
+
+
+#   +----------------------------------------------------------------------+
+#   |          _____     _     _              _____                        |
+#   |         |  ___|__ | | __| | ___ _ __   |_   _| __ ___  ___           |
+#   |         | |_ / _ \| |/ _` |/ _ \ '__|____| || '__/ _ \/ _ \          |
+#   |         |  _| (_) | | (_| |  __/ | |_____| || | |  __/  __/          |
+#   |         |_|  \___/|_|\__,_|\___|_|       |_||_|  \___|\___|          |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+def render_wato_folders():
+    if not wato_snapins_allowed():
+        return
     else:
         if config.is_multisite():
             sitenames = config.sites.keys()
@@ -42,12 +87,12 @@ def render_wato_files():
                 state = html.site_status[sitename]["state"]
                 if state != "disabled":
                     html.write("<h3>%s</h3>\n" % site["alias"])
-                    ajax_url = site["url_prefix"] + "check_mk/ajax_wato_files.py"
+                    ajax_url = site["url_prefix"] + "check_mk/ajax_wato_folders.py"
                     html.javascript("document.write(get_url_sync('%s'));" % ajax_url)
         else:
-            ajax_wato_files()
+            ajax_wato_folders()
 
-def ajax_wato_files():
+def ajax_wato_folders():
     if config.may("use_wato"):
         render_linktree_folder(wato.api.get_folder_tree())
 
@@ -73,6 +118,6 @@ sidebar_snapins["wato"] = {
     "title" : _("Hosts"),
     "description" : _("A foldable tree showing all your WATO folders and files - allowing you to navigate in the tree while using views or being in WATO"),
     "author" : "Mathias Kettner",
-    "render" : render_wato_files,
+    "render" : render_wato_folders,
     "allowed" : [ "admin", "user" ],
 }

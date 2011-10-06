@@ -60,32 +60,6 @@ sidebar_snapins["about"] = {
     "allowed" : [ "admin", "user", "guest" ],
 }
 
-# -----------------------------------------------------------------------
-#      _       _           _       _     _             _   _
-#     / \   __| |_ __ ___ (_)_ __ (_)___| |_ _ __ __ _| |_(_) ___  _ __
-#    / _ \ / _` | '_ ` _ \| | '_ \| / __| __| '__/ _` | __| |/ _ \| '_ \
-#   / ___ \ (_| | | | | | | | | | | \__ \ |_| | | (_| | |_| | (_) | | | |
-#  /_/   \_\__,_|_| |_| |_|_|_| |_|_|___/\__|_|  \__,_|\__|_|\___/|_| |_|
-#
-# -----------------------------------------------------------------------
-def render_admin():
-    html.write('<ul>')
-    if config.wato_enabled and config.may("use_wato"):
-        bulletlink(_("WATO - Configure Hosts and Services"), "wato.py")
-    bulletlink(_("View permissions"), "view_permissions.py")
-    if config.may("edit_permissions"):
-        bulletlink(_("Edit permissions"), "edit_permissions.py")
-    html.write('</ul>')
-
-sidebar_snapins["admin"] = {
-    "title" : _("Administration"),
-    "description" : _("Links to administrations functions, e.g. configuration of permissions"),
-    "author" : "Mathias Kettner",
-    "render" : render_admin,
-    "allowed" : [ "admin" ],
-}
-
-
 # --------------------------------------------------------------
 #   __     ___
 #   \ \   / (_) _____      _____

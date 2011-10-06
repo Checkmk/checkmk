@@ -376,6 +376,13 @@ li.sidebar {
     margin-left: 0px;
 }
 
+div.snapin img.iconlink {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
 div.snapin div.footnote {
     width: 100%;
     text-align: right;

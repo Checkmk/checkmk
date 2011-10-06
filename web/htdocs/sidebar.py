@@ -69,6 +69,12 @@ def simplelink(text, target):
 def bulletlink(text, target):
     html.write("<li class=sidebar>" + link(text, target) + "</li>\n")
 
+def iconlink(text, target, icon):
+    linktext = '<img class=iconlink src="images/icon_%s.png">%s' % \
+         ( icon, text )
+    html.write('<a target=main class=link href="%s">%s</a><br>' % \
+            (target, linktext))
+
 def footnotelinks(links):
     html.write("<div class=footnotelink>")
     for text, target in links:

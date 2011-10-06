@@ -2547,10 +2547,9 @@ def host_move_combo(host = None, top = False):
                         onchange = "update_bulk_moveto(this.value)",
                         attrs = {'class': 'bulk_moveto'})
         else:
-            html.hidden_field("host", host)
             uri = html.makeuri([("host", host), ("_transid", html.current_transid() )])
-            html.sorted_select(None, selections, "", 
-                "location.href='%s&_move_host_to=' + this.value;" % uri);
+            html.sorted_select("_move_%s" % host, selections, "",
+                "location.href='%s&_move_host_to=' + this.value;return true;" % uri);
 
 
 def move_hosts_to(hostnames, target_filename):

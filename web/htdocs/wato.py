@@ -2550,7 +2550,7 @@ def host_move_combo(host = None, top = False):
             html.hidden_field("host", host)
             uri = html.makeuri([("host", host), ("_transid", html.current_transid() )])
             html.sorted_select(None, selections, "", 
-                "location.href='%s' + '&_move_host_to=' + this.value;" % uri);
+                "location.href='%s&_move_host_to=' + this.value;" % uri);
 
 
 def move_hosts_to(hostnames, target_filename):

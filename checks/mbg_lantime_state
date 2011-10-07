@@ -34,8 +34,8 @@ mbg_lantime_state_statemap = {
   '5': 'normalOperationRefclock',
 }
 
-# stratum, refclock_offset
-mbg_lantime_state_default_levels = (0, 0, 5, 10)
+# stratum, refclock_offset (in microseconds)
+mbg_lantime_state_default_levels = (0, 0, 500, 1000)
 
 def inventory_mbg_lantime_state(info):
     if len(info) > 0 and len(info[0]) == 5:
@@ -70,18 +70,14 @@ def check_mbg_lantime_state(item, params, info):
 
         thr_txt = ''
 
-        if refclock_offset < 0:
-            pos_refclock_offset = refclock_offset * -1
-        else:
-            pos_refclock_offset = refclock_offset
-
-        if params[2] is not None and int(pos_refclock_offset) > params[3]:
+        pos_refclock_offset = abs(savefloat(refclock_offset))
+        if params[2] is not None and pos_refclock_offset > params[3]:
             state   = max(state, 2)
             thr_txt = ' (!!)'
-        elif params[3] is not None and int(pos_refclock_offset) > params[2]:
+        elif params[3] is not None and pos_refclock_offset > params[2]:
             state   = max(state, 1)
             thr_txt = ' (!)'
-        state_txt.append('Refclock Offset: %sms%s' % (refclock_offset, thr_txt))
+        state_txt.append('Refclock Offset: %0.4fms%s' % (savefloat(refclock_offset) / 1000, thr_txt))
 
         perfdata = [('offset', refclock_offset, params[2], params[3])]
 

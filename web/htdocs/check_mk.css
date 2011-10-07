@@ -1407,48 +1407,8 @@ img.siteicon {
 
  These styles are used on the "Edit Permissions" page
 */
-table.permissions {
-    border-collapse: collapse;
-    empty-cells: show;
-    border-spacing: 0px;
-}
-
-table.permissions td, table.permissions th {
-    border: 1px solid #fff;
-    padding: 3px 0.5ex;
-}
-table.permissions th {
-    text-align: left;
-    background-color: #98a;
-    color: #fff;
-}
-
-table.permissions td.legend {
-    background-color: #769;
-    color: #fff;
-}
-table.permissions td.legend.sub {
-    border-top-style: none;
-    border-bottom-style: none;
-    background-color: #87a;
-    padding-left: 1em;
-    padding-top: 2px;
-    padding-bottom: 0px;
-}
-table.permissions td.content {
-    text-align: center;
-    width: 6ex;
-    vertical-align: middle;
-}
-
-table.permissions td.content.user {
-    background-color: #b84;
-}
-table.permissions td.content.admin {
-    background-color: #c85;
-}
-table.permissions td.content.guest {
-    background-color: #d86;
+table.permissions td.legend { 
+    width: 500px;
 }
 
 /*
@@ -1720,6 +1680,14 @@ div.dashlet div.title {
     font-size: 10pt;
     font-weight: bold;
 }
+div.dashlet div.title a {
+    text-decoration: none;
+    border-bottom: 1px dotted white;
+    color: white;
+}
+div.dashlet div.title a:hover { 
+    color: #00f;
+}
 
 div.dashlet img.shadow {
     position: absolute;
@@ -1792,6 +1760,11 @@ div.dashlet table.hoststats {
     border-collapse: collapse;
     border-spacing: 0px;
 }
+div.dashlet table.hoststats.narrow { 
+    margin-top: 4px;
+}
+
+
 div.dashlet table.hoststats td { 
     text-align: right;
     padding-right: 6px;
@@ -1799,6 +1772,7 @@ div.dashlet table.hoststats td {
     background-image: url("images/form_background.png");
     background-repeat: repeat;
 }
+
 div.dashlet table.hoststats th { 
     text-align: left;
     background-color: transparent;
@@ -1816,7 +1790,15 @@ div.dashlet table.hoststats th, table.hoststats td {
     vertical-align: middle;
 }
 
+div.dashlet div.nograph {
+    background-color: white;
+    width: 100%;
+    height: 100%;
+}
 
+div.dashlet div.nograph div.msg {
+    padding: 10px;
+}
 
 /*
     _       _     _ ____                    _           

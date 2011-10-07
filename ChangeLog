@@ -8,6 +8,7 @@
 1.1.12b1:
     Core, Setup, etc.:
     * FIX: fix cmk -D on cluster hosts
+    * Made profile output file configurable (Variable: g_profile_path)
 
     Checks & Agents:
     * FIX: j4p_performance: fix inventory functions 
@@ -16,10 +17,12 @@
     * mrpe: make check cluster-aware and work as clustered_service
     * cups_queues: Run agent part only on directly on CUPS servers,
       not on clients
+    * FIX: mbg_lantime_state: Fixed output UOM to really be miliseconds
 
     Multisite:
     * FIX: fix rescheduling of host check
     * FIX: fix exception when using status_host while local site is offline
+    * FIX: Fixed not updating pnp graphs on dashboard in some browsers (like chrome)
     * FIX: fix URL-too-long in permissions page
     * FIX: fix permission computation
     * Cleanup permissions page optically, add comments for views and snapins
@@ -29,6 +32,8 @@
     * Added "Administration" snapin to default sidebar
     * Tactical Overview: make link clickable even if count is zero
     * Minor cleanup in default dashboard
+    * Dashboard: new dashlet attribute title_url lets you make a title into a link
+    * Dashboard: make numbers match "Tactical Overview" snapin
 
     Livestatus:
     * Write messages after initialization into an own livestatus.log

@@ -63,7 +63,7 @@ def render_wato():
     iconlink(_("Roles"),                  "wato.py?mode=roles",          "roles")
     iconlink(_("Contact Groups"),         "wato.py?mode=contact_groups", "contactgroups")
     iconlink(_("Time Periods"),           "wato.py?mode=timeperiods",    "timeperiods")
-    iconlink(_("Monitoring sites"),       "wato.py?mode=sites",          "sites")
+    iconlink(_("Multisite Connections"),  "wato.py?mode=sites",          "sites")
 
 
 sidebar_snapins["admin"] = {
@@ -88,17 +88,17 @@ def render_wato_folders():
     if not wato_snapins_allowed():
         return
     else:
-        if config.is_multisite():
-            sitenames = config.allsites().keys()
-            sitenames.sort()
-            for sitename in sitenames:
-                site = config.sites[sitename]
-                state = html.site_status[sitename]["state"]
-                if state != "disabled":
-                    html.write("<h3>%s</h3>\n" % site["alias"])
-                    ajax_url = site["url_prefix"] + "check_mk/ajax_wato_folders.py"
-                    html.javascript("document.write(get_url_sync('%s'));" % ajax_url)
-        else:
+        #EE if config.is_multisite():
+        #EE     sitenames = config.allsites().keys()
+        #EE     sitenames.sort()
+        #EE     for sitename in sitenames:
+        #EE         site = config.sites[sitename]
+        #EE         state = html.site_status[sitename]["state"]
+        #EE         if state != "disabled":
+        #EE             html.write("<h3>%s</h3>\n" % site["alias"])
+        #EE             ajax_url = site["url_prefix"] + "check_mk/ajax_wato_folders.py"
+        #EE             html.javascript("document.write(get_url_sync('%s'));" % ajax_url)
+        #EE else:
             ajax_wato_folders()
 
 def ajax_wato_folders():
@@ -111,7 +111,7 @@ def render_linktree_folder(f):
     is_leaf = len(subfolders) == 0 
 
     title = '<a href="#" onclick="wato_tree_click(%r);">%s (%d)</a>' % (
-            f[".path"], f["title"], f["num_hosts"]) 
+            f[".path"], f["title"], f[".total_hosts"]) 
 
     if not is_leaf:
         html.begin_foldable_container('wato', f[".path"], False, title)

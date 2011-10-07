@@ -69,6 +69,9 @@
 #   "num_hosts"       -> number of hosts in this folder (this is identical to 
 #                        to len() of the entry ".hosts" but is persisted for
 #                        performance issues.
+#   ".total_hosts"    -> recursive number of hosts, computed on demand by
+#                        num_hosts_in()
+#                        
 # 
 # g_folder -> The folder object representing the folder the user is 
 #             currently operating in. 
@@ -2336,7 +2339,7 @@ def find_host_in(host, folder):
         if p != None:
             return p
 
-def num_hosts_in(folder, recurse):
+def num_hosts_in(folder, recurse=True):
     if not "num_hosts" in folder:
         load_hosts(folder)
         save_folder(folder)
@@ -2348,6 +2351,7 @@ def num_hosts_in(folder, recurse):
     for subfolder in folder[".folders"].values():
         num += num_hosts_in(subfolder, True)
     num += folder["num_hosts"]
+    folder[".total_hosts"] = num # store for later usage
     return num
 
 # This is a dummy implementation which works without tags
@@ -4012,7 +4016,7 @@ def mode_configuration(phase):
       ( "timeperiods",      _("Time Periods"),       "timeperiods", 
       _("Timeperiods define a set of days and hours of a regular week and "
         "can be used to restrict alert notifications.") ), 
-      ( "sites",  _("Monitoring sites"), "sites",
+      ( "sites",  _("Multisite Connections"), "sites",
       _("Configure distributed monitoring via Multsite, manage connections to remote sites.")),
     ]
     columns = 2
@@ -4745,7 +4749,7 @@ class TimeperiodSelection(ElementSelection):
 #   +----------------------------------------------------------------------+
 def mode_sites(phase):
     if phase == "title":
-        return _("Monitoring sites")
+        return _("Manage Multisite connections")
 
     elif phase == "buttons":
         html.context_button(_("Back"), make_link([("mode", "configuration")]), "back")
@@ -4777,6 +4781,7 @@ def mode_sites(phase):
         return
 
 
+    html.write("<h3>" + _("Multisite connections") + "</h3>")
     html.write("<table class=data>")
     html.write("<tr><th>" + _("Actions") + "<th>" 
                 + _("Site-ID") 
@@ -4855,11 +4860,16 @@ def mode_edit_site(phase):
 
         new_site = {}
         sites[id] = new_site
-        new_site["alias"] = html.var("alias", id).strip()
+        alias = html.var_utf8("alias", "").strip()
+        if not alias:
+            raise MKUserError("alias", _("Please enter an alias name or description of this site."))
+
+        new_site["alias"] = alias
         url_prefix = html.var("url_prefix", "").strip()
         if url_prefix and url_prefix[-1] != '/':
             raise MKUserError("url_prefix", _("The URL prefix must end with a slash."))
-        new_site["url_prefix"] = url_prefix
+        if url_prefix:
+            new_site["url_prefix"] = url_prefix
         new_site["disabled"] = html.get_checkbox("disabled")
 
         # Connection
@@ -4929,6 +4939,7 @@ def mode_edit_site(phase):
     html.write(_("Site ID"))
     html.write("</td><td class=content>")
     html.text_input("id", siteid) 
+    html.set_focus("id")
     html.write("</td></tr>")
 
     # Alias
@@ -5054,8 +5065,6 @@ def mode_edit_site(phase):
     html.hidden_fields()
     html.button("save", _("Save"))
     html.end_form()
-    html.set_focus("id")
-
 
 
 def load_sites():
@@ -5077,9 +5086,13 @@ def load_sites():
 
 def save_sites(sites):
     filename = multisite_dir + "sites.mk"
-    out = file(filename, "w")
-    out.write("# Written by WATO\n# encoding: utf-8\n\n")
-    out.write("sites = \\\n%s\n" % pprint.pformat(sites))
+    if len(sites) == 0:
+        if os.path.exists(filename):
+            os.remove(filename)
+    else:
+        out = file(filename, "w")
+        out.write("# Written by WATO\n# encoding: utf-8\n\n")
+        out.write("sites = \\\n%s\n" % pprint.pformat(sites))
 
 #   +----------------------------------------------------------------------+
 #   |           ____        _        _____    _ _ _                        |
@@ -6116,6 +6129,7 @@ class API:
     # the tree (e.g. the status GUI).
     def get_folder_tree(self):
         load_all_folders()
+        num_hosts_in(g_root_folder) # sets ".total_hosts"
         return g_root_folder
 
     # sort list of folders or files by their title

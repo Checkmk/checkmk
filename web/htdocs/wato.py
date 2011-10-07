@@ -4784,6 +4784,8 @@ def mode_sites(phase):
                 + "</th><th>" + _("Connection")
                 + "</th><th>" + _("Status host")
                 + "</th><th>" + _("Disabled")
+                + "</th><th>" + _("Timeout")
+                + "</th><th>" + _("Pers.")
                 + "</th></tr>\n")
 
     odd = "even"
@@ -4808,17 +4810,21 @@ def mode_sites(phase):
             html.write("<td><b>" + _("yes") + "</b></td>")
         else:
             html.write("<td>" + _("no") + "</td>")
+        if "timeout" in site:
+            html.write("<td class=number>%d sec</td>" % site["timeout"])
+        else:
+            html.write("<td></td>")
+        if site.get("persist", False):
+            html.write("<td><b>" + _("yes") + "</b></td>")
+        else:
+            html.write("<td>" + _("no") + "</td>")
+
         html.write("</tr>")
 
 def mode_edit_site(phase):
     sites = load_sites()
-    siteid = html.var("edit", "") # missing -> new site
+    siteid = html.var("edit", None) # missing -> new site
     new = siteid == None
-    if new:
-        site = {}
-    else:
-        site = sites[siteid]
-
     if phase == "title":
         if new:
             return _("Create new site connection")
@@ -4829,8 +4835,15 @@ def mode_edit_site(phase):
         html.context_button(_("Back"), make_link([("mode", "sites")]), "back")
         return
 
+    if new:
+        site = {}
+    else:
+        site = sites.get(siteid, "")
 
-    elif phase == "action":
+    if phase == "action":
+        if not html.check_transaction():
+            return "sites"
+
         id = html.var("id").strip()
         if (new or id != siteid) and id in sites:
             raise MKUserError("id", _("This id is already being used by another connection."))
@@ -4842,7 +4855,7 @@ def mode_edit_site(phase):
 
         new_site = {}
         sites[id] = new_site
-        new_site["alias"] = html.var("alias", "").strip()
+        new_site["alias"] = html.var("alias", id).strip()
         url_prefix = html.var("url_prefix", "").strip()
         if url_prefix and url_prefix[-1] != '/':
             raise MKUserError("url_prefix", _("The URL prefix must end with a slash."))
@@ -4875,6 +4888,18 @@ def mode_edit_site(phase):
         else:
             method = "local"
 
+        # Timeout
+        timeout = html.var("timeout", "").strip()
+        if timeout != "":
+            try:
+                timeout = int(timeout)
+            except:
+                raise MKUserError("timeout", _("%s is not a valid integer number.") % timeout)
+            new_site["timeout"] = timeout
+
+        # Persist
+        new_site["persist"] = html.get_checkbox("persist")
+
         # Status host
         sh_site = html.var("sh_site")
         if sh_site:
@@ -4906,6 +4931,13 @@ def mode_edit_site(phase):
     html.text_input("id", siteid) 
     html.write("</td></tr>")
 
+    # Alias
+    html.write("<tr><td class=legend>")
+    html.write(_("Alias") + "<br><i>" + _("A name or description of the site</i>"))
+    html.write("</td><td class=content>")
+    html.text_input("alias", site.get("alias", ""), size = 50)
+    html.write("</td></tr>")
+
     # Disabled
     html.write("<tr><td class=legend>")
     html.write(_("<i>If you disable a site, it will vanish from the status display, but the "
@@ -4913,13 +4945,6 @@ def mode_edit_site(phase):
     html.write("</td><td class=content>")
     html.checkbox("disabled", False)
     html.write(_(" disable this connection"))
-    html.write("</td></tr>")
-
-    # Alias
-    html.write("<tr><td class=legend>")
-    html.write(_("Alias") + "<br><i>" + _("A name or description of the site</i>"))
-    html.write("</td><td class=content>")
-    html.text_input("alias", site.get("alias", ""), size = 50)
     html.write("</td></tr>")
 
     # Connection
@@ -4964,6 +4989,28 @@ def mode_edit_site(phase):
     html.write("<p>")
     html.radiobutton("method", "unix",  method == "unix", _("Connect via UNIX socket: "))
     html.text_input("conn_socket", conn_socket)
+    html.write("</td></tr>")
+
+    # Timeout
+    html.write("<tr><td class=legend>")
+    html.write(_("Connect Timeout<br><i>This setting limits the time Multisites waits for a connection "
+                 "to the site to be established before the site is considered to be unreachable. "
+                 "If not set, the operating system defaults are begin used."
+                 "connection configuration is still available for later use.</i>")) 
+    html.write("</td><td class=content>")
+    timeout = site.get("timeout", "")
+    html.number_input("timeout", timeout, size=2)
+    html.write(_(" seconds"))
+    html.write("</td></tr>")
+
+    # Persistent connections
+    html.write("<tr><td class=legend>")
+    html.write(_("<i>If you enable persistent connections then Multisite will try to keep open "
+                 "the connection to the remote sites. This brings a great speed up in high-latency "
+                 "situations but locks a number of threads in the Livestatus module of the target site. "))
+    html.write("</td><td class=content>")
+    html.checkbox("persist", site.get("persist", False))
+    html.write(_(" use persistent connections"))
     html.write("</td></tr>")
 
     # URL-Prefix
@@ -5032,7 +5079,7 @@ def save_sites(sites):
     filename = multisite_dir + "sites.mk"
     out = file(filename, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
-    out.write("sites.update(\n %s)\n" % pprint.pformat(sites))
+    out.write("sites = \\\n%s\n" % pprint.pformat(sites))
 
 #   +----------------------------------------------------------------------+
 #   |           ____        _        _____    _ _ _                        |

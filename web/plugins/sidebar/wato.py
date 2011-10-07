@@ -51,11 +51,20 @@ def render_wato():
     if not wato_snapins_allowed():
         return
 
-    iconlink(_("Host management"),        "wato.py?mode=folder", "folder")
-    iconlink(_("Host search"),            "wato.py?mode=search", "search")
-    iconlink(_("Configuration"),          "wato.py?mode=configuration", "configuration")
-    iconlink(_("Backup & Restore"),       "wato.py?mode=snapshot", "backup")
-    iconlink(_("Changelog & Activation"), "wato.py?mode=changelog", "wato_changes")
+    iconlink(_("Host management"),        "wato.py?mode=folder",         "folder")
+    iconlink(_("Host search"),            "wato.py?mode=search",         "search")
+    iconlink(_("Backup & Restore"),       "wato.py?mode=snapshot",       "backup")
+    iconlink(_("Changelog & Activation"), "wato.py?mode=changelog",      "wato_changes")
+    iconlink(_("Global settings"),        "wato.py?mode=globalvars",     "configuration")
+    iconlink(_("Rulesets"),               "wato.py?mode=rulesets",       "rulesets")
+    iconlink(_("Host Groups"),            "wato.py?mode=host_groups",    "hostgroups")
+    iconlink(_("Service Groups"),         "wato.py?mode=service_groups", "servicegroups")
+    iconlink(_("Users & Contacts"),       "wato.py?mode=contacts",       "contacts")
+    iconlink(_("Roles"),                  "wato.py?mode=roles",          "roles")
+    iconlink(_("Contact Groups"),         "wato.py?mode=contact_groups", "contactgroups")
+    iconlink(_("Time Periods"),           "wato.py?mode=timeperiods",    "timeperiods")
+    iconlink(_("Monitoring sites"),       "wato.py?mode=sites",          "sites")
+
 
 sidebar_snapins["admin"] = {
     "title" : _("WATO: Check_MK Administration"),
@@ -80,7 +89,7 @@ def render_wato_folders():
         return
     else:
         if config.is_multisite():
-            sitenames = config.sites.keys()
+            sitenames = config.allsites().keys()
             sitenames.sort()
             for sitename in sitenames:
                 site = config.sites[sitename]

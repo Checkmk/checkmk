@@ -366,25 +366,30 @@ def render_sitestatus():
         sitenames.sort()
         for sitename in sitenames:
             site = config.site(sitename)
-            state = html.site_status[sitename]["state"]
-            if state == "disabled":
-                switch = "on"
-                text = site["alias"]
-                title = _("Site %s is switched off") % site["alias"]
+            if sitename not in html.site_status or "state" not in html.site_status[sitename]:
+                state = "missing"
+                text = _("Missing site")
+                title = _("Site %s does not exist") % sitename
             else:
-                switch = "off"
-		try:
-		    linkview = config.sitestatus_link_view
-		except:
-		    linkview = "sitehosts"
-                text = link(site["alias"], "view.py?view_name=%s&site=%s" % (linkview, sitename))
-                ex = html.site_status[sitename].get("exception")
-                shs = html.site_status[sitename].get("status_host_state")
-
-                if ex:
-                    title = ex
+                state = html.site_status[sitename]["state"]
+                if state == "disabled":
+                    switch = "on"
+                    text = site["alias"]
+                    title = _("Site %s is switched off") % site["alias"]
                 else:
-                    title = "Site %s is online" % site["alias"]
+                    switch = "off"
+                    try:
+                        linkview = config.sitestatus_link_view
+                    except:
+                        linkview = "sitehosts"
+                    text = link(site["alias"], "view.py?view_name=%s&site=%s" % (linkview, sitename))
+                    ex = html.site_status[sitename].get("exception")
+                    shs = html.site_status[sitename].get("status_host_state")
+
+                    if ex:
+                        title = ex
+                    else:
+                        title = "Site %s is online" % site["alias"]
 
             html.write("<tr><td class=left>%s</td>" % text)
             onclick = "switch_site('_site_switch=%s:%s')" % (sitename, switch)

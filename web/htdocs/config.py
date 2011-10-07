@@ -308,7 +308,7 @@ def sitenames():
     return sites.keys()
 
 def allsites():
-    return dict( [(name, site(name)) for name in sitenames()])
+    return dict( [(name, site(name)) for name in sitenames() if not site(name).get("disabled", False)])
 
 def site(name):
     s = sites.get(name, {})

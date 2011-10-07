@@ -59,7 +59,7 @@ def render_wato():
     iconlink(_("Rulesets"),               "wato.py?mode=rulesets",       "rulesets")
     iconlink(_("Host Groups"),            "wato.py?mode=host_groups",    "hostgroups")
     iconlink(_("Service Groups"),         "wato.py?mode=service_groups", "servicegroups")
-    iconlink(_("Users & Contacts"),       "wato.py?mode=contacts",       "contacts")
+    iconlink(_("Users & Contacts"),       "wato.py?mode=users",          "contacts")
     iconlink(_("Roles"),                  "wato.py?mode=roles",          "roles")
     iconlink(_("Contact Groups"),         "wato.py?mode=contact_groups", "contactgroups")
     iconlink(_("Time Periods"),           "wato.py?mode=timeperiods",    "timeperiods")

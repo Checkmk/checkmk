@@ -42,4 +42,44 @@ Attribute eines Benutzers:
   Irgendwie doof. Oder wir schaffen es durch das "adaptive monitoring"
   von Nagios zur Laufzeit diese Werte zu ändern.
 
+-> Implementierungsplan:
+
+* mode_users -> Zeigt Tabelle aller User. 
+** load_users() und save_users() -> multisite.d/users.mk 
+   Nagios-Benutzer müssen aber in conf.d/wato/contacts.mk gespeichert
+   werden?? 
+
+define_contacts = {
+    "harri" : {
+        "alias" : "Harri Hirsch",
+        "contact_groups" : [ "admin", "linux" ],
+        "notification_period" : "7x24",
+        "host_notification_options": "wfde",
+        "service_notification_options" : "rwc",
+        "email" : "mk@harri.hirsch",
+        "attributes" : {
+            "seppl" : 5,
+        }
+    }
+}
+
+In multisite.d/users.mk wird weiterhin gespeichert:
+
+users = {
+    "harri" : {
+        "roles" : [ "admin", "guest" ],
+        "password" : "2938ru8923fj892rf",
+        "disabled" : True,
+    }
+}
+
+-> Beide dicts werden beim Laden zusammengeführt und beim Speichern
+wieder aufgespalten. Multisite lädt für den eigenen Bedarf nur
+die users.mk, bzw. wird die ja automatisch geladen.
+
+Beim Speichern wird außerdem die Datei htpasswd rausgeschrieben.
+Diese Datei wird in defaults referenziert. Das normale setup.sh
+kennt die Datei ohnehin. Bei OMD bauen wir es in die Defaults
+ein.
+
 

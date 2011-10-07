@@ -4007,7 +4007,7 @@ def mode_configuration(phase):
       _("Organize your hosts in groups independent of the tree structure.") ),
       ( "service_groups",    _("Service Groups"),     "servicegroups", 
       _("Organize services in groups for a better overview in the status display.") ),
-      ( "contacts",          _("Users & Contacts"),     "contacts", 
+      ( "users",          _("Users & Contacts"),     "users", 
       _("Manage users of Multisite and contacts of the monitoring system.") ),
       ( "roles",            _("Roles"),     "roles", 
       _("Manage user roles and permissions.") ),
@@ -4777,7 +4777,7 @@ def mode_sites(phase):
            _("You have not configured any local or remotes sites. Multisite will " 
              "implicitely add the data of the local monitoring site. If you add remotes "
              "sites, please do not forget to add your local monitoring site also, if "
-             "you want to display its data."))
+             "you want to display its data.") + "</div>")
         return
 
 
@@ -4825,6 +4825,7 @@ def mode_sites(phase):
             html.write("<td>" + _("no") + "</td>")
 
         html.write("</tr>")
+    html.write("</table>")
 
 def mode_edit_site(phase):
     sites = load_sites()
@@ -5093,6 +5094,187 @@ def save_sites(sites):
         out = file(filename, "w")
         out.write("# Written by WATO\n# encoding: utf-8\n\n")
         out.write("sites = \\\n%s\n" % pprint.pformat(sites))
+
+#   +----------------------------------------------------------------------+
+#   | _   _                      ______            _             _         |
+#   || | | |___  ___ _ __ ___   / / ___|___  _ __ | |_ __ _  ___| |_ ___   |
+#   || | | / __|/ _ \ '__/ __| / / |   / _ \| '_ \| __/ _` |/ __| __/ __|  |
+#   || |_| \__ \  __/ |  \__ \/ /| |__| (_) | | | | || (_| | (__| |_\__ \  |
+#   | \___/|___/\___|_|  |___/_/  \____\___/|_| |_|\__\__,_|\___|\__|___/  |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Mode for managing users and contacts.                                |
+#   +----------------------------------------------------------------------+
+def mode_users(phase): 
+    if phase == "title":
+        return _("Manage Users & Contacts")
+
+    elif phase == "buttons":
+        html.context_button(_("Back"), make_link([("mode", "configuration")]), "back")
+        html.context_button(_("New user"), make_link([("mode", "edit_user")]), "new")
+        return
+
+    users = load_users()
+
+    if phase == "action":
+        if not html.check_transaction():
+            return
+        delid = html.var("_delete")
+        if delid == html.req.user:
+            raise MKUserError(None, _("You cannot delete your own account!"))
+
+        c = wato_confirm(_("Confirm deletion of user %s" % delid),
+                         _("Do you really want to delete the user %s?" % delid))
+        if c: 
+            del users[delid]
+            save_users(sites)
+            log_pending(None, "edit-users", _("Deleted user %s" % (delid)))
+            return None
+        elif c == False:
+            return ""
+        else:
+            return None
+
+    if len(users) == 0:
+        html.write("<div class=info>" + 
+            _("There are not defined any contacts/users yet.") + "</div>")
+
+    html.write("<h3>" + _("Users & Contacts") + "</h3>")
+    html.write("<table class=data>")
+    html.write("<tr><th>" + _("Actions") + "<th>" 
+                + _("ID") 
+                + "</th><th>" + _("Full Name")
+                + "</th><th>" + _("Email")
+                + "</th><th>" + _("Roles")
+                + "</th></tr>\n")
+
+    odd = "even"
+    entries = users.items()
+    entries.sort(cmp = lambda a, b: cmp(a[1].get("alias"), b[1].get("alias")))
+    for id, user in entries:
+        odd = odd == "odd" and "even" or "odd" 
+        html.write('<tr class="data %s0">' % odd)
+        edit_url = make_link([("mode", "edit_user"), ("edit", id)])
+        delete_url = html.makeactionuri([("_delete", id)])
+        html.write("<td class=buttons>")
+        html.buttonlink(edit_url, _("Properties"))
+        html.buttonlink(delete_url, _("Delete"))
+        html.write("</td><td>%s</td><td>%s</td>" % (id, user.get("alias", "")))
+        html.write("<td>%s</td>" % user.get("email", ""))
+        html.write("<td>%s</td>" % ", ".join(user["roles"]))
+        html.write("</tr>")
+    html.write("</table>")
+
+
+
+def mode_edit_user(phase):
+    return
+
+
+def load_users(): 
+    # First load monitoring contacts from Check_MK's world
+    filename = root_dir + "contacts.mk"
+    if os.path.exists(filename):
+        try:
+            vars = { "define_contacts" : {} }
+            execfile(filename, vars, vars)
+            contacts = vars["define_contacts"]
+        except Exception, e:
+            if config.debug:
+                raise MKGeneralException(_("Cannot read configuration file %s: %s" %  
+                              (filename, e)))
+            contacts = {}
+    else:
+        contacts = {}
+
+    # Now add information about users from the Web world
+    filename = multisite_dir + "users.mk"
+    if os.path.exists(filename):
+        try:
+            vars = { "users" : {} }
+            execfile(filename, vars, vars)
+            users = vars["users"]
+        except Exception, e:
+            if config.debug:
+                raise MKGeneralException(_("Cannot read configuration file %s: %s" %  
+                              (filename, e)))
+            users = {}
+    else:
+        users = {}
+
+    # Merge them together. Monitoring users not known to Multisite
+    # will be added later as normal users.
+    result = {}
+    for id, user in users.items():
+        profile = contacts.get(id, {})
+        profile.update(user)
+        result[id] = profile
+
+    # This loop is only neccessary if someone has edited
+    # contacts.mk manually. But we want to support that as
+    # far as possible.
+    for id, contact in contacts.items():
+        if id not in result:
+            result[id] = contact
+            result[id]["roles"] = [ "user" ]
+            result[id]["disabled"] = True
+            result[id]["password"] = ""
+
+    # Passwords are read directly from the apache htpasswd-file.
+    # That way heroes of the command line will still be able to
+    # change passwords with htpasswd.
+    filename = defaults.htpasswd_file
+    for line in file(filename):
+        id, password = line.strip().split(":")[:2]
+        if id in result:
+            result["password"] = password
+        elif id in config.admin_users:
+            # Create entry if this is an admin user
+            new_user = {
+                "roles" : [ "admin" ],
+                "password" : password,
+                "disabled" : False
+            }
+            result[id] = new_user
+        # Other unknown entries will silently be dropped. Sorry...
+
+    return result
+
+def split_dict(d, keylist, positive):
+    return dict(zip([(k,v) for (k,v) in d if (k in keylist) == positive]))
+
+def save_users(profiles):
+    non_contact_keys = [ "roles", "password", "disabled" ]
+
+    # Remove multisite keys in contacts
+    contacts = dict(zip([ (id, split_dict(user, non_contact_keys, False)) for (id, user) in profiles.items() ])) 
+
+    # Remove contact keys and password from users
+    users    = dict(zip([ (id, split_dict(split_dict(user, multisite_keys, True), [ "password" ], False))
+                       for (id, user) in profiles.items() ]))
+
+    # Check_MK's monitoring contacts
+    filename = root_dir + "contacts.mk"
+    out = file(filename, "w")
+    out.write("# Written by WATO\n# encoding: utf-8\n\n")
+    out.write("define_contacts.update(\n%s\n)\n" % pprint.pformat(contacts))
+
+    # Users with passwords for Multisite
+    filename = multisite_dir + "users.mk"
+    out = file(filename, "w")
+    out.write("# Written by WATO\n# encoding: utf-8\n\n")
+    out.write("users = \\%s\n" % pprint.pformat(users))
+
+    # Apache htpasswd. We only store passwords here. During
+    # loading we created entries for all admin users we know. Other
+    # users from htpasswd are lost. If you start managing users with
+    # WATO, you should continue to do so or stop doing to for ever...
+    filename = defaults.htpasswd_file
+    out = file(filename, "w")
+    for id, user in users.items():
+        out.write("%s:%s\n" % (id, user["password"]))
+
+
 
 #   +----------------------------------------------------------------------+
 #   |           ____        _        _____    _ _ _                        |
@@ -6297,6 +6479,8 @@ mode_functions = {
    "edit_timeperiod" : mode_edit_timeperiod,
    "sites"           : mode_sites,
    "edit_site"       : mode_edit_site,
+   "users"           : mode_users,
+   "edit_user"       : mode_edit_user,
 }
 
 extra_buttons = [

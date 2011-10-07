@@ -3253,6 +3253,31 @@ class ValueSpec:
     def validate_value(self, value, varprefix):
         pass
 
+# A fixed non-editable value, e.g. to be use in "Alternative"
+class FixedValue(ValueSpec):
+    def __init__(self, value, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._value = value
+
+    def canonical_value(self):
+        return self._value
+
+    def render_input(self, varprefix, value):
+        html.write(self.title())
+
+    def value_to_text(self, value):
+        return self.title()
+
+    def from_html_vars(self, varprefix):
+        return self._value
+
+    def validate_datatype(self, value, varprefix):
+        if not self._value == value:
+            raise MKUserError(varprefix, _("Invalid value, must be '%r' but is '%r'" % (self._value, value)))
+
+    def validate_value(self, value, varprefix):
+        self.validate_datatype(value, varprefix)
+        
 
 # Editor for a single integer
 class Integer(ValueSpec):
@@ -3305,7 +3330,7 @@ class TextAscii(ValueSpec):
         return ""
 
     def render_input(self, varprefix, value):
-        html.text_input(varprefix, str(value), self._size)
+        html.text_input(varprefix, str(value), size = self._size)
 
     def value_to_text(self, value):
         return value
@@ -3320,6 +3345,17 @@ class TextAscii(ValueSpec):
     def validate_value(self, value, varprefix):
         if not self._allow_empty and value == "":
             raise MKUserError(varprefix, _("An empty value is not allowed here."))
+
+class TextUnicode(TextAscii):
+    def __init__(self, **kwargs):
+        TextAscii.__init__(self, **kwargs)
+
+    def from_html_vars(self, varprefix):
+        return html.var_utf8(varprefix, "").strip()
+
+    def validate_datatype(self, value, varprefix): 
+        if type(value) not in [ str, unicode ]:
+            raise MKUserError(varprefix, _("The value must be of type str or unicode, but it has type %s") % type(value)) 
 
 
 # A variant of TextAscii() that validates a path to a filename that 
@@ -3449,6 +3485,76 @@ class DropdownChoice(ValueSpec):
                 return
         raise MKUserError(varprefix, _("Invalid value %s, must be in %s") % 
             ", ".join([v for (v,t) in self._choices]))
+
+# Represents a dict of dicts, which is dynamic
+###class DictionaryTable(ValueSpec):
+###    def __init__(self, key, elements, **kwargs):
+###        ValueSpec.__init__(self, **kwargs)
+###        self._key = key
+###        self._elements = elements
+###        # _value_vs must have variable _elements
+###
+###    def canonical_value(self):
+###        return {}
+###
+###    def render_input(self, varprefix, value):
+###        html.write("<table class=data>") 
+###        html.write("<tr>")
+###        html.write("<th>%s</th>\n" % self._key.title())
+###        for elkey, elem in self._elements:
+###            html.write("<th>%s</th>\n" % elem.title())
+###        html.write("</tr>")
+###        odd = "even"
+###        for nr, (key, val) in enumerate(value.items()): 
+###            vp = "%s_%d" % (varprefix, nr)
+###            html.write("<tr>")
+###            odd = odd == "odd" and "even" or "odd" 
+###            html.write('<tr class="data %s0">' % odd)
+###            html.write("<td>")
+###            self._key.render_input(vp + "_key", key)
+###            html.write("</td>")
+###            for nnr, (elkey, elem) in enumerate(self._elements):
+###                html.write("<td>")
+###                elem.render_input("%s_%d" % (vp, nnr), val.get(elkey))
+###                html.write("</td>")
+###            html.write("</tr>")
+###        html.write("</table>")
+###
+###    def value_to_text(self, value): 
+###        texts = []
+###        for key, val in value.items():
+###            text = "%s: " % self._key.value_to_text(key)
+###            settings = []
+###            for elkey, elem in self._elements:  
+###                settings.append("%s=%s" % (elkey, elem.value_to_text(val.get(elkey))))
+###            text += ";".join(settings)
+###            texts.append(text) 
+###        return ", ".join(texts)
+###
+###    def from_html_vars(self, varprefix):
+###        value = {}
+###        nr = 0
+###        while True: 
+###            vp = "%s_%d" % (varprefix, nr)
+###            if not html.has_var(vp + "_key"):
+###                break
+###            keyval = self._key.from_html_vars(vp + "_key")
+###            element = {}
+###            value[keyval] = element
+###            for nnr, (elkey, elem) in enumerate(self._elements):
+###                elvalue = elem.from_html_vars("%s_%d" % (vp, nnr))
+###                element[elkey] = elvalue
+###            nr += 1
+###        return value
+###
+###
+###    def validate_datatype(self, value, varprefix): 
+###        pass
+###
+###    def validate_value(self, value, varprefix): 
+###        pass
+
+
 
 # A list of checkboxes representing a list of values
 class ListChoice(ValueSpec):
@@ -3905,7 +4011,9 @@ def mode_configuration(phase):
       _("Manage groups of contacts.") ),
       ( "timeperiods",      _("Time Periods"),       "timeperiods", 
       _("Timeperiods define a set of days and hours of a regular week and "
-        "can be used to restrict alert notifications.") ),
+        "can be used to restrict alert notifications.") ), 
+      ( "sites",  _("Monitoring sites"), "sites",
+      _("Configure distributed monitoring via Multsite, manage connections to remote sites.")),
     ]
     columns = 2
 
@@ -4542,7 +4650,6 @@ def mode_edit_timeperiod(phase):
     html.begin_form("timeperiod", method="POST")
     html.write("<table class=form>")
 
-
     # Name
     html.write("<tr><td class=legend>")
     html.write(_("Internal name"))
@@ -4625,6 +4732,307 @@ class TimeperiodSelection(ElementSelection):
         timeperiods = load_timeperiods()
         elements = dict([ (name, tp.get("alias", name)) for (name, tp) in timeperiods.items() ])
         return elements
+
+#   +----------------------------------------------------------------------+
+#   |                        ____  _ _                                     |
+#   |                       / ___|(_) |_ ___  ___                          |
+#   |                       \___ \| | __/ _ \/ __|                         |
+#   |                        ___) | | ||  __/\__ \                         |
+#   |                       |____/|_|\__\___||___/                         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Mode for managing sites.                                             |
+#   +----------------------------------------------------------------------+
+def mode_sites(phase):
+    if phase == "title":
+        return _("Monitoring sites")
+
+    elif phase == "buttons":
+        html.context_button(_("Back"), make_link([("mode", "configuration")]), "back")
+        html.context_button(_("New connection"), make_link([("mode", "edit_site")]), "new")
+        return
+
+    sites = load_sites()
+
+    if phase == "action":
+        delid = html.var("_delete")
+        c = wato_confirm(_("Confirm deletion of site %s" % delid),
+                         _("Do you really want to delete the connection to the site %s?" % delid))
+        if c: 
+            del sites[delid]
+            save_sites(sites)
+            log_pending(None, "edit-sites", _("Deleted site %s" % (delid)))
+            return None
+        elif c == False:
+            return ""
+        else:
+            return None
+
+    if len(sites) == 0:
+        html.write("<div class=info>" + 
+           _("You have not configured any local or remotes sites. Multisite will " 
+             "implicitely add the data of the local monitoring site. If you add remotes "
+             "sites, please do not forget to add your local monitoring site also, if "
+             "you want to display its data."))
+        return
+
+
+    html.write("<table class=data>")
+    html.write("<tr><th>" + _("Actions") + "<th>" 
+                + _("Site-ID") 
+                + "</th><th>" + _("Alias / Description")
+                + "</th><th>" + _("Connection")
+                + "</th><th>" + _("Status host")
+                + "</th><th>" + _("Disabled")
+                + "</th></tr>\n")
+
+    odd = "even"
+    entries = sites.items()
+    entries.sort(cmp = lambda a, b: cmp(a[1].get("alias"), b[1].get("alias")))
+    for id, site in entries:
+        odd = odd == "odd" and "even" or "odd" 
+        html.write('<tr class="data %s0">' % odd)
+        edit_url = make_link([("mode", "edit_site"), ("edit", id)])
+        delete_url = html.makeactionuri([("_delete", id)])
+        html.write("<td class=buttons>")
+        html.buttonlink(edit_url, _("Properties"))
+        html.buttonlink(delete_url, _("Delete"))
+        html.write("</td><td>%s</td><td>%s</td>" % (id, site.get("alias", "")))
+        html.write("<td>%s</td>" % site.get("socket", _("local site")))
+        if "status_host" in site:
+            sh_site, sh_host = site["status_host"]
+            html.write("<td>%s/%s</td>" % (sh_site, sh_host))
+        else:
+            html.write("<td></td>")
+        if site.get("disabled", False) == True:
+            html.write("<td><b>" + _("yes") + "</b></td>")
+        else:
+            html.write("<td>" + _("no") + "</td>")
+        html.write("</tr>")
+
+def mode_edit_site(phase):
+    sites = load_sites()
+    siteid = html.var("edit", "") # missing -> new site
+    new = siteid == None
+    if new:
+        site = {}
+    else:
+        site = sites[siteid]
+
+    if phase == "title":
+        if new:
+            return _("Create new site connection")
+        else:
+            return _("Edit site connection %s" % siteid)
+
+    elif phase == "buttons":
+        html.context_button(_("Back"), make_link([("mode", "sites")]), "back")
+        return
+
+
+    elif phase == "action":
+        id = html.var("id").strip()
+        if (new or id != siteid) and id in sites:
+            raise MKUserError("id", _("This id is already being used by another connection."))
+        if not re.match("^[-a-z0-9A-Z_]+$", id):
+            raise MKUserError("id", _("The site id must consist only of letters, digit and the underscore."))
+
+        if not new and id != siteid:
+            del sites[siteid]
+
+        new_site = {}
+        sites[id] = new_site
+        new_site["alias"] = html.var("alias", "").strip()
+        url_prefix = html.var("url_prefix", "").strip()
+        if url_prefix and url_prefix[-1] != '/':
+            raise MKUserError("url_prefix", _("The URL prefix must end with a slash."))
+        new_site["url_prefix"] = url_prefix
+        new_site["disabled"] = html.get_checkbox("disabled")
+
+        # Connection
+        method = html.var("method")
+        if method == "unix":
+            socket = html.var("conn_socket").strip()
+            if not socket:
+                raise MKUserError("conn_socket", _("Please specify the path to the UNIX socket to connect to."))
+            # We do not check for the existance of the socket here. The matching
+            # OMD site might be down. The admin might just want to disable the site for
+            # that reason.
+            new_site["socket"] = "unix:" + socket 
+
+        elif method == "tcp":
+            host = html.var("conn_host").strip()
+            if not host:
+                raise MKUserError("conn_host", _("Please specify the host or IP address to connect to."))
+            port = html.var("conn_port").strip()
+            try:
+                port = int(port)
+            except:
+                raise MKUserError("conn_port", _("The port '%s' is not a valid number") % port)
+            if port < 1 or port > 65535:
+                raise MKUserError("conn_port{", _("The port number must be between 1 and 65535"))
+            new_site["socket"] = "tcp:%s:%d" % (host, port)
+        else:
+            method = "local"
+
+        # Status host
+        sh_site = html.var("sh_site")
+        if sh_site:
+            if sh_site not in sites:
+                raise MKUserError("sh_site", _("The site of the status host does not exist."))
+            if sh_site in [ siteid, id ]:
+                raise MKUserError("sh_site", _("You cannot use the site itself as site of the status host."))
+            sh_host = html.var("sh_host")
+            if not sh_host:
+                raise MKUserError("sh_host", _("Please specify the name of the status host."))
+            new_site["status_host"] = ( sh_site, sh_host )
+
+        save_sites(sites)
+        if new:
+            log_pending(None, "edit-sites", _("Create new connection to site %s" % id))
+        else:
+            log_pending(None, "edit-sites", _("Modified connection to site %s" % id))
+        return "sites"
+
+
+
+    html.begin_form("site")
+    html.write("<table class=form>")
+
+    # ID
+    html.write("<tr><td class=legend>")
+    html.write(_("Site ID"))
+    html.write("</td><td class=content>")
+    html.text_input("id", siteid) 
+    html.write("</td></tr>")
+
+    # Disabled
+    html.write("<tr><td class=legend>")
+    html.write(_("<i>If you disable a site, it will vanish from the status display, but the "
+                 "connection configuration is still available for later use.</i>")) 
+    html.write("</td><td class=content>")
+    html.checkbox("disabled", False)
+    html.write(_(" disable this connection"))
+    html.write("</td></tr>")
+
+    # Alias
+    html.write("<tr><td class=legend>")
+    html.write(_("Alias") + "<br><i>" + _("A name or description of the site</i>"))
+    html.write("</td><td class=content>")
+    html.text_input("alias", site.get("alias", ""), size = 50)
+    html.write("</td></tr>")
+
+    # Connection
+    html.write("<tr><td class=legend>")
+    html.write(_("Connection<br><i>When connecting to remote site please make sure "
+               "that Livestatus over TCP is activated there. You can use UNIX sockets "
+               "to connect to foreign sites on localhost. Please make sure that this "
+               "site has proper read and write permissions to the UNIX socket of the "
+               "foreign site."))
+    html.write("</td><td class=content>")
+    if html.has_var("method"):
+        conn_socket = ""
+        conn_host = ""
+        conn_port = ""
+        method = html.var("method")
+    else:
+        try:
+            conn_socket = ""
+            conn_host = ""
+            conn_port = 6557 
+            sock = site.get("socket")
+
+            if not sock:
+                method = "local"
+            elif sock.startswith("unix:"):
+                method = "unix"
+                conn_socket = sock[5:]
+            else:
+                method = "tcp"
+                parts = sock.split(":")
+                conn_host = parts[1]
+                conn_port = int(parts[2])
+        except:
+            method = "local"
+
+    html.radiobutton("method", "local", method == "local", _("Connect to the local site")) 
+    html.write("<p>")
+    html.radiobutton("method", "tcp", method == "tcp", _("Connect via TCP to host: "))
+    html.text_input("conn_host", conn_host, size=20)
+    html.write(_(" port: "))
+    html.number_input("conn_port", conn_port)
+    html.write("<p>")
+    html.radiobutton("method", "unix",  method == "unix", _("Connect via UNIX socket: "))
+    html.text_input("conn_socket", conn_socket)
+    html.write("</td></tr>")
+
+    # URL-Prefix
+    html.write("<tr><td class=legend>")
+    docu_url = "http://mathias-kettner.de/checkmk_multisite_modproxy.html"
+    html.write(_("URL prefix<br><i>The URL prefix will be prepended to links of addons like PNP4Nagios "
+                 "or the classical Nagios GUI when a link to such applications points to a host or "
+                 "service on that site. You can either use an absole URL prefix like <tt>http://some.host/mysite/</tt> "
+                 "or a relative URL like <tt>/mysite/</tt>. When using relative prefixes you needed a mod_proxy "
+                 "configuration in your local system apache that proxies such URLs ot the according remote site. "
+                 "Please refer to the <a target=_blank href='%s'>online documentation</a> for details. "
+                 "The prefix should end with a slash. Omit the <tt>/pnp4nagios/</tt> from the prefix.") % docu_url) 
+    html.write("</td><td class=content>")
+    html.text_input("url_prefix", site.get("url_prefix", ""), size = 50)
+    html.write("</td></tr>")
+
+    # Status-Host
+    html.write("<tr><td class=legend>")
+    docu_url = "http://mathias-kettner.de/checkmk_multisite_statushost.html"
+    html.write(_("Status host<br><i>By specifying a status host for each non-local connection "
+                 "you prevent Multisite from running into timeouts when remote sites do not respond. "
+                 "You need to add the remote monitoring servers as hosts into your local monitoring "
+                 "site and use their host state as a reachability state of the remote site. Please "
+                 "refer to the <a target=_blank href='%s'>online documentation</a> for details.") % docu_url)
+
+    html.write("</td><td class=content>")
+    sh = site.get("status_host")
+    if sh:
+        sh_site, sh_host = sh
+    else:
+        sh_site = ""
+        sh_host = ""
+    html.write(_("host: "))
+    html.text_input("sh_host", sh_host)
+    html.write(_(" on monitoring site: "))  
+    html.sorted_select("sh_site", 
+       [ ("", _("(no status host)")) ] + [ (sk, si.get("alias", sk)) for (sk, si) in sites.items() ], sh_site)
+    html.write("</td></tr>")
+
+    html.write("</table>")
+    html.hidden_fields()
+    html.button("save", _("Save"))
+    html.end_form()
+    html.set_focus("id")
+
+
+
+def load_sites():
+    try:
+        filename = multisite_dir + "sites.mk"
+        if not os.path.exists(filename):
+            return {}
+
+        vars = { "sites" : {} }
+        execfile(filename, vars, vars)
+        return vars["sites"]
+
+    except Exception, e:
+        if config.debug:
+            raise MKGeneralException(_("Cannot read configuration file %s: %s" %  
+                          (filename, e)))
+        return {}
+
+
+def save_sites(sites):
+    filename = multisite_dir + "sites.mk"
+    out = file(filename, "w")
+    out.write("# Written by WATO\n# encoding: utf-8\n\n")
+    out.write("sites.update(\n %s)\n" % pprint.pformat(sites))
 
 #   +----------------------------------------------------------------------+
 #   |           ____        _        _____    _ _ _                        |
@@ -5826,6 +6234,8 @@ mode_functions = {
    "edit_group"      : mode_edit_group,
    "timeperiods"     : mode_timeperiods,
    "edit_timeperiod" : mode_edit_timeperiod,
+   "sites"           : mode_sites,
+   "edit_site"       : mode_edit_site,
 }
 
 extra_buttons = [

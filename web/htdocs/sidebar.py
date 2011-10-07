@@ -72,7 +72,7 @@ def bulletlink(text, target):
 def iconlink(text, target, icon):
     linktext = '<img class=iconlink src="images/icon_%s.png">%s' % \
          ( icon, text )
-    html.write('<a target=main class=link href="%s">%s</a><br>' % \
+    html.write('<a target=main class="iconlink link" href="%s">%s</a><br>' % \
             (target, linktext))
 
 def footnotelinks(links):

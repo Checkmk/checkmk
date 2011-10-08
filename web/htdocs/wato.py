@@ -3926,7 +3926,10 @@ class Dictionary(ValueSpec):
 
 # Base class for selection of a Nagios element out
 # of a given list that must be loaded from a file.
-# Examples: GroupSelection, TimeperiodSelection
+# Examples: GroupSelection, TimeperiodSelection. Child
+# class must define a function get_elements() that
+# returns a dictionary from element keys to element
+# titles.
 class ElementSelection(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
@@ -4438,7 +4441,10 @@ class GroupSelection(ElementSelection):
 
     def get_elements(self):
         all_groups = load_group_information()
-        return all_groups.get(self._what, {})
+        this_group = all_groups.get(self._what, {})
+        # replace the title with the key if the title is empty
+        return dict([ (k, t or k) for (k, t) in this_group.items() ])
+
 
 
 #   +----------------------------------------------------------------------+
@@ -5288,6 +5294,10 @@ def mode_edit_user(phase):
             raise MKUserError("email", _("'%s' is not a valid email address." % email))
         new_user["email"] = email
 
+        # Roles
+        user["roles"] = filter(lambda role: html.get_checkbox("role_" + role), 
+                               config.roles)
+
         # Contact groups
         cgs = []
         for c in contact_groups:
@@ -5371,6 +5381,19 @@ def mode_edit_user(phase):
                  "via Email."))
     html.write("</td><td class=content>")
     html.text_input("email", user.get("email", ""), size = 50)
+    html.write("</td></tr>")
+
+    # Roles
+    html.write("<tr><td class=legend>")
+    html.write(_("Roles<br><i>By assigning roles to a user he obtains permissions. "
+                 "If a user has more then one role, he gets the maximum of all "
+                 "permissions of his roles. "
+                 "Users without any role have no permissions to use Multisite at all "
+                 "but still can be monitoring contacts and receive notifications.</i>"))
+    html.write("</td><td class=content>")
+    for role in config.roles:
+        html.checkbox("role_" + role, role in user.get("roles", []))
+        html.write(" %s<br>" % role)
     html.write("</td></tr>")
 
     # Contact groups
@@ -5478,9 +5501,9 @@ def load_users():
     filename = root_dir + "contacts.mk"
     if os.path.exists(filename):
         try:
-            vars = { "define_contacts" : {} }
+            vars = { "contacts" : {} }
             execfile(filename, vars, vars)
-            contacts = vars["define_contacts"]
+            contacts = vars["contacts"]
         except Exception, e:
             if config.debug:
                 raise MKGeneralException(_("Cannot read configuration file %s: %s" %  
@@ -5568,7 +5591,7 @@ def save_users(profiles):
     filename = root_dir + "contacts.mk"
     out = file(filename, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
-    out.write("define_contacts.update(\n%s\n)\n" % pprint.pformat(contacts))
+    out.write("contacts.update(\n%s\n)\n" % pprint.pformat(contacts))
 
     # Users with passwords for Multisite
     filename = multisite_dir + "users.mk"

@@ -274,12 +274,13 @@ service_groups                       = []
 service_contactgroups                = []
 service_notification_periods         = [] # deprecated, will be removed soon.
 host_notification_periods            = [] # deprecated, will be removed soon.
-timeperiods                          = {} # needed for WATO
 host_contactgroups                   = []
 parents                              = []
 define_hostgroups                    = None
 define_servicegroups                 = None
 define_contactgroups                 = None
+contacts                             = {}
+timeperiods                          = {} # needed for WATO
 clusters                             = {}
 clustered_services                   = []
 clustered_services_of                = {} # new in 1.1.4
@@ -1096,7 +1097,7 @@ def host_contactgroups_of(hostlist):
 def host_contactgroups_nag(hostlist):
     cgrs = host_contactgroups_of(hostlist)
     if len(cgrs) > 0:
-        return "    contact_groups +" + ",".join(cgrs) + "\n"
+        return "    contact_groups " + ",".join(cgrs) + "\n"
     else:
         return ""
 
@@ -1128,11 +1129,11 @@ def extra_service_conf_of(hostname, description):
     sercgr = service_extra_conf(hostname, description, service_contactgroups)
     contactgroups_to_define.update(sercgr)
     if len(sercgr) > 0:
-        conf += "  contact_groups\t\t+" + ",".join(sercgr) + "\n"
+        conf += "  contact_groups\t\t" + ",".join(sercgr) + "\n"
 
     sergr = service_extra_conf(hostname, description, service_groups)
     if len(sergr) > 0:
-        conf += "  service_groups\t\t+" + ",".join(sergr) + "\n"
+        conf += "  service_groups\t\t" + ",".join(sergr) + "\n"
         if define_servicegroups:
             servicegroups_to_define.update(sergr)
     conf += extra_conf_of(extra_service_conf, hostname, description)
@@ -1354,6 +1355,7 @@ def create_nagios_config(outfile = sys.stdout, hostnames = None):
     create_nagios_config_contactgroups(outfile)
     create_nagios_config_commands(outfile)
     create_nagios_config_timeperiods(outfile)
+    create_nagios_config_contacts(outfile)
 
     if extra_nagios_conf:
         outfile.write("\n# extra_nagios_conf\n\n")
@@ -1410,12 +1412,12 @@ def create_nagios_hostdefs(outfile, hostname):
         hostgroups_to_define.add(default_host_group)
     elif define_hostgroups:
         hostgroups_to_define.update(hgs)
-    outfile.write("  hostgroups\t\t\t+%s\n" % hostgroups)
+    outfile.write("  hostgroups\t\t\t%s\n" % hostgroups)
 
     # Contact groups
     cgrs = host_contactgroups_of([hostname])
     if len(cgrs) > 0:
-        outfile.write("  contact_groups\t\t+%s\n" % ",".join(cgrs))
+        outfile.write("  contact_groups\t\t%s\n" % ",".join(cgrs))
         contactgroups_to_define.update(cgrs)
 
     # Parents for non-clusters
@@ -1754,20 +1756,56 @@ def create_nagios_config_commands(outfile):
 
 def create_nagios_config_timeperiods(outfile):
     if len(timeperiods) > 0:
+        outfile.write("\n# ------------------------------------------------------------\n")
+        outfile.write("# Timeperiod definitions (controlled by variable 'timeperiods')\n")
+        outfile.write("# ------------------------------------------------------------\n\n")
         tpnames = timeperiods.keys()
         tpnames.sort()
-        outfile.write("\n# ------------------------------------------------------------\n")
-        outfile.write("# Timeperiod definitions (controlled by timeperiods)\n")
-        outfile.write("# ------------------------------------------------------------\n\n")
         for name in tpnames:
             tp = timeperiods[name]
             outfile.write("define timeperiod {\n  timeperiod_name\t\t%s\n" % name) 
             if "alias" in tp: 
-                outfile.write("  alias\t\t\t%s\n" % tp["alias"].encode("utf-8"))
+                outfile.write("  alias\t\t\t\t%s\n" % tp["alias"].encode("utf-8"))
             for key, value in tp.items():
                 if key != "alias":
-                    outfile.write("  %-20s\t%s\n" % (key, value))
-            outfile.write("\n}\n\n")
+                    times = ", ".join([ ("%s-%s" % (fr, to)) for (fr, to) in value ])
+                    if times:
+                        outfile.write("  %-20s\t\t%s\n" % (key, times))
+            outfile.write("}\n\n")
+
+def create_nagios_config_contacts(outfile):
+    if len(contacts) > 0:
+        outfile.write("\n# ------------------------------------------------------------\n")
+        outfile.write("# Timeperiod definitions (controlled by variable 'contacts'\n")
+        outfile.write("# ------------------------------------------------------------\n\n")
+        cnames = contacts.keys()
+        cnames.sort()
+        for cname in cnames:
+            contact = contacts[cname]
+            outfile.write("define contact {\n  contact_name\t\t\t%s\n" % cname)
+            if "alias" in contact:
+                outfile.write("  alias\t\t\t\t%s\n" % contact["alias"].encode("utf-8"))
+            if "email" in contact:
+                outfile.write("  email\t\t\t\t%s\n" % contact["email"])
+            not_enabled = contact.get("notifications_enabled", True)
+            for what in [ "host", "service" ]:
+                no = contact.get(what + "_notification_options", "")
+                if not no or not not_enabled:
+                    no = "n"
+                outfile.write("  %s_notification_options\t%s\n" % (what, ",".join(list(no))))
+                outfile.write("  %s_notification_period\t%s\n" % (what, contact.get("notification_period", "24X7")))
+                outfile.write("  %s_notification_commands\tcheck-mk-dummy\n" % what)
+
+            # Refer only to those contact groups that actually have objects assigned to
+            cgrs = [ cgr for cgr in contact.get("contactgroups", []) if cgr in contactgroups_to_define ]
+            # Use dummy group if none is set. Nagios will not start otherwise
+            if not cgrs:
+                cgrs = [ "check_mk" ]
+            outfile.write("  contactgroups\t\t\t%s\n" % ", ".join(cgrs))
+            outfile.write("}\n\n")
+
+
+            
 
 
 #   +----------------------------------------------------------------------+

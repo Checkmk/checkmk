@@ -338,19 +338,29 @@ class html:
         addprops = ""
         if "size" in args:
             addprops += " size=%d" % (args["size"] + 2)
+        if "type" in args:
+            mytype = args["type"]
+        else:
+            mytype = "text"
+        if "autocomplete" in args:
+            addprops += " autocomplete=\"%s\"" % args["autocomplete"]
+
 
         value = self.req.vars.get(varname, default_value)
         error = self.user_errors.get(varname)
         html = ""
         if error:
             html = "<x class=inputerror>"
-        html += "<input type=text class=%s value=\"%s\" name=\"%s\"%s>" % \
-                     (cssclass, attrencode(value), varname, addprops)
+        html += "<input type=%s class=%s value=\"%s\" name=\"%s\"%s>" % \
+                     (mytype, cssclass, attrencode(value), varname, addprops)
         if error:
             html += "</x>"
             self.set_focus(varname)
         self.write(html)
         self.form_vars.append(varname)
+
+    def password_input(self, varname, default_value = "", **args):
+        self.text_input(varname, default_value, type="password", size=12, **args)
 
     def text_area(self, varname, deflt="", rows=8):
         value = self.req.vars.get(varname, deflt)

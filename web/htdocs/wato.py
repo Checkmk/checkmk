@@ -4844,7 +4844,7 @@ def mode_edit_site(phase):
     if new:
         site = {}
     else:
-        site = sites.get(siteid, "")
+        site = sites.get(siteid, {})
 
     if phase == "action":
         if not html.check_transaction():
@@ -5115,6 +5115,7 @@ def mode_users(phase):
         return
 
     users = load_users()
+    timeperiods = load_timeperiods()
 
     if phase == "action":
         if not html.check_transaction():
@@ -5127,7 +5128,7 @@ def mode_users(phase):
                          _("Do you really want to delete the user %s?" % delid))
         if c: 
             del users[delid]
-            save_users(sites)
+            save_users(users)
             log_pending(None, "edit-users", _("Deleted user %s" % (delid)))
             return None
         elif c == False:
@@ -5143,9 +5144,12 @@ def mode_users(phase):
     html.write("<table class=data>")
     html.write("<tr><th>" + _("Actions") + "<th>" 
                 + _("ID") 
+                + "</th><th>" + _("Locked")
                 + "</th><th>" + _("Full Name")
                 + "</th><th>" + _("Email")
                 + "</th><th>" + _("Roles")
+                + "</th><th>" + _("Contact groups")
+                + "</th><th>" + _("Notifications")
                 + "</th></tr>\n")
 
     odd = "even"
@@ -5154,22 +5158,320 @@ def mode_users(phase):
     for id, user in entries:
         odd = odd == "odd" and "even" or "odd" 
         html.write('<tr class="data %s0">' % odd)
+
+        # Buttons
         edit_url = make_link([("mode", "edit_user"), ("edit", id)])
         delete_url = html.makeactionuri([("_delete", id)])
         html.write("<td class=buttons>")
         html.buttonlink(edit_url, _("Properties"))
         html.buttonlink(delete_url, _("Delete"))
-        html.write("</td><td>%s</td><td>%s</td>" % (id, user.get("alias", "")))
+        html.write("</td>")
+
+        # ID
+        html.write("<td>%s</td>" % id)
+
+        # Locked
+        locked = user.get("locked", False)
+        html.write("<td>%s</td>" % (locked and ("<b>" + _("yes") + "</b>") or _("no")))
+        # Email
         html.write("<td>%s</td>" % user.get("email", ""))
-        html.write("<td>%s</td>" % ", ".join(user["roles"]))
+
+        # Alias
+        html.write("<td>%s</td>" % user.get("alias", ""))
+
+        # Roles
+        if user.get("roles", []):
+            html.write("<td>%s</td>" % ", ".join(user["roles"]))
+        else:
+            html.write("<td></td>")
+
+        # contact groups
+        html.write("<td>")
+        cgs = user.get("contactgroups", [])
+        if cgs:
+            html.write(", ".join(cgs))
+        else:
+            html.write("<i>" + _("none") + "</i>")
+        html.write("</td>")
+
+        # notifications
+        html.write("<td>")
+        if not cgs:
+            html.write(_("<i>not a contact</i>"))
+        elif not user.get("notifications_enabled", True):
+            html.write(_("disabled"))
+        elif "" == user.get("host_notification_options", "") \
+            and "" == user.get("service_notification_options", ""):
+            html.write(_("all events disabled"))
+        else:
+            tp = user.get("notification_period", "24X7")
+            if tp != "24X7" and tp not in timeperiods:
+                tp = tp + _(" (invalid)")
+            elif tp != "24X7":
+                url = make_link([("mode", "edit_timeperiod"), ("edit", tp)])
+                tp = '<a href="%s">%s</a>' % (url, timeperiods[tp].get("alias", tp))
+            html.write(tp)
+        html.write("</td>")
         html.write("</tr>")
     html.write("</table>")
 
 
 
 def mode_edit_user(phase):
-    return
+    users = load_users()
+    userid = html.var("edit", None) # missing -> new user
+    new = userid == None
+    if phase == "title":
+        if new:
+            return _("Create new user")
+        else:
+            return _("Edit user %s" % userid)
 
+    elif phase == "buttons":
+        html.context_button(_("Back"), make_link([("mode", "users")]), "back")
+        return
+
+    if new:
+        user = {}
+    else:
+        user = users.get(userid, {})
+
+    # Load data that is referenced - in order to display dropdown
+    # boxes and to check for validity.
+    contact_groups = load_group_information().get("contact", {})
+    timeperiods = load_timeperiods()
+
+    if phase == "action":
+        if not html.check_transaction():
+            return "users"
+
+        id = html.var("userid").strip()
+        if new and id in users:
+            raise MKUserError("userid", _("This id is already being used by another user."))
+        if not re.match("^[-a-z0-9A-Z_]+$", id):
+            raise MKUserError("userid", _("The user id must consist only of letters, digit and the underscore."))
+
+        if new:
+            new_user = {}
+            users[id] = new_user
+        else:
+            new_user = users[id]
+
+        # Full name
+        alias = html.var("alias").strip()
+        if not alias:
+            raise MKUserError("alias", 
+            _("Please specify a full name or descriptive alias for the user."))
+        new_user["alias"] = alias
+
+        # Password
+        password = html.var("password").strip()
+        password2 = html.var("password2").strip()
+            
+        # Locking
+        if id == html.req.user and html.get_checkbox("locked"):
+            raise MKUserError(_("You cannot lock your own account!"))
+        new_user["locked"] = html.get_checkbox("locked")
+
+        # We compare both passwords only, if the user has supplied
+        # the repeation! We are so nice to our power users...
+        if password2 and password != password2:
+            raise MKUserError("password2", _("The both passwords do not match."))
+
+        if password:
+            new_user["password"] = encrypt_password(password)
+
+        # Email address
+        email = html.var("email").strip()
+        regex_email = '^[-a-zA-Z0-9_.]+@[-a-zA-Z0-9]+(\.[a-zA-Z]+)*$'
+        if email and not re.match(regex_email, email):
+            raise MKUserError("email", _("'%s' is not a valid email address." % email))
+        new_user["email"] = email
+
+        # Contact groups
+        cgs = []
+        for c in contact_groups:
+            if html.get_checkbox("cg_" + c):
+                cgs.append(c)
+        new_user["contactgroups"] = cgs
+
+        # Notifications
+        new_user["notifications_enabled"] = html.get_checkbox("notifications_enabled")
+        ntp = html.var("notification_period")
+        if ntp not in timeperiods:
+            ntp = "24X7"
+        new_user["notification_period"] = ntp
+    
+        for what, opts in [ ( "host", "durfs"), ("service", "wucrfs") ]:
+            new_user[what + "_notification_options"] = "".join(
+              [ opt for opt in opts if html.get_checkbox(what + "_" + opt) ])
+
+
+        # Saving
+        save_users(users)
+        if new:
+            log_pending(None, "edit-users", _("Create new user %s" % id))
+        else:
+            log_pending(None, "edit-users", _("Modified user %s" % id))
+        return "users"
+
+
+    html.begin_form("user")
+    html.write("<table class=form>")
+
+    # ID
+    html.write("<tr><td class=legend>")
+    html.write(_("User ID"))
+    html.write("</td><td class=content>")
+    if new:
+        html.text_input("userid", userid) 
+        html.set_focus("userid")
+    else:
+        html.write(userid)
+        html.hidden_field("userid", userid)
+    html.write("</td></tr>")
+
+    # Full name
+    html.write("<tr><td class=legend>")
+    html.write(_("Full name") + "<br><i>" + _("Full name or alias of the user</i>"))
+    html.write("</td><td class=content>")
+    html.text_input("alias", user.get("alias", ""), size = 50)
+    if not new:
+        html.set_focus("alias")
+    html.write("</td></tr>")
+
+    # Password
+    html.write("<tr><td class=legend>")
+    html.write(_("Password<br><i>If you want to user to be able to login "
+                 "then specify a password here. Users without a login make sense "
+                 "if they are monitoring contacts that are just used for "
+                 "notifications.<br><br>The repetition of the password is optional. "
+                 "If you think you can type the password correctly, simply leave out "
+                 "the repetition."))
+    html.write("</td><td class=content>")
+    html.password_input("password", autocomplete="off")
+    html.write(_(" repeat: "))
+    html.password_input("password2", autocomplete="off")
+    html.write(" (%s)" % _("optional, if you like to be sure"))
+    html.write("</td></tr>")
+
+    # Locking
+    html.write("<tr><td class=legend>")
+    html.write(_("<i>Locking the password prevents a user from logging in without "
+                 "the need of changing the password.</i>"))
+    html.write("</td><td class=content>")
+    html.checkbox("locked", user.get("locked", False))
+    html.write(_(" lock the password of this account"))
+    html.write("</td></tr>")
+
+    # Email address
+    html.write("<tr><td class=legend>")
+    html.write(_("Email address<br><i>The email address is optional and is needed "
+                 "if the user is a monitoring contact and receives notifications "
+                 "via Email."))
+    html.write("</td><td class=content>")
+    html.text_input("email", user.get("email", ""), size = 50)
+    html.write("</td></tr>")
+
+    # Contact groups
+    html.write("<tr><td class=legend>")
+    url1 = make_link([("mode", "contact_groups")])
+    url2 = make_link([("mode", "rulesets")])
+    html.write(_("Contact groups<br><i>Contact groups are used to assign monitoring "
+                 "objects to users. If you haven't defined any contact groups yet, "
+                 "then first <a href='%s'>do so</a>. Hosts and services can be "
+                 "assigned to contact groups using <a href='%s'>rules</a>.") %
+                 (url1, url2))
+    html.write("<br><br>" + _("If you do not put the user into any contact group "
+               "then no monitoring contact will be created for the user.")
+               + "</i>")
+    html.write("</td><td class=content>")
+    if len(contact_groups) == 0:
+        html.write(_("Please first create some <a href='%s'>contact groups</a>") %
+                url1)
+    else:
+        entries = [ (contact_groups[c], c) for c in contact_groups ]
+        entries.sort()
+        for alias, gid in entries:
+            if not alias:
+                alias = gid
+            html.checkbox("cg_" + gid, gid in user.get("contactgroups", []))
+            html.write(" " + alias + "<br>")
+
+    html.write("</td></tr>")
+
+    # Notifications enabled
+    html.write("<tr><td class=legend>")
+    html.write(_("Notifications enabled<br><i>Notifications are sent out "
+                "when the status of a host or service changes.</i>"))
+    html.write("</td><td class=content>")
+    html.checkbox("notifications_enabled", user.get("notifications_enabled", True))
+    html.write(" " + _("enable notifications"))
+    html.write("</td></tr>")
+
+    # Notification period
+    html.write("<tr><td class=legend>")
+    html.write(_("Notification time period<br><i>Only during this time period the "
+                 "user will get notifications about host or service alerts."))
+    html.write("</td><td class=content>")
+    choices = [ ( "24X7", _("Always")) ] + \
+              [ ( id, tp["alias"]) for (id, tp) in timeperiods.items() ]
+    html.sorted_select("notification_period", choices, user.get("notification_period"))
+    html.write("</td></tr>")
+
+    # Notification options
+    notification_option_names = { # defined here: _() must be executed always!
+        "host" : {
+            "d" : _("Host goes down"),
+            "u" : _("Host gets unreachble"),
+            "r" : _("Host goes up again"),
+        },
+        "service" : {
+            "w" : _("Service goes into warning state"),
+            "u" : _("Service goes into unknown state"),
+            "c" : _("Service goes into critical state"),
+            "r" : _("Service recovers to OK"),
+        },
+        "both" : {
+            "f" : _("Start or end of flapping state"),
+            "s" : _("Start or end of a scheduled downtime"),
+        }
+    }
+
+    html.write("<tr><td class=legend>")
+    html.write(_("Notification options<br><i>Here you specify which types of alerts "
+               "will be notified to this contact.</i>"))
+    html.write("</td><td class=content>")
+    for title, what, opts in [ ( _("Host events"), "host", "durfs"), 
+                  (_("Service events"), "service", "wucrfs") ]:
+        html.write("%s:<ul>" % title)
+        user_opts = user.get(what + "_notification_options", opts)
+        for opt in opts:
+            html.checkbox(what + "_" + opt, opt in user_opts)
+            opt_name = notification_option_names[what].get(opt, 
+                   notification_option_names["both"].get(opt))
+            html.write(" %s<br>" % opt_name)
+        html.write("</ul>")
+    html.write("</td></tr>")
+
+    # TODO: Later we could add custom macros here, which
+    # then could be used for notifications. On the other hand,
+    # if we implement some check_mk --notify, we could directly
+    # access the data in the account with the need to store
+    # values in the monitoring core. We'll see what future brings.
+
+    html.write("</table>")
+    html.hidden_fields()
+    html.button("save", _("Save"))
+    html.end_form()
+
+
+
+
+def encrypt_password(password):
+    import md5crypt, time
+    salt = "%06d" % (1000000 * (time.time() % 1.0))
+    return md5crypt.md5crypt(password, salt, '$1$')
 
 def load_users(): 
     # First load monitoring contacts from Check_MK's world
@@ -5191,9 +5493,9 @@ def load_users():
     filename = multisite_dir + "users.mk"
     if os.path.exists(filename):
         try:
-            vars = { "users" : {} }
+            vars = { "multisite_users" : {} }
             execfile(filename, vars, vars)
-            users = vars["users"]
+            users = vars["multisite_users"]
         except Exception, e:
             if config.debug:
                 raise MKGeneralException(_("Cannot read configuration file %s: %s" %  
@@ -5217,7 +5519,7 @@ def load_users():
         if id not in result:
             result[id] = contact
             result[id]["roles"] = [ "user" ]
-            result[id]["disabled"] = True
+            result[id]["locked"] = True
             result[id]["password"] = ""
 
     # Passwords are read directly from the apache htpasswd-file.
@@ -5226,14 +5528,20 @@ def load_users():
     filename = defaults.htpasswd_file
     for line in file(filename):
         id, password = line.strip().split(":")[:2]
+        if password.startswith("!"):
+            locked = True
+            password = password[1:]
+        else:
+            locked = False
         if id in result:
-            result["password"] = password
+            result[id]["password"] = password
+            result[id]["locked"] = locked
         elif id in config.admin_users:
             # Create entry if this is an admin user
             new_user = {
                 "roles" : [ "admin" ],
                 "password" : password,
-                "disabled" : False
+                "locked" : False
             }
             result[id] = new_user
         # Other unknown entries will silently be dropped. Sorry...
@@ -5241,17 +5549,20 @@ def load_users():
     return result
 
 def split_dict(d, keylist, positive):
-    return dict(zip([(k,v) for (k,v) in d if (k in keylist) == positive]))
+    return dict([(k,v) for (k,v) in d.items() if (k in keylist) == positive])
 
 def save_users(profiles):
-    non_contact_keys = [ "roles", "password", "disabled" ]
+    # TODO: delete var/check_mk/web/$USER of non-existing users. Do we
+    # need to remove other references as well?
+    non_contact_keys = [ "roles", "password", "locked" ]
 
     # Remove multisite keys in contacts
-    contacts = dict(zip([ (id, split_dict(user, non_contact_keys, False)) for (id, user) in profiles.items() ])) 
+    contacts = dict([ (id, split_dict(user, non_contact_keys, False)) for (id, user) in profiles.items() ])
 
     # Remove contact keys and password from users
-    users    = dict(zip([ (id, split_dict(split_dict(user, multisite_keys, True), [ "password" ], False))
-                       for (id, user) in profiles.items() ]))
+    users  = dict([ (id, { "roles" : p.get("roles", []) } ) 
+                  for (id, p) 
+                  in profiles.items() ] )
 
     # Check_MK's monitoring contacts
     filename = root_dir + "contacts.mk"
@@ -5263,16 +5574,21 @@ def save_users(profiles):
     filename = multisite_dir + "users.mk"
     out = file(filename, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
-    out.write("users = \\%s\n" % pprint.pformat(users))
+    out.write("multisite_users = \\\n%s\n" % pprint.pformat(users))
 
     # Apache htpasswd. We only store passwords here. During
     # loading we created entries for all admin users we know. Other
     # users from htpasswd are lost. If you start managing users with
     # WATO, you should continue to do so or stop doing to for ever...
+    # Locked accounts get a '!' before their password. This disable it.
     filename = defaults.htpasswd_file
     out = file(filename, "w")
-    for id, user in users.items():
-        out.write("%s:%s\n" % (id, user["password"]))
+    for id, user in profiles.items():
+        if user.get("locked", False):
+            locksym = '!'
+        else:
+            locksym = ""
+        out.write("%s:%s%s\n" % (id, locksym, user.get("password", "!")))
 
 
 

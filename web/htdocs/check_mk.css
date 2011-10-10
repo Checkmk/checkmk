@@ -2185,6 +2185,27 @@ table.add_snapin i {
     font-size: 8pt;
 }
 
+/* Special styles for roles editor (permissions) */
+.wato table.form table.permissions {
+    border-collapse: collapse;
+    border-spacing: 0px; 
+    width: 100%;
+}
+.wato table.form table.permissions td {
+    border-top: 1px dotted white;
+    padding-top: 2px;
+    padding-bottom: 8px;
+}
+.wato table.form table.permissions td.left {
+}
+.wato table.form table.permissions td.right {
+    text-align: right;
+    vertical-align: top;
+}
+.wato table.form table.permissions td.right select {
+    width: 120px;
+}
+
 
 /* 
     ____                                    

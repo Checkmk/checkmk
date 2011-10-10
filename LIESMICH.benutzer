@@ -82,4 +82,18 @@ Diese Datei wird in defaults referenziert. Das normale setup.sh
 kennt die Datei ohnehin. Bei OMD bauen wir es in die Defaults
 ein.
 
+================================================================
+Was jetzt noch fehlt:
+- Verwalten der Rollen
+- Beim Löschen von Objekten Bezüge sicherstellen. Im config-Dialog
+  könnte man darauf hinweisen, dass es Bezüge gibt und diese
+  automatisch entfernen. Oder soll man eher sperren? Das wäre einfacher.
+- Altes Konfig-Schema in der multisite.mk ablösen oder unterstützen, so
+  dass es immer noch geht? Gut wäre es.
+- Neues Rollen-Schema auch wirklich verwenden.
+- Neue Rechte für WATO einführen und diese auch wirklich abfragen
+- Folder mit Kontaktgruppen berechtigen, nicht mit Rollen
+- Login-Maske für Multisite - diese optional machen (Default is
+  HTTP-Auth). In OMD per Config einen Schalter dafür einbauen.
+- NagVis und PNP so erweitern, dass eine zentral Auth funktioniert.
 

@@ -667,21 +667,6 @@ class html:
             return False
         return True
 
-    def confirm(self, msg):
-        if self.var("_do_actions") == "No":
-            return # user has pressed "No"
-        if not self.has_var("_do_confirm"):
-            self.write("<div class=really>%s" % msg)
-            self.begin_form("confirm", None, "POST")
-            self.hidden_fields(add_action_vars = True)
-            self.button("_do_confirm", _("Yes!"), "really")
-            self.button("_do_actions", _("No"), "")
-            self.end_form()
-            self.write("</div>")
-            return False
-        else:
-            return self.check_transaction()
-
     def do_actions(self):
         return self.var("_do_actions") not in [ "", None, "No" ]
 
@@ -756,6 +741,21 @@ class html:
             return True
         else:
             return False
+
+    def confirm(self, msg):
+        if self.var("_do_actions") == "No":
+            return # user has pressed "No"               # None --> "No"
+        if not self.has_var("_do_confirm"):
+            self.write("<div class=really>%s" % msg)
+            self.begin_form("confirm", None, "POST")
+            self.hidden_fields(add_action_vars = True)
+            self.button("_do_confirm", _("Yes!"), "really")
+            self.button("_do_actions", _("No"), "")
+            self.end_form()
+            self.write("</div>")
+            return False                                # False --> "Dialog shown, no answer yet"
+        else:
+            return self.check_transaction()             # True: "Yes", False --> Browser reload
 
     def register_event(self, name):
         self.events.add(name)

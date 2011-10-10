@@ -117,7 +117,8 @@ def load_config():
 #
 # -------------------------------------------------------------------
 
-roles = [ "user", "admin", "guest" ]
+builtin_role_ids = [ "user", "admin", "guest" ] # hard coded in various permissions
+roles = {} # User supplied roles
 
 # define default values for all settings
 debug             = False
@@ -140,6 +141,7 @@ def declare_permission(name, title, description, defaults):
 def declare_permission_section(name, title):
     permission_sections[name] = title
 
+# TODO: _(...)
 declare_permission("use",
      "Use Multisite at all",
      "Users without this permission are not let in at all",

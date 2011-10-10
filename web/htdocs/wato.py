@@ -4647,7 +4647,7 @@ def mode_edit_timeperiod(phase):
                 if len(name) == 0:
                     raise MKUserError("name", _("Please specify a name of the new timeperiod."))
                 if not re.match("^[-a-z0-9A-Z_]*$", name):
-                    raise MKUserError(htmlvarname, _("Invalid timeperiod name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
+                    raise MKUserError("name", _("Invalid timeperiod name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
                 timeperiods[name] = timeperiod
                 log_pending(None, "edit-timeperiods", _("Created new time period %s" % name))
             else:
@@ -5246,6 +5246,7 @@ def mode_edit_user(phase):
     # boxes and to check for validity.
     contact_groups = load_group_information().get("contact", {})
     timeperiods = load_timeperiods()
+    roles = load_roles()
 
     if phase == "action":
         if not html.check_transaction():
@@ -5296,7 +5297,7 @@ def mode_edit_user(phase):
 
         # Roles
         user["roles"] = filter(lambda role: html.get_checkbox("role_" + role), 
-                               config.roles)
+                               roles.keys())
 
         # Contact groups
         cgs = []
@@ -5391,9 +5392,11 @@ def mode_edit_user(phase):
                  "Users without any role have no permissions to use Multisite at all "
                  "but still can be monitoring contacts and receive notifications.</i>"))
     html.write("</td><td class=content>")
-    for role in config.roles:
-        html.checkbox("role_" + role, role in user.get("roles", []))
-        html.write(" %s<br>" % role)
+    entries = roles.items()
+    entries.sort(cmp = lambda a,b: cmp((a[1]["alias"],a[0]), (b[1]["alias"],b[0])))
+    for role_id, role in entries:
+        html.checkbox("role_" + role_id, role_id in user.get("roles", []))
+        html.write(" %s (%s)<br>" % (role["alias"], role_id))
     html.write("</td></tr>")
 
     # Contact groups
@@ -5594,6 +5597,7 @@ def save_users(profiles):
     out.write("contacts.update(\n%s\n)\n" % pprint.pformat(contacts))
 
     # Users with passwords for Multisite
+    make_nagios_directory(multisite_dir)
     filename = multisite_dir + "users.mk"
     out = file(filename, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
@@ -5613,6 +5617,330 @@ def save_users(profiles):
             locksym = ""
         out.write("%s:%s%s\n" % (id, locksym, user.get("password", "!")))
 
+#   +----------------------------------------------------------------------+
+#   |                       ____       _                                   |
+#   |                      |  _ \ ___ | | ___  ___                         |
+#   |                      | |_) / _ \| |/ _ \/ __|                        |
+#   |                      |  _ < (_) | |  __/\__ \                        |
+#   |                      |_| \_\___/|_|\___||___/                        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Mode for managing roles and permissions.                             |
+#   | In order to make getting started easier - Check_MK Multisite comes   |
+#   | with three builtin-roles: admin, user and guest. These roles have    |
+#   | predefined permissions. The builtin roles cannot be deleted. Users   |
+#   | listed in admin_users in multisite.mk automatically get the role     |
+#   | admin - even if no such user or contact has been configured yet. By  |
+#   | that way an initial login - e.g. as omdamin - is possible. The admin |
+#   | role cannot be removed from that user as long as he is listed in     |
+#   | admin_users. Also the variables guest_users, users and default_user_ |
+#   | role still work. That way Multisite is fully operable without WATO   |
+#   | and also backwards compatible.                                       |
+#   | In WATO you can create further roles and also edit the permissions   |
+#   | of the existing roles. Users can be assigned to builtin and custom   |
+#   | roles.                                                               |
+#   | This modes manages the creation of custom roles and the permissions  |
+#   | configuration of all roles.
+#   +----------------------------------------------------------------------+
+
+def mode_roles(phase):
+    if phase == "title":
+        return _("Manage Roles & Permissions")
+
+    elif phase == "buttons":
+        html.context_button(_("Back"), make_link([("mode", "configuration")]), "back")
+        html.context_button(_("New role"), make_link([("mode", "edit_role")]), "new")
+        return
+
+    roles = load_roles()
+    users = load_users()
+        
+    if phase == "action":
+        if html.var("_delete"):
+            delid = html.var("_delete")
+            if html.transaction_valid() and roles[delid].get('builtin'):
+                raise MKUserError(None, _("You cannot delete the builtin roles!"))
+
+            c = wato_confirm(_("Confirm deletion of role %s" % delid),
+                             _("Do you really want to delete the role %s?" % delid))
+            if c: 
+                rename_user_role(delid, None) # Remove from existing users
+                del roles[delid]
+                save_roles(roles)
+                log_pending(None, "edit-roles", _("Deleted role %s" % delid))
+                return None
+            elif c == False:
+                return ""
+            else:
+                return
+        elif html.var("_clone"):
+            if html.check_transaction():
+                cloneid = html.var("_clone")
+                cloned_role = roles[cloneid]
+                newid = cloneid
+                while newid in roles:
+                    newid += "x"
+                new_role = {}
+                new_role.update(cloned_role)
+                if cloned_role.get("builtin"):
+                    new_role["builtin"] =  False
+                    new_role["basedon"] = cloneid
+                roles[newid] = new_role
+                save_roles(roles)
+                log_pending(None, "edit-roles", _("Created new role %s" % newid))
+                return None
+            else:
+                return None
+
+
+    html.write("<h3>" + _("User Roles") + "</h3>")
+    html.write("<table class=data>")
+    html.write("<tr>"
+             + "<th>" + _("Actions")       + "</th>"  
+             + "<th>" + _("ID")            + "</th>"  
+             + "<th>" + _("Description")   + "</th>"  
+             + "<th>" + _("Type")          + "</th>"
+             + "<th>" + _("Modifications") + "</th>"
+             + "<th>" + _("Users")         + "</th>"
+             + "</tr>\n")
+
+
+    # Show table of builtin and user defined roles
+    entries = roles.items()
+    entries.sort(cmp = lambda a,b: cmp((a[1]["alias"],a[0]), (b[1]["alias"],b[0])))
+
+    odd = "even"
+    for id, role in entries:
+        odd = odd == "odd" and "even" or "odd" 
+        html.write('<tr class="data %s0">' % odd)
+
+        # Actions 
+        html.write("<td>")
+        edit_url = make_link([("mode", "edit_role"), ("edit", id)])
+        clone_url = html.makeactionuri([("_clone", id)])
+        delete_url = html.makeactionuri([("_delete", id)])
+        html.buttonlink(edit_url, _("Properties"))
+        html.buttonlink(clone_url, _("Clone"))
+        if not role.get("builtin"):
+            html.buttonlink(delete_url, _("Delete"))
+        html.write("</td>")
+
+        # ID
+        html.write("<td>%s</td>" % id)
+
+        # Description
+        html.write("<td>%s</td>" % role["alias"])
+
+        # Type
+        html.write("<td>%s</td>" % (role.get("builtin") and _("builtin") or _("custom")))
+
+        # Modifications
+        html.write("<td><span title='%s'>%s</span></td>" % (
+            _("That many permissions do not use the factory defaults."), len(role["permissions"])))
+
+        # Users
+        html.write("<td>%s</td>" %
+          ", ".join([ '<a href="%s">%s</a>' % (make_link([("mode", "edit_user"), ("edit", user_id)]), user["alias"])  
+            for (user_id, user) in users.items() if (id in user["roles"])]))
+
+        html.write("</tr>\n") 
+
+    # Possibly we could also display the following information
+    # - number of set permissions (needs loading users)
+    # - number of users with this role
+    html.write("</table>")
+
+
+def mode_edit_role(phase):
+    id = html.var("edit")
+
+    if phase == "title":
+        return _("Edit user role %s" % id)
+
+    elif phase == "buttons":
+        html.context_button(_("Back"), make_link([("mode", "roles")]), "back")
+        return
+
+    roles = load_roles()
+    role = roles[id]
+
+    if phase == "action":
+        alias = html.var_utf8("alias")
+        new_id = html.var("id")
+        if len(new_id) == 0:
+            raise MKUserError("id", _("Please specify an ID for the new role.")) 
+        if not re.match("^[-a-z0-9A-Z_]*$", new_id):
+            raise MKUserError("id", _("Invalid role ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
+        if new_id != id:
+            if new_id in roles:
+                raise MKUserError("id", _("The ID is already used by another role"))
+
+        role["alias"] = alias 
+
+        # based on 
+        if not role.get("builtin"):
+            basedon = html.var("basedon")
+            if basedon not in config.builtin_role_ids:
+                raise MKUserError("basedon", _("Invalid valid for based on. Must be id of builtin rule."))
+            role["basedon"] = basedon
+
+        # Permissions
+        permissions = {}
+        for perm in config.permissions_by_order:
+            pname = perm["name"]
+            value = html.var("perm_" + pname)
+            if value == "yes":
+                permissions[pname] = True
+            elif value == "no":
+                permissions[pname] = False
+        role["permissions"] = permissions
+
+        if id != new_id:
+            roles[new_id] = role
+            del roles[id]
+            rename_user_role(id, new_id)
+
+        save_roles(roles)
+        log_pending(None, "edit-roles", _("Modified user role %s" % new_id)) 
+        return "roles"
+
+    html.begin_form("role", method="POST")
+    html.write("<table class=form>")
+
+    # ID
+    html.write("<tr><td class=legend>")
+    html.write(_("Internal ID"))
+    html.write("</td><td class=content>")
+    if role.get("builtin"):
+        html.write("%s (%s)" % (id, _("builtin role"))) 
+        html.hidden_field("id", id)
+    else:
+        html.text_input("id", id)
+        html.set_focus("id")
+    html.write("</td></tr>")
+
+    # Alias
+    html.write("<tr><td class=legend>")
+    html.write(_("Alias") + "<br><i>" + _("An optional description of the timeperiod</i>"))
+    html.write("</td><td class=content>")
+    html.text_input("alias", role.get("alias", ""), size = 50)
+    html.write("</td></tr>")
+
+    # Based on
+    if not role.get("builtin"):
+        html.write("<tr><td class=legend>")
+        html.write(_("Based on<br><i>Each user defined role is based on one of the builtin roles. "
+                     "When created it will start with all permissions of that role. When due to a software "
+                     "update or installation of an addons new permissions appear, the user role will get or "
+                     "not get those new permissions based on the default settings of the builtin role it's "
+                     "based on.</i>"))
+        html.write("</td><td class=content>")
+        choices = [ (i, r["alias"]) for i, r in roles.items() if r.get("builtin") ]
+        html.sorted_select("basedon", choices, role.get("basedon", "user"))
+        html.write("</td></tr>")
+
+    
+    # Permissions
+    base_role_id = role.get("basedon", id)
+    def perm_header(title, is_open, help=None):
+        html.write("<tr><td class=legend>")
+        html.write(title)
+        if help:
+            html.write("<br><i>%s</i>" % help)
+        html.write("</td><td class=content>")
+        html.begin_foldable_container('permissions', title, is_open, title, indent=False) 
+        html.write("<table class=permissions>")
+
+    def perm_footer():
+        html.write("</table>")
+        html.end_foldable_container()
+        html.write("</td></tr>")
+
+    perm_header(_("General permissions"), True, 
+       _("When you leave the permissions at <i>default</i> then they get their "
+         "settings from the factory defaults (for builtin roles) or from the " 
+         "factory default of their base role (for user define roles). Factory defaults "
+         "may change due to software updates. When choosing another base role, all "
+         "permissions that are on default will reflect the new base role."))
+    current_section = None
+    for perm in config.permissions_by_order:
+        pname = perm["name"]
+        if "." in pname:
+            section = pname.split(".")[0]
+            section_title = config.permission_sections[section]
+            if section != current_section:
+                perm_footer()
+                perm_header(section_title, False)
+                current_section = section
+        
+        pvalue = role["permissions"].get(pname)
+        def_value = base_role_id in perm["defaults"]
+        html.write("<tr><td class=left>%s<br><i>%s</i></td>" % (perm["title"], perm["description"]))
+        html.write("<td class=right>")
+        choices = [ ( "yes", _("yes")),
+                    ( "no", _("no")),
+                    ( "default", _("default (%s)") % (def_value and _("yes") or _("no") )) ] 
+        html.select("perm_" + pname, choices, { True: "yes", False: "no" }.get(pvalue, "default") )
+        html.write("</td></tr>")
+    perm_footer()
+
+    # Save button
+    html.write("<tr><td colspan=2 class=buttons>")
+    html.button("save", _("Save"))
+    html.write("</td></tr>")
+    html.write("</table>")
+    html.hidden_fields()
+    html.end_form()
+
+
+def load_roles():
+    # Fake builtin roles into user roles.
+    builtin_role_names = {  # Default names for builtin roles
+        "admin" : _("Administrator"),
+        "user"  : _("Normal monitoring user"),
+        "guest" : _("Guest user"),
+    }
+    roles = dict([(id, { 
+         "alias" : builtin_role_names.get(id, id),
+         "permissions" : {}, # use default everywhere
+         "builtin": True}) 
+                  for id in config.builtin_role_ids ])
+    
+    filename = multisite_dir + "roles.mk"
+    if not os.path.exists(filename):
+        return roles
+
+    try:
+        vars = { "roles" : roles }
+        execfile(filename, vars, vars)
+        return vars["roles"]
+    
+    except Exception, e:
+        if config.debug:
+            raise MKGeneralException(_("Cannot read configuration file %s: %s" %  
+                          (filename, e)))
+        return roles
+
+
+def save_roles(roles):
+    make_nagios_directory(multisite_dir)
+    filename = multisite_dir + "roles.mk"
+    out = file(filename, "w")
+    out.write("# Written by WATO\n# encoding: utf-8\n\n")
+    out.write("roles.update(\n%s)\n" % pprint.pformat(roles))
+
+
+# Adapt references in users. Builtin rules cannot
+# be renamed and are not handled here. If new_id is None,
+# the role is being deleted
+def rename_user_role(id, new_id):
+    users = load_users()
+    for user in users.values():
+        if id in user["roles"]:
+            user["roles"].remove(id)
+            if new_id:
+                user["roles"].append(new_id)
+    save_users(users)
 
 
 #   +----------------------------------------------------------------------+
@@ -6820,6 +7148,8 @@ mode_functions = {
    "edit_site"       : mode_edit_site,
    "users"           : mode_users,
    "edit_user"       : mode_edit_user,
+   "roles"           : mode_roles,
+   "edit_role"       : mode_edit_role,
 }
 
 extra_buttons = [

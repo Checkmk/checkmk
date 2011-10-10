@@ -131,12 +131,12 @@ def connect_to_livestatus(html):
     # If Multisite is retricted to data user is a nagios contact for,
     # we need to set an AuthUser: header for livestatus
     if not config.may("see_all"):
-        html.live.set_auth_user('read',   config.user)
-        html.live.set_auth_user('action', config.user)
+        html.live.set_auth_user('read',   config.user_id)
+        html.live.set_auth_user('action', config.user_id)
 
     # May the user see all objects in BI aggregations or only some? 
     if not config.may("bi.see_all"):
-        html.live.set_auth_user('bi', config.user)
+        html.live.set_auth_user('bi', config.user_id)
 
     # Default auth domain is read. Please set to None to switch off authorization
     html.live.set_auth_domain('read')
@@ -232,7 +232,7 @@ def handler(req, profiling = True):
         # User allowed to login at all?
         if not config.may("use"):
             reason = _("You are not authorized to use Check_MK Multisite. Sorry. "
-                       "You are logged in as <b>%s</b>.") % config.user
+                       "You are logged in as <b>%s</b>.") % config.user_id
             if len(config.user_role_ids):
                 reason += _("Your roles are <b>%s</b>. " % ", ".join(config.user_role_ids))
             else:

@@ -881,7 +881,7 @@ config.aggregation_functions['running_on'] = aggr_running_on
 
 # Just for debugging
 def page_debug():
-    compile_forest(html.req.user)
+    compile_forest(config.user_id)
     
     html.header("BI Debug")
     render_forest()
@@ -891,7 +891,7 @@ def page_debug():
 # Just for debugging, as well
 def page_all():
     html.header("All")
-    compile_forest(html.req.user)
+    compile_forest(config.user_id)
     load_assumptions()
     for group, trees in g_user_cache["forest"].items():
         html.write("<h2>%s</h2>" % group)
@@ -960,7 +960,7 @@ def create_aggregation_row(tree, status_info = None):
 
 
 def table(columns, add_headers, only_sites, limit, filters):
-    compile_forest(html.req.user)
+    compile_forest(config.user_id)
     load_assumptions() # user specific, always loaded
     # Hier müsste man jetzt die Filter kennen, damit man nicht sinnlos
     # alle Aggregationen berechnet.
@@ -1009,7 +1009,7 @@ def table(columns, add_headers, only_sites, limit, filters):
 
 # Table of all host aggregations, i.e. aggregations using data from exactly one host
 def host_table(columns, add_headers, only_sites, limit, filters):
-    compile_forest(html.req.user)
+    compile_forest(config.user_id)
     load_assumptions() # user specific, always loaded
 
     # Create livestatus filter for filtering out hosts. We can
@@ -1079,7 +1079,7 @@ def status_tree_depth(tree):
         return maxdepth + 1
 
 def is_part_of_aggregation(what, site, host, service):
-    compile_forest(html.req.user)
+    compile_forest(config.user_id)
     if what == "host":
         return (site, host) in g_user_cache["affected_hosts"]
     else:

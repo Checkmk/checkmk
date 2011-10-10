@@ -46,6 +46,7 @@ except NameError:
     from sets import Set as set
 
 user = None
+user_id = None 
 user_role_ids = []
 
 # Base directory of dynamic configuration
@@ -70,12 +71,10 @@ def include(filename):
         execfile(filename, globals(), globals())
         modification_timestamps.append(lm)
     except Exception, e:
-        global user
-        global role
-        global user_permissions
+        global user_id
+        global roles
         user = "nobody"
-        role = None
-        user_permissions = []
+        roles = []
         raise MKConfigError("Cannot read configuration file %s: %s:" % (filename, e))
 
 modification_timestamps = []
@@ -210,8 +209,8 @@ declare_permission("configure_sidebar",
 # Compute permissions for HTTP user and set in
 # global variables. Also store user.
 def login(u):
-    global user
-    user = u
+    global user_id
+    user_id = u
 
     # Determine the roles of the user. If the user is listed in 
     # users, admin_users or guest_users in multisite.mk then we
@@ -220,7 +219,14 @@ def login(u):
     # use that profile. Remaining (unknown) users get the default_user_role.
     # That can be set to None -> User has no permissions at all.
     global user_role_ids
-    user_role_ids = roles_of_user(user)
+    user_role_ids = roles_of_user(user_id)
+
+    # Prepare user object
+    global user
+    if u in multisite_users:
+        user = multisite_users[u]
+    else:
+        user = { "roles" : user_role_ids } 
 
     # Prepare cache of already computed permissions
     global user_permissions
@@ -234,7 +240,7 @@ def login(u):
 
     # Prepare users' own configuration directory
     global user_confdir
-    user_confdir = config_dir + "/" + user
+    user_confdir = config_dir + "/" + user_id
     make_nagios_directory(user_confdir)
 
     # load current on/off-switching states of sites

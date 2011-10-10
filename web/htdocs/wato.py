@@ -842,7 +842,8 @@ def show_hosts(folder):
 def host_move_combo(host = None, top = False):
     other_folders = []
     for path, afolder in g_folders.items():
-        if config.role in afolder["roles"] and afolder != g_folder:
+        # TODO: Check permisssions
+        if afolder != g_folder:
             os_path = afolder[".path"]
             msg = afolder["title"]
             if os_path:
@@ -1995,7 +1996,7 @@ def log_entry(linkinfo, action, message, logfilename):
     log_file = log_dir + logfilename
     make_nagios_directory(log_dir)
     f = create_user_file(log_file, "ab")
-    f.write("%d %s %s %s " % (int(time.time()), link, html.req.user, action))
+    f.write("%d %s %s %s " % (int(time.time()), link, config.user_id, action))
     f.write(message)
     f.write("\n")
 
@@ -5127,7 +5128,7 @@ def mode_users(phase):
         if not html.check_transaction():
             return
         delid = html.var("_delete")
-        if delid == html.req.user:
+        if delid == config.user_id:
             raise MKUserError(None, _("You cannot delete your own account!"))
 
         c = wato_confirm(_("Confirm deletion of user %s" % delid),
@@ -5276,7 +5277,7 @@ def mode_edit_user(phase):
         password2 = html.var("password2").strip()
             
         # Locking
-        if id == html.req.user and html.get_checkbox("locked"):
+        if id == config.user_id and html.get_checkbox("locked"):
             raise MKUserError(_("You cannot lock your own account!"))
         new_user["locked"] = html.get_checkbox("locked")
 

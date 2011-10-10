@@ -139,7 +139,7 @@ def render_groups(what):
     name_to_alias = dict(data)
     groups = [(name_to_alias[name].lower(), name_to_alias[name], name) for name in name_to_alias.keys()]
     groups.sort() # sort by Alias in lowercase
-    target = views.get_context_link(html.req.user, "%sgroup" % what)
+    target = views.get_context_link(config.user_id, "%sgroup" % what)
     if target:
         html.write('<ul>')
         for alias_lower, alias, name in groups:
@@ -198,7 +198,7 @@ def render_hosts(mode):
         num_columns = 2
 
     views.load_views()
-    target = views.get_context_link(html.req.user, view)
+    target = views.get_context_link(config.user_id, view)
     html.write("<table class=allhosts>\n")
     col = 1
     for site, host, state, worstsvc in hosts:

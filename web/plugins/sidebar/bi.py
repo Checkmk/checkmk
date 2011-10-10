@@ -36,7 +36,7 @@ except NameError:
     from sets import Set as set
 
 def render_bi_groups():
-    bi.compile_forest(html.req.user)
+    bi.compile_forest(config.user_id)
     html.write("<ul>")
     for group, trees in bi.g_user_cache["forest"].items():
         if len(trees) > 0:

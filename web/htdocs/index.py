@@ -24,10 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
+# Prepare builtin-scope for localization function _()
 import __builtin__
 __builtin__._ = lambda x: x
 __builtin__.current_language = None
 
+# Load modules
 from mod_python import apache, util
 import sys, os, pprint
 from lib import *
@@ -41,6 +44,7 @@ for fn in os.listdir(pagehandlers_dir):
     if fn.endswith(".py"):
         execfile(pagehandlers_dir + "/" + fn)
 
+# prepare local-structure within OMD sites
 if defaults.omd_root:
     local_module_path = defaults.omd_root + "/local/share/check_mk/web/htdocs"
     local_locale_path = defaults.omd_root + "/local/share/check_mk/locale"
@@ -137,6 +141,7 @@ def connect_to_livestatus(html):
     # Default auth domain is read. Please set to None to switch off authorization
     html.live.set_auth_domain('read')
 
+# Main entry point for all HTTP-requests (called directly by mod_apache)
 def handler(req, profiling = True):
     req.content_type = "text/html; charset=UTF-8"
     req.header_sent = False
@@ -167,7 +172,8 @@ def handler(req, profiling = True):
         if html.var("debug"): # Debug flag may be set via URL
             config.debug = True
 
-        # Initialize the multiste i18n
+        # Initialize the multiste i18n. This will be replaced by
+        # language settings stored in the user profile
         lang = html.var("lang", config.default_language)
 
         # Make current language globally known to all of our modules
@@ -225,9 +231,14 @@ def handler(req, profiling = True):
 
         # User allowed to login at all?
         if not config.may("use"):
-            reason = _("Not Authorized. You are logged in as <b>%s</b>. Your role is <b>%s</b>."
-                     "If you think this is an error, "
-                     "please ask your administrator to add your login into multisite.mk") % (config.user, config.role)
+            reason = _("You are not authorized to use Check_MK Multisite. Sorry. "
+                       "You are logged in as <b>%s</b>.") % config.user
+            if len(config.user_role_ids):
+                reason += _("Your roles are <b>%s</b>. " % ", ".join(config.user_role_ids))
+            else:
+                reason += _("<b>You do not have any roles.</b> ") 
+            reason += _("If you think this is an error, "
+                        "please ask your administrator to check the permissions configuration.") 
             raise MKAuthException(reason)
 
         # General access allowed. Now connect to livestatus

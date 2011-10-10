@@ -574,7 +574,7 @@ class html:
 
     def top_heading(self, title):
         if type(self.req.user) == str:
-            login_text = "<b>%s</b> (%s)" % (config.user, config.role)
+            login_text = "<b>%s</b> (%s)" % (config.user, "+".join(config.user_role_ids))
         else:
             login_text = _("not logged in")
         self.write("<table class=header><tr><td class=left>%s</td><td class=right>"

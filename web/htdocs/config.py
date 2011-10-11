@@ -234,9 +234,10 @@ def login(u):
 
     # Make sure, admin can restore permissions in any case!
     if user in admin_users:
-        user_permissions["use"] = True
-        user_permissions["use_wato"] = True
-        user_permissions["edit_permissions"] = True
+        user_permissions["use"] = True        # use Multisite
+        user_permissions["wato.use"] = True   # enter WATO
+        user_permissions["wato.edit"] = True  # make changes in WATO...
+        user_permissions["wato.users"] = True # ... with access to user management
 
     # Prepare users' own configuration directory
     global user_confdir
@@ -294,6 +295,14 @@ def may(pname):
 
 def user_may(u, pname):
     return may_with_roles(roles_of_user(u), pname)
+
+def need_permission(pname):
+    if not may(pname):
+        perm = permissions_by_name[pname]
+        raise MKAuthException(_("We are sorry, but you lack the permission "
+                              "for this operation. If you do not like this "
+                              "then please ask you administrator to provide you with "
+                              "the following permission: '<b>%s</b>'.") % perm["title"])
 
 
 # -------------------------------------------------------------------

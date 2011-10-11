@@ -107,10 +107,178 @@ import sys, pprint, socket, re, subprocess, time, datetime, shutil, tarfile, Str
 import config, htmllib
 from lib import *
 
-config.declare_permission("use_wato",
+# Declare WATO-specific permissions
+config.declare_permission_section("wato", _("WATO - Check_MK's Web Administration Tool"))
+
+config.declare_permission("wato.use",
      _("Use WATO"),
-     _("This permissions allows users to use WATO - Check_MK's Web Administration Tool."),
+     _("This permissions allows users to use WATO - Check_MK's "
+       "Web Administration Tool. Without this "
+       "permission all references to WATO (buttons, links,"
+       "snapins) will be unvisible."),
      [ "admin", "user" ])
+
+config.declare_permission("wato.edit",
+     _("Make changes, perform actions"),
+     _("This permission is needed in order to make any "
+       "changes or perform any actions at all. "
+       "Without this permission, the user is only "
+       "able to view data, and that only in modules he "
+       "has explicit permissions for."),
+     [ "admin", "user" ])
+
+config.declare_permission("wato.viewall",
+     _("Read access to all modules"),
+     _("When this permission is set then the user sees "
+       "also such modules he has no explicit "
+       "access to (see below)."),
+     [ "admin", ])
+
+config.declare_permission("wato.activate",
+     _("Activate Configuration"),
+     _("This permission is needed for activating the "
+       "current configuration (and thus rewriting the "
+       "monitoring configuration and restart the monitoring daemon.)"),
+     [ "admin", "user", ])
+
+config.declare_permission("wato.auditlog",
+     _("Audit log"),
+     _("Access to the historic audit log. A user with write "
+       "access can delete the audit log. "
+       "The currently pending changes can be seen by all users "
+       "with access to WATO."),
+     [ "admin", ])
+
+# TODO
+config.declare_permission("wato.hosts",
+     _("Host management"),
+     _("Access to the management of hosts and folders. This "
+       "module has some additional permissions (see below)."),
+     [ "admin", "user" ])
+
+# TODO
+config.declare_permission("wato.edit_hosts",
+     _("Modify existing hosts"),
+     _("Modify the properties of existing hosts. Please note: "
+       "for the management of services (inventory) there is "
+       "a separate permission (see below)"),
+     [ "admin", "user" ])
+
+# TODO
+config.declare_permission("wato.manage_hosts",
+     _("Add & remove hosts"),
+     _("Add hosts to the monitoring and remove hosts "
+       "from the monitoring. Please also add the permissions "
+       "<i>Modify existing hosts</i>."),
+     [ "admin", "user" ])
+
+# TODO
+config.declare_permission("wato.services",
+     _("Manage services"),
+     _("Do inventory and service configuration on existing hosts."),
+     [ "admin", "user" ])
+
+# TODO
+config.declare_permission("wato.edit_folders",
+     _("Modify existing folders"),
+     _("Modify the properties of existing folders."),
+     [ "admin", "user" ])
+
+# TODO
+config.declare_permission("wato.manage_folders", 
+     _("Add & remove folders"),
+     _("Add new folders and delete existing folders. If a folder to be deleted contains hosts then "
+       "the permission to delete hosts is also required."),
+     [ "admin", "user" ])
+
+# TODO
+config.declare_permission("wato.all_folders",
+     _("Access to all hosts and folders"),
+     _("Without this permission, operations on folders can only be done by users that are members of "
+       "one of the folders contact groups. This permission grants full access to all folders and hosts. "),
+     [ "admin" ])
+
+# TODO
+config.declare_permission("wato.global",
+     _("Global settings"),
+     _("Access to the module <i>Global settings</i>"),
+     [ "admin", ])
+
+# TODO
+config.declare_permission("wato.rulesets",
+     _("Rulesets"),
+     _("Access to the module for managing Check_MK rules. Please note that a user can only "
+       "manage rules in folders he has permissions to. "),
+     [ "admin", "user" ])
+
+# TODO
+config.declare_permission("wato.groups",
+     _("Host & Service Groups"),
+     _("Access to the modules for managing host and service groups."),
+     [ "admin", ])
+
+# TODO
+config.declare_permission("wato.timeperiods",
+     _("Timeperiods"),
+     _("Access to the module <i>Timeperiods</i>"),
+     [ "admin", ])
+
+# TODO
+config.declare_permission("wato.sites",
+     _("Site management"),
+     _("Access to the module for managing connections to remote monitoring sites."),
+     [ "admin", ])
+
+# TODO
+config.declare_permission("wato.users",
+     _("User management"),
+     _("This permission is needed for the modules <b>Users & Contacts</b>, <b>Roles</b> and <b>Contact Groups</b>"),
+     [ "admin", ])
+
+# TODO
+config.declare_permission("wato.snapshots",
+     _("Backup & Restore"),
+     _("Access to the module <i>Backup & Restore</i>. Please note: a user with write access to this module "
+       "can make arbitrary changes to the configuration by restoring uploaded snapshots!"),
+     [ "admin",  ])
+
+# Modules accessible in main level, also shown in WATO snapin
+# fields: mode, title, icon, permission, help
+modules = [
+      ( "folder",           _("Host & Folders"),     "folder", "hosts",
+      _("Manage monitored hosts and services and the hosts' folder structure.")),
+
+      ( "globalvars",        _("Global settings"),    "configuration", "global", 
+      _("Manage global configuration settings for Check_MK, Multisite and the "
+
+        "monitoring core here.")),
+      ( "rulesets",          _("Rulesets"),           "rulesets", "rulesets", 
+
+      _("Check parameters and other variables that can be set on a per-host "
+        "and per-service basis are managed via rules.") ),
+
+      ( "host_groups",       _("Host Groups"),        "hostgroups", "groups", 
+      _("Organize your hosts in groups independent of the tree structure.") ),
+
+      ( "service_groups",    _("Service Groups"),     "servicegroups", "groups", 
+      _("Organize services in groups for a better overview in the status display.") ),
+
+      ( "users",          _("Users & Contacts"),     "users", "users", 
+      _("Manage users of Multisite and contacts of the monitoring system.") ),
+
+      ( "roles",            _("Roles"),     "roles", "users",
+      _("Manage user roles and permissions.") ),
+
+      ( "contact_groups",   _("Contact Groups"),     "contactgroups", "users",
+      _("Manage groups of contacts.") ),
+
+      ( "timeperiods",      _("Time Periods"),       "timeperiods", "timeperiods", 
+      _("Timeperiods define a set of days and hours of a regular week and "
+        "can be used to restrict alert notifications.") ), 
+
+      ( "sites",  _("Multisite Connections"), "sites", "sites",
+      _("Configure distributed monitoring via Multsite, manage connections to remote sites.")),
+    ]
 
 root_dir      = defaults.check_mk_configdir + "/wato/"
 multisite_dir = defaults.default_config_dir + "/multisite.d/"
@@ -154,30 +322,40 @@ def page_handler():
 
     if not config.wato_enabled:
         raise MKGeneralException(_("WATO is disabled. Please set <tt>wato_enabled = True</tt> in your <tt>multisite.mk</tt> if you want to use WATO."))
-    if not config.may("use_wato"):
+    if not config.may("wato.use"):
         raise MKAuthException(_("You are not allowed to use WATO."))
 
-    declare_host_tag_attributes() # create attributes out of tag definitions
-    load_all_folders()            # load information about all folders
-    set_current_folder()          # set g_folder from HTML variable
-    load_hosts(g_folder)          # load information about hosts
-    title = g_folder["title"]     # title might be changed by actions
+    # Make information about current folder and hosts avaiable
+    prepare_folder_info()
 
-    current_mode = html.var("mode") or "folder"
-    modefunc = mode_functions.get(current_mode)
+    current_mode = html.var("mode") or "main"
+    modeperms, modefunc = modes.get(current_mode, ([], None))
     if modefunc == None:
         html.header(_("Sorry"))
         html.begin_context_buttons()
-        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
+        html.context_button(_("Home"), make_link([("mode", "main")]), "home")
         html.end_context_buttons()
         html.message(_("This module has not yet been implemented."))
         html.footer()
         return
 
+    # Check general permission for this mode
+    if not config.may("wato.viewall"):
+        for pname in modeperms:
+            config.need_permission("wato." + pname)
+
     # Do actions (might switch mode)
     action_message = None
     if html.has_var("_transid"):
         try:
+            config.need_permission("wato.edit")
+
+            # Even if the user has seen this mode because auf "viewall", 
+            # he needs an explicit access permission for doing changes:
+            if config.may("wato.viewall"):
+                for pname in modeperms:
+                    config.need_permission("wato." + pname)
+
             result = modefunc("action")
             if type(result) == tuple:
                 newmode, action_message = result
@@ -200,19 +378,25 @@ def page_handler():
                         html.write("</div>")
                         html.footer()
                     return
-                modefunc = mode_functions.get(newmode, mode_folder)
+                modeperms, modefunc = modes.get(newmode)
                 current_mode = newmode
                 html.set_var("mode", newmode) # will be used by makeuri
+
+                # Check general permissions for the new mode
+                if not config.may("wato.viewall"):
+                    for pname in modeperms:
+                        config.need_permission("wato." + pname)
 
         except MKUserError, e:
             action_message = e.message
             html.add_user_error(e.varname, e.message)
 
+        except MKAuthException, e:
+            action_message = e.reason
+            html.add_user_error(None, e.reason)
+
     # Title
-    mode_title = modefunc("title")
-    if mode_title:
-        title += " - " + mode_title
-    html.header(title)
+    html.header(modefunc("title"))
     html.write("<script type='text/javascript' src='js/wato.js'></script>")
     html.write("<div class=wato>\n")
 
@@ -553,17 +737,17 @@ def get_folder_aliaspath(folder, show_main = True):
 
 def mode_folder(phase):
     if phase == "title":
-        return None
+        return g_folder["title"]
 
     elif phase == "buttons":
-        folder_status_button()
+        global_buttons()
         html.context_button(_("Folder Properties"), make_link_to([("mode", "editfolder")], g_folder), "properties")
-        html.context_button(_("New folder"),        make_link([("mode", "newfolder")]), "newfolder")
-        html.context_button(_("New host"),          make_link([("mode", "newhost")]), "new")
-        html.context_button(_("Configuration"),     make_link([("mode", "configuration")]), "configuration")
-        html.context_button(_("Backup / Restore"),  make_link([("mode", "snapshot")]), "backup")
-        changelog_button()
+        if config.may("wato.manage_folders"):
+            html.context_button(_("New folder"),        make_link([("mode", "newfolder")]), "newfolder")
+        if config.may("wato.manage_hosts"):
+            html.context_button(_("New host"),          make_link([("mode", "newhost")]), "new")
         search_button()
+        folder_status_button()
     
     elif phase == "action":
         if html.var("_search"): # just commit to search form
@@ -587,10 +771,12 @@ def mode_folder(phase):
         # Deletion of single hosts
         delname = html.var("_delete_host")
         if delname and delname in g_folder[".hosts"]:
+            config.need_permission("wato.manage_hosts")
             return delete_host_after_confirm(delname)
 
         # Move single hosts to other files
         if html.has_var("_move_host_to"):
+            config.need_permission("wato.edit_hosts")
             hostname = html.var("host")
             if hostname:
                 move_host_to(hostname, html.var("_move_host_to"))
@@ -610,10 +796,12 @@ def mode_folder(phase):
 
         # Deletion
         if html.var("_bulk_delete"):
+            config.need_permission("wato.manage_hosts")
             return delete_hosts_after_confirm(selected_hosts)
 
         # Move
         elif html.var("_bulk_move"):
+            config.need_permission("wato.edit_hosts")
             target_file = html.var("bulk_moveto")
             if target_file == "@":
                 raise MKUserError("bulk_moveto", _("Please select the destination file"))
@@ -622,6 +810,7 @@ def mode_folder(phase):
 
         # Move to target folder (from import)
         elif html.var("_bulk_movetotarget"):
+            config.need_permission("wato.edit_hosts")
             return move_to_imported_folders(selected_hosts)
 
         elif html.var("_bulk_edit"):
@@ -639,6 +828,12 @@ def mode_folder(phase):
             _("There are no sub folders and no hosts in this folder. ") +
             "</div>")
 
+
+def prepare_folder_info():
+    declare_host_tag_attributes() # create attributes out of tag definitions
+    load_all_folders()            # load information about all folders
+    set_current_folder()          # set g_folder from HTML variable
+    load_hosts(g_folder)          # load information about hosts
 
 def show_subfolders(folder):
     if len(folder[".folders"]) == 0:
@@ -669,11 +864,12 @@ def show_subfolders(folder):
         edit_url     = make_link_to([("mode", "editfolder")], entry)
         delete_url   = make_action_link([("mode", "folder"), 
                        ("_delete_folder", entry[".name"])])
-        enter_url    = make_link_to([], entry)
+        enter_url    = make_link_to([("mode", "folder")], entry)
 
         html.write("<td class=buttons>")
         html.buttonlink(edit_url, _("Properties"))
-        html.buttonlink(delete_url, _("Delete"))
+        if config.may("wato.manage_folders"):
+            html.buttonlink(delete_url, _("Delete"))
         html.write("</td>")
 
 
@@ -743,13 +939,17 @@ def show_hosts(folder):
         html.write("<td colspan=%d>" % colspan)
         html.jsbutton('_markall', _('X'), 'javascript:toggle_all_rows();')
         html.write(' ' + _("On all selected hosts:\n"))
-        html.button("_bulk_delete", _("Delete"))
-        html.button("_bulk_edit", _("Edit"))
-        html.button("_bulk_cleanup", _("Cleanup"))
-        html.button("_bulk_inventory", _("Inventory"))
-        host_move_combo(None, top)
-        if at_least_one_imported:
-            html.button("_bulk_movetotarget", _("Move to Target Folders"))
+        if config.may("wato.manage_hosts"):
+            html.button("_bulk_delete", _("Delete"))
+        if config.may("wato.edit_hosts"):
+            html.button("_bulk_edit", _("Edit"))
+            html.button("_bulk_cleanup", _("Cleanup"))
+        if config.may("wato.services"):
+            html.button("_bulk_inventory", _("Inventory"))
+        if config.may("wato.edit_hosts"):
+            host_move_combo(None, top)
+            if at_least_one_imported:
+                html.button("_bulk_movetotarget", _("Move to Target Folders"))
         html.write("</td></tr>\n")
 
     search_text = html.var("search")
@@ -774,7 +974,8 @@ def show_hosts(folder):
 
     # Add the bulk action buttons also to the top of the table when this
     # list shows more than 10 rows
-    if more_than_ten_items:
+    if more_than_ten_items and \
+        config.may("wato.edit_hosts") or config.may("wato.manage_hosts"):
         bulk_actions(at_least_one_imported, top = True)
 
     # Now loop again over all hosts and display them
@@ -802,8 +1003,9 @@ def show_hosts(folder):
         html.write("<td class=buttons>")
         html.buttonlink(edit_url,     _("Edit"))
         html.buttonlink(services_url, _("Services"))
-        html.buttonlink(clone_url,    _("Clone"))
-        html.buttonlink(delete_url,   _("Delete"))
+        if config.may("wato.manage_hosts"):
+            html.buttonlink(clone_url,    _("Clone"))
+            html.buttonlink(delete_url,   _("Delete"))
         html.write("</td>\n")
 
         # Hostname with link to details page (edit host)
@@ -824,11 +1026,13 @@ def show_hosts(folder):
 
         # Move to
         html.write("<td>")
-        host_move_combo(hostname)
+        if config.may("wato.edit_hosts"):
+            host_move_combo(hostname)
         html.write("</td>\n")
         html.write("</tr>\n")
 
-    bulk_actions(at_least_one_imported)
+    if config.may("wato.edit_hosts") or config.may("wato.manage_hosts"):
+        bulk_actions(at_least_one_imported)
     html.write("</table>\n")
 
     html.hidden_fields()
@@ -1007,6 +1211,11 @@ def mode_editfolder(phase, new):
         html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
             
     elif phase == "action":
+        if new:
+            config.need_permission("wato.manage_folders")
+        else:
+            config.need_permission("wato.edit_folders")
+
         if not html.check_transaction():
             return "folder"
 
@@ -1030,7 +1239,10 @@ def mode_editfolder(phase, new):
         attributes_changed = not new and attributes != g_folder.get("attributes", {})
 
         if new:
-            newpath = g_folder[".path"] + "/" + name
+            if g_folder[".path"]:
+                newpath = g_folder[".path"] + "/" + name
+            else:
+                newpath = name
             new_folder = { 
                 ".name"       : name,
                 ".path"       : newpath,
@@ -1219,6 +1431,7 @@ def mode_edithost(phase, new):
 
     elif phase == "action":
         if not new and html.var("delete"): # Delete this host
+            config.need_permission("wato.manage_hosts")
             if not html.transaction_valid():
                 return "folder"
             else:
@@ -1228,12 +1441,15 @@ def mode_edithost(phase, new):
 
         # handle clone & new
         if new:
+            config.need_permission("wato.manage_hosts")
             if not hostname:
                 raise MKUserError("host", _("Please specify a host name"))
             elif hostname in g_folder[".hosts"]:
                 raise MKUserError("host", _("A host with this name already exists."))
             elif not re.match("^[a-zA-Z0-9-_.]+$", hostname):
                 raise MKUserError("host", _("Invalid host name: must contain only characters, digits, dash, underscore and dot."))
+        else:
+            config.need_permission("wato.edit_hosts")
 
         if hostname:
             go_to_services = html.var("services")
@@ -1330,6 +1546,7 @@ def mode_inventory(phase, firsttime):
         html.context_button(_("Full Scan"), html.makeuri([("_scan", "yes")]))
 
     elif phase == "action":
+        config.need_permission("wato.services")
         if html.check_transaction():
             cache_options = not html.var("_scan") and [ '--cache' ] or []
             table = check_mk_automation("try-inventory", cache_options + [hostname])
@@ -1372,21 +1589,23 @@ def show_service_table(hostname, firsttime):
 
     html.begin_form("checks", None, "POST")
     fixall = 0
-    for entry in table:
-        if entry[0] == 'new' and not html.has_var("_activate_all") and not firsttime:
-            html.button("_activate_all", _("Activate missing"))
-            fixall += 1
-            break
-    for entry in table:
-        if entry[0] in [ 'obsolete', 'vanished', ]:
-            html.button("_cleanup", _("Remove exceeding"))
-            fixall += 1
-            break
-    if fixall == 2:
-        html.button("_fixall", _("Fix all missing/exceeding"))
+    if config.may("wato.services"):
+        for entry in table:
+            if entry[0] == 'new' and not html.has_var("_activate_all") and not firsttime:
+                html.button("_activate_all", _("Activate missing"))
+                fixall += 1
+                break
+        for entry in table:
+            if entry[0] in [ 'obsolete', 'vanished', ]:
+                html.button("_cleanup", _("Remove exceeding"))
+                fixall += 1
+                break
 
-    if len(table) > 0:
-        html.button("_save", _("Save manual check configuration"))
+        if fixall == 2:
+            html.button("_fixall", _("Fix all missing/exceeding"))
+
+        if len(table) > 0:
+            html.button("_save", _("Save manual check configuration"))
 
     html.hidden_fields()
     if html.var("_scan"):
@@ -1939,44 +2158,51 @@ def mode_changelog(phase):
         return _("Change log")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
-        if log_exists("pending"):
+        home_button()
+        if log_exists("pending") and config.may("wato.activate"):
             html.context_button(_("Activate Changes!"), 
                 html.makeuri([("_action", "activate"), ("_transid", html.current_transid())]), "apply", True)
-        if log_exists("audit"):
-            html.context_button(_("Clear Audit Log"),
-                html.makeuri([("_action", "clear"), ("_transid", html.current_transid())]), "trash")
+        if log_exists("audit") and config.may("wato.auditlog") and config.may("wato.edit"):
             html.context_button(_("Download Audit Log"),
-                html.makeuri([("_action", "csv"), ("_transid", html.current_transid())]), "csv")
+                html.makeuri([("_action", "csv"), ("_transid", html.current_transid())]), "download")
+            if config.may("wato.edit"):
+                html.context_button(_("Clear Audit Log"),
+                    html.makeuri([("_action", "clear"), ("_transid", html.current_transid())]), "trash")
 
     elif phase == "action":
         if html.var("_action") == "clear":
+            need_permission("wato.auditlog")
+            need_permission("wato.edit")
             return clear_audit_log_after_confirm()
 
         elif html.var("_action") == "csv":
+            need_permission("wato.auditlog")
             return export_audit_log()
 
         elif html.check_transaction():
-                create_snapshot()
-                try:
-                    check_mk_automation("restart")
-                    call_hook_activate_changes()
-                except Exception, e:
-                    raise MKUserError(None, str(e))
-                log_commit_pending() # flush logfile with pending actions
-                log_audit(None, "activate-config", _("Configuration activated, monitoring server restarted"))
-                return None, _("The new configuration has been successfully activated.")
-
+            config.need_permission("wato.activate")
+            create_snapshot()
+            try:
+                check_mk_automation("restart")
+                call_hook_activate_changes()
+            except Exception, e:
+                raise MKUserError(None, str(e))
+            log_commit_pending() # flush logfile with pending actions
+            log_audit(None, "activate-config", _("Configuration activated, monitoring server restarted"))
+            return None, _("The new configuration has been successfully activated.")
 
     else:
         pending = parse_audit_log("pending")
         render_audit_log(pending, "pending")
 
-        audit = parse_audit_log("audit")
-        render_audit_log(audit, "audit")
+        if config.may("wato.auditlog"):
+            audit = parse_audit_log("audit")
+            render_audit_log(audit, "audit")
+            if len(pending) + len(audit) == 0:
+                html.write("<div class=info>" + _("There are no pending or old changes.") + "</div>")
+        elif len(pending) == 0:
+                html.write("<div class=info>" + _("There are no pending changes.") + "</div>")
 
-        if len(pending) + len(audit) == 0:
-            html.write("<div class=info>" + _("There are now pending or old changes yes.") + "</div>")
 
 
 def log_entry(linkinfo, action, message, logfilename):
@@ -2160,7 +2386,7 @@ def render_audit_log(log, what, with_filename = False):
         htmlcode += "<div class=info>%s</div>" % empty_msg
         return
     elif what == 'audit':
-        htmlcode += "<b>" + _("All Changes") + "</b>"
+        htmlcode += "<b>" + _("Audit log") + "</b>"
     elif what == 'pending':
         htmlcode += "<h1>" + _("Changes which are not yet activated:") + "</h1>"
 
@@ -2314,6 +2540,17 @@ def folder_status_button(viewname = "allhosts"):
            ("wato_folder", g_folder[".path"])]), 
            "status")  # TODO: support for distributed WATO
 
+def global_buttons():
+    changelog_button()
+    home_button()
+
+def home_button():
+    html.context_button(_("Home"), make_link([("mode", "main")]), "home")
+
+def snapshots_button():
+    if config.may("wato.snapshots"):
+        html.context_button(_("Backup / Restore"),  make_link([("mode", "snapshot")]), "backup")
+
 def search_button():
     html.context_button(_("Search"), make_link([("mode", "search")]), "search")
 
@@ -2425,6 +2662,7 @@ def render_folder_path(the_folder = 0, link_to_last = False, keepvarnames = ["mo
             html.hidden_field(var, html.var(var))
         html.write("</form>")
     html.write("</div>")
+
 
 #   +----------------------------------------------------------------------+
 #   |               ____                                                   |
@@ -3033,8 +3271,10 @@ def mode_snapshot(phase):
     if phase == "title":
         return _("Backup/Restore")
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
-        html.context_button(_("Create Snapshot"), make_action_link([("mode", "snapshot"),("_create_snapshot","Yes")]))
+        home_button()
+        changelog_button()
+        html.context_button(_("Create Snapshot"), 
+                make_action_link([("mode", "snapshot"),("_create_snapshot","Yes")]), "snapshot")
         return
     elif phase == "action":
         if html.has_var("_download_file"):
@@ -3999,46 +4239,25 @@ def get_edited_value(valuespec):
 #   | Main entry page for configuration of global variables, rules, groups,| 
 #   | timeperiods, users, etc.                                             |
 #   +----------------------------------------------------------------------+
-def mode_configuration(phase):
-    submodules = [
-      ( "globalvars",        _("Global settings"),    "configuration", 
-      _("Manage global configuration settings for Check_MK, Multisite and the "
-        "monitoring core here.")),
-      ( "rulesets",          _("Rulesets"),           "rulesets", 
-      _("Check parameters and other variables that can be set on a per-host "
-        "and per-service basis are managed via rules.") ),
-      ( "host_groups",       _("Host Groups"),        "hostgroups", 
-      _("Organize your hosts in groups independent of the tree structure.") ),
-      ( "service_groups",    _("Service Groups"),     "servicegroups", 
-      _("Organize services in groups for a better overview in the status display.") ),
-      ( "users",          _("Users & Contacts"),     "users", 
-      _("Manage users of Multisite and contacts of the monitoring system.") ),
-      ( "roles",            _("Roles"),     "roles", 
-      _("Manage user roles and permissions.") ),
-      ( "contact_groups",   _("Contact Groups"),     "contactgroups", 
-      _("Manage groups of contacts.") ),
-      ( "timeperiods",      _("Time Periods"),       "timeperiods", 
-      _("Timeperiods define a set of days and hours of a regular week and "
-        "can be used to restrict alert notifications.") ), 
-      ( "sites",  _("Multisite Connections"), "sites",
-      _("Configure distributed monitoring via Multsite, manage connections to remote sites.")),
-    ]
+def mode_main(phase):
     columns = 2
 
     if phase == "title":
-        return _("Configuration")
+        return _("WATO - Check_MK's Web Administration Tool")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
-        for mode, title, icon, help in submodules:
-            html.context_button(title, make_link([("mode", mode)]), icon)
+        changelog_button()
+        snapshots_button()
         return
 
     elif phase == "action":
         return
 
     html.write("<table class=configmodules>")
-    for nr, (mode, title, icon, help) in enumerate(submodules):
+    for nr, (mode, title, icon, permission, help) in enumerate(modules):
+        if not config.may("wato." + permission) and not config.may("wato.viewall"):
+            continue
+
         if nr % columns == 0:
             html.write("<tr>")
         url = make_link([("mode", mode)])
@@ -4070,7 +4289,7 @@ def mode_globalvars(phase):
         return _("Global configuration settings for Check_MK")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "configuration")]), "back")
+        global_buttons()
         return
     
     # Get default settings of all configuration variables of interest in the domain
@@ -4095,7 +4314,7 @@ def mode_globalvars(phase):
                 save_configuration_settings(current_settings)
                 msg = _("Resetted configuration variable %s to its default.") % varname
                 log_pending(None, "edit-configvar", msg)
-                return "configuration", msg 
+                return "globalvars", msg 
             elif c == False:
                 return ""
             else:
@@ -4137,7 +4356,7 @@ def mode_globalvars(phase):
             html.write("<td class=buttons>")
             # html.buttonlink(edit_url, _("Edit"))
             if varname in current_settings: 
-                reset_url = make_action_link([("mode", "configuration"), ("_reset", varname)])
+                reset_url = make_action_link([("mode", "globalvars"), ("_reset", varname)])
                 html.buttonlink(reset_url, _("Reset"))
             html.write("</td>")
 
@@ -4150,7 +4369,7 @@ def mode_edit_configvar(phase):
         return "Global configuration settings for Check_MK"
 
     elif phase == "buttons":
-        html.context_button(_("Abort"), make_link([("mode", "configuration")]), "abort")
+        html.context_button(_("Abort"), make_link([("mode", "globalvars")]), "abort")
         return
 
     varname = html.var("varname")
@@ -4164,7 +4383,7 @@ def mode_edit_configvar(phase):
         msg = _("Changed global configuration variable %s to %s.") \
               % (varname, valuespec.value_to_text(new_value)) 
         log_pending(None, "edit-configvar", msg)
-        return "configuration"
+        return "globalvars"
     
     if varname in current_settings:
         value = current_settings[varname]
@@ -4273,8 +4492,8 @@ def mode_groups(phase, what):
         return what_name.title()
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "configuration")]), "back")
-        html.context_button(_("New group"), make_link([("mode", "edit_group"), ("what", what)]), "new")
+        global_buttons()
+        html.context_button(_("New group"), make_link([("mode", "edit_%s_group" % what)]), "new")
         if what == "contact":
             pass
         else:
@@ -4318,7 +4537,7 @@ def mode_groups(phase, what):
     for name, alias in sorted:
         odd = odd == "odd" and "even" or "odd" 
         html.write('<tr class="data %s0">' % odd)
-        edit_url = make_link([("mode", "edit_group"), ("what", what), ("edit", name)])
+        edit_url = make_link([("mode", "edit_%s_group" % what), ("edit", name)])
         delete_url = html.makeactionuri([("_delete", name)])
         html.write("<td class=buttons>")
         html.buttonlink(edit_url, _("Properties"))
@@ -4327,7 +4546,7 @@ def mode_groups(phase, what):
     html.write("</table>")
 
 
-def mode_edit_group(phase):
+def mode_edit_group(phase, what):
     what = html.var("what")
     name = html.var("edit") # missing -> new group
     new = name == None
@@ -4463,7 +4682,7 @@ def mode_timeperiods(phase):
         return _("Timeperiod definitions")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "configuration")]), "back")
+        global_buttons()
         html.context_button(_("New Timeperiod"), make_link([("mode", "edit_timeperiod")]), "new")
         return
 
@@ -4759,7 +4978,7 @@ def mode_sites(phase):
         return _("Manage Multisite connections")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "configuration")]), "back")
+        global_buttons()
         html.context_button(_("New connection"), make_link([("mode", "edit_site")]), "new")
         return
 
@@ -5117,7 +5336,7 @@ def mode_users(phase):
         return _("Manage Users & Contacts")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "configuration")]), "back")
+        global_buttons()
         html.context_button(_("New user"), make_link([("mode", "edit_user")]), "new")
         return
 
@@ -5188,7 +5407,8 @@ def mode_users(phase):
 
         # Roles
         if user.get("roles", []):
-            html.write("<td>%s</td>" % ", ".join(user["roles"]))
+            html.write("<td>%s</td>" % ", ".join(
+               [ '<a href="%s">%s</a>' % (make_link([("mode", "edit_role"), ("edit", r)]), r) for r in user["roles"]]))
         else:
             html.write("<td></td>")
 
@@ -5397,7 +5617,8 @@ def mode_edit_user(phase):
     entries.sort(cmp = lambda a,b: cmp((a[1]["alias"],a[0]), (b[1]["alias"],b[0])))
     for role_id, role in entries:
         html.checkbox("role_" + role_id, role_id in user.get("roles", []))
-        html.write(" %s (%s)<br>" % (role["alias"], role_id))
+        url = make_link([("mode", "edit_role"), ("edit", role_id)])
+        html.write(" <a href='%s'>%s</a> (%s)<br>" % (url, role["alias"], role_id))
     html.write("</td></tr>")
 
     # Contact groups
@@ -5649,7 +5870,7 @@ def mode_roles(phase):
         return _("Manage Roles & Permissions")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "configuration")]), "back")
+        global_buttons()
         html.context_button(_("New role"), make_link([("mode", "edit_role")]), "new")
         return
 
@@ -5843,13 +6064,13 @@ def mode_edit_role(phase):
     
     # Permissions
     base_role_id = role.get("basedon", id)
-    def perm_header(title, is_open, help=None):
+    def perm_header(section_id, title, is_open, help=None):
         html.write("<tr><td class=legend>")
         html.write(title)
         if help:
             html.write("<br><i>%s</i>" % help)
         html.write("</td><td class=content>")
-        html.begin_foldable_container('permissions', title, is_open, title, indent=False) 
+        html.begin_foldable_container('permissions', section_id, is_open, title, indent=False) 
         html.write("<table class=permissions>")
 
     def perm_footer():
@@ -5857,7 +6078,7 @@ def mode_edit_role(phase):
         html.end_foldable_container()
         html.write("</td></tr>")
 
-    perm_header(_("General permissions"), True, 
+    perm_header("general", _("General permissions"), True, 
        _("When you leave the permissions at <i>default</i> then they get their "
          "settings from the factory defaults (for builtin roles) or from the " 
          "factory default of their base role (for user define roles). Factory defaults "
@@ -5871,7 +6092,7 @@ def mode_edit_role(phase):
             section_title = config.permission_sections[section]
             if section != current_section:
                 perm_footer()
-                perm_header(section_title, False)
+                perm_header(section, section_title, False)
                 current_section = section
         
         pvalue = role["permissions"].get(pname)
@@ -5970,7 +6191,7 @@ def mode_rulesets(phase):
             html.context_button(_("Back"), 
                  make_link([("mode", "edithost"), ("host", only_host)]), "back")
         else:
-            html.context_button(_("Back"), make_link([("mode", "configuration")]), "back")
+            global_buttons()
         return
     
     elif phase == "action":
@@ -6991,7 +7212,7 @@ class API:
 
     # Create an URL to a certain WATO folder.
     def link_to_path(self, path):
-        return "wato.py?folder=" + htmllib.urlencode(path)
+        return "wato.py?mode=folder&folder=" + htmllib.urlencode(path)
 
     # Create an URL to the edit-properties of a host.
     def link_to_host(self, hostname):
@@ -7118,39 +7339,40 @@ def debug(info):
 #   | Prepare plugin-datastructures and load WATO plugins                  |
 #   +----------------------------------------------------------------------+
 
-
-mode_functions = {
-   "folder"          : mode_folder,
-   "newfolder"       : lambda phase: mode_editfolder(phase, True),
-   "editfolder"      : lambda phase: mode_editfolder(phase, False),
-   "newhost"         : lambda phase: mode_edithost(phase, True),
-   "edithost"        : lambda phase: mode_edithost(phase, False),
-   "firstinventory"  : lambda phase: mode_inventory(phase, True),
-   "inventory"       : lambda phase: mode_inventory(phase, False),
-   "search"          : mode_search,
-   "bulkinventory"   : mode_bulk_inventory,
-   "bulkedit"        : mode_bulk_edit,
-   "bulkcleanup"     : mode_bulk_cleanup,
-   "changelog"       : mode_changelog,
-   "snapshot"        : mode_snapshot,
-   "configuration"   : mode_configuration,
-   "globalvars"      : mode_globalvars,
-   "edit_configvar"  : mode_edit_configvar,
-   "rulesets"        : mode_rulesets,
-   "view_ruleset"    : mode_view_ruleset,
-   "edit_rule"       : mode_edit_rule,
-   "host_groups"     : lambda phase: mode_groups(phase, "host"),
-   "service_groups"  : lambda phase: mode_groups(phase, "service"),
-   "contact_groups"  : lambda phase: mode_groups(phase, "contact"),
-   "edit_group"      : mode_edit_group,
-   "timeperiods"     : mode_timeperiods,
-   "edit_timeperiod" : mode_edit_timeperiod,
-   "sites"           : mode_sites,
-   "edit_site"       : mode_edit_site,
-   "users"           : mode_users,
-   "edit_user"       : mode_edit_user,
-   "roles"           : mode_roles,
-   "edit_role"       : mode_edit_role,
+modes = {
+   "main"               : ([], mode_main),
+   "folder"             : (["hosts"], mode_folder),
+   "newfolder"          : (["hosts", "manage_folders"], lambda phase: mode_editfolder(phase, True)),
+   "editfolder"         : (["hosts" ], lambda phase: mode_editfolder(phase, False)),
+   "newhost"            : (["hosts", "manage_hosts"], lambda phase: mode_edithost(phase, True)),
+   "edithost"           : (["hosts"], lambda phase: mode_edithost(phase, False)),
+   "firstinventory"     : (["hosts", "services"], lambda phase: mode_inventory(phase, True)),
+   "inventory"          : (["hosts"], lambda phase: mode_inventory(phase, False)),
+   "search"             : (["hosts"], mode_search),
+   "bulkinventory"      : (["hosts", "services"], mode_bulk_inventory),
+   "bulkedit"           : (["hosts", "edit_hosts"], mode_bulk_edit),
+   "bulkcleanup"        : (["hosts", "edit_hosts"], mode_bulk_cleanup),
+   "changelog"          : ([], mode_changelog),
+   "snapshot"           : (["snapshots"], mode_snapshot),
+   "globalvars"         : (["global"], mode_globalvars),
+   "edit_configvar"     : (["global"], mode_edit_configvar),
+   "rulesets"           : (["rulesets"], mode_rulesets),
+   "view_ruleset"       : (["rulesets"], mode_view_ruleset),
+   "edit_rule"          : (["rulesets"], mode_edit_rule),
+   "host_groups"        : (["groups"], lambda phase: mode_groups(phase, "host")),
+   "service_groups"     : (["groups"], lambda phase: mode_groups(phase, "service")),
+   "contact_groups"     : (["users"], lambda phase: mode_groups(phase, "contact")),
+   "edit_host_group"    : (["groups"], lambda phase: mode_edit_group(phase, "host")),
+   "edit_service_group" : (["groups"], lambda phase: mode_edit_group(phase, "service")),
+   "edit_contact_group" : (["users"], lambda phase: mode_edit_group(phase, "contact")),
+   "timeperiods"        : (["timeperiods"], mode_timeperiods),
+   "edit_timeperiod"    : (["timeperiods"], mode_edit_timeperiod),
+   "sites"              : (["sites"], mode_sites),
+   "edit_site"          : (["sites"], mode_edit_site),
+   "users"              : (["users"], mode_users),
+   "edit_user"          : (["users"], mode_edit_user),
+   "roles"              : (["users"], mode_roles),
+   "edit_role"          : (["users"], mode_edit_role),
 }
 
 extra_buttons = [

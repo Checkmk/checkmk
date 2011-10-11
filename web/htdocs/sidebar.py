@@ -320,6 +320,9 @@ def page_add_snapin():
     for name in names:
         if name in used_snapins:
             continue
+        if not config.may("sidesnap." + name):
+            continue # not allowed for this user
+
         if n == 3:
             html.write("</tr><tr>\n")
             n = 0

@@ -792,6 +792,7 @@ class html:
     def begin_foldable_container(self, treename, id, isopen, title, indent = True):
         # try to get persistet state of tree
         tree_state = weblib.get_tree_states(treename)
+
         if id in tree_state:
             isopen = tree_state[id] == "on"
 

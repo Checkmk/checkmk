@@ -11,3 +11,4 @@ Was jetzt noch fehlt:
   HTTP-Auth). In OMD per Config einen Schalter dafür einbauen.
 - NagVis und PNP so erweitern, dass eine zentral Auth funktioniert.
 - Spracheinstellung pro Benutzer
+- custom_links Snapin muss evtl. repariert werden.

@@ -425,16 +425,17 @@ def wato_link(filename, site, hostname, where):
         return ""
 
 def paint_wato(what, row, tags, custom_vars):
-    # Link to WATO for hosts
-    filename = row["host_filename"]
-    if filename.startswith("/wato/"):
-        if what == "host":
-            return wato_link(filename, row["site"], row["host_name"], "edithost")
+    if config.wato_enabled and config.may("wato.use"):
+        # Link to WATO for hosts
+        filename = row["host_filename"]
+        if filename.startswith("/wato/"):
+            if what == "host":
+                return wato_link(filename, row["site"], row["host_name"], "edithost")
 
-        # Link to WATO for Check_MK Inventory service
-        elif what == "service":
-            if row["service_description"].lower() == "check_mk inventory":
-                return wato_link(filename, row["site"], row["host_name"], "inventory")
+            # Link to WATO for Check_MK Inventory service
+            elif what == "service":
+                if row["service_description"].lower() == "check_mk inventory":
+                    return wato_link(filename, row["site"], row["host_name"], "inventory")
 
 multisite_icons.append({
     'paint':           paint_wato,

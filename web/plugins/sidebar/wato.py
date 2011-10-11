@@ -26,19 +26,6 @@
 
 import config, wato
 
-def wato_snapins_allowed():
-    if not config.wato_enabled:
-        html.write(_("WATO is disabled. Please set <tt>wato_enabled = True</tt> in your <tt>multisite.mk</tt> if you want to use WATO."))
-        return False
-
-    elif not config.may("use_wato"):
-        html.write(_("You are not allowed to use Check_MK's web configuration GUI."))
-        return False
-    else:
-        return True
-
-
-
 #   +----------------------------------------------------------------------+
 #   |                     __        ___  _____ ___                         |
 #   |                     \ \      / / \|_   _/ _ \                        |
@@ -48,22 +35,16 @@ def wato_snapins_allowed():
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 def render_wato():
-    if not wato_snapins_allowed():
-        return
+    if not config.wato_enabled:
+        html.write(_("WATO is disabled in <tt>multisite.mk</tt>."))
+    elif not config.may("wato.use"):
+        html.write(_("You are not allowed to use Check_MK's web configuration GUI."))
+        return False
 
-    iconlink(_("Host management"),        "wato.py?mode=folder",         "folder")
-    iconlink(_("Host search"),            "wato.py?mode=search",         "search")
-    iconlink(_("Backup & Restore"),       "wato.py?mode=snapshot",       "backup")
-    iconlink(_("Changelog & Activation"), "wato.py?mode=changelog",      "wato_changes")
-    iconlink(_("Global settings"),        "wato.py?mode=globalvars",     "configuration")
-    iconlink(_("Rulesets"),               "wato.py?mode=rulesets",       "rulesets")
-    iconlink(_("Host Groups"),            "wato.py?mode=host_groups",    "hostgroups")
-    iconlink(_("Service Groups"),         "wato.py?mode=service_groups", "servicegroups")
-    iconlink(_("Users & Contacts"),       "wato.py?mode=users",          "contacts")
-    iconlink(_("Roles"),                  "wato.py?mode=roles",          "roles")
-    iconlink(_("Contact Groups"),         "wato.py?mode=contact_groups", "contactgroups")
-    iconlink(_("Time Periods"),           "wato.py?mode=timeperiods",    "timeperiods")
-    iconlink(_("Multisite Connections"),  "wato.py?mode=sites",          "sites")
+    iconlink(_("Main menu"), "wato.py", "home")
+    for mode, title, icon, permission, help in wato.modules:
+        if config.may("wato." + permission) or config.may("wato.viewall"):
+            iconlink(title, "wato.py?mode=%s" % mode, icon)
 
 
 sidebar_snapins["admin"] = {
@@ -71,7 +52,7 @@ sidebar_snapins["admin"] = {
     "description" : _("Direct access to WATO - the web administration GUI of Check_MK"),
     "author" : "Mathias Kettner",
     "render" : render_wato,
-    "allowed" : [ "admin" ],
+    "allowed" : [ "admin", "user" ],
 }
 
 
@@ -85,8 +66,8 @@ sidebar_snapins["admin"] = {
 #   +----------------------------------------------------------------------+
 
 def render_wato_folders():
-    if not wato_snapins_allowed():
-        return
+    if not config.wato_enabled:
+        html.write(_("WATO is disabled in <tt>multisite.mk</tt>."))
     else:
         #EE if config.is_multisite():
         #EE     sitenames = config.allsites().keys()
@@ -102,8 +83,7 @@ def render_wato_folders():
             ajax_wato_folders()
 
 def ajax_wato_folders():
-    if config.may("use_wato"):
-        render_linktree_folder(wato.api.get_folder_tree())
+    render_linktree_folder(wato.api.get_folder_tree())
 
     
 def render_linktree_folder(f):
@@ -121,12 +101,11 @@ def render_linktree_folder(f):
     else:
         html.write("<li>" + title + "</li>")
 
-
-
 sidebar_snapins["wato"] = {
     "title" : _("Hosts"),
-    "description" : _("A foldable tree showing all your WATO folders and files - allowing you to navigate in the tree while using views or being in WATO"),
+    "description" : _("A foldable tree showing all your WATO folders and files - "
+                      "allowing you to navigate in the tree while using views or being in WATO"),
     "author" : "Mathias Kettner",
     "render" : render_wato_folders,
-    "allowed" : [ "admin", "user" ],
+    "allowed" : [ "admin", "user", "guest" ],
 }

@@ -1127,6 +1127,29 @@ table.form {
     border-spacing: 0px;
     margin: 10px;
 }
+/* Sorry for the mess here. It is due to using foldable_containter
+   within a form table (currently only in WATO in the host and
+   folder properties) */
+
+table.form.nomargin {
+    margin: 0;
+}
+table.form.nomargin td.legend,
+.wato table.form.nomargin td.checkbox,
+table.form.nomargin td.content,
+table.form.nomargin td.buttons {
+    border-top-style: none;
+}
+table.form.nomargin td.title {
+    border-top-style: none;
+    padding-bottom: 10px;
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+}
+.wato table.form tr.top td,
+.wato table.form tr.top td.checkbox {
+    border-top-style: solid;
+}
 
 table.form textarea {
     width: 30em;

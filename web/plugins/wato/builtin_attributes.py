@@ -24,6 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+declare_host_attribute(ContactGroupsAttribute(),
+                       show_in_table = True,
+                       show_in_folder = True)
+
 declare_host_attribute(NagiosTextAttribute("alias", "alias", _("Alias"),
                        _("A comment or description of this host"),
                        "", mandatory=False), 
@@ -40,4 +44,4 @@ declare_host_attribute(TextAttribute("ipaddress", _("IP Address / DNS Name"),
                          "dynamic IP addresses."),
                          allow_empty = False), 
                          show_in_table = True, 
-                         show_in_folder = True)
+                         show_in_folder = False)

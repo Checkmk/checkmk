@@ -127,7 +127,7 @@ config.declare_permission("wato.edit",
        "has explicit permissions for."),
      [ "admin", "user" ])
 
-config.declare_permission("wato.viewall",
+config.declare_permission("wato.seeall",
      _("Read access to all modules"),
      _("When this permission is set then the user sees "
        "also such modules he has no explicit "
@@ -149,14 +149,12 @@ config.declare_permission("wato.auditlog",
        "with access to WATO."),
      [ "admin", ])
 
-# TODO
 config.declare_permission("wato.hosts",
      _("Host management"),
      _("Access to the management of hosts and folders. This "
        "module has some additional permissions (see below)."),
      [ "admin", "user" ])
 
-# TODO
 config.declare_permission("wato.edit_hosts",
      _("Modify existing hosts"),
      _("Modify the properties of existing hosts. Please note: "
@@ -164,7 +162,6 @@ config.declare_permission("wato.edit_hosts",
        "a separate permission (see below)"),
      [ "admin", "user" ])
 
-# TODO
 config.declare_permission("wato.manage_hosts",
      _("Add & remove hosts"),
      _("Add hosts to the monitoring and remove hosts "
@@ -172,70 +169,64 @@ config.declare_permission("wato.manage_hosts",
        "<i>Modify existing hosts</i>."),
      [ "admin", "user" ])
 
-# TODO
 config.declare_permission("wato.services",
      _("Manage services"),
      _("Do inventory and service configuration on existing hosts."),
      [ "admin", "user" ])
 
-# TODO
 config.declare_permission("wato.edit_folders",
      _("Modify existing folders"),
      _("Modify the properties of existing folders."),
      [ "admin", "user" ])
 
-# TODO
 config.declare_permission("wato.manage_folders", 
      _("Add & remove folders"),
      _("Add new folders and delete existing folders. If a folder to be deleted contains hosts then "
        "the permission to delete hosts is also required."),
      [ "admin", "user" ])
 
-# TODO
+config.declare_permission("wato.see_all_folders",
+     _("Read access to all hosts and folders"),
+     _("Users without this permissions can only see folders with a contact group they are in. "),
+     [ "admin" ])
+
 config.declare_permission("wato.all_folders",
-     _("Access to all hosts and folders"),
+     _("Write access to all hosts and folders"),
      _("Without this permission, operations on folders can only be done by users that are members of "
        "one of the folders contact groups. This permission grants full access to all folders and hosts. "),
      [ "admin" ])
 
-# TODO
 config.declare_permission("wato.global",
      _("Global settings"),
      _("Access to the module <i>Global settings</i>"),
      [ "admin", ])
 
-# TODO
 config.declare_permission("wato.rulesets",
      _("Rulesets"),
      _("Access to the module for managing Check_MK rules. Please note that a user can only "
        "manage rules in folders he has permissions to. "),
      [ "admin", "user" ])
 
-# TODO
 config.declare_permission("wato.groups",
      _("Host & Service Groups"),
      _("Access to the modules for managing host and service groups."),
      [ "admin", ])
 
-# TODO
 config.declare_permission("wato.timeperiods",
      _("Timeperiods"),
      _("Access to the module <i>Timeperiods</i>"),
      [ "admin", ])
 
-# TODO
 config.declare_permission("wato.sites",
      _("Site management"),
      _("Access to the module for managing connections to remote monitoring sites."),
      [ "admin", ])
 
-# TODO
 config.declare_permission("wato.users",
      _("User management"),
      _("This permission is needed for the modules <b>Users & Contacts</b>, <b>Roles</b> and <b>Contact Groups</b>"),
      [ "admin", ])
 
-# TODO
 config.declare_permission("wato.snapshots",
      _("Backup & Restore"),
      _("Access to the module <i>Backup & Restore</i>. Please note: a user with write access to this module "
@@ -340,7 +331,7 @@ def page_handler():
         return
 
     # Check general permission for this mode
-    if not config.may("wato.viewall"):
+    if not config.may("wato.seeall"):
         for pname in modeperms:
             config.need_permission("wato." + pname)
 
@@ -350,9 +341,9 @@ def page_handler():
         try:
             config.need_permission("wato.edit")
 
-            # Even if the user has seen this mode because auf "viewall", 
+            # Even if the user has seen this mode because auf "seeall", 
             # he needs an explicit access permission for doing changes:
-            if config.may("wato.viewall"):
+            if config.may("wato.seeall"):
                 for pname in modeperms:
                     config.need_permission("wato." + pname)
 
@@ -383,7 +374,7 @@ def page_handler():
                 html.set_var("mode", newmode) # will be used by makeuri
 
                 # Check general permissions for the new mode
-                if not config.may("wato.viewall"):
+                if not config.may("wato.seeall"):
                     for pname in modeperms:
                         config.need_permission("wato." + pname)
 
@@ -513,7 +504,6 @@ def load_folder(dir, name="", path=""):
     except:
         # .wato missing or invalid
         folder = { 
-            "roles"     : [ "admin" ], 
             "title"     : name and name or _("Main directory"),
             "num_hosts" : 0,
         }
@@ -877,6 +867,8 @@ def show_subfolders(folder):
         html.write('<td class=takeall><a href="%s">%s</a></td>' % 
                     (enter_url, entry["title"]))
 
+        effective = effective_attributes(None, folder)
+
         # Attributes for Hosts
         for attr, topic in host_attributes:
             if attr.show_in_table() and attr.show_in_folder():
@@ -884,7 +876,8 @@ def show_subfolders(folder):
                 if attrname in entry.get("attributes", {}):
                     tdclass, content = attr.paint(entry["attributes"][attrname], "")
                 else:
-                    tdclass, content = "", ""
+                    tdclass, content = attr.paint(effective.get(attrname), "")
+                    tdclass += " inherited"
                 html.write('<td class="%s">%s</td>' % (tdclass, content))
 
         # Internal foldername
@@ -975,7 +968,7 @@ def show_hosts(folder):
     # Add the bulk action buttons also to the top of the table when this
     # list shows more than 10 rows
     if more_than_ten_items and \
-        config.may("wato.edit_hosts") or config.may("wato.manage_hosts"):
+        (config.may("wato.edit_hosts") or config.may("wato.manage_hosts")):
         bulk_actions(at_least_one_imported, top = True)
 
     # Now loop again over all hosts and display them
@@ -1013,8 +1006,8 @@ def show_hosts(folder):
 
         # Show attributes
         for attr, topic in host_attributes:
-            attrname = attr.name()
             if attr.show_in_table():
+                attrname = attr.name()
                 if attrname in host:
                     tdclass, tdcontent = attr.paint(host.get(attrname), hostname)
                 else:
@@ -1080,9 +1073,6 @@ def move_hosts_to(hostnames, path):
     target_folder = g_folders[path]
     if target_folder == g_folder:
         return # target and source are the same
-
-    if config.role not in target_folder["roles"]:
-        raise MKAuthException(_("You have no change permissions on the target folder"))
 
     # read hosts currently in target file
     load_hosts(target_folder)
@@ -1195,13 +1185,12 @@ def mode_editfolder(phase, new):
 
     if new:
         page_title = _("Create new folder")
-        name, title, roles = None, None, []
+        name, title = None, None
         mode = "new"
     else:
-        page_title = _("Edit Properties")
+        page_title = _("Folder Properties")
         name  = g_folder[".name"]
         title = g_folder["title"]
-        roles = g_folder["roles"]
         mode = "edit"
 
     if phase == "title":
@@ -1232,9 +1221,7 @@ def mode_editfolder(phase, new):
             else:
                 name = create_wato_foldername(title)
 
-        # Roles and Permissions
-        roles = [ role for role in config.roles if html.var("role_" + role) ]
-
+        # Attributes
         attributes = collect_attributes()
         attributes_changed = not new and attributes != g_folder.get("attributes", {})
 
@@ -1247,7 +1234,6 @@ def mode_editfolder(phase, new):
                 ".name"       : name,
                 ".path"       : newpath,
                 "title"      : title, 
-                "roles"      : roles,
                 "attributes" : attributes,
                 ".folders"   : {},
                 ".hosts"     : {},
@@ -1264,7 +1250,6 @@ def mode_editfolder(phase, new):
             log_pending(g_folder, "edit-folder", "Edited properties of folder %s" % title)
 
             g_folder["title"]      = title
-            g_folder["roles"]      = roles
             g_folder["attributes"] = attributes
 
         
@@ -1286,10 +1271,10 @@ def mode_editfolder(phase, new):
         render_folder_path()
 
         html.begin_form("editfolder")
-        html.write('<table class="form">\n')
+        html.write('<table class="form nomargin">\n')
         
         # title
-        html.write("<tr><td class=legend colspan=2>Title</td><td class=content>")
+        html.write("<tr class=top><td class=legend>Title</td><td class=checkbox></td><td class=content>")
         html.text_input("title", title)
         html.set_focus("title")
         html.write("</td></tr>\n")
@@ -1310,20 +1295,8 @@ def mode_editfolder(phase, new):
 
                 html.write("</td></tr>\n")
 
-        # permissions
-        html.write("<tr><td class=legend colspan=2>" 
-                   + _("Grant access to") + "</td><td class=content>")
-        for role in config.roles:
-            html.checkbox("role_" + role, role in g_folder["roles"])
-            html.write(" " + role + "<br>")
-        html.write("</td></tr>")
-
         # Attributes inherited to hosts
         if have_folder_attributes():
-            html.write("<tr><td class=title colspan=3>")
-            html.write(_("The following attributes will be inherited to all hosts "
-                         "in this folder"))
-            html.write("</td></tr>")
             if new:
                 attributes = {}
                 parent = g_folder
@@ -1474,10 +1447,10 @@ def mode_edithost(phase, new):
             render_folder_path()
 
         html.begin_form("edithost")
-        html.write('<table class="form">\n')
+        html.write('<table class="form nomargin">\n')
 
         # host name
-        html.write("<tr><td class=legend colspan=2>" + _("Hostname") + "</td><td class=content>")
+        html.write("<tr class=top><td class=legend>" + _("Hostname") + "</td><td class=checkbox></td><td class=content>")
         if hostname and mode == "edit":
             html.write(hostname)
         else:
@@ -1856,7 +1829,6 @@ def create_target_file_from_aliaspath(aliaspath):
                     ".name" : name,
                     ".path" : folder[".path"] + (name,),
                     "title" : parts[0],
-                    "roles" : folder["roles"],
                     "attributes" : {}, 
                     ".folders" : {},
                     ".files" : {},
@@ -1872,7 +1844,6 @@ def create_target_file_from_aliaspath(aliaspath):
             ".name" : "hosts.mk",
             ".path" : folder[".path"] + ("hosts.mk",),
             "title" : _("Hosts"),
-            "roles" : folder["roles"],
             "attributes" : {},
             "num_hosts" : 0, 
         }
@@ -2961,6 +2932,81 @@ class HostTagAttribute(Attribute):
         return [] # No matching tag
 
 
+# Attribute needed for folder permissions
+class ContactGroupsAttribute(Attribute):
+    # The constructor stores name and title. If those are
+    # dynamic than leave them out and override name() and
+    # title()
+    def __init__(self):
+        url = "wato.py?mode=rulesets"
+        Attribute.__init__(self, "contactgroups", _("Permissions"), 
+          _("Only members of the contact groups listed here have WATO permission "
+            "to the host / folder. If you want, you can make those contact groups "
+            "automatically also <b>monitoring contacts</b>. This is completely "
+            "optional. Assignment of host and services to contact groups "
+            "can be done by <a href='%s'>rules</a> as well.") % url)
+        self._default_value = ( True, [] ) 
+        self._contactgroups = None
+        self._users = None
+
+    def paint(self, value, hostname):
+        texts = []
+        use, cgs = value
+        self.load_data()
+        items = self._contactgroups.items()
+        items.sort(cmp = lambda a,b: cmp(a[1], b[1]))
+        for name, alias in items:
+            if name in cgs:
+                texts.append(alias and alias or name)
+        result = ", ".join(texts)
+        if texts:
+            result += "<span title='%s'><b>*</b></span>" % \
+                  _("These contact groups are also used in the monitoring configuration.")
+        return "", result
+
+    def render_input(self, value):
+        # Only show contact groups I'm currently in and contact
+        # groups already listed here. 
+        use, cgs = value
+        self.load_data()
+        items = self._contactgroups.items()
+        items.sort(cmp = lambda a,b: cmp(a[1], b[1]))
+        for name, alias in items:
+            if name in cgs or name in self._my_groups:
+                html.checkbox(self._name + "_" + name, name in cgs)
+                html.write(" %s<br>" % (alias and alias or name))
+        html.write("<hr>")
+        html.checkbox(self._name + "_use", use)
+        html.write( " " + _("Add these contact groups to the host's contact groups in the monitoring configuration"))
+
+    def load_data(self): 
+        if self._contactgroups != None:
+            return
+        self._contactgroups = load_group_information()["contact"]
+        self._users = load_users()
+        if config.may("wato.all_folders"):
+            self._my_groups = self._contactgroups
+        elif config.user_id in self._users:
+            self._my_groups = self._users[config.user_id].get("contactgroups", [])
+        else:
+            self._my_groups = []
+
+    def from_html_vars(self): 
+        cgs = []
+        self.load_data()
+        for name in self._contactgroups:
+            if name in cgs or name in self._my_groups:
+                if html.get_checkbox(self._name + "_" + name):
+                    cgs.append(name)
+        return html.get_checkbox(self._name + "_use"), cgs
+
+    def filter_matches(self, crit, value, hostname):
+        for c in crit[1]:
+            if c in value[1]:
+                return True
+        return False
+
+
 # Declare an attribute for each host tag configured in multisite.mk
 # Also make sure that the tags are reconfigured as soon as the
 # configuration of the tags has changed.
@@ -3046,10 +3092,10 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 title = topic
             if topic == topics[0]:
                 html.write("</table>")
-            # html.write("<tr><td colspan=3 class=buttons>")
+
             html.begin_foldable_container("wato_attributes", title, 
-                                          topic == None, title, indent = False)
-            html.write("<table class=form>")
+                                          topic == None, title, indent = "form")
+            html.write('<table class="form nomargin">')
 
         for attr, atopic in host_attributes:
             if atopic != topic:
@@ -3211,7 +3257,7 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
             html.write("</table>")
             html.end_foldable_container()
             if topic == topics[-1]:
-                html.write("<table class=form>")
+                html.write('<table class="form nomargin">')
 
 
 # Check if at least one host in a folder (or its subfolders)
@@ -3238,7 +3284,10 @@ def some_host_hasnt_set(folder, attrname):
 # for a host. This returns a dictionary with a value for
 # each host attribute
 def effective_attributes(host, folder):
-    chain = [ host ]
+    if host:
+        chain = [ host ]
+    else:
+        chain = [ ]
     while folder:
         chain.append(folder.get("attributes", {}))
         folder = folder.get(".parent")
@@ -4255,7 +4304,7 @@ def mode_main(phase):
 
     html.write("<table class=configmodules>")
     for nr, (mode, title, icon, permission, help) in enumerate(modules):
-        if not config.may("wato." + permission) and not config.may("wato.viewall"):
+        if not config.may("wato." + permission) and not config.may("wato.seeall"):
             continue
 
         if nr % columns == 0:

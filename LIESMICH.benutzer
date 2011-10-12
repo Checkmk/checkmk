@@ -5,10 +5,53 @@ Was jetzt noch fehlt:
   könnte man darauf hinweisen, dass es Bezüge gibt und diese
   automatisch entfernen. Oder soll man eher sperren? Das wäre einfacher.
   * Das Löschen von Rollen ist schon entsprechend Umgesetzt
-- Neue Rechte für WATO einführen und diese auch wirklich abfragen
+  * Löschen von Kontaktgruppen. Diese haben Bezüge zu Hosts, Services
+    Foldern und Usern. An allen vier Stellen muss gelöscht werden.
+  * Löschen von Timeperiods. Entsprechende Regeln müssen bearbeitet werden.
 - Folder mit Kontaktgruppen berechtigen, nicht mit Rollen
 - Login-Maske für Multisite - diese optional machen (Default is
   HTTP-Auth). In OMD per Config einen Schalter dafür einbauen.
 - NagVis und PNP so erweitern, dass eine zentral Auth funktioniert.
 - Spracheinstellung pro Benutzer
 - custom_links Snapin muss evtl. repariert werden.
+
+Konzept: Kontaktgruppen und Folder
+-------------------------
+Jeder Folder hat eine Liste von Kontaktgruppen. Nur Mitglieder
+dieser Kontaktgruppen und User mit der Berechtigung "all_folders"
+können auf diesen Folder schreibend zu greifen. Lesend zugreifen
+können zudem Benutzer mit dem Recht "see_all_folders".
+
+Die Kontakgruppeneingenschaft regelt man über ein Hostattribut.
+So bekommt man automatisch eine Vererbung hin und hat auch
+gleichzeitig eine Berechtigung auf einzelnen Hosts. Das Löschen,
+Anlegen und Verschieben von Hosts erfordert Berechtigung auf
+dem Folder (analog zu UNIX). Es wäre auch sonst nicht symmetrisch.
+
+Die Kontaktgruppen eines Folders kann nur derjenige ändern, der
+Rechte auf dem Vaterfolder hat. Auf dem Wurzelfolder hat keine
+Rechte. Hier braucht man "all_folders".
+
+Wenn man einen Folder anlegt, erbt der natürlich automatisch das Kontaktgruppenattribut. Dieses
+kann man editieren, aber nur solche Kontaktgruppen auswählen, in denen man selbst Mitglied ist -
+außer man hat "all_folders", dann kann man auch neue Kontaktgruppen hinzufügen.
+
+Die Zugehörigkeit der Objekte zu Nagios-Kontaktgruppen wird
+*trotzdem* unabhängig davon über Regeln gesteuert. Frage ist,
+ob man nicht an dieser Stelle die Konkaktgruppen automatisch
+auch an die Hosts weitergibt. Dazu könnte man einfach eine
+Regel direkt in die hosts.mk einbauen: host_contactgroups.append(
+  ( [ FOLDER .. ], ALL_HOSTS ),)
+Für die Services ist das nicht notwendig, da Services ohne
+Kontaktgruppe ja automatisch die von Host bekommen.
+
+Implementierung:
+
+HostAttribute: ContactGroupsAttribute.
+
+Zeigt die Kontaktgruppen an. Dazu muss ich aber ein paar Randinformationen
+kennen:
+
+* Habe ich das Recht "all_folders"?
+* In welchen Kontaktgruppen bin ich? -> Gezielt laden, aber nur bei render_input
+

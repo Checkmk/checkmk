@@ -428,15 +428,21 @@ class html:
         if error:
             html += "</x>"
 
-    # Get value of checkbox. Return True, False or None
-    def get_checkbox(self, varname):
-        try:
-            if not self.var("filled_in") == self.form_name: # this form filled in
-                return None
-        except:
-            # self.form_name not set, we have no form
-            if not self.var("filled_in"):
-                return None
+    # Get value of checkbox. Return True, False or None. None means
+    # that no form has been submitted. The problem here is the distintion
+    # between False and None. The browser does not set the variables for
+    # Checkboxes that are not checked :-(
+    def get_checkbox(self, varname, form_name = None):
+        if form_name:
+            try:
+                if not self.var("filled_in") == self.form_name: # this form filled in
+                    return None
+            except:
+                # self.form_name not set, we have no form
+                if not self.var("filled_in"):
+                    return None
+        elif not self.var("filled_in"):
+            return None
 
         value = self.req.vars.get(varname, "")
         return not not value
@@ -755,7 +761,7 @@ class html:
             self.write("</div>")
             return False                                # False --> "Dialog shown, no answer yet"
         else:
-            return self.check_transaction()             # True: "Yes", False --> Browser reload
+            return self.check_transaction() and True or None # True: "Yes", None --> Browser reload
 
     def register_event(self, name):
         self.events.add(name)

@@ -825,11 +825,12 @@ def mode_folder(phase):
         # Move
         elif html.var("_bulk_move"):
             config.need_permission("wato.edit_hosts")
-            target_file = html.var("bulk_moveto")
-            if target_file == "@":
-                raise MKUserError("bulk_moveto", _("Please select the destination file"))
-            num_moved = move_hosts_to(selected_hosts, target_file)
-            return None, _("Successfully moved %d hosts to %s") % (num_moved, target_file)
+            target_folder_name = html.var("bulk_moveto")
+            if target_folder_name == "@":
+                raise MKUserError("bulk_moveto", _("Please select the destination folder"))
+            target_folder = g_folders[target_folder_name]
+            num_moved = move_hosts_to(selected_hosts, target_folder_name)
+            return None, _("Successfully moved %d hosts to %s") % (num_moved, target_folder["title"])
 
         # Move to target folder (from import)
         elif html.var("_bulk_movetotarget"):
@@ -847,9 +848,17 @@ def mode_folder(phase):
         have_something = show_subfolders(g_folder)
         have_something = show_hosts(g_folder) or have_something
         if not have_something:
-            html.write("<div class=info>" + 
-            _("There are no sub folders and no hosts in this folder. ") +
-            "</div>")
+            url = "wato.py?mode=view_ruleset&varname=snmp_communities"
+            render_main_menu([
+                ("newhost", _("Create new host"), "new", "hosts", 
+                  _("Click here to create a host to be monitored. Please make sure that " 
+                    "you first have installed the Check_MK agent on that host. If that "
+                    "host shall be monitored via SNMP, please make sure, that the monitoring "
+                    "system has access and the <a href='%s'>SNMP community</a> has been set.") % url),
+                ("newfolder", _("Create new folder"), "newfolder", "hosts",
+                  _("Hosts are organized in folders. The folders construct a tree which can also "
+                    "be used to navigate in the status GUI. Attributes can be inherited along the "
+                    "paths of that tree. The usage of folders is optional."))])
 
 
 def prepare_folder_info():
@@ -2803,7 +2812,7 @@ def render_folder_path(the_folder = 0, link_to_last = False, keepvarnames = ["mo
         for var in keepvarnames:
             html.hidden_field(var, html.var(var))
         html.write("</form>")
-    html.write("</div>")
+    html.write("</div><br>")
 
 
 #   +----------------------------------------------------------------------+
@@ -3156,7 +3165,7 @@ class ContactGroupsAttribute(Attribute):
             return
         self._loaded_at = id(html)
 
-        self._contactgroups = load_group_information()["contact"]
+        self._contactgroups = load_group_information().get("contact", {})
 
     def from_html_vars(self): 
         cgs = []
@@ -4455,8 +4464,6 @@ def get_edited_value(valuespec):
 #   | timeperiods, users, etc.                                             |
 #   +----------------------------------------------------------------------+
 def mode_main(phase):
-    columns = 2
-
     if phase == "title":
         return _("WATO - Check_MK's Web Administration Tool")
 
@@ -4468,8 +4475,11 @@ def mode_main(phase):
     elif phase == "action":
         return
 
+    render_main_menu(modules)
+
+def render_main_menu(some_modules, columns = 2):
     html.write("<table class=configmodules>")
-    for nr, (mode, title, icon, permission, help) in enumerate(modules):
+    for nr, (mode, title, icon, permission, help) in enumerate(some_modules):
         if not config.may("wato." + permission) and not config.may("wato.seeall"):
             continue
 
@@ -5559,8 +5569,6 @@ def mode_users(phase):
     timeperiods = load_timeperiods()
 
     if phase == "action":
-        if not html.check_transaction():
-            return
         delid = html.var("_delete")
         if delid == config.user_id:
             raise MKUserError(None, _("You cannot delete your own account!"))
@@ -5732,8 +5740,8 @@ def mode_edit_user(phase):
         new_user["email"] = email
 
         # Roles
-        user["roles"] = filter(lambda role: html.get_checkbox("role_" + role), 
-                               roles.keys())
+        new_user["roles"] = filter(lambda role: html.get_checkbox("role_" + role), 
+                                   roles.keys())
 
         # Contact groups
         cgs = []

@@ -80,7 +80,9 @@ def render_wato_folders():
         #EE             ajax_url = site["url_prefix"] + "check_mk/ajax_wato_folders.py"
         #EE             html.javascript("document.write(get_url_sync('%s'));" % ajax_url)
         #EE else:
+            html.write("<ul>")
             ajax_wato_folders()
+            html.write("</ul>")
 
 def ajax_wato_folders():
     render_linktree_folder(wato.api.get_folder_tree())

@@ -12,6 +12,7 @@
       not on clients
     * FIX: mbg_lantime_state: Fixed output UOM to really be miliseconds
     * FIX: ntp: Handling large times in "poll" column correctly
+    * New check dmi_sysinfo to gather basic hardware information
 
     Multisite:
     * FIX: fix rescheduling of host check

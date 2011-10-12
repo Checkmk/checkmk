@@ -446,11 +446,11 @@ def set_current_folder():
         else: # fall back to root folder
             g_folder = g_root_folder
 
-    html.set_var("folder", g_folder['.path']) # in case of implizit folder selection
-
     if not g_folder:
         raise MKGeneralException(_('You called this page with a non-existing folder! '
                                  'Go back to the <a href="wato.py">main index</a>.'))
+    html.set_var("folder", g_folder['.path']) # in case of implizit folder selection
+
 
 #   +----------------------------------------------------------------------+
 #   |          _                    _    ______                            |
@@ -1287,7 +1287,7 @@ def delete_folder_after_confirm(del_folder):
             raise MKGeneralException(_("Cannot remove the folder '%s': probably there are "
                                        "still non-WATO files contained in this directory.") % folder_path)
 
-        log_audit(folder_dir(del_folder), "delete-folder", _("Deleted empty folder %s")% folder_dir(del_folder))
+        log_audit(del_folder, "delete-folder", _("Deleted empty folder %s")% folder_dir(del_folder))
         call_hook_folder_deleted(del_folder)
         html.reload_sidebar() # refresh WATO snapin
         return "folder"
@@ -2322,12 +2322,12 @@ def mode_changelog(phase):
 
     elif phase == "action":
         if html.var("_action") == "clear":
-            need_permission("wato.auditlog")
-            need_permission("wato.edit")
+            config.need_permission("wato.auditlog")
+            config.need_permission("wato.edit")
             return clear_audit_log_after_confirm()
 
         elif html.var("_action") == "csv":
-            need_permission("wato.auditlog")
+            config.need_permission("wato.auditlog")
             return export_audit_log()
 
         elif html.check_transaction():

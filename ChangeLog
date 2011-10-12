@@ -13,6 +13,8 @@
     * FIX: mbg_lantime_state: Fixed output UOM to really be miliseconds
     * FIX: ntp: Handling large times in "poll" column correctly
     * New check dmi_sysinfo to gather basic hardware information
+    * New check bintec_info to gather the software version and serial number
+    of bintec routers
 
     Multisite:
     * FIX: fix rescheduling of host check

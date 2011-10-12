@@ -11,6 +11,7 @@
     * cups_queues: Run agent part only on directly on CUPS servers,
       not on clients
     * FIX: mbg_lantime_state: Fixed output UOM to really be miliseconds
+    * FIX: ntp: Handling large times in "poll" column correctly
 
     Multisite:
     * FIX: fix rescheduling of host check

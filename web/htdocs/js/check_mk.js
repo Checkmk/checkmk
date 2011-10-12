@@ -1025,6 +1025,7 @@ function highlight_row(elem, on) {
         });
         checkbox = null;
     }
+    return false;
 }
 
 function highlight_elem(elem, on) {
@@ -1040,7 +1041,7 @@ function highlight_elem(elem, on) {
 
     var childs = elem.childNodes;
     for(var i = 0; i < childs.length; i++)
-        if(childs[i].nodeName !== '#text')
+        if(childs[i].nodeName !== '#text' && childs[i].nodeName !== 'OPTION')
             highlight_elem(childs[i], on);
 }
 

@@ -43,7 +43,7 @@ def render_wato():
 
     iconlink(_("Main menu"), "wato.py", "home")
     for mode, title, icon, permission, help in wato.modules:
-        if config.may("wato." + permission) or config.may("wato.viewall"):
+        if config.may("wato." + permission) or config.may("wato.seeall"):
             iconlink(title, "wato.py?mode=%s" % mode, icon)
 
 

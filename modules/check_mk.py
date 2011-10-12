@@ -1090,8 +1090,18 @@ def summary_hostgroups_of(hostname):
 
 def host_contactgroups_of(hostlist):
     cgrs = []
-    for host in hostlist:
-        cgrs += host_extra_conf(host, host_contactgroups)
+    for host in hostlist: 
+        # host_contactgroups may take single values as well as
+        # lists as item value. Of all list entries only the first
+        # one is used. The single-contact-groups entries are all
+        # recognized.
+        first_list = True
+        for entry in host_extra_conf(host, host_contactgroups): 
+            if type(entry) == list and first_list:
+                cgrs += entry
+                first_list = False
+            else:
+                cgrs.append(entry)
     return list(set(cgrs))
 
 def host_contactgroups_nag(hostlist):

@@ -312,7 +312,8 @@ def page_handler():
     g_html_head_open = False
 
     if not config.wato_enabled:
-        raise MKGeneralException(_("WATO is disabled. Please set <tt>wato_enabled = True</tt> in your <tt>multisite.mk</tt> if you want to use WATO."))
+        raise MKGeneralException(_("WATO is disabled. Please set <tt>wato_enabled = True</tt>"
+                                   " in your <tt>multisite.mk</tt> if you want to use WATO."))
     if not config.may("wato.use"):
         raise MKAuthException(_("You are not allowed to use WATO."))
 
@@ -417,6 +418,9 @@ def page_handler():
         raise
 
     except MKInternalError:
+        raise
+
+    except MKAuthException:
         raise
 
     except Exception, e:
@@ -565,12 +569,14 @@ def load_hosts_file(folder):
     filename = root_dir + folder[".path"] + "/hosts.mk"
     if os.path.exists(filename):
         variables = {
-            "ALL_HOSTS"          : ALL_HOSTS,
-            "all_hosts"          : [],
-            "ipaddresses"        : {},
-            "extra_host_conf"    : { "alias" : [] },
-            "extra_service_conf" : { "_WATO" : [] },
-            "host_attributes"    : {},
+            "FOLDER_PATH"         : folder[".path"],
+            "ALL_HOSTS"           : ALL_HOSTS,
+            "all_hosts"           : [],
+            "ipaddresses"         : {},
+            "extra_host_conf"     : { "alias" : [] },
+            "extra_service_conf"  : { "_WATO" : [] },
+            "host_attributes"     : {},
+            "host_contactgroups"  : [],
         }
         execfile(filename, variables, variables)
         for h in variables["all_hosts"]:
@@ -612,6 +618,11 @@ def save_hosts(folder):
     folder_path = folder[".path"]
     dirname = root_dir + folder_path
     filename = dirname + "/hosts.mk"
+    if not os.path.isdir(dirname):
+        os.makedirs(dirname)
+
+    out = file(filename, "w")
+
     hosts = folder.get(".hosts", [])
     if len(hosts) == 0:
         if os.path.exists(filename):
@@ -640,10 +651,17 @@ def save_hosts(folder):
         if ipaddress:
             ipaddresses[hostname] = ipaddress
 
-    if not os.path.isdir(dirname):
-        os.makedirs(dirname)
 
-    out = file(filename, "w")
+        # Create contact group rule entries for hosts with explicitely set values
+        # Note: since the type if this entry is a list, not a single contact group, all other list
+        # entries coming after this one will be ignored. That way the host-entries have
+        # precedence over the folder entries.
+
+        if "contactgroups" in host:
+            use, cgs = host["contactgroups"]
+            if use and cgs:
+                out.write("\nhost_contactgroups.append(( %r, [%r] ))\n" % (cgs, hostname))
+
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     if len(all_hosts) > 0:
         out.write("all_hosts += ")
@@ -676,6 +694,15 @@ def save_hosts(folder):
             out.write("\n# %s\n" % host_attribute[attrname].title())
             out.write("extra_host_conf.setdefault(%r, []).extend(\n" % nag_varname)
             out.write("  %s)\n" % pprint.pformat(macrolist))
+    
+    # If the contact groups of the host are set to be used for the monitoring,
+    # we create an according rule for the folder and an according rule for
+    # each host that has an explicit setting for that attribute.
+    use, cgs = effective.get("contactgroups", (False, [])) 
+    if use and cgs: 
+        out.write("\nhost_contactgroups.append(\n"
+                  "  ( %r, [ '/' + FOLDER_PATH + '/' ], ALL_HOSTS ))\n" % cgs)
+
 
     # Write information about all host attributes into special variable - even
     # values stored for check_mk as well.
@@ -752,6 +779,10 @@ def mode_folder(phase):
                 if len(del_folder[".folders"]) > 0:
                     raise MKUserError(None, _("The folder %s cannot be deleted, it still contains some subfolders.")
                     % del_folder["title"])
+                config.need_permission("wato.manage_folders")
+                if True != check_folder_permissions(g_folder, "write", False):
+                    raise MKAuthException(_("Sorry. In order to delete a folder you need write permissions to its "
+                                            "parent folder."))
                 return delete_folder_after_confirm(del_folder)
             else:
                 raise MKGeneralException(_("You called this page with a non-existing folder/file %s") % delname)
@@ -762,12 +793,14 @@ def mode_folder(phase):
         delname = html.var("_delete_host")
         if delname and delname in g_folder[".hosts"]:
             config.need_permission("wato.manage_hosts")
+            check_folder_permissions(g_folder, "write")
             return delete_host_after_confirm(delname)
 
-        # Move single hosts to other files
+        # Move single hosts to other folders
         if html.has_var("_move_host_to"):
             config.need_permission("wato.edit_hosts")
             hostname = html.var("host")
+            check_folder_permissions(g_folder, "write")
             if hostname:
                 move_host_to(hostname, html.var("_move_host_to"))
                 return
@@ -825,13 +858,92 @@ def prepare_folder_info():
     set_current_folder()          # set g_folder from HTML variable
     load_hosts(g_folder)          # load information about hosts
 
+
+def check_host_permissions(hostname, exception=True):
+    if config.may("wato.all_folders"):
+        return True
+    host = g_folder[".hosts"][hostname]
+    effective = effective_attributes(host, g_folder)
+    use, cgs = effective.get("contactgroups", (None, []))
+    # Get contact groups of user
+    users = load_users()
+    if config.user_id not in users:
+        user_cgs = []
+    else:
+        user_cgs = users[config.user_id]["contactgroups"]
+
+    for c in user_cgs:
+        if c in cgs:
+            return True
+
+    reason = _("Sorry, you have no permission on the host '<b>%s</b>'. The host's contact "
+               "groups are <b>%s</b>, your contact groups are <b>%s</b>.") % \
+               (hostname, ", ".join(cgs), ", ".join(user_cgs))
+    if exception:
+        raise MKAuthException(reason)
+    return reason
+
+
+def check_folder_permissions(folder, how, exception=True):
+    if config.may("wato.all_folders"):
+        return True
+    if how == "read" and config.may("wato.see_all_folders"):
+        return True
+
+    # Get contact groups of that folder
+    effective = effective_attributes(None, folder)
+    use, cgs = effective.get("contactgroups", (None, []))
+
+    # Get contact groups of user
+    users = load_users()
+    if config.user_id not in users:
+        user_cgs = []
+    else:
+        user_cgs = users[config.user_id]["contactgroups"]
+
+    for c in user_cgs:
+        if c in cgs:
+            return True
+
+    reason = _("Sorry, you have no permission on the folder '<b>%s</b>'. The folder's contact "
+               "groups are <b>%s</b>, your contact groups are <b>%s</b>.") % \
+               (folder["title"], ", ".join(cgs), ", ".join(user_cgs))
+    if exception:
+        raise MKAuthException(reason)
+    else:
+        return reason
+
+# Make sure that the user is in all of cgs contact groups.
+# This is needed when the user assigns contact groups to
+# objects. He may only assign such groups he is member himself.
+def check_user_contactgroups(cgspec):
+    if config.may("wato.all_folders"):
+        return
+
+    use, cgs = cgspec
+    users = load_users()
+    if config.user_id not in users:
+        user_cgs = []
+    else:
+        user_cgs = users[config.user_id]["contactgroups"]
+    for c in cgs:
+        if c not in user_cgs:
+            raise MKAuthException(_("Sorry, you cannot assign the contact group '<b>%s</b>' "
+              "because you are not member in that group. Your groups are: <b>%s</b>") % 
+                 ( c, ", ".join(user_cgs)))
+
+
+
 def show_subfolders(folder):
     if len(folder[".folders"]) == 0:
         return False
 
     html.write("<h3>" + _("Subfolders") + "</h3>")
     html.write("<table class=data>\n")
-    html.write("<tr><th class=left>" + _("Actions") + "</th><th>" + _("Title") + "</th>")
+    html.write("<tr><th class=left>" 
+               + _("Actions") + "</th><th>" 
+               + _("Title") + "</th><th>"
+               + _("Auth") + "</th>")
 
     for attr, topic in host_attributes:
         if attr.show_in_table() and attr.show_in_folder():
@@ -867,9 +979,19 @@ def show_subfolders(folder):
         html.write('<td class=takeall><a href="%s">%s</a></td>' % 
                     (enter_url, entry["title"]))
 
-        effective = effective_attributes(None, folder)
+        # Am I authorized?
+        auth = check_folder_permissions(entry, "write", False)
+        if auth == True:
+            icon = "authok"
+            title = _("You have permission to this folder.") 
+        else:
+            icon = "autherr"
+            title = htmllib.strip_tags(auth)
+        html.write('<td><img class=icon src="images/icon_%s.png" title="%s"></td>' % (icon, title))
+
 
         # Attributes for Hosts
+        effective = effective_attributes(None, folder)
         for attr, topic in host_attributes:
             if attr.show_in_table() and attr.show_in_folder():
                 attrname = attr.name()
@@ -915,7 +1037,10 @@ def show_hosts(folder):
     colspan = 6
     html.begin_form("hosts", None, "POST", onsubmit = 'add_row_selections(this);')
     html.write("<table class=data>\n")
-    html.write("<tr><th class=left></th><th></th><th>" + _("Hostname") + "</th>")
+    html.write("<tr><th class=left></th><th></th><th>"
+               + _("Hostname") + "</th><th>"
+               + _("Auth") + "</th>")
+
 
     for attr, topic in host_attributes:
         if attr.show_in_table():
@@ -1004,6 +1129,16 @@ def show_hosts(folder):
         # Hostname with link to details page (edit host)
         html.write('<td><a href="%s">%s</a></td>\n' % (edit_url, hostname))
 
+        # Am I authorized?
+        auth = check_host_permissions(hostname, False)
+        if auth == True:
+            icon = "authok"
+            title = _("You have permission to this host.") 
+        else:
+            icon = "autherr"
+            title = htmllib.strip_tags(auth)
+        html.write('<td><img class=icon src="images/icon_%s.png" title="%s"></td>' % (icon, title))
+
         # Show attributes
         for attr, topic in host_attributes:
             if attr.show_in_table():
@@ -1071,6 +1206,8 @@ def move_hosts_to(hostnames, path):
         return
 
     target_folder = g_folders[path]
+    check_folder_permissions(target_folder, "write")
+
     if target_folder == g_folder:
         return # target and source are the same
 
@@ -1226,6 +1363,8 @@ def mode_editfolder(phase, new):
         attributes_changed = not new and attributes != g_folder.get("attributes", {})
 
         if new:
+            check_folder_permissions(g_folder, "write")
+            check_user_contactgroups(attributes.get("contactgroups", (False, [])))
             if g_folder[".path"]:
                 newpath = g_folder[".path"] + "/" + name
             else:
@@ -1247,6 +1386,18 @@ def mode_editfolder(phase, new):
             log_audit(new_folder, "new-folder", _("Created new folder %s") % title)
 
         else:
+            cgs_changed = attributes.get("contactgroups") != g_folder["attributes"].get("contactgroups")
+            other_changed = attributes != g_folder["attributes"] and not cgs_changed
+            if other_changed:
+                check_folder_permissions(g_folder, "write")
+            if g_folder.get(".parent") \
+                 and cgs_changed \
+                 and True != check_folder_permissions(g_folder.get(".parent"), "write", False):
+                 raise MKAuthException(_("Sorry. In order to change the permissions of a folder you need write "
+                                         "access to the parent folder."))
+
+            if cgs_changed:
+                check_user_contactgroups(attributes.get("contactgroups"))
             log_pending(g_folder, "edit-folder", "Edited properties of folder %s" % title)
 
             g_folder["title"]      = title
@@ -1269,6 +1420,7 @@ def mode_editfolder(phase, new):
 
     else:
         render_folder_path()
+        check_folder_permissions(g_folder, "read")
 
         html.begin_form("editfolder")
         html.write('<table class="form nomargin">\n')
@@ -1405,6 +1557,7 @@ def mode_edithost(phase, new):
     elif phase == "action":
         if not new and html.var("delete"): # Delete this host
             config.need_permission("wato.manage_hosts")
+            check_folder_permissions(g_folder, "write")
             if not html.transaction_valid():
                 return "folder"
             else:
@@ -1415,6 +1568,8 @@ def mode_edithost(phase, new):
         # handle clone & new
         if new:
             config.need_permission("wato.manage_hosts")
+            check_folder_permissions(g_folder, "write")
+            check_user_contactgroups(host.get("contactgroups", (False, [])))
             if not hostname:
                 raise MKUserError("host", _("Please specify a host name"))
             elif hostname in g_folder[".hosts"]:
@@ -1423,6 +1578,22 @@ def mode_edithost(phase, new):
                 raise MKUserError("host", _("Invalid host name: must contain only characters, digits, dash, underscore and dot."))
         else:
             config.need_permission("wato.edit_hosts")
+
+            # Check which attributes have changed. For a change in the contact groups
+            # we need permissions on the folder. For a change in the rest we need
+            # permissions on the host
+            old_host = dict(g_folder[".hosts"][hostname].items())
+            del old_host[".tags"] # not contained in new host
+            cgs_changed = host.get("contactgroups") != old_host.get("contactgroups")
+            other_changed = old_host != host and not cgs_changed
+            if other_changed:
+                check_host_permissions(hostname)
+            if cgs_changed \
+                 and True != check_folder_permissions(g_folder, "write", False):
+                 raise MKAuthException(_("Sorry. In order to change the permissions of a host you need write "
+                                         "access to the folder it is contained in."))
+            if cgs_changed:
+                check_user_contactgroups(host.get("contactgroups", (False, [])))
 
         if hostname:
             go_to_services = html.var("services")
@@ -2948,6 +3119,7 @@ class ContactGroupsAttribute(Attribute):
         self._default_value = ( True, [] ) 
         self._contactgroups = None
         self._users = None
+        self._loaded_at = None
 
     def paint(self, value, hostname):
         texts = []
@@ -2972,32 +3144,26 @@ class ContactGroupsAttribute(Attribute):
         items = self._contactgroups.items()
         items.sort(cmp = lambda a,b: cmp(a[1], b[1]))
         for name, alias in items:
-            if name in cgs or name in self._my_groups:
-                html.checkbox(self._name + "_" + name, name in cgs)
-                html.write(" %s<br>" % (alias and alias or name))
+            html.checkbox(self._name + "_" + name, name in cgs)
+            html.write(" %s<br>" % (alias and alias or name))
         html.write("<hr>")
         html.checkbox(self._name + "_use", use)
         html.write( " " + _("Add these contact groups to the host's contact groups in the monitoring configuration"))
 
     def load_data(self): 
-        if self._contactgroups != None:
+        # Make cache valid only during this HTTP request
+        if self._loaded_at == id(html):
             return
+        self._loaded_at = id(html)
+
         self._contactgroups = load_group_information()["contact"]
-        self._users = load_users()
-        if config.may("wato.all_folders"):
-            self._my_groups = self._contactgroups
-        elif config.user_id in self._users:
-            self._my_groups = self._users[config.user_id].get("contactgroups", [])
-        else:
-            self._my_groups = []
 
     def from_html_vars(self): 
         cgs = []
         self.load_data()
         for name in self._contactgroups:
-            if name in cgs or name in self._my_groups:
-                if html.get_checkbox(self._name + "_" + name):
-                    cgs.append(name)
+            if html.get_checkbox(self._name + "_" + name):
+                cgs.append(name)
         return html.get_checkbox(self._name + "_use"), cgs
 
     def filter_matches(self, crit, value, hostname):

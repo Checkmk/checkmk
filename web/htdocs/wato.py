@@ -4749,7 +4749,18 @@ def mode_groups(phase, what):
     sorted.sort()
     html.write("<h3>%s</h3>" % what_name.title())
     if len(sorted) == 0:
-        html.write("<div class=info>" + _("There are not defined any groups yet.") + "</div>")
+        if what == "contact":
+            render_main_menu([
+              ( "edit_contact_group", _("Create new contact group"), "new", 
+              what == "contact" and "users" or "groups",
+              _("In order to assign objects (hosts and services) to people (contacts), "
+                "you need first to define contact groups. When you put a user into a contact "
+                "group then that user gets a monitoring contact. When you then also assign "
+                "hosts and services to a contact group, all members of that group will be "
+                "responsible for that objects, can receive notification for and see those objects "
+                "in the status GUI."))])
+        else:
+            html.write("<div class=info>" + _("There are not defined any groups yet.") + "</div>")
         return
 
     html.write("<table class=data>")
@@ -4772,7 +4783,6 @@ def mode_groups(phase, what):
 
 
 def mode_edit_group(phase, what):
-    what = html.var("what")
     name = html.var("edit") # missing -> new group
     new = name == None
 
@@ -5665,6 +5675,14 @@ def mode_users(phase):
         html.write("</tr>")
     html.write("</table>")
 
+    if not load_group_information().get("contact", {}):
+        url = "wato.py?mode=contact_groups"
+        html.write("<div class=info>" + 
+            _("Note: you haven't defined any contact groups yet. If you <a href='%s'>"
+              "create some contact groups</a> you can assign users to them und thus "
+              "make them monitoring contacts. Only monitoring contacts can receive "
+              "notifications.") % url + "</div>")
+
 
 
 def mode_edit_user(phase):
@@ -6185,7 +6203,8 @@ def mode_roles(phase):
 
         # Users
         html.write("<td>%s</td>" %
-          ", ".join([ '<a href="%s">%s</a>' % (make_link([("mode", "edit_user"), ("edit", user_id)]), user["alias"])  
+          ", ".join([ '<a href="%s">%s</a>' % (make_link([("mode", "edit_user"), ("edit", user_id)]), 
+             user.get("alias", user_id))  
             for (user_id, user) in users.items() if (id in user["roles"])]))
 
         html.write("</tr>\n") 

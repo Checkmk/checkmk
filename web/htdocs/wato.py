@@ -5001,7 +5001,7 @@ def mode_edit_timeperiod(phase):
     num_columns = 3
     num_exceptions = 10
 
-    def timeperiod_ranges(keyname):
+    def timeperiod_ranges(vp, keyname):
         ranges = timeperiod.get(keyname, [])
         for c in range(num_columns): 
             if c < len(ranges):
@@ -5011,7 +5011,7 @@ def mode_edit_timeperiod(phase):
             else:
                 fromto = "", ""
             html.write("<td>")
-            var_prefix = keyname + "_%d_" % c
+            var_prefix = vp + "_%d_" % c
             html.text_input(var_prefix + "from", fromto[0], cssclass = "timeperioddate")
             html.write(" - ")
             val = c == 0 and "24:00" or ""
@@ -5094,8 +5094,7 @@ def mode_edit_timeperiod(phase):
                         raise MKUserError(varprefix + "_name", 
                             _("'%s' is not a valid Nagios timeperiod day specification.") % exname)
                     ranges = get_ranges(varprefix)
-                    if ranges:
-                        timeperiod[exname] = ranges
+                    timeperiod[exname] = ranges
 
             if new:
                 name = html.var("name")
@@ -5147,7 +5146,7 @@ def mode_edit_timeperiod(phase):
     for weekday, weekday_alias in weekdays:
         ranges = timeperiod.get(weekday)
         html.write("<tr><td class=name>%s</td>" % weekday_alias)
-        timeperiod_ranges(weekday)
+        timeperiod_ranges(weekday, weekday)
         html.write("</tr>")
     html.write("</table></td></tr>")
 
@@ -5177,7 +5176,7 @@ def mode_edit_timeperiod(phase):
         html.write("<tr><td class=name>")
         html.text_input(varprefix + "_name", exname)
         html.write("</td>")
-        timeperiod_ranges(exname)
+        timeperiod_ranges(varprefix, exname)
         html.write("</tr>")
     html.write("</table></td></tr>")
 

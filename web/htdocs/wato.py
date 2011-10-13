@@ -758,6 +758,8 @@ def mode_folder(phase):
 
     elif phase == "buttons":
         global_buttons()
+        if config.may("wato.rulesets") or config.may("wato.seeall"):
+            html.context_button(_("Rulesets"),        make_link([("mode", "rulesets")]), "rulesets")
         html.context_button(_("Folder Properties"), make_link_to([("mode", "editfolder")], g_folder), "properties")
         if config.may("wato.manage_folders"):
             html.context_button(_("New folder"),        make_link([("mode", "newfolder")]), "newfolder")
@@ -5648,7 +5650,8 @@ def mode_users(phase):
         html.write("<td>")
         cgs = user.get("contactgroups", [])
         if cgs:
-            html.write(", ".join(cgs))
+            html.write(", ".join(
+               [ '<a href="%s">%s</a>' % (make_link([("mode", "edit_contact_group"), ("edit", c)]), c) for c in cgs]))
         else:
             html.write("<i>" + _("none") + "</i>")
         html.write("</td>")
@@ -6433,6 +6436,8 @@ def mode_rulesets(phase):
                  make_link([("mode", "edithost"), ("host", only_host)]), "back")
         else:
             global_buttons()
+            if config.may("wato.hosts") or config.may("wato.seeall"):
+                html.context_button(_("Folder"), make_link([("mode", "folder")]), "folder")
         return
     
     elif phase == "action":

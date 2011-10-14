@@ -475,7 +475,7 @@ def hosttags_match_taglist(hosttags, required_tags):
         else:
             negate = False
 
-        if tag[-1] == '+':
+        if tag and tag[-1] == '+':
             tag = tag[:-1]
             matches = False
             for t in hosttags:

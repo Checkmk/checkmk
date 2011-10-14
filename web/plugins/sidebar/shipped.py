@@ -838,8 +838,8 @@ def render_bookmarks():
     n = 0
     for title, href in bookmarks:
         html.write("<div id=\"bookmark_%d\">" % n)
-        iconbutton(_("delete"), "del_bookmark.py?num=%d" % n, "side", "updateContents", 'snapin_bookmarks')
-        iconbutton(_("edit"), "edit_bookmark.py?num=%d" % n, "main")
+        iconbutton(_("delete"), "del_bookmark.py?num=%d" % n, "side", "updateContents", 'snapin_bookmarks', css_class = 'bookmark')
+        iconbutton(_("edit"), "edit_bookmark.py?num=%d" % n, "main", css_class = 'bookmark')
         html.write(link(title, href))
         html.write("</div>")
         n += 1
@@ -933,8 +933,8 @@ sidebar_snapins["bookmarks"] = {
 def render_custom_links():
     links = config.custom_links.get(config.role)
     if not links:
-        html.write(_("Please edit <tt>%s</tt> in order to configure which links are shown in this snapin.\n") %
-                  (defaults.default_config_dir + "/multisite.mk"))
+        html.write((_("Please edit <tt>%s</tt> in order to configure which links are shown in this snapin.") %
+                  (defaults.default_config_dir + "/multisite.mk")) + "\n")
         return
 
     def render_list(ids, links):

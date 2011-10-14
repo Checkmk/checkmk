@@ -485,19 +485,19 @@ class html:
         d = self.var(varname + "_date")
         if not t or not d:
             raise MKUserError([varname + "_date", varname + "_time"],
-                              _("Please specify a date and time"))
+                              _("Please specify a date and time."))
 
         try:
             br = time.strptime(d + " " + t, "%Y-%m-%d %H:%M")
         except:
             raise MKUserError([varname + "_date", varname + "_time"],
-                              _("Please enter the date/time in the format YYYY-MM-DD HH:MM"))
+                              _("Please enter the date/time in the format YYYY-MM-DD HH:MM."))
         return int(time.mktime(br))
 
     def get_time_input(self, varname, what):
         t = self.var(varname)
         if not t:
-            raise MKUserError(varname, _("Please specify %s") % what)
+            raise MKUserError(varname, _("Please specify %s.") % what)
 
         try:
             h, m = t.split(":")
@@ -506,7 +506,7 @@ class html:
             if m < 0 or m > 59 or h < 0:
                 raise Exception()
         except:
-            raise MKUserError(varname, _("Please enter the time in the format HH:MM"))
+            raise MKUserError(varname, _("Please enter the time in the format HH:MM."))
         return m * 60 + h * 3600
 
     def upload_file(self, varname):

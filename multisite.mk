@@ -1,57 +1,15 @@
 # Confguration for Check_MK Multisite
 
-# Users with unrestricted permissions
+# Users with unrestricted permissions. These users will always
+# have the permissions to edit users, roles and permissions,
+# even if configuration has been edited via WATO
 admin_users = [ "nagiosadmin" ]
 
-# Users seeing all data but cannot do any action
-# guest_users = [ "guest" ]
-
-# A lists of all normal operational users allowed to use
-# Multisite. If this variable is not set, then everybody with a correct
-# HTTP login may use Multisite and gets the role "user"
-# users       = [ "meier", "huber", "mueller" ]
-
-# Users not explicitely being listed in admin_users or guest_users
-# get the role "user" if they have a valid login. You can change this
-# to "guest", "admin" or None by setting the following variable:
-# default_user_role = "guest"
-
-# Sites to connect to. If this variable is unset, a single
-# connection to the local host is done.
-#sites = {
-#   # connect to local Nagios
-#   "local" : {
-#        "alias" : "Munich"
-#   },
-#
-#   # connect to remote site (e.g. local OMD site 'paris')
-#   "paris": {
-#        "alias":          "Paris",
-#        "socket":         "tcp:127.0.0.1:6557",
-#        "url_prefix":     "/paris/",
-#    },
-#
-#   # connect to remote site (site on remote host)
-#   "rome": {
-#        "alias":          "Rome",
-#        "socket":         "tcp:10.0.0.2:6557",
-#        "url_prefix":     "http://10.0.0.2/rome/",
-#    },
-#}
-
-# 
 # NagVis
 #
 # The NagVis-Snapin needs to know the URL to nagvis.
 # This is not always /nagvis/ - especially not for OMD
 nagvis_base_url = '/nagvis'
-
-
-# Restrict number of datasets queries via Livestatus.
-# This prevents you from consuming too much ressources
-# in case of insensible queries.
-# soft_query_limit = 1000
-# hard_query_limit = 5000
 
 # Views allow to play alarm sounds according to the
 # "worst" state of the show items. Configure here
@@ -118,10 +76,6 @@ custom_links['admin'] = custom_links['user'] + [
   ])
 ]
 
-# Show error messages from unreachable sites in views. Set this
-# to False in order to hide those messages.
-show_livestatus_errors = True
-
 # Hide certain views from the sidebar
 # hidden_views = [ "hosttiles", "allhosts_mini" ]
 # Vice versa: hide all views except these (be carefull, this
@@ -132,11 +86,6 @@ show_livestatus_errors = True
 # Load custom style sheet which can override styles defined in check_mk.css
 # Put your style sheet into web/htdocs/
 # custom_style_sheet = "my_styles.css"
-
-# URL to show as welcome page (in the 'main' frame).
-# You can use relative URL or absolute URLs like 'http://server/url'
-# Default is 'main.py'
-# start_url = 'view.py?view_name=hostgroups'
 
 # Quicksearch: Limit the number of hits to shop in dropdown.
 # Default is to show at most 80 items.

@@ -28,6 +28,16 @@ register_configvar(group,
             default_value = False),
     domain = "multisite")
 
+register_configvar(group,
+    "show_livestatus_errors",
+    Checkbox(title = _("Show MK Livestatus error messages"),
+             label = _("show errors"),
+             help = _("This option controls whether error messages from unreachable sites are shown in the output of "
+                      "views. Those error messages shall alert you that not all data from all sites has been shown. "
+                      "Other people - however - find those messages distracting. "),
+             default_value = True),
+    domain = "multisite")
+
 register_configvar(group, 
     "soft_query_limit",
     Integer(title = _("Soft query limit"),
@@ -48,6 +58,16 @@ register_configvar(group,
             minvalue = 1,
             default_value = 5000),
     domain = "multisite")
+
+register_configvar(group,
+    "start_url",
+    TextAscii(title = _("Start-URL to display in main frame"),
+              help = _("When you point your browser to the Multisite GUI, usually the dashboard "
+                       "is shown in the main (right) frame. You can replace this with any other "
+                       "URL you like here."),
+              default_value = "dashboard.py"),
+    domain = "multisite")
+
 
 register_configvar(group,
     "wato_hide_filenames",

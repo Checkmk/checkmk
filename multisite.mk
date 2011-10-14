@@ -87,10 +87,6 @@ custom_links['admin'] = custom_links['user'] + [
 # Put your style sheet into web/htdocs/
 # custom_style_sheet = "my_styles.css"
 
-# Quicksearch: Limit the number of hits to shop in dropdown.
-# Default is to show at most 80 items.
-# quicksearch_dropdown_limit = 80
-
 #   __        ___  _____ ___  
 #   \ \      / / \|_   _/ _ \ 
 #    \ \ /\ / / _ \ | || | | |

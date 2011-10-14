@@ -59,6 +59,17 @@ register_configvar(group,
             default_value = 5000),
     domain = "multisite")
 
+register_configvar(group, 
+    "quicksearch_dropdown_limit",
+    Integer(title = _("Number of elements to show in Quicksearch"),
+            help = _("When typing a texts in the Quicksearch snapin, a dropdown will "
+                     "appear listing all matching host names containing that text. "  
+                     "That list is limited in size so that the dropdown will not get "
+                     "too large when you have a huge number of lists. "),
+            minvalue = 1,
+            default_value = 80),
+    domain = "multisite")
+
 register_configvar(group,
     "start_url",
     TextAscii(title = _("Start-URL to display in main frame"),

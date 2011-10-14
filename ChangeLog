@@ -23,6 +23,7 @@
     * FIX: fix URL-too-long in permissions page
     * FIX: fix permission computation
     * FIX: fixed sorting of service perfdata columns
+    * FIX: fixed sorting of multiple joined columns in some cases
     * Cleanup permissions page optically, add comments for views and snapins
     * Added some missing i18n strings in general HTML functions
     * Added display_option "w" to disable limit messages and livestatus errors in views

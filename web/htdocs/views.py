@@ -1752,28 +1752,37 @@ def sort_data(data, sorters):
     if len(sorters) == 0:
         return
 
-    # Join the data in case of sorting with joined data
-    # FIXME: Problem: What to do in case of several joined
-    # columns of different services which use the same cols?
-    for row in data:
-        for s in sorters:
-            if len(s) > 2:
-                row.update(row.get("JOIN", {}).get(s[2], {}))
+    # Handle case where join columns are not present for all rows
+    def save_compare(compfunc, row1, row2):
+        if row1 == None and row2 == None:
+            return 0
+        elif row1 == None:
+            return -1
+        elif row2 == None:
+            return 1
+        else:
+            return compfunc(row1, row2)
 
-    if len(sorters) == 1:
-        data.sort(sorters[0][0]["cmp"], None, sorters[0][1])
-        return
-
-    sort_cmps = [(s[0]["cmp"], (s[1] and -1 or 1)) for s in sorters]
+    sort_cmps = []
+    for s in sorters:
+        cmpfunc = s[0]["cmp"]
+        negate = s[1] and -1 or 1
+        if len(s) > 2:
+            joinkey = s[2] # e.g. service description
+        else:
+            joinkey = None
+        sort_cmps.append((cmpfunc, negate, joinkey))
 
     def multisort(e1, e2):
-        for func, neg in sort_cmps:
-            c = neg * func(e1, e2)
+        for func, neg, joinkey in sort_cmps:
+            if joinkey: # Sorter for join column, use JOIN info
+                c = neg * save_compare(func, e1["JOIN"].get(joinkey), e2["JOIN"].get(joinkey))
+            else:
+                c = neg * func(e1, e2)
             if c != 0: return c
         return 0 # equal
 
     data.sort(multisort)
-
 
 # Create a list of filters allowed for a certain data source.
 # Each filter is valid for a special info, e.g. "host" or

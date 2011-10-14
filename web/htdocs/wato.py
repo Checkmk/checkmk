@@ -556,13 +556,14 @@ def load_all_hosts(base_folder = None):
     if base_folder == None:
         base_folder = g_root_folder
     hosts = {}
-    for f in base_folder[".files"].values():
-        hosts.update(load_hosts_file(base_folder, f))
     for f in base_folder[".folders"].values():
         hosts.update(load_all_hosts(f))
+    hosts.update(load_hosts(base_folder))
     return hosts
 
-def load_hosts(folder):
+def load_hosts(folder = None):
+    if folder == None:
+        folder = g_folder
     if ".hosts" not in folder:
         folder[".hosts"] = load_hosts_file(folder)
         folder["num_hosts"] = len(folder[".hosts"])
@@ -620,7 +621,9 @@ def load_hosts_file(folder):
     # html.write("<pre>%s</pre>" % pprint.pformat(hosts))
     return hosts
 
-def save_hosts(folder):
+def save_hosts(folder = None):
+    if folder == None:
+        folder = g_folder
     folder_path = folder[".path"]
     dirname = root_dir + folder_path
     filename = dirname + "/hosts.mk"
@@ -1226,7 +1229,7 @@ def move_hosts_to(hostnames, path):
     check_folder_permissions(target_folder, "write")
 
     if target_folder == g_folder:
-        return # target and source are the same
+        return 0 # target and source are the same
 
     # read hosts currently in target file
     load_hosts(target_folder)
@@ -1256,7 +1259,7 @@ def move_hosts_to(hostnames, path):
         
 
 def move_host_to(hostname, target_filename):
-    move_hosts_to([hostname], target_filename)
+    return move_hosts_to([hostname], target_filename)
 
 def delete_hosts_after_confirm(hosts):
     c = wato_confirm(_("Confirm deletion of %d hosts") % len(hosts),
@@ -1987,22 +1990,22 @@ def move_to_imported_folders(hosts):
         # Next problem: The folder path in imported_folder refers 
         # to the Alias of the folders, not to the internal file
         # name. And we need to create folders not yet existing.
-        target_file = create_target_file_from_aliaspath(imported_folder)
-        num_moved += move_hosts_to(hosts, target_file) 
-
-    save_folder_config()
+        target_folder = create_target_folder_from_aliaspath(imported_folder)
+        num_moved += move_hosts_to(hosts, target_folder[".path"])
+        save_folder(target_folder)
+    save_folder(g_folder)
     html.reload_sidebar() # refresh WATO snapin
     return None, _("Successfully moved %d hosts to their original folder destinations.") % num_moved
 
 
-def create_target_file_from_aliaspath(aliaspath):
+def create_target_folder_from_aliaspath(aliaspath):
     # The alias path is a '/' separated path of folder titles.
     # An empty path is interpreted as root path. The actual file
     # name is the host list with the name "Hosts". 
-    if aliaspath == "":
+    if aliaspath == "" or aliaspath == "/":
         folder = g_root_folder
     else:
-        parts = aliaspath.split("/")
+        parts = aliaspath.strip("/").split("/")
         folder = g_root_folder
         while len(parts) > 0: 
             # Look in current folder for subfolder with the target name
@@ -2013,33 +2016,22 @@ def create_target_file_from_aliaspath(aliaspath):
                     break
             else: # not found. Create this folder
                 name = create_wato_foldername(parts[0], folder)
+                new_path = folder[".path"] + (name,)
                 new_folder = {
                     ".name" : name,
-                    ".path" : folder[".path"] + (name,),
+                    ".path" : new_path,
                     "title" : parts[0],
                     "attributes" : {}, 
                     ".folders" : {},
                     ".files" : {},
+                    ".parent" : folder
                 }
                 folder[".folders"][name] = new_folder
+                g_folders[new_path] = folder
                 folder = new_folder
                 parts = parts[1:]
 
-    # Now folder points to the folder the host needs to be created
-    # in. In that folder we put the host into the host list "hosts.mk". 
-    if "hosts.mk" not in folder[".files"]:
-        new_file = {
-            ".name" : "hosts.mk",
-            ".path" : folder[".path"] + ("hosts.mk",),
-            "title" : _("Hosts"),
-            "attributes" : {},
-            "num_hosts" : 0, 
-        }
-        folder[".files"]["hosts.mk"] = new_file 
-        g_files[new_file[".path"]] = new_file
-
-    the_file = folder[".files"]["hosts.mk"]
-    return "/" + "/".join(the_file[".path"])
+    return folder
 
 
 

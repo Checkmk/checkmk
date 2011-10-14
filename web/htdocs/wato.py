@@ -7480,6 +7480,10 @@ class API:
         else:
             return path
 
+    # Returns the number of not activated changes.
+    def num_pending_changes(self):
+        return len(parse_audit_log("pending"))
+
     # BELOW ARE PRIVATE HELPER FUNCTIONS
 
     def _cleanup_directory(self, thing):

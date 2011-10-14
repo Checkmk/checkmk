@@ -80,7 +80,10 @@ def render_wato_folders():
         #EE             ajax_url = site["url_prefix"] + "check_mk/ajax_wato_folders.py"
         #EE             html.javascript("document.write(get_url_sync('%s'));" % ajax_url)
         #EE else:
-            ajax_wato_folders()
+        ajax_wato_folders()
+        num_pending = wato.api.num_pending_changes()
+        if num_pending:
+            footnotelinks([(_("%d changes pending") % num_pending, "wato.py?mode=changelog")])
 
 def ajax_wato_folders():
     render_linktree_folder(wato.api.get_folder_tree())

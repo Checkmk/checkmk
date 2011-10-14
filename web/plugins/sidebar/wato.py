@@ -99,7 +99,7 @@ def render_linktree_folder(f):
             f[".path"], f["title"], f[".total_hosts"]) 
 
     if not is_leaf:
-        html.begin_foldable_container('wato', f[".path"], False, title)
+        html.begin_foldable_container('wato-hosts', "/" + f[".path"], False, title)
         for sf in wato.api.sort_by_title(subfolders.values()):
             render_linktree_folder(sf)
         html.end_foldable_container()

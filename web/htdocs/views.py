@@ -349,7 +349,7 @@ def page_edit_views(msg=None):
 
     # Deletion of views
     delname = html.var("_delete")
-    if delname and html.confirm(_("Please confirm the deletion of the view <tt>%s</tt>") % delname):
+    if delname and html.confirm(_("Please confirm the deletion of the view <tt>%s</tt>.") % delname):
         del html.multisite_views[(html.req.user, delname)]
         save_views(html.req.user)
         html.reload_sidebar();
@@ -881,7 +881,7 @@ def create_view():
         raise MKUserError("view_name", _("The name of the view may only contain letters, digits and underscores."))
     title = html.var_utf8("view_title").strip()
     if title == "":
-        raise MKUserError("view_title", _("Please specify a title for your view"))
+        raise MKUserError("view_title", _("Please specify a title for your view."))
     linktitle = html.var("view_linktitle").strip()
     if not linktitle:
         linktitle = title

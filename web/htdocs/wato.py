@@ -592,7 +592,7 @@ def mode_file(phase):
         elif html.var("_bulk_move"):
             target_file = html.var("bulk_moveto")
             if not target_file:
-                raise MKUserError("bulk_moveto", _("Please select the destination file"))
+                raise MKUserError("bulk_moveto", _("Please select the destination file."))
             num_moved = move_hosts_to(selected_hosts, target_file)
             return None, _("Successfully moved %d hosts to %s") % (num_moved, target_file)
 
@@ -777,7 +777,7 @@ def mode_edithost(phase, new):
         host = g_hosts[clonename]
         mode = "clone"
     elif not new and hostname in g_hosts:
-        title = _("Edit host ") + hostname
+        title = _("Edit host") + " " + hostname
         host = g_hosts[hostname]
         mode = "edit"
     else:
@@ -807,7 +807,7 @@ def mode_edithost(phase, new):
         # handle clone & new
         if new:
             if not hostname:
-                raise MKUserError("host", _("Please specify a host name"))
+                raise MKUserError("host", _("Please specify a host name."))
             elif hostname in g_hosts:
                 raise MKUserError("host", _("A host with this name already exists."))
             elif not re.match("^[a-zA-Z0-9-_.]+$", hostname):
@@ -917,7 +917,7 @@ def mode_inventory(phase, firsttime):
 
 def mode_snapshot(phase):
     if phase == "title":
-        return _("Backup/Restore")
+        return _("Backup / Restore")
     elif phase == "buttons":
         html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
         html.context_button(_("Create Snapshot"), make_action_link([("mode", "snapshot"),("_create_snapshot","Yes")]))
@@ -1556,7 +1556,7 @@ def bulk_cleanup_attributes(the_file, hosts):
 
 def mode_changelog(phase):
     if phase == "title":
-        return _("Change log")
+        return _("ChangeLog")
 
     elif phase == "buttons":
         html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
@@ -2537,7 +2537,7 @@ def host_move_combo(host = None, top = False):
     if len(other_files) > 0:
         selections = [("", _("(select file)"))] + other_files
         if host == None:
-            html.button("_bulk_move", _("Move To:"))
+            html.button("_bulk_move", _("Move To") + ":")
             field_name = 'bulk_moveto'
             if top:
                 field_name = '_top_bulk_moveto'
@@ -2805,7 +2805,7 @@ class TextAttribute(Attribute):
         value = self.from_html_vars()
         if self._mandatory and not value:
             raise MKUserError("attr_" + self.name(), 
-                  _("Please specify a value for %s") % self.title())
+                  _("Please specify a value for %s.") % self.title())
 
     def filter_matches(self, crit, value, hostname):
         if value == None:  # Host does not have this attribute

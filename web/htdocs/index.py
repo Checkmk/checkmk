@@ -279,17 +279,17 @@ def handler(req, profiling = True):
 
     except Exception, e:
         if not fail_silently:
-            html.header(_("Internal Error"))
+            html.header(_("Internal error"))
             if config.debug:
                 import traceback, StringIO
                 txt = StringIO.StringIO()
                 t, v, tb = sys.exc_info()
                 traceback.print_exception(t, v, tb, None, txt)
-                html.show_error("%s: %s<pre>%s</pre>" % (_('Internal error:'), e, txt.getvalue()))
+                html.show_error("%s: %s<pre>%s</pre>" % (_('Internal error') + ':', e, txt.getvalue()))
             else:
                 url = html.makeuri([("debug", "1")])
-                html.show_error("%s: %s (<a href=\"%s\">%s</a>)" % (_('Internal error:'), e, url, _('Retry with debug mode')))
-                apache.log_error("%s %s" % (_('Internal error:'), e), apache.APLOG_ERR)
+                html.show_error("%s: %s (<a href=\"%s\">%s</a>)" % (_('Internal error') + ':', e, url, _('Retry with debug mode')))
+                apache.log_error("%s %s" % (_('Internal error') + ':', e), apache.APLOG_ERR)
             html.footer()
         response_code = apache.HTTP_INTERNAL_SERVER_ERROR
 

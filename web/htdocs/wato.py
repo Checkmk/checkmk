@@ -1298,9 +1298,8 @@ def delete_folder_after_confirm(del_folder):
             raise MKGeneralException(_("Cannot remove the folder '%s': probably there are "
                                        "still non-WATO files contained in this directory.") % folder_path)
 
-        log_audit(del_folder, "delete-folder", _("Deleted empty folder %s")% folder_dir(del_folder))
+        log_pending(del_folder, "delete-folder", _("Deleted empty folder %s")% folder_dir(del_folder))
         call_hook_folder_deleted(del_folder)
-        html.reload_sidebar() # refresh WATO snapin
         return "folder"
     elif c == False: # not yet confirmed
         return ""
@@ -1403,7 +1402,7 @@ def mode_editfolder(phase, new):
             save_folder(new_folder)
             call_hook_folder_created(new_folder)
 
-            log_audit(new_folder, "new-folder", _("Created new folder %s") % title)
+            log_pending(new_folder, "new-folder", _("Created new folder %s") % title)
 
         else:
             cgs_changed = attributes.get("contactgroups") != g_folder["attributes"].get("contactgroups")
@@ -2388,6 +2387,7 @@ def log_audit(linkinfo, what, message):
 def log_pending(linkinfo, what, message):
     log_entry(linkinfo, what, message, "pending.log")
     log_entry(linkinfo, what, message, "audit.log")
+    html.reload_sidebar() # refresh WATO snapin
 
 def log_commit_pending():
     pending = log_dir + "pending.log"
@@ -5077,7 +5077,9 @@ def mode_edit_timeperiod(phase):
 
     if phase == "action":
         if html.check_transaction():
-            alias = html.var_utf8("alias")
+            alias = html.var_utf8("alias").strip()
+            if not alias:
+                raise MKUserError("alias", _("Please specify an alias name for your timeperiod."))
         
             # extract time ranges of weekdays
             for weekday, weekday_name in weekdays:

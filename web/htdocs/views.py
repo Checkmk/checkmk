@@ -2388,12 +2388,7 @@ def get_separated_sorters(view):
 
     return group_sort, user_sort, view_sort
 
-def get_painter_join_index(view, painter):
-    for e in view["painters"]:
-        if e[0] == painter['name'] and len(e) >= 5:
-            return e[3]
-
-def sort_url(view, painter):
+def sort_url(view, painter, join_index):
     """
     The following sorters need to be handled in this order:
 
@@ -2407,9 +2402,6 @@ def sort_url(view, painter):
     group_sort, user_sort, view_sort = get_separated_sorters(view)
 
     sorter = group_sort + user_sort + view_sort
-
-    # When painter is joined, then add the join index as 3rd attribute to tuple
-    join_index = get_painter_join_index(view, painter)
 
     # Now apply the sorter of the current column:
     # - Negate/Disable when at first position
@@ -2451,9 +2443,11 @@ def sort_url(view, painter):
 
 def paint_header(view, p):
     painter = p[0]
+    join_index = None
     if len(p) >= 4: # join column
         if len(p) >= 5 and p[4]:
-            t = p[4]
+            t   = p[4]
+            join_index = p[3]
         else:
             t = p[3]
     else:
@@ -2472,7 +2466,7 @@ def paint_header(view, p):
        and view.get('user_sortable', True) \
        and get_sorter_name_of_painter(painter) is not None:
         params = [
-            ('sort', sort_url(view, painter)),
+            ('sort', sort_url(view, painter, join_index)),
         ]
         if html.has_var('_body_class'):
             params.append(('_body_class',     html.var('_body_class')))

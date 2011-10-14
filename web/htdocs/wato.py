@@ -1376,7 +1376,7 @@ def mode_bulk_inventory(phase):
 
         # Start button 
         html.write('<tr><td colspan=2 class="buttons">')
-        html.button("_start", _("Start!"))
+        html.button("_start", _("Start"))
         html.write("</tr>")
 
         html.write("</table>")

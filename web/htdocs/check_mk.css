@@ -434,6 +434,11 @@ div.snapin img.iconbutton {
     border: none;
 }
 
+div.snapin img.iconbutton.bookmark {
+    width:  16px;
+    height: 16px;
+}
+
 /* state bullets at problem host or all hosts snapin */
 div.statebullet { 
     margin-left: 0px; 

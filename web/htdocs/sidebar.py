@@ -81,7 +81,7 @@ def footnotelinks(links):
         html.write(link(text, target))
     html.write("</div>\n")
 
-def iconbutton(what, url, target="side", handler="", name=""):
+def iconbutton(what, url, target="side", handler="", name="", css_class = ""):
     if target == "side":
         onclick = "onclick=\"get_url('%s', %s, '%s')\"" % \
                    (url, handler, name)
@@ -91,7 +91,8 @@ def iconbutton(what, url, target="side", handler="", name=""):
         onclick = ""
         href = "%scheck_mk/%s" % (defaults.url_prefix, url)
         tg = "target=%s" % target
-    html.write("<a href=\"%s\" %s %s><img class=iconbutton onmouseover=\"hilite_icon(this, 1)\" onmouseout=\"hilite_icon(this, 0)\" align=absmiddle src=\"%scheck_mk/images/button_%s_lo.png\"></a>\n " % (href, onclick, tg, defaults.url_prefix, what))
+    css_class = css_class and " " + css_class or ""
+    html.write("<a href=\"%s\" %s %s><img class=\"iconbutton%s\" onmouseover=\"hilite_icon(this, 1)\" onmouseout=\"hilite_icon(this, 0)\" align=absmiddle src=\"%scheck_mk/images/button_%s_lo.png\"></a>\n " % (href, onclick, tg, css_class, defaults.url_prefix, what))
 
 def nagioscgilink(text, target):
     html.write("<li class=sidebar><a target=\"main\" class=link href=\"%snagios/cgi-bin/%s\">%s</a></li>" % \

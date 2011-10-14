@@ -511,13 +511,16 @@ def load_folder(dir, name="", path=""):
     except:
         # .wato missing or invalid
         folder = { 
-            "title"     : name and name or _("Main directory"),
-            "num_hosts" : 0,
+            "title"      : name and name or _("Main directory"),
+            "num_hosts"  : 0,
         }
 
     folder[".name"]    = name
     folder[".path"]    = path
     folder[".folders"] = {}
+
+    if "attributes" not in folder: # Make sure, attributes are always present
+        folder["attributes"] = {}
 
     # Now look subdirectories
     for entry in os.listdir(dir):
@@ -2342,7 +2345,10 @@ def mode_changelog(phase):
                 check_mk_automation("restart")
                 call_hook_activate_changes()
             except Exception, e:
-                raise MKUserError(None, str(e))
+                if config.debug:
+                    raise
+                else:
+                    raise MKUserError(None, "Error executing hooks: %s" % str(e))
             log_commit_pending() # flush logfile with pending actions
             log_audit(None, "activate-config", _("Configuration activated, monitoring server restarted"))
             return None, _("The new configuration has been successfully activated.")
@@ -7513,7 +7519,7 @@ def collect_hosts(folder):
     hosts = {}
 
     # Collect hosts in this folder
-    for hostname, host in folder[".hosts"]:
+    for hostname, host in folder[".hosts"].items():
         hosts[hostname] = effective_attributes(host, folder)
         host["file"] = folder[".path"]
 

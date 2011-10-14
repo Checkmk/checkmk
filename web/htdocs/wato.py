@@ -434,25 +434,29 @@ def page_handler():
     html.footer()
 
 
-def set_current_folder():
+def set_current_folder(folder = None):
     global g_folder
-
-    if html.has_var("folder"):
-        path = html.var("folder")
-        g_folder = g_folders.get(path)
+    
+    if folder:
+        g_folder = folder
     else:
-        host = html.var("host")
-        if host: # find host with full scan. Expensive operation
-            g_folder = find_host(host)
-            if not g_folder:
-                raise MKGeneralException(_("The host <b>%s</b> is not managed by WATO.") % host)
-        else: # fall back to root folder
-            g_folder = g_root_folder
+        if html.has_var("folder"):
+            path = html.var("folder")
+            g_folder = g_folders.get(path)
+        else:
+            host = html.var("host")
+            if host: # find host with full scan. Expensive operation
+                g_folder = find_host(host)
+                if not g_folder:
+                    raise MKGeneralException(_("The host <b>%s</b> is not managed by WATO.") % host)
+            else: # fall back to root folder
+                g_folder = g_root_folder
 
-    if not g_folder:
-        raise MKGeneralException(_('You called this page with a non-existing folder! '
-                                 'Go back to the <a href="wato.py">main index</a>.'))
+        if not g_folder:
+            raise MKGeneralException(_('You called this page with a non-existing folder! '
+                                     'Go back to the <a href="wato.py">main index</a>.'))
     html.set_var("folder", g_folder['.path']) # in case of implizit folder selection
+    load_hosts(g_folder)          # load information about hosts
 
 
 #   +----------------------------------------------------------------------+
@@ -876,7 +880,6 @@ def prepare_folder_info():
     declare_host_tag_attributes() # create attributes out of tag definitions
     load_all_folders()            # load information about all folders
     set_current_folder()          # set g_folder from HTML variable
-    load_hosts(g_folder)          # load information about hosts
 
 
 def check_host_permissions(hostname, exception=True):
@@ -983,7 +986,7 @@ def show_subfolders(folder):
         name = entry[".name"]
         folder_path = entry[".path"]
 
-        edit_url     = make_link_to([("mode", "editfolder")], entry)
+        edit_url     = make_link_to([("mode", "editfolder"), ("backfolder", g_folder[".path"])], entry)
         delete_url   = make_action_link([("mode", "folder"), 
                        ("_delete_folder", entry[".name"])])
         enter_url    = make_link_to([("mode", "folder")], entry)
@@ -1353,7 +1356,12 @@ def mode_editfolder(phase, new):
         return page_title
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
+        linkvars = [("mode", "folder")]
+        if html.has_var("backfolder"):
+            link = make_link_to(linkvars, g_folders[html.var("backfolder")])
+        else:
+            link = make_link(linkvars)
+        html.context_button(_("Back"), link, "back")
             
     elif phase == "action":
         if new:
@@ -1434,6 +1442,8 @@ def mode_editfolder(phase, new):
             log_pending(g_folder, "edit-folder", _("Changed attributes of folder %s") % title)
             call_hook_hosts_changed(g_folder)
 
+        if html.has_var("backfolder"):
+            set_current_folder(g_folders[html.var("backfolder")])
         return "folder"
 
 

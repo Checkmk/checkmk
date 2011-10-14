@@ -18,6 +18,10 @@
     * cups_queues: Run agent part only on directly on CUPS servers,
       not on clients
     * FIX: mbg_lantime_state: Fixed output UOM to really be miliseconds
+    * FIX: ntp: Handling large times in "poll" column correctly
+    * New check dmi_sysinfo to gather basic hardware information
+    * New check bintec_info to gather the software version and serial number
+    of bintec routers
 
     Multisite:
     * FIX: fix rescheduling of host check
@@ -25,6 +29,9 @@
     * FIX: Fixed not updating pnp graphs on dashboard in some browsers (like chrome)
     * FIX: fix URL-too-long in permissions page
     * FIX: fix permission computation
+    * FIX: fixed sorting of service perfdata columns
+    * FIX: fixed sorting of multiple joined columns in some cases
+    * FIX: fixed some localisation strings
     * Cleanup permissions page optically, add comments for views and snapins
     * Added some missing i18n strings in general HTML functions
     * Added display_option "w" to disable limit messages and livestatus errors in views
@@ -41,6 +48,7 @@
     WATO:
     * FIX: "bulk move to" at the top of wato hostlists works again
     * FIX: IE<9: Fixed problem with checkbox events when editing a host
+    * FIX: "move to" dropdown in IE9 works again
 
 1.1.11i4:
     Core, Setup, etc.:

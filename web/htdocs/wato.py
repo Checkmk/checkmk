@@ -1553,7 +1553,7 @@ def mode_edithost(phase, new):
         host = g_folder[".hosts"][clonename]
         mode = "clone"
     elif not new and hostname in g_folder[".hosts"]:
-        title = _("Edit host ") + hostname
+        title = _("Edit host") + " " + hostname
         host = g_folder[".hosts"][hostname]
         mode = "edit"
     else:
@@ -1591,7 +1591,7 @@ def mode_edithost(phase, new):
             check_folder_permissions(g_folder, "write")
             check_user_contactgroups(host.get("contactgroups", (False, [])))
             if not hostname:
-                raise MKUserError("host", _("Please specify a host name"))
+                raise MKUserError("host", _("Please specify a host name."))
             elif hostname in g_folder[".hosts"]:
                 raise MKUserError("host", _("A host with this name already exists."))
             elif not re.match("^[a-zA-Z0-9-_.]+$", hostname):
@@ -2116,7 +2116,7 @@ def mode_bulk_inventory(phase):
 
         # Start button 
         html.write('<tr><td colspan=2 class="buttons">')
-        html.button("_start", _("Start!"))
+        html.button("_start", _("Start"))
         html.write("</tr>")
 
         html.write("</table>")
@@ -2306,7 +2306,7 @@ def bulk_cleanup_attributes(the_file, hosts):
 
 def mode_changelog(phase):
     if phase == "title":
-        return _("Change log")
+        return _("ChangeLog")
 
     elif phase == "buttons":
         home_button()

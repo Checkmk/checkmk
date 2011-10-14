@@ -23,25 +23,28 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+# Target
 
-declare_host_attribute(ContactGroupsAttribute(),
-                       show_in_table = True,
-                       show_in_folder = True)
+def inventory_dmi_sysinfo(checkname, info):
+    if len(info) > 0 and info[0] == ['System', 'Information']:
+        return [(None, None)]
 
-declare_host_attribute(NagiosTextAttribute("alias", "alias", _("Alias"),
-                       _("A comment or description of this host"),
-                       "", mandatory=False), 
-                       show_in_table = True, 
-                       show_in_folder = False)
+def check_dmi_sysinfo(item, param, info):
+    if len(info) == 0 or info[0] != ['System', 'Information']:
+        return (3, "UNKNOWN - Invalid information")
+    data = {}
+    for line in info:
+        line = " ".join(line)
+        if ":" in line:
+            key, value = line.split(":")
+            data[key.strip()] = value.strip()
 
-declare_host_attribute(TextAttribute("ipaddress", _("IP address / DNS Name"),
-                       _("In case the name of the host is not resolvable via <tt>/etc/hosts</tt> "
-                         "or DNS by your monitoring server, you can specify an explicit IP "
-                         "address or a resolvable DNS name of the host here. <b>Note</b>: If you leave "
-                         "this attribute empty, then DNS resolution will be done when you activate "
-                         "the configuration. When you enter a DNS name here, the DNS resolution will "
-                         "be done each time the host is checked. Use this only for hosts with "
-                         "dynamic IP addresses."),
-                         allow_empty = False), 
-                         show_in_table = True, 
-                         show_in_folder = False)
+    return (0, "Manufacturer: %s, Product-Name: %s, Version: %s, S/N: %s" % (
+                 data.get("Manufacturer", "Unknown"),
+                 data.get("Product Name", "Unknown"),
+                 data.get("Version", "Unknown"),
+                 data.get("Serial Number", "Unknown"),
+            ))
+
+
+check_info['dmi_sysinfo'] = (check_dmi_sysinfo, "DMI Sysinfo", 0, inventory_dmi_sysinfo)

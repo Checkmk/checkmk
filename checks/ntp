@@ -69,6 +69,18 @@ def inventory_ntp_summary(info):
     if len(info) > 0:
         return [(None, "ntp_default_levels")]
 
+def ntp_fmt_time(t):
+    if t == '-':
+        return 0
+    elif t[-1] == "m":
+        return int(t[:-1]) * 60
+    elif t[-1] == "h":
+        return int(t[:-1]) * 60 * 60
+    elif t[-1] == "d":
+        return int(t[:-1]) * 60 * 60 * 24
+    else:
+        return int(t)
+
 # Helper function that parses the information about one
 # peer and returns a tuple of
 # 0. Nagios state (0, 1, 2 or 3)
@@ -83,19 +95,8 @@ def check_ntp_server_state(line, params):
     offset  = float(offset)
     jitter  = float(jitter)
 
-    # Parse time when search was last reached
-    if when == '-':
-        when = 0
-    elif when[-1] == "m":
-        when = int(when[:-1]) * 60
-    elif when[-1] == "h":
-        when = int(when[:-1]) * 60 * 60
-    elif when[-1] == "d":
-        when = int(when[:-1]) * 60 * 60 * 24
-    else:
-        when    = int(when)
-
-    poll    = int(poll)
+    when    = ntp_fmt_time(when)
+    poll    = ntp_fmt_time(poll)
     stratum = int(stratum)
     state = ntp_state_codes.get(statecode, "unknown")
     infotext = "%s - stratum %d, offset %.2f ms, jitter %.2f ms" % (state, stratum, offset, jitter)

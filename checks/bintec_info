@@ -24,24 +24,24 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-declare_host_attribute(ContactGroupsAttribute(),
-                       show_in_table = True,
-                       show_in_folder = True)
+def inventory_bintec_info(info):
+    if len(info[0]) >= 1:
+        return [ (None, None) ]
 
-declare_host_attribute(NagiosTextAttribute("alias", "alias", _("Alias"),
-                       _("A comment or description of this host"),
-                       "", mandatory=False), 
-                       show_in_table = True, 
-                       show_in_folder = False)
+def check_bintec_info(checktype, params, info):
+    if len(info[0]) < 2:
+        return (3, "UNKNOWN - No data retrieved")
+    sw_version, serial = info[0]
+    return (0, "Serial: %s, Software: %s" % (serial, sw_version))
 
-declare_host_attribute(TextAttribute("ipaddress", _("IP address / DNS Name"),
-                       _("In case the name of the host is not resolvable via <tt>/etc/hosts</tt> "
-                         "or DNS by your monitoring server, you can specify an explicit IP "
-                         "address or a resolvable DNS name of the host here. <b>Note</b>: If you leave "
-                         "this attribute empty, then DNS resolution will be done when you activate "
-                         "the configuration. When you enter a DNS name here, the DNS resolution will "
-                         "be done each time the host is checked. Use this only for hosts with "
-                         "dynamic IP addresses."),
-                         allow_empty = False), 
-                         show_in_table = True, 
-                         show_in_folder = False)
+check_info['bintec_info'] = (check_bintec_info, "Bintec Info", 0, inventory_bintec_info)
+# 1.3.6.1.4.1.272.4.1.26.0 SW Version
+# 1.3.6.1.4.1.272.4.1.31.0 S/N
+snmp_info['bintec_info']  = ( ".1.3.6.1.4.1.272.4.1", [
+                                     '26.0', # SW Version
+                                     '31.0', # S/N
+                              ] )
+
+# This check works on all SNMP hosts
+snmp_scan_functions['bintec_info'] = lambda oid: oid(".1.3.6.1.2.1.1.2.0") == \
+                                       ".1.3.6.1.4.1.272.4.200.83.88.67.66.0.0"

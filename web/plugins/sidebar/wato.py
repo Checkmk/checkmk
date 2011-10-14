@@ -87,6 +87,8 @@ def ajax_wato_folders():
 
     
 def render_linktree_folder(f):
+    if ".parent" in f:
+        html.write("<ul>")
     subfolders = f.get(".folders", {})
     is_leaf = len(subfolders) == 0 
 
@@ -99,11 +101,9 @@ def render_linktree_folder(f):
             render_linktree_folder(sf)
         html.end_foldable_container()
     else:
-        if ".parent" in f:
-            html.write("<ul>")
         html.write("<li>" + title + "</li>")
-        if ".parent" in f:
-            html.write("</ul>")
+    if ".parent" in f:
+        html.write("</ul>")
 
 sidebar_snapins["wato"] = {
     "title" : _("Hosts"),

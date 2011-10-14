@@ -281,6 +281,9 @@ ALL_HOSTS    = [ '@all' ]
 ALL_SERVICES = [ "" ]
 NEGATE       = '@negate'
 
+g_folder = None
+g_root_folder = None
+g_folders = {}
 g_html_head_open = False
 
 

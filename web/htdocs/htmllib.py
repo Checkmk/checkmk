@@ -820,7 +820,7 @@ class html:
             self.write('<b class="treeangle title" class=treeangle %s>%s</b><br>' % 
                      (onclick, title))
 
-        indent_style = indent != "True" and "padding-left: 0px; " or ""
+        indent_style = indent != "True" and "padding-left: 15px; " or "padding-left: 0px; "
         if indent == "form":
             self.write("</td></tr></table>")
             indent_style += "margin: 0; "

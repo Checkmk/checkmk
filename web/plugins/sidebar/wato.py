@@ -88,7 +88,7 @@ def ajax_wato_folders():
     
 def render_linktree_folder(f):
     if ".parent" in f:
-        html.write("<ul>")
+        html.write("<ul style='padding-left: 0px;'>")
     subfolders = f.get(".folders", {})
     is_leaf = len(subfolders) == 0 
 

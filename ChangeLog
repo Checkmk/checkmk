@@ -5,6 +5,9 @@
       has been dropped (see migration notes!)
     * Configuration of global configuration variables of Check_MK via WATO
 
+    Multisite:
+    * FIX: Fixed encoding problem when opening dashboard
+
 1.1.12b1:
     Core, Setup, etc.:
     * FIX: fix cmk -D on cluster hosts

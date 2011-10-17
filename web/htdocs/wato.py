@@ -4790,8 +4790,21 @@ def mode_groups(phase, what):
     html.write("<table class=data>")
     html.write("<tr><th>" + _("Actions") 
                 + "</th><th>" + _("Name") 
-                + "</th><th>" + _("Alias") 
-                + "</th></tr>\n")
+                + "</th><th>" + _("Alias"))
+
+    if what == "contact":
+        html.write("</th><th>" + _("Members"))
+
+    html.write("</th></tr>\n")
+
+    # Show member of contact groups
+    if what == "contact":
+        users = load_users()
+        members = {}
+        for userid, user in users.items():
+            cgs = user.get("contactgroups", [])
+            for cg in cgs:
+                members.setdefault(cg, []).append(userid)
 
     odd = "even"
     for name, alias in sorted:
@@ -4802,7 +4815,12 @@ def mode_groups(phase, what):
         html.write("<td class=buttons>")
         html.buttonlink(edit_url, _("Properties"))
         html.buttonlink(delete_url, _("Delete"))
-        html.write("</td><td>%s</td><td>%s</td></tr>" % (name, alias))
+        html.write("</td><td>%s</td><td>%s</td>" % (name, alias))
+        if what == "contact":
+            html.write("<td>%s</td>" % ", ".join(
+               [ '<a href="%s">%s</a>' % (make_link([("mode", "edit_user"), ("edit", n)]), n) 
+                 for n in members.get(name, [])]))
+        html.write("</tr>")
     html.write("</table>")
 
 
@@ -4871,7 +4889,7 @@ def mode_edit_group(phase, what):
     html.write("<tr><td class=legend>")
     html.write(_("Alias<br><i>A description of this group.</i>"))  
     html.write("</td><td class=content>")
-    html.text_input("alias")
+    html.text_input("alias", name and groups.get(name, "") or "")
     html.write("</td></tr>") 
     html.write("<tr><td class=buttons colspan=2>")
     html.button("save", _("Save"))

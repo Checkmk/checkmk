@@ -4831,7 +4831,7 @@ def mode_edit_group(phase, what):
                 if len(name) == 0:
                     raise MKUserError("name", _("Please specify a name of the new group."))
                 if not re.match("^[-a-z0-9A-Z_]*$", name):
-                    raise MKUserError(htmlvarname, _("Invalid group name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
+                    raise MKUserError("name", _("Invalid group name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
                 groups[name] = alias
                 log_pending(None, "edit-%sgroups" % what, _("Create new %s group %s" % (what, name)))
             else:

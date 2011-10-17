@@ -1583,7 +1583,7 @@ def mode_edithost(phase, new):
     elif phase == "buttons":
         if not new:
             host_status_button(hostname, "hoststatus")
-        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
         if not new:
             html.context_button(_("Services"), 
                   make_link([("mode", "inventory"), ("host", hostname)]))
@@ -1721,7 +1721,7 @@ def mode_inventory(phase, firsttime):
 
     elif phase == "buttons":
         host_status_button(hostname, "host")
-        html.context_button(_("Back"), 
+        html.context_button(_("Host properties"), 
                             make_link([("mode", "edithost"), ("host", hostname)]), "back")
         html.context_button(_("Full Scan"), html.makeuri([("_scan", "yes")]))
 
@@ -1733,7 +1733,7 @@ def mode_inventory(phase, firsttime):
             table.sort()
             active_checks = {}
             new_target = "folder"
-            for st, ct, item, paramstring, params, descr, state, output, perfdata in table:
+            for st, ct, checkgroup, item, paramstring, params, descr, state, output, perfdata in table:
                 if (html.has_var("_cleanup") or html.has_var("_fixall")) \
                     and st in [ "vanished", "obsolete" ]:
                     pass
@@ -1804,13 +1804,14 @@ def show_service_table(hostname, firsttime):
         ]:
         first = True
         trclass = "even"
-        for st, ct, item, paramstring, params, descr, state, output, perfdata in table:
+        for st, ct, checkgroup, item, paramstring, params, descr, state, output, perfdata in table:
             if state_type != st:
                 continue
             if first:
                 html.write('<tr class=groupheader><td colspan=7><br>%s</td></tr>\n' % state_name)
                 html.write("<tr><th>" + _("Status") + "</th><th>" + _("Checktype") + "</th><th>" + _("Item") + "</th>"
-                           "<th>" + _("Service Description") + "</th><th>" + _("Current check") + "</th><th></th></tr>\n")
+                           "<th>" + _("Service Description") + "</th><th>" 
+                           + _("Current check") + "</th><th></th></th></th></tr>\n")
                 first = False
             trclass = trclass == "even" and "odd" or "even"
             statename = nagios_short_state_names.get(state, "PEND")
@@ -1819,8 +1820,32 @@ def show_service_table(hostname, firsttime):
                 state = 0 # for tr class
             else:
                 stateclass = "state svcstate state%s" % state
-            html.write("<tr class=\"data %s%d\"><td class=\"%s\">%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>" %
-                    (trclass, state, stateclass, statename, ct, item, descr, output))
+            html.write("<tr class=\"data %s%d\">" % (trclass, state))
+
+            # Status, Checktype, Item, Description, Check Output
+            html.write("<td class=\"%s\">%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>" %
+                    (stateclass, statename, ct, item, descr, output))
+
+            # Icon for Rule editor, Check parameters
+            html.write("<td>")
+            if checkgroup:
+                varname = "checkgroup_parameters:" + checkgroup
+                url = make_link([("mode", "edit_ruleset"), 
+                                 ("varname", varname),
+                                 ("host", hostname),
+                                 ("item", repr(item))]) 
+                title = _("Edit rules for this check parameter")
+                rulespec = g_rulespecs.get(varname)
+                if rulespec:
+                    title = "Check parameters for this service: " + \
+                      rulespec["valuespec"].value_to_text(params)
+                html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
+                   (url, title))
+                           
+            html.write("</td>")
+
+            # Checkbox
+            html.write("<td>")
             if checkbox != None:
                 varname = "_%s_%s" % (ct, item)
                 html.checkbox(varname, checkbox)
@@ -4747,7 +4772,7 @@ def mode_groups(phase, what):
             pass
         else:
             varname = what + "_groups"
-            html.context_button(_("Rules"), make_link([("mode", "view_ruleset"), ("varname", varname)]), "rulesets")
+            html.context_button(_("Rules"), make_link([("mode", "edit_ruleset"), ("varname", varname)]), "rulesets")
         return
 
     all_groups = load_group_information()
@@ -6432,6 +6457,7 @@ def load_roles():
 
 
 def save_roles(roles):
+    st
     make_nagios_directory(multisite_dir)
     filename = multisite_dir + "roles.mk"
     out = file(filename, "w")
@@ -6475,7 +6501,7 @@ def mode_rulesets(phase):
 
     elif phase == "buttons":
         if only_host:
-            html.context_button(_("Back"), 
+            html.context_button(only_host,
                  make_link([("mode", "edithost"), ("host", only_host)]), "back")
         else:
             global_buttons()
@@ -6558,7 +6584,7 @@ def mode_rulesets(phase):
             odd = odd == "odd" and "even" or "odd" 
             html.write('<tr class="data %s0">' % odd)
 
-            url_vars = [("mode", "view_ruleset"), ("varname", varname)]
+            url_vars = [("mode", "edit_ruleset"), ("varname", varname)]
             if only_host:
                 url_vars.append(("host", only_host))
             view_url = make_link(url_vars)
@@ -6585,10 +6611,12 @@ def mode_rulesets(phase):
             html.write("<div class=info>" + _("There are no rules defined in this folder.") + "</div>")
 
     
-def mode_view_ruleset(phase):
+def mode_edit_ruleset(phase):
     varname = html.var("varname")
     rulespec = g_rulespecs[varname]
     hostname = html.var("host", "")
+    item = eval(html.var("item", "None"))
+
     if hostname:
         hosts = load_hosts(g_folder)
         host = hosts.get(hostname)
@@ -6599,10 +6627,12 @@ def mode_view_ruleset(phase):
         title = rulespec["title"]
         if hostname:
             title += _(" for host %s") % hostname
+        if rulespec["itemtype"]:
+            title += _(" and %s %s") % (rulespec["itemname"], item)
         return title
 
     elif phase == "buttons":
-        html.context_button(_("Back"), 
+        html.context_button(_("All rulesets"), 
               make_link([("mode", "rulesets"), ("host", hostname)]), "back")
         return
 
@@ -6612,9 +6642,11 @@ def mode_view_ruleset(phase):
         rulesets = load_rulesets(rule_folder) 
         rules = rulesets.get(varname, [])
 
-        if html.var("_new_rule"):
+        if html.var("_new_rule") or html.var("_new_host_rule"):
             if html.check_transaction():
-                new_rule = create_rule(rulespec, hostname)
+                if html.var("_new_rule"):
+                    hostname = None
+                new_rule = create_rule(rulespec, hostname, item)
                 if hostname:
                     rules[0:0] = [new_rule]
                 else:
@@ -6734,7 +6766,8 @@ def mode_view_ruleset(phase):
             # Value
             html.write('<td class=value>\n')
             if hostname:
-                reason = rule_matches_host(rulespec, tag_specs, host_list, folder, g_folder, hostname)
+                reason = rule_matches_host_and_item(
+                    rulespec, tag_specs, host_list, item_list, folder, g_folder, hostname, item)
                 # Handle case where dict is constructed from rules
                 if reason == True and rulespec["match"] == "dict": 
                     if len(value) == 0:
@@ -6786,6 +6819,7 @@ def mode_view_ruleset(phase):
                 ("varname", varname), 
                 ("rulenr", rel_rulenr), 
                 ("host", hostname),
+                ("item", repr(item)),
                 ("rule_folder", folder[".path"])])
             html.buttonlink(url, _("Edit"))
             html.write("</td>")
@@ -6809,13 +6843,17 @@ def mode_view_ruleset(phase):
             rel_rulenr += 1
         html.write('</table>')
 
-    html.write("<p>" + _("Create a new rule in the folder: "))
+    html.write("<p>" + _("Create a new rule: "))
     html.begin_form("new_rule")
     if hostname:
-        html.button("_new_rule", _("Create exception rule for host %s" % hostname))
-    else:
-        html.select("folder", folder_selection(g_root_folder))
-        html.button("_new_rule", _("Create rule"))
+        title = _("Exception rule for host %s" % hostname)
+        if rulespec["itemtype"]:
+            title += _(" and %s %s") % (rulespec["itemname"], item)
+        html.button("_new_host_rule", title)
+        html.write(" " + _("or") + " ")
+    html.button("_new_rule", _("General rule in folder: "))
+    html.select("folder", folder_selection(g_root_folder))
+    html.write("</p>\n")
     html.hidden_fields()
     html.end_form()
 
@@ -6841,7 +6879,7 @@ def folder_selection(folder, depth=0):
         render_rule(ruleset, rule, n + 1, n == len(rules) - 1)
 
 
-def create_rule(rulespec, hostname=None):
+def create_rule(rulespec, hostname=None, item=None):
     new_rule = []
     valuespec = rulespec["valuespec"]
     if valuespec:
@@ -6851,7 +6889,7 @@ def create_rule(rulespec, hostname=None):
     else:
         new_rule.append(ALL_HOSTS) # bottom: default to catch-all rule
     if rulespec["itemtype"]:
-        new_rule.append([""])
+        new_rule.append(["%s$" % item])
     return tuple(new_rule)
 
 
@@ -6909,7 +6947,8 @@ def parse_rule(ruleset, orig_rule):
     except Exception, e:
         raise MKGeneralException(_("Invalid rule <tt>%s</tt>") % (orig_rule,))
 
-def rule_matches_host(rulespec, tag_specs, host_list, rule_folder, host_folder, hostname):
+def rule_matches_host_and_item(rulespec, tag_specs, host_list, item_list, 
+                               rule_folder, host_folder, hostname, item):
     reasons = []
     host = host_folder[".hosts"][hostname]
     if not (
@@ -6929,6 +6968,17 @@ def rule_matches_host(rulespec, tag_specs, host_list, rule_folder, host_folder, 
 
     if not is_indirect_parent_of(host_folder, rule_folder):
         reasons.append(_("The rule does not apply to the folder of the host."))
+
+    # Check items
+    if rulespec["itemtype"]:
+        item_matches = False
+        for i in item_list:
+            if re.match(i, str(item)):
+                item_matches = True
+                break
+        if not item_matches:
+            reasons.append(_("The %s %s does not match this rule.") % 
+                   (rulespec["itemname"], item))
 
     if len(reasons) == 0:
         return True
@@ -7100,8 +7150,11 @@ def mode_edit_rule(phase):
         return _("Edit rule %s") % rulespec["title"]
 
     elif phase == "buttons":
-        html.context_button(_("Back"), 
-             make_link([("mode", "view_ruleset"), ("varname", varname), ("host", html.var("host", ""))]), "back")
+        html.context_button(_("All rules"), 
+             make_link([("mode", "edit_ruleset"), 
+                        ("varname", varname), 
+                        ("host", html.var("host", "")),
+                        ("item", html.var("item", "None"))]), "back")
         return
 
     folder = g_folders[html.var("rule_folder")]
@@ -7125,7 +7178,7 @@ def mode_edit_rule(phase):
             save_rulesets(folder, rulesets)
             log_pending(None, "edit-rule", "Changed properties of rule %s in folder %s" % 
                     (rulespec["title"], folder["title"]))
-        return "view_ruleset"
+        return "edit_ruleset"
 
     html.begin_form("rule_editor")
     html.write('<table class="form ruleditor">')
@@ -7650,7 +7703,7 @@ modes = {
    "globalvars"         : (["global"], mode_globalvars),
    "edit_configvar"     : (["global"], mode_edit_configvar),
    "rulesets"           : (["rulesets"], mode_rulesets),
-   "view_ruleset"       : (["rulesets"], mode_view_ruleset),
+   "edit_ruleset"       : (["rulesets"], mode_edit_ruleset),
    "edit_rule"          : (["rulesets"], mode_edit_rule),
    "host_groups"        : (["groups"], lambda phase: mode_groups(phase, "host")),
    "service_groups"     : (["groups"], lambda phase: mode_groups(phase, "service")),

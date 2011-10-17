@@ -302,7 +302,7 @@ def handler(req, profiling = True):
                 html.show_error("%s: %s (<a href=\"%s\">%s</a>)" % (_('Internal error') + ':', e, url, _('Retry with debug mode')))
                 apache.log_error("%s %s" % (_('Internal error') + ':', e), apache.APLOG_ERR)
             html.footer()
-        response_code = apache.HTTP_INTERNAL_SERVER_ERROR
+        response_code = apache.OK
 
     # Disconnect from livestatus!
     html.live = None

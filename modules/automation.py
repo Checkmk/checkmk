@@ -226,7 +226,8 @@ def automation_try_inventory(args):
             exitcode = None
             output = "WAITING - Legacy check, cannot be done offline"
             perfdata = []
-        table.append((state_type, ct, item, paramstring, params, descr, exitcode, output, perfdata))
+        checkgroup = checkgroup_of.get(ct)
+        table.append((state_type, ct, checkgroup, item, paramstring, params, descr, exitcode, output, perfdata))
 
     return table
 

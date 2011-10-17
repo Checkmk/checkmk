@@ -5146,7 +5146,7 @@ def mode_edit_timeperiod(phase):
     else:
         alias = ""
     html.write("<tr><td class=legend>")
-    html.write(_("Alias") + "<br><i>" + _("An optional description of the timeperiod</i>"))
+    html.write(_("Alias") + "<br><i>" + _("A description of the timeperiod</i>"))
     html.write("</td><td class=content>")
     html.text_input("alias", alias, size = 50)
     html.write("</td></tr>")

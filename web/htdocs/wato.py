@@ -2160,7 +2160,7 @@ def mode_bulk_edit(phase):
                 host.update(changed_attributes)
                 log_pending(hostname, "bulk-edit", _("Changed attributes of host %s in bulk mode") % hostname)
             save_folder_and_hosts(g_folder)
-            call_hook_hosts_changed(g_file)
+            call_hook_hosts_changed(g_folder)
             return "folder"
         return
 

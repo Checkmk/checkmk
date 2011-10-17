@@ -30,7 +30,6 @@ import main
 import page_logwatch
 import views
 import sidebar
-import permissions
 import actions
 import weblib
 import dashboard

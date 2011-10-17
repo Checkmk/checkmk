@@ -1,9 +1,11 @@
 Migration notes for wato-ng:
 
-1. Hostlisten sind abgeschaffte, Dateien müssen hosts.mk heißen.
+1. Hostlisten sind abgeschafft, Dateien müssen hosts.mk heißen.
+   In doc/helpers gibt es ein Migrationsskript.
 2. Dateien müssen unter /wato/ liegen.
 3. wato_host_tags anstelle von host_tags. Das id-Feld ist
-   jetzt zwingend vorgeschrieben.
+   jetzt zwingend vorgeschrieben. None ist (wohl?) nicht mehr
+   erlaubt.
 
 Dokumentation:
 

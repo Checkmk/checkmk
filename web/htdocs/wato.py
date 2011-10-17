@@ -6140,7 +6140,6 @@ def mode_roles(phase):
 
     elif phase == "buttons":
         global_buttons()
-        html.context_button(_("New role"), make_link([("mode", "edit_role")]), "new")
         return
 
     roles = load_roles()

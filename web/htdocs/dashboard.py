@@ -133,7 +133,7 @@ def render_dashboard(name):
         # refreshed by us but need to do that themselves.
         if "url" in dashlet:
             refresh_dashlets.append([nr, dashlet.get("refresh", 0), 
-              add_wato_folder_to_url(dashlet["url"], wato_folder)])
+              str(add_wato_folder_to_url(dashlet["url"], wato_folder))])
 
         # Paint the dashlet's HTML code
         render_dashlet(nr, dashlet, wato_folder)

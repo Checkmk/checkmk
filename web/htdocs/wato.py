@@ -431,6 +431,9 @@ def page_handler():
         html.show_error(traceback.format_exc().replace('\n', '<br />'))
 
     html.write("</div>\n")
+    if g_need_sidebar_reload == id(html):
+        html.reload_sidebar()
+
     html.footer()
 
 
@@ -458,6 +461,10 @@ def set_current_folder(folder = None):
     html.set_var("folder", g_folder['.path']) # in case of implizit folder selection
     load_hosts(g_folder)          # load information about hosts
 
+g_need_sidebar_reload = None
+def need_sidebar_reload():
+    global g_need_sidebar_reload
+    g_need_sidebar_reload = id(html)
 
 #   +----------------------------------------------------------------------+
 #   |          _                    _    ______                            |
@@ -1431,7 +1438,7 @@ def mode_editfolder(phase, new):
             g_folder["attributes"] = attributes
 
         
-        html.reload_sidebar() # refresh WATO snapin. FIXME: Geht das nicht besser?
+        need_sidebar_reload()
         save_folder_and_hosts(g_folder) # save folder metainformation
 
         # Due to changes in folder/file attributes, host files
@@ -2003,7 +2010,7 @@ def move_to_imported_folders(hosts):
         num_moved += move_hosts_to(hosts, target_folder[".path"])
         save_folder(target_folder)
     save_folder(g_folder)
-    html.reload_sidebar() # refresh WATO snapin
+    log_pending(g_folder, "move-hosts", _("Moved %d imported hosts to their original destination.") % num_moved)
     return None, _("Successfully moved %d hosts to their original folder destinations.") % num_moved
 
 
@@ -2025,15 +2032,19 @@ def create_target_folder_from_aliaspath(aliaspath):
                     break
             else: # not found. Create this folder
                 name = create_wato_foldername(parts[0], folder)
-                new_path = folder[".path"] + (name,)
+                new_path = folder[".path"]
+                if new_path:
+                    new_path += "/"
+                new_path += name
+
                 new_folder = {
-                    ".name" : name,
-                    ".path" : new_path,
-                    "title" : parts[0],
+                    ".name"      : name,
+                    ".path"      : new_path,
+                    "title"      : parts[0],
                     "attributes" : {}, 
-                    ".folders" : {},
-                    ".files" : {},
-                    ".parent" : folder
+                    ".folders"   : {},
+                    ".files"     : {},
+                    ".parent"    : folder
                 }
                 folder[".folders"][name] = new_folder
                 g_folders[new_path] = folder
@@ -2393,17 +2404,16 @@ def log_entry(linkinfo, action, message, logfilename):
 def log_audit(linkinfo, what, message):
     log_entry(linkinfo, what, message, "audit.log")
 
-
 def log_pending(linkinfo, what, message):
     log_entry(linkinfo, what, message, "pending.log")
     log_entry(linkinfo, what, message, "audit.log")
-    html.reload_sidebar() # refresh WATO snapin
+    need_sidebar_reload()
 
 def log_commit_pending():
     pending = log_dir + "pending.log"
     if os.path.exists(pending):
         os.remove(pending)
-    html.reload_sidebar() # refresh WATO snapin
+    need_sidebar_reload()
 
 def clear_audit_log():
     path = log_dir + "audit.log"

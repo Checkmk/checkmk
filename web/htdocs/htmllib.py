@@ -709,7 +709,8 @@ class html:
         self.write('<script type="text/javascript" src="js/%s.js"></script>\n' % name)
 
     def reload_sidebar(self):
-        self.javascript("parent.frames[0].location.reload();");
+        if not self.has_var("_ajaxid"):
+            self.javascript("parent.frames[0].location.reload();");
 
     # Get next transaction id for that user
     def current_transid(self):

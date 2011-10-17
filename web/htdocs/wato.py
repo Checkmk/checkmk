@@ -4840,6 +4840,8 @@ def mode_edit_group(phase, what):
                 name = html.var("name").strip()
                 if len(name) == 0:
                     raise MKUserError("name", _("Please specify a name of the new group."))
+                if ' ' in name:
+                    raise MKUserError("name", _("Sorry, spaces are not allowed in group names."))
                 if not re.match("^[-a-z0-9A-Z_]*$", name):
                     raise MKUserError("name", _("Invalid group name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
                 groups[name] = alias

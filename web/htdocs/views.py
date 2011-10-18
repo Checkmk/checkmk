@@ -349,7 +349,7 @@ def page_edit_views(msg=None):
 
     # Deletion of views
     delname = html.var("_delete")
-    if delname and html.confirm(_("Please confirm the deletion of the view <tt>%s</tt>") % delname):
+    if delname and html.confirm(_("Please confirm the deletion of the view <tt>%s</tt>.") % delname):
         del html.multisite_views[(html.req.user, delname)]
         save_views(html.req.user)
         html.reload_sidebar();
@@ -881,7 +881,7 @@ def create_view():
         raise MKUserError("view_name", _("The name of the view may only contain letters, digits and underscores."))
     title = html.var_utf8("view_title").strip()
     if title == "":
-        raise MKUserError("view_title", _("Please specify a title for your view"))
+        raise MKUserError("view_title", _("Please specify a title for your view."))
     linktitle = html.var("view_linktitle").strip()
     if not linktitle:
         linktitle = title
@@ -1752,28 +1752,37 @@ def sort_data(data, sorters):
     if len(sorters) == 0:
         return
 
-    # Join the data in case of sorting with joined data
-    # FIXME: Problem: What to do in case of several joined
-    # columns of different services which use the same cols?
-    for row in data:
-        for s in sorters:
-            if len(s) > 2:
-                row.update(row.get("JOIN", {}).get(s[2], {}))
+    # Handle case where join columns are not present for all rows
+    def save_compare(compfunc, row1, row2):
+        if row1 == None and row2 == None:
+            return 0
+        elif row1 == None:
+            return -1
+        elif row2 == None:
+            return 1
+        else:
+            return compfunc(row1, row2)
 
-    if len(sorters) == 1:
-        data.sort(sorters[0][0]["cmp"], None, sorters[0][1])
-        return
-
-    sort_cmps = [(s[0]["cmp"], (s[1] and -1 or 1)) for s in sorters]
+    sort_cmps = []
+    for s in sorters:
+        cmpfunc = s[0]["cmp"]
+        negate = s[1] and -1 or 1
+        if len(s) > 2:
+            joinkey = s[2] # e.g. service description
+        else:
+            joinkey = None
+        sort_cmps.append((cmpfunc, negate, joinkey))
 
     def multisort(e1, e2):
-        for func, neg in sort_cmps:
-            c = neg * func(e1, e2)
+        for func, neg, joinkey in sort_cmps:
+            if joinkey: # Sorter for join column, use JOIN info
+                c = neg * save_compare(func, e1["JOIN"].get(joinkey), e2["JOIN"].get(joinkey))
+            else:
+                c = neg * func(e1, e2)
             if c != 0: return c
         return 0 # equal
 
     data.sort(multisort)
-
 
 # Create a list of filters allowed for a certain data source.
 # Each filter is valid for a special info, e.g. "host" or
@@ -2379,12 +2388,7 @@ def get_separated_sorters(view):
 
     return group_sort, user_sort, view_sort
 
-def get_painter_join_index(view, painter):
-    for e in view["painters"]:
-        if e[0] == painter['name'] and len(e) >= 5:
-            return e[3]
-
-def sort_url(view, painter):
+def sort_url(view, painter, join_index):
     """
     The following sorters need to be handled in this order:
 
@@ -2398,9 +2402,6 @@ def sort_url(view, painter):
     group_sort, user_sort, view_sort = get_separated_sorters(view)
 
     sorter = group_sort + user_sort + view_sort
-
-    # When painter is joined, then add the join index as 3rd attribute to tuple
-    join_index = get_painter_join_index(view, painter)
 
     # Now apply the sorter of the current column:
     # - Negate/Disable when at first position
@@ -2442,9 +2443,11 @@ def sort_url(view, painter):
 
 def paint_header(view, p):
     painter = p[0]
+    join_index = None
     if len(p) >= 4: # join column
         if len(p) >= 5 and p[4]:
-            t = p[4]
+            t   = p[4]
+            join_index = p[3]
         else:
             t = p[3]
     else:
@@ -2463,7 +2466,7 @@ def paint_header(view, p):
        and view.get('user_sortable', True) \
        and get_sorter_name_of_painter(painter) is not None:
         params = [
-            ('sort', sort_url(view, painter)),
+            ('sort', sort_url(view, painter, join_index)),
         ]
         if html.has_var('_body_class'):
             params.append(('_body_class',     html.var('_body_class')))

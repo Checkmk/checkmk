@@ -1,0 +1,10 @@
+Title: Alias is created twice
+Component: core
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-10-18 08:51:10
+Class: cleanup
+
+When a host gets an explicit alias, the host definition will contain
+two alias entries. One should be removed.

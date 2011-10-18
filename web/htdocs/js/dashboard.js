@@ -29,50 +29,68 @@ function resize_dashlets(id, code)
     var oDash = null;
     for (var i in resize_info) {
         var dashlet = resize_info[i];
+        var d_number  = dashlet[0];
+        var d_visible = dashlet[1];
+        var d_left    = dashlet[2];
+        var d_top     = dashlet[3];
+        var d_width   = dashlet[4];
+        var d_height  = dashlet[5];
+
+        var disstyle = "block";
+        if (!d_visible) {
+            disstyle = "none";
+        }
 
         // check if dashlet has title and resize its width
-        oDash = document.getElementById("dashlet_title_" + dashlet[0]);
+        oDash = document.getElementById("dashlet_title_" + d_number);
         if (oDash) {
-            oDash.style.width  = dashlet[3] + "px";
+            oDash.style.width  = d_width + "px";
             oDash.style.top    = "-" + title_height + "px";
             oDash.style.height = title_height + "px";
+            oDash.style.display = disstyle;
         }
 
         // resize outer div
-        oDash = document.getElementById("dashlet_" + dashlet[0]);
+        oDash = document.getElementById("dashlet_" + d_number);
         if(oDash) {
             oDash.style.position = 'absolute';
-            oDash.style.display  = 'block';
-            oDash.style.left     = dashlet[1] + "px";
-            oDash.style.top      = dashlet[2] + "px";
-            oDash.style.width    = dashlet[3] + "px";
-            oDash.style.height   = dashlet[4] + "px";
+            oDash.style.display  = disstyle;
+            oDash.style.left     = d_left + "px";
+            oDash.style.top      = d_top + "px";
+            oDash.style.width    = d_width + "px";
+            oDash.style.height   = d_height + "px";
         }
 
         // resize shadow images
-        oDash = document.getElementById("dashadow_w_" + dashlet[0]);
-        if(oDash && dashlet[4] - 32 > 0)
-            oDash.style.height = (dashlet[4] - 32) + "px";
-        oDash = document.getElementById("dashadow_e_" + dashlet[0]);
-        if (oDash && dashlet[4] - 32 > 0)
-            oDash.style.height = (dashlet[4] - 32) + "px";
-        oDash = document.getElementById("dashadow_n_" + dashlet[0]);
-        if (oDash && dashlet[3] - 32 > 0)
-            oDash.style.width = (dashlet[3] - 32) + "px";
-        oDash = document.getElementById("dashadow_s_" + dashlet[0]);
-        if (oDash && dashlet[3] - 32 > 0)
-            oDash.style.width = (dashlet[3] - 32) + "px";
+        oDash = document.getElementById("dashadow_w_" + d_number);
+        if (oDash) oDash.style.display  = disstyle;
+        if (oDash && d_height - 32 > 0)
+            oDash.style.height = (d_height - 32) + "px";
+        oDash = document.getElementById("dashadow_e_" + d_number);
+        if (oDash) oDash.style.display  = disstyle;
+        if (oDash && d_height - 32 > 0)
+            oDash.style.height = (d_height - 32) + "px";
+        oDash = document.getElementById("dashadow_n_" + d_number);
+        if (oDash) oDash.style.display  = disstyle;
+        if (oDash && d_width - 32 > 0)
+            oDash.style.width = (d_width - 32) + "px";
+        oDash = document.getElementById("dashadow_s_" + d_number);
+        if (oDash) oDash.style.display  = disstyle;
+        if (oDash && d_width - 32 > 0)
+            oDash.style.width = (d_width - 32) + "px";
+
 
         // resize content div
-        oDash = document.getElementById("dashlet_inner_" + dashlet[0]);
+        oDash = document.getElementById("dashlet_inner_" + d_number);
         if(oDash) {
+            oDash.style.display  = disstyle;
             oDash.style.position = 'absolute';
             oDash.style.left   = dashlet_padding + "px";
             oDash.style.top    = dashlet_padding + "px";
-            if((dashlet[3] - 2*dashlet_padding) > 0)
-                oDash.style.width  = (dashlet[3] - 2*dashlet_padding) + "px";
-            if((dashlet[4] - 2*dashlet_padding) > 0)
-                oDash.style.height = (dashlet[4] - 2*dashlet_padding) + "px";
+            if((d_width - 2*dashlet_padding) > 0)
+                oDash.style.width  = (d_width - 2*dashlet_padding) + "px";
+            if((d_height - 2*dashlet_padding) > 0)
+                oDash.style.height = (d_height - 2*dashlet_padding) + "px";
         }
     }
     oDash = null; 
@@ -80,7 +98,7 @@ function resize_dashlets(id, code)
 
 function set_dashboard_size()
 {
-  var body_padding = 10;
+  var body_padding = 0;
   var width  = pageWidth();
   var height = pageHeight();
   width  = width - 2*screen_margin - 2*body_padding;

@@ -78,7 +78,7 @@ multisite_painter_options["pnpview"] = {
  "title"   : _("PNP Timerange"),
  "default" : "1",
  "values"  : [ ("0", _("4 Hours")),  ("1", _("25 Hours")),
-               ("2", _("One week")), ("3", _("One Month")),
+               ("2", _("One Week")), ("3", _("One Month")),
                ("4", _("One Year")), ("", _("All")) ]
 }
 
@@ -808,7 +808,7 @@ multisite_painters["host_check_type"] = {
 }
 
 multisite_painters["host_in_notifper"] = {
-    "title"   : _("Host in notification period"),
+    "title"   : _("Host in notif. period"),
     "short"   : _("in notif. p."),
     "columns" : [ "host_in_notification_period" ],
     "paint"   : lambda row: paint_nagiosflag(row, "host_in_notification_period", False),

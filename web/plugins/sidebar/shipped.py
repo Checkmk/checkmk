@@ -954,8 +954,8 @@ sidebar_snapins["bookmarks"] = {
 def render_custom_links():
     links = config.custom_links.get(config.role)
     if not links:
-        html.write(_("Please edit <tt>%s</tt> in order to configure which links are shown in this snapin.\n") %
-                  (defaults.default_config_dir + "/multisite.mk"))
+        html.write((_("Please edit <tt>%s</tt> in order to configure which links are shown in this snapin.") %
+                  (defaults.default_config_dir + "/multisite.mk")) + "\n")
         return
 
     def render_list(ids, links):

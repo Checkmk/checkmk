@@ -293,15 +293,22 @@ def ajax_resize():
             bottom = abs_position[1]
             top = bottom - used_size[1]
 
-        # Allocate used squares in matrix
-        for x in range(left, right):
-            for y in range(top, bottom):
-                used_matrix[(x,y)] = True
+        # Allocate used squares in matrix. If not all squares we need are free,
+        # then the dashboard is too small for all dashlets (as it seems).
+        # TEST: Dashlet auf 0/0 setzen, wenn kein Platz dafür da ist.
+        try:
+            for x in range(left, right):
+                for y in range(top, bottom):
+                    if (x,y) in used_matrix:
+                        raise Exception()
+                    used_matrix[(x,y)] = True
+            # Helper variable for how to grow, both x and y in [-1, 0, 1]
+            grow_by = rel_position.compute_grow_by(size) 
 
-        # Helper variable for how to grow, both x and y in [-1, 0, 1]
-        grow_by = rel_position.compute_grow_by(size) 
+            positions.append((nr, True, left, top, right, bottom, grow_by))
+        except:
+            positions.append((nr, False, left, top, right, bottom, (0,0)))
 
-        positions.append((nr, left, top, right, bottom, grow_by))
 
     # now resize all elastic dashlets to the max, but only
     # by one raster at a time, in order to be fair
@@ -341,29 +348,29 @@ def ajax_resize():
     while at_least_one_expanded:
         at_least_one_expanded = False
         new_positions = []
-        for (nr, left, top, right, bottom, grow_by) in positions:
-            # html.write(repr((nr, left, top, right, bottom, grow_by)))
-            # try to grow in X direction by one
-            if grow_by[0] > 0 and right < rastersize[0] and try_allocate(right, top, right+1, bottom):
-                at_least_one_expanded = True
-                right += 1
-            elif grow_by[0] < 0 and left > 0 and try_allocate(left-1, top, left, bottom):
-                at_least_one_expanded = True
-                left -= 1
+        for (nr, visible, left, top, right, bottom, grow_by) in positions:
+            if visible:
+                # html.write(repr((nr, left, top, right, bottom, grow_by)))
+                # try to grow in X direction by one
+                if grow_by[0] > 0 and right < rastersize[0] and try_allocate(right, top, right+1, bottom):
+                    at_least_one_expanded = True
+                    right += 1
+                elif grow_by[0] < 0 and left > 0 and try_allocate(left-1, top, left, bottom):
+                    at_least_one_expanded = True
+                    left -= 1
 
-            # try to grow in Y direction by one
-            if grow_by[1] > 0 and bottom < rastersize[1] and try_allocate(left, bottom, right, bottom+1):
-                at_least_one_expanded = True
-                bottom += 1
-            elif grow_by[1] < 0 and top > 0 and try_allocate(left, top-1, right, top):
-                at_least_one_expanded = True
-                top -= 1
-
-            new_positions.append((nr, left, top, right, bottom, grow_by))
+                # try to grow in Y direction by one
+                if grow_by[1] > 0 and bottom < rastersize[1] and try_allocate(left, bottom, right, bottom+1):
+                    at_least_one_expanded = True
+                    bottom += 1
+                elif grow_by[1] < 0 and top > 0 and try_allocate(left, top-1, right, top):
+                    at_least_one_expanded = True
+                    top -= 1
+            new_positions.append((nr, visible, left, top, right, bottom, grow_by))
         positions = new_positions
 
     resize_info = []
-    for nr, left, top, right, bottom, grow_by in positions:
+    for nr, visible, left, top, right, bottom, grow_by in positions:
         # html.write(repr((nr, left, top, right, bottom, grow_by)))
         # html.write("<br>")
         title = board["dashlets"][nr].get("title")
@@ -372,6 +379,7 @@ def ajax_resize():
         else:
             th = 0
         resize_info.append([nr,
+                            visible and 1 or 0,
                             left * raster[0],
                             top * raster[1] + th,
                             (right - left) * raster[0],

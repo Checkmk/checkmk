@@ -1,3 +1,8 @@
+1.1.12b2:
+    Multisite:
+    * Remove Check_MK logo from default dashboard
+    * Let dashboard use 10 more pixels right and bottom
+
 1.1.12b1:
     Core, Setup, etc.:
     * FIX: fix cmk -D on cluster hosts
@@ -11,6 +16,10 @@
     * cups_queues: Run agent part only on directly on CUPS servers,
       not on clients
     * FIX: mbg_lantime_state: Fixed output UOM to really be miliseconds
+    * FIX: ntp: Handling large times in "poll" column correctly
+    * New check dmi_sysinfo to gather basic hardware information
+    * New check bintec_info to gather the software version and serial number
+    of bintec routers
 
     Multisite:
     * FIX: fix rescheduling of host check
@@ -18,6 +27,9 @@
     * FIX: Fixed not updating pnp graphs on dashboard in some browsers (like chrome)
     * FIX: fix URL-too-long in permissions page
     * FIX: fix permission computation
+    * FIX: fixed sorting of service perfdata columns
+    * FIX: fixed sorting of multiple joined columns in some cases
+    * FIX: fixed some localisation strings
     * Cleanup permissions page optically, add comments for views and snapins
     * Added some missing i18n strings in general HTML functions
     * Added display_option "w" to disable limit messages and livestatus errors in views

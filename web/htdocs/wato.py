@@ -7455,6 +7455,15 @@ class API:
         eff["name"] = hostname
         return eff
 
+    # Update the attributes of the given host and returns the resulting host attributes
+    # which have been persisted
+    def update_host_attributes(self, host, attr):
+        folder = g_folders.get(host["path"])
+        load_hosts(folder)
+        folder[".hosts"][host["name"]].update(attr)
+        save_folder_and_hosts(folder)
+        return folder[".hosts"][host["name"]]
+
     # Return displayable information about host (call with with result vom get_host())
     def get_host_painted(self, host): 
         declare_host_tag_attributes()
@@ -7541,7 +7550,7 @@ def collect_hosts(folder):
     # Collect hosts in this folder
     for hostname, host in folder[".hosts"].items():
         hosts[hostname] = effective_attributes(host, folder)
-        host["file"] = folder[".path"]
+        hosts[hostname]["path"] = folder[".path"]
 
     # Collect hosts from subfolders
     for subfolder in folder[".folders"].values():

@@ -4,6 +4,8 @@
     * Hosts can now be created directly in folders. The concept of host lists
       has been dropped (see migration notes!)
     * Configuration of global configuration variables of Check_MK via WATO
+    * Added missing API function update_host_attributes() to change the
+      attributes of a host
 
     Multisite:
     * FIX: Fixed encoding problem when opening dashboard

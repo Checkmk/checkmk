@@ -675,8 +675,27 @@ register_rule(group,
     )
 
             
-            
-
+register_rule(group,
+    "checkgroup_parameters:memory",
+    Alternative(
+        title = _("Main memory usage (Linux / UNIX)"),
+        help = _("The levels for memory usage on Linux and UNIX systems take into account the "
+               "currently used memory (RAM or SWAP) by all processes and sets this in relation "
+               "to the total RAM of the system. This means that the memory usage can exceed 100%. "
+               "A usage of 200% means that the total size of all processes is twice as large as "
+               "the main memory, so <b>at least</b> the half of it is currently swapped out."),
+        elements = [ 
+            Tuple(
+                title = _("Specify levels in percentage of RAM"),
+                elements = [
+                  Percentage(title = _("Warning at a usage of"), label = _("% of RAM")),
+                  Percentage(title = _("Critical at a usage of"), label = _("% of RAM"))]),
+            Tuple(
+                title = _("Specify levels in percentage of RAM"),
+                elements = [
+                  Integer(title = _("Warning at"), unit = _("MB")),
+                  Integer(title = _("Critical at"), unit = _("MB"))]),
+            ]))
 
 
 register_rule(group, 
@@ -693,4 +712,52 @@ register_rule(group,
               Integer(title = _("Critical at a load of"))]),
     )
 
+register_rule(group, 
+    "checkgroup_parameters:cpu_utilization",
+    Optional(
+        Tuple(
+              elements = [
+                  Percentage(title = _("Warning at a disk wait of"), label = "%"),
+                  Percentage(title = _("Critical at a disk wait of"), label = "%")]),
+        title = _("CPU utilization"),
+        label = _("Alert on too high disk wait (IO wait)"), 
+        help = _("The CPU utilization sums up the percentages of CPU time that is used "
+                 "for user processes, kernel routines (system), disk wait (sometimes also "
+                 "called IO wait) or nothing (idle). "
+                 "Currently you can only set warning/critical levels to the disk wait. This "
+                 "is the total percentage of time all CPUs have nothing else to do then waiting "
+                 "for data coming from or going to disk. If you have a significant disk wait "
+                 "the the bottleneck of your server is IO. Please note that depending on the "
+                 "applications being run this might or might not be totally normal."),
+),
+    )
 
+register_rule(group, 
+    "checkgroup_parameters:threads",
+    Tuple(title = _("Number of threads"), 
+          help = _("This levels check the number of currently existing threads on the system. Each process has at "
+                   "least one thread."),
+          elements = [
+              Integer(title = _("Warning at"), label = _("threads")),
+              Integer(title = _("Critical at"), label = _("threads"))]),
+    )
+
+register_rule(group,
+    "checkgroup_parameters:vm_counter",
+    Tuple(title = _("Number of kernel events per second"),
+          help = _("This ruleset applies to several similar checks measing various kernel "
+                   "events like context switches, process creations and major page faults. "
+                   "Please create separate rules for each type of kernel counter you "
+                   "want to set levels for."),
+          show_titles = False,
+          elements = [
+              Optional(
+                 Float(label = _("events per second")),
+                 title = _("Set warning level:"),
+                 sameline = True),
+              Optional(
+                 Float(label = _("events per second")),
+                 title = _("Set critical level:"),
+                 sameline = True)]),
+    itemtype = "item",
+    itemname = _("kernel counter"))

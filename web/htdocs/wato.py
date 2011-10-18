@@ -3813,6 +3813,7 @@ class Integer(ValueSpec):
         self._minvalue = kwargs.get("minvalue") 
         self._maxvalue = kwargs.get("maxvalue")
         self._label    = kwargs.get("label")
+        self._unit     = kwargs.get("unit", "")
 
     def canonical_value(self):
         if self._minvalue:
@@ -3824,7 +3825,10 @@ class Integer(ValueSpec):
         html.number_input(varprefix, str(value), self._size)
         if self._label:
             html.write(" ")
-            html.write(self._label)
+            if self._label:
+                html.write(self._label)
+            elif self._unit:
+                html.write(self._unit)
 
     def from_html_vars(self, varprefix):
         try:
@@ -3832,6 +3836,9 @@ class Integer(ValueSpec):
         except:
             raise MKUserError(varprefix, 
                   _("The text <b><tt>%s</tt></b> is not a valid integer number." % html.var(varprefix)))
+
+    def value_to_text(self, value):
+        return "%d%s" % (value, self._unit)
 
     def validate_datatype(self, value, varprefix): 
         if type(value) != int:
@@ -3943,6 +3950,8 @@ class Percentage(Float):
             self._minvalue = 0.0
         if "max_value" not in kwargs:
             self._maxvalue = 101.0
+        if "unit" not in kwargs:
+            self._unit = "%"
 
     def value_to_text(self, value):
         return "%.1f%%" % value
@@ -4200,6 +4209,7 @@ class Optional(ValueSpec):
         self._label = kwargs.get("label")
         self._negate = kwargs.get("negate", False)
         self._none_label = kwargs.get("none_label", _("(unset)"))
+        self._sameline = kwargs.get("sameline", False)
 
     def canonical_value(self):
         return None
@@ -4210,6 +4220,7 @@ class Optional(ValueSpec):
             checked = html.get_checkbox(varprefix + "_use")
         else:
             checked = self._negate != (value != None)
+        html.write("<div style=\"float: left;\">")
         html.checkbox(varprefix + "_use" , checked,
                       onclick="wato_toggle_option(this, %r, %r)" % 
                          (div_id, self._negate and 1 or 0))
@@ -4221,15 +4232,19 @@ class Optional(ValueSpec):
             html.write(_(" Ignore this option"))
         else:
             html.write(_(" Activate this option"))
-        html.write("<br><br>")
-        html.write('<div id="%s" style="display: %s">' % (
+        if self._sameline:
+            html.write("&nbsp;")
+        else:
+            html.write("<br><br>")
+        html.write("</div>")
+        html.write('<div id="%s" style="float: left; display: %s">' % (
                 div_id, checked == self._negate and "none" or ""))
         if value == None:
-            value = ""
+            value = self._valuespec.default_value()
         if self._valuespec.title():
             html.write(self._valuespec.title() + " ")
         self._valuespec.render_input(varprefix + "_value", value)
-        html.write('</div>')
+        html.write('</div>\n')
 
     def value_to_text(self, value):
         if value == None:
@@ -4327,6 +4342,7 @@ class Tuple(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._elements = kwargs["elements"]
+        self._show_titles = kwargs.get("show_titles", True)
 
     def canonical_value(self):
         return tuple([x.canonical_value() for x in self._elements])
@@ -4339,7 +4355,9 @@ class Tuple(ValueSpec):
                 help = "<br><i>%s</i>" % element.help()
             else:
                 help = ""
-            html.write("<tr><td>%s:%s</td>" % (element.title(), help))
+            html.write("<tr>")
+            if self._show_titles:
+                html.write("<td>%s:%s</td>" % (element.title(), help))
             html.write("<td>")
             element.render_input(vp, val)
             html.write("</td></tr>")
@@ -4349,9 +4367,9 @@ class Tuple(ValueSpec):
         self._elements[0].set_focus(varprefix + "_0")
 
     def value_to_text(self, value): 
-        return "(" + ", ".join([ element.value_to_text(val) 
+        return "" + ", ".join([ element.value_to_text(val) 
                          for (element, val)
-                         in zip(self._elements, value)]) + ")"
+                         in zip(self._elements, value)]) + ""
 
     def from_html_vars(self, varprefix):
         value = []
@@ -6636,12 +6654,15 @@ def mode_edit_ruleset(phase):
         if hostname:
             title += _(" for host %s") % hostname
         if rulespec["itemtype"]:
-            title += _(" and %s %s") % (rulespec["itemname"], item)
+            title += _(" and %s '%s'") % (rulespec["itemname"], item)
         return title
 
     elif phase == "buttons":
         html.context_button(_("All rulesets"), 
               make_link([("mode", "rulesets"), ("host", hostname)]), "back")
+        if hostname:
+            html.context_button(_("Services"), 
+                 make_link([("mode", "inventory"), ("host", hostname)]), "back")
         return
 
     elif phase == "action":
@@ -6668,7 +6689,7 @@ def mode_edit_ruleset(phase):
         action = html.var("_action")
 
         if action == "delete":
-            c = wato_confirm(_("Confirm"), _("Delete rule number %d?") % rulenr)
+            c = wato_confirm(_("Confirm"), _("Delete rule number %d?") % (rulenr+1))
             if c:
                 del rules[rulenr - 1]
                 save_rulesets(rule_folder, rulesets)
@@ -6795,7 +6816,11 @@ def mode_edit_ruleset(phase):
                         match_keys.update(new_keys)
 
                 elif reason == True and (not alread_matched or rulespec["match"] == "all"):
-                    title = _("This rule matches for the host '%s'.") % hostname
+                    title = _("This rule matches for the host '%s'") % hostname
+                    if rulespec["itemtype"]:
+                        title += _(" and the %s '%s'.") % (rulespec["itemname"], item)
+                    else:
+                        title += "."
                     img = 'match'
                     alread_matched = True
                 elif reason == True:
@@ -6805,14 +6830,14 @@ def mode_edit_ruleset(phase):
                 else:
                     title = _("This rule does not match: %s") % reason
                     img = 'nmatch'
-                html.write('<img align=absbottom title="%s" class=icon src="images/icon_rule%s.png"> ' % (title, img))
+                html.write('<img align=absmiddle title="%s" class=icon src="images/icon_rule%s.png"> ' % (title, img))
             if rulespec["valuespec"]:
                 value_html = rulespec["valuespec"].value_to_text(value)
             else:
                 img = value and "yes" or "no"
                 title = value and _("This rule results in a positive outcome.") \
                               or  _("this rule results in a negative outcome.")
-                value_html = '<img align=absbottom title="%s" src="images/rule_%s.png">' % (title, img)
+                value_html = '<img align=absmiddle title="%s" src="images/rule_%s.png">' % (title, img)
             html.write('%s</td>\n' % value_html)
 
             # Conditions
@@ -6856,7 +6881,7 @@ def mode_edit_ruleset(phase):
     if hostname:
         title = _("Exception rule for host %s" % hostname)
         if rulespec["itemtype"]:
-            title += _(" and %s %s") % (rulespec["itemname"], item)
+            title += _(" and %s '%s'") % (rulespec["itemname"], item)
         html.button("_new_host_rule", title)
         html.write(" " + _("or") + " ")
     html.button("_new_rule", _("General rule in folder: "))
@@ -7189,23 +7214,23 @@ def mode_edit_rule(phase):
         return "edit_ruleset"
 
     html.begin_form("rule_editor")
-    html.write('<table class="form ruleditor">')
+    html.write('<table class="form ruleeditor">\n')
 
     # Value
-    html.write("<tr><td class=title colspan=2><h3>%s</h3></td></tr>" % 
+    html.write("<tr><td class=title colspan=2><h3>%s</h3></td></tr>\n" % 
                 _("Value"))
     if valuespec:
         value = rule[0]
         edit_value(valuespec, value)
         valuespec.set_focus("ve")
     else:
-        html.write("<tr><td class=legend></td>")
+        html.write("<tr><td class=legend></td>\n")
         html.write("<td class=content>")
         for posneg, img in [ ("positive", "yes"), ("negative", "no")]:
             val = img == "yes"
             html.write('<img align=top src="images/rule_%s.png"> ' % img)
             html.radiobutton("value", img, value == val, _("Make the outcome of the ruleset <b>%s</b><br>") % posneg)
-        html.write("</td></tr>")
+        html.write("</td></tr>\n")
 
     # Conditions
     html.write("<tr><td class=title colspan=2><h3>%s</h3></td></tr>" % 

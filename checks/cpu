@@ -78,3 +78,4 @@ check_info['cpu.loads'] = (check_cpu_load, "CPU load", 1,  inventory_cpu_load )
 checkgroup_of['cpu.loads'] = "cpu_load"
 
 check_info['cpu.threads'] = (check_cpu_threads, "Number of threads", 1,  inventory_cpu_threads)
+checkgroup_of['cpu.threads'] = "threads"

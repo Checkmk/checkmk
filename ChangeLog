@@ -6,6 +6,8 @@
     * Configuration of global configuration variables of Check_MK via WATO
     * Added missing API function update_host_attributes() to change the
       attributes of a host
+    * Added API function num_hosts_in_folder() to count the number of hosts
+      below the given folder
 
     Multisite:
     * FIX: Fixed encoding problem when opening dashboard

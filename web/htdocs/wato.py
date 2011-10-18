@@ -7446,6 +7446,9 @@ class API:
         else:
             raise MKGeneralException("No WATO folder %s." % path)
 
+    # Get the number of hosts recursive from the given folder
+    def num_hosts_in_folder(self, folder):
+        return num_hosts_in(folder, True)
 
     # Get all effective data of a host. Folder must be returned by get_folder()
     def get_host(self, folder, hostname):

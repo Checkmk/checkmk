@@ -36,6 +36,8 @@ def do_automation(cmd, args):
         if cmd == "get-configuration":
             read_config_files(with_autochecks=False, with_conf_d=False)
             result = automation_get_configuration()
+        elif cmd == "get-check-information":
+            result = automation_get_check_information()
         elif cmd == "delete-host":
             read_config_files(with_autochecks=False)
             result = automation_delete_host(args)
@@ -414,3 +416,15 @@ def automation_get_configuration():
         if varname in globals():
             result[varname] = globals()[varname]
     return result
+
+def automation_get_check_information():
+    manuals = all_manuals()
+    checks = {}
+    for checkname in check_info:
+        manfile = manuals.get(checkname)
+        if manfile:
+            title = file(manfile).readline().strip().split(":", 1)[1]
+        else:
+            title = checkname
+        checks[checkname] = { "title" : title }
+    return checks

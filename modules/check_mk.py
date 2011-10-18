@@ -1937,8 +1937,8 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
                 continue
 
             # Skip checktypes which are generally ignored for this host
-            if checktype_ignored_for_host(host, checkname):
-                continue
+            # DONE LATER: if checktype_ignored_for_host(host, checkname):
+            #    continue
 
             if is_cluster(host):
                 sys.stderr.write("%s is a cluster host and cannot be inventorized.\n" % host)
@@ -2064,7 +2064,7 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
                     else:
                         continue # we have that already
 
-                if service_ignored(hn, description):
+                if service_ignored(hn, checkname, description):
                     if include_state:
                         if state_type == "old":
                             state_type = "obsolete"
@@ -2146,8 +2146,15 @@ def check_inventory(hostname):
         sys.exit(3)
 
 
-def service_ignored(hostname, service_description):
-    return in_boolean_serviceconf_list(hostname, service_description, ignored_services)
+def service_ignored(hostname, checktype, service_description):
+    if checktype in ignored_checktypes:
+        return True
+    if in_boolean_serviceconf_list(hostname, service_description, ignored_services):
+        return True
+    if checktype_ignored_for_host(hostname, checktype):
+        return True
+    return False
+
 
 def in_boolean_serviceconf_list(hostname, service_description, conflist):
     for entry in conflist:

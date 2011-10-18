@@ -446,6 +446,17 @@ register_rule(group,
              "list of a host."),
     itemtype = "service")
 
+register_rule(group,
+    "ignored_checks",
+    CheckTypeSelection(
+        title = _("Ignored checks"),
+        help = _("This ruleset is similar to 'Ignored services', but selects checks to be ignored "
+                 "by their <b>type</b>. This allows to disable certain techinal implementations "
+                 "such as filesystem checks via SNMP on hosts that also have the Check_MK agent "
+                 "installed."),
+    ))
+
+
 group = _("SNMP")
 
 _snmpv3_basic_elements = [
@@ -488,6 +499,16 @@ register_rule(group,
                    ])],
         title = _("SNMP communities of monitored hosts")))
 
+register_rule(group,
+    "bulkwalk_hosts",
+    title = _("Hosts using SNMP v2c (and bulk walk)"),
+    help = _("Most SNMP hosts support SNMP version 2c. However, Check_MK defaults to version 1, "
+             "in order to support as many devices as possible. Please use this ruleset in order "
+             "to configure SNMP v2c for as many hosts as possible. That version has two advantages: "
+             "it supports 64 bit counters, which avoid problems with wrapping counters at too "
+             "much traffic. And it support bulk walk, which saves much CPU and network ressourecs. "
+             "Please be aware, however, that there are some broken devices out there, that support "
+             "v2c but behave very bad when it is used. "))
 
 group = _("Operation mode of Check_MK") 
 

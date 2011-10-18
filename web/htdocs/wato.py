@@ -4100,15 +4100,27 @@ class DropdownChoice(ValueSpec):
 class ListChoice(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
-        self._choices = kwargs["choices"] 
+        self._choices = kwargs.get("choices")
         self._columns = kwargs.get("columns", 1)
+        self._loaded_at = None
+
+    # In case of overloaded functions with dynamic elements
+    def load_elements(self):
+        if self._choices:
+            self._elements = self._choices
+            return
+
+        if self._loaded_at != id(html):
+            self._elements = self.get_elements()
+            self._loaded_at = id(html) # unique for each query!
 
     def canonical_value(self):
         return []
 
     def render_input(self, varprefix, value):
+        self.load_elements()
         html.write("<table>")
-        for nr, (key, title) in enumerate(self._choices):
+        for nr, (key, title) in enumerate(self._elements):
             if nr % self._columns == 0:
                 if nr > 0:
                     html.write("</tr>")
@@ -4119,21 +4131,24 @@ class ListChoice(ValueSpec):
         html.write("</tr></table>")
 
     def value_to_text(self, value): 
-        d = dict(self._choices)
+        self.load_elements()
+        d = dict(self._elements)
         return ", ".join([ str(d.get(v,v)) for v in value ])
 
     def from_html_vars(self, varprefix):
+        self.load_elements()
         value = []
 
-        for nr, (key, title) in enumerate(self._choices):
+        for nr, (key, title) in enumerate(self._elements):
             if html.get_checkbox("%s_%d" % (varprefix, nr)):
                 value.append(key)
         return value
 
     def validate_datatype(self, value, varprefix):
+        self.load_elements()
         if type(value) != list:
             raise MKUserError(varprefix, _("The datatype must be list, but is %s") % type(value)) 
-        d = dict(self._choices)
+        d = dict(self._elements)
         for v in value:
             if v not in d:
                 raise MKUserError(varprefix, _("%s is not an allowed value") % v)
@@ -4489,9 +4504,9 @@ class ElementSelection(ValueSpec):
         self._loaded_at = None
 
     def load_elements(self):
-        if self._loaded_at != html:
+        if self._loaded_at != id(html):
             self._elements = self.get_elements()
-            self._loaded_at = html # unique for each query!
+            self._loaded_at = id(html) # unique for each query!
 
     def canonical_value(self):
         self.load_elements()
@@ -4525,6 +4540,18 @@ class ElementSelection(ValueSpec):
     def validate_datatype(self, value, varprefix):
         if type(value) != str:
             raise MKUserError(varprefix, _("The datatype must be str (string), but is %s") % type(value))
+
+
+
+class CheckTypeSelection(ListChoice):
+    def __init__(self, **kwargs):
+        ListChoice.__init__(self, columns=3, **kwargs)
+
+    def get_elements(self):
+        checks = check_mk_automation("get-check-information")
+        elements = [ (cn, "<span title=\"%s\">%s</span>" % (c["title"], cn)) for (cn, c) in checks.items()]
+        elements.sort()
+        return elements
 
 
 def edit_value(valuespec, value):

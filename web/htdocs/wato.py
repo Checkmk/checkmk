@@ -587,7 +587,7 @@ def load_hosts_file(folder):
     filename = root_dir + folder[".path"] + "/hosts.mk"
     if os.path.exists(filename):
         variables = {
-            "FOLDER_PATH"         : folder[".path"],
+            "FOLDER_PATH"         : "",
             "ALL_HOSTS"           : ALL_HOSTS,
             "all_hosts"           : [],
             "ipaddresses"         : {},
@@ -625,7 +625,8 @@ def load_hosts_file(folder):
                         tagvalue = attr.get_tag_value(tags)
                         host[attr.name()] = tagvalue
 
-            host[".tags"] = parts[1:] # access to "raw" tags, needed for rule engine
+            # access to "raw" tags, needed for rule engine, remove implicit tags
+            host[".tags"] = [ p for p in parts[1:] if p not in [ "wato", "//" ] ]
             hosts[hostname]   = host
 
 
@@ -649,14 +650,14 @@ def save_hosts(folder = None):
             os.remove(filename)
         return
 
-    all_hosts = []
+    all_hosts = [] # pair-list of (hostname, tags)
     ipaddresses = {}
     hostnames = hosts.keys()
     hostnames.sort()
+    custom_macros = {} # collect value for attributes that are to be present in Nagios
     for hostname in hostnames:
         host = hosts[hostname]
         effective = effective_attributes(host, folder)
-
         ipaddress = effective.get("ipaddress")
 
         # Compute tags from settings of each individual tag. We've got
@@ -667,7 +668,7 @@ def save_hosts(folder = None):
                 value = effective.get(attr.name())
                 tags.update(attr.get_tag_list(value))
 
-        all_hosts.append("|".join([hostname] + list(tags) + [ "/wato/" + folder_path + "/", 'wato' ]))
+        all_hosts.append((hostname, list(tags)))
         if ipaddress:
             ipaddresses[hostname] = ipaddress
 
@@ -682,19 +683,6 @@ def save_hosts(folder = None):
             if use and cgs:
                 out.write("\nhost_contactgroups.append(( %r, [%r] ))\n" % (cgs, hostname))
 
-    out.write("# Written by WATO\n# encoding: utf-8\n\n")
-    if len(all_hosts) > 0:
-        out.write("all_hosts += ")
-        out.write(pprint.pformat(all_hosts))
-        if len(ipaddresses) > 0:
-            out.write("\n\nipaddresses.update(")
-            out.write(pprint.pformat(ipaddresses))
-            out.write(")")
-        out.write("\n")
-
-    # Add custom macros for attributes that are to be present in Nagios
-    custom_macros = {}
-    for hostname, host in hosts.items():
         for attr, topic in host_attributes:
             attrname = attr.name()
             if attrname in effective:
@@ -702,16 +690,33 @@ def save_hosts(folder = None):
                 if nag_varname:
                     value = effective.get(attrname)
                     nagstring = attr.to_nagios(value)
-                    if nag_varname not in custom_macros:
-                        custom_macros[nag_varname] = {}
-                    custom_macros.setdefault(nag_varname, {})[hostname] = nagstring
+                    if nagstring != None:
+                        if nag_varname not in custom_macros:
+                            custom_macros[nag_varname] = {}
+                        custom_macros[nag_varname][hostname] = nagstring
+
+    out.write("# Written by WATO\n# encoding: utf-8\n\n")
+    if len(all_hosts) > 0:
+        out.write("all_hosts += [\n")
+        for hostname, taglist in all_hosts:
+            tagstext = "|".join(taglist)
+            if tagstext:
+                tagstext += "|"
+            out.write('  "%s|%swato|/" + FOLDER_PATH + "/",\n' % (hostname, tagstext))
+        out.write("]\n")
+        if len(ipaddresses) > 0:
+            out.write("\n# Explicit IP addresses\n")
+            out.write("ipaddresses.update(")
+            out.write(pprint.pformat(ipaddresses))
+            out.write(")")
+        out.write("\n")
 
     for nag_varname, entries in custom_macros.items():
         macrolist = []
         for hostname, nagstring in entries.items():
             macrolist.append((nagstring, [hostname]))
         if len(macrolist) > 0:
-            out.write("\n# %s\n" % host_attribute[attrname].title())
+            out.write("\n# Settings for %s\n" % nag_varname)
             out.write("extra_host_conf.setdefault(%r, []).extend(\n" % nag_varname)
             out.write("  %s)\n" % pprint.pformat(macrolist))
     
@@ -727,7 +732,7 @@ def save_hosts(folder = None):
     # Write information about all host attributes into special variable - even
     # values stored for check_mk as well.
     out.write("\n# Host attributes (needed for WATO)\n")
-    out.write("host_attributes.update(%s)\n" % pprint.pformat(hosts))
+    out.write("host_attributes.update(\n%s)\n" % pprint.pformat(hosts))
 
 
 def delete_configuration_file(folder, thefile):
@@ -3081,7 +3086,10 @@ class NagiosTextAttribute(TextAttribute):
         return self.nag_name
 
     def to_nagios(self, value):
-        return value.encode("utf-8")
+        if value:
+            return value.encode("utf-8")
+        else:
+            return None
 
 # An attribute for selecting one item out of list using
 # a drop down box (<select>). Enumlist is a list of

@@ -6,6 +6,8 @@ Migration notes for wato-ng:
 3. wato_host_tags anstelle von host_tags. Das id-Feld ist
    jetzt zwingend vorgeschrieben. None ist (wohl?) nicht mehr
    erlaubt.
+4. if und Freunde: es sind nur noch dictionary parameter erlaubt
+   if_default_levels = { ... } wurden eingeführt.
 
 Dokumentation:
 

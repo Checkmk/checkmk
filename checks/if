@@ -39,6 +39,7 @@ def if_convert_to_if64(info):
 check_info['if'] = (check_if, "Interface %s", 1,  inventory_if)
 check_includes['if'] = [ "if.include" ]
 checkgroup_of['if'] = "if"
+check_default_levels['if'] = "if_default_levels"
 
 snmp_info['if'] = \
   ( ".1.3.6.1.2.1.2.2.1", [

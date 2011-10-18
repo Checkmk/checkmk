@@ -4223,7 +4223,7 @@ class Optional(ValueSpec):
             checked = html.get_checkbox(varprefix + "_use")
         else:
             checked = self._negate != (value != None)
-        html.write("<div style=\"float: left;\">")
+        html.write("<div style=\"float: none;\">")
         html.checkbox(varprefix + "_use" , checked,
                       onclick="wato_toggle_option(this, %r, %r)" % 
                          (div_id, self._negate and 1 or 0))
@@ -4315,7 +4315,10 @@ class Alternative(ValueSpec):
 
     def value_to_text(self, value):
         vs = self.matching_alternative(value)
-        return vs.value_to_text(value)
+        if vs:
+            return vs.value_to_text(value)
+        else:
+            return _("invalid:") + " " + str(value)
 
     def from_html_vars(self, varprefix):
         nr = int(html.var(varprefix + "_use"))
@@ -4412,7 +4415,9 @@ class Dictionary(ValueSpec):
 ##        return "<br><br>".join(h)
 
     def render_input(self, varprefix, value):
+        html.write("<table class=dictionary>")
         for param, vs in self._elements:
+            html.write("<tr><td>")
             vp = varprefix + "_" + param
             div_id = vp
             html.checkbox(vp + "_USE", param in value,
@@ -4423,7 +4428,8 @@ class Dictionary(ValueSpec):
             if vs.help():
                 html.write("<ul class=help>%s</ul>" % vs.help())
             vs.render_input(vp, value.get(param, vs.canonical_value()))
-            html.write("</div></ul>")
+            html.write("</div></td></tr>")
+        html.write("</table>")
 
     def set_focus(self, varprefix):
         self._elements[0][1].set_focus(varprefix + self._elements[0][0])
@@ -4568,7 +4574,7 @@ def render_main_menu(some_modules, columns = 2):
         url = make_link([("mode", mode)])
         html.write('<td class=icon><a href="%s"><img src="images/icon_%s.png"></a></td>' % 
               (url, icon))
-        html.write('</td><td class=text><a href="%s">%s</a><br><i>%s</i></td>' % 
+        html.write('</td><td class=text><a href="%s">%s</a><br><i class=help>%s</i></td>' % 
            (url, title, help))
         if nr % columns == columns - 1:
             html.write("</tr>")
@@ -6680,6 +6686,7 @@ def mode_edit_ruleset(phase):
             if html.check_transaction():
                 if html.var("_new_rule"):
                     hostname = None
+                    item = None
                 new_rule = create_rule(rulespec, hostname, item)
                 if hostname:
                     rules[0:0] = [new_rule]
@@ -6927,7 +6934,10 @@ def create_rule(rulespec, hostname=None, item=None):
     else:
         new_rule.append(ALL_HOSTS) # bottom: default to catch-all rule
     if rulespec["itemtype"]:
-        new_rule.append(["%s$" % item])
+        if item != None:
+            new_rule.append(["%s$" % item])
+        else:
+            new_rule.append([""])
     return tuple(new_rule)
 
 

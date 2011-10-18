@@ -33,10 +33,10 @@ if_inventory_uses_alias = False
 if_inventory_monitor_speed = True
 if_inventory_monitor_state = True
 
-if_default_levels = (0.01, 0.1, None, None, ('1', 'up')) # Only defined for legacy compatibility
-if_default_error_levels = (0.01, 0.1)    # percentages or errors!
-if_default_traffic_levels = (None, None) # No levels and bandwidth usage
-if_default_average = None                # No average computing
+factory_settings["if_default_levels"] = {
+    "errors" : (0.01, 0.1),
+}
+
 
 # Remove 0 bytes from strings. They lead to problems e.g. here:
 # On windows hosts the labels of network interfaces in oid
@@ -52,9 +52,6 @@ def cleanup_if_strings(s):
 
 # make sure, that configuration variable is present in precompiled host checks
 check_config_variables.append("nagios_illegal_chars")
-
-# default error levels are needed in case of incomplete parameter dictionary
-check_config_variables.append("if_default_error_levels")
 
 # Name of state (lookup SNMP enum)
 def if_statename(st):
@@ -91,15 +88,13 @@ def inventory_if_common(info):
         seen_items.add(item)
 
         if ifType in if_inventory_porttypes and ifOperStatus in if_inventory_portstates:
-            paramstring = '{ "errors" : if_default_error_levels, ' \
-                          '"traffic" : if_default_traffic_levels, ' \
-                          '"average" : if_default_average '
+            paramstring = "{"
 
             if if_inventory_monitor_state:
-                paramstring += ', "state" : "%s"' % ifOperStatus
+                paramstring += '"state" : "%s",' % ifOperStatus
 
             if ifSpeed != "" and if_inventory_monitor_speed:
-                paramstring += ', "speed" : %d' % int(ifSpeed)
+                paramstring += '"speed" : %d,' % int(ifSpeed)
             paramstring += "}"
             pre_inventory.append( (item, paramstring, int(ifIndex)) )
 
@@ -116,27 +111,24 @@ def inventory_if_common(info):
 
 
 def check_if_common(item, params, info):
-    err_warn, err_crit = 0, 0
-    targetspeed        = None
-    targetstate        = None
-    bw_warn, bw_crit   = None, None
-    average            = None
+    # Params now must be a dict. Some keys might
+    # be set to None
+    targetspeed        = params.get("speed")
+    targetstate        = params.get("state")
+    average            = params.get("average")
+    
+    # error checking might be turned off
+    if params["errors"]:
+        err_warn, err_crit = params["errors"]
+    else:
+        err_warn, err_crit = None, None
 
-    # new style of check parameters since 1.1.9i1
-    if type(params) == dict:
-        err_warn, err_crit = params.get("errors", if_default_error_levels)
-        targetspeed        = params.get("speed")
-        targetstate        = params.get("state")
-        bw_warn, bw_crit   = params.get("traffic", (None, None))
-        average            = params.get("average")
+    # Traffic checking might be turned off
+    if "traffic" in params:
+        bw_warn, bw_crit = params["traffic"]
+    else:
+        bw_warn, bw_crit = None, None
 
-    # old style of parameters: tuple with various length
-    elif len(params) == 3:
-        err_warn, err_crit, targetspeed = params
-    elif len(params) == 5:
-        err_warn, err_crit, targetspeed, bw_warn, bw_crit = params
-    elif len(params) == 6:
-        err_warn, err_crit, targetspeed, bw_warn, bw_crit, targetstate = params
 
     for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets,  \
             inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \

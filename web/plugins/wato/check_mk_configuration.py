@@ -529,7 +529,8 @@ register_rule(group,
 group = _("Check Parameters")
 register_rule(group, 
     "checkgroup_parameters:filesystem",
-    Dictionary(title = _("Filesystems (used space and growth)"),
+    Dictionary(
+        title = _("Filesystems (used space and growth)"),
         elements = [
             ( "levels", 
               Tuple(
@@ -761,3 +762,50 @@ register_rule(group,
                  sameline = True)]),
     itemtype = "item",
     itemname = _("kernel counter"))
+
+register_rule(group,
+    "checkgroup_parameters:disk_io",
+    Dictionary(
+        title = _("Levels on disk IO (throughput)"),
+        elements = [
+            ( "read",
+              Tuple(
+                  title = _("Read throughput"),
+                  elements = [
+                      Integer(title = "warning at", unit = _("MB/s")),
+                      Integer(title = "critical at", unit = _("MB/s"))
+                  ])),
+            ( "write",
+              Tuple(
+                  title = _("Write throughput"),
+                  elements = [
+                      Integer(title = "warning at", unit = _("MB/s")),
+                      Integer(title = "critical at", unit = _("MB/s"))
+                  ])),
+            ( "average",
+              Integer(
+                  title = _("Average"),
+                  help = _("When averaging is set, then an floating average value "
+                           "of the disk throughput is computed and the levels for read "
+                           "and write will be applied to the average instead of the current "
+                           "value."),
+                 unit = "min"))
+        ]),
+    itemtype = "item",
+    itemname = _("Device"),
+    itemhelp = _("For a summarized throughput of all disks, specify <tt>SUMMARY</tt>, for a "
+                 "sum of read or write throughput write <tt>read</tt> or <tt>write</tt> resp. "
+                 "A per-disk IO is specified by the drive letter and a colon on Windows "
+                 "(e.g. <tt>C:</tt>) or by the device name on Linux/UNIX (e.g. <tt>/dev/sda</tt>).")
+    )
+
+
+register_rule(group, 
+    "checkgroup_parameters:mailqueue_length",
+    Tuple(title = _("Number of mails in outgoing mail queue"), 
+          help = _("This levels is applied to the number of Email that are currently in the outgoing mail queue."),
+          elements = [
+              Integer(title = _("Warning at"), label = _("mails")),
+              Integer(title = _("Critical at"), label = _("mails"))]),
+    )
+

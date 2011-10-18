@@ -62,3 +62,4 @@ def check_diskstat(item, params, info):
     return check_diskstat_generic(item, params, int(info[0][0]), linux_diskstat_convert(info))
 
 check_info['diskstat'] = (check_diskstat, "Disk IO %s", 1,  inventory_diskstat)
+checkgroup_of["diskstat"] = "disk_io"

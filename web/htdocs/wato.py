@@ -3823,7 +3823,7 @@ class Integer(ValueSpec):
 
     def render_input(self, varprefix, value):
         html.number_input(varprefix, str(value), self._size)
-        if self._label:
+        if self._label or self._unit:
             html.write(" ")
             if self._label:
                 html.write(self._label)
@@ -3838,7 +3838,10 @@ class Integer(ValueSpec):
                   _("The text <b><tt>%s</tt></b> is not a valid integer number." % html.var(varprefix)))
 
     def value_to_text(self, value):
-        return "%d%s" % (value, self._unit)
+        text = str(value)
+        if self._unit:
+            text += " " + self._unit
+        return text
 
     def validate_datatype(self, value, varprefix): 
         if type(value) != int:
@@ -4400,13 +4403,13 @@ class Dictionary(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._elements = kwargs["elements"]
 
-    def help(self):
-        h = []
-        for key, vs in self._elements:
-            hh = vs.help()
-            if hh:
-              h.append("</i>%s<br><i>%s" % (vs.title(), hh))
-        return "<br><br>".join(h)
+##    def help(self):
+##        h = []
+##        for key, vs in self._elements:
+##            hh = vs.help()
+##            if hh:
+##              h.append("</i>%s<br><i>%s" % (vs.title(), hh))
+##        return "<br><br>".join(h)
 
     def render_input(self, varprefix, value):
         for param, vs in self._elements:
@@ -4415,8 +4418,10 @@ class Dictionary(ValueSpec):
             html.checkbox(vp + "_USE", param in value,
                           onclick="wato_toggle_option(this, %r)" % div_id)
             html.write(" %s<br>" % vs.title())
-            html.write('<ul><div id="%s" style="display: %s">' % ( 
+            html.write('<div class=dictelement id="%s" style="display: %s">' % ( 
                 div_id, param not in value and "none" or ""))
+            if vs.help():
+                html.write("<ul class=help>%s</ul>" % vs.help())
             vs.render_input(vp, value.get(param, vs.canonical_value()))
             html.write("</div></ul>")
 
@@ -7095,11 +7100,17 @@ def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
 
     # Item list
     if ruleset["itemtype"] and item_list != ALL_SERVICES:
-        tt_list = [ "<tt><b>%s</b></tt>" % t for t in item_list ]
+        tt_list = []
+        for t in item_list:
+            if t.endswith("$"):
+                tt_list.append("%s <tt><b>%s</b></tt>" % (_("is"), t[:-1]))
+            else:
+                tt_list.append("%s <tt><b>%s</b></tt>" % (_("begins with"), t))
+        
         if ruleset["itemtype"] == "service":
-            condition = _("Service name begins with ") + " or with ".join(tt_list)
+            condition = _("Service name ") + " or ".join(tt_list)
         elif ruleset["itemtype"] == "item":
-            condition = (_("%s begins with ") % ruleset["itemname"]) + " or with ".join(tt_list)
+            condition = ruleset["itemname"] + " " + " or ".join(tt_list)
         html.write('<li class="condition">%s</li>' % condition)
 
     html.write("</ul>")
@@ -7244,6 +7255,10 @@ def mode_edit_rule(phase):
     
     html.write("</i></td>")
     html.write("<td class=content>")
+    if len(config.wato_host_tags) == 0:
+        html.write(_("You have not configured any host tags. If you work with rules "
+                     "you should better do so and add a <tt>wato_host_tags = ..</tt> "
+                     "to your <tt>multisite.mk</tt>. You will find an example there."))
     for id, title, tags in config.wato_host_tags:
         default_tag = None
         ignore = True
@@ -7325,11 +7340,14 @@ def mode_edit_rule(phase):
         elif itemtype == "item":
             html.write(rulespec["itemname"].title())
             html.write("<br><i>")
-            html.write(_("You can make the rule apply only on certain services of the "
-                         "specified hosts. Do this by specifying explicit items to mach "
-                         "here. <b>Note:</b> the match is done on the <u>beginning</u> "
-                         "of the item in question. Regular expressions are interpreted, "
-                         "so appending a <tt>$</tt> will force an exact match."))
+            if rulespec["itemhelp"]:
+                html.write(rulespec["itemhelp"])
+            else:
+                html.write(_("You can make the rule apply only on certain services of the "
+                             "specified hosts. Do this by specifying explicit items to mach "
+                             "here. <b>Note:</b> the match is done on the <u>beginning</u> "
+                             "of the item in question. Regular expressions are interpreted, "
+                             "so appending a <tt>$</tt> will force an exact match."))
         else:
             raise MKGeneralException("Invalid item type '%s'" % itemtype)
 
@@ -7358,7 +7376,11 @@ def mode_edit_rule(phase):
                 if x == num_cols - 1:
                     html.write("</tr>")
                 x += 1
-            html.write("</table></div>")
+            html.write("</table>")
+            html.write(_("The entries here are regular expressions to match the beginning. "
+                         "Add a <tt>$</tt> for an exact match. An arbitrary string is matched "
+                         "with <tt>.*</tt>"))
+            html.write("</div>")
                 
     html.write("<tr><td class=buttons colspan=2>")
     html.button("save", _("Save"))
@@ -7493,6 +7515,7 @@ g_rulespecs = {}
 g_rulespec_groups = {}
 def register_rule(group, varname, valuespec = None, title = None, 
                   help = None, itemtype = None, itemname = None, 
+                  itemhelp = None,
                   match = "first", optional = False):
     ruleset = {
         "group"     : group, 
@@ -7500,6 +7523,7 @@ def register_rule(group, varname, valuespec = None, title = None,
         "valuespec" : valuespec, 
         "itemtype"  : itemtype, # None, "service", "checktype" or "checkitem"
         "itemname"  : itemname, # e.g. "mount point"
+        "itemhelp"  : itemhelp, # a description of the item, only rarely used
         "match"     : match,
         "title"     : title or valuespec.title(),
         "help"      : help or valuespec.help(),

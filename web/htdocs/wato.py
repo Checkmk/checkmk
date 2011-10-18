@@ -103,7 +103,7 @@
 #   | Importing, Permissions, global variables                             |
 #   +----------------------------------------------------------------------+
 
-import sys, pprint, socket, re, subprocess, time, datetime, shutil, tarfile, StringIO
+import sys, pprint, socket, re, subprocess, time, datetime, shutil, tarfile, StringIO, math
 import config, htmllib
 from lib import *
 
@@ -3814,6 +3814,8 @@ class Integer(ValueSpec):
         self._maxvalue = kwargs.get("maxvalue")
         self._label    = kwargs.get("label")
         self._unit     = kwargs.get("unit", "")
+        if "size" not in kwargs and "maxvalue" in kwargs:
+            self._size = 1 + int(math.log10(self._maxvalue))
 
     def canonical_value(self):
         if self._minvalue:
@@ -3822,7 +3824,7 @@ class Integer(ValueSpec):
             return 0
 
     def render_input(self, varprefix, value):
-        html.number_input(varprefix, str(value), self._size)
+        html.number_input(varprefix, str(value), size = self._size)
         if self._label or self._unit:
             html.write(" ")
             if self._label:

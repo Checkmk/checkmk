@@ -307,6 +307,7 @@ donation_hosts                       = []
 donation_command                     = 'mail -r checkmk@yoursite.de  -s "Host donation %s" donatehosts@mathias-kettner.de' % check_mk_version
 scanparent_hosts                     = [ ( ALL_HOSTS ) ]
 host_attributes                      = {} # needed by WATO, ignored by Check_MK
+ping_levels                          = [] # special parameters for host/PING check_command
 
 # global variables used to cache temporary values (not needed in check_mk_base)
 ip_to_hostname_cache = None
@@ -1164,6 +1165,30 @@ def extra_conf_of(confdict, hostname, service):
             result += format % (key, values[0])
     return result
 
+def check_icmp_arguments(hostname):
+    values = host_extra_conf(hostname, ping_levels)
+    levels = {}
+    for value in values[::-1]: # make first rules have precedence
+        levels.update(value)
+    if len(levels) == 0:
+        return ""
+
+    args = []
+    rta = 200, 500
+    loss = 80, 100
+    for key, value in levels.items():
+        if key == "timeout":
+            args.append("-t %d" % value)
+        elif key == "packets":
+            args.append("-n %d" % value)
+        elif key == "rta":
+            rtas = value
+        elif key == "loss":
+            loss = value
+    args.append("-w %.2f,%.2f%%" % (rta[0], loss[0]))
+    args.append("-c %.2f,%.2f%%" % (rta[1], loss[1]))
+    return " ".join(args)
+
 
 # Return a list of services this services depends upon
 def service_deps(hostname, servicedesc):
@@ -1406,6 +1431,16 @@ def create_nagios_hostdefs(outfile, hostname):
     outfile.write("  address\t\t\t%s\n" % (ip and ip or "0.0.0.0"))
     outfile.write("  _TAGS\t\t\t\t%s\n" % " ".join(tags_of_host(hostname)))
 
+    # Levels for host check
+    ping_args = check_icmp_arguments(hostname)
+    if is_clust and ip: # Do check cluster IP address if one is there
+        outfile.write("  check_command\t\t\tcheck-mk-ping!%s\n" % ping_args)
+    elif ping_args and is_clust: # use check_icmp in cluster mode
+        outfile.write("  check_command\t\t\tcheck-mk-ping-cluster!%s\n" % args)
+    elif ping_args: # use special arguments
+        outfile.write("  check_command\t\t\tcheck-mk-ping!%s\n" % ping_args)
+
+
     # WATO folder path
     path = host_paths.get(hostname)
     if path:
@@ -1445,10 +1480,6 @@ def create_nagios_hostdefs(outfile, hostname):
         alias = "cluster of %s" % ", ".join(nodes)
         outfile.write("  _NODEIPS\t\t\t%s\n" % " ".join(node_ips))
         outfile.write("  parents\t\t\t%s\n" % ",".join(nodes))
-
-        # Host check uses (service-) IP address if available
-        if ip:
-            outfile.write("  check_command\t\t\tcheck-mk-ping\n")
 
     # Output alias, but only if it's not define in extra_host_conf
     aliases = host_extra_conf(hostname, extra_host_conf.get("alias", []))

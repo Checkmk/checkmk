@@ -337,7 +337,7 @@ class html:
             default_value = ""
         addprops = ""
         if "size" in args:
-            addprops += " size=%d" % (args["size"] + 2)
+            addprops += " size=%d" % (args["size"] + 1)
         if "type" in args:
             mytype = args["type"]
         else:

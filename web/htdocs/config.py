@@ -224,6 +224,19 @@ def login(u):
     global user_role_ids
     user_role_ids = roles_of_user(user_id)
 
+    # Get base roles (admin/user/guest)
+    global user_baserole_ids
+    user_baserole_ids = base_roles_of(user_role_ids) 
+
+    # Get best base roles and use as "the" role of the user
+    global user_baserole_id
+    if "admin" in user_role_ids:
+        user_baserole_id = "admin"
+    elif "user" in user_role_ids:
+        user_baserole_id = "user"
+    else:
+        user_baserole_id = "guest"
+
     # Prepare user object
     global user
     if u in multisite_users:
@@ -270,6 +283,15 @@ def roles_of_user(user):
         return [ default_user_role ]
     else:
         return []
+
+def base_roles_of(some_roles): 
+    base_roles = set([])
+    for r in some_roles:
+        if r in builtin_role_ids:
+            base_roles.add(r)
+        else:
+            base_roles.add(roles[r]["basedon"])
+    return list(base_roles)
 
 
 def may_with_roles(some_role_ids, pname):

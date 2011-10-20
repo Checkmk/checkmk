@@ -2433,6 +2433,7 @@ def mode_changelog(phase):
 def log_entry(linkinfo, action, message, logfilename):
     if type(message) == unicode:
         message = message.encode("utf-8")
+    message = message.strip()
 
     # linkinfo is either a folder, or a hostname or None
     if type(linkinfo) == dict and linkinfo[".path"] in g_folders:
@@ -2709,6 +2710,8 @@ def check_mk_automation(command, args=[], indata=""):
                     "<li>Retry this operation</li></ol>\n" %
                     (html.apache_user(), sudoline))
 
+    if config.debug:
+        log_audit(None, "automation", "Automation: %s" % " ".join(cmd))
     try:
         # This debug output makes problems when doing bulk inventory, because
         # it garbles the non-HTML response output
@@ -2726,13 +2729,19 @@ def check_mk_automation(command, args=[], indata=""):
     outdata = p.stdout.read()
     exitcode = p.wait()
     if exitcode != 0:
+        log_audit(None, "automation", "Automation command %s failed with exit code %d: %s" % (" ".join(cmd), exitcode, outdata))
         raise MKGeneralException("Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>%s" %
               (" ".join(cmd), exitcode, hilite_errors(outdata), sudo_msg))
     try:
+        if config.debug:
+            log_audit(None, "automation", "Result from automation: %s" % outdata),))
         return eval(outdata)
     except Exception, e:
+        log_audit(None, "automation", "Automation command %s failed: invalid output: %s" % (" ".join(cmd), outdata))
         raise MKGeneralException("Error running <tt>%s</tt>. Invalid output from webservice (%s): <pre>%s</pre>" %
                       (" ".join(cmd), e, outdata))
+
+
 
 def hilite_errors(outdata):
     return re.sub("\nError: *([^\n]*)", "\n<div class=err>Error: \\1</div>", outdata)

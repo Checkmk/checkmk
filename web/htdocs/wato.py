@@ -6741,7 +6741,7 @@ def mode_edit_hosttag(phase):
                     raise MKUserError("tag_id", _("Please specify an ID for your tag group."))
                 if not re.match("^[-a-z0-9A-Z_]*$", tag_id):
                     raise MKUserError("tag_id", _("Invalid tag group ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
-                for tgid, tit, ch in hosttags:
+                for tgid, tit, ch in config.wato_host_tags:
                     if tgid == tag_id:
                         raise MKUserError("tag_id", _("The tag group ID %s is already used by the tag group '%s'.") % (tag_id, tit))
 
@@ -6768,9 +6768,10 @@ def mode_edit_hosttag(phase):
                     new_choices.append((id, descr))
                 if id:
                     # Make sure this ID is not used elsewhere
-                    for tgid, tit, ch in hosttags:
+                    for tgid, tit, ch in config.wato_host_tags:
                         if tgid != tag_id:
-                            for tid, ttit in ch:
+                            for e in ch:
+                                tid, ttit = e[:2]
                                 if id == tid:
                                     raise MKUserError("id_%d" % nr, _("The tag ID '%s' is already being used by the choice '%s' in the tag group '%s'.") % 
                                         ( id, ttit, tit ))
@@ -6908,7 +6909,7 @@ def mode_edit_hosttag(phase):
 def load_hosttags():
     filename = multisite_dir + "hosttags.mk"
     if not os.path.exists(filename):
-        return {}
+        return []
     try:
         vars = { "wato_host_tags" : [] }
         execfile(filename, vars, vars)
@@ -6918,7 +6919,7 @@ def load_hosttags():
         if config.debug:
             raise MKGeneralException(_("Cannot read configuration file %s: %s" %  
                           (filename, e)))
-        return {}
+        return []
 
 def save_hosttags(hosttags):
     make_nagios_directory(multisite_dir)

@@ -103,7 +103,7 @@ def automation_inventory(args):
     # Create new list of checks
     new_items = []
     for entry in table:
-        state_type, ct, item, paramstring = entry[:4]
+        state_type, ct, checkgroup, item, paramstring = entry[:5]
         if state_type in [ "legacy", "manual", "ignored" ]:
             continue # this is not an autocheck or ignored and currently not checked
 

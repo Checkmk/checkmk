@@ -2097,9 +2097,10 @@ def create_target_folder_from_aliaspath(aliaspath):
                     ".parent"    : folder
                 }
                 folder[".folders"][name] = new_folder
-                g_folders[new_path] = folder
+                g_folders[new_path] = new_folder
                 folder = new_folder
                 parts = parts[1:]
+                save_folder(folder) # make sure, directory is created
 
     return folder
 

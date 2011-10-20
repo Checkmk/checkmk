@@ -6771,10 +6771,12 @@ def mode_edit_hosttag(phase):
                     for tgid, tit, ch in config.wato_host_tags:
                         if tgid != tag_id:
                             for e in ch:
-                                tid, ttit = e[:2]
-                                if id == tid:
-                                    raise MKUserError("id_%d" % nr, _("The tag ID '%s' is already being used by the choice '%s' in the tag group '%s'.") % 
-                                        ( id, ttit, tit ))
+                                # Check primary and secondary tags
+                                if id == e[0] or len(e) > 2 and id in e[2]:
+                                    raise MKUserError("id_%d" % nr, 
+                                      _("The tag ID '%s' is already being used by the choice "
+                                        "'%s' in the tag group '%s'.") % 
+                                        ( id, e[1], tit ))
 
                 nr += 1
             if len(new_choices) == 0:

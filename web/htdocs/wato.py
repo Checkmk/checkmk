@@ -3135,15 +3135,21 @@ class EnumAttribute(Attribute):
 # A selection dropdown for a host tag
 class HostTagAttribute(Attribute):
     def __init__(self, tag_definition):
-        # In newer days, the tag defitions contain a third
-        # element: the id of the tag group - written at the
-        # beginning of the tuple. If that is present, we use
-        # it as id, otherwise we use the number.
         tag_id, title, self._taglist = tag_definition
         name = "tag_" + tag_id
-        Attribute.__init__(self, name, title, "", self._taglist[0][0])
+        if len(self._taglist) == 1:
+            def_value = None
+        else:
+            def_value = self._taglist[0][0]
+        Attribute.__init__(self, name, title, "", def_value)
 
     def paint(self, value, hostname):
+        if len(self._taglist) == 1:
+            title = self._taglist[0][1]
+            if value:
+                return "", title
+            else:
+                return "", "%s %s" % (_("not"), title)
         for entry in self._taglist:
             if value == entry[0]:
                 return "", entry[1]
@@ -3151,16 +3157,29 @@ class HostTagAttribute(Attribute):
                       # But case could occur if tags definitions have been changed.
 
     def render_input(self, value):
+        # Tag groups with just one entry are being displayed
+        # as checkboxes
         choices = [e[:2] for e in self._taglist]
-        html.select("attr_" + self.name(), choices, value)
+        varname = "attr_" + self.name()
+        if len(choices) == 1:
+            html.checkbox(varname, value != None)
+            html.write(" " + choices[0][1])
+        else:
+            html.select(varname, choices, value)
 
     def from_html_vars(self):
-        value = html.var("attr_" + self.name())
-        if not value:
-            value = None
-        return value
+        varname = "attr_" + self.name()
+        if len(self._taglist) == 1:
+            if html.get_checkbox(varname):
+                return self._taglist[0][0]
+            else:
+                return None
+        else:
+            value = html.var(varname)
+            if not value:
+                value = None
+            return value
     
-
     # Special function for computing the setting of a specific
     # tag group from the total list of tags of a host
     def get_tag_value(self, tags):
@@ -3276,6 +3295,13 @@ def declare_host_tag_attributes():
                 show_in_table = False, show_in_folder = True, topic = _("Host tags"))
 
         configured_host_tags = config.wato_host_tags
+
+def undeclare_host_tag_attribute(tag_id):
+    attrname = "tag_" + tag_id
+    attr = host_attribute[attrname]
+    del host_attribute[attrname]
+    global host_attributes
+    host_attributes = [ ha for ha in host_attributes if ha[0] != attr ]
 
 
 # Global datastructure holding all attributes (in a defined order)
@@ -6595,6 +6621,7 @@ def mode_hosttags(phase):
             if message:
                 hosttags = [ e for e in hosttags if e[0] != del_id ]
                 save_hosttags(hosttags)
+                rewrite_config_files_below(g_root_folder) # explicit host tags in all_hosts                
                 log_pending(None, "edit-hosttags", _("Removed host tag group %s (%s)") % (message, del_id))
                 return "hosttags", message != True and message or None
         return
@@ -6642,7 +6669,9 @@ def mode_hosttags(phase):
             html.write("<td>%s</td>" % (len(choices) == 1 and _("Checkbox") or _("Dropdown")))
             html.write("<td class=number>%d</td>" % len(choices))
             html.write("<td>")
+            html.begin_form("tag_%s" % tag_id)
             host_attribute["tag_%s" % tag_id].render_input(None)
+            html.end_form()
             html.write("</td>")
             html.write("<td class=buttons>")
             html.buttonlink(edit_url, _("Edit"))
@@ -6681,6 +6710,7 @@ def mode_edit_hosttag(phase):
     if phase == "action":
         if html.transaction_valid():
             if new:
+                html.check_transaction() # use up transaction id
                 tag_id = html.var("tag_id").strip()
                 if len(tag_id) == 0:
                     raise MKUserError("tag_id", _("Please specify an ID for your tag group."))
@@ -6730,6 +6760,9 @@ def mode_edit_hosttag(phase):
                 taggroup = tag_id, title, new_choices
                 hosttags.append(taggroup)
                 save_hosttags(hosttags)
+                config.wato_host_tags = hosttags
+                declare_host_tag_attributes()
+                rewrite_config_files_below(g_root_folder) # explicit host tags in all_hosts                
                 log_pending(None, "edit-hosttags", _("Created new host tag group '%s'") % tag_id)
                 return "hosttags", _("Created new host tag group '%s'") % title
             else:
@@ -6768,6 +6801,9 @@ def mode_edit_hosttag(phase):
                 message = rename_host_tags_after_confirmation(tag_id, operations)
                 if message:
                     save_hosttags(new_hosttags)
+                    config.wato_host_tags = new_hosttags
+                    declare_host_tag_attributes()
+                    rewrite_config_files_below(g_root_folder) # explicit host tags in all_hosts                
                     log_pending(None, "edit-hosttags", _("Edited host tag group %s (%s)") % (message, tag_id))
                     return "hosttags", message != True and message or None
 
@@ -6870,6 +6906,8 @@ def rename_host_tags_after_confirmation(tag_id, operations):
     if mode == "abort":
         raise MKUserError("id_0", "Please refine your changes or go back to the list of tag groups.")
     elif mode:
+        if type(operations) == list: # make attribute unknown to system, important for save() operations
+            undeclare_host_tag_attribute(tag_id)
         affected_folders, affected_hosts, affected_rulespecs = \
         change_host_tags_in_folders(tag_id, operations, mode, g_root_folder)
         return _("Modified folders: %d, modified hosts: %d, modified rulesets: %d" %
@@ -6899,7 +6937,7 @@ def rename_host_tags_after_confirmation(tag_id, operations):
             message += '<a href="%s">%s</a>' % (
                 make_link([("mode", "edithost"), ("host", host[".name"])]),
                 host[".name"])
-            message += "</li></ul>"
+        message += "</li></ul>"
 
     if affected_rulespecs:
         message += _("Rulesets that contain rules with references to the changed tags") + ":<ul>"
@@ -7057,9 +7095,9 @@ def change_host_tags_in_rules(folder, tag_id, operations, mode):
                         if tag in tag_specs and mode == "delete":
                             rules_to_delete.add(nr)
                         elif tag in tag_specs:
-                            tags_specs.remove(tag)
+                            tag_specs.remove(tag)
                         elif "+"+tag in tag_specs:
-                            tags_specs.remove("!"+tag)
+                            tag_specs.remove("!"+tag)
         
             # Removal or renamal of single tag choices
             else:

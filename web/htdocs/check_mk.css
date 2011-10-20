@@ -77,6 +77,7 @@ ul.treeangle li {
     margin: 0px;
     margin-left: 16px;
     padding-left: 20px;
+    list-style: disc;
 }
 
 input.buttonlink {

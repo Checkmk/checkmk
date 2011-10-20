@@ -2734,10 +2734,10 @@ def check_mk_automation(command, args=[], indata=""):
               (" ".join(cmd), exitcode, hilite_errors(outdata), sudo_msg))
     try:
         if config.debug:
-            log_audit(None, "automation", "Result from automation: %s" % outdata),))
+            log_audit(None, "automation", "Result from automation: %s" % outdata)
         return eval(outdata)
     except Exception, e:
-        log_audit(None, "automation", "Automation command %s failed: invalid output: %s" % (" ".join(cmd), outdata))
+        log_audit(None, "automation", "Automation command %s failed: invalid output: %s" % (" ".join(cmd), outdata)) 
         raise MKGeneralException("Error running <tt>%s</tt>. Invalid output from webservice (%s): <pre>%s</pre>" %
                       (" ".join(cmd), e, outdata))
 
@@ -6575,7 +6575,6 @@ def load_roles():
 
 
 def save_roles(roles):
-    st
     make_nagios_directory(multisite_dir)
     filename = multisite_dir + "roles.mk"
     out = file(filename, "w")

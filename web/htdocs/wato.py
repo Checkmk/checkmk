@@ -6624,6 +6624,22 @@ def mode_hosttags(phase):
                 rewrite_config_files_below(g_root_folder) # explicit host tags in all_hosts                
                 log_pending(None, "edit-hosttags", _("Removed host tag group %s (%s)") % (message, del_id))
                 return "hosttags", message != True and message or None
+
+        move_nr = html.var("_move")
+        if move_nr != None:
+            if html.check_transaction():
+                move_nr = int(move_nr)
+                if move_nr > 0:
+                    dir = 1
+                else:
+                    move_nr = -move_nr
+                    dir = -1
+                moved = hosttags[move_nr]
+                del hosttags[move_nr]
+                hosttags[move_nr+dir:move_nr+dir] = [moved]
+                save_hosttags(hosttags)
+                config.wato_host_tags = hosttags
+                log_pending(None, "edit-hosttags", _("Changed order of host tag groups"))
         return
 
     if len(hosttags) == 0:
@@ -6655,12 +6671,12 @@ def mode_hosttags(phase):
             if nr == 0:
                 empty_icon_button()
             else:
-                icon_button(html.makeactionuri([("_up", str(nr))]), 
+                icon_button(html.makeactionuri([("_move", str(-nr))]), 
                             _("Move this tag group one position up"), "up")
             if nr == len(hosttags) - 1:
                 empty_icon_button()
             else:
-                icon_button(html.makeactionuri([("_down", str(nr))]),
+                icon_button(html.makeactionuri([("_move", str(nr))]),
                             _("Move this tag group one position down"), "down")
             icon_button(delete_url, _("Delete this tag group"), "delete")
             html.write("</td>")

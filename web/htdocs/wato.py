@@ -1836,7 +1836,7 @@ def show_service_table(hostname, firsttime):
                 html.write('<tr class=groupheader><td colspan=7><br>%s</td></tr>\n' % state_name)
                 html.write("<tr><th>" + _("Status") + "</th><th>" + _("Checktype") + "</th><th>" + _("Item") + "</th>"
                            "<th>" + _("Service Description") + "</th><th>" 
-                           + _("Current check") + "</th><th></th></th></th></tr>\n")
+                           + _("Current check") + "</th><th></th><th></th></tr>\n")
                 first = False
             trclass = trclass == "even" and "odd" or "even"
             statename = nagios_short_state_names.get(state, "PEND")

@@ -821,7 +821,7 @@ class html:
             self.write('<b class="treeangle title" class=treeangle %s>%s</b><br>' % 
                      (onclick, title))
 
-        indent_style = indent != "True" and "padding-left: 15px; " or "padding-left: 0px; "
+        indent_style = "padding-left: %dpx; " % (indent == True and 15 or 0)
         if indent == "form":
             self.write("</td></tr></table>")
             indent_style += "margin: 0; "
@@ -830,3 +830,8 @@ class html:
     
     def end_foldable_container(self):
         self.write("</ul>")
+
+    def debug(self, *x):
+        import pprint
+        for element in x:
+            self.write("<pre>%s</pre>\n" % pprint.pformat(element))

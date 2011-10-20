@@ -97,6 +97,9 @@ def load_config():
     global modification_timestamps
     modification_timestamps = []
 
+    global wato_host_tags
+    wato_host_tags = []
+
     include("multisite.mk")
     # Load also all files below multisite.d
     conf_dir = defaults.default_config_dir + "/multisite.d"
@@ -298,6 +301,7 @@ def may_with_roles(some_role_ids, pname):
     # If at least one of the user's roles has this permission, it's fine
     for role_id in some_role_ids:
         role = roles[role_id]
+
         he_may = role.get("permissions", {}).get(pname)
         if he_may == None: # not explicitely listed -> take defaults 
             if "basedon" in role:

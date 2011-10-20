@@ -80,7 +80,7 @@ def render_views():
                 continue
             if t == topic:
                 if first:
-                    html.begin_foldable_container("views", topic, False, topic)
+                    html.begin_foldable_container("views", topic, False, topic, indent=True)
                     # html.write("<h3>%s</h3>\n" % topic)
                     first = False
                     # html.write("<ul>")

@@ -196,6 +196,12 @@ config.declare_permission("wato.all_folders",
        "one of the folders contact groups. This permission grants full access to all folders and hosts. "),
      [ "admin" ])
 
+config.declare_permission("wato.hosttags",
+     _("Manage host tags"),
+     _("Create, remove and edit host tags. Removing host tags also might remove rules, "
+       "so this permission should not be available to normal users. "),
+     [ "admin" ])
+
 config.declare_permission("wato.global",
      _("Global settings"),
      _("Access to the module <i>Global settings</i>"),
@@ -238,6 +244,10 @@ config.declare_permission("wato.snapshots",
 modules = [
       ( "folder",           _("Host & Folders"),     "folder", "hosts",
       _("Manage monitored hosts and services and the hosts' folder structure.")),
+      
+      ( "hosttags",         _("Host tags"),          "hosttag", "hosttags",
+      _("Manage your host tags. Tags are used to classify hosts and are the "
+        "fundament of the configuration of hosts and services.")),
 
       ( "globalvars",        _("Global settings"),    "configuration", "global", 
       _("Manage global configuration settings for Check_MK, Multisite and the "
@@ -627,7 +637,11 @@ def load_hosts_file(folder):
 
             # access to "raw" tags, needed for rule engine, remove implicit tags
             host[".tags"] = [ p for p in parts[1:] if p not in [ "wato", "//" ] ]
-            hosts[hostname]   = host
+
+            # access to name of host, if key is not present
+            host[".name"] = hostname
+
+            hosts[hostname] = host
 
 
     # html.write("<pre>%s</pre>" % pprint.pformat(hosts))
@@ -3114,18 +3128,13 @@ class EnumAttribute(Attribute):
 
 # A selection dropdown for a host tag
 class HostTagAttribute(Attribute):
-    def __init__(self, nr, tag_definition):
+    def __init__(self, tag_definition):
         # In newer days, the tag defitions contain a third
         # element: the id of the tag group - written at the
         # beginning of the tuple. If that is present, we use
         # it as id, otherwise we use the number.
-        if len(tag_definition) >= 3:
-            name = "tag_" + tag_definition[0]
-            tag_definition = tag_definition[1:]
-        else:
-            name = "tag_%d" % nr
-
-        title, self._taglist = tag_definition 
+        tag_id, title, self._taglist = tag_definition
+        name = "tag_" + tag_id
         Attribute.__init__(self, name, title, "", self._taglist[0][0])
 
     def paint(self, value, hostname):
@@ -3256,8 +3265,9 @@ def declare_host_tag_attributes():
             if attr.name().startswith("tag_"):
                 del host_attribute[attr.name()]
 
-        for num, entry in enumerate(config.wato_host_tags):
-            declare_host_attribute(HostTagAttribute(num + 1, entry), show_in_table = False, show_in_folder = True, topic = _("Host tags"))
+        for entry in config.wato_host_tags:
+            declare_host_attribute(HostTagAttribute(entry), 
+                show_in_table = False, show_in_folder = True, topic = _("Host tags"))
 
         configured_host_tags = config.wato_host_tags
 
@@ -6545,6 +6555,493 @@ def rename_user_role(id, new_id):
 
 
 #   +----------------------------------------------------------------------+
+#   |              _   _           _     _____                             |
+#   |             | | | | ___  ___| |_  |_   _|_ _  __ _ ___               |
+#   |             | |_| |/ _ \/ __| __|   | |/ _` |/ _` / __|              |
+#   |             |  _  | (_) \__ \ |_    | | (_| | (_| \__ \              |
+#   |             |_| |_|\___/|___/\__|   |_|\__,_|\__, |___/              |
+#   |                                              |___/                   |
+#   +----------------------------------------------------------------------+
+#   | Manage the variable config.wato_host_tags -> The set of tags to be   |
+#   | assigned to hosts and that is the basis of the rules.                |
+#   +----------------------------------------------------------------------+
+def mode_hosttags(phase):
+    if phase == "title":
+        return _("Manage host tag groups")
+
+    elif phase == "buttons":
+        global_buttons()
+        html.context_button(_("New Tag group"), make_link([("mode", "edit_hosttag")]), "new")
+        return
+
+    elif phase == "action":
+        return
+
+    hosttags = load_hosttags()
+    if len(hosttags) == 0:
+        render_main_menu([
+            ("edit_hosttag", _("Create new tag group"), "new", "hosttags",
+            _("Click here to create a first host tag group. For each tag group a dropdown choice or "
+              "checkbox will be added to the folder and host properties. When defining rules, host tags "
+              "are the fundament of the rules' conditions.")),])
+
+    else:
+        html.write("<h3>" + _("Host tag groups") + "</h3>")
+        html.write("<table class=data>")
+        html.write("<tr>" + 
+                   "<th>" + _("Actions") + "</th>"
+                   "<th>" + _("ID") + "</th>"
+                   "<th>" + _("Title") + "</th>"
+                   "<th>" + _("Type") + "</th>"
+                   "<th>" + _("Choices") + "</th>"
+                   "<th>" + _("Demonstration") + "</th>"
+                   "<th></th>"
+                   "</tr>")
+        odd = "even"
+        for nr, (tag_id, title, choices) in enumerate(hosttags):
+            odd = odd == "odd" and "even" or "odd" 
+            html.write('<tr class="data %s0">' % odd)
+            edit_url     = make_link([("mode", "edit_hosttag"), ("edit", tag_id)])
+            delete_url   = html.makeactionuri([("_delete", tag_id)])
+            html.write("<td>")
+            if nr == 0:
+                empty_icon_button()
+            else:
+                icon_button(html.makeactionuri([("_up", str(nr))]), 
+                            _("Move this tag group one position up"), "up")
+            if nr == len(hosttags) - 1:
+                empty_icon_button()
+            else:
+                icon_button(html.makeactionuri([("_down", str(nr))]),
+                            _("Move this tag group one position down"), "down")
+            icon_button(delete_url, _("Delete this tag group"), "delete")
+            html.write("</td>")
+            html.write("<td>%s</td>" % tag_id)
+            html.write("<td>%s</td>" % title)
+            html.write("<td>%s</td>" % (len(choices) == 1 and _("Checkbox") or _("Dropdown")))
+            html.write("<td class=number>%d</td>" % len(choices))
+            html.write("<td>")
+            host_attribute["tag_%s" % tag_id].render_input(None)
+            html.write("</td>")
+            html.write("<td class=buttons>")
+            html.buttonlink(edit_url, _("Edit"))
+            html.write("</td>")
+
+            html.write("</tr>")
+        html.write("</table>")
+
+
+def mode_edit_hosttag(phase):
+    tag_id = html.var("edit")
+    new = tag_id == None
+
+    if phase == "title":
+        if new:
+            return _("Create new tag group")
+        else:
+            return _("Edit tag group")
+
+    elif phase == "buttons":
+        html.context_button(_("Back"), make_link([("mode", "hosttags")]), "back")
+        return
+
+    hosttags = load_hosttags()
+    if new:
+        tag_id = None
+        title = ""
+        choices = []
+    else:
+        for id, tit, ch in hosttags:
+            if id == tag_id:
+                title = tit
+                choices = ch
+                break
+
+    if phase == "action":
+        if html.transaction_valid():
+            if new:
+                tag_id = html.var("tag_id").strip()
+                if len(tag_id) == 0:
+                    raise MKUserError("tag_id", _("Please specify an ID for your tag group."))
+                if not re.match("^[-a-z0-9A-Z_]*$", tag_id):
+                    raise MKUserError("tag_id", _("Invalid tag group ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
+                for tgid, tit, ch in hosttags:
+                    if tgid == tag_id:
+                        raise MKUserError("tag_id", _("The tag group ID %s is already used by the tag group '%s'.") % (tag_id, tit))
+
+            title = html.var_utf8("title").strip()
+            if not title:
+                raise MKUserError("title", _("Please specify a title for your host tag group."))
+
+            nr = 0
+            new_choices = []
+            have_none_tag = False
+            while html.has_var("id_%d" % nr):
+                id = html.var("id_%d" % nr).strip()
+                descr = html.var_utf8("descr_%d" % nr).strip()
+                if id or descr:
+                    if not re.match("^[-a-z0-9A-Z_]*$", id):
+                        raise MKUserError("id_%d" % nr, _("Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
+                    if not descr:
+                        raise MKUserError("descr_%d" % nr, _("Please supply a description for the tag with the ID %s.") % id)
+                    if not id:
+                        id = None
+                        if have_none_tag:
+                            raise MKUserError("id_%d" % nr, _("Only on tag may be empty."))
+                        have_none_tag = True
+                    new_choices.append((id, descr))
+                if id:
+                    # Make sure this ID is not used elsewhere
+                    for tgid, tit, ch in hosttags:
+                        if tgid != tag_id:
+                            for tid, ttit in ch:
+                                if id == tid:
+                                    raise MKUserError("id_%d" % nr, _("The tag ID '%s' is already being used by the choice '%s' in the tag group '%s'.") % 
+                                        ( id, ttit, tit ))
+
+                nr += 1
+            if len(new_choices) == 0:
+                raise MKUserError("id_0", _("Please specify at least on tag."))
+            if len(new_choices) == 1 and new_choices[0][0] == None:
+                raise MKUserError("id_0", _("Tags with only one choice must have an ID."))
+
+            if new:
+                taggroup = tag_id, title, new_choices
+                hosttags.append(taggroup)
+                save_hosttags(hosttags)
+                log_pending(None, "edit-hosttags", _("Created new host tag group '%s'") % tag_id)
+                return "hosttags", _("Created new host tag group '%s'") % title
+            else:
+                new_hosttags = []
+                for entry in hosttags:
+                    if entry[0] == tag_id:
+                        new_hosttags.append((tag_id, title, new_choices))
+                    else:
+                        new_hosttags.append(entry)
+
+                # This is the major effort of WATO when it comes to 
+                # host tags: renaming and deleting of tags that might be
+                # in use by folders, hosts and rules. First we create a
+                # kind auf "patch" from the old to the new tags. The renaming
+                # of a tag is detected by comparing the titles. Addition
+                # of new tags is not a problem and need not be handled.
+                operations = {}
+
+                # Detect renaming
+                new_by_title = dict([(tit, tag) for (tag, tit) in new_choices])
+                for tag, tit in choices:
+                    if tit in new_by_title:
+                        new_tag = new_by_title[tit]
+                        if new_tag != tag:
+                            operations[tag] = new_tag # might be None
+
+                # Detect removal
+                for tag, tit in choices:
+                   if tag != None \
+                       and tag not in [ e[0] for e in new_choices ] \
+                       and tag not in operations:
+                       # remove explicit tag (hosts/folders) or remove it from tag specs (rules)
+                       operations[tag] = False
+
+                # Now check, if any folders, hosts or rules are affected
+                message = rename_host_tags_after_confirmation(tag_id, operations)
+                if message:
+                    save_hosttags(new_hosttags)
+                    log_pending(None, "edit-hosttags", _("Edited host tag group %s (%s)") % (message, tag_id))
+                    return "hosttags", message != True and message or None
+
+        return "hosttags"
+
+
+
+    html.begin_form("hosttaggroup")
+    html.write("<table class=form>")
+
+    # Tag ID
+    html.write("<tr><td class=legend>")
+    html.write(_("Internal ID") + "<br><i>")
+    html.write(_("The internal ID of the tag group is used to store the tag's "
+                 "value in the host properties. It cannot be changed later.</i>"))
+    html.write("</td><td class=content>")
+    if new:
+        html.text_input("tag_id")
+        html.set_focus("tag_id")
+    else:
+        html.write(tag_id) 
+    html.write("</td></tr>")
+
+    # Title
+    html.write("<tr><td class=legend>")
+    html.write(_("Title") + "<br><i>" + _("A description of this tag group</i>"))
+    html.write("</td><td class=content>")
+    html.text_input("title", title, size = 30)
+    html.write("</td></tr>")
+
+    # Choices
+    num_choices = 16
+    html.write("<tr><td class=legend>")
+    html.write(_("Choices") + "<br><i>" +
+               _("The first choice of a tag group will be its default value. "
+                 "If a tag group has only one choice, it will be displayed "
+                 "as a checkbox and set or not set the only tag. If it has "
+                 "more choices you may leave at most one tag id empty. A host "
+                 "with that choice will not get any tag of this group.<br><br>"
+                 "The tag ID must contain only of letters, digits and "
+                 "underscores.<br><br><b>Renaming tags ID:</b> if you want "
+                 "to rename the ID of a tag, then please make sure that you do not "
+                 "change its title at the same time! Otherwise WATO will not "
+                 "be able to detect the renaming and cannot exchange the tags "
+                 "in all folders, hosts and rules accordingly.</i>"))
+    html.write("</td><td class=content>")
+    html.write("<table>")
+    html.write("<tr><th>%s</th><th>%s</th></tr>" % 
+        (_("Tag ID"), _("Description")))
+    for nr in range(max(num_choices, len(choices))):
+        if nr < len(choices):
+            tag_id, descr = choices[nr]
+        else:
+            tag_id, descr = "", ""
+        if tag_id == None:
+            tag_id = "" # for empty tag
+        html.write("<tr><td>")
+        html.text_input("id_%d" % nr, tag_id, size=10)
+        html.write("</td><td>")
+        html.text_input("descr_%d" % nr, descr, size=30)
+        html.write("</td></tr>")
+    html.write("</table>")
+    html.write("</td></tr>")
+
+
+    # Button and end
+    html.write("<tr><td colspan=2 class=buttons>")
+    html.button("save", _("Save"))
+    html.write("</td></tr>")
+    html.write("</table>")
+    html.hidden_fields()
+    html.end_form()
+
+
+
+
+def load_hosttags():
+    filename = multisite_dir + "hosttags.mk"
+    if not os.path.exists(filename):
+        return {}
+    try:
+        vars = { "wato_host_tags" : [] }
+        execfile(filename, vars, vars)
+        return vars["wato_host_tags"]
+    
+    except Exception, e:
+        if config.debug:
+            raise MKGeneralException(_("Cannot read configuration file %s: %s" %  
+                          (filename, e)))
+        return {}
+
+def save_hosttags(hosttags):
+    make_nagios_directory(multisite_dir)
+    out = file(multisite_dir + "hosttags.mk", "w")
+    out.write("# Written by WATO\n# encoding: utf-8\n\n")
+    out.write("wato_host_tags += \\\n%s\n" % pprint.pformat(hosttags))
+
+def rename_host_tags_after_confirmation(tag_id, operations):
+    mode = html.var("_repair")
+    if mode == "abort":
+        raise MKUserError("id_0", "Please refine your changes or go back to the list of tag groups.")
+    elif mode:
+        affected_folders, affected_hosts, affected_rulespecs = \
+        change_host_tags_in_folders(tag_id, operations, mode, g_root_folder)
+        return _("Modified folders: %d, modified hosts: %d, modified rulesets: %d" %
+            (len(affected_folders), len(affected_hosts), len(affected_rulespecs)))
+
+    message = ""
+    affected_folders, affected_hosts, affected_rulespecs = \
+        change_host_tags_in_folders(tag_id, operations, "check", g_root_folder)
+
+    if affected_folders:
+        message += _("Affected folders with an explicit reference to this tag group and that are affected by the change") + ":<ul>"
+        for folder in affected_folders:
+            message += '<li><a href="%s">%s</a></li>' % (
+                make_link_to([("mode", "editfolder")], folder),
+                folder["title"])
+            message += "</ul>"
+
+    if affected_hosts:
+        message += _("Hosts where this tag group is explicitely set and that are effected by the change") + ":<ul><li>"
+        for nr, host in enumerate(affected_hosts):
+            if nr > 20:
+                message += "... (%d more)" % len(affected_hosts - 20)
+                break
+            elif nr > 0:
+                message += ", "
+
+            message += '<a href="%s">%s</a>' % (
+                make_link([("mode", "edithost"), ("host", host[".name"])]),
+                host[".name"])
+            message += "</li></ul>"
+
+    if affected_rulespecs:
+        message += _("Rulesets that contain rules with references to the changed tags") + ":<ul>"
+        for rulespec in affected_rulespecs:
+            message += '<li><a href="%s">%s</a></li>' % (
+                make_link([("mode", "edit_ruleset"), ("varname", rulespec["varname"])]),
+                rulespec["title"])
+        message += "</ul>"
+
+    if message:
+        wato_html_head(_("Confirm tag modifications"))
+        html.write("<div class=really>")
+        html.write("<h3>" + _("Your modifications affects some objects") + "</h3>")
+        html.write(message)
+        html.write("<br>" + _("WATO can repair things for you. It can rename tags in folders, host and rules. "
+                              "Removed tag groups will be removed from hosts and folders, removed tags will be "
+                              "replaced with the default value for the tag group (for hosts and folders). What "
+                              "rules concern, you have to decide how to proceed."))
+        html.begin_form("confirm")
+        # Check if operations contains removal
+        have_removal = False
+        for new_val in operations.values():
+            if not new_val:
+                have_removal = True
+                break
+
+        if len(affected_rulespecs) > 0 and have_removal:
+            html.write("<br><b>" + _("Some tags that are used in rules have been removed by you. What "
+                       "shall we do with that rules?") + "</b><ul>")
+            html.radiobutton("_repair", "remove", True, _("Just remove the affected tags from the rules."))
+            html.write("<br>")
+            html.radiobutton("_repair", "delete", False, _("Delete rules containing tags that have been removed, if tag is used in a positive sense. Just remove that tag if it's used negated."))
+        else:
+            html.write("<ul>")
+            html.radiobutton("_repair", "repair", True, _("Fix affected folders, hosts and rules."))
+
+        html.write("<br>")
+        html.radiobutton("_repair", "abort", False, _("Abort your modifications."))
+        html.write("</ul>")
+
+        html.button("_do_confirm", _("Proceed"), "")
+        html.hidden_fields(add_action_vars = True)
+        html.end_form()
+        html.write("</div>")
+        return False
+
+    return True
+
+# operation == None -> tag group is deleted completely
+def change_host_tags_in_folders(tag_id, operations, mode, folder):
+    need_save = False
+    affected_folders = []
+    affected_hosts = []
+    affected_rulespecs = []
+    attrname = "tag_" + tag_id
+    attributes = folder["attributes"]
+    if attrname in attributes: # this folder has set the tag group in question
+        if operations == None: # deletion of tag group
+            affected_folders.append(folder)
+            # if mode ...
+        else:
+            current = attributes[attrname]
+            if current in operations:
+                affected_folders.append(folder)
+                if mode != "check":
+                    new_tag = operations[current]
+                    if new_tag == False: # tag choice has been removed -> fall back to default
+                        del attributes[attrname]
+                    else:
+                        attributes[attrname] = new_tag
+                    need_save = True
+    if need_save:
+        save_folder(folder)
+
+    for subfolder in folder[".folders"].values():
+        aff_folders, aff_hosts, aff_rulespecs = change_host_tags_in_folders(tag_id, operations, mode, subfolder)
+        affected_folders += aff_folders
+        affected_hosts += aff_hosts
+        affected_rulespecs += aff_rulespecs
+    
+    load_hosts(folder)
+    affected_hosts += change_host_tags_in_hosts(folder, tag_id, operations, mode, folder[".hosts"])
+    affected_rulespecs += change_host_tags_in_rules(folder, tag_id, operations, mode) 
+    return affected_folders, affected_hosts, affected_rulespecs
+
+def change_host_tags_in_hosts(folder, tag_id, operations, mode, hostlist):
+    need_save = False
+    affected_hosts = []
+    for hostname, host in hostlist.items():
+        attrname = "tag_" + tag_id
+        if attrname in host:
+            if operations == None: # delete complete tag group
+                affected_hosts.append(host)
+            else:
+                if host[attrname] in operations:
+                    affected_hosts.append(host)
+                    if mode != "check":
+                        new_tag, new_default 
+                        host[attrname] = operations[host[attrname]]
+                        need_save = True
+    if need_save:
+        save_hosts(folder)
+    return affected_hosts
+
+
+# The function parses all rules in all rulesets and looks
+# for host tags that have been removed or renamed. If tags
+# are removed then the depending on the mode affected rules
+# are either deleted ("delete") or the vanished tags are
+# removed from the rule ("remove").
+def change_host_tags_in_rules(folder, tag_id, operations, mode):
+    need_save = False
+    affected_rulespecs = []
+    all_rulesets = load_rulesets(folder)
+    for varname, ruleset in all_rulesets.items():
+        rulespec = g_rulespecs[varname]
+        rules_to_delete = set([])
+        for nr, rule in enumerate(ruleset):
+            modified = False
+            value, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
+            for old_tag, new_tag in operations.items():
+                # The case that old_tag is None (an empty tag has got a name)
+                # cannot be handled when it comes to rules. Rules do not support
+                # such None-values.
+                if not old_tag:
+                    continue
+
+                if old_tag in tag_specs or ("!" + old_tag) in tag_specs:
+                    modified = True
+                    if rulespec not in affected_rulespecs:
+                        affected_rulespecs.append(rulespec)
+                    if mode != "check":
+                        if old_tag in tag_specs:
+                            tag_specs.remove(old_tag)
+                            if new_tag:
+                                tag_specs.append(new_tag)
+                            elif mode == "delete":
+                                rules_to_delete.add(nr)
+                        # negated tag has been renamed or removed 
+                        if "!"+old_tag in tag_specs:
+                            tag_specs.remove("!"+old_tag)
+                            if new_tag:
+                                tag_specs.append("!"+new_tag)
+                            # the case "delete" need not be handled here. Negated
+                            # tags can always be removed without changing the rule's
+                            # behaviour.
+            if modified:
+                ruleset[nr] = construct_rule(rulespec, value, tag_specs, host_list, item_list)
+                need_save = True
+
+        rules_to_delete = list(rules_to_delete)
+        rules_to_delete.sort()
+        for nr in rules_to_delete[::-1]:
+            del ruleset[nr]
+
+    if need_save:
+        save_rulesets(folder, all_rulesets)
+    affected_rulespecs.sort(cmp = lambda a, b: cmp(a["title"], b["title"]))
+    return affected_rulespecs
+
+
+
+#   +----------------------------------------------------------------------+
 #   |           ____        _        _____    _ _ _                        |
 #   |          |  _ \ _   _| | ___  | ____|__| (_) |_ ___  _ __            |
 #   |          | |_) | | | | |/ _ \ |  _| / _` | | __/ _ \| '__|           |
@@ -6970,9 +7467,10 @@ def create_rule(rulespec, hostname=None, item=None):
     return tuple(new_rule)
 
 
+
 def rule_button(action, help=None, folder=None, rulenr=0):
     if action == None:
-        html.write('<img class=trans src="images/trans.png">')
+        empty_icon_button()
     else:
         vars = [("_folder", folder[".path"]), 
           ("_rulenr", str(rulenr)), 
@@ -6980,11 +7478,17 @@ def rule_button(action, help=None, folder=None, rulenr=0):
         if html.var("host"):
             vars.append(("host", html.var("host")))
         url = html.makeactionuri(vars)
-        html.write('<a href="%s">'
-                   '<img title="%s" src="images/button_%s_lo.png" ' 
-                   'onmouseover=\"hilite_icon(this, 1)\" '
-                   'onmouseout=\"hilite_icon(this, 0)\">'
-                   '</a>\n' % (url, help, action))
+        icon_button(url, help, action)
+
+def empty_icon_button():
+    html.write('<img class=trans src="images/trans.png">')
+
+def icon_button(url, help, icon):
+    html.write('<a href="%s">'
+               '<img class=iconbutton title="%s" src="images/button_%s_lo.png" ' 
+               'onmouseover=\"hilite_icon(this, 1)\" '
+               'onmouseout=\"hilite_icon(this, 0)\">'
+               '</a>\n' % (url, help, icon))
 
 
 def parse_rule(ruleset, orig_rule):
@@ -7023,6 +7527,8 @@ def parse_rule(ruleset, orig_rule):
 
     except Exception, e:
         raise MKGeneralException(_("Invalid rule <tt>%s</tt>") % (orig_rule,))
+
+
 
 def rule_matches_host_and_item(rulespec, tag_specs, host_list, item_list, 
                                rule_folder, host_folder, hostname, item):
@@ -7766,9 +8272,6 @@ def call_hook_activate_changes():
     if hook_registered('activate-changes'):
         call_hooks("activate-changes", collect_hosts(g_root_folder))
 
-# DEBUG utility
-def debug(info):
-    html.write("<pre>" + pprint.pformat(info) + "</pre><br>")
 
 #   +----------------------------------------------------------------------+
 #   |                   ____  _             _                              |
@@ -7815,6 +8318,8 @@ modes = {
    "edit_user"          : (["users"], mode_edit_user),
    "roles"              : (["users"], mode_roles),
    "edit_role"          : (["users"], mode_edit_role),
+   "hosttags"           : (["hosttags"], mode_hosttags),
+   "edit_hosttag"       : (["hosttags"], mode_edit_hosttag),
 }
 
 extra_buttons = [

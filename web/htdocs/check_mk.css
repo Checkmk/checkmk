@@ -2091,14 +2091,13 @@ table.add_snapin i {
     top: 3px;
 }
 
-
-.wato td.rulebuttons img {
+.wato img.iconbutton {
     width: 20px;
     height: 20px;
 }
 
-.wato td.rulebuttons img.trans {
-    width: 23px;
+.wato img.trans {
+    width: 24px;
 }
 .wato td.value img {
     width: 20px;

@@ -6574,10 +6574,25 @@ def mode_hosttags(phase):
         html.context_button(_("New Tag group"), make_link([("mode", "edit_hosttag")]), "new")
         return
 
-    elif phase == "action":
+    hosttags = load_hosttags()
+
+    if phase == "action":
+        del_id = html.var("_delete")
+        if del_id:
+            for e in hosttags:
+                if e[0] == del_id:
+                    # In case of tag group deletion, the operations is a pair of tag_id
+                    # and list of choice-ids.
+                    operations = [ x[0] for x in e[2] ]
+
+            message = rename_host_tags_after_confirmation(del_id, operations)
+            if message:
+                hosttags = [ e for e in hosttags if e[0] != del_id ]
+                save_hosttags(hosttags)
+                log_pending(None, "edit-hosttags", _("Removed host tag group %s (%s)") % (message, del_id))
+                return "hosttags", message != True and message or None
         return
 
-    hosttags = load_hosttags()
     if len(hosttags) == 0:
         render_main_menu([
             ("edit_hosttag", _("Create new tag group"), "new", "hosttags",
@@ -6888,8 +6903,21 @@ def rename_host_tags_after_confirmation(tag_id, operations):
                 rulespec["title"])
         message += "</ul>"
 
-    if message:
-        wato_html_head(_("Confirm tag modifications"))
+    if not message and type(operations) == tuple: # deletion of unused tag group
+        html.write("<div class=really>")
+        html.begin_form("confirm")
+        html.write(_("Please confirm the deletion of the tag group."))
+        html.button("_abort", _("Abort"))
+        html.button("_do_confirm", _("Proceed"))
+        html.hidden_fields(add_action_vars = True)
+        html.end_form()
+        html.write("</div>")
+
+    elif message:
+        if type(operations) == list:
+            wato_html_head(_("Confirm tag deletion"))
+        else:
+            wato_html_head(_("Confirm tag modifications"))
         html.write("<div class=really>")
         html.write("<h3>" + _("Your modifications affects some objects") + "</h3>")
         html.write(message)
@@ -6898,12 +6926,16 @@ def rename_host_tags_after_confirmation(tag_id, operations):
                               "replaced with the default value for the tag group (for hosts and folders). What "
                               "rules concern, you have to decide how to proceed."))
         html.begin_form("confirm")
+
         # Check if operations contains removal
-        have_removal = False
-        for new_val in operations.values():
-            if not new_val:
-                have_removal = True
-                break
+        if type(operations) == list:
+            have_removal = True
+        else:
+            have_removal = False
+            for new_val in operations.values():
+                if not new_val:
+                    have_removal = True
+                    break
 
         if len(affected_rulespecs) > 0 and have_removal:
             html.write("<br><b>" + _("Some tags that are used in rules have been removed by you. What "
@@ -6936,9 +6968,12 @@ def change_host_tags_in_folders(tag_id, operations, mode, folder):
     attrname = "tag_" + tag_id
     attributes = folder["attributes"]
     if attrname in attributes: # this folder has set the tag group in question
-        if operations == None: # deletion of tag group
-            affected_folders.append(folder)
-            # if mode ...
+        if type(operations) == list: # deletion of tag group
+            if attrname in attributes:
+                affected_folders.append(folder)
+                if mode != "check":
+                    del attributes[attrname]
+                    need_save = True
         else:
             current = attributes[attrname]
             if current in operations:
@@ -6970,14 +7005,20 @@ def change_host_tags_in_hosts(folder, tag_id, operations, mode, hostlist):
     for hostname, host in hostlist.items():
         attrname = "tag_" + tag_id
         if attrname in host:
-            if operations == None: # delete complete tag group
+            if type(operations) == list: # delete complete tag group 
                 affected_hosts.append(host)
+                if mode != "check":
+                    del host[attrname]
+                    need_save = True
             else:
                 if host[attrname] in operations:
                     affected_hosts.append(host)
                     if mode != "check":
-                        new_tag, new_default 
-                        host[attrname] = operations[host[attrname]]
+                        new_tag = operations[host[attrname]]
+                        if new_tag == False: # tag choice has been removed -> fall back to default
+                            del host[attrname]
+                        else:
+                            host[attrname] = new_tag
                         need_save = True
     if need_save:
         save_hosts(folder)
@@ -6999,32 +7040,49 @@ def change_host_tags_in_rules(folder, tag_id, operations, mode):
         for nr, rule in enumerate(ruleset):
             modified = False
             value, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
-            for old_tag, new_tag in operations.items():
-                # The case that old_tag is None (an empty tag has got a name)
-                # cannot be handled when it comes to rules. Rules do not support
-                # such None-values.
-                if not old_tag:
-                    continue
+            
+            # Handle deletion of complete tag group
+            if type(operations) == list: # this list of tags to remove
+                for tag in operations:
+                    if tag != None and (tag in tag_specs or "!"+tag in tag_specs):
+                        modified = True
+                        if rulespec not in affected_rulespecs:
+                            affected_rulespecs.append(rulespec)
+                        if tag in tag_specs and mode == "delete":
+                            rules_to_delete.add(nr)
+                        elif tag in tag_specs:
+                            tags_specs.remove(tag)
+                        elif "+"+tag in tag_specs:
+                            tags_specs.remove("!"+tag)
+        
+            # Removal or renamal of single tag choices
+            else:
+                for old_tag, new_tag in operations.items():
+                    # The case that old_tag is None (an empty tag has got a name)
+                    # cannot be handled when it comes to rules. Rules do not support
+                    # such None-values.
+                    if not old_tag:
+                        continue
 
-                if old_tag in tag_specs or ("!" + old_tag) in tag_specs:
-                    modified = True
-                    if rulespec not in affected_rulespecs:
-                        affected_rulespecs.append(rulespec)
-                    if mode != "check":
-                        if old_tag in tag_specs:
-                            tag_specs.remove(old_tag)
-                            if new_tag:
-                                tag_specs.append(new_tag)
-                            elif mode == "delete":
-                                rules_to_delete.add(nr)
-                        # negated tag has been renamed or removed 
-                        if "!"+old_tag in tag_specs:
-                            tag_specs.remove("!"+old_tag)
-                            if new_tag:
-                                tag_specs.append("!"+new_tag)
-                            # the case "delete" need not be handled here. Negated
-                            # tags can always be removed without changing the rule's
-                            # behaviour.
+                    if old_tag in tag_specs or ("!" + old_tag) in tag_specs:
+                        modified = True
+                        if rulespec not in affected_rulespecs:
+                            affected_rulespecs.append(rulespec)
+                        if mode != "check":
+                            if old_tag in tag_specs:
+                                tag_specs.remove(old_tag)
+                                if new_tag:
+                                    tag_specs.append(new_tag)
+                                elif mode == "delete":
+                                    rules_to_delete.add(nr)
+                            # negated tag has been renamed or removed 
+                            if "!"+old_tag in tag_specs:
+                                tag_specs.remove("!"+old_tag)
+                                if new_tag:
+                                    tag_specs.append("!"+new_tag)
+                                # the case "delete" need not be handled here. Negated
+                                # tags can always be removed without changing the rule's
+                                # behaviour.
             if modified:
                 ruleset[nr] = construct_rule(rulespec, value, tag_specs, host_list, item_list)
                 need_save = True

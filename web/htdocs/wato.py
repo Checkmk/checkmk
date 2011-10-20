@@ -641,6 +641,9 @@ def load_hosts_file(folder):
             # access to name of host, if key is not present
             host[".name"] = hostname
 
+            # access to the folder object
+            host['.folder'] = folder
+
             hosts[hostname] = host
 
 
@@ -670,6 +673,9 @@ def save_hosts(folder = None):
     hostnames.sort()
     custom_macros = {} # collect value for attributes that are to be present in Nagios
     for hostname in hostnames:
+        # Remove temporary entries from the dictionary
+        hosts[hostname] = dict([(k, v) for (k, v) in hosts[hostname].iteritems() if not k.startswith('.') ])
+
         host = hosts[hostname]
         effective = effective_attributes(host, folder)
         ipaddress = effective.get("ipaddress")

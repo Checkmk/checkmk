@@ -8119,6 +8119,9 @@ class API:
         else:
             raise MKGeneralException("No WATO folder %s." % path)
 
+    # Get the number of hosts recursive from the given folder
+    def num_hosts_in_folder(self, folder):
+        return num_hosts_in(folder, True)
 
     # Get all effective data of a host. Folder must be returned by get_folder()
     def get_host(self, folder, hostname):
@@ -8127,6 +8130,15 @@ class API:
         eff = effective_attributes(host, folder)
         eff["name"] = hostname
         return eff
+
+    # Update the attributes of the given host and returns the resulting host attributes
+    # which have been persisted
+    def update_host_attributes(self, host, attr):
+        folder = g_folders.get(host["path"])
+        load_hosts(folder)
+        folder[".hosts"][host["name"]].update(attr)
+        save_folder_and_hosts(folder)
+        return folder[".hosts"][host["name"]]
 
     # Return displayable information about host (call with with result vom get_host())
     def get_host_painted(self, host): 
@@ -8214,7 +8226,7 @@ def collect_hosts(folder):
     # Collect hosts in this folder
     for hostname, host in folder[".hosts"].items():
         hosts[hostname] = effective_attributes(host, folder)
-        host["file"] = folder[".path"]
+        hosts[hostname]["path"] = folder[".path"]
 
     # Collect hosts from subfolders
     for subfolder in folder[".folders"].values():

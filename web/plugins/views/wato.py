@@ -56,7 +56,8 @@ class FilterWatoFile(Filter):
             return ""
 
     def folder_selection(self, folder, prefix, depth):
-        self.check_wato_data_update()
+        if depth == 0:
+            self.check_wato_data_update()
         my_path = prefix + folder[".name"]
         if not my_path.endswith(".mk"):
             my_path += "/"

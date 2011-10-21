@@ -8,6 +8,10 @@
     * FIX: do not show WATO icon if no WATO permission
     * Sidebar sitestatus: Sorting sites by sitealias
 
+    Livestatus:
+    * FIX: fix crash on imcomplete log lines (i.e. as
+      as result of a full disk)
+
 1.1.12b1:
     Core, Setup, etc.:
     * FIX: fix cmk -D on cluster hosts

@@ -87,6 +87,18 @@ char *next_token(char **c, char delim)
     return begin;
 }
 
+/* same as next_token() but returns "" instead of 0 if
+   no tokens has been found */
+char *save_next_token(char **c, char delim)
+{
+    char *result = next_token(c, delim);
+    if (result == 0)
+        return "";
+    else
+        return result;
+}
+
+
 int ends_with(const char *a, const char *b)
 {
     return !strcmp(a + strlen(a) - strlen(b), b);

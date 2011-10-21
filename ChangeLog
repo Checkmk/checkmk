@@ -1,6 +1,7 @@
 1.1.12b2:
     Core, Setup, etc.:
     * FIX: fix crash with umlauts in host aliases
+    * FIX: fix duplicate alias attribute in hosts when defining explicit alias
 
     Multisite:
     * Remove Check_MK logo from default dashboard

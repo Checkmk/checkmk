@@ -3,6 +3,9 @@
     * FIX: fix crash with umlauts in host aliases
     * FIX: remove duplicate alias from Nagios config
 
+    Checks & Agents:
+    * services: better handling of invalid patterns
+
     Multisite:
     * Remove Check_MK logo from default dashboard
     * Let dashboard use 10 more pixels right and bottom

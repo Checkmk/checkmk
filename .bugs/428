@@ -1,0 +1,12 @@
+Title: aix ps check does not count threads correctly
+Component: checks
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-10-21 13:12:14
+Targetversion: 1.1.12
+Class: bug
+
+The AIX ps check does not use the right command to get process threads.
+It should be changed to 
+ps=`/usr/bin/ps -eo thcount | awk '{SUM+=$1} END {print SUM}'`

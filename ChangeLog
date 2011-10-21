@@ -5,6 +5,7 @@
 
     Checks & Agents:
     * services: better handling of invalid patterns
+    * FIX: multipath: fix for another UUID format
 
     Multisite:
     * Remove Check_MK logo from default dashboard

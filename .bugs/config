@@ -13,7 +13,7 @@ components = [
   "livestatus",
   "wato",
   "bi",
-  "doku"
+  "docu"
 ]
 
 classes = [ 

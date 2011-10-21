@@ -8,6 +8,7 @@
     * FIX: multipath: fix for another UUID format
     * AIX agent: fix implementation of thread count
     * blade_bays: detect more than 16 bays
+    * statgrab_*: added missing inventory functions
 
     Multisite:
     * Remove Check_MK logo from default dashboard

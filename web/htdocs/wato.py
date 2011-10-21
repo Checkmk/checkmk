@@ -358,6 +358,9 @@ def mode_editfolder(phase, what, new):
             else:
                 name = create_wato_filename(title, what)
 
+        if not html.check_transaction():
+            return "folder"
+
         # Roles and Permissions
         roles = [ role for role in config.roles if html.var("role_" + role) ]
 

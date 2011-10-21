@@ -1628,7 +1628,7 @@ def show_context_links(thisview, active_filters):
                 html.begin_context_buttons()
                 execute_hooks('buttons-begin')
             vars_values = [ (var, html.var(var)) for var in set(used_contextvars) ]
-            html.context_button(view_linktitle(view), html.makeuri_contextless(vars_values + [("view_name", name)]), view.get("icon"))
+            html.context_button(linktitle, html.makeuri_contextless(vars_values + [("view_name", name)]), view.get("icon"))
 
     execute_hooks('buttons-end')
 

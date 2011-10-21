@@ -1423,7 +1423,7 @@ def create_nagios_hostdefs(outfile, hostname):
     outfile.write("  alias\t\t\t\t%s\n" % alias)
 
     # Custom configuration last -> user may override all other values
-    outfile.write(extra_host_conf_of(hostname))
+    outfile.write(extra_host_conf_of(hostname).encode("utf-8"))
 
     outfile.write("}\n")
 

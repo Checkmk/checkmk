@@ -5,6 +5,7 @@ State: open
 Cost: 1
 Date: 2011-01-05 10:33:21
 Class: cleanup
+Targetversion: 1.2.0
 
 StatsGroupBy ist deprecated. Die Warnung dazu erst ab 1.2i1 aktivieren:
 

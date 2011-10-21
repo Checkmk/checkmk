@@ -1,10 +1,11 @@
 Title: Gejointe Columns sortieren ist noch ein Hack
 Component: multisite
-Benefit: 1
-State: open
-Cost: 2
-Date: 2011-08-26 10:49:22
+State: done
 Class: nastiness
+Date: 2011-08-26 10:49:22
+Benefit: 1
+Cost: 2
+Fun: 0
 
 Ich musste das Sortieren der joined colums umsetzen. Das war gar nicht so trivial.
 Als Hack habe ich es nun geschaft. Das offene Problem, welches noch existiert:
@@ -19,3 +20,6 @@ Der richtige Weg wäre wohl die Row dann zu joinen, wenn man weiß um welche Col
 Das Problem ist nur, dass man dies bei den Sortern momentan erst im Sorter selbst weiß.
 Man müsste eine Wrapper Funktion dazwischen schieben, die den Join mit der jeweiligen Column
 macht.
+
+2011-10-21 09:58:42: changed state open -> done
+Has already been solved

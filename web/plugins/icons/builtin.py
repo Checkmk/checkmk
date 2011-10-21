@@ -421,6 +421,9 @@ def wato_link(filename, site, hostname, where):
         return ""
 
 def paint_wato(what, row, tags, custom_vars):
+    if not config.may("use_wato"):
+        return
+             
     # Link to WATO for hosts
     if "wato" in tags and what == "host":
         for tag in tags:

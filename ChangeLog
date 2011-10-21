@@ -1,7 +1,12 @@
 1.1.12b2:
+    Core, Setup, etc.:
+    * FIX: fix crash with umlauts in host aliases
+
     Multisite:
     * Remove Check_MK logo from default dashboard
     * Let dashboard use 10 more pixels right and bottom
+    * FIX: do not show WATO icon if no WATO permission
+    * Sidebar sitestatus: Sorting sites by sitealias
 
 1.1.12b1:
     Core, Setup, etc.:

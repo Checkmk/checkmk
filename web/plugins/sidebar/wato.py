@@ -46,7 +46,12 @@ def render_wato_files():
 
 def ajax_wato_files():
     if config.may("use_wato"):
+        tree = wato.api.get_folder_tree()
+        if len(tree[".folders"]) == 0:
+            html.write("<ul>")
         render_linktree_folder(wato.api.get_folder_tree())
+        if len(tree[".folders"]) == 0:
+            html.write("</ul>")
 
     
 def render_linktree_folder(f):

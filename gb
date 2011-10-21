@@ -494,7 +494,8 @@ def main_commit(args):
         sys.stdout.write("Commiting:\n")
         for id in g_modified:
             list_bug(g_bugs[id])
-        if 0 == os.system("git commit -m 'Updated bug entries' ."):
+        if 0 == os.system("git commit -m 'Updated bug entries %s' ." % (
+              ", ".join(["#%04d" % id for id in g_modified]))):
             sys.stdout.write("--> Successfully committed %d bugs.\n" % len(g_modified))
         else:
             bail_out("Cannot commit.")

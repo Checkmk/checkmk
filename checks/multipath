@@ -106,6 +106,20 @@
 #   |- 3:0:1:1 sdv        65:80  active undef running
 #   `- 2:0:1:1 sdh        8:112  active undef running
 
+# This is another output, which made problems up to
+# 1.1.12:
+#
+# SDDN_S2A_9900_1308xxxxxxxx dm-13 DDN,S2A 9900
+# [size=7.3T][features=0][hwhandler=0][rw]
+# \_ round-robin 0 [prio=0][active]
+#  \_ 3:0:1:11 sdaj 66:48   [failed][undef]
+#  \_ 4:0:0:11 sdbh 67:176  [failed][undef]
+#  \_ 4:0:2:11 sddd 70:176  [active][undef]
+#  \_ 3:0:2:11 sdeb 128:48  [active][undef]
+# \_ round-robin 0 [prio=0][enabled]
+#  \_ 4:0:1:11 sdcf 69:48   [active][undef]
+#  \_ 3:0:0:11 sdl  8:176   [active][undef]
+
 
 def parse_multipath_output(info, only_uuid = None):
     # only_uuid --> look only for data of this uuid or alias
@@ -116,11 +130,14 @@ def parse_multipath_output(info, only_uuid = None):
     # 0: matching regex
     # 1: matched regex-group id of UUID
     # 2: matched regex-group id of alias (optional)
-    reg_headers = [ (get_regex("^[0-9a-z]{33}$"), 0, None),
-                    (get_regex("^([^\s]+)\s\(([0-9A-Za-z_-]+)\)"), 2, 1),
-                    (get_regex("^[a-zA-Z0-9_]+$"), 0, None),
-                    (get_regex("^([0-9a-z]{33}|[0-9a-z]{49})\s?dm.+$"), 1, None),
-                    (get_regex("^[a-zA-Z0-9_]+dm-.+$"), 0, None) ]
+    reg_headers = [ 
+        (get_regex(r"^[0-9a-z]{33}$"),                       0, None), # 1. (should be included in 3.)
+        (get_regex(r"^([^\s]+)\s\(([0-9A-Za-z_-]+)\)"),      2, 1), # 2.
+        (get_regex(r"^[a-zA-Z0-9_]+$"),                      0, None), # 3. 
+        (get_regex(r"^([0-9a-z]{33}|[0-9a-z]{49})\s?dm.+$"), 1, None), # 4.
+        (get_regex(r"^[a-zA-Z0-9_]+dm-.+$"),                 0, None), # 5. Remove this line in 1.2.0
+        (get_regex(r"^([a-zA-Z0-9_]+)\s?dm-.+$"),            1, None), # 6.
+    ]
 
     reg_prio = get_regex("[[ ]prio=")
     reg_lun  = get_regex("[0-9]+:[0-9]+:[0-9]+:[0-9]+")

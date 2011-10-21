@@ -24,28 +24,30 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+memused_default_levels = (150.0, 200.0)
+
+def inventory_statgrab_mem(info):
+    if len(info) > 0:
+        return [(None, 'memused_default_levels')]
 
 def check_statgrab_mem(item, params, info):
-    try:
-        for var, value in info:
-            if var == 'mem.used':     memused_kb   = int(value) / 1024
-            elif var == 'mem.total':  totalmem_kb  = int(value) / 1024
-            elif var == 'swap.used':  swapused_kb  = int(value) / 1024 / 4 # BUG in statgrab und Solaris?
-            elif var == 'swap.total': totalswap_kb = int(value) / 1024 / 4
-            elif var == 'mem.cache':  caches_kb    = int(value) / 1024
-        totalused_kb = (swapused_kb + memused_kb - caches_kb)
-        totalused_mb = totalused_kb / 1024
-        totalmem_mb = totalmem_kb / 1024
-        totalused_perc = 100 * (float(totalused_kb) / float(totalmem_kb))
-        totalvirt_mb = (totalswap_kb + totalmem_kb) / 1024
-        warn, crit = params
+    for var, value in info:
+        if var == 'mem.used':     memused_kb   = int(value) / 1024
+        elif var == 'mem.total':  totalmem_kb  = int(value) / 1024
+        elif var == 'swap.used':  swapused_kb  = int(value) / 1024 / 4 # BUG in statgrab und Solaris?
+        elif var == 'swap.total': totalswap_kb = int(value) / 1024 / 4
+        elif var == 'mem.cache':  caches_kb    = int(value) / 1024
+    totalused_kb = (swapused_kb + memused_kb - caches_kb)
+    totalused_mb = totalused_kb / 1024
+    totalmem_mb = totalmem_kb / 1024
+    totalused_perc = 100 * (float(totalused_kb) / float(totalmem_kb))
+    totalvirt_mb = (totalswap_kb + totalmem_kb) / 1024
+    warn, crit = params
 
-        perfdata = [
-            ('ramused', str((memused_kb - caches_kb) / 1024) + 'MB', '', '', 0, totalmem_mb),
-            ('swapused', str(swapused_kb / 1024) + 'MB', '', '', 0, totalswap_kb / 1024) ]
+    perfdata = [
+        ('ramused', str((memused_kb - caches_kb) / 1024) + 'MB', '', '', 0, totalmem_mb),
+        ('swapused', str(swapused_kb / 1024) + 'MB', '', '', 0, totalswap_kb / 1024) ]
 
-    except:
-        return (3, "UNKNOWN - invalid output from plugin")
 
     # levels may be given either in int -> MB or in float -> percentages
 
@@ -75,4 +77,4 @@ def check_statgrab_mem(item, params, info):
                     (totalused_mb, totalused_perc), perfdata)
 
 
-check_info['statgrab_mem'] = (check_statgrab_mem, "Memory used", 1, no_inventory_possible)
+check_info['statgrab_mem'] = (check_statgrab_mem, "Memory used", 1, inventory_statgrab_mem)

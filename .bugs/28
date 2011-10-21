@@ -5,6 +5,7 @@ State: open
 Cost: 4
 Date: 2010-12-21 16:41:20
 Class: nastiness
+Targetversion: 1.2.0
 
 Dazu müsste man aber erstmal rausfinden, wie man bei Windows
 dies anstellt. Es hängt ja von der Landeseinstellung ab. Vielleicht

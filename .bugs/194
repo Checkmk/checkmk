@@ -1,10 +1,11 @@
 Title: WATO Folder/File Titel ändern wirkt erst nach weiterem Reload
 Component: wato
-Benefit: 3
-State: open
-Cost: 3
-Date: 2011-08-25 09:21:20
+State: done
 Class: nastiness
+Date: 2011-08-25 09:21:20
+Benefit: 3
+Cost: 3
+Fun: 0
 
 Wenn man momentan den Titel eines Folders oder eines Files im WATO ändert
 und das Formular abschickt, ändert sich der Titel bei der Folgeseite nicht.
@@ -13,3 +14,6 @@ Das liegt vermutlich daran, dass der Titel gemalt wird, bevor das Formular
 überhaupt verarbeitet wird.
 
 Ist kein KO, aber mindestens mal nicht schön.
+
+2011-10-21 12:28:47: changed state open -> done
+fixed. Der Titel wird nun erst nach der action phase ermittelt

@@ -12,6 +12,23 @@
     Multisite:
     * FIX: Fixed encoding problem when opening dashboard
 
+
+1.1.12b2:
+    Core, Setup, etc.:
+    * FIX: fix crash with umlauts in host aliases
+    * FIX: remove duplicate alias from Nagios config
+
+    Multisite:
+    * Remove Check_MK logo from default dashboard
+    * Let dashboard use 10 more pixels right and bottom
+    * FIX: do not show WATO icon if no WATO permission
+    * Sidebar sitestatus: Sorting sites by sitealias
+
+    Livestatus:
+    * FIX: fix crash on imcomplete log lines (i.e. as
+      as result of a full disk)
+
+
 1.1.12b1:
     Core, Setup, etc.:
     * FIX: fix cmk -D on cluster hosts

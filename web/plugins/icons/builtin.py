@@ -405,13 +405,9 @@ multisite_icons.append({
 #   +----------------------------------------------------------------------+
 
 def wato_link(filename, site, hostname, where):
-    # filename is /wato/north/hosts.mk, folder is just "north"
-    if filename.startswith("/wato/") \
-      and filename.endswith("/hosts.mk") \
-      and 'X' in html.display_options:
-        folder = filename[6:-9]
+    if 'X' in html.display_options:
         prefix = config.site(site)["url_prefix"] + "check_mk/"
-        url = prefix + "wato.py?folder=%s&host=%s" % (htmllib.urlencode(folder),
+        url = prefix + "wato.py?filename=%s&host=%s" % (htmllib.urlencode(filename),
                                                         htmllib.urlencode(hostname))
         if where == "inventory":
             url += "&mode=inventory"
@@ -425,21 +421,24 @@ def wato_link(filename, site, hostname, where):
         return ""
 
 def paint_wato(what, row, tags, custom_vars):
-    if config.wato_enabled and config.may("wato.use"):
-        # Link to WATO for hosts
-        filename = row["host_filename"]
-        if filename.startswith("/wato/"):
-            if what == "host":
-                return wato_link(filename, row["site"], row["host_name"], "edithost")
+    # Link to WATO for hosts
+    if "wato" in tags and what == "host":
+        for tag in tags:
+            if tag.endswith(".mk"):
+                wato_filename = tag
+                return wato_link(wato_filename, row["site"],
+                                 row["host_name"], "edithost")
 
-            # Link to WATO for Check_MK Inventory service
-            elif what == "service":
-                if row["service_description"].lower() == "check_mk inventory":
-                    return wato_link(filename, row["site"], row["host_name"], "inventory")
+
+    # Link to WATO for Check_MK Inventory service
+    if what == "service":
+        wato_filename = custom_vars.get("WATO")
+        if wato_filename:
+            return wato_link(wato_filename, row["site"],
+                             row["host_name"], "inventory")
 
 multisite_icons.append({
     'paint':           paint_wato,
-    'host_columns':   [ "filename", "name" ],
 })
 
 #   +----------------------------------------------------------------------+

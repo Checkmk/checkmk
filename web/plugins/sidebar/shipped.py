@@ -362,9 +362,14 @@ table.hostmatrix td { border: 1px solid white; padding: 0; border-spacing: 0; }
 def render_sitestatus():
     if config.is_multisite():
         html.write("<table cellspacing=0 class=sitestate>")
-        sitenames = config.allsites().keys()
-        sitenames.sort()
-        for sitename in sitenames:
+
+        # Sort the list of sitenames by sitealias
+        sitenames = []
+        for sitename, site in config.allsites().iteritems():
+            sitenames.append((sitename, site['alias']))
+        sitenames = sorted(sitenames, key=lambda k: k[1])
+
+        for sitename, sitealias in sitenames:
             site = config.site(sitename)
             if sitename not in html.site_status or "state" not in html.site_status[sitename]:
                 state = "missing"

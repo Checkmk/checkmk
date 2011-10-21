@@ -1481,15 +1481,20 @@ def create_nagios_hostdefs(outfile, hostname):
         outfile.write("  _NODEIPS\t\t\t%s\n" % " ".join(node_ips))
         outfile.write("  parents\t\t\t%s\n" % ",".join(nodes))
 
+        # Host check uses (service-) IP address if available
+        if ip:
+            outfile.write("  check_command\t\t\tcheck-mk-ping\n")
+
+
     # Output alias, but only if it's not define in extra_host_conf
     aliases = host_extra_conf(hostname, extra_host_conf.get("alias", []))
     if len(aliases) == 0:
         outfile.write("  alias\t\t\t\t%s\n" % alias)
     else:
-        alias = aliases[0]
+        alias = aliases[0].encode("utf-8")
 
-    # Custom configuration last -> user may override all other values (includes alias)
-    outfile.write(extra_host_conf_of(hostname))
+    # Custom configuration last -> user may override all other values
+    outfile.write(extra_host_conf_of(hostname).encode("utf-8"))
 
     outfile.write("}\n")
 

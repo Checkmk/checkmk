@@ -35,8 +35,10 @@ extern "C" {
     int ends_with(const char *a, const char *b);
 #ifdef __cplusplus
     char *next_token(char **c, char delim = ',');
+    char *save_next_token(char **c, char delim = ',');
 #else
     char *next_token(char **c, char delim);
+    char *save_next_token(char **c, char delim);
 #endif
     char *next_field(char **line);
 #ifdef __cplusplus

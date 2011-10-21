@@ -108,9 +108,9 @@ bool LogEntry::handleStatusEntry()
         scan++;
 
         _host_name    = next_token(&scan, ';');
-        _state        = hostStateToInt(next_token(&scan, ';'));
+        _state        = hostStateToInt(save_next_token(&scan, ';'));
         _state_type   = next_token(&scan, ';');
-        _attempt      = atoi(next_token(&scan, ';'));
+        _attempt      = atoi(save_next_token(&scan, ';'));
         _check_output = next_token(&scan, ';');
         return true;
     }
@@ -143,9 +143,9 @@ bool LogEntry::handleStatusEntry()
 
         _host_name    = next_token(&scan, ';');
         _svc_desc     = next_token(&scan, ';');
-        _state        = serviceStateToInt(next_token(&scan, ';'));
+        _state        = serviceStateToInt(save_next_token(&scan, ';'));
         _state_type   = next_token(&scan, ';');
-        _attempt      = atoi(next_token(&scan, ';'));
+        _attempt      = atoi(save_next_token(&scan, ';'));
         _check_output = next_token(&scan, ';');
         return true;
     }
@@ -182,11 +182,11 @@ bool LogEntry::handleNotificationEntry()
         _host_name     = next_token(&scan, ';');
         if (svc) {
             _svc_desc = next_token(&scan, ';');
-            _state_type = next_token(&scan, ';');
+            _state_type = save_next_token(&scan, ';');
             _state = serviceStateToInt(_state_type);
         } 
         else {
-            _state_type = next_token(&scan, ';');
+            _state_type = save_next_token(&scan, ';');
             _state = hostStateToInt(_state_type);
         }
 
@@ -211,7 +211,7 @@ bool LogEntry::handlePassiveCheckEntry()
         _host_name    = next_token(&scan, ';');
         if (svc) 
             _svc_desc     = next_token(&scan, ';');
-        _state        = atoi(next_token(&scan, ';'));
+        _state        = atoi(save_next_token(&scan, ';'));
         _check_output = next_token(&scan, ';');
         return true;
     }

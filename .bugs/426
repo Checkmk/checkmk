@@ -1,10 +1,10 @@
 Title: hpux_cpu problem parsing uptime info
 Component: checks
-Benefit: 2
+Benefit: 1
 State: open
 Cost: 4
 Date: 2011-10-21 12:55:23
-Targetversion: 1.1.13i1
+Targetversion: 1.2.0
 Class: bug
 
 The check seems to trip while parsing the uptime output.

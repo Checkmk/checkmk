@@ -34,18 +34,15 @@ def inventory_statgrab_cpu(info):
 def check_statgrab_cpu(item, params, info):
     global g_counters
     user = 0
-    try: 
-        for var, value in info:
-            if var == 'iowait':
-                wait = int(value)
-            elif var == 'kernel':
-                system = int(value)
-            elif var == 'nice' or var == 'user':
-                user += int(value)
-            elif var == 'total':
-                total = int(value)
-    except:
-        return (3, "UNKNOWN - invalid output from plugin")
+    for var, value in info:
+        if var == 'iowait':
+            wait = int(value)
+        elif var == 'kernel':
+            system = int(value)
+        elif var == 'nice' or var == 'user':
+            user += int(value)
+        elif var == 'total':
+            total = int(value)
 
     values = [ user, system, wait, total ]
     this_time = int(time.time())

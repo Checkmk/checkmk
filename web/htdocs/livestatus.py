@@ -298,6 +298,8 @@ class BaseConnection:
             raise MKLivestatusSocketError(str(e))
 
     def do_command(self, command):
+        if self.socket == None:
+            self.connect()
         if not command.endswith("\n"):
             command += "\n"
         try:

@@ -5,6 +5,9 @@
 
     Checks & Agents:
     * services: better handling of invalid patterns
+    * FIX: multipath: fix for another UUID format
+    * AIX agent: fix implementation of thread count
+    * blade_bays: detect more than 16 bays
 
     Multisite:
     * Remove Check_MK logo from default dashboard
@@ -18,6 +21,7 @@
     Livestatus:
     * FIX: fix crash on imcomplete log lines (i.e. as
       as result of a full disk)
+    * FIX: Livestatus-API: fix COMMAND via persistent connections
 
     Checks & Agents:
     * FIX: fix smart.temp WARN/CRIT levels were off by one degree

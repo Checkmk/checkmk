@@ -63,7 +63,7 @@ mpstat -a | tail -n1
 # (thanks to Cameron Pierce)
 echo '<<<cpu>>>'
 load=`uptime|sed -e 's;.*average: \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\), \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\), \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\);\1 \2 \3;'`
-ps=`ps -ef|wc -l|sed -e 's;[[:space:]]\{1,\};;'`
+ps=`ps -eo thcount | awk '{SUM+=$1} END {print SUM}'`
 procs=`vmstat|grep lcpu|sed -e 's;.* lcpu=\([[:digit:]]\{1,2\}\) .*;\1;'`
 echo $load 1/$ps $$ $procs
 

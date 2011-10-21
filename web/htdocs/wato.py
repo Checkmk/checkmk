@@ -89,10 +89,7 @@ def page_handler():
         get_folder_and_file() # sets g_root_folder and g_pathname
 
         if g_file:
-            title = g_file["title"]
             read_the_configuration_file()
-        else:
-            title = g_folder["title"]
 
         default_mode = g_file and "file" or "folder"
         current_mode = html.var("mode", default_mode)
@@ -140,6 +137,10 @@ def page_handler():
             html.add_user_error(e.varname, e.message)
 
     # Title
+    if g_file:
+        title = g_file["title"]
+    else:
+        title = g_folder["title"]
     mode_title = modefunc("title")
     if mode_title:
         title += " - " + mode_title
@@ -357,6 +358,9 @@ def mode_editfolder(phase, what, new):
                 check_wato_filename("name", name, what)
             else:
                 name = create_wato_filename(title, what)
+
+        if not html.check_transaction():
+            return "folder"
 
         # Roles and Permissions
         roles = [ role for role in config.roles if html.var("role_" + role) ]

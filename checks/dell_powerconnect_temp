@@ -63,7 +63,6 @@ def check_dell_powerconnect_temp(item, params, info):
         dell_powerconnect_status = dell_powerconnect_temp_status_map[state]
 
         if int(temp) >= crit:
-            import pprint; pprint.pprint(temp)
             status = 2
         elif int(temp) >= warn:
             status = 1

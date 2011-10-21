@@ -6,6 +6,7 @@ Date: 2011-02-10 09:45:24
 Benefit: 1
 Cost: 2
 Fun: 0
+Targetversion: 1.2.0
 
 After changing the trend_range to a larger time the check reports a peak
 value which is wrong. It might be needed to detect such a change and reset

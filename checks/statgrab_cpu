@@ -25,21 +25,24 @@
 # Boston, MA 02110-1301 USA.
 
 
-def check_statgrab_util(item, params, info):
+
+def inventory_statgrab_cpu(info):
+   if len(info) > 1:
+       return [(None, None)] 
+
+
+def check_statgrab_cpu(item, params, info):
     global g_counters
     user = 0
-    try:
-        for var, value in info:
-            if var == 'iowait':
-                wait = int(value)
-            elif var == 'kernel':
-                system = int(value)
-            elif var == 'nice' or var == 'user':
-                user += int(value)
-            elif var == 'total':
-                total = int(value)
-    except:
-        return (3, "UNKNOWN - invalid output from plugin")
+    for var, value in info:
+        if var == 'iowait':
+            wait = int(value)
+        elif var == 'kernel':
+            system = int(value)
+        elif var == 'nice' or var == 'user':
+            user += int(value)
+        elif var == 'total':
+            total = int(value)
 
     values = [ user, system, wait, total ]
     this_time = int(time.time())
@@ -64,4 +67,4 @@ def check_statgrab_util(item, params, info):
           ( "wait",   "%.3f" % wait_perc ) ]
     return (0, "OK - user: %2.0f%%, system: %2.0f%%, wait: %2.0f%%" % (user_perc, system_perc, wait_perc), perfdata)
 
-check_info['statgrab_cpu'] = (check_statgrab_util, "CPU utilization", 1, no_inventory_possible)
+check_info['statgrab_cpu'] = (check_statgrab_cpu, "CPU utilization", 1, inventory_statgrab_cpu)

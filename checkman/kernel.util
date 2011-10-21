@@ -4,7 +4,7 @@ author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
- This cheak measures the CPU utilization during the last check
+ This check measures the CPU utilization during the last check
  cycle. A level can be set only on {wait} (disk wait). If you
  want to set levels on your CPU usage you better use the check
  {cpu.loads}.

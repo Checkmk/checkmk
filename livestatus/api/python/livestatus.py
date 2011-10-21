@@ -298,6 +298,8 @@ class BaseConnection:
             raise MKLivestatusSocketError(str(e))
 
     def do_command(self, command):
+        if self.socket == None:
+            self.connect()
         if not command.endswith("\n"):
             command += "\n"
         try:
@@ -392,9 +394,9 @@ class MultiSiteConnection(Helpers):
             i = 0
             for name, site, connection in self.connections:
                 if name == sitename:
-                    break
+                    del self.connections[i]
+		    return
                 i += 1
-            del self.connections[i]
 
 
         # Status host: A status host helps to prevent trying to connect

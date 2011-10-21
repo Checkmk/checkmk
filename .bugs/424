@@ -1,0 +1,9 @@
+Title: lnx multipath check looks for hardcoded multipath device strings
+Component: checks
+Benefit: 6
+State: open
+Cost: 4
+Date: 2011-10-21 11:48:52
+Class: bug
+
+If a multipath device in /dev/mapper is not called mpath* then it will not be detected by the multipath check service is generated. The check should be changed to either look at the dm tables or at the "official" output of mulipath -v2 -l during inventory.

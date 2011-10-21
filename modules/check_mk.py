@@ -1123,23 +1123,16 @@ def extra_service_conf_of(hostname, description):
 def extra_summary_service_conf_of(hostname, description):
     return extra_conf_of(extra_summary_service_conf, hostname, description)
 
-
-def get_extra_conf_of(confdict, hostname, service):
-    result = {}
+def extra_conf_of(confdict, hostname, service):
+    result = ""
     for key, conflist in confdict.items():
         if service != None:
             values = service_extra_conf(hostname, service, conflist)
         else:
             values = host_extra_conf(hostname, conflist)
         if len(values) > 0:
-            result[key] = values[0]
-    return result
-
-
-def extra_conf_of(confdict, hostname, service):
-    result = ""
-    for key, value in get_extra_conf_of(confdict, hostname, service).iteritems():
-        result += "  %-29s %s\n" % (key, value)
+            format = "  %-29s %s\n"
+            result += format % (key, values[0])
     return result
 
 
@@ -1387,7 +1380,6 @@ def create_nagios_hostdefs(outfile, hostname):
     if path:
         outfile.write("  _FILENAME\t\t\t%s\n" % path)
 
-
     # Host groups: If the host has no hostgroups it gets the default
     # hostgroup (Nagios requires each host to be member of at least on
     # group.
@@ -1427,8 +1419,12 @@ def create_nagios_hostdefs(outfile, hostname):
         if ip:
             outfile.write("  check_command\t\t\tcheck-mk-ping\n")
 
-    if not 'alias' in get_extra_conf_of(extra_host_conf, hostname, None):
+    # Output alias, but only if it's not define in extra_host_conf
+    aliases = host_extra_conf(hostname, extra_host_conf.get("alias", []))
+    if len(aliases) == 0:
         outfile.write("  alias\t\t\t\t%s\n" % alias)
+    else:
+        alias = aliases[0].encode("utf-8")
 
     # Custom configuration last -> user may override all other values
     outfile.write(extra_host_conf_of(hostname).encode("utf-8"))

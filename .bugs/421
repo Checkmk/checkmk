@@ -1,0 +1,8 @@
+Title: logwatch loses last line id on logrotate
+Component: checks
+Benefit: 5
+State: open
+Cost: 4
+Date: 2011-10-21 10:07:19
+Class: bug
+

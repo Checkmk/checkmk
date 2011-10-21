@@ -5,6 +5,7 @@ State: open
 Cost: 2
 Date: 2011-08-24 16:32:16
 Class: cleanup
+Targetversion: 1.2.0
 
 Enable the sound configuration in config.py per default. Change
 the comments in the example multisite.mk or remove that part

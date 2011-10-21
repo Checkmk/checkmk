@@ -5,6 +5,7 @@ State: open
 Cost: 2
 Date: 2010-12-21 22:19:48
 Class: todo
+Targetversion: 1.2.0
 
 Auf der Homepage sollte ein Hinweis platziert werden, dass es einen neuen
 Agent gibt. Dieser basiert zwar auf dem Linux Agenten, gibt momentan aber

@@ -128,9 +128,9 @@ def check_smart_temp(item, params, info):
         if len(line) >= 13 and line[0] == item and line[4] == "Temperature_Celsius":
             celsius = int(line[12])
             perfdata = [ ( "temp", celsius, warn, crit ) ]
-            if celsius > crit:
+            if celsius >= crit:
                 return (2, "CRIT - Temperature is %dC" % celsius, perfdata)
-            elif celsius > warn:
+            elif celsius >= warn:
                 return (1, "WARN - Temperature is %dC" % celsius, perfdata)
             else:
                 return (0, "OK - Temperature is %dC" % celsius, perfdata)

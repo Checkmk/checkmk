@@ -15,9 +15,9 @@
     * Let dashboard use 10 more pixels right and bottom
     * FIX: do not show WATO icon if no WATO permission
     * Sidebar sitestatus: Sorting sites by sitealias
-
+    * FIX: removed redundant calls of view_linktitle()
     WATO:
-    * FIX: fix update of file/folder title after edit of title property
+    * FIX: fix update of file/folder title after title property change
 
     Livestatus:
     * FIX: fix crash on imcomplete log lines (i.e. as

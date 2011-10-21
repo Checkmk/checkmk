@@ -5,6 +5,7 @@ State: open
 Cost: 5
 Date: 2011-02-11 11:17:50
 Class: todo
+Targetversion: 1.2.0
 
 When monitoring switches the services are ordered as follows:
 
@@ -16,4 +17,6 @@ When monitoring switches the services are ordered as follows:
 2
 20
 
-It would be good to cleanup such interface names by adding a leading zero to the numbers to have a proper sorting of the elements.
+It would be good to cleanup such interface names by adding a leading zero to the numbers to
+have a proper sorting of the elements. We can make it like in the brocade checks: As we
+know the total number of ports we can decide whether to use 2, 3 or 4 digits.

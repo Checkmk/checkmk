@@ -58,7 +58,7 @@ def inventory_windows_services(info):
 
     # Handle single entries (type str)
     def add_matching_services(name, state, start_type, entry):
-        if ' ' in entry:
+        if ' ' in entry and len(entry.split()) == 2:
             svc, statespec = entry.split()
         else:
             svc = entry

@@ -5,6 +5,7 @@ State: open
 Cost: 4
 Date: 2011-07-18 15:42:34
 Class: nastiness
+Targetversion: 1.2.0
 
 there is a very nasty issue with the IPMI agent code - if we kill the initial build of the SDR
 cache there will be no point in re-doing the scan and IPMI will be disabled forever.  The problem

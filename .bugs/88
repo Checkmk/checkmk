@@ -5,6 +5,7 @@ State: open
 Cost: 2
 Date: 2011-01-04 13:51:15
 Class: cleanup
+Targetversion: 1.2.0
 
 The directory /usr/share/doc is not optimal since the templates
 are no longer an example but a vital part - usually never changed

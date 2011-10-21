@@ -5,6 +5,7 @@ State: open
 Cost: 5
 Date: 2010-12-21 21:28:27
 Class: cleanup
+Targetversion: 1.2.0
 
 Performance counter: Generell sollten *alle* Counter von Check_MK
 behandelt werden mit get_counter und *nicht* als counter in die

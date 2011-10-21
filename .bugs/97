@@ -5,6 +5,7 @@ State: open
 Cost: 2
 Date: 2011-01-22 13:53:40
 Class: cleanup
+Targetversion: 1.2.0
 
 When doing a restart of Nagios or a config check while running
 under OMD, then better not call the start scripts directly, but

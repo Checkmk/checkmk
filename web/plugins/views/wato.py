@@ -30,17 +30,25 @@ import wato
 class FilterWatoFile(Filter):
     def __init__(self):
         Filter.__init__(self, "filename", "WATO Folder/File", "host", ["filename"], [])
-        self.load_wato_data()
+        self.last_wato_data_update = None
 
     def load_wato_data(self):
         self.tree = wato.api.get_folder_tree()
         self.path_to_tree = {} # keep mapping from string-paths to folders/files
-        self.selection = self.folder_selection(self.tree, "", 0)
+        if not hasattr(self,"selection"):
+            self.selection = self.folder_selection(self.tree, "", 0)
+
+    def check_wato_data_update(self):
+        if not self.last_wato_data_update or time.time() - self.last_wato_data_update > 30:
+            self.last_wato_data_update = time.time()
+            self.load_wato_data()
 
     def display(self):
+        self.check_wato_data_update()
         html.select(self.name, [("", "")] + self.selection)
 
     def filter(self, infoname):
+        self.check_wato_data_update()
         current = html.var(self.name)
         if current and current in self.path_to_tree:
             return "Filter: host_filename ~ ^%s\n" % current.replace("\n", "") # prevent insertions attack
@@ -48,6 +56,7 @@ class FilterWatoFile(Filter):
             return ""
 
     def folder_selection(self, folder, prefix, depth):
+        self.check_wato_data_update()
         my_path = prefix + folder[".name"]
         if not my_path.endswith(".mk"):
             my_path += "/"
@@ -78,9 +87,9 @@ class FilterWatoFile(Filter):
         # file titles and so on.
         # The call below needs to use some sort of indicator wether the cache needs
         # to be renewed or not.
+        self.check_wato_data_update()
         current = html.var(self.name)
         if current and current != "/":
-            self.load_wato_data()
             return self.path_to_tree.get(current) 
 
 

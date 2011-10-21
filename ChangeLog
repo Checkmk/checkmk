@@ -9,6 +9,7 @@
     * AIX agent: fix implementation of thread count
     * blade_bays: detect more than 16 bays
     * statgrab_*: added missing inventory functions
+    * FIX: fix smart.temp WARN/CRIT levels were off by one degree
 
     Multisite:
     * Remove Check_MK logo from default dashboard
@@ -16,6 +17,7 @@
     * FIX: do not show WATO icon if no WATO permission
     * Sidebar sitestatus: Sorting sites by sitealias
     * FIX: removed redundant calls of view_linktitle()
+
     WATO:
     * FIX: fix update of file/folder title after title property change
 
@@ -23,9 +25,6 @@
     * FIX: fix crash on imcomplete log lines (i.e. as
       as result of a full disk)
     * FIX: Livestatus-API: fix COMMAND via persistent connections
-
-    Checks & Agents:
-    * FIX: fix smart.temp WARN/CRIT levels were off by one degree
 	
 1.1.12b1:
     Core, Setup, etc.:

@@ -7372,8 +7372,15 @@ def mode_edit_ruleset(phase):
         elif action == "insert":
             if not html.check_transaction():
                 return None # browser reload
-            rules[rulenr:rulenr] = [rules[rulenr]]
-            save_rulesets(rule_folder, rulesets)
+            if g_folder == rule_folder:
+                rules[rulenr:rulenr] = [rules[rulenr]]
+                save_rulesets(rule_folder, rulesets)
+            else:
+                folder_rulesets = load_rulesets(g_folder)
+                folder_rules = folder_rulesets.setdefault(varname, [])
+                folder_rules.append(rules[rulenr])
+                save_rulesets(g_folder, folder_rulesets)
+
             log_pending(None, "edit-ruleset", 
                   _("Inserted new rule in ruleset %s") % rulespec["title"])
             return
@@ -7441,7 +7448,7 @@ def mode_edit_ruleset(phase):
             html.write("<td class=number>%d</td>" % (rulenr + 1))
 
             # Actions
-            html.write("<td class=rulebuttons>")
+            html.write("<td class=\"buttons rulebuttons\">")
             if not first_in_group:
                 rule_button("up", _("Move this rule one position up"), folder, rel_rulenr)
             else:
@@ -7450,7 +7457,8 @@ def mode_edit_ruleset(phase):
                 rule_button("down", _("Move this rule one position down"), folder, rel_rulenr)
             else:
                 rule_button(None)
-            rule_button("insert", _("Insert a copy of this rule"), folder, rel_rulenr)
+            rule_button("insert", _("Insert a copy of this rule into the folder '%s'") 
+                        % g_folder["title"], folder, rel_rulenr)
             rule_button("delete", _("Delete this rule"), folder, rel_rulenr)
             html.write("</td>")
 
@@ -7570,14 +7578,6 @@ def folder_selection(folder, depth=0):
         sel += folder_selection(subfolder, depth + 1)
     return sel
 
-    html.write("<h3>%s</h3>\n" % ruleset["title"])
-    if ruleset["help"]:
-        html.write("<p>%s</p>\n" % ruleset["help"])
-    all_configured_rulesets = load_rulesets(g_folder) 
-    
-    rules = all_configured_rulesets.get(varname, [])
-    for n, rule in enumerate(rules):
-        render_rule(ruleset, rule, n + 1, n == len(rules) - 1)
 
 
 def create_rule(rulespec, hostname=None, item=None):
@@ -7887,16 +7887,29 @@ def mode_edit_rule(phase):
         if html.check_transaction():
             # CONDITION
             tag_specs, host_list, item_list = get_rule_conditions(rulespec)
+            new_rule_folder = g_folders[html.var("new_rule_folder")]
             # VALUE
             if valuespec:
                 value = get_edited_value(valuespec)
             else:
                 value = html.var("value") == "yes"
             rule = construct_rule(rulespec, value, tag_specs, host_list, item_list)
-            rules[rulenr] = rule
-            save_rulesets(folder, rulesets)
-            log_pending(None, "edit-rule", "Changed properties of rule %s in folder %s" % 
-                    (rulespec["title"], folder["title"]))
+            if new_rule_folder == folder:
+                rules[rulenr] = rule
+                save_rulesets(folder, rulesets)
+                log_pending(None, "edit-rule", _("Changed properties of rule %s in folder %s") % 
+                        (rulespec["title"], folder["title"]))
+            else: # Move rule to new folder
+                del rules[rulenr]
+                save_rulesets(folder, rulesets)
+                rulesets = load_rulesets(new_rule_folder)
+                rules = rulesets.setdefault(varname, [])
+                rules.append(rule)
+                save_rulesets(new_rule_folder, rulesets)
+                log_pending(None, "edit-rule", _("Changed properties of rule %s, moved rule from "
+                            "folder %s to %s") % (rulespec["title"], folder["title"], 
+                            new_rule_folder["title"]))
+
         return "edit_ruleset"
 
     html.begin_form("rule_editor")
@@ -7921,6 +7934,13 @@ def mode_edit_rule(phase):
     # Conditions
     html.write("<tr><td class=title colspan=2><h3>%s</h3></td></tr>" % 
                 _("Conditions"))
+
+    # Rule folder
+    html.write("<tr><td class=legend>%s<br><i>%s</i></td>" % 
+               (_("Folder"), _("The rule is only applied to hosts directly in or below this folder.")))
+    html.write("<td class=content>")
+    html.select("new_rule_folder", folder_selection(g_root_folder), folder[".path"])
+    html.write("</td></tr>")
 
     # Host tags
     html.write("<tr><td class=legend>" + _("Host tags") + "<br><i>")

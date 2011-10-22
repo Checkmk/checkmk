@@ -2484,3 +2484,31 @@ table.aggrtree td.leaf.even {
 table.aggrtree td.node {
     background-color: #e8e8e8;
 }
+
+/* Styles used in internal debugging */
+table.debug_vars {
+    border-collapse: collapse;
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+}
+table.debug_vars th {
+    border: 1px solid #080;
+    background-color: #8c8;
+    font-weight: bold;
+}
+table.debug_vars td.left {
+    background-color: #395;
+    color: white;
+    font-weight: bold;
+}
+table.debug_vars td.right {
+    background-color: #8fc;
+    color: black;
+    font-weight: bold;
+}
+table.debug_vars td {
+    padding: 2px 6px;
+    border: 1px solid #050;
+    font-family: courier, monospace;
+}

@@ -835,3 +835,10 @@ class html:
         import pprint
         for element in x:
             self.write("<pre>%s</pre>\n" % pprint.pformat(element))
+
+    def debug_vars(self):
+        self.write('<table onmouseover="this.style.display=\'none\';" class=debug_vars>')
+        self.write("<tr><th colspan=2>POST / GET Variables</th></tr>")
+        for name, value in sorted(self.req.vars.items()):
+            self.write("<tr><td class=left>%s</td><td class=right>%s</td></tr>\n" % (name, value))
+        self.write("</ul>")

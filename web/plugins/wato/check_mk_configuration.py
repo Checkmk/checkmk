@@ -402,6 +402,31 @@ register_rule(group,
             minvalue = 1),
     itemtype = "service")
 
+register_rule(group, 
+    "extra_service_conf:check_interval",
+    Integer(title = _("Normal check interval for service checks"),
+            help = _("Check_MK usually uses an interval of one minute for the active Check_MK "
+                     "check and for legacy checks. Here you can specify a larger interval. Please "
+                     "note, that this setting only applies to active checks (those with the "
+                     "%s reschedule button). Ich you want to change the check interval of "
+                     "the Check_MK service only, specify <tt><b>Check_MK$</b></tt> in the list "
+                     "of services.") % '<img class="icon docu" src="images/icon_reload.gif">',
+            minvalue = 1,
+            label = _("minutes")),
+    itemtype = "service")
+
+register_rule(group, 
+    "extra_service_conf:retry_interval",
+    Integer(title = _("Retry check interval for service checks"),
+            help = _("This setting is relevant of you have set the maximum number of check "
+                     "attempts to a number greater than one. In case a service check is not OK "
+                     "and the maximum number of check attempts is not yet reached, it will be "
+                     "reched with this interval. The retry interval is usually set to a smaller "
+                     "value then the normal interval.<br><br>This setting only applies to "
+                     "active checks."),
+            minvalue = 1,
+            label = _("minutes")),
+    itemtype = "service")
 
 register_rule(group,
     "extra_host_conf:notification_period",

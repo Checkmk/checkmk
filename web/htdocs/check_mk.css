@@ -939,6 +939,13 @@ td.icons img {
 
 img.icon {
    width: 20px;
+   height: 20px;
+}
+/* Icon image place inline in some documentation text */
+.wato img.icon.docu {
+   width: 14px;
+   height: 14px;
+   vertical-align: middle;
 }
 
 /* Styles used by specific painters. These should be modularized later ... */

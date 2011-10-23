@@ -2748,156 +2748,6 @@ def hilite_errors(outdata):
 
 
 
-#   +----------------------------------------------------------------------+
-#   |                  _   _      _                                        |
-#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
-#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
-#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
-#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
-#   |                              |_|                                     |
-#   +----------------------------------------------------------------------+
-#   | Functions needed at various places                                   |
-#   +----------------------------------------------------------------------+
-
-def host_status_button(hostname, viewname):
-    html.context_button(_("Status"), 
-       "view.py?" + htmllib.urlencode_vars([
-           ("view_name", viewname), 
-           ("filename", g_folder[".path"] + "/hosts.mk"),
-           ("host",     hostname),
-           ("site",     "")]), 
-           "status")  # TODO: support for distributed WATO
-
-def folder_status_button(viewname = "allhosts"):
-    html.context_button(_("Status"), 
-       "view.py?" + htmllib.urlencode_vars([
-           ("view_name", viewname), 
-           ("wato_folder", g_folder[".path"])]), 
-           "status")  # TODO: support for distributed WATO
-
-def global_buttons():
-    changelog_button()
-    home_button()
-
-def home_button():
-    html.context_button(_("Home"), make_link([("mode", "main")]), "home")
-
-def snapshots_button():
-    if config.may("wato.snapshots"):
-        html.context_button(_("Backup / Restore"),  make_link([("mode", "snapshot")]), "backup")
-
-def search_button():
-    html.context_button(_("Search"), make_link([("mode", "search")]), "search")
-
-def changelog_button():
-    pending = parse_audit_log("pending")
-    if len(pending) > 0:
-        buttontext = "<b>%d " % len(pending) + _("Changes")  + "</b>"
-        hot = True
-    else:
-        buttontext = _("No Changes")
-        hot = False
-    html.context_button(buttontext, make_link([("mode", "changelog")]), "wato_changes", hot)
-
-def find_host(host):
-    return find_host_in(host, g_root_folder)
-
-def find_host_in(host, folder):
-    hosts = load_hosts(folder)
-    if host in hosts:
-        return folder
-
-    for f in folder.get(".folders").values():
-        p = find_host_in(host, f)
-        if p != None:
-            return p
-
-def num_hosts_in(folder, recurse=True):
-    if not "num_hosts" in folder:
-        load_hosts(folder)
-        save_folder(folder)
-
-    if not recurse:
-        return folder["num_hosts"]
-
-    num = 0
-    for subfolder in folder[".folders"].values():
-        num += num_hosts_in(subfolder, True)
-    num += folder["num_hosts"]
-    folder[".total_hosts"] = num # store for later usage
-    return num
-
-# This is a dummy implementation which works without tags
-# and implements only a special case of Check_MK's real logic.
-def host_extra_conf(hostname, conflist):
-    for value, hostlist in conflist:
-        if hostname in hostlist:
-            return [value]
-    return []
-
-# Create link keeping the context to the current folder / file
-def make_link(vars):
-    vars = vars + [ ("folder", g_folder[".path"]) ]
-    return html.makeuri_contextless(vars)
-
-# Small helper for creating a link with a context to a given folder
-def make_link_to(vars, folder):
-    vars = vars + [ ("folder", folder[".path"]) ]
-    return html.makeuri_contextless(vars)
-
-def make_action_link(vars):
-    return make_link(vars + [("_transid", html.current_transid())])
-
-
-# Show confirmation dialog, send HTML-header if dialog is shown.
-def wato_confirm(html_title, message):
-    wato_html_head(html_title)
-    return html.confirm(message)
-
-def wato_html_head(title):
-    global g_html_head_open
-    if not g_html_head_open:
-        g_html_head_open = True
-        html.header(title)
-        html.write("<div class=wato>\n")
-
-def render_folder_path(the_folder = 0, link_to_last = False, keepvarnames = ["mode"]):
-    if the_folder == 0:
-        the_folder = g_folder
-
-    keepvars = [ (name, html.var(name)) for name in keepvarnames ]
-    def render_component(folder):
-        return '<a href="%s">%s</a>' % (
-               html.makeuri_contextless([
-                  ("folder", folder[".path"])] + keepvars), folder["title"])
-
-    folders = []
-    folder = the_folder.get(".parent")
-    while folder:
-        folders.append(folder)
-        folder = folder.get(".parent")
-
-    parts = []
-    for folder in folders[::-1]:
-        parts.append(render_component(folder))
-    if link_to_last:
-        parts.append(render_component(the_folder))
-    else:
-        parts.append("<b>" + the_folder["title"] + "</b>")
-
-    html.write("<div class=folderpath>%s\n" % "<i> / </i>".join(parts))
-
-    subfolders = the_folder[".folders"]
-    if len(subfolders) > 0 and not link_to_last:
-        html.write("<i> / </i>")
-        html.write("<form method=GET name=folderpath>")
-        options = [ (sf[".path"], sf["title"]) for sf in subfolders.values() ]
-        html.sorted_select("folder", [ ("", "") ] + options, onchange="folderpath.submit();", attrs={"class" : "folderpath"})
-        for var in keepvarnames:
-            html.hidden_field(var, html.var(var))
-        html.write("</form>")
-    html.write("</div><br>")
-
 
 #   +----------------------------------------------------------------------+
 #   |               ____                                                   |
@@ -8434,6 +8284,160 @@ def call_hook_activate_changes():
     if hook_registered('activate-changes'):
         call_hooks("activate-changes", collect_hosts(g_root_folder))
 
+
+#   +----------------------------------------------------------------------+
+#   |                  _   _      _                                        |
+#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
+#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
+#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
+#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
+#   |                              |_|                                     |
+#   +----------------------------------------------------------------------+
+#   | Functions needed at various places                                   |
+#   +----------------------------------------------------------------------+
+
+def host_status_button(hostname, viewname):
+    html.context_button(_("Status"), 
+       "view.py?" + htmllib.urlencode_vars([
+           ("view_name", viewname), 
+           ("filename", g_folder[".path"] + "/hosts.mk"),
+           ("host",     hostname),
+           ("site",     "")]), 
+           "status")  # TODO: support for distributed WATO
+
+def folder_status_button(viewname = "allhosts"):
+    html.context_button(_("Status"), 
+       "view.py?" + htmllib.urlencode_vars([
+           ("view_name", viewname), 
+           ("wato_folder", g_folder[".path"])]), 
+           "status")  # TODO: support for distributed WATO
+
+def global_buttons():
+    changelog_button()
+    home_button()
+
+def home_button():
+    html.context_button(_("Home"), make_link([("mode", "main")]), "home")
+
+def snapshots_button():
+    if config.may("wato.snapshots"):
+        html.context_button(_("Backup / Restore"),  make_link([("mode", "snapshot")]), "backup")
+
+def search_button():
+    html.context_button(_("Search"), make_link([("mode", "search")]), "search")
+
+def changelog_button():
+    pending = parse_audit_log("pending")
+    if len(pending) > 0:
+        buttontext = "<b>%d " % len(pending) + _("Changes")  + "</b>"
+        hot = True
+    else:
+        buttontext = _("No Changes")
+        hot = False
+    html.context_button(buttontext, make_link([("mode", "changelog")]), "wato_changes", hot)
+
+def find_host(host):
+    return find_host_in(host, g_root_folder)
+
+def find_host_in(host, folder):
+    hosts = load_hosts(folder)
+    if host in hosts:
+        return folder
+
+    for f in folder.get(".folders").values():
+        p = find_host_in(host, f)
+        if p != None:
+            return p
+
+def num_hosts_in(folder, recurse=True):
+    if not "num_hosts" in folder:
+        load_hosts(folder)
+        save_folder(folder)
+
+    if not recurse:
+        return folder["num_hosts"]
+
+    num = 0
+    for subfolder in folder[".folders"].values():
+        num += num_hosts_in(subfolder, True)
+    num += folder["num_hosts"]
+    folder[".total_hosts"] = num # store for later usage
+    return num
+
+# This is a dummy implementation which works without tags
+# and implements only a special case of Check_MK's real logic.
+def host_extra_conf(hostname, conflist):
+    for value, hostlist in conflist:
+        if hostname in hostlist:
+            return [value]
+    return []
+
+# Create link keeping the context to the current folder / file
+def make_link(vars):
+    vars = vars + [ ("folder", g_folder[".path"]) ]
+    return html.makeuri_contextless(vars)
+
+# Small helper for creating a link with a context to a given folder
+def make_link_to(vars, folder):
+    vars = vars + [ ("folder", folder[".path"]) ]
+    return html.makeuri_contextless(vars)
+
+def make_action_link(vars):
+    return make_link(vars + [("_transid", html.current_transid())])
+
+
+# Show confirmation dialog, send HTML-header if dialog is shown.
+def wato_confirm(html_title, message):
+    wato_html_head(html_title)
+    return html.confirm(message)
+
+def wato_html_head(title):
+    global g_html_head_open
+    if not g_html_head_open:
+        g_html_head_open = True
+        html.header(title)
+        html.write("<div class=wato>\n")
+
+def render_folder_path(the_folder = 0, link_to_last = False, keepvarnames = ["mode"]):
+    if the_folder == 0:
+        the_folder = g_folder
+
+    keepvars = [ (name, html.var(name)) for name in keepvarnames ]
+    def render_component(folder):
+        return '<a href="%s">%s</a>' % (
+               html.makeuri_contextless([
+                  ("folder", folder[".path"])] + keepvars), folder["title"])
+
+    folders = []
+    folder = the_folder.get(".parent")
+    while folder:
+        folders.append(folder)
+        folder = folder.get(".parent")
+
+    parts = []
+    for folder in folders[::-1]:
+        parts.append(render_component(folder))
+    if link_to_last:
+        parts.append(render_component(the_folder))
+    else:
+        parts.append("<b>" + the_folder["title"] + "</b>")
+
+    html.write("<div class=folderpath>%s\n" % "<i> / </i>".join(parts))
+
+    subfolders = the_folder[".folders"]
+    if len(subfolders) > 0 and not link_to_last:
+        html.write("<i> / </i>")
+        html.write("<form method=GET name=folderpath>")
+        options = [ (sf[".path"], sf["title"]) for sf in subfolders.values() ]
+        html.sorted_select("folder", [ ("", "") ] + options, onchange="folderpath.submit();", attrs={"class" : "folderpath"})
+        for var in keepvarnames:
+            html.hidden_field(var, html.var(var))
+        html.write("</form>")
+    html.write("</div><br>")
+
+def may_see_hosts():
+    return config.may("wato.use") and \
+       (config.may("wato.seeall") or config.may("wato.hosts"))
 
 #   +----------------------------------------------------------------------+
 #   |                   ____  _             _                              |

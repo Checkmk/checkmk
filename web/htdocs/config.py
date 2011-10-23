@@ -252,7 +252,7 @@ def login(u):
     user_permissions = {}
 
     # Make sure, admin can restore permissions in any case!
-    if user in admin_users:
+    if user_id in admin_users:
         user_permissions["use"] = True        # use Multisite
         user_permissions["wato.use"] = True   # enter WATO
         user_permissions["wato.edit"] = True  # make changes in WATO...
@@ -316,6 +316,7 @@ def may_with_roles(some_role_ids, pname):
     
 
 def may(pname):
+    global user_permissions
     if pname in user_permissions:
         return user_permissions[pname]
     he_may = may_with_roles(user_role_ids, pname)

@@ -58,22 +58,37 @@ def inventory_dell_powerconnect_temp(checkname, info):
 # Execute a check against each sensor.
 def check_dell_powerconnect_temp(item, params, info):
     warn, crit = params
+    sensor_info = ""
+    temp_info = ""
+
     for temp, state in info:
         status = 0
         dell_powerconnect_status = dell_powerconnect_temp_status_map[state]
 
+	if state == 3:
+	   sensor_info = " (!!)"
+
         if int(temp) >= crit:
             status = 2
+	    temp_info = " (!!)"
+
         elif int(temp) >= warn:
             status = 1
+	    temp_info = " (!)"
         else:
             status = dell_powerconnect_temp_status2nagios_map[dell_powerconnect_status]
 
-        return (status, '%s - The temperature sensor is currently (%s), and the current temperature is %sC' %
-                        (nagios_state_names[status], dell_powerconnect_temp_status_map[state], temp), [
-               ("state", dell_powerconnect_temp_sensor_state_performance_map[state], "", 0, 0, 1),
+        return (status, '%s - The temperature sensor is currently (%s)%s, and the current temperature is %sC%s' %
+                        (nagios_state_names[status], dell_powerconnect_temp_status_map[state], sensor_info, temp, temp_info), [
                ("temperature", int(temp), warn, crit, 0, 200),
                ])
+
+# Retain code below in case future changes permit performance data for states via a global/check specific flag
+#        return (status, '%s - The temperature sensor is currently (%s), and the current temperature is %sC' %
+#                        (nagios_state_names[status], dell_powerconnect_temp_status_map[state], temp), [
+#               ("state", dell_powerconnect_temp_sensor_state_performance_map[state], "", 0, 0, 1),
+#               ("temperature", int(temp), warn, crit, 0, 200),
+#               ])
     return (3, "UNKNOWN - item not found in snmp data")
 
 

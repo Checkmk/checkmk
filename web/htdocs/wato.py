@@ -7923,7 +7923,7 @@ def mode_edit_rule(phase):
                 x += 1
             html.write("</table>")
             html.write(_("The entries here are regular expressions to match the beginning. "
-                         "Add a <tt>$</tt> for an exact match. An arbitrary string is matched "
+                         "Add a <tt>$</tt> for an exact match. An arbitrary substring is matched "
                          "with <tt>.*</tt>"))
             html.write("</div>")
                 

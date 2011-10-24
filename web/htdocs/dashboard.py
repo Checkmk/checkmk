@@ -501,7 +501,8 @@ def render_statistics(what, table, filter):
     html.write('<canvas class=pie width=%d height=%d id=%s_stats style="float: left"></canvas>' % 
             (pie_diameter, pie_diameter, what))
     
-    html.write('<table class="hoststats narrow" style="float:left">')
+    html.write('<table class="hoststats%s" style="float:left">' % ( 
+        len(pies) > 5 and " narrow" or ""))
     for (name, color, query), count in pies + [ ((_("Total"), "", ""), total) ]:
         html.write('<tr><th>%s</th><td class=color style="background-color: %s">'
                    '</td><td>%d</td></tr>' % (name, color, count))

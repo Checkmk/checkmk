@@ -1789,6 +1789,9 @@ div.dashlet table.hoststats th, table.hoststats td {
     border-width: 1px;
     vertical-align: middle;
 }
+div.dashlet table.hoststats.narrow th, table.hoststats.narrow td { 
+    font-size: 8pt;
+}
 
 div.dashlet div.nograph {
     background-color: white;

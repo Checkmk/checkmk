@@ -5629,11 +5629,12 @@ def mode_users(phase):
         # Locked
         locked = user.get("locked", False)
         html.write("<td>%s</td>" % (locked and ("<b>" + _("yes") + "</b>") or _("no")))
+
+        # Full name / Alias
+        html.write("<td>%s</td>" % user.get("alias", ""))
+
         # Email
         html.write("<td>%s</td>" % user.get("email", ""))
-
-        # Alias
-        html.write("<td>%s</td>" % user.get("alias", ""))
 
         # Roles
         if user.get("roles", []):

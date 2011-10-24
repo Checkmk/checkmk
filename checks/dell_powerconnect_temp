@@ -66,15 +66,15 @@ def check_dell_powerconnect_temp(item, params, info):
         dell_powerconnect_status = dell_powerconnect_temp_status_map[state]
 
 	if state == 3:
-	   sensor_info = " (!!)"
+	   sensor_info = "(!!)"
 
         if int(temp) >= crit:
             status = 2
-	    temp_info = " (!!)"
+	    temp_info = "(!!)"
 
         elif int(temp) >= warn:
             status = 1
-	    temp_info = " (!)"
+	    temp_info = "(!)"
         else:
             status = dell_powerconnect_temp_status2nagios_map[dell_powerconnect_status]
 

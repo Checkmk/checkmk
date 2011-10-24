@@ -5987,10 +5987,12 @@ def mode_edit_user(phase):
     # if we implement some check_mk --notify, we could directly
     # access the data in the account with the need to store
     # values in the monitoring core. We'll see what future brings.
+    html.write("<tr><td class=buttons colspan=2>")
+    html.button("save", _("Save"))
+    html.write("</tr>")
 
     html.write("</table>")
     html.hidden_fields()
-    html.button("save", _("Save"))
     html.end_form()
 
 

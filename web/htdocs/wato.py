@@ -239,47 +239,6 @@ config.declare_permission("wato.snapshots",
        "can make arbitrary changes to the configuration by restoring uploaded snapshots!"),
      [ "admin",  ])
 
-# Modules accessible in main level, also shown in WATO snapin
-# fields: mode, title, icon, permission, help
-modules = [
-      ( "folder",           _("Host & Folders"),     "folder", "hosts",
-      _("Manage monitored hosts and services and the hosts' folder structure.")),
-      
-      ( "hosttags",         _("Host tags"),          "hosttag", "hosttags",
-      _("Manage your host tags. Tags are used to classify hosts and are the "
-        "fundament of the configuration of hosts and services.")),
-
-      ( "globalvars",        _("Global settings"),    "configuration", "global", 
-      _("Manage global configuration settings for Check_MK, Multisite and the "
-
-        "monitoring core here.")),
-      ( "rulesets",          _("Rulesets"),           "rulesets", "rulesets", 
-
-      _("Check parameters and other variables that can be set on a per-host "
-        "and per-service basis are managed via rules.") ),
-
-      ( "host_groups",       _("Host Groups"),        "hostgroups", "groups", 
-      _("Organize your hosts in groups independent of the tree structure.") ),
-
-      ( "service_groups",    _("Service Groups"),     "servicegroups", "groups", 
-      _("Organize services in groups for a better overview in the status display.") ),
-
-      ( "users",          _("Users & Contacts"),     "users", "users", 
-      _("Manage users of Multisite and contacts of the monitoring system.") ),
-
-      ( "roles",            _("Roles"),     "roles", "users",
-      _("Manage user roles and permissions.") ),
-
-      ( "contact_groups",   _("Contact Groups"),     "contactgroups", "users",
-      _("Manage groups of contacts.") ),
-
-      ( "timeperiods",      _("Time Periods"),       "timeperiods", "timeperiods", 
-      _("Timeperiods define a set of days and hours of a regular week and "
-        "can be used to restrict alert notifications.") ), 
-
-      ( "sites",  _("Multisite Connections"), "sites", "sites",
-      _("Configure distributed monitoring via Multsite, manage connections to remote sites.")),
-    ]
 
 root_dir      = defaults.check_mk_configdir + "/wato/"
 multisite_dir = defaults.default_config_dir + "/multisite.d/"

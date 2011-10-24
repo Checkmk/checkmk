@@ -419,11 +419,11 @@ register_rule(group,
 register_rule(group, 
     "extra_service_conf:retry_interval",
     Integer(title = _("Retry check interval for service checks"),
-            help = _("This setting is relevant of you have set the maximum number of check "
+            help = _("This setting is relevant if you have set the maximum number of check "
                      "attempts to a number greater than one. In case a service check is not OK "
                      "and the maximum number of check attempts is not yet reached, it will be "
-                     "reched with this interval. The retry interval is usually set to a smaller "
-                     "value then the normal interval.<br><br>This setting only applies to "
+                     "rescheduled with this interval. The retry interval is usually set to a smaller "
+                     "value than the normal interval.<br><br>This setting only applies to "
                      "active checks."),
             minvalue = 1,
             label = _("minutes")),

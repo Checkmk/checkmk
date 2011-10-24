@@ -983,9 +983,9 @@ def show_subfolders(folder):
         enter_url    = make_link_to([("mode", "folder")], entry)
 
         html.write("<td class=buttons>")
-        html.buttonlink(edit_url, _("Properties"))
+        icon_button(edit_url, _("Edit the properties of this folder"), "folderproperties")
         if config.may("wato.manage_folders"):
-            html.buttonlink(delete_url, _("Delete"))
+            icon_button(delete_url, _("Delete this folder"), "delete")
         html.write("</td>")
 
 
@@ -1053,7 +1053,8 @@ def show_hosts(folder):
     html.write("<table class=data>\n")
     html.write("<tr><th class=left></th><th></th><th>"
                + _("Hostname") + "</th><th>"
-               + _("Auth") + "</th>")
+               + _("Auth") + "</th>"
+               + "<th>" + _("Tags") + "</th>")
 
 
     for attr, topic in host_attributes:
@@ -1133,11 +1134,11 @@ def show_hosts(folder):
         html.write('</td>\n')
 
         html.write("<td class=buttons>")
-        html.buttonlink(edit_url,     _("Edit"))
-        html.buttonlink(services_url, _("Services"))
+        icon_button(edit_url, _("Edit the properties of this host"), "edithost")
+        icon_button(services_url, _("Edit the services of this host, do an inventory"), "services")
         if config.may("wato.manage_hosts"):
-            html.buttonlink(clone_url,    _("Clone"))
-            html.buttonlink(delete_url,   _("Delete"))
+            icon_button(clone_url, _("Create a clone of this host"), "insert")
+            icon_button(delete_url, _("Delete this host"), "delete")
         html.write("</td>\n")
 
         # Hostname with link to details page (edit host)
@@ -1152,6 +1153,9 @@ def show_hosts(folder):
             icon = "autherr"
             title = htmllib.strip_tags(auth)
         html.write('<td><img class=icon src="images/icon_%s.png" title="%s"></td>' % (icon, title))
+        
+        # Raw tags
+        html.write("<td>%s</td>" % "<b style='color: #888;'>|</b>".join(host[".tags"]))
 
         # Show attributes
         for attr, topic in host_attributes:
@@ -1570,7 +1574,7 @@ def mode_edithost(phase, new):
         html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
         if not new:
             html.context_button(_("Services"), 
-                  make_link([("mode", "inventory"), ("host", hostname)]))
+                  make_link([("mode", "inventory"), ("host", hostname)]), "services")
             html.context_button(_("Rulesets"),  
                   make_link([("mode", "rulesets"), ("host", hostname), ("local", "on")]), "rulesets")
 
@@ -8402,7 +8406,7 @@ def render_folder_path(the_folder = 0, link_to_last = False, keepvarnames = ["mo
         for var in keepvarnames:
             html.hidden_field(var, html.var(var))
         html.write("</form>")
-    html.write("</div><br>")
+    html.write("</div>")
 
 def may_see_hosts():
     return config.may("wato.use") and \

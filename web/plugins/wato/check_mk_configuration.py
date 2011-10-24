@@ -408,7 +408,7 @@ register_rule(group,
             help = _("Check_MK usually uses an interval of one minute for the active Check_MK "
                      "check and for legacy checks. Here you can specify a larger interval. Please "
                      "note, that this setting only applies to active checks (those with the "
-                     "%s reschedule button). Ich you want to change the check interval of "
+                     "%s reschedule button). If you want to change the check interval of "
                      "the Check_MK service only, specify <tt><b>Check_MK$</b></tt> in the list "
                      "of services.") % '<img class="icon docu" src="images/icon_reload.gif">',
             minvalue = 1,

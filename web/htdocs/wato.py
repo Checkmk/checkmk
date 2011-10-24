@@ -4237,7 +4237,7 @@ class Tuple(ValueSpec):
         return tuple([x.canonical_value() for x in self._elements])
 
     def render_input(self, varprefix, value):
-        html.write("<table>")
+        html.write('<table class="valuespec_tuple">')
         for no, (element, val) in enumerate(zip(self._elements, value)):
             vp = varprefix + "_" + str(no)
             if element.help():
@@ -4246,8 +4246,9 @@ class Tuple(ValueSpec):
                 help = ""
             html.write("<tr>")
             if self._show_titles:
-                html.write("<td>%s:%s</td>" % (element.title(), help))
-            html.write("<td>")
+                title = element.title()[0].upper() + element.title()[1:]
+                html.write("<td class=left>%s:%s</td>" % (title, help))
+            html.write("<td class=right>")
             element.render_input(vp, val)
             html.write("</td></tr>")
         html.write("</table>")
@@ -4900,6 +4901,22 @@ class GroupSelection(ElementSelection):
         this_group = all_groups.get(self._what, {})
         # replace the title with the key if the title is empty
         return dict([ (k, t or k) for (k, t) in this_group.items() ])
+
+
+class CheckTypeGroupSelection(ElementSelection):
+    def __init__(self, checkgroup, **kwargs):
+        ElementSelection.__init__(self, **kwargs)
+        self._checkgroup = checkgroup
+
+    def get_elements(self):
+        checks = check_mk_automation("get-check-information")
+        elements = dict([ (cn, "%s - %s" % (cn, c["title"])) for (cn, c) in checks.items() 
+                     if c.get("group") == self._checkgroup ])
+        return elements
+
+    def value_to_text(self, value):
+        return "<tt>%s</tt>" % value
+
 
 
 

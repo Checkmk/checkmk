@@ -423,8 +423,10 @@ def automation_get_check_information():
     for checkname in check_info:
         manfile = manuals.get(checkname)
         if manfile:
-            title = file(manfile).readline().strip().split(":", 1)[1]
+            title = file(manfile).readline().strip().split(":", 1)[1].strip()
         else:
             title = checkname
         checks[checkname] = { "title" : title }
+        if checkname in checkgroup_of:
+            checks[checkname]["group"] = checkgroup_of[checkname]
     return checks

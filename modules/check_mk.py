@@ -256,6 +256,7 @@ nagios_illegal_chars               = '`~!$%^&*|\'"<>?,()='
 
 # Data to be defined in main.mk
 checks                               = []
+static_checks                        = {}
 check_parameters                     = []
 checkgroup_parameters                = {}
 legacy_checks                        = []
@@ -4010,6 +4011,19 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
             sys.stderr.write("Error in configuration: duplicate host '%s'\n" % hostname)
             sys.exit(4)
         seen_hostnames.add(hostname)
+
+    # Add WATO-configured explicit checks to (possibly empty) checks
+    # statically defined in checks.
+    static = []
+    for entries in static_checks.values():
+        for entry in entries:
+            checktype, item, params = entry[0]
+            if len(entry) == 3:
+                taglist, hostlist = entry[1:3]
+            else:
+                hostlist = entry[1]
+        static.append((taglist, hostlist, checktype, item, params))
+    checks = static + checks
 
     # Read autochecks and append them to explicit checks
     if with_autochecks:

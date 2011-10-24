@@ -725,12 +725,12 @@ register_rule(group,
                    minvalue = 1,
                )),
         ]))
-    
 
-register_rule(group, 
-    "checkgroup_parameters:filesystem",
+checkgroups = []
+checkgroups.append(( 
+    "filesystem", 
+    _("Filesystems (used space and growth)"),
     Dictionary(
-        title = _("Filesystems (used space and growth)"),
         elements = [
             ( "levels", 
               Tuple(
@@ -781,14 +781,18 @@ register_rule(group,
 
             
         ]),
-    itemtype = "item",
-    itemname = _("mount point"),
-    match = "dict",
-    )
+    TextAscii(
+        title = _("Mount point"),
+        help = _("For Linux/UNIX systems, specify the mount point, for Windows systems "
+                 "the drive letter uppercase followed by a colon, e.g. <tt>C:</tt>"),
+        allow_empty = False),
+    "dict")
+)
 
-register_rule(group,
-    "checkgroup_parameters:if",
-    Dictionary(title = _("Network interfaces and switch ports"),
+checkgroups.append(( 
+    "if",
+    _("Network interfaces and switch ports"),
+    Dictionary(
         elements = [
             ( "errors", 
               Tuple(
@@ -870,16 +874,17 @@ register_rule(group,
                ),
 
            ]),
-    match = "dict",
-    itemtype = "item",
-    itemname = _("port specification"),
-    )
+    TextAscii(
+        title = _("port specification"),
+        allow_empty = False),
+    "dict",
+    ))
 
             
-register_rule(group,
-    "checkgroup_parameters:memory",
+checkgroups.append((
+    "memory",
+    _("Main memory usage (Linux / UNIX)"),
     Alternative(
-        title = _("Main memory usage (Linux / UNIX)"),
         help = _("The levels for memory usage on Linux and UNIX systems take into account the "
                "currently used memory (RAM or SWAP) by all processes and sets this in relation "
                "to the total RAM of the system. This means that the memory usage can exceed 100%. "
@@ -896,12 +901,14 @@ register_rule(group,
                 elements = [
                   Integer(title = _("Warning at"), unit = _("MB")),
                   Integer(title = _("Critical at"), unit = _("MB"))]),
-            ]))
+            ]),
+    None, None))
 
 
-register_rule(group, 
-    "checkgroup_parameters:cpu_load",
-    Tuple(title = _("CPU load (not utilization!)"), 
+checkgroups.append((
+    "cpu_load",
+    _("CPU load (not utilization!)"), 
+    Tuple(
           help = _("The CPU load of a system is the number of processes currently being "
                    "in the state <u>running</u>, i.e. either they occupy a CPU or wait "
                    "for one. The <u>load average</u> is the averaged CPU load over the last 1, "
@@ -911,16 +918,16 @@ register_rule(group,
           elements = [
               Integer(title = _("Warning at a load of")),
               Integer(title = _("Critical at a load of"))]),
-    )
+    None, None))
 
-register_rule(group, 
-    "checkgroup_parameters:cpu_utilization",
+checkgroups.append((
+    "cpu_utilization",
+    _("CPU utilization"),
     Optional(
         Tuple(
               elements = [
                   Percentage(title = _("Warning at a disk wait of"), label = "%"),
                   Percentage(title = _("Critical at a disk wait of"), label = "%")]),
-        title = _("CPU utilization"),
         label = _("Alert on too high disk wait (IO wait)"), 
         help = _("The CPU utilization sums up the percentages of CPU time that is used "
                  "for user processes, kernel routines (system), disk wait (sometimes also "
@@ -929,23 +936,24 @@ register_rule(group,
                  "is the total percentage of time all CPUs have nothing else to do then waiting "
                  "for data coming from or going to disk. If you have a significant disk wait "
                  "the the bottleneck of your server is IO. Please note that depending on the "
-                 "applications being run this might or might not be totally normal."),
-),
-    )
+                 "applications being run this might or might not be totally normal.")),
+    None, None))
 
-register_rule(group, 
-    "checkgroup_parameters:threads",
-    Tuple(title = _("Number of threads"), 
+checkgroups.append((
+    "threads",
+    _("Number of threads"), 
+    Tuple(
           help = _("This levels check the number of currently existing threads on the system. Each process has at "
                    "least one thread."),
           elements = [
               Integer(title = _("Warning at"), label = _("threads")),
               Integer(title = _("Critical at"), label = _("threads"))]),
-    )
+    None, None))
 
-register_rule(group,
-    "checkgroup_parameters:vm_counter",
-    Tuple(title = _("Number of kernel events per second"),
+checkgroups.append((
+    "vm_counter",
+    _("Number of kernel events per second"),
+    Tuple(
           help = _("This ruleset applies to several similar checks measing various kernel "
                    "events like context switches, process creations and major page faults. "
                    "Please create separate rules for each type of kernel counter you "
@@ -960,13 +968,18 @@ register_rule(group,
                  Float(label = _("events per second")),
                  title = _("Set critical level:"),
                  sameline = True)]),
-    itemtype = "item",
-    itemname = _("kernel counter"))
+    DropdownChoice(
+        title = _("kernel counter"),
+        choices = [ (x,x) for x in [ 
+           "Context Switches",
+           "Process Creations",
+           "Major Page Faults" ]]),
+    "first"))
 
-register_rule(group,
-    "checkgroup_parameters:disk_io",
+checkgroups.append((
+    "disk_io",
+    _("Levels on disk IO (throughput)"),
     Dictionary(
-        title = _("Levels on disk IO (throughput)"),
         elements = [
             ( "read",
               Tuple(
@@ -991,21 +1004,74 @@ register_rule(group,
                            "value."),
                  unit = "min"))
         ]),
-    itemtype = "item",
-    itemname = _("Device"),
-    itemhelp = _("For a summarized throughput of all disks, specify <tt>SUMMARY</tt>, for a "
+    OptionalDropdownChoice(
+        choices = [ ( "SUMMARY", _("Summary of all disks") ),
+                    ( "read",    _("Summary of disk input (read)") ),
+                    ( "write",   _("Summary of disk output (write)") ),
+                  ],
+        otherlabel = _("One explicit devices ->"),
+        explicit = TextAscii(allow_empty = False),
+        title = _("Device"),
+        help = _("For a summarized throughput of all disks, specify <tt>SUMMARY</tt>, for a "
                  "sum of read or write throughput write <tt>read</tt> or <tt>write</tt> resp. "
                  "A per-disk IO is specified by the drive letter and a colon on Windows "
-                 "(e.g. <tt>C:</tt>) or by the device name on Linux/UNIX (e.g. <tt>/dev/sda</tt>).")
-    )
+                 "(e.g. <tt>C:</tt>) or by the device name on Linux/UNIX (e.g. <tt>/dev/sda</tt>).")),
+    "first"))
 
 
-register_rule(group, 
-    "checkgroup_parameters:mailqueue_length",
-    Tuple(title = _("Number of mails in outgoing mail queue"), 
+checkgroups.append((
+    "mailqueue_length",
+    _("Number of mails in outgoing mail queue"), 
+    Tuple(
           help = _("This levels is applied to the number of Email that are currently in the outgoing mail queue."),
           elements = [
               Integer(title = _("Warning at"), label = _("mails")),
               Integer(title = _("Critical at"), label = _("mails"))]),
-    )
+    None, None))
 
+# Create rules for check parameters of inventorized checks
+for checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
+    if itemspec:
+        itemtype = "item"
+        itemname = itemspec.title()
+        itemhelp = itemspec.help()
+    else:
+        itemtype = None
+        itemname = None
+        itemhelp = None
+
+    register_rule(
+        group, 
+        varname = "checkgroup_parameters:%s" % checkgroup,
+        title = title,
+        valuespec = valuespec,
+        itemtype = itemtype,
+        itemname = itemname,
+        itemhelp = itemhelp,
+        match = matchtype)
+
+
+
+# Create Rules for static checks
+group = _("Statically configured checks")
+
+for checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
+    elements = [
+        CheckTypeGroupSelection(
+            checkgroup,
+            title = _("Checktype"),
+            help = _("Please choose the check plugin")) ]
+    if itemspec:
+        elements.append(itemspec)
+    if valuespec:
+        valuespec._title = _("Parameters")
+        elements.append(valuespec)
+
+    register_rule(
+        group, "static_checks:%s" % checkgroup,
+        title = title,
+        valuespec = Tuple(
+            title = valuespec.title(),
+            elements = elements,
+        ),
+        match = "all")

@@ -2150,6 +2150,12 @@ table.add_snapin i {
     float: none;
 }
 
+.wato table.form.ruleeditor td.content table.valuespec_tuple td.right,
+.wato table.form.ruleeditor td.content table.valuespec_tuple td.left {
+    vertical-align: top;
+    padding-bottom: 10px;
+}
+
 .wato div.rule div.title {
     position: absolute;
     top: 12px;

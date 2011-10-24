@@ -4,6 +4,7 @@
 
     Multisite:
     * Dashboard: fix font size of service statistics table
+    * Dashboard: insert links to views into statistics
     
 1.1.12b2:
     Core, Setup, etc.:

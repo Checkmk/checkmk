@@ -413,21 +413,25 @@ def dashlet_mk_logo():
 def dashlet_hoststats():
     table = [
        ( _("up"), "#0b3",
+        "searchhost&is_host_scheduled_downtime_depth=0&hst0=on",
         "Stats: state = 0\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "StatsAnd: 2\n"),
 
        ( _("down"), "#f00",
+        "searchhost&is_host_scheduled_downtime_depth=0&hst1=on",
         "Stats: state = 1\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "StatsAnd: 2\n"),
 
        ( _("unreachable"), "#f80",
+        "searchhost&is_host_scheduled_downtime_depth=0&hst2=on",
         "Stats: state = 2\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "StatsAnd: 2\n"),
 
        ( _("in downtime"), "#0af",
+        "searchhost&search=1&is_host_scheduled_downtime_depth=1",
         "Stats: scheduled_downtime_depth > 0\n" \
        )
     ]
@@ -438,6 +442,7 @@ def dashlet_hoststats():
 def dashlet_servicestats():
     table = [
        ( _("OK"), "#0b3",
+        "searchsvc&hst0=on&st0=on&is_in_downtime=0",
         "Stats: state = 0\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
@@ -445,6 +450,7 @@ def dashlet_servicestats():
         "StatsAnd: 4\n"),
 
        ( _("warning"), "#ff0",
+        "searchsvc&hst0=on&st1=on&is_in_downtime=0",
         "Stats: state = 1\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
@@ -452,6 +458,7 @@ def dashlet_servicestats():
         "StatsAnd: 4\n"),
 
        ( _("unknown"), "#f80",
+        "searchsvc&hst0=on&st3=on&is_in_downtime=0",
         "Stats: state = 3\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
@@ -459,6 +466,7 @@ def dashlet_servicestats():
         "StatsAnd: 4\n"),
 
        ( _("critical"), "#f00",
+        "searchsvc&hst0=on&st2=on&is_in_downtime=0",
         "Stats: state = 2\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
@@ -466,11 +474,13 @@ def dashlet_servicestats():
         "StatsAnd: 4\n"),
 
        ( _("in downtime"), "#0af",
+        "searchsvc&hst0=on&is_in_downtime=0",
         "Stats: scheduled_downtime_depth > 0\n" \
         "Stats: host_scheduled_downtime_depth > 0\n" \
         "StatsOr: 2\n"),
 
        ( _("on down host"), "#048",
+        "searchsvc&hst1=on&hst2=on&hstp=on",
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
         "Stats: host_state != 0\n" \
@@ -490,7 +500,7 @@ def render_statistics(what, table, filter):
     
     query = "GET %s\n" % what
     for entry in table:
-        query += entry[2]
+        query += entry[3]
     query += filter
 
     result = html.live.query_summed_stats(query)
@@ -503,16 +513,19 @@ def render_statistics(what, table, filter):
     
     html.write('<table class="hoststats%s" style="float:left">' % ( 
         len(pies) > 5 and " narrow" or ""))
-    for (name, color, query), count in pies + [ ((_("Total"), "", ""), total) ]:
-        html.write('<tr><th>%s</th><td class=color style="background-color: %s">'
-                   '</td><td>%d</td></tr>' % (name, color, count))
+    for (name, color, viewurl, query), count in pies + [ ((_("Total"), "", "all%s" % what, ""), total) ]:
+        url = "view.py?view_name=" + viewurl + "&filled_in=filter&search=1&filename=" \
+              + htmllib.urlencode(html.var("filename", ""))
+        html.write('<tr><th><a href="%s">%s</a></th>' % (url, name))
+        html.write('<td class=color style="background-color: %s">'
+                   '</td><td><a href="%s">%d</a></td></tr>' % (color, url, count))
 
     html.write("</table>")
 
     r = 0.0
     pie_parts = []
     if total > 0:
-        for (name, color, q), value in pies:
+        for (name, color, viewurl, q), value in pies:
             perc = 100.0 * value / total
             pie_parts.append('chart_pie("%s", %f, %f, %r);' % (what, r, r + perc, color))
             r += perc

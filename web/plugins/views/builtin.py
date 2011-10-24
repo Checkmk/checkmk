@@ -1006,6 +1006,7 @@ multisite_builtin_views.update({
                                 'summary_host',
                                 'serviceregex',
                                 'check_command',
+                                'hoststate',
                                 'svcstate',
                                 'opthostgroup',
                                 'opthost_contactgroup',

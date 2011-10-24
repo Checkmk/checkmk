@@ -148,14 +148,15 @@ register_configvar(group,
 
 register_configvar(group,
     "check_submission",
-    DropdownChoice(title = _("Check submission method"),
-         help = _("If you set this to <b>Nagios command pipe</b>, then Check_MK will write its "
+    DropdownChoice(
+        title = _("Check submission method"),
+        help = _("If you set this to <b>Nagios command pipe</b>, then Check_MK will write its "
                   "check results into the Nagios command pipe. This is the classical way. "
                   "Choosing <b>Create check files</b> "
                   "skips one phase in the Nagios core and directly create Nagios check files. "
                   "The reduces the overhead but might not be compatible with other monitoring "
                   "cores."),
-         choices = [ ("pipe", _("Nagios command pipe")),
+        choices = [ ("pipe", _("Nagios command pipe")),
                      ("file", _("Create check files")) ]))
 
 group = _("Inventory - automatic service detection")
@@ -427,6 +428,30 @@ register_rule(group,
             minvalue = 1,
             label = _("minutes")),
     itemtype = "service")
+
+register_rule(group,
+    "extra_host_conf:notifications_enabled",
+    DropdownChoice(
+        title = _("Enable/disable notifications for Hosts"),
+        help = _("This setting allows you to disable notifications about problems of a "
+                 "host completely. Per default all notifications are enabled. Sometimes "
+                 "it is more conveniant to just disable notifications then to remove a "
+                 "host completely from the monitoring. Note: this setting has no effect "
+                 "on the notifications of service problems of a host."),
+        choices = [ ("1", _("Enable host notifications")),
+                    ("0", _("Disable host notifications")) ],
+        ))
+
+register_rule(group,
+    "extra_service_conf:notifications_enabled",
+    DropdownChoice(
+        title = _("Enable/disable notifications for Services"),
+        help = _("This setting allows you to disable notifications about problems of a "
+                 "service completely. Per default all notifications are enabled."),
+        choices = [ ("1", _("Enable service notifications")),
+                    ("0", _("Disable service notifications")) ],
+        ),
+        itemtype = "service")
 
 register_rule(group,
     "extra_host_conf:notification_period",

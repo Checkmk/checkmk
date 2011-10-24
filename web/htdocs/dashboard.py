@@ -583,11 +583,14 @@ def render_pnpgraph(site, host, service=None, source=0):
         service = "_HOST_"
 
     if not site:
-        base_url = defaults.url_prefix + "/pnp4nagios/index.php/"
+        base_url = defaults.url_prefix 
     else:
         base_url = html.site_status[site]["site"]["url_prefix"]
-
-    img_url = base_url + "image?host=%s&srv=%s&view=0&source=%d&theme=multisite&_t=%d" % \
+    base_url += "/pnp4nagios/index.php/"
+    var_part = "?host=%s&srv=%s&view=0&source=%d&theme=multisite&_t=%d" % \
             (pnp_cleanup(host), pnp_cleanup(service), source, int(time.time()))
-    html.write('<img src="%s">' % img_url)
+
+    pnp_url = base_url + "graph" + var_part
+    img_url = base_url + "image" + var_part
+    html.write('<a href="%s"><img border=0 src="%s"></a>' % (pnp_url, img_url))
 

@@ -544,9 +544,8 @@ def load_all_hosts(base_folder = None):
 def load_hosts(folder = None):
     if folder == None:
         folder = g_folder
-    if ".hosts" not in folder:
-        folder[".hosts"] = load_hosts_file(folder)
-        folder["num_hosts"] = len(folder[".hosts"])
+    folder[".hosts"] = load_hosts_file(folder)
+    folder["num_hosts"] = len(folder[".hosts"])
     return folder[".hosts"]
 
 
@@ -626,16 +625,18 @@ def save_hosts(folder = None):
             os.remove(filename)
         return
 
+
     all_hosts = [] # pair-list of (hostname, tags)
     ipaddresses = {}
     hostnames = hosts.keys()
     hostnames.sort()
     custom_macros = {} # collect value for attributes that are to be present in Nagios
+    cleaned_hosts = {}
     for hostname in hostnames:
         # Remove temporary entries from the dictionary
-        hosts[hostname] = dict([(k, v) for (k, v) in hosts[hostname].iteritems() if not k.startswith('.') ])
+        cleaned_hosts[hostname] = dict([(k, v) for (k, v) in hosts[hostname].iteritems() if not k.startswith('.') ])
 
-        host = hosts[hostname]
+        host = cleaned_hosts[hostname]
         effective = effective_attributes(host, folder)
         ipaddress = effective.get("ipaddress")
 
@@ -711,7 +712,7 @@ def save_hosts(folder = None):
     # Write information about all host attributes into special variable - even
     # values stored for check_mk as well.
     out.write("\n# Host attributes (needed for WATO)\n")
-    out.write("host_attributes.update(\n%s)\n" % pprint.pformat(hosts))
+    out.write("host_attributes.update(\n%s)\n" % pprint.pformat(cleaned_hosts))
 
 
 def delete_configuration_file(folder, thefile):
@@ -1031,7 +1032,7 @@ def show_subfolders(folder):
     return True
     
 def show_hosts(folder):
-    # We assume that the hosts of the folder already have been loaded
+    load_hosts(folder)
     if len(folder[".hosts"]) == 0:
         return False
 
@@ -1044,7 +1045,7 @@ def show_hosts(folder):
     html.end_form()
     html.write("<p>")
 
-    hostnames = g_folder[".hosts"].keys()
+    hostnames = folder[".hosts"].keys()
     hostnames.sort()
 
     # Show table of hosts in this folder
@@ -1404,7 +1405,6 @@ def mode_editfolder(phase, new):
             g_folder[".folders"][name] = new_folder
             save_folder(new_folder)
             call_hook_folder_created(new_folder)
-
             log_pending(new_folder, "new-folder", _("Created new folder %s") % title)
 
         else:
@@ -1425,17 +1425,18 @@ def mode_editfolder(phase, new):
             g_folder["title"]      = title
             g_folder["attributes"] = attributes
 
+            # Due to changes in folder/file attributes, host files
+            # might need to be rewritten in order to reflect Changes
+            # in Nagios-relevant attributes.
+            if attributes_changed:
+                rewrite_config_files_below(g_folder) # due to inherited attributes
+                log_pending(g_folder, "edit-folder", _("Changed attributes of folder %s") % title)
+                call_hook_hosts_changed(g_folder)
+
         
         need_sidebar_reload()
         save_folder_and_hosts(g_folder) # save folder metainformation
 
-        # Due to changes in folder/file attributes, host files
-        # might need to be rewritten in order to reflect Changes
-        # in Nagios-relevant attributes.
-        if attributes_changed:
-            rewrite_config_files_below(g_folder) # due to inherited attributes
-            log_pending(g_folder, "edit-folder", _("Changed attributes of folder %s") % title)
-            call_hook_hosts_changed(g_folder)
 
         if html.has_var("backfolder"):
             set_current_folder(g_folders[html.var("backfolder")])

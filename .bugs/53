@@ -1,10 +1,12 @@
 Title: JSON-Ausgabe - Multisite Webservice
 Component: multisite
-Benefit: 7
-State: open
 Cost: 6
 Date: 2010-12-21 22:02:56
+State: done
 Class: feature
+Benefit: 7
+Fun: 0
+Targetversion: 
 
 Über eine URL-Variable kann man jede View so aufrufen, dass man die Antwort
 als JSON bekommt (oder Python oder CSV). Dabei soll auch Sortierung
@@ -47,3 +49,6 @@ sondern alle Daten über URL-Variablen sendet. Das sollte nicht so schwer zu
 bauen sein, weil der View-Editor (Try-Modus) das ja sogar schon vorsieht. Dann
 ist das Addon wieder Herr der Lage.
 
+
+2011-10-21 17:33:07: changed state open -> done
+Already done in 1.1.10

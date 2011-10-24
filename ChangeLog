@@ -1,3 +1,7 @@
+1.1.12:
+    Checks & Agents:
+    * dell_powerconnect_*: final fixed, added PNP-templates
+    
 1.1.12b2:
     Core, Setup, etc.:
     * FIX: fix crash with umlauts in host aliases

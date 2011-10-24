@@ -432,7 +432,7 @@ register_rule(group,
 register_rule(group,
     "extra_host_conf:notifications_enabled",
     DropdownChoice(
-        title = _("Enable/disable notifications for Hosts"),
+        title = _("Enable/disable notifications for hosts"),
         help = _("This setting allows you to disable notifications about problems of a "
                  "host completely. Per default all notifications are enabled. Sometimes "
                  "it is more conveniant to just disable notifications then to remove a "
@@ -445,7 +445,7 @@ register_rule(group,
 register_rule(group,
     "extra_service_conf:notifications_enabled",
     DropdownChoice(
-        title = _("Enable/disable notifications for Services"),
+        title = _("Enable/disable notifications for services"),
         help = _("This setting allows you to disable notifications about problems of a "
                  "service completely. Per default all notifications are enabled."),
         choices = [ ("1", _("Enable service notifications")),
@@ -475,6 +475,89 @@ register_rule(group,
                  "filter out problems in the problems views for objects not being in "
                  "their notification period (you can think of the notification period "
                  "as the 'service time'.")),
+    itemtype = "service")
+
+class MonitoringIcon(ValueSpec):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+
+    def available_icons(self):
+        if defaults.omd_root:
+            dirs = [ defaults.omd_root + "/local/share/check_mk/web/htdocs/images/icons",
+                     defaults.omd_root + "/share/check_mk/web/htdocs/images/icons" ]
+        else:
+            dir = [ defaults.web_dir + "/htdocs/images/icons" ]
+
+        icons = []
+        for dir in dirs:
+            if os.path.exists(dir):
+                icons += [ i for i in os.listdir(dir) 
+                           if '.' in i and os.path.isfile(dir + "/" + i) ]
+        icons.sort()
+        return icons
+
+    def render_input(self, varprefix, value):
+        num_columns = 12
+        html.write("<table>")
+        for nr, filename in enumerate([None] + self.available_icons()):
+            if nr % num_columns == 0: 
+                html.write("<tr>")
+            html.write("<td>")
+            html.radiobutton(varprefix, str(nr), value == filename, 
+                            self.value_to_text(filename))
+            html.write("&nbsp; </td>")
+            if nr % num_columns == num_columns - 1:
+                html.write("</tr>")
+        if nr != num_columns - 1:
+            html.write("</tr>")
+        html.write("</table>")
+
+    def value_to_text(self, value):
+        if value:
+            return '<img align=middle title="%s" class=icon src="images/icons/%s">' % \
+                (value, value)
+        else:
+            return _("none")
+
+    def from_html_vars(self, varprefix):
+        nr = int(html.var(varprefix))
+        if nr == 0:
+            return None
+        else:
+            return self.available_icons()[nr-1]
+
+    def validate_datatype(self, value, varprefix):
+        if value != None and type(value) != str:
+            raise MKUserError(varprefix, _("The type is %s, but should be None or str") % 
+                type(value))
+    
+    def validate_value(self, value, varprefix):
+        if value and value not in self.available_icons():
+            raise MKUserError(varprefix, _("The selected icon image does not exist."))
+
+
+
+register_rule(group,
+    "extra_host_conf:icon_image",
+    MonitoringIcon(
+        title = _("Icon image for hosts in status GUI"),
+        help = _("You can assign icons to hosts for the status GUI. "
+                 "Put your images into <tt>%s</tt>. ") %
+                ( defaults.omd_root 
+                   and defaults.omd_root + "/local/share/check_mk/web/htdocs/images/icons"
+                   or defaults.web_dir + "/htdocs/images/icons" ),
+        ))
+
+register_rule(group,
+    "extra_service_conf:icon_image",
+    MonitoringIcon(
+        title = _("Icon image for services in status GUI"),
+        help = _("You can assign icons to services for the status GUI. "
+                 "Put your images into <tt>%s</tt>. ") %
+                ( defaults.omd_root 
+                   and defaults.omd_root + "/local/share/check_mk/web/htdocs/images/icons"
+                   or defaults.web_dir + "/htdocs/images/icons" ),
+        ),
     itemtype = "service")
 
 register_rule(group,

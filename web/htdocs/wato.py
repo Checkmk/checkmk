@@ -7068,6 +7068,7 @@ def mode_rulesets(phase):
     html.write(' <img align=absbottom class=icon src="images/icon_localrule.png"> ')
     html.hidden_fields()
     html.end_form()
+    html.write("<br>")
 
     # Load all rules from all folders. Hope this doesn't take too much time.
     # We need this information only for displaying the number of rules in 
@@ -7084,7 +7085,6 @@ def mode_rulesets(phase):
 
     groupnames = g_rulespec_groups.keys()
     groupnames.sort()
-    html.write("<table class=data>")
 
     something_shown = False
     # Loop over all ruleset groups
@@ -7115,9 +7115,13 @@ def mode_rulesets(phase):
             if only_local and num_local_rules == 0:
                 continue
 
-
             if not title_shown:
-                html.write("<tr><td colspan=3><h3>%s</h3></td></tr>\n" % groupname) 
+                if something_shown:
+                    html.write("</table>")
+                    html.end_foldable_container()
+                    html.write("<br>")
+                html.begin_foldable_container("rulesets", groupname, False, groupname, indent=False)
+                html.write('<table class="data rulesets">')
                 html.write("<tr><th>" + _("Rule set") + "</th>"
                            "<th>" + _("Check_MK Variable") + "</th><th>" + _("Rules") + "</th></tr>\n")
                 odd = "even"
@@ -7132,9 +7136,9 @@ def mode_rulesets(phase):
                 url_vars.append(("host", only_host))
             view_url = make_link(url_vars)
 
-            html.write('<td><a href="%s">%s</a></td>' % (view_url, rulespec["title"]))
+            html.write('<td class=title><a href="%s">%s</a></td>' % (view_url, rulespec["title"]))
             display_varname = ':' in varname and '%s["%s"]' % tuple(varname.split(":")) or varname
-            html.write('<td><tt>%s</tt></td>' % display_varname)
+            html.write('<td class=varname><tt>%s</tt></td>' % display_varname)
             html.write('<td class=number>')
             if num_local_rules:
                 if only_host:
@@ -7145,9 +7149,12 @@ def mode_rulesets(phase):
                     title)
             html.write("%d</td>" % num_rules)
             html.write('</tr>')
-    html.write("</table>")
 
-    if not something_shown:
+    if something_shown:
+        html.write("</table>")
+        html.end_foldable_container()
+
+    else:
         if only_host:
             html.write("<div class=info>" + _("There are no rules with an exception for the host <b>%s</b>.") % only_host + "</div>")
         else:
@@ -7170,7 +7177,7 @@ def mode_edit_ruleset(phase):
         title = rulespec["title"]
         if hostname:
             title += _(" for host %s") % hostname
-        if rulespec["itemtype"]:
+        if html.has_var("item") and rulespec["itemtype"]:
             title += _(" and %s '%s'") % (rulespec["itemname"], item)
         return title
 

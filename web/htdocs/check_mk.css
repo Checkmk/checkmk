@@ -2262,6 +2262,16 @@ table.add_snapin i {
     width: 120px;
 }
 
+/* Table in page "Rulesets" */
+.wato table.data.rulesets {
+    width: 800px;
+}
+.wato table.data.rulesets td.title {
+    width: 430px;
+}
+.wato table.data.rulesets td.varname {
+    width: 300px;
+}
 
 /* 
     ____                                    

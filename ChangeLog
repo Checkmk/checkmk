@@ -5,6 +5,7 @@
     Multisite:
     * Dashboard: fix font size of service statistics table
     * Dashboard: insert links to views into statistics
+    * Dashboard: add links to PNP when using PNP graphs
     
 1.1.12b2:
     Core, Setup, etc.:

@@ -4020,13 +4020,25 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
             # Parameters are optional
             if len(entry[0]) == 2:
                 checktype, item = entry[0]
+                params = None
             else:
                 checktype, item, params = entry[0]
             if len(entry) == 3:
                 taglist, hostlist = entry[1:3]
             else:
                 hostlist = entry[1]
-        static.append((taglist, hostlist, checktype, item, params))
+                taglist = []
+            # Make sure, that for dictionary based checks
+            # at least those keys defined in the factory
+            # settings are present in the parameters
+            if type(params) == dict:
+                def_levels_varname = check_default_levels.get(checktype)
+                if def_levels_varname:
+                    for key, value in factory_settings.get(def_levels_varname, {}).items():
+                        if key not in params:
+                            params[key] = value
+
+            static.append((taglist, hostlist, checktype, item, params))
     checks = static + checks
 
     # Read autochecks and append them to explicit checks

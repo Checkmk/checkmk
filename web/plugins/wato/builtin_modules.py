@@ -23,11 +23,10 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-# Modules accessible in main level, also shown in WATO snapin
-# fields: mode, title, icon, permission, help
 
 # List of modules for main menu and WATO snapin. These modules are
 # defined in a plugin because they contain i18n strings.
+# fields: mode, title, icon, permission, help
 
 modules = [
       ( "folder",           _("Hosts & folders"),     "folder", "hosts",

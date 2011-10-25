@@ -7211,16 +7211,17 @@ def mode_edit_ruleset(phase):
                       _("Created new rule in ruleset %s in folder %s") % (rulespec["title"], rule_folder["title"]))
             return
 
-        rulenr = int(html.var("_rulenr"))
+        rulenr = int(html.var("_rulenr")) # rule number relativ to folder
         action = html.var("_action")
 
         if action == "delete":
-            c = wato_confirm(_("Confirm"), _("Delete rule number %d?") % (rulenr+1))
+            c = wato_confirm(_("Confirm"), _("Delete rule number %d of folder '%s'?") 
+                % (rulenr + 1, rule_folder["title"]))
             if c:
-                del rules[rulenr - 1]
+                del rules[rulenr]
                 save_rulesets(rule_folder, rulesets)
                 log_pending(None, "edit-ruleset", 
-                      _("Delete rule in ruleset %s") % rulespec["title"])
+                      _("Deleted rule in ruleset '%s'") % rulespec["title"])
                 return
             elif c == False: # not yet confirmed
                 return ""
@@ -7285,18 +7286,21 @@ def mode_edit_ruleset(phase):
         odd = "odd"
         alread_matched = False
         match_keys = set([]) # in case if match = "dict"
+        last_folder = None
         for rulenr in range(0, len(ruleset)):
             folder, rule = ruleset[rulenr]
-            first_in_group = rulenr == 0 or ruleset[rulenr-1][0] != folder
-            last_in_group = rulenr == len(ruleset) - 1 or ruleset[rulenr+1][0] != folder
-                
-            if first_in_group:
+            if folder != last_folder:
+                first_in_group = True
                 rel_rulenr = 0
                 # Count how many of the following rules are located in the same
                 # folder
                 row_span = 1
                 while rulenr + row_span < len(ruleset) and ruleset[rulenr + row_span][0] == folder:
                     row_span += 1
+                last_folder = folder
+            else:
+                first_in_group = False
+            last_in_group = rulenr == len(ruleset) - 1 or ruleset[rulenr+1][0] != folder
                 
             odd = odd == "odd" and "even" or "odd"
             value, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
@@ -7403,11 +7407,9 @@ def mode_edit_ruleset(phase):
             else:
                 html.write('<img src="images/icon_trans.png" class=icon>')
 
-            # "rule matches"
             html.write("</td>")
-
-            
             rel_rulenr += 1
+
         html.write('</table>')
 
     html.write("<p>" + _("Create a new rule: "))

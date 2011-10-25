@@ -2462,10 +2462,20 @@ def parse_audit_log(what):
         entries = []
         for line in file(path):
             line = line.rstrip().decode("utf-8")
-            entries.append(line.split(None, 4))
+            splitted = line.split(None, 4)
+            if len(splitted) == 5 and is_integer(splitted[0]):
+                splitted[0] = int(splitted[0])
+                entries.append(splitted)
         entries.reverse()
         return entries
     return []
+
+def is_integer(i):
+    try:
+        int(i)
+        return True
+    except:
+        return False
 
 def log_exists(what):
     path = log_dir + what + ".log"
@@ -2517,11 +2527,12 @@ def paged_log(log):
     first_log_index   = None
     last_log_index    = None
     for index, (t, linkinfo, user, action, text) in enumerate(log):
-        t = int(t)
         if t >= end_time:
             # This log is too new
             continue
-        elif first_log_index is None and t < end_time and t >= start_time:
+        elif first_log_index is None \
+              and t < end_time \
+              and t >= start_time:
             # This is a log for this day. Save the first index
             if first_log_index is None:
                 first_log_index = index
@@ -2590,8 +2601,10 @@ def render_audit_log(log, what, with_filename = False):
         even = even == "even" and "odd" or "even"
         htmlcode += '<tr class="%s0">' % even
         htmlcode += '<td>%s</td>' % render_linkinfo(linkinfo)
-        htmlcode += '<td>%s</td><td>%s</td><td>%s</td><td width="100%%">%s</td></tr>\n' % (
-                                          fmt_date(float(t)), fmt_time(float(t)), user, text)
+        htmlcode += '<td class=nobreak>%s</td>' % fmt_date(float(t))
+        htmlcode += '<td class=nobreak>%s</td>' % fmt_time(float(t))
+        htmlcode += '<td>%s</td><td width="100%%">%s</td></tr>\n' % \
+                  (user, text)
     htmlcode += "</table>"
 
     if what == 'audit':

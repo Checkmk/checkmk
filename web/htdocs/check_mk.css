@@ -1982,6 +1982,10 @@ table.add_snapin i {
     padding: 2px 6px;
 }
 
+.wato table.auditlog td.nobreak {
+    white-space: nowrap;
+}
+
 .wato .pending td { 
     border: 1px solid #444;
     padding: 2px 6px;

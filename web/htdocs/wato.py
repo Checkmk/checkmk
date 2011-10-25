@@ -3650,15 +3650,19 @@ class FixedValue(ValueSpec):
     def __init__(self, value, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._value = value
+        self._totext = kwargs.get("totext")
 
     def canonical_value(self):
         return self._value
 
     def render_input(self, varprefix, value):
-        html.write(self.title())
+        html.write(self.value_to_text(value))
 
     def value_to_text(self, value):
-        return self.title()
+        if self._totext != None:
+            return self._totext
+        else:
+            return self.title()
 
     def from_html_vars(self, varprefix):
         return self._value

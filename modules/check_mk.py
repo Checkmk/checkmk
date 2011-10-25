@@ -4017,7 +4017,11 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
     static = []
     for entries in static_checks.values():
         for entry in entries:
-            checktype, item, params = entry[0]
+            # Parameters are optional
+            if len(entry[0]) == 2:
+                checktype, item = entry[0]
+            else:
+                checktype, item, params = entry[0]
             if len(entry) == 3:
                 taglist, hostlist = entry[1:3]
             else:

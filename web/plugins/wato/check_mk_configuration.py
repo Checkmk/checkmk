@@ -1029,8 +1029,26 @@ checkgroups.append((
               Integer(title = _("Critical at"), label = _("mails"))]),
     None, None))
 
+checkgroups.append((
+    "mailqueue_length",
+    _("Number of mails in outgoing mail queue"), 
+    Tuple(
+          help = _("This levels is applied to the number of Email that are currently in the outgoing mail queue."),
+          elements = [
+              Integer(title = _("Warning at"), label = _("mails")),
+              Integer(title = _("Critical at"), label = _("mails"))]),
+    None, None))
+
+checkgroups.append((
+    "uptime",
+    _("Display the system's uptime as a check"),
+    None,
+    None, None))
+
 # Create rules for check parameters of inventorized checks
 for checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
+    if not valuespec:
+        continue # would be useles rule if check has no parameters
     if itemspec:
         itemtype = "item"
         itemname = itemspec.title()
@@ -1045,8 +1063,7 @@ for checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
         varname = "checkgroup_parameters:%s" % checkgroup,
         title = title,
         valuespec = valuespec,
-        itemtype = itemtype,
-        itemname = itemname,
+        itemtype = itemtype, itemname = itemname,
         itemhelp = itemhelp,
         match = matchtype)
 
@@ -1063,9 +1080,13 @@ for checkgroup, title, valuespec, itemspec, matchtype in checkgroups:
             help = _("Please choose the check plugin")) ]
     if itemspec:
         elements.append(itemspec)
-    if valuespec:
-        valuespec._title = _("Parameters")
-        elements.append(valuespec)
+    if not valuespec:
+        valuespec =\
+            FixedValue(None, 
+                help = _("This check has no parameters."),
+                totext = "")
+    valuespec._title = _("Parameters")
+    elements.append(valuespec)
 
     register_rule(
         group, "static_checks:%s" % checkgroup,

@@ -166,7 +166,7 @@ register_configvar(group,
             help = _("The number of seconds a cache file may be old if check_mk should " 
                      "use it instead of getting information from the target hosts while " 
                      "checking a cluster. Per default this is enabled and set to 90 seconds. " 
-                     "If your check cycle is not set to a larger value then one minute then "
+                     "If your check cycle is not set to a larger value than one minute then "
                      "you should increase this accordingly.")))
 
 register_configvar(group,
@@ -176,8 +176,8 @@ register_configvar(group,
         help = _("If you set this to <b>Nagios command pipe</b>, then Check_MK will write its "
                   "check results into the Nagios command pipe. This is the classical way. "
                   "Choosing <b>Create check files</b> "
-                  "skips one phase in the Nagios core and directly create Nagios check files. "
-                  "The reduces the overhead but might not be compatible with other monitoring "
+                  "skips one phase in the Nagios core and directly creates Nagios check files. "
+                  "This reduces the overhead but might not be compatible with other monitoring "
                   "cores."),
         choices = [ ("pipe", _("Nagios command pipe")),
                      ("file", _("Create check files")) ]))
@@ -332,7 +332,8 @@ register_configvar(group,
     Checkbox(title = _("Use description as service name for network interface checks"),
              label = _("use description"),
              help = _("This option lets Check_MK use the interface description as item instead "
-                      "of the port number. ")))
+                      "of the port number. If no description is available then the port number is "
+                      "used anyway.")))
 
 register_configvar(group,
     "if_inventory_uses_alias",

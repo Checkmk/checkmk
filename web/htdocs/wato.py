@@ -6169,7 +6169,7 @@ def mode_roles(phase):
                 rename_user_role(delid, None) # Remove from existing users
                 del roles[delid]
                 save_roles(roles)
-                log_pending(None, "edit-roles", _("Deleted role %s" % delid))
+                log_audit(None, "edit-roles", _("Deleted role '%s'" % delid))
                 return None
             elif c == False:
                 return ""
@@ -6189,7 +6189,7 @@ def mode_roles(phase):
                     new_role["basedon"] = cloneid
                 roles[newid] = new_role
                 save_roles(roles)
-                log_pending(None, "edit-roles", _("Created new role %s" % newid))
+                log_audit(None, "edit-roles", _("Created new role '%s'" % newid))
                 return None
             else:
                 return None
@@ -6304,7 +6304,7 @@ def mode_edit_role(phase):
             rename_user_role(id, new_id)
 
         save_roles(roles)
-        log_pending(None, "edit-roles", _("Modified user role %s" % new_id)) 
+        log_audit(None, "edit-roles", _("Modified user role '%s'" % new_id)) 
         return "roles"
 
     html.begin_form("role", method="POST")

@@ -377,17 +377,29 @@ function debug(s) {
 // Set the size of the sidebar_content div to fit the whole screen
 // but without scrolling. The height of the header and footer divs need
 // to be treated here.
+var g_just_resizing = 0;
 function setSidebarHeight() {
   var oHeader  = document.getElementById('side_header');
   var oContent = document.getElementById('side_content');
   var oFooter  = document.getElementById('side_footer');
   var height   = pageHeight();
 
+  // Resize sidebar frame on Chrome (and other webkit browsers)
+  if (isWebkit()) {
+      var oldcols = parent.document.body.cols.split(",");
+      var oldwidth = parseInt(oldcols[0]);
+      var width = oHeader.clientWidth;
+      var target_width = oldwidth * 280.0 / width;
+      var newcols = target_width.toString() + ",*";
+      parent.document.body.cols = newcols;
+  }
+
   // Don't handle zero heights
   if (height == 0)
     return;
 
   oContent.style.height = (height - oHeader.clientHeight - oFooter.clientHeight - 5) + 'px';
+
 
   oFooter = null;
   oContent = null;

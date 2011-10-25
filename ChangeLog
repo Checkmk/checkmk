@@ -1,9 +1,22 @@
 1.1.13i1:
+    Core, Setup, etc.:
+    * New configuration variable static_checks[] (used by WATO)
+    * New configuration variable checkgroup_parameters (mainly for WATO)
+
+    Checks & Agents:
+    * if/if64: new ruleset if_disable_if64_hosts, that force if on
+      hosts the seem to support if64
+
     WATO:
+    * Evolved to full featured monitoring configuration tool!
     * Major internal code cleanup
     * Hosts can now be created directly in folders. The concept of host lists
       has been dropped (see migration notes!)
     * Configuration of global configuration variables of Check_MK via WATO
+    * Configuration of main.mk rules
+    * Configuration of Nagios objects and attributes
+    * Configuration of users and roles
+    * Configuration of host tags
     * Added missing API function update_host_attributes() to change the
       attributes of a host
     * Added API function num_hosts_in_folder() to count the number of hosts

@@ -37,6 +37,10 @@ factory_settings["if_default_levels"] = {
     "errors" : (0.01, 0.1),
 }
 
+if_disable_if64_hosts = [] # Binary host list for disabling if64 on some broken devices
+
+def if64_disabled(hostname):
+    return in_binary_hostlist(hostname, if_disable_if64_hosts)
 
 # Remove 0 bytes from strings. They lead to problems e.g. here:
 # On windows hosts the labels of network interfaces in oid

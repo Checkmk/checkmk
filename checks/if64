@@ -60,4 +60,4 @@ snmp_info['if64'] = \
 
 # check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2
 snmp_scan_functions['if64'] = \
-        lambda oid: oid(".1.3.6.1.2.1.31.1.1.1.6.*") != None
+        lambda oid: (not if64_disabled(g_hostname)) and oid(".1.3.6.1.2.1.31.1.1.1.6.*") != None

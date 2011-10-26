@@ -26,6 +26,11 @@
     * FIX: Fixed encoding problem when opening dashboard
 
 
+1.1.12p1:
+    Checks & Agents:
+    * FIX: mk_oracle now also detects XE databases
+ 
+
 1.1.12:
     Checks & Agents:
     * dell_powerconnect_*: final fixed, added PNP-templates

@@ -5288,6 +5288,7 @@ def mode_sites(phase):
                 + "</th><th>" + _("Disabled")
                 + "</th><th>" + _("Timeout")
                 + "</th><th>" + _("Pers.")
+                + "</th><th>" + _("Replication")
                 + "</th></tr>\n")
 
     odd = "even"
@@ -5296,13 +5297,23 @@ def mode_sites(phase):
     for id, site in entries:
         odd = odd == "odd" and "even" or "odd" 
         html.write('<tr class="data %s0">' % odd)
+        # Buttons
         edit_url = make_link([("mode", "edit_site"), ("edit", id)])
         delete_url = html.makeactionuri([("_delete", id)])
         html.write("<td class=buttons>")
         html.buttonlink(edit_url, _("Properties"))
         html.buttonlink(delete_url, _("Delete"))
+
+        # Alias
         html.write("</td><td>%s</td><td>%s</td>" % (id, site.get("alias", "")))
-        html.write("<td>%s</td>" % site.get("socket", _("local site")))
+
+        # Socket
+        socket = site.get("socket", _("local site"))
+        if socket == "disabled:":
+            socket = _("don't query status")
+        html.write("<td>%s</td>" % socket)
+
+        # Status host
         if "status_host" in site:
             sh_site, sh_host = site["status_host"]
             html.write("<td>%s/%s</td>" % (sh_site, sh_host))
@@ -5312,14 +5323,27 @@ def mode_sites(phase):
             html.write("<td><b>" + _("yes") + "</b></td>")
         else:
             html.write("<td>" + _("no") + "</td>")
+
+        # Timeout
         if "timeout" in site:
             html.write("<td class=number>%d sec</td>" % site["timeout"])
         else:
             html.write("<td></td>")
+
+        # Persist
         if site.get("persist", False):
             html.write("<td><b>" + _("yes") + "</b></td>")
         else:
             html.write("<td>" + _("no") + "</td>")
+
+        # Replication
+        if site.get("replication") == "slave":
+            repl = _("Slave")
+        elif site.get("replication") == "peer":
+            repl = _("Peer")
+        else:
+            repl = ""
+        html.write("<td>%s</td>" % repl)
 
         html.write("</tr>")
     html.write("</table>")
@@ -5393,6 +5417,8 @@ def mode_edit_site(phase):
             if port < 1 or port > 65535:
                 raise MKUserError("conn_port{", _("The port number must be between 1 and 65535"))
             new_site["socket"] = "tcp:%s:%d" % (host, port)
+        elif method == "disabled":
+            new_site["socket"] = "disabled:"
         else:
             method = "local"
 
@@ -5419,6 +5445,23 @@ def mode_edit_site(phase):
             if not sh_host:
                 raise MKUserError("sh_host", _("Please specify the name of the status host."))
             new_site["status_host"] = ( sh_site, sh_host )
+
+        # Replication
+        html.debug_vars()
+        repl = html.var("replication")
+        if repl:
+            new_site["replication"] = repl
+        multisiteurl = html.var("multisiteurl", "").strip()
+        if repl:
+            if not multisiteurl:
+                raise MKUserError("multisiteurl", _("Please enter the Multisite URL of the slave/peer site."))
+            if not multisiteurl.endswith("/check_mk/"):
+                raise MKUserError("multisiteurl", _("The Multisite URL must end with /check_mk/"))
+            if not multisiteurl.startswith("http://") and not multisiteurl.startswith("https://"):
+                raise MKUserError("multisiteurl", _("The Multisites URL must begin with <tt>http://</tt> or <tt>https://</tt>."))
+            if "socket" in new_site:
+                raise MKUserError("replication", _("You cannot do replication with the local site."))
+            new_site["multisiteurl"] = multisiteurl
 
         save_sites(sites)
         if new:
@@ -5481,11 +5524,13 @@ def mode_edit_site(phase):
             elif sock.startswith("unix:"):
                 method = "unix"
                 conn_socket = sock[5:]
-            else:
+            elif sock.startswith("tcp:"):
                 method = "tcp"
                 parts = sock.split(":")
                 conn_host = parts[1]
                 conn_port = int(parts[2])
+            else:
+                method = "disabled"
         except:
             method = "local"
 
@@ -5498,6 +5543,10 @@ def mode_edit_site(phase):
     html.write("<p>")
     html.radiobutton("method", "unix",  method == "unix", _("Connect via UNIX socket: "))
     html.text_input("conn_socket", conn_socket)
+    html.write("<p>")
+    html.radiobutton("method", "disabled",  method == "disabled", 
+               _("Do not display status information from this site"))
+
     html.write("</td></tr>")
 
     # Timeout
@@ -5557,6 +5606,40 @@ def mode_edit_site(phase):
     html.write(_(" on monitoring site: "))  
     html.sorted_select("sh_site", 
        [ ("", _("(no status host)")) ] + [ (sk, si.get("alias", sk)) for (sk, si) in sites.items() ], sh_site)
+    html.write("</td></tr>")
+
+    # Replication
+    html.write("<tr><td class=legend>")
+    html.write(_("WATO Replication") + "<br><i>" + 
+               _("WATO replication allows you to manage several monitoring sites with a "
+                 "logically centralized WATO. Slave sites receive their configuration "
+                 "from master sites. Several master sites can build a peer-to-peer "
+                 "replication pool for sake of redundancy.<br><br>Note: Slave sites "
+                 "do not need any replication configuration. They will be remote-controlled "
+                 "by the master sites.") + "</i>")
+    html.write("</td><td class=content>")
+    html.write("<b>%s</b><br>" % _("Replication method"))
+    
+    html.radiobutton("replication", "",      site.get("replication") == None,  _("No replication with this site"))
+    html.write("<br>")
+    html.radiobutton("replication", "peer",  site.get("replication") == "peer", _("Peer: synchronize configuration with this site"))
+    html.write("<br>")
+    html.radiobutton("replication", "slave", site.get("replication") == "slave", _("Slave: push configuration to this site"))
+    html.write("<br><br>")
+    html.write("<b>%s</b><br><i>%s</i><br>" % (
+       _("Multisite-URL of remote site upto and including <tt>/check_mk/</tt>"),
+       _("This URL is in many cases the same as the URL-Prefix but with <tt>check_mk/</tt> "
+         "appended, but it must always be an absolute URL. Please note, that "
+         "that URL will be fetched by the Apache server of the local "
+         "site itself, whilst the URL-Prefix is used by your local Browser.")))
+    html.text_input("multisiteurl", site.get("multisiteurl", ""), size=60)
+    html.write("<br><br><b>%s</b><br><i class=help>%s</i><br>" % 
+            ( _("Shared secret (automation credentials)"),
+              _("When creating a new connection the secret will automatically "
+                "be fetched from the slave site.")))
+    html.text_input("secret", site.get("secret", ""))
+
+
     html.write("</td></tr>")
 
     html.write("</table>")

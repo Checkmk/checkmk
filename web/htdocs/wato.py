@@ -495,7 +495,7 @@ def save_all_folders():
 # it in g_folders, load recursively all subfolders and then
 # return the folder object. The case the .wato file is missing 
 # it will be assume to contain default values.
-def load_folder(dir, name="", path=""):
+def load_folder(dir, name="", path="", parent=None):
     fn = dir + "/.wato"
     try:
         folder = eval(file(fn).read())
@@ -509,10 +509,20 @@ def load_folder(dir, name="", path=""):
     folder[".name"]    = name
     folder[".path"]    = path
     folder[".folders"] = {}
+    if parent:
+        folder[".parent"] = parent
 
     if "attributes" not in folder: # Make sure, attributes are always present
         folder["attributes"] = {}
 
+    # Add information about the effective site of this folder
+    if "site" in folder["attributes"]:
+        folder[".site"] = folder["attributes"]["site"]
+    elif parent:
+        folder[".site"] = parent[".site"]
+    else:
+        folder[".site"] = default_site()
+        
     # Now look subdirectories
     for entry in os.listdir(dir):
         if entry[0] == '.': # entries '.' and '..'
@@ -525,8 +535,7 @@ def load_folder(dir, name="", path=""):
                 subpath = entry
             else:
                 subpath = path + "/" + entry
-            f = load_folder(p, entry, subpath)
-            f[".parent"] = folder
+            f = load_folder(p, entry, subpath, folder)
             folder[".folders"][entry] = f
     
     g_folders[path] = folder
@@ -612,6 +621,13 @@ def load_hosts_file(folder):
 
             # access to the folder object
             host['.folder'] = folder
+
+            # Compute site attribute, because it is needed at various
+            # places.
+            if "site" in host:
+                host[".site"] = host["site"]
+            else:
+                host[".site"] = folder[".site"]
 
             hosts[hostname] = host
 
@@ -1277,9 +1293,10 @@ def delete_hosts_after_confirm(hosts):
                      _("Do you really want to delete the %d selected hosts?") % len(hosts))
     if c:
         for delname in hosts:
+            host = g_folder[".hosts"][delname]
+            check_mk_automation(host[".site"], "delete-host", [delname])
             del g_folder[".hosts"][delname]
             g_folder["num_hosts"] -= 1
-            check_mk_automation("delete-host", [delname])
             log_pending(delname, "delete-host", _("Deleted host %s") % delname)
         save_folder_and_hosts(g_folder)
         call_hook_hosts_changed(g_folder)
@@ -1644,6 +1661,7 @@ def mode_edithost(phase, new):
                     log_pending(hostname, "edit-host", _("Edited properties of host [%s]") % hostname)
                 save_folder_and_hosts(g_folder)
                 call_hook_hosts_changed(g_folder)
+                load_hosts(g_folder)
             if new:
                 return go_to_services and "firstinventory" or "folder"
             else:
@@ -1658,7 +1676,8 @@ def mode_edithost(phase, new):
         html.write('<table class="form nomargin">\n')
 
         # host name
-        html.write("<tr class=top><td class=legend>" + _("Hostname") + "</td><td class=checkbox></td><td class=content>")
+        html.write("<tr class=top><td class=legend>" + _("Hostname") + 
+                   "</td><td class=checkbox></td><td class=content>")
         if hostname and mode == "edit":
             html.write(hostname)
         else:
@@ -1683,11 +1702,12 @@ def delete_host_after_confirm(delname):
     c = wato_confirm(_("Confirm host deletion"),
                      _("Do you really want to delete the host <tt>%s</tt>?") % delname)
     if c:
+        host = g_folder[".hosts"][delname]
         del g_folder[".hosts"][delname]
         g_folder["num_hosts"] -= 1
         save_folder_and_hosts(g_folder)
         log_pending(delname, "delete-host", _("Deleted host %s") % delname)
-        check_mk_automation("delete-host", [delname])
+        check_mk_automation(host[".site"], "delete-host", [delname])
         call_hook_hosts_changed(g_folder)
         return "folder"
     elif c == False: # not yet confirmed
@@ -1711,6 +1731,7 @@ def mode_inventory(phase, firsttime):
     hostname = html.var("host")
     if hostname not in g_folder[".hosts"]:
         raise MKGeneralException(_("You called this page for a non-existing host."))
+    host = g_folder[".hosts"][hostname]
 
     if phase == "title":
         title = _("Services of host %s") % hostname
@@ -1730,7 +1751,7 @@ def mode_inventory(phase, firsttime):
         config.need_permission("wato.services")
         if html.check_transaction():
             cache_options = not html.var("_scan") and [ '--cache' ] or []
-            table = check_mk_automation("try-inventory", cache_options + [hostname])
+            table = check_mk_automation(host[".site"], "try-inventory", cache_options + [hostname])
             table.sort()
             active_checks = {}
             new_target = "folder"
@@ -1746,7 +1767,7 @@ def mode_inventory(phase, firsttime):
                     if html.var(varname, "") != "":
                         active_checks[(ct, item)] = paramstring
 
-            check_mk_automation("set-autochecks", [hostname], active_checks)
+            check_mk_automation(host[".site"], "set-autochecks", [hostname], active_checks)
             message = _("Saved check configuration of host [%s] with %d services") % \
                         (hostname, len(active_checks)) 
             log_pending(hostname, "set-autochecks", message) 
@@ -1754,15 +1775,19 @@ def mode_inventory(phase, firsttime):
         return "folder"
 
     else:
-        show_service_table(hostname, firsttime)
+        show_service_table(host, firsttime)
 
 
-def show_service_table(hostname, firsttime):
+def show_service_table(host, firsttime):
+    hostname = host[".name"]
+
     # Read current check configuration
     cache_options = not html.var("_scan") and [ '--cache' ] or []
     try:
-        table = check_mk_automation("try-inventory", cache_options + [hostname])
+        table = check_mk_automation(host[".site"], "try-inventory", cache_options + [hostname])
     except Exception, e:
+        if config.debug:
+            raise
         html.show_error("Inventory failed for this host: %s" % e)
         return
 
@@ -2107,8 +2132,9 @@ def mode_bulk_inventory(phase):
         if html.var("_item"):
             how = html.var("how")
             hostname = html.var("_item")
+            host = g_folder[".hosts"]
             try:
-                counts = check_mk_automation("inventory", [how, hostname])
+                counts = check_mk_automation(host[".site"], "inventory", [how, hostname])
                 result = repr([ 'continue', 1, 0 ] + list(counts)) + "\n"
                 result += _("Inventorized %s<br>\n") % hostname
                 log_pending(hostname, "bulk-inventory", 
@@ -2381,7 +2407,7 @@ def mode_changelog(phase):
             config.need_permission("wato.activate")
             create_snapshot()
             try:
-                check_mk_automation("restart")
+                check_mk_local_automation("restart")
                 call_hook_activate_changes()
             except Exception, e:
                 if config.debug:
@@ -2658,8 +2684,14 @@ def export_audit_log():
 #   | for doing inventory, showing the services of a host, deletion of a   |
 #   | host and similar things.                                             |
 #   +----------------------------------------------------------------------+
+def check_mk_automation(siteid, command, args=[], indata=""):
+    if site_is_local(siteid):
+        return check_mk_local_automation(command, args, indata)
+    else:
+        return check_mk_remote_automation(siteid, command, args, indata)
 
-def check_mk_automation(command, args=[], indata=""):
+
+def check_mk_local_automation(command, args=[], indata=""):
     # Gather the command to use for executing --automation calls to check_mk
     # - First try to use the check_mk_automation option from the defaults
     # - When not set try to detect the command for OMD or non OMD installations
@@ -4454,7 +4486,7 @@ class CheckTypeSelection(ListChoice):
         ListChoice.__init__(self, columns=3, **kwargs)
 
     def get_elements(self):
-        checks = check_mk_automation("get-check-information")
+        checks = check_mk_local_automation("get-check-information")
         elements = [ (cn, "<span title=\"%s\">%s</span>" % (c["title"], cn)) for (cn, c) in checks.items()]
         elements.sort()
         return elements
@@ -4541,7 +4573,7 @@ def mode_globalvars(phase):
     # Get default settings of all configuration variables of interest in the domain
     # "check_mk". (this also reflects the settings done in main.mk)
     check_mk_vars = [ varname for (varname, var) in g_configvars.items() if var[0] == "check_mk" ]
-    default_values = check_mk_automation("get-configuration", [], check_mk_vars)
+    default_values = check_mk_local_automation("get-configuration", [], check_mk_vars)
     current_settings = load_configuration_settings()
 
     if phase == "action":
@@ -4634,7 +4666,7 @@ def mode_edit_configvar(phase):
     if varname in current_settings:
         value = current_settings[varname]
     else:
-        check_mk_vars = check_mk_automation("get-configuration", [], [varname])
+        check_mk_vars = check_mk_local_automation("get-configuration", [], [varname])
         value = check_mk_vars.get(varname, valuespec.default_value())
 
     html.begin_form("value_editor")
@@ -4948,7 +4980,7 @@ class CheckTypeGroupSelection(ElementSelection):
         self._checkgroup = checkgroup
 
     def get_elements(self):
-        checks = check_mk_automation("get-check-information")
+        checks = check_mk_local_automation("get-check-information")
         elements = dict([ (cn, "%s - %s" % (cn, c["title"])) for (cn, c) in checks.items() 
                      if c.get("group") == self._checkgroup ])
         return elements
@@ -5584,8 +5616,6 @@ def mode_edit_site(phase):
         if "secret" in old_site:
             new_site["secret"] = old_site["secret"]
 
-        html.debug(new_site)
-
         save_sites(sites)
         if new:
             log_pending(None, "edit-sites", _("Create new connection to site %s" % id))
@@ -5837,10 +5867,22 @@ def open_url(url, user=None, password=None):
     else:
         return urllib.FancyURLopener().open(url)
 
+def check_mk_remote_automation(siteid, command, args, indata):
+    response = do_remote_automation(
+        config.site(siteid), "checkmk-automation", 
+        [ 
+            ("automation", command),   # The Check_MK automation command
+            ("arguments", repr(args)), # The arguments for the command 
+            ("indata", repr(indata)),  # The input data
+        ])
+    return response
 
 def do_remote_automation(site, command, vars):
     base_url = site["multisiteurl"]
-    secret = site.get("secret", "")
+    secret = site.get("secret")
+    if not secret:
+        raise MKAutomationException(_("You are not logged into the remote site."))
+
     url = base_url + "automation.py?" + \
         htmllib.urlencode_vars(
            [("command", command), ("secret", secret)] + vars)
@@ -5855,6 +5897,7 @@ def do_remote_automation(site, command, vars):
             "Malformed output from remote site: <pre>%s</pre>" % response_code)
     return response
 
+
 # Determine, if we have any slaves to distribute
 # configuration to.
 def is_distributed():
@@ -5868,27 +5911,31 @@ def declare_site_attribute():
     if is_distributed():
         declare_host_attribute(SiteAttribute(), show_in_table = True, show_in_folder = True)
 
+def default_site():
+    deflt = None
+    for id, site in config.sites.items():
+        if not "socket" in site \
+            or site["socket"] == "unix:" + defaults.livestatus_unix_socket:
+            return id
+    return None
 
 class SiteAttribute(Attribute):
     def __init__(self):
         # Default is is the local one, if one exists or
         # no one if there is no local site
-        deflt = None
         self._choices = []
         for id, site in config.sites.items():
             title = id
             if site.get("alias"):
                 title += " - " + site["alias"]
             self._choices.append((id, title))
-            if not "socket" in site or site["socket"] == "unix:" + defaults.livestatus_unix_socket:
-                deflt = id
 
         self._choices.sort(cmp=lambda a,b: cmp(a[1], b[1]))
         self._choices.append(("", _("(do not monitor)")))
         self._choices_dict = dict(self._choices)
         Attribute.__init__(self, "site", _("Monitored on site"),
                     _("Specify the site that should monitor this host."),
-                    default_value = deflt)
+                    default_value = default_site())
 
     def paint(self, value, hostname):
         return "", self._choices_dict.get(value, value)
@@ -5937,10 +5984,27 @@ def get_login_secret(create_on_demand = False):
         write_settings_file(path, secret)
         return secret
 
+def site_is_local(siteid):
+    site = config.sites[siteid]
+    return "socket" not in site \
+        or site["socket"] == "unix:" + defaults.livestatus_unix_socket
 
 def page_automation():
-    response = "babaluba"
-    html.write(repr(response))
+    secret = html.var("secret")
+    if not secret:
+        raise MKAuthException(_("Missing secret for automation command."))
+    if secret != get_login_secret():
+        raise MKAuthException(_("Invalid automation secret."))
+
+    command = html.var("command")
+    if command == "checkmk-automation":
+        cmk_command = html.var("automation")
+        args = eval(html.var("arguments"))
+        indata = eval(html.var("indata"))
+        result = check_mk_local_automation(cmk_command, args, indata)
+        html.write(repr(result))
+    else:
+        raise MKGeneralException(_("Invalid automation command."))
 
 
 

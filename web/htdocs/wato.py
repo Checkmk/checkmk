@@ -5283,17 +5283,19 @@ def mode_sites(phase):
 
         logout_id = html.var("_logout")
         if logout_id:
-            if not html.check_transaction():
-                return
             site = sites[logout_id]
-            site["logged_in"] = False
-            if "secret" in site:
-                del site["secret"]
-            save_sites(sites)
-            log_pending(None, "edit-site", _("Logged out of remote site '%s'") % site["alias"])
-            return None, _("Logged out.")
-
-
+            c = wato_confirm(_("Confirm logout"),
+                       _("Do you really want to log out of '%s'?") % site["alias"])
+            if c:
+                if "secret" in site:
+                    del site["secret"]
+                save_sites(sites)
+                log_pending(None, "edit-site", _("Logged out of remote site '%s'") % site["alias"])
+                return None, _("Logged out.")
+            elif c == False:
+                return ""
+            else:
+                return None
 
         login_id = html.var("_login")
         if login_id:
@@ -5308,10 +5310,9 @@ def mode_sites(phase):
                 try:
                     secret = do_site_login(login_id, name, passwd)
                     site["secret"] = secret
-                    site["logged_in"] = True
                     save_sites(sites)
                     log_pending(None, "edit-site", _("Successfully logged into remote site '%s'") % site["alias"])
-                    return None, _("Login successful. The secret is <tt>%s</tt>." % secret)
+                    return None, _("Successfully logged into remote site '%s'!" % site["alias"])
                 except MKAutomationException, e:
                     error = _("Cannot connect to remote site: %s") % e
                 except MKUserError, e:
@@ -5437,7 +5438,7 @@ def mode_sites(phase):
         # Login-Button for Replication
         html.write("<td>")
         if repl:
-            if site.get("logged_in"):
+            if site.get("secret"):
                 logout_url = make_action_link([("mode", "sites"), ("_logout", id)])
                 html.buttonlink(logout_url, _("Logout"))
             else:
@@ -5569,12 +5570,8 @@ def mode_edit_site(phase):
             new_site["multisiteurl"] = multisiteurl
 
         # Secret is not checked here.
-        new_site["secret"] = html.var("secret", "").strip()
-        if not new and new_site["secret"] == old_site["secret"]:
-            new_site["logged_in"] = old_site.get("logged_in", False)
-        else:
-            new_site["logged_in"] = False
-
+        if "secret" in old_site:
+            new_site["secret"] = old_site["secret"]
 
         html.debug(new_site)
 
@@ -5748,13 +5745,6 @@ def mode_edit_site(phase):
          "that URL will be fetched by the Apache server of the local "
          "site itself, whilst the URL-Prefix is used by your local Browser.")))
     html.text_input("multisiteurl", site.get("multisiteurl", ""), size=60)
-    html.write("<br><br><b>%s</b><br><i class=help>%s</i><br>" % 
-            ( _("Shared secret (automation credentials)"),
-              _("When creating a new connection the secret will automatically "
-                "be fetched from the slave site.")))
-    html.text_input("secret", site.get("secret", ""))
-
-
     html.write("</td></tr>")
 
     html.write("</table>")
@@ -5815,7 +5805,7 @@ def do_site_login(site_id, name, password):
     try:
         return eval(response)
     except:
-        raise MKAutomationException(_("Malformed output from remote site."))
+        raise MKAutomationException(response)
 
 
 def open_url(url, user=None, password=None):
@@ -5877,7 +5867,25 @@ def do_remote_automation(site, command, vars):
 def page_automation_login():
     if not config.may("wato.automation"):
         raise MKAuthException(_("This account has no permission for automation."))
-    html.write(repr("HirniBalid"))
+    # When we are here, a remote (master) site has successfully logged in
+    # using the credentials of the administrator. The login is done be exchanging
+    # a login secret. If such a secret is not yet present it is created on
+    # the fly.
+    html.write(repr(get_login_secret(True)))
+
+def get_login_secret(create_on_demand = False):
+    path = var_dir + "automation_secret.mk"
+    try:
+        return eval(file(path).read())
+    except:
+        if not create_on_demand:
+            return None
+        # We should use /dev/random here for cryptographic safety. But
+        # that involves the great problem that the system might hang
+        # because of loss of entropy. So we hope this is random enough:
+        secret = file("/dev/urandom").read(32)
+        write_settings_file(path, secret)
+        return secret
 
 
 def page_automation():

@@ -755,6 +755,12 @@ is missing. You can create that file with <tt>htpasswd</tt> or \
 htpasswd file from your Nagios installation. Please edit <tt>$apache_config_dir/$NAME</tt> \
 and change the path there. Restart Apache afterwards."
   </Directory>
+  # Automation is done without HTTP Auth
+  <Location "${url_prefix}check_mk/automation.py">
+       Order allow,deny
+       Allow from all
+       Satisfy any
+  </Location>
 </IfModule>
 
 <IfModule !mod_python.c>
@@ -798,6 +804,12 @@ Alias /$OMD_SITE/check_mk/agents $OMD_ROOT/local/share/check_mk/agents
         ErrorDocument 403 "<h1>Authentication Problem</h1>Either you've entered an invalid password or the authentication<br>configuration of your check_mk web pages is incorrect.<br>"
         ErrorDocument 500 "<h1>Server or Configuration Problem</h1>A Server problem occurred. You'll find details in the error log of Apache. One possible reason is, that the file <tt>$OMD_ROOT/etc/htpasswd</tt> is missing. You can manage that file with <tt>htpasswd</tt> or <tt>htpasswd2</tt>."
   </Directory>
+  # Automation is done without HTTP Auth
+  <Location "/$OMD_SITE/check_mk/automation.py">
+       Order allow,deny
+       Allow from all
+       Satisfy any
+  </Location>
 </IfModule>
 
 <IfModule !mod_python.c>

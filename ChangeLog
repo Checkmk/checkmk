@@ -1,6 +1,7 @@
 1.1.12:
     Checks & Agents:
     * dell_powerconnect_*: final fixed, added PNP-templates
+    * ps.perf: better error handling in PNP template
 
     Multisite:
     * Dashboard: fix font size of service statistics table

@@ -813,7 +813,7 @@ class html:
         self.write('<img align=absbottom class="treeangle" id="treeimg.%s.%s" '
                    'src="images/tree_%s.png" %s>' % 
                 (treename, id, img_num, onclick))
-        if title[0] == '<': # custom HTML code
+        if title.startswith('<'): # custom HTML code
             self.write(title)
             if indent != "form":
                 self.write("<br>")

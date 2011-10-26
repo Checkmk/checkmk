@@ -881,6 +881,7 @@ def mode_folder(phase):
 
 def prepare_folder_info():
     declare_host_tag_attributes() # create attributes out of tag definitions
+    declare_site_attribute()      # create attribute for distributed WATO
     load_all_folders()            # load information about all folders
     set_current_folder()          # set g_folder from HTML variable
 
@@ -3146,10 +3147,8 @@ def declare_host_tag_attributes():
 
 def undeclare_host_tag_attribute(tag_id):
     attrname = "tag_" + tag_id
-    attr = host_attribute[attrname]
-    del host_attribute[attrname]
-    global host_attributes
-    host_attributes = [ ha for ha in host_attributes if ha[0] != attr ]
+    undeclare_host_attribute(attrname)
+
 
 
 # Global datastructure holding all attributes (in a defined order)
@@ -3170,6 +3169,14 @@ def declare_host_attribute(a, show_in_table = True, show_in_folder = True, topic
     a._show_in_table  = show_in_table
     a._show_in_folder = show_in_folder
     a._show_in_form   = show_in_form
+
+def undeclare_host_attribute(attrname):
+    if attrname in host_attribute:
+        attr = host_attribute[attrname]
+        del host_attribute[attrname]
+        global host_attributes
+        host_attributes = [ ha for ha in host_attributes if ha[0] != attr ]
+
 
 # Read attributes from HTML variables
 def collect_attributes(do_validate = True):
@@ -3278,9 +3285,13 @@ def configure_attributes(hosts, for_what, parent, myself=None, without_attribute
                 inherited_value = attr.default_value()
 
             # Legend and Help
-            html.write("<tr><td class=legend><h3>%s</h3>" % attr.title())
+            html.write("<tr><td class=legend>")
             if attr.help():
+                html.begin_foldable_container("attribute_help", attrname, True, "<b>%s</b>" % attr.title(), indent=False)
                 html.write("<i>%s</i>" % attr.help())
+                html.end_foldable_container()
+            else:
+                html.write("<b>%s</b>" % attr.title())
             html.write("</td>")
 
             # Checkbox for activating this attribute
@@ -5789,6 +5800,7 @@ def save_sites(sites):
 #   |                    |_|                                               |
 #   +----------------------------------------------------------------------+
 #   | Functions dealing with the WATO replication feature.                 |
+#   | Let's call this "Distributed WATO". More buzz-word like :-)          |
 #   +----------------------------------------------------------------------+
 def do_site_login(site_id, name, password):
     sites = load_sites()
@@ -5843,15 +5855,53 @@ def do_remote_automation(site, command, vars):
             "Malformed output from remote site: <pre>%s</pre>" % response_code)
     return response
 
+# Determine, if we have any slaves to distribute
+# configuration to.
+def is_distributed():
+    for site in config.sites.values():
+        if site.get("replication"):
+            return True
+    return False
 
-###   # Allow access to automation URLs bypassing HTTP Auth. Authentication
-###   # is done in-band.
-###   <Location "/aaa/check_mk/automation.py">
-###       Order allow,deny
-###       Allow from all
-###       Satisfy any
-###   </Location>
+def declare_site_attribute():
+    undeclare_host_attribute("site")
+    if is_distributed():
+        declare_host_attribute(SiteAttribute(), show_in_table = True, show_in_folder = True)
 
+
+class SiteAttribute(Attribute):
+    def __init__(self):
+        # Default is is the local one, if one exists or
+        # no one if there is no local site
+        deflt = None
+        self._choices = []
+        for id, site in config.sites.items():
+            title = id
+            if site.get("alias"):
+                title += " - " + site["alias"]
+            self._choices.append((id, title))
+            if not "socket" in site or site["socket"] == "unix:" + defaults.livestatus_unix_socket:
+                deflt = id
+
+        self._choices.sort(cmp=lambda a,b: cmp(a[1], b[1]))
+        self._choices.append(("", _("(do not monitor)")))
+        self._choices_dict = dict(self._choices)
+        Attribute.__init__(self, "site", _("Monitored on site"),
+                    _("Specify the site that should monitor this host."),
+                    default_value = deflt)
+
+    def paint(self, value, hostname):
+        return "", self._choices_dict.get(value, value)
+
+    def render_input(self, value):
+        html.select("site", self._choices, value)
+
+    def from_html_vars(self):
+        site = html.var("site")
+        if site and site in self._choices_dict:
+            return site
+        else:
+            return None
 
 #   +----------------------------------------------------------------------+
 #   |          _         _                        _   _                    |

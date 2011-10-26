@@ -104,6 +104,7 @@
 #   +----------------------------------------------------------------------+
 
 import sys, pprint, socket, re, subprocess, time, datetime, shutil, tarfile, StringIO, math
+import urllib, urllib2
 import config, htmllib
 from lib import *
 
@@ -228,6 +229,12 @@ config.declare_permission("wato.sites",
      _("Access to the module for managing connections to remote monitoring sites."),
      [ "admin", ])
 
+config.declare_permission("wato.automation",
+    _("Site remote automation"),
+    _("This permission is needed for a remote administration of the site "
+      "as a distributed WATO slave or peer."),
+    [ "admin", ])
+
 config.declare_permission("wato.users",
      _("User management"),
      _("This permission is needed for the modules <b>Users & Contacts</b>, <b>Roles</b> and <b>Contact Groups</b>"),
@@ -239,6 +246,10 @@ config.declare_permission("wato.snapshots",
        "can make arbitrary changes to the configuration by restoring uploaded snapshots!"),
      [ "admin",  ])
 
+
+class MKAutomationException(Exception):
+    def __init__(self, msg):
+        Exception.__init__(self, msg)
 
 root_dir      = defaults.check_mk_configdir + "/wato/"
 multisite_dir = defaults.default_config_dir + "/multisite.d/"
@@ -5257,17 +5268,93 @@ def mode_sites(phase):
 
     if phase == "action":
         delid = html.var("_delete")
-        c = wato_confirm(_("Confirm deletion of site %s" % delid),
-                         _("Do you really want to delete the connection to the site %s?" % delid))
-        if c: 
-            del sites[delid]
+        if delid:
+            c = wato_confirm(_("Confirm deletion of site %s" % delid),
+                             _("Do you really want to delete the connection to the site %s?" % delid))
+            if c: 
+                del sites[delid]
+                save_sites(sites)
+                log_pending(None, "edit-sites", _("Deleted site %s" % (delid)))
+                return None
+            elif c == False:
+                return ""
+            else:
+                return None
+
+        logout_id = html.var("_logout")
+        if logout_id:
+            if not html.check_transaction():
+                return
+            site = sites[logout_id]
+            site["logged_in"] = False
+            if "secret" in site:
+                del site["secret"]
             save_sites(sites)
-            log_pending(None, "edit-sites", _("Deleted site %s" % (delid)))
-            return None
-        elif c == False:
+            log_pending(None, "edit-site", _("Logged out of remote site '%s'") % site["alias"])
+            return None, _("Logged out.")
+
+
+
+        login_id = html.var("_login")
+        if login_id:
+            if not html.check_transaction():
+                return
+            site = sites[login_id]
+            error = None
+            # Fetch name/password of admin account
+            if html.has_var("_name"):
+                name = html.var("_name", "").strip()
+                passwd = html.var("_passwd", "").strip()
+                try:
+                    secret = do_site_login(login_id, name, passwd)
+                    site["secret"] = secret
+                    site["logged_in"] = True
+                    save_sites(sites)
+                    log_pending(None, "edit-site", _("Successfully logged into remote site '%s'") % site["alias"])
+                    return None, _("Login successful. The secret is <tt>%s</tt>." % secret)
+                except MKAutomationException, e:
+                    error = _("Cannot connect to remote site: %s") % e
+                except MKUserError, e:
+                    html.add_user_error(e.varname, e.message)
+                    error = e.message
+                except Exception, e:
+                    if config.debug:
+                        raise
+                    html.add_user_error("_name", error)
+                    error = str(e)
+
+
+            wato_html_head(_("Login into site '%s'") % site["alias"])
+            if error:
+                html.show_error(error)
+            html.write("<div class=message>")
+            html.write("<h3>%s</h3>" % _("Login credentials"))
+            html.write(_("For the initial login into the slave/peer site %s "
+                         "we need once your administration login for the Multsite "
+                         "GUI on that site. Your credentials will only be used for "
+                         "the initial handshake and not be stored. If the login is "
+                         "successful then both side will exchange a login secret "
+                         "which is used for the further remote calls.") % site["alias"])
+            html.begin_form("login")
+            html.write("<table class=form>")
+            html.write("<tr><td class=legend>%s</td>" % _("Administrator login"))
+            html.write("<td class=content>")
+            html.write("<table><tr><td>%s</td><td>" % _("Adminstrator name:"))
+            html.text_input("_name")
+            html.set_focus("_name")
+            html.write("</td></tr><tr><td>%s</td><td>" % _("Administrator password:"))
+            html.password_input("_passwd")
+            html.write("</td></tr></table>")
+            html.write("</td></tr>")
+            html.write("<tr><td class=buttons colspan=2>")
+            html.button("_do_login", _("Login"))
+            html.write("</td></tr></table>")
+            html.hidden_field("_login", login_id)
+            html.hidden_fields()
+            html.end_form()
+            html.write("</div>")
             return ""
-        else:
-            return None
+        return
 
     if len(sites) == 0:
         html.write("<div class=info>" + 
@@ -5278,6 +5365,7 @@ def mode_sites(phase):
         return
 
 
+    html.debug_vars()
     html.write("<h3>" + _("Multisite connections") + "</h3>")
     html.write("<table class=data>")
     html.write("<tr><th>" + _("Actions") + "<th>" 
@@ -5289,6 +5377,7 @@ def mode_sites(phase):
                 + "</th><th>" + _("Timeout")
                 + "</th><th>" + _("Pers.")
                 + "</th><th>" + _("Replication")
+                + "</th><th>" + _("Login")
                 + "</th></tr>\n")
 
     odd = "even"
@@ -5345,6 +5434,18 @@ def mode_sites(phase):
             repl = ""
         html.write("<td>%s</td>" % repl)
 
+        # Login-Button for Replication
+        html.write("<td>")
+        if repl:
+            if site.get("logged_in"):
+                logout_url = make_action_link([("mode", "sites"), ("_logout", id)])
+                html.buttonlink(logout_url, _("Logout"))
+            else:
+                login_url = make_action_link([("mode", "sites"), ("_login", id)])
+                html.buttonlink(login_url, _("Login"))
+        html.write("</td>")
+        
+
         html.write("</tr>")
     html.write("</table>")
 
@@ -5376,6 +5477,10 @@ def mode_edit_site(phase):
             raise MKUserError("id", _("This id is already being used by another connection."))
         if not re.match("^[-a-z0-9A-Z_]+$", id):
             raise MKUserError("id", _("The site id must consist only of letters, digit and the underscore."))
+
+        # Save copy of old site for later
+        if not new:
+            old_site = sites[siteid]
 
         if not new and id != siteid:
             del sites[siteid]
@@ -5459,9 +5564,19 @@ def mode_edit_site(phase):
                 raise MKUserError("multisiteurl", _("The Multisite URL must end with /check_mk/"))
             if not multisiteurl.startswith("http://") and not multisiteurl.startswith("https://"):
                 raise MKUserError("multisiteurl", _("The Multisites URL must begin with <tt>http://</tt> or <tt>https://</tt>."))
-            if "socket" in new_site:
+            if "socket" not in new_site:
                 raise MKUserError("replication", _("You cannot do replication with the local site."))
             new_site["multisiteurl"] = multisiteurl
+
+        # Secret is not checked here.
+        new_site["secret"] = html.var("secret", "").strip()
+        if not new and new_site["secret"] == old_site["secret"]:
+            new_site["logged_in"] = old_site.get("logged_in", False)
+        else:
+            new_site["logged_in"] = False
+
+
+        html.debug(new_site)
 
         save_sites(sites)
         if new:
@@ -5674,6 +5789,102 @@ def save_sites(sites):
         out = file(filename, "w")
         out.write("# Written by WATO\n# encoding: utf-8\n\n")
         out.write("sites = \\\n%s\n" % pprint.pformat(sites))
+
+#   +----------------------------------------------------------------------+
+#   |           ____            _ _           _   _                        |
+#   |          |  _ \ ___ _ __ | (_) ___ __ _| |_(_) ___  _ __             |
+#   |          | |_) / _ \ '_ \| | |/ __/ _` | __| |/ _ \| '_ \            |
+#   |          |  _ <  __/ |_) | | | (_| (_| | |_| | (_) | | | |           |
+#   |          |_| \_\___| .__/|_|_|\___\__,_|\__|_|\___/|_| |_|           |
+#   |                    |_|                                               |
+#   +----------------------------------------------------------------------+
+#   | Functions dealing with the WATO replication feature.                 |
+#   +----------------------------------------------------------------------+
+def do_site_login(site_id, name, password):
+    sites = load_sites()
+    site = sites[site_id]
+    if not name:
+        raise MKUserError("_name", 
+            _("Please specify your administrator login on the remote site."))
+    if not password:
+        raise MKUserError("_passwd", 
+            _("Please specify your password."))
+
+    o = open_url(site["multisiteurl"] + "automation_login.py", name, password)
+    response = o.read()
+    try:
+        return eval(response)
+    except:
+        raise MKAutomationException(_("Malformed output from remote site."))
+
+
+def open_url(url, user=None, password=None):
+    if user:
+        try:
+            passwdmngr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+            passwdmngr.add_password(None, url, user, password)
+            authhandler = urllib2.HTTPBasicAuthHandler(passwdmngr)
+            opener = urllib2.build_opener(authhandler)
+            urllib2.install_opener(opener)
+            return urllib2.urlopen(url)
+        except urllib2.HTTPError, e:
+            if e.code == 401:
+                raise MKUserError("_passwd", _("Authentication failed. Invalid login/password."))
+            else:
+                raise MKUserError("_passwd", _("HTTP Error: %s" % e))
+    else:
+        return urllib.FancyURLopener().open(url)
+
+
+def do_remote_automation(site, command, vars):
+    base_url = site["multisiteurl"]
+    secret = site.get("secret", "")
+    url = base_url + "automation.py?" + \
+        htmllib.urlencode_vars(
+           [("command", command), ("secret", secret)] + vars)
+    connection = open_url(url)
+    response_code = connection.read().strip()
+    if not response_code:
+        raise MKAutomationException("Empty output from remote site.")
+    try:
+        response = eval(response_code)
+    except:
+        raise MKAutomationException(
+            "Malformed output from remote site: <pre>%s</pre>" % response_code)
+    return response
+
+
+###   # Allow access to automation URLs bypassing HTTP Auth. Authentication
+###   # is done in-band.
+###   <Location "/aaa/check_mk/automation.py">
+###       Order allow,deny
+###       Allow from all
+###       Satisfy any
+###   </Location>
+
+
+#   +----------------------------------------------------------------------+
+#   |          _         _                        _   _                    |
+#   |         / \  _   _| |_ ___  _ __ ___   __ _| |_(_) ___  _ __         |
+#   |        / _ \| | | | __/ _ \| '_ ` _ \ / _` | __| |/ _ \| '_ \        |
+#   |       / ___ \ |_| | || (_) | | | | | | (_| | |_| | (_) | | | |       |
+#   |      /_/   \_\__,_|\__\___/|_| |_| |_|\__,_|\__|_|\___/|_| |_|       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | These function implement a web service with that a master can call   |
+#   | automation functions on slaves and peers.                            |
+#   +----------------------------------------------------------------------+
+def page_automation_login():
+    if not config.may("wato.automation"):
+        raise MKAuthException(_("This account has no permission for automation."))
+    html.write(repr("HirniBalid"))
+
+
+def page_automation():
+    response = "babaluba"
+    html.write(repr(response))
+
+
 
 #   +----------------------------------------------------------------------+
 #   | _   _                      ______            _             _         |

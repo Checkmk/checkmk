@@ -217,32 +217,34 @@ def handler(req, profiling = True):
             os.chmod(profilefile + ".py", 0755)
             return apache.OK
 
+        # Special handling for automation.py. Sorry, this must be hardcoded
+        # here. Automation calls bybass the normal authentication stuff
+        if req.myfile != "automation":
+            # Prepare output format
+            output_format = html.var("output_format", "html")
+            html.set_output_format(output_format)
 
-        # Prepare output format
-        output_format = html.var("output_format", "html")
-        html.set_output_format(output_format)
+            if not req.user or type(req.user) != str:
+                raise MKConfigError(_("You are not logged in. This should never happen. Please "
+                        "review your Apache configuration. Check_MK Multisite requires HTTP login."))
 
-        if not req.user or type(req.user) != str:
-            raise MKConfigError(_("You are not logged in. This should never happen. Please "
-                    "review your Apache configuration. Check_MK Multisite requires HTTP login."))
+            # Set all permissions, read site config, and similar stuff
+            config.login(html.req.user)
 
-        # Set all permissions, read site config, and similar stuff
-        config.login(html.req.user)
+            # User allowed to login at all?
+            if not config.may("use"):
+                reason = _("You are not authorized to use Check_MK Multisite. Sorry. "
+                           "You are logged in as <b>%s</b>.") % config.user_id
+                if len(config.user_role_ids):
+                    reason += _("Your roles are <b>%s</b>. " % ", ".join(config.user_role_ids))
+                else:
+                    reason += _("<b>You do not have any roles.</b> ") 
+                reason += _("If you think this is an error, "
+                            "please ask your administrator to check the permissions configuration.") 
+                raise MKAuthException(reason)
 
-        # User allowed to login at all?
-        if not config.may("use"):
-            reason = _("You are not authorized to use Check_MK Multisite. Sorry. "
-                       "You are logged in as <b>%s</b>.") % config.user_id
-            if len(config.user_role_ids):
-                reason += _("Your roles are <b>%s</b>. " % ", ".join(config.user_role_ids))
-            else:
-                reason += _("<b>You do not have any roles.</b> ") 
-            reason += _("If you think this is an error, "
-                        "please ask your administrator to check the permissions configuration.") 
-            raise MKAuthException(reason)
-
-        # General access allowed. Now connect to livestatus
-        connect_to_livestatus(html)
+            # General access allowed. Now connect to livestatus
+            connect_to_livestatus(html)
 
         handler = pagehandlers.get(req.myfile, page_not_found)
         handler()

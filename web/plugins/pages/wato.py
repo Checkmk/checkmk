@@ -30,4 +30,6 @@ import sidebar
 pagehandlers.update({
     "wato"              : wato.page_handler,
     "ajax_wato_folders" : sidebar.ajax_wato_folders,
+    "automation_login"  : wato.page_automation_login,
+    "automation"        : wato.page_automation,
 })

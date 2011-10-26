@@ -71,3 +71,4 @@ def check_winperf_phydisk(item, params, info):
     return check_diskstat_generic(item, params, this_time, winperf_phydisk_convert(info))
 
 check_info['winperf_phydisk'] = (check_winperf_phydisk, "Disk IO %s", 1,  inventory_winperf_phydisk)
+checkgroup_of["winperf_pydisk"] = "disk_io"

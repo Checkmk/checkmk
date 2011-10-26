@@ -66,6 +66,26 @@ function wato_toggle_attribute(oCheckbox, attrname) {
     oDefault = null;
 }
 
+function wato_toggle_option(oCheckbox, divid, negate) {
+    var oDiv = document.getElementById(divid);
+    if ((oCheckbox.checked && !negate) || (!oCheckbox.checked && negate))
+        oDiv.style.display = ""; 
+    else
+        oDiv.style.display = "none";  
+    oDiv = null;
+}
+
+function wato_toggle_dropdown(oDropdown, divid) {
+    var oDiv = document.getElementById(divid);
+    if (oDropdown.value == "other")
+        oDiv.style.display = ""; 
+    else
+        oDiv.style.display = "none";  
+    oDiv = null;
+}
+
+
+    
 // ----------------------------------------------------------------------------
 // Interactive progress code
 // ----------------------------------------------------------------------------

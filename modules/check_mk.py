@@ -256,7 +256,9 @@ nagios_illegal_chars               = '`~!$%^&*|\'"<>?,()='
 
 # Data to be defined in main.mk
 checks                               = []
+static_checks                        = {}
 check_parameters                     = []
+checkgroup_parameters                = {}
 legacy_checks                        = []
 all_hosts                            = []
 host_paths                           = {}
@@ -271,13 +273,15 @@ ignored_checks                       = [] # exclude from inventory
 host_groups                          = []
 service_groups                       = []
 service_contactgroups                = []
-service_notification_periods         = []
-host_notification_periods            = []
+service_notification_periods         = [] # deprecated, will be removed soon.
+host_notification_periods            = [] # deprecated, will be removed soon.
 host_contactgroups                   = []
 parents                              = []
 define_hostgroups                    = None
 define_servicegroups                 = None
 define_contactgroups                 = None
+contacts                             = {}
+timeperiods                          = {} # needed for WATO
 clusters                             = {}
 clustered_services                   = []
 clustered_services_of                = {} # new in 1.1.4
@@ -292,7 +296,7 @@ summary_service_groups               = [] # service groups for aggregated servic
 summary_service_contactgroups        = [] # service contact groups for aggregated services
 summary_host_notification_periods    = []
 summary_service_notification_periods = []
-ipaddresses                          = {} # mapping from hostname to ipadress
+ipaddresses                          = {} # mapping from hostname to ipaddress
 only_hosts                           = None
 extra_host_conf                      = {}
 extra_summary_host_conf              = {}
@@ -304,6 +308,7 @@ donation_hosts                       = []
 donation_command                     = 'mail -r checkmk@yoursite.de  -s "Host donation %s" donatehosts@mathias-kettner.de' % check_mk_version
 scanparent_hosts                     = [ ( ALL_HOSTS ) ]
 host_attributes                      = {} # needed by WATO, ignored by Check_MK
+ping_levels                          = [] # special parameters for host/PING check_command
 
 # global variables used to cache temporary values (not needed in check_mk_base)
 ip_to_hostname_cache = None
@@ -311,6 +316,7 @@ ip_to_hostname_cache = None
 # The following data structures will be filled by the various checks
 # found in the checks/ directory.
 check_info                         = {} # all known checks
+checkgroup_of                      = {} # groups of checks with compatible parametration
 check_includes                     = {} # library files needed by checks
 precompile_params                  = {} # optional functions for parameter precompilation, look at df for an example
 check_default_levels               = {} # dictionary-configured checks declare their default level variables here
@@ -462,6 +468,7 @@ def tags_of_host(hostname):
 # Check if a host fullfills the requirements of a tags
 # list. The host must have all tags in the list, except
 # for those negated with '!'. Those the host must *not* have!
+# New in 1.1.13: a trailing + means a prefix match
 def hosttags_match_taglist(hosttags, required_tags):
     for tag in required_tags:
         if len(tag) > 0 and tag[0] == '!':
@@ -469,6 +476,20 @@ def hosttags_match_taglist(hosttags, required_tags):
             tag = tag[1:]
         else:
             negate = False
+
+        if tag and tag[-1] == '+':
+            tag = tag[:-1]
+            matches = False
+            for t in hosttags:
+                if t.startswith(tag):
+                    matches = True
+            if not matches:
+                return False
+
+        else:
+            if (tag in hosttags) == negate:
+                return False
+
         if (tag in hosttags) == negate:
             return False
     return True
@@ -1071,14 +1092,24 @@ def summary_hostgroups_of(hostname):
 
 def host_contactgroups_of(hostlist):
     cgrs = []
-    for host in hostlist:
-        cgrs += host_extra_conf(host, host_contactgroups)
+    for host in hostlist: 
+        # host_contactgroups may take single values as well as
+        # lists as item value. Of all list entries only the first
+        # one is used. The single-contact-groups entries are all
+        # recognized.
+        first_list = True
+        for entry in host_extra_conf(host, host_contactgroups): 
+            if type(entry) == list and first_list:
+                cgrs += entry
+                first_list = False
+            else:
+                cgrs.append(entry)
     return list(set(cgrs))
 
 def host_contactgroups_nag(hostlist):
     cgrs = host_contactgroups_of(hostlist)
     if len(cgrs) > 0:
-        return "    contact_groups +" + ",".join(cgrs) + "\n"
+        return "    contact_groups " + ",".join(cgrs) + "\n"
     else:
         return ""
 
@@ -1110,11 +1141,11 @@ def extra_service_conf_of(hostname, description):
     sercgr = service_extra_conf(hostname, description, service_contactgroups)
     contactgroups_to_define.update(sercgr)
     if len(sercgr) > 0:
-        conf += "  contact_groups\t\t+" + ",".join(sercgr) + "\n"
+        conf += "  contact_groups\t\t" + ",".join(sercgr) + "\n"
 
     sergr = service_extra_conf(hostname, description, service_groups)
     if len(sergr) > 0:
-        conf += "  service_groups\t\t+" + ",".join(sergr) + "\n"
+        conf += "  service_groups\t\t" + ",".join(sergr) + "\n"
         if define_servicegroups:
             servicegroups_to_define.update(sergr)
     conf += extra_conf_of(extra_service_conf, hostname, description)
@@ -1134,6 +1165,30 @@ def extra_conf_of(confdict, hostname, service):
             format = "  %-29s %s\n"
             result += format % (key, values[0])
     return result
+
+def check_icmp_arguments(hostname):
+    values = host_extra_conf(hostname, ping_levels)
+    levels = {}
+    for value in values[::-1]: # make first rules have precedence
+        levels.update(value)
+    if len(levels) == 0:
+        return ""
+
+    args = []
+    rta = 200, 500
+    loss = 80, 100
+    for key, value in levels.items():
+        if key == "timeout":
+            args.append("-t %d" % value)
+        elif key == "packets":
+            args.append("-n %d" % value)
+        elif key == "rta":
+            rtas = value
+        elif key == "loss":
+            loss = value
+    args.append("-w %.2f,%.2f%%" % (rta[0], loss[0]))
+    args.append("-c %.2f,%.2f%%" % (rta[1], loss[1]))
+    return " ".join(args)
 
 
 # Return a list of services this services depends upon
@@ -1249,7 +1304,7 @@ def in_extraconf_hostlist(hostlist, hostname):
 
     # Migration help: print error if old format appears in config file
     if len(hostlist) == 1 and hostlist[0] == "":
-        raise MKGeneralException('Invalid emtpy entry [ "" ] in configuration')
+        raise MKGeneralException('Invalid empty entry [ "" ] in configuration')
 
     for hostentry in hostlist:
         if len(hostentry) == 0:
@@ -1335,6 +1390,8 @@ def create_nagios_config(outfile = sys.stdout, hostnames = None):
     create_nagios_config_servicegroups(outfile)
     create_nagios_config_contactgroups(outfile)
     create_nagios_config_commands(outfile)
+    create_nagios_config_timeperiods(outfile)
+    create_nagios_config_contacts(outfile)
 
     if extra_nagios_conf:
         outfile.write("\n# extra_nagios_conf\n\n")
@@ -1375,6 +1432,16 @@ def create_nagios_hostdefs(outfile, hostname):
     outfile.write("  address\t\t\t%s\n" % (ip and ip or "0.0.0.0"))
     outfile.write("  _TAGS\t\t\t\t%s\n" % " ".join(tags_of_host(hostname)))
 
+    # Levels for host check
+    ping_args = check_icmp_arguments(hostname)
+    if is_clust and ip: # Do check cluster IP address if one is there
+        outfile.write("  check_command\t\t\tcheck-mk-ping!%s\n" % ping_args)
+    elif ping_args and is_clust: # use check_icmp in cluster mode
+        outfile.write("  check_command\t\t\tcheck-mk-ping-cluster!%s\n" % args)
+    elif ping_args: # use special arguments
+        outfile.write("  check_command\t\t\tcheck-mk-ping!%s\n" % ping_args)
+
+
     # WATO folder path
     path = host_paths.get(hostname)
     if path:
@@ -1390,12 +1457,12 @@ def create_nagios_hostdefs(outfile, hostname):
         hostgroups_to_define.add(default_host_group)
     elif define_hostgroups:
         hostgroups_to_define.update(hgs)
-    outfile.write("  hostgroups\t\t\t+%s\n" % hostgroups)
+    outfile.write("  hostgroups\t\t\t%s\n" % hostgroups)
 
     # Contact groups
     cgrs = host_contactgroups_of([hostname])
     if len(cgrs) > 0:
-        outfile.write("  contact_groups\t\t+%s\n" % ",".join(cgrs))
+        outfile.write("  contact_groups\t\t%s\n" % ",".join(cgrs))
         contactgroups_to_define.update(cgrs)
 
     # Parents for non-clusters
@@ -1418,6 +1485,7 @@ def create_nagios_hostdefs(outfile, hostname):
         # Host check uses (service-) IP address if available
         if ip:
             outfile.write("  check_command\t\t\tcheck-mk-ping\n")
+
 
     # Output alias, but only if it's not define in extra_host_conf
     aliases = host_extra_conf(hostname, extra_host_conf.get("alias", []))
@@ -1737,6 +1805,60 @@ def create_nagios_config_commands(outfile):
 
 """ % ( checkname, dummy_check_commandline ))
 
+def create_nagios_config_timeperiods(outfile):
+    if len(timeperiods) > 0:
+        outfile.write("\n# ------------------------------------------------------------\n")
+        outfile.write("# Timeperiod definitions (controlled by variable 'timeperiods')\n")
+        outfile.write("# ------------------------------------------------------------\n\n")
+        tpnames = timeperiods.keys()
+        tpnames.sort()
+        for name in tpnames:
+            tp = timeperiods[name]
+            outfile.write("define timeperiod {\n  timeperiod_name\t\t%s\n" % name) 
+            if "alias" in tp: 
+                outfile.write("  alias\t\t\t\t%s\n" % tp["alias"].encode("utf-8"))
+            for key, value in tp.items():
+                if key != "alias":
+                    times = ", ".join([ ("%s-%s" % (fr, to)) for (fr, to) in value ])
+                    if times:
+                        outfile.write("  %-20s\t\t%s\n" % (key, times))
+            outfile.write("}\n\n")
+
+def create_nagios_config_contacts(outfile):
+    if len(contacts) > 0:
+        outfile.write("\n# ------------------------------------------------------------\n")
+        outfile.write("# Timeperiod definitions (controlled by variable 'contacts'\n")
+        outfile.write("# ------------------------------------------------------------\n\n")
+        cnames = contacts.keys()
+        cnames.sort()
+        for cname in cnames:
+            contact = contacts[cname]
+            outfile.write("define contact {\n  contact_name\t\t\t%s\n" % cname)
+            if "alias" in contact:
+                outfile.write("  alias\t\t\t\t%s\n" % contact["alias"].encode("utf-8"))
+            if "email" in contact:
+                outfile.write("  email\t\t\t\t%s\n" % contact["email"])
+            not_enabled = contact.get("notifications_enabled", True)
+            for what in [ "host", "service" ]:
+                no = contact.get(what + "_notification_options", "")
+                if not no or not not_enabled:
+                    no = "n"
+                outfile.write("  %s_notification_options\t%s\n" % (what, ",".join(list(no))))
+                outfile.write("  %s_notification_period\t%s\n" % (what, contact.get("notification_period", "24X7")))
+                outfile.write("  %s_notification_commands\tcheck-mk-dummy\n" % what)
+
+            # Refer only to those contact groups that actually have objects assigned to
+            cgrs = [ cgr for cgr in contact.get("contactgroups", []) if cgr in contactgroups_to_define ]
+            # Use dummy group if none is set. Nagios will not start otherwise
+            if not cgrs:
+                cgrs = [ "check_mk" ]
+            outfile.write("  contactgroups\t\t\t%s\n" % ", ".join(cgrs))
+            outfile.write("}\n\n")
+
+
+            
+
+
 #   +----------------------------------------------------------------------+
 #   |            ___                      _                                |
 #   |           |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _              |
@@ -1821,8 +1943,8 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
                 continue
 
             # Skip checktypes which are generally ignored for this host
-            if checktype_ignored_for_host(host, checkname):
-                continue
+            # DONE LATER: if checktype_ignored_for_host(host, checkname):
+            #    continue
 
             if is_cluster(host):
                 sys.stderr.write("%s is a cluster host and cannot be inventorized.\n" % host)
@@ -1948,7 +2070,7 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
                     else:
                         continue # we have that already
 
-                if service_ignored(hn, description):
+                if service_ignored(hn, checkname, description):
                     if include_state:
                         if state_type == "old":
                             state_type = "obsolete"
@@ -2030,8 +2152,15 @@ def check_inventory(hostname):
         sys.exit(3)
 
 
-def service_ignored(hostname, service_description):
-    return in_boolean_serviceconf_list(hostname, service_description, ignored_services)
+def service_ignored(hostname, checktype, service_description):
+    if checktype in ignored_checktypes:
+        return True
+    if in_boolean_serviceconf_list(hostname, service_description, ignored_services):
+        return True
+    if checktype_ignored_for_host(hostname, checktype):
+        return True
+    return False
+
 
 def in_boolean_serviceconf_list(hostname, service_description, conflist):
     for entry in conflist:
@@ -2266,6 +2395,7 @@ no_inventory_possible = None
                  "check_includes = {}\n" +
                  "precompile_params = {}\n" +
                  "factory_settings = {}\n" + 
+                 "checkgroup_of = {}\n" +
                  "check_config_variables = []\n" +
                  "check_default_levels = {}\n" +
                  "snmp_info = {}\n" +
@@ -3795,7 +3925,8 @@ def ip_to_hostname(ip):
 
 # Now - at last - we can read in the user's configuration files
 def all_nonfunction_vars():
-    return set([ name for name,value in globals().items() if name[0] != '_' and type(value) != type(lambda:0) ])
+    return set([ name for name,value in globals().items() 
+                if name[0] != '_' and type(value) != type(lambda:0) ])
 
 def marks_hosts_with_path(old, all, filename):
     if not filename.startswith(check_mk_configdir):
@@ -3807,7 +3938,7 @@ def marks_hosts_with_path(old, all, filename):
         if host not in old:
             host_paths[host] = path
 
-def read_config_files():
+def read_config_files(with_autochecks=True, with_conf_d=True):
     global vars_before_config, final_mk, local_mk, checks
 
     # Initialize dictionary-type default levels variables
@@ -3815,17 +3946,25 @@ def read_config_files():
         globals()[varname] = {}
 
     # Create list of all files to be included
-    list_of_files = reduce(lambda a,b: a+b, 
-       [ [ "%s/%s" % (d, f) for f in fs if f.endswith(".mk")] 
-         for d, sb, fs in os.walk(check_mk_configdir) ], [])
-    list_of_files.sort()
-    list_of_files = [ check_mk_configfile ] + list_of_files
+    if with_conf_d:
+        list_of_files = reduce(lambda a,b: a+b, 
+           [ [ "%s/%s" % (d, f) for f in fs if f.endswith(".mk")] 
+             for d, sb, fs in os.walk(check_mk_configdir) ], [])
+        list_of_files.sort()
+        list_of_files = [ check_mk_configfile ] + list_of_files
+    else:
+        list_of_files = [ check_mk_configfile ]
+
     final_mk = check_mk_basedir + "/final.mk"
     if os.path.exists(final_mk):
         list_of_files.append(final_mk)
     local_mk = check_mk_basedir + "/local.mk"
     if os.path.exists(local_mk):
         list_of_files.append(local_mk)
+
+    global FILE_PATH, FOLDER_PATH
+    FILE_PATH = None
+    FOLDER_PATH = None
 
     vars_before_config = all_nonfunction_vars()
     for _f in list_of_files:
@@ -3836,6 +3975,15 @@ def read_config_files():
             if opt_debug:
                 sys.stderr.write("Reading config file %s...\n" % _f)
             _old_all_hosts = all_hosts[:]
+            # Make the config path available as a global variable to
+            # be used within the configuration file
+            if _f.startswith( check_mk_configdir + "/"):
+                FILE_PATH = _f[len(check_mk_configdir) + 1:]
+                FOLDER_PATH = os.path.dirname(FILE_PATH)
+            else:
+                FILE_PATH = None
+                FOLDER_PATH = None
+                
             execfile(_f, globals(), globals())
             marks_hosts_with_path(_old_all_hosts, all_hosts, _f)
         except Exception, e:
@@ -3864,9 +4012,39 @@ def read_config_files():
             sys.exit(4)
         seen_hostnames.add(hostname)
 
+    # Add WATO-configured explicit checks to (possibly empty) checks
+    # statically defined in checks.
+    static = []
+    for entries in static_checks.values():
+        for entry in entries:
+            # Parameters are optional
+            if len(entry[0]) == 2:
+                checktype, item = entry[0]
+                params = None
+            else:
+                checktype, item, params = entry[0]
+            if len(entry) == 3:
+                taglist, hostlist = entry[1:3]
+            else:
+                hostlist = entry[1]
+                taglist = []
+            # Make sure, that for dictionary based checks
+            # at least those keys defined in the factory
+            # settings are present in the parameters
+            if type(params) == dict:
+                def_levels_varname = check_default_levels.get(checktype)
+                if def_levels_varname:
+                    for key, value in factory_settings.get(def_levels_varname, {}).items():
+                        if key not in params:
+                            params[key] = value
+
+            static.append((taglist, hostlist, checktype, item, params))
+    checks = static + checks
+
     # Read autochecks and append them to explicit checks
-    read_all_autochecks()
-    checks = autochecks + checks
+    if with_autochecks:
+        read_all_autochecks()
+        checks = autochecks + checks
 
     # Check for invalid configuration variables
     vars_after_config = all_nonfunction_vars()
@@ -3942,7 +4120,14 @@ def compute_check_parameters(host, checktype, item, params):
         params = new_params
 
     descr = service_description(checktype, item)
-    entries = service_extra_conf(host, descr, check_parameters)
+
+    # Get parameters configured via checkgroup_parameters
+    entries = get_checkgroup_parameters(host, checktype, item)
+
+    # Get parameters configured via check_parameters
+    entries += service_extra_conf(host, descr, check_parameters)
+
+
     if len(entries) > 0:
         # loop from last to first (first must have precedence)
         for entry in entries[::-1]:
@@ -3951,6 +4136,20 @@ def compute_check_parameters(host, checktype, item, params):
             else:
                 params = entry
     return params
+
+def get_checkgroup_parameters(host, checktype, item):
+    checkgroup = checkgroup_of.get(checktype)
+    if not checkgroup: 
+        return []
+    rules = checkgroup_parameters.get(checkgroup)
+    if rules == None:
+        return []
+
+    if item == None: # checks without an item
+        return host_extra_conf(host, rules)
+    else: # checks with an item need service-specific rules
+        return service_extra_conf(host, str(item), rules)
+
 
 # read automatically generated checks. They are prepended to the check
 # table: explicit user defined checks override automatically generated
@@ -4016,7 +4215,7 @@ if __name__ == "__main__":
                      "check-inventory=", "paths", "cleanup-autochecks", "checks=" ]
 
     non_config_options = ['-L', '--list-checks', '-P', '--package', '-M', 
-                          '--man', '-V', '--version' ,'-h', '--help']
+                          '--man', '-V', '--version' ,'-h', '--help', '--automation']
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)

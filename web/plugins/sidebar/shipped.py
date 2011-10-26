@@ -60,32 +60,6 @@ sidebar_snapins["about"] = {
     "allowed" : [ "admin", "user", "guest" ],
 }
 
-# -----------------------------------------------------------------------
-#      _       _           _       _     _             _   _
-#     / \   __| |_ __ ___ (_)_ __ (_)___| |_ _ __ __ _| |_(_) ___  _ __
-#    / _ \ / _` | '_ ` _ \| | '_ \| / __| __| '__/ _` | __| |/ _ \| '_ \
-#   / ___ \ (_| | | | | | | | | | | \__ \ |_| | | (_| | |_| | (_) | | | |
-#  /_/   \_\__,_|_| |_| |_|_|_| |_|_|___/\__|_|  \__,_|\__|_|\___/|_| |_|
-#
-# -----------------------------------------------------------------------
-def render_admin():
-    html.write('<ul>')
-    if config.may("use_wato"):
-        bulletlink(_("WATO - Configure Hosts and Services"), "wato.py")
-    bulletlink(_("View permissions"), "view_permissions.py")
-    if config.may("edit_permissions"):
-        bulletlink(_("Edit permissions"), "edit_permissions.py")
-    html.write('</ul>')
-
-sidebar_snapins["admin"] = {
-    "title" : _("Administration"),
-    "description" : _("Links to administrations functions, e.g. configuration of permissions"),
-    "author" : "Mathias Kettner",
-    "render" : render_admin,
-    "allowed" : [ "admin" ],
-}
-
-
 # --------------------------------------------------------------
 #   __     ___
 #   \ \   / (_) _____      _____
@@ -106,7 +80,7 @@ def render_views():
                 continue
             if t == topic:
                 if first:
-                    html.begin_foldable_container("views", topic, False, topic)
+                    html.begin_foldable_container("views", topic, False, topic, indent=True)
                     # html.write("<h3>%s</h3>\n" % topic)
                     first = False
                     # html.write("<ul>")
@@ -165,7 +139,7 @@ def render_groups(what):
     name_to_alias = dict(data)
     groups = [(name_to_alias[name].lower(), name_to_alias[name], name) for name in name_to_alias.keys()]
     groups.sort() # sort by Alias in lowercase
-    target = views.get_context_link(html.req.user, "%sgroup" % what)
+    target = views.get_context_link(config.user_id, "%sgroup" % what)
     if target:
         html.write('<ul>')
         for alias_lower, alias, name in groups:
@@ -224,7 +198,7 @@ def render_hosts(mode):
         num_columns = 2
 
     views.load_views()
-    target = views.get_context_link(html.req.user, view)
+    target = views.get_context_link(config.user_id, view)
     html.write("<table class=allhosts>\n")
     col = 1
     for site, host, state, worstsvc in hosts:
@@ -397,25 +371,30 @@ def render_sitestatus():
 
         for sitename, sitealias in sitenames:
             site = config.site(sitename)
-            state = html.site_status[sitename]["state"]
-            if state == "disabled":
-                switch = "on"
-                text = site["alias"]
-                title = _("Site %s is switched off") % site["alias"]
+            if sitename not in html.site_status or "state" not in html.site_status[sitename]:
+                state = "missing"
+                text = _("Missing site")
+                title = _("Site %s does not exist") % sitename
             else:
-                switch = "off"
-		try:
-		    linkview = config.sitestatus_link_view
-		except:
-		    linkview = "sitehosts"
-                text = link(site["alias"], "view.py?view_name=%s&site=%s" % (linkview, sitename))
-                ex = html.site_status[sitename].get("exception")
-                shs = html.site_status[sitename].get("status_host_state")
-
-                if ex:
-                    title = ex
+                state = html.site_status[sitename]["state"]
+                if state == "disabled":
+                    switch = "on"
+                    text = site["alias"]
+                    title = _("Site %s is switched off") % site["alias"]
                 else:
-                    title = "Site %s is online" % site["alias"]
+                    switch = "off"
+                    try:
+                        linkview = config.sitestatus_link_view
+                    except:
+                        linkview = "sitehosts"
+                    text = link(site["alias"], "view.py?view_name=%s&site=%s" % (linkview, sitename))
+                    ex = html.site_status[sitename].get("exception")
+                    shs = html.site_status[sitename].get("status_host_state")
+
+                    if ex:
+                        title = ex
+                    else:
+                        title = "Site %s is online" % site["alias"]
 
             html.write("<tr><td class=left>%s</td>" % text)
             onclick = "switch_site('_site_switch=%s:%s')" % (sitename, switch)
@@ -864,8 +843,8 @@ def render_bookmarks():
     n = 0
     for title, href in bookmarks:
         html.write("<div id=\"bookmark_%d\">" % n)
-        iconbutton(_("delete"), "del_bookmark.py?num=%d" % n, "side", "updateContents", 'snapin_bookmarks')
-        iconbutton(_("edit"), "edit_bookmark.py?num=%d" % n, "main")
+        iconbutton(_("delete"), "del_bookmark.py?num=%d" % n, "side", "updateContents", 'snapin_bookmarks', css_class = 'bookmark')
+        iconbutton(_("edit"), "edit_bookmark.py?num=%d" % n, "main", css_class = 'bookmark')
         html.write(link(title, href))
         html.write("</div>")
         n += 1
@@ -957,7 +936,7 @@ sidebar_snapins["bookmarks"] = {
 # ------------------------------------------------------------
 
 def render_custom_links():
-    links = config.custom_links.get(config.role)
+    links = config.custom_links.get(config.user_baserole_id)
     if not links:
         html.write((_("Please edit <tt>%s</tt> in order to configure which links are shown in this snapin.") %
                   (defaults.default_config_dir + "/multisite.mk")) + "\n")

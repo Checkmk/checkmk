@@ -28,6 +28,6 @@ import wato
 import sidebar
 
 pagehandlers.update({
-    "wato"            : wato.page_handler,
-    "ajax_wato_files" : sidebar.ajax_wato_files,
+    "wato"              : wato.page_handler,
+    "ajax_wato_folders" : sidebar.ajax_wato_folders,
 })

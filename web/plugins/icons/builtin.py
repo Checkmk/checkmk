@@ -396,55 +396,6 @@ multisite_icons.append({
 })
 
 #   +----------------------------------------------------------------------+
-#   |                     __        ___  _____ ___                         |
-#   |                     \ \      / / \|_   _/ _ \                        |
-#   |                      \ \ /\ / / _ \ | || | | |                       |
-#   |                       \ V  V / ___ \| || |_| |                       |
-#   |                        \_/\_/_/   \_\_| \___/                        |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-
-def wato_link(filename, site, hostname, where):
-    if 'X' in html.display_options:
-        prefix = config.site(site)["url_prefix"] + "check_mk/"
-        url = prefix + "wato.py?filename=%s&host=%s" % (htmllib.urlencode(filename),
-                                                        htmllib.urlencode(hostname))
-        if where == "inventory":
-            url += "&mode=inventory"
-            help = _("Edit services in WATO - the Check_MK Web Administration Tool")
-        else:
-            url += "&mode=edithost"
-            help = _("Open this host in WATO - the Check_MK Web Administration Tool")
-        return '<a href="%s"><img class=icon src="images/icon_wato.gif" ' \
-               'title="%s"></a>' % (url, help)
-    else:
-        return ""
-
-def paint_wato(what, row, tags, custom_vars):
-    if not config.may("use_wato"):
-        return
-             
-    # Link to WATO for hosts
-    if "wato" in tags and what == "host":
-        for tag in tags:
-            if tag.endswith(".mk"):
-                wato_filename = tag
-                return wato_link(wato_filename, row["site"],
-                                 row["host_name"], "edithost")
-
-
-    # Link to WATO for Check_MK Inventory service
-    if what == "service":
-        wato_filename = custom_vars.get("WATO")
-        if wato_filename:
-            return wato_link(wato_filename, row["site"],
-                             row["host_name"], "inventory")
-
-multisite_icons.append({
-    'paint':           paint_wato,
-})
-
-#   +----------------------------------------------------------------------+
 #   |          ____                _              _       _                |
 #   |         |  _ \ ___  ___  ___| |__   ___  __| |_   _| | ___           |
 #   |         | |_) / _ \/ __|/ __| '_ \ / _ \/ _` | | | | |/ _ \          |

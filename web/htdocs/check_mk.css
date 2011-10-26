@@ -9,12 +9,13 @@
 */
 
 body {
-    font-family: arial, helvetica, sans-serif;
+    font-family: verdana, arial, helvetica, sans-serif;
     font-size: 9pt;
     background-attachment: fixed;
     background-repeat: repeat;
     margin: 0;
 }
+
 
 td, th {
     vertical-align: top;
@@ -76,6 +77,7 @@ ul.treeangle li {
     margin: 0px;
     margin-left: 16px;
     padding-left: 20px;
+    list-style: disc;
 }
 
 input.buttonlink {
@@ -376,6 +378,13 @@ li.sidebar {
     margin-left: 0px;
 }
 
+div.snapin img.iconlink {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
 div.snapin div.footnote {
     width: 100%;
     text-align: right;
@@ -425,6 +434,11 @@ div.snapin div.footnotelink a:hover {
 div.snapin img.iconbutton {
     margin: 0px 2px 0px 0px;
     border: none;
+}
+
+div.snapin img.iconbutton.bookmark {
+    width:  16px;
+    height: 16px;
 }
 
 /* state bullets at problem host or all hosts snapin */
@@ -925,6 +939,13 @@ td.icons img {
 
 img.icon {
    width: 20px;
+   height: 20px;
+}
+/* Icon image place inline in some documentation text */
+.wato img.icon.docu {
+   width: 14px;
+   height: 14px;
+   vertical-align: middle;
 }
 
 /* Styles used by specific painters. These should be modularized later ... */
@@ -1119,6 +1140,29 @@ table.form {
     empty-cells: show;
     border-spacing: 0px;
     margin: 10px;
+}
+/* Sorry for the mess here. It is due to using foldable_containter
+   within a form table (currently only in WATO in the host and
+   folder properties) */
+
+table.form.nomargin {
+    margin: 0;
+}
+table.form.nomargin td.legend,
+.wato table.form.nomargin td.checkbox,
+table.form.nomargin td.content,
+table.form.nomargin td.buttons {
+    border-top-style: none;
+}
+table.form.nomargin td.title {
+    border-top-style: none;
+    padding-bottom: 10px;
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+}
+.wato table.form tr.top td,
+.wato table.form tr.top td.checkbox {
+    border-top-style: solid;
 }
 
 table.form textarea {
@@ -1938,6 +1982,10 @@ table.add_snapin i {
     padding: 2px 6px;
 }
 
+.wato table.auditlog td.nobreak {
+    white-space: nowrap;
+}
+
 .wato .pending td { 
     border: 1px solid #444;
     padding: 2px 6px;
@@ -1977,8 +2025,19 @@ table.add_snapin i {
 
 /* Path to current folder at top of screen */
 .wato div.folderpath {
-    margin-bottom: 6px;
+    margin-bottom: 30px;
 }
+
+.wato div.folderpath a, .wato div.folderpath b, .wato div.folderpath i {
+    float: left;
+}
+
+.wato div.folderpath i {
+    margin: 0px 3px;
+    font-weight: bold;
+    font-style: normal;
+}
+
 .wato div.folderpath a, 
 .wato div.folderpath b {
     -moz-border-radius: 3px;
@@ -1997,6 +2056,17 @@ table.add_snapin i {
     /* text-decoration: underline; */
 }
 
+.wato select.folderpath {
+    background-color: #8ab;
+    -moz-border-radius: 3px;
+    padding: 2px 4px;
+    margin: 0;
+    color: #fff;
+    font-weight: normal;
+    font-size: 8pt;
+    border-style: none;
+}
+
 /* Information boxes displayed directly in the data area */
 .wato div.info {
     margin-top: 10px;
@@ -2013,8 +2083,223 @@ table.add_snapin i {
     float: right;
 }
 
+/* Special styles for configuration and rule editor */
+.wato div.rule {
+    width: 500px;
+    height: 140px;
+    border: 1px solid white;
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+    margin-top: 10px;
+    -moz-border-radius: 4px;
+    position: relative;
+    top: 0px;
+    left: 0px;
+}
+
+.wato div.rule div.nr {
+    -moz-border-radius: 10px;
+    border: 1px solid white;
+    background-color: #fcd340;
+    color: black;
+    text-align: center;
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    left: 9px;
+    top: 9px;
+}
+.wato div.rule div.nr b {
+    position: relative;
+    top: 3px;
+}
+
+.wato img.iconbutton {
+    width: 20px;
+    height: 20px;
+}
+
+.wato img.trans {
+    width: 24px;
+}
+.wato td.value img {
+    width: 20px;
+    height: 20px;
+}
+.wato table.ruleeditor img {
+    width: 22px;
+    height: 22px;
+    position: relative;
+    top: -3px;
+}
+.wato table.ruleeditor td.content ul.help {
+    color: white;
+    font-style: italic;
+    font-size: 8pt;
+    padding: 0;
+    margin: 0 0 5px 0;
+    width: 300px;
+}
+
+.wato div.dictelement * {
+    font-size: 8pt;
+}
+.wato div.dictelement {
+    font-size: 8pt;
+    padding-left: 10px;
+    border-left: 2px solid #ccc;
+    margin-left: 8px;
+    margin-bottom: 10px;
+    margin-top: 3px;
+    float: none;
+}
+
+.wato table.form.ruleeditor td.content table.valuespec_tuple td.left {
+    padding-right: 10px;
+}
+
+.wato table.form.ruleeditor td.content table.valuespec_tuple td.right,
+.wato table.form.ruleeditor td.content table.valuespec_tuple td.left {
+    vertical-align: top;
+    padding-bottom: 10px;
+}
+
+.wato div.rule div.title {
+    position: absolute;
+    top: 12px;
+    color: white;
+    font-size: 10pt;
+    font-weight: bold;
+}
+
+.wato div.rule div.conditions.title {
+    left: 40px;
+}
+.wato div.rule div.value.title {
+    left: 390px;
+}
+
+
+.wato div.rule div.box {
+    position: absolute;
+    top: 30px;
+    border: 1px solid white;
+    background-color: #a7bec3;
+    padding: 5px;
+    -moz-border-radius: 4px;
+    height: 90px;
+}
+
+.wato div.rule div.conditions.box {
+    left: 40px;
+    width: 330px;
+}
+
+.wato ul.conditions {
+    padding: 0;
+    margin-left: 15px;
+    margin-top: 0;
+    margin-bottom: 0;
+    list-style-type: square;
+}
+.wato ul.conditions li {
+    padding: 0;
+    margin: 0;
+}
+
+
+.wato div.rule div.condition {
+    float: none;
+}
+
+.wato div.rule div.value.box {
+    left: 390px;
+    width: 90px;
+}
+
+.wato table.itemlist td {
+    margin: 0;
+    padding: 0;
+}
+
+.wato table.form td.content td {
+    padding: 0;
+    vertical-align: middle;
+}
+
+.wato table.data.ruleset td {
+/*    vertical-align: top; */
+}
+
+.wato table.timeperiod td.name { 
+    width: 200px;
+}
+.wato table.timeperiod td { 
+    white-space: nowrap;
+}
+.wato input.timeperioddate {
+    width: 7ex;
+    font-family: monospace;
+}
+
+/* configuration overview */
+.wato table.configmodules {
+    empty-cells: show;
+    border-spacing: 8px;
+}
+.wato table.configmodules td {
+    background-image: url("images/form_background.png");
+    background-repeat: repeat;
+    padding: 6px;
+    -moz-border-radius: 5px;
+}
+.wato table.configmodules td.text a {
+    color: #246;
+    font-weight: bold;
+}
+.wato table.configmodules td.text a:hover {
+    color: #579;
+}
+
+.wato table.configmodules td.text i {
+    color: black;
+    font-size: 8pt;
+}
+
+/* Special styles for roles editor (permissions) */
+.wato table.form table.permissions {
+    border-collapse: collapse;
+    border-spacing: 0px; 
+    width: 100%;
+}
+.wato table.form table.permissions td {
+    border-top: 1px dotted white;
+    padding-top: 2px;
+    padding-bottom: 8px;
+}
+.wato table.form table.permissions td.left {
+}
+.wato table.form table.permissions td.right {
+    text-align: right;
+    vertical-align: top;
+}
+.wato table.form table.permissions td.right select {
+    width: 120px;
+}
+
+/* Table in page "Rulesets" */
+.wato table.data.rulesets {
+    width: 800px;
+}
+.wato table.data.rulesets td.title {
+    width: 430px;
+}
+.wato table.data.rulesets td.varname {
+    width: 300px;
+}
+
 /* 
-   ____                                    
+    ____                                    
    |  _ \ _ __ ___   __ _ _ __ ___  ___ ___ 
    | |_) | '__/ _ \ / _` | '__/ _ \/ __/ __|
    |  __/| | | (_) | (_| | | |  __/\__ \__ \
@@ -2139,6 +2424,14 @@ table.add_snapin i {
     vertical-align: bottom;
 }
 
+.wato div.error pre div.err {
+    background-color: yellow;
+    font-weight: bold;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    float: left;
+}
 /* 
       _                                    _   _             
      / \   __ _  __ _ _ __ ___  __ _  __ _| |_(_) ___  _ __  
@@ -2232,4 +2525,32 @@ table.aggrtree td.leaf.even {
 }
 table.aggrtree td.node {
     background-color: #e8e8e8;
+}
+
+/* Styles used in internal debugging */
+table.debug_vars {
+    border-collapse: collapse;
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+}
+table.debug_vars th {
+    border: 1px solid #080;
+    background-color: #8c8;
+    font-weight: bold;
+}
+table.debug_vars td.left {
+    background-color: #395;
+    color: white;
+    font-weight: bold;
+}
+table.debug_vars td.right {
+    background-color: #8fc;
+    color: black;
+    font-weight: bold;
+}
+table.debug_vars td {
+    padding: 2px 6px;
+    border: 1px solid #050;
+    font-family: courier, monospace;
 }

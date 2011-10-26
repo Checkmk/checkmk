@@ -46,7 +46,8 @@ except NameError:
     from sets import Set as set
 
 user = None
-role = None
+user_id = None 
+user_role_ids = []
 
 # Base directory of dynamic configuration
 config_dir = defaults.var_dir + "/web"
@@ -70,12 +71,10 @@ def include(filename):
         execfile(filename, globals(), globals())
         modification_timestamps.append(lm)
     except Exception, e:
-        global user
-        global role
-        global user_permissions
+        global user_id
+        global roles
         user = "nobody"
-        role = None
-        user_permissions = []
+        roles = []
         raise MKConfigError("Cannot read configuration file %s: %s:" % (filename, e))
 
 modification_timestamps = []
@@ -98,6 +97,9 @@ def load_config():
     global modification_timestamps
     modification_timestamps = []
 
+    global wato_host_tags
+    wato_host_tags = []
+
     include("multisite.mk")
     # Load also all files below multisite.d
     conf_dir = defaults.default_config_dir + "/multisite.d"
@@ -117,7 +119,8 @@ def load_config():
 #
 # -------------------------------------------------------------------
 
-roles = [ "user", "admin", "guest" ]
+builtin_role_ids = [ "user", "admin", "guest" ] # hard coded in various permissions
+roles = {} # User supplied roles
 
 # define default values for all settings
 debug             = False
@@ -125,6 +128,9 @@ users             = []
 admin_users       = []
 guest_users       = []
 default_user_role = "user"
+
+# New style, used by WATO
+multisite_users = {}
 
 # Global table of available permissions. Plugins may add their own
 # permissions
@@ -140,6 +146,7 @@ def declare_permission(name, title, description, defaults):
 def declare_permission_section(name, title):
     permission_sections[name] = title
 
+# TODO: _(...)
 declare_permission("use",
      "Use Multisite at all",
      "Users without this permission are not let in at all",
@@ -208,89 +215,125 @@ declare_permission("configure_sidebar",
 # Compute permissions for HTTP user and set in
 # global variables. Also store user.
 def login(u):
+    global user_id
+    user_id = u
+
+    # Determine the roles of the user. If the user is listed in 
+    # users, admin_users or guest_users in multisite.mk then we
+    # give him the according roles. If the user has an explicit
+    # profile in multisite_users (e.g. due to WATO), we rather
+    # use that profile. Remaining (unknown) users get the default_user_role.
+    # That can be set to None -> User has no permissions at all.
+    global user_role_ids
+    user_role_ids = roles_of_user(user_id)
+
+    # Get base roles (admin/user/guest)
+    global user_baserole_ids
+    user_baserole_ids = base_roles_of(user_role_ids) 
+
+    # Get best base roles and use as "the" role of the user
+    global user_baserole_id
+    if "admin" in user_role_ids:
+        user_baserole_id = "admin"
+    elif "user" in user_role_ids:
+        user_baserole_id = "user"
+    else:
+        user_baserole_id = "guest"
+
+    # Prepare user object
     global user
-    user = u
-    global role
-    role = None
+    if u in multisite_users:
+        user = multisite_users[u]
+    else:
+        user = { "roles" : user_role_ids } 
+
+    # Prepare cache of already computed permissions
+    global user_permissions
+    user_permissions = {}
+
+    # Make sure, admin can restore permissions in any case!
+    if user_id in admin_users:
+        user_permissions["use"] = True        # use Multisite
+        user_permissions["wato.use"] = True   # enter WATO
+        user_permissions["wato.edit"] = True  # make changes in WATO...
+        user_permissions["wato.users"] = True # ... with access to user management
 
     # Prepare users' own configuration directory
     global user_confdir
-    user_confdir = config_dir + "/" + user
+    user_confdir = config_dir + "/" + user_id
     make_nagios_directory(user_confdir)
 
-    # determine role of user. Each user may be listed only once
-    # in admin_users, guest_users and users.
-    all = admin_users + guest_users
-    if users != None:
-        all += users
-    if all.count(user) > 1:
-        raise MKConfigError(_("Your username (<b>%s</b>) is listed more than once "
-                "in multisite.mk. This is not allowed. "
-                "Please check your config.") % user)
-
-    role = role_of_user(user)
-
-    # Now set permissions according to role
-    load_permissions()
-    global user_permissions
-    user_permissions = set([])
-    for p in permissions_by_order:
-        roles = permissions.get(p["name"], p["defaults"])
-        if role in roles:
-            user_permissions.add(p["name"])
-
-    # Make sure, admin can restore permissions in any case!
-    if role == "admin":
-        user_permissions.add("use")
-        user_permissions.add("edit_permissions")
-
+    # load current on/off-switching states of sites
     read_site_config()
 
-def save_site_config():
-    save_user_file("siteconfig", user_siteconf)
 
-def role_of_user(u):
-    if u in admin_users:
-        return "admin"
-    elif u in guest_users:
-        return "guest"
-    elif u in users:
-        return "user"
+def roles_of_user(user):
+    # Make sure, builtin roles are present, even if not modified 
+    # and saved with WATO.
+    for br in builtin_role_ids:
+        if br not in roles:
+            roles[br] = {}
+
+    if user in multisite_users:
+        return multisite_users[user]["roles"]
+    elif user in admin_users:
+        return [ "admin" ]
+    elif user in guest_users:
+        return [ "guest" ]
+    elif users != None and user in users:
+        return [ "user" ]
+    elif default_user_role:
+        return [ default_user_role ]
     else:
-        return default_user_role
+        return []
 
-def may(permname):
-    # handle case where declare_permission is done after login
-    # and permname also not contained in save configuration
-    if permname not in permissions:
-        perm = permissions_by_name.get(permname)
-        if not perm: # Object does not exists, e.g. sidesnap.multisite if not is_multisite()
-            return False
-        if role in perm["defaults"]:
-            user_permissions.add(permname)
+def base_roles_of(some_roles): 
+    base_roles = set([])
+    for r in some_roles:
+        if r in builtin_role_ids:
+            base_roles.add(r)
+        else:
+            base_roles.add(roles[r]["basedon"])
+    return list(base_roles)
 
-    return permname in user_permissions
 
-def user_may(u, permname):
-    role = role_of_user(u)
-    roles = permissions.get(permname)
-    if roles == None:
-        perm = permissions_by_name.get(permname)
-        if not perm:
-            return False # permission target does not exist
-        roles = perm["defaults"]
-    return role in roles
+def may_with_roles(some_role_ids, pname):
+    # If at least one of the user's roles has this permission, it's fine
+    for role_id in some_role_ids:
+        role = roles[role_id]
 
-def load_permissions():
-    global permissions
-    path = config_dir + "/permissions.mk"
-    if os.path.exists(path):
-        permissions = eval(file(path).read())
-    else:
-        permissions = {}
+        he_may = role.get("permissions", {}).get(pname)
+        if he_may == None: # not explicitely listed -> take defaults 
+            if "basedon" in role:
+                base_role_id = role["basedon"]
+            else:
+                base_role_id = role_id
+            perm = permissions_by_name[pname]
+            he_may = base_role_id in perm["defaults"]
+        if he_may:
+            return True
+    return False
+    
 
-def save_permissions(permissions):
-    write_settings_file(config_dir + "/permissions.mk", permissions)
+def may(pname):
+    global user_permissions
+    if pname in user_permissions:
+        return user_permissions[pname]
+    he_may = may_with_roles(user_role_ids, pname)
+    user_permissions[pname] = he_may
+    return he_may
+
+def user_may(u, pname):
+    return may_with_roles(roles_of_user(u), pname)
+
+def need_permission(pname):
+    if not may(pname):
+        perm = permissions_by_name[pname]
+        raise MKAuthException(_("We are sorry, but you lack the permission "
+                              "for this operation. If you do not like this "
+                              "then please ask you administrator to provide you with "
+                              "the following permission: '<b>%s</b>'.") % perm["title"])
+
 
 # -------------------------------------------------------------------
 #    ____  _ _
@@ -308,7 +351,7 @@ def sitenames():
     return sites.keys()
 
 def allsites():
-    return dict( [(name, site(name)) for name in sitenames()])
+    return dict( [(name, site(name)) for name in sitenames() if not site(name).get("disabled", False)])
 
 def site(name):
     s = sites.get(name, {})
@@ -337,6 +380,9 @@ def is_multisite():
 def read_site_config():
     global user_siteconf
     user_siteconf = load_user_file("siteconfig", {})
+
+def save_site_config():
+    save_user_file("siteconfig", user_siteconf)
 
 #    ____  _     _      _
 #   / ___|(_) __| | ___| |__   __ _ _ __
@@ -456,8 +502,6 @@ filter_columns = 2
 # Default language for l10n
 default_language = None
 
-# Default preserved snapshots
-max_snapshots = 50
 
 #    __        ___  _____ ___  
 #    \ \      / / \|_   _/ _ \ 
@@ -466,9 +510,12 @@ max_snapshots = 50
 #       \_/\_/_/   \_\_| \___/ 
 #                              
 
-config_files = []
-host_tags = []
+wato_enabled = True
+wato_host_tags = []
 wato_hide_filenames = True
+wato_max_snapshots = 50
+wato_num_hostspecs = 12
+wato_num_itemspecs = 15
 
 
 #     ____ ___ 

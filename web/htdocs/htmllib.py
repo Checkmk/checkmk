@@ -165,6 +165,7 @@ class html:
         self.output_format = "html"
         self.status_icons = {}
         self.link_target = None
+        self.form_vars = []
 
     def plugin_stylesheets(self): 
         global plugin_stylesheets
@@ -238,6 +239,9 @@ class html:
     def end_form(self):
         self.write("</form>\n")
 
+    def form_submitted(self):
+        return self.has_var("filled_in")
+
     def add_user_error(self, varname, message):
         if type(varname) == list:
             for v in varname:
@@ -278,6 +282,9 @@ class html:
         if remove_prefix != None:
             vars = [ i for i in vars if not i[0].startswith(remove_prefix) ]
         return self.req.myfile + ".py?" + urlencode_vars(vars + addvars)
+
+    def makeactionuri(self, addvars):
+        return self.makeuri(addvars + [("_transid", self.current_transid())])
 
     def makeuri_contextless(self, vars):
         return self.req.myfile + ".py?" + urlencode_vars(vars)
@@ -330,20 +337,30 @@ class html:
             default_value = ""
         addprops = ""
         if "size" in args:
-            addprops += " size=%d" % args["size"]
+            addprops += " size=%d" % (args["size"] + 1)
+        if "type" in args:
+            mytype = args["type"]
+        else:
+            mytype = "text"
+        if "autocomplete" in args:
+            addprops += " autocomplete=\"%s\"" % args["autocomplete"]
+
 
         value = self.req.vars.get(varname, default_value)
         error = self.user_errors.get(varname)
         html = ""
         if error:
             html = "<x class=inputerror>"
-        html += "<input type=text class=%s value=\"%s\" name=\"%s\"%s>" % \
-                     (cssclass, attrencode(value), varname, addprops)
+        html += "<input type=%s class=%s value=\"%s\" name=\"%s\"%s>" % \
+                     (mytype, cssclass, attrencode(value), varname, addprops)
         if error:
             html += "</x>"
             self.set_focus(varname)
         self.write(html)
         self.form_vars.append(varname)
+
+    def password_input(self, varname, default_value = "", **args):
+        self.text_input(varname, default_value, type="password", size=12, **args)
 
     def text_area(self, varname, deflt="", rows=8):
         value = self.req.vars.get(varname, deflt)
@@ -356,11 +373,11 @@ class html:
             self.set_focus(varname)
         self.form_vars.append(varname)
 
-    def sorted_select(self, varname, options, deflt="", onchange=None):
+    def sorted_select(self, varname, options, deflt="", onchange=None, attrs = {}):
         # Sort according to display texts, not keys
         sorted = options[:]
         sorted.sort(lambda a,b: cmp(a[1].lower(), b[1].lower()))
-        html.select(self, varname, sorted, deflt, onchange)
+        html.select(self, varname, sorted, deflt, onchange, attrs)
 
     def select(self, varname, options, deflt="", onchange=None, attrs = {}):
         current = self.var(varname, deflt)
@@ -411,15 +428,21 @@ class html:
         if error:
             html += "</x>"
 
-    # Get value of checkbox. Return True, False or None
-    def get_checkbox(self, varname):
-        try:
-            if not self.var("filled_in") == self.form_name: # this form filled in
-                return None
-        except:
-            # self.form_name not set, we have no form
-            if not self.var("filled_in"):
-                return None
+    # Get value of checkbox. Return True, False or None. None means
+    # that no form has been submitted. The problem here is the distintion
+    # between False and None. The browser does not set the variables for
+    # Checkboxes that are not checked :-(
+    def get_checkbox(self, varname, form_name = None):
+        if form_name:
+            try:
+                if not self.var("filled_in") == self.form_name: # this form filled in
+                    return None
+            except:
+                # self.form_name not set, we have no form
+                if not self.var("filled_in"):
+                    return None
+        elif not self.var("filled_in"):
+            return None
 
         value = self.req.vars.get(varname, "")
         return not not value
@@ -557,7 +580,7 @@ class html:
 
     def top_heading(self, title):
         if type(self.req.user) == str:
-            login_text = "<b>%s</b> (%s)" % (config.user, config.role)
+            login_text = "<b>%s</b> (%s)" % (config.user_id, "+".join(config.user_role_ids))
         else:
             login_text = _("not logged in")
         self.write("<table class=header><tr><td class=left>%s</td><td class=right>"
@@ -650,21 +673,6 @@ class html:
             return False
         return True
 
-    def confirm(self, msg):
-        if self.var("_do_actions") == "No":
-            return # user has pressed "No"
-        if not self.has_var("_do_confirm"):
-            self.write("<div class=really>%s" % msg)
-            self.begin_form("confirm", None, "POST")
-            self.hidden_fields(add_action_vars = True)
-            self.button("_do_confirm", _("Yes!"), "really")
-            self.button("_do_actions", _("No"), "")
-            self.end_form()
-            self.write("</div>")
-            return False
-        else:
-            return self.check_transaction()
-
     def do_actions(self):
         return self.var("_do_actions") not in [ "", None, "No" ]
 
@@ -701,7 +709,8 @@ class html:
         self.write('<script type="text/javascript" src="js/%s.js"></script>\n' % name)
 
     def reload_sidebar(self):
-        self.javascript("parent.frames[0].location.reload();");
+        if not self.has_var("_ajaxid"):
+            self.javascript("parent.frames[0].location.reload();");
 
     # Get next transaction id for that user
     def current_transid(self):
@@ -740,6 +749,21 @@ class html:
         else:
             return False
 
+    def confirm(self, msg):
+        if self.var("_do_actions") == "No":
+            return # user has pressed "No"               # None --> "No"
+        if not self.has_var("_do_confirm"):
+            self.write("<div class=really>%s" % msg)
+            self.begin_form("confirm", None, "POST")
+            self.hidden_fields(add_action_vars = True)
+            self.button("_do_confirm", _("Yes!"), "really")
+            self.button("_do_actions", _("No"), "")
+            self.end_form()
+            self.write("</div>")
+            return False                                # False --> "Dialog shown, no answer yet"
+        else:
+            return self.check_transaction() and True or None # True: "Yes", None --> Browser reload
+
     def register_event(self, name):
         self.events.add(name)
 
@@ -772,9 +796,10 @@ class html:
                 omd_mode = 'own'
         return (omd_mode, omd_site)
 
-    def begin_foldable_container(self, treename, id, isopen, title, indent = True):
+    def begin_foldable_container(self, treename, id, isopen, title, indent = True): 
         # try to get persistet state of tree
         tree_state = weblib.get_tree_states(treename)
+
         if id in tree_state:
             isopen = tree_state[id] == "on"
 
@@ -783,17 +808,37 @@ class html:
         onclick += ' onmouseover="this.style.cursor=\'pointer\';" '
         onclick += ' onmouseout="this.style.cursor=\'auto\';" '
         
+        if indent == "form":
+            self.write('<table class="form nomargin"><tr><td class=title>')
         self.write('<img align=absbottom class="treeangle" id="treeimg.%s.%s" '
                    'src="images/tree_%s.png" %s>' % 
                 (treename, id, img_num, onclick))
         if title[0] == '<': # custom HTML code
-            self.write(title + "<br>")
+            self.write(title)
+            if indent != "form":
+                self.write("<br>")
         else:
             self.write('<b class="treeangle title" class=treeangle %s>%s</b><br>' % 
                      (onclick, title))
-        indent_style = not indent and "padding-left: 0px; " or ""
+
+        indent_style = "padding-left: %dpx; " % (indent == True and 15 or 0)
+        if indent == "form":
+            self.write("</td></tr></table>")
+            indent_style += "margin: 0; "
         self.write('<ul class="treeangle" style="%s display: %s" id="tree.%s.%s">' % 
              (indent_style, (not isopen) and "none" or "",  treename, id))
     
     def end_foldable_container(self):
+        self.write("</ul>")
+
+    def debug(self, *x):
+        import pprint
+        for element in x:
+            self.write("<pre>%s</pre>\n" % pprint.pformat(element))
+
+    def debug_vars(self):
+        self.write('<table onmouseover="this.style.display=\'none\';" class=debug_vars>')
+        self.write("<tr><th colspan=2>POST / GET Variables</th></tr>")
+        for name, value in sorted(self.req.vars.items()):
+            self.write("<tr><td class=left>%s</td><td class=right>%s</td></tr>\n" % (name, value))
         self.write("</ul>")

@@ -122,6 +122,7 @@ def check_mem_used(item, params, info):
 
 check_info['mem.used'] = (check_mem_used, "Memory used", 1,  inventory_mem_used)
 check_config_variables.append("mem_extended_perfdata")
+checkgroup_of["mem.used"] = "memory"
 
 
 #   +----------------------------------------------------------------------+

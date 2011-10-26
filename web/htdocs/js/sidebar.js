@@ -377,17 +377,29 @@ function debug(s) {
 // Set the size of the sidebar_content div to fit the whole screen
 // but without scrolling. The height of the header and footer divs need
 // to be treated here.
+var g_just_resizing = 0;
 function setSidebarHeight() {
   var oHeader  = document.getElementById('side_header');
   var oContent = document.getElementById('side_content');
   var oFooter  = document.getElementById('side_footer');
   var height   = pageHeight();
 
+  // Resize sidebar frame on Chrome (and other webkit browsers)
+  if (isWebkit()) {
+      var oldcols = parent.document.body.cols.split(",");
+      var oldwidth = parseInt(oldcols[0]);
+      var width = oHeader.clientWidth;
+      var target_width = oldwidth * 280.0 / width;
+      var newcols = target_width.toString() + ",*";
+      parent.document.body.cols = newcols;
+  }
+
   // Don't handle zero heights
   if (height == 0)
     return;
 
   oContent.style.height = (height - oHeader.clientHeight - oFooter.clientHeight - 5) + 'px';
+
 
   oFooter = null;
   oContent = null;
@@ -721,20 +733,20 @@ function storeScrollPos() {
 }
 
 /* Foldable Tree in snapin */
-function wato_tree_click(filename) {
+function wato_tree_click(folderpath) {
     // Get the URL in the main frame. If that is a view or a dashboard,
     // then reload that view with an updated "filename" variable. If that is
     // a wato.py page, navigate to the according wato page. In all other
     // cases, select the view "allhosts" with the according path.
     var href = parent.frames[1].location + ""; // adding "" converts url from something magic to string
     if (href.indexOf("/view.py") >= 0) 
-        href = add_html_var(href, "filename", filename);
+        href = add_html_var(href, "wato_folder", folderpath);
     else if (href.indexOf("/dashboard.py") >= 0) 
-        href = add_html_var(href, "filename", filename);
+        href = add_html_var(href, "wato_folder", folderpath);
     else if (href.indexOf("/wato.py") >= 0)
-        href = "wato.py?filename=" + escape(filename);
+        href = "wato.py?mode=folder&folder=" + escape(folderpath);
     else
-        href = "view.py?view_name=allhosts&filename=" + escape(filename);
+        href = "view.py?view_name=allhosts&wato_folder=" + escape(folderpath);
     parent.frames[1].location = href;
 }
 

@@ -26,62 +26,97 @@
 
 import config, wato
 
-def render_wato_files():
-    if not config.may("use_wato"):
+#   +----------------------------------------------------------------------+
+#   |                     __        ___  _____ ___                         |
+#   |                     \ \      / / \|_   _/ _ \                        |
+#   |                      \ \ /\ / / _ \ | || | | |                       |
+#   |                       \ V  V / ___ \| || |_| |                       |
+#   |                        \_/\_/_/   \_\_| \___/                        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+def render_wato():
+    if not config.wato_enabled:
+        html.write(_("WATO is disabled in <tt>multisite.mk</tt>."))
+    elif not config.may("wato.use"):
         html.write(_("You are not allowed to use Check_MK's web configuration GUI."))
+        return False
 
+    iconlink(_("Main menu"), "wato.py", "home")
+    for mode, title, icon, permission, help in wato.modules:
+        if config.may("wato." + permission) or config.may("wato.seeall"):
+            iconlink(title, "wato.py?mode=%s" % mode, icon)
+
+
+sidebar_snapins["admin"] = {
+    "title" : _("WATO: Check_MK Administration"),
+    "description" : _("Direct access to WATO - the web administration GUI of Check_MK"),
+    "author" : "Mathias Kettner",
+    "render" : render_wato,
+    "allowed" : [ "admin", "user" ],
+}
+
+
+#   +----------------------------------------------------------------------+
+#   |          _____     _     _              _____                        |
+#   |         |  ___|__ | | __| | ___ _ __   |_   _| __ ___  ___           |
+#   |         | |_ / _ \| |/ _` |/ _ \ '__|____| || '__/ _ \/ _ \          |
+#   |         |  _| (_) | | (_| |  __/ | |_____| || | |  __/  __/          |
+#   |         |_|  \___/|_|\__,_|\___|_|       |_||_|  \___|\___|          |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+def render_wato_folders():
+    if not config.wato_enabled:
+        html.write(_("WATO is disabled in <tt>multisite.mk</tt>."))
     else:
-        if config.is_multisite():
-            sitenames = config.sites.keys()
-            sitenames.sort()
-            for sitename in sitenames:
-                site = config.sites[sitename]
-                state = html.site_status[sitename]["state"]
-                if state != "disabled":
-                    html.write("<h3>%s</h3>\n" % site["alias"])
-                    ajax_url = site["url_prefix"] + "check_mk/ajax_wato_files.py"
-                    html.javascript("document.write(get_url_sync('%s'));" % ajax_url)
-        else:
-            ajax_wato_files()
+        #EE if config.is_multisite():
+        #EE     sitenames = config.allsites().keys()
+        #EE     sitenames.sort()
+        #EE     for sitename in sitenames:
+        #EE         site = config.sites[sitename]
+        #EE         state = html.site_status[sitename]["state"]
+        #EE         if state != "disabled":
+        #EE             html.write("<h3>%s</h3>\n" % site["alias"])
+        #EE             ajax_url = site["url_prefix"] + "check_mk/ajax_wato_folders.py"
+        #EE             html.javascript("document.write(get_url_sync('%s'));" % ajax_url)
+        #EE else:
+        ajax_wato_folders()
+        num_pending = wato.api.num_pending_changes()
+        if num_pending:
+            footnotelinks([(_("%d changes pending") % num_pending, "wato.py?mode=changelog")])
 
-def ajax_wato_files():
-    if config.may("use_wato"):
-        tree = wato.api.get_folder_tree()
-        if len(tree[".folders"]) == 0:
-            html.write("<ul>")
-        render_linktree_folder(wato.api.get_folder_tree())
-        if len(tree[".folders"]) == 0:
-            html.write("</ul>")
+def ajax_wato_folders():
+    render_linktree_folder(wato.api.get_folder_tree())
 
     
 def render_linktree_folder(f):
     subfolders = f.get(".folders", {})
-    subfiles = f.get(".files", {})
-    is_leaf = len(subfolders) == 0 and len(subfiles) == 0
+    is_leaf = len(subfolders) == 0 
 
-    path = f[".path"]
-    filename = "/" + "/".join(path)
-    if not filename.endswith(".mk") and not filename.endswith("/"):
-        filename += "/"
+    # Suppress indentation for non-emtpy root folder
+    if ".parent" not in f and is_leaf:
+        html.write("<ul>") # empty root folder
+    elif ".parent" in f:
+        html.write("<ul style='padding-left: 0px;'>")
 
-    title = '<a href="#" onclick="wato_tree_click(%r);">%s</a>' % (filename, f["title"]) 
+    title = '<a href="#" onclick="wato_tree_click(%r);">%s (%d)</a>' % (
+            f[".path"], f["title"], f[".total_hosts"]) 
 
     if not is_leaf:
-        html.begin_foldable_container('wato', filename, False, title)
+        html.begin_foldable_container('wato-hosts', "/" + f[".path"], False, title)
         for sf in wato.api.sort_by_title(subfolders.values()):
-            render_linktree_folder(sf)
-        for sf in wato.api.sort_by_title(subfiles.values()):
             render_linktree_folder(sf)
         html.end_foldable_container()
     else:
         html.write("<li>" + title + "</li>")
-
-
+    if ".parent" in f or is_leaf:
+        html.write("</ul>")
 
 sidebar_snapins["wato"] = {
     "title" : _("Hosts"),
-    "description" : _("A foldable tree showing all your WATO folders and files - allowing you to navigate in the tree while using views or being in WATO"),
+    "description" : _("A foldable tree showing all your WATO folders and files - "
+                      "allowing you to navigate in the tree while using views or being in WATO"),
     "author" : "Mathias Kettner",
-    "render" : render_wato_files,
-    "allowed" : [ "admin", "user" ],
+    "render" : render_wato_folders,
+    "allowed" : [ "admin", "user", "guest" ],
 }

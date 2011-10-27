@@ -1,14 +1,19 @@
 Title: Service "1st perf data" in host view: search broken
 Component: multisite
-Benefit: 2
-State: open
 Cost: 2
 Date: 2011-10-27 18:53:50
-Targetversion: 1.1.12p1
+State: done
 Class: bug
+Benefit: 2
+Fun: 0
+Targetversion: 1.1.12p1
 
 Take the allhosts_mini View. Add a service column
 with the 1.st service perfdata variable. Now click
 on the header to sort after that columns -> Error
 that the column "service_perf_data" is missing.
 
+
+2011-10-27 19:44:48: changed state open -> done
+The problem appeared, when the join column did not
+have an explicit title. This is fixed now.

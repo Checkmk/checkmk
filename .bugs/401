@@ -1,0 +1,12 @@
+Title: IE8: Hiliting of rows in checkbox mode is broken
+Component: multisite
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-10-27 18:51:44
+Targetversion: 1.1.12p1
+Class: bug
+
+When in a view in Checkbox mode hovering over the rows
+should hilite those rows. In IE8 this does not work.
+The red background of the CRIT is destroyed, too.

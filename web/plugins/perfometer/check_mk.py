@@ -330,6 +330,8 @@ def perfometer_check_mk_printer_supply(row, check_command, perf_data):
     crit = float(perf_data[0][4])
     mini = float(perf_data[0][5])
     maxi = float(perf_data[0][6])
+    if maxi < 0:
+        return "", "" # Printer does not supply a max value
 
     # If there is no 100% given, calculate the percentage
     if maxi != 100.0:

@@ -1,0 +1,11 @@
+Title: IE8: Hitting enter in Quicksearch does not work
+Component: multisite
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-10-27 18:52:58
+Targetversion: 1.1.12p1
+Class: bug
+
+When hitting Enter in Quicksearch when no host matches, a service
+search should be done. In Firefox this works, in IE8 not.

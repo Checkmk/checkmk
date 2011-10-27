@@ -1,0 +1,11 @@
+Title: Add filters for hard service state
+Component: multisite
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-10-27 18:56:40
+Targetversion: 
+Class: todo
+
+Do we have filters for the hard service state? At least in
+the service search they should be visible. Same for hosts.

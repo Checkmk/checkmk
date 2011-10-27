@@ -39,7 +39,7 @@ $def[1] .= "GPRINT:count:MAX:\"Maximum\: $format \" ";
 $def[1] .= "HRULE:$WARN[1]#FFFF00:\"Warning at $WARN[1]\" ";
 $def[1] .= "HRULE:$CRIT[1]#FF0000:\"Critical at $CRIT[1]\" ";
 
-if ($DS[2]) {
+if (isset($DS[2])) {
  $opt[2]  = " --vertical-label \"MB\" -l 0 --title \"Memory Usage\" ";
  $def[2]  = "DEF:vsz=$RRDFILE[2]:$DS[2]:MAX ";
  $def[2] .= "DEF:rss=$RRDFILE[3]:$DS[3]:MAX ";
@@ -55,7 +55,7 @@ if ($DS[2]) {
  $def[2] .= "GPRINT:rssmb:MAX:\"Max\: %5.1lf MB\" ";
 }
 
-if ($DS[3]) {
+if (isset($DS[3])) {
  $opt[3]  = " --vertical-label \"CPU(%)\" -l 0 -u 100 --title \"CPU Usage\" ";
  $def[3]  = "DEF:pcpu=$RRDFILE[4]:$DS[4]:MAX ";
  $def[3] .= "AREA:pcpu#30ff80:\"CPU usage (%) \" ";

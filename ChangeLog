@@ -26,9 +26,21 @@
     * FIX: Fixed encoding problem when opening dashboard
 
 
+1.1.12p1:
+    Checks & Agents:
+    * FIX: mk_oracle now also detects XE databases
+    * FIX: printer_alerts: handle 0-entries of Brother printers
+    * FIX: printer_supply: fix Perf-O-Meter if no max known
+
+    Multisite:
+    * FIX: finally fixed long-wanted "NagStaMon create hundreds
+      of Apache processes" problem!
+ 
+
 1.1.12:
     Checks & Agents:
     * dell_powerconnect_*: final fixed, added PNP-templates
+    * ps.perf: better error handling in PNP template
 
     Multisite:
     * Dashboard: fix font size of service statistics table

@@ -437,7 +437,7 @@ def dashlet_hoststats():
     ]
     filter = "Filter: custom_variable_names < _REALNAME\n"
 
-    render_statistics("hosts", table, filter)
+    render_statistics("hoststats", "hosts", table, filter)
 
 def dashlet_servicestats():
     table = [
@@ -488,10 +488,10 @@ def dashlet_servicestats():
     ]
     filter = "Filter: host_custom_variable_names < _REALNAME\n"
 
-    render_statistics("services", table, filter)
+    render_statistics("servicestats", "services", table, filter)
 
 
-def render_statistics(what, table, filter):
+def render_statistics(pie_id, what, table, filter):
     # Is the query restricted to a certain WATO-path?
     wato_folder = html.var("wato_folder")
     if wato_folder:
@@ -509,7 +509,7 @@ def render_statistics(what, table, filter):
     pie_diameter = 136
 
     html.write('<canvas class=pie width=%d height=%d id=%s_stats style="float: left"></canvas>' % 
-            (pie_diameter, pie_diameter, what))
+            (pie_diameter, pie_diameter, pie_id))
     
     html.write('<table class="hoststats%s" style="float:left">' % ( 
         len(pies) > 5 and " narrow" or ""))
@@ -527,7 +527,7 @@ def render_statistics(what, table, filter):
     if total > 0:
         for (name, color, viewurl, q), value in pies:
             perc = 100.0 * value / total
-            pie_parts.append('chart_pie("%s", %f, %f, %r);' % (what, r, r + perc, color))
+            pie_parts.append('chart_pie("%s", %f, %f, %r);' % (pie_id, r, r + perc, color))
             r += perc
 
     html.javascript("""
@@ -535,8 +535,8 @@ function has_canvas_support() {
     return document.createElement('canvas').getContext;
 }
 
-function chart_pie(what, from, to, color) {
-    var context = document.getElementById(what + "_stats").getContext('2d');
+function chart_pie(pie_id, from, to, color) {
+    var context = document.getElementById(pie_id + "_stats").getContext('2d');
     if(!context)
         return;
     var pie_x = %(x)f;
@@ -564,8 +564,7 @@ function rad(g) {
 if(has_canvas_support()) {
     %(p)s
 }
-""" % { "what" : what, "x" : pie_diameter / 2, 
-        "y": pie_diameter/2, "d" : pie_diameter, 'p': '\n'.join(pie_parts) })
+""" % { "x" : pie_diameter / 2, "y": pie_diameter/2, "d" : pie_diameter, 'p': '\n'.join(pie_parts) })
 
 def dashlet_pnpgraph():
     render_pnpgraph(html.var("site"), html.var("host"), html.var("service"), int(html.var("source", 0)))

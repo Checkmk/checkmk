@@ -26,7 +26,7 @@
 # Check_MK agent plugin for monitoring ORACLE databases
 
 # Get list of all running databases
-SIDS=$(UNIX95=true ps ax -o args | sed -n '/^ora_pmon_\([^ ]*\)/s//\1/p')
+SIDS=$(UNIX95=true ps ax -o args | sed -n '/^\(ora\|xe\)_pmon_\([^ ]*\)/s//\2/p')
 if [ -z "$SIDS" ] ; then exit 0 ; fi
 
 CACHE_MAXAGE=120

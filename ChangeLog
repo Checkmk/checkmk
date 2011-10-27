@@ -35,6 +35,8 @@
     Multisite:
     * FIX: finally fixed long-wanted "NagStaMon create hundreds
       of Apache processes" problem!
+    * FIX: query crashed when sorting after a join columns without
+      an explicit title.
  
 
 1.1.12:

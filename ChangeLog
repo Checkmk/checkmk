@@ -3,6 +3,10 @@
     * FIX: mk_oracle now also detects XE databases
     * FIX: printer_alerts: handle 0-entries of Brother printers
 
+    Multisite:
+    * FIX: finally fixed long-wanted "NagStaMon create hundreds
+      of Apache processes" problem!
+
 1.1.12:
     Checks & Agents:
     * dell_powerconnect_*: final fixed, added PNP-templates

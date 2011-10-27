@@ -1201,6 +1201,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         else:
             join_columns += s[0]["columns"]
 
+
     # Add key columns, needed for executing commands
     columns += datasource["keys"]
 
@@ -1214,7 +1215,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     columns = list(colset)
 
     # Get list of painter options we need to display (such as PNP time range
-    # or the format being used for timestamp display
+    # or the format being used for timestamp display)
     painter_options = []
     for entry in all_painters:
         p = entry[0]
@@ -2442,16 +2443,19 @@ def sort_url(view, painter, join_index):
     return ','.join(p)
 
 def paint_header(view, p):
+    # The variable p is a tuple with the following components:
+    # p[0] --> painter object, from multisite_painters[]
+    # p[1] --> view name to link to or None (not needed here)
+    # p[2] --> tooltip (title) to display (not needed here)
+    # p[3] --> optional: join key (e.g. service description)
+    # p[4] --> optional: column title to use instead default
     painter = p[0]
     join_index = None
+    t = painter.get("short", painter["title"])
     if len(p) >= 4: # join column
-        if len(p) >= 5 and p[4]:
-            t   = p[4]
-            join_index = p[3]
-        else:
-            t = p[3]
-    else:
-        t = painter.get("short", painter["title"])
+        join_index = p[3]
+    if len(p) >= 5 and p[4]:
+        t = p[4]
 
     # Optional: Sort link in title cell
     # Use explicit defined sorter or implicit the sorter with the painter name

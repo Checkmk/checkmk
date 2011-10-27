@@ -21,6 +21,7 @@
       attributes of a host
     * Added API function num_hosts_in_folder() to count the number of hosts
       below the given folder
+    * Added option to download "latest" snapshot
 
     Multisite:
     * FIX: Fixed encoding problem when opening dashboard

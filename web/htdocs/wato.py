@@ -3438,13 +3438,24 @@ def mode_snapshot(phase):
         return
     elif phase == "action":
         if html.has_var("_download_file"):
-            # FIXME: HTML Variable pruefen, kein join verwenden
-            download_file = os.path.join(snapshot_dir, html.var("_download_file"))
+            download_file = html.var("_download_file")
+            if not download_file.startswith('wato-snapshot') and download_file != 'latest':
+                raise MKUserError(None, _("Invalid download file specified"))
+
+            # Find the latest snapshot file
+            if download_file == 'latest':
+                snapshots = os.listdir(snapshot_dir)
+                if not snapshots:
+                    return False
+                download_file = snapshots[-1]
+
+            download_file = os.path.join(snapshot_dir, download_file)
             if os.path.exists(download_file):
-                html.req.headers_out['Content-Disposition'] = 'Attachment; filename=' + html.var("_download_file")
+                html.req.headers_out['Content-Disposition'] = 'Attachment; filename=' + download_file
                 html.req.headers_out['content_type'] = 'application/x-tar'
                 html.write(open(download_file).read())
                 return False
+
         # create snapshot
         elif html.has_var("_create_snapshot"):
             if html.check_transaction():

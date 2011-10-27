@@ -147,7 +147,9 @@ def strip_tags(ht):
         x = ht.find('<')
         if x == -1:
             break
-        y = ht.find('>')
+        y = ht.find('>', x)
+        if y == -1:
+            break
         ht = ht[0:x] + ht[y+1:]
     return ht
 

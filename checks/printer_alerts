@@ -70,6 +70,8 @@ def inventory_printer_alerts(info):
     return [ (None, None) ]
 
 def check_printer_alerts(_not_used, _not_used1, info):
+    # Filter out empty status lines (e.g. sent by Brother printers)
+    info = [ i for i in info if i != [ "1", "0", "0", "0", "" ] ]
     if not info:
         return (0, 'OK - No alerts present')
 

@@ -1991,6 +1991,17 @@ table.add_snapin i {
     padding: 2px 6px;
 }
 
+.wato table.auditlog.pending td {
+    border-color: #f80;
+}
+.wato table.auditlog.pending tr.even0 {
+    background-color: #fda;
+}
+
+.wato table.auditlog.pending tr.odd0 {
+    background-color: #fc8;
+}
+
 .wato td.dns {
     color: #666;
 }

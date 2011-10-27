@@ -363,6 +363,7 @@ def site(name):
         s["socket"] = "unix:" + defaults.livestatus_unix_socket
     if "url_prefix" not in s:
         s["url_prefix"] = "../" # relative URL from /check_mk/
+    s["id"] = name
     return s
 
 def site_is_local(name):

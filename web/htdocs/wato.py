@@ -2403,6 +2403,15 @@ def mode_changelog(phase):
             config.need_permission("wato.auditlog")
             return export_audit_log()
 
+        elif html.has_var("_siteaction"):
+            site_id = html.var("_site")
+            action = html.var("_siteaction")
+            if html.check_transaction():
+                site = config.site(site_id)
+                synchronize_site(site)
+                if action == "restart":
+                    restart_site(site)
+
         elif html.check_transaction():
             config.need_permission("wato.activate")
             create_snapshot()
@@ -2419,6 +2428,61 @@ def mode_changelog(phase):
             return None, _("The new configuration has been successfully activated.")
 
     else:
+        # Distributed WATO: Show replication state of each site
+        if is_distributed():
+            html.write("<h3>%s</h3>" % _("Distributed WATO - replication status"))
+            repstatus = load_replication_status()
+            sites = config.allsites().items()
+            sites.sort(cmp = lambda a,b: cmp(a[1].get("alias",a[0]), b[1].get("alias", b[0])))
+            html.write("<table class=data>")
+            html.write("<tr>" +
+                       "<th>%s</th>" % _("ID") + 
+                       "<th>%s</th>" % _("Alias") + 
+                       "<th>%s</th>" % _("Type") + 
+                       "<th>%s</th>" % _("Changes") + 
+                       "<th></th>" +
+                       "<th>%s</th>" % _("Actions") +
+                       "</tr>")
+            odd = "even"
+            for site_id, site in sites:
+                if not site_is_local(site_id) and not site.get("replication"):
+                    continue
+
+
+                srs = repstatus.get(site_id, {})
+                html.write('<tr class="data %s0">' % odd)
+                html.write("<td>%s</td>" % site_id)
+                html.write("<td>%s</td>" % site.get("alias", ""))
+
+                # Type
+                if site_is_local(site_id):
+                    sitetype = _("local")
+                elif site["replication"] == "slave":
+                    sitetype = _("Slave")
+                else:
+                    sitetype = _("Peer")
+                html.write("<td>%s</td>" % sitetype)
+
+                html.write("<td class=number>%d</td>" % srs.get("pending", 0))
+                html.write('<td><img class=icon title="%s" src="images/icon_%s.png"></td>' % 
+                        (srs.get("need_restart") \
+                          and (_("This site needs a restart for activating the changes."), "restart") 
+                          or ("", "trans")))
+
+                # Actions
+                sync_url = make_action_link([("mode", "changelog"), ("_site", site_id), ("_siteaction", "sync")])
+                restart_url = make_action_link([("mode", "changelog"), ("_site", site_id), ("_siteaction", "restart")])
+                html.write("<td class=buttons>")
+                if not site_is_local(site_id):
+                    html.buttonlink(restart_url, _("Sync & Restart"))
+                    html.buttonlink(sync_url, _("Synchronize"))
+                else:
+                    html.buttonlink(restart_url, _("Restart"))
+                html.write("</td>")
+                html.write("</tr>")
+            html.write("</table>")
+
+
         pending = parse_audit_log("pending")
         render_audit_log(pending, "pending")
 
@@ -2459,9 +2523,22 @@ def log_audit(linkinfo, what, message):
     log_entry(linkinfo, what, message, "audit.log")
 
 def log_pending(linkinfo, what, message):
+    # TODO: Need flag whether restart is neccessary
     log_entry(linkinfo, what, message, "pending.log")
     log_entry(linkinfo, what, message, "audit.log")
     need_sidebar_reload()
+    # Currently we add the pending to each site, regardless if 
+    # the site is really affected. This needs to be optimized
+    # in future.
+    if is_distributed():
+        repstatus = load_replication_status()
+        for siteid in config.sites:
+            rs = repstatus.setdefault(siteid, {})
+            rs.setdefault("pending", 0)
+            rs["pending"] += 1
+            rs["need_restart"] = True
+        save_replication_status(repstatus)
+
 
 def log_commit_pending():
     pending = log_dir + "pending.log"
@@ -2626,14 +2703,14 @@ def render_audit_log(log, what, with_filename = False):
         htmlcode += "<div class=info>%s</div>" % empty_msg
         return
     elif what == 'audit':
-        htmlcode += "<b>" + _("Audit log") + "</b>"
+        htmlcode += "<h3>" + _("Audit log") + "</h3>"
     elif what == 'pending':
-        htmlcode += "<h1>" + _("Changes which are not yet activated:") + "</h1>"
+        htmlcode += "<h3>" + _("Changes which are not yet activated:") + "</h3>"
 
     if what == 'audit':
         display_paged(times)
 
-    htmlcode += '<table class="wato auditlog">'
+    htmlcode += '<table class="wato auditlog %s">' % what
     even = "even"
     for t, linkinfo, user, action, text in log:
         even = even == "even" and "odd" or "even"
@@ -2649,7 +2726,8 @@ def render_audit_log(log, what, with_filename = False):
         html.write(htmlcode)
         display_paged(times)
     else:
-        html.show_warning(htmlcode)
+        html.write(htmlcode)
+        # html.show_warning(htmlcode)
 
 def export_audit_log():
     html.req.content_type = "text/csv; charset=UTF-8"
@@ -5949,6 +6027,37 @@ class SiteAttribute(Attribute):
             return site
         else:
             return None
+
+# The replication status contains information about each
+# site. It is a dictionary from the site id to a dict with
+# the following keys:
+# "pending" : 17,  # number of non-synchronized changes
+# "need_restart" : True, # True, if remote site needs a restart (cmk -R)
+def load_replication_status():
+    try:
+        return eval(file(var_dir + "replication_status.mk").read())
+    except:
+        return {}
+
+def save_replication_status(repstatus):
+    config.write_settings_file(var_dir + "replication_status.mk", repstatus)
+
+def update_replication_status(siteid, vars):
+    repstatus = load_replication_status()
+    repstatus.setdefault(siteid, {})
+    repstatus[siteid].update(vars)
+    save_replication_status(repstatus)
+
+def synchronize_site(site):
+    # Collect our configuration, send via webservice to the
+    # remote site
+    html.debug(site)
+
+def restart_site(site):
+    check_mk_automation(site["id"], "restart")
+    update_replication_status(site["id"], { "need_restart" : False })
+    
+
 
 #   +----------------------------------------------------------------------+
 #   |          _         _                        _   _                    |

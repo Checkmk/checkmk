@@ -2,6 +2,10 @@
     Checks & Agents:
     * FIX: mk_oracle now also detects XE databases
 
+    Multisite:
+    * FIX: Added id parameter to render_statistics() method to allow more than
+      one pie dashlet for host/service stats
+
 1.1.12:
     Checks & Agents:
     * dell_powerconnect_*: final fixed, added PNP-templates

@@ -30,6 +30,7 @@
     Checks & Agents:
     * FIX: mk_oracle now also detects XE databases
     * FIX: printer_alerts: handle 0-entries of Brother printers
+    * FIX: printer_supply: fix Perf-O-Meter if no max known
 
     Multisite:
     * FIX: finally fixed long-wanted "NagStaMon create hundreds

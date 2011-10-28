@@ -267,7 +267,7 @@ def main_list(args):
             if hit:
                 break
         if not hit:
-            bail_out("No such component, state or class: %s" % a)
+            bail_out("No such component, state, class or target version: %s" % a)
 
     # Filter
     newbugs = []

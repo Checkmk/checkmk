@@ -1684,7 +1684,9 @@ def query_data(datasource, columns, add_columns, add_headers, only_sites = [], l
     if limit != None:
         html.live.set_limit(limit + 1) # + 1: We need to know, if limit is exceeded
     if config.debug and html.output_format == "html" and 'W' in html.display_options:
+        html.begin_foldable_container("debug_lq", "x", True, _("Livestatus Query:"), indent=False)  
         html.write("<div class=message><tt>%s</tt></div>\n" % (query.replace('\n', '<br>\n')))
+        html.end_foldable_container()
 
     if only_sites:
         html.live.set_only_sites(only_sites)

@@ -9,6 +9,7 @@
       of Apache processes" problem!
     * FIX: query crashed when sorting after a join columns without
       an explicit title.
+    * FIX: filter for WATO file/folder was not always working.
  
 1.1.12:
     Checks & Agents:

@@ -4,7 +4,7 @@ Benefit: 2
 State: open
 Cost: 2
 Date: 2011-10-27 15:00:16
-Targetversion: 1.1.12p1
+Targetversion: 1.1.12
 Class: bug
 
 The service hard state filter uses the HTML variables hst0, hst1, ...

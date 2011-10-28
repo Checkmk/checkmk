@@ -4,7 +4,7 @@ Benefit: 2
 State: open
 Cost: 2
 Date: 2011-10-27 18:55:56
-Targetversion: 
+Targetversion: 1.2.0
 Class: todo
 
 So that we can filter events for the alert state.

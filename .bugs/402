@@ -4,7 +4,7 @@ Benefit: 1
 State: open
 Cost: 1
 Date: 2011-10-27 18:52:58
-Targetversion: 1.1.12p1
+Targetversion: 1.1.12
 Class: bug
 
 When hitting Enter in Quicksearch when no host matches, a service

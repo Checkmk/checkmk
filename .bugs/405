@@ -4,7 +4,7 @@ Benefit: 1
 State: open
 Cost: 1
 Date: 2011-10-27 18:56:40
-Targetversion: 
+Targetversion: 1.2.0
 Class: todo
 
 Do we have filters for the hard service state? At least in

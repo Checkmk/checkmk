@@ -6,7 +6,7 @@ State: done
 Class: bug
 Benefit: 2
 Fun: 0
-Targetversion: 1.1.12p1
+Targetversion: 1.1.12
 
 Take the allhosts_mini View. Add a service column
 with the 1.st service perfdata variable. Now click

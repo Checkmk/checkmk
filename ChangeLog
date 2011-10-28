@@ -38,6 +38,8 @@
     * FIX: query crashed when sorting after a join columns without
       an explicit title.
     * FIX: filter for WATO file/folder was not always working.
+    * Added filter for hard services states to search and service
+      problems view
  
 
 1.1.12:

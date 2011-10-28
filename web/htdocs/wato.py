@@ -370,6 +370,8 @@ def page_handler():
         modefunc("buttons")
         for inmode, buttontext, target in extra_buttons:
             if inmode == current_mode:
+                if hasattr(target, '__call__'):
+                    target = target()
                 if '/' == target[0] or target.startswith('../') or '://' in target:
                     html.context_button(buttontext, target)
                 else:

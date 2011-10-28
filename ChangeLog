@@ -22,6 +22,7 @@
     * Added API function num_hosts_in_folder() to count the number of hosts
       below the given folder
     * Added option to download "latest" snapshot
+    * extra_buttons can now register a function to gather the URL to link to
 
     Multisite:
     * FIX: Fixed encoding problem when opening dashboard

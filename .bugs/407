@@ -1,0 +1,13 @@
+Title: Painter for normal/retry check interval
+Component: multisite
+Benefit: 1
+State: open
+Cost: 1
+Date: 2011-10-28 10:10:23
+Targetversion: 1.1.12p1
+Class: cleanup
+
+New columns for normal/retry check interval for hosts and
+services. We could make three columns: two isolated and
+one combined column. Also add the combined column to the 
+host and service detail views.

@@ -35,6 +35,7 @@
     * FIX: printer_supply: fix Perf-O-Meter if no max known
     * FIX: Added id parameter to render_statistics() method to allow more than
       one pie dashlet for host/service stats
+    * FIX: drbd: fixed inventory functions
 
     Multisite:
     * FIX: finally fixed long-wanted "NagStaMon create hundreds

@@ -168,7 +168,7 @@ drbd_cs_map = {
   'VerifyS':        0, 'VerifyT':        0,
 }
 
-def inventory_drbd(info):
+def inventory_drbd(info, checktype):
     inventory = []
     for line in info[2:]:
         if drbd_block_start_match.search(line[0]) > 0:
@@ -326,7 +326,7 @@ def check_drbd_stats(item, params, info):
 
     return (3, "UNKNOWN - Undefined state")
 
-check_info['drbd']         = (check_drbd_general, "DRBD %s status",  1, inventory_drbd)
-check_info['drbd.net']     = (check_drbd_net,     "DRBD %s net",     1, inventory_drbd)
-check_info['drbd.disk']    = (check_drbd_disk,    "DRBD %s disk",    1, inventory_drbd)
-check_info['drbd.stats']   = (check_drbd_stats,   "DRBD %s stats",   1, inventory_drbd)
+check_info['drbd']         = (check_drbd_general, "DRBD %s status",  1, lambda info: inventory_drbd(info, "drbd"))
+check_info['drbd.net']     = (check_drbd_net,     "DRBD %s net",     1, lambda info: inventory_drbd(info, "drbd.net"))
+check_info['drbd.disk']    = (check_drbd_disk,    "DRBD %s disk",    1, lambda info: inventory_drbd(info, "drbd.disk"))
+check_info['drbd.stats']   = (check_drbd_stats,   "DRBD %s stats",   1, lambda info: inventory_drbd(info, "drbd.stats"))

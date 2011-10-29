@@ -5082,16 +5082,27 @@ def mode_edit_timeperiod(phase):
                 begin = "00:00"
             if not end:
                 end = "24:00"
-            for what, bound in [ ("from", begin), ("to", end) ]:
-                if not valid_bound(bound):
-                    raise MKUserError(vp + what,
-                           _("Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format.") % bound)
+
+            begin, end = [ parse_bound(w, b) for (w,b) in [ ("from", begin), ("to", end) ]]
             ranges.append((begin, end))
         return ranges
 
 
-    def valid_bound(bound):
-        return re.match("^(24|[0-1][0-9]|2[0-3]):[0-5][0-9]$", bound)
+    def parse_bound(what, bound):
+        # Fully specified
+        if re.match("^(24|[0-1][0-9]|2[0-3]):[0-5][0-9]$", bound):
+            return bound
+        # only hours
+        try:
+            b = int(bound)
+            if b <= 24 and b >= 0:
+                return "%02d:00" % b
+        except:
+            pass
+
+        raise MKUserError(vp + what,
+               _("Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format.") % bound)
+
 
     name = html.var("edit") # missing -> new group
     new = name == None

@@ -2407,10 +2407,23 @@ def mode_changelog(phase):
             site_id = html.var("_site")
             action = html.var("_siteaction")
             if html.check_transaction():
-                site = config.site(site_id)
-                synchronize_site(site)
-                if action == "restart":
-                    restart_site(site)
+                try:
+                    site = config.site(site_id)
+                    response = synchronize_site(site)
+                    if response == True:
+                        update_replication_status(site_id, { "pending": 0 })
+                        return None
+                    else:
+                        raise MKUserError(None, _("Cannot synchronize site: %s") % response)
+
+                    if action == "restart":
+                        restart_site(site)
+                except MKAutomationException, e:
+                    raise MKUserError(None, _("Remote command on site %s failed: '%s'.") % (site_id, e))
+                except Exception, e:
+                    if config.debug:
+                        raise
+                    raise MKUserError(None, _("Remote command on site %s failed: '%s'.") % (site_id, e))
 
         elif html.check_transaction():
             config.need_permission("wato.activate")
@@ -2438,6 +2451,7 @@ def mode_changelog(phase):
             html.write("<tr>" +
                        "<th>%s</th>" % _("ID") + 
                        "<th>%s</th>" % _("Alias") + 
+                       "<th>%s</th>" % _("Multisite URL") + 
                        "<th>%s</th>" % _("Type") + 
                        "<th>%s</th>" % _("Changes") + 
                        "<th></th>" +
@@ -2445,17 +2459,23 @@ def mode_changelog(phase):
                        "</tr>")
             odd = "even"
             for site_id, site in sites:
-                if not site_is_local(site_id) and not site.get("replication"):
+                is_local = site_is_local(site_id)
+
+                if not is_local and not site.get("replication"):
                     continue
 
 
                 srs = repstatus.get(site_id, {})
                 html.write('<tr class="data %s0">' % odd)
-                html.write("<td>%s</td>" % site_id)
+                html.write("<td><a href='%s'>%s</a></td>" % 
+                   (make_link([("mode", "edit_site"), ("edit", site_id)]), site_id))
                 html.write("<td>%s</td>" % site.get("alias", ""))
 
+                html.write("<td>%s</td>" % (not is_local 
+                   and "<a href='%s'>%s</a>" % tuple([site.get("multisiteurl")]*2) or ""))
+
                 # Type
-                if site_is_local(site_id):
+                if is_local:
                     sitetype = _("local")
                 elif site["replication"] == "slave":
                     sitetype = _("Slave")
@@ -2464,18 +2484,27 @@ def mode_changelog(phase):
                 html.write("<td>%s</td>" % sitetype)
 
                 html.write("<td class=number>%d</td>" % srs.get("pending", 0))
-                html.write('<td><img class=icon title="%s" src="images/icon_%s.png"></td>' % 
-                        (srs.get("need_restart") \
-                          and (_("This site needs a restart for activating the changes."), "restart") 
-                          or ("", "trans")))
+
+                # icons
+                html.write('<td>')
+                if srs.get("pending") and not site_is_local(site_id):
+                    html.write('<img class=icon title="%s" src="images/icon_need_replicate.png">' % 
+                          _("This site is not update and needs a replication."))
+                if srs.get("need_restart"):
+                    html.write('<img class=icon title="%s" src="images/icon_need_restart.png">' % 
+                          _("This site needs a restart for activating the changes."))
+                html.write("</td>")
+
+
+
 
                 # Actions
                 sync_url = make_action_link([("mode", "changelog"), ("_site", site_id), ("_siteaction", "sync")])
                 restart_url = make_action_link([("mode", "changelog"), ("_site", site_id), ("_siteaction", "restart")])
                 html.write("<td class=buttons>")
                 if not site_is_local(site_id):
+                    html.buttonlink(sync_url, _("Sync"))
                     html.buttonlink(restart_url, _("Sync & Restart"))
-                    html.buttonlink(sync_url, _("Synchronize"))
                 else:
                     html.buttonlink(restart_url, _("Restart"))
                 html.write("</td>")
@@ -3580,8 +3609,8 @@ def mode_snapshot(phase):
         # create snapshot
         elif html.has_var("_create_snapshot"):
             if html.check_transaction():
-                create_snapshot()
-                return None, _("Snapshot created.")
+                filename = create_snapshot()
+                return None, _("Created snapshot <tt>%s</tt>.") % filename
             else:
                 return None
         # upload snapshot
@@ -3655,6 +3684,15 @@ def mode_snapshot(phase):
         html.hidden_fields()
         html.end_form()
 
+def create_snapshot_file(filename):
+    tar = tarfile.open(filename,"w:gz")
+
+    len_abs = len(root_dir)
+    for root, dirs, files in os.walk(defaults.check_mk_configdir):
+        for filename in files:
+            tar.add(root + "/" + filename, root[len_abs:] + "/" + filename)
+    tar.close()
+
 
 def create_snapshot():
     if not os.path.exists(snapshot_dir):
@@ -3662,13 +3700,7 @@ def create_snapshot():
 
     snapshot_name = "wato-snapshot-%s.tar.gz" %  \
                     time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(time.time()))
-    tar = tarfile.open(snapshot_dir + snapshot_name,"w:gz")
-
-    len_abs = len(root_dir)
-    for root, dirs, files in os.walk(defaults.check_mk_configdir):
-        for filename in files:
-            tar.add(root + "/" + filename, root[len_abs:] + "/" + filename)
-    tar.close()
+    create_snapshot_file(snapshot_dir + snapshot_name)
 
     log_audit(None, "snapshot-created", _("Created snapshot %s") % snapshot_name)
 
@@ -3680,6 +3712,8 @@ def create_snapshot():
     while len(snapshots) > config.wato_max_snapshots:
         log_pending(None, "snapshot-removed", _("Removed snapshot %s") % snapshots[-1])
         os.remove(snapshot_dir + snapshots.pop())
+
+    return snapshot_name
 
 def restore_snapshot( filename, tarstream = None ):
     if not os.path.exists(snapshot_dir):
@@ -5690,8 +5724,8 @@ def mode_edit_site(phase):
                 raise MKUserError("replication", _("You cannot do replication with the local site."))
             new_site["multisiteurl"] = multisiteurl
 
-        # Secret is not checked here.
-        if "secret" in old_site:
+        # Secret is not checked here, just kept
+        if not new and "secret" in old_site:
             new_site["secret"] = old_site["secret"]
 
         save_sites(sites)
@@ -5773,7 +5807,7 @@ def mode_edit_site(phase):
     html.number_input("conn_port", conn_port)
     html.write("<p>")
     html.radiobutton("method", "unix",  method == "unix", _("Connect via UNIX socket: "))
-    html.text_input("conn_socket", conn_socket)
+    html.text_input("conn_socket", conn_socket, size=36)
     html.write("<p>")
     html.radiobutton("method", "disabled",  method == "disabled", 
                _("Do not display status information from this site"))
@@ -5966,6 +6000,7 @@ def do_remote_automation(site, command, vars):
         htmllib.urlencode_vars(
            [("command", command), ("secret", secret)] + vars)
     connection = open_url(url)
+    connection.write("Das hier sind Daten!")
     response_code = connection.read().strip()
     if not response_code:
         raise MKAutomationException("Empty output from remote site.")
@@ -6050,14 +6085,33 @@ def update_replication_status(siteid, vars):
     save_replication_status(repstatus)
 
 def synchronize_site(site):
-    # Collect our configuration, send via webservice to the
-    # remote site
-    html.debug(site)
+    snapshot_path = defaults.tmp_dir + "/snapshot_for_%s.tar.gz" % site["id"]
+    create_snapshot_file(snapshot_path)
+    return push_snapshot_to_site(site, snapshot_path)
 
 def restart_site(site):
     check_mk_automation(site["id"], "restart")
     update_replication_status(site["id"], { "need_restart" : False })
-    
+
+def push_snapshot_to_site(site, filename):
+    url_base = site["multisiteurl"] + "automation.py?"
+    var_string = htmllib.urlencode_vars([
+        ("command", "push-snapshot"),
+        ("secret", site["secret"])])
+    url = url_base + var_string
+    # urllib2 does not seem to support file uploads. Please tell me, if
+    # you know a better method for uploading, without the use of external
+    # programs...
+    response_text = os.popen("curl -F snapshot=@%s '%s'" % (filename, url)).read()
+    try:
+        response = eval(response_text)
+        return response
+    except:
+        raise MKAutomationException(_("Garbled automation response from site %s: '%s'") % 
+            (site["id"], response_text))
+
+    html.debug(url)
+
 
 
 #   +----------------------------------------------------------------------+
@@ -6089,8 +6143,15 @@ def get_login_secret(create_on_demand = False):
             return None
         # We should use /dev/random here for cryptographic safety. But
         # that involves the great problem that the system might hang
-        # because of loss of entropy. So we hope this is random enough:
-        secret = file("/dev/urandom").read(32)
+        # because of loss of entropy. So we hope /dev/urandom is enough.
+        # Furthermore we filter out non-printable characters. The byte
+        # 0x00 for example does not make it through HTTP and the URL.
+        secret = ""
+        urandom = file("/dev/urandom")
+        while len(secret) < 32:
+            c = urandom.read(1)
+            if ord(c) >= 33 and ord(c) <= 127:
+                secret += c
         write_settings_file(path, secret)
         return secret
 
@@ -6113,8 +6174,24 @@ def page_automation():
         indata = eval(html.var("indata"))
         result = check_mk_local_automation(cmk_command, args, indata)
         html.write(repr(result))
+    elif command == "push-snapshot":
+        html.write(repr(automation_push_snapshot()))
     else:
         raise MKGeneralException(_("Invalid automation command."))
+
+def automation_push_snapshot():
+    try:
+        tarcontent = html.var('snapshot')
+        stream = StringIO.StringIO()  # Is there not better way to do this?
+        stream.write(tarcontent)
+        stream.seek(0)
+        snapshot = tarfile.open(None, "r:gz", stream)
+        snapshot.extractall(root_dir)
+        snapshot.close()
+        log_audit(None, "replication", _("Synchronized with master."))
+        return True
+    except Exception, e:
+        return str(e)
 
 
 

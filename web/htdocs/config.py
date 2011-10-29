@@ -101,13 +101,19 @@ def load_config():
     wato_host_tags = []
 
     include("multisite.mk")
-    # Load also all files below multisite.d
+
+    # Load also recursively all files below multisite.d
     conf_dir = defaults.default_config_dir + "/multisite.d"
+    filelist = []
     if os.path.isdir(conf_dir):
-        filelist = glob.glob(conf_dir + "/*.mk")
-        filelist.sort()
-        for p in filelist:
-            include(p)
+        for root, dirs, files in os.walk(conf_dir):
+            for filename in files:
+                if filename.endswith(".mk"):
+                    filelist.append(root + "/" + filename)
+
+    filelist.sort()
+    for p in filelist:
+        include(p)
 
 
 # -------------------------------------------------------------------

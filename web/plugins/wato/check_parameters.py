@@ -379,16 +379,6 @@ checkgroups.append((
     None, None))
 
 checkgroups.append((
-    "mailqueue_length",
-    _("Number of mails in outgoing mail queue"), 
-    Tuple(
-          help = _("This levels is applied to the number of Email that are currently in the outgoing mail queue."),
-          elements = [
-              Integer(title = _("Warning at"), label = _("mails")),
-              Integer(title = _("Critical at"), label = _("mails"))]),
-    None, None))
-
-checkgroups.append((
     "uptime",
     _("Display the system's uptime as a check"),
     None,

@@ -1863,7 +1863,7 @@ def mode_search(phase):
         return _("Search for hosts in %s and below" % (g_folder["title"]))
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link_to([("mode", "folder")], g_folder), "back")
+        html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
 
     elif phase == "action":
         pass
@@ -2092,7 +2092,7 @@ def mode_bulk_inventory(phase):
         return _("Bulk service detection (inventory)")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
         return
 
     elif phase == "action":
@@ -2178,7 +2178,7 @@ def mode_bulk_edit(phase):
         return _("Bulk edit hosts")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
         return
 
     elif phase == "action":
@@ -2230,7 +2230,7 @@ def mode_bulk_cleanup(phase):
         return _("Bulk removal of explicit attributes")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
         return
 
     elif phase == "action":
@@ -4835,7 +4835,7 @@ def mode_edit_group(phase, what):
                 return _("Edit contact group")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "%s_groups" % what)]), "back")
+        html.context_button(_("All groups"), make_link([("mode", "%s_groups" % what)]), "back")
         return
 
     all_groups = load_group_information()
@@ -4932,7 +4932,7 @@ class GroupSelection(ElementSelection):
         all_groups = load_group_information()
         this_group = all_groups.get(self._what, {})
         # replace the title with the key if the title is empty
-        return dict([ (k, t or k) for (k, t) in this_group.items() ])
+        return dict([ (k, t and ("%s - %s" % (k,t)) or k) for (k, t) in this_group.items() ])
 
 
 class CheckTypeGroupSelection(ElementSelection):
@@ -5114,7 +5114,7 @@ def mode_edit_timeperiod(phase):
             return _("Edit time period")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "timeperiods")]), "back")
+        html.context_button(_("All Timeperiods"), make_link([("mode", "timeperiods")]), "back")
         return
 
     timeperiods = load_timeperiods() 
@@ -5257,7 +5257,7 @@ class TimeperiodSelection(ElementSelection):
 
     def get_elements(self):
         timeperiods = load_timeperiods()
-        elements = dict([ (name, tp.get("alias", name)) for (name, tp) in timeperiods.items() ])
+        elements = dict([ (name, "%s - %s" % (name, tp["alias"])) for (name, tp) in timeperiods.items() ])
         return elements
 
 #   +----------------------------------------------------------------------+
@@ -5361,7 +5361,7 @@ def mode_edit_site(phase):
             return _("Edit site connection %s" % siteid)
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "sites")]), "back")
+        html.context_button(_("All Sites"), make_link([("mode", "sites")]), "back")
         return
 
     if new:
@@ -5761,7 +5761,7 @@ def mode_edit_user(phase):
             return _("Edit user %s" % userid)
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "users")]), "back")
+        html.context_button(_("All Users"), make_link([("mode", "users")]), "back")
         return
 
     if new:
@@ -5924,7 +5924,7 @@ def mode_edit_user(phase):
     for role_id, role in entries:
         html.checkbox("role_" + role_id, role_id in user.get("roles", []))
         url = make_link([("mode", "edit_role"), ("edit", role_id)])
-        html.write(" <a href='%s'>%s</a> (%s)<br>" % (url, role["alias"], role_id))
+        html.write("%s - <a href='%s'>%s</a><br>" % (role_id, url, role["alias"]))
     html.write("</td></tr>")
 
     # Contact groups
@@ -5950,7 +5950,8 @@ def mode_edit_user(phase):
             if not alias:
                 alias = gid
             html.checkbox("cg_" + gid, gid in user.get("contactgroups", []))
-            html.write(" " + alias + "<br>")
+            url = make_link([("mode", "edit_contact_group"), ("edit", gid)])
+            html.write(" %s - <a href=\"%s\">%s</a><br>" % (gid, url, alias))
 
     html.write("</td></tr>")
 
@@ -5968,8 +5969,8 @@ def mode_edit_user(phase):
     html.write(_("Notification time period<br><i>Only during this time period the "
                  "user will get notifications about host or service alerts."))
     html.write("</td><td class=content>")
-    choices = [ ( "24X7", _("Always")) ] + \
-              [ ( id, tp["alias"]) for (id, tp) in timeperiods.items() ]
+    choices = [ ( "24X7", _("24X7 - Always")) ] + \
+              [ ( id, "%s - %s" % (id, tp["alias"])) for (id, tp) in timeperiods.items() ]
     html.sorted_select("notification_period", choices, user.get("notification_period"))
     html.write("</td></tr>")
 
@@ -6288,7 +6289,7 @@ def mode_edit_role(phase):
         return _("Edit user role %s" % id)
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "roles")]), "back")
+        html.context_button(_("All Roles"), make_link([("mode", "roles")]), "back")
         return
 
     roles = load_roles()
@@ -6595,7 +6596,7 @@ def mode_edit_hosttag(phase):
             return _("Edit tag group")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "hosttags")]), "back")
+        html.context_button(_("All Hosttags"), make_link([("mode", "hosttags")]), "back")
         return
 
     hosttags = load_hosttags()

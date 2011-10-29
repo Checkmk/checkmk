@@ -1714,6 +1714,8 @@ def mode_inventory(phase, firsttime):
 
     elif phase == "buttons":
         host_status_button(hostname, "host")
+        html.context_button(_("Folder"), 
+                            make_link([("mode", "folder")]), "back")
         html.context_button(_("Host properties"), 
                             make_link([("mode", "edithost"), ("host", hostname)]), "back")
         html.context_button(_("Full Scan"), html.makeuri([("_scan", "yes")]))

@@ -252,7 +252,7 @@ class MKAutomationException(Exception):
         Exception.__init__(self, msg)
 
 root_dir      = defaults.check_mk_configdir + "/wato/"
-multisite_dir = defaults.default_config_dir + "/multisite.d/"
+multisite_dir = defaults.default_config_dir + "/multisite.d/wato/"
 var_dir       = defaults.var_dir + "/wato/"
 log_dir       = var_dir + "log/"
 snapshot_dir  = var_dir + "/snapshots/"
@@ -5890,6 +5890,7 @@ def load_sites():
 
 
 def save_sites(sites):
+    make_nagios_directory(multisite_dir)
     filename = multisite_dir + "sites.mk"
     if len(sites) == 0:
         if os.path.exists(filename):
@@ -8471,6 +8472,7 @@ def mode_edit_rule(phase):
 
 
 def save_rulesets(folder, rulesets):
+    make_nagios_directory(root_dir)
     path = root_dir + '/' + folder['.path'] + '/' + "rules.mk" 
     out = file(path, "w") 
     out.write("# Written by WATO\n# encoding: utf-8\n\n")

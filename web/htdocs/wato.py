@@ -5165,6 +5165,10 @@ def mode_edit_timeperiod(phase):
                     raise MKUserError("name", _("Please specify a name of the new timeperiod."))
                 if not re.match("^[-a-z0-9A-Z_]*$", name):
                     raise MKUserError("name", _("Invalid timeperiod name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
+                if name in timeperiods:
+                    raise MKUserError("name", _("This name is already being used by another timeperiod."))
+                if name == "7X24":
+                    raise MKUserError("name", _("The time period name 7X24 cannot be used. It is always autmatically defined."))
                 timeperiods[name] = timeperiod
                 log_pending(None, "edit-timeperiods", _("Created new time period %s" % name))
             else:
@@ -5183,6 +5187,7 @@ def mode_edit_timeperiod(phase):
     html.write("</td><td class=content>")
     if new:
         html.text_input("name")
+        html.set_focus("name")
     else:
         html.write(name) 
     html.write("</td></tr>")
@@ -5196,6 +5201,8 @@ def mode_edit_timeperiod(phase):
     html.write(_("Alias") + "<br><i>" + _("A description of the timeperiod</i>"))
     html.write("</td><td class=content>")
     html.text_input("alias", alias, size = 50)
+    if not new:
+        html.set_focus("alias")
     html.write("</td></tr>")
 
     # Week days

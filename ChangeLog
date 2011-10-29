@@ -26,8 +26,6 @@
 
     Multisite:
     * FIX: Fixed encoding problem when opening dashboard
-    * FIX: Added id parameter to render_statistics() method to allow more than
-      one pie dashlet for host/service stats
 
 
 1.1.12p1:
@@ -35,6 +33,8 @@
     * FIX: mk_oracle now also detects XE databases
     * FIX: printer_alerts: handle 0-entries of Brother printers
     * FIX: printer_supply: fix Perf-O-Meter if no max known
+    * FIX: Added id parameter to render_statistics() method to allow more than
+      one pie dashlet for host/service stats
 
     Multisite:
     * FIX: finally fixed long-wanted "NagStaMon create hundreds

@@ -45,6 +45,8 @@
     * FIX: filter for WATO file/folder was not always working.
     * Added filter for hard services states to search and service
       problems view
+    * FIX: dashboard problem views now ignore notification period,
+      just as tactical overview and normal problem views do
  
 
 1.1.12:

@@ -93,4 +93,5 @@ class FilterWatoFile(Filter):
             return self.path_to_tree.get(current) 
 
 declare_filter(10, FilterWatoFile())
-ubiquitary_filters.append("wato_folder") # show in all views
+if "wato_folder" not in ubiquitary_filters:
+    ubiquitary_filters.append("wato_folder") # show in all views

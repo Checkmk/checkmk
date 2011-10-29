@@ -2263,7 +2263,7 @@ def register_hook(hook, func):
     if not hook in view_hooks:
         view_hooks[hook] = []
 
-    if func not in view_hooks[hook]
+    if func not in view_hooks[hook]:
         view_hooks[hook].append(func)
 
 def execute_hooks(hook):

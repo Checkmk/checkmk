@@ -1825,17 +1825,17 @@ def show_service_table(hostname, firsttime):
             html.write("<td>")
             if checkgroup:
                 varname = "checkgroup_parameters:" + checkgroup
-                url = make_link([("mode", "edit_ruleset"), 
-                                 ("varname", varname),
-                                 ("host", hostname),
-                                 ("item", repr(item))]) 
-                title = _("Edit rules for this check parameter")
-                rulespec = g_rulespecs.get(varname)
-                if rulespec:
+                if varname in g_rulespecs:
+                    rulespec = g_rulespecs[varname]
+                    url = make_link([("mode", "edit_ruleset"), 
+                                     ("varname", varname),
+                                     ("host", hostname),
+                                     ("item", repr(item))]) 
+                    title = _("Edit rules for this check parameter")
                     title = "Check parameters for this service: " + \
-                      rulespec["valuespec"].value_to_text(params)
-                html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
-                   (url, title))
+                        rulespec["valuespec"].value_to_text(params)
+                    html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
+                       (url, title))
                            
             html.write("</td>")
 

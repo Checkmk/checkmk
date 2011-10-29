@@ -84,6 +84,15 @@ function wato_toggle_dropdown(oDropdown, divid) {
     oDiv = null;
 }
 
+function wato_toggle_dropdownn(oDropdown, divid) {
+    var oDiv = document.getElementById(divid);
+    if (oDropdown.value == "ignore")
+        oDiv.style.display = "none"; 
+    else
+        oDiv.style.display = "";  
+    oDiv = null;
+}
+
 
     
 // ----------------------------------------------------------------------------

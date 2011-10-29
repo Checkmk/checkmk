@@ -4432,9 +4432,9 @@ class ElementSelection(ValueSpec):
         self.load_elements()
         if len(self._elements) == 0:
             raise MKUserError(varprefix, 
-              _("You cannot save this rule. There are not defined any elements for this selection yet." % self._what))
+              _("You cannot save this rule. There are not defined any elements for this selection yet."))
         if value not in self._elements:
-            raise MKUserError(varprefix, _("%s is not an existing element in this selection.") % (value, self._what))
+            raise MKUserError(varprefix, _("%s is not an existing element in this selection.") % (value,))
 
     def validate_datatype(self, value, varprefix):
         if type(value) != str:
@@ -7830,28 +7830,47 @@ def mode_edit_rule(phase):
         html.write(_("You have not configured any host tags. If you work with rules "
                      "you should better do so and add a <tt>wato_host_tags = ..</tt> "
                      "to your <tt>multisite.mk</tt>. You will find an example there."))
-    for id, title, tags in config.wato_host_tags:
-        default_tag = None
-        ignore = True
-        for t in tag_specs:
-            if t[0] == '!':
-                n = True
-                t = t[1:]
-            else:
-                n = False
-            if t in [ x[0] for x in tags]:
-                ignore = False
-                negate = n
+    else:
+        html.write("<table>")
+        for id, title, tags in config.wato_host_tags:
+            html.write("<tr><td>%s: &nbsp;</td>" % title)
+            default_tag = None
+            ignore = True
+            for t in tag_specs:
+                if t[0] == '!':
+                    n = True
+                    t = t[1:]
+                else:
+                    n = False
+                if t in [ x[0] for x in tags]:
+                    ignore = False
+                    negate = n
+            if ignore:
+                deflt = "ignore"
+            elif negate:
+                deflt = "isnot"
+            else: 
+                deflt = "is"
 
-        html.radiobutton("tag_" + id, "ignore", ignore, _("ignore"))
-        html.write("&nbsp;")
-        html.radiobutton("tag_" + id, "is",     not ignore and not negate, _("is"))
-        html.write("&nbsp;")
-        html.radiobutton("tag_" + id, "isnot",  not ignore and negate, _("is not"))
-        html.write("&nbsp;")
-        html.select("tagvalue_" + id, [t[0:2] for t in tags if t[0] != None], deflt=default_tag)
-        html.write("<br>")
+            html.write("<td>")
+            html.select("tag_" + id, [
+                ("ignore", _("ignore")), 
+                ("is", _("is")), 
+                ("isnot", _("isnot"))], deflt,
+                onchange="wato_toggle_dropdownn(this, 'tag_sel_%s');" % id)
+            html.write("</td><td>")
+            if html.form_submitted():
+                div_is_open = html.var("tag_" + id) != "ignore"
+            else:
+                div_is_open = deflt != "ignore"
+            html.write('<div id="tag_sel_%s" style="white-space: nowrap; %s">' % (
+                id, not div_is_open and "display: none;" or ""))
+            html.select("tagvalue_" + id, [t[0:2] for t in tags if t[0] != None], deflt=default_tag)
+            html.write("</div>")
+            html.write("</td></tr>")
+        html.write("</table>")
     html.write("</td></tr>")
+
 
     # Explicit hosts / ALL_HOSTS
     html.write("<tr><td class=legend>")

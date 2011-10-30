@@ -4563,9 +4563,9 @@ def mode_globalvars(phase):
 
     groupnames = g_configvar_groups.keys()
     groupnames.sort()
-    html.write("<table class=data>")
     for groupname in groupnames:
-        html.write("<tr><td colspan=5><h3>%s</h3></td></tr>\n" % groupname) 
+        html.begin_foldable_container("globalvars", groupname, False, groupname, indent=False)
+        html.write('<table class="data globalvars">')
         html.write("<tr><th>" + _("Configuration variable") + 
                    "</th><th>" +_("Check_MK variable") + "</th><th>" + 
                    _("Default") + "</th><th>" + _("Your setting") + "</th><th></th></tr>\n")
@@ -4585,8 +4585,8 @@ def mode_globalvars(phase):
 
             edit_url = make_link([("mode", "edit_configvar"), ("varname", varname)])
 
-            html.write('<td><a href="%s">%s</a></td>' % (edit_url, valuespec.title()))
-            html.write('<td><tt>%s</tt></td>' % varname)
+            html.write('<td class=title><a href="%s">%s</a></td>' % (edit_url, valuespec.title()))
+            html.write('<td class=varname><tt>%s</tt></td>' % varname)
             if varname in current_settings: 
                 html.write('<td class=inherited>%s</td>' % valuespec.value_to_text(defaultvalue))
                 html.write('<td><b>%s</b></td>'          % valuespec.value_to_text(current_settings[varname]))
@@ -4602,7 +4602,8 @@ def mode_globalvars(phase):
             html.write("</td>")
 
             html.write('</tr>')
-    html.write("</table>")
+        html.write("</table>")
+        html.end_foldable_container()
 
 
 def mode_edit_configvar(phase):
@@ -7157,7 +7158,6 @@ def mode_rulesets(phase):
                 if something_shown:
                     html.write("</table>")
                     html.end_foldable_container()
-                    html.write("<br>")
                 html.begin_foldable_container("rulesets", groupname, False, groupname, indent=False)
                 html.write('<table class="data rulesets">')
                 html.write("<tr><th>" + _("Rule set") + "</th>"

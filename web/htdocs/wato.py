@@ -103,9 +103,10 @@
 #   | Importing, Permissions, global variables                             |
 #   +----------------------------------------------------------------------+
 
-import sys, pprint, socket, re, subprocess, time, datetime, shutil, tarfile, StringIO, math
+import sys, pprint, socket, re, subprocess, time, datetime,  \
+       shutil, tarfile, StringIO, math
 import urllib, urllib2
-import config, htmllib
+import config, htmllib, multitar
 from lib import *
 
 # Declare WATO-specific permissions
@@ -256,6 +257,22 @@ multisite_dir = defaults.default_config_dir + "/multisite.d/wato/"
 var_dir       = defaults.var_dir + "/wato/"
 log_dir       = var_dir + "log/"
 snapshot_dir  = var_dir + "/snapshots/"
+
+# Directories and files to synchronize during replication
+replication_paths = [
+  ( "dir",  "check_mk",   root_dir ),
+  ( "dir",  "multisite",  multisite_dir ),
+  ( "file", "htpasswd",   defaults.htpasswd_file ),
+]
+
+# Directories and files for backup & restore
+backup_paths = replication_paths + [
+  # autochecks are a site-local ressource. This does only make
+  # sense for single-site installations. How should we handle
+  # this?
+  # ( "dir", "autochecks", defaults.autochecksdir ),
+]
+
 
 ALL_HOSTS    = [ '@all' ]
 ALL_SERVICES = [ "" ]
@@ -3634,13 +3651,14 @@ def mode_snapshot(phase):
         elif html.has_var("_upload_file"):
             if html.var("_upload_file") == "":
                 raise MKUserError(None, _("You need to select a file for upload"))
-
                 return None
             if html.check_transaction():
-                restore_snapshot(None, html.var('_upload_file'))
-                return None, _("Successfully uploaded configuration.")
+                multitar.extract_from_buffer(html.var("_upload_file"), backup_paths)
+                log_pending(None, "snapshot-restored", _("Restored from uploaded file"))
+                return None, _("Successfully restored configuration.")
             else:
                 return None
+
         # delete file
         elif html.has_var("_delete_file"):
             delete_file = html.var("_delete_file")
@@ -3656,6 +3674,7 @@ def mode_snapshot(phase):
                 return ""
             else:
                 return None  # browser reload
+
         # restore snapshot
         elif html.has_var("_restore_snapshot"):
             snapshot_file = html.var("_restore_snapshot")
@@ -3664,8 +3683,9 @@ def mode_snapshot(phase):
                                 snapshot_file
                             )
             if c:
-                restore_snapshot(snapshot_file)
-                return None, _("Snapshot restored.")
+                multitar.extract_from_file(snapshot_dir + snapshot_file, backup_paths)
+                log_pending(None, "snapshot-restored", _("Restored snapshot %s") % snapshot_file)
+                return None, _("Successfully restored Snapshot.")
             elif c == False: # not yet confirmed
                 return ""
             else:
@@ -3701,15 +3721,6 @@ def mode_snapshot(phase):
         html.hidden_fields()
         html.end_form()
 
-def create_snapshot_file(filename):
-    tar = tarfile.open(filename,"w:gz")
-
-    len_abs = len(root_dir)
-    for root, dirs, files in os.walk(defaults.check_mk_configdir):
-        for filename in files:
-            tar.add(root + "/" + filename, root[len_abs:] + "/" + filename)
-    tar.close()
-
 
 def create_snapshot():
     if not os.path.exists(snapshot_dir):
@@ -3717,7 +3728,7 @@ def create_snapshot():
 
     snapshot_name = "wato-snapshot-%s.tar.gz" %  \
                     time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(time.time()))
-    create_snapshot_file(snapshot_dir + snapshot_name)
+    multitar.create(snapshot_dir + snapshot_name, backup_paths)
 
     log_audit(None, "snapshot-created", _("Created snapshot %s") % snapshot_name)
 
@@ -3731,32 +3742,6 @@ def create_snapshot():
         os.remove(snapshot_dir + snapshots.pop())
 
     return snapshot_name
-
-def restore_snapshot( filename, tarstream = None ):
-    if not os.path.exists(snapshot_dir):
-       os.mkdir(snapshot_dir)
-
-    delete_root_dir()
-    if filename:
-        if not os.path.exists(snapshot_dir + filename):
-            raise MKGeneralException(_("Snapshot does not exist %s" % filename))
-        snapshot = tarfile.open(snapshot_dir + filename, "r:gz")
-    elif tarstream:
-        stream = StringIO.StringIO()
-        stream.write(tarstream)
-        stream.seek(0)
-        snapshot = tarfile.open(None, "r:gz", stream)
-    else:
-        return
-
-    snapshot.extractall(root_dir)
-    snapshot.close()
-    log_pending(None, "snapshot-restored", _("Restored snapshot %s") % (filename or _('from uploaded file')))
-
-def delete_root_dir():
-    if not "/conf.d/" in root_dir:
-        raise MKGeneralException("ERROR: config directory seems incorrect. check_mk_configdir %s" % defaults.check_mk_configdir)
-    shutil.rmtree(root_dir)
 
 
 #   +----------------------------------------------------------------------+
@@ -6122,7 +6107,7 @@ def update_replication_status(siteid, vars):
 
 def synchronize_site(site):
     snapshot_path = defaults.tmp_dir + "/snapshot_for_%s.tar.gz" % site["id"]
-    create_snapshot_file(snapshot_path)
+    multitar.create(snapshot_path, replication_paths)
     return push_snapshot_to_site(site, snapshot_path)
 
 def restart_site(site):

@@ -1924,9 +1924,14 @@ table.add_snapin i {
 }
 
 
+.wato table.form {
+    width: 800px;
+}
+
 .wato table.form td.legend { 
     border-right-style: none;
     padding-bottom: 8px;
+    width: 300px;
 }
 
 .wato table.form td.legend h3 { 

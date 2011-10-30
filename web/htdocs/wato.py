@@ -254,6 +254,8 @@ class MKAutomationException(Exception):
 
 root_dir      = defaults.check_mk_configdir + "/wato/"
 multisite_dir = defaults.default_config_dir + "/multisite.d/wato/"
+# sites.mk is not in the WATO path since it must be spared from replication
+sites_mk      = defaults.default_config_dir + "/multisite.d/sites.mk"
 var_dir       = defaults.var_dir + "/wato/"
 log_dir       = var_dir + "log/"
 snapshot_dir  = var_dir + "/snapshots/"
@@ -263,14 +265,20 @@ replication_paths = [
   ( "dir",  "check_mk",   root_dir ),
   ( "dir",  "multisite",  multisite_dir ),
   ( "file", "htpasswd",   defaults.htpasswd_file ),
+  # Also replicate the user-settings of Multisite? While the replication
+  # as such works pretty well, the count of pending changes will not 
+  # know. 
+  ( "dir", "usersettings", defaults.var_dir + "/web" ),
 ]
 
 # Directories and files for backup & restore
 backup_paths = replication_paths + [
+  ( "file", "sites",      sites_mk)
   # autochecks are a site-local ressource. This does only make
   # sense for single-site installations. How should we handle
   # this?
   # ( "dir", "autochecks", defaults.autochecksdir ),
+
 ]
 
 
@@ -2522,8 +2530,10 @@ def mode_changelog(phase):
 
 
                 # Actions
-                sync_url = make_action_link([("mode", "changelog"), ("_site", site_id), ("_siteaction", "sync")])
-                restart_url = make_action_link([("mode", "changelog"), ("_site", site_id), ("_siteaction", "restart")])
+                sync_url = make_action_link([("mode", "changelog"), 
+                        ("_site", site_id), ("_siteaction", "sync")])
+                restart_url = make_action_link([("mode", "changelog"), 
+                        ("_site", site_id), ("_siteaction", "restart")])
                 html.write("<td class=buttons>")
                 if not site_is_local(site_id):
                     html.buttonlink(sync_url, _("Sync"))
@@ -4823,7 +4833,7 @@ def register_configvar(group, varname, valuespec, domain="check_mk"):
 
 def load_configuration_settings():
     settings = {}
-    load_configuration_vars(multisite_dir + "wato.mk",   settings)
+    load_configuration_vars(multisite_dir + "global.mk", settings)
     load_configuration_vars(root_dir      + "global.mk", settings)
     return settings
 
@@ -4854,7 +4864,7 @@ def save_configuration_settings(vars):
     make_nagios_directory(root_dir)
     save_configuration_vars(per_domain.get("check_mk", {}), root_dir + "global.mk")
     make_nagios_directory(multisite_dir)
-    save_configuration_vars(per_domain.get("multisite", {}), multisite_dir + "wato.mk")
+    save_configuration_vars(per_domain.get("multisite", {}), multisite_dir + "global.mk")
 
 def save_configuration_vars(vars, filename):
     out = file(filename, "w")
@@ -5929,12 +5939,11 @@ def mode_edit_site(phase):
 
 def load_sites():
     try:
-        filename = multisite_dir + "sites.mk"
-        if not os.path.exists(filename):
+        if not os.path.exists(sites_mk):
             return {}
 
         vars = { "sites" : {} }
-        execfile(filename, vars, vars)
+        execfile(sites_mk, vars, vars)
         return vars["sites"]
 
     except Exception, e:
@@ -5946,14 +5955,12 @@ def load_sites():
 
 def save_sites(sites):
     make_nagios_directory(multisite_dir)
-    filename = multisite_dir + "sites.mk"
-    if len(sites) == 0:
-        if os.path.exists(filename):
-            os.remove(filename)
-    else:
-        out = file(filename, "w")
-        out.write("# Written by WATO\n# encoding: utf-8\n\n")
-        out.write("sites = \\\n%s\n" % pprint.pformat(sites))
+    # Important: even write out sites if it's empty. The global 'sites'
+    # variable will otherwise survive in the Python interpreter of the
+    # Apache processes.
+    out = file(sites_mk, "w")
+    out.write("# Written by WATO\n# encoding: utf-8\n\n")
+    out.write("sites = \\\n%s\n" % pprint.pformat(sites))
 
 #   +----------------------------------------------------------------------+
 #   |           ____            _ _           _   _                        |
@@ -6107,8 +6114,13 @@ def update_replication_status(siteid, vars):
 
 def synchronize_site(site):
     snapshot_path = defaults.tmp_dir + "/snapshot_for_%s.tar.gz" % site["id"]
+    if os.path.exists(snapshot_path):
+        os.remove(snapshot_path)
     multitar.create(snapshot_path, replication_paths)
-    return push_snapshot_to_site(site, snapshot_path)
+    result = push_snapshot_to_site(site, snapshot_path)
+    if not config.debug:
+        os.remove(snapshot_path)
+    return result
 
 def restart_site(site):
     check_mk_automation(site["id"], "restart")
@@ -6130,8 +6142,6 @@ def push_snapshot_to_site(site, filename):
     except:
         raise MKAutomationException(_("Garbled automation response from site %s: '%s'") % 
             (site["id"], response_text))
-
-    html.debug(url)
 
 
 
@@ -6203,12 +6213,7 @@ def page_automation():
 def automation_push_snapshot():
     try:
         tarcontent = html.var('snapshot')
-        stream = StringIO.StringIO()  # Is there not better way to do this?
-        stream.write(tarcontent)
-        stream.seek(0)
-        snapshot = tarfile.open(None, "r:gz", stream)
-        snapshot.extractall(root_dir)
-        snapshot.close()
+        multitar.extract_from_buffer(tarcontent, replication_paths)
         log_audit(None, "replication", _("Synchronized with master."))
         return True
     except Exception, e:

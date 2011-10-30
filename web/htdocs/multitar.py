@@ -27,7 +27,7 @@
 # This module contains some helper functions dealing with the creation
 # of multi-tier tar files (tar files containing tar files)
 
-import os, tarfile, time, shutil
+import os, tarfile, time, shutil, StringIO
 
 class fake_file:
     def __init__(self, content):
@@ -84,15 +84,29 @@ def extract(tar, components):
     for what, name, path in components:
         subtarstream = tar.extractfile(name + ".tar")
 
+        if what == "dir":
+            target_dir = path
+        else:
+            target_dir = os.path.dirname(path)
+
         # Remove old stuff
         if os.path.exists(path):
             if what == "dir":
-                shutil.rmtree(path)
-                target_dir = path
+                wipe_directory(path)
             else:
                 os.remove(path)
-                target_dir = os.path.dirname(path)
+        elif what == "dir":
+            os.makedirs(path)
 
         # Extract without use of temporary files
         subtar = tarfile.open(fileobj = subtarstream)
         subtar.extractall(target_dir)
+
+def wipe_directory(path):
+    for entry in os.listdir(path):
+        if entry not in [ '.', '..' ]:
+            p = path + "/" + entry
+            if os.path.isdir(p):
+                shutil.rmtree(p)
+            else:
+                os.remove(p)

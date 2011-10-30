@@ -717,6 +717,12 @@ def get_single_oid(hostname, ipaddress, oid):
     return value
 
 def snmp_scan(hostname, ipaddress):
+    # Make hostname globally available for scan functions.
+    # This is rarely used, but e.g. the scan for if/if64 needs
+    # this to evaluate if_disabled_if64_checks. 
+    global g_hostname
+    g_hostname = hostname
+
     if opt_verbose:
         sys.stdout.write("Scanning host %s(%s) for SNMP checks..." % (hostname, ipaddress))
     sys_descr = get_single_oid(hostname, ipaddress, ".1.3.6.1.2.1.1.1.0")

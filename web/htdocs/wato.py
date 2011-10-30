@@ -381,6 +381,10 @@ def page_handler():
         modefunc("buttons")
         for inmode, buttontext, target in extra_buttons:
             if inmode == current_mode:
+                if hasattr(target, '__call__'):
+                    target = target()
+                    if not target:
+                        continue
                 if '/' == target[0] or target.startswith('../') or '://' in target:
                     html.context_button(buttontext, target)
                 else:
@@ -1743,6 +1747,8 @@ def mode_inventory(phase, firsttime):
 
     elif phase == "buttons":
         host_status_button(hostname, "host")
+        html.context_button(_("Folder"), 
+                            make_link([("mode", "folder")]), "back")
         html.context_button(_("Host properties"), 
                             make_link([("mode", "edithost"), ("host", hostname)]), "back")
         html.context_button(_("Full Scan"), html.makeuri([("_scan", "yes")]))
@@ -1856,17 +1862,17 @@ def show_service_table(host, firsttime):
             html.write("<td>")
             if checkgroup:
                 varname = "checkgroup_parameters:" + checkgroup
-                url = make_link([("mode", "edit_ruleset"), 
-                                 ("varname", varname),
-                                 ("host", hostname),
-                                 ("item", repr(item))]) 
-                title = _("Edit rules for this check parameter")
-                rulespec = g_rulespecs.get(varname)
-                if rulespec:
+                if varname in g_rulespecs:
+                    rulespec = g_rulespecs[varname]
+                    url = make_link([("mode", "edit_ruleset"), 
+                                     ("varname", varname),
+                                     ("host", hostname),
+                                     ("item", repr(item))]) 
+                    title = _("Edit rules for this check parameter")
                     title = "Check parameters for this service: " + \
-                      rulespec["valuespec"].value_to_text(params)
-                html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
-                   (url, title))
+                        rulespec["valuespec"].value_to_text(params)
+                    html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
+                       (url, title))
                            
             html.write("</td>")
 
@@ -1896,7 +1902,7 @@ def mode_search(phase):
         return _("Search for hosts in %s and below" % (g_folder["title"]))
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link_to([("mode", "folder")], g_folder), "back")
+        html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
 
     elif phase == "action":
         pass
@@ -2125,7 +2131,7 @@ def mode_bulk_inventory(phase):
         return _("Bulk service detection (inventory)")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
         return
 
     elif phase == "action":
@@ -2212,7 +2218,7 @@ def mode_bulk_edit(phase):
         return _("Bulk edit hosts")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
         return
 
     elif phase == "action":
@@ -2264,7 +2270,7 @@ def mode_bulk_cleanup(phase):
         return _("Bulk removal of explicit attributes")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "folder")]), "back")
+        html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
         return
 
     elif phase == "action":
@@ -3599,13 +3605,24 @@ def mode_snapshot(phase):
         return
     elif phase == "action":
         if html.has_var("_download_file"):
-            # FIXME: HTML Variable pruefen, kein join verwenden
-            download_file = os.path.join(snapshot_dir, html.var("_download_file"))
+            download_file = html.var("_download_file")
+            if not download_file.startswith('wato-snapshot') and download_file != 'latest':
+                raise MKUserError(None, _("Invalid download file specified"))
+
+            # Find the latest snapshot file
+            if download_file == 'latest':
+                snapshots = os.listdir(snapshot_dir)
+                if not snapshots:
+                    return False
+                download_file = snapshots[-1]
+
+            download_file = os.path.join(snapshot_dir, download_file)
             if os.path.exists(download_file):
-                html.req.headers_out['Content-Disposition'] = 'Attachment; filename=' + html.var("_download_file")
+                html.req.headers_out['Content-Disposition'] = 'Attachment; filename=' + download_file
                 html.req.headers_out['content_type'] = 'application/x-tar'
                 html.write(open(download_file).read())
                 return False
+
         # create snapshot
         elif html.has_var("_create_snapshot"):
             if html.check_transaction():
@@ -4583,9 +4600,9 @@ class ElementSelection(ValueSpec):
         self.load_elements()
         if len(self._elements) == 0:
             raise MKUserError(varprefix, 
-              _("You cannot save this rule. There are not defined any elements for this selection yet." % self._what))
+              _("You cannot save this rule. There are not defined any elements for this selection yet."))
         if value not in self._elements:
-            raise MKUserError(varprefix, _("%s is not an existing element in this selection.") % (value, self._what))
+            raise MKUserError(varprefix, _("%s is not an existing element in this selection.") % (value,))
 
     def validate_datatype(self, value, varprefix):
         if type(value) != str:
@@ -4712,9 +4729,9 @@ def mode_globalvars(phase):
 
     groupnames = g_configvar_groups.keys()
     groupnames.sort()
-    html.write("<table class=data>")
     for groupname in groupnames:
-        html.write("<tr><td colspan=5><h3>%s</h3></td></tr>\n" % groupname) 
+        html.begin_foldable_container("globalvars", groupname, False, groupname, indent=False)
+        html.write('<table class="data globalvars">')
         html.write("<tr><th>" + _("Configuration variable") + 
                    "</th><th>" +_("Check_MK variable") + "</th><th>" + 
                    _("Default") + "</th><th>" + _("Your setting") + "</th><th></th></tr>\n")
@@ -4734,8 +4751,8 @@ def mode_globalvars(phase):
 
             edit_url = make_link([("mode", "edit_configvar"), ("varname", varname)])
 
-            html.write('<td><a href="%s">%s</a></td>' % (edit_url, valuespec.title()))
-            html.write('<td><tt>%s</tt></td>' % varname)
+            html.write('<td class=title><a href="%s">%s</a></td>' % (edit_url, valuespec.title()))
+            html.write('<td class=varname><tt>%s</tt></td>' % varname)
             if varname in current_settings: 
                 html.write('<td class=inherited>%s</td>' % valuespec.value_to_text(defaultvalue))
                 html.write('<td><b>%s</b></td>'          % valuespec.value_to_text(current_settings[varname]))
@@ -4751,7 +4768,8 @@ def mode_globalvars(phase):
             html.write("</td>")
 
             html.write('</tr>')
-    html.write("</table>")
+        html.write("</table>")
+        html.end_foldable_container()
 
 
 def mode_edit_configvar(phase):
@@ -4986,7 +5004,7 @@ def mode_edit_group(phase, what):
                 return _("Edit contact group")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "%s_groups" % what)]), "back")
+        html.context_button(_("All groups"), make_link([("mode", "%s_groups" % what)]), "back")
         return
 
     all_groups = load_group_information()
@@ -5083,7 +5101,7 @@ class GroupSelection(ElementSelection):
         all_groups = load_group_information()
         this_group = all_groups.get(self._what, {})
         # replace the title with the key if the title is empty
-        return dict([ (k, t or k) for (k, t) in this_group.items() ])
+        return dict([ (k, t and ("%s - %s" % (k,t)) or k) for (k, t) in this_group.items() ])
 
 
 class CheckTypeGroupSelection(ElementSelection):
@@ -5233,16 +5251,27 @@ def mode_edit_timeperiod(phase):
                 begin = "00:00"
             if not end:
                 end = "24:00"
-            for what, bound in [ ("from", begin), ("to", end) ]:
-                if not valid_bound(bound):
-                    raise MKUserError(vp + what,
-                           _("Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format.") % bound)
+
+            begin, end = [ parse_bound(w, b) for (w,b) in [ ("from", begin), ("to", end) ]]
             ranges.append((begin, end))
         return ranges
 
 
-    def valid_bound(bound):
-        return re.match("^(24|[0-1][0-9]|2[0-3]):[0-5][0-9]$", bound)
+    def parse_bound(what, bound):
+        # Fully specified
+        if re.match("^(24|[0-1][0-9]|2[0-3]):[0-5][0-9]$", bound):
+            return bound
+        # only hours
+        try:
+            b = int(bound)
+            if b <= 24 and b >= 0:
+                return "%02d:00" % b
+        except:
+            pass
+
+        raise MKUserError(vp + what,
+               _("Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format.") % bound)
+
 
     name = html.var("edit") # missing -> new group
     new = name == None
@@ -5254,7 +5283,7 @@ def mode_edit_timeperiod(phase):
             return _("Edit time period")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "timeperiods")]), "back")
+        html.context_button(_("All Timeperiods"), make_link([("mode", "timeperiods")]), "back")
         return
 
     timeperiods = load_timeperiods() 
@@ -5305,6 +5334,10 @@ def mode_edit_timeperiod(phase):
                     raise MKUserError("name", _("Please specify a name of the new timeperiod."))
                 if not re.match("^[-a-z0-9A-Z_]*$", name):
                     raise MKUserError("name", _("Invalid timeperiod name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
+                if name in timeperiods:
+                    raise MKUserError("name", _("This name is already being used by another timeperiod."))
+                if name == "7X24":
+                    raise MKUserError("name", _("The time period name 7X24 cannot be used. It is always autmatically defined."))
                 timeperiods[name] = timeperiod
                 log_pending(None, "edit-timeperiods", _("Created new time period %s" % name))
             else:
@@ -5323,6 +5356,7 @@ def mode_edit_timeperiod(phase):
     html.write("</td><td class=content>")
     if new:
         html.text_input("name")
+        html.set_focus("name")
     else:
         html.write(name) 
     html.write("</td></tr>")
@@ -5336,6 +5370,8 @@ def mode_edit_timeperiod(phase):
     html.write(_("Alias") + "<br><i>" + _("A description of the timeperiod</i>"))
     html.write("</td><td class=content>")
     html.text_input("alias", alias, size = 50)
+    if not new:
+        html.set_focus("alias")
     html.write("</td></tr>")
 
     # Week days
@@ -5397,7 +5433,7 @@ class TimeperiodSelection(ElementSelection):
 
     def get_elements(self):
         timeperiods = load_timeperiods()
-        elements = dict([ (name, tp.get("alias", name)) for (name, tp) in timeperiods.items() ])
+        elements = dict([ (name, "%s - %s" % (name, tp["alias"])) for (name, tp) in timeperiods.items() ])
         return elements
 
 #   +----------------------------------------------------------------------+
@@ -5616,7 +5652,7 @@ def mode_edit_site(phase):
             return _("Edit site connection %s" % siteid)
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "sites")]), "back")
+        html.context_button(_("All Sites"), make_link([("mode", "sites")]), "back")
         return
 
     if new:
@@ -6337,7 +6373,7 @@ def mode_edit_user(phase):
             return _("Edit user %s" % userid)
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "users")]), "back")
+        html.context_button(_("All Users"), make_link([("mode", "users")]), "back")
         return
 
     if new:
@@ -6500,7 +6536,7 @@ def mode_edit_user(phase):
     for role_id, role in entries:
         html.checkbox("role_" + role_id, role_id in user.get("roles", []))
         url = make_link([("mode", "edit_role"), ("edit", role_id)])
-        html.write(" <a href='%s'>%s</a> (%s)<br>" % (url, role["alias"], role_id))
+        html.write("%s - <a href='%s'>%s</a><br>" % (role_id, url, role["alias"]))
     html.write("</td></tr>")
 
     # Contact groups
@@ -6526,7 +6562,8 @@ def mode_edit_user(phase):
             if not alias:
                 alias = gid
             html.checkbox("cg_" + gid, gid in user.get("contactgroups", []))
-            html.write(" " + alias + "<br>")
+            url = make_link([("mode", "edit_contact_group"), ("edit", gid)])
+            html.write(" %s - <a href=\"%s\">%s</a><br>" % (gid, url, alias))
 
     html.write("</td></tr>")
 
@@ -6544,8 +6581,8 @@ def mode_edit_user(phase):
     html.write(_("Notification time period<br><i>Only during this time period the "
                  "user will get notifications about host or service alerts."))
     html.write("</td><td class=content>")
-    choices = [ ( "24X7", _("Always")) ] + \
-              [ ( id, tp["alias"]) for (id, tp) in timeperiods.items() ]
+    choices = [ ( "24X7", _("24X7 - Always")) ] + \
+              [ ( id, "%s - %s" % (id, tp["alias"])) for (id, tp) in timeperiods.items() ]
     html.sorted_select("notification_period", choices, user.get("notification_period"))
     html.write("</td></tr>")
 
@@ -6864,7 +6901,7 @@ def mode_edit_role(phase):
         return _("Edit user role %s" % id)
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "roles")]), "back")
+        html.context_button(_("All Roles"), make_link([("mode", "roles")]), "back")
         return
 
     roles = load_roles()
@@ -7171,7 +7208,7 @@ def mode_edit_hosttag(phase):
             return _("Edit tag group")
 
     elif phase == "buttons":
-        html.context_button(_("Back"), make_link([("mode", "hosttags")]), "back")
+        html.context_button(_("All Hosttags"), make_link([("mode", "hosttags")]), "back")
         return
 
     hosttags = load_hosttags()
@@ -7723,7 +7760,6 @@ def mode_rulesets(phase):
                 if something_shown:
                     html.write("</table>")
                     html.end_foldable_container()
-                    html.write("<br>")
                 html.begin_foldable_container("rulesets", groupname, False, groupname, indent=False)
                 html.write('<table class="data rulesets">')
                 html.write("<tr><th>" + _("Rule set") + "</th>"
@@ -8417,28 +8453,47 @@ def mode_edit_rule(phase):
         html.write(_("You have not configured any host tags. If you work with rules "
                      "you should better do so and add a <tt>wato_host_tags = ..</tt> "
                      "to your <tt>multisite.mk</tt>. You will find an example there."))
-    for id, title, tags in config.wato_host_tags:
-        default_tag = None
-        ignore = True
-        for t in tag_specs:
-            if t[0] == '!':
-                n = True
-                t = t[1:]
-            else:
-                n = False
-            if t in [ x[0] for x in tags]:
-                ignore = False
-                negate = n
+    else:
+        html.write("<table>")
+        for id, title, tags in config.wato_host_tags:
+            html.write("<tr><td>%s: &nbsp;</td>" % title)
+            default_tag = None
+            ignore = True
+            for t in tag_specs:
+                if t[0] == '!':
+                    n = True
+                    t = t[1:]
+                else:
+                    n = False
+                if t in [ x[0] for x in tags]:
+                    ignore = False
+                    negate = n
+            if ignore:
+                deflt = "ignore"
+            elif negate:
+                deflt = "isnot"
+            else: 
+                deflt = "is"
 
-        html.radiobutton("tag_" + id, "ignore", ignore, _("ignore"))
-        html.write("&nbsp;")
-        html.radiobutton("tag_" + id, "is",     not ignore and not negate, _("is"))
-        html.write("&nbsp;")
-        html.radiobutton("tag_" + id, "isnot",  not ignore and negate, _("is not"))
-        html.write("&nbsp;")
-        html.select("tagvalue_" + id, [t[0:2] for t in tags if t[0] != None], deflt=default_tag)
-        html.write("<br>")
+            html.write("<td>")
+            html.select("tag_" + id, [
+                ("ignore", _("ignore")), 
+                ("is", _("is")), 
+                ("isnot", _("isnot"))], deflt,
+                onchange="wato_toggle_dropdownn(this, 'tag_sel_%s');" % id)
+            html.write("</td><td>")
+            if html.form_submitted():
+                div_is_open = html.var("tag_" + id) != "ignore"
+            else:
+                div_is_open = deflt != "ignore"
+            html.write('<div id="tag_sel_%s" style="white-space: nowrap; %s">' % (
+                id, not div_is_open and "display: none;" or ""))
+            html.select("tagvalue_" + id, [t[0:2] for t in tags if t[0] != None], deflt=default_tag)
+            html.write("</div>")
+            html.write("</td></tr>")
+        html.write("</table>")
     html.write("</td></tr>")
+
 
     # Explicit hosts / ALL_HOSTS
     html.write("<tr><td class=legend>")

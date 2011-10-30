@@ -459,7 +459,7 @@ register_rule(group,
         title = _("Enable/disable notifications for hosts"),
         help = _("This setting allows you to disable notifications about problems of a "
                  "host completely. Per default all notifications are enabled. Sometimes "
-                 "it is more conveniant to just disable notifications then to remove a "
+                 "it is more convenient to just disable notifications then to remove a "
                  "host completely from the monitoring. Note: this setting has no effect "
                  "on the notifications of service problems of a host."),
         choices = [ ("1", _("Enable host notifications")),

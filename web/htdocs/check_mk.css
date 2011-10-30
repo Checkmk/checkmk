@@ -1924,9 +1924,14 @@ table.add_snapin i {
 }
 
 
+.wato table.form {
+    width: 800px;
+}
+
 .wato table.form td.legend { 
     border-right-style: none;
     padding-bottom: 8px;
+    width: 300px;
 }
 
 .wato table.form td.legend h3 { 
@@ -2306,6 +2311,17 @@ table.add_snapin i {
     width: 430px;
 }
 .wato table.data.rulesets td.varname {
+    width: 300px;
+}
+
+/* Table in page "Global variables" */
+.wato table.data.globalvars {
+    width: 100%;
+}
+.wato table.data.globalvars td.title {
+    width: 430px;
+}
+.wato table.data.globalvars td.varname {
     width: 300px;
 }
 

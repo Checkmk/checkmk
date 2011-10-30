@@ -115,7 +115,7 @@ def load_bug(bugid):
         "state"          : "unknown",
         "title"          : "unknown",
         "component"      : "general",
-        "targetversion"  : "",
+        "targetversion"  : "future",
     }
     
     f = file(str(bugid))
@@ -252,7 +252,11 @@ def main_list(args):
 
         hit = False
         for tp, values in [
-          ( "component", components ), ( "state", states ), ( "class", classes ),  ]:
+          ( "component",      components ), 
+          ( "state",          states ), 
+          ( "class",          classes ),
+          ( "targetversion",  targetversions),
+          ]:
             for v in values:
                 if v.startswith(a):
                     entries = filters.get(tp, [])
@@ -263,7 +267,7 @@ def main_list(args):
             if hit:
                 break
         if not hit:
-            bail_out("No such component, state or class: %s" % a)
+            bail_out("No such component, state, class or target version: %s" % a)
 
     # Filter
     newbugs = []
@@ -367,11 +371,11 @@ def main_new(args):
     if  bug["title"] == "":
         sys.stderr.write("Cancelled.\n")
         sys.exit(0)
-    bug["class"]     = input_choice("Class",     classes)
-    bug["component"] = input_choice("Component", components)
-    bug["targetversion"] = get_input("Target Version")
-    bug["cost"]      = input_choice("Cost",      "123456789")
-    bug["benefit"]   = input_choice("Benefit",   "123456789")
+    bug["class"]         = input_choice("Class",     classes)
+    bug["component"]     = input_choice("Component", components)
+    bug["targetversion"] = input_choice("Target Version", targetversions)
+    bug["cost"]          = input_choice("Cost",      "123456789")
+    bug["benefit"]       = input_choice("Benefit",   "123456789")
     
     bug["description"] = get_long_input("description")
     g_bugs[bug["id"]] = bug

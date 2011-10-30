@@ -21,6 +21,8 @@
       attributes of a host
     * Added API function num_hosts_in_folder() to count the number of hosts
       below the given folder
+    * Added option to download "latest" snapshot
+    * extra_buttons can now register a function to gather the URL to link to
 
     Multisite:
     * FIX: Fixed encoding problem when opening dashboard
@@ -31,10 +33,20 @@
     * FIX: mk_oracle now also detects XE databases
     * FIX: printer_alerts: handle 0-entries of Brother printers
     * FIX: printer_supply: fix Perf-O-Meter if no max known
+    * FIX: Added id parameter to render_statistics() method to allow more than
+      one pie dashlet for host/service stats
+    * FIX: drbd: fixed inventory functions
 
     Multisite:
     * FIX: finally fixed long-wanted "NagStaMon create hundreds
       of Apache processes" problem!
+    * FIX: query crashed when sorting after a join columns without
+      an explicit title.
+    * FIX: filter for WATO file/folder was not always working.
+    * Added filter for hard services states to search and service
+      problems view
+    * FIX: dashboard problem views now ignore notification period,
+      just as tactical overview and normal problem views do
  
 
 1.1.12:

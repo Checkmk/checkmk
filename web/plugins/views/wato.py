@@ -39,10 +39,10 @@ class FilterWatoFile(Filter):
         self.tree = wato.api.get_folder_tree()
         self.path_to_tree = {} # will be filled by self.folder_selection
         self.selection = self.folder_selection(self.tree, "", 0)
+        self.last_wato_data_update = time.time()
 
     def check_wato_data_update(self):
-        if not self.last_wato_data_update or time.time() - self.last_wato_data_update > 30:
-            self.last_wato_data_update = time.time()
+        if not self.last_wato_data_update or time.time() - self.last_wato_data_update > 5:
             self.load_wato_data()
 
     def display(self):
@@ -57,11 +57,11 @@ class FilterWatoFile(Filter):
         else:
             return ""
 
+    # Construct pair-list of ( folder-path, title ) to be used
+    # by the HTML selection box. This also updates self._tree,
+    # a dictionary from the path to the title.
     def folder_selection(self, folder, prefix, depth):
-        if depth == 0:
-            self.check_wato_data_update()
         my_path = folder[".path"]
-
         if depth:
             title_prefix = "&nbsp;&nbsp;&nbsp;" * depth + "` " + "- " * depth
         else:
@@ -93,4 +93,5 @@ class FilterWatoFile(Filter):
             return self.path_to_tree.get(current) 
 
 declare_filter(10, FilterWatoFile())
-ubiquitary_filters.append("wato_folder") # show in all views
+if "wato_folder" not in ubiquitary_filters:
+    ubiquitary_filters.append("wato_folder") # show in all views

@@ -697,12 +697,13 @@ def save_hosts(folder = None):
         ipaddress = effective.get("ipaddress")
 
         # Compute tags from settings of each individual tag. We've got
-        # the current value for each individual tag.
+        # the current value for each individual tag. Also other attributes
+        # can set tags (e.g. the SiteAttribute)
         tags = set([])
         for attr, topic in host_attributes:
-            if isinstance(attr, HostTagAttribute):
-                value = effective.get(attr.name())
-                tags.update(attr.get_tag_list(value))
+            value = effective.get(attr.name())
+            html.debug(value)
+            tags.update(attr.get_tag_list(value))
 
         all_hosts.append((hostname, list(tags)))
         if ipaddress:
@@ -3054,6 +3055,10 @@ class Attribute:
     # that are represented by the current HTML variables.
     def filter_matches(self, crit, value, hostname):
         return crit == value
+
+    # Host tags to set for this host
+    def get_tag_list(self, value):
+        return []
 
 
 # A simple text attribute. It is stored in 
@@ -6092,6 +6097,13 @@ class SiteAttribute(Attribute):
         else:
             return None
 
+    def get_tag_list(self, value):
+        html.debug(value)
+        if value:
+            return [ "site:" + value ]
+        else:
+            return []
+
 # The replication status contains information about each
 # site. It is a dictionary from the site id to a dict with
 # the following keys:
@@ -6166,6 +6178,11 @@ def page_automation_login():
     html.write(repr(get_login_secret(True)))
 
 def get_login_secret(create_on_demand = False):
+    Achtung: Hier muss ich noch auf dem Slave den Name der Site mitspeichern.
+    Oder der Name der Site kommt mit beim Synchronisieren. Wenn der Master
+    eine Konfiguration hochschiebt, kann er bei der Gelegenheit den Sitenamen
+    mitsenden. Daraus wird dann sofort eine onlyhosts.mk-Datei erzeugt, die 
+    diesen Sitenamen enthält. 
     path = var_dir + "automation_secret.mk"
     try:
         return eval(file(path).read())

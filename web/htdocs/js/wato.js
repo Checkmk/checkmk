@@ -327,3 +327,22 @@ function update_bulk_moveto(val) {
                 fields[i].options[a].selected = true;
     fields = null;
 }
+
+//   +----------------------------------------------------------------------+
+//   |           ____            _ _           _   _                        |
+//   |          |  _ \ ___ _ __ | (_) ___ __ _| |_(_) ___  _ __             |
+//   |          | |_) / _ \ '_ \| | |/ __/ _` | __| |/ _ \| '_ \            |
+//   |          |  _ <  __/ |_) | | | (_| (_| | |_| | (_) | | | |           |
+//   |          |_| \_\___| .__/|_|_|\___\__,_|\__|_|\___/|_| |_|           |
+//   |                    |_|                                               |
+//   +----------------------------------------------------------------------+
+
+function wato_do_replication(siteid) {
+    get_url("wato_ajax_replication.py?site=" + siteid, wato_replication_result, siteid);
+}
+
+function wato_replication_result(siteid, code) {
+    var oDiv = document.getElementById("repstate_" + siteid);
+    oDiv.innerHTML = code;
+}
+    

@@ -2265,6 +2265,13 @@ def bulk_cleanup_attributes(the_file, hosts):
 #   +----------------------------------------------------------------------+
 
 def mode_changelog(phase):
+    # See below for the usage of this weird variable...
+    global sitestatus_do_async_replication
+    try:
+        sitestatus_do_async_replication
+    except:
+        sitestatus_do_async_replication = False
+
     if phase == "title":
         return _("ChangeLog")
 
@@ -2281,6 +2288,7 @@ def mode_changelog(phase):
                     html.makeuri([("_action", "clear"), ("_transid", html.current_transid())]), "trash")
 
     elif phase == "action":
+        sitestatus_do_async_replication = False # see below
         if html.var("_action") == "clear":
             config.need_permission("wato.auditlog")
             config.need_permission("wato.edit")
@@ -2291,6 +2299,7 @@ def mode_changelog(phase):
             return export_audit_log()
 
         elif html.has_var("_siteaction"):
+            config.need_permission("wato.activate")
             site_id = html.var("_site")
             action = html.var("_siteaction")
             if html.check_transaction():
@@ -2315,17 +2324,23 @@ def mode_changelog(phase):
         elif html.check_transaction():
             config.need_permission("wato.activate")
             create_snapshot()
-            try:
-                check_mk_local_automation("restart")
-                call_hook_activate_changes()
-            except Exception, e:
-                if config.debug:
-                    raise
-                else:
-                    raise MKUserError(None, "Error executing hooks: %s" % str(e))
-            log_commit_pending() # flush logfile with pending actions
-            log_audit(None, "activate-config", _("Configuration activated, monitoring server restarted"))
-            return None, _("The new configuration has been successfully activated.")
+            if is_distributed():
+                # Do nothing here, but let site status table be shown in a mode
+                # were in each site that is not up-to-date an asynchronus AJAX
+                # job is being startet that updates that site
+                sitestatus_do_async_replication = True
+            else:
+                try:
+                    check_mk_local_automation("restart")
+                    call_hook_activate_changes()
+                except Exception, e:
+                    if config.debug:
+                        raise
+                    else:
+                        raise MKUserError(None, "Error executing hooks: %s" % str(e))
+                log_commit_pending() # flush logfile with pending actions
+                log_audit(None, "activate-config", _("Configuration activated, monitoring server restarted"))
+                return None, _("The new configuration has been successfully activated.")
 
     else:
         # Distributed WATO: Show replication state of each site
@@ -2341,7 +2356,8 @@ def mode_changelog(phase):
             html.write("<th rowspan=2>%s</th>" % _("ID") + 
                        "<th rowspan=2>%s</th>" % _("Alias"))
             html.write("<th colspan=6>%s</th>" % _("Livestatus"))
-            html.write("<th colspan=5>%s</th>" % _("Replication"))
+            html.write("<th colspan=%d>%s</th>" % 
+                         (sitestatus_do_async_replication and 3 or 5, _("Replication")))
             html.write("<tr>" +
                        "<th>%s</th>" % _("Status") + 
                        "<th>%s</th>" % _("Version") + 
@@ -2350,11 +2366,15 @@ def mode_changelog(phase):
                        "<th>%s</th>" % _("Services") + 
                        "<th>%s</th>" % _("Last restart") + 
                        "<th>%s</th>" % _("Multisite URL") + 
-                       "<th>%s</th>" % _("Type") + 
-                       "<th>%s</th>" % _("Changes") + 
-                       "<th>%s</th>" % _("State") +
-                       "<th>%s</th>" % _("Actions") +
-                       "</tr>")
+                       "<th>%s</th>" % _("Type"))
+            if sitestatus_do_async_replication:
+                html.write("<th>%s</th>" % _("Replication status"))
+            else:
+                html.write("<th>%s</th>" % _("Actions") +
+                           "<th>%s</th>" % _("Changes") + 
+                           "<th>%s</th>" % _("State"))
+            html.write("</tr>")
+
             odd = "even"
             for site_id, site in sites:
                 is_local = site_is_local(site_id)
@@ -2406,42 +2426,52 @@ def mode_changelog(phase):
                     sitetype = _("Peer")
                 html.write("<td>%s</td>" % sitetype)
 
-                # Number of pending changes
-                html.write("<td class=number>%d</td>" % srs.get("pending", 0))
+                uptodate = not (srs.get("need_restart") or \
+                                (srs.get("pending") and not site_is_local(site_id)))
 
-                # State
-                html.write("<td class=buttons>")
-                uptodate = True
-                if srs.get("pending") and not site_is_local(site_id):
-                    html.write('<img class=icon title="%s" src="images/icon_need_replicate.png">' % 
-                        _("This site is not update and needs a replication."))
-                    uptodate = False
-                if srs.get("need_restart"):
-                    html.write('<img class=icon title="%s" src="images/icon_need_restart.png">' % 
-                        _("This site needs a restart for activating the changes."))
-                    uptodate = False
-                if uptodate:
-                    html.write('<img class=icon title="%s" src="images/icon_siteuptodate.png">' % 
-                        _("This site is up-to-date."))
-                html.write("</td>")
+                # Start asynchronous replication
+                if sitestatus_do_async_replication:
+                    html.write("<td>")
+                    html.write('<div id="repstate_%s">%s</div>' %
+                            (site_id, uptodate and _("nothing to do") 
+                                  or _("Working...")))
+                    if not uptodate:
+                        html.javascript("wato_do_replication('%s');" % site_id)
+                    html.write("</td>")
+                else:
+                    # Number of pending changes
+                    html.write("<td class=number>%d</td>" % srs.get("pending", 0))
 
-                # Actions
-                html.write("<td class=buttons>")
-                sync_url = make_action_link([("mode", "changelog"), 
-                        ("_site", site_id), ("_siteaction", "sync")])
-                restart_url = make_action_link([("mode", "changelog"), 
-                        ("_site", site_id), ("_siteaction", "restart")])
-                if not uptodate:
-                    if not site_is_local(site_id):
-                        if srs.get("pending"):
-                            html.buttonlink(sync_url, _("Sync"))
-                            if srs.get("need_restart"):
-                                html.buttonlink(restart_url, _("Sync & Restart"))
+                    # State
+                    html.write("<td class=buttons>")
+                    if srs.get("pending") and not site_is_local(site_id):
+                        html.write('<img class=icon title="%s" src="images/icon_need_replicate.png">' % 
+                            _("This site is not update and needs a replication."))
+                    if srs.get("need_restart"):
+                        html.write('<img class=icon title="%s" src="images/icon_need_restart.png">' % 
+                            _("This site needs a restart for activating the changes."))
+                    if uptodate:
+                        html.write('<img class=icon title="%s" src="images/icon_siteuptodate.png">' % 
+                            _("This site is up-to-date."))
+                    html.write("</td>")
+
+                    # Actions
+                    html.write("<td class=buttons>")
+                    sync_url = make_action_link([("mode", "changelog"), 
+                            ("_site", site_id), ("_siteaction", "sync")])
+                    restart_url = make_action_link([("mode", "changelog"), 
+                            ("_site", site_id), ("_siteaction", "restart")])
+                    if not uptodate:
+                        if not site_is_local(site_id):
+                            if srs.get("pending"):
+                                html.buttonlink(sync_url, _("Sync"))
+                                if srs.get("need_restart"):
+                                    html.buttonlink(restart_url, _("Sync & Restart"))
+                            else:
+                                html.buttonlink(restart_url, _("Restart"))
                         else:
                             html.buttonlink(restart_url, _("Restart"))
-                    else:
-                        html.buttonlink(restart_url, _("Restart"))
-                html.write("</td>")
+                    html.write("</td>")
 
                 html.write("</tr>")
                 if not uptodate:
@@ -6092,6 +6122,30 @@ def push_snapshot_to_site(site, filename, do_restart):
     except:
         raise MKAutomationException(_("Garbled automation response from site %s: '%s'") % 
             (site["id"], response_text))
+
+
+# AJAX handler for asynchronous site replication
+def ajax_replication():
+    site_id = html.var("site")
+    repstatus = load_replication_status()
+    srs = repstatus.get(site_id, {})
+    restart = srs.get("need_restart", False)
+    site = config.site(site_id)
+    try:
+        result = synchronize_site(site, restart)
+    except Exception, e:
+        result = str(e)
+    if result == True:
+        if site_is_local(site_id):
+            answer = _("Successfully restarted.")
+        elif restart:
+            answer = _("Successfully synchronized and restarted.")
+        else:
+            answer = _("Successfully synchronized.")
+    else:
+        answer = "<div class=error>%s: %s</div>" % (_("Error"), hilite_errors(result))
+
+    html.write(answer)
 
 
 

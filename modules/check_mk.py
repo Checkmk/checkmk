@@ -1091,6 +1091,7 @@ def all_active_clusters():
                  if in_binary_hostlist(hostname, only_hosts) ]
 
 def hostgroups_of(hostname):
+    print(host_groups)
     return host_extra_conf(hostname, host_groups)
 
 def summary_hostgroups_of(hostname):
@@ -1459,10 +1460,12 @@ def create_nagios_hostdefs(outfile, hostname):
     hgs = hostgroups_of(hostname)
     hostgroups = ",".join(hgs)
     if len(hgs) == 0:
+        print "AAAAAAAAAA..."
         hostgroups = default_host_group
         hostgroups_to_define.add(default_host_group)
     elif define_hostgroups:
         hostgroups_to_define.update(hgs)
+    print "ALLES GUT: [%s] %r" % (hostgroups, hgs)
     outfile.write("  hostgroups\t\t\t%s\n" % hostgroups)
 
     # Contact groups

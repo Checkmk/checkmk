@@ -2295,16 +2295,16 @@ def mode_changelog(phase):
             action = html.var("_siteaction")
             if html.check_transaction():
                 try:
+                    # If the site has no pending changes but just needs restart,
+                    # the button text is just "Restart". We do a sync anyway. This
+                    # can be optimized in future but is the save way for now.
                     site = config.site(site_id)
-                    response = synchronize_site(site)
+                    response = synchronize_site(site, restart = action == "restart")
                     if response == True:
-                        update_replication_status(site_id, { "pending": 0 })
                         return None
                     else:
                         raise MKUserError(None, _("Cannot synchronize site: %s") % response)
 
-                    if action == "restart":
-                        restart_site(site)
                 except MKAutomationException, e:
                     raise MKUserError(None, _("Remote command on site %s failed: '%s'.") % (site_id, e))
                 except Exception, e:
@@ -2330,6 +2330,8 @@ def mode_changelog(phase):
     else:
         # Distributed WATO: Show replication state of each site
         if is_distributed():
+            all_sites_uptodate = True
+
             html.write("<h3>%s</h3>" % _("Distributed WATO - replication status"))
             repstatus = load_replication_status()
             sites = config.allsites().items()
@@ -2350,7 +2352,6 @@ def mode_changelog(phase):
 
                 if not is_local and not site.get("replication"):
                     continue
-
 
                 srs = repstatus.get(site_id, {})
                 html.write('<tr class="data %s0">' % odd)
@@ -2374,16 +2375,19 @@ def mode_changelog(phase):
 
                 # icons
                 html.write('<td>')
+                uptodate = True
                 if srs.get("pending") and not site_is_local(site_id):
                     html.write('<img class=icon title="%s" src="images/icon_need_replicate.png">' % 
-                          _("This site is not update and needs a replication."))
+                        _("This site is not update and needs a replication."))
+                    uptodate = False
                 if srs.get("need_restart"):
                     html.write('<img class=icon title="%s" src="images/icon_need_restart.png">' % 
-                          _("This site needs a restart for activating the changes."))
+                        _("This site needs a restart for activating the changes."))
+                    uptodate = False
+                if uptodate:
+                    html.write('<img class=icon title="%s" src="images/icon_siteuptodate.png">' % 
+                        _("This site is up-to-date."))
                 html.write("</td>")
-
-
-
 
                 # Actions
                 sync_url = make_action_link([("mode", "changelog"), 
@@ -2391,15 +2395,25 @@ def mode_changelog(phase):
                 restart_url = make_action_link([("mode", "changelog"), 
                         ("_site", site_id), ("_siteaction", "restart")])
                 html.write("<td class=buttons>")
-                if not site_is_local(site_id):
-                    html.buttonlink(sync_url, _("Sync"))
-                    html.buttonlink(restart_url, _("Sync & Restart"))
-                else:
-                    html.buttonlink(restart_url, _("Restart"))
+                if not uptodate:
+                    if not site_is_local(site_id):
+                        if srs.get("pending"):
+                            html.buttonlink(sync_url, _("Sync"))
+                            if srs.get("need_restart"):
+                                html.buttonlink(restart_url, _("Sync & Restart"))
+                        else:
+                            html.buttonlink(restart_url, _("Restart"))
+                    else:
+                        html.buttonlink(restart_url, _("Restart"))
                 html.write("</td>")
                 html.write("</tr>")
+                if not uptodate:
+                    all_sites_uptodate = False
             html.write("</table>")
 
+        # All sites up-to-date: we flush the pending log right now.
+        if all_sites_uptodate:
+            log_commit_pending()
 
         pending = parse_audit_log("pending")
         render_audit_log(pending, "pending")
@@ -2623,7 +2637,10 @@ def render_audit_log(log, what, with_filename = False):
     elif what == 'audit':
         htmlcode += "<h3>" + _("Audit log") + "</h3>"
     elif what == 'pending':
-        htmlcode += "<h3>" + _("Changes which are not yet activated:") + "</h3>"
+        if is_distributed():
+            htmlcode += "<h3>" + _("Changes that are not activated on all sites:") + "</h3>"
+        else:
+            htmlcode += "<h3>" + _("Changes that are not yet activated:") + "</h3>"
 
     if what == 'audit':
         display_paged(times)
@@ -5993,26 +6010,39 @@ def update_replication_status(siteid, vars):
     repstatus[siteid].update(vars)
     save_replication_status(repstatus)
 
-def synchronize_site(site):
+def synchronize_site(site, restart):
+    if site_is_local(site["id"]):
+        if restart:
+            restart_site(site)
+            update_replication_status(site["id"], { "pending" : 0 })
+        return True
+
     snapshot_path = defaults.tmp_dir + "/snapshot_for_%s.tar.gz" % site["id"]
     if os.path.exists(snapshot_path):
         os.remove(snapshot_path)
     multitar.create(snapshot_path, replication_paths)
-    result = push_snapshot_to_site(site, snapshot_path)
+    result = push_snapshot_to_site(site, snapshot_path, restart)
+    if result == True:
+        update_replication_status(site["id"], { "pending": 0 })
+        if restart:
+            update_replication_status(site["id"], { "need_restart": False })
     if not config.debug:
         os.remove(snapshot_path)
     return result
 
+# Isolated restart without prior synchronization. Currently this
+# is only being called for the local site.
 def restart_site(site):
     check_mk_automation(site["id"], "restart")
     update_replication_status(site["id"], { "need_restart" : False })
 
-def push_snapshot_to_site(site, filename):
+def push_snapshot_to_site(site, filename, do_restart):
     url_base = site["multisiteurl"] + "automation.py?"
     var_string = htmllib.urlencode_vars([
         ("command",    "push-snapshot"),
         ("secret",     site["secret"]),
         ("siteid",     site["id"]),         # This site must know it's ID
+        ("restart",    do_restart and "yes" or "on"),
     ])
     url = url_base + var_string
     # urllib2 does not seem to support file uploads. Please tell me, if
@@ -6104,6 +6134,9 @@ def automation_push_snapshot():
         # Create rule making this site only monitor our hosts
         create_only_hosts_file(siteid)
         log_audit(None, "replication", _("Synchronized with master (my site id is %s.)") % siteid)
+        if html.var("restart", "no") == "yes":
+            check_mk_local_automation("restart")
+            call_hook_activate_changes()
         return True
     except Exception, e:
         return str(e)

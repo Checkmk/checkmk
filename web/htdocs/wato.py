@@ -2445,7 +2445,7 @@ def mode_changelog(phase):
                     if status == "online":
                         html.write('<div id="repstate_%s">%s</div>' %
                                 (site_id, uptodate and _("nothing to do") 
-                                      or _("Working...")))
+                                      or "<img class=icon src='images/icon_reloading.gif'>%s</img>" % _("Working...")))
                         if not uptodate:
                             html.javascript("wato_do_replication('%s');" % site_id)
                             num_replsites += 1

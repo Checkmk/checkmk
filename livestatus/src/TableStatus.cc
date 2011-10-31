@@ -54,6 +54,8 @@ extern int process_performance_data;
 extern int check_external_commands;
 extern int num_cached_log_messages;
 extern int interval_length;
+extern int g_num_hosts;
+extern int g_num_services;
 
 extern circular_buffer external_command_buffer;
 extern int external_command_buffer_slots;
@@ -137,6 +139,11 @@ TableStatus::TableStatus()
                 "Time time of the last log file rotation", (int*)&last_log_rotation));
     addColumn(new IntPointerColumn("interval_length", 
                 "The default interval length from nagios.cfg", (int*)&interval_length));
+
+    addColumn(new IntPointerColumn("num_hosts", 
+                "The total number of hosts", (int*)&g_num_hosts));
+    addColumn(new IntPointerColumn("num_services", 
+                "The total number of services", (int*)&g_num_services));
 
     addColumn(new StringPointerColumn("program_version", 
                 "The version of the monitoring daemon", get_program_version()));

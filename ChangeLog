@@ -27,6 +27,9 @@
     Multisite:
     * FIX: Fixed encoding problem when opening dashboard
 
+    Livestatus:
+    * New columns num_hosts and num_services in status table
+
 
 1.1.12p1:
     Checks & Agents:

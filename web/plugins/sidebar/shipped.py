@@ -399,7 +399,8 @@ def render_sitestatus():
             html.write("<tr><td class=left>%s</td>" % text)
             onclick = "switch_site('_site_switch=%s:%s')" % (sitename, switch)
             html.write("<td class=state>")
-            html.write('<a title="%s" href="#" onclick="%s" class=%s>%s</a></td>' % (title, onclick, state, state))
+            html.write('<a title="%s" href="#" onclick="%s" class="sitestatus %s">%s</a></td>' % 
+                       (title, onclick, state, state))
             html.write("</tr>\n")
         html.write("</table>\n")
 
@@ -447,13 +448,6 @@ table.sitestate td.state a {
     border-width: 1px;
     border-style: solid;
 }
-table.sitestate a.online   { background-color: #3c0; color: #fff; border-color: #0f0; }
-table.sitestate a.disabled { background-color: #666; color: #ccc; border-color: #888; }
-table.sitestate a.dead     { background-color: #c00; color: #f88; border-color: #f44; }
-table.sitestate a.waiting  { background-color: #666; color: #fff; border-color: #ccc; }
-table.sitestate a.down     { background-color: #f00; color: #fff; border-color: #800; }
-table.sitestate a.unreach  { background-color: #f80; color: #fff; border-color: #840; }
-table.sitestate a.unknown  { background-color: #26c; color: #fff; border-color: #44f; }
 """ % snapin_width
 }
 

@@ -84,6 +84,17 @@ input.buttonlink {
     padding: 1px;
     font-size: 8pt;
 }
+
+/* Status of sites in sidebar and in WATO */
+
+.sitestatus.online   { background-color: #3c0; color: #fff; border-color: #0f0; }
+.sitestatus.disabled { background-color: #666; color: #ccc; border-color: #888; }
+.sitestatus.dead     { background-color: #c00; color: #f88; border-color: #f44; }
+.sitestatus.waiting  { background-color: #666; color: #fff; border-color: #ccc; }
+.sitestatus.down     { background-color: #f00; color: #fff; border-color: #800; }
+.sitestatus.unreach  { background-color: #f80; color: #fff; border-color: #840; }
+.sitestatus.unknown  { background-color: #26c; color: #fff; border-color: #44f; }
+
 /*
    __  __       _        
   |  \/  | __ _(_)_ __   
@@ -623,6 +634,11 @@ table.data th {
     color: #fff;
     vertical-align: middle;
 }
+/* Two-lined header, for example in WATO: ChangeLog->Site Status */
+table.data tr.dualheader th {
+    border-bottom: 1px solid #ccc;
+}
+
 
 /* Table header links (For sorting) */
 
@@ -1967,6 +1983,17 @@ table.add_snapin i {
     text-align: right;
     border: 1px solid #fff;
     border-left-style: none;
+}
+
+.wato div.sitestatus {
+    border-style: solid;
+    border-width: 1px;
+    -moz-border-radius: 3px;
+    vertical-align: middle;
+    text-align: center;
+    padding: 0px 10px;
+    font-size: 7pt;
+    font-weight: bold;
 }
 
 .wato table.auditlog {

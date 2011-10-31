@@ -2337,13 +2337,19 @@ def mode_changelog(phase):
             sites = config.allsites().items()
             sites.sort(cmp = lambda a,b: cmp(a[1].get("alias",a[0]), b[1].get("alias", b[0])))
             html.write("<table class=data>")
+            html.write("<tr class=dualheader>")
+            html.write("<th rowspan=2>%s</th>" % _("ID") + 
+                       "<th rowspan=2>%s</th>" % _("Alias"))
+            html.write("<th colspan=3>%s</th>" % _("Livestatus"))
+            html.write("<th colspan=5>%s</th>" % _("Replication"))
             html.write("<tr>" +
-                       "<th>%s</th>" % _("ID") + 
-                       "<th>%s</th>" % _("Alias") + 
+                       "<th>%s</th>" % _("Status") + 
+                       "<th>%s</th>" % _("Core-Version") + 
+                       "<th>%s</th>" % _("Last restart") + 
                        "<th>%s</th>" % _("Multisite URL") + 
-                       "<th>%s</th>" % _("Type") + 
                        "<th>%s</th>" % _("Changes") + 
-                       "<th></th>" +
+                       "<th>%s</th>" % _("Type") + 
+                       "<th>%s</th>" % _("State") +
                        "<th>%s</th>" % _("Actions") +
                        "</tr>")
             odd = "even"
@@ -2355,10 +2361,27 @@ def mode_changelog(phase):
 
                 srs = repstatus.get(site_id, {})
                 html.write('<tr class="data %s0">' % odd)
+                # ID & Alias
                 html.write("<td><a href='%s'>%s</a></td>" % 
                    (make_link([("mode", "edit_site"), ("edit", site_id)]), site_id))
                 html.write("<td>%s</td>" % site.get("alias", ""))
 
+                # Livestatus
+                ss = html.site_status.get(site_id, {})
+                status = ss.get("state", "unknown")
+                html.write('<td><div class="sitestatus %s">%s</div></td>' % (status, status))
+
+                # Core-Version
+                html.write('<td>%s</td>' % ss.get("program_version", ""))
+
+                # Uptime / Last restart
+                if "program_start" in ss:
+                    age_text = html.age_text(time.time() - ss["program_start"]) + " " + _("ago")
+                else:
+                    aget_text = ""
+                html.write('<td>%s</td>' % age_text)
+
+                # Multisite-URL
                 html.write("<td>%s</td>" % (not is_local 
                    and "<a href='%s'>%s</a>" % tuple([site.get("multisiteurl")]*2) or ""))
 
@@ -2373,8 +2396,9 @@ def mode_changelog(phase):
 
                 html.write("<td class=number>%d</td>" % srs.get("pending", 0))
 
-                # icons
-                html.write('<td>')
+
+                # State
+                html.write("<td class=buttons>")
                 uptodate = True
                 if srs.get("pending") and not site_is_local(site_id):
                     html.write('<img class=icon title="%s" src="images/icon_need_replicate.png">' % 
@@ -2390,11 +2414,11 @@ def mode_changelog(phase):
                 html.write("</td>")
 
                 # Actions
+                html.write("<td class=buttons>")
                 sync_url = make_action_link([("mode", "changelog"), 
                         ("_site", site_id), ("_siteaction", "sync")])
                 restart_url = make_action_link([("mode", "changelog"), 
                         ("_site", site_id), ("_siteaction", "restart")])
-                html.write("<td class=buttons>")
                 if not uptodate:
                     if not site_is_local(site_id):
                         if srs.get("pending"):
@@ -2406,6 +2430,7 @@ def mode_changelog(phase):
                     else:
                         html.buttonlink(restart_url, _("Restart"))
                 html.write("</td>")
+
                 html.write("</tr>")
                 if not uptodate:
                     all_sites_uptodate = False

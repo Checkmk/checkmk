@@ -399,7 +399,7 @@ class BIGroupFilter(Filter):
         return [ (self.htmlvars[0], row[self.column]) ]
 
     def display(self):
-        bi.compile_forest(html.req.user)
+        bi.compile_forest(config.user_id)
         htmlvar = self.htmlvars[0]
         html.select(htmlvar, [ ("", "") ] + [(g,g) for g in bi.g_user_cache["forest"].keys()])
 

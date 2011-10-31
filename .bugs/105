@@ -5,7 +5,7 @@ State: open
 Cost: 5
 Date: 2011-01-24 16:22:26
 Class: cleanup
-Targetversion: 1.1.12p1
+Targetversion: 1.1.12
 
 All SNMP checks must define scan functions. Otherwise the scan
 can take a long time on some slow devices.

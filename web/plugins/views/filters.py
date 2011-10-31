@@ -206,7 +206,7 @@ class FilterServiceState(Filter):
 
         for i in [0,1,2,3]:
             if html.var(self.prefix + "st%d" % i, defval) == "on":
-                if self.prefix == "h":
+                if self.prefix == "hd":
                     column = "service_last_hard_state"
                 else:
                     column = "service_state"
@@ -214,12 +214,14 @@ class FilterServiceState(Filter):
         if html.var(self.prefix + "stp", defval) == "on":
             headers.append("Filter: service_has_been_checked = 0\n")
         if len(headers) == 0:
-            return "Limit: 0\n" # not allowed state
+            return "Limit: 0\n" # no allowed state
+        elif len(headers) == 5: # all states allowed
+            return ""
         else:
             return "".join(headers) + ("Or: %d\n" % len(headers))
 
 declare_filter(215, FilterServiceState("svcstate",     _("Service states"),      ""))
-declare_filter(216, FilterServiceState("svchardstate", _("Service hard states"), "h"))
+declare_filter(216, FilterServiceState("svchardstate", _("Service hard states"), "hd"))
 
 class FilterHostState(Filter):
     def __init__(self):

@@ -69,13 +69,19 @@ def simplelink(text, target):
 def bulletlink(text, target):
     html.write("<li class=sidebar>" + link(text, target) + "</li>\n")
 
+def iconlink(text, target, icon):
+    linktext = '<img class=iconlink src="images/icon_%s.png">%s' % \
+         ( icon, text )
+    html.write('<a target=main class="iconlink link" href="%s">%s</a><br>' % \
+            (target, linktext))
+
 def footnotelinks(links):
     html.write("<div class=footnotelink>")
     for text, target in links:
         html.write(link(text, target))
     html.write("</div>\n")
 
-def iconbutton(what, url, target="side", handler="", name=""):
+def iconbutton(what, url, target="side", handler="", name="", css_class = ""):
     if target == "side":
         onclick = "onclick=\"get_url('%s', %s, '%s')\"" % \
                    (url, handler, name)
@@ -85,7 +91,8 @@ def iconbutton(what, url, target="side", handler="", name=""):
         onclick = ""
         href = "%scheck_mk/%s" % (defaults.url_prefix, url)
         tg = "target=%s" % target
-    html.write("<a href=\"%s\" %s %s><img class=iconbutton onmouseover=\"hilite_icon(this, 1)\" onmouseout=\"hilite_icon(this, 0)\" align=absmiddle src=\"%scheck_mk/images/button_%s_lo.png\"></a>\n " % (href, onclick, tg, defaults.url_prefix, what))
+    css_class = css_class and " " + css_class or ""
+    html.write("<a href=\"%s\" %s %s><img class=\"iconbutton%s\" onmouseover=\"hilite_icon(this, 1)\" onmouseout=\"hilite_icon(this, 0)\" align=absmiddle src=\"%scheck_mk/images/button_%s_lo.png\"></a>\n " % (href, onclick, tg, css_class, defaults.url_prefix, what))
 
 def nagioscgilink(text, target):
     html.write("<li class=sidebar><a target=\"main\" class=link href=\"%snagios/cgi-bin/%s\">%s</a></li>" % \
@@ -314,6 +321,9 @@ def page_add_snapin():
     for name in names:
         if name in used_snapins:
             continue
+        if not config.may("sidesnap." + name):
+            continue # not allowed for this user
+
         if n == 3:
             html.write("</tr><tr>\n")
             n = 0

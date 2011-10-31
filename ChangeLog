@@ -1,3 +1,64 @@
+1.1.13i1:
+    Core, Setup, etc.:
+    * New configuration variable static_checks[] (used by WATO)
+    * New configuration variable checkgroup_parameters (mainly for WATO)
+
+    Checks & Agents:
+    * if/if64: new ruleset if_disable_if64_hosts, that force if on
+      hosts the seem to support if64
+
+    WATO:
+    * Evolved to full featured monitoring configuration tool!
+    * Major internal code cleanup
+    * Hosts can now be created directly in folders. The concept of host lists
+      has been dropped (see migration notes!)
+    * Configuration of global configuration variables of Check_MK via WATO
+    * Configuration of main.mk rules
+    * Configuration of Nagios objects and attributes
+    * Configuration of users and roles
+    * Configuration of host tags
+    * Added missing API function update_host_attributes() to change the
+      attributes of a host
+    * Added API function num_hosts_in_folder() to count the number of hosts
+      below the given folder
+    * Added option to download "latest" snapshot
+    * extra_buttons can now register a function to gather the URL to link to
+
+    Multisite:
+    * FIX: Fixed encoding problem when opening dashboard
+
+
+1.1.12p1:
+    Checks & Agents:
+    * FIX: mk_oracle now also detects XE databases
+    * FIX: printer_alerts: handle 0-entries of Brother printers
+    * FIX: printer_supply: fix Perf-O-Meter if no max known
+    * FIX: Added id parameter to render_statistics() method to allow more than
+      one pie dashlet for host/service stats
+    * FIX: drbd: fixed inventory functions
+
+    Multisite:
+    * FIX: finally fixed long-wanted "NagStaMon create hundreds
+      of Apache processes" problem!
+    * FIX: query crashed when sorting after a join columns without
+      an explicit title.
+    * FIX: filter for WATO file/folder was not always working.
+    * Added filter for hard services states to search and service
+      problems view
+    * FIX: dashboard problem views now ignore notification period,
+      just as tactical overview and normal problem views do
+ 
+
+1.1.12:
+    Checks & Agents:
+    * dell_powerconnect_*: final fixed, added PNP-templates
+    * ps.perf: better error handling in PNP template
+
+    Multisite:
+    * Dashboard: fix font size of service statistics table
+    * Dashboard: insert links to views into statistics
+    * Dashboard: add links to PNP when using PNP graphs
+    
 1.1.12b2:
     Core, Setup, etc.:
     * FIX: fix crash with umlauts in host aliases
@@ -26,6 +87,7 @@
       as result of a full disk)
     * FIX: Livestatus-API: fix COMMAND via persistent connections
 	
+
 1.1.12b1:
     Core, Setup, etc.:
     * FIX: fix cmk -D on cluster hosts

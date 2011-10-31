@@ -24,23 +24,25 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import wato
+import config, wato
 
 
 class FilterWatoFile(Filter):
     def __init__(self):
-        Filter.__init__(self, "filename", "WATO Folder/File", "host", ["filename"], [])
+        Filter.__init__(self, "wato_folder", _("WATO Folder"), "host", ["filename"], [])
         self.last_wato_data_update = None
+
+    def available(self):
+        return config.wato_enabled
 
     def load_wato_data(self):
         self.tree = wato.api.get_folder_tree()
-        self.path_to_tree = {} # keep mapping from string-paths to folders/files
-        if not hasattr(self,"selection"):
-            self.selection = self.folder_selection(self.tree, "", 0)
+        self.path_to_tree = {} # will be filled by self.folder_selection
+        self.selection = self.folder_selection(self.tree, "", 0)
+        self.last_wato_data_update = time.time()
 
     def check_wato_data_update(self):
-        if not self.last_wato_data_update or time.time() - self.last_wato_data_update > 30:
-            self.last_wato_data_update = time.time()
+        if not self.last_wato_data_update or time.time() - self.last_wato_data_update > 5:
             self.load_wato_data()
 
     def display(self):
@@ -51,24 +53,21 @@ class FilterWatoFile(Filter):
         self.check_wato_data_update()
         current = html.var(self.name)
         if current and current in self.path_to_tree:
-            return "Filter: host_filename ~ ^%s\n" % current.replace("\n", "") # prevent insertions attack
+            return "Filter: host_filename ~ ^/wato/%s/\n" % current.replace("\n", "") # prevent insertions attack
         else:
             return ""
 
+    # Construct pair-list of ( folder-path, title ) to be used
+    # by the HTML selection box. This also updates self._tree,
+    # a dictionary from the path to the title.
     def folder_selection(self, folder, prefix, depth):
-        if depth == 0:
-            self.check_wato_data_update()
-        my_path = prefix + folder[".name"]
-        if not my_path.endswith(".mk"):
-            my_path += "/"
-
+        my_path = folder[".path"]
         if depth:
             title_prefix = "&nbsp;&nbsp;&nbsp;" * depth + "` " + "- " * depth
         else:
             title_prefix = ""
         self.path_to_tree[my_path] = folder["title"]
         sel = [ (my_path , title_prefix + folder["title"]) ]
-        sel += self.sublist(folder.get(".files", {}), my_path, depth)
         sel += self.sublist(folder.get(".folders", {}), my_path, depth)
         return sel
 
@@ -93,7 +92,6 @@ class FilterWatoFile(Filter):
         if current and current != "/":
             return self.path_to_tree.get(current) 
 
-
-
 declare_filter(10, FilterWatoFile())
-ubiquitary_filters.append("filename") # show in all views
+if "wato_folder" not in ubiquitary_filters:
+    ubiquitary_filters.append("wato_folder") # show in all views

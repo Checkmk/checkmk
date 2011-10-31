@@ -41,3 +41,4 @@ def check_uptime(_no_item, _no_params, info):
 
 
 check_info["uptime"] = (check_uptime, "Uptime", 1, inventory_uptime)
+checkgroup_of["uptime"] = "uptime"

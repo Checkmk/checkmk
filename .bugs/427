@@ -4,7 +4,7 @@ Benefit: 1
 State: open
 Cost: 3
 Date: 2011-10-21 13:09:21
-Targetversion: 1.1.12
+Targetversion: 1.2.0
 Class: feature
 
 There is a agent section outputting the memory information for HP-UX, but no

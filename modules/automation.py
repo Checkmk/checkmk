@@ -33,20 +33,28 @@ class MKAutomationError(Exception):
 
 def do_automation(cmd, args):
     try:
-        if cmd == "try-inventory":
-            result = automation_try_inventory(args)
-        elif cmd == "inventory":
-            result = automation_inventory(args)
-        elif cmd == "get-autochecks":
-            result = automation_get_autochecks(args)
-        elif cmd == "set-autochecks":
-            result = automation_set_autochecks(args)
+        if cmd == "get-configuration":
+            read_config_files(with_autochecks=False, with_conf_d=False)
+            result = automation_get_configuration()
+        elif cmd == "get-check-information":
+            result = automation_get_check_information()
         elif cmd == "delete-host":
+            read_config_files(with_autochecks=False)
             result = automation_delete_host(args)
-        elif cmd == "restart":
-	    result = automation_restart()
         else:
-            raise MKAutomationError("Automation command '%s' is not implemented." % cmd)
+            read_config_files()
+            if cmd == "try-inventory":
+                result = automation_try_inventory(args)
+            elif cmd == "inventory":
+                result = automation_inventory(args)
+            elif cmd == "get-autochecks":
+                result = automation_get_autochecks(args)
+            elif cmd == "set-autochecks":
+                result = automation_set_autochecks(args)
+            elif cmd == "restart":
+                result = automation_restart()
+            else:
+                raise MKAutomationError("Automation command '%s' is not implemented." % cmd)
 
     except MKAutomationError, e:
         sys.stderr.write("%s\n" % e)
@@ -95,7 +103,7 @@ def automation_inventory(args):
     # Create new list of checks
     new_items = []
     for entry in table:
-        state_type, ct, item, paramstring = entry[:4]
+        state_type, ct, checkgroup, item, paramstring = entry[:5]
         if state_type in [ "legacy", "manual", "ignored" ]:
             continue # this is not an autocheck or ignored and currently not checked
 
@@ -220,7 +228,8 @@ def automation_try_inventory(args):
             exitcode = None
             output = "WAITING - Legacy check, cannot be done offline"
             perfdata = []
-        table.append((state_type, ct, item, paramstring, params, descr, exitcode, output, perfdata))
+        checkgroup = checkgroup_of.get(ct)
+        table.append((state_type, ct, checkgroup, item, paramstring, params, descr, exitcode, output, perfdata))
 
     return table
 
@@ -398,4 +407,26 @@ def automation_restart():
 
     sys.stdout = old_stdout
 
+def automation_get_configuration(): 
+    # We read the list of variable names from stdin since
+    # that could be too much for the command line
+    variable_names = eval(sys.stdin.read())
+    result = {}
+    for varname in variable_names:
+        if varname in globals():
+            result[varname] = globals()[varname]
+    return result
 
+def automation_get_check_information():
+    manuals = all_manuals()
+    checks = {}
+    for checkname in check_info:
+        manfile = manuals.get(checkname)
+        if manfile:
+            title = file(manfile).readline().strip().split(":", 1)[1].strip()
+        else:
+            title = checkname
+        checks[checkname] = { "title" : title }
+        if checkname in checkgroup_of:
+            checks[checkname]["group"] = checkgroup_of[checkname]
+    return checks

@@ -134,7 +134,7 @@ def show_filter_form(is_open, filters):
     html.write("<table class=\"form\">\n")
 
     # sort filters according to title
-    s = [(f.sort_index, f.title, f) for f in filters]
+    s = [(f.sort_index, f.title, f) for f in filters if f.available()]
     s.sort()
     col = 0
     for sort_index, title, f in s:
@@ -216,6 +216,11 @@ class Filter:
         self.htmlvars = htmlvars
         self.link_columns = link_columns
 
+    # Some filters can be unavailable due to the configuration (e.g.
+    # the WATO Folder filter is only available if WATO is enabled.
+    def available(self):
+        return True
+
     def display(self):
         raise MKInternalError("Incomplete implementation of filter %s '%s': missing display()" % \
                 (self.name, self.title))
@@ -285,7 +290,7 @@ def load_views():
 # Get the list of views which are available to the user
 # (which could be retrieved with get_view)
 def available_views():
-    user = html.req.user
+    user = config.user_id
     views = {}
 
     # 1. user's own views, if allowed to edit views
@@ -350,8 +355,8 @@ def page_edit_views(msg=None):
     # Deletion of views
     delname = html.var("_delete")
     if delname and html.confirm(_("Please confirm the deletion of the view <tt>%s</tt>.") % delname):
-        del html.multisite_views[(html.req.user, delname)]
-        save_views(html.req.user)
+        del html.multisite_views[(config.user_id, delname)]
+        save_views(config.user_id)
         html.reload_sidebar();
 
     html.begin_form("create_view", "edit_view.py")
@@ -383,7 +388,7 @@ def page_edit_views(msg=None):
         if owner == "" and not config.may("view.%s" % viewname):
             continue
         view = html.multisite_views[(owner, viewname)]
-        if owner == html.req.user or (view["public"] and (owner == "" or config.user_may(owner, "publish_views"))):
+        if owner == config.user_id or (view["public"] and (owner == "" or config.user_may(owner, "publish_views"))):
             if first:
                 html.write("<tr><th>"+_('Name')+"</th><th>"+_('Title / Description')+"</th>"
                            "<th>"+_('Owner')+"</th><th>"+_('Public')+"</th><th>"+_('linked')+"</th>"
@@ -414,7 +419,7 @@ def page_edit_views(msg=None):
             backurl = htmllib.urlencode(html.makeuri([]))
             url = "edit_view.py?clonefrom=%s&load_view=%s&back=%s" % (owner, viewname, backurl)
             html.buttonlink(url, buttontext, True)
-            if owner == html.req.user:
+            if owner == config.user_id:
                 html.buttonlink("edit_view.py?load_view=%s" % viewname, _("Edit"))
                 html.buttonlink("edit_views.py?_delete=%s" % viewname, _("Delete!"), True)
             html.write("</td></tr>\n")
@@ -454,22 +459,22 @@ def page_edit_view():
         if cloneuser != None:
             view = copy.copy(html.multisite_views.get((cloneuser, viewname), None))
             # Make sure, name is unique
-            if cloneuser == html.req.user: # Clone own view
+            if cloneuser == config.user_id: # Clone own view
                 newname = viewname + "_clone"
             else:
                 newname = viewname
             # Name conflict -> try new names
             n = 1
-            while (html.req.user, newname) in html.multisite_views:
+            while (config.user_id, newname) in html.multisite_views:
                 n += 1
                 newname = viewname + "_clone%d" % n
             view["name"] = newname
             viewname = newname
             oldname = None # Prevent renaming
-            if cloneuser == html.req.user:
+            if cloneuser == config.user_id:
                 view["title"] += _(" (Copy)")
         else:
-            view = html.multisite_views.get((html.req.user, viewname))
+            view = html.multisite_views.get((config.user_id, viewname))
             if not view:
                 view = html.multisite_views.get(('', viewname)) # load builtin view
 
@@ -491,12 +496,12 @@ def page_edit_view():
             if html.var("save"):
                 if html.check_transaction():
                     load_views()
-                    html.multisite_views[(html.req.user, view["name"])] = view
+                    html.multisite_views[(config.user_id, view["name"])] = view
                     oldname = html.var("old_name")
                     # Handle renaming of views -> delete old entry
-                    if oldname and oldname != view["name"] and (html.req.user, oldname) in html.multisite_views:
-                        del html.multisite_views[(html.req.user, oldname)]
-                    save_views(html.req.user)
+                    if oldname and oldname != view["name"] and (config.user_id, oldname) in html.multisite_views:
+                        del html.multisite_views[(config.user_id, oldname)]
+                    save_views(config.user_id)
                 return page_message_and_forward(_("Your view has been saved."), "edit_views.py",
                         "<script type='text/javascript'>if(top.frames[0]) top.frames[0].location.reload();</script>\n")
 
@@ -990,7 +995,7 @@ def create_view():
 
     return {
         "name"            : name,
-        "owner"           : html.req.user,
+        "owner"           : config.user_id,
         "title"           : title,
         "topic"           : topic,
         "linktitle"       : linktitle,
@@ -1150,7 +1155,6 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         if not filter.info or filter.info in datasource["infos"]:
             show_filters.append(filter)
 
-
     hide_filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
     hard_filters = [ multisite_filters[fn] for fn in view["hard_filters"] ]
     for varname, value in view["hard_filtervars"]:
@@ -1161,7 +1165,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     # Prepare Filter headers for Livestatus
     filterheaders = ""
     only_sites = None
-    all_active_filters = show_filters + hide_filters + hard_filters
+    all_active_filters = [ f for f in show_filters + hide_filters + hard_filters if f.available() ]
     for filt in all_active_filters: 
         header = filt.filter(tablename)
         if header.startswith("Sites:"):
@@ -1201,6 +1205,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         else:
             join_columns += s[0]["columns"]
 
+
     # Add key columns, needed for executing commands
     columns += datasource["keys"]
 
@@ -1214,7 +1219,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     columns = list(colset)
 
     # Get list of painter options we need to display (such as PNP time range
-    # or the format being used for timestamp display
+    # or the format being used for timestamp display)
     painter_options = []
     for entry in all_painters:
         p = entry[0]
@@ -1284,7 +1289,8 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
 
         # Command-button, open command form if checkboxes are currently shown
         if 'C' in display_options and len(rows) > 0 and config.may("act"):
-            toggle_button("table_actions", show_checkboxes, _("Commands"))
+            toggle_button("table_actions", False, _("Commands"))
+            # toggle_button("table_actions", show_checkboxes, _("Commands"))
             html.write("<td class=minigap></td>\n")
 
         # Buttons for view options
@@ -1336,7 +1342,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
         if 'E' in display_options and config.may("edit_views"):
             backurl = htmllib.urlencode(html.makeuri([]))
             html.write('<td class="right" onmouseover="hover_tab(this);" onmouseout="unhover_tab(this);">')
-            if view["owner"] == html.req.user:
+            if view["owner"] == config.user_id:
                 html.write('<a href="edit_view.py?load_view=%s&back=%s">%s</a>\n' %
                                                      (view["name"], backurl, _('Edit')))
             else:
@@ -1375,8 +1381,9 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
                 if 'C' in display_options:
                     show_action_form(True, datasource)
 
-        elif 'C' in display_options: # (display open, if checkboxes are currently shown)
-            show_action_form(show_checkboxes, datasource)
+        elif 'C' in display_options: # (*not* display open, if checkboxes are currently shown)
+            # show_action_form(show_checkboxes, datasource)
+            show_action_form(False, datasource)
 
     if need_navi:
         if 'O' in display_options and len(painter_options) > 0 and config.may("painter_options"):
@@ -1569,7 +1576,7 @@ def view_linktitle(view):
 
 def show_context_links(thisview, active_filters):
     # Show button to WATO, if permissions allow this
-    if config.may("use_wato"):
+    if config.wato_enabled and config.may("wato.use"):
         html.begin_context_buttons()
         execute_hooks('buttons-begin')
         first = False
@@ -1577,8 +1584,8 @@ def show_context_links(thisview, active_filters):
         if host:
             url = wato.api.link_to_host(host)
         else:
-            url = wato.api.link_to_path(html.var("filename", "/"))
-        html.context_button(_("WATO") ,url, "wato")
+            url = wato.api.link_to_path(html.var("wato_folder", ""))
+        html.context_button(_("WATO"), url, "wato")
 
     else:
         first = True
@@ -1677,7 +1684,9 @@ def query_data(datasource, columns, add_columns, add_headers, only_sites = [], l
     if limit != None:
         html.live.set_limit(limit + 1) # + 1: We need to know, if limit is exceeded
     if config.debug and html.output_format == "html" and 'W' in html.display_options:
+        html.begin_foldable_container("debug_lq", "x", True, _("Livestatus Query:"), indent=False)  
         html.write("<div class=message><tt>%s</tt></div>\n" % (query.replace('\n', '<br>\n')))
+        html.end_foldable_container()
 
     if only_sites:
         html.live.set_only_sites(only_sites)
@@ -2065,7 +2074,7 @@ def nagios_host_service_action_command(what, dataset):
 
     elif html.var("_fake") and config.may("action.fakechecks"):
         statename = html.var("_fake")
-        pluginoutput = _("Manually set to %s by %s") % (statename, html.req.user)
+        pluginoutput = _("Manually set to %s by %s") % (statename, config.user_id)
         svcstate = {"Ok":0, "Warning":1, "Critical":2, "Unknown":3}.get(statename)
         if svcstate != None:
             command = "PROCESS_SERVICE_CHECK_RESULT;%s;%s;%s" % (spec, svcstate, pluginoutput)
@@ -2083,7 +2092,7 @@ def nagios_host_service_action_command(what, dataset):
         sendnot = html.var("_ack_notify") and 1 or 0
         perscomm = html.var("_ack_persistent") and 1 or 0
         command = "ACKNOWLEDGE_" + cmdtag + "_PROBLEM;%s;%d;%d;%d;%s" % \
-                      (spec, sticky, sendnot, perscomm, html.req.user) + (";%s" % comment)
+                      (spec, sticky, sendnot, perscomm, config.user_id) + (";%s" % comment)
         title = _("<b>acknowledge the problems</b> of")
 
     elif html.var("_add_comment") and config.may("action.addcomment"):
@@ -2091,7 +2100,7 @@ def nagios_host_service_action_command(what, dataset):
         if not comment:
             raise MKUserError("_comment", _("You need to supply a comment."))
         command = "ADD_" + cmdtag + "_COMMENT;%s;1;%s" % \
-                  (spec, html.req.user) + (";%s" % comment)
+                  (spec, config.user_id) + (";%s" % comment)
         title = _("<b>add a comment to</b>")
 
     elif html.var("_remove_ack") and config.may("action.acknowledge"):
@@ -2163,7 +2172,7 @@ def nagios_host_service_action_command(what, dataset):
             fixed = 1
             duration = 0
         command = (("SCHEDULE_" + cmdtag + "_DOWNTIME;%s;" % spec) \
-                   + ("%d;%d;%d;0;%d;%s;" % (down_from, down_to, fixed, duration, html.req.user)) \
+                   + ("%d;%d;%d;0;%d;%s;" % (down_from, down_to, fixed, duration, config.user_id)) \
                    + comment)
 
     nagios_command = ("[%d] " % int(time.time())) + command + "\n"
@@ -2252,8 +2261,9 @@ def page_message_and_forward(message, default_url, addhtml=""):
 
 def register_hook(hook, func):
     if not hook in view_hooks:
-        view_hooks[hook] = [func]
-    else:
+        view_hooks[hook] = []
+
+    if func not in view_hooks[hook]:
         view_hooks[hook].append(func)
 
 def execute_hooks(hook):
@@ -2442,16 +2452,19 @@ def sort_url(view, painter, join_index):
     return ','.join(p)
 
 def paint_header(view, p):
+    # The variable p is a tuple with the following components:
+    # p[0] --> painter object, from multisite_painters[]
+    # p[1] --> view name to link to or None (not needed here)
+    # p[2] --> tooltip (title) to display (not needed here)
+    # p[3] --> optional: join key (e.g. service description)
+    # p[4] --> optional: column title to use instead default
     painter = p[0]
     join_index = None
+    t = painter.get("short", painter["title"])
     if len(p) >= 4: # join column
-        if len(p) >= 5 and p[4]:
-            t   = p[4]
-            join_index = p[3]
-        else:
-            t = p[3]
-    else:
-        t = painter.get("short", painter["title"])
+        join_index = p[3]
+    if len(p) >= 5 and p[4]:
+        t = p[4]
 
     # Optional: Sort link in title cell
     # Use explicit defined sorter or implicit the sorter with the painter name

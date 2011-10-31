@@ -1,0 +1,10 @@
+Title: Add filter for alert state in log views (OK/CRIT, etc)
+Component: multisite
+Benefit: 2
+State: open
+Cost: 2
+Date: 2011-10-27 18:55:56
+Targetversion: 1.2.0
+Class: todo
+
+So that we can filter events for the alert state.

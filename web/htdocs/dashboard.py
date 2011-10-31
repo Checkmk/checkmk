@@ -85,37 +85,37 @@ def page_dashboard():
 
     render_dashboard(name)
 
-def add_filename_to_url(url, filename):
-    if not filename:
+def add_wato_folder_to_url(url, wato_folder):
+    if not wato_folder:
         return url
     elif '/' in url:
-        return url # do not append filename to non-Check_MK-urls
+        return url # do not append wato_folder to non-Check_MK-urls
     elif '?' in url:
-        return url + "&filename=" + htmllib.urlencode(filename)
+        return url + "&wato_folder=" + htmllib.urlencode(wato_folder)
     else:
-        return url + "?filename=" + htmllib.urlencode(filename)
+        return url + "?wato_folder=" + htmllib.urlencode(wato_folder)
 
 
 # Actual rendering function
 def render_dashboard(name):
     board = dashboards[name]
 
-    # The dashboard may be called with "filename" set. In that case
+    # The dashboard may be called with "wato_folder" set. In that case
     # the dashboard is assumed to restrict the shown data to a specific
     # WATO subfolder or file. This could be a configurable feature in
     # future, but currently we assume, that *all* dashboards are filename
     # sensitive.
 
-    filename = html.var("filename")
-    if not filename or filename == "/": # ignore filename in case of root folder
-        filename = None
+    wato_folder = html.var("wato_folder")
+    if not wato_folder: # ignore wato folder in case of root folder
+        wato_folder = None
 
     # The title of the dashboard needs to be prefixed with the WATO path, 
     # in order to make it clear to the user, that he is seeing only partial
     # data.
     title = board["title"]
-    if filename:
-        title = wato.api.get_folder_title(filename) + " - " + title
+    if wato_folder:
+        title = wato.api.get_folder_title(wato_folder) + " - " + title
     html.header(title)
 
     html.javascript_file("dashboard")
@@ -133,10 +133,10 @@ def render_dashboard(name):
         # refreshed by us but need to do that themselves.
         if "url" in dashlet:
             refresh_dashlets.append([nr, dashlet.get("refresh", 0), 
-              add_filename_to_url(dashlet["url"], filename)])
+              str(add_wato_folder_to_url(dashlet["url"], wato_folder))])
 
         # Paint the dashlet's HTML code
-        render_dashlet(nr, dashlet, filename)
+        render_dashlet(nr, dashlet, wato_folder)
 
     html.write("</div>\n")
 
@@ -163,7 +163,7 @@ dashboard_scheduler(1);
 # for the resizing. Within that div there is an inner div containing the
 # actual dashlet content. The margin between the inner and outer div is
 # used for stylish layout stuff (shadows, etc.)
-def render_dashlet(nr, dashlet, filename):
+def render_dashlet(nr, dashlet, wato_folder):
 
     html.write('<div class=dashlet id="dashlet_%d">' % nr)
     # render shadow
@@ -195,7 +195,7 @@ def render_dashlet(nr, dashlet, filename):
         html.write(dashlet["content"])
     elif "iframe" in dashlet: # fixed content containing iframe
         html.write('<iframe width="100%%" height="100%%" src="%s"></iframe>' % 
-           add_filename_to_url(dashlet["iframe"], filename))
+           add_wato_folder_to_url(dashlet["iframe"], wato_folder))
     html.write("</div></div>\n")
 
 # Here comes the brain stuff: An intelligent liquid layout algorithm.
@@ -413,31 +413,36 @@ def dashlet_mk_logo():
 def dashlet_hoststats():
     table = [
        ( _("up"), "#0b3",
+        "searchhost&is_host_scheduled_downtime_depth=0&hst0=on",
         "Stats: state = 0\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "StatsAnd: 2\n"),
 
        ( _("down"), "#f00",
+        "searchhost&is_host_scheduled_downtime_depth=0&hst1=on",
         "Stats: state = 1\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "StatsAnd: 2\n"),
 
        ( _("unreachable"), "#f80",
+        "searchhost&is_host_scheduled_downtime_depth=0&hst2=on",
         "Stats: state = 2\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "StatsAnd: 2\n"),
 
        ( _("in downtime"), "#0af",
+        "searchhost&search=1&is_host_scheduled_downtime_depth=1",
         "Stats: scheduled_downtime_depth > 0\n" \
        )
     ]
     filter = "Filter: custom_variable_names < _REALNAME\n"
 
-    render_statistics("hosts", table, filter)
+    render_statistics("hoststats", "hosts", table, filter)
 
 def dashlet_servicestats():
     table = [
        ( _("OK"), "#0b3",
+        "searchsvc&hst0=on&st0=on&is_in_downtime=0",
         "Stats: state = 0\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
@@ -445,6 +450,7 @@ def dashlet_servicestats():
         "StatsAnd: 4\n"),
 
        ( _("warning"), "#ff0",
+        "searchsvc&hst0=on&st1=on&is_in_downtime=0",
         "Stats: state = 1\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
@@ -452,6 +458,7 @@ def dashlet_servicestats():
         "StatsAnd: 4\n"),
 
        ( _("unknown"), "#f80",
+        "searchsvc&hst0=on&st3=on&is_in_downtime=0",
         "Stats: state = 3\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
@@ -459,6 +466,7 @@ def dashlet_servicestats():
         "StatsAnd: 4\n"),
 
        ( _("critical"), "#f00",
+        "searchsvc&hst0=on&st2=on&is_in_downtime=0",
         "Stats: state = 2\n" \
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
@@ -466,11 +474,13 @@ def dashlet_servicestats():
         "StatsAnd: 4\n"),
 
        ( _("in downtime"), "#0af",
+        "searchsvc&hst0=on&is_in_downtime=0",
         "Stats: scheduled_downtime_depth > 0\n" \
         "Stats: host_scheduled_downtime_depth > 0\n" \
         "StatsOr: 2\n"),
 
        ( _("on down host"), "#048",
+        "searchsvc&hst1=on&hst2=on&hstp=on",
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
         "Stats: host_state != 0\n" \
@@ -478,19 +488,19 @@ def dashlet_servicestats():
     ]
     filter = "Filter: host_custom_variable_names < _REALNAME\n"
 
-    render_statistics("services", table, filter)
+    render_statistics("servicestats", "services", table, filter)
 
 
-def render_statistics(what, table, filter):
+def render_statistics(pie_id, what, table, filter):
     # Is the query restricted to a certain WATO-path?
-    filename = html.var("filename")
-    if filename and filename != "/":
+    wato_folder = html.var("wato_folder")
+    if wato_folder:
         # filter += "Filter: host_state = 0"
-        filter += "Filter: host_filename ~ ^%s\n" % filename.replace("\n", "")
+        filter += "Filter: host_filename ~ ^/wato/%s/\n" % wato_folder.replace("\n", "")
     
     query = "GET %s\n" % what
     for entry in table:
-        query += entry[2]
+        query += entry[3]
     query += filter
 
     result = html.live.query_summed_stats(query)
@@ -499,21 +509,25 @@ def render_statistics(what, table, filter):
     pie_diameter = 136
 
     html.write('<canvas class=pie width=%d height=%d id=%s_stats style="float: left"></canvas>' % 
-            (pie_diameter, pie_diameter, what))
+            (pie_diameter, pie_diameter, pie_id))
     
-    html.write('<table class="hoststats narrow" style="float:left">')
-    for (name, color, query), count in pies + [ ((_("Total"), "", ""), total) ]:
-        html.write('<tr><th>%s</th><td class=color style="background-color: %s">'
-                   '</td><td>%d</td></tr>' % (name, color, count))
+    html.write('<table class="hoststats%s" style="float:left">' % ( 
+        len(pies) > 5 and " narrow" or ""))
+    for (name, color, viewurl, query), count in pies + [ ((_("Total"), "", "all%s" % what, ""), total) ]:
+        url = "view.py?view_name=" + viewurl + "&filled_in=filter&search=1&wato_folder=" \
+              + htmllib.urlencode(html.var("wato_folder", ""))
+        html.write('<tr><th><a href="%s">%s</a></th>' % (url, name))
+        html.write('<td class=color style="background-color: %s">'
+                   '</td><td><a href="%s">%d</a></td></tr>' % (color, url, count))
 
     html.write("</table>")
 
     r = 0.0
     pie_parts = []
     if total > 0:
-        for (name, color, q), value in pies:
+        for (name, color, viewurl, q), value in pies:
             perc = 100.0 * value / total
-            pie_parts.append('chart_pie("%s", %f, %f, %r);' % (what, r, r + perc, color))
+            pie_parts.append('chart_pie("%s", %f, %f, %r);' % (pie_id, r, r + perc, color))
             r += perc
 
     html.javascript("""
@@ -521,8 +535,8 @@ function has_canvas_support() {
     return document.createElement('canvas').getContext;
 }
 
-function chart_pie(what, from, to, color) {
-    var context = document.getElementById(what + "_stats").getContext('2d');
+function chart_pie(pie_id, from, to, color) {
+    var context = document.getElementById(pie_id + "_stats").getContext('2d');
     if(!context)
         return;
     var pie_x = %(x)f;
@@ -550,8 +564,7 @@ function rad(g) {
 if(has_canvas_support()) {
     %(p)s
 }
-""" % { "what" : what, "x" : pie_diameter / 2, 
-        "y": pie_diameter/2, "d" : pie_diameter, 'p': '\n'.join(pie_parts) })
+""" % { "x" : pie_diameter / 2, "y": pie_diameter/2, "d" : pie_diameter, 'p': '\n'.join(pie_parts) })
 
 def dashlet_pnpgraph():
     render_pnpgraph(html.var("site"), html.var("host"), html.var("service"), int(html.var("source", 0)))
@@ -569,11 +582,14 @@ def render_pnpgraph(site, host, service=None, source=0):
         service = "_HOST_"
 
     if not site:
-        base_url = defaults.url_prefix + "/pnp4nagios/index.php/"
+        base_url = defaults.url_prefix 
     else:
         base_url = html.site_status[site]["site"]["url_prefix"]
-
-    img_url = base_url + "image?host=%s&srv=%s&view=0&source=%d&theme=multisite&_t=%d" % \
+    base_url += "/pnp4nagios/index.php/"
+    var_part = "?host=%s&srv=%s&view=0&source=%d&theme=multisite&_t=%d" % \
             (pnp_cleanup(host), pnp_cleanup(service), source, int(time.time()))
-    html.write('<img src="%s">' % img_url)
+
+    pnp_url = base_url + "graph" + var_part
+    img_url = base_url + "image" + var_part
+    html.write('<a href="%s"><img border=0 src="%s"></a>' % (pnp_url, img_url))
 

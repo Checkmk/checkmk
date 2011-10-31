@@ -30,7 +30,6 @@ import main
 import page_logwatch
 import views
 import sidebar
-import permissions
 import actions
 import weblib
 import dashboard
@@ -58,8 +57,6 @@ pagehandlers.update({
    "del_bookmark"          : sidebar.ajax_del_bookmark,
    "tree_openclose"        : weblib.ajax_tree_openclose,
    "edit_bookmark"         : sidebar.page_edit_bookmark,
-   "view_permissions"      : permissions.page_view_permissions,
-   "edit_permissions"      : permissions.page_edit_permissions,
    "nagios_action"         : actions.ajax_action,
    "dashboard"             : dashboard.page_dashboard,
    "dashboard_resize"      : dashboard.ajax_resize,

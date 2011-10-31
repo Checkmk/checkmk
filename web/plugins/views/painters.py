@@ -148,9 +148,10 @@ def iconpainter_columns(what):
 
     for icon in multisite_icons:
         if 'columns' in icon:
-            cols.update([ what + '_' + i for i in icon['columns'] ])
-        if what + '_columns' in icon:
-            cols.update(icon[what + '_columns'])
+            cols.update([ what + '_' + c for c in icon['columns'] ])
+        cols.update([ "host_" + c for c in icon.get("host_columns", [])])
+        if what == "service":
+            cols.update([ "service_" + c for c in icon.get("service_columns", [])])
 
     return cols
 

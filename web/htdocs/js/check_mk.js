@@ -173,6 +173,11 @@ function executeJS(objId) {
 function isFirefox() {
   return navigator.userAgent.indexOf("Firefox") > -1;
 }
+
+function isWebkit() {
+  return navigator.userAgent.indexOf("WebKit") > -1;
+}
+
 function pageHeight() {
   var h;
   
@@ -200,7 +205,7 @@ function pageWidth() {
   else
     w = null;
   
-  return h;
+  return w;
 }
 
 /**

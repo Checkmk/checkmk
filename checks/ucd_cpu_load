@@ -44,6 +44,8 @@ def check_ucd_cpu_load(item, params, info):
         return (0, "OK - 15min Load %.2f" % load[2], perfdata)
 
 check_info['ucd_cpu_load'] = (check_ucd_cpu_load, "CPU load", 1,  inventory_ucd_cpu_load )
+checkgroup_of['ucd_cpu_load'] = "cpu_load"
+
 snmp_info['ucd_cpu_load'] = ( ".1.3.6.1.4.1.2021.10.1", [ 6 ] )
 
 # We are not sure how to safely detect the UCD SNMP Daemon. We know that

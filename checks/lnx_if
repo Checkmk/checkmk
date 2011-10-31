@@ -139,3 +139,5 @@ def check_lnx_if(item, params, info):
     return check_if_common(item, params, if_lnx_convert_to_if64(info))
 
 check_info['lnx_if'] = (check_lnx_if, "Interface %s", 1,  inventory_lnx_if)
+checkgroup_of['lnx_if'] = "if"
+check_default_levels['lnx_if'] = "if_default_levels"

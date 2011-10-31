@@ -178,7 +178,7 @@ def handler(req, profiling = True):
 
         # Make current language globally known to all of our modules
         __builtin__.current_language = lang
-
+        
         if lang:
             locale_base = defaults.locale_dir
             po_path = '/%s/LC_MESSAGES/multisite.po' % lang

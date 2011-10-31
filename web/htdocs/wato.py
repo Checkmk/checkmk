@@ -2410,7 +2410,7 @@ def mode_changelog(phase):
                 if "program_start" in ss:
                     age_text = html.age_text(time.time() - ss["program_start"]) + " " + _("ago")
                 else:
-                    aget_text = ""
+                    age_text = ""
                 html.write('<td>%s</td>' % age_text)
 
                 # Multisite-URL

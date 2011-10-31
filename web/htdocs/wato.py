@@ -2279,10 +2279,12 @@ def mode_changelog(phase):
     elif phase == "buttons":
         home_button()
         # Commit pending log right here, if all sites are up-to-date
-        if is_distributed() and all_sites_uptodate():
+        if is_distributed() and global_replication_state() == "clean":
             log_commit_pending()
 
-        if log_exists("pending") and config.may("wato.activate"):
+        if config.may("wato.activate") and (
+                (not is_distributed() and log_exists("pending"))
+            or  (is_distributed() and global_replication_state() == "dirty")):
             html.context_button(_("Activate Changes!"), 
                 html.makeuri([("_action", "activate"), ("_transid", html.current_transid())]), "apply", True)
         if log_exists("audit") and config.may("wato.auditlog") and config.may("wato.edit"):
@@ -2386,16 +2388,19 @@ def mode_changelog(phase):
                 if not is_local and not site.get("replication"):
                     continue
 
+                ss = html.site_status.get(site_id, {})
+                status = ss.get("state", "unknown")
                 srs = repstatus.get(site_id, {})
-                html.write('<tr class="data %s0">' % odd)
+
+                # Make row red, if site status is not online
+                html.write('<tr class="data %s%d">' % (odd, status != "online" and 2 or 0))
+
                 # ID & Alias
                 html.write("<td><a href='%s'>%s</a></td>" % 
                    (make_link([("mode", "edit_site"), ("edit", site_id)]), site_id))
                 html.write("<td>%s</td>" % site.get("alias", ""))
 
                 # Livestatus
-                ss = html.site_status.get(site_id, {})
-                status = ss.get("state", "unknown")
                 html.write('<td><div class="sitestatus %s">%s</div></td>' % (status, status))
 
                 # Livestatus-Version
@@ -2436,12 +2441,16 @@ def mode_changelog(phase):
                 # Start asynchronous replication
                 if sitestatus_do_async_replication:
                     html.write("<td>")
-                    html.write('<div id="repstate_%s">%s</div>' %
-                            (site_id, uptodate and _("nothing to do") 
-                                  or _("Working...")))
-                    if not uptodate:
-                        html.javascript("wato_do_replication('%s');" % site_id)
-                        num_replsites += 1
+                    # Do only include sites that are known to be up
+                    if status == "online":
+                        html.write('<div id="repstate_%s">%s</div>' %
+                                (site_id, uptodate and _("nothing to do") 
+                                      or _("Working...")))
+                        if not uptodate:
+                            html.javascript("wato_do_replication('%s');" % site_id)
+                            num_replsites += 1
+                    else:
+                        html.write("<b>%s</b>" % _("Skipping this site."))
                     html.write("</td>")
                 else:
                     # Number of pending changes
@@ -6088,15 +6097,31 @@ def update_replication_status(siteid, vars):
     save_replication_status(repstatus)
     os.close(fd)
 
-def all_sites_uptodate():
+def global_replication_state():
     repstatus = load_replication_status()
+    some_dirty = False
+    some_offline = False
+
     for site_id, site in config.allsites().items():
         if not site_is_local(site_id) and not site.get("replication"):
             continue
+
         srs = repstatus.get(site_id, {})
+
         if srs.get("pending") or srs.get("need_restart"):
-            return False
-    return True
+            ss = html.site_status.get(site_id, {})
+            status = ss.get("state", "unknown") # Skip non-online sites, they cannot be restarted
+            if status != "online":
+                some_offline = True
+            else:
+                some_dirty = True
+
+    if some_dirty:
+        return "dirty"
+    elif some_offline: # dirty but offline
+        return "locked"
+    else:
+        return "clean"
 
 def synchronize_site(site, restart):
     if site_is_local(site["id"]):

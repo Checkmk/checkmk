@@ -8925,10 +8925,12 @@ def changelog_button():
     if len(pending) > 0:
         buttontext = "<b>%d " % len(pending) + _("Changes")  + "</b>"
         hot = True
+        icon = "wato_changes"
     else:
         buttontext = _("No Changes")
         hot = False
-    html.context_button(buttontext, make_link([("mode", "changelog")]), "wato_changes", hot)
+        icon = "wato_nochanges"
+    html.context_button(buttontext, make_link([("mode", "changelog")]), icon, hot)
 
 def find_host(host):
     return find_host_in(host, g_root_folder)

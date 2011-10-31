@@ -107,137 +107,6 @@ import sys, pprint, socket, re, subprocess, time, datetime, shutil, tarfile, Str
 import config, htmllib
 from lib import *
 
-# Declare WATO-specific permissions
-config.declare_permission_section("wato", _("WATO - Check_MK's Web Administration Tool"))
-
-config.declare_permission("wato.use",
-     _("Use WATO"),
-     _("This permissions allows users to use WATO - Check_MK's "
-       "Web Administration Tool. Without this "
-       "permission all references to WATO (buttons, links,"
-       "snapins) will be unvisible."),
-     [ "admin", "user" ])
-
-config.declare_permission("wato.edit",
-     _("Make changes, perform actions"),
-     _("This permission is needed in order to make any "
-       "changes or perform any actions at all. "
-       "Without this permission, the user is only "
-       "able to view data, and that only in modules he "
-       "has explicit permissions for."),
-     [ "admin", "user" ])
-
-config.declare_permission("wato.seeall",
-     _("Read access to all modules"),
-     _("When this permission is set then the user sees "
-       "also such modules he has no explicit "
-       "access to (see below)."),
-     [ "admin", ])
-
-config.declare_permission("wato.activate",
-     _("Activate Configuration"),
-     _("This permission is needed for activating the "
-       "current configuration (and thus rewriting the "
-       "monitoring configuration and restart the monitoring daemon.)"),
-     [ "admin", "user", ])
-
-config.declare_permission("wato.auditlog",
-     _("Audit log"),
-     _("Access to the historic audit log. A user with write "
-       "access can delete the audit log. "
-       "The currently pending changes can be seen by all users "
-       "with access to WATO."),
-     [ "admin", ])
-
-config.declare_permission("wato.hosts",
-     _("Host management"),
-     _("Access to the management of hosts and folders. This "
-       "module has some additional permissions (see below)."),
-     [ "admin", "user" ])
-
-config.declare_permission("wato.edit_hosts",
-     _("Modify existing hosts"),
-     _("Modify the properties of existing hosts. Please note: "
-       "for the management of services (inventory) there is "
-       "a separate permission (see below)"),
-     [ "admin", "user" ])
-
-config.declare_permission("wato.manage_hosts",
-     _("Add & remove hosts"),
-     _("Add hosts to the monitoring and remove hosts "
-       "from the monitoring. Please also add the permissions "
-       "<i>Modify existing hosts</i>."),
-     [ "admin", "user" ])
-
-config.declare_permission("wato.services",
-     _("Manage services"),
-     _("Do inventory and service configuration on existing hosts."),
-     [ "admin", "user" ])
-
-config.declare_permission("wato.edit_folders",
-     _("Modify existing folders"),
-     _("Modify the properties of existing folders."),
-     [ "admin", "user" ])
-
-config.declare_permission("wato.manage_folders", 
-     _("Add & remove folders"),
-     _("Add new folders and delete existing folders. If a folder to be deleted contains hosts then "
-       "the permission to delete hosts is also required."),
-     [ "admin", "user" ])
-
-config.declare_permission("wato.see_all_folders",
-     _("Read access to all hosts and folders"),
-     _("Users without this permissions can only see folders with a contact group they are in. "),
-     [ "admin" ])
-
-config.declare_permission("wato.all_folders",
-     _("Write access to all hosts and folders"),
-     _("Without this permission, operations on folders can only be done by users that are members of "
-       "one of the folders contact groups. This permission grants full access to all folders and hosts. "),
-     [ "admin" ])
-
-config.declare_permission("wato.hosttags",
-     _("Manage host tags"),
-     _("Create, remove and edit host tags. Removing host tags also might remove rules, "
-       "so this permission should not be available to normal users. "),
-     [ "admin" ])
-
-config.declare_permission("wato.global",
-     _("Global settings"),
-     _("Access to the module <i>Global settings</i>"),
-     [ "admin", ])
-
-config.declare_permission("wato.rulesets",
-     _("Rulesets"),
-     _("Access to the module for managing Check_MK rules. Please note that a user can only "
-       "manage rules in folders he has permissions to. "),
-     [ "admin", "user" ])
-
-config.declare_permission("wato.groups",
-     _("Host & Service Groups"),
-     _("Access to the modules for managing host and service groups."),
-     [ "admin", ])
-
-config.declare_permission("wato.timeperiods",
-     _("Timeperiods"),
-     _("Access to the module <i>Timeperiods</i>"),
-     [ "admin", ])
-
-config.declare_permission("wato.sites",
-     _("Site management"),
-     _("Access to the module for managing connections to remote monitoring sites."),
-     [ "admin", ])
-
-config.declare_permission("wato.users",
-     _("User management"),
-     _("This permission is needed for the modules <b>Users & Contacts</b>, <b>Roles</b> and <b>Contact Groups</b>"),
-     [ "admin", ])
-
-config.declare_permission("wato.snapshots",
-     _("Backup & Restore"),
-     _("Access to the module <i>Backup & Restore</i>. Please note: a user with write access to this module "
-       "can make arbitrary changes to the configuration by restoring uploaded snapshots!"),
-     [ "admin",  ])
 
 
 root_dir      = defaults.check_mk_configdir + "/wato/"
@@ -8558,4 +8427,143 @@ modes = {
 extra_buttons = [
 ]
 
-load_web_plugins("wato", globals())
+loaded_with_language = False
+def load_plugins():
+    global loaded_with_language
+    if loaded_with_language == current_language:
+        return
+    loaded_with_language = current_language
+
+    # Declare WATO-specific permissions
+    config.declare_permission_section("wato", _("WATO - Check_MK's Web Administration Tool"))
+
+    config.declare_permission("wato.use",
+         _("Use WATO"),
+         _("This permissions allows users to use WATO - Check_MK's "
+           "Web Administration Tool. Without this "
+           "permission all references to WATO (buttons, links,"
+           "snapins) will be unvisible."),
+         [ "admin", "user" ])
+
+    config.declare_permission("wato.edit",
+         _("Make changes, perform actions"),
+         _("This permission is needed in order to make any "
+           "changes or perform any actions at all. "
+           "Without this permission, the user is only "
+           "able to view data, and that only in modules he "
+           "has explicit permissions for."),
+         [ "admin", "user" ])
+
+    config.declare_permission("wato.seeall",
+         _("Read access to all modules"),
+         _("When this permission is set then the user sees "
+           "also such modules he has no explicit "
+           "access to (see below)."),
+         [ "admin", ])
+
+    config.declare_permission("wato.activate",
+         _("Activate Configuration"),
+         _("This permission is needed for activating the "
+           "current configuration (and thus rewriting the "
+           "monitoring configuration and restart the monitoring daemon.)"),
+         [ "admin", "user", ])
+
+    config.declare_permission("wato.auditlog",
+         _("Audit log"),
+         _("Access to the historic audit log. A user with write "
+           "access can delete the audit log. "
+           "The currently pending changes can be seen by all users "
+           "with access to WATO."),
+         [ "admin", ])
+
+    config.declare_permission("wato.hosts",
+         _("Host management"),
+         _("Access to the management of hosts and folders. This "
+           "module has some additional permissions (see below)."),
+         [ "admin", "user" ])
+
+    config.declare_permission("wato.edit_hosts",
+         _("Modify existing hosts"),
+         _("Modify the properties of existing hosts. Please note: "
+           "for the management of services (inventory) there is "
+           "a separate permission (see below)"),
+         [ "admin", "user" ])
+
+    config.declare_permission("wato.manage_hosts",
+         _("Add & remove hosts"),
+         _("Add hosts to the monitoring and remove hosts "
+           "from the monitoring. Please also add the permissions "
+           "<i>Modify existing hosts</i>."),
+         [ "admin", "user" ])
+
+    config.declare_permission("wato.services",
+         _("Manage services"),
+         _("Do inventory and service configuration on existing hosts."),
+         [ "admin", "user" ])
+
+    config.declare_permission("wato.edit_folders",
+         _("Modify existing folders"),
+         _("Modify the properties of existing folders."),
+         [ "admin", "user" ])
+
+    config.declare_permission("wato.manage_folders", 
+         _("Add & remove folders"),
+         _("Add new folders and delete existing folders. If a folder to be deleted contains hosts then "
+           "the permission to delete hosts is also required."),
+         [ "admin", "user" ])
+
+    config.declare_permission("wato.see_all_folders",
+         _("Read access to all hosts and folders"),
+         _("Users without this permissions can only see folders with a contact group they are in. "),
+         [ "admin" ])
+
+    config.declare_permission("wato.all_folders",
+         _("Write access to all hosts and folders"),
+         _("Without this permission, operations on folders can only be done by users that are members of "
+           "one of the folders contact groups. This permission grants full access to all folders and hosts. "),
+         [ "admin" ])
+
+    config.declare_permission("wato.hosttags",
+         _("Manage host tags"),
+         _("Create, remove and edit host tags. Removing host tags also might remove rules, "
+           "so this permission should not be available to normal users. "),
+         [ "admin" ])
+
+    config.declare_permission("wato.global",
+         _("Global settings"),
+         _("Access to the module <i>Global settings</i>"),
+         [ "admin", ])
+
+    config.declare_permission("wato.rulesets",
+         _("Rulesets"),
+         _("Access to the module for managing Check_MK rules. Please note that a user can only "
+           "manage rules in folders he has permissions to. "),
+         [ "admin", "user" ])
+
+    config.declare_permission("wato.groups",
+         _("Host & Service Groups"),
+         _("Access to the modules for managing host and service groups."),
+         [ "admin", ])
+
+    config.declare_permission("wato.timeperiods",
+         _("Timeperiods"),
+         _("Access to the module <i>Timeperiods</i>"),
+         [ "admin", ])
+
+    config.declare_permission("wato.sites",
+         _("Site management"),
+         _("Access to the module for managing connections to remote monitoring sites."),
+         [ "admin", ])
+
+    config.declare_permission("wato.users",
+         _("User management"),
+         _("This permission is needed for the modules <b>Users & Contacts</b>, <b>Roles</b> and <b>Contact Groups</b>"),
+         [ "admin", ])
+
+    config.declare_permission("wato.snapshots",
+         _("Backup & Restore"),
+         _("Access to the module <i>Backup & Restore</i>. Please note: a user with write access to this module "
+           "can make arbitrary changes to the configuration by restoring uploaded snapshots!"),
+         [ "admin",  ])
+
+    load_web_plugins("wato", globals())

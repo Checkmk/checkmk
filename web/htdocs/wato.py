@@ -2340,15 +2340,18 @@ def mode_changelog(phase):
             html.write("<tr class=dualheader>")
             html.write("<th rowspan=2>%s</th>" % _("ID") + 
                        "<th rowspan=2>%s</th>" % _("Alias"))
-            html.write("<th colspan=3>%s</th>" % _("Livestatus"))
+            html.write("<th colspan=6>%s</th>" % _("Livestatus"))
             html.write("<th colspan=5>%s</th>" % _("Replication"))
             html.write("<tr>" +
                        "<th>%s</th>" % _("Status") + 
-                       "<th>%s</th>" % _("Core-Version") + 
+                       "<th>%s</th>" % _("Version") + 
+                       "<th>%s</th>" % _("Core") + 
+                       "<th>%s</th>" % _("Hosts") + 
+                       "<th>%s</th>" % _("Services") + 
                        "<th>%s</th>" % _("Last restart") + 
                        "<th>%s</th>" % _("Multisite URL") + 
-                       "<th>%s</th>" % _("Changes") + 
                        "<th>%s</th>" % _("Type") + 
+                       "<th>%s</th>" % _("Changes") + 
                        "<th>%s</th>" % _("State") +
                        "<th>%s</th>" % _("Actions") +
                        "</tr>")
@@ -2371,9 +2374,18 @@ def mode_changelog(phase):
                 status = ss.get("state", "unknown")
                 html.write('<td><div class="sitestatus %s">%s</div></td>' % (status, status))
 
+                # Livestatus-Version
+                html.write('<td>%s</td>' % ss.get("livestatus_version", ""))
+
                 # Core-Version
                 html.write('<td>%s</td>' % ss.get("program_version", ""))
 
+                # Hosts/services
+                html.write('<td class=number><a href="view.py?view_name=sitehosts&site=%s">%s</a></td>' % 
+                  (site_id, ss.get("num_hosts", "")))
+                html.write('<td class=number><a href="view.py?view_name=sitesvcs&site=%s">%s</a></td>' % 
+                  (site_id, ss.get("num_services", "")))
+                
                 # Uptime / Last restart
                 if "program_start" in ss:
                     age_text = html.age_text(time.time() - ss["program_start"]) + " " + _("ago")
@@ -2383,7 +2395,7 @@ def mode_changelog(phase):
 
                 # Multisite-URL
                 html.write("<td>%s</td>" % (not is_local 
-                   and "<a href='%s'>%s</a>" % tuple([site.get("multisiteurl")]*2) or ""))
+                   and "<a target=\"_blank\" href='%s'>%s</a>" % tuple([site.get("multisiteurl")]*2) or ""))
 
                 # Type
                 if is_local:
@@ -2394,8 +2406,8 @@ def mode_changelog(phase):
                     sitetype = _("Peer")
                 html.write("<td>%s</td>" % sitetype)
 
+                # Number of pending changes
                 html.write("<td class=number>%d</td>" % srs.get("pending", 0))
-
 
                 # State
                 html.write("<td class=buttons>")

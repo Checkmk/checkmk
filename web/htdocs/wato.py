@@ -702,7 +702,6 @@ def save_hosts(folder = None):
         tags = set([])
         for attr, topic in host_attributes:
             value = effective.get(attr.name())
-            html.debug(value)
             tags.update(attr.get_tag_list(value))
 
         all_hosts.append((hostname, list(tags)))
@@ -5557,7 +5556,6 @@ def mode_sites(phase):
         return
 
 
-    html.debug_vars()
     html.write("<h3>" + _("Multisite connections") + "</h3>")
     html.write("<table class=data>")
     html.write("<tr><th>" + _("Actions") + "<th>" 
@@ -5744,7 +5742,6 @@ def mode_edit_site(phase):
             new_site["status_host"] = ( sh_site, sh_host )
 
         # Replication
-        html.debug_vars()
         repl = html.var("replication")
         if repl:
             new_site["replication"] = repl
@@ -5966,6 +5963,24 @@ def save_sites(sites):
     out = file(sites_mk, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("sites = \\\n%s\n" % pprint.pformat(sites))
+    update_only_hosts_file(sites)
+
+# Makes sure, that in distributed mode we monitor only 
+# the hosts that are directly assigned to our (the local)
+# site.
+def update_only_hosts_file(sites):
+    # Note: we cannot access config.sites here, since we
+    # are currently in the process of saving the new
+    # site configuration.
+    distributed = False
+    for siteid, site in sites.items():
+        if site.get("replication"):
+            distributed = True
+        if "socket" not in site \
+            or site["socket"] == "unix:" + defaults.livestatus_unix_socket:
+            create_only_hosts_file(siteid)
+    if not distributed:
+        delete_only_hosts_file()
 
 #   +----------------------------------------------------------------------+
 #   |           ____            _ _           _   _                        |
@@ -6098,7 +6113,6 @@ class SiteAttribute(Attribute):
             return None
 
     def get_tag_list(self, value):
-        html.debug(value)
         if value:
             return [ "site:" + value ]
         else:
@@ -6141,8 +6155,10 @@ def restart_site(site):
 def push_snapshot_to_site(site, filename):
     url_base = site["multisiteurl"] + "automation.py?"
     var_string = htmllib.urlencode_vars([
-        ("command", "push-snapshot"),
-        ("secret", site["secret"])])
+        ("command",    "push-snapshot"),
+        ("secret",     site["secret"]),
+        ("siteid",     site["id"]),         # This site must know it's ID
+    ])
     url = url_base + var_string
     # urllib2 does not seem to support file uploads. Please tell me, if
     # you know a better method for uploading, without the use of external
@@ -6178,11 +6194,6 @@ def page_automation_login():
     html.write(repr(get_login_secret(True)))
 
 def get_login_secret(create_on_demand = False):
-    Achtung: Hier muss ich noch auf dem Slave den Name der Site mitspeichern.
-    Oder der Name der Site kommt mit beim Synchronisieren. Wenn der Master
-    eine Konfiguration hochschiebt, kann er bei der Gelegenheit den Sitenamen
-    mitsenden. Daraus wird dann sofort eine onlyhosts.mk-Datei erzeugt, die 
-    diesen Sitenamen enthält. 
     path = var_dir + "automation_secret.mk"
     try:
         return eval(file(path).read())
@@ -6229,13 +6240,32 @@ def page_automation():
 
 def automation_push_snapshot():
     try:
+        siteid = html.var("siteid")
+        if not siteid:
+            raise MKGeneralException(_("Missing variable siteid"))
         tarcontent = html.var('snapshot')
         multitar.extract_from_buffer(tarcontent, replication_paths)
-        log_audit(None, "replication", _("Synchronized with master."))
+
+        # Create rule making this site only monitor our hosts
+        create_only_hosts_file(siteid)
+        log_audit(None, "replication", _("Synchronized with master (my site id is %s.)") % siteid)
         return True
     except Exception, e:
         return str(e)
 
+def create_only_hosts_file(siteid):
+    out = file(defaults.check_mk_configdir + "/only_hosts.mk", "w")
+    out.write("# Written by WATO\n# encoding: utf-8\n\n")
+    out.write("# This file has been created by the master site\n"
+              "# push the configuration to us. It makes sure that\n"
+              "# we only monitor hosts that are assigned to our site.\n\n")
+    out.write("if only_hosts == None:\n    only_hosts = []\n\n")
+    out.write("only_hosts = [( ['site:%s'], ALL_HOSTS )]\n" % siteid)
+
+def delete_only_hosts_file():
+    p = defaults.check_mk_configdir + "/only_hosts.mk"
+    if os.path.exists(p):
+        os.remove(p)
 
 
 #   +----------------------------------------------------------------------+

@@ -2074,12 +2074,6 @@ def mode_bulk_inventory(phase):
         html.radiobutton("how", "refresh", False, _("Refresh all services (tabula rasa)") + "<br>")
         html.write("</td></tr>")
 
-        # Check type (first we need a Check_MK automation service for getting the list of checktype)
-        # html.write("<tr><td class=legend>Checktype</td><td class=content>")
-        # selection = check_mk_automation('get-checktypes')
-        # html.sorted_select("check_command", [("", "all types")] + [(x,x) for x in selection])
-        # html.write("</td></tr>")
-
         # Start button 
         html.write('<tr><td colspan=2 class="buttons">')
         html.button("_start", _("Start"))
@@ -5910,7 +5904,6 @@ def do_remote_automation(site, command, vars):
         htmllib.urlencode_vars(
            [("command", command), ("secret", secret)] + vars)
     connection = open_url(url)
-    connection.write("Das hier sind Daten!")
     response_code = connection.read().strip()
     if not response_code:
         raise MKAutomationException("Empty output from remote site.")

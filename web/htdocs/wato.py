@@ -2278,6 +2278,10 @@ def mode_changelog(phase):
 
     elif phase == "buttons":
         home_button()
+        # Commit pending log right here, if all sites are up-to-date
+        if is_distributed() and all_sites_uptodate():
+            log_commit_pending()
+
         if log_exists("pending") and config.may("wato.activate"):
             html.context_button(_("Activate Changes!"), 
                 html.makeuri([("_action", "activate"), ("_transid", html.current_transid())]), "apply", True)
@@ -2346,8 +2350,6 @@ def mode_changelog(phase):
     else:
         # Distributed WATO: Show replication state of each site
         if is_distributed():
-            all_sites_uptodate = True
-
             html.write("<h3>%s</h3>" % _("Distributed WATO - replication status"))
             repstatus = load_replication_status()
             sites = config.allsites().items()
@@ -2377,6 +2379,7 @@ def mode_changelog(phase):
             html.write("</tr>")
 
             odd = "even"
+            num_replsites = 0 # for detecting end of bulk replication
             for site_id, site in sites:
                 is_local = site_is_local(site_id)
 
@@ -2438,6 +2441,7 @@ def mode_changelog(phase):
                                   or _("Working...")))
                     if not uptodate:
                         html.javascript("wato_do_replication('%s');" % site_id)
+                        num_replsites += 1
                     html.write("</td>")
                 else:
                     # Number of pending changes
@@ -2475,13 +2479,11 @@ def mode_changelog(phase):
                     html.write("</td>")
 
                 html.write("</tr>")
-                if not uptodate:
-                    all_sites_uptodate = False
             html.write("</table>")
 
-        # All sites up-to-date: we flush the pending log right now.
-        if all_sites_uptodate:
-            log_commit_pending()
+            # The Javascript world needs to know, how many asynchro
+            if num_replsites > 0:
+                html.javascript("var num_replsites = %d;\n" % num_replsites)
 
         sitestatus_do_async_replication = None # could survive in global context!
         
@@ -6085,6 +6087,16 @@ def update_replication_status(siteid, vars):
     repstatus[siteid].update(vars)
     save_replication_status(repstatus)
     os.close(fd)
+
+def all_sites_uptodate():
+    repstatus = load_replication_status()
+    for site_id, site in config.allsites().items():
+        if not site_is_local(site_id) and not site.get("replication"):
+            continue
+        srs = repstatus.get(site_id, {})
+        if srs.get("pending") or srs.get("need_restart"):
+            return False
+    return True
 
 def synchronize_site(site, restart):
     if site_is_local(site["id"]):

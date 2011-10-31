@@ -344,5 +344,10 @@ function wato_do_replication(siteid) {
 function wato_replication_result(siteid, code) {
     var oDiv = document.getElementById("repstate_" + siteid);
     oDiv.innerHTML = code;
+    if (0 == --num_replsites) {
+        window.location.reload(false);
+    }
 }
     
+// num_replsites is set by the page code in wat.py to the number async jobs started
+// in total

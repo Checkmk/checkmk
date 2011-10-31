@@ -104,7 +104,7 @@
 #   +----------------------------------------------------------------------+
 
 import sys, pprint, socket, re, subprocess, time, datetime,  \
-       shutil, tarfile, StringIO, math
+       shutil, tarfile, StringIO, math, fcntl
 import urllib, urllib2
 import config, htmllib, multitar
 from lib import *
@@ -114,13 +114,14 @@ class MKAutomationException(Exception):
     def __init__(self, msg):
         Exception.__init__(self, msg)
 
-root_dir      = defaults.check_mk_configdir + "/wato/"
-multisite_dir = defaults.default_config_dir + "/multisite.d/wato/"
+root_dir       = defaults.check_mk_configdir + "/wato/"
+multisite_dir  = defaults.default_config_dir + "/multisite.d/wato/"
 # sites.mk is not in the WATO path since it must be spared from replication
-sites_mk      = defaults.default_config_dir + "/multisite.d/sites.mk"
-var_dir       = defaults.var_dir + "/wato/"
-log_dir       = var_dir + "log/"
-snapshot_dir  = var_dir + "/snapshots/"
+sites_mk       = defaults.default_config_dir + "/multisite.d/sites.mk"
+var_dir        = defaults.var_dir + "/wato/"
+log_dir        = var_dir + "log/"
+snapshot_dir   = var_dir + "/snapshots/"
+repstatus_file = var_dir + "replication_status.mk"
 
 # Directories and files to synchronize during replication
 replication_paths = [
@@ -2370,9 +2371,9 @@ def mode_changelog(phase):
             if sitestatus_do_async_replication:
                 html.write("<th>%s</th>" % _("Replication status"))
             else:
-                html.write("<th>%s</th>" % _("Actions") +
-                           "<th>%s</th>" % _("Changes") + 
-                           "<th>%s</th>" % _("State"))
+                html.write("<th>%s</th>" % _("Changes") + 
+                           "<th>%s</th>" % _("State") +
+                           "<th>%s</th>" % _("Actions"))
             html.write("</tr>")
 
             odd = "even"
@@ -2482,6 +2483,8 @@ def mode_changelog(phase):
         if all_sites_uptodate:
             log_commit_pending()
 
+        sitestatus_do_async_replication = None # could survive in global context!
+        
         pending = parse_audit_log("pending")
         render_audit_log(pending, "pending")
 
@@ -6065,18 +6068,23 @@ class SiteAttribute(Attribute):
 # "need_restart" : True, # True, if remote site needs a restart (cmk -R)
 def load_replication_status():
     try:
-        return eval(file(var_dir + "replication_status.mk").read())
+        return eval(file(repstatus_file).read())
     except:
         return {}
 
 def save_replication_status(repstatus):
-    config.write_settings_file(var_dir + "replication_status.mk", repstatus)
+    config.write_settings_file(repstatus_file, repstatus)
 
+# Updates one or more dict elements of a site in an 
+# atomic way.
 def update_replication_status(siteid, vars):
+    fd = os.open(repstatus_file, os.O_RDWR)
+    fcntl.flock(fd, fcntl.LOCK_EX)
     repstatus = load_replication_status()
     repstatus.setdefault(siteid, {})
     repstatus[siteid].update(vars)
     save_replication_status(repstatus)
+    os.close(fd)
 
 def synchronize_site(site, restart):
     if site_is_local(site["id"]):

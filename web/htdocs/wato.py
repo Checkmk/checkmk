@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#   +----------------------------------------------------------------------+
+#   .-README---------------------------------------------------------------.
 #   |               ____                _                                  |
 #   |              |  _ \ ___  __ _  __| |  _ __ ___   ___                 |
 #   |              | |_) / _ \/ _` |/ _` | | '_ ` _ \ / _ \                |
@@ -33,7 +33,7 @@
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 #   | A few words about the implementation details of WATO.                |
-#   +----------------------------------------------------------------------+
+#   `----------------------------------------------------------------------'
 
 # [1] Files and Folders
 # WATO organizes hosts in folders. A wato folder is represented by a 
@@ -92,7 +92,8 @@
 # g_html_head_open -> True, if the HTML head has already been rendered.
 
 
-#   +----------------------------------------------------------------------+
+#.
+#   .-Init-----------------------------------------------------------------.
 #   |                           ___       _ _                              |
 #   |                          |_ _|_ __ (_) |_                            |
 #   |                           | || '_ \| | __|                           |
@@ -101,7 +102,7 @@
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 #   | Importing, Permissions, global variables                             |
-#   +----------------------------------------------------------------------+
+#   `----------------------------------------------------------------------'
 
 import sys, pprint, socket, re, subprocess, time, datetime,  \
        shutil, tarfile, StringIO, math, fcntl
@@ -155,8 +156,8 @@ g_root_folder = None
 g_folders = {}
 g_html_head_open = False
 
-
-#   +----------------------------------------------------------------------+
+#.
+#   .-Main-----------------------------------------------------------------.
 #   |                        __  __       _                                |
 #   |                       |  \/  | __ _(_)_ __                           |
 #   |                       | |\/| |/ _` | | '_ \                          |
@@ -177,7 +178,7 @@ g_html_head_open = False
 #   | Dummerweise kann ich aber die Kontextbuttons erst dann anzeigen,     |
 #   | wenn ich den Ausgang der Aktion kenne. Daher wird zuerst die Aktion  |
 #   | ausgeführt, welche aber keinen HTML-Code ausgeben darf.              |
-#   +----------------------------------------------------------------------+
+#   `----------------------------------------------------------------------'
 
 def page_handler():
     global g_html_head_open
@@ -339,7 +340,8 @@ def need_sidebar_reload():
     global g_need_sidebar_reload
     g_need_sidebar_reload = id(html)
 
-#   +----------------------------------------------------------------------+
+#.
+#   .-Load/Save------------------------------------------------------------.
 #   |          _                    _    ______                            |
 #   |         | |    ___   __ _  __| |  / / ___|  __ ___   _____           |
 #   |         | |   / _ \ / _` |/ _` | / /\___ \ / _` \ \ / / _ \          |
@@ -352,7 +354,7 @@ def need_sidebar_reload():
 #   | mance reasons. In most cases information about the hosts is needed   |
 #   | only for the current folder. Keep in mind: WATO is designed for      |
 #   | handling 100k hosts.                                                 |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
 
 def folder_dir(the_folder):
     return root_dir + the_folder[".path"]
@@ -666,7 +668,8 @@ def get_folder_aliaspath(folder, show_main = True):
             aliaspath.insert(0,folder['title'])
     return ' / '.join(aliaspath)
 
-#   +----------------------------------------------------------------------+
+#.
+#   .-Folders--------------------------------------------------------------.
 #   |                   _____     _     _                                  |
 #   |                  |  ___|__ | | __| | ___ _ __ ___                    |
 #   |                  | |_ / _ \| |/ _` |/ _ \ '__/ __|                   |
@@ -675,7 +678,7 @@ def get_folder_aliaspath(folder, show_main = True):
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 #   | Mode for showing a folder, bulk actions on hosts.                    |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
 
 def mode_folder(phase):
     if phase == "title":
@@ -1245,7 +1248,8 @@ def get_hostnames_from_checkboxes():
             selected_hosts.append(name)
     return selected_hosts
 
-#   +----------------------------------------------------------------------+
+#.
+#   .-Edit Folder----------------------------------------------------------.
 #   |           _____    _ _ _     _____     _     _                       |
 #   |          | ____|__| (_) |_  |  ___|__ | | __| | ___ _ __             |
 #   |          |  _| / _` | | __| | |_ / _ \| |/ _` |/ _ \ '__|            |
@@ -1255,7 +1259,7 @@ def get_hostnames_from_checkboxes():
 #   +----------------------------------------------------------------------+
 #   | Mode for editing the properties of a folder. This includes the       |
 #   | creation of new folders.                                             |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
 
 def mode_editfolder(phase, new):
     global g_folder
@@ -1457,7 +1461,8 @@ def convert_title_to_filename(title):
     return str(converted)
 
 
-#   +----------------------------------------------------------------------+
+#.
+#   .-Edit-Host------------------------------------------------------------.
 #   |               _____    _ _ _     _   _           _                   |
 #   |              | ____|__| (_) |_  | | | | ___  ___| |_                 |
 #   |              |  _| / _` | | __| | |_| |/ _ \/ __| __|                |
@@ -1466,7 +1471,7 @@ def convert_title_to_filename(title):
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 #   | Mode for host details (new, clone, edit)                             |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
 
 def mode_edithost(phase, new):
     hostname = html.var("host") # may be empty in new/clone mode
@@ -1608,7 +1613,8 @@ def delete_host_after_confirm(delname):
     else:
         return None # browser reload 
 
-#   +----------------------------------------------------------------------+
+#.
+#   .-Services-------------------------------------------------------------.
 #   |                ____                  _                               |
 #   |               / ___|  ___ _ ____   _(_) ___ ___  ___                 |
 #   |               \___ \ / _ \ '__\ \ / / |/ __/ _ \/ __|                |
@@ -1618,7 +1624,7 @@ def delete_host_after_confirm(delname):
 #   +----------------------------------------------------------------------+
 #   | Mode for doing the inventory on a single host and/or showing and     |
 #   | editing the current services of a host.                              |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
 
 def mode_inventory(phase, firsttime):
     hostname = html.var("host")
@@ -1775,7 +1781,8 @@ def show_service_table(host, firsttime):
     html.end_form()
 
 
-#   +----------------------------------------------------------------------+
+#.
+#   .-Search---------------------------------------------------------------.
 #   |                   ____                      _                        |
 #   |                  / ___|  ___  __ _ _ __ ___| |__                     |
 #   |                  \___ \ / _ \/ _` | '__/ __| '_ \                    |
@@ -1784,7 +1791,7 @@ def show_service_table(host, firsttime):
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 #   | Dialog for searching for hosts - globally in all files               |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
 
 def mode_search(phase):
     if phase == "title":
@@ -1907,7 +1914,8 @@ def search_hosts_in_folder(folder, crit):
 
     return len(found)
 
-#   +----------------------------------------------------------------------+
+#.
+#   .-CSV-Import-----------------------------------------------------------.
 #   |       ____ ______     __   ___                            _          |
 #   |      / ___/ ___\ \   / /  |_ _|_ __ ___  _ __   ___  _ __| |_        |
 #   |     | |   \___ \\ \ / /____| || '_ ` _ \| '_ \ / _ \| '__| __|       |
@@ -1918,7 +1926,7 @@ def search_hosts_in_folder(folder, crit):
 #   | The following functions help implementing an import of hosts from    |
 #   | third party applications, such as from CVS files. The import itsself |
 #   | is not yet coded, but functions for dealing with the imported hosts. |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
 
 def move_to_imported_folders(hosts):
     c = wato_confirm( 
@@ -2002,7 +2010,8 @@ def create_target_folder_from_aliaspath(aliaspath):
 
 
 
-#   +----------------------------------------------------------------------+
+#.
+#   .-Bulk-Inventory-------------------------------------------------------.
 #   |  ____        _ _      ___                      _                     |
 #   | | __ ) _   _| | | __ |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _   |
 #   | |  _ \| | | | | |/ /  | || '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |  |
@@ -2013,7 +2022,7 @@ def create_target_folder_from_aliaspath(aliaspath):
 #   | When the user wants to scan the services of multiple hosts at once   |
 #   | this function is used. There is no fine-tuning possibility. We       |
 #   | simply do something like -I or -II on the list of hosts.             |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
 
 def mode_bulk_inventory(phase):
     if phase == "title":
@@ -2097,7 +2106,8 @@ def mode_bulk_inventory(phase):
 
         html.write("</table>")
 
-#   +----------------------------------------------------------------------+
+#.
+#   .-Bulk-Edit------------------------------------------------------------.
 #   |                ____        _ _      _____    _ _ _                   |
 #   |               | __ ) _   _| | | __ | ____|__| (_) |_                 |
 #   |               |  _ \| | | | | |/ / |  _| / _` | | __|                |
@@ -2108,7 +2118,7 @@ def mode_bulk_inventory(phase):
 #   | Change the attributes of a number of selected host at once. Also the |
 #   | cleanup is implemented here: the bulk removal of explicit attribute  |
 #   | values.                                                              |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
 
 def mode_bulk_edit(phase):
     if phase == "title":
@@ -2151,7 +2161,8 @@ def mode_bulk_edit(phase):
     html.end_form()
 
 
-#   +----------------------------------------------------------------------+
+#.
+#   .-Bulk-Cleanup---------------------------------------------------------.
 #   |      ____        _ _       ____ _                                    |
 #   |     | __ ) _   _| | | __  / ___| | ___  __ _ _ __  _   _ _ __        |
 #   |     |  _ \| | | | | |/ / | |   | |/ _ \/ _` | '_ \| | | | '_ \       |
@@ -2160,7 +2171,7 @@ def mode_bulk_edit(phase):
 #   |                                                         |_|          |
 #   +----------------------------------------------------------------------+
 #   | Mode for removing attributes from host in bulk mode.                 |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
 
 def mode_bulk_cleanup(phase):
     if phase == "title":
@@ -2269,7 +2280,8 @@ def bulk_cleanup_attributes(the_file, hosts):
 
 
 
-#   +----------------------------------------------------------------------+
+#.
+#   .-Logfile--------------------------------------------------------------.
 #   |                    _                 __ _ _                          |
 #   |                   | |    ___   __ _ / _(_) | ___                     |
 #   |                   | |   / _ \ / _` | |_| | |/ _ \                    |
@@ -2278,7 +2290,7 @@ def bulk_cleanup_attributes(the_file, hosts):
 #   |                               |___/                                  |
 #   +----------------------------------------------------------------------+
 #   | Handling of the audit logfiles                                       |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
 def mode_auditlog(phase):
     if phase == "title":
         return _("Audit logfile")
@@ -2820,7 +2832,8 @@ def export_audit_log():
     return False
 
 
-#   +----------------------------------------------------------------------+
+#.
+#   .-Automation-----------------------------------------------------------.
 #   |          _         _                        _   _                    |
 #   |         / \  _   _| |_ ___  _ __ ___   __ _| |_(_) ___  _ __         |
 #   |        / _ \| | | | __/ _ \| '_ ` _ \ / _` | __| |/ _ \| '_ \        |
@@ -2831,7 +2844,8 @@ def export_audit_log():
 #   | This code section deals with the interaction of Check_MK. It is used |
 #   | for doing inventory, showing the services of a host, deletion of a   |
 #   | host and similar things.                                             |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
+
 def check_mk_automation(siteid, command, args=[], indata=""):
     if site_is_local(siteid):
         return check_mk_local_automation(command, args, indata)
@@ -2913,14 +2927,12 @@ def check_mk_local_automation(command, args=[], indata=""):
                       (" ".join(cmd), e, outdata))
 
 
-
 def hilite_errors(outdata):
     return re.sub("\nError: *([^\n]*)", "\n<div class=err>Error: \\1</div>", outdata)
 
 
-
-
-#   +----------------------------------------------------------------------+
+#.
+#   .-Progress-------------------------------------------------------------.
 #   |               ____                                                   |
 #   |              |  _ \ _ __ ___   __ _ _ __ ___  ___ ___                |
 #   |              | |_) | '__/ _ \ / _` | '__/ _ \/ __/ __|               |
@@ -2931,7 +2943,7 @@ def hilite_errors(outdata):
 #   | Bulk inventory and other longer procedures are separated in single   |
 #   | steps and run by an JavaScript scheduler showing a progress bar and  |
 #   | buttons for aborting and pausing.                                    |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
 
 def interactive_progress(items, title, stats, finishvars, timewait, success_stats = [], termvars = []):
     if not termvars:
@@ -2971,7 +2983,9 @@ def interactive_progress(items, title, stats, finishvars, timewait, success_stat
     html.javascript(('progress_scheduler("%s", "%s", 50, %s, "%s", %s, "%s", "' + _("FINISHED.") + '");') %
                      (html.var('mode'), base_url, json_items, html.makeuri(finishvars), success_stats, html.makeuri(termvars),))
 
-#   +----------------------------------------------------------------------+
+
+#.
+#   .-Attributes-----------------------------------------------------------.
 #   |              _   _   _        _ _           _                        |
 #   |             / \ | |_| |_ _ __(_) |__  _   _| |_ ___  ___             |
 #   |            / _ \| __| __| '__| | '_ \| | | | __/ _ \/ __|            |
@@ -2981,7 +2995,8 @@ def interactive_progress(items, title, stats, finishvars, timewait, success_stat
 #   +----------------------------------------------------------------------+
 #   | Attributes of hosts are based on objects and are extendable via      |
 #   | WATO plugins.                                                        |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
+
 class Attribute:
     # The constructor stores name and title. If those are
     # dynamic than leave them out and override name() and
@@ -3624,7 +3639,8 @@ def effective_attributes(host, folder):
     return eff
     
 
-#   +----------------------------------------------------------------------+
+#.
+#   .-Snapshots------------------------------------------------------------.
 #   |           ____                        _           _                  |
 #   |          / ___| _ __   __ _ _ __  ___| |__   ___ | |_ ___            |
 #   |          \___ \| '_ \ / _` | '_ \/ __| '_ \ / _ \| __/ __|           |
@@ -3633,7 +3649,7 @@ def effective_attributes(host, folder):
 #   |                            |_|                                       |
 #   +----------------------------------------------------------------------+
 #   | Mode for backup/restore/creation of snapshots                        |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
 
 def mode_snapshot(phase):
     if phase == "title":
@@ -3768,7 +3784,8 @@ def create_snapshot():
     return snapshot_name
 
 
-#   +----------------------------------------------------------------------+
+#.
+#   .-Value-Editor---------------------------------------------------------.
 #   |       __     __    _              _____    _ _ _                     |
 #   |       \ \   / /_ _| |_   _  ___  | ____|__| (_) |_ ___  _ __         |
 #   |        \ \ / / _` | | | | |/ _ \ |  _| / _` | | __/ _ \| '__|        |
@@ -3779,7 +3796,7 @@ def create_snapshot():
 #   | The value editor is used in the configuration and rules module for   |
 #   | editing single values (e.g. configuration parameter for main.mk or   |
 #   | check parameters).                                                   |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
 
 # Abstract base class of all value declaration classes.
 class ValueSpec:
@@ -4100,75 +4117,6 @@ class DropdownChoice(ValueSpec):
                 return
         raise MKUserError(varprefix, _("Invalid value %s, must be in %s") % 
             ", ".join([v for (v,t) in self._choices]))
-
-# Represents a dict of dicts, which is dynamic
-###class DictionaryTable(ValueSpec):
-###    def __init__(self, key, elements, **kwargs):
-###        ValueSpec.__init__(self, **kwargs)
-###        self._key = key
-###        self._elements = elements
-###        # _value_vs must have variable _elements
-###
-###    def canonical_value(self):
-###        return {}
-###
-###    def render_input(self, varprefix, value):
-###        html.write("<table class=data>") 
-###        html.write("<tr>")
-###        html.write("<th>%s</th>\n" % self._key.title())
-###        for elkey, elem in self._elements:
-###            html.write("<th>%s</th>\n" % elem.title())
-###        html.write("</tr>")
-###        odd = "even"
-###        for nr, (key, val) in enumerate(value.items()): 
-###            vp = "%s_%d" % (varprefix, nr)
-###            html.write("<tr>")
-###            odd = odd == "odd" and "even" or "odd" 
-###            html.write('<tr class="data %s0">' % odd)
-###            html.write("<td>")
-###            self._key.render_input(vp + "_key", key)
-###            html.write("</td>")
-###            for nnr, (elkey, elem) in enumerate(self._elements):
-###                html.write("<td>")
-###                elem.render_input("%s_%d" % (vp, nnr), val.get(elkey))
-###                html.write("</td>")
-###            html.write("</tr>")
-###        html.write("</table>")
-###
-###    def value_to_text(self, value): 
-###        texts = []
-###        for key, val in value.items():
-###            text = "%s: " % self._key.value_to_text(key)
-###            settings = []
-###            for elkey, elem in self._elements:  
-###                settings.append("%s=%s" % (elkey, elem.value_to_text(val.get(elkey))))
-###            text += ";".join(settings)
-###            texts.append(text) 
-###        return ", ".join(texts)
-###
-###    def from_html_vars(self, varprefix):
-###        value = {}
-###        nr = 0
-###        while True: 
-###            vp = "%s_%d" % (varprefix, nr)
-###            if not html.has_var(vp + "_key"):
-###                break
-###            keyval = self._key.from_html_vars(vp + "_key")
-###            element = {}
-###            value[keyval] = element
-###            for nnr, (elkey, elem) in enumerate(self._elements):
-###                elvalue = elem.from_html_vars("%s_%d" % (vp, nnr))
-###                element[elkey] = elvalue
-###            nr += 1
-###        return value
-###
-###
-###    def validate_datatype(self, value, varprefix): 
-###        pass
-###
-###    def validate_value(self, value, varprefix): 
-###        pass
-
 
 
 # A list of checkboxes representing a list of values
@@ -4644,7 +4592,9 @@ def get_edited_value(valuespec):
     valuespec.validate_value(value, "ve")
     return value
 
-#   +----------------------------------------------------------------------+
+
+#.
+#   .-Configuration--------------------------------------------------------.
 #   |    ____             __ _                       _   _                 |
 #   |   / ___|___  _ __  / _(_) __ _ _   _ _ __ __ _| |_(_) ___  _ __      |
 #   |  | |   / _ \| '_ \| |_| |/ _` | | | | '__/ _` | __| |/ _ \| '_ \     |
@@ -4654,7 +4604,8 @@ def get_edited_value(valuespec):
 #   +----------------------------------------------------------------------+
 #   | Main entry page for configuration of global variables, rules, groups,| 
 #   | timeperiods, users, etc.                                             |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
+
 def mode_main(phase):
     if phase == "title":
         return _("WATO - Check_MK's Web Administration Tool")
@@ -4686,11 +4637,8 @@ def render_main_menu(some_modules, columns = 2):
             html.write("</tr>")
     html.write("</table>")
         
-
-
-
-
-#   +----------------------------------------------------------------------+
+#.
+#   .-Global-Vars----------------------------------------------------------.
 #   |          ____ _       _           _  __     __                       |
 #   |         / ___| | ___ | |__   __ _| | \ \   / /_ _ _ __ ___           |
 #   |        | |  _| |/ _ \| '_ \ / _` | |  \ \ / / _` | '__/ __|          |
@@ -4699,7 +4647,7 @@ def render_main_menu(some_modules, columns = 2):
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 #   | Editor for global settings in main.mk                                |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
 
 def mode_globalvars(phase):
     if phase == "title":
@@ -4887,8 +4835,8 @@ def save_configuration_vars(vars, filename):
     for varname, value in vars.items():
         out.write("%s = %r\n" % (varname, value))
     
-
-#   +----------------------------------------------------------------------+
+#.
+#   .-Groups---------------------------------------------------------------.
 #   |                    ____                                              |
 #   |                   / ___|_ __ ___  _   _ _ __  ___                    |
 #   |                  | |  _| '__/ _ \| | | | '_ \/ __|                   |
@@ -4897,7 +4845,8 @@ def save_configuration_vars(vars, filename):
 #   |                                        |_|                           |
 #   +----------------------------------------------------------------------+
 #   | Mode for editing host-, service- and contact groups                  |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
+
 def mode_groups(phase, what):
     if what == "host":
         what_name = _("host groups")
@@ -5129,9 +5078,8 @@ class CheckTypeGroupSelection(ElementSelection):
         return "<tt>%s</tt>" % value
 
 
-
-
-#   +----------------------------------------------------------------------+
+#.
+#   .-Timeperiods----------------------------------------------------------.
 #   |      _____ _                                _           _            |
 #   |     |_   _(_)_ __ ___   ___ _ __   ___ _ __(_) ___   __| |___        |
 #   |       | | | | '_ ` _ \ / _ \ '_ \ / _ \ '__| |/ _ \ / _` / __|       |
@@ -5140,7 +5088,8 @@ class CheckTypeGroupSelection(ElementSelection):
 #   |                            |_|                                       |
 #   +----------------------------------------------------------------------+
 #   | Modes for managing Nagios' timeperiod definitions.                   |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
+
 def mode_timeperiods(phase):
     if phase == "title":
         return _("Timeperiod definitions")
@@ -5446,7 +5395,8 @@ class TimeperiodSelection(ElementSelection):
         elements = dict([ (name, "%s - %s" % (name, tp["alias"])) for (name, tp) in timeperiods.items() ])
         return elements
 
-#   +----------------------------------------------------------------------+
+#.
+#   .-Sites----------------------------------------------------------------.
 #   |                        ____  _ _                                     |
 #   |                       / ___|(_) |_ ___  ___                          |
 #   |                       \___ \| | __/ _ \/ __|                         |
@@ -5455,7 +5405,8 @@ class TimeperiodSelection(ElementSelection):
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 #   | Mode for managing sites.                                             |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
+
 def mode_sites(phase):
     if phase == "title":
         return _("Manage Multisite connections")
@@ -6016,7 +5967,8 @@ def update_only_hosts_file(sites):
     if not distributed:
         delete_only_hosts_file()
 
-#   +----------------------------------------------------------------------+
+#.
+#   .-Replication----------------------------------------------------------.
 #   |           ____            _ _           _   _                        |
 #   |          |  _ \ ___ _ __ | (_) ___ __ _| |_(_) ___  _ __             |
 #   |          | |_) / _ \ '_ \| | |/ __/ _` | __| |/ _ \| '_ \            |
@@ -6026,7 +5978,8 @@ def update_only_hosts_file(sites):
 #   +----------------------------------------------------------------------+
 #   | Functions dealing with the WATO replication feature.                 |
 #   | Let's call this "Distributed WATO". More buzz-word like :-)          |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
+
 def do_site_login(site_id, name, password):
     sites = load_sites()
     site = sites[site_id]
@@ -6301,8 +6254,8 @@ def ajax_replication():
     html.write(answer)
 
 
-
-#   +----------------------------------------------------------------------+
+#.
+#   .-Automation-----------------------------------------------------------.
 #   |          _         _                        _   _                    |
 #   |         / \  _   _| |_ ___  _ __ ___   __ _| |_(_) ___  _ __         |
 #   |        / _ \| | | | __/ _ \| '_ ` _ \ / _` | __| |/ _ \| '_ \        |
@@ -6312,7 +6265,8 @@ def ajax_replication():
 #   +----------------------------------------------------------------------+
 #   | These function implement a web service with that a master can call   |
 #   | automation functions on slaves and peers.                            |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
+
 def page_automation_login():
     if not config.may("wato.automation"):
         raise MKAuthException(_("This account has no permission for automation."))
@@ -6441,8 +6395,8 @@ def delete_only_hosts_file():
     if os.path.exists(p):
         os.remove(p)
 
-
-#   +----------------------------------------------------------------------+
+#.
+#   .-Users/Contacts-------------------------------------------------------.
 #   | _   _                      ______            _             _         |
 #   || | | |___  ___ _ __ ___   / / ___|___  _ __ | |_ __ _  ___| |_ ___   |
 #   || | | / __|/ _ \ '__/ __| / / |   / _ \| '_ \| __/ _` |/ __| __/ __|  |
@@ -6451,7 +6405,8 @@ def delete_only_hosts_file():
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 #   | Mode for managing users and contacts.                                |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
+
 def mode_users(phase): 
     if phase == "title":
         return _("Manage Users & Contacts")
@@ -6971,7 +6926,8 @@ def save_users(profiles):
             locksym = ""
         out.write("%s:%s%s\n" % (id, locksym, user.get("password", "!")))
 
-#   +----------------------------------------------------------------------+
+#.
+#   .-Roles----------------------------------------------------------------.
 #   |                       ____       _                                   |
 #   |                      |  _ \ ___ | | ___  ___                         |
 #   |                      | |_) / _ \| |/ _ \/ __|                        |
@@ -6994,8 +6950,8 @@ def save_users(profiles):
 #   | of the existing roles. Users can be assigned to builtin and custom   |
 #   | roles.                                                               |
 #   | This modes manages the creation of custom roles and the permissions  |
-#   | configuration of all roles.
-#   +----------------------------------------------------------------------+
+#   | configuration of all roles.                                          |
+#   '----------------------------------------------------------------------'
 
 def mode_roles(phase):
     if phase == "title":
@@ -7296,8 +7252,8 @@ def rename_user_role(id, new_id):
                 user["roles"].append(new_id)
     save_users(users)
 
-
-#   +----------------------------------------------------------------------+
+#.
+#   .-Host-Tags------------------------------------------------------------.
 #   |              _   _           _     _____                             |
 #   |             | | | | ___  ___| |_  |_   _|_ _  __ _ ___               |
 #   |             | |_| |/ _ \/ __| __|   | |/ _` |/ _` / __|              |
@@ -7307,7 +7263,8 @@ def rename_user_role(id, new_id):
 #   +----------------------------------------------------------------------+
 #   | Manage the variable config.wato_host_tags -> The set of tags to be   |
 #   | assigned to hosts and that is the basis of the rules.                |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
+
 def mode_hosttags(phase):
     if phase == "title":
         return _("Manage host tag groups")
@@ -7872,8 +7829,8 @@ def change_host_tags_in_rules(folder, tag_id, operations, mode):
     return affected_rulespecs
 
 
-
-#   +----------------------------------------------------------------------+
+#.
+#   .-Rule-Editor----------------------------------------------------------.
 #   |           ____        _        _____    _ _ _                        |
 #   |          |  _ \ _   _| | ___  | ____|__| (_) |_ ___  _ __            |
 #   |          | |_) | | | | |/ _ \ |  _| / _` | | __/ _ \| '__|           |
@@ -7883,7 +7840,8 @@ def change_host_tags_in_rules(folder, tag_id, operations, mode):
 #   +----------------------------------------------------------------------+
 #   | WATO's awesome rule editor: Let's user edit rule based parameters    |
 #   | from main.mk.                                                        |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
+
 def mode_rulesets(phase):
     only_host = html.var("host", "")
     only_local = html.var("local")
@@ -8958,7 +8916,8 @@ def register_rule(group, varname, valuespec = None, title = None,
     g_rulespec_groups.setdefault(group, []).append(ruleset)
     g_rulespecs[varname] = ruleset
  
-#   +----------------------------------------------------------------------+
+#.
+#   .-Hooks-&-API----------------------------------------------------------.
 #   |       _   _             _           ___        _    ____ ___         |
 #   |      | | | | ___   ___ | | _____   ( _ )      / \  |  _ \_ _|        |
 #   |      | |_| |/ _ \ / _ \| |/ / __|  / _ \/\   / _ \ | |_) | |         |
@@ -8971,7 +8930,7 @@ def register_rule(group, varname, valuespec = None, title = None,
 #   | Hooks are a way how addons can add own activities at certain points  |
 #   | of time, e.g. when a host as been edited of the changes have been    | 
 #   | activated.                                                           |
-#   +----------------------------------------------------------------------+ 
+#   '----------------------------------------------------------------------' 
 
 # Inform plugins about changes of hosts. the_thing can be:
 # a folder, a file or a host
@@ -9164,8 +9123,8 @@ def call_hook_activate_changes():
     if hook_registered('activate-changes'):
         call_hooks("activate-changes", collect_hosts(g_root_folder))
 
-
-#   +----------------------------------------------------------------------+
+#.
+#   .-Helpers--------------------------------------------------------------.
 #   |                  _   _      _                                        |
 #   |                 | | | | ___| |_ __   ___ _ __ ___                    |
 #   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
@@ -9174,7 +9133,7 @@ def call_hook_activate_changes():
 #   |                              |_|                                     |
 #   +----------------------------------------------------------------------+
 #   | Functions needed at various places                                   |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
 
 def host_status_button(hostname, viewname):
     html.context_button(_("Status"), 
@@ -9321,7 +9280,8 @@ def may_see_hosts():
     return config.may("wato.use") and \
        (config.may("wato.seeall") or config.may("wato.hosts"))
 
-#   +----------------------------------------------------------------------+
+#.
+#   .-Plugins--------------------------------------------------------------.
 #   |                   ____  _             _                              |
 #   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
 #   |                  | |_) | | | | |/ _` | | '_ \/ __|                   |
@@ -9330,7 +9290,7 @@ def may_see_hosts():
 #   |                                 |___/                                |
 #   +----------------------------------------------------------------------+
 #   | Prepare plugin-datastructures and load WATO plugins                  |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
 
 modes = {
    "main"               : ([], mode_main),

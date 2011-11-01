@@ -311,11 +311,8 @@ def handler(req, profiling = True):
         if not fail_silently:
             html.header(_("Internal error"))
             if config.debug:
-                import traceback, StringIO
-                txt = StringIO.StringIO()
-                t, v, tb = sys.exc_info()
-                traceback.print_exception(t, v, tb, None, txt)
-                html.show_error("%s: %s<pre>%s</pre>" % (_('Internal error') + ':', e, txt.getvalue()))
+                html.show_error("%s: %s<pre>%s</pre>" % 
+                    (_('Internal error') + ':', e, format_exception()))
             else:
                 url = html.makeuri([("debug", "1")])
                 html.show_error("%s: %s (<a href=\"%s\">%s</a>)" % (_('Internal error') + ':', e, url, _('Retry with debug mode')))

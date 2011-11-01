@@ -409,11 +409,11 @@ def load_folder(dir, name="", path="", parent=None):
 
     # Add information about the effective site of this folder
     if "site" in folder["attributes"]:
-        folder[".site"] = folder["attributes"]["site"]
+        folder[".siteid"] = folder["attributes"]["site"]
     elif parent:
-        folder[".site"] = parent[".site"]
+        folder[".siteid"] = parent[".siteid"]
     else:
-        folder[".site"] = default_site()
+        folder[".siteid"] = default_site()
         
     # Now look subdirectories
     for entry in os.listdir(dir):
@@ -517,9 +517,9 @@ def load_hosts_file(folder):
             # Compute site attribute, because it is needed at various
             # places.
             if "site" in host:
-                host[".site"] = host["site"]
+                host[".siteid"] = host["site"]
             else:
-                host[".site"] = folder[".site"]
+                host[".siteid"] = folder[".siteid"]
 
             hosts[hostname] = host
 
@@ -1186,7 +1186,7 @@ def delete_hosts_after_confirm(hosts):
     if c:
         for delname in hosts:
             host = g_folder[".hosts"][delname]
-            check_mk_automation(host[".site"], "delete-host", [delname])
+            check_mk_automation(host[".siteid"], "delete-host", [delname])
             del g_folder[".hosts"][delname]
             g_folder["num_hosts"] -= 1
             log_pending(delname, "delete-host", _("Deleted host %s") % delname)
@@ -1599,7 +1599,7 @@ def delete_host_after_confirm(delname):
         g_folder["num_hosts"] -= 1
         save_folder_and_hosts(g_folder)
         log_pending(delname, "delete-host", _("Deleted host %s") % delname)
-        check_mk_automation(host[".site"], "delete-host", [delname])
+        check_mk_automation(host[".siteid"], "delete-host", [delname])
         call_hook_hosts_changed(g_folder)
         return "folder"
     elif c == False: # not yet confirmed
@@ -1645,7 +1645,7 @@ def mode_inventory(phase, firsttime):
         config.need_permission("wato.services")
         if html.check_transaction():
             cache_options = not html.var("_scan") and [ '--cache' ] or []
-            table = check_mk_automation(host[".site"], "try-inventory", cache_options + [hostname])
+            table = check_mk_automation(host[".siteid"], "try-inventory", cache_options + [hostname])
             table.sort()
             active_checks = {}
             new_target = "folder"
@@ -1661,7 +1661,7 @@ def mode_inventory(phase, firsttime):
                     if html.var(varname, "") != "":
                         active_checks[(ct, item)] = paramstring
 
-            check_mk_automation(host[".site"], "set-autochecks", [hostname], active_checks)
+            check_mk_automation(host[".siteid"], "set-autochecks", [hostname], active_checks)
             message = _("Saved check configuration of host [%s] with %d services") % \
                         (hostname, len(active_checks)) 
             log_pending(hostname, "set-autochecks", message) 
@@ -1678,7 +1678,7 @@ def show_service_table(host, firsttime):
     # Read current check configuration
     cache_options = not html.var("_scan") and [ '--cache' ] or []
     try:
-        table = check_mk_automation(host[".site"], "try-inventory", cache_options + [hostname])
+        table = check_mk_automation(host[".siteid"], "try-inventory", cache_options + [hostname])
     except Exception, e:
         if config.debug:
             raise
@@ -2025,29 +2025,43 @@ def mode_bulk_inventory(phase):
     elif phase == "action":
         if html.var("_item"):
             how = html.var("how")
-            hostname = html.var("_item")
-            host = g_folder[".hosts"]
             try:
-                counts = check_mk_automation(host[".site"], "inventory", [how, hostname])
+                folderpath, hostname = html.var("_item").split("|")
+                folder = g_folders[folderpath]
+                load_hosts(folder)
+                host = folder[".hosts"][hostname]
+                file("/tmp/hirn", "w").write(pprint.pformat(host))
+                eff = effective_attributes(host, folder)
+                site_id = eff.get("site")
+                counts = check_mk_automation(site_id, "inventory", [how, hostname])
                 result = repr([ 'continue', 1, 0 ] + list(counts)) + "\n"
                 result += _("Inventorized %s<br>\n") % hostname
                 log_pending(hostname, "bulk-inventory", 
                     _("Inventorized host: %d added, %d removed, %d kept, %d total services") % counts)
             except Exception, e:
                 result = repr([ 'failed', 1, 1, 0, 0, 0, 0, ]) + "\n"
-                result += _("Error during inventory of %s: %s<br>\n") % (hostname, e)
+                if site_id:
+                    msg = _("Error during inventory of %s on site %s: %s") % (hostname, site_id, e)
+                else:
+                    msg = _("Error during inventory of %s: %s") % (hostname, e)
+                if config.debug:
+                    msg += "<br><pre>%s</pre>" % format_exception().replace("\n", "<br>")
+                result += msg + "\n<br>"
             html.write(result)
             return ""
         return
 
+
     # interactive progress is *not* done in action phase. It
     # renders the page content itself.
     hostnames = get_hostnames_from_checkboxes()
+    items = [ "%s|%s" % (g_folder[".name"], hostname) 
+             for hostname in hostnames ]
 
     if html.var("_start"):
         # Start interactive progress
         interactive_progress(
-            hostnames,         # list of items
+            items,
             _("Bulk inventory"),  # title
             [ (_("Total hosts"),      0),
               (_("Failed hosts"),     0), 
@@ -2490,7 +2504,8 @@ def mode_changelog(phase):
                 html.write("</tr>")
             html.write("</table>")
 
-            # The Javascript world needs to know, how many asynchro
+            # The Javascript world needs to know, how many asynchronous
+            # replication jobs it should wait to be finished.
             if num_replsites > 0:
                 html.javascript("var num_replsites = %d;\n" % num_replsites)
 
@@ -6191,6 +6206,7 @@ def ajax_replication():
     else:
         answer = "<div class=error>%s: %s</div>" % (_("Error"), hilite_errors(result))
 
+    answer += '<img src="images/icon_trans.png" class=icon>'
     html.write(answer)
 
 

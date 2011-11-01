@@ -341,13 +341,17 @@ function wato_do_replication(siteid) {
     get_url("wato_ajax_replication.py?site=" + siteid, wato_replication_result, siteid);
 }
 
+// num_replsites is set by the page code in wat.py to the number async jobs started
+// in total
 function wato_replication_result(siteid, code) {
     var oDiv = document.getElementById("repstate_" + siteid);
     oDiv.innerHTML = code;
     if (0 == --num_replsites) {
-        window.location.reload(false);
+        setTimeout(wato_replication_finish, 3000);
     }
 }
     
-// num_replsites is set by the page code in wat.py to the number async jobs started
-// in total
+function wato_replication_finish() {
+    window.location.reload(false);
+    parent.frames[1].location.reload();
+} 

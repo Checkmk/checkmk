@@ -5455,6 +5455,7 @@ def mode_sites(phase):
             if c: 
                 del sites[delid]
                 save_sites(sites)
+                update_replication_status(delid, None)
                 log_audit(None, "edit-sites", _("Deleted site %s" % (delid)))
                 return None
             elif c == False:
@@ -5471,6 +5472,7 @@ def mode_sites(phase):
                 if "secret" in site:
                     del site["secret"]
                 save_sites(sites)
+                update_replication_status(logout_id, None)
                 log_audit(None, "edit-site", _("Logged out of remote site '%s'") % site["alias"])
                 return None, _("Logged out.")
             elif c == False:
@@ -5492,6 +5494,8 @@ def mode_sites(phase):
                     secret = do_site_login(login_id, name, passwd)
                     site["secret"] = secret
                     save_sites(sites)
+                    # Assume that the site is not up-to-date
+                    update_replication_status(login_id, { "pending" : 1, "need_restart" : True })
                     log_pending(True, None, "edit-site", _("Successfully logged into remote site '%s'") % site["alias"])
                     return None, _("Successfully logged into remote site '%s'!" % site["alias"])
                 except MKAutomationException, e:
@@ -5678,7 +5682,8 @@ def mode_edit_site(phase):
             raise MKUserError("url_prefix", _("The URL prefix must end with a slash."))
         if url_prefix:
             new_site["url_prefix"] = url_prefix
-        new_site["disabled"] = html.get_checkbox("disabled")
+        disabled = html.get_checkbox("disabled")
+        new_site["disabled"] = disabled 
 
         # Connection
         method = html.var("method")
@@ -5734,6 +5739,8 @@ def mode_edit_site(phase):
 
         # Replication
         repl = html.var("replication")
+        if repl == "none":
+            repl = None
         if repl:
             new_site["replication"] = repl
         multisiteurl = html.var("multisiteurl", "").strip()
@@ -5746,7 +5753,11 @@ def mode_edit_site(phase):
                 raise MKUserError("multisiteurl", _("The Multisites URL must begin with <tt>http://</tt> or <tt>https://</tt>."))
             if "socket" not in new_site:
                 raise MKUserError("replication", _("You cannot do replication with the local site."))
-            new_site["multisiteurl"] = multisiteurl
+        
+        # Save Multisite-URL even if replication is turned off. That way that
+        # setting is not lost if replication is turned off for a while.
+        new_site["multisiteurl"] = multisiteurl 
+
 
         # Secret is not checked here, just kept
         if not new and "secret" in old_site:
@@ -5755,8 +5766,18 @@ def mode_edit_site(phase):
         save_sites(sites)
         if new:
             log_audit(None, "edit-sites", _("Create new connection to site %s" % id))
+            if repl and not disabled:
+                # Assume that site needs to be synchronized
+                update_replication_status(id, { "pending" : 1, "need_restart" : True })
         else:
             log_audit(None, "edit-sites", _("Modified connection to site %s" % id))
+            # Replication mode has switched on/off => handle replication state
+            repstatus = load_replication_status()
+            make_repl = repl and not disabled
+            if make_repl and id not in repstatus: # Repl switched on
+                update_replication_status(id, { "pending" : 1, "need_restart" : True })
+            elif (not make_repl) and id in repstatus:
+                update_replication_status(id, None) # Replication switched off
         return "sites"
 
 
@@ -5783,8 +5804,11 @@ def mode_edit_site(phase):
     html.write("<tr><td class=legend>")
     html.write(_("<i>If you disable a connection, then it will not be shown in the "
                  "status display and no replication will be done.</i>"))
-    html.write("</td><td class=content>")
-    html.checkbox("disabled", False)
+    html.write("</td>")
+
+    # Disabled
+    html.write("<td class=content>")
+    html.checkbox("disabled", site.get("disabled"))
     html.write(_("Disable this connection"))
     html.write("</td></tr>")
 
@@ -5909,7 +5933,8 @@ def mode_edit_site(phase):
     html.write("</td><td class=content>")
     html.write("<b>%s</b><br>" % _("Replication method"))
     
-    html.radiobutton("replication", "",      site.get("replication") == None,  _("No replication with this site"))
+    html.debug_vars()
+    html.radiobutton("replication", "none",  site.get("replication") == None,  _("No replication with this site"))
     html.write("<br>")
     html.radiobutton("replication", "peer",  site.get("replication") == "peer", _("Peer: synchronize configuration with this site"))
     html.write("<br>")
@@ -6123,13 +6148,18 @@ def save_replication_status(repstatus):
     config.write_settings_file(repstatus_file, repstatus)
 
 # Updates one or more dict elements of a site in an 
-# atomic way.
-def update_replication_status(siteid, vars):
+# atomic way. If vars is None, the sites status will
+# be removed
+def update_replication_status(site_id, vars):
     fd = os.open(repstatus_file, os.O_RDWR)
     fcntl.flock(fd, fcntl.LOCK_EX)
     repstatus = load_replication_status()
-    repstatus.setdefault(siteid, {})
-    repstatus[siteid].update(vars)
+    if vars == None:
+        if site_id in repstatus:
+            del repstatus[site_id]
+    else:
+        repstatus.setdefault(site_id, {})
+        repstatus[site_id].update(vars)
     save_replication_status(repstatus)
     os.close(fd)
 

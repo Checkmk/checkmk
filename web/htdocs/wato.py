@@ -6045,6 +6045,12 @@ def open_url(url, user=None, password=None):
         return urllib.FancyURLopener().open(url)
 
 def check_mk_remote_automation(siteid, command, args, indata):
+    # If the site is not up-to-date, synchronize it first.
+    repstatus = load_replication_status()
+    if repstatus.get(siteid, {}).get("pending"):
+        synchronize_site(config.site(siteid), False)
+
+    # Now do the actual remote command
     response = do_remote_automation(
         config.site(siteid), "checkmk-automation", 
         [ 

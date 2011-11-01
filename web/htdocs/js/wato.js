@@ -347,7 +347,7 @@ function wato_replication_result(siteid, code) {
     var oDiv = document.getElementById("repstate_" + siteid);
     oDiv.innerHTML = code;
     if (0 == --num_replsites) {
-        setTimeout(wato_replication_finish, 3000);
+        setTimeout(wato_replication_finish, 2000);
     }
 }
     

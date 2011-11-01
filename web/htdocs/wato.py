@@ -1164,7 +1164,7 @@ def move_hosts_to(hostnames, path):
         g_folder["num_hosts"] -= 1
         del g_folder[".hosts"][hostname]
         if len(hostnames) == 1:
-            log_pending(hostname, "move-host", _("Moved host from %s to %s") %
+            log_pending(True, hostname, "move-host", _("Moved host from %s to %s") %
                 (g_folder[".path"], target_folder[".path"]))
         num_moved += 1
 
@@ -1172,7 +1172,7 @@ def move_hosts_to(hostnames, path):
     save_folder_and_hosts(g_folder)
     call_hook_hosts_changed(g_root_folder)
     if len(hostnames) > 1:
-        log_pending(target_folder, "move-host", _("Moved %d hosts from %s to %s") %
+        log_pending(True, target_folder, "move-host", _("Moved %d hosts from %s to %s") %
             (num_moved, g_folder[".path"], target_folder[".path"]))
     return num_moved 
         
@@ -1189,7 +1189,7 @@ def delete_hosts_after_confirm(hosts):
             check_mk_automation(host[".siteid"], "delete-host", [delname])
             del g_folder[".hosts"][delname]
             g_folder["num_hosts"] -= 1
-            log_pending(delname, "delete-host", _("Deleted host %s") % delname)
+            log_pending(True, delname, "delete-host", _("Deleted host %s") % delname)
         save_folder_and_hosts(g_folder)
         call_hook_hosts_changed(g_folder)
         return "folder", _("Successfully deleted %d hosts") % len(hosts)
@@ -1218,7 +1218,7 @@ def delete_folder_after_confirm(del_folder):
             raise MKGeneralException(_("Cannot remove the folder '%s': probably there are "
                                        "still non-WATO files contained in this directory.") % folder_path)
 
-        log_pending(del_folder, "delete-folder", _("Deleted empty folder %s")% folder_dir(del_folder))
+        log_pending(True, del_folder, "delete-folder", _("Deleted empty folder %s")% folder_dir(del_folder))
         call_hook_folder_deleted(del_folder)
         return "folder"
     elif c == False: # not yet confirmed
@@ -1326,7 +1326,7 @@ def mode_editfolder(phase, new):
             g_folder[".folders"][name] = new_folder
             save_folder(new_folder)
             call_hook_folder_created(new_folder)
-            log_pending(new_folder, "new-folder", _("Created new folder %s") % title)
+            log_pending(True, new_folder, "new-folder", _("Created new folder %s") % title)
 
         else:
             cgs_changed = attributes.get("contactgroups") != g_folder["attributes"].get("contactgroups")
@@ -1341,7 +1341,7 @@ def mode_editfolder(phase, new):
 
             if cgs_changed:
                 check_user_contactgroups(attributes.get("contactgroups"))
-            log_pending(g_folder, "edit-folder", "Edited properties of folder %s" % title)
+            log_pending(True, g_folder, "edit-folder", "Edited properties of folder %s" % title)
 
             g_folder["title"]      = title
             g_folder["attributes"] = attributes
@@ -1351,7 +1351,7 @@ def mode_editfolder(phase, new):
             # in Nagios-relevant attributes.
             if attributes_changed:
                 rewrite_config_files_below(g_folder) # due to inherited attributes
-                log_pending(g_folder, "edit-folder", _("Changed attributes of folder %s") % title)
+                log_pending(True, g_folder, "edit-folder", _("Changed attributes of folder %s") % title)
                 call_hook_hosts_changed(g_folder)
 
         
@@ -1547,10 +1547,10 @@ def mode_edithost(phase, new):
                 g_folder[".hosts"][hostname] = host
                 if new:
                     message = _("Created new host %s.") % hostname
-                    log_pending(hostname, "create-host", message) 
+                    log_pending(True, hostname, "create-host", message) 
                     g_folder["num_hosts"] += 1
                 else:
-                    log_pending(hostname, "edit-host", _("Edited properties of host [%s]") % hostname)
+                    log_pending(True, hostname, "edit-host", _("Edited properties of host [%s]") % hostname)
                 save_folder_and_hosts(g_folder)
                 call_hook_hosts_changed(g_folder)
                 load_hosts(g_folder)
@@ -1598,7 +1598,7 @@ def delete_host_after_confirm(delname):
         del g_folder[".hosts"][delname]
         g_folder["num_hosts"] -= 1
         save_folder_and_hosts(g_folder)
-        log_pending(delname, "delete-host", _("Deleted host %s") % delname)
+        log_pending(True, delname, "delete-host", _("Deleted host %s") % delname)
         check_mk_automation(host[".siteid"], "delete-host", [delname])
         call_hook_hosts_changed(g_folder)
         return "folder"
@@ -1664,7 +1664,7 @@ def mode_inventory(phase, firsttime):
             check_mk_automation(host[".siteid"], "set-autochecks", [hostname], active_checks)
             message = _("Saved check configuration of host [%s] with %d services") % \
                         (hostname, len(active_checks)) 
-            log_pending(hostname, "set-autochecks", message) 
+            log_pending(True, hostname, "set-autochecks", message) 
             return new_target, message
         return "folder"
 
@@ -1955,7 +1955,7 @@ def move_to_imported_folders(hosts):
         num_moved += move_hosts_to(hosts, target_folder[".path"])
         save_folder(target_folder)
     save_folder(g_folder)
-    log_pending(g_folder, "move-hosts", _("Moved %d imported hosts to their original destination.") % num_moved)
+    log_pending(True, g_folder, "move-hosts", _("Moved %d imported hosts to their original destination.") % num_moved)
     return None, _("Successfully moved %d hosts to their original folder destinations.") % num_moved
 
 
@@ -2036,7 +2036,7 @@ def mode_bulk_inventory(phase):
                 counts = check_mk_automation(site_id, "inventory", [how, hostname])
                 result = repr([ 'continue', 1, 0 ] + list(counts)) + "\n"
                 result += _("Inventorized %s<br>\n") % hostname
-                log_pending(hostname, "bulk-inventory", 
+                log_pending(True, hostname, "bulk-inventory", 
                     _("Inventorized host: %d added, %d removed, %d kept, %d total services") % counts)
             except Exception, e:
                 result = repr([ 'failed', 1, 1, 0, 0, 0, 0, ]) + "\n"
@@ -2124,7 +2124,7 @@ def mode_bulk_edit(phase):
             for hostname in hostnames:
                 host = g_folder[".hosts"][hostname]
                 host.update(changed_attributes)
-                log_pending(hostname, "bulk-edit", _("Changed attributes of host %s in bulk mode") % hostname)
+                log_pending(True, hostname, "bulk-edit", _("Changed attributes of host %s in bulk mode") % hostname)
             save_folder_and_hosts(g_folder)
             call_hook_hosts_changed(g_folder)
             return "folder"
@@ -2181,7 +2181,7 @@ def mode_bulk_cleanup(phase):
                     if attrname in host:
                         del host[attrname]
                 if num_cleaned > 0:
-                    log_pending(hostname, "bulk-cleanup", _("Cleaned %d attributes of host %s in bulk mode") % (
+                    log_pending(True, hostname, "bulk-cleanup", _("Cleaned %d attributes of host %s in bulk mode") % (
                     num_cleaned, hostname))
             save_hosts(g_folder)
             return "folder"
@@ -2278,6 +2278,36 @@ def bulk_cleanup_attributes(the_file, hosts):
 #   +----------------------------------------------------------------------+
 #   | Handling of the audit logfiles                                       |
 #   +----------------------------------------------------------------------+
+def mode_auditlog(phase):
+    if phase == "title":
+        return _("Audit logfile")
+
+    elif phase == "buttons":
+        home_button()
+        changelog_button()
+        if log_exists("audit") and config.may("wato.auditlog") and config.may("wato.edit"):
+            html.context_button(_("Download"),
+                html.makeuri([("_action", "csv"), ("_transid", html.current_transid())]), "download")
+            if config.may("wato.edit"):
+                html.context_button(_("Clear Logfile"),
+                    html.makeuri([("_action", "clear"), ("_transid", html.current_transid())]), "trash")
+        return
+
+    elif phase == "action":
+        if html.var("_action") == "clear":
+            config.need_permission("wato.auditlog")
+            config.need_permission("wato.edit")
+            return clear_audit_log_after_confirm()
+
+        elif html.var("_action") == "csv":
+            config.need_permission("wato.auditlog")
+            return export_audit_log()
+
+    audit = parse_audit_log("audit")
+    if len(audit) == 0:
+        html.write("<div class=info>" + _("The audit logfile is empty.") + "</div>")
+    else:
+        render_audit_log(audit, "audit")
 
 def mode_changelog(phase):
     # See below for the usage of this weird variable...
@@ -2288,7 +2318,7 @@ def mode_changelog(phase):
         sitestatus_do_async_replication = False
 
     if phase == "title":
-        return _("ChangeLog")
+        return _("Pending changes to activate")
 
     elif phase == "buttons":
         home_button()
@@ -2301,25 +2331,10 @@ def mode_changelog(phase):
             or  (is_distributed() and global_replication_state() == "dirty")):
             html.context_button(_("Activate Changes!"), 
                 html.makeuri([("_action", "activate"), ("_transid", html.current_transid())]), "apply", True)
-        if log_exists("audit") and config.may("wato.auditlog") and config.may("wato.edit"):
-            html.context_button(_("Download Audit Log"),
-                html.makeuri([("_action", "csv"), ("_transid", html.current_transid())]), "download")
-            if config.may("wato.edit"):
-                html.context_button(_("Clear Audit Log"),
-                    html.makeuri([("_action", "clear"), ("_transid", html.current_transid())]), "trash")
 
     elif phase == "action":
         sitestatus_do_async_replication = False # see below
-        if html.var("_action") == "clear":
-            config.need_permission("wato.auditlog")
-            config.need_permission("wato.edit")
-            return clear_audit_log_after_confirm()
-
-        elif html.var("_action") == "csv":
-            config.need_permission("wato.auditlog")
-            return export_audit_log()
-
-        elif html.has_var("_siteaction"):
+        if html.has_var("_siteaction"):
             config.need_permission("wato.activate")
             site_id = html.var("_site")
             action = html.var("_siteaction")
@@ -2512,16 +2527,10 @@ def mode_changelog(phase):
         sitestatus_do_async_replication = None # could survive in global context!
         
         pending = parse_audit_log("pending")
-        render_audit_log(pending, "pending")
-
-        if config.may("wato.auditlog"):
-            audit = parse_audit_log("audit")
-            render_audit_log(audit, "audit")
-            if len(pending) + len(audit) == 0:
-                html.write("<div class=info>" + _("There are no pending or old changes.") + "</div>")
-        elif len(pending) == 0:
-                html.write("<div class=info>" + _("There are no pending changes.") + "</div>")
-
+        if len(pending) == 0:
+            html.write("<div class=info>" + _("There are no pending changes.") + "</div>")
+        else:
+            render_audit_log(pending, "pending")
 
 
 def log_entry(linkinfo, action, message, logfilename):
@@ -2550,11 +2559,15 @@ def log_entry(linkinfo, action, message, logfilename):
 def log_audit(linkinfo, what, message):
     log_entry(linkinfo, what, message, "audit.log")
 
-def log_pending(linkinfo, what, message):
-    # TODO: Need flag whether restart is neccessary
-    log_entry(linkinfo, what, message, "pending.log")
+def log_pending(need_restart, linkinfo, what, message):
+    # In non-distributed mode we only mark this change pending,
+    # when a restart is neccessary in order to make it active.
+    if need_restart or is_distributed():
+        log_entry(linkinfo, what, message, "pending.log")
+        need_sidebar_reload()
+
     log_entry(linkinfo, what, message, "audit.log")
-    need_sidebar_reload()
+
     # Currently we add the pending to each site, regardless if 
     # the site is really affected. This needs to be optimized
     # in future.
@@ -2563,8 +2576,10 @@ def log_pending(linkinfo, what, message):
         for siteid in config.sites:
             rs = repstatus.setdefault(siteid, {})
             rs.setdefault("pending", 0)
-            rs["pending"] += 1
-            rs["need_restart"] = True
+            if need_restart or not site_is_local(siteid):
+                rs["pending"] += 1
+            if need_restart:
+                rs["need_restart"] = True
         save_replication_status(repstatus)
 
 
@@ -2859,7 +2874,8 @@ def check_mk_local_automation(command, args=[], indata=""):
     outdata = p.stdout.read()
     exitcode = p.wait()
     if exitcode != 0:
-        log_audit(None, "automation", "Automation command %s failed with exit code %d: %s" % (" ".join(cmd), exitcode, outdata))
+        if config.debug:
+            log_audit(None, "automation", "Automation command %s failed with exit code %d: %s" % (" ".join(cmd), exitcode, outdata))
         raise MKGeneralException("Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>%s" %
               (" ".join(cmd), exitcode, hilite_errors(outdata), sudo_msg))
     try:
@@ -2867,7 +2883,8 @@ def check_mk_local_automation(command, args=[], indata=""):
             log_audit(None, "automation", "Result from automation: %s" % outdata)
         return eval(outdata)
     except Exception, e:
-        log_audit(None, "automation", "Automation command %s failed: invalid output: %s" % (" ".join(cmd), outdata)) 
+        if config.debug:
+            log_audit(None, "automation", "Automation command %s failed: invalid output: %s" % (" ".join(cmd), outdata)) 
         raise MKGeneralException("Error running <tt>%s</tt>. Invalid output from webservice (%s): <pre>%s</pre>" %
                       (" ".join(cmd), e, outdata))
 
@@ -3637,7 +3654,7 @@ def mode_snapshot(phase):
                 return None
             if html.check_transaction():
                 multitar.extract_from_buffer(html.var("_upload_file"), backup_paths)
-                log_pending(None, "snapshot-restored", _("Restored from uploaded file"))
+                log_pending(True, None, "snapshot-restored", _("Restored from uploaded file"))
                 return None, _("Successfully restored configuration.")
             else:
                 return None
@@ -3667,7 +3684,7 @@ def mode_snapshot(phase):
                             )
             if c:
                 multitar.extract_from_file(snapshot_dir + snapshot_file, backup_paths)
-                log_pending(None, "snapshot-restored", _("Restored snapshot %s") % snapshot_file)
+                log_pending(True, None, "snapshot-restored", _("Restored snapshot %s") % snapshot_file)
                 return None, _("Successfully restored Snapshot.")
             elif c == False: # not yet confirmed
                 return ""
@@ -3721,7 +3738,7 @@ def create_snapshot():
         snapshots.append(f)
     snapshots.sort(reverse=True)
     while len(snapshots) > config.wato_max_snapshots:
-        log_pending(None, "snapshot-removed", _("Removed snapshot %s") % snapshots[-1])
+        log_audit(None, "snapshot-removed", _("Removed snapshot %s") % snapshots[-1])
         os.remove(snapshot_dir + snapshots.pop())
 
     return snapshot_name
@@ -4689,7 +4706,7 @@ def mode_globalvars(phase):
                 del current_settings[varname]
                 save_configuration_settings(current_settings)
                 msg = _("Resetted configuration variable %s to its default.") % varname
-                log_pending(None, "edit-configvar", msg)
+                log_pending(True, None, "edit-configvar", msg)
                 return "globalvars", msg 
             elif c == False:
                 return ""
@@ -4759,7 +4776,7 @@ def mode_edit_configvar(phase):
         save_configuration_settings(current_settings)
         msg = _("Changed global configuration variable %s to %s.") \
               % (varname, valuespec.value_to_text(new_value)) 
-        log_pending(None, "edit-configvar", msg)
+        log_pending(True, None, "edit-configvar", msg)
         return "globalvars"
     
     if varname in current_settings:
@@ -4890,7 +4907,7 @@ def mode_groups(phase, what):
         if c: 
             del groups[delname]
             save_group_information(all_groups)
-            log_pending(None, "edit-%sgroups", _("Deleted %s group %s" % (what, delname)))
+            log_pending(True, None, "edit-%sgroups", _("Deleted %s group %s" % (what, delname)))
             return None
         elif c == False:
             return ""
@@ -4991,10 +5008,10 @@ def mode_edit_group(phase, what):
                 if not re.match("^[-a-z0-9A-Z_]*$", name):
                     raise MKUserError("name", _("Invalid group name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
                 groups[name] = alias
-                log_pending(None, "edit-%sgroups" % what, _("Create new %s group %s" % (what, name)))
+                log_pending(True, None, "edit-%sgroups" % what, _("Create new %s group %s" % (what, name)))
             else:
                 groups[name] = alias
-                log_pending(None, "edit-%sgroups" % what, _("Changed alias of %s group %s" % (what, name)))
+                log_pending(True, None, "edit-%sgroups" % what, _("Changed alias of %s group %s" % (what, name)))
             save_group_information(all_groups)
 
         return what + "_groups"
@@ -5120,7 +5137,7 @@ def mode_timeperiods(phase):
         if c:
             del timeperiods[delname]
             save_timeperiods(timeperiods)
-            log_pending(None, "edit-timeperiods", _("Deleted timeperiod %s") % delname)
+            log_pending(True, None, "edit-timeperiods", _("Deleted timeperiod %s") % delname)
             return None
         elif c == False:
             return ""
@@ -5308,9 +5325,9 @@ def mode_edit_timeperiod(phase):
                 if name == "7X24":
                     raise MKUserError("name", _("The time period name 7X24 cannot be used. It is always autmatically defined."))
                 timeperiods[name] = timeperiod
-                log_pending(None, "edit-timeperiods", _("Created new time period %s" % name))
+                log_pending(True, None, "edit-timeperiods", _("Created new time period %s" % name))
             else:
-                log_pending(None, "edit-timeperiods", _("Modified time period %s" % name))
+                log_pending(True, None, "edit-timeperiods", _("Modified time period %s" % name))
             timeperiod["alias"] = alias 
             save_timeperiods(timeperiods)
             return "timeperiods"
@@ -5434,7 +5451,7 @@ def mode_sites(phase):
             if c: 
                 del sites[delid]
                 save_sites(sites)
-                log_pending(None, "edit-sites", _("Deleted site %s" % (delid)))
+                log_audit(None, "edit-sites", _("Deleted site %s" % (delid)))
                 return None
             elif c == False:
                 return ""
@@ -5450,7 +5467,7 @@ def mode_sites(phase):
                 if "secret" in site:
                     del site["secret"]
                 save_sites(sites)
-                log_pending(None, "edit-site", _("Logged out of remote site '%s'") % site["alias"])
+                log_audit(None, "edit-site", _("Logged out of remote site '%s'") % site["alias"])
                 return None, _("Logged out.")
             elif c == False:
                 return ""
@@ -5471,7 +5488,7 @@ def mode_sites(phase):
                     secret = do_site_login(login_id, name, passwd)
                     site["secret"] = secret
                     save_sites(sites)
-                    log_pending(None, "edit-site", _("Successfully logged into remote site '%s'") % site["alias"])
+                    log_pending(True, None, "edit-site", _("Successfully logged into remote site '%s'") % site["alias"])
                     return None, _("Successfully logged into remote site '%s'!" % site["alias"])
                 except MKAutomationException, e:
                     error = _("Cannot connect to remote site: %s") % e
@@ -5733,9 +5750,9 @@ def mode_edit_site(phase):
 
         save_sites(sites)
         if new:
-            log_pending(None, "edit-sites", _("Create new connection to site %s" % id))
+            log_audit(None, "edit-sites", _("Create new connection to site %s" % id))
         else:
-            log_pending(None, "edit-sites", _("Modified connection to site %s" % id))
+            log_audit(None, "edit-sites", _("Modified connection to site %s" % id))
         return "sites"
 
 
@@ -6341,7 +6358,7 @@ def mode_users(phase):
         if c: 
             del users[delid]
             save_users(users)
-            log_pending(None, "edit-users", _("Deleted user %s" % (delid)))
+            log_pending(True, None, "edit-users", _("Deleted user %s" % (delid)))
             return None
         elif c == False:
             return ""
@@ -6538,9 +6555,9 @@ def mode_edit_user(phase):
         # Saving
         save_users(users)
         if new:
-            log_pending(None, "edit-users", _("Create new user %s" % id))
+            log_pending(True, None, "edit-users", _("Create new user %s" % id))
         else:
-            log_pending(None, "edit-users", _("Modified user %s" % id))
+            log_pending(True, None, "edit-users", _("Modified user %s" % id))
         return "users"
 
 
@@ -6887,7 +6904,7 @@ def mode_roles(phase):
                 rename_user_role(delid, None) # Remove from existing users
                 del roles[delid]
                 save_roles(roles)
-                log_audit(None, "edit-roles", _("Deleted role '%s'" % delid))
+                log_pending(False, None, "edit-roles", _("Deleted role '%s'" % delid))
                 return None
             elif c == False:
                 return ""
@@ -6907,7 +6924,7 @@ def mode_roles(phase):
                     new_role["basedon"] = cloneid
                 roles[newid] = new_role
                 save_roles(roles)
-                log_audit(None, "edit-roles", _("Created new role '%s'" % newid))
+                log_pending(False, None, "edit-roles", _("Created new role '%s'" % newid))
                 return None
             else:
                 return None
@@ -7022,7 +7039,7 @@ def mode_edit_role(phase):
             rename_user_role(id, new_id)
 
         save_roles(roles)
-        log_audit(None, "edit-roles", _("Modified user role '%s'" % new_id)) 
+        log_pending(False, None, "edit-roles", _("Modified user role '%s'" % new_id)) 
         return "roles"
 
     html.begin_form("role", method="POST")
@@ -7200,7 +7217,7 @@ def mode_hosttags(phase):
                 hosttags = [ e for e in hosttags if e[0] != del_id ]
                 save_hosttags(hosttags)
                 rewrite_config_files_below(g_root_folder) # explicit host tags in all_hosts                
-                log_pending(None, "edit-hosttags", _("Removed host tag group %s (%s)") % (message, del_id))
+                log_pending(True, None, "edit-hosttags", _("Removed host tag group %s (%s)") % (message, del_id))
                 return "hosttags", message != True and message or None
 
         move_nr = html.var("_move")
@@ -7217,7 +7234,7 @@ def mode_hosttags(phase):
                 hosttags[move_nr+dir:move_nr+dir] = [moved]
                 save_hosttags(hosttags)
                 config.wato_host_tags = hosttags
-                log_pending(None, "edit-hosttags", _("Changed order of host tag groups"))
+                log_pending(True, None, "edit-hosttags", _("Changed order of host tag groups"))
         return
 
     if len(hosttags) == 0:
@@ -7360,7 +7377,7 @@ def mode_edit_hosttag(phase):
                 config.wato_host_tags = hosttags
                 declare_host_tag_attributes()
                 rewrite_config_files_below(g_root_folder) # explicit host tags in all_hosts                
-                log_pending(None, "edit-hosttags", _("Created new host tag group '%s'") % tag_id)
+                log_pending(True, None, "edit-hosttags", _("Created new host tag group '%s'") % tag_id)
                 return "hosttags", _("Created new host tag group '%s'") % title
             else:
                 new_hosttags = []
@@ -7401,7 +7418,7 @@ def mode_edit_hosttag(phase):
                     config.wato_host_tags = new_hosttags
                     declare_host_tag_attributes()
                     rewrite_config_files_below(g_root_folder) # explicit host tags in all_hosts                
-                    log_pending(None, "edit-hosttags", _("Edited host tag group %s (%s)") % (message, tag_id))
+                    log_pending(True, None, "edit-hosttags", _("Edited host tag group %s (%s)") % (message, tag_id))
                     return "hosttags", message != True and message or None
 
         return "hosttags"
@@ -7924,7 +7941,7 @@ def mode_edit_ruleset(phase):
                 else:
                     rules.append(new_rule)
                 save_rulesets(rule_folder, rulesets)
-                log_pending(None, "edit-ruleset", 
+                log_pending(True, None, "edit-ruleset", 
                       _("Created new rule in ruleset %s in folder %s") % (rulespec["title"], rule_folder["title"]))
             return
 
@@ -7937,7 +7954,7 @@ def mode_edit_ruleset(phase):
             if c:
                 del rules[rulenr]
                 save_rulesets(rule_folder, rulesets)
-                log_pending(None, "edit-ruleset", 
+                log_pending(True, None, "edit-ruleset", 
                       _("Deleted rule in ruleset '%s'") % rulespec["title"])
                 return
             elif c == False: # not yet confirmed
@@ -7957,7 +7974,7 @@ def mode_edit_ruleset(phase):
                 folder_rules.append(rules[rulenr])
                 save_rulesets(g_folder, folder_rulesets)
 
-            log_pending(None, "edit-ruleset", 
+            log_pending(True, None, "edit-ruleset", 
                   _("Inserted new rule in ruleset %s") % rulespec["title"])
             return
 
@@ -7971,7 +7988,7 @@ def mode_edit_ruleset(phase):
             else:
                 rules[rulenr+1:rulenr+1] = [ rule ]
             save_rulesets(rule_folder, rulesets)
-            log_pending(None, "edit-ruleset", 
+            log_pending(True, None, "edit-ruleset", 
                      _("Changed order of rules in ruleset %s") % rulespec["title"])
             return
 
@@ -8474,7 +8491,7 @@ def mode_edit_rule(phase):
             if new_rule_folder == folder:
                 rules[rulenr] = rule
                 save_rulesets(folder, rulesets)
-                log_pending(None, "edit-rule", _("Changed properties of rule %s in folder %s") % 
+                log_pending(True, None, "edit-rule", _("Changed properties of rule %s in folder %s") % 
                         (rulespec["title"], folder["title"]))
             else: # Move rule to new folder
                 del rules[rulenr]
@@ -8483,7 +8500,7 @@ def mode_edit_rule(phase):
                 rules = rulesets.setdefault(varname, [])
                 rules.append(rule)
                 save_rulesets(new_rule_folder, rulesets)
-                log_pending(None, "edit-rule", _("Changed properties of rule %s, moved rule from "
+                log_pending(True, None, "edit-rule", _("Changed properties of rule %s, moved rule from "
                             "folder %s to %s") % (rulespec["title"], folder["title"], 
                             new_rule_folder["title"]))
 
@@ -9213,6 +9230,7 @@ modes = {
    "bulkedit"           : (["hosts", "edit_hosts"], mode_bulk_edit),
    "bulkcleanup"        : (["hosts", "edit_hosts"], mode_bulk_cleanup),
    "changelog"          : ([], mode_changelog),
+   "auditlog"           : (["auditlog"], mode_auditlog),
    "snapshot"           : (["snapshots"], mode_snapshot),
    "globalvars"         : (["global"], mode_globalvars),
    "edit_configvar"     : (["global"], mode_edit_configvar),

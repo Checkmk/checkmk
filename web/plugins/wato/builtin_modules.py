@@ -66,5 +66,8 @@ modules = [
 
       ( "sites",  _("Multisite Connections"), "sites", "sites",
       _("Configure distributed monitoring via Multsite, manage connections to remote sites.")),
+
+      ( "auditlog", _("Audit Logfile"), "auditlog", "auditlog",
+      _("The audit log keeps track of all modifications and actions of the users in WATO.")),
     ]
 

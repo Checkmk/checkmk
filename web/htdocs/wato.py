@@ -2458,7 +2458,7 @@ def mode_changelog(phase):
                     age_text = html.age_text(time.time() - ss["program_start"])
                 else:
                     age_text = ""
-                html.write('<td>%s</td>' % age_text)
+                html.write('<td class=number>%s</td>' % age_text)
 
                 # Multisite-URL
                 html.write("<td>%s</td>" % (not is_local 
@@ -5828,7 +5828,7 @@ def mode_edit_site(phase):
 
     # Disabled
     html.write("<td class=content>")
-    html.checkbox("disabled", site.get("disabled"))
+    html.checkbox("disabled", site.get("disabled", False))
     html.write(_("Disable this connection"))
     html.write("</td></tr>")
 
@@ -5886,8 +5886,7 @@ def mode_edit_site(phase):
     html.write("<tr><td class=legend>")
     html.write(_("Connect Timeout<br><i>This setting limits the time Multisites waits for a connection "
                  "to the site to be established before the site is considered to be unreachable. "
-                 "If not set, the operating system defaults are begin used."
-                 "connection configuration is still available for later use.</i>")) 
+                 "If not set, the operating system defaults are begin used.</i>"))
     html.write("</td><td class=content>")
     timeout = site.get("timeout", "")
     html.number_input("timeout", timeout, size=2)
@@ -5901,7 +5900,7 @@ def mode_edit_site(phase):
                  "situations but locks a number of threads in the Livestatus module of the target site. "))
     html.write("</td><td class=content>")
     html.checkbox("persist", site.get("persist", False))
-    html.write(_(" use persistent connections"))
+    html.write(_("Use persistent connections"))
     html.write("</td></tr>")
 
     # URL-Prefix
@@ -5935,7 +5934,7 @@ def mode_edit_site(phase):
         sh_site = ""
         sh_host = ""
     html.write(_("host: "))
-    html.text_input("sh_host", sh_host)
+    html.text_input("sh_host", sh_host, size=10)
     html.write(_(" on monitoring site: "))  
     html.sorted_select("sh_site", 
        [ ("", _("(no status host)")) ] + [ (sk, si.get("alias", sk)) for (sk, si) in sites.items() ], sh_site)
@@ -6176,7 +6175,8 @@ def save_replication_status(repstatus):
 # atomic way. If vars is None, the sites status will
 # be removed
 def update_replication_status(site_id, vars):
-    fd = os.open(repstatus_file, os.O_RDWR)
+    make_nagios_directory(var_dir)
+    fd = os.open(repstatus_file, os.O_RDWR | os.O_CREAT)
     fcntl.flock(fd, fcntl.LOCK_EX)
     repstatus = load_replication_status()
     if vars == None:
@@ -6254,11 +6254,13 @@ def restart_site(site):
     update_replication_status(site["id"], { "need_restart" : False })
 
 def push_snapshot_to_site(site, do_restart):
+    mode = site.get("replication", "slave")
     url_base = site["multisiteurl"] + "automation.py?"
     var_string = htmllib.urlencode_vars([
         ("command",    "push-snapshot"),
         ("secret",     site["secret"]),
         ("siteid",     site["id"]),         # This site must know it's ID
+        ("mode",       mode),
         ("restart",    do_restart and "yes" or "on"),
     ])
     url = url_base + var_string
@@ -6346,6 +6348,17 @@ def site_is_local(siteid):
     return "socket" not in site \
         or site["socket"] == "unix:" + defaults.livestatus_unix_socket
 
+# Returns the ID of our site. This function only works in replication
+# mode and looks for an entry connecting to the local socket.
+def our_site_id():
+    if not is_distributed():
+        return None
+    for site_id in config.allsites():
+        if site_is_local(site_id):
+            return site_id
+    return None
+
+
 def page_automation():
     secret = html.var("secret")
     if not secret:
@@ -6367,15 +6380,46 @@ def page_automation():
 
 def automation_push_snapshot():
     try:
-        siteid = html.var("siteid")
-        if not siteid:
+        site_id = html.var("siteid")
+        if not site_id:
             raise MKGeneralException(_("Missing variable siteid"))
+        mode = html.var("mode", "slave")
+
+        our_id = our_site_id()
+
+        if mode == "slave" and is_distributed():
+            raise MKGeneralException(_("Configuration error. You treat us as "
+               "a <b>slave</b>, but we are a <b>peer</b>!"))
+
+        elif mode == "peer" and not is_distributed():
+            raise MKGeneralException(_("Configuration error. You treat us as "
+               "a peer, but we have no peer configuration!"))
+
+
+        # In peer mode, we have a replication configuration ourselves and
+        # we have a site ID our selves. Let's make sure that ID matches
+        # the ID our peer thinks we have.
+        if our_id != None and our_id != site_id:
+            raise MKGeneralException(
+              _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") %
+                (our_id, site_id))
+
+        # Make sure there are no local changes we would loose! But only if we are
+        # distributed ourselves (meaning we are a peer).
+        if is_distributed():
+            pending = parse_audit_log("pending")
+            if len(pending) > 0:
+                message = _("There are %d pending changes that would get lost. The most recent are: ") % len(pending)
+                message += ", ".join([e[-1] for e in pending[:10]])
+                raise MKGeneralException(message)
+
         tarcontent = html.var('snapshot')
         multitar.extract_from_buffer(tarcontent, replication_paths)
+        log_commit_pending() # pending changes are lost
 
         # Create rule making this site only monitor our hosts
-        create_only_hosts_file(siteid)
-        log_audit(None, "replication", _("Synchronized with master (my site id is %s.)") % siteid)
+        create_only_hosts_file(site_id)
+        log_audit(None, "replication", _("Synchronized with master (my site id is %s.)") % site_id)
         if html.var("restart", "no") == "yes":
             check_mk_local_automation("restart")
             call_hook_activate_changes()

@@ -357,7 +357,9 @@ def sitenames():
     return sites.keys()
 
 def allsites():
-    return dict( [(name, site(name)) for name in sitenames() if not site(name).get("disabled", False)])
+    return dict( [(name, site(name)) 
+                  for name in sitenames() 
+                  if not site(name).get("disabled", False)] )
 
 def site(name):
     s = sites.get(name, {})
@@ -380,6 +382,8 @@ def site_is_local(name):
 def is_multisite():
     if len(sites) > 1:
         return True
+    elif len(sites) == 0:
+        return False
     # Also use Multisite mode if the one and only site is not local
     sitename = sites.keys()[0]
     return not site_is_local(sitename)

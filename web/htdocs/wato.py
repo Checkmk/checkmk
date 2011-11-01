@@ -114,14 +114,15 @@ class MKAutomationException(Exception):
     def __init__(self, msg):
         Exception.__init__(self, msg)
 
-root_dir       = defaults.check_mk_configdir + "/wato/"
-multisite_dir  = defaults.default_config_dir + "/multisite.d/wato/"
-# sites.mk is not in the WATO path since it must be spared from replication
-sites_mk       = defaults.default_config_dir + "/multisite.d/sites.mk"
-var_dir        = defaults.var_dir + "/wato/"
-log_dir        = var_dir + "log/"
-snapshot_dir   = var_dir + "/snapshots/"
-repstatus_file = var_dir + "replication_status.mk"
+# Some paths and directories
+root_dir           = defaults.check_mk_configdir + "/wato/"
+multisite_dir      = defaults.default_config_dir + "/multisite.d/wato/"
+sites_mk           = defaults.default_config_dir + "/multisite.d/sites.mk"
+var_dir            = defaults.var_dir + "/wato/"
+log_dir            = var_dir + "log/"
+snapshot_dir       = var_dir + "/snapshots/"
+sync_snapshot_file = defaults.tmp_dir + "/sync_snapshot.tar.gz"
+repstatus_file     = var_dir + "replication_status.mk"
 
 # Directories and files to synchronize during replication
 replication_paths = [
@@ -2381,6 +2382,13 @@ def mode_changelog(phase):
     else:
         # Distributed WATO: Show replication state of each site
         if is_distributed():
+
+            # During bulk replication we rather create the sync snapshot now. Otherwise
+            # there is the danger, that it is created multiple times in parallel, thus
+            # wasting time.
+            if sitestatus_do_async_replication:
+                create_sync_snapshot()
+
             html.write("<h3>%s</h3>" % _("Distributed WATO - replication status"))
             repstatus = load_replication_status()
             sites = config.allsites().items()
@@ -2391,22 +2399,23 @@ def mode_changelog(phase):
                        "<th rowspan=2>%s</th>" % _("Alias"))
             html.write("<th colspan=6>%s</th>" % _("Livestatus"))
             html.write("<th colspan=%d>%s</th>" % 
-                         (sitestatus_do_async_replication and 3 or 5, _("Replication")))
+                         (sitestatus_do_async_replication and 4 or 6, _("Replication")))
             html.write("<tr>" +
                        "<th>%s</th>" % _("Status") + 
                        "<th>%s</th>" % _("Version") + 
                        "<th>%s</th>" % _("Core") + 
-                       "<th>%s</th>" % _("Hosts") + 
-                       "<th>%s</th>" % _("Services") + 
-                       "<th>%s</th>" % _("Last restart") + 
+                       "<th>%s</th>" % _("Ho.") + 
+                       "<th>%s</th>" % _("Sv.") + 
+                       "<th>%s</th>" % _("Uptime") + 
                        "<th>%s</th>" % _("Multisite URL") + 
                        "<th>%s</th>" % _("Type"))
             if sitestatus_do_async_replication:
-                html.write("<th>%s</th>" % _("Replication status"))
+                html.write("<th>%s</th>" % _("Replication result"))
             else:
                 html.write("<th>%s</th>" % _("Changes") + 
                            "<th>%s</th>" % _("State") +
-                           "<th>%s</th>" % _("Actions"))
+                           "<th>%s</th>" % _("Actions") + 
+                           "<th>%s</th>" % _("Last result"))
             html.write("</tr>")
 
             odd = "even"
@@ -2446,7 +2455,7 @@ def mode_changelog(phase):
                 
                 # Uptime / Last restart
                 if "program_start" in ss:
-                    age_text = html.age_text(time.time() - ss["program_start"]) + " " + _("ago")
+                    age_text = html.age_text(time.time() - ss["program_start"])
                 else:
                     age_text = ""
                 html.write('<td>%s</td>' % age_text)
@@ -2520,6 +2529,14 @@ def mode_changelog(phase):
                             html.buttonlink(restart_url, _("Restart"))
                     html.write("</td>")
 
+                    # Last result
+                    result = srs.get("result", "")
+                    if len(result) > 20:
+                        result = htmllib.strip_tags(result)
+                        result = '<span title="%s">%s...</span>' % \
+                            (htmllib.attrencode(result), result[:20])
+                    html.write("<td>%s</td>" % result)
+
                 html.write("</tr>")
             html.write("</table>")
 
@@ -2585,6 +2602,9 @@ def log_pending(need_restart, linkinfo, what, message):
             if need_restart:
                 rs["need_restart"] = True
         save_replication_status(repstatus)
+
+        # Snapshot is invalid, if still existing
+        remove_sync_snapshot()
 
 
 def log_commit_pending():
@@ -5933,7 +5953,6 @@ def mode_edit_site(phase):
     html.write("</td><td class=content>")
     html.write("<b>%s</b><br>" % _("Replication method"))
     
-    html.debug_vars()
     html.radiobutton("replication", "none",  site.get("replication") == None,  _("No replication with this site"))
     html.write("<br>")
     html.radiobutton("replication", "peer",  site.get("replication") == "peer", _("Peer: synchronize configuration with this site"))
@@ -6184,7 +6203,7 @@ def global_replication_state():
             ss = html.site_status.get(site_id, {})
             status = ss.get("state", "unknown") # Skip non-online sites, they cannot be restarted
             if status != "online" or (
-                  not (site_is_local(site_id) and "secret" not in site)):
+                  (not site_is_local(site_id) and "secret" not in site)):
                 some_offline = True
             else:
                 some_dirty = True
@@ -6196,6 +6215,16 @@ def global_replication_state():
     else:
         return "clean"
 
+def remove_sync_snapshot():
+    if os.path.exists(sync_snapshot_file):
+        os.remove(sync_snapshot_file)
+
+def create_sync_snapshot():
+    if not os.path.exists(sync_snapshot_file):
+        tmp_path = "%s-%s" % (sync_snapshot_file, id(html))
+        multitar.create(tmp_path, replication_paths)
+        os.rename(tmp_path, sync_snapshot_file)
+
 def synchronize_site(site, restart):
     if site_is_local(site["id"]):
         if restart:
@@ -6203,18 +6232,20 @@ def synchronize_site(site, restart):
             update_replication_status(site["id"], { "pending" : 0 })
         return True
 
-    snapshot_path = defaults.tmp_dir + "/snapshot_for_%s.tar.gz" % site["id"]
-    if os.path.exists(snapshot_path):
-        os.remove(snapshot_path)
-    multitar.create(snapshot_path, replication_paths)
-    result = push_snapshot_to_site(site, snapshot_path, restart)
-    if result == True:
-        update_replication_status(site["id"], { "pending": 0 })
-        if restart:
-            update_replication_status(site["id"], { "need_restart": False })
-    if not config.debug:
-        os.remove(snapshot_path)
-    return result
+    create_sync_snapshot()
+    try:
+        result = push_snapshot_to_site(site, restart)
+        if result == True:
+            update_replication_status(site["id"], { "pending": 0, "result" : _("Success") })
+            if restart:
+                update_replication_status(site["id"], { "need_restart": False })
+        else:
+            update_replication_status(site["id"], { "result" : result })
+        return result
+    except Exception, e:
+        update_replication_status(site["id"], { "result" : str(e) })
+        raise
+
 
 # Isolated restart without prior synchronization. Currently this
 # is only being called for the local site.
@@ -6222,7 +6253,7 @@ def restart_site(site):
     check_mk_automation(site["id"], "restart")
     update_replication_status(site["id"], { "need_restart" : False })
 
-def push_snapshot_to_site(site, filename, do_restart):
+def push_snapshot_to_site(site, do_restart):
     url_base = site["multisiteurl"] + "automation.py?"
     var_string = htmllib.urlencode_vars([
         ("command",    "push-snapshot"),
@@ -6234,7 +6265,7 @@ def push_snapshot_to_site(site, filename, do_restart):
     # urllib2 does not seem to support file uploads. Please tell me, if
     # you know a better method for uploading, without the use of external
     # programs...
-    response_text = os.popen("curl -F snapshot=@%s '%s'" % (filename, url)).read()
+    response_text = os.popen("curl -F snapshot=@%s '%s'" % (sync_snapshot_file, url)).read()
     try:
         response = eval(response_text)
         return response

@@ -1935,19 +1935,14 @@ table.add_snapin i {
     -moz-border-radius: 0px 4px 0px 0px;
 }
 .wato table.form {
-    width: 800px;
+    width: 850px;
     margin-left: 0px;
-}
-
-
-.wato table.form {
-    width: 800px;
 }
 
 .wato table.form td.legend { 
     border-right-style: none;
     padding-bottom: 8px;
-    width: 300px;
+    width: 350px;
 }
 
 .wato table.form td.legend h3 { 

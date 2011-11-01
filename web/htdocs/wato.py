@@ -2471,7 +2471,9 @@ def mode_changelog(phase):
                 if sitestatus_do_async_replication:
                     html.write("<td>")
                     # Do only include sites that are known to be up
-                    if status == "online":
+                    if not site_is_local(site_id) and not "secret" in site:
+                        html.write("<b>%s</b>" % _("Not logged in."))
+                    elif status == "online":
                         html.write('<div id="repstate_%s">%s</div>' %
                                 (site_id, uptodate and _("nothing to do") 
                                       or "<img class=icon src='images/icon_reloading.gif'>%s</img>" % _("Working...")))
@@ -2504,7 +2506,9 @@ def mode_changelog(phase):
                             ("_site", site_id), ("_siteaction", "sync")])
                     restart_url = make_action_link([("mode", "changelog"), 
                             ("_site", site_id), ("_siteaction", "restart")])
-                    if not uptodate:
+                    if not site_is_local(site_id) and "secret" not in site:
+                        html.write("<b>%s</b>" % _("Not logged in."))
+                    elif not uptodate:
                         if not site_is_local(site_id):
                             if srs.get("pending"):
                                 html.buttonlink(sync_url, _("Sync"))
@@ -5777,11 +5781,11 @@ def mode_edit_site(phase):
 
     # Disabled
     html.write("<tr><td class=legend>")
-    html.write(_("<i>If you disable a site, it will vanish from the status display, but the "
-                 "connection configuration is still available for later use.</i>")) 
+    html.write(_("<i>If you disable a connection, then it will not be shown in the "
+                 "status display and no replication will be done.</i>"))
     html.write("</td><td class=content>")
     html.checkbox("disabled", False)
-    html.write(_(" disable this connection"))
+    html.write(_("Disable this connection"))
     html.write("</td></tr>")
 
     # Connection
@@ -6143,7 +6147,8 @@ def global_replication_state():
         if srs.get("pending") or srs.get("need_restart"):
             ss = html.site_status.get(site_id, {})
             status = ss.get("state", "unknown") # Skip non-online sites, they cannot be restarted
-            if status != "online":
+            if status != "online" or (
+                  not (site_is_local(site_id) and "secret" not in site)):
                 some_offline = True
             else:
                 some_dirty = True

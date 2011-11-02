@@ -1181,12 +1181,12 @@ def move_hosts_to(hostnames, path):
             continue
 
         mark_affected_sites_dirty(g_folder, hostname)
-        mark_affected_sites_dirty(target_folder, hostname)
-
         target_hosts[hostname] = g_folder[".hosts"][hostname]
         target_folder["num_hosts"] += 1
         g_folder["num_hosts"] -= 1
         del g_folder[".hosts"][hostname]
+        mark_affected_sites_dirty(target_folder, hostname)
+
         if len(hostnames) == 1:
             log_pending(AFFECTED, hostname, "move-host", _("Moved host from %s to %s") %
                 (g_folder[".path"], target_folder[".path"]))
@@ -6258,8 +6258,8 @@ def find_host_sites(site_ids, folder, hostname):
     else:
         site_ids.add(folder[".siteid"])
 
+# Scan recursively for hosts in a folder
 def find_folder_sites(site_ids, folder):
-    site_ids.add(folder[".siteid"])
     load_hosts(folder)
     for hostname in folder[".hosts"]:
         find_host_sites(site_ids, folder, hostname)
@@ -6276,8 +6276,10 @@ def find_folder_sites(site_ids, folder):
 # g) doing bulk inventory for a host
 # h) doing bulk edit on a host (2 times)
 # i) doing bulk cleanup on a host (2 time) 
-# It scans for the sites affected by a folder and all of its contents
-# or just a single host and mark that sites for sync or restart
+# It scans for the sites affected by the hosts in a folder and its subfolders.
+# Please note: The "site" attribute of the folder itself is not relevant
+# at all. It's just there to be inherited to the hosts. What counts is
+# only the attributes of the hosts.
 def mark_affected_sites_dirty(folder, hostname=None, sync = True, restart = True):
     if is_distributed():
         site_ids = set([])
@@ -8148,7 +8150,8 @@ def mode_edit_ruleset(phase):
                 else:
                     rules.append(new_rule)
                 save_rulesets(rule_folder, rulesets)
-                log_pending(SYNCRESTART, None, "edit-ruleset", 
+                mark_affected_sites_dirty(rule_folder)
+                log_pending(AFFECTED, None, "edit-ruleset", 
                       _("Created new rule in ruleset %s in folder %s") % (rulespec["title"], rule_folder["title"]))
             return
 
@@ -8161,7 +8164,8 @@ def mode_edit_ruleset(phase):
             if c:
                 del rules[rulenr]
                 save_rulesets(rule_folder, rulesets)
-                log_pending(SYNCRESTART, None, "edit-ruleset", 
+                mark_affected_sites_dirty(rule_folder)
+                log_pending(AFFECTED, None, "edit-ruleset", 
                       _("Deleted rule in ruleset '%s'") % rulespec["title"])
                 return
             elif c == False: # not yet confirmed
@@ -8175,13 +8179,15 @@ def mode_edit_ruleset(phase):
             if g_folder == rule_folder:
                 rules[rulenr:rulenr] = [rules[rulenr]]
                 save_rulesets(rule_folder, rulesets)
+                mark_affected_sites_dirty(rule_folder)
             else:
                 folder_rulesets = load_rulesets(g_folder)
                 folder_rules = folder_rulesets.setdefault(varname, [])
                 folder_rules.append(rules[rulenr])
                 save_rulesets(g_folder, folder_rulesets)
+                mark_affected_sites_dirty(g_folder)
 
-            log_pending(SYNCRESTART, None, "edit-ruleset", 
+            log_pending(AFFECTED, None, "edit-ruleset", 
                   _("Inserted new rule in ruleset %s") % rulespec["title"])
             return
 
@@ -8195,7 +8201,8 @@ def mode_edit_ruleset(phase):
             else:
                 rules[rulenr+1:rulenr+1] = [ rule ]
             save_rulesets(rule_folder, rulesets)
-            log_pending(SYNCRESTART, None, "edit-ruleset", 
+            mark_affected_sites_dirty(rule_folder)
+            log_pending(AFFECTED, None, "edit-ruleset", 
                      _("Changed order of rules in ruleset %s") % rulespec["title"])
             return
 
@@ -8698,7 +8705,8 @@ def mode_edit_rule(phase):
             if new_rule_folder == folder:
                 rules[rulenr] = rule
                 save_rulesets(folder, rulesets)
-                log_pending(SYNCRESTART, None, "edit-rule", _("Changed properties of rule %s in folder %s") % 
+                mark_affected_sites_dirty(folder)
+                log_pending(AFFECTED, None, "edit-rule", _("Changed properties of rule %s in folder %s") % 
                         (rulespec["title"], folder["title"]))
             else: # Move rule to new folder
                 del rules[rulenr]
@@ -8707,7 +8715,9 @@ def mode_edit_rule(phase):
                 rules = rulesets.setdefault(varname, [])
                 rules.append(rule)
                 save_rulesets(new_rule_folder, rulesets)
-                log_pending(SYNCRESTART, None, "edit-rule", _("Changed properties of rule %s, moved rule from "
+                mark_affected_sites_dirty(folder)
+                mark_affected_sites_dirty(new_rule_folder)
+                log_pending(AFFECTED, None, "edit-rule", _("Changed properties of rule %s, moved rule from "
                             "folder %s to %s") % (rulespec["title"], folder["title"], 
                             new_rule_folder["title"]))
 

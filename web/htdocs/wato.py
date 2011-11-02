@@ -4792,7 +4792,7 @@ def save_group_information(groups):
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     for what in [ "host", "service", "contact" ]:
         if what in groups and len(groups[what]) > 0:
-            out.write("if not define_%sgroups:\n    define_%sgroups = {}\n" % (what, what))
+            out.write("if type(define_%sgroups) != dict:\n    define_%sgroups = {}\n" % (what, what))
             out.write("define_%sgroups.update(%s)\n\n" % (what, pprint.pformat(groups[what])))
 
 

@@ -188,6 +188,10 @@ g_html_head_open = False
 #   `----------------------------------------------------------------------'
 
 def page_handler():
+    # Distributed WATO: redirect to better peer, if possible
+    peer = preferred_peer()
+    html.debug(peer)
+
     global g_html_head_open
     g_html_head_open = False
 
@@ -6407,6 +6411,41 @@ def ajax_replication():
 
     answer += '<img src="images/icon_trans.png" class=icon>'
     html.write(answer)
+
+def preferred_peer():
+    local_site = None
+    best_peer = None
+    best_working_peer = None
+    for site_id, site in config.allsites().items():
+        if site_is_local(site_id):
+            if best_peer == None or site_id < best_peer["id"]:
+                best_peer = site
+            if best_working_peer == None or site_id < best_working_peer["id"]:
+                best_working_peer = site
+            local_site = site
+
+        # Is the a member of the peer group?
+        elif site.get("replication") == "peer":
+            if best_peer == None or site_id < best_peer["id"]:
+                best_peer = site
+
+            ss = html.site_status.get(site_id, {})
+            status = ss.get("state", "unknown")
+            if status == "online" and (
+                best_working_peer == None or site_id < best_working_peer):
+                best_working_peer = site
+
+    if best_working_peer: # Good
+        if best_working_peer == local_site:
+            if best_peer != best_working_peer:
+                return False # Only better peer is broken
+            else:
+                return None # Means we are the blessed one
+        else:
+            return best_working_peer
+
+    return None # no peer, not even a local site...
+
 
 
 #.

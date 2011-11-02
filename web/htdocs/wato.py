@@ -2402,6 +2402,9 @@ def mode_changelog(phase):
             html.context_button(_("Activate Changes!"), 
                 html.makeuri([("_action", "activate"), ("_transid", html.current_transid())]), "apply", True)
 
+        if is_distributed():
+            html.context_button(_("Site Configuration"), make_link([("mode", "sites")]), "sites")
+
     elif phase == "action":
         sitestatus_do_async_replication = False # see below
         if html.has_var("_siteaction"):
@@ -5534,6 +5537,8 @@ def mode_sites(phase):
 
         login_id = html.var("_login")
         if login_id:
+            if html.var("_abort"):
+                return "sites"
             if not html.check_transaction():
                 return
             site = sites[login_id]
@@ -5584,6 +5589,7 @@ def mode_sites(phase):
             html.write("</td></tr>")
             html.write("<tr><td class=buttons colspan=2>")
             html.button("_do_login", _("Login"))
+            html.button("_abort", _("Abort"))
             html.write("</td></tr></table>")
             html.hidden_field("_login", login_id)
             html.hidden_fields()

@@ -39,6 +39,7 @@
     * FIX: Added id parameter to render_statistics() method to allow more than
       one pie dashlet for host/service stats
     * FIX: drbd: fixed inventory functions
+    * FIX: printer_supply: handle output of Brother printers
 
     Multisite:
     * FIX: finally fixed long-wanted "NagStaMon create hundreds

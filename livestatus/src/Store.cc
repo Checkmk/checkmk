@@ -38,7 +38,7 @@
 extern int g_debug_level;
 extern unsigned long g_max_cached_messages;
 
-    Store::Store()
+Store::Store()
     :_table_hosts(false)
     , _table_hostsbygroup(true)
     , _table_services(false, false)
@@ -46,7 +46,7 @@ extern unsigned long g_max_cached_messages;
     , _table_servicesbyhostgroup(false, true)
     , _table_downtimes(true)
     , _table_comments(false)
-     , _table_log(g_max_cached_messages)
+    , _table_log(g_max_cached_messages)
 {
     _tables.insert(make_pair("hosts", &_table_hosts));
     _tables.insert(make_pair("hostsbygroup", &_table_hostsbygroup));

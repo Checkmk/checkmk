@@ -188,9 +188,12 @@ g_html_head_open = False
 #   `----------------------------------------------------------------------'
 
 def page_handler():
-    # Distributed WATO: redirect to better peer, if possible
+
+    # Distributed WATO: redirect to better peer, if possible. Only the
+    # Sites administration is available locally.
     peer = preferred_peer()
-    html.debug(peer)
+    if do_peer_redirect(peer):
+        return
 
     global g_html_head_open
     g_html_head_open = False
@@ -275,6 +278,13 @@ def page_handler():
     html.header(modefunc("title"))
     html.write("<script type='text/javascript' src='js/wato.js'></script>")
     html.write("<div class=wato>\n")
+
+    if peer == False:
+        html.show_error("<b>%s</b><br>%s" % (
+            _("Primary system unreachable"),
+            _("The primary system is currently unreachable. Please make sure "
+              "that you synchronize changes back as soon as it is avaiable "
+              "again.")))
 
     try:
         # Show contexts buttons
@@ -6446,6 +6456,35 @@ def preferred_peer():
 
     return None # no peer, not even a local site...
 
+def do_peer_redirect(peer):
+    if is_distributed():
+        current_mode = html.var("mode") or "main"
+        if peer:
+            rel_url = html.makeuri([])
+            frameset_url = "index.py?" + htmllib.urlencode_vars([("start_url", rel_url)])
+            url = peer["multisiteurl"] + frameset_url
+
+            html.header(_("Access to standby system"))
+            if global_replication_state() != "clean":
+                html.show_error(_("You are currently accessing a standby "
+                  "system while the primary system is available. "
+                  "Furthermore you have local changes in the stanbdy system "
+                  "that are not replicated "
+                  "to all sites. Please first <a href='%s'>replicate</a> "
+                  "your changes before switching to the <a target=_parent href='%s'>primary system.</a>") %
+                     ("wato.py?mode=changelog", url))
+
+            if current_mode not in [ "sites", "edit_site", "changelog" ]:
+                html.show_error(_("You have accessed a site that is currently "
+                                  "in standby mode. The only accessible modules "
+                                  "are the <a href='%s'>site management</a> "
+                                  "and the <a href='%s'>replication</a>. "
+                                  "Please proceed on the currently active system "
+                                  "<a target='_parent' href='%s'>%s</a>.") % 
+                                ("wato.py?mode=sites", "wato.py?mode=changelog",
+                                url, peer["alias"]))
+                html.footer()
+                return True
 
 
 #.

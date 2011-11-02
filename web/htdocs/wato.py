@@ -5721,8 +5721,12 @@ def mode_edit_site(phase):
         if not html.check_transaction():
             return "sites"
 
-        id = html.var("id").strip()
-        if (new or id != siteid) and id in sites:
+        if new:
+            id = html.var("id").strip()
+        else:
+            id = siteid
+
+        if new and id in sites:
             raise MKUserError("id", _("This id is already being used by another connection."))
         if not re.match("^[-a-z0-9A-Z_]+$", id):
             raise MKUserError("id", _("The site id must consist only of letters, digit and the underscore."))
@@ -5730,9 +5734,6 @@ def mode_edit_site(phase):
         # Save copy of old site for later
         if not new:
             old_site = sites[siteid]
-
-        if not new and id != siteid:
-            del sites[siteid]
 
         new_site = {}
         sites[id] = new_site
@@ -5822,7 +5823,6 @@ def mode_edit_site(phase):
         # setting is not lost if replication is turned off for a while.
         new_site["multisiteurl"] = multisiteurl 
 
-
         # Secret is not checked here, just kept
         if not new and "secret" in old_site:
             new_site["secret"] = old_site["secret"]
@@ -5834,7 +5834,7 @@ def mode_edit_site(phase):
                 # Assume that site needs to be synchronized
                 update_replication_status(id, { "need_sync" : True, "need_restart" : True })
         else:
-            log_audit(None, "edit-sites", _("Modified connection to site %s" % id))
+            log_audit(None, "edit-sites", _("Modified site connection %s" % id))
             # Replication mode has switched on/off => handle replication state
             repstatus = load_replication_status()
             make_repl = repl and not disabled
@@ -5846,8 +5846,6 @@ def mode_edit_site(phase):
                     log_commit_pending()
         return "sites"
 
-
-
     html.begin_form("site")
     html.write("<table class=form>")
 
@@ -5855,8 +5853,11 @@ def mode_edit_site(phase):
     html.write("<tr><td class=legend>")
     html.write(_("Site ID"))
     html.write("</td><td class=content>")
-    html.text_input("id", siteid) 
-    html.set_focus("id")
+    if new:
+        html.text_input("id", siteid) 
+        html.set_focus("id")
+    else:
+        html.write(siteid)
     html.write("</td></tr>")
 
     # Alias
@@ -5864,6 +5865,8 @@ def mode_edit_site(phase):
     html.write(_("Alias") + "<br><i>" + _("A name or description of the site</i>"))
     html.write("</td><td class=content>")
     html.text_input("alias", site.get("alias", ""), size = 50)
+    if not new:
+        html.set_focus("alias")
     html.write("</td></tr>")
 
     # Disabled

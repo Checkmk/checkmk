@@ -874,7 +874,7 @@ def load_view_into_html_vars(view):
 
     # Make sure, checkboxes with default "on" do no set "on". Otherwise they
     # would always be on
-    html.set_var("filled_in", "create_view")
+    html.set_var("_filled_in", "create_view")
 
 # Extract properties of view from HTML variables and construct
 # view object, to be used for saving or displaying
@@ -1159,7 +1159,7 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
     hard_filters = [ multisite_filters[fn] for fn in view["hard_filters"] ]
     for varname, value in view["hard_filtervars"]:
         # shown filters are set, if form is fresh and variable not supplied in URL
-        if not html.var("filled_in") and not html.has_var(varname):
+        if not html.var("_filled_in") and not html.has_var(varname):
             html.set_var(varname, value)
 
     # Prepare Filter headers for Livestatus

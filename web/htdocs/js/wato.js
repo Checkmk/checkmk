@@ -336,22 +336,42 @@ function update_bulk_moveto(val) {
 //   |          |_| \_\___| .__/|_|_|\___\__,_|\__|_|\___/|_| |_|           |
 //   |                    |_|                                               |
 //   +----------------------------------------------------------------------+
+var replication_progress = new Array();
 
-function wato_do_replication(siteid) {
-    get_url("wato_ajax_replication.py?site=" + siteid, wato_replication_result, siteid);
+function wato_do_replication(siteid, est) {
+    get_url("wato_ajax_replication.py?site=" + siteid, 
+            wato_replication_result, siteid);
+    replication_progress[siteid] = 20; // 10 of 10 10ths
+    setTimeout("replication_step('"+siteid+"',"+est+");", est/10);
 }
+
+function replication_step(siteid, est) {
+    if (replication_progress[siteid] > 0) {
+        replication_progress[siteid]--;
+        var oDiv = document.getElementById("repstate_" + siteid);
+        p = replication_progress[siteid];
+        oDiv.innerHTML = "<div class=repprogress style='width: " + ((20-p)*8) + "px;'></div>" 
+        setTimeout("replication_step('"+siteid+"',"+est+");", est/20);
+    }
+}
+
 
 // num_replsites is set by the page code in wat.py to the number async jobs started
 // in total
 function wato_replication_result(siteid, code) {
+    replication_progress[siteid] = 0;
     var oDiv = document.getElementById("repstate_" + siteid);
-    oDiv.innerHTML = code;
+    if (code.substr(0, 3) == "OK:")
+        oDiv.innerHTML = "<div class='repprogress ok' style='width: 160px;'>" + 
+              code.substr(3) + "</div>";
+    else 
+        oDiv.innerHTML = code;
     if (0 == --num_replsites) {
         setTimeout(wato_replication_finish, 2000);
     }
 }
     
 function wato_replication_finish() {
-    window.location.reload(false);
-    parent.frames[1].location.reload();
+    /* window.location.reload(false);
+    parent.frames[1].location.reload(); */
 } 

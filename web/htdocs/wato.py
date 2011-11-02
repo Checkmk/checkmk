@@ -2558,21 +2558,29 @@ def mode_changelog(phase):
                     sitetype = _("Peer")
                 html.write("<td>%s</td>" % sitetype)
 
-                uptodate = not (srs.get("need_restart") or \
-                                (srs.get("need_sync") and not site_is_local(site_id)))
+                need_restart = srs.get("need_restart")
+                need_sync    = srs.get("need_sync") and not site_is_local(site_id)
+                uptodate = not (need_restart or need_sync)
 
                 # Start asynchronous replication
                 if sitestatus_do_async_replication:
-                    html.write("<td>")
+                    html.write("<td class=repprogress>")
                     # Do only include sites that are known to be up
                     if not site_is_local(site_id) and not "secret" in site:
                         html.write("<b>%s</b>" % _("Not logged in."))
                     elif status == "online":
                         html.write('<div id="repstate_%s">%s</div>' %
-                                (site_id, uptodate and _("nothing to do") 
-                                      or "<img class=icon src='images/icon_reloading.gif'>%s</img>" % _("Working...")))
+                                (site_id, uptodate and _("nothing to do") or ""))
                         if not uptodate:
-                            html.javascript("wato_do_replication('%s');" % site_id)
+                            if need_restart and need_sync:
+                                what = "sync+restart"
+                            elif need_restart:
+                                what = "restart"
+                            else:
+                                what = "sync"
+                            estimated_duration = srs.get("times", {}).get(what, 2.0)
+                            html.javascript("wato_do_replication('%s', %d);" %
+                              (site_id, int(estimated_duration * 1000.0)))
                             num_replsites += 1
                     else:
                         html.write("<b>%s</b>" % _("Skipping this site."))
@@ -6241,7 +6249,7 @@ def save_replication_status(repstatus):
 # Updates one or more dict elements of a site in an 
 # atomic way. If vars is None, the sites status will
 # be removed
-def update_replication_status(site_id, vars):
+def update_replication_status(site_id, vars, times = {}):
     make_nagios_directory(var_dir)
     fd = os.open(repstatus_file, os.O_RDWR | os.O_CREAT)
     fcntl.flock(fd, fcntl.LOCK_EX)
@@ -6252,6 +6260,12 @@ def update_replication_status(site_id, vars):
     else:
         repstatus.setdefault(site_id, {})
         repstatus[site_id].update(vars)
+        old_times = repstatus[site_id].setdefault("times", {})
+        for what, duration in times.items():
+            if what not in old_times:
+                old_times[what] = duration
+            else:
+                old_times[what] = 0.8 * old_times[what] + 0.2 * duration
     save_replication_status(repstatus)
     os.close(fd)
 
@@ -6342,15 +6356,26 @@ def create_sync_snapshot():
 def synchronize_site(site, restart):
     if site_is_local(site["id"]):
         if restart:
+            start = time.time()
             restart_site(site)
-            update_replication_status(site["id"], { "need_restart" : False })
+            update_replication_status(site["id"], 
+            { "need_restart" : False },
+            { "restart" : time.time() - start})
+
         return True
 
     create_sync_snapshot()
     try:
+        start = time.time()
         result = push_snapshot_to_site(site, restart)
+        duration = time.time() - start
+        update_replication_status(site["id"], {}, 
+           { restart and "sync+restart" or "restart" : duration })
         if result == True:
-            update_replication_status(site["id"], { "need_sync": False, "result" : _("Success") })
+            update_replication_status(site["id"], { 
+                "need_sync": False, 
+                "result" : _("Success"),
+                })
             if restart:
                 update_replication_status(site["id"], { "need_restart": False })
         else:
@@ -6364,8 +6389,11 @@ def synchronize_site(site, restart):
 # Isolated restart without prior synchronization. Currently this
 # is only being called for the local site.
 def restart_site(site):
+    start = time.time()
     check_mk_automation(site["id"], "restart")
-    update_replication_status(site["id"], { "need_restart" : False })
+    duration = time.time() - start
+    update_replication_status(site["id"], 
+        { "need_restart" : False }, { "restart" : duration })
 
 def push_snapshot_to_site(site, do_restart):
     mode = site.get("replication", "slave")
@@ -6408,18 +6436,10 @@ def ajax_replication():
     except Exception, e:
         result = str(e)
     if result == True:
-        if site_is_local(site_id):
-            answer = _("Successfully restarted.")
-        elif need_sync and need_restart:
-            answer = _("Successfully synchronized and restarted.")
-        elif need_sync:
-            answer = _("Successfully synchronized.")
-        else:
-            answer = _("Successfully restarted.")
+        answer = "OK:" + _("Success");
     else:
         answer = "<div class=error>%s: %s</div>" % (_("Error"), hilite_errors(result))
 
-    answer += '<img src="images/icon_trans.png" class=icon>'
     html.write(answer)
 
 def preferred_peer():

@@ -26,6 +26,7 @@
 
     Multisite:
     * FIX: Fixed encoding problem when opening dashboard
+    * FIX: Fixed styling of view header in older IE browsers
 
 
 1.1.12p1:

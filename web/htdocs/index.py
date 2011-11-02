@@ -235,7 +235,7 @@ def handler(req, profiling = True):
             try:
                 handler()
             except Exception, e:
-                html.write(repr(str(e)))
+                html.write(str(e))
             return apache.OK
 
         # Prepare output format

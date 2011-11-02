@@ -443,6 +443,12 @@ def load_folder(dir, name="", path="", parent=None):
     g_folders[path] = folder
     return folder
 
+# Reload a folder. This is called after the folder is modified,
+# so that subsequent code has access to the correct folder
+# meta data (such as .siteid)
+def reload_folder(folder):
+    load_folder(folder_dir(folder), folder[".name"], folder[".path"], folder.get(".parent"))
+
 # Load the information about all folders - except the hosts
 def load_all_folders():
     if not os.path.exists(root_dir):
@@ -1346,6 +1352,7 @@ def mode_editfolder(phase, new):
             g_folders[newpath] = new_folder
             g_folder[".folders"][name] = new_folder
             save_folder(new_folder)
+            reload_folder(new_folder)
             call_hook_folder_created(new_folder)
             # Note: sites are not marked as dirty. Only peers will be synced.
             # The creation of a folder without hosts has not effect on the
@@ -1378,6 +1385,7 @@ def mode_editfolder(phase, new):
                 # might need to be rewritten in order to reflect Changes
                 # in Nagios-relevant attributes.
                 rewrite_config_files_below(g_folder) # due to inherited attributes
+                reload_folder(g_folder)
                 log_pending(AFFECTED, g_folder, "edit-folder", 
                        _("Changed attributes of folder %s") % title)
                 call_hook_hosts_changed(g_folder)
@@ -1644,7 +1652,7 @@ def delete_host_after_confirm(delname):
         return None # browser reload 
 
 #.
-#   .-Services-------------------------------------------------------------.
+#   .-Inventory & Servicis-------------------------------------------------.
 #   |                ____                  _                               |
 #   |               / ___|  ___ _ ____   _(_) ___ ___  ___                 |
 #   |               \___ \ / _ \ '__\ \ / / |/ __/ _ \/ __|                |
@@ -2071,7 +2079,6 @@ def mode_bulk_inventory(phase):
                 folder = g_folders[folderpath]
                 load_hosts(folder)
                 host = folder[".hosts"][hostname]
-                file("/tmp/hirn", "w").write(pprint.pformat(host))
                 eff = effective_attributes(host, folder)
                 site_id = eff.get("site")
                 counts = check_mk_automation(site_id, "inventory", [how, hostname])
@@ -2171,6 +2178,7 @@ def mode_bulk_edit(phase):
                 mark_affected_sites_dirty(g_folder, hostname)
                 log_pending(AFFECTED, hostname, "bulk-edit", _("Changed attributes of host %s in bulk mode") % hostname)
             save_folder_and_hosts(g_folder)
+            reload_hosts() # indirect host tag changes
             call_hook_hosts_changed(g_folder)
             return "folder"
         return
@@ -6245,8 +6253,8 @@ def global_replication_state():
 
 def find_host_sites(site_ids, folder, hostname):
     host = folder[".hosts"][hostname]
-    if "site" in host.get("attributes", {}):
-        site_ids.add(host["attributes"]["site"])
+    if "site" in host:
+        site_ids.add(host["site"])
     else:
         site_ids.add(folder[".siteid"])
 
@@ -6351,19 +6359,27 @@ def ajax_replication():
     site_id = html.var("site")
     repstatus = load_replication_status()
     srs = repstatus.get(site_id, {})
-    restart = srs.get("need_restart", False)
+    need_sync = srs.get("need_sync", False)
+    need_restart = srs.get("need_restart", False)
+    
     site = config.site(site_id)
     try:
-        result = synchronize_site(site, restart)
+        if need_sync:
+            result = synchronize_site(site, need_restart)
+        else:
+            restart_site(site)
+            result = True
     except Exception, e:
         result = str(e)
     if result == True:
         if site_is_local(site_id):
             answer = _("Successfully restarted.")
-        elif restart:
+        elif need_sync and need_restart:
             answer = _("Successfully synchronized and restarted.")
-        else:
+        elif need_sync:
             answer = _("Successfully synchronized.")
+        else:
+            answer = _("Successfully restarted.")
     else:
         answer = "<div class=error>%s: %s</div>" % (_("Error"), hilite_errors(result))
 

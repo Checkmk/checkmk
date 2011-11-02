@@ -5500,7 +5500,15 @@ def mode_sites(phase):
 
     if phase == "action":
         delid = html.var("_delete")
-        if delid:
+        if delid and html.transaction_valid():
+            # Make sure that site is not being used by hosts and folders
+            site_ids = set([])
+            find_folder_sites(site_ids, g_root_folder, True)
+            if delid in site_ids:
+                raise MKUserError(None, 
+                    _("You cannot delete this connection. "
+                      "It has folders/hosts assigned to it."))
+
             c = wato_confirm(_("Confirm deletion of site %s" % delid),
                              _("Do you really want to delete the connection to the site %s?" % delid))
             if c: 
@@ -6264,13 +6272,16 @@ def find_host_sites(site_ids, folder, hostname):
     else:
         site_ids.add(folder[".siteid"])
 
-# Scan recursively for hosts in a folder
-def find_folder_sites(site_ids, folder):
+# Scan recursively for references to sites
+# in folders and hosts
+def find_folder_sites(site_ids, folder, include_folder = False):
+    if include_folder:
+        site_ids.add(folder[".siteid"])
     load_hosts(folder)
     for hostname in folder[".hosts"]:
         find_host_sites(site_ids, folder, hostname)
     for subfolder in folder[".folders"].values():
-        find_folder_sites(site_ids, subfolder)
+        find_folder_sites(site_ids, subfolder, include_folder)
 
 # This method is called when:
 # a) moving a host from one folder to another (2 times)

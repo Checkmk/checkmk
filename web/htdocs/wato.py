@@ -1702,7 +1702,7 @@ def mode_inventory(phase, firsttime):
             message = _("Saved check configuration of host [%s] with %d services") % \
                         (hostname, len(active_checks)) 
             log_pending(LOCALRESTART, hostname, "set-autochecks", message) 
-            mark_affected_sites_dirty(folder, hostname, sync=False, restart=True)
+            mark_affected_sites_dirty(g_folder, hostname, sync=False, restart=True)
             return new_target, message
         return "folder"
 
@@ -2663,23 +2663,21 @@ def log_pending(status, linkinfo, what, message):
     else:
         log_entry(linkinfo, what, message, "pending.log")
         for siteid, site in config.sites.items():
+
+            changes = {}
             
             # Local site can never have pending changes to be synced
             if site_is_local(siteid):
                 if status in [ RESTART, SYNCRESTART ]:
-                    update_replication_status(siteid, { 
-                        "need_restart" : True,
-                        "need_sync" : False,
-                    })
+                    changes["need_restart"] = True
             elif site.get("replication") == "peer" and status == AFFECTED:
-                update_replication_status(siteid, {
-                    "need_sync" : True,
-                })
+                changes["need_sync"] = True
             else:
-                update_replication_status(siteid, {
-                    "need_sync"      : status in [ SYNC, SYNCRESTART ],
-                    "need_restart" : status in [ RESTART, SYNCRESTART ],
-                })
+                if status in [ SYNC, SYNCRESTART ]:
+                    changes["need_sync"] = True
+                if status in [ RESTART, SYNCRESTART ]:
+                    changes["need_restart"] = True
+            update_replication_status(siteid, changes)
 
         # Make sure that a new snapshot for syncing will be created
         # when times comes to syncing
@@ -6280,10 +6278,12 @@ def mark_affected_sites_dirty(folder, hostname=None, sync = True, restart = True
         else:
             find_folder_sites(site_ids, folder)
         for site_id in site_ids:
-            update_replication_status(site_id, {
-                "need_sync"    : sync and not site_is_local(site_id), 
-                "need_restart" : restart,
-            })
+            changes = {}
+            if sync:
+                changes["need_sync"] = True
+            if restart:
+                changes["need_restart"] = True
+            update_replication_status(site_id, changes)
 
 def remove_sync_snapshot():
     if os.path.exists(sync_snapshot_file):

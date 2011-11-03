@@ -118,8 +118,7 @@ div.main {
 /* The content page header containing the title, user, date */
 body.main table.header {
     width: 100%;
-    margin-bottom: 10px;
-    margin-left: 0px;
+    margin: 0 0 10px 0;
     padding: 0px 0px 10px 0px;
     border-spacing: 0px;
     color: #fff;
@@ -127,12 +126,16 @@ body.main table.header {
 
 body.main hr.header {
     background-color: #fff;
-    border-style: none;
     height: 1px;
     position: absolute;
     width: 100%;
     left: 0px;
-    top: 35px;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    top: 42px;
+    /* Needed for older IE versions */
+    color: #fff;
 }
 
 body.main table.header td.left {

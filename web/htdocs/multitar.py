@@ -82,7 +82,11 @@ def extract_from_file(filename, components):
 # Extract a tarball
 def extract(tar, components):
     for what, name, path in components:
-        subtarstream = tar.extractfile(name + ".tar")
+        try:
+            subtarstream = tar.extractfile(name + ".tar")
+        except:
+            pass # may be missing, e.g. sites.tar is only present
+                 # if some sites have been created.
 
         if what == "dir":
             target_dir = path

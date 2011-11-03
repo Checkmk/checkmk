@@ -735,18 +735,12 @@ def mode_folder(phase):
 
         if html.var("_delete_folder") and html.transaction_valid():
             delname = html.var("_delete_folder")
-            if delname in g_folder[".folders"]:
-                del_folder = g_folder[".folders"][delname]
-                if len(del_folder[".folders"]) > 0:
-                    raise MKUserError(None, _("The folder %s cannot be deleted, it still contains some subfolders.")
-                    % del_folder["title"])
-                config.need_permission("wato.manage_folders")
-                if True != check_folder_permissions(g_folder, "write", False):
-                    raise MKAuthException(_("Sorry. In order to delete a folder you need write permissions to its "
-                                            "parent folder."))
-                return delete_folder_after_confirm(del_folder)
-            else:
-                raise MKGeneralException(_("You called this page with a non-existing folder/file %s") % delname)
+            del_folder = g_folder[".folders"][delname]
+            config.need_permission("wato.manage_folders")
+            if True != check_folder_permissions(g_folder, "write", False):
+                raise MKAuthException(_("Sorry. In order to delete a folder you need write permissions to its "
+                                        "parent folder."))
+            return delete_folder_after_confirm(del_folder)
 
         ### Operations on HOSTS
 
@@ -1240,25 +1234,19 @@ def delete_hosts_after_confirm(hosts):
 def delete_folder_after_confirm(del_folder):
     msg = _("Do you really want to delete the folder %s?") % del_folder["title"]
     if not config.wato_hide_filenames:
-        msg += "<br>" + _("(The directory <tt>%s</tt>)") % folder_dir(del_folder)
+        msg += _(" Its directory is <tt>%s</tt>.") % folder_dir(del_folder)
+    num_hosts = num_hosts_in(del_folder)
+    if num_hosts:
+        msg += _(" The folder contains <b>%d</b> hosts, which will also be deleted!") % num_hosts
     c = wato_confirm(_("Confirm folder deletion"), msg)
                      
     if c:
         mark_affected_sites_dirty(g_folder)
         del g_folder[".folders"][del_folder[".name"]]
         folder_path = folder_dir(del_folder)
-        try:
-            for ext in [ ".wato", "hosts.mk", "rules.mk" ]:
-                if os.path.exists(folder_path + "/" + ext):
-                    os.remove(folder_path + "/" + ext)
-            os.rmdir(folder_path)
-        except:
-            pass
-        if os.path.exists(folder_path):
-            raise MKGeneralException(_("Cannot remove the folder '%s': probably there are "
-                                       "still non-WATO files contained in this directory.") % folder_path)
-
-        log_pending(AFFECTED, del_folder, "delete-folder", _("Deleted empty folder %s")% folder_dir(del_folder))
+        shutil.rmtree(folder_path)
+        log_pending(AFFECTED, del_folder, "delete-folder", 
+                _("Deleted empty folder %s")% folder_dir(del_folder))
         call_hook_folder_deleted(del_folder)
         return "folder"
     elif c == False: # not yet confirmed
@@ -3763,7 +3751,7 @@ def mode_snapshot(phase):
         if html.has_var("_download_file"):
             download_file = html.var("_download_file")
             if not download_file.startswith('wato-snapshot') and download_file != 'latest':
-                raise MKUserError(None, _("Invalid download file specified"))
+                raise MKUserError(None, _("Invalid download file specified."))
 
             # Find the latest snapshot file
             if download_file == 'latest':
@@ -3786,14 +3774,16 @@ def mode_snapshot(phase):
                 return None, _("Created snapshot <tt>%s</tt>.") % filename
             else:
                 return None
+
         # upload snapshot
         elif html.has_var("_upload_file"):
             if html.var("_upload_file") == "":
-                raise MKUserError(None, _("You need to select a file for upload"))
+                raise MKUserError(None, _("Please select a file for upload."))
                 return None
             if html.check_transaction():
                 multitar.extract_from_buffer(html.var("_upload_file"), backup_paths)
-                log_pending(SYNCRESTART, None, "snapshot-restored", _("Restored from uploaded file"))
+                log_pending(SYNCRESTART, None, "snapshot-restored", 
+                    _("Restored from uploaded file"))
                 return None, _("Successfully restored configuration.")
             else:
                 return None
@@ -3801,7 +3791,7 @@ def mode_snapshot(phase):
         # delete file
         elif html.has_var("_delete_file"):
             delete_file = html.var("_delete_file")
-            c = wato_confirm(_("Confirm delete snapshot"),
+            c = wato_confirm(_("Confirm deletion of snapshot"),
                              _("Are you sure you want to delete the snapshot <br><br>%s?") %
                                 delete_file
                             )
@@ -3823,8 +3813,9 @@ def mode_snapshot(phase):
                             )
             if c:
                 multitar.extract_from_file(snapshot_dir + snapshot_file, backup_paths)
-                log_pending(SYNCRESTART, None, "snapshot-restored", _("Restored snapshot %s") % snapshot_file)
-                return None, _("Successfully restored Snapshot.")
+                log_pending(SYNCRESTART, None, "snapshot-restored", 
+                     _("Restored snapshot %s") % snapshot_file)
+                return None, _("Successfully restored snapshot.")
             elif c == False: # not yet confirmed
                 return ""
             else:
@@ -3842,16 +3833,34 @@ def mode_snapshot(phase):
         else:
             html.write('<table class=data>')
             html.write('<h3>' + _("Snapshots") + '</h3>')
+            html.write("<tr>")
+            html.write("<th>%s</th>" % _("Actions"))
+            html.write("<th>%s</th>" % _("Filename"))
+            html.write("<th>%s</th>" % _("Age"))
+            html.write("</tr>")
 
             odd = "odd"
             for name in snapshots:
                 odd = odd == "odd" and "even" or "odd"
                 html.write('<tr class="data %s0"><td>' % odd)
-                html.buttonlink(make_action_link([("mode","snapshot"),("_restore_snapshot", name)]), _("Restore"))
-                html.buttonlink(make_action_link([("mode","snapshot"),("_delete_file", name)]), _("Delete"))
+
+                # Buttons
+                html.buttonlink(make_action_link(
+                   [("mode","snapshot"),("_restore_snapshot", name)]), _("Restore"))
+                html.buttonlink(make_action_link(
+                   [("mode","snapshot"),("_delete_file", name)]), _("Delete"))
                 html.write("<td>")
+
+                # Snapshot name
                 html.write('<a href="%s">%s</a>' % (make_action_link([("mode","snapshot"),("_download_file", name)]), name))
+
+                # Age
+                html.write("<td class=number>")
+                age = time.time() - os.stat(snapshot_dir + name).st_mtime
+                html.write(html.age_text(age))
+                html.write("</td>")
             html.write('</table>')
+
 
         html.write("<h3>" + _("Restore from uploaded file") + "</h3>")
         html.begin_form("upload_form", None, "POST")

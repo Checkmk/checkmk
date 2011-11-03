@@ -5206,19 +5206,29 @@ def mode_timeperiods(phase):
 
     if phase == "action":
         delname = html.var("_delete")
-        c = wato_confirm(_("Confirm deletion of time period %s") % delname,
-              _("Do you really want to delete the time period '%s'? If it "
-                "is still in use by an object, you will not be able to "
-                "activate your changed configuration?") % delname)
-        if c:
-            del timeperiods[delname]
-            save_timeperiods(timeperiods)
-            log_pending(SYNCRESTART, None, "edit-timeperiods", _("Deleted timeperiod %s") % delname)
-            return None
-        elif c == False:
-            return ""
-        else:
-            return None
+        if html.transaction_valid():
+            usages = find_usage_of_timeperiod(delname)
+            if usages:
+                message = "<b>%s</b><br>%s:<ul>" % \
+                            (_("You cannot delete this timeperiod."),
+                             _("It is still in use by"))
+                for title, link in usages:
+                    message += '<li><a href="%s">%s</a></li>\n' % (link, title)
+                message += "</ul>"
+                raise MKUserError(None, message)
+
+            c = wato_confirm(_("Confirm deletion of time period %s") % delname,
+                  _("Do you really want to delete the time period '%s'? I've checked it: "
+                    "it is not being used by any rule or user profile right now.") % delname)
+            if c:
+                del timeperiods[delname]
+                save_timeperiods(timeperiods)
+                log_pending(SYNCRESTART, None, "edit-timeperiods", _("Deleted timeperiod %s") % delname)
+                return None
+            elif c == False:
+                return ""
+            else:
+                return None
 
     html.write("<h3>" + _("Timeperiod definitions") + "</h3>")
 
@@ -5497,6 +5507,35 @@ class TimeperiodSelection(ElementSelection):
         timeperiods = load_timeperiods()
         elements = dict([ (name, "%s - %s" % (name, tp["alias"])) for (name, tp) in timeperiods.items() ])
         return elements
+
+# Check if a timeperiod is currently in use and cannot be deleted
+# Returns a list of occurrances.
+# Possible usages:
+# - user accounts (notification period)
+# - rules: service/host-notification/check-period
+def find_usage_of_timeperiod(tpname):
+
+    # Part 1: Rules
+    used_in = []
+    for varname, ruleset in load_all_rulesets().items():
+        rulespec = g_rulespecs[varname]
+        if isinstance(rulespec.get("valuespec"), TimeperiodSelection):
+            for folder, rule in ruleset:
+                value, tag_specs, host_list, item_list = parse_rule(rulespec, rule)
+                if value == tpname:
+                    used_in.append(("%s: %s" % (_("Ruleset"), g_rulespecs[varname]["title"]), 
+                                   make_link([("mode", "edit_ruleset"), ("varname", varname)])))
+                    break
+
+    # Part 2: Users
+    for userid, user in load_users().items():
+        tp = user.get("notification_period")
+        if tp == tpname:
+            used_in.append(("%s: %s" % (_("User"), userid),
+                make_link([("mode", "edit_user"), ("edit", userid)])))
+
+    return used_in
+
 
 #.
 #   .-Sites----------------------------------------------------------------.

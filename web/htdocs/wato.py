@@ -2414,7 +2414,8 @@ def mode_changelog(phase):
                 (not is_distributed() and log_exists("pending"))
             or  (is_distributed() and global_replication_state() == "dirty")):
             html.context_button(_("Activate Changes!"), 
-                html.makeuri([("_action", "activate"), ("_transid", html.current_transid())]), "apply", True)
+                html.makeuri([("_action", "activate"), ("_transid", html.current_transid())]), 
+                             "apply", True, id="act_changes_button")
 
         if is_distributed():
             html.context_button(_("Site Configuration"), make_link([("mode", "sites")]), "sites")

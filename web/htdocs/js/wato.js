@@ -337,12 +337,14 @@ function update_bulk_moveto(val) {
 //   |                    |_|                                               |
 //   +----------------------------------------------------------------------+
 var replication_progress = new Array();
+var num_failedsites = 0;
 
 function wato_do_replication(siteid, est) {
     get_url("wato_ajax_replication.py?site=" + siteid, 
             wato_replication_result, siteid);
     replication_progress[siteid] = 20; // 10 of 10 10ths
     setTimeout("replication_step('"+siteid+"',"+est+");", est/10);
+    num_failedsites = num_replsites;
 }
 
 function replication_step(siteid, est) {
@@ -361,9 +363,11 @@ function replication_step(siteid, est) {
 function wato_replication_result(siteid, code) {
     replication_progress[siteid] = 0;
     var oDiv = document.getElementById("repstate_" + siteid);
-    if (code.substr(0, 3) == "OK:")
+    if (code.substr(0, 3) == "OK:") {
         oDiv.innerHTML = "<div class='repprogress ok' style='width: 160px;'>" + 
               code.substr(3) + "</div>";
+        num_failedsites--;
+    }
     else 
         oDiv.innerHTML = code;
     if (0 == --num_replsites) {
@@ -372,6 +376,9 @@ function wato_replication_result(siteid, code) {
 }
     
 function wato_replication_finish() {
-    /* window.location.reload(false);
-    parent.frames[1].location.reload(); */
+    parent.frames[1].location.reload(); // reload sidebar
+    if (num_failedsites == 0) {
+        oDiv = document.getElementById("act_changes_button");
+        oDiv.style.display = "none";
+    }
 } 

@@ -2350,32 +2350,25 @@ def mode_random_hosts(phase):
 
     elif phase == "action":
         if html.check_transaction():
-            import random
             count = int(html.var("count"))
-            created = 0
-            n = 1
-            while created < count:
-                while True:
-                    name = "random_%010d" % int(random.random() * 10000000000)
-                    if name in g_folder[".hosts"]:
-                        n += 1
-                    else:
-                        break
-                host = {"ipaddress" : "127.0.0.1"}
-                g_folder[".hosts"][name] = host
-                created += 1
-            g_folder["num_hosts"] += count
-            save_folder_and_hosts(g_folder)
-            reload_hosts()
-            return "folder", _("Created %d random hosts.") % count
-        return "folder"
+            folders = int(html.var("folders"))
+            levels = int(html.var("levels"))
+            created = create_random_hosts(g_folder, count, folders, levels)
+            return "folder", _("Created %d random hosts.") % created
+        else:
+            return "folder"
 
     html.begin_form("random")
     html.write("<table class=form>")
     html.write("<tr><td class=legend>%s</td>" % _("Number to create"))
     html.write("</td><td class=content>")
-    html.number_input("count", 100)
+    html.write("%s: " % _("Hosts to create in each folder"))
+    html.number_input("count", 10)
     html.set_focus("count")
+    html.write("<br>%s: " % _("Number of folders to create in each level"))
+    html.number_input("folders", 10)
+    html.write("<br>%s: " % _("Levels of folders to create"))
+    html.number_input("levels", 1)
     html.write("</td></tr>")
 
     html.write("<tr><td class=buttons colspan=2>")
@@ -2384,6 +2377,52 @@ def mode_random_hosts(phase):
     html.hidden_fields()
     html.end_form()
 
+def create_random_hosts(folder, count, folders, levels):
+    import random
+    if levels == 0:
+        created = 0
+        while created < count:
+            name = "random_%010d" % int(random.random() * 10000000000)
+            host = {"ipaddress" : "127.0.0.1"}
+            folder[".hosts"][name] = host
+            created += 1
+        folder["num_hosts"] += count
+        save_folder_and_hosts(folder)
+        reload_hosts()
+        return count
+    else:
+        total_created = 0
+        if folder[".path"]:
+            prefixpath = folder[".path"] + "/"
+        else:
+            prefixpath = ""
+        created = 0
+        while created < folders:
+            created += 1
+            i = 1
+            while True:
+                name = "folder_%02d" % i
+                if name not in folder[".folders"]:
+                    break
+                i += 1
+            title = "Subfolder %02d" % i
+            path = prefixpath + name
+            subfolder = {
+                ".parent" : folder,
+                ".name" : name,
+                ".folders" : {},
+                ".hosts" : {},
+                ".path" : path,
+                "attributes" : {},
+                "num_hosts" : 0,
+                "title" : title,
+            }
+            g_folders[path] = subfolder
+            folder[".folders"][name] = subfolder
+            save_folder(subfolder)
+            total_created += create_random_hosts(subfolder, count, folders, levels - 1)
+        save_folder(folder)
+        return total_created
 
 #.
 #   .-Auditlog-------------------------------------------------------------.

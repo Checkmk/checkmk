@@ -505,6 +505,25 @@ register_rule(group,
                  "as the 'service time'.")),
     itemtype = "service")
 
+register_rule(group,
+    "extra_host_conf:check_period",
+    TimeperiodSelection(
+        title = _("Check period for hosts"),
+        help = _("If you specify a check period for a host then active checks of that "
+                 "host will only take place within that period. In the rest of the time "
+                 "the state of the host will stay at its last status.")),
+    )
+
+register_rule(group,
+    "extra_service_conf:check_period",
+    TimeperiodSelection(
+        title = _("Check period for services"),
+        help = _("If you specify a notification period for a service then active checks "
+                 "of that service will only be done in that period. Please note, that the "
+                 "checks driven by Check_MK are passive checks and are not affected by this "
+                 "rule. You can use the rule for the active Check_MK check, however.")),
+    itemtype = "service")
+
 class MonitoringIcon(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)

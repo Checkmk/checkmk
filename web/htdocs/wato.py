@@ -1139,20 +1139,29 @@ def show_hosts(folder):
                     'init_rowselect();' % repr(["_c_%s" % h for h in hostnames]))
     return True
 
-
+host_move_combo_cache_id = None
 def host_move_combo(host = None, top = False):
-    other_folders = []
-    for path, afolder in g_folders.items():
-        # TODO: Check permisssions
-        if afolder != g_folder:
-            os_path = afolder[".path"]
-            msg = afolder["title"]
-            if os_path:
-                msg += " (%s)" % os_path
-            other_folders.append((os_path, msg))
+    global host_move_combo_cache, host_move_combo_cache_id
+    if host_move_combo_cache_id != id(html):
+        host_move_combo_cache = {}
+        host_move_combo_cache_id = id(html)
 
-    if len(other_folders) > 0:
-        selections = [("@", _("(select folder)"))] + other_folders
+    if id(g_folder) not in host_move_combo_cache:
+        selections = [("@", _("(select folder)"))]
+        for path, afolder in g_folders.items():
+            # TODO: Check permisssions
+            if afolder != g_folder:
+                os_path = afolder[".path"]
+                msg = afolder["title"]
+                if os_path:
+                    msg += " (%s)" % os_path
+                selections.append((os_path, msg))
+        selections.sort(cmp=lambda a,b: cmp(a[1].lower(), b[1].lower()))
+        host_move_combo_cache[id(g_folder)] = selections
+    else:
+        selections = host_move_combo_cache[id(g_folder)]
+
+    if len(selections) > 1:
         if host == None:
             html.button("_bulk_move", _("Move To:"))
             field_name = 'bulk_moveto'
@@ -1166,7 +1175,7 @@ def host_move_combo(host = None, top = False):
         else:
             html.hidden_field("host", host)
             uri = html.makeuri([("host", host), ("_transid", html.current_transid() )])
-            html.sorted_select("_host_move_%s" % host, selections, "@", 
+            html.select("_host_move_%s" % host, selections, "@", 
                 "location.href='%s' + '&_move_host_to=' + this.value;" % uri);
 
 

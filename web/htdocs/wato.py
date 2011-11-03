@@ -3234,10 +3234,11 @@ class Attribute:
 # A simple text attribute. It is stored in 
 # a Python unicode string
 class TextAttribute(Attribute):
-    def __init__(self, name, title, help = None, default_value="", mandatory=False, allow_empty=True):
+    def __init__(self, name, title, help = None, default_value="", mandatory=False, allow_empty=True, size=20):
         Attribute.__init__(self, name, title, help, default_value)
         self._mandatory = mandatory
         self._allow_empty = allow_empty
+        self._size = size
 
     def paint(self, value, hostname):
         if not value:
@@ -3251,7 +3252,7 @@ class TextAttribute(Attribute):
     def render_input(self, value):
         if value == None: 
             value = ""
-        html.text_input("attr_" + self.name(), value)
+        html.text_input("attr_" + self.name(), value, size = self._size)
 
     def from_html_vars(self):
         value = html.var_utf8("attr_" + self.name())

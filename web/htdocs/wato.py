@@ -3859,11 +3859,11 @@ def mode_snapshot(phase):
                     return False
                 download_file = snapshots[-1]
 
-            download_file = os.path.join(snapshot_dir, download_file)
-            if os.path.exists(download_file):
+            download_path = os.path.join(snapshot_dir, download_file)
+            if os.path.exists(download_path):
                 html.req.headers_out['Content-Disposition'] = 'Attachment; filename=' + download_file
                 html.req.headers_out['content_type'] = 'application/x-tar'
-                html.write(open(download_file).read())
+                html.write(open(download_path).read())
                 return False
 
         # create snapshot

@@ -726,6 +726,8 @@ def mode_folder(phase):
             html.context_button(_("New host"),          make_link([("mode", "newhost")]), "new")
         search_button()
         folder_status_button()
+        if config.may("wato.random_hosts"):
+            html.context_button(_("Random Hosts"), make_link([("mode", "random_hosts")]), "random")
     
     elif phase == "action":
         if html.var("_search"): # just commit to search form
@@ -1006,7 +1008,6 @@ def show_hosts(folder):
                + _("Auth") + "</th>"
                + "<th>" + _("Tags") + "</th>")
 
-
     for attr, topic in host_attributes:
         if attr.show_in_table():
             html.write("<th>%s</th>" % attr.title())
@@ -1080,7 +1081,7 @@ def show_hosts(folder):
         delete_url   = make_action_link([("mode", "folder"), ("_delete_host", hostname)])
 
         html.write('<td class=checkbox>')
-        html.write("<input type=checkbox name=\"%s\" value=%d />" % (hostname, colspan))
+        html.write("<input type=checkbox name=\"_c_%s\" value=%d />" % (hostname, colspan))
         html.write('</td>\n')
 
         html.write("<td class=buttons>")
@@ -1135,7 +1136,7 @@ def show_hosts(folder):
     html.end_form()
 
     html.javascript('g_selected_rows = %s;\n'
-                    'init_rowselect();' % repr(hostnames))
+                    'init_rowselect();' % repr(["_c_%s" % h for h in hostnames]))
     return True
 
 
@@ -1165,7 +1166,7 @@ def host_move_combo(host = None, top = False):
         else:
             html.hidden_field("host", host)
             uri = html.makeuri([("host", host), ("_transid", html.current_transid() )])
-            html.sorted_select("host_move_%s" % host, selections, "@", 
+            html.sorted_select("_host_move_%s" % host, selections, "@", 
                 "location.href='%s' + '&_move_host_to=' + this.value;" % uri);
 
 
@@ -1219,7 +1220,7 @@ def delete_hosts_after_confirm(hosts):
         for delname in hosts:
             mark_affected_sites_dirty(g_folder, delname)
             host = g_folder[".hosts"][delname]
-            check_mk_automation(host[".siteid"], "delete-host", [delname])
+            # check_mk_automation(host[".siteid"], "delete-host", [delname])
             del g_folder[".hosts"][delname]
             g_folder["num_hosts"] -= 1
             log_pending(AFFECTED, delname, "delete-host", _("Deleted host %s") % delname)
@@ -1268,7 +1269,7 @@ def get_hostnames_from_checkboxes():
     search_text = html.var("search")
     for name in hostnames:
         if (not search_text or (search_text.lower() in name.lower())) \
-            and name in selected:
+            and ('_c_' + name) in selected:
             selected_hosts.append(name)
     return selected_hosts
 
@@ -2084,6 +2085,7 @@ def mode_bulk_inventory(phase):
                 eff = effective_attributes(host, folder)
                 site_id = eff.get("site")
                 counts = check_mk_automation(site_id, "inventory", [how, hostname])
+                #counts = ( 1, 2, 3, 4 )
                 result = repr([ 'continue', 1, 0 ] + list(counts)) + "\n"
                 result += _("Inventorized %s<br>\n") % hostname
                 mark_affected_sites_dirty(folder, hostname, sync=False, restart=True)
@@ -2324,6 +2326,63 @@ def bulk_cleanup_attributes(the_file, hosts):
 
     return num_shown > 0
 
+
+
+#.
+#   .-Random Hosts---------------------------------------------------------.
+#   |  ____                 _                   _   _           _          |
+#   | |  _ \ __ _ _ __   __| | ___  _ __ ___   | | | | ___  ___| |_ ___    |
+#   | | |_) / _` | '_ \ / _` |/ _ \| '_ ` _ \  | |_| |/ _ \/ __| __/ __|   |
+#   | |  _ < (_| | | | | (_| | (_) | | | | | | |  _  | (_) \__ \ |_\__ \   |
+#   | |_| \_\__,_|_| |_|\__,_|\___/|_| |_| |_| |_| |_|\___/|___/\__|___/   |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | This module allows the creation of large numbers of random hosts,    |
+#   | for test and development.                                            |
+#   '----------------------------------------------------------------------'
+def mode_random_hosts(phase):
+    if phase == "title":
+        return _("Random Hosts")
+
+    elif phase == "buttons":
+        html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
+        return
+
+    elif phase == "action":
+        if html.check_transaction():
+            import random
+            count = int(html.var("count"))
+            created = 0
+            n = 1
+            while created < count:
+                while True:
+                    name = "random_%010d" % int(random.random() * 10000000000)
+                    if name in g_folder[".hosts"]:
+                        n += 1
+                    else:
+                        break
+                host = {"ipaddress" : "127.0.0.1"}
+                g_folder[".hosts"][name] = host
+                created += 1
+            g_folder["num_hosts"] += count
+            save_folder_and_hosts(g_folder)
+            reload_hosts()
+            return "folder", _("Created %d random hosts.") % count
+        return "folder"
+
+    html.begin_form("random")
+    html.write("<table class=form>")
+    html.write("<tr><td class=legend>%s</td>" % _("Number to create"))
+    html.write("</td><td class=content>")
+    html.number_input("count", 100)
+    html.set_focus("count")
+    html.write("</td></tr>")
+
+    html.write("<tr><td class=buttons colspan=2>")
+    html.button("start", _("Start!"), "submit")
+    html.write("</tr></table>\n")
+    html.hidden_fields()
+    html.end_form()
 
 
 #.
@@ -2934,7 +2993,7 @@ def export_audit_log():
 #   '----------------------------------------------------------------------'
 
 def check_mk_automation(siteid, command, args=[], indata=""):
-    if site_is_local(siteid):
+    if not siteid or site_is_local(siteid):
         return check_mk_local_automation(command, args, indata)
     else:
         return check_mk_remote_automation(siteid, command, args, indata)
@@ -3061,12 +3120,12 @@ def interactive_progress(items, title, stats, finishvars, timewait, success_stat
     html.write("</td></tr>")
     html.write("</table>")
     html.write("</center>")
-    json_items    = '[ %s ]' % ','.join([ "'" + h + "'" for h in items ])
+    json_items    = '[ %s ]' % ',\n'.join([ "'" + h + "'" for h in items ])
     success_stats = '[ %s ]' % ','.join(map(str, success_stats))
     # Remove all sel_* variables. We do not need them for our ajax-calls.
     # They are just needed for the Abort/Finish links. Those must be converted
     # to POST.
-    base_url = html.makeuri([], remove_prefix = "sel_")
+    base_url = html.makeuri([], remove_prefix = "sel")
     html.javascript(('progress_scheduler("%s", "%s", 50, %s, "%s", %s, "%s", "' + _("FINISHED.") + '");') %
                      (html.var('mode'), base_url, json_items, html.makeuri(finishvars), success_stats, html.makeuri(termvars),))
 
@@ -3838,6 +3897,7 @@ def mode_snapshot(phase):
             html.write("<th>%s</th>" % _("Actions"))
             html.write("<th>%s</th>" % _("Filename"))
             html.write("<th>%s</th>" % _("Age"))
+            html.write("<th>%s</th>" % _("Size"))
             html.write("</tr>")
 
             odd = "odd"
@@ -3855,11 +3915,13 @@ def mode_snapshot(phase):
                 # Snapshot name
                 html.write('<a href="%s">%s</a>' % (make_action_link([("mode","snapshot"),("_download_file", name)]), name))
 
-                # Age
+                # Age and Size
                 html.write("<td class=number>")
-                age = time.time() - os.stat(snapshot_dir + name).st_mtime
+                st = os.stat(snapshot_dir + name)
+                age = time.time() - st.st_mtime
                 html.write(html.age_text(age))
                 html.write("</td>")
+                html.write("<td class=number>%d</td>" % st.st_size)
             html.write('</table>')
 
 
@@ -9616,6 +9678,7 @@ modes = {
    "bulkinventory"      : (["hosts", "services"], mode_bulk_inventory),
    "bulkedit"           : (["hosts", "edit_hosts"], mode_bulk_edit),
    "bulkcleanup"        : (["hosts", "edit_hosts"], mode_bulk_cleanup),
+   "random_hosts"       : (["hosts", "random_hosts"], mode_random_hosts),
    "changelog"          : ([], mode_changelog),
    "auditlog"           : (["auditlog"], mode_auditlog),
    "snapshot"           : (["snapshots"], mode_snapshot),
@@ -9713,6 +9776,13 @@ def load_plugins():
            "from the monitoring. Please also add the permissions "
            "<i>Modify existing hosts</i>."),
          [ "admin", "user" ])
+
+    config.declare_permission("wato.random_hosts",
+         _("Create random hosts"),
+         _("The creation of random hosts is a facility for test and development "
+           "and disabled by default. It allows you to create a number of random "
+           "hosts and thus simulate larger environments."),
+         [ ])
 
     config.declare_permission("wato.services",
          _("Manage services"),

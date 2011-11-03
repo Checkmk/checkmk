@@ -1276,7 +1276,7 @@ function table_init_rowselect(oTable) {
     var childs = get_all_checkboxes(oTable);
     for(var i = 0; i < childs.length; i++) {
         // Perform initial selections
-        if(g_selected_rows.indexOf(childs[i].name) > -1)
+        if (g_selected_rows.indexOf(childs[i].name) > -1)
             childs[i].checked = true;
         else
             childs[i].checked = false;

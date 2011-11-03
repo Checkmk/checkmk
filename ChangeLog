@@ -1,12 +1,4 @@
 1.1.13i1:
-    Core, Setup, etc.:
-    * New configuration variable static_checks[] (used by WATO)
-    * New configuration variable checkgroup_parameters (mainly for WATO)
-
-    Checks & Agents:
-    * if/if64: new ruleset if_disable_if64_hosts, that force if on
-      hosts the seem to support if64
-
     WATO:
     * Evolved to full featured monitoring configuration tool!
     * Major internal code cleanup
@@ -17,12 +9,21 @@
     * Configuration of Nagios objects and attributes
     * Configuration of users and roles
     * Configuration of host tags
+    * Distributed WATO: replication of the configuration to slaves and peers
     * Added missing API function update_host_attributes() to change the
       attributes of a host
     * Added API function num_hosts_in_folder() to count the number of hosts
       below the given folder
     * Added option to download "latest" snapshot
     * extra_buttons can now register a function to gather the URL to link to
+
+    Core, Setup, etc.:
+    * New configuration variable static_checks[] (used by WATO)
+    * New configuration variable checkgroup_parameters (mainly for WATO)
+
+    Checks & Agents:
+    * if/if64: new ruleset if_disable_if64_hosts, that force if on
+      hosts the seem to support if64
 
     Multisite:
     * FIX: Fixed encoding problem when opening dashboard

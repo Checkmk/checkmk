@@ -2049,13 +2049,15 @@ def create_target_folder_from_aliaspath(aliaspath):
                     "attributes" : {}, 
                     ".folders"   : {},
                     ".files"     : {},
-                    ".parent"    : folder
+                    ".parent"    : folder,
+                    ".siteid"    : folder[".siteid"],
                 }
                 folder[".folders"][name] = new_folder
                 g_folders[new_path] = new_folder
                 folder = new_folder
                 parts = parts[1:]
                 save_folder(folder) # make sure, directory is created
+                reload_folder(folder)
 
     return folder
 

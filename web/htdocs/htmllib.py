@@ -233,7 +233,7 @@ class html:
             onsubmit = ''
         self.write("<form name=%s class=%s action=\"%s\" method=%s%s%s>\n" %
                    (name, name, action, method, enctype, onsubmit))
-        self.hidden_field("_filled_in", name)
+        self.hidden_field("filled_in", name)
         self.hidden_field("_transid", str(self.current_transid()))
         self.hidden_fields(self.global_vars)
         self.form_name = name
@@ -242,7 +242,7 @@ class html:
         self.write("</form>\n")
 
     def form_submitted(self):
-        return self.has_var("_filled_in")
+        return self.has_var("filled_in")
 
     def add_user_error(self, varname, message):
         if type(varname) == list:
@@ -415,10 +415,10 @@ class html:
             html = "<x class=inputerror>"
         # Problem with checkboxes: The browser will add the variable
         # only to the URL if the box is checked. So in order to detect
-        # whether we should add the default value, we need to detect
+        # wether we should add the default value, we need to detect
         # if the form is printed for the first time. This is the
-        # case if "_filled_in" is not set.
-        if not self.var("_filled_in") == self.form_name: # this form filled in
+        # case if "filled_in" is not set.
+        if not self.var("filled_in") == self.form_name: # this form filled in
             value = self.req.vars.get(varname, deflt)
         else:
             value = self.req.vars.get(varname, "")
@@ -443,13 +443,13 @@ class html:
     def get_checkbox(self, varname, form_name = None):
         if form_name:
             try:
-                if not self.var("_filled_in") == self.form_name: # this form filled in
+                if not self.var("filled_in") == self.form_name: # this form filled in
                     return None
             except:
                 # self.form_name not set, we have no form
-                if not self.var("_filled_in"):
+                if not self.var("filled_in"):
                     return None
-        elif not self.var("_filled_in"):
+        elif not self.var("filled_in"):
             return None
 
         value = self.req.vars.get(varname, "")

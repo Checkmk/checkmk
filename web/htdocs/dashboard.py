@@ -518,7 +518,7 @@ def render_statistics(pie_id, what, table, filter):
     html.write('<table class="hoststats%s" style="float:left">' % ( 
         len(pies) > 5 and " narrow" or ""))
     for (name, color, viewurl, query), count in pies + [ ((_("Total"), "", "all%s" % what, ""), total) ]:
-        url = "view.py?view_name=" + viewurl + "&_filled_in=filter&search=1&wato_folder=" \
+        url = "view.py?view_name=" + viewurl + "&filled_in=filter&search=1&wato_folder=" \
               + htmllib.urlencode(html.var("wato_folder", ""))
         html.write('<tr><th><a href="%s">%s</a></th>' % (url, name))
         html.write('<td class=color style="background-color: %s">'

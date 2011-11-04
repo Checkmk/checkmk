@@ -516,7 +516,7 @@ class BIStatusFilter(Filter):
         return ""
 
     def display(self):
-        if html.var("_filled_in"):
+        if html.var("filled_in"):
             defval = ""
         else:
             defval = "on"
@@ -529,7 +529,7 @@ class BIStatusFilter(Filter):
 
     def filter_table(self, rows):
         jeaders = []
-        if html.var("_filled_in"):
+        if html.var("filled_in"):
             defval = ""
         else:
             defval = "on"

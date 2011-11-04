@@ -188,7 +188,7 @@ class FilterServiceState(Filter):
         self.prefix = prefix
 
     def display(self):
-        if html.var("_filled_in"):
+        if html.var("filled_in"):
             defval = ""
         else:
             defval = "on"
@@ -199,7 +199,7 @@ class FilterServiceState(Filter):
 
     def filter(self, infoname):
         headers = []
-        if html.var("_filled_in"):
+        if html.var("filled_in"):
             defval = ""
         else:
             defval = "on"
@@ -229,7 +229,7 @@ class FilterHostState(Filter):
                 "host", [ "hst0", "hst1", "hst2", "hstp" ], [])
 
     def display(self):
-        if html.var("_filled_in"):
+        if html.var("filled_in"):
             defval = ""
         else:
             defval = "on"
@@ -239,7 +239,7 @@ class FilterHostState(Filter):
 
     def filter(self, infoname):
         headers = []
-        if html.var("_filled_in"):
+        if html.var("filled_in"):
             defval = ""
         else:
             defval = "on"
@@ -465,7 +465,7 @@ class FilterLogClass(Filter):
                 "log", [ "logclass%d" % l for l, c in self.log_classes ], [])
 
     def display(self):
-        if html.var("_filled_in"):
+        if html.var("filled_in"):
             defval = ""
         else:
             defval = "on"
@@ -493,7 +493,7 @@ class FilterLogClass(Filter):
 
     def filter(self, infoname):
         headers = []
-        if html.var("_filled_in"):
+        if html.var("filled_in"):
             defval = ""
         else:
             defval = "on"

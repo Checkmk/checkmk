@@ -6239,10 +6239,11 @@ def mode_edit_site(phase):
          "site itself, whilst the URL-Prefix is used by your local Browser.")))
     html.text_input("multisiteurl", site.get("multisiteurl", ""), size=60)
     html.write("</td></tr>")
-
+    html.write("<tr><td colspan=2 class=buttons>")
+    html.button("save", _("Save"))
+    html.write("</td></tr>")
     html.write("</table>")
     html.hidden_fields()
-    html.button("save", _("Save"))
     html.end_form()
 
 

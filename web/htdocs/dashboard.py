@@ -447,7 +447,8 @@ def dashlet_servicestats():
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
         "Stats: host_state = 0\n" \
-        "StatsAnd: 4\n"),
+        "Stats: host_has_been_checked = 1\n" \
+        "StatsAnd: 5\n"),
 
        ( _("warning"), "#ff0",
         "searchsvc&hst0=on&st1=on&is_in_downtime=0",
@@ -455,7 +456,8 @@ def dashlet_servicestats():
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
         "Stats: host_state = 0\n" \
-        "StatsAnd: 4\n"),
+        "Stats: host_has_been_checked = 1\n" \
+        "StatsAnd: 5\n"),
 
        ( _("unknown"), "#f80",
         "searchsvc&hst0=on&st3=on&is_in_downtime=0",
@@ -463,7 +465,8 @@ def dashlet_servicestats():
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
         "Stats: host_state = 0\n" \
-        "StatsAnd: 4\n"),
+        "Stats: host_has_been_checked = 1\n" \
+        "StatsAnd: 5\n"),
 
        ( _("critical"), "#f00",
         "searchsvc&hst0=on&st2=on&is_in_downtime=0",
@@ -471,10 +474,11 @@ def dashlet_servicestats():
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
         "Stats: host_state = 0\n" \
-        "StatsAnd: 4\n"),
+        "Stats: host_has_been_checked = 1\n" \
+        "StatsAnd: 5\n"),
 
        ( _("in downtime"), "#0af",
-        "searchsvc&hst0=on&is_in_downtime=0",
+        "searchsvc&hst0=on&is_in_downtime=1",
         "Stats: scheduled_downtime_depth > 0\n" \
         "Stats: host_scheduled_downtime_depth > 0\n" \
         "StatsOr: 2\n"),

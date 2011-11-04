@@ -8974,6 +8974,7 @@ def mode_edit_rule(phase):
             # CONDITION
             tag_specs, host_list, item_list = get_rule_conditions(rulespec)
             new_rule_folder = g_folders[html.var("new_rule_folder")]
+
             # VALUE
             if valuespec:
                 value = get_edited_value(valuespec)
@@ -9055,7 +9056,8 @@ def mode_edit_rule(phase):
                     t = t[1:]
                 else:
                     n = False
-                if t in [ x[0] for x in tags]:
+                if t in [ x[0] for x in tags ]:
+                    default_tag = t
                     ignore = False
                     negate = n
             if ignore:
@@ -9068,8 +9070,8 @@ def mode_edit_rule(phase):
             html.write("<td>")
             html.select("tag_" + id, [
                 ("ignore", _("ignore")), 
-                ("is", _("is")), 
-                ("isnot", _("isnot"))], deflt,
+                ("is",     _("is")), 
+                ("isnot",  _("isnot"))], deflt,
                 onchange="wato_toggle_dropdownn(this, 'tag_sel_%s');" % id)
             html.write("</td><td>")
             if html.form_submitted():

@@ -710,3 +710,15 @@ register_rule(group,
              "a host is connected to, e.g. when the IP address of the host is dynamic "
              "and can change."))
 
+register_rule(group,
+    "datasource_programs",
+    TextAscii(
+        title = _("Individual program call instead of agent access"),
+        help = _("For agent based checks Check_MK allows you to specify an alternative "
+                 "program that should be called by Check_MK instead of connecting the agent "
+                 "via TCP. That program must output the agent's data on standard output in "
+                 "the same format the agent would do. This is for example useful for monitoring "
+                 "via SSH. The command line may contain the placeholders <tt>&lt;IP&gt;</tt> and "
+                 "<tt>&lt;HOST&gt;</tt>."),
+        label = _("Command line to execute")))
+

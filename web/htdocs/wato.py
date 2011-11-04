@@ -3858,7 +3858,10 @@ def mode_snapshot(phase):
         changelog_button()
         html.context_button(_("Create Snapshot"), 
                 make_action_link([("mode", "snapshot"),("_create_snapshot","Yes")]), "snapshot")
+        html.context_button(_("Factory Reset"), 
+                make_action_link([("mode", "snapshot"),("_factory_reset","Yes")]), "factoryreset")
         return
+
     elif phase == "action":
         if html.has_var("_download_file"):
             download_file = html.var("_download_file")
@@ -3932,7 +3935,26 @@ def mode_snapshot(phase):
                 return ""
             else:
                 return None  # browser reload
-        return False
+
+        elif html.has_var("_factory_reset"):
+            c = wato_confirm(_("Confirm factory reset"),
+                _("If you proceed now, all hosts, folders, rules and other configurations "
+                  "done with WATO will be deleted! Please consider making a snapshot before "
+                  "you do this. Snapshots will not be deleted. Also the password of the currently "
+                  "logged in user (%s) will be kept.<br><br>" 
+                  "Do you really want to delete all or your configuration data?") % config.user_id)
+            if c:
+                factory_reset()
+                return None, _("Resetted WATO, wiped all configuration.")
+            elif c == False: # not yet confirmed
+                return ""
+            else:
+                return None  # browser reload
+
+
+        else:
+            return False
+
     else:
         snapshots = []
         if os.path.exists(snapshot_dir):
@@ -4005,6 +4027,21 @@ def create_snapshot():
         os.remove(snapshot_dir + snapshots.pop())
 
     return snapshot_name
+
+def factory_reset():
+    # Darn. What makes things complicated here is that we need to conserve htpasswd,
+    # at least the account of the currently logged in user.
+    users = load_users()
+    for id in users.keys():
+        if id != config.user_id:
+            del users[id]
+    save_users(users) # this will cleanup htpasswd
+
+    for path in [ root_dir, multisite_dir, sites_mk, log_dir ]:
+        if os.path.exists(path):
+            shutil.rmtree(path)
+
+    log_pending(SYNCRESTART, None, "factory-reset", _("Complete reset to factory settings."))
 
 
 #.
@@ -9905,8 +9942,10 @@ def load_plugins():
 
     config.declare_permission("wato.snapshots",
          _("Backup & Restore"),
-         _("Access to the module <i>Backup & Restore</i>. Please note: a user with write access to this module "
-           "can make arbitrary changes to the configuration by restoring uploaded snapshots!"),
-         [ "admin",  ])
+         _("Access to the module <i>Backup & Restore</i>. Please note: a user with "
+           "write access to this module " 
+           "can make arbitrary changes to the configuration by restoring uploaded snapshots "
+           "and even do a complete factory reset!"),
+         [ "admin", ])
 
     load_web_plugins("wato", globals())

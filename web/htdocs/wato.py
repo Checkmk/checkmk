@@ -9772,8 +9772,8 @@ def load_plugins():
          _("Use WATO"),
          _("This permissions allows users to use WATO - Check_MK's "
            "Web Administration Tool. Without this "
-           "permission all references to WATO (buttons, links,"
-           "snapins) will be unvisible."),
+           "permission all references to WATO (buttons, links, "
+           "snapins) will be invisible."),
          [ "admin", "user" ])
 
     config.declare_permission("wato.edit",

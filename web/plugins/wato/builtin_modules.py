@@ -69,5 +69,8 @@ modules = [
 
       ( "auditlog", _("Audit Logfile"), "auditlog", "auditlog",
       _("The audit log keeps track of all modifications and actions of the users in WATO.")),
+
+      ( "snapshot", _("Backup & Restore"), "backup", "snapshots", 
+        _("Make snapshots of your current configuration, download, upload and restore snapshots.")),
     ]
 

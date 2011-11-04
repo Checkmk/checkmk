@@ -4831,7 +4831,6 @@ def mode_main(phase):
 
     elif phase == "buttons":
         changelog_button()
-        snapshots_button()
         return
 
     elif phase == "action":
@@ -9580,10 +9579,6 @@ def global_buttons():
 
 def home_button():
     html.context_button(_("Home"), make_link([("mode", "main")]), "home")
-
-def snapshots_button():
-    if config.may("wato.snapshots"):
-        html.context_button(_("Backup / Restore"),  make_link([("mode", "snapshot")]), "backup")
 
 def search_button():
     html.context_button(_("Search"), make_link([("mode", "search")]), "search")

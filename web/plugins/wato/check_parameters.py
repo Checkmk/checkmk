@@ -241,12 +241,12 @@ checkgroups.append((
                "the main memory, so <b>at least</b> the half of it is currently swapped out."),
         elements = [ 
             Tuple(
-                title = _("Specify levels in percentage of RAM"),
+                title = _("Specify levels in percentage of total RAM"),
                 elements = [
                   Percentage(title = _("Warning at a usage of"), label = _("% of RAM")),
                   Percentage(title = _("Critical at a usage of"), label = _("% of RAM"))]),
             Tuple(
-                title = _("Specify levels in percentage of RAM"),
+                title = _("Specify levels in absolute usage values"),
                 elements = [
                   Integer(title = _("Warning at"), unit = _("MB")),
                   Integer(title = _("Critical at"), unit = _("MB"))]),

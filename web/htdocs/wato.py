@@ -6539,7 +6539,7 @@ def mark_affected_sites_dirty(folder, hostname=None, sync = True, restart = True
             find_folder_sites(site_ids, folder)
         for site_id in site_ids:
             changes = {}
-            if sync:
+            if sync and not site_is_local(site_id):
                 changes["need_sync"] = True
             if restart:
                 changes["need_restart"] = True

@@ -3174,8 +3174,12 @@ def interactive_progress(items, title, stats, finishvars, timewait, success_stat
     # They are just needed for the Abort/Finish links. Those must be converted
     # to POST.
     base_url = html.makeuri([], remove_prefix = "sel")
+    finish_url = make_link([("mode", "folder")] + finishvars)
+    term_url = make_link([("mode", "folder")] + termvars)
+
     html.javascript(('progress_scheduler("%s", "%s", 50, %s, "%s", %s, "%s", "' + _("FINISHED.") + '");') %
-                     (html.var('mode'), base_url, json_items, html.makeuri(finishvars), success_stats, html.makeuri(termvars),))
+                     (html.var('mode'), base_url, json_items, finish_url, 
+                      success_stats, term_url))
 
 
 #.

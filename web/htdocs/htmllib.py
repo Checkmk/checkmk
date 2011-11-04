@@ -314,7 +314,8 @@ class html:
     def jsbutton(self, varname, text, onclick, style=''):
         if style:
             style = ' style="%s"' % style
-        self.write("<input type=button name=%s id=%s onclick=\"%s\" class=button%s value=\"%s\" />" % (varname, varname, onclick, style, text))
+        self.write("<input type=button name=%s id=%s onclick=\"%s\" "
+                   "class=button%s value=\"%s\" />" % (varname, varname, onclick, style, text))
 
     def begin_context_buttons(self):
         self.write("<table class=contextlinks><tr><td>\n")

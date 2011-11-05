@@ -4110,6 +4110,21 @@ def compute_check_parameters(host, checktype, item, params):
     def_levels_varname = check_default_levels.get(checktype)
     if def_levels_varname:
         vars_before_config.add(def_levels_varname)
+
+    # Handle case where parameter is None but the type of the 
+    # default value is a dictionary. This is for example the
+    # case if a check type has gotten parameters in a new version
+    # but inventory of the old version left None as a parameter.
+    # Also from now on we support that the inventory simply puts
+    # None as a parameter. We convert that to an empty dictionary
+    # that will be updated with the factory settings and default
+    # levels, if possible.
+    if params == None and def_levels_varname:
+        fs = factory_settings.get(def_levels_varname)
+        if type(fs) == dict:
+            params = {}
+
+    # Honor factory settings for dict-type checks
     if def_levels_varname and type(params) == dict:
 
         # Start with factory settings
@@ -4132,7 +4147,6 @@ def compute_check_parameters(host, checktype, item, params):
 
     # Get parameters configured via check_parameters
     entries += service_extra_conf(host, descr, check_parameters)
-
 
     if len(entries) > 0:
         # loop from last to first (first must have precedence)

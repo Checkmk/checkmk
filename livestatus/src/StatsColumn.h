@@ -25,12 +25,14 @@
 #ifndef StatsColumn_h
 #define StatsColumn_h
 
-#define STATS_OP_COUNT 0
-#define STATS_OP_SUM   1
-#define STATS_OP_MIN   2
-#define STATS_OP_MAX   3
-#define STATS_OP_AVG   4
-#define STATS_OP_STD   5
+#define STATS_OP_COUNT  0
+#define STATS_OP_SUM    1
+#define STATS_OP_MIN    2
+#define STATS_OP_MAX    3
+#define STATS_OP_AVG    4
+#define STATS_OP_STD    5
+#define STATS_OP_SUMINV 6
+#define STATS_OP_AVGINV 7
 
 class Aggregator;
 class Column;

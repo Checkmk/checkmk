@@ -37,6 +37,7 @@ public:
     virtual double getValue(void *data) = 0;
     void output(void *, Query *);
     int type() { return COLTYPE_DOUBLE; }
+    string valueAsString(void *data, Query *);
     Filter *createFilter(int operator_id, char *value);
 };
 

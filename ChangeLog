@@ -31,6 +31,7 @@
 
     Livestatus:
     * New columns num_hosts and num_services in status table
+    * New aggregation functions suminv and avginv (see Documentation)
 
 
 1.1.12p1:

@@ -535,13 +535,9 @@ def render_statistics(pie_id, what, table, filter):
             r += perc
 
     html.javascript("""
-function has_canvas_support() {
-    return document.createElement('canvas').getContext;
-}
-
 function chart_pie(pie_id, from, to, color) {
     var context = document.getElementById(pie_id + "_stats").getContext('2d');
-    if(!context)
+    if (!context)
         return;
     var pie_x = %(x)f;
     var pie_y = %(y)f;
@@ -560,12 +556,8 @@ function chart_pie(pie_id, from, to, color) {
     context = null;
 }
 
-// convert percent to angle(rad)
-function rad(g) {
-    return (g * 360 / 100 * Math.PI) / 180;
-}
 
-if(has_canvas_support()) {
+if (has_canvas_support()) {
     %(p)s
 }
 """ % { "x" : pie_diameter / 2, "y": pie_diameter/2, "d" : pie_diameter, 'p': '\n'.join(pie_parts) })

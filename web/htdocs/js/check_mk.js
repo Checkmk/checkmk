@@ -1332,3 +1332,12 @@ function add_row_selections(form) {
     form.appendChild(field);
     field = null;
 }
+
+function has_canvas_support() {
+    return document.createElement('canvas').getContext;
+}
+
+// convert percent to angle(rad)
+function rad(g) {
+    return (g * 360 / 100 * Math.PI) / 180;
+}

@@ -26,6 +26,7 @@
       hosts the seem to support if64
 
     Multisite:
+    * New nifty sidebar snapin "Speed-O-Meter"
     * FIX: Fixed encoding problem when opening dashboard
     * FIX: Fixed styling of view header in older IE browsers
 

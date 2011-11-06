@@ -1,0 +1,12 @@
+Title: BI: make sample local check for monitoring aggregations
+Component: bi
+Benefit: 3
+State: open
+Cost: 2
+Date: 2011-10-28 11:15:39
+Targetversion: 
+Class: todo
+
+A simple local check can connect to Multisite, fetch the current state
+of all BI aggregates and output them in the style of a local check.
+The admin just needs to add the URL and user/password.

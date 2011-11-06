@@ -447,7 +447,8 @@ def dashlet_servicestats():
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
         "Stats: host_state = 0\n" \
-        "StatsAnd: 4\n"),
+        "Stats: host_has_been_checked = 1\n" \
+        "StatsAnd: 5\n"),
 
        ( _("warning"), "#ff0",
         "searchsvc&hst0=on&st1=on&is_in_downtime=0",
@@ -455,7 +456,8 @@ def dashlet_servicestats():
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
         "Stats: host_state = 0\n" \
-        "StatsAnd: 4\n"),
+        "Stats: host_has_been_checked = 1\n" \
+        "StatsAnd: 5\n"),
 
        ( _("unknown"), "#f80",
         "searchsvc&hst0=on&st3=on&is_in_downtime=0",
@@ -463,7 +465,8 @@ def dashlet_servicestats():
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
         "Stats: host_state = 0\n" \
-        "StatsAnd: 4\n"),
+        "Stats: host_has_been_checked = 1\n" \
+        "StatsAnd: 5\n"),
 
        ( _("critical"), "#f00",
         "searchsvc&hst0=on&st2=on&is_in_downtime=0",
@@ -471,10 +474,11 @@ def dashlet_servicestats():
         "Stats: scheduled_downtime_depth = 0\n" \
         "Stats: host_scheduled_downtime_depth = 0\n" \
         "Stats: host_state = 0\n" \
-        "StatsAnd: 4\n"),
+        "Stats: host_has_been_checked = 1\n" \
+        "StatsAnd: 5\n"),
 
        ( _("in downtime"), "#0af",
-        "searchsvc&hst0=on&is_in_downtime=0",
+        "searchsvc&hst0=on&is_in_downtime=1",
         "Stats: scheduled_downtime_depth > 0\n" \
         "Stats: host_scheduled_downtime_depth > 0\n" \
         "StatsOr: 2\n"),
@@ -531,13 +535,9 @@ def render_statistics(pie_id, what, table, filter):
             r += perc
 
     html.javascript("""
-function has_canvas_support() {
-    return document.createElement('canvas').getContext;
-}
-
 function chart_pie(pie_id, from, to, color) {
     var context = document.getElementById(pie_id + "_stats").getContext('2d');
-    if(!context)
+    if (!context)
         return;
     var pie_x = %(x)f;
     var pie_y = %(y)f;
@@ -556,12 +556,8 @@ function chart_pie(pie_id, from, to, color) {
     context = null;
 }
 
-// convert percent to angle(rad)
-function rad(g) {
-    return (g * 360 / 100 * Math.PI) / 180;
-}
 
-if(has_canvas_support()) {
+if (has_canvas_support()) {
     %(p)s
 }
 """ % { "x" : pie_diameter / 2, "y": pie_diameter/2, "d" : pie_diameter, 'p': '\n'.join(pie_parts) })

@@ -110,8 +110,17 @@ def connect_to_livestatus(html):
 
         # Fetch status of sites by querying the version of Nagios and livestatus
         html.live.set_prepend_site(True)
-        for sitename, v1, v2, ps in html.live.query("GET status\nColumns: livestatus_version program_version program_start"):
-            html.site_status[sitename].update({ "state" : "online", "livestatus_version": v1, "program_version" : v2, "program_start" : ps })
+        for sitename, v1, v2, ps, num_hosts, num_services in html.live.query(
+              "GET status\n"
+              "Columns: livestatus_version program_version program_start num_hosts num_services"):
+            html.site_status[sitename].update({ 
+                "state" : "online", 
+                "livestatus_version": v1,
+                "program_version" : v2, 
+                "program_start" : ps,
+                "num_hosts" : num_hosts,
+                "num_services" : num_services,
+            })
         html.live.set_prepend_site(False)
 
         # Get exceptions in case of dead sites
@@ -119,7 +128,10 @@ def connect_to_livestatus(html):
             html.site_status[sitename]["exception"] = deadinfo["exception"]
             shs = deadinfo.get("status_host_state")
             html.site_status[sitename]["status_host_state"] = shs
-            statename = { 1:"down", 2:"unreach", 3:"waiting", }.get(shs, "unknown")
+            if shs == None:
+                statename = "dead"
+            else:
+                statename = { 1:"down", 2:"unreach", 3:"waiting", }.get(shs, "unknown")
             html.site_status[sitename]["state"] = statename
 
     else:
@@ -217,6 +229,17 @@ def handler(req, profiling = True):
             os.chmod(profilefile + ".py", 0755)
             return apache.OK
 
+        # Get page handler
+        handler = pagehandlers.get(req.myfile, page_not_found)
+
+        # Special handling for automation.py. Sorry, this must be hardcoded
+        # here. Automation calls bybass the normal authentication stuff
+        if req.myfile == "automation":
+            try:
+                handler()
+            except Exception, e:
+                html.write(str(e))
+            return apache.OK
 
         # Prepare output format
         output_format = html.var("output_format", "html")
@@ -244,7 +267,6 @@ def handler(req, profiling = True):
         # General access allowed. Now connect to livestatus
         connect_to_livestatus(html)
 
-        handler = pagehandlers.get(req.myfile, page_not_found)
         handler()
 
     except MKUserError, e:
@@ -292,11 +314,8 @@ def handler(req, profiling = True):
         if not fail_silently:
             html.header(_("Internal error"))
             if config.debug:
-                import traceback, StringIO
-                txt = StringIO.StringIO()
-                t, v, tb = sys.exc_info()
-                traceback.print_exception(t, v, tb, None, txt)
-                html.show_error("%s: %s<pre>%s</pre>" % (_('Internal error') + ':', e, txt.getvalue()))
+                html.show_error("%s: %s<pre>%s</pre>" % 
+                    (_('Internal error') + ':', e, format_exception()))
             else:
                 url = html.makeuri([("debug", "1")])
                 html.show_error("%s: %s (<a href=\"%s\">%s</a>)" % (_('Internal error') + ':', e, url, _('Retry with debug mode')))

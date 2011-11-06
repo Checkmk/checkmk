@@ -123,3 +123,12 @@ def pnp_cleanup(s):
         .replace(':', '_') \
         .replace('/', '_') \
         .replace('\\', '_')
+
+def format_exception():
+    import traceback, StringIO, sys
+    txt = StringIO.StringIO()
+    t, v, tb = sys.exc_info()
+    traceback.print_exception(t, v, tb, None, txt)
+    return txt.getvalue()
+
+

@@ -37,6 +37,11 @@ void IntAggregator::consume(void *data, Query *query)
         case STATS_OP_AVG:
             _aggr += value; break;
 
+        case STATS_OP_SUMINV:
+        case STATS_OP_AVGINV:
+            _sumq += 1.0 / (double)value;
+            break;
+
         case STATS_OP_MIN:
             if (_count == 1)
                 _aggr = value;
@@ -68,8 +73,16 @@ void IntAggregator::output(Query *q)
             q->outputInteger64(_aggr); 
             break;
 
+        case STATS_OP_SUMINV:
+            q->outputInteger64(_sumq); 
+            break;
+
         case STATS_OP_AVG:
             q->outputDouble(double(_aggr) / _count);
+            break;
+
+        case STATS_OP_AVGINV:
+            q->outputInteger64(_sumq / _count); 
             break;
 
         case STATS_OP_STD:

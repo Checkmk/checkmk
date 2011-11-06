@@ -1276,7 +1276,7 @@ function table_init_rowselect(oTable) {
     var childs = get_all_checkboxes(oTable);
     for(var i = 0; i < childs.length; i++) {
         // Perform initial selections
-        if(g_selected_rows.indexOf(childs[i].name) > -1)
+        if (g_selected_rows.indexOf(childs[i].name) > -1)
             childs[i].checked = true;
         else
             childs[i].checked = false;
@@ -1331,4 +1331,13 @@ function add_row_selections(form) {
 
     form.appendChild(field);
     field = null;
+}
+
+function has_canvas_support() {
+    return document.createElement('canvas').getContext;
+}
+
+// convert percent to angle(rad)
+function rad(g) {
+    return (g * 360 / 100 * Math.PI) / 180;
 }

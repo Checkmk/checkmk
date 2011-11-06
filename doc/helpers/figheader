@@ -2,9 +2,13 @@
 
 import os, sys
 width = 76
-sep = "#   +" + '-' * (width - 6) + '+'
-print sep
+septop = "#   ." + '-' * (width - 6) + '.'
+sepmid = "#   +" + '-' * (width - 6) + '+'
+sepbot = "#   '" + '-' * (width - 6) + "'"
+print septop
 for line in os.popen("figlet -c -w %d %s" % (width - 7, " ".join(sys.argv[1:])), "r"):
     line = line[:-1]
     print ("#   |%-" + str(width - 6) + "s|") % line
-print sep
+print sepmid
+print "#   |" + " " * (width - 6) + "|"
+print sepbot

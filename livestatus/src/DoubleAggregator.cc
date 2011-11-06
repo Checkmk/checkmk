@@ -60,6 +60,11 @@ void DoubleAggregator::consume(void *data, Query *)
             _aggr += value;
             _sumq += value * value;
             break;
+
+        case STATS_OP_SUMINV:
+        case STATS_OP_AVGINV:
+            _aggr += 1.0 / value;
+            break;
     }
 }
 
@@ -70,10 +75,12 @@ void DoubleAggregator::output(Query *q)
         case STATS_OP_SUM:
         case STATS_OP_MIN:
         case STATS_OP_MAX:
+        case STATS_OP_SUMINV:
             q->outputDouble(_aggr); 
             break;
 
         case STATS_OP_AVG:
+        case STATS_OP_AVGINV:
             if (_count == 0)
                 q->outputDouble(0.0);
             else

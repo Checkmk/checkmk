@@ -399,7 +399,8 @@ def render_sitestatus():
             html.write("<tr><td class=left>%s</td>" % text)
             onclick = "switch_site('_site_switch=%s:%s')" % (sitename, switch)
             html.write("<td class=state>")
-            html.write('<a title="%s" href="#" onclick="%s" class=%s>%s</a></td>' % (title, onclick, state, state))
+            html.write('<a title="%s" href="#" onclick="%s" class="sitestatus %s">%s</a></td>' % 
+                       (title, onclick, state, state))
             html.write("</tr>\n")
         html.write("</table>\n")
 
@@ -447,13 +448,6 @@ table.sitestate td.state a {
     border-width: 1px;
     border-style: solid;
 }
-table.sitestate a.online   { background-color: #3c0; color: #fff; border-color: #0f0; }
-table.sitestate a.disabled { background-color: #666; color: #ccc; border-color: #888; }
-table.sitestate a.dead     { background-color: #c00; color: #f88; border-color: #f44; }
-table.sitestate a.waiting  { background-color: #666; color: #fff; border-color: #ccc; }
-table.sitestate a.down     { background-color: #f00; color: #fff; border-color: #800; }
-table.sitestate a.unreach  { background-color: #f80; color: #fff; border-color: #840; }
-table.sitestate a.unknown  { background-color: #26c; color: #fff; border-color: #44f; }
 """ % snapin_width
 }
 
@@ -558,30 +552,40 @@ table.tacticaloverview a { display: block; margin-right: 2px; }
 #
 # --------------------------------------------------------------
 def render_performance():
-    data = html.live.query("GET status\nColumns: service_checks_rate host_checks_rate external_commands_rate connections_rate forks_rate log_messages_rate cached_log_messages\n")
+    def write_line(left, right):
+        html.write("<tr><td class=left>%s</td>"
+                   "<td class=right><strong>%s</strong></td></tr>" % (left, right))
+
     html.write("<table class=\"content_center performance\">\n")
+
+    data = html.live.query("GET status\nColumns: service_checks_rate host_checks_rate "
+                           "external_commands_rate connections_rate forks_rate "
+                           "log_messages_rate cached_log_messages\n")
     for what, col, format in \
-        [("Service checks", 0, "%.2f/s"),
-        ("Host checks", 1, "%.2f/s"),
-        ("External commands", 2, "%.2f/s"),
-        ("Livestatus-connections", 3, "%.2f/s"),
-        ("Process creations", 4, "%.2f/s"),
-        ("New log messages", 5, "%.2f/s"),
-        ("Cached log messages", 6, "%d")]:
-       html.write(("<tr><td class=left>%s:</td><td class=right><strong>" + format + "</strong></td></tr>\n") % (what, sum([row[col] for row in data])))
-    data = html.live.query("GET status\nColumns: external_command_buffer_slots external_command_buffer_max\n")
-    size = sum([row[0] for row in data])
-    maxx = sum([row[1] for row in data])
-    html.write("<tr><td class=left>%s</td>"
-               "<td class=right><strong>%d / %d</strong></td></tr>" % \
-                                        (_('Com. buf. max/total'), maxx, size))
+        [("Service checks",        0, "%.2f/s"),
+        ("Host checks",            1, "%.2f/s"),
+        ("External commands",      2, "%.2f/s"),
+        ("Livestatus-conn.",       3, "%.2f/s"),
+        ("Process creations",      4, "%.2f/s"),
+        ("New log messages",       5, "%.2f/s"),
+        ("Cached log messages",    6, "%d")]:
+        write_line(what + ":", format % sum([row[col] for row in data]))
+
+    if len(config.allsites()) == 1:
+        data = html.live.query("GET status\nColumns: external_command_buffer_slots "
+                               "external_command_buffer_max\n")
+        size = sum([row[0] for row in data])
+        maxx = sum([row[1] for row in data])
+        write_line(_('Com. buf. max/total'), "%d / %d" % (maxx, size))
+
+
     html.write("</table>\n")
 
 sidebar_snapins["performance"] = {
     "title" : _("Server performance"),
     "description" : _("Live monitor of the overall performance of all monitoring servers"),
     "author" : "Mathias Kettner",
-    "refresh" : 10,
+    "refresh" : 15,
     "render" : render_performance,
     "allowed" : [ "admin", ],
     "styles" : """
@@ -596,11 +600,184 @@ table.performance {
     border-width: 1px;
 }
 table.performance td { padding: 0px; }
-table.Performance td.right { text-align: right; padding: 0px; }
+table.performance td.right { 
+    text-align: right; 
+    padding: 0px; 
+    padding-right: 1px; 
+    white-space: nowrap;
+}
 
 """ % (snapin_width - 2)
 }
 
+#.
+#   .----------------------------------------------------------------------.
+#   |    ____                      _                      _                |
+#   |   / ___| _ __   ___  ___  __| | ___  _ __ ___   ___| |_ ___ _ __     |
+#   |   \___ \| '_ \ / _ \/ _ \/ _` |/ _ \| '_ ` _ \ / _ \ __/ _ \ '__|    |
+#   |    ___) | |_) |  __/  __/ (_| | (_) | | | | | |  __/ ||  __/ |       |
+#   |   |____/| .__/ \___|\___|\__,_|\___/|_| |_| |_|\___|\__\___|_|       |
+#   |         |_|                                                          |
+#   '----------------------------------------------------------------------'
+def render_speedometer():
+    html.write("<div class=speedometer>");
+    html.write('<img id=speedometerbg src="images/speedometer.png">')
+    html.write('<canvas width=228 height=136 id=speedometer></canvas>')
+    html.write("</div>")
+
+    html.javascript("""
+function show_speed(percentage) {
+    var context = document.getElementById('speedometer').getContext('2d');
+    if (!context)
+        return;
+
+    if (percentage > 100.0)
+        percentage = 100.0;
+
+    var orig_x = 116;
+    var orig_y = 181;
+    var angle_0   = 232.0;
+    var angle_100 = 307.0;
+    var angle = angle_0 + (angle_100 - angle_0) * percentage / 100.0;
+    var angle_rad = angle / 360.0 * Math.PI * 2;
+    var length = 120;
+    var end_x = orig_x + (Math.cos(angle_rad) * length);
+    var end_y = orig_y + (Math.sin(angle_rad) * length);
+
+    context.clearRect(0, 0, 228, 136);
+    context.beginPath();
+    context.moveTo(orig_x, orig_y);
+    context.lineTo(end_x, end_y);
+    context.closePath();
+    context.shadowOffsetX = 2;
+    context.shadowOffsetY = 2;
+    context.shadowBlur = 2;
+    context.stroStyle = "#000000";
+    context.stroke();
+    context = null;
+}
+
+function speedometer_show_speed(last_perc, program_start, scheduled_rate) 
+{
+    text = get_url_sync("sidebar_ajax_speedometer.py" + 
+                        "?last_perc=" + last_perc + 
+                        "&scheduled_rate=" + scheduled_rate +
+                        "&program_start=" + program_start);
+    code = eval(text);
+    scheduled_rate = code[0];
+    program_start    = code[1];
+    percentage       = code[2];
+    last_perc        = code[3];
+    title            = code[4];
+
+    oDiv = document.getElementById('speedometer');
+    oDiv.title = title
+    oDiv = document.getElementById('speedometerbg');
+    oDiv.title = title
+    oDiv = null;
+    
+
+    move_needle(last_perc, percentage); // 50 * 100ms = 5s = refresh time
+
+    // large timeout for fetching new data via Livestatus
+    setTimeout("speedometer_show_speed(" 
+        + percentage       + "," 
+        + program_start    + "," 
+        + scheduled_rate + ");", 5000);
+}
+
+var needle_timeout = null;
+
+function move_needle(from_perc, to_perc)
+{
+    new_perc = from_perc * 0.9 + to_perc * 0.1;
+    show_speed(new_perc);
+    if (needle_timeout != null)
+        clearTimeout(needle_timeout);
+    needle_timeout = setTimeout("move_needle(" + new_perc + "," +  to_perc + ");", 50);
+}
+
+
+speedometer_show_speed(0, 0, 0);
+
+""")
+
+
+def ajax_speedometer():
+    try:
+        # Try to get values from last call in order to compute
+        # driftig speedometer-needle and to reuse the scheduled
+        # check reate.
+        last_perc          = float(html.var("last_perc"))
+        scheduled_rate     = float(html.var("scheduled_rate"))
+        last_program_start = int(html.var("program_start"))
+            
+        # Get the current rates and the program start time. If there
+        # are more than one site, we simply add the start times.
+        data = html.live.query_summed_stats("GET status\n"
+               "Columns: service_checks_rate host_checks_rate program_start")
+        current_rate = data[0] + data[1] 
+        program_start = data[2]
+
+        # Recompute the scheduled_rate only if it is not known (first call)
+        # or if one of the sites has been restarted. The computed value cannot
+        # change during the monitoring since it just reflects the configuration.
+        # That way we save CPU ressources since the computation of the 
+        # scheduled checks rate needs to loop over all hosts and services.
+        if last_program_start != program_start:
+            scheduled_rate = 0.0
+            for what in [ "host", "service" ]:
+                data = html.live.query_summed_stats(
+                        "GET %ss\nStats: suminv check_interval" % what)
+                scheduled_rate += data[0] / 60.0
+
+        percentage = 100.0 * current_rate / scheduled_rate;
+        title = _("Scheduled check rate: %.1f/s, current rate: %.1f/s, that is "
+                  "%.0f%% of the scheduled rate" % 
+                  (scheduled_rate, current_rate, percentage))
+
+    except Exception, e:
+        scheduled_rate = 0
+        program_start = 0
+        percentage = 0
+        last_perc = 0
+        title = _("No performance data: ") + str(e) 
+
+    html.write(repr([scheduled_rate, program_start, percentage, last_perc, title]))
+
+
+sidebar_snapins["speedometer"] = {
+    "title" : _("Speed-O-Meter"),
+    "description" : _("A gadget that shows your current check rate in relation to "
+                      "the scheduled check rate. If the Speed-O-Meter shows a speed "
+                      "of 100 percent, then all checks are being executed in exactly "
+                      "the rate that is configured (via check_interval)"),
+    "author" : "Mathias Kettner",
+    "render" : render_speedometer,
+    "allowed" : [ "admin", ],
+    "styles" : """
+div.speedometer {
+    position: relative;
+    top: 0px;
+    left: 0px;
+    height: 223px;
+}
+img#speedometerbg {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
+canvas#speedometer {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
+"""}
+
+
+
+
+#.
 # --------------------------------------------------------------
 #    ____                           _   _
 #   / ___|  ___ _ ____   _____ _ __| |_(_)_ __ ___   ___

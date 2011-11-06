@@ -1,12 +1,4 @@
 1.1.13i1:
-    Core, Setup, etc.:
-    * New configuration variable static_checks[] (used by WATO)
-    * New configuration variable checkgroup_parameters (mainly for WATO)
-
-    Checks & Agents:
-    * if/if64: new ruleset if_disable_if64_hosts, that force if on
-      hosts the seem to support if64
-
     WATO:
     * Evolved to full featured monitoring configuration tool!
     * Major internal code cleanup
@@ -17,6 +9,7 @@
     * Configuration of Nagios objects and attributes
     * Configuration of users and roles
     * Configuration of host tags
+    * Distributed WATO: replication of the configuration to slaves and peers
     * Added missing API function update_host_attributes() to change the
       attributes of a host
     * Added API function num_hosts_in_folder() to count the number of hosts
@@ -24,8 +17,22 @@
     * Added option to download "latest" snapshot
     * extra_buttons can now register a function to gather the URL to link to
 
+    Core, Setup, etc.:
+    * New configuration variable static_checks[] (used by WATO)
+    * New configuration variable checkgroup_parameters (mainly for WATO)
+
+    Checks & Agents:
+    * if/if64: new ruleset if_disable_if64_hosts, that force if on
+      hosts the seem to support if64
+
     Multisite:
+    * New nifty sidebar snapin "Speed-O-Meter"
     * FIX: Fixed encoding problem when opening dashboard
+    * FIX: Fixed styling of view header in older IE browsers
+
+    Livestatus:
+    * New columns num_hosts and num_services in status table
+    * New aggregation functions suminv and avginv (see Documentation)
 
 
 1.1.12p1:
@@ -36,6 +43,7 @@
     * FIX: Added id parameter to render_statistics() method to allow more than
       one pie dashlet for host/service stats
     * FIX: drbd: fixed inventory functions
+    * FIX: printer_supply: handle output of Brother printers
 
     Multisite:
     * FIX: finally fixed long-wanted "NagStaMon create hundreds

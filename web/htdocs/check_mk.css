@@ -84,6 +84,17 @@ input.buttonlink {
     padding: 1px;
     font-size: 8pt;
 }
+
+/* Status of sites in sidebar and in WATO */
+
+.sitestatus.online   { background-color: #3c0; color: #fff; border-color: #0f0; }
+.sitestatus.disabled { background-color: #666; color: #ccc; border-color: #888; }
+.sitestatus.dead     { background-color: #c00; color: #f88; border-color: #f44; }
+.sitestatus.waiting  { background-color: #666; color: #fff; border-color: #ccc; }
+.sitestatus.down     { background-color: #f00; color: #fff; border-color: #800; }
+.sitestatus.unreach  { background-color: #f80; color: #fff; border-color: #840; }
+.sitestatus.unknown  { background-color: #26c; color: #fff; border-color: #44f; }
+
 /*
    __  __       _        
   |  \/  | __ _(_)_ __   
@@ -107,8 +118,7 @@ div.main {
 /* The content page header containing the title, user, date */
 body.main table.header {
     width: 100%;
-    margin-bottom: 10px;
-    margin-left: 0px;
+    margin: 0 0 10px 0;
     padding: 0px 0px 10px 0px;
     border-spacing: 0px;
     color: #fff;
@@ -116,12 +126,16 @@ body.main table.header {
 
 body.main hr.header {
     background-color: #fff;
-    border-style: none;
     height: 1px;
     position: absolute;
     width: 100%;
     left: 0px;
-    top: 35px;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    top: 42px;
+    /* Needed for older IE versions */
+    color: #fff;
 }
 
 body.main table.header td.left {
@@ -623,6 +637,11 @@ table.data th {
     color: #fff;
     vertical-align: middle;
 }
+/* Two-lined header, for example in WATO: ChangeLog->Site Status */
+table.data tr.dualheader th {
+    border-bottom: 1px solid #ccc;
+}
+
 
 /* Table header links (For sorting) */
 
@@ -1919,19 +1938,14 @@ table.add_snapin i {
     -moz-border-radius: 0px 4px 0px 0px;
 }
 .wato table.form {
-    width: 800px;
+    width: 850px;
     margin-left: 0px;
-}
-
-
-.wato table.form {
-    width: 800px;
 }
 
 .wato table.form td.legend { 
     border-right-style: none;
     padding-bottom: 8px;
-    width: 300px;
+    width: 350px;
 }
 
 .wato table.form td.legend h3 { 
@@ -1969,6 +1983,17 @@ table.add_snapin i {
     border-left-style: none;
 }
 
+.wato div.sitestatus {
+    border-style: solid;
+    border-width: 1px;
+    -moz-border-radius: 3px;
+    vertical-align: middle;
+    text-align: center;
+    padding: 0px 10px;
+    font-size: 7pt;
+    font-weight: bold;
+}
+
 .wato table.auditlog {
     background-image: url("images/form_background.png");
     background-repeat: repeat;
@@ -1994,6 +2019,17 @@ table.add_snapin i {
 .wato .pending td { 
     border: 1px solid #444;
     padding: 2px 6px;
+}
+
+.wato table.auditlog.pending td {
+    border-color: #f80;
+}
+.wato table.auditlog.pending tr.even0 {
+    background-color: #fda;
+}
+
+.wato table.auditlog.pending tr.odd0 {
+    background-color: #fc8;
 }
 
 .wato td.dns {
@@ -2312,6 +2348,21 @@ table.add_snapin i {
 }
 .wato table.data.globalvars td.varname {
     width: 300px;
+}
+
+/* Replication */
+.wato table.data td.repprogress {
+    width: 160px;
+}
+.wato div.repprogress {
+    height: 16px;
+    background-image: url("images/repprogress.png");
+    background-repeat: repeat;
+    float: left;
+    color: white;
+    text-align: center;
+    padding-top: 0px;
+    font-size: 8pt;
 }
 
 /* 

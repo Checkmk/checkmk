@@ -165,7 +165,7 @@ declare_permission("edit_permissions",
 
 declare_permission("see_all",
      "See all Nagios objects",
-     "See all objects regardless of contacts and contact groups. If combined<br>with 'perform commands' then commands may be done on all objects.",
+     "See all objects regardless of contacts and contact groups. If combined with 'perform commands' then commands may be done on all objects.",
      [ "admin", "guest" ])
 
 declare_permission("edit_views",
@@ -185,24 +185,24 @@ declare_permission("force_views",
 
 declare_permission("view_option_columns",
      "Change view display columns",
-     "Interactively change the number of columns being displayed by a view<br>(does not edit or customize the view)",
+     "Interactively change the number of columns being displayed by a view (does not edit or customize the view)",
      [ "admin", "user", "guest" ])
 
 declare_permission("view_option_refresh",
      "Change view display refresh",
-     "Interactively change the automatic browser reload of a view being displayed<br>(does not edit or customize the view)",
+     "Interactively change the automatic browser reload of a view being displayed (does not edit or customize the view)",
      [ "admin", "user" ])
 
 declare_permission("painter_options",
      "Change column display options",
-     "Some of the display columns offer options for customizing their output.<br>"
-     "For example time stamp columns can be displayed absolute, relative or<br>"
+     "Some of the display columns offer options for customizing their output. "
+     "For example time stamp columns can be displayed absolute, relative or "
      "in a mixed style. This permission allows the user to modify display options",
      [ "admin", "user", "guest" ])
 
 declare_permission("act",
      "Perform commands",
-     "Allows users to perform Nagios commands. If now futher permissions are granted,<br>actions can only be done one objects one is a contact for",
+     "Allows users to perform Nagios commands. If now futher permissions are granted, actions can only be done one objects one is a contact for",
      [ "admin", "user" ])
 
 
@@ -357,7 +357,9 @@ def sitenames():
     return sites.keys()
 
 def allsites():
-    return dict( [(name, site(name)) for name in sitenames() if not site(name).get("disabled", False)])
+    return dict( [(name, site(name)) 
+                  for name in sitenames() 
+                  if not site(name).get("disabled", False)] )
 
 def site(name):
     s = sites.get(name, {})
@@ -369,6 +371,7 @@ def site(name):
         s["socket"] = "unix:" + defaults.livestatus_unix_socket
     if "url_prefix" not in s:
         s["url_prefix"] = "../" # relative URL from /check_mk/
+    s["id"] = name
     return s
 
 def site_is_local(name):
@@ -379,6 +382,8 @@ def site_is_local(name):
 def is_multisite():
     if len(sites) > 1:
         return True
+    elif len(sites) == 0:
+        return False
     # Also use Multisite mode if the one and only site is not local
     sitename = sites.keys()[0]
     return not site_is_local(sitename)

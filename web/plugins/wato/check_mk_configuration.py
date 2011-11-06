@@ -124,7 +124,8 @@ register_configvar(group,
                    "not respond within this time, it is considered to be unreachable. "
                    "Note: This does <b>not</b> limit the time the agent needs to "
                    "generate its output."),
-          minvalue = 1.0))
+          minvalue = 1.0),
+    need_restart = True)
 
 
 register_configvar(group,
@@ -134,7 +135,8 @@ register_configvar(group,
              help = _("This boolean variable allows you to bring check_mk into a dry run mode. "
                       "No hosts will be contacted, no DNS lookups will take place and data is read "
                       "from cache files that have been created during normal operation or have "
-                      "been copied here from another monitoring site.")))
+                      "been copied here from another monitoring site.")),
+    need_restart = True)
 
 
 register_configvar(group,
@@ -157,7 +159,8 @@ register_configvar(group,
           help = _("If this option is used and set to a filename, Check_MK will create a debug logfile " 
                    "containing details about failed checks (those which have state UNKNOWN " 
                    "and the output UNKNOWN - invalid output from plugin.... Per default no "
-                   "logfile is written.")))
+                   "logfile is written.")),
+    need_restart = True)
 
 register_configvar(group,
     "cluster_max_cachefile_age",
@@ -167,7 +170,8 @@ register_configvar(group,
                      "use it instead of getting information from the target hosts while " 
                      "checking a cluster. Per default this is enabled and set to 90 seconds. " 
                      "If your check cycle is not set to a larger value than one minute then "
-                     "you should increase this accordingly.")))
+                     "you should increase this accordingly.")),
+    need_restart = True)
 
 register_configvar(group,
     "check_submission",
@@ -180,7 +184,8 @@ register_configvar(group,
                   "This reduces the overhead but might not be compatible with other monitoring "
                   "cores."),
         choices = [ ("pipe", _("Nagios command pipe")),
-                     ("file", _("Create check files")) ]))
+                     ("file", _("Create check files")) ]),
+    need_restart = True)
 
 group = _("Inventory - automatic service detection")
 
@@ -193,7 +198,8 @@ register_configvar(group,
         title = _("Enable regular inventory checks"),
         help = _("If enabled, Check_MK will create one additional check per host "
                  "that does a regular check, if the inventory would find new services "
-                 "currently un-monitored.")))
+                 "currently un-monitored.")),
+    need_restart = True)
 
 register_configvar(group,
     "inventory_check_severity",
@@ -208,8 +214,6 @@ register_configvar(group,
             (3, _("Unknown") ),
             ]))
         
-
-
 
 register_configvar(group,
     "always_cleanup_autochecks",
@@ -501,6 +505,25 @@ register_rule(group,
                  "as the 'service time'.")),
     itemtype = "service")
 
+register_rule(group,
+    "extra_host_conf:check_period",
+    TimeperiodSelection(
+        title = _("Check period for hosts"),
+        help = _("If you specify a check period for a host then active checks of that "
+                 "host will only take place within that period. In the rest of the time "
+                 "the state of the host will stay at its last status.")),
+    )
+
+register_rule(group,
+    "extra_service_conf:check_period",
+    TimeperiodSelection(
+        title = _("Check period for services"),
+        help = _("If you specify a notification period for a service then active checks "
+                 "of that service will only be done in that period. Please note, that the "
+                 "checks driven by Check_MK are passive checks and are not affected by this "
+                 "rule. You can use the rule for the active Check_MK check, however.")),
+    itemtype = "service")
+
 class MonitoringIcon(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
@@ -686,4 +709,16 @@ register_rule(group,
              "activate the changes. In some rare cases DNS lookups must be done each time "
              "a host is connected to, e.g. when the IP address of the host is dynamic "
              "and can change."))
+
+register_rule(group,
+    "datasource_programs",
+    TextAscii(
+        title = _("Individual program call instead of agent access"),
+        help = _("For agent based checks Check_MK allows you to specify an alternative "
+                 "program that should be called by Check_MK instead of connecting the agent "
+                 "via TCP. That program must output the agent's data on standard output in "
+                 "the same format the agent would do. This is for example useful for monitoring "
+                 "via SSH. The command line may contain the placeholders <tt>&lt;IP&gt;</tt> and "
+                 "<tt>&lt;HOST&gt;</tt>."),
+        label = _("Command line to execute")))
 

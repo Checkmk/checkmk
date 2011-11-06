@@ -377,6 +377,10 @@ void Query::parseStatsLine(char *line)
         operation = STATS_OP_AVG;
     else if (!strcmp(col_or_op, "std"))
         operation = STATS_OP_STD;
+    else if (!strcmp(col_or_op, "suminv"))
+        operation = STATS_OP_SUMINV;
+    else if (!strcmp(col_or_op, "avginv"))
+        operation = STATS_OP_AVGINV;
 
     char *column_name;
     if (operation == STATS_OP_COUNT)  

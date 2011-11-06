@@ -62,35 +62,45 @@ printer_alerts_group_map = {
 
 printer_alerts_state_map = {
   2: [ 8, 1101, 1102, 1112, 1114, 1115 ],
-  1: [ ],
-  0: [ 4, 6, 7, 19, 20, 23, 24, 25, 27, 35, 36, 37, 38, 502, 503, 504, 505, 506, 507, 802, 803, 804, 805, 806, 807, 808, 809, 810, 1001, 1002, 1005, 1106, 1107, 1108, 1111, 1113, 1302, 1304, 1501, 1502, 1503, 1504, 1505, 1506, 1509 ],
+  1: [ 1104 ],
+  0: [ 4, 6, 7, 19, 20, 23, 24, 25, 27, 35, 36, 37, 38, 
+       502, 503, 504, 505, 506, 507, 802, 803, 804, 805, 
+       806, 807, 808, 809, 810, 1001, 1002, 1005, 1106, 
+       1107, 1108, 1111, 1113, 1302, 1304, 1501, 1502, 
+       1503, 1504, 1505, 1506, 1509 ],
 }
 
 def inventory_printer_alerts(info):
     return [ (None, None) ]
 
 def check_printer_alerts(_not_used, _not_used1, info):
-    # Filter out empty status lines (e.g. sent by Brother printers)
-    info = [ i for i in info if i != [ "1", "0", "0", "0", "" ] ]
+    # Filter out empty status lines (e.g. sent by Brother)
+    info = [ i for i in info if i[1:5] != [ "0", "0", "0", "" ] ]
     if not info:
         return (0, 'OK - No alerts present')
 
     sum_state  = 0
     sum_txt    = []
-    for alert in info:
-        sev, group, group_index, code, desc = alert
+    for sev, group, group_index, code, desc in info:
 
-        state = 3
+        state = 3 # UNKNOWN
         for s in [ 2, 1, 0 ]:
-            if saveint(sev) in printer_alerts_state_map[s]:
+            if saveint(code) in printer_alerts_state_map[s]:
                 state = s
                 break
+	# Code not found -> take into account severity
+	if state == 3 and sev == '1': 
+	    state = 0
 
         group_txt = printer_alerts_group_map.get(group, 'UNKNOWN')
         if group_index != '-1':
             group_txt += ' #%s' % group_index
 
-        if state > sum_state:
+        if state == 2:
+            sum_state = 2
+        elif state == 3 and sum_state != 2:
+            sum_state = 3
+        elif state > sum_state:
             sum_state = state
 
         sum_txt.append('%s - %s - %s (%s)' % (nagios_state_names[state],

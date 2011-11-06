@@ -314,7 +314,8 @@ class html:
     def jsbutton(self, varname, text, onclick, style=''):
         if style:
             style = ' style="%s"' % style
-        self.write("<input type=button name=%s id=%s onclick=\"%s\" class=button%s value=\"%s\" />" % (varname, varname, onclick, style, text))
+        self.write("<input type=button name=%s id=%s onclick=\"%s\" "
+                   "class=button%s value=\"%s\" />" % (varname, varname, onclick, style, text))
 
     def begin_context_buttons(self):
         self.write("<table class=contextlinks><tr><td>\n")
@@ -322,10 +323,14 @@ class html:
     def end_context_buttons(self):
         self.write("</td></tr></table>\n")
 
-    def context_button(self, title, url, icon=None, hot=False):
+    def context_button(self, title, url, icon=None, hot=False, id=None):
         if icon:
             title = '<img src="images/icon_%s.png">%s' % (icon, title)
-        self.write('<div class="contextlink%s" ' % (hot and " hot" or ""))
+        if id:
+            idtext = " id='%s'" % id
+        else:
+            idtext = ""
+        self.write('<div%s class="contextlink%s" ' % (idtext, hot and " hot" or ""))
         self.write(r'''onmouseover='this.style.backgroundImage="url(\"images/contextlink%s_hi.png\")";' ''' % (hot and "_hot" or ""))
         self.write(r'''onmouseout='this.style.backgroundImage="url(\"images/contextlink%s.png\")";' ''' % (hot and "_hot" or ""))
         self.write('>')
@@ -398,6 +403,8 @@ class html:
             self.form_vars.append(varname)
 
     def radiobutton(self, varname, value, checked, text):
+        if self.has_var(varname):
+            checked = self.var(varname) == value
         checked_text = checked and " checked" or ""
         self.write("<input type=radio name=%s value=\"%s\"%s> %s\n" %
                       (varname, value, checked_text, text))
@@ -815,7 +822,7 @@ class html:
         self.write('<img align=absbottom class="treeangle" id="treeimg.%s.%s" '
                    'src="images/tree_%s.png" %s>' % 
                 (treename, id, img_num, onclick))
-        if title[0] == '<': # custom HTML code
+        if title.startswith('<'): # custom HTML code
             self.write(title)
             if indent != "form":
                 self.write("<br>")

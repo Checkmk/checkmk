@@ -1,0 +1,12 @@
+Title: Set in_notification_period filter in problem views
+Component: multisite
+Benefit: 2
+State: open
+Cost: 2
+Date: 2011-10-28 09:22:31
+Targetversion: 1.1.12p1
+Class: cleanup
+
+In all Multisite views showing problems (also dashboard_...) the
+notification period filter should be set to 1 so that problem
+out of the notification period are not being shown.

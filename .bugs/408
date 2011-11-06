@@ -1,0 +1,15 @@
+Title: Livestatus grouping by check_interval does not work
+Component: livestatus
+Benefit: 1
+State: open
+Cost: 2
+Date: 2011-10-28 10:14:07
+Targetversion: 
+Class: bug
+
+GET services
+Columns: check_interval
+Stats: state >= 0
+
+==> invalid;998 -> seems that check_interval is a float and
+cannot be used for grouping. We could force an integer here.

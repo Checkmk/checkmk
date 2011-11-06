@@ -571,11 +571,12 @@ def render_performance():
         ("Cached log messages",    6, "%d")]:
         write_line(what + ":", format % sum([row[col] for row in data]))
 
-    data = html.live.query("GET status\nColumns: external_command_buffer_slots "
-                           "external_command_buffer_max\n")
-    size = sum([row[0] for row in data])
-    maxx = sum([row[1] for row in data])
-    write_line(_('Com. buf. max/total'), "%d / %d" % (maxx, size))
+    if len(config.allsites()) == 1:
+        data = html.live.query("GET status\nColumns: external_command_buffer_slots "
+                               "external_command_buffer_max\n")
+        size = sum([row[0] for row in data])
+        maxx = sum([row[1] for row in data])
+        write_line(_('Com. buf. max/total'), "%d / %d" % (maxx, size))
 
 
     html.write("</table>\n")

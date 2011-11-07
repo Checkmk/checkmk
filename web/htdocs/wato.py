@@ -9751,6 +9751,7 @@ def render_folder_path(the_folder = 0, link_to_last = False, keepvarnames = ["mo
         for var in keepvarnames:
             html.hidden_field(var, html.var(var))
         html.write("</form>")
+    html.write("<div style='clear: both;'></div>")
     html.write("</div>")
 
 def may_see_hosts():

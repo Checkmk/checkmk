@@ -204,7 +204,7 @@ checkgroups.append((
                            title = _("Absolute levels in <b>bytes</b> per second"),
                            elements = [
                                Integer(title = _("Warning at"), label = _("bytes per second")),
-                               Integer(title = _("Critical at"), label = _("% of port speed")),
+                               Integer(title = _("Critical at"), label = _("bytes per second")),
                            ]
                         )
                    ])

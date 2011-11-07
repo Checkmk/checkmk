@@ -8987,12 +8987,15 @@ def get_rule_conditions(ruleset):
             item_list = []
             while True:
                 var = "item_%d" % nr
-                item = html.var(var)
+                item = html.var(var, "").strip()
                 if nr > config.wato_num_itemspecs and not item:
                     break
                 if item:
                     item_list.append(item)
                 nr += 1
+            if len(item_list) == 0:
+                raise MKUserError("item_0", _("Please specify at least one %s or "
+                    "this rule will never match.") % ruleset["itemname"])
     else:
         item_list = None
 
@@ -9211,7 +9214,9 @@ def mode_edit_rule(phase):
 
         html.write("</td><td class=content>")
         if itemtype:
-            checked = len(item_list) > 0 and item_list[0] != ""
+            checked = html.get_checkbox("explicit_services")
+            if checked == None: # read from rule itself
+                checked = len(item_list) == 0 or item_list[0] != ""
             div_id = "itemlist"
             html.checkbox("explicit_services", checked, onclick="wato_toggle_option(this, %r)" % div_id)
             html.write(" " + _("Specify explicit values"))

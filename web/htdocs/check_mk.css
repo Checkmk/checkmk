@@ -2066,7 +2066,7 @@ table.add_snapin i {
 
 /* Path to current folder at top of screen */
 .wato div.folderpath {
-    margin-bottom: 30px;
+    margin-bottom: 10px;
 }
 
 .wato div.folderpath a, .wato div.folderpath b, .wato div.folderpath i {

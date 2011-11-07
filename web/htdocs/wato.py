@@ -204,7 +204,7 @@ def page_handler():
     if not config.may("wato.use"):
         raise MKAuthException(_("You are not allowed to use WATO."))
 
-    # Make information about current folder and hosts avaiable
+    # Make information about current folder and hosts available
     prepare_folder_info()
 
     current_mode = html.var("mode") or "main"
@@ -283,7 +283,7 @@ def page_handler():
         html.show_error("<b>%s</b><br>%s" % (
             _("Primary system unreachable"),
             _("The primary system is currently unreachable. Please make sure "
-              "that you synchronize changes back as soon as it is avaiable "
+              "that you synchronize changes back as soon as it is available "
               "again.")))
 
     try:
@@ -2529,18 +2529,26 @@ def mode_changelog(phase):
                     # the button text is just "Restart". We do a sync anyway. This
                     # can be optimized in future but is the save way for now.
                     site = config.site(site_id)
-                    response = synchronize_site(site, restart = action == "restart")
+                    if action in [ "sync", "sync_restart" ]:
+                        response = synchronize_site(site, restart = action == "restart")
+                    else:
+                        try:
+                            restart_site(site)
+                            response = True
+                        except Exception, e:
+                            response = str(e)
+
                     if response == True:
                         return None
                     else:
-                        raise MKUserError(None, _("Cannot synchronize site: %s") % response)
+                        raise MKUserError(None, _("Error on remote access to site: %s") % response)
 
                 except MKAutomationException, e:
-                    raise MKUserError(None, _("Remote command on site %s failed: '%s'.") % (site_id, e))
+                    raise MKUserError(None, _("Remote command on site %s failed: <pre>%s</pre>") % (site_id, e))
                 except Exception, e:
                     if config.debug:
                         raise
-                    raise MKUserError(None, _("Remote command on site %s failed: '%s'.") % (site_id, e))
+                    raise MKUserError(None, _("Remote command on site %s failed: <pre>%s</pre>") % (site_id, e))
 
         elif html.check_transaction():
             config.need_permission("wato.activate")
@@ -2703,6 +2711,8 @@ def mode_changelog(phase):
                             ("_site", site_id), ("_siteaction", "sync")])
                     restart_url = make_action_link([("mode", "changelog"), 
                             ("_site", site_id), ("_siteaction", "restart")])
+                    sync_restart_url = make_action_link([("mode", "changelog"), 
+                            ("_site", site_id), ("_siteaction", "sync_restart")])
                     if not site_is_local(site_id) and "secret" not in site:
                         html.write("<b>%s</b>" % _("Not logged in."))
                     elif not uptodate:
@@ -2710,7 +2720,7 @@ def mode_changelog(phase):
                             if srs.get("need_sync"):
                                 html.buttonlink(sync_url, _("Sync"))
                                 if srs.get("need_restart"):
-                                    html.buttonlink(restart_url, _("Sync & Restart"))
+                                    html.buttonlink(sync_restart_url, _("Sync & Restart"))
                             else:
                                 html.buttonlink(restart_url, _("Restart"))
                         else:
@@ -6691,7 +6701,7 @@ def do_peer_redirect(peer):
             if global_replication_state() != "clean":
                 html.show_error(_("You are currently accessing a standby "
                   "system while the primary system is available. "
-                  "Furthermore you have local changes in the stanbdy system "
+                  "Furthermore you have local changes in the standby system "
                   "that are not replicated "
                   "to all sites. Please first <a href='%s'>replicate</a> "
                   "your changes before switching to the <a target=_parent href='%s'>primary system.</a>") %
@@ -6790,6 +6800,9 @@ def page_automation():
 
 def automation_push_snapshot():
     try:
+        # Initialise g_root_folder, load all folder information
+        prepare_folder_info()
+
         site_id = html.var("siteid")
         if not site_id:
             raise MKGeneralException(_("Missing variable siteid"))
@@ -6804,7 +6817,6 @@ def automation_push_snapshot():
         elif mode == "peer" and not is_distributed():
             raise MKGeneralException(_("Configuration error. You treat us as "
                "a peer, but we have no peer configuration!"))
-
 
         # In peer mode, we have a replication configuration ourselves and
         # we have a site ID our selves. Let's make sure that ID matches
@@ -6835,7 +6847,10 @@ def automation_push_snapshot():
             call_hook_activate_changes()
         return True
     except Exception, e:
-        return str(e)
+        if config.debug:
+            return _("Internal automation error: %s\n%s") % (str(e), format_exception())
+        else:
+            return _("Internal automation error: %s") % e
 
 def create_only_hosts_file(siteid):
     out = file(defaults.check_mk_configdir + "/only_hosts.mk", "w")
@@ -6844,7 +6859,7 @@ def create_only_hosts_file(siteid):
               "# push the configuration to us. It makes sure that\n"
               "# we only monitor hosts that are assigned to our site.\n\n")
     out.write("if only_hosts == None:\n    only_hosts = []\n\n")
-    out.write("only_hosts = [( ['site:%s'], ALL_HOSTS )]\n" % siteid)
+    out.write("only_hosts += [( ['site:%s'], ALL_HOSTS )]\n" % siteid)
 
 def delete_only_hosts_file():
     p = defaults.check_mk_configdir + "/only_hosts.mk"
@@ -8310,6 +8325,7 @@ def mode_rulesets(phase):
 
     elif phase == "buttons":
         if only_host:
+            home_button()
             html.context_button(only_host,
                  make_link([("mode", "edithost"), ("host", only_host)]), "back")
         else:
@@ -8447,6 +8463,7 @@ def mode_edit_ruleset(phase):
         return title
 
     elif phase == "buttons":
+        home_button()
         html.context_button(_("All rulesets"), 
               make_link([("mode", "rulesets"), ("host", hostname)]), "back")
         if hostname:
@@ -8548,7 +8565,6 @@ def mode_edit_ruleset(phase):
                    "<th>" + _("Folder") + "</th>"
                    "<th>" + _("Value") + "</th>"
                    "<th>" + _("Conditions") + "</th>"
-                   "<th></th>" # Edit
                    "<th></th>" # Several icons
                    "</tr>\n")
 
@@ -8588,6 +8604,14 @@ def mode_edit_ruleset(phase):
                 rule_button("down", _("Move this rule one position down"), folder, rel_rulenr)
             else:
                 rule_button(None)
+            edit_url = make_link([
+                ("mode", "edit_rule"), 
+                ("varname", varname), 
+                ("rulenr", rel_rulenr), 
+                ("host", hostname),
+                ("item", repr(item)),
+                ("rule_folder", folder[".path"])])
+            icon_button(edit_url, _("Edit this rule"), "edit")
             rule_button("insert", _("Insert a copy of this rule into the folder '%s'") 
                         % g_folder["title"], folder, rel_rulenr)
             rule_button("delete", _("Delete this rule"), folder, rel_rulenr)
@@ -8652,18 +8676,6 @@ def mode_edit_ruleset(phase):
             render_conditions(rulespec, tag_specs, host_list, item_list, varname, folder)
             html.write("</td>")
             
-            # Edit
-            html.write("<td class=buttons>")
-            url = make_link([
-                ("mode", "edit_rule"), 
-                ("varname", varname), 
-                ("rulenr", rel_rulenr), 
-                ("host", hostname),
-                ("item", repr(item)),
-                ("rule_folder", folder[".path"])])
-            html.buttonlink(url, _("Edit"))
-            html.write("</td>")
-
             # Icons
             html.write("<td>")
             # "this folder"
@@ -8977,12 +8989,15 @@ def get_rule_conditions(ruleset):
             item_list = []
             while True:
                 var = "item_%d" % nr
-                item = html.var(var)
+                item = html.var(var, "").strip()
                 if nr > config.wato_num_itemspecs and not item:
                     break
                 if item:
                     item_list.append(item)
                 nr += 1
+            if len(item_list) == 0:
+                raise MKUserError("item_0", _("Please specify at least one %s or "
+                    "this rule will never match.") % ruleset["itemname"])
     else:
         item_list = None
 
@@ -8998,6 +9013,7 @@ def mode_edit_rule(phase):
         return _("Edit rule %s") % rulespec["title"]
 
     elif phase == "buttons":
+        home_button()
         html.context_button(_("All rules"), 
              make_link([("mode", "edit_ruleset"), 
                         ("varname", varname), 
@@ -9201,7 +9217,9 @@ def mode_edit_rule(phase):
 
         html.write("</td><td class=content>")
         if itemtype:
-            checked = len(item_list) > 0 and item_list[0] != ""
+            checked = html.get_checkbox("explicit_services")
+            if checked == None: # read from rule itself
+                checked = len(item_list) == 0 or item_list[0] != ""
             div_id = "itemlist"
             html.checkbox("explicit_services", checked, onclick="wato_toggle_option(this, %r)" % div_id)
             html.write(" " + _("Specify explicit values"))
@@ -9736,6 +9754,7 @@ def render_folder_path(the_folder = 0, link_to_last = False, keepvarnames = ["mo
         for var in keepvarnames:
             html.hidden_field(var, html.var(var))
         html.write("</form>")
+    html.write("<div style='clear: both;'></div>")
     html.write("</div>")
 
 def may_see_hosts():

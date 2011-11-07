@@ -20,6 +20,7 @@
     * FIX: dashboard problem views now ignore notification period,
       just as tactical overview and normal problem views do
     * FIX: Fixed styling of view header in older IE browsers
+    * FIX: Loading dashboard plugins in dashboard module
 
 1.1.12:
     Checks & Agents:

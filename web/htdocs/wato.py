@@ -8563,7 +8563,6 @@ def mode_edit_ruleset(phase):
                    "<th>" + _("Folder") + "</th>"
                    "<th>" + _("Value") + "</th>"
                    "<th>" + _("Conditions") + "</th>"
-                   "<th></th>" # Edit
                    "<th></th>" # Several icons
                    "</tr>\n")
 
@@ -8603,6 +8602,14 @@ def mode_edit_ruleset(phase):
                 rule_button("down", _("Move this rule one position down"), folder, rel_rulenr)
             else:
                 rule_button(None)
+            edit_url = make_link([
+                ("mode", "edit_rule"), 
+                ("varname", varname), 
+                ("rulenr", rel_rulenr), 
+                ("host", hostname),
+                ("item", repr(item)),
+                ("rule_folder", folder[".path"])])
+            icon_button(edit_url, _("Edit this rule"), "edit")
             rule_button("insert", _("Insert a copy of this rule into the folder '%s'") 
                         % g_folder["title"], folder, rel_rulenr)
             rule_button("delete", _("Delete this rule"), folder, rel_rulenr)
@@ -8667,18 +8674,6 @@ def mode_edit_ruleset(phase):
             render_conditions(rulespec, tag_specs, host_list, item_list, varname, folder)
             html.write("</td>")
             
-            # Edit
-            html.write("<td class=buttons>")
-            url = make_link([
-                ("mode", "edit_rule"), 
-                ("varname", varname), 
-                ("rulenr", rel_rulenr), 
-                ("host", hostname),
-                ("item", repr(item)),
-                ("rule_folder", folder[".path"])])
-            html.buttonlink(url, _("Edit"))
-            html.write("</td>")
-
             # Icons
             html.write("<td>")
             # "this folder"

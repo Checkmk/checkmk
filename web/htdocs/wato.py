@@ -2119,7 +2119,7 @@ def mode_bulk_inventory(phase):
     # interactive progress is *not* done in action phase. It
     # renders the page content itself.
     hostnames = get_hostnames_from_checkboxes()
-    items = [ "%s|%s" % (g_folder[".name"], hostname) 
+    items = [ "%s|%s" % (g_folder[".path"], hostname) 
              for hostname in hostnames ]
 
     if html.var("_start"):

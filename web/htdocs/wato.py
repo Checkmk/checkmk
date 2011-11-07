@@ -8325,6 +8325,7 @@ def mode_rulesets(phase):
 
     elif phase == "buttons":
         if only_host:
+            home_button()
             html.context_button(only_host,
                  make_link([("mode", "edithost"), ("host", only_host)]), "back")
         else:
@@ -8462,6 +8463,7 @@ def mode_edit_ruleset(phase):
         return title
 
     elif phase == "buttons":
+        home_button()
         html.context_button(_("All rulesets"), 
               make_link([("mode", "rulesets"), ("host", hostname)]), "back")
         if hostname:
@@ -9011,6 +9013,7 @@ def mode_edit_rule(phase):
         return _("Edit rule %s") % rulespec["title"]
 
     elif phase == "buttons":
+        home_button()
         html.context_button(_("All rules"), 
              make_link([("mode", "edit_ruleset"), 
                         ("varname", varname), 

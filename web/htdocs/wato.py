@@ -204,7 +204,7 @@ def page_handler():
     if not config.may("wato.use"):
         raise MKAuthException(_("You are not allowed to use WATO."))
 
-    # Make information about current folder and hosts avaiable
+    # Make information about current folder and hosts available
     prepare_folder_info()
 
     current_mode = html.var("mode") or "main"
@@ -283,7 +283,7 @@ def page_handler():
         html.show_error("<b>%s</b><br>%s" % (
             _("Primary system unreachable"),
             _("The primary system is currently unreachable. Please make sure "
-              "that you synchronize changes back as soon as it is avaiable "
+              "that you synchronize changes back as soon as it is available "
               "again.")))
 
     try:
@@ -6701,7 +6701,7 @@ def do_peer_redirect(peer):
             if global_replication_state() != "clean":
                 html.show_error(_("You are currently accessing a standby "
                   "system while the primary system is available. "
-                  "Furthermore you have local changes in the stanbdy system "
+                  "Furthermore you have local changes in the standby system "
                   "that are not replicated "
                   "to all sites. Please first <a href='%s'>replicate</a> "
                   "your changes before switching to the <a target=_parent href='%s'>primary system.</a>") %

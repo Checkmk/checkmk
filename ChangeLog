@@ -29,6 +29,7 @@
     * New nifty sidebar snapin "Speed-O-Meter"
     * FIX: Fixed encoding problem when opening dashboard
     * FIX: Fixed styling of view header in older IE browsers
+    * FIX: Loading dashboard plugins in dashboard module
 
     Livestatus:
     * New columns num_hosts and num_services in status table

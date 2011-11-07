@@ -2536,11 +2536,11 @@ def mode_changelog(phase):
                         raise MKUserError(None, _("Cannot synchronize site: %s") % response)
 
                 except MKAutomationException, e:
-                    raise MKUserError(None, _("Remote command on site %s failed: '%s'.") % (site_id, e))
+                    raise MKUserError(None, _("Remote command on site %s failed: <pre>%s</pre>") % (site_id, e))
                 except Exception, e:
                     if config.debug:
                         raise
-                    raise MKUserError(None, _("Remote command on site %s failed: '%s'.") % (site_id, e))
+                    raise MKUserError(None, _("Remote command on site %s failed: <pre>%s</pre>") % (site_id, e))
 
         elif html.check_transaction():
             config.need_permission("wato.activate")
@@ -6805,7 +6805,6 @@ def automation_push_snapshot():
             raise MKGeneralException(_("Configuration error. You treat us as "
                "a peer, but we have no peer configuration!"))
 
-
         # In peer mode, we have a replication configuration ourselves and
         # we have a site ID our selves. Let's make sure that ID matches
         # the ID our peer thinks we have.
@@ -6835,7 +6834,10 @@ def automation_push_snapshot():
             call_hook_activate_changes()
         return True
     except Exception, e:
-        return str(e)
+        if config.debug:
+            return _("Internal automation error: %s\n%s") % (str(e), format_exception())
+        else:
+            return _("Internal automation error: %s") % e
 
 def create_only_hosts_file(siteid):
     out = file(defaults.check_mk_configdir + "/only_hosts.mk", "w")

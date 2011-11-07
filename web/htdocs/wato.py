@@ -2529,11 +2529,19 @@ def mode_changelog(phase):
                     # the button text is just "Restart". We do a sync anyway. This
                     # can be optimized in future but is the save way for now.
                     site = config.site(site_id)
-                    response = synchronize_site(site, restart = action == "restart")
+                    if action in [ "sync", "sync_restart" ]:
+                        response = synchronize_site(site, restart = action == "restart")
+                    else:
+                        try:
+                            restart_site(site)
+                            response = True
+                        except Exception, e:
+                            response = str(e)
+
                     if response == True:
                         return None
                     else:
-                        raise MKUserError(None, _("Cannot synchronize site: %s") % response)
+                        raise MKUserError(None, _("Error on remote access to site: %s") % response)
 
                 except MKAutomationException, e:
                     raise MKUserError(None, _("Remote command on site %s failed: <pre>%s</pre>") % (site_id, e))
@@ -2703,6 +2711,8 @@ def mode_changelog(phase):
                             ("_site", site_id), ("_siteaction", "sync")])
                     restart_url = make_action_link([("mode", "changelog"), 
                             ("_site", site_id), ("_siteaction", "restart")])
+                    sync_restart_url = make_action_link([("mode", "changelog"), 
+                            ("_site", site_id), ("_siteaction", "sync_restart")])
                     if not site_is_local(site_id) and "secret" not in site:
                         html.write("<b>%s</b>" % _("Not logged in."))
                     elif not uptodate:
@@ -2710,7 +2720,7 @@ def mode_changelog(phase):
                             if srs.get("need_sync"):
                                 html.buttonlink(sync_url, _("Sync"))
                                 if srs.get("need_restart"):
-                                    html.buttonlink(restart_url, _("Sync & Restart"))
+                                    html.buttonlink(sync_restart_url, _("Sync & Restart"))
                             else:
                                 html.buttonlink(restart_url, _("Restart"))
                         else:

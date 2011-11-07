@@ -1,0 +1,10 @@
+Title: filesystem_levels aus Dokus entfernen
+Component: docu
+Benefit: 2
+State: open
+Cost: 1
+Date: 2011-11-07 10:27:18
+Targetversion: 1.1.12
+Class: bug
+
+Die Option ist deprecated. Deswegen aus der Doku entfernen.

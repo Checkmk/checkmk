@@ -6790,6 +6790,9 @@ def page_automation():
 
 def automation_push_snapshot():
     try:
+        # Initialise g_root_folder, load all folder information
+        prepare_folder_info()
+
         site_id = html.var("siteid")
         if not site_id:
             raise MKGeneralException(_("Missing variable siteid"))

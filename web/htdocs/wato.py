@@ -6849,7 +6849,7 @@ def create_only_hosts_file(siteid):
               "# push the configuration to us. It makes sure that\n"
               "# we only monitor hosts that are assigned to our site.\n\n")
     out.write("if only_hosts == None:\n    only_hosts = []\n\n")
-    out.write("only_hosts = [( ['site:%s'], ALL_HOSTS )]\n" % siteid)
+    out.write("only_hosts += [( ['site:%s'], ALL_HOSTS )]\n" % siteid)
 
 def delete_only_hosts_file():
     p = defaults.check_mk_configdir + "/only_hosts.mk"

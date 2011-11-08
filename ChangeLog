@@ -36,6 +36,9 @@
 
 
 1.1.12p1:
+    Core, Setup, etc.:
+    * FIX: fix aggregate_check_mk (Summary host agent status)
+
     Checks & Agents:
     * FIX: mk_oracle now also detects XE databases
     * FIX: printer_alerts: handle 0-entries of Brother printers

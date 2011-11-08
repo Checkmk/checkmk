@@ -44,6 +44,10 @@
       one pie dashlet for host/service stats
     * FIX: drbd: fixed inventory functions
     * FIX: printer_supply: handle output of Brother printers
+    * FIX: ps.perf PNP template: show memory usage per process and not
+      summed up. This is needed in situations where one process forks itself
+      in irregular intervals and rates but you are interested just in the
+      memory usage of the main process.
 
     Multisite:
     * FIX: finally fixed long-wanted "NagStaMon create hundreds

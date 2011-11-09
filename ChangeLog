@@ -24,6 +24,10 @@
     Checks & Agents:
     * if/if64: new ruleset if_disable_if64_hosts, that force if on
       hosts the seem to support if64
+    * Windows agent: new config variable "sections" in [global], that
+      allows to configure which sections are being output.
+    * Windows agent: in [logwatch] you can now configure which logfiles
+      to process and which levels of messages to send.
 
     Multisite:
     * New nifty sidebar snapin "Speed-O-Meter"

@@ -68,8 +68,23 @@
 
 bool do_tcp = false;
 bool should_terminate = false;
-bool logwatch_send_initial_entries = false;
 
+#define SECTION_CHECK_MK     0x00000001
+#define SECTION_UPTIME       0x00000002
+#define SECTION_DF           0x00000004
+#define SECTION_PS           0x00000008
+#define SECTION_MEM          0x00000010
+#define SECTION_SERVICES     0x00000020
+#define SECTION_WINPERF      0x00000040
+#define SECTION_LOGWATCH     0x00000080
+#define SECTION_SYSTEMTIME   0x00000100
+#define SECTION_PLUGINS      0x00000200
+#define SECTION_LOCAL        0x00000400
+
+unsigned long enabled_sections = 0xffffffff;
+
+// Variables for section <<<logwatch>>>
+bool logwatch_send_initial_entries = false;
 bool logwatch_suppress_info = true;
 
 // dynamic buffer for event log entries. Grows with the
@@ -91,6 +106,15 @@ char     g_current_directory[256];
 char     g_plugins_dir[256];
 char     g_local_dir[256];
 char     g_config_file[256];
+
+// Configuration of eventlog monitoring (see config parser)
+struct eventlog_config_entry {
+    char name[256];
+    int level;
+};
+int num_eventlog_configs = 0;
+eventlog_config_entry eventlog_config[MAX_EVENTLOGS];
+
 
 struct ipspec {
     uint32_t address;
@@ -743,7 +767,7 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
     char regpath[128];
     BYTE dllpath[128];
     char source_name[128];
-
+    
     EVENTLOGRECORD *event = (EVENTLOGRECORD *)buffer;
     while (bytesread > 0) 
     {
@@ -841,7 +865,7 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
 
 
 void output_eventlog(SOCKET &out, const char *logname, 
-		     DWORD *record_number, bool just_find_end)
+		     DWORD *record_number, bool just_find_end, int level)
 {
     if (eventlog_buffer_size == 0) {
 	const int initial_size = 65536;
@@ -893,7 +917,7 @@ void output_eventlog(SOCKET &out, const char *logname,
 				 &bytesneeded))
 		{
 		    process_eventlog_entries(out, logname, eventlog_buffer, 
-					     bytesread, record_number, just_find_end || t==0, &worst_state);
+                             bytesread, record_number, just_find_end || t==0, &worst_state);
 		}
 		else {
 		    DWORD error = GetLastError();
@@ -918,7 +942,7 @@ void output_eventlog(SOCKET &out, const char *logname,
 		    }
 		}
 	    }
-	    if (worst_state == 0 && logwatch_suppress_info) {
+	    if (worst_state < level && logwatch_suppress_info) {
 		break; // nothing important found. Skip second run
 	    }
 	}
@@ -1058,9 +1082,23 @@ void section_eventlog(SOCKET &out)
 	for (unsigned i=0; i < num_eventlogs; i++) {
 	    if (!newly_found[i]) // not here any more!
 		output(out, "[[[%s:missing]]]\n", eventlog_names[i]);
-	    else
-		output_eventlog(out, eventlog_names[i], &known_record_numbers[i], 
-				first_run && !logwatch_send_initial_entries);
+	    else {
+                // Get the configuration of that log file (which messages to send)
+                int level = 1;
+                for (int j=0; j<num_eventlog_configs; j++) {
+                    const char *cname = eventlog_config[j].name;
+                    if (!strcmp(cname, "*") ||
+                        !strcasecmp(cname, eventlog_names[i])) 
+                    {
+                        level = eventlog_config[j].level;
+                        break; 
+                    }
+                }
+                if (level != -1) {
+                    output_eventlog(out, eventlog_names[i], &known_record_numbers[i], 
+                                    first_run && !logwatch_send_initial_entries, level);
+                }
+            } 
 	}
     }
     first_run = false;
@@ -1139,7 +1177,8 @@ void get_agent_dir(char *buffer, int size)
     buffer[0] = 0;
 
     HKEY key;
-    DWORD ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\check_mk_agent", 0, KEY_READ, &key);
+    DWORD ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
+          "SYSTEM\\CurrentControlSet\\Services\\check_mk_agent", 0, KEY_READ, &key);
     if (ret == ERROR_SUCCESS)
     {
         DWORD dsize = size;
@@ -1164,7 +1203,9 @@ void get_agent_dir(char *buffer, int size)
         // If the agent is not installed as service, simply
         // assume the current directory to be the agent 
         // directory (for test and adhoc mode)
-        strcpy(g_agent_directory, g_current_directory);
+        strncpy(buffer, g_current_directory, size);
+        if (buffer[strlen(buffer)-1] == '\\') // Remove trailing backslash
+            buffer[strlen(buffer)-1] = 0;
     }
 
 }
@@ -1176,10 +1217,10 @@ void section_check_mk(SOCKET &out)
     output(out, "Version: %s\n", CHECK_MK_VERSION);
     output(out, "AgentOS: windows\n");
     output(out, "WorkingDirectory: %s\n", g_current_directory);
-    output(out, "ConfigFile: %s\n", g_config_file);
-    output(out, "AgentDirectory: %s\n", g_agent_directory);
+    output(out, "ConfigFile: %s\n",       g_config_file);
+    output(out, "AgentDirectory: %s\n",   g_agent_directory);
     output(out, "PluginsDirectory: %s\n", g_plugins_dir);
-    output(out, "LocalDirectory: %s\n", g_local_dir);
+    output(out, "LocalDirectory: %s\n",   g_local_dir);
     output(out, "OnlyFrom:");
     if (g_num_only_from == 0)
         output(out, " 0.0.0.0/0\n");
@@ -1202,17 +1243,28 @@ void output_data(SOCKET &out)
     // make sure, output of numbers is not localized
     setlocale(LC_ALL, "C");
 
-    section_check_mk(out);
-    section_uptime(out);
-    section_df(out);
-    section_ps(out);
-    section_mem(out);
-    section_services(out);
-    section_winperf(out);
-    section_eventlog(out);
-    section_plugins(out);
-    section_local(out);
-    section_systemtime(out);
+    if (enabled_sections & SECTION_CHECK_MK)
+        section_check_mk(out);
+    if (enabled_sections & SECTION_UPTIME)
+        section_uptime(out);
+    if (enabled_sections & SECTION_DF)
+        section_df(out);
+    if (enabled_sections & SECTION_PS)
+        section_ps(out);
+    if (enabled_sections & SECTION_MEM)
+        section_mem(out);
+    if (enabled_sections & SECTION_SERVICES)
+        section_services(out);
+    if (enabled_sections & SECTION_WINPERF)
+        section_winperf(out);
+    if (enabled_sections & SECTION_LOGWATCH)
+        section_eventlog(out);
+    if (enabled_sections & SECTION_PLUGINS)
+        section_plugins(out);
+    if (enabled_sections & SECTION_LOCAL)
+        section_local(out);
+    if (enabled_sections & SECTION_SYSTEMTIME)
+        section_systemtime(out);
 }
     
 
@@ -1570,6 +1622,14 @@ char *strip(char *s)
     return lstrip(s);
 }
 
+void lowercase(char *s)
+{
+    while (*s) {
+        *s = tolower(*s); 
+        s++;
+    }
+}
+
 void add_only_from(char *value)
 {
     if (g_num_only_from >= MAX_ONLY_FROM) {
@@ -1644,18 +1704,50 @@ void parse_only_from(char *value)
         add_only_from(word);
 }
 
-void handle_global_config_variable(char *var, char *value)
+bool handle_global_config_variable(char *var, char *value)
 {
     if (!strcmp(var, "only_from")) {
         parse_only_from(value);
+        return true;
     }
-    else {
-        fprintf(stderr, "Invalid configuration variable %s in section [global].\r\n", var);
-        exit(1);
+    else if (!strcmp(var, "sections")) {
+        enabled_sections = 0;
+        char *word;
+        while ((word = next_word(&value))) {
+            if (!strcmp(word, "check_mk"))
+                enabled_sections |= SECTION_CHECK_MK;
+            else if (!strcmp(word, "uptime"))
+                enabled_sections |= SECTION_UPTIME;
+            else if (!strcmp(word, "df"))
+                enabled_sections |= SECTION_DF;
+            else if (!strcmp(word, "ps"))
+                enabled_sections |= SECTION_PS;
+            else if (!strcmp(word, "mem"))
+                enabled_sections |= SECTION_MEM;
+            else if (!strcmp(word, "services"))
+                enabled_sections |= SECTION_SERVICES;
+            else if (!strcmp(word, "winperf"))
+                enabled_sections |= SECTION_WINPERF;
+            else if (!strcmp(word, "logwatch"))
+                enabled_sections |= SECTION_LOGWATCH;
+            else if (!strcmp(word, "systemtime"))
+                enabled_sections |= SECTION_SYSTEMTIME;
+            else if (!strcmp(word, "plugins"))
+                enabled_sections |= SECTION_PLUGINS;
+            else if (!strcmp(word, "local"))
+                enabled_sections |= SECTION_LOCAL;
+            else {
+                fprintf(stderr, "Invalid section '%s'.\r\n", word);
+                return false;
+            }
+        }
+        return true;
     }
+
+    return false;
 }
 
-void handle_winperf_config_variable(char *var, char *value)
+bool handle_winperf_config_variable(char *var, char *value)
 {
     if (!strcmp(var, "counters")) {
         char *word;
@@ -1674,12 +1766,62 @@ void handle_winperf_config_variable(char *var, char *value)
             g_winperf_counters[g_num_winperf_counters].id = atoi(word);
             g_num_winperf_counters ++;
         }
+        return true;
     }
-    else {
-        fprintf(stderr, "Invalid configuration variable %s in section [winperf].\r\n", var);
-        exit(1);
-    }
+    return false;
 }
+
+bool handle_logwatch_config_variable(char *var, char *value)
+{
+    if (!strncmp(var, "logfile ", 8)) {
+        int level;
+        char *logfilename = lstrip(var + 8);
+        lowercase(logfilename);
+        if (!strcmp(value, "off")) 
+            level = -1;
+        else if (!strcmp(value, "all")) 
+            level = 0;
+        else if (!strcmp(value, "warn"))
+            level = 1;
+        else if (!strcmp(value, "crit"))
+            level = 2;
+        else {
+            fprintf(stderr, "Invalid log level '%s'.\r\n"
+                    "Allowed are off, all, warn and crit.\r\n", value);
+            return false;
+        }
+        if (num_eventlog_configs < MAX_EVENTLOGS) {
+            eventlog_config[num_eventlog_configs].level = level;
+            strncpy(eventlog_config[num_eventlog_configs].name, logfilename, 256);
+            num_eventlog_configs++;
+        }
+        return true;
+    }
+    return false;
+}
+
+/* Example configuration file:
+
+[global]
+    # Process this logfile only on the following hosts
+    only_on = zhamzr12
+
+    # Restrict access to certain IP addresses
+    only_from = 127.0.0.1 192.168.56.0/24
+
+
+[winperf]
+    # Select counters to extract. The following counters
+    # are needed by checks shipped with check_mk.
+    counters = 10332:msx_queues
+
+[logwatch]
+    # Select which messages are to be sent in which
+    # event log
+    logfile system      = off
+    logfile application = info
+    logfile *           = off
+*/
 
 void read_config_file()
 {
@@ -1692,7 +1834,7 @@ void read_config_file()
 
     char line[512];
     int lineno = 0;
-    void (*variable_handler)(char *var, char *value) = 0;
+    bool (*variable_handler)(char *var, char *value) = 0;
 
     while (!feof(file)) {
         if (!fgets(line, sizeof(line), file))
@@ -1710,6 +1852,8 @@ void read_config_file()
                 variable_handler = handle_global_config_variable;
             else if (!strcmp(section, "winperf"))
                 variable_handler = handle_winperf_config_variable;
+            else if (!strcmp(section, "logwatch"))
+                variable_handler = handle_logwatch_config_variable;
             else {
                 fprintf(stderr, "Invalid section [%s] in %s in line %d.\r\n",
                         section, g_config_file, lineno);
@@ -1734,11 +1878,14 @@ void read_config_file()
             char *value = s + 1;
             char *variable = l;
             rstrip(variable);
+            lowercase(variable);
             value = strip(value);
-            variable_handler(variable, value); // add section later
+            if (!variable_handler(variable, value)) {
+                fprintf(stderr, "Invalid entry in %s line %d.\r\n", g_config_file, lineno);
+                exit(1);
+            }
         }
     }
-        
 }
 
 int main(int argc, char **argv)

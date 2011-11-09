@@ -68,6 +68,7 @@
 
 bool do_tcp = false;
 bool should_terminate = false;
+char g_hostname[256]; 
 
 #define SECTION_CHECK_MK     0x00000001
 #define SECTION_UPTIME       0x00000002
@@ -1210,12 +1211,12 @@ void get_agent_dir(char *buffer, int size)
 
 }
 
-
 void section_check_mk(SOCKET &out)
 {
     output(out, "<<<check_mk>>>\n");
     output(out, "Version: %s\n", CHECK_MK_VERSION);
     output(out, "AgentOS: windows\n");
+    output(out, "Hostname: %s\n",         g_hostname);
     output(out, "WorkingDirectory: %s\n", g_current_directory);
     output(out, "ConfigFile: %s\n",       g_config_file);
     output(out, "AgentDirectory: %s\n",   g_agent_directory);
@@ -1293,15 +1294,22 @@ bool check_only_from(uint32_t ip)
     return false;
 }
 
-
-void listen_tcp_loop()
+void wsa_startup()
 {
     WSADATA wsa;
     if (0 != WSAStartup(MAKEWORD(2, 0), &wsa)) {
 	fprintf(stderr, "Cannot initialize winsock.\n");
 	exit(1);
     }
+    if (0 != (gethostname(g_hostname, sizeof(g_hostname)))) {
+        strcpy(g_hostname, "");
+    }
 
+}
+
+
+void listen_tcp_loop()
+{
     SOCKET s = socket(AF_INET, SOCK_STREAM, 0);
     if (s == INVALID_SOCKET) {
 	fprintf(stderr, "Cannot create socket.\n");
@@ -1538,12 +1546,11 @@ void UninstallService()
     }
 }
 
-
 void do_test()
 {
     do_tcp = false;
     SOCKET dummy;
-    output_data(dummy);
+    output_data(dummy); 
 }
 
 
@@ -1629,6 +1636,66 @@ void lowercase(char *s)
         s++;
     }
 }
+
+//  .----------------------------------------------------------------------.
+//  |    ____             __ _                       _   _                 |
+//  |   / ___|___  _ __  / _(_) __ _ _   _ _ __ __ _| |_(_) ___  _ __      |
+//  |  | |   / _ \| '_ \| |_| |/ _` | | | | '__/ _` | __| |/ _ \| '_ \     |
+//  |  | |__| (_) | | | |  _| | (_| | |_| | | | (_| | |_| | (_) | | | |    |
+//  |   \____\___/|_| |_|_| |_|\__, |\__,_|_|  \__,_|\__|_|\___/|_| |_|    |
+//  |                          |___/                                       |
+//  '----------------------------------------------------------------------'
+
+
+// Do a simple pattern matching with the jokers * and ?. 
+// This is case insensitive (windows-like).
+bool globmatch(const char *pattern, char *astring) 
+{
+    const char *p = pattern;
+    char *s = astring;
+    while (*s) {
+        if (!*p) 
+            return false; // pattern too short
+
+        // normal character-wise match
+        if (tolower(*p) == tolower(*s) || *p == '?') {
+            p++;
+            s++;
+        }
+
+        // non-matching charactetr
+        else if (*p != '*')
+            return false;
+
+        else { // check *
+            // If there is more than one asterisk in the pattern, 
+            // we need to try out several variants. We do this
+            // by backtracking (smart, eh?)
+            int maxlength = strlen(s);
+            // replace * by a sequence of ?, at most the rest length of s  
+            char *subpattern = (char *)malloc(strlen(p) + maxlength + 1);
+            bool match = false;
+            for (int i=0; i<=maxlength; i++) {
+                for (int x=0; x<i; x++)
+                    subpattern[x] = '?';
+                strcpy(subpattern + i, p + 1); // omit leading '*'
+                if (globmatch(subpattern, s)) {
+                    match = true;
+                    break;
+                }
+            }
+            free(subpattern); 
+            return match;
+        }
+    }
+
+    // string has ended, pattern not. Pattern must only
+    // contain * now if it wants to match
+    while (*p == '*') p++;
+    return *p == 0;
+}
+
+
 
 void add_only_from(char *value)
 {
@@ -1800,6 +1867,17 @@ bool handle_logwatch_config_variable(char *var, char *value)
     return false;
 }
 
+bool check_host_restriction(char *patterns)
+{
+    char *word;
+    while ((word = next_word(&patterns))) {
+        if (globmatch(word, g_hostname)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 /* Example configuration file:
 
 [global]
@@ -1835,6 +1913,7 @@ void read_config_file()
     char line[512];
     int lineno = 0;
     bool (*variable_handler)(char *var, char *value) = 0;
+    bool is_active = true; // false in sections with host restrictions
 
     while (!feof(file)) {
         if (!fgets(line, sizeof(line), file))
@@ -1859,6 +1938,8 @@ void read_config_file()
                         section, g_config_file, lineno);
                 exit(1);
             }
+            // forget host-restrictions if new section begins
+            is_active = true; 
         }
         else if (!variable_handler) {
             fprintf(stderr, "Line %d is outside of any section.\r\n", lineno);
@@ -1880,7 +1961,21 @@ void read_config_file()
             rstrip(variable);
             lowercase(variable);
             value = strip(value);
-            if (!variable_handler(variable, value)) {
+
+            // handle host restriction
+            if (!strcmp(variable, "host")) 
+                is_active = check_host_restriction(value);
+
+            // skip all other variables for non-relevant hosts
+            else if (!is_active)
+                continue;
+
+            // Useful for debugging host restrictions
+            else if (!strcmp(variable, "print"))
+                fprintf(stderr, "%s\r\n", value);
+
+
+            else if (!variable_handler(variable, value)) {
                 fprintf(stderr, "Invalid entry in %s line %d.\r\n", g_config_file, lineno);
                 exit(1);
             }
@@ -1888,8 +1983,19 @@ void read_config_file()
     }
 }
 
+
+//   .----------------------------------------------------------------------.
+//   |                        __  __       _                                |
+//   |                       |  \/  | __ _(_)_ __                           |
+//   |                       | |\/| |/ _` | | '_ \                          |
+//   |                       | |  | | (_| | | | | |                         |
+//   |                       |_|  |_|\__,_|_|_| |_|                         |
+//   |                                                                      |
+//   '----------------------------------------------------------------------'
+
 int main(int argc, char **argv)
 {
+    wsa_startup();
     determine_directories();
     read_config_file();
 

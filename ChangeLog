@@ -28,6 +28,8 @@
       allows to configure which sections are being output.
     * Windows agent: in [logwatch] you can now configure which logfiles
       to process and which levels of messages to send.
+    * Windows agent: new config variable "host" in all sections that
+      restricts the folling entries to certain hosts.
 
     Multisite:
     * New nifty sidebar snapin "Speed-O-Meter"

@@ -31,6 +31,10 @@
     * Windows agent: new config variable "host" in all sections that
       restricts the folling entries to certain hosts.
 
+1.1.12p2:
+    Checks & Agents:
+    * FIX: mem.win: Default levels now works, check not always OK
+
     Multisite:
     * New nifty sidebar snapin "Speed-O-Meter"
     * FIX: Fixed encoding problem when opening dashboard

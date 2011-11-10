@@ -1,3 +1,7 @@
+1.1.12p2:
+    Multisite:
+    * FIX: Do not show WATO button in views if WATO is disabled
+
 1.1.12p1:
     Core, Setup, etc.:
     * FIX: fix aggregate_check_mk (Summary host agent status)

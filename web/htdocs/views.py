@@ -1570,7 +1570,7 @@ def view_linktitle(view):
 
 def show_context_links(thisview, active_filters):
     # Show button to WATO, if permissions allow this
-    if config.may("use_wato"):
+    if config.wato_enabled and config.may("use_wato"):
         html.begin_context_buttons()
         execute_hooks('buttons-begin')
         first = False

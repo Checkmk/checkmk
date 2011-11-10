@@ -41,6 +41,7 @@
     Checks & Agents:
     * FIX: mem.win: Default levels now works, check not always OK
     * FIX: blade_health: fix OID specification
+    * FIX: blade_bays: fix naming of item and man page
 
     Multisite:
     * FIX: Fixed encoding problem when opening dashboard

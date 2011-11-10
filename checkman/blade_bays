@@ -10,12 +10,9 @@ description:
  in a critical check result.
 
 item:
- Number of the bay (as string, not int).
-
-examples:
- checks += [
-  ( "hostabc", "blade_bays", "8", None)
- ]
+ A string with the format "PD{A} {B}" where {A} is the number
+ of the power domain (1 or 2) and {B} is the name of the bay
+ (e.g. {Midplane}).
 
 inventory:
  All bays with the state 1 (present and OK) are automatically 

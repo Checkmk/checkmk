@@ -35,6 +35,9 @@
     * extra_buttons can now register a function to gather the URL to link to
 
 1.1.12p2:
+    Core, Setup, etc.:
+    * FIX: fix handling of empty suboids
+
     Checks & Agents:
     * FIX: mem.win: Default levels now works, check not always OK
     * FIX: blade_health: fix OID specification

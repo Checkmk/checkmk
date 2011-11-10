@@ -40,6 +40,9 @@
     * New columns num_hosts and num_services in status table
     * New aggregation functions suminv and avginv (see Documentation)
 
+1.1.12p2:
+    * FIX: Do not show WATO button in views if WATO is disabled
+    * FIX: Remove WATO Folder filter if WATO is disabled
 
 1.1.12p1:
     Core, Setup, etc.:

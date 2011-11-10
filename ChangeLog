@@ -5,6 +5,7 @@
     Multisite:
     * FIX: Do not show WATO button in views if WATO is disabled
     * FIX: Remove WATO Folder filter if WATO is disabled
+    * FIX: Snapin 'Performance': fix text align for numbers
 
 1.1.12p1:
     Core, Setup, etc.:

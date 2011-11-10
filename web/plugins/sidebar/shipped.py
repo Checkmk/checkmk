@@ -617,7 +617,7 @@ table.performance {
     border-width: 1px;
 }
 table.performance td { padding: 0px; }
-table.Performance td.right { text-align: right; padding: 0px; }
+table.performance td.right { text-align: right; padding: 0px; }
 
 """ % (snapin_width - 2)
 }

@@ -1146,6 +1146,9 @@ def show_view(view, show_heading = False, show_buttons = True, show_footer = Tru
 
     # add ubiquitary_filters that are possible for this datasource
     for fn in ubiquitary_filters:
+        # Disable 'filename' filter, if WATO is disabled
+        if fn == "filename" and not config.wato_enabled:
+            continue
         filter = multisite_filters[fn]
         if not filter.info or filter.info in datasource["infos"]:
             show_filters.append(filter)
@@ -1552,6 +1555,9 @@ def view_title(view):
     title = view["title"] + " " + ", ".join(extra_titles)
 
     for fn in ubiquitary_filters:
+        # Disable 'filename' filter, if WATO is disabled
+        if fn == "filename" and not config.wato_enabled:
+            continue
         filt = multisite_filters[fn]
         heading = filt.heading_info(tablename)
         if heading:

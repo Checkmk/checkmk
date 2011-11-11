@@ -247,17 +247,24 @@ body.side {
     background-image: url("images/sidebar_bottom.png");
 }
 
-#side_footer div.button {
-    width: 75px;
+#side_footer ul.buttons {
     height: 20px;
     z-index: 20;
     position: absolute;
     top: 10px;
     left: 15px;
-    float: left;
+    margin: 0;
+    padding: 0;
 }
 
-#side_footer div.button a {
+#side_footer ul.buttons li {
+    list-style-type: none;
+    float: left;
+    display: inline;
+    margin-left: none;
+}
+
+#side_footer ul.buttons a {
     width: 75px;
     height: 17px;
     display: block;
@@ -271,8 +278,22 @@ body.side {
     margin: 0;
 }
 
-#side_footer div.button a:hover {
+#side_footer ul.buttons a:hover {
     background-image: url("images/sidebar_button_hi.png");
+}
+
+#side_footer ul.buttons a.logout {
+    width: 20px;
+    margin-left: 15px;
+    background-image: url("images/sidebar_logout_lo.png");
+}
+
+#side_footer ul.buttons a.logout:hover {
+    background-image: url("images/sidebar_logout_hi.png");
+}
+
+#side_footer div.buttons a {
+    float: left;
 }
 
 #side_footer div.copyright {

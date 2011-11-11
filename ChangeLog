@@ -33,6 +33,7 @@
 
     Multisite:
     * New nifty sidebar snapin "Speed-O-Meter"
+    * Implemented logout functionality in OMD environments
     * FIX: Fixed encoding problem when opening dashboard
     * FIX: Fixed styling of view header in older IE browsers
 

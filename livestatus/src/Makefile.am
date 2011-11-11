@@ -52,7 +52,12 @@ livestatus_so_SOURCES = \
 	ContactgroupsColumn.cc opids.cc auth.cc livechecking.c
 
 livecheck: livecheck.c strutil.cc
-	diet gcc -I.. -s -o $@ $^
+	@if type diet >/dev/null 2>&1 ; then \ 
+	    echo "You have no dietlibc install. We won't be able to create a static binary." ; \
+	    diet $(CC) $(CFLAGS) -I.. -s -o $@ $^ ; \
+        else \
+	    $(CC) $(CFLAGS) -I.. -s -o $@ $^ ; \
+        fi
 
 livestatus_so_CXXFLAGS = -I$(top_srcdir)/nagios -fPIC
 livestatus_so_CFLAGS   = $(livestatus_so_CXXFLAGS) 

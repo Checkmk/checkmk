@@ -28,6 +28,8 @@
 #include <sys/timeb.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <string.h>
+
 #include "strutil.h"
 
 int main(int argc, char **argv)
@@ -42,12 +44,13 @@ int main(int argc, char **argv)
 
     while (1) {
         write(1, "*", 1); // Signal Nagios that we are finished
-        if (NULL == fgets(host, sizeof(host), stdin)) {
+        if (NULL == fgets(host, sizeof(host), stdin)
+         || NULL == fgets(service, sizeof(service), stdin)
+         || NULL == fgets(latency, sizeof(latency), stdin)
+         || NULL == fgets(command, sizeof(command), stdin))
+        {
             exit(0);
         }
-        fgets(service, sizeof(service), stdin);
-        fgets(latency, sizeof(latency), stdin);
-        fgets(command, sizeof(command), stdin);
     
         int fd[2];
         pipe(fd);
@@ -113,7 +116,7 @@ int main(int argc, char **argv)
             ftime(&end);
             char template[256];
             snprintf(template, sizeof(template), "%s/cXXXXXX", check_result_path);
-            mktemp(template);
+            char *foo = mktemp(template);
             FILE *checkfile = fopen(template, "w");
             fprintf(checkfile, "host_name=%s", host);
             if (service[0] != '\n')

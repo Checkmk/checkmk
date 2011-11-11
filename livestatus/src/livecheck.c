@@ -32,15 +32,31 @@
 
 #include "strutil.h"
 
+pid_t g_pid;
+void alarm_handler(int);
+void term_handler(int);
+
+// This program must be called with two arguments:
+// 1. Path to check result directory
+// 2. timeout for host checks
+// 3. timeout for service checks
 int main(int argc, char **argv)
 { 
     char *check_result_path = argv[1];
+    int host_check_timeout = atoi(argv[2]);
+    int service_check_timeout = atoi(argv[3]);
+
     char host[256];
     char service[512];
     char latency[16];
     char command[1024]; 
     int pid;
     int check_result;
+
+    signal(SIGALRM, alarm_handler); // handler for check timeout
+    signal(SIGINT,  term_handler);
+    signal(SIGQUIT, term_handler);
+    signal(SIGTERM, term_handler);
 
     while (1) {
         write(1, "*", 1); // Signal Nagios that we are finished
@@ -51,6 +67,8 @@ int main(int argc, char **argv)
         {
             exit(0);
         }
+
+        int is_host_check = service[0] == '\n';
     
         int fd[2];
         pipe(fd);
@@ -76,6 +94,7 @@ int main(int argc, char **argv)
                 && NULL == strchr(command, '\'') 
                 && NULL == strchr(command, '>') 
                 && NULL == strchr(command, '<') 
+                && NULL == strchr(command, ';') 
                 && NULL == strchr(command, '|'))
             {
                 char *c = command;
@@ -99,19 +118,36 @@ int main(int argc, char **argv)
         }
 
         else {
-            char output[1024]; 
+            g_pid = pid;
+            unsigned timeout = is_host_check ? host_check_timeout : service_check_timeout;
+            if (timeout)
+                alarm(timeout);
+
+            char output[8192]; 
             int bytes_read = read(fd[0], output, sizeof(output));
             int ret;
             waitpid(pid, &ret, 0);
-            int return_code;
+            g_pid = 0;
+            alarm(0); // cancel timeout
 
-            if (WIFEXITED(ret))
-                return_code = WEXITSTATUS(ret);
-            else {
-                if (0 == bytes_read)
-                    sprintf(output, "Error executing %s\n", command);
-                return_code = 3;
+            int return_code;
+            if (WIFSIGNALED(ret)) {
+                int signum = WTERMSIG(ret);
+                if (signum == SIGKILL) {
+                    snprintf(output, sizeof(output), "(Check Timed Out After %d Seconds)\n", timeout);
+                    return_code = 3;
+                }
+                else {
+                    snprintf(output, sizeof(output), "(Check Plugin Died With Signal %d)\n", signum);
+                    return_code = 3; 
+                }
             }
+            else {
+                return_code = WEXITSTATUS(ret);
+                if (0 == bytes_read || output[0] == '\n')
+                    snprintf(output, sizeof(output), "(No output returned from plugin)\n");
+            }
+
             struct timeb end;
             ftime(&end);
             char template[256];
@@ -119,7 +155,7 @@ int main(int argc, char **argv)
             char *foo = mktemp(template);
             FILE *checkfile = fopen(template, "w");
             fprintf(checkfile, "host_name=%s", host);
-            if (service[0] != '\n')
+            if (!is_host_check)
                 fprintf(checkfile, "service_description=%s", service);
             fprintf(checkfile, 
                 "check_type=%d\n"
@@ -130,8 +166,8 @@ int main(int argc, char **argv)
                 "start_time=%d.%03u\n" 
                 "finish_time=%d.%03u\n"
                 "return_code=%d\n"                                                   
-                "output=%s\n", 
-                service[0] == '\n' ? 0 : 1,
+                "output=CL: %s\n", 
+                is_host_check ? 0 : 1,
                 latency,
                 (int)start.time,
                 start.millitm,
@@ -143,5 +179,22 @@ int main(int argc, char **argv)
             strcat(template, ".ok");
             close(creat(template, 0644));
         }
+    }
+}
+
+// Propagate signal to child, if we are killed
+void term_handler(int signum) 
+{
+    if (g_pid) {
+        kill(g_pid, signum);
+    }
+    exit(0);
+}
+
+// handle check timeout
+void alarm_handler(int signum)
+{
+    if (g_pid) {
+        kill(g_pid, SIGKILL);
     }
 }

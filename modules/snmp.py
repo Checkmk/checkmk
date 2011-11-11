@@ -121,10 +121,14 @@ def extract_end_oid(prefix, complete):
     return complete[len(prefix):].lstrip('.')
 
 # sort OID strings numerically
+def oid_to_intlist(oid):
+    if oid:
+        return map(int, oid.split('.'))
+    else:
+        return []
+
 def cmp_oids(o1, o2):
-    i1 = map(int, o1.split('.')) 
-    i2 = map(int, o2.split('.')) 
-    return cmp(i1, i2)
+    return cmp(oid_to_intlist(o1), oid_to_intlist(o2))
 
 def get_snmp_table(hostname, ip, oid_info):
     # oid_info is either ( oid, columns ) or

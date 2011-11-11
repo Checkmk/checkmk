@@ -22,19 +22,16 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef nagios_h
-#define nagios_h
+#ifndef _livechecking_h
+#define _livechecking_h
 
-#include "config.h"
+#include "nagios.h"
 
-#define NSCORE
-#include "nagios/objects.h"
-#include "nagios/nagios.h"
-#include "nagios/nebstructs.h"
-#include "nagios/neberrors.h"
-#include "nagios/broker.h"
-#include "nagios/nebmodules.h"
-#include "nagios/nebcallbacks.h"
+void init_livecheck();
+void deinit_livecheck();
+int broker_service_livecheck(int event_type __attribute__ ((__unused__)), void *data);
+int broker_host_livecheck(int event_type __attribute__ ((__unused__)), void *data);
+extern int g_num_livehelpers;
+extern int g_livecheck_enabled;
 
-#endif // nagios_h
-
+#endif // _livechecking_h

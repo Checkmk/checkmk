@@ -22,10 +22,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-bin_PROGRAMS = unixcat livecheck
+bin_PROGRAMS = unixcat
 unixcat_SOURCES = unixcat.c
 unixcat_LDADD = -lpthread
 
+pkglib_PROGRAMS = livecheck
 livecheck_SOURCES = livecheck.c strutil.cc
 
 pkglib_LIBRARIES = livestatus.so

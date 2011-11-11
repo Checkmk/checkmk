@@ -13,5 +13,6 @@ make -j 8
 
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 sudo install src/livestatus.o /omd/versions/default/lib/mk-livestatus/livestatus.o
+sudo install -m 755 src/livecheck /omd/versions/default/lib
 echo "$C files copied"
 sudo omd restart $SITE nagios

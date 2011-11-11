@@ -34,6 +34,12 @@
     * Added option to download "latest" snapshot
     * extra_buttons can now register a function to gather the URL to link to
 
+    Livestatus:
+    * Experimental feature: livecheck -> super fast active check execution
+      by making use of external helper processes. Set livecheck=PATH_TO_bin/livecheck
+      in nagios.cfg where you load Livestatus. Optional set num_livecheck_helpers=NUM
+      to set number of processes. Nagios will not fork() anymore for check exection.
+
 1.1.12p2:
     Core, Setup, etc.:
     * FIX: fix handling of empty suboids

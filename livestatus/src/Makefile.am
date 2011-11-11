@@ -22,9 +22,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-bin_PROGRAMS = unixcat
+bin_PROGRAMS = unixcat livecheck
 unixcat_SOURCES = unixcat.c
 unixcat_LDADD = -lpthread
+
+livecheck_SOURCES = livecheck.c strutil.cc
 
 pkglib_LIBRARIES = livestatus.so
 livestatus_so_SOURCES = \
@@ -47,7 +49,10 @@ livestatus_so_SOURCES = \
 	OffsetStringHostMacroColumn.cc StatsColumn.cc IntAggregator.cc CountAggregator.cc \
 	DoubleAggregator.cc AttributelistColumn.cc AttributelistFilter.cc \
 	global_counters.c  module.c  logger.c waittriggers.c TimeperiodsCache.cc pnp4nagios.cc \
-	ContactgroupsColumn.cc opids.cc auth.cc
+	ContactgroupsColumn.cc opids.cc auth.cc livechecking.c
+
+livecheck: livecheck.c strutil.cc
+	diet gcc -I.. -s -o $@ $^
 
 livestatus_so_CXXFLAGS = -I$(top_srcdir)/nagios -fPIC
 livestatus_so_CFLAGS   = $(livestatus_so_CXXFLAGS) 

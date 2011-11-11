@@ -4,3 +4,4 @@
 .deps
 *.so
 Makefile.in
+livecheck

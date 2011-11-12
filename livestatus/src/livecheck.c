@@ -26,6 +26,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/timeb.h>
+#include <netinet/ip.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <string.h>
@@ -37,6 +38,7 @@ void alarm_handler(int);
 void term_handler(int);
 char **parse_into_arguments(char *command);
 int check_icmp(int argc, char **argv, char *output);
+int icmp_sock = -1;
 
 // This program must be called with two arguments:
 // 1. Path to check result directory
@@ -60,6 +62,12 @@ int main(int argc, char **argv)
     signal(SIGQUIT, term_handler);
     signal(SIGTERM, term_handler);
 
+    // Setup raw socket for inline check_icmp if we are root
+    if (geteuid() == 0) {
+        icmp_sock = socket(PF_INET, SOCK_RAW, IPPROTO_ICMP);
+        setuid(getuid()); /* Drop root priviledges */
+    }
+
     while (1) {
         write(1, "*", 1); // Signal Nagios that we are finished
         if (NULL == fgets(host, sizeof(host), stdin)
@@ -78,8 +86,9 @@ int main(int argc, char **argv)
 
         // Optimization(1):
         // If it's check_icmp, we use our inline version
-        // of that :-)
-        if (strstr(command, "/check_icmp ")) {
+        // of that. But only if we have (had) root priviledges
+        // and had been able to create a raw socket
+        if (icmp_sock != -1 && strstr(command, "/check_icmp ")) {
             char **arguments = parse_into_arguments(command);
             int arg_c = 0;
             while (arguments[arg_c])

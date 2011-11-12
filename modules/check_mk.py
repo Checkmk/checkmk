@@ -2163,14 +2163,20 @@ def precompile_hostcheck(hostname):
     if opt_verbose:
         sys.stderr.write("%s%s%-16s%s:" % (tty_bold, tty_blue, hostname, tty_normal))
 
+    compiled_filename = precompiled_hostchecks_dir + "/" + hostname
+    source_filename = compiled_filename + ".py"
     try:
         os.remove(compiled_filename)
         os.remove(source_filename)
     except:
         pass
 
-    compiled_filename = precompiled_hostchecks_dir + "/" + hostname
-    source_filename = compiled_filename + ".py"
+    # check table, enriched with addition precompiled information.
+    check_table = get_precompiled_check_table(hostname)
+    if len(check_table) == 0:
+        if opt_verbose:
+            sys.stderr.write("(no Check_MK checks)\n")
+            return
 
     output = file(source_filename + ".new", "w")
     output.write("#!/usr/bin/python\n")
@@ -2214,8 +2220,6 @@ no_inventory_possible = None
                  ]:
         output.write("%s = %r\n" % (var, globals()[var]))
 
-    # check table, enriched with addition precompiled information.
-    check_table = get_precompiled_check_table(hostname)
     output.write("\n# Checks for %s\n\n" % hostname)
     output.write("def get_sorted_check_table(hostname):\n    return %r\n\n" % check_table)
 

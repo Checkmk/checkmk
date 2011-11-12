@@ -35,6 +35,8 @@
 pid_t g_pid;
 void alarm_handler(int);
 void term_handler(int);
+char **parse_into_arguments(char *command);
+int check_icmp(int argc, char **argv, char *output);
 
 // This program must be called with two arguments:
 // 1. Path to check result directory
@@ -69,117 +71,138 @@ int main(int argc, char **argv)
         }
 
         int is_host_check = service[0] == '\n';
-    
-        int fd[2];
-        pipe(fd);
-
-        pid = fork();
         struct timeb start;
         ftime(&start);
+        char output[8192]; 
+        int return_code;
 
-        if (pid == 0) {
-            close(fd[0]);   // close read end
-            dup2(fd[1], 1); // point stdout into pipe  
-            dup2(fd[1], 2); // also point stderr into pipe
-            int f = open("/dev/null", O_RDONLY);
-            dup2(f, 0);
+        // Optimization(1):
+        // If it's check_icmp, we use our inline version
+        // of that :-)
+        if (strstr(command, "/check_icmp ")) {
+            char **arguments = parse_into_arguments(command);
+            int arg_c = 0;
+            while (arguments[arg_c])
+                arg_c++;
 
-            // Optimization:
-            // if Command begins / and command line does not
-            // contain any ', /, < or >, split by spaces and
-            // directly call exec.
-            // This save two fork()s and one shell.
-            if (command[0] == '/'
-                && NULL == strchr(command, '"') 
-                && NULL == strchr(command, '\'') 
-                && NULL == strchr(command, '>') 
-                && NULL == strchr(command, '<') 
-                && NULL == strchr(command, ';') 
-                && NULL == strchr(command, '|'))
-            {
-                char *c = command;
-                char *arguments[128];
-                char *executable = next_field(&c);
-                arguments[0] = executable;
-                unsigned a = 1;
-                while (a < 127) {
-                    char *arg = next_field(&c);
-                    arguments[a++] = arg;
-                    if (!arg) break;
-                }
-                execv(executable, arguments);
-            }
-            else {
-                int ret = system(command);
-                if (WIFEXITED(ret))
-                    exit(WEXITSTATUS(ret));
-            }
-            exit(127);
+            return_code = check_icmp(arg_c, arguments, output);
+            FILE *x = fopen("/tmp/x.log", "a+");
+            fprintf(x, "RETURN: %d '%s'\n", return_code, output);
+            fclose(x);
         }
-
         else {
-            g_pid = pid;
-            unsigned timeout = is_host_check ? host_check_timeout : service_check_timeout;
-            if (timeout)
-                alarm(timeout);
+            int fd[2];
+            pipe(fd);
 
-            char output[8192]; 
-            int bytes_read = read(fd[0], output, sizeof(output));
-            int ret;
-            waitpid(pid, &ret, 0);
-            g_pid = 0;
-            alarm(0); // cancel timeout
+            pid = fork();
 
-            int return_code;
-            if (WIFSIGNALED(ret)) {
-                int signum = WTERMSIG(ret);
-                if (signum == SIGKILL) {
-                    snprintf(output, sizeof(output), "(Check Timed Out After %d Seconds)\n", timeout);
-                    return_code = 3;
+            if (pid == 0) {
+                close(fd[0]);   // close read end
+                dup2(fd[1], 1); // point stdout into pipe  
+                dup2(fd[1], 2); // also point stderr into pipe
+                int f = open("/dev/null", O_RDONLY);
+                dup2(f, 0);
+
+                // Optimization(2):
+                // if Command begins / and command line does not
+                // contain any ', /, < or >, split by spaces and
+                // directly call exec.
+                // This save two fork()s and one shell.
+                if (command[0] == '/'
+                    && NULL == strchr(command, '"') 
+                    && NULL == strchr(command, '\'') 
+                    && NULL == strchr(command, '>') 
+                    && NULL == strchr(command, '<') 
+                    && NULL == strchr(command, ';') 
+                    && NULL == strchr(command, '|'))
+                {
+                    char **arguments = parse_into_arguments(command);
+                    execv(arguments[0], arguments);
                 }
                 else {
-                    snprintf(output, sizeof(output), "(Check Plugin Died With Signal %d)\n", signum);
-                    return_code = 3; 
+                    int ret = system(command);
+                    if (WIFEXITED(ret))
+                        exit(WEXITSTATUS(ret));
                 }
-            }
-            else {
-                return_code = WEXITSTATUS(ret);
-                if (0 == bytes_read || output[0] == '\n')
-                    snprintf(output, sizeof(output), "(No output returned from plugin)\n");
+                exit(127);
             }
 
-            struct timeb end;
-            ftime(&end);
-            char template[256];
-            snprintf(template, sizeof(template), "%s/cXXXXXX", check_result_path);
-            char *foo = mktemp(template);
-            FILE *checkfile = fopen(template, "w");
-            fprintf(checkfile, "host_name=%s", host);
-            if (!is_host_check)
-                fprintf(checkfile, "service_description=%s", service);
-            fprintf(checkfile, 
-                "check_type=%d\n"
-                "check_options=0\n"
-                "scheduled_check=1\n"
-                "reschedule_check=1\n"
-                "latency=%s"
-                "start_time=%d.%03u\n" 
-                "finish_time=%d.%03u\n"
-                "return_code=%d\n"                                                   
-                "output=CL: %s\n", 
-                is_host_check ? 0 : 1,
-                latency,
-                (int)start.time,
-                start.millitm,
-                (int)end.time,
-                end.millitm,
-                return_code,
-                output);
-            fclose(checkfile);
-            strcat(template, ".ok");
-            close(creat(template, 0644));
+            else {
+                g_pid = pid;
+                unsigned timeout = is_host_check ? host_check_timeout : service_check_timeout;
+                if (timeout)
+                    alarm(timeout);
+
+                int bytes_read = read(fd[0], output, sizeof(output));
+                int ret;
+                waitpid(pid, &ret, 0);
+                g_pid = 0;
+                alarm(0); // cancel timeout
+
+                if (WIFSIGNALED(ret)) {
+                    int signum = WTERMSIG(ret);
+                    if (signum == SIGKILL) {
+                        snprintf(output, sizeof(output), "(Check Timed Out After %d Seconds)\n", timeout);
+                        return_code = 3;
+                    }
+                    else {
+                        snprintf(output, sizeof(output), "(Check Plugin Died With Signal %d)\n", signum);
+                        return_code = 3; 
+                    }
+                }
+                else {
+                    return_code = WEXITSTATUS(ret);
+                    if (0 == bytes_read || output[0] == '\n')
+                        snprintf(output, sizeof(output), "(No output returned from plugin)\n");
+                }
+            }
         }
+        struct timeb end;
+        ftime(&end);
+        char template[256];
+        snprintf(template, sizeof(template), "%s/cXXXXXX", check_result_path);
+        char *foo = mktemp(template);
+        FILE *checkfile = fopen(template, "w");
+        fprintf(checkfile, "host_name=%s", host);
+        if (!is_host_check)
+            fprintf(checkfile, "service_description=%s", service);
+        fprintf(checkfile, 
+            "check_type=%d\n"
+            "check_options=0\n"
+            "scheduled_check=1\n"
+            "reschedule_check=1\n"
+            "latency=%s"
+            "start_time=%d.%03u\n" 
+            "finish_time=%d.%03u\n"
+            "return_code=%d\n"                                                   
+            "output=%s\n", 
+            is_host_check ? 0 : 1,
+            latency,
+            (int)start.time,
+            start.millitm,
+            (int)end.time,
+            end.millitm,
+            return_code,
+            output);
+        fclose(checkfile);
+        strcat(template, ".ok");
+        close(creat(template, 0644));
     }
+}
+
+char **parse_into_arguments(char *command)
+{
+    static char *arguments[128];
+    char *c = command;
+    char *executable = next_field(&c);
+    arguments[0] = executable;
+    unsigned a = 1;
+    while (a < 127) {
+        char *arg = next_field(&c);
+        arguments[a++] = arg;
+        if (!arg) break;
+    }
+    return arguments;
 }
 
 // Propagate signal to child, if we are killed

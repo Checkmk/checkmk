@@ -27,7 +27,7 @@ unixcat_SOURCES = unixcat.c
 unixcat_LDADD = -lpthread
 
 pkglib_PROGRAMS = livecheck
-livecheck_SOURCES = livecheck.c strutil.cc
+livecheck_SOURCES = livecheck.c strutil.cc check_icmp.c
 
 pkglib_LIBRARIES = livestatus.so
 livestatus_so_SOURCES = \
@@ -52,13 +52,12 @@ livestatus_so_SOURCES = \
 	global_counters.c  module.c  logger.c waittriggers.c TimeperiodsCache.cc pnp4nagios.cc \
 	ContactgroupsColumn.cc opids.cc auth.cc livechecking.c
 
-livecheck: livecheck.c strutil.cc
-	@if type diet >/dev/null 2>&1 ; then \ 
-	    echo "You have no dietlibc install. We won't be able to create a static binary." ; \
-	    diet $(CC) $(CFLAGS) -I.. -s -o $@ $^ ; \
-        else \
-	    $(CC) $(CFLAGS) -I.. -s -o $@ $^ ; \
-        fi
+# livecheck: livecheck.c strutil.cc check_icmp.c # 	@if false && type diet >/dev/null 2>&1 ; then \
+# 	    $(CC) $(CFLAGS) -I.. -s -o $@ $^ ; \
+#         else \
+# 	    echo "You have no dietlibc install. We won't be able to create a static binary." ; \
+# 	    diet $(CC) $(CFLAGS) -I.. -s -o $@ $^ ; \
+#         fi
 
 livestatus_so_CXXFLAGS = -I$(top_srcdir)/nagios -fPIC
 livestatus_so_CFLAGS   = $(livestatus_so_CXXFLAGS) 

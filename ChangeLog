@@ -44,6 +44,7 @@
 1.1.12p2:
     Core, Setup, etc.:
     * FIX: fix handling of empty suboids
+    * FIX: do not create precomiled checks for host without Check_MK services
 
     Checks & Agents:
     * FIX: mem.win: Default levels now works, check not always OK

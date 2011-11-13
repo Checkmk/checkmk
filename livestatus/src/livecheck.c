@@ -46,6 +46,10 @@ int icmp_sock = -1;
 // 3. timeout for service checks
 int main(int argc, char **argv)
 { 
+    if (argc != 4) {
+        fprintf(stderr, "Usage: %s CHECKRESULTPATH HOST_CHECK_TIMEOUT SERVICE_CHECK_TIMEOUT\n", argv[0]);
+        exit(1);
+    }
     char *check_result_path = argv[1];
     int host_check_timeout = atoi(argv[2]);
     int service_check_timeout = atoi(argv[3]);
@@ -93,11 +97,7 @@ int main(int argc, char **argv)
             int arg_c = 0;
             while (arguments[arg_c])
                 arg_c++;
-
             return_code = check_icmp(arg_c, arguments, output);
-            FILE *x = fopen("/tmp/x.log", "a+");
-            fprintf(x, "RETURN: %d '%s'\n", return_code, output);
-            fclose(x);
         }
         else {
             int fd[2];

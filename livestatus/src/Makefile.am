@@ -52,12 +52,10 @@ livestatus_so_SOURCES = \
 	global_counters.c  module.c  logger.c waittriggers.c TimeperiodsCache.cc pnp4nagios.cc \
 	ContactgroupsColumn.cc opids.cc auth.cc livechecking.c
 
-# livecheck: livecheck.c strutil.cc check_icmp.c # 	@if false && type diet >/dev/null 2>&1 ; then \
-# 	    $(CC) $(CFLAGS) -I.. -s -o $@ $^ ; \
-#         else \
-# 	    echo "You have no dietlibc install. We won't be able to create a static binary." ; \
-# 	    diet $(CC) $(CFLAGS) -I.. -s -o $@ $^ ; \
-#         fi
+if HAVE_DIET
+livecheck: livecheck.c strutil.cc check_icmp.c 
+	diet -v $(CC) $(CFLAGS) $(LDFLAGS) -I.. -s -o $@ $^
+endif
 
 livestatus_so_CXXFLAGS = -I$(top_srcdir)/nagios -fPIC
 livestatus_so_CFLAGS   = $(livestatus_so_CXXFLAGS) 

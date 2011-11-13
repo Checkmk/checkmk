@@ -1,59 +1,52 @@
-/*****************************************************************************
-* 
-* Nagios check_icmp plugin
-* 
-* License: GPL
-* Copyright (c) 2005-2008 Nagios Plugins Development Team
-* Original Author : Andreas Ericsson <ae@op5.se>
-* 
-* Description:
-* 
-* This file contains the check_icmp plugin
-* 
-* Relevant RFC's: 792 (ICMP), 791 (IP)
-* 
-* This program was modeled somewhat after the check_icmp program,
-* which was in turn a hack of fping (www.fping.org) but has been
-* completely rewritten since to generate higher precision rta values,
-* and support several different modes as well as setting ttl to control.
-* redundant routes. The only remainders of fping is currently a few
-* function names.
-* 
-* 
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-* 
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-* 
-* You should have received a copy of the GNU General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-* 
-* 
-*****************************************************************************/
+// +------------------------------------------------------------------+
+// |             ____ _               _        __  __ _  __           |
+// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+// |                                                                  |
+// | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+// +------------------------------------------------------------------+
+//
+// This file is part of Check_MK.
+// The official homepage is at http://mathias-kettner.de/check_mk.
+//
+// check_mk is free software;  you can redistribute it and/or modify it
+// under the  terms of the  GNU General Public License  as published by
+// the Free Software Foundation in version 2.  check_mk is  distributed
+// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+// ails.  You should have  received  a copy of the  GNU  General Public
+// License along with GNU Make; see the file  COPYING.  If  not,  write
+// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+// Boston, MA 02110-1301 USA.
 
-/* --------------------------------------------------------------------------
-   This version of check_icmp has a modified main() function. It is used as 
-   inline code by livecheck (in order to avoid fork()/exec()
-   ------------------------------------------------------------------------ */
+/* --------------------------------------------------------------------
+   This version of check_icmp has been derived from Andreas Ericsson's
+   check_icmp plugin from the Nagios Plugins, which has again been 
+   derived from another "check_icmp" program, that again was a hack of
+   fping. 
 
-#include <netinet/ip_icmp.h>
-/* progname may change */
-/* char *progname = "check_icmp"; */
-char *progname;
-const char *copyright = "2005-2008";
-const char *email = "nagiosplug-devel@lists.sourceforge.net";
+   We which to thank all of those authors for their work, which saved
+   me a lot of time. Long live open source!
+ -------------------------------------------------------------------- */
 
 #define DEFAULT_SOCKET_TIMEOUT 10
 #define STATE_OK 0
 #define STATE_WARNING 1
 #define STATE_CRITICAL 2
 
+#define _GNU_SOURCE
+#define __USE_BSD
+
+#include <stdint.h>
+
+#ifndef u_int
 typedef unsigned int u_int;
+typedef unsigned char u_char;
+typedef unsigned short u_short;
+#endif
 
 #if HAVE_SYS_SOCKIO_H
 #include <sys/sockio.h>
@@ -72,19 +65,19 @@ typedef unsigned int u_int;
 #include <netdb.h>
 #include <sys/socket.h>
 #include <net/if.h>
+#include "/usr/include/netinet/ip_icmp.h"
+// #include <netinet/ip_icmp.h>
 #include <netinet/in_systm.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <arpa/inet.h>
 #include <signal.h>
 #include <float.h>
-#include <stdint.h>
-#include <setjmp.h>
 
 // Stuff needed for livecheck
+#include <setjmp.h>
 static jmp_buf exit_jmp;
 static int exit_code;
-static FILE *g_output = 0;
 
 /** sometimes undefined system macros (quite a few, actually) **/
 #ifndef MAXTTL
@@ -153,22 +146,6 @@ typedef struct icmp_ping_data {
 	unsigned short ping_id;
 } icmp_ping_data;
 
-/* the different modes of this program are as follows:
- * MODE_RTA: send all packets no matter what (mimic check_icmp and check_ping)
- * MODE_HOSTCHECK: Return immediately upon any sign of life
- *                 In addition, sends packets to ALL addresses assigned
- *                 to this host (as returned by gethostbyname() or
- *                 gethostbyaddr() and expects one host only to be checked at
- *                 a time.  Therefore, any packet response what so ever will
- *                 count as a sign of life, even when received outside
- *                 crit.rta limit. Do not misspell any additional IP's.
- * MODE_ALL:  Requires packets from ALL requested IP to return OK (default).
- * MODE_ICMP: implement something similar to check_icmp.
- */
-#define MODE_RTA 0
-#define MODE_HOSTCHECK 1
-#define MODE_ALL 2
-#define MODE_ICMP 3
 
 
 #define MIN_PING_DATA_SIZE sizeof(struct icmp_ping_data)
@@ -210,14 +187,12 @@ extern char **environ;
 /** global variables **/
 static struct rta_host **table, *cursor, *list;
 static threshold crit = {80, 500000}, warn = {40, 200000};
-static int mode, timeout = 10;
+static int timeout = 10;
 static unsigned short icmp_data_size = DEFAULT_PING_DATA_SIZE;
 static unsigned short icmp_pkt_size = DEFAULT_PING_DATA_SIZE + ICMP_MINLEN;
 
 static unsigned int icmp_sent = 0, icmp_recv = 0, icmp_lost = 0;
-#define icmp_pkts_en_route (icmp_sent - (icmp_recv + icmp_lost))
 static unsigned short targets_down = 0, targets = 0, packets = 0;
-#define targets_alive (targets - targets_down)
 static unsigned int retry_interval, pkt_interval, target_interval;
 static int status = STATE_OK;
 extern int icmp_sock;
@@ -231,51 +206,56 @@ static int min_hosts_alive = -1;
 float pkt_backoff_factor = 1.5;
 float target_backoff_factor = 1.5;
 
+#define targets_alive (targets - targets_down)
+#define icmp_pkts_en_route (icmp_sent - (icmp_recv + icmp_lost))
+
+char *g_output_buffer;
+int g_output_buffer_size;
+char *g_output_pointer;
+
 void init_global_variables()
 {
- crit.pl = 80;
- crit.rta = 500000;
- warn.pl = 40;
- warn.rta = 200000; 
- timeout = 10;
- icmp_data_size = DEFAULT_PING_DATA_SIZE;
- icmp_pkt_size = DEFAULT_PING_DATA_SIZE + ICMP_MINLEN;
-
- icmp_sent = 0;
- icmp_recv = 0;
- icmp_lost = 0;
- targets_down = 0;
- targets = 0;
- packets = 0;
- status = STATE_OK;
- max_completion_time = 0;
- ttl = 0;
- warn_down = 1;
- crit_down = 1;
- min_hosts_alive = -1;
- pkt_backoff_factor = 1.5;
- target_backoff_factor = 1.5;
+    crit.pl = 80;
+    crit.rta = 500000;
+    warn.pl = 40;
+    warn.rta = 200000; 
+    timeout = 10;
+    icmp_data_size = DEFAULT_PING_DATA_SIZE;
+    icmp_pkt_size = DEFAULT_PING_DATA_SIZE + ICMP_MINLEN;
+   
+    icmp_sent = 0;
+    icmp_recv = 0;
+    icmp_lost = 0;
+    targets_down = 0;
+    targets = 0;
+    packets = 0;
+    status = STATE_OK;
+    max_completion_time = 0;
+    ttl = 0;
+    warn_down = 1;
+    crit_down = 1;
+    min_hosts_alive = -1;
+    pkt_backoff_factor = 1.5;
+    target_backoff_factor = 1.5;
 }
 
-/** code start **/
-static void
-crash(const char *fmt, ...)
+void do_output(int crash, char *format, ...)
 {
-	va_list ap;
-
-	fprintf(g_output, "%s: ", progname);
-
-	va_start(ap, fmt);
-	vfprintf(g_output, fmt, ap);
-	va_end(ap);
-
-	if(errno) fprintf(g_output, ": %s", strerror(errno));
-	fputs("", g_output);
-
+    va_list ap;
+    va_start(ap, format);
+    int place_left = g_output_pointer - g_output_buffer + g_output_buffer_size;
+    g_output_pointer += vsnprintf(g_output_pointer, place_left, format, ap);
+    va_end(ap);
+    *g_output_pointer = 0;
+    if (crash) {
         exit_code = 3;
         longjmp(exit_jmp, 1);
+    }
 }
-
+void do_output_char(char c)
+{
+    *g_output_pointer++ = c;
+}
 
 static const char *
 get_icmp_error_msg(unsigned char icmp_type, unsigned char icmp_code)
@@ -396,194 +376,168 @@ handle_random_icmp(unsigned char *packet, struct sockaddr_in *addr)
 
 
 /* This was the main() function of the original check_icmp. */
-int check_icmp(int argc, char **argv, char *output)
+int check_icmp(int argc, char **argv, char *output, int size)
 {       
-        init_global_variables();
+    init_global_variables();
 
-        /* Fake output into memory */
-        g_output = fmemopen(output, 8192, "w");  
+    g_output_buffer = output;
+    g_output_buffer_size = size;
+    g_output_pointer = output;
 
-        exit_code = 3;
-        if (setjmp(exit_jmp)) {
-            fclose(g_output);
-            return exit_code;
-        }
+    exit_code = 3;
+    if (setjmp(exit_jmp)) {
+        return exit_code;
+    }
 
-	int i;
-	char *ptr;
-	long int arg;
-	int icmp_sockerrno;
-	int result;
-	struct rta_host *host;
+    int i;
+    char *ptr;
+    long int arg;
+    int icmp_sockerrno;
+    int result;
+    struct rta_host *host;
 
-	/* we only need to be setsuid when we get the sockets, so do
-	 * that before pointer magic (esp. on network data) */
-	icmp_sockerrno = 0;
+    /* we only need to be setsuid when we get the sockets, so do
+     * that before pointer magic (esp. on network data) */
+    icmp_sockerrno = 0;
 
-	/* POSIXLY_CORRECT might break things, so unset it (the portable way) */
-	environ = NULL;
+    /* POSIXLY_CORRECT might break things, so unset it (the portable way) */
+    environ = NULL;
 
-	/* use the pid to mark packets as ours */
-	/* Some systems have 32-bit pid_t so mask off only 16 bits */
-	pid = getpid() & 0xffff;
-	/* fprintf(g_output, "pid = %u\n", pid); */
+    /* use the pid to mark packets as ours */
+    /* Some systems have 32-bit pid_t so mask off only 16 bits */
+    pid = getpid() & 0xffff;
 
-	/* get calling name the old-fashioned way for portability instead
-	 * of relying on the glibc-ism __progname */
-	ptr = strrchr(argv[0], '/');
-	if(ptr) progname = &ptr[1];
-	else progname = argv[0];
+    cursor = list = NULL;
+    table = NULL;
 
-	/* now set defaults. Use progname to set them initially (allows for
-	 * superfast check_host program when target host is up */
-	cursor = list = NULL;
-	table = NULL;
+    crit.rta = 500000;
+    crit.pl = 80;
+    warn.rta = 200000;
+    warn.pl = 40;
+    pkt_interval = 80000;  /* 80 msec packet interval by default */
+    packets = 5;
 
-	mode = MODE_RTA;
-	crit.rta = 500000;
-	crit.pl = 80;
-	warn.rta = 200000;
-	warn.pl = 40;
-	pkt_interval = 80000;  /* 80 msec packet interval by default */
-	packets = 5;
 
-	if(!strcmp(progname, "check_icmp") || !strcmp(progname, "check_ping")) {
-		mode = MODE_ICMP;
-	}
-	else if(!strcmp(progname, "check_host")) {
-		mode = MODE_HOSTCHECK;
-		pkt_interval = 1000000;
-		packets = 5;
-		crit.rta = warn.rta = 1000000;
-		crit.pl = warn.pl = 100;
-	}
-	else if(!strcmp(progname, "check_rta_multi")) {
-		mode = MODE_ALL;
-		target_interval = 0;
-		pkt_interval = 50000;
-		packets = 5;
-	}
+    /* parse the arguments */
+    for(i = 1; i < argc; i++) {
+    	while((arg = getopt(argc, argv, "w:c:n:p:t:H:s:i:b:I:l:m:")) != EOF) {
+    		long size;
+    		switch(arg) {
+    		case 'b':
+    			size = strtol(optarg,NULL,0);
+    			if (size >= (sizeof(struct icmp) + sizeof(struct icmp_ping_data)) &&
+    			    size < MAX_PING_DATA) {
+    				icmp_data_size = size;
+    				icmp_pkt_size = size + ICMP_MINLEN;
+    			} 
+                            break;
+    		case 'i':
+    			pkt_interval = get_timevar(optarg);
+    			break;
+    		case 'I':
+    			target_interval = get_timevar(optarg);
+    			break;
+    		case 'w':
+    			get_threshold(optarg, &warn);
+    			break;
+    		case 'c':
+    			get_threshold(optarg, &crit);
+    			break;
+    		case 'n':
+    		case 'p':
+    			packets = strtoul(optarg, NULL, 0);
+    			break;
+    		case 't':
+    			timeout = strtoul(optarg, NULL, 0);
+    			if(!timeout) timeout = 10;
+    			break;
+    		case 'H':
+    			add_target(optarg);
+    			break;
+    		case 'l':
+    			ttl = (unsigned char)strtoul(optarg, NULL, 0);
+    			break;
+    		case 'm':
+    			min_hosts_alive = (int)strtoul(optarg, NULL, 0);
+    			break;
+    		case 'd': /* implement later, for cluster checks */
+    			warn_down = (unsigned char)strtoul(optarg, &ptr, 0);
+    			if(ptr) {
+    				crit_down = (unsigned char)strtoul(ptr + 1, NULL, 0);
+    			}
+    			break;
+    		case 's': /* specify source IP address */
+    			set_source_ip(optarg);
+    			break;
+    		}
+    	}
+    }
 
-	/* parse the arguments */
-	for(i = 1; i < argc; i++) {
-		while((arg = getopt(argc, argv, "w:c:n:p:t:H:s:i:b:I:l:m:")) != EOF) {
-			long size;
-			switch(arg) {
-			case 'b':
-				size = strtol(optarg,NULL,0);
-				if (size >= (sizeof(struct icmp) + sizeof(struct icmp_ping_data)) &&
-				    size < MAX_PING_DATA) {
-					icmp_data_size = size;
-					icmp_pkt_size = size + ICMP_MINLEN;
-				} 
-                                break;
-			case 'i':
-				pkt_interval = get_timevar(optarg);
-				break;
-			case 'I':
-				target_interval = get_timevar(optarg);
-				break;
-			case 'w':
-				get_threshold(optarg, &warn);
-				break;
-			case 'c':
-				get_threshold(optarg, &crit);
-				break;
-			case 'n':
-			case 'p':
-				packets = strtoul(optarg, NULL, 0);
-				break;
-			case 't':
-				timeout = strtoul(optarg, NULL, 0);
-				if(!timeout) timeout = 10;
-				break;
-			case 'H':
-				add_target(optarg);
-				break;
-			case 'l':
-				ttl = (unsigned char)strtoul(optarg, NULL, 0);
-				break;
-			case 'm':
-				min_hosts_alive = (int)strtoul(optarg, NULL, 0);
-				break;
-			case 'd': /* implement later, for cluster checks */
-				warn_down = (unsigned char)strtoul(optarg, &ptr, 0);
-				if(ptr) {
-					crit_down = (unsigned char)strtoul(ptr + 1, NULL, 0);
-				}
-				break;
-			case 's': /* specify source IP address */
-				set_source_ip(optarg);
-				break;
-			}
-		}
-	}
+    argv = &argv[optind];
+    while(*argv) {
+    	add_target(*argv);
+    	argv++;
+    }
+    if(!targets) {
+    	errno = 0;
+    	do_output(1, "No hosts to check");
+            exit_code = 3;
+            longjmp(exit_jmp, 1);
+    }
 
-	argv = &argv[optind];
-	while(*argv) {
-		add_target(*argv);
-		argv++;
-	}
-	if(!targets) {
-		errno = 0;
-		crash("No hosts to check");
-                exit_code = 3;
-                longjmp(exit_jmp, 1);
-	}
+    if(!ttl) ttl = 64;
 
-	if(!ttl) ttl = 64;
+    if(icmp_sock) {
+    	result = setsockopt(icmp_sock, SOL_IP, IP_TTL, &ttl, sizeof(ttl));
+    }
 
-	if(icmp_sock) {
-		result = setsockopt(icmp_sock, SOL_IP, IP_TTL, &ttl, sizeof(ttl));
-	}
+    /* stupid users should be able to give whatever thresholds they want
+     * (nothing will break if they do), but some anal plugin maintainer
+     * will probably add some printf() thing here later, so it might be
+     * best to at least show them where to do it. ;) */
+    if(warn.pl > crit.pl) warn.pl = crit.pl;
+    if(warn.rta > crit.rta) warn.rta = crit.rta;
+    if(warn_down > crit_down) crit_down = warn_down;
 
-	/* stupid users should be able to give whatever thresholds they want
-	 * (nothing will break if they do), but some anal plugin maintainer
-	 * will probably add some printf() thing here later, so it might be
-	 * best to at least show them where to do it. ;) */
-	if(warn.pl > crit.pl) warn.pl = crit.pl;
-	if(warn.rta > crit.rta) warn.rta = crit.rta;
-	if(warn_down > crit_down) crit_down = warn_down;
+    signal(SIGINT, finish);
+    signal(SIGHUP, finish);
+    signal(SIGTERM, finish);
+    signal(SIGALRM, finish);
+    alarm(timeout);
 
-	signal(SIGINT, finish);
-	signal(SIGHUP, finish);
-	signal(SIGTERM, finish);
-	signal(SIGALRM, finish);
-	alarm(timeout);
+    /* make sure we don't wait any longer than necessary */
+    gettimeofday(&prog_start, &tz);
+    max_completion_time =
+    	((targets * packets * pkt_interval) + (targets * target_interval)) +
+    	(targets * packets * crit.rta) + crit.rta;
 
-	/* make sure we don't wait any longer than necessary */
-	gettimeofday(&prog_start, &tz);
-	max_completion_time =
-		((targets * packets * pkt_interval) + (targets * target_interval)) +
-		(targets * packets * crit.rta) + crit.rta;
+    if(packets > 20) {
+    	errno = 0;
+    	do_output(1, "packets is > 20 (%d)", packets);
+    }
 
-	if(packets > 20) {
-		errno = 0;
-		crash("packets is > 20 (%d)", packets);
-	}
+    if(min_hosts_alive < -1) {
+    	errno = 0;
+    	do_output(1, "minimum alive hosts is negative (%i)", min_hosts_alive);
+    }
 
-	if(min_hosts_alive < -1) {
-		errno = 0;
-		crash("minimum alive hosts is negative (%i)", min_hosts_alive);
-	}
+    host = list;
+    table = malloc(sizeof(struct rta_host **) * (argc - 1));
+    i = 0;
+    while(host) {
+    	host->id = i*packets;
+    	table[i] = host;
+    	host = host->next;
+    	i++;
+    }
 
-	host = list;
-	table = malloc(sizeof(struct rta_host **) * (argc - 1));
-	i = 0;
-	while(host) {
-		host->id = i*packets;
-		table[i] = host;
-		host = host->next;
-		i++;
-	}
+    run_checks();
 
-	run_checks();
+    errno = 0;
+    finish(0);
 
-	errno = 0;
-	finish(0);
-
-        exit_code = 0;
-        longjmp(exit_jmp, 1);
+    exit_code = 0;
+    longjmp(exit_jmp, 1);
 }
 
 static void
@@ -654,8 +608,7 @@ wait_for_reply(int sock, u_int t)
 
 		/* wrap up if all targets are declared dead */
 		if(!targets_alive ||
-		   get_timevaldiff(&prog_start, NULL) >= max_completion_time ||
-		   (mode == MODE_HOSTCHECK && targets_down))
+		   get_timevaldiff(&prog_start, NULL) >= max_completion_time)
 		{
 			finish(0);
 		}
@@ -683,7 +636,7 @@ wait_for_reply(int sock, u_int t)
 /* #endif */
 
 		if(n < (hlen + ICMP_MINLEN)) {
-			crash("received packet too short for ICMP (%d bytes, expected %d) from %s\n",
+			do_output(1, "received packet too short for ICMP (%d bytes, expected %d) from %s\n",
 				  n, hlen + icmp_pkt_size, inet_ntoa(resp_addr.sin_addr));
 		}
 
@@ -710,18 +663,6 @@ wait_for_reply(int sock, u_int t)
 			host->rtmax = tdiff;
 		if (tdiff < host->rtmin)
 			host->rtmin = tdiff;
-
-
-		/* if we're in hostcheck mode, exit with limited printouts */
-		if(mode == MODE_HOSTCHECK) {
-			fprintf(g_output, "SUPER OK - %s responds to ICMP. Packet %u, rta %0.3fms|"
-				   "pkt=%u;;0;%u rta=%0.3f;%0.3f;%0.3f;;\n",
-				   host->name, icmp_recv, (float)tdiff / 1000,
-				   icmp_recv, packets, (float)tdiff / 1000,
-				   (float)warn.rta / 1000, (float)crit.rta / 1000);
-                        exit_code = 0;
-                        longjmp(exit_jmp, 1);
-		}
 	}
 
 	return 0;
@@ -743,14 +684,14 @@ send_icmp_ping(int sock, struct rta_host *host)
 
 	if(sock == -1) {
 		errno = 0;
-		crash("Attempt to send on bogus socket");
+		do_output(1, "Attempt to send on bogus socket");
 		return -1;
 	}
 	addr = (struct sockaddr *)&host->saddr_in;
 
 	if(!packet.buf) {
 		if (!(packet.buf = malloc(icmp_pkt_size))) {
-			crash("send_icmp_ping(): failed to malloc %d bytes for send buffer",
+			do_output(1, "send_icmp_ping(): failed to malloc %d bytes for send buffer",
 				  icmp_pkt_size);
 			return -1;	/* might be reached if we're in debug mode */
 		}
@@ -805,7 +746,7 @@ recvfrom_wto(int sock, void *buf, unsigned int len, struct sockaddr *saddr,
 	errno = 0;
 	gettimeofday(&then, &tz);
 	n = select(sock + 1, &rd, &wr, NULL, &to);
-	if(n < 0) crash("select() in recvfrom_wto");
+	if(n < 0) do_output(1, "select() in recvfrom_wto");
 	gettimeofday(&now, &tz);
 	*timo = get_timevaldiff(&then, &now);
 
@@ -867,30 +808,30 @@ finish(int sig)
 		if(hosts_ok >= min_hosts_alive) status = STATE_OK;
 		else if((hosts_ok + hosts_warn) >= min_hosts_alive) status = STATE_WARNING;
 	}
-	fprintf(g_output, "%s - ", status_string[status]);
+	do_output(0, "%s -- ", status_string[status]);
 
 	host = list;
 	while(host) {
 		if(i) {
-			if(i < targets) fprintf(g_output, " :: ");
-			else fprintf(g_output, "\n");
+			if(i < targets) do_output(0, " :: ");
+			else do_output(0, "\n");
 		}
 		i++;
 		if(!host->icmp_recv) {
 			status = STATE_CRITICAL;
 			if(host->flags & FLAG_LOST_CAUSE) {
-				fprintf(g_output, "%s: %s @ %s. rta nan, lost %d%%",
+				do_output(0, "%s: %s @ %s. rta nan, lost %d%%",
 					   host->name,
 					   get_icmp_error_msg(host->icmp_type, host->icmp_code),
 					   inet_ntoa(host->error_addr),
 					   100);
 			}
 			else { /* not marked as lost cause, so we have no flags for it */
-				fprintf(g_output, "%s: rta nan, lost 100%%", host->name);
+				do_output(0, "%s: rta nan, lost 100%%", host->name);
 			}
 		}
 		else {	/* !icmp_recv */
-			fprintf(g_output, "%s: rta %0.3fms, lost %u%%",
+			do_output(0, "%s: rta %0.3fms, lost %u%%",
 				   host->name, host->rta / 1000, host->pl);
 		}
 
@@ -898,11 +839,11 @@ finish(int sig)
 	}
 
 	/* iterate once more for pretty perfparse output */
-        putc('|', g_output);
+        do_output_char('|');
 	i = 0;
 	host = list;
 	while(host) {
-		fprintf(g_output, "%srta=%0.3fms;%0.3f;%0.3f;0; %spl=%u%%;%u;%u;; %srtmax=%0.3fms;;;; %srtmin=%0.3fms;;;; ",
+		do_output(0, "%srta=%0.3fms;%0.3f;%0.3f;0; %spl=%u%%;%u;%u;; %srtmax=%0.3fms;;;; %srtmin=%0.3fms;;;; ",
 			   (targets > 1) ? host->name : "",
 			   host->rta / 1000, (float)warn.rta / 1000, (float)crit.rta / 1000,
 			   (targets > 1) ? host->name : "", host->pl, warn.pl, crit.pl,
@@ -918,7 +859,7 @@ finish(int sig)
 	}
 
 	/* finish with an empty line */
-	fputs("", g_output);
+        do_output_char('\n');
 
         exit_code = status;
         longjmp(exit_jmp, 1);
@@ -970,7 +911,7 @@ add_target_ip(char *arg, struct in_addr *in)
 	/* add the fresh ip */
 	host = malloc(sizeof(struct rta_host));
 	if(!host) {
-		crash("add_target_ip(%s, %s): malloc(%d) failed",
+		do_output(1, "add_target_ip(%s, %s): malloc(%d) failed",
 			  arg, inet_ntoa(*in), sizeof(struct rta_host));
 	}
 	memset(host, 0, sizeof(struct rta_host));
@@ -1013,7 +954,7 @@ add_target(char *arg)
 		he = gethostbyname(arg);
 		if(!he) {
 			errno = 0;
-			crash("Failed to resolve %s", arg);
+			do_output(1, "Failed to resolve %s", arg);
 			return -1;
 		}
 	}
@@ -1022,11 +963,6 @@ add_target(char *arg)
 	for(i = 0; he->h_addr_list[i]; i++) {
 		in = (struct in_addr *)he->h_addr_list[i];
 		add_target_ip(arg, in);
-
-		/* this is silly, but it works */
-		if(mode == MODE_HOSTCHECK || mode == MODE_ALL) {
-			continue;
-		}
 		break;
 	}
 
@@ -1043,7 +979,7 @@ set_source_ip(char *arg)
 	if((src.sin_addr.s_addr = inet_addr(arg)) == INADDR_NONE)
 		src.sin_addr.s_addr = get_ip_address(arg);
 	if(bind(icmp_sock, (struct sockaddr *)&src, sizeof(src)) == -1)
-		crash("Cannot bind to IP address %s", arg);
+		do_output(1, "Cannot bind to IP address %s", arg);
 }
 
 /* TODO: Move this to netutils.c and also change check_dhcp to use that. */
@@ -1057,12 +993,12 @@ get_ip_address(const char *ifname)
 	strncpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name) - 1);
 	ifr.ifr_name[sizeof(ifr.ifr_name) - 1] = '\0';
 	if(ioctl(icmp_sock, SIOCGIFADDR, &ifr) == -1)
-		crash("Cannot determine IP address of interface %s", ifname);
+		do_output(1, "Cannot determine IP address of interface %s", ifname);
 	memcpy(&ip, &ifr.ifr_addr, sizeof(ip));
 	return ip.sin_addr.s_addr;
 #else
 	errno = 0;
-	crash("Cannot get interface IP address on this platform.");
+	do_output(1, "Cannot get interface IP address on this platform.");
 #endif
 }
 

@@ -34,6 +34,7 @@ extern int g_debug_level;
 extern int currently_running_host_checks;
 extern int currently_running_service_checks;
 extern char *check_result_path;
+extern char g_livecheck_path[];
 extern int host_check_timeout;
 extern int service_check_timeout;
 
@@ -181,7 +182,7 @@ void init_livecheck()
             snprintf(ht, sizeof(ht), "%u", host_check_timeout);
             char st[32];
             snprintf(st, sizeof(st), "%u", service_check_timeout);
-            execl("/omd/versions/default/lib/livecheck", "livecheck", check_result_path, ht, st, (char *)0);
+            execl(g_livecheck_path, "livecheck", check_result_path, ht, st, (char *)0);
             logger(LG_INFO, "ERROR: Cannot start livecheck helper: %s", strerror(errno));
             exit(1);
         }

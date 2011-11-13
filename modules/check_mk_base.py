@@ -673,9 +673,6 @@ def save_counters(hostname):
 # This is the main check function - the central entry point to all and
 # everything
 def do_check(hostname, ipaddress):
-# HIRN
-    import time
-    time.sleep(30)
 
     if opt_verbose:
         sys.stderr.write("Check_mk version %s\n" % check_mk_version)

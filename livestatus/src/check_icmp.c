@@ -808,7 +808,7 @@ finish(int sig)
 		if(hosts_ok >= min_hosts_alive) status = STATE_OK;
 		else if((hosts_ok + hosts_warn) >= min_hosts_alive) status = STATE_WARNING;
 	}
-	do_output(0, "%s -- ", status_string[status]);
+	do_output(0, "%s - ", status_string[status]);
 
 	host = list;
 	while(host) {

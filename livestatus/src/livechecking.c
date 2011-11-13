@@ -25,6 +25,7 @@
 
 #include <sys/types.h>
 #include <errno.h>
+#include <sys/resource.h>
 
 #include "nagios.h"
 #include "logger.h"
@@ -182,6 +183,12 @@ void init_livecheck()
             snprintf(ht, sizeof(ht), "%u", host_check_timeout);
             char st[32];
             snprintf(st, sizeof(st), "%u", service_check_timeout);
+            // reduce stack size in order to save memory
+            struct rlimit rl;
+            getrlimit(RLIMIT_STACK, &rl);
+            logger(LG_INFO, "Stacksize is %d", rl.rlim_cur);
+            rl.rlim_cur = 32768;
+            setrlimit(RLIMIT_STACK, &rl);
             execl(g_livecheck_path, "livecheck", check_result_path, ht, st, (char *)0);
             logger(LG_INFO, "ERROR: Cannot start livecheck helper: %s", strerror(errno));
             exit(1);

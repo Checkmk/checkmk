@@ -112,6 +112,13 @@ int main(int argc, char **argv)
                 int f = open("/dev/null", O_RDONLY);
                 dup2(f, 0);
 
+                // Allow for larger stack size
+                struct rlimit rl;
+                getrlimit(RLIMIT_STACK, &rl);
+                rl.rlim_cur = 32 * 1024 * 1024;
+                rl.rlim_max = 32 * 1024 * 1024;
+                setrlimit(RLIMIT_STACK, &rl);
+
                 // Optimization(2):
                 // if Command begins / and command line does not
                 // contain any ', /, < or >, split by spaces and

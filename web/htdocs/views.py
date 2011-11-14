@@ -2176,6 +2176,10 @@ def nagios_host_service_action_command(what, dataset):
     elif html.var("_down_custom") and config.may("action.downtimes"):
         down_from = html.get_datetime_input("_down_from")
         down_to   = html.get_datetime_input("_down_to")
+        if down_to < time.time():
+            raise MKUserError("_down_to", _("You cannot set a downtime that ends in the past. "
+                         "This incident will be reported."))
+
         title = _("<b>schedule a downtime from %s to %s</b> on ") % (
             time.asctime(time.localtime(down_from)),
             time.asctime(time.localtime(down_to)))

@@ -510,3 +510,39 @@ declare_filter(255, FilterLogClass())
 declare_filter(202, FilterText("log_plugin_output",  _("Log: plugin output"), "log", "log_plugin_output", "log_plugin_output", "~~"))
 declare_filter(260, FilterText("log_contact_name",   _("Log: contact name"),  "log", "log_contact_name",  "log_contact_name",  "="),
                                                                                                   _("Exact match, used for linking"))
+
+class FilterLogState(Filter):
+    def __init__(self):
+        self._items = [ ("h0", "host", 0, _("Up")),("h1", "host", 1, _("Down")),("h2", "host", 2, _("Unreachable")), 
+                        ("s0", "service", 0, _("OK")), ("s1", "service", 1, _("Warning")), 
+                        ("s2", "service", 2, _("Critical")),("s3", "service", 3, _("Unknown")) ]
+
+        Filter.__init__(self, "log_state", _("Type of alerts of hosts and services"),
+                "log", [ "logst_" + e[0] for e in self._items ], [])
+
+    def display(self):
+        html.write("<table><tr><td>")
+        for varsuffix, what, state, text in self._items:
+            if state == 0:
+                html.write("%s %s:<br>" % (_(what.title()), _("alerts")))
+            html.write("&nbsp; ")
+            html.checkbox("logst_" + varsuffix, True)
+            html.write(" " + text + "<br>")
+            if varsuffix == "h2":
+                html.write("</td><td>")
+        html.write("</td></tr></table>")
+
+    def filter(self, infoname):
+        headers = []
+        for varsuffix, what, state, text in self._items:
+            if html.get_checkbox("logst_" + varsuffix) != False: # None = form not filled in = allow
+                headers.append("Filter: log_type = %s ALERT\nFilter: log_state = %d\nAnd: 2\n" %  
+                            (what.upper(), state))
+        if len(headers) == 0:
+            return "Limit: 0\n" # no allowed state
+        elif len(headers) == len(self._items):
+            return "" # all allowed or form not filled in
+        else:
+            return "".join(headers) + ("Or: %d\n" % len(headers))
+
+declare_filter(270, FilterLogState())

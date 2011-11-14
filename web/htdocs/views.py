@@ -600,7 +600,7 @@ function toggle_section(nr, oImg) {
     html.write("<table class=filters>")
     html.write("<tr><th>")
     html.write(_("Filter"))
-    html.write("</th><th>"+_('usage')+"</th><th>"+_('hardcoded settings')+"</th><th>"+_('HTML variables')+"</th></tr>\n")
+    html.write("</th><th>"+_('usage')+"</th><th>"+_('hardcoded settings')+"</th></tr>\n")
     allowed_filters = filters_allowed_for_datasource(datasourcename)
     # sort filters according to title
     s = [(filt.sort_index, filt.title, fname, filt) 
@@ -623,9 +623,6 @@ function toggle_section(nr, oImg) {
         html.write("</td><td class=widget>")
         filt.display()
         html.write("</td>")
-        html.write("<td><tt>")
-        html.write(" ".join(filt.htmlvars))
-        html.write("</tt></td>")
         html.write("</tr>\n")
     html.write("</table>\n")
     # Set all filters into the proper display state

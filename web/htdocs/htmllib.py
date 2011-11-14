@@ -432,6 +432,11 @@ class html:
         except:
             t = default_value
 
+        if varname in self.user_errors:
+            self.add_user_error(varname + "_date", self.user_errors[varname])
+            self.add_user_error(varname + "_time", self.user_errors[varname])
+            self.set_focus(varname + "_date")
+
         br = time.localtime(t)
         self.date_input(varname + "_date", br.tm_year, br.tm_mon, br.tm_mday)
         self.write(" ")

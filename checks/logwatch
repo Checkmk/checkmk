@@ -44,9 +44,9 @@ def inventory_logwatch(info):
 #logwatch_patterns = {
 #    'System': [
 #    ( 'W', 'sshd' ),
-#    ( ['host1', 'host2'], 'C', 'ssh' ), # only applies to certain hosts
+#    ( ['host1', 'host2'],        'C', 'ssh' ), # only applies to certain hosts
 #    ( ['lnx', 'dmz'], ALL_HOSTS, 'C', 'ssh' ), # only applies to host having certain tags
-
+#    ( ALL_HOSTS, (10, 20), 'x' ), # at 10 messages per interval warn, at 20 crit
 #    ( 'I', '0' )
 #    ],
 #    'Application': [
@@ -55,7 +55,25 @@ def inventory_logwatch(info):
 #    ]
 #    }
 
-# Extracts only pattern relevant for current host and item.
+# New rule-stule logwatch_rules in WATO friendly consistent rule notation:
+#
+# logwatch_rules = [
+#   ( [ PATTERNS ], ALL_HOSTS, [ "Application", "System" ] ),
+# ]
+# All [ PATTERNS ] of matching rules will be concatenated in order of
+# appearance.
+#
+# PATTERN is a list like: 
+# [ ( 'I',      ".*ssh.*" ),          # Ignore these messages
+#   ( (10, 20), "login"   ),          # Warning at 10 messages, Critical at 20
+#   ( 'C',      "bad"     ),          # Always critical
+#   ( 'W',      "not entirely bad" ), # Always warning
+# ]
+#
+
+
+
+# Extracts patterns that are relevant for the current host and item.
 # Constructs simple list of pairs: [ ('W', 'crash.exe'), ('C', 'sshd.*test') ]
 def logwatch_precompile(hostname, item, params):
     patterns = logwatch_patterns.get(item)
@@ -82,15 +100,30 @@ def logwatch_precompile(hostname, item, params):
     return params
 
 
-def logwatch_reclassify(patterns, text):
+def logwatch_reclassify(counts, patterns, text):
     for level, pattern in patterns:
         reg = compiled_regexes.get(pattern)
         if not reg:
             reg = re.compile(pattern)
             compiled_regexes[pattern] = reg
         if reg.search(text):
-            return level
+            # If the level is not fixed like 'C' or 'W' but a pair like (10, 20),
+            # then we count how many times this pattern has already matched and
+            # assign the levels according to the number of matches of this pattern.
+            if type(level) == tuple:
+                warn, crit = level
+                newcount = counts.setdefault(id(pattern), 0) + 1
+                counts[id(pattern)] = newcount
+                if newcount >= crit:
+                    return 'C'
+                elif newcount >= warn:
+                    return 'W'
+                else:
+                    return 'I'
+            else:
+                return level
     return None
+
 
 # In case of a precompiled check, params contains the precompiled
 # logwatch_patterns for the logfile we deal with. If using check_mk
@@ -183,6 +216,7 @@ def check_logwatch(item, params, info):
         else:
             patterns = logwatch_precompile(g_hostname, item, None)
 
+        counts = {} # for counting number of matches of a certain pattern
         if len(loglines) > 0:
             worst = 0
             newloglines = []
@@ -194,7 +228,7 @@ def check_logwatch(item, params, info):
                 else:
                     text = ""
                 if patterns and level != '.': # do never reclassify informational context messages
-                    newlevel = logwatch_reclassify(patterns, text)
+                    newlevel = logwatch_reclassify(counts, patterns, text)
                     if newlevel != None:
                         level = newlevel
 

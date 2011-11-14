@@ -12,6 +12,8 @@
       to process and which levels of messages to send.
     * Windows agent: new config variable "host" in all sections that
       restricts the folling entries to certain hosts.
+    * logwatch: allow to classify messages based on their count (see
+      man page of logwatch for details)
 
     Multisite:
     * New nifty sidebar snapin "Speed-O-Meter"

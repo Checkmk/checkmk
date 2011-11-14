@@ -79,6 +79,11 @@ def load_plugins():
             _("Fake check results"),
             _("Manually submit check results for host and service checks"),
             [ "admin" ])
+    config.declare_permission("action.customnotification",
+            _("Send custom notification"),
+            _("Manually let the core send a notification to a host or service in order "
+              "to test if notifications are setup correctly"),
+            [ "user", "admin" ])
     config.declare_permission("action.acknowledge",
             _("Acknowledge"),
             _("Acknowledge host and service problems and remove acknowledgements"),
@@ -1895,14 +1900,14 @@ def show_downtime_actions():
     if config.may("action.downtimes"):
         html.write("<tr><td class=legend>"+_('Downtimes')+"</td>\n"
                 "<td class=content>\n"
-                   "<input type=submit name=_remove_downtimes value=\""+_('Remove')+"\"> &nbsp; "
+                   "<input type=submit name=_remove_downtimes value=\""+_('Remove')+"\">"
                    "</td></tr>\n")
 
 def show_comment_actions():
     if config.may("action.addcomment"):
         html.write("<tr><td class=legend>"+_('Comments')+"</td>\n"
                 "<td class=content>\n"
-                   "<input type=submit name=_remove_comments value=\""+_('Remove')+"\"> &nbsp; "
+                   "<input type=submit name=_remove_comments value=\""+_('Remove')+"\">"
                    "</td></tr>\n")
 
 
@@ -1910,16 +1915,16 @@ def show_host_service_actions(what):
     if config.may("action.notifications"):
         html.write("<tr><td class=legend>"+_('Notifications')+"</td>\n"
                    "<td class=content>\n"
-                   "<input type=submit name=_enable_notifications value=\""+_('Enable')+"\"> &nbsp; "
-                   "<input type=submit name=_disable_notifications value=\""+_('Disable')+"\"> &nbsp; "
+                   "<input type=submit name=_enable_notifications value=\""+_('Enable')+"\"> "
+                   "<input type=submit name=_disable_notifications value=\""+_('Disable')+"\">"
                    "</td></tr>\n")
 
     if config.may("action.enablechecks") or config.may("action.reschedule"):
         html.write("<tr><td class=legend>"+_('Active checks')+"</td>\n"
                    "<td class=content>\n")
         if config.may("action.enablechecks"):
-            html.write("<input type=submit name=_enable_checks value=\""+_('Enable')+"\"> &nbsp; "
-                   "<input type=submit name=_disable_checks value=\""+_('Disable')+"\"> &nbsp; ")
+            html.write("<input type=submit name=_enable_checks value=\""+_('Enable')+"\"> "
+                   "<input type=submit name=_disable_checks value=\""+_('Disable')+"\"> ")
         if config.may("action.reschedule"):
             html.write("<input type=submit name=_resched_checks value=\""+_('Reschedule next check now')+"\">\n"
                    "</td></tr>\n")
@@ -1927,8 +1932,8 @@ def show_host_service_actions(what):
     if config.may("action.enablechecks"):
         html.write("<tr><td class=legend>"+_('Passive checks')+"</td>\n"
                    "<td class=content>\n")
-        html.write("<input type=submit name=_enable_passive_checks value=\""+_('Enable')+"\"> &nbsp; "
-               "<input type=submit name=_disable_passive_checks value=\""+_('Disable')+"\"> &nbsp; "
+        html.write("<input type=submit name=_enable_passive_checks value=\""+_('Enable')+"\"> "
+               "<input type=submit name=_disable_passive_checks value=\""+_('Disable')+"\">"
                "</td></tr>\n")
 
     if config.may("action.clearmodattr"):
@@ -1948,29 +1953,46 @@ def show_host_service_actions(what):
             html.write(" ")
         html.write("</td></tr>\n")
 
+    if config.may("action.customnotification"):
+        html.write("<tr><td class=legend>"+_('Custom notification')+"</td>\n")
+        html.write("<td class=content>")
+        html.write(_('Comment') + ": ")
+        html.text_input("_cusnot_comment", "TEST", size=20)
+        html.write(" &nbsp; ")
+        html.checkbox("_cusnot_forced", False)
+        html.write(_("forced") + " ")
+        html.checkbox("_cusnot_broadcast", False)
+        html.write(_("broadcast") + " ")
+        html.write(" &nbsp; ")
+        html.write("<input type=submit name=_customnotification value=\"" + _('Send') +"\">") 
+        html.write("</td></tr>\n")
+
     if config.may("action.acknowledge"):
         html.write("<tr><td rowspan=3 class=legend>"+_('Acknowledge')+"</td>\n")
-        html.write("<td class=content><input type=submit name=_acknowledge value=\""+_('Acknowledge')+"\"> &nbsp; "
+        html.write("<td class=content><input type=submit name=_acknowledge value=\""+_('Acknowledge')+"\"> "
                    "<input type=submit name=_remove_ack value=\""+_('Remove Acknowledgement')+"\"></td></tr>\n")
 
         html.write("<tr><td class=content>")
         html.checkbox("_ack_sticky", True)
-        html.write(" "+_('sticky')+" &nbsp; ")
+        html.write(_('sticky')+" &nbsp; ")
         html.checkbox("_ack_notify", True)
-        html.write(" "+_('send notification')+" &nbsp; ")
+        html.write(_('send notification')+" &nbsp; ")
         html.checkbox("_ack_persistent", False)
-        html.write(" "+_('persistent comment'))
+        html.write(_('persistent comment'))
         html.write("</td></tr>\n")
 
-        html.write("<tr><td class=content><div class=textinputlegend>"+_('Comment:')+"</div>")
-        html.text_input("_ack_comment", size=65)
+        html.write("<tr><td class=content>")
+        html.write(_("Comment") + ": ")
+        html.text_input("_ack_comment", size=48)
         html.write("</td></tr>\n")
         
     if config.may("action.addcomment"):
-        html.write("<tr><td rowspan=2 class=legend>"+_('Add comment')+"</td>\n")
-        html.write("<td class=content><input type=submit name=_add_comment value=\""+_('Add comment')+"\"></td></tr>\n"
-                "<tr><td class=content><div class=textinputlegend>"+_('Comment')+":</div>")
-        html.text_input("_comment", size=65)
+        html.write("<tr><td class=legend>"+_('Add comment')+"</td>\n")
+        html.write("<td class=content>")
+        html.write(_('Comment')+": ")
+        html.text_input("_comment", size=33)
+        html.write(" &nbsp; ")
+        html.write("<input type=submit name=_add_comment value=\""+_('Add comment')+"\">")
         html.write("</td></tr>\n")
 
     if config.may("action.downtimes"):
@@ -1992,11 +2014,11 @@ def show_host_service_actions(what):
         html.write("</td></tr>")
         html.write("<tr><td class=content>")
         html.checkbox("_down_flexible", False)
-        html.write(" "+_('flexible with max. duration')+" ")
+        html.write(_('flexible with max. duration')+" ")
         html.time_input("_down_duration", 2, 0)
         html.write(" "+_('(HH:MM)')+"</td></tr>\n")
-        html.write("<tr><td class=content><div class=textinputlegend>"+_('Comment')+":</div>\n")
-        html.text_input("_down_comment", size=65)
+        html.write("<tr><td class=content>" + _('Comment')+": ")
+        html.text_input("_down_comment", size=48)
 
 def nagios_action_command(what, row):
     if what in [ "host", "service" ]:
@@ -2086,6 +2108,14 @@ def nagios_host_service_action_command(what, dataset):
             if hoststate != None:
                 command = "PROCESS_HOST_CHECK_RESULT;%s;%s;%s" % (spec, hoststate, pluginoutput)
         title = _("<b>manually set check results to %s</b> for") % statename
+
+    elif html.var("_customnotification") and config.may("action.customnotification"):
+        comment = html.var("_cusnot_comment")
+        broadcast = html.get_checkbox("_cusnot_broadcast") and 1 or 0
+        forced = html.get_checkbox("_cusnot_forced") and 2 or 0
+        command = "SEND_CUSTOM_%s_NOTIFICATION;%s;%s;%s;%s" % \
+                ( cmdtag, spec, broadcast + forced, config.user_id, comment)
+        title = _("<b>send a custom notification</b> regarding")
 
     elif html.var("_acknowledge") and config.may("action.acknowledge"):
         comment = html.var_utf8("_ack_comment")

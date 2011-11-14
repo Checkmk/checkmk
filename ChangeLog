@@ -19,6 +19,7 @@
     * New nifty sidebar snapin "Speed-O-Meter"
     * Implemented logout functionality in OMD environments
     * New filter for the (new) state in host/service alerts
+    * New command for sending custom notifications
 
     WATO:
     * Evolved to full featured monitoring configuration tool!

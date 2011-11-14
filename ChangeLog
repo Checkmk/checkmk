@@ -21,7 +21,6 @@
     * New filter for the (new) state in host/service alerts
     * New command for sending custom notifications
     * FIX: Fixed encoding problem when opening dashboard
-    * FIX: Fixed styling of view header in older IE browsers
 
     WATO:
     * Evolved to full featured monitoring configuration tool!
@@ -60,9 +59,11 @@
     * FIX: blade_bays: fix naming of item and man page
 
     Multisite:
-    * FIX: Disallow settings downtimes that end in the past
+    * FIX: Fixed styling of view header in older IE browsers
     * FIX: Do not show WATO button in views if WATO is disabled
-    * FIX: Remove WATO Folder filter if WATO is disabled
+    * FIX: Remove WATO Folder filter if WATO is disabled 
+    * FIX: Snapin 'Performance': fix text align for numbers
+    * FIX: Disallow settings downtimes that end in the past
 
 1.1.12p1:
     Core, Setup, etc.:

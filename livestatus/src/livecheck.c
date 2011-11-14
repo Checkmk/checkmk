@@ -66,12 +66,6 @@ int main(int argc, char **argv)
     signal(SIGQUIT, term_handler);
     signal(SIGTERM, term_handler);
 
-    // Setup raw socket for inline check_icmp if we are root
-    if (geteuid() == 0) {
-        icmp_sock = socket(PF_INET, SOCK_RAW, IPPROTO_ICMP);
-        setuid(getuid()); /* Drop root priviledges */
-    }
-
     while (1) {
         write(1, "*", 1); // Signal Nagios that we are finished
         if (NULL == fgets(host, sizeof(host), stdin)
@@ -92,7 +86,7 @@ int main(int argc, char **argv)
         // If it's check_icmp, we use our inline version
         // of that. But only if we have (had) root priviledges
         // and had been able to create a raw socket
-        if (icmp_sock != -1 && strstr(command, "/check_icmp ")) {
+        if (geteuid() == 0 && strstr(command, "/check_icmp ")) {
             char **arguments = parse_into_arguments(command);
             int arg_c = 0;
             while (arguments[arg_c])
@@ -106,6 +100,10 @@ int main(int argc, char **argv)
             pid = fork();
 
             if (pid == 0) {
+                // Drop root priviledges: only needed for ICMP socket
+                if (geteuid() == 0)
+                    setuid(getuid());
+
                 close(fd[0]);   // close read end
                 dup2(fd[1], 1); // point stdout into pipe  
                 dup2(fd[1], 2); // also point stderr into pipe

@@ -46,6 +46,7 @@ struct live_helper {
     pid_t pid; 
     int sock;
     FILE *fsock;
+    int is_free;
 };
 struct live_helper *g_live_helpers;
 
@@ -65,10 +66,21 @@ void execute_livecheck(struct live_helper *lh, const char *host_name,
 
 struct live_helper *get_free_live_helper()
 {
-    // Check if one of our helpers is free
+    // Check if one of our helpers is free. First look
+    // at the flag
+    unsigned i;
+    for (i=0; i<g_num_livehelpers; i++) {
+        if (g_live_helpers[i].is_free) {
+            g_live_helpers[i].is_free = 0;
+            return &g_live_helpers[i];
+        }
+    }
+
+    // None none to be free -> use select to detect livehelpers
+    // that have signalled us (by sending a byte) that they are
+    // free again.
     fd_set fds;
     FD_ZERO(&fds);
-    unsigned i;
     int max_fd = 0;
     for (i=0; i<g_num_livehelpers; i++) {
         int fd = g_live_helpers[i].sock;
@@ -83,11 +95,13 @@ struct live_helper *get_free_live_helper()
     if (r == 0)
         return 0;
 
+    struct live_helper *free_helper = 0;
     for (i=0; i<g_num_livehelpers; i++) {
         if (FD_ISSET(g_live_helpers[i].sock, &fds))
-            break;
+            g_live_helpers[i].is_free = 1;
+            free_helper = &g_live_helpers[i];
     }
-    return &g_live_helpers[i];
+    return free_helper;
 }
 
 int broker_host_livecheck(int event_type __attribute__ ((__unused__)), void *data)
@@ -136,6 +150,7 @@ int broker_service_livecheck(int event_type __attribute__ ((__unused__)), void *
     struct live_helper *lh = get_free_live_helper();
     if (!lh) {
         logger(LG_INFO, "No livecheck helper free.");
+        // Let the core handle this check himself
         return NEB_OK;
     }
 
@@ -183,11 +198,11 @@ void init_livecheck()
             snprintf(ht, sizeof(ht), "%u", host_check_timeout);
             char st[32];
             snprintf(st, sizeof(st), "%u", service_check_timeout);
+
             // reduce stack size in order to save memory
             struct rlimit rl;
             getrlimit(RLIMIT_STACK, &rl);
-            logger(LG_INFO, "Stacksize is %d", rl.rlim_cur);
-            rl.rlim_cur = 32768;
+            rl.rlim_cur = 65536;
             setrlimit(RLIMIT_STACK, &rl);
             execl(g_livecheck_path, "livecheck", check_result_path, ht, st, (char *)0);
             logger(LG_INFO, "ERROR: Cannot start livecheck helper: %s", strerror(errno));
@@ -197,6 +212,7 @@ void init_livecheck()
         g_live_helpers[i].pid = pid;
         g_live_helpers[i].sock = fd[0];
         g_live_helpers[i].fsock = fdopen(fd[0], "r+");
+        g_live_helpers[i].is_free = 0; // wait until helper sends "ready" byte.
     }
 }
 
@@ -212,8 +228,13 @@ void deinit_livecheck()
         kill(g_live_helpers[i].pid, SIGTERM);
         int status;
         waitpid(g_live_helpers[i].pid, &status, 0); 
-        if (g_debug_level > 0)
-            logger(LG_INFO, "Livecheck helper %d exited with status %d.", g_live_helpers[i].pid, status);
+        if (WIFSIGNALED(status) && WTERMSIG(status) != SIGTERM) {
+            logger(LG_INFO, "Livecheck helper %d exited with signal %d.",
+                g_live_helpers[i].pid, WTERMSIG(status));
+        }
+        else if (g_debug_level > 0)
+            logger(LG_INFO, "Livecheck helper %d exited with status %d.", 
+                g_live_helpers[i].pid, status);
     }
     free(g_live_helpers);
 }

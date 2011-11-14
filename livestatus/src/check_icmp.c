@@ -384,8 +384,11 @@ int check_icmp(int argc, char **argv, char *output, int size)
     g_output_buffer_size = size;
     g_output_pointer = output;
 
+    icmp_sock = socket(PF_INET, SOCK_RAW, IPPROTO_ICMP);
+
     exit_code = 3;
     if (setjmp(exit_jmp)) {
+        close(icmp_sock);
         return exit_code;
     }
 
